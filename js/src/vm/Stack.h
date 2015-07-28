@@ -196,6 +196,8 @@ class AbstractFramePtr
     inline bool isGlobalFrame() const;
     inline bool isEvalFrame() const;
     inline bool isDebuggerEvalFrame() const;
+    inline bool hasCachedSavedFrame() const;
+    inline void setHasCachedSavedFrame();
 
     inline JSScript* script() const;
     inline JSFunction* fun() const;
@@ -328,14 +330,22 @@ class InterpreterFrame
         /* Used in tracking calls and profiling (see vm/SPSProfiler.cpp) */
         HAS_PUSHED_SPS_FRAME =   0x10000, /* SPS was notified of enty */
 
+
         /*
          * If set, we entered one of the JITs and ScriptFrameIter should skip
          * this frame.
          */
-        RUNNING_IN_JIT     =    0x20000,
+        RUNNING_IN_JIT         =    0x20000,
 
         /* Miscellaneous state. */
-        CREATE_SINGLETON   =    0x40000   /* Constructed |this| object should be singleton. */
+        CREATE_SINGLETON       =    0x40000,   /* Constructed |this| object should be singleton. */
+
+        /*
+         * If set, this frame has been on the stack when
+         * |js::SavedStacks::saveCurrentStack| was called, and so there is a
+         * |js::SavedFrame| object cached for this frame.
+         */
+        HAS_CACHED_SAVED_FRAME =    0x80000,
     };
 
   private:
@@ -897,6 +907,13 @@ class InterpreterFrame
     }
 
     inline void unsetIsDebuggee();
+
+    bool hasCachedSavedFrame() const {
+        return flags_ & HAS_CACHED_SAVED_FRAME;
+    }
+    void setHasCachedSavedFrame() {
+        flags_ |= HAS_CACHED_SAVED_FRAME;
+    }
 
   public:
     void mark(JSTracer* trc);
@@ -1719,6 +1736,8 @@ class FrameIter
     bool isEvalFrame() const;
     bool isNonEvalFunctionFrame() const;
     bool hasArgs() const { return isNonEvalFunctionFrame(); }
+
+    bool hasCachedSavedFrame(JSContext* cx, bool* hasCachedSavedFramep);
 
     ScriptSource* scriptSource() const;
     const char* scriptFilename() const;

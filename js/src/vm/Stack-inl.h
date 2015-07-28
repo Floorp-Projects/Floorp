@@ -607,6 +607,27 @@ AbstractFramePtr::isDebuggerEvalFrame() const
 }
 
 inline bool
+AbstractFramePtr::hasCachedSavedFrame() const
+{
+    if (isInterpreterFrame())
+        return asInterpreterFrame()->hasCachedSavedFrame();
+    if (isBaselineFrame())
+        return asBaselineFrame()->hasCachedSavedFrame();
+    return asRematerializedFrame()->hasCachedSavedFrame();
+}
+
+inline void
+AbstractFramePtr::setHasCachedSavedFrame()
+{
+    if (isInterpreterFrame())
+        asInterpreterFrame()->setHasCachedSavedFrame();
+    else if (isBaselineFrame())
+        asBaselineFrame()->setHasCachedSavedFrame();
+    else
+        asRematerializedFrame()->setHasCachedSavedFrame();
+}
+
+inline bool
 AbstractFramePtr::isDebuggee() const
 {
     if (isInterpreterFrame())
