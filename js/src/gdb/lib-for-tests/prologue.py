@@ -23,9 +23,9 @@ def run_fragment(fragment, function='breakpoint'):
 # Assert that |actual| is equal to |expected|; if not, complain in a helpful way.
 def assert_eq(actual, expected):
     if actual != expected:
-        raise AssertionError, """Unexpected result:
+        raise AssertionError("""Unexpected result:
 expected: %r
-actual:   %r""" % (expected, actual)
+actual:   %r""" % (expected, actual))
 
 # Assert that |value|'s pretty-printed form is |form|. If |value| is a
 # string, then evaluate it with gdb.parse_and_eval to produce a value.
@@ -44,10 +44,10 @@ def assert_subprinter_registered(printer, subprinter):
     pat = r'^( +)%(printer)s *\n(\1 +.*\n)*\1 +%(subprinter)s *\n' % names
     output = gdb.execute('info pretty-printer', to_string=True)
     if not re.search(pat, output, re.MULTILINE):
-        raise AssertionError, ("assert_subprinter_registered failed to find pretty-printer:\n"
-                               "  %s:%s\n"
-                               "'info pretty-printer' says:\n"
-                               "%s" % (printer, subprinter, output))
+        raise AssertionError("assert_subprinter_registered failed to find pretty-printer:\n"
+                             "  %s:%s\n"
+                             "'info pretty-printer' says:\n"
+                             "%s" % (printer, subprinter, output))
 
 # Request full stack traces for Python errors.
 gdb.execute('set python print-stack full')
@@ -64,7 +64,7 @@ gdb.execute('set width 0')
 try:
     # testscript is set on the GDB command line, via:
     # --eval-command python testscript=...
-    execfile(testscript)
+    exec(open(testscript).read())
 except AssertionError as err:
     sys.stderr.write('\nAssertion traceback:\n')
     (t, v, tb) = sys.exc_info()
