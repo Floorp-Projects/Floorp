@@ -118,7 +118,7 @@ done
 # Mozharness would ordinarily do the checkouts itself, but they are disabled
 # here (--no-checkout-sources, --no-clone-tools) as the checkout is performed above.
 
-$WORKSPACE/build/src/testing/${MOZHARNESS_SCRIPT} ${config_cmds} \
+./${MOZHARNESS_SCRIPT} ${config_cmds} \
   $debug_flag \
   $custom_build_variant_cfg_flag \
   --disable-mock \
