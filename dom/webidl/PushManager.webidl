@@ -22,7 +22,7 @@ interface PushManagerImpl {
     [Func="ServiceWorkerRegistration::WebPushMethodHider"] void setScope(DOMString scope);
 };
 
-[Exposed=(Window,Worker), Func="nsContentUtils::PushEnabled"]
+[Exposed=(Window,Worker), Func="mozilla::dom::PushManager::Enabled"]
 interface PushManager {
   [ChromeOnly, Throws, Exposed=Window]
   void setPushManagerImpl(PushManagerImpl store);
