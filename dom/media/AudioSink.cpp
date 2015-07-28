@@ -250,21 +250,18 @@ AudioSink::InitializeAudioStream()
 void
 AudioSink::Drain()
 {
+  AssertOnAudioThread();
   MOZ_ASSERT(mPlaying && !mAudioStream->IsPaused());
-  AssertCurrentThreadInMonitor();
   // If the media was too short to trigger the start of the audio stream,
   // start it now.
   mAudioStream->Start();
-  {
-    ReentrantMonitorAutoExit exit(GetReentrantMonitor());
-    mAudioStream->Drain();
-  }
+  mAudioStream->Drain();
 }
 
 void
 AudioSink::Cleanup()
 {
-  AssertCurrentThreadInMonitor();
+  AssertOnAudioThread();
   mEndPromise.Resolve(true, __func__);
   // Since the promise if resolved asynchronously, we don't shutdown
   // AudioStream here so MDSM::ResyncAudioClock can get the correct
@@ -280,9 +277,9 @@ AudioSink::ExpectMoreAudioData()
 bool
 AudioSink::WaitingForAudioToPlay()
 {
+  AssertOnAudioThread();
   // Return true if we're not playing, and we're not shutting down, or we're
   // playing and we've got no audio to play.
-  AssertCurrentThreadInMonitor();
   if (!mStopAudioThread && (!mPlaying || ExpectMoreAudioData())) {
     return true;
   }
@@ -292,7 +289,7 @@ AudioSink::WaitingForAudioToPlay()
 bool
 AudioSink::IsPlaybackContinuing()
 {
-  AssertCurrentThreadInMonitor();
+  AssertOnAudioThread();
   // If we're shutting down, captured, or at EOS, break out and exit the audio
   // thread.
   if (mStopAudioThread || AudioQueue().AtEndOfStream()) {
@@ -323,16 +320,13 @@ AudioSink::AudioLoop()
     }
 
     case AUDIOSINK_STATE_PLAYING: {
-      {
-        ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-        if (WaitingForAudioToPlay()) {
-          // NotifyData() will schedule next loop.
-          break;
-        }
-        if (!IsPlaybackContinuing()) {
-          SetState(AUDIOSINK_STATE_COMPLETE);
-          break;
-        }
+      if (WaitingForAudioToPlay()) {
+        // NotifyData() will schedule next loop.
+        break;
+      }
+      if (!IsPlaybackContinuing()) {
+        SetState(AUDIOSINK_STATE_COMPLETE);
+        break;
       }
       if (!PlayAudio()) {
         SetState(AUDIOSINK_STATE_COMPLETE);
@@ -405,7 +399,7 @@ AudioSink::PlayAudio()
 void
 AudioSink::FinishAudioLoop()
 {
-  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  AssertOnAudioThread();
   MOZ_ASSERT(mStopAudioThread || AudioQueue().AtEndOfStream());
   if (!mStopAudioThread && mPlaying) {
     Drain();
