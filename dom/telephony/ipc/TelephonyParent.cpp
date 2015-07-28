@@ -41,7 +41,7 @@ TelephonyParent::RecvPTelephonyRequestConstructor(PTelephonyRequestParent* aActo
   nsCOMPtr<nsITelephonyService> service = do_GetService(TELEPHONY_SERVICE_CONTRACTID);
 
   if (!service) {
-    return NS_SUCCEEDED(actor->NotifyError(NS_LITERAL_STRING("InvalidStateError")));
+    return NS_SUCCEEDED(actor->GetCallback()->NotifyError(NS_LITERAL_STRING("InvalidStateError")));
   }
 
   switch (aRequest.type()) {
@@ -57,79 +57,79 @@ TelephonyParent::RecvPTelephonyRequestConstructor(PTelephonyRequestParent* aActo
     case IPCTelephonyRequest::TDialRequest: {
       const DialRequest& request = aRequest.get_DialRequest();
       service->Dial(request.clientId(), request.number(),
-                    request.isEmergency(), actor);
+                    request.isEmergency(), actor->GetDialCallback());
       return true;
     }
 
     case IPCTelephonyRequest::TSendUSSDRequest: {
       const SendUSSDRequest& request = aRequest.get_SendUSSDRequest();
-      service->SendUSSD(request.clientId(), request.ussd(), actor);
+      service->SendUSSD(request.clientId(), request.ussd(), actor->GetCallback());
       return true;
     }
 
     case IPCTelephonyRequest::TCancelUSSDRequest: {
       const CancelUSSDRequest& request = aRequest.get_CancelUSSDRequest();
-      service->CancelUSSD(request.clientId(), actor);
+      service->CancelUSSD(request.clientId(), actor->GetCallback());
       return true;
     }
 
     case IPCTelephonyRequest::TConferenceCallRequest: {
       const ConferenceCallRequest& request = aRequest.get_ConferenceCallRequest();
-      service->ConferenceCall(request.clientId(), actor);
+      service->ConferenceCall(request.clientId(), actor->GetCallback());
       return true;
     }
 
     case IPCTelephonyRequest::TSeparateCallRequest: {
       const SeparateCallRequest& request = aRequest.get_SeparateCallRequest();
-      service->SeparateCall(request.clientId(), request.callIndex(), actor);
+      service->SeparateCall(request.clientId(), request.callIndex(), actor->GetCallback());
       return true;
     }
 
     case IPCTelephonyRequest::THangUpConferenceRequest: {
       const HangUpConferenceRequest& request = aRequest.get_HangUpConferenceRequest();
-      service->HangUpConference(request.clientId(), actor);
+      service->HangUpConference(request.clientId(), actor->GetCallback());
       return true;
     }
 
     case IPCTelephonyRequest::THoldConferenceRequest: {
       const HoldConferenceRequest& request = aRequest.get_HoldConferenceRequest();
-      service->HoldConference(request.clientId(), actor);
+      service->HoldConference(request.clientId(), actor->GetCallback());
       return true;
     }
 
     case IPCTelephonyRequest::TResumeConferenceRequest: {
       const ResumeConferenceRequest& request = aRequest.get_ResumeConferenceRequest();
-      service->ResumeConference(request.clientId(), actor);
+      service->ResumeConference(request.clientId(), actor->GetCallback());
       return true;
     }
 
     case IPCTelephonyRequest::TAnswerCallRequest: {
       const AnswerCallRequest& request = aRequest.get_AnswerCallRequest();
-      service->AnswerCall(request.clientId(), request.callIndex(), actor);
+      service->AnswerCall(request.clientId(), request.callIndex(), actor->GetCallback());
       return true;
     }
 
     case IPCTelephonyRequest::THangUpCallRequest: {
       const HangUpCallRequest& request = aRequest.get_HangUpCallRequest();
-      service->HangUpCall(request.clientId(), request.callIndex(), actor);
+      service->HangUpCall(request.clientId(), request.callIndex(), actor->GetCallback());
       return true;
     }
 
     case IPCTelephonyRequest::TRejectCallRequest: {
       const RejectCallRequest& request = aRequest.get_RejectCallRequest();
-      service->RejectCall(request.clientId(), request.callIndex(), actor);
+      service->RejectCall(request.clientId(), request.callIndex(), actor->GetCallback());
       return true;
     }
 
     case IPCTelephonyRequest::THoldCallRequest: {
       const HoldCallRequest& request = aRequest.get_HoldCallRequest();
-      service->HoldCall(request.clientId(), request.callIndex(), actor);
+      service->HoldCall(request.clientId(), request.callIndex(), actor->GetCallback());
       return true;
     }
 
     case IPCTelephonyRequest::TResumeCallRequest: {
       const ResumeCallRequest& request = aRequest.get_ResumeCallRequest();
-      service->ResumeCall(request.clientId(), request.callIndex(), actor);
+      service->ResumeCall(request.clientId(), request.callIndex(), actor->GetCallback());
       return true;
     }
 
@@ -139,7 +139,7 @@ TelephonyParent::RecvPTelephonyRequestConstructor(PTelephonyRequestParent* aActo
                          request.dtmfChars(),
                          request.pauseDuration(),
                          request.toneDuration(),
-                         actor);
+                         actor->GetCallback());
       return true;
     }
 
@@ -347,12 +347,12 @@ TelephonyParent::SupplementaryServiceNotification(uint32_t aClientId,
  ******************************************************************************/
 
 NS_IMPL_ISUPPORTS(TelephonyRequestParent,
-                  nsITelephonyListener,
-                  nsITelephonyCallback,
-                  nsITelephonyDialCallback)
+                  nsITelephonyListener)
 
 TelephonyRequestParent::TelephonyRequestParent()
-  : mActorDestroyed(false)
+  : mActorDestroyed(false),
+    mCallback(new Callback(*this)),
+    mDialCallback(new DialCallback(*this))
 {
 }
 
@@ -428,56 +428,74 @@ TelephonyRequestParent::SupplementaryServiceNotification(uint32_t aClientId,
   MOZ_CRASH("Not a TelephonyParent!");
 }
 
-// nsITelephonyDialCallback
+/*******************************************************************************
+ * TelephonyRequestParent::Callback
+ ******************************************************************************/
 
-NS_IMETHODIMP
-TelephonyRequestParent::NotifyDialMMI(const nsAString& aServiceCode)
+NS_IMPL_ISUPPORTS(TelephonyRequestParent::Callback,
+                  nsITelephonyCallback)
+
+nsresult TelephonyRequestParent::Callback::SendResponse(const IPCTelephonyResponse& aResponse)
 {
-  NS_ENSURE_TRUE(!mActorDestroyed, NS_ERROR_FAILURE);
-
-  return SendNotifyDialMMI(nsAutoString(aServiceCode)) ? NS_OK : NS_ERROR_FAILURE;
+  return mParent.SendResponse(aResponse);
 }
 
 NS_IMETHODIMP
-TelephonyRequestParent::NotifySuccess()
+TelephonyRequestParent::Callback::NotifySuccess()
 {
   return SendResponse(SuccessResponse());
 }
 
 NS_IMETHODIMP
-TelephonyRequestParent::NotifyError(const nsAString& aError)
+TelephonyRequestParent::Callback::NotifyError(const nsAString& aError)
 {
   return SendResponse(ErrorResponse(nsAutoString(aError)));
 }
 
+/*******************************************************************************
+ * TelephonyRequestParent::DialCallback
+ ******************************************************************************/
+
+NS_IMPL_ISUPPORTS_INHERITED(TelephonyRequestParent::DialCallback,
+                            TelephonyRequestParent::Callback,
+                            nsITelephonyDialCallback)
+
 NS_IMETHODIMP
-TelephonyRequestParent::NotifyDialCallSuccess(uint32_t aClientId,
-                                              uint32_t aCallIndex,
-                                              const nsAString& aNumber)
+TelephonyRequestParent::DialCallback::NotifyDialMMI(const nsAString& aServiceCode)
+{
+  NS_ENSURE_TRUE(!mParent.mActorDestroyed, NS_ERROR_FAILURE);
+
+  return mParent.SendNotifyDialMMI(nsAutoString(aServiceCode)) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+TelephonyRequestParent::DialCallback::NotifyDialCallSuccess(uint32_t aClientId,
+                                                            uint32_t aCallIndex,
+                                                            const nsAString& aNumber)
 {
   return SendResponse(DialResponseCallSuccess(aClientId, aCallIndex,
                                               nsAutoString(aNumber)));
 }
 
 NS_IMETHODIMP
-TelephonyRequestParent::NotifyDialMMISuccess(const nsAString& aStatusMessage)
+TelephonyRequestParent::DialCallback::NotifyDialMMISuccess(const nsAString& aStatusMessage)
 {
   return SendResponse(DialResponseMMISuccess(nsAutoString(aStatusMessage),
                                              AdditionalInformation(mozilla::void_t())));
 }
 
 NS_IMETHODIMP
-TelephonyRequestParent::NotifyDialMMISuccessWithInteger(const nsAString& aStatusMessage,
-                                                        uint16_t aAdditionalInformation)
+TelephonyRequestParent::DialCallback::NotifyDialMMISuccessWithInteger(const nsAString& aStatusMessage,
+                                                                      uint16_t aAdditionalInformation)
 {
   return SendResponse(DialResponseMMISuccess(nsAutoString(aStatusMessage),
                                              AdditionalInformation(aAdditionalInformation)));
 }
 
 NS_IMETHODIMP
-TelephonyRequestParent::NotifyDialMMISuccessWithStrings(const nsAString& aStatusMessage,
-                                                        uint32_t aCount,
-                                                        const char16_t** aAdditionalInformation)
+TelephonyRequestParent::DialCallback::NotifyDialMMISuccessWithStrings(const nsAString& aStatusMessage,
+                                                                      uint32_t aCount,
+                                                                      const char16_t** aAdditionalInformation)
 {
   nsTArray<nsString> additionalInformation;
   for (uint32_t i = 0; i < aCount; i++) {
@@ -489,9 +507,9 @@ TelephonyRequestParent::NotifyDialMMISuccessWithStrings(const nsAString& aStatus
 }
 
 NS_IMETHODIMP
-TelephonyRequestParent::NotifyDialMMISuccessWithCallForwardingOptions(const nsAString& aStatusMessage,
-                                                                      uint32_t aCount,
-                                                                      nsIMobileCallForwardingOptions** aAdditionalInformation)
+TelephonyRequestParent::DialCallback::NotifyDialMMISuccessWithCallForwardingOptions(const nsAString& aStatusMessage,
+                                                                                    uint32_t aCount,
+                                                                                    nsIMobileCallForwardingOptions** aAdditionalInformation)
 {
   nsTArray<nsIMobileCallForwardingOptions*> additionalInformation;
   for (uint32_t i = 0; i < aCount; i++) {
@@ -503,15 +521,15 @@ TelephonyRequestParent::NotifyDialMMISuccessWithCallForwardingOptions(const nsAS
 }
 
 NS_IMETHODIMP
-TelephonyRequestParent::NotifyDialMMIError(const nsAString& aError)
+TelephonyRequestParent::DialCallback::NotifyDialMMIError(const nsAString& aError)
 {
   return SendResponse(DialResponseMMIError(nsAutoString(aError),
                                            AdditionalInformation(mozilla::void_t())));
 }
 
 NS_IMETHODIMP
-TelephonyRequestParent::NotifyDialMMIErrorWithInfo(const nsAString& aError,
-                                                   uint16_t aInfo)
+TelephonyRequestParent::DialCallback::NotifyDialMMIErrorWithInfo(const nsAString& aError,
+                                                                 uint16_t aInfo)
 {
   return SendResponse(DialResponseMMIError(nsAutoString(aError),
                                            AdditionalInformation(aInfo)));

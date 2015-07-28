@@ -105,6 +105,12 @@ static PRLogModuleInfo* gMediaElementEventsLog;
 
 #include "mozilla/EventStateManager.h"
 
+#if defined(MOZ_B2G) && !defined(MOZ_GRAPHENE)
+// This controls the b2g specific of pausing the media element when the
+// AudioChannel tells us to mute it.
+#define PAUSE_MEDIA_ELEMENT_FROM_AUDIOCHANNEL
+#endif
+
 using namespace mozilla::layers;
 using mozilla::net::nsMediaFragmentURIParser;
 
@@ -1420,6 +1426,12 @@ HTMLMediaElement::Seek(double aTime,
   // aTime should be non-NaN.
   MOZ_ASSERT(!mozilla::IsNaN(aTime));
 
+  // Detect if user has interacted with element by seeking so that
+  // play will not be blocked when initiated by a script.
+  if (EventStateManager::IsHandlingUserInput() || nsContentUtils::IsCallerChrome()) {
+    mHasUserInteraction = true;
+  }
+
   StopSuspendingAfterFirstFrame();
 
   if (mSrcStream) {
@@ -2030,7 +2042,8 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mPlayingThroughTheAudioChannel(false),
     mDisableVideo(false),
     mPlayBlockedBecauseHidden(false),
-    mElementInTreeState(ELEMENT_NOT_INTREE)
+    mElementInTreeState(ELEMENT_NOT_INTREE),
+    mHasUserInteraction(false)
 {
   if (!gMediaElementLog) {
     gMediaElementLog = PR_NewLogModule("nsMediaElement");
@@ -2146,14 +2159,16 @@ HTMLMediaElement::Play(ErrorResult& aRv)
 {
   // Prevent media element from being auto-started by a script when
   // media.autoplay.enabled=false
-  nsRefPtr<TimeRanges> played(Played());
-  if (played->Length() == 0
+  if (!mHasUserInteraction
       && !IsAutoplayEnabled()
       && !EventStateManager::IsHandlingUserInput()
       && !nsContentUtils::IsCallerChrome()) {
     LOG(LogLevel::Debug, ("%p Blocked attempt to autoplay media.", this));
     return;
   }
+
+  // Play was not blocked so assume user interacted with the element.
+  mHasUserInteraction = true;
 
   StopSuspendingAfterFirstFrame();
   SetPlayedOrSeeked(true);
@@ -3995,7 +4010,7 @@ HTMLMediaElement::NotifyOwnerDocumentActivityChangedInternal()
   }
 
   bool pauseElement = !IsActive();
-#ifdef MOZ_B2G
+#ifdef PAUSE_MEDIA_ELEMENT_FROM_AUDIOCHANNEL
   pauseElement |= ComputedMuted();
 #endif
 
@@ -4439,7 +4454,7 @@ nsresult HTMLMediaElement::UpdateChannelMuteState(float aVolume, bool aMuted)
     }
   }
 
-#ifdef MOZ_B2G
+#ifdef PAUSE_MEDIA_ELEMENT_FROM_AUDIOCHANNEL
   SuspendOrResumeElement(ComputedMuted(), false);
 #endif
   return NS_OK;
@@ -4509,7 +4524,7 @@ NS_IMETHODIMP HTMLMediaElement::WindowVolumeChanged(float aVolume, bool aMuted)
 
   UpdateChannelMuteState(aVolume, aMuted);
 
-#ifdef MOZ_B2G
+#ifdef PAUSE_MEDIA_ELEMENT_FROM_AUDIOCHANNEL
   mPaused.SetCanPlay(!aMuted);
 #endif
 
