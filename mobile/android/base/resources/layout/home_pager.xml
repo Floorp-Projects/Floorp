@@ -18,6 +18,6 @@
                                          android:background="@color/about_page_header_grey"
                                          android:layout_gravity="top"
                                          gecko:strip="@drawable/home_tab_menu_strip"
-                                         gecko:tabContentStart="72dp" />
+                                         gecko:tabContentStart="@dimen/tab_strip_content_start" />
 
 </org.mozilla.gecko.home.HomePager>
