@@ -626,6 +626,14 @@ PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
     }
 #endif
 
+    case NPPVpluginIsPlayingAudio: {
+        NPError rv = NPERR_GENERIC_ERROR;
+        if (!CallNPN_SetValue_NPPVpluginIsPlayingAudio((NPBool)(intptr_t)aValue, &rv)) {
+            return NPERR_GENERIC_ERROR;
+        }
+        return rv;
+    }
+
     default:
         MOZ_LOG(GetPluginLog(), LogLevel::Warning,
                ("In PluginInstanceChild::NPN_SetValue: Unhandled NPPVariable %i (%s)",
