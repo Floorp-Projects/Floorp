@@ -1711,46 +1711,6 @@ else
     _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -D_MOZILLA_CONFIG_H_ $(ACDEFINES)'
 fi
 
-dnl gcc can come with its own linker so it is better to use the pass-thru calls
-dnl MKSHLIB_FORCE_ALL is used to force the linker to include all object
-dnl files present in an archive. MKSHLIB_UNFORCE_ALL reverts the linker to
-dnl normal behavior.
-dnl ========================================================
-MKSHLIB_FORCE_ALL=
-MKSHLIB_UNFORCE_ALL=
-
-if test "$COMPILE_ENVIRONMENT"; then
-if test "$GNU_CC"; then
-  AC_MSG_CHECKING(whether ld has archive extraction flags)
-  AC_CACHE_VAL(ac_cv_mkshlib_force_and_unforce,
-   [_SAVE_LDFLAGS=$LDFLAGS; _SAVE_LIBS=$LIBS
-    ac_cv_mkshlib_force_and_unforce="no"
-    exec 3<&0 <<LOOP_INPUT
-  force="-Wl,--whole-archive";   unforce="-Wl,--no-whole-archive"
-  force="-Wl,-z -Wl,allextract"; unforce="-Wl,-z -Wl,defaultextract"
-  force="-Wl,-all";              unforce="-Wl,-none"
-LOOP_INPUT
-    while read line
-    do
-      eval $line
-      LDFLAGS=$force
-      LIBS=$unforce
-      AC_TRY_LINK(,, ac_cv_mkshlib_force_and_unforce=$line; break)
-    done
-    exec 0<&3 3<&-
-    LDFLAGS=$_SAVE_LDFLAGS; LIBS=$_SAVE_LIBS
-   ])
-  if test "$ac_cv_mkshlib_force_and_unforce" = "no"; then
-    AC_MSG_RESULT(no)
-  else
-    AC_MSG_RESULT(yes)
-    eval $ac_cv_mkshlib_force_and_unforce
-    MKSHLIB_FORCE_ALL=$force
-    MKSHLIB_UNFORCE_ALL=$unforce
-  fi
-fi # GNU_CC
-fi # COMPILE_ENVIRONMENT
-
 dnl ========================================================
 dnl Checking for 64-bit OS
 dnl ========================================================
@@ -2276,8 +2236,6 @@ ia64*-hpux*)
         IMPORT_LIB_SUFFIX=lib
         MKSHLIB='$(LD) -NOLOGO -DLL -OUT:$@ -PDB:$(LINK_PDBFILE) $(DSO_LDOPTS)'
         MKCSHLIB='$(LD) -NOLOGO -DLL -OUT:$@ -PDB:$(LINK_PDBFILE) $(DSO_LDOPTS)'
-        MKSHLIB_FORCE_ALL=
-        MKSHLIB_UNFORCE_ALL=
         dnl Set subsystem version 5 for Windows XP.
         if test "$CPU_ARCH" = "x86"; then
             WIN32_SUBSYSTEM_VERSION=5.01
@@ -2456,8 +2414,6 @@ ia64*-hpux*)
         DSO_LDOPTS='-shared'
     fi
     # This will fail on a.out systems prior to 1.5.1_ALPHA.
-    MKSHLIB_FORCE_ALL='-Wl,--whole-archive'
-    MKSHLIB_UNFORCE_ALL='-Wl,--no-whole-archive'
     if test "$LIBRUNPATH"; then
         DSO_LDOPTS="-Wl,-R$LIBRUNPATH $DSO_LDOPTS"
     fi
@@ -2507,8 +2463,6 @@ ia64*-hpux*)
        MOZ_OPTIMIZE_FLAGS="-xO4"
        MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_FLAGS) $(DSO_LDOPTS) -h $(DSO_SONAME) -o $@'
        MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_FLAGS) $(DSO_LDOPTS) -h $(DSO_SONAME) -o $@'
-       MKSHLIB_FORCE_ALL='-z allextract'
-       MKSHLIB_UNFORCE_ALL='-z defaultextract'
        DSO_LDOPTS='-G'
        AR_LIST="$AR t"
        AR_EXTRACT="$AR x"
@@ -2549,8 +2503,6 @@ ia64*-hpux*)
     else
        LDFLAGS="$LDFLAGS -Wl,-z,ignore -Wl,-R,'\$\$ORIGIN:\$\$ORIGIN/..' -Wl,-z,lazyload -Wl,-z,combreloc -Wl,-z,muldefs"
        LIBS="-lc $LIBS"
-       MKSHLIB_FORCE_ALL='-Wl,-z -Wl,allextract'
-       MKSHLIB_UNFORCE_ALL='-Wl,-z -Wl,defaultextract'
        ASFLAGS="$ASFLAGS -fPIC"
        DSO_LDOPTS='-shared'
        WARNINGS_AS_ERRORS='-Werror'
@@ -8978,8 +8930,6 @@ AC_SUBST(MOZ_CHROME_FILE_FORMAT)
 AC_SUBST(WRAP_LDFLAGS)
 AC_SUBST(MKSHLIB)
 AC_SUBST(MKCSHLIB)
-AC_SUBST(MKSHLIB_FORCE_ALL)
-AC_SUBST(MKSHLIB_UNFORCE_ALL)
 AC_SUBST(DSO_CFLAGS)
 AC_SUBST(DSO_PIC_CFLAGS)
 AC_SUBST(DSO_LDOPTS)
