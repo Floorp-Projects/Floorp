@@ -2855,6 +2855,13 @@ TextPropertyEditor.prototype = {
   },
 
   /**
+   * Get the rule to the current text property
+   */
+  get rule() {
+    return this.prop.rule;
+  },
+
+  /**
    * Create the property editor's DOM.
    */
   _create: function() {
@@ -3004,7 +3011,7 @@ TextPropertyEditor.prototype = {
    * @return {string} the stylesheet's href.
    */
   get sheetHref() {
-    let domRule = this.prop.rule.domRule;
+    let domRule = this.rule.domRule;
     if (domRule) {
       return domRule.href || domRule.nodeHref;
     }
@@ -3068,14 +3075,14 @@ TextPropertyEditor.prototype = {
 
     // Combine the property's value and priority into one string for
     // the value.
-    let store = this.prop.rule.elementStyle.store;
-    let val = store.userProperties.getProperty(this.prop.rule.style, name,
+    let store = this.rule.elementStyle.store;
+    let val = store.userProperties.getProperty(this.rule.style, name,
                                                this.prop.value);
     if (this.prop.priority) {
       val += " !" + this.prop.priority;
     }
 
-    let propDirty = store.userProperties.contains(this.prop.rule.style, name);
+    let propDirty = store.userProperties.contains(this.rule.style, name);
 
     if (propDirty) {
       this.element.setAttribute("dirty", "");
