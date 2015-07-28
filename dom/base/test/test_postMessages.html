@@ -1,0 +1,256 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for postMessages cloning/transferring objects</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<input id="fileList" type="file"></input>
+<script type="application/javascript;version=1.7">
+
+function getType(a) {
+  if (a === null || a === undefined)
+    return 'null';
+
+  if (Array.isArray(a))
+    return 'array';
+
+  if (typeof a == 'object')
+    return 'object';
+
+  return 'primitive';
+}
+
+function compare(a, b) {
+  is (getType(a), getType(b), 'Type matches');
+
+  var type = getType(a);
+  if (type == 'array') {
+    is (a.length, b.length, 'Array.length matches');
+    for (var i = 0; i < a.length; ++i) {
+      compare(a[i], b[i]);
+    }
+
+    return;
+  }
+
+  if (type == 'object') {
+    ok (a !== b, 'They should not match');
+
+    var aProps = [];
+    for (var p in a) aProps.push(p);
+
+    var bProps = [];
+    for (var p in b) bProps.push(p);
+
+    is (aProps.length, bProps.length, 'Props match');
+    is (aProps.sort().toSource(), bProps.sort().toSource(), 'Props match - using toSource()');
+
+    for (var p in a) {
+      compare(a[p], b[p]);
+    }
+
+    return;
+  }
+
+  if (type != 'null') {
+    is (a.toSource(), b.toSource(), 'Matching using toSource()');
+  }
+}
+
+var clonableObjects = [
+  'hello world',
+  123,
+  null,
+  true,
+  new Date(),
+  [ 1, 'test', true, new Date() ],
+  { a: true, b:  null, c: new Date(), d: [ true, false, {} ] },
+  new Blob([123], { type: 'plain/text' }),
+  new ImageData(2, 2),
+];
+
+function create_fileList() {
+  var url = SimpleTest.getTestFileURL("script_postmessages_fileList.js");
+  var script = SpecialPowers.loadChromeScript(url);
+
+  function onOpened(message) {
+    var fileList = document.getElementById('fileList');
+    SpecialPowers.wrap(fileList).mozSetFileArray([message.file]);
+
+    // Just a simple test
+    var domFile = fileList.files[0];
+    is(domFile.name, "prefs.js", "fileName should be prefs.js");
+
+    clonableObjects.push(fileList.files);
+    script.destroy();
+    next();
+  }
+
+  script.addMessageListener("file.opened", onOpened);
+  script.sendAsyncMessage("file.open");
+}
+
+function runTests(obj) {
+  ok(('clonableObjects' in obj) &&
+     ('transferableObjects' in obj) &&
+     (obj.clonableObjects || obj.transferableObjects), "We must run some test!");
+
+  // cloning tests
+  new Promise(function(resolve, reject) {
+    if (!obj.clonableObjects) {
+      resolve();
+      return;
+    }
+
+    var clonableObjectsId = 0;
+    function runClonableTest() {
+      if (clonableObjectsId >= clonableObjects.length) {
+        resolve();
+        return;
+      }
+
+      var object = clonableObjects[clonableObjectsId++];
+      obj.send(object, []).then(function(received) {
+        compare(received.data, object);
+        runClonableTest();
+      });
+    }
+
+    runClonableTest();
+  })
+
+  // transfering tests
+  .then(function() {
+    if (!obj.transferableObjects) {
+      return;
+    }
+
+    // MessagePort
+    return new Promise(function(r, rr) {
+      var mc = new MessageChannel();
+      obj.send(42, [mc.port1]).then(function(received) {
+        ok(received.ports.length, 1, "MessagePort has been transferred");
+        mc.port2.postMessage("hello world");
+        received.ports[0].onmessage = function(e) {
+          ok(e.data, "hello world", "Ports are connected!");
+          r();
+        }
+      });
+    });
+  })
+
+  // done.
+  .then(function() {
+    obj.finished();
+  });
+}
+
+// PostMessage to the same window.
+function test_windowToWindow() {
+  info("Testing window to window");
+  var resolve;
+
+  onmessage = function(e) {
+    if (!resolve) {
+      ok(false, "Unexpected message!");
+      return;
+    }
+
+    let tmp = resolve;
+    resolve = null;
+    tmp({ data: e.data, ports: e.ports });
+  }
+
+  runTests({
+    clonableObjects: true,
+    transferableObjects: true,
+    send: function(what, ports) {
+      return new Promise(function(r, rr) {
+        resolve = r;
+        postMessage(what, '*', ports);
+      });
+    },
+
+    finished: function() {
+      onmessage = null;
+      next();
+    }
+  });
+}
+
+// PostMessage to iframe
+function test_windowToIframe() {
+  info("Testing window to iframe");
+  test_windowToIframeURL('iframe_postMessages.html');
+}
+
+// PostMessage to cross-origin iframe
+function test_windowToCrossOriginIframe() {
+  info("Testing window to cross-origin iframe");
+  test_windowToIframeURL('http://example.com/tests/dom/base/test/iframe_postMessages.html');
+}
+
+// iframe helper class
+function test_windowToIframeURL(url) {
+  var resolve;
+
+  onmessage = function(e) {
+    if (!resolve) {
+      ok(false, "Unexpected message!");
+      return;
+    }
+
+    let tmp = resolve;
+    resolve = null;
+    tmp({ data: e.data, ports: e.ports });
+  }
+
+  var ifr = document.createElement('iframe');
+  ifr.src = url;
+  ifr.onload = function() {
+    runTests({
+      clonableObjects: true,
+      transferableObjects: true,
+      send: function(what, ports) {
+        return new Promise(function(r, rr) {
+          resolve = r;
+          ifr.contentWindow.postMessage(what, '*', ports);
+        });
+      },
+
+      finished: function() {
+        document.body.removeChild(ifr);
+        onmessage = null;
+        next();
+      }
+    });
+  }
+  document.body.appendChild(ifr);
+}
+
+var tests = [
+  create_fileList,
+
+  test_windowToWindow,
+  test_windowToIframe,
+  test_windowToCrossOriginIframe,
+];
+
+function next() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["dom.messageChannel.enabled", true]]}, next);
+</script>
+</body>
+</html>
