@@ -98,7 +98,7 @@ public:
 
   virtual const nsTArray<nsRefPtr<BlobImpl>>* GetSubBlobImpls() const override
   {
-    return &mBlobImpls;
+    return mBlobImpls.Length() ? &mBlobImpls : nullptr;
   }
 
   virtual void GetMozFullPathInternal(nsAString& aFullPath,
