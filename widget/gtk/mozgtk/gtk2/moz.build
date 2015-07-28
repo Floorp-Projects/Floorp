@@ -12,7 +12,9 @@ DEFINES['GTK3_SYMBOLS'] = True
 
 SharedLibrary('mozgtk2')
 
-SONAME = 'mozgtk'
+SHARED_LIBRARY_NAME = 'mozgtk'
+
+FINAL_TARGET = 'dist/bin/gtk2'
 
 # If LDFLAGS contains -Wl,--as-needed or if it's the default for the toolchain,
 # we need to add -Wl,--no-as-needed before the gtk libraries, otherwise the

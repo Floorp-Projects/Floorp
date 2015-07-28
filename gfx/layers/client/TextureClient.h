@@ -243,6 +243,7 @@ public:
 
   /**
    * Returns a DrawTarget to draw into the TextureClient.
+   * This function should never be called when not on the main thread!
    *
    * This must never be called on a TextureClient that is not sucessfully locked.
    * When called several times within one Lock/Unlock pair, this method should
@@ -267,6 +268,12 @@ public:
    *
    */
   virtual gfx::DrawTarget* BorrowDrawTarget() { return nullptr; }
+
+  /**
+   * This function can be used to update the contents of the TextureClient
+   * off the main thread.
+   */
+  virtual void UpdateFromSurface(gfx::DataSourceSurface* aSurface) { MOZ_CRASH(); }
 
   // TextureClients that can expose a DrawTarget should override this method.
   virtual gfx::SurfaceFormat GetFormat() const
@@ -585,6 +592,8 @@ public:
   virtual bool CanExposeDrawTarget() const override { return true; }
 
   virtual gfx::DrawTarget* BorrowDrawTarget() override;
+
+  virtual void UpdateFromSurface(gfx::DataSourceSurface* aSurface) override;
 
   virtual bool AllocateForSurface(gfx::IntSize aSize,
                                   TextureAllocationFlags aFlags = ALLOC_DEFAULT) override;

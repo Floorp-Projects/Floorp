@@ -41,6 +41,13 @@ leak:nr_reg_set
 # Additional WebRTC leak suppressions added for Mochitest 3.
 leak:mozilla::TransportLayerDtls::Setup
 
+# Bug 1187424 - DesktopApplication does not free any of its string members.
+leak:webrtc::DesktopApplication::
+
+# Bug 1187518 - SCTP leaks in child process while running WebRTC tests.
+leak:recv_function_udp
+
+
 ###
 ### Many leaks only affect some test suites.  The suite annotations are not checked.
 ###
@@ -84,6 +91,22 @@ leak:_PR_Getfd
 
 # Bug 1028483 - The XML parser sometimes leaks an object. bc3
 leak:processInternalEntity
+
+# Bug 1187421 - With e10s, NSS does not always free the error stack. m1.
+leak:nss_ClearErrorStack
+
+# Bug 1090570 - IPC Transport lifetime is not always managed correctly.
+leak:mozilla::ipc::OpenDescriptor
+leak:IPC::Channel::ChannelImpl::OutputQueuePush
+leak:IPC::Channel::Channel
+leak:base::MessagePumpLibevent::WatchFileDescriptor
+
+# Bug 1122045 - Leaks in MessageLoop::MessageLoop()
+leak:MessageLoop::MessageLoop
+# This may not actually be related to MessageLoop.
+leak:base::WaitableEvent::TimedWait
+leak:MessageLoop::PostTask_Helper
+
 
 ###
 ### Leaks with system libraries in their stacks. These show up across a number of tests.

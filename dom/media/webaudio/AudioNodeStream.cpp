@@ -411,7 +411,7 @@ AudioNodeStream::AccumulateInputChunk(uint32_t aInputIndex, const AudioChunk& aC
 
   for (uint32_t c = 0; c < channels.Length(); ++c) {
     const float* inputData = static_cast<const float*>(channels[c]);
-    float* outputData = static_cast<float*>(const_cast<void*>(aBlock->mChannelData[c]));
+    float* outputData = aBlock->ChannelFloatsForWrite(c);
     if (inputData) {
       if (aInputIndex == 0) {
         AudioBlockCopyChannelWithScale(inputData, aChunk.mVolume, outputData);

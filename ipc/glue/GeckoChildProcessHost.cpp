@@ -125,7 +125,8 @@ GeckoChildProcessHost::~GeckoChildProcessHost()
     SharedMemoryBasic::CleanupForPid(mChildProcessHandle);
 #endif
     ProcessWatcher::EnsureProcessTerminated(mChildProcessHandle
-#if defined(NS_BUILD_REFCNT_LOGGING)
+#if defined(NS_BUILD_REFCNT_LOGGING) || defined(MOZ_ASAN)
+    // If we're doing leak logging, shutdown can be slow.
                                             , false // don't "force"
 #endif
     );
@@ -600,32 +601,19 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
     path += "/lib";
 #  endif  // MOZ_WIDGET_ANDROID
     const char *ld_library_path = PR_GetEnv("LD_LIBRARY_PATH");
-    nsCString new_ld_lib_path;
-    if (ld_library_path && *ld_library_path) {
-      new_ld_lib_path.Assign(path.get());
-      new_ld_lib_path.Append(':');
-      new_ld_lib_path.Append(ld_library_path);
-      newEnvVars["LD_LIBRARY_PATH"] = new_ld_lib_path.get();
-    } else {
-      newEnvVars["LD_LIBRARY_PATH"] = path.get();
-    }
+    nsCString new_ld_lib_path(path.get());
 
 #  if (MOZ_WIDGET_GTK == 3)
     if (mProcessType == GeckoProcessType_Plugin) {
-      const char *ld_preload = PR_GetEnv("LD_PRELOAD");
-      nsCString new_ld_preload;
-
-      new_ld_preload.Assign(path.get());
-      new_ld_preload.AppendLiteral("/" DLL_PREFIX "mozgtk2" DLL_SUFFIX);
-
-      if (ld_preload && *ld_preload) {
-        new_ld_preload.AppendLiteral(":");
-        new_ld_preload.Append(ld_preload);
-      }
-      newEnvVars["LD_PRELOAD"] = new_ld_preload.get();
+      new_ld_lib_path.Append("/gtk2:");
+      new_ld_lib_path.Append(path.get());
     }
-#  endif // MOZ_WIDGET_GTK
-
+#endif
+    if (ld_library_path && *ld_library_path) {
+      new_ld_lib_path.Append(':');
+      new_ld_lib_path.Append(ld_library_path);
+    }
+    newEnvVars["LD_LIBRARY_PATH"] = new_ld_lib_path.get();
 
 # elif OS_MACOSX
     newEnvVars["DYLD_LIBRARY_PATH"] = path.get();
