@@ -167,7 +167,12 @@ enum nsChangeHint {
   /**
    * This will cause rendering observers to be invalidated.
    */
-  nsChangeHint_InvalidateRenderingObservers = 0x400000
+  nsChangeHint_InvalidateRenderingObservers = 0x400000,
+
+  /**
+   * Indicates that the style changes the computed BSize --- e.g. 'height'.
+   */
+  nsChangeHint_UpdateComputedBSize = 0x1000000,
 
   // IMPORTANT NOTE: When adding new hints, consider whether you need to
   // add them to NS_HintsNotHandledForDescendantsIn() below.  Please also
@@ -232,7 +237,8 @@ inline bool NS_IsHintSubset(nsChangeHint aSubset, nsChangeHint aSuperSet) {
           nsChangeHint_AddOrRemoveTransform | \
           nsChangeHint_BorderStyleNoneChange | \
           nsChangeHint_NeedReflow | \
-          nsChangeHint_ClearAncestorIntrinsics)
+          nsChangeHint_ClearAncestorIntrinsics | \
+          nsChangeHint_UpdateComputedBSize)
 
 inline nsChangeHint NS_HintsNotHandledForDescendantsIn(nsChangeHint aChangeHint) {
   nsChangeHint result = nsChangeHint(aChangeHint & (
@@ -246,7 +252,8 @@ inline nsChangeHint NS_HintsNotHandledForDescendantsIn(nsChangeHint aChangeHint)
     nsChangeHint_ChildrenOnlyTransform |
     nsChangeHint_RecomputePosition |
     nsChangeHint_AddOrRemoveTransform |
-    nsChangeHint_BorderStyleNoneChange));
+    nsChangeHint_BorderStyleNoneChange |
+    nsChangeHint_UpdateComputedBSize));
 
   if (!NS_IsHintSubset(nsChangeHint_NeedDirtyReflow, aChangeHint) &&
       NS_IsHintSubset(nsChangeHint_NeedReflow, aChangeHint)) {

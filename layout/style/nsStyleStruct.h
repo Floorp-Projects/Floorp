@@ -1345,7 +1345,8 @@ struct nsStylePosition {
   static nsChangeHint MaxDifference() {
     return NS_CombineHint(NS_STYLE_HINT_REFLOW,
                           nsChangeHint(nsChangeHint_RecomputePosition |
-                                       nsChangeHint_UpdateParentOverflow));
+                                       nsChangeHint_UpdateParentOverflow |
+                                       nsChangeHint_UpdateComputedBSize));
   }
   static nsChangeHint MaxDifferenceNeverInherited() {
     // CalcDifference can return both nsChangeHint_ClearAncestorIntrinsics and
