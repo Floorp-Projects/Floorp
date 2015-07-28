@@ -126,6 +126,7 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["layers.componentalpha.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
   ["layers.d3d11.disable-warp", TelemetryEnvironment.RECORD_PREF_VALUE],
   ["layers.d3d11.force-warp", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["layers.offmainthreadcomposition.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
   ["layers.prefer-d3d9", TelemetryEnvironment.RECORD_PREF_VALUE],
   ["layers.prefer-opengl", TelemetryEnvironment.RECORD_PREF_VALUE],
   ["layout.css.devPixelsPerPx", TelemetryEnvironment.RECORD_PREF_VALUE],
