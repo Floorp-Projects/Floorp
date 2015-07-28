@@ -11,10 +11,9 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIIPCSerializableURI.h"
-#include "nsINestedURI.h"
 
-class nsMozIconURI : public nsIMozIconURI
-                   , public nsIIPCSerializableURI
+class nsMozIconURI final : public nsIMozIconURI
+                         , public nsIIPCSerializableURI
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -39,24 +38,6 @@ protected:
                        // kSizeStrings
   int32_t mIconState;  // -1 if not specified, otherwise index into
                        // kStateStrings
-};
-
-class nsNestedMozIconURI : public nsMozIconURI
-                         , public nsINestedURI
-{
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_FORWARD_NSIURI(nsMozIconURI::)
-  NS_FORWARD_NSIMOZICONURI(nsMozIconURI::)
-  NS_FORWARD_NSIIPCSERIALIZABLEURI(nsMozIconURI::)
-
-  NS_DECL_NSINESTEDURI
-
-  // nsNestedMozIconURI
-  nsNestedMozIconURI();
-
-protected:
-  virtual ~nsNestedMozIconURI();
-
 };
 
 #endif // mozilla_image_decoders_icon_nsIconURI_h
