@@ -27,7 +27,7 @@ proto = {};
 obj = Object.preventExtensions(Object.create(proto));
 assertEq(Reflect.setPrototypeOf(obj, {}), false);
 assertEq(Reflect.setPrototypeOf(obj, null), false);
-assertEq(Reflect.setPrototypeOf(obj, proto), false);  // even if not changing anything
+assertEq(Reflect.setPrototypeOf(obj, proto), true);  // except if not changing anything
 
 // Return false rather than create a [[Prototype]] cycle.
 obj = {};
