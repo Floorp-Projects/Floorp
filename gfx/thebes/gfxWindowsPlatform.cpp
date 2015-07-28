@@ -1909,15 +1909,7 @@ bool DoesD3D11TextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT forma
 
 bool DoesD3D11TextureSharingWork(ID3D11Device *device)
 {
-  static bool checked;
-  static bool result;
-
-  if (checked)
-    return result;
-  checked = true;
-
-  result = DoesD3D11TextureSharingWorkInternal(device, DXGI_FORMAT_B8G8R8A8_UNORM, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
-  return result;
+  return DoesD3D11TextureSharingWorkInternal(device, DXGI_FORMAT_B8G8R8A8_UNORM, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
 }
 
 bool DoesD3D11AlphaTextureSharingWork(ID3D11Device *device)
