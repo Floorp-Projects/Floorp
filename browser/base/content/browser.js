@@ -6635,6 +6635,7 @@ var gIdentityHandler = {
   IDENTITY_MODE_MIXED_ACTIVE_BLOCKED                   : "verifiedDomain mixedContent mixedActiveBlocked",  // SSL with unauthenticated active content blocked; no unauthenticated display content
   IDENTITY_MODE_MIXED_ACTIVE_BLOCKED_IDENTIFIED        : "verifiedIdentity mixedContent mixedActiveBlocked",  // SSL with unauthenticated active content blocked; no unauthenticated display content
   IDENTITY_MODE_CHROMEUI                               : "chromeUI",         // Part of the product's UI
+  IDENTITY_MODE_FILE_URI                               : "fileURI",  // File path
 
   // Cache the most recent SSLStatus and Location seen in checkIdentity
   _lastStatus : null,
@@ -6850,7 +6851,20 @@ var gIdentityHandler = {
         this.setMode(this.IDENTITY_MODE_USES_WEAK_CIPHER);
       }
     } else {
-      this.setMode(this.IDENTITY_MODE_UNKNOWN);
+      // Create a channel for the sole purpose of getting the resolved URI
+      // of the request to determine if it's loaded from the file system.
+      let resolvedURI = NetUtil.newChannel({uri,loadUsingSystemPrincipal:true}).URI;
+      if (resolvedURI.schemeIs("jar")) {
+        // Given a URI "jar:<jar-file-uri>!/<jar-entry>"
+        // create a new URI using <jar-file-uri>!/<jar-entry>
+        resolvedURI = NetUtil.newURI(resolvedURI.path);
+      }
+
+      if (resolvedURI.schemeIs("file")) {
+        this.setMode(this.IDENTITY_MODE_FILE_URI);
+      } else {
+        this.setMode(this.IDENTITY_MODE_UNKNOWN);
+      }
     }
 
     // Show the doorhanger when:

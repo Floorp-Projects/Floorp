@@ -680,6 +680,7 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 
 <!ENTITY identity.connectionSecure "Secure Connection">
 <!ENTITY identity.connectionNotSecure "Connection is Not Secure">
+<!ENTITY identity.connectionFile "This page is stored on your computer.">
 <!ENTITY identity.connectionVerified "&brandShortName; verified that you are securely connected to this site, run by:">
 <!ENTITY identity.connectionInternal "This is a secure &brandShortName; page.">
 
