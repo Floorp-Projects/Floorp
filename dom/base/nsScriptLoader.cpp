@@ -638,7 +638,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
         // loop gets a chance to spin.
 
         // KVKV TODO: Instead of processing immediately, try off-thread-parsing
-        // it and only schedule a ProcessRequest if that fails.
+        // it and only schedule a pending ProcessRequest if that fails.
         ProcessPendingRequestsAsync();
       } else {
         mLoadingAsyncRequests.AppendElement(request);
@@ -687,16 +687,44 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
       }
       return true;
     }
-    if (request->IsDoneLoading() && ReadyToExecuteScripts()) {
-      // The request has already been loaded and there are no pending style
-      // sheets. If the script comes from the network stream, cheat for
-      // performance reasons and avoid a trip through the event loop.
+
+    if (request->IsDoneLoading()) {
       if (aElement->GetParserCreated() == FROM_PARSER_NETWORK) {
+        // The request has already been loaded.  Attempt to immediately
+        // start an off-thread compile for it.
+        nsresult rv = AttemptAsyncScriptCompile(request);
+        if (rv == NS_OK) {
+          // Off-thread compile started.  Set the script as blocking the parser
+          // and continue.  Script will be executed when ready.
+          NS_ASSERTION(!mParserBlockingRequest,
+              "There can be only one parser-blocking script at a time");
+          NS_ASSERTION(mXSLTRequests.isEmpty(),
+              "Parser-blocking scripts and XSLT scripts in the same doc!");
+          mParserBlockingRequest = request;
+          return true;
+        }
+
+        // If off-thread compile errored, return immediately, without blocking parser.
+        // Script is discarded.
+        if (rv != NS_ERROR_FAILURE) {
+          return false;
+        }
+      }
+
+      // If we get here, it means the request is fully loaded, and is either
+      // from a document.write, or a network-loaded script tag that for which
+      // off-thread compile was rejected.
+
+      // If the script comes from the network stream, and document is ready
+      // to execute scripts, cheat for performance reasons and avoid a trip
+      // through the event loop.
+      if (aElement->GetParserCreated() == FROM_PARSER_NETWORK &&
+          ReadyToExecuteScripts()) {
         return ProcessRequest(request) == NS_ERROR_HTMLPARSER_BLOCK;
       }
-      // Otherwise, we've got a document.written script, make a trip through
-      // the event loop to hide the preload effects from the scripts on the
-      // Web page.
+
+      // Document is not ready to execute scripts (style sheet blocking
+      // execution), or script was introduced by a document.write.
       NS_ASSERTION(!mParserBlockingRequest,
           "There can be only one parser-blocking script at a time");
       NS_ASSERTION(mXSLTRequests.isEmpty(),
@@ -705,8 +733,8 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
       ProcessPendingRequestsAsync();
       return true;
     }
-    // The script hasn't loaded yet or there's a style sheet blocking it.
-    // The script will be run when it loads or the style sheet loads.
+
+    // The script hasn't loaded yet, it will be run when it loads.
     NS_ASSERTION(!mParserBlockingRequest,
         "There can be only one parser-blocking script at a time");
     NS_ASSERTION(mXSLTRequests.isEmpty(),
@@ -802,6 +830,23 @@ nsScriptLoader::ProcessOffThreadRequest(nsScriptLoadRequest* aRequest)
 {
   MOZ_ASSERT(aRequest->mProgress == nsScriptLoadRequest::Progress_Compiling);
   aRequest->mProgress = nsScriptLoadRequest::Progress_DoneCompiling;
+  if (aRequest == mParserBlockingRequest) {
+    if (!ReadyToExecuteScripts()) {
+      // If not ready to execute scripts, schedule an async call to
+      // ProcessPendingRequests to handle it.
+      ProcessPendingRequestsAsync();
+      return NS_OK;
+    }
+
+    // Same logic as in top of ProcessPendingRequests.
+    mParserBlockingRequest = nullptr;
+    UnblockParser(aRequest);
+    ProcessRequest(aRequest);
+    mDocument->UnblockOnload(false);
+    ContinueParserAsync(aRequest);
+    return NS_OK;
+  }
+
   nsresult rv = ProcessRequest(aRequest);
   mDocument->UnblockOnload(false);
   return rv;
@@ -850,9 +895,10 @@ OffThreadScriptLoaderCallback(void *aToken, void *aCallbackData)
 }
 
 nsresult
-nsScriptLoader::AttemptAsyncScriptParse(nsScriptLoadRequest* aRequest)
+nsScriptLoader::AttemptAsyncScriptCompile(nsScriptLoadRequest* aRequest)
 {
-  if (!aRequest->mElement->GetScriptAsync() || aRequest->mIsInline) {
+  // Don't off-thread compile inline scripts.
+  if (aRequest->mIsInline) {
     return NS_ERROR_FAILURE;
   }
 
@@ -893,7 +939,8 @@ nsScriptLoader::AttemptAsyncScriptParse(nsScriptLoadRequest* aRequest)
 }
 
 nsresult
-nsScriptLoader::CompileOffThreadOrProcessRequest(nsScriptLoadRequest* aRequest)
+nsScriptLoader::CompileOffThreadOrProcessRequest(nsScriptLoadRequest* aRequest,
+                                                 bool* oCompiledOffThread)
 {
   NS_ASSERTION(nsContentUtils::IsSafeToRunScript(),
                "Processing requests when running scripts is unsafe.");
@@ -902,8 +949,11 @@ nsScriptLoader::CompileOffThreadOrProcessRequest(nsScriptLoadRequest* aRequest)
   NS_ASSERTION(!aRequest->InCompilingStage(),
                "Candidate for off-thread compile is already in compiling stage.");
 
-  nsresult rv = AttemptAsyncScriptParse(aRequest);
+  nsresult rv = AttemptAsyncScriptCompile(aRequest);
   if (rv != NS_ERROR_FAILURE) {
+    if (oCompiledOffThread && rv == NS_OK) {
+      *oCompiledOffThread = true;
+    }
     return rv;
   }
 
@@ -1194,8 +1244,12 @@ nsScriptLoader::ProcessPendingRequests()
       mParserBlockingRequest->IsReadyToRun() &&
       ReadyToExecuteScripts()) {
     request.swap(mParserBlockingRequest);
+    bool offThreadCompiled = request->mProgress == nsScriptLoadRequest::Progress_DoneCompiling;
     UnblockParser(request);
     ProcessRequest(request);
+    if (offThreadCompiled) {
+      mDocument->UnblockOnload(false);
+    }
     ContinueParserAsync(request);
   }
 
@@ -1585,6 +1639,23 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
 
   // Mark this as loaded
   aRequest->mProgress = nsScriptLoadRequest::Progress_DoneLoading;
+
+  // If this is currently blocking the parser, attempt to compile it off-main-thread.
+  if (aRequest == mParserBlockingRequest) {
+    nsresult rv = AttemptAsyncScriptCompile(aRequest);
+    if (rv == NS_OK) {
+      NS_ASSERTION(aRequest->mProgress == nsScriptLoadRequest::Progress_Compiling,
+          "Request should be off-thread compiling now.");
+      return NS_OK;
+    }
+
+    // If off-thread compile errored, return the error.
+    if (rv != NS_ERROR_FAILURE) {
+      return rv;
+    }
+
+    // If off-thread compile was rejected, continue with regular processing.
+  }
 
   // And if it's async, move it to the loaded list.  aRequest->mIsAsync really
   // _should_ be in a list, but the consequences if it's not are bad enough we
