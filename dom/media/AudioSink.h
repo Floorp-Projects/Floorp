@@ -12,6 +12,7 @@
 
 #include "mozilla/dom/AudioChannelBinding.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/ReentrantMonitor.h"
 
@@ -57,7 +58,20 @@ public:
   void NotifyData();
 
 private:
+  enum State {
+    AUDIOSINK_STATE_INIT,
+    AUDIOSINK_STATE_PLAYING,
+    AUDIOSINK_STATE_COMPLETE,
+    AUDIOSINK_STATE_SHUTDOWN,
+    AUDIOSINK_STATE_ERROR
+  };
+
   ~AudioSink() {}
+
+  void DispatchTask(already_AddRefed<nsIRunnable>&& event);
+  void SetState(State aState);
+  void ScheduleNextLoop();
+  void ScheduleNextLoopCrossThread();
 
   // The main loop for the audio thread. Sent to the thread as
   // an nsRunnableMethod. This continually does blocking writes to
@@ -73,13 +87,19 @@ private:
 
   bool ExpectMoreAudioData();
 
-  // Wait on the decoder monitor until playback is ready or the sink is told to shut down.
-  void WaitForAudioToPlay();
+  // Return true if playback is not ready and the sink is not told to shut down.
+  bool WaitingForAudioToPlay();
 
   // Check if the sink has been told to shut down, resuming mAudioStream if
   // not.  Returns true if processing should continue, false if AudioLoop
   // should shutdown.
   bool IsPlaybackContinuing();
+
+  // Write audio samples or silence to the audio hardware.
+  // Return false if any error. Called on the audio thread.
+  bool PlayAudio();
+
+  void FinishAudioLoop();
 
   // Write aFrames of audio frames of silence to the audio hardware. Returns
   // the number of frames actually written. The write size is capped at
@@ -114,9 +134,15 @@ private:
   }
 
   void AssertOnAudioThread();
+  void AssertNotOnAudioThread();
 
   MediaQueue<AudioData>& mAudioQueue;
   mutable ReentrantMonitor mMonitor;
+
+  // There members are accessed on the audio thread only.
+  State mState;
+  Maybe<State> mPendingState;
+  bool mAudioLoopScheduled;
 
   // Thread for pushing audio onto the audio hardware.
   // The "audio push thread".

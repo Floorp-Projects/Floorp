@@ -74,12 +74,6 @@ WebGLUtil = (function() {
       } catch(e) {}
 
       if (!gl) {
-        try {
-          gl = canvas.getContext('experimental-webgl2');
-        } catch(e) {}
-      }
-
-      if (!gl) {
         todo(false, 'WebGL2 is not supported');
         onFinished();
         return;

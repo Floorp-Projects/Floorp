@@ -51,9 +51,6 @@ protected:
   ~DataContainerEvent() {}
 
 private:
-  static PLDHashOperator
-    TraverseEntry(const nsAString& aKey, nsIVariant* aDataItem, void* aUserArg);
-
   nsInterfaceHashtable<nsStringHashKey, nsIVariant> mData;
 };
 

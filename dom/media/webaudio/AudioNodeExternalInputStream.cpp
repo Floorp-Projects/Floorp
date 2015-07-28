@@ -49,8 +49,7 @@ CopyChunkToBlock(const AudioChunk& aInput, AudioChunk *aBlock,
 
   uint32_t duration = aInput.GetDuration();
   for (uint32_t c = 0; c < blockChannels; ++c) {
-    float* outputData =
-      static_cast<float*>(const_cast<void*>(aBlock->mChannelData[c])) + aOffsetInBlock;
+    float* outputData = aBlock->ChannelFloatsForWrite(c) + aOffsetInBlock;
     if (channels[c]) {
       switch (aInput.mBufferFormat) {
       case AUDIO_FORMAT_FLOAT32:
