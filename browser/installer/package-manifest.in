@@ -638,9 +638,13 @@
 @RESPATH@/components/nsUrlClassifierHashCompleter.js
 @RESPATH@/components/nsUrlClassifierListManager.js
 @RESPATH@/components/nsUrlClassifierLib.js
-@RESPATH@/components/PrivateBrowsingTrackingProtectionWhitelist.js
 @RESPATH@/components/url-classifier.xpt
 #endif
+
+; Private Browsing
+@RESPATH@/components/privatebrowsing.xpt
+@RESPATH@/components/PrivateBrowsing.manifest
+@RESPATH@/components/PrivateBrowsingTrackingProtectionWhitelist.js
 
 ; ANGLE GLES-on-D3D rendering library
 #ifdef MOZ_ANGLE_RENDERER
