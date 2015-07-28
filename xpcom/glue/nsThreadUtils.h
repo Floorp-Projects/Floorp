@@ -367,7 +367,7 @@ struct StoreCopyPassByValue
   typedef T passed_type;
   stored_type m;
   template <typename A>
-  StoreCopyPassByValue(A&& a) : m(mozilla::Forward<A>(a)) {}
+  explicit StoreCopyPassByValue(A&& a) : m(mozilla::Forward<A>(a)) {}
   passed_type PassAsParameter() { return m; }
 };
 template<typename S>
@@ -381,7 +381,7 @@ struct StoreCopyPassByConstLRef
   typedef const T& passed_type;
   stored_type m;
   template <typename A>
-  StoreCopyPassByConstLRef(A&& a) : m(mozilla::Forward<A>(a)) {}
+  explicit StoreCopyPassByConstLRef(A&& a) : m(mozilla::Forward<A>(a)) {}
   passed_type PassAsParameter() { return m; }
 };
 template<typename S>
@@ -395,7 +395,7 @@ struct StoreCopyPassByLRef
   typedef T& passed_type;
   stored_type m;
   template <typename A>
-  StoreCopyPassByLRef(A&& a) : m(mozilla::Forward<A>(a)) {}
+  explicit StoreCopyPassByLRef(A&& a) : m(mozilla::Forward<A>(a)) {}
   passed_type PassAsParameter() { return m; }
 };
 template<typename S>
@@ -409,7 +409,7 @@ struct StoreCopyPassByRRef
   typedef T&& passed_type;
   stored_type m;
   template <typename A>
-  StoreCopyPassByRRef(A&& a) : m(mozilla::Forward<A>(a)) {}
+  explicit StoreCopyPassByRRef(A&& a) : m(mozilla::Forward<A>(a)) {}
   passed_type PassAsParameter() { return mozilla::Move(m); }
 };
 template<typename S>
@@ -423,7 +423,7 @@ struct StoreRefPassByLRef
   typedef T& passed_type;
   stored_type m;
   template <typename A>
-  StoreRefPassByLRef(A& a) : m(a) {}
+  explicit StoreRefPassByLRef(A& a) : m(a) {}
   passed_type PassAsParameter() { return m; }
 };
 template<typename S>
@@ -437,7 +437,7 @@ struct StoreConstRefPassByConstLRef
   typedef const T& passed_type;
   stored_type m;
   template <typename A>
-  StoreConstRefPassByConstLRef(const A& a) : m(a) {}
+  explicit StoreConstRefPassByConstLRef(const A& a) : m(a) {}
   passed_type PassAsParameter() { return m; }
 };
 template<typename S>
@@ -451,7 +451,7 @@ struct StorensRefPtrPassByPtr
   typedef T* passed_type;
   stored_type m;
   template <typename A>
-  StorensRefPtrPassByPtr(A a) : m(a) {}
+  explicit StorensRefPtrPassByPtr(A a) : m(a) {}
   passed_type PassAsParameter() { return m.get(); }
 };
 template<typename S>
@@ -465,7 +465,7 @@ struct StorePtrPassByPtr
   typedef T* passed_type;
   stored_type m;
   template <typename A>
-  StorePtrPassByPtr(A a) : m(a) {}
+  explicit StorePtrPassByPtr(A a) : m(a) {}
   passed_type PassAsParameter() { return m; }
 };
 template<typename S>
@@ -479,7 +479,7 @@ struct StoreConstPtrPassByConstPtr
   typedef const T* passed_type;
   stored_type m;
   template <typename A>
-  StoreConstPtrPassByConstPtr(A a) : m(a) {}
+  explicit StoreConstPtrPassByConstPtr(A a) : m(a) {}
   passed_type PassAsParameter() { return m; }
 };
 template<typename S>
@@ -493,7 +493,7 @@ struct StoreCopyPassByConstPtr
   typedef const T* passed_type;
   stored_type m;
   template <typename A>
-  StoreCopyPassByConstPtr(A&& a) : m(mozilla::Forward<A>(a)) {}
+  explicit StoreCopyPassByConstPtr(A&& a) : m(mozilla::Forward<A>(a)) {}
   passed_type PassAsParameter() { return &m; }
 };
 template<typename S>
@@ -507,7 +507,7 @@ struct StoreCopyPassByPtr
   typedef T* passed_type;
   stored_type m;
   template <typename A>
-  StoreCopyPassByPtr(A&& a) : m(mozilla::Forward<A>(a)) {}
+  explicit StoreCopyPassByPtr(A&& a) : m(mozilla::Forward<A>(a)) {}
   passed_type PassAsParameter() { return &m; }
 };
 template<typename S>
@@ -626,7 +626,7 @@ struct nsRunnableMethodArguments<T0>
 {
   typename ::detail::ParameterStorage<T0>::Type m0;
   template<typename A0>
-  nsRunnableMethodArguments(A0&& a0)
+  explicit nsRunnableMethodArguments(A0&& a0)
     : m0(mozilla::Forward<A0>(a0))
   {}
   template<class C, typename M> void apply(C* o, M m)
