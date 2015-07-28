@@ -81,11 +81,22 @@ ContentSearchUIController.prototype = {
     return this._defaultEngine;
   },
 
-  set defaultEngine(val) {
-    this._defaultEngine = val;
+  set defaultEngine(engine) {
+    let icon;
+    if (engine.iconBuffer) {
+      icon = this._getFaviconURIFromBuffer(engine.iconBuffer);
+    }
+    else {
+      icon = this._getImageURIForCurrentResolution(
+        "chrome://mozapps/skin/places/defaultFavicon.png");
+    }
+    this._defaultEngine = {
+      name: engine.name,
+      icon: icon,
+    };
     this._updateDefaultEngineHeader();
 
-    if (val && document.activeElement == this.input) {
+    if (engine && document.activeElement == this.input) {
       this._speculativeConnect();
     }
   },
@@ -441,18 +452,10 @@ ContentSearchUIController.prototype = {
       return;
     }
     this._currentEngineIndex += aReverse ? -1 : 1;
-    let engine;
-    if (this._currentEngineIndex == -1) {
-      engine = this._originalDefaultEngine;
-    } else {
-      let button = this._oneOffButtons[this._currentEngineIndex];
-      engine = {
-        name: button.engineName,
-        icon: button.firstChild.getAttribute("src"),
-      };
-    }
-    this._sendMsg("SetCurrentEngine", engine.name);
-    this.defaultEngine = engine;
+    let engineName = this._currentEngineIndex > -1 ?
+                     this._oneOffButtons[this._currentEngineIndex].engineName :
+                     this._originalDefaultEngine.name;
+    this._sendMsg("SetCurrentEngine", engineName);
   },
 
   _onFocus: function () {
@@ -574,11 +577,14 @@ ContentSearchUIController.prototype = {
   },
 
   _onMsgState: function (state) {
-    this.defaultEngine = {
-      name: state.currentEngine.name,
-      icon: this._getFaviconURIFromBuffer(state.currentEngine.iconBuffer),
-    };
     this.engines = state.engines;
+    // No point updating the default engine (and the header) if there's no change.
+    if (this.defaultEngine &&
+        this.defaultEngine.name == state.currentEngine.name &&
+        this.defaultEngine.icon == state.currentEngine.icon) {
+      return;
+    }
+    this.defaultEngine = state.currentEngine;
   },
 
   _onMsgCurrentState: function (state) {
@@ -586,10 +592,7 @@ ContentSearchUIController.prototype = {
   },
 
   _onMsgCurrentEngine: function (engine) {
-    this.defaultEngine = {
-      name: engine.name,
-      icon: this._getFaviconURIFromBuffer(engine.iconBuffer),
-    };
+    this.defaultEngine = engine;
     this._pendingOneOffRefresh = true;
   },
 
@@ -603,9 +606,7 @@ ContentSearchUIController.prototype = {
 
   _updateDefaultEngineHeader: function () {
     let header = document.getElementById("contentSearchDefaultEngineHeader");
-    if (this.defaultEngine.icon) {
-      header.firstChild.setAttribute("src", this.defaultEngine.icon);
-    }
+    header.firstChild.setAttribute("src", this.defaultEngine.icon);
     if (!this._strings) {
       return;
     }
@@ -684,6 +685,14 @@ ContentSearchUIController.prototype = {
     return URL.createObjectURL(blob) + "#-moz-resolution=" + sizeStr;
   },
 
+  // Adds "@2x" to the name of the given PNG url for "retina" screens.
+  _getImageURIForCurrentResolution: function (uri) {
+    if (window.devicePixelRatio > 1) {
+      return uri.replace(/\.png$/, "@2x.png");
+    }
+    return uri;
+  },
+
   _getSearchEngines: function () {
     this._sendMsg("GetState");
   },
@@ -758,9 +767,8 @@ ContentSearchUIController.prototype = {
     let header = document.createElementNS(HTML_NS, "td");
     headerRow.setAttribute("class", "contentSearchHeaderRow");
     header.setAttribute("class", "contentSearchHeader");
-    let img = document.createElementNS(HTML_NS, "img");
-    img.setAttribute("src", "chrome://browser/skin/search-engine-placeholder.png");
-    header.appendChild(img);
+    let iconImg = document.createElementNS(HTML_NS, "img");
+    header.appendChild(iconImg);
     header.id = "contentSearchDefaultEngineHeader";
     headerRow.appendChild(header);
     headerRow.addEventListener("click", this);
@@ -845,9 +853,13 @@ ContentSearchUIController.prototype = {
       let button = document.createElementNS(HTML_NS, "button");
       button.setAttribute("class", "contentSearchOneOffItem");
       let img = document.createElementNS(HTML_NS, "img");
-      let uri = "chrome://browser/skin/search-engine-placeholder.png";
+      let uri;
       if (engine.iconBuffer) {
         uri = this._getFaviconURIFromBuffer(engine.iconBuffer);
+      }
+      else {
+        uri = this._getImageURIForCurrentResolution(
+          "chrome://browser/skin/search-engine-placeholder.png");
       }
       img.setAttribute("src", uri);
       button.appendChild(img);
