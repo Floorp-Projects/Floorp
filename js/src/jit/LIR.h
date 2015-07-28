@@ -1815,7 +1815,7 @@ LAllocation::toRegister() const
 } // namespace jit
 } // namespace js
 
-#include "jit/LIR-Common.h"
+#include "jit/shared/LIR-shared.h"
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
 # if defined(JS_CODEGEN_X86)
 #  include "jit/x86/LIR-x86.h"
