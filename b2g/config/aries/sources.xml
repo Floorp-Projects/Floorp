@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="e862ab9177af664f00b4522e2350f4cb13866d73">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="5a049cc2aab237c20924e77d7df1960dae0738b8"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="e9a940b23af342e29cfee2ea803fe3f0c154d5d9"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="9f45c1988fe72749f0659409e6e3320fabf7b79a"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
@@ -122,7 +122,7 @@
   <project name="platform/system/media" path="system/media" revision="c1332c21c608f4932a6d7e83450411cde53315ef"/>
   <default remote="caf" revision="LNX.LA.3.5.2.1.1" sync-j="4"/>
   <!-- Platform common things -->
-  <project name="device-shinano-common" path="device/sony/shinano-common" remote="b2g" revision="24763a010cda411db9e24d8eb3dac2982e12f0de"/>
+  <project name="device-shinano-common" path="device/sony/shinano-common" remote="b2g" revision="df3d2ae4345ca5d32bce717bb7b3dac18a3afa18"/>
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="1bb28abbc215f45220620af5cd60a8ac1be93722"/>
   <project name="device/qcom/common" path="device/qcom/common" revision="2501e5940ba69ece7654ff85611c76ae5bda299c"/>
   <project name="codeaurora_kernel_msm" path="kernel" remote="b2g" revision="d620691cad7aee780018e98159ff03bf99840317"/>
@@ -130,7 +130,6 @@
   <project name="init_sh" path="external/init_sh" remote="b2g" revision="3bdd26e092db9c47c5beb04b4809a35f8f767b8a"/>
   <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="0a01977f34d6e86fe23d6c0ec75e96ba988bbebb"/>
   <project name="platform_external_libnfc-pn547" path="external/libnfc-pn547" remote="b2g" revision="5bb999b84b8adc14f6bea004d523ba258dea8188"/>
-  <project name="timekeep" path="external/timekeep" remote="b2g" revision="4cbb0abc00681f116f043584661307b5c4855a31"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="5b71e40213f650459e95d35b6f14af7e88d8ab62"/>
   <project name="platform_frameworks_av" path="frameworks/av" remote="b2g" revision="a920312eb6299b6cc11f7136254c4b0ba7a663be"/>
   <project name="platform/frameworks/base" path="frameworks/base" revision="da8e6bc53c8bc669da0bb627904d08aa293f2497"/>
@@ -144,6 +143,7 @@
   <project name="platform/hardware/qcom/media" path="hardware/qcom/media" revision="a558dc844bf5144fc38603fd8f4df8d9557052a5"/>
   <project name="platform/hardware/qcom/wlan" path="hardware/qcom/wlan" revision="57ee1320ed7b4a1a1274d8f3f6c177cd6b9becb2"/>
   <project name="platform/hardware/ril" path="hardware/ril" revision="12b1977cc704b35f2e9db2bb423fa405348bc2f3"/>
+  <project name="timekeep" path="hardware/sony/timekeep" remote="b2g" revision="4cbb0abc00681f116f043584661307b5c4855a31"/>
   <project name="platform/system/bluetooth" path="system/bluetooth" revision="985bf15264d865fe7b9c5b45f61c451cbaafa43d"/>
   <project name="platform/system/core" path="system/core" revision="42839aedcf70bf6bc92a3b7ea4a5cc9bf9aef3f9"/>
   <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="5f4b68c799927b6e078f987b12722c3a6ccd4a45"/>
