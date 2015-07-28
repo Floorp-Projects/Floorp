@@ -61,6 +61,8 @@ class MOZ_STACK_CLASS BytecodeCompiler
     bool compileFunctionBody(MutableHandleFunction fun, const AutoNameVector& formals,
                              GeneratorKind generatorKind);
 
+    ScriptSourceObject* sourceObjectPtr() const;
+
   private:
     bool checkLength();
     bool createScriptSource();
@@ -118,7 +120,7 @@ class MOZ_STACK_CLASS BytecodeCompiler
 
     RootedScript script;
     Maybe<BytecodeEmitter> emitter;
-    };
+};
 
 AutoCompilationTraceLogger::AutoCompilationTraceLogger(ExclusiveContext* cx, const TraceLoggerTextId id)
   : logger(cx->isJSContext() ? TraceLoggerForMainThread(cx->asJSContext()->runtime())
@@ -569,7 +571,7 @@ BytecodeCompiler::maybeCompleteCompressSource()
 
 JSScript*
 BytecodeCompiler::compileScript(HandleObject scopeChain, HandleScript evalCaller,
-                                          unsigned staticLevel)
+                                unsigned staticLevel)
 {
     if (!createSourceAndParser())
         return nullptr;
@@ -714,6 +716,12 @@ BytecodeCompiler::compileFunctionBody(MutableHandleFunction fun, const AutoNameV
 }
 
 ScriptSourceObject*
+BytecodeCompiler::sourceObjectPtr() const
+{
+    return sourceObject.get();
+}
+
+ScriptSourceObject*
 frontend::CreateScriptSourceObject(ExclusiveContext* cx, const ReadOnlyCompileOptions& options)
 {
     ScriptSource* ss = cx->new_<ScriptSource>();
@@ -753,7 +761,8 @@ frontend::CompileScript(ExclusiveContext* cx, LifoAlloc* alloc, HandleObject sco
                         SourceBufferHolder& srcBuf,
                         JSString* source_ /* = nullptr */,
                         unsigned staticLevel /* = 0 */,
-                        SourceCompressionTask* extraSct /* = nullptr */)
+                        SourceCompressionTask* extraSct /* = nullptr */,
+                        ScriptSourceObject** sourceObjectOut /* = nullptr */)
 {
     MOZ_ASSERT(srcBuf.get());
 
@@ -767,10 +776,32 @@ frontend::CompileScript(ExclusiveContext* cx, LifoAlloc* alloc, HandleObject sco
     MOZ_ASSERT_IF(staticLevel != 0, evalCaller);
     MOZ_ASSERT_IF(staticLevel != 0, !options.sourceIsLazy);
 
+    MOZ_ASSERT_IF(sourceObjectOut, *sourceObjectOut == nullptr);
+
     BytecodeCompiler compiler(cx, alloc, options, srcBuf, TraceLogger_ParserCompileScript);
     compiler.maybeSetSourceCompressor(extraSct);
     compiler.setEnclosingStaticScope(enclosingStaticScope);
-    return compiler.compileScript(scopeChain, evalCaller, staticLevel);
+    JSScript* script = compiler.compileScript(scopeChain, evalCaller, staticLevel);
+
+    // frontend::CompileScript independently returns the
+    // ScriptSourceObject (SSO) for the compile.  This is used by
+    // off-main-thread script compilation (OMT-SC).
+    //
+    // OMT-SC cannot initialize the SSO when it is first constructed
+    // because the SSO is allocated initially in a separate compartment.
+    //
+    // After OMT-SC, the separate compartment is merged with the main
+    // compartment, at which point the JSScripts created become observable
+    // by the debugger via memory-space scanning.
+    //
+    // Whatever happens to the top-level script compilation (even if it
+    // fails and returns null), we must finish initializing the SSO.  This
+    // is because there may be valid inner scripts observable by the debugger
+    // which reference the partially-initialized SSO.
+    if (sourceObjectOut)
+        *sourceObjectOut = compiler.sourceObjectPtr();
+
+    return script;
 }
 
 bool
