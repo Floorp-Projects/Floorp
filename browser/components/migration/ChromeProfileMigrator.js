@@ -6,15 +6,18 @@
 
 "use strict";
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cr = Components.results;
+const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
 const FILE_INPUT_STREAM_CID = "@mozilla.org/network/file-input-stream;1";
 
 const S100NS_FROM1601TO1970 = 0x19DB1DED53E8000;
 const S100NS_PER_MS = 10;
+
+const AUTH_TYPE = {
+  SCHEME_HTML: 0,
+  SCHEME_BASIC: 1,
+  SCHEME_DIGEST: 2
+};
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -25,6 +28,8 @@ Cu.import("resource:///modules/MigrationUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OSCrypto",
+                                  "resource://gre/modules/OSCrypto.jsm");
 
 /**
  * Convert Chrome time format to Date object
@@ -93,7 +98,11 @@ ChromeProfileMigrator.prototype.getResources =
       if (profileFolder.exists()) {
         let possibleResources = [GetBookmarksResource(profileFolder),
                                  GetHistoryResource(profileFolder),
-                                 GetCookiesResource(profileFolder)];
+                                 GetCookiesResource(profileFolder),
+#ifdef XP_WIN
+                                 GetWindowsPasswordsResource(profileFolder)
+#endif
+                                 ];
         return [r for each (r in possibleResources) if (r != null)];
       }
     }
@@ -351,6 +360,101 @@ function GetCookiesResource(aProfileFolder) {
       stmt.finalize();
     }
   }
+}
+
+function GetWindowsPasswordsResource(aProfileFolder) {
+  let loginFile = aProfileFolder.clone();
+  loginFile.append("Login Data");
+  if (!loginFile.exists())
+    return null;
+
+  return {
+    type: MigrationUtils.resourceTypes.PASSWORDS,
+
+    migrate(aCallback) {
+      let dbConn = Services.storage.openUnsharedDatabase(loginFile);
+      let stmt = dbConn.createAsyncStatement(`
+        SELECT origin_url, action_url, username_element, username_value,
+        password_element, password_value, signon_realm, scheme, date_created,
+        times_used FROM logins WHERE blacklisted_by_user = 0`);
+      let crypto = new OSCrypto();
+
+      stmt.executeAsync({
+        _rowToLoginInfo(row) {
+          let loginInfo = {
+            username: row.getResultByName("username_value"),
+            password: crypto.decryptData(row.getResultByName("password_value")),
+            hostName: NetUtil.newURI(row.getResultByName("origin_url")).prePath,
+            submitURL: null,
+            httpRealm: null,
+            usernameElement: row.getResultByName("username_element"),
+            passwordElement: row.getResultByName("password_element"),
+            timeCreated: chromeTimeToDate(row.getResultByName("date_created") + 0).getTime(),
+            timesUsed: row.getResultByName("times_used") + 0,
+          };
+
+          switch (row.getResultByName("scheme")) {
+            case AUTH_TYPE.SCHEME_HTML:
+              loginInfo.submitURL = NetUtil.newURI(row.getResultByName("action_url")).prePath;
+              break;
+            case AUTH_TYPE.SCHEME_BASIC:
+            case AUTH_TYPE.SCHEME_DIGEST:
+              // signon_realm format is URIrealm, so we need remove URI
+              loginInfo.httpRealm = row.getResultByName("signon_realm")
+                                    .substring(loginInfo.hostName.length + 1);
+              break;
+            default:
+              throw new Error("Login data scheme type not supported: " +
+                              row.getResultByName("scheme"));
+          }
+
+          return loginInfo;
+        },
+
+        handleResult(aResults) {
+          for (let row = aResults.getNextRow(); row; row = aResults.getNextRow()) {
+            try {
+              let loginInfo = this._rowToLoginInfo(row);
+              let login = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
+
+              login.init(loginInfo.hostName, loginInfo.submitURL, loginInfo.httpRealm,
+                         loginInfo.username, loginInfo.password, loginInfo.usernameElement,
+                         loginInfo.passwordElement);
+              login.QueryInterface(Ci.nsILoginMetaInfo);
+              login.timeCreated = loginInfo.timeCreated;
+              login.timeLastUsed = loginInfo.timeCreated;
+              login.timePasswordChanged = loginInfo.timeCreated;
+              login.timesUsed = loginInfo.timesUsed;
+
+              // Add the login only if there's not an existing entry
+              let logins = Services.logins.findLogins({}, login.hostname,
+                                                      login.formSubmitURL,
+                                                      login.httpRealm);
+
+              // Bug 1187190: Password changes should be propagated depending on timestamps.
+              if (!logins.some(l => login.matches(l, true))) {
+                Services.logins.addLogin(login);
+              }
+            } catch (e) {
+              Cu.reportError(e);
+            }
+          }
+        },
+
+        handleError(aError) {
+          Cu.reportError("Async statement execution returned with '" +
+                         aError.result + "', '" + aError.message + "'");
+        },
+
+        handleCompletion(aReason) {
+          dbConn.asyncClose();
+          aCallback(aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED);
+          crypto.finalize();
+        },
+      });
+      stmt.finalize();
+    }
+  };
 }
 
 ChromeProfileMigrator.prototype.classDescription = "Chrome Profile Migrator";
