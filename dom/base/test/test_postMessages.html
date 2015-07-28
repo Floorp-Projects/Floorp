@@ -231,12 +231,51 @@ function test_windowToIframeURL(url) {
   document.body.appendChild(ifr);
 }
 
+function test_broadcastChannel() {
+  info("Testing broadcastChannel");
+
+  var bc1 = new BroadcastChannel('postMessagesTest');
+  var bc2 = new BroadcastChannel('postMessagesTest');
+
+  var resolve;
+
+  bc2.onmessage = function(e) {
+    if (!resolve) {
+      ok(false, "Unexpected message!");
+      return;
+    }
+
+    let tmp = resolve;
+    resolve = null;
+    tmp({ data: e.data, ports: [] });
+  }
+
+  runTests({
+    clonableObjects: true,
+    transferableObjects: false,
+    send: function(what, ports) {
+      is(ports.length, 0, "No ports for this test!");
+      return new Promise(function(r, rr) {
+        resolve = r;
+        bc1.postMessage(what);
+      });
+    },
+
+    finished: function() {
+      onmessage = null;
+      next();
+    }
+  });
+}
+
 var tests = [
   create_fileList,
 
   test_windowToWindow,
   test_windowToIframe,
   test_windowToCrossOriginIframe,
+
+  test_broadcastChannel,
 ];
 
 function next() {
