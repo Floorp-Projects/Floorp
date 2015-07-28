@@ -4,7 +4,6 @@ MOZ_AUTOMATION_UPDATE_PACKAGING=0
 MOZ_AUTOMATION_SDK=0
 . "$topsrcdir/browser/config/mozconfigs/linux64/nightly"
 
-ac_add_options --enable-default-toolkit=cairo-gtk2
 ac_add_options --enable-application=b2g/dev
 
 # Include Firefox OS fonts.

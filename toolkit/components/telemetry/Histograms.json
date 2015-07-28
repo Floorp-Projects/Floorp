@@ -8223,6 +8223,14 @@
     "extended_statistics_ok": true,
     "description": "Sanitize: Time it takes to sanitize the open windows list (ms)"
   },
+  "PWMGR_ABOUT_LOGINS_GET_ALL_LOGINS_MS": {
+    "expires_in_version": "55",
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 30,
+    "extended_statistics_ok": true,
+    "description": "How long getAllLogins() on about:logins takes for mobile users"
+  },
   "PWMGR_BLOCKLIST_NUM_SITES": {
     "expires_in_version": "never",
     "kind": "exponential",

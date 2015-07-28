@@ -207,7 +207,7 @@ public:
                            uintptr_t aOffsetWithinBlock,
                            uint32_t aNumberOfFrames) {
     for (uint32_t i = 0; i < aChannels; ++i) {
-      float* baseChannelData = static_cast<float*>(const_cast<void*>(aOutput->mChannelData[i]));
+      float* baseChannelData = aOutput->ChannelFloatsForWrite(i);
       memcpy(baseChannelData + aOffsetWithinBlock,
              mBuffer->GetData(i) + mBufferPosition,
              aNumberOfFrames * sizeof(float));
@@ -268,8 +268,7 @@ public:
 
         uint32_t outSamples = availableInOutputBuffer;
         float* outputData =
-          static_cast<float*>(const_cast<void*>(aOutput->mChannelData[i])) +
-          *aOffsetWithinBlock;
+          aOutput->ChannelFloatsForWrite(i) + *aOffsetWithinBlock;
 
         WebAudioUtils::SpeexResamplerProcess(resampler, i,
                                              inputData, &inSamples,
@@ -294,8 +293,7 @@ public:
         uint32_t inSamples = mRemainingResamplerTail;
         uint32_t outSamples = availableInOutputBuffer;
         float* outputData =
-          static_cast<float*>(const_cast<void*>(aOutput->mChannelData[i])) +
-          *aOffsetWithinBlock;
+          aOutput->ChannelFloatsForWrite(i) + *aOffsetWithinBlock;
 
         // AudioDataValue* for aIn selects the function that does not try to
         // copy and format-convert input data.

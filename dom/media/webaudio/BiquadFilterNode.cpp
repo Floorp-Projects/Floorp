@@ -206,7 +206,7 @@ public:
       SetParamsOnBiquad(mBiquads[i], aStream->SampleRate(), mType, freq, q, gain, detune);
 
       mBiquads[i].process(input,
-                          static_cast<float*>(const_cast<void*>(aOutput->mChannelData[i])),
+                          aOutput->ChannelFloatsForWrite(i),
                           aInput.GetDuration());
     }
   }

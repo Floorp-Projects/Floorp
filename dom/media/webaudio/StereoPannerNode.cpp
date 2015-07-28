@@ -86,7 +86,7 @@ public:
   void SetToSilentStereoBlock(AudioChunk* aChunk)
   {
     for (uint32_t channel = 0; channel < 2; channel++) {
-      float* samples = static_cast<float*>(const_cast<void*>(aChunk->mChannelData[channel]));
+      float* samples = aChunk->ChannelFloatsForWrite(channel);
       for (uint32_t i = 0; i < WEBAUDIO_BLOCK_SIZE; i++) {
         samples[i] = 0.f;
       }
@@ -102,7 +102,7 @@ public:
       AllocateAudioBlock(2, aOutput);
       const float* input = static_cast<const float*>(aInput.mChannelData[0]);
       for (uint32_t channel = 0; channel < 2; channel++) {
-        float* output = static_cast<float*>(const_cast<void*>(aOutput->mChannelData[channel]));
+        float* output = aOutput->ChannelFloatsForWrite(channel);
         PodCopy(output, input, WEBAUDIO_BLOCK_SIZE);
       }
     }

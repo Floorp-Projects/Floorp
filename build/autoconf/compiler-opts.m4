@@ -358,6 +358,20 @@ fi
 
 AC_SUBST(MOZ_PROGRAM_LDFLAGS)
 
+dnl ASan assumes no symbols are being interposed, and when that happens,
+dnl it's not happy with it. Unconveniently, since Firefox is exporting
+dnl libffi symbols and Gtk+3 pulls system libffi via libwayland-client,
+dnl system libffi interposes libffi symbols that ASan assumes are in
+dnl libxul, so it barfs about buffer overflows.
+dnl Using -Wl,-Bsymbolic ensures no exported symbol can be interposed.
+if test -n "$GCC_USE_GNU_LD"; then
+  case "$LDFLAGS" in
+  *-fsanitize=address*)
+    LDFLAGS="$LDFLAGS -Wl,-Bsymbolic"
+    ;;
+  esac
+fi
+
 ])
 
 dnl GCC and clang will fail if given an unknown warning option like -Wfoobar. 

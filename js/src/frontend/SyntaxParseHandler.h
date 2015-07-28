@@ -173,6 +173,9 @@ class SyntaxParseHandler
 
     static Node null() { return NodeFailure; }
 
+    void prepareNodeForMutation(Node node) {}
+    void freeTree(Node node) {}
+
     void trace(JSTracer* trc) {}
 
     Node newName(PropertyName* name, uint32_t blockid, const TokenPos& pos, ExclusiveContext* cx) {
