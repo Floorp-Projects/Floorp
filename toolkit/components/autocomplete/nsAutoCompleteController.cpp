@@ -1344,7 +1344,9 @@ nsAutoCompleteController::EnterMatch(bool aIsPopupSelection)
         GetResultValueAt(mCompletedSelectionIndex, true, finalValue);
         nsAutoString inputValue;
         input->GetTextValue(inputValue);
-        if (!finalValue.Equals(inputValue)) {
+        nsAutoString completedValue;
+        GetResultValueAt(mCompletedSelectionIndex, false, completedValue);
+        if (completedValue.Equals(inputValue) && !finalValue.Equals(inputValue)) {
           value = finalValue;
         }
         // Note that if the user opens the popup, mouses over entries without
