@@ -28,7 +28,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MessagePortList)
 
 public:
-  MessagePortList(nsISupports* aOwner, nsTArray<nsRefPtr<MessagePortBase>>& aPorts)
+  MessagePortList(nsISupports* aOwner,
+                  const nsTArray<nsRefPtr<MessagePortBase>>& aPorts)
     : mOwner(aOwner)
     , mPorts(aPorts)
   {

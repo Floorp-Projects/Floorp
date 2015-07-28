@@ -20,11 +20,75 @@ using namespace ipc;
 
 namespace dom {
 
-SharedMessagePortMessage::~SharedMessagePortMessage()
+void
+SharedMessagePortMessage::Read(nsISupports* aParent,
+                               JSContext* aCx,
+                               JS::MutableHandle<JS::Value> aValue,
+                               ErrorResult& aRv)
+{
+  if (mData.IsEmpty()) {
+    return;
+  }
+
+  auto* data = reinterpret_cast<uint64_t*>(mData.Elements());
+  size_t dataLen = mData.Length();
+  MOZ_ASSERT(!(dataLen % sizeof(*data)));
+
+  bool ok = ReadFromBuffer(aParent, aCx, data, dataLen, aValue);
+  Free();
+
+  if (NS_WARN_IF(!ok)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+}
+
+void
+SharedMessagePortMessage::Write(JSContext* aCx,
+                                JS::Handle<JS::Value> aValue,
+                                JS::Handle<JS::Value> aTransfer,
+                                ErrorResult& aRv)
+{
+  if (NS_WARN_IF(!StructuredCloneHelper::Write(aCx, aValue, aTransfer))) {
+    aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
+    return;
+  }
+
+  const nsTArray<nsRefPtr<BlobImpl>>& blobImpls = BlobImpls();
+  for (uint32_t i = 0, len = blobImpls.Length(); i < len; ++i) {
+    if (!blobImpls[i]->MayBeClonedToOtherThreads()) {
+      aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
+      return;
+    }
+  }
+
+  FallibleTArray<uint8_t> cloneData;
+
+  MoveBufferDataToArray(cloneData, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  MOZ_ASSERT(mData.IsEmpty());
+  mData.SwapElements(cloneData);
+}
+
+void
+SharedMessagePortMessage::Free()
 {
   if (!mData.IsEmpty()) {
-    FreeStructuredClone(mData, mClosure);
+    auto* data = reinterpret_cast<uint64_t*>(mData.Elements());
+    size_t dataLen = mData.Length();
+    MOZ_ASSERT(!(dataLen % sizeof(*data)));
+
+    FreeBuffer(data, dataLen);
+    mData.Clear();
   }
+}
+
+SharedMessagePortMessage::~SharedMessagePortMessage()
+{
+  Free();
 }
 
 /* static */ void
@@ -44,8 +108,7 @@ SharedMessagePortMessage::FromSharedToMessagesChild(
     MessagePortMessage* message = aArray.AppendElement();
     message->data().SwapElements(data->mData);
 
-    const nsTArray<nsRefPtr<BlobImpl>>& blobImpls =
-      data->mClosure.mBlobImpls;
+    const nsTArray<nsRefPtr<BlobImpl>>& blobImpls = data->BlobImpls();
     if (!blobImpls.IsEmpty()) {
       message->blobsChild().SetCapacity(blobImpls.Length());
 
@@ -57,8 +120,7 @@ SharedMessagePortMessage::FromSharedToMessagesChild(
       }
     }
 
-    message->transferredPorts().AppendElements(
-      data->mClosure.mMessagePortIdentifiers);
+    message->transferredPorts().AppendElements(data->PortIdentifiers());
   }
 }
 
@@ -80,17 +142,16 @@ SharedMessagePortMessage::FromMessagesToSharedChild(
 
     const nsTArray<PBlobChild*>& blobs = message.blobsChild();
     if (!blobs.IsEmpty()) {
-      data->mClosure.mBlobImpls.SetCapacity(blobs.Length());
+      data->BlobImpls().SetCapacity(blobs.Length());
 
       for (uint32_t i = 0, len = blobs.Length(); i < len; ++i) {
         nsRefPtr<BlobImpl> impl =
           static_cast<BlobChild*>(blobs[i])->GetBlobImpl();
-        data->mClosure.mBlobImpls.AppendElement(impl);
+        data->BlobImpls().AppendElement(impl);
       }
     }
 
-    data->mClosure.mMessagePortIdentifiers.AppendElements(
-      message.transferredPorts());
+    data->PortIdentifiers().AppendElements(message.transferredPorts());
 
     if (!aData.AppendElement(data, mozilla::fallible)) {
       return false;
@@ -119,7 +180,7 @@ SharedMessagePortMessage::FromSharedToMessagesParent(
     MessagePortMessage* message = aArray.AppendElement(mozilla::fallible);
     message->data().SwapElements(data->mData);
 
-    const nsTArray<nsRefPtr<BlobImpl>>& blobImpls = data->mClosure.mBlobImpls;
+    const nsTArray<nsRefPtr<BlobImpl>>& blobImpls = data->BlobImpls();
     if (!blobImpls.IsEmpty()) {
       message->blobsParent().SetCapacity(blobImpls.Length());
 
@@ -131,8 +192,7 @@ SharedMessagePortMessage::FromSharedToMessagesParent(
       }
     }
 
-    message->transferredPorts().AppendElements(
-      data->mClosure.mMessagePortIdentifiers);
+    message->transferredPorts().AppendElements(data->PortIdentifiers());
   }
 
   return true;
@@ -156,17 +216,16 @@ SharedMessagePortMessage::FromMessagesToSharedParent(
 
     const nsTArray<PBlobParent*>& blobs = message.blobsParent();
     if (!blobs.IsEmpty()) {
-      data->mClosure.mBlobImpls.SetCapacity(blobs.Length());
+      data->BlobImpls().SetCapacity(blobs.Length());
 
       for (uint32_t i = 0, len = blobs.Length(); i < len; ++i) {
         nsRefPtr<BlobImpl> impl =
           static_cast<BlobParent*>(blobs[i])->GetBlobImpl();
-        data->mClosure.mBlobImpls.AppendElement(impl);
+        data->BlobImpls().AppendElement(impl);
       }
     }
 
-    data->mClosure.mMessagePortIdentifiers.AppendElements(
-      message.transferredPorts());
+    data->PortIdentifiers().AppendElements(message.transferredPorts());
 
     if (!aData.AppendElement(data, mozilla::fallible)) {
       return false;

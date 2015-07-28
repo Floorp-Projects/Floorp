@@ -90,11 +90,12 @@ BroadcastChannelChild::RecvNotify(const ClonedMessageData& aData)
   StructuredCloneHelper cloneHelper(StructuredCloneHelper::CloningSupported,
                                     StructuredCloneHelper::TransferringNotSupported);
 
+  cloneHelper.BlobImpls().AppendElements(blobs);
+
   JS::Rooted<JS::Value> value(cx, JS::NullValue());
   if (buffer.dataLength &&
       !cloneHelper.ReadFromBuffer(mBC->GetParentObject(), cx,
-                                  buffer.data, buffer.dataLength, blobs,
-                                  &value)) {
+                                  buffer.data, buffer.dataLength, &value)) {
     JS_ClearPendingException(cx);
     return false;
   }

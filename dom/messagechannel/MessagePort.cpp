@@ -116,24 +116,16 @@ public:
 
     JSContext* cx = jsapi.cx();
 
-    nsTArray<nsRefPtr<MessagePort>> ports;
     nsCOMPtr<nsPIDOMWindow> window =
       do_QueryInterface(mPort->GetParentObject());
 
+    ErrorResult rv;
     JS::Rooted<JS::Value> value(cx);
-    if (!mData->mData.IsEmpty()) {
-      bool ok = ReadStructuredCloneWithTransfer(cx, mData->mData,
-                                                mData->mClosure,
-                                                &value, window, ports);
-      FreeStructuredClone(mData->mData, mData->mClosure);
 
-      if (!ok) {
-        return NS_ERROR_FAILURE;
-      }
+    mData->Read(window, cx, &value, rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      return rv.StealNSResult();
     }
-
-    // The data should be already be cleaned.
-    MOZ_ASSERT(!mData->mData.Length());
 
     // Create the event
     nsCOMPtr<mozilla::dom::EventTarget> eventTarget =
@@ -148,14 +140,9 @@ public:
     event->SetTrusted(true);
     event->SetSource(mPort);
 
-    nsTArray<nsRefPtr<MessagePortBase>> array;
-    array.SetCapacity(ports.Length());
-    for (uint32_t i = 0; i < ports.Length(); ++i) {
-      array.AppendElement(ports[i]);
-    }
-
     nsRefPtr<MessagePortList> portList =
-      new MessagePortList(static_cast<dom::Event*>(event.get()), array);
+      new MessagePortList(static_cast<dom::Event*>(event.get()),
+                          mData->GetTransferredPorts());
     event->SetPorts(portList);
 
     bool dummy;
@@ -454,9 +441,8 @@ MessagePort::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
 
   nsRefPtr<SharedMessagePortMessage> data = new SharedMessagePortMessage();
 
-  if (!WriteStructuredCloneWithTransfer(aCx, aMessage, transferable,
-                                        data->mData, data->mClosure)) {
-    aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
+  data->Write(aCx, aMessage, transferable, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
 
