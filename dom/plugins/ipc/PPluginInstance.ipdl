@@ -150,6 +150,8 @@ parent:
     returns (NPError result);
   intr NPN_SetValue_NPPVpluginEventModel(int eventModel)
     returns (NPError result);
+  intr NPN_SetValue_NPPVpluginIsPlayingAudio(bool isAudioPlaying)
+    returns (NPError result);
 
   intr NPN_GetURL(nsCString url, nsCString target)
     returns (NPError result);

@@ -2402,6 +2402,27 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
       return inst->SetUsesDOMForCursor(useDOMForCursor);
     }
 
+    case NPPVpluginIsPlayingAudio: {
+      // For testing, remove me
+      printf("set audio %p\n", result);
+      bool isPlaying = !!result;
+
+      nsCOMPtr<nsIDocument> doc = GetDocumentFromNPP(npp);
+      if (doc) {
+        nsCOMPtr<nsPIDOMWindow> domwindow = doc->GetWindow();
+        nsCOMPtr<nsIObserverService> observerService =
+          services::GetObserverService();
+        if (observerService) {
+          // XXX THIS NEEDS A BETTER API
+          observerService->NotifyObservers(ToSupports(domwindow),
+                                           "media-playback",
+                                           isPlaying ? NS_LITERAL_STRING("active").get() :
+                                                       NS_LITERAL_STRING("inactive").get());
+        }
+      }
+      return NPERR_NO_ERROR;
+    }
+
 #ifndef MOZ_WIDGET_ANDROID
     // On android, their 'drawing model' uses the same constant!
     case NPPVpluginDrawingModel: {

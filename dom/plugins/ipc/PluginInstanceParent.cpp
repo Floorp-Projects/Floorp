@@ -441,6 +441,15 @@ PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginEventModel(
 }
 
 bool
+PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginIsPlayingAudio(
+    const bool& isAudioPlaying, NPError* result)
+{
+    *result = mNPNIface->setvalue(mNPP, NPPVpluginIsPlayingAudio,
+                                  (void*)(intptr_t)isAudioPlaying);
+    return true;
+}
+
+bool
 PluginInstanceParent::AnswerNPN_GetURL(const nsCString& url,
                                        const nsCString& target,
                                        NPError* result)
