@@ -282,7 +282,8 @@ FreeStructuredClone(nsTArray<uint8_t>& aData, StructuredCloneClosure& aClosure)
   size_t dataLen = aData.Length();
   MOZ_ASSERT(!(dataLen % sizeof(*data)));
 
-  JS_ClearStructuredClone(data, dataLen, &gCallbacks, &aClosure, false);
+  StructuredCloneClosureInternal internalClosure(aClosure, nullptr);
+  JS_ClearStructuredClone(data, dataLen, &gCallbacks, &internalClosure, false);
   aData.Clear();
 }
 
