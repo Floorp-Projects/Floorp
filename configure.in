@@ -2601,31 +2601,6 @@ dnl if any other platforms need to override this in the future.
 AC_DEFINE_UNQUOTED(D_INO,$DIRENT_INO)
 
 dnl ========================================================
-dnl Any platform that doesn't have MKSHLIB_FORCE_ALL defined
-dnl by now will not have any way to link most binaries (tests
-dnl as well as viewer, apprunner, etc.), because some symbols
-dnl will be left out of the "composite" .so's by ld as unneeded.
-dnl So, by defining NO_LD_ARCHIVE_FLAGS for these platforms,
-dnl they can link in the static libs that provide the missing
-dnl symbols.
-dnl ========================================================
-NO_LD_ARCHIVE_FLAGS=
-if test -z "$MKSHLIB_FORCE_ALL" -o -z "$MKSHLIB_UNFORCE_ALL"; then
-    NO_LD_ARCHIVE_FLAGS=1
-fi
-case "$target" in
-*-aix4.3*|*-aix5*)
-    NO_LD_ARCHIVE_FLAGS=
-    ;;
-*-mingw*)
-    if test -z "$GNU_CC"; then
-        NO_LD_ARCHIVE_FLAGS=
-    fi
-    ;;
-esac
-AC_SUBST(NO_LD_ARCHIVE_FLAGS)
-
-dnl ========================================================
 dnl = Flags to strip unused symbols from .so components and
 dnl = to export jemalloc symbols when linking a program
 dnl ========================================================
