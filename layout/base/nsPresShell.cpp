@@ -986,7 +986,7 @@ PresShell::Init(nsIDocument* aDocument,
     mZoomConstraintsClient->Init(this, mDocument);
 #ifndef MOZ_WIDGET_ANDROID
     // Fennec will need some work to use this code; see bug 1180267.
-    if (gfxPrefs::MetaViewportEnabled()) {
+    if (gfxPrefs::MetaViewportEnabled() || gfxPrefs::APZAllowZooming()) {
       mMobileViewportManager = new MobileViewportManager(this, mDocument);
     }
 #endif

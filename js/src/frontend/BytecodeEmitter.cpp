@@ -2039,6 +2039,7 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case PNK_MULASSIGN:
       case PNK_DIVASSIGN:
       case PNK_MODASSIGN:
+      case PNK_POWASSIGN:
         MOZ_ASSERT(pn->isArity(PN_BINARY));
         *answer = true;
         return true;
@@ -2091,6 +2092,7 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case PNK_STAR:
       case PNK_DIV:
       case PNK_MOD:
+      case PNK_POW:
         MOZ_ASSERT(pn->isArity(PN_LIST));
         MOZ_ASSERT(pn->pn_count >= 2);
         *answer = true;
@@ -7730,6 +7732,7 @@ BytecodeEmitter::emitTree(ParseNode* pn)
       case PNK_MULASSIGN:
       case PNK_DIVASSIGN:
       case PNK_MODASSIGN:
+      case PNK_POWASSIGN:
         if (!emitAssignment(pn->pn_left, pn->getOp(), pn->pn_right))
             return false;
         break;
@@ -7774,6 +7777,20 @@ BytecodeEmitter::emitTree(ParseNode* pn)
             if (!emitTree(subexpr))
                 return false;
             if (!emit1(op))
+                return false;
+        }
+        break;
+      }
+
+      case PNK_POW: {
+        MOZ_ASSERT(pn->isArity(PN_LIST));
+        /* Right-associative operator chain. */
+        for (ParseNode* subexpr = pn->pn_head; subexpr; subexpr = subexpr->pn_next) {
+            if (!emitTree(subexpr))
+                return false;
+        }
+        for (uint32_t i = 0; i < pn->pn_count - 1; i++) {
+            if (!emit1(JSOP_POW))
                 return false;
         }
         break;

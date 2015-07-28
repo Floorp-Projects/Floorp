@@ -76,6 +76,18 @@ public:
   bool Read(JSContext* aCx,
             JS::MutableHandle<JS::Value> aValue);
 
+  uint64_t* BufferData() const
+  {
+    MOZ_ASSERT(mBuffer, "Write() has never been called.");
+    return mBuffer->data();
+  }
+
+  size_t BufferSize() const
+  {
+    MOZ_ASSERT(mBuffer, "Write() has never been called.");
+    return mBuffer->nbytes();
+  }
+
 protected:
   nsAutoPtr<JSAutoStructuredCloneBuffer> mBuffer;
 
@@ -84,31 +96,35 @@ protected:
 #endif
 };
 
+class BlobImpl;
 class MessagePortBase;
 class MessagePortIdentifier;
 
 class StructuredCloneHelper : public StructuredCloneHelperInternal
 {
 public:
-  enum StructuredCloneHelperFlags {
-    eAll = 0,
-
-    // Disable the cloning of blobs. If a blob is part of the cloning value,
-    // an exception will be thrown.
-    eBlobNotSupported = 1 << 0,
-
-    // Disable the cloning of FileLists. If a FileList is part of the cloning
-    // value, an exception will be thrown.
-    eFileListNotSupported = 1 << 1,
-
-    // MessagePort can just be transfered. Using this flag we do not support
-    // the transfering.
-    eMessagePortNotSupported = 1 << 2,
+  enum CloningSupport
+  {
+    CloningSupported,
+    CloningNotSupported
   };
 
-  // aFlags is a bitmap of StructuredCloneHelperFlags.
-  explicit StructuredCloneHelper(uint32_t aFlags = eAll);
+  enum TransferringSupport
+  {
+    TransferringSupported,
+    TransferringNotSupported
+  };
+
+  // If cloning is supported, this object will clone objects such as Blobs,
+  // FileList, ImageData, etc.
+  // If transferring is supported, we will transfer MessagePorts and in the
+  // future other transferrable objects.
+  explicit StructuredCloneHelper(CloningSupport aSupportsCloning,
+                                 TransferringSupport aSupportsTransferring);
   virtual ~StructuredCloneHelper();
+
+  bool Write(JSContext* aCx,
+             JS::Handle<JS::Value> aValue);
 
   bool Write(JSContext* aCx,
              JS::Handle<JS::Value> aValue,
@@ -118,9 +134,22 @@ public:
             JSContext* aCx,
             JS::MutableHandle<JS::Value> aValue);
 
+  bool ReadFromBuffer(nsISupports* aParent,
+                      JSContext* aCx,
+                      uint64_t* aBuffer,
+                      size_t aBufferLength,
+                      nsTArray<nsRefPtr<BlobImpl>>& aBlobImpls,
+                      JS::MutableHandle<JS::Value> aValue);
+
+  const nsTArray<nsRefPtr<BlobImpl>>& ClonedBlobImpls() const
+  {
+    MOZ_ASSERT(mBuffer, "Write() has never been called.");
+    return mBlobImplArray;
+  }
+
   nsTArray<nsRefPtr<MessagePortBase>>& GetTransferredPorts()
   {
-    MOZ_ASSERT(!(mFlags & eMessagePortNotSupported));
+    MOZ_ASSERT(mSupportsTransferring);
     return mTransferredPorts;
   }
 
@@ -154,19 +183,12 @@ public:
                                     void* aContent,
                                     uint64_t aExtraData) override;
 private:
-  bool StoreISupports(nsISupports* aSupports)
-  {
-    MOZ_ASSERT(aSupports);
-    mSupportsArray.AppendElement(aSupports);
-    return true;
-  }
-
-  // This is our bitmap.
-  uint32_t mFlags;
+  bool mSupportsCloning;
+  bool mSupportsTransferring;
 
   // Useful for the structured clone algorithm:
 
-  nsTArray<nsCOMPtr<nsISupports>> mSupportsArray;
+  nsTArray<nsRefPtr<BlobImpl>> mBlobImplArray;
 
   // This raw pointer is set and unset into the ::Read(). It's always null
   // outside that method. For this reason it's a raw pointer.

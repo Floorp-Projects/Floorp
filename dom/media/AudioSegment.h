@@ -148,7 +148,14 @@ struct AudioChunk {
     return true;
   }
 
-  int ChannelCount() const { return mChannelData.Length(); }
+  size_t ChannelCount() const { return mChannelData.Length(); }
+
+  float* ChannelFloatsForWrite(size_t aChannel)
+  {
+    MOZ_ASSERT(mBufferFormat == AUDIO_FORMAT_FLOAT32);
+    MOZ_ASSERT(!mBuffer->IsShared());
+    return static_cast<float*>(const_cast<void*>(mChannelData[aChannel]));
+  }
 
   bool IsMuted() const { return mVolume == 0.0f; }
 
