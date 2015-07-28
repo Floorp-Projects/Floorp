@@ -6,6 +6,8 @@ Cu.import("resource://gre/modules/PromiseUtils.jsm", this);
 const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
 
 const MESSAGE_TELEMETRY_PAYLOAD = "Telemetry:Payload";
+const MESSAGE_TELEMETRY_GET_CHILD_PAYLOAD = "Telemetry:GetChildPayload";
+const MESSAGE_CHILD_TEST_DONE = "ChildTest:Done";
 
 const PLATFORM_VERSION = "1.9.2";
 const APP_VERSION = "1";
@@ -58,7 +60,12 @@ function check_histogram_values(payload) {
 add_task(function*() {
   if (!runningInParent) {
     TelemetryController.setupContent();
+    TelemetrySession.setupContent();
     run_child_test();
+    dump("... done with child test\n");
+    do_send_remote_message(MESSAGE_CHILD_TEST_DONE);
+    dump("... waiting for child payload collection\n");
+    yield do_await_remote_message(MESSAGE_TELEMETRY_GET_CHILD_PAYLOAD);
     return;
   }
 
@@ -69,13 +76,16 @@ add_task(function*() {
   yield TelemetryController.setup();
   yield TelemetrySession.setup();
 
-  // Run test in child and wait until it is finished.
-  yield run_test_in_child("test_ChildHistograms.js");
+  // Run test in child, don't wait for it to finish.
+  let childPromise = run_test_in_child("test_ChildHistograms.js");
+  yield do_await_remote_message(MESSAGE_CHILD_TEST_DONE);
 
   // Gather payload from child.
+  dump("... requesting child payloads\n");
   let promiseMessage = do_await_remote_message(MESSAGE_TELEMETRY_PAYLOAD);
   TelemetrySession.requestChildPayloads();
   yield promiseMessage;
+  dump("... received child payload\n");
 
   // Check child payload.
   const payload = TelemetrySession.getPayload("test-ping");
