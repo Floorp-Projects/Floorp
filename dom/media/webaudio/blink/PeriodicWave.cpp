@@ -203,12 +203,9 @@ void PeriodicWave::createBandLimitedTables(const float* realData, const float* i
         // Copy from loaded frequency data and scale.
         float scale = fftSize;
         AudioBufferCopyWithScale(realData, scale, realP, numberOfPartials + 1);
-        AudioBufferCopyWithScale(imagData, scale, imagP, numberOfPartials + 1);
-
         // Generate complex conjugate because of the way the
         // inverse FFT is defined.
-        float minusOne = -1;
-        AudioBufferInPlaceScale(imagP, minusOne, numberOfPartials + 1);
+        AudioBufferCopyWithScale(imagData, -scale, imagP, numberOfPartials + 1);
 
         // Clear the remaining bins.
         for (i = numberOfPartials + 1; i < halfSize + 1; ++i) {
