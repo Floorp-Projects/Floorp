@@ -8,13 +8,12 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Maybe.h"
+#include "mozilla/Move.h"
 
 #include <algorithm>
 #include <math.h>
 
 #include "jsapi.h"
-#include "jscntxt.h"
 #include "jscompartment.h"
 #include "jsfriendapi.h"
 #include "jshashutil.h"
@@ -33,11 +32,15 @@
 #include "jscntxtinlines.h"
 
 #include "vm/NativeObject-inl.h"
+#include "vm/Stack-inl.h"
 
 using mozilla::AddToHash;
 using mozilla::DebugOnly;
 using mozilla::HashString;
 using mozilla::Maybe;
+using mozilla::Move;
+using mozilla::Nothing;
+using mozilla::Some;
 
 namespace js {
 
@@ -46,19 +49,110 @@ namespace js {
  */
 const unsigned ASYNC_STACK_MAX_FRAME_COUNT = 60;
 
+/* static */ Maybe<LiveSavedFrameCache::FramePtr>
+LiveSavedFrameCache::getFramePtr(FrameIter& iter)
+{
+    if (iter.hasUsableAbstractFramePtr())
+        return Some(FramePtr(iter.abstractFramePtr()));
+
+    if (iter.isPhysicalIonFrame())
+        return Some(FramePtr(iter.physicalIonFrame()));
+
+    return Nothing();
+}
+
+/* static */ void
+LiveSavedFrameCache::trace(LiveSavedFrameCache* cache, JSTracer* trc)
+{
+    if (!cache->initialized())
+        return;
+
+    for (auto* entry = cache->frames->begin(); entry < cache->frames->end(); entry++) {
+        TraceEdge(trc,
+                  &entry->savedFrame,
+                  "LiveSavedFrameCache::frames SavedFrame");
+    }
+}
+
+bool
+LiveSavedFrameCache::insert(JSContext* cx, FramePtr& framePtr, jsbytecode* pc,
+                            HandleSavedFrame savedFrame)
+{
+    MOZ_ASSERT(initialized());
+
+    if (!frames->emplaceBack(framePtr, pc, savedFrame)) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    // Safe to dereference the cache key because the stack frames are still
+    // live. After this point, they should never be dereferenced again.
+    if (framePtr.is<AbstractFramePtr>())
+        framePtr.as<AbstractFramePtr>().setHasCachedSavedFrame();
+    else
+        framePtr.as<jit::CommonFrameLayout*>()->setHasCachedSavedFrame();
+
+    return true;
+}
+
+void
+LiveSavedFrameCache::find(JSContext* cx, FrameIter& frameIter, MutableHandleSavedFrame frame) const
+{
+    MOZ_ASSERT(initialized());
+    MOZ_ASSERT(!frameIter.done());
+    MOZ_ASSERT(frameIter.hasCachedSavedFrame());
+
+    Maybe<FramePtr> maybeFramePtr = getFramePtr(frameIter);
+    MOZ_ASSERT(maybeFramePtr.isSome());
+
+    FramePtr framePtr(*maybeFramePtr);
+    jsbytecode* pc = frameIter.pc();
+    size_t numberStillValid = 0;
+
+    frame.set(nullptr);
+    for (auto* p = frames->begin(); p < frames->end(); p++) {
+        numberStillValid++;
+        if (framePtr == p->framePtr && pc == p->pc) {
+            frame.set(p->savedFrame);
+            break;
+        }
+    }
+
+    if (!frame) {
+        frames->clear();
+        return;
+    }
+
+    MOZ_ASSERT(0 < numberStillValid && numberStillValid <= frames->length());
+
+    if (frame->compartment() != cx->compartment()) {
+        frame.set(nullptr);
+        numberStillValid--;
+    }
+
+    // Everything after the cached SavedFrame are stale younger frames we have
+    // since popped.
+    frames->shrinkBy(frames->length() - numberStillValid);
+}
+
 struct SavedFrame::Lookup {
     Lookup(JSAtom* source, uint32_t line, uint32_t column,
            JSAtom* functionDisplayName, JSAtom* asyncCause, SavedFrame* parent,
-           JSPrincipals* principals)
+           JSPrincipals* principals, Maybe<LiveSavedFrameCache::FramePtr> framePtr, jsbytecode* pc,
+           Activation* activation)
       : source(source),
         line(line),
         column(column),
         functionDisplayName(functionDisplayName),
         asyncCause(asyncCause),
         parent(parent),
-        principals(principals)
+        principals(principals),
+        framePtr(framePtr),
+        pc(pc),
+        activation(activation)
     {
         MOZ_ASSERT(source);
+        MOZ_ASSERT(activation);
     }
 
     explicit Lookup(SavedFrame& savedFrame)
@@ -68,18 +162,27 @@ struct SavedFrame::Lookup {
         functionDisplayName(savedFrame.getFunctionDisplayName()),
         asyncCause(savedFrame.getAsyncCause()),
         parent(savedFrame.getParent()),
-        principals(savedFrame.getPrincipals())
+        principals(savedFrame.getPrincipals()),
+        framePtr(Nothing()),
+        pc(nullptr),
+        activation(nullptr)
     {
         MOZ_ASSERT(source);
     }
 
-    JSAtom*      source;
-    uint32_t     line;
-    uint32_t     column;
-    JSAtom*      functionDisplayName;
-    JSAtom*      asyncCause;
-    SavedFrame*  parent;
+    JSAtom*       source;
+    uint32_t      line;
+    uint32_t      column;
+    JSAtom*       functionDisplayName;
+    JSAtom*       asyncCause;
+    SavedFrame*   parent;
     JSPrincipals* principals;
+
+    // These are used only by the LiveSavedFrameCache and not used for identity or
+    // hashing.
+    Maybe<LiveSavedFrameCache::FramePtr> framePtr;
+    jsbytecode*                          pc;
+    Activation*                          activation;
 
     void trace(JSTracer* trc) {
         TraceManuallyBarrieredEdge(trc, &source, "SavedFrame::Lookup::source");
@@ -399,8 +502,7 @@ SavedFrame::checkThis(JSContext* cx, CallArgs& args, const char* fnName,
     const Value& thisValue = args.thisv();
 
     if (!thisValue.isObject()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT,
-                             InformalValueTypeName(thisValue));
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, InformalValueTypeName(thisValue));
         return false;
     }
 
@@ -814,7 +916,7 @@ SavedStacks::saveCurrentStack(JSContext* cx, MutableHandleSavedFrame frame, unsi
     MOZ_ASSERT(initialized());
     assertSameCompartment(cx, this);
 
-    if (creatingSavedFrame) {
+    if (creatingSavedFrame || cx->isExceptionPending()) {
         frame.set(nullptr);
         return true;
     }
@@ -855,13 +957,12 @@ SavedStacks::sweep(JSRuntime* rt)
 void
 SavedStacks::trace(JSTracer* trc)
 {
-    if (!pcLocationMap.initialized())
-        return;
-
-    // Mark each of the source strings in our pc to location cache.
-    for (PCLocationMap::Enum e(pcLocationMap); !e.empty(); e.popFront()) {
-        LocationValue& loc = e.front().value();
-        TraceEdge(trc, &loc.source, "SavedStacks::PCLocationMap's memoized script source name");
+    if (pcLocationMap.initialized()) {
+        // Mark each of the source strings in our pc to location cache.
+        for (PCLocationMap::Enum e(pcLocationMap); !e.empty(); e.popFront()) {
+            LocationValue& loc = e.front().value();
+            TraceEdge(trc, &loc.source, "SavedStacks::PCLocationMap's memoized script source name");
+        }
     }
 }
 
@@ -906,6 +1007,8 @@ SavedStacks::insertFrames(JSContext* cx, FrameIter& iter, MutableHandleSavedFram
     Activation* asyncActivation = nullptr;
     RootedSavedFrame asyncStack(cx, nullptr);
     RootedString asyncCause(cx, nullptr);
+    bool parentIsInCache = false;
+    RootedSavedFrame cachedFrame(cx, nullptr);
 
     // Accumulate the vector of Lookup objects in |stackChain|.
     SavedFrame::AutoLookupVector stackChain(cx);
@@ -943,6 +1046,11 @@ SavedStacks::insertFrames(JSContext* cx, FrameIter& iter, MutableHandleSavedFram
                 return false;
         }
 
+        // The bit set means that the next older parent (frame, pc) pair *must*
+        // be in the cache.
+        if (maxFrameCount == 0)
+            parentIsInCache = iter.hasCachedSavedFrame();
+
         auto displayAtom = iter.isNonEvalFunctionFrame() ? iter.functionDisplayAtom() : nullptr;
         if (!stackChain->emplaceBack(location->source,
                                      location->line,
@@ -950,17 +1058,16 @@ SavedStacks::insertFrames(JSContext* cx, FrameIter& iter, MutableHandleSavedFram
                                      displayAtom,
                                      nullptr,
                                      nullptr,
-                                     iter.compartment()->principals()))
+                                     iter.compartment()->principals(),
+                                     LiveSavedFrameCache::getFramePtr(iter),
+                                     iter.pc(),
+                                     &activation))
         {
             ReportOutOfMemory(cx);
             return false;
         }
 
         ++iter;
-
-        // If maxFrameCount is zero there's no limit on the number of frames.
-        if (maxFrameCount == 0)
-            continue;
 
         if (maxFrameCount == 1) {
             // The frame we just saved was the last one we were asked to save.
@@ -969,13 +1076,29 @@ SavedStacks::insertFrames(JSContext* cx, FrameIter& iter, MutableHandleSavedFram
             break;
         }
 
+        if (parentIsInCache &&
+            !iter.done() &&
+            iter.hasCachedSavedFrame())
+        {
+            auto* cache = activation.getLiveSavedFrameCache(cx);
+            if (!cache)
+                return false;
+            cache->find(cx, iter, &cachedFrame);
+            if (cachedFrame)
+                break;
+        }
+
+        // If maxFrameCount is zero there's no limit on the number of frames.
+        if (maxFrameCount == 0)
+            continue;
+
         maxFrameCount--;
     }
 
     // Limit the depth of the async stack, if any, and ensure that the
     // SavedFrame instances we use are stored in the same compartment as the
     // rest of the synchronous stack chain.
-    RootedSavedFrame parentFrame(cx, nullptr);
+    RootedSavedFrame parentFrame(cx, cachedFrame);
     if (asyncStack && !adoptAsyncStack(cx, asyncStack, asyncCause, &parentFrame, maxFrameCount))
         return false;
 
@@ -987,6 +1110,12 @@ SavedStacks::insertFrames(JSContext* cx, FrameIter& iter, MutableHandleSavedFram
         parentFrame.set(getOrCreateSavedFrame(cx, lookup));
         if (!parentFrame)
             return false;
+
+        if (maxFrameCount == 0 && lookup->framePtr && parentFrame != cachedFrame) {
+            auto* cache = lookup->activation->getLiveSavedFrameCache(cx);
+            if (!cache || !cache->insert(cx, *lookup->framePtr, lookup->pc, parentFrame))
+                return false;
+        }
     }
 
     frame.set(parentFrame);
