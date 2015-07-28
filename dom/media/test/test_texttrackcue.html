@@ -45,13 +45,11 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.regions.enabled", true]]},
       is(cueList.length, 6, "Cue list length should be 6.");
 
       // Check that the typedef of TextTrackCue works in Gecko.
-      isnot(window.TextTrackCue, undefined, "TextTrackCue should be defined.");
+      is(window.TextTrackCue, undefined, "TextTrackCue should be undefined.");
       isnot(window.VTTCue, undefined, "VTTCue should be defined.");
 
       // Check if first cue was parsed correctly.
       var cue = cueList[0];
-      ok(cue instanceof TextTrackCue, "Cue should be an instanceof TextTrackCue.");
-      ok(cue instanceof VTTCue, "Cue should be an instanceof VTTCue.");
       is(cue.id, "1", "Cue's ID should be 1.");
       is(cue.startTime, 0.5, "Cue's start time should be 0.5.");
       is(cue.endTime, 0.7, "Cue's end time should be 0.7.");

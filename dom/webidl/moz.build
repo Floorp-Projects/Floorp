@@ -521,7 +521,6 @@ WEBIDL_FILES = [
     'TextDecoder.webidl',
     'TextEncoder.webidl',
     'TextTrack.webidl',
-    'TextTrackCue.webidl',
     'TextTrackCueList.webidl',
     'TextTrackList.webidl',
     'ThreadSafeChromeUtils.webidl',
