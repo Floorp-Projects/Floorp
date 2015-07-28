@@ -1161,7 +1161,7 @@ function CssRuleView(inspector, document, aStore, aPageStyle) {
   this.store = aStore || {};
   this.pageStyle = aPageStyle;
 
-  this._outputParser = new OutputParser();
+  this._outputParser = new OutputParser(document);
 
   this._onKeypress = this._onKeypress.bind(this);
   this._onAddRule = this._onAddRule.bind(this);
