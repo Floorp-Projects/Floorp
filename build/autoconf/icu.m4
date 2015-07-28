@@ -173,59 +173,59 @@ if test -z "$BUILDING_JS" -o -n "$JS_STANDALONE"; then
         ICU_CROSS_BUILD_OPT=""
 
         if test "$CROSS_COMPILE"; then
-    	# Remove _DEPEND_CFLAGS from HOST_FLAGS to avoid configure error
-    	HOST_ICU_CFLAGS="$HOST_CFLAGS"
-    	HOST_ICU_CXXFLAGS="$HOST_CXXFLAGS"
+            # Remove _DEPEND_CFLAGS from HOST_FLAGS to avoid configure error
+            HOST_ICU_CFLAGS="$HOST_CFLAGS"
+            HOST_ICU_CXXFLAGS="$HOST_CXXFLAGS"
 
-    	HOST_ICU_CFLAGS=`echo $HOST_ICU_CFLAGS | sed "s|$_DEPEND_CFLAGS||g"`
-    	HOST_ICU_CXXFLAGS=`echo $HOST_ICU_CFXXLAGS | sed "s|$_DEPEND_CFLAGS||g"`
+            HOST_ICU_CFLAGS=`echo $HOST_ICU_CFLAGS | sed "s|$_DEPEND_CFLAGS||g"`
+            HOST_ICU_CXXFLAGS=`echo $HOST_ICU_CFXXLAGS | sed "s|$_DEPEND_CFLAGS||g"`
 
-    	# ICU requires RTTI
-    	if test "$GNU_CC"; then
-    	    HOST_ICU_CXXFLAGS=`echo $HOST_ICU_CXXFLAGS | sed 's|-fno-rtti|-frtti|g'`
-    	elif test "$_MSC_VER"; then
-    	    HOST_ICU_CXXFLAGS=`echo $HOST_ICU_CXXFLAGS | sed 's|-GR-|-GR|g'`
-    	fi
+            # ICU requires RTTI
+            if test "$GNU_CC"; then
+                HOST_ICU_CXXFLAGS=`echo $HOST_ICU_CXXFLAGS | sed 's|-fno-rtti|-frtti|g'`
+            elif test "$_MSC_VER"; then
+                HOST_ICU_CXXFLAGS=`echo $HOST_ICU_CXXFLAGS | sed 's|-GR-|-GR|g'`
+            fi
 
-    	HOST_ICU_BUILD_OPTS=""
-    	if test -n "$MOZ_DEBUG"; then
-    	    HOST_ICU_BUILD_OPTS="$HOST_ICU_BUILD_OPTS --enable-debug"
-    	fi
+            HOST_ICU_BUILD_OPTS=""
+            if test -n "$MOZ_DEBUG"; then
+                HOST_ICU_BUILD_OPTS="$HOST_ICU_BUILD_OPTS --enable-debug"
+            fi
 
-    	abs_srcdir=`(cd $srcdir; pwd)`
-    	mkdir -p $_objdir/intl/icu/host
-        (export AR="$HOST_AR"
-         export RANLIB="$HOST_RANLIB"
-         export CC="$HOST_CC"
-         export CXX="$HOST_CXX"
-         export CPP="$HOST_CPP"
-         export LD="$HOST_LD"
-         export CFLAGS="$HOST_ICU_CFLAGS $HOST_OPTIMIZE_FLAGS"
-         export CPPFLAGS="$ICU_CPPFLAGS"
-         export CXXFLAGS="$HOST_ICU_CXXFLAGS $HOST_OPTIMIZE_FLAGS"
-         export LDFLAGS="$HOST_LDFLAGS"
-         ac_configure_args="$HOST_ICU_BUILD_OPTS"
-         ac_configure_args="$ac_configure_args --enable-static --disable-shared --enable-extras=no --enable-icuio=no --enable-layout=no --enable-tests=no --enable-samples=no"
-         AC_OUTPUT_SUBDIRS_NOW(intl/icu/source:intl/icu/host)
-        ) || exit 1
-    	# generate config/icucross.mk
-    	$GMAKE -C $_objdir/intl/icu/host/ config/icucross.mk
+            abs_srcdir=`(cd $srcdir; pwd)`
+            mkdir -p $_objdir/intl/icu/host
+            (export AR="$HOST_AR"
+             export RANLIB="$HOST_RANLIB"
+             export CC="$HOST_CC"
+             export CXX="$HOST_CXX"
+             export CPP="$HOST_CPP"
+             export LD="$HOST_LD"
+             export CFLAGS="$HOST_ICU_CFLAGS $HOST_OPTIMIZE_FLAGS"
+             export CPPFLAGS="$ICU_CPPFLAGS"
+             export CXXFLAGS="$HOST_ICU_CXXFLAGS $HOST_OPTIMIZE_FLAGS"
+             export LDFLAGS="$HOST_LDFLAGS"
+             ac_configure_args="$HOST_ICU_BUILD_OPTS"
+             ac_configure_args="$ac_configure_args --enable-static --disable-shared --enable-extras=no --enable-icuio=no --enable-layout=no --enable-tests=no --enable-samples=no"
+             AC_OUTPUT_SUBDIRS_NOW(intl/icu/source:intl/icu/host)
+            ) || exit 1
+            # generate config/icucross.mk
+            $GMAKE -C $_objdir/intl/icu/host/ config/icucross.mk
 
-    	# --with-cross-build requires absolute path
-    	ICU_HOST_PATH=`cd $_objdir/intl/icu/host && pwd`
-    	ICU_CROSS_BUILD_OPT="--with-cross-build=$ICU_HOST_PATH --disable-tools"
-    	ICU_TARGET_OPT="--build=$build --host=$target"
+            # --with-cross-build requires absolute path
+            ICU_HOST_PATH=`cd $_objdir/intl/icu/host && pwd`
+            ICU_CROSS_BUILD_OPT="--with-cross-build=$ICU_HOST_PATH --disable-tools"
+            ICU_TARGET_OPT="--build=$build --host=$target"
         else
-    	# CROSS_COMPILE isn't set build and target are i386 and x86-64.
-    	# So we must set target for --build and --host.
-    	ICU_TARGET_OPT="--build=$target --host=$target"
+            # CROSS_COMPILE isn't set build and target are i386 and x86-64.
+            # So we must set target for --build and --host.
+            ICU_TARGET_OPT="--build=$target --host=$target"
         fi
 
         if test -z "$MOZ_SHARED_ICU"; then
-    	# To reduce library size, use static linking
-    	ICU_LINK_OPTS="--enable-static --disable-shared"
+            # To reduce library size, use static linking
+            ICU_LINK_OPTS="--enable-static --disable-shared"
         else
-    	ICU_LINK_OPTS="--disable-static --enable-shared"
+            ICU_LINK_OPTS="--disable-static --enable-shared"
         fi
         # Force the ICU static libraries to be position independent code
         ICU_CFLAGS="$DSO_PIC_CFLAGS $CFLAGS"
@@ -233,64 +233,64 @@ if test -z "$BUILDING_JS" -o -n "$JS_STANDALONE"; then
 
         ICU_BUILD_OPTS=""
         if test -n "$MOZ_DEBUG" -o "MOZ_DEBUG_SYMBOLS"; then
-    	ICU_CFLAGS="$ICU_CFLAGS $MOZ_DEBUG_FLAGS"
-    	ICU_CXXFLAGS="$ICU_CXXFLAGS $MOZ_DEBUG_FLAGS"
-    	if test -n "$CROSS_COMPILE" -a "$OS_TARGET" = "Darwin" \
-    		-a "$HOST_OS_ARCH" != "Darwin"
-    	then
-    	    # Bug 951758: Cross-OSX builds with non-Darwin hosts have issues
-    	    # with -g and friends (like -gdwarf and -gfull) because they try
-    	    # to run dsymutil
-    	    changequote(,)
-    	    ICU_CFLAGS=`echo $ICU_CFLAGS | sed 's|-g[^ \t]*||g'`
-    	    ICU_CXXFLAGS=`echo $ICU_CXXFLAGS | sed 's|-g[^ \t]*||g'`
-    	    changequote([,])
-    	fi
+            ICU_CFLAGS="$ICU_CFLAGS $MOZ_DEBUG_FLAGS"
+            ICU_CXXFLAGS="$ICU_CXXFLAGS $MOZ_DEBUG_FLAGS"
+            if test -n "$CROSS_COMPILE" -a "$OS_TARGET" = "Darwin" \
+                    -a "$HOST_OS_ARCH" != "Darwin"
+            then
+                # Bug 951758: Cross-OSX builds with non-Darwin hosts have issues
+                # with -g and friends (like -gdwarf and -gfull) because they try
+                # to run dsymutil
+                changequote(,)
+                ICU_CFLAGS=`echo $ICU_CFLAGS | sed 's|-g[^ \t]*||g'`
+                ICU_CXXFLAGS=`echo $ICU_CXXFLAGS | sed 's|-g[^ \t]*||g'`
+                changequote([,])
+            fi
 
-    	ICU_LDFLAGS="$MOZ_DEBUG_LDFLAGS"
-    	if test -z "$MOZ_DEBUG"; then
-    	    # To generate debug symbols, it requires MOZ_DEBUG_FLAGS.
-    	    # But, not debug build.
-    	    ICU_CFLAGS="$ICU_CFLAGS -UDEBUG -DNDEBUG"
-    	    ICU_CXXFLAGS="$ICU_CXXFLAGS -UDEBUG -DNDEBUG"
-    	elif test -z "$MOZ_NO_DEBUG_RTL"; then
-    	    ICU_BUILD_OPTS="$ICU_BUILD_OPTS --enable-debug"
-    	fi
+            ICU_LDFLAGS="$MOZ_DEBUG_LDFLAGS"
+            if test -z "$MOZ_DEBUG"; then
+                # To generate debug symbols, it requires MOZ_DEBUG_FLAGS.
+                # But, not debug build.
+                ICU_CFLAGS="$ICU_CFLAGS -UDEBUG -DNDEBUG"
+                ICU_CXXFLAGS="$ICU_CXXFLAGS -UDEBUG -DNDEBUG"
+            elif test -z "$MOZ_NO_DEBUG_RTL"; then
+                ICU_BUILD_OPTS="$ICU_BUILD_OPTS --enable-debug"
+            fi
         fi
         if test -z "$MOZ_OPTIMIZE"; then
-    	ICU_BUILD_OPTS="$ICU_BUILD_OPTS --disable-release"
+            ICU_BUILD_OPTS="$ICU_BUILD_OPTS --disable-release"
         else
-    	ICU_CFLAGS="$ICU_CFLAGS $MOZ_OPTIMIZE_FLAGS"
-    	ICU_CXXFLAGS="$ICU_CXXFLAGS $MOZ_OPTIMIZE_FLAGS"
+            ICU_CFLAGS="$ICU_CFLAGS $MOZ_OPTIMIZE_FLAGS"
+            ICU_CXXFLAGS="$ICU_CXXFLAGS $MOZ_OPTIMIZE_FLAGS"
         fi
 
         if test "$am_cv_langinfo_codeset" = "no"; then
-    	# ex. Android
-    	ICU_CPPFLAGS="$ICU_CPPFLAGS -DU_HAVE_NL_LANGINFO_CODESET=0"
+            # ex. Android
+            ICU_CPPFLAGS="$ICU_CPPFLAGS -DU_HAVE_NL_LANGINFO_CODESET=0"
         fi
 
         # ICU requires RTTI
         if test "$GNU_CC"; then
-    	ICU_CXXFLAGS=`echo $ICU_CXXFLAGS | sed 's|-fno-rtti|-frtti|g'`
+            ICU_CXXFLAGS=`echo $ICU_CXXFLAGS | sed 's|-fno-rtti|-frtti|g'`
         else
-    	if test "$_MSC_VER"; then
-    	    ICU_CXXFLAGS=`echo $ICU_CXXFLAGS | sed 's|-GR-|-GR|g'`
-    	fi
+            if test "$_MSC_VER"; then
+                ICU_CXXFLAGS=`echo $ICU_CXXFLAGS | sed 's|-GR-|-GR|g'`
+            fi
 
-    	# Add RTL flags for MSVCRT.DLL
-    	if test -n "$MOZ_DEBUG" -a -z "$MOZ_NO_DEBUG_RTL"; then
-    	    ICU_CFLAGS="$ICU_CFLAGS -MDd"
-    	    ICU_CXXFLAGS="$ICU_CXXFLAGS -MDd"
-    	else
-    	    ICU_CFLAGS="$ICU_CFLAGS -MD"
-    	    ICU_CXXFLAGS="$ICU_CXXFLAGS -MD"
-    	fi
+            # Add RTL flags for MSVCRT.DLL
+            if test -n "$MOZ_DEBUG" -a -z "$MOZ_NO_DEBUG_RTL"; then
+                ICU_CFLAGS="$ICU_CFLAGS -MDd"
+                ICU_CXXFLAGS="$ICU_CXXFLAGS -MDd"
+            else
+                ICU_CFLAGS="$ICU_CFLAGS -MD"
+                ICU_CXXFLAGS="$ICU_CXXFLAGS -MD"
+            fi
 
-    	# add disable optimize flag for workaround for bug 899948
-    	if test -z "$MOZ_OPTIMIZE"; then
-    	    ICU_CFLAGS="$ICU_CFLAGS -Od"
-    	    ICU_CXXFLAGS="$ICU_CXXFLAGS -Od"
-    	fi
+            # add disable optimize flag for workaround for bug 899948
+            if test -z "$MOZ_OPTIMIZE"; then
+                ICU_CFLAGS="$ICU_CFLAGS -Od"
+                ICU_CXXFLAGS="$ICU_CXXFLAGS -Od"
+            fi
         fi
 
         if test -n "$gonkdir"; then
