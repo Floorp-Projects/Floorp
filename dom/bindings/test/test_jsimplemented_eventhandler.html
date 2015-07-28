@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1186696
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1186696</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1186696 **/
+  SimpleTest.waitForExplicitFinish();
+
+  function doTest() {
+    var values = [ function() {}, 5, null, undefined, "some string", {} ];
+
+    while (values.length != 0) {
+      var value = values.pop();
+      var t = new TestInterfaceJS();
+      t.onsomething = value;
+      var gottenValue = t.onsomething;
+      if (typeof value == "object" || typeof value == "function") {
+        is(gottenValue, value, "Should get back the object-or-null we put in");
+      } else {
+        is(gottenValue, null, "Should get back null");
+      }
+    }
+
+    SimpleTest.finish();
+  }
+
+  SpecialPowers.pushPrefEnv({set: [['dom.expose_test_interfaces', true]]},
+                            doTest);
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1186696">Mozilla Bug 1186696</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

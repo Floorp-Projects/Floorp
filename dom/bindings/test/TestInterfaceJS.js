@@ -156,6 +156,13 @@ TestInterfaceJS.prototype = {
     });
   },
 
+  get onsomething() {
+    return this.__DOM_IMPL__.getEventHandler("onsomething");
+  },
+
+  set onsomething(val) {
+    this.__DOM_IMPL__.setEventHandler("onsomething", val);
+  }
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TestInterfaceJS])
