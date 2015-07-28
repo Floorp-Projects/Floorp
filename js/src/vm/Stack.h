@@ -283,11 +283,11 @@ class InterpreterFrame
   public:
     enum Flags : uint32_t {
         /* Primary frame type */
-        GLOBAL             =        0x1,  /* frame pushed for a global script */
-        FUNCTION           =        0x2,  /* frame pushed for a scripted call */
+        GLOBAL                 =        0x1,  /* frame pushed for a global script */
+        FUNCTION               =        0x2,  /* frame pushed for a scripted call */
 
         /* Frame subtypes */
-        EVAL               =        0x4,  /* frame pushed for eval() or debugger eval */
+        EVAL                   =        0x4,  /* frame pushed for eval() or debugger eval */
 
 
         /*
@@ -302,33 +302,33 @@ class InterpreterFrame
          *   previous frame in memory. Iteration should treat
          *   evalInFramePrev_ as this frame's previous frame.
          */
-        DEBUGGER_EVAL      =        0x8,
+        DEBUGGER_EVAL          =        0x8,
 
-        CONSTRUCTING       =       0x10,  /* frame is for a constructor invocation */
+        CONSTRUCTING           =       0x10,  /* frame is for a constructor invocation */
 
-        RESUMED_GENERATOR  =       0x20,  /* frame is for a resumed generator invocation */
+        RESUMED_GENERATOR      =       0x20,  /* frame is for a resumed generator invocation */
 
         /* (0x40 and 0x80 are unused) */
 
         /* Function prologue state */
-        HAS_CALL_OBJ       =      0x100,  /* CallObject created for heavyweight fun */
-        HAS_ARGS_OBJ       =      0x200,  /* ArgumentsObject created for needsArgsObj script */
+        HAS_CALL_OBJ           =      0x100,  /* CallObject created for heavyweight fun */
+        HAS_ARGS_OBJ           =      0x200,  /* ArgumentsObject created for needsArgsObj script */
 
         /* Lazy frame initialization */
-        HAS_RVAL           =      0x800,  /* frame has rval_ set */
-        HAS_SCOPECHAIN     =     0x1000,  /* frame has scopeChain_ set */
+        HAS_RVAL               =      0x800,  /* frame has rval_ set */
+        HAS_SCOPECHAIN         =     0x1000,  /* frame has scopeChain_ set */
 
         /* Debugger state */
-        PREV_UP_TO_DATE    =     0x4000,  /* see DebugScopes::updateLiveScopes */
+        PREV_UP_TO_DATE        =     0x4000,  /* see DebugScopes::updateLiveScopes */
 
         /*
          * See comment above 'isDebuggee' in jscompartment.h for explanation of
          * invariants of debuggee compartments, scripts, and frames.
          */
-        DEBUGGEE           =     0x8000,  /* Execution is being observed by Debugger */
+        DEBUGGEE               =     0x8000,  /* Execution is being observed by Debugger */
 
         /* Used in tracking calls and profiling (see vm/SPSProfiler.cpp) */
-        HAS_PUSHED_SPS_FRAME =   0x10000, /* SPS was notified of enty */
+        HAS_PUSHED_SPS_FRAME   =    0x10000, /* SPS was notified of enty */
 
 
         /*
