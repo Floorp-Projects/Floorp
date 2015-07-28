@@ -116,16 +116,8 @@
 .identity-popup-expander[panel-multiview-anchor] {
   transition: background-color 250ms ease-in;
   background-color: Highlight;
-  background-image: url("chrome://browser/skin/customizableui/subView-arrow-back-inverted.png"),
+  background-image: url("chrome://browser/skin/controlcenter/arrow-subview-back.svg"),
                     linear-gradient(rgba(255,255,255,0.3), transparent);
-  color: HighlightText;
-}
-
-@media (min-resolution: 1.1dppx) {
-  .identity-popup-expander[panel-multiview-anchor] {
-    background-image: url("chrome://browser/skin/customizableui/subView-arrow-back-inverted@2x.png"),
-                      linear-gradient(rgba(255,255,255,0.3), transparent);
-  }
 }
 
 .identity-popup-expander > .button-box {
