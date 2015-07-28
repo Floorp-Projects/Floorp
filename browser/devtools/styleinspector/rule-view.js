@@ -3163,7 +3163,8 @@ TextPropertyEditor.prototype = {
   },
 
   _onStartEditing: function() {
-    this._previewValue(this.prop.value);
+    this.element.classList.remove("ruleview-overridden");
+    this.enable.style.visibility = "hidden";
   },
 
   /**
@@ -3467,9 +3468,6 @@ TextPropertyEditor.prototype = {
     if (!this.editing || this.ruleEditor.isEditing) {
       return;
     }
-
-    this.element.classList.remove("ruleview-overridden");
-    this.enable.style.visibility = "hidden";
 
     let val = parseSingleValue(aValue);
     this.ruleEditor.rule.previewPropertyValue(this.prop, val.value,
