@@ -306,7 +306,7 @@ class Node {
     Node() { construct<void>(nullptr); }
 
     template<typename T>
-    Node(T* ptr) {
+    MOZ_IMPLICIT Node(T* ptr) {
         construct(ptr);
     }
     template<typename T>
@@ -317,7 +317,7 @@ class Node {
 
     // We can construct and assign from rooted forms of pointers.
     template<typename T>
-    Node(const Rooted<T*>& root) {
+    MOZ_IMPLICIT Node(const Rooted<T*>& root) {
         construct(root.get());
     }
     template<typename T>
