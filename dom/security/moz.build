@@ -37,5 +37,6 @@ LOCAL_INCLUDES += [
     '/netwerk/base',
 ]
 
-CFLAGS += ['-Wshadow']
-CXXFLAGS += ['-Wshadow']
+if CONFIG['GNU_CC']:
+    CFLAGS += ['-Wshadow']
+    CXXFLAGS += ['-Wshadow']
