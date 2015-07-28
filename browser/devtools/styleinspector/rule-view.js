@@ -3163,7 +3163,6 @@ TextPropertyEditor.prototype = {
   },
 
   _onStartEditing: function() {
-    this.element.classList.remove("ruleview-overridden");
     this._previewValue(this.prop.value);
   },
 
@@ -3326,6 +3325,10 @@ TextPropertyEditor.prototype = {
       this.prop.setName(properties[0].name);
       this.committed.name = this.prop.name;
 
+      if (!this.prop.enabled) {
+        this.prop.setEnabled(true);
+      }
+
       if (properties.length > 1) {
         this.prop.setValue(properties[0].value, properties[0].priority);
         this.ruleEditor.addProperties(properties.slice(1), this.prop);
@@ -3381,6 +3384,11 @@ TextPropertyEditor.prototype = {
 
     // First, set this property value (common case, only modified a property)
     this.prop.setValue(val.value, val.priority);
+
+    if (!this.prop.enabled) {
+      this.prop.setEnabled(true);
+    }
+
     this.removeOnRevert = false;
     this.committed.value = this.prop.value;
     this.committed.priority = this.prop.priority;
@@ -3459,6 +3467,9 @@ TextPropertyEditor.prototype = {
     if (!this.editing || this.ruleEditor.isEditing) {
       return;
     }
+
+    this.element.classList.remove("ruleview-overridden");
+    this.enable.style.visibility = "hidden";
 
     let val = parseSingleValue(aValue);
     this.ruleEditor.rule.previewPropertyValue(this.prop, val.value,
