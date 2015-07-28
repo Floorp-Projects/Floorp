@@ -17,7 +17,6 @@ SOURCES += [
     'TestNeedsNoVTableType.cpp',
     'TestNoAddRefReleaseOnReturn.cpp',
     'TestNoArithmeticExprInArgument.cpp',
-    'TestNoDuplicateRefCntMember.cpp',
     'TestNonHeapClass.cpp',
     'TestNonMemMovable.cpp',
     'TestNoRefcountedInsideLambdas.cpp',
