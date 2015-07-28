@@ -12,7 +12,7 @@ dictionary TestInterfaceJSUnionableDictionary {
 [JSImplementation="@mozilla.org/dom/test-interface-js;1",
  Pref="dom.expose_test_interfaces",
  Constructor(optional any anyArg, optional object objectArg, optional TestInterfaceJSDictionary dictionaryArg)]
-interface TestInterfaceJS {
+interface TestInterfaceJS : EventTarget {
   readonly attribute any anyArg;
   readonly attribute object objectArg;
   [Cached, Pure] readonly attribute TestInterfaceJSDictionary dictionaryArg;
@@ -78,4 +78,7 @@ interface TestInterfaceJS {
   Promise<void> testPromiseWithThrowingChromeThenable();
   Promise<void> testPromiseWithThrowingContentThenable(object thenable);
   Promise<void> testPromiseWithDOMExceptionThrowingThenable();
+
+  // Event handler tests
+  attribute EventHandler onsomething;
 };
