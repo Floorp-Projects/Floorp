@@ -476,14 +476,14 @@ GetWrapperCache(const SmartPtr<T>& aObject)
 
 struct MOZ_STACK_CLASS ParentObject {
   template<class T>
-  ParentObject(T* aObject) :
+  MOZ_IMPLICIT ParentObject(T* aObject) :
     mObject(aObject),
     mWrapperCache(GetWrapperCache(aObject)),
     mUseXBLScope(false)
   {}
 
   template<class T, template<typename> class SmartPtr>
-  ParentObject(const SmartPtr<T>& aObject) :
+  MOZ_IMPLICIT ParentObject(const SmartPtr<T>& aObject) :
     mObject(aObject.get()),
     mWrapperCache(GetWrapperCache(aObject.get())),
     mUseXBLScope(false)
