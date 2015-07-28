@@ -8,7 +8,7 @@
 const { Cc, Ci, Cu, Cr } = require("chrome");
 const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 const EventEmitter = require("devtools/toolkit/event-emitter");
-const { DevToolsUtils } = Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm", {});
+const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 
 function DebuggerPanel(iframeWindow, toolbox) {
   this.panelWin = iframeWindow;
