@@ -72,6 +72,13 @@ for (var object of objects) {
         TypeError, "Object.setPrototypeOf should fail when the object is not extensible");
 }
 
+// check if Object.setPrototypeof(A, B) succeeds on not extensible object A if
+// prototype of A == B already
+var objectProto = {};
+var nonExtensibleObject = Object.create(objectProto);
+Object.preventExtensions(nonExtensibleObject);
+assertEq(Object.setPrototypeOf(nonExtensibleObject, objectProto), nonExtensibleObject);
+
 // check if Object.setPrototypeOf works with prototype lookup
 var object = {};
 assertEq('x' in object, false);
