@@ -3301,23 +3301,34 @@ TextPropertyEditor.prototype = {
    *        True if the change should be applied.
    */
   _onNameDone: function(aValue, aCommit) {
-    if (aCommit && !this.ruleEditor.isEditing) {
-      // Unlike the value editor, if a name is empty the entire property
-      // should always be removed.
-      if (aValue.trim() === "") {
-        this.remove();
-      } else {
-        // Adding multiple rules inside of name field overwrites the current
-        // property with the first, then adds any more onto the property list.
-        let properties = parseDeclarations(aValue);
+    if ((!aCommit && this.ruleEditor.isEditing) ||
+        this.committed.name == aValue) {
+      // Disable the property if the property was originally disabled.
+      if (!this.prop.enabled) {
+        this.rule.setPropertyEnabled(this.prop, this.prop.enabled);
+      }
 
-        if (properties.length) {
-          this.prop.setName(properties[0].name);
-          if (properties.length > 1) {
-            this.prop.setValue(properties[0].value, properties[0].priority);
-            this.ruleEditor.addProperties(properties.slice(1), this.prop);
-          }
-        }
+      return;
+    }
+
+    // Unlike the value editor, if a name is empty the entire property
+    // should always be removed.
+    if (aValue.trim() === "") {
+      this.remove();
+      return;
+    }
+
+    // Adding multiple rules inside of name field overwrites the current
+    // property with the first, then adds any more onto the property list.
+    let properties = parseDeclarations(aValue);
+
+    if (properties.length) {
+      this.prop.setName(properties[0].name);
+      this.committed.name = this.prop.name;
+
+      if (properties.length > 1) {
+        this.prop.setValue(properties[0].value, properties[0].priority);
+        this.ruleEditor.addProperties(properties.slice(1), this.prop);
       }
     }
   },
@@ -3349,35 +3360,33 @@ TextPropertyEditor.prototype = {
    * @param {bool} aCommit
    *        True if the change should be applied.
    */
-  _onValueDone: function(aValue, aCommit) {
-    if (!aCommit && !this.ruleEditor.isEditing) {
+  _onValueDone: function(aValue="", aCommit) {
+    let parsedProperties = this._getValueAndExtraProperties(aValue);
+    let val = parseSingleValue(parsedProperties.firstValue);
+    let isValueUnchanged =
+      !parsedProperties.propertiesToAdd.length &&
+      this.committed.value == val.value &&
+      this.committed.priority == val.priority;
+
+    if ((!aCommit && !this.ruleEditor.isEditing) || isValueUnchanged) {
       // A new property should be removed when escape is pressed.
       if (this.removeOnRevert) {
         this.remove();
       } else {
-        // update the editor back to committed value
-        this.update();
-
-        // undo the preview in content style
-        this.ruleEditor.rule.previewPropertyValue(this.prop,
-          this.prop.value, this.prop.priority);
+        // Disable the property if the property was originally disabled.
+        this.rule.setPropertyEnabled(this.prop, this.prop.enabled);
       }
       return;
     }
 
-    let {propertiesToAdd, firstValue} =
-        this._getValueAndExtraProperties(aValue);
-
     // First, set this property value (common case, only modified a property)
-    let val = parseSingleValue(firstValue);
-
     this.prop.setValue(val.value, val.priority);
     this.removeOnRevert = false;
     this.committed.value = this.prop.value;
     this.committed.priority = this.prop.priority;
 
     // If needed, add any new properties after this.prop.
-    this.ruleEditor.addProperties(propertiesToAdd, this.prop);
+    this.ruleEditor.addProperties(parsedProperties.propertiesToAdd, this.prop);
 
     // If the name or value is not actively being edited, and the value is
     // empty, then remove the whole property.
