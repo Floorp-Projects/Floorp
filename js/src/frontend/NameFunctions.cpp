@@ -439,6 +439,7 @@ class NameResolver
           case PNK_MULASSIGN:
           case PNK_DIVASSIGN:
           case PNK_MODASSIGN:
+          case PNK_POWASSIGN:
           case PNK_ELEM:
           case PNK_COLON:
           case PNK_CASE:
@@ -659,6 +660,7 @@ class NameResolver
           case PNK_STAR:
           case PNK_DIV:
           case PNK_MOD:
+          case PNK_POW:
           case PNK_COMMA:
           case PNK_NEW:
           case PNK_CALL:

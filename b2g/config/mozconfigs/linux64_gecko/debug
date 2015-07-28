@@ -4,8 +4,6 @@ MOZ_AUTOMATION_UPDATE_PACKAGING=0
 . "$topsrcdir/b2g/config/mozconfigs/common"
 . "$topsrcdir/build/unix/mozconfig.linux"
 
-ac_add_options --enable-default-toolkit=cairo-gtk2
-
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 ac_add_options --enable-update-packaging
 ac_add_options --enable-signmar

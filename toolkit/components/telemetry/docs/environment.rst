@@ -139,7 +139,8 @@ Structure::
               {
                 screenWidth: <number>,  // screen width in pixels
                 screenHeight: <number>, // screen height in pixels
-                refreshRate: <number>,  // refresh rate in hertz (present on Windows only)
+                refreshRate: <number>,  // refresh rate in hertz (present on Windows only).
+                                        //  (values <= 1 indicate an unknown value)
                 pseudoDisplay: <bool>,  // networked screen (present on Windows only)
                 scale: <number>,        // backing scale factor (present on Mac only)
               },
@@ -161,6 +162,8 @@ Structure::
                 warp: <bool>,           // Software rendering (WARP) mode was chosen.
                 textureSharing: <bool>  // Whether or not texture sharing works.
                 version: <number>,      // The D3D11 device feature level.
+                blacklisted: <bool>,    // Whether D3D11 is blacklisted; use to see whether WARP
+                                        // was blacklist induced or driver-failure induced.
               },
               "d2d" { // This feature is Windows-only.
                 status: <string>,
