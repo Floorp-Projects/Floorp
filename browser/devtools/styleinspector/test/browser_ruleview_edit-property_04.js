@@ -39,19 +39,25 @@ function* testDisableProperty(inspector, view) {
   });
   is(newValue, "", "background-color should have been unset.");
 
-  yield testPreviewDisableProperty(view, ruleEditor, propEditor.nameSpan,
-    "VK_ESCAPE");
-  yield testPreviewDisableProperty(view, ruleEditor, propEditor.valueSpan,
-    "VK_ESCAPE");
-  yield testPreviewDisableProperty(view, ruleEditor, propEditor.valueSpan,
-    "VK_TAB");
-  yield testPreviewDisableProperty(view, ruleEditor, propEditor.valueSpan,
-    "VK_RETURN");
+  yield testPreviewDisableProperty(view, ruleEditor, propEditor,
+    propEditor.nameSpan, "VK_ESCAPE");
+  yield testPreviewDisableProperty(view, ruleEditor, propEditor,
+    propEditor.valueSpan, "VK_ESCAPE");
+  yield testPreviewDisableProperty(view, ruleEditor, propEditor,
+    propEditor.valueSpan, "VK_TAB");
+  yield testPreviewDisableProperty(view, ruleEditor, propEditor,
+    propEditor.valueSpan, "VK_RETURN");
 }
 
-function* testPreviewDisableProperty(view, ruleEditor, propEditor, commitKey) {
-  let editor = yield focusEditableField(view, propEditor);
+function* testPreviewDisableProperty(view, ruleEditor, propEditor,
+    editableField, commitKey) {
+  let editor = yield focusEditableField(view, editableField);
   yield ruleEditor.rule._applyingModifications;
+
+  ok(!propEditor.element.classList.contains("ruleview-overridden"),
+    "property is not overridden.");
+  is(propEditor.enable.style.visibility, "hidden",
+    "property enable checkbox is hidden.");
 
   let newValue = yield executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
@@ -64,6 +70,14 @@ function* testPreviewDisableProperty(view, ruleEditor, propEditor, commitKey) {
   EventUtils.synthesizeKey(commitKey, {}, view.styleWindow);
   yield onBlur;
   yield ruleEditor.rule._applyingModifications;
+
+  ok(!propEditor.prop.enabled, "property is disabled.");
+  ok(propEditor.element.classList.contains("ruleview-overridden"),
+    "property is overridden.");
+  is(propEditor.enable.style.visibility, "visible",
+    "property enable checkbox is visible.");
+  ok(!propEditor.enable.getAttribute("checked"),
+    "property enable checkbox is not checked.");
 
   newValue = yield executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
