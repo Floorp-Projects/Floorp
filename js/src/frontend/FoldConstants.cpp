@@ -463,90 +463,6 @@ FoldType(ExclusiveContext* cx, ParseNode* pn, ParseNodeKind kind)
     return true;
 }
 
-/*
- * Fold two numeric constants.  Beware that pn1 and pn2 are recycled, unless
- * one of them aliases pn, so you can't safely fetch pn2->pn_next, e.g., after
- * a successful call to this function.
- */
-static bool
-FoldBinaryNumeric(ExclusiveContext* cx, JSOp op, ParseNode* pn1, ParseNode* pn2,
-                  ParseNode* pn)
-{
-    double d, d2;
-    int32_t i, j;
-
-    MOZ_ASSERT(pn1->isKind(PNK_NUMBER) && pn2->isKind(PNK_NUMBER));
-    d = pn1->pn_dval;
-    d2 = pn2->pn_dval;
-    switch (op) {
-      case JSOP_LSH:
-      case JSOP_RSH:
-        i = ToInt32(d);
-        j = ToInt32(d2);
-        j &= 31;
-        d = int32_t((op == JSOP_LSH) ? uint32_t(i) << j : i >> j);
-        break;
-
-      case JSOP_URSH:
-        j = ToInt32(d2);
-        j &= 31;
-        d = ToUint32(d) >> j;
-        break;
-
-      case JSOP_ADD:
-        d += d2;
-        break;
-
-      case JSOP_SUB:
-        d -= d2;
-        break;
-
-      case JSOP_MUL:
-        d *= d2;
-        break;
-
-      case JSOP_DIV:
-        if (d2 == 0) {
-#if defined(XP_WIN)
-            /* XXX MSVC miscompiles such that (NaN == 0) */
-            if (IsNaN(d2))
-                d = GenericNaN();
-            else
-#endif
-            if (d == 0 || IsNaN(d))
-                d = GenericNaN();
-            else if (IsNegative(d) != IsNegative(d2))
-                d = NegativeInfinity<double>();
-            else
-                d = PositiveInfinity<double>();
-        } else {
-            d /= d2;
-        }
-        break;
-
-      case JSOP_MOD:
-        if (d2 == 0) {
-            d = GenericNaN();
-        } else {
-            d = js_fmod(d, d2);
-        }
-        break;
-
-      case JSOP_POW:
-        d = ecmaPow(d, d2);
-        break;
-
-      default:;
-    }
-
-    /* Take care to allow pn1 or pn2 to alias pn. */
-    pn->setKind(PNK_NUMBER);
-    pn->setOp(JSOP_DOUBLE);
-    pn->setArity(PN_NULLARY);
-    pn->pn_dval = d;
-    return true;
-}
-
 // Remove a ParseNode, **pnp, from a parse tree, putting another ParseNode,
 // *pn, in its place.
 //
@@ -1164,6 +1080,48 @@ FoldFunction(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& pa
     return true;
 }
 
+static double
+ComputeBinary(ParseNodeKind kind, double left, double right)
+{
+    if (kind == PNK_ADD)
+        return left + right;
+
+    if (kind == PNK_SUB)
+        return left - right;
+
+    if (kind == PNK_STAR)
+        return left * right;
+
+    if (kind == PNK_MOD)
+        return right == 0 ? GenericNaN() : js_fmod(left, right);
+
+    if (kind == PNK_URSH)
+        return ToUint32(left) >> (ToUint32(right) & 31);
+
+    if (kind == PNK_DIV) {
+        if (right == 0) {
+#if defined(XP_WIN)
+            /* XXX MSVC miscompiles such that (NaN == 0) */
+            if (IsNaN(right))
+                return GenericNaN();
+#endif
+            if (left == 0 || IsNaN(left))
+                return GenericNaN();
+            if (IsNegative(left) != IsNegative(right))
+                return NegativeInfinity<double>();
+            return PositiveInfinity<double>();
+        }
+
+        return left / right;
+    }
+
+    MOZ_ASSERT(kind == PNK_LSH || kind == PNK_RSH);
+
+    int32_t i = ToInt32(left);
+    uint32_t j = ToUint32(right) & 31;
+    return int32_t((kind == PNK_LSH) ? uint32_t(i) << j : i >> j);
+}
+
 static bool
 FoldBinaryArithmetic(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
                      bool inGenexpLambda)
@@ -1196,21 +1154,25 @@ FoldBinaryArithmetic(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHand
     // due to floating point imprecision.  For example, if |x === -2**53|,
     // |x - 1 - 1 === -2**53| but |x - 2 === -2**53 - 2|.  Shifts could be
     // folded, but it doesn't seem worth the effort.)
-    JSOp op = node->getOp();
     ParseNode* elem = node->pn_head;
     ParseNode* next = elem->pn_next;
     if (elem->isKind(PNK_NUMBER)) {
+        ParseNodeKind kind = node->getKind();
         while (true) {
             if (!next || !next->isKind(PNK_NUMBER))
                 break;
 
-            ParseNode* afterNext = next->pn_next;
-            if (!FoldBinaryNumeric(cx, op, elem, next, elem))
-                return false;
+            double d = ComputeBinary(kind, elem->pn_dval, next->pn_dval);
 
+            ParseNode* afterNext = next->pn_next;
             parser.freeTree(next);
             next = afterNext;
             elem->pn_next = next;
+
+            elem->setKind(PNK_NUMBER);
+            elem->setOp(JSOP_DOUBLE);
+            elem->setArity(PN_NULLARY);
+            elem->pn_dval = d;
 
             node->pn_count--;
         }
