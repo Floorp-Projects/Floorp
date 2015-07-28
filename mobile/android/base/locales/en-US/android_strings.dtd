@@ -688,5 +688,8 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY restriction_disallow_report_site_issue_description "Hide \'Report site issue\' menu item.">
 <!ENTITY restriction_disallow_import_settings_title "Disallow importing settings">
 <!ENTITY restriction_disallow_import_settings_description "Do not allow to import settings from other system browsers.">
-
+<!ENTITY restriction_disallow_addons_title "Disallow add-ons">
+<!ENTITY restriction_disallow_addons_description "Disallow installation of add-ons.">
+<!ENTITY restriction_disallow_apps_title "Disallow apps">
+<!ENTITY restriction_disallow_apps_description "Disallow installing apps from Firefox Marketplace.">
 
