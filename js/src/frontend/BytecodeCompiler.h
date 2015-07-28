@@ -27,7 +27,8 @@ CompileScript(ExclusiveContext* cx, LifoAlloc* alloc,
               HandleObject scopeChain, Handle<ScopeObject*> enclosingStaticScope,
               HandleScript evalCaller, const ReadOnlyCompileOptions& options,
               SourceBufferHolder& srcBuf, JSString* source_ = nullptr,
-              unsigned staticLevel = 0, SourceCompressionTask* extraSct = nullptr);
+              unsigned staticLevel = 0, SourceCompressionTask* extraSct = nullptr,
+              ScriptSourceObject** sourceObjectOut = nullptr);
 
 bool
 CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const char16_t* chars, size_t length);
