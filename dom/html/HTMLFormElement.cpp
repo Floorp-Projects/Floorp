@@ -132,17 +132,6 @@ HTMLFormElement::~HTMLFormElement()
 
 // nsISupports
 
-static PLDHashOperator
-ElementTraverser(const nsAString& key, HTMLInputElement* element,
-                 void* userArg)
-{
-  nsCycleCollectionTraversalCallback *cb =
-    static_cast<nsCycleCollectionTraversalCallback*>(userArg);
-
-  cb->NoteXPCOMChild(ToSupports(element));
-  return PL_DHASH_NEXT;
-}
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLFormElement)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLFormElement,
@@ -150,7 +139,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLFormElement,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mControls)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mImageNameLookupTable)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPastNameLookupTable)
-  tmp->mSelectedRadioButtons.EnumerateRead(ElementTraverser, &cb);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSelectedRadioButtons)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLFormElement,
