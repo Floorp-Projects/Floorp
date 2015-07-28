@@ -73,8 +73,8 @@ private:
 
   bool ExpectMoreAudioData();
 
-  // Wait on the decoder monitor until playback is ready or the sink is told to shut down.
-  void WaitForAudioToPlay();
+  // Return true if playback is not ready and the sink is not told to shut down.
+  bool WaitingForAudioToPlay();
 
   // Check if the sink has been told to shut down, resuming mAudioStream if
   // not.  Returns true if processing should continue, false if AudioLoop
