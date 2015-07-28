@@ -73,14 +73,6 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(HTMLPropertiesCollection)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(HTMLPropertiesCollection)
 
-
-static PLDHashOperator
-SetPropertyListDocument(const nsAString& aKey, PropertyNodeList* aEntry, void* aData)
-{
-  aEntry->SetDocument(static_cast<nsIDocument*>(aData));
-  return PL_DHASH_NEXT;
-}
-
 void
 HTMLPropertiesCollection::SetDocument(nsIDocument* aDocument) {
   if (mDoc) {
@@ -90,7 +82,9 @@ HTMLPropertiesCollection::SetDocument(nsIDocument* aDocument) {
   if (mDoc) {
     mDoc->AddMutationObserver(this);
   }
-  mNamedItemEntries.EnumerateRead(SetPropertyListDocument, aDocument);
+  for (auto iter = mNamedItemEntries.Iter(); !iter.Done(); iter.Next()) {
+    iter.UserData()->SetDocument(aDocument);
+  }
   mIsDirty = true;
 }
 
@@ -191,13 +185,6 @@ HTMLPropertiesCollection::ContentRemoved(nsIDocument *aDocument,
   mIsDirty = true;
 }
 
-static PLDHashOperator
-MarkDirty(const nsAString& aKey, PropertyNodeList* aEntry, void* aData)
-{
-  aEntry->SetDirty();
-  return PL_DHASH_NEXT;
-}
-
 void
 HTMLPropertiesCollection::EnsureFresh()
 {
@@ -209,7 +196,9 @@ HTMLPropertiesCollection::EnsureFresh()
   mProperties.Clear();
   mNames->Clear();
   // We don't clear NamedItemEntries because the PropertyNodeLists must be live.
-  mNamedItemEntries.EnumerateRead(MarkDirty, nullptr);
+  for (auto iter = mNamedItemEntries.Iter(); !iter.Done(); iter.Next()) {
+    iter.UserData()->SetDirty();
+  }
   if (!mRoot->HasAttr(kNameSpaceID_None, nsGkAtoms::itemscope)) {
     return;
   }

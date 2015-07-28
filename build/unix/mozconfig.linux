@@ -29,17 +29,9 @@ ac_add_options --enable-elf-hack
 # Avoid dependency on libstdc++ 4.7
 ac_add_options --enable-stdcxx-compat
 
-# $topsrcdir/gtk3 comes from tooltool, when the tooltool manifest contains it.
-if [ -d "$topsrcdir/gtk3" ]; then
-  # PKG_CONFIG_LIBDIR is appropriately overridden in mozconfig.linux32
-  export PKG_CONFIG_LIBDIR=/usr/lib64/pkgconfig:/usr/share/pkgconfig
-  export PKG_CONFIG_SYSROOT_DIR="$topsrcdir/gtk3"
-  export PKG_CONFIG_PATH="$topsrcdir/gtk3/usr/local/lib/pkgconfig"
-  export PATH="$topsrcdir/gtk3/usr/local/bin:${PATH}"
-  # Ensure cairo, gdk-pixbuf, etc. are not taken from the system installed packages.
-  LDFLAGS="-L$topsrcdir/gtk3/usr/local/lib"
-  mk_add_options "export LD_LIBRARY_PATH=$topsrcdir/gtk3/usr/local/lib"
-  ac_add_options --enable-default-toolkit=cairo-gtk3
-fi
+# PKG_CONFIG_LIBDIR is appropriately overridden in mozconfig.linux32
+export PKG_CONFIG_LIBDIR=/usr/lib64/pkgconfig:/usr/share/pkgconfig
 
 export SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE=/builds/crash-stats-api.token
+
+. "$topsrcdir/build/unix/mozconfig.gtk"

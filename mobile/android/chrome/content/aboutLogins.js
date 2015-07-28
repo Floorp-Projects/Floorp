@@ -7,6 +7,7 @@ let Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils;
 Cu.import("resource://gre/modules/Messaging.jsm");
 Cu.import("resource://gre/modules/Services.jsm")
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/TelemetryStopwatch.jsm");
 
 XPCOMUtils.defineLazyGetter(window, "gChromeWin", function()
   window.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -53,7 +54,9 @@ let Logins = {
     emptyBody.classList.add("hidden");
 
     try {
+      TelemetryStopwatch.start("PWMGR_ABOUT_LOGINS_GET_ALL_LOGINS_MS");
       logins = Services.logins.getAllLogins();
+      TelemetryStopwatch.finish("PWMGR_ABOUT_LOGINS_GET_ALL_LOGINS_MS");
     } catch(e) {
       // Master password was not entered
       debug("Master password permissions error: " + e);

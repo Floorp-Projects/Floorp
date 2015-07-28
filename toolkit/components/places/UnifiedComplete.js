@@ -38,6 +38,8 @@ const PREF_SUGGEST_OPENPAGE =       [ "suggest.openpage",       true ];
 const PREF_SUGGEST_HISTORY_ONLYTYPED = [ "suggest.history.onlyTyped", false ];
 const PREF_SUGGEST_SEARCHES =       [ "suggest.searches",       true ];
 
+const PREF_MAX_CHARS_FOR_SUGGEST =  [ "maxCharsForSearchSuggestions", 20];
+
 // Match type constants.
 // These indicate what type of search function we should be using.
 const MATCH_ANYWHERE = Ci.mozIPlacesAutoComplete.MATCH_ANYWHERE;
@@ -416,6 +418,7 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
     store.suggestOpenpage = prefs.get(...PREF_SUGGEST_OPENPAGE);
     store.suggestTyped = prefs.get(...PREF_SUGGEST_HISTORY_ONLYTYPED);
     store.suggestSearches = prefs.get(...PREF_SUGGEST_SEARCHES);
+    store.maxCharsForSearchSuggestions = prefs.get(...PREF_MAX_CHARS_FOR_SUGGEST);
 
     // If history is not set, onlyTyped value should be ignored.
     if (!store.suggestHistory) {
@@ -598,9 +601,11 @@ function makeActionURL(action, params) {
  *        An nsIAutoCompleteSimpleResultListener.
  * @param autocompleteSearch
  *        An nsIAutoCompleteSearch.
+ * @param prohibitSearchSuggestions
+ *        Whether search suggestions are allowed for this search.
  */
 function Search(searchString, searchParam, autocompleteListener,
-                resultListener, autocompleteSearch) {
+                resultListener, autocompleteSearch, prohibitSearchSuggestions) {
   // We want to store the original string for case sensitive searches.
   this._originalSearchString = searchString;
   this._trimmedOriginalSearchString = searchString.trim();
@@ -631,6 +636,8 @@ function Search(searchString, searchParam, autocompleteListener,
     this._trimmedOriginalSearchString.slice(0, pathIndex).toLowerCase() +
     this._trimmedOriginalSearchString.slice(pathIndex)
   );
+
+  this._prohibitSearchSuggestions = prohibitSearchSuggestions;
 
   this._listener = autocompleteListener;
   this._autocompleteSearch = autocompleteSearch;
@@ -909,18 +916,29 @@ Search.prototype = {
   }),
 
   *_matchSearchSuggestions() {
-    if (!this.hasBehavior("searches") || this._inPrivateWindow) {
+    // Limit the string sent for search suggestions to a maximum length.
+    let searchString = this._searchTokens.join(" ")
+                           .substr(0, Prefs.maxCharsForSearchSuggestions);
+    // Avoid fetching suggestions if they are not required, private browsing
+    // mode is enabled, or the search string may expose sensitive information.
+    if (!this.hasBehavior("searches") || this._inPrivateWindow ||
+        this._prohibitSearchSuggestionsFor(searchString)) {
       return;
     }
 
     this._searchSuggestionController =
       PlacesSearchAutocompleteProvider.getSuggestionController(
-        this._searchTokens.join(" "),
+        searchString,
         this._inPrivateWindow,
         Prefs.maxRichResults
       );
     let promise = this._searchSuggestionController.fetchCompletePromise
       .then(() => {
+        if (this._searchSuggestionController.resultsCount >= 0 &&
+            this._searchSuggestionController.resultsCount < 2) {
+          // The original string is used to properly compare with the next search.
+          this._lastLowResultsSearchSuggestion = this._originalSearchString;
+        }
         while (this.pending && this._remoteMatchesCount < Prefs.maxRichResults) {
           let [match, suggestion] = this._searchSuggestionController.consume();
           if (!suggestion)
@@ -938,6 +956,28 @@ Search.prototype = {
     } else {
       this._remoteMatchesPromises.push(promise);
     }
+  },
+
+  _prohibitSearchSuggestionsFor(searchString) {
+    if (this._prohibitSearchSuggestions)
+      return true;
+
+    // Suggestions for a single letter are unlikely to be useful.
+    if (searchString.length < 2)
+      return true;
+
+    let tokens = searchString.split(/\s/);
+
+    // The first token may be a whitelisted host.
+    if (REGEXP_SINGLEWORD_HOST.test(tokens[0]) &&
+        Services.uriFixup.isDomainWhitelisted(tokens[0], -1))
+      return true;
+
+    // Disallow fetching search suggestions for strings looking like URLs, to
+    // avoid disclosing information about networks or passwords.
+    return tokens.some(token => {
+      return ["/", "@", ":", "."].some(c => token.includes(c));
+    });
   },
 
   _matchKnownUrl: function* (conn) {
@@ -1701,8 +1741,15 @@ UnifiedComplete.prototype = {
     // Note: We don't use previousResult to make sure ordering of results are
     //       consistent.  See bug 412730 for more details.
 
+    // If the previous search didn't fetch enough search suggestions, it's
+    // unlikely a longer text would do.
+    let prohibitSearchSuggestions =
+      this._lastLowResultsSearchSuggestion &&
+      searchString.length > this._lastLowResultsSearchSuggestion.length &&
+      searchString.startsWith(this._lastLowResultsSearchSuggestion);
+
     this._currentSearch = new Search(searchString, searchParam, listener,
-                                     this, this);
+                                     this, this, prohibitSearchSuggestions);
 
     // If we are not enabled, we need to return now.  Notice we need an empty
     // result regardless, so we still create the Search object.
@@ -1745,6 +1792,7 @@ UnifiedComplete.prototype = {
     TelemetryStopwatch.cancel(TELEMETRY_6_FIRST_RESULTS, this);
     // Clear state now to avoid race conditions, see below.
     let search = this._currentSearch;
+    this._lastLowResultsSearchSuggestion = search._lastLowResultsSearchSuggestion;
     delete this._currentSearch;
 
     if (!notify)

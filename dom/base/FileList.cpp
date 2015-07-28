@@ -21,30 +21,6 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(FileList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(FileList)
 
-/* static */ already_AddRefed<FileList>
-FileList::Create(nsISupports* aParent, FileListClonedData* aData)
-{
-  MOZ_ASSERT(aData);
-
-  nsRefPtr<FileList> fileList = new FileList(aParent);
-
-  const nsTArray<nsRefPtr<BlobImpl>>& blobImpls = aData->BlobImpls();
-  for (uint32_t i = 0; i < blobImpls.Length(); ++i) {
-    const nsRefPtr<BlobImpl>& blobImpl = blobImpls[i];
-    MOZ_ASSERT(blobImpl);
-    MOZ_ASSERT(blobImpl->IsFile());
-
-    nsRefPtr<File> file = File::Create(aParent, blobImpl);
-    MOZ_ASSERT(file);
-
-    if (NS_WARN_IF(!fileList->Append(file))) {
-      return nullptr;
-    }
-  }
-
-  return fileList.forget();
-}
-
 JSObject*
 FileList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
@@ -66,20 +42,6 @@ FileList::Item(uint32_t aIndex, nsISupports** aFile)
   file.forget(aFile);
   return NS_OK;
 }
-
-already_AddRefed<FileListClonedData>
-FileList::CreateClonedData() const
-{
-  nsTArray<nsRefPtr<BlobImpl>> blobImpls;
-  for (uint32_t i = 0; i < mFiles.Length(); ++i) {
-    blobImpls.AppendElement(mFiles[i]->Impl());
-  }
-
-  nsRefPtr<FileListClonedData> data = new FileListClonedData(blobImpls);
-  return data.forget();
-}
-
-NS_IMPL_ISUPPORTS0(FileListClonedData)
 
 } // namespace dom
 } // namespace mozilla

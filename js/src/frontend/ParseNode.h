@@ -197,6 +197,7 @@ class UpvarCookie
     F(STAR) \
     F(DIV) \
     F(MOD) \
+    F(POW) \
     \
     /* Assignment operators (= += -= etc.). */ \
     /* ParseNode::isAssignment assumes all these are consecutive. */ \
@@ -211,7 +212,8 @@ class UpvarCookie
     F(URSHASSIGN) \
     F(MULASSIGN) \
     F(DIVASSIGN) \
-    F(MODASSIGN)
+    F(MODASSIGN) \
+    F(POWASSIGN)
 
 /*
  * Parsing builds a tree of nodes that directs code generation.  This tree is
@@ -230,9 +232,9 @@ enum ParseNodeKind
 #undef EMIT_ENUM
     PNK_LIMIT, /* domain size */
     PNK_BINOP_FIRST = PNK_OR,
-    PNK_BINOP_LAST = PNK_MOD,
+    PNK_BINOP_LAST = PNK_POW,
     PNK_ASSIGNMENT_START = PNK_ASSIGN,
-    PNK_ASSIGNMENT_LAST = PNK_MODASSIGN
+    PNK_ASSIGNMENT_LAST = PNK_POWASSIGN
 };
 
 inline bool
@@ -369,31 +371,34 @@ IsDeleteKind(ParseNodeKind kind)
  * PNK_URSHASSIGN,
  * PNK_MULASSIGN,
  * PNK_DIVASSIGN,
- * PNK_MODASSIGN
+ * PNK_MODASSIGN,
+ * PNK_POWASSIGN
  * PNK_CONDITIONAL ternary  (cond ? trueExpr : falseExpr)
  *                          pn_kid1: cond, pn_kid2: then, pn_kid3: else
- * PNK_OR       binary      pn_left: first in || chain, pn_right: rest of chain
- * PNK_AND      binary      pn_left: first in && chain, pn_right: rest of chain
- * PNK_BITOR    binary      pn_left: left-assoc | expr, pn_right: ^ expr
- * PNK_BITXOR   binary      pn_left: left-assoc ^ expr, pn_right: & expr
- * PNK_BITAND   binary      pn_left: left-assoc & expr, pn_right: EQ expr
- *
- * PNK_EQ,      binary      pn_left: left-assoc EQ expr, pn_right: REL expr
+ * PNK_OR,      list        pn_head; list of pn_count subexpressions
+ * PNK_AND,                 All of these operators are left-associative except (**).
+ * PNK_BITOR,
+ * PNK_BITXOR,
+ * PNK_BITAND,
+ * PNK_EQ,
  * PNK_NE,
  * PNK_STRICTEQ,
- * PNK_STRICTNE
- * PNK_LT,      binary      pn_left: left-assoc REL expr, pn_right: SH expr
+ * PNK_STRICTNE,
+ * PNK_LT,
  * PNK_LE,
  * PNK_GT,
- * PNK_GE
- * PNK_LSH,     binary      pn_left: left-assoc SH expr, pn_right: ADD expr
+ * PNK_GE,
+ * PNK_LSH,
  * PNK_RSH,
- * PNK_URSH
- * PNK_ADD,     binary      pn_left: left-assoc ADD expr, pn_right: MUL expr
- * PNK_SUB
- * PNK_STAR,    binary      pn_left: left-assoc MUL expr, pn_right: UNARY expr
- * PNK_DIV,                 pn_op: JSOP_MUL, JSOP_DIV, JSOP_MOD
- * PNK_MOD
+ * PNK_URSH,
+ * PNK_ADD,
+ * PNK_SUB,
+ * PNK_STAR,
+ * PNK_DIV,
+ * PNK_MOD,
+ * PNK_POW                  (**) is right-associative, but forms a list
+ *                          nonetheless. Special hacks everywhere.
+ *
  * PNK_POS,     unary       pn_kid: UNARY expr
  * PNK_NEG
  * PNK_VOID,    unary       pn_kid: UNARY expr
