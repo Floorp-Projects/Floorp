@@ -165,7 +165,6 @@ static_assert(MAX_WORKERS_PER_DOMAIN >= 1,
 #define PREF_SERVICEWORKERS_TESTING_ENABLED "dom.serviceWorkers.testing.enabled"
 #define PREF_INTERCEPTION_ENABLED      "dom.serviceWorkers.interception.enabled"
 #define PREF_INTERCEPTION_OPAQUE_ENABLED "dom.serviceWorkers.interception.opaque.enabled"
-#define PREF_PUSH_ENABLED              "dom.push.enabled"
 
 namespace {
 
@@ -1945,10 +1944,6 @@ RuntimeService::Init()
                                   WorkerPrefChanged,
                                   PREF_SERVICEWORKERS_TESTING_ENABLED,
                                   reinterpret_cast<void *>(WORKERPREF_SERVICEWORKERS_TESTING))) ||
-      NS_FAILED(Preferences::RegisterCallbackAndCall(
-                                  WorkerPrefChanged,
-                                  PREF_PUSH_ENABLED,
-                                  reinterpret_cast<void *>(WORKERPREF_PUSH))) ||
       NS_FAILED(Preferences::RegisterCallback(LoadRuntimeOptions,
                                               PREF_JS_OPTIONS_PREFIX,
                                               nullptr)) ||
@@ -2172,10 +2167,6 @@ RuntimeService::Cleanup()
                                   WorkerPrefChanged,
                                   PREF_DOM_WORKERNOTIFICATION_ENABLED,
                                   reinterpret_cast<void *>(WORKERPREF_DOM_WORKERNOTIFICATION))) ||
-        NS_FAILED(Preferences::UnregisterCallback(
-                                  WorkerPrefChanged,
-                                  PREF_PUSH_ENABLED,
-                                  reinterpret_cast<void *>(WORKERPREF_PUSH))) ||
 #if DUMP_CONTROLLED_BY_PREF
         NS_FAILED(Preferences::UnregisterCallback(
                                   WorkerPrefChanged,
@@ -2724,7 +2715,6 @@ RuntimeService::WorkerPrefChanged(const char* aPrefName, void* aClosure)
     case WORKERPREF_INTERCEPTION_OPAQUE_ENABLED:
     case WORKERPREF_SERVICEWORKERS:
     case WORKERPREF_SERVICEWORKERS_TESTING:
-    case WORKERPREF_PUSH:
       sDefaultPreferences[key] = Preferences::GetBool(aPrefName, false);
       break;
 

@@ -7,8 +7,7 @@
  * https://w3c.github.io/push-api/
  */
 
-[Func="nsContentUtils::PushEnabled",
- Exposed=ServiceWorker]
+[Exposed=ServiceWorker]
 interface PushMessageData
 {
     // FIXME(nsm): Bug 1149195.
