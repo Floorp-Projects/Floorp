@@ -883,16 +883,26 @@ nsScriptLoader::AttemptAsyncScriptParse(nsScriptLoadRequest* aRequest)
 }
 
 nsresult
+nsScriptLoader::ParseOffThreadOrProcessRequest(nsScriptLoadRequest* aRequest)
+{
+  NS_ASSERTION(nsContentUtils::IsSafeToRunScript(),
+               "Processing requests when running scripts is unsafe.");
+  NS_ASSERTION(!aRequest->mOffThreadToken,
+               "Candidate for off-thread parsing is already parsed off-thread");
+
+  nsresult rv = AttemptAsyncScriptParse(aRequest);
+  if (rv != NS_ERROR_FAILURE) {
+    return rv;
+  }
+
+  return ProcessRequest(aRequest);
+}
+
+nsresult
 nsScriptLoader::ProcessRequest(nsScriptLoadRequest* aRequest)
 {
   NS_ASSERTION(nsContentUtils::IsSafeToRunScript(),
                "Processing requests when running scripts is unsafe.");
-
-  if (!aRequest->mOffThreadToken) {
-    nsresult rv = AttemptAsyncScriptParse(aRequest);
-    if (rv != NS_ERROR_FAILURE)
-      return rv;
-  }
 
   NS_ENSURE_ARG(aRequest);
   nsAutoString textData;
@@ -1183,7 +1193,7 @@ nsScriptLoader::ProcessPendingRequests()
 
   while (mEnabled && !mLoadedAsyncRequests.isEmpty()) {
     request = mLoadedAsyncRequests.StealFirst();
-    ProcessRequest(request);
+    ParseOffThreadOrProcessRequest(request);
   }
 
   while (mEnabled && !mNonAsyncExternalScriptInsertedRequests.isEmpty() &&
