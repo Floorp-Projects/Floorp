@@ -3,67 +3,78 @@
 
 const FUZZ_FACTOR = 3;
 
-function assertAboutEq(actual, expected) {
-  if (Math.abs(actual - expected) > FUZZ_FACTOR)
-    throw new Error("Assertion failed: expected about " + expected + ", got " + actual +
-                    ". FUZZ_FACTOR = " + FUZZ_FACTOR);
+function isAboutEq(actual, expected) {
+  return Math.abs(actual - expected) <= FUZZ_FACTOR;
 }
 
 var stacks = [];
 
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
-stacks.push(saveStack());
+(function () {
+  // Use an IIFE here so that we don't keep these saved stacks alive in the
+  // frame cache when we test that they all go away at the end of the test.
 
-assertAboutEq(getSavedFrameCount(), 50);
+  var startCount = getSavedFrameCount();
+  print("startCount = " + startCount);
+
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+  stacks.push(saveStack());
+
+  gc();
+
+  var endCount = getSavedFrameCount();
+  print("endCount = " + endCount);
+
+  assertEq(isAboutEq(endCount - startCount, 50), true);
+}());
 
 while (stacks.length) {
   stacks.pop();
@@ -73,4 +84,4 @@ gc();
 stacks = null;
 gc();
 
-assertAboutEq(getSavedFrameCount(), 0);
+assertEq(isAboutEq(getSavedFrameCount(), 0), true);
