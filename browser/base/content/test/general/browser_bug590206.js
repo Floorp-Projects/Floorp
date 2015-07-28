@@ -5,16 +5,7 @@
 const DUMMY = "browser/browser/base/content/test/general/dummy_page.html";
 
 function loadNewTab(aURL, aCallback) {
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.loadURI(aURL);
-
-  gBrowser.selectedBrowser.addEventListener("load", function() {
-    if (gBrowser.selectedBrowser.currentURI.spec != aURL)
-      return;
-    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
-
-    aCallback(gBrowser.selectedTab);
-  }, true);
+  BrowserTestUtils.openNewForegroundTab(gBrowser, aURL).then(aCallback);
 }
 
 function getIdentityMode() {
@@ -61,16 +52,14 @@ function test_blank() {
 function test_chrome() {
   let oldTab = gBrowser.selectedTab;
 
-  // Since users aren't likely to type in full chrome URLs, we won't show
-  // the positive security indicator on it, but we will show it on about:addons.
   loadNewTab("chrome://mozapps/content/extensions/extensions.xul", function(aNewTab) {
-    is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
+    is(getIdentityMode(), "fileURI", "Identity should be file");
 
     gBrowser.selectedTab = oldTab;
     is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
 
     gBrowser.selectedTab = aNewTab;
-    is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
+    is(getIdentityMode(), "fileURI", "Identity should be file");
 
     gBrowser.removeTab(aNewTab);
 
@@ -112,7 +101,64 @@ function test_addons() {
 
     runNextTest();
   });
-}
+},
+
+function test_file() {
+  let oldTab = gBrowser.selectedTab;
+  let fileURI = getTestFilePath("");
+
+  loadNewTab(fileURI, function(aNewTab) {
+    is(getIdentityMode(), "fileURI", "Identity should be file");
+
+    gBrowser.selectedTab = oldTab;
+    is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
+
+    gBrowser.selectedTab = aNewTab;
+    is(getIdentityMode(), "fileURI", "Identity should be file");
+
+    gBrowser.removeTab(aNewTab);
+
+    runNextTest();
+  });
+},
+
+function test_resource_uri() {
+  let oldTab = gBrowser.selectedTab;
+  let dataURI = "resource://gre/modules/Services.jsm"
+
+  loadNewTab(dataURI, function(aNewTab) {
+    is(getIdentityMode(), "fileURI", "Identity should be unknown");
+
+    gBrowser.selectedTab = oldTab;
+    is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
+
+    gBrowser.selectedTab = aNewTab;
+    is(getIdentityMode(), "fileURI", "Identity should be unknown");
+
+    gBrowser.removeTab(aNewTab);
+
+    runNextTest();
+  });
+},
+
+function test_data_uri() {
+  let oldTab = gBrowser.selectedTab;
+  let dataURI = "data:text/html,hi"
+
+  loadNewTab(dataURI, function(aNewTab) {
+    is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
+
+    gBrowser.selectedTab = oldTab;
+    is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
+
+    gBrowser.selectedTab = aNewTab;
+    is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
+
+    gBrowser.removeTab(aNewTab);
+
+    runNextTest();
+  });
+},
 ];
 
 var gTestStart = null;
