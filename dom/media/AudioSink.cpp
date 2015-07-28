@@ -127,15 +127,21 @@ AudioSink::HasUnplayedFrames()
 void
 AudioSink::Shutdown()
 {
-  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  mStopAudioThread = true;
-  if (mAudioStream) {
-    mAudioStream->Cancel();
+  {
+    ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+    if (mAudioStream) {
+      mAudioStream->Cancel();
+    }
   }
-  ScheduleNextLoopCrossThread();
+  nsRefPtr<AudioSink> self = this;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
+    self->mStopAudioThread = true;
+    if (!self->mAudioLoopScheduled) {
+      self->AudioLoop();
+    }
+  });
+  DispatchTask(r.forget());
 
-  // Exit the monitor so audio loop can enter the monitor and finish its job.
-  ReentrantMonitorAutoExit exit(GetReentrantMonitor());
   mThread->Shutdown();
   mThread = nullptr;
   if (mAudioStream) {
