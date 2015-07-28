@@ -118,6 +118,17 @@ class GaiaIntegrationTest(GaiaTest):
             overwrite='clobber'
         )
 
+        cmd = [
+            'make',
+            'lint',
+            'NODE_MODULES_SRC=npm-cache',
+            'VIRTUALENV_EXISTS=1'
+        ]
+
+        # for Mulet
+        if 'firefox' in self.binary_path:
+            cmd += ['RUNTIME=%s' % self.binary_path]
+
         self.make_node_modules()
 
         output_parser = GaiaLinterOutputParser(
@@ -125,12 +136,7 @@ class GaiaIntegrationTest(GaiaTest):
             config=self.config,
             log_obj=self.log_obj)
 
-        code = self.run_command([
-            'make',
-            'lint',
-            'NODE_MODULES_SRC=npm-cache',
-            'VIRTUALENV_EXISTS=1'
-        ], cwd=dirs['abs_gaia_dir'],
+        code = self.run_command(cmd, cwd=dirs['abs_gaia_dir'],
            output_parser=output_parser,
            output_timeout=600)
 
