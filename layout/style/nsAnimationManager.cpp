@@ -1005,7 +1005,7 @@ nsAnimationManager::FlushAnimations(FlushFlags aFlags)
         AnimationCollection::CanAnimateFlags(0)) &&
       collection->CanThrottleAnimation(now);
 
-    nsRefPtr<css::AnimValuesStyleRule> oldStyleRule = collection->mStyleRule;
+    nsRefPtr<AnimValuesStyleRule> oldStyleRule = collection->mStyleRule;
     collection->EnsureStyleRuleFor(now, canThrottleTick
                                         ? EnsureStyleRule_IsThrottled
                                         : EnsureStyleRule_IsNotThrottled);
