@@ -322,10 +322,8 @@ private:
                             nsScriptObjectTracer* aTracer);
 
 #ifdef DEBUG
-public:
   void CheckCCWrapperTraversal(void* aScriptObjectHolder,
                                nsScriptObjectTracer* aTracer);
-private:
 #endif // DEBUG
 
   /**
