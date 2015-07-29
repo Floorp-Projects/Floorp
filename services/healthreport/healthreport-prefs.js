@@ -34,4 +34,5 @@ pref("datareporting.healthreport.service.providerCategories",
 #endif
     );
 
-pref("datareporting.healthreport.about.reportUrl",   "https://fhr.cdn.mozilla.net/%LOCALE%/");
+pref("datareporting.healthreport.about.reportUrl", "https://fhr.cdn.mozilla.net/%LOCALE%/");
+pref("datareporting.healthreport.about.reportUrlUnified", "https://fhr.cdn.mozilla.net/%LOCALE%/");
