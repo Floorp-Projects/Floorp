@@ -11,7 +11,7 @@
 == rotatex-perspective-1c.html rotatex-1-ref.html
 == rotatex-perspective-3a.html rotatex-perspective-3-ref.html
 == scalez-1a.html scalez-1-ref.html
-fuzzy-if(cocoaWidget,17,3) == preserve3d-1a.html preserve3d-1-ref.html
+fuzzy-if(cocoaWidget,17,4) == preserve3d-1a.html preserve3d-1-ref.html
 == preserve3d-1b.html about:blank
 == preserve3d-clipped.html about:blank
 == preserve3d-2a.html preserve3d-2-ref.html
