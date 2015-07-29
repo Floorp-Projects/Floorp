@@ -1008,6 +1008,11 @@ BluetoothAdapter::HandlePropertyChanged(const BluetoothValue& aValue)
     }
   }
 
+  if (types.IsEmpty()) {
+    // No adapter attribute changed
+    return;
+  }
+
   DispatchAttributeEvent(types);
 }
 
@@ -1134,7 +1139,7 @@ BluetoothAdapter::HandleDeviceUnpaired(const BluetoothValue& aValue)
 void
 BluetoothAdapter::DispatchAttributeEvent(const Sequence<nsString>& aTypes)
 {
-  NS_ENSURE_TRUE_VOID(aTypes.Length());
+  MOZ_ASSERT(!aTypes.IsEmpty());
 
   BluetoothAttributeEventInit init;
   init.mAttrs = aTypes;

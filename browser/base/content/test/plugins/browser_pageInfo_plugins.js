@@ -34,7 +34,7 @@ function doOnOpenPageInfo(continuation) {
 
 function pageInfoObserve(win, topic, data) {
   Services.obs.removeObserver(pageInfoObserve, "page-info-dialog-loaded");
-  executeSoon(gNextTest);
+  gPageInfo.onFinished.push(() => executeSoon(gNextTest));
 }
 
 function finishTest() {

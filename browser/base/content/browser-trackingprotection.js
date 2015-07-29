@@ -126,6 +126,9 @@ let TrackingProtection = {
     // Telemetry for disable protection.
     this.eventsHistogram.add(1);
 
+    // Hide the control center.
+    document.getElementById("identity-popup").hidePopup();
+
     BrowserReload();
   },
 
@@ -145,6 +148,9 @@ let TrackingProtection = {
 
     // Telemetry for enable protection.
     this.eventsHistogram.add(2);
+
+    // Hide the control center.
+    document.getElementById("identity-popup").hidePopup();
 
     BrowserReload();
   },

@@ -15,7 +15,8 @@ let Clipboard = Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard
 let HasFindClipboard = Clipboard.supportsFindClipboard();
 
 function addTabWithText(aText, aCallback) {
-  let newTab = gBrowser.addTab("data:text/html,<h1 id='h1'>" + aText + "</h1>");
+  let newTab = gBrowser.addTab("data:text/html;charset=utf-8,<h1 id='h1'>" +
+                               aText + "</h1>");
   tabs.push(newTab);
   gBrowser.selectedTab = newTab;
 }
@@ -78,6 +79,12 @@ function continueTests1() {
 
 function continueTests2() {
   gBrowser.removeEventListener("DOMContentLoaded", continueTests2, true);
+  waitForCondition(() => !gFindBar.getElement("highlight").checked,
+                   continueTests3,
+                   "Highlight never reset!");
+}
+
+function continueTests3() {
   ok(!gFindBar.getElement("highlight").checked, "Highlight button reset!");
   gFindBar.close();
   ok(gFindBar.hidden, "First tab doesn't show find bar!");
