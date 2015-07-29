@@ -85,10 +85,6 @@ public:
     // Find a visual and colormap pair suitable for rendering to this surface.
     bool GetColormapAndVisual(Colormap* colormap, Visual **visual);
 
-    // This surface is a wrapper around X pixmaps, which are stored in the X
-    // server, not the main application.
-    virtual gfxMemoryLocation GetMemoryLocation() const override;
-
 #if defined(GL_PROVIDER_GLX)
     GLXPixmap GetGLXPixmap();
 #endif
