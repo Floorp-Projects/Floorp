@@ -1490,25 +1490,44 @@ nsRefreshDriver::DispatchPendingEvents()
   }
 }
 
+namespace {
+  enum class AnimationEventType {
+    CSSAnimations,
+    CSSTransitions
+  };
+
+  struct DispatchAnimationEventParams {
+    AnimationEventType mEventType;
+    nsRefreshDriver* mRefreshDriver;
+  };
+}
+
 static bool
 DispatchAnimationEventsOnSubDocuments(nsIDocument* aDocument,
-                                      void* aRefreshDriver)
+                                      void* aParams)
 {
+  MOZ_ASSERT(aParams, "Animation event parameters should be set");
+  auto params = static_cast<DispatchAnimationEventParams*>(aParams);
+
   nsIPresShell* shell = aDocument->GetShell();
   if (!shell) {
     return true;
   }
 
   nsPresContext* context = shell->GetPresContext();
-  if (!context || context->RefreshDriver() != aRefreshDriver) {
+  if (!context || context->RefreshDriver() != params->mRefreshDriver) {
     return true;
   }
 
   nsCOMPtr<nsIDocument> kungFuDeathGrip(aDocument);
 
-  context->AnimationManager()->DispatchEvents();
+  if (params->mEventType == AnimationEventType::CSSAnimations) {
+    context->AnimationManager()->DispatchEvents();
+  } else {
+    context->TransitionManager()->DispatchEvents();
+  }
   aDocument->EnumerateSubDocuments(DispatchAnimationEventsOnSubDocuments,
-                                   nullptr);
+                                   aParams);
 
   return true;
 }
@@ -1521,7 +1540,18 @@ nsRefreshDriver::DispatchAnimationEvents()
   }
 
   nsIDocument* doc = mPresContext->Document();
-  DispatchAnimationEventsOnSubDocuments(doc, this);
+
+  // Dispatch transition events first since transitions conceptually sit
+  // below animations in terms of compositing order.
+  DispatchAnimationEventParams params { AnimationEventType::CSSTransitions,
+                                        this };
+  DispatchAnimationEventsOnSubDocuments(doc, &params);
+  if (!mPresContext) {
+    return;
+  }
+
+  params.mEventType = AnimationEventType::CSSAnimations;
+  DispatchAnimationEventsOnSubDocuments(doc, &params);
 }
 
 void
