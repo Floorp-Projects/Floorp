@@ -420,7 +420,7 @@ size_t
 nsDocumentRuleResultCacheKey::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t n = 0;
-  n += mMatchingRules.SizeOfExcludingThis(aMallocSizeOf);
+  n += mMatchingRules.ShallowSizeOfExcludingThis(aMallocSizeOf);
   return n;
 }
 

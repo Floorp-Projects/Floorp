@@ -262,11 +262,11 @@ nsUrlClassifierPrefixSet::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeO
 {
   size_t n = 0;
   n += aMallocSizeOf(this);
-  n += mIndexDeltas.SizeOfExcludingThis(aMallocSizeOf);
+  n += mIndexDeltas.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (uint32_t i = 0; i < mIndexDeltas.Length(); i++) {
-    n += mIndexDeltas[i].SizeOfExcludingThis(aMallocSizeOf);
+    n += mIndexDeltas[i].ShallowSizeOfExcludingThis(aMallocSizeOf);
   }
-  n += mIndexPrefixes.SizeOfExcludingThis(aMallocSizeOf);
+  n += mIndexPrefixes.ShallowSizeOfExcludingThis(aMallocSizeOf);
   return n;
 }
 

@@ -97,8 +97,8 @@ private:
     SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
     {
       size_t n = aMallocSizeOf(this);
-      n += mOrderedLT.SizeOfExcludingThis(aMallocSizeOf);
-      n += mExternalRefs.SizeOfExcludingThis(aMallocSizeOf);
+      n += mOrderedLT.ShallowSizeOfExcludingThis(aMallocSizeOf);
+      n += mExternalRefs.ShallowSizeOfExcludingThis(aMallocSizeOf);
       return n;
     }
 

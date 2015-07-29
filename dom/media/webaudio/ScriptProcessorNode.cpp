@@ -321,7 +321,7 @@ public:
     // - mDestination (probably)
     size_t amount = AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
     amount += mSharedBuffers->SizeOfIncludingThis(aMallocSizeOf);
-    amount += mInputChannels.SizeOfExcludingThis(aMallocSizeOf);
+    amount += mInputChannels.ShallowSizeOfExcludingThis(aMallocSizeOf);
     for (size_t i = 0; i < mInputChannels.Length(); i++) {
       amount += mInputChannels[i].SizeOfExcludingThis(aMallocSizeOf);
     }

@@ -391,7 +391,7 @@ size_t MediaCacheStream::SizeOfExcludingThis(
   // Looks like these are not owned:
   // - mClient
   // - mPrincipal
-  size_t size = mBlocks.SizeOfExcludingThis(aMallocSizeOf);
+  size_t size = mBlocks.ShallowSizeOfExcludingThis(aMallocSizeOf);
   size += mReadaheadBlocks.SizeOfExcludingThis(aMallocSizeOf);
   size += mMetadataBlocks.SizeOfExcludingThis(aMallocSizeOf);
   size += mPlayedBlocks.SizeOfExcludingThis(aMallocSizeOf);

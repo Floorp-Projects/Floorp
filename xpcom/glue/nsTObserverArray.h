@@ -261,10 +261,12 @@ public:
   void Compact() { mArray.Compact(); }
 
   // Returns the number of bytes on the heap taken up by this object, not
-  // including sizeof(*this).
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+  // including sizeof(*this). If you want to measure anything hanging off the
+  // array, you must iterate over the elements and measure them individually;
+  // hence the "Shallow" prefix.
+  size_t ShallowSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   {
-    return mArray.SizeOfExcludingThis(aMallocSizeOf);
+    return mArray.ShallowSizeOfExcludingThis(aMallocSizeOf);
   }
 
   //

@@ -217,7 +217,7 @@ public:
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   {
-    return mChanges.SizeOfExcludingThis(aMallocSizeOf);
+    return mChanges.ShallowSizeOfExcludingThis(aMallocSizeOf);
   }
 
 private:

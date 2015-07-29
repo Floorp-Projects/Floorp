@@ -169,7 +169,7 @@ public:
     // - mNode
 
     // Just count the array, actual nodes are counted in mNode.
-    amount += mInputNodes.SizeOfExcludingThis(aMallocSizeOf);
+    amount += mInputNodes.ShallowSizeOfExcludingThis(aMallocSizeOf);
 
     if (mNodeStreamPort) {
       amount += mNodeStreamPort->SizeOfIncludingThis(aMallocSizeOf);

@@ -108,7 +108,7 @@ Reverb::Reverb(ThreadSharedFloatArrayBufferList* impulseResponse, size_t impulse
 size_t Reverb::sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
     size_t amount = aMallocSizeOf(this);
-    amount += m_convolvers.SizeOfExcludingThis(aMallocSizeOf);
+    amount += m_convolvers.ShallowSizeOfExcludingThis(aMallocSizeOf);
     for (size_t i = 0; i < m_convolvers.Length(); i++) {
         if (m_convolvers[i]) {
             amount += m_convolvers[i]->sizeOfIncludingThis(aMallocSizeOf);

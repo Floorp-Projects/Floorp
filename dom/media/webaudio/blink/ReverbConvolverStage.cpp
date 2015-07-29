@@ -99,9 +99,9 @@ size_t ReverbConvolverStage::sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSi
         amount += m_fftConvolver->sizeOfIncludingThis(aMallocSizeOf);
     }
 
-    amount += m_preDelayBuffer.SizeOfExcludingThis(aMallocSizeOf);
-    amount += m_temporaryBuffer.SizeOfExcludingThis(aMallocSizeOf);
-    amount += m_directKernel.SizeOfExcludingThis(aMallocSizeOf);
+    amount += m_preDelayBuffer.ShallowSizeOfExcludingThis(aMallocSizeOf);
+    amount += m_temporaryBuffer.ShallowSizeOfExcludingThis(aMallocSizeOf);
+    amount += m_directKernel.ShallowSizeOfExcludingThis(aMallocSizeOf);
 
     if (m_directConvolver) {
         amount += m_directConvolver->sizeOfIncludingThis(aMallocSizeOf);

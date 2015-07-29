@@ -1199,7 +1199,7 @@ public:
     size_t amount = MediaStream::SizeOfExcludingThis(aMallocSizeOf);
     // Not owned:
     // - mInputs elements
-    amount += mInputs.SizeOfExcludingThis(aMallocSizeOf);
+    amount += mInputs.ShallowSizeOfExcludingThis(aMallocSizeOf);
     return amount;
   }
 

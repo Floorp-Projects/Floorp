@@ -28,9 +28,9 @@ public:
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     size_t amount = 0;
-    amount += mBuffers.SizeOfExcludingThis(aMallocSizeOf);
+    amount += mBuffers.ShallowSizeOfExcludingThis(aMallocSizeOf);
     for (size_t i = 0; i < mBuffers.Length(); i++) {
-      amount += mBuffers[i].SizeOfExcludingThis(aMallocSizeOf);
+      amount += mBuffers[i].ShallowSizeOfExcludingThis(aMallocSizeOf);
     }
 
     return amount;
@@ -176,7 +176,7 @@ struct AudioChunk {
     }
 
     // Memory in the array is owned by mBuffer.
-    amount += mChannelData.SizeOfExcludingThis(aMallocSizeOf);
+    amount += mChannelData.ShallowSizeOfExcludingThis(aMallocSizeOf);
     return amount;
   }
 
