@@ -639,7 +639,6 @@ CompositorD3D11::DrawVRDistortion(const gfx::Rect& aRect,
     static_cast<EffectVRDistortion*>(aEffectChain.mPrimaryEffect.get());
 
   TextureSourceD3D11* source = vrEffect->mTexture->AsSourceD3D11();
-  gfx::IntSize size = vrEffect->mRenderTarget->GetSize(); // XXX source->GetSize()
 
   VRHMDInfo* hmdInfo = vrEffect->mHMD;
   VRHMDType hmdType = hmdInfo->GetType();
@@ -707,21 +706,23 @@ CompositorD3D11::DrawVRDistortion(const gfx::Rect& aRect,
   ID3D11ShaderResourceView* srView = source->GetShaderResourceView();
   mContext->PSSetShaderResources(0, 1, &srView);
 
-  gfx::IntSize vpSizeInt = mCurrentRT->GetSize();
-  gfx::Size vpSize(vpSizeInt.width, vpSizeInt.height);
+  Rect destRect = aTransform.TransformBounds(aRect);
+  gfx::IntSize preDistortionSize = vrEffect->mRenderTarget->GetSize(); // XXX source->GetSize()
+  gfx::Size vpSize = destRect.Size();
+
   ID3D11Buffer* vbuffer;
   UINT vsize, voffset;
 
   for (uint32_t eye = 0; eye < 2; eye++) {
     gfx::IntRect eyeViewport;
-    eyeViewport.x = eye * size.width / 2;
+    eyeViewport.x = eye * preDistortionSize.width / 2;
     eyeViewport.y = 0;
-    eyeViewport.width = size.width / 2;
-    eyeViewport.height = size.height;
+    eyeViewport.width = preDistortionSize.width / 2;
+    eyeViewport.height = preDistortionSize.height;
 
     hmdInfo->FillDistortionConstants(eye,
-                                     size, eyeViewport,
-                                     vpSize, aRect,
+                                     preDistortionSize, eyeViewport,
+                                     vpSize, destRect,
                                      shaderConstants);
 
     // D3D has clip space top-left as -1,1 so we need to flip the Y coordinate offset here
