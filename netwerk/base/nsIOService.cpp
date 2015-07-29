@@ -49,6 +49,7 @@
 
 #ifdef MOZ_WIDGET_GONK
 #include "nsINetworkManager.h"
+#include "nsINetworkInterface.h"
 #endif
 
 #if defined(XP_WIN)
@@ -1321,18 +1322,18 @@ IsWifiActive()
     if (!networkManager) {
         return false;
     }
-    nsCOMPtr<nsINetworkInterface> active;
-    networkManager->GetActive(getter_AddRefs(active));
-    if (!active) {
+    nsCOMPtr<nsINetworkInfo> activeNetworkInfo;
+    networkManager->GetActiveNetworkInfo(getter_AddRefs(activeNetworkInfo));
+    if (!activeNetworkInfo) {
         return false;
     }
     int32_t type;
-    if (NS_FAILED(active->GetType(&type))) {
+    if (NS_FAILED(activeNetworkInfo->GetType(&type))) {
         return false;
     }
     switch (type) {
-    case nsINetworkInterface::NETWORK_TYPE_WIFI:
-    case nsINetworkInterface::NETWORK_TYPE_WIFI_P2P:
+    case nsINetworkInfo::NETWORK_TYPE_WIFI:
+    case nsINetworkInfo::NETWORK_TYPE_WIFI_P2P:
         return true;
     default:
         return false;
@@ -1433,7 +1434,7 @@ nsIOService::Observe(nsISupports *subject,
         if (IsNeckoChild()) {
           return NS_OK;
         }
-        nsCOMPtr<nsINetworkInterface> interface = do_QueryInterface(subject);
+        nsCOMPtr<nsINetworkInfo> interface = do_QueryInterface(subject);
         if (!interface) {
             return NS_ERROR_FAILURE;
         }
@@ -1444,8 +1445,8 @@ nsIOService::Observe(nsISupports *subject,
 
         bool wifiActive = IsWifiActive();
         int32_t newWifiState = wifiActive ?
-            nsINetworkInterface::NETWORK_TYPE_WIFI :
-            nsINetworkInterface::NETWORK_TYPE_MOBILE;
+            nsINetworkInfo::NETWORK_TYPE_WIFI :
+            nsINetworkInfo::NETWORK_TYPE_MOBILE;
         if (mPreviousWifiState != newWifiState) {
             // Notify wifi-only apps of their new status
             int32_t status = wifiActive ?
