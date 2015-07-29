@@ -55,16 +55,16 @@
   width: 16px;
   float: right;
   right: 0;
-  background-image: -moz-image-rect(url(chrome://global/skin/icons/close.png), 0, 16, 16, 0);
+  background-image: -moz-image-rect(url(chrome://browser/skin/newtab/close.png), 0, 16, 16, 0);
   background-color: transparent;
 }
 
 #newtab-undo-close-button:hover {
-  background-image: -moz-image-rect(url(chrome://global/skin/icons/close.png), 0, 32, 16, 16);
+  background-image: -moz-image-rect(url(chrome://browser/skin/newtab/close.png), 0, 32, 16, 16);
 }
 
-#newtab-undo-close-button:active {
-  background-image: -moz-image-rect(url(chrome://global/skin/icons/close.png), 0, 48, 16, 32);
+#newtab-undo-close-button:hover:active {
+  background-image: -moz-image-rect(url(chrome://browser/skin/newtab/close.png), 0, 48, 16, 32);
 }
 
 /* CUSTOMIZE */
