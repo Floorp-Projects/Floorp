@@ -9,15 +9,11 @@
  * to the top window.
  */
 Cu.import("resource://gre/modules/PerformanceStats.jsm", this);
-Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://testing-common/ContentTask.jsm", this);
-
 
 const URL = "http://example.com/browser/toolkit/components/perfmonitoring/tests/browser/browser_compartments.html?test=" + Math.random();
 const PARENT_TITLE = `Main frame for test browser_compartments.js ${Math.random()}`;
 const FRAME_TITLE = `Subframe for test browser_compartments.js ${Math.random()}`;
-
-const PARENT_PID = Services.appinfo.processID;
 
 // This function is injected as source as a frameScript
 function frameScript() {
@@ -26,7 +22,7 @@ function frameScript() {
 
     const { utils: Cu, classes: Cc, interfaces: Ci } = Components;
     Cu.import("resource://gre/modules/PerformanceStats.jsm");
-    Cu.import("resource://gre/modules/Services.jsm");
+
     let performanceStatsService =
       Cc["@mozilla.org/toolkit/performance-stats-service;1"].
       getService(Ci.nsIPerformanceStatsService);
@@ -37,7 +33,7 @@ function frameScript() {
     addMessageListener("compartments-test:getStatistics", () => {
       try {
         monitor.promiseSnapshot().then(snapshot => {
-          sendAsyncMessage("compartments-test:getStatistics", {snapshot, pid: Services.appinfo.processID});
+          sendAsyncMessage("compartments-test:getStatistics", snapshot);
         });
       } catch (ex) {
         Cu.reportError("Error in content (getStatistics): " + ex);
@@ -139,21 +135,19 @@ function monotinicity_tester(source, testName) {
       return;
     }
     let name = `${testName}: ${iteration++}`;
-    let result = yield source();
-    if (!result) {
+    let snapshot = yield source();
+    if (!snapshot) {
       // This can happen at the end of the test when we attempt
       // to communicate too late with the content process.
       window.clearInterval(interval);
       return;
     }
-    let {pid, snapshot} = result;
 
     // Sanity check on the process data.
     sanityCheck(previous.processData, snapshot.processData);
     SilentAssert.equal(snapshot.processData.isSystem, true);
     SilentAssert.equal(snapshot.processData.name, "<process>");
     SilentAssert.equal(snapshot.processData.addonId, "");
-    SilentAssert.equal(snapshot.processData.processId, pid);
     previous.procesData = snapshot.processData;
 
     // Sanity check on components data.
@@ -166,13 +160,9 @@ function monotinicity_tester(source, testName) {
       ]) {
         // Note that we cannot expect components data to be always smaller
         // than process data, as `getrusage` & co are not monotonic.
-        SilentAssert.leq(item[probe][k], 3 * snapshot.processData[probe][k],
-          `Sanity check (${name}): ${k} of component is not impossibly larger than that of process`);
+        SilentAssert.leq(item[probe][k], 2 * snapshot.processData[probe][k],
+          `Sanity check (${testName}): ${k} of component is not impossibly larger than that of process`);
       }
-
-      let isCorrectPid = (item.processId == pid && !item.isChildProcess)
-        || (item.processId != pid && item.isChildProcess);
-      SilentAssert.ok(isCorrectPid, `Pid check (${name}): the item comes from the right process`);
 
       let key = item.groupId;
       if (map.has(key)) {
@@ -232,7 +222,7 @@ add_task(function* test() {
     info("Deactivating sanity checks under Windows (bug 1151240)");
   } else {
     info("Setting up sanity checks");
-    monotinicity_tester(() => monitor.promiseSnapshot().then(snapshot => ({snapshot, pid: PARENT_PID})), "parent process");
+    monotinicity_tester(() => monitor.promiseSnapshot(), "parent process");
     monotinicity_tester(() => promiseContentResponseOrNull(browser, "compartments-test:getStatistics", null), "content process" );
   }
 
@@ -252,7 +242,7 @@ add_task(function* test() {
     });
     info("Titles set");
 
-    let {snapshot: stats} = (yield promiseContentResponse(browser, "compartments-test:getStatistics", null));
+    let stats = (yield promiseContentResponse(browser, "compartments-test:getStatistics", null));
 
     let titles = [for(stat of stats.componentsData) stat.title];
 
