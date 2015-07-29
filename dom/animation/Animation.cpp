@@ -540,7 +540,7 @@ Animation::CanThrottle() const
 }
 
 void
-Animation::ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
+Animation::ComposeStyle(nsRefPtr<AnimValuesStyleRule>& aStyleRule,
                         nsCSSPropertySet& aSetProperties,
                         bool& aNeedsRefreshes)
 {
@@ -1056,7 +1056,7 @@ Animation::GetPresContext() const
 AnimationCollection*
 Animation::GetCollection() const
 {
-  css::CommonAnimationManager* manager = GetAnimationManager();
+  CommonAnimationManager* manager = GetAnimationManager();
   if (!manager) {
     return nullptr;
   }
