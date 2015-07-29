@@ -570,8 +570,7 @@ CreateHeadlessANGLE(CreateContextFlags flags, const nsCOMPtr<nsIGfxInfo>& gfxInf
     nsRefPtr<GLContext> gl;
 
 #ifdef XP_WIN
-    gl = gl::GLContextProviderEGL::CreateHeadless(requireCompatProfile,
-                                                  forceEnabled);
+    gl = gl::GLContextProviderEGL::CreateHeadless(flags);,
     if (!gl) {
         webgl->GenerateWarning("Error during ANGLE OpenGL init.");
         return nullptr;
