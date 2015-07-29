@@ -426,8 +426,8 @@ public:
    * lower precision, usually 15.6 ms, but with very good performance benefit.
    * Use it for measurements of longer times, like >200ms timeouts.
    */
-  static MFBT_API TimeStamp Now() { return Now(true); }
-  static MFBT_API TimeStamp NowLoRes() { return Now(false); }
+  static TimeStamp Now() { return Now(true); }
+  static TimeStamp NowLoRes() { return Now(false); }
 
   /**
    * Return a timestamp representing the time when the current process was

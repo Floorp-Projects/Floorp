@@ -287,13 +287,13 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   nsRefPtr<MediaDecoderStateMachine> self = this;
 
   AudioQueue().AddPopListener(
-    [self] (const AudioData* aSample) {
-      self->OnAudioPopped(aSample);
-    }, mTaskQueue);
+    [self] (const MediaData* aSample) {
+      self->OnAudioPopped(aSample->As<AudioData>());
+     }, mTaskQueue);
 
   VideoQueue().AddPopListener(
-    [self] (const VideoData* aSample) {
-      self->OnVideoPopped(aSample);
+    [self] (const MediaData* aSample) {
+      self->OnVideoPopped(aSample->As<VideoData>());
     }, mTaskQueue);
 }
 
@@ -384,13 +384,14 @@ void MediaDecoderStateMachine::SendStreamData()
 
   const auto clockTime = GetClock();
   while (true) {
-    const AudioData* a = AudioQueue().PeekFront();
+    const MediaData* a = AudioQueue().PeekFront();
+
     // If we discard audio samples fed to the stream immediately, we will
     // keep decoding audio samples till the end and consume a lot of memory.
     // Therefore we only discard those behind the stream clock to throttle
     // the decoding speed.
     if (a && a->mTime <= clockTime) {
-      nsRefPtr<AudioData> releaseMe = AudioQueue().PopFront();
+      nsRefPtr<MediaData> releaseMe = AudioQueue().PopFront();
       continue;
     }
     break;
@@ -1042,7 +1043,7 @@ nsresult MediaDecoderStateMachine::Init(MediaDecoderStateMachine* aCloneDonor)
 
   nsresult rv = mReader->Init(cloneReader);
   NS_ENSURE_SUCCESS(rv, rv);
-
+  ScheduleStateMachineCrossThread();
   return NS_OK;
 }
 
@@ -2113,11 +2114,11 @@ MediaDecoderStateMachine::SeekCompleted()
   int64_t newCurrentTime = seekTime;
 
   // Setup timestamp state.
-  nsRefPtr<VideoData> video = VideoQueue().PeekFront();
+  nsRefPtr<MediaData> video = VideoQueue().PeekFront();
   if (seekTime == Duration().ToMicroseconds()) {
     newCurrentTime = seekTime;
   } else if (HasAudio()) {
-    AudioData* audio = AudioQueue().PeekFront();
+    MediaData* audio = AudioQueue().PeekFront();
     // Though we adjust the newCurrentTime in audio-based, and supplemented
     // by video. For better UX, should NOT bind the slide position to
     // the first audio data timestamp directly.
@@ -2516,7 +2517,7 @@ void MediaDecoderStateMachine::RenderVideoFrames(int32_t aMaxFrames,
   AssertCurrentThreadInMonitor();
 
   VideoFrameContainer* container = mDecoder->GetVideoFrameContainer();
-  nsAutoTArray<nsRefPtr<VideoData>,16> frames;
+  nsAutoTArray<nsRefPtr<MediaData>,16> frames;
   VideoQueue().GetFirstElements(aMaxFrames, &frames);
   if (frames.IsEmpty() || !container) {
     return;
@@ -2525,7 +2526,7 @@ void MediaDecoderStateMachine::RenderVideoFrames(int32_t aMaxFrames,
   nsAutoTArray<ImageContainer::NonOwningImage,16> images;
   TimeStamp lastFrameTime;
   for (uint32_t i = 0; i < frames.Length(); ++i) {
-    VideoData* frame = frames[i];
+    VideoData* frame = frames[i]->As<VideoData>();
     frame->mSentToCompositor = true;
 
     int64_t frameTime = frame->mTime;
@@ -2562,7 +2563,7 @@ void MediaDecoderStateMachine::RenderVideoFrames(int32_t aMaxFrames,
                 VideoQueue().GetSize(), mReader->SizeOfVideoQueueInFrames());
   }
 
-  container->SetCurrentFrames(frames[0]->mDisplay, images);
+  container->SetCurrentFrames(frames[0]->As<VideoData>()->mDisplay, images);
 }
 
 void MediaDecoderStateMachine::ResyncAudioClock()
@@ -2666,21 +2667,21 @@ void MediaDecoderStateMachine::UpdateRenderedVideoFrames()
   NS_ASSERTION(clockTime >= 0, "Should have positive clock time.");
   int64_t remainingTime = AUDIO_DURATION_USECS;
   if (VideoQueue().GetSize() > 0) {
-    nsRefPtr<VideoData> currentFrame = VideoQueue().PopFront();
+    nsRefPtr<MediaData> currentFrame = VideoQueue().PopFront();
     int32_t framesRemoved = 0;
     while (VideoQueue().GetSize() > 0) {
-      VideoData* nextFrame = VideoQueue().PeekFront();
+      MediaData* nextFrame = VideoQueue().PeekFront();
       if (!IsRealTime() && nextFrame->mTime > clockTime) {
         remainingTime = nextFrame->mTime - clockTime;
         break;
       }
       ++framesRemoved;
-      if (!currentFrame->mSentToCompositor) {
+      if (!currentFrame->As<VideoData>()->mSentToCompositor) {
         mDecoder->NotifyDecodedFrames(0, 0, 1);
         VERBOSE_LOG("discarding video frame mTime=%lld clock_time=%lld",
                     currentFrame->mTime, clockTime);
       }
-      CheckTurningOffHardwareDecoder(currentFrame);
+      CheckTurningOffHardwareDecoder(currentFrame->As<VideoData>());
       currentFrame = VideoQueue().PopFront();
 
     }

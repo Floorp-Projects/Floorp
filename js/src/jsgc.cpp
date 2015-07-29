@@ -1366,12 +1366,11 @@ FinishPersistentRootedChain(mozilla::LinkedList<PersistentRooted<T>>& list)
 void
 js::gc::FinishPersistentRootedChains(RootLists& roots)
 {
-    FinishPersistentRootedChain(roots.functionPersistentRooteds);
-    FinishPersistentRootedChain(roots.idPersistentRooteds);
-    FinishPersistentRootedChain(roots.objectPersistentRooteds);
-    FinishPersistentRootedChain(roots.scriptPersistentRooteds);
-    FinishPersistentRootedChain(roots.stringPersistentRooteds);
-    FinishPersistentRootedChain(roots.valuePersistentRooteds);
+    FinishPersistentRootedChain(roots.getPersistentRootedList<JSObject*>());
+    FinishPersistentRootedChain(roots.getPersistentRootedList<JSScript*>());
+    FinishPersistentRootedChain(roots.getPersistentRootedList<JSString*>());
+    FinishPersistentRootedChain(roots.getPersistentRootedList<jsid>());
+    FinishPersistentRootedChain(roots.getPersistentRootedList<Value>());
 }
 
 void
