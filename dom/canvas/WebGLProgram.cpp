@@ -9,7 +9,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/WebGL2RenderingContextBinding.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "WebGLActiveInfo.h"
 #include "WebGLContext.h"
 #include "WebGLShader.h"

@@ -11,7 +11,7 @@
 #include "nsIPipe.h"
 #include "nsIEventTarget.h"
 #include "nsISeekableStream.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsSegmentedBuffer.h"
 #include "nsStreamUtils.h"
 #include "nsCOMPtr.h"

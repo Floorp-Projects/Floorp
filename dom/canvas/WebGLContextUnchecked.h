@@ -8,7 +8,7 @@
 #define WEBGLCONTEXTUNCHECKED_H
 
 #include "GLDefs.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "WebGLTypes.h"
 
 namespace mozilla {

@@ -24,7 +24,7 @@
 #include "mozilla/layers/AsyncCompositionManager.h" // for ViewTransform
 #include "mozilla/layers/LayerMetricsWrapper.h" // for LayerMetricsWrapper
 #include "mozilla/mozalloc.h"           // for operator delete, etc
-#include "nsRefPtr.h"                   // for nsRefPtr
+#include "mozilla/nsRefPtr.h"                   // for nsRefPtr
 #include "nsDebug.h"                    // for NS_ASSERTION
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "nsISupportsUtils.h"           // for NS_ADDREF, NS_RELEASE

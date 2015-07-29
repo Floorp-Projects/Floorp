@@ -12,7 +12,7 @@
 #include "nsError.h"
 #include "nsDebug.h"
 #include "nsISupportsImpl.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/TypeTraits.h"
 
 /**
