@@ -14,10 +14,13 @@ MacIOSurfaceTextureSourceBasic::MacIOSurfaceTextureSourceBasic(
                                 MacIOSurface* aSurface)
   : mCompositor(aCompositor)
   , mSurface(aSurface)
-{}
+{
+  MOZ_COUNT_CTOR(MacIOSurfaceTextureSourceBasic);
+}
 
 MacIOSurfaceTextureSourceBasic::~MacIOSurfaceTextureSourceBasic()
 {
+  MOZ_COUNT_DTOR(MacIOSurfaceTextureSourceBasic);
 }
 
 gfx::IntSize
