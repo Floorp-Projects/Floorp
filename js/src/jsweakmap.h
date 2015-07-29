@@ -251,8 +251,8 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
             gc::Cell* value = gc::ToMarkable(r.front().value());
             if (key && value) {
                 tracer->trace(memberOf,
-                              JS::GCCellPtr(r.front().key().get()),
-                              JS::GCCellPtr(r.front().value().get()));
+                              JS::GCCellPtr(r.front().key()),
+                              JS::GCCellPtr(r.front().value()));
             }
         }
     }
