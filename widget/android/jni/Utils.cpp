@@ -1,4 +1,5 @@
 #include "Utils.h"
+#include "Types.h"
 
 #include "mozilla/Assertions.h"
 
@@ -7,6 +8,37 @@
 
 namespace mozilla {
 namespace jni {
+
+namespace detail {
+
+#define DEFINE_PRIMITIVE_TYPE_ADAPTER(NativeType, JNIType, JNIName) \
+    \
+    constexpr JNIType (JNIEnv::*TypeAdapter<NativeType>::Call) \
+            (jobject, jmethodID, jvalue*); \
+    constexpr JNIType (JNIEnv::*TypeAdapter<NativeType>::StaticCall) \
+            (jclass, jmethodID, jvalue*); \
+    constexpr JNIType (JNIEnv::*TypeAdapter<NativeType>::Get) \
+            (jobject, jfieldID); \
+    constexpr JNIType (JNIEnv::*TypeAdapter<NativeType>::StaticGet) \
+            (jclass, jfieldID); \
+    constexpr void (JNIEnv::*TypeAdapter<NativeType>::Set) \
+            (jobject, jfieldID, JNIType); \
+    constexpr void (JNIEnv::*TypeAdapter<NativeType>::StaticSet) \
+            (jclass, jfieldID, JNIType)
+
+DEFINE_PRIMITIVE_TYPE_ADAPTER(bool,     jboolean, Boolean);
+DEFINE_PRIMITIVE_TYPE_ADAPTER(int8_t,   jbyte,    Byte);
+DEFINE_PRIMITIVE_TYPE_ADAPTER(char16_t, jchar,    Char);
+DEFINE_PRIMITIVE_TYPE_ADAPTER(int16_t,  jshort,   Short);
+DEFINE_PRIMITIVE_TYPE_ADAPTER(int32_t,  jint,     Int);
+DEFINE_PRIMITIVE_TYPE_ADAPTER(int64_t,  jlong,    Long);
+DEFINE_PRIMITIVE_TYPE_ADAPTER(float,    jfloat,   Float);
+DEFINE_PRIMITIVE_TYPE_ADAPTER(double,   jdouble,  Double);
+
+#undef DEFINE_PRIMITIVE_TYPE_ADAPTER
+
+} // namespace detail
+
 
 bool ThrowException(JNIEnv *aEnv, const char *aClass,
                     const char *aMessage)
