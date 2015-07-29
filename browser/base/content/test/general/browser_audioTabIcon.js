@@ -10,15 +10,13 @@ function* wait_for_tab_playing_event(tab, expectPlaying) {
   });
 }
 
-function* test_tooltip(icon, expectedTooltip) {
-  function disable_non_test_mouse(disable) {
-    let utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                      .getInterface(Ci.nsIDOMWindowUtils);
-    utils.disableNonTestMouseEvents(disable);
-  }
+function disable_non_test_mouse(disable) {
+  let utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIDOMWindowUtils);
+  utils.disableNonTestMouseEvents(disable);
+}
 
-  let tooltip = document.getElementById("tabbrowser-tab-tooltip");
-
+function* hover_icon(icon, tooltip) {
   disable_non_test_mouse(true);
 
   let popupShownPromise = BrowserTestUtils.waitForEvent(tooltip, "popupshown");
@@ -26,13 +24,24 @@ function* test_tooltip(icon, expectedTooltip) {
   EventUtils.synthesizeMouse(icon, 2, 2, {type: "mousemove"});
   EventUtils.synthesizeMouse(icon, 3, 3, {type: "mousemove"});
   EventUtils.synthesizeMouse(icon, 4, 4, {type: "mousemove"});
-  yield popupShownPromise;
+  return popupShownPromise;
+}
 
-  is(tooltip.getAttribute("label"), expectedTooltip, "Correct tooltip expected");
-
+function leave_icon(icon) {
   EventUtils.synthesizeMouse(icon, 0, 0, {type: "mouseout"});
+  EventUtils.synthesizeMouseAtCenter(document.documentElement, {type: "mousemove"});
+  EventUtils.synthesizeMouseAtCenter(document.documentElement, {type: "mousemove"});
+  EventUtils.synthesizeMouseAtCenter(document.documentElement, {type: "mousemove"});
 
   disable_non_test_mouse(false);
+}
+
+function* test_tooltip(icon, expectedTooltip) {
+  let tooltip = document.getElementById("tabbrowser-tab-tooltip");
+
+  yield hover_icon(icon, tooltip);
+  is(tooltip.getAttribute("label"), expectedTooltip, "Correct tooltip expected");
+  leave_icon(icon);
 }
 
 function* test_mute_tab(tab, icon, expectMuted) {
@@ -44,7 +53,15 @@ function* test_mute_tab(tab, icon, expectMuted) {
     return false;
   });
 
+  let activeTab = gBrowser.selectedTab;
+
+  let tooltip = document.getElementById("tabbrowser-tab-tooltip");
+
+  yield hover_icon(icon, tooltip);
   EventUtils.synthesizeMouseAtCenter(icon, {button: 0});
+  leave_icon(icon);
+
+  is(gBrowser.selectedTab, activeTab, "Clicking on mute should not change the currently selected tab");
 
   return mutedPromise;
 }
@@ -89,6 +106,14 @@ function* test_on_browser(browser) {
   yield test_playing_icon_on_tab(tab, browser, true);
 
   gBrowser.unpinTab(tab);
+
+  // Retest with another browser in the foreground tab
+  if (gBrowser.selectedBrowser.currentURI.spec == PAGE) {
+    yield BrowserTestUtils.withNewTab({
+      gBrowser,
+      url: "data:text/html,test"
+    }, () => test_on_browser(browser));
+  }
 }
 
 add_task(function*() {
