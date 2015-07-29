@@ -451,14 +451,14 @@ WebMDemuxer::EnsureUpToDateIndex()
   if (!mNeedReIndex) {
     return;
   }
+  if (mInitData && mBufferedState->GetInitEndOffset() == -1) {
+    mBufferedState->NotifyDataArrived(mInitData->Elements(), mInitData->Length(), 0);
+  }
   AutoPinned<MediaResource> resource(mResource);
   nsTArray<MediaByteRange> byteRanges;
   nsresult rv = resource->GetCachedRanges(byteRanges);
-  if (NS_FAILED(rv)) {
+  if (NS_FAILED(rv) || !byteRanges.Length()) {
     return;
-  }
-  if (mInitData && mBufferedState->GetInitEndOffset() == -1) {
-    mBufferedState->NotifyDataArrived(mInitData->Elements(), mInitData->Length(), 0);
   }
   mBufferedState->UpdateIndex(byteRanges, mResource);
   if (!mInitData && mBufferedState->GetInitEndOffset() != -1) {
