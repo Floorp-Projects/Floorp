@@ -660,7 +660,11 @@ public:
     // Can't inline these variables due to short-circuit evaluation.
     bool continueX = mApzc.mX.SampleOverscrollAnimation(aDelta);
     bool continueY = mApzc.mY.SampleOverscrollAnimation(aDelta);
-    return continueX || continueY;
+    if (!continueX && !continueY) {
+      mApzc.OverscrollAnimationEnding();
+      return false;
+    }
+    return true;
   }
 private:
   AsyncPanZoomController& mApzc;
@@ -3323,6 +3327,20 @@ void AsyncPanZoomController::ShareCompositorFrameMetrics() {
         APZC_LOG("%p failed to share FrameMetrics with content process.", this);
       }
     }
+  }
+}
+
+void AsyncPanZoomController::OverscrollAnimationEnding() {
+  // If we got into overscroll from a fling, that fling did not request a
+  // fling snap to avoid a resulting scrollTo from cancelling the overscroll
+  // animation too early. We do still want to request a fling snap, though,
+  // in case the end of the axis at which we're overscrolled is not a valid
+  // snap point, so we request one now. If there are no snap points, this will
+  // do nothing. If there are snap points, we'll get a scrollTo that snaps us
+  // back to the nearest valid snap point.
+  if (nsRefPtr<GeckoContentController> controller = GetGeckoContentController()) {
+    controller->RequestFlingSnap(mFrameMetrics.GetScrollId(),
+                                 mFrameMetrics.GetScrollOffset());
   }
 }
 
