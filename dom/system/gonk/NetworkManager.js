@@ -231,7 +231,8 @@ NetworkManager.prototype = {
         let excludeFota = aMsg.json.excludeFota;
         let interfaces = [];
 
-        for each (let i in this.networkInterfaces) {
+        for each (let network in this.networkInterfaces) {
+          let i = network.info;
           if ((i.type == Ci.nsINetworkInfo.NETWORK_TYPE_MOBILE_MMS && excludeMms) ||
               (i.type == Ci.nsINetworkInfo.NETWORK_TYPE_MOBILE_SUPL && excludeSupl) ||
               (i.type == Ci.nsINetworkInfo.NETWORK_TYPE_MOBILE_IMS && excludeIms) ||
@@ -251,9 +252,7 @@ NetworkManager.prototype = {
             ips: ips.value,
             prefixLengths: prefixLengths.value,
             gateways: i.getGateways(),
-            dnses: i.getDnses(),
-            httpProxyHost: i.httpProxyHost,
-            httpProxyPort: i.httpProxyPort
+            dnses: i.getDnses()
           });
         }
         return interfaces;
