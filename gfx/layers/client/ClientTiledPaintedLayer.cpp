@@ -170,7 +170,8 @@ ClientTiledPaintedLayer::BeginPaint()
   // on this layer. If there is an OMT animation then we need to draw the whole
   // visible region of this layer as determined by layout, because we don't know
   // what parts of it might move into view in the compositor.
-  if (!hasTransformAnimation) {
+  if (!hasTransformAnimation &&
+      mContentClient->GetLowPrecisionTiledBuffer()) {
     ParentLayerRect criticalDisplayPort =
       (displayportMetrics.GetCriticalDisplayPort() * displayportMetrics.GetZoom())
       + displayportMetrics.GetCompositionBounds().TopLeft();
@@ -401,7 +402,14 @@ ClientTiledPaintedLayer::RenderLayer()
   void *data = ClientManager()->GetPaintedLayerCallbackData();
 
   if (!mContentClient) {
-    mContentClient = new MultiTiledContentClient(this, ClientManager());
+#if defined(MOZ_B2G) || defined(XP_MACOSX)
+    if (mCreationHint == LayerManager::NONE) {
+      mContentClient = new SingleTiledContentClient(this, ClientManager());
+    } else
+#endif
+    {
+      mContentClient = new MultiTiledContentClient(this, ClientManager());
+    }
 
     mContentClient->Connect();
     ClientManager()->AsShadowForwarder()->Attach(mContentClient, this);
@@ -538,6 +546,22 @@ ClientTiledPaintedLayer::RenderLayer()
   // If we get here, we've done all the high- and low-precision
   // paints we wanted to do, so we can finish the paint and chill.
   EndPaint();
+}
+
+bool
+ClientTiledPaintedLayer::IsOptimizedFor(LayerManager::PaintedLayerCreationHint aHint)
+{
+#if defined(MOZ_B2G) || defined(XP_MACOSX)
+  // The only creation hint is whether the layer is scrollable or not, and this
+  // is only respected on B2G and OSX, where it's used to determine whether to
+  // use a tiled content client or not.
+  // There are pretty nasty performance consequences for not using tiles on
+  // large, scrollable layers, so we want the layer to be recreated in this
+  // situation.
+  return aHint == GetCreationHint();
+#else
+  return true;
+#endif
 }
 
 void
