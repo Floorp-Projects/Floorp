@@ -14,5 +14,6 @@ mozprocess.pth:testing/mozbase/mozprocess
 mozprofile.pth:testing/mozbase/mozprofile
 mozrunner.pth:testing/mozbase/mozrunner
 mozsystemmonitor.pth:testing/mozbase/mozsystemmonitor
+mozscreenshot.pth:testing/mozbase/mozscreenshot
 moztest.pth:testing/mozbase/moztest
 mozversion.pth:testing/mozbase/mozversion
