@@ -13,6 +13,7 @@
 #include "nsChangeHint.h"
 #include "nsCSSProperty.h"
 #include "nsDisplayList.h" // For nsDisplayItem::Type
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/dom/Animation.h"
@@ -510,6 +511,72 @@ private:
   dom::Element* MOZ_NON_OWNING_REF mElement;
   nsCSSPseudoElements::Type        mPseudoType;
 };
+
+template <class EventInfo>
+class DelayedEventDispatcher
+{
+public:
+  void QueueEvent(EventInfo&& aEventInfo)
+  {
+    mPendingEvents.AppendElement(mozilla::Forward<EventInfo>(aEventInfo));
+  }
+
+  // Takes a reference to the owning manager's pres context so it can
+  // detect if the pres context is destroyed while dispatching one of
+  // the events.
+  void DispatchEvents(nsPresContext* const & aPresContext)
+  {
+    if (!aPresContext || mPendingEvents.IsEmpty()) {
+      return;
+    }
+
+    EventArray events;
+    mPendingEvents.SwapElements(events);
+    // FIXME: Sort events here in timeline order, then document order
+    for (EventInfo& info : events) {
+      EventDispatcher::Dispatch(info.mElement, aPresContext, &info.mEvent);
+
+      if (!aPresContext) {
+        break;
+      }
+    }
+  }
+
+  void ClearEventQueue() { mPendingEvents.Clear(); }
+  bool HasQueuedEvents() const { return !mPendingEvents.IsEmpty(); }
+
+  // Methods for supporting cycle-collection
+  void Traverse(nsCycleCollectionTraversalCallback* aCallback,
+                const char* aName)
+  {
+    for (EventInfo& info : mPendingEvents) {
+      ImplCycleCollectionTraverse(*aCallback, info.mElement, aName);
+    }
+  }
+  void Unlink() { mPendingEvents.Clear(); }
+
+protected:
+  typedef nsTArray<EventInfo> EventArray;
+
+  EventArray mPendingEvents;
+};
+
+template <class EventInfo>
+inline void
+ImplCycleCollectionUnlink(DelayedEventDispatcher<EventInfo>& aField)
+{
+  aField.Unlink();
+}
+
+template <class EventInfo>
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            DelayedEventDispatcher<EventInfo>& aField,
+                            const char* aName,
+                            uint32_t aFlags = 0)
+{
+  aField.Traverse(&aCallback, aName);
+}
 
 } // namespace mozilla
 
