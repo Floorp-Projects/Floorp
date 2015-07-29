@@ -79,10 +79,6 @@ MediaStreamGraphImpl::FinishStream(MediaStream* aStream)
   STREAM_LOG(LogLevel::Debug, ("MediaStream %p will finish", aStream));
   aStream->mFinished = true;
   aStream->mBuffer.AdvanceKnownTracksTime(STREAM_TIME_MAX);
-  // Force at least one more iteration of the control loop, since we rely
-  // on UpdateCurrentTimeForStreams to notify our listeners once the stream end
-  // has been reached.
-  EnsureNextIteration();
 
   SetStreamOrderDirty();
 }
@@ -108,7 +104,7 @@ MediaStreamGraphImpl::AddStream(MediaStream* aStream)
     mSuspendedStreams.AppendElement(aStream);
     STREAM_LOG(LogLevel::Debug, ("Adding media stream %p to the graph, in the suspended stream array", aStream));
   } else {
-    aStream->mBufferStartTime = IterationEnd();
+    aStream->mBufferStartTime = mProcessedTime;
     mStreams.AppendElement(aStream);
     STREAM_LOG(LogLevel::Debug, ("Adding media stream %p to the graph", aStream));
   }
@@ -256,10 +252,10 @@ MediaStreamGraphImpl::GraphTimeToStreamTime(MediaStream* aStream,
 {
   MOZ_ASSERT(aTime <= mStateComputedTime,
                "Don't ask about times where we haven't made blocking decisions yet");
-  if (aTime <= IterationEnd()) {
+  if (aTime <= mProcessedTime) {
     return std::max<StreamTime>(0, aTime - aStream->mBufferStartTime);
   }
-  GraphTime t = IterationEnd();
+  GraphTime t = mProcessedTime;
   StreamTime s = t - aStream->mBufferStartTime;
   while (t < aTime) {
     GraphTime end;
@@ -287,7 +283,8 @@ MediaStreamGraphImpl::StreamTimeToGraphTime(MediaStream* aStream,
   if (aTime >= STREAM_TIME_MAX) {
     return GRAPH_TIME_MAX;
   }
-  MediaTime bufferElapsedToCurrentTime =  IterationEnd() - aStream->mBufferStartTime;
+  MediaTime bufferElapsedToCurrentTime =
+    mProcessedTime - aStream->mBufferStartTime;
   if (aTime < bufferElapsedToCurrentTime ||
       (aTime == bufferElapsedToCurrentTime && !(aFlags & INCLUDE_TRAILING_BLOCKED_INTERVAL))) {
     return aTime + aStream->mBufferStartTime;
@@ -296,7 +293,7 @@ MediaStreamGraphImpl::StreamTimeToGraphTime(MediaStream* aStream,
   MediaTime streamAmount = aTime - bufferElapsedToCurrentTime;
   NS_ASSERTION(streamAmount >= 0, "Can't answer queries before current time");
 
-  GraphTime t = IterationEnd();
+  GraphTime t = mProcessedTime;
   while (t < GRAPH_TIME_MAX) {
     if (!(aFlags & INCLUDE_TRAILING_BLOCKED_INTERVAL) && streamAmount == 0) {
       return t;
@@ -336,7 +333,7 @@ MediaStreamGraphImpl::StreamNotifyOutput(MediaStream* aStream)
 {
   for (uint32_t j = 0; j < aStream->mListeners.Length(); ++j) {
     MediaStreamListener* l = aStream->mListeners[j];
-    l->NotifyOutput(this, IterationEnd());
+    l->NotifyOutput(this, mProcessedTime);
   }
 }
 
@@ -348,7 +345,7 @@ MediaStreamGraphImpl::StreamReadyToFinish(MediaStream* aStream)
 
   // The stream is fully finished when all of its track data has been played
   // out.
-  if (IterationEnd() >=
+  if (mProcessedTime >=
       aStream->StreamTimeToGraphTime(aStream->GetStreamBuffer().GetAllTracksEnd()))  {
     NS_WARN_IF_FALSE(aStream->mNotifiedBlocked,
       "Should've notified blocked=true for a fully finished stream");
@@ -405,9 +402,7 @@ MediaStreamGraphImpl::UpdateCurrentTimeForStreams(GraphTime aPrevCurrentTime,
 
       if (runningAndSuspendedPair[array] == &mStreams) {
         bool streamHasOutput = blockedTime < aNextCurrentTime - aPrevCurrentTime;
-        // Make this an assertion when bug 957832 is fixed.
-        NS_WARN_IF_FALSE(
-          !streamHasOutput || !stream->mNotifiedFinished,
+        NS_ASSERTION(!streamHasOutput || !stream->mNotifiedFinished,
           "Shouldn't have already notified of finish *and* have output!");
 
         if (streamHasOutput) {
@@ -440,13 +435,13 @@ MediaStreamGraphImpl::WillUnderrun(MediaStream* aStream, GraphTime aTime,
     StreamTimeToGraphTime(aStream, aStream->GetBufferEnd(),
                           INCLUDE_TRAILING_BLOCKED_INTERVAL);
 #ifdef DEBUG
-  if (bufferEnd < IterationEnd()) {
+  if (bufferEnd < mProcessedTime) {
     STREAM_LOG(LogLevel::Error, ("MediaStream %p underrun, "
-                              "bufferEnd %f < IterationEnd() %f (%lld < %lld), Streamtime %lld",
-                              aStream, MediaTimeToSeconds(bufferEnd), MediaTimeToSeconds(IterationEnd()),
-                              bufferEnd, IterationEnd(), aStream->GetBufferEnd()));
+                              "bufferEnd %f < mProcessedTime %f (%lld < %lld), Streamtime %lld",
+                              aStream, MediaTimeToSeconds(bufferEnd), MediaTimeToSeconds(mProcessedTime),
+                              bufferEnd, mProcessedTime, aStream->GetBufferEnd()));
     aStream->DumpTrackInfo();
-    NS_ASSERTION(bufferEnd >= IterationEnd(), "Buffer underran");
+    NS_ASSERTION(bufferEnd >= mProcessedTime, "Buffer underran");
   }
 #endif
   // We should block after bufferEnd.
@@ -748,8 +743,6 @@ MediaStreamGraphImpl::UpdateStreamOrder()
 void
 MediaStreamGraphImpl::RecomputeBlocking(GraphTime aEndBlockingDecisions)
 {
-  bool blockingDecisionsWillChange = false;
-
   STREAM_LOG(LogLevel::Verbose, ("Media graph %p computing blocking for time %f",
                               this, MediaTimeToSeconds(mStateComputedTime)));
   nsTArray<MediaStream*>* runningAndSuspendedPair[2];
@@ -771,16 +764,7 @@ MediaStreamGraphImpl::RecomputeBlocking(GraphTime aEndBlockingDecisions)
              t < aEndBlockingDecisions; t = end) {
           end = GRAPH_TIME_MAX;
           RecomputeBlockingAt(streamSet, t, aEndBlockingDecisions, &end);
-          if (end < GRAPH_TIME_MAX) {
-            blockingDecisionsWillChange = true;
-          }
         }
-      }
-
-      GraphTime end;
-      stream->mBlocked.GetAt(IterationEnd(), &end);
-      if (end < GRAPH_TIME_MAX) {
-        blockingDecisionsWillChange = true;
       }
     }
   }
@@ -788,17 +772,12 @@ MediaStreamGraphImpl::RecomputeBlocking(GraphTime aEndBlockingDecisions)
                               this, MediaTimeToSeconds(mStateComputedTime),
                               MediaTimeToSeconds(aEndBlockingDecisions)));
 
-  MOZ_ASSERT(aEndBlockingDecisions >= IterationEnd());
+  MOZ_ASSERT(aEndBlockingDecisions >= mProcessedTime);
   // The next state computed time can be the same as the previous: it
   // means the driver would be have been blocking indefinitly, but the graph has
   // been woken up right after having been to sleep.
   MOZ_ASSERT(aEndBlockingDecisions >= mStateComputedTime);
   mStateComputedTime = aEndBlockingDecisions;
-
-  if (blockingDecisionsWillChange) {
-    // Make sure we wake up to notify listeners about these changes.
-    EnsureNextIteration();
-  }
 }
 
 void
@@ -1296,7 +1275,7 @@ MediaStreamGraphImpl::PrepareUpdatesToMainThreadState(bool aFinalUpdate)
       StreamUpdate* update = mStreamUpdates.AppendElement();
       update->mStream = stream;
       update->mNextMainThreadCurrentTime =
-        GraphTimeToStreamTime(stream, IterationEnd());
+        GraphTimeToStreamTime(stream, mProcessedTime);
       update->mNextMainThreadFinished = stream->mNotifiedFinished;
     }
     if (!mPendingUpdateRunnables.IsEmpty()) {
@@ -1514,14 +1493,14 @@ MediaStreamGraphImpl::OneIteration(GraphTime aFrom, GraphTime aTo,
     }
   }
 
-  UpdateCurrentTimeForStreams(aFrom, aTo);
-
   GraphTime stateFrom = mStateComputedTime;
   GraphTime stateEnd = std::min(aStateEnd, mEndTime);
   UpdateGraph(stateEnd);
 
   Process(stateFrom, stateEnd);
   mProcessedTime = stateEnd;
+
+  UpdateCurrentTimeForStreams(stateFrom, stateEnd);
 
   // Send updates to the main thread and wait for the next control loop
   // iteration.
@@ -1666,7 +1645,6 @@ public:
   virtual void Run() override
   {
     mStream->GraphImpl()->AddStream(mStream);
-    mStream->Init();
   }
   virtual void RunDuringShutdown() override
   {
@@ -1973,15 +1951,6 @@ size_t
 MediaStream::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
-}
-
-void
-MediaStream::Init()
-{
-  MediaStreamGraphImpl* graph = GraphImpl();
-  mBlocked.SetAtAndAfter(graph->IterationEnd(), true);
-  mExplicitBlockerCount.SetAtAndAfter(graph->IterationEnd(), true);
-  mExplicitBlockerCount.SetAtAndAfter(graph->mStateComputedTime, false);
 }
 
 MediaStreamGraphImpl*
@@ -3336,7 +3305,7 @@ MediaStreamGraphImpl::MoveStreams(AudioContextOperation aAudioContextOperation,
     // set their buffer start time to the appropriate value now:
     if (aAudioContextOperation == AudioContextOperation::Resume &&
         stream->mBufferStartTime == START_TIME_DELAYED) {
-      stream->mBufferStartTime = IterationEnd();
+      stream->mBufferStartTime = mProcessedTime;
     }
 
     stream->remove();

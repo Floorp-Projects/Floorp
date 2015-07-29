@@ -433,8 +433,6 @@ public:
   virtual AudioNodeStream* AsAudioNodeStream() { return nullptr; }
   virtual CameraPreviewMediaStream* AsCameraPreviewStream() { return nullptr; }
 
-  // media graph thread only
-  void Init();
   // These Impl methods perform the core functionality of the control methods
   // above, on the media graph thread.
   /**
