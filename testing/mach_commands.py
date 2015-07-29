@@ -10,6 +10,7 @@ import sys
 import tempfile
 import subprocess
 import shutil
+from collections import defaultdict
 
 from mach.decorators import (
     CommandArgument,
@@ -437,33 +438,51 @@ class JsapiTestsCommand(MachCommandBase):
         return jsapi_tests_result
 
 def autotry_parser():
-    from autotry import parser
-    return parser()
+    from autotry import arg_parser
+    return arg_parser()
 
 @CommandProvider
 class PushToTry(MachCommandBase):
+    def normalise_list(self, items, allow_subitems=False):
+        from autotry import parse_arg
 
-    def validate_args(self, paths, tests, tags, builds, platforms):
-        if not any([len(paths), tests, tags]):
-            print("Paths, tests, or tags must be specified.")
+        rv = defaultdict(list)
+        for item in items:
+            parsed = parse_arg(item)
+            for key, values in parsed.iteritems():
+                rv[key].extend(values)
+
+        if not allow_subitems:
+            if not all(item == [] for item in rv.itervalues()):
+                raise ValueError("Unexpected subitems in argument")
+            return rv.keys()
+        else:
+            return rv
+
+    def validate_args(self, **kwargs):
+        if not kwargs["paths"] and not kwargs["tests"] and not kwargs["tags"]:
+            print("Paths, tags, or tests must be specified as an argument to autotry.")
             sys.exit(1)
 
-        if platforms is None:
-            platforms = os.environ['AUTOTRY_PLATFORM_HINT']
+        if kwargs["platforms"] is None:
+            print("Platforms must be specified as an argument to autotry")
+            sys.exit(1)
 
-        rv_platforms = []
-        for item in platforms:
-            for platform in item.split(","):
-                if platform:
-                    rv_platforms.append(platform)
+        try:
+            platforms = self.normalise_list(kwargs["platforms"])
+        except ValueError as e:
+            print("Error parsing -p argument:\n%s" % e.message)
+            sys.exit(1)
 
-        rv_tests = []
-        for item in tests:
-            for test in item.split(","):
-                if test:
-                    rv_tests.append(test)
+        try:
+            tests = (self.normalise_list(kwargs["tests"], allow_subitems=True)
+                     if kwargs["tests"] else {})
+        except ValueError as e:
+            print("Error parsing -u argument:\n%s" % e.message)
+            sys.exit(1)
 
-        for p in paths:
+        paths = []
+        for p in kwargs["paths"]:
             p = os.path.normpath(os.path.abspath(p))
             if not p.startswith(self.topsrcdir):
                 print('Specified path "%s" is outside of the srcdir, unable to'
@@ -473,15 +492,23 @@ class PushToTry(MachCommandBase):
                 print('Specified path "%s" is at the top of the srcdir and would'
                       ' select all tests.' % p)
                 sys.exit(1)
+            paths.append(os.path.relpath(p, self.topsrcdir))
 
-        return builds, rv_platforms, rv_tests
+        try:
+            tags = self.normalise_list(kwargs["tags"]) if kwargs["tags"] else []
+        except ValueError as e:
+            print("Error parsing --tags argument:\n%s" % e.message)
+            sys.exit(1)
+
+        return kwargs["builds"], platforms, tests, paths, tags, kwargs["extra_args"]
+
 
     @Command('try',
              category='testing',
              description='Push selected tests to the try server',
              parser=autotry_parser)
-    def autotry(self, builds=None, platforms=None, paths=None, verbose=None,
-                push=None, tags=None, tests=None, extra_args=None, intersection=False):
+
+    def autotry(self, **kwargs):
         """Autotry is in beta, please file bugs blocking 1149670.
 
         Push the current tree to try, with the specified syntax.
@@ -527,14 +554,23 @@ class PushToTry(MachCommandBase):
         from autotry import AutoTry
         print("mach try is under development, please file bugs blocking 1149670.")
 
-        if tests is None:
-            tests = []
-
-        builds, platforms, tests = self.validate_args(paths, tests, tags, builds, platforms)
         resolver = self._spawn(TestResolver)
-
         at = AutoTry(self.topsrcdir, resolver, self._mach_context)
-        if push and at.find_uncommited_changes():
+
+        if kwargs["load"] is not None:
+            defaults = at.load_config(kwargs["load"])
+
+            if defaults is None:
+                print("No saved configuration called %s found in autotry.ini" % kwargs["load"],
+                      file=sys.stderr)
+
+            for key, value in kwargs.iteritems():
+                if value in (None, []) and key in defaults:
+                    kwargs[key] = defaults[key]
+
+        builds, platforms, tests, paths, tags, extra_args = self.validate_args(**kwargs)
+
+        if kwargs["push"] and at.find_uncommited_changes():
             print('ERROR please commit changes before continuing')
             sys.exit(1)
 
@@ -551,30 +587,31 @@ class PushToTry(MachCommandBase):
                       paths)
                 sys.exit(1)
 
-            if not intersection:
+            if not kwargs["intersection"]:
                 paths_by_flavor = at.remove_duplicates(paths_by_flavor, tests)
         else:
             paths_by_flavor = {}
 
         try:
             msg = at.calc_try_syntax(platforms, tests, builds, paths_by_flavor, tags,
-                                     extra_args, intersection)
+                                     extra_args, kwargs["intersection"])
         except ValueError as e:
             print(e.message)
             sys.exit(1)
 
-        if verbose and paths_by_flavor:
+        if kwargs["verbose"] and paths_by_flavor:
             print('The following tests will be selected: ')
             for flavor, paths in paths_by_flavor.iteritems():
                 print("%s: %s" % (flavor, ",".join(paths)))
 
-        if verbose or not push:
+        if kwargs["verbose"] or not kwargs["push"]:
             print('The following try syntax was calculated:\n%s' % msg)
 
-        if push:
-            at.push_to_try(msg, verbose)
+        if kwargs["push"]:
+            at.push_to_try(msg, kwargs["verbose"])
 
-        return
+        if kwargs["save"] is not None:
+            at.save_config(kwargs["save"], msg)
 
 
 def get_parser(argv=None):
