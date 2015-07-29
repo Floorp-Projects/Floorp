@@ -1615,42 +1615,40 @@ let Impl = {
    /**
     * Save both the "saved-session" and the "shutdown" pings to disk.
     */
-  saveShutdownPings: function() {
+  saveShutdownPings: Task.async(function*() {
     this._log.trace("saveShutdownPings");
 
-    // We don't wait for "shutdown" pings to be written to disk before gathering the
-    // "saved-session" payload. Instead we append the promises to this list and wait
-    // on both to be saved after kicking off their collection.
-    let p = [];
-
     if (IS_UNIFIED_TELEMETRY) {
-      let shutdownPayload = this.getSessionPayload(REASON_SHUTDOWN, false);
+      try {
+        let shutdownPayload = this.getSessionPayload(REASON_SHUTDOWN, false);
 
-      let options = {
-        addClientId: true,
-        addEnvironment: true,
-        overwrite: true,
-      };
-      p.push(TelemetryController.addPendingPing(getPingType(shutdownPayload), shutdownPayload, options)
-                                .catch(e => this._log.error("saveShutdownPings - failed to submit shutdown ping", e)));
+        let options = {
+          addClientId: true,
+          addEnvironment: true,
+          overwrite: true,
+        };
+        yield TelemetryController.addPendingPing(getPingType(shutdownPayload), shutdownPayload, options);
+      } catch (ex) {
+        this._log.error("saveShutdownPings - failed to submit shutdown ping", ex);
+      }
      }
 
     // As a temporary measure, we want to submit saved-session too if extended Telemetry is enabled
     // to keep existing performance analysis working.
     if (Telemetry.canRecordExtended) {
-      let payload = this.getSessionPayload(REASON_SAVED_SESSION, false);
+      try {
+        let payload = this.getSessionPayload(REASON_SAVED_SESSION, false);
 
-      let options = {
-        addClientId: true,
-        addEnvironment: true,
-      };
-      p.push(TelemetryController.addPendingPing(getPingType(payload), payload, options)
-                                .catch (e => this._log.error("saveShutdownPings - failed to submit saved-session ping", e)));
+        let options = {
+          addClientId: true,
+          addEnvironment: true,
+        };
+        yield TelemetryController.addPendingPing(getPingType(payload), payload, options);
+      } catch (ex) {
+        this._log.error("saveShutdownPings - failed to submit saved-session ping", ex);
+      }
     }
-
-    // Wait on pings to be saved.
-    return Promise.all(p);
-  },
+  }),
 
 
   testSavePendingPing: function testSaveHistograms() {
