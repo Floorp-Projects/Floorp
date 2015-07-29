@@ -781,9 +781,8 @@ void
 TrackBuffersManager::InitializationSegmentReceived()
 {
   MOZ_ASSERT(mParser->HasCompleteInitData());
-  mInitData = mParser->InitData();
   mCurrentInputBuffer = new SourceBufferResource(mType);
-  mCurrentInputBuffer->AppendData(mInitData);
+  mCurrentInputBuffer->AppendData(mParser->InitData());
   uint32_t length =
     mParser->InitSegmentRange().mEnd - (mProcessedInput - mInputBuffer->Length());
   if (mInputBuffer->Length() == length) {
@@ -984,6 +983,9 @@ TrackBuffersManager::OnDemuxerInitDone(nsresult)
     MonitorAutoLock mon(mMonitor);
     mInfo = info;
   }
+
+  // We now have a valid init data ; we can store it for later use.
+  mInitData = mParser->InitData();
 
   // 3. Remove the initialization segment bytes from the beginning of the input buffer.
   // This step has already been done in InitializationSegmentReceived when we
