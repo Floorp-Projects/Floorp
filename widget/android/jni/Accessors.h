@@ -3,7 +3,6 @@
 
 #include <jni.h>
 
-#include "mozilla/Attributes.h"
 #include "mozilla/jni/Refs.h"
 #include "mozilla/jni/Types.h"
 #include "AndroidBridge.h"
@@ -206,12 +205,6 @@ class Field : public Accessor
     typedef typename Traits::ReturnType GetterType;
     typedef typename Traits::SetterType SetterType;
 
-    template<typename T> struct RemoveRef { typedef T Type; };
-    template<typename T> struct RemoveRef<const T&> { typedef T Type; };
-
-    // Setter type without any const/& added
-    typedef typename RemoveRef<SetterType>::Type SetterBaseType;
-
 private:
 
     static jfieldID sID;
@@ -262,13 +255,13 @@ public:
         JNIEnv* const env = BeginAccess();
 
         if (Traits::isStatic) {
-            (env->*TypeAdapter<SetterBaseType>::StaticSet)(
+            (env->*TypeAdapter<SetterType>::StaticSet)(
                     Owner::sClassRef, sID,
-                    TypeAdapter<SetterBaseType>::FromNative(env, val));
+                    TypeAdapter<SetterType>::FromNative(env, val));
         } else {
-            (env->*TypeAdapter<SetterBaseType>::Set)(
+            (env->*TypeAdapter<SetterType>::Set)(
                     cls->mInstance, sID,
-                    TypeAdapter<SetterBaseType>::FromNative(env, val));
+                    TypeAdapter<SetterType>::FromNative(env, val));
         }
 
         EndAccess(env, rv);
