@@ -189,7 +189,7 @@ NoteWeakMapsTracer::trace(JSObject* aMap, JS::GCCellPtr aKey,
 
   JSObject* kdelegate = nullptr;
   if (aKey.is<JSObject>()) {
-    kdelegate = js::GetWeakmapKeyDelegate(&aKey.to<JSObject>());
+    kdelegate = js::GetWeakmapKeyDelegate(&aKey.as<JSObject>());
   }
 
   if (AddToCCKind(aValue.kind())) {
@@ -245,7 +245,7 @@ struct FixWeakMappingGrayBitsTracer : public js::WeakMapTracer
     }
 
     if (delegateMightNeedMarking && aKey.is<JSObject>()) {
-      JSObject* kdelegate = js::GetWeakmapKeyDelegate(&aKey.to<JSObject>());
+      JSObject* kdelegate = js::GetWeakmapKeyDelegate(&aKey.as<JSObject>());
       if (kdelegate && !JS::ObjectIsMarkedGray(kdelegate)) {
         if (JS::UnmarkGrayGCThingRecursively(aKey)) {
           mAnyMarked = true;
@@ -344,9 +344,9 @@ TraversalTracer::onChild(const JS::GCCellPtr& aThing)
       mCb.NoteNextEdgeName(buffer);
     }
     if (aThing.is<JSObject>()) {
-      mCb.NoteJSObject(&aThing.to<JSObject>());
+      mCb.NoteJSObject(&aThing.as<JSObject>());
     } else {
-      mCb.NoteJSScript(&aThing.to<JSScript>());
+      mCb.NoteJSScript(&aThing.as<JSScript>());
     }
   } else if (aThing.is<js::Shape>()) {
     // The maximum depth of traversal when tracing a Shape is unbounded, due to
@@ -484,7 +484,7 @@ CycleCollectedJSRuntime::DescribeGCThing(bool aIsMarked, JS::GCCellPtr aThing,
   char name[72];
   uint64_t compartmentAddress = 0;
   if (aThing.is<JSObject>()) {
-    JSObject* obj = &aThing.to<JSObject>();
+    JSObject* obj = &aThing.as<JSObject>();
     compartmentAddress = (uint64_t)js::GetObjectCompartment(obj);
     const js::Class* clasp = js::GetObjectClass(obj);
 
@@ -583,7 +583,7 @@ CycleCollectedJSRuntime::TraverseGCThing(TraverseSelect aTs, JS::GCCellPtr aThin
   }
 
   if (aThing.is<JSObject>()) {
-    JSObject* obj = &aThing.to<JSObject>();
+    JSObject* obj = &aThing.as<JSObject>();
     NoteGCThingXPCOMChildren(js::GetObjectClass(obj), obj, aCb);
   }
 }

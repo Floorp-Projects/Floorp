@@ -206,14 +206,14 @@ JS_FRIEND_API(void)
 JS_TraceShapeCycleCollectorChildren(JS::CallbackTracer* trc, JS::GCCellPtr shape)
 {
     MOZ_ASSERT(shape.is<Shape>());
-    TraceCycleCollectorChildren(trc, &shape.to<Shape>());
+    TraceCycleCollectorChildren(trc, &shape.as<Shape>());
 }
 
 JS_FRIEND_API(void)
 JS_TraceObjectGroupCycleCollectorChildren(JS::CallbackTracer* trc, JS::GCCellPtr group)
 {
     MOZ_ASSERT(group.is<ObjectGroup>());
-    TraceCycleCollectorChildren(trc, &group.to<ObjectGroup>());
+    TraceCycleCollectorChildren(trc, &group.as<ObjectGroup>());
 }
 
 static bool
@@ -853,7 +853,7 @@ struct DumpHeapTracer : public JS::CallbackTracer, public WeakMapTracer
     void trace(JSObject* map, JS::GCCellPtr key, JS::GCCellPtr value) override {
         JSObject* kdelegate = nullptr;
         if (key.is<JSObject>())
-            kdelegate = js::GetWeakmapKeyDelegate(&key.to<JSObject>());
+            kdelegate = js::GetWeakmapKeyDelegate(&key.as<JSObject>());
 
         fprintf(output, "WeakMapEntry map=%p key=%p keyDelegate=%p value=%p\n",
                 map, key.asCell(), kdelegate, value.asCell());
