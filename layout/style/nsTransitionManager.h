@@ -212,8 +212,7 @@ public:
   {
   }
 
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsTransitionManager)
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
   typedef mozilla::AnimationCollection AnimationCollection;
 
@@ -273,8 +272,6 @@ public:
   void FlushTransitions(FlushFlags aFlags);
 
 protected:
-  virtual ~nsTransitionManager() {}
-
   virtual nsIAtom* GetAnimationsAtom() override {
     return nsGkAtoms::transitionsProperty;
   }
@@ -297,9 +294,6 @@ private:
                              nsCSSPropertySet* aWhichStarted);
 
   bool mInAnimationOnlyStyleUpdate;
-
-  mozilla::DelayedEventDispatcher<mozilla::TransitionEventInfo>
-      mEventDispatcher;
 };
 
 #endif /* !defined(nsTransitionManager_h_) */
