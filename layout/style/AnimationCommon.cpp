@@ -185,12 +185,6 @@ CommonAnimationManager::GetAnimationsForCompositor(const nsIFrame* aFrame,
   return collection;
 }
 
-/*
- * nsISupports implementation
- */
-
-NS_IMPL_ISUPPORTS(CommonAnimationManager, nsIStyleRuleProcessor)
-
 nsRestyleHint
 CommonAnimationManager::HasStateDependentStyle(StateRuleProcessorData* aData)
 {
