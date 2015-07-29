@@ -2365,6 +2365,10 @@ struct ScriptAndCounts
     jit::IonScriptCounts* getIonCounts() const {
         return scriptCounts.ionCounts;
     }
+
+    void trace(JSTracer* trc) {
+        TraceRoot(trc, &script, "ScriptAndCounts::script");
+    }
 };
 
 struct GSNCache;
