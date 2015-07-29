@@ -260,7 +260,7 @@ add_test(function test_fireAlarm() {
   NetworkStatsService._networks[wifiId].status = NETWORK_STATUS_STANDBY;
 
   NetworkStatsService._db.addAlarm(alarm, function addSuccessCb(error, newId) {
-    NetworkStatsService._db.getAlarms(Ci.nsINetworkInterface.NETWORK_TYPE_WIFI,
+    NetworkStatsService._db.getAlarms(Ci.nsINetworkInfo.NETWORK_TYPE_WIFI,
                                       testManifestURL, function onGet(error, result) {
       do_check_eq(error, null);
       do_check_eq(result.length, 1);
@@ -272,7 +272,7 @@ add_test(function test_fireAlarm() {
       result[0].manifestURL = testManifestURL;
 
       NetworkStatsService._fireAlarm(result[0], false);
-      NetworkStatsService._db.getAlarms(Ci.nsINetworkInterface.NETWORK_TYPE_WIFI,
+      NetworkStatsService._db.getAlarms(Ci.nsINetworkInfo.NETWORK_TYPE_WIFI,
                                         testManifestURL, function onGet(error, result) {
         do_check_eq(error, undefined);
         do_check_eq(result.length, 0);
