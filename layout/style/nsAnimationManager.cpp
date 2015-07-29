@@ -7,7 +7,6 @@
 #include "nsTransitionManager.h"
 #include "mozilla/dom/CSSAnimationBinding.h"
 
-#include "mozilla/EventDispatcher.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/dom/DocumentTimeline.h"
@@ -251,10 +250,9 @@ CSSAnimation::QueueEvents()
     StickyTimeDuration elapsedTime =
       std::min(StickyTimeDuration(mEffect->InitialAdvance()),
                computedTiming.mActiveDuration);
-    AnimationEventInfo ei(owningElement, mAnimationName, NS_ANIMATION_START,
-                          elapsedTime,
-                          PseudoTypeAsString(owningPseudoType));
-    manager->QueueEvent(ei);
+    manager->QueueEvent(
+      AnimationEventInfo(owningElement, mAnimationName, NS_ANIMATION_START,
+                         elapsedTime, PseudoTypeAsString(owningPseudoType)));
     // Then have the shared code below append an 'animationend':
     message = NS_ANIMATION_END;
   } else {
@@ -274,9 +272,9 @@ CSSAnimation::QueueEvents()
     elapsedTime = computedTiming.mActiveDuration;
   }
 
-  AnimationEventInfo ei(owningElement, mAnimationName, message, elapsedTime,
-                        PseudoTypeAsString(owningPseudoType));
-  manager->QueueEvent(ei);
+  manager->QueueEvent(
+    AnimationEventInfo(owningElement, mAnimationName, message, elapsedTime,
+                       PseudoTypeAsString(owningPseudoType)));
 }
 
 CommonAnimationManager*
@@ -305,15 +303,7 @@ CSSAnimation::PseudoTypeAsString(nsCSSPseudoElements::Type aPseudoType)
 
 ////////////////////////// nsAnimationManager ////////////////////////////
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsAnimationManager)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsAnimationManager)
-  tmp->mPendingEvents.Clear();
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsAnimationManager)
-  for (AnimationEventInfo& info : tmp->mPendingEvents) {
-    ImplCycleCollectionTraverse(cb, info.mElement, "mPendingEvents.mElement");
-  }
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION(nsAnimationManager, mEventDispatcher)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsAnimationManager)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsAnimationManager)
@@ -366,7 +356,7 @@ nsAnimationManager::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 
   // Measurement of the following members may be added later if DMD finds it is
   // worthwhile:
-  // - mPendingEvents
+  // - mEventDispatcher
 }
 
 /* virtual */ size_t
@@ -537,21 +527,15 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
 
   TimeStamp refreshTime = mPresContext->RefreshDriver()->MostRecentRefresh();
   collection->EnsureStyleRuleFor(refreshTime, EnsureStyleRule_IsNotThrottled);
-  // We don't actually dispatch the mPendingEvents now.  We'll either
+  // We don't actually dispatch the pending events now.  We'll either
   // dispatch them the next time we get a refresh driver notification
   // or the next time somebody calls
   // nsPresShell::FlushPendingNotifications.
-  if (!mPendingEvents.IsEmpty()) {
+  if (mEventDispatcher.HasQueuedEvents()) {
     mPresContext->Document()->SetNeedStyleFlush();
   }
 
   return GetAnimationRule(aElement, aStyleContext->GetPseudoType());
-}
-
-void
-nsAnimationManager::QueueEvent(AnimationEventInfo& aEventInfo)
-{
-  mPendingEvents.AppendElement(aEventInfo);
 }
 
 struct KeyframeData {
@@ -1021,20 +1005,4 @@ nsAnimationManager::FlushAnimations(FlushFlags aFlags)
   }
 
   MaybeStartOrStopObservingRefreshDriver();
-}
-
-void
-nsAnimationManager::DoDispatchEvents()
-{
-  EventArray events;
-  mPendingEvents.SwapElements(events);
-  // FIXME: Sort events here in timeline order, then document order
-  for (uint32_t i = 0, i_end = events.Length(); i < i_end; ++i) {
-    AnimationEventInfo &info = events[i];
-    EventDispatcher::Dispatch(info.mElement, mPresContext, &info.mEvent);
-
-    if (!mPresContext) {
-      break;
-    }
-  }
 }
