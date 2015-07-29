@@ -8,14 +8,13 @@ import mozilla.prettyprinters
 
 # Import the pretty-printer modules. As a side effect, loading these
 # modules registers their printers with mozilla.prettyprinters.
-import mozilla.GCCellPtr
 import mozilla.Interpreter
+import mozilla.jsid
 import mozilla.JSObject
 import mozilla.JSString
 import mozilla.JSSymbol
-import mozilla.Root
-import mozilla.jsid
 import mozilla.jsval
+import mozilla.Root
 
 # The user may have personal pretty-printers. Get those, too, if they exist.
 try:
