@@ -868,6 +868,7 @@ ClientMultiTiledLayerBuffer::GetSurfaceDescriptorTiles()
   }
   return SurfaceDescriptorTiles(mValidRegion,
                                 tiles,
+                                mTileOrigin, mTileSize,
                                 mTiles.mFirst.x, mTiles.mFirst.y,
                                 mTiles.mSize.width, mTiles.mSize.height,
                                 mResolution, mFrameResolution.xScale,
