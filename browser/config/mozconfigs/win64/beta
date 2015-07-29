@@ -1,3 +1,5 @@
+MOZ_AUTOMATION_SDK=${MOZ_AUTOMATION_SDK-1}
+
 . "$topsrcdir/build/mozconfig.win-common"
 . "$topsrcdir/browser/config/mozconfigs/win64/common-win64"
 . "$topsrcdir/browser/config/mozconfigs/win64/common-opt"
