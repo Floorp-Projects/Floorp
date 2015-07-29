@@ -2,8 +2,8 @@
 
 #include "mozilla/Assertions.h"
 
+#include "AndroidBridge.h"
 #include "GeneratedJNIWrappers.h"
-#include "Refs.h"
 
 namespace mozilla {
 namespace jni {
@@ -37,6 +37,52 @@ void HandleUncaughtException(JNIEnv *aEnv)
 
     // Should be dead by now...
     MOZ_CRASH("Failed to handle uncaught exception");
+}
+
+namespace {
+
+jclass sJNIObjectClass;
+jfieldID sJNIObjectHandleField;
+
+bool EnsureJNIObject(JNIEnv* env, jobject instance) {
+    if (!sJNIObjectClass) {
+        sJNIObjectClass = AndroidBridge::GetClassGlobalRef(
+                env, "org/mozilla/gecko/mozglue/JNIObject");
+
+        sJNIObjectHandleField = AndroidBridge::GetFieldID(
+                env, sJNIObjectClass, "mHandle", "J");
+    }
+
+    MOZ_ASSERT(env->IsInstanceOf(instance, sJNIObjectClass));
+    return true;
+}
+
+} // namespace
+
+uintptr_t GetNativeHandle(JNIEnv* env, jobject instance)
+{
+    if (!EnsureJNIObject(env, instance)) {
+        return 0;
+    }
+
+    auto handle = static_cast<uintptr_t>(
+            env->GetLongField(instance, sJNIObjectHandleField));
+
+    if (!handle && !env->ExceptionCheck()) {
+        ThrowException(env, "java/lang/NullPointerException",
+                       "Null native pointer");
+    }
+    return handle;
+}
+
+void SetNativeHandle(JNIEnv* env, jobject instance, uintptr_t handle)
+{
+    if (!EnsureJNIObject(env, instance)) {
+        return;
+    }
+
+    env->SetLongField(instance, sJNIObjectHandleField,
+                      static_cast<jlong>(handle));
 }
 
 } // jni

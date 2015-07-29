@@ -3,20 +3,61 @@
 
 #include <jni.h>
 
+#include "mozilla/WeakPtr.h"
 #include "mozilla/jni/Accessors.h"
 #include "mozilla/jni/Refs.h"
 #include "mozilla/jni/Types.h"
 #include "mozilla/jni/Utils.h"
 
 namespace mozilla {
-namespace jni{
+namespace jni {
 
 // Get the native pointer stored in a Java instance.
 template<class Impl>
-Impl* GetInstancePtr(JNIEnv* env, jobject instance)
+Impl* GetNativePtr(JNIEnv* env, jobject instance)
 {
-    // TODO: implement instance native pointers.
-    return nullptr;
+    const auto ptr = reinterpret_cast<const WeakPtr<Impl>*>(
+            GetNativeHandle(env, instance));
+    if (!ptr) {
+        return nullptr;
+    }
+
+    Impl* const impl = *ptr;
+    if (!impl) {
+        ThrowException(env, "java/lang/NullPointerException",
+                       "Native object already released");
+    }
+    return impl;
+}
+
+template<class Impl, class LocalRef>
+Impl* GetNativePtr(const LocalRef& instance)
+{
+    return GetNativePtr<Impl>(instance.Env(), instance.Get());
+}
+
+template<class Impl, class LocalRef>
+void ClearNativePtr(const LocalRef& instance)
+{
+    JNIEnv* const env = instance.Env();
+    const auto ptr = reinterpret_cast<WeakPtr<Impl>*>(
+            GetNativeHandle(env, instance.Get()));
+    if (ptr) {
+        SetNativeHandle(env, instance.Get(), 0);
+        delete ptr;
+    } else {
+        // GetNativeHandle throws an exception when returning null.
+        MOZ_ASSERT(env->ExceptionCheck());
+        env->ExceptionClear();
+    }
+}
+
+template<class Impl, class LocalRef>
+void SetNativePtr(const LocalRef& instance, Impl* ptr)
+{
+    ClearNativePtr<Impl>(instance);
+    SetNativeHandle(instance.Env(), instance.Get(),
+                      reinterpret_cast<uintptr_t>(new WeakPtr<Impl>(ptr)));
 }
 
 namespace detail {
@@ -47,7 +88,7 @@ public:
     static ReturnJNIType Wrap(JNIEnv* env, jobject instance,
                               typename TypeAdapter<Args>::JNIType... args)
     {
-        Impl* const impl = GetInstancePtr<Impl>(env, instance);
+        Impl* const impl = GetNativePtr<Impl>(env, instance);
         if (!impl) {
             return ReturnJNIType();
         }
@@ -56,17 +97,19 @@ public:
     }
 
     // Instance method with instance reference
-    template<ReturnType (Impl::*Method) (typename Owner::Param, Args...)>
+    template<ReturnType (Impl::*Method) (const typename Owner::LocalRef&, Args...)>
     static ReturnJNIType Wrap(JNIEnv* env, jobject instance,
                               typename TypeAdapter<Args>::JNIType... args)
     {
-        Impl* const impl = GetInstancePtr<Impl>(env, instance);
+        Impl* const impl = GetNativePtr<Impl>(env, instance);
         if (!impl) {
             return ReturnJNIType();
         }
-        return TypeAdapter<ReturnType>::FromNative(env,
-                (impl->*Method)(Owner::Ref::From(instance),
-                                TypeAdapter<Args>::ToNative(env, args)...));
+        auto self = Owner::LocalRef::Adopt(env, instance);
+        const auto res = TypeAdapter<ReturnType>::FromNative(env,
+                (impl->*Method)(self, TypeAdapter<Args>::ToNative(env, args)...));
+        self.Forget();
+        return res;
     }
 };
 
@@ -82,7 +125,7 @@ public:
     static void Wrap(JNIEnv* env, jobject instance,
                      typename TypeAdapter<Args>::JNIType... args)
     {
-        Impl* const impl = GetInstancePtr<Impl>(env, instance);
+        Impl* const impl = GetNativePtr<Impl>(env, instance);
         if (!impl) {
             return;
         }
@@ -90,16 +133,17 @@ public:
     }
 
     // Instance method with instance reference
-    template<void (Impl::*Method) (typename Owner::Param, Args...)>
+    template<void (Impl::*Method) (const typename Owner::LocalRef&, Args...)>
     static void Wrap(JNIEnv* env, jobject instance,
                      typename TypeAdapter<Args>::JNIType... args)
     {
-        Impl* const impl = GetInstancePtr<Impl>(env, instance);
+        Impl* const impl = GetNativePtr<Impl>(env, instance);
         if (!impl) {
             return;
         }
-        (impl->*Method)(Owner::Ref::From(instance),
-                        TypeAdapter<Args>::ToNative(env, args)...);
+        auto self = Owner::LocalRef::Adopt(env, instance);
+        (impl->*Method)(self, TypeAdapter<Args>::ToNative(env, args)...);
+        self.Forget();
     }
 };
 
@@ -120,13 +164,15 @@ public:
     }
 
     // Static method with class reference
-    template<ReturnType (*Method) (ClassObject::Param, Args...)>
+    template<ReturnType (*Method) (const ClassObject::LocalRef&, Args...)>
     static ReturnJNIType Wrap(JNIEnv* env, jclass cls,
                               typename TypeAdapter<Args>::JNIType... args)
     {
-        return TypeAdapter<ReturnType>::FromNative(env,
-                (*Method)(ClassObject::Ref::From(cls),
-                          TypeAdapter<Args>::ToNative(env, args)...));
+        auto clazz = ClassObject::LocalRef::Adopt(env, cls);
+        const auto res = TypeAdapter<ReturnType>::FromNative(env,
+                (*Method)(clazz, TypeAdapter<Args>::ToNative(env, args)...));
+        clazz.Forget();
+        return res;
     }
 };
 
@@ -144,12 +190,13 @@ public:
     }
 
     // Static method with class reference
-    template<void (*Method) (ClassObject::Param, Args...)>
+    template<void (*Method) (const ClassObject::LocalRef&, Args...)>
     static void Wrap(JNIEnv* env, jclass cls,
                      typename TypeAdapter<Args>::JNIType... args)
     {
-        (*Method)(ClassObject::Ref::From(cls),
-                  TypeAdapter<Args>::ToNative(env, args)...);
+        auto clazz = ClassObject::LocalRef::Adopt(env, cls);
+        (*Method)(clazz, TypeAdapter<Args>::ToNative(env, args)...);
+        clazz.Forget();
     }
 };
 
@@ -190,15 +237,29 @@ public:
             return;
         }
         JNIEnv* const env = GetJNIForThread();
-        env->RegisterNatives(Accessor::EnsureClassRef<Cls>(env),
-                             Natives::methods,
-                             sizeof(Natives::methods) / sizeof(JNINativeMethod));
+        MOZ_ALWAYS_TRUE(!env->RegisterNatives(
+                Accessor::EnsureClassRef<Cls>(env),
+                 Natives::methods,
+                 sizeof(Natives::methods) / sizeof(Natives::methods[0])));
         sInited = true;
+    }
+
+protected:
+    static Impl* GetNative(const typename Cls::LocalRef& instance) {
+        return GetNativePtr<Impl>(instance);
     }
 
     NativeImpl() {
         // Initialize on creation if not already initialized.
         Init();
+    }
+
+    void AttachNative(const typename Cls::LocalRef& instance) {
+        SetNativePtr<>(instance, static_cast<Impl*>(this));
+    }
+
+    void DisposeNative(const typename Cls::LocalRef& instance) {
+        ClearNativePtr<Impl>(instance);
     }
 };
 
