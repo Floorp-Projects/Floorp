@@ -181,7 +181,9 @@ void PeriodicWave::createBandLimitedTables(const float* realData, const float* i
     unsigned halfSize = fftSize / 2;
     unsigned i;
 
-    numberOfComponents = std::min(numberOfComponents, halfSize + 1);
+    // Limit the number of components used to those for frequencies below the
+    // Nyquist of the fixed length inverse FFT.
+    numberOfComponents = std::min(numberOfComponents, halfSize);
 
     m_bandLimitedTables.SetCapacity(m_numberOfRanges);
 
@@ -218,16 +220,12 @@ void PeriodicWave::createBandLimitedTables(const float* realData, const float* i
             realP[i] = 0;
             imagP[i] = 0;
         }
-        // Clear nyquist if necessary.
-        if (numberOfPartials < halfSize + 1)
-            realP[halfSize] = 0;
 
         // Clear any DC-offset.
         realP[0] = 0;
 
-        // Clear values which have no effect.
+        // Clear value which has no effect.
         imagP[0] = 0;
-        imagP[halfSize] = 0;
 
         // Create the band-limited table.
         AlignedAudioFloatArray* table = new AlignedAudioFloatArray(m_periodicWaveSize);
