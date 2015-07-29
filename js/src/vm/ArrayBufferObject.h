@@ -40,8 +40,6 @@ class ArrayBufferViewObject;
 //   - ArrayBufferViewObject
 //   - TypedObject (declared in builtin/TypedObject.h)
 //
-// Note that |TypedArrayObjectTemplate| is just an implementation
-// detail that makes implementing its various subclasses easier.
 // Note that |TypedArrayObjectTemplate| and |SharedTypedArrayObjectTemplate| are
 // just implementation details that make implementing their various subclasses easier.
 //
@@ -95,11 +93,11 @@ class ArrayBufferObjectMaybeShared : public NativeObject
 /*
  * ArrayBufferObject
  *
- * This class holds the underlying raw buffer that the various
- * ArrayBufferViewObject subclasses (DataViewObject and the TypedArrays)
- * access. It can be created explicitly and passed to an ArrayBufferViewObject
- * subclass, or can be created lazily when it is first accessed for a
- * TypedArrayObject or TypedObject that doesn't have an explicit buffer.
+ * This class holds the underlying raw buffer that the various ArrayBufferViews
+ * (eg DataViewObject, the TypedArrays, TypedObjects) access. It can be created
+ * explicitly and used to construct an ArrayBufferView, or can be created
+ * lazily when it is first accessed for a TypedArrayObject or TypedObject that
+ * doesn't have an explicit buffer.
  *
  * ArrayBufferObject (or really the underlying memory) /is not racy/: the
  * memory is private to a single worker.
