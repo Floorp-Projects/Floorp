@@ -75,7 +75,8 @@ public:
     }
 
     nsRefPtr<gl::GLContext> gl;
-    gl = gl::GLContextProvider::CreateHeadless(gl::CreateContextFlags::REQUIRE_COMPAT_PROFILE);
+    bool requireCompatProfile = true;
+    gl = gl::GLContextProvider::CreateHeadless(requireCompatProfile);
 
     if (!gl) {
       // Setting mReady to true here means that we won't retry. Everything will

@@ -430,11 +430,11 @@ DrawTargetSkia::DrawSurfaceWithShadow(SourceSurface *aSurface,
 
   SkPaint paint;
 
-  SkAutoTUnref<SkImageFilter> filter(SkDropShadowImageFilter::Create(aOffset.x, aOffset.y,
-                                                                     aSigma, aSigma,
-                                                                     ColorToSkColor(aColor, 1.0)));
+  SkImageFilter* filter = SkDropShadowImageFilter::Create(aOffset.x, aOffset.y,
+                                                          aSigma, aSigma,
+                                                          ColorToSkColor(aColor, 1.0));
 
-  paint.setImageFilter(filter.get());
+  paint.setImageFilter(filter);
   paint.setXfermodeMode(GfxOpToSkiaOp(aOperator));
 
   mCanvas->drawBitmap(bitmap.mBitmap, aDest.x, aDest.y, &paint);

@@ -122,7 +122,6 @@ void ShutdownTileCache();
 
 using namespace mozilla;
 using namespace mozilla::layers;
-using namespace mozilla::gl;
 
 gfxPlatform *gPlatform = nullptr;
 static bool gEverInitialized = false;
@@ -495,7 +494,7 @@ gfxPlatform::Init()
 #endif
 
 #ifdef MOZ_GL_DEBUG
-    GLContext::StaticInit();
+    mozilla::gl::GLContext::StaticInit();
 #endif
 
     InitLayersAccelerationPrefs();
@@ -543,11 +542,11 @@ gfxPlatform::Init()
     gPlatform->mFontPrefsObserver = new FontPrefsObserver();
     Preferences::AddStrongObservers(gPlatform->mFontPrefsObserver, kObservedPrefs);
 
-    GLContext::PlatformStartup();
+    mozilla::gl::GLContext::PlatformStartup();
 
 #ifdef MOZ_WIDGET_ANDROID
     // Texture pool init
-    TexturePoolOGL::Init();
+    mozilla::gl::TexturePoolOGL::Init();
 #endif
 
 #ifdef MOZ_WIDGET_GONK
@@ -627,11 +626,11 @@ gfxPlatform::Shutdown()
 
 #ifdef MOZ_WIDGET_ANDROID
     // Shut down the texture pool
-    TexturePoolOGL::Shutdown();
+    mozilla::gl::TexturePoolOGL::Shutdown();
 #endif
 
     // Shut down the default GL context provider.
-    GLContextProvider::Shutdown();
+    mozilla::gl::GLContextProvider::Shutdown();
 
 #if defined(XP_WIN)
     // The above shutdown calls operate on the available context providers on
@@ -640,7 +639,7 @@ gfxPlatform::Shutdown()
     // We should only support the default GL provider on Windows; then, this
     // could go away. Unfortunately, we currently support WGL (the default) for
     // WebGL on Optimus.
-    GLContextProviderEGL::Shutdown();
+    mozilla::gl::GLContextProviderEGL::Shutdown();
 #endif
 
     // This is a bit iffy - we're assuming that we were the ones that set the
@@ -1079,7 +1078,7 @@ gfxPlatform::InitializeSkiaCacheLimits()
   }
 }
 
-SkiaGLGlue*
+mozilla::gl::SkiaGLGlue*
 gfxPlatform::GetSkiaGLGlue()
 {
 #ifdef USE_SKIA_GPU
@@ -1089,14 +1088,14 @@ gfxPlatform::GetSkiaGLGlue()
      * FIXME: This should be stored in TLS or something, since there needs to be one for each thread using it. As it
      * stands, this only works on the main thread.
      */
-    nsRefPtr<GLContext> glContext;
-    glContext = GLContextProvider::CreateHeadless(CreateContextFlags::REQUIRE_COMPAT_PROFILE |
-                                                  CreateContextFlags::ALLOW_OFFLINE_RENDERER);
+    bool requireCompatProfile = true;
+    nsRefPtr<mozilla::gl::GLContext> glContext;
+    glContext = mozilla::gl::GLContextProvider::CreateHeadless(requireCompatProfile);
     if (!glContext) {
       printf_stderr("Failed to create GLContext for SkiaGL!\n");
       return nullptr;
     }
-    mSkiaGlue = new SkiaGLGlue(glContext);
+    mSkiaGlue = new mozilla::gl::SkiaGLGlue(glContext);
     MOZ_ASSERT(mSkiaGlue->GetGrContext(), "No GrContext");
     InitializeSkiaCacheLimits();
   }
