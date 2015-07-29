@@ -102,7 +102,7 @@ DebugWrapperTraceCallback(JS::GCCellPtr aPtr, const char* aName, void* aClosure)
   DebugWrapperTraversalCallback* callback =
     static_cast<DebugWrapperTraversalCallback*>(aClosure);
   if (aPtr.is<JSObject>()) {
-    callback->NoteJSObject(&aPtr.to<JSObject>());
+    callback->NoteJSObject(&aPtr.as<JSObject>());
   }
 }
 
