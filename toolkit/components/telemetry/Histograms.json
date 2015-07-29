@@ -4572,6 +4572,48 @@
     "n_buckets": 20,
     "description": "Time (ms) it takes for checking if the pending pings are over-quota"
   },
+  "TELEMETRY_PING_SIZE_EXCEEDED_SEND": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Number of Telemetry pings discarded before sending because they exceeded the maximum size"
+  },
+  "TELEMETRY_PING_SIZE_EXCEEDED_PENDING": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Number of Telemetry pending pings discarded because they exceeded the maximum size"
+  },
+  "TELEMETRY_PING_SIZE_EXCEEDED_ARCHIVED": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Number of archived Telemetry pings discarded because they exceeded the maximum size"
+  },
+  "TELEMETRY_DISCARDED_PENDING_PINGS_SIZE_MB": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "30",
+    "n_buckets": 29,
+    "description": "The size (MB) of the Telemetry pending pings exceeding the maximum file size"
+  },
+  "TELEMETRY_DISCARDED_ARCHIVED_PINGS_SIZE_MB": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "30",
+    "n_buckets": 29,
+    "description": "The size (MB) of the Telemetry archived, compressed, pings exceeding the maximum file size"
+  },
+  "TELEMETRY_DISCARDED_SEND_PINGS_SIZE_MB": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "30",
+    "n_buckets": 29,
+    "description": "The size (MB) of the ping data submitted to Telemetry exceeding the maximum size"
+  },
   "TELEMETRY_DISCARDED_CONTENT_PINGS_COUNT": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",

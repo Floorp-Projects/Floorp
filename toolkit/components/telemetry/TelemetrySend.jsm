@@ -916,6 +916,19 @@ let TelemetrySendImpl = {
     let utf8Payload = converter.ConvertFromUnicode(JSON.stringify(networkPayload));
     utf8Payload += converter.Finish();
     Telemetry.getHistogramById("TELEMETRY_STRINGIFY").add(new Date() - startTime);
+
+    // Check the size and drop pings which are too big.
+    const pingSizeBytes = utf8Payload.length;
+    if (pingSizeBytes > TelemetryStorage.MAXIMUM_PING_SIZE) {
+      this._log.error("_doPing - submitted ping exceeds the size limit, size: " + pingSizeBytes);
+      Telemetry.getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_SEND").add();
+      Telemetry.getHistogramById("TELEMETRY_DISCARDED_SEND_PINGS_SIZE_MB")
+               .add(Math.floor(pingSizeBytes / 1024 / 1024));
+      // We don't need to call |request.abort()| as it was not sent yet.
+      this._pendingPingRequests.delete(id);
+      return TelemetryStorage.removePendingPing(id);
+    }
+
     let payloadStream = Cc["@mozilla.org/io/string-input-stream;1"]
                         .createInstance(Ci.nsIStringInputStream);
     startTime = new Date();
