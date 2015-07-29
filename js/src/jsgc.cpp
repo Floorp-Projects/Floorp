@@ -1318,6 +1318,10 @@ GCRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
 void
 GCRuntime::finish()
 {
+    /* Wait for the nursery sweeping to end. */
+    if (rt->gc.nursery.isEnabled())
+        rt->gc.nursery.waitBackgroundFreeEnd();
+
     /*
      * Wait until the background finalization and allocation stops and the
      * helper thread shuts down before we forcefully release any remaining GC
