@@ -345,12 +345,7 @@ class RootLists
     friend void js::gc::MarkPersistentRootedChainsInLists(RootLists&, JSTracer*);
     friend void js::gc::FinishPersistentRootedChains(RootLists&);
 
-    mozilla::LinkedList<JS::PersistentRootedFunction> functionPersistentRooteds;
-    mozilla::LinkedList<JS::PersistentRootedId>       idPersistentRooteds;
-    mozilla::LinkedList<JS::PersistentRootedObject>   objectPersistentRooteds;
-    mozilla::LinkedList<JS::PersistentRootedScript>   scriptPersistentRooteds;
-    mozilla::LinkedList<JS::PersistentRootedString>   stringPersistentRooteds;
-    mozilla::LinkedList<JS::PersistentRootedValue>    valuePersistentRooteds;
+    mozilla::LinkedList<JS::PersistentRooted<void*>> heapRoots_[THING_ROOT_LIMIT];
 
     /* Specializations of this return references to the appropriate list. */
     template<typename Referent>
@@ -358,28 +353,46 @@ class RootLists
 };
 
 template<>
-inline mozilla::LinkedList<JS::PersistentRootedFunction>
-&RootLists::getPersistentRootedList<JSFunction*>() { return functionPersistentRooteds; }
+inline mozilla::LinkedList<JS::PersistentRootedFunction>&
+RootLists::getPersistentRootedList<JSFunction*>() {
+    return reinterpret_cast<mozilla::LinkedList<JS::PersistentRooted<JSFunction*>>&>(
+        heapRoots_[THING_ROOT_OBJECT]);
+}
 
 template<>
-inline mozilla::LinkedList<JS::PersistentRootedId>
-&RootLists::getPersistentRootedList<jsid>() { return idPersistentRooteds; }
+inline mozilla::LinkedList<JS::PersistentRootedObject>&
+RootLists::getPersistentRootedList<JSObject*>() {
+    return reinterpret_cast<mozilla::LinkedList<JS::PersistentRooted<JSObject*>>&>(
+        heapRoots_[THING_ROOT_OBJECT]);
+}
 
 template<>
-inline mozilla::LinkedList<JS::PersistentRootedObject>
-&RootLists::getPersistentRootedList<JSObject*>() { return objectPersistentRooteds; }
+inline mozilla::LinkedList<JS::PersistentRootedId>&
+RootLists::getPersistentRootedList<jsid>() {
+    return reinterpret_cast<mozilla::LinkedList<JS::PersistentRooted<jsid>>&>(
+        heapRoots_[THING_ROOT_ID]);
+}
 
 template<>
-inline mozilla::LinkedList<JS::PersistentRootedScript>
-&RootLists::getPersistentRootedList<JSScript*>() { return scriptPersistentRooteds; }
+inline mozilla::LinkedList<JS::PersistentRootedScript>&
+RootLists::getPersistentRootedList<JSScript*>() {
+    return reinterpret_cast<mozilla::LinkedList<JS::PersistentRooted<JSScript*>>&>(
+        heapRoots_[THING_ROOT_SCRIPT]);
+}
 
 template<>
-inline mozilla::LinkedList<JS::PersistentRootedString>
-&RootLists::getPersistentRootedList<JSString*>() { return stringPersistentRooteds; }
+inline mozilla::LinkedList<JS::PersistentRootedString>&
+RootLists::getPersistentRootedList<JSString*>() {
+    return reinterpret_cast<mozilla::LinkedList<JS::PersistentRooted<JSString*>>&>(
+        heapRoots_[THING_ROOT_STRING]);
+}
 
 template<>
-inline mozilla::LinkedList<JS::PersistentRootedValue>
-&RootLists::getPersistentRootedList<JS::Value>() { return valuePersistentRooteds; }
+inline mozilla::LinkedList<JS::PersistentRootedValue>&
+RootLists::getPersistentRootedList<JS::Value>() {
+    return reinterpret_cast<mozilla::LinkedList<JS::PersistentRooted<JS::Value>>&>(
+        heapRoots_[THING_ROOT_VALUE]);
+}
 
 struct ContextFriendFields
 {

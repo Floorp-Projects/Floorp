@@ -238,7 +238,7 @@ public:
   MOZ_IMPLICIT RefPtr(T* aVal) : mPtr(ref(aVal)) {}
 
   template<typename U>
-  RefPtr(const RefPtr<U>& aOther) : mPtr(ref(aOther.get())) {}
+  MOZ_IMPLICIT RefPtr(const RefPtr<U>& aOther) : mPtr(ref(aOther.get())) {}
 
   ~RefPtr() { unref(mPtr); }
 

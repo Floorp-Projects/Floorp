@@ -1187,6 +1187,8 @@ nsLookAndFeel::Init()
     style = gtk_widget_get_style_context(frame);
     gtk_style_context_get_border_color(style, GTK_STATE_FLAG_NORMAL, &color);
     sFrameInnerDarkBorder = sFrameOuterLightBorder = GDK_RGBA_TO_NS_RGBA(color);
+
+    gtk_widget_path_free(path);
 #endif
     // Some themes have a unified menu bar, and support window dragging on it
     gboolean supports_menubar_drag = FALSE;
