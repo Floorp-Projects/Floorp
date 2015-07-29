@@ -67,7 +67,7 @@ config = {
         "a11y": ["--a11y"],
         "plugins": ['--setpref=dom.ipc.plugins.enabled=false',
                     '--setpref=dom.ipc.plugins.enabled.x86_64=false',
-                    '--ipcplugins']
+                    '--manifest=tests/dom/plugins/test/mochitest/mochitest.ini']
     },
     # local webapprt suites
     "all_webapprt_suites": {
