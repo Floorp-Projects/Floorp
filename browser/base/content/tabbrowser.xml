@@ -5661,6 +5661,11 @@
 
     <implementation>
 
+      <!--
+          This code is the same as in toolkit/content/widgets/tabbox.xml,
+          except for the _tabAttrModified call. If you modify it, tabbox.xml
+          might also need to be modified.
+      -->
       <property name="_visuallySelected">
         <setter>
           <![CDATA[
@@ -5668,23 +5673,27 @@
             this.setAttribute("visuallyselected", "true");
           else
             this.removeAttribute("visuallyselected");
-          this.parentNode.tabbrowser._tabAttrModified(this, ["visuallyselected"]);
+          gBrowser._tabAttrModified(this, ["visuallyselected"]);
 
-          this._setPositionAttributes(val);
-
-          return val;
-          ]]>
-        </setter>
-      </property>
-
-      <property name="_logicallySelected">
-        <setter>
-          <![CDATA[
-          if (val)
-            this.setAttribute("selected", "true");
+          if (this.previousSibling && this.previousSibling.localName == "tab") {
+            if (val)
+              this.previousSibling.setAttribute("beforeselected", "true");
+            else
+              this.previousSibling.removeAttribute("beforeselected");
+            this.removeAttribute("first-tab");
+          }
           else
-            this.removeAttribute("selected");
+            this.setAttribute("first-tab", "true");
 
+          if (this.nextSibling && this.nextSibling.localName == "tab") {
+            if (val)
+              this.nextSibling.setAttribute("afterselected", "true");
+            else
+              this.nextSibling.removeAttribute("afterselected");
+            this.removeAttribute("last-tab");
+          }
+          else
+            this.setAttribute("last-tab", "true");
           return val;
           ]]>
         </setter>
