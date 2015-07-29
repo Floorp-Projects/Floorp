@@ -89,10 +89,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1161831
         ifr.onload = function() {
           ok(true, 'Loaded ' + url);
           var prin = SpecialPowers.wrap(ifr.contentWindow).document.nodePrincipal;
-          is(prin.originNoSuffix, url, 'Principal origin is correct: ' + url);
+          function stripTrailingSlash(s) { return s.replace(/\/$/, ''); };
+          is(stripTrailingSlash(prin.URI.spec), url, 'Principal uri is correct: ' + url);
+          function stripPath(s) { return s.replace(/(.*\/\/.+)\/.*/, '$1'); };
+          is(prin.originNoSuffix, stripPath(url), 'Principal origin is correct: ' + prin.originNoSuffix);
           is(prin.originAttributes.addonId, 'imaginaryaddon-' + url[url.indexOf('/') + 2], 'addonId is correct');
-          is(SpecialPowers.wrap(ifr.contentWindow).document.title, 'resource test file',
-             'document looks right');
+          if (/_blank/.test(url)) {
+            is(SpecialPowers.wrap(ifr.contentWindow).document.documentElement.innerHTML,
+               '<head></head><body></body>', 'blank document looks right');
+          } else {
+            is(SpecialPowers.wrap(ifr.contentWindow).document.title, 'resource test file',
+               'document looks right');
+          }
           ifr.remove();
           resolve();
         };
@@ -104,7 +112,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1161831
         } catch (e) {
           ifr.remove();
           threw = true;
-          ok(/denied|insecure/.test(e), "exceiton correct: " + e);
+          ok(/denied|insecure/.test(e), "exception correct: " + e);
         }
         is(threw, !!shouldThrow, "Correct throwing behavior for: " + url);
         !threw || resolve();
@@ -126,6 +134,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1161831
     .then(testLoad.bind(null, 'moz-extension://liebchen', navigateWithLocation))
     .then(testLoad.bind(null, 'moz-extension://liebchen', navigateWithSrc))
     .then(testLoad.bind(null, 'moz-extension://cherise', navigateWithSrc))
+    .then(testLoad.bind(null, 'moz-extension://cherise/_blank.html', navigateWithSrc))
     .then(SimpleTest.finish.bind(SimpleTest),
           function(e) { ok(false, "rejected promise: " + e); SimpleTest.finish() }
     );

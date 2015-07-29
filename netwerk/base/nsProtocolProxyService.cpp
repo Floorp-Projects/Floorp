@@ -1663,7 +1663,7 @@ nsProtocolProxyService::GetProtocolInfo(nsIURI *uri, nsProtocolInfo *info)
     if (NS_FAILED(rv))
         return rv;
 
-    rv = handler->GetProtocolFlags(&info->flags);
+    rv = handler->DoGetProtocolFlags(uri, &info->flags);
     if (NS_FAILED(rv))
         return rv;
 

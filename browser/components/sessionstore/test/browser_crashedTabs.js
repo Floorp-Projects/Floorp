@@ -341,3 +341,49 @@ add_task(function test_close_tab_after_crash() {
 
   is(gBrowser.tabs.length, 1, "Should have closed the tab");
 });
+
+/**
+ * Checks that "restore all" button is only shown if more than one tab
+ * has crashed.
+ */
+add_task(function* test_hide_restore_all_button() {
+  let newTab = gBrowser.addTab();
+  gBrowser.selectedTab = newTab;
+  let browser = newTab.linkedBrowser;
+  ok(browser.isRemoteBrowser, "Should be a remote browser");
+  yield promiseBrowserLoaded(browser);
+
+  browser.loadURI(PAGE_1);
+  yield promiseBrowserLoaded(browser);
+
+  yield TabStateFlusher.flush(browser);
+
+  // Crash the tab
+  yield crashBrowser(browser);
+
+  let doc = browser.contentDocument;
+  let restoreAllButton = doc.getElementById("restoreAll");
+  let restoreOneButton = doc.getElementById("restoreTab");
+
+  is(restoreAllButton.getAttribute("hidden"), "true", "Restore All button should be hidden");
+  ok(restoreOneButton.classList.contains("primary"), "Restore Tab button should have the primary class");
+
+  let newTab2 = gBrowser.addTab();
+  gBrowser.selectedTab = newTab;
+
+  browser.loadURI(PAGE_2);
+  yield promiseBrowserLoaded(browser);
+
+  // Crash the tab
+  yield crashBrowser(browser);
+
+  doc = browser.contentDocument;
+  restoreAllButton = doc.getElementById("restoreAll");
+  restoreOneButton = doc.getElementById("restoreTab");
+
+  ok(!restoreAllButton.hasAttribute("hidden"), "Restore All button should not be hidden");
+  ok(!(restoreOneButton.classList.contains("primary")), "Restore Tab button should not have the primary class");
+
+  gBrowser.removeTab(newTab);
+  gBrowser.removeTab(newTab2);
+});

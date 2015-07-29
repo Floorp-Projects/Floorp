@@ -1701,6 +1701,9 @@ CopyFromRematerializedFrame(JSContext* cx, JitActivation* act, uint8_t* fp, size
     for (size_t i = 0; i < frame->script()->nfixed(); i++)
         *frame->valueSlot(i) = rematFrame->locals()[i];
 
+    if (rematFrame->hasCachedSavedFrame())
+        frame->setHasCachedSavedFrame();
+
     JitSpew(JitSpew_BaselineBailouts,
             "  Copied from rematerialized frame at (%p,%u)",
             fp, inlineDepth);

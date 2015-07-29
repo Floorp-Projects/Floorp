@@ -350,6 +350,8 @@ protected:
     return mResourceEntries.Length() >= mResourceTimingBufferSize;
   }
 
+  void LogEntry(PerformanceEntry* aEntry, const nsACString& aOwner) const;
+
 private:
   nsTArray<nsRefPtr<PerformanceEntry>> mUserEntries;
   nsTArray<nsRefPtr<PerformanceEntry>> mResourceEntries;

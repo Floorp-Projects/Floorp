@@ -92,15 +92,4 @@ enum class gfxContentType {
   SENTINEL    = 0xffff
 };
 
-/**
-  * The memory used by a gfxASurface (as reported by KnownMemoryUsed()) can
-  * either live in this process's heap, in this process but outside the
-  * heap, or in another process altogether.
-  */
-enum class gfxMemoryLocation {
-  IN_PROCESS_HEAP,
-  IN_PROCESS_NONHEAP,
-  OUT_OF_PROCESS
-};
-
 #endif /* GFX_TYPES_H */

@@ -79,8 +79,19 @@ class DebuggerWeakMap : private WeakMap<PreBarriered<UnbarrieredKey>, Relocatabl
 
   public:
     typedef WeakMap<Key, Value, DefaultHasher<Key> > Base;
+
     explicit DebuggerWeakMap(JSContext* cx)
         : Base(cx), zoneCounts(cx->runtime()) { }
+
+    ~DebuggerWeakMap() {
+        // If our owning Debugger fails construction after already initializing
+        // this DebuggerWeakMap, we need to make sure that we aren't in the
+        // compartment's weak map list anymore. Normally, when we are destroyed
+        // because the GC finds us unreachable, the GC takes care of removing us
+        // from this list.
+        if (WeakMapBase::isInList())
+            WeakMapBase::removeWeakMapFromList(this);
+    }
 
   public:
     /* Expose those parts of HashMap public interface that are used by Debugger methods. */

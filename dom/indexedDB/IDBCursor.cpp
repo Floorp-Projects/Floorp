@@ -682,7 +682,8 @@ IDBCursor::Delete(JSContext* aCx, ErrorResult& aRv)
   if (IsSourceDeleted() ||
       !mHaveValue ||
       mType == Type_ObjectStoreKey ||
-      mType == Type_IndexKey) {
+      mType == Type_IndexKey ||
+      mContinueCalled) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
     return nullptr;
   }

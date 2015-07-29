@@ -69,6 +69,11 @@ SOURCES += [
     'nsCocoaDebugUtils.mm',
 ]
 
+if not CONFIG['RELEASE_BUILD'] or CONFIG['DEBUG']:
+    SOURCES += [
+        'nsSandboxViolationSink.mm',
+    ]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

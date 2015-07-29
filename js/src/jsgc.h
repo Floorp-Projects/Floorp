@@ -23,18 +23,6 @@
 
 #include "vm/NativeObject.h"
 
-#define FOR_EACH_GC_LAYOUT(D) \
- /* PrettyName       TypeName           AddToCCKind */ \
-    D(BaseShape,     js::BaseShape,     true) \
-    D(JitCode,       js::jit::JitCode,  true) \
-    D(LazyScript,    js::LazyScript,    true) \
-    D(Object,        JSObject,          true) \
-    D(ObjectGroup,   js::ObjectGroup,   true) \
-    D(Script,        JSScript,          true) \
-    D(Shape,         js::Shape,         true) \
-    D(String,        JSString,          false) \
-    D(Symbol,        JS::Symbol,        false)
-
 namespace js {
 
 unsigned GetCPUCount();
@@ -63,15 +51,6 @@ enum State {
     COMPACT
 };
 
-// Map from base trace type to the trace kind.
-template <typename T> struct MapTypeToTraceKind {};
-#define EXPAND_DEF(name, type, _) \
-    template <> struct MapTypeToTraceKind<type> { \
-        static const JS::TraceKind kind = JS::TraceKind::name; \
-    };
-FOR_EACH_GC_LAYOUT(EXPAND_DEF);
-#undef EXPAND_DEF
-
 /* Map from C++ type to alloc kind. JSObject does not have a 1:1 mapping, so must use Arena::thingSize. */
 template <typename T> struct MapTypeToFinalizeKind {};
 template <> struct MapTypeToFinalizeKind<JSScript>          { static const AllocKind kind = AllocKind::SCRIPT; };
@@ -89,7 +68,7 @@ template <> struct MapTypeToFinalizeKind<jit::JitCode>      { static const Alloc
 template <typename T> struct ParticipatesInCC {};
 #define EXPAND_PARTICIPATES_IN_CC(_, type, addToCCKind) \
     template <> struct ParticipatesInCC<type> { static const bool value = addToCCKind; };
-FOR_EACH_GC_LAYOUT(EXPAND_PARTICIPATES_IN_CC)
+JS_FOR_EACH_TRACEKIND(EXPAND_PARTICIPATES_IN_CC)
 #undef EXPAND_PARTICIPATES_IN_CC
 
 static inline bool
@@ -177,53 +156,6 @@ CanBeFinalizedInBackground(AllocKind kind, const Class* clasp)
             (!clasp->finalize || (clasp->flags & JSCLASS_BACKGROUND_FINALIZE)));
 }
 
-// Fortunately, few places in the system need to deal with fully abstract
-// cells. In those places that do, we generally want to move to a layout
-// templated function as soon as possible. This template wraps the upcast
-// for that dispatch.
-//
-// Call the functor |F f| with template parameter of the layout type.
-
-// GCC and Clang require an explicit template declaration in front of the
-// specialization of operator() because it is a dependent template. MSVC, on
-// the other hand, gets very confused if we have a |template| token there.
-#ifdef _MSC_VER
-# define DEPENDENT_TEMPLATE_HINT
-#else
-# define DEPENDENT_TEMPLATE_HINT template
-#endif
-template <typename F, typename... Args>
-auto
-CallTyped(F f, JS::TraceKind traceKind, Args&&... args)
-  -> decltype(f. DEPENDENT_TEMPLATE_HINT operator()<JSObject>(mozilla::Forward<Args>(args)...))
-{
-    switch (traceKind) {
-#define EXPAND_DEF(name, type, _) \
-      case JS::TraceKind::name: \
-        return f. DEPENDENT_TEMPLATE_HINT operator()<type>(mozilla::Forward<Args>(args)...);
-      FOR_EACH_GC_LAYOUT(EXPAND_DEF);
-#undef EXPAND_DEF
-      default:
-          MOZ_CRASH("Invalid trace kind in CallTyped.");
-    }
-}
-#undef DEPENDENT_TEMPLATE_HINT
-
-template <typename F, typename... Args>
-auto
-CallTyped(F f, void* thing, JS::TraceKind traceKind, Args&&... args)
-  -> decltype(f(reinterpret_cast<JSObject*>(0), mozilla::Forward<Args>(args)...))
-{
-    switch (traceKind) {
-#define EXPAND_DEF(name, type, _) \
-      case JS::TraceKind::name: \
-          return f(static_cast<type*>(thing), mozilla::Forward<Args>(args)...);
-      FOR_EACH_GC_LAYOUT(EXPAND_DEF);
-#undef EXPAND_DEF
-      default:
-          MOZ_CRASH("Invalid trace kind in CallTyped.");
-    }
-}
 /* Capacity for slotsToThingKind */
 const size_t SLOTS_TO_THING_KIND_LIMIT = 17;
 

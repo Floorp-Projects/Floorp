@@ -25,6 +25,7 @@ EXPORTS.mozilla.ipc += [
     'IOThreadChild.h',
     'MessageChannel.h',
     'MessageLink.h',
+    'Neutering.h',
     'ProcessChild.h',
     'ProtocolUtils.h',
     'ScopedXREEmbed.h',

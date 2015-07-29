@@ -137,7 +137,7 @@ function CssComputedView(inspector, document, pageStyle) {
 
   this.propertyViews = [];
 
-  this._outputParser = new OutputParser();
+  this._outputParser = new OutputParser(document);
 
   let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"]
     .getService(Ci.nsIXULChromeRegistry);

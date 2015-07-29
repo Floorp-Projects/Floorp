@@ -65,10 +65,6 @@ public:
 
     const mozilla::gfx::IntSize GetSize() const;
 
-    // The memory used by this surface lives in this process's address space,
-    // but not in the heap.
-    virtual gfxMemoryLocation GetMemoryLocation() const;
-
 private:
     void MakeInvalid(mozilla::gfx::IntSize& size);
 

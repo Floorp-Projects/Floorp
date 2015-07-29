@@ -14,7 +14,7 @@
 #include "mozilla/Maybe.h"           // for Maybe
 #include "mozilla/MemoryReporting.h" // for MallocSizeOf
 #include "mozilla/HashFunctions.h"   // for HashGeneric and AddToHash
-#include "gfx2DGlue.h"               // for gfxMemoryLocation
+#include "gfx2DGlue.h"
 #include "gfxPoint.h"                // for gfxSize
 #include "nsCOMPtr.h"                // for already_AddRefed
 #include "mozilla/gfx/Point.h"       // for mozilla::gfx::IntSize

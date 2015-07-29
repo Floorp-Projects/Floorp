@@ -781,9 +781,8 @@ void
 TrackBuffersManager::InitializationSegmentReceived()
 {
   MOZ_ASSERT(mParser->HasCompleteInitData());
-  mInitData = mParser->InitData();
   mCurrentInputBuffer = new SourceBufferResource(mType);
-  mCurrentInputBuffer->AppendData(mInitData);
+  mCurrentInputBuffer->AppendData(mParser->InitData());
   uint32_t length =
     mParser->InitSegmentRange().mEnd - (mProcessedInput - mInputBuffer->Length());
   if (mInputBuffer->Length() == length) {
@@ -878,7 +877,7 @@ TrackBuffersManager::OnDemuxerInitDone(nsresult)
   }
 
   // 4. Let active track flag equal false.
-  mActiveTrack = false;
+  bool activeTrack = false;
 
   // Increase our stream id.
   uint32_t streamID = sStreamSourceID++;
@@ -911,7 +910,7 @@ TrackBuffersManager::OnDemuxerInitDone(nsresult)
       //   7. If audioTracks.length equals 0, then run the following steps:
       //     1. Set the enabled property on new audio track to true.
       //     2. Set active track flag to true.
-      mActiveTrack = true;
+      activeTrack = true;
       //   8. Add new audio track to the audioTracks attribute on this SourceBuffer object.
       //   9. Queue a task to fire a trusted event named addtrack, that does not bubble and is not cancelable, and that uses the TrackEvent interface, at the AudioTrackList object referenced by the audioTracks attribute on this SourceBuffer object.
       //   10. Add new audio track to the audioTracks attribute on the HTMLMediaElement.
@@ -943,7 +942,7 @@ TrackBuffersManager::OnDemuxerInitDone(nsresult)
       //   7. If videoTracks.length equals 0, then run the following steps:
       //     1. Set the selected property on new video track to true.
       //     2. Set active track flag to true.
-      mActiveTrack = true;
+      activeTrack = true;
       //   8. Add new video track to the videoTracks attribute on this SourceBuffer object.
       //   9. Queue a task to fire a trusted event named addtrack, that does not bubble and is not cancelable, and that uses the TrackEvent interface, at the VideoTrackList object referenced by the videoTracks attribute on this SourceBuffer object.
       //   10. Add new video track to the videoTracks attribute on the HTMLMediaElement.
@@ -956,6 +955,9 @@ TrackBuffersManager::OnDemuxerInitDone(nsresult)
     // 4. For each text track in the initialization segment, run following steps:
     // 5. If active track flag equals true, then run the following steps:
     // This is handled by SourceBuffer once the promise is resolved.
+    if (activeTrack) {
+      mActiveTrack = true;
+    }
 
     // 6. Set first initialization segment received flag to true.
     mFirstInitializationSegmentReceived = true;
@@ -984,6 +986,9 @@ TrackBuffersManager::OnDemuxerInitDone(nsresult)
     MonitorAutoLock mon(mMonitor);
     mInfo = info;
   }
+
+  // We now have a valid init data ; we can store it for later use.
+  mInitData = mParser->InitData();
 
   // 3. Remove the initialization segment bytes from the beginning of the input buffer.
   // This step has already been done in InitializationSegmentReceived when we

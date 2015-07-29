@@ -12,11 +12,16 @@
 /* Show the "Connection is not secure" labels only for non-secure sites. */
 #identity-popup-security-content:not(.unknownIdentity) > .identity-popup-connection-not-secure,
 #identity-popup-securityView:not(.unknownIdentity) > #identity-popup-securityView-header > .identity-popup-connection-not-secure,
+/* Show "This page is stored on your computer" only for file URLs. */
+#identity-popup-security-content:not(.fileURI) > .identity-popup-connection-file-uri,
+#identity-popup-securityView:not(.fileURI) > #identity-popup-securityView-header > .identity-popup-connection-file-uri,
 /* Show "This is a secure internal page" only for whitelisted pages. */
 #identity-popup-securityView:not(.chromeUI) > #identity-popup-securityView-header > .identity-popup-connection-internal,
 #identity-popup-security-content:not(.chromeUI) > .identity-popup-connection-internal,
 /* Hide the subsection arrow for whitelisted chromeUI pages. */
 #identity-popup-security-content.chromeUI + .identity-popup-expander,
+/* Hide the subsection arrow for whitelisted file URI pages. */
+#identity-popup-security-content.fileURI + .identity-popup-expander,
 /* Hide the tracking protection section for whitelisted chromeUI pages. */
 #identity-popup-mainView.chromeUI > #tracking-protection-container {
   display: none;
@@ -111,16 +116,8 @@
 .identity-popup-expander[panel-multiview-anchor] {
   transition: background-color 250ms ease-in;
   background-color: Highlight;
-  background-image: url("chrome://browser/skin/customizableui/subView-arrow-back-inverted.png"),
+  background-image: url("chrome://browser/skin/controlcenter/arrow-subview-back.svg"),
                     linear-gradient(rgba(255,255,255,0.3), transparent);
-  color: HighlightText;
-}
-
-@media (min-resolution: 1.1dppx) {
-  .identity-popup-expander[panel-multiview-anchor] {
-    background-image: url("chrome://browser/skin/customizableui/subView-arrow-back-inverted@2x.png"),
-                      linear-gradient(rgba(255,255,255,0.3), transparent);
-  }
 }
 
 .identity-popup-expander > .button-box {

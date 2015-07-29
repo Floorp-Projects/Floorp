@@ -2210,22 +2210,34 @@ MBinaryArithInstruction::foldsTo(TempAllocator& alloc)
 
     MDefinition* lhs = getOperand(0);
     MDefinition* rhs = getOperand(1);
-    if (MDefinition* folded = EvaluateConstantOperands(alloc, this))
+    if (MConstant* folded = EvaluateConstantOperands(alloc, this)) {
+        if (isTruncated()) {
+            if (!folded->block())
+                block()->insertBefore(this, folded);
+            return MTruncateToInt32::New(alloc, folded);
+        }
         return folded;
+    }
 
     // 0 + -0 = 0. So we can't remove addition
     if (isAdd() && specialization_ != MIRType_Int32)
         return this;
 
-    if (IsConstant(rhs, getIdentity()))
+    if (IsConstant(rhs, getIdentity())) {
+        if (isTruncated())
+            return MTruncateToInt32::New(alloc, lhs);
         return lhs;
+    }
 
     // subtraction isn't commutative. So we can't remove subtraction when lhs equals 0
     if (isSub())
         return this;
 
-    if (IsConstant(lhs, getIdentity()))
+    if (IsConstant(lhs, getIdentity())) {
+        if (isTruncated())
+            return MTruncateToInt32::New(alloc, rhs);
         return rhs; // x op id => x
+    }
 
     return this;
 }

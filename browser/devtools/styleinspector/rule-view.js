@@ -334,7 +334,11 @@ ElementStyle.prototype = {
     let textProps = [];
     for (let rule of this.rules) {
       if (rule.pseudoElement == pseudo && !rule.keyframes) {
-        textProps = textProps.concat(rule.textProps.slice(0).reverse());
+        for (let textProp of rule.textProps.slice(0).reverse()) {
+          if (textProp.enabled) {
+            textProps.push(textProp);
+          }
+        }
       }
     }
 
@@ -1161,7 +1165,7 @@ function CssRuleView(inspector, document, aStore, aPageStyle) {
   this.store = aStore || {};
   this.pageStyle = aPageStyle;
 
-  this._outputParser = new OutputParser();
+  this._outputParser = new OutputParser(document);
 
   this._onKeypress = this._onKeypress.bind(this);
   this._onAddRule = this._onAddRule.bind(this);
@@ -3163,7 +3167,8 @@ TextPropertyEditor.prototype = {
   },
 
   _onStartEditing: function() {
-    this._previewValue(this.prop.value);
+    this.element.classList.remove("ruleview-overridden");
+    this.enable.style.visibility = "hidden";
   },
 
   /**
@@ -3467,9 +3472,6 @@ TextPropertyEditor.prototype = {
     if (!this.editing || this.ruleEditor.isEditing) {
       return;
     }
-
-    this.element.classList.remove("ruleview-overridden");
-    this.enable.style.visibility = "hidden";
 
     let val = parseSingleValue(aValue);
     this.ruleEditor.rule.previewPropertyValue(this.prop, val.value,

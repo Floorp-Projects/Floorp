@@ -9,6 +9,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
                                   "resource://gre/modules/LoginHelper.jsm");
 
 var security = {
+  init: function(uri, windowInfo) {
+    this.uri = uri;
+    this.windowInfo = windowInfo;
+  },
+
   // Display the server certificate (static)
   viewCert : function () {
     var cert = security._cert;
@@ -24,14 +29,10 @@ var security = {
 
     // We don't have separate info for a frame, return null until further notice
     // (see bug 138479)
-    if (gWindow != gWindow.top)
+    if (!this.windowInfo.isTopWindow)
       return null;
 
-    var hName = null;
-    try {
-      hName = gWindow.location.host;
-    }
-    catch (exception) { }
+    var hostName = this.windowInfo.hostName;
 
     var ui = security._getSecurityUI();
     if (!ui)
@@ -56,7 +57,7 @@ var security = {
         this.mapIssuerOrganization(cert.issuerOrganization) || cert.issuerName;
 
       var retval = {
-        hostName : hName,
+        hostName : hostName,
         cAName : issuerName,
         encryptionAlgorithm : undefined,
         encryptionStrength : undefined,
@@ -64,8 +65,7 @@ var security = {
         isBroken : isBroken,
         isMixed : isMixed,
         isEV : isEV,
-        cert : cert,
-        fullLocation : gWindow.location
+        cert : cert
       };
 
       var version;
@@ -95,7 +95,7 @@ var security = {
       return retval;
     } else {
       return {
-        hostName : hName,
+        hostName : hostName,
         cAName : "",
         encryptionAlgorithm : "",
         encryptionStrength : 0,
@@ -103,8 +103,8 @@ var security = {
         isBroken : isBroken,
         isMixed : isMixed,
         isEV : isEV,
-        cert : null,
-        fullLocation : gWindow.location
+        cert : null
+
       };
     }
   },
@@ -140,13 +140,12 @@ var security = {
                       getService(Components.interfaces.nsIEffectiveTLDService);
 
     var eTLD;
-    var uri = BrowserUtils.makeURIFromCPOW(gDocument.documentURIObject);
     try {
-      eTLD = eTLDService.getBaseDomain(uri);
+      eTLD = eTLDService.getBaseDomain(this.uri);
     }
     catch (e) {
       // getBaseDomain will fail if the host is an IP address or is empty
-      eTLD = uri.asciiHost;
+      eTLD = this.uri.asciiHost;
     }
 
     if (win) {
@@ -168,7 +167,9 @@ var security = {
   _cert : null
 };
 
-function securityOnLoad() {
+function securityOnLoad(uri, windowInfo) {
+  security.init(uri, windowInfo);
+
   var info = security._getSecurityInfo();
   if (!info) {
     document.getElementById("securityTab").hidden = true;
@@ -226,7 +227,6 @@ function securityOnLoad() {
   var yesStr = pageInfoBundle.getString("yes");
   var noStr = pageInfoBundle.getString("no");
 
-  var uri = BrowserUtils.makeURIFromCPOW(gDocument.documentURIObject);
   setText("security-privacy-cookies-value",
           hostHasCookies(uri) ? yesStr : noStr);
   setText("security-privacy-passwords-value",

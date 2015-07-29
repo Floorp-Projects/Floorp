@@ -324,10 +324,14 @@ WaveShaperNode::SetCurve(const Nullable<Float32Array>& aCurve, ErrorResult& aRv)
       return;
     }
 
-    mCurve = floats.Obj();
+    if (!curve.SetLength(argLength, fallible)) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
+    }
 
-    curve.SetLength(argLength);
     PodCopy(curve.Elements(), floats.Data(), floats.Length());
+
+    mCurve = floats.Obj();
   } else {
     mCurve = nullptr;
   }
