@@ -92,8 +92,7 @@ static nsRefPtr<GLContext> sPluginContext = nullptr;
 static bool EnsureGLContext()
 {
   if (!sPluginContext) {
-    bool requireCompatProfile = true;
-    sPluginContext = GLContextProvider::CreateHeadless(requireCompatProfile);
+    sPluginContext = GLContextProvider::CreateHeadless(CreateContextFlags::REQUIRE_COMPAT_PROFILE);
   }
 
   return sPluginContext != nullptr;
