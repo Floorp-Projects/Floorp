@@ -499,12 +499,6 @@ gfxASurface::GetSubpixelAntialiasingEnabled()
 #endif
 }
 
-gfxMemoryLocation
-gfxASurface::GetMemoryLocation() const
-{
-    return gfxMemoryLocation::IN_PROCESS_HEAP;
-}
-
 int32_t
 gfxASurface::BytePerPixelFromFormat(gfxImageFormat format)
 {

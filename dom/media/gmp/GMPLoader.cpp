@@ -14,11 +14,13 @@
 
 #include <string>
 
-#if defined(XP_WIN) && defined(MOZ_SANDBOX)
-#include "mozilla/Scoped.h"
+#ifdef XP_WIN
 #include "windows.h"
+#ifdef MOZ_SANDBOX
+#include "mozilla/Scoped.h"
 #include <intrin.h>
 #include <assert.h>
+#endif
 #endif
 
 #if defined(HASH_NODE_ID_WITH_DEVICE_ID)
@@ -196,11 +198,7 @@ GMPLoaderImpl::Load(const char* aUTF8LibPath,
     nodeId = std::string(aOriginSalt, aOriginSalt + aOriginSaltLen);
   }
 
-#if defined(XP_WIN) && defined(MOZ_SANDBOX)
-  // If the GMP DLL is a side-by-side assembly with static imports then the DLL
-  // loader will attempt to create an activation context which will fail because
-  // of the sandbox. If we create an activation context before we start the
-  // sandbox then this one will get picked up by the DLL loader.
+#ifdef XP_WIN
   int pathLen = MultiByteToWideChar(CP_UTF8, 0, aUTF8LibPath, -1, nullptr, 0);
   if (pathLen == 0) {
     return false;
@@ -211,11 +209,17 @@ GMPLoaderImpl::Load(const char* aUTF8LibPath,
     return false;
   }
 
+#ifdef MOZ_SANDBOX
+  // If the GMP DLL is a side-by-side assembly with static imports then the DLL
+  // loader will attempt to create an activation context which will fail because
+  // of the sandbox. If we create an activation context before we start the
+  // sandbox then this one will get picked up by the DLL loader.
   ACTCTX actCtx = { sizeof(actCtx) };
   actCtx.dwFlags = ACTCTX_FLAG_RESOURCE_NAME_VALID;
   actCtx.lpSource = widePath;
   actCtx.lpResourceName = ISOLATIONAWARE_MANIFEST_RESOURCE_ID;
   ScopedActCtxHandle actCtxHandle(CreateActCtx(&actCtx));
+#endif
 #endif
 
   // Start the sandbox now that we've generated the device bound node id.

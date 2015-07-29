@@ -18,9 +18,7 @@
 #include "nsILoadContext.h"
 #include "nsIDocShell.h"
 
-NS_IMPL_ISUPPORTS(nsScriptError, nsIConsoleMessage, nsIScriptError)
-
-nsScriptError::nsScriptError()
+nsScriptErrorBase::nsScriptErrorBase()
     :  mMessage(),
        mSourceName(),
        mLineNumber(0),
@@ -36,10 +34,10 @@ nsScriptError::nsScriptError()
 {
 }
 
-nsScriptError::~nsScriptError() {}
+nsScriptErrorBase::~nsScriptErrorBase() {}
 
 void
-nsScriptError::InitializeOnMainThread()
+nsScriptErrorBase::InitializeOnMainThread()
 {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(!mInitializedOnMainThread);
@@ -70,7 +68,7 @@ nsScriptError::InitializeOnMainThread()
 
 // nsIConsoleMessage methods
 NS_IMETHODIMP
-nsScriptError::GetMessageMoz(char16_t** result) {
+nsScriptErrorBase::GetMessageMoz(char16_t** result) {
     nsresult rv;
 
     nsAutoCString message;
@@ -87,7 +85,7 @@ nsScriptError::GetMessageMoz(char16_t** result) {
 
 
 NS_IMETHODIMP
-nsScriptError::GetLogLevel(uint32_t* aLogLevel)
+nsScriptErrorBase::GetLogLevel(uint32_t* aLogLevel)
 {
   if (mFlags & (uint32_t)nsIScriptError::infoFlag) {
     *aLogLevel = nsIConsoleMessage::info;
@@ -101,66 +99,66 @@ nsScriptError::GetLogLevel(uint32_t* aLogLevel)
 
 // nsIScriptError methods
 NS_IMETHODIMP
-nsScriptError::GetErrorMessage(nsAString& aResult) {
+nsScriptErrorBase::GetErrorMessage(nsAString& aResult) {
     aResult.Assign(mMessage);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsScriptError::GetSourceName(nsAString& aResult) {
+nsScriptErrorBase::GetSourceName(nsAString& aResult) {
     aResult.Assign(mSourceName);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsScriptError::GetSourceLine(nsAString& aResult) {
+nsScriptErrorBase::GetSourceLine(nsAString& aResult) {
     aResult.Assign(mSourceLine);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsScriptError::GetLineNumber(uint32_t* result) {
+nsScriptErrorBase::GetLineNumber(uint32_t* result) {
     *result = mLineNumber;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsScriptError::GetColumnNumber(uint32_t* result) {
+nsScriptErrorBase::GetColumnNumber(uint32_t* result) {
     *result = mColumnNumber;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsScriptError::GetFlags(uint32_t* result) {
+nsScriptErrorBase::GetFlags(uint32_t* result) {
     *result = mFlags;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsScriptError::GetCategory(char** result) {
+nsScriptErrorBase::GetCategory(char** result) {
     *result = ToNewCString(mCategory);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsScriptError::GetStack(JS::MutableHandleValue aStack) {
+nsScriptErrorBase::GetStack(JS::MutableHandleValue aStack) {
     aStack.setUndefined();
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsScriptError::SetStack(JS::HandleValue aStack) {
+nsScriptErrorBase::SetStack(JS::HandleValue aStack) {
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsScriptError::Init(const nsAString& message,
-                    const nsAString& sourceName,
-                    const nsAString& sourceLine,
-                    uint32_t lineNumber,
-                    uint32_t columnNumber,
-                    uint32_t flags,
-                    const char* category)
+nsScriptErrorBase::Init(const nsAString& message,
+                        const nsAString& sourceName,
+                        const nsAString& sourceLine,
+                        uint32_t lineNumber,
+                        uint32_t columnNumber,
+                        uint32_t flags,
+                        const char* category)
 {
     return InitWithWindowID(message, sourceName, sourceLine, lineNumber,
                             columnNumber, flags,
@@ -170,14 +168,14 @@ nsScriptError::Init(const nsAString& message,
 }
 
 NS_IMETHODIMP
-nsScriptError::InitWithWindowID(const nsAString& message,
-                                const nsAString& sourceName,
-                                const nsAString& sourceLine,
-                                uint32_t lineNumber,
-                                uint32_t columnNumber,
-                                uint32_t flags,
-                                const nsACString& category,
-                                uint64_t aInnerWindowID)
+nsScriptErrorBase::InitWithWindowID(const nsAString& message,
+                                    const nsAString& sourceName,
+                                    const nsAString& sourceLine,
+                                    uint32_t lineNumber,
+                                    uint32_t columnNumber,
+                                    uint32_t flags,
+                                    const nsACString& category,
+                                    uint64_t aInnerWindowID)
 {
     mMessage.Assign(message);
     mSourceName.Assign(sourceName);
@@ -197,7 +195,7 @@ nsScriptError::InitWithWindowID(const nsAString& message,
 }
 
 NS_IMETHODIMP
-nsScriptError::ToString(nsACString& /*UTF8*/ aResult)
+nsScriptErrorBase::ToString(nsACString& /*UTF8*/ aResult)
 {
     static const char format0[] =
         "[%s: \"%s\" {file: \"%s\" line: %d column: %d source: \"%s\"}]";
@@ -260,7 +258,7 @@ nsScriptError::ToString(nsACString& /*UTF8*/ aResult)
 }
 
 NS_IMETHODIMP
-nsScriptError::GetOuterWindowID(uint64_t* aOuterWindowID)
+nsScriptErrorBase::GetOuterWindowID(uint64_t* aOuterWindowID)
 {
     NS_WARN_IF_FALSE(NS_IsMainThread() || mInitializedOnMainThread,
                      "This can't be safely determined off the main thread, "
@@ -275,21 +273,21 @@ nsScriptError::GetOuterWindowID(uint64_t* aOuterWindowID)
 }
 
 NS_IMETHODIMP
-nsScriptError::GetInnerWindowID(uint64_t* aInnerWindowID)
+nsScriptErrorBase::GetInnerWindowID(uint64_t* aInnerWindowID)
 {
     *aInnerWindowID = mInnerWindowID;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsScriptError::GetTimeStamp(int64_t* aTimeStamp)
+nsScriptErrorBase::GetTimeStamp(int64_t* aTimeStamp)
 {
     *aTimeStamp = mTimeStamp;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsScriptError::GetIsFromPrivateWindow(bool* aIsFromPrivateWindow)
+nsScriptErrorBase::GetIsFromPrivateWindow(bool* aIsFromPrivateWindow)
 {
     NS_WARN_IF_FALSE(NS_IsMainThread() || mInitializedOnMainThread,
                      "This can't be safely determined off the main thread, "
@@ -302,3 +300,5 @@ nsScriptError::GetIsFromPrivateWindow(bool* aIsFromPrivateWindow)
     *aIsFromPrivateWindow = mIsFromPrivateWindow;
     return NS_OK;
 }
+
+NS_IMPL_ISUPPORTS(nsScriptError, nsIConsoleMessage, nsIScriptError)

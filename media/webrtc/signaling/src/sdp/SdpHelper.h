@@ -5,6 +5,8 @@
 #ifndef _SDPHELPER_H_
 #define _SDPHELPER_H_
 
+#include "nsError.h"
+
 #include "signaling/src/sdp/SdpMediaSection.h"
 #include "signaling/src/sdp/SdpAttribute.h"
 
@@ -87,6 +89,8 @@ class SdpHelper {
     void appendSdpParseErrors(
           const std::vector<std::pair<size_t, std::string> >& aErrors,
           std::string* aErrorString);
+
+    static bool GetPtAsInt(const std::string& ptString, uint16_t* ptOutparam);
 
   private:
     std::string& mLastError;

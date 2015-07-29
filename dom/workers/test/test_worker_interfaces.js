@@ -124,6 +124,8 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "IDBCursor",
 // IMPORTANT: Do not change this list without review from a DOM peer!
+    "IDBCursorWithValue",
+// IMPORTANT: Do not change this list without review from a DOM peer!
     "IDBDatabase",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "IDBFactory",

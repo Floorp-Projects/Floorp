@@ -40,6 +40,7 @@
 #include "mozilla/unused.h"
 #include "nsILoadContext.h"
 #include "mozilla/dom/HTMLObjectElementBinding.h"
+#include "AudioChannelService.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -169,7 +170,7 @@ using namespace mozilla::layers;
 
 static NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
 
-NS_IMPL_ISUPPORTS0(nsNPAPIPluginInstance)
+NS_IMPL_ISUPPORTS(nsNPAPIPluginInstance, nsIAudioChannelAgentCallback)
 
 nsNPAPIPluginInstance::nsNPAPIPluginInstance()
   : mDrawingModel(kDefaultDrawingModel)
@@ -253,6 +254,7 @@ nsNPAPIPluginInstance::Destroy()
 {
   Stop();
   mPlugin = nullptr;
+  mAudioChannelAgent = nullptr;
 
 #if MOZ_WIDGET_ANDROID
   if (mContentSurface)
@@ -1787,4 +1789,72 @@ nsNPAPIPluginInstance::GetRunID(uint32_t* aRunID)
   }
 
   return library->GetRunID(aRunID);
+}
+
+nsresult
+nsNPAPIPluginInstance::GetOrCreateAudioChannelAgent(nsIAudioChannelAgent** aAgent)
+{
+  if (!mAudioChannelAgent) {
+    nsresult rv;
+    mAudioChannelAgent = do_CreateInstance("@mozilla.org/audiochannelagent;1", &rv);
+    if (NS_WARN_IF(!mAudioChannelAgent)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsPIDOMWindow> window = GetDOMWindow();
+    if (NS_WARN_IF(!window)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    rv = mAudioChannelAgent->Init(window->GetCurrentInnerWindow(),
+                                 (int32_t)AudioChannelService::GetDefaultAudioChannel(),
+                                 this);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  nsCOMPtr<nsIAudioChannelAgent> agent = mAudioChannelAgent;
+  agent.forget(aAgent);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNPAPIPluginInstance::WindowVolumeChanged(float aVolume, bool aMuted)
+{
+  // We just support mute/unmute
+  nsresult rv = SetMuted(aMuted);
+  NS_WARN_IF(NS_FAILED(rv));
+  return rv;
+}
+
+NS_IMETHODIMP
+nsNPAPIPluginInstance::WindowAudioCaptureChanged()
+{
+  return NS_OK;
+}
+
+nsresult
+nsNPAPIPluginInstance::SetMuted(bool aIsMuted)
+{
+  if (RUNNING != mRunning)
+    return NS_OK;
+
+  PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("nsNPAPIPluginInstance informing plugin of mute state change this=%p\n",this));
+
+  if (!mPlugin || !mPlugin->GetLibrary())
+    return NS_ERROR_FAILURE;
+
+  NPPluginFuncs* pluginFunctions = mPlugin->PluginFuncs();
+
+  if (!pluginFunctions->setvalue)
+    return NS_ERROR_FAILURE;
+
+  PluginDestructionGuard guard(this);
+
+  NPError error;
+  NPBool value = static_cast<NPBool>(aIsMuted);
+  NS_TRY_SAFE_CALL_RETURN(error, (*pluginFunctions->setvalue)(&mNPP, NPNVmuteAudioBool, &value), this,
+                          NS_PLUGIN_CALL_UNSAFE_TO_REENTER_GECKO);
+  return (error == NPERR_NO_ERROR) ? NS_OK : NS_ERROR_FAILURE;
 }

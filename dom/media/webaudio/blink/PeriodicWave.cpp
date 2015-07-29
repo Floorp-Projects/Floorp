@@ -147,7 +147,7 @@ void PeriodicWave::waveDataForFundamentalFrequency(float fundamentalFrequency, f
     higherWaveData = m_bandLimitedTables[rangeIndex1]->Elements();
 
     // Ranges from 0 -> 1 to interpolate between lower -> higher.
-    tableInterpolationFactor = pitchRange - rangeIndex1;
+    tableInterpolationFactor = rangeIndex2 - pitchRange;
 }
 
 unsigned PeriodicWave::maxNumberOfPartials() const

@@ -36,6 +36,7 @@ RematerializedFrame::RematerializedFrame(JSContext* cx, uint8_t* top, unsigned n
   : prevUpToDate_(false),
     isDebuggee_(iter.script()->isDebuggee()),
     isConstructing_(iter.isConstructing()),
+    hasCachedSavedFrame_(false),
     top_(top),
     pc_(iter.pc()),
     frameNo_(iter.frameNo()),

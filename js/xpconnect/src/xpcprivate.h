@@ -2989,18 +2989,17 @@ xpc_PrintJSStack(JSContext* cx, bool showArgs, bool showLocals,
 
 // Definition of nsScriptError, defined here because we lack a place to put
 // XPCOM objects associated with the JavaScript engine.
-class nsScriptError : public nsIScriptError {
+class nsScriptErrorBase : public nsIScriptError {
 public:
-    nsScriptError();
+    nsScriptErrorBase();
 
   // TODO - do something reasonable on getting null from these babies.
 
-    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSICONSOLEMESSAGE
     NS_DECL_NSISCRIPTERROR
 
 protected:
-    virtual ~nsScriptError();
+    virtual ~nsScriptErrorBase();
 
     void
     InitializeOnMainThread();
@@ -3022,7 +3021,16 @@ protected:
     bool mIsFromPrivateWindow;
 };
 
-class nsScriptErrorWithStack : public nsScriptError {
+class nsScriptError final : public nsScriptErrorBase {
+public:
+    nsScriptError() {}
+    NS_DECL_THREADSAFE_ISUPPORTS
+
+private:
+    virtual ~nsScriptError() {}
+};
+
+class nsScriptErrorWithStack : public nsScriptErrorBase {
 public:
     explicit nsScriptErrorWithStack(JS::HandleObject);
 

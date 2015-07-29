@@ -1096,8 +1096,12 @@
               case "mouseup":
               case "mousedown":
               case "contextmenu": {
-                if (!this._ignoreMouseEvents)
-                  this._autoScrollPopup.hidePopup();
+                if (!this._ignoreMouseEvents) {
+                  // Use a timeout to prevent the mousedown from opening the popup again.
+                  // Ideally, we could use preventDefault here, but contenteditable
+                  // and middlemouse paste don't interact well. See bug 1188536.
+                  setTimeout(() => this._autoScrollPopup.hidePopup(), 0);
+                }
                 this._ignoreMouseEvents = false;
                 break;
               }
