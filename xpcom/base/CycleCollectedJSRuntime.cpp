@@ -134,7 +134,7 @@ struct NoteWeakMapChildrenTracer : public JS::CallbackTracer
 void
 NoteWeakMapChildrenTracer::onChild(const JS::GCCellPtr& aThing)
 {
-  if (aThing.is<JSString>()) {
+  if (aThing.isString()) {
     return;
   }
 
@@ -168,7 +168,7 @@ NoteWeakMapsTracer::trace(JSObject* aMap, JS::GCCellPtr aKey,
   // If nothing that could be held alive by this entry is marked gray, return.
   if ((!aKey || !JS::GCThingIsMarkedGray(aKey)) &&
       MOZ_LIKELY(!mCb.WantAllTraces())) {
-    if (!aValue || !JS::GCThingIsMarkedGray(aValue) || aValue.is<JSString>()) {
+    if (!aValue || !JS::GCThingIsMarkedGray(aValue) || aValue.isString()) {
       return;
     }
   }
@@ -188,8 +188,8 @@ NoteWeakMapsTracer::trace(JSObject* aMap, JS::GCCellPtr aKey,
   }
 
   JSObject* kdelegate = nullptr;
-  if (aKey.is<JSObject>()) {
-    kdelegate = js::GetWeakmapKeyDelegate(&aKey.as<JSObject>());
+  if (aKey.isObject()) {
+    kdelegate = js::GetWeakmapKeyDelegate(aKey.toObject());
   }
 
   if (AddToCCKind(aValue.kind())) {
@@ -200,7 +200,7 @@ NoteWeakMapsTracer::trace(JSObject* aMap, JS::GCCellPtr aKey,
     mChildTracer.mKey = aKey;
     mChildTracer.mKeyDelegate = kdelegate;
 
-    if (aValue.is<JSString>()) {
+    if (aValue.isString()) {
       JS_TraceChildren(&mChildTracer, aValue.asCell(), aValue.kind());
     }
 
@@ -244,8 +244,8 @@ struct FixWeakMappingGrayBitsTracer : public js::WeakMapTracer
       aKey = nullptr;
     }
 
-    if (delegateMightNeedMarking && aKey.is<JSObject>()) {
-      JSObject* kdelegate = js::GetWeakmapKeyDelegate(&aKey.as<JSObject>());
+    if (delegateMightNeedMarking && aKey.isObject()) {
+      JSObject* kdelegate = js::GetWeakmapKeyDelegate(aKey.toObject());
       if (kdelegate && !JS::ObjectIsMarkedGray(kdelegate)) {
         if (JS::UnmarkGrayGCThingRecursively(aKey)) {
           mAnyMarked = true;
@@ -343,21 +343,21 @@ TraversalTracer::onChild(const JS::GCCellPtr& aThing)
       getTracingEdgeName(buffer, sizeof(buffer));
       mCb.NoteNextEdgeName(buffer);
     }
-    if (aThing.is<JSObject>()) {
-      mCb.NoteJSObject(&aThing.as<JSObject>());
+    if (aThing.isObject()) {
+      mCb.NoteJSObject(aThing.toObject());
     } else {
-      mCb.NoteJSScript(&aThing.as<JSScript>());
+      mCb.NoteJSScript(aThing.toScript());
     }
-  } else if (aThing.is<js::Shape>()) {
+  } else if (aThing.isShape()) {
     // The maximum depth of traversal when tracing a Shape is unbounded, due to
     // the parent pointers on the shape.
     JS_TraceShapeCycleCollectorChildren(this, aThing);
-  } else if (aThing.is<js::ObjectGroup>()) {
+  } else if (aThing.isObjectGroup()) {
     // The maximum depth of traversal when tracing an ObjectGroup is unbounded,
     // due to information attached to the groups which can lead other groups to
     // be traced.
     JS_TraceObjectGroupCycleCollectorChildren(this, aThing);
-  } else if (!aThing.is<JSString>()) {
+  } else if (!aThing.isString()) {
     JS_TraceChildren(this, aThing.asCell(), aThing.kind());
   }
 }
@@ -483,8 +483,8 @@ CycleCollectedJSRuntime::DescribeGCThing(bool aIsMarked, JS::GCCellPtr aThing,
 
   char name[72];
   uint64_t compartmentAddress = 0;
-  if (aThing.is<JSObject>()) {
-    JSObject* obj = &aThing.as<JSObject>();
+  if (aThing.isObject()) {
+    JSObject* obj = aThing.toObject();
     compartmentAddress = (uint64_t)js::GetObjectCompartment(obj);
     const js::Class* clasp = js::GetObjectClass(obj);
 
@@ -582,8 +582,8 @@ CycleCollectedJSRuntime::TraverseGCThing(TraverseSelect aTs, JS::GCCellPtr aThin
     NoteGCThingJSChildren(aThing, aCb);
   }
 
-  if (aThing.is<JSObject>()) {
-    JSObject* obj = &aThing.as<JSObject>();
+  if (aThing.isObject()) {
+    JSObject* obj = aThing.toObject();
     NoteGCThingXPCOMChildren(js::GetObjectClass(obj), obj, aCb);
   }
 }
@@ -635,7 +635,7 @@ CycleCollectedJSRuntime::TraverseObjectShim(void* aData, JS::GCCellPtr aThing)
   TraverseObjectShimClosure* closure =
     static_cast<TraverseObjectShimClosure*>(aData);
 
-  MOZ_ASSERT(aThing.is<JSObject>());
+  MOZ_ASSERT(aThing.isObject());
   closure->self->TraverseGCThing(CycleCollectedJSRuntime::TRAVERSE_CPP,
                                  aThing, closure->cb);
 }
