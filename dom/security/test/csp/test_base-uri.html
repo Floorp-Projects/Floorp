@@ -54,11 +54,16 @@ examiner.prototype  = {
 }
 window.BaseURIExaminer = new examiner();
 
+function finishTest() {
+  window.BaseURIExaminer.remove();
+  SimpleTest.finish();
+}
+
 function loadNextTest() {
   counter++;
   if (counter == testPolicies.length) {
-    window.BaseURIExaminer.remove();
-    SimpleTest.finish();
+    finishTest();
+    return;
   }
   var src = "http://example.com/tests/dom/security/test/csp/file_testserver.sjs";
   // append the file that should be served
