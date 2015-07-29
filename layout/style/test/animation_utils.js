@@ -55,7 +55,7 @@ function advance_clock(milliseconds) {
     // This function checks that the list of eventsExpected matches
     // the received events -- but it only checks the properties that
     // are present on eventsExpected.
-    is(gEventsReceived.length, gEventsReceived.length,
+    is(gEventsReceived.length, eventsExpected.length,
        "number of events received for " + desc);
     for (var i = 0,
          i_end = Math.min(eventsExpected.length, gEventsReceived.length);
