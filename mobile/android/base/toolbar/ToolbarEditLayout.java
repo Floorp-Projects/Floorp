@@ -17,6 +17,8 @@ import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.PropertyAnimator.PropertyAnimationListener;
 import org.mozilla.gecko.preferences.GeckoPreferences;
@@ -262,6 +264,7 @@ public class ToolbarEditLayout extends ThemedLinearLayout {
     }
 
     private void launchQRCodeReader() {
+        Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.ACTIONBAR, "qrcode_input_launch");
         final Intent intent = InputOptionsUtils.createQRCodeReaderIntent();
 
         Activity activity = GeckoAppShell.getGeckoInterface().getActivity();
@@ -271,6 +274,7 @@ public class ToolbarEditLayout extends ThemedLinearLayout {
                 if (resultCode == Activity.RESULT_OK) {
                     String text = intent.getStringExtra("SCAN_RESULT");
                     if (!StringUtils.isSearchQuery(text, false)) {
+                        Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.ACTIONBAR, "qrcode_input_success");
                         mEditText.setText(text);
                         mEditText.selectAll();
 
