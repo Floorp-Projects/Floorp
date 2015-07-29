@@ -140,6 +140,7 @@ user_pref("datareporting.policy.dataSubmissionPolicyBypassNotification", true);
 // works. It just can't hit the default production endpoint.
 user_pref("datareporting.healthreport.documentServerURI", "http://%(server)s/healthreport/");
 user_pref("datareporting.healthreport.about.reportUrl", "http://%(server)s/abouthealthreport/");
+user_pref("datareporting.healthreport.about.reportUrlUnified", "http://%(server)s/abouthealthreport/v4/");
 
 // Make sure CSS error reporting is enabled for tests
 user_pref("layout.css.report_errors", true);
