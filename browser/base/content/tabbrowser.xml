@@ -563,8 +563,20 @@
         <parameter name="aTab"/>
         <parameter name="aBrowser"/>
         <parameter name="aStartsBlank"/>
+        <parameter name="aWasPreloadedBrowser"/>
         <body>
         <![CDATA[
+          let stateFlags = 0;
+          // Initialize mStateFlags to non-zero e.g. when creating a progress
+          // listener for preloaded browsers as there was no progress listener
+          // around when the content started loading. If the content didn't
+          // quite finish loading yet, mStateFlags will very soon be overridden
+          // with the correct value and end up at STATE_STOP again.
+          if (aWasPreloadedBrowser) {
+            stateFlags = Ci.nsIWebProgressListener.STATE_STOP |
+                         Ci.nsIWebProgressListener.STATE_IS_REQUEST;
+          }
+
           return ({
             mTabBrowser: this,
             mTab: aTab,
@@ -572,7 +584,7 @@
             mBlank: aStartsBlank,
 
             // cache flags for correct status UI update after tab switching
-            mStateFlags: 0,
+            mStateFlags: stateFlags,
             mStatus: 0,
             mMessage: "",
             mTotalProgress: 0,
@@ -1837,7 +1849,7 @@
             this.tabContainer.updateVisibility();
 
             // wire up a progress listener for the new browser object.
-            var tabListener = this.mTabProgressListener(t, b, uriIsAboutBlank);
+            var tabListener = this.mTabProgressListener(t, b, uriIsAboutBlank, usingPreloadedContent);
             const filter = Components.classes["@mozilla.org/appshell/component/browser-status-filter;1"]
                                      .createInstance(Components.interfaces.nsIWebProgress);
             filter.addProgressListener(tabListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
@@ -2549,7 +2561,7 @@
 
             // Restore the progress listener
             this.mTabListeners[index] = tabListener =
-              this.mTabProgressListener(aOurTab, ourBrowser, false);
+              this.mTabProgressListener(aOurTab, ourBrowser, false, false);
 
             const notifyAll = Ci.nsIWebProgress.NOTIFY_ALL;
             filter.addProgressListener(tabListener, notifyAll);
@@ -4028,7 +4040,7 @@
           this.updateWindowResizers();
 
           // Hook up the event listeners to the first browser
-          var tabListener = this.mTabProgressListener(this.mCurrentTab, this.mCurrentBrowser, true);
+          var tabListener = this.mTabProgressListener(this.mCurrentTab, this.mCurrentBrowser, true, false);
           const nsIWebProgress = Components.interfaces.nsIWebProgress;
           const filter = Components.classes["@mozilla.org/appshell/component/browser-status-filter;1"]
                                    .createInstance(nsIWebProgress);
