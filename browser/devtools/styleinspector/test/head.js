@@ -414,28 +414,14 @@ function* waitForComputedStyleProperty(selector, pseudo, name, expected) {
  * @return a promise that resolves to the inplace-editor element when ready
  */
 let focusEditableField = Task.async(function*(ruleView, editable, xOffset=1, yOffset=1, options={}) {
-  // Focusing the name or value input is going to fire a preview and update the rule view
-  let expectRuleViewUpdate =
-    editable.classList.contains("ruleview-propertyname") ||
-    editable.classList.contains("ruleview-propertyvalue");
-  let onRuleViewChanged;
-  if (expectRuleViewUpdate) {
-    onRuleViewChanged = ruleView.once("ruleview-changed");
-  }
-
   let onFocus = once(editable.parentNode, "focus", true);
   info("Clicking on editable field to turn to edit mode");
   EventUtils.synthesizeMouse(editable, xOffset, yOffset, options,
     editable.ownerDocument.defaultView);
-  let event = yield onFocus;
+  yield onFocus;
 
   info("Editable field gained focus, returning the input field now");
   let onEdit = inplaceEditor(editable.ownerDocument.activeElement);
-
-  if (expectRuleViewUpdate) {
-    info("Waiting for rule view update");
-    yield onRuleViewChanged;
-  }
 
   return onEdit;
 });
@@ -801,11 +787,11 @@ function getRuleViewRuleEditor(view, childrenIndex, nodeIndex) {
 let focusNewRuleViewProperty = Task.async(function*(ruleEditor) {
   info("Clicking on a close ruleEditor brace to start editing a new property");
   ruleEditor.closeBrace.scrollIntoView();
-  let editor = yield focusEditableField(ruleEditor.ruleView, ruleEditor.closeBrace);
+  let editor = yield focusEditableField(ruleEditor.ruleView,
+    ruleEditor.closeBrace);
 
-  is(inplaceEditor(ruleEditor.newPropSpan), editor, "Focused editor is the new property editor.");
-  is(ruleEditor.rule.textProps.length,  0, "Starting with one new text property.");
-  is(ruleEditor.propertyList.children.length, 1, "Starting with two property editors.");
+  is(inplaceEditor(ruleEditor.newPropSpan), editor,
+    "Focused editor is the new property editor.");
 
   return editor;
 });

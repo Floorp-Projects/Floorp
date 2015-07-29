@@ -52,8 +52,19 @@ pageInfoTreeView.prototype = {
   {
     this.rows = this.data.push(row);
     this.rowCountChanged(this.rows - 1, 1);
-    if (this.selection.count == 0 && this.rowCount && !gImageElement)
+    if (this.selection.count == 0 && this.rowCount && !gImageElement) {
       this.selection.select(0);
+    }
+  },
+
+  addRows: function(rows)
+  {
+    this.data = this.data.concat(rows);
+    this.rowCountChanged(this.rows, rows.length);
+    this.rows = this.data.length;
+    if (this.selection.count == 0 && this.rowCount && !gImageElement) {
+      this.selection.select(0);
+    }
   },
 
   rowCountChanged: function(index, count)
@@ -140,8 +151,7 @@ pageInfoTreeView.prototype = {
 };
 
 // mmm, yummy. global variables.
-var gWindow = null;
-var gDocument = null;
+var gDocInfo = null;
 var gImageElement = null;
 
 // column number to help using the data array
@@ -286,8 +296,7 @@ const XHTMLre = RegExp(XHTMLNSre + "|" + XHTML2NSre, "");
  * invoked as "XXXLoadFunc();"
  */
 
-// These functions are called to build the data displayed in the Page
-// Info window. The global variables gDocument and gWindow are set.
+// These functions are called to build the data displayed in the Page Info window.
 var onLoadRegistry = [ ];
 
 // These functions are called to remove old data still displayed in
@@ -296,23 +305,12 @@ var onLoadRegistry = [ ];
 // tab is cleared.
 var onResetRegistry = [ ];
 
-// These are called once for each subframe of the target document and
-// the target document itself. The frame is passed as an argument.
-var onProcessFrame = [ ];
-
-// These functions are called once for each element (in all subframes, if any)
-// in the target document. The element is passed as an argument.
-var onProcessElement = [ ];
-
 // These functions are called once when all the elements in all of the target
 // document (and all of its subframes, if any) have been processed
 var onFinished = [ ];
 
 // These functions are called once when the Page Info window is closed.
 var onUnloadRegistry = [ ];
-
-// These functions are called once when an image preview is shown.
-var onImagePreviewShown = [ ];
 
 /* Called when PageInfo window is loaded.  Arguments are:
  *  window.arguments[0] - (optional) an object consisting of
@@ -341,11 +339,6 @@ function onLoadPageInfo()
              window.arguments.length >= 1 &&
              window.arguments[0];
 
-  if (!args || !args.doc) {
-    gWindow = window.opener.gBrowser.selectedBrowser.contentWindowAsCPOW;
-    gDocument = gWindow.document;
-  }
-
   // init media view
   var imageTree = document.getElementById("imagetree");
   imageTree.view = gImageView;
@@ -357,22 +350,52 @@ function onLoadPageInfo()
             .notifyObservers(window, "page-info-dialog-loaded", null);
 }
 
-function loadPageInfo()
+function loadPageInfo(frameOuterWindowID)
 {
-  var titleFormat = gWindow != gWindow.top ? "pageInfo.frame.title"
-                                           : "pageInfo.page.title";
-  document.title = gBundle.getFormattedString(titleFormat, [gDocument.location]);
+  let mm = window.opener.gBrowser.selectedBrowser.messageManager;
 
-  document.getElementById("main-window").setAttribute("relatedUrl", gDocument.location);
+  gStrings["application/rss+xml"]  = gBundle.getString("feedRss");
+  gStrings["application/atom+xml"] = gBundle.getString("feedAtom");
+  gStrings["text/xml"]             = gBundle.getString("feedXML");
+  gStrings["application/xml"]      = gBundle.getString("feedXML");
+  gStrings["application/rdf+xml"]  = gBundle.getString("feedXML");
 
-  // do the easy stuff first
-  makeGeneralTab();
+  // Look for pageInfoListener in content.js. Sends message to listener with arguments.
+  mm.sendAsyncMessage("PageInfo:getData", {strings: gStrings,
+                      frameOuterWindowID: frameOuterWindowID});
 
-  // and then the hard stuff
-  makeTabs(gDocument, gWindow);
+  let pageInfoData = null;
 
-  initFeedTab();
-  onLoadPermission();
+  // Get initial pageInfoData needed to display the general, feeds, permission and security tabs.
+  mm.addMessageListener("PageInfo:data", function onmessage(message) {
+    mm.removeMessageListener("PageInfo:data", onmessage);
+    pageInfoData = message.data;
+    let docInfo = pageInfoData.docInfo;
+    let windowInfo = pageInfoData.windowInfo;
+    let uri = makeURI(docInfo.documentURIObject.spec,
+                      docInfo.documentURIObject.originCharset);
+    gDocInfo = docInfo;
+
+    var titleFormat = windowInfo.isTopWindow ? "pageInfo.frame.title"
+                                             : "pageInfo.page.title";
+    document.title = gBundle.getFormattedString(titleFormat, [docInfo.location]);
+
+    document.getElementById("main-window").setAttribute("relatedUrl", docInfo.location);
+
+    makeGeneralTab(pageInfoData.metaViewRows, docInfo);
+    initFeedTab(pageInfoData.feeds);
+    onLoadPermission(uri);
+    securityOnLoad(uri, windowInfo);
+  });
+
+  // Get the media elements from content script to setup the media tab.
+  mm.addMessageListener("PageInfo:mediaData", function onmessage(message){
+    mm.removeMessageListener("PageInfo:mediaData", onmessage);
+    makeMediaTab(message.data.imageViewRows);
+
+    // Loop through onFinished and execute the functions on it.
+    onFinished.forEach(function(func) { func(pageInfoData); });
+  });
 
   /* Call registered overlay init functions */
   onLoadRegistry.forEach(function(func) { func(); });
@@ -443,15 +466,22 @@ function showTab(id)
 
 function loadTab(args)
 {
-  if (args && args.doc) {
-    gDocument = args.doc;
-    gWindow = gDocument.defaultView;
+  // If the "View Image Info" context menu item was used, the related image
+  // element is provided as an argument. This can't be a background image.
+  let imageElement = args && args.imageElement;
+  if (imageElement) {
+    gImageElement = {currentSrc: imageElement.currentSrc,
+                     width: imageElement.width, height: imageElement.height,
+                     imageText: imageElement.title || imageElement.alt};
+  }
+  else {
+    gImageElement = null;
   }
 
-  gImageElement = args && args.imageElement;
+  let frameOuterWindowID = args && args.frameOuterWindowID;
 
   /* Load the page info */
-  loadPageInfo();
+  loadPageInfo(frameOuterWindowID);
 
   var initialTab = (args && args.initialTab) || "generalTab";
   var radioGroup = document.getElementById("viewGroup");
@@ -491,31 +521,29 @@ function openCacheEntry(key, cb)
   diskStorage.asyncOpenURI(Services.io.newURI(key, null, null), "", nsICacheStorage.OPEN_READONLY, checkCacheListener);
 }
 
-function makeGeneralTab()
+function makeGeneralTab(metaViewRows, docInfo)
 {
-  var title = (gDocument.title) ? gBundle.getFormattedString("pageTitle", [gDocument.title]) : gBundle.getString("noPageTitle");
+  var title = (docInfo.title) ? gBundle.getFormattedString("pageTitle", [docInfo.title]) : gBundle.getString("noPageTitle");
   document.getElementById("titletext").value = title;
 
-  var url = gDocument.location.toString();
+  var url = docInfo.location;
   setItemValue("urltext", url);
 
-  var referrer = ("referrer" in gDocument && gDocument.referrer);
+  var referrer = ("referrer" in docInfo && docInfo.referrer);
   setItemValue("refertext", referrer);
 
-  var mode = ("compatMode" in gDocument && gDocument.compatMode == "BackCompat") ? "generalQuirksMode" : "generalStrictMode";
+  var mode = ("compatMode" in docInfo && docInfo.compatMode == "BackCompat") ? "generalQuirksMode" : "generalStrictMode";
   document.getElementById("modetext").value = gBundle.getString(mode);
 
   // find out the mime type
-  var mimeType = gDocument.contentType;
+  var mimeType = docInfo.contentType;
   setItemValue("typetext", mimeType);
 
   // get the document characterset
-  var encoding = gDocument.characterSet;
+  var encoding = docInfo.characterSet;
   document.getElementById("encodingtext").value = encoding;
 
-  // get the meta tags
-  var metaNodes = gDocument.getElementsByTagName("meta");
-  var length = metaNodes.length;
+  let length = metaViewRows.length;
 
   var metaGroup = document.getElementById("metaTags");
   if (!length)
@@ -529,15 +557,14 @@ function makeGeneralTab()
     var metaTree = document.getElementById("metatree");
     metaTree.view = gMetaView;
 
-    for (var i = 0; i < length; i++)
-      gMetaView.addRow([metaNodes[i].name || metaNodes[i].httpEquiv || metaNodes[i].getAttribute("property"),
-                        metaNodes[i].content]);
+    // Add the metaViewRows onto the general tab's meta info tree.
+    gMetaView.addRows(metaViewRows);
 
     metaGroup.collapsed = false;
   }
 
   // get the date of last modification
-  var modifiedText = formatDate(gDocument.lastModified, gStrings.notSet);
+  var modifiedText = formatDate(docInfo.lastModified, gStrings.notSet);
   document.getElementById("modifiedtext").value = modifiedText;
 
   // get cache info
@@ -551,57 +578,16 @@ function makeGeneralTab()
     }
     setItemValue("sizetext", sizeText);
   });
-
-  securityOnLoad();
 }
 
-//******** Generic Build-a-tab
-// Assumes the views are empty. Only called once to build the tabs, and
-// does so by farming the task off to another thread via setTimeout().
-// The actual work is done with a TreeWalker that calls doGrab() once for
-// each element node in the document.
-
-var gFrameList = [ ];
-
-function makeTabs(aDocument, aWindow)
+function makeMediaTab(imageViewRows)
 {
-  goThroughFrames(aDocument, aWindow);
-  processFrames();
-}
-
-function goThroughFrames(aDocument, aWindow)
-{
-  gFrameList.push(aDocument);
-  if (aWindow && aWindow.frames.length > 0) {
-    var num = aWindow.frames.length;
-    for (var i = 0; i < num; i++)
-      goThroughFrames(aWindow.frames[i].document, aWindow.frames[i]);  // recurse through the frames
+  // Call addImage passing in the image rows to add to the view on the Media Tab.
+  for (let image of imageViewRows) {
+    let [url, type, alt, elem, isBg] = image;
+    addImage(url, type, alt, elem, isBg);
   }
-}
-
-function processFrames()
-{
-  if (gFrameList.length) {
-    var doc = gFrameList[0];
-    onProcessFrame.forEach(function(func) { func(doc); });
-    var iterator = doc.createTreeWalker(doc, NodeFilter.SHOW_ELEMENT, grabAll);
-    gFrameList.shift();
-    setTimeout(doGrab, 10, iterator);
-    onFinished.push(selectImage);
-  }
-  else
-    onFinished.forEach(function(func) { func(); });
-}
-
-function doGrab(iterator)
-{
-  for (var i = 0; i < 500; ++i)
-    if (!iterator.nextNode()) {
-      processFrames();
-      return;
-    }
-
-  setTimeout(doGrab, 10, iterator);
+  selectImage();
 }
 
 function addImage(url, type, alt, elem, isBg)
@@ -639,78 +625,17 @@ function addImage(url, type, alt, elem, isBg)
   else {
     var i = gImageHash[url][type][alt];
     gImageView.data[i][COL_IMAGE_COUNT]++;
-    if (elem == gImageElement)
+    // The same image can occur several times on the page at different sizes.
+    // If the "View Image Info" context menu item was used, ensure we select
+    // the correct element.
+    if (!gImageView.data[i][COL_IMAGE_BG] &&
+        gImageElement && url == gImageElement.currentSrc &&
+        gImageElement.width == elem.width &&
+        gImageElement.height == elem.height &&
+        gImageElement.imageText == elem.imageText) {
       gImageView.data[i][COL_IMAGE_NODE] = elem;
+    }
   }
-}
-
-function grabAll(elem)
-{
-  // check for images defined in CSS (e.g. background, borders), any node may have multiple
-  var computedStyle = elem.ownerDocument.defaultView.getComputedStyle(elem, "");
-
-  if (computedStyle) {
-    var addImgFunc = function (label, val) {
-      if (val.primitiveType == CSSPrimitiveValue.CSS_URI) {
-        addImage(val.getStringValue(), label, gStrings.notSet, elem, true);
-      }
-      else if (val.primitiveType == CSSPrimitiveValue.CSS_STRING) {
-        // This is for -moz-image-rect.
-        // TODO: Reimplement once bug 714757 is fixed
-        var strVal = val.getStringValue();
-        if (strVal.search(/^.*url\(\"?/) > -1) {
-          url = strVal.replace(/^.*url\(\"?/,"").replace(/\"?\).*$/,"");
-          addImage(url, label, gStrings.notSet, elem, true);
-        }
-      }
-      else if (val.cssValueType == CSSValue.CSS_VALUE_LIST) {
-        // recursively resolve multiple nested CSS value lists
-        for (var i = 0; i < val.length; i++)
-          addImgFunc(label, val.item(i));
-      }
-    };
-
-    addImgFunc(gStrings.mediaBGImg, computedStyle.getPropertyCSSValue("background-image"));
-    addImgFunc(gStrings.mediaBorderImg, computedStyle.getPropertyCSSValue("border-image-source"));
-    addImgFunc(gStrings.mediaListImg, computedStyle.getPropertyCSSValue("list-style-image"));
-    addImgFunc(gStrings.mediaCursor, computedStyle.getPropertyCSSValue("cursor"));
-  }
-
-  // one swi^H^H^Hif-else to rule them all
-  if (elem instanceof HTMLImageElement)
-    addImage(elem.src, gStrings.mediaImg,
-             (elem.hasAttribute("alt")) ? elem.alt : gStrings.notSet, elem, false);
-  else if (elem instanceof SVGImageElement) {
-    try {
-      // Note: makeURLAbsolute will throw if either the baseURI is not a valid URI
-      //       or the URI formed from the baseURI and the URL is not a valid URI
-      var href = makeURLAbsolute(elem.baseURI, elem.href.baseVal);
-      addImage(href, gStrings.mediaImg, "", elem, false);
-    } catch (e) { }
-  }
-  else if (elem instanceof HTMLVideoElement) {
-    addImage(elem.currentSrc, gStrings.mediaVideo, "", elem, false);
-  }
-  else if (elem instanceof HTMLAudioElement) {
-    addImage(elem.currentSrc, gStrings.mediaAudio, "", elem, false);
-  }
-  else if (elem instanceof HTMLLinkElement) {
-    if (elem.rel && /\bicon\b/i.test(elem.rel))
-      addImage(elem.href, gStrings.mediaLink, "", elem, false);
-  }
-  else if (elem instanceof HTMLInputElement || elem instanceof HTMLButtonElement) {
-    if (elem.type.toLowerCase() == "image")
-      addImage(elem.src, gStrings.mediaInput,
-               (elem.hasAttribute("alt")) ? elem.alt : gStrings.notSet, elem, false);
-  }
-  else if (elem instanceof HTMLObjectElement)
-    addImage(elem.data, gStrings.mediaObject, getValueText(elem), elem, false);
-  else if (elem instanceof HTMLEmbedElement)
-    addImage(elem.src, gStrings.mediaEmbed, "", elem, false);
-
-  onProcessElement.forEach(function(func) { func(elem); });
-
-  return NodeFilter.FILTER_ACCEPT;
 }
 
 //******** Link Stuff
@@ -814,14 +739,15 @@ function saveMedia()
       else if (item instanceof HTMLAudioElement)
         titleKey = "SaveAudioTitle";
 
-      saveURL(url, null, titleKey, false, false, makeURI(item.baseURI), gDocument);
+      saveURL(url, null, titleKey, false, false, makeURI(item.baseURI),
+              null, gDocInfo.isContentWindowPrivate);
     }
   } else {
     selectSaveFolder(function(aDirectory) {
       if (aDirectory) {
         var saveAnImage = function(aURIString, aChosenData, aBaseURI) {
           internalSave(aURIString, null, null, null, null, false, "SaveImageTitle",
-                       aChosenData, aBaseURI, gDocument);
+                       aChosenData, aBaseURI, null, gDocInfo.isContentWindowPrivate);
         };
 
         for (var i = 0; i < rowArray.length; i++) {
@@ -893,6 +819,7 @@ function onImageSelect()
   }
 }
 
+// Makes the media preview (image, video, etc) for the selected row on the media tab.
 function makePreview(row)
 {
   var imageTree = document.getElementById("imagetree");
@@ -902,18 +829,7 @@ function makePreview(row)
   var isAudio = false;
 
   setItemValue("imageurltext", url);
-
-  var imageText;
-  if (!isBG &&
-      !(item instanceof SVGImageElement) &&
-      !(gDocument instanceof ImageDocument)) {
-    imageText = item.title || item.alt;
-
-    if (!imageText && !(item instanceof HTMLImageElement))
-      imageText = getValueText(item);
-  }
-  setItemValue("imagetext", imageText);
-
+  setItemValue("imagetext", item.imageText);
   setItemValue("imagelongdesctext", item.longDesc);
 
   // get cache info
@@ -931,32 +847,8 @@ function makePreview(row)
       sizeText = gBundle.getString("mediaUnknownNotCached");
     setItemValue("imagesizetext", sizeText);
 
-    var mimeType;
-    var numFrames = 1;
-    if (item instanceof HTMLObjectElement ||
-        item instanceof HTMLEmbedElement ||
-        item instanceof HTMLLinkElement)
-      mimeType = item.type;
-
-    if (!mimeType && !isBG && item instanceof nsIImageLoadingContent) {
-      var imageRequest = item.getRequest(nsIImageLoadingContent.CURRENT_REQUEST);
-      if (imageRequest) {
-        mimeType = imageRequest.mimeType;
-        var image = imageRequest.image;
-        if (image)
-          numFrames = image.numFrames;
-      }
-    }
-
-    if (!mimeType)
-      mimeType = getContentTypeFromHeaders(cacheEntry);
-
-    // if we have a data url, get the MIME type from the url
-    if (!mimeType && url.startsWith("data:")) {
-      let dataMimeType = /^data:(image\/[^;,]+)/i.exec(url);
-      if (dataMimeType)
-        mimeType = dataMimeType[1].toLowerCase();
-    }
+    var mimeType = item.mimeType || this.getContentTypeFromHeaders(cacheEntry);
+    var numFrames = item.numFrames;
 
     var imageType;
     if (mimeType) {
@@ -991,10 +883,10 @@ function makePreview(row)
     var physWidth = 0, physHeight = 0;
     var width = 0, height = 0;
 
-    if ((item instanceof HTMLLinkElement || item instanceof HTMLInputElement ||
-         item instanceof HTMLImageElement ||
-         item instanceof SVGImageElement ||
-         (item instanceof HTMLObjectElement && mimeType && mimeType.startsWith("image/")) || isBG) && isProtocolAllowed) {
+    if ((item.HTMLLinkElement || item.HTMLInputElement ||
+         item.HTMLImageElement || item.SVGImageElement ||
+         (item.HTMLObjectElement && mimeType && mimeType.startsWith("image/")) ||
+         isBG) && isProtocolAllowed) {
       newImage.setAttribute("src", url);
       physWidth = newImage.width || 0;
       physHeight = newImage.height || 0;
@@ -1013,9 +905,9 @@ function makePreview(row)
         newImage.height = newImage.naturalHeight;
       }
 
-      if (item instanceof SVGImageElement) {
-        newImage.width = item.width.baseVal.value;
-        newImage.height = item.height.baseVal.value;
+      if (item.SVGImageElement) {
+        newImage.width = item.SVGImageElementWidth;
+        newImage.height = item.SVGImageElementHeight;
       }
 
       width = newImage.width;
@@ -1024,7 +916,7 @@ function makePreview(row)
       document.getElementById("theimagecontainer").collapsed = false
       document.getElementById("brokenimagecontainer").collapsed = true;
     }
-    else if (item instanceof HTMLVideoElement && isProtocolAllowed) {
+    else if (item.HTMLVideoElement && isProtocolAllowed) {
       newImage = document.createElementNS("http://www.w3.org/1999/xhtml", "video");
       newImage.id = "thepreviewimage";
       newImage.src = url;
@@ -1035,7 +927,7 @@ function makePreview(row)
       document.getElementById("theimagecontainer").collapsed = false;
       document.getElementById("brokenimagecontainer").collapsed = true;
     }
-    else if (item instanceof HTMLAudioElement && isProtocolAllowed) {
+    else if (item.HTMLAudioElement && isProtocolAllowed) {
       newImage = new Audio;
       newImage.id = "thepreviewimage";
       newImage.src = url;
@@ -1073,8 +965,6 @@ function makePreview(row)
 
     imageContainer.removeChild(oldImage);
     imageContainer.appendChild(newImage);
-
-    onImagePreviewShown.forEach(function(func) { func(); });
   });
 }
 
@@ -1130,69 +1020,9 @@ function getContentTypeFromHeaders(cacheEntryDescriptor)
   if (!cacheEntryDescriptor)
     return null;
 
-  return (/^Content-Type:\s*(.*?)\s*(?:\;|$)/mi
-          .exec(cacheEntryDescriptor.getMetaDataElement("response-head")))[1];
-}
-
-//******** Other Misc Stuff
-// Modified from the Links Panel v2.3, http://segment7.net/mozilla/links/links.html
-// parse a node to extract the contents of the node
-function getValueText(node)
-{
-  var valueText = "";
-
-  // form input elements don't generally contain information that is useful to our callers, so return nothing
-  if (node instanceof HTMLInputElement ||
-      node instanceof HTMLSelectElement ||
-      node instanceof HTMLTextAreaElement)
-    return valueText;
-
-  // otherwise recurse for each child
-  var length = node.childNodes.length;
-  for (var i = 0; i < length; i++) {
-    var childNode = node.childNodes[i];
-    var nodeType = childNode.nodeType;
-
-    // text nodes are where the goods are
-    if (nodeType == Node.TEXT_NODE)
-      valueText += " " + childNode.nodeValue;
-    // and elements can have more text inside them
-    else if (nodeType == Node.ELEMENT_NODE) {
-      // images are special, we want to capture the alt text as if the image weren't there
-      if (childNode instanceof HTMLImageElement)
-        valueText += " " + getAltText(childNode);
-      else
-        valueText += " " + getValueText(childNode);
-    }
-  }
-
-  return stripWS(valueText);
-}
-
-// Copied from the Links Panel v2.3, http://segment7.net/mozilla/links/links.html
-// traverse the tree in search of an img or area element and grab its alt tag
-function getAltText(node)
-{
-  var altText = "";
-
-  if (node.alt)
-    return node.alt;
-  var length = node.childNodes.length;
-  for (var i = 0; i < length; i++)
-    if ((altText = getAltText(node.childNodes[i]) != undefined))  // stupid js warning...
-      return altText;
-  return "";
-}
-
-// Copied from the Links Panel v2.3, http://segment7.net/mozilla/links/links.html
-// strip leading and trailing whitespace, and replace multiple consecutive whitespace characters with a single space
-function stripWS(text)
-{
-  var middleRE = /\s+/g;
-  var endRE = /(^\s+)|(\s+$)/g;
-
-  text = text.replace(middleRE, " ");
-  return text.replace(endRE, "");
+  let headers = cacheEntryDescriptor.getMetaDataElement("response-head");
+  let type = /^Content-Type:\s*(.*?)\s*(?:\;|$)/mi.exec(headers);
+  return type && type[1];
 }
 
 function setItemValue(id, value)
@@ -1281,8 +1111,13 @@ function selectImage()
 
   var tree = document.getElementById("imagetree");
   for (var i = 0; i < tree.view.rowCount; i++) {
-    if (gImageElement == gImageView.data[i][COL_IMAGE_NODE] &&
-        !gImageView.data[i][COL_IMAGE_BG]) {
+    // If the image row element is the image selected from the "View Image Info" context menu item.
+    let image = gImageView.data[i][COL_IMAGE_NODE];
+    if (!gImageView.data[i][COL_IMAGE_BG] &&
+        gImageElement.currentSrc == gImageView.data[i][COL_IMAGE_ADDRESS] &&
+        gImageElement.width == image.width &&
+        gImageElement.height == image.height &&
+        gImageElement.imageText == image.imageText) {
       tree.view.selection.select(i);
       tree.treeBoxObject.ensureRowIsVisible(i);
       tree.focus();

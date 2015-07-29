@@ -37,6 +37,8 @@ public class RestrictedProfiles {
         add("wyciwyg");
     }};
 
+    private static final String ABOUT_ADDONS = "about:addons";
+
     /**
      * This is a hack to allow non-GeckoApp activities to safely call into
      * RestrictedProfiles without reworking this class or GeckoProfile.
@@ -269,6 +271,13 @@ public class RestrictedProfiles {
             }
 
             return !GUEST_RESTRICTIONS.contains(restriction);
+        }
+
+        // Disallow browsing about:addons if 'disallow install extension' restriction is enforced
+        if (restriction == Restriction.DISALLOW_BROWSE_FILES
+            && url.toLowerCase().startsWith(ABOUT_ADDONS)
+            && !isAllowed(context, Restriction.DISALLOW_INSTALL_EXTENSION)) {
+            return false;
         }
 
         // NOTE: Restrictions hold the opposite intention, so we need to flip it.

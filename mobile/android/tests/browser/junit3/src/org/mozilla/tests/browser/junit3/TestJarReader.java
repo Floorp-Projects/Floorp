@@ -40,6 +40,12 @@ public class TestJarReader extends InstrumentationTestCase {
         stream = GeckoJarReader.getStream(context, "jar:" + url + "!/chrome/chrome/content/branding/favicon32.png");
         assertNull(stream);
 
+        // Test looking for a file that doesn't exist in the APK.
+        // Bug 1174922, prefixed string / length error.
+        url = "jar:file://" + appPath + "!/" + AppConstants.OMNIJAR_NAME + "BAD";
+        stream = GeckoJarReader.getStream(context, "jar:" + url + "!/chrome/chrome/content/branding/favicon32.png");
+        assertNull(stream);
+
         // Test looking for an jar with an invalid url.
         url = "jar:file://" + appPath + "!" + "!/" + AppConstants.OMNIJAR_NAME;
         stream = GeckoJarReader.getStream(context, "jar:" + url + "!/chrome/chrome/content/branding/nonexistent_file.png");
