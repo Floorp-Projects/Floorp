@@ -48,6 +48,7 @@ EXTRA_JS_MODULES += [
     'ProfileAge.jsm',
     'Promise-backend.js',
     'Promise.jsm',
+    'PromiseMessage.jsm',
     'PromiseUtils.jsm',
     'PropertyListUtils.jsm',
     'RemoteController.jsm',
