@@ -64,6 +64,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/unused.h"
 #include "mozilla/TimelineConsumers.h"
+#include "nsAnimationManager.h"
 
 #ifdef MOZ_NUWA_PROCESS
 #include "ipc/Nuwa.h"
@@ -1489,6 +1490,40 @@ nsRefreshDriver::DispatchPendingEvents()
   }
 }
 
+static bool
+DispatchAnimationEventsOnSubDocuments(nsIDocument* aDocument,
+                                      void* aRefreshDriver)
+{
+  nsIPresShell* shell = aDocument->GetShell();
+  if (!shell) {
+    return true;
+  }
+
+  nsPresContext* context = shell->GetPresContext();
+  if (!context || context->RefreshDriver() != aRefreshDriver) {
+    return true;
+  }
+
+  nsCOMPtr<nsIDocument> kungFuDeathGrip(aDocument);
+
+  context->AnimationManager()->DispatchEvents();
+  aDocument->EnumerateSubDocuments(DispatchAnimationEventsOnSubDocuments,
+                                   nullptr);
+
+  return true;
+}
+
+void
+nsRefreshDriver::DispatchAnimationEvents()
+{
+  if (!mPresContext) {
+    return;
+  }
+
+  nsIDocument* doc = mPresContext->Document();
+  DispatchAnimationEventsOnSubDocuments(doc, this);
+}
+
 void
 nsRefreshDriver::RunFrameRequestCallbacks(TimeStamp aNowTime)
 {
@@ -1664,6 +1699,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
     if (i == 0) {
       // This is the Flush_Style case.
 
+      DispatchAnimationEvents();
       DispatchPendingEvents();
       RunFrameRequestCallbacks(aNowTime);
 
