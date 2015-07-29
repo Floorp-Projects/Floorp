@@ -163,7 +163,7 @@ protected:
     MOZ_ASSERT(!mOwningElement.IsSet(), "Owning element should be cleared "
                                         "before a CSS animation is destroyed");
   }
-  virtual CommonAnimationManager* GetAnimationManager() const override;
+  virtual css::CommonAnimationManager* GetAnimationManager() const override;
 
   void QueueEvents();
 
@@ -240,11 +240,11 @@ protected:
 } /* namespace mozilla */
 
 class nsAnimationManager final
-  : public mozilla::CommonAnimationManager
+  : public mozilla::css::CommonAnimationManager
 {
 public:
   explicit nsAnimationManager(nsPresContext *aPresContext)
-    : mozilla::CommonAnimationManager(aPresContext)
+    : mozilla::css::CommonAnimationManager(aPresContext)
   {
   }
 
