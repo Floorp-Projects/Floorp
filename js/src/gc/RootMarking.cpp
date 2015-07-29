@@ -304,14 +304,13 @@ struct PersistentRootedMarker
 {
     typedef PersistentRooted<T> Element;
     typedef mozilla::LinkedList<Element> List;
-    using TraceFunc = void (*)(JSTracer* trc, T* ref, const char* name);
+    typedef void (*MarkFunc)(JSTracer* trc, T* ref, const char* name);
 
-    template <TraceFunction<T> TraceFn = TraceNullableRoot>
     static void
     markChain(JSTracer* trc, List& list, const char* name)
     {
         for (Element* r = list.getFirst(); r; r = r->getNext())
-            TraceFn(trc, r->address(), name);
+            TraceNullableRoot(trc, r->address(), name);
     }
 };
 
@@ -332,11 +331,6 @@ js::gc::MarkPersistentRootedChainsInLists(RootLists& roots, JSTracer* trc)
                                             "PersistentRooted<jsid>");
     PersistentRootedMarker<Value>::markChain(trc, roots.getPersistentRootedList<Value>(),
                                              "PersistentRooted<Value>");
-
-    PersistentRootedMarker<ConcreteTraceable>::markChain<MarkDynamicTraceable>(trc,
-        reinterpret_cast<mozilla::LinkedList<JS::PersistentRooted<ConcreteTraceable>>&>(
-            roots.heapRoots_[THING_ROOT_DYNAMIC_TRACEABLE]),
-        "PersistentRooted<Value>");
 }
 
 void
