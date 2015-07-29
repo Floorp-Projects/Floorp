@@ -285,6 +285,7 @@ public:
       mozilla::Forward<mozilla::TransitionEventInfo>(aEventInfo));
   }
 
+  void DispatchEvents()  { mEventDispatcher.DispatchEvents(mPresContext); }
   void ClearEventQueue() { mEventDispatcher.ClearEventQueue(); }
 
 protected:
