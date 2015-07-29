@@ -31,6 +31,8 @@ using mozilla::dom::AnimationPlayState;
 using mozilla::dom::KeyframeEffectReadOnly;
 using mozilla::dom::CSSAnimation;
 
+////////////////////////// CSSAnimation ////////////////////////////
+
 JSObject*
 CSSAnimation::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
@@ -300,6 +302,26 @@ CSSAnimation::PseudoTypeAsString(nsCSSPseudoElements::Type aPseudoType)
       return EmptyString();
   }
 }
+
+////////////////////////// nsAnimationManager ////////////////////////////
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsAnimationManager)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsAnimationManager)
+  tmp->mPendingEvents.Clear();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsAnimationManager)
+  for (AnimationEventInfo& info : tmp->mPendingEvents) {
+    ImplCycleCollectionTraverse(cb, info.mElement, "mPendingEvents.mElement");
+  }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsAnimationManager)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsAnimationManager)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsAnimationManager)
+  NS_INTERFACE_MAP_ENTRY(nsIStyleRuleProcessor)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStyleRuleProcessor)
+NS_INTERFACE_MAP_END
 
 void
 nsAnimationManager::MaybeUpdateCascadeResults(AnimationCollection* aCollection)

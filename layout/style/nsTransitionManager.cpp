@@ -74,9 +74,7 @@ ElementPropertyTransition::CurrentValuePortion() const
          .GetValue(computedTiming.mProgress);
 }
 
-/*****************************************************************************
- * CSSTransition                                                             *
- *****************************************************************************/
+////////////////////////// CSSTransition ////////////////////////////
 
 JSObject*
 CSSTransition::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
@@ -176,9 +174,9 @@ CSSTransition::HasLowerCompositeOrderThan(const Animation& aOther) const
          nsCSSProps::GetStringValue(otherTransition->TransitionProperty());
 }
 
-/*****************************************************************************
- * nsTransitionManager                                                       *
- *****************************************************************************/
+////////////////////////// nsTransitionManager ////////////////////////////
+
+NS_IMPL_ISUPPORTS(nsTransitionManager, nsIStyleRuleProcessor)
 
 void
 nsTransitionManager::StyleContextChanged(dom::Element *aElement,
