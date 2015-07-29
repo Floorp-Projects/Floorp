@@ -248,6 +248,12 @@ function fakeNow(...args) {
   return new Date(date);
 }
 
+function fakeMonotonicNow(ms) {
+  const m = Cu.import("resource://gre/modules/TelemetrySession.jsm");
+  m.Policy.monotonicNow = () => ms;
+  return ms;
+}
+
 // Fake the timeout functions for TelemetryController sending.
 function fakePingSendTimer(set, clear) {
   let module = Cu.import("resource://gre/modules/TelemetrySend.jsm");
