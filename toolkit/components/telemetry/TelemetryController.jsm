@@ -593,9 +593,20 @@ let Impl = {
    *                   false otherwise.
    */
   enableTelemetryRecording: function enableTelemetryRecording() {
-    const enabled = Preferences.get(PREF_ENABLED, false);
+    // The thumbnail service also runs in a content process, even with e10s off.
+    // We need to check if e10s is on so we don't submit child payloads for it.
+    // We still need xpcshell child tests to work, so we skip this if test mode is enabled.
+    if (Utils.isContentProcess && !this._testMode && !Services.appinfo.browserTabsRemoteAutostart) {
+      this._log.config("enableTelemetryRecording - not enabling Telemetry for non-e10s child process");
+      Telemetry.canRecordBase = false;
+      Telemetry.canRecordExtended = false;
+      return false;
+    }
 
-    // Enable base Telemetry recording, if needed.
+    // Configure base Telemetry recording.
+    // Unified Telemetry makes it opt-out unless the unifedOptin pref is set.
+    // If extended Telemetry is enabled, base recording is always on as well.
+    const enabled = Preferences.get(PREF_ENABLED, false);
     Telemetry.canRecordBase = enabled || (IS_UNIFIED_TELEMETRY && !IS_UNIFIED_OPTIN);
 
 #ifdef MOZILLA_OFFICIAL

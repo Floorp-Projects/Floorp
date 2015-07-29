@@ -419,6 +419,10 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
     store.suggestTyped = prefs.get(...PREF_SUGGEST_HISTORY_ONLYTYPED);
     store.suggestSearches = prefs.get(...PREF_SUGGEST_SEARCHES);
     store.maxCharsForSearchSuggestions = prefs.get(...PREF_MAX_CHARS_FOR_SUGGEST);
+    store.keywordEnabled = true;
+    try {
+      store.keywordEnabled = Services.prefs.getBoolPref("keyword.enabled");
+    } catch (ex) {}
 
     // If history is not set, onlyTyped value should be ignored.
     if (!store.suggestHistory) {
@@ -473,7 +477,9 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
       loadPrefs(subject, topic, data);
       this._ignoreNotifications = false;
     },
-    QueryInterface: XPCOMUtils.generateQI([ Ci.nsIObserver ])
+    QueryInterface: XPCOMUtils.generateQI([
+      Ci.nsIObserver,
+      Ci.nsISupportsWeakReference ])
   };
 
   // Synchronize suggest.* prefs with autocomplete.enabled at initialization
@@ -481,6 +487,7 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
 
   loadPrefs();
   prefs.observe("", store);
+  Services.prefs.addObserver("keyword.enabled", store, true);
 
   return Object.seal(store);
 });
@@ -1174,7 +1181,9 @@ Search.prototype = {
 
     // If the result is something that looks like a single-worded hostname
     // we need to check the domain whitelist to treat it as such.
+    // We also want to return a "visit" if keyword.enabled is false.
     if (uri.asciiHost &&
+        Prefs.keywordEnabled &&
         REGEXP_SINGLEWORD_HOST.test(uri.asciiHost) &&
         !Services.uriFixup.isDomainWhitelisted(uri.asciiHost, -1)) {
       return false;

@@ -61,4 +61,16 @@ add_task(function*() {
     searchParam: "enable-actions",
     matches: [ makeVisitMatch("[2001:db8::1]", "http://[2001:db8::1]/") ]
   });
+
+  // Setting keyword.enabled to false should always try to visit.
+  Services.prefs.setBoolPref("keyword.enabled", false);
+  do_register_cleanup(() => {
+    Services.prefs.clearUserPref("keyword.enabled");
+  });
+  do_print("visit url, keyword.enabled = false");
+  yield check_autocomplete({
+    search: "bacon",
+    searchParam: "enable-actions",
+    matches: [ makeVisitMatch("bacon", "http://bacon/") ]
+  });
 });

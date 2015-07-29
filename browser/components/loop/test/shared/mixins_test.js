@@ -431,7 +431,8 @@ describe("loop.shared.mixins", function() {
         doNotDisturb: true,
         getAudioBlob: sinon.spy(function(name, callback) {
           callback(null, new Blob([new ArrayBuffer(10)], {type: "audio/ogg"}));
-        })
+        }),
+        getLoopPref: sandbox.stub()
       };
 
       fakeAudio = {

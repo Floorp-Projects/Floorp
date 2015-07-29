@@ -1,0 +1,38 @@
+---
+$inherits:
+  from: 'tasks/test.yml'
+task:
+  metadata:
+    name: '[TC] - Gaia Linter'
+    description: Linter Test
+
+  payload:
+    command:
+      - entrypoint
+      - ./bin/pull_gaia.sh &&
+      - >
+        python ./mozharness/scripts/gaia_linter.py
+        --application firefox
+        --no-read-buildbot-config
+        --config-file ./mozharness/configs/b2g/gaia_integration_config.py
+        --config-file ./mozharness_configs/gaia_integration_override.py
+        --download-symbols ondemand
+        --no-pull
+        --installer-url {{build_url}}
+        --test-packages-url {{test_packages_url}}
+        --gaia-repo https://hg.mozilla.org/integration/gaia-central
+        --gaia-dir /home/worker
+    artifacts:
+      'public/build':
+        type: directory
+        path: '/home/worker/artifacts/'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+
+  extra:
+    treeherderEnv:
+      - production
+      - staging
+    treeherder:
+      groupSymbol: "?"
+      symbol: 'Li'
+      productName: 'b2g'

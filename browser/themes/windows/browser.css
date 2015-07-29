@@ -1221,6 +1221,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   #urlbar,
   .searchbar-textbox {
     @navbarTextboxCustomBorder@
+    border-radius: 1px;
   }
 
   @media (-moz-os-version: windows-vista),

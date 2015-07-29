@@ -18,7 +18,7 @@ loader.lazyImporter(this, "LayoutHelpers", "resource://gre/modules/devtools/Layo
 loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/gDevTools.jsm");
 loader.lazyImporter(this, "devtools", "resource://gre/modules/devtools/Loader.jsm");
 loader.lazyImporter(this, "VariablesView", "resource:///modules/devtools/VariablesView.jsm");
-loader.lazyImporter(this, "DevToolsUtils", "resource://gre/modules/devtools/DevToolsUtils.jsm");
+const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 
 // Match the function name from the result of toString() or toSource().
 //

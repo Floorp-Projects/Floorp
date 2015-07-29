@@ -6696,6 +6696,10 @@ var gIdentityHandler = {
     delete this._identityIconCountryLabel;
     return this._identityIconCountryLabel = document.getElementById("identity-icon-country-label");
   },
+  get _identityIcons () {
+    delete this._identityIcons;
+    return this._identityIcons = document.getElementById("identity-icons");
+  },
   get _identityIcon () {
     delete this._identityIcon;
     return this._identityIcon = document.getElementById("page-proxy-favicon");
@@ -6715,12 +6719,14 @@ var gIdentityHandler = {
    */
   _cacheElements : function() {
     delete this._identityBox;
+    delete this._identityIcons;
     delete this._identityIconLabel;
     delete this._identityIconCountryLabel;
     delete this._identityIcon;
     delete this._permissionsContainer;
     delete this._permissionList;
     this._identityBox = document.getElementById("identity-box");
+    this._identityIcons = document.getElementById("identity-icons");
     this._identityIconLabel = document.getElementById("identity-icon-label");
     this._identityIconCountryLabel = document.getElementById("identity-icon-country-label");
     this._identityIcon = document.getElementById("page-proxy-favicon");
@@ -7130,7 +7136,7 @@ var gIdentityHandler = {
     this._identityBox.setAttribute("open", "true");
 
     // Now open the popup, anchored off the primary chrome element
-    this._identityPopup.openPopup(this._identityIcon, "bottomcenter topleft");
+    this._identityPopup.openPopup(this._identityIcons, "bottomcenter topleft");
   },
 
   onPopupShown(event) {
