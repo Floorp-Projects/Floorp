@@ -28,6 +28,7 @@
 
 #include "nsDebug.h" // for |NS_ASSERTION|
 #include "nsISupportsUtils.h" // for |nsresult|, |NS_ADDREF|, |NS_GET_TEMPLATE_IID| et al
+#include "nsRefPtr.h"
 
 #include "nsCycleCollectionNoteChild.h"
 
@@ -1376,5 +1377,28 @@ CallQueryInterface(nsCOMPtr<SourceType>& aSourcePtr, DestinationType** aDestPtr)
 {
   return CallQueryInterface(aSourcePtr.get(), aDestPtr);
 }
+
+template <class T>
+nsRefPtr<T>::nsRefPtr(const nsCOMPtr_helper& aHelper)
+{
+  void* newRawPtr;
+  if (NS_FAILED(aHelper(NS_GET_TEMPLATE_IID(T), &newRawPtr))) {
+    newRawPtr = 0;
+  }
+  mRawPtr = static_cast<T*>(newRawPtr);
+}
+
+template <class T>
+nsRefPtr<T>&
+nsRefPtr<T>::operator=(const nsCOMPtr_helper& aHelper)
+{
+  void* newRawPtr;
+  if (NS_FAILED(aHelper(NS_GET_TEMPLATE_IID(T), &newRawPtr))) {
+    newRawPtr = 0;
+  }
+  assign_assuming_AddRef(static_cast<T*>(newRawPtr));
+  return *this;
+}
+
 
 #endif // !defined(nsCOMPtr_h___)

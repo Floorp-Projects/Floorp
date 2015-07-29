@@ -8,9 +8,8 @@
 #define nsRefPtr_h
 
 #include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "nsDebug.h"
-#include "nsISupportsUtils.h"
 
 /*****************************************************************************/
 
@@ -216,7 +215,7 @@ public:
   // parameters where aRhs bay be a T** or an I** where I is a base class
   // of T.
   {
-    NS_ASSERTION(aRhs, "Null pointer passed to forget!");
+    MOZ_ASSERT(aRhs, "Null pointer passed to forget!");
     *aRhs = mRawPtr;
     mRawPtr = 0;
   }
@@ -247,8 +246,8 @@ public:
   T*
   operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN
   {
-    NS_PRECONDITION(mRawPtr != 0,
-                    "You can't dereference a NULL nsRefPtr with operator->().");
+    MOZ_ASSERT(mRawPtr != 0,
+               "You can't dereference a NULL nsRefPtr with operator->().");
     return get();
   }
 
@@ -260,8 +259,8 @@ public:
   U&
   operator->*(U V::* aMember)
   {
-    NS_PRECONDITION(mRawPtr != 0,
-                    "You can't dereference a NULL nsRefPtr with operator->*().");
+    MOZ_ASSERT(mRawPtr != 0,
+               "You can't dereference a NULL nsRefPtr with operator->*().");
     return get()->*aMember;
   }
 #endif
@@ -286,8 +285,8 @@ public:
   T&
   operator*() const
   {
-    NS_PRECONDITION(mRawPtr != 0,
-                    "You can't dereference a NULL nsRefPtr with operator*().");
+    MOZ_ASSERT(mRawPtr != 0,
+               "You can't dereference a NULL nsRefPtr with operator*().");
     return *get();
   }
 
@@ -298,28 +297,6 @@ public:
     return reinterpret_cast<T**>(&mRawPtr);
   }
 };
-
-template <class T>
-nsRefPtr<T>::nsRefPtr(const nsCOMPtr_helper& aHelper)
-{
-  void* newRawPtr;
-  if (NS_FAILED(aHelper(NS_GET_TEMPLATE_IID(T), &newRawPtr))) {
-    newRawPtr = 0;
-  }
-  mRawPtr = static_cast<T*>(newRawPtr);
-}
-
-template <class T>
-nsRefPtr<T>&
-nsRefPtr<T>::operator=(const nsCOMPtr_helper& aHelper)
-{
-  void* newRawPtr;
-  if (NS_FAILED(aHelper(NS_GET_TEMPLATE_IID(T), &newRawPtr))) {
-    newRawPtr = 0;
-  }
-  assign_assuming_AddRef(static_cast<T*>(newRawPtr));
-  return *this;
-}
 
 class nsCycleCollectionTraversalCallback;
 template <typename T>
@@ -530,14 +507,6 @@ operator!=(::detail::nsRefPtrZero* aLhs, const nsRefPtr<T>& aRhs)
 // specifically to allow |0 != smartPtr|
 {
   return reinterpret_cast<const void*>(aLhs) != static_cast<const void*>(aRhs.get());
-}
-
-
-template <class SourceType, class DestinationType>
-inline nsresult
-CallQueryInterface(nsRefPtr<SourceType>& aSourcePtr, DestinationType** aDestPtr)
-{
-  return CallQueryInterface(aSourcePtr.get(), aDestPtr);
 }
 
 /*****************************************************************************/
