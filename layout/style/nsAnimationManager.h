@@ -32,13 +32,13 @@ struct AnimationEventInfo {
                      const nsSubstring& aAnimationName,
                      uint32_t aMessage,
                      const mozilla::StickyTimeDuration& aElapsedTime,
-                     const nsAString& aPseudoElement)
+                     nsCSSPseudoElements::Type aPseudoType)
     : mElement(aElement), mEvent(true, aMessage)
   {
     // XXX Looks like nobody initialize WidgetEvent::time
     mEvent.animationName = aAnimationName;
     mEvent.elapsedTime = aElapsedTime.ToSeconds();
-    mEvent.pseudoElement = aPseudoElement;
+    mEvent.pseudoElement = AnimationCollection::PseudoTypeAsString(aPseudoType);
   }
 
   // InternalAnimationEvent doesn't support copy-construction, so we need
@@ -164,8 +164,6 @@ protected:
   virtual CommonAnimationManager* GetAnimationManager() const override;
 
   void QueueEvents();
-
-  static nsString PseudoTypeAsString(nsCSSPseudoElements::Type aPseudoType);
 
   nsString mAnimationName;
 

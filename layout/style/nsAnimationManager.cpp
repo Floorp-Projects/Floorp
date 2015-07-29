@@ -252,7 +252,7 @@ CSSAnimation::QueueEvents()
                computedTiming.mActiveDuration);
     manager->QueueEvent(
       AnimationEventInfo(owningElement, mAnimationName, NS_ANIMATION_START,
-                         elapsedTime, PseudoTypeAsString(owningPseudoType)));
+                         elapsedTime, owningPseudoType));
     // Then have the shared code below append an 'animationend':
     message = NS_ANIMATION_END;
   } else {
@@ -274,7 +274,7 @@ CSSAnimation::QueueEvents()
 
   manager->QueueEvent(
     AnimationEventInfo(owningElement, mAnimationName, message, elapsedTime,
-                       PseudoTypeAsString(owningPseudoType)));
+                       owningPseudoType));
 }
 
 CommonAnimationManager*
@@ -286,19 +286,6 @@ CSSAnimation::GetAnimationManager() const
   }
 
   return context->AnimationManager();
-}
-
-/* static */ nsString
-CSSAnimation::PseudoTypeAsString(nsCSSPseudoElements::Type aPseudoType)
-{
-  switch (aPseudoType) {
-    case nsCSSPseudoElements::ePseudo_before:
-      return NS_LITERAL_STRING("::before");
-    case nsCSSPseudoElements::ePseudo_after:
-      return NS_LITERAL_STRING("::after");
-    default:
-      return EmptyString();
-  }
 }
 
 ////////////////////////// nsAnimationManager ////////////////////////////
