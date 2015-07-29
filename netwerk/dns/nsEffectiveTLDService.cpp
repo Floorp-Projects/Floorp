@@ -122,7 +122,7 @@ size_t
 nsEffectiveTLDService::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 {
   size_t n = aMallocSizeOf(this);
-  n += mHash.SizeOfExcludingThis(nullptr, aMallocSizeOf);
+  n += mHash.ShallowSizeOfExcludingThis(aMallocSizeOf);
 
   // Measurement of the following members may be added later if DMD finds it is
   // worthwhile:
