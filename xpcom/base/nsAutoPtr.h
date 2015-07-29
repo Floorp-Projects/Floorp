@@ -8,7 +8,7 @@
 #define nsAutoPtr_h
 
 #include "nsCOMPtr.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 #include "nsCycleCollectionNoteChild.h"
 #include "mozilla/MemoryReporting.h"

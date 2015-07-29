@@ -7,7 +7,7 @@
 #define AudioSink_h__
 
 #include "MediaInfo.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsISupportsImpl.h"
 
 #include "mozilla/dom/AudioChannelBinding.h"

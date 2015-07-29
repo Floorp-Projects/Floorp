@@ -8,7 +8,7 @@
 #define InterceptedChannel_h
 
 #include "nsINetworkInterceptController.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/Maybe.h"
 
 class nsICacheEntry;

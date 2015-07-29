@@ -9,7 +9,7 @@
 
 #include "GeckoProfiler.h"
 #include "nsTArray.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 class nsDocShell;
 class TimelineMarker;

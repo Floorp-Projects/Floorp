@@ -28,7 +28,7 @@
 
 #include "nsDebug.h" // for |NS_ASSERTION|
 #include "nsISupportsUtils.h" // for |nsresult|, |NS_ADDREF|, |NS_GET_TEMPLATE_IID| et al
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 #include "nsCycleCollectionNoteChild.h"
 
