@@ -11,7 +11,6 @@ if [ -d "$TOOLTOOL_DIR/gtk3" ]; then
   export PATH="$TOOLTOOL_DIR/gtk3/usr/local/bin:${PATH}"
   # Ensure cairo, gdk-pixbuf, etc. are not taken from the system installed packages.
   LDFLAGS="-L$TOOLTOOL_DIR/gtk3/usr/local/lib ${LDFLAGS}"
-  mk_add_options "export LD_LIBRARY_PATH=$TOOLTOOL_DIR/gtk3/usr/local/lib"
   ac_add_options --enable-default-toolkit=cairo-gtk3
 
   # Set things up to use Gtk+3 from the tooltool package
@@ -22,37 +21,8 @@ if [ -d "$TOOLTOOL_DIR/gtk3" ]; then
   mk_add_options "export GDK_PIXBUF_MODULEDIR=$TOOLTOOL_DIR/gtk3/usr/local/lib/gdk-pixbuf-2.0/2.10.0/loaders"
   mk_add_options "export LD_LIBRARY_PATH=$TOOLTOOL_DIR/gtk3/usr/local/lib"
 
-  # pango expects absolute paths in pango.modules, and TOOLTOOL_DIR may vary...
-  LD_LIBRARY_PATH=$TOOLTOOL_DIR/gtk3/usr/local/lib \
-  PANGO_SYSCONFDIR=$TOOLTOOL_DIR/gtk3/usr/local/etc \
-  PANGO_LIBDIR=$TOOLTOOL_DIR/gtk3/usr/local/lib \
-  $TOOLTOOL_DIR/gtk3/usr/local/bin/pango-querymodules > $TOOLTOOL_DIR/gtk3/usr/local/etc/pango/pango.modules
-
-  # same with gdb-pixbuf and loaders.cache
-  LD_LIBRARY_PATH=$TOOLTOOL_DIR/gtk3/usr/local/lib \
-  GDK_PIXBUF_MODULE_FILE=$TOOLTOOL_DIR/gtk3/usr/local/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache \
-  GDK_PIXBUF_MODULEDIR=$TOOLTOOL_DIR/gtk3/usr/local/lib/gdk-pixbuf-2.0/2.10.0/loaders \
-  $TOOLTOOL_DIR/gtk3/usr/local/bin/gdk-pixbuf-query-loaders > $TOOLTOOL_DIR/gtk3/usr/local/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache
-
-  # The fontconfig version in the tooltool package has known uses of
-  # uninitialized memory when creating its cache, and while most users
-  # will already have an existing cache, running Firefox on automation
-  # will create it. Combined with valgrind, this generates irrelevant
-  # errors.
-  # So create the fontconfig cache beforehand.
-  $TOOLTOOL_DIR/gtk3/usr/local/bin/fc-cache
-
-  # mock build environment doesn't have fonts in /usr/share/fonts, but
-  # has some in /usr/share/X11/fonts. Add this directory to the
-  # fontconfig configuration without changing the gtk3 tooltool package.
-  cat << EOF > $TOOLTOOL_DIR/gtk3/usr/local/etc/fonts/local.conf
-<?xml version="1.0"?>
-<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
-<fontconfig>
-  <dir>/usr/share/X11/fonts</dir>
-</fontconfig>
-EOF
-
+  # Until a tooltool with bug 1188571 landed is available everywhere
+  $TOOLTOOL_DIR/gtk3/setup.sh
 else
   ac_add_options --enable-default-toolkit=cairo-gtk2
 fi
