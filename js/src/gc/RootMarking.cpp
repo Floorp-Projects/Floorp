@@ -333,15 +333,10 @@ js::gc::MarkPersistentRootedChainsInLists(RootLists& roots, JSTracer* trc)
     PersistentRootedMarker<Value>::markChain(trc, roots.getPersistentRootedList<Value>(),
                                              "PersistentRooted<Value>");
 
-    PersistentRootedMarker<JS::StaticTraceable>::markChain<
-        js::DispatchWrapper<JS::StaticTraceable>::TraceWrapped>(trc,
-            reinterpret_cast<mozilla::LinkedList<JS::PersistentRooted<JS::StaticTraceable>>&>(
-                roots.heapRoots_[THING_ROOT_STATIC_TRACEABLE]),
-            "PersistentRooted<StaticTraceable>");
     PersistentRootedMarker<ConcreteTraceable>::markChain<MarkDynamicTraceable>(trc,
         reinterpret_cast<mozilla::LinkedList<JS::PersistentRooted<ConcreteTraceable>>&>(
             roots.heapRoots_[THING_ROOT_DYNAMIC_TRACEABLE]),
-        "PersistentRooted<DynamicTraceable>");
+        "PersistentRooted<Value>");
 }
 
 void
