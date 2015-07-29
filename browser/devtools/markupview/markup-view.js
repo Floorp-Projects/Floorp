@@ -1466,11 +1466,6 @@ MarkupView.prototype = {
 
     this._destroyer = promise.resolve();
 
-    // Note that if the toolbox is closed, this will work fine, but will fail
-    // in case the browser is closed and will trigger a noSuchActor message.
-    // We ignore the promise that |_hideBoxModel| returns, since we should still
-    // proceed with the rest of destruction if it fails.
-    this._hideBoxModel();
     this._clearBriefBoxModelTimer();
 
     this._elt.removeEventListener("click", this._onMouseClick, false);

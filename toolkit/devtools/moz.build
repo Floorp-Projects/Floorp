@@ -42,7 +42,6 @@ EXTRA_JS_MODULES.devtools += [
 
 EXTRA_JS_MODULES.devtools += [
     'Console.jsm',
-    'DevToolsUtils.jsm',
     'LayoutHelpers.jsm',
     'Loader.jsm',
     'Require.jsm',
