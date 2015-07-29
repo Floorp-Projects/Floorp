@@ -162,7 +162,7 @@ protected:
                                         "before a CSS transition is destroyed");
   }
 
-  virtual CommonAnimationManager* GetAnimationManager() const override;
+  virtual css::CommonAnimationManager* GetAnimationManager() const override;
 
   // The (pseudo-)element whose computed transition-property refers to this
   // transition (if any).
@@ -173,11 +173,11 @@ protected:
 } // namespace mozilla
 
 class nsTransitionManager final
-  : public mozilla::CommonAnimationManager
+  : public mozilla::css::CommonAnimationManager
 {
 public:
   explicit nsTransitionManager(nsPresContext *aPresContext)
-    : mozilla::CommonAnimationManager(aPresContext)
+    : mozilla::css::CommonAnimationManager(aPresContext)
     , mInAnimationOnlyStyleUpdate(false)
   {
   }
