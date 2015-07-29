@@ -9,10 +9,12 @@
 #define nsTransitionManager_h_
 
 #include "mozilla/Attributes.h"
+#include "mozilla/ContentEvents.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/KeyframeEffect.h"
 #include "AnimationCommon.h"
+#include "nsCSSProps.h"
 #include "nsCSSPseudoElements.h"
 
 class nsIGlobalObject;
@@ -170,6 +172,34 @@ protected:
 };
 
 } // namespace dom
+
+struct TransitionEventInfo {
+  nsCOMPtr<nsIContent> mElement;
+  InternalTransitionEvent mEvent;
+
+  TransitionEventInfo(nsIContent *aElement, nsCSSProperty aProperty,
+                      TimeDuration aDuration,
+                      nsCSSPseudoElements::Type aPseudoType)
+    : mElement(aElement)
+    , mEvent(true, NS_TRANSITION_END)
+  {
+    // XXX Looks like nobody initialize WidgetEvent::time
+    mEvent.propertyName =
+      NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(aProperty));
+    mEvent.elapsedTime = aDuration.ToSeconds();
+    mEvent.pseudoElement = AnimationCollection::PseudoTypeAsString(aPseudoType);
+  }
+
+  // InternalTransitionEvent doesn't support copy-construction, so we need
+  // to ourselves in order to work with nsTArray
+  TransitionEventInfo(const TransitionEventInfo &aOther)
+    : mElement(aOther.mElement)
+    , mEvent(true, NS_TRANSITION_END)
+  {
+    mEvent.AssignTransitionEventData(aOther.mEvent, false);
+  }
+};
+
 } // namespace mozilla
 
 class nsTransitionManager final
