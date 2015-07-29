@@ -10,7 +10,7 @@
 requestLongerTimeout(10); // e10s tests take time.
 const {
   ManifestObtainer
-} = Components.utils.import('resource://gre/modules/WebManifest.jsm', {});
+} = Cu.import('resource://gre/modules/ManifestObtainer.jsm', {});
 const path = '/tests/dom/security/test/csp/';
 const testFile = `file=${path}file_web_manifest.html`;
 const remoteFile = `file=${path}file_web_manifest_remote.html`;
@@ -220,12 +220,11 @@ add_task(function* () {
 
   function* testObtainingManifest(aBrowser, aTest) {
     const observer = (/blocks/.test(aTest.expected)) ? new NetworkObserver(aTest) : null;
-    const obtainer = new ManifestObtainer();
     let manifest;
     // Expect an exception (from promise rejection) if there a content policy
     // that is violated.
     try {
-      manifest = yield obtainer.obtainManifest(aBrowser);
+      manifest = yield ManifestObtainer.browserObtainManifest(aBrowser);
     } catch (e) {
       const msg = `Expected promise rejection obtaining.`;
       ok(/blocked the loading of a resource/.test(e.message), msg);
