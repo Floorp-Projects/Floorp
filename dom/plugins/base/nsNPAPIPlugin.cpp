@@ -106,6 +106,8 @@ using mozilla::plugins::PluginModuleContentParent;
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GeckoPlugins" , ## args)
 #endif
 
+#include "nsIAudioChannelAgent.h"
+
 using namespace mozilla;
 using namespace mozilla::plugins::parent;
 
@@ -2400,6 +2402,46 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
     case NPPVpluginUsesDOMForCursorBool: {
       bool useDOMForCursor = (result != nullptr);
       return inst->SetUsesDOMForCursor(useDOMForCursor);
+    }
+
+    case NPPVpluginIsPlayingAudio: {
+      bool isMuted = !result;
+
+      nsNPAPIPluginInstance* inst = (nsNPAPIPluginInstance*) npp->ndata;
+      MOZ_ASSERT(inst);
+
+      if (isMuted && !inst->HasAudioChannelAgent()) {
+        return NPERR_NO_ERROR;
+      }
+
+      nsCOMPtr<nsIAudioChannelAgent> agent;
+      nsresult rv = inst->GetOrCreateAudioChannelAgent(getter_AddRefs(agent));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return NPERR_NO_ERROR;
+      }
+
+      MOZ_ASSERT(agent);
+
+      if (isMuted) {
+        rv = agent->NotifyStoppedPlaying();
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return NPERR_NO_ERROR;
+        }
+      } else {
+        float volume = 0.0;
+        bool muted = true;
+        rv = agent->NotifyStartedPlaying(&volume, &muted);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return NPERR_NO_ERROR;
+        }
+
+        rv = inst->WindowVolumeChanged(volume, muted);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return NPERR_NO_ERROR;
+        }
+      }
+
+      return NPERR_NO_ERROR;
     }
 
 #ifndef MOZ_WIDGET_ANDROID

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252">
+  <title>MSE: |waiting| event when source data is missing</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test"><script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+runWithMSE(function(ms, el) {
+  el.controls = true;
+  once(ms, 'sourceopen').then(function() {
+    ok(true, "Receive a sourceopen event");
+    var audiosb = ms.addSourceBuffer("audio/mp4");
+    var videosb = ms.addSourceBuffer("video/mp4");
+    fetchAndLoad(audiosb, 'bipbop/bipbop_audio', ['init'], '.mp4')
+    .then(fetchAndLoad.bind(null, videosb, 'bipbop/bipbop_video', ['init'], '.mp4'))
+    .then(fetchAndLoad.bind(null, audiosb, 'bipbop/bipbop_audio', range(1, 5), '.m4s'))
+    .then(fetchAndLoad.bind(null, videosb, 'bipbop/bipbop_video', range(1, 6), '.m4s'))
+    .then(function() {
+      // HTMLMediaElement fires 'waiting' if somebody invokes |play()| before the MDSM
+      // has notified it of available data. Make sure that we get 'playing' before
+      // we starting waiting for 'waiting'.
+      info("Invoking play()");
+      var p = once(el, 'playing');
+      el.play();
+      return p;
+    }).then(function() {
+      ok(true, "Video playing. It should play for a bit, then fire 'waiting'");
+      var p = once(el, 'waiting');
+      el.play();
+      return p;
+    }).then(function() {
+      // currentTime is based on the current video frame, so if the audio ends just before
+      // the next video frame, currentTime can be up to 1 frame's worth earlier than
+      // min(audioEnd, videoEnd).
+      isfuzzy(el.currentTime, Math.min(audiosb.buffered.end(0), videosb.buffered.end(0)) - 1/60,
+              1/30, "Got a waiting event at " + el.currentTime);
+    }).then(function() {
+      var p = once(el, 'ended');
+      ms.endOfStream();
+      return p;
+    }).then(function() {
+      is(el.duration, 4.005, "Video has correct duration: " + el.duration);
+      is(el.currentTime, el.duration, "Video has correct currentTime.");
+      SimpleTest.finish();
+    });
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>

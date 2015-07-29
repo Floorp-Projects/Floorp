@@ -480,9 +480,13 @@
 @BINPATH@/components/nsUrlClassifierHashCompleter.js
 @BINPATH@/components/nsUrlClassifierListManager.js
 @BINPATH@/components/nsUrlClassifierLib.js
-@BINPATH@/components/PrivateBrowsingTrackingProtectionWhitelist.js
 @BINPATH@/components/url-classifier.xpt
 #endif
+
+; Private Browsing
+@BINPATH@/components/privatebrowsing.xpt
+@BINPATH@/components/PrivateBrowsing.manifest
+@BINPATH@/components/PrivateBrowsingTrackingProtectionWhitelist.js
 
 ; GNOME hooks
 #ifdef MOZ_ENABLE_GNOME_COMPONENT

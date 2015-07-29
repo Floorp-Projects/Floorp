@@ -52,13 +52,13 @@ this.PrivateBrowsingUtils = {
   },
 
   addToTrackingAllowlist(aURI) {
-    let pbmtpWhitelist = Cc["@mozilla.org/url-classifier/pbm-tp-whitelist;1"]
+    let pbmtpWhitelist = Cc["@mozilla.org/pbm-tp-whitelist;1"]
                            .getService(Ci.nsIPrivateBrowsingTrackingProtectionWhitelist);
     pbmtpWhitelist.addToAllowList(aURI);
   },
 
   removeFromTrackingAllowlist(aURI) {
-    let pbmtpWhitelist = Cc["@mozilla.org/url-classifier/pbm-tp-whitelist;1"]
+    let pbmtpWhitelist = Cc["@mozilla.org/pbm-tp-whitelist;1"]
                            .getService(Ci.nsIPrivateBrowsingTrackingProtectionWhitelist);
     pbmtpWhitelist.removeFromAllowList(aURI);
   },

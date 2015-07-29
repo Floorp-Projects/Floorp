@@ -718,7 +718,7 @@ public:
                         const nsAString& aPopupWindowFeatures) = 0;
 
   // Inner windows only.
-  void AddAudioContext(mozilla::dom::AudioContext* aAudioContext);
+  bool AddAudioContext(mozilla::dom::AudioContext* aAudioContext);
   void RemoveAudioContext(mozilla::dom::AudioContext* aAudioContext);
   void MuteAudioContexts();
   void UnmuteAudioContexts();

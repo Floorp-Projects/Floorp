@@ -134,7 +134,7 @@
             tooltiptext="&visibilityToggle.tooltip;"
             accesskey="&saveButton.accesskey;"></xul:label>
           <hgroup class="stylesheet-info">
-            <h1><a class="stylesheet-name" tabindex="0"><xul:label crop="start"/></a></h1>
+            <h1><a class="stylesheet-name" tabindex="0"><xul:label crop="center"/></a></h1>
             <div class="stylesheet-more">
               <h3 class="stylesheet-title"></h3>
               <h3 class="stylesheet-linked-file"></h3>

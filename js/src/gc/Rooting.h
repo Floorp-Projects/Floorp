@@ -20,6 +20,7 @@ class ArrayObject;
 class GlobalObject;
 class PlainObject;
 class ScriptSourceObject;
+class SavedFrame;
 class Shape;
 class ObjectGroup;
 
@@ -33,12 +34,14 @@ typedef JS::Handle<JSLinearString*>    HandleLinearString;
 typedef JS::Handle<PropertyName*>      HandlePropertyName;
 typedef JS::Handle<ArrayObject*>       HandleArrayObject;
 typedef JS::Handle<PlainObject*>       HandlePlainObject;
+typedef JS::Handle<SavedFrame*>        HandleSavedFrame;
 typedef JS::Handle<ScriptSourceObject*> HandleScriptSource;
 
 typedef JS::MutableHandle<Shape*>      MutableHandleShape;
 typedef JS::MutableHandle<JSAtom*>     MutableHandleAtom;
 typedef JS::MutableHandle<NativeObject*> MutableHandleNativeObject;
 typedef JS::MutableHandle<PlainObject*> MutableHandlePlainObject;
+typedef JS::MutableHandle<SavedFrame*> MutableHandleSavedFrame;
 
 typedef JS::Rooted<NativeObject*>      RootedNativeObject;
 typedef JS::Rooted<Shape*>             RootedShape;
@@ -49,6 +52,7 @@ typedef JS::Rooted<PropertyName*>      RootedPropertyName;
 typedef JS::Rooted<ArrayObject*>       RootedArrayObject;
 typedef JS::Rooted<GlobalObject*>      RootedGlobalObject;
 typedef JS::Rooted<PlainObject*>       RootedPlainObject;
+typedef JS::Rooted<SavedFrame*>        RootedSavedFrame;
 typedef JS::Rooted<ScriptSourceObject*> RootedScriptSource;
 
 } /* namespace js */

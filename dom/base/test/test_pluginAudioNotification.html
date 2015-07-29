@@ -1,0 +1,117 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for audio controller in windows</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<pre id="test">
+</pre>
+<iframe></iframe>
+
+<script type="application/javascript">
+
+// Copied from /dom/plugins/test/mochitest/utils.js
+function getTestPlugin(pluginName) {
+  var ph = SpecialPowers.Cc["@mozilla.org/plugin/host;1"]
+                                 .getService(SpecialPowers.Ci.nsIPluginHost);
+  var tags = ph.getPluginTags();
+  var name = pluginName || "Test Plug-in";
+  for (var tag of tags) {
+    if (tag.name == name) {
+      return tag;
+    }
+  }
+
+  ok(false, "Could not find plugin tag with plugin name '" + name + "'");
+  return null;
+}
+// Copied from /dom/plugins/test/mochitest/utils.js
+function setTestPluginEnabledState(newEnabledState, pluginName) {
+  var oldEnabledState = SpecialPowers.setTestPluginEnabledState(newEnabledState, pluginName);
+  if (!oldEnabledState) {
+    return;
+  }
+  var plugin = getTestPlugin(pluginName);
+  while (plugin.enabledState != newEnabledState) {
+    // Run a nested event loop to wait for the preference change to
+    // propagate to the child. Yuck!
+    SpecialPowers.Services.tm.currentThread.processNextEvent(true);
+  }
+  SimpleTest.registerCleanupFunction(function() {
+    SpecialPowers.setTestPluginEnabledState(oldEnabledState, pluginName);
+  });
+}
+setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+SimpleTest.waitForExplicitFinish();
+
+var expectedNotification = null;
+var iframe = null;
+
+var observer = {
+  observe: function(subject, topic, data) {
+    is(topic, "media-playback", "media-playback received");
+    is(data, expectedNotification, "This is the right notification");
+    SimpleTest.executeSoon(runTest);
+  }
+};
+
+var observerService = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
+                                   .getService(SpecialPowers.Ci.nsIObserverService);
+
+var tests = [
+  function() {
+    iframe = document.querySelector("iframe");
+    SpecialPowers.pushPrefEnv({"set": [["media.useAudioChannelService", true]]}, runTest);
+  },
+
+  function() {
+    observerService.addObserver(observer, "media-playback", false);
+    ok(true, "Observer set");
+    runTest();
+  },
+
+  function() {
+    expectedNotification = 'active';
+    iframe.src = "file_pluginAudio.html";
+  },
+
+  function() {
+    ok(!iframe.contentWindow.pluginMuted(), "Plugin should not be muted");
+    iframe.contentWindow.toggleMuteState(true);
+    ok(iframe.contentWindow.pluginMuted(), "Plugin should be muted");
+    iframe.contentWindow.toggleMuteState(false);
+    ok(!iframe.contentWindow.pluginMuted(), "Plugin should not be muted");
+    runTest();
+  },
+
+  function() {
+    expectedNotification = 'inactive';
+    iframe.contentWindow.stopAudio();
+  },
+
+  function() {
+    observerService.removeObserver(observer, "media-playback");
+    ok(true, "Observer removed");
+    runTest();
+  }
+];
+
+function runTest() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+
+onload = runTest;
+
+</script>
+</body>
+</html>
+

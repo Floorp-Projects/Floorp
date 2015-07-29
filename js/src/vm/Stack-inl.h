@@ -607,6 +607,27 @@ AbstractFramePtr::isDebuggerEvalFrame() const
 }
 
 inline bool
+AbstractFramePtr::hasCachedSavedFrame() const
+{
+    if (isInterpreterFrame())
+        return asInterpreterFrame()->hasCachedSavedFrame();
+    if (isBaselineFrame())
+        return asBaselineFrame()->hasCachedSavedFrame();
+    return asRematerializedFrame()->hasCachedSavedFrame();
+}
+
+inline void
+AbstractFramePtr::setHasCachedSavedFrame()
+{
+    if (isInterpreterFrame())
+        asInterpreterFrame()->setHasCachedSavedFrame();
+    else if (isBaselineFrame())
+        asBaselineFrame()->setHasCachedSavedFrame();
+    else
+        asRematerializedFrame()->setHasCachedSavedFrame();
+}
+
+inline bool
 AbstractFramePtr::isDebuggee() const
 {
     if (isInterpreterFrame())
@@ -866,6 +887,7 @@ Activation::Activation(JSContext* cx, Kind kind)
     prevProfiling_(prev_ ? prev_->mostRecentProfiling() : nullptr),
     savedFrameChain_(0),
     hideScriptedCallerCount_(0),
+    frameCache_(cx),
     asyncStack_(cx, cx->runtime_->asyncStackForNewActivations),
     asyncCause_(cx, cx->runtime_->asyncCauseForNewActivations),
     asyncCallIsExplicit_(cx->runtime_->asyncCallIsExplicit),
@@ -910,6 +932,13 @@ Activation::mostRecentProfiling()
     if (isProfiling())
         return this;
     return prevProfiling_;
+}
+
+inline LiveSavedFrameCache*
+Activation::getLiveSavedFrameCache(JSContext* cx) {
+    if (!frameCache_.get().initialized() && !frameCache_.get().init(cx))
+        return nullptr;
+    return frameCache_.address();
 }
 
 InterpreterActivation::InterpreterActivation(RunState& state, JSContext* cx,
@@ -987,6 +1016,36 @@ inline JSContext*
 AsmJSActivation::cx()
 {
     return cx_->asJSContext();
+}
+
+inline bool
+FrameIter::hasCachedSavedFrame() const
+{
+    if (isAsmJS())
+        return false;
+
+    if (hasUsableAbstractFramePtr())
+        return abstractFramePtr().hasCachedSavedFrame();
+
+    MOZ_ASSERT(data_.jitFrames_.isIonScripted());
+    // SavedFrame caching is done at the physical frame granularity (rather than
+    // for each inlined frame) for ion. Therefore, it is impossible to have a
+    // cached SavedFrame if this frame is not a physical frame.
+    return isPhysicalIonFrame() && data_.jitFrames_.current()->hasCachedSavedFrame();
+}
+
+inline void
+FrameIter::setHasCachedSavedFrame()
+{
+    MOZ_ASSERT(!isAsmJS());
+
+    if (hasUsableAbstractFramePtr()) {
+        abstractFramePtr().setHasCachedSavedFrame();
+        return;
+    }
+
+    MOZ_ASSERT(isPhysicalIonFrame());
+    data_.jitFrames_.current()->setHasCachedSavedFrame();
 }
 
 } /* namespace js */
