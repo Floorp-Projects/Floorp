@@ -50,8 +50,6 @@ struct AnimationEventInfo {
   }
 };
 
-typedef InfallibleTArray<AnimationEventInfo> EventArray;
-
 namespace dom {
 
 class CSSAnimation final : public Animation
@@ -281,7 +279,11 @@ public:
   /**
    * Add a pending event.
    */
-  void QueueEvent(mozilla::AnimationEventInfo& aEventInfo);
+  void QueueEvent(mozilla::AnimationEventInfo&& aEventInfo)
+  {
+    mEventDispatcher.QueueEvent(
+      mozilla::Forward<mozilla::AnimationEventInfo>(aEventInfo));
+  }
 
   /**
    * Dispatch any pending events.  We accumulate animationend and
@@ -290,14 +292,8 @@ public:
    * accumulate animationstart events at other points when style
    * contexts are created.
    */
-  void DispatchEvents() {
-    // Fast-path the common case: no events
-    if (!mPendingEvents.IsEmpty()) {
-      DoDispatchEvents();
-    }
-  }
-
-  void ClearEventQueue() { mPendingEvents.Clear(); }
+  void DispatchEvents()  { mEventDispatcher.DispatchEvents(mPresContext); }
+  void ClearEventQueue() { mEventDispatcher.ClearEventQueue(); }
 
 protected:
   virtual ~nsAnimationManager() {}
@@ -315,6 +311,8 @@ protected:
     return true;
   }
 
+  mozilla::DelayedEventDispatcher<mozilla::AnimationEventInfo> mEventDispatcher;
+
 private:
   void BuildAnimations(nsStyleContext* aStyleContext,
                        mozilla::dom::Element* aTarget,
@@ -331,11 +329,6 @@ private:
   static void UpdateCascadeResults(nsStyleContext* aStyleContext,
                                    mozilla::AnimationCollection*
                                      aElementAnimations);
-
-  // The guts of DispatchEvents
-  void DoDispatchEvents();
-
-  mozilla::EventArray mPendingEvents;
 };
 
 #endif /* !defined(nsAnimationManager_h_) */
