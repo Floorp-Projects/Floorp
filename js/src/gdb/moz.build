@@ -9,7 +9,6 @@ GeckoProgram('gdb-tests', linkage=None)
 UNIFIED_SOURCES += [
     'gdb-tests.cpp',
     'tests/test-asmjs.cpp',
-    'tests/test-GCCellPtr.cpp',
     'tests/test-Interpreter.cpp',
     'tests/test-jsid.cpp',
     'tests/test-JSObject.cpp',
