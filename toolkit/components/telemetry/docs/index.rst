@@ -21,4 +21,5 @@ Client-side, this consists of:
    main-ping
    deletion-ping
    crash-ping
+   uitour-ping
    preferences
