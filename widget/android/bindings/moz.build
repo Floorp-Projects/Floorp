@@ -7,6 +7,7 @@
 # List of stems to generate .cpp and .h files for.  To add a stem, add it to
 # this list and ensure that $(stem)-classes.txt exists in this directory.
 generated = [
+    'Bundle',
     'MediaCodec',
     'SurfaceTexture',
 ]
