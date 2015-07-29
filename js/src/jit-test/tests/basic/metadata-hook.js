@@ -1,5 +1,5 @@
 
-setObjectMetadataCallback(true);
+enableShellObjectMetadataCallback();
 
 function Foo() {
   this.x = 0;
