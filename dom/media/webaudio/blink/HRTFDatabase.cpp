@@ -82,7 +82,7 @@ HRTFDatabase::HRTFDatabase(float sampleRate)
 size_t HRTFDatabase::sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
     size_t amount = aMallocSizeOf(this);
-    amount += m_elevations.SizeOfExcludingThis(aMallocSizeOf);
+    amount += m_elevations.ShallowSizeOfExcludingThis(aMallocSizeOf);
     for (size_t i = 0; i < m_elevations.Length(); i++) {
       amount += m_elevations[i]->sizeOfIncludingThis(aMallocSizeOf);
     }

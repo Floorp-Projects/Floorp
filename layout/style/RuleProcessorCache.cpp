@@ -259,9 +259,9 @@ RuleProcessorCache::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
   size_t n = aMallocSizeOf(this);
 
   int count = 0;
-  n += mEntries.SizeOfExcludingThis(aMallocSizeOf);
+  n += mEntries.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (Entry& e : mEntries) {
-    n += e.mDocumentEntries.SizeOfExcludingThis(aMallocSizeOf);
+    n += e.mDocumentEntries.ShallowSizeOfExcludingThis(aMallocSizeOf);
     for (DocumentEntry& de : e.mDocumentEntries) {
       count++;
       n += de.mRuleProcessor->SizeOfIncludingThis(aMallocSizeOf);

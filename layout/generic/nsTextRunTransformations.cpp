@@ -86,8 +86,8 @@ size_t
 nsTransformedTextRun::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 {
   size_t total = gfxTextRun::SizeOfExcludingThis(aMallocSizeOf);
-  total += mStyles.SizeOfExcludingThis(aMallocSizeOf);
-  total += mCapitalize.SizeOfExcludingThis(aMallocSizeOf);
+  total += mStyles.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  total += mCapitalize.ShallowSizeOfExcludingThis(aMallocSizeOf);
   if (mOwnsFactory) {
     total += aMallocSizeOf(mFactory);
   }
