@@ -164,8 +164,8 @@ class JS_FRIEND_API(GCCellPtr)
 
     // Construction from an explicit type.
     template <typename T>
-    explicit GCCellPtr(T* ptr) : ptr(checkedCast(ptr, JS::MapTypeToTraceKind<T>::kind)) { }
-    explicit GCCellPtr(JSFunction* ptr) : ptr(checkedCast(ptr, JS::TraceKind::Object)) { }
+    explicit GCCellPtr(T* p) : ptr(checkedCast(p, JS::MapTypeToTraceKind<T>::kind)) { }
+    explicit GCCellPtr(JSFunction* p) : ptr(checkedCast(p, JS::TraceKind::Object)) { }
     explicit GCCellPtr(JSFlatString* str) : ptr(checkedCast(str, JS::TraceKind::String)) { }
     explicit GCCellPtr(const Value& v);
 
@@ -189,7 +189,7 @@ class JS_FRIEND_API(GCCellPtr)
     // Conversions to more specific types must match the kind. Access to
     // further refined types is not allowed directly from a GCCellPtr.
     template <typename T>
-    T& to() const {
+    T& as() const {
         MOZ_ASSERT(kind() == JS::MapTypeToTraceKind<T>::kind);
         // We can't use static_cast here, because the fact that JSObject
         // inherits from js::gc::Cell is not part of the public API.
