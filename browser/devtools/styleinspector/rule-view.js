@@ -334,7 +334,11 @@ ElementStyle.prototype = {
     let textProps = [];
     for (let rule of this.rules) {
       if (rule.pseudoElement == pseudo && !rule.keyframes) {
-        textProps = textProps.concat(rule.textProps.slice(0).reverse());
+        for (let textProp of rule.textProps.slice(0).reverse()) {
+          if (textProp.enabled) {
+            textProps.push(textProp);
+          }
+        }
       }
     }
 
