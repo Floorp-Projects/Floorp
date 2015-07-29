@@ -174,7 +174,15 @@ CSSTransition::HasLowerCompositeOrderThan(const Animation& aOther) const
 
 ////////////////////////// nsTransitionManager ////////////////////////////
 
-NS_IMPL_ISUPPORTS(nsTransitionManager, nsIStyleRuleProcessor)
+NS_IMPL_CYCLE_COLLECTION(nsTransitionManager, mEventDispatcher)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsTransitionManager)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsTransitionManager)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsTransitionManager)
+  NS_INTERFACE_MAP_ENTRY(nsIStyleRuleProcessor)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
 
 void
 nsTransitionManager::StyleContextChanged(dom::Element *aElement,
@@ -837,6 +845,10 @@ nsTransitionManager::UpdateCascadeResults(AnimationCollection* aTransitions,
 nsTransitionManager::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
   return CommonAnimationManager::SizeOfExcludingThis(aMallocSizeOf);
+
+  // Measurement of the following members may be added later if DMD finds it is
+  // worthwhile:
+  // - mEventDispatcher
 }
 
 /* virtual */ size_t
@@ -871,7 +883,6 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
     return;
   }
 
-  nsTArray<TransitionEventInfo> events;
   TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
   bool didThrottle = false;
   // Trim transitions that have completed, post restyle events for frames that
@@ -910,7 +921,7 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
               anim->GetEffect()->AsTransition()->TransitionProperty();
             TimeDuration duration =
               anim->GetEffect()->Timing().mIterationDuration;
-            events.AppendElement(
+            mEventDispatcher.QueueEvent(
               TransitionEventInfo(collection->mElement, prop,
                                   duration, collection->PseudoElementType()));
 
@@ -965,12 +976,5 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
 
   MaybeStartOrStopObservingRefreshDriver();
 
-  for (uint32_t i = 0, i_end = events.Length(); i < i_end; ++i) {
-    TransitionEventInfo &info = events[i];
-    EventDispatcher::Dispatch(info.mElement, mPresContext, &info.mEvent);
-
-    if (!mPresContext) {
-      break;
-    }
-  }
+  mEventDispatcher.DispatchEvents(mPresContext);
 }
