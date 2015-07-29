@@ -685,9 +685,6 @@ protected:
     return CurrentState().font;
   }
 
-  // This function maintains a list of raw pointers to cycle-collected
-  // objects. We need to ensure that no entries persist beyond unlink,
-  // since the objects are logically destructed at that point.
   static std::vector<CanvasRenderingContext2D*>& DemotableContexts();
   static void DemoteOldestContextIfNecessary();
 

@@ -54,21 +54,19 @@ public:
      * resource sharing can be avoided on the target platform, it will
      * be, in order to isolate the offscreen context.
      *
-     * @param size The initial size of this offscreen context.
-     * @param caps The SurfaceCaps for this offscreen context.
-     * @param flags The set of CreateContextFlags to be used for this
-     *              offscreen context.
+     * @param aSize The initial size of this offscreen context.
+     * @param aFormat The ContextFormat for this offscreen context.
      *
      * @return Context to use for offscreen rendering
      */
     static already_AddRefed<GLContext>
     CreateOffscreen(const mozilla::gfx::IntSize& size,
                     const SurfaceCaps& caps,
-                    CreateContextFlags flags);
+                    bool requireCompatProfile);
 
     // Just create a context. We'll add offscreen stuff ourselves.
     static already_AddRefed<GLContext>
-    CreateHeadless(CreateContextFlags flags);
+    CreateHeadless(bool requireCompatProfile, bool forceEnabled = false);
 
     /**
      * Create wrapping Gecko GLContext for external gl context.

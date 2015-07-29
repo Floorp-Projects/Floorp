@@ -45,8 +45,7 @@ public:
       caps.preserve = false;
       caps.bpp16 = false;
       nsRefPtr<GLContext> context = GLContextProvider::CreateOffscreen(
-        IntSize(gCompWidth, gCompHeight), caps,
-        CreateContextFlags::REQUIRE_COMPAT_PROFILE);
+        IntSize(gCompWidth, gCompHeight), caps, true);
       return context.forget().take();
     }
     return nullptr;
