@@ -1003,4 +1003,6 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
   }
 
   MaybeStartOrStopObservingRefreshDriver();
+
+  mEventDispatcher.DispatchEvents(mPresContext);
 }
