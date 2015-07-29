@@ -154,6 +154,36 @@ this.PushDB.prototype = {
     );
   },
 
+  // testFn(record) is called with a database record and should return true if
+  // that record should be deleted.
+  clearIf: function(testFn) {
+    debug("clearIf()");
+    return new Promise((resolve, reject) =>
+      this.newTxn(
+        "readwrite",
+        this._dbStoreName,
+        (aTxn, aStore) => {
+          aTxn.result = undefined;
+
+          aStore.openCursor().onsuccess = event => {
+            let cursor = event.target.result;
+            if (cursor) {
+              if (testFn(this.toPushRecord(cursor.value))) {
+                let deleteRequest = cursor.delete();
+                deleteRequest.onerror = e => {
+                  debug("Failed to delete entry even when test succeeded!");
+                }
+              }
+              cursor.continue();
+            }
+          }
+        },
+        resolve,
+        reject
+      )
+    );
+  },
+
   getByPushEndpoint: function(aPushEndpoint) {
     debug("getByPushEndpoint()");
 

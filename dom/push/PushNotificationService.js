@@ -58,6 +58,10 @@ PushNotificationService.prototype = {
     return PushService._clearAll();
   },
 
+  clearForDomain: function(domain) {
+    return PushService._clearForDomain(domain);
+  },
+
   observe: function observe(subject, topic, data) {
     switch (topic) {
       case "app-startup":

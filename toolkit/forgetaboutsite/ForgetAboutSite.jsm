@@ -181,6 +181,16 @@ this.ForgetAboutSite = {
     let np = Cc["@mozilla.org/network/predictor;1"].
              getService(Ci.nsINetworkPredictor);
     np.reset();
+
+    // Push notifications.
+    try {
+      var push = Cc["@mozilla.org/push/NotificationService;1"]
+                  .getService(Ci.nsIPushNotificationService);
+      push.clearForDomain(aDomain);
+    } catch (e) {
+      dump("Web Push may not be available.\n");
+    }
+
     return Promise.all(promises);
   }
 };
