@@ -295,7 +295,7 @@ ThreadedDriver::RunThread()
       STREAM_LOG(LogLevel::Debug, ("Time did not advance"));
     }
 
-    mStateComputedTime = mNextStateComputedTime;
+    MOZ_ASSERT(mStateComputedTime == mNextStateComputedTime);
     mNextStateComputedTime =
       mGraphImpl->RoundUpToNextAudioBlock(
         mIterationEnd + mGraphImpl->MillisecondsToMediaTime(AUDIO_TARGET_MS));
@@ -822,7 +822,7 @@ AudioCallbackDriver::DataCallback(AudioDataValue* aBuffer, long aFrames)
   // we don't need to run an iteration and if we do so we may overflow.
   if (mBuffer.Available()) {
 
-    mStateComputedTime = mNextStateComputedTime;
+    MOZ_ASSERT(mStateComputedTime == mNextStateComputedTime);
 
     // State computed time is decided by the audio callback's buffer length. We
     // compute the iteration start and end from there, trying to keep the amount
