@@ -10364,8 +10364,8 @@ EmitMIR(ModuleCompiler& m, const AsmFunction& function, LifoAlloc& lifo,
 }
 
 static bool
-CheckFunction(ModuleValidator& m, ModuleCompiler& mc, LifoAlloc& lifo,
-              MIRGenerator** mir, ModuleGlobals::Func** funcOut)
+CheckFunction(ModuleValidator& m, LifoAlloc& lifo, AsmFunction** asmFunc,
+              ModuleGlobals::Func** funcOut)
 {
     int64_t before = PRMJ_Now();
 
@@ -10385,13 +10385,13 @@ CheckFunction(ModuleValidator& m, ModuleCompiler& mc, LifoAlloc& lifo,
         if (!CheckChangeHeap(m, fn, &validated))
             return false;
         if (validated) {
-            *mir = nullptr;
+            *asmFunc = nullptr;
             return true;
         }
     }
 
-    AsmFunction function(m.cx());
-    FunctionBuilder f(m, function, fn);
+    *asmFunc = lifo.new_<AsmFunction>(m.cx());
+    FunctionBuilder f(m, **asmFunc, fn);
     if (!f.init())
         return false;
 
@@ -10431,13 +10431,22 @@ CheckFunction(ModuleValidator& m, ModuleCompiler& mc, LifoAlloc& lifo,
 
     m.parser().release(mark);
 
-    function.setNumLocals(f.numLocals());
+    (*asmFunc)->setNumLocals(f.numLocals());
+    *funcOut = func;
+    return true;
+}
 
-    *mir = EmitMIR(mc, function, lifo, func->sig().args());
+static bool
+GenerateMIR(ModuleCompiler& mc, LifoAlloc& lifo, AsmFunction& bytecode, ModuleGlobals::Func* func,
+            MIRGenerator** mir)
+{
+    int64_t before = PRMJ_Now();
+
+    *mir = EmitMIR(mc, bytecode, lifo, func->sig().args());
     if (!*mir)
         return false;
 
-    *funcOut = func;
+    func->accumulateCompileTime((PRMJ_Now() - before) / PRMJ_USEC_PER_MSEC);
     return true;
 }
 
@@ -10501,14 +10510,18 @@ CheckFunctionsSequential(ModuleValidator& m, ModuleCompiler& mc)
 
         LifoAllocScope scope(&lifo);
 
-        MIRGenerator* mir;
+        AsmFunction* asmFunc;
         ModuleGlobals::Func* func;
-        if (!CheckFunction(m, mc, lifo, &mir, &func))
+        if (!CheckFunction(m, lifo, &asmFunc, &func))
             return false;
 
-        // In the case of the change-heap function, no MIR is produced.
-        if (!mir)
+        // In the case of the change-heap function, no bytecode is produced.
+        if (!asmFunc)
             continue;
+
+        MIRGenerator* mir;
+        if (!GenerateMIR(mc, lifo, *asmFunc, func, &mir))
+            return false;
 
         int64_t before = PRMJ_Now();
 
@@ -10667,15 +10680,19 @@ CheckFunctionsParallel(ModuleValidator& m, ModuleCompiler& mc, ParallelGroupStat
         if (!task && !GetUnusedTask(group, i, &task) && !GetUsedTask(mc, group, &task))
             return false;
 
-        // Generate MIR into the LifoAlloc on the main thread.
-        MIRGenerator* mir;
+        AsmFunction* asmFunc;
         ModuleGlobals::Func* func;
-        if (!CheckFunction(m, mc, task->lifo, &mir, &func))
+        if (!CheckFunction(m, task->lifo, &asmFunc, &func))
             return false;
 
-        // In the case of the change-heap function, no MIR is produced.
-        if (!mir)
+        // In the case of the change-heap function, no bytecode is produced.
+        if (!asmFunc)
             continue;
+
+        // Generate MIR into the LifoAlloc on the main thread.
+        MIRGenerator* mir;
+        if (!GenerateMIR(mc, task->lifo, *asmFunc, func, &mir))
+            return false;
 
         // Perform optimizations and LIR generation on a helper thread.
         task->init(m.cx()->compartment()->runtimeFromAnyThread(), func, mir);
@@ -12109,7 +12126,7 @@ CheckModule(ExclusiveContext* cx, AsmJSParser& parser, ParseNode* stmtList,
 
 #if !defined(ENABLE_SHARED_ARRAY_BUFFER)
     if (mv.module().hasArrayView() && mv.module().isSharedView())
-        return mc.fail(nullptr, "shared views not supported by this build");
+        return mv.fail(nullptr, "shared views not supported by this build");
 #endif
 
     ModuleCompiler mc(cx, parser, mv.modulePtr(), mg);
