@@ -8,6 +8,7 @@ import filecmp
 import os
 import re
 import subprocess
+import traceback
 
 from collections import defaultdict
 from mach.mixin.process import ProcessExecutionMixin
@@ -29,6 +30,13 @@ MOZCONFIG_BAD_EXIT_CODE = '''
 Evaluation of your mozconfig exited with an error. This could be triggered
 by a command inside your mozconfig failing. Please change your mozconfig
 to not error and/or to catch errors in executed commands.
+'''.strip()
+
+MOZCONFIG_BAD_OUTPUT = '''
+Evaluation of your mozconfig produced unexpected output.  This could be
+triggered by a command inside your mozconfig failing or producing some warnings
+or error messages. Please change your mozconfig to not error and/or to catch
+errors in executed commands.
 '''.strip()
 
 
@@ -234,7 +242,17 @@ class MozconfigLoader(ProcessExecutionMixin):
 
             raise MozconfigLoadException(path, MOZCONFIG_BAD_EXIT_CODE, lines)
 
-        parsed = self._parse_loader_output(output)
+        try:
+            parsed = self._parse_loader_output(output)
+        except AssertionError:
+            # _parse_loader_output uses assertions to verify the
+            # well-formedness of the shell output; when these fail, it
+            # generally means there was a problem with the output, but we
+            # include the assertion traceback just to be sure.
+            print('Assertion failed in _parse_loader_output:')
+            traceback.print_exc()
+            raise MozconfigLoadException(path, MOZCONFIG_BAD_OUTPUT,
+                                         output.splitlines())
 
         def diff_vars(vars_before, vars_after):
             set1 = set(vars_before.keys()) - self.IGNORE_SHELL_VARIABLES
