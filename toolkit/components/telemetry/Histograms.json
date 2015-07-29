@@ -3387,7 +3387,7 @@
     "description": "Number of thumbnails stored in the browser DB *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
   },
   "FENNEC_READING_LIST_COUNT": {
-    "expires_in_version": "40",
+    "expires_in_version": "50",
     "kind": "exponential",
     "high": "1000",
     "n_buckets": 10,
