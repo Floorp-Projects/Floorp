@@ -729,9 +729,14 @@ CompositorD3D11::DrawVRDistortion(const gfx::Rect& aRect,
 
     // XXX I really want to write a templated helper for these next 4 lines
     D3D11_MAPPED_SUBRESOURCE resource;
-    mContext->Map(mAttachments->mVRDistortionConstants, 0, D3D11_MAP_WRITE_DISCARD, 0, &resource);
+    hr = mContext->Map(mAttachments->mVRDistortionConstants, 0, D3D11_MAP_WRITE_DISCARD, 0, &resource);
+    if (FAILED(hr) || !resource.pData) {
+      gfxCriticalError() << "Failed to map VRDistortionConstants. Result: " << hr;
+      return;
+    }
     *(gfx::VRDistortionConstants*)resource.pData = shaderConstants;
     mContext->Unmap(mAttachments->mVRDistortionConstants, 0);
+    resource.pData = nullptr;
 
     // XXX is there a better way to change a bunch of these things from what they were set to
     // in BeginFrame/etc?
