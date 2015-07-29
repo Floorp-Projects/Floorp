@@ -190,6 +190,7 @@ browser.jar:
   skin/classic/browser/yosemite/loop/toolbar@2x.png         (loop/toolbar-yosemite@2x.png)
 * skin/classic/browser/controlcenter/panel.css        (controlcenter/panel.css)
   skin/classic/browser/controlcenter/arrow-subview.svg  (../shared/controlcenter/arrow-subview.svg)
+  skin/classic/browser/controlcenter/arrow-subview-back.svg  (../shared/controlcenter/arrow-subview-back.svg)
   skin/classic/browser/controlcenter/conn-not-secure.svg  (../shared/controlcenter/conn-not-secure.svg)
   skin/classic/browser/controlcenter/conn-secure.svg  (../shared/controlcenter/conn-secure.svg)
   skin/classic/browser/controlcenter/conn-degraded.svg  (../shared/controlcenter/conn-degraded.svg)
