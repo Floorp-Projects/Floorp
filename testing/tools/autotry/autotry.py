@@ -3,10 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import argparse
-import sys
-import os
 import itertools
+import os
+import re
 import subprocess
+import sys
 import which
 
 from collections import defaultdict
@@ -14,7 +15,7 @@ from collections import defaultdict
 import ConfigParser
 
 
-def parser():
+def arg_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('paths', nargs='*', help='Paths to search for tests to run on try.')
     parser.add_argument('-p', dest='platforms', action="append",
@@ -31,6 +32,10 @@ def parser():
                         help='Do not push to try as a result of running this command (if '
                         'specified this command will only print calculated try '
                         'syntax and selection info).')
+    parser.add_argument('--save', dest="save", action='store',
+                        help="Save the command line arguments for future use with --preset")
+    parser.add_argument('--preset', dest="load", action='store',
+                        help="Load a saved set of arguments. Additional arguments will override saved ones")
     parser.add_argument('extra_args', nargs=argparse.REMAINDER,
                         help='Extra arguments to put in the try push')
     parser.add_argument('-v', "--verbose", dest='verbose', action='store_true', default=False,
@@ -38,6 +43,102 @@ def parser():
                         'and commands performed.')
     return parser
 
+class TryArgumentTokenizer(object):
+    symbols = [("seperator", ","),
+               ("list_start", "\["),
+               ("list_end", "\]"),
+               ("item", "([^,\[\]\s][^,\[\]]+)"),
+               ("space", "\s+")]
+    token_re = re.compile("|".join("(?P<%s>%s)" % item for item in symbols))
+
+    def tokenize(self, data):
+        for match in self.token_re.finditer(data):
+            symbol = match.lastgroup
+            data = match.group(symbol)
+            if symbol == "space":
+                pass
+            else:
+                yield symbol, data
+
+class TryArgumentParser(object):
+    """Simple three-state parser for handling expressions
+    of the from "foo[sub item, another], bar,baz". This takes
+    input from the TryArgumentTokenizer and runs through a small
+    state machine, returning a dictionary of {top-level-item:[sub_items]}
+    i.e. the above would result in
+    {"foo":["sub item", "another"], "bar": [], "baz": []}
+    In the case of invalid input a ValueError is raised."""
+
+    EOF = object()
+
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.tokens = None
+        self.current_item = None
+        self.data = {}
+        self.token = None
+        self.state = None
+
+    def parse(self, tokens):
+        self.reset()
+        self.tokens = tokens
+        self.consume()
+        self.state = self.item_state
+        while self.token[0] != self.EOF:
+            self.state()
+        return self.data
+
+    def consume(self):
+        try:
+            self.token = self.tokens.next()
+        except StopIteration:
+            self.token = (self.EOF, None)
+
+    def expect(self, *types):
+        if self.token[0] not in types:
+            raise ValueError("Error parsing try string, unexpected %s" % (self.token[0]))
+
+    def item_state(self):
+        self.expect("item")
+        value = self.token[1].strip()
+        if value not in self.data:
+            self.data[value] = []
+        self.current_item = value
+        self.consume()
+        if self.token[0] == "seperator":
+            self.consume()
+        elif self.token[0] == "list_start":
+            self.consume()
+            self.state = self.subitem_state
+        elif self.token[0] == self.EOF:
+            pass
+        else:
+            raise ValueError
+
+    def subitem_state(self):
+        self.expect("item")
+        value = self.token[1].strip()
+        self.data[self.current_item].append(value)
+        self.consume()
+        if self.token[0] == "seperator":
+            self.consume()
+        elif self.token[0] == "list_end":
+            self.consume()
+            self.state = self.after_list_end_state
+        else:
+            raise ValueError
+
+    def after_list_end_state(self):
+        self.expect("seperator")
+        self.consume()
+        self.state = self.item_state
+
+def parse_arg(arg):
+    tokenizer = TryArgumentTokenizer()
+    parser = TryArgumentParser()
+    return parser.parse(tokenizer.tokenize(arg))
 
 class AutoTry(object):
 
@@ -76,6 +177,40 @@ class AutoTry(object):
         else:
             self._use_git = True
 
+    @property
+    def config_path(self):
+        return os.path.join(self.mach_context.state_dir, "autotry.ini")
+
+    def load_config(self, name):
+        config = ConfigParser.RawConfigParser()
+        success = config.read([self.config_path])
+        if not success:
+            return None
+
+        try:
+            data = config.get("try", name)
+        except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+            return None
+
+        kwargs = vars(arg_parser().parse_args(data.split()))
+
+        return kwargs
+
+    def save_config(self, name, data):
+        assert data.startswith("try: ")
+        data = data[len("try: "):]
+
+        parser = ConfigParser.RawConfigParser()
+        parser.read([self.config_path])
+
+        if not parser.has_section("try"):
+            parser.add_section("try")
+
+        parser.set("try", name, data)
+
+        with open(self.config_path, "w") as f:
+            parser.write(f)
+
     def paths_by_flavor(self, paths=None, tags=None):
         paths_by_flavor = defaultdict(set)
 
@@ -113,7 +248,7 @@ class AutoTry(object):
                         intersection):
         parts = ["try:", "-b", builds, "-p", ",".join(platforms)]
 
-        suites = set(tests) if not intersection else set()
+        suites = tests if not intersection else {}
         paths = set()
         for flavor, flavor_tests in paths_by_flavor.iteritems():
             suite = self.flavor_suites[flavor]
@@ -121,13 +256,14 @@ class AutoTry(object):
                 for job_name in self.flavor_jobs[flavor]:
                     for test in flavor_tests:
                         paths.add("%s:%s" % (flavor, test))
-                    suites.add(job_name)
+                    suites[job_name] = tests.get(suite, [])
 
         if not suites:
             raise ValueError("No tests found matching filters")
 
         parts.append("-u")
-        parts.append(",".join(sorted(suites)))
+        parts.append(",".join("%s%s" % (k, "[%s]" % ",".join(v) if v else "")
+                              for k,v in sorted(suites.items())))
 
         if tags:
             parts.append(' '.join('--tag %s' % t for t in tags))
