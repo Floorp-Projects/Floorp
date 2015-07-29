@@ -12,6 +12,70 @@
 namespace mozilla {
 namespace widget {
 
+class ANRReporter : public mozilla::jni::Class<ANRReporter>
+{
+public:
+    typedef mozilla::jni::Ref<ANRReporter> Ref;
+    typedef mozilla::jni::LocalRef<ANRReporter> LocalRef;
+    typedef mozilla::jni::GlobalRef<ANRReporter> GlobalRef;
+    typedef const mozilla::jni::Param<ANRReporter>& Param;
+
+    static constexpr char name[] =
+            "org/mozilla/gecko/ANRReporter";
+
+protected:
+    ANRReporter(jobject instance) : Class(instance) {}
+
+public:
+    struct GetNativeStack_t {
+        typedef ANRReporter Owner;
+        typedef mozilla::jni::String::LocalRef ReturnType;
+        typedef mozilla::jni::String::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "getNativeStack";
+        static constexpr char signature[] =
+                "()Ljava/lang/String;";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct ReleaseNativeStack_t {
+        typedef ANRReporter Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "releaseNativeStack";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct RequestNativeStack_t {
+        typedef ANRReporter Owner;
+        typedef bool ReturnType;
+        typedef bool SetterType;
+        typedef mozilla::jni::Args<
+                bool> Args;
+        static constexpr char name[] = "requestNativeStack";
+        static constexpr char signature[] =
+                "(Z)Z";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    template<class Impl> class Natives;
+};
+
 class DownloadsIntegration : public mozilla::jni::Class<DownloadsIntegration>
 {
 public:
