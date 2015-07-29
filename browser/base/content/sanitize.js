@@ -516,9 +516,13 @@ Sanitizer.prototype = {
         sss.clearAll();
 
         // Clear all push notification subscriptions
-        var push = Cc["@mozilla.org/push/NotificationService;1"]
-                    .getService(Ci.nsIPushNotificationService);
-        push.clearAll();
+        try {
+          var push = Cc["@mozilla.org/push/NotificationService;1"]
+                      .getService(Ci.nsIPushNotificationService);
+          push.clearAll();
+        } catch (e) {
+          dump("Web Push may not be available.\n");
+        }
 
         TelemetryStopwatch.finish("FX_SANITIZE_SITESETTINGS");
       },
