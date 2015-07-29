@@ -433,6 +433,7 @@ gbjar.sources += [
     'RemoteTabsExpandableListAdapter.java',
     'Restarter.java',
     'RestrictedProfiles.java',
+    'RestrictionProvider.java',
     'ServiceNotificationClient.java',
     'SessionParser.java',
     'SharedPreferencesHelper.java',

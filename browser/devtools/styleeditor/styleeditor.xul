@@ -91,7 +91,7 @@
 
   <xul:stack id="style-editor-chrome" class="loading theme-body">
 
-    <xul:box class="splitview-root" context="sidebar-context">
+    <xul:box class="splitview-root devtools-responsive-container" context="sidebar-context">
       <xul:box class="splitview-controller">
         <xul:box class="splitview-main">
           <xul:toolbar class="devtools-toolbar">
@@ -125,7 +125,7 @@
           </div>
         </xul:box> <!-- .splitview-nav-container -->
       </xul:box>   <!-- .splitview-controller -->
-      <xul:splitter class="devtools-side-splitter splitview-landscape-splitter devtools-invisible-splitter"/>
+      <xul:splitter class="devtools-side-splitter devtools-invisible-splitter"/>
       <xul:box class="splitview-side-details devtools-main-content"/>
 
       <div id="splitview-templates" hidden="true">
@@ -148,9 +148,6 @@
         </li>
 
         <xul:box id="splitview-tpl-details-stylesheet" class="splitview-details">
-          <xul:resizer class="splitview-portrait-resizer"
-                      dir="bottom"
-                      element="splitview-resizer-target"/>
           <xul:hbox class="stylesheet-details-container">
             <xul:box class="stylesheet-editor-input textbox"
                      data-placeholder="&editorTextbox.placeholder;"/>

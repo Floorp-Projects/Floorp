@@ -10,7 +10,6 @@ const JS_URL = EXAMPLE_URL + "code_math_bogus_map.js";
 
 // This test causes an error to be logged in the console, which appears in TBPL
 // logs, so we are disabling that here.
-let { DevToolsUtils } = Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm", {});
 DevToolsUtils.reportingDisabled = true;
 
 let gPanel, gDebugger, gFrames, gSources, gPrefs;
