@@ -7,34 +7,32 @@
  * http://dev.w3.org/2011/webrtc/editor/getusermedia.html
  */
 
-enum SupportedVideoConstraints {
-    "other",
-    "facingMode",
-    "width",
-    "height",
-    "frameRate",
-    "mediaSource",
-    "browserWindow",
-    "scrollWithPage",
-    "deviceId"
+// These dictionaries need to be in a separate file from their use in unions
+// in MediaSreamTrack.webidl due to a webidl compiler limitation:
+//
+// TypeError: Dictionary contains a union that contains a dictionary in the same
+// WebIDL file.  This won't compile.  Move the inner dictionary to a different file.
+
+dictionary ConstrainLongRange {
+    long min;
+    long max;
+    long exact;
+    long ideal;
 };
 
-enum SupportedAudioConstraints {
-    "other"
+dictionary ConstrainDoubleRange {
+    double min;
+    double max;
+    double exact;
+    double ideal;
 };
 
-dictionary MediaTrackConstraintSet {
-    ConstrainLong width;
-    ConstrainLong height;
-    ConstrainDouble frameRate;
-    ConstrainDOMString facingMode;
-    DOMString mediaSource = "camera";
-    long long browserWindow;
-    boolean scrollWithPage;
-    ConstrainDOMString deviceId;
+dictionary ConstrainBooleanParameters {
+    boolean exact;
+    boolean ideal;
 };
 
-typedef (long or ConstrainLongRange) ConstrainLong;
-typedef (double or ConstrainDoubleRange) ConstrainDouble;
-typedef (boolean or ConstrainBooleanParameters) ConstrainBoolean;
-typedef (DOMString or sequence<DOMString> or ConstrainDOMStringParameters) ConstrainDOMString;
+dictionary ConstrainDOMStringParameters {
+    (DOMString or sequence<DOMString>) exact;
+    (DOMString or sequence<DOMString>) ideal;
+};

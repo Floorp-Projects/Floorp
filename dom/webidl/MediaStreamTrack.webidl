@@ -10,6 +10,44 @@
  * liability, trademark and document use rules apply.
  */
 
+// These two enums are in the spec even though they're not used directly in the
+// API due to https://www.w3.org/Bugs/Public/show_bug.cgi?id=19936
+// Their binding code is used in the implementation.
+
+enum VideoFacingModeEnum {
+    "user",
+    "environment",
+    "left",
+    "right"
+};
+
+enum MediaSourceEnum {
+    "camera",
+    "screen",
+    "application",
+    "window",
+    "browser",
+    "microphone",
+    "audioCapture",
+    "other"
+};
+
+typedef (long or ConstrainLongRange) ConstrainLong;
+typedef (double or ConstrainDoubleRange) ConstrainDouble;
+typedef (boolean or ConstrainBooleanParameters) ConstrainBoolean;
+typedef (DOMString or sequence<DOMString> or ConstrainDOMStringParameters) ConstrainDOMString;
+
+dictionary MediaTrackConstraintSet {
+    ConstrainLong width;
+    ConstrainLong height;
+    ConstrainDouble frameRate;
+    ConstrainDOMString facingMode;
+    DOMString mediaSource = "camera";
+    long long browserWindow;
+    boolean scrollWithPage;
+    ConstrainDOMString deviceId;
+};
+
 dictionary MediaTrackConstraints : MediaTrackConstraintSet {
     sequence<MediaTrackConstraintSet> advanced;
 };
