@@ -948,34 +948,33 @@ void MediaPipelineTransmit::PipelineListener::ProcessAudioChunk(
     AudioSessionConduit *conduit,
     TrackRate rate,
     AudioChunk& chunk) {
-  // TODO(ekr@rtfm.com): Do more than one channel
-  nsAutoArrayPtr<int16_t> samples(new int16_t[chunk.mDuration]);
 
-  if (enabled_ && chunk.mBuffer) {
-    switch (chunk.mBufferFormat) {
+  // Convert to interleaved, 16-bits integer audio, with a maximum of two
+  // channels (since the WebRTC.org code below makes the assumption that the
+  // input audio is either mono or stereo).
+  uint32_t outputChannels = chunk.ChannelCount() == 1 ? 1 : 2;
+  nsAutoArrayPtr<int16_t> convertedSamples(
+      new int16_t[chunk.mDuration * outputChannels]);
+
+  // If this track is not enabled, simply ignore the data in the chunk.
+  if (!enabled_) {
+    chunk.mBufferFormat = AUDIO_FORMAT_SILENCE;
+  }
+
+  switch (chunk.mBufferFormat) {
       case AUDIO_FORMAT_FLOAT32:
-        {
-          const float* buf = static_cast<const float *>(chunk.mChannelData[0]);
-          ConvertAudioSamplesWithScale(buf, static_cast<int16_t*>(samples),
-                                       chunk.mDuration, chunk.mVolume);
-        }
+        DownmixAndInterleave(chunk.ChannelData<float>(),
+                             chunk.mDuration, chunk.mVolume, outputChannels,
+                             convertedSamples.get());
         break;
       case AUDIO_FORMAT_S16:
-        {
-          const short* buf = static_cast<const short *>(chunk.mChannelData[0]);
-          ConvertAudioSamplesWithScale(buf, samples, chunk.mDuration, chunk.mVolume);
-        }
+        DownmixAndInterleave(chunk.ChannelData<int16_t>(),
+                             chunk.mDuration, chunk.mVolume, outputChannels,
+                             convertedSamples.get());
         break;
       case AUDIO_FORMAT_SILENCE:
-        memset(samples, 0, chunk.mDuration * sizeof(samples[0]));
+        PodZero(convertedSamples.get(), chunk.mDuration * outputChannels);
         break;
-      default:
-        MOZ_ASSERT_UNREACHABLE("Unexpected AudioSampleFormat");
-        return;
-    }
-  } else {
-    // This means silence.
-    memset(samples, 0, chunk.mDuration * sizeof(samples[0]));
   }
 
   MOZ_ASSERT(!(rate%100)); // rate should be a multiple of 100
@@ -999,7 +998,7 @@ void MediaPipelineTransmit::PipelineListener::ProcessAudioChunk(
   // from the last run)
   int64_t chunk_remaining;
   int64_t tocpy;
-  int16_t *samples_tmp = samples.get();
+  int16_t *samples_tmp = convertedSamples.get();
 
   chunk_remaining = chunk.mDuration;
 
