@@ -15,6 +15,9 @@
 #include "mozilla/Monitor.h"
 #include "mozilla/Vector.h"
 #include "mozilla/WeakPtr.h"
+#if defined(OS_WIN)
+#include "mozilla/ipc/Neutering.h"
+#endif // defined(OS_WIN)
 #include "mozilla/ipc/Transport.h"
 #include "MessageLink.h"
 #include "nsAutoPtr.h"

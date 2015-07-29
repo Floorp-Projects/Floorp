@@ -42,5 +42,5 @@ interface nsIPrivateBrowsingTrackingProtectionWhitelist : nsISupports
 };
 
 %{ C++
-#define NS_PBTRACKINGPROTECTIONWHITELIST_CONTRACTID "@mozilla.org/url-classifier/pbm-tp-whitelist;1"
+#define NS_PBTRACKINGPROTECTIONWHITELIST_CONTRACTID "@mozilla.org/pbm-tp-whitelist;1"
 %}

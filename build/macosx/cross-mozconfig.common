@@ -1,0 +1,50 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+MOZ_AUTOMATION_L10N_CHECK=0
+#TODO: bug 935237 - fix packaging
+MOZ_AUTOMATION_PACKAGE=0
+#TODO: bug 543111 - fix Breakpad
+MOZ_AUTOMATION_BUILD_SYMBOLS=0
+MOZ_AUTOMATION_UPLOAD_SYMBOLS=0
+
+if [ "x$IS_NIGHTLY" = "xyes" ]; then
+  # Some nightlies (eg: Mulet) don't want these set.
+  MOZ_AUTOMATION_UPDATE_PACKAGING=${MOZ_AUTOMATION_UPDATE_PACKAGING-1}
+  MOZ_AUTOMATION_SDK=${MOZ_AUTOMATION_SDK-1}
+fi
+. "$topsrcdir/build/mozconfig.common"
+#TODO: bug 543111 - fix Breakpad
+ac_add_options --disable-crashreporter
+
+# ld needs libLTO.so from llvm
+mk_add_options "export LD_LIBRARY_PATH=$topsrcdir/clang/lib"
+
+CROSS_CCTOOLS_PATH=$topsrcdir/cctools
+CROSS_SYSROOT=$topsrcdir/MacOSX10.7.sdk
+CROSS_PRIVATE_FRAMEWORKS=$CROSS_SYSROOT/System/Library/PrivateFrameworks
+FLAGS="-target x86_64-apple-darwin10 -mlinker-version=136 -B $CROSS_CCTOOLS_PATH/bin -isysroot $CROSS_SYSROOT"
+
+export CC="$topsrcdir/clang/bin/clang $FLAGS"
+export CXX="$topsrcdir/clang/bin/clang++ $FLAGS"
+export CPP="$topsrcdir/clang/bin/clang $FLAGS -E"
+export LLVMCONFIG=$topsrcdir/clang/bin/llvm-config
+export LDFLAGS="-Wl,-syslibroot,$CROSS_SYSROOT -Wl,-dead_strip"
+export TOOLCHAIN_PREFIX=$CROSS_CCTOOLS_PATH/bin/x86_64-apple-darwin10-
+#TODO: bug 1184202 - would be nice if these could be detected with TOOLCHAIN_PREFIX automatically
+export AR=${TOOLCHAIN_PREFIX}ar
+export RANLIB=${TOOLCHAIN_PREFIX}ranlib
+export STRIP=${TOOLCHAIN_PREFIX}strip
+export OTOOL=${TOOLCHAIN_PREFIX}otool
+
+export HOST_CC=gcc
+export HOST_CXX=g++
+export HOST_LDFLAGS="-g"
+
+ac_add_options --target=x86_64-apple-darwin
+ac_add_options --with-macos-private-frameworks=$CROSS_PRIVATE_FRAMEWORKS
+
+. "$topsrcdir/build/mozconfig.cache"
+
+export SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE=/builds/crash-stats-api.token

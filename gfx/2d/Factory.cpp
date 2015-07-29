@@ -621,7 +621,9 @@ Factory::SetDirect3D10Device(ID3D10Device1 *aDevice)
   // do not throw on failure; return error codes and disconnect the device
   // On Windows 8 error codes are the default, but on Windows 7 the
   // default is to throw (or perhaps only with some drivers?)
-  aDevice->SetExceptionMode(0);
+  if (aDevice) {
+    aDevice->SetExceptionMode(0);
+  }
   mD3D10Device = aDevice;
 }
 

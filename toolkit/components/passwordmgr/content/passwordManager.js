@@ -78,6 +78,12 @@ var signonsTreeView = {
         return "";
     }
   },
+  isEditable : function(row, col) {
+    if (col.id == "userCol" || col.id == "passwordCol") {
+      return true;
+    }
+    return false;
+  },
   isSeparator : function(index) { return false; },
   isSorted : function() { return false; },
   isContainer : function(index) { return false; },
@@ -89,7 +95,31 @@ var signonsTreeView = {
       return "ltr";
 
     return "";
-  }
+  },
+  setCellText : function(row, col, value) {
+    // If there is a filter, _filterSet needs to be used, otherwise signons is used.
+    let table = signonsTreeView._filterSet.length ? signonsTreeView._filterSet : signons;
+    function _editLogin(field) {
+      if (value == table[row][field]) {
+        return;
+      }
+      let existingLogin = table[row].clone();
+      table[row][field] = value;
+      table[row].timePasswordChanged = Date.now();
+      passwordmanager.modifyLogin(existingLogin, table[row]);
+      signonsTree.treeBoxObject.invalidateRow(row);
+    }
+
+    if (col.id == "userCol") {
+     _editLogin("username");
+
+    } else if (col.id == "passwordCol") {
+      if (!value) {
+        return;
+      }
+      _editLogin("password");
+    }
+  },
 };
 
 
@@ -207,11 +237,15 @@ function FinalizeSignonDeletions(syncNeeded) {
 }
 
 function HandleSignonKeyPress(e) {
+  // If editing is currently performed, don't do anything.
+  if (signonsTree.getAttribute("editing")) {
+    return;
+  }
   if (e.keyCode == KeyEvent.DOM_VK_DELETE
 #ifdef XP_MACOSX
       || e.keyCode == KeyEvent.DOM_VK_BACK_SPACE
 #endif
-     ) {
+   ) {
     DeleteSignon();
   }
 }
@@ -411,4 +445,12 @@ function masterPasswordLogin(noPasswordCallback) {
   }
 
   return token.isLoggedIn();
+}
+
+function escapeKeyHandler() {
+  // If editing is currently performed, don't do anything.
+  if (signonsTree.getAttribute("editing")) {
+    return;
+  }
+  window.close();
 }

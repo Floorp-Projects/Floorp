@@ -300,9 +300,3 @@ gfxWindowsSurface::GetSize() const
     return mozilla::gfx::IntSize(cairo_win32_surface_get_width(mSurface),
                       cairo_win32_surface_get_height(mSurface));
 }
-
-gfxMemoryLocation
-gfxWindowsSurface::GetMemoryLocation() const
-{
-    return gfxMemoryLocation::IN_PROCESS_NONHEAP;
-}

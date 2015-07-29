@@ -606,9 +606,3 @@ gfxXlibSurface::GetGLXPixmap()
     return mGLXPixmap;
 }
 #endif
-
-gfxMemoryLocation
-gfxXlibSurface::GetMemoryLocation() const
-{
-    return gfxMemoryLocation::OUT_OF_PROCESS;
-}

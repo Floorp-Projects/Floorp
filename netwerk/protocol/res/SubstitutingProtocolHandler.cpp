@@ -84,9 +84,23 @@ SubstitutingURL::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
 SubstitutingProtocolHandler::SubstitutingProtocolHandler(const char* aScheme, uint32_t aFlags,
                                                          bool aEnforceFileOrJar)
   : mScheme(aScheme)
-  , mFlags(aFlags)
   , mSubstitutions(16)
   , mEnforceFileOrJar(aEnforceFileOrJar)
+{
+  mFlags.emplace(aFlags);
+  ConstructInternal();
+}
+
+SubstitutingProtocolHandler::SubstitutingProtocolHandler(const char* aScheme)
+  : mScheme(aScheme)
+  , mSubstitutions(16)
+  , mEnforceFileOrJar(true)
+{
+  ConstructInternal();
+}
+
+void
+SubstitutingProtocolHandler::ConstructInternal()
 {
   nsresult rv;
   mIOService = do_GetIOService(&rv);
@@ -180,7 +194,12 @@ SubstitutingProtocolHandler::GetDefaultPort(int32_t *result)
 nsresult
 SubstitutingProtocolHandler::GetProtocolFlags(uint32_t *result)
 {
-  *result = mFlags;
+  if (mFlags.isNothing()) {
+    NS_WARNING("Trying to get protocol flags the wrong way - use nsIProtocolHandlerWithDynamicFlags instead");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  *result = mFlags.ref();
   return NS_OK;
 }
 
@@ -328,8 +347,7 @@ nsresult
 SubstitutingProtocolHandler::HasSubstitution(const nsACString& root, bool *result)
 {
   NS_ENSURE_ARG_POINTER(result);
-
-  *result = mSubstitutions.Get(root, nullptr);
+  *result = HasSubstitution(root);
   return NS_OK;
 }
 
@@ -346,6 +364,10 @@ SubstitutingProtocolHandler::ResolveURI(nsIURI *uri, nsACString &result)
 
   rv = uri->GetPath(path);
   if (NS_FAILED(rv)) return rv;
+
+  if (ResolveSpecialCases(host, path, result)) {
+    return NS_OK;
+  }
 
   // Unescape the path so we can perform some checks on it.
   nsAutoCString unescapedPath(path);

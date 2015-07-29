@@ -8,17 +8,22 @@
 #define vm_Stack_h
 
 #include "mozilla/Atomics.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Variant.h"
 
 #include "jsfun.h"
 #include "jsscript.h"
 #include "jsutil.h"
 
 #include "asmjs/AsmJSFrameIterator.h"
+#include "gc/Rooting.h"
 #include "jit/JitFrameIterator.h"
 #ifdef CHECK_OSIPOINT_REGISTERS
 #include "jit/Registers.h" // for RegisterDump
 #endif
+#include "js/RootingAPI.h"
+#include "vm/SavedFrame.h"
 
 struct JSCompartment;
 
@@ -34,6 +39,7 @@ class ArgumentsObject;
 class AsmJSModule;
 class InterpreterRegs;
 class CallObject;
+class FrameIter;
 class ScopeObject;
 class ScriptFrameIter;
 class SPSProfiler;
@@ -43,6 +49,10 @@ class StaticBlockObject;
 class ScopeCoordinate;
 
 class SavedFrame;
+
+namespace jit {
+class CommonFrameLayout;
+}
 
 // VM stack layout
 //
@@ -196,6 +206,8 @@ class AbstractFramePtr
     inline bool isGlobalFrame() const;
     inline bool isEvalFrame() const;
     inline bool isDebuggerEvalFrame() const;
+    inline bool hasCachedSavedFrame() const;
+    inline void setHasCachedSavedFrame();
 
     inline JSScript* script() const;
     inline JSFunction* fun() const;
@@ -279,13 +291,13 @@ enum ExecuteType {
 class InterpreterFrame
 {
   public:
-    enum Flags {
+    enum Flags : uint32_t {
         /* Primary frame type */
-        GLOBAL             =        0x1,  /* frame pushed for a global script */
-        FUNCTION           =        0x2,  /* frame pushed for a scripted call */
+        GLOBAL                 =        0x1,  /* frame pushed for a global script */
+        FUNCTION               =        0x2,  /* frame pushed for a scripted call */
 
         /* Frame subtypes */
-        EVAL               =        0x4,  /* frame pushed for eval() or debugger eval */
+        EVAL                   =        0x4,  /* frame pushed for eval() or debugger eval */
 
 
         /*
@@ -300,42 +312,50 @@ class InterpreterFrame
          *   previous frame in memory. Iteration should treat
          *   evalInFramePrev_ as this frame's previous frame.
          */
-        DEBUGGER_EVAL      =        0x8,
+        DEBUGGER_EVAL          =        0x8,
 
-        CONSTRUCTING       =       0x10,  /* frame is for a constructor invocation */
+        CONSTRUCTING           =       0x10,  /* frame is for a constructor invocation */
 
-        RESUMED_GENERATOR  =       0x20,  /* frame is for a resumed generator invocation */
+        RESUMED_GENERATOR      =       0x20,  /* frame is for a resumed generator invocation */
 
         /* (0x40 and 0x80 are unused) */
 
         /* Function prologue state */
-        HAS_CALL_OBJ       =      0x100,  /* CallObject created for heavyweight fun */
-        HAS_ARGS_OBJ       =      0x200,  /* ArgumentsObject created for needsArgsObj script */
+        HAS_CALL_OBJ           =      0x100,  /* CallObject created for heavyweight fun */
+        HAS_ARGS_OBJ           =      0x200,  /* ArgumentsObject created for needsArgsObj script */
 
         /* Lazy frame initialization */
-        HAS_RVAL           =      0x800,  /* frame has rval_ set */
-        HAS_SCOPECHAIN     =     0x1000,  /* frame has scopeChain_ set */
+        HAS_RVAL               =      0x800,  /* frame has rval_ set */
+        HAS_SCOPECHAIN         =     0x1000,  /* frame has scopeChain_ set */
 
         /* Debugger state */
-        PREV_UP_TO_DATE    =     0x4000,  /* see DebugScopes::updateLiveScopes */
+        PREV_UP_TO_DATE        =     0x4000,  /* see DebugScopes::updateLiveScopes */
 
         /*
          * See comment above 'isDebuggee' in jscompartment.h for explanation of
          * invariants of debuggee compartments, scripts, and frames.
          */
-        DEBUGGEE           =     0x8000,  /* Execution is being observed by Debugger */
+        DEBUGGEE               =     0x8000,  /* Execution is being observed by Debugger */
 
         /* Used in tracking calls and profiling (see vm/SPSProfiler.cpp) */
-        HAS_PUSHED_SPS_FRAME =   0x10000, /* SPS was notified of enty */
+        HAS_PUSHED_SPS_FRAME   =    0x10000, /* SPS was notified of enty */
+
 
         /*
          * If set, we entered one of the JITs and ScriptFrameIter should skip
          * this frame.
          */
-        RUNNING_IN_JIT     =    0x20000,
+        RUNNING_IN_JIT         =    0x20000,
 
         /* Miscellaneous state. */
-        CREATE_SINGLETON   =    0x40000   /* Constructed |this| object should be singleton. */
+        CREATE_SINGLETON       =    0x40000,   /* Constructed |this| object should be singleton. */
+
+        /*
+         * If set, this frame has been on the stack when
+         * |js::SavedStacks::saveCurrentStack| was called, and so there is a
+         * |js::SavedFrame| object cached for this frame.
+         */
+        HAS_CACHED_SAVED_FRAME =    0x80000,
     };
 
   private:
@@ -898,6 +918,13 @@ class InterpreterFrame
 
     inline void unsetIsDebuggee();
 
+    bool hasCachedSavedFrame() const {
+        return flags_ & HAS_CACHED_SAVED_FRAME;
+    }
+    void setHasCachedSavedFrame() {
+        flags_ |= HAS_CACHED_SAVED_FRAME;
+    }
+
   public:
     void mark(JSTracer* trc);
     void markValues(JSTracer* trc, unsigned start, unsigned end);
@@ -1091,6 +1118,128 @@ struct DefaultHasher<AbstractFramePtr> {
 
 /*****************************************************************************/
 
+// SavedFrame caching to minimize stack walking.
+//
+// SavedFrames are hash consed to minimize expensive (with regards to both space
+// and time) allocations in the face of many stack frames that tend to share the
+// same older tail frames. Despite that, in scenarios where we are frequently
+// saving the same or similar stacks, such as when the Debugger's allocation
+// site tracking is enabled, these older stack frames still get walked
+// repeatedly just to create the lookup structs to find their corresponding
+// SavedFrames in the hash table. This stack walking is slow, and we would like
+// to minimize it.
+//
+// We have reserved a bit on most of SpiderMonkey's various frame
+// representations (the exceptions being asm and inlined ion frames). As we
+// create SavedFrame objects for live stack frames in SavedStacks::insertFrames,
+// we set this bit and append the SavedFrame object to the cache. As we walk the
+// stack, if we encounter a frame that has this bit set, that indicates that we
+// have already captured a SavedFrame object for the given stack frame (but not
+// necessarily the current pc) during a previous call to insertFrames. We know
+// that the frame's parent was also captured and has its bit set as well, but
+// additionally we know the parent was captured at its current pc. For the
+// parent, rather than continuing the expensive stack walk, we do a quick and
+// cache-friendly linear search through the frame cache. Upon finishing search
+// through the frame cache, stale entries are removed.
+//
+// The frame cache maintains the invariant that its first E[0] .. E[j-1]
+// entries are live and sorted from oldest to younger frames, where 0 < j < n
+// and n = the length of the cache. When searching the cache, we require
+// that we are considering the youngest live frame whose bit is set. Every
+// cache entry E[i] where i >= j is a stale entry. Consider the following
+// scenario:
+//
+//     P  >  Q  >  R  >  S          Initial stack, bits not set.
+//     P* >  Q* >  R* >  S*         Capture a SavedFrame stack, set bits.
+//     P* >  Q* >  R*               Return from S.
+//     P* >  Q*                     Return from R.
+//     P* >  Q* >  T                Call T, its bit is not set.
+//
+// The frame cache was populated with [P, Q, R, S] when we captured a
+// SavedFrame stack, but because we returned from frames R and S, their
+// entries in the frame cache are now stale. This fact is unbeknownst to us
+// because we do not observe frame pops. Upon capturing a second stack, we
+// start stack walking at the youngest frame T, which does not have its bit
+// set and must take the hash table lookup slow path rather than the frame
+// cache short circuit. Next we proceed to Q and find that it has its bit
+// set, and it is therefore the youngest live frame with its bit set. We
+// search through the frame cache from oldest to youngest and find the cache
+// entry matching Q. We know that T is the next younger live frame from Q
+// and that T does not have an entry in the frame cache because its bit was
+// not set. Therefore, we have found entry E[j-1] and the subsequent entries
+// are stale and should be purged from the frame cache.
+//
+// We have a LiveSavedFrameCache for each activation to minimize the number of
+// entries that must be scanned through, and to avoid the headaches of
+// maintaining a cache for each compartment and invalidating stale cache entries
+// in the presence of cross-compartment calls.
+class LiveSavedFrameCache : public JS::StaticTraceable
+{
+  public:
+    using FramePtr = mozilla::Variant<AbstractFramePtr, jit::CommonFrameLayout*>;
+
+  private:
+    struct Entry
+    {
+        FramePtr                    framePtr;
+        jsbytecode*                 pc;
+        RelocatablePtr<SavedFrame*> savedFrame;
+
+        Entry(FramePtr& framePtr, jsbytecode* pc, SavedFrame* savedFrame)
+          : framePtr(framePtr)
+          , pc(pc)
+          , savedFrame(savedFrame)
+        { }
+    };
+
+    using EntryVector = Vector<Entry, 0, SystemAllocPolicy>;
+    EntryVector* frames;
+
+    LiveSavedFrameCache(const LiveSavedFrameCache&) = delete;
+    LiveSavedFrameCache& operator=(const LiveSavedFrameCache&) = delete;
+
+  public:
+    explicit LiveSavedFrameCache() : frames(nullptr) { }
+
+    LiveSavedFrameCache(LiveSavedFrameCache&& rhs)
+        : frames(rhs.frames)
+    {
+        MOZ_ASSERT(this != &rhs, "self-move disallowed");
+        rhs.frames = nullptr;
+    }
+
+    ~LiveSavedFrameCache() {
+        if (frames) {
+            js_delete(frames);
+            frames = nullptr;
+        }
+    }
+
+    bool initialized() const { return !!frames; }
+    bool init(JSContext* cx) {
+        frames = js_new<EntryVector>();
+        if (!frames) {
+            JS_ReportOutOfMemory(cx);
+            return false;
+        }
+        return true;
+    }
+
+    static mozilla::Maybe<FramePtr> getFramePtr(FrameIter& iter);
+    static void trace(LiveSavedFrameCache* cache, JSTracer* trc);
+
+    void find(JSContext* cx, FrameIter& frameIter, MutableHandleSavedFrame frame) const;
+    bool insert(JSContext* cx, FramePtr& framePtr, jsbytecode* pc, HandleSavedFrame savedFrame);
+};
+
+static_assert(sizeof(LiveSavedFrameCache) == sizeof(uintptr_t),
+              "Every js::Activation has a LiveSavedFrameCache, so we need to be pretty careful "
+              "about avoiding bloat. If you're adding members to LiveSavedFrameCache, maybe you "
+              "should consider figuring out a way to make js::Activation have a "
+              "LiveSavedFrameCache* instead of a Rooted<LiveSavedFrameCache>.");
+
+/*****************************************************************************/
+
 class InterpreterActivation;
 class AsmJSActivation;
 
@@ -1118,6 +1267,10 @@ class Activation
     // activation, which should prompt the caller to consult embedding-specific
     // data structures instead.
     size_t hideScriptedCallerCount_;
+
+    // The cache of SavedFrame objects we have already captured when walking
+    // this activation's stack.
+    Rooted<LiveSavedFrameCache> frameCache_;
 
     // Youngest saved frame of an async stack that will be iterated during stack
     // capture in place of the actual stack of previous activations. Note that
@@ -1222,6 +1375,8 @@ class Activation
     bool asyncCallIsExplicit() const {
         return asyncCallIsExplicit_;
     }
+
+    inline LiveSavedFrameCache* getLiveSavedFrameCache(JSContext* cx);
 
   private:
     Activation(const Activation& other) = delete;
@@ -1638,7 +1793,7 @@ class AsmJSActivation : public Activation
 //
 // FrameIter is parameterized by what it includes in the stack iteration:
 //  - The SavedOption controls whether FrameIter stops when it finds an
-//    activation that was set aside via JS_SaveFrameChain (and not yet retored
+//    activation that was set aside via JS_SaveFrameChain (and not yet restored
 //    by JS_RestoreFrameChain). (Hopefully this will go away.)
 //  - The ContextOption determines whether the iteration will view frames from
 //    all JSContexts or just the given JSContext. (Hopefully this will go away.)
@@ -1713,12 +1868,17 @@ class FrameIter
     bool isAsmJS() const { MOZ_ASSERT(!done()); return data_.state_ == ASMJS; }
     inline bool isIon() const;
     inline bool isBaseline() const;
+    inline bool isPhysicalIonFrame() const;
 
     bool isFunctionFrame() const;
     bool isGlobalFrame() const;
     bool isEvalFrame() const;
     bool isNonEvalFunctionFrame() const;
     bool hasArgs() const { return isNonEvalFunctionFrame(); }
+
+    // These two methods may not be called with asm frames.
+    inline bool hasCachedSavedFrame() const;
+    inline void setHasCachedSavedFrame();
 
     ScriptSource* scriptSource() const;
     const char* scriptFilename() const;
@@ -1806,6 +1966,9 @@ class FrameIter
 
     // This can only be called when isInterp():
     inline InterpreterFrame* interpFrame() const;
+
+    // This can only be called when isPhysicalIonFrame():
+    inline jit::CommonFrameLayout* physicalIonFrame() const;
 
   private:
     Data data_;
@@ -2013,6 +2176,21 @@ FrameIter::interpFrame() const
 {
     MOZ_ASSERT(data_.state_ == INTERP);
     return data_.interpFrames_.frame();
+}
+
+inline bool
+FrameIter::isPhysicalIonFrame() const
+{
+    return isJit() &&
+           data_.jitFrames_.isIonScripted() &&
+           ionInlineFrames_.frameNo() == 0;
+}
+
+inline jit::CommonFrameLayout*
+FrameIter::physicalIonFrame() const
+{
+    MOZ_ASSERT(isPhysicalIonFrame());
+    return data_.jitFrames_.current();
 }
 
 }  /* namespace js */

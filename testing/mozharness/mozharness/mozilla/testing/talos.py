@@ -574,9 +574,6 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
         # XXX temporary python version check
         python = self.query_python_path()
         self.run_command([python, "--version"])
-        # run talos tests
-        talos = os.path.join(self.talos_path, 'talos', 'PerfConfigurator.py')
-        command = [python, talos] + options
         parser = TalosOutputParser(config=self.config, log_obj=self.log_obj,
                                    error_list=TalosErrorList)
         env = {}
@@ -587,15 +584,9 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
         env = self.query_env(partial_env=env, log_level=INFO)
         # sets a timeout for how long talos should run without output
         output_timeout = self.config.get('talos_output_timeout', 3600)
-        # Call PerfConfigurator to generate talos.yml
-        self.return_code = self.run_command(command, cwd=self.workdir,
-                                            output_timeout=output_timeout,
-                                            output_parser=parser,
-                                            env=env)
-        # Call run_tests on generated talos.yml
+        # run talos tests
         run_tests = os.path.join(self.talos_path, 'talos', 'run_tests.py')
-        options = "talos.yml"
-        command = [python, run_tests, '--noisy', '--debug'] + [options]
+        command = [python, run_tests, '--debug'] + options
         self.return_code = self.run_command(command, cwd=self.workdir,
                                             output_timeout=output_timeout,
                                             output_parser=parser,

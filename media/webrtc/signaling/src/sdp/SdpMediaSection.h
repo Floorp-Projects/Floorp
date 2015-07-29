@@ -148,6 +148,80 @@ public:
     GetAttributeList().SetAttribute(new SdpDirectionAttribute(direction));
   }
 
+  const SdpFmtpAttributeList::Parameters*
+  FindFmtp(const std::string& pt) const
+  {
+    const SdpAttributeList& attrs = GetAttributeList();
+
+    if (attrs.HasAttribute(SdpAttribute::kFmtpAttribute)) {
+      const SdpFmtpAttributeList& fmtps = attrs.GetFmtp();
+      for (auto i = fmtps.mFmtps.begin(); i != fmtps.mFmtps.end(); ++i) {
+        if (i->format == pt && i->parameters) {
+          return i->parameters.get();
+        }
+      }
+    }
+    return nullptr;
+  }
+
+  const SdpRtpmapAttributeList::Rtpmap*
+  FindRtpmap(const std::string& pt) const
+  {
+    auto& attrs = GetAttributeList();
+    if (!attrs.HasAttribute(SdpAttribute::kRtpmapAttribute)) {
+      return nullptr;
+    }
+
+    const SdpRtpmapAttributeList& rtpmap = attrs.GetRtpmap();
+    if (!rtpmap.HasEntry(pt)) {
+      return nullptr;
+    }
+
+    return &rtpmap.GetEntry(pt);
+  }
+
+  const SdpSctpmapAttributeList::Sctpmap*
+  FindSctpmap(const std::string& pt) const
+  {
+    auto& attrs = GetAttributeList();
+    if (!attrs.HasAttribute(SdpAttribute::kSctpmapAttribute)) {
+      return nullptr;
+    }
+
+    const SdpSctpmapAttributeList& sctpmap = attrs.GetSctpmap();
+    if (!sctpmap.HasEntry(pt)) {
+      return nullptr;
+    }
+
+    return &sctpmap.GetEntry(pt);
+  }
+
+  bool
+  HasRtcpFb(const std::string& pt,
+            SdpRtcpFbAttributeList::Type type,
+            const std::string& subType) const
+  {
+    const SdpAttributeList& attrs(GetAttributeList());
+
+    if (!attrs.HasAttribute(SdpAttribute::kRtcpFbAttribute)) {
+      return false;
+    }
+
+    for (auto& rtcpfb : attrs.GetRtcpFb().mFeedbacks) {
+      if (rtcpfb.type == type) {
+        if (rtcpfb.pt == "*" || rtcpfb.pt == pt) {
+          if (rtcpfb.parameter == subType) {
+            return true;
+          }
+        }
+      }
+    }
+
+    return false;
+  }
+
+
+
 private:
   size_t mLevel;
 };

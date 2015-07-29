@@ -745,13 +745,7 @@ nsPerformance::InsertUserEntry(PerformanceEntry* aEntry)
       // If we have no URI, just put in "none".
       uri.AssignLiteral("none");
     }
-    PERFLOG("Performance Entry: %s|%s|%s|%f|%f|%" PRIu64 "\n",
-            uri.get(),
-            NS_ConvertUTF16toUTF8(aEntry->GetEntryType()).get(),
-            NS_ConvertUTF16toUTF8(aEntry->GetName()).get(),
-            aEntry->StartTime(),
-            aEntry->Duration(),
-            static_cast<uint64_t>(PR_Now() / PR_USEC_PER_MSEC));
+    PerformanceBase::LogEntry(aEntry, uri);
   }
 
   PerformanceBase::InsertUserEntry(aEntry);
@@ -978,6 +972,18 @@ void
 PerformanceBase::ClearMeasures(const Optional<nsAString>& aName)
 {
   ClearUserEntries(aName, NS_LITERAL_STRING("measure"));
+}
+
+void
+PerformanceBase::LogEntry(PerformanceEntry* aEntry, const nsACString& aOwner) const
+{
+  PERFLOG("Performance Entry: %s|%s|%s|%f|%f|%" PRIu64 "\n",
+          aOwner.BeginReading(),
+          NS_ConvertUTF16toUTF8(aEntry->GetEntryType()).get(),
+          NS_ConvertUTF16toUTF8(aEntry->GetName()).get(),
+          aEntry->StartTime(),
+          aEntry->Duration(),
+          static_cast<uint64_t>(PR_Now() / PR_USEC_PER_MSEC));
 }
 
 void

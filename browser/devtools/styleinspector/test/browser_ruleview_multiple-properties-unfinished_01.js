@@ -36,9 +36,9 @@ function waitRuleViewChanged(view, n) {
 }
 function* testCreateNewMultiUnfinished(inspector, ruleEditor, view) {
   let onMutation = inspector.once("markupmutation");
-  // There is 6 rule-view updates, one for the rule view creation,
-  // one for each new property and one last for throttle update.
-  let onRuleViewChanged = waitRuleViewChanged(view, 6);
+  // There is 5 rule-view updates, one for the rule view creation,
+  // one for each new property
+  let onRuleViewChanged = waitRuleViewChanged(view, 5);
   yield createNewRuleViewProperty(ruleEditor,
     "color:blue;background : orange   ; text-align:center; border-color: ");
   yield onMutation;

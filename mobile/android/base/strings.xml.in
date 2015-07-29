@@ -472,8 +472,8 @@
   <string name="doorhanger_tracking_title">&doorhanger_tracking_title;</string>
   <string name="doorhanger_tracking_state_enabled">&doorhanger_tracking_state_enabled;</string>
   <string name="doorhanger_tracking_state_disabled">&doorhanger_tracking_state_disabled;</string>
-  <string name="doorhanger_tracking_message_enabled">&doorhanger_tracking_message_enabled;</string>
-  <string name="doorhanger_tracking_message_disabled">&doorhanger_tracking_message_disabled;</string>
+  <string name="doorhanger_tracking_message_enabled">&doorhanger_tracking_message_enabled1;</string>
+  <string name="doorhanger_tracking_message_disabled">&doorhanger_tracking_message_disabled1;</string>
 
   <string name="learn_more">&learn_more;</string>
   <string name="enable_protection">&enable_protection;</string>

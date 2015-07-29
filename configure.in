@@ -4345,10 +4345,7 @@ cairo-cocoa)
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
     MOZ_USER_DIR="Mozilla"
     MOZ_FS_LAYOUT=bundle
-    # skip event loop instrumentation on UIKit for now
-    if test "$MOZ_WIDGET_TOOLKIT" == "cocoa"; then
-      MOZ_INSTRUMENT_EVENT_LOOP=1
-    fi
+    MOZ_INSTRUMENT_EVENT_LOOP=1
     ;;
 
 cairo-uikit)
@@ -9215,22 +9212,6 @@ if test "$COMPILE_ENVIRONMENT" -a -z "$LIBXUL_SDK_DIR"; then
   MOZ_SUBCONFIGURE_ICU()
   MOZ_SUBCONFIGURE_FFI()
 fi
-
-# Hack around an Apple bug that affects the egrep that comes with OS X 10.7.
-# "env ARCHPREFERENCE=i386,x86_64 arch egrep" first tries to use the 32-bit
-# Intel part of the egrep fat binary, even on 64-bit systems, and falls back on
-# the 64-bit part if it's not a fat binary, as can happen with MacPorts. We
-# (apparently) only need this hack when egrep's "pattern" is particularly long
-# (as in the following code) and the first egrep on our $PATH is Apple's.  See
-# bug 655339.
-case "$host" in
-*-apple-darwin11*)
-    FIXED_EGREP="env ARCHPREFERENCE=i386,x86_64 arch egrep"
-    ;;
-*)
-    FIXED_EGREP="egrep"
-    ;;
-esac
 
 # Run jemalloc configure script
 

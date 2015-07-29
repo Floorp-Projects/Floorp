@@ -22,6 +22,11 @@ function hidden(sel) {
   return display === "none";
 }
 
+function identityPopupState() {
+  let win = browser.ownerGlobal;
+  return win.document.getElementById("identity-popup").state;
+}
+
 function clickButton(sel) {
   let win = browser.ownerGlobal;
   let el = win.document.querySelector(sel);
@@ -85,6 +90,8 @@ add_task(function* testExceptionAddition() {
   info("Disable TP for the page (which reloads the page)");
   let tabReloadPromise = promiseTabLoadEvent(tab);
   clickButton("#tracking-action-unblock");
+  is(identityPopupState(), "closed", "foobar");
+
   yield tabReloadPromise;
   testTrackingPageUnblocked();
 
@@ -115,6 +122,8 @@ add_task(function* testExceptionPersistence() {
   info("Disable TP for the page (which reloads the page)");
   let tabReloadPromise = promiseTabLoadEvent(tab);
   clickButton("#tracking-action-unblock");
+  is(identityPopupState(), "closed", "foobar");
+
   yield tabReloadPromise;
   testTrackingPageUnblocked();
 
