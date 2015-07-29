@@ -256,7 +256,8 @@ loop.standaloneRoomViews = (function(mozL10n) {
     mixins: [
       Backbone.Events,
       sharedMixins.MediaSetupMixin,
-      sharedMixins.RoomsAudioMixin
+      sharedMixins.RoomsAudioMixin,
+      sharedMixins.DocumentTitleMixin
     ],
 
     propTypes: {
@@ -306,6 +307,14 @@ loop.standaloneRoomViews = (function(mozL10n) {
      * @param  {Object} nextState Next state object.
      */
     componentWillUpdate: function(nextProps, nextState) {
+      if (this.state.roomState !== ROOM_STATES.READY &&
+          nextState.roomState === ROOM_STATES.READY) {
+        this.setTitle(mozL10n.get("standalone_title_with_room_name", {
+          roomName: nextState.roomName || this.state.roomName,
+          clientShortname: mozL10n.get("clientShortname2")
+        }));
+      }
+
       if (this.state.roomState !== ROOM_STATES.MEDIA_WAIT &&
           nextState.roomState === ROOM_STATES.MEDIA_WAIT) {
         this.props.dispatcher.dispatch(new sharedActions.SetupStreamElements({

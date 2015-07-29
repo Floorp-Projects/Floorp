@@ -31,14 +31,20 @@ class GaiaBuildUnitTest(GaiaTest):
         output_parser = TestSummaryOutputParserHelper(
           config=self.config, log_obj=self.log_obj, error_list=self.error_list)
 
-        code = self.run_command([
+        cmd = [
             'make',
             'build-test-unit',
             'REPORTER=mocha-tbpl-reporter',
             'NODE_MODULES_SRC=npm-cache',
             'VIRTUALENV_EXISTS=1',
             'TRY_ENV=1'
-        ], cwd=dirs['abs_gaia_dir'],
+        ]
+
+        # for Mulet
+        if 'firefox' in self.binary_path:
+            cmd += ['RUNTIME=%s' % self.binary_path]
+
+        code = self.run_command(cmd, cwd=dirs['abs_gaia_dir'],
            output_parser=output_parser,
            output_timeout=330)
 

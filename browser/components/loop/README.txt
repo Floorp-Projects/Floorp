@@ -56,6 +56,17 @@ You can also run it by hand in the browser/components/loop directory:
 
   eslint --ext .js --ext .jsx --ext .jsm .
 
+Test coverage
+=============
+Initial setup
+  cd test
+  npm install
+
+To run
+  npm run build-coverage
+
+It will create a `coverage` folder under test/
+
 Front-End Unit Tests
 ====================
 The unit tests for Loop reside in three directories:

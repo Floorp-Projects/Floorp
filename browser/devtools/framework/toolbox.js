@@ -1756,6 +1756,14 @@ Toolbox.prototype = {
         yield this.highlighterUtils.stopPicker();
         yield this._inspector.destroy();
         if (this._highlighter) {
+          // Note that if the toolbox is closed, this will work fine, but will fail
+          // in case the browser is closed and will trigger a noSuchActor message.
+          // We ignore the promise that |_hideBoxModel| returns, since we should still
+          // proceed with the rest of destruction if it fails.
+          // FF42+ now does the cleanup from the actor.
+          if (!this.highlighter.traits.autoHideOnDestroy) {
+            this.highlighterUtils.unhighlight();
+          }
           yield this._highlighter.destroy();
         }
         if (this._selection) {

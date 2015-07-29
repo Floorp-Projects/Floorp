@@ -111,6 +111,10 @@
   transition: none;
 }
 
+#urlbar[pageproxystate="invalid"] > #identity-box > #identity-icons > #tracking-protection-icon {
+  visibility: collapse;
+}
+
 /* MAIN IDENTITY ICON */
 
 #page-proxy-favicon {
@@ -119,26 +123,26 @@
   list-style-image: url(chrome://browser/skin/identity-not-secure.svg);
 }
 
-.chromeUI > #page-proxy-favicon[pageproxystate="valid"] {
+.chromeUI > #identity-icons > #page-proxy-favicon[pageproxystate="valid"] {
   list-style-image: url(chrome://branding/content/identity-icons-brand.svg);
 }
 
-.verifiedDomain > #page-proxy-favicon[pageproxystate="valid"],
-.verifiedIdentity > #page-proxy-favicon[pageproxystate="valid"] {
+.verifiedDomain > #identity-icons > #page-proxy-favicon[pageproxystate="valid"],
+.verifiedIdentity > #identity-icons > #page-proxy-favicon[pageproxystate="valid"] {
   list-style-image: url(chrome://browser/skin/identity-secure.svg);
 }
 
-.mixedActiveContent > #page-proxy-favicon[pageproxystate="valid"] {
+.mixedActiveContent > #identity-icons > #page-proxy-favicon[pageproxystate="valid"] {
   list-style-image: url(chrome://browser/skin/identity-mixed-active-loaded.svg);
 }
 
-.weakCipher > #page-proxy-favicon[pageproxystate="valid"],
-.mixedDisplayContent > #page-proxy-favicon[pageproxystate="valid"],
-.mixedDisplayContentLoadedActiveBlocked > #page-proxy-favicon[pageproxystate="valid"] {
+.weakCipher > #identity-icons > #page-proxy-favicon[pageproxystate="valid"],
+.mixedDisplayContent > #identity-icons > #page-proxy-favicon[pageproxystate="valid"],
+.mixedDisplayContentLoadedActiveBlocked > #identity-icons > #page-proxy-favicon[pageproxystate="valid"] {
   list-style-image: url(chrome://browser/skin/identity-mixed-passive-loaded.svg);
 }
 
-.mixedActiveBlocked > #page-proxy-favicon[pageproxystate="valid"] {
+.mixedActiveBlocked > #identity-icons > #page-proxy-favicon[pageproxystate="valid"] {
   list-style-image: url(chrome://browser/skin/identity-mixed-active-blocked.svg);
 }
 
@@ -146,7 +150,7 @@
   opacity: 0.3;
 }
 
-#urlbar[actiontype="searchengine"] > #identity-box > #page-proxy-favicon {
+#urlbar[actiontype="searchengine"] > #identity-box > #identity-icons > #page-proxy-favicon {
   -moz-image-region: inherit;
   list-style-image: url(chrome://global/skin/icons/autocomplete-search.svg#search-icon);
   width: 16px;

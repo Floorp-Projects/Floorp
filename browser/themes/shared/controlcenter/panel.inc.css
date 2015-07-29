@@ -65,7 +65,7 @@
 }
 
 .identity-popup-section:not(:first-child) {
-  border-top: 1px solid rgb(229,229,229);
+  border-top: 1px solid ThreeDShadow;
 }
 
 #identity-popup-securityView,
@@ -126,7 +126,7 @@
 .identity-popup-expander > .button-box {
   padding: 0;
   -moz-appearance: none;
-  border: solid #e5e5e5;
+  border: solid ThreeDShadow;
   border-width: 0 0 0 1px;
 }
 
@@ -209,7 +209,7 @@
 }
 
 #identity-popup-securityView-header {
-  border-bottom: 1px solid #e5e5e5;
+  border-bottom: 1px solid ThreeDShadow;
   padding-bottom: 1em;
   margin-bottom: 1em;
 }
@@ -219,7 +219,7 @@
 }
 
 #identity-popup-content-verifier {
-  color: #636363;
+  color: Graytext;
 }
 
 #identity-popup-content-owner,
@@ -277,7 +277,7 @@
 
 #identity-popup-more-info-button {
   border: none;
-  border-top: 1px solid hsla(210,4%,10%,.14);
+  border-top: 1px solid ThreeDShadow;
   background: transparent;
   -moz-appearance: none;
   margin-top: 5px;
