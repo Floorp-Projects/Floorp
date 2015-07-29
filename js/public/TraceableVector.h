@@ -8,12 +8,12 @@
 #define js_TraceableVector_h
 
 #include "mozilla/Vector.h"
+
 #include "js/RootingAPI.h"
+#include "js/TracingAPI.h"
 #include "js/Vector.h"
 
 namespace js {
-
-template <typename> struct DefaultTracer;
 
 // A TraceableVector is a Vector with an additional trace method that knows how
 // to visit all of the items stored in the Vector. For vectors that contain GC
