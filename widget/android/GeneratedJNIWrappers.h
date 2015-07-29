@@ -3139,7 +3139,6 @@ public:
 
 };
 
-
 } /* widget */
 } /* mozilla */
 #endif // GeneratedJNIWrappers_h

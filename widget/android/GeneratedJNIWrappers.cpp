@@ -1334,6 +1334,5 @@ void Clipboard::SetClipboardText(mozilla::jni::String::Param a0)
     return mozilla::jni::Method<SetClipboardText_t>::Call(nullptr, nullptr, a0);
 }
 
-
 } /* widget */
 } /* mozilla */
