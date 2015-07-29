@@ -997,10 +997,6 @@ template<typename T>
 class PersistentRooted : public js::PersistentRootedBase<T>,
                          private mozilla::LinkedListElement<PersistentRooted<T>>
 {
-    static_assert(!mozilla::IsConvertible<T, StaticTraceable*>::value &&
-                  !mozilla::IsConvertible<T, DynamicTraceable*>::value,
-                  "Rooted takes pointer or Traceable types but not Traceable* type");
-
     typedef mozilla::LinkedListElement<PersistentRooted<T>> ListBase;
 
     friend class mozilla::LinkedList<PersistentRooted>;
@@ -1020,8 +1016,7 @@ class PersistentRooted : public js::PersistentRootedBase<T>,
                    kind == js::THING_ROOT_SCRIPT ||
                    kind == js::THING_ROOT_STRING ||
                    kind == js::THING_ROOT_ID ||
-                   kind == js::THING_ROOT_VALUE ||
-                   kind == js::THING_ROOT_DYNAMIC_TRACEABLE);
+                   kind == js::THING_ROOT_VALUE);
     }
 
   public:
