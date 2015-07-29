@@ -963,7 +963,7 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
 #ifdef DEBUG
     // reget frame from content since it may have been regenerated...
     if (changeData->mContent) {
-      if (!css::CommonAnimationManager::ContentOrAncestorHasAnimation(changeData->mContent)) {
+      if (!CommonAnimationManager::ContentOrAncestorHasAnimation(changeData->mContent)) {
         nsIFrame* frame = changeData->mContent->GetPrimaryFrame();
         if (frame) {
           DebugVerifyStyleTree(frame);
@@ -2625,7 +2625,7 @@ ElementRestyler::AddLayerChangesForAnimation()
     RestyleManager::GetMaxAnimationGenerationForFrame(mFrame);
 
   nsChangeHint hint = nsChangeHint(0);
-  const auto& layerInfo = css::CommonAnimationManager::sLayerAnimationInfo;
+  const auto& layerInfo = CommonAnimationManager::sLayerAnimationInfo;
   for (size_t i = 0; i < ArrayLength(layerInfo); i++) {
     Layer* layer =
       FrameLayerBuilder::GetDedicatedLayer(mFrame, layerInfo[i].mLayerType);
