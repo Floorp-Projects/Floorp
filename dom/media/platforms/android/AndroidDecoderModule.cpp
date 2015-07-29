@@ -37,7 +37,13 @@ namespace mozilla {
 static MediaCodec::LocalRef CreateDecoder(const nsACString& aMimeType)
 {
   MediaCodec::LocalRef codec;
-  NS_ENSURE_SUCCESS(MediaCodec::CreateDecoderByType(PromiseFlatCString(aMimeType).get(), &codec), nullptr);
+  nsACString type = *aMimeType;
+  if (aMimeType.EqualsLiteral("video/webm; codecs=vp8")) {
+      type = "video/x-vnd.on2.vp8";
+  } else if (aMimeType.EqualsLiteral("video/webm; codecs=vp9")) {
+      type = "video/x-vnd.on2.vp9";
+  }
+  NS_ENSURE_SUCCESS(MediaCodec::CreateDecoderByType(PromiseFlatCString(type).get(), &codec), nullptr);
   return codec;
 }
 
