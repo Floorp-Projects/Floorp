@@ -11,7 +11,7 @@
  * uses service workers to notify applications. This interface exists to allow
  * privileged code to receive messages without migrating to service workers.
  */
-[scriptable, uuid(abde228b-7d14-4cab-b1f9-9f87750ede0f)]
+[scriptable, uuid(74586476-d73f-4867-bece-87c1dea35750)]
 interface nsIPushNotificationService : nsISupports
 {
   /**
@@ -48,7 +48,12 @@ interface nsIPushNotificationService : nsISupports
   jsval registration(in string scope, in jsval originAttributes);
 
   /**
-   * Clear all subscriptions
+   * Clear all subscriptions.
    */
-   jsval clearAll();
+  jsval clearAll();
+
+  /**
+   * Clear subscriptions for a domain.
+   */
+  jsval clearForDomain(in string domain);
 };
