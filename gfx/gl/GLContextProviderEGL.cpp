@@ -933,9 +933,9 @@ GLContextEGL::CreateEGLPixmapOffscreenContext(const mozilla::gfx::IntSize& size)
 }
 
 already_AddRefed<GLContext>
-GLContextProviderEGL::CreateHeadless(CreateContextFlags flags)
+GLContextProviderEGL::CreateHeadless(bool requireCompatProfile, bool forceEnabled)
 {
-    if (!sEGLLibrary.EnsureInitialized(flags & CreateContextFlags::FORCE_ENABLE_HARDWARE)) {
+    if (!sEGLLibrary.EnsureInitialized(forceEnabled)) {
         return nullptr;
     }
 
@@ -953,9 +953,9 @@ GLContextProviderEGL::CreateHeadless(CreateContextFlags flags)
 already_AddRefed<GLContext>
 GLContextProviderEGL::CreateOffscreen(const mozilla::gfx::IntSize& size,
                                       const SurfaceCaps& caps,
-                                      CreateContextFlags flags)
+                                      bool requireCompatProfile)
 {
-    nsRefPtr<GLContext> glContext = CreateHeadless(flags);
+    nsRefPtr<GLContext> glContext = CreateHeadless(requireCompatProfile);
     if (!glContext)
         return nullptr;
 
