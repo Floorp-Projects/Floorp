@@ -189,6 +189,22 @@ protected:
 public:
   virtual LayerRenderState GetRenderState() override
   {
+    // If we have exactly one high precision tile, then we can support hwc.
+    if (mTiledBuffer.GetTileCount() == 1 &&
+        mLowPrecisionTiledBuffer.GetTileCount() == 0) {
+      TextureHost* host = mTiledBuffer.GetTile(0).mTextureHost;
+      if (host) {
+        MOZ_ASSERT(!mTiledBuffer.GetTile(0).mTextureHostOnWhite, "Component alpha not supported!");
+        LayerRenderState state = host->GetRenderState();
+
+        // Offset by the distance between the start of the valid (visible) region and the top-left
+        // of the tile.
+        gfx::IntPoint offset = mTiledBuffer.GetTileOffset(mTiledBuffer.GetPlacement().TilePosition(0));
+
+        state.SetOffset(offset - GetValidRegion().GetBounds().TopLeft());
+        return host->GetRenderState();
+      }
+    }
     return LayerRenderState();
   }
 
