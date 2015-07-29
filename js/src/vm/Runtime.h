@@ -1681,6 +1681,33 @@ struct JSRuntime : public JS::shadow::Runtime,
         // The total amount of time spent waiting on CPOWs since the
         // start of the process, in microseconds.
         uint64_t totalCPOWTime;
+
+        // Data extracted by the AutoStopwatch to determine how often
+        // we reschedule the process to a different CPU during the
+        // execution of JS.
+        //
+        // Warning: These values are incremented *only* on platforms
+        // that offer a syscall/libcall to check on which CPU a
+        // process is currently executed.
+        struct TestCpuRescheduling
+        {
+            // Incremented once we have finished executing code
+            // in a group, if the CPU on which we started
+            // execution is the same as the CPU on which
+            // we finished.
+            uint64_t stayed;
+            // Incremented once we have finished executing code
+            // in a group, if the CPU on which we started
+            // execution is different from the CPU on which
+            // we finished.
+            uint64_t moved;
+            TestCpuRescheduling()
+              : stayed(0),
+                moved(0)
+            { }
+        };
+        TestCpuRescheduling testCpuRescheduling;
+
     private:
         Stopwatch(const Stopwatch&) = delete;
         Stopwatch& operator=(const Stopwatch&) = delete;
