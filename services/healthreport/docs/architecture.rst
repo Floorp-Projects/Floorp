@@ -83,6 +83,9 @@ infoURL
 about.reportUrl
    The URL to load in ``about:healthreport``.
 
+about.reportUrlUnified
+   The URL to load in ``about:healthreport``. This is used instead of ``reportUrl`` for UnifiedTelemetry when it is not opt-in.
+
 service.providerCategories
    A comma-delimited list of category manager categories that contain
    registered ``Metrics.Provider`` records. Read below for how provider
