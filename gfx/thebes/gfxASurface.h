@@ -159,12 +159,6 @@ public:
     // to a sub-class of gfxASurface.)
     virtual bool SizeOfIsMeasured() const { return false; }
 
-    /**
-     * Where does this surface's memory live?  By default, we say it's in this
-     * process's heap.
-     */
-    virtual gfxMemoryLocation GetMemoryLocation() const;
-
     static int32_t BytePerPixelFromFormat(gfxImageFormat format);
 
     virtual const mozilla::gfx::IntSize GetSize() const;
