@@ -182,8 +182,6 @@ public:
   {
   }
 
-  NS_DECL_ISUPPORTS
-
   typedef mozilla::AnimationCollection AnimationCollection;
 
   /**
