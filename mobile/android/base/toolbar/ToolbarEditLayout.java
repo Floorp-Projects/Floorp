@@ -229,6 +229,7 @@ public class ToolbarEditLayout extends ThemedLinearLayout {
     }
 
     private void launchVoiceRecognizer() {
+        Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.ACTIONBAR, "voice_input_launch");
         final Intent intent = InputOptionsUtils.createVoiceRecognizerIntent(getResources().getString(R.string.voicesearch_prompt));
 
         Activity activity = GeckoAppShell.getGeckoInterface().getActivity();
@@ -239,6 +240,7 @@ public class ToolbarEditLayout extends ThemedLinearLayout {
                     return;
                 }
 
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.ACTIONBAR, "voice_input_success");
                 // We have RESULT_OK, not RESULT_NO_MATCH so it should be safe to assume that
                 // we have at least one match. We only need one: this will be
                 // used for showing the user search engines with this search term in it.
