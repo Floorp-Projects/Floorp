@@ -347,8 +347,7 @@ nsresult
 SubstitutingProtocolHandler::HasSubstitution(const nsACString& root, bool *result)
 {
   NS_ENSURE_ARG_POINTER(result);
-
-  *result = mSubstitutions.Get(root, nullptr);
+  *result = HasSubstitution(root);
   return NS_OK;
 }
 
@@ -365,6 +364,10 @@ SubstitutingProtocolHandler::ResolveURI(nsIURI *uri, nsACString &result)
 
   rv = uri->GetPath(path);
   if (NS_FAILED(rv)) return rv;
+
+  if (ResolveSpecialCases(host, path, result)) {
+    return NS_OK;
+  }
 
   // Unescape the path so we can perform some checks on it.
   nsAutoCString unescapedPath(path);
