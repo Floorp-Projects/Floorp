@@ -9,10 +9,9 @@
 
 #include "js/HashTable.h"
 #include "js/RootingAPI.h"
+#include "js/TracingAPI.h"
 
 namespace js {
-
-template <typename> struct DefaultTracer;
 
 // A TraceableHashMap is a HashMap with an additional trace method that knows
 // how to visit all keys and values in the table. HashMaps that contain GC
@@ -174,12 +173,6 @@ class HandleBase<TraceableHashMap<A,B,C,D,E,F>>
     using Map = TraceableHashMap<A,B,C,D,E,F>;
     friend class TraceableHashMapOperations<JS::Handle<Map>, A,B,C,D,E,F>;
     const Map& extract() const { return *static_cast<const JS::Handle<Map>*>(this)->address(); }
-};
-
-// The default implementation of DefaultTracer will leave alone POD types.
-template <typename T> struct DefaultTracer {
-    static_assert(mozilla::IsPod<T>::value, "non-pod types must not be ignored");
-    static void trace(JSTracer* trc, T* t, const char* name) {}
 };
 
 } /* namespace js */
