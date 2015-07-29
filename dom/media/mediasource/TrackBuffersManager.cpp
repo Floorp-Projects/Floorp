@@ -386,7 +386,7 @@ TrackBuffersManager::CompleteResetParserState()
     mInputBuffer = new MediaByteBuffer;
     mInputBuffer->AppendElements(*mInitData);
   }
-  RecreateParser();
+  RecreateParser(true);
 
   // 7. Set append state to WAITING_FOR_SEGMENT.
   SetAppendState(AppendState::WAITING_FOR_SEGMENT);
@@ -649,8 +649,7 @@ TrackBuffersManager::SegmentParserLoop()
         SetAppendState(AppendState::PARSING_INIT_SEGMENT);
         if (mFirstInitializationSegmentReceived) {
           // This is a new initialization segment. Obsolete the old one.
-          mInitData = nullptr;
-          RecreateParser();
+          RecreateParser(false);
         }
         continue;
       }
@@ -994,7 +993,7 @@ TrackBuffersManager::OnDemuxerInitDone(nsresult)
   // This step has already been done in InitializationSegmentReceived when we
   // transferred the content into mCurrentInputBuffer.
   mCurrentInputBuffer->EvictAll();
-  RecreateParser();
+  RecreateParser(true);
 
   // 4. Set append state to WAITING_FOR_SEGMENT.
   SetAppendState(AppendState::WAITING_FOR_SEGMENT);
@@ -1191,7 +1190,7 @@ TrackBuffersManager::CompleteCodedFrameProcessing()
   // from the resource.
   mCurrentInputBuffer->EvictAll();
   mInputDemuxer->NotifyDataRemoved();
-  RecreateParser();
+  RecreateParser(true);
 
   // 7. Set append state to WAITING_FOR_SEGMENT.
   SetAppendState(AppendState::WAITING_FOR_SEGMENT);
@@ -1627,7 +1626,7 @@ TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
 }
 
 void
-TrackBuffersManager::RecreateParser()
+TrackBuffersManager::RecreateParser(bool aReuseInitData)
 {
   MOZ_ASSERT(OnTaskQueue());
   // Recreate our parser for only the data remaining. This is required
@@ -1635,7 +1634,7 @@ TrackBuffersManager::RecreateParser()
   // Once the old TrackBuffer/MediaSource implementation is removed
   // we can optimize this part. TODO
   mParser = ContainerParser::CreateForMIMEType(mType);
-  if (mInitData) {
+  if (aReuseInitData && mInitData) {
     int64_t start, end;
     mParser->ParseStartAndEndTimestamps(mInitData, start, end);
     mProcessedInput = mInitData->Length();
