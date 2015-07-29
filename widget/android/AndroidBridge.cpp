@@ -46,6 +46,8 @@
 #include "SurfaceTexture.h"
 #include "GLContextProvider.h"
 
+#include "ANRReporter.h"
+
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::jni;
@@ -249,6 +251,7 @@ AndroidBridge::Init(JNIEnv *jEnv, Object::Param clsLoader)
     jAvailable = inputStream.getMethod("available", "()I");
 
     InitAndroidJavaWrappers(jEnv);
+    ANRReporter::Init();
 
     // jEnv should NOT be cached here by anything -- the jEnv here
     // is not valid for the real gecko main thread, which is set
