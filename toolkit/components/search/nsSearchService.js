@@ -611,14 +611,9 @@ function storeCountryCode(cc) {
     Services.telemetry.getHistogramById("SEARCH_SERVICE_US_TIMEZONE_MISMATCHED_COUNTRY").add(1);
   }
   // telemetry to compare our geoip response with platform-specific country data.
-  // On Mac and Windows, we can get a country code via nsIGfxInfo2
-  let gfxInfo2;
-  try {
-    gfxInfo2 = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo2);
-  } catch (ex) {
-    // not available on this platform.
-  }
-  if (gfxInfo2) {
+  // On Mac and Windows, we can get a country code via sysinfo
+  let platformCC = Services.sysinfo.get("countryCode");
+  if (platformCC) {
     let probeUSMismatched, probeNonUSMismatched;
     switch (Services.appinfo.OS) {
       case "Darwin":
@@ -630,11 +625,10 @@ function storeCountryCode(cc) {
         probeNonUSMismatched = "SEARCH_SERVICE_NONUS_COUNTRY_MISMATCHED_PLATFORM_WIN";
         break;
       default:
-        Cu.reportError("Platform " + Services.appinfo.OS + " has nsIGfxInfo2 but no search service telemetry probes");
+        Cu.reportError("Platform " + Services.appinfo.OS + " has system country code but no search service telemetry probes");
         break;
     }
     if (probeUSMismatched && probeNonUSMismatched) {
-      let platformCC = gfxInfo2.countryCode;
       if (cc == "US" || platformCC == "US") {
         // one of the 2 said US, so record if they are the same.
         Services.telemetry.getHistogramById(probeUSMismatched).add(cc != platformCC);
