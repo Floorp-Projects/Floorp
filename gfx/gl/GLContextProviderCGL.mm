@@ -187,6 +187,11 @@ static const NSOpenGLPixelFormatAttribute kAttribs_offscreen[] = {
     0
 };
 
+static const NSOpenGLPixelFormatAttribute kAttribs_offscreen_allow_offline[] = {
+    NSOpenGLPFAAllowOfflineRenderers,
+    0
+};
+
 static const NSOpenGLPixelFormatAttribute kAttribs_offscreen_accel[] = {
     NSOpenGLPFAAccelerated,
     0
@@ -269,10 +274,18 @@ CreateOffscreenFBOContext(CreateContextFlags flags)
     if (!context) {
         profile = ContextProfile::OpenGLCompatibility;
 
-        if (gfxPrefs::RequireHardwareGL())
-            context = CreateWithFormat(kAttribs_offscreen_accel);
-        else
-            context = CreateWithFormat(kAttribs_offscreen);
+        if (flags & CreateContextFlags::ALLOW_OFFLINE_RENDERER) {
+          if (gfxPrefs::RequireHardwareGL())
+              context = CreateWithFormat(kAttribs_singleBuffered);
+          else
+              context = CreateWithFormat(kAttribs_offscreen_allow_offline);
+
+        } else {
+          if (gfxPrefs::RequireHardwareGL())
+              context = CreateWithFormat(kAttribs_offscreen_accel);
+          else
+              context = CreateWithFormat(kAttribs_offscreen);
+        }
     }
     if (!context) {
         NS_WARNING("Failed to create NSOpenGLContext.");
