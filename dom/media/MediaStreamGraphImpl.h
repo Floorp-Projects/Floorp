@@ -389,10 +389,6 @@ public:
   GraphTime StreamTimeToGraphTime(MediaStream* aStream, StreamTime aTime,
                                   uint32_t aFlags = 0);
   /**
-   * Get the current audio position of the stream's audio output.
-   */
-  GraphTime GetAudioPosition(MediaStream* aStream);
-  /**
    * Call NotifyHaveCurrentData on aStream's listeners.
    */
   void NotifyHasCurrentData(MediaStream* aStream);

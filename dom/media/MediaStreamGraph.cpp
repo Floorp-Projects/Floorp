@@ -326,14 +326,6 @@ MediaStreamGraphImpl::StreamTimeToGraphTime(MediaStream* aStream,
 }
 
 GraphTime
-MediaStreamGraphImpl::GetAudioPosition(MediaStream* aStream)
-{
-  /* This is correlated to the audio clock when using an AudioCallbackDriver,
-   * and is using a system timer otherwise. */
-  return IterationEnd();
-}
-
-GraphTime
 MediaStreamGraphImpl::IterationEnd() const
 {
   return CurrentDriver()->IterationEnd();
