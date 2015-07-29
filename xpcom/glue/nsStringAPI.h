@@ -1228,7 +1228,7 @@ public:
 #ifdef MOZ_USE_CHAR16_WRAPPER
   explicit NS_ConvertUTF16toUTF8(char16ptr_t aString,
                                  uint32_t aLength = UINT32_MAX)
-    : NS_ConvertUTF16toUTF8(static_cast<const char16_t*>(aString))
+    : NS_ConvertUTF16toUTF8(static_cast<const char16_t*>(aString), aLength)
   {
   }
 #endif

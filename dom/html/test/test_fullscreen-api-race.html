@@ -112,13 +112,26 @@ function next() {
     SimpleTest.waitForFocus(resolve, win, true);
   }).then(() => {
     return new Promise(resolve => {
-      function listener() {
+      var retried = false;
+      function listener(evt) {
+        if (!retried && evt.type == "mozfullscreenerror") {
+          todo(false, "Failed to enter fullscreen, but try again");
+          retried = true;
+          SimpleTest.waitForFocus(() => {
+            win.document.documentElement.mozRequestFullScreen();
+          }, win, true);
+          return;
+        }
         win.removeEventListener("mozfullscreenchange", listener);
+        win.removeEventListener("mozfullscreenerror", listener);
+        is(evt.type, "mozfullscreenchange", "Should get fullscreenchange");
         ok(win.document.mozFullScreen, "Should have entered fullscreen");
         ok(win.fullScreen, "The window should be in fullscreen");
         test.actionFunc(win).then(resolve);
       }
+      info("About to enter fullscreen");
       win.addEventListener("mozfullscreenchange", listener);
+      win.addEventListener("mozfullscreenerror", listener);
       win.document.documentElement.mozRequestFullScreen();
     });
   }).then(() => {

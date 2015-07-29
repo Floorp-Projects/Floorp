@@ -356,7 +356,8 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'wbemuuid',
         'wintrust',
         'wtsapi32',
-        'locationapi'
+        'locationapi',
+        'sapi',
     ]
     if CONFIG['ACCESSIBILITY']:
         OS_LIBS += [

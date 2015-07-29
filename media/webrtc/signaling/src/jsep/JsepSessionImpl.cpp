@@ -1762,7 +1762,7 @@ JsepSessionImpl::ParseSdp(const std::string& sdp, UniquePtr<Sdp>* parsedp)
     auto& formats = parsed->GetMediaSection(i).GetFormats();
     for (auto f = formats.begin(); f != formats.end(); ++f) {
       uint16_t pt;
-      if (!JsepCodecDescription::GetPtAsInt(*f, &pt)) {
+      if (!SdpHelper::GetPtAsInt(*f, &pt)) {
         JSEP_SET_ERROR("Payload type \""
                        << *f << "\" is not a 16-bit unsigned int at level "
                        << i);

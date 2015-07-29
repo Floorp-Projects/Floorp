@@ -7,7 +7,6 @@
 TEST_DIRS += ['tests']
 
 XPIDL_SOURCES += [
-    'nsIPrivateBrowsingTrackingProtectionWhitelist.idl',
     'nsIUrlClassifierDBService.idl',
     'nsIUrlClassifierHashCompleter.idl',
     'nsIUrlClassifierPrefixSet.idl',
@@ -43,7 +42,6 @@ SOURCES += [
 EXTRA_COMPONENTS += [
     'nsURLClassifier.manifest',
     'nsUrlClassifierHashCompleter.js',
-    'PrivateBrowsingTrackingProtectionWhitelist.js',
 ]
 
 # Same as JS components that are run through the pre-processor.
