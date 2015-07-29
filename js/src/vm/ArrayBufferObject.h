@@ -21,23 +21,24 @@ class ArrayBufferViewObject;
 // The inheritance hierarchy for the various classes relating to typed arrays
 // is as follows.
 //
-// - JSObject
+// - NativeObject
 //   - ArrayBufferObjectMaybeShared
 //     - ArrayBufferObject
 //     - SharedArrayBufferObject
-//   - ArrayBufferViewObject
-//     - DataViewObject
-//     - TypedArrayObject (declared in vm/TypedArrayObject.h)
-//       - TypedArrayObjectTemplate
-//         - Int8ArrayObject
-//         - Uint8ArrayObject
-//         - ...
-//     - TypedObject (declared in builtin/TypedObject.h)
+//   - DataViewObject
+//   - TypedArrayObject (declared in vm/TypedArrayObject.h)
+//     - TypedArrayObjectTemplate
+//       - Int8ArrayObject
+//       - Uint8ArrayObject
+//       - ...
 //   - SharedTypedArrayObject (declared in vm/SharedTypedArrayObject.h)
 //     - SharedTypedArrayObjectTemplate
 //       - SharedInt8ArrayObject
 //       - SharedUint8ArrayObject
 //       - ...
+// - JSObject
+//   - ArrayBufferViewObject
+//   - TypedObject (declared in builtin/TypedObject.h)
 //
 // Note that |TypedArrayObjectTemplate| is just an implementation
 // detail that makes implementing its various subclasses easier.
