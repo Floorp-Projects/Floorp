@@ -293,13 +293,18 @@ BluetoothDevice::HandlePropertyChanged(const BluetoothValue& aValue)
     }
   }
 
+  if (types.IsEmpty()) {
+    // No device attribute changed
+    return;
+  }
+
   DispatchAttributeEvent(types);
 }
 
 void
 BluetoothDevice::DispatchAttributeEvent(const Sequence<nsString>& aTypes)
 {
-  NS_ENSURE_TRUE_VOID(aTypes.Length());
+  MOZ_ASSERT(!aTypes.IsEmpty());
 
   BluetoothAttributeEventInit init;
   init.mAttrs = aTypes;

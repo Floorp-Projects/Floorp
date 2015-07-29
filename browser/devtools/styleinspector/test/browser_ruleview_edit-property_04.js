@@ -4,8 +4,7 @@
 
 "use strict";
 
-// Tests that a disabled property is previewed when the property name or value
-// editor is focused and the property remains disabled when the escaping out of
+// Tests that a disabled property remains disabled when the escaping out of
 // the property editor.
 
 let TEST_URI = [
@@ -39,20 +38,19 @@ function* testDisableProperty(inspector, view) {
   });
   is(newValue, "", "background-color should have been unset.");
 
-  yield testPreviewDisableProperty(view, ruleEditor, propEditor,
+  yield testEditDisableProperty(view, ruleEditor, propEditor,
     propEditor.nameSpan, "VK_ESCAPE");
-  yield testPreviewDisableProperty(view, ruleEditor, propEditor,
+  yield testEditDisableProperty(view, ruleEditor, propEditor,
     propEditor.valueSpan, "VK_ESCAPE");
-  yield testPreviewDisableProperty(view, ruleEditor, propEditor,
+  yield testEditDisableProperty(view, ruleEditor, propEditor,
     propEditor.valueSpan, "VK_TAB");
-  yield testPreviewDisableProperty(view, ruleEditor, propEditor,
+  yield testEditDisableProperty(view, ruleEditor, propEditor,
     propEditor.valueSpan, "VK_RETURN");
 }
 
-function* testPreviewDisableProperty(view, ruleEditor, propEditor,
+function* testEditDisableProperty(view, ruleEditor, propEditor,
     editableField, commitKey) {
   let editor = yield focusEditableField(view, editableField);
-  yield ruleEditor.rule._applyingModifications;
 
   ok(!propEditor.element.classList.contains("ruleview-overridden"),
     "property is not overridden.");
@@ -64,7 +62,7 @@ function* testPreviewDisableProperty(view, ruleEditor, propEditor,
     ruleIndex: 0,
     name: "background-color"
   });
-  is(newValue, "blue", "background-color should have been previewed.");
+  is(newValue, "", "background-color should remain unset.");
 
   let onBlur = once(editor.input, "blur");
   EventUtils.synthesizeKey(commitKey, {}, view.styleWindow);
@@ -84,5 +82,5 @@ function* testPreviewDisableProperty(view, ruleEditor, propEditor,
     ruleIndex: 0,
     name: "background-color"
   });
-  is(newValue, "", "background-color should have been unset.");
+  is(newValue, "", "background-color should remain unset.");
 }

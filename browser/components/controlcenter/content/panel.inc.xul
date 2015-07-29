@@ -27,6 +27,8 @@
                  value="&identity.connectionSecure;"/>
           <label class="identity-popup-connection-not-secure identity-popup-text"
                  value="&identity.connectionNotSecure;"/>
+          <label class="identity-popup-connection-file-uri identity-popup-text"
+                 value="&identity.connectionFile;"/>
           <label class="identity-popup-connection-internal identity-popup-text"
                  value="&identity.connectionInternal;"/>
         </vbox>
@@ -95,6 +97,8 @@
                value="&identity.connectionSecure;"/>
         <label class="identity-popup-connection-not-secure identity-popup-text"
                value="&identity.connectionNotSecure;"/>
+        <label class="identity-popup-connection-file-uri identity-popup-text"
+               value="&identity.connectionFile;"/>
         <label class="identity-popup-connection-internal identity-popup-text"
                value="&identity.connectionInternal;"/>
       </vbox>

@@ -1139,7 +1139,9 @@ var gBrowserInit = {
 
     gBrowser.addEventListener("AboutTabCrashedLoad", function(event) {
 #ifdef MOZ_CRASHREPORTER
-      TabCrashReporter.onAboutTabCrashedLoad(gBrowser.getBrowserForDocument(event.target));
+      TabCrashReporter.onAboutTabCrashedLoad(gBrowser.getBrowserForDocument(event.target), {
+        crashedTabCount: SessionStore.crashedTabCount,
+      });
 #endif
     }, false, true);
 
@@ -1171,11 +1173,7 @@ var gBrowserInit = {
         SessionStore.reviveCrashedTab(tab);
         break;
       case "restoreAll":
-        for (let browserWin of browserWindows()) {
-          for (let tab of browserWin.gBrowser.tabs) {
-            SessionStore.reviveCrashedTab(tab);
-          }
-        }
+        SessionStore.reviveAllCrashedTabs();
         break;
       }
     }, false, true);
@@ -2411,8 +2409,10 @@ function BrowserViewSource(browser) {
 // doc - document to use for source, or null for this window's document
 // initialTab - name of the initial tab to display, or null for the first tab
 // imageElement - image to load in the Media Tab of the Page Info window; can be null/omitted
-function BrowserPageInfo(doc, initialTab, imageElement) {
-  var args = {doc: doc, initialTab: initialTab, imageElement: imageElement};
+// frameOuterWindowID - the id of the frame that the context menu opened in; can be null/omitted
+function BrowserPageInfo(doc, initialTab, imageElement, frameOuterWindowID) {
+  var args = {doc: doc, initialTab: initialTab, imageElement: imageElement,
+              frameOuterWindowID: frameOuterWindowID};
   var windows = Services.wm.getEnumerator("Browser:page-info");
 
   var documentURL = doc ? doc.location : window.gBrowser.selectedBrowser.contentDocumentAsCPOW.location;
@@ -6633,6 +6633,7 @@ var gIdentityHandler = {
   IDENTITY_MODE_MIXED_ACTIVE_BLOCKED                   : "verifiedDomain mixedContent mixedActiveBlocked",  // SSL with unauthenticated active content blocked; no unauthenticated display content
   IDENTITY_MODE_MIXED_ACTIVE_BLOCKED_IDENTIFIED        : "verifiedIdentity mixedContent mixedActiveBlocked",  // SSL with unauthenticated active content blocked; no unauthenticated display content
   IDENTITY_MODE_CHROMEUI                               : "chromeUI",         // Part of the product's UI
+  IDENTITY_MODE_FILE_URI                               : "fileURI",  // File path
 
   // Cache the most recent SSLStatus and Location seen in checkIdentity
   _lastStatus : null,
@@ -6848,7 +6849,20 @@ var gIdentityHandler = {
         this.setMode(this.IDENTITY_MODE_USES_WEAK_CIPHER);
       }
     } else {
-      this.setMode(this.IDENTITY_MODE_UNKNOWN);
+      // Create a channel for the sole purpose of getting the resolved URI
+      // of the request to determine if it's loaded from the file system.
+      let resolvedURI = NetUtil.newChannel({uri,loadUsingSystemPrincipal:true}).URI;
+      if (resolvedURI.schemeIs("jar")) {
+        // Given a URI "jar:<jar-file-uri>!/<jar-entry>"
+        // create a new URI using <jar-file-uri>!/<jar-entry>
+        resolvedURI = NetUtil.newURI(resolvedURI.path);
+      }
+
+      if (resolvedURI.schemeIs("file")) {
+        this.setMode(this.IDENTITY_MODE_FILE_URI);
+      } else {
+        this.setMode(this.IDENTITY_MODE_UNKNOWN);
+      }
     }
 
     // Show the doorhanger when:
