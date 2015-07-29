@@ -16,7 +16,7 @@
 #include "GonkNativeWindow.h"
 #include "GonkNativeWindowClient.h"
 #include "mozilla/media/MediaSystemResourceClient.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 #include <speex/speex_resampler.h>
 

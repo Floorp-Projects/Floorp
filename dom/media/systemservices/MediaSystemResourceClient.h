@@ -12,7 +12,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/media/MediaSystemResourceTypes.h"
 #include "mozilla/Monitor.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 namespace mozilla {
 

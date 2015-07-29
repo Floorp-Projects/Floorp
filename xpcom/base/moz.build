@@ -55,7 +55,6 @@ EXPORTS += [
     'nsISupportsBase.h',
     'nsObjCExceptions.h',
     'nsQueryObject.h',
-    'nsRefPtr.h',
     'nsTraceRefcnt.h',
     'nsWeakPtr.h',
 ]
