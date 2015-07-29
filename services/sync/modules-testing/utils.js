@@ -184,14 +184,10 @@ this.configureFxAccountIdentity = function(authService,
       let accountState = new AccountState(storageManager);
       return accountState;
     },
-    getCertificate(data, keyPair, mustBeValidUntil) {
-      let cert = {
-        validUntil: this.now() + CERT_LIFETIME,
-        cert: "certificate",
-      };
-      this.currentAccountState.updateUserAccountData({cert: cert});
-      return Promise.resolve(cert.cert);
+    _getAssertion(audience) {
+      return Promise.resolve("assertion");
     },
+
   };
   fxa = new FxAccounts(MockInternal);
 

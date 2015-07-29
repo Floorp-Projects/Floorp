@@ -18,7 +18,7 @@ function* performTest() {
   let [host, , doc] = yield createHost("bottom", "data:text/html," +
     "<h1>browser_outputParser.js</h1><div></div>");
 
-  let parser = new OutputParser();
+  let parser = new OutputParser(doc);
   testParseCssProperty(doc, parser);
   testParseCssVar(doc, parser);
 
