@@ -222,7 +222,7 @@ enum {
   kWindows7 = 0x60001,
   kWindows8 = 0x60002,
   kWindows8_1 = 0x60003,
-  kWindows10 = 0x60004
+  kWindows10 = 0xA0000
 };
 
 static int32_t
