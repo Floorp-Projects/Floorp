@@ -11,7 +11,7 @@
 #include "gfxPrefs.h"
 #include "image_operations.h"
 #include "convolver.h"
-#include "skia/SkTypes.h"
+#include "skia/include/core/SkTypes.h"
 
 using std::max;
 using std::swap;

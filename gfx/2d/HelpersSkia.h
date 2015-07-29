@@ -7,11 +7,11 @@
 #define MOZILLA_GFX_HELPERSSKIA_H_
 
 #include "2D.h"
-#include "skia/SkCanvas.h"
-#include "skia/SkDashPathEffect.h"
-#include "skia/SkShader.h"
+#include "skia/include/core/SkCanvas.h"
+#include "skia/include/effects/SkDashPathEffect.h"
+#include "skia/include/core/SkShader.h"
 #ifdef USE_SKIA_GPU
-#include "skia/GrTypes.h"
+#include "skia/include/gpu/GrTypes.h"
 #endif
 #include "mozilla/Assertions.h"
 #include <vector>
