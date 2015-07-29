@@ -1171,7 +1171,8 @@ var WifiManager = (function() {
           cancelWaitForDriverReadyTimer();
           WifiNetworkInterface.info.name =
             libcutils.property_get("wifi.tethering.interface", manager.ifname);
-          gTetheringService.setWifiTethering(enabled, WifiNetworkInterface,
+          gTetheringService.setWifiTethering(enabled,
+                                             WifiNetworkInterface.info.name,
                                              configuration, function(result) {
             if (result) {
               manager.tetheringState = "UNINITIALIZED";
