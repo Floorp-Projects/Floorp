@@ -212,7 +212,10 @@ class GaiaTest(TestingMixin, MercurialScript, TransferMixin, GaiaMixin, BlobUplo
         """
         if code == 0:
             level = INFO
-            if passed == 0 or failed > 0:
+            # We used to check for passed == 0 as well but it can
+            # be normal to end up with empty chunks especially when
+            # large amounts of tests are disabled.
+            if failed > 0:
                 status = 'test failures'
                 tbpl_status = TBPL_WARNING
             else:
