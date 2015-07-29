@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<embed type="application/x-test" width="200" height="200"></embed>
+<script>
+var plugin = document.querySelector("embed");
+onload = function() {
+  plugin.startAudioPlayback();
+};
+function stopAudio() {
+  plugin.stopAudioPlayback();
+}
+function pluginMuted() {
+  return plugin.audioMuted();
+}
+function toggleMuteState(muted) {
+  var Ci = SpecialPowers.Ci;
+  var utils = SpecialPowers.wrap(window).top
+                           .QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindowUtils);
+  utils.audioMuted = muted;
+}
+</script>

@@ -1,0 +1,37 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+MOZ_AUTOMATION_L10N_CHECK=0
+
+if [ "x$IS_NIGHTLY" = "xyes" ]; then
+  # Some nightlies (eg: Mulet) don't want these set.
+  MOZ_AUTOMATION_UPLOAD_SYMBOLS=${MOZ_AUTOMATION_UPLOAD_SYMBOLS-1}
+  MOZ_AUTOMATION_UPDATE_PACKAGING=${MOZ_AUTOMATION_UPDATE_PACKAGING-1}
+  MOZ_AUTOMATION_SDK=${MOZ_AUTOMATION_SDK-1}
+fi
+. "$topsrcdir/build/mozconfig.common"
+
+if [ -d "$topsrcdir/clang" ]; then
+    # mozilla-central based build
+    export CC=$topsrcdir/clang/bin/clang
+    export CXX=$topsrcdir/clang/bin/clang++
+    export LLVMCONFIG=$topsrcdir/clang/bin/llvm-config
+elif [ -d "$topsrcdir/../clang" ]; then
+    # comm-central based build
+    export CC=$topsrcdir/../clang/bin/clang
+    export CXX=$topsrcdir/../clang/bin/clang++
+    export LLVMCONFIG=$topsrcdir/../clang/bin/llvm-config
+fi
+
+# If not set use the system default clang
+if [ -z "$CC" ]; then
+    export CC=clang
+fi
+
+# If not set use the system default clang++
+if [ -z "$CXX" ]; then
+    export CXX=clang++
+fi
+
+export SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE=/builds/crash-stats-api.token

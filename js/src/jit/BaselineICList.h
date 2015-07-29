@@ -73,11 +73,15 @@ namespace jit {
     _(Call_IsSuspendedStarGenerator)             \
                                                  \
     _(GetElem_Fallback)                          \
-    _(GetElem_NativeSlot)                        \
-    _(GetElem_NativePrototypeSlot)               \
-    _(GetElem_NativePrototypeCallNative)         \
-    _(GetElem_NativePrototypeCallScripted)       \
-    _(GetElem_UnboxedProperty)                   \
+    _(GetElem_NativeSlotName)                    \
+    _(GetElem_NativeSlotSymbol)                  \
+    _(GetElem_NativePrototypeSlotName)           \
+    _(GetElem_NativePrototypeSlotSymbol)         \
+    _(GetElem_NativePrototypeCallNativeName)     \
+    _(GetElem_NativePrototypeCallNativeSymbol)   \
+    _(GetElem_NativePrototypeCallScriptedName)   \
+    _(GetElem_NativePrototypeCallScriptedSymbol) \
+    _(GetElem_UnboxedPropertyName)               \
     _(GetElem_String)                            \
     _(GetElem_Dense)                             \
     _(GetElem_UnboxedArray)                      \

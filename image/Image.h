@@ -8,7 +8,7 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TimeStamp.h"
-#include "gfx2DGlue.h"                // for gfxMemoryLocation
+#include "gfx2DGlue.h"
 #include "imgIContainer.h"
 #include "ImageURL.h"
 #include "nsStringFwd.h"

@@ -1,0 +1,34 @@
+[
+{
+"clang_version": "r183744"
+}, 
+{
+"size": 70350828, 
+"digest": "6cd04e8ec44c6fef159349c22bd0476891e4a2d46479f9586283eaf3305e42f79c720d40dfec0e78d8899c1651189b12e285de60862ffd0612b0dac7a0c336c6", 
+"algorithm": "sha512", 
+"unpack": true,
+"filename": "clang.tar.bz2"
+},
+{
+"size": 2581027, 
+"digest": "9b59abef2bd4ae3a5b792de96e1336d879c1c5b6b07382797ae1bcc299e74ddf805bc95b7bc813cf3b4586db5eb4d0f41d09b2f85f0629cf27e57a4de851129c", 
+"algorithm": "sha512", 
+"unpack": true,
+"filename": "cctools.tar.gz"
+},
+{
+"size": 35215976, 
+"visibility": "internal", 
+"digest": "8be736545ddab25ebded188458ce974d5c9a7e29f3c50d2ebfbcb878f6aff853dd2ff5a3528bdefc64396a10101a1b50fd2fe52000140df33643cebe1ea759da", 
+"algorithm": "sha512", 
+"unpack": true,
+"filename": "MacOSX10.7.sdk.tar.bz2"
+},
+{
+"size": 167175,
+"digest": "0b71a936edf5bd70cf274aaa5d7abc8f77fe8e7b5593a208f805cc9436fac646b9c4f0b43c2b10de63ff3da671497d35536077ecbc72dba7f8159a38b580f831",
+"algorithm": "sha512",
+"unpack": true,
+"filename": "sccache.tar.bz2"
+}
+]

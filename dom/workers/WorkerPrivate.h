@@ -1322,6 +1322,13 @@ public:
   }
 
   bool
+  PerformanceLoggingEnabled() const
+  {
+    AssertIsOnWorkerThread();
+    return mPreferences[WORKERPREF_PERFORMANCE_LOGGING_ENABLED];
+  }
+
+  bool
   OnLine() const
   {
     AssertIsOnWorkerThread();
