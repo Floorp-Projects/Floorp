@@ -6,16 +6,6 @@
 const { utils: Cu, interfaces: Ci } = Components;
 const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 
-function CertDialogService() {}
-CertDialogService.prototype = {
-  classID: Components.ID("{a70153f2-3590-4317-93e9-73b3e7ffca5d}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsICertificateDialogs]),
-
-  getPKCS12FilePassword: function() {
-    return true; // Simulates entering an empty password
-  }
-};
-
 let Prompter = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPrompt]),
   alert: function() {} // Do nothing when asked to show an alert
@@ -32,6 +22,5 @@ WindowWatcherService.prototype = {
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([
-  CertDialogService,
   WindowWatcherService
 ]);
