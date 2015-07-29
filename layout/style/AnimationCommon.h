@@ -506,6 +506,14 @@ public:
 
   bool IsSet() const { return !!mElement; }
 
+  void GetElement(dom::Element*& aElement,
+                  nsCSSPseudoElements::Type& aPseudoType) const {
+    aElement = mElement;
+    aPseudoType = mPseudoType;
+  }
+
+  nsPresContext* GetRenderedPresContext() const;
+
 private:
   dom::Element* MOZ_NON_OWNING_REF mElement;
   nsCSSPseudoElements::Type        mPseudoType;

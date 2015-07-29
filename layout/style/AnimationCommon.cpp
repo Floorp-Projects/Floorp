@@ -995,4 +995,24 @@ AnimationCollection::HasCurrentAnimationsForProperties(
   return false;
 }
 
+nsPresContext*
+OwningElementRef::GetRenderedPresContext() const
+{
+  if (!mElement) {
+    return nullptr;
+  }
+
+  nsIDocument* doc = mElement->GetComposedDoc();
+  if (!doc) {
+    return nullptr;
+  }
+
+  nsIPresShell* shell = doc->GetShell();
+  if (!shell) {
+    return nullptr;
+  }
+
+  return shell->GetPresContext();
+}
+
 } // namespace mozilla
