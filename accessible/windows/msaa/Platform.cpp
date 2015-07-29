@@ -49,6 +49,10 @@ a11y::ProxyDestroyed(ProxyAccessible* aProxy)
 {
   ProxyAccessibleWrap* wrapper =
     reinterpret_cast<ProxyAccessibleWrap*>(aProxy->GetWrapper());
+  MOZ_ASSERT(wrapper);
+  if (!wrapper)
+    return;
+
   wrapper->Shutdown();
   aProxy->SetWrapper(0);
   wrapper->Release();

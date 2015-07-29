@@ -72,7 +72,7 @@ MediaSourceDecoder::Load(nsIStreamListener**, MediaDecoder*)
   NS_ENSURE_SUCCESS(rv, rv);
 
   SetStateMachineParameters();
-  return ScheduleStateMachine();
+  return NS_OK;
 }
 
 media::TimeIntervals

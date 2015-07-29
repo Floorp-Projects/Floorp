@@ -309,6 +309,12 @@
           </intent-filter>
         </receiver>
 
+        <receiver android:name="org.mozilla.gecko.RestrictionProvider">
+          <intent-filter>
+            <action android:name="android.intent.action.GET_RESTRICTION_ENTRIES" />
+          </intent-filter>
+        </receiver>
+
         <!-- Activity used for launching non-privileged WebApps via a URL -->
         <activity android:name="org.mozilla.gecko.Webapp"
                   android:label="@string/webapp_generic_name"

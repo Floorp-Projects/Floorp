@@ -2449,10 +2449,16 @@ js::SetPrototype(JSContext* cx, HandleObject obj, HandleObject proto, JS::Object
     if (!extensible)
         return result.fail(JSMSG_CANT_SET_PROTO);
 
-    /* ES6 9.1.2 step 6 forbids generating cyclical prototype chains. */
+    /*
+     * ES6 9.1.2 step 6 forbids generating cyclical prototype chains. But we
+     * have to do this comparison on the observable outer objects, not on the
+     * possibly-inner object we're setting the proto on.
+     */
+    RootedObject outerObj(cx, GetOuterObject(cx, obj));
     RootedObject obj2(cx);
     for (obj2 = proto; obj2; ) {
-        if (obj2 == obj)
+        MOZ_ASSERT(GetOuterObject(cx, obj2) == obj2);
+        if (obj2 == outerObj)
             return result.fail(JSMSG_CANT_SET_PROTO_CYCLE);
 
         if (!GetPrototype(cx, obj2, &obj2))

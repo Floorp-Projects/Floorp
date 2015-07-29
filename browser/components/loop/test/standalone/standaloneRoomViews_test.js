@@ -16,6 +16,7 @@ describe("loop.standaloneRoomViews", function() {
   var sharedUtils = loop.shared.utils;
 
   var sandbox, dispatcher, activeRoomStore, dispatch;
+  var fakeWindow;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
@@ -34,12 +35,30 @@ describe("loop.standaloneRoomViews", function() {
     });
 
     sandbox.useFakeTimers();
+    fakeWindow = {
+      close: sandbox.stub(),
+      addEventListener: function() {},
+      document: { addEventListener: function(){} },
+      setTimeout: function(callback) { callback(); }
+    };
+    loop.shared.mixins.setRootObject(fakeWindow);
+
+
+    sandbox.stub(navigator.mozL10n, "get", function(key, args) {
+      switch(key) {
+        case "standalone_title_with_room_name":
+          return args.roomName + " — " + args.clientShortname;
+        default:
+          return key;
+      }
+    });
 
     // Prevents audio request errors in the test console.
     sandbox.useFakeXMLHttpRequest();
   });
 
   afterEach(function() {
+    loop.shared.mixins.setRootObject(window);
     sandbox.restore();
   });
 
@@ -83,6 +102,14 @@ describe("loop.standaloneRoomViews", function() {
     }
 
     describe("#componentWillUpdate", function() {
+      it("should set document.title to roomName and brand name when the READY state is dispatched", function() {
+        activeRoomStore.setStoreState({roomName: "fakeName", roomState: ROOM_STATES.INIT});
+        var view = mountTestComponent();
+        activeRoomStore.setStoreState({roomState: ROOM_STATES.READY});
+
+        expect(fakeWindow.document.title).to.equal("fakeName — clientShortname2");
+      });
+
       it("should dispatch a `SetupStreamElements` action when the MEDIA_WAIT state " +
         "is entered", function() {
           activeRoomStore.setStoreState({roomState: ROOM_STATES.READY});
