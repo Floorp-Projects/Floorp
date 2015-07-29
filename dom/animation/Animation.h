@@ -141,7 +141,7 @@ public:
 
   virtual void CancelFromStyle() { DoCancel(); }
 
-  void Tick();
+  virtual void Tick();
 
   /**
    * Set the time to use for starting or pausing a pending animation.
