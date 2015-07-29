@@ -26,12 +26,12 @@ class ReentrancyGuard
 public:
   template<class T>
 #ifdef DEBUG
-  ReentrancyGuard(T& aObj
-                  MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  explicit ReentrancyGuard(T& aObj
+                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     : mEntered(aObj.mEntered)
 #else
-  ReentrancyGuard(T&
-                  MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  explicit ReentrancyGuard(T&
+                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
 #endif
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;

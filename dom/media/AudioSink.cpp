@@ -23,7 +23,7 @@ extern PRLogModuleInfo* gMediaDecoderLog;
 // The amount of audio frames that is used to fuzz rounding errors.
 static const int64_t AUDIO_FUZZ_FRAMES = 1;
 
-AudioSink::AudioSink(MediaQueue<AudioData>& aAudioQueue,
+AudioSink::AudioSink(MediaQueue<MediaData>& aAudioQueue,
                      int64_t aStartTime,
                      const AudioInfo& aInfo,
                      dom::AudioChannel aChannel)
@@ -417,7 +417,8 @@ AudioSink::PlayFromAudioQueue()
 {
   AssertOnAudioThread();
   NS_ASSERTION(!mAudioStream->IsPaused(), "Don't play when paused");
-  nsRefPtr<AudioData> audio(AudioQueue().PopFront());
+  nsRefPtr<AudioData> audio =
+    dont_AddRef(AudioQueue().PopFront().take()->As<AudioData>());
 
   SINK_LOG_V("playing %u frames of audio at time %lld",
              audio->mFrames, audio->mTime);

@@ -104,7 +104,7 @@ public:
 
   /* Equivalent to RangedPtr(aArr, aArr, N). */
   template<size_t N>
-  RangedPtr(T (&aArr)[N])
+  explicit RangedPtr(T (&aArr)[N])
     : mPtr(aArr)
 #ifdef DEBUG
     , mRangeStart(aArr), mRangeEnd(aArr + N)

@@ -209,6 +209,8 @@ tests:
     allowed_build_tasks:
       tasks/builds/b2g_desktop_opt.yml:
         task: tasks/tests/b2g_build_unit.yml
+      tasks/builds/mulet_linux.yml:
+        task: tasks/tests/mulet_build_unit.yml
   gaia-js-integration:
     allowed_build_tasks:
       tasks/builds/b2g_desktop_opt.yml:
@@ -219,6 +221,8 @@ tests:
     allowed_build_tasks:
       tasks/builds/b2g_desktop_opt.yml:
         task: tasks/tests/b2g_linter.yml
+      tasks/builds/mulet_linux.yml:
+        task: tasks/tests/mulet_linter.yml
   gaia-ui-test-accessibility:
     allowed_build_tasks:
       tasks/builds/b2g_desktop_opt.yml:
