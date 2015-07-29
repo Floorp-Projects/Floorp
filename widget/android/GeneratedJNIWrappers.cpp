@@ -10,6 +10,17 @@
 namespace mozilla {
 namespace widget {
 
+constexpr char ANRReporter::name[];
+
+constexpr char ANRReporter::GetNativeStack_t::name[];
+constexpr char ANRReporter::GetNativeStack_t::signature[];
+
+constexpr char ANRReporter::ReleaseNativeStack_t::name[];
+constexpr char ANRReporter::ReleaseNativeStack_t::signature[];
+
+constexpr char ANRReporter::RequestNativeStack_t::name[];
+constexpr char ANRReporter::RequestNativeStack_t::signature[];
+
 constexpr char DownloadsIntegration::name[];
 
 constexpr char DownloadsIntegration::ScanMedia_t::name[];
