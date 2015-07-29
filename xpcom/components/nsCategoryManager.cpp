@@ -318,7 +318,7 @@ CategoryNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf)
 {
   // We don't measure the strings pointed to by the entries because the
   // pointers are non-owning.
-  return mTable.SizeOfExcludingThis(nullptr, aMallocSizeOf);
+  return mTable.ShallowSizeOfExcludingThis(aMallocSizeOf);
 }
 
 //
