@@ -1115,42 +1115,28 @@ imgFrame::SetCompositingFailed(bool val)
   mCompositingFailed = val;
 }
 
-size_t
-imgFrame::SizeOfExcludingThis(gfxMemoryLocation aLocation,
-                              MallocSizeOf aMallocSizeOf) const
+void
+imgFrame::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
+                                 size_t& aHeapSizeOut,
+                                 size_t& aNonHeapSizeOut) const
 {
   MonitorAutoLock lock(mMonitor);
 
-  // aMallocSizeOf is only used if aLocation is
-  // gfxMemoryLocation::IN_PROCESS_HEAP.  It
-  // should be nullptr otherwise.
-  MOZ_ASSERT(
-    (aLocation == gfxMemoryLocation::IN_PROCESS_HEAP &&  aMallocSizeOf) ||
-    (aLocation != gfxMemoryLocation::IN_PROCESS_HEAP && !aMallocSizeOf),
-    "mismatch between aLocation and aMallocSizeOf");
-
-  size_t n = 0;
-
-  if (mPalettedImageData && aLocation == gfxMemoryLocation::IN_PROCESS_HEAP) {
-    n += aMallocSizeOf(mPalettedImageData);
+  if (mPalettedImageData) {
+    aHeapSizeOut += aMallocSizeOf(mPalettedImageData);
   }
-  if (mImageSurface && aLocation == gfxMemoryLocation::IN_PROCESS_HEAP) {
-    n += aMallocSizeOf(mImageSurface);
+  if (mImageSurface) {
+    aHeapSizeOut += aMallocSizeOf(mImageSurface);
   }
-  if (mOptSurface && aLocation == gfxMemoryLocation::IN_PROCESS_HEAP) {
-    n += aMallocSizeOf(mOptSurface);
+  if (mOptSurface) {
+    aHeapSizeOut += aMallocSizeOf(mOptSurface);
   }
 
-  if (mVBuf && aLocation == gfxMemoryLocation::IN_PROCESS_HEAP) {
-    n += aMallocSizeOf(mVBuf);
-    n += mVBuf->HeapSizeOfExcludingThis(aMallocSizeOf);
+  if (mVBuf) {
+    aHeapSizeOut += aMallocSizeOf(mVBuf);
+    aHeapSizeOut += mVBuf->HeapSizeOfExcludingThis(aMallocSizeOf);
+    aNonHeapSizeOut += mVBuf->NonHeapSizeOfExcludingThis();
   }
-
-  if (mVBuf && aLocation == gfxMemoryLocation::IN_PROCESS_NONHEAP) {
-    n += mVBuf->NonHeapSizeOfExcludingThis();
-  }
-
-  return n;
 }
 
 } // namespace image
