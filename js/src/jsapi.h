@@ -5586,6 +5586,11 @@ GetStopwatchIsMonitoringPerCompartment(JSRuntime*);
 extern JS_PUBLIC_API(bool)
 IsStopwatchActive(JSRuntime*);
 
+// Extract the CPU rescheduling data.
+extern JS_PUBLIC_API(void)
+GetPerfMonitoringTestCpuRescheduling(JSRuntime*, uint64_t* stayed, uint64_t* moved);
+
+
 /**
  * Add a number of microseconds to the time spent waiting on CPOWs
  * since process start.
