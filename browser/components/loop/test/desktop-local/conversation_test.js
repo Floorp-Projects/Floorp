@@ -78,6 +78,7 @@ describe("loop.conversation", function() {
   });
 
   describe("#init", function() {
+    var OTRestore;
     beforeEach(function() {
       sandbox.stub(React, "render");
       sandbox.stub(document.mozL10n, "initialize");
@@ -93,13 +94,14 @@ describe("loop.conversation", function() {
           pathname: "/"
         });
 
+      OTRestore = window.OT;
       window.OT = {
         overrideGuidStorage: sinon.stub()
       };
     });
 
     afterEach(function() {
-      delete window.OT;
+      window.OT = OTRestore;
     });
 
     it("should initialize L10n", function() {

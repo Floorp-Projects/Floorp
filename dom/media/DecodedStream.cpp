@@ -184,8 +184,8 @@ OutputStreamData::Init(DecodedStream* aDecodedStream, ProcessedMediaStream* aStr
   aStream->AddListener(mListener);
 }
 
-DecodedStream::DecodedStream(MediaQueue<AudioData>& aAudioQueue,
-                             MediaQueue<VideoData>& aVideoQueue)
+DecodedStream::DecodedStream(MediaQueue<MediaData>& aAudioQueue,
+                             MediaQueue<MediaData>& aVideoQueue)
   : mMonitor("DecodedStream::mMonitor")
   , mPlaying(false)
   , mAudioQueue(aAudioQueue)
@@ -402,19 +402,21 @@ DecodedStream::InitTracks()
 
 static void
 SendStreamAudio(DecodedStreamData* aStream, int64_t aStartTime,
-                AudioData* aAudio, AudioSegment* aOutput,
+                MediaData* aData, AudioSegment* aOutput,
                 uint32_t aRate, double aVolume)
 {
+  MOZ_ASSERT(aData);
+  AudioData* audio = aData->As<AudioData>();
   // This logic has to mimic AudioSink closely to make sure we write
   // the exact same silences
   CheckedInt64 audioWrittenOffset = aStream->mAudioFramesWritten +
                                     UsecsToFrames(aStartTime, aRate);
-  CheckedInt64 frameOffset = UsecsToFrames(aAudio->mTime, aRate);
+  CheckedInt64 frameOffset = UsecsToFrames(audio->mTime, aRate);
 
   if (!audioWrittenOffset.isValid() ||
       !frameOffset.isValid() ||
       // ignore packet that we've already processed
-      frameOffset.value() + aAudio->mFrames <= audioWrittenOffset.value()) {
+      frameOffset.value() + audio->mFrames <= audioWrittenOffset.value()) {
     return;
   }
 
@@ -431,20 +433,20 @@ SendStreamAudio(DecodedStreamData* aStream, int64_t aStartTime,
   MOZ_ASSERT(audioWrittenOffset.value() >= frameOffset.value());
 
   int64_t offset = audioWrittenOffset.value() - frameOffset.value();
-  size_t framesToWrite = aAudio->mFrames - offset;
+  size_t framesToWrite = audio->mFrames - offset;
 
-  aAudio->EnsureAudioBuffer();
-  nsRefPtr<SharedBuffer> buffer = aAudio->mAudioBuffer;
+  audio->EnsureAudioBuffer();
+  nsRefPtr<SharedBuffer> buffer = audio->mAudioBuffer;
   AudioDataValue* bufferData = static_cast<AudioDataValue*>(buffer->Data());
   nsAutoTArray<const AudioDataValue*, 2> channels;
-  for (uint32_t i = 0; i < aAudio->mChannels; ++i) {
-    channels.AppendElement(bufferData + i * aAudio->mFrames + offset);
+  for (uint32_t i = 0; i < audio->mChannels; ++i) {
+    channels.AppendElement(bufferData + i * audio->mFrames + offset);
   }
   aOutput->AppendFrames(buffer.forget(), channels, framesToWrite);
   aStream->mAudioFramesWritten += framesToWrite;
   aOutput->ApplyVolume(aVolume);
 
-  aStream->mNextAudioTime = aAudio->GetEndTime();
+  aStream->mNextAudioTime = audio->GetEndTime();
 }
 
 void
@@ -458,7 +460,7 @@ DecodedStream::SendAudio(double aVolume, bool aIsSameOrigin)
 
   AudioSegment output;
   uint32_t rate = mInfo.mAudio.mRate;
-  nsAutoTArray<nsRefPtr<AudioData>,10> audio;
+  nsAutoTArray<nsRefPtr<MediaData>,10> audio;
   TrackID audioTrackId = mInfo.mAudio.mTrackId;
   SourceMediaStream* sourceStream = mData->mStream;
 
@@ -523,7 +525,7 @@ DecodedStream::SendVideo(bool aIsSameOrigin)
 
   VideoSegment output;
   TrackID videoTrackId = mInfo.mVideo.mTrackId;
-  nsAutoTArray<nsRefPtr<VideoData>, 10> video;
+  nsAutoTArray<nsRefPtr<MediaData>, 10> video;
   SourceMediaStream* sourceStream = mData->mStream;
 
   // It's OK to hold references to the VideoData because VideoData
@@ -531,7 +533,7 @@ DecodedStream::SendVideo(bool aIsSameOrigin)
   mVideoQueue.GetElementsAfter(mData->mNextVideoTime, &video);
 
   for (uint32_t i = 0; i < video.Length(); ++i) {
-    VideoData* v = video[i];
+    VideoData* v = video[i]->As<VideoData>();
 
     if (mData->mNextVideoTime < v->mTime) {
       // Write last video frame to catch up. mLastVideoImage can be null here

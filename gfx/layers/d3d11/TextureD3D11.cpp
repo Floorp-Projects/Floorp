@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -63,6 +63,23 @@ GetTileRectD3D11(uint32_t aID, IntSize aSize, uint32_t aMaxSize)
                  verticalTile * aMaxSize,
                  horizontalTile < (horizontalTiles - 1) ? aMaxSize : aSize.width % aMaxSize,
                  verticalTile < (verticalTiles - 1) ? aMaxSize : aSize.height % aMaxSize);
+}
+
+ID3D11ShaderResourceView*
+TextureSourceD3D11::GetShaderResourceView()
+{
+  MOZ_ASSERT(mTexture == GetD3D11Texture(), "You need to override GetShaderResourceView if you're overriding GetD3D11Texture!");
+
+  if (!mSRV && mTexture) {
+    RefPtr<ID3D11Device> device;
+    mTexture->GetDevice(byRef(device));
+    HRESULT hr = device->CreateShaderResourceView(mTexture, nullptr, byRef(mSRV));
+    if (FAILED(hr)) {
+      gfxCriticalError(CriticalLog::DefaultOptions(false)) << "[D3D11] TextureSourceD3D11:GetShaderResourceView CreateSRV failure " << gfx::hexa(hr);
+      return nullptr;
+    }
+  }
+  return mSRV;
 }
 
 DataTextureSourceD3D11::DataTextureSourceD3D11(SurfaceFormat aFormat,
@@ -954,6 +971,7 @@ DataTextureSourceD3D11::Update(DataSourceSurface* aSurface,
                          GetRequiredTilesD3D11(mSize.height, maxSize);
 
     mTileTextures.resize(tileCount);
+    mTileSRVs.resize(tileCount);
     mTexture = nullptr;
 
     for (uint32_t i = 0; i < tileCount; i++) {
@@ -986,10 +1004,34 @@ DataTextureSourceD3D11::GetD3D11Texture() const
                     : mTexture;
 }
 
+ID3D11ShaderResourceView*
+DataTextureSourceD3D11::GetShaderResourceView()
+{
+  if (mIterating) {
+    if (!mTileSRVs[mCurrentTile]) {
+      if (!mTileTextures[mCurrentTile]) {
+        return nullptr;
+      }
+      
+      RefPtr<ID3D11Device> device;
+      mTileTextures[mCurrentTile]->GetDevice(byRef(device));
+      HRESULT hr = device->CreateShaderResourceView(mTileTextures[mCurrentTile], nullptr, byRef(mTileSRVs[mCurrentTile]));
+      if (FAILED(hr)) {
+        gfxCriticalError(CriticalLog::DefaultOptions(false)) << "[D3D11] DataTextureSourceD3D11:GetShaderResourceView CreateSRV failure " << gfx::hexa(hr);
+        return nullptr;
+      }
+    }
+    return mTileSRVs[mCurrentTile];
+  }
+
+  return TextureSourceD3D11::GetShaderResourceView();
+}
+
 void
 DataTextureSourceD3D11::Reset()
 {
   mTexture = nullptr;
+  mTileSRVs.resize(0);
   mTileTextures.resize(0);
   mIsTiled = false;
   mSize.width = 0;
