@@ -27,13 +27,6 @@ const Utils = TelemetryUtils;
 
 const myScope = this;
 
-const IS_CONTENT_PROCESS = (function() {
-  // We cannot use Services.appinfo here because in telemetry xpcshell tests,
-  // appinfo is initially unavailable, and becomes available only later on.
-  let runtime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
-  return runtime.processType == Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT;
-})();
-
 // When modifying the payload in incompatible ways, please bump this version number
 const PAYLOAD_VERSION = 4;
 const PING_TYPE_MAIN = "main";
@@ -58,7 +51,7 @@ const MIN_SUBSESSION_LENGTH_MS = 10 * 60 * 1000;
 #expand const HISTOGRAMS_FILE_VERSION = "__HISTOGRAMS_FILE_VERSION__";
 
 const LOGGER_NAME = "Toolkit.Telemetry";
-const LOGGER_PREFIX = "TelemetrySession" + (IS_CONTENT_PROCESS ? "#content::" : "::");
+const LOGGER_PREFIX = "TelemetrySession" + (Utils.isContentProcess ? "#content::" : "::");
 
 const PREF_BRANCH = "toolkit.telemetry.";
 const PREF_PREVIOUS_BUILDID = PREF_BRANCH + "previousBuildID";
@@ -538,32 +531,20 @@ let TelemetryScheduler = {
     }
     this._lastTickTime = now;
 
-    // Check if aborted-session ping is due.
-    let isAbortedPingDue =
-      (now - this._lastSessionCheckpointTime) >= ABORTED_SESSION_UPDATE_INTERVAL_MS;
-    // Check if daily ping is due.
-    let shouldSendDaily = this._isDailyPingDue(nowDate);
-    // We can combine the daily-ping and the aborted-session ping in the following cases:
-    // - If both the daily and the aborted session pings are due (a laptop that wakes
-    //   up after a few hours).
-    // - If either the daily ping is due and the other one would follow up shortly
-    //   (whithin the coalescence threshold).
-    let nextSessionCheckpoint =
-      this._lastSessionCheckpointTime + ABORTED_SESSION_UPDATE_INTERVAL_MS;
-    let combineActions = (shouldSendDaily && isAbortedPingDue) || (shouldSendDaily &&
-                          Utils.areTimesClose(now, nextSessionCheckpoint,
-                                                       SCHEDULER_COALESCE_THRESHOLD_MS));
+    // Check if the daily ping is due.
+    const shouldSendDaily = this._isDailyPingDue(nowDate);
 
-    if (combineActions) {
-      this._log.trace("_schedulerTickLogic - Combining pings.");
-      // Send the daily ping and also save its payload as an aborted-session ping.
-      return Impl._sendDailyPing(true).then(() => this._dailyPingSucceeded(now),
-                                            () => this._dailyPingFailed(now));
-    } else if (shouldSendDaily) {
+    if (shouldSendDaily) {
       this._log.trace("_schedulerTickLogic - Daily ping due.");
       return Impl._sendDailyPing().then(() => this._dailyPingSucceeded(now),
                                         () => this._dailyPingFailed(now));
-    } else if (isAbortedPingDue) {
+    }
+
+    // Check if the aborted-session ping is due. If a daily ping was saved above, it was
+    // already duplicated as an aborted-session ping.
+    const isAbortedPingDue =
+      (now - this._lastSessionCheckpointTime) >= ABORTED_SESSION_UPDATE_INTERVAL_MS;
+    if (isAbortedPingDue) {
       this._log.trace("_schedulerTickLogic - Aborted session ping due.");
       return this._saveAbortedPing(now);
     }
@@ -749,6 +730,12 @@ this.TelemetrySession = Object.freeze({
   /**
    * Used only for testing purposes.
    */
+  setupContent: function() {
+    return Impl.setupContentProcess(true);
+  },
+  /**
+   * Used only for testing purposes.
+   */
   uninstall: function() {
     try {
       Impl.uninstall();
@@ -853,7 +840,7 @@ let Impl = {
     } catch (ex) {}
 
     // Only submit this if the extended set is enabled.
-    if (!IS_CONTENT_PROCESS && Telemetry.canRecordExtended) {
+    if (!Utils.isContentProcess && Telemetry.canRecordExtended) {
       try {
         ret.addonManager = AddonManagerPrivate.getSimpleMeasures();
         ret.UITelemetry = UITelemetry.getSimpleMeasures();
@@ -882,7 +869,7 @@ let Impl = {
       ret.maximalNumberOfConcurrentThreads = maximalNumberOfConcurrentThreads;
     }
 
-    if (IS_CONTENT_PROCESS) {
+    if (Utils.isContentProcess) {
       return ret;
     }
 
@@ -1306,7 +1293,7 @@ let Impl = {
       payloadObj.log = TelemetryLog.entries();
     }
 
-    if (IS_CONTENT_PROCESS) {
+    if (Utils.isContentProcess) {
       return payloadObj;
     }
 
@@ -1364,10 +1351,10 @@ let Impl = {
 
     let measurements =
       this.getSimpleMeasurements(reason == REASON_SAVED_SESSION, isSubsession, clearSubsession);
-    let info = !IS_CONTENT_PROCESS ? this.getMetadata(reason) : null;
+    let info = !Utils.isContentProcess ? this.getMetadata(reason) : null;
     let payload = this.assemblePayloadWithMeasurements(measurements, info, reason, clearSubsession);
 
-    if (!IS_CONTENT_PROCESS && clearSubsession) {
+    if (!Utils.isContentProcess && clearSubsession) {
       this.startNewSubsession();
       // Persist session data to disk (don't wait until it completes).
       let sessionData = this._getSessionDataObject();
@@ -1528,10 +1515,11 @@ let Impl = {
   /**
    * Initializes telemetry for a content process.
    */
-  setupContentProcess: function setupContentProcess() {
+  setupContentProcess: function setupContentProcess(testing) {
     this._log.trace("setupContentProcess");
 
     if (!Telemetry.canRecordBase) {
+      this._log.trace("setupContentProcess - base recording is disabled, not initializing");
       return;
     }
 
@@ -1545,7 +1533,7 @@ let Impl = {
 
       this.attachObservers();
       this.gatherMemory();
-    }.bind(this), TELEMETRY_DELAY);
+    }.bind(this), testing ? TELEMETRY_TEST_DELAY : TELEMETRY_DELAY);
 
     delayedTask.arm();
   },
@@ -1871,11 +1859,9 @@ let Impl = {
 
   /**
    * Gather and send a daily ping.
-   * @param {Boolean} [saveAsAborted=false] Also saves the payload as an aborted-session
-   *                  ping.
    * @return {Promise} Resolved when the ping is sent.
    */
-  _sendDailyPing: function(saveAsAborted = false) {
+  _sendDailyPing: function() {
     this._log.trace("_sendDailyPing");
     let payload = this.getSessionPayload(REASON_DAILY, true);
 
@@ -1885,11 +1871,14 @@ let Impl = {
     };
 
     let promise = TelemetryController.submitExternalPing(getPingType(payload), payload, options);
-    // If required, also save the payload as an aborted session.
-    if (saveAsAborted && IS_UNIFIED_TELEMETRY) {
+
+    // Also save the payload as an aborted session. If we delay this, aborted-session can
+    // lag behind for the profileSubsessionCounter and other state, complicating analysis.
+    if (IS_UNIFIED_TELEMETRY) {
       let abortedPromise = this._saveAbortedSessionPing(payload);
       promise = promise.then(() => abortedPromise);
     }
+
     return promise;
   },
 

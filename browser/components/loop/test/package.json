@@ -1,0 +1,21 @@
+{
+  "name": "FirefoxHello",
+  "version": "0.0.1",
+  "description": "Firefox Hello test coverage",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "devDependencies": {
+    "istanbul": "^0.3.17",
+    "karma": "^0.12.37",
+    "karma-coverage": "^0.4.2",
+    "karma-firefox-launcher": "^0.1.6",
+    "karma-mocha": "^0.2.0"
+  },
+  "scripts": {
+    "build-coverage-shared": "./node_modules/.bin/karma start karma/karma.coverage.shared_standalone.js",
+    "build-coverage-desktop": "./node_modules/.bin/karma start karma/karma.coverage.desktop.js",
+    "build-coverage": "npm run build-coverage-desktop && npm run build-coverage-shared"
+  }
+}

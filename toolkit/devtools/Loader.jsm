@@ -152,7 +152,7 @@ SrcdirProvider.prototype = {
     let contentObserverURI = this.fileURI(OS.Path.join(toolkitDir), "content-observer.js");
     let gcliURI = this.fileURI(OS.Path.join(toolkitDir, "gcli", "source", "lib", "gcli"));
     let projecteditorURI = this.fileURI(OS.Path.join(devtoolsDir, "projecteditor"));
-    let promiseURI = this.fileURI(OS.Path.join(modulesDir, "promise-backend.js"));
+    let promiseURI = this.fileURI(OS.Path.join(modulesDir, "Promise-backend.js"));
     let acornURI = this.fileURI(OS.Path.join(toolkitDir, "acorn"));
     let acornWalkURI = OS.Path.join(acornURI, "walk.js");
     let ternURI = OS.Path.join(toolkitDir, "tern");
@@ -439,7 +439,9 @@ DevToolsLoader.prototype = {
 
     this._provider.unload("reload");
     delete this._provider;
+    delete this._mainid;
     this._chooseProvider();
+    this.main("main");
   },
 
   /**
