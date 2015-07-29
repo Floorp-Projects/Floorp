@@ -23,6 +23,8 @@ enum class CreateContextFlags : int8_t {
     REQUIRE_COMPAT_PROFILE = 1 << 0,
     // Force the use of hardware backed GL, don't allow software implementations.
     FORCE_ENABLE_HARDWARE = 1 << 1,
+    /* Don't force discrete GPU to be used (if applicable) */
+    ALLOW_OFFLINE_RENDERER =  1 << 2,
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CreateContextFlags)
 
