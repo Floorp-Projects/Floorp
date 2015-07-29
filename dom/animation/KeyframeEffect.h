@@ -26,9 +26,8 @@ struct JSContext;
 class nsCSSPropertySet;
 
 namespace mozilla {
-namespace css {
+
 class AnimValuesStyleRule;
-} // namespace css
 
 /**
  * Input timing parameters.
@@ -319,7 +318,7 @@ public:
   // Animation for the current time except any properties already contained
   // in |aSetProperties|.
   // Any updated properties are added to |aSetProperties|.
-  void ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
+  void ComposeStyle(nsRefPtr<AnimValuesStyleRule>& aStyleRule,
                     nsCSSPropertySet& aSetProperties);
 
 protected:
