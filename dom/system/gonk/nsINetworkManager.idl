@@ -4,99 +4,13 @@
 
 #include "nsISupports.idl"
 
-/**
- * Information about networks that is exposed to network manager API consumers.
- */
-[scriptable, uuid(12da2bfd-0801-40d9-9c2e-768868526065)]
-interface nsINetworkInterface : nsISupports
-{
-  const long NETWORK_STATE_UNKNOWN = -1;
-  const long NETWORK_STATE_CONNECTING = 0;
-  const long NETWORK_STATE_CONNECTED = 1;
-  const long NETWORK_STATE_DISCONNECTING = 2;
-  const long NETWORK_STATE_DISCONNECTED = 3;
-
-  /**
-   * Current network state, one of the NETWORK_STATE_* constants.
-   *
-   * When this changes, network interface implementations notify with
-   * updateNetworkInterface() API.
-   */
-  readonly attribute long state;
-
-  const long NETWORK_TYPE_UNKNOWN     = -1;
-  const long NETWORK_TYPE_WIFI        = 0;
-  const long NETWORK_TYPE_MOBILE      = 1;
-  const long NETWORK_TYPE_MOBILE_MMS  = 2;
-  const long NETWORK_TYPE_MOBILE_SUPL = 3;
-  const long NETWORK_TYPE_WIFI_P2P    = 4;
-  const long NETWORK_TYPE_MOBILE_IMS  = 5;
-  const long NETWORK_TYPE_MOBILE_DUN  = 6;
-  const long NETWORK_TYPE_MOBILE_FOTA = 7;
-
-  /**
-   * Network type. One of the NETWORK_TYPE_* constants.
-   */
-  readonly attribute long type;
-
-  /**
-   * Name of the network interface. This identifier is unique.
-   */
-  readonly attribute DOMString name;
-
-  /**
-   * The host name of the http proxy server.
-   */
-  readonly attribute DOMString httpProxyHost;
-
-  /*
-   * The port number of the http proxy server.
-   */
-  readonly attribute long httpProxyPort;
-
-  /**
-   * Get the list of ip addresses and prefix lengths, ip address could be IPv4
-   * or IPv6, typically 1 IPv4 or 1 IPv6 or one of each.
-   *
-   * @param ips
-   *        The list of ip addresses retrieved.
-   * @param prefixLengths
-   *        The list of prefix lengths retrieved.
-   *
-   * @returns the length of the lists.
-   */
-  void getAddresses([array, size_is(count)] out wstring ips,
-                    [array, size_is(count)] out unsigned long prefixLengths,
-                    [retval] out unsigned long count);
-
-  /**
-   * Get the list of gateways, could be IPv4 or IPv6, typically 1 IPv4 or 1
-   * IPv6 or one of each.
-   *
-   * @param count
-   *        The length of the list of gateways
-   *
-   * @returns the list of gateways.
-   */
-  void getGateways([optional] out unsigned long count,
-                   [array, size_is(count), retval] out wstring gateways);
-
-  /**
-   * Get the list of dnses, could be IPv4 or IPv6.
-   *
-   * @param count
-   *        The length of the list of dnses.
-   *
-   * @returns the list of dnses.
-   */
-  void getDnses([optional] out unsigned long count,
-                [array, size_is(count), retval] out wstring dnses);
-};
+interface nsINetworkInfo;
+interface nsINetworkInterface;
 
 /**
  * Manage network interfaces.
  */
-[scriptable, uuid(b0ab71bf-4b38-4796-8a3c-4141255f4259)]
+[scriptable, uuid(e5ffe335-078e-4b25-87f1-02429bd2e458)]
 interface nsINetworkManager : nsISupports
 {
   /**
@@ -141,12 +55,12 @@ interface nsINetworkManager : nsISupports
   void unregisterNetworkInterface(in nsINetworkInterface network);
 
   /**
-   * Object containing all known network connections, keyed by their
+   * Object containing all known network information, keyed by their
    * network id. Network id is composed of a sub-id + '-' + network
    * type. For mobile network types, sub-id is 'ril' + service id; for
    * non-mobile network types, sub-id is always 'device'.
    */
-  readonly attribute jsval networkInterfaces;
+  readonly attribute jsval allNetworkInfo;
 
   /**
    * The preferred network type. One of the
@@ -159,12 +73,13 @@ interface nsINetworkManager : nsISupports
   attribute long preferredNetworkType;
 
   /**
-   * The network interface handling all data traffic.
+   * The network information of the network interface handling all network
+   * traffic.
    *
    * When this changes, the 'network-active-changed' observer
    * notification is dispatched.
    */
-  readonly attribute nsINetworkInterface active;
+  readonly attribute nsINetworkInfo activeNetworkInfo;
 
   /**
    * Override the default behaviour for preferredNetworkType and route
@@ -183,7 +98,7 @@ interface nsINetworkManager : nsISupports
    * Add host route to the specified network into routing table.
    *
    * @param network
-   *        The network interface where the host to be routed to.
+   *        The network information for the host to be routed to.
    * @param host
    *        The host to be added.
    *        The host will be resolved in advance if it's not an ip-address.
@@ -191,14 +106,14 @@ interface nsINetworkManager : nsISupports
    * @return a Promise
    *         resolved if added; rejected, otherwise.
    */
-  jsval addHostRoute(in nsINetworkInterface network,
+  jsval addHostRoute(in nsINetworkInfo network,
                      in DOMString host);
 
   /**
    * Remove host route to the specified network from routing table.
    *
    * @param network
-   *        The network interface where the routing to be removed from.
+   *        The network information for the routing to be removed from.
    * @param host
    *        The host routed to the network.
    *        The host will be resolved in advance if it's not an ip-address.
@@ -206,6 +121,6 @@ interface nsINetworkManager : nsISupports
    * @return a Promise
    *         resolved if removed; rejected, otherwise.
    */
-  jsval removeHostRoute(in nsINetworkInterface network,
+  jsval removeHostRoute(in nsINetworkInfo network,
                         in DOMString host);
 };
