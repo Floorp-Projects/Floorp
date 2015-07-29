@@ -348,19 +348,6 @@ public:
            mElementProperty == nsGkAtoms::animationsOfAfterProperty;
   }
 
-  nsString PseudoElement() const
-  {
-    if (IsForElement()) {
-      return EmptyString();
-    }
-    if (IsForBeforePseudo()) {
-      return NS_LITERAL_STRING("::before");
-    }
-    MOZ_ASSERT(IsForAfterPseudo(),
-               "::before & ::after should be the only pseudo-elements here");
-    return NS_LITERAL_STRING("::after");
-  }
-
   nsCSSPseudoElements::Type PseudoElementType() const
   {
     if (IsForElement()) {
@@ -373,6 +360,8 @@ public:
                "::before & ::after should be the only pseudo-elements here");
     return nsCSSPseudoElements::ePseudo_after;
   }
+
+  static nsString PseudoTypeAsString(nsCSSPseudoElements::Type aPseudoType);
 
   dom::Element* GetElementToRestyle() const;
 

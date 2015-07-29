@@ -852,7 +852,8 @@ struct TransitionEventInfo {
   InternalTransitionEvent mEvent;
 
   TransitionEventInfo(nsIContent *aElement, nsCSSProperty aProperty,
-                      TimeDuration aDuration, const nsAString& aPseudoElement)
+                      TimeDuration aDuration,
+                      nsCSSPseudoElements::Type aPseudoType)
     : mElement(aElement)
     , mEvent(true, NS_TRANSITION_END)
   {
@@ -860,7 +861,7 @@ struct TransitionEventInfo {
     mEvent.propertyName =
       NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(aProperty));
     mEvent.elapsedTime = aDuration.ToSeconds();
-    mEvent.pseudoElement = aPseudoElement;
+    mEvent.pseudoElement = AnimationCollection::PseudoTypeAsString(aPseudoType);
   }
 
   // InternalTransitionEvent doesn't support copy-construction, so we need
@@ -940,8 +941,7 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
               anim->GetEffect()->Timing().mIterationDuration;
             events.AppendElement(
               TransitionEventInfo(collection->mElement, prop,
-                                  duration,
-                                  collection->PseudoElement()));
+                                  duration, collection->PseudoElementType()));
 
             // Leave this transition in the list for one more refresh
             // cycle, since we haven't yet processed its style change, and
