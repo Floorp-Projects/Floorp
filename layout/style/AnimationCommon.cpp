@@ -718,6 +718,21 @@ AnimationCollection::HasAnimationOfProperty(nsCSSProperty aProperty) const
   return false;
 }
 
+/*static*/ nsString
+AnimationCollection::PseudoTypeAsString(nsCSSPseudoElements::Type aPseudoType)
+{
+  switch (aPseudoType) {
+    case nsCSSPseudoElements::ePseudo_before:
+      return NS_LITERAL_STRING("::before");
+    case nsCSSPseudoElements::ePseudo_after:
+      return NS_LITERAL_STRING("::after");
+    default:
+      MOZ_ASSERT(aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement,
+                 "Unexpected pseudo type");
+      return EmptyString();
+  }
+}
+
 mozilla::dom::Element*
 AnimationCollection::GetElementToRestyle() const
 {
