@@ -91,7 +91,7 @@
 
 #include "mozilla/Hal.h"
 #ifdef USE_SKIA
-#include "skia/SkGraphics.h"
+#include "skia/include/core/SkGraphics.h"
 # ifdef USE_SKIA_GPU
 #  include "SkiaGLGlue.h"
 # endif

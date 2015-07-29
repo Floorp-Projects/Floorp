@@ -8,8 +8,8 @@
 #ifdef USE_SKIA_GPU
 
 #include "GLContext.h"
-#include "skia/GrGLInterface.h"
-#include "skia/GrContext.h"
+#include "skia/include/gpu/gl/GrGLInterface.h"
+#include "skia/include/gpu/GrContext.h"
 #include "mozilla/gfx/HelpersSkia.h"
 
 namespace mozilla {
