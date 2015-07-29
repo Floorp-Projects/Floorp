@@ -59,24 +59,6 @@ uint32_t
 GetAudioChannelsSuperset(uint32_t aChannels1, uint32_t aChannels2);
 
 /**
- * Given an array of input channel data, and an output channel count,
- * replaces the array with an array of upmixed channels.
- * This shuffles the array and may set some channel buffers to aZeroChannel.
- * Don't call this with input count >= output count.
- * This may return *more* channels than requested. In that case, downmixing
- * is required to to get to aOutputChannelCount. (This is how we handle
- * odd cases like 3 -> 4 upmixing.)
- * If aChannelArray.Length() was the input to one of a series of
- * GetAudioChannelsSuperset calls resulting in aOutputChannelCount,
- * no downmixing will be required.
- */
-void
-AudioChannelsUpMix(nsTArray<const void*>* aChannelArray,
-                   uint32_t aOutputChannelCount,
-                   const void* aZeroChannel);
-
-
-/**
  * DownMixMatrix represents a conversion matrix efficiently by exploiting the
  * fact that each input channel contributes to at most one output channel,
  * except possibly for the C input channel in layouts that have one. Also,
@@ -124,19 +106,19 @@ gDownMixMatrices[CUSTOM_CHANNEL_LAYOUTS*(CUSTOM_CHANNEL_LAYOUTS - 1)/2] =
  * input count <= output count.
  */
 template<typename T>
-void AudioChannelsDownMix(const nsTArray<const void*>& aChannelArray,
-                     T** aOutputChannels,
-                     uint32_t aOutputChannelCount,
-                     uint32_t aDuration)
+void AudioChannelsDownMix(const nsTArray<const T*>& aChannelArray,
+                          T** aOutputChannels,
+                          uint32_t aOutputChannelCount,
+                          uint32_t aDuration)
 {
   uint32_t inputChannelCount = aChannelArray.Length();
-  const void* const* inputChannels = aChannelArray.Elements();
+  const T* const* inputChannels = aChannelArray.Elements();
   NS_ASSERTION(inputChannelCount > aOutputChannelCount, "Nothing to do");
 
   if (inputChannelCount > 6) {
     // Just drop the unknown channels.
     for (uint32_t o = 0; o < aOutputChannelCount; ++o) {
-      memcpy(aOutputChannels[o], inputChannels[o], aDuration*sizeof(T));
+      PodCopy(aOutputChannels[o], inputChannels[o], aDuration);
     }
     return;
   }
@@ -153,8 +135,7 @@ void AudioChannelsDownMix(const nsTArray<const void*>& aChannelArray,
   for (uint32_t s = 0; s < aDuration; ++s) {
     // Reserve an extra junk channel at the end for the cases where we
     // want an input channel to contribute to nothing
-    T outputChannels[CUSTOM_CHANNEL_LAYOUTS + 1];
-    memset(outputChannels, 0, sizeof(T)*(CUSTOM_CHANNEL_LAYOUTS));
+    T outputChannels[CUSTOM_CHANNEL_LAYOUTS + 1] = {0};
     for (uint32_t c = 0; c < inputChannelCount; ++c) {
       outputChannels[m.mInputDestination[c]] +=
         m.mInputCoefficient[c]*(static_cast<const T*>(inputChannels[c]))[s];
@@ -171,6 +152,94 @@ void AudioChannelsDownMix(const nsTArray<const void*>& aChannelArray,
   }
 }
 
+/**
+ * UpMixMatrix represents a conversion matrix by exploiting the fact that
+ * each output channel comes from at most one input channel.
+ */
+struct UpMixMatrix {
+  uint8_t mInputDestination[CUSTOM_CHANNEL_LAYOUTS];
+};
+
+static const UpMixMatrix
+gUpMixMatrices[CUSTOM_CHANNEL_LAYOUTS*(CUSTOM_CHANNEL_LAYOUTS - 1)/2] =
+{
+  // Upmixes from mono
+  { { 0, 0 } },
+  { { 0, IGNORE, IGNORE } },
+  { { 0, 0, IGNORE, IGNORE } },
+  { { 0, IGNORE, IGNORE, IGNORE, IGNORE } },
+  { { IGNORE, IGNORE, 0, IGNORE, IGNORE, IGNORE } },
+  // Upmixes from stereo
+  { { 0, 1, IGNORE } },
+  { { 0, 1, IGNORE, IGNORE } },
+  { { 0, 1, IGNORE, IGNORE, IGNORE } },
+  { { 0, 1, IGNORE, IGNORE, IGNORE, IGNORE } },
+  // Upmixes from 3-channel
+  { { 0, 1, 2, IGNORE } },
+  { { 0, 1, 2, IGNORE, IGNORE } },
+  { { 0, 1, 2, IGNORE, IGNORE, IGNORE } },
+  // Upmixes from quad
+  { { 0, 1, 2, 3, IGNORE } },
+  { { 0, 1, IGNORE, IGNORE, 2, 3 } },
+  // Upmixes from 5-channel
+  { { 0, 1, 2, 3, 4, IGNORE } }
+};
+
+
+/**
+ * Given an array of input channel data, and an output channel count,
+ * replaces the array with an array of upmixed channels.
+ * This shuffles the array and may set some channel buffers to aZeroChannel.
+ * Don't call this with input count >= output count.
+ * This may return *more* channels than requested. In that case, downmixing
+ * is required to to get to aOutputChannelCount. (This is how we handle
+ * odd cases like 3 -> 4 upmixing.)
+ * If aChannelArray.Length() was the input to one of a series of
+ * GetAudioChannelsSuperset calls resulting in aOutputChannelCount,
+ * no downmixing will be required.
+ */
+template<typename T>
+void
+AudioChannelsUpMix(nsTArray<const T*>* aChannelArray,
+                   uint32_t aOutputChannelCount,
+                   const T* aZeroChannel)
+{
+  uint32_t inputChannelCount = aChannelArray->Length();
+  uint32_t outputChannelCount =
+    GetAudioChannelsSuperset(aOutputChannelCount, inputChannelCount);
+  NS_ASSERTION(outputChannelCount > inputChannelCount,
+               "No up-mix needed");
+  MOZ_ASSERT(inputChannelCount > 0, "Bad number of channels");
+  MOZ_ASSERT(outputChannelCount > 0, "Bad number of channels");
+
+  aChannelArray->SetLength(outputChannelCount);
+
+  if (inputChannelCount < CUSTOM_CHANNEL_LAYOUTS &&
+      outputChannelCount <= CUSTOM_CHANNEL_LAYOUTS) {
+    const UpMixMatrix& m = gUpMixMatrices[
+      gMixingMatrixIndexByChannels[inputChannelCount - 1] +
+      outputChannelCount - inputChannelCount - 1];
+
+    const T* outputChannels[CUSTOM_CHANNEL_LAYOUTS];
+
+    for (uint32_t i = 0; i < outputChannelCount; ++i) {
+      uint8_t channelIndex = m.mInputDestination[i];
+      if (channelIndex == IGNORE) {
+        outputChannels[i] = aZeroChannel;
+      } else {
+        outputChannels[i] = aChannelArray->ElementAt(channelIndex);
+      }
+    }
+    for (uint32_t i = 0; i < outputChannelCount; ++i) {
+      aChannelArray->ElementAt(i) = outputChannels[i];
+    }
+    return;
+  }
+
+  for (uint32_t i = inputChannelCount; i < outputChannelCount; ++i) {
+    aChannelArray->ElementAt(i) = aZeroChannel;
+  }
+}
 
 } // namespace mozilla
 
