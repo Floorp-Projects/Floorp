@@ -333,9 +333,9 @@ description > html|a {
   background-color: transparent !important;
   border: none;
   box-shadow: none;
-  height: 18px;
   padding: 0;
-  min-width: 18px;
+  min-height: 0;
+  min-width: 0;
 }
 
 #dialogBox > .groupbox-body {
