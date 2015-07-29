@@ -648,8 +648,7 @@ WebGLTexture::EnsureInitializedImageData(TexImageTarget imageTarget,
                         imageInfo.mDepth,
                         bytespertexel,
                         mContext->mPixelStoreUnpackAlignment);
-    MOZ_ASSERT(checked_byteLength.isValid()); // Should have been checked
-                                              // earlier.
+    MOZ_RELEASE_ASSERT(checked_byteLength.isValid()); // Should have been checked earlier.
 
     size_t byteCount = checked_byteLength.value();
 
