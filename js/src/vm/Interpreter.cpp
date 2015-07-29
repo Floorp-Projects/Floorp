@@ -57,8 +57,8 @@
 #include "vm/Stack-inl.h"
 
 #if defined(XP_WIN)
-#include <Windows.h>
-#include <Processthreadsapi.h>
+#include <processthreadsapi.h>
+#include <windows.h>
 #endif // defined(XP_WIN)
 
 using namespace js;
@@ -396,7 +396,7 @@ class AutoStopwatch final
 
     // The CPU on which we started the measure. Defined only
     // if `isMonitoringJank_` is `true`.
-#if defined(XP_WIN) && _WIN32_WINNT >= 0x0601
+#if defined(XP_WIN) && WINVER >= _WIN32_WINNT_VISTA
     struct cpuid_t {
         WORD group_;
         BYTE number_;
@@ -531,6 +531,12 @@ class AutoStopwatch final
                 const uint64_t cyclesEnd = getCycles();
                 cyclesDelta = getDelta(cyclesEnd, cyclesStart_);
             }
+#if (defined(XP_WIN) && WINVER >= _WIN32_WINNT_VISTA) || defined(XP_LINUX)
+            if (isSameCPU(cpuStart_, cpuEnd))
+                runtime->stopwatch.testCpuRescheduling.stayed += 1;
+            else
+                runtime->stopwatch.testCpuRescheduling.moved += 1;
+#endif // defined(XP_WIN) || defined(XP_LINUX)
         }
 
         uint64_t CPOWTimeDelta = 0;
@@ -621,7 +627,7 @@ class AutoStopwatch final
     // access to the current CPU.
     cpuid_t inline getCPU() const
     {
-#if defined(XP_WIN)
+#if defined(XP_WIN) && WINVER >= _WIN32_WINNT_VISTA
         PROCESSOR_NUMBER proc;
         GetCurrentProcessorNumberEx(&proc);
 
@@ -637,7 +643,7 @@ class AutoStopwatch final
     // Compare two CPU identifiers.
     bool inline isSameCPU(const cpuid_t& a, const cpuid_t& b) const
     {
-#if defined(XP_WIN)
+#if defined(XP_WIN)  && WINVER >= _WIN32_WINNT_VISTA
         return a.group_ == b.group_ && a.number_ == b.number_;
 #elif defined(XP_LINUX)
         return a == b;

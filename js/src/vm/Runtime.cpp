@@ -1208,6 +1208,13 @@ js::GetStopwatchIsMonitoringPerCompartment(JSRuntime* rt)
     return rt->stopwatch.isMonitoringPerCompartment();
 }
 
+void
+js::GetPerfMonitoringTestCpuRescheduling(JSRuntime* rt, uint64_t* stayed, uint64_t* moved)
+{
+    *stayed = rt->stopwatch.testCpuRescheduling.stayed;
+    *moved = rt->stopwatch.testCpuRescheduling.moved;
+}
+
 js::PerformanceGroupHolder::~PerformanceGroupHolder()
 {
     unlink();
