@@ -55,6 +55,9 @@ const PENDING_PINGS_QUOTA_BYTES_DESKTOP = 15 * 1024 * 1024; // 15 MB
 // Maximum space the outgoing pings can take on disk, for Mobile (in Bytes).
 const PENDING_PINGS_QUOTA_BYTES_MOBILE = 1024 * 1024; // 1 MB
 
+// The maximum size a pending/archived ping can take on disk.
+const PING_FILE_MAXIMUM_SIZE_BYTES = 1024 * 1024; // 1 MB
+
 // This special value is submitted when the archive is outside of the quota.
 const ARCHIVE_SIZE_PROBE_SPECIAL_VALUE = 300;
 
@@ -103,6 +106,12 @@ this.TelemetryStorage = {
     return OS.Path.join(OS.Constants.Path.profileDir, "saved-telemetry-pings");
   },
 
+  /**
+   * The maximum size a ping can have, in bytes.
+   */
+  get MAXIMUM_PING_SIZE() {
+    return PING_FILE_MAXIMUM_SIZE_BYTES;
+  },
   /**
    * Shutdown & block on any outstanding async activity in this module.
    *
@@ -585,13 +594,27 @@ let TelemetryStorageImpl = {
     const path = getArchivedPingPath(id, new Date(data.timestampCreated), data.type);
     const pathCompressed = path + "lz4";
 
+    // Purge pings which are too big.
+    let checkSize = function*(path) {
+      const fileSize = (yield OS.File.stat(path)).size;
+      if (fileSize > PING_FILE_MAXIMUM_SIZE_BYTES) {
+        Telemetry.getHistogramById("TELEMETRY_DISCARDED_ARCHIVED_PINGS_SIZE_MB")
+                 .add(Math.floor(fileSize / 1024 / 1024));
+        Telemetry.getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_ARCHIVED").add();
+        yield OS.File.remove(path, {ignoreAbsent: true});
+        throw new Error("loadArchivedPing - exceeded the maximum ping size: " + fileSize);
+      }
+    };
+
     try {
       // Try to load a compressed version of the archived ping first.
       this._log.trace("loadArchivedPing - loading ping from: " + pathCompressed);
+      yield* checkSize(pathCompressed);
       return yield this.loadPingFile(pathCompressed, /*compressed*/ true);
     } catch (ex if ex.becauseNoSuchFile) {
       // If that fails, look for the uncompressed version.
       this._log.trace("loadArchivedPing - compressed ping not found, loading: " + path);
+      yield* checkSize(path);
       return yield this.loadPingFile(path, /*compressed*/ false);
     }
   }),
@@ -612,6 +635,8 @@ let TelemetryStorageImpl = {
     this._log.trace("_removeArchivedPing - removing ping from: " + path);
     yield OS.File.remove(path, {ignoreAbsent: true});
     yield OS.File.remove(pathCompressed, {ignoreAbsent: true});
+    // Remove the ping from the cache.
+    this._archivedPings.delete(id);
   }),
 
   /**
@@ -754,6 +779,19 @@ let TelemetryStorageImpl = {
         continue;
       }
 
+      // Enforce a maximum file size limit on archived pings.
+      if (fileSize > PING_FILE_MAXIMUM_SIZE_BYTES) {
+        this._log.error("_enforceArchiveQuota - removing file exceeding size limit, size: " + fileSize);
+        // We just remove the ping from the disk, we don't bother removing it from pingList
+        // since it won't contribute to the quota.
+        yield this._removeArchivedPing(ping.id, ping.timestampCreated, ping.type)
+                  .catch(e => this._log.error("_enforceArchiveQuota - failed to remove archived ping" + ping.id));
+        Telemetry.getHistogramById("TELEMETRY_DISCARDED_ARCHIVED_PINGS_SIZE_MB")
+                 .add(Math.floor(fileSize / 1024 / 1024));
+        Telemetry.getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_ARCHIVED").add();
+        continue;
+      }
+
       archiveSizeInBytes += fileSize;
 
       if (archiveSizeInBytes < SAFE_QUOTA) {
@@ -798,9 +836,6 @@ let TelemetryStorageImpl = {
       // This list is guaranteed to be in order, so remove the pings at its
       // beginning (oldest).
       yield this._removeArchivedPing(ping.id, ping.timestampCreated, ping.type);
-
-      // Remove outdated pings from the cache.
-      this._archivedPings.delete(ping.id);
     }
 
     const endTimeStamp = Policy.now().getTime();
@@ -1132,16 +1167,34 @@ let TelemetryStorageImpl = {
     });
   },
 
-  loadPendingPing: function(id) {
+  loadPendingPing: Task.async(function*(id) {
     this._log.trace("loadPendingPing - id: " + id);
     let info = this._pendingPings.get(id);
     if (!info) {
       this._log.trace("loadPendingPing - unknown id " + id);
-      return Promise.reject(new Error("TelemetryStorage.loadPendingPing - no ping with id " + id));
+      throw new Error("TelemetryStorage.loadPendingPing - no ping with id " + id);
     }
 
-    return this.loadPingFile(info.path, false);
-  },
+    // Try to get the dimension of the ping. If that fails, update the histograms.
+    let fileSize = 0;
+    try {
+      fileSize = (yield OS.File.stat(info.path)).size;
+    } catch (e if e instanceof OS.File.Error && e.becauseNoSuchFile) {
+      // Fall through and let |loadPingFile| report the error.
+    }
+
+    // Purge pings which are too big.
+    if (fileSize > PING_FILE_MAXIMUM_SIZE_BYTES) {
+      yield this.removePendingPing(id);
+      Telemetry.getHistogramById("TELEMETRY_DISCARDED_PENDING_PINGS_SIZE_MB")
+               .add(Math.floor(fileSize / 1024 / 1024));
+      Telemetry.getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_PENDING").add();
+      throw new Error("loadPendingPing - exceeded the maximum ping size: " + fileSize);
+    }
+
+    // Try to load the ping file. Update the related histograms on failure.
+    return yield this.loadPingFile(info.path, false);
+  }),
 
   removePendingPing: function(id) {
     let info = this._pendingPings.get(id);
@@ -1210,6 +1263,21 @@ let TelemetryStorageImpl = {
       } catch (ex) {
         this._log.error("_scanPendingPings - failed to stat file " + file.path, ex);
         continue;
+      }
+
+      // Enforce a maximum file size limit on pending pings.
+      if (info.size > PING_FILE_MAXIMUM_SIZE_BYTES) {
+        this._log.error("_scanPendingPings - removing file exceeding size limit " + file.path);
+        try {
+          yield OS.File.remove(file.path);
+        } catch (ex) {
+          this._log.error("_scanPendingPings - failed to remove file " + file.path, ex);
+        } finally {
+          Telemetry.getHistogramById("TELEMETRY_DISCARDED_PENDING_PINGS_SIZE_MB")
+                   .add(Math.floor(info.size / 1024 / 1024));
+          Telemetry.getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_PENDING").add();
+          continue;
+        }
       }
 
       let id = OS.Path.basename(file.path);
