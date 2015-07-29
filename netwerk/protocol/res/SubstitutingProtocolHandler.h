@@ -34,6 +34,8 @@ public:
   NS_DECL_NON_VIRTUAL_NSIPROTOCOLHANDLER;
   NS_DECL_NON_VIRTUAL_NSISUBSTITUTINGPROTOCOLHANDLER;
 
+  bool HasSubstitution(const nsACString& aRoot) const { return mSubstitutions.Get(aRoot, nullptr); }
+
   void CollectSubstitutions(InfallibleTArray<SubstitutionMapping>& aResources);
 
 protected:
@@ -48,6 +50,13 @@ protected:
   {
     *aResult = nullptr;
     return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // Override this in the subclass to check for special case when resolving URIs
+  // _before_ checking substitutions.
+  virtual bool ResolveSpecialCases(const nsACString& aHost, const nsACString& aPath, nsACString& aResult)
+  {
+    return false;
   }
 
   nsIIOService* IOService() { return mIOService; }
