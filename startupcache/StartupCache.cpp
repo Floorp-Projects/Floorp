@@ -383,7 +383,7 @@ StartupCache::HeapSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     // DMD to be significant.  They can be added later if necessary.
     return aMallocSizeOf(this) +
            mTable.SizeOfExcludingThis(SizeOfEntryExcludingThis, aMallocSizeOf) +
-           mPendingWrites.SizeOfExcludingThis(aMallocSizeOf);
+           mPendingWrites.ShallowSizeOfExcludingThis(aMallocSizeOf);
 }
 
 /* static */ size_t

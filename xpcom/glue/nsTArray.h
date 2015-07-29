@@ -941,8 +941,10 @@ public:
   }
 
   // @return The amount of memory used by this nsTArray_Impl, excluding
-  // sizeof(*this).
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+  // sizeof(*this). If you want to measure anything hanging off the array, you
+  // must iterate over the elements and measure them individually; hence the
+  // "Shallow" prefix.
+  size_t ShallowSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   {
     if (this->UsesAutoArrayBuffer() || Hdr() == EmptyHdr()) {
       return 0;
@@ -951,10 +953,12 @@ public:
   }
 
   // @return The amount of memory used by this nsTArray_Impl, including
-  // sizeof(*this).
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+  // sizeof(*this). If you want to measure anything hanging off the array, you
+  // must iterate over the elements and measure them individually; hence the
+  // "Shallow" prefix.
+  size_t ShallowSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   {
-    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+    return aMallocSizeOf(this) + ShallowSizeOfExcludingThis(aMallocSizeOf);
   }
 
   //

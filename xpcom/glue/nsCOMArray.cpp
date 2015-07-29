@@ -297,7 +297,7 @@ nsCOMArray_base::SizeOfExcludingThis(
     nsBaseArraySizeOfElementIncludingThisFunc aSizeOfElementIncludingThis,
     mozilla::MallocSizeOf aMallocSizeOf, void* aData) const
 {
-  size_t n = mArray.SizeOfExcludingThis(aMallocSizeOf);
+  size_t n = mArray.ShallowSizeOfExcludingThis(aMallocSizeOf);
 
   if (aSizeOfElementIncludingThis) {
     for (uint32_t index = 0; index < mArray.Length(); ++index) {

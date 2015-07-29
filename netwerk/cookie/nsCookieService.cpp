@@ -604,7 +604,7 @@ nsCookieEntry::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t amount = nsCookieKey::SizeOfExcludingThis(aMallocSizeOf);
 
-  amount += mCookies.SizeOfExcludingThis(aMallocSizeOf);
+  amount += mCookies.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (uint32_t i = 0; i < mCookies.Length(); ++i) {
     amount += mCookies[i]->SizeOfIncludingThis(aMallocSizeOf);
   }
@@ -630,7 +630,7 @@ DBState::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 
   amount += aMallocSizeOf(this);
   amount += hostTable.SizeOfExcludingThis(aMallocSizeOf);
-  amount += hostArray.SizeOfExcludingThis(aMallocSizeOf);
+  amount += hostArray.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (uint32_t i = 0; i < hostArray.Length(); ++i) {
     amount += hostArray[i].SizeOfExcludingThis(aMallocSizeOf);
   }

@@ -2525,7 +2525,7 @@ nsCSSValueGradient::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) con
   n += mAngle.SizeOfExcludingThis(aMallocSizeOf);
   n += mRadialValues[0].SizeOfExcludingThis(aMallocSizeOf);
   n += mRadialValues[1].SizeOfExcludingThis(aMallocSizeOf);
-  n += mStops.SizeOfExcludingThis(aMallocSizeOf);
+  n += mStops.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (uint32_t i = 0; i < mStops.Length(); i++) {
     n += mStops[i].SizeOfExcludingThis(aMallocSizeOf);
   }
@@ -2685,7 +2685,7 @@ nsCSSCornerSizes::corners[4] = {
 size_t
 mozilla::css::GridTemplateAreasValue::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
-  size_t n = mNamedAreas.SizeOfExcludingThis(aMallocSizeOf);
-  n += mTemplates.SizeOfExcludingThis(aMallocSizeOf);
+  size_t n = mNamedAreas.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  n += mTemplates.ShallowSizeOfExcludingThis(aMallocSizeOf);
   return n;
 }

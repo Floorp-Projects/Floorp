@@ -335,7 +335,7 @@ size_t CacheIOThread::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) co
   size_t n = 0;
   n += mallocSizeOf(mThread);
   for (uint32_t level = 0; level < LAST_LEVEL; ++level) {
-    n += mEventQueue[level].SizeOfExcludingThis(mallocSizeOf);
+    n += mEventQueue[level].ShallowSizeOfExcludingThis(mallocSizeOf);
     // Events referenced by the queues are arbitrary objects we cannot be sure
     // are reported elsewhere as well as probably not implementing nsISizeOf
     // interface.  Deliberatly omitting them from reporting here.

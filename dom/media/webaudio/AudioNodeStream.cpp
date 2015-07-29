@@ -62,7 +62,7 @@ AudioNodeStream::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   // - mEngine
 
   amount += ProcessedMediaStream::SizeOfExcludingThis(aMallocSizeOf);
-  amount += mLastChunks.SizeOfExcludingThis(aMallocSizeOf);
+  amount += mLastChunks.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (size_t i = 0; i < mLastChunks.Length(); i++) {
     // NB: This is currently unshared only as there are instances of
     //     double reporting in DMD otherwise.

@@ -2009,7 +2009,7 @@ CacheFile::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
   }
 
   // Input streams are not elsewhere reported.
-  n += mInputs.SizeOfExcludingThis(mallocSizeOf);
+  n += mInputs.ShallowSizeOfExcludingThis(mallocSizeOf);
   for (uint32_t i = 0; i < mInputs.Length(); ++i) {
     n += mInputs[i]->SizeOfIncludingThis(mallocSizeOf);
   }
@@ -2021,7 +2021,7 @@ CacheFile::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 
   // The listeners are usually classes reported just above.
   n += mChunkListeners.SizeOfExcludingThis(nullptr, mallocSizeOf);
-  n += mObjsToRelease.SizeOfExcludingThis(mallocSizeOf);
+  n += mObjsToRelease.ShallowSizeOfExcludingThis(mallocSizeOf);
 
   // mHandle reported directly from CacheFileIOManager.
 

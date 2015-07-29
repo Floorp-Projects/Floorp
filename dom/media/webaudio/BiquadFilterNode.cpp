@@ -218,7 +218,7 @@ public:
     // - mDestination - probably not owned
     // - AudioParamTimelines - counted in the AudioNode
     size_t amount = AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
-    amount += mBiquads.SizeOfExcludingThis(aMallocSizeOf);
+    amount += mBiquads.ShallowSizeOfExcludingThis(aMallocSizeOf);
     return amount;
   }
 

@@ -45,7 +45,7 @@ public:
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     {
         size_t amount = aMallocSizeOf(this);
-        amount += m_buffer.SizeOfExcludingThis(aMallocSizeOf);
+        amount += m_buffer.ShallowSizeOfExcludingThis(aMallocSizeOf);
         return amount;
     }
 

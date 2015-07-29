@@ -1950,15 +1950,15 @@ MediaStream::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   // - mAudioOutputStream - elements
 
   amount += mBuffer.SizeOfExcludingThis(aMallocSizeOf);
-  amount += mAudioOutputs.SizeOfExcludingThis(aMallocSizeOf);
-  amount += mVideoOutputs.SizeOfExcludingThis(aMallocSizeOf);
+  amount += mAudioOutputs.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  amount += mVideoOutputs.ShallowSizeOfExcludingThis(aMallocSizeOf);
   amount += mExplicitBlockerCount.SizeOfExcludingThis(aMallocSizeOf);
-  amount += mListeners.SizeOfExcludingThis(aMallocSizeOf);
-  amount += mMainThreadListeners.SizeOfExcludingThis(aMallocSizeOf);
-  amount += mDisabledTrackIDs.SizeOfExcludingThis(aMallocSizeOf);
+  amount += mListeners.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  amount += mMainThreadListeners.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  amount += mDisabledTrackIDs.ShallowSizeOfExcludingThis(aMallocSizeOf);
   amount += mBlocked.SizeOfExcludingThis(aMallocSizeOf);
   amount += mGraphUpdateIndices.SizeOfExcludingThis(aMallocSizeOf);
-  amount += mConsumers.SizeOfExcludingThis(aMallocSizeOf);
+  amount += mConsumers.ShallowSizeOfExcludingThis(aMallocSizeOf);
 
   return amount;
 }

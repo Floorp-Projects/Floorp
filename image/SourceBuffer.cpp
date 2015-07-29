@@ -397,7 +397,7 @@ SourceBuffer::SizeOfIncludingThisWithComputedFallback(MallocSizeOf
   MutexAutoLock lock(mMutex);
 
   size_t n = aMallocSizeOf(this);
-  n += mChunks.SizeOfExcludingThis(aMallocSizeOf);
+  n += mChunks.ShallowSizeOfExcludingThis(aMallocSizeOf);
 
   for (uint32_t i = 0 ; i < mChunks.Length() ; ++i) {
     size_t chunkSize = aMallocSizeOf(mChunks[i].Data());
