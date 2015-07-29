@@ -84,6 +84,7 @@ class CSSTransition final : public Animation
 public:
  explicit CSSTransition(nsIGlobalObject* aGlobal)
     : dom::Animation(aGlobal)
+    , mWasFinishedOnLastTick(false)
   {
   }
 
@@ -116,6 +117,8 @@ public:
     Animation::CancelFromStyle();
     MOZ_ASSERT(mSequenceNum == kUnsequenced);
   }
+
+  void Tick() override;
 
   nsCSSProperty TransitionProperty() const;
 
@@ -166,9 +169,13 @@ protected:
 
   virtual CommonAnimationManager* GetAnimationManager() const override;
 
+  void QueueEvents();
+
   // The (pseudo-)element whose computed transition-property refers to this
   // transition (if any).
   OwningElementRef mOwningElement;
+
+  bool mWasFinishedOnLastTick;
 };
 
 } // namespace dom
@@ -271,6 +278,14 @@ public:
   virtual void WillRefresh(mozilla::TimeStamp aTime) override;
 
   void FlushTransitions(FlushFlags aFlags);
+
+  void QueueEvent(mozilla::TransitionEventInfo&& aEventInfo)
+  {
+    mEventDispatcher.QueueEvent(
+      mozilla::Forward<mozilla::TransitionEventInfo>(aEventInfo));
+  }
+
+  void ClearEventQueue() { mEventDispatcher.ClearEventQueue(); }
 
 protected:
   virtual ~nsTransitionManager() {}
