@@ -60,7 +60,7 @@ class AutoCreateAndDestroyReentrantMonitor
 public:
   AutoCreateAndDestroyReentrantMonitor() {
     mReentrantMonitor = new ReentrantMonitor("TestTimers::AutoMon");
-    NS_ASSERTION(mReentrantMonitor, "Out of memory!");
+    MOZ_ASSERT(mReentrantMonitor, "Out of memory!");
   }
 
   ~AutoCreateAndDestroyReentrantMonitor() {
@@ -84,12 +84,12 @@ public:
   : mThreadPtr(aThreadPtr), mReentrantMonitor(aReentrantMonitor) { }
 
   NS_IMETHOD Notify(nsITimer* aTimer) override {
-    NS_ASSERTION(mThreadPtr, "Callback was not supposed to be called!");
+    MOZ_ASSERT(mThreadPtr, "Callback was not supposed to be called!");
     nsCOMPtr<nsIThread> current(do_GetCurrentThread());
 
     ReentrantMonitorAutoEnter mon(*mReentrantMonitor);
 
-    NS_ASSERTION(!*mThreadPtr, "Timer called back more than once!");
+    MOZ_ASSERT(!*mThreadPtr, "Timer called back more than once!");
     *mThreadPtr = current;
 
     mon.Notify();
@@ -129,8 +129,7 @@ TestTargetedTimers()
     new TimerCallback(&notifiedThread, newMon);
   NS_ENSURE_TRUE(callback, NS_ERROR_OUT_OF_MEMORY);
 
-  rv = timer->InitWithCallback(callback, PR_MillisecondsToInterval(2000),
-                               nsITimer::TYPE_ONE_SHOT);
+  rv = timer->InitWithCallback(callback, 2000, nsITimer::TYPE_ONE_SHOT);
   NS_ENSURE_SUCCESS(rv, rv);
 
   ReentrantMonitorAutoEnter mon(*newMon);
@@ -162,8 +161,7 @@ TestTimerWithStoppedTarget()
     new TimerCallback(nullptr, nullptr);
   NS_ENSURE_TRUE(callback, NS_ERROR_OUT_OF_MEMORY);
 
-  rv = timer->InitWithCallback(callback, PR_MillisecondsToInterval(100),
-                               nsITimer::TYPE_ONE_SHOT);
+  rv = timer->InitWithCallback(callback, 100, nsITimer::TYPE_ONE_SHOT);
   NS_ENSURE_SUCCESS(rv, rv);
 
   testThread->Shutdown();
