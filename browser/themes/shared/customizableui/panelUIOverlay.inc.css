@@ -92,8 +92,6 @@
 
 #PanelUI-button {
   margin-inline-start: 2px;
-  padding-inline-start: 2px;
-  padding-inline-end: 2px;
   border-inline-start: 1px solid;
   border-image: linear-gradient(transparent, rgba(0,0,0,.1) 20%, rgba(0,0,0,.1) 80%, transparent);
   border-image-slice: 1;
