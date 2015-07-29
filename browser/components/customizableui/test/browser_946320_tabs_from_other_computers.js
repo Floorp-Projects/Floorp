@@ -121,12 +121,8 @@ function configureFxAccountIdentity() {
       storageManager.initialize(user);
       return new AccountState(storageManager);
     },
-    getCertificate(data, keyPair, mustBeValidUntil) {
-      this.cert = {
-        validUntil: this.now() + 10000,
-        cert: "certificate",
-      };
-      return Promise.resolve(this.cert.cert);
+    _getAssertion(audience) {
+      return Promise.resolve("assertion");
     },
     getCertificateSigned() {
       return Promise.resolve();
