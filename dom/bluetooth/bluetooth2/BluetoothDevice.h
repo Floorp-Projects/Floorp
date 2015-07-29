@@ -117,6 +117,8 @@ private:
 
   /**
    * Fire BluetoothAttributeEvent to trigger onattributechanged event handler.
+   *
+   * @param aTypes [in] Array of changed attributes. Must be non-empty.
    */
   void DispatchAttributeEvent(const Sequence<nsString>& aTypes);
 
