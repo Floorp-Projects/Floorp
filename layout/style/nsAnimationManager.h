@@ -101,8 +101,6 @@ public:
     MOZ_ASSERT(mSequenceNum == kUnsequenced);
   }
 
-  void Tick() override;
-
   bool IsStylePaused() const { return mIsStylePaused; }
 
   bool HasLowerCompositeOrderThan(const Animation& aOther) const override;
@@ -122,6 +120,8 @@ public:
                aOther.IsUsingCustomCompositeOrder());
     mSequenceNum = aOther.mSequenceNum;
   }
+
+  void QueueEvents(EventArray& aEventsToDispatch);
 
   // Returns the element or pseudo-element whose animation-name property
   // this CSSAnimation corresponds to (if any). This is used for determining
@@ -164,8 +164,6 @@ protected:
                                         "before a CSS animation is destroyed");
   }
   virtual css::CommonAnimationManager* GetAnimationManager() const override;
-
-  void QueueEvents();
 
   static nsString PseudoTypeAsString(nsCSSPseudoElements::Type aPseudoType);
 
@@ -248,6 +246,12 @@ public:
   {
   }
 
+  void UpdateStyleAndEvents(mozilla::AnimationCollection* aEA,
+                            mozilla::TimeStamp aRefreshTime,
+                            mozilla::EnsureStyleRuleFlags aFlags);
+  void QueueEvents(mozilla::AnimationCollection* aEA,
+                   mozilla::EventArray &aEventsToDispatch);
+
   void MaybeUpdateCascadeResults(mozilla::AnimationCollection* aCollection);
 
   // nsIStyleRuleProcessor (parts)
@@ -276,11 +280,6 @@ public:
                                    mozilla::dom::Element* aElement);
 
   /**
-   * Add a pending event.
-   */
-  void QueueEvent(mozilla::AnimationEventInfo& aEventInfo);
-
-  /**
    * Dispatch any pending events.  We accumulate animationend and
    * animationiteration events only during refresh driver notifications
    * (and dispatch them at the end of such notifications), but we
@@ -294,11 +293,7 @@ public:
     }
   }
 
-  void ClearEventQueue() { mPendingEvents.Clear(); }
-
 protected:
-  virtual ~nsAnimationManager() {}
-
   virtual nsIAtom* GetAnimationsAtom() override {
     return nsGkAtoms::animationsProperty;
   }
