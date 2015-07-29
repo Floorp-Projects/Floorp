@@ -310,7 +310,7 @@ function test() {
     }
   ];
 
-  let parser = new OutputParser();
+  let parser = new OutputParser(document);
   for (let i = 0; i < testData.length; i ++) {
     let data = testData[i];
     info("Output-parser test data " + i + ". {" + data.name + " : " + data.value + ";}");

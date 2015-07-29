@@ -96,10 +96,6 @@ ContentSearchUIController.prototype = {
 
   set engines(val) {
     this._engines = val;
-    if (!this._table.hidden) {
-      this._setUpOneOffButtons();
-      return;
-    }
     this._pendingOneOffRefresh = true;
   },
 
@@ -127,6 +123,9 @@ ContentSearchUIController.prototype = {
     let allElts = [...this._suggestionsList.children,
                    ...this._oneOffButtons,
                    document.getElementById("contentSearchSettingsButton")];
+    // If we are selecting a suggestion and a one-off is selected, don't deselect it.
+    let excludeIndex = idx < this.numSuggestions && this.selectedButtonIndex > -1 ?
+                       this.numSuggestions + this.selectedButtonIndex : -1;
     for (let i = 0; i < allElts.length; ++i) {
       let elt = allElts[i];
       let ariaSelectedElt = i < this.numSuggestions ? elt.firstChild : elt;
@@ -135,16 +134,43 @@ ContentSearchUIController.prototype = {
         ariaSelectedElt.setAttribute("aria-selected", "true");
         this.input.setAttribute("aria-activedescendant", ariaSelectedElt.id);
       }
-      else {
+      else if (i != excludeIndex) {
         elt.classList.remove("selected");
         ariaSelectedElt.setAttribute("aria-selected", "false");
       }
     }
   },
 
+  get selectedButtonIndex() {
+    let elts = [...this._oneOffButtons,
+                document.getElementById("contentSearchSettingsButton")];
+    for (let i = 0; i < elts.length; ++i) {
+      if (elts[i].classList.contains("selected")) {
+        return i;
+      }
+    }
+    return -1;
+  },
+
+  set selectedButtonIndex(idx) {
+    let elts = [...this._oneOffButtons,
+                document.getElementById("contentSearchSettingsButton")];
+    for (let i = 0; i < elts.length; ++i) {
+      let elt = elts[i];
+      if (i == idx) {
+        elt.classList.add("selected");
+        elt.setAttribute("aria-selected", "true");
+      }
+      else {
+        elt.classList.remove("selected");
+        elt.setAttribute("aria-selected", "false");
+      }
+    }
+  },
+
   get selectedEngineName() {
-    let selectedElt = this._table.querySelector(".selected");
-    if (selectedElt && selectedElt.engineName) {
+    let selectedElt = this._oneOffsTable.querySelector(".selected");
+    if (selectedElt) {
       return selectedElt.engineName;
     }
     return this.defaultEngine.name;
@@ -194,7 +220,7 @@ ContentSearchUIController.prototype = {
   },
 
   _onCommand: function(aEvent) {
-    if (this.selectedIndex == this.numSuggestions + this._oneOffButtons.length) {
+    if (this.selectedButtonIndex == this._oneOffButtons.length) {
       // Settings button was selected.
       this._sendMsg("ManageEngines");
       return;
@@ -264,19 +290,58 @@ ContentSearchUIController.prototype = {
 
   _onKeypress: function (event) {
     let selectedIndexDelta = 0;
+    let selectedSuggestionDelta = 0;
+    let selectedOneOffDelta = 0;
+
     switch (event.keyCode) {
     case event.DOM_VK_UP:
-      if (!this._table.hidden) {
-        selectedIndexDelta = -1;
+      if (this._table.hidden) {
+        return;
       }
+      if (event.getModifierState("Accel")) {
+        if (event.shiftKey) {
+          selectedSuggestionDelta = -1;
+          break;
+        }
+        this._cycleCurrentEngine(true);
+        break;
+      }
+      if (event.altKey) {
+        selectedOneOffDelta = -1;
+        break;
+      }
+      selectedIndexDelta = -1;
       break;
     case event.DOM_VK_DOWN:
       if (this._table.hidden) {
         this._getSuggestions();
+        return;
       }
-      else {
-        selectedIndexDelta = 1;
+      if (event.getModifierState("Accel")) {
+        if (event.shiftKey) {
+          selectedSuggestionDelta = 1;
+          break;
+        }
+        this._cycleCurrentEngine(false);
+        break;
       }
+      if (event.altKey) {
+        selectedOneOffDelta = 1;
+        break;
+      }
+      selectedIndexDelta = 1;
+      break;
+    case event.DOM_VK_TAB:
+      if (this._table.hidden) {
+        return;
+      }
+      // Shift+tab when either the first or no one-off is selected, as well as
+      // tab when the settings button is selected, should change focus as normal.
+      if ((this.selectedButtonIndex <= 0 && event.shiftKey) ||
+          this.selectedButtonIndex == this._oneOffButtons.length && !event.shiftKey) {
+        return;
+      }
+      selectedOneOffDelta = event.shiftKey ? -1 : 1;
       break;
     case event.DOM_VK_RIGHT:
       // Allow normal caret movement until the caret is at the end of the input.
@@ -297,37 +362,97 @@ ContentSearchUIController.prototype = {
       }
       this._stickyInputValue = this.input.value;
       this._hideSuggestions();
-      break;
+      return;
     case event.DOM_VK_RETURN:
       this._onCommand(event);
-      break;
+      return;
     case event.DOM_VK_DELETE:
       if (this.selectedIndex >= 0) {
         this.deleteSuggestionAtIndex(this.selectedIndex);
       }
-      break;
+      return;
     case event.DOM_VK_ESCAPE:
       if (!this._table.hidden) {
         this._hideSuggestions();
       }
+      return;
     default:
       return;
     }
 
+    let currentIndex = this.selectedIndex;
     if (selectedIndexDelta) {
-      // Update the selection.
-      let newSelectedIndex = this.selectedIndex + selectedIndexDelta;
+      let newSelectedIndex = currentIndex + selectedIndexDelta;
       if (newSelectedIndex < -1) {
         newSelectedIndex = this.numSuggestions + this._oneOffButtons.length;
       }
-      else if (this.numSuggestions + this._oneOffButtons.length < newSelectedIndex) {
+      // If are moving up from the first one off, we have to deselect the one off
+      // manually because the selectedIndex setter tries to exclude the selected
+      // one-off (which is desirable for accel+shift+up/down).
+      if (currentIndex == this.numSuggestions && selectedIndexDelta == -1) {
+        this.selectedButtonIndex = -1;
+      }
+      this.selectAndUpdateInput(newSelectedIndex);
+    }
+
+    else if (selectedSuggestionDelta) {
+      let newSelectedIndex;
+      if (currentIndex >= this.numSuggestions || currentIndex == -1) {
+        // No suggestion already selected, select the first/last one appropriately.
+        newSelectedIndex = selectedSuggestionDelta == 1 ?
+                           0 : this.numSuggestions - 1;
+      }
+      else {
+        newSelectedIndex = currentIndex + selectedSuggestionDelta;
+      }
+      if (newSelectedIndex >= this.numSuggestions) {
         newSelectedIndex = -1;
       }
       this.selectAndUpdateInput(newSelectedIndex);
-
-      // Prevent the input's caret from moving.
-      event.preventDefault();
     }
+
+    else if (selectedOneOffDelta) {
+      let newSelectedIndex;
+      let currentButton = this.selectedButtonIndex;
+      if (currentButton == -1 || currentButton == this._oneOffButtons.length) {
+        // No one-off already selected, select the first/last one appropriately.
+        newSelectedIndex = selectedOneOffDelta == 1 ?
+                           0 : this._oneOffButtons.length - 1;
+      }
+      else {
+        newSelectedIndex = currentButton + selectedOneOffDelta;
+      }
+      // Allow selection of the settings button via the tab key.
+      if (newSelectedIndex == this._oneOffButtons.length &&
+          event.keyCode != event.DOM_VK_TAB) {
+        newSelectedIndex = -1;
+      }
+      this.selectedButtonIndex = newSelectedIndex;
+    }
+
+    // Prevent the input's caret from moving.
+    event.preventDefault();
+  },
+
+  _currentEngineIndex: -1,
+  _cycleCurrentEngine: function (aReverse) {
+    if ((this._currentEngineIndex == this._oneOffButtons.length - 1 && !aReverse) ||
+        (this._currentEngineIndex < 0 && aReverse)) {
+      return;
+    }
+    this._currentEngineIndex += aReverse ? -1 : 1;
+    let engine;
+    if (this._currentEngineIndex == -1) {
+      engine = this._originalDefaultEngine;
+    } else {
+      let button = this._oneOffButtons[this._currentEngineIndex];
+      engine = {
+        name: button.engineName,
+        icon: button.firstChild.getAttribute("src"),
+      };
+    }
+    this._sendMsg("SetCurrentEngine", engine.name);
+    this.defaultEngine = engine;
   },
 
   _onFocus: function () {
@@ -356,7 +481,12 @@ ContentSearchUIController.prototype = {
   },
 
   _onMousemove: function (event) {
-    this.selectedIndex = this._indexOfTableItem(event.target);
+    let idx = this._indexOfTableItem(event.target);
+    if (idx >= this.numSuggestions) {
+      this.selectedButtonIndex = idx - this.numSuggestions;
+      return;
+    }
+    this.selectedIndex = idx;
   },
 
   _onMouseup: function (event) {
@@ -364,6 +494,15 @@ ContentSearchUIController.prototype = {
       return;
     }
     this._onCommand(event);
+  },
+
+  _onMouseout: function (event) {
+    // We only deselect one-off buttons and the settings button when they are
+    // moused out.
+    let idx = this._indexOfTableItem(event.originalTarget);
+    if (idx >= this.numSuggestions) {
+      this.selectedButtonIndex = -1;
+    }
   },
 
   _onClick: function (event) {
@@ -427,6 +566,10 @@ ContentSearchUIController.prototype = {
       }
       this._table.hidden = false;
       this.input.setAttribute("aria-expanded", "true");
+      this._originalDefaultEngine = {
+        name: this.defaultEngine.name,
+        icon: this.defaultEngine.icon,
+      };
     }
   },
 
@@ -447,10 +590,6 @@ ContentSearchUIController.prototype = {
       name: engine.name,
       icon: this._getFaviconURIFromBuffer(engine.iconBuffer),
     };
-    if (!this._table.hidden) {
-      this._setUpOneOffButtons();
-      return;
-    }
     this._pendingOneOffRefresh = true;
   },
 
@@ -572,6 +711,9 @@ ContentSearchUIController.prototype = {
 
   _hideSuggestions: function () {
     this.input.setAttribute("aria-expanded", "false");
+    this.selectedIndex = -1;
+    this.selectedButtonIndex = -1;
+    this._currentEngineIndex = -1;
     this._table.hidden = true;
   },
 
@@ -605,11 +747,7 @@ ContentSearchUIController.prototype = {
     document.addEventListener("mouseup", () => { delete this._mousedown; });
 
     // Deselect the selected element on mouseout if it wasn't a suggestion.
-    this._table.addEventListener("mouseout", () => {
-      if (this.selectedIndex >= this.numSuggestions) {
-        this.selectAndUpdateInput(-1);
-      }
-    });
+    this._table.addEventListener("mouseout", this);
 
     // If a search is loaded in the same tab, ensure the suggestions dropdown
     // is hidden immediately when the page starts loading and not when it first
