@@ -787,11 +787,11 @@ function getRuleViewRuleEditor(view, childrenIndex, nodeIndex) {
 let focusNewRuleViewProperty = Task.async(function*(ruleEditor) {
   info("Clicking on a close ruleEditor brace to start editing a new property");
   ruleEditor.closeBrace.scrollIntoView();
-  let editor = yield focusEditableField(ruleEditor.ruleView, ruleEditor.closeBrace);
+  let editor = yield focusEditableField(ruleEditor.ruleView,
+    ruleEditor.closeBrace);
 
-  is(inplaceEditor(ruleEditor.newPropSpan), editor, "Focused editor is the new property editor.");
-  is(ruleEditor.rule.textProps.length,  0, "Starting with one new text property.");
-  is(ruleEditor.propertyList.children.length, 1, "Starting with two property editors.");
+  is(inplaceEditor(ruleEditor.newPropSpan), editor,
+    "Focused editor is the new property editor.");
 
   return editor;
 });
