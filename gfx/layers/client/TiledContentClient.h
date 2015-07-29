@@ -277,7 +277,6 @@ struct TileClient
   nsIntRegion mInvalidFront;
   nsIntRegion mInvalidBack;
   nsExpirationState mExpirationState;
-
 private:
   // Copies dirty pixels from the front buffer into the back buffer,
   // and records the copied region in aAddPaintedRegion.
@@ -468,9 +467,6 @@ protected:
   bool ValidateTile(TileClient& aTile,
                     const nsIntPoint& aTileRect,
                     const nsIntRegion& dirtyRect);
-
-  void PostValidate(const nsIntRegion& aPaintRegion,
-                    const nsIntRegion& aDirtyRegion);
 
   void UnlockTile(TileClient& aTile);
 

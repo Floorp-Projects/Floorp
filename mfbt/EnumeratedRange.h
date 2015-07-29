@@ -36,7 +36,7 @@ public:
     : mCurrent(aCurrent) { }
 
   template<typename IntType, typename EnumType>
-  EnumeratedIterator(const EnumeratedIterator<IntType, EnumType>& aOther)
+  explicit EnumeratedIterator(const EnumeratedIterator<IntType, EnumType>& aOther)
     : mCurrent(aOther.mCurrent) { }
 
   EnumTypeT operator*() const { return mCurrent; }

@@ -5,7 +5,7 @@ const Cu = Components.utils;
 const Cr = Components.results;
 
 Cu.import("resource://gre/modules/devtools/Loader.jsm");
-Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm");
+const DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils");
 
 // Register a console listener, so console messages don't just disappear
 // into the ether.

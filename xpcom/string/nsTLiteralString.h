@@ -28,7 +28,7 @@ public:
    */
 
   template<size_type N>
-  nsTLiteralString_CharT(const char_type (&aStr)[N])
+  explicit nsTLiteralString_CharT(const char_type (&aStr)[N])
     : string_type(const_cast<char_type*>(aStr), N - 1, F_TERMINATED | F_LITERAL)
   {
   }

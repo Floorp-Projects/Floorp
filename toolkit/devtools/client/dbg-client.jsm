@@ -50,7 +50,7 @@ Object.defineProperty(this, "WebConsoleClient", {
   enumerable: true
 });
 
-Components.utils.import("resource://gre/modules/devtools/DevToolsUtils.jsm");
+const DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils");
 this.executeSoon = DevToolsUtils.executeSoon;
 this.makeInfallible = DevToolsUtils.makeInfallible;
 this.values = DevToolsUtils.values;

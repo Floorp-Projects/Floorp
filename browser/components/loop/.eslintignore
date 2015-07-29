@@ -11,6 +11,9 @@ standalone/content/libs
 standalone/node_modules
 # Libs we don't need to check
 test/shared/vendor
+# Coverage files
+test/coverage
+test/node_modules
 # These are generated react files that we don't need to check
 content/js/contacts.js
 content/js/conversation.js

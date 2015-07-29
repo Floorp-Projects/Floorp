@@ -47,9 +47,20 @@ describe("loop.webapp", function() {
   });
 
   describe("#init", function() {
+    var loopConfigRestore;
+
     beforeEach(function() {
       sandbox.stub(React, "render");
+      loopConfigRestore = loop.config;
+      loop.config = {
+        feedbackApiUrl: "http://fake.invalid",
+        serverUrl: "http://fake.invalid"
+      };
       sandbox.stub(loop.Dispatcher.prototype, "dispatch");
+    });
+
+    afterEach(function() {
+      loop.config = loopConfigRestore;
     });
 
     it("should create the WebappRootView", function() {
