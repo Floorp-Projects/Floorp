@@ -270,7 +270,7 @@ private:
      */
     bool Equals(const char *str) const
     {
-      return strncmp(str, buf, length) == 0;
+      return (strncmp(str, buf, length) == 0 && str[length] == '\0');
     }
 
   private:
