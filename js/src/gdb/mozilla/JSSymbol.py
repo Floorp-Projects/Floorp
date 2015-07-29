@@ -18,7 +18,7 @@ class JSSymbolPtr(mozilla.prettyprinters.Pointer):
         self.value = value
 
     def to_string(self):
-        code = int(self.value['code_']) & 0xffffffff
+        code = int(self.value['code_'])
         desc = str(self.value['description_'])
         if code == InSymbolRegistry:
             return "Symbol.for({})".format(desc)
