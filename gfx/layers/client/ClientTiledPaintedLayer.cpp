@@ -19,6 +19,7 @@
 #include "mozilla/mozalloc.h"           // for operator delete, etc
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "LayersLogging.h"
+#include "mozilla/layers/SingleTiledContentClient.h"
 
 namespace mozilla {
 namespace layers {
@@ -231,6 +232,10 @@ bool
 ClientTiledPaintedLayer::UseProgressiveDraw() {
   if (!gfxPlatform::GetPlatform()->UseProgressivePaint()) {
     // pref is disabled, so never do progressive
+    return false;
+  }
+
+  if (!mContentClient->GetTiledBuffer()->SupportsProgressiveUpdate()) {
     return false;
   }
 
