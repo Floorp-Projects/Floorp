@@ -322,6 +322,7 @@ private:
   typedef nsClassHashtable<nsUint32HashKey, ImageStartData> ImageStartTable;
 
   void DispatchPendingEvents();
+  void DispatchAnimationEvents();
   void RunFrameRequestCallbacks(mozilla::TimeStamp aNowTime);
 
   void Tick(int64_t aNowEpoch, mozilla::TimeStamp aNowTime);
