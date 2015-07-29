@@ -735,11 +735,11 @@ TextureClient*
 TileClient::GetBackBuffer(const nsIntRegion& aDirtyRegion,
                           gfxContentType aContent,
                           SurfaceMode aMode,
-                          bool *aCreatedTextureClient,
                           nsIntRegion& aAddPaintedRegion,
                           RefPtr<TextureClient>* aBackBufferOnWhite)
 {
   // Try to re-use the front-buffer if possible
+  bool createdTextureClient = false;
   if (mFrontBuffer &&
       mFrontBuffer->HasInternalBuffer() &&
       mFrontLock->GetReadCount() == 1 &&
@@ -748,58 +748,91 @@ TileClient::GetBackBuffer(const nsIntRegion& aDirtyRegion,
     // re-use the front buffer.
     DiscardBackBuffer();
     Flip();
-    *aBackBufferOnWhite = mBackBufferOnWhite;
-    return mBackBuffer;
-  }
+  } else {
+    if (!mBackBuffer ||
+        mBackLock->GetReadCount() > 1) {
 
-  if (!mBackBuffer ||
-      mBackLock->GetReadCount() > 1) {
+      if (mBackLock) {
+        // Before we Replacing the lock by another one we need to unlock it!
+        mBackLock->ReadUnlock();
+      }
 
-    if (mBackLock) {
-      // Before we Replacing the lock by another one we need to unlock it!
-      mBackLock->ReadUnlock();
-    }
+      if (mBackBuffer) {
+        // Our current back-buffer is still locked by the compositor. This can occur
+        // when the client is producing faster than the compositor can consume. In
+        // this case we just want to drop it and not return it to the pool.
+        mAllocator->ReportClientLost();
+      }
+      if (mBackBufferOnWhite) {
+        mAllocator->ReportClientLost();
+        mBackBufferOnWhite = nullptr;
+      }
 
-    if (mBackBuffer) {
-      // Our current back-buffer is still locked by the compositor. This can occur
-      // when the client is producing faster than the compositor can consume. In
-      // this case we just want to drop it and not return it to the pool.
-      mAllocator->ReportClientLost();
-    }
-    if (mBackBufferOnWhite) {
-      mAllocator->ReportClientLost();
-      mBackBufferOnWhite = nullptr;
-    }
-
-    mBackBuffer.Set(this, mAllocator->GetTextureClient());
-    if (!mBackBuffer) {
-      return nullptr;
-    }
-
-    if (aMode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
-      mBackBufferOnWhite = mAllocator->GetTextureClient();
-      if (!mBackBufferOnWhite) {
-        mBackBuffer.Set(this, nullptr);
+      mBackBuffer.Set(this, mAllocator->GetTextureClient());
+      if (!mBackBuffer) {
+        gfxCriticalError() << "[Tiling:Client] Failed to allocate a TextureClient";
         return nullptr;
       }
+
+      if (aMode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
+        mBackBufferOnWhite = mAllocator->GetTextureClient();
+        if (!mBackBufferOnWhite) {
+          mBackBuffer.Set(this, nullptr);
+          gfxCriticalError() << "[Tiling:Client] Failed to allocate a TextureClient";
+          return nullptr;
+        }
+      }
+
+      // Create a lock for our newly created back-buffer.
+      if (mManager->AsShadowForwarder()->IsSameProcess()) {
+        // If our compositor is in the same process, we can save some cycles by not
+        // using shared memory.
+        mBackLock = new gfxMemorySharedReadLock();
+      } else {
+        mBackLock = new gfxShmSharedReadLock(mManager->AsShadowForwarder());
+      }
+
+      MOZ_ASSERT(mBackLock->IsValid());
+
+      createdTextureClient = true;
+      mInvalidBack = IntRect(0, 0, mBackBuffer->GetSize().width, mBackBuffer->GetSize().height);
     }
 
-    // Create a lock for our newly created back-buffer.
-    if (mManager->AsShadowForwarder()->IsSameProcess()) {
-      // If our compositor is in the same process, we can save some cycles by not
-      // using shared memory.
-      mBackLock = new gfxMemorySharedReadLock();
-    } else {
-      mBackLock = new gfxShmSharedReadLock(mManager->AsShadowForwarder());
-    }
-
-    MOZ_ASSERT(mBackLock->IsValid());
-
-    *aCreatedTextureClient = true;
-    mInvalidBack = IntRect(0, 0, mBackBuffer->GetSize().width, mBackBuffer->GetSize().height);
+    ValidateBackBufferFromFront(aDirtyRegion, aAddPaintedRegion);
   }
 
-  ValidateBackBufferFromFront(aDirtyRegion, aAddPaintedRegion);
+  if (!mBackBuffer->IsLocked()) {
+    if (!mBackBuffer->Lock(OpenMode::OPEN_READ_WRITE)) {
+      gfxCriticalError() << "[Tiling:Client] Failed to lock a tile";
+      DiscardBackBuffer();
+      DiscardFrontBuffer();
+      return nullptr;
+    }
+  }
+
+  if (mBackBufferOnWhite && !mBackBufferOnWhite->IsLocked()) {
+    if (!mBackBufferOnWhite->Lock(OpenMode::OPEN_READ_WRITE)) {
+      gfxCriticalError() << "[Tiling:Client] Failed to lock a tile";
+      DiscardBackBuffer();
+      DiscardFrontBuffer();
+      return nullptr;
+    }
+  }
+
+  if (createdTextureClient) {
+    if (!mCompositableClient->AddTextureClient(mBackBuffer)) {
+      gfxCriticalError() << "[Tiling:Client] Failed to connect a TextureClient (a)";
+      DiscardFrontBuffer();
+      DiscardBackBuffer();
+      return nullptr;
+    }
+    if (mBackBufferOnWhite && !mCompositableClient->AddTextureClient(mBackBufferOnWhite)) {
+      gfxCriticalError() << "[Tiling:Client] Failed to connect a TextureClient (b)";
+      DiscardFrontBuffer();
+      DiscardBackBuffer();
+      return nullptr;
+    }
+  }
 
   *aBackBufferOnWhite = mBackBufferOnWhite;
   return mBackBuffer;
@@ -1211,7 +1244,6 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
   }
   aTile.SetCompositableClient(mCompositableClient);
 
-  bool createdTextureClient = false;
   nsIntRegion offsetScaledDirtyRegion = aDirtyRegion.MovedBy(-aTileOrigin);
   offsetScaledDirtyRegion.ScaleRoundOut(mResolution, mResolution);
 
@@ -1223,7 +1255,7 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
   RefPtr<TextureClient> backBuffer =
     aTile.GetBackBuffer(offsetScaledDirtyRegion,
                         content, mode,
-                        &createdTextureClient, extraPainted,
+                        extraPainted,
                         &backBufferOnWhite);
 
   aTile.mUpdateRect = offsetScaledDirtyRegion.GetBounds().Union(extraPainted.GetBounds());
@@ -1233,42 +1265,10 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
   mPaintedRegion.Or(mPaintedRegion, extraPainted);
 
   if (!backBuffer) {
-    gfxCriticalError() << "[Tiling:Client] Failed to allocate a TextureClient";
-    aTile.DiscardBuffers();
     return false;
   }
 
-  // the back buffer may have been already locked in ValidateBackBufferFromFront
-  if (!backBuffer->IsLocked()) {
-    if (!backBuffer->Lock(OpenMode::OPEN_READ_WRITE)) {
-      gfxCriticalError() << "[Tiling:Client] Failed to lock a tile";
-      aTile.DiscardBuffers();
-      return false;
-    }
-  }
-
-  if (backBufferOnWhite && !backBufferOnWhite->IsLocked()) {
-    if (!backBufferOnWhite->Lock(OpenMode::OPEN_READ_WRITE)) {
-      gfxCriticalError() << "[Tiling:Client] Failed to lock a tile";
-      aTile.DiscardBuffers();
-      return false;
-    }
-  }
-
   if (usingTiledDrawTarget) {
-    if (createdTextureClient) {
-      if (!mCompositableClient->AddTextureClient(backBuffer)) {
-        gfxCriticalError() << "[Tiling:Client] Failed to connect a TextureClient (a)";
-        aTile.DiscardBuffers();
-        return false;
-      }
-      if (backBufferOnWhite && !mCompositableClient->AddTextureClient(backBufferOnWhite)) {
-        gfxCriticalError() << "[Tiling:Client] Failed to connect a TextureClient (b)";
-        aTile.DiscardBuffers();
-        return false;
-      }
-    }
-
     gfx::Tile moz2DTile;
     RefPtr<DrawTarget> dt = backBuffer->BorrowDrawTarget();
     RefPtr<DrawTarget> dtOnWhite;
@@ -1373,14 +1373,6 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
   tileRegion.SubOut(aDirtyRegion); // Has now been validated
 
   backBuffer->SetWaste(tileRegion.Area() * mResolution * mResolution);
-
-  if (createdTextureClient) {
-    if (!mCompositableClient->AddTextureClient(backBuffer)) {
-      gfxCriticalError() << "[Tiling:Client] Failed to connect a TextureClient (c)";
-      aTile.DiscardBuffers();
-      return false;
-    }
-  }
 
   aTile.Flip();
 
