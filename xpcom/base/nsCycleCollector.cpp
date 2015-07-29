@@ -3422,9 +3422,8 @@ nsCycleCollector::Suspect(void* aPtr, nsCycleCollectionParticipant* aParti,
 {
   CheckThreadSafety();
 
-  // Re-entering ::Suspect during collection used to be a fatal error,
-  // but we are canonicalizing nsISupports pointers using QI, so we
-  // will see some spurious refcount traffic here.
+  // Don't call AddRef or Release of a CCed object in a Traverse() method.
+  MOZ_ASSERT(!mScanInProgress, "Attempted to call Suspect() while a scan was in progress");
 
   if (MOZ_UNLIKELY(mScanInProgress)) {
     return;
