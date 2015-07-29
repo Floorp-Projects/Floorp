@@ -12,7 +12,6 @@
 
 #include "nsIContent.h"
 #include "nsStyleContext.h"
-#include "nsCSSProps.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TimeStamp.h"
 #include "nsRefreshDriver.h"
@@ -20,7 +19,6 @@
 #include "nsRuleWalker.h"
 #include "nsCSSPropertySet.h"
 #include "mozilla/EventDispatcher.h"
-#include "mozilla/ContentEvents.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/dom/Element.h"
@@ -846,33 +844,6 @@ nsTransitionManager::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
-
-struct TransitionEventInfo {
-  nsCOMPtr<nsIContent> mElement;
-  InternalTransitionEvent mEvent;
-
-  TransitionEventInfo(nsIContent *aElement, nsCSSProperty aProperty,
-                      TimeDuration aDuration,
-                      nsCSSPseudoElements::Type aPseudoType)
-    : mElement(aElement)
-    , mEvent(true, NS_TRANSITION_END)
-  {
-    // XXX Looks like nobody initialize WidgetEvent::time
-    mEvent.propertyName =
-      NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(aProperty));
-    mEvent.elapsedTime = aDuration.ToSeconds();
-    mEvent.pseudoElement = AnimationCollection::PseudoTypeAsString(aPseudoType);
-  }
-
-  // InternalTransitionEvent doesn't support copy-construction, so we need
-  // to ourselves in order to work with nsTArray
-  TransitionEventInfo(const TransitionEventInfo &aOther)
-    : mElement(aOther.mElement)
-    , mEvent(true, NS_TRANSITION_END)
-  {
-    mEvent.AssignTransitionEventData(aOther.mEvent, false);
-  }
-};
 
 /* virtual */ void
 nsTransitionManager::WillRefresh(mozilla::TimeStamp aTime)
