@@ -217,14 +217,14 @@ private:
                                    const UniquePtr<Sdp>& remote);
   nsresult AddTransportAttributes(SdpMediaSection* msection,
                                   SdpSetupAttribute::Role dtlsRole);
-  nsresult SetupTransportParams(const Sdp& oldAnswer,
-                                const Sdp& newOffer,
-                                Sdp* newLocal);
-  nsresult AddOfferMSections(const JsepOfferOptions& options, Sdp* sdp);
+  nsresult CopyPreviousTransportParams(const Sdp& oldAnswer,
+                                       const Sdp& newOffer,
+                                       Sdp* newLocal);
+  nsresult SetupOfferMSections(const JsepOfferOptions& options, Sdp* sdp);
   // Non-const so it can assign m-line index to tracks
-  nsresult AddOfferMSectionsByType(SdpMediaSection::MediaType type,
-                                   Maybe<size_t> offerToReceive,
-                                   Sdp* sdp);
+  nsresult SetupOfferMSectionsByType(SdpMediaSection::MediaType type,
+                                     Maybe<size_t> offerToReceive,
+                                     Sdp* sdp);
   nsresult BindLocalTracks(SdpMediaSection::MediaType mediatype,
                            Sdp* sdp);
   nsresult BindTrackToMsection(JsepSendingTrack* track,
@@ -238,9 +238,9 @@ private:
   nsresult AddRecvonlyMsections(SdpMediaSection::MediaType mediatype,
                                 size_t count,
                                 Sdp* sdp);
-  nsresult CreateReoffer(const Sdp& oldLocalSdp,
-                         const Sdp& oldAnswer,
-                         Sdp* newSdp);
+  nsresult AddReofferMsections(const Sdp& oldLocalSdp,
+                               const Sdp& oldAnswer,
+                               Sdp* newSdp);
   void SetupBundle(Sdp* sdp) const;
   nsresult GetRemoteIds(const Sdp& sdp,
                         const SdpMediaSection& msection,
@@ -280,7 +280,6 @@ private:
 
   nsresult GetNegotiatedBundledMids(SdpHelper::BundledMids* bundledMids);
 
-  void DisableMsection(Sdp* sdp, SdpMediaSection* msection) const;
   nsresult EnableOfferMsection(SdpMediaSection* msection);
 
   nsresult SetUniquePayloadTypes();
