@@ -25,9 +25,20 @@
 #include "nsWindowsWMain.cpp"
 #endif
 
+#ifdef MOZ_WIDGET_GTK
+#include <gtk/gtk.h>
+#endif
+
 int
 main(int argc, char** argv, char** envp)
 {
+#ifdef MOZ_WIDGET_GTK
+    // A default display may or may not be required for xpcshell tests, and so
+    // is not created here. Instead we set the command line args, which is a
+    // fairly cheap operation.
+    gtk_parse_args(&argc, &argv);
+#endif
+
 #ifdef XP_MACOSX
     InitAutoreleasePool();
 #endif
