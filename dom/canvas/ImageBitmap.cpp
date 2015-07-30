@@ -11,6 +11,7 @@
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/gfx/2D.h"
 #include "imgTools.h"
+#include "js/StructuredClone.h"
 #include "libyuv.h"
 #include "nsLayoutUtils.h"
 
@@ -1084,6 +1085,89 @@ ImageBitmap::Create(nsIGlobalObject* aGlobal, const ImageBitmapSource& aSrc,
   }
 
   return promise.forget();
+}
+
+/*static*/ JSObject*
+ImageBitmap::ReadStructuredClone(JSContext* aCx,
+                                 JSStructuredCloneReader* aReader,
+                                 nsIGlobalObject* aParent,
+                                 const nsTArray<nsRefPtr<layers::Image>>& aClonedImages,
+                                 uint32_t aIndex)
+{
+  MOZ_ASSERT(aCx);
+  MOZ_ASSERT(aReader);
+  // aParent might be null.
+
+  uint32_t picRectX_;
+  uint32_t picRectY_;
+  uint32_t picRectWidth_;
+  uint32_t picRectHeight_;
+
+  if (!JS_ReadUint32Pair(aReader, &picRectX_, &picRectY_) ||
+      !JS_ReadUint32Pair(aReader, &picRectWidth_, &picRectHeight_)) {
+    return nullptr;
+  }
+
+  int32_t picRectX = BitwiseCast<int32_t>(picRectX_);
+  int32_t picRectY = BitwiseCast<int32_t>(picRectY_);
+  int32_t picRectWidth = BitwiseCast<int32_t>(picRectWidth_);
+  int32_t picRectHeight = BitwiseCast<int32_t>(picRectHeight_);
+
+  // Create a new ImageBitmap.
+  MOZ_ASSERT(!aClonedImages.IsEmpty());
+  MOZ_ASSERT(aIndex < aClonedImages.Length());
+
+  // nsRefPtr<ImageBitmap> needs to go out of scope before toObjectOrNull() is
+  // called because the static analysis thinks dereferencing XPCOM objects
+  // can GC (because in some cases it can!), and a return statement with a
+  // JSObject* type means that JSObject* is on the stack as a raw pointer
+  // while destructors are running.
+  JS::Rooted<JS::Value> value(aCx);
+  {
+    nsRefPtr<ImageBitmap> imageBitmap =
+      new ImageBitmap(aParent, aClonedImages[aIndex]);
+
+    ErrorResult error;
+    imageBitmap->SetPictureRect(IntRect(picRectX, picRectY,
+                                        picRectWidth, picRectHeight), error);
+    if (NS_WARN_IF(error.Failed())) {
+      error.SuppressException();
+      return nullptr;
+    }
+
+    if (!GetOrCreateDOMReflector(aCx, imageBitmap, &value)) {
+      return nullptr;
+    }
+  }
+
+  return &(value.toObject());
+}
+
+/*static*/ bool
+ImageBitmap::WriteStructuredClone(JSStructuredCloneWriter* aWriter,
+                                  nsTArray<nsRefPtr<layers::Image>>& aClonedImages,
+                                  ImageBitmap* aImageBitmap)
+{
+  MOZ_ASSERT(aWriter);
+  MOZ_ASSERT(aImageBitmap);
+
+  const uint32_t picRectX = BitwiseCast<uint32_t>(aImageBitmap->mPictureRect.x);
+  const uint32_t picRectY = BitwiseCast<uint32_t>(aImageBitmap->mPictureRect.y);
+  const uint32_t picRectWidth = BitwiseCast<uint32_t>(aImageBitmap->mPictureRect.width);
+  const uint32_t picRectHeight = BitwiseCast<uint32_t>(aImageBitmap->mPictureRect.height);
+
+  // Indexing the cloned images and send the index to the receiver.
+  uint32_t index = aClonedImages.Length();
+
+  if (NS_WARN_IF(!JS_WriteUint32Pair(aWriter, SCTAG_DOM_IMAGEBITMAP, index)) ||
+      NS_WARN_IF(!JS_WriteUint32Pair(aWriter, picRectX, picRectY)) ||
+      NS_WARN_IF(!JS_WriteUint32Pair(aWriter, picRectWidth, picRectHeight))) {
+    return false;
+  }
+
+  aClonedImages.AppendElement(aImageBitmap->mData);
+
+  return true;
 }
 
 } // namespace dom
