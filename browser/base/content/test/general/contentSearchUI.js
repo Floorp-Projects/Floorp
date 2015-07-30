@@ -124,27 +124,11 @@ let messageHandlers = {
     ack("addInputValueToFormHistory");
   },
 
-  addDuplicateOneOff: function () {
-    let btn = gController._oneOffButtons[gController._oneOffButtons.length - 1];
-    let newBtn = btn.cloneNode(true);
-    btn.parentNode.appendChild(newBtn);
-    gController._oneOffButtons.push(newBtn);
-    ack("addDuplicateOneOff");
-  },
-
-  removeLastOneOff: function () {
-    gController._oneOffButtons.pop().remove();
-    ack("removeLastOneOff");
-  },
-
   reset: function () {
-    // Reset both the input and suggestions by select all + delete. If there was
-    // no text entered, this won't have any effect, so also escape to ensure the
-    // suggestions table is closed.
+    // Reset both the input and suggestions by select all + delete.
     gController.input.focus();
     content.synthesizeKey("a", { accelKey: true });
     content.synthesizeKey("VK_DELETE", {});
-    content.synthesizeKey("VK_ESCAPE", {});
     ack("reset");
   },
 };
@@ -181,7 +165,6 @@ function waitForContentSearchEvent(messageType, cb) {
 function currentState() {
   let state = {
     selectedIndex: gController.selectedIndex,
-    selectedButtonIndex: gController.selectedButtonIndex,
     numSuggestions: gController._table.hidden ? 0 : gController.numSuggestions,
     suggestionAtIndex: [],
     isFormHistorySuggestionAtIndex: [],
