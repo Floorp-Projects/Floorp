@@ -1064,39 +1064,6 @@ UnpackPDU<BluetoothUuid>(DaemonSocketPDU& aPDU,
 // Init operators
 //
 
-// |PDUInitOP| provides functionality for init operators that unpack PDUs.
-class PDUInitOp
-{
-protected:
-  PDUInitOp(DaemonSocketPDU& aPDU)
-  : mPDU(&aPDU)
-  { }
-
-  DaemonSocketPDU& GetPDU() const
-  {
-    return *mPDU; // cannot be nullptr
-  }
-
-  void WarnAboutTrailingData() const
-  {
-    size_t size = mPDU->GetSize();
-
-    if (MOZ_LIKELY(!size)) {
-      return;
-    }
-
-    uint8_t service, opcode;
-    uint16_t payloadSize;
-    mPDU->GetHeader(service, opcode, payloadSize);
-
-    BT_LOGR("Unpacked PDU of type (%x,%x) still contains %zu Bytes of data.",
-            service, opcode, size);
-  }
-
-private:
-  DaemonSocketPDU* mPDU; // Hold pointer to allow for constant instances
-};
-
 // |UnpackPDUInitOp| is a general-purpose init operator for all variants
 // of |BluetoothResultRunnable| and |BluetoothNotificationRunnable|. The
 // call operators of |UnpackPDUInitOp| unpack a PDU into the supplied
