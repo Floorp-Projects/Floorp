@@ -2645,14 +2645,7 @@ GCRuntime::protectRelocatedArenas()
 {
     for (ArenaHeader* arena = relocatedArenasToRelease; arena; ) {
         ArenaHeader* next = arena->next;
-#if defined(XP_WIN)
-        DWORD oldProtect;
-        if (!VirtualProtect(arena, ArenaSize, PAGE_NOACCESS, &oldProtect))
-            MOZ_CRASH();
-#else  // assume Unix
-        if (mprotect(arena, ArenaSize, PROT_NONE))
-            MOZ_CRASH();
-#endif
+        ProtectPages(arena, ArenaSize);
         arena = next;
     }
 }
@@ -2660,16 +2653,8 @@ GCRuntime::protectRelocatedArenas()
 void
 GCRuntime::unprotectRelocatedArenas()
 {
-    for (ArenaHeader* arena = relocatedArenasToRelease; arena; arena = arena->next) {
-#if defined(XP_WIN)
-        DWORD oldProtect;
-        if (!VirtualProtect(arena, ArenaSize, PAGE_READWRITE, &oldProtect))
-            MOZ_CRASH();
-#else  // assume Unix
-        if (mprotect(arena, ArenaSize, PROT_READ | PROT_WRITE))
-            MOZ_CRASH();
-#endif
-    }
+    for (ArenaHeader* arena = relocatedArenasToRelease; arena; arena = arena->next)
+        UnprotectPages(arena, ArenaSize);
 }
 #endif
 
