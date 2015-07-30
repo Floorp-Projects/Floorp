@@ -82,6 +82,12 @@ public enum Restriction {
             16, "no_private_browsing",
             R.string.restriction_disallow_private_browsing_title,
             R.string.restriction_disallow_private_browsing_description
+    ),
+
+    DISALLOW_LOCATION_SERVICE(
+            17, "no_location_service",
+            R.string.restriction_disallow_location_services_title,
+            R.string.restriction_disallow_location_services_description
     );
 
     public final int id;

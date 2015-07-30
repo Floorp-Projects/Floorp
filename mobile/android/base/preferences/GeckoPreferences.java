@@ -766,7 +766,7 @@ OnSharedPreferenceChangeListener
                     }
                 } else if (PREFS_GEO_REPORTING.equals(key) ||
                            PREFS_GEO_LEARN_MORE.equals(key)) {
-                    if (!AppConstants.MOZ_STUMBLER_BUILD_TIME_ENABLED) {
+                    if (!AppConstants.MOZ_STUMBLER_BUILD_TIME_ENABLED || !RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_LOCATION_SERVICE)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
