@@ -1471,6 +1471,7 @@ var WalkerActor = protocol.ActorClass({
     // Create the observer on the node's actor.  The node will make sure
     // the observer is cleaned up when the actor is released.
     actor.observer = new actor.rawNode.defaultView.MutationObserver(this.onMutations);
+    actor.observer.mergeAttributeRecords = true;
     actor.observer.observe(node, {
       attributes: true,
       characterData: true,
@@ -2736,29 +2737,7 @@ var WalkerActor = protocol.ActorClass({
       this._orphaned = new Set();
     }
 
-
-    // Clear out any duplicate attribute mutations before sending them over
-    // the protocol.  Keep only the most recent change for each attribute.
-    let targetMap = {};
-    let filtered = pending.reverse().filter(mutation => {
-      if (mutation.type === "attributes") {
-        if (!targetMap[mutation.target]) {
-          targetMap[mutation.target] = {};
-        }
-        let attributesForTarget = targetMap[mutation.target];
-
-        if (attributesForTarget[mutation.attributeName]) {
-          // Since the array was reversed, if we've seen this attribute already
-          // then this one is a duplicate and can be skipped.
-          return false;
-        }
-
-        attributesForTarget[mutation.attributeName] = true;
-      }
-      return true;
-    }).reverse();
-
-    return filtered;
+    return pending;
   }, {
     request: {
       cleanup: Option(0)
