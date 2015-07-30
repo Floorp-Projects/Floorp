@@ -1285,7 +1285,6 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
     ParseNode* pn = *pnp;
     ParseNode* pn1 = nullptr;
     ParseNode* pn2 = nullptr;
-    ParseNode* pn3 = nullptr;
 
     switch (pn->getKind()) {
       case PNK_NEWTARGET:
@@ -1532,7 +1531,6 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
             if (!Fold(cx, &pn->pn_kid3, parser, inGenexpLambda, SyntacticContext::Other))
                 return false;
         }
-        pn3 = pn->pn_kid3;
         break;
 
       case PN_BINARY:
