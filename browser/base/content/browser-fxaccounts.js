@@ -246,9 +246,12 @@ let gFxAccounts = {
       // fxAccountsEnabled is false because migration has not yet finished.  In
       // that case, hide the button.  We'll get another notification with a null
       // state once migration is complete.
+      this.panelUIFooter.hidden = true;
       this.panelUIFooter.removeAttribute("fxastatus");
       return;
     }
+
+    this.panelUIFooter.hidden = false;
 
     // Make sure the button is disabled in customization mode.
     if (this._inCustomizationMode) {

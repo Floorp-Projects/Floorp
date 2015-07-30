@@ -516,7 +516,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 }
 
 #PanelUI-footer-inner,
-#PanelUI-footer-fxa {
+#PanelUI-footer-fxa:not([hidden]) {
   display: flex;
   border-top: 1px solid hsla(210,4%,10%,.14);
 }
