@@ -398,7 +398,7 @@ CacheFileContextEvictor::GetContextFile(nsILoadContextInfo *aLoadContextInfo,
   leafName.AssignLiteral(CONTEXT_EVICTION_PREFIX);
 
   nsAutoCString keyPrefix;
-  CacheFileUtils::AppendKeyPrefix(aLoadContextInfo, keyPrefix);
+  CacheFileUtils::AppendKeyPrefix(aLoadContextInfo, false, keyPrefix);
 
   nsAutoCString data64;
   rv = Base64Encode(keyPrefix, data64);
