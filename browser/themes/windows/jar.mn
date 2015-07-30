@@ -453,6 +453,7 @@ browser.jar:
 *       skin/classic/browser/devtools/debugger.css                  (devtools/debugger.css)
 *       skin/classic/browser/devtools/netmonitor.css                (devtools/netmonitor.css)
 *       skin/classic/browser/devtools/performance.css               (devtools/performance.css)
+        skin/classic/browser/devtools/promisedebugger.css           (../shared/devtools/promisedebugger.css)
         skin/classic/browser/devtools/timeline-filter.svg           (../shared/devtools/images/timeline-filter.svg)
 *       skin/classic/browser/devtools/scratchpad.css                (devtools/scratchpad.css)
 *       skin/classic/browser/devtools/shadereditor.css              (devtools/shadereditor.css)
