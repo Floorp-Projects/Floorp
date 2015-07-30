@@ -551,6 +551,8 @@
   <string name="restriction_disallow_apps_description">&restriction_disallow_apps_description;</string>
   <string name="restriction_disallow_devtools_title">&restriction_disallow_devtools_title;</string>
   <string name="restriction_disallow_devtools_description">&restriction_disallow_devtools_description;</string>
+  <string name="restriction_disallow_customize_home_title">&restriction_disallow_customize_home_title;</string>
+  <string name="restriction_disallow_customize_home_description">&restriction_disallow_customize_home_description;</string>
 
   <!-- Miscellaneous -->
   <string name="ellipsis">&ellipsis;</string>

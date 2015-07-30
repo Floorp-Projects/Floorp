@@ -132,6 +132,7 @@ OnSharedPreferenceChangeListener
     public static final String PREFS_VOICE_INPUT_ENABLED = NON_PREF_PREFIX + "voice_input_enabled";
     public static final String PREFS_QRCODE_ENABLED = NON_PREF_PREFIX + "qrcode_enabled";
     private static final String PREFS_DEVTOOLS = NON_PREF_PREFIX + "devtools.enabled";
+    private static final String PREFS_CUSTOMIZE_HOME = NON_PREF_PREFIX + "customize_home";
 
     private static final String ACTION_STUMBLER_UPLOAD_PREF = AppConstants.ANDROID_PACKAGE_NAME + ".STUMBLER_PREF";
 
@@ -703,6 +704,14 @@ OnSharedPreferenceChangeListener
                     preferences.removePreference(pref);
                     i--;
                     continue;
+                }
+
+                if (PREFS_CUSTOMIZE_HOME.equals(key)) {
+                    if (!RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_CUSTOMIZE_HOME)) {
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
                 }
 
                 setupPreferences((PreferenceGroup) pref, prefs);
