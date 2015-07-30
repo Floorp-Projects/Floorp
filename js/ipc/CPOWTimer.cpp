@@ -9,6 +9,8 @@
 #include "nsContentUtils.h"
 #include "CPOWTimer.h"
 
+#include "jsapi.h"
+
 CPOWTimer::CPOWTimer(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
     : cx_(nullptr)
     , startInterval_(0)
@@ -18,7 +20,7 @@ CPOWTimer::CPOWTimer(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
     if (!js::GetStopwatchIsMonitoringCPOW(runtime))
         return;
     cx_ = cx;
-    startInterval_ = PR_IntervalNow();
+    startInterval_ = JS_Now();
 }
 CPOWTimer::~CPOWTimer()
 {
@@ -33,7 +35,12 @@ CPOWTimer::~CPOWTimer()
         return;
     }
 
+    const int64_t endInterval = JS_Now();
+    if (endInterval <= startInterval_) {
+        // Do not assume monotonicity.
+        return;
+    }
+
     js::PerformanceData* performance = js::GetPerformanceData(runtime);
-    uint64_t duration = PR_IntervalToMicroseconds(PR_IntervalNow() - startInterval_);
-    performance->totalCPOWTime += duration;
+    performance->totalCPOWTime += endInterval - startInterval_;
 }
