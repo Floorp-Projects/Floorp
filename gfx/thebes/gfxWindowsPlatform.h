@@ -302,12 +302,14 @@ private:
     void InitializeDevices();
     void InitializeD3D11();
     void InitializeD2D();
-    bool InitializeD2D1();
+    void InitializeD2D1();
     bool InitDWriteSupport();
 
     void DisableD2D();
 
     mozilla::gfx::FeatureStatus CheckD3D11Support(bool* aCanUseHardware);
+    mozilla::gfx::FeatureStatus CheckD2DSupport();
+    mozilla::gfx::FeatureStatus CheckD2D1Support();
     void AttemptD3D11DeviceCreation();
     void AttemptWARPDeviceCreation();
     void AttemptD3D11ImageBridgeDeviceCreation();

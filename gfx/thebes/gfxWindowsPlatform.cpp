@@ -2180,29 +2180,38 @@ IsD2DBlacklisted()
   return false;
 }
 
-void
-gfxWindowsPlatform::InitializeD2D()
+// Check whether we can support Direct2D. Although some of these checks will
+// not change after a TDR (like the OS version), we could find a driver change
+// that runs us into the blacklist.
+FeatureStatus
+gfxWindowsPlatform::CheckD2DSupport()
 {
-  if (!gfxPrefs::Direct2DForceEnabled()) {
-    if (IsD2DBlacklisted()) {
-      mD2DStatus = FeatureStatus::Blacklisted;
-      return;
-    }
+  if (!gfxPrefs::Direct2DForceEnabled() && IsD2DBlacklisted()) {
+    return FeatureStatus::Blacklisted;
   }
 
   // Do not ever try to use D2D if it's explicitly disabled.
   if (gfxPrefs::Direct2DDisabled()) {
-    mD2DStatus = FeatureStatus::Disabled;
-    return;
+    return FeatureStatus::Disabled;
   }
 
   // Direct2D is only Vista or higher, but we require a D3D11 compositor to
   // use it. (This check may be implied by the fact that we do not get here
   // without a D3D11 compositor device.)
   if (!IsVistaOrLater()) {
-    mD2DStatus = FeatureStatus::Unavailable;
+    return FeatureStatus::Unavailable;
+  }
+  return FeatureStatus::Available;
+}
+
+void
+gfxWindowsPlatform::InitializeD2D()
+{
+  mD2DStatus = CheckD2DSupport();
+  if (IsFeatureStatusFailure(mD2DStatus)) {
     return;
   }
+
   if (!mDoesD3D11TextureSharingWork) {
     mD2DStatus = FeatureStatus::Failed;
     return;
@@ -2227,35 +2236,40 @@ gfxWindowsPlatform::InitializeD2D()
   mD2DStatus = FeatureStatus::Available;
 }
 
-bool
+FeatureStatus
+gfxWindowsPlatform::CheckD2D1Support()
+{
+  if (!Factory::SupportsD2D1()) {
+    return FeatureStatus::Unavailable;
+  }
+  if (!gfxPrefs::Direct2DUse1_1()) {
+    return FeatureStatus::Disabled;
+  }
+  // Normally we don't use D2D content drawing when using WARP. However if
+  // WARP is force-enabled, we will let Direct2D use WARP as well.
+  if (mIsWARP && !gfxPrefs::LayersD3D11ForceWARP()) {
+    return FeatureStatus::Blocked;
+  }
+  return FeatureStatus::Available;
+}
+
+void
 gfxWindowsPlatform::InitializeD2D1()
 {
   ScopedGfxFeatureReporter d2d1_1("D2D1.1");
 
-  if (!Factory::SupportsD2D1()) {
-    mD2D1Status = FeatureStatus::Unavailable;
-    return false;
-  }
-  if (!gfxPrefs::Direct2DUse1_1()) {
-    mD2D1Status = FeatureStatus::Disabled;
-    return false;
-  }
-
-  // Normally we don't use D2D content drawing when using WARP. However if
-  // WARP is force-enabled, we wlil let Direct2D use WARP as well.
-  if (mIsWARP && !gfxPrefs::LayersD3D11ForceWARP()) {
-    mD2D1Status = FeatureStatus::Blocked;
-    return false;
+  mD2D1Status = CheckD2D1Support();
+  if (IsFeatureStatusFailure(mD2D1Status)) {
+    return;
   }
 
   if (!AttemptD3D11ContentDeviceCreation()) {
     mD2D1Status = FeatureStatus::Failed;
-    return false;
+    return;
   }
 
   mD2D1Status = FeatureStatus::Available;
   d2d1_1.SetSuccessful();
-  return true;
 }
 
 already_AddRefed<ID3D11Device>
