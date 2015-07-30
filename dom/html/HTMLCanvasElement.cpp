@@ -749,9 +749,12 @@ GetCanvasContextType(const nsAString& str, CanvasContextType* const out_type)
 static already_AddRefed<nsICanvasRenderingContextInternal>
 CreateContextForCanvas(CanvasContextType contextType, HTMLCanvasElement* canvas)
 {
+  MOZ_ASSERT(contextType != CanvasContextType::NoContext);
   nsRefPtr<nsICanvasRenderingContextInternal> ret;
 
   switch (contextType) {
+  case CanvasContextType::NoContext:
+    break;
   case CanvasContextType::Canvas2D:
     Telemetry::Accumulate(Telemetry::CANVAS_2D_USED, 1);
     ret = new CanvasRenderingContext2D();
