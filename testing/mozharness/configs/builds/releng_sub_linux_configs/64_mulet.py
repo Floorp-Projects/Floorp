@@ -11,6 +11,7 @@ config = {
         'sendchange',
     ],
     'stage_platform': 'linux64-mulet',
+    'build_type': 'mulet-opt',
     'stage_product': 'b2g',
     'tooltool_manifest_src': "b2g/dev/config/tooltool-manifests/linux64/releng.manifest",
     'platform_supports_post_upload_to_latest': False,
