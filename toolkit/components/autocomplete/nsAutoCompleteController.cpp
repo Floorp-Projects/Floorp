@@ -44,10 +44,8 @@ NS_INTERFACE_MAP_END
 
 nsAutoCompleteController::nsAutoCompleteController() :
   mDefaultIndexCompleted(false),
+  mBackspaced(false),
   mPopupClosedByCompositionStart(false),
-  mProhibitAutoFill(false),
-  mUserClearedAutoFill(false),
-  mClearingAutoFillSearchesAgain(false),
   mCompositionState(eCompositionState_None),
   mSearchStatus(nsAutoCompleteController::STATUS_NONE),
   mRowCount(0),
@@ -121,7 +119,7 @@ nsAutoCompleteController::SetInput(nsIAutoCompleteInput *aInput)
   mSearchString = newValue;
   mPlaceholderCompletionString.Truncate();
   mDefaultIndexCompleted = false;
-  mProhibitAutoFill = false;
+  mBackspaced = false;
   mSearchStatus = nsIAutoCompleteController::STATUS_NONE;
   mRowCount = 0;
   mSearchesOngoing = 0;
@@ -150,17 +148,12 @@ nsAutoCompleteController::SetInput(nsIAutoCompleteInput *aInput)
       mSearches.AppendObject(search);
 
       // Count immediate searches.
+      uint16_t searchType = nsIAutoCompleteSearchDescriptor::SEARCH_TYPE_DELAYED;
       nsCOMPtr<nsIAutoCompleteSearchDescriptor> searchDesc =
         do_QueryInterface(search);
-      if (searchDesc) {
-        uint16_t searchType = nsIAutoCompleteSearchDescriptor::SEARCH_TYPE_DELAYED;
-        if (NS_SUCCEEDED(searchDesc->GetSearchType(&searchType)) &&
-            searchType == nsIAutoCompleteSearchDescriptor::SEARCH_TYPE_IMMEDIATE)
-          mImmediateSearchesCount++;
-
-        if (!mClearingAutoFillSearchesAgain)
-          searchDesc->GetClearingAutoFillSearchesAgain(&mClearingAutoFillSearchesAgain);
-      }
+      if (searchDesc && NS_SUCCEEDED(searchDesc->GetSearchType(&searchType)) &&
+          searchType == nsIAutoCompleteSearchDescriptor::SEARCH_TYPE_IMMEDIATE)
+        mImmediateSearchesCount++;
     }
   }
 
@@ -224,39 +217,25 @@ nsAutoCompleteController::HandleText()
   input->GetDisableAutoComplete(&disabled);
   NS_ENSURE_TRUE(!disabled, NS_OK);
 
-  // Usually we don't search again if the new string is the same as the last one.
+  // Don't search again if the new string is the same as the last search
   // However, if this is called immediately after compositionend event,
   // we need to search the same value again since the search was canceled
   // at compositionstart event handler.
-  // The new string might also be the same as the last search if the autofilled
-  // portion was cleared. In this case, we may want to search again.
-
-  bool userAddedText = newValue.Length() > mSearchString.Length();
-  mUserClearedAutoFill =
-    !userAddedText &&
-    newValue.Length() < mPlaceholderCompletionString.Length() &&
-    Substring(mPlaceholderCompletionString, 0, newValue.Length()).Equals(newValue);
-
-  bool searchAgainOnAutoFillClear = mUserClearedAutoFill && mClearingAutoFillSearchesAgain;
-
-  if (!handlingCompositionCommit &&
-      !searchAgainOnAutoFillClear &&
-      newValue.Length() > 0 &&
+  if (!handlingCompositionCommit && newValue.Length() > 0 &&
       newValue.Equals(mSearchString)) {
     return NS_OK;
   }
 
   // Determine if the user has removed text from the end (probably by backspacing)
-  if (!userAddedText &&
-      Substring(mSearchString, 0, newValue.Length()).Equals(newValue)) {
+  if (newValue.Length() < mSearchString.Length() &&
+      Substring(mSearchString, 0, newValue.Length()).Equals(newValue))
+  {
     // We need to throw away previous results so we don't try to search through them again
-    if (newValue.Length() < mSearchString.Length()) {
-      ClearResults();
-    }
-    mProhibitAutoFill = true;
+    ClearResults();
+    mBackspaced = true;
     mPlaceholderCompletionString.Truncate();
   } else {
-    mProhibitAutoFill = false;
+    mBackspaced = false;
   }
 
   mSearchString = newValue;
@@ -1172,13 +1151,6 @@ nsAutoCompleteController::StartSearch(uint16_t aSearchType)
     if (NS_FAILED(rv))
         return rv;
 
-    // FormFill expects the searchParam to only contain the input element id,
-    // other consumers may have other expectations, so this modifies it only
-    // for new consumers handling autoFill by themselves.
-    if (mProhibitAutoFill && mClearingAutoFillSearchesAgain) {
-      searchParam.AppendLiteral(" prohibit-autofill");
-    }
-
     rv = search->StartSearch(mSearchString, searchParam, result, static_cast<nsIAutoCompleteObserver *>(this));
     if (NS_FAILED(rv)) {
       ++mSearchesFailed;
@@ -1253,7 +1225,6 @@ nsAutoCompleteController::MaybeCompletePlaceholder()
   // In addition, the selection must be at the end of the current input to
   // trigger the placeholder completion.
   bool usePlaceholderCompletion =
-    !mUserClearedAutoFill &&
     !mPlaceholderCompletionString.IsEmpty() &&
     mPlaceholderCompletionString.Length() > mSearchString.Length() &&
     selectionEnd == selectionStart &&
@@ -1642,7 +1613,7 @@ nsAutoCompleteController::ClearResults()
 nsresult
 nsAutoCompleteController::CompleteDefaultIndex(int32_t aResultIndex)
 {
-  if (mDefaultIndexCompleted || mProhibitAutoFill || mSearchString.Length() == 0 || !mInput)
+  if (mDefaultIndexCompleted || mBackspaced || mSearchString.Length() == 0 || !mInput)
     return NS_OK;
 
   nsCOMPtr<nsIAutoCompleteInput> input(mInput);
