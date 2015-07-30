@@ -81,14 +81,10 @@ class Label : public LabelBase
     {
 #ifdef DEBUG
         // The assertion below doesn't hold if an error occurred.
-        if (OOM_counter > OOM_maxAllocations)
-            return;
-        if (JitContext* context = MaybeGetJitContext()) {
-            if (context->runtime->hadOutOfMemory())
-                return;
-        }
-
-        MOZ_ASSERT(!used());
+        JitContext* context = MaybeGetJitContext();
+        bool hadError = OOM_counter >= OOM_maxAllocations ||
+                        (context && context->runtime->hadOutOfMemory());
+        MOZ_ASSERT_IF(!hadError, !used());
 #endif
     }
 };
