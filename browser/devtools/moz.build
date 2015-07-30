@@ -19,6 +19,7 @@ DIRS += [
     'netmonitor',
     'performance',
     'projecteditor',
+    'promisedebugger',
     'responsivedesign',
     'scratchpad',
     'shadereditor',

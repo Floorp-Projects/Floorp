@@ -4,16 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const Cu = Components.utils;
-const Ci = Components.interfaces;
-const Cr = Components.results;
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
-
-this.EXPORTED_SYMBOLS = ["LayoutHelpers"];
+let {Ci} = require("chrome")
 
 let LayoutHelpers = function(aTopLevelWindow) {
   this._topDocShell = aTopLevelWindow.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -21,7 +12,7 @@ let LayoutHelpers = function(aTopLevelWindow) {
                                      .QueryInterface(Ci.nsIDocShell);
 };
 
-this.LayoutHelpers = LayoutHelpers;
+module.exports = LayoutHelpers;
 
 LayoutHelpers.prototype = {
 
@@ -354,8 +345,8 @@ LayoutHelpers.prototype = {
     }
 
     let winUtils = win.
-      QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-      getInterface(Components.interfaces.nsIDOMWindowUtils);
+      QueryInterface(Ci.nsIInterfaceRequestor).
+      getInterface(Ci.nsIDOMWindowUtils);
 
     return winUtils.containerElement;
   },

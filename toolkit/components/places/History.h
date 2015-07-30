@@ -181,7 +181,7 @@ private:
     }
     size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     {
-      return array.SizeOfExcludingThis(aMallocSizeOf);
+      return array.ShallowSizeOfExcludingThis(aMallocSizeOf);
     }
     ObserverArray array;
   };

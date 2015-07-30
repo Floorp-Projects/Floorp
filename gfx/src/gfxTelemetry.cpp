@@ -32,5 +32,12 @@ FeatureStatusToString(FeatureStatus aStatus)
   }
 }
 
+bool
+IsFeatureStatusFailure(FeatureStatus aStatus)
+{
+  return aStatus != FeatureStatus::Unused &&
+         aStatus != FeatureStatus::Available;
+}
+
 } // namespace gfx
 } // namespace mozilla

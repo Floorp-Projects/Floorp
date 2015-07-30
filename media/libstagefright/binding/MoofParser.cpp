@@ -250,7 +250,11 @@ MoofParser::ParseMvex(Box& aBox)
     if (box.IsType("trex")) {
       Trex trex = Trex(box);
       if (!mTrex.mTrackId || trex.mTrackId == mTrex.mTrackId) {
+        auto trackId = mTrex.mTrackId;
         mTrex = trex;
+        // Keep the original trackId, as should it be 0 we want to continue
+        // parsing all tracks.
+        mTrex.mTrackId = trackId;
       }
     }
   }

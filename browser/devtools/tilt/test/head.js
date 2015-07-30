@@ -9,10 +9,8 @@ let {EPSILON, TiltMath, vec3, mat3, mat4, quat4} = devtools.require("devtools/ti
 let TiltUtils = devtools.require("devtools/tilt/tilt-utils");
 let {TiltVisualizer} = devtools.require("devtools/tilt/tilt-visualizer");
 let DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils");
+let LayoutHelpers = devtools.require("devtools/toolkit/layout-helpers");
 
-let tempScope = {};
-Components.utils.import("resource://gre/modules/devtools/LayoutHelpers.jsm", tempScope);
-let LayoutHelpers = tempScope.LayoutHelpers;
 
 const DEFAULT_HTML = "data:text/html," +
   "<DOCTYPE html>" +

@@ -1,10 +1,10 @@
-var gWidgetManifestURL = 'http://test/tests/dom/apps/tests/file_app.sjs?apptype=widget&getmanifest=true';
-var gInvalidWidgetManifestURL = 'http://test/tests/dom/apps/tests/file_app.sjs?apptype=invalidWidget&getmanifest=true';
+var gWidgetManifestURL = "http://test/tests/dom/apps/tests/file_app.sjs?apptype=widget&getmanifest=true";
+var gInvalidWidgetManifestURL = "http://test/tests/dom/apps/tests/file_app.sjs?apptype=invalidWidget&getmanifest=true";
 var gApp;
 var gHasBrowserPermission;
 
-function onError() {
-  ok(false, "Error callback invoked");
+function onError(msg) {
+  ok(false, "Error callback invoked: " + msg);
   finish();
 }
 
@@ -33,36 +33,52 @@ function uninstallApp() {
 function testApp(isValidWidget) {
   info("Test widget feature. IsValidWidget: " + isValidWidget);
 
-  var ifr = document.createElement('iframe');
-  ifr.setAttribute('mozbrowser', 'true');
-  ifr.setAttribute('mozwidget', gApp.manifestURL);
-  ifr.setAttribute('src', gApp.origin+gApp.manifest.launch_path);
+  var ifr = document.createElement("iframe");
+  ifr.setAttribute("mozbrowser", "true");
+  ifr.setAttribute("mozwidget", gApp.manifestURL);
+  ifr.setAttribute("src", gApp.origin + gApp.manifest.launch_path);
 
-  var domParent = document.getElementById('container');
+  var domParent = document.getElementById("container");
   domParent.appendChild(ifr);
 
-  var mm = SpecialPowers.getBrowserFrameMessageManager(ifr);
-  mm.addMessageListener('OK', function(msg) {
-    ok(isValidWidget, "Message from widget: " + SpecialPowers.wrap(msg).json);
-  });
-  mm.addMessageListener('KO', function(msg) {
-    ok(!isValidWidget, "Message from widget: " + SpecialPowers.wrap(msg).json);
-  });
-  mm.addMessageListener('DONE', function(msg) {
-    ok(true, "Message from widget complete: "+SpecialPowers.wrap(msg).json);
-    domParent.removeChild(ifr);
-    runTest();
-  });
-
-  ifr.addEventListener('mozbrowserloadend', function() {
+  ifr.addEventListener("mozbrowserloadend", function _onloadend() {
     ok(true, "receive mozbrowserloadend");
-
     // Test limited browser API feature only for valid widget case
     if (isValidWidget) {
       testLimitedBrowserAPI(ifr);
     }
-    SimpleTest.executeSoon(()=>loadFrameScript(mm));
+    SimpleTest.executeSoon(() => loadFrameScript(mm,
+                                                 checkIsWidgetScript,
+                                                 true));
   }, false);
+
+  ifr.addEventListener("mozbrowsererror", (event) => {
+    ok(!isValidWidget, "receive mozbrowsererror: " + JSON.stringify(event.detail));
+    domParent.removeChild(ifr);
+    runTest();
+  });
+
+  // Callback of frameScript
+  var mm = SpecialPowers.getBrowserFrameMessageManager(ifr);
+  mm.addMessageListener("OK", function(msg) {
+    ok(isValidWidget, "Message from widget: " + SpecialPowers.wrap(msg).json);
+  });
+  mm.addMessageListener("KO", function(msg) {
+    ok(!isValidWidget, "Message from widget: " + SpecialPowers.wrap(msg).json);
+  });
+  mm.addMessageListener("DONE", function _done(msg) {
+    ok(true, "Message from widget complete: " + SpecialPowers.wrap(msg).json);
+
+    mm.removeMessageListener("DONE", _done);
+    mm.addMessageListener("DONE", function _done(msg) {
+      ok(true, "Message from widget complete: " + SpecialPowers.wrap(msg).json);
+      runTest();
+    });
+
+    info("set src to a invalid page");
+    ifr.setAttribute("src", gApp.origin);
+    isValidWidget = false;
+  });
 
   // Test limited browser API feature only for valid widget case
   if (!isValidWidget) {
@@ -70,10 +86,10 @@ function testApp(isValidWidget) {
   }
 
   [
-    'mozbrowsertitlechange',
-    'mozbrowseropenwindow',
-    'mozbrowserscroll',
-    'mozbrowserasyncscroll'
+    "mozbrowsertitlechange",
+    "mozbrowseropenwindow",
+    "mozbrowserscroll",
+    "mozbrowserasyncscroll"
   ].forEach( function(topic) {
     ifr.addEventListener(topic, function() {
       ok(false, topic + " should be hidden");
@@ -83,19 +99,19 @@ function testApp(isValidWidget) {
 
 function testLimitedBrowserAPI(ifr) {
   var securitySensitiveCalls = [
-    { api: 'sendMouseEvent'      , args: ['mousedown', 0, 0, 0, 0, 0] },
-    { api: 'sendTouchEvent'      , args: ['touchstart', [0], [0], [0], [1], [1], [0], [1], 1, 0] },
-    { api: 'goBack'              , args: [] },
-    { api: 'goForward'           , args: [] },
-    { api: 'reload'              , args: [] },
-    { api: 'stop'                , args: [] },
-    { api: 'download'            , args: ['http://example.org'] },
-    { api: 'purgeHistory'        , args: [] },
-    { api: 'getScreenshot'       , args: [0, 0] },
-    { api: 'zoom'                , args: [0.1] },
-    { api: 'getCanGoBack'        , args: [] },
-    { api: 'getCanGoForward'     , args: [] },
-    { api: 'getContentDimensions', args: [] }
+    { api: "sendMouseEvent"      , args: ["mousedown", 0, 0, 0, 0, 0] },
+    { api: "sendTouchEvent"      , args: ["touchstart", [0], [0], [0], [1], [1], [0], [1], 1, 0] },
+    { api: "goBack"              , args: [] },
+    { api: "goForward"           , args: [] },
+    { api: "reload"              , args: [] },
+    { api: "stop"                , args: [] },
+    { api: "download"            , args: ["http://example.org"] },
+    { api: "purgeHistory"        , args: [] },
+    { api: "getScreenshot"       , args: [0, 0] },
+    { api: "zoom"                , args: [0.1] },
+    { api: "getCanGoBack"        , args: [] },
+    { api: "getCanGoForward"     , args: [] },
+    { api: "getContentDimensions", args: [] }
   ];
   securitySensitiveCalls.forEach( function(call) {
     if (gHasBrowserPermission) {
@@ -114,54 +130,49 @@ function testLimitedBrowserAPI(ifr) {
   });
 }
 
-function loadFrameScript(mm) {
-  var script = 'data:,\
-  function ok(p, msg) { \
-  if (p) { \
-  sendAsyncMessage("OK", msg); \
-} else { \
-  sendAsyncMessage("KO", msg); \
-} \
-} \
-  \
-  function is(a, b, msg) { \
-  if (a == b) { \
-  sendAsyncMessage("OK", a + " == " + b + " - " + msg); \
-} else { \
-  sendAsyncMessage("KO", a + " != " + b + " - " + msg); \
-} \
-} \
-  \
-  function finish() { \
-  sendAsyncMessage("DONE",""); \
-} \
-  \
-  function onError() { \
-  ok(false, "Error callback invoked"); \
-  finish(); \
-} \
-  \
-  function checkWidget(widget) { \
-  /*For invalid widget case, ignore the following check*/\
-  if (widget) { \
-  var widgetName = "Really Rapid Release (APPTYPETOKEN)"; \
-  is(widget.origin, "http://test", "Widget origin should be correct"); \
-  is(widget.installOrigin, "http://mochi.test:8888", "Install origin should be correct"); \
-} \
-  finish(); \
-} \
-  \
-  var request = content.window.navigator.mozApps.getSelf(); \
-  request.onsuccess = function() { \
-  var widget = request.result; \
-  ok(widget,"Should be a widget"); \
-  checkWidget(widget); \
-}; \
-  request.onerror = onError; \
-  content.window.open("about:blank"); /*test mozbrowseropenwindow*/ \
-  content.window.scrollTo(4000, 4000); /*test mozbrowser(async)scroll*/ \
-  ';
+function loadFrameScript(mm, frameScript, testMozbrowserEvent) {
+  var script = "data:,(" + frameScript.toString() + ")(" + testMozbrowserEvent + ");";
   mm.loadFrameScript(script, /* allowDelayedLoad = */ false);
+}
+
+function checkIsWidgetScript(testMozbrowserEvent) {
+  function ok(p, msg) {
+    if (p) {
+    sendAsyncMessage("OK", msg);
+    } else {
+    sendAsyncMessage("KO", msg);
+    }
+  }
+
+  function is(a, b, msg) {
+    if (a == b) {
+      sendAsyncMessage("OK", a + " == " + b + " - " + msg);
+    } else {
+      sendAsyncMessage("KO", a + " != " + b + " - " + msg);
+    }
+  }
+
+  function finish() {
+    sendAsyncMessage("DONE", "");
+  }
+
+  function onError() {
+    ok(false, "Error callback invoked");
+    finish();
+  }
+
+  var request = content.window.navigator.mozApps.getSelf();
+  request.onsuccess = function() {
+    var widget = request.result;
+    ok(widget, "Should" + (widget ? "" : " not") + " be a widget");
+    finish();
+  };
+  request.onerror = onError;
+
+  if (testMozbrowserEvent) {
+    content.window.open("about:blank"); /* test mozbrowseropenwindow */
+    content.window.scrollTo(4000, 4000); /* test mozbrowser(async)scroll */
+  }
 }
 
 var tests = [
@@ -176,22 +187,12 @@ var tests = [
   // Preferences
   function() {
     SpecialPowers.pushPrefEnv({"set": [["dom.mozBrowserFramesEnabled", true],
-                                       ["dom.enable_widgets", true],
-                                       ["dom.datastore.sysMsgOnChangeShortTimeoutSec", 1],
-                                       ["dom.datastore.sysMsgOnChangeLongTimeoutSec", 3]]}, runTest);
-  },
-
-  function() {
-    if (SpecialPowers.isMainProcess()) {
-      SpecialPowers.Cu.import("resource://gre/modules/DataStoreChangeNotifier.jsm");
-    }
-
-    SpecialPowers.setAllAppsLaunchable(true);
-    runTest();
+                                       ["dom.enable_widgets", true]]}, runTest);
   },
 
   // No confirmation needed when an app is installed
   function() {
+    SpecialPowers.setAllAppsLaunchable(true);
     SpecialPowers.autoConfirmAppInstall(() => {
       SpecialPowers.autoConfirmAppUninstall(runTest);
     });

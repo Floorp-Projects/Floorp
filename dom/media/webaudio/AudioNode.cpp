@@ -97,16 +97,16 @@ AudioNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   // - mStream
   size_t amount = 0;
 
-  amount += mInputNodes.SizeOfExcludingThis(aMallocSizeOf);
+  amount += mInputNodes.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (size_t i = 0; i < mInputNodes.Length(); i++) {
     amount += mInputNodes[i].SizeOfExcludingThis(aMallocSizeOf);
   }
 
   // Just measure the array. The entire audio node graph is measured via the
   // MediaStreamGraph's streams, so we don't want to double-count the elements.
-  amount += mOutputNodes.SizeOfExcludingThis(aMallocSizeOf);
+  amount += mOutputNodes.ShallowSizeOfExcludingThis(aMallocSizeOf);
 
-  amount += mOutputParams.SizeOfExcludingThis(aMallocSizeOf);
+  amount += mOutputParams.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (size_t i = 0; i < mOutputParams.Length(); i++) {
     amount += mOutputParams[i]->SizeOfIncludingThis(aMallocSizeOf);
   }
