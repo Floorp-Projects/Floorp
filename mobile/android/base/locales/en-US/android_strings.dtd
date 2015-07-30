@@ -693,4 +693,5 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY restriction_disallow_addons_description "Disallow installation of add-ons.">
 <!ENTITY restriction_disallow_apps_title "Disallow apps">
 <!ENTITY restriction_disallow_apps_description "Disallow installing apps from Firefox Marketplace.">
-
+<!ENTITY restriction_disallow_devtools_title "Disallow developer tools">
+<!ENTITY restriction_disallow_devtools_description "Disallow usage of developer tools.">

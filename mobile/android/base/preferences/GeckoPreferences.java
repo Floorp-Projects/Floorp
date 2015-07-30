@@ -7,6 +7,7 @@ package org.mozilla.gecko.preferences;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -475,15 +476,18 @@ OnSharedPreferenceChangeListener
         if (onIsMultiPane()) {
             loadHeadersFromResource(R.xml.preference_headers, target);
 
-            // If locale switching is disabled, remove the section
-            // entirely. This logic will need to be extended when
-            // content language selection (Bug 881510) is implemented.
-            if (!localeSwitchingIsEnabled) {
-                for (Header header : target) {
-                    if (header.id == R.id.pref_header_language) {
-                        target.remove(header);
-                        break;
-                    }
+            Iterator<Header> iterator = target.iterator();
+
+            while (iterator.hasNext()) {
+                Header header = iterator.next();
+
+                if (header.id == R.id.pref_header_language && !localeSwitchingIsEnabled) {
+                    // If locale switching is disabled, remove the section
+                    // entirely. This logic will need to be extended when
+                    // content language selection (Bug 881510) is implemented.
+                    iterator.remove();
+                } else if (header.id == R.id.pref_header_devtools && !RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_DEVELOPER_TOOLS)) {
+                    iterator.remove();
                 }
             }
         }
