@@ -50,6 +50,8 @@ public:
 
     virtual bool SwapBuffers() override;
 
+    virtual Maybe<gfx::IntSize> GetTargetSize() override;
+
 private:
     friend class GLContextProviderGLX;
 
