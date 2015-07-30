@@ -113,6 +113,8 @@ browser.jar:
     content/browser/devtools/performance/views/optimizations-list.js        (performance/views/optimizations-list.js)
     content/browser/devtools/performance/views/frames-list.js               (performance/views/frames-list.js)
     content/browser/devtools/performance/views/recordings.js           (performance/views/recordings.js)
+    content/browser/devtools/promisedebugger/promise-debugger.js       (promisedebugger/promise-debugger.js)
+    content/browser/devtools/promisedebugger/promise-debugger.xhtml    (promisedebugger/promise-debugger.xhtml)
     content/browser/devtools/commandline.css                           (commandline/commandline.css)
     content/browser/devtools/commandlineoutput.xhtml                   (commandline/commandlineoutput.xhtml)
     content/browser/devtools/commandlinetooltip.xhtml                  (commandline/commandlinetooltip.xhtml)

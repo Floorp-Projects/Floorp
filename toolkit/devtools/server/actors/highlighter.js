@@ -11,6 +11,7 @@ const {Arg, Option, method, RetVal} = protocol;
 const events = require("sdk/event/core");
 const Heritage = require("sdk/core/heritage");
 const EventEmitter = require("devtools/toolkit/event-emitter");
+const LayoutHelpers = require("devtools/toolkit/layout-helpers");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 loader.lazyRequireGetter(this, "CssLogic",
@@ -20,8 +21,6 @@ loader.lazyRequireGetter(this, "setIgnoreLayoutChanges",
 loader.lazyGetter(this, "DOMUtils", function() {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 });
-loader.lazyImporter(this, "LayoutHelpers",
-  "resource://gre/modules/devtools/LayoutHelpers.jsm");
 
 // FIXME: add ":visited" and ":link" after bug 713106 is fixed
 const PSEUDO_CLASSES = [":hover", ":active", ":focus"];
