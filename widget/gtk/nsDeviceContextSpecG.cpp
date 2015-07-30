@@ -274,7 +274,16 @@ gboolean nsDeviceContextSpecGTK::PrinterEnumerator(GtkPrinter *aPrinter,
     NS_ConvertUTF16toUTF8 requestedName(printerName);
     const char* currentName = gtk_printer_get_name(aPrinter);
     if (requestedName.Equals(currentName)) {
-      nsDeviceContextSpecGTK::StartPrintJob(spec, aPrinter);
+      spec->mPrintSettings->SetGtkPrinter(aPrinter);
+
+      // Bug 1145916 - attempting to kick off a print job for this printer
+      // during this tick of the event loop will result in the printer backend
+      // misunderstanding what the capabilities of the printer are due to a
+      // GTK bug (https://bugzilla.gnome.org/show_bug.cgi?id=753041). We
+      // sidestep this by deferring the print to the next tick.
+      nsCOMPtr<nsIRunnable> event =
+        NS_NewRunnableMethod(spec, &nsDeviceContextSpecGTK::StartPrintJob);
+      NS_DispatchToCurrentThread(event);
       return TRUE;
     }
   }
@@ -283,19 +292,17 @@ gboolean nsDeviceContextSpecGTK::PrinterEnumerator(GtkPrinter *aPrinter,
   return FALSE;
 }
 
-/* static */
-void nsDeviceContextSpecGTK::StartPrintJob(nsDeviceContextSpecGTK* spec,
-                                           GtkPrinter* printer) {
-  GtkPrintJob* job = gtk_print_job_new(spec->mTitle.get(),
-                                       printer,
-                                       spec->mGtkPrintSettings,
-                                       spec->mGtkPageSetup);
+void nsDeviceContextSpecGTK::StartPrintJob() {
+  GtkPrintJob* job = gtk_print_job_new(mTitle.get(),
+                                       mPrintSettings->GetGtkPrinter(),
+                                       mGtkPrintSettings,
+                                       mGtkPageSetup);
 
-  if (!gtk_print_job_set_source_file(job, spec->mSpoolName.get(), nullptr))
+  if (!gtk_print_job_set_source_file(job, mSpoolName.get(), nullptr))
     return;
 
-  NS_ADDREF(spec->mSpoolFile.get());
-  gtk_print_job_send(job, print_callback, spec->mSpoolFile, ns_release_macro);
+  NS_ADDREF(mSpoolFile.get());
+  gtk_print_job_send(job, print_callback, mSpoolFile, ns_release_macro);
 }
 
 void
@@ -328,7 +335,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::EndDocument()
     GtkPrinter* printer = mPrintSettings->GetGtkPrinter();
     if (printer) {
       // We have a printer, so we can print right away.
-      nsDeviceContextSpecGTK::StartPrintJob(this, printer);
+      StartPrintJob();
     } else {
       // We don't have a printer. We have to enumerate the printers and find
       // one with a matching name.
