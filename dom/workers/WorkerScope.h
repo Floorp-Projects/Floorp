@@ -12,6 +12,7 @@
 #include "mozilla/dom/Headers.h"
 #include "mozilla/dom/RequestBinding.h"
 #include "nsWeakReference.h"
+#include "mozilla/dom/ImageBitmapSource.h"
 
 namespace mozilla {
 namespace dom {
@@ -153,6 +154,14 @@ public:
 
   already_AddRefed<cache::CacheStorage>
   GetCaches(ErrorResult& aRv);
+
+  already_AddRefed<Promise>
+  CreateImageBitmap(const ImageBitmapSource& aImage, ErrorResult& aRv);
+
+  already_AddRefed<Promise>
+  CreateImageBitmap(const ImageBitmapSource& aImage,
+                    int32_t aSx, int32_t aSy, int32_t aSw, int32_t aSh,
+                    ErrorResult& aRv);
 };
 
 class DedicatedWorkerGlobalScope final : public WorkerGlobalScope
