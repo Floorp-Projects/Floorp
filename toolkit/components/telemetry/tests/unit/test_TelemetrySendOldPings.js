@@ -273,6 +273,54 @@ add_task(function* test_overdue_old_format() {
   yield clearPendingPings();
 });
 
+add_task(function* test_corrupted_pending_pings() {
+  const TEST_TYPE = "test_corrupted";
+
+  Telemetry.getHistogramById("TELEMETRY_PENDING_LOAD_FAILURE_READ").clear();
+  Telemetry.getHistogramById("TELEMETRY_PENDING_LOAD_FAILURE_PARSE").clear();
+
+  // Save a pending ping and get its id.
+  let pendingPingId = yield TelemetryController.addPendingPing(TEST_TYPE, {}, {});
+
+  // Try to load it: there should be no error.
+  yield TelemetryStorage.loadPendingPing(pendingPingId);
+
+  let h = Telemetry.getHistogramById("TELEMETRY_PENDING_LOAD_FAILURE_READ").snapshot();
+  Assert.equal(h.sum, 0, "Telemetry must not report a pending ping load failure");
+  h = Telemetry.getHistogramById("TELEMETRY_PENDING_LOAD_FAILURE_PARSE").snapshot();
+  Assert.equal(h.sum, 0, "Telemetry must not report a pending ping parse failure");
+
+  // Delete it from the disk, so that its id will be kept in the cache but it will
+  // fail loading the file.
+  yield OS.File.remove(getSavePathForPingId(pendingPingId));
+
+  // Try to load a pending ping which isn't there anymore.
+  yield Assert.rejects(TelemetryStorage.loadPendingPing(pendingPingId),
+                       "Telemetry must fail loading a ping which isn't there");
+
+  h = Telemetry.getHistogramById("TELEMETRY_PENDING_LOAD_FAILURE_READ").snapshot();
+  Assert.equal(h.sum, 1, "Telemetry must report a pending ping load failure");
+  h = Telemetry.getHistogramById("TELEMETRY_PENDING_LOAD_FAILURE_PARSE").snapshot();
+  Assert.equal(h.sum, 0, "Telemetry must not report a pending ping parse failure");
+
+  // Save a new ping, so that it gets in the pending pings cache.
+  pendingPingId = yield TelemetryController.addPendingPing(TEST_TYPE, {}, {});
+  // Overwrite it with a corrupted JSON file and then try to load it.
+  const INVALID_JSON = "{ invalid,JSON { {1}";
+  yield OS.File.writeAtomic(getSavePathForPingId(pendingPingId), INVALID_JSON, { encoding: "utf-8" });
+
+  // Try to load the ping with the corrupted JSON content.
+  yield Assert.rejects(TelemetryStorage.loadPendingPing(pendingPingId),
+                       "Telemetry must fail loading a corrupted ping");
+
+  h = Telemetry.getHistogramById("TELEMETRY_PENDING_LOAD_FAILURE_READ").snapshot();
+  Assert.equal(h.sum, 1, "Telemetry must report a pending ping load failure");
+  h = Telemetry.getHistogramById("TELEMETRY_PENDING_LOAD_FAILURE_PARSE").snapshot();
+  Assert.equal(h.sum, 1, "Telemetry must report a pending ping parse failure");
+
+  yield clearPendingPings();
+});
+
 /**
  * Create some recent and overdue pings and verify that they get sent.
  */

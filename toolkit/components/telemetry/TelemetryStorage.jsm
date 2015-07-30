@@ -72,6 +72,34 @@ const PENDING_PINGS_SIZE_PROBE_SPECIAL_VALUE = 17;
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
+ * This is thrown by |TelemetryStorage.loadPingFile| when reading the ping
+ * from the disk fails.
+ */
+function PingReadError(message="Error reading the ping file") {
+  Error.call(this, message);
+  let error = new Error();
+  this.name = "PingReadError";
+  this.message = message;
+  this.stack = error.stack;
+}
+PingReadError.prototype = Object.create(Error.prototype);
+PingReadError.prototype.constructor = PingReadError;
+
+/**
+ * This is thrown by |TelemetryStorage.loadPingFile| when parsing the ping JSON
+ * content fails.
+ */
+function PingParseError(message="Error parsing ping content") {
+  Error.call(this, message);
+  let error = new Error();
+  this.name = "PingParseError";
+  this.message = message;
+  this.stack = error.stack;
+}
+PingParseError.prototype = Object.create(Error.prototype);
+PingParseError.prototype.constructor = PingParseError;
+
+/**
  * This is a policy object used to override behavior for testing.
  */
 let Policy = {
@@ -1223,8 +1251,17 @@ let TelemetryStorageImpl = {
       throw new Error("loadPendingPing - exceeded the maximum ping size: " + fileSize);
     }
 
-    // Try to load the ping file. Update the related histograms on failure.
-    return yield this.loadPingFile(info.path, false);
+    return this.loadPingFile(info.path, false).catch(e => {
+      // If we failed to load the ping, check what happened and update the histogram.
+      // Then propagate the rejection.
+      if (e instanceof PingReadError) {
+        Telemetry.getHistogramById("TELEMETRY_PENDING_LOAD_FAILURE_READ").add();
+      } else if (e instanceof PingParseError) {
+        Telemetry.getHistogramById("TELEMETRY_PENDING_LOAD_FAILURE_PARSE").add();
+      }
+
+      return Promise.reject(e);
+    });
   }),
 
   removePendingPing: function(id) {
@@ -1387,21 +1424,35 @@ let TelemetryStorageImpl = {
    * @param {Boolean} [aCompressed=false] If |true|, expects the file to be compressed using lz4.
    * @return {Promise<Object>} A promise resolved with the ping content or rejected if the
    *                           ping contains invalid data.
+   * @throws {PingReadError} There was an error while reading the ping file from the disk.
+   * @throws {PingParseError} There was an error while parsing the JSON content of the ping file.
    */
   loadPingFile: Task.async(function* (aFilePath, aCompressed = false) {
     let options = {};
     if (aCompressed) {
       options.compression = "lz4";
     }
-    let array = yield OS.File.read(aFilePath, options);
+
+    let array;
+    try {
+      array = yield OS.File.read(aFilePath, options);
+    } catch(e) {
+      throw new PingReadError(e.message);
+    };
+
     let decoder = new TextDecoder();
     let string = decoder.decode(array);
-
-    let ping = JSON.parse(string);
-    // The ping's payload used to be stringified JSON.  Deal with that.
-    if (typeof(ping.payload) == "string") {
-      ping.payload = JSON.parse(ping.payload);
+    let ping;
+    try {
+      ping = JSON.parse(string);
+      // The ping's payload used to be stringified JSON.  Deal with that.
+      if (typeof(ping.payload) == "string") {
+        ping.payload = JSON.parse(ping.payload);
+      }
+    } catch (e) {
+      throw new PingParseError(e.message);
     }
+
     return ping;
   }),
 
