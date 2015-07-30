@@ -42,7 +42,7 @@ LogURI(const char *aFunctionName, void *self, nsIURI *aURI, nsILoadContextInfo *
 
     nsAutoCString prefix;
     if (aInfo) {
-      CacheFileUtils::AppendKeyPrefix(aInfo, prefix);
+      CacheFileUtils::AppendKeyPrefix(aInfo, false, prefix);
       prefix += ":";
     }
 
@@ -627,7 +627,7 @@ PackagedAppService::RequestURI(nsIURI *aURI,
   }
 
   nsAutoCString key;
-  CacheFileUtils::AppendKeyPrefix(aInfo, key);
+  CacheFileUtils::AppendKeyPrefix(aInfo, false, key);
 
   {
     nsAutoCString spec;

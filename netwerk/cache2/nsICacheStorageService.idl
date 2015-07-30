@@ -13,7 +13,7 @@ interface nsICacheStorageConsumptionObserver;
 /**
  * Provides access to particual cache storages of the network URI cache.
  */
-[scriptable, uuid(44de2fa4-1b0e-4cd3-9e32-211e936f721e)]
+[scriptable, uuid(6764d6a5-af42-4655-aef2-81d9efe72ae6)]
 interface nsICacheStorageService : nsISupports
 {
   /**
@@ -41,6 +41,14 @@ interface nsICacheStorageService : nsISupports
    */
   nsICacheStorage diskCacheStorage(in nsILoadContextInfo aLoadContextInfo,
                                    in bool aLookupAppCache);
+
+  /**
+   * Entries bound to an app will be persisted in a roaming part of the profile
+   * and won't unpersist until the app goes away.  Common web content will use
+   * disk cache storage, when under the private browsing mode, entries will be
+   * held in memory and evicted on limit.
+   */
+  nsICacheStorage pinningCacheStorage(in nsILoadContextInfo aLoadContextInfo);
 
   /**
    * Get storage for a specified application cache obtained using some different

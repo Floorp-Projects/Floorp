@@ -55,7 +55,7 @@ public:
   NS_DECL_NSIRUNNABLE
 
   CacheEntry(const nsACString& aStorageID, nsIURI* aURI, const nsACString& aEnhanceID,
-             bool aUseDisk);
+             bool aUseDisk, uint32_t aPinningAppId);
 
   void AsyncOpen(nsICacheEntryOpenCallback* aCallback, uint32_t aFlags);
 
@@ -275,6 +275,9 @@ private:
 
   // Whether it's allowed to persist the data to disk
   bool const mUseDisk;
+
+  // AppId of an app that wants this entry be pinned
+  uint32_t const mPinningAppId;
 
   // Set when entry is doomed with AsyncDoom() or DoomAlreadyRemoved().
   // Left as a standalone flag to not bother with locking (there is no need).

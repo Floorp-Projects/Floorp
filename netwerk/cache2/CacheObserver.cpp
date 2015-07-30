@@ -429,6 +429,10 @@ CacheStorageEvictHelper::Run(mozIApplicationClearPrivateDataParams* aParams)
   rv = ClearStorage(true, aBrowserOnly, true);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // And finally evict everything that this app has stored as pinned
+  rv = CacheFileIOManager::EvictPinned(mAppId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
