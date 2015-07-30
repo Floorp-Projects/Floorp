@@ -228,7 +228,8 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
 
   PeerConnectionImpl* GetPC() { return mParent; }
   nsresult Init(const std::vector<NrIceStunServer>& stun_servers,
-                const std::vector<NrIceTurnServer>& turn_servers);
+                const std::vector<NrIceTurnServer>& turn_servers,
+                NrIceCtx::Policy policy);
   // WARNING: This destroys the object!
   void SelfDestruct();
 
