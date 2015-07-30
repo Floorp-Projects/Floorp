@@ -23,11 +23,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=916893
   function testFrame(src) {
     var iframe = document.createElement("iframe");
     iframe.src = src;
-    window.callback = function() {
+    window.callback = function(result) {
       window.callback = null;
       document.body.removeChild(iframe);
       iframe = null;
-      ok(true, "Got notificationclick event.");
+      ok(result, "Got notificationclick event with correct data.");
       MockServices.unregister();
       SimpleTest.finish();
     };

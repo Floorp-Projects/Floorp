@@ -20,7 +20,9 @@ if (self.Notification) {
         lang: "",
         body: "This is a notification body",
         tag: "sometag",
-        icon: "icon.png"
+        icon: "icon.png",
+        data: ["a complex object that should be", { "structured": "cloned" }],
+        mozbehavior: { vibrationPattern: [30, 200, 30] },
       };
       var notification = new Notification("This is a title", options);
 
@@ -36,6 +38,8 @@ if (self.Notification) {
       is(notification.body, options.body, "body should get set");
       is(notification.tag, options.tag, "tag should get set");
       is(notification.icon, options.icon, "icon should get set");
+      is(notification.data[0],  "a complex object that should be", "data item 0 should be a matching string");
+      is(notification.data[1]["structured"], "cloned", "data item 1 should be a matching object literal");
 
       // store notification in test context
       this.notification = notification;
