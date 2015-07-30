@@ -1935,6 +1935,7 @@ MarkupContainer.prototype = {
       let link = target.dataset.link;
       let type = target.dataset.type;
       this.markup._inspector.followAttributeLink(type, link);
+      return;
     }
 
     // Start dragging the container after a delay.
