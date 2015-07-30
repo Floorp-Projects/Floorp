@@ -1,0 +1,100 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(f439ab5d-64bd-4a6c-8863-30235fa784d2)]
+interface nsINetworkInfo : nsISupports
+{
+  const long NETWORK_STATE_UNKNOWN       = -1;
+  const long NETWORK_STATE_CONNECTING    = 0;
+  const long NETWORK_STATE_CONNECTED     = 1;
+  const long NETWORK_STATE_DISCONNECTING = 2;
+  const long NETWORK_STATE_DISCONNECTED  = 3;
+
+  /**
+   * Current network state, one of the NETWORK_STATE_* constants.
+   *
+   * When this changes, network interface implementations notify with
+   * updateNetworkInterface() API.
+   */
+  readonly attribute long state;
+
+  const long NETWORK_TYPE_UNKNOWN     = -1;
+  const long NETWORK_TYPE_WIFI        = 0;
+  const long NETWORK_TYPE_MOBILE      = 1;
+  const long NETWORK_TYPE_MOBILE_MMS  = 2;
+  const long NETWORK_TYPE_MOBILE_SUPL = 3;
+  const long NETWORK_TYPE_WIFI_P2P    = 4;
+  const long NETWORK_TYPE_MOBILE_IMS  = 5;
+  const long NETWORK_TYPE_MOBILE_DUN  = 6;
+  const long NETWORK_TYPE_MOBILE_FOTA = 7;
+
+  /**
+   * Network type. One of the NETWORK_TYPE_* constants.
+   */
+  readonly attribute long type;
+
+  /**
+   * Interface name of the network interface this network info belongs to.
+   */
+  readonly attribute DOMString name;
+
+  /**
+   * Get the list of ip addresses and prefix lengths, ip address could be IPv4
+   * or IPv6, typically 1 IPv4 or 1 IPv6 or one of each.
+   *
+   * @param ips
+   *        The list of ip addresses retrieved.
+   * @param prefixLengths
+   *        The list of prefix lengths retrieved.
+   *
+   * @returns the length of the lists.
+   */
+  void getAddresses([array, size_is(count)] out wstring ips,
+                    [array, size_is(count)] out unsigned long prefixLengths,
+                    [retval] out unsigned long count);
+
+  /**
+   * Get the list of gateways, could be IPv4 or IPv6, typically 1 IPv4 or 1
+   * IPv6 or one of each.
+   *
+   * @param count
+   *        The length of the list of gateways
+   *
+   * @returns the list of gateways.
+   */
+  void getGateways([optional] out unsigned long count,
+                   [array, size_is(count), retval] out wstring gateways);
+
+  /**
+   * Get the list of dnses, could be IPv4 or IPv6.
+   *
+   * @param count
+   *        The length of the list of dnses.
+   *
+   * @returns the list of dnses.
+   */
+  void getDnses([optional] out unsigned long count,
+                [array, size_is(count), retval] out wstring dnses);
+};
+
+[scriptable, uuid(9a025351-8684-4ab5-a0c1-f21a9f83d405)]
+interface nsINetworkInterface : nsISupports
+{
+  /**
+   * The network information about this network interface.
+   */
+  readonly attribute nsINetworkInfo info;
+
+  /**
+   * The host name of the http proxy server.
+   */
+  readonly attribute DOMString httpProxyHost;
+
+  /*
+   * The port number of the http proxy server.
+   */
+  readonly attribute long httpProxyPort;
+};

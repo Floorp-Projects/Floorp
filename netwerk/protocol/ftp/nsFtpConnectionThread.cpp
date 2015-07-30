@@ -1617,10 +1617,10 @@ nsFtpState::Init(nsFtpChannel *channel)
     mCountRecv = 0;
 
 #ifdef MOZ_WIDGET_GONK
-    nsCOMPtr<nsINetworkInterface> activeNetwork;
-    GetActiveNetworkInterface(activeNetwork);
-    mActiveNetwork =
-        new nsMainThreadPtrHolder<nsINetworkInterface>(activeNetwork);
+    nsCOMPtr<nsINetworkInfo> activeNetworkInfo;
+    GetActiveNetworkInfo(activeNetworkInfo);
+    mActiveNetworkInfo =
+        new nsMainThreadPtrHolder<nsINetworkInfo>(activeNetworkInfo);
 #endif
 
     mKeepRunning = true;
@@ -2105,7 +2105,7 @@ nsFtpState::SaveNetworkStats(bool enforce)
     NS_GetAppInfo(mChannel, &appId, &isInBrowser);
 
     // Check if active network and appid are valid.
-    if (!mActiveNetwork || appId == NECKO_NO_APP_ID) {
+    if (!mActiveNetworkInfo || appId == NECKO_NO_APP_ID) {
         return NS_OK;
     }
 
@@ -2124,7 +2124,7 @@ nsFtpState::SaveNetworkStats(bool enforce)
     // Create the event to save the network statistics.
     // the event is then dispathed to the main thread.
     nsRefPtr<nsRunnable> event =
-        new SaveNetworkStatsEvent(appId, isInBrowser, mActiveNetwork,
+        new SaveNetworkStatsEvent(appId, isInBrowser, mActiveNetworkInfo,
                                   mCountRecv, 0, false);
     NS_DispatchToMainThread(event);
 
