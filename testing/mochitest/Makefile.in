@@ -45,8 +45,10 @@ ifeq ($(OS_ARCH),Linux)
 TEST_HARNESS_BINS += fix_linux_stack.py
 endif
 
-ifeq (gtk2_1,$(MOZ_WIDGET_TOOLKIT)_$(MOZ_X11))
+ifdef MOZ_X11
+ifneq (,$(filter gtk%,$(MOZ_WIDGET_TOOLKIT)))
 TEST_HARNESS_BINS += screentopng
+endif
 endif
 
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
