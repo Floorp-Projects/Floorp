@@ -368,13 +368,13 @@ AccessibleCaretEventHub::SetState(State* aState)
   mState->Enter(this);
 }
 
-NS_IMPL_STATE_CLASS_GETTER(NoActionState)
-NS_IMPL_STATE_CLASS_GETTER(PressCaretState)
-NS_IMPL_STATE_CLASS_GETTER(DragCaretState)
-NS_IMPL_STATE_CLASS_GETTER(PressNoCaretState)
-NS_IMPL_STATE_CLASS_GETTER(ScrollState)
-NS_IMPL_STATE_CLASS_GETTER(PostScrollState)
-NS_IMPL_STATE_CLASS_GETTER(LongTapState)
+MOZ_IMPL_STATE_CLASS_GETTER(NoActionState)
+MOZ_IMPL_STATE_CLASS_GETTER(PressCaretState)
+MOZ_IMPL_STATE_CLASS_GETTER(DragCaretState)
+MOZ_IMPL_STATE_CLASS_GETTER(PressNoCaretState)
+MOZ_IMPL_STATE_CLASS_GETTER(ScrollState)
+MOZ_IMPL_STATE_CLASS_GETTER(PostScrollState)
+MOZ_IMPL_STATE_CLASS_GETTER(LongTapState)
 
 AccessibleCaretEventHub::AccessibleCaretEventHub()
 {
