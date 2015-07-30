@@ -37,7 +37,8 @@ class SourceSurface;
 } // namespace gl
 
 namespace dom {
-class HTMLImageElementOrHTMLCanvasElementOrHTMLVideoElement;
+class HTMLImageElementOrHTMLCanvasElementOrHTMLVideoElementOrImageBitmap;
+typedef HTMLImageElementOrHTMLCanvasElementOrHTMLVideoElementOrImageBitmap CanvasImageSource;
 class ImageData;
 class StringOrCanvasGradientOrCanvasPattern;
 class OwningStringOrCanvasGradientOrCanvasPattern;
@@ -60,9 +61,6 @@ class CanvasRenderingContext2D final :
   public nsICanvasRenderingContextInternal,
   public nsWrapperCache
 {
-typedef HTMLImageElementOrHTMLCanvasElementOrHTMLVideoElement
-  HTMLImageOrCanvasOrVideoElement;
-
   virtual ~CanvasRenderingContext2D();
 
 public:
@@ -132,7 +130,7 @@ public:
     CreateRadialGradient(double x0, double y0, double r0, double x1, double y1,
                          double r1, ErrorResult& aError);
   already_AddRefed<CanvasPattern>
-    CreatePattern(const HTMLImageOrCanvasOrVideoElement& element,
+    CreatePattern(const CanvasImageSource& element,
                   const nsAString& repeat, ErrorResult& error);
 
   double ShadowOffsetX()
@@ -208,20 +206,20 @@ public:
   void RemoveHitRegion(const nsAString& id);
   void ClearHitRegions();
 
-  void DrawImage(const HTMLImageOrCanvasOrVideoElement& image,
+  void DrawImage(const CanvasImageSource& image,
                  double dx, double dy, mozilla::ErrorResult& error)
   {
     DrawImage(image, 0.0, 0.0, 0.0, 0.0, dx, dy, 0.0, 0.0, 0, error);
   }
 
-  void DrawImage(const HTMLImageOrCanvasOrVideoElement& image,
+  void DrawImage(const CanvasImageSource& image,
                  double dx, double dy, double dw, double dh,
                  mozilla::ErrorResult& error)
   {
     DrawImage(image, 0.0, 0.0, 0.0, 0.0, dx, dy, dw, dh, 2, error);
   }
 
-  void DrawImage(const HTMLImageOrCanvasOrVideoElement& image,
+  void DrawImage(const CanvasImageSource& image,
                  double sx, double sy, double sw, double sh, double dx,
                  double dy, double dw, double dh, mozilla::ErrorResult& error)
   {
@@ -666,7 +664,7 @@ protected:
   nsLayoutUtils::SurfaceFromElementResult
     CachedSurfaceFromElement(Element* aElement);
 
-  void DrawImage(const HTMLImageOrCanvasOrVideoElement &imgElt,
+  void DrawImage(const CanvasImageSource &imgElt,
                  double sx, double sy, double sw, double sh,
                  double dx, double dy, double dw, double dh,
                  uint8_t optional_argc, mozilla::ErrorResult& error);

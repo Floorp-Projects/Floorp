@@ -26,6 +26,11 @@ dictionary HitRegionOptions {
   Element? control = null;
 };
 
+typedef (HTMLImageElement or
+         HTMLCanvasElement or
+         HTMLVideoElement or
+         ImageBitmap) CanvasImageSource;
+
 interface CanvasRenderingContext2D {
 
   // back-reference to the canvas.  Might be null if we're not
@@ -64,7 +69,7 @@ interface CanvasRenderingContext2D {
   [NewObject, Throws]
   CanvasGradient createRadialGradient(double x0, double y0, double r0, double x1, double y1, double r1);
   [NewObject, Throws]
-  CanvasPattern createPattern((HTMLImageElement or HTMLCanvasElement or HTMLVideoElement) image, [TreatNullAs=EmptyString] DOMString repetition);
+  CanvasPattern createPattern(CanvasImageSource image, [TreatNullAs=EmptyString] DOMString repetition);
 
   // shadows
            [LenientFloat]
@@ -116,12 +121,13 @@ interface CanvasRenderingContext2D {
 
   // drawing images
 // NOT IMPLEMENTED           attribute boolean imageSmoothingEnabled; // (default true)
+
   [Throws, LenientFloat]
-  void drawImage((HTMLImageElement or HTMLCanvasElement or HTMLVideoElement) image, double dx, double dy);
+  void drawImage(CanvasImageSource image, double dx, double dy);
   [Throws, LenientFloat]
-  void drawImage((HTMLImageElement or HTMLCanvasElement or HTMLVideoElement) image, double dx, double dy, double dw, double dh);
+  void drawImage(CanvasImageSource image, double dx, double dy, double dw, double dh);
   [Throws, LenientFloat]
-  void drawImage((HTMLImageElement or HTMLCanvasElement or HTMLVideoElement) image, double sx, double sy, double sw, double sh, double dx, double dy, double dw, double dh);
+  void drawImage(CanvasImageSource image, double sx, double sy, double sw, double sh, double dx, double dy, double dw, double dh);
 
   // hit regions
   [Pref="canvas.hitregions.enabled", Throws] void addHitRegion(optional HitRegionOptions options);
