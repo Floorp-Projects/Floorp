@@ -558,9 +558,6 @@ TrackBuffersManager::CodedFrameRemoval(TimeInterval aInterval)
   }
   mEvictionOccurred = true;
 
-  // Tell our demuxer that data was removed.
-  mMediaSourceDemuxer->NotifyTimeRangesChanged();
-
   return dataRemoved;
 }
 
@@ -584,6 +581,9 @@ TrackBuffersManager::UpdateBufferedRanges()
 #endif
 
   mOfficialGroupEndTimestamp = mGroupEndTimestamp;
+
+  // Tell our demuxer that data was removed or added.
+  mMediaSourceDemuxer->NotifyTimeRangesChanged();
 }
 
 nsRefPtr<TrackBuffersManager::AppendPromise>
@@ -1195,9 +1195,6 @@ TrackBuffersManager::CompleteCodedFrameProcessing()
 
   // 7. Set append state to WAITING_FOR_SEGMENT.
   SetAppendState(AppendState::WAITING_FOR_SEGMENT);
-
-  // Tell our demuxer that data was added.
-  mMediaSourceDemuxer->NotifyTimeRangesChanged();
 
   // 8. Jump to the loop top step above.
   ResolveProcessing(false, __func__);
