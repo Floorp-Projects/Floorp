@@ -1515,6 +1515,12 @@ TrackBuffersManager::InsertFrames(TrackBuffer& aSamples,
   CheckNextInsertionIndex(aTrackData,
                           TimeUnit::FromMicroseconds(aSamples[0]->mTime));
 
+  // Adjust our demuxing index if necessary.
+  if (trackBuffer.mNextGetSampleIndex.isSome() &&
+      trackBuffer.mNextInsertionIndex.ref() <= trackBuffer.mNextGetSampleIndex.ref()) {
+    trackBuffer.mNextGetSampleIndex.ref() += aSamples.Length();
+  }
+
   TrackBuffer& data = trackBuffer.mBuffers.LastElement();
   data.InsertElementsAt(trackBuffer.mNextInsertionIndex.ref(), aSamples);
   trackBuffer.mNextInsertionIndex.ref() += aSamples.Length();
