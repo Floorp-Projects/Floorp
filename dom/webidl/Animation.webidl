@@ -31,6 +31,7 @@ interface Animation : EventTarget {
   [Throws]
   readonly attribute Promise<Animation> finished;
            attribute EventHandler       onfinish;
+           attribute EventHandler       oncancel;
   void cancel ();
   [Throws]
   void finish ();
