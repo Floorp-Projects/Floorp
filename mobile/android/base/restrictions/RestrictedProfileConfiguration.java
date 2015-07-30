@@ -20,7 +20,8 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
             Restriction.DISALLOW_INSTALL_APPS,
             Restriction.DISALLOW_TOOLS_MENU,
             Restriction.DISALLOW_REPORT_SITE_ISSUE,
-            Restriction.DISALLOW_IMPORT_SETTINGS
+            Restriction.DISALLOW_IMPORT_SETTINGS,
+            Restriction.DISALLOW_DEVELOPER_TOOLS
     );
 
     private static final String ABOUT_ADDONS = "about:addons";
