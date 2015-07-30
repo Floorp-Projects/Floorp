@@ -205,16 +205,16 @@ public:
   // Return a unique-to-the-process identifier for this Promise.
   uint64_t GetID();
 
+  // Queue an async microtask to current main or worker thread.
+  static void
+  DispatchToMicroTask(nsIRunnable* aRunnable);
+
 protected:
   // Do NOT call this unless you're Promise::Create.  I wish we could enforce
   // that from inside this class too, somehow.
   explicit Promise(nsIGlobalObject* aGlobal);
 
   virtual ~Promise();
-
-  // Queue an async microtask to current main or worker thread.
-  static void
-  DispatchToMicroTask(nsIRunnable* aRunnable);
 
   // Do JS-wrapping after Promise creation.
   void CreateWrapper(ErrorResult& aRv);

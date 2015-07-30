@@ -457,7 +457,7 @@ CodeGeneratorX86Shared::generateOutOfLineCode()
         masm.jmp(ImmPtr(handler->raw()), Relocation::JITCODE);
     }
 
-    return true;
+    return !masm.oom();
 }
 
 class BailoutJump {

@@ -311,7 +311,8 @@ public:
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
     {
-        return mallocSizeOf(this) + mTreeData.SizeOfExcludingThis(mallocSizeOf);
+        return mallocSizeOf(this) +
+               mTreeData.ShallowSizeOfExcludingThis(mallocSizeOf);
     }
 };
 
@@ -624,7 +625,7 @@ size_t
 WebGLElementArrayCache::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
     return mallocSizeOf(this) +
-           mBytes.SizeOfExcludingThis(mallocSizeOf) +
+           mBytes.ShallowSizeOfExcludingThis(mallocSizeOf) +
            SizeOfNullable(mallocSizeOf, mUint8Tree) +
            SizeOfNullable(mallocSizeOf, mUint16Tree) +
            SizeOfNullable(mallocSizeOf, mUint32Tree);

@@ -245,7 +245,7 @@ public:
     }
 
     size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
-        size_t total = mBlocks.SizeOfExcludingThis(aMallocSizeOf);
+        size_t total = mBlocks.ShallowSizeOfExcludingThis(aMallocSizeOf);
         for (uint32_t i = 0; i < mBlocks.Length(); i++) {
             if (mBlocks[i]) {
                 total += aMallocSizeOf(mBlocks[i]);

@@ -291,8 +291,9 @@ private:
         uint64_t size = reader.ReadU32();
         const uint8_t* typec = reader.Peek(4);
         uint32_t type = reader.ReadU32();
-        MSE_DEBUGV(AtomParser ,"Checking atom:'%c%c%c%c'",
-                   typec[0], typec[1], typec[2], typec[3]);
+        MSE_DEBUGV(AtomParser ,"Checking atom:'%c%c%c%c' @ %u",
+                   typec[0], typec[1], typec[2], typec[3],
+                   (uint32_t)reader.Offset() - 8);
         if (mInitOffset.isNothing() &&
             mp4_demuxer::AtomType(type) == initAtom) {
           mInitOffset = Some(reader.Offset());

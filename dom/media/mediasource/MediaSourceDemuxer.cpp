@@ -361,7 +361,7 @@ MediaSourceTrackDemuxer::BreakCycles()
 nsRefPtr<MediaSourceTrackDemuxer::SeekPromise>
 MediaSourceTrackDemuxer::DoSeek(media::TimeUnit aTime)
 {
-  if (aTime.ToMicroseconds() && !mBufferedRanges.Contains(aTime)) {
+  if (!mBufferedRanges.Contains(aTime)) {
     // We don't have the data to seek to.
     return SeekPromise::CreateAndReject(DemuxerFailureReason::WAITING_FOR_DATA,
                                         __func__);
