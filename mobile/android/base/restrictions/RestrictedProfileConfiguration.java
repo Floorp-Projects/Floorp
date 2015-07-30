@@ -37,7 +37,15 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
 
     @Override
     public boolean isAllowed(Restriction restriction) {
-        return !getAppRestrictions(context).getBoolean(restriction.name, DEFAULT_RESTRICTIONS.contains(restriction));
+        boolean isAllowed = !getAppRestrictions(context).getBoolean(restriction.name, DEFAULT_RESTRICTIONS.contains(restriction));
+
+        if (isAllowed) {
+            // If this restriction is not enforced by the app setup then check wether this is a restriction that is
+            // enforced by the system.
+            isAllowed = !getUserRestrictions(context).getBoolean(restriction.name, false);
+        }
+
+        return isAllowed;
     }
 
     @Override
@@ -62,5 +70,11 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
     private Bundle getAppRestrictions(final Context context) {
         final UserManager mgr = (UserManager) context.getSystemService(Context.USER_SERVICE);
         return mgr.getApplicationRestrictions(context.getPackageName());
+    }
+
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+    private Bundle getUserRestrictions(final Context context) {
+        final UserManager mgr = (UserManager) context.getSystemService(Context.USER_SERVICE);
+        return mgr.getUserRestrictions();
     }
 }
