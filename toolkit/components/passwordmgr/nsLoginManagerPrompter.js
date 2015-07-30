@@ -857,7 +857,11 @@ LoginManagerPrompter.prototype = {
       // Ensure the type is reset so the field is masked.
       passwordField.setAttribute("type", "password");
       passwordField.setAttribute("value", login.password);
-      passwordField.setAttribute("show-content", showPasswordPlaceholder);
+      if (Services.prefs.getBoolPref("signon.rememberSignons.visibilityToggle")) {
+        passwordField.setAttribute("show-content", showPasswordPlaceholder);
+      } else {
+        passwordField.setAttribute("show-content", "");
+      }
       updateButtonLabel();
     };
 
@@ -988,8 +992,10 @@ LoginManagerPrompter.prototype = {
                        .addEventListener("input", onInput);
               chromeDoc.getElementById("password-notification-password")
                        .addEventListener("input", onInput);
-              chromeDoc.getElementById("password-notification-password")
-                       .addEventListener("focus", onPasswordFocus);
+              if (Services.prefs.getBoolPref("signon.rememberSignons.visibilityToggle")) {
+                chromeDoc.getElementById("password-notification-password")
+                         .addEventListener("focus", onPasswordFocus);
+              }
               chromeDoc.getElementById("password-notification-password")
                        .addEventListener("blur", onPasswordBlur);
               break;
