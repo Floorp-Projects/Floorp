@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16" height="16" viewBox="0 0 16 16">
+  <style>
+    use:not(:target) {
+      display: none;
+    }
+    .icon {
+      fill: #666;
+    }
+    .icon.hover {
+      fill: #4d4d4d;
+    }
+    .icon.pressed {
+      fill: #000;
+    }
+    .icon.dark {
+      fill: #999;
+    }
+    .icon.dark.hover {
+      fill: #b2b2b2;
+    }
+    .icon.dark.pressed {
+      fill: #fff;
+    }
+    .muted {
+      opacity: .7;
+      stroke: #666;
+      stroke-width: 0;
+    }
+    .muted.hover {
+      opacity: .85;
+      stroke: #4d4d4d;
+    }
+    .muted.pressed {
+      opacity: 1;
+      stroke: #000;
+    }
+    .muted.dark {
+      stroke: #999;
+    }
+    .muted.dark.hover {
+      stroke: #b2b2b2;
+    }
+    .muted.dark.pressed {
+      stroke: #fff;
+    }
+  </style>
+  <defs>
+    <clipPath id="clip-wave">
+      <path d="M 10,7 l 3,-8 l 2,0 l 0,18 l -2,0 l -3,-8 z" />
+    </clipPath>
+    <mask id="disabled-cutout">
+      <rect width="16" height="16" fill="#fff" />
+      <line x1="4" y1="14" x2="14" y2="4" stroke="#000" stroke-width="2" />
+    </mask>
+    <g id="shape-tab-audio">
+      <rect x="2" y="5" width="6" height="6" rx="2" ry="2" />
+      <polygon points="4,6 9,2 9,14 4,10" />
+      <path d="M 10,7 a 1 1 0 0,1 0,2 z" />
+      <path d="M 10,5 a 3 3 0 0,1 0,6 l 0,-1 a 2 2 0 0,0 0,-4 z"  clip-path="url(#clip-wave)" />
+      <path d="M 10,3 a 5 5 0 0,1 0,10 l 0,-1 a 4 4 0 0,0 0,-8 z" clip-path="url(#clip-wave)" />
+    </g>
+    <g id="shape-tab-audio-muted">
+      <g mask="url(#disabled-cutout)">
+        <rect x="3" y="5" width="6" height="6" rx="2" ry="2" />
+        <polygon points="5,6 10,2 10,14 5,10" />
+      </g>
+      <line x1="2" y1="13" x2="14" y2="3" stroke-width="1.5" />
+    </g>
+  </defs>
+  <use id="tab-audio" class="icon" xlink:href="#shape-tab-audio"/>
+  <use id="tab-audio-hover" class="icon hover" xlink:href="#shape-tab-audio"/>
+  <use id="tab-audio-pressed" class="icon pressed" xlink:href="#shape-tab-audio"/>
+  <use id="tab-audio-muted" class="icon muted" xlink:href="#shape-tab-audio-muted" />
+  <use id="tab-audio-muted-hover" class="icon muted hover" xlink:href="#shape-tab-audio-muted" />
+  <use id="tab-audio-muted-pressed" class="icon muted pressed" xlink:href="#shape-tab-audio-muted" />
+  <use id="tab-audio-dark" class="icon dark" xlink:href="#shape-tab-audio"/>
+  <use id="tab-audio-dark-hover" class="icon hover dark" xlink:href="#shape-tab-audio"/>
+  <use id="tab-audio-dark-pressed" class="icon pressed dark" xlink:href="#shape-tab-audio"/>
+  <use id="tab-audio-muted-dark" class="icon muted dark" xlink:href="#shape-tab-audio-muted" />
+  <use id="tab-audio-muted-dark-hover" class="icon muted hover dark" xlink:href="#shape-tab-audio-muted" />
+  <use id="tab-audio-muted-dark-pressed" class="icon muted pressed dark" xlink:href="#shape-tab-audio-muted" />
+</svg>

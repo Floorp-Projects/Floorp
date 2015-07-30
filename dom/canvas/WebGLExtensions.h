@@ -20,6 +20,10 @@ template<typename T>
 class Sequence;
 } // namespace dom
 
+namespace webgl {
+class FormatUsageAuthority;
+} // namespace webgl
+
 class WebGLContext;
 class WebGLShader;
 class WebGLQuery;
@@ -210,6 +214,8 @@ class WebGLExtensionTextureFloat
     : public WebGLExtensionBase
 {
 public:
+    static void InitWebGLFormats(webgl::FormatUsageAuthority* authority);
+
     explicit WebGLExtensionTextureFloat(WebGLContext*);
     virtual ~WebGLExtensionTextureFloat();
 
@@ -230,6 +236,8 @@ class WebGLExtensionTextureHalfFloat
     : public WebGLExtensionBase
 {
 public:
+    static void InitWebGLFormats(webgl::FormatUsageAuthority* authority);
+
     explicit WebGLExtensionTextureHalfFloat(WebGLContext*);
     virtual ~WebGLExtensionTextureHalfFloat();
 
