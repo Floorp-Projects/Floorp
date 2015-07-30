@@ -1033,7 +1033,8 @@ StructTypeDescr::fieldCount() const
 size_t
 StructTypeDescr::maybeForwardedFieldCount() const
 {
-    return maybeForwardedFieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_NAMES).getDenseInitializedLength();
+    ArrayObject& fieldInfo = *MaybeForwarded(&fieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_NAMES));
+    return fieldInfo.getDenseInitializedLength();
 }
 
 bool
@@ -1068,7 +1069,7 @@ StructTypeDescr::fieldOffset(size_t index) const
 size_t
 StructTypeDescr::maybeForwardedFieldOffset(size_t index) const
 {
-    ArrayObject& fieldOffsets = maybeForwardedFieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS);
+    ArrayObject& fieldOffsets = *MaybeForwarded(&fieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS));
     MOZ_ASSERT(index < fieldOffsets.getDenseInitializedLength());
     return AssertedCast<size_t>(fieldOffsets.getDenseElement(index).toInt32());
 }
@@ -1084,7 +1085,7 @@ StructTypeDescr::fieldDescr(size_t index) const
 TypeDescr&
 StructTypeDescr::maybeForwardedFieldDescr(size_t index) const
 {
-    ArrayObject& fieldDescrs = maybeForwardedFieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_TYPES);
+    ArrayObject& fieldDescrs = *MaybeForwarded(&fieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_TYPES));
     MOZ_ASSERT(index < fieldDescrs.getDenseInitializedLength());
     JSObject& descr =
         *MaybeForwarded(&fieldDescrs.getDenseElement(index).toObject());
@@ -1643,7 +1644,7 @@ OutlineTypedObject::obj_trace(JSTracer* trc, JSObject* object)
     // may not have had their slots updated yet. Note that this does not apply
     // to generational GC because these objects (type descriptors and
     // prototypes) are never allocated in the nursery.
-    TypeDescr& descr = typedObj.maybeForwardedTypeDescr();
+    TypeDescr& descr = *MaybeForwarded(&typedObj.typeDescr());
 
     // Mark the owner, watching in case it is moved by the tracer.
     JSObject* oldOwner = typedObj.owner_;
@@ -2157,7 +2158,7 @@ InlineTypedObject::obj_trace(JSTracer* trc, JSObject* object)
 
     // When this is called for compacting GC, the related objects we touch here
     // may not have had their slots updated yet.
-    TypeDescr& descr = typedObj.maybeForwardedTypeDescr();
+    TypeDescr& descr = *MaybeForwarded(&typedObj.typeDescr());
 
     descr.traceInstances(trc, typedObj.inlineTypedMem(), 1);
 }
@@ -2847,7 +2848,7 @@ visitReferences(TypeDescr& descr,
       case type::Array:
       {
         ArrayTypeDescr& arrayDescr = descr.as<ArrayTypeDescr>();
-        TypeDescr& elementDescr = arrayDescr.maybeForwardedElementType();
+        TypeDescr& elementDescr = *MaybeForwarded(&arrayDescr.elementType());
         for (int32_t i = 0; i < arrayDescr.length(); i++) {
             visitReferences(elementDescr, mem, visitor);
             mem += elementDescr.size();

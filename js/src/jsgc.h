@@ -1100,23 +1100,20 @@ MergeCompartments(JSCompartment* source, JSCompartment* target);
  */
 class RelocationOverlay
 {
-    friend class MinorCollectionTracer;
-    friend class js::TenuringTracer;
-
     /* The low bit is set so this should never equal a normal pointer. */
     static const uintptr_t Relocated = uintptr_t(0xbad0bad1);
 
-    // Putting the magic value after the forwarding pointer is a terrible hack
-    // to make JSObject::zone() work on forwarded objects.
+    // Arrange the fields of the RelocationOverlay so that JSObject's group
+    // pointer is not overwritten during compacting.
 
-    /* The location |this| was moved to. */
-    Cell* newLocation_;
+    /* A list entry to track all relocated things. */
+    RelocationOverlay* next_;
 
     /* Set to Relocated when moved. */
     uintptr_t magic_;
 
-    /* A list entry to track all relocated things. */
-    RelocationOverlay* next_;
+    /* The location |this| was moved to. */
+    Cell* newLocation_;
 
   public:
     static RelocationOverlay* fromCell(Cell* cell) {
@@ -1134,15 +1131,20 @@ class RelocationOverlay
 
     void forwardTo(Cell* cell) {
         MOZ_ASSERT(!isForwarded());
-        static_assert(offsetof(JSObject, group_) == offsetof(RelocationOverlay, newLocation_),
-                      "forwarding pointer and group should be at same location, "
-                      "so that obj->zone() works on forwarded objects");
+        static_assert(offsetof(JSObject, group_) == offsetof(RelocationOverlay, next_),
+                      "next pointer and group should be at same location, "
+                      "so that group is not overwritten during compacting");
         newLocation_ = cell;
         magic_ = Relocated;
-        next_ = nullptr;
+    }
+
+    RelocationOverlay*& nextRef() {
+        MOZ_ASSERT(isForwarded());
+        return next_;
     }
 
     RelocationOverlay* next() const {
+        MOZ_ASSERT(isForwarded());
         return next_;
     }
 
