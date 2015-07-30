@@ -307,16 +307,10 @@ private:
 
     void DisableD2D();
 
-    // Used by InitializeD3D11().
-    enum class D3D11Status {
-      Ok,
-      OnlyWARP,
-      Blocked
-    };
-    D3D11Status CheckD3D11Support();
-    bool AttemptD3D11DeviceCreation();
-    bool AttemptWARPDeviceCreation();
-    bool AttemptD3D11ImageBridgeDeviceCreation();
+    mozilla::gfx::FeatureStatus CheckD3D11Support(bool* aCanUseHardware);
+    void AttemptD3D11DeviceCreation();
+    void AttemptWARPDeviceCreation();
+    void AttemptD3D11ImageBridgeDeviceCreation();
     bool AttemptD3D11ContentDeviceCreation();
 
     IDXGIAdapter1 *GetDXGIAdapter();
