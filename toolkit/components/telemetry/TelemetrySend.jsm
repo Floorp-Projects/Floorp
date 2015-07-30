@@ -901,6 +901,7 @@ let TelemetrySendImpl = {
         // 4XX means that something with the request was broken.
         this._log.error("_doPing - error submitting to " + url + ", status: " + status
                         + " - ping request broken?");
+        Telemetry.getHistogramById("TELEMETRY_PING_EVICTED_FOR_SERVER_ERRORS").add();
         // TODO: we should handle this better, but for now we should avoid resubmitting
         // broken requests by pretending success.
         success = true;
