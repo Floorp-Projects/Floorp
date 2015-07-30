@@ -129,7 +129,7 @@ public class FirefoxAccounts {
           // exist.
           final AndroidFxAccount fxAccount =
               AccountPickler.unpickle(context, FxAccountConstants.ACCOUNT_PICKLE_FILENAME);
-          accounts[0] = fxAccount.getAndroidAccount();
+          accounts[0] = fxAccount != null ? fxAccount.getAndroidAccount() : null;
         } finally {
           latch.countDown();
         }

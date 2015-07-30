@@ -80,12 +80,13 @@ public class AccountPickler {
 
   /**
    * Remove Firefox account persisted to disk.
+   * This operation is synchronized to avoid race condition while deleting the account.
    *
    * @param context Android context.
    * @param filename name of persisted pickle file; must not contain path separators.
    * @return <code>true</code> if given pickle existed and was successfully deleted.
    */
-  public static boolean deletePickle(final Context context, final String filename) {
+  public synchronized static boolean deletePickle(final Context context, final String filename) {
     return context.deleteFile(filename);
   }
 
@@ -122,11 +123,12 @@ public class AccountPickler {
 
   /**
    * Persist Firefox account to disk as a JSON object.
+   * This operation is synchronized to avoid race condition while deleting the account.
    *
-   * @param AndroidFxAccount the account to persist to disk
+   * @param account the AndroidFxAccount to persist to disk
    * @param filename name of file to persist to; must not contain path separators.
    */
-  public static void pickle(final AndroidFxAccount account, final String filename) {
+  public synchronized static void pickle(final AndroidFxAccount account, final String filename) {
     final ExtendedJSONObject o = toJSON(account, System.currentTimeMillis());
     writeToDisk(account.context, filename, o);
   }
@@ -155,6 +157,7 @@ public class AccountPickler {
 
   /**
    * Create Android account from saved JSON object. Assumes that an account does not exist.
+   * This operation is synchronized to avoid race condition while deleting the account.
    *
    * @param context
    *          Android context.
@@ -162,7 +165,7 @@ public class AccountPickler {
    *          name of file to read from; must not contain path separators.
    * @return created Android account, or null on error.
    */
-  public static AndroidFxAccount unpickle(final Context context, final String filename) {
+  public synchronized static AndroidFxAccount unpickle(final Context context, final String filename) {
     final String jsonString = Utils.readFile(context, filename);
     if (jsonString == null) {
       Logger.info(LOG_TAG, "Pickle file '" + filename + "' not found; aborting.");

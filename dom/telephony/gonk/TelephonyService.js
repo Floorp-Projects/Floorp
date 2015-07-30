@@ -1883,13 +1883,37 @@ TelephonyService.prototype = {
       return;
     }
 
-    // It's a foreground call.
+    // After hangup a single call, gecko has to resume the held call or conference.
     if (!call.isConference) {
       let heldCalls = this._getCallsWithState(aClientId, nsITelephonyService.CALL_STATE_HELD);
 
-      // Automatic resume another held call.
       if (heldCalls.length) {
-        this._hangUpForeground(aClientId, aCallback);
+        if (call.state === nsITelephonyService.CALL_STATE_CONNECTED) {
+          // For a foreground call, ril has a request to do two actions together.
+          this._hangUpForeground(aClientId, aCallback);
+        } else {
+          // Otherwise, gecko should send out two consecutive requests by itself.
+          this._sendToRilWorker(aClientId, "hangUpCall", { callIndex: aCallIndex }, response => {
+            if (response.errorMsg) {
+              aCallback.notifyError(response.errorMsg);
+            } else {
+              aCallback.notifySuccess();
+
+              let emptyCallback = {
+                QueryInterface: XPCOMUtils.generateQI([Ci.nsITelephonyCallback]),
+                notifySuccess: () => {},
+                notifyError: () => {}
+              };
+
+              if (heldCalls.length === 1) {
+                this.resumeCall(aClientId, heldCalls[0].callIndex, emptyCallback);
+              } else {
+                this.resumeConference(aClientId, emptyCallback);
+              }
+            }
+          });
+        }
+
         return;
       }
     }
