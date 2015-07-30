@@ -15,7 +15,7 @@
 #include "BluetoothManager.h"
 #include "BluetoothOppManager.h"
 #include "BluetoothParent.h"
-#if defined(MOZ_B2G_BT_BLUEDROID)
+#if defined(MOZ_B2G_BT_DAEMON)
 #include "BluetoothPbapManager.h"
 #endif
 #include "BluetoothReplyRunnable.h"
@@ -52,17 +52,10 @@
  *   MOZ_B2G_BT and MOZ_B2G_BT_BLUEZ are both defined.
  */
 #include "BluetoothDBusService.h"
-#elif defined(MOZ_B2G_BT_BLUEDROID)
-/**
- * B2G bluedroid:
- *   MOZ_B2G_BT and MOZ_B2G_BT_BLUEDROID are both defined;
- *   MOZ_B2G_BLUEZ or MOZ_B2G_DAEMON are not defined.
- */
-#include "BluetoothServiceBluedroid.h"
 #elif defined(MOZ_B2G_BT_DAEMON)
 /**
  * B2G Bluetooth daemon:
- *   MOZ_B2G_BT, MOZ_B2G_BLUEDROID and MOZ_B2G_BT_DAEMON are defined;
+ *   MOZ_B2G_BT and MOZ_B2G_BT_DAEMON are defined;
  *   MOZ_B2G_BLUEZ is not defined.
  */
 #include "BluetoothServiceBluedroid.h"
@@ -220,8 +213,6 @@ BluetoothService::Create()
 
 #if defined(MOZ_B2G_BT_BLUEZ)
   return new BluetoothDBusService();
-#elif defined(MOZ_B2G_BT_BLUEDROID)
-  return new BluetoothServiceBluedroid();
 #elif defined(MOZ_B2G_BT_DAEMON)
   return new BluetoothServiceBluedroid();
 #endif
@@ -409,7 +400,7 @@ BluetoothService::StopBluetooth(bool aIsStartup)
     BluetoothHfpManager::Get(),
     BluetoothA2dpManager::Get(),
     BluetoothOppManager::Get(),
-#if defined(MOZ_B2G_BT_BLUEDROID)
+#if defined(MOZ_B2G_BT_DAEMON)
     BluetoothPbapManager::Get(),
 #endif
     BluetoothHidManager::Get()
