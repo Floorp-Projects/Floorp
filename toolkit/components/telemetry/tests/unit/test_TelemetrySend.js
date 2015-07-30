@@ -263,6 +263,43 @@ add_task(function* test_discardBigPings() {
   Assert.equal(h.counts[2], 1, "Telemetry must report a 2MB, oversized, ping submitted.");
 });
 
+add_task(function* test_evictedOnServerErrors() {
+  const TEST_TYPE = "test-evicted";
+
+  yield TelemetrySend.reset();
+  Assert.equal(TelemetrySend.pendingPingCount, 0, "Should have no pending pings yet");
+
+  // Write a custom ping handler which will return 403. This will trigger ping eviction
+  // on client side.
+  PingServer.registerPingHandler((req, res) => {
+    res.setStatusLine(null, 403, "Forbidden");
+    res.processAsync();
+    res.finish();
+  });
+
+  // Clear the histogram and submit a ping.
+  Telemetry.getHistogramById("TELEMETRY_PING_EVICTED_FOR_SERVER_ERRORS").clear();
+  let pingId = yield TelemetryController.submitExternalPing(TEST_TYPE, {});
+  yield TelemetrySend.testWaitOnOutgoingPings();
+
+  let h = Telemetry.getHistogramById("TELEMETRY_PING_EVICTED_FOR_SERVER_ERRORS").snapshot();
+  Assert.equal(h.sum, 1, "Telemetry must report a ping evicted due to server errors");
+
+  // The ping should not be persisted.
+  yield Assert.rejects(TelemetryStorage.loadPendingPing(pingId), "The ping must not be persisted.");
+
+  // Reset the ping handler and submit a new ping.
+  PingServer.resetPingHandler();
+  pingId = yield TelemetryController.submitExternalPing(TEST_TYPE, {});
+
+  let ping = yield PingServer.promiseNextPings(1);
+  Assert.equal(ping[0].id, pingId, "The correct ping must be received");
+
+  // We should not have updated the error histogram.
+  h = Telemetry.getHistogramById("TELEMETRY_PING_EVICTED_FOR_SERVER_ERRORS").snapshot();
+  Assert.equal(h.sum, 1, "Telemetry must report a ping evicted due to server errors");
+});
+
 // Test that the current, non-persisted pending pings are properly saved on shutdown.
 add_task(function* test_persistCurrentPingsOnShutdown() {
   const TEST_TYPE = "test-persistCurrentPingsOnShutdown";
