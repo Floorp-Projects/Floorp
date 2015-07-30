@@ -35,7 +35,7 @@ struct StmtInfoPC : public StmtInfoBase {
     // case's lexical declarations start at so we may generate dead zone
     // checks for other cases' declarations.
     //
-    // Only valid if type is StmtType::SWITCH.
+    // Only valid if type is STMT_SWITCH.
     uint16_t        firstDominatingLexicalInCase;
 
     explicit StmtInfoPC(ExclusiveContext* cx)

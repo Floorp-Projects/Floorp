@@ -75,12 +75,12 @@ struct frontend::StmtInfoBCE : public StmtInfoBase
      */
 
     ptrdiff_t& gosubs() {
-        MOZ_ASSERT(type == StmtType::FINALLY);
+        MOZ_ASSERT(type == STMT_FINALLY);
         return breaks;
     }
 
     ptrdiff_t& guardJump() {
-        MOZ_ASSERT(type == StmtType::TRY || type == StmtType::FINALLY);
+        MOZ_ASSERT(type == STMT_TRY || type == STMT_FINALLY);
         return continues;
     }
 };
@@ -376,7 +376,7 @@ static const char * const statementName[] = {
     "spread",                /* SPREAD */
 };
 
-static_assert(MOZ_ARRAY_LENGTH(statementName) == uint16_t(StmtType::LIMIT),
+static_assert(MOZ_ARRAY_LENGTH(statementName) == STMT_LIMIT,
               "statementName array and StmtType enum must be consistent");
 
 static const char*
@@ -384,7 +384,7 @@ StatementName(StmtInfoBCE* topStmt)
 {
     if (!topStmt)
         return js_script_str;
-    return statementName[uint16_t(topStmt->type)];
+    return statementName[topStmt->type];
 }
 
 static void
@@ -573,7 +573,7 @@ class NonLocalExitScope {
             StmtInfoBCE* stmt = bce->topStmt;
             while (1) {
                 MOZ_ASSERT(stmt);
-                if (stmt->linksScope()) {
+                if (stmt->isNestedScope) {
                     openScopeIndex = stmt->blockScopeIndex;
                     break;
                 }
@@ -613,25 +613,25 @@ NonLocalExitScope::prepareForNonLocalJump(StmtInfoBCE* toStmt)
 
     for (StmtInfoBCE* stmt = bce->topStmt; stmt != toStmt; stmt = stmt->down) {
         switch (stmt->type) {
-          case StmtType::FINALLY:
+          case STMT_FINALLY:
             FLUSH_POPS();
             if (!bce->emitBackPatchOp(&stmt->gosubs()))
                 return false;
             break;
 
-          case StmtType::WITH:
+          case STMT_WITH:
             if (!bce->emit1(JSOP_LEAVEWITH))
                 return false;
-            MOZ_ASSERT(stmt->linksScope());
+            MOZ_ASSERT(stmt->isNestedScope);
             if (!popScopeForNonLocalExit(stmt->blockScopeIndex))
                 return false;
             break;
 
-          case StmtType::FOR_OF_LOOP:
+          case STMT_FOR_OF_LOOP:
             npops += 2;
             break;
 
-          case StmtType::FOR_IN_LOOP:
+          case STMT_FOR_IN_LOOP:
             /* The iterator and the current value are on the stack. */
             npops += 1;
             FLUSH_POPS();
@@ -639,11 +639,11 @@ NonLocalExitScope::prepareForNonLocalJump(StmtInfoBCE* toStmt)
                 return false;
             break;
 
-          case StmtType::SPREAD:
+          case STMT_SPREAD:
             MOZ_ASSERT_UNREACHABLE("can't break/continue/return from inside a spread");
             break;
 
-          case StmtType::SUBROUTINE:
+          case STMT_SUBROUTINE:
             /*
              * There's a [exception or hole, retsub pc-index] pair on the
              * stack that we need to pop.
@@ -655,6 +655,7 @@ NonLocalExitScope::prepareForNonLocalJump(StmtInfoBCE* toStmt)
         }
 
         if (stmt->isBlockScope) {
+            MOZ_ASSERT(stmt->isNestedScope);
             StaticBlockObject& blockObj = stmt->staticBlock();
             if (blockObj.needsClone()) {
                 if (!bce->emit1(JSOP_POPBLOCKSCOPE))
@@ -741,9 +742,9 @@ BytecodeEmitter::pushLoopStatement(LoopStmtInfo* stmt, StmtType type, ptrdiff_t 
     stmt->loopDepth = downLoop ? downLoop->loopDepth + 1 : 1;
 
     int loopSlots;
-    if (type == StmtType::SPREAD)
+    if (type == STMT_SPREAD)
         loopSlots = 3;
-    else if (type == StmtType::FOR_IN_LOOP || type == StmtType::FOR_OF_LOOP)
+    else if (type == STMT_FOR_IN_LOOP || type == STMT_FOR_OF_LOOP)
         loopSlots = 2;
     else
         loopSlots = 0;
@@ -894,8 +895,8 @@ BytecodeEmitter::computeLocalOffset(Handle<StaticBlockObject*> blockObj)
 // will emit DEBUGLEAVEBLOCK and may emit POPBLOCKSCOPE.  (For "with" scopes it
 // emits LEAVEWITH, of course.)  Pass enterNestedScope a fresh StmtInfoBCE
 // object, and pass that same object to the corresponding leaveNestedScope.  If
-// the statement is a block scope, pass StmtType::BLOCK as stmtType; otherwise for
-// with scopes pass StmtType::WITH.
+// the statement is a block scope, pass STMT_BLOCK as stmtType; otherwise for
+// with scopes pass STMT_WITH.
 //
 bool
 BytecodeEmitter::enterNestedScope(StmtInfoBCE* stmt, ObjectBox* objbox, StmtType stmtType)
@@ -904,7 +905,7 @@ BytecodeEmitter::enterNestedScope(StmtInfoBCE* stmt, ObjectBox* objbox, StmtType
     uint32_t scopeObjectIndex = objectList.add(objbox);
 
     switch (stmtType) {
-      case StmtType::BLOCK: {
+      case STMT_BLOCK: {
         Rooted<StaticBlockObject*> blockObj(cx, &scopeObj->as<StaticBlockObject>());
 
         computeLocalOffset(blockObj);
@@ -918,7 +919,7 @@ BytecodeEmitter::enterNestedScope(StmtInfoBCE* stmt, ObjectBox* objbox, StmtType
         }
         break;
       }
-      case StmtType::WITH:
+      case STMT_WITH:
         MOZ_ASSERT(scopeObj->is<StaticWithObject>());
         if (!emitInternedObjectOp(scopeObjectIndex, JSOP_ENTERWITH))
             return false;
@@ -940,8 +941,8 @@ BytecodeEmitter::enterNestedScope(StmtInfoBCE* stmt, ObjectBox* objbox, StmtType
     pushStatement(stmt, stmtType, offset());
     scopeObj->initEnclosingNestedScope(enclosingStaticScope());
     FinishPushNestedScope(this, stmt, *scopeObj);
-    MOZ_ASSERT(stmt->linksScope());
-    stmt->isBlockScope = (stmtType == StmtType::BLOCK);
+    MOZ_ASSERT(stmt->isNestedScope);
+    stmt->isBlockScope = (stmtType == STMT_BLOCK);
 
     return true;
 }
@@ -963,8 +964,8 @@ bool
 BytecodeEmitter::leaveNestedScope(StmtInfoBCE* stmt)
 {
     MOZ_ASSERT(stmt == topStmt);
-    MOZ_ASSERT(stmt->linksScope());
-    MOZ_ASSERT(stmt->isBlockScope == !(stmt->type == StmtType::WITH));
+    MOZ_ASSERT(stmt->isNestedScope);
+    MOZ_ASSERT(stmt->isBlockScope == !(stmt->type == STMT_WITH));
     uint32_t blockScopeIndex = stmt->blockScopeIndex;
 
 #ifdef DEBUG
@@ -1523,7 +1524,7 @@ BytecodeEmitter::tryConvertFreeName(ParseNode* pn)
         // The only statements within a lazy function which can push lexical
         // scopes are try/catch blocks. Use generic ops in this case.
         for (StmtInfoBCE* stmt = topStmt; stmt; stmt = stmt->down) {
-            if (stmt->type == StmtType::CATCH)
+            if (stmt->type == STMT_CATCH)
                 return true;
         }
 
@@ -2350,7 +2351,7 @@ BytecodeEmitter::needsImplicitThis()
         return true;
 
     for (StmtInfoBCE* stmt = topStmt; stmt; stmt = stmt->down) {
-        if (stmt->type == StmtType::WITH)
+        if (stmt->type == STMT_WITH)
             return true;
     }
 
@@ -3034,7 +3035,7 @@ BytecodeEmitter::enterBlockScope(StmtInfoBCE* stmtInfo, ObjectBox* objbox, JSOp 
     if (!pushInitialConstants(initialValueOp, blockObj->numVariables() - alreadyPushed))
         return false;
 
-    if (!enterNestedScope(stmtInfo, objbox, StmtType::BLOCK))
+    if (!enterNestedScope(stmtInfo, objbox, STMT_BLOCK))
         return false;
 
     if (!initializeBlockScopedLocalsFromStack(blockObj))
@@ -3064,14 +3065,14 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
         if (!enterBlockScope(&stmtInfo, cases->pn_objbox, JSOP_UNINITIALIZED, 0))
             return false;
 
-        stmtInfo.type = StmtType::SWITCH;
+        stmtInfo.type = STMT_SWITCH;
         stmtInfo.update = top = offset();
         /* Advance |cases| to refer to the switch case list. */
         cases = cases->expr();
     } else {
         MOZ_ASSERT(cases->isKind(PNK_STATEMENTLIST));
         top = offset();
-        pushStatement(&stmtInfo, StmtType::SWITCH, top);
+        pushStatement(&stmtInfo, STMT_SWITCH, top);
     }
 
     /* Switch bytecodes run from here till end of final case. */
@@ -4772,16 +4773,16 @@ bool
 BytecodeEmitter::emitCatch(ParseNode* pn)
 {
     /*
-     * Morph StmtType::BLOCK to StmtType::CATCH, note the block entry code offset,
+     * Morph STMT_BLOCK to STMT_CATCH, note the block entry code offset,
      * and save the block object atom.
      */
     StmtInfoBCE* stmt = topStmt;
-    MOZ_ASSERT(stmt->type == StmtType::BLOCK && stmt->isBlockScope);
-    stmt->type = StmtType::CATCH;
+    MOZ_ASSERT(stmt->type == STMT_BLOCK && stmt->isBlockScope);
+    stmt->type = STMT_CATCH;
 
     /* Go up one statement info record to the TRY or FINALLY record. */
     stmt = stmt->down;
-    MOZ_ASSERT(stmt->type == StmtType::TRY || stmt->type == StmtType::FINALLY);
+    MOZ_ASSERT(stmt->type == STMT_TRY || stmt->type == STMT_FINALLY);
 
     /* Pick up the pending exception and bind it to the catch variable. */
     if (!emit1(JSOP_EXCEPTION))
@@ -4871,12 +4872,12 @@ BytecodeEmitter::emitTry(ParseNode* pn)
     // Push stmtInfo to track jumps-over-catches and gosubs-to-finally
     // for later fixup.
     //
-    // When a finally block is active (StmtType::FINALLY in our parse context),
+    // When a finally block is active (STMT_FINALLY in our parse context),
     // non-local jumps (including jumps-over-catches) result in a GOSUB
     // being written into the bytecode stream and fixed-up later (c.f.
     // emitBackPatchOp and backPatch).
     //
-    pushStatement(&stmtInfo, pn->pn_kid3 ? StmtType::FINALLY : StmtType::TRY, offset());
+    pushStatement(&stmtInfo, pn->pn_kid3 ? STMT_FINALLY : STMT_TRY, offset());
 
     // Since an exception can be thrown at any place inside the try block,
     // we need to restore the stack and the scope chain before we transfer
@@ -4997,7 +4998,7 @@ BytecodeEmitter::emitTry(ParseNode* pn)
         finallyStart = offset();
 
         // Indicate that we're emitting a subroutine body.
-        stmtInfo.type = StmtType::SUBROUTINE;
+        stmtInfo.type = STMT_SUBROUTINE;
         if (!updateSourceCoordNotes(pn->pn_kid3->pn_pos.begin))
             return false;
         if (!emit1(JSOP_FINALLY) ||
@@ -5038,7 +5039,7 @@ BytecodeEmitter::emitIf(ParseNode* pn)
     StmtInfoBCE stmtInfo(cx);
 
     /* Initialize so we can detect else-if chains and avoid recursion. */
-    stmtInfo.type = StmtType::IF;
+    stmtInfo.type = STMT_IF;
     ptrdiff_t beq = -1;
     ptrdiff_t jmp = -1;
     unsigned noteIndex = -1;
@@ -5048,16 +5049,16 @@ BytecodeEmitter::emitIf(ParseNode* pn)
     if (!emitTree(pn->pn_kid1))
         return false;
     ptrdiff_t top = offset();
-    if (stmtInfo.type == StmtType::IF) {
-        pushStatement(&stmtInfo, StmtType::IF, top);
+    if (stmtInfo.type == STMT_IF) {
+        pushStatement(&stmtInfo, STMT_IF, top);
     } else {
         /*
          * We came here from the goto further below that detects else-if
-         * chains, so we must mutate stmtInfo back into a StmtType::IF record.
+         * chains, so we must mutate stmtInfo back into a STMT_IF record.
          * Also we need a note offset for SRC_IF_ELSE to help IonMonkey.
          */
-        MOZ_ASSERT(stmtInfo.type == StmtType::ELSE);
-        stmtInfo.type = StmtType::IF;
+        MOZ_ASSERT(stmtInfo.type == STMT_ELSE);
+        stmtInfo.type = STMT_IF;
         stmtInfo.update = top;
         if (!setSrcNoteOffset(noteIndex, 0, jmp - beq))
             return false;
@@ -5075,7 +5076,7 @@ BytecodeEmitter::emitIf(ParseNode* pn)
         return false;
     if (pn3) {
         /* Modify stmtInfo so we know we're in the else part. */
-        stmtInfo.type = StmtType::ELSE;
+        stmtInfo.type = STMT_ELSE;
 
         /*
          * Emit a JSOP_BACKPATCH op to jump from the end of our then part
@@ -5178,7 +5179,7 @@ BytecodeEmitter::emitWith(ParseNode* pn)
     StmtInfoBCE stmtInfo(cx);
     if (!emitTree(pn->pn_left))
         return false;
-    if (!enterNestedScope(&stmtInfo, pn->pn_binary_obj, StmtType::WITH))
+    if (!enterNestedScope(&stmtInfo, pn->pn_binary_obj, STMT_WITH))
         return false;
     if (!emitTree(pn->pn_right))
         return false;
@@ -5277,9 +5278,9 @@ BytecodeEmitter::emitForInOrOfVariables(ParseNode* pn, bool* letDecl)
 bool
 BytecodeEmitter::emitForOf(StmtType type, ParseNode* pn, ptrdiff_t top)
 {
-    MOZ_ASSERT(type == StmtType::FOR_OF_LOOP || type == StmtType::SPREAD);
-    MOZ_ASSERT_IF(type == StmtType::FOR_OF_LOOP, pn && pn->pn_left->isKind(PNK_FOROF));
-    MOZ_ASSERT_IF(type == StmtType::SPREAD, !pn);
+    MOZ_ASSERT(type == STMT_FOR_OF_LOOP || type == STMT_SPREAD);
+    MOZ_ASSERT_IF(type == STMT_FOR_OF_LOOP, pn && pn->pn_left->isKind(PNK_FOROF));
+    MOZ_ASSERT_IF(type == STMT_SPREAD, !pn);
 
     ParseNode* forHead = pn ? pn->pn_left : nullptr;
     ParseNode* forHeadExpr = forHead ? forHead->pn_kid3 : nullptr;
@@ -5290,7 +5291,7 @@ BytecodeEmitter::emitForOf(StmtType type, ParseNode* pn, ptrdiff_t top)
     if (pn1 && !emitForInOrOfVariables(pn1, &letDecl))
         return false;
 
-    if (type == StmtType::FOR_OF_LOOP) {
+    if (type == STMT_FOR_OF_LOOP) {
         // For-of loops run with two values on the stack: the iterator and the
         // current result object.
 
@@ -5332,7 +5333,7 @@ BytecodeEmitter::emitForOf(StmtType type, ParseNode* pn, ptrdiff_t top)
     if (!emitLoopHead(nullptr))
         return false;
 
-    if (type == StmtType::SPREAD)
+    if (type == STMT_SPREAD)
         this->stackDepth++;
 
 #ifdef DEBUG
@@ -5340,13 +5341,13 @@ BytecodeEmitter::emitForOf(StmtType type, ParseNode* pn, ptrdiff_t top)
 #endif
 
     // Emit code to assign result.value to the iteration variable.
-    if (type == StmtType::FOR_OF_LOOP) {
+    if (type == STMT_FOR_OF_LOOP) {
         if (!emit1(JSOP_DUP))                             // ITER RESULT RESULT
             return false;
     }
     if (!emitAtomOp(cx->names().value, JSOP_GETPROP))     // ... RESULT VALUE
         return false;
-    if (type == StmtType::FOR_OF_LOOP) {
+    if (type == STMT_FOR_OF_LOOP) {
         if (!emitAssignment(forHead->pn_kid2, JSOP_NOP, nullptr)) // ITER RESULT VALUE
             return false;
         if (!emit1(JSOP_POP))                             // ITER RESULT
@@ -5363,14 +5364,14 @@ BytecodeEmitter::emitForOf(StmtType type, ParseNode* pn, ptrdiff_t top)
         StmtInfoBCE* stmt = &stmtInfo;
         do {
             stmt->update = offset();
-        } while ((stmt = stmt->down) != nullptr && stmt->type == StmtType::LABEL);
+        } while ((stmt = stmt->down) != nullptr && stmt->type == STMT_LABEL);
     } else {
         if (!emit1(JSOP_INITELEM_INC))                    // ITER ARR (I+1)
             return false;
 
         MOZ_ASSERT(this->stackDepth == loopDepth - 1);
 
-        // StmtType::SPREAD never contain continue, so do not set "update" offset.
+        // STMT_SPREAD never contain continue, so do not set "update" offset.
     }
 
     // COME FROM the beginning of the loop to here.
@@ -5378,7 +5379,7 @@ BytecodeEmitter::emitForOf(StmtType type, ParseNode* pn, ptrdiff_t top)
     if (!emitLoopEntry(forHeadExpr))
         return false;
 
-    if (type == StmtType::FOR_OF_LOOP) {
+    if (type == STMT_FOR_OF_LOOP) {
         if (!emit1(JSOP_POP))                             // ITER
             return false;
         if (!emit1(JSOP_DUP))                             // ITER ITER
@@ -5405,7 +5406,7 @@ BytecodeEmitter::emitForOf(StmtType type, ParseNode* pn, ptrdiff_t top)
         return false;
 
     // Fixup breaks and continues.
-    // For StmtType::SPREAD, just pop pc->topStmt.
+    // For STMT_SPREAD, just pop pc->topStmt.
     popStatement();
 
     if (!tryNoteList.append(JSTRY_FOR_OF, stackDepth, top, offset()))
@@ -5416,7 +5417,7 @@ BytecodeEmitter::emitForOf(StmtType type, ParseNode* pn, ptrdiff_t top)
             return false;
     }
 
-    if (type == StmtType::SPREAD) {
+    if (type == STMT_SPREAD) {
         if (!emit2(JSOP_PICK, (jsbytecode)3))      // ARR I RESULT ITER
             return false;
     }
@@ -5464,7 +5465,7 @@ BytecodeEmitter::emitForIn(ParseNode* pn, ptrdiff_t top)
     }
 
     LoopStmtInfo stmtInfo(cx);
-    pushLoopStatement(&stmtInfo, StmtType::FOR_IN_LOOP, top);
+    pushLoopStatement(&stmtInfo, STMT_FOR_IN_LOOP, top);
 
     /* Annotate so IonMonkey can find the loop-closing jump. */
     unsigned noteIndex;
@@ -5504,7 +5505,7 @@ BytecodeEmitter::emitForIn(ParseNode* pn, ptrdiff_t top)
     StmtInfoBCE* stmt = &stmtInfo;
     do {
         stmt->update = offset();
-    } while ((stmt = stmt->down) != nullptr && stmt->type == StmtType::LABEL);
+    } while ((stmt = stmt->down) != nullptr && stmt->type == STMT_LABEL);
 
     /*
      * Fixup the goto that starts the loop to jump down to JSOP_MOREITER.
@@ -5550,7 +5551,7 @@ bool
 BytecodeEmitter::emitNormalFor(ParseNode* pn, ptrdiff_t top)
 {
     LoopStmtInfo stmtInfo(cx);
-    pushLoopStatement(&stmtInfo, StmtType::FOR_LOOP, top);
+    pushLoopStatement(&stmtInfo, STMT_FOR_LOOP, top);
 
     ParseNode* forHead = pn->pn_left;
     ParseNode* forBody = pn->pn_right;
@@ -5625,7 +5626,7 @@ BytecodeEmitter::emitNormalFor(ParseNode* pn, ptrdiff_t top)
     StmtInfoBCE* stmt = &stmtInfo;
     do {
         stmt->update = offset();
-    } while ((stmt = stmt->down) != nullptr && stmt->type == StmtType::LABEL);
+    } while ((stmt = stmt->down) != nullptr && stmt->type == STMT_LABEL);
 
     // Freshen the block on the scope chain to expose distinct bindings for each loop
     // iteration.
@@ -5636,7 +5637,7 @@ BytecodeEmitter::emitNormalFor(ParseNode* pn, ptrdiff_t top)
         // let-statement for the guarding condition to have held) and freshen
         // if the block object needs cloning.
         StmtInfoBCE* parent = stmtInfo.down;
-        MOZ_ASSERT(parent->type == StmtType::BLOCK);
+        MOZ_ASSERT(parent->type == STMT_BLOCK);
         MOZ_ASSERT(parent->isBlockScope);
 
         if (parent->staticScope->as<StaticBlockObject>().needsClone()) {
@@ -5709,7 +5710,7 @@ BytecodeEmitter::emitFor(ParseNode* pn, ptrdiff_t top)
         return emitForIn(pn, top);
 
     if (pn->pn_left->isKind(PNK_FOROF))
-        return emitForOf(StmtType::FOR_OF_LOOP, pn, top);
+        return emitForOf(STMT_FOR_OF_LOOP, pn, top);
 
     MOZ_ASSERT(pn->pn_left->isKind(PNK_FORHEAD));
     return emitNormalFor(pn, top);
@@ -5903,7 +5904,7 @@ BytecodeEmitter::emitDo(ParseNode* pn)
         return false;
 
     LoopStmtInfo stmtInfo(cx);
-    pushLoopStatement(&stmtInfo, StmtType::DO_LOOP, top);
+    pushLoopStatement(&stmtInfo, STMT_DO_LOOP, top);
 
     if (!emitLoopEntry(nullptr))
         return false;
@@ -5916,7 +5917,7 @@ BytecodeEmitter::emitDo(ParseNode* pn)
     StmtInfoBCE* stmt = &stmtInfo;
     do {
         stmt->update = off;
-    } while ((stmt = stmt->down) != nullptr && stmt->type == StmtType::LABEL);
+    } while ((stmt = stmt->down) != nullptr && stmt->type == STMT_LABEL);
 
     /* Compile the loop condition, now that continues know where to go. */
     if (!emitTree(pn->pn_right))
@@ -5962,7 +5963,7 @@ BytecodeEmitter::emitWhile(ParseNode* pn, ptrdiff_t top)
      *  N    N*(ifeq-fail; goto); ifeq-pass  goto; N*ifne-pass; ifne-fail
      */
     LoopStmtInfo stmtInfo(cx);
-    pushLoopStatement(&stmtInfo, StmtType::WHILE_LOOP, top);
+    pushLoopStatement(&stmtInfo, STMT_WHILE_LOOP, top);
 
     unsigned noteIndex;
     if (!newSrcNote(SRC_WHILE, &noteIndex))
@@ -6005,13 +6006,13 @@ BytecodeEmitter::emitBreak(PropertyName* label)
     StmtInfoBCE* stmt = topStmt;
     SrcNoteType noteType;
     if (label) {
-        while (stmt->type != StmtType::LABEL || stmt->label != label)
+        while (stmt->type != STMT_LABEL || stmt->label != label)
             stmt = stmt->down;
         noteType = SRC_BREAK2LABEL;
     } else {
-        while (!stmt->isLoop() && stmt->type != StmtType::SWITCH)
+        while (!stmt->isLoop() && stmt->type != STMT_SWITCH)
             stmt = stmt->down;
-        noteType = (stmt->type == StmtType::SWITCH) ? SRC_SWITCHBREAK : SRC_BREAK;
+        noteType = (stmt->type == STMT_SWITCH) ? SRC_SWITCHBREAK : SRC_BREAK;
     }
 
     return emitGoto(stmt, &stmt->breaks, noteType);
@@ -6024,7 +6025,7 @@ BytecodeEmitter::emitContinue(PropertyName* label)
     if (label) {
         /* Find the loop statement enclosed by the matching label. */
         StmtInfoBCE* loop = nullptr;
-        while (stmt->type != StmtType::LABEL || stmt->label != label) {
+        while (stmt->type != STMT_LABEL || stmt->label != label) {
             if (stmt->isLoop())
                 loop = stmt;
             stmt = stmt->down;
@@ -6042,7 +6043,7 @@ bool
 BytecodeEmitter::inTryBlockWithFinally()
 {
     for (StmtInfoBCE* stmt = topStmt; stmt; stmt = stmt->down) {
-        if (stmt->type == StmtType::FINALLY)
+        if (stmt->type == STMT_FINALLY)
             return true;
     }
     return false;
@@ -6201,7 +6202,7 @@ BytecodeEmitter::emitYieldStar(ParseNode* iter, ParseNode* gen)
 
     // Try prologue.                                             // ITER RESULT
     StmtInfoBCE stmtInfo(cx);
-    pushStatement(&stmtInfo, StmtType::TRY, offset());
+    pushStatement(&stmtInfo, STMT_TRY, offset());
     unsigned noteIndex;
     if (!newSrcNote(SRC_TRY, &noteIndex))
         return false;
@@ -6335,7 +6336,7 @@ BytecodeEmitter::emitStatementList(ParseNode* pn, ptrdiff_t top)
     MOZ_ASSERT(pn->isArity(PN_LIST));
 
     StmtInfoBCE stmtInfo(cx);
-    pushStatement(&stmtInfo, StmtType::BLOCK, top);
+    pushStatement(&stmtInfo, STMT_BLOCK, top);
 
     for (ParseNode* pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
         if (!emitTree(pn2))
@@ -6386,7 +6387,7 @@ BytecodeEmitter::emitStatement(ParseNode* pn)
          * compound statement.
          */
         if (topStmt &&
-            topStmt->type == StmtType::LABEL &&
+            topStmt->type == STMT_LABEL &&
             topStmt->update >= offset())
         {
             useful = true;
@@ -6947,7 +6948,7 @@ BytecodeEmitter::emitLabeledStatement(const LabeledStatement* pn)
 
     /* Emit code for the labeled statement. */
     StmtInfoBCE stmtInfo(cx);
-    pushStatement(&stmtInfo, StmtType::LABEL, offset());
+    pushStatement(&stmtInfo, STMT_LABEL, offset());
     stmtInfo.label = pn->label();
 
     if (!emitTree(pn->statement()))
@@ -7199,7 +7200,7 @@ BytecodeEmitter::emitArrayComp(ParseNode* pn)
 bool
 BytecodeEmitter::emitSpread()
 {
-    return emitForOf(StmtType::SPREAD, nullptr, -1);
+    return emitForOf(STMT_SPREAD, nullptr, -1);
 }
 
 bool

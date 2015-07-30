@@ -592,10 +592,10 @@ struct BytecodeEmitter
     // iteration count). The stack after iteration will look like |ARRAY INDEX|.
     bool emitSpread();
 
-    // If type is StmtType::FOR_OF_LOOP, emit bytecode for a for-of loop.
+    // If type is STMT_FOR_OF_LOOP, emit bytecode for a for-of loop.
     // pn should be PNK_FOR, and pn->pn_left should be PNK_FOROF.
     //
-    // If type is StmtType::SPREAD, emit bytecode for spread operator.
+    // If type is STMT_SPREAD, emit bytecode for spread operator.
     // pn should be nullptr.
     //
     // Please refer the comment above emitSpread for additional information about
