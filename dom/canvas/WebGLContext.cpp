@@ -685,9 +685,10 @@ CreateOffscreen(GLContext* gl, const WebGLContextOptions& options,
     if (!baseCaps.alpha)
         baseCaps.premultAlpha = true;
 
-    if (gl->IsANGLE()) {
+    if (gl->IsANGLE() || gl->GetContextType() == GLContextType::GLX) {
         // We can't use no-alpha formats on ANGLE yet because of:
         // https://code.google.com/p/angleproject/issues/detail?id=764
+        // GLX only supports GL_RGBA pixmaps as well.
         baseCaps.alpha = true;
     }
 
@@ -949,12 +950,12 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
     mOptionsFrozen = true;
 
     // Update our internal stuff:
-    if (gl->WorkAroundDriverBugs() && gl->IsANGLE()) {
+    if (gl->WorkAroundDriverBugs()) {
         if (!mOptions.alpha && gl->Caps().alpha)
             mNeedsFakeNoAlpha = true;
 
         // ANGLE doesn't quite handle this properly.
-        if (gl->Caps().depth && !gl->Caps().stencil)
+        if (gl->Caps().depth && !gl->Caps().stencil && gl->IsANGLE())
             mNeedsFakeNoStencil = true;
     }
 
