@@ -19,10 +19,12 @@
  * TODO: The constructor should accept the UA's supported display modes.
  * TODO: hook up developer tools to console. (1086997).
  */
-/*globals Components, ValueExtractor, ImageObjectProcessor, ConsoleAPI*/
+/*globals Components*/
 'use strict';
 const {
-  utils: Cu
+  utils: Cu,
+  interfaces: Ci,
+  classes: Cc
 } = Components;
 Cu.importGlobalProperties(['URL']);
 const displayModes = new Set(['fullscreen', 'standalone', 'minimal-ui',
@@ -32,23 +34,41 @@ const orientationTypes = new Set(['any', 'natural', 'landscape', 'portrait',
   'portrait-primary', 'portrait-secondary', 'landscape-primary',
   'landscape-secondary'
 ]);
-Cu.import('resource://gre/modules/devtools/Console.jsm');
+const {
+  ConsoleAPI
+} = Cu.import('resource://gre/modules/devtools/Console.jsm', {});
 // ValueExtractor is used by the various processors to get values
 // from the manifest and to report errors.
-Cu.import('resource://gre/modules/ValueExtractor.jsm');
+const {
+  ValueExtractor
+} = Cu.import('resource://gre/modules/ValueExtractor.js', {});
 // ImageObjectProcessor is used to process things like icons and images
-Cu.import('resource://gre/modules/ImageObjectProcessor.jsm');
+const {
+  ImageObjectProcessor
+} = Cu.import('resource://gre/modules/ImageObjectProcessor.js', {});
 
-this.ManifestProcessor = { // jshint ignore:line
-  get defaultDisplayMode() {
-    return 'browser';
+function ManifestProcessor() {}
+
+// Static getters
+Object.defineProperties(ManifestProcessor, {
+  'defaultDisplayMode': {
+    get: function() {
+      return 'browser';
+    }
   },
-  get displayModes() {
-    return displayModes;
+  'displayModes': {
+    get: function() {
+      return displayModes;
+    }
   },
-  get orientationTypes() {
-    return orientationTypes;
-  },
+  'orientationTypes': {
+    get: function() {
+      return orientationTypes;
+    }
+  }
+});
+
+ManifestProcessor.prototype = {
   // process() method processes JSON text into a clean manifest
   // that conforms with the W3C specification. Takes an object
   // expecting the following dictionary items:
@@ -79,8 +99,8 @@ this.ManifestProcessor = { // jshint ignore:line
     const processedManifest = {
       'lang': processLangMember(),
       'start_url': processStartURLMember(),
-      'display': processDisplayMember.call(this),
-      'orientation': processOrientationMember.call(this),
+      'display': processDisplayMember(),
+      'orientation': processOrientationMember(),
       'name': processNameMember(),
       'icons': imgObjProcessor.process(
         rawManifest, manifestURL, 'icons'
@@ -125,7 +145,7 @@ this.ManifestProcessor = { // jshint ignore:line
         trim: true
       };
       const value = extractor.extractValue(spec);
-      if (this.orientationTypes.has(value)) {
+      if (ManifestProcessor.orientationTypes.has(value)) {
         return value;
       }
       // The spec special-cases orientation to return the empty string.
@@ -141,10 +161,10 @@ this.ManifestProcessor = { // jshint ignore:line
         trim: true
       };
       const value = extractor.extractValue(spec);
-      if (displayModes.has(value)) {
+      if (ManifestProcessor.displayModes.has(value)) {
         return value;
       }
-      return this.defaultDisplayMode;
+      return ManifestProcessor.defaultDisplayMode;
     }
 
     function processScopeMember() {
@@ -229,7 +249,8 @@ this.ManifestProcessor = { // jshint ignore:line
         objectName: 'manifest',
         object: rawManifest,
         property: 'lang',
-        expectedType: 'string', trim: true
+        expectedType: 'string',
+        trim: true
       };
       let tag = extractor.extractValue(spec);
       // TODO: Check if tag is structurally valid.
@@ -244,4 +265,5 @@ this.ManifestProcessor = { // jshint ignore:line
     }
   }
 };
+this.ManifestProcessor = ManifestProcessor; // jshint ignore:line
 this.EXPORTED_SYMBOLS = ['ManifestProcessor']; // jshint ignore:line

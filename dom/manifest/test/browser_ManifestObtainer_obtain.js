@@ -1,8 +1,9 @@
 //Used by JSHint:
-/*global requestLongerTimeout, Cu, BrowserTestUtils, add_task, SpecialPowers, gBrowser, Assert*/ 'use strict';
+/*global Cu, BrowserTestUtils, add_task, SpecialPowers, gBrowser, Assert*/
+'use strict';
 const {
   ManifestObtainer
-} = Cu.import('resource://gre/modules/ManifestObtainer.jsm', {});
+} = Cu.import('resource://gre/modules/WebManifest.jsm', {});
 
 requestLongerTimeout(4); // e10s tests take time.
 const defaultURL =
@@ -176,9 +177,10 @@ add_task(function*() {
   }
 
   function* testObtainingManifest(aBrowser, aTest) {
+    const obtainer = new ManifestObtainer();
     aBrowser.contentWindowAsCPOW.document.head.innerHTML = aTest.testData;
     try {
-      const manifest = yield ManifestObtainer.browserObtainManifest(aBrowser);
+      const manifest = yield obtainer.obtainManifest(aBrowser);
       aTest.run(manifest);
     } catch (e) {
       aTest.run(e);
@@ -192,6 +194,7 @@ add_task(function*() {
  * in each tab. They should all return pass.
  */
 add_task(function*() {
+  const obtainer = new ManifestObtainer();
   const defaultPath = '/tests/dom/manifest/test/manifestLoader.html';
   const tabURLs = [
     `http://test:80${defaultPath}`,
@@ -234,7 +237,7 @@ add_task(function*() {
   // Flood random browsers with requests. Once promises settle, check that
   // responses all pass.
   const results = yield Promise.all((
-    for (browser of randBrowsers(browsers, 100)) ManifestObtainer.browserObtainManifest(browser)
+    for (browser of randBrowsers(browsers, 100)) obtainer.obtainManifest(browser)
   ));
   const expected = 'Expect every manifest to have name equal to `pass`.';
   const pass = results.every(manifest => manifest.name === 'pass');
