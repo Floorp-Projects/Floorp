@@ -108,6 +108,10 @@ elif gl_provider == 'GLX':
     # as it includes X11 headers which cause conflicts.
     SOURCES += [
         'GLContextProviderGLX.cpp',
+        'SharedSurfaceGLX.cpp'
+    ]
+    EXPORTS += [
+        'SharedSurfaceGLX.h'
     ]
 else:
     UNIFIED_SOURCES += [

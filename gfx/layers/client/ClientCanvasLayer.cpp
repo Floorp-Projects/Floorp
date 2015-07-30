@@ -32,6 +32,11 @@
 #include "SharedSurfaceIO.h"
 #endif
 
+#ifdef GL_PROVIDER_GLX
+#include "GLXLibrary.h"
+#include "SharedSurfaceGLX.h"
+#endif
+
 using namespace mozilla::gfx;
 using namespace mozilla::gl;
 
@@ -86,6 +91,9 @@ ClientCanvasLayer::Initialize(const Data& aData)
         factory = SurfaceFactory_IOSurface::Create(mGLContext, caps, forwarder, mFlags);
 #elif defined(MOZ_WIDGET_GONK)
         factory = MakeUnique<SurfaceFactory_Gralloc>(mGLContext, caps, forwarder, mFlags);
+#elif defined(GL_PROVIDER_GLX)
+        if (sGLXLibrary.UseTextureFromPixmap())
+          factory = SurfaceFactory_GLXDrawable::Create(mGLContext, caps, forwarder, mFlags);
 #else
         if (mGLContext->GetContextType() == GLContextType::EGL) {
           if (XRE_IsParentProcess()) {

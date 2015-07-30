@@ -33,6 +33,9 @@
 #include "mozilla/layers/MacIOSurfaceTextureHostOGL.h"
 #endif
 
+#ifdef GL_PROVIDER_GLX
+#include "mozilla/layers/X11TextureHost.h"
+#endif
 
 using namespace mozilla::gl;
 using namespace mozilla::gfx;
@@ -93,6 +96,14 @@ CreateTextureHostOGL(const SurfaceDescriptor& aDesc,
       break;
     }
 #endif
+
+#ifdef GL_PROVIDER_GLX
+    case SurfaceDescriptor::TSurfaceDescriptorX11: {
+      const auto& desc = aDesc.get_SurfaceDescriptorX11();
+      result = new X11TextureHost(aFlags, desc);
+      break;
+#endif
+    }
     default: return nullptr;
   }
   return result.forget();
