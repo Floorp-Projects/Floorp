@@ -12,6 +12,7 @@
 #include "WebGLShader.h"
 #include "WebGLProgram.h"
 #include "WebGLUniformLocation.h"
+#include "WebGLFormats.h"
 #include "WebGLFramebuffer.h"
 #include "WebGLRenderbuffer.h"
 #include "WebGLShaderPrecisionFormat.h"
@@ -2270,42 +2271,16 @@ WebGLContext::RenderbufferStorage_base(const char* funcName, GLenum target,
         return;
     }
 
+    // Convert DEPTH_STENCIL to sized type for testing
+    GLenum sizedInternalFormat = internalFormat;
+    if (sizedInternalFormat == LOCAL_GL_DEPTH_STENCIL)
+        sizedInternalFormat = LOCAL_GL_DEPTH24_STENCIL8;
+
     bool isFormatValid = false;
-    switch (internalFormat) {
-    case LOCAL_GL_RGBA4:
-    case LOCAL_GL_RGB5_A1:
-    case LOCAL_GL_RGB565:
-    case LOCAL_GL_DEPTH_COMPONENT16:
-    case LOCAL_GL_STENCIL_INDEX8:
-    case LOCAL_GL_DEPTH_STENCIL:
-        isFormatValid = true;
-        break;
-
-    case LOCAL_GL_SRGB8_ALPHA8_EXT:
-        if (IsExtensionEnabled(WebGLExtensionID::EXT_sRGB))
-            isFormatValid = true;
-        break;
-
-    case LOCAL_GL_RGB16F:
-    case LOCAL_GL_RGBA16F:
-        if (IsExtensionEnabled(WebGLExtensionID::OES_texture_half_float) &&
-            IsExtensionEnabled(WebGLExtensionID::EXT_color_buffer_half_float))
-        {
-            isFormatValid = true;
-        }
-        break;
-
-    case LOCAL_GL_RGB32F:
-    case LOCAL_GL_RGBA32F:
-        if (IsExtensionEnabled(WebGLExtensionID::OES_texture_float) &&
-            IsExtensionEnabled(WebGLExtensionID::WEBGL_color_buffer_float))
-        {
-            isFormatValid = true;
-        }
-        break;
-
-    default:
-        break;
+    const webgl::FormatInfo* info = webgl::GetInfoBySizedFormat(sizedInternalFormat);
+    if (info) {
+        const webgl::FormatUsageInfo* usage = mFormatUsage->GetUsage(info);
+        isFormatValid = usage && usage->asRenderbuffer;
     }
 
     if (!isFormatValid) {
