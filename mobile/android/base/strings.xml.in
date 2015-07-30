@@ -553,6 +553,8 @@
   <string name="restriction_disallow_devtools_description">&restriction_disallow_devtools_description;</string>
   <string name="restriction_disallow_customize_home_title">&restriction_disallow_customize_home_title;</string>
   <string name="restriction_disallow_customize_home_description">&restriction_disallow_customize_home_description;</string>
+  <string name="restriction_disallow_private_browsing_title">&restriction_disallow_private_browsing_title;</string>
+  <string name="restriction_disallow_private_browsing_description">&restriction_disallow_private_browsing_description;</string>
 
   <!-- Miscellaneous -->
   <string name="ellipsis">&ellipsis;</string>
