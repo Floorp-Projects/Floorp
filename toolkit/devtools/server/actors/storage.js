@@ -19,11 +19,10 @@ const {LongStringActor} = require("devtools/server/actors/string");
 const {DebuggerServer} = require("devtools/server/main");
 const Services = require("Services");
 const promise = require("promise");
+const LayoutHelpers = require("devtools/toolkit/layout-helpers");
 
 loader.lazyImporter(this, "OS", "resource://gre/modules/osfile.jsm");
 loader.lazyImporter(this, "Sqlite", "resource://gre/modules/Sqlite.jsm");
-loader.lazyImporter(this, "LayoutHelpers",
-                    "resource://gre/modules/devtools/LayoutHelpers.jsm");
 
 let gTrackedMessageManager = new Map();
 

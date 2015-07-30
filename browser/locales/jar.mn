@@ -61,6 +61,8 @@
     locale/browser/devtools/sourceeditor.dtd          (%chrome/browser/devtools/sourceeditor.dtd)
     locale/browser/devtools/profiler.dtd              (%chrome/browser/devtools/profiler.dtd)
     locale/browser/devtools/profiler.properties       (%chrome/browser/devtools/profiler.properties)
+    locale/browser/devtools/promisedebugger.dtd       (%chrome/browser/devtools/promisedebugger.dtd)
+    locale/browser/devtools/promisedebugger.properties  (%chrome/browser/devtools/promisedebugger.properties)
     locale/browser/devtools/layoutview.dtd            (%chrome/browser/devtools/layoutview.dtd)
     locale/browser/devtools/responsiveUI.properties   (%chrome/browser/devtools/responsiveUI.properties)
     locale/browser/devtools/toolbox.dtd            (%chrome/browser/devtools/toolbox.dtd)
