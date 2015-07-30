@@ -217,7 +217,15 @@ public:
   {
     return mOutputBuffer[aIndex].r;
   }
+  float& RealData(uint32_t aIndex)
+  {
+    return mOutputBuffer[aIndex].r;
+  }
   float ImagData(uint32_t aIndex) const
+  {
+    return mOutputBuffer[aIndex].i;
+  }
+  float& ImagData(uint32_t aIndex)
   {
     return mOutputBuffer[aIndex].i;
   }
