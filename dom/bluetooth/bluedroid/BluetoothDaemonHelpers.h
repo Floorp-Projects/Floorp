@@ -288,6 +288,9 @@ Convert(BluetoothGattAuthReq aIn, int32_t& aOut);
 nsresult
 Convert(BluetoothGattWriteType aIn, int32_t& aOut);
 
+nsresult
+Convert(nsresult aIn, BluetoothStatus& aOut);
+
 //
 // Packing
 //
