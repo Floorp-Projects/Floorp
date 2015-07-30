@@ -844,10 +844,13 @@ LoginManagerPrompter.prototype = {
                .setAttribute("placeholder", usernamePlaceholder);
       chromeDoc.getElementById("password-notification-username")
                .setAttribute("value", login.username);
-      chromeDoc.getElementById("password-notification-password")
-               .setAttribute("value", login.password);
-      chromeDoc.getElementById("password-notification-password")
-               .setAttribute("show-content", showPasswordPlaceholder);
+      let passwordField = chromeDoc.getElementById("password-notification-password");
+      passwordField.setAttribute("value", login.password);
+      if (Services.prefs.getBoolPref("signon.rememberSignons.visibilityToggle")) {
+        passwordField.setAttribute("show-content", showPasswordPlaceholder);
+      } else {
+        passwordField.setAttribute("show-content", "");
+      }
       updateButtonLabel();
     };
 
