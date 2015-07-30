@@ -213,6 +213,7 @@ body {
 .empty-text {
   color: #363B40;
   font-size: 25px;
+  font-weight: lighter;
   margin-bottom: 20px;
 }
 
