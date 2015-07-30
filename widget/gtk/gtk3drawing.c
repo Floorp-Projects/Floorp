@@ -1268,7 +1268,7 @@ moz_gtk_scale_paint(cairo_t *cr, GdkRectangle* rect,
                     GtkOrientation flags, GtkTextDirection direction)
 {
   GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
-  gint x = 0, y = 0;
+  gint x, y, width, height, min_width, min_height;
   GtkStyleContext* style;
   GtkWidget* widget;
   GtkBorder margin;
@@ -1276,23 +1276,29 @@ moz_gtk_scale_paint(cairo_t *cr, GdkRectangle* rect,
   ensure_scale_widget();
   widget = ((flags == GTK_ORIENTATION_HORIZONTAL) ? gHScaleWidget : gVScaleWidget);
   gtk_widget_set_direction(widget, direction);
+  moz_gtk_get_scale_metrics(flags, &min_width, &min_height);
 
   style = gtk_widget_get_style_context(widget);
   gtk_style_context_save(style);
-  gtk_style_context_add_class(style, GTK_STYLE_CLASS_SCALE);
+  gtk_style_context_add_class(style, GTK_STYLE_CLASS_TROUGH);
   gtk_style_context_get_margin(style, state_flags, &margin); 
 
+  // Clamp the dimension perpendicular to the direction that the slider crosses
+  // to the minimum size.
   if (flags == GTK_ORIENTATION_HORIZONTAL) {
-    x = margin.left;
-    y++;
-  }
-  else {
-    x++;
-    y = margin.top;
+    width = rect->width - (margin.left + margin.right);
+    height = min_height - (margin.top + margin.bottom);
+    x = rect->x + margin.left;
+    y = rect->y + (rect->height - height)/2;
+  } else {
+    width = min_width - (margin.left + margin.right);
+    height = rect->height - (margin.top + margin.bottom);
+    x = rect->x + (rect->width - width)/2;
+    y = rect->y + margin.top;
   }
 
-  gtk_render_frame(style, cr, rect->x + x, rect->y + y,
-                   rect->width - 2*x, rect->height - 2*y);
+  gtk_render_background(style, cr, x, y, width, height);
+  gtk_render_frame(style, cr, x, y, width, height);
 
   if (state->focused)
     gtk_render_focus(style, cr, 
@@ -3009,6 +3015,25 @@ moz_gtk_get_menu_separator_height(gint *size)
     *size += (wide_separators) ? separator_height : 1;
 
     return MOZ_GTK_SUCCESS;
+}
+
+void
+moz_gtk_get_scale_metrics(GtkOrientation orient, gint* scale_width,
+                          gint* scale_height)
+{
+  gint thumb_length, thumb_height, trough_border;
+  GtkWidget* widget = orient == GTK_ORIENTATION_HORIZONTAL ?
+                      gHScaleWidget : gVScaleWidget;
+  moz_gtk_get_scalethumb_metrics(orient, &thumb_length, &thumb_height);
+  gtk_widget_style_get(widget, "trough-border", &trough_border, NULL);
+
+  if (orient == GTK_ORIENTATION_HORIZONTAL) {
+      *scale_width = thumb_length + trough_border * 2;
+      *scale_height = thumb_height + trough_border * 2;
+  } else {
+      *scale_width = thumb_height + trough_border * 2;
+      *scale_height = thumb_length + trough_border * 2;
+  }
 }
 
 gint
