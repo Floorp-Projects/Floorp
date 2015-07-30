@@ -70,6 +70,12 @@ public enum Restriction {
             14, "no_developer_tools",
             R.string.restriction_disallow_devtools_title,
             R.string.restriction_disallow_devtools_description
+    ),
+
+    DISALLOW_CUSTOMIZE_HOME(
+            15, "no_customize_home",
+            R.string.restriction_disallow_customize_home_title,
+            R.string.restriction_disallow_customize_home_description
     );
 
     public final int id;
