@@ -509,7 +509,6 @@ gfxWindowsPlatform::HandleDeviceReset()
 
   // Reset local state. Note: we leave feature status variables as-is. They
   // will be recomputed by InitializeDevices().
-  mIsWARP = false;
   mHasDeviceReset = false;
   mHasFakeDeviceReset = false;
   mDoesD3D11TextureSharingWork = false;
@@ -1914,6 +1913,11 @@ CanUseWARP()
 FeatureStatus
 gfxWindowsPlatform::CheckD3D11Support(bool* aCanUseHardware)
 {
+  // Don't revive D3D11 support after a failure.
+  if (IsFeatureStatusFailure(mD3D11Status)) {
+    return mD3D11Status;
+  }
+
   if (gfxPrefs::LayersD3D11ForceWARP()) {
     *aCanUseHardware = false;
     return FeatureStatus::Available;
@@ -2077,6 +2081,11 @@ gfxWindowsPlatform::AttemptD3D11ImageBridgeDeviceCreation()
 void
 gfxWindowsPlatform::InitializeDevices()
 {
+  // Don't retry acceleration if it failed earlier.
+  if (IsFeatureStatusFailure(mAcceleration)) {
+    return;
+  }
+
   // If we previously crashed initializing devices, or if we're in safe mode,
   // bail out now.
   DriverInitCrashDetection detectCrashes;
@@ -2135,6 +2144,12 @@ gfxWindowsPlatform::InitializeD3D11()
     return;
   }
 
+  // Check if a failure was injected for testing.
+  if (gfxPrefs::DeviceFailForTesting()) {
+    mD3D11Status = FeatureStatus::Failed;
+    return;
+  }
+
   // First try to create a hardware accelerated device.
   if (canUseHardware) {
     AttemptD3D11DeviceCreation();
@@ -2186,6 +2201,11 @@ IsD2DBlacklisted()
 FeatureStatus
 gfxWindowsPlatform::CheckD2DSupport()
 {
+  // Don't revive D2D support after a failure.
+  if (IsFeatureStatusFailure(mD2DStatus)) {
+    return mD2DStatus;
+  }
+
   if (!gfxPrefs::Direct2DForceEnabled() && IsD2DBlacklisted()) {
     return FeatureStatus::Blacklisted;
   }
@@ -2239,6 +2259,10 @@ gfxWindowsPlatform::InitializeD2D()
 FeatureStatus
 gfxWindowsPlatform::CheckD2D1Support()
 {
+  // Don't revive D2D1 support after a failure.
+  if (IsFeatureStatusFailure(mD2D1Status)) {
+    return mD2D1Status;
+  }
   if (!Factory::SupportsD2D1()) {
     return FeatureStatus::Unavailable;
   }
