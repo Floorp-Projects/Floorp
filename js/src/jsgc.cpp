@@ -1945,15 +1945,19 @@ ArenaList::pickArenasToRelocate(size_t& arenaTotalOut, size_t& relocTotalOut)
     if (isCursorAtEnd())
         return nullptr;
 
-    ArenaHeader** arenap = cursorp_;               // Next arena to consider
-    size_t previousFreeCells = 0;                  // Count of free cells before
-    size_t followingUsedCells = 0;                 // Count of used cells after arenap.
-    size_t arenaCount = 0;                         // Total number of arenas.
-    size_t arenaIndex = 0;                         // Index of the next arena to consider.
+    ArenaHeader** arenap = cursorp_;  // Next arena to consider for relocation.
+    size_t previousFreeCells = 0;     // Count of free cells before arenap.
+    size_t followingUsedCells = 0;    // Count of used cells after arenap.
+    size_t fullArenaCount = 0;        // Number of full arenas (not relocated).
+    size_t nonFullArenaCount = 0;     // Number of non-full arenas (considered for relocation).
+    size_t arenaIndex = 0;            // Index of the next arena to consider.
+
+    for (ArenaHeader* arena = head_; arena != *cursorp_; arena = arena->next)
+        fullArenaCount++;
 
     for (ArenaHeader* arena = *cursorp_; arena; arena = arena->next) {
         followingUsedCells += arena->countUsedCells();
-        arenaCount++;
+        nonFullArenaCount++;
     }
 
     mozilla::DebugOnly<size_t> lastFreeCells(0);
@@ -1976,10 +1980,10 @@ ArenaList::pickArenasToRelocate(size_t& arenaTotalOut, size_t& relocTotalOut)
         arenaIndex++;
     }
 
-    size_t relocCount = arenaCount - arenaIndex;
-    MOZ_ASSERT(relocCount < arenaCount);
+    size_t relocCount = nonFullArenaCount - arenaIndex;
+    MOZ_ASSERT(relocCount < nonFullArenaCount);
     MOZ_ASSERT((relocCount == 0) == (!*arenap));
-    arenaTotalOut += arenaCount;
+    arenaTotalOut += fullArenaCount + nonFullArenaCount;
     relocTotalOut += relocCount;
 
     return arenap;
