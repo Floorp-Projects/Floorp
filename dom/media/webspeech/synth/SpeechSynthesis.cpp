@@ -72,6 +72,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(SpeechSynthesis)
 
 SpeechSynthesis::SpeechSynthesis(nsPIDOMWindow* aParent)
   : mParent(aParent)
+  , mHoldQueue(false)
 {
   MOZ_ASSERT(aParent->IsInnerWindow());
 }
@@ -120,11 +121,8 @@ SpeechSynthesis::Speaking() const
 bool
 SpeechSynthesis::Paused() const
 {
-  if (mSpeechQueue.IsEmpty()) {
-    return false;
-  }
-
-  return mSpeechQueue.ElementAt(0)->IsPaused();
+  return mHoldQueue ||
+         (!mSpeechQueue.IsEmpty() && mSpeechQueue.ElementAt(0)->IsPaused());
 }
 
 void
@@ -138,7 +136,7 @@ SpeechSynthesis::Speak(SpeechSynthesisUtterance& aUtterance)
   mSpeechQueue.AppendElement(&aUtterance);
   aUtterance.mState = SpeechSynthesisUtterance::STATE_PENDING;
 
-  if (mSpeechQueue.Length() == 1 && !mCurrentTask) {
+  if (mSpeechQueue.Length() == 1 && !mCurrentTask && !mHoldQueue) {
     AdvanceQueue();
   }
 }
@@ -181,28 +179,43 @@ void
 SpeechSynthesis::Cancel()
 {
   if (mCurrentTask) {
-   if (mSpeechQueue.Length() > 1) {
+    if (mSpeechQueue.Length() > 1) {
       // Remove all queued utterances except for current one.
       mSpeechQueue.RemoveElementsAt(1, mSpeechQueue.Length() - 1);
     }
-
-   mCurrentTask->Cancel();
+    mCurrentTask->Cancel();
+  } else {
+    mSpeechQueue.Clear();
   }
 }
 
 void
 SpeechSynthesis::Pause()
 {
-  if (mCurrentTask && !Paused() && (Speaking() || Pending())) {
+  if (Paused()) {
+    return;
+  }
+
+  if (mCurrentTask &&
+      mSpeechQueue.ElementAt(0)->GetState() != SpeechSynthesisUtterance::STATE_ENDED) {
     mCurrentTask->Pause();
+  } else {
+    mHoldQueue = true;
   }
 }
 
 void
 SpeechSynthesis::Resume()
 {
-  if (mCurrentTask && Paused()) {
+  if (!Paused()) {
+    return;
+  }
+
+  if (mCurrentTask) {
     mCurrentTask->Resume();
+  } else {
+    mHoldQueue = false;
+    AdvanceQueue();
   }
 }
 
