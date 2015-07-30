@@ -14,6 +14,9 @@
 
 BEGIN_BLUETOOTH_NAMESPACE
 
+using mozilla::ipc::DaemonSocketPDU;
+using mozilla::ipc::DaemonSocketPDUHeader;
+
 class BluetoothSetupResultHandler;
 
 class BluetoothDaemonA2dpModule
