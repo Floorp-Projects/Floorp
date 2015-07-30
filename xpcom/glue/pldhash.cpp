@@ -748,56 +748,20 @@ PLDHashTable::ShrinkIfAppropriate()
   }
 }
 
-MOZ_ALWAYS_INLINE size_t
-PLDHashTable::SizeOfExcludingThis(
-    PLDHashSizeOfEntryExcludingThisFun aSizeOfEntryExcludingThis,
-    MallocSizeOf aMallocSizeOf, void* aArg /* = nullptr */) const
+size_t
+PLDHashTable::ShallowSizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
 #ifdef DEBUG
   AutoReadOp op(mChecker);
 #endif
 
-  if (!mEntryStore.Get()) {
-    return 0;
-  }
-
-  size_t n = aMallocSizeOf(mEntryStore.Get());
-  if (aSizeOfEntryExcludingThis) {
-    for (auto iter = ConstIter(); !iter.Done(); iter.Next()) {
-      n += aSizeOfEntryExcludingThis(iter.Get(), aMallocSizeOf, aArg);
-    }
-  }
-
-  return n;
-}
-
-MOZ_ALWAYS_INLINE size_t
-PLDHashTable::SizeOfIncludingThis(
-    PLDHashSizeOfEntryExcludingThisFun aSizeOfEntryExcludingThis,
-    MallocSizeOf aMallocSizeOf, void* aArg /* = nullptr */) const
-{
-  return aMallocSizeOf(this) +
-         SizeOfExcludingThis(aSizeOfEntryExcludingThis, aMallocSizeOf, aArg);
+  return aMallocSizeOf(mEntryStore.Get());
 }
 
 size_t
-PL_DHashTableSizeOfExcludingThis(
-    const PLDHashTable* aTable,
-    PLDHashSizeOfEntryExcludingThisFun aSizeOfEntryExcludingThis,
-    MallocSizeOf aMallocSizeOf, void* aArg /* = nullptr */)
+PLDHashTable::ShallowSizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
-  return aTable->SizeOfExcludingThis(aSizeOfEntryExcludingThis,
-                                     aMallocSizeOf, aArg);
-}
-
-size_t
-PL_DHashTableSizeOfIncludingThis(
-    const PLDHashTable* aTable,
-    PLDHashSizeOfEntryExcludingThisFun aSizeOfEntryExcludingThis,
-    MallocSizeOf aMallocSizeOf, void* aArg /* = nullptr */)
-{
-  return aTable->SizeOfIncludingThis(aSizeOfEntryExcludingThis,
-                                     aMallocSizeOf, aArg);
+  return aMallocSizeOf(this) + ShallowSizeOfExcludingThis(aMallocSizeOf);
 }
 
 PLDHashTable::Iterator::Iterator(Iterator&& aOther)

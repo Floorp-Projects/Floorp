@@ -183,19 +183,15 @@ Native2WrappedNativeMap::~Native2WrappedNativeMap()
 }
 
 size_t
-Native2WrappedNativeMap::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
+Native2WrappedNativeMap::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
-    size_t n = 0;
-    n += mallocSizeOf(this);
-    n += PL_DHashTableSizeOfIncludingThis(mTable, SizeOfEntryExcludingThis, mallocSizeOf);
+    size_t n = mallocSizeOf(this);
+    n += mTable->ShallowSizeOfIncludingThis(mallocSizeOf);
+    for (auto iter = mTable->Iter(); !iter.Done(); iter.Next()) {
+        auto entry = static_cast<Native2WrappedNativeMap::Entry*>(iter.Get());
+        n += mallocSizeOf(entry->value);
+    }
     return n;
-}
-
-/* static */ size_t
-Native2WrappedNativeMap::SizeOfEntryExcludingThis(PLDHashEntryHdr* hdr,
-                                                  mozilla::MallocSizeOf mallocSizeOf, void*)
-{
-    return mallocSizeOf(((Native2WrappedNativeMap::Entry*)hdr)->value);
 }
 
 /***************************************************************************/
@@ -255,20 +251,15 @@ IID2NativeInterfaceMap::~IID2NativeInterfaceMap()
 }
 
 size_t
-IID2NativeInterfaceMap::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
+IID2NativeInterfaceMap::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
-    size_t n = 0;
-    n += mallocSizeOf(this);
-    n += PL_DHashTableSizeOfIncludingThis(mTable, SizeOfEntryExcludingThis, mallocSizeOf);
+    size_t n = mallocSizeOf(this);
+    n += mTable->ShallowSizeOfIncludingThis(mallocSizeOf);
+    for (auto iter = mTable->Iter(); !iter.Done(); iter.Next()) {
+        auto entry = static_cast<IID2NativeInterfaceMap::Entry*>(iter.Get());
+        n += entry->value->SizeOfIncludingThis(mallocSizeOf);
+    }
     return n;
-}
-
-/* static */ size_t
-IID2NativeInterfaceMap::SizeOfEntryExcludingThis(PLDHashEntryHdr* hdr,
-                                                 mozilla::MallocSizeOf mallocSizeOf, void*)
-{
-    XPCNativeInterface* iface = ((IID2NativeInterfaceMap::Entry*)hdr)->value;
-    return iface->SizeOfIncludingThis(mallocSizeOf);
 }
 
 /***************************************************************************/
@@ -294,10 +285,8 @@ ClassInfo2NativeSetMap::~ClassInfo2NativeSetMap()
 size_t
 ClassInfo2NativeSetMap::ShallowSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
 {
-    size_t n = 0;
-    n += mallocSizeOf(this);
-    // The second arg is nullptr because this is a "shallow" measurement of the map.
-    n += PL_DHashTableSizeOfIncludingThis(mTable, nullptr, mallocSizeOf);
+    size_t n = mallocSizeOf(this);
+    n += mTable->ShallowSizeOfIncludingThis(mallocSizeOf);
     return n;
 }
 
@@ -322,19 +311,15 @@ ClassInfo2WrappedNativeProtoMap::~ClassInfo2WrappedNativeProtoMap()
 }
 
 size_t
-ClassInfo2WrappedNativeProtoMap::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
+ClassInfo2WrappedNativeProtoMap::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
-    size_t n = 0;
-    n += mallocSizeOf(this);
-    n += PL_DHashTableSizeOfIncludingThis(mTable, SizeOfEntryExcludingThis, mallocSizeOf);
+    size_t n = mallocSizeOf(this);
+    n += mTable->ShallowSizeOfIncludingThis(mallocSizeOf);
+    for (auto iter = mTable->Iter(); !iter.Done(); iter.Next()) {
+        auto entry = static_cast<ClassInfo2WrappedNativeProtoMap::Entry*>(iter.Get());
+        n += mallocSizeOf(entry->value);
+    }
     return n;
-}
-
-/* static */ size_t
-ClassInfo2WrappedNativeProtoMap::SizeOfEntryExcludingThis(PLDHashEntryHdr* hdr,
-                                                          mozilla::MallocSizeOf mallocSizeOf, void*)
-{
-    return mallocSizeOf(((ClassInfo2WrappedNativeProtoMap::Entry*)hdr)->value);
 }
 
 /***************************************************************************/
@@ -438,19 +423,15 @@ NativeSetMap::~NativeSetMap()
 }
 
 size_t
-NativeSetMap::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
+NativeSetMap::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
-    size_t n = 0;
-    n += mallocSizeOf(this);
-    n += PL_DHashTableSizeOfIncludingThis(mTable, SizeOfEntryExcludingThis, mallocSizeOf);
+    size_t n = mallocSizeOf(this);
+    n += mTable->ShallowSizeOfIncludingThis(mallocSizeOf);
+    for (auto iter = mTable->Iter(); !iter.Done(); iter.Next()) {
+        auto entry = static_cast<NativeSetMap::Entry*>(iter.Get());
+        n += entry->key_value->SizeOfIncludingThis(mallocSizeOf);
+    }
     return n;
-}
-
-/* static */ size_t
-NativeSetMap::SizeOfEntryExcludingThis(PLDHashEntryHdr* hdr, mozilla::MallocSizeOf mallocSizeOf, void*)
-{
-    XPCNativeSet* set = ((NativeSetMap::Entry*)hdr)->key_value;
-    return set->SizeOfIncludingThis(mallocSizeOf);
 }
 
 /***************************************************************************/
