@@ -238,11 +238,18 @@ GrallocTextureHostOGL::GetAsSurface() {
     return nullptr;
   }
   uint8_t* grallocData;
-  graphicBuffer->lock(GRALLOC_USAGE_SW_READ_OFTEN, reinterpret_cast<void**>(&grallocData));
+  int32_t rv = graphicBuffer->lock(GRALLOC_USAGE_SW_READ_OFTEN, reinterpret_cast<void**>(&grallocData));
+  if (rv) {
+    return nullptr;
+  }
   RefPtr<gfx::DataSourceSurface> grallocTempSurf =
     gfx::Factory::CreateWrappingDataSourceSurface(grallocData,
                                                   graphicBuffer->getStride() * android::bytesPerPixel(graphicBuffer->getPixelFormat()),
                                                   GetSize(), GetFormat());
+  if (!grallocTempSurf) {
+    graphicBuffer->unlock();
+    return nullptr;
+  }
   RefPtr<gfx::DataSourceSurface> surf = CreateDataSourceSurfaceByCloning(grallocTempSurf);
 
   graphicBuffer->unlock();
