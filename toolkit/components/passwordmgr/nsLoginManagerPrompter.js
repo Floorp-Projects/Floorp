@@ -847,14 +847,17 @@ LoginManagerPrompter.prototype = {
     };
 
     let writeDataToUI = () => {
+      // setAttribute is used since the <textbox> binding may not be attached yet.
       chromeDoc.getElementById("password-notification-username")
                .setAttribute("placeholder", usernamePlaceholder);
       chromeDoc.getElementById("password-notification-username")
                .setAttribute("value", login.username);
-      chromeDoc.getElementById("password-notification-password")
-               .setAttribute("value", login.password);
-      chromeDoc.getElementById("password-notification-password")
-               .setAttribute("show-content", showPasswordPlaceholder);
+
+      let passwordField = chromeDoc.getElementById("password-notification-password");
+      // Ensure the type is reset so the field is masked.
+      passwordField.setAttribute("type", "password");
+      passwordField.setAttribute("value", login.password);
+      passwordField.setAttribute("show-content", showPasswordPlaceholder);
       updateButtonLabel();
     };
 
@@ -880,13 +883,14 @@ LoginManagerPrompter.prototype = {
         selectionStart = passwordField.value.length;
         selectionEnd = passwordField.value.length;
       }
-      passwordField.type = "";
+      passwordField.setAttribute("type", "");
       passwordField.selectionStart = selectionStart;
       passwordField.selectionEnd = selectionEnd;
     };
 
     let onPasswordBlur = () => {
-      chromeDoc.getElementById("password-notification-password").type = "password";
+      // Use setAttribute in case the <textbox> binding isn't applied.
+      chromeDoc.getElementById("password-notification-password").setAttribute("type", "password");
     };
 
     let onNotificationClick = (clickEvent) => {
