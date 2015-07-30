@@ -1141,6 +1141,11 @@ pref("javascript.options.mem.log", false);
 pref("javascript.options.mem.notify", false);
 pref("javascript.options.gc_on_memory_pressure", true);
 pref("javascript.options.compact_on_user_inactive", true);
+#ifdef NIGHTLY_BUILD
+pref("javascript.options.compact_on_user_inactive_delay", 15000); // ms
+#else
+pref("javascript.options.compact_on_user_inactive_delay", 300000); // ms
+#endif
 
 pref("javascript.options.mem.gc_high_frequency_time_limit_ms", 1000);
 pref("javascript.options.mem.gc_high_frequency_low_limit_mb", 100);
