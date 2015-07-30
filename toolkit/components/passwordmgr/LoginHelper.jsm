@@ -260,6 +260,43 @@ this.LoginHelper = {
   },
 
   /**
+   * Removes duplicates from a list of logins.
+   *
+   * @param {nsILoginInfo[]} logins
+   *        A list of logins we want to deduplicate.
+   *
+   * @param {string[] = ["username", "password"]} uniqueKeys
+   *        A list of login attributes to use as unique keys for the deduplication.
+   *
+   * @returns {nsILoginInfo[]} list of unique logins.
+   */
+  dedupeLogins(logins, uniqueKeys = ["username", "password"]) {
+    const KEY_DELIMITER = ":";
+
+    // Generate a unique key string from a login.
+    function getKey(login, uniqueKeys) {
+      return uniqueKeys.reduce((prev, key) => prev + KEY_DELIMITER + login[key], "");
+    }
+
+    // We use a Map to easily lookup logins by their unique keys.
+    let loginsByKeys = new Map();
+    for (let login of logins) {
+      let key = getKey(login, uniqueKeys);
+      // If we find a more recently used login for the same key, replace the existing one.
+      if (loginsByKeys.has(key)) {
+        let loginDate = login.QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
+        let storedLoginDate = loginsByKeys.get(key).QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
+        if (loginDate < storedLoginDate) {
+          continue;
+        }
+      }
+      loginsByKeys.set(key, login);
+    }
+    // Return the map values in the form of an array.
+    return [...loginsByKeys.values()];
+  },
+
+  /**
    * Open the password manager window.
    *
    * @param {Window} window
