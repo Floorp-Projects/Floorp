@@ -1092,16 +1092,13 @@ class ModuleGlobals
         uint32_t tableIndex_;
         FuncPtrVector elems_;
 
+        FuncPtrTable(FuncPtrTable&& rhs) = delete;
+
       public:
         FuncPtrTable(ExclusiveContext* cx, Signature&& sig, uint32_t mask, uint32_t gdo,
                      uint32_t tableIndex)
           : sig_(Move(sig)), mask_(mask), globalDataOffset_(gdo), tableIndex_(tableIndex),
             elems_(cx)
-        {}
-
-        FuncPtrTable(FuncPtrTable&& rhs)
-          : sig_(Move(rhs.sig_)), mask_(rhs.mask_), globalDataOffset_(rhs.globalDataOffset_),
-            elems_(Move(rhs.elems_))
         {}
 
         Signature& sig() { return sig_; }
@@ -1116,7 +1113,7 @@ class ModuleGlobals
         const Func& elem(unsigned i) const { return *elems_[i]; }
     };
 
-    typedef Vector<FuncPtrTable> FuncPtrTableVector;
+    typedef Vector<FuncPtrTable*> FuncPtrTableVector;
     typedef Vector<Func*> FuncVector;
 
   private:
@@ -1143,13 +1140,26 @@ class ModuleGlobals
         return funcPtrTables_.length();
     }
     FuncPtrTable& funcPtrTable(unsigned i) {
-        return funcPtrTables_[i];
+        return *funcPtrTables_[i];
     }
-    bool addFuncPtrTable(FuncPtrTable&& table) {
-        return funcPtrTables_.append(Move(table));
+    bool addFuncPtrTable(FuncPtrTable* table) {
+        return funcPtrTables_.append(table);
     }
 };
 
+// The ModuleValidator encapsulates the entire validation of an asm.js module.
+// Its lifetime goes from the validation of the top components of an asm.js
+// module (all the globals), the emission of bytecode for all the functions in
+// the module and the validation of function's pointer tables.
+//
+// Rooting note: ModuleValidator is a stack class that contains unrooted
+// PropertyName (JSAtom) pointers.  This is safe because it cannot be
+// constructed without a TokenStream reference.  TokenStream is itself a stack
+// class that cannot be constructed without an AutoKeepAtoms being live on the
+// stack, which prevents collection of atoms.
+//
+// ModuleValidator is marked as rooted in the rooting analysis.  Don't add
+// non-JSAtom pointers, or this will break!
 class MOZ_STACK_CLASS ModuleValidator
 {
   public:
@@ -1319,12 +1329,43 @@ class MOZ_STACK_CLASS ModuleValidator
         Scalar::Type type;
     };
 
+    class ExitDescriptor
+    {
+        PropertyName* name_;
+        Signature* sig_;
+
+      public:
+        ExitDescriptor(PropertyName* name, Signature* sig)
+          : name_(name), sig_(sig)
+        {}
+        PropertyName* name() const {
+            return name_;
+        }
+        const Signature& sig() const {
+            return *sig_;
+        }
+
+        // ExitDescriptor is a HashPolicy:
+        typedef ExitDescriptor Lookup;
+        static HashNumber hash(const ExitDescriptor& d) {
+            HashNumber hn = HashGeneric(d.name_, d.sig_->retType().which());
+            const VarTypeVector& args = d.sig_->args();
+            for (unsigned i = 0; i < args.length(); i++)
+                hn = AddToHash(hn, args[i].which());
+            return hn;
+        }
+        static bool match(const ExitDescriptor& lhs, const ExitDescriptor& rhs) {
+            return lhs.name_ == rhs.name_ && lhs.sig_ == rhs.sig_;
+        }
+    };
+
   private:
     typedef HashMap<PropertyName*, Global*> GlobalMap;
     typedef HashMap<PropertyName*, MathBuiltin> MathNameMap;
     typedef HashMap<PropertyName*, AsmJSAtomicsBuiltinFunction> AtomicsNameMap;
     typedef HashMap<PropertyName*, AsmJSSimdOperation> SimdOperationNameMap;
     typedef Vector<ArrayView> ArrayViewVector;
+    typedef HashMap<ExitDescriptor, unsigned, ExitDescriptor> ExitMap;
 
     ExclusiveContext* cx_;
     AsmJSParser&      parser_;
@@ -1335,6 +1376,7 @@ class MOZ_STACK_CLASS ModuleValidator
 
     GlobalMap                      globals_;
     ArrayViewVector                arrayViews_;
+    ExitMap                        exits_;
 
     MathNameMap                    standardLibraryMathNames_;
     AtomicsNameMap                 standardLibraryAtomicsNames_;
@@ -1343,7 +1385,6 @@ class MOZ_STACK_CLASS ModuleValidator
     ParseNode*      moduleFunctionNode_;
     PropertyName*   moduleFunctionName_;
 
-    // XXX maybe factor out with MC
     UniquePtr<char[], JS::FreePolicy> errorString_;
     uint32_t                          errorOffset_;
     bool                              errorOverRecursed_;
@@ -1361,6 +1402,7 @@ class MOZ_STACK_CLASS ModuleValidator
         moduleGlobals_(moduleGlobals),
         globals_(cx),
         arrayViews_(cx),
+        exits_(cx),
         standardLibraryMathNames_(cx),
         standardLibraryAtomicsNames_(cx),
         standardLibrarySimdOpNames_(cx),
@@ -1420,7 +1462,7 @@ class MOZ_STACK_CLASS ModuleValidator
   public:
 
     bool init() {
-        if (!globals_.init())
+        if (!globals_.init() || !exits_.init())
             return false;
 
         if (!standardLibraryMathNames_.init() ||
@@ -1658,10 +1700,8 @@ class MOZ_STACK_CLASS ModuleValidator
         return module_->addExportedChangeHeap(name, g.changeHeapSrcBegin(), g.changeHeapSrcEnd(),
                                               maybeFieldName);
     }
-    bool addFunction(PropertyName* name, Signature&& sig, ModuleGlobals::Func** func, uint32_t* outFuncIndex) {
+    bool addFunction(PropertyName* name, Signature&& sig, ModuleGlobals::Func** func) {
         uint32_t funcIndex = moduleGlobals_.numFunctions();
-        if (outFuncIndex)
-            *outFuncIndex = funcIndex;
         Global* global = moduleLifo_.new_<Global>(Global::Function);
         if (!global)
             return false;
@@ -1676,12 +1716,9 @@ class MOZ_STACK_CLASS ModuleValidator
             return false;
         return moduleGlobals_.addFunction(*func);
     }
-    bool addFuncPtrTable(PropertyName* name, Signature&& sig, uint32_t mask, ModuleGlobals::FuncPtrTable** table,
-                         uint32_t* tableIndexOut)
+    bool addFuncPtrTable(PropertyName* name, Signature&& sig, uint32_t mask, ModuleGlobals::FuncPtrTable** table)
     {
         uint32_t tableIndex = moduleGlobals_.numFuncPtrTables();
-        if (tableIndexOut)
-            *tableIndexOut = tableIndex;
         Global* global = moduleLifo_.new_<Global>(Global::FuncPtrTable);
         if (!global)
             return false;
@@ -1691,11 +1728,25 @@ class MOZ_STACK_CLASS ModuleValidator
         uint32_t globalDataOffset;
         if (!module_->addFuncPtrTable(/* numElems = */ mask + 1, &globalDataOffset))
             return false;
-        ModuleGlobals::FuncPtrTable tmpTable(cx_, Move(sig), mask, globalDataOffset, tableIndex);
-        if (!moduleGlobals_.addFuncPtrTable(Move(tmpTable)))
+        *table = moduleLifo_.new_<ModuleGlobals::FuncPtrTable>(cx_, Move(sig), mask, globalDataOffset, tableIndex);
+        return *table && moduleGlobals_.addFuncPtrTable(*table);
+    }
+    bool addExit(unsigned ffiIndex, PropertyName* name, Signature&& sig, unsigned* exitIndex,
+                 Signature** lifoSig)
+    {
+        Signature* signature = moduleLifo_.new_<Signature>(Move(sig));
+        if (!signature)
             return false;
-        *table = &moduleGlobals_.funcPtrTable(tableIndex);
-        return true;
+        *lifoSig = signature;
+        ExitDescriptor exitDescriptor(name, signature);
+        ExitMap::AddPtr p = exits_.lookupForAdd(exitDescriptor);
+        if (p) {
+            *exitIndex = p->value();
+            return true;
+        }
+        if (!module_->addExit(ffiIndex, exitIndex))
+            return false;
+        return exits_.add(p, Move(exitDescriptor), *exitIndex);
     }
 
     bool tryOnceToValidateChangeHeap() {
@@ -1714,7 +1765,6 @@ class MOZ_STACK_CLASS ModuleValidator
     }
 
     // Error handling.
-    // XXX maybe factor out with ModuleCompiler
     bool failOffset(uint32_t offset, const char* str) {
         MOZ_ASSERT(!errorString_);
         MOZ_ASSERT(errorOffset_ == UINT32_MAX);
@@ -1734,7 +1784,8 @@ class MOZ_STACK_CLASS ModuleValidator
         // delayed until the compilation is off the stack and more memory can be freed.
         gc::AutoSuppressGC nogc(cx_);
         TokenPos pos;
-        if (!tokenStream().peekTokenPos(&pos))
+        TokenStream::Modifier modifier = tokenStream().hasLookahead() ? tokenStream().getLookaheadModifier() : TokenStream::None;
+        if (!tokenStream().peekTokenPos(&pos, modifier))
             return false;
         return failOffset(pos.begin, str);
     }
@@ -1774,7 +1825,7 @@ class MOZ_STACK_CLASS ModuleValidator
     ExclusiveContext* cx() const { return cx_; }
     ParseNode*    moduleFunctionNode() const { return moduleFunctionNode_; }
     PropertyName* moduleFunctionName() const { return moduleFunctionName_; }
-    ScopedJSDeletePtr<AsmJSModule>& modulePtr() { return module_; }// XXX me doesn't like that
+    ScopedJSDeletePtr<AsmJSModule>& modulePtr() { return module_; }
     const AsmJSModule& module() const { return *module_.get(); }
     AsmJSParser& parser() const { return parser_; }
     TokenStream& tokenStream() const { return parser_.tokenStream; }
@@ -1786,6 +1837,9 @@ class MOZ_STACK_CLASS ModuleValidator
     }
     const ArrayView& arrayView(unsigned i) const {
         return arrayViews_[i];
+    }
+    unsigned numFunctions() const {
+        return moduleGlobals_.numFunctions();
     }
     ModuleGlobals::Func& function(unsigned i) const {
         return *moduleGlobals_.function(i);
@@ -1882,53 +1936,17 @@ class MOZ_STACK_CLASS ModuleValidator
 //  }
 //
 // The ModuleCompiler maintains a hash table (ExitMap) which allows a call site
-// to add a new exit or reuse an existing one. The key is an ExitDescriptor
-// (which holds the exit pairing) and the value is an index into the
-// Vector<Exit> stored in the AsmJSModule.
+// to add a new exit or reuse an existing one. The key is an index into the
+// Vector<Exit> stored in the AsmJSModule and the value is the signature of
+// that exit's variant.
 //
-// Rooting note: ModuleCompiler is a stack class that contains unrooted
-// PropertyName (JSAtom) pointers.  This is safe because it cannot be
-// constructed without a TokenStream reference.  TokenStream is itself a stack
-// class that cannot be constructed without an AutoKeepAtoms being live on the
-// stack, which prevents collection of atoms.
-//
-// ModuleCompiler is marked as rooted in the rooting analysis.  Don't add
-// non-JSAtom pointers, or this will break!
+// The same rooting note in the top comment of ModuleValidator applies here as
+// well.
 class MOZ_STACK_CLASS ModuleCompiler
 {
   public:
-
-    class ExitDescriptor
-    {
-        PropertyName* name_;
-        Signature* sig_;
-
-      public:
-        ExitDescriptor(PropertyName* name, Signature* sig)
-          : name_(name), sig_(sig)
-        {}
-        PropertyName* name() const {
-            return name_;
-        }
-        const Signature& sig() const {
-            return *sig_;
-        }
-
-        // ExitDescriptor is a HashPolicy:
-        typedef ExitDescriptor Lookup;
-        static HashNumber hash(const ExitDescriptor& d) {
-            HashNumber hn = HashGeneric(d.name_, d.sig_->retType().which());
-            const VarTypeVector& args = d.sig_->args();
-            for (unsigned i = 0; i < args.length(); i++)
-                hn = AddToHash(hn, args[i].which());
-            return hn;
-        }
-        static bool match(const ExitDescriptor& lhs, const ExitDescriptor& rhs) {
-            return lhs.name_ == rhs.name_ && lhs.sig_ == rhs.sig_;
-        }
-    };
-
-    typedef HashMap<ExitDescriptor, unsigned, ExitDescriptor> ExitMap;
+    // Map exitIndex to the corresponding exit's Signature.
+    typedef HashMap<unsigned, const Signature*> ExitMap;
 
   private:
     struct SlowFunction
@@ -1944,29 +1962,23 @@ class MOZ_STACK_CLASS ModuleCompiler
     };
 
     typedef Vector<SlowFunction> SlowFunctionVector;
-    typedef Vector<Signature*> SignatureVector;
 
-    ExclusiveContext *             cx_;
-    AsmJSParser &                  parser_;
+    ExclusiveContext *              cx_;
+    AsmJSParser &                   parser_;
 
-    MacroAssembler                 masm_;
+    MacroAssembler                  masm_;
 
-    ScopedJSDeletePtr<AsmJSModule>& module_; // XXX me don't like that
-    LifoAlloc                      moduleLifo_;
-    ModuleGlobals &                moduleGlobals_;
+    ScopedJSDeletePtr<AsmJSModule>& module_;
+    ModuleGlobals &                 moduleGlobals_;
 
     ExitMap                        exits_;
-    SignatureVector                exitsSignatures_;
+
     NonAssertingLabel              stackOverflowLabel_;
     NonAssertingLabel              asyncInterruptLabel_;
     NonAssertingLabel              syncInterruptLabel_;
     NonAssertingLabel              onDetachedLabel_;
     NonAssertingLabel              onOutOfBoundsLabel_;
     NonAssertingLabel              onConversionErrorLabel_;
-
-    UniquePtr<char[], JS::FreePolicy> errorString_;
-    uint32_t                       errorOffset_;
-    bool                           errorOverRecursed_;
 
     int64_t                        usecBefore_;
     SlowFunctionVector             slowFunctions_;
@@ -1980,87 +1992,15 @@ class MOZ_STACK_CLASS ModuleCompiler
         parser_(parser),
         masm_(MacroAssembler::AsmJSToken()),
         module_(module),
-        moduleLifo_(LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
         moduleGlobals_(moduleGlobals),
         exits_(cx),
-        exitsSignatures_(cx),
-        errorString_(nullptr),
-        errorOffset_(UINT32_MAX),
-        errorOverRecursed_(false),
         usecBefore_(PRMJ_Now()),
         slowFunctions_(cx),
         finishedFunctionBodies_(false)
     {}
 
-    ~ModuleCompiler() {
-        if (errorString_) {
-            MOZ_ASSERT(errorOffset_ != UINT32_MAX);
-            tokenStream().reportAsmJSError(errorOffset_,
-                                           JSMSG_USE_ASM_TYPE_FAIL,
-                                           errorString_.get());
-        }
-        if (errorOverRecursed_)
-            ReportOverRecursed(cx_);
-    }
-
     bool init() {
         return exits_.init();
-    }
-
-    bool failOffset(uint32_t offset, const char* str) {
-        MOZ_ASSERT(!errorString_);
-        MOZ_ASSERT(errorOffset_ == UINT32_MAX);
-        MOZ_ASSERT(str);
-        errorOffset_ = offset;
-        errorString_ = DuplicateString(cx_, str);
-        return false;
-    }
-
-    bool fail(ParseNode* pn, const char* str) {
-        if (pn)
-            return failOffset(pn->pn_pos.begin, str);
-
-        // The exact rooting static analysis does not perform dataflow analysis, so it believes
-        // that unrooted things on the stack during compilation may still be accessed after this.
-        // Since pn is typically only null under OOM, this suppression simply forces any GC to be
-        // delayed until the compilation is off the stack and more memory can be freed.
-        gc::AutoSuppressGC nogc(cx_);
-        TokenPos pos;
-        TokenStream::Modifier modifier = tokenStream().hasLookahead() ? tokenStream().getLookaheadModifier() : TokenStream::None;
-        if (!tokenStream().peekTokenPos(&pos, modifier))
-            return false;
-        return failOffset(pos.begin, str);
-    }
-
-    bool failfVA(ParseNode* pn, const char* fmt, va_list ap) {
-        MOZ_ASSERT(!errorString_);
-        MOZ_ASSERT(errorOffset_ == UINT32_MAX);
-        MOZ_ASSERT(fmt);
-        errorOffset_ = pn ? pn->pn_pos.begin : tokenStream().currentToken().pos.end;
-        errorString_.reset(JS_vsmprintf(fmt, ap));
-        return false;
-    }
-
-    bool failf(ParseNode* pn, const char* fmt, ...) {
-        va_list ap;
-        va_start(ap, fmt);
-        failfVA(pn, fmt, ap);
-        va_end(ap);
-        return false;
-    }
-
-    bool failName(ParseNode* pn, const char* fmt, PropertyName* name) {
-        // This function is invoked without the caller properly rooting its locals.
-        gc::AutoSuppressGC suppress(cx_);
-        JSAutoByteString bytes;
-        if (AtomToPrintableString(cx_, name, &bytes))
-            failf(pn, fmt, bytes.ptr());
-        return false;
-    }
-
-    bool failOverRecursed() {
-        errorOverRecursed_ = true;
-        return false;
     }
 
     /*************************************************** Read-only interface */
@@ -2075,7 +2015,6 @@ class MOZ_STACK_CLASS ModuleCompiler
     Label& onDetachedLabel() { return onDetachedLabel_; }
     Label& onOutOfBoundsLabel() { return onOutOfBoundsLabel_; }
     Label& onConversionErrorLabel() { return onConversionErrorLabel_; }
-    bool hasError() const { return errorString_ != nullptr; }
     const AsmJSModule& module() const { return *module_.get(); }
     bool usesSignalHandlersForInterrupt() const { return module_->usesSignalHandlersForInterrupt(); }
     bool usesSignalHandlersForOOB() const { return module_->usesSignalHandlersForOOB(); }
@@ -2086,37 +2025,17 @@ class MOZ_STACK_CLASS ModuleCompiler
     ExitMap::Range allExits() const {
         return exits_.all();
     }
-    const Signature& exitSignature(unsigned i) const {
-        return *exitsSignatures_[i];
-    }
-    unsigned numFunctions() const {
-        return moduleGlobals_.numFunctions();
-    }
     ModuleGlobals::Func& function(unsigned i) const {
         return *moduleGlobals_.function(i);
     }
-    ModuleGlobals::FuncPtrTable& funcPtrTable(unsigned i) const {
-        return moduleGlobals_.funcPtrTable(i);
-    }
 
     /***************************************************** Mutable interface */
-    bool addExit(unsigned ffiIndex, PropertyName* name, Signature&& sig, unsigned* exitIndex) {
-        Signature* signature = moduleLifo_.new_<Signature>(Move(sig));
-        if (!signature)
-            return false;
-        ExitDescriptor exitDescriptor(name, signature);
-        ExitMap::AddPtr p = exits_.lookupForAdd(exitDescriptor);
-        if (p) {
-            *exitIndex = p->value();
+    bool addExit(unsigned exitIndex, const Signature* signature)
+    {
+        ExitMap::AddPtr p = exits_.lookupForAdd(exitIndex);
+        if (p)
             return true;
-        }
-        if (!module_->addExit(ffiIndex, exitIndex))
-            return false;
-        MOZ_ASSERT(exitsSignatures_.length() == *exitIndex,
-                   "exitsSignatures_ and exits_ must contain as many elements");
-        if (!exitsSignatures_.append(signature))
-            return false;
-        return exits_.add(p, Move(exitDescriptor), *exitIndex);
+        return exits_.add(p, exitIndex, signature);
     }
 
     bool finishGeneratingFunction(ModuleGlobals::Func& func, CodeGenerator& codegen,
@@ -3006,6 +2925,7 @@ class AsmFunction
     float    readF32(size_t* pc) const { return readPrimitive<float>(pc); }
     uint32_t readU32(size_t* pc) const { return readPrimitive<uint32_t>(pc); }
     double   readF64(size_t* pc) const { return readPrimitive<double>(pc); }
+    uint8_t* readPtr(size_t* pc) const { return readPrimitive<uint8_t*>(pc); }
 
     SimdConstant readI32X4(size_t* pc) const {
         int32_t x = readI32(pc);
@@ -3042,6 +2962,11 @@ class AsmFunction
                       "patch32 must be used with 32-bits wide types");
         MOZ_ASSERT(pcIsPatchable(pc, sizeof(uint32_t)));
         memcpy(&bytecode_[pc], &i, sizeof(uint32_t));
+    }
+
+    void patchPtr(size_t pc, uint8_t* ptr) {
+        MOZ_ASSERT(pcIsPatchable(pc, sizeof(uint8_t*)));
+        memcpy(&bytecode_[pc], &ptr, sizeof(uint8_t*));
     }
 
     // Setters
@@ -3083,7 +3008,6 @@ class FunctionBuilder
     typedef HashMap<PropertyName*, uint32_t> LabelMap;
 
     ModuleValidator &      m_;
-    ModuleCompiler &       mc_;
     ParseNode *            fn_;
 
     AsmFunction &          func_;
@@ -3096,9 +3020,8 @@ class FunctionBuilder
     bool                   hasAlreadyReturned_;
 
   public:
-    FunctionBuilder(ModuleValidator& m, ModuleCompiler& mc, AsmFunction& func, ParseNode* fn)
+    FunctionBuilder(ModuleValidator& m, AsmFunction& func, ParseNode* fn)
       : m_(m),
-        mc_(mc),
         fn_(fn),
         func_(func),
         locals_(m.cx()),
@@ -3108,7 +3031,6 @@ class FunctionBuilder
     {}
 
     ModuleValidator& m() const    { return m_; }
-    ModuleCompiler& mc() const    { return mc_; }
     ExclusiveContext* cx() const  { return m_.cx(); }
     ParseNode* fn() const         { return fn_; }
 
@@ -3291,6 +3213,9 @@ class FunctionBuilder
         static_assert(sizeof(T) == sizeof(uint32_t), "patch32 is used for 4-bytes long ops");
         func_.patch32(pos, val);
     }
+    void patchPtr(size_t pos, uint8_t* ptr) {
+        func_.patchPtr(pos, ptr);
+    }
 
     size_t tempU8() {
         return func_.writeU8(uint8_t(Stmt::Bad));
@@ -3304,8 +3229,20 @@ class FunctionBuilder
             func_.writeU8(uint8_t(Stmt::Bad));
         return ret;
     }
+    size_t tempPtr() {
+        size_t ret = func_.writeU8(uint8_t(Stmt::Bad));
+        for (size_t i = 1; i < sizeof(intptr_t); i++)
+            func_.writeU8(uint8_t(Stmt::Bad));
+        return ret;
+    }
     /************************************************** End of build helpers */
 };
+
+static bool
+NoExceptionPending(ExclusiveContext* cx)
+{
+    return !cx->isJSContext() || !cx->asJSContext()->isExceptionPending();
+}
 
 typedef Vector<size_t,1> LabelVector;
 typedef Vector<MBasicBlock*,8> BlockVector;
@@ -3985,13 +3922,13 @@ class FunctionCompiler
     }
 
   public:
-    bool internalCall(const ModuleGlobals::Func& func, const Call& call, MDefinition** def)
+    bool internalCall(const Signature& sig, Label* entry, const Call& call, MDefinition** def)
     {
-        MIRType returnType = func.sig().retType().toMIRType();
-        return callPrivate(MAsmJSCall::Callee(&func.entry()), call, returnType, def);
+        MIRType returnType = sig.retType().toMIRType();
+        return callPrivate(MAsmJSCall::Callee(entry), call, returnType, def);
     }
 
-    bool funcPtrCall(const ModuleGlobals::FuncPtrTable& table, MDefinition* index,
+    bool funcPtrCall(const Signature& sig, uint32_t maskLit, uint32_t globalDataOffset, MDefinition* index,
                      const Call& call, MDefinition** def)
     {
         if (inDeadCode()) {
@@ -3999,14 +3936,14 @@ class FunctionCompiler
             return true;
         }
 
-        MConstant* mask = MConstant::New(alloc(), Int32Value(table.mask()));
+        MConstant* mask = MConstant::New(alloc(), Int32Value(maskLit));
         curBlock_->add(mask);
         MBitAnd* maskedIndex = MBitAnd::NewAsmJS(alloc(), index, mask);
         curBlock_->add(maskedIndex);
-        MAsmJSLoadFuncPtr* ptrFun = MAsmJSLoadFuncPtr::New(alloc(), table.globalDataOffset(), maskedIndex);
+        MAsmJSLoadFuncPtr* ptrFun = MAsmJSLoadFuncPtr::New(alloc(), globalDataOffset, maskedIndex);
         curBlock_->add(ptrFun);
 
-        MIRType returnType = table.sig().retType().toMIRType();
+        MIRType returnType = sig.retType().toMIRType();
         return callPrivate(MAsmJSCall::Callee(ptrFun), call, returnType, def);
     }
 
@@ -4373,6 +4310,7 @@ class FunctionCompiler
     int32_t  readI32()       { return func_.readI32(&pc_); }
     float    readF32()       { return func_.readF32(&pc_); }
     double   readF64()       { return func_.readF64(&pc_); }
+    uint8_t* readPtr()       { return func_.readPtr(&pc_); }
     SimdConstant readI32X4() { return func_.readI32X4(&pc_); }
     SimdConstant readF32X4() { return func_.readF32X4(&pc_); }
 
@@ -6456,21 +6394,19 @@ CheckSignatureAgainstExisting(ModuleValidator& m, ParseNode* usepn, const Signat
 
 static bool
 CheckFunctionSignature(ModuleValidator& m, ParseNode* usepn, Signature&& sig, PropertyName* name,
-                       ModuleGlobals::Func** func, uint32_t* funcIndex = nullptr)
+                       ModuleGlobals::Func** func)
 {
     ModuleGlobals::Func* existing = m.lookupFunction(name);
     if (!existing) {
         if (!CheckModuleLevelName(m, usepn, name))
             return false;
-        return m.addFunction(name, Move(sig), func, funcIndex);
+        return m.addFunction(name, Move(sig), func);
     }
 
     if (!CheckSignatureAgainstExisting(m, usepn, sig, existing->sig()))
         return false;
 
     *func = existing;
-    if (funcIndex)
-        *funcIndex = existing->funcIndex();
     return true;
 }
 
@@ -6500,8 +6436,10 @@ CheckInternalCall(FunctionBuilder& f, ParseNode* callNode, PropertyName* calleeN
         case RetType::Float32x4: f.writeOp(F32X4::CallInternal); break;
     }
 
-    // Signature's index in module
-    size_t indexAt = f.temp32();
+    // Function's entry in lifo
+    size_t entryAt = f.tempPtr();
+    // Function's signature in lifo
+    size_t signatureAt = f.tempPtr();
     // Call node position (asm.js specific)
     f.writeU32(callNode->pn_pos.begin);
 
@@ -6509,13 +6447,12 @@ CheckInternalCall(FunctionBuilder& f, ParseNode* callNode, PropertyName* calleeN
     if (!CheckCallArgs(f, callNode, CheckIsVarType, signature))
         return false;
 
-    uint32_t funcIndex = -1;
     ModuleGlobals::Func* callee;
-    if (!CheckFunctionSignature(f.m(), callNode, Move(signature), calleeName, &callee, &funcIndex))
+    if (!CheckFunctionSignature(f.m(), callNode, Move(signature), calleeName, &callee))
         return false;
 
-    MOZ_ASSERT(funcIndex != uint32_t(-1));
-    f.patch32(indexAt, funcIndex);
+    f.patchPtr(entryAt, (uint8_t*) &callee->entry());
+    f.patchPtr(signatureAt, (uint8_t*) &callee->sig());
     *type = retType.toType();
     return true;
 }
@@ -6523,10 +6460,9 @@ CheckInternalCall(FunctionBuilder& f, ParseNode* callNode, PropertyName* calleeN
 static bool
 EmitInternalCall(FunctionCompiler& f, RetType retType, MDefinition** def)
 {
-    uint32_t sigIndex = f.readU32();
+    Label* entry = reinterpret_cast<Label*>(f.readPtr());
+    const Signature& sig = *reinterpret_cast<Signature*>(f.readPtr());
 
-    ModuleGlobals::Func& callee = f.m().function(sigIndex);
-    Signature& sig = callee.sig();
     MOZ_ASSERT_IF(sig.retType() != RetType::Void, sig.retType() == retType);
 
     uint32_t callNodePosition = f.readU32();
@@ -6535,14 +6471,13 @@ EmitInternalCall(FunctionCompiler& f, RetType retType, MDefinition** def)
     if (!EmitCallArgs(f, sig, &call))
         return false;
 
-    return f.internalCall(callee, call, def);
+    return f.internalCall(sig, entry, call, def);
 }
 
 static bool
 CheckFuncPtrTableAgainstExisting(ModuleValidator& m, ParseNode* usepn,
                                  PropertyName* name, Signature&& sig, unsigned mask,
-                                 ModuleGlobals::FuncPtrTable** tableOut,
-                                 uint32_t* tableIndex = nullptr)
+                                 ModuleGlobals::FuncPtrTable** tableOut)
 {
     if (const ModuleValidator::Global* existing = m.lookupGlobal(name)) {
         if (existing->which() != ModuleValidator::Global::FuncPtrTable)
@@ -6555,8 +6490,6 @@ CheckFuncPtrTableAgainstExisting(ModuleValidator& m, ParseNode* usepn,
         if (!CheckSignatureAgainstExisting(m, usepn, sig, table.sig()))
             return false;
 
-        if (tableIndex)
-            *tableIndex = existing->funcPtrTableIndex();
         *tableOut = &table;
         return true;
     }
@@ -6564,7 +6497,7 @@ CheckFuncPtrTableAgainstExisting(ModuleValidator& m, ParseNode* usepn,
     if (!CheckModuleLevelName(m, usepn, name))
         return false;
 
-    return m.addFuncPtrTable(name, Move(sig), mask, tableOut, tableIndex);
+    return m.addFuncPtrTable(name, Move(sig), mask, tableOut);
 }
 
 static bool
@@ -6607,8 +6540,13 @@ CheckFuncPtrCall(FunctionBuilder& f, ParseNode* callNode, RetType retType, Type*
         case RetType::Int32x4:   f.writeOp(I32X4::CallIndirect); break;
         case RetType::Float32x4: f.writeOp(F32X4::CallIndirect); break;
     }
-    // Table's index in module
-    size_t tableIndexAt = f.temp32();
+
+    // Table's mask
+    f.writeU32(mask);
+    // Global data offset
+    size_t globalDataOffsetAt = f.temp32();
+    // Signature
+    size_t signatureAt = f.tempPtr();
     // Call node position (asm.js specific)
     f.writeU32(callNode->pn_pos.begin);
 
@@ -6623,13 +6561,12 @@ CheckFuncPtrCall(FunctionBuilder& f, ParseNode* callNode, RetType retType, Type*
     if (!CheckCallArgs(f, callNode, CheckIsVarType, sig))
         return false;
 
-    uint32_t tableIndex = -1;
     ModuleGlobals::FuncPtrTable* table;
-    if (!CheckFuncPtrTableAgainstExisting(f.m(), tableNode, name, Move(sig), mask, &table, &tableIndex))
+    if (!CheckFuncPtrTableAgainstExisting(f.m(), tableNode, name, Move(sig), mask, &table))
         return false;
 
-    MOZ_ASSERT(tableIndex != uint32_t(-1));
-    f.patch32(tableIndexAt, tableIndex);
+    f.patch32(globalDataOffsetAt, table->globalDataOffset());
+    f.patchPtr(signatureAt, (uint8_t*) &table->sig());
 
     *type = retType.toType();
     return true;
@@ -6638,10 +6575,10 @@ CheckFuncPtrCall(FunctionBuilder& f, ParseNode* callNode, RetType retType, Type*
 static bool
 EmitFuncPtrCall(FunctionCompiler& f, RetType retType, MDefinition** def)
 {
-    uint32_t tableIndex = f.readU32();
+    uint32_t mask = f.readU32();
+    uint32_t globalDataOffset = f.readU32();
+    const Signature& sig = *reinterpret_cast<Signature*>(f.readPtr());
 
-    ModuleGlobals::FuncPtrTable& table = f.m().funcPtrTable(tableIndex);
-    const Signature& sig = table.sig();
     MOZ_ASSERT_IF(sig.retType() != RetType::Void, sig.retType() == retType);
 
     uint32_t callNodePosition = f.readU32();
@@ -6654,7 +6591,7 @@ EmitFuncPtrCall(FunctionCompiler& f, RetType retType, MDefinition** def)
     if (!EmitCallArgs(f, sig, &call))
         return false;
 
-    return f.funcPtrCall(table, index, call, def);
+    return f.funcPtrCall(sig, mask, globalDataOffset, index, call, def);
 }
 
 static bool
@@ -6690,8 +6627,10 @@ CheckFFICall(FunctionBuilder& f, ParseNode* callNode, unsigned ffiIndex, RetType
         case RetType::Float32x4: f.writeOp(F32X4::CallImport); break;
     }
 
-    // Index in the exit array
+    // Exit index
     size_t indexAt = f.temp32();
+    // Pointer to the exit's signature in the module's lifo
+    size_t sigAt = f.tempPtr();
     // Call node position (asm.js specific)
     f.writeU32(callNode->pn_pos.begin);
 
@@ -6699,12 +6638,14 @@ CheckFFICall(FunctionBuilder& f, ParseNode* callNode, unsigned ffiIndex, RetType
     if (!CheckCallArgs(f, callNode, CheckIsExternType, signature))
         return false;
 
-    unsigned exitIndex = -1;
-    if (!f.mc().addExit(ffiIndex, calleeName, Move(signature), &exitIndex))
+    Signature* lifoSig = nullptr;
+    unsigned exitIndex;
+    if (!f.m().addExit(ffiIndex, calleeName, Move(signature), &exitIndex, &lifoSig))
         return false;
 
-    MOZ_ASSERT(exitIndex != uint32_t(-1));
+    MOZ_ASSERT(!!lifoSig);
     f.patch32(indexAt, exitIndex);
+    f.patchPtr(sigAt, (uint8_t*)lifoSig);
     *type = retType.toType();
     return true;
 }
@@ -6712,14 +6653,18 @@ CheckFFICall(FunctionBuilder& f, ParseNode* callNode, unsigned ffiIndex, RetType
 static bool
 EmitFFICall(FunctionCompiler& f, RetType retType, MDefinition** def)
 {
-    uint32_t exitIndex = f.readU32();
+    unsigned exitIndex = f.readI32();
+    uint8_t* signaturePtr = f.readPtr();
 
-    const Signature& sig = f.m().exitSignature(exitIndex);
+    const Signature& sig = *reinterpret_cast<Signature*>(signaturePtr);
     MOZ_ASSERT_IF(sig.retType() != RetType::Void, sig.retType() == retType);
 
     uint32_t callNodePosition = f.readU32();
     FunctionCompiler::Call call(f, callNodePosition);
     if (!EmitCallArgs(f, sig, &call))
+        return false;
+
+    if (!f.m().addExit(exitIndex, &sig))
         return false;
 
     return f.ffiCall(exitIndex, call, retType.toMIRType(), def);
@@ -10446,7 +10391,7 @@ CheckFunction(ModuleValidator& m, ModuleCompiler& mc, LifoAlloc& lifo,
     }
 
     AsmFunction function(m.cx());
-    FunctionBuilder f(m, mc, function, fn);
+    FunctionBuilder f(m, function, fn);
     if (!f.init())
         return false;
 
@@ -10529,7 +10474,7 @@ GenerateCode(ModuleCompiler& m, ModuleGlobals::Func& func, MIRGenerator& mir, LI
 }
 
 static bool
-CheckAllFunctionsDefined(ModuleCompiler& m)
+CheckAllFunctionsDefined(ModuleValidator& m)
 {
     for (unsigned i = 0; i < m.numFunctions(); i++) {
         if (!m.function(i).entry().bound())
@@ -10583,7 +10528,7 @@ CheckFunctionsSequential(ModuleValidator& m, ModuleCompiler& mc)
             return false;
     }
 
-    if (!CheckAllFunctionsDefined(mc))
+    if (!CheckAllFunctionsDefined(m))
         return false;
 
     return true;
@@ -10748,11 +10693,11 @@ CheckFunctionsParallel(ModuleValidator& m, ModuleCompiler& mc, ParallelGroupStat
             return false;
     }
 
-    if (!CheckAllFunctionsDefined(mc))
+    if (!CheckAllFunctionsDefined(m))
         return false;
 
     MOZ_ASSERT(group.outstandingJobs == 0);
-    MOZ_ASSERT(group.compiledJobs == mc.numFunctions());
+    MOZ_ASSERT(group.compiledJobs == m.numFunctions());
 #ifdef DEBUG
     {
         AutoLockHelperThreadState lock;
@@ -11301,8 +11246,8 @@ GenerateCheckForHeapDetachment(ModuleCompiler& m, Register scratch)
 }
 
 static bool
-GenerateFFIInterpExit(ModuleCompiler& m, const ModuleCompiler::ExitDescriptor& exit,
-                      unsigned exitIndex, Label* throwLabel)
+GenerateFFIInterpExit(ModuleCompiler& m, const Signature* sig, unsigned exitIndex,
+                      Label* throwLabel)
 {
     MacroAssembler& masm = m.masm();
     MOZ_ASSERT(masm.framePushed() == 0);
@@ -11320,7 +11265,7 @@ GenerateFFIInterpExit(ModuleCompiler& m, const ModuleCompiler::ExitDescriptor& e
     // The padding between stack args and argv ensures that argv is aligned. The
     // padding between argv and retaddr ensures that sp is aligned.
     unsigned offsetToArgv = AlignBytes(StackArgBytes(invokeArgTypes), sizeof(double));
-    unsigned argvBytes = Max<size_t>(1, exit.sig().args().length()) * sizeof(Value);
+    unsigned argvBytes = Max<size_t>(1, sig->args().length()) * sizeof(Value);
     unsigned framePushed = StackDecrementForCall(masm, ABIStackAlignment, offsetToArgv + argvBytes);
 
     Label begin;
@@ -11329,7 +11274,7 @@ GenerateFFIInterpExit(ModuleCompiler& m, const ModuleCompiler::ExitDescriptor& e
     // Fill the argument array.
     unsigned offsetToCallerStackArgs = sizeof(AsmJSFrame) + masm.framePushed();
     Register scratch = ABIArgGenerator::NonArgReturnReg0;
-    FillArgumentArray(m, exit.sig().args(), offsetToArgv, offsetToCallerStackArgs, scratch);
+    FillArgumentArray(m, sig->args(), offsetToArgv, offsetToCallerStackArgs, scratch);
 
     // Prepare the arguments for the call to InvokeFromAsmJS_*.
     ABIArgMIRTypeIter i(invokeArgTypes);
@@ -11342,7 +11287,7 @@ GenerateFFIInterpExit(ModuleCompiler& m, const ModuleCompiler::ExitDescriptor& e
     i++;
 
     // argument 1: argc
-    unsigned argc = exit.sig().args().length();
+    unsigned argc = sig->args().length();
     if (i->kind() == ABIArg::GPR)
         masm.mov(ImmWord(argc), i->gpr());
     else
@@ -11362,7 +11307,7 @@ GenerateFFIInterpExit(ModuleCompiler& m, const ModuleCompiler::ExitDescriptor& e
 
     // Make the call, test whether it succeeded, and extract the return value.
     AssertStackAlignment(masm, ABIStackAlignment);
-    switch (exit.sig().retType().which()) {
+    switch (sig->retType().which()) {
       case RetType::Void:
         masm.call(AsmJSImmPtr(AsmJSImm_InvokeFromAsmJS_Ignore));
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
@@ -11401,8 +11346,8 @@ static const unsigned MaybeSavedGlobalReg = 0;
 #endif
 
 static bool
-GenerateFFIIonExit(ModuleCompiler& m, const ModuleCompiler::ExitDescriptor& exit,
-                   unsigned exitIndex, Label* throwLabel)
+GenerateFFIIonExit(ModuleCompiler& m, const Signature* sig, unsigned exitIndex,
+                   Label* throwLabel)
 {
     MacroAssembler& masm = m.masm();
     MOZ_ASSERT(masm.framePushed() == 0);
@@ -11414,7 +11359,7 @@ GenerateFFIIonExit(ModuleCompiler& m, const ModuleCompiler::ExitDescriptor& exit
     // that sp be JitStackAlignment-aligned *after* pushing the return address.
     static_assert(AsmJSStackAlignment >= JitStackAlignment, "subsumes");
     unsigned sizeOfRetAddr = sizeof(void*);
-    unsigned ionFrameBytes = 3 * sizeof(void*) + (1 + exit.sig().args().length()) * sizeof(Value);
+    unsigned ionFrameBytes = 3 * sizeof(void*) + (1 + sig->args().length()) * sizeof(Value);
     unsigned totalIonBytes = sizeOfRetAddr + ionFrameBytes + MaybeSavedGlobalReg;
     unsigned ionFramePushed = StackDecrementForCall(masm, JitStackAlignment, totalIonBytes) -
                               sizeOfRetAddr;
@@ -11454,7 +11399,7 @@ GenerateFFIIonExit(ModuleCompiler& m, const ModuleCompiler::ExitDescriptor& exit
     masm.loadBaselineOrIonNoArgCheck(callee, callee, nullptr);
 
     // 3. Argc
-    unsigned argc = exit.sig().args().length();
+    unsigned argc = sig->args().length();
     masm.storePtr(ImmWord(uintptr_t(argc)), Address(masm.getStackPointer(), argOffset));
     argOffset += sizeof(size_t);
 
@@ -11464,8 +11409,8 @@ GenerateFFIIonExit(ModuleCompiler& m, const ModuleCompiler::ExitDescriptor& exit
 
     // 5. Fill the arguments
     unsigned offsetToCallerStackArgs = ionFramePushed + sizeof(AsmJSFrame);
-    FillArgumentArray(m, exit.sig().args(), argOffset, offsetToCallerStackArgs, scratch);
-    argOffset += exit.sig().args().length() * sizeof(Value);
+    FillArgumentArray(m, sig->args(), argOffset, offsetToCallerStackArgs, scratch);
+    argOffset += sig->args().length() * sizeof(Value);
     MOZ_ASSERT(argOffset == ionFrameBytes);
 
     // 6. Jit code will clobber all registers, even non-volatiles. GlobalReg and
@@ -11607,7 +11552,7 @@ GenerateFFIIonExit(ModuleCompiler& m, const ModuleCompiler::ExitDescriptor& exit
     masm.branchTestMagic(Assembler::Equal, JSReturnOperand, throwLabel);
 
     Label oolConvert;
-    switch (exit.sig().retType().which()) {
+    switch (sig->retType().which()) {
       case RetType::Void:
         break;
       case RetType::Signed:
@@ -11664,7 +11609,7 @@ GenerateFFIIonExit(ModuleCompiler& m, const ModuleCompiler::ExitDescriptor& exit
 
         // Call coercion function
         AssertStackAlignment(masm, ABIStackAlignment);
-        switch (exit.sig().retType().which()) {
+        switch (sig->retType().which()) {
           case RetType::Signed:
             masm.call(AsmJSImmPtr(AsmJSImm_CoerceInPlace_ToInt32));
             masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
@@ -11690,15 +11635,15 @@ GenerateFFIIonExit(ModuleCompiler& m, const ModuleCompiler::ExitDescriptor& exit
 
 // See "asm.js FFI calls" comment above.
 static bool
-GenerateFFIExits(ModuleCompiler& m, const ModuleCompiler::ExitDescriptor& exit, unsigned exitIndex,
+GenerateFFIExits(ModuleCompiler& m, unsigned exitIndex, const Signature* signature,
                  Label* throwLabel)
 {
     // Generate the slow path through the interpreter
-    if (!GenerateFFIInterpExit(m, exit, exitIndex, throwLabel))
+    if (!GenerateFFIInterpExit(m, signature, exitIndex, throwLabel))
         return false;
 
     // Generate the fast path
-    if (!GenerateFFIIonExit(m, exit, exitIndex, throwLabel))
+    if (!GenerateFFIIonExit(m, signature, exitIndex, throwLabel))
         return false;
 
     return true;
@@ -12239,12 +12184,6 @@ EstablishPreconditions(ExclusiveContext* cx, AsmJSParser& parser)
         return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by arrow function context");
 
     return true;
-}
-
-static bool
-NoExceptionPending(ExclusiveContext* cx)
-{
-    return !cx->isJSContext() || !cx->asJSContext()->isExceptionPending();
 }
 
 bool

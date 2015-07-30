@@ -442,6 +442,8 @@ class AsmJSModule
             uint32_t startOffsetInModule_;  // Store module-start-relative offsets
             uint32_t endOffsetInModule_;    // so preserved by serialization.
         } pod;
+
+        // Used only during compilation => not needed during serialization
         uint32_t funcIndex_;
 
         friend class AsmJSModule;
