@@ -157,25 +157,6 @@ import json
 
 platforms = ['linux', 'mac', 'android', 'win']
 
-custom_includes = {
-  'skia/src/ports/SkAtomics_sync.h': True,
-  'skia/src/ports/SkAtomics_win.h': True,
-  'skia/src/ports/SkBarriers_x86.h': True,
-  'skia/src/ports/SkBarriers_arm.h': True,
-  'skia/src/ports/SkBarriers_tsan.h': True,
-  'skia/src/ports/SkMutex_pthread.h': True,
-  'skia/src/ports/SkMutex_win.h': True
-}
-
-def generate_includes():
-  includes = {}
-  for root, dirs, files in os.walk('skia/include'):
-    for name in files:
-      if name.endswith('.h'):
-        includes[os.path.join(root, name)] = True
-
-  return dict(includes.items() + custom_includes.items())
-
 def generate_opt_sources():
   opt_sources = {'opts': {''}}
   for root, dirs, files in os.walk('skia/src/opts'):
@@ -400,13 +381,11 @@ def write_list(f, name, values, indent):
   write_indent(indent)
   f.write(']\n')
 
-def write_mozbuild(includes, sources):
+def write_mozbuild(sources):
   filename = 'moz.build'
   f = open(filename, 'w')
 
   f.write(header)
-
-  write_list(f, 'EXPORTS.skia', includes, 0)
 
   write_sources(f, sources['common'], 0)
 
@@ -447,10 +426,9 @@ def write_mozbuild(includes, sources):
   print 'Wrote ' + filename
 
 def main():
-  includes = generate_includes()
   platform_sources = generate_platform_sources()
   separated_sources = generate_separated_sources(platform_sources)
-  write_mozbuild(includes, separated_sources)
+  write_mozbuild(separated_sources)
 
 
 if __name__ == '__main__':

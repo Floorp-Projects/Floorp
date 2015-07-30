@@ -8299,6 +8299,7 @@ dnl ========================================================
 dnl Skia
 dnl ========================================================
 if test "$MOZ_ENABLE_SKIA"; then
+  SKIA_INCLUDES="/gfx/skia /gfx/skia/skia/include/config /gfx/skia/skia/include/core"
   AC_DEFINE(MOZ_ENABLE_SKIA)
   AC_DEFINE(USE_SKIA)
   if test "${MOZ_WIDGET_TOOLKIT}" = "android" -o x"$MOZ_WIDGET_TOOLKIT" = x"gonk"; then
@@ -8306,12 +8307,14 @@ if test "$MOZ_ENABLE_SKIA"; then
   fi
 
   if test "${CPU_ARCH}" != "ppc" -a "${CPU_ARCH}" != "ppc64" -a "${CPU_ARCH}" != "sparc" -a -z "$MOZ_DISABLE_SKIA_GPU" ; then
+    SKIA_INCLUDES="$SKIA_INCLUDES /gfx/skia/skia/include/gpu /gfx/skia/skia/include/utils"
     MOZ_ENABLE_SKIA_GPU=1
     AC_DEFINE(USE_SKIA_GPU)
     AC_SUBST(MOZ_ENABLE_SKIA_GPU)
   fi
 fi
 AC_SUBST(MOZ_ENABLE_SKIA)
+AC_SUBST_LIST(SKIA_INCLUDES)
 
 dnl ========================================================
 dnl disable xul
