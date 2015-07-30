@@ -11,11 +11,12 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/ipc/DaemonSocketPDU.h"
-#include "nsThreadUtils.h"
-
-using namespace mozilla::ipc;
+#include "mozilla/ipc/DaemonSocketPDUHelpers.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
+
+using mozilla::ipc::DaemonSocketPDU;
+using mozilla::ipc::DaemonSocketPDUHeader;
 
 //
 // Helper structures
@@ -104,24 +105,6 @@ struct BluetoothConfigurationParameter {
   uint8_t mType;
   uint16_t mLength;
   nsAutoArrayPtr<uint8_t> mValue;
-};
-
-struct DaemonSocketPDUHeader {
-  DaemonSocketPDUHeader()
-  : mService(0x00)
-  , mOpcode(0x00)
-  , mLength(0x00)
-  { }
-
-  DaemonSocketPDUHeader(uint8_t aService, uint8_t aOpcode, uint8_t aLength)
-  : mService(aService)
-  , mOpcode(aOpcode)
-  , mLength(aLength)
-  { }
-
-  uint8_t mService;
-  uint8_t mOpcode;
-  uint16_t mLength;
 };
 
 struct BluetoothPinCode {
