@@ -1,6 +1,10 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+html {
+  font-size: 10px;
+  font-family: menu;
+}
 
 body {
   background: none;
@@ -177,7 +181,7 @@ body {
   display: block;
   width: 100%;
   margin-top: 10px;
-  font-size: 10px;
+  font-size: 1rem;
   color: #777;
 }
 
@@ -211,13 +215,20 @@ body {
   font-weight: bold;
   color: #999;
   padding: .5rem 0;
+  height: 3rem;
+  line-height: 3rem;
+}
+
+.new-room-view > .context-checkbox-checked {
+  background-color: #dbf7ff;
 }
 
 .new-room-view > .context {
-  margin: .5rem 0 0;
-  background-color: #dbf7ff;
+  margin: .5rem 0 .5rem;
   border-radius: 3px 3px 0 0;
-  padding: .5rem;
+  padding: .5rem 1rem ;
+  margin-left: -1rem;
+  margin-right: -1rem;
 }
 
 .new-room-view > .context > .context-enabled {
@@ -230,11 +241,13 @@ body {
 }
 
 .new-room-view > .context > .checkbox-wrapper {
+  height: 2rem;
   margin-bottom: .5em;
+  line-height: 2rem;
 }
 
 .new-room-view > .context > .checkbox-wrapper > .checkbox {
-  border-color: #0096dd;
+  border-color: #d8d8d8;
   background-color: #fff;
 }
 
@@ -244,16 +257,17 @@ body {
 
 .new-room-view > .context > .checkbox-wrapper > label {
   color: #333;
-  font-weight: 700;
+  font-size: 1.1rem;
 }
 
 .new-room-view > .btn {
+  height: 3rem;
   display: block;
-  font-size: 1rem;
-  margin: 0 auto .5rem;
+  font-size: 1.2rem;
+  margin: 0 auto 1rem;
   width: 100%;
   padding: .5rem 1rem;
-  border-radius: 0 0 3px 3px;
+  border-radius: 4px;
 }
 
 /* Remove when bug 1142671 is backed out. */
@@ -277,14 +291,14 @@ body {
 }
 
 .room-list > .room-entry {
-  padding: .5rem 1rem;
+  padding: .2rem 1rem;
   /* Always show the default pointer, even over the text part of the entry. */
   cursor: default;
 }
 
 .room-list > .room-entry > h2 {
   display: inline-block;
-  font-size: .85rem;
+  font-size: 1rem;
   color: #777;
   /* See .room-entry-context-item for the margin/size reductions. */
   width: calc(100% - 1rem - 16px);
@@ -309,11 +323,7 @@ body {
 }
 
 .room-list > .room-entry:hover {
-  background: #f1f1f1;
-}
-
-.room-list > .room-entry:not(:last-child) {
-  border-bottom: 1px solid #ccc;
+  background: #dbf7ff;
 }
 
 .room-list > .room-entry > p {
@@ -424,7 +434,7 @@ body {
   border: 1px solid #c1c1c1;
   border-radius: 2px;
   min-height: 26px;
-  font-size: 12px;
+  font-size: 1.2rem;
 }
 
 .button > .button-caption {
@@ -619,7 +629,7 @@ html[dir="rtl"] .generate-url-spinner {
 }
 
 .terms-service > a {
-  color: #00caee;
+  color: #00a9dc;
 }
 
 /* DnD menu */
