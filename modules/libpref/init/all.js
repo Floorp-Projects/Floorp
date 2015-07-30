@@ -471,12 +471,6 @@ pref("media.mediasource.enabled", true);
 pref("media.mediasource.enabled", false);
 #endif
 
-#ifdef RELEASE_BUILD
-pref("media.mediasource.whitelist", true);
-#else
-pref("media.mediasource.whitelist", false);
-#endif // RELEASE_BUILD
-
 pref("media.mediasource.mp4.enabled", true);
 pref("media.mediasource.webm.enabled", false);
 
