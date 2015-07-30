@@ -9,6 +9,7 @@
 #include "CacheIndex.h"
 #include "CacheIndexIterator.h"
 #include "CacheStorage.h"
+#include "PinningCacheStorage.h"
 #include "AppCacheStorage.h"
 #include "CacheEntry.h"
 #include "CacheFileUtils.h"
@@ -209,12 +210,12 @@ protected:
 class WalkMemoryCacheRunnable : public WalkCacheRunnable
 {
 public:
-  WalkMemoryCacheRunnable(nsILoadContextInfo *aLoadInfo,
+  WalkMemoryCacheRunnable(CacheStorage const *aStorage,
                           bool aVisitEntries,
                           nsICacheStorageVisitor* aVisitor)
     : WalkCacheRunnable(aVisitor, aVisitEntries)
   {
-    CacheFileUtils::AppendKeyPrefix(aLoadInfo, mContextKey);
+    CacheFileUtils::AppendKeyPrefix(aStorage, mContextKey);
     MOZ_ASSERT(NS_IsMainThread());
   }
 
@@ -535,8 +536,9 @@ void CacheStorageService::DropPrivateBrowsingEntries()
   nsTArray<nsCString> keys;
   sGlobalEntryTables->EnumerateRead(&CollectPrivateContexts, &keys);
 
-  for (uint32_t i = 0; i < keys.Length(); ++i)
-    DoomStorageEntries(keys[i], nullptr, true, nullptr);
+  for (uint32_t i = 0; i < keys.Length(); ++i) {
+    DoomStorageEntries(keys[i], nullptr, true, false, nullptr);
+  }
 }
 
 namespace {
@@ -716,6 +718,23 @@ NS_IMETHODIMP CacheStorageService::DiskCacheStorage(nsILoadContextInfo *aLoadCon
   return NS_OK;
 }
 
+NS_IMETHODIMP CacheStorageService::PinningCacheStorage(nsILoadContextInfo *aLoadContextInfo,
+                                                       nsICacheStorage * *_retval)
+{
+  NS_ENSURE_ARG(aLoadContextInfo);
+  NS_ENSURE_ARG(_retval);
+
+  if (!CacheObserver::UseNewCache()) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  nsCOMPtr<nsICacheStorage> storage =
+    new mozilla::net::PinningCacheStorage(aLoadContextInfo);
+
+  storage.forget(_retval);
+  return NS_OK;
+}
+
 NS_IMETHODIMP CacheStorageService::AppCacheStorage(nsILoadContextInfo *aLoadContextInfo,
                                                    nsIApplicationCache *aApplicationCache,
                                                    nsICacheStorage * *_retval)
@@ -751,7 +770,7 @@ NS_IMETHODIMP CacheStorageService::Clear()
       sGlobalEntryTables->EnumerateRead(&CollectContexts, &keys);
 
       for (uint32_t i = 0; i < keys.Length(); ++i)
-        DoomStorageEntries(keys[i], nullptr, true, nullptr);
+        DoomStorageEntries(keys[i], nullptr, true, false, nullptr);
     }
 
     rv = CacheFileIOManager::EvictAll();
@@ -1336,10 +1355,15 @@ CacheStorageService::AddStorageEntry(CacheStorage const* aStorage,
   NS_ENSURE_ARG(aStorage);
 
   nsAutoCString contextKey;
-  CacheFileUtils::AppendKeyPrefix(aStorage->LoadInfo(), contextKey);
+  CacheFileUtils::AppendKeyPrefix(aStorage, contextKey);
+
+  uint32_t pinningAppId = aStorage->IsPinning()
+    ? aStorage->LoadInfo()->AppId()
+    : nsILoadContextInfo::NO_APP_ID;
 
   return AddStorageEntry(contextKey, aURI, aIdExtension,
-                         aStorage->WriteToDisk(), aCreateIfNotExist, aReplace,
+                         aStorage->WriteToDisk(), pinningAppId,
+                         aCreateIfNotExist, aReplace,
                          aResult);
 }
 
@@ -1348,6 +1372,7 @@ CacheStorageService::AddStorageEntry(nsCSubstring const& aContextKey,
                                      nsIURI* aURI,
                                      const nsACString & aIdExtension,
                                      bool aWriteToDisk,
+                                     uint32_t aPinningAppId,
                                      bool aCreateIfNotExist,
                                      bool aReplace,
                                      CacheEntryHandle** aResult)
@@ -1410,7 +1435,7 @@ CacheStorageService::AddStorageEntry(nsCSubstring const& aContextKey,
     // Ensure entry for the particular URL, if not read/only
     if (!entryExists && (aCreateIfNotExist || aReplace)) {
       // Entry is not in the hashtable or has just been truncated...
-      entry = new CacheEntry(aContextKey, aURI, aIdExtension, aWriteToDisk);
+      entry = new CacheEntry(aContextKey, aURI, aIdExtension, aWriteToDisk, aPinningAppId);
       entries->Put(entryKey, entry);
       LOG(("  new entry %p for %s", entry.get(), entryKey.get()));
     }
@@ -1435,7 +1460,7 @@ CacheStorageService::CheckStorageEntry(CacheStorage const* aStorage,
   nsresult rv;
 
   nsAutoCString contextKey;
-  CacheFileUtils::AppendKeyPrefix(aStorage->LoadInfo(), contextKey);
+  CacheFileUtils::AppendKeyPrefix(aStorage, contextKey);
 
   if (!aStorage->WriteToDisk()) {
     AppendMemoryStorageID(contextKey);
@@ -1469,6 +1494,11 @@ CacheStorageService::CheckStorageEntry(CacheStorage const* aStorage,
     // Memory entry, nothing more to do.
     LOG(("  not found in hash tables"));
     return NS_OK;
+  }
+
+  if (aStorage->IsPinning()) {
+    LOG(("  not implemented for pinning entries"));
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   // Disk entry, not found in the hashtable, check the index.
@@ -1557,7 +1587,7 @@ CacheStorageService::DoomStorageEntry(CacheStorage const* aStorage,
   NS_ENSURE_ARG(aURI);
 
   nsAutoCString contextKey;
-  CacheFileUtils::AppendKeyPrefix(aStorage->LoadInfo(), contextKey);
+  CacheFileUtils::AppendKeyPrefix(aStorage, contextKey);
 
   nsAutoCString entryKey;
   nsresult rv = CacheEntry::HashingKey(EmptyCString(), aIdExtension, aURI, entryKey);
@@ -1598,7 +1628,7 @@ CacheStorageService::DoomStorageEntry(CacheStorage const* aStorage,
 
   if (aStorage->WriteToDisk()) {
     nsAutoCString contextKey;
-    CacheFileUtils::AppendKeyPrefix(aStorage->LoadInfo(), contextKey);
+    CacheFileUtils::AppendKeyPrefix(aStorage, contextKey);
 
     rv = CacheEntry::HashingKey(contextKey, aIdExtension, aURI, entryKey);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1643,18 +1673,20 @@ CacheStorageService::DoomStorageEntries(CacheStorage const* aStorage,
   NS_ENSURE_ARG(aStorage);
 
   nsAutoCString contextKey;
-  CacheFileUtils::AppendKeyPrefix(aStorage->LoadInfo(), contextKey);
+  CacheFileUtils::AppendKeyPrefix(aStorage, contextKey);
 
   mozilla::MutexAutoLock lock(mLock);
 
   return DoomStorageEntries(contextKey, aStorage->LoadInfo(),
-                            aStorage->WriteToDisk(), aCallback);
+                            aStorage->WriteToDisk(),
+                            aStorage->IsPinning(), aCallback);
 }
 
 nsresult
 CacheStorageService::DoomStorageEntries(nsCSubstring const& aContextKey,
                                         nsILoadContextInfo* aContext,
                                         bool aDiskStorage,
+                                        bool aPinningStorage,
                                         nsICacheEntryDoomCallback* aCallback)
 {
   mLock.AssertCurrentThreadOwns();
@@ -1673,7 +1705,7 @@ CacheStorageService::DoomStorageEntries(nsCSubstring const& aContextKey,
 
     if (aContext && !aContext->IsPrivate()) {
       LOG(("  dooming disk entries"));
-      CacheFileIOManager::EvictByContext(aContext);
+      CacheFileIOManager::EvictByContext(aContext, aPinningStorage);
     }
   } else {
     LOG(("  dooming memory-only storage of %s", aContextKey.BeginReading()));
@@ -1740,6 +1772,10 @@ CacheStorageService::WalkStorageEntries(CacheStorage const* aStorage,
 
   NS_ENSURE_ARG(aStorage);
 
+  if (aStorage->IsPinning()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   if (aStorage->WriteToDisk()) {
     nsRefPtr<WalkDiskCacheRunnable> event =
       new WalkDiskCacheRunnable(aStorage->LoadInfo(), aVisitEntries, aVisitor);
@@ -1747,20 +1783,20 @@ CacheStorageService::WalkStorageEntries(CacheStorage const* aStorage,
   }
 
   nsRefPtr<WalkMemoryCacheRunnable> event =
-    new WalkMemoryCacheRunnable(aStorage->LoadInfo(), aVisitEntries, aVisitor);
+    new WalkMemoryCacheRunnable(aStorage, aVisitEntries, aVisitor);
   return event->Walk();
 }
 
 void
 CacheStorageService::CacheFileDoomed(nsILoadContextInfo* aLoadContextInfo,
-                                     const nsACString & aIdExtension,
-                                     const nsACString & aURISpec)
+                                     CacheFileUtils::KeyInfo* aKeyInfo)
 {
   nsAutoCString contextKey;
-  CacheFileUtils::AppendKeyPrefix(aLoadContextInfo, contextKey);
+  CacheFileUtils::AppendKeyPrefix(aLoadContextInfo, aKeyInfo->mPinningStorage, contextKey);
 
   nsAutoCString entryKey;
-  CacheEntry::HashingKey(EmptyCString(), aIdExtension, aURISpec, entryKey);
+  CacheEntry::HashingKey(EmptyCString(),
+                         aKeyInfo->mIdEnhance, aKeyInfo->mURISpec, entryKey);
 
   mozilla::MutexAutoLock lock(mLock);
 
@@ -1789,15 +1825,15 @@ CacheStorageService::CacheFileDoomed(nsILoadContextInfo* aLoadContextInfo,
 
 bool
 CacheStorageService::GetCacheEntryInfo(nsILoadContextInfo* aLoadContextInfo,
-                                       const nsACString & aIdExtension,
-                                       const nsACString & aURISpec,
+                                       CacheFileUtils::KeyInfo* aKeyInfo,
                                        EntryInfoCallback *aCallback)
 {
   nsAutoCString contextKey;
-  CacheFileUtils::AppendKeyPrefix(aLoadContextInfo, contextKey);
+  CacheFileUtils::AppendKeyPrefix(aLoadContextInfo, aKeyInfo->mPinningStorage, contextKey);
 
   nsAutoCString entryKey;
-  CacheEntry::HashingKey(EmptyCString(), aIdExtension, aURISpec, entryKey);
+  CacheEntry::HashingKey(EmptyCString(),
+                         aKeyInfo->mIdEnhance, aKeyInfo->mURISpec, entryKey);
 
   nsRefPtr<CacheEntry> entry;
   {

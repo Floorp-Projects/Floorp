@@ -11,21 +11,26 @@
 #include "nsTArray.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/TimeStamp.h"
+#include "CacheStorageService.h"
 
 class nsILoadContextInfo;
 class nsACString;
 
 namespace mozilla {
 namespace net {
+
+class CacheStorage;
+
 namespace CacheFileUtils {
 
 already_AddRefed<nsILoadContextInfo>
 ParseKey(const nsCSubstring &aKey,
-         nsCSubstring *aIdEnhance = nullptr,
-         nsCSubstring *aURISpec = nullptr);
+         KeyInfo* aKeyInfo = nullptr);
 
 void
-AppendKeyPrefix(nsILoadContextInfo *aInfo, nsACString &_retval);
+AppendKeyPrefix(CacheStorage const* aStorage, nsACString &_retval);
+void
+AppendKeyPrefix(nsILoadContextInfo *aInfo, bool aPin, nsACString &_retval);
 
 void
 AppendTagWithValue(nsACString & aTarget, char const aTag, nsCSubstring const & aValue);

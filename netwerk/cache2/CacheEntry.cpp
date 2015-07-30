@@ -163,7 +163,8 @@ NS_IMPL_ISUPPORTS(CacheEntry,
 CacheEntry::CacheEntry(const nsACString& aStorageID,
                        nsIURI* aURI,
                        const nsACString& aEnhanceID,
-                       bool aUseDisk)
+                       bool aUseDisk,
+                       uint32_t aPinningAppId)
 : mFrecency(0)
 , mSortingExpirationTime(uint32_t(-1))
 , mLock("CacheEntry")
@@ -172,6 +173,7 @@ CacheEntry::CacheEntry(const nsACString& aStorageID,
 , mEnhanceID(aEnhanceID)
 , mStorageID(aStorageID)
 , mUseDisk(aUseDisk)
+, mPinningAppId(aPinningAppId)
 , mIsDoomed(false)
 , mSecurityInfoLoaded(false)
 , mPreventCallbacks(false)
@@ -341,7 +343,8 @@ bool CacheEntry::Load(bool aTruncate, bool aPriority)
   //    as a new one.
   // 2. When this is a memory-only entry, check there is a disk file.
   //    If there is or could be, doom that file.
-  if ((!aTruncate || !mUseDisk) && NS_SUCCEEDED(rv)) {
+  if ((!aTruncate || !mUseDisk) && NS_SUCCEEDED(rv) &&
+      !mPinningAppId) {
     // Check the index right now to know we have or have not the entry
     // as soon as possible.
     CacheIndex::EntryStatus status;
@@ -391,6 +394,7 @@ bool CacheEntry::Load(bool aTruncate, bool aPriority)
       rv = mFile->Init(fileKey,
                        aTruncate,
                        !mUseDisk,
+                       mPinningAppId,
                        aPriority,
                        directLoad ? nullptr : this);
     }
@@ -486,6 +490,7 @@ already_AddRefed<CacheEntryHandle> CacheEntry::ReopenTruncated(bool aMemoryOnly,
     nsresult rv = CacheStorageService::Self()->AddStorageEntry(
       GetStorageID(), GetURI(), GetEnhanceID(),
       mUseDisk && !aMemoryOnly,
+      mPinningAppId,
       true, // always create
       true, // truncate existing (this one)
       getter_AddRefs(handle));

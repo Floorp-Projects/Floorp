@@ -101,7 +101,8 @@ function run_test() {
 
 function doneFirstLoad(req, buffer, expected) {
   // Load it again, make sure it hits the cache
-  var chan = makeChan(URL, 0, false);
+  var nc = req.notificationCallbacks.getInterface(Ci.nsILoadContext);
+  var chan = makeChan(URL, nc.appId, nc.isInBrowserElement);
   chan.asyncOpen(new ChannelListener(doneSecondLoad, expected), null);
 }
 
