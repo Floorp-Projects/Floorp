@@ -926,16 +926,15 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
   // we use a zero-delay timer to coalesce multiple pref updates
   if (!mPrefChangedTimer)
   {
-    mPrefChangedTimer = do_CreateInstance("@mozilla.org/timer;1");
-    if (!mPrefChangedTimer)
-      return;
     // We will end up calling InvalidatePreferenceSheets one from each pres
     // context, but all it's doing is clearing its cached sheet pointers,
     // so it won't be wastefully recreating the sheet multiple times.
     // The first pres context that has its mPrefChangedTimer called will
     // be the one to cause the reconstruction of the pref style sheet.
     nsLayoutStylesheetCache::InvalidatePreferenceSheets();
-    mPrefChangedTimer->InitWithFuncCallback(nsPresContext::PrefChangedUpdateTimerCallback, (void*)this, 0, nsITimer::TYPE_ONE_SHOT);
+    if (!InitTimer(mPrefChangedTimer, nsPresContext::PrefChangedUpdateTimerCallback, 0)) {
+      return;
+    }
   }
   if (prefName.EqualsLiteral("nglayout.debug.paint_flashing") ||
       prefName.EqualsLiteral("nglayout.debug.paint_flashing_chrome")) {
@@ -2531,6 +2530,21 @@ nsPresContext::HasCachedStyleData()
   return mShell && mShell->StyleSet()->HasCachedStyleData();
 }
 
+bool
+nsPresContext::InitTimer(nsCOMPtr<nsITimer>& aTimer,
+                         nsTimerCallbackFunc aCallback,
+                         uint32_t aDelay)
+{
+  aTimer = do_CreateInstance("@mozilla.org/timer;1");
+  if (!aTimer) {
+    return false;
+  }
+
+  nsresult rv = aTimer->InitWithFuncCallback(aCallback, this, aDelay,
+                                             nsITimer::TYPE_ONE_SHOT);
+  return NS_SUCCEEDED(rv);
+}
+
 static bool sGotInterruptEnv = false;
 enum InterruptMode {
   ModeRandom,
@@ -2920,13 +2934,9 @@ nsRootPresContext::InitApplyPluginGeometryTimer()
   // so set a backup timer to do this too.  We want to make sure this
   // won't fire before our normal paint notifications, if those would
   // update the geometry, so set it for double the refresh driver interval.
-  mApplyPluginGeometryTimer = do_CreateInstance("@mozilla.org/timer;1");
-  if (mApplyPluginGeometryTimer) {
-    mApplyPluginGeometryTimer->
-      InitWithFuncCallback(ApplyPluginGeometryUpdatesCallback, this,
-                           nsRefreshDriver::DefaultInterval() * 2,
-                           nsITimer::TYPE_ONE_SHOT);
-  }
+  InitTimer(mApplyPluginGeometryTimer,
+            ApplyPluginGeometryUpdatesCallback,
+            nsRefreshDriver::DefaultInterval() * 2);
 }
 
 void
@@ -3096,11 +3106,8 @@ nsRootPresContext::EnsureEventualDidPaintEvent()
 {
   if (mNotifyDidPaintTimer)
     return;
-  mNotifyDidPaintTimer = do_CreateInstance("@mozilla.org/timer;1");
-  if (!mNotifyDidPaintTimer)
-    return;
-  mNotifyDidPaintTimer->InitWithFuncCallback(NotifyDidPaintForSubtreeCallback,
-                                             (void*)this, 100, nsITimer::TYPE_ONE_SHOT);
+
+  InitTimer(mNotifyDidPaintTimer, NotifyDidPaintForSubtreeCallback, 100);
 }
 
 void
