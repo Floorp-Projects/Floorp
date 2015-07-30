@@ -931,6 +931,7 @@ add_task(function* test_dailyDuplication() {
     return;
   }
 
+  clearPendingPings();
   PingServer.clearRequests();
 
   let schedulerTickCallback = null;
@@ -1429,6 +1430,8 @@ add_task(function* test_schedulerComputerSleep() {
 
   const ABORTED_FILE = OS.Path.join(DATAREPORTING_PATH, ABORTED_PING_FILE_NAME);
 
+  clearPendingPings();
+  yield TelemetrySend.reset();
   PingServer.clearRequests();
 
   // Remove any aborted-session ping from the previous tests.

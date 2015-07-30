@@ -463,6 +463,48 @@ add_task(function* test_pendingPingsQuota() {
   yield TelemetryStorage.testPendingQuotaTaskPromise();
   yield checkPendingPings();
 
+  const OVERSIZED_PING_ID = "9b21ec8f-f762-4d28-a2c1-44e1c4694f24";
+  // Create a pending oversized ping.
+  const OVERSIZED_PING = {
+    id: OVERSIZED_PING_ID,
+    type: PING_TYPE,
+    creationDate: (new Date()).toISOString(),
+    // Generate a 2MB string to use as the ping payload.
+    payload: generateRandomString(2 * 1024 * 1024),
+  };
+  yield TelemetryStorage.savePendingPing(OVERSIZED_PING);
+
+  // Reset the histograms.
+  Telemetry.getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_PENDING").clear();
+  Telemetry.getHistogramById("TELEMETRY_DISCARDED_PENDING_PINGS_SIZE_MB").clear();
+
+  // Try to manually load the oversized ping.
+  yield Assert.rejects(TelemetryStorage.loadPendingPing(OVERSIZED_PING_ID),
+                       "The oversized ping should have been pruned.");
+  Assert.ok(!(yield OS.File.exists(getSavePathForPingId(OVERSIZED_PING_ID))),
+            "The ping should not be on the disk anymore.");
+
+  // Make sure we're correctly updating the related histograms.
+  h = Telemetry.getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_PENDING").snapshot();
+  Assert.equal(h.sum, 1, "Telemetry must report 1 oversized ping in the pending pings directory.");
+  h = Telemetry.getHistogramById("TELEMETRY_DISCARDED_PENDING_PINGS_SIZE_MB").snapshot();
+  Assert.equal(h.counts[2], 1, "Telemetry must report a 2MB, oversized, ping.");
+
+  // Save the ping again to check if it gets pruned when scanning the pings directory.
+  yield TelemetryStorage.savePendingPing(OVERSIZED_PING);
+  expectedPrunedPings.push(OVERSIZED_PING_ID);
+
+  // Scan the pending pings directory.
+  yield TelemetryController.reset();
+  yield TelemetryStorage.testPendingQuotaTaskPromise();
+  yield checkPendingPings();
+
+  // Make sure we're correctly updating the related histograms.
+  h = Telemetry.getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_PENDING").snapshot();
+  Assert.equal(h.sum, 2, "Telemetry must report 1 oversized ping in the pending pings directory.");
+  h = Telemetry.getHistogramById("TELEMETRY_DISCARDED_PENDING_PINGS_SIZE_MB").snapshot();
+  Assert.equal(h.counts[2], 2, "Telemetry must report two 2MB, oversized, pings.");
+
   Services.prefs.setBoolPref(PREF_FHR_UPLOAD, true);
 });
 

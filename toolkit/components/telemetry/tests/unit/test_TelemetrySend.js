@@ -14,6 +14,8 @@ Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
 
+const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
+
 const PREF_TELEMETRY_ENABLED = "toolkit.telemetry.enabled";
 const PREF_TELEMETRY_SERVER = "toolkit.telemetry.server";
 
@@ -234,6 +236,33 @@ add_task(function* test_backoffTimeout() {
 
   yield TelemetrySend.testWaitOnOutgoingPings();
   Assert.equal(TelemetrySend.pendingPingCount, 0, "Should have no pending pings left");
+});
+
+add_task(function* test_discardBigPings() {
+  const TEST_PING_TYPE = "test-ping-type";
+
+  // Generate a 2MB string and create an oversized payload.
+  const OVERSIZED_PAYLOAD = generateRandomString(2 * 1024 * 1024);
+
+  // Reset the histograms.
+  Telemetry.getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_SEND").clear();
+  Telemetry.getHistogramById("TELEMETRY_DISCARDED_SEND_PINGS_SIZE_MB").clear();
+
+  // Submit a ping of a normal size and check that we don't count it in the histogram.
+  yield TelemetryController.submitExternalPing(TEST_PING_TYPE, { test: "test" });
+  yield TelemetrySend.testWaitOnOutgoingPings();
+  let h = Telemetry.getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_SEND").snapshot();
+  Assert.equal(h.sum, 0, "Telemetry must report no oversized ping submitted.");
+  h = Telemetry.getHistogramById("TELEMETRY_DISCARDED_SEND_PINGS_SIZE_MB").snapshot();
+  Assert.equal(h.sum, 0, "Telemetry must report no oversized pings.");
+
+  // Submit an oversized ping and check that it gets discarded.
+  yield TelemetryController.submitExternalPing(TEST_PING_TYPE, OVERSIZED_PAYLOAD);
+  yield TelemetrySend.testWaitOnOutgoingPings();
+  h = Telemetry.getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_SEND").snapshot();
+  Assert.equal(h.sum, 1, "Telemetry must report 1 oversized ping submitted.");
+  h = Telemetry.getHistogramById("TELEMETRY_DISCARDED_SEND_PINGS_SIZE_MB").snapshot();
+  Assert.equal(h.counts[2], 1, "Telemetry must report a 2MB, oversized, ping submitted.");
 });
 
 // Test that the current, non-persisted pending pings are properly saved on shutdown.
