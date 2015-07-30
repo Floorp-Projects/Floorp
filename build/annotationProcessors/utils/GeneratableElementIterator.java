@@ -31,7 +31,7 @@ public class GeneratableElementIterator implements Iterator<AnnotatableEntity> {
         // Get all the elements of this class as AccessibleObjects.
         Member[] aMethods = aClass.getDeclaredMethods();
         Member[] aFields = aClass.getDeclaredFields();
-        Member[] aCtors = aClass.getConstructors();
+        Member[] aCtors = aClass.getDeclaredConstructors();
 
         // Shove them all into one buffer.
         Member[] objs = new Member[aMethods.length + aFields.length + aCtors.length];

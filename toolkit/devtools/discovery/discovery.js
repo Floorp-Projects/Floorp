@@ -385,16 +385,16 @@ Discovery.prototype = {
     if (topic !== "network-active-changed") {
       return;
     }
-    let activeNetwork = subject;
-    if (!activeNetwork) {
-      log("No active network");
+    let activeNetworkInfo = subject;
+    if (!activeNetworkInfo) {
+      log("No active network info");
       return;
     }
-    activeNetwork = activeNetwork.QueryInterface(Ci.nsINetworkInterface);
-    log("Active network changed to: " + activeNetwork.type);
+    activeNetworkInfo = activeNetworkInfo.QueryInterface(Ci.nsINetworkInfo);
+    log("Active network changed to: " + activeNetworkInfo.type);
     // UDP sockets go down when the device goes offline, so we'll restart them
     // when the active network goes back to WiFi.
-    if (activeNetwork.type === Ci.nsINetworkInterface.NETWORK_TYPE_WIFI) {
+    if (activeNetworkInfo.type === Ci.nsINetworkInfo.NETWORK_TYPE_WIFI) {
       this._restartListening();
     }
   },

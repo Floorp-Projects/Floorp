@@ -9,7 +9,7 @@
 
 #include "mozilla/dom/StructuredCloneHelper.h"
 #include "nsCOMPtr.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 

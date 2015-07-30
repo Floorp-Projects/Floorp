@@ -7,7 +7,7 @@
 #ifndef DecodedStream_h_
 #define DecodedStream_h_
 
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsTArray.h"
 #include "MediaInfo.h"
 
