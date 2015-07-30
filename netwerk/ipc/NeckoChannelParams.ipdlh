@@ -98,7 +98,6 @@ struct HttpChannelConnectArgs
 {
   uint32_t channelId;
   bool shouldIntercept;
-  OptionalLoadInfoArgs loadInfo;
 };
 
 union HttpChannelCreationArgs
@@ -123,7 +122,6 @@ struct FTPChannelOpenArgs
 struct FTPChannelConnectArgs
 {
   uint32_t channelId;
-  OptionalLoadInfoArgs loadInfo;
 };
 
 union FTPChannelCreationArgs

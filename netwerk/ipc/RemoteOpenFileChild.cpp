@@ -210,7 +210,7 @@ RemoteOpenFileChild::AsyncRemoteFileOpen(int32_t aFlags,
 
   mTabChild = static_cast<TabChild*>(aTabChild);
 
-  if (MissingRequiredTabChild(mTabChild, nullptr, "remoteopenfile")) {
+  if (MissingRequiredTabChild(mTabChild, "remoteopenfile")) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 

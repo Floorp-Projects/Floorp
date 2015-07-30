@@ -169,7 +169,7 @@ FTPChannelChild::AsyncOpen(::nsIStreamListener* listener, nsISupports* aContext)
   if (iTabChild) {
     tabChild = static_cast<mozilla::dom::TabChild*>(iTabChild.get());
   }
-  if (MissingRequiredTabChild(tabChild, mLoadInfo, "ftp")) {
+  if (MissingRequiredTabChild(tabChild, "ftp")) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
@@ -718,10 +718,7 @@ FTPChannelChild::ConnectParent(uint32_t id)
   // until OnStopRequest, or we do a redirect, or we hit an IPDL error.
   AddIPDLReference();
 
-  FTPChannelConnectArgs connectArgs;
-  connectArgs.channelId() = id;
-  nsresult rv = mozilla::ipc::LoadInfoToLoadInfoArgs(mLoadInfo, &connectArgs.loadInfo());
-  NS_ENSURE_SUCCESS(rv, rv);
+  FTPChannelConnectArgs connectArgs(id);
 
   if (!gNeckoChild->SendPFTPChannelConstructor(this, tabChild,
                                                IPC::SerializedLoadContext(this),
