@@ -121,10 +121,9 @@ public:
    * Convenience function that generates nsZipHandle
    *
    * @param   aFile         The file used to access the zip
-   * @param   aMustCacheFd  Optional flag to keep the PRFileDesc in nsZipHandle
    * @return  status code
    */
-  nsresult OpenArchive(nsIFile *aFile, bool aMustCacheFd = false);
+  nsresult OpenArchive(nsIFile *aFile);
 
   /**
    * Test the integrity of items in this archive by running
@@ -381,7 +380,7 @@ class nsZipHandle {
 friend class nsZipArchive;
 friend class mozilla::FileLocation;
 public:
-  static nsresult Init(nsIFile *file, bool aMustCacheFd, nsZipHandle **ret,
+  static nsresult Init(nsIFile *file, nsZipHandle **ret,
                        PRFileDesc **aFd = nullptr);
   static nsresult Init(nsZipArchive *zip, const char *entry,
                        nsZipHandle **ret);

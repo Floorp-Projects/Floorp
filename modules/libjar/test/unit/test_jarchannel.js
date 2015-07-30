@@ -277,20 +277,7 @@ if (inChild) {
         // Drop any JAR caches
         obs.notifyObservers(null, "chrome-flush-caches", null);
 
-        // Open the first channel without ensureChildFd()
-        var chan_first = ios.newChannel2(uri,
-                                         null,
-                                         null,
-                                         null,      // aLoadingNode
-                                         Services.scriptSecurityManager.getSystemPrincipal(),
-                                         null,      // aTriggeringPrincipal
-                                         Ci.nsILoadInfo.SEC_NORMAL,
-                                         Ci.nsIContentPolicy.TYPE_OTHER)
-                            .QueryInterface(Ci.nsIJARChannel);
-        chan_first.asyncOpen(new Listener(function(l) {
-        }), null);
-
-        // Open multiple channels with ensureChildFd()
+        // Open multiple channels
         var num = 10;
         var chan = [];
         for (var i = 0; i < num; i++) {
@@ -303,12 +290,11 @@ if (inChild) {
                                       Ci.nsILoadInfo.SEC_NORMAL,
                                       Ci.nsIContentPolicy.TYPE_OTHER)
                          .QueryInterface(Ci.nsIJARChannel);
-            chan[i].ensureChildFd();
             chan[i].asyncOpen(new Listener(function(l) {
             }), null);
         }
 
-        // Open the last channel with ensureChildFd()
+        // Open the last channel
         var chan_last = ios.newChannel2(uri,
                                         null,
                                         null,
@@ -318,7 +304,6 @@ if (inChild) {
                                         Ci.nsILoadInfo.SEC_NORMAL,
                                         Ci.nsIContentPolicy.TYPE_OTHER)
                            .QueryInterface(Ci.nsIJARChannel);
-        chan_last.ensureChildFd();
         chan_last.asyncOpen(new Listener(function(l) {
             run_next_test();
         }), null);
