@@ -139,7 +139,7 @@ bool Axis::AdjustDisplacement(ParentLayerCoord aDisplacement,
     return false;
   }
 
-  ClearOverscrollAnimationState();
+  EndOverscrollAnimation();
 
   ParentLayerCoord displacement = aDisplacement;
 
@@ -186,7 +186,7 @@ void Axis::OverscrollBy(ParentLayerCoord aOverscroll) {
   if (FuzzyEqualsAdditive(aOverscroll.value, 0.0f, COORDINATE_EPSILON)) {
     return;
   }
-  ClearOverscrollAnimationState();
+  EndOverscrollAnimation();
   aOverscroll = ApplyResistance(aOverscroll);
   if (aOverscroll > 0) {
 #ifdef DEBUG
@@ -238,13 +238,11 @@ void Axis::StartOverscrollAnimation(float aVelocity) {
 }
 
 void Axis::EndOverscrollAnimation() {
-  ClearOverscrollAnimationState();
-}
-
-void Axis::ClearOverscrollAnimationState() {
+  ParentLayerCoord overscroll = GetOverscroll();
   mFirstOverscrollAnimationSample = 0;
   mLastOverscrollPeak = 0;
   mOverscrollScale = 1.0f;
+  mOverscroll = overscroll;
 }
 
 void Axis::StepOverscrollAnimation(double aStepDurationMilliseconds) {
@@ -364,7 +362,7 @@ bool Axis::IsOverscrolled() const {
 }
 
 void Axis::ClearOverscroll() {
-  ClearOverscrollAnimationState();
+  EndOverscrollAnimation();
   mOverscroll = 0;
 }
 

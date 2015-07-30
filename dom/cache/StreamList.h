@@ -9,7 +9,7 @@
 
 #include "mozilla/dom/cache/Context.h"
 #include "mozilla/dom/cache/Types.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsTArray.h"
 
 class nsIInputStream;
