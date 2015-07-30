@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<meta charset="utf-8">
+<body>
+  <script type="application/javascript">
+
+  function ok(expect, msg) {
+    window.parent.postMessage({"type": "status", status: !!expect, msg: msg}, "*");
+  }
+
+  window.onmessage = function(event) {
+    ok(!!event.data.bitmap1, "Get the 1st ImageBitmap from the main script.");
+    ok(!!event.data.bitmap2, "Get the 2st ImageBitmap from the main script.");
+
+    // send the first original ImageBitmap back to the main window
+    window.parent.postMessage({"type":"bitmap1", "bitmap":event.data.bitmap1}, "*");
+
+    // create a new ImageBitmap from the 2nd original ImageBitmap
+    // and then send the newly created ImageBitmap back to the main window
+    var promise = createImageBitmap(event.data.bitmap2);
+    promise.then(
+      function(bitmap) {
+        ok(true, "Successfully create a new ImageBitmap from the 2nd original bitmap in worker.");
+
+        // send the newly created ImageBitmap back to the main window
+        window.parent.postMessage({"type":"bitmap2", "bitmap":bitmap}, "*");
+
+        // finish the test
+        window.parent.postMessage({"type": "finish"}, "*");
+      },
+      function() {
+        ok(false, "Cannot create a new bitmap from the original bitmap in worker.");
+      }
+    );
+  }
+
+
+  </script>
+</body>
