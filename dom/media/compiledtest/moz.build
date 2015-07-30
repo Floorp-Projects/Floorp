@@ -6,7 +6,8 @@
 
 GeckoCppUnitTests([
     'TestAudioBuffers',
-    'TestAudioMixer'
+    'TestAudioMixer',
+    'TestAudioPacketizer'
 ])
 
 LOCAL_INCLUDES += [
