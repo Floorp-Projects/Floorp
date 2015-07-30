@@ -34,7 +34,7 @@ ResourceItem::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   size_t size = aMallocSizeOf(this);
 
   // size excluding this
-  size += mData->SizeOfExcludingThis(aMallocSizeOf);
+  size += mData->ShallowSizeOfExcludingThis(aMallocSizeOf);
 
   return size;
 }

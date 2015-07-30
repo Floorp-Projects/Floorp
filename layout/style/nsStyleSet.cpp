@@ -226,10 +226,10 @@ nsStyleSet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   for (uint32_t i = 0; i < mScopedDocSheetRuleProcessors.Length(); i++) {
     n += mScopedDocSheetRuleProcessors[i]->SizeOfIncludingThis(aMallocSizeOf);
   }
-  n += mScopedDocSheetRuleProcessors.SizeOfExcludingThis(aMallocSizeOf);
+  n += mScopedDocSheetRuleProcessors.ShallowSizeOfExcludingThis(aMallocSizeOf);
 
-  n += mRoots.SizeOfExcludingThis(aMallocSizeOf);
-  n += mOldRuleTrees.SizeOfExcludingThis(aMallocSizeOf);
+  n += mRoots.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  n += mOldRuleTrees.ShallowSizeOfExcludingThis(aMallocSizeOf);
 
   return n;
 }

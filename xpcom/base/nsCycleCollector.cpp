@@ -886,7 +886,7 @@ public:
 
     // We don't measure what the WeakMappings point to, because the
     // pointers are non-owning.
-    *aWeakMapsSize = mWeakMaps.SizeOfExcludingThis(aMallocSizeOf);
+    *aWeakMapsSize = mWeakMaps.ShallowSizeOfExcludingThis(aMallocSizeOf);
   }
 };
 

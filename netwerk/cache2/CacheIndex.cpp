@@ -3611,8 +3611,8 @@ CacheIndex::SizeOfExcludingThisInternal(mozilla::MallocSizeOf mallocSizeOf) cons
   n += mTmpJournal.SizeOfExcludingThis(mallocSizeOf);
 
   // mFrecencyArray items are reported by mIndex/mPendingUpdates
-  n += mFrecencyArray.SizeOfExcludingThis(mallocSizeOf);
-  n += mDiskConsumptionObservers.SizeOfExcludingThis(mallocSizeOf);
+  n += mFrecencyArray.ShallowSizeOfExcludingThis(mallocSizeOf);
+  n += mDiskConsumptionObservers.ShallowSizeOfExcludingThis(mallocSizeOf);
 
   return n;
 }

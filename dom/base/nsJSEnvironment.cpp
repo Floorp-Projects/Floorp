@@ -112,9 +112,9 @@ const size_t gStackSize = 8192;
 
 #define NS_FULL_GC_DELAY            60000 // ms
 
-// The amount of time to wait from the user being idle to starting a shrinking
-// GC.
-#define NS_SHRINKING_GC_DELAY       15000 // ms
+// The default amount of time to wait from the user being idle to starting a
+// shrinking GC.
+#define NS_DEAULT_INACTIVE_GC_DELAY 300000 // ms
 
 // Maximum amount of time that should elapse between incremental GC slices
 #define NS_INTERSLICE_GC_DELAY      100 // ms
@@ -221,6 +221,7 @@ static bool sGCOnMemoryPressure;
 // after NS_SHRINKING_GC_DELAY ms later, if the appropriate pref is set.
 
 static bool sCompactOnUserInactive;
+static uint32_t sCompactOnUserInactiveDelay = NS_DEAULT_INACTIVE_GC_DELAY;
 static bool sIsCompactingOnUserInactive = false;
 
 // In testing, we call RunNextCollectorTimer() to ensure that the collectors are run more
@@ -2097,7 +2098,7 @@ nsJSContext::PokeShrinkingGC()
   }
 
   sShrinkingGCTimer->InitWithFuncCallback(ShrinkingGCTimerFired, nullptr,
-                                          NS_SHRINKING_GC_DELAY,
+                                          sCompactOnUserInactiveDelay,
                                           nsITimer::TYPE_ONE_SHOT);
 }
 
@@ -2854,6 +2855,10 @@ nsJSContext::EnsureStatics()
   Preferences::AddBoolVarCache(&sCompactOnUserInactive,
                                "javascript.options.compact_on_user_inactive",
                                true);
+
+  Preferences::AddUintVarCache(&sCompactOnUserInactiveDelay,
+                               "javascript.options.compact_on_user_inactive_delay",
+                               NS_DEAULT_INACTIVE_GC_DELAY);
 
   nsIObserver* observer = new nsJSEnvironmentObserver();
   obs->AddObserver(observer, "memory-pressure", false);

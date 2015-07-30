@@ -257,7 +257,7 @@ size_t
 PannerNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t amount = AudioNode::SizeOfExcludingThis(aMallocSizeOf);
-  amount += mSources.SizeOfExcludingThis(aMallocSizeOf);
+  amount += mSources.ShallowSizeOfExcludingThis(aMallocSizeOf);
   return amount;
 }
 

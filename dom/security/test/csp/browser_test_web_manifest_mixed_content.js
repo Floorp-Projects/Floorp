@@ -6,7 +6,7 @@
 'use strict';
 const {
   ManifestObtainer
-} = Components.utils.import('resource://gre/modules/WebManifest.jsm', {});
+} = Cu.import('resource://gre/modules/ManifestObtainer.jsm', {});
 const path = '/tests/dom/security/test/csp/';
 const mixedContent = `file=${path}file_web_manifest_mixed_content.html`;
 const server = 'file_testserver.sjs';
@@ -45,9 +45,8 @@ add_task(function*() {
   }
 
   function* testObtainingManifest(aBrowser, aTest) {
-    const obtainer = new ManifestObtainer();
     try {
-      yield obtainer.obtainManifest(aBrowser);
+      yield ManifestObtainer.browserObtainManifest(aBrowser);
     } catch (e) {
       aTest.run(e)
     }

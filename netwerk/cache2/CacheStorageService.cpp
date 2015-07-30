@@ -1970,10 +1970,10 @@ CacheStorageService::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) con
 
   size_t n = 0;
   // The elemets are referenced by sGlobalEntryTables and are reported from there
-  n += Pool(true).mFrecencyArray.SizeOfExcludingThis(mallocSizeOf);
-  n += Pool(true).mExpirationArray.SizeOfExcludingThis(mallocSizeOf);
-  n += Pool(false).mFrecencyArray.SizeOfExcludingThis(mallocSizeOf);
-  n += Pool(false).mExpirationArray.SizeOfExcludingThis(mallocSizeOf);
+  n += Pool(true).mFrecencyArray.ShallowSizeOfExcludingThis(mallocSizeOf);
+  n += Pool(true).mExpirationArray.ShallowSizeOfExcludingThis(mallocSizeOf);
+  n += Pool(false).mFrecencyArray.ShallowSizeOfExcludingThis(mallocSizeOf);
+  n += Pool(false).mExpirationArray.ShallowSizeOfExcludingThis(mallocSizeOf);
   // Entries reported manually in CacheStorageService::CollectReports callback
   if (sGlobalEntryTables) {
     n += sGlobalEntryTables->SizeOfIncludingThis(nullptr, mallocSizeOf);

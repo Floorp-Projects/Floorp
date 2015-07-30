@@ -751,5 +751,35 @@ DeallocateMappedContent(void* p, size_t length)
 #error "Memory mapping functions are not defined for your OS."
 #endif
 
+void
+ProtectPages(void* p, size_t size)
+{
+    MOZ_ASSERT(size % pageSize == 0);
+#if defined(XP_WIN)
+    DWORD oldProtect;
+    if (!VirtualProtect(p, size, PAGE_NOACCESS, &oldProtect))
+        MOZ_CRASH("VirtualProtect(PAGE_NOACCESS) failed");
+    MOZ_ASSERT(oldProtect == PAGE_READWRITE);
+#else  // assume Unix
+    if (mprotect(p, size, PROT_NONE))
+        MOZ_CRASH("mprotect(PROT_NONE) failed");
+#endif
+}
+
+void
+UnprotectPages(void* p, size_t size)
+{
+    MOZ_ASSERT(size % pageSize == 0);
+#if defined(XP_WIN)
+    DWORD oldProtect;
+    if (!VirtualProtect(p, size, PAGE_READWRITE, &oldProtect))
+        MOZ_CRASH("VirtualProtect(PAGE_READWRITE) failed");
+    MOZ_ASSERT(oldProtect == PAGE_NOACCESS);
+#else  // assume Unix
+    if (mprotect(p, size, PROT_READ | PROT_WRITE))
+        MOZ_CRASH("mprotect(PROT_READ | PROT_WRITE) failed");
+#endif
+}
+
 } // namespace gc
 } // namespace js
