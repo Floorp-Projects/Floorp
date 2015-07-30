@@ -11,7 +11,6 @@ const {Cc, Ci, Cu, components} = require("chrome");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
-loader.lazyImporter(this, "LayoutHelpers", "resource://gre/modules/devtools/LayoutHelpers.jsm");
 
 // TODO: Bug 842672 - toolkit/ imports modules from browser/.
 // Note that these are only used in WebConsoleCommands, see $0 and pprint().
@@ -19,6 +18,7 @@ loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/gDevTools.j
 loader.lazyImporter(this, "devtools", "resource://gre/modules/devtools/Loader.jsm");
 loader.lazyImporter(this, "VariablesView", "resource:///modules/devtools/VariablesView.jsm");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+const LayoutHelpers = require("devtools/toolkit/layout-helpers");
 
 // Match the function name from the result of toString() or toSource().
 //

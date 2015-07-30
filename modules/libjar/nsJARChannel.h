@@ -122,7 +122,6 @@ private:
     bool                            mIsPending;
     bool                            mIsUnsafe;
     bool                            mOpeningRemote;
-    bool                            mEnsureChildFd;
 
     mozilla::net::MemoryDownloader::Data mTempMem;
     nsCOMPtr<nsIInputStreamPump>    mPump;

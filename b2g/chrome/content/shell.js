@@ -585,7 +585,7 @@ var shell = {
         // TODO: We should get the `isActive` state from evt.isActive.
         // Then we don't need to do `channel.isActive()` here.
         channel.isActive().onsuccess = function(evt) {
-          this.sendChromeEvent({
+          SystemAppProxy._sendCustomEvent('mozSystemWindowChromeEvent', {
             type: 'system-audiochannel-state-changed',
             name: channel.name,
             isActive: evt.target.result

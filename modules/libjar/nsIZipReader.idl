@@ -208,7 +208,7 @@ interface nsIZipReader : nsISupports
 ////////////////////////////////////////////////////////////////////////////////
 // nsIZipReaderCache
 
-[scriptable, uuid(94ecd586-d405-4801-93d3-8ac7bef81bde)]
+[scriptable, uuid(31179807-9fcd-46c4-befa-2ade209a394b)]
 interface nsIZipReaderCache : nsISupports
 {
     /**
@@ -244,14 +244,6 @@ interface nsIZipReaderCache : nsISupports
      * See getZip
      */
     nsIZipReader getInnerZip(in nsIFile zipFile, in AUTF8String zipEntry);
-
-    /**
-     * Whether to keep NSPR file descriptor for newly opened files in the cache.
-     * When aMustCacheFd is enabled and a file is given, the file will be flushed
-     * from the cache if its file descriptor was not cached.
-     * Note: currently not supported on Windows platform.
-     */
-    void setMustCacheFd(in nsIFile zipFile, in bool aMustCacheFd);
 
     /**
      * Returns the cached NSPR file descriptor of the file.

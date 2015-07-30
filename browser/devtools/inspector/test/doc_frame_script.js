@@ -13,7 +13,8 @@
 // Some listeners do not send a response message back.
 
 let {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-let {LayoutHelpers} = Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm", {});
+let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+let LayoutHelpers = devtools.require("devtools/toolkit/layout-helpers");
 let DOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
             .getService(Ci.mozIJSSubScriptLoader);
