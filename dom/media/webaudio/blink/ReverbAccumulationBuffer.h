@@ -61,7 +61,7 @@ public:
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     {
-        return m_buffer.SizeOfExcludingThis(aMallocSizeOf);
+        return m_buffer.ShallowSizeOfExcludingThis(aMallocSizeOf);
     }
 
 private:

@@ -727,66 +727,43 @@
       <property name="selected" readonly="true"
                 onget="return this.getAttribute('selected') == 'true';"/>
 
-      <!--
-          This code is the same as in browser/base/content/tabbrowser.xml,
-          except for the _tabAttrModified call. If you modify it, tabbrowser.xml
-          should probably also be modified.
-      -->
-      <property name="_visuallySelected">
-        <setter>
-          <![CDATA[
-          if (val)
-            this.setAttribute("visuallyselected", "true");
-          else
-            this.removeAttribute("visuallyselected");
-
-          if (this.previousSibling && this.previousSibling.localName == "tab") {
-            if (val)
-              this.previousSibling.setAttribute("beforeselected", "true");
-            else
-              this.previousSibling.removeAttribute("beforeselected");
-            this.removeAttribute("first-tab");
-          }
-          else
-            this.setAttribute("first-tab", "true");
-
-          if (this.nextSibling && this.nextSibling.localName == "tab") {
-            if (val)
-              this.nextSibling.setAttribute("afterselected", "true");
-            else
-              this.nextSibling.removeAttribute("afterselected");
-            this.removeAttribute("last-tab");
-          }
-          else
-            this.setAttribute("last-tab", "true");
-          return val;
-        ]]>
-        </setter>
-      </property>
-
-      <property name="_logicallySelected">
-        <setter>
-          <![CDATA[
+      <property name="_selected">
+        <setter><![CDATA[
           if (val)
             this.setAttribute("selected", "true");
           else
             this.removeAttribute("selected");
 
+          this._setPositionAttributes(val);
+
           return val;
-          ]]>
-        </setter>
+        ]]></setter>
       </property>
 
-      <property name="_selected">
-        <setter>
-          <![CDATA[
-          // If our tab switching is synchronous, then logical selection = visual selection
-          this._logicallySelected = val;
-          this._visuallySelected = val;
-          return val;
-          ]]>
-        </setter>
-      </property>
+      <method name="_setPositionAttributes">
+        <parameter name="aSelected"/>
+        <body><![CDATA[
+          if (this.previousSibling && this.previousSibling.localName == "tab") {
+            if (aSelected)
+              this.previousSibling.setAttribute("beforeselected", "true");
+            else
+              this.previousSibling.removeAttribute("beforeselected");
+            this.removeAttribute("first-tab");
+          } else {
+            this.setAttribute("first-tab", "true");
+          }
+
+          if (this.nextSibling && this.nextSibling.localName == "tab") {
+            if (aSelected)
+              this.nextSibling.setAttribute("afterselected", "true");
+            else
+              this.nextSibling.removeAttribute("afterselected");
+            this.removeAttribute("last-tab");
+          } else {
+            this.setAttribute("last-tab", "true");
+          }
+        ]]></body>
+      </method>
 
       <property name="linkedPanel" onget="return this.getAttribute('linkedpanel')"
                                    onset="this.setAttribute('linkedpanel', val); return val;"/>

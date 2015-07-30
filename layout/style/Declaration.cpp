@@ -1392,7 +1392,7 @@ size_t
 Declaration::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
-  n += mOrder.SizeOfExcludingThis(aMallocSizeOf);
+  n += mOrder.ShallowSizeOfExcludingThis(aMallocSizeOf);
   n += mData          ? mData         ->SizeOfIncludingThis(aMallocSizeOf) : 0;
   n += mImportantData ? mImportantData->SizeOfIncludingThis(aMallocSizeOf) : 0;
   if (mVariables) {

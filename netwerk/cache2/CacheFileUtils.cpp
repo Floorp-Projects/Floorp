@@ -415,7 +415,7 @@ ValidityMap::Clear()
 size_t
 ValidityMap::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
-  return mMap.SizeOfExcludingThis(mallocSizeOf);
+  return mMap.ShallowSizeOfExcludingThis(mallocSizeOf);
 }
 
 ValidityPair&

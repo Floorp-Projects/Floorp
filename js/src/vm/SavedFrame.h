@@ -81,22 +81,10 @@ class SavedFrame : public NativeObject {
         JSSLOT_ASYNCCAUSE,
         JSSLOT_PARENT,
         JSSLOT_PRINCIPALS,
-        JSSLOT_PRIVATE_PARENT,
 
         // The total number of reserved slots in the SavedFrame class.
         JSSLOT_COUNT
     };
-
-    // Because we hash the parent pointer, we need to rekey a saved frame
-    // whenever its parent was relocated by the GC. However, the GC doesn't
-    // notify us when this occurs. As a work around, we keep a duplicate copy of
-    // the parent pointer as a private value in a reserved slot. Whenever the
-    // private value parent pointer doesn't match the regular parent pointer, we
-    // know that GC moved the parent and we need to update our private value and
-    // rekey the saved frame in its hash set. These two methods are helpers for
-    // this process.
-    bool parentMoved();
-    void updatePrivateParent();
 
     static bool checkThis(JSContext* cx, CallArgs& args, const char* fnName,
                           MutableHandleObject frame);

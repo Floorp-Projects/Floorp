@@ -562,7 +562,7 @@ public:
     }
 
     size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
-        return mTableData.SizeOfExcludingThis(aMallocSizeOf);
+        return mTableData.ShallowSizeOfExcludingThis(aMallocSizeOf);
     }
     size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
         return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
@@ -1819,7 +1819,7 @@ gfxFontFamily::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
         mFamilyCharacterMap.SizeOfExcludingThis(aMallocSizeOf);
 
     aSizes->mFontListSize +=
-        mAvailableFonts.SizeOfExcludingThis(aMallocSizeOf);
+        mAvailableFonts.ShallowSizeOfExcludingThis(aMallocSizeOf);
     for (uint32_t i = 0; i < mAvailableFonts.Length(); ++i) {
         gfxFontEntry *fe = mAvailableFonts[i];
         if (fe) {

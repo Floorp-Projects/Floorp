@@ -554,6 +554,50 @@ AddAppDirToCommandLine(std::vector<std::string>& aCmdLine)
   }
 }
 
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
+static void
+MaybeAddNsprLogFileAccess(std::vector<std::wstring>& aAllowedFilesReadWrite)
+{
+  const char* nsprLogFileEnv = PR_GetEnv("NSPR_LOG_FILE");
+  if (!nsprLogFileEnv) {
+    return;
+  }
+
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = NS_GetSpecialDirectory(NS_OS_CURRENT_WORKING_DIR,
+                                       getter_AddRefs(file));
+  if (NS_FAILED(rv) || !file) {
+    NS_WARNING("Failed to get current working directory");
+    return;
+  }
+
+  nsDependentCString nsprLogFile(nsprLogFileEnv);
+  rv = file->AppendRelativeNativePath(nsprLogFile);
+  if (NS_FAILED(rv)) {
+    // Not a relative path, try it as an absolute one.
+    rv = file->InitWithNativePath(nsprLogFile);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+  }
+
+  nsAutoString resolvedFilePath;
+  rv = file->GetPath(resolvedFilePath);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+  }
+
+  // Update the environment variable as well as adding the rule, because the
+  // Chromium sandbox can only allow access to fully qualified file paths. This
+  // only affects the environment for the child process we're about to create,
+  // because this will get reset to the original value in PerformAsyncLaunch.
+  aAllowedFilesReadWrite.push_back(resolvedFilePath.get());
+  nsAutoCString resolvedEnvVar("NSPR_LOG_FILE=");
+  AppendUTF16toUTF8(resolvedFilePath, resolvedEnvVar);
+  PR_SetEnv(resolvedEnvVar.get());
+}
+#endif
+
 bool
 GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExtraOpts, base::ProcessArchitecture arch)
 {
@@ -891,6 +935,7 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   };
 
   if (shouldSandboxCurrentProcess) {
+    MaybeAddNsprLogFileAccess(mAllowedFilesReadWrite);
     for (auto it = mAllowedFilesRead.begin();
          it != mAllowedFilesRead.end();
          ++it) {

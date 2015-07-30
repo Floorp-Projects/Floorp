@@ -11,112 +11,81 @@
  *
  * BUG: https://bugzilla.mozilla.org/show_bug.cgi?id=1083410
  */
-/*globals content, sendAsyncMessage, addMessageListener, Components*/
-'use strict';
+/*globals Task, ManifestObtainer, ManifestFinder, content, sendAsyncMessage, addMessageListener, Components*/
+"use strict";
 const {
   utils: Cu,
-  classes: Cc,
-  interfaces: Ci
 } = Components;
-const {
-  ManifestProcessor
-} = Cu.import('resource://gre/modules/WebManifest.jsm', {});
-const {
-  Task: {
-    spawn, async
-  }
-} = Components.utils.import('resource://gre/modules/Task.jsm', {});
+Cu.import("resource://gre/modules/ManifestObtainer.jsm");
+Cu.import("resource://gre/modules/ManifestFinder.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 
-addMessageListener('DOM:ManifestObtainer:Obtain', async(function* (aMsg) {
-  const response = {
-    msgId: aMsg.data.msgId,
-    success: true,
-    result: undefined
-  };
-  try {
-    response.result = yield fetchManifest();
-  } catch (err) {
-    response.success = false;
-    response.result = cloneError(err);
-  }
-  sendAsyncMessage('DOM:ManifestObtainer:Obtain', response);
-}));
+const MessageHandler = {
+  registerListeners() {
+    addMessageListener(
+      "DOM:WebManifest:hasManifestLink",
+      this.hasManifestLink.bind(this)
+    );
+    addMessageListener(
+      "DOM:ManifestObtainer:Obtain",
+      this.obtainManifest.bind(this)
+    );
+  },
 
-function cloneError(aError) {
+  /**
+   * Check if the content document includes a link to a web manifest.
+   * @param {Object} aMsg The IPC message, which is destructured to just
+   *                      get the id.
+   */
+  hasManifestLink({data: {id}}) {
+    const response = makeMsgResponse(id);
+    response.result = ManifestFinder.contentHasManifestLink(content);
+    response.success = true;
+    sendAsyncMessage("DOM:WebManifest:hasManifestLink", response);
+  },
+
+  /**
+   * Asynchronously obtains a web manifest from content by using the
+   * ManifestObtainer and messages back the result.
+   * @param {Object} aMsg The IPC message, which is destructured to just
+   *                      get the id.
+   */
+  obtainManifest: Task.async(function* ({data: {id}}) {
+    const response = makeMsgResponse(id);
+    try {
+      response.result = yield ManifestObtainer.contentObtainManifest(content);
+      response.success = true;
+    } catch (err) {
+      response.result = serializeError(err);
+    }
+    sendAsyncMessage("DOM:ManifestObtainer:Obtain", response);
+  }),
+};
+/**
+ * Utility function to Serializes an JS Error, so it can be transferred over
+ * the message channel.
+ * FIX ME: https://bugzilla.mozilla.org/show_bug.cgi?id=1172586
+ * @param  {Error} aError The error to serialize.
+ * @return {Object} The serialized object.
+ */
+function serializeError(aError) {
   const clone = {
-    'fileName': String(aError.fileName),
-    'lineNumber': String(aError.lineNumber),
-    'columnNumber': String(aError.columnNumber),
-    'stack': String(aError.stack),
-    'message': String(aError.message),
-    'name': String(aError.name)
+    "fileName": aError.fileName,
+    "lineNumber": aError.lineNumber,
+    "columnNumber": aError.columnNumber,
+    "stack": aError.stack,
+    "message": aError.message,
+    "name": aError.name
   };
   return clone;
 }
 
-function fetchManifest() {
-  return spawn(function* () {
-    if (!content || content.top !== content) {
-      let msg = 'Content window must be a top-level browsing context.';
-      throw new Error(msg);
-    }
-    const elem = content.document.querySelector('link[rel~="manifest"]');
-    if (!elem || !elem.getAttribute('href')) {
-      let msg = 'No manifest to fetch.';
-      throw new Error(msg);
-    }
-    // Throws on malformed URLs
-    const manifestURL = new content.URL(elem.href, elem.baseURI);
-    if (!canLoadManifest(elem)) {
-      let msg = `Content Security Policy: The page's settings blocked the `;
-      msg += `loading of a resource at ${elem.href}`;
-      throw new Error(msg);
-    }
-    const reqInit = {
-      mode: 'cors'
+function makeMsgResponse(aId) {
+    return {
+      id: aId,
+      success: false,
+      result: undefined
     };
-    if (elem.crossOrigin === 'use-credentials') {
-      reqInit.credentials = 'include';
-    }
-    const req = new content.Request(manifestURL, reqInit);
-    req.setContentPolicyType(Ci.nsIContentPolicy.TYPE_WEB_MANIFEST);
-    const response = yield content.fetch(req);
-    const manifest = yield processResponse(response, content);
-    return manifest;
-  });
-}
+  }
 
-function canLoadManifest(aElem) {
-  const contentPolicy = Cc['@mozilla.org/layout/content-policy;1']
-    .getService(Ci.nsIContentPolicy);
-  const mimeType = aElem.type || 'application/manifest+json';
-  const elemURI = BrowserUtils.makeURI(
-    aElem.href, aElem.ownerDocument.characterSet
-  );
-  const shouldLoad = contentPolicy.shouldLoad(
-    Ci.nsIContentPolicy.TYPE_WEB_MANIFEST, elemURI,
-    aElem.ownerDocument.documentURIObject,
-    aElem, mimeType, null
-  );
-  return shouldLoad === Ci.nsIContentPolicy.ACCEPT;
-}
-
-function processResponse(aResp, aContentWindow) {
-  return spawn(function* () {
-    const badStatus = aResp.status < 200 || aResp.status >= 300;
-    if (aResp.type === 'error' || badStatus) {
-      let msg =
-        `Fetch error: ${aResp.status} - ${aResp.statusText} at ${aResp.url}`;
-      throw new Error(msg);
-    }
-    const text = yield aResp.text();
-    const args = {
-      jsonText: text,
-      manifestURL: aResp.url,
-      docURL: aContentWindow.location.href
-    };
-    const processor = new ManifestProcessor();
-    const manifest = processor.process(args);
-    return Cu.cloneInto(manifest, content);
-  });
-}
+MessageHandler.registerListeners();

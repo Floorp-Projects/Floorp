@@ -34,6 +34,9 @@ class Request final : public nsISupports
 public:
   Request(nsIGlobalObject* aOwner, InternalRequest* aRequest);
 
+  static bool
+  RequestContextEnabled(JSContext* aCx, JSObject* aObj);
+
   JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {

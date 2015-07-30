@@ -581,7 +581,7 @@ MediaRawData::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t size = aMallocSizeOf(this);
 
-  size += mBuffer->SizeOfIncludingThis(aMallocSizeOf);
+  size += mBuffer->ShallowSizeOfIncludingThis(aMallocSizeOf);
   return size;
 }
 
