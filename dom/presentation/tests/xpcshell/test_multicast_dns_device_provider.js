@@ -6,12 +6,16 @@
 
 const { classes: Cc, interfaces: Ci, manager: Cm, results: Cr, utils: Cu } = Components;
 
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const INFO_CONTRACT_ID = "@mozilla.org/toolkit/components/mdnsresponder/dns-info;1";
 const PROVIDER_CONTRACT_ID = "@mozilla.org/presentation-device/multicastdns-provider;1";
 const SD_CONTRACT_ID = "@mozilla.org/toolkit/components/mdnsresponder/dns-sd;1";
 const UUID_CONTRACT_ID = "@mozilla.org/uuid-generator;1";
+
+const PREF_DISCOVERY = "dom.presentation.discovery.enabled";
+const PREF_DISCOVERABLE = "dom.presentation.discoverable";
 
 let registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
 
@@ -58,7 +62,10 @@ ContractHook.prototype = {
 
     let oldContract = this.unregister();
     this.hookedMap.get(this._contractID).push(oldContract);
-    registrar.registerFactory(this.classID, "", this._contractID, this._newFactory);
+    registrar.registerFactory(this.classID,
+                              "",
+                              this._contractID,
+                              this._newFactory);
 
     do_register_cleanup(() => { this.cleanup.apply(this); });
   },
@@ -72,7 +79,10 @@ ContractHook.prototype = {
     let prevContract = this.hookedMap.get(this._contractID).pop();
 
     if (prevContract.factory) {
-      registrar.registerFactory(prevContract.classID, "", this._contractID, prevContract.factory);
+      registrar.registerFactory(prevContract.classID,
+                                "",
+                                this._contractID,
+                                prevContract.factory);
     }
   },
 
@@ -169,6 +179,8 @@ function createDevice(host, port, serviceName, serviceType, domainName, attribut
 }
 
 function registerService() {
+  Services.prefs.setBoolPref(PREF_DISCOVERABLE, true);
+
   let mockObj = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
     startDiscovery: function(serviceType, listener) {},
@@ -179,64 +191,255 @@ function registerService() {
         cancel: function() {
           this.serviceUnregistered++;
         }.bind(this)
-      }
+      };
     },
     resolveService: function(serviceInfo, listener) {},
     serviceRegistered: 0,
     serviceUnregistered: 0
   };
   let contractHook = new ContractHook(SD_CONTRACT_ID, mockObj);
+  let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
 
   Assert.equal(mockObj.serviceRegistered, 0);
-  let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
-  Assert.equal(mockObj.serviceRegistered, 0);
+  Assert.equal(mockObj.serviceUnregistered, 0);
+
+  // Register
   provider.listener = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDeviceListener, Ci.nsISupportsWeakReference]),
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDeviceListener,
+                                           Ci.nsISupportsWeakReference]),
     addDevice: function(device) {},
     removeDevice: function(device) {},
     updateDevice: function(device) {},
   };
   Assert.equal(mockObj.serviceRegistered, 1);
-
   Assert.equal(mockObj.serviceUnregistered, 0);
+
+  // Unregister
   provider.listener = null;
+  Assert.equal(mockObj.serviceRegistered, 1);
+  Assert.equal(mockObj.serviceUnregistered, 1);
+
+  run_next_test();
+}
+
+function noRegisterService() {
+  Services.prefs.setBoolPref(PREF_DISCOVERABLE, false);
+
+  let mockObj = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
+    startDiscovery: function(serviceType, listener) {},
+    registerService: function(serviceInfo, listener) {
+      Assert.ok(false, "should not register service if not discoverable");
+    },
+    resolveService: function(serviceInfo, listener) {},
+  };
+
+  let contractHook = new ContractHook(SD_CONTRACT_ID, mockObj);
+  let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
+
+  // Try register
+  provider.listener = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDeviceListener,
+                                           Ci.nsISupportsWeakReference]),
+    addDevice: function(device) {},
+    removeDevice: function(device) {},
+    updateDevice: function(device) {},
+  };
+  provider.listener = null;
+
+  run_next_test();
+}
+
+function registerServiceDynamically() {
+  Services.prefs.setBoolPref(PREF_DISCOVERABLE, false);
+
+  let mockObj = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
+    startDiscovery: function(serviceType, listener) {},
+    registerService: function(serviceInfo, listener) {
+      this.serviceRegistered++;
+      return {
+        QueryInterface: XPCOMUtils.generateQI([Ci.nsICancelable]),
+        cancel: function() {
+          this.serviceUnregistered++;
+        }.bind(this)
+      };
+    },
+    resolveService: function(serviceInfo, listener) {},
+    serviceRegistered: 0,
+    serviceUnregistered: 0
+  };
+  let contractHook = new ContractHook(SD_CONTRACT_ID, mockObj);
+  let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
+
+  Assert.equal(mockObj.serviceRegistered, 0);
+  Assert.equal(mockObj.serviceRegistered, 0);
+
+  // Try Register
+  provider.listener = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDeviceListener,
+                                           Ci.nsISupportsWeakReference]),
+    addDevice: function(device) {},
+    removeDevice: function(device) {},
+    updateDevice: function(device) {},
+  };
+  Assert.equal(mockObj.serviceRegistered, 0);
+  Assert.equal(mockObj.serviceUnregistered, 0);
+
+  // Enable registration
+  Services.prefs.setBoolPref(PREF_DISCOVERABLE, true);
+  Assert.equal(mockObj.serviceRegistered, 1);
+  Assert.equal(mockObj.serviceUnregistered, 0);
+
+  // Disable registration
+  Services.prefs.setBoolPref(PREF_DISCOVERABLE, false);
+  Assert.equal(mockObj.serviceRegistered, 1);
+  Assert.equal(mockObj.serviceUnregistered, 1);
+
+  // Try unregister
+  provider.listener = null;
+  Assert.equal(mockObj.serviceRegistered, 1);
   Assert.equal(mockObj.serviceUnregistered, 1);
 
   run_next_test();
 }
 
 function addDevice() {
-  let mockDevice = createDevice("device.local", 12345, "service.name", "_mozilla_papi._tcp");
+  Services.prefs.setBoolPref(PREF_DISCOVERY, true);
+
+  let mockDevice = createDevice("device.local",
+                                12345,
+                                "service.name",
+                                "_mozilla_papi._tcp");
   let mockObj = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
     startDiscovery: function(serviceType, listener) {
       listener.onDiscoveryStarted(serviceType);
-      listener.onServiceFound(createDevice("", 0, mockDevice.serviceName, mockDevice.serviceType));
+      listener.onServiceFound(createDevice("",
+                                           0,
+                                           mockDevice.serviceName,
+                                           mockDevice.serviceType));
       return {
         QueryInterface: XPCOMUtils.generateQI([Ci.nsICancelable]),
         cancel: function() {}
-      }
+      };
     },
     registerService: function(serviceInfo, listener) {},
     resolveService: function(serviceInfo, listener) {
       Assert.equal(serviceInfo.serviceName, mockDevice.serviceName);
       Assert.equal(serviceInfo.serviceType, mockDevice.serviceType);
-      listener.onServiceResolved(createDevice(mockDevice.host, mockDevice.port, mockDevice.serviceName, mockDevice.serviceType));
+      listener.onServiceResolved(createDevice(mockDevice.host,
+                                              mockDevice.port,
+                                              mockDevice.serviceName,
+                                              mockDevice.serviceType));
+    }
+  };
+
+  let contractHook = new ContractHook(SD_CONTRACT_ID, mockObj);
+  let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
+  let listener = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDeviceListener,
+                                           Ci.nsISupportsWeakReference]),
+    addDevice: function(device) { this.devices.push(device); },
+    removeDevice: function(device) {},
+    updateDevice: function(device) {},
+    devices: []
+  };
+  Assert.equal(listener.devices.length, 0);
+
+  // Start discovery
+  provider.listener = listener;
+  Assert.equal(listener.devices.length, 1);
+
+  // Force discovery again
+  provider.forceDiscovery();
+  Assert.equal(listener.devices.length, 1);
+
+  provider.listener = null;
+  Assert.equal(listener.devices.length, 1);
+
+  run_next_test();
+}
+
+function noAddDevice() {
+  Services.prefs.setBoolPref(PREF_DISCOVERY, false);
+
+  let mockDevice = createDevice("device.local", 12345, "service.name", "_mozilla_papi._tcp");
+  let mockObj = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
+    startDiscovery: function(serviceType, listener) {
+      Assert.ok(false, "shouldn't perform any device discovery");
+    },
+    registerService: function(serviceInfo, listener) {},
+    resolveService: function(serviceInfo, listener) {
     }
   };
   let contractHook = new ContractHook(SD_CONTRACT_ID, mockObj);
 
   let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
   let listener = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDeviceListener, Ci.nsISupportsWeakReference]),
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDeviceListener,
+                                           Ci.nsISupportsWeakReference]),
+    addDevice: function(device) {},
+    removeDevice: function(device) {},
+    updateDevice: function(device) {},
+  };
+  provider.listener = listener;
+  provider.forceDiscovery();
+  provider.listener = null;
+
+  run_next_test();
+}
+
+function addDeviceDynamically() {
+  Services.prefs.setBoolPref(PREF_DISCOVERY, false);
+
+  let mockDevice = createDevice("device.local",
+                                12345,
+                                "service.name",
+                                "_mozilla_papi._tcp");
+  let mockObj = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
+    startDiscovery: function(serviceType, listener) {
+      listener.onDiscoveryStarted(serviceType);
+      listener.onServiceFound(createDevice("",
+                                           0,
+                                           mockDevice.serviceName,
+                                           mockDevice.serviceType));
+      return {
+        QueryInterface: XPCOMUtils.generateQI([Ci.nsICancelable]),
+        cancel: function() {}
+      };
+    },
+    registerService: function(serviceInfo, listener) {},
+    resolveService: function(serviceInfo, listener) {
+      Assert.equal(serviceInfo.serviceName, mockDevice.serviceName);
+      Assert.equal(serviceInfo.serviceType, mockDevice.serviceType);
+      listener.onServiceResolved(createDevice(mockDevice.host,
+                                              mockDevice.port,
+                                              mockDevice.serviceName,
+                                              mockDevice.serviceType));
+    }
+  };
+
+  let contractHook = new ContractHook(SD_CONTRACT_ID, mockObj);
+  let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
+  let listener = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDeviceListener,
+                                           Ci.nsISupportsWeakReference]),
     addDevice: function(device) { this.devices.push(device); },
     removeDevice: function(device) {},
     updateDevice: function(device) {},
     devices: []
   };
   provider.listener = listener;
-
   Assert.equal(listener.devices.length, 0);
+
+  // Enable discovery
+  Services.prefs.setBoolPref(PREF_DISCOVERY, true);
+  Assert.equal(listener.devices.length, 1);
+
+  // Try discovery again
   provider.forceDiscovery();
   Assert.equal(listener.devices.length, 1);
 
@@ -245,11 +448,101 @@ function addDevice() {
   run_next_test();
 }
 
+function serverClosed() {
+  Services.prefs.setBoolPref(PREF_DISCOVERABLE, true);
+  Services.prefs.setBoolPref(PREF_DISCOVERY, true);
+
+  let mockDevice = createDevice("device.local",
+                                12345,
+                                "service.name",
+                                "_mozilla_papi._tcp");
+
+  let mockObj = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
+    startDiscovery: function(serviceType, listener) {
+      listener.onDiscoveryStarted(serviceType);
+      listener.onServiceFound(createDevice("",
+                                           0,
+                                           mockDevice.serviceName,
+                                           mockDevice.serviceType));
+      return {
+        QueryInterface: XPCOMUtils.generateQI([Ci.nsICancelable]),
+        cancel: function() {}
+      };
+    },
+    registerService: function(serviceInfo, listener) {
+      this.serviceRegistered++;
+      return {
+        QueryInterface: XPCOMUtils.generateQI([Ci.nsICancelable]),
+        cancel: function() {
+          this.serviceUnregistered++;
+        }.bind(this)
+      };
+    },
+    resolveService: function(serviceInfo, listener) {
+      Assert.equal(serviceInfo.serviceName, mockDevice.serviceName);
+      Assert.equal(serviceInfo.serviceType, mockDevice.serviceType);
+      listener.onServiceResolved(createDevice(mockDevice.host,
+                                              mockDevice.port,
+                                              mockDevice.serviceName,
+                                              mockDevice.serviceType));
+    },
+    serviceRegistered: 0,
+    serviceUnregistered: 0
+  };
+  let contractHook = new ContractHook(SD_CONTRACT_ID, mockObj);
+  let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
+
+  Assert.equal(mockObj.serviceRegistered, 0);
+  Assert.equal(mockObj.serviceUnregistered, 0);
+
+  // Register
+  let listener = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDeviceListener,
+                                           Ci.nsISupportsWeakReference]),
+    addDevice: function(device) { this.devices.push(device); },
+    removeDevice: function(device) {},
+    updateDevice: function(device) {},
+    devices: []
+  };
+  Assert.equal(listener.devices.length, 0);
+
+  provider.listener = listener;
+  Assert.equal(mockObj.serviceRegistered, 1);
+  Assert.equal(mockObj.serviceUnregistered, 0);
+  Assert.equal(listener.devices.length, 1);
+
+  let serverListener = provider.QueryInterface(Ci.nsITCPPresentationServerListener);
+  serverListener.onClose(Cr.NS_ERROR_UNEXPECTED);
+
+  Assert.equal(mockObj.serviceRegistered, 2);
+  Assert.equal(mockObj.serviceUnregistered, 1);
+  Assert.equal(listener.devices.length, 2);
+
+  // Unregister
+  provider.listener = null;
+  Assert.equal(mockObj.serviceRegistered, 2);
+  Assert.equal(mockObj.serviceUnregistered, 2);
+  Assert.equal(listener.devices.length, 2);
+
+  run_next_test();
+}
+
 function run_test() {
   let infoHook = new ContractHook(INFO_CONTRACT_ID, MockDNSServiceInfo);
 
+  do_register_cleanup(() => {
+    Services.prefs.clearUserPref(PREF_DISCOVERY);
+    Services.prefs.clearUserPref(PREF_DISCOVERABLE);
+  });
+
   add_test(registerService);
+  add_test(noRegisterService);
+  add_test(registerServiceDynamically);
   add_test(addDevice);
+  add_test(noAddDevice);
+  add_test(addDeviceDynamically);
+  add_test(serverClosed);
 
   run_next_test();
 }

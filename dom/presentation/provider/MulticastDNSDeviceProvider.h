@@ -9,6 +9,7 @@
 #include "nsCOMPtr.h"
 #include "nsICancelable.h"
 #include "nsIDNSServiceDiscovery.h"
+#include "nsIObserver.h"
 #include "nsIPresentationDeviceProvider.h"
 #include "nsITCPPresentationServer.h"
 #include "mozilla/nsRefPtr.h"
@@ -28,6 +29,7 @@ class MulticastDNSDeviceProvider final
   , public nsIDNSRegistrationListener
   , public nsIDNSServiceResolveListener
   , public nsITCPPresentationServerListener
+  , public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
@@ -36,6 +38,7 @@ public:
   NS_DECL_NSIDNSREGISTRATIONLISTENER
   NS_DECL_NSIDNSSERVICERESOLVELISTENER
   NS_DECL_NSITCPPRESENTATIONSERVERLISTENER
+  NS_DECL_NSIOBSERVER
 
   explicit MulticastDNSDeviceProvider() = default;
   nsresult Init();
@@ -43,7 +46,13 @@ public:
 
 private:
   virtual ~MulticastDNSDeviceProvider();
-  nsresult RegisterService(uint32_t aPort);
+  nsresult RegisterService();
+  nsresult UnregisterService(nsresult aReason);
+  nsresult StopDiscovery(nsresult aReason);
+
+  nsresult OnDiscoveryChanged(bool aEnabled);
+  nsresult OnDiscoverableChanged(bool aEnabled);
+  nsresult OnServiceNameChanged(const nsCString& aServiceName);
 
   bool mInitialized = false;
   nsWeakPtr mDeviceListener;
@@ -54,6 +63,9 @@ private:
   nsCOMPtr<nsICancelable> mDiscoveryRequest;
   nsCOMPtr<nsICancelable> mRegisterRequest;
 
+  bool mDiscoveryEnabled = false;
+  bool mDiscoverable = false;
+  nsCString mServiceName;
   nsCString mRegisteredName;
 };
 
