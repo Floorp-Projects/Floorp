@@ -734,16 +734,13 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame,
 #endif
 #endif
 
-  bool isNonBidi = false;
-
   nsIFrame* frame0 = frameCount > 0 ? aBpd->FrameAt(0) : nullptr;
-  nsIFrame* frame1 = frameCount > 1 ? aBpd->FrameAt(1) : nullptr;
 
   // Non-bidi frames
-  if (runCount == 1 && (frameCount == 1 || frameCount == 2) &&
+  if (runCount == 1 &&
       aBpd->mParagraphDepth == 0 && aBpd->GetDirection() == NSBIDI_LTR &&
       aBpd->GetParaLevel() == 0 &&
-      frame0 != NS_BIDI_CONTROL_FRAME &&
+      frame0 && frame0 != NS_BIDI_CONTROL_FRAME &&
       !frame0->Properties().Get(nsIFrame::EmbeddingLevelProperty()) &&
       !frame0->Properties().Get(nsIFrame::BaseLevelProperty())) {
     // We have a left-to-right frame in a left-to-right paragraph,
@@ -751,20 +748,21 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame,
     // The embedding level and base level frame properties aren't
     // set (because if they are this frame used to have some other direction,
     // so we can't do this optimization)
-    // As long as this is the only frame, or it's followed by a linebreak,
-    // this is a non-bidi paragraph.
-    if (!frame1 || (frame1 != NS_BIDI_CONTROL_FRAME &&
-                    frame1->GetType() == nsGkAtoms::brFrame)) {
-      isNonBidi = true;
-    }
-  }
 
-  if (isNonBidi) {
+    // Make all continuations fluid within this run
+    for (int i = 0; i < frameCount; ++i) {
+      nsIFrame* frame = aBpd->FrameAt(i);
+      if (frame && frame != NS_BIDI_CONTROL_FRAME) {
+        JoinInlineAncestors(frame);
+      }
+    }
+
 #ifdef DEBUG
 #ifdef NOISY_BIDI
     printf("early return for single direction frame %p\n", (void*)frame);
 #endif
 #endif
+
     return NS_OK;
   }
 
