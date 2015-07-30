@@ -133,47 +133,6 @@ public:
     }
 #endif
   }
-  // Inverse-transform the FFTSize()/2+1 points of data in each
-  // of aRealDataIn and aImagDataIn and store the resulting
-  // FFTSize() points in aRealDataOut.
-  void PerformInverseFFT(float* aRealDataIn,
-                         float *aImagDataIn,
-                         float *aRealDataOut)
-  {
-    EnsureIFFT();
-    const uint32_t inputSize = mFFTSize / 2 + 1;
-#if defined(MOZ_LIBAV_FFT)
-    AlignedTArray<FFTSample> inputBuffer(inputSize * 2);
-    for (uint32_t i = 0; i < inputSize; ++i) {
-      inputBuffer[2*i] = aRealDataIn[i];
-      inputBuffer[(2*i)+1] = aImagDataIn[i];
-    }
-    av_rdft_calc(mAvIRDFT, inputBuffer.Elements());
-    PodCopy(aRealDataOut, inputBuffer.Elements(), FFTSize());
-    // TODO: Once bug 877662 lands, change this to use SSE.
-    for (uint32_t i = 0; i < mFFTSize; ++i) {
-      aRealDataOut[i] /= mFFTSize;
-    }
-#else
-    AlignedTArray<ComplexU> inputBuffer(inputSize);
-    for (uint32_t i = 0; i < inputSize; ++i) {
-      inputBuffer[i].r = aRealDataIn[i];
-      inputBuffer[i].i = aImagDataIn[i];
-    }
-#if defined(BUILD_ARM_NEON)
-    if (mozilla::supports_neon()) {
-      omxSP_FFTInv_CCSToR_F32_Sfs(inputBuffer.Elements()->f,
-                                  aRealDataOut, mOmxIFFT);
-    } else
-#endif
-    {
-      kiss_fftri(mKissIFFT, &(inputBuffer.Elements()->c), aRealDataOut);
-      for (uint32_t i = 0; i < mFFTSize; ++i) {
-        aRealDataOut[i] /= mFFTSize;
-      }
-    }
-#endif
-  }
 
   void Multiply(const FFTBlock& aFrame)
   {
