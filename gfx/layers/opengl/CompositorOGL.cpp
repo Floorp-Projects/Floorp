@@ -126,9 +126,8 @@ CompositorOGL::CreateContext()
     caps.preserve = false;
     caps.bpp16 = gfxPlatform::GetPlatform()->GetOffscreenFormat() == gfxImageFormat::RGB16_565;
 
-    bool requireCompatProfile = true;
     context = GLContextProvider::CreateOffscreen(mSurfaceSize,
-                                                 caps, requireCompatProfile);
+                                                 caps, CreateContextFlags::REQUIRE_COMPAT_PROFILE);
   }
 
   if (!context) {

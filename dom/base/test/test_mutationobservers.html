@@ -743,12 +743,173 @@ function testStyleRemoveProperty2() {
     observer.disconnect();
     m = null;
     div.removeAttribute("data-test");
-    then();
+    then(testAttributeRecordMerging1);
   });
   m.observe(div, { attributes: true });
   is(div.getAttribute("style"), null, "style attribute before unsuccessful removeProperty");
   div.style.removeProperty("color");  // shouldn't generate any mutation records
   div.setAttribute("data-test", "a");
+}
+
+function testAttributeRecordMerging1() {
+  ok(true, "testAttributeRecordMerging1");
+  var m = new M(function(records, observer) {
+    is(records.length, 2);
+    is(records[0].type, "attributes");
+    is(records[0].target, div);
+    is(records[0].attributeName, "foo");
+    is(records[0].attributeNamespace, null);
+    is(records[0].oldValue, null);
+
+    is(records[1].type, "attributes");
+    is(records[1].target, div.firstChild);
+    is(records[1].attributeName, "foo");
+    is(records[1].attributeNamespace, null);
+    is(records[1].oldValue, null);
+    observer.disconnect();
+    div.innerHTML = "";
+    div.removeAttribute("foo");
+    then(testAttributeRecordMerging2);
+  });
+  m.observe(div, {
+      attributes: true,
+      subtree: true
+    });
+  SpecialPowers.wrap(m).mergeAttributeRecords = true;
+
+  div.setAttribute("foo", "bar_1");
+  div.setAttribute("foo", "bar_2");
+  div.innerHTML = "<div></div>";
+  div.firstChild.setAttribute("foo", "bar_1");
+  div.firstChild.setAttribute("foo", "bar_2");
+}
+
+function testAttributeRecordMerging2() {
+  ok(true, "testAttributeRecordMerging2");
+  var m = new M(function(records, observer) {
+    is(records.length, 2);
+    is(records[0].type, "attributes");
+    is(records[0].target, div);
+    is(records[0].attributeName, "foo");
+    is(records[0].attributeNamespace, null);
+    is(records[0].oldValue, "initial");
+
+    is(records[1].type, "attributes");
+    is(records[1].target, div.firstChild);
+    is(records[1].attributeName, "foo");
+    is(records[1].attributeNamespace, null);
+    is(records[1].oldValue, "initial");
+    observer.disconnect();
+    div.innerHTML = "";
+    div.removeAttribute("foo");
+    then(testAttributeRecordMerging3);
+  });
+
+  div.setAttribute("foo", "initial");
+  div.innerHTML = "<div></div>";
+  div.firstChild.setAttribute("foo", "initial");
+  m.observe(div, {
+      attributes: true,
+      subtree: true,
+      attributeOldValue: true
+    });
+  SpecialPowers.wrap(m).mergeAttributeRecords = true;
+
+  div.setAttribute("foo", "bar_1");
+  div.setAttribute("foo", "bar_2");
+  div.firstChild.setAttribute("foo", "bar_1");
+  div.firstChild.setAttribute("foo", "bar_2");
+}
+
+function testAttributeRecordMerging3() {
+  ok(true, "testAttributeRecordMerging3");
+  var m = new M(function(records, observer) {
+    is(records.length, 4);
+    is(records[0].type, "attributes");
+    is(records[0].target, div);
+    is(records[0].attributeName, "foo");
+    is(records[0].attributeNamespace, null);
+    is(records[0].oldValue, "initial");
+
+    is(records[1].type, "attributes");
+    is(records[1].target, div.firstChild);
+    is(records[1].attributeName, "foo");
+    is(records[1].attributeNamespace, null);
+    is(records[1].oldValue, "initial");
+    
+    is(records[2].type, "attributes");
+    is(records[2].target, div);
+    is(records[2].attributeName, "foo");
+    is(records[2].attributeNamespace, null);
+    is(records[2].oldValue, "bar_1");
+
+    is(records[3].type, "attributes");
+    is(records[3].target, div.firstChild);
+    is(records[3].attributeName, "foo");
+    is(records[3].attributeNamespace, null);
+    is(records[3].oldValue, "bar_1");
+
+    observer.disconnect();
+    div.innerHTML = "";
+    div.removeAttribute("foo");
+    then(testAttributeRecordMerging4);
+  });
+
+  div.setAttribute("foo", "initial");
+  div.innerHTML = "<div></div>";
+  div.firstChild.setAttribute("foo", "initial");
+  m.observe(div, {
+      attributes: true,
+      subtree: true,
+      attributeOldValue: true
+    });
+  SpecialPowers.wrap(m).mergeAttributeRecords = true;
+
+  // No merging should happen.
+  div.setAttribute("foo", "bar_1");
+  div.firstChild.setAttribute("foo", "bar_1");
+  div.setAttribute("foo", "bar_2");
+  div.firstChild.setAttribute("foo", "bar_2");
+}
+
+function testAttributeRecordMerging4() {
+  ok(true, "testAttributeRecordMerging4");
+  var m = new M(function(records, observer) {
+  });
+
+  div.setAttribute("foo", "initial");
+  div.innerHTML = "<div></div>";
+  div.firstChild.setAttribute("foo", "initial");
+  m.observe(div, {
+      attributes: true,
+      subtree: true,
+      attributeOldValue: true
+    });
+  SpecialPowers.wrap(m).mergeAttributeRecords = true;
+
+  div.setAttribute("foo", "bar_1");
+  div.setAttribute("foo", "bar_2");
+  div.firstChild.setAttribute("foo", "bar_1");
+  div.firstChild.setAttribute("foo", "bar_2");
+
+  var records = m.takeRecords();
+
+  is(records.length, 2);
+  is(records[0].type, "attributes");
+  is(records[0].target, div);
+  is(records[0].attributeName, "foo");
+  is(records[0].attributeNamespace, null);
+  is(records[0].oldValue, "initial");
+
+  is(records[1].type, "attributes");
+  is(records[1].target, div.firstChild);
+  is(records[1].attributeName, "foo");
+  is(records[1].attributeNamespace, null);
+  is(records[1].oldValue, "initial");
+  m.disconnect();
+  div.innerHTML = "";
+  div.removeAttribute("foo");
+  then();
 }
 
 SimpleTest.waitForExplicitFinish();

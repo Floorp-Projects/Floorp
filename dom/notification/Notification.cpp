@@ -69,8 +69,6 @@ class ScopeCheckingGetCallback : public nsINotificationStorageCallback
 {
   const nsString mScope;
 public:
-  NS_DECL_ISUPPORTS
-
   explicit ScopeCheckingGetCallback(const nsAString& aScope)
     : mScope(aScope)
   {}
@@ -120,8 +118,6 @@ protected:
 
   nsTArray<NotificationStrings> mStrings;
 };
-
-NS_IMPL_ISUPPORTS(ScopeCheckingGetCallback, nsINotificationStorageCallback)
 
 class NotificationStorageCallback final : public ScopeCheckingGetCallback
 {
@@ -190,7 +186,9 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(NotificationStorageCallback)
 NS_IMPL_CYCLE_COLLECTION(NotificationStorageCallback, mWindow, mPromise);
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(NotificationStorageCallback)
-NS_INTERFACE_MAP_END_INHERITING(ScopeCheckingGetCallback)
+  NS_INTERFACE_MAP_ENTRY(nsINotificationStorageCallback)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
 
 class NotificationGetRunnable final : public nsRunnable
 {
@@ -1766,7 +1764,7 @@ class WorkerGetCallback final : public ScopeCheckingGetCallback
 {
   nsRefPtr<PromiseWorkerProxy> mPromiseProxy;
 public:
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_ISUPPORTS
 
   WorkerGetCallback(PromiseWorkerProxy* aProxy, const nsAString& aScope)
     : ScopeCheckingGetCallback(aScope), mPromiseProxy(aProxy)
@@ -1808,7 +1806,7 @@ private:
   {}
 };
 
-NS_IMPL_ISUPPORTS_INHERITED0(WorkerGetCallback, ScopeCheckingGetCallback)
+NS_IMPL_ISUPPORTS(WorkerGetCallback, nsINotificationStorageCallback)
 
 class WorkerGetRunnable final : public nsRunnable
 {

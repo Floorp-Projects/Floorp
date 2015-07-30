@@ -187,6 +187,11 @@ static const NSOpenGLPixelFormatAttribute kAttribs_offscreen[] = {
     0
 };
 
+static const NSOpenGLPixelFormatAttribute kAttribs_offscreen_allow_offline[] = {
+    NSOpenGLPFAAllowOfflineRenderers,
+    0
+};
+
 static const NSOpenGLPixelFormatAttribute kAttribs_offscreen_accel[] = {
     NSOpenGLPFAAccelerated,
     0
@@ -253,7 +258,7 @@ GLContextProviderCGL::CreateForWindow(nsIWidget *aWidget)
 }
 
 static already_AddRefed<GLContextCGL>
-CreateOffscreenFBOContext(bool requireCompatProfile)
+CreateOffscreenFBOContext(CreateContextFlags flags)
 {
     if (!sCGLLibrary.EnsureInitialized()) {
         return nullptr;
@@ -262,17 +267,25 @@ CreateOffscreenFBOContext(bool requireCompatProfile)
     ContextProfile profile;
     NSOpenGLContext* context = nullptr;
 
-    if (!requireCompatProfile) {
+    if (!(flags & CreateContextFlags::REQUIRE_COMPAT_PROFILE)) {
         profile = ContextProfile::OpenGLCore;
         context = CreateWithFormat(kAttribs_offscreen_coreProfile);
     }
     if (!context) {
         profile = ContextProfile::OpenGLCompatibility;
 
-        if (gfxPrefs::RequireHardwareGL())
-            context = CreateWithFormat(kAttribs_offscreen_accel);
-        else
-            context = CreateWithFormat(kAttribs_offscreen);
+        if (flags & CreateContextFlags::ALLOW_OFFLINE_RENDERER) {
+          if (gfxPrefs::RequireHardwareGL())
+              context = CreateWithFormat(kAttribs_singleBuffered);
+          else
+              context = CreateWithFormat(kAttribs_offscreen_allow_offline);
+
+        } else {
+          if (gfxPrefs::RequireHardwareGL())
+              context = CreateWithFormat(kAttribs_offscreen_accel);
+          else
+              context = CreateWithFormat(kAttribs_offscreen);
+        }
     }
     if (!context) {
         NS_WARNING("Failed to create NSOpenGLContext.");
@@ -287,10 +300,10 @@ CreateOffscreenFBOContext(bool requireCompatProfile)
 }
 
 already_AddRefed<GLContext>
-GLContextProviderCGL::CreateHeadless(bool requireCompatProfile, bool forceEnabled)
+GLContextProviderCGL::CreateHeadless(CreateContextFlags flags)
 {
     nsRefPtr<GLContextCGL> gl;
-    gl = CreateOffscreenFBOContext(requireCompatProfile);
+    gl = CreateOffscreenFBOContext(flags);
     if (!gl)
         return nullptr;
 
@@ -305,9 +318,9 @@ GLContextProviderCGL::CreateHeadless(bool requireCompatProfile, bool forceEnable
 already_AddRefed<GLContext>
 GLContextProviderCGL::CreateOffscreen(const IntSize& size,
                                       const SurfaceCaps& caps,
-                                      bool requireCompatProfile)
+                                      CreateContextFlags flags)
 {
-    nsRefPtr<GLContext> glContext = CreateHeadless(requireCompatProfile);
+    nsRefPtr<GLContext> glContext = CreateHeadless(flags);
     if (!glContext->InitOffscreen(size, caps)) {
         NS_WARNING("Failed during InitOffscreen.");
         return nullptr;
@@ -330,7 +343,7 @@ GLContextProviderCGL::GetGlobalContext()
         // than 16x16 in size; also 16x16 is POT so that we can do
         // a FBO with it on older video cards.  A FBO context for
         // sharing is preferred since it has no associated target.
-        gGlobalContext = CreateOffscreenFBOContext(false);
+        gGlobalContext = CreateOffscreenFBOContext(CreateContextFlags::NONE);
         if (!gGlobalContext || !static_cast<GLContextCGL*>(gGlobalContext.get())->Init()) {
             NS_WARNING("Couldn't init gGlobalContext.");
             gGlobalContext = nullptr;
