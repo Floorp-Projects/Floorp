@@ -16,6 +16,8 @@ config = {
         # 'update',
     ],
     'stage_platform': 'linux64-asan',
+    'publish_nightly_en_US_routes': False,
+    'build_type': 'asan',
     'purge_minsize': 12,
     'tooltool_manifest_src': "browser/config/tooltool-manifests/linux64/\
 asan.manifest",

@@ -129,6 +129,7 @@ class SpidermonkeyBuild(MockMixin,
                                 'upload_remote_basepath': None,
                                 'enable_try_uploads': True,
                                 'source': None,
+                                'stage_product': 'firefox',
                             },
         )
 
