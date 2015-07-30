@@ -189,7 +189,7 @@ function checkContextMenu(event)
   // context menu from mouse click
   switch (gTestId) {
     case -1:
-      var expected = gSelectionStep == 2 ? 1 : (navigator.platform.indexOf("Mac") >= 0 ? 3 : 0);
+      var expected = gSelectionStep == 2 ? 1 : (platformIsMac() ? 3 : 0);
       is($(gTestElement).selectedIndex, expected, "index after click " + gSelectionStep);
       break;
     case 0:
@@ -222,45 +222,55 @@ function checkContextMenuForMenu(event)
 function checkPopup()
 {
   var menurect = $("themenu").getBoundingClientRect();
+  
+  // Context menus are offset by a number of pixels from the mouse click
+  // which activates them. This is so that they don't appear exactly
+  // under the mouse which can cause them to be mistakenly dismissed.
+  // The number of pixels depends on the platform  and is defined in
+  // each platform's nsLookAndFeel
+  var contextMenuOffsetX = platformIsMac() ? 1 : 2;
+  var contextMenuOffsetY = platformIsMac() ? -6 : 2;
 
   if (gTestId == 0) {
     if (gTestElement == "list") {
       var itemrect = $("item3").getBoundingClientRect();
-      isRoundedX(menurect.left, itemrect.left + 2,
+      isRoundedX(menurect.left, itemrect.left + contextMenuOffsetX,
          "list selection keyboard left");
-      isRoundedY(menurect.top, itemrect.bottom + 2,
+      isRoundedY(menurect.top, itemrect.bottom + contextMenuOffsetY,
          "list selection keyboard top");
     }
     else {
       var tree = $("tree");
       var bodyrect = $("treechildren").getBoundingClientRect();
-      isRoundedX(menurect.left, bodyrect.left + 2,
+      isRoundedX(menurect.left, bodyrect.left + contextMenuOffsetX,
          "tree selection keyboard left");
       isRoundedY(menurect.top, bodyrect.top +
-         tree.treeBoxObject.rowHeight * 3 + 2,
+         tree.treeBoxObject.rowHeight * 3 + contextMenuOffsetY,
          "tree selection keyboard top");
     }
   }
   else if (gTestId == 1) {
-    // activating a context menu with the mouse from position (7, 1).
-    // Add 2 pixels to these values as context menus are offset by 2 pixels
-    // so that they don't appear exactly only the menu making them easier to
-    // dismiss. See nsXULPopupListener.
+    // activating a context menu with the mouse from position (7, 4).
     var elementrect = $(gTestElement).getBoundingClientRect();
-    isRoundedX(menurect.left, elementrect.left + 9,
+    isRoundedX(menurect.left, elementrect.left + 7 + contextMenuOffsetX,
        gTestElement + " mouse left");
-    isRoundedY(menurect.top, elementrect.top + 6,
+    isRoundedY(menurect.top, elementrect.top + 4 + contextMenuOffsetY,
        gTestElement + " mouse top");
   }
   else {
     var elementrect = $(gTestElement).getBoundingClientRect();
-    isRoundedX(menurect.left, elementrect.left + 2,
+    isRoundedX(menurect.left, elementrect.left + contextMenuOffsetX,
        gTestElement + " no selection keyboard left");
-    isRoundedY(menurect.top, elementrect.bottom + 2,
+    isRoundedY(menurect.top, elementrect.bottom + contextMenuOffsetY,
        gTestElement + " no selection keyboard top");
   }
 
   $("themenu").hidePopup();
+}
+
+function platformIsMac()
+{
+  return navigator.platform.indexOf("Mac") > -1;
 }
 
 ]]>
