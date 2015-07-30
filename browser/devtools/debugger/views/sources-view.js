@@ -664,6 +664,8 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     if (Prefs.promiseDebuggerEnabled) {
       let promisePane = this.DebuggerView._promisePane;
       promisePane.hidden = !promisePane.hidden;
+
+      this.DebuggerView._initializePromiseDebugger();
     }
   },
 

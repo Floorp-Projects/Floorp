@@ -16,6 +16,8 @@
 #include <stagefright/foundation/AHandler.h>
 #include "GonkNativeWindow.h"
 #include "GonkNativeWindowClient.h"
+#include "mozilla/layers/FenceUtils.h"
+#include <ui/Fence.h>
 
 using namespace android;
 
@@ -117,7 +119,8 @@ private:
   void onMessageReceived(const sp<AMessage> &aMessage);
 
   void ReleaseAllPendingVideoBuffers();
-  void PostReleaseVideoBuffer(android::MediaBuffer *aBuffer);
+  void PostReleaseVideoBuffer(android::MediaBuffer *aBuffer,
+                              layers::FenceHandle mReleaseFence);
 
   uint32_t mVideoWidth;
   uint32_t mVideoHeight;
@@ -150,11 +153,17 @@ private:
     kNotifyPostReleaseBuffer = 'nprb',
   };
 
-  // Hold video's MediaBuffers that are released.
-  // The holded MediaBuffers are released soon after flush.
-  Vector<android::MediaBuffer*> mPendingVideoBuffers;
-  // The lock protects mPendingVideoBuffers.
-  Mutex mPendingVideoBuffersLock;
+  struct ReleaseItem {
+    ReleaseItem(android::MediaBuffer* aBuffer, layers::FenceHandle& aFence)
+    : mBuffer(aBuffer)
+    , mReleaseFence(aFence) {}
+    android::MediaBuffer* mBuffer;
+    layers::FenceHandle mReleaseFence;
+  };
+  nsTArray<ReleaseItem> mPendingReleaseItems;
+
+  // The lock protects mPendingReleaseItems.
+  Mutex mPendingReleaseItemsLock;
 
   // MediaCodedc's wrapper that performs the decoding.
   android::sp<android::MediaCodecProxy> mDecoder;

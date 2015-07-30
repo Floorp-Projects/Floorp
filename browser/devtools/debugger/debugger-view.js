@@ -30,6 +30,8 @@ const SEARCH_AUTOFILL = [SEARCH_GLOBAL_FLAG, SEARCH_FUNCTION_FLAG, SEARCH_TOKEN_
 const EDITOR_VARIABLE_HOVER_DELAY = 750; // ms
 const EDITOR_VARIABLE_POPUP_POSITION = "topcenter bottomleft";
 const TOOLBAR_ORDER_POPUP_POSITION = "topcenter bottomleft";
+const PROMISE_DEBUGGER_URL =
+  "chrome://browser/content/devtools/promisedebugger/promise-debugger.xhtml";
 
 /**
  * Object defining the debugger view components.
@@ -93,6 +95,7 @@ let DebuggerView = {
     this.WatchExpressions.destroy();
     this.EventListeners.destroy();
     this.GlobalSearch.destroy();
+    this._destroyPromiseDebugger();
     this._destroyPanes();
     this._destroyEditor(deferred.resolve);
 
@@ -192,6 +195,28 @@ let DebuggerView = {
           break;
       }
     });
+  },
+
+  /**
+   * Initialie the Promise Debugger instance.
+   */
+  _initializePromiseDebugger: function() {
+    let iframe = this._promiseDebuggerIframe = document.createElement("iframe");
+    iframe.setAttribute("flex", 1);
+    iframe.setAttribute("src", PROMISE_DEBUGGER_URL);
+    this._promisePane.appendChild(iframe);
+  },
+
+  /**
+   * Destroy the Promise Debugger instance.
+   */
+  _destroyPromiseDebugger: function() {
+    if (this._promiseDebuggerIframe) {
+      this._promiseDebuggerIframe.parentNode.removeChild(
+        this._promiseDebuggerIframe);
+
+      this._promiseDebuggerIframe = null;
+    }
   },
 
   /**
