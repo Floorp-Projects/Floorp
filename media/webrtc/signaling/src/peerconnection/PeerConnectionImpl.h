@@ -149,7 +149,9 @@ class PCUuidGenerator : public mozilla::JsepUuidGenerator {
 class PeerConnectionConfiguration
 {
 public:
-  PeerConnectionConfiguration() : mBundlePolicy(kBundleBalanced) {}
+  PeerConnectionConfiguration()
+  : mBundlePolicy(kBundleBalanced),
+    mIceTransportPolicy(NrIceCtx::ICE_POLICY_ALL) {}
 
   bool addStunServer(const std::string& addr, uint16_t port,
                      const char* transport)
@@ -186,6 +188,8 @@ public:
   const std::vector<NrIceTurnServer>& getTurnServers() const { return mTurnServers; }
   void setBundlePolicy(JsepBundlePolicy policy) { mBundlePolicy = policy;}
   JsepBundlePolicy getBundlePolicy() const { return mBundlePolicy; }
+  void setIceTransportPolicy(NrIceCtx::Policy policy) { mIceTransportPolicy = policy;}
+  NrIceCtx::Policy getIceTransportPolicy() const { return mIceTransportPolicy; }
 
 #ifndef MOZILLA_EXTERNAL_LINKAGE
   nsresult Init(const RTCConfiguration& aSrc);
@@ -196,6 +200,7 @@ private:
   std::vector<NrIceStunServer> mStunServers;
   std::vector<NrIceTurnServer> mTurnServers;
   JsepBundlePolicy mBundlePolicy;
+  NrIceCtx::Policy mIceTransportPolicy;
 };
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
