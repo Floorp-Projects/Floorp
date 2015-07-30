@@ -7,13 +7,34 @@
 #include "GLContext.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "WebGLContext.h"
+#include "WebGLFormats.h"
 
 namespace mozilla {
+
+using mozilla::webgl::EffectiveFormat;
 
 WebGLExtensionColorBufferHalfFloat::WebGLExtensionColorBufferHalfFloat(WebGLContext* webgl)
     : WebGLExtensionBase(webgl)
 {
     MOZ_ASSERT(IsSupported(webgl), "Don't construct extension if unsupported.");
+
+    webgl::FormatUsageAuthority* authority = webgl->mFormatUsage.get();
+
+    auto updateUsage = [authority](EffectiveFormat effectiveFormat) {
+        webgl::FormatUsageInfo* usage = authority->GetUsage(effectiveFormat);
+        MOZ_ASSERT(usage);
+        usage->asRenderbuffer = usage->isRenderable = true;
+    };
+
+    // Ensure require formats are initialized.
+    WebGLExtensionTextureHalfFloat::InitWebGLFormats(authority);
+
+    // Update usage to allow asRenderbuffer and isRenderable
+    updateUsage(EffectiveFormat::RGBA16F);
+    updateUsage(EffectiveFormat::RGB16F);
+    updateUsage(EffectiveFormat::Luminance16FAlpha16F);
+    updateUsage(EffectiveFormat::Luminance16F);
+    updateUsage(EffectiveFormat::Alpha16F);
 }
 
 WebGLExtensionColorBufferHalfFloat::~WebGLExtensionColorBufferHalfFloat()

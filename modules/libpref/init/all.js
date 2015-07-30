@@ -688,7 +688,7 @@ pref("gfx.content.azure.backends", "direct2d1.1,direct2d,cairo");
 pref("gfx.content.azure.backends", "cg");
 pref("gfx.canvas.azure.backends", "skia");
 // Accelerated cg canvas where available (10.7+)
-pref("gfx.canvas.azure.accelerated", false);
+pref("gfx.canvas.azure.accelerated", true);
 #else
 pref("gfx.canvas.azure.backends", "cairo");
 pref("gfx.content.azure.backends", "cairo");
@@ -4430,7 +4430,7 @@ pref("dom.mozAlarms.enabled", false);
 
 // Push
 
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+#if !defined(MOZ_B2G) && !defined(ANDROID)
 // Desktop prefs
 #ifdef RELEASE_BUILD
 pref("dom.push.enabled", false);
@@ -4879,7 +4879,14 @@ pref("intl.collation.mac.use_icu", true);
 // Enable NSTextInput protocol for use with IMEs that have not
 // been updated to use the NSTextInputClient protocol.
 pref("intl.ime.nstextinput.enable", false);
+
+#if !defined(RELEASE_BUILD) || defined(DEBUG)
+// In non-release builds we crash by default on insecure text input (when a
+// password editor has focus but secure event input isn't enabled).  The
+// following pref, when turned on, disables this behavior.  See bug 1188425.
+pref("intl.allow-insecure-text-input", false);
 #endif
+#endif // XP_MACOSX
 
 // Enable meta-viewport support in remote APZ-enabled frames.
 pref("dom.meta-viewport.enabled", false);
