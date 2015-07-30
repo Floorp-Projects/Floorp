@@ -137,7 +137,7 @@ private:
     { return NS_PTR_TO_INT32(aKey); }
 
     size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-    { return mEntries.SizeOfExcludingThis(aMallocSizeOf); }
+    { return mEntries.ShallowSizeOfExcludingThis(aMallocSizeOf); }
 
     enum { ALLOW_MEMMOVE = false };
   };

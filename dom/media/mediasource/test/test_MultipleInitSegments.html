@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=windows-1252">
+  <title>MSE: Append buffer with multiple init segments</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+runWithMSE(function (ms, v) {
+  ms.addEventListener("sourceopen", function () {
+    var sb = ms.addSourceBuffer("video/webm");
+    fetchWithXHR("seek_lowres.webm", function (seek_lowres) {
+      fetchWithXHR("seek.webm", function (seek) {
+        var data = [
+          [seek_lowres, 0, 438],     // lowres init segment
+          [seek_lowres, 438, 25950], // lowres media segment 0-1
+          [seek, 0, 318],            // init segment
+          [seek, 46712, 67833]       // media segment 0.8-1.201
+        ];
+        var length = data.map(d => d[2] - d[1]).reduce((a, b) => a + b);
+        var arrayBuffer = new Uint8Array(length);
+        var pos = 0;
+        data.forEach(function(d) {
+          var buffer = new Uint8Array(d[0], d[1], d[2]-d[1]);
+          arrayBuffer.set(buffer, pos);
+          pos += buffer.byteLength;
+        });
+        loadSegment.bind(null, sb, arrayBuffer)().then(function() {
+          // Since we are passing multiple segments in one buffer,
+          // the first durationchange event from parsing the init
+          // segment will be fired before updateend.
+          v.addEventListener("durationchange", function () {
+            ok(v.duration, 1.201);
+            SimpleTest.finish();
+          });
+          ms.endOfStream();
+        });
+      });
+    });
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>

@@ -214,6 +214,21 @@ class LifoAlloc
         curSize_ -= size;
     }
 
+    MOZ_ALWAYS_INLINE
+    void* allocImpl(size_t n) {
+        void* result;
+        if (latest && (result = latest->tryAlloc(n)))
+            return result;
+
+        if (!getOrCreateChunk(n))
+            return nullptr;
+
+        // Since we just created a large enough chunk, this can't fail.
+        result = latest->tryAlloc(n);
+        MOZ_ASSERT(result);
+        return result;
+    }
+
   public:
     explicit LifoAlloc(size_t defaultChunkSize)
       : peakSize_(0)
@@ -257,23 +272,12 @@ class LifoAlloc
     MOZ_ALWAYS_INLINE
     void* alloc(size_t n) {
         JS_OOM_POSSIBLY_FAIL();
-
-        void* result;
-        if (latest && (result = latest->tryAlloc(n)))
-            return result;
-
-        if (!getOrCreateChunk(n))
-            return nullptr;
-
-        // Since we just created a large enough chunk, this can't fail.
-        result = latest->tryAlloc(n);
-        MOZ_ASSERT(result);
-        return result;
+        return allocImpl(n);
     }
 
     MOZ_ALWAYS_INLINE
     void* allocInfallible(size_t n) {
-        if (void* result = alloc(n))
+        if (void* result = allocImpl(n))
             return result;
         CrashAtUnhandlableOOM("LifoAlloc::allocInfallible");
         return nullptr;

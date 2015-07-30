@@ -239,6 +239,27 @@ async_test(function(t) {
   }));
 }, 'Test resetting of computed style');
 
+async_test(function(t) {
+  var div = addDiv(t, {'class': 'animated-div'});
+  div.style.animation = ANIM_PROP_VAL;
+  var animation = div.getAnimations()[0];
+
+  var resolvedFinished = false;
+  animation.finished.then(function() {
+    resolvedFinished = true;
+  });
+
+  animation.ready.then(function() {
+    animation.finish();
+  }).then(t.step_func(function() {
+    assert_true(resolvedFinished,
+      'Animation.finished should be resolved soon after ' +
+      'Animation.finish()');
+    t.done();
+  }));
+
+}, 'Test finish() resolves finished promise synchronously');
+
 done();
 </script>
 </body>

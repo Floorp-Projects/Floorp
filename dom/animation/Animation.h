@@ -60,9 +60,9 @@ public:
     , mPendingState(PendingState::NotPending)
     , mSequenceNum(kUnsequenced)
     , mIsRunningOnCompositor(false)
-    , mIsPreviousStateFinished(false)
     , mFinishedAtLastComposeStyle(false)
     , mIsRelevant(false)
+    , mFinishedIsResolved(false)
   {
   }
 
@@ -323,11 +323,21 @@ protected:
     DidSeek
   };
 
-  void UpdateTiming(SeekFlag aSeekFlag);
-  void UpdateFinishedState(SeekFlag aSeekFlag);
+  enum class SyncNotifyFlag {
+    Sync,
+    Async
+  };
+
+  void UpdateTiming(SeekFlag aSeekFlag,
+                    SyncNotifyFlag aSyncNotifyFlag);
+  void UpdateFinishedState(SeekFlag aSeekFlag,
+                           SyncNotifyFlag aSyncNotifyFlag);
   void UpdateEffect();
   void FlushStyle() const;
   void PostUpdate();
+  void ResetFinishedPromise();
+  void MaybeResolveFinishedPromise();
+  void DoFinishNotification(SyncNotifyFlag aSyncNotifyFlag);
 
   /**
    * Remove this animation from the pending animation tracker and reset
@@ -385,13 +395,17 @@ protected:
   uint64_t mSequenceNum;
 
   bool mIsRunningOnCompositor;
-  // Indicates whether we were in the finished state during our
-  // most recent unthrottled sample (our last ComposeStyle call).
-  bool mIsPreviousStateFinished; // Spec calls this "previous finished state"
   bool mFinishedAtLastComposeStyle;
   // Indicates that the animation should be exposed in an element's
   // getAnimations() list.
   bool mIsRelevant;
+
+  nsRevocableEventPtr<nsRunnableMethod<Animation>> mFinishNotificationTask;
+  // True if mFinished is resolved or would be resolved if mFinished has
+  // yet to be created. This is not set when mFinished is rejected since
+  // in that case mFinished is immediately reset to represent a new current
+  // finished promise.
+  bool mFinishedIsResolved;
 };
 
 } // namespace dom

@@ -590,15 +590,15 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
 
     /* Initialize the UDP candidates */
     if (r=nr_ice_component_initialize_udp(ctx, component, addrs, addr_ct, lufrag, &pwd))
-      ABORT(r);
+      r_log(LOG_ICE,LOG_INFO,"ICE(%s): failed to create UDP candidates with error %d",ctx->label,r);
     /* And the TCP candidates */
     if (r=nr_ice_component_initialize_tcp(ctx, component, addrs, addr_ct, lufrag, &pwd))
-      ABORT(r);
+      r_log(LOG_ICE,LOG_INFO,"ICE(%s): failed to create TCP candidates with error %d",ctx->label,r);
 
     /* count the candidates that will be initialized */
     cand=TAILQ_FIRST(&component->candidates);
     if(!cand){
-      r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): couldn't create any valid candidates",ctx->label);
+      r_log(LOG_ICE,LOG_ERR,"ICE(%s): couldn't create any valid candidates",ctx->label);
       ABORT(R_NOT_FOUND);
     }
 

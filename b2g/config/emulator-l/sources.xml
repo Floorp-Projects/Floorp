@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="07c383a786f188904311a37f6062c2cb84c9b61d">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="1d3595836bd55b70478923d771051268a5dabf91"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="7e7e92fbeea90cad8bf6f494b1a73712f79178e8"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="9f45c1988fe72749f0659409e6e3320fabf7b79a"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
@@ -142,11 +142,9 @@
   <!-- Emulator specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="fe7df1bc8dd0fd71571505d7be1c31a4ad1e40fb"/>
   <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="48132ec0b0dfe9fc29c7c3f0e799066be8999198"/>
-  <!-- external/qemu for emulator-l need to be updated in bug-1121378 -->
   <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="59e434cbecc02653f44cedeb2ef5cc88dc8bb61b"/>
   <project name="platform_external_wpa_supplicant_8" path="external/wpa_supplicant_8" remote="b2g" revision="cbda29a58abc4ea1f7f4611fe354ab67b606219d"/>
   <project name="platform/development" path="development" revision="0c51f6e0aa2ee57fcb75ec3b2ff6bf754cece63e"/>
   <project name="android-sdk" path="sdk" remote="b2g" revision="ff4190dc603f62a7caa48342aa268acf99863c5c"/>
-  <!-- hardware-ril for emulator-l need to be updated in bug-1113054 -->
-  <project name="platform/hardware/ril" path="hardware/ril" revision="e00d716e7e3d31729f75399855b6921e90cb0b66"/>
+  <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="2210a0276fa000ef7224f26b24f00cb34a372e8d"/>
 </manifest>

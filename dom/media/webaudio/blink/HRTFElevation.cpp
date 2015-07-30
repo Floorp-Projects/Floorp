@@ -54,7 +54,7 @@ size_t HRTFElevation::sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) c
 {
     size_t amount = aMallocSizeOf(this);
 
-    amount += m_kernelListL.SizeOfExcludingThis(aMallocSizeOf);
+    amount += m_kernelListL.ShallowSizeOfExcludingThis(aMallocSizeOf);
     for (size_t i = 0; i < m_kernelListL.Length(); i++) {
         amount += m_kernelListL[i]->sizeOfIncludingThis(aMallocSizeOf);
     }

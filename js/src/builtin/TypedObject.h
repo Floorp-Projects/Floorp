@@ -421,11 +421,6 @@ class ArrayTypeDescr : public ComplexTypeDescr
         return getReservedSlot(JS_DESCR_SLOT_ARRAY_ELEM_TYPE).toObject().as<TypeDescr>();
     }
 
-    TypeDescr& maybeForwardedElementType() const {
-        JSObject* elemType = &getReservedSlot(JS_DESCR_SLOT_ARRAY_ELEM_TYPE).toObject();
-        return MaybeForwarded(elemType)->as<TypeDescr>();
-    }
-
     int32_t length() const {
         return getReservedSlot(JS_DESCR_SLOT_ARRAY_LENGTH).toInt32();
     }
@@ -489,10 +484,6 @@ class StructTypeDescr : public ComplexTypeDescr
   private:
     ArrayObject& fieldInfoObject(size_t slot) const {
         return getReservedSlot(slot).toObject().as<ArrayObject>();
-    }
-
-    ArrayObject& maybeForwardedFieldInfoObject(size_t slot) const {
-        return MaybeForwarded(&getReservedSlot(slot).toObject())->as<ArrayObject>();
     }
 };
 
@@ -560,16 +551,8 @@ class TypedObject : public JSObject
         return getProto()->as<TypedProto>();
     }
 
-    TypedProto& maybeForwardedTypedProto() const {
-        return MaybeForwarded(getProto())->as<TypedProto>();
-    }
-
     TypeDescr& typeDescr() const {
         return group()->typeDescr();
-    }
-
-    TypeDescr& maybeForwardedTypeDescr() const {
-        return MaybeForwarded(&typeDescr())->as<TypeDescr>();
     }
 
     int32_t offset() const;

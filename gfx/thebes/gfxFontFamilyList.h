@@ -149,12 +149,12 @@ struct FontFamilyName final {
     }
 
     // memory reporting
-    size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
+    size_t SizeOfExcludingThis2(mozilla::MallocSizeOf aMallocSizeOf) const {
         return mName.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
     }
 
-    size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
-        return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+    size_t SizeOfIncludingThis2(mozilla::MallocSizeOf aMallocSizeOf) const {
+        return aMallocSizeOf(this) + SizeOfExcludingThis2(aMallocSizeOf);
     }
 
     FontFamilyType mType;
@@ -337,7 +337,7 @@ public:
 
     // memory reporting
     size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
-        return mFontlist.SizeOfExcludingThis(aMallocSizeOf);
+        return mFontlist.ShallowSizeOfExcludingThis(aMallocSizeOf);
     }
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {

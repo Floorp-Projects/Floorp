@@ -56,7 +56,8 @@ let CERTIFICATE_ERROR_PAGE_PREF = 'security.alternate_certificate_error_page';
 const OBSERVED_EVENTS = [
   'xpcom-shutdown',
   'media-playback',
-  'activity-done'
+  'activity-done',
+  'invalid-widget'
 ];
 
 const COMMAND_MAP = {
@@ -299,6 +300,9 @@ BrowserElementChild.prototype = {
         break;
       case 'xpcom-shutdown':
         this._shuttingDown = true;
+        break;
+      case 'invalid-widget':
+        sendAsyncMsg('error', { type: 'invalid-widget' });
         break;
     }
   },

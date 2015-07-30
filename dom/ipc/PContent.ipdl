@@ -650,6 +650,12 @@ child:
      * Send gamepad status update to child.
      */
     GamepadUpdate(GamepadChangeEvent aGamepadEvent);
+
+    /**
+     * Tell the child that for testing purposes, a graphics device reset has
+     * occurred.
+     */
+    async TestGraphicsDeviceReset(uint32_t aReason);
 parent:
     /**
      * Tell the content process some attributes of itself.  This is

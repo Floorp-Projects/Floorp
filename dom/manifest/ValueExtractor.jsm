@@ -25,9 +25,7 @@ ValueExtractor.prototype = {
   //  objectName: string used to construct the developer warning.
   //  property: the name of the property being extracted.
   //  trim: boolean, if the value should be trimmed (used by string type).
-  extractValue({
-      expectedType, object, objectName, property, trim
-    }) {
+  extractValue({expectedType, object, objectName, property, trim}) {
     const value = object[property];
     const isArray = Array.isArray(value);
     // We need to special-case "array", as it's not a JS primitive.
