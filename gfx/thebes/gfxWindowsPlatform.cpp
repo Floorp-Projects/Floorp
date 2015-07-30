@@ -74,6 +74,7 @@
 
 #include "VsyncSource.h"
 #include "DriverInitCrashDetection.h"
+#include "mozilla/dom/ContentParent.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -376,6 +377,7 @@ gfxWindowsPlatform::gfxWindowsPlatform()
   : mRenderMode(RENDER_GDI)
   , mIsWARP(false)
   , mHasDeviceReset(false)
+  , mHasFakeDeviceReset(false)
   , mDoesD3D11TextureSharingWork(false)
   , mAcceleration(FeatureStatus::Unused)
   , mD3D11Status(FeatureStatus::Unused)
@@ -482,7 +484,19 @@ gfxWindowsPlatform::HandleDeviceReset()
     return false;
   }
 
-  Telemetry::Accumulate(Telemetry::DEVICE_RESET_REASON, uint32_t(resetReason));
+  if (mHasFakeDeviceReset) {
+    if (XRE_IsParentProcess()) {
+      // Notify child processes that we got a device reset.
+      nsTArray<dom::ContentParent*> processes;
+      dom::ContentParent::GetAll(processes);
+
+      for (size_t i = 0; i < processes.Length(); i++) {
+        processes[i]->SendTestGraphicsDeviceReset(uint32_t(resetReason));
+      }
+    }
+  } else {
+    Telemetry::Accumulate(Telemetry::DEVICE_RESET_REASON, uint32_t(resetReason));
+  }
 
   // Remove devices and adapters.
   mD3D10Device = nullptr;
@@ -497,6 +511,7 @@ gfxWindowsPlatform::HandleDeviceReset()
   // will be recomputed by InitializeDevices().
   mIsWARP = false;
   mHasDeviceReset = false;
+  mHasFakeDeviceReset = false;
   mDoesD3D11TextureSharingWork = false;
   mDeviceResetReason = DeviceResetReason::OK;
 
@@ -1109,6 +1124,17 @@ gfxWindowsPlatform::IsDeviceReset(HRESULT hr, DeviceResetReason* aResetReason)
   return false;
 }
 
+void
+gfxWindowsPlatform::TestDeviceReset(DeviceResetReason aReason)
+{
+  if (mHasDeviceReset) {
+    return;
+  }
+  mHasDeviceReset = true;
+  mHasFakeDeviceReset = true;
+  mDeviceResetReason = aReason;
+}
+
 bool
 gfxWindowsPlatform::DidRenderingDeviceReset(DeviceResetReason* aResetReason)
 {
@@ -1139,6 +1165,14 @@ gfxWindowsPlatform::DidRenderingDeviceReset(DeviceResetReason* aResetReason)
     if (IsDeviceReset(hr, aResetReason)) {
       return true;
     }
+  }
+  if (XRE_IsParentProcess() && gfxPrefs::DeviceResetForTesting()) {
+    TestDeviceReset((DeviceResetReason)gfxPrefs::DeviceResetForTesting());
+    if (aResetReason) {
+      *aResetReason = mDeviceResetReason;
+    }
+    gfxPrefs::SetDeviceResetForTesting(0);
+    return true;
   }
   return false;
 }
