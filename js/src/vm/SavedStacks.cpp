@@ -422,26 +422,11 @@ SavedFrame::initFromLookup(SavedFrame::HandleLookup lookup)
                         ? StringValue(lookup->asyncCause)
                         : NullValue());
     setReservedSlot(JSSLOT_PARENT, ObjectOrNullValue(lookup->parent));
-    setReservedSlot(JSSLOT_PRIVATE_PARENT, PrivateValue(lookup->parent));
 
     MOZ_ASSERT(getReservedSlot(JSSLOT_PRINCIPALS).isUndefined());
     if (lookup->principals)
         JS_HoldPrincipals(lookup->principals);
     setReservedSlot(JSSLOT_PRINCIPALS, PrivateValue(lookup->principals));
-}
-
-bool
-SavedFrame::parentMoved()
-{
-    const Value& v = getReservedSlot(JSSLOT_PRIVATE_PARENT);
-    JSObject* p = static_cast<JSObject*>(v.toPrivate());
-    return p == getParent();
-}
-
-void
-SavedFrame::updatePrivateParent()
-{
-    setReservedSlot(JSSLOT_PRIVATE_PARENT, PrivateValue(getParent()));
 }
 
 bool
@@ -937,15 +922,17 @@ SavedStacks::sweep(JSRuntime* rt)
                 e.removeFront();
             } else {
                 SavedFrame* frame = &obj->as<SavedFrame>();
-                bool parentMoved = frame->parentMoved();
 
-                if (parentMoved) {
-                    frame->updatePrivateParent();
-                }
+                SavedFrame* parent = frame->getParent();
+                bool parentMoved = parent && IsForwarded(parent);
+                if (parentMoved)
+                    parent = Forwarded(parent);
 
                 if (obj != temp || parentMoved) {
-                    e.rekeyFront(SavedFrame::Lookup(*frame),
-                                 ReadBarriered<SavedFrame*>(frame));
+                    MOZ_ASSERT(!IsForwarded(frame));
+                    SavedFrame::Lookup newLocation(*frame);
+                    newLocation.parent = parent;
+                    e.rekeyFront(newLocation, ReadBarriered<SavedFrame*>(frame));
                 }
             }
         }
