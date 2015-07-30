@@ -4700,6 +4700,12 @@
     "kind": "flag",
     "description": "Set if Telemetry failed to save the session data to disk."
   },
+  "TELEMETRY_PING_EVICTED_FOR_SERVER_ERRORS": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Number of Telemetry ping files evicted due to server errors (4XX HTTP code received)"
+  },
   "TELEMETRY_TEST_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
