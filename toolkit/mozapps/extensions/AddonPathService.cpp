@@ -14,12 +14,14 @@
 #include "nsThreadUtils.h"
 #include "nsIIOService.h"
 #include "nsNetUtil.h"
+#include "nsIAddonPolicyService.h"
 #include "nsIFileURL.h"
 #include "nsIResProtocolHandler.h"
 #include "nsIChromeRegistry.h"
 #include "nsIJARURI.h"
 #include "nsJSUtils.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/ToJSValue.h"
 #include "mozilla/AddonPathService.h"
 #include "mozilla/Omnijar.h"
 
@@ -65,6 +67,18 @@ AddonPathService::GetInstance()
   return sInstance;
 }
 
+static JSAddonId*
+ConvertAddonId(const nsAString& addonIdString)
+{
+  AutoSafeJSContext cx;
+  JS::RootedValue strv(cx);
+  if (!mozilla::dom::ToJSValue(cx, addonIdString, &strv)) {
+    return nullptr;
+  }
+  JS::RootedString str(cx, strv.toString());
+  return JS::NewAddonId(cx, str);
+}
+
 JSAddonId*
 AddonPathService::Find(const nsAString& path)
 {
@@ -107,11 +121,7 @@ AddonPathService::FindAddonId(const nsAString& path)
 NS_IMETHODIMP
 AddonPathService::InsertPath(const nsAString& path, const nsAString& addonIdString)
 {
-  AutoSafeJSContext cx;
-  JS::RootedString str(cx, JS_NewUCStringCopyN(cx,
-                                               addonIdString.BeginReading(),
-                                               addonIdString.Length()));
-  JSAddonId* addonId = JS::NewAddonId(cx, str);
+  JSAddonId* addonId = ConvertAddonId(addonIdString);
 
   // Add the new path in sorted order.
   PathEntryComparator comparator;
@@ -198,8 +208,22 @@ MapURIToAddonID(nsIURI* aURI)
     return nullptr;
   }
 
+  bool equals;
+  nsresult rv;
+  if (NS_SUCCEEDED(aURI->SchemeIs("moz-extension", &equals)) && equals) {
+    nsCOMPtr<nsIAddonPolicyService> service = do_GetService("@mozilla.org/addons/policy-service;1");
+    if (service) {
+      nsString addonId;
+      rv = service->ExtensionURIToAddonId(aURI, addonId);
+      if (NS_FAILED(rv))
+        return nullptr;
+
+      return ConvertAddonId(addonId);
+    }
+  }
+
   nsAutoString filePath;
-  nsresult rv = ResolveURI(aURI, filePath);
+  rv = ResolveURI(aURI, filePath);
   if (NS_FAILED(rv))
     return nullptr;
 

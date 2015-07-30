@@ -54,6 +54,10 @@ XPCOMUtils.defineLazyServiceGetter(this,
                                    "ResProtocolHandler",
                                    "@mozilla.org/network/protocol;1?name=resource",
                                    "nsIResProtocolHandler");
+XPCOMUtils.defineLazyServiceGetter(this,
+                                   "AddonPolicyService",
+                                   "@mozilla.org/addons/policy-service;1",
+                                   "nsIAddonPolicyService");
 
 XPCOMUtils.defineLazyGetter(this, "CertUtils", function certUtilsLazyGetter() {
   let certUtils = {};
@@ -4028,6 +4032,10 @@ this.XPIProvider = {
    * @see    amIAddonManager.mapURIToAddonID
    */
   mapURIToAddonID: function XPI_mapURIToAddonID(aURI) {
+    if (aURI.scheme == "moz-extension") {
+      return AddonPolicyService.extensionURIToAddonId(aURI);
+    }
+
     let resolved = this._resolveURIToFile(aURI);
     if (!resolved || !(resolved instanceof Ci.nsIFileURL))
       return null;
