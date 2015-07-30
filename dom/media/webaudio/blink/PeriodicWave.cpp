@@ -109,10 +109,10 @@ size_t PeriodicWave::sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) co
 {
     size_t amount = aMallocSizeOf(this);
 
-    amount += m_bandLimitedTables.SizeOfExcludingThis(aMallocSizeOf);
+    amount += m_bandLimitedTables.ShallowSizeOfExcludingThis(aMallocSizeOf);
     for (size_t i = 0; i < m_bandLimitedTables.Length(); i++) {
         if (m_bandLimitedTables[i]) {
-            amount += m_bandLimitedTables[i]->SizeOfIncludingThis(aMallocSizeOf);
+            amount += m_bandLimitedTables[i]->ShallowSizeOfIncludingThis(aMallocSizeOf);
         }
     }
 

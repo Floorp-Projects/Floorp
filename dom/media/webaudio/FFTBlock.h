@@ -232,7 +232,7 @@ public:
     amount += aMallocSizeOf(mKissFFT);
     amount += aMallocSizeOf(mKissIFFT);
 #endif
-    amount += mOutputBuffer.SizeOfExcludingThis(aMallocSizeOf);
+    amount += mOutputBuffer.ShallowSizeOfExcludingThis(aMallocSizeOf);
     return amount;
   }
 

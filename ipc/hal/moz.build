@@ -8,13 +8,15 @@ EXPORTS.mozilla.ipc += [
     'DaemonRunnables.h',
     'DaemonSocket.h',
     'DaemonSocketConsumer.h',
-    'DaemonSocketPDU.h'
+    'DaemonSocketPDU.h',
+    'DaemonSocketPDUHelpers.h'
 ]
 
 UNIFIED_SOURCES += [
     'DaemonSocket.cpp',
     'DaemonSocketConsumer.cpp',
-    'DaemonSocketPDU.cpp'
+    'DaemonSocketPDU.cpp',
+    'DaemonSocketPDUHelpers.cpp'
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

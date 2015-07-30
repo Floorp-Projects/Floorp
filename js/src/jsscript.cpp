@@ -3611,6 +3611,33 @@ LazyScript::finalize(FreeOp* fop)
         fop->free_(table_);
 }
 
+size_t
+JSScript::calculateLiveFixed(jsbytecode* pc)
+{
+    size_t nlivefixed = nbodyfixed();
+
+    if (nfixed() != nlivefixed) {
+        NestedScopeObject* staticScope = getStaticBlockScope(pc);
+        if (staticScope)
+            staticScope = MaybeForwarded(staticScope);
+        while (staticScope && !staticScope->is<StaticBlockObject>()) {
+            staticScope = staticScope->enclosingNestedScope();
+            if (staticScope)
+                staticScope = MaybeForwarded(staticScope);
+        }
+
+        if (staticScope) {
+            StaticBlockObject& blockObj = staticScope->as<StaticBlockObject>();
+            nlivefixed = blockObj.localOffset() + blockObj.numVariables();
+        }
+    }
+
+    MOZ_ASSERT(nlivefixed <= nfixed());
+    MOZ_ASSERT(nlivefixed >= nbodyfixed());
+
+    return nlivefixed;
+}
+
 NestedScopeObject*
 JSScript::getStaticBlockScope(jsbytecode* pc)
 {

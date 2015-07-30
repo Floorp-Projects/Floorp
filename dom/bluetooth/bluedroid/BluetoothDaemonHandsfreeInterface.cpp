@@ -10,6 +10,8 @@
 
 BEGIN_BLUETOOTH_NAMESPACE
 
+using namespace mozilla::ipc;
+
 //
 // Handsfree module
 //

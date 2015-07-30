@@ -47,7 +47,7 @@ GonkVideoDecoderManager::GonkVideoDecoderManager(
   , mLastDecodedTime(0)
   , mColorConverterBufferSize(0)
   , mNativeWindow(nullptr)
-  , mPendingVideoBuffersLock("GonkVideoDecoderManager::mPendingVideoBuffersLock")
+  , mPendingReleaseItemsLock("GonkVideoDecoderManager::mPendingReleaseItemsLock")
   , mMonitor("GonkVideoDecoderManager")
 {
   MOZ_COUNT_CTOR(GonkVideoDecoderManager);
@@ -573,16 +573,18 @@ GonkVideoDecoderManager::RecycleCallback(TextureClient* aClient, void* aClosure)
   GonkVideoDecoderManager* videoManager = static_cast<GonkVideoDecoderManager*>(aClosure);
   GrallocTextureClientOGL* client = static_cast<GrallocTextureClientOGL*>(aClient);
   aClient->ClearRecycleCallback();
-  videoManager->PostReleaseVideoBuffer(client->GetMediaBuffer());
+  FenceHandle handle = aClient->GetAndResetReleaseFenceHandle();
+  videoManager->PostReleaseVideoBuffer(client->GetMediaBuffer(), handle);
 }
 
 void GonkVideoDecoderManager::PostReleaseVideoBuffer(
-                                android::MediaBuffer *aBuffer)
+                                android::MediaBuffer *aBuffer,
+                                FenceHandle aReleaseFence)
 {
   {
-    MutexAutoLock autoLock(mPendingVideoBuffersLock);
+    MutexAutoLock autoLock(mPendingReleaseItemsLock);
     if (aBuffer) {
-      mPendingVideoBuffers.append(aBuffer);
+      mPendingReleaseItems.AppendElement(ReleaseItem(aBuffer, aReleaseFence));
     }
   }
   sp<AMessage> notify =
@@ -593,24 +595,22 @@ void GonkVideoDecoderManager::PostReleaseVideoBuffer(
 
 void GonkVideoDecoderManager::ReleaseAllPendingVideoBuffers()
 {
-  Vector<android::MediaBuffer*> releasingVideoBuffers;
+  nsTArray<ReleaseItem> releasingItems;
   {
-    MutexAutoLock autoLock(mPendingVideoBuffersLock);
-    int size = mPendingVideoBuffers.length();
-    for (int i = 0; i < size; i++) {
-      releasingVideoBuffers.append(mPendingVideoBuffers[i]);
-    }
-    mPendingVideoBuffers.clear();
+    MutexAutoLock autoLock(mPendingReleaseItemsLock);
+    releasingItems.AppendElements(mPendingReleaseItems);
+    mPendingReleaseItems.Clear();
   }
-  // Free all pending video buffers without holding mPendingVideoBuffersLock.
-  int size = releasingVideoBuffers.length();
-  for (int i = 0; i < size; i++) {
-    android::MediaBuffer *buffer;
-    buffer = releasingVideoBuffers[i];
-    mDecoder->ReleaseMediaBuffer(buffer);
-    buffer = nullptr;
+
+  // Free all pending video buffers without holding mPendingReleaseItemsLock.
+  size_t size = releasingItems.Length();
+  for (size_t i = 0; i < size; i++) {
+    nsRefPtr<FenceHandle::FdObj> fdObj = releasingItems[i].mReleaseFence.GetAndResetFdObj();
+    sp<Fence> fence = new Fence(fdObj->GetAndResetFd());
+    fence->waitForever("GonkVideoDecoderManager");
+    mDecoder->ReleaseMediaBuffer(releasingItems[i].mBuffer);
   }
-  releasingVideoBuffers.clear();
+  releasingItems.Clear();
 }
 
 } // namespace mozilla

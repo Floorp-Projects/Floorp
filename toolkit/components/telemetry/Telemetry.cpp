@@ -402,7 +402,7 @@ public:
     size_t size;
     size = mFileStats.SizeOfExcludingThis(SizeOfFileIOEntryTypeExcludingThis,
                                           aMallocSizeOf) +
-           mSafeDirs.SizeOfExcludingThis(aMallocSizeOf);
+           mSafeDirs.ShallowSizeOfExcludingThis(aMallocSizeOf);
     uint32_t safeDirsLen = mSafeDirs.Length();
     for (uint32_t i = 0; i < safeDirsLen; ++i) {
       size += mSafeDirs[i].SizeOfExcludingThis(aMallocSizeOf);

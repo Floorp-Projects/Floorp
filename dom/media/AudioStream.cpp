@@ -167,7 +167,7 @@ AudioStream::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   // - mLatencyLog
   // - mCubebStream
 
-  amount += mInserts.SizeOfExcludingThis(aMallocSizeOf);
+  amount += mInserts.ShallowSizeOfExcludingThis(aMallocSizeOf);
   amount += mBuffer.SizeOfExcludingThis(aMallocSizeOf);
 
   return amount;

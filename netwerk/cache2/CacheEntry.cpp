@@ -1667,7 +1667,7 @@ size_t CacheEntry::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
   size_t n = 0;
   nsCOMPtr<nsISizeOf> sizeOf;
 
-  n += mCallbacks.SizeOfExcludingThis(mallocSizeOf);
+  n += mCallbacks.ShallowSizeOfExcludingThis(mallocSizeOf);
   if (mFile) {
     n += mFile->SizeOfIncludingThis(mallocSizeOf);
   }

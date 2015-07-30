@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://www.whatwg.org/specs/web-apps/current-work/#texttrackcue
+ * http://dev.w3.org/html5/webvtt/#the-vttcue-interface
  */
 
 enum AutoKeyword { "auto" };
@@ -25,13 +25,7 @@ enum DirectionSetting {
 
 [Constructor(double startTime, double endTime, DOMString text),
  Pref="media.webvtt.enabled"]
-interface VTTCue : EventTarget {
-  readonly attribute TextTrack? track;
-
-  attribute DOMString id;
-  attribute double startTime;
-  attribute double endTime;
-  attribute boolean pauseOnExit;
+interface VTTCue : TextTrackCue {
   [Pref="media.webvtt.regions.enabled"]
   attribute VTTRegion? region;
   attribute DirectionSetting vertical;
@@ -48,10 +42,6 @@ interface VTTCue : EventTarget {
   attribute AlignSetting align;
   attribute DOMString text;
   DocumentFragment getCueAsHTML();
-
-  attribute EventHandler onenter;
-
-  attribute EventHandler onexit;
 };
 
 // Mozilla extensions.

@@ -1895,7 +1895,7 @@ js::gc::StoreBuffer::ValueEdge::trace(TenuringTracer& mover) const
 void
 js::TenuringTracer::insertIntoFixupList(RelocationOverlay* entry) {
     *tail = entry;
-    tail = &entry->next_;
+    tail = &entry->nextRef();
     *tail = nullptr;
 }
 

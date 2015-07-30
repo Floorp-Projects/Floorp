@@ -1038,18 +1038,21 @@ MediaFormatReader::Update(TrackType aTrack)
         mVideo.mIsHardwareAccelerated =
           mVideo.mDecoder && mVideo.mDecoder->IsHardwareAccelerated();
       }
-      nsRefPtr<MediaData> output = decoder.mOutput[0];
-      decoder.mOutput.RemoveElementAt(0);
-      decoder.mSizeOfQueue -= 1;
-      if (decoder.mTimeThreshold.isNothing() ||
-          media::TimeUnit::FromMicroseconds(output->mTime) >= decoder.mTimeThreshold.ref()) {
-        ReturnOutput(output, aTrack);
-        decoder.mTimeThreshold.reset();
-      } else {
-        LOGV("Internal Seeking: Dropping frame time:%f wanted:%f (kf:%d)",
-             media::TimeUnit::FromMicroseconds(output->mTime).ToSeconds(),
-             decoder.mTimeThreshold.ref().ToSeconds(),
-             output->mKeyframe);
+      while (decoder.mOutput.Length()) {
+        nsRefPtr<MediaData> output = decoder.mOutput[0];
+        decoder.mOutput.RemoveElementAt(0);
+        decoder.mSizeOfQueue -= 1;
+        if (decoder.mTimeThreshold.isNothing() ||
+            media::TimeUnit::FromMicroseconds(output->mTime) >= decoder.mTimeThreshold.ref()) {
+          ReturnOutput(output, aTrack);
+          decoder.mTimeThreshold.reset();
+          break;
+        } else {
+          LOGV("Internal Seeking: Dropping frame time:%f wanted:%f (kf:%d)",
+               media::TimeUnit::FromMicroseconds(output->mTime).ToSeconds(),
+               decoder.mTimeThreshold.ref().ToSeconds(),
+               output->mKeyframe);
+        }
       }
     } else if (decoder.mDrainComplete) {
       decoder.mDrainComplete = false;
@@ -1195,8 +1198,9 @@ MediaFormatReader::ResetDecode()
 void
 MediaFormatReader::Output(TrackType aTrack, MediaData* aSample)
 {
-  LOGV("Decoded %s sample time=%lld dur=%lld",
-       TrackTypeToStr(aTrack), aSample->mTime, aSample->mDuration);
+  LOGV("Decoded %s sample time=%lld timecode=%lld kf=%d dur=%lld",
+       TrackTypeToStr(aTrack), aSample->mTime, aSample->mTimecode,
+       aSample->mKeyframe, aSample->mDuration);
 
   if (!aSample) {
     NS_WARNING("MediaFormatReader::Output() passed a null sample");
