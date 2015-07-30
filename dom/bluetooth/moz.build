@@ -13,7 +13,6 @@ if CONFIG['MOZ_B2G_BT']:
     SOURCES += [
         'BluetoothHidManager.cpp',
         'BluetoothInterface.cpp',
-        'BluetoothInterfaceHelpers.cpp',
         'BluetoothUtils.cpp',
         'BluetoothUuid.cpp',
         'ObexBase.cpp'
