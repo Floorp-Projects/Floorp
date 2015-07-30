@@ -9,7 +9,7 @@ const {Cc, Ci, Cu} = require("chrome");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm");
+let LayoutHelpers = require("devtools/toolkit/layout-helpers");
 
 const STACK_THICKNESS = 15;
 

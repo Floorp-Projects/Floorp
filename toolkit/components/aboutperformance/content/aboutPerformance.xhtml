@@ -9,101 +9,105 @@
     <title>about:performance</title>
     <script type="text/javascript;version=1.8" src="chrome://global/content/aboutPerformance.js"></script>
     <style>
-      td.addon {
-        display: inline-block;
-        width: 400px;
-      }
-      td.time {
-        display: inline-block;
-        width: 100px;
-      }
-      td.cpow {
-        display: inline-block;
-        width: 100px;
-      }
-      .header {
-        font-weight: bold;
-      }
-      tr.details {
-        font-weight: lighter;
-        color: gray;
+      @import url("chrome://global/skin/in-content/common.css");
+      .hidden {
         display: none;
       }
-      tr.addon {
-        background-color: white;
-      }
-      tr.platform {
-        background-color: rgb(255, 255, 200);
-      }
-      tr.content {
-        background-color: rgb(200, 255, 255);
-      }
-      td.jank0 {
-        color: rgb(0, 0, 0);
+      .summary .title {
         font-weight: bold;
       }
-      td.jank1 {
-        color: rgb(25, 0, 0);
-        font-weight: bold;
+      a {
+        text-decoration: none;
       }
-      td.jank2 {
-        color: rgb(50, 0, 0);
-        font-weight: bold;
+      a.more {
+        margin-left: 2ch;
       }
-      td.jank3 {
-        color: rgb(75, 0, 0);
-        font-weight: bold;
+      ul.hidden_additional_items {
+        padding-top: 0;
+        margin-top: 0;
       }
-      td.jank4 {
-        color: rgb(100, 0, 0);
-        font-weight: bold;
+      ul.visible_items {
+        padding-bottom: 0;
+        margin-bottom: 0;
       }
-      td.jank5 {
-        color: rgb(125, 0, 0);
-        font-weight: bold;
+      li.delta {
+        margin-top: .5em;
       }
-      td.jank6 {
-        color: rgb(150, 0, 0);
-        font-weight: bold;
+      h2 {
+        margin-top: 1cm;
       }
-      td.jank7 {
-        color: rgb(175, 0, 0);
-        font-weight: bold;
+      button.show_all_items {
+        margin-top: .5cm;
+        margin-left: 1cm;
       }
-      td.jank8 {
-        color: rgb(200, 0, 0);
-        font-weight: bold;
+      body {
+        margin-left: 1cm;
       }
-      td.jank9 {
-        color: rgb(225, 0, 0);
-        font-weight: bold;
+      div.measuring {
+         background: url(chrome://global/skin/media/throbber.png) no-repeat center;
+         min-width: 36px;
+         min-height: 36px;
       }
-      td.jank10 {
-        color: rgb(255, 0, 0);
-        font-weight: bold;
+      li.delta {
+        border-left-width: 5px;
+        border-left-style: solid;
+        padding-left: 1em;
+        list-style: none;
+      }
+      li.delta[impact="0"] {
+        border-left-color: rgb(0, 255, 0);
+      }
+      li.delta[impact="1"] {
+        border-left-color: rgb(24, 231, 0);
+      }
+      li.delta[impact="2"] {
+        border-left-color: rgb(48, 207, 0);
+      }
+      li.delta[impact="3"] {
+        border-left-color: rgb(72, 183, 0);
+      }
+      li.delta[impact="4"] {
+        border-left-color: rgb(96, 159, 0);
+      }
+      li.delta[impact="5"] {
+        border-left-color: rgb(120, 135, 0);
+      }
+      li.delta[impact="6"] {
+        border-left-color: rgb(144, 111, 0);
+      }
+      li.delta[impact="7"] {
+        border-left-color: rgb(168, 87, 0);
+      }
+      li.delta[impact="8"] {
+        border-left-color: rgb(192, 63, 0);
+      }
+      li.delta[impact="9"] {
+        border-left-color: rgb(216, 39, 0);
+      }
+      li.delta[impact="10"] {
+        border-left-color: rgb(240, 15, 0);
+      }
+      li.delta[impact="11"] {
+        border-left-color: rgb(255, 0, 0);
       }
     </style>
   </head>
   <body onload="go()">
-
-    <h1>Performance monitor</h1>
-
-    <input type="button" id="playButton" value="Play" />
-    <input type="button" id="pauseButton" value="Pause" />
-    <select id="intervalDropdown">
-      <option value="500">0.5 seconds</option>
-      <option value="1000">1 second</option>
-      <option value="2000">2 seconds</option>
-      <option value="5000" selected="selected">5 seconds</option>
-      <option value="10000">10 seconds</option>
-    </select>
-    <table id="liveData">
-    </table>
-
-    <h1>Slow add-ons alerts</h1>
-    <div id="slowAddonsList">
-      (none)
+    <div>
+      <input type="checkbox" checked="false" id="check-display-recent"></input> 
+      <label for="check-display-recent" id="label-display-recent">Display only the last few seconds.</label>
+      <input type="checkbox" checked="true" id="check-autorefresh"></input>
+      <label for="check-autorefresh">Refresh automatically</label>
     </div>
-
+    <div>
+      <h2>Performance of Add-ons</h2>
+      <div id="addons" class="measuring">
+      </div>
+    </div>
+    <div>
+      <h2>Performance of Web pages</h2>
+      <div id="webpages" class="measuring">
+      </div>
+    </div>
   </body>
 </html>
