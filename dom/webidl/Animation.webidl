@@ -30,6 +30,7 @@ interface Animation : EventTarget {
   readonly attribute Promise<Animation> ready;
   [Throws]
   readonly attribute Promise<Animation> finished;
+           attribute EventHandler       onfinish;
   void cancel ();
   [Throws]
   void finish ();
