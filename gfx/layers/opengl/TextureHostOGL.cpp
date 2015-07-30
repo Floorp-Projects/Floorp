@@ -102,8 +102,8 @@ CreateTextureHostOGL(const SurfaceDescriptor& aDesc,
       const auto& desc = aDesc.get_SurfaceDescriptorX11();
       result = new X11TextureHost(aFlags, desc);
       break;
-#endif
     }
+#endif
     default: return nullptr;
   }
   return result.forget();
