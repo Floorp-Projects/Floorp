@@ -202,7 +202,7 @@ MediaEncoder::GetEncodedData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
       rv = mWriter->GetContainerData(aOutputBufs,
                                      ContainerWriter::GET_HEADER);
       if (aOutputBufs != nullptr) {
-        mSizeOfBuffer = aOutputBufs->SizeOfExcludingThis(MallocSizeOf);
+        mSizeOfBuffer = aOutputBufs->ShallowSizeOfExcludingThis(MallocSizeOf);
       }
       if (NS_FAILED(rv)) {
        LOG(LogLevel::Error,("Error! writer fail to generate header!"));
@@ -237,7 +237,7 @@ MediaEncoder::GetEncodedData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
                                      isAudioCompleted && isVideoCompleted ?
                                      ContainerWriter::FLUSH_NEEDED : 0);
       if (aOutputBufs != nullptr) {
-        mSizeOfBuffer = aOutputBufs->SizeOfExcludingThis(MallocSizeOf);
+        mSizeOfBuffer = aOutputBufs->ShallowSizeOfExcludingThis(MallocSizeOf);
       }
       if (NS_SUCCEEDED(rv)) {
         // Successfully get the copy of final container data from writer.

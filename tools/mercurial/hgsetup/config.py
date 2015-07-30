@@ -183,7 +183,7 @@ class MercurialConfig(object):
 
     def get_bugzilla_credentials(self):
         if 'bugzilla' not in self._c:
-            return None, None
+            return None, None, None, None
 
         b = self._c['bugzilla']
         return (

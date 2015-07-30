@@ -1857,15 +1857,15 @@ nsComponentManagerImpl::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
   n += mContractIDs.SizeOfExcludingThis(SizeOfContractIDsEntryExcludingThis,
                                         aMallocSizeOf);
 
-  n += sStaticModules->SizeOfIncludingThis(aMallocSizeOf);
-  n += sModuleLocations->SizeOfIncludingThis(aMallocSizeOf);
+  n += sStaticModules->ShallowSizeOfIncludingThis(aMallocSizeOf);
+  n += sModuleLocations->ShallowSizeOfIncludingThis(aMallocSizeOf);
 
-  n += mKnownStaticModules.SizeOfExcludingThis(aMallocSizeOf);
+  n += mKnownStaticModules.ShallowSizeOfExcludingThis(aMallocSizeOf);
   n += mKnownModules.SizeOfExcludingThis(nullptr, aMallocSizeOf);
 
   n += PL_SizeOfArenaPoolExcludingPool(&mArena, aMallocSizeOf);
 
-  n += mPendingServices.SizeOfExcludingThis(aMallocSizeOf);
+  n += mPendingServices.ShallowSizeOfExcludingThis(aMallocSizeOf);
 
   // Measurement of the following members may be added later if DMD finds it is
   // worthwhile:

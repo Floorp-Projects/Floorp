@@ -16,12 +16,12 @@ size_t
 DelayBuffer::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t amount = 0;
-  amount += mChunks.SizeOfExcludingThis(aMallocSizeOf);
+  amount += mChunks.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (size_t i = 0; i < mChunks.Length(); i++) {
     amount += mChunks[i].SizeOfExcludingThis(aMallocSizeOf, false);
   }
 
-  amount += mUpmixChannels.SizeOfExcludingThis(aMallocSizeOf);
+  amount += mUpmixChannels.ShallowSizeOfExcludingThis(aMallocSizeOf);
   return amount;
 }
 

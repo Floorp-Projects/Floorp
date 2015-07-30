@@ -49,9 +49,9 @@ size_t FFTConvolver::sizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) co
 {
     size_t amount = 0;
     amount += m_frame.SizeOfExcludingThis(aMallocSizeOf);
-    amount += m_inputBuffer.SizeOfExcludingThis(aMallocSizeOf);
-    amount += m_outputBuffer.SizeOfExcludingThis(aMallocSizeOf);
-    amount += m_lastOverlapBuffer.SizeOfExcludingThis(aMallocSizeOf);
+    amount += m_inputBuffer.ShallowSizeOfExcludingThis(aMallocSizeOf);
+    amount += m_outputBuffer.ShallowSizeOfExcludingThis(aMallocSizeOf);
+    amount += m_lastOverlapBuffer.ShallowSizeOfExcludingThis(aMallocSizeOf);
     return amount;
 }
 
