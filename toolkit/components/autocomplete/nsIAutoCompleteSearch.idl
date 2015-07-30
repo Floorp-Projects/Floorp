@@ -50,7 +50,7 @@ interface nsIAutoCompleteObserver : nsISupports
   void onUpdateSearchResult(in nsIAutoCompleteSearch search, in nsIAutoCompleteResult result);
 };
 
-[scriptable, uuid(02314d6e-b730-40cc-a215-221554d77064)]
+[scriptable, uuid(4c3e7462-fbfb-4310-8f4b-239238392b75)]
 interface nsIAutoCompleteSearchDescriptor : nsISupports
 {
   // The search is started after the timeout specified by the corresponding
@@ -65,4 +65,10 @@ interface nsIAutoCompleteSearchDescriptor : nsISupports
    * Defaults to SEARCH_TYPE_DELAYED.
    */
   readonly attribute unsigned short searchType;
+
+  /*
+   * Whether a new search should be triggered when the user deletes the
+   * autofilled part.
+   */
+  readonly attribute boolean clearingAutoFillSearchesAgain;
 };
