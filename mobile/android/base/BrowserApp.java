@@ -2691,7 +2691,7 @@ public class BrowserApp extends GeckoApp
             });
 
             // Don't show the banner in guest mode.
-            if (!getProfile().inGuestMode()) {
+            if (!RestrictedProfiles.isUserRestricted()) {
                 final ViewStub homeBannerStub = (ViewStub) findViewById(R.id.home_banner_stub);
                 final HomeBanner homeBanner = (HomeBanner) homeBannerStub.inflate();
                 mHomePager.setBanner(homeBanner);
