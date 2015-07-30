@@ -392,6 +392,7 @@ INNER_MAKE_GECKOLIBS_AAR= \
     --revision $(geckoaar-revision) \
     --topsrcdir '$(topsrcdir)' \
     --distdir '$(_ABS_DIST)' \
+    --appname '$(MOZ_APP_NAME)' \
     '$(_ABS_DIST)'
 else
 INNER_MAKE_GECKOLIBS_AAR=echo 'Android geckolibs.aar packaging requires packaging geckoview'

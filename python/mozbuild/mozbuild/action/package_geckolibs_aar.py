@@ -92,14 +92,14 @@ def _generate_geckoview_classes_jar(distdir, base_path):
     _zipdir(geckoview_aar_classes_path, classes_jar_path)
     return File(classes_jar_path)
 
-def package_geckolibs_aar(topsrcdir, distdir, output_file):
+def package_geckolibs_aar(topsrcdir, distdir, appname, output_file):
     jarrer = Jarrer(optimize=False)
 
     srcdir = os.path.join(topsrcdir, 'mobile', 'android', 'geckoview_library', 'geckolibs')
     jarrer.add('AndroidManifest.xml', File(os.path.join(srcdir, 'AndroidManifest.xml')))
     jarrer.add('classes.jar', File(os.path.join(srcdir, 'classes.jar')))
 
-    jni = FileFinder(os.path.join(distdir, 'fennec', 'lib'))
+    jni = FileFinder(os.path.join(distdir, appname, 'lib'))
     for p, f in jni.find('**/*.so'):
         jarrer.add(os.path.join('jni', p), f)
 
@@ -110,17 +110,17 @@ def package_geckolibs_aar(topsrcdir, distdir, output_file):
         jarrer.add(os.path.join('assets', p), f)
 
     # This neatly ignores omni.ja.
-    assets = FileFinder(os.path.join(distdir, 'fennec', 'assets'))
+    assets = FileFinder(os.path.join(distdir, appname, 'assets'))
     for p, f in assets.find('**/*.so'):
         jarrer.add(os.path.join('assets', p), f)
 
     jarrer.copy(output_file)
     return 0
 
-def package_geckoview_aar(topsrcdir, distdir, output_file):
+def package_geckoview_aar(topsrcdir, distdir, appname, output_file):
     jarrer = Jarrer(optimize=False)
-    fennec_path = os.path.join(distdir, 'fennec')
-    assets = FileFinder(os.path.join(fennec_path, 'assets'), ignore=['*.so'])
+    app_path = os.path.join(distdir, appname)
+    assets = FileFinder(os.path.join(app_path, 'assets'), ignore=['*.so'])
     for p, f in assets.find('omni.ja'):
         jarrer.add(os.path.join('assets', p), f)
 
@@ -129,7 +129,7 @@ def package_geckoview_aar(topsrcdir, distdir, output_file):
 
     # The resource set is packaged during Fennec's build.
     resjar = JarReader(os.path.join(base_path, 'geckoview_resources.zip'))
-    for p, f in JarFinder(p, resjar).find('*'):
+    for p, f in JarFinder(base_path, resjar).find('*'):
         jarrer.add(os.path.join('res', p), f)
 
     # Package the contents of all Fennec JAR files into classes.jar.
@@ -159,6 +159,8 @@ def main(args):
                         help='Top source directory.')
     parser.add_argument('--distdir',
                         help='Distribution directory (usually $OBJDIR/dist).')
+    parser.add_argument('--appname',
+                        help='Application name (usually $MOZ_APP_NAME, like "fennec").')
     args = parser.parse_args(args)
 
     # An Ivy 'publication' date must be given in the form yyyyMMddHHmmss, and Mozilla buildids are in this format.
@@ -174,8 +176,8 @@ def main(args):
     geckoview_aar = os.path.join(args.dir, 'geckoview-{revision}.aar').format(revision=args.revision)
     paths_to_hash.append(geckoview_aar)
 
-    package_geckolibs_aar(args.topsrcdir, args.distdir, gecklibs_aar)
-    package_geckoview_aar(args.topsrcdir, args.distdir, geckoview_aar)
+    package_geckolibs_aar(args.topsrcdir, args.distdir, args.appname, gecklibs_aar)
+    package_geckoview_aar(args.topsrcdir, args.distdir, args.appname, geckoview_aar)
 
     geckolibs_pom_path = os.path.join(args.dir, 'geckolibs-{revision}.pom').format(revision=args.revision)
     paths_to_hash.append(geckolibs_pom_path)
