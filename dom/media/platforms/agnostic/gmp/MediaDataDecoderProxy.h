@@ -8,7 +8,7 @@
 #define MediaDataDecoderProxy_h_
 
 #include "PlatformDecoderModule.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsThreadUtils.h"
 #include "nscore.h"
 

@@ -4379,8 +4379,8 @@ pref("full-screen-api.enabled", false);
 pref("full-screen-api.allow-trusted-requests-only", true);
 pref("full-screen-api.pointer-lock.enabled", true);
 // transition duration of fade-to-black and fade-from-black, unit: ms
-pref("full-screen-api.transition-duration.enter", "400 400");
-pref("full-screen-api.transition-duration.leave", "400 400");
+pref("full-screen-api.transition-duration.enter", "200 200");
+pref("full-screen-api.transition-duration.leave", "200 200");
 
 // DOM idle observers API
 pref("dom.idle-observers-api.enabled", true);
@@ -4619,9 +4619,19 @@ pref("dom.browserElement.maxScreenshotDelayMS", 2000);
 // Whether we should show the placeholder when the element is focused but empty.
 pref("dom.placeholder.show_on_focus", true);
 
+// VR is disabled by default
 pref("dom.vr.enabled", false);
+// Oculus > 0.5
+pref("dom.vr.oculus.enabled", true);
+// Oculus <= 0.5; will only trigger if > 0.5 is not used or found
+pref("dom.vr.oculus050.enabled", true);
+// Cardboard VR device is disabled by default
+pref("dom.vr.cardboard.enabled", false);
 // 0 = never; 1 = only if real devices aren't there; 2 = always
 pref("dom.vr.add-test-devices", 1);
+// true = show the VR textures in our compositing output; false = don't.
+// true might have performance impact
+pref("gfx.vr.mirror-textures", false);
 
 // MMS UA Profile settings
 pref("wap.UAProf.url", "");

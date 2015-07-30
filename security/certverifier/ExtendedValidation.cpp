@@ -92,44 +92,62 @@ static const size_t NUM_TEST_EV_ROOTS = 2;
 #endif
 
 static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
-  // IMPORTANT! When extending this list,
-  // pairs of dotted_oid and oid_name should always be unique pairs.
-  // In other words, if you add another list, that uses the same dotted_oid
-  // as an existing entry, then please use the same oid_name.
+  // IMPORTANT! When extending this list, if you add another entry that uses
+  // the same dotted_oid as an existing entry, use the same oid_name.
 #ifdef DEBUG
-  // Debug EV certificates should all use the OID (repeating EV OID is OK):
+  // Debug EV certificates should all use the following OID:
   // 1.3.6.1.4.1.13769.666.666.666.1.500.9.1.
+  // (multiple entries with the same OID is ok)
   // If you add or remove debug EV certs you must also modify NUM_TEST_EV_ROOTS
   // so that the correct number of certs are skipped as these debug EV certs are
   // NOT part of the default trust store.
   {
-    // This is the testing EV signature (xpcshell) (RSA)
-    // CN=XPCShell EV Testing (untrustworthy) CA,OU=Security Engineering,O=Mozilla - EV debug test CA,L=Mountain View,ST=CA,C=US"
+    // This is the PSM xpcshell testing EV certificate. It can be generated
+    // using pycert.py and the following specification:
+    //
+    // issuer:evroot
+    // subject:evroot
+    // subjectKey:ev
+    // issuerKey:ev
+    // validity:20150101-20350101
+    // extension:basicConstraints:cA,
+    // extension:keyUsage:keyCertSign,cRLSign
+    //
+    // If this ever needs to change, re-generate the certificate and update the
+    // following entry with the new fingerprint, issuer, and serial number.
     "1.3.6.1.4.1.13769.666.666.666.1.500.9.1",
     "DEBUGtesting EV OID",
     SEC_OID_UNKNOWN,
-    { 0x2D, 0x94, 0x52, 0x70, 0xAA, 0x92, 0x13, 0x0B, 0x1F, 0xB1, 0x24,
-      0x0B, 0x24, 0xB1, 0xEE, 0x4E, 0xFB, 0x7C, 0x43, 0x45, 0x45, 0x7F,
-      0x97, 0x6C, 0x90, 0xBF, 0xD4, 0x8A, 0x04, 0x79, 0xE4, 0x68 },
-    "MIGnMQswCQYDVQQGEwJVUzELMAkGA1UECAwCQ0ExFjAUBgNVBAcMDU1vdW50YWlu"
-    "IFZpZXcxIzAhBgNVBAoMGk1vemlsbGEgLSBFViBkZWJ1ZyB0ZXN0IENBMR0wGwYD"
-    "VQQLDBRTZWN1cml0eSBFbmdpbmVlcmluZzEvMC0GA1UEAwwmWFBDU2hlbGwgRVYg"
-    "VGVzdGluZyAodW50cnVzdHdvcnRoeSkgQ0E=",
-    "At+3zdo=",
+    { 0x85, 0x2A, 0x29, 0x38, 0x31, 0x09, 0x7D, 0x14, 0x0C, 0x83, 0xAB,
+      0x8D, 0x6D, 0x54, 0x32, 0x77, 0x37, 0xC8, 0xBF, 0xB2, 0xC2, 0xEC,
+      0xCC, 0x82, 0xC0, 0xA2, 0x5F, 0x24, 0x9D, 0xFD, 0xFB, 0xAB },
+    "MBExDzANBgNVBAMMBmV2cm9vdA==",
+    "GSsFG1fp8SGMxPjAQvdOBN26ij4=",
     nullptr
   },
   {
-    // The RSA root with an inadequate key size used for EV key size checking
-    // O=ev_root_rsa_2040,CN=XPCShell Key Size Testing rsa 2040-bit (EV)
+    // This is an RSA root with an inadequate key size. It is used to test that
+    // minimum key sizes are enforced when verifying for EV. It can be
+    // generated using pycert.py and the following specification:
+    //
+    // issuer:ev_root_rsa_2040
+    // subject:ev_root_rsa_2040
+    // issuerKey:evRSA2040
+    // subjectKey:evRSA2040
+    // validity:20150101-20350101
+    // extension:basicConstraints:cA,
+    // extension:keyUsage:cRLSign,keyCertSign
+    //
+    // If this ever needs to change, re-generate the certificate and update the
+    // following entry with the new fingerprint, issuer, and serial number.
     "1.3.6.1.4.1.13769.666.666.666.1.500.9.1",
     "DEBUGtesting EV OID",
     SEC_OID_UNKNOWN,
-    { 0x47, 0x8B, 0x21, 0xEE, 0x20, 0x3F, 0x2A, 0x14, 0x52, 0x70, 0xF9,
-      0x75, 0xE0, 0x67, 0x93, 0x6E, 0x70, 0x3D, 0xA8, 0x8D, 0x09, 0x95,
-      0x72, 0xF4, 0x03, 0x6F, 0x00, 0xA2, 0x33, 0x82, 0x8D, 0x46 },
-    "MFExNDAyBgNVBAMMK1hQQ1NoZWxsIEtleSBTaXplIFRlc3RpbmcgcnNhIDIwNDAt"
-    "Yml0IChFVikxGTAXBgNVBAoMEGV2X3Jvb3RfcnNhXzIwNDA=",
-    "AhZ7jg==",
+    { 0x28, 0x79, 0xB9, 0x6C, 0x08, 0x71, 0x6C, 0x7D, 0xCE, 0x38, 0x8C,
+      0xAB, 0x7E, 0xEB, 0x08, 0xA6, 0xF7, 0x2C, 0xCE, 0xE4, 0x47, 0xF5,
+      0x72, 0xA1, 0xEB, 0x16, 0x9B, 0xC3, 0x49, 0x49, 0x72, 0x5D },
+    "MBsxGTAXBgNVBAMMEGV2X3Jvb3RfcnNhXzIwNDA=",
+    "N2nWLMPfNebIktpezTGThHoXsDU=",
     nullptr
   },
 #endif

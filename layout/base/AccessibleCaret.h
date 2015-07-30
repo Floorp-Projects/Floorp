@@ -15,7 +15,7 @@
 #include "nsISupportsBase.h"
 #include "nsISupportsImpl.h"
 #include "nsRect.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsString.h"
 
 class nsIDocument;

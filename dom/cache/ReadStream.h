@@ -12,7 +12,7 @@
 #include "nsID.h"
 #include "nsIInputStream.h"
 #include "nsISupportsImpl.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsTArrayForwardDeclare.h"
 
 namespace mozilla {

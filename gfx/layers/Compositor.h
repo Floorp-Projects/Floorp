@@ -385,16 +385,6 @@ public:
   virtual void EndFrameForExternalComposition(const gfx::Matrix& aTransform) = 0;
 
   /**
-   * Setup the viewport and projection matrix for rendering to a target of the
-   * given dimensions. The size and transform here will override those set in
-   * BeginFrame. BeginFrame sets a size and transform for the default render
-   * target, usually the screen. Calling this method prepares the compositor to
-   * render using a different viewport (that is, size and transform), usually
-   * associated with a new render target.
-   */
-  virtual void PrepareViewport(const gfx::IntSize& aSize) = 0;
-
-  /**
    * Whether textures created by this compositor can receive partial updates.
    */
   virtual bool SupportsPartialTextureUpdate() = 0;

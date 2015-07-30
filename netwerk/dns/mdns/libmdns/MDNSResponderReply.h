@@ -10,7 +10,7 @@
 #include "MDNSResponderOperator.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIThread.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {

@@ -242,7 +242,8 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
                                     Compositor* aCompositor,
                                     ISurfaceAllocator* aAllocator)
 {
-  if (mResolution != aTiles.resolution()) {
+  if (mResolution != aTiles.resolution() ||
+      aTiles.tileSize() != mTileSize) {
     Clear();
   }
   MOZ_ASSERT(aAllocator);
@@ -352,6 +353,8 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
   }
 
   mTiles = newTiles;
+  mTileSize = aTiles.tileSize();
+  mTileOrigin = aTiles.tileOrigin();
   mValidRegion = aTiles.validRegion();
   mResolution = aTiles.resolution();
   mFrameResolution = CSSToParentLayerScale2D(aTiles.frameXResolution(),

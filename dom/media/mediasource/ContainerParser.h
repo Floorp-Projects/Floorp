@@ -7,7 +7,7 @@
 #ifndef MOZILLA_CONTAINERPARSER_H_
 #define MOZILLA_CONTAINERPARSER_H_
 
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsString.h"
 #include "MediaResource.h"
 

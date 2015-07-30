@@ -10,7 +10,7 @@
 #include "mozilla/dom/cache/Types.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsImpl.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsString.h"
 #include "nsTArray.h"
 

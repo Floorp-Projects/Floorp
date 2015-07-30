@@ -74,8 +74,19 @@ LIRGeneratorShared::ReorderCommutative(MDefinition** lhsp, MDefinition** rhsp, M
 void
 LIRGeneratorShared::visitConstant(MConstant* ins)
 {
+    if (!IsFloatingPointType(ins->type()) && ins->canEmitAtUses()) {
+        emitAtUses(ins);
+        return;
+    }
+
     const Value& v = ins->value();
     switch (ins->type()) {
+      case MIRType_Double:
+        define(new(alloc()) LDouble(v.toDouble()), ins);
+        break;
+      case MIRType_Float32:
+        define(new(alloc()) LFloat32(v.toDouble()), ins);
+        break;
       case MIRType_Boolean:
         define(new(alloc()) LInteger(v.toBoolean()), ins);
         break;

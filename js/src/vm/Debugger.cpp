@@ -4041,10 +4041,11 @@ class MOZ_STACK_CLASS Debugger::ObjectQuery
 
         /*
          * If the referent is an object and matches our query's restrictions,
-         * add it to the vector accumulating results.
+         * add it to the vector accumulating results. Skip objects that should
+         * never be exposed to JS, like ScopeObjects and internal functions.
          */
 
-        if (!referent.is<JSObject>())
+        if (!referent.is<JSObject>() || referent.exposeToJS().isUndefined())
             return true;
 
         JSObject* obj = referent.as<JSObject>();

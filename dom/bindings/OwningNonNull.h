@@ -147,7 +147,7 @@ nsCOMPtr<T>::operator=(const mozilla::dom::OwningNonNull<U>& aOther)
   return operator=(aOther.get());
 }
 
-// Declared in nsRefPtr.h
+// Declared in mozilla/nsRefPtr.h
 template<class T> template<class U>
 nsRefPtr<T>::nsRefPtr(const mozilla::dom::OwningNonNull<U>& aOther)
   : nsRefPtr(aOther.get())

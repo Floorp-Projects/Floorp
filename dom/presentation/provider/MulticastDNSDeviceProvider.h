@@ -11,7 +11,7 @@
 #include "nsIDNSServiceDiscovery.h"
 #include "nsIPresentationDeviceProvider.h"
 #include "nsITCPPresentationServer.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsString.h"
 #include "nsWeakPtr.h"
 

@@ -57,6 +57,7 @@ mgjar.sources += [
     'mozglue/generatorannotations/OptionalGeneratedParameter.java',
     'mozglue/generatorannotations/WrapElementForJNI.java',
     'mozglue/generatorannotations/WrapEntireClassForJNI.java',
+    'mozglue/JNIObject.java',
     'mozglue/JNITarget.java',
     'mozglue/NativeReference.java',
     'mozglue/NativeZip.java',

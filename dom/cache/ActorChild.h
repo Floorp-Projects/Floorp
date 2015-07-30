@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_cache_ActioChild_h
 #define mozilla_dom_cache_ActioChild_h
 
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 namespace mozilla {
 namespace dom {

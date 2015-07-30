@@ -12,7 +12,7 @@
 #include "mozilla/gfx/Matrix.h"             // for Matrix4x4
 #include "mozilla/layers/LayersTypes.h"     // for EventRegions
 #include "mozilla/Maybe.h"                  // for Maybe
-#include "nsRefPtr.h"                       // for nsRefPtr
+#include "mozilla/nsRefPtr.h"                       // for nsRefPtr
 
 namespace mozilla {
 namespace layers {

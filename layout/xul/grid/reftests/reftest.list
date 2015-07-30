@@ -13,6 +13,6 @@ skip-if((B2G&&browserIsRemote)||Mulet) == not-full-row-group-direction.xul not-f
 skip-if((B2G&&browserIsRemote)||Mulet) == not-full-row-leaf-align.xul not-full-basic-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if((B2G&&browserIsRemote)||Mulet) == not-full-row-leaf-pack.xul not-full-row-leaf-pack-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if((B2G&&browserIsRemote)||Mulet) == not-full-row-leaf-direction.xul not-full-row-leaf-pack-ref.xhtml
-skip-if(B2G||Mulet) random-if(transparentScrollbars) fails-if(Android&&browserIsRemote) == scrollable-columns.xul scrollable-columns-ref.xhtml # bug 650597, 732569 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) random-if(transparentScrollbars) fails-if(Android&&browserIsRemote) fuzzy-if(OSX==1010,1,565) == scrollable-columns.xul scrollable-columns-ref.xhtml # bug 650597, 732569 # Initial mulet triage: parity with B2G/B2G Desktop
 fails skip-if((B2G&&browserIsRemote)||Mulet) == scrollable-rows.xul scrollable-rows-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if((B2G&&browserIsRemote)||Mulet) == sizing-2d.xul sizing-2d-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop

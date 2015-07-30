@@ -11,7 +11,7 @@
 #include "mozilla/CondVar.h"
 #include "mozilla/DebugOnly.h"
 #include "nsISupportsImpl.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsThread.h"
 
 class nsIRunnable;

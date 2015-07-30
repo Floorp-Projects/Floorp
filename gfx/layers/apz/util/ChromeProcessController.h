@@ -8,7 +8,7 @@
 
 #include "mozilla/layers/GeckoContentController.h"
 #include "nsCOMPtr.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 class nsIDOMWindowUtils;
 class nsIDocument;

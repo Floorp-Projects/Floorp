@@ -11,7 +11,7 @@
 #include "nsIRunnable.h"
 #include "nsISupportsImpl.h"
 #include "nsIThread.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 #include "mozilla/ThreadLocal.h"
 

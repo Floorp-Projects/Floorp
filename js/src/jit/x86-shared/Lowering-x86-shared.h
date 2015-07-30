@@ -40,7 +40,6 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared
                          MDefinition* lhs, MDefinition* rhs);
     void lowerForBitAndAndBranch(LBitAndAndBranch* baab, MInstruction* mir,
                                  MDefinition* lhs, MDefinition* rhs);
-    void visitConstant(MConstant* ins);
     void visitAsmJSNeg(MAsmJSNeg* ins);
     void lowerMulI(MMul* mul, MDefinition* lhs, MDefinition* rhs);
     void lowerDivI(MDiv* div);
@@ -48,8 +47,6 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared
     void lowerUDiv(MDiv* div);
     void lowerUMod(MMod* mod);
     void lowerUrshD(MUrsh* mir);
-    void lowerConstantDouble(double d, MInstruction* ins);
-    void lowerConstantFloat32(float d, MInstruction* ins);
     void lowerTruncateDToInt32(MTruncateToInt32* ins);
     void lowerTruncateFToInt32(MTruncateToInt32* ins);
     void visitSimdBinaryArith(MSimdBinaryArith* ins);

@@ -15,18 +15,13 @@ const SERVER_PORT = 8888;
 function getOCSPResponder(expectedCertNames) {
   let expectedPaths = expectedCertNames.slice();
   return startOCSPResponder(SERVER_PORT, "www.example.com", [],
-                            "test_keysize", expectedCertNames, expectedPaths);
-}
-
-function certFromFile(filename) {
-  let der = readFile(do_get_file("test_keysize/" + filename, false));
-  return certDB.constructX509(der, der.length);
+                            "test_keysize_ev/", expectedCertNames, expectedPaths);
 }
 
 function loadCert(certName, trustString) {
-  let certFilename = certName + ".der";
-  addCertFromFile(certDB, "test_keysize/" + certFilename, trustString);
-  return certFromFile(certFilename);
+  let certFilename = "test_keysize_ev/" + certName + ".pem";
+  addCertFromFile(certDB, certFilename, trustString);
+  return constructCertFromFile(certFilename);
 }
 
 /**
@@ -36,7 +31,7 @@ function loadCert(certName, trustString) {
  *        An array of nicknames of the certs to be responded to.
  * @param {String} rootCertFileName
  *        The file name of the root cert. Can begin with ".." to reference
- *        certs in folders other than "test_keysize/".
+ *        certs in folders other than "test_keysize_ev/".
  * @param {Array} intCertFileNames
  *        An array of file names of any intermediate certificates.
  * @param {String} endEntityCertFileName
@@ -56,8 +51,11 @@ function addKeySizeTestForEV(expectedNamesForOCSP,
     for (let intCertFileName of intCertFileNames) {
       loadCert(intCertFileName, ",,");
     }
-    checkEVStatus(certDB, certFromFile(endEntityCertFileName + ".der"),
-                  certificateUsageSSLServer, expectedResult);
+    checkEVStatus(
+      certDB,
+      constructCertFromFile(`test_keysize_ev/${endEntityCertFileName}.pem`),
+      certificateUsageSSLServer,
+      expectedResult);
 
     ocspResponder.stop(run_next_test);
   });
@@ -133,6 +131,14 @@ function checkRSAChains(inadequateKeySize, adequateKeySize) {
 function run_test() {
   Services.prefs.setCharPref("network.dns.localDomains", "www.example.com");
   Services.prefs.setIntPref("security.OCSP.enabled", 1);
+
+  let smallKeyEVRoot =
+    constructCertFromFile("test_keysize_ev/ev_root_rsa_2040.pem");
+  equal(smallKeyEVRoot.sha256Fingerprint,
+        "28:79:B9:6C:08:71:6C:7D:CE:38:8C:AB:7E:EB:08:A6:" +
+        "F7:2C:CE:E4:47:F5:72:A1:EB:16:9B:C3:49:49:72:5D",
+        "test sanity check: the small-key EV root must have the same " +
+        "fingerprint as the corresponding entry in ExtendedValidation.cpp");
 
   checkRSAChains(2040, 2048);
 

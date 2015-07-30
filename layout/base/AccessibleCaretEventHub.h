@@ -16,7 +16,7 @@
 #include "nsIScrollObserver.h"
 #include "nsISelectionListener.h"
 #include "nsPoint.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsWeakReference.h"
 
 class nsDocShell;

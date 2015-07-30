@@ -18,7 +18,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsTArray.h"
 
 namespace mozilla {

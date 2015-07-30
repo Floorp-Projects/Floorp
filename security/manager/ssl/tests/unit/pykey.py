@@ -10,11 +10,20 @@ PKCS #8 file representing the (private) key. Also provides
 methods for signing data and representing the key as a subject
 public key info for use with pyasn1.
 
-The key specification format is currently very simple. If it is
-empty, one RSA key is used. If it consists of the string
-'alternate', a different RSA key is used. In the future it will
-be possible to specify other properties of the key (type,
-strength, signature algorithm, etc.).
+The key specification format is as follows:
+
+<empty string>: a 2048-bit RSA key
+alternate: a different 2048-bit RSA key
+ev: a 2048-bit RSA key that, when combined with the right pycert
+    specification, results in a certificate that is enabled for
+    extended validation in debug Firefox (see ExtendedValidation.cpp).
+evRSA2040: a 2040-bit RSA key that, when combined with the right pycert
+           specification, results in a certificate that is enabled for
+           extended validation in debug Firefox.
+rsa2040: a 2040-bit RSA key
+
+In the future it will be possible to specify other properties of the key
+(type, strength, signature algorithm, etc.).
 """
 
 from pyasn1.codec.der import encoder
@@ -192,6 +201,162 @@ class RSAKey:
         '27bf42f0cfa751e507651c5638db9393dd23dd1f6b295151de44b77fe55a'
         '7b0df271e19a65c0', 16)
 
+    evRSA_N = long(
+        '00b549895c9d00108d11a1f99f87a9e3d1a5db5dfaecf188da57bf641368'
+        '8f2ce4722cff109038c17402c93a2a473dbd286aed3fdcd363cf5a291477'
+        '01bdd818d7615bf9356bd5d3c8336aaa8c0971368a06c3cd4461b93e5142'
+        '4e1744bb2eaad46aab38ce196821961f87714a1663693f09761cdf4d6ba1'
+        '25eacec7be270d388f789f6cdf78ae3144ed28c45e79293863a7a22a4898'
+        '0a36a40e72d579c9b925dff8c793362ffd6897a7c1754c5e97c967c3eadd'
+        '1aae8aa2ccce348a0169b80e28a2d70c1a960c6f335f2da09b9b643f5abf'
+        'ba49e8aaa981e960e27d87480bdd55dd9417fa18509fbb554ccf81a4397e'
+        '8ba8128a34bdf27865c189e5734fb22905', 16)
+    evRSA_E = 65537L
+    evRSA_D = long(
+        '00983d54f94d6f4c76eb23d6f93d78523530cf73b0d16254c6e781768d45'
+        'f55681d1d02fb2bd2aac6abc1c389860935c52a0d8f41482010394778314'
+        '1d864bff30803638a5c0152570ae9d18f3d8ca163efb475b0dddf32e7e16'
+        'ec7565e6bb5e025c41c5c66e57a03cede554221f83045347a2c4c451c3dc'
+        'e476b787ce0c057244be9e04ef13118dbbb3d5e0a6cc87029eafd4a69ed9'
+        'b14759b15e39d8a9884e56f54d2f9ab013f0d15f318a9ab6b2f73d1ec3c9'
+        'fe274ae89431a10640be7899b0011c5e5093a1834708689de100634dabde'
+        '60fbd6aaefa3a33df34a1f36f60c043036b748d1c9ee98c4031a0afec60e'
+        'fda0a990be524f5614eac4fdb34a52f951', 16)
+    evRSA_P = long(
+        '00eadc2cb33e5ff1ca376bbd95bd6a1777d2cf4fac47545e92d11a6209b9'
+        'd5e4ded47834581c169b3c884742a09ea187505c1ca55414d8d25b497632'
+        'd5ec2aaa05233430fad49892777a7d68e038f561a3b8969e60b0a263defb'
+        'fda48a9b0ff39d95bc88b15267c8ade97b5107948e41e433249d87f7db10'
+        '9d5d74584d86bcc1d7', 16)
+    evRSA_Q = long(
+        '00c59ae576a216470248d944a55b9e9bf93299da341ec56e558eba821abc'
+        'e1bf57b79cf411d2904c774f9dba1f15185f607b0574a08205d6ec28b66a'
+        '36d634232eaaf2fea37561abaf9d644b68db38c9964cb8c96ec0ac61eba6'
+        '4d05b446542f423976f5acde4ecc95536d2df578954f93f0cfd9c58fb78b'
+        'a2a76dd5ac284dc883', 16)
+    evRSA_exp1 = long(
+        '00c1d2ef3906331c52aca64811f9fe425beb2898322fb3db51032ce8d7e9'
+        'fc32240be92019cf2480fcd5e329837127118b2a59a1bfe06c883e3a4447'
+        'f3f031cd9aebd0b8d368fc79740d2cce8eadb324df7f091eafe1564361d5'
+        '4920b01b0471230e5e47d93f8ed33963c517bc4fc78f6d8b1f9eba85bcce'
+        'db7033026508db6285', 16)
+    evRSA_exp2 = long(
+        '008521b8db5694dfbe804a315f9efc9b65275c5490acf2a3456d65e6e610'
+        'bf9f647fc67501d4f5772f232ac70ccdef9fc2a6dfa415c7c41b6afc7af9'
+        'd07c3ca03f7ed93c09f0b99f2c304434322f1071709bbc1baa4c91575fa6'
+        'a959e07d4996956d95e22b57938b6e47c8d51ffedfc9bf888ce0d1a3e42b'
+        '65a89bed4b91d3e5f5', 16)
+    evRSA_coef = long(
+        '00dc497b06b920c8be0b0077b798e977eef744a90ec2c5d7e6cbb22448fa'
+        'c72da81a33180e0d8a02e831460c7fc7fd3a612f7b9930b61b799f8e908e'
+        '632e9ba0409b6aa70b03a3ba787426263b5bd5843df8476edb5d14f6a861'
+        '3ebaf5b9cd5ca42f5fbd2802e08e4e49e5709f5151510caa5ab2c1c6eb3e'
+        'fe9295d16e8c25c916', 16)
+
+    evRSA2040_N = long(
+        '00ca7020dc215f57914d343fae4a015111697af997a5ece91866499fc23f'
+        '1b88a118cbd30b10d91c7b9a0d4ee8972fcae56caf57f25fc1275a2a4dbc'
+        'b982428c32ef587bf2387410330a0ffb16b8029bd783969ef675f6de38c1'
+        '8f67193cb6c072f8b23d0b3374112627a57b90055771d9e62603f53788d7'
+        'f63afa724f5d108096df31f89f26b1eb5f7c4357980e008fcd55d827dd26'
+        '2395ca2f526a07897cc40c593b38716ebc0caa596719c6f29ac9b73a7a94'
+        '4748a3aa3e09e9eb4d461ea0027e540926614728b9d243975cf9a0541bef'
+        'd25e76b51f951110b0e7644fc7e38441791b6d2227384cb8004e23342372'
+        'b1cf5cc3e73e31b7bbefa160e6862ebb', 16)
+    evRSA2040_E = 65537L
+    evRSA2040_D = long(
+        '00b2db74bce92362abf72955a638ae8720ba3033bb7f971caf39188d7542'
+        'eaa1c1abb5d205b1e2111f4791c08911a2e141e8cfd7054702d23100b564'
+        '2c06e1a31b118afd1f9a2f396cced425c501d91435ca8656766ced2b93bb'
+        'b8669fce9bacd727d1dacb3dafabc3293e35389eef8ea0b58e1aeb1a20e6'
+        'a61f9fcd453f7567fe31d123b616a26fef4df1d6c9f7490111d028eefd1d'
+        '972045b1a242273dd7a67ebf111db2741a5a93c7b2289cc4a236f5a99a6e'
+        'c7a8206fdae1c1d04bdbb1980d4a298c5a17dae4186474a5f7835d882bce'
+        'f24aef4ed6f149f94d96c9f7d78e647fc778a9017ff208d3b4a1768b1821'
+        '62102cdab032fabbab38d5200a324649', 16)
+    evRSA2040_P = long(
+         '0f3844d0d4d4d6a21acd76a6fc370b8550e1d7ec5a6234172e790f0029ae'
+        '651f6d5c59330ab19802b9d7a207de7a1fb778e3774fdbdc411750633d8d'
+        '1b3fe075006ffcfd1d10e763c7a9227d2d5f0c2dade1c9e659c350a159d3'
+        '6bb986f12636d4f9942b288bc0fe21da8799477173144249ca2e389e6c5c'
+        '25aa78c8cad7d4df', 16)
+    evRSA2040_Q = long(
+        '0d4d0bedd1962f07a1ead6b23a4ed67aeaf1270f052a6d29ba074945c636'
+        '1a5c4f8f07bf859e067aed3f4e6e323ef2aa8a6acd340b0bdc7cfe4fd329'
+        'e3c97f870c7f7735792c6aa9d0f7e7542a28ed6f01b0e55a2b8d9c24a65c'
+        '6da314c95484f5c7c3954a81bb016b07ed17ee9b06039695bca059a79f8d'
+        'c2423d328d5265a5', 16)
+    evRSA2040_exp1 = long(
+        '09f29a2ff05be8a96d614ba31b08935420a86c6bc42b99a6692ea0da5763'
+        'f01e596959b7ddce73ef9c2e4f6e5b40710887500d44ba0c3cd3132cba27'
+        '475f39c2df7552e2d123a2497a4f97064028769a48a3624657f72bf539f3'
+        'd0de234feccd3be8a0aa90c6bf6e9b0bed43070a24d061ff3ed1751a3ef2'
+        'ff7f6b90b9dbd5fb', 16)
+    evRSA2040_exp2 = long(
+        '01a659e170cac120a03be1cf8f9df1caa353b03593bd7476e5853bd874c2'
+        '87388601c6c341ce9d1d284a5eef1a3a669d32b816a5eaecd8b7844fe070'
+        '64b9bca0c2b318d540277b3f7f1510d386bb36e03b04771e5d229e88893e'
+        '13b753bfb94518bb638e2404bd6e6a993c1668d93fc0b82ff08aaf34347d'
+        '3fe8397108c87ca5', 16)
+    evRSA2040_coef = long(
+        '040257c0d4a21c0b9843297c65652db66304fb263773d728b6abfa06d37a'
+        'c0ca62c628023e09e37dc0a901e4ce1224180e2582a3aa4b6a1a7b98e2bd'
+        '70077aec14ac8ab66a755c71e0fc102471f9bbc1b46a95aa0b645f2c38e7'
+        '6450289619ea3f5e8ae61037bffcf8249f22aa4e76e2a01909f3feb290ce'
+        '93edf57b10ebe796', 16)
+
+    rsa2040_N = long(
+      '00bac0652fdfbc0055882ffbaeaceec88fa2d083c297dd5d40664dd3d90f'
+      '52f9aa02bd8a50fba16e0fd991878ef475f9b350d9f8e3eb2abd717ce327'
+      'b09788531f13df8e3e4e3b9d616bb8a41e5306eed2472163161051180127'
+      '6a4eb66f07331b5cbc8bcae7016a8f9b3d4f2ac4553c624cf5263bcb348e'
+      '8840de6612870960a792191b138fb217f765cec7bff8e94f16b39419bf75'
+      '04c59a7e4f79bd6d173e9c7bf3d9d2a4e73cc180b0590a73d584fb7fc9b5'
+      '4fa544607e53fc685c7a55fd44a81d4142b6af51ea6fa6cea52965a2e8c5'
+      'd84f3ca024d6fbb9b005b9651ce5d9f2ecf40ed404981a9ffc02636e311b'
+      '095c6332a0c87dc39271b5551481774b', 16)
+    rsa2040_E = 65537L
+    rsa2040_D = long(
+      '603db267df97555cbed86b8df355034af28f1eb7f3e7829d239bcc273a7c'
+      '7a69a10be8f21f1b6c4b02c6bae3731c3158b5bbff4605f57ab7b7b2a0cb'
+      'a2ec005a2db5b1ea6e0aceea5bc745dcd2d0e9d6b80d7eb0ea2bc08127bc'
+      'e35fa50c42cc411871ba591e23ba6a38484a33eff1347f907ee9a5a92a23'
+      '11bb0b435510020f78e3bb00099db4d1182928096505fcba84f3ca1238fd'
+      '1eba5eea1f391bbbcc5424b168063fc17e1ca6e1912ccba44f9d0292308a'
+      '1fedb80612529b39f59d0a3f8180b5ba201132197f93a5815ded938df8e7'
+      'd93c9b15766588f339bb59100afda494a7e452d7dd4c9a19ce2ec3a33a18'
+      'b20f0b4dade172bee19f26f0dcbe41', 16)
+    rsa2040_P = long(
+      '0ec3869cb92d406caddf7a319ab29448bc505a05913707873361fc5b986a'
+      '499fb65eeb815a7e37687d19f128087289d9bb8818e7bcca502c4900ad9a'
+      'ece1179be12ff3e467d606fc820ea8f07ac9ebffe2236e38168412028822'
+      '3e42dbe68dfd972a85a6447e51695f234da7911c67c9ab9531f33df3b994'
+      '32d4ee88c9a4efbb', 16)
+    rsa2040_Q = long(
+      '0ca63934549e85feac8e0f5604303fd1849fe88af4b7f7e1213283bbc7a2'
+      'c2a509f9273c428c68de3db93e6145f1b400bd6d4a262614e9043ad362d4'
+      'eba4a6b995399c8934a399912199e841d8e8dbff0489f69e663796730b29'
+      '80530b31cb70695a21625ea2adccc09d930516fa872211a91e22dd89fd9e'
+      'b7da8574b72235b1', 16)
+    rsa2040_exp1 = long(
+      '0d7d3a75e17f65f8a658a485c4095c10a4f66979e2b73bca9cf8ef21253e'
+      '1facac6d4791f58392ce8656f88f1240cc90c29653e3100c6d7a38ed44b1'
+      '63b339e5f3b6e38912126c69b3ceff2e5192426d9649b6ffca1abb75d2ba'
+      '2ed6d9a26aa383c5973d56216ff2edb90ccf887742a0f183ac92c94cf187'
+      '657645c7772d9ad7', 16)
+    rsa2040_exp2 = long(
+      '03f550194c117f24bea285b209058032f42985ff55acebe88b16df9a3752'
+      '7b4e61dc91a68dbc9a645134528ce5f248bda2893c96cb7be79ee73996c7'
+      'c22577f6c2f790406f3472adb3b211b7e94494f32c5c6fcc0978839fe472'
+      '4c31b06318a2489567b4fca0337acb1b841227aaa5f6c74800a2306929f0'
+      '2ce038bad943df41', 16)
+    rsa2040_coef = long(
+      '080a7dbfa8c2584814c71664c56eb62ce4caf16afe88d4499159d674774a'
+      '3a3ecddf1256c02fc91525c527692422d0aba94e5c41ee12dc71bb66f867'
+      '9fa17e096f28080851ba046eb31885c1414e8985ade599d907af17453d1c'
+      'caea2c0d06443f8367a6be154b125e390ee0d90f746f08801dd3f5367f59'
+      'fba2e5a67c05f375', 16)
+
     def __init__(self, specification = None):
         if not specification:
             self.RSA_N = self.sharedRSA_N
@@ -211,6 +376,33 @@ class RSAKey:
             self.RSA_exp1 = self.alternateRSA_exp1
             self.RSA_exp2 = self.alternateRSA_exp2
             self.RSA_coef = self.alternateRSA_coef
+        elif specification == 'ev':
+            self.RSA_N = self.evRSA_N
+            self.RSA_E = self.evRSA_E
+            self.RSA_D = self.evRSA_D
+            self.RSA_P = self.evRSA_P
+            self.RSA_Q = self.evRSA_Q
+            self.RSA_exp1 = self.evRSA_exp1
+            self.RSA_exp2 = self.evRSA_exp2
+            self.RSA_coef = self.evRSA_coef
+        elif specification == 'evRSA2040':
+            self.RSA_N = self.evRSA2040_N
+            self.RSA_E = self.evRSA2040_E
+            self.RSA_D = self.evRSA2040_D
+            self.RSA_P = self.evRSA2040_P
+            self.RSA_Q = self.evRSA2040_Q
+            self.RSA_exp1 = self.evRSA2040_exp1
+            self.RSA_exp2 = self.evRSA2040_exp2
+            self.RSA_coef = self.evRSA2040_coef
+        elif specification == 'rsa2040':
+            self.RSA_N = self.rsa2040_N
+            self.RSA_E = self.rsa2040_E
+            self.RSA_D = self.rsa2040_D
+            self.RSA_P = self.rsa2040_P
+            self.RSA_Q = self.rsa2040_Q
+            self.RSA_exp1 = self.rsa2040_exp1
+            self.RSA_exp2 = self.rsa2040_exp2
+            self.RSA_coef = self.rsa2040_coef
         else:
             raise UnknownKeySpecificationError(specification)
 
@@ -274,7 +466,7 @@ class RSAKey:
 # read the specification and output the key as ASCII-encoded PKCS #8.
 def main(output, inputPath):
     with open(inputPath) as configStream:
-        output.write(RSAKey(configStream.read()).toPEM())
+        output.write(RSAKey(configStream.read().strip()).toPEM())
 
 # When run as a standalone program, this will read a specification from
 # stdin and output the certificate as PEM to stdout.

@@ -8,7 +8,7 @@
 
 #include "mozilla/UniquePtr.h"
 #include "nsRect.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsSize.h"
 #include "nsString.h"
 #include "nsTArray.h"

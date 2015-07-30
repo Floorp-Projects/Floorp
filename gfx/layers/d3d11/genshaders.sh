@@ -45,7 +45,7 @@ SRC=CompositorD3D11VR.hlsl
 DEST=CompositorD3D11ShadersVR.h
 
 rm -f $DEST
-makeShaderVS OculusVRDistortionVS
-makeShaderPS OculusVRDistortionPS
+makeShaderVS Oculus050VRDistortionVS
+makeShaderPS Oculus050VRDistortionPS
 
 rm $tempfile

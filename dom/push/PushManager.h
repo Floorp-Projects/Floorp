@@ -38,7 +38,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 
 #include "nsCOMPtr.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "jsapi.h"
 
 class nsIGlobalObject;

@@ -88,8 +88,6 @@ public:
 
   virtual void Mutated(Layer* aLayer) override;
 
-  virtual bool IsOptimizedFor(PaintedLayer* aLayer, PaintedLayerCreationHint aHint) override;
-
   virtual already_AddRefed<PaintedLayer> CreatePaintedLayer() override;
   virtual already_AddRefed<PaintedLayer> CreatePaintedLayerWithHint(PaintedLayerCreationHint aHint) override;
   virtual already_AddRefed<ContainerLayer> CreateContainerLayer() override;

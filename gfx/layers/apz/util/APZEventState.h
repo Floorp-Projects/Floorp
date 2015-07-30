@@ -15,7 +15,7 @@
 #include "nsCOMPtr.h"
 #include "nsISupportsImpl.h"  // for NS_INLINE_DECL_REFCOUNTING
 #include "nsIWeakReferenceUtils.h"  // for nsWeakPtr
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 template <class> class nsCOMPtr;
 class nsIDocument;

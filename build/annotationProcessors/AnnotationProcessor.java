@@ -116,18 +116,15 @@ public class AnnotationProcessor {
         }
 
         implementationFile.append(
-                "\n" +
                 "} /* widget */\n" +
                 "} /* mozilla */\n");
 
         headerFile.append(
-                "\n" +
                 "} /* widget */\n" +
                 "} /* mozilla */\n" +
                 "#endif // " + getHeaderGuardName(HEADER_FILE) + "\n");
 
         nativesFile.append(
-                "\n" +
                 "} /* widget */\n" +
                 "} /* mozilla */\n" +
                 "#endif // " + getHeaderGuardName(NATIVES_FILE) + "\n");

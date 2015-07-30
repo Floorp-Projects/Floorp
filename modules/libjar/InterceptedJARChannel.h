@@ -13,7 +13,7 @@
 #include "nsIInputStreamPump.h"
 #include "nsINetworkInterceptController.h"
 #include "nsIOutputStream.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 #include "mozilla/Maybe.h"
 

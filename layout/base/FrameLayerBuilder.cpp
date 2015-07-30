@@ -2044,7 +2044,11 @@ ContainerState::GetLayerCreationHint(const nsIFrame* aAnimatedGeometryRoot)
   }
   nsIFrame* animatedGeometryRootParent = aAnimatedGeometryRoot->GetParent();
   nsIScrollableFrame* scrollable = do_QueryFrame(animatedGeometryRootParent);
-  if (scrollable && scrollable->WantAsyncScroll()) {
+  if (scrollable
+#ifdef MOZ_B2G
+      && scrollable->WantAsyncScroll()
+#endif
+     ) {
     // WantAsyncScroll() returns false when the frame has overflow:hidden,
     // so we won't create tiled layers for overflow:hidden frames even if
     // they have a display port. The main purpose of the WantAsyncScroll check
@@ -2071,7 +2075,7 @@ ContainerState::AttemptToRecyclePaintedLayer(const nsIFrame* aAnimatedGeometryRo
 
   // Check if the layer hint has changed and whether or not the layer should
   // be recreated because of it.
-  if (!mManager->IsOptimizedFor(layer, GetLayerCreationHint(aAnimatedGeometryRoot))) {
+  if (!layer->IsOptimizedFor(GetLayerCreationHint(aAnimatedGeometryRoot))) {
     return nullptr;
   }
 

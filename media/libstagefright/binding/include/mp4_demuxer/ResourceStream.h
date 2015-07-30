@@ -7,7 +7,7 @@
 
 #include "MediaResource.h"
 #include "mp4_demuxer/Stream.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 namespace mp4_demuxer
 {

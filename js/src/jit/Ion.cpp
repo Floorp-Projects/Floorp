@@ -50,6 +50,7 @@
 #include "jsscriptinlines.h"
 
 #include "jit/JitFrames-inl.h"
+#include "jit/shared/Lowering-shared-inl.h"
 #include "vm/Debugger-inl.h"
 #include "vm/ScopeObject-inl.h"
 

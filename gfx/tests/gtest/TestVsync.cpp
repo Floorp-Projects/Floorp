@@ -9,7 +9,7 @@
 #include "gfxPrefs.h"
 #include "MainThreadUtils.h"
 #include "nsIThread.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "SoftwareVsyncSource.h"
 #include "VsyncSource.h"
 #include "mozilla/Monitor.h"

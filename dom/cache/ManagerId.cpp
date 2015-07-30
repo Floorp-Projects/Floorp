@@ -7,7 +7,7 @@
 #include "mozilla/dom/cache/ManagerId.h"
 #include "nsIPrincipal.h"
 #include "nsProxyRelease.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {

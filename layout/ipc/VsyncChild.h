@@ -8,7 +8,7 @@
 
 #include "mozilla/layout/PVsyncChild.h"
 #include "nsISupportsImpl.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 namespace mozilla {
 

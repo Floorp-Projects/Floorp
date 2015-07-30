@@ -9,7 +9,7 @@
 #include "mozilla/layout/PVsyncParent.h"
 #include "mozilla/VsyncDispatcher.h"
 #include "nsCOMPtr.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 class nsIThread;
 

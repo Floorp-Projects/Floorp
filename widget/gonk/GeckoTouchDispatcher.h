@@ -22,7 +22,7 @@
 #include "Units.h"
 #include "mozilla/Mutex.h"
 #include <vector>
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 class nsIWidget;
 

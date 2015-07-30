@@ -9,8 +9,7 @@ do_get_profile(); // must be called before getting nsIX509CertDB
 const certdb = Cc["@mozilla.org/security/x509certdb;1"]
                  .getService(Ci.nsIX509CertDB);
 
-const evrootnick = "XPCShell EV Testing (untrustworthy) CA - Mozilla - " +
-                   "EV debug test CA";
+const evrootnick = "evroot";
 
 // This is the list of certificates needed for the test
 // The certificates prefixed by 'int-' are intermediates
@@ -29,7 +28,7 @@ let certList = [
 ];
 
 function load_ca(ca_name) {
-  var ca_filename = ca_name + ".der";
+  var ca_filename = ca_name + ".pem";
   addCertFromFile(certdb, "test_ev_certs/" + ca_filename, 'CTu,CTu,CTu');
 }
 
@@ -59,7 +58,7 @@ function check_ee_for_ev(cert_name, expected_ev) {
 
 function run_test() {
   for (let i = 0 ; i < certList.length; i++) {
-    let cert_filename = certList[i] + ".der";
+    let cert_filename = certList[i] + ".pem";
     addCertFromFile(certdb, "test_ev_certs/" + cert_filename, ',,');
   }
   load_ca("evroot");
@@ -78,7 +77,6 @@ function run_test() {
     check_ee_for_ev("ev-valid", gEVExpected);
     ocspResponder.stop(run_next_test);
   });
-
 
   add_test(function () {
     clearOCSPCache();

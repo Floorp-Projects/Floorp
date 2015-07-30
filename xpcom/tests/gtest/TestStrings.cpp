@@ -10,7 +10,7 @@
 #include "nsStringBuffer.h"
 #include "nsReadableUtils.h"
 #include "nsCRTGlue.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsTArray.h"
 #include "gtest/gtest.h"
 
