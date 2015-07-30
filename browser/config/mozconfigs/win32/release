@@ -1,5 +1,7 @@
 # This make file should be identical to the beta mozconfig, apart from the
 # safeguard below
+MOZ_AUTOMATION_SDK=${MOZ_AUTOMATION_SDK-1}
+
 . "$topsrcdir/build/mozconfig.win-common"
 . "$topsrcdir/browser/config/mozconfigs/win32/common-opt"
 
