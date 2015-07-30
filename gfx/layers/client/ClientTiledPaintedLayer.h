@@ -82,6 +82,8 @@ public:
                          LayerMetricsWrapper* aOutDisplayPortAncestor,
                          bool* aOutHasTransformAnimation);
 
+  virtual bool IsOptimizedFor(LayerManager::PaintedLayerCreationHint aCreationHint) override;
+
 private:
   ClientLayerManager* ClientManager()
   {

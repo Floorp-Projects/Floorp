@@ -30,6 +30,7 @@ SOURCES += [
     'AndroidJavaWrappers.cpp',
     'AndroidJNI.cpp',
     'AndroidJNIWrapper.cpp',
+    'ANRReporter.cpp',
     'GeneratedJNIWrappers.cpp',
     'GfxInfo.cpp',
     'NativeJSContainer.cpp',

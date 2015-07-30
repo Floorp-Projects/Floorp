@@ -21,6 +21,10 @@ inline bool ThrowException(JNIEnv *aEnv, const char *aMessage)
 
 void HandleUncaughtException(JNIEnv *aEnv);
 
+uintptr_t GetNativeHandle(JNIEnv* env, jobject instance);
+
+void SetNativeHandle(JNIEnv* env, jobject instance, uintptr_t handle);
+
 } // jni
 } // mozilla
 

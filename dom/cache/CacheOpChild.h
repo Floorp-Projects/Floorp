@@ -10,7 +10,7 @@
 #include "mozilla/dom/cache/ActorChild.h"
 #include "mozilla/dom/cache/PCacheOpChild.h"
 #include "mozilla/dom/cache/TypeUtils.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 class nsIGlobalObject;
 

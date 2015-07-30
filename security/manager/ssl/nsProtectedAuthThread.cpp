@@ -4,7 +4,7 @@
 
 #include "pk11func.h"
 #include "mozilla/DebugOnly.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsCOMPtr.h"
 #include "PSMRunnable.h"
 #include "nsString.h"

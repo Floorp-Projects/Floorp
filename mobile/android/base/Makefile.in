@@ -195,7 +195,6 @@ classycle_jar := $(topsrcdir)/mobile/android/build/classycle/classycle-1.4.1.jar
 		-libraryjars $(library_jars)
 
 CLASSES_WITH_JNI= \
-    org.mozilla.gecko.ANRReporter \
     org.mozilla.gecko.GeckoAppShell \
     org.mozilla.gecko.GeckoJavaSampler \
     org.mozilla.gecko.gfx.NativePanZoomController \
