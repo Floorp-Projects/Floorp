@@ -456,7 +456,8 @@ public:
                         mozilla::dom::MutationCallback& aCb,
                         bool aChrome)
   : mOwner(aOwner), mLastPendingMutation(nullptr), mPendingMutationCount(0),
-    mCallback(&aCb), mWaitingForRun(false), mIsChrome(aChrome), mId(++sCount)
+    mCallback(&aCb), mWaitingForRun(false), mIsChrome(aChrome),
+    mMergeAttributeRecords(false), mId(++sCount)
   {
   }
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -497,6 +498,22 @@ public:
                         mozilla::ErrorResult& aRv);
 
   mozilla::dom::MutationCallback* MutationCallback() { return mCallback; }
+
+  bool MergeAttributeRecords()
+  {
+    return mMergeAttributeRecords;
+  }
+
+  void SetMergeAttributeRecords(bool aVal)
+  {
+    mMergeAttributeRecords = aVal;
+  }
+
+  // If both records are for 'attributes' type and for the same target and
+  // attribute name and namespace are the same, we can skip the newer record.
+  // aOldRecord->mPrevValue holds the original value, if observed.
+  bool MergeableAttributeRecord(nsDOMMutationRecord* aOldRecord,
+                                nsDOMMutationRecord* aRecord);
 
   void AppendMutationRecord(already_AddRefed<nsDOMMutationRecord> aRecord)
   {
@@ -585,6 +602,7 @@ protected:
 
   bool                                               mWaitingForRun;
   bool                                               mIsChrome;
+  bool                                               mMergeAttributeRecords;
 
   uint64_t                                           mId;
 

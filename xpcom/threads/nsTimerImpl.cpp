@@ -9,7 +9,6 @@
 #include "nsAutoPtr.h"
 #include "nsThreadManager.h"
 #include "nsThreadUtils.h"
-#include "plarena.h"
 #include "pratom.h"
 #include "GeckoProfiler.h"
 #include "mozilla/Atomics.h"
@@ -65,155 +64,6 @@ myNS_MeanAndStdDev(double n, double sumOfValues, double sumOfSquaredValues,
   *meanResult = mean;
   *stdDevResult = stdDev;
 }
-
-namespace {
-
-// TimerEventAllocator is a thread-safe allocator used only for nsTimerEvents.
-// It's needed to avoid contention over the default allocator lock when
-// firing timer events (see bug 733277).  The thread-safety is required because
-// nsTimerEvent objects are allocated on the timer thread, and freed on another
-// thread.  Because TimerEventAllocator has its own lock, contention over that
-// lock is limited to the allocation and deallocation of nsTimerEvent objects.
-//
-// Because this allocator is layered over PLArenaPool, it never shrinks -- even
-// "freed" nsTimerEvents aren't truly freed, they're just put onto a free-list
-// for later recycling.  So the amount of memory consumed will always be equal
-// to the high-water mark consumption.  But nsTimerEvents are small and it's
-// unusual to have more than a few hundred of them, so this shouldn't be a
-// problem in practice.
-
-class TimerEventAllocator
-{
-private:
-  struct FreeEntry
-  {
-    FreeEntry* mNext;
-  };
-
-  PLArenaPool mPool;
-  FreeEntry* mFirstFree;
-  mozilla::Monitor mMonitor;
-
-public:
-  TimerEventAllocator()
-    : mFirstFree(nullptr)
-    , mMonitor("TimerEventAllocator")
-  {
-    PL_InitArenaPool(&mPool, "TimerEventPool", 4096, /* align = */ 0);
-  }
-
-  ~TimerEventAllocator()
-  {
-    PL_FinishArenaPool(&mPool);
-  }
-
-  void* Alloc(size_t aSize);
-  void Free(void* aPtr);
-};
-
-} // namespace
-
-class nsTimerEvent : public nsRunnable
-{
-public:
-  NS_IMETHOD Run();
-
-  nsTimerEvent()
-    : mTimer()
-    , mGeneration(0)
-  {
-    MOZ_COUNT_CTOR(nsTimerEvent);
-
-    MOZ_ASSERT(gThread->IsOnTimerThread(),
-               "nsTimer must always be allocated on the timer thread");
-
-    sAllocatorUsers++;
-  }
-
-  TimeStamp mInitTime;
-
-  static void Init();
-  static void Shutdown();
-  static void DeleteAllocatorIfNeeded();
-
-  static void* operator new(size_t aSize) CPP_THROW_NEW
-  {
-    return sAllocator->Alloc(aSize);
-  }
-  void operator delete(void* aPtr)
-  {
-    sAllocator->Free(aPtr);
-    DeleteAllocatorIfNeeded();
-  }
-
-  already_AddRefed<nsTimerImpl> ForgetTimer()
-  {
-    return mTimer.forget();
-  }
-
-  void SetTimer(already_AddRefed<nsTimerImpl> aTimer)
-  {
-    mTimer = aTimer;
-    mGeneration = mTimer->GetGeneration();
-  }
-
-private:
-  ~nsTimerEvent()
-  {
-    MOZ_COUNT_DTOR(nsTimerEvent);
-
-    MOZ_ASSERT(!sCanDeleteAllocator || sAllocatorUsers > 0,
-               "This will result in us attempting to deallocate the nsTimerEvent allocator twice");
-    sAllocatorUsers--;
-  }
-
-  nsRefPtr<nsTimerImpl> mTimer;
-  int32_t      mGeneration;
-
-  static TimerEventAllocator* sAllocator;
-  static Atomic<int32_t> sAllocatorUsers;
-  static bool sCanDeleteAllocator;
-};
-
-TimerEventAllocator* nsTimerEvent::sAllocator = nullptr;
-Atomic<int32_t> nsTimerEvent::sAllocatorUsers;
-bool nsTimerEvent::sCanDeleteAllocator = false;
-
-namespace {
-
-void*
-TimerEventAllocator::Alloc(size_t aSize)
-{
-  MOZ_ASSERT(aSize == sizeof(nsTimerEvent));
-
-  mozilla::MonitorAutoLock lock(mMonitor);
-
-  void* p;
-  if (mFirstFree) {
-    p = mFirstFree;
-    mFirstFree = mFirstFree->mNext;
-  } else {
-    PL_ARENA_ALLOCATE(p, &mPool, aSize);
-    if (!p) {
-      return nullptr;
-    }
-  }
-
-  return p;
-}
-
-void
-TimerEventAllocator::Free(void* aPtr)
-{
-  mozilla::MonitorAutoLock lock(mMonitor);
-
-  FreeEntry* entry = reinterpret_cast<FreeEntry*>(aPtr);
-
-  entry->mNext = mFirstFree;
-  mFirstFree = entry;
-}
-
-} // namespace
 
 NS_IMPL_QUERY_INTERFACE(nsTimerImpl, nsITimer)
 NS_IMPL_ADDREF(nsTimerImpl)
@@ -302,8 +152,6 @@ nsTimerImpl::Startup()
 {
   nsresult rv;
 
-  nsTimerEvent::Init();
-
   gThread = new TimerThread();
 
   NS_ADDREF(gThread);
@@ -336,8 +184,6 @@ nsTimerImpl::Shutdown()
 
   gThread->Shutdown();
   NS_RELEASE(gThread);
-
-  nsTimerEvent::Shutdown();
 }
 
 
@@ -359,23 +205,7 @@ nsTimerImpl::InitCommon(uint32_t aType, uint32_t aDelay)
     return rv;
   }
 
-  /**
-   * In case of re-Init, both with and without a preceding Cancel, clear the
-   * mCanceled flag and assign a new mGeneration.  But first, remove any armed
-   * timer from the timer thread's list.
-   *
-   * If we are racing with the timer thread to remove this timer and we lose,
-   * the RemoveTimer call made here will fail to find this timer in the timer
-   * thread's list, and will return false harmlessly.  We test mArmed here to
-   * avoid the small overhead in RemoveTimer of locking the timer thread and
-   * checking its list for this timer.  It's safe to test mArmed even though
-   * it might be cleared on another thread in the next cycle (or even already
-   * be cleared by another CPU whose store hasn't reached our CPU's cache),
-   * because RemoveTimer is idempotent.
-   */
-  if (mArmed) {
-    gThread->RemoveTimer(this);
-  }
+  gThread->RemoveTimer(this);
   mCanceled = false;
   mTimeout = TimeStamp();
   mGeneration = gGenerator++;
@@ -659,117 +489,6 @@ nsTimerImpl::Fire()
       gThread->AddTimer(this);
     }
   }
-}
-
-void
-nsTimerEvent::Init()
-{
-  sAllocator = new TimerEventAllocator();
-}
-
-void
-nsTimerEvent::Shutdown()
-{
-  sCanDeleteAllocator = true;
-  DeleteAllocatorIfNeeded();
-}
-
-void
-nsTimerEvent::DeleteAllocatorIfNeeded()
-{
-  if (sCanDeleteAllocator && sAllocatorUsers == 0) {
-    delete sAllocator;
-    sAllocator = nullptr;
-  }
-}
-
-NS_IMETHODIMP
-nsTimerEvent::Run()
-{
-  if (mGeneration != mTimer->GetGeneration()) {
-    return NS_OK;
-  }
-
-  if (MOZ_LOG_TEST(GetTimerLog(), LogLevel::Debug)) {
-    TimeStamp now = TimeStamp::Now();
-    MOZ_LOG(GetTimerLog(), LogLevel::Debug,
-           ("[this=%p] time between PostTimerEvent() and Fire(): %fms\n",
-            this, (now - mInitTime).ToMilliseconds()));
-  }
-
-  mTimer->Fire();
-  // Since nsTimerImpl is not thread-safe, we should release |mTimer|
-  // here in the target thread to avoid race condition. Otherwise,
-  // ~nsTimerEvent() which calls nsTimerImpl::Release() could run in the
-  // timer thread and result in race condition.
-  mTimer = nullptr;
-
-  return NS_OK;
-}
-
-already_AddRefed<nsTimerImpl>
-nsTimerImpl::PostTimerEvent(already_AddRefed<nsTimerImpl> aTimerRef)
-{
-  nsRefPtr<nsTimerImpl> timer(aTimerRef);
-  if (!timer->mEventTarget) {
-    NS_ERROR("Attempt to post timer event to NULL event target");
-    return timer.forget();
-  }
-
-  // XXX we may want to reuse this nsTimerEvent in the case of repeating timers.
-
-  // Since TimerThread addref'd 'timer' for us, we don't need to addref here.
-  // We will release either in ~nsTimerEvent(), or pass the reference back to
-  // the caller. We need to copy the generation number from this timer into the
-  // event, so we can avoid firing a timer that was re-initialized after being
-  // canceled.
-
-  // Note: We override operator new for this class, and the override is
-  // fallible!
-  nsRefPtr<nsTimerEvent> event = new nsTimerEvent;
-  if (!event) {
-    return timer.forget();
-  }
-
-  if (MOZ_LOG_TEST(GetTimerLog(), LogLevel::Debug)) {
-    event->mInitTime = TimeStamp::Now();
-  }
-
-  // If this is a repeating precise timer, we need to calculate the time for
-  // the next timer to fire before we make the callback.
-  if (timer->IsRepeatingPrecisely()) {
-    timer->SetDelayInternal(timer->mDelay);
-
-    // But only re-arm REPEATING_PRECISE timers.
-    if (gThread && timer->mType == TYPE_REPEATING_PRECISE) {
-      nsresult rv = gThread->AddTimer(timer);
-      if (NS_FAILED(rv)) {
-        return timer.forget();
-      }
-    }
-  }
-
-#ifdef MOZ_TASK_TRACER
-  // During the dispatch of TimerEvent, we overwrite the current TraceInfo
-  // partially with the info saved in timer earlier, and restore it back by
-  // AutoSaveCurTraceInfo.
-  AutoSaveCurTraceInfo saveCurTraceInfo;
-  (timer->GetTracedTask()).SetTLSTraceInfo();
-#endif
-
-  nsIEventTarget* target = timer->mEventTarget;
-  event->SetTimer(timer.forget());
-
-  nsresult rv = target->Dispatch(event, NS_DISPATCH_NORMAL);
-  if (NS_FAILED(rv)) {
-    timer = event->ForgetTimer();
-    if (gThread) {
-      gThread->RemoveTimer(timer);
-    }
-    return timer.forget();
-  }
-
-  return nullptr;
 }
 
 void
