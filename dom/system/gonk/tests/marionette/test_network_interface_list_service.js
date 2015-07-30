@@ -4,7 +4,7 @@
 MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = "head.js";
 
-function getNetworkInterface(aType) {
+function getNetworkInfo(aType) {
   let networkListService =
     Cc["@mozilla.org/network/interface-list-service;1"].
       getService(Ci.nsINetworkInterfaceListService);
@@ -14,9 +14,9 @@ function getNetworkInterface(aType) {
   // Try to get nsINetworkInterface for aType.
   let numberOfInterface = networkList.getNumberOfInterface();
   for (let i = 0; i < numberOfInterface; i++) {
-    let iface = networkList.getInterface(i);
-    if (iface.type === aType) {
-      return iface;
+    let info = networkList.getInterfaceInfo(i);
+    if (info.type === aType) {
+      return info;
     }
   }
 
@@ -29,27 +29,27 @@ function testGetDataInterfaceList(aMobileDataEnabled) {
       aMobileDataEnabled ? "enabled" : "disabled");
 
   return setDataEnabledAndWait(aMobileDataEnabled)
-    .then(() => getNetworkInterface(NETWORK_TYPE_MOBILE))
-    .then((networkInterface) => {
-      if (!networkInterface) {
-        ok(false, "Should get an valid nsINetworkInterface for mobile");
+    .then(() => getNetworkInfo(NETWORK_TYPE_MOBILE))
+    .then((networkInfo) => {
+      if (!networkInfo) {
+        ok(false, "Should get an valid nsINetworkInfo for mobile");
         return;
       }
 
-      ok(networkInterface instanceof Ci.nsINetworkInterface,
-         "networkInterface should be an instance of nsINetworkInterface");
+      ok(networkInfo instanceof Ci.nsINetworkInfo,
+         "networkInfo should be an instance of nsINetworkInfo");
 
       let ipAddresses = {};
       let prefixs = {};
       let numOfGateways = {};
       let numOfDnses = {};
-      let numOfIpAddresses = networkInterface.getAddresses(ipAddresses, prefixs);
-      let gateways = networkInterface.getGateways(numOfGateways);
-      let dnses = networkInterface.getDnses(numOfDnses);
+      let numOfIpAddresses = networkInfo.getAddresses(ipAddresses, prefixs);
+      let gateways = networkInfo.getGateways(numOfGateways);
+      let dnses = networkInfo.getDnses(numOfDnses);
 
       if (aMobileDataEnabled) {
         // Mobile data is enabled.
-        is(networkInterface.state, NETWORK_STATE_CONNECTED, "check state");
+        is(networkInfo.state, NETWORK_STATE_CONNECTED, "check state");
         ok(numOfIpAddresses > 0, "check number of ipAddresses");
         ok(ipAddresses.value.length > 0, "check ipAddresses.length");
         ok(prefixs.value.length > 0, "check prefixs.length");
@@ -60,7 +60,7 @@ function testGetDataInterfaceList(aMobileDataEnabled) {
         ok(dnses.length > 0, "check dnses.length");
       } else {
         // Mobile data is disabled.
-        is(networkInterface.state, NETWORK_STATE_DISCONNECTED, "check state");
+        is(networkInfo.state, NETWORK_STATE_DISCONNECTED, "check state");
         is(numOfIpAddresses, 0, "check number of ipAddresses");
         is(ipAddresses.value.length, 0, "check ipAddresses.length");
         is(prefixs.value.length, 0, "check prefixs.length");

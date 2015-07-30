@@ -13,8 +13,8 @@ function testInitialState() {
   return getSettings(SETTINGS_KEY_DATA_ENABLED)
     .then((enabled) => {
       is(enabled, false, "data should be off by default");
-      is(networkManager.active, null,
-         "networkManager.active should be null by default");
+      is(networkManager.activeNetworkInfo, null,
+         "networkManager.activeNetworkInfo should be null by default");
     });
 }
 
@@ -29,16 +29,16 @@ function testActiveNetworkChangedBySwitchingDataCall(aDataCallEnabled) {
     let subject = results[0];
 
     if (aDataCallEnabled) {
-      ok(subject instanceof Ci.nsINetworkInterface,
-         "subject should be an instance of nsINetworkInterface");
-      ok(subject instanceof Ci.nsIRilNetworkInterface,
-         "subject should be an instance of nsIRILNetworkInterface");
+      ok(subject instanceof Ci.nsINetworkInfo,
+         "subject should be an instance of nsINetworkInfo");
+      ok(subject instanceof Ci.nsIRilNetworkInfo,
+         "subject should be an instance of nsIRilNetworkInfo");
       is(subject.type, NETWORK_TYPE_MOBILE,
          "subject.type should be NETWORK_TYPE_MOBILE");
     }
 
-    is(subject, networkManager.active,
-       "subject should be equal with networkManager.active");
+    is(subject, networkManager.activeNetworkInfo,
+       "subject should be equal with networkManager.activeNetworkInfo");
   });
 }
 

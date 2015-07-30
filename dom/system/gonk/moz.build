@@ -16,6 +16,7 @@
 
 XPIDL_SOURCES += [
     'nsIAudioManager.idl',
+    'nsINetworkInterface.idl',
     'nsINetworkInterfaceListService.idl',
     'nsINetworkManager.idl',
     'nsINetworkService.idl',

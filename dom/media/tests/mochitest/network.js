@@ -25,7 +25,7 @@ function isNetworkReady() {
     for (var i = 0; i < num; i++) {
       var ips = {};
       var prefixLengths = {};
-      var length = itfList.getInterface(i).getAddresses(ips, prefixLengths);
+      var length = itfList.getInterfaceInfo(i).getAddresses(ips, prefixLengths);
 
       for (var j = 0; j < length; j++) {
         var ip = ips.value[j];

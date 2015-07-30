@@ -490,39 +490,44 @@ function P2pStateMachine(aP2pCommand, aNetUtil) {
   let _p2pNetworkInterface = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsINetworkInterface]),
 
-    state: Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED,
-    type: Ci.nsINetworkInterface.NETWORK_TYPE_WIFI_P2P,
-    name: P2P_INTERFACE_NAME,
-    ips: [],
-    prefixLengths: [],
-    dnses: [],
-    gateways: [],
+    info: {
+      QueryInterface: XPCOMUtils.generateQI([Ci.nsINetworkInfo]),
+
+      state: Ci.nsINetworkInfo.NETWORK_STATE_DISCONNECTED,
+      type: Ci.nsINetworkInfo.NETWORK_TYPE_WIFI_P2P,
+      name: P2P_INTERFACE_NAME,
+      ips: [],
+      prefixLengths: [],
+      dnses: [],
+      gateways: [],
+
+      getAddresses: function (ips, prefixLengths) {
+        ips.value = this.ips.slice();
+        prefixLengths.value = this.prefixLengths.slice();
+
+        return this.ips.length;
+      },
+
+      getGateways: function (count) {
+        if (count) {
+          count.value = this.gateways.length;
+        }
+        return this.gateways.slice();
+      },
+
+      getDnses: function (count) {
+        if (count) {
+          count.value = this.dnses.length;
+        }
+        return this.dnses.slice();
+      }
+    },
+
     httpProxyHost: null,
     httpProxyPort: null,
 
     // help
-    registered: false,
-
-    getAddresses: function (ips, prefixLengths) {
-      ips.value = this.ips.slice();
-      prefixLengths.value = this.prefixLengths.slice();
-
-      return this.ips.length;
-    },
-
-    getGateways: function (count) {
-      if (count) {
-        count.value = this.gateways.length;
-      }
-      return this.gateways.slice();
-    },
-
-    getDnses: function (count) {
-      if (count) {
-        count.value = this.dnses.length;
-      }
-      return this.dnses.slice();
-    }
+    registered: false
   };
 
   //---------------------------------------------------------
@@ -1419,10 +1424,10 @@ function P2pStateMachine(aP2pCommand, aNetUtil) {
         }
 
         // Update p2p network interface.
-        _p2pNetworkInterface.state = Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED;
-        _p2pNetworkInterface.ips = [GO_NETWORK_INTERFACE.ip];
-        _p2pNetworkInterface.prefixLengths = [GO_NETWORK_INTERFACE.maskLength];
-        _p2pNetworkInterface.gateways = [GO_NETWORK_INTERFACE.ip];
+        _p2pNetworkInterface.info.state = Ci.nsINetworkInfo.NETWORK_STATE_CONNECTED;
+        _p2pNetworkInterface.info.ips = [GO_NETWORK_INTERFACE.ip];
+        _p2pNetworkInterface.info.prefixLengths = [GO_NETWORK_INTERFACE.maskLength];
+        _p2pNetworkInterface.info.gateways = [GO_NETWORK_INTERFACE.ip];
         handleP2pNetworkInterfaceStateChanged();
 
         _groupInfo.networkInterface = _p2pNetworkInterface;
@@ -1454,18 +1459,18 @@ function P2pStateMachine(aP2pCommand, aNetUtil) {
       if (!maskLength) {
         maskLength = 32; // max prefix for IPv4.
       }
-      _p2pNetworkInterface.state = Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED;
-      _p2pNetworkInterface.ips = [dhcpData.info.ipaddr_str];
-      _p2pNetworkInterface.prefixLengths = [maskLength];
+      _p2pNetworkInterface.info.state = Ci.nsINetworkInfo.NETWORK_STATE_CONNECTED;
+      _p2pNetworkInterface.info.ips = [dhcpData.info.ipaddr_str];
+      _p2pNetworkInterface.info.prefixLengths = [maskLength];
       if (typeof dhcpData.info.dns1_str == "string" &&
           dhcpData.info.dns1_str.length) {
-        _p2pNetworkInterface.dnses.push(dhcpData.info.dns1_str);
+        _p2pNetworkInterface.info.dnses.push(dhcpData.info.dns1_str);
       }
       if (typeof dhcpData.info.dns2_str == "string" &&
           dhcpData.info.dns2_str.length) {
-        _p2pNetworkInterface.dnses.push(dhcpData.info.dns2_str);
+        _p2pNetworkInterface.info.dnses.push(dhcpData.info.dns2_str);
       }
-      _p2pNetworkInterface.gateways = [dhcpData.info.gateway_str];
+      _p2pNetworkInterface.info.gateways = [dhcpData.info.gateway_str];
       handleP2pNetworkInterfaceStateChanged();
 
       _groupInfo.networkInterface = _p2pNetworkInterface;
@@ -1476,11 +1481,11 @@ function P2pStateMachine(aP2pCommand, aNetUtil) {
   }
 
   function resetP2pNetworkInterface() {
-    _p2pNetworkInterface.state = Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED;
-    _p2pNetworkInterface.ips = [];
-    _p2pNetworkInterface.prefixLengths = [];
-    _p2pNetworkInterface.dnses = [];
-    _p2pNetworkInterface.gateways = [];
+    _p2pNetworkInterface.info.state = Ci.nsINetworkInfo.NETWORK_STATE_DISCONNECTED;
+    _p2pNetworkInterface.info.ips = [];
+    _p2pNetworkInterface.info.prefixLengths = [];
+    _p2pNetworkInterface.info.dnses = [];
+    _p2pNetworkInterface.info.gateways = [];
   }
 
   function registerP2pNetworkInteface() {
@@ -1523,7 +1528,7 @@ function P2pStateMachine(aP2pCommand, aNetUtil) {
     }
 
     // Update p2p network interface.
-    _p2pNetworkInterface.state = Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED;
+    _p2pNetworkInterface.info.state = Ci.nsINetworkInfo.NETWORK_STATE_DISCONNECTED;
     handleP2pNetworkInterfaceStateChanged();
 
     if (P2P_ROLE_GO === aInfo.role) {

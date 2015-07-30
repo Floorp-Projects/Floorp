@@ -2,10 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsINetworkManager.idl"
 #include "nsISupports.idl"
 
-[scriptable, uuid(b44d74db-c9d6-41dd-98ae-a56918d6e6ad)]
+interface nsINetworkInfo;
+
+[scriptable, uuid(55779d32-1e28-4f43-af87-09d04bc3cce9)]
 interface nsINetworkInterfaceList : nsISupports
 {
   /**
@@ -14,10 +15,10 @@ interface nsINetworkInterfaceList : nsISupports
   long getNumberOfInterface();
 
   /**
-   * Get the i-th interface from the list.
+   * Get the i-th interface info info from the list.
    * @param interfaceIndex index of interface, from 0 to number of interface - 1.
    */
-  nsINetworkInterface getInterface(in long interfaceIndex);
+  nsINetworkInfo getInterfaceInfo(in long interfaceIndex);
 };
 
 [scriptable, uuid(21d7fc8b-28c4-4a4f-a15e-1f9defbc2cec)]

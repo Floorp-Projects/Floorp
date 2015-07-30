@@ -227,10 +227,10 @@ MmsConnection.prototype = {
   mmsProxy: "",
   mmsPort:  -1,
 
-  setApnSetting: function(network) {
-    this.mmsc = network.mmsc;
-    this.mmsProxy = network.mmsProxy;
-    this.mmsPort = network.mmsPort;
+  setApnSetting: function(networkInfo) {
+    this.mmsc = networkInfo.mmsc;
+    this.mmsProxy = networkInfo.mmsProxy;
+    this.mmsPort = networkInfo.mmsPort;
   },
 
   get proxyInfo() {
@@ -268,8 +268,8 @@ MmsConnection.prototype = {
   // cache of hosts to be accessed when this connection is alive.
   hostsToRoute: null,
 
-  // cache of the networkInterface acquired during this connection.
-  networkInterface: null,
+  // cache of the networkInfo acquired during this connection.
+  networkInfo: null,
 
   connectTimer: null,
 
@@ -303,14 +303,14 @@ MmsConnection.prototype = {
 
       // Clear cache.
       this.hostsToRoute = [];
-      this.networkInterface = null;
+      this.networkInfo = null;
 
-      this.radioInterface.deactivateDataCallByType(Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS);
+      this.radioInterface.deactivateDataCallByType(Ci.nsINetworkInfo.NETWORK_TYPE_MOBILE_MMS);
     };
 
     let promises =
       this.hostsToRoute.map((aHost) => {
-        return gNetworkManager.removeHostRoute(this.networkInterface, aHost);
+        return gNetworkManager.removeHostRoute(this.networkInfo, aHost);
       });
 
     return Promise.all(promises)
@@ -442,7 +442,7 @@ MmsConnection.prototype = {
 
       // Bug 1059110: Ensure all the initialization are done before setup data call.
       if (DEBUG) debug("acquire: buffer the MMS request and setup the MMS data call.");
-      this.radioInterface.setupDataCallByType(Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS);
+      this.radioInterface.setupDataCallByType(Ci.nsINetworkInfo.NETWORK_TYPE_MOBILE_MMS);
 
       return false;
     }
@@ -494,7 +494,7 @@ MmsConnection.prototype = {
       host = uri.host;
     } catch (e) {}
 
-    return gNetworkManager.addHostRoute(this.networkInterface, host)
+    return gNetworkManager.addHostRoute(this.networkInfo, host)
       .then(() => {
         if (this.hostsToRoute.indexOf(host) < 0) {
           this.hostsToRoute.push(host);
@@ -517,20 +517,20 @@ MmsConnection.prototype = {
   observe: function(subject, topic, data) {
     switch (topic) {
       case kNetworkConnStateChangedTopic: {
-        // The network for MMS connection must be nsIRilNetworkInterface.
-        if (!(subject instanceof Ci.nsIRilNetworkInterface)) {
+        // The network info for MMS connection must be nsIRilNetworkInfo.
+        if (!(subject instanceof Ci.nsIRilNetworkInfo)) {
           return;
         }
 
         // Check if the network state change belongs to this service.
-        let network = subject.QueryInterface(Ci.nsIRilNetworkInterface);
-        if (network.serviceId != this.serviceId ||
-            network.type != Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS) {
+        let networkInfo = subject.QueryInterface(Ci.nsIRilNetworkInfo);
+        if (networkInfo.serviceId != this.serviceId ||
+            networkInfo.type != Ci.nsINetworkInfo.NETWORK_TYPE_MOBILE_MMS) {
           return;
         }
 
         let connected =
-          network.state == Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED;
+          networkInfo.state == Ci.nsINetworkInfo.NETWORK_STATE_CONNECTED;
 
         // Return if the MMS network state doesn't change, where the network
         // state change can come from other non-MMS networks.
@@ -541,16 +541,16 @@ MmsConnection.prototype = {
         this.connected = connected;
         if (!this.connected) {
           this.hostsToRoute = [];
-          this.networkInterface = null;
+          this.networkInfo = null;
           return;
         }
 
         // Set up the MMS APN setting based on the connected MMS network,
         // which is going to be used for the HTTP requests later.
-        this.setApnSetting(network);
+        this.setApnSetting(networkInfo);
 
-        // Cache connected network.
-        this.networkInterface = network;
+        // Cache connected network info.
+        this.networkInfo = networkInfo;
 
         if (DEBUG) debug("Got the MMS network connected! Resend the buffered " +
                          "MMS requests: number: " + this.pendingCallbacks.length);
@@ -745,7 +745,7 @@ XPCOMUtils.defineLazyGetter(this, "gMmsTransactionHelper", function() {
         // TODO: |getNetId| will be implemented as a sync call in nsINetworkManager
         //       once Bug 1141903 is landed.
         mmsConnection.ensureRouting(url)
-          .then(() => gNetworkService.getNetId(mmsConnection.networkInterface.name))
+          .then(() => gNetworkService.getNetId(mmsConnection.networkInfo.name))
           .then((netId) => startTransaction(netId))
           .catch((aReason) => onRejected(aReason));
       });

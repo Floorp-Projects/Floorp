@@ -248,7 +248,7 @@ TetheringService.prototype = {
         this.handle(aSubject.key, aSubject.value);
         break;
       case TOPIC_CONNECTION_STATE_CHANGED:
-        network = aSubject.QueryInterface(Ci.nsINetworkInterface);
+        network = aSubject.QueryInterface(Ci.nsINetworkInfo);
         debug("Network " + network.type + "/" + network.name +
               " changed state to " + network.state);
         this.onConnectionChanged(network);
@@ -338,18 +338,18 @@ TetheringService.prototype = {
       libcutils.property_get("ro.tethering.dun_required") === "1";
   },
 
-  getNetworkInterface: function(aType, aServiceId) {
-    for each (let network in gNetworkManager.networkInterfaces) {
-      if (network.type == aType) {
+  getNetworkInfo: function(aType, aServiceId) {
+    for each (let networkInfo in gNetworkManager.allNetworkInfo) {
+      if (networkInfo.type == aType) {
         try {
-          if (network instanceof Ci.nsIRilNetworkInterface) {
-            let rilNetwork = network.QueryInterface(Ci.nsIRilNetworkInterface);
+          if (networkInfo instanceof Ci.nsIRilNetworkInfo) {
+            let rilNetwork = networkInfo.QueryInterface(Ci.nsIRilNetworkInfo);
             if (rilNetwork.serviceId != aServiceId) {
               continue;
             }
           }
         } catch (e) {}
-        return network;
+        return networkInfo;
       }
     }
     return null;
@@ -405,7 +405,7 @@ TetheringService.prototype = {
       let ril = gRil.getRadioInterface(this._dataDefaultServiceId);
 
       this.dunRetryTimes = 0;
-      ril.setupDataCallByType(Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN);
+      ril.setupDataCallByType(Ci.nsINetworkInfo.NETWORK_TYPE_MOBILE_DUN);
       this.dunConnectTimer.cancel();
       this.dunConnectTimer.
         initWithCallback(this.onDunConnectTimerTimeout.bind(this),
@@ -430,8 +430,8 @@ TetheringService.prototype = {
   _dunActiveUsers: 0,
   handleDunConnection: function(aEnable, aCallback) {
     debug("handleDunConnection: " + aEnable);
-    let dun = this.getNetworkInterface(
-      Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN, this._dataDefaultServiceId);
+    let dun = this.getNetworkInfo(
+      Ci.nsINetworkInfo.NETWORK_TYPE_MOBILE_DUN, this._dataDefaultServiceId);
 
     if (!aEnable) {
       this._dunActiveUsers--;
@@ -445,15 +445,15 @@ TetheringService.prototype = {
       this.dunConnectTimer.cancel();
       this._pendingTetheringRequests = [];
 
-      if (dun && (dun.state == Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED)) {
+      if (dun && (dun.state == Ci.nsINetworkInfo.NETWORK_STATE_CONNECTED)) {
         gRil.getRadioInterface(this._dataDefaultServiceId)
-          .deactivateDataCallByType(Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN);
+          .deactivateDataCallByType(Ci.nsINetworkInfo.NETWORK_TYPE_MOBILE_DUN);
       }
       return;
     }
 
     this._dunActiveUsers++;
-    if (!dun || (dun.state != Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED)) {
+    if (!dun || (dun.state != Ci.nsINetworkInfo.NETWORK_STATE_CONNECTED)) {
       debug("DUN data call inactive, setup dun data call!")
       this._pendingTetheringRequests.push(aCallback);
       this.dunRetryTimes = 0;
@@ -495,23 +495,24 @@ TetheringService.prototype = {
     this._usbTetheringAction = TETHERING_STATE_ONGOING;
 
     if (this.tetheringSettings[SETTINGS_DUN_REQUIRED]) {
-      this.handleDunConnection(true, (aNetwork) => {
-        if (!aNetwork){
+      this.handleDunConnection(true, (aNetworkInfo) => {
+        if (!aNetworkInfo){
           this.usbTetheringResultReport(aEnable, "Dun connection failed");
           return;
         }
-        this._tetheringInterface[TETHERING_TYPE_USB].externalInterface = aNetwork.name;
+        this._tetheringInterface[TETHERING_TYPE_USB].externalInterface =
+          aNetworkInfo.name;
         gNetworkService.enableUsbRndis(true, this.enableUsbRndisResult.bind(this));
       });
       return;
     }
 
-    if (gNetworkManager.active) {
+    if (gNetworkManager.activeNetworkInfo) {
       this._tetheringInterface[TETHERING_TYPE_USB].externalInterface =
-        gNetworkManager.active.name;
+        gNetworkManager.activeNetworkInfo.name;
     } else {
-      let mobile = this.getNetworkInterface(
-        Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE, this._dataDefaultServiceId);
+      let mobile = this.getNetworkInfo(
+        Ci.nsINetworkInfo.NETWORK_TYPE_MOBILE, this._dataDefaultServiceId);
       if (mobile && mobile.name) {
         this._tetheringInterface[TETHERING_TYPE_USB].externalInterface = mobile.name;
       }
@@ -599,10 +600,10 @@ TetheringService.prototype = {
   },
 
   // Enable/disable WiFi tethering by sending commands to netd.
-  setWifiTethering: function(aEnable, aNetwork, aConfig, aCallback) {
+  setWifiTethering: function(aEnable, aInterfaceName, aConfig, aCallback) {
     debug("setWifiTethering: " + aEnable);
-    if (!aNetwork) {
-      this.notifyError(true, aCallback, "invalid network information");
+    if (!aInterfaceName) {
+      this.notifyError(true, aCallback, "invalid network interface name");
       return;
     }
 
@@ -630,22 +631,24 @@ TetheringService.prototype = {
       return;
     }
 
-    this._tetheringInterface[TETHERING_TYPE_WIFI].internalInterface = aNetwork.name;
+    this._tetheringInterface[TETHERING_TYPE_WIFI].internalInterface =
+      aInterfaceName;
 
     if (this.tetheringSettings[SETTINGS_DUN_REQUIRED]) {
-      this.handleDunConnection(true, (aNetwork) => {
-        if (!aNetwork) {
+      this.handleDunConnection(true, (aNetworkInfo) => {
+        if (!aNetworkInfo) {
           this.notifyError(true, aCallback, "Dun connection failed");
           return;
         }
-        this._tetheringInterface[TETHERING_TYPE_WIFI].externalInterface = aNetwork.name;
+        this._tetheringInterface[TETHERING_TYPE_WIFI].externalInterface =
+          aNetworkInfo.name;
         this.enableWifiTethering(true, aConfig, aCallback);
       });
       return;
     }
 
-    let mobile = this.getNetworkInterface(
-      Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE, this._dataDefaultServiceId);
+    let mobile = this.getNetworkInfo(
+      Ci.nsINetworkInfo.NETWORK_TYPE_MOBILE, this._dataDefaultServiceId);
     // Update the real interface name
     if (mobile && mobile.name) {
       this._tetheringInterface[TETHERING_TYPE_WIFI].externalInterface = mobile.name;
@@ -745,20 +748,20 @@ TetheringService.prototype = {
     }
   },
 
-  onConnectionChanged: function(aNetwork) {
-    if (aNetwork.state != Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED) {
+  onConnectionChanged: function(aNetworkInfo) {
+    if (aNetworkInfo.state != Ci.nsINetworkInfo.NETWORK_STATE_CONNECTED) {
       debug("We are only interested in CONNECTED event");
       return;
     }
 
     if (this.tetheringSettings[SETTINGS_DUN_REQUIRED] &&
-        aNetwork.type === Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN) {
+        aNetworkInfo.type === Ci.nsINetworkInfo.NETWORK_TYPE_MOBILE_DUN) {
       this.dunConnectTimer.cancel();
       debug("DUN data call connected, process callbacks.");
       while (this._pendingTetheringRequests.length > 0) {
         let callback = this._pendingTetheringRequests.shift();
         if (typeof callback === 'function') {
-          callback(aNetwork);
+          callback(aNetworkInfo);
         }
       }
       return;
@@ -770,15 +773,15 @@ TetheringService.prototype = {
     }
 
     if (this.tetheringSettings[SETTINGS_DUN_REQUIRED] &&
-        aNetwork.type === Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN &&
+        aNetworkInfo.type === Ci.nsINetworkInfo.NETWORK_TYPE_MOBILE_DUN &&
         this._tetheringInterface[TETHERING_TYPE_USB].externalInterface ===
-        aNetwork.name) {
+        aNetworkInfo.name) {
       debug("Dun required and dun interface is the same");
       return;
     }
 
     if (this._tetheringInterface[TETHERING_TYPE_USB].externalInterface ===
-        gNetworkManager.active.name) {
+        gNetworkManager.activeNetworkInfo.name) {
       debug("The active interface is the same");
       return;
     }
@@ -790,12 +793,12 @@ TetheringService.prototype = {
 
     let current = {
       internalIfname: this._tetheringInterface[TETHERING_TYPE_USB].internalInterface,
-      externalIfname: aNetwork.name
+      externalIfname: aNetworkInfo.name
     };
 
     let callback = (() => {
       // Update external network interface.
-      debug("Update upstream interface to " + aNetwork.name);
+      debug("Update upstream interface to " + aNetworkInfo.name);
       gNetworkService.updateUpStream(previous, current,
                                      this.onConnectionChangedReport.bind(this));
     });

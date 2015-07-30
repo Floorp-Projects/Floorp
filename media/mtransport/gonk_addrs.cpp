@@ -12,7 +12,7 @@ extern "C" {
 
 #include <vector>
 #include <string>
-#include "nsINetworkManager.h"
+#include "nsINetworkInterface.h"
 #include "nsINetworkInterfaceListService.h"
 #include "runnable_utils.h"
 #include "nsCOMPtr.h"
@@ -58,8 +58,8 @@ GetInterfaces(std::vector<NetworkInterface>* aInterfaces)
   aInterfaces->clear();
 
   for (int32_t i = 0; i < listLength; i++) {
-    nsCOMPtr<nsINetworkInterface> iface;
-    if (NS_FAILED(networkList->GetInterface(i, getter_AddRefs(iface)))) {
+    nsCOMPtr<nsINetworkInfo> info;
+    if (NS_FAILED(networkList->GetInterfaceInfo(i, getter_AddRefs(info)))) {
       continue;
     }
 
@@ -71,7 +71,7 @@ GetInterfaces(std::vector<NetworkInterface>* aInterfaces)
     memset(&(interface.addr), 0, sizeof(interface.addr));
     interface.addr.sin_family = AF_INET;
 
-    if (NS_FAILED(iface->GetAddresses(&ips, &prefixs, &count))) {
+    if (NS_FAILED(info->GetAddresses(&ips, &prefixs, &count))) {
       continue;
     }
 
@@ -94,20 +94,20 @@ GetInterfaces(std::vector<NetworkInterface>* aInterfaces)
     }
 
     nsAutoString ifaceName;
-    if (NS_FAILED(iface->GetName(ifaceName))) {
+    if (NS_FAILED(info->GetName(ifaceName))) {
       continue;
     }
     interface.name = NS_ConvertUTF16toUTF8(ifaceName).get();
 
     int32_t type;
-    if (NS_FAILED(iface->GetType(&type))) {
+    if (NS_FAILED(info->GetType(&type))) {
       continue;
     }
     switch (type) {
-      case nsINetworkInterface::NETWORK_TYPE_WIFI:
+      case nsINetworkInfo::NETWORK_TYPE_WIFI:
         interface.type = NR_INTERFACE_TYPE_WIFI;
         break;
-      case nsINetworkInterface::NETWORK_TYPE_MOBILE:
+      case nsINetworkInfo::NETWORK_TYPE_MOBILE:
         interface.type = NR_INTERFACE_TYPE_MOBILE;
         break;
     }

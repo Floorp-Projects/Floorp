@@ -19,7 +19,7 @@
 #include "mozilla/net/DNS.h"
 
 #ifdef MOZ_WIDGET_GONK
-#include "nsINetworkManager.h"
+#include "nsINetworkInterface.h"
 #include "nsProxyRelease.h"
 #endif
 
@@ -408,7 +408,7 @@ private:
     uint32_t                           mAppId;
     bool                               mIsInBrowser;
 #ifdef MOZ_WIDGET_GONK
-    nsMainThreadPtrHandle<nsINetworkInterface> mActiveNetwork;
+    nsMainThreadPtrHandle<nsINetworkInfo> mActiveNetworkInfo;
 #endif
     nsresult                           SaveNetworkStats(bool);
     void                               CountRecvBytes(uint64_t recvBytes)

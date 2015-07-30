@@ -60,8 +60,8 @@ const kPrefRilDebuggingEnabled = "ril.debugging.enabled";
 const RADIO_POWER_OFF_TIMEOUT = 30000;
 const HW_DEFAULT_CLIENT_ID = 0;
 
-const NETWORK_TYPE_WIFI        = Ci.nsINetworkInterface.NETWORK_TYPE_WIFI;
-const NETWORK_TYPE_MOBILE      = Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE;
+const NETWORK_TYPE_WIFI        = Ci.nsINetworkInfo.NETWORK_TYPE_WIFI;
+const NETWORK_TYPE_MOBILE      = Ci.nsINetworkInfo.NETWORK_TYPE_MOBILE;
 
 // set to true in ril_consts.js to see debug messages
 var DEBUG = RIL.DEBUG_RIL;
@@ -1148,21 +1148,21 @@ RadioInterface.prototype = {
         this._sntp.updateOffset(offset);
         break;
       case kNetworkConnStateChangedTopic:
-        let network = subject.QueryInterface(Ci.nsINetworkInterface);
-        if (network.state != Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED) {
+        let networkInfo = subject.QueryInterface(Ci.nsINetworkInfo);
+        if (networkInfo.state != Ci.nsINetworkInfo.NETWORK_STATE_CONNECTED) {
           return;
         }
 
         // SNTP can only update when we have mobile or Wifi connections.
-        if (network.type != NETWORK_TYPE_WIFI &&
-            network.type != NETWORK_TYPE_MOBILE) {
+        if (networkInfo.type != NETWORK_TYPE_WIFI &&
+            networkInfo.type != NETWORK_TYPE_MOBILE) {
           return;
         }
 
         // If the network comes from RIL, make sure the RIL service is matched.
-        if (subject instanceof Ci.nsIRilNetworkInterface) {
-          network = subject.QueryInterface(Ci.nsIRilNetworkInterface);
-          if (network.serviceId != this.clientId) {
+        if (subject instanceof Ci.nsIRilNetworkInfo) {
+          networkInfo = subject.QueryInterface(Ci.nsIRilNetworkInfo);
+          if (networkInfo.serviceId != this.clientId) {
             return;
           }
         }
@@ -1242,8 +1242,9 @@ RadioInterface.prototype = {
         // Set the latest cached NITZ time if it's available.
         if (this._lastNitzMessage) {
           this.setClockByNitz(this._lastNitzMessage);
-        } else if (gNetworkManager.active && gNetworkManager.active.state ==
-                 Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED) {
+        } else if (gNetworkManager.activeNetworkInfo &&
+                   gNetworkManager.activeNetworkInfo.state ==
+                   Ci.nsINetworkInfo.NETWORK_STATE_CONNECTED) {
           // Set the latest cached SNTP time if it's available.
           if (!this._sntp.isExpired()) {
             this.setClockBySntp(this._sntp.getOffset());
