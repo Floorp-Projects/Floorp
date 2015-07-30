@@ -154,7 +154,9 @@ let Delta = {
  * Utilities for dealing with state
  */
 let State = {
-  _monitor: PerformanceStats.getMonitor(["jank", "cpow", "ticks"]),
+  _monitor: PerformanceStats.getMonitor([
+    "jank", "cpow", "ticks",
+  ]),
 
   /**
    * Indexed by the number of minutes since the snapshot was taken.
