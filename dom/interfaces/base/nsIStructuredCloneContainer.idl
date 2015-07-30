@@ -27,7 +27,7 @@ interface nsIDocument;
  * string containing a copy of the container's serialized data, using
  * getDataAsBase64.
  */
-[scriptable, uuid(63eeafec-63f5-42c3-aea9-5c04678784e7)]
+[scriptable, uuid(c664aae7-0d67-4155-a2dd-a3861778626f)]
 interface nsIStructuredCloneContainer : nsISupports
 {
   /**
@@ -46,8 +46,16 @@ interface nsIStructuredCloneContainer : nsISupports
   void initFromBase64(in AString aData,in unsigned long aFormatVersion);
 
   /**
+   * Deserializes this structured clone container returning it as a jsval.
+   * Can be called on main and worker threads.
+   */
+  [implicit_jscontext]
+  jsval deserializeToJsval();
+
+  /**
    * Deserialize the object this container holds, returning it wrapped as
    * an nsIVariant.
+   * Main thread only!
    */
   [implicit_jscontext]
   nsIVariant deserializeToVariant();
