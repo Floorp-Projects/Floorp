@@ -135,7 +135,7 @@ VPXDecoder::DoDecodeFrame(MediaRawData* aSample)
                                               aSample->mDuration,
                                               b,
                                               aSample->mKeyframe,
-                                              aSample->mTimecode,
+                                              -1,
                                               picture);
 
     if (!v) {
