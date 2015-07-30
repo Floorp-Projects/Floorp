@@ -3977,15 +3977,14 @@ TraverseBookmarkFolderObservers(nsTrimInt64HashKey::KeyType aKey,
 }
 
 static void
-traverseResultObservers(nsMaybeWeakPtrArray<nsINavHistoryResultObserver> aObservers,
+traverseResultObservers(nsMaybeWeakPtrArray<nsINavHistoryResultObserver>& aObservers,
                         void *aClosure)
 {
   nsCycleCollectionTraversalCallback* cb =
     static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
   for (uint32_t i = 0; i < aObservers.Length(); ++i) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "mResultObservers value[i]");
-    const nsCOMPtr<nsINavHistoryResultObserver> &obs = aObservers.ElementAt(i);
-    cb->NoteXPCOMChild(obs);
+    cb->NoteXPCOMChild(aObservers.ElementAt(i).GetRawValue());
   }
 }
 

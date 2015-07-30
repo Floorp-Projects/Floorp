@@ -38,6 +38,7 @@ public:
 
   operator const nsCOMPtr<T>() const { return GetValue(); }
 
+  nsISupports* GetRawValue() const { return mPtr.get(); }
 protected:
   const nsCOMPtr<T> GetValue() const {
     return nsCOMPtr<T>(dont_AddRef(static_cast<T*>
