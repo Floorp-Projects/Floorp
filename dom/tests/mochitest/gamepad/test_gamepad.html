@@ -19,7 +19,8 @@ var index = GamepadService.addGamepad("test gamepad", // id
                                       2);// axes
 GamepadService.newButtonEvent(index, 0, true);
 function connecthandler(e) {
-  ok(e.gamepad.timestamp <= performance.now());
+  ok(e.gamepad.timestamp <= performance.now(),
+     "gamepad.timestamp should less than or equal to performance.now()");
   is(e.gamepad.index, 0, "correct gamepad index");
   is(e.gamepad.id, "test gamepad", "correct gamepad name");
   is(e.gamepad.mapping, "standard", "standard mapping");
