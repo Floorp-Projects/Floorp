@@ -23,9 +23,9 @@
 #include "mozilla/unused.h"
 #include "prrng.h"
 
-using namespace mozilla::ipc;
-
 BEGIN_BLUETOOTH_NAMESPACE
+
+using namespace mozilla::ipc;
 
 static const int sRetryInterval = 100; // ms
 
