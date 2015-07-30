@@ -4335,6 +4335,9 @@ pref("layers.compositor-lru-size", 0);
 // Enable/Disable the geolocation API for content
 pref("geo.enabled", true);
 
+// Timeout for outbound network geolocation provider XHR
+pref("geo.wifi.xhr.timeout", 60000);
+
 // Enable/Disable the orientation API for content
 pref("device.sensors.enabled", true);
 
