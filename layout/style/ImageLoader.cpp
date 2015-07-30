@@ -204,7 +204,7 @@ ImageLoader::SetAnimationMode(uint16_t aMode)
 
 #ifdef DEBUG
     {
-      nsCOMPtr<imgIRequest> debugRequest = do_QueryInterface(key);
+      nsCOMPtr<imgIRequest> debugRequest = do_QueryInterface(request);
       NS_ASSERTION(debugRequest == request, "This is bad");
     }
 #endif
@@ -228,7 +228,7 @@ ImageLoader::ClearFrames(nsPresContext* aPresContext)
 
 #ifdef DEBUG
     {
-      nsCOMPtr<imgIRequest> debugRequest = do_QueryInterface(key);
+      nsCOMPtr<imgIRequest> debugRequest = do_QueryInterface(request);
       NS_ASSERTION(debugRequest == request, "This is bad");
     }
 #endif
