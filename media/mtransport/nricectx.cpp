@@ -381,9 +381,10 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
                                   bool set_interface_priorities,
                                   bool allow_loopback,
                                   bool tcp_enabled,
-                                  bool allow_link_local) {
+                                  bool allow_link_local,
+                                  Policy policy) {
 
-  RefPtr<NrIceCtx> ctx = new NrIceCtx(name, offerer);
+  RefPtr<NrIceCtx> ctx = new NrIceCtx(name, offerer, policy);
 
   // Initialize the crypto callbacks and logging stuff
   if (!initialized) {
@@ -607,6 +608,11 @@ nsresult NrIceCtx::SetControlling(Controlling controlling) {
 
 NrIceCtx::Controlling NrIceCtx::GetControlling() {
   return (peer_->controlling) ? ICE_CONTROLLING : ICE_CONTROLLED;
+}
+
+nsresult NrIceCtx::SetPolicy(Policy policy) {
+  policy_ = policy;
+  return NS_OK;
 }
 
 nsresult NrIceCtx::SetStunServers(const std::vector<NrIceStunServer>&
