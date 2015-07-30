@@ -1041,6 +1041,499 @@ enum NeedsBoundsCheck {
 
 namespace {
 
+enum class AsmType : uint8_t {
+    Int32,
+    Float32,
+    Float64,
+    Int32x4,
+    Float32x4
+};
+
+enum class Stmt : uint8_t {
+    Ret,
+
+    Block,
+
+    IfThen,
+    IfElse,
+    Switch,
+
+    While,
+    DoWhile,
+
+    ForInitInc,
+    ForInitNoInc,
+    ForNoInitNoInc,
+    ForNoInitInc,
+
+    Label,
+    Continue,
+    ContinueLabel,
+    Break,
+    BreakLabel,
+
+    CallInternal,
+    CallIndirect,
+    CallImport,
+
+    AtomicsFence,
+
+    // asm.js specific
+    // Expression statements (to be removed in the future)
+    I32Expr,
+    F32Expr,
+    F64Expr,
+    I32X4Expr,
+    F32X4Expr,
+
+    Id,
+    Noop,
+
+    DebugCheckPoint,
+
+    Bad
+};
+
+enum class I32 : uint8_t {
+    // Common opcodes
+    GetLocal,
+    SetLocal,
+    GetGlobal,
+    SetGlobal,
+
+    CallInternal,
+    CallIndirect,
+    CallImport,
+
+    Conditional,
+    Comma,
+
+    Literal,
+
+    // Binary arith opcodes
+    Add,
+    Sub,
+    Mul,
+    SDiv,
+    SMod,
+    UDiv,
+    UMod,
+    Min,
+    Max,
+
+    // Unary arith opcodes
+    Not,
+    Neg,
+
+    // Bitwise opcodes
+    BitOr,
+    BitAnd,
+    BitXor,
+    BitNot,
+
+    Lsh,
+    ArithRsh,
+    LogicRsh,
+
+    // Conversion opcodes
+    FromF32,
+    FromF64,
+
+    // Math builtin opcodes
+    Clz,
+    Abs,
+
+    // Comparison opcodes
+    // Ordering matters (EmitComparison expects signed opcodes to be placed
+    // before unsigned opcodes)
+    EqI32,
+    NeI32,
+    SLtI32,
+    SLeI32,
+    SGtI32,
+    SGeI32,
+    ULtI32,
+    ULeI32,
+    UGtI32,
+    UGeI32,
+
+    EqF32,
+    NeF32,
+    LtF32,
+    LeF32,
+    GtF32,
+    GeF32,
+
+    EqF64,
+    NeF64,
+    LtF64,
+    LeF64,
+    GtF64,
+    GeF64,
+
+    // Heap accesses opcodes
+    SLoad8,
+    SLoad16,
+    SLoad32,
+    ULoad8,
+    ULoad16,
+    ULoad32,
+    Store8,
+    Store16,
+    Store32,
+
+    // Atomics opcodes
+    AtomicsCompareExchange,
+    AtomicsExchange,
+    AtomicsLoad,
+    AtomicsStore,
+    AtomicsBinOp,
+
+    // SIMD opcodes
+    I32X4SignMask,
+    F32X4SignMask,
+
+    I32X4ExtractLane,
+
+    // Specific to AsmJS
+    Id,
+
+    Bad
+};
+
+enum class F32 : uint8_t {
+    // Common opcodes
+    GetLocal,
+    SetLocal,
+    GetGlobal,
+    SetGlobal,
+
+    CallInternal,
+    CallIndirect,
+    CallImport,
+
+    Conditional,
+    Comma,
+
+    Literal,
+
+    // Binary arith opcodes
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Min,
+    Max,
+    Neg,
+
+    // Math builtin opcodes
+    Abs,
+    Sqrt,
+    Ceil,
+    Floor,
+
+    // Conversion opcodes
+    FromF64,
+    FromS32,
+    FromU32,
+
+    // Heap accesses opcodes
+    Load,
+    StoreF32,
+    StoreF64,
+
+    // SIMD opcodes
+    F32X4ExtractLane,
+
+    // asm.js specific
+    Id,
+    Bad
+};
+
+enum class F64 : uint8_t {
+    // Common opcodes
+    GetLocal,
+    SetLocal,
+    GetGlobal,
+    SetGlobal,
+
+    CallInternal,
+    CallIndirect,
+    CallImport,
+
+    Conditional,
+    Comma,
+
+    Literal,
+
+    // Binary arith opcodes
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Min,
+    Max,
+    Mod,
+    Neg,
+
+    // Math builtin opcodes
+    Abs,
+    Sqrt,
+    Ceil,
+    Floor,
+    Sin,
+    Cos,
+    Tan,
+    Asin,
+    Acos,
+    Atan,
+    Exp,
+    Log,
+    Pow,
+    Atan2,
+
+    // Conversions opcodes
+    FromF32,
+    FromS32,
+    FromU32,
+
+    // Heap accesses opcodes
+    Load,
+    StoreF32,
+    StoreF64,
+
+    // asm.js specific
+    Id,
+    Bad
+};
+
+enum class I32X4 : uint8_t {
+    // Common opcodes
+    GetLocal,
+    SetLocal,
+
+    GetGlobal,
+    SetGlobal,
+
+    CallInternal,
+    CallIndirect,
+    CallImport,
+
+    Conditional,
+    Comma,
+
+    Literal,
+
+    // Specific opcodes
+    Ctor,
+
+    Unary,
+
+    Binary,
+    BinaryCompI32X4,
+    BinaryCompF32X4,
+    BinaryBitwise,
+    BinaryShift,
+
+    ReplaceLane,
+
+    FromF32X4,
+    FromF32X4Bits,
+
+    Swizzle,
+    Shuffle,
+    Select,
+    BitSelect,
+    Splat,
+
+    Load,
+    Store,
+
+    // asm.js specific
+    Id,
+    Bad
+};
+
+enum class F32X4 : uint8_t {
+    // Common opcodes
+    GetLocal,
+    SetLocal,
+
+    GetGlobal,
+    SetGlobal,
+
+    CallInternal,
+    CallIndirect,
+    CallImport,
+
+    Conditional,
+    Comma,
+
+    Literal,
+
+    // Specific opcodes
+    Ctor,
+
+    Unary,
+
+    Binary,
+    BinaryBitwise,
+
+    ReplaceLane,
+
+    FromI32X4,
+    FromI32X4Bits,
+    Swizzle,
+    Shuffle,
+    Select,
+    BitSelect,
+    Splat,
+
+    Load,
+    Store,
+
+    // asm.js specific
+    Id,
+    Bad
+};
+
+} // namespace
+
+class AsmFunction
+{
+    typedef Vector<uint8_t, 4096> Bytecode;
+    Bytecode bytecode_;
+
+  public:
+    typedef Vector<AsmJSNumLit> VarInitializerVector;
+
+  private:
+    VarInitializerVector varInitializers_;
+
+    RetType returnedType_;
+    size_t numLocals_;
+
+  public:
+    explicit AsmFunction(ExclusiveContext* cx)
+      : bytecode_(cx),
+        varInitializers_(cx),
+        returnedType_(RetType::Which(-1)),
+        numLocals_(-1)
+    {}
+
+  private:
+    AsmFunction(const AsmFunction&) = delete;
+    AsmFunction(AsmFunction&& other) = delete;
+    AsmFunction& operator=(const AsmFunction&) = delete;
+
+    // Helper functions
+    template<class T> size_t writePrimitive(T v) {
+        size_t writeAt = bytecode_.length();
+        if (!bytecode_.append(reinterpret_cast<uint8_t*>(&v), sizeof(T)))
+            return -1;
+        return writeAt;
+    }
+
+    template<class T> T readPrimitive(size_t* pc) const {
+        MOZ_ASSERT(*pc + sizeof(T) <= bytecode_.length());
+        T ret;
+        memcpy(&ret, &bytecode_[*pc], sizeof(T));
+        *pc += sizeof(T);
+        return ret;
+    }
+
+  public:
+    size_t writeU8(uint8_t i)   { return writePrimitive<uint8_t>(i); }
+    size_t writeI32(int32_t i)  { return writePrimitive<int32_t>(i); }
+    size_t writeU32(uint32_t i) { return writePrimitive<uint32_t>(i); }
+    size_t writeF32(float f)    { return writePrimitive<float>(f); }
+    size_t writeF64(double d)   { return writePrimitive<double>(d); }
+
+    size_t writeI32X4(const int32_t* i4) {
+        size_t pos = bytecode_.length();
+        for (size_t i = 0; i < 4; i++)
+            writePrimitive<int32_t>(i4[i]);
+        return pos;
+    }
+    size_t writeF32X4(const float* f4) {
+        size_t pos = bytecode_.length();
+        for (size_t i = 0; i < 4; i++)
+            writePrimitive<float>(f4[i]);
+        return pos;
+    }
+
+    uint8_t  readU8 (size_t* pc) const { return readPrimitive<uint8_t>(pc); }
+    int32_t  readI32(size_t* pc) const { return readPrimitive<int32_t>(pc); }
+    float    readF32(size_t* pc) const { return readPrimitive<float>(pc); }
+    uint32_t readU32(size_t* pc) const { return readPrimitive<uint32_t>(pc); }
+    double   readF64(size_t* pc) const { return readPrimitive<double>(pc); }
+    uint8_t* readPtr(size_t* pc) const { return readPrimitive<uint8_t*>(pc); }
+
+    SimdConstant readI32X4(size_t* pc) const {
+        int32_t x = readI32(pc);
+        int32_t y = readI32(pc);
+        int32_t z = readI32(pc);
+        int32_t w = readI32(pc);
+        return SimdConstant::CreateX4(x, y, z, w);
+    }
+    SimdConstant readF32X4(size_t* pc) const {
+        float x = readF32(pc);
+        float y = readF32(pc);
+        float z = readF32(pc);
+        float w = readF32(pc);
+        return SimdConstant::CreateX4(x, y, z, w);
+    }
+
+#ifdef DEBUG
+    bool pcIsPatchable(size_t pc, unsigned size) const {
+        bool patchable = true;
+        for (unsigned i = 0; patchable && i < size; i++)
+            patchable &= Stmt(bytecode_[pc]) == Stmt::Bad;
+        return patchable;
+    }
+#endif
+
+    void patchU8(size_t pc, uint8_t i) {
+        MOZ_ASSERT(pcIsPatchable(pc, sizeof(uint8_t)));
+        bytecode_[pc] = i;
+    }
+
+    template<class T>
+    void patch32(size_t pc, T i) {
+        static_assert(sizeof(T) == sizeof(uint32_t),
+                      "patch32 must be used with 32-bits wide types");
+        MOZ_ASSERT(pcIsPatchable(pc, sizeof(uint32_t)));
+        memcpy(&bytecode_[pc], &i, sizeof(uint32_t));
+    }
+
+    void patchPtr(size_t pc, uint8_t* ptr) {
+        MOZ_ASSERT(pcIsPatchable(pc, sizeof(uint8_t*)));
+        memcpy(&bytecode_[pc], &ptr, sizeof(uint8_t*));
+    }
+
+    // Setters
+    void setReturnedType(RetType retType) {
+        MOZ_ASSERT(returnedType_ == RetType::Which(-1));
+        returnedType_ = retType;
+    }
+    void setNumLocals(size_t numLocals) {
+        MOZ_ASSERT(numLocals_ == size_t(-1));
+        numLocals_ = numLocals;
+    }
+    bool addVariable(const AsmJSNumLit& init) {
+        return varInitializers_.append(init);
+    }
+
+    // Read-only interface
+    size_t size() const { return bytecode_.length(); }
+
+    RetType returnedType() const { MOZ_ASSERT(returnedType_ != RetType::Which(-1)); return returnedType_; }
+    const VarInitializerVector& varInitializers() const { return varInitializers_; }
+    size_t numLocals() const { MOZ_ASSERT(numLocals_ != size_t(-1)); return numLocals_; }
+};
+
+namespace {
+
 class ModuleGlobals
 {
   public:
@@ -1048,6 +1541,7 @@ class ModuleGlobals
     class Func
     {
         Signature sig_;
+        AsmFunction* bytecode_;
         PropertyName* name_;
         Label* entry_;
         uint32_t funcIndex_;
@@ -1058,21 +1552,23 @@ class ModuleGlobals
 
       public:
         Func(PropertyName* name, Signature&& sig, Label* entry, uint32_t funcIndex)
-          : sig_(Move(sig)), name_(name), entry_(entry), funcIndex_(funcIndex), srcBegin_(0),
-            srcEnd_(0), compileTime_(0), defined_(false)
+          : sig_(Move(sig)), bytecode_(nullptr), name_(name), entry_(entry),
+            funcIndex_(funcIndex), srcBegin_(0), srcEnd_(0), compileTime_(0), defined_(false)
         {}
 
         PropertyName* name() const { return name_; }
         bool defined() const { return defined_; }
         uint32_t funcIndex() const { return funcIndex_; }
 
-        void define(ParseNode* fn) {
+        void define(ParseNode* fn, AsmFunction* bytecode) {
             MOZ_ASSERT(!defined_);
             defined_ = true;
             srcBegin_ = fn->pn_pos.begin;
             srcEnd_ = fn->pn_pos.end;
+            bytecode_ = bytecode;
         }
 
+        AsmFunction* bytecode() const { MOZ_ASSERT(defined_); return bytecode_; }
         uint32_t srcBegin() const { MOZ_ASSERT(defined_); return srcBegin_; }
         uint32_t srcEnd() const { MOZ_ASSERT(defined_); return srcEnd_; }
         Signature& sig() { return sig_; }
@@ -2500,495 +2996,6 @@ IsLiteralInt(ModuleValidator& m, ParseNode* pn, uint32_t* u32)
 /*****************************************************************************/
 
 namespace {
-
-enum class AsmType : uint8_t {
-    Int32,
-    Float32,
-    Float64,
-    Int32x4,
-    Float32x4
-};
-
-enum class Stmt : uint8_t {
-    Ret,
-
-    Block,
-
-    IfThen,
-    IfElse,
-    Switch,
-
-    While,
-    DoWhile,
-
-    ForInitInc,
-    ForInitNoInc,
-    ForNoInitNoInc,
-    ForNoInitInc,
-
-    Label,
-    Continue,
-    ContinueLabel,
-    Break,
-    BreakLabel,
-
-    CallInternal,
-    CallIndirect,
-    CallImport,
-
-    AtomicsFence,
-
-    // asm.js specific
-    // Expression statements (to be removed in the future)
-    I32Expr,
-    F32Expr,
-    F64Expr,
-    I32X4Expr,
-    F32X4Expr,
-
-    Id,
-    Noop,
-
-    DebugCheckPoint,
-
-    Bad
-};
-
-enum class I32 : uint8_t {
-    // Common opcodes
-    GetLocal,
-    SetLocal,
-    GetGlobal,
-    SetGlobal,
-
-    CallInternal,
-    CallIndirect,
-    CallImport,
-
-    Conditional,
-    Comma,
-
-    Literal,
-
-    // Binary arith opcodes
-    Add,
-    Sub,
-    Mul,
-    SDiv,
-    SMod,
-    UDiv,
-    UMod,
-    Min,
-    Max,
-
-    // Unary arith opcodes
-    Not,
-    Neg,
-
-    // Bitwise opcodes
-    BitOr,
-    BitAnd,
-    BitXor,
-    BitNot,
-
-    Lsh,
-    ArithRsh,
-    LogicRsh,
-
-    // Conversion opcodes
-    FromF32,
-    FromF64,
-
-    // Math builtin opcodes
-    Clz,
-    Abs,
-
-    // Comparison opcodes
-    // Ordering matters (EmitComparison expects signed opcodes to be placed
-    // before unsigned opcodes)
-    EqI32,
-    NeI32,
-    SLtI32,
-    SLeI32,
-    SGtI32,
-    SGeI32,
-    ULtI32,
-    ULeI32,
-    UGtI32,
-    UGeI32,
-
-    EqF32,
-    NeF32,
-    LtF32,
-    LeF32,
-    GtF32,
-    GeF32,
-
-    EqF64,
-    NeF64,
-    LtF64,
-    LeF64,
-    GtF64,
-    GeF64,
-
-    // Heap accesses opcodes
-    SLoad8,
-    SLoad16,
-    SLoad32,
-    ULoad8,
-    ULoad16,
-    ULoad32,
-    Store8,
-    Store16,
-    Store32,
-
-    // Atomics opcodes
-    AtomicsCompareExchange,
-    AtomicsExchange,
-    AtomicsLoad,
-    AtomicsStore,
-    AtomicsBinOp,
-
-    // SIMD opcodes
-    I32X4SignMask,
-    F32X4SignMask,
-
-    I32X4ExtractLane,
-
-    // Specific to AsmJS
-    Id,
-
-    Bad
-};
-
-enum class F32 : uint8_t {
-    // Common opcodes
-    GetLocal,
-    SetLocal,
-    GetGlobal,
-    SetGlobal,
-
-    CallInternal,
-    CallIndirect,
-    CallImport,
-
-    Conditional,
-    Comma,
-
-    Literal,
-
-    // Binary arith opcodes
-    Add,
-    Sub,
-    Mul,
-    Div,
-    Min,
-    Max,
-    Neg,
-
-    // Math builtin opcodes
-    Abs,
-    Sqrt,
-    Ceil,
-    Floor,
-
-    // Conversion opcodes
-    FromF64,
-    FromS32,
-    FromU32,
-
-    // Heap accesses opcodes
-    Load,
-    StoreF32,
-    StoreF64,
-
-    // SIMD opcodes
-    F32X4ExtractLane,
-
-    // asm.js specific
-    Id,
-    Bad
-};
-
-enum class F64 : uint8_t {
-    // Common opcodes
-    GetLocal,
-    SetLocal,
-    GetGlobal,
-    SetGlobal,
-
-    CallInternal,
-    CallIndirect,
-    CallImport,
-
-    Conditional,
-    Comma,
-
-    Literal,
-
-    // Binary arith opcodes
-    Add,
-    Sub,
-    Mul,
-    Div,
-    Min,
-    Max,
-    Mod,
-    Neg,
-
-    // Math builtin opcodes
-    Abs,
-    Sqrt,
-    Ceil,
-    Floor,
-    Sin,
-    Cos,
-    Tan,
-    Asin,
-    Acos,
-    Atan,
-    Exp,
-    Log,
-    Pow,
-    Atan2,
-
-    // Conversions opcodes
-    FromF32,
-    FromS32,
-    FromU32,
-
-    // Heap accesses opcodes
-    Load,
-    StoreF32,
-    StoreF64,
-
-    // asm.js specific
-    Id,
-    Bad
-};
-
-enum class I32X4 : uint8_t {
-    // Common opcodes
-    GetLocal,
-    SetLocal,
-
-    GetGlobal,
-    SetGlobal,
-
-    CallInternal,
-    CallIndirect,
-    CallImport,
-
-    Conditional,
-    Comma,
-
-    Literal,
-
-    // Specific opcodes
-    Ctor,
-
-    Unary,
-
-    Binary,
-    BinaryCompI32X4,
-    BinaryCompF32X4,
-    BinaryBitwise,
-    BinaryShift,
-
-    ReplaceLane,
-
-    FromF32X4,
-    FromF32X4Bits,
-
-    Swizzle,
-    Shuffle,
-    Select,
-    BitSelect,
-    Splat,
-
-    Load,
-    Store,
-
-    // asm.js specific
-    Id,
-    Bad
-};
-
-enum class F32X4 : uint8_t {
-    // Common opcodes
-    GetLocal,
-    SetLocal,
-
-    GetGlobal,
-    SetGlobal,
-
-    CallInternal,
-    CallIndirect,
-    CallImport,
-
-    Conditional,
-    Comma,
-
-    Literal,
-
-    // Specific opcodes
-    Ctor,
-
-    Unary,
-
-    Binary,
-    BinaryBitwise,
-
-    ReplaceLane,
-
-    FromI32X4,
-    FromI32X4Bits,
-    Swizzle,
-    Shuffle,
-    Select,
-    BitSelect,
-    Splat,
-
-    Load,
-    Store,
-
-    // asm.js specific
-    Id,
-    Bad
-};
-
-class AsmFunction
-{
-    typedef Vector<uint8_t, 4096> Bytecode;
-    Bytecode bytecode_;
-
-  public:
-    typedef Vector<AsmJSNumLit> VarInitializerVector;
-
-  private:
-    VarInitializerVector varInitializers_;
-
-    RetType returnedType_;
-    size_t numLocals_;
-
-  public:
-    explicit AsmFunction(ExclusiveContext* cx)
-      : bytecode_(cx),
-        varInitializers_(cx),
-        returnedType_(RetType::Which(-1)),
-        numLocals_(-1)
-    {}
-
-  private:
-    AsmFunction(const AsmFunction&) = delete;
-    AsmFunction(AsmFunction&& other) = delete;
-    AsmFunction& operator=(const AsmFunction&) = delete;
-
-    // Helper functions
-    template<class T> size_t writePrimitive(T v) {
-        size_t writeAt = bytecode_.length();
-        if (!bytecode_.append(reinterpret_cast<uint8_t*>(&v), sizeof(T)))
-            return -1;
-        return writeAt;
-    }
-
-    template<class T> T readPrimitive(size_t* pc) const {
-        MOZ_ASSERT(*pc + sizeof(T) <= bytecode_.length());
-        T ret;
-        memcpy(&ret, &bytecode_[*pc], sizeof(T));
-        *pc += sizeof(T);
-        return ret;
-    }
-
-  public:
-    size_t writeU8(uint8_t i)   { return writePrimitive<uint8_t>(i); }
-    size_t writeI32(int32_t i)  { return writePrimitive<int32_t>(i); }
-    size_t writeU32(uint32_t i) { return writePrimitive<uint32_t>(i); }
-    size_t writeF32(float f)    { return writePrimitive<float>(f); }
-    size_t writeF64(double d)   { return writePrimitive<double>(d); }
-
-    size_t writeI32X4(const int32_t* i4) {
-        size_t pos = bytecode_.length();
-        for (size_t i = 0; i < 4; i++)
-            writePrimitive<int32_t>(i4[i]);
-        return pos;
-    }
-    size_t writeF32X4(const float* f4) {
-        size_t pos = bytecode_.length();
-        for (size_t i = 0; i < 4; i++)
-            writePrimitive<float>(f4[i]);
-        return pos;
-    }
-
-    uint8_t  readU8 (size_t* pc) const { return readPrimitive<uint8_t>(pc); }
-    int32_t  readI32(size_t* pc) const { return readPrimitive<int32_t>(pc); }
-    float    readF32(size_t* pc) const { return readPrimitive<float>(pc); }
-    uint32_t readU32(size_t* pc) const { return readPrimitive<uint32_t>(pc); }
-    double   readF64(size_t* pc) const { return readPrimitive<double>(pc); }
-    uint8_t* readPtr(size_t* pc) const { return readPrimitive<uint8_t*>(pc); }
-
-    SimdConstant readI32X4(size_t* pc) const {
-        int32_t x = readI32(pc);
-        int32_t y = readI32(pc);
-        int32_t z = readI32(pc);
-        int32_t w = readI32(pc);
-        return SimdConstant::CreateX4(x, y, z, w);
-    }
-    SimdConstant readF32X4(size_t* pc) const {
-        float x = readF32(pc);
-        float y = readF32(pc);
-        float z = readF32(pc);
-        float w = readF32(pc);
-        return SimdConstant::CreateX4(x, y, z, w);
-    }
-
-#ifdef DEBUG
-    bool pcIsPatchable(size_t pc, unsigned size) const {
-        bool patchable = true;
-        for (unsigned i = 0; patchable && i < size; i++)
-            patchable &= Stmt(bytecode_[pc]) == Stmt::Bad;
-        return patchable;
-    }
-#endif
-
-    void patchU8(size_t pc, uint8_t i) {
-        MOZ_ASSERT(pcIsPatchable(pc, sizeof(uint8_t)));
-        bytecode_[pc] = i;
-    }
-
-    template<class T>
-    void patch32(size_t pc, T i) {
-        static_assert(sizeof(T) == sizeof(uint32_t),
-                      "patch32 must be used with 32-bits wide types");
-        MOZ_ASSERT(pcIsPatchable(pc, sizeof(uint32_t)));
-        memcpy(&bytecode_[pc], &i, sizeof(uint32_t));
-    }
-
-    void patchPtr(size_t pc, uint8_t* ptr) {
-        MOZ_ASSERT(pcIsPatchable(pc, sizeof(uint8_t*)));
-        memcpy(&bytecode_[pc], &ptr, sizeof(uint8_t*));
-    }
-
-    // Setters
-    void setReturnedType(RetType retType) {
-        MOZ_ASSERT(returnedType_ == RetType::Which(-1));
-        returnedType_ = retType;
-    }
-    void setNumLocals(size_t numLocals) {
-        MOZ_ASSERT(numLocals_ == size_t(-1));
-        numLocals_ = numLocals;
-    }
-    bool addVariable(const AsmJSNumLit& init) {
-        return varInitializers_.append(init);
-    }
-
-    // Read-only interface
-    size_t size() const { return bytecode_.length(); }
-
-    RetType returnedType() const { MOZ_ASSERT(returnedType_ != RetType::Which(-1)); return returnedType_; }
-    const VarInitializerVector& varInitializers() const { return varInitializers_; }
-    size_t numLocals() const { MOZ_ASSERT(numLocals_ != size_t(-1)); return numLocals_; }
-};
 
 // Encapsulates the building of an asm bytecode function from an asm.js function
 // source code, packing the asm.js code into the asm bytecode form that can
@@ -10364,8 +10371,7 @@ EmitMIR(ModuleCompiler& m, const AsmFunction& function, LifoAlloc& lifo,
 }
 
 static bool
-CheckFunction(ModuleValidator& m, LifoAlloc& lifo, AsmFunction** asmFunc,
-              ModuleGlobals::Func** funcOut)
+CheckFunction(ModuleValidator& m, LifoAlloc& lifo, ModuleGlobals::Func** funcOut)
 {
     int64_t before = PRMJ_Now();
 
@@ -10385,13 +10391,13 @@ CheckFunction(ModuleValidator& m, LifoAlloc& lifo, AsmFunction** asmFunc,
         if (!CheckChangeHeap(m, fn, &validated))
             return false;
         if (validated) {
-            *asmFunc = nullptr;
+            *funcOut = nullptr;
             return true;
         }
     }
 
-    *asmFunc = lifo.new_<AsmFunction>(m.cx());
-    FunctionBuilder f(m, **asmFunc, fn);
+    AsmFunction* asmFunc = lifo.new_<AsmFunction>(m.cx());
+    FunctionBuilder f(m, *asmFunc, fn);
     if (!f.init())
         return false;
 
@@ -10426,23 +10432,24 @@ CheckFunction(ModuleValidator& m, LifoAlloc& lifo, AsmFunction** asmFunc,
     if (func->defined())
         return m.failName(fn, "function '%s' already defined", FunctionName(fn));
 
-    func->define(fn);
+    asmFunc->setNumLocals(f.numLocals());
+    func->define(fn, asmFunc);
+
     func->accumulateCompileTime((PRMJ_Now() - before) / PRMJ_USEC_PER_MSEC);
 
     m.parser().release(mark);
 
-    (*asmFunc)->setNumLocals(f.numLocals());
     *funcOut = func;
     return true;
 }
 
 static bool
-GenerateMIR(ModuleCompiler& mc, LifoAlloc& lifo, AsmFunction& bytecode, ModuleGlobals::Func* func,
+GenerateMIR(ModuleCompiler& mc, LifoAlloc& lifo, ModuleGlobals::Func* func,
             MIRGenerator** mir)
 {
     int64_t before = PRMJ_Now();
 
-    *mir = EmitMIR(mc, bytecode, lifo, func->sig().args());
+    *mir = EmitMIR(mc, *func->bytecode(), lifo, func->sig().args());
     if (!*mir)
         return false;
 
@@ -10510,17 +10517,16 @@ CheckFunctionsSequential(ModuleValidator& m, ModuleCompiler& mc)
 
         LifoAllocScope scope(&lifo);
 
-        AsmFunction* asmFunc;
         ModuleGlobals::Func* func;
-        if (!CheckFunction(m, lifo, &asmFunc, &func))
+        if (!CheckFunction(m, lifo, &func))
             return false;
 
-        // In the case of the change-heap function, no bytecode is produced.
-        if (!asmFunc)
+        // In the case of the change-heap function, no function is produced.
+        if (!func)
             continue;
 
         MIRGenerator* mir;
-        if (!GenerateMIR(mc, lifo, *asmFunc, func, &mir))
+        if (!GenerateMIR(mc, lifo, func, &mir))
             return false;
 
         int64_t before = PRMJ_Now();
@@ -10680,18 +10686,17 @@ CheckFunctionsParallel(ModuleValidator& m, ModuleCompiler& mc, ParallelGroupStat
         if (!task && !GetUnusedTask(group, i, &task) && !GetUsedTask(mc, group, &task))
             return false;
 
-        AsmFunction* asmFunc;
         ModuleGlobals::Func* func;
-        if (!CheckFunction(m, task->lifo, &asmFunc, &func))
+        if (!CheckFunction(m, task->lifo, &func))
             return false;
 
-        // In the case of the change-heap function, no bytecode is produced.
-        if (!asmFunc)
+        // In the case of the change-heap function, no function is produced.
+        if (!func)
             continue;
 
         // Generate MIR into the LifoAlloc on the main thread.
         MIRGenerator* mir;
-        if (!GenerateMIR(mc, task->lifo, *asmFunc, func, &mir))
+        if (!GenerateMIR(mc, task->lifo, func, &mir))
             return false;
 
         // Perform optimizations and LIR generation on a helper thread.
