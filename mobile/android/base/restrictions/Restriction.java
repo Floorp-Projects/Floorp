@@ -64,8 +64,13 @@ public enum Restriction {
     DISALLOW_REPORT_SITE_ISSUE(
             13, "no_report_site_issue",
             R.string.restriction_disallow_report_site_issue_title,
-            R.string.restriction_disallow_report_site_issue_description);
+            R.string.restriction_disallow_report_site_issue_description),
 
+    DISALLOW_DEVELOPER_TOOLS(
+            14, "no_developer_tools",
+            R.string.restriction_disallow_devtools_title,
+            R.string.restriction_disallow_devtools_description
+    );
 
     public final int id;
     public final String name;
