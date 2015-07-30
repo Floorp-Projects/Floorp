@@ -837,6 +837,7 @@ class GCRuntime
     void releaseArena(ArenaHeader* aheader, const AutoLockGC& lock);
 
     void releaseHeldRelocatedArenas();
+    void releaseHeldRelocatedArenasWithoutUnlocking(const AutoLockGC& lock);
 
     // Allocator
     template <AllowGC allowGC>
@@ -936,16 +937,15 @@ class GCRuntime
     void endCompactPhase(JS::gcreason::Reason reason);
     void sweepTypesAfterCompacting(Zone* zone);
     void sweepZoneAfterCompacting(Zone* zone);
-    bool relocateArenas(Zone* zone, JS::gcreason::Reason reason, SliceBudget& sliceBudget);
+    bool relocateArenas(Zone* zone, JS::gcreason::Reason reason, ArenaHeader*& relocatedListOut,
+                        SliceBudget& sliceBudget);
     void updateAllCellPointersParallel(MovingTracer* trc, Zone* zone);
     void updateAllCellPointersSerial(MovingTracer* trc, Zone* zone);
     void updatePointersToRelocatedCells(Zone* zone);
-    void releaseRelocatedArenas();
-    void releaseRelocatedArenasWithoutUnlocking(const AutoLockGC& lock);
-#ifdef DEBUG
-    void protectRelocatedArenas();
-    void unprotectRelocatedArenas();
-#endif
+    void protectAndHoldArenas(ArenaHeader* arenaList);
+    void unprotectHeldRelocatedArenas();
+    void releaseRelocatedArenas(ArenaHeader* arenaList);
+    void releaseRelocatedArenasWithoutUnlocking(ArenaHeader* arenaList, const AutoLockGC& lock);
     void finishCollection(JS::gcreason::Reason reason);
 
     void computeNonIncrementalMarkingForValidation();
