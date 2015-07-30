@@ -697,3 +697,5 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY restriction_disallow_devtools_description "Disallow usage of developer tools.">
 <!ENTITY restriction_disallow_customize_home_title "Disallow customizing home">
 <!ENTITY restriction_disallow_customize_home_description "Disallow customizing home panels.">
+<!ENTITY restriction_disallow_private_browsing_title "Disallow private browsing">
+<!ENTITY restriction_disallow_private_browsing_description "Disallow private browsing mode.">

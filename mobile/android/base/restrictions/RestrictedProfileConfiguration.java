@@ -22,10 +22,12 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
             Restriction.DISALLOW_REPORT_SITE_ISSUE,
             Restriction.DISALLOW_IMPORT_SETTINGS,
             Restriction.DISALLOW_DEVELOPER_TOOLS,
-            Restriction.DISALLOW_CUSTOMIZE_HOME
+            Restriction.DISALLOW_CUSTOMIZE_HOME,
+            Restriction.DISALLOW_PRIVATE_BROWSING
     );
 
     private static final String ABOUT_ADDONS = "about:addons";
+    private static final String ABOUT_PRIVATE_BROWSING = "about:privatebrowsing";
 
     private Context context;
 
@@ -43,6 +45,11 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
         if (!isAllowed(Restriction.DISALLOW_INSTALL_EXTENSION) && url.toLowerCase().startsWith(ABOUT_ADDONS)) {
             return false;
         }
+
+        if (!isAllowed(Restriction.DISALLOW_PRIVATE_BROWSING) && url.toLowerCase().startsWith(ABOUT_PRIVATE_BROWSING)) {
+            return false;
+        }
+
         return true;
     }
 

@@ -3360,6 +3360,9 @@ public class BrowserApp extends GeckoApp
         final boolean toolsVisible = RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_TOOLS_MENU);
         MenuUtils.safeSetVisible(aMenu, R.id.tools, toolsVisible);
 
+        final boolean privateTabVisible = RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_PRIVATE_BROWSING);
+        MenuUtils.safeSetVisible(aMenu, R.id.new_private_tab, privateTabVisible);
+
         // Disable save as PDF for about:home and xul pages.
         saveAsPDF.setEnabled(!(isAboutHome(tab) ||
                                tab.getContentType().equals("application/vnd.mozilla.xul+xml") ||

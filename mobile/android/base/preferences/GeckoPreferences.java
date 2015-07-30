@@ -133,6 +133,8 @@ OnSharedPreferenceChangeListener
     public static final String PREFS_QRCODE_ENABLED = NON_PREF_PREFIX + "qrcode_enabled";
     private static final String PREFS_DEVTOOLS = NON_PREF_PREFIX + "devtools.enabled";
     private static final String PREFS_CUSTOMIZE_HOME = NON_PREF_PREFIX + "customize_home";
+    private static final String PREFS_TRACKING_PROTECTION_PRIVATE_BROWSING = "privacy.trackingprotection.pbmode.enabled";
+    private static final String PREFS_TRACKING_PROTECTION_LEARN_MORE = NON_PREF_PREFIX + "trackingprotection.learn_more";
 
     private static final String ACTION_STUMBLER_UPLOAD_PREF = AppConstants.ANDROID_PACKAGE_NAME + ".STUMBLER_PREF";
 
@@ -738,7 +740,7 @@ OnSharedPreferenceChangeListener
                     }
                 } else if (PREFS_OPEN_URLS_IN_PRIVATE.equals(key)) {
                     // Remove UI for opening external links in private browsing on non-Nightly builds.
-                    if (!AppConstants.NIGHTLY_BUILD) {
+                    if (!AppConstants.NIGHTLY_BUILD || !RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_PRIVATE_BROWSING)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
@@ -844,6 +846,18 @@ OnSharedPreferenceChangeListener
                 } else if (PREFS_QRCODE_ENABLED.equals(key)) {
                     if (!InputOptionsUtils.supportsQrCodeReader(getApplicationContext())) {
                         // Remove UI for qr code input on non nightly builds
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
+                } else if (PREFS_TRACKING_PROTECTION_PRIVATE_BROWSING.equals(key)) {
+                    if (!RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_PRIVATE_BROWSING)) {
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
+                } else if (PREFS_TRACKING_PROTECTION_LEARN_MORE.equals(key)) {
+                    if (!RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_PRIVATE_BROWSING)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
