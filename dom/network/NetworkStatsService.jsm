@@ -26,8 +26,8 @@ const NET_NETWORKSTATSSERVICE_CID = Components.ID("{18725604-e9ac-488a-8aa0-2471
 const TOPIC_BANDWIDTH_CONTROL = "netd-bandwidth-control"
 
 const TOPIC_CONNECTION_STATE_CHANGED = "network-connection-state-changed";
-const NET_TYPE_WIFI = Ci.nsINetworkInterface.NETWORK_TYPE_WIFI;
-const NET_TYPE_MOBILE = Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE;
+const NET_TYPE_WIFI = Ci.nsINetworkInfo.NETWORK_TYPE_WIFI;
+const NET_TYPE_MOBILE = Ci.nsINetworkInfo.NETWORK_TYPE_MOBILE;
 
 // Networks have different status that NetworkStats API needs to be aware of.
 // Network is present and ready, so NetworkManager provides the whole info.
@@ -192,10 +192,10 @@ this.NetworkStatsService = {
         // the stats are updated for the new interface without waiting to
         // complete the updating period.
 
-        let network = aSubject.QueryInterface(Ci.nsINetworkInterface);
-        debug("Network " + network.name + " of type " + network.type + " status change");
+        let networkInfo = aSubject.QueryInterface(Ci.nsINetworkInfo);
+        debug("Network " + networkInfo.name + " of type " + networkInfo.type + " status change");
 
-        let netId = this.convertNetworkInterface(network);
+        let netId = this.convertNetworkInfo(networkInfo);
         if (!netId) {
           break;
         }
@@ -269,33 +269,33 @@ this.NetworkStatsService = {
     return networks;
   },
 
-  convertNetworkInterface: function(aNetwork) {
-    if (aNetwork.type != NET_TYPE_MOBILE &&
-        aNetwork.type != NET_TYPE_WIFI) {
+  convertNetworkInfo: function(aNetworkInfo) {
+    if (aNetworkInfo.type != NET_TYPE_MOBILE &&
+        aNetworkInfo.type != NET_TYPE_WIFI) {
       return null;
     }
 
     let id = '0';
-    if (aNetwork.type == NET_TYPE_MOBILE) {
-      if (!(aNetwork instanceof Ci.nsIRilNetworkInterface)) {
-        debug("Error! Mobile network should be an nsIRilNetworkInterface!");
+    if (aNetworkInfo.type == NET_TYPE_MOBILE) {
+      if (!(aNetworkInfo instanceof Ci.nsIRilNetworkInfo)) {
+        debug("Error! Mobile network should be an nsIRilNetworkInfo!");
         return null;
       }
 
-      let rilNetwork = aNetwork.QueryInterface(Ci.nsIRilNetworkInterface);
+      let rilNetwork = aNetworkInfo.QueryInterface(Ci.nsIRilNetworkInfo);
       id = rilNetwork.iccId;
     }
 
-    let netId = this.getNetworkId(id, aNetwork.type);
+    let netId = this.getNetworkId(id, aNetworkInfo.type);
 
     if (!this._networks[netId]) {
       this._networks[netId] = Object.create(null);
       this._networks[netId].network = { id: id,
-                                        type: aNetwork.type };
+                                        type: aNetworkInfo.type };
     }
 
     this._networks[netId].status = NETWORK_STATUS_READY;
-    this._networks[netId].interfaceName = aNetwork.name;
+    this._networks[netId].interfaceName = aNetworkInfo.name;
     return netId;
   },
 
@@ -738,10 +738,10 @@ this.NetworkStatsService = {
   /*
    * Function responsible for receiving stats which are not from netd.
    */
-  saveStats: function saveStats(aAppId, aIsInBrowser, aServiceType, aNetwork,
+  saveStats: function saveStats(aAppId, aIsInBrowser, aServiceType, aNetworkInfo,
                                 aTimeStamp, aRxBytes, aTxBytes, aIsAccumulative,
                                 aCallback) {
-    let netId = this.convertNetworkInterface(aNetwork);
+    let netId = this.convertNetworkInfo(aNetworkInfo);
     if (!netId) {
       if (aCallback) {
         aCallback(false, "Invalid network type");

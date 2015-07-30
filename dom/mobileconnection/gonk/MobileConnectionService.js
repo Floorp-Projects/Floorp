@@ -708,10 +708,10 @@ MobileConnectionProvider.prototype = {
   updateDataInfo: function(aNewInfo, aBatch = false) {
     // For the data connection, the `connected` flag indicates whether
     // there's an active data call. We get correct `connected` state here.
-    let active = gNetworkManager.active;
+    let active = gNetworkManager.activeNetworkInfo;
     aNewInfo.connected = false;
     if (active &&
-        active.type === Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE &&
+        active.type === Ci.nsINetworkInfo.NETWORK_TYPE_MOBILE &&
         active.serviceId === this._clientId) {
       aNewInfo.connected = true;
     }
@@ -1599,11 +1599,10 @@ MobileConnectionService.prototype = {
         }
         break;
       case NS_DATA_CALL_ERROR_TOPIC_ID:
-        let network = aSubject;
         try {
-          if (network instanceof Ci.nsIRilNetworkInterface) {
-            let rilNetwork = network.QueryInterface(Ci.nsIRilNetworkInterface);
-            this.notifyDataError(rilNetwork.serviceId, rilNetwork);
+          if (aSubject instanceof Ci.nsIRilNetworkInfo) {
+            let rilInfo = aSubject.QueryInterface(Ci.nsIRilNetworkInfo);
+            this.notifyDataError(rilInfo.serviceId, aData);
           }
         } catch (e) {}
         break;

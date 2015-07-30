@@ -8,7 +8,7 @@
 #define mozilla_dom_cache_DBAction_h
 
 #include "mozilla/dom/cache/Action.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsString.h"
 
 class mozIStorageConnection;

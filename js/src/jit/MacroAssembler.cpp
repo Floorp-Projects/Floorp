@@ -21,6 +21,7 @@
 #include "vm/TraceLogging.h"
 
 #include "jsobjinlines.h"
+#include "jit/shared/Lowering-shared-inl.h"
 #include "vm/Interpreter-inl.h"
 
 using namespace js;

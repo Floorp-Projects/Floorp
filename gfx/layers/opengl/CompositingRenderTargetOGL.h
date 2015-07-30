@@ -39,6 +39,8 @@ class CompositingRenderTargetOGL : public CompositingRenderTarget
 {
   typedef mozilla::gl::GLContext GLContext;
 
+  friend class CompositorOGL;
+
   // For lazy initialisation of the GL stuff
   struct InitParams
   {

@@ -6,7 +6,7 @@
 #ifndef RTCIDENTITYPROVIDER_H_
 #define RTCIDENTITYPROVIDER_H_
 
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsImpl.h"
 #include "nsIGlobalObject.h"

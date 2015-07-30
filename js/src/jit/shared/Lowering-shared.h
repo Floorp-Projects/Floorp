@@ -208,6 +208,13 @@ class LIRGeneratorShared : public MDefinitionVisitor
                          BailoutKind kind = Bailout_DuringVMCall);
 
   public:
+    void lowerConstantDouble(double d, MInstruction* mir) {
+        define(new(alloc()) LDouble(d), mir);
+    }
+    void lowerConstantFloat32(float f, MInstruction* mir) {
+        define(new(alloc()) LFloat32(f), mir);
+    }
+
     void visitConstant(MConstant* ins);
 
     // Whether to generate typed reads for element accesses with hole checks.

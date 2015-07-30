@@ -527,7 +527,8 @@ public class CodeGenerator {
                 "};\n" +
                 "\n" +
                 "template<class Impl>\n" +
-                "constexpr JNINativeMethod " + clsName + "::Natives<Impl>::methods[];\n");
+                "constexpr JNINativeMethod " + clsName + "::Natives<Impl>::methods[];\n" +
+                "\n");
         return natives.toString();
     }
 }

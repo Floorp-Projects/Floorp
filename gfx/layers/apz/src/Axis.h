@@ -278,9 +278,6 @@ protected:
   // actual overscroll amount.
   ParentLayerCoord ApplyResistance(ParentLayerCoord aOverscroll) const;
 
-  // Clear the state associated with an overscroll animation.
-  void ClearOverscrollAnimationState();
-
   // Helper function for SampleOverscrollAnimation().
   void StepOverscrollAnimation(double aStepDurationMilliseconds);
 

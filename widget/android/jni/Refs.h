@@ -31,6 +31,12 @@ template<class Cls> class GlobalRef;
 template<class Cls> struct ParamImpl { typedef Ref<Cls> Type; };
 template<class Cls> using Param = typename ParamImpl<Cls>::Type;
 
+namespace detail {
+
+template<class Cls> struct TypeAdapter;
+
+} // namespace detail
+
 
 // How exception during a JNI call should be treated.
 enum class ExceptionMode
@@ -206,6 +212,7 @@ class Ref : public RefBase<Cls, jobject>
     template<class C, typename T> friend class RefBase;
     friend class jni::LocalRef<Cls>;
     friend class jni::GlobalRef<Cls>;
+    friend class detail::TypeAdapter<Ref<Cls>>;
 
     typedef RefBase<Cls, jobject> Base;
 
@@ -239,6 +246,7 @@ class Ref<TypedObject<T>>
     friend class RefBase<TypedObject<T>, T>;
     friend class jni::LocalRef<TypedObject<T>>;
     friend class jni::GlobalRef<TypedObject<T>>;
+    friend class detail::TypeAdapter<Ref<TypedObject<T>>>;
 
     typedef RefBase<TypedObject<T>, T> Base;
 
@@ -491,6 +499,7 @@ class Ref<String> : public RefBase<String, jstring>
     friend class RefBase<String, jstring>;
     friend class jni::LocalRef<String>;
     friend class jni::GlobalRef<String>;
+    friend class detail::TypeAdapter<Ref<String>>;
 
     typedef RefBase<TypedObject<jstring>, jstring> Base;
 
