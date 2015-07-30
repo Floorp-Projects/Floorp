@@ -9,6 +9,7 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/SyncRunnable.h"
 #include "nsThreadUtils.h"
 #include "AndroidBridge.h"
 
@@ -66,7 +67,8 @@ extern "C" {
     jclass foundClass;
     nsCOMPtr<nsIRunnable> runnable_ref(new GetGlobalClassRefRunnable(className,
                                                                      &foundClass));
-    mainThread->Dispatch(runnable_ref, NS_DISPATCH_SYNC);
+    nsRefPtr<mozilla::SyncRunnable> sr = new mozilla::SyncRunnable(runnable_ref);
+    sr->DispatchToThread(mainThread);
     if (!foundClass)
       return nullptr;
 
