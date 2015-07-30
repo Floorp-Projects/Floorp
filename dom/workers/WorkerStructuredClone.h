@@ -12,6 +12,10 @@
 class nsPIDOMWindow;
 
 namespace mozilla {
+namespace layers {
+class Image;
+}
+
 namespace dom {
 
 class MessagePortBase;
@@ -35,6 +39,12 @@ public:
   nsCOMPtr<nsPIDOMWindow> mParentWindow;
 
   nsTArray<nsCOMPtr<nsISupports>> mClonedObjects;
+
+  // This is used for sharing the backend of ImageBitmaps.
+  // The layers::Image object must be thread-safely reference-counted.
+  // The layers::Image object will not be written ever via any ImageBitmap
+  // instance, so no race condition will occur.
+  nsTArray<nsRefPtr<layers::Image>> mClonedImages;
 
   // The transferred ports.
   nsTArray<nsRefPtr<MessagePortBase>> mMessagePorts;

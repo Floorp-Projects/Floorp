@@ -15,6 +15,8 @@
 #include "nsCycleCollectionParticipant.h"
 
 struct JSContext;
+struct JSStructuredCloneReader;
+struct JSStructuredCloneWriter;
 
 namespace mozilla {
 
@@ -30,6 +32,10 @@ class Image;
 
 namespace dom {
 
+namespace workers {
+class WorkerStructuredCloneClosure;
+}
+
 class CanvasRenderingContext2D;
 class File;
 class HTMLCanvasElement;
@@ -37,6 +43,7 @@ class HTMLImageElement;
 class HTMLVideoElement;
 class ImageData;
 class Promise;
+class PostMessageEvent; // For StructuredClone between windows.
 class CreateImageBitmapFromBlob;
 class CreateImageBitmapFromBlobTask;
 class CreateImageBitmapFromBlobWorkerTask;
@@ -84,6 +91,18 @@ public:
   static already_AddRefed<Promise>
   Create(nsIGlobalObject* aGlobal, const ImageBitmapSource& aSrc,
          const Maybe<gfx::IntRect>& aCropRect, ErrorResult& aRv);
+
+  static JSObject*
+  ReadStructuredClone(JSContext* aCx,
+                      JSStructuredCloneReader* aReader,
+                      nsIGlobalObject* aParent,
+                      const nsTArray<nsRefPtr<layers::Image>>& aClonedImages,
+                      uint32_t aIndex);
+
+  static bool
+  WriteStructuredClone(JSStructuredCloneWriter* aWriter,
+                       nsTArray<nsRefPtr<layers::Image>>& aClonedImages,
+                       ImageBitmap* aImageBitmap);
 
   friend CreateImageBitmapFromBlob;
   friend CreateImageBitmapFromBlobTask;
