@@ -101,8 +101,8 @@ AnalyserNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t amount = AudioNode::SizeOfExcludingThis(aMallocSizeOf);
   amount += mAnalysisBlock.SizeOfExcludingThis(aMallocSizeOf);
-  amount += mChunks.SizeOfExcludingThis(aMallocSizeOf);
-  amount += mOutputBuffer.SizeOfExcludingThis(aMallocSizeOf);
+  amount += mChunks.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  amount += mOutputBuffer.ShallowSizeOfExcludingThis(aMallocSizeOf);
   return amount;
 }
 

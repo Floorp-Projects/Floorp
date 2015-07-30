@@ -16,16 +16,15 @@
 #include "BluetoothDaemonHelpers.h"
 #include "BluetoothDaemonSetupInterface.h"
 #include "BluetoothDaemonSocketInterface.h"
-#include "BluetoothInterfaceHelpers.h"
 #include "mozilla/ipc/DaemonRunnables.h"
 #include "mozilla/ipc/DaemonSocket.h"
 #include "mozilla/ipc/ListenSocket.h"
 #include "mozilla/unused.h"
 #include "prrng.h"
 
-using namespace mozilla::ipc;
-
 BEGIN_BLUETOOTH_NAMESPACE
+
+using namespace mozilla::ipc;
 
 static const int sRetryInterval = 100; // ms
 

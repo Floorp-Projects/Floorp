@@ -135,7 +135,7 @@ public:
     // Future: properly measure speex memory
     amount += aMallocSizeOf(mUpSampler);
     amount += aMallocSizeOf(mDownSampler);
-    amount += mBuffer.SizeOfExcludingThis(aMallocSizeOf);
+    amount += mBuffer.ShallowSizeOfExcludingThis(aMallocSizeOf);
     return amount;
   }
 
@@ -261,7 +261,7 @@ public:
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     size_t amount = AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
-    amount += mCurve.SizeOfExcludingThis(aMallocSizeOf);
+    amount += mCurve.ShallowSizeOfExcludingThis(aMallocSizeOf);
     amount += mResampler.SizeOfExcludingThis(aMallocSizeOf);
     return amount;
   }

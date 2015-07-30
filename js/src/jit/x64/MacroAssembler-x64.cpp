@@ -35,6 +35,8 @@ MacroAssemblerX64::loadConstantDouble(double d, FloatRegister dest)
     } else {
         doubleIndex = doubles_.length();
         enoughMemory_ &= doubles_.append(Double(d));
+        if (!enoughMemory_)
+            return;
         enoughMemory_ &= doubleMap_.add(p, d, doubleIndex);
         if (!enoughMemory_)
             return;
@@ -69,6 +71,8 @@ MacroAssemblerX64::loadConstantFloat32(float f, FloatRegister dest)
     } else {
         floatIndex = floats_.length();
         enoughMemory_ &= floats_.append(Float(f));
+        if (!enoughMemory_)
+            return;
         enoughMemory_ &= floatMap_.add(p, f, floatIndex);
         if (!enoughMemory_)
             return;
@@ -97,6 +101,8 @@ MacroAssemblerX64::getSimdData(const SimdConstant& v)
     } else {
         index = simds_.length();
         enoughMemory_ &= simds_.append(SimdData(v));
+        if (!enoughMemory_)
+            return nullptr;
         enoughMemory_ &= simdMap_.add(p, v, index);
         if (!enoughMemory_)
             return nullptr;

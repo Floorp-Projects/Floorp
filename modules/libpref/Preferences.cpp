@@ -226,7 +226,7 @@ SizeOfObserverEntryExcludingThis(ValueObserverHashKey* aKey,
 {
   size_t n = 0;
   n += aKey->mPrefName.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-  n += aData->mClosures.SizeOfExcludingThis(aMallocSizeOf);
+  n += aData->mClosures.ShallowSizeOfExcludingThis(aMallocSizeOf);
   return n;
 }
 
@@ -244,7 +244,7 @@ Preferences::SizeOfIncludingThisAndOtherStuff(mozilla::MallocSizeOf aMallocSizeO
     n += PL_DHashTableSizeOfExcludingThis(gHashTable, nullptr, aMallocSizeOf);
   }
   if (gCacheData) {
-    n += gCacheData->SizeOfIncludingThis(aMallocSizeOf);
+    n += gCacheData->ShallowSizeOfIncludingThis(aMallocSizeOf);
     for (uint32_t i = 0, count = gCacheData->Length(); i < count; ++i) {
       n += aMallocSizeOf((*gCacheData)[i]);
     }

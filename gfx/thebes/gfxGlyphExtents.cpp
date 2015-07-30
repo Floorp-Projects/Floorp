@@ -77,7 +77,7 @@ uint32_t
 gfxGlyphExtents::GlyphWidths::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
     uint32_t i;
-    uint32_t size = mBlocks.SizeOfExcludingThis(aMallocSizeOf);
+    uint32_t size = mBlocks.ShallowSizeOfExcludingThis(aMallocSizeOf);
     for (i = 0; i < mBlocks.Length(); ++i) {
         uintptr_t bits = mBlocks[i];
         if (bits && !(bits & 0x1)) {

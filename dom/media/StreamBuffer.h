@@ -177,7 +177,7 @@ public:
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   {
     size_t amount = 0;
-    amount += mTracks.SizeOfExcludingThis(aMallocSizeOf);
+    amount += mTracks.ShallowSizeOfExcludingThis(aMallocSizeOf);
     for (size_t i = 0; i < mTracks.Length(); i++) {
       amount += mTracks[i]->SizeOfIncludingThis(aMallocSizeOf);
     }

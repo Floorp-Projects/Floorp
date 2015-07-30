@@ -405,6 +405,142 @@ async_test(function(t) {
   }));
 }, 'Test finished promise changes when animationPlayState set to running');
 
+async_test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = ANIM_PROP_VAL;
+  var animation = div.getAnimations()[0];
+
+  var previousFinishedPromise = animation.finished;
+
+  animation.currentTime = ANIM_DURATION;
+
+  animation.finished.then(t.step_func(function() {
+    animation.currentTime = 0;
+    assert_not_equals(animation.finished, previousFinishedPromise,
+                      'Finished promise should change once a prior ' +
+                      'finished promise resolved and the animation ' +
+                      'falls out finished state');
+    t.done();
+  }));
+}, 'Test finished promise changes when a prior finished promise resolved ' +
+   'and the animation falls out finished state');
+
+async_test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = ANIM_PROP_VAL;
+  var animation = div.getAnimations()[0];
+
+  var previousFinishedPromise = animation.finished;
+
+  animation.currentTime = ANIM_DURATION;
+  animation.currentTime = ANIM_DURATION / 2;
+
+  assert_equals(animation.finished, previousFinishedPromise,
+                'No new finished promise generated when finished state ' +
+                'is checked asynchronously');
+  t.done();
+}, 'Test no new finished promise generated when finished state ' +
+   'is checked asynchronously');
+
+async_test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = ANIM_PROP_VAL;
+  var animation = div.getAnimations()[0];
+
+  var previousFinishedPromise = animation.finished;
+
+  animation.finish();
+  animation.currentTime = ANIM_DURATION / 2;
+
+  assert_not_equals(animation.finished, previousFinishedPromise,
+                    'New finished promise generated when finished state ' +
+                    'is checked synchronously');
+  t.done();
+}, 'Test new finished promise generated when finished state ' +
+   'is checked synchronously');
+
+async_test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = ANIM_PROP_VAL;
+  var animation = div.getAnimations()[0];
+
+  var resolvedFinished = false;
+  animation.finished.then(function() {
+    resolvedFinished = true;
+  });
+
+  animation.ready.then(function() {
+    animation.finish();
+    animation.currentTime = ANIM_DURATION / 2;
+  }).then(t.step_func(function() {
+    assert_true(resolvedFinished,
+      'Animation.finished should be resolved even if ' +
+      'the finished state is changed soon');
+    t.done();
+  }));
+
+}, 'Test synchronous finished promise resolved even if finished state ' +
+   'is changed soon');
+
+async_test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = ANIM_PROP_VAL;
+  var animation = div.getAnimations()[0];
+
+  var resolvedFinished = false;
+  animation.finished.then(function() {
+    resolvedFinished = true;
+  });
+
+  animation.ready.then(t.step_func(function() {
+    animation.currentTime = ANIM_DURATION;
+    animation.finish();
+  })).then(t.step_func(function() {
+    assert_true(resolvedFinished,
+      'Animation.finished should be resolved soon after finish() is ' +
+      'called even if there are other asynchronous promises just before it');
+    t.done();
+  }));
+}, 'Test synchronous finished promise resolved even if asynchronous ' +
+   'finished promise happens just before synchronous promise');
+
+async_test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = ANIM_PROP_VAL;
+  var animation = div.getAnimations()[0];
+
+  animation.finished.then(t.step_func(function() {
+    assert_unreached('Animation.finished should not be resolved');
+  }));
+
+  animation.ready.then(function() {
+    animation.currentTime = ANIM_DURATION;
+    animation.currentTime = ANIM_DURATION / 2;
+  }).then(t.step_func(function() {
+    t.done();
+  }));
+}, 'Test finished promise is not resolved when the animation ' +
+   'falls out finished state immediately');
+
+async_test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = ANIM_PROP_VAL;
+  var animation = div.getAnimations()[0];
+
+  animation.ready.then(function() {
+    animation.currentTime = ANIM_DURATION;
+    animation.finished.then(t.step_func(function() {
+      assert_unreached('Animation.finished should not be resolved');
+    }));
+    animation.currentTime = 0;
+  }).then(t.step_func(function() {
+    t.done();
+  }));
+
+}, 'Test finished promise is not resolved once the animation ' +
+   'falls out finished state even though the current finished ' +
+   'promise is generated soon after animation state became finished');
+
 done();
 </script>
 </body>

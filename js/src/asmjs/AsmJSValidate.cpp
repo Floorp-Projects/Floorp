@@ -3224,19 +3224,15 @@ class FunctionCompiler
                labeledContinues_.init();
     }
 
-    ~FunctionCompiler()
+    void checkPostconditions()
     {
-#ifdef DEBUG
-        if (!m().hasError() && cx()->isJSContext() && !cx()->asJSContext()->isExceptionPending()) {
-            MOZ_ASSERT(loopStack_.empty());
-            MOZ_ASSERT(unlabeledBreaks_.empty());
-            MOZ_ASSERT(unlabeledContinues_.empty());
-            MOZ_ASSERT(labeledBreaks_.empty());
-            MOZ_ASSERT(labeledContinues_.empty());
-            MOZ_ASSERT(inDeadCode());
-            MOZ_ASSERT(pc_ == func_.size(), "all bytecode must be consumed");
-        }
-#endif
+        MOZ_ASSERT(loopStack_.empty());
+        MOZ_ASSERT(unlabeledBreaks_.empty());
+        MOZ_ASSERT(unlabeledContinues_.empty());
+        MOZ_ASSERT(labeledBreaks_.empty());
+        MOZ_ASSERT(labeledContinues_.empty());
+        MOZ_ASSERT(inDeadCode());
+        MOZ_ASSERT(pc_ == func_.size(), "all bytecode must be consumed");
     }
 
     /************************* Read-only interface (after local scope setup) */
@@ -4243,11 +4239,17 @@ class FunctionCompiler
 
         // Prepare data structures
         alloc_  = lifo_.new_<TempAllocator>(&lifo_);
+        if (!alloc_)
+            return false;
         jitContext_.emplace(m_.cx(), alloc_);
 
         MOZ_ASSERT(numLocals == argTypes.length() + varInitializers.length());
         graph_  = lifo_.new_<MIRGraph>(alloc_);
+        if (!graph_)
+            return false;
         info_   = lifo_.new_<CompileInfo>(numLocals);
+        if (!info_)
+            return false;
         const OptimizationInfo* optimizationInfo = js_IonOptimizations.get(Optimization_AsmJS);
         const JitCompileOptions options;
         mirGen_ = lifo_.new_<MIRGenerator>(CompileCompartment::get(cx()->compartment()),
@@ -4256,6 +4258,8 @@ class FunctionCompiler
                                            &m().onOutOfBoundsLabel(),
                                            &m().onConversionErrorLabel(),
                                            m().usesSignalHandlersForOOB());
+        if (!mirGen_)
+            return false;
 
         if (!newBlock(/* pred = */ nullptr, 0, &curBlock_))
             return false;
@@ -10257,6 +10261,7 @@ EmitMIR(ModuleCompiler& m, const AsmFunction& function, LifoAlloc& lifo,
 
     jit::SpewBeginFunction(mir, nullptr);
 
+    f.checkPostconditions();
     return mir;
 }
 
@@ -11078,7 +11083,7 @@ GenerateEntry(ModuleCompiler& m, unsigned exportIndex)
     masm.move32(Imm32(true), ReturnReg);
     masm.ret();
 
-    return m.finishGeneratingEntry(exportIndex, &begin) && !masm.oom();
+    return !masm.oom() && m.finishGeneratingEntry(exportIndex, &begin);
 }
 
 static void
@@ -11232,7 +11237,7 @@ GenerateFFIInterpExit(ModuleCompiler& m, const ModuleCompiler::ExitDescriptor& e
 
     Label profilingReturn;
     GenerateAsmJSExitEpilogue(masm, framePushed, AsmJSExit::SlowFFI, &profilingReturn);
-    return m.finishGeneratingInterpExit(exitIndex, &begin, &profilingReturn) && !masm.oom();
+    return !masm.oom() && m.finishGeneratingInterpExit(exitIndex, &begin, &profilingReturn);
 }
 
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
@@ -11526,7 +11531,7 @@ GenerateFFIIonExit(ModuleCompiler& m, const ModuleCompiler::ExitDescriptor& exit
 
     MOZ_ASSERT(masm.framePushed() == 0);
 
-    return m.finishGeneratingJitExit(exitIndex, &begin, &profilingReturn) && !masm.oom();
+    return !masm.oom() && m.finishGeneratingJitExit(exitIndex, &begin, &profilingReturn);
 }
 
 // See "asm.js FFI calls" comment above.
@@ -11648,7 +11653,7 @@ GenerateBuiltinThunk(ModuleCompiler& m, AsmJSExit::BuiltinKind builtin)
 
     Label profilingReturn;
     GenerateAsmJSExitEpilogue(masm, framePushed, AsmJSExit::Builtin(builtin), &profilingReturn);
-    return m.finishGeneratingBuiltinThunk(builtin, &begin, &profilingReturn) && !masm.oom();
+    return !masm.oom() && m.finishGeneratingBuiltinThunk(builtin, &begin, &profilingReturn);
 }
 
 static bool
@@ -11656,7 +11661,7 @@ GenerateStackOverflowExit(ModuleCompiler& m, Label* throwLabel)
 {
     MacroAssembler& masm = m.masm();
     GenerateAsmJSStackOverflowExit(masm, &m.stackOverflowLabel(), throwLabel);
-    return m.finishGeneratingInlineStub(&m.stackOverflowLabel()) && !masm.oom();
+    return !masm.oom() && m.finishGeneratingInlineStub(&m.stackOverflowLabel());
 }
 
 static bool
@@ -11670,7 +11675,7 @@ GenerateOnDetachedLabelExit(ModuleCompiler& m, Label* throwLabel)
     masm.call(AsmJSImmPtr(AsmJSImm_OnDetached));
     masm.jump(throwLabel);
 
-    return m.finishGeneratingInlineStub(&m.onDetachedLabel()) && !masm.oom();
+    return !masm.oom() && m.finishGeneratingInlineStub(&m.onDetachedLabel());
 }
 
 static bool
@@ -11688,7 +11693,7 @@ GenerateExceptionLabelExit(ModuleCompiler& m, Label* throwLabel, Label* exit, As
     masm.call(AsmJSImmPtr(func));
     masm.jump(throwLabel);
 
-    return m.finishGeneratingInlineStub(exit) && !masm.oom();
+    return !masm.oom() && m.finishGeneratingInlineStub(exit);
 }
 
 static const LiveRegisterSet AllRegsExceptSP(
@@ -11854,7 +11859,7 @@ GenerateAsyncInterruptExit(ModuleCompiler& m, Label* throwLabel)
 # error "Unknown architecture!"
 #endif
 
-    return m.finishGeneratingInlineStub(&m.asyncInterruptLabel()) && !masm.oom();
+    return !masm.oom() && m.finishGeneratingInlineStub(&m.asyncInterruptLabel());
 }
 
 static bool
@@ -11873,7 +11878,7 @@ GenerateSyncInterruptExit(ModuleCompiler& m, Label* throwLabel)
 
     Label profilingReturn;
     GenerateAsmJSExitEpilogue(masm, framePushed, AsmJSExit::Interrupt, &profilingReturn);
-    return m.finishGeneratingInterrupt(&m.syncInterruptLabel(), &profilingReturn) && !masm.oom();
+    return !masm.oom() && m.finishGeneratingInterrupt(&m.syncInterruptLabel(), &profilingReturn);
 }
 
 // If an exception is thrown, simply pop all frames (since asm.js does not
@@ -11904,7 +11909,7 @@ GenerateThrowStub(ModuleCompiler& m, Label* throwLabel)
     masm.mov(ImmWord(0), ReturnReg);
     masm.ret();
 
-    return m.finishGeneratingInlineStub(throwLabel) && !masm.oom();
+    return !masm.oom() && m.finishGeneratingInlineStub(throwLabel);
 }
 
 static bool

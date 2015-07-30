@@ -275,6 +275,8 @@ public:
     mozilla::gfx::FeatureStatus GetD2D1Status() const;
     unsigned GetD3D11Version();
 
+    void TestDeviceReset(DeviceResetReason aReason) override;
+
     virtual already_AddRefed<mozilla::gfx::VsyncSource> CreateHardwareVsyncSource() override;
     static mozilla::Atomic<size_t> sD3D11MemoryUsed;
     static mozilla::Atomic<size_t> sD3D9MemoryUsed;
@@ -300,21 +302,17 @@ private:
     void InitializeDevices();
     void InitializeD3D11();
     void InitializeD2D();
-    bool InitializeD2D1();
+    void InitializeD2D1();
     bool InitDWriteSupport();
 
     void DisableD2D();
 
-    // Used by InitializeD3D11().
-    enum class D3D11Status {
-      Ok,
-      OnlyWARP,
-      Blocked
-    };
-    D3D11Status CheckD3D11Support();
-    bool AttemptD3D11DeviceCreation();
-    bool AttemptWARPDeviceCreation();
-    bool AttemptD3D11ImageBridgeDeviceCreation();
+    mozilla::gfx::FeatureStatus CheckD3D11Support(bool* aCanUseHardware);
+    mozilla::gfx::FeatureStatus CheckD2DSupport();
+    mozilla::gfx::FeatureStatus CheckD2D1Support();
+    void AttemptD3D11DeviceCreation();
+    void AttemptWARPDeviceCreation();
+    void AttemptD3D11ImageBridgeDeviceCreation();
     bool AttemptD3D11ContentDeviceCreation();
 
     IDXGIAdapter1 *GetDXGIAdapter();
@@ -334,6 +332,7 @@ private:
     mozilla::RefPtr<mozilla::layers::ReadbackManagerD3D11> mD3D11ReadbackManager;
     bool mIsWARP;
     bool mHasDeviceReset;
+    bool mHasFakeDeviceReset;
     bool mDoesD3D11TextureSharingWork;
     DeviceResetReason mDeviceResetReason;
 
