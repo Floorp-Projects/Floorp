@@ -6,7 +6,7 @@
 #include "DecoderFactory.h"
 
 #include "nsMimeTypes.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsString.h"
 
 #include "Decoder.h"

@@ -41,7 +41,6 @@
 #include "nsIMobileMessageDatabaseService.h"
 #include "nsPluginInstanceOwner.h"
 #include "AndroidSurfaceTexture.h"
-#include "GeckoProfiler.h"
 #include "nsMemoryPressure.h"
 
 using namespace mozilla;
@@ -968,81 +967,6 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode(JNIEnv* env
 {
     // FIXME implement this
     return 0;
-}
-
-NS_EXPORT jboolean JNICALL
-Java_org_mozilla_gecko_ANRReporter_requestNativeStack(JNIEnv*, jclass, jboolean aUnwind)
-{
-    if (profiler_is_active()) {
-        // Don't proceed if profiler is already running
-        return JNI_FALSE;
-    }
-    // WARNING: we are on the ANR reporter thread at this point and it is
-    // generally unsafe to use the profiler from off the main thread. However,
-    // the risk here is limited because for most users, the profiler is not run
-    // elsewhere. See the discussion in Bug 863777, comment 13
-    const char *NATIVE_STACK_FEATURES[] =
-        {"leaf", "threads", "privacy"};
-    const char *NATIVE_STACK_UNWIND_FEATURES[] =
-        {"leaf", "threads", "privacy", "stackwalk"};
-
-    const char **features = NATIVE_STACK_FEATURES;
-    size_t features_size = sizeof(NATIVE_STACK_FEATURES);
-    if (aUnwind) {
-        features = NATIVE_STACK_UNWIND_FEATURES;
-        features_size = sizeof(NATIVE_STACK_UNWIND_FEATURES);
-        // We want the new unwinder if the unwind mode has not been set yet
-        putenv("MOZ_PROFILER_NEW=1");
-    }
-
-    const char *NATIVE_STACK_THREADS[] =
-        {"GeckoMain", "Compositor"};
-    // Buffer one sample and let the profiler wait a long time
-    profiler_start(100, 10000, features, features_size / sizeof(char*),
-        NATIVE_STACK_THREADS, sizeof(NATIVE_STACK_THREADS) / sizeof(char*));
-    return JNI_TRUE;
-}
-
-NS_EXPORT jstring JNICALL
-Java_org_mozilla_gecko_ANRReporter_getNativeStack(JNIEnv* jenv, jclass)
-{
-    if (!profiler_is_active()) {
-        // Maybe profiler support is disabled?
-        return nullptr;
-    }
-
-    // Timeout if we don't get a profiler sample after 5 seconds.
-    const PRIntervalTime timeout = PR_SecondsToInterval(5);
-    const PRIntervalTime startTime = PR_IntervalNow();
-
-    // Pointer to a profile JSON string
-    typedef mozilla::UniquePtr<char[]> ProfilePtr;
-
-    ProfilePtr profile(profiler_get_profile());
-
-    while (profile && !strstr(profile.get(), "\"samples\":[{")) {
-        // no sample yet?
-        if (PR_IntervalNow() - startTime >= timeout) {
-            return nullptr;
-        }
-        usleep(100000ul); // Sleep for 100ms
-        profile = ProfilePtr(profiler_get_profile());
-    }
-
-    if (profile) {
-        return jenv->NewStringUTF(profile.get());
-    }
-    return nullptr;
-}
-
-NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_ANRReporter_releaseNativeStack(JNIEnv* jenv, jclass)
-{
-    if (!profiler_is_active()) {
-        // Maybe profiler support is disabled?
-        return;
-    }
-    mozilla_sampler_stop();
 }
 
 }

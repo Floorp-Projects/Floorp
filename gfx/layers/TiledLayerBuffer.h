@@ -150,7 +150,7 @@ public:
   gfx::IntPoint GetTileOffset(TileIntPoint aPosition) const {
     gfx::IntSize scaledTileSize = GetScaledTileSize();
     return gfx::IntPoint(aPosition.x * scaledTileSize.width,
-                         aPosition.y * scaledTileSize.height);
+                         aPosition.y * scaledTileSize.height) + mTileOrigin;
   }
 
   const TilesPlacement& GetPlacement() const { return mTiles; }
@@ -194,6 +194,7 @@ protected:
   TilesPlacement  mTiles;
   float           mResolution;
   gfx::IntSize    mTileSize;
+  gfx::IntPoint   mTileOrigin;
 };
 
 template<typename Derived, typename Tile> void

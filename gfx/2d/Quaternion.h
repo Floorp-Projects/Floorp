@@ -92,6 +92,16 @@ public:
   {
     return Conjugate().Normalize();
   }
+
+  Point3D RotatePoint(const Point3D& aPoint) {
+    Float uvx = Float(2.0) * (y*aPoint.z - z*aPoint.y);
+    Float uvy = Float(2.0) * (z*aPoint.x - x*aPoint.z);
+    Float uvz = Float(2.0) * (x*aPoint.y - y*aPoint.x);
+
+    return Point3D(aPoint.x + w*uvx + y*uvz - z*uvy,
+                   aPoint.y + w*uvy + z*uvx - x*uvz,
+                   aPoint.z + w*uvz + x*uvy - y*uvx);
+  }
 };
 
 } // namespace gfx

@@ -135,9 +135,7 @@ MultipartImage::~MultipartImage()
   mTracker->ResetImage();
 }
 
-NS_IMPL_QUERY_INTERFACE_INHERITED0(MultipartImage, ImageWrapper)
-NS_IMPL_ADDREF_INHERITED(MultipartImage, ImageWrapper)
-NS_IMPL_RELEASE_INHERITED(MultipartImage, ImageWrapper)
+NS_IMPL_ISUPPORTS_INHERITED0(MultipartImage, ImageWrapper)
 
 void
 MultipartImage::BeginTransitionToPart(Image* aNextPart)

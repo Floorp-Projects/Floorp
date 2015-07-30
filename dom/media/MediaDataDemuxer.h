@@ -14,7 +14,7 @@
 #include "MediaInfo.h"
 #include "TimeUnits.h"
 #include "nsISupportsImpl.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsTArray.h"
 
 namespace mozilla {

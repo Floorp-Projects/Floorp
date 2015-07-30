@@ -19,6 +19,7 @@
 
 #include "jsscriptinlines.h"
 
+#include "jit/shared/Lowering-shared-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/StringObject-inl.h"
 #include "vm/UnboxedObject-inl.h"

@@ -21,7 +21,6 @@
 
 #include "nsDebug.h"
 #include "nsReadableUtils.h"
-#include "../../xpcom/base/nsRefPtr.h"
 #include "nsString.h"
 
 #include "gfxContext.h"
@@ -51,6 +50,7 @@
 #include "mozilla/dom/ImageData.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/Endian.h"
+#include "mozilla/nsRefPtr.h"
 
 namespace mozilla {
 
