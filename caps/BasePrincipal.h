@@ -124,6 +124,7 @@ public:
   NS_IMETHOD GetAppId(uint32_t* aAppStatus) final;
   NS_IMETHOD GetIsInBrowserElement(bool* aIsInBrowserElement) final;
   NS_IMETHOD GetUnknownAppId(bool* aUnknownAppId) final;
+  NS_IMETHOD GetUserContextId(uint32_t* aUserContextId) final;
 
   virtual bool IsOnCSSUnprefixingWhitelist() override { return false; }
 
@@ -134,6 +135,7 @@ public:
 
   const OriginAttributes& OriginAttributesRef() { return mOriginAttributes; }
   uint32_t AppId() const { return mOriginAttributes.mAppId; }
+  uint32_t UserContextId() const { return mOriginAttributes.mUserContextId; }
   bool IsInBrowserElement() const { return mOriginAttributes.mInBrowser; }
 
 protected:

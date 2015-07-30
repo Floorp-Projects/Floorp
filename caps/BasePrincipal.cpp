@@ -325,6 +325,13 @@ BasePrincipal::GetAppId(uint32_t* aAppId)
 }
 
 NS_IMETHODIMP
+BasePrincipal::GetUserContextId(uint32_t* aUserContextId)
+{
+  *aUserContextId = UserContextId();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 BasePrincipal::GetIsInBrowserElement(bool* aIsInBrowserElement)
 {
   *aIsInBrowserElement = IsInBrowserElement();
