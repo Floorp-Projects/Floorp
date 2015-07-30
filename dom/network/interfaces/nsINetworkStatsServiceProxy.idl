@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-interface nsINetworkInterface;
+interface nsINetworkInfo;
 
 [scriptable, function, uuid(5f821529-1d80-4ab5-a933-4e1b3585b6bc)]
 interface nsINetworkStatsServiceProxyCallback : nsISupports
@@ -16,7 +16,7 @@ interface nsINetworkStatsServiceProxyCallback : nsISupports
   void notify(in boolean aResult, in jsval aMessage);
 };
 
-[scriptable, uuid(98fd8f69-784e-4626-aa59-56d6436a3c24)]
+[scriptable, uuid(f4f3e901-e102-499d-9d37-dc9951f52df7)]
 interface nsINetworkStatsServiceProxy : nsISupports
 {
   /*
@@ -32,7 +32,7 @@ interface nsINetworkStatsServiceProxy : nsISupports
    */
   void saveAppStats(in unsigned long aAppId,
                     in boolean aIsInBrowser,
-                    in nsINetworkInterface aNetwork,
+                    in nsINetworkInfo aNetworkInfo,
                     in unsigned long long aTimeStamp,
                     in unsigned long long aRxBytes,
                     in unsigned long long aTxBytes,
@@ -50,7 +50,7 @@ interface nsINetworkStatsServiceProxy : nsISupports
    * @param aCallback an optional callback
    */
   void saveServiceStats(in string aServiceType,
-                        in nsINetworkInterface aNetwork,
+                        in nsINetworkInfo aNetworkInfo,
                         in unsigned long long aTimeStamp,
                         in unsigned long long aRxBytes,
                         in unsigned long long aTxBytes,
