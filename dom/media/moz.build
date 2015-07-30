@@ -101,6 +101,7 @@ EXPORTS += [
     'AudioChannelFormat.h',
     'AudioCompactor.h',
     'AudioMixer.h',
+    'AudioPacketizer.h',
     'AudioSampleFormat.h',
     'AudioSegment.h',
     'AudioStream.h',
