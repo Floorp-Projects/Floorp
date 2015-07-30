@@ -22,7 +22,7 @@
  * All values are monotonic and are updated only when
  * `nsIPerformanceStatsService.isStopwatchActive` is `true`.
  */
-[scriptable, uuid(1bc2d016-e9ae-4186-97c6-9478eddda245)]
+[scriptable, uuid(89440555-dd81-4a22-8747-049bcf0ab586)]
 interface nsIPerformanceStats: nsISupports {
   /**
    * An identifier unique to the component.
@@ -92,6 +92,11 @@ interface nsIPerformanceStats: nsISupports {
   readonly attribute bool isSystem;
 
   /**
+   * The process running this group.
+   */
+  readonly attribute unsigned long long processId;
+
+  /**
    * Jank indicator.
    *
    * durations[i] == number of times execution of this group
@@ -104,7 +109,7 @@ interface nsIPerformanceStats: nsISupports {
 /**
  * A snapshot of the performance data of the process.
  */
-[scriptable, uuid(29ecebd0-908a-4b34-8f62-a6015dea1141)]
+[scriptable, uuid(2e0c50e2-3aff-4cc8-88a6-c0dc200da8fc)]
 interface nsIPerformanceSnapshot: nsISupports {
   /**
    * Data on all individual components.

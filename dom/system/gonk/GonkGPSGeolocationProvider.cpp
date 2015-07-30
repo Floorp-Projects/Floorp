@@ -25,7 +25,7 @@
 #include "nsContentUtils.h"
 #include "nsGeoPosition.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsINetworkManager.h"
+#include "nsINetworkInterface.h"
 #include "nsIObserverService.h"
 #include "nsJSUtils.h"
 #include "nsPrintfCString.h"
@@ -359,12 +359,12 @@ int32_t
 GonkGPSGeolocationProvider::GetDataConnectionState()
 {
   if (!mRadioInterface) {
-    return nsINetworkInterface::NETWORK_STATE_UNKNOWN;
+    return nsINetworkInfo::NETWORK_STATE_UNKNOWN;
   }
 
   int32_t state;
   mRadioInterface->GetDataCallStateByType(
-    nsINetworkInterface::NETWORK_TYPE_MOBILE_SUPL, &state);
+    nsINetworkInfo::NETWORK_TYPE_MOBILE_SUPL, &state);
   return state;
 }
 
@@ -383,7 +383,7 @@ GonkGPSGeolocationProvider::SetAGpsDataConn(nsAString& aApn)
 
   int32_t connectionState = GetDataConnectionState();
   NS_ConvertUTF16toUTF8 apn(aApn);
-  if (connectionState == nsINetworkInterface::NETWORK_STATE_CONNECTED) {
+  if (connectionState == nsINetworkInfo::NETWORK_STATE_CONNECTED) {
     // The definition of availability is
     // 1. The device is connected to the home network
     // 2. The device is connected to a foreign network and data
@@ -400,7 +400,7 @@ GonkGPSGeolocationProvider::SetAGpsDataConn(nsAString& aApn)
 #else
     mAGpsInterface->data_conn_open(apn.get());
 #endif
-  } else if (connectionState == nsINetworkInterface::NETWORK_STATE_DISCONNECTED) {
+  } else if (connectionState == nsINetworkInfo::NETWORK_STATE_DISCONNECTED) {
     if (hasUpdateNetworkAvailability) {
       mAGpsRilInterface->update_network_availability(false, apn.get());
     }
@@ -450,12 +450,12 @@ GonkGPSGeolocationProvider::RequestDataConnection()
     return;
   }
 
-  if (GetDataConnectionState() == nsINetworkInterface::NETWORK_STATE_CONNECTED) {
+  if (GetDataConnectionState() == nsINetworkInfo::NETWORK_STATE_CONNECTED) {
     // Connection is already established, we don't need to setup again.
     // We just get supl APN and make AGPS data connection state updated.
     RequestSettingValue("ril.supl.apn");
   } else {
-    mRadioInterface->SetupDataCallByType(nsINetworkInterface::NETWORK_TYPE_MOBILE_SUPL);
+    mRadioInterface->SetupDataCallByType(nsINetworkInfo::NETWORK_TYPE_MOBILE_SUPL);
   }
 }
 
@@ -468,7 +468,7 @@ GonkGPSGeolocationProvider::ReleaseDataConnection()
     return;
   }
 
-  mRadioInterface->DeactivateDataCallByType(nsINetworkInterface::NETWORK_TYPE_MOBILE_SUPL);
+  mRadioInterface->DeactivateDataCallByType(nsINetworkInfo::NETWORK_TYPE_MOBILE_SUPL);
 }
 
 void
@@ -1010,15 +1010,15 @@ int
 ConvertToGpsNetworkType(int aNetworkInterfaceType)
 {
   switch (aNetworkInterfaceType) {
-    case nsINetworkInterface::NETWORK_TYPE_WIFI:
+    case nsINetworkInfo::NETWORK_TYPE_WIFI:
       return AGPS_RIL_NETWORK_TYPE_WIFI;
-    case nsINetworkInterface::NETWORK_TYPE_MOBILE:
+    case nsINetworkInfo::NETWORK_TYPE_MOBILE:
       return AGPS_RIL_NETWORK_TYPE_MOBILE;
-    case nsINetworkInterface::NETWORK_TYPE_MOBILE_MMS:
+    case nsINetworkInfo::NETWORK_TYPE_MOBILE_MMS:
       return AGPS_RIL_NETWORK_TYPE_MOBILE_MMS;
-    case nsINetworkInterface::NETWORK_TYPE_MOBILE_SUPL:
+    case nsINetworkInfo::NETWORK_TYPE_MOBILE_SUPL:
       return AGPS_RIL_NETWORK_TYPE_MOBILE_SUPL;
-    case nsINetworkInterface::NETWORK_TYPE_MOBILE_DUN:
+    case nsINetworkInfo::NETWORK_TYPE_MOBILE_DUN:
       return AGPS_RIL_NETWORK_TTYPE_MOBILE_DUN;
     default:
       NS_WARNING(nsPrintfCString("Unknown network type mapping %d",
@@ -1037,21 +1037,21 @@ GonkGPSGeolocationProvider::Observe(nsISupports* aSubject,
 
 #ifdef MOZ_B2G_RIL
   if (!strcmp(aTopic, kNetworkConnStateChangedTopic)) {
-    nsCOMPtr<nsINetworkInterface> iface = do_QueryInterface(aSubject);
-    if (!iface) {
+    nsCOMPtr<nsINetworkInfo> info = do_QueryInterface(aSubject);
+    if (!info) {
       return NS_OK;
     }
-    nsCOMPtr<nsIRilNetworkInterface> rilface = do_QueryInterface(aSubject);
+    nsCOMPtr<nsIRilNetworkInfo> rilInfo = do_QueryInterface(aSubject);
     if (mAGpsRilInterface && mAGpsRilInterface->update_network_state) {
       int32_t state;
       int32_t type;
-      iface->GetState(&state);
-      iface->GetType(&type);
-      bool connected = (state == nsINetworkInterface::NETWORK_STATE_CONNECTED);
+      info->GetState(&state);
+      info->GetType(&type);
+      bool connected = (state == nsINetworkInfo::NETWORK_STATE_CONNECTED);
       bool roaming = false;
       int gpsNetworkType = ConvertToGpsNetworkType(type);
       if (gpsNetworkType >= 0) {
-        if (rilface) {
+        if (rilInfo) {
           do {
             nsCOMPtr<nsIMobileConnectionService> service =
               do_GetService(NS_MOBILE_CONNECTION_SERVICE_CONTRACTID);
@@ -1080,7 +1080,7 @@ GonkGPSGeolocationProvider::Observe(nsISupports* aSubject,
       }
     }
     // No data connection
-    if (!rilface) {
+    if (!rilInfo) {
       return NS_OK;
     }
 
