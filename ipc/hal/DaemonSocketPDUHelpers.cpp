@@ -7,6 +7,19 @@
 #include "DaemonSocketPDUHelpers.h"
 #include <limits>
 
+#ifdef CHROMIUM_LOG
+#undef CHROMIUM_LOG
+#endif
+
+#if defined(MOZ_WIDGET_GONK)
+#include <android/log.h>
+#define CHROMIUM_LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "I/O", args);
+#else
+#include <stdio.h>
+#define IODEBUG true
+#define CHROMIUM_LOG(args...) if (IODEBUG) printf(args);
+#endif
+
 namespace mozilla {
 namespace ipc {
 namespace DaemonSocketPDUHelpers {
@@ -228,6 +241,28 @@ UnpackPDU(DaemonSocketPDU& aPDU, const UnpackString0& aOut)
   *aOut.mString = NS_ConvertUTF8toUTF16(cstring);
 
   return NS_OK;
+}
+
+//
+// Init operators
+//
+
+void
+PDUInitOp::WarnAboutTrailingData() const
+{
+  size_t size = mPDU->GetSize();
+
+  if (MOZ_LIKELY(!size)) {
+    return;
+  }
+
+  uint8_t service, opcode;
+  uint16_t payloadSize;
+  mPDU->GetHeader(service, opcode, payloadSize);
+
+  CHROMIUM_LOG(
+    "Unpacked PDU of type (%x,%x) still contains %zu Bytes of data.",
+    service, opcode, size);
 }
 
 } // namespace DaemonSocketPDUHelpers
