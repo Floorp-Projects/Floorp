@@ -302,6 +302,9 @@ private:
   CommandResult setNetworkInterfaceAlarm(NetworkParams& aOptions);
   CommandResult enableNetworkInterfaceAlarm(NetworkParams& aOptions);
   CommandResult disableNetworkInterfaceAlarm(NetworkParams& aOptions);
+  CommandResult setTetheringAlarm(NetworkParams& aOptions);
+  CommandResult removeTetheringAlarm(NetworkParams& aOptions);
+  CommandResult getTetheringStatus(NetworkParams& aOptions);
   CommandResult setWifiOperationMode(NetworkParams& aOptions);
   CommandResult setDhcpServer(NetworkParams& aOptions);
   CommandResult setWifiTethering(NetworkParams& aOptions);
@@ -337,7 +340,9 @@ private:
   static const CommandFunc sNetworkInterfaceEnableAlarmChain[];
   static const CommandFunc sNetworkInterfaceDisableAlarmChain[];
   static const CommandFunc sNetworkInterfaceSetAlarmChain[];
-
+  static const CommandFunc sTetheringInterfaceSetAlarmChain[];
+  static const CommandFunc sTetheringInterfaceRemoveAlarmChain[];
+  static const CommandFunc sTetheringGetStatusChain[];
   /**
    * Individual netd command stored in command chain.
    */
@@ -357,6 +362,9 @@ private:
   static void setQuota(PARAMS);
   static void removeQuota(PARAMS);
   static void setAlarm(PARAMS);
+  static void removeAlarm(PARAMS);
+  static void setGlobalAlarm(PARAMS);
+  static void removeGlobalAlarm(PARAMS);
   static void setInterfaceUp(PARAMS);
   static void tetherInterface(PARAMS);
   static void addInterfaceToLocalNetwork(PARAMS);

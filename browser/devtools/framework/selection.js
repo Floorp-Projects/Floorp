@@ -8,7 +8,7 @@
 
 const {Cu, Ci} = require("chrome");
 let EventEmitter = require("devtools/toolkit/event-emitter");
-Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm");
+let LayoutHelpers = require("devtools/toolkit/layout-helpers");
 
 /**
  * API

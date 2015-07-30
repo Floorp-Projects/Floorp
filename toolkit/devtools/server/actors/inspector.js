@@ -70,6 +70,7 @@ const {
 } = require("devtools/server/actors/highlighter");
 const {getLayoutChangesObserver, releaseLayoutChangesObserver} =
   require("devtools/server/actors/layout");
+const LayoutHelpers = require("devtools/toolkit/layout-helpers");
 
 const {EventParsers} = require("devtools/toolkit/event-parsers");
 
@@ -115,8 +116,6 @@ const PSEUDO_SELECTORS = [
 
 let HELPER_SHEET = ".__fx-devtools-hide-shortcut__ { visibility: hidden !important } ";
 HELPER_SHEET += ":-moz-devtools-highlighted { outline: 2px dashed #F06!important; outline-offset: -2px!important } ";
-
-Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm");
 
 loader.lazyRequireGetter(this, "DevToolsUtils",
                          "devtools/toolkit/DevToolsUtils");

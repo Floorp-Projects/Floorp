@@ -41,6 +41,7 @@
 const { Cc, Ci, Cu } = require("chrome");
 const Services = require("Services");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+const LayoutHelpers = require("devtools/toolkit/layout-helpers");
 
 let pseudos = new Set([
   ":after",
@@ -76,7 +77,6 @@ exports.PSEUDO_ELEMENT_SET = PSEUDO_ELEMENT_SET;
 // on the worker thread, where Cu is not available.
 if (Cu) {
   Cu.importGlobalProperties(['CSS']);
-  Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm");
 }
 
 function CssLogic()
