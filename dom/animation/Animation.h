@@ -112,6 +112,7 @@ public:
   virtual void Reverse(ErrorResult& aRv);
   bool IsRunningOnCompositor() const { return mIsRunningOnCompositor; }
   IMPL_EVENT_HANDLER(finish);
+  IMPL_EVENT_HANDLER(cancel);
 
   // Wrapper functions for Animation DOM methods when called
   // from script.
