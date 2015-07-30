@@ -154,7 +154,6 @@ content_process_main(int argc, char* argv[])
     if (argc < 1) {
       return 3;
     }
-    XRE_SetProcessType(argv[--argc]);
 
     bool isNuwa = false;
     for (int i = 1; i < argc; i++) {
@@ -163,6 +162,26 @@ content_process_main(int argc, char* argv[])
         gIsSandboxEnabled |= strcmp(argv[i], "-sandbox") == 0;
 #endif
     }
+
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
+    if (gIsSandboxEnabled) {
+        sandbox::TargetServices* target_service =
+            sandbox::SandboxFactory::GetTargetServices();
+        if (!target_service) {
+            return 1;
+        }
+
+        sandbox::ResultCode result = target_service->Init();
+        if (result != sandbox::SBOX_ALL_OK) {
+           return 2;
+        }
+
+        mozilla::SandboxTarget::Instance()->SetTargetServices(target_service);
+        mozilla::sandboxing::PrepareForLogging();
+    }
+#endif
+
+    XRE_SetProcessType(argv[--argc]);
 
 #ifdef MOZ_NUWA_PROCESS
     if (isNuwa) {
@@ -205,24 +224,6 @@ content_process_main(int argc, char* argv[])
         mozilla::SanitizeEnvironmentVariables();
         SetDllDirectory(L"");
     }
-
-#ifdef MOZ_SANDBOX
-    if (gIsSandboxEnabled) {
-        sandbox::TargetServices* target_service =
-            sandbox::SandboxFactory::GetTargetServices();
-        if (!target_service) {
-            return 1;
-        }
-
-        sandbox::ResultCode result =
-            mozilla::SandboxTarget::Instance()->InitTargetServices(target_service);
-        if (result != sandbox::SBOX_ALL_OK) {
-           return 2;
-        }
-
-        mozilla::sandboxing::PrepareForLogging();
-    }
-#endif
 #endif
     nsAutoPtr<mozilla::gmp::GMPLoader> loader;
 #if !defined(MOZ_WIDGET_ANDROID) && !defined(MOZ_WIDGET_GONK)
