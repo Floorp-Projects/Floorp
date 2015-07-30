@@ -48,8 +48,6 @@ var ecmaGlobals =
     "Number",
     "Object",
     "Proxy",
-    "PushEvent",
-    "PushMessageData",
     "RangeError",
     "ReferenceError",
     "Reflect",
@@ -174,9 +172,13 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Promise",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "PushManager",
+    { name: "PushEvent", b2g: false, android: false, release: false },
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "PushSubscription",
+    { name: "PushManager", b2g: false, android: false, release: false },
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    { name: "PushMessageData", b2g: false, android: false, release: false },
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    { name: "PushSubscription", b2g: false, android: false, release: false },
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Request",
 // IMPORTANT: Do not change this list without review from a DOM peer!

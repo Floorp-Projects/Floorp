@@ -186,7 +186,7 @@ protected:
       return true;
     }
 
-    mGLContext = GLContextProvider::CreateHeadless(false);
+    mGLContext = GLContextProvider::CreateHeadless(CreateContextFlags::NONE);
     return mGLContext;
   }
 

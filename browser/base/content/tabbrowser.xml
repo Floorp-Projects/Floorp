@@ -4,11 +4,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!DOCTYPE bindings [
-<!ENTITY % tabBrowserDTD SYSTEM "chrome://browser/locale/tabbrowser.dtd" >
-%tabBrowserDTD;
-]>
-
 <bindings id="tabBrowserBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -3871,11 +3866,21 @@
             event.preventDefault();
             return;
           }
-          event.target.setAttribute("label",
-                                    tab.mOverCloseButton ?
-                                    tab.getAttribute("closetabtext") :
-                                    tab.getAttribute("label") +
-                                      (this.AppConstants.E10S_TESTING_ONLY && tab.linkedBrowser && tab.linkedBrowser.isRemoteBrowser ? " - e10s" : ""));
+          var stringID, label;
+          if (tab.mOverCloseButton) {
+            stringID = "tabs.closeTab.tooltip";
+          } else if (tab._overPlayingIcon) {
+            stringID = tab.linkedBrowser.audioMuted ?
+              "tabs.mutedAudio.tooltip" :
+              "tabs.playingAudio.tooltip";
+          } else {
+            label = tab.getAttribute("label") +
+                      (this.AppConstants.E10S_TESTING_ONLY && tab.linkedBrowser && tab.linkedBrowser.isRemoteBrowser ? " - e10s" : "");
+          }
+          if (stringID && !label) {
+            label = this.mStringBundle.getString(stringID);
+          }
+          event.target.setAttribute("label", label);
         ]]></body>
       </method>
 
@@ -4235,6 +4240,40 @@
           let tab = this.getTabForBrowser(browser);
           tab.setAttribute("crashed", true);
           this.setIcon(tab, icon);
+        ]]>
+      </handler>
+      <handler event="DOMMediaPlaybackStarted">
+        <![CDATA[
+          if (!Services.prefs.getBoolPref("browser.tabs.showAudioPlayingIcon") ||
+              !event.isTrusted)
+            return;
+
+          var browser = event.originalTarget;
+          var tab = this.getTabForBrowser(browser);
+          if (!tab)
+            return;
+
+          if (!tab.hasAttribute("soundplaying")) {
+            tab.setAttribute("soundplaying", true);
+            this._tabAttrModified(tab, ["soundplaying"]);
+          }
+        ]]>
+      </handler>
+      <handler event="DOMMediaPlaybackStopped">
+        <![CDATA[
+          if (!Services.prefs.getBoolPref("browser.tabs.showAudioPlayingIcon") ||
+              !event.isTrusted)
+            return;
+
+          var browser = event.originalTarget;
+          var tab = this.getTabForBrowser(browser);
+          if (!tab)
+            return;
+
+          if (tab.hasAttribute("soundplaying")) {
+            tab.removeAttribute("soundplaying");
+            this._tabAttrModified(tab, ["soundplaying"]);
+          }
         ]]>
       </handler>
     </handlers>
@@ -5629,7 +5668,7 @@
       <stylesheet src="chrome://browser/content/tabbrowser.css"/>
     </resources>
 
-    <content context="tabContextMenu" closetabtext="&closeTab.label;">
+    <content context="tabContextMenu">
       <xul:stack class="tab-stack" flex="1">
         <xul:hbox xbl:inherits="pinned,selected,visuallyselected,titlechanged,fadein"
                   class="tab-background">
@@ -5651,13 +5690,18 @@
                      class="tab-icon-image"
                      validate="never"
                      role="presentation"/>
-          <xul:image xbl:inherits="crashed,busy"
+          <xul:image xbl:inherits="crashed,busy,soundplaying,pinned,muted"
+                     anonid="overlay-icon"
                      class="tab-icon-overlay"
                      role="presentation"/>
           <xul:label flex="1"
                      anonid="tab-label"
                      xbl:inherits="value=visibleLabel,crop,accesskey,fadein,pinned,selected,visuallyselected"
                      class="tab-text tab-label"
+                     role="presentation"/>
+          <xul:image xbl:inherits="soundplaying,pinned,muted"
+                     anonid="soundplaying-icon"
+                     class="tab-icon-sound"
                      role="presentation"/>
           <xul:toolbarbutton anonid="close-button"
                              xbl:inherits="fadein,pinned,selected,visuallyselected"
@@ -5771,6 +5815,7 @@
       </property>
 
       <field name="mOverCloseButton">false</field>
+      <field name="_overPlayingIcon">false</field>
       <field name="mCorrespondingMenuitem">null</field>
 
       <!--
@@ -5827,6 +5872,23 @@
           tabContainer._hoveredTab = null;
         ]]></body>
       </method>
+
+      <method name="_toggleMuteAudio">
+        <body>
+        <![CDATA[
+          let tabContainer = this.parentNode;
+          let browser = this.linkedBrowser;
+          if (browser.audioMuted) {
+            browser.unmute();
+            this.removeAttribute("muted");
+          } else {
+            browser.mute();
+            this.setAttribute("muted", "true");
+          }
+          tabContainer.tabbrowser._tabAttrModified(this, ["muted"]);
+        ]]>
+        </body>
+      </method>
     </implementation>
 
     <handlers>
@@ -5834,6 +5896,9 @@
         let anonid = event.originalTarget.getAttribute("anonid");
         if (anonid == "close-button")
           this.mOverCloseButton = true;
+        else if ((anonid == "soundplaying-icon") ||
+                 ((anonid == "overlay-icon") && this.hasAttribute("soundplaying")))
+          this._overPlayingIcon = true;
 
         this._mouseenter();
       ]]></handler>
@@ -5841,6 +5906,9 @@
         let anonid = event.originalTarget.getAttribute("anonid");
         if (anonid == "close-button")
           this.mOverCloseButton = false;
+        else if ((anonid == "soundplaying-icon") ||
+                 ((anonid == "overlay-icon") && this.hasAttribute("soundplaying")))
+          this._overPlayingIcon = false;
 
         this._mouseleave();
       ]]></handler>
@@ -5852,7 +5920,8 @@
         if (this.selected) {
           this.style.MozUserFocus = 'ignore';
           this.clientTop; // just using this to flush style updates
-        } else if (this.mOverCloseButton) {
+        } else if (this.mOverCloseButton ||
+                   this._overPlayingIcon) {
           // Prevent tabbox.xml from selecting the tab.
           event.stopPropagation();
         }
@@ -5860,6 +5929,19 @@
       </handler>
       <handler event="mouseup">
         this.style.MozUserFocus = '';
+      </handler>
+      <handler event="click">
+      <![CDATA[
+        if (event.button != 0) {
+          return;
+        }
+
+        let anonid = event.originalTarget.getAttribute("anonid");
+        if ((anonid == "soundplaying-icon") ||
+            ((anonid == "overlay-icon") && this.hasAttribute("soundplaying"))) {
+          this._toggleMuteAudio();
+        }
+      ]]>
       </handler>
     </handlers>
   </binding>

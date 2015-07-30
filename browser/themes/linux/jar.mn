@@ -243,6 +243,8 @@ browser.jar:
   skin/classic/browser/tabbrowser/tab-active-middle.png     (tabbrowser/tab-active-middle.png)
   skin/classic/browser/tabbrowser/tab-arrow-left.png        (tabbrowser/tab-arrow-left.png)
   skin/classic/browser/tabbrowser/tab-arrow-left-inverted.png (tabbrowser/tab-arrow-left-inverted.png)
+  skin/classic/browser/tabbrowser/tab-audio.svg       (../shared/tabbrowser/tab-audio.svg)
+  skin/classic/browser/tabbrowser/tab-audio-small.svg (../shared/tabbrowser/tab-audio-small.svg)
   skin/classic/browser/tabbrowser/tab-background-end.png    (tabbrowser/tab-background-end.png)
   skin/classic/browser/tabbrowser/tab-background-middle.png (tabbrowser/tab-background-middle.png)
   skin/classic/browser/tabbrowser/tab-background-start.png  (tabbrowser/tab-background-start.png)
