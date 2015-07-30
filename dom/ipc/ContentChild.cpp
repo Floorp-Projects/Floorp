@@ -192,6 +192,7 @@
 #include "mozilla/widget/PuppetBidiKeyboard.h"
 #include "mozilla/RemoteSpellCheckEngineChild.h"
 #include "GMPServiceChild.h"
+#include "gfxPlatform.h"
 
 using namespace mozilla;
 using namespace mozilla::docshell;
@@ -2902,6 +2903,15 @@ ContentChild::RecvEndDragSession(const bool& aDoneDrag,
     }
     dragService->EndDragSession(aDoneDrag);
   }
+  return true;
+}
+
+bool
+ContentChild::RecvTestGraphicsDeviceReset(const uint32_t& aResetReason)
+{
+#if defined(XP_WIN)
+  gfxPlatform::GetPlatform()->TestDeviceReset(DeviceResetReason(aResetReason));
+#endif
   return true;
 }
 

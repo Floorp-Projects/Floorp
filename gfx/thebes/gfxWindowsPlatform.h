@@ -275,6 +275,8 @@ public:
     mozilla::gfx::FeatureStatus GetD2D1Status() const;
     unsigned GetD3D11Version();
 
+    void TestDeviceReset(DeviceResetReason aReason) override;
+
     virtual already_AddRefed<mozilla::gfx::VsyncSource> CreateHardwareVsyncSource() override;
     static mozilla::Atomic<size_t> sD3D11MemoryUsed;
     static mozilla::Atomic<size_t> sD3D9MemoryUsed;
@@ -334,6 +336,7 @@ private:
     mozilla::RefPtr<mozilla::layers::ReadbackManagerD3D11> mD3D11ReadbackManager;
     bool mIsWARP;
     bool mHasDeviceReset;
+    bool mHasFakeDeviceReset;
     bool mDoesD3D11TextureSharingWork;
     DeviceResetReason mDeviceResetReason;
 
