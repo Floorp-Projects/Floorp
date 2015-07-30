@@ -28,6 +28,114 @@
    fun:_ZN17gfxPangoFontGroup11MakeFontSetEP14_PangoLanguagedP9nsAutoRefI10_FcPatternE
    ...
 }
+# Fontconfig is going fancy with its cache structure and that confuses valgrind.
+# https://bugs.freedesktop.org/show_bug.cgi?id=8215
+# https://bugs.freedesktop.org/show_bug.cgi?id=8428
+{
+   Bug 1187649
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:realloc
+   fun:FcPatternObjectInsertElt
+   ...
+}
+# Leaks due to either Gtk+3 or cairo, but Gecko is not directly involved with
+# those cairo interactions.
+{
+   Bug 1187649
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_cairo_freelist_alloc
+   fun:_cairo_xlib_display_queue_resource
+   fun:_cairo_xlib_surface_finish
+   ...
+   fun:gtk_widget_realize
+   fun:_ZN8nsWindow6CreateEP9nsIWidgetPvRKN7mozilla3gfx12IntRectTypedINS4_12UnknownUnitsEEEP16nsWidgetInitData
+   ...
+}
+# The three following leaks are deep in Gtk+3, and it doesn't seem we're doing
+# anything wrong on our end with the container objects. Those suppressions
+# are purposefully verbose so as to avoid them catching actual leaks due to
+# Gecko code.
+# Note: valgrind doesn't support more than 24 elements in a suppression stack,
+# which explains why the second has an ellipsis above g_slice_alloc.
+{
+   Bug 1187649
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:g_malloc
+   fun:g_slice_alloc
+   fun:g_list_prepend
+   fun:gtk_combo_box_get_path_for_child
+   fun:gtk_container_get_path_for_child
+   fun:gtk_widget_get_path
+   fun:_gtk_widget_update_path
+   fun:reset_style_recurse
+   fun:gtk_widget_reset_style
+   fun:gtk_widget_set_parent
+   fun:gtk_combo_box_add
+   fun:g_cclosure_marshal_VOID__OBJECTv
+   fun:_g_closure_invoke_va
+   fun:g_signal_emit_valist
+   fun:g_signal_emit
+   fun:gtk_combo_box_constructor
+   fun:g_object_newv
+   fun:g_object_new_valist
+   fun:g_object_new
+   fun:_ZN13nsLookAndFeel4InitEv
+   ...
+}
+{
+   Bug 1187649
+   Memcheck:Leak
+   match-leak-kinds: definite
+   ...
+   fun:g_slice_alloc
+   fun:g_slice_copy
+   fun:boxed_proxy_lcopy_value
+   fun:gtk_style_context_get_valist
+   fun:gtk_style_context_get
+   fun:set_color
+   fun:gtk_style_update_from_context
+   fun:gtk_style_constructed
+   fun:g_object_newv
+   fun:g_object_new_valist
+   fun:g_object_new
+   fun:_gtk_style_new_for_path
+   fun:gtk_style_new
+   fun:gtk_widget_get_default_style
+   fun:gtk_widget_init
+   fun:g_type_create_instance
+   fun:g_object_constructor
+   fun:g_object_newv
+   fun:g_object_new
+   fun:gtk_accel_label_new
+   fun:_ZN13nsLookAndFeel4InitEv
+   ...
+}
+{
+   Bug 1187649
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:g_malloc
+   fun:g_slice_alloc
+   fun:g_slice_copy
+   fun:boxed_proxy_lcopy_value
+   fun:gtk_style_context_get_valist
+   fun:gtk_style_context_get
+   fun:set_color
+   fun:gtk_style_update_from_context
+   fun:gtk_style_constructed
+   fun:g_object_newv
+   fun:g_object_new_valist
+   fun:g_object_new
+   fun:gtk_widget_get_style
+   fun:_ZN13nsIconChannel4InitEP6nsIURI
+   ...
+}
 {
    Bug 794366
    Memcheck:Leak
