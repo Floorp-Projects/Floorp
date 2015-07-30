@@ -313,7 +313,7 @@ nsFrameLoader::ReallyStartLoadingInternal()
     }
 
     // Execute pending frame scripts before loading URL
-    EnsureMessageManager();
+    ReallyLoadFrameScripts();
 
     // FIXME get error codes from child
     mRemoteBrowser->LoadURL(mURIToLoad);
@@ -790,7 +790,7 @@ nsFrameLoader::ShowRemoteFrame(const ScreenIntSize& size,
     mRemoteBrowser->Show(size, parentIsActive);
     mRemoteBrowserShown = true;
 
-    EnsureMessageManager();
+    ReallyLoadFrameScripts();
 
     InitializeBrowserAPI();
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
@@ -1789,7 +1789,7 @@ nsFrameLoader::MaybeCreateDocShell()
     webNav->SetSessionHistory(sessionHistory);
   }
 
-  EnsureMessageManager();
+  ReallyLoadFrameScripts();
 
   if (OwnerIsAppFrame()) {
     // You can't be both an app and a browser frame.
@@ -2474,6 +2474,10 @@ nsFrameLoader::EnsureMessageManager()
     return rv;
   }
 
+  if (mMessageManager) {
+    return NS_OK;
+  }
+
   if (!mIsTopLevelContent &&
       !OwnerIsBrowserOrAppFrame() &&
       !mRemoteFrame &&
@@ -2481,14 +2485,6 @@ nsFrameLoader::EnsureMessageManager()
         mOwnerContent->AttrValueIs(kNameSpaceID_None,
                                    nsGkAtoms::forcemessagemanager,
                                    nsGkAtoms::_true, eCaseMatters))) {
-    return NS_OK;
-  }
-
-  bool useRemoteProcess = ShouldUseRemoteProcess();
-  if (mMessageManager) {
-    if (useRemoteProcess && mRemoteBrowser) {
-      mMessageManager->InitWithCallback(this);
-    }
     return NS_OK;
   }
 
@@ -2510,18 +2506,24 @@ nsFrameLoader::EnsureMessageManager()
     }
   }
 
-  if (useRemoteProcess) {
-    mMessageManager = new nsFrameMessageManager(mRemoteBrowser ? this : nullptr,
-                                                static_cast<nsFrameMessageManager*>(parentManager.get()),
-                                                MM_CHROME);
-  } else {
-    mMessageManager = new nsFrameMessageManager(nullptr,
-                                                static_cast<nsFrameMessageManager*>(parentManager.get()),
-                                                MM_CHROME);
-
+  mMessageManager = new nsFrameMessageManager(nullptr,
+                                              static_cast<nsFrameMessageManager*>(parentManager.get()),
+                                              MM_CHROME);
+  if (!ShouldUseRemoteProcess()) {
     mChildMessageManager =
       new nsInProcessTabChildGlobal(mDocShell, mOwnerContent, mMessageManager);
-    // Force pending frame scripts to be loaded.
+  }
+  return NS_OK;
+}
+
+nsresult
+nsFrameLoader::ReallyLoadFrameScripts()
+{
+  nsresult rv = EnsureMessageManager();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  if (mMessageManager) {
     mMessageManager->InitWithCallback(this);
   }
   return NS_OK;
