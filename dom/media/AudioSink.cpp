@@ -159,26 +159,41 @@ AudioSink::Shutdown()
 void
 AudioSink::SetVolume(double aVolume)
 {
-  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  mVolume = aVolume;
-  mSetVolume = true;
+  AssertNotOnAudioThread();
+  nsRefPtr<AudioSink> self = this;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
+    if (self->mState == AUDIOSINK_STATE_PLAYING) {
+      self->mAudioStream->SetVolume(aVolume);
+    }
+  });
+  DispatchTask(r.forget());
 }
 
 void
 AudioSink::SetPlaybackRate(double aPlaybackRate)
 {
-  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  NS_ASSERTION(mPlaybackRate != 0, "Don't set the playbackRate to 0 on AudioStream");
-  mPlaybackRate = aPlaybackRate;
-  mSetPlaybackRate = true;
+  AssertNotOnAudioThread();
+  MOZ_ASSERT(aPlaybackRate != 0, "Don't set the playbackRate to 0 on AudioStream");
+  nsRefPtr<AudioSink> self = this;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
+    if (self->mState == AUDIOSINK_STATE_PLAYING) {
+      self->mAudioStream->SetPlaybackRate(aPlaybackRate);
+    }
+  });
+  DispatchTask(r.forget());
 }
 
 void
 AudioSink::SetPreservesPitch(bool aPreservesPitch)
 {
-  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  mPreservesPitch = aPreservesPitch;
-  mSetPreservesPitch = true;
+  AssertNotOnAudioThread();
+  nsRefPtr<AudioSink> self = this;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
+    if (self->mState == AUDIOSINK_STATE_PLAYING) {
+      self->mAudioStream->SetPreservesPitch(aPreservesPitch);
+    }
+  });
+  DispatchTask(r.forget());
 }
 
 void
