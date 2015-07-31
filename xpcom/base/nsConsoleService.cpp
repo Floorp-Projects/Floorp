@@ -22,6 +22,7 @@
 #include "nsPrintfCString.h"
 #include "nsProxyRelease.h"
 #include "nsIScriptError.h"
+#include "nsISupportsPrimitives.h"
 
 #include "mozilla/Preferences.h"
 
@@ -45,8 +46,8 @@ NS_IMPL_RELEASE(nsConsoleService)
 NS_IMPL_CLASSINFO(nsConsoleService, nullptr,
                   nsIClassInfo::THREADSAFE | nsIClassInfo::SINGLETON,
                   NS_CONSOLESERVICE_CID)
-NS_IMPL_QUERY_INTERFACE_CI(nsConsoleService, nsIConsoleService)
-NS_IMPL_CI_INTERFACE_GETTER(nsConsoleService, nsIConsoleService)
+NS_IMPL_QUERY_INTERFACE_CI(nsConsoleService, nsIConsoleService, nsIObserver)
+NS_IMPL_CI_INTERFACE_GETTER(nsConsoleService, nsIConsoleService, nsIObserver)
 
 static bool sLoggingEnabled = true;
 static bool sLoggingBuffered = true;
@@ -69,7 +70,7 @@ nsConsoleService::nsConsoleService()
 }
 
 
-NS_IMETHODIMP
+void
 nsConsoleService::ClearMessagesForWindowID(const uint64_t innerID)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
@@ -92,6 +93,7 @@ nsConsoleService::ClearMessagesForWindowID(const uint64_t innerID)
 
     uint32_t j = i;
     // Now shift all the following messages
+    // XXXkhuey this is not an efficient way to iterate through an array ...
     for (; j < mBufferSize - 1 && mMessages[j + 1]; j++) {
       mMessages[j] = mMessages[j + 1];
     }
@@ -105,8 +107,6 @@ nsConsoleService::ClearMessagesForWindowID(const uint64_t innerID)
     // Ensure the next iteration handles the messages we just shifted down
     i--;
   }
-
-  return NS_OK;
 }
 
 nsConsoleService::~nsConsoleService()
@@ -138,6 +138,12 @@ public:
 #if defined(ANDROID)
     Preferences::AddBoolVarCache(&sLoggingLogcat, "consoleservice.logcat", true);
 #endif // defined(ANDROID)
+
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    MOZ_ASSERT(obs);
+    obs->AddObserver(mConsole, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+    obs->AddObserver(mConsole, "inner-window-destroyed", false);
+
     if (!sLoggingBuffered) {
       mConsole->Reset();
     }
@@ -484,5 +490,28 @@ nsConsoleService::Reset()
     NS_RELEASE(mMessages[i]);
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsConsoleService::Observe(nsISupports* aSubject, const char* aTopic,
+                          const char16_t* aData)
+{
+  if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+    // Dump all our messages, in case any are cycle collected.
+    Reset();
+    // We could remove ourselves from the observer service, but it is about to
+    // drop all observers anyways, so why bother.
+  } else if (!strcmp(aTopic, "inner-window-destroyed")) {
+    nsCOMPtr<nsISupportsPRUint64> supportsInt = do_QueryInterface(aSubject);
+    MOZ_ASSERT(supportsInt);
+
+    uint64_t windowId;
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(supportsInt->GetData(&windowId)));
+
+    ClearMessagesForWindowID(windowId);
+  } else {
+    MOZ_CRASH();
+  }
   return NS_OK;
 }
