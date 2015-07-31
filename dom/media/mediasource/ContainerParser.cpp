@@ -177,6 +177,16 @@ public:
         (*aData)[3] == 0x6b) {
       return true;
     }
+    // 0xa3 // SimpleBlock
+    if (aData->Length() >= 1 &&
+        (*aData)[0] == 0xa3) {
+      return true;
+    }
+    // 0xa1 // Block
+    if (aData->Length() >= 1 &&
+        (*aData)[0] == 0xa1) {
+      return true;
+    }
     return false;
   }
 
