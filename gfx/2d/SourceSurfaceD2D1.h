@@ -39,7 +39,7 @@ public:
 private:
   friend class DrawTargetD2D1;
 
-  void EnsureRealizedBitmap();
+  bool EnsureRealizedBitmap();
 
   // This function is called by the draw target this texture belongs to when
   // it is about to be changed. The texture will be required to make a copy

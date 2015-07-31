@@ -38,6 +38,11 @@ function copyStringAndToast(string, notifyString) {
 
 // Delay filtering while typing in MS
 const FILTER_DELAY = 500;
+/* Constants for usage telemetry */
+const LOGINS_LIST_VIEWED = 0;
+const LOGIN_VIEWED = 1;
+const LOGIN_EDITED = 2;
+const LOGIN_PW_TOGGLED = 3;
 
 let Logins = {
   _logins: [],
@@ -162,6 +167,7 @@ let Logins = {
   },
 
   _showList: function () {
+    Services.telemetry.getHistogramById("PWMGR_ABOUT_LOGINS_USAGE").add(LOGINS_LIST_VIEWED);
     let loginsListPage = document.getElementById("logins-list-page");
     loginsListPage.classList.remove("hidden");
 
@@ -184,6 +190,7 @@ let Logins = {
     }
   },
   _showEditLoginDialog: function (login) {
+    Services.telemetry.getHistogramById("PWMGR_ABOUT_LOGINS_USAGE").add(LOGIN_VIEWED);
     let listPage = document.getElementById("logins-list-page");
     listPage.classList.add("hidden");
 
@@ -210,6 +217,7 @@ let Logins = {
   },
 
   _onSaveEditLogin: function() {
+    Services.telemetry.getHistogramById("PWMGR_ABOUT_LOGINS_USAGE").add(LOGIN_EDITED);
     let newUsername = document.getElementById("username").value;
     let newPassword = document.getElementById("password").value;
     let newDomain  = document.getElementById("hostname").value;
@@ -248,6 +256,7 @@ let Logins = {
   },
 
   _onPasswordBtn: function () {
+    Services.telemetry.getHistogramById("PWMGR_ABOUT_LOGINS_USAGE").add(LOGIN_PW_TOGGLED);
     this._updatePasswordBtn(this._isPasswordBtnInHideMode());
   },
 

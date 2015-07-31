@@ -25,7 +25,6 @@ interfaces = [
     'storage',
     'json',
     'offline',
-    'push',
     'geolocation',
     'notification',
     'permission',
@@ -34,6 +33,9 @@ interfaces = [
     'apps',
     'gamepad',
 ]
+
+if not CONFIG['MOZ_SIMPLEPUSH']:
+    interfaces += ['push']
 
 DIRS += ['interfaces/' + i for i in interfaces]
 

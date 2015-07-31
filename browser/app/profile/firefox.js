@@ -1889,7 +1889,7 @@ pref("privacy.trackingprotection.introURL", "https://support.mozilla.org/kb/trac
 pref("privacy.trackingprotection.introCount", 0);
 pref("privacy.trackingprotection.introURL", "https://support.mozilla.org/kb/tracking-protection-firefox");
 
-#ifdef NIGHTLY_BUILD
+#ifndef RELEASE_BUILD
 // At the moment, autostart.2 is used, while autostart.1 is unused.
 // We leave it here set to false to reset users' defaults and allow
 // us to change everybody to true in the future, when desired.

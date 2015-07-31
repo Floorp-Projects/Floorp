@@ -215,4 +215,6 @@
     <item name="match_parent" type="dimen">-1</item>
     <item name="wrap_content" type="dimen">-2</item>
 
+    <item name="tab_strip_content_start" type="dimen">12dp</item>
+
 </resources>

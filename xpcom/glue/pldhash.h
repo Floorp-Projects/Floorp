@@ -52,9 +52,6 @@ private:
   PLDHashNumber mKeyHash;
 };
 
-typedef size_t (*PLDHashSizeOfEntryExcludingThisFun)(
-  PLDHashEntryHdr* aHdr, mozilla::MallocSizeOf aMallocSizeOf, void* aArg);
-
 #ifdef DEBUG
 
 // This class does three kinds of checking:
@@ -375,17 +372,13 @@ public:
   // a new |aLength| argument.
   void ClearAndPrepareForLength(uint32_t aLength);
 
-  // Measure the size of the table's entry storage, and if
-  // |aSizeOfEntryExcludingThis| is non-nullptr, measure the size of things
-  // pointed to by entries.
-  size_t SizeOfIncludingThis(
-    PLDHashSizeOfEntryExcludingThisFun aSizeOfEntryExcludingThis,
-    mozilla::MallocSizeOf aMallocSizeOf, void* aArg = nullptr) const;
+  // Measure the size of the table's entry storage. If the entries contain
+  // pointers to other heap blocks, you have to iterate over the table and
+  // measure those separately; hence the "Shallow" prefix.
+  size_t ShallowSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-  // Like SizeOfExcludingThis(), but includes sizeof(*this).
-  size_t SizeOfExcludingThis(
-    PLDHashSizeOfEntryExcludingThisFun aSizeOfEntryExcludingThis,
-    mozilla::MallocSizeOf aMallocSizeOf, void* aArg = nullptr) const;
+  // Like ShallowSizeOfExcludingThis(), but includes sizeof(*this).
+  size_t ShallowSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 #ifdef DEBUG
   // Mark a table as immutable for the remainder of its lifetime. This
@@ -634,18 +627,6 @@ PL_DHashTableRemove(PLDHashTable* aTable, const void* aKey);
 
 void
 PL_DHashTableRawRemove(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
-
-size_t
-PL_DHashTableSizeOfExcludingThis(
-  const PLDHashTable* aTable,
-  PLDHashSizeOfEntryExcludingThisFun aSizeOfEntryExcludingThis,
-  mozilla::MallocSizeOf aMallocSizeOf, void* aArg = nullptr);
-
-size_t
-PL_DHashTableSizeOfIncludingThis(
-  const PLDHashTable* aTable,
-  PLDHashSizeOfEntryExcludingThisFun aSizeOfEntryExcludingThis,
-  mozilla::MallocSizeOf aMallocSizeOf, void* aArg = nullptr);
 
 #ifdef DEBUG
 void

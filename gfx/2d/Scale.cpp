@@ -6,7 +6,7 @@
 
 #ifdef USE_SKIA
 #include "HelpersSkia.h"
-#include "skia/SkBitmap.h"
+#include "skia/include/core/SkBitmap.h"
 #include "image_operations.h"
 #endif
 
