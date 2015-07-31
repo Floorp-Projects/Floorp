@@ -7,12 +7,16 @@ package org.mozilla.gecko.util;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
+import android.support.annotation.ColorRes;
+import android.support.annotation.DrawableRes;
+import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.graphics.drawable.DrawableCompat;
 
 public class DrawableUtil {
 
-    public static Drawable tintDrawable(final Context context, final int drawableID, final int colorID) {
+    public static Drawable tintDrawable(@NonNull final Context context, @DrawableRes final int drawableID,
+                @ColorRes final int colorID) {
         final Drawable icon = DrawableCompat.wrap(
                 ContextCompat.getDrawable(context, drawableID).mutate());
         DrawableCompat.setTint(icon, context.getResources().getColor(colorID));
