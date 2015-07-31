@@ -29,10 +29,6 @@ public:
 
   void DispatchNfcEvent(const mozilla::dom::NfcEventOptions& aOptions);
 
-  nsCOMPtr<nsIThread> GetThread() {
-    return mThread;
-  }
-
 private:
   class CleanupRunnable;
   class SendRunnable;
