@@ -15,12 +15,14 @@
                                            android:paddingRight="1dip"
                                            android:gravity="center">
 
-    <RelativeLayout android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="6dip"
-                    android:padding="4dip"
-                    android:background="@drawable/tab_thumbnail"
-                    android:duplicateParentState="true">
+    <org.mozilla.gecko.widget.TabThumbnailWrapper
+            android:id="@+id/wrapper"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="6dip"
+            android:padding="4dip"
+            android:background="@drawable/tab_thumbnail"
+            android:duplicateParentState="true">
 
         <org.mozilla.gecko.widget.ThumbnailView android:id="@+id/thumbnail"
                                                 android:layout_width="@dimen/tab_thumbnail_width"
@@ -55,6 +57,6 @@
 
         </LinearLayout>
 
-    </RelativeLayout>
+    </org.mozilla.gecko.widget.TabThumbnailWrapper>
 
 </org.mozilla.gecko.tabs.TabsLayoutItemView>

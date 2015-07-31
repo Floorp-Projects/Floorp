@@ -5,9 +5,11 @@ import android.database.Cursor;
 import android.database.DataSetObserver;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
@@ -197,6 +199,10 @@ public class RemoteTabsSplitPlaneFragment extends RemoteTabsBaseFragment {
         // Now the adapter is wrapped; we can remove our footer view.
         mClientList.removeFooterView(mFooterView);
 
+        // Register touch handler to conditionally enable swipe refresh layout.
+        mClientList.setOnTouchListener(new ListTouchListener(mClientList));
+        mTabList.setOnTouchListener(new ListTouchListener(mTabList));
+
         // Create callbacks before the initial loader is started
         mCursorLoaderCallbacks = new CursorLoaderCallbacks();
         loadIfVisible();
@@ -360,6 +366,37 @@ public class RemoteTabsSplitPlaneFragment extends RemoteTabsBaseFragment {
             final boolean isSelected = client.guid.equals(sState.selectedClient);
             adapter.updateClientsItemView(isSelected, context, view, getItem(position));
             return view;
+        }
+    }
+
+    /**
+     * OnTouchListener implementation for ListView that enables swipe to refresh on the touch down event iff list cannot scroll up.
+     * This implementation does not consume the <code>MotionEvent</code>.
+     */
+    private class ListTouchListener implements View.OnTouchListener {
+        private final AbsListView listView;
+
+        public ListTouchListener(AbsListView listView) {
+            this.listView = listView;
+        }
+
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+            final int action = event.getAction();
+            switch (action) {
+                case MotionEvent.ACTION_DOWN:
+                    // Enable swipe to refresh iff the first item is visible and is at the top.
+                    mRefreshLayout.setEnabled(listView.getCount() <= 0
+                    	    || (listView.getFirstVisiblePosition() <= 0 && listView.getChildAt(0).getTop() >= 0));
+                    break;
+                case MotionEvent.ACTION_CANCEL:
+                case MotionEvent.ACTION_UP:
+                    mRefreshLayout.setEnabled(true);
+                    break;
+            }
+
+            // Event is not handled here, it will be consumed in enclosing SwipeRefreshLayout.
+            return false;
         }
     }
 }
