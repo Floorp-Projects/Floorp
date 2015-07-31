@@ -18,6 +18,7 @@ import java.util.Map;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.RestrictedProfiles;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.Telemetry;
@@ -33,6 +34,7 @@ import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.PinSiteDialog.OnSiteSelectedListener;
 import org.mozilla.gecko.home.TopSitesGridView.OnEditPinnedSiteListener;
 import org.mozilla.gecko.home.TopSitesGridView.TopSitesGridContextMenuInfo;
+import org.mozilla.gecko.restrictions.Restriction;
 import org.mozilla.gecko.tiles.TilesRecorder;
 import org.mozilla.gecko.tiles.Tile;
 import org.mozilla.gecko.util.StringUtils;
@@ -368,6 +370,10 @@ public class TopSitesPanel extends HomeFragment {
 
         if (!StringUtils.isShareableUrl(info.url) || GeckoProfile.get(getActivity()).inGuestMode()) {
             menu.findItem(R.id.home_share).setVisible(false);
+        }
+
+        if (!RestrictedProfiles.isAllowed(view.getContext(), Restriction.DISALLOW_PRIVATE_BROWSING)) {
+            menu.findItem(R.id.home_open_private_tab).setVisible(false);
         }
     }
 

@@ -66,9 +66,10 @@ private:
   nsRefPtr<nsSpeechTask> mCurrentTask;
 
   nsRefPtrHashtable<nsStringHashKey, SpeechSynthesisVoice> mVoiceCache;
+
+  bool mHoldQueue;
 };
 
 } // namespace dom
 } // namespace mozilla
-
 #endif

@@ -138,15 +138,6 @@ MediaSourceDemuxer::GetCrypto()
 }
 
 void
-MediaSourceDemuxer::NotifyTimeRangesChanged()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  for (uint32_t i = 0; i < mDemuxers.Length(); i++) {
-    mDemuxers[i]->NotifyTimeRangesChanged();
-  }
-}
-
-void
 MediaSourceDemuxer::AttachSourceBuffer(TrackBuffersManager* aSourceBuffer)
 {
   nsCOMPtr<nsIRunnable> task =
@@ -269,13 +260,6 @@ MediaSourceTrackDemuxer::MediaSourceTrackDemuxer(MediaSourceDemuxer* aParent,
   , mType(aType)
   , mMonitor("MediaSourceTrackDemuxer")
 {
-  // Force refresh of our buffered ranges.
-  nsRefPtr<MediaSourceTrackDemuxer> self = this;
-  nsCOMPtr<nsIRunnable> task =
-    NS_NewRunnableFunction([self] () {
-      self->NotifyTimeRangesChanged();
-    });
-  mParent->GetTaskQueue()->Dispatch(task.forget());
 }
 
 UniquePtr<TrackInfo>
@@ -361,7 +345,10 @@ MediaSourceTrackDemuxer::BreakCycles()
 nsRefPtr<MediaSourceTrackDemuxer::SeekPromise>
 MediaSourceTrackDemuxer::DoSeek(media::TimeUnit aTime)
 {
-  if (!mBufferedRanges.Contains(aTime)) {
+  TimeIntervals buffered = mManager->Buffered(mType);
+  buffered.SetFuzz(TimeUnit::FromMicroseconds(EOS_FUZZ_US));
+
+  if (!buffered.Contains(aTime)) {
     // We don't have the data to seek to.
     return SeekPromise::CreateAndReject(DemuxerFailureReason::WAITING_FOR_DATA,
                                         __func__);
@@ -411,17 +398,6 @@ MediaSourceTrackDemuxer::DoSkipToNextRandomAccessPoint(media::TimeUnit aTimeThre
     mManager->IsEnded() ? DemuxerFailureReason::END_OF_STREAM :
                           DemuxerFailureReason::WAITING_FOR_DATA, parsed);
   return SkipAccessPointPromise::CreateAndReject(holder, __func__);
-}
-
-void
-MediaSourceTrackDemuxer::NotifyTimeRangesChanged()
-{
-  if (!mParent) {
-    return;
-  }
-  MOZ_ASSERT(mParent->OnTaskQueue());
-  mBufferedRanges = mManager->Buffered(mType);
-  mBufferedRanges.SetFuzz(TimeUnit::FromMicroseconds(EOS_FUZZ_US));
 }
 
 } // namespace mozilla

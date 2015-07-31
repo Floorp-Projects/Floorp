@@ -3,7 +3,7 @@ This is an import of Skia from 2014-07-28 (b1ab5fdd11bb358d738c1bfa63737dc65174a
 To update to a new version of Skia:
 
 - Clone Skia from upstream using the instructions here: https://sites.google.com/site/skiadocs/user-documentation/downloading
-- Copy the entire source tree from a Skia clone to mozilla-central/gfx/skia/trunk
+- Copy the entire source tree from a Skia clone to mozilla-central/gfx/skia/skia
 - cd gfx/skia && ./gyp_mozbuild
 
 Once that's done, use git status to view the files that have changed. Keep an eye on GrUserConfig.h

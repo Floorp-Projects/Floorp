@@ -39,4 +39,3 @@ EXPORTS
     eglGetPlatformDisplayEXT         @35
     eglQuerySurfacePointerANGLE      @36
     eglPostSubBufferNV               @37
-    eglSurfaceReleaseSyncANGLE       @38

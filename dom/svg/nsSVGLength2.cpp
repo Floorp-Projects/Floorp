@@ -17,6 +17,7 @@
 #include "nsSVGIntegrationUtils.h"
 #include "nsTextFormatter.h"
 #include "DOMSVGLength.h"
+#include "LayoutLogging.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -121,7 +122,7 @@ static float
 FixAxisLength(float aLength)
 {
   if (aLength == 0.0f) {
-    NS_WARNING("zero axis length");
+    LAYOUT_WARNING("zero axis length");
     return 1e-20f;
   }
   return aLength;
