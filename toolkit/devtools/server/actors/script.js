@@ -18,7 +18,7 @@ const promise = require("promise");
 const PromiseDebugging = require("PromiseDebugging");
 const xpcInspector = require("xpcInspector");
 const ScriptStore = require("./utils/ScriptStore");
-const {DevToolsWorker} = require("devtools/toolkit/shared/worker.js");
+const { DevToolsWorker } = require("devtools/toolkit/shared/worker.js");
 
 const { defer, resolve, reject, all } = require("devtools/toolkit/deprecated-sync-thenables");
 

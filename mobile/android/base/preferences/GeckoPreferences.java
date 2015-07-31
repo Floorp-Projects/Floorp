@@ -135,6 +135,7 @@ OnSharedPreferenceChangeListener
     private static final String PREFS_CUSTOMIZE_HOME = NON_PREF_PREFIX + "customize_home";
     private static final String PREFS_TRACKING_PROTECTION_PRIVATE_BROWSING = "privacy.trackingprotection.pbmode.enabled";
     private static final String PREFS_TRACKING_PROTECTION_LEARN_MORE = NON_PREF_PREFIX + "trackingprotection.learn_more";
+    private static final String PREFS_CATEGORY_PRIVATE_DATA = NON_PREF_PREFIX + "category_private_data";
 
     private static final String ACTION_STUMBLER_UPLOAD_PREF = AppConstants.ANDROID_PACKAGE_NAME + ".STUMBLER_PREF";
 
@@ -491,6 +492,8 @@ OnSharedPreferenceChangeListener
                     iterator.remove();
                 } else if (header.id == R.id.pref_header_devtools && !RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_DEVELOPER_TOOLS)) {
                     iterator.remove();
+                } else if (header.id == R.id.pref_header_display && !RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_DISPLAY_SETTINGS)) {
+                    iterator.remove();
                 }
             }
         }
@@ -715,6 +718,13 @@ OnSharedPreferenceChangeListener
                         continue;
                     }
                 }
+                if (PREFS_CATEGORY_PRIVATE_DATA.equals(key)) {
+                    if (!RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_CLEAR_HISTORY)) {
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
+                }
 
                 setupPreferences((PreferenceGroup) pref, prefs);
             } else {
@@ -858,6 +868,12 @@ OnSharedPreferenceChangeListener
                     }
                 } else if (PREFS_TRACKING_PROTECTION_LEARN_MORE.equals(key)) {
                     if (!RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_PRIVATE_BROWSING)) {
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
+                } else if (PREFS_MP_ENABLED.equals(key)) {
+                    if (!RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_MASTER_PASSWORD)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
