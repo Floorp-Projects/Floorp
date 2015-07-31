@@ -102,25 +102,6 @@ HashableValue::mark(JSTracer* trc) const
 
 namespace {
 
-class MapIteratorObject : public NativeObject
-{
-  public:
-    static const Class class_;
-
-    enum { TargetSlot, KindSlot, RangeSlot, SlotCount };
-    static const JSFunctionSpec methods[];
-    static MapIteratorObject* create(JSContext* cx, HandleObject mapobj, ValueMap* data,
-                                     MapObject::IteratorKind kind);
-    static bool next(JSContext* cx, unsigned argc, Value* vp);
-    static void finalize(FreeOp* fop, JSObject* obj);
-
-  private:
-    static inline bool is(HandleValue v);
-    inline ValueMap::Range* range();
-    inline MapObject::IteratorKind kind() const;
-    static bool next_impl(JSContext* cx, CallArgs args);
-};
-
 } /* anonymous namespace */
 
 const Class MapIteratorObject::class_ = {
@@ -140,14 +121,15 @@ const Class MapIteratorObject::class_ = {
 
 const JSFunctionSpec MapIteratorObject::methods[] = {
     JS_SELF_HOSTED_SYM_FN(iterator, "IteratorIdentity", 0, 0),
-    JS_FN("next", next, 0, 0),
+    JS_SELF_HOSTED_FN("next", "MapIteratorNext", 0, 0),
     JS_FS_END
 };
 
-inline ValueMap::Range*
-MapIteratorObject::range()
+static inline ValueMap::Range*
+MapIteratorObjectRange(NativeObject* obj)
 {
-    return static_cast<ValueMap::Range*>(getSlot(RangeSlot).toPrivate());
+    MOZ_ASSERT(obj->is<MapIteratorObject>());
+    return static_cast<ValueMap::Range*>(obj->getSlot(MapIteratorObject::RangeSlot).toPrivate());
 }
 
 inline MapObject::IteratorKind
@@ -194,75 +176,46 @@ MapIteratorObject::create(JSContext* cx, HandleObject mapobj, ValueMap* data,
         return nullptr;
     }
     iterobj->setSlot(TargetSlot, ObjectValue(*mapobj));
-    iterobj->setSlot(KindSlot, Int32Value(int32_t(kind)));
     iterobj->setSlot(RangeSlot, PrivateValue(range));
+    iterobj->setSlot(KindSlot, Int32Value(int32_t(kind)));
     return iterobj;
 }
 
 void
 MapIteratorObject::finalize(FreeOp* fop, JSObject* obj)
 {
-    fop->delete_(obj->as<MapIteratorObject>().range());
+    fop->delete_(MapIteratorObjectRange(static_cast<NativeObject*>(obj)));
 }
 
 bool
-MapIteratorObject::is(HandleValue v)
+MapIteratorObject::next(JSContext* cx, Handle<MapIteratorObject*> mapIterator,
+                        HandleArrayObject resultPairObj)
 {
-    return v.isObject() && v.toObject().hasClass(&class_);
-}
+    MOZ_ASSERT(resultPairObj->getDenseInitializedLength() == 2);
 
-bool
-MapIteratorObject::next_impl(JSContext* cx, CallArgs args)
-{
-    MapIteratorObject& thisobj = args.thisv().toObject().as<MapIteratorObject>();
-    ValueMap::Range* range = thisobj.range();
-    RootedValue value(cx);
-    bool done;
-
+    ValueMap::Range* range = MapIteratorObjectRange(mapIterator);
     if (!range || range->empty()) {
         js_delete(range);
-        thisobj.setReservedSlot(RangeSlot, PrivateValue(nullptr));
-        value.setUndefined();
-        done = true;
-    } else {
-        switch (thisobj.kind()) {
-          case MapObject::Keys:
-            value = range->front().key.get();
-            break;
-
-          case MapObject::Values:
-            value = range->front().value;
-            break;
-
-          case MapObject::Entries: {
-            JS::AutoValueArray<2> pair(cx);
-            pair[0].set(range->front().key.get());
-            pair[1].set(range->front().value);
-
-            JSObject* pairobj = NewDenseCopiedArray(cx, pair.length(), pair.begin());
-            if (!pairobj)
-                return false;
-            value.setObject(*pairobj);
-            break;
-          }
-        }
-        range->popFront();
-        done = false;
+        mapIterator->setReservedSlot(RangeSlot, PrivateValue(nullptr));
+        return true;
     }
+    switch (mapIterator->kind()) {
+      case MapObject::Keys:
+        resultPairObj->setDenseElementWithType(cx, 0, range->front().key.get());
+        break;
 
-    RootedObject result(cx, CreateItrResultObject(cx, value, done));
-    if (!result)
-        return false;
-    args.rval().setObject(*result);
+      case MapObject::Values:
+        resultPairObj->setDenseElementWithType(cx, 1, range->front().value);
+        break;
 
-    return true;
-}
-
-bool
-MapIteratorObject::next(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, is, next_impl, args);
+      case MapObject::Entries: {
+        resultPairObj->setDenseElementWithType(cx, 0, range->front().key.get());
+        resultPairObj->setDenseElementWithType(cx, 1, range->front().value);
+        break;
+      }
+    }
+    range->popFront();
+    return false;
 }
 
 
@@ -1455,7 +1408,6 @@ js::InitSetClass(JSContext* cx, HandleObject obj)
 }
 
 const JSFunctionSpec selfhosting_collection_iterator_methods[] = {
-    JS_FN("std_Map_iterator_next", MapIteratorObject::next, 0, 0),
     JS_FN("std_Set_iterator_next", SetIteratorObject::next, 0, 0),
     JS_FS_END
 };
