@@ -76,6 +76,7 @@ gujar.sources += [
     'util/ActivityResultHandlerMap.java',
     'util/ActivityUtils.java',
     'util/Clipboard.java',
+    'util/DrawableUtil.java',
     'util/EventCallback.java',
     'util/FileUtils.java',
     'util/FloatUtils.java',
