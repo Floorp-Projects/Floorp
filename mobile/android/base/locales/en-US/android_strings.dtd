@@ -701,3 +701,5 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY restriction_disallow_private_browsing_description "Disallow private browsing mode.">
 <!ENTITY restriction_disallow_location_services_title "Disallow location services">
 <!ENTITY restriction_disallow_location_services_description "Disallow sharing of location data to improve geolocation service.">
+<!ENTITY restriction_disallow_display_settings_title "Disallow display settings">
+<!ENTITY restriction_disallow_display_settings_description "Disallow changing of advanced display settings.">
