@@ -102,8 +102,13 @@ describe("loop.conversationViews", function () {
       sdkDriver: {}
     });
 
+    var textChatStore = new loop.store.TextChatStore(dispatcher, {
+      sdkDriver: {}
+    });
+
     loop.store.StoreMixin.register({
-      conversationStore: conversationStore
+      conversationStore: conversationStore,
+      textChatStore: textChatStore
     });
   });
 
