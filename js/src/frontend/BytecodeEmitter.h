@@ -105,8 +105,6 @@ enum VarEmitOption {
 
 struct BytecodeEmitter
 {
-    typedef StmtInfoBCE StmtInfo;
-
     SharedContext* const sc;      /* context shared between parsing and bytecode generation */
 
     ExclusiveContext* const cx;
@@ -137,10 +135,7 @@ struct BytecodeEmitter
 
     HandleScript    evalCaller;     /* scripted caller info for eval and dbgapi */
 
-    StmtInfoBCE*    topStmt;       /* top of statement info stack */
-    StmtInfoBCE*    topScopeStmt;  /* top lexical scope statement */
-    Rooted<NestedScopeObject*> staticScope;
-                                    /* compile time scope chain */
+    StmtInfoStack<StmtInfoBCE> stmtStack;
 
     OwnedAtomIndexMapPtr atomIndices; /* literals indexed for mapping */
     unsigned        firstLine;      /* first line, for JSScript::initFromEmitter */
@@ -223,6 +218,10 @@ struct BytecodeEmitter
                     bool insideNonGlobalEval, uint32_t lineNum, EmitterMode emitterMode = Normal);
     bool init();
     bool updateLocalsToFrameSlots();
+
+    StmtInfoBCE* topStmt() const { return stmtStack.top(); }
+    StmtInfoBCE* topScopeStmt() const { return stmtStack.topScopal(); }
+    NestedScopeObject* topStaticScope() const;
 
     bool isAliasedName(ParseNode* pn);
 
