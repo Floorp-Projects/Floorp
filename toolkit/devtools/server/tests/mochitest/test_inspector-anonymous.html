@@ -54,8 +54,8 @@ window.onload = function() {
     let toolbarbutton = yield gWalker.querySelector(gWalker.rootNode, "toolbarbutton");
     let children = yield gWalker.children(toolbarbutton);
 
-    is (toolbarbutton.numChildren, 3, "XBL content is visible even in HTML doc");
-    is (children.nodes.length, 3, "XBL content is returned even in HTML doc");
+    is (toolbarbutton.numChildren, 0, "XBL content is not visible in HTML doc");
+    is (children.nodes.length, 0, "XBL content is not returned in HTML doc");
 
     runNextTest();
   });
