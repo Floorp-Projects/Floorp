@@ -237,6 +237,9 @@ public:
   /// Are we in the middle of a frame right now? Used for assertions only.
   bool InFrame() const { return mInFrame; }
 
+  /// Should we store surfaces created by this decoder in the SurfaceCache?
+  bool ShouldUseSurfaceCache() const { return bool(mImage); }
+
   /**
    * Returns true if this decoder was aborted.
    *
