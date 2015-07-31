@@ -4304,13 +4304,14 @@ ContentParent::GetConsoleService()
         return mConsoleService.get();
     }
 
+    // XXXkhuey everything about this is terrible.
     // Get the ConsoleService by CID rather than ContractID, so that we
     // can cast the returned pointer to an nsConsoleService (rather than
     // just an nsIConsoleService). This allows us to call the non-idl function
     // nsConsoleService::LogMessageWithMode.
     NS_DEFINE_CID(consoleServiceCID, NS_CONSOLESERVICE_CID);
-    nsCOMPtr<nsConsoleService>  consoleService(do_GetService(consoleServiceCID));
-    mConsoleService = consoleService;
+    nsCOMPtr<nsIConsoleService> consoleService(do_GetService(consoleServiceCID));
+    mConsoleService = static_cast<nsConsoleService*>(consoleService.get());
     return mConsoleService.get();
 }
 
