@@ -174,7 +174,7 @@ public:
   void DoIteration();
 
   bool OneIteration(GraphTime aFrom, GraphTime aTo,
-                    GraphTime aStateFrom, GraphTime aStateEnd);
+                    GraphTime aStateEnd);
 
   bool Running() const
   {
