@@ -1377,6 +1377,9 @@ protected:
   // Have we added quirk.css to the style set?
   unsigned              mQuirkSheetAdded : 1;
 
+  // Is there a pref update to process once we have a container?
+  unsigned              mNeedsPrefUpdate : 1;
+
 #ifdef RESTYLE_LOGGING
   // Should we output debug information about restyling for this document?
   bool                  mRestyleLoggingEnabled;
