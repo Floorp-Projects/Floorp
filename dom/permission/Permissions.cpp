@@ -9,8 +9,8 @@
 #include "mozilla/dom/PermissionsBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/Services.h"
-
 #include "nsIPermissionManager.h"
+#include "PermissionUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -41,22 +41,6 @@ Permissions::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 }
 
 namespace {
-
-PermissionState
-ActionToPermissionState(uint32_t aAction)
-{
-  switch (aAction) {
-    case nsIPermissionManager::ALLOW_ACTION:
-      return PermissionState::Granted;
-
-    case nsIPermissionManager::DENY_ACTION:
-      return PermissionState::Denied;
-
-    default:
-    case nsIPermissionManager::PROMPT_ACTION:
-      return PermissionState::Prompt;
-  }
-}
 
 nsresult
 CheckPermission(const char* aName,
