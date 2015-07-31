@@ -34,7 +34,7 @@ using namespace mozilla::ipc;
 
 namespace mozilla {
 
-static NfcService* gNfcService;
+static StaticRefPtr<NfcService> gNfcService;
 
 NS_IMPL_ISUPPORTS(NfcService, nsINfcService)
 
@@ -456,7 +456,7 @@ NfcService::FactoryCreate()
     ClearOnShutdown(&gNfcService);
   }
 
-  nsRefPtr<NfcService> service = gNfcService;
+  nsRefPtr<NfcService> service(gNfcService);
   return service.forget();
 }
 
