@@ -185,6 +185,7 @@ browser.jar:
   skin/classic/browser/feeds/subscribe.css            (feeds/subscribe.css)
   skin/classic/browser/feeds/subscribe-ui.css         (feeds/subscribe-ui.css)
 * skin/classic/browser/newtab/newTab.css              (newtab/newTab.css)
+  skin/classic/browser/newtab/close.png               (../shared/newtab/close.png)
   skin/classic/browser/newtab/controls.svg            (../shared/newtab/controls.svg)
   skin/classic/browser/newtab/whimsycorn.png          (../shared/newtab/whimsycorn.png)
   skin/classic/browser/panic-panel/header.png         (../shared/panic-panel/header.png)
