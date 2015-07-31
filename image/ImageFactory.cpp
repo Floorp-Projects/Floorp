@@ -221,6 +221,29 @@ ImageFactory::CreateRasterImage(nsIRequest* aRequest,
   aProgressTracker->SetImage(newImage);
   newImage->SetProgressTracker(aProgressTracker);
 
+  nsAutoCString ref;
+  aURI->GetRef(ref);
+  net::nsMediaFragmentURIParser parser(ref);
+  if (parser.HasResolution()) {
+    newImage->SetRequestedResolution(parser.GetResolution());
+  }
+
+  if (parser.HasSampleSize()) {
+      /* Get our principal */
+      nsCOMPtr<nsIChannel> chan(do_QueryInterface(aRequest));
+      nsCOMPtr<nsIPrincipal> principal;
+      if (chan) {
+        nsContentUtils::GetSecurityManager()
+          ->GetChannelResultPrincipal(chan, getter_AddRefs(principal));
+      }
+
+      if ((principal &&
+           principal->GetAppStatus() == nsIPrincipal::APP_STATUS_CERTIFIED) ||
+          gfxPrefs::ImageMozSampleSizeEnabled()) {
+        newImage->SetRequestedSampleSize(parser.GetSampleSize());
+      }
+  }
+
   rv = newImage->Init(aMimeType.get(), aImageFlags);
   NS_ENSURE_SUCCESS(rv, BadImage(newImage));
 
@@ -243,29 +266,6 @@ ImageFactory::CreateRasterImage(nsIRequest* aRequest,
         NS_WARNING("About to hit OOM in imagelib!");
       }
     }
-  }
-
-  nsAutoCString ref;
-  aURI->GetRef(ref);
-  net::nsMediaFragmentURIParser parser(ref);
-  if (parser.HasResolution()) {
-    newImage->SetRequestedResolution(parser.GetResolution());
-  }
-
-  if (parser.HasSampleSize()) {
-      /* Get our principal */
-      nsCOMPtr<nsIChannel> chan(do_QueryInterface(aRequest));
-      nsCOMPtr<nsIPrincipal> principal;
-      if (chan) {
-        nsContentUtils::GetSecurityManager()
-          ->GetChannelResultPrincipal(chan, getter_AddRefs(principal));
-      }
-
-      if ((principal &&
-           principal->GetAppStatus() == nsIPrincipal::APP_STATUS_CERTIFIED) ||
-          gfxPrefs::ImageMozSampleSizeEnabled()) {
-        newImage->SetRequestedSampleSize(parser.GetSampleSize());
-      }
   }
 
   return newImage.forget();
