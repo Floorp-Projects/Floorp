@@ -211,12 +211,6 @@ private:
   // with no color effect.
   bool AllBordersSolid(bool *aHasCompositeColors);
 
-  // Azure variant of CreateCornerGradient.
-  already_AddRefed<mozilla::gfx::GradientStops>
-  CreateCornerGradient(mozilla::css::Corner aCorner, nscolor aFirstColor,
-                       nscolor aSecondColor, mozilla::gfx::DrawTarget *aDT,
-                       mozilla::gfx::Point &aPoint1, mozilla::gfx::Point &aPoint2);
-
   // Draw a solid color border that is uniformly the same width.
   void DrawSingleWidthSolidBorder();
 
