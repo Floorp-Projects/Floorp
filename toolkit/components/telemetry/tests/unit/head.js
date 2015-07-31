@@ -238,7 +238,6 @@ function fakeNow(...args) {
     Cu.import("resource://gre/modules/TelemetryController.jsm"),
     Cu.import("resource://gre/modules/TelemetryStorage.jsm"),
     Cu.import("resource://gre/modules/TelemetrySend.jsm"),
-    Cu.import("resource://gre/modules/TelemetryReportingPolicy.jsm"),
   ];
 
   for (let m of modules) {
@@ -286,8 +285,6 @@ if (runningInParent) {
   Services.prefs.setCharPref("toolkit.telemetry.log.level", "Trace");
   // Telemetry archiving should be on.
   Services.prefs.setBoolPref("toolkit.telemetry.archive.enabled", true);
-  // Telemetry xpcshell tests cannot show the infobar.
-  Services.prefs.setBoolPref("datareporting.policy.dataSubmissionPolicyBypassNotification", true);
 
   fakePingSendTimer((callback, timeout) => {
     Services.tm.mainThread.dispatch(() => callback(), Ci.nsIThread.DISPATCH_NORMAL);
