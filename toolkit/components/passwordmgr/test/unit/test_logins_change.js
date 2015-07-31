@@ -52,6 +52,29 @@ function checkLoginInvalid(aLoginInfo, aExpectedError)
   Services.logins.removeLogin(testLogin);
 }
 
+/**
+ * Verifies that two objects are not the same instance
+ * but have equal attributes.
+ *
+ * @param {Object} objectA
+ *        An object to compare.
+ *
+ * @param {Object} objectB
+ *        Another object to compare.
+ *
+ * @param {string[]} attributes
+ *        Attributes to compare.
+ *
+ * @return true if all passed attributes are equal for both objects, false otherwise.
+ */
+function compareAttributes(objectA, objectB, attributes) {
+  // If it's the same object, we want to return false.
+  if (objectA == objectB) {
+    return false;
+  }
+  return attributes.every(attr => objectA[attr] == objectB[attr]);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Tests
 
@@ -294,4 +317,70 @@ add_task(function test_modifyLogin_nsIProperyBag()
   LoginTestUtils.checkLogins([loginInfo, differentLoginInfo]);
 
   LoginTestUtils.clearData();
+});
+
+/**
+ * Tests the login deduplication function.
+ */
+add_task(function test_deduplicate_logins() {
+  // Different key attributes combinations and the amount of unique
+  // results expected for the TestData login list.
+  let keyCombinations = [
+    {
+      keyset: ["username", "password"],
+      results: 13,
+    },
+    {
+      keyset: ["hostname", "username"],
+      results: 17,
+    },
+    {
+      keyset: ["hostname", "username", "password"],
+      results: 18,
+    },
+    {
+      keyset: ["hostname", "username", "password", "formSubmitURL"],
+      results: 22,
+    },
+  ];
+
+  let logins = TestData.loginList();
+
+  for (let testCase of keyCombinations) {
+    // Deduplicate the logins using the current testcase keyset.
+    let deduped = LoginHelper.dedupeLogins(logins, testCase.keyset);
+    Assert.equal(deduped.length, testCase.results, "Correct amount of results.");
+
+    // Checks that every login after deduping is unique.
+    Assert.ok(deduped.every(loginA =>
+      deduped.every(loginB => !compareAttributes(loginA, loginB, testCase.keyset))
+    ), "Every login is unique.");
+  }
+});
+
+/**
+ * Ensure that the login deduplication function keeps the most recent login.
+ */
+add_task(function test_deduplicate_keeps_most_recent() {
+  // Logins to deduplicate.
+  let logins = [
+    TestData.formLogin({timeLastUsed: Date.UTC(2004, 11, 4, 0, 0, 0)}),
+    TestData.formLogin({formSubmitURL: "http://example.com", timeLastUsed: Date.UTC(2015, 11, 4, 0, 0, 0)}),
+  ];
+
+  // Deduplicate the logins.
+  let deduped = LoginHelper.dedupeLogins(logins);
+  Assert.equal(deduped.length, 1, "Deduplicated the logins array.");
+
+  // Verify that the remaining login have the most recent date.
+  let loginTimeLastUsed = deduped[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
+  Assert.equal(loginTimeLastUsed, Date.UTC(2015, 11, 4, 0, 0, 0), "Most recent login was kept.");
+
+  // Deduplicate the reverse logins array.
+  deduped = LoginHelper.dedupeLogins(logins.reverse());
+  Assert.equal(deduped.length, 1, "Deduplicated the reversed logins array.");
+
+  // Verify that the remaining login have the most recent date.
+  loginTimeLastUsed = deduped[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
+  Assert.equal(loginTimeLastUsed, Date.UTC(2015, 11, 4, 0, 0, 0), "Most recent login was kept.");
 });
