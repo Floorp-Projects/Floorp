@@ -12,6 +12,7 @@
 #include "nsISupports.h"
 #include "nsTArrayForwardDeclare.h"
 #include "mozilla/dom/CPOWManagerGetter.h"
+#include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 
 #define NS_ICONTENTCHILD_IID                                    \
   { 0x4eed2e73, 0x94ba, 0x48a8,                                 \
