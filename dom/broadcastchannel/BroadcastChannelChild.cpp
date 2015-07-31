@@ -93,11 +93,13 @@ BroadcastChannelChild::RecvNotify(const ClonedMessageData& aData)
   cloneHelper.BlobImpls().AppendElements(blobs);
 
   JS::Rooted<JS::Value> value(cx, JS::NullValue());
-  if (buffer.dataLength &&
-      !cloneHelper.ReadFromBuffer(mBC->GetParentObject(), cx,
-                                  buffer.data, buffer.dataLength, &value)) {
-    JS_ClearPendingException(cx);
-    return false;
+  if (buffer.dataLength) {
+    ErrorResult rv;
+    cloneHelper.ReadFromBuffer(mBC->GetParentObject(), cx,
+                               buffer.data, buffer.dataLength, &value, rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      return true;
+    }
   }
 
   RootedDictionary<MessageEventInit> init(cx);
