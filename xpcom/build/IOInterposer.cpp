@@ -16,6 +16,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ThreadLocal.h"
+#include "nscore.h" // for NS_FREE_PERMANENT_DATA
 #if !defined(XP_WIN)
 #include "NSPRInterposer.h"
 #endif // !defined(XP_WIN)
@@ -460,10 +461,10 @@ IOInterposeObserver::IsMainThread()
 void
 IOInterposer::Clear()
 {
-  /* Clear() is a no-op on opt builds so that we may continue to trap I/O until
-     process termination. In debug builds we need to shut down IOInterposer so
-     that all references are properly released and refcnt log remains clean. */
-#if defined(DEBUG) || defined(FORCE_BUILD_REFCNT_LOGGING) || defined(MOZ_ASAN)
+  /* Clear() is a no-op on release builds so that we may continue to trap I/O
+     until process termination. In leak-checking builds, we need to shut down
+     IOInterposer so that all references are properly released. */
+#ifdef NS_FREE_PERMANENT_DATA
   UnregisterCurrentThread();
   sMasterList = nullptr;
 #endif
