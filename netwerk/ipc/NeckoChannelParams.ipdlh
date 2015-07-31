@@ -92,6 +92,7 @@ struct HttpChannelOpenArgs
   OptionalLoadInfoArgs        loadInfo;
   OptionalHttpResponseHead    synthesizedResponseHead;
   uint32_t                    cacheKey;
+  nsCString                   schedulingContextID;
 };
 
 struct HttpChannelConnectArgs

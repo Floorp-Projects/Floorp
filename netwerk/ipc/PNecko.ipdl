@@ -108,6 +108,8 @@ parent:
                   nsString password, nsString domain);
   OnAuthCancelled(uint64_t callbackId, bool userCancel);
 
+  RemoveSchedulingContext(nsCString scid);
+
 child:
   /*
    * Bring up the http auth prompt for a nested remote mozbrowser.

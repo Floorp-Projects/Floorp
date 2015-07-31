@@ -23,7 +23,6 @@ public:
   virtual ~NeckoChild();
 
   static void InitNeckoChild();
-  static void DestroyNeckoChild();
 
 protected:
   virtual PHttpChannelChild*
