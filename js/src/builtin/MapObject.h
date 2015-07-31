@@ -9,6 +9,7 @@
 
 #include "jsobj.h"
 
+#include "builtin/SelfHostingDefines.h"
 #include "vm/Runtime.h"
 
 namespace js {
@@ -88,6 +89,13 @@ typedef OrderedHashSet<HashableValue,
 class MapObject : public NativeObject {
   public:
     enum IteratorKind { Keys, Values, Entries };
+    static_assert(Keys == ITEM_KIND_KEY,
+                  "IteratorKind Keys must match self-hosting define for item kind key.");
+    static_assert(Values == ITEM_KIND_VALUE,
+                  "IteratorKind Values must match self-hosting define for item kind value.");
+    static_assert(Entries == ITEM_KIND_KEY_AND_VALUE,
+                  "IteratorKind Entries must match self-hosting define for item kind "
+                  "key-and-value.");
 
     static JSObject* initClass(JSContext* cx, JSObject* obj);
     static const Class class_;
@@ -144,6 +152,32 @@ class MapObject : public NativeObject {
     static bool entries_impl(JSContext* cx, CallArgs args);
     static bool clear_impl(JSContext* cx, CallArgs args);
     static bool clear(JSContext* cx, unsigned argc, Value* vp);
+};
+
+class MapIteratorObject : public NativeObject
+{
+  public:
+    static const Class class_;
+
+    enum { TargetSlot, RangeSlot, KindSlot, SlotCount };
+
+    static_assert(TargetSlot == ITERATOR_SLOT_TARGET,
+                  "TargetSlot must match self-hosting define for iterated object slot.");
+    static_assert(RangeSlot == ITERATOR_SLOT_RANGE,
+                  "RangeSlot must match self-hosting define for range or index slot.");
+    static_assert(KindSlot == ITERATOR_SLOT_ITEM_KIND,
+                  "KindSlot must match self-hosting define for item kind slot.");
+
+    static const JSFunctionSpec methods[];
+    static MapIteratorObject* create(JSContext* cx, HandleObject mapobj, ValueMap* data,
+                                     MapObject::IteratorKind kind);
+    static void finalize(FreeOp* fop, JSObject* obj);
+
+    static bool next(JSContext* cx, Handle<MapIteratorObject*> mapIterator,
+                     HandleArrayObject resultPairObj);
+
+  private:
+    inline MapObject::IteratorKind kind() const;
 };
 
 class SetObject : public NativeObject {

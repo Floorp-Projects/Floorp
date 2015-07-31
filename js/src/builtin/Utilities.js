@@ -44,6 +44,7 @@ var std_String_substring = String_substring;
 var std_WeakMap = WeakMap;
 // StopIteration is a bare constructor without properties or methods.
 var std_StopIteration = StopIteration;
+var std_Map_iterator_next = MapIteratorNext;
 
 
 /********** List specification type **********/
