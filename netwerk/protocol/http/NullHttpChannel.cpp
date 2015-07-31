@@ -206,6 +206,18 @@ NullHttpChannel::RedirectTo(nsIURI *aNewURI)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+NullHttpChannel::GetSchedulingContextID(nsID *_retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+NullHttpChannel::SetSchedulingContextID(const nsID scID)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 //-----------------------------------------------------------------------------
 // NullHttpChannel::nsIChannel
 //-----------------------------------------------------------------------------
