@@ -2540,13 +2540,8 @@ pref("dom.ipc.plugins.reportCrashURL", true);
 // Defaults to 30 seconds.
 pref("dom.ipc.plugins.unloadTimeoutSecs", 30);
 
-// Asynchronous plugin initialization should only be enabled on non-e10s
-// channels until some remaining bugs are resolved.
-#ifdef E10S_TESTING_ONLY
-pref("dom.ipc.plugins.asyncInit", false);
-#else
+// Asynchronous plugin initialization should be enabled by default.
 pref("dom.ipc.plugins.asyncInit", true);
-#endif
 
 pref("dom.ipc.processCount", 1);
 
