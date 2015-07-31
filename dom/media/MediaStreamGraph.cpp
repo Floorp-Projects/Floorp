@@ -1441,16 +1441,17 @@ MediaStreamGraphImpl::OneIteration(GraphTime aFrom, GraphTime aTo,
 
   UpdateCurrentTimeForStreams(aFrom, aTo);
 
-  UpdateGraph(aStateEnd);
+  GraphTime stateEnd = std::min(aStateEnd, mEndTime);
+  UpdateGraph(stateEnd);
 
-  Process(aStateFrom, aStateEnd);
+  Process(aStateFrom, stateEnd);
 
   // Send updates to the main thread and wait for the next control loop
   // iteration.
   {
     MonitorAutoLock lock(mMonitor);
     bool finalUpdate = mForceShutDown ||
-      (IterationEnd() >= mEndTime && AllFinishedStreamsNotified()) ||
+      (stateEnd >= mEndTime && AllFinishedStreamsNotified()) ||
       (IsEmpty() && mBackMessageQueue.IsEmpty());
     PrepareUpdatesToMainThreadState(finalUpdate);
     if (finalUpdate) {
@@ -3443,7 +3444,9 @@ MediaStreamGraph::StartNonRealtimeProcessing(uint32_t aTicksToProcess)
   if (graph->mNonRealtimeProcessing)
     return;
 
-  graph->mEndTime = graph->IterationEnd() + aTicksToProcess;
+  graph->mEndTime =
+    graph->RoundUpToNextAudioBlock(graph->CurrentDriver()->StateComputedTime() +
+                                   aTicksToProcess - 1);
   graph->mNonRealtimeProcessing = true;
   graph->EnsureRunInStableState();
 }
