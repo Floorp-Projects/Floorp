@@ -53,7 +53,7 @@
     </PreferenceCategory>
 
     <!-- keys prefixed with "android.not_a_preference." are not synced with Gecko -->
-    <PreferenceCategory android:title="@string/pref_clear_private_data_category">
+    <PreferenceCategory android:key="android.not_a_preference.category_private_data" android:title="@string/pref_clear_private_data_category">
 
         <org.mozilla.gecko.preferences.PrivateDataPreference
                             android:key="android.not_a_preference.privacy.clear"
