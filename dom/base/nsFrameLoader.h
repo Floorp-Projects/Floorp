@@ -223,6 +223,11 @@ private:
   bool ShouldUseRemoteProcess();
 
   /**
+   * Return true if the frame is a remote frame. Return false otherwise
+   */
+  bool IsRemoteFrame();
+
+  /**
    * Is this a frameloader for a bona fide <iframe mozbrowser> or
    * <iframe mozapp>?  (I.e., does the frame return true for
    * nsIMozBrowserFrame::GetReallyIsBrowserOrApp()?)
