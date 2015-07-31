@@ -42,7 +42,8 @@ const prefs = new Preferences("dom.push.");
 gDebuggingEnabled = prefs.get("debug");
 
 const kCHILD_PROCESS_MESSAGES = ["Push:Register", "Push:Unregister",
-                                 "Push:Registration"];
+                                 "Push:Registration", "Push:RegisterEventNotificationListener",
+                                 "child-process-shutdown"];
 
 const PUSH_SERVICE_UNINIT = 0;
 const PUSH_SERVICE_INIT = 1; // No serverURI
@@ -84,6 +85,8 @@ this.PushService = {
   _db: null,
   _options: null,
   _alarmID: null,
+
+  _childListeners: [],
 
   // When serverURI changes (this is used for testing), db is cleaned up and a
   // a new db is started. This events must be sequential.
@@ -590,6 +593,8 @@ this.PushService = {
   uninit: function() {
     debug("uninit()");
 
+    this._childListeners = [];
+
     if (this._state == PUSH_SERVICE_UNINIT) {
       return;
     }
@@ -668,9 +673,25 @@ this.PushService = {
       scope: record.scope
     };
 
-    let ppmm = Cc['@mozilla.org/parentprocessmessagemanager;1']
-                 .getService(Ci.nsIMessageListenerManager);
-    ppmm.broadcastAsyncMessage('pushsubscriptionchange', data);
+    this._notifyListeners('pushsubscriptionchange', data);
+  },
+
+  _notifyListeners: function(name, data) {
+    if (this._childListeners.length > 0) {
+      // Try to send messages to all listeners, but remove any that fail since
+      // the receiver is likely gone away.
+      for (var i = this._childListeners.length - 1; i >= 0; --i) {
+        try {
+          this._childListeners[i].sendAsyncMessage(name, data);
+        } catch(e) {
+          this._childListeners.splice(i, 1);
+        }
+      }
+    } else {
+      let ppmm = Cc['@mozilla.org/parentprocessmessagemanager;1']
+                   .getService(Ci.nsIMessageListenerManager);
+      ppmm.broadcastAsyncMessage(name, data);
+    }
   },
 
   // Fires a push-register system message to all applications that have
@@ -798,9 +819,7 @@ this.PushService = {
       scope: aPushRecord.scope
     };
 
-    let ppmm = Cc['@mozilla.org/parentprocessmessagemanager;1']
-                 .getService(Ci.nsIMessageListenerManager);
-    ppmm.broadcastAsyncMessage('push', data);
+    this._notifyListeners('push', data);
   },
 
   getByKeyID: function(aKeyID) {
@@ -906,6 +925,23 @@ this.PushService = {
 
     if (kCHILD_PROCESS_MESSAGES.indexOf(aMessage.name) == -1) {
       debug("Invalid message from child " + aMessage.name);
+      return;
+    }
+
+    if (aMessage.name === "Push:RegisterEventNotificationListener") {
+      debug("Adding child listener");
+      this._childListeners.push(aMessage.target);
+      return;
+    }
+
+    if (aMessage.name === "child-process-shutdown") {
+      debug("Possibly removing child listener");
+      for (var i = this._childListeners.length - 1; i >= 0; --i) {
+        if (this._childListeners[i] == aMessage.target) {
+          debug("Removed child listener");
+          this._childListeners.splice(i, 1);
+        }
+      }
       return;
     }
 
