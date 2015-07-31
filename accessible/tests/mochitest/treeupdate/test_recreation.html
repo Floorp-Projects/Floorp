@@ -88,11 +88,6 @@
       this.__proto__ = new removeAttr(aID, "role");
     }
 
-    function changeOnclick(aID)
-    {
-      this.__proto__ = new changeAttr(aID, "onclick", "alert(3);");
-    }
-
     function changeHref(aID)
     {
       this.__proto__ = new changeAttr(aID, "href", "www");
@@ -124,9 +119,6 @@
       // recreate an accessible by role change
       gQueue.push(new changeRole("div1"));
 
-      // recreate an accessible by onclick change
-      gQueue.push(new changeOnclick("div2"));
-
       // recreate an accessible by href change
       gQueue.push(new changeHref("anchor"));
 
@@ -155,7 +147,6 @@
 
   <span id="span">span</span>
   <div id="div1">div</div>
-  <div id="div2">div</div>
   <a id="anchor">anchor</a>
   <div id="div3" role="listbox">list</div>
 
