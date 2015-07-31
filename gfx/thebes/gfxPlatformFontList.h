@@ -298,12 +298,10 @@ protected:
 
     typedef nsRefPtrHashtable<nsStringHashKey, gfxFontFamily> FontFamilyTable;
 
-    // used by memory reporter to accumulate sizes of family names in the hash
+    // used by memory reporter to accumulate sizes of family names in the table
     static size_t
-    SizeOfFamilyNameEntryExcludingThis(const nsAString&               aKey,
-                                       const nsRefPtr<gfxFontFamily>& aFamily,
-                                       mozilla::MallocSizeOf          aMallocSizeOf,
-                                       void*                          aUserArg);
+    SizeOfFontFamilyTableExcludingThis(const FontFamilyTable& aTable,
+                                       mozilla::MallocSizeOf aMallocSizeOf);
 
     // canonical family name ==> family entry (unique, one name per family entry)
     FontFamilyTable mFontFamilies;

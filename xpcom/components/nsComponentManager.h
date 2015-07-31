@@ -337,7 +337,7 @@ public:
 
   nsTArray<PendingServiceInfo> mPendingServices;
 
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 #ifdef MOZ_B2G_LOADER
   // Preload XPT interface info for B2G loader.
