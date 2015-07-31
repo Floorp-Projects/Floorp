@@ -22,10 +22,6 @@ SCRIPT_DIRECTORY = os.path.abspath(
     os.path.realpath(os.path.dirname(sys.argv[0])))
 sys.path.insert(0, SCRIPT_DIRECTORY)
 
-from automationutils import (
-    dumpScreen,
-    printstatus
-)
 import mozcrash
 import mozdebug
 import mozinfo
@@ -34,6 +30,7 @@ import mozprocess
 import mozprofile
 import mozrunner
 from mozrunner.utils import test_environment
+from mozscreenshot import printstatus, dump_screen
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -436,7 +433,7 @@ class RefTest(object):
             log.info("Not taking screenshot here: see the one that was previously logged")
             return
         self.haveDumpedScreen = True
-        dumpScreen(utilityPath)
+        dump_screen(utilityPath, log)
 
     def killAndGetStack(self, process, utilityPath, debuggerInfo, dump_screen=False):
         """
@@ -456,7 +453,7 @@ class RefTest(object):
                 if os.path.exists(crashinject):
                     status = subprocess.Popen(
                         [crashinject, str(process.pid)]).wait()
-                    printstatus(status, "crashinject")
+                    printstatus("crashinject", status)
                     if status == 0:
                         return
             else:

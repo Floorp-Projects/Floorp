@@ -581,9 +581,6 @@ TrackBuffersManager::UpdateBufferedRanges()
 #endif
 
   mOfficialGroupEndTimestamp = mGroupEndTimestamp;
-
-  // Tell our demuxer that data was removed or added.
-  mMediaSourceDemuxer->NotifyTimeRangesChanged();
 }
 
 nsRefPtr<TrackBuffersManager::AppendPromise>

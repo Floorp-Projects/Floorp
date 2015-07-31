@@ -87,6 +87,9 @@ public:
 
 #if defined(GL_PROVIDER_GLX)
     GLXPixmap GetGLXPixmap();
+    // Binds a GLXPixmap backed by this context's surface.
+    // Primarily for use in sharing surfaces.
+    void BindGLXPixmap(GLXPixmap aPixmap);
 #endif
 
     // Return true if cairo will take its slow path when this surface is used

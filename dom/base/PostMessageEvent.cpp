@@ -94,10 +94,13 @@ PostMessageEvent::Run()
     }
   }
 
+  ErrorResult rv;
   JS::Rooted<JS::Value> messageData(cx);
   nsCOMPtr<nsPIDOMWindow> window = targetWindow.get();
-  if (!Read(window, cx, &messageData)) {
-    return NS_ERROR_DOM_DATA_CLONE_ERR;
+
+  Read(window, cx, &messageData, rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
   }
 
   // Create the event

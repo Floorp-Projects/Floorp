@@ -182,6 +182,8 @@ CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gtk3', 'gonk', 'qt'):
     CXXFLAGS += CONFIG['CAIRO_FT_CFLAGS']
 
+LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']
+
 if CONFIG['OS_ARCH'] == 'WINNT':
     # Due to bug 796023, we can't have -DUNICODE and -D_UNICODE; defining those
     # macros changes the type of LOGFONT to LOGFONTW instead of LOGFONTA. This

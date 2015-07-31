@@ -171,7 +171,7 @@ private:
 // Uses any of the sets of ops below.
 struct RuleHashTableEntry : public PLDHashEntryHdr {
   // If you add members that have heap allocated memory be sure to change the
-  // logic in SizeOfRuleHashTableEntry().
+  // logic in SizeOfRuleHashTable().
   // Auto length 1, because we always have at least one entry in mRules.
   nsAutoTArray<RuleValue, 1> mRules;
 };
@@ -746,10 +746,14 @@ void RuleHash::EnumerateAllRules(Element* aElement, ElementDependentRuleProcesso
 }
 
 static size_t
-SizeOfRuleHashTableEntry(PLDHashEntryHdr* aHdr, MallocSizeOf aMallocSizeOf, void *)
+SizeOfRuleHashTable(const PLDHashTable& aTable, MallocSizeOf aMallocSizeOf)
 {
-  RuleHashTableEntry* entry = static_cast<RuleHashTableEntry*>(aHdr);
-  return entry->mRules.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  size_t n = aTable.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  for (auto iter = aTable.ConstIter(); !iter.Done(); iter.Next()) {
+    auto entry = static_cast<RuleHashTableEntry*>(iter.Get());
+    n += entry->mRules.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  }
+  return n;
 }
 
 size_t
@@ -757,21 +761,13 @@ RuleHash::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t n = 0;
 
-  n += PL_DHashTableSizeOfExcludingThis(&mIdTable,
-                                        SizeOfRuleHashTableEntry,
-                                        aMallocSizeOf);
+  n += SizeOfRuleHashTable(mIdTable, aMallocSizeOf);
 
-  n += PL_DHashTableSizeOfExcludingThis(&mClassTable,
-                                        SizeOfRuleHashTableEntry,
-                                        aMallocSizeOf);
+  n += SizeOfRuleHashTable(mClassTable, aMallocSizeOf);
 
-  n += PL_DHashTableSizeOfExcludingThis(&mTagTable,
-                                        SizeOfRuleHashTableEntry,
-                                        aMallocSizeOf);
+  n += SizeOfRuleHashTable(mTagTable, aMallocSizeOf);
 
-  n += PL_DHashTableSizeOfExcludingThis(&mNameSpaceTable,
-                                        SizeOfRuleHashTableEntry,
-                                        aMallocSizeOf);
+  n += SizeOfRuleHashTable(mNameSpaceTable, aMallocSizeOf);
 
   n += mUniversalRules.ShallowSizeOfExcludingThis(aMallocSizeOf);
 
@@ -923,10 +919,14 @@ struct RuleCascadeData {
 };
 
 static size_t
-SizeOfSelectorsEntry(PLDHashEntryHdr* aHdr, MallocSizeOf aMallocSizeOf, void *)
+SizeOfSelectorsHashTable(const PLDHashTable& aTable, MallocSizeOf aMallocSizeOf)
 {
-  AtomSelectorEntry* entry = static_cast<AtomSelectorEntry*>(aHdr);
-  return entry->mSelectors.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  size_t n = aTable.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  for (auto iter = aTable.ConstIter(); !iter.Done(); iter.Next()) {
+    auto entry = static_cast<AtomSelectorEntry*>(iter.Get());
+    n += entry->mSelectors.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  }
+  return n;
 }
 
 static size_t
@@ -958,21 +958,16 @@ RuleCascadeData::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 
   n += mStateSelectors.ShallowSizeOfExcludingThis(aMallocSizeOf);
 
-  n += PL_DHashTableSizeOfExcludingThis(&mIdSelectors,
-                                        SizeOfSelectorsEntry, aMallocSizeOf);
-  n += PL_DHashTableSizeOfExcludingThis(&mClassSelectors,
-                                        SizeOfSelectorsEntry, aMallocSizeOf);
+  n += SizeOfSelectorsHashTable(mIdSelectors, aMallocSizeOf);
+  n += SizeOfSelectorsHashTable(mClassSelectors, aMallocSizeOf);
 
   n += mPossiblyNegatedClassSelectors.ShallowSizeOfExcludingThis(aMallocSizeOf);
   n += mPossiblyNegatedIDSelectors.ShallowSizeOfExcludingThis(aMallocSizeOf);
 
-  n += PL_DHashTableSizeOfExcludingThis(&mAttributeSelectors,
-                                        SizeOfSelectorsEntry, aMallocSizeOf);
-  n += PL_DHashTableSizeOfExcludingThis(&mAnonBoxRules,
-                                        SizeOfRuleHashTableEntry, aMallocSizeOf);
+  n += SizeOfSelectorsHashTable(mAttributeSelectors, aMallocSizeOf);
+  n += SizeOfRuleHashTable(mAnonBoxRules, aMallocSizeOf);
 #ifdef MOZ_XUL
-  n += PL_DHashTableSizeOfExcludingThis(&mXULTreeRules,
-                                        SizeOfRuleHashTableEntry, aMallocSizeOf);
+  n += SizeOfRuleHashTable(mXULTreeRules, aMallocSizeOf);
 #endif
 
   n += mFontFaceRules.ShallowSizeOfExcludingThis(aMallocSizeOf);

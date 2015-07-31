@@ -449,25 +449,25 @@ SharedContext::allLocalsAliased()
  * Also remember to keep the statementName array in BytecodeEmitter.cpp in
  * sync.
  */
-enum StmtType {
-    STMT_LABEL,                 /* labeled statement:  L: s */
-    STMT_IF,                    /* if (then) statement */
-    STMT_ELSE,                  /* else clause of if statement */
-    STMT_SEQ,                   /* synthetic sequence of statements */
-    STMT_BLOCK,                 /* compound statement: { s1[;... sN] } */
-    STMT_SWITCH,                /* switch statement */
-    STMT_WITH,                  /* with statement */
-    STMT_CATCH,                 /* catch block */
-    STMT_TRY,                   /* try block */
-    STMT_FINALLY,               /* finally block */
-    STMT_SUBROUTINE,            /* gosub-target subroutine body */
-    STMT_DO_LOOP,               /* do/while loop statement */
-    STMT_FOR_LOOP,              /* for loop statement */
-    STMT_FOR_IN_LOOP,           /* for/in loop statement */
-    STMT_FOR_OF_LOOP,           /* for/of loop statement */
-    STMT_WHILE_LOOP,            /* while loop statement */
-    STMT_SPREAD,                /* spread operator (pseudo for/of) */
-    STMT_LIMIT
+enum class StmtType : uint16_t {
+    LABEL,                 /* labeled statement:  L: s */
+    IF,                    /* if (then) statement */
+    ELSE,                  /* else clause of if statement */
+    SEQ,                   /* synthetic sequence of statements */
+    BLOCK,                 /* compound statement: { s1[;... sN] } */
+    SWITCH,                /* switch statement */
+    WITH,                  /* with statement */
+    CATCH,                 /* catch block */
+    TRY,                   /* try block */
+    FINALLY,               /* finally block */
+    SUBROUTINE,            /* gosub-target subroutine body */
+    DO_LOOP,               /* do/while loop statement */
+    FOR_LOOP,              /* for loop statement */
+    FOR_IN_LOOP,           /* for/in loop statement */
+    FOR_OF_LOOP,           /* for/of loop statement */
+    WHILE_LOOP,            /* while loop statement */
+    SPREAD,                /* spread operator (pseudo for/of) */
+    LIMIT
 };
 
 /*
@@ -493,20 +493,17 @@ enum StmtType {
 
 // StmtInfoPC is used by the Parser.  StmtInfoBCE is used by the
 // BytecodeEmitter.  The two types have some overlap, encapsulated by
-// StmtInfoBase.  Several functions below (e.g. PushStatement) are templated to
-// work with both types.
+// StmtInfoBase.
 
-struct StmtInfoBase {
+struct StmtInfoBase
+{
     // Statement type (StmtType).
-    uint16_t        type;
+    StmtType type;
 
-    // True if type is STMT_BLOCK, STMT_TRY, STMT_SWITCH, or STMT_FINALLY and
-    // the block contains at least one let-declaration, or if type is
-    // STMT_CATCH.
+    // True if type is StmtType::BLOCK, StmtType::TRY, StmtType::SWITCH, or
+    // StmtType::FINALLY and the block contains at least one let-declaration,
+    // or if type is StmtType::CATCH.
     bool isBlockScope:1;
-
-    // True if isBlockScope or type == STMT_WITH.
-    bool isNestedScope:1;
 
     // for (let ...) induced block scope
     bool isForLetBlock:1;
@@ -514,104 +511,102 @@ struct StmtInfoBase {
     // Block label.
     RootedAtom      label;
 
-    // Compile-time scope chain node for this scope.  Only set if
-    // isNestedScope.
+    // Compile-time scope chain node for this scope.
     Rooted<NestedScopeObject*> staticScope;
 
     explicit StmtInfoBase(ExclusiveContext* cx)
-        : isBlockScope(false), isNestedScope(false), isForLetBlock(false),
+        : isBlockScope(false), isForLetBlock(false),
           label(cx), staticScope(cx)
     {}
 
     bool maybeScope() const {
-        return STMT_BLOCK <= type && type <= STMT_SUBROUTINE && type != STMT_WITH;
+        return StmtType::BLOCK <= type && type <= StmtType::SUBROUTINE &&
+               type != StmtType::WITH;
     }
 
     bool linksScope() const {
-        return isNestedScope;
+        return !!staticScope;
     }
 
-    void setStaticScope() {
+    bool canBeBlockScope() {
+        return type == StmtType::BLOCK ||
+               type == StmtType::SWITCH ||
+               type == StmtType::TRY ||
+               type == StmtType::FINALLY ||
+               type == StmtType::CATCH;
     }
 
     StaticBlockObject& staticBlock() const {
-        MOZ_ASSERT(isNestedScope);
+        MOZ_ASSERT(staticScope);
         MOZ_ASSERT(isBlockScope);
         return staticScope->as<StaticBlockObject>();
     }
 
     bool isLoop() const {
-        return type >= STMT_DO_LOOP;
+        return type >= StmtType::DO_LOOP;
     }
 
     bool isTrying() const {
-        return STMT_TRY <= type && type <= STMT_SUBROUTINE;
+        return StmtType::TRY <= type && type <= StmtType::SUBROUTINE;
     }
 };
 
-// Push the C-stack-allocated struct at stmt onto the StmtInfoPC stack.
-template <class ContextT>
-void
-PushStatement(ContextT* ct, typename ContextT::StmtInfo* stmt, StmtType type)
+template <class StmtInfo>
+class MOZ_STACK_CLASS StmtInfoStack
 {
-    stmt->type = type;
-    stmt->isBlockScope = false;
-    stmt->isNestedScope = false;
-    stmt->isForLetBlock = false;
-    stmt->label = nullptr;
-    stmt->staticScope = nullptr;
-    stmt->down = ct->topStmt;
-    ct->topStmt = stmt;
-    if (stmt->linksScope()) {
-        stmt->downScope = ct->topScopeStmt;
-        ct->topScopeStmt = stmt;
-    } else {
-        stmt->downScope = nullptr;
+    // Top of the stack.
+    StmtInfo* innermostStmt_;
+
+    // Top scope statement with a nested scope.
+    StmtInfo* innermostScopeStmt_;
+
+  public:
+    explicit StmtInfoStack(ExclusiveContext* cx)
+      : innermostStmt_(nullptr),
+        innermostScopeStmt_(nullptr)
+    { }
+
+    StmtInfo* innermost() const { return innermostStmt_; }
+    StmtInfo* innermostScopeStmt() const { return innermostScopeStmt_; }
+
+    void push(StmtInfo* stmt, StmtType type) {
+        stmt->type = type;
+        stmt->isBlockScope = false;
+        stmt->isForLetBlock = false;
+        stmt->label = nullptr;
+        stmt->staticScope = nullptr;
+        stmt->enclosing = innermostStmt_;
+        stmt->enclosingScope = nullptr;
+        innermostStmt_ = stmt;
     }
-}
 
-template <class ContextT>
-void
-FinishPushNestedScope(ContextT* ct, typename ContextT::StmtInfo* stmt, NestedScopeObject& staticScope)
-{
-    stmt->isNestedScope = true;
-    stmt->downScope = ct->topScopeStmt;
-    ct->topScopeStmt = stmt;
-    ct->staticScope = &staticScope;
-    stmt->staticScope = &staticScope;
-}
-
-// Pop pc->topStmt. If the top StmtInfoPC struct is not stack-allocated, it
-// is up to the caller to free it.  The dummy argument is just to make the
-// template matching work.
-template <class ContextT>
-void
-FinishPopStatement(ContextT* ct)
-{
-    typename ContextT::StmtInfo* stmt = ct->topStmt;
-    ct->topStmt = stmt->down;
-    if (stmt->linksScope()) {
-        ct->topScopeStmt = stmt->downScope;
-        if (stmt->isNestedScope) {
-            MOZ_ASSERT(stmt->staticScope);
-            ct->staticScope = stmt->staticScope->enclosingNestedScope();
-        }
+    void pushNestedScope(StmtInfo* stmt, StmtType type, NestedScopeObject& staticScope) {
+        push(stmt, type);
+        linkAsInnermostScopeStmt(stmt, staticScope);
     }
-}
 
-/*
- * Find a lexically scoped variable (one declared by let, catch, or an array
- * comprehension) named by atom, looking in ct's compile-time scopes.
- *
- * If a WITH statement is reached along the scope stack, return its statement
- * info record, so callers can tell that atom is ambiguous.
- *
- * In any event, directly return the statement info record in which atom was
- * found. Otherwise return null.
- */
-template <class ContextT>
-typename ContextT::StmtInfo*
-LexicalLookup(ContextT* ct, HandleAtom atom, typename ContextT::StmtInfo* stmt = nullptr);
+    void pop() {
+        StmtInfo* stmt = innermostStmt_;
+        innermostStmt_ = stmt->enclosing;
+        if (stmt->linksScope())
+            innermostScopeStmt_ = stmt->enclosingScope;
+    }
+
+    void linkAsInnermostScopeStmt(StmtInfo* stmt, NestedScopeObject& staticScope) {
+        MOZ_ASSERT(stmt != innermostScopeStmt_);
+        MOZ_ASSERT(!stmt->enclosingScope);
+        stmt->enclosingScope = innermostScopeStmt_;
+        innermostScopeStmt_ = stmt;
+        stmt->staticScope = &staticScope;
+    }
+
+    void makeInnermostLexicalScope(StaticBlockObject& blockObj) {
+        MOZ_ASSERT(!innermostStmt_->isBlockScope);
+        MOZ_ASSERT(innermostStmt_->canBeBlockScope());
+        innermostStmt_->isBlockScope = true;
+        linkAsInnermostScopeStmt(innermostStmt_, blockObj);
+    }
+};
 
 } // namespace frontend
 

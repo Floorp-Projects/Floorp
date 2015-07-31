@@ -454,8 +454,8 @@ BroadcastChannel::PostMessageInternal(JSContext* aCx,
 {
   nsRefPtr<BroadcastChannelMessage> data = new BroadcastChannelMessage();
 
-  if (!data->Write(aCx, aMessage)) {
-    aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
+  data->Write(aCx, aMessage, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
 
