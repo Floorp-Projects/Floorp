@@ -10,8 +10,6 @@
 #include "DecodePool.h"
 #include "GeckoProfiler.h"
 #include "imgIContainer.h"
-#include "nsIConsoleService.h"
-#include "nsIScriptError.h"
 #include "nsProxyRelease.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
@@ -236,51 +234,6 @@ Decoder::CompleteDecode()
     if (!mIsAnimated && !mImageIsTransient && mCurrentFrame) {
       mCurrentFrame->SetOptimizable();
     }
-  }
-}
-
-void
-Decoder::Finish()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  MOZ_ASSERT(HasError() || !mInFrame, "Finishing while we're still in a frame");
-
-  // If we detected an error in CompleteDecode(), log it to the error console.
-  if (mShouldReportError && !WasAborted()) {
-    nsCOMPtr<nsIConsoleService> consoleService =
-      do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-    nsCOMPtr<nsIScriptError> errorObject =
-      do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
-
-    if (consoleService && errorObject && !HasDecoderError()) {
-      nsAutoString msg(NS_LITERAL_STRING("Image corrupt or truncated."));
-      nsAutoString src;
-      if (mImage->GetURI()) {
-        nsCString uri;
-        if (mImage->GetURI()->GetSpecTruncatedTo1k(uri) == ImageURL::TruncatedTo1k) {
-          msg += NS_LITERAL_STRING(" URI in this note truncated due to length.");
-        }
-        src = NS_ConvertUTF8toUTF16(uri);
-      }
-      if (NS_SUCCEEDED(errorObject->InitWithWindowID(
-                         msg,
-                         src,
-                         EmptyString(), 0, 0, nsIScriptError::errorFlag,
-                         "Image", mImage->InnerWindowID()
-                       ))) {
-        consoleService->LogMessage(errorObject);
-      }
-    }
-  }
-
-  nsresult rv = mImageMetadata.SetOnImage(mImage);
-  if (NS_FAILED(rv)) {
-    PostResizeError();
-  }
-
-  if (mDecodeDone && !IsMetadataDecode()) {
-    mImage->OnDecodingComplete(mIsAnimated);
   }
 }
 

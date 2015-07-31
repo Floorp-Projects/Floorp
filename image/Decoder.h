@@ -43,12 +43,6 @@ public:
   nsresult Decode();
 
   /**
-   * Cleans up the decoder's state and notifies our image about success or
-   * failure. May only be called on the main thread.
-   */
-  void Finish();
-
-  /**
    * Given a maximum number of bytes we're willing to decode, @aByteLimit,
    * returns true if we should attempt to run this decoder synchronously.
    */
@@ -107,7 +101,7 @@ public:
     MOZ_ASSERT(!mInitialized, "Shouldn't be initialized yet");
     mMetadataDecode = aMetadataDecode;
   }
-  bool IsMetadataDecode() { return mMetadataDecode; }
+  bool IsMetadataDecode() const { return mMetadataDecode; }
 
   /**
    * If this decoder supports downscale-during-decode, sets the target size that
@@ -218,18 +212,30 @@ public:
     return mInFrame ? mFrameCount - 1 : mFrameCount;
   }
 
+  // Did we discover that the image we're decoding is animated?
+  bool HasAnimation() const { return mIsAnimated; }
+
   // Error tracking
   bool HasError() const { return HasDataError() || HasDecoderError(); }
   bool HasDataError() const { return mDataError; }
   bool HasDecoderError() const { return NS_FAILED(mFailCode); }
+  bool ShouldReportError() const { return mShouldReportError; }
   nsresult GetDecoderError() const { return mFailCode; }
   void PostResizeError() { PostDataError(); }
 
+  /// Did we finish decoding enough that calling Decode() again would be useless?
   bool GetDecodeDone() const
   {
     return mDecodeDone || (mMetadataDecode && HasSize()) ||
            HasError() || mDataDone;
   }
+
+  /// Did we finish decoding enough to set |RasterImage::mHasBeenDecoded|?
+  // XXX(seth): This will be removed in bug 1187401.
+  bool GetDecodeTotallyDone() const { return mDecodeDone && !IsMetadataDecode(); }
+
+  /// Are we in the middle of a frame right now? Used for assertions only.
+  bool InFrame() const { return mInFrame; }
 
   /**
    * Returns true if this decoder was aborted.

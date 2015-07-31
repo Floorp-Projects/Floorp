@@ -21,7 +21,9 @@
 #include "ImageRegion.h"
 #include "Layers.h"
 #include "LookupResult.h"
+#include "nsIConsoleService.h"
 #include "nsIInputStream.h"
+#include "nsIScriptError.h"
 #include "nsPresContext.h"
 #include "SourceBuffer.h"
 #include "SurfaceCache.h"
@@ -977,42 +979,6 @@ RasterImage::SetSize(int32_t aWidth, int32_t aHeight, Orientation aOrientation)
   mHasSize = true;
 
   return NS_OK;
-}
-
-void
-RasterImage::OnDecodingComplete(bool aIsAnimated)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (mError) {
-    return;
-  }
-
-  // Flag that we've been decoded before.
-  mHasBeenDecoded = true;
-
-  if (aIsAnimated) {
-    if (mAnim) {
-      mAnim->SetDoneDecoding(true);
-    } else {
-      // The OnAddedFrame event that will create mAnim is still in the event
-      // queue. Wait for it.
-      nsCOMPtr<nsIRunnable> runnable =
-        NS_NewRunnableMethod(this, &RasterImage::MarkAnimationDecoded);
-      NS_DispatchToMainThread(runnable);
-    }
-  }
-}
-
-void
-RasterImage::MarkAnimationDecoded()
-{
-  MOZ_ASSERT(mAnim, "Should have an animation now");
-  if (!mAnim) {
-    return;
-  }
-
-  mAnim->SetDoneDecoding(true);
 }
 
 NS_IMETHODIMP
@@ -2012,8 +1978,39 @@ RasterImage::FinalizeDecoder(Decoder* aDecoder)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aDecoder);
+  MOZ_ASSERT(aDecoder->HasError() || !aDecoder->InFrame(),
+             "Finalizing a decoder in the middle of a frame");
+
+  // If the decoder detected an error, log it to the error console.
+  if (aDecoder->ShouldReportError() && !aDecoder->WasAborted()) {
+    ReportDecoderError(aDecoder);
+  }
+
+  // Record all the metadata the decoder gathered about this image.
+  nsresult rv = aDecoder->GetImageMetadata().SetOnImage(this);
+  if (NS_FAILED(rv)) {
+    aDecoder->PostResizeError();
+  }
+
   MOZ_ASSERT(mError || mHasSize || !aDecoder->HasSize(),
              "Should have handed off size by now");
+
+  if (aDecoder->GetDecodeTotallyDone() && !mError) {
+    // Flag that we've been decoded before.
+    mHasBeenDecoded = true;
+
+    if (aDecoder->HasAnimation()) {
+      if (mAnim) {
+        mAnim->SetDoneDecoding(true);
+      } else {
+        // The OnAddedFrame event that will create mAnim is still in the event
+        // queue. Wait for it.
+        nsCOMPtr<nsIRunnable> runnable =
+          NS_NewRunnableMethod(this, &RasterImage::MarkAnimationDecoded);
+        NS_DispatchToMainThread(runnable);
+      }
+    }
+  }
 
   // Send out any final notifications.
   NotifyProgress(aDecoder->TakeProgress(),
@@ -2068,6 +2065,46 @@ RasterImage::FinalizeDecoder(Decoder* aDecoder)
   if (done && wasMetadata && mWantFullDecode) {
     mWantFullDecode = false;
     RequestDecode();
+  }
+}
+
+void
+RasterImage::MarkAnimationDecoded()
+{
+  MOZ_ASSERT(mAnim, "Should have an animation now");
+  if (!mAnim) {
+    return;
+  }
+
+  mAnim->SetDoneDecoding(true);
+}
+
+void
+RasterImage::ReportDecoderError(Decoder* aDecoder)
+{
+  nsCOMPtr<nsIConsoleService> consoleService =
+    do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+  nsCOMPtr<nsIScriptError> errorObject =
+    do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
+
+  if (consoleService && errorObject && !aDecoder->HasDecoderError()) {
+    nsAutoString msg(NS_LITERAL_STRING("Image corrupt or truncated."));
+    nsAutoString src;
+    if (GetURI()) {
+      nsCString uri;
+      if (GetURI()->GetSpecTruncatedTo1k(uri) == ImageURL::TruncatedTo1k) {
+        msg += NS_LITERAL_STRING(" URI in this note truncated due to length.");
+      }
+      src = NS_ConvertUTF8toUTF16(uri);
+    }
+    if (NS_SUCCEEDED(errorObject->InitWithWindowID(
+                       msg,
+                       src,
+                       EmptyString(), 0, 0, nsIScriptError::errorFlag,
+                       "Image", InnerWindowID()
+                     ))) {
+      consoleService->LogMessage(errorObject);
+    }
   }
 }
 
