@@ -156,6 +156,7 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, bool aNetworkCreated)
   , mVisible(true)
 {
   ResetPermissionManagerStatus();
+  mRemoteFrame = ShouldUseRemoteProcess();
 }
 
 nsFrameLoader::~nsFrameLoader()
@@ -301,12 +302,7 @@ nsFrameLoader::ReallyStartLoadingInternal()
   PROFILER_LABEL("nsFrameLoader", "ReallyStartLoading",
     js::ProfileEntry::Category::OTHER);
 
-  nsresult rv = MaybeCreateDocShell();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  if (mRemoteFrame) {
+  if (IsRemoteFrame()) {
     if (!mRemoteBrowser && !TryRemoteBrowser()) {
         NS_WARNING("Couldn't create child process for iframe.");
         return NS_ERROR_FAILURE;
@@ -325,6 +321,10 @@ nsFrameLoader::ReallyStartLoadingInternal()
     return NS_OK;
   }
 
+  nsresult rv = MaybeCreateDocShell();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
   NS_ASSERTION(mDocShell,
                "MaybeCreateDocShell succeeded with a null mDocShell");
 
@@ -444,11 +444,7 @@ nsFrameLoader::CheckURILoad(nsIURI* aURI)
   }
 
   // Bail out if this is an infinite recursion scenario
-  rv = MaybeCreateDocShell();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (mRemoteFrame) {
+  if (IsRemoteFrame()) {
     return NS_OK;
   }
   return CheckForRecursiveLoad(aURI);
@@ -460,14 +456,16 @@ nsFrameLoader::GetDocShell(nsIDocShell **aDocShell)
   *aDocShell = nullptr;
   nsresult rv = NS_OK;
 
+  if (IsRemoteFrame()) {
+    return rv;
+  }
+
   // If we have an owner, make sure we have a docshell and return
   // that. If not, we're most likely in the middle of being torn down,
   // then we just return null.
   if (mOwnerContent) {
     nsresult rv = MaybeCreateDocShell();
-    if (NS_FAILED(rv))
-      return rv;
-    if (mRemoteFrame) {
+    if (NS_FAILED(rv)) {
       return rv;
     }
     NS_ASSERTION(mDocShell,
@@ -625,42 +623,42 @@ nsFrameLoader::Show(int32_t marginWidth, int32_t marginHeight,
   AutoResetInShow resetInShow(this);
   mInShow = true;
 
+  ScreenIntSize size = frame->GetSubdocumentSize();
+  if (IsRemoteFrame()) {
+    return ShowRemoteFrame(size, frame);
+  }
+
   nsresult rv = MaybeCreateDocShell();
   if (NS_FAILED(rv)) {
     return false;
   }
-
-  if (!mRemoteFrame) {
-    if (!mDocShell)
-      return false;
-
-    mDocShell->SetMarginWidth(marginWidth);
-    mDocShell->SetMarginHeight(marginHeight);
-
-    nsCOMPtr<nsIScrollable> sc = do_QueryInterface(mDocShell);
-    if (sc) {
-      sc->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_X,
-                                         scrollbarPrefX);
-      sc->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_Y,
-                                         scrollbarPrefY);
-    }
-
-    nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
-    if (presShell) {
-      // Ensure root scroll frame is reflowed in case scroll preferences or
-      // margins have changed
-      nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
-      if (rootScrollFrame) {
-        presShell->FrameNeedsReflow(rootScrollFrame, nsIPresShell::eResize,
-                                    NS_FRAME_IS_DIRTY);
-      }
-      return true;
-    }
+  NS_ASSERTION(mDocShell,
+               "MaybeCreateDocShell succeeded, but null mDocShell");
+  if (!mDocShell) {
+    return false;
   }
 
-  ScreenIntSize size = frame->GetSubdocumentSize();
-  if (mRemoteFrame) {
-    return ShowRemoteFrame(size, frame);
+  mDocShell->SetMarginWidth(marginWidth);
+  mDocShell->SetMarginHeight(marginHeight);
+
+  nsCOMPtr<nsIScrollable> sc = do_QueryInterface(mDocShell);
+  if (sc) {
+    sc->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_X,
+                                       scrollbarPrefX);
+    sc->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_Y,
+                                       scrollbarPrefY);
+  }
+
+  nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
+  if (presShell) {
+    // Ensure root scroll frame is reflowed in case scroll preferences or
+    // margins have changed
+    nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
+    if (rootScrollFrame) {
+      presShell->FrameNeedsReflow(rootScrollFrame, nsIPresShell::eResize,
+                                  NS_FRAME_IS_DIRTY);
+    }
+    return true;
   }
 
   nsView* view = frame->EnsureInnerView();
@@ -682,7 +680,7 @@ nsFrameLoader::Show(int32_t marginWidth, int32_t marginHeight,
   // sub-document. This shouldn't be necessary, but given the way our
   // editor works, it is. See
   // https://bugzilla.mozilla.org/show_bug.cgi?id=284245
-  nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
+  presShell = mDocShell->GetPresShell();
   if (presShell) {
     nsCOMPtr<nsIDOMHTMLDocument> doc =
       do_QueryInterface(presShell->GetDocument());
@@ -729,7 +727,7 @@ nsFrameLoader::MarginsChanged(uint32_t aMarginWidth,
                               uint32_t aMarginHeight)
 {
   // We assume that the margins are always zero for remote frames.
-  if (mRemoteFrame)
+  if (IsRemoteFrame())
     return;
 
   // If there's no docshell, we're probably not up and running yet.
@@ -754,7 +752,7 @@ bool
 nsFrameLoader::ShowRemoteFrame(const ScreenIntSize& size,
                                nsSubDocumentFrame *aFrame)
 {
-  NS_ASSERTION(mRemoteFrame, "ShowRemote only makes sense on remote frames.");
+  NS_ASSERTION(IsRemoteFrame(), "ShowRemote only makes sense on remote frames.");
 
   if (!mRemoteBrowser && !TryRemoteBrowser()) {
     NS_ERROR("Couldn't create child process.");
@@ -967,11 +965,11 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
                   "Swapping some sort of random loaders?");
   NS_ENSURE_STATE(!mInShow && !aOther->mInShow);
 
-  if (mRemoteFrame && aOther->mRemoteFrame) {
+  if (IsRemoteFrame() && aOther->IsRemoteFrame()) {
     return SwapWithOtherRemoteLoader(aOther, aFirstToSwap, aSecondToSwap);
   }
 
-  if (mRemoteFrame || aOther->mRemoteFrame) {
+  if (IsRemoteFrame() || aOther->IsRemoteFrame()) {
     NS_WARNING("Swapping remote and non-remote frames is not currently supported");
     return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -1641,21 +1639,26 @@ nsFrameLoader::ShouldUseRemoteProcess()
                                     eCaseMatters);
 }
 
+bool
+nsFrameLoader::IsRemoteFrame()
+{
+  if (mRemoteFrame) {
+    MOZ_ASSERT(!mDocShell, "Found a remote frame with a DocShell");
+    return true;
+  }
+  return false;
+}
+
 nsresult
 nsFrameLoader::MaybeCreateDocShell()
 {
   if (mDocShell) {
     return NS_OK;
   }
-  if (mRemoteFrame) {
+  if (IsRemoteFrame()) {
     return NS_OK;
   }
   NS_ENSURE_STATE(!mDestroyCalled);
-
-  if (ShouldUseRemoteProcess()) {
-    mRemoteFrame = true;
-    return NS_OK;
-  }
 
   // Get our parent docshell off the document of mOwnerContent
   // XXXbz this is such a total hack.... We really need to have a
@@ -1876,13 +1879,16 @@ nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI)
 {
   nsresult rv;
 
+  MOZ_ASSERT(!IsRemoteFrame(),
+             "Shouldn't call CheckForRecursiveLoad on remote frames.");
+
   mDepthTooGreat = false;
   rv = MaybeCreateDocShell();
   if (NS_FAILED(rv)) {
     return rv;
   }
-  NS_ASSERTION(!mRemoteFrame,
-               "Shouldn't call CheckForRecursiveLoad on remote frames.");
+  NS_ASSERTION(mDocShell,
+               "MaybeCreateDocShell succeeded, but null mDocShell");
   if (!mDocShell) {
     return NS_ERROR_FAILURE;
   }
@@ -2004,7 +2010,7 @@ nsFrameLoader::GetWindowDimensions(nsIntRect& aRect)
 NS_IMETHODIMP
 nsFrameLoader::UpdatePositionAndSize(nsSubDocumentFrame *aIFrame)
 {
-  if (mRemoteFrame) {
+  if (IsRemoteFrame()) {
     if (mRemoteBrowser) {
       ScreenIntSize size = aIFrame->GetSubdocumentSize();
       nsIntRect dimensions;
@@ -2469,18 +2475,13 @@ nsFrameLoader::EnsureMessageManager()
 {
   NS_ENSURE_STATE(mOwnerContent);
 
-  nsresult rv = MaybeCreateDocShell();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
   if (mMessageManager) {
     return NS_OK;
   }
 
   if (!mIsTopLevelContent &&
       !OwnerIsBrowserOrAppFrame() &&
-      !mRemoteFrame &&
+      !IsRemoteFrame() &&
       !(mOwnerContent->IsXULElement() &&
         mOwnerContent->AttrValueIs(kNameSpaceID_None,
                                    nsGkAtoms::forcemessagemanager,
@@ -2509,7 +2510,16 @@ nsFrameLoader::EnsureMessageManager()
   mMessageManager = new nsFrameMessageManager(nullptr,
                                               static_cast<nsFrameMessageManager*>(parentManager.get()),
                                               MM_CHROME);
-  if (!ShouldUseRemoteProcess()) {
+  if (!IsRemoteFrame()) {
+    nsresult rv = MaybeCreateDocShell();
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    NS_ASSERTION(mDocShell,
+                 "MaybeCreateDocShell succeeded, but null mDocShell");
+    if (!mDocShell) {
+      return NS_ERROR_FAILURE;
+    }
     mChildMessageManager =
       new nsInProcessTabChildGlobal(mDocShell, mOwnerContent, mMessageManager);
   }
