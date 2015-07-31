@@ -4,7 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_MANIFESTS += ['test/mochitest.ini']
+MOCHITEST_MANIFESTS += [
+    'test/mochitest.ini',
+    'test/pointerevents/mochitest.ini',
+]
+
 MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
 XPIDL_SOURCES += [
