@@ -32,7 +32,6 @@ class AudioOutputObserver;
  */
 struct StreamUpdate
 {
-  int64_t mGraphUpdateIndex;
   nsRefPtr<MediaStream> mStream;
   StreamTime mNextMainThreadCurrentTime;
   bool mNextMainThreadFinished;
@@ -75,7 +74,6 @@ protected:
 class MessageBlock
 {
 public:
-  int64_t mGraphUpdateIndex;
   nsTArray<nsAutoPtr<ControlMessage> > mMessages;
 };
 
@@ -424,11 +422,6 @@ public:
     return mStreams.IsEmpty() && mSuspendedStreams.IsEmpty() && mPortCount == 0;
   }
 
-  // For use by control messages, on graph thread only.
-  /**
-   * Identify which graph update index we are currently processing.
-   */
-  int64_t GetProcessingGraphUpdateIndex() const { return mProcessingGraphUpdateIndex; }
   /**
    * Add aStream to the graph and initializes its graph-specific state.
    */
@@ -572,10 +565,6 @@ public:
    * Date of the last time we updated the main thread with the graph state.
    */
   TimeStamp mLastMainThreadUpdate;
-  /**
-   * Which update batch we are currently processing.
-   */
-  int64_t mProcessingGraphUpdateIndex;
   /**
    * Number of active MediaInputPorts
    */
