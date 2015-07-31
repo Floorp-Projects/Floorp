@@ -496,9 +496,11 @@ RenderMinimap(ContainerT* aContainer, LayerManagerComposite* aManager,
   r = transform.TransformBounds(scrollRect.ToUnknownRect());
   compositor->SlowDrawRect(r, pageBorderColor, clipRect, aContainer->GetEffectiveTransform());
   r = transform.TransformBounds(dp.ToUnknownRect());
+  compositor->FillRect(r, tileActiveColor, clipRect, aContainer->GetEffectiveTransform());
+  r = transform.TransformBounds(dp.ToUnknownRect());
   compositor->SlowDrawRect(r, displayPortColor, clipRect, aContainer->GetEffectiveTransform());
   r = transform.TransformBounds(viewRect.ToUnknownRect());
-  compositor->SlowDrawRect(r, viewPortColor, clipRect, aContainer->GetEffectiveTransform());
+  compositor->SlowDrawRect(r, viewPortColor, clipRect, aContainer->GetEffectiveTransform(), 2);
 }
 
 
