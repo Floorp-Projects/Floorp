@@ -278,8 +278,13 @@ PreallocatedProcessManagerImpl::GetSpareProcess()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (mSpareProcesses.IsEmpty()) {
+  if (!mIsNuwaReady) {
     return nullptr;
+  }
+
+  if (mSpareProcesses.IsEmpty()) {
+    // After this call, there should be a spare process.
+    mPreallocatedAppProcess->ForkNewProcess(true);
   }
 
   nsRefPtr<ContentParent> process = mSpareProcesses.LastElement();
@@ -369,7 +374,7 @@ PreallocatedProcessManagerImpl::PreallocatedProcessReady()
 void
 PreallocatedProcessManagerImpl::NuwaFork()
 {
-  mozilla::unused << mPreallocatedAppProcess->SendNuwaFork();
+  mPreallocatedAppProcess->ForkNewProcess(false);
 }
 #endif
 

@@ -363,8 +363,6 @@ public:
                                       const bool& aIsHotSwappable) override;
     virtual bool RecvVolumeRemoved(const nsString& aFsName) override;
 
-    virtual bool RecvNuwaFork() override;
-
     virtual bool
     RecvNotifyProcessPriorityChanged(const hal::ProcessPriority& aPriority) override;
     virtual bool RecvMinimizeMemoryUsage() override;
@@ -516,6 +514,9 @@ private:
 
     DISALLOW_EVIL_CONSTRUCTORS(ContentChild);
 };
+
+void
+InitOnContentProcessCreated();
 
 uint64_t
 NextWindowID();
