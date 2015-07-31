@@ -107,3 +107,6 @@ LOCAL_INCLUDES += [
 
 # Because imgFrame.cpp includes "cairo.h"
 CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
+
+LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']
+

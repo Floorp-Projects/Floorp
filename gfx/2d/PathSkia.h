@@ -7,7 +7,7 @@
 #define MOZILLA_GFX_PATH_SKIA_H_
 
 #include "2D.h"
-#include "skia/SkPath.h"
+#include "skia/include/core/SkPath.h"
 
 namespace mozilla {
 namespace gfx {

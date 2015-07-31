@@ -34,12 +34,6 @@ import urllib2
 import zipfile
 import bisection
 
-from automationutils import (
-    dumpScreen,
-    printstatus,
-    setAutomationLog,
-)
-
 from datetime import datetime
 from manifestparser import TestManifest
 from manifestparser.filters import (
@@ -58,6 +52,7 @@ from urllib import quote_plus as encodeURIComponent
 from mozlog.formatters import TbplFormatter
 from mozlog import commandline
 from mozrunner.utils import test_environment
+from mozscreenshot import dump_screen
 import mozleak
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -526,7 +521,6 @@ class MochitestUtilsMixin(object):
                                                      "tbpl": sys.stdout
                                                  })
             MochitestUtilsMixin.log = self.log
-            setAutomationLog(self.log)
 
         self.message_logger = MessageLogger(logger=self.log)
 
@@ -1559,7 +1553,7 @@ class Mochitest(MochitestUtilsMixin):
                 "Not taking screenshot here: see the one that was previously logged")
             return
         self.haveDumpedScreen = True
-        dumpScreen(utilityPath)
+        dump_screen(utilityPath, self.log)
 
     def killAndGetStack(
             self,
@@ -1783,6 +1777,7 @@ class Mochitest(MochitestUtilsMixin):
                          outputTimeout=timeout)
             proc = runner.process_handler
             self.log.info("runtests.py | Application pid: %d" % proc.pid)
+            self.log.process_start("Main app process")
 
             if onLaunch is not None:
                 # Allow callers to specify an onLaunch callback to be fired after the
@@ -1797,7 +1792,7 @@ class Mochitest(MochitestUtilsMixin):
             # until bug 913970 is fixed regarding mozrunner `wait` not returning status
             # see https://bugzilla.mozilla.org/show_bug.cgi?id=913970
             status = proc.wait()
-            printstatus(status, "Main app process")
+            self.log.process_exit("Main app process", status)
             runner.process_handler = None
 
             # finalize output handler

@@ -16,7 +16,6 @@ from datetime import datetime, timedelta
 
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
 sys.path.insert(0, SCRIPT_DIR)
-import automationutils
 
 # --------------------------------------------------------------
 # TODO: this is a hack for mozbase without virtualenv, remove with bug 849900
@@ -31,6 +30,8 @@ if os.path.isdir(mozbase):
             sys.path.append(package_path)
 
 import mozcrash
+from mozscreenshot import printstatus, dump_screen
+
 
 # ---------------------------------------------------------------
 
@@ -367,7 +368,7 @@ class Automation(object):
       return
 
     self.haveDumpedScreen = True;
-    automationutils.dumpScreen(utilityPath)
+    dump_screen(utilityPath, self.log)
 
 
   def killAndGetStack(self, processPID, utilityPath, debuggerInfo):
@@ -389,7 +390,7 @@ class Automation(object):
         crashinject = os.path.normpath(os.path.join(utilityPath, "crashinject.exe"))
         if os.path.exists(crashinject):
           status = subprocess.Popen([crashinject, str(processPID)]).wait()
-          automationutils.printstatus(status, "crashinject")
+          printstatus("crashinject", status)
           if status == 0:
             return
     self.log.info("Can't trigger Breakpad, just killing process")
@@ -457,7 +458,7 @@ class Automation(object):
         self.killAndGetStack(browserProcessId, utilityPath, debuggerInfo)
 
     status = proc.wait()
-    automationutils.printstatus(status, "Main app process")
+    printstatus("Main app process", status)
     if status == 0:
       self.lastTestSeen = "Main app process exited normally"
     if status != 0 and not didTimeout and not hitMaxTime:

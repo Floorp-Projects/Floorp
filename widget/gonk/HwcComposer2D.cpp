@@ -685,13 +685,15 @@ HwcComposer2D::TryHwComposition(nsScreenGonk* aScreen)
                 case HWC_BLIT:
                     blitComposite = true;
                     break;
-                case HWC_OVERLAY:
+                case HWC_OVERLAY: {
                     // HWC will compose HWC_OVERLAY layers in partial
                     // Overlay Composition, set layer composition flag
                     // on mapped LayerComposite to skip GPU composition
                     mHwcLayerMap[k]->SetLayerComposited(true);
+
+                    uint8_t opacity = std::min(0xFF, (int)(mHwcLayerMap[k]->GetLayer()->GetEffectiveOpacity() * 256.0));
                     if ((mList->hwLayers[k].hints & HWC_HINT_CLEAR_FB) &&
-                        (mList->hwLayers[k].blending == HWC_BLENDING_NONE)) {
+                        (opacity == 0xFF)) {
                         // Clear visible rect on FB with transparent pixels.
                         hwc_rect_t r = mList->hwLayers[k].displayFrame;
                         mHwcLayerMap[k]->SetClearRect(nsIntRect(r.left, r.top,
@@ -699,6 +701,7 @@ HwcComposer2D::TryHwComposition(nsScreenGonk* aScreen)
                                                                 r.bottom - r.top));
                     }
                     break;
+                }
                 default:
                     break;
             }

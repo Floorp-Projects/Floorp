@@ -241,7 +241,7 @@ Preferences::SizeOfIncludingThisAndOtherStuff(mozilla::MallocSizeOf aMallocSizeO
   if (gHashTable) {
     // pref keys are allocated in a private arena, which we count elsewhere.
     // pref stringvals are allocated out of the same private arena.
-    n += PL_DHashTableSizeOfExcludingThis(gHashTable, nullptr, aMallocSizeOf);
+    n += gHashTable->ShallowSizeOfIncludingThis(aMallocSizeOf);
   }
   if (gCacheData) {
     n += gCacheData->ShallowSizeOfIncludingThis(aMallocSizeOf);
