@@ -75,6 +75,9 @@ add_task(function test() {
     insertOrigin("https://foo.com", "A", 2, 0, 0, 0),
     insertOrigin("http://foo.com", "A", 2, 0, 0, 0),
     insertOrigin("http://foo.com^appId=1000&inBrowser=1", "A", 2, 0, 0, 0),
+
+    insertOrigin("http://127.0.0.1", "B", 2, 0, 0, 0),
+    insertOrigin("http://localhost", "B", 2, 0, 0, 0),
   ];
 
   let created4 = []; // Didn't create any v4 entries, so the DB should be empty
@@ -88,7 +91,10 @@ add_task(function test() {
   let expected = [
     ["https://foo.com", "A", 2, 0, 0, 0],
     ["http://foo.com", "A", 2, 0, 0, 0],
-    ["http://foo.com^appId=1000&inBrowser=1", "A", 2, 0, 0, 0]
+    ["http://foo.com^appId=1000&inBrowser=1", "A", 2, 0, 0, 0],
+
+    ["http://127.0.0.1", "B", 2, 0, 0, 0],
+    ["http://localhost", "B", 2, 0, 0, 0],
   ];
 
   let found = expected.map((it) => 0);
