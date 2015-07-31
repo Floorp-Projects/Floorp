@@ -567,7 +567,7 @@ class MOZ_STACK_CLASS StmtInfoStack
     { }
 
     StmtInfo* innermost() const { return innermostStmt_; }
-    StmtInfo* innermostScopal() const { return innermostScopeStmt_; }
+    StmtInfo* innermostScopeStmt() const { return innermostScopeStmt_; }
 
     void push(StmtInfo* stmt, StmtType type) {
         stmt->type = type;
@@ -582,7 +582,7 @@ class MOZ_STACK_CLASS StmtInfoStack
 
     void pushNestedScope(StmtInfo* stmt, StmtType type, NestedScopeObject& staticScope) {
         push(stmt, type);
-        linkAsInnermostScopal(stmt, staticScope);
+        linkAsInnermostScopeStmt(stmt, staticScope);
     }
 
     void pop() {
@@ -592,8 +592,8 @@ class MOZ_STACK_CLASS StmtInfoStack
             innermostScopeStmt_ = stmt->enclosingScope;
     }
 
-    void linkAsInnermostScopal(StmtInfo* stmt, NestedScopeObject& staticScope) {
-        MOZ_ASSERT(stmt != innermostScopal());
+    void linkAsInnermostScopeStmt(StmtInfo* stmt, NestedScopeObject& staticScope) {
+        MOZ_ASSERT(stmt != innermostScopeStmt_);
         MOZ_ASSERT(!stmt->enclosingScope);
         stmt->enclosingScope = innermostScopeStmt_;
         innermostScopeStmt_ = stmt;
@@ -604,7 +604,7 @@ class MOZ_STACK_CLASS StmtInfoStack
         MOZ_ASSERT(!innermostStmt_->isBlockScope);
         MOZ_ASSERT(innermostStmt_->canBeBlockScope());
         innermostStmt_->isBlockScope = true;
-        linkAsInnermostScopal(innermostStmt_, blockObj);
+        linkAsInnermostScopeStmt(innermostStmt_, blockObj);
     }
 };
 
