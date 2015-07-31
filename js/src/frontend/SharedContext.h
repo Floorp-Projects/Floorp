@@ -496,7 +496,8 @@ enum class StmtType : uint16_t {
 // StmtInfoBase.  Several functions below (e.g. PushStatement) are templated to
 // work with both types.
 
-struct StmtInfoBase {
+struct StmtInfoBase
+{
     // Statement type (StmtType).
     StmtType type;
 
@@ -528,6 +529,14 @@ struct StmtInfoBase {
         return !!staticScope;
     }
 
+    bool canBeBlockScope() {
+        return type == StmtType::BLOCK ||
+               type == StmtType::SWITCH ||
+               type == StmtType::TRY ||
+               type == StmtType::FINALLY ||
+               type == StmtType::CATCH;
+    }
+
     StaticBlockObject& staticBlock() const {
         MOZ_ASSERT(staticScope);
         MOZ_ASSERT(isBlockScope);
@@ -540,6 +549,68 @@ struct StmtInfoBase {
 
     bool isTrying() const {
         return StmtType::TRY <= type && type <= StmtType::SUBROUTINE;
+    }
+};
+
+template <class StmtInfo>
+class MOZ_STACK_CLASS StmtInfoStack
+{
+    // Top of the stack.
+    StmtInfo* topStmt_;
+
+    // Top scope statement with a nested scope.
+    StmtInfo* topScopeStmt_;
+
+  public:
+    explicit StmtInfoStack(ExclusiveContext* cx)
+      : topStmt_(nullptr),
+        topScopeStmt_(nullptr)
+    { }
+
+    StmtInfo* top() const { return topStmt_; }
+    StmtInfo* topScopal() const { return topScopeStmt_; }
+    NestedScopeObject* topStaticScope() const {
+        if (!topScopal())
+            return nullptr;
+        return topScopal()->staticScope;
+    }
+
+    void push(StmtInfo* stmt, StmtType type) {
+        stmt->type = type;
+        stmt->isBlockScope = false;
+        stmt->isForLetBlock = false;
+        stmt->label = nullptr;
+        stmt->staticScope = nullptr;
+        stmt->down = topStmt_;
+        stmt->downScope = nullptr;
+        topStmt_ = stmt;
+    }
+
+    void pushNestedScope(StmtInfo* stmt, StmtType type, NestedScopeObject& staticScope) {
+        push(stmt, type);
+        linkAsTopScopal(stmt, staticScope);
+    }
+
+    void pop() {
+        StmtInfo* stmt = topStmt_;
+        topStmt_ = stmt->down;
+        if (stmt->linksScope())
+            topScopeStmt_ = stmt->downScope;
+    }
+
+    void linkAsTopScopal(StmtInfo* stmt, NestedScopeObject& staticScope) {
+        MOZ_ASSERT(stmt != topScopal());
+        MOZ_ASSERT(!stmt->downScope);
+        stmt->downScope = topScopeStmt_;
+        topScopeStmt_ = stmt;
+        stmt->staticScope = &staticScope;
+    }
+
+    void makeTopLexicalScope(StaticBlockObject& blockObj) {
+        MOZ_ASSERT(!topStmt_->isBlockScope);
+        MOZ_ASSERT(topStmt_->canBeBlockScope());
+        topStmt_->isBlockScope = true;
+        linkAsTopScopal(topStmt_, blockObj);
     }
 };
 
@@ -583,20 +654,6 @@ FinishPopStatement(ContextT* ct)
             ct->staticScope = stmt->staticScope->enclosingNestedScope();
     }
 }
-
-/*
- * Find a lexically scoped variable (one declared by let, catch, or an array
- * comprehension) named by atom, looking in ct's compile-time scopes.
- *
- * If a WITH statement is reached along the scope stack, return its statement
- * info record, so callers can tell that atom is ambiguous.
- *
- * In any event, directly return the statement info record in which atom was
- * found. Otherwise return null.
- */
-template <class ContextT>
-typename ContextT::StmtInfo*
-LexicalLookup(ContextT* ct, HandleAtom atom, typename ContextT::StmtInfo* stmt = nullptr);
 
 } // namespace frontend
 
