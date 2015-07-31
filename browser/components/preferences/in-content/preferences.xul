@@ -200,8 +200,8 @@
                 pack="end"
                 role="dialog"
                 aria-labelledby="dialogTitle">
-        <caption class="titlebar" flex="1" align="center">
-          <label id="dialogTitle" class="title" flex="1"></label>
+        <caption flex="1" align="center">
+          <label id="dialogTitle" flex="1"></label>
           <button id="dialogClose"
                   class="close-icon"
                   aria-label="&preferencesCloseButton.label;"/>
