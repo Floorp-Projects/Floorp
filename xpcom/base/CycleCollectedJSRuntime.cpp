@@ -455,9 +455,9 @@ CycleCollectedJSRuntime::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t n = 0;
 
-  // nullptr for the second arg;  we're not measuring anything hanging off the
-  // entries in mJSHolders.
-  n += mJSHolders.SizeOfExcludingThis(nullptr, aMallocSizeOf);
+  // We're deliberately not measuring anything hanging off the entries in
+  // mJSHolders.
+  n += mJSHolders.ShallowSizeOfExcludingThis(aMallocSizeOf);
 
   return n;
 }

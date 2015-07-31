@@ -930,22 +930,6 @@ SizeOfSelectorsHashTable(const PLDHashTable& aTable, MallocSizeOf aMallocSizeOf)
   return n;
 }
 
-static size_t
-SizeOfKeyframesRuleEntryExcludingThis(nsStringHashKey::KeyType aKey,
-                                      nsCSSKeyframesRule* const& aData,
-                                      mozilla::MallocSizeOf aMallocSizeOf,
-                                      void* aUserArg)
-{
-  // We don't own the nsCSSKeyframesRule objects so we don't count them. We do
-  // care about the size of the keys' nsAString members' buffers though.
-  //
-  // Note that we depend on nsStringHashKey::GetKey() returning a reference,
-  // since otherwise aKey would be a copy of the string key and we would not be
-  // measuring the right object here.
-
-  return aKey.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-}
-
 size_t
 RuleCascadeData::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
@@ -976,9 +960,17 @@ RuleCascadeData::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   n += mFontFeatureValuesRules.ShallowSizeOfExcludingThis(aMallocSizeOf);
   n += mPageRules.ShallowSizeOfExcludingThis(aMallocSizeOf);
   n += mCounterStyleRules.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  n += mKeyframesRuleTable.SizeOfExcludingThis(SizeOfKeyframesRuleEntryExcludingThis,
-                                               aMallocSizeOf,
-                                               nullptr);
+
+  n += mKeyframesRuleTable.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  for (auto iter = mKeyframesRuleTable.ConstIter(); !iter.Done(); iter.Next()) {
+    // We don't own the nsCSSKeyframesRule objects so we don't count them. We
+    // do care about the size of the keys' nsAString members' buffers though.
+    //
+    // Note that we depend on nsStringHashKey::GetKey() returning a reference,
+    // since otherwise aKey would be a copy of the string key and we would not
+    // be measuring the right object here.
+    n += iter.Key().SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+  }
 
   return n;
 }
