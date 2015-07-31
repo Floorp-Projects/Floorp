@@ -389,10 +389,13 @@ protected:
                                           uint8_t aPaletteDepth,
                                           imgFrame* aPreviousFrame);
 
-  /*
-   * Member variables.
-   *
-   */
+protected:
+  uint8_t* mImageData;  // Pointer to image data in either Cairo or 8bit format
+  uint32_t mImageDataLength;
+  uint32_t* mColormap;  // Current colormap to be used in Cairo format
+  uint32_t mColormapSize;
+
+private:
   nsRefPtr<RasterImage> mImage;
   Maybe<SourceBufferIterator> mIterator;
   RawAccessFrameRef mCurrentFrame;
@@ -400,10 +403,9 @@ protected:
   nsIntRect mInvalidRect; // Tracks an invalidation region in the current frame.
   Progress mProgress;
 
-  uint8_t* mImageData;  // Pointer to image data in either Cairo or 8bit format
-  uint32_t mImageDataLength;
-  uint32_t* mColormap;  // Current colormap to be used in Cairo format
-  uint32_t mColormapSize;
+  uint32_t mFrameCount; // Number of frames, including anything in-progress
+
+  nsresult mFailCode;
 
   // Telemetry data for this decoder.
   TimeDuration mDecodeTime;
@@ -411,24 +413,19 @@ protected:
 
   uint32_t mFlags;
   size_t mBytesDecoded;
-  bool mSendPartialInvalidations;
-  bool mDataDone;
-  bool mDecodeDone;
-  bool mDataError;
-  bool mDecodeAborted;
-  bool mShouldReportError;
-  bool mImageIsTransient;
-  bool mImageIsLocked;
 
-private:
-  uint32_t mFrameCount; // Number of frames, including anything in-progress
-
-  nsresult mFailCode;
-
-  bool mInitialized;
-  bool mMetadataDecode;
-  bool mInFrame;
-  bool mIsAnimated;
+  bool mInitialized : 1;
+  bool mMetadataDecode : 1;
+  bool mSendPartialInvalidations : 1;
+  bool mImageIsTransient : 1;
+  bool mImageIsLocked : 1;
+  bool mInFrame : 1;
+  bool mIsAnimated : 1;
+  bool mDataDone : 1;
+  bool mDecodeDone : 1;
+  bool mDataError : 1;
+  bool mDecodeAborted : 1;
+  bool mShouldReportError : 1;
 };
 
 } // namespace image
