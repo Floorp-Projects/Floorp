@@ -7,13 +7,8 @@
 #ifndef NfcService_h
 #define NfcService_h
 
-#include <mozilla/ipc/ListenSocket.h>
-#include "mozilla/ipc/ListenSocketConsumer.h"
-#include <mozilla/ipc/StreamSocket.h>
-#include "mozilla/ipc/StreamSocketConsumer.h"
 #include "nsCOMPtr.h"
 #include "nsINfcService.h"
-#include "NfcMessageHandler.h"
 
 class nsIThread;
 
@@ -22,10 +17,9 @@ namespace dom {
 class NfcEventOptions;
 } // namespace dom
 
-class NfcService final
-  : public nsINfcService
-  , public mozilla::ipc::StreamSocketConsumer
-  , public mozilla::ipc::ListenSocketConsumer
+class NfcConsumer;
+
+class NfcService final : public nsINfcService
 {
 public:
   NS_DECL_ISUPPORTS
@@ -41,30 +35,13 @@ public:
     return mThread;
   }
 
-  // Methods for |StreamSocketConsumer| and |ListenSocketConsumer|
-  //
-
-  void ReceiveSocketData(
-    int aIndex, nsAutoPtr<mozilla::ipc::UnixSocketBuffer>& aBuffer) override;
-  void OnConnectSuccess(int aIndex) override;
-  void OnConnectError(int aIndex) override;
-  void OnDisconnect(int aIndex) override;
-
 private:
-  enum SocketType {
-    LISTEN_SOCKET,
-    STREAM_SOCKET
-  };
-
   NfcService();
   ~NfcService();
 
   nsCOMPtr<nsIThread> mThread;
   nsCOMPtr<nsINfcGonkEventListener> mListener;
-  nsRefPtr<mozilla::ipc::ListenSocket> mListenSocket;
-  nsRefPtr<mozilla::ipc::StreamSocket> mStreamSocket;
-  nsAutoPtr<NfcMessageHandler> mHandler;
-  nsCString mListenSocketName;
+  nsAutoPtr<NfcConsumer> mNfcConsumer;
 };
 
 } // namespace mozilla
