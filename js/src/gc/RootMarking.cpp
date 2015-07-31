@@ -331,14 +331,11 @@ js::gc::MarkPersistentRootedChains(JSTracer* trc)
 }
 
 void
-js::gc::GCRuntime::markRuntime(JSTracer* trc,
-                               TraceOrMarkRuntime traceOrMark,
-                               TraceRootsOrUsedSaved rootsSource)
+js::gc::GCRuntime::markRuntime(JSTracer* trc, TraceOrMarkRuntime traceOrMark)
 {
     gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_ROOTS);
 
     MOZ_ASSERT(traceOrMark == TraceRuntime || traceOrMark == MarkRuntime);
-    MOZ_ASSERT(rootsSource == TraceRoots || rootsSource == UseSavedRoots);
 
     MOZ_ASSERT(!rt->mainThread.suppressGC);
 
