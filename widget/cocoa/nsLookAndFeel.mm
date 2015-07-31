@@ -473,12 +473,6 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
     case eIntID_ColorPickerAvailable:
       aResult = 1;
       break;
-    case eIntID_ContextMenuOffsetVertical:
-      aResult = -6;
-      break;
-    case eIntID_ContextMenuOffsetHorizontal:
-      aResult = 1;
-      break;
     default:
       aResult = 0;
       res = NS_ERROR_FAILURE;
