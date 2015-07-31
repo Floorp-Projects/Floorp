@@ -149,6 +149,7 @@ protected:
     bool mNeedsBlit;
 
     GLenum mUserReadBufferMode;
+    GLenum mUserDrawBufferMode;
 
     // Below are the parts that help us pretend to be framebuffer 0:
     GLuint mUserDrawFB;
@@ -222,6 +223,7 @@ public:
                         GLint y, GLsizei width, GLsizei height, GLint border);
 
     void SetReadBuffer(GLenum userMode);
+    void SetDrawBuffer(GLenum userMode);
 
     /**
      * Attempts to read pixels from the current bound framebuffer, if
