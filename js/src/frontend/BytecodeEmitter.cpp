@@ -188,12 +188,6 @@ BytecodeEmitter::updateLocalsToFrameSlots()
     return true;
 }
 
-NestedScopeObject*
-BytecodeEmitter::topStaticScope() const
-{
-    return stmtStack.topStaticScope();
-}
-
 bool
 BytecodeEmitter::emitCheck(ptrdiff_t delta, ptrdiff_t* offset)
 {
@@ -578,20 +572,11 @@ class NonLocalExitScope {
       : bce(bce_),
         savedScopeIndex(bce->blockScopeList.length()),
         savedDepth(bce->stackDepth),
-        openScopeIndex(UINT32_MAX) {
-        if (bce->topStaticScope()) {
-            StmtInfoBCE* stmt = bce->topStmt();
-            while (1) {
-                MOZ_ASSERT(stmt);
-                if (stmt->linksScope()) {
-                    openScopeIndex = stmt->blockScopeIndex;
-                    break;
-                }
-                stmt = stmt->down;
-            }
-        }
+        openScopeIndex(UINT32_MAX)
+    {
+        if (StmtInfoBCE* stmt = bce->topScopeStmt())
+            openScopeIndex = stmt->blockScopeIndex;
     }
-
     ~NonLocalExitScope() {
         for (uint32_t n = savedScopeIndex; n < bce->blockScopeList.length(); n++)
             bce->blockScopeList.recordEnd(n, bce->offset());
@@ -767,8 +752,8 @@ BytecodeEmitter::pushLoopStatement(LoopStmtInfo* stmt, StmtType type, ptrdiff_t 
 JSObject*
 BytecodeEmitter::enclosingStaticScope()
 {
-    if (topStaticScope())
-        return topStaticScope();
+    if (StmtInfoBCE* stmt = topScopeStmt())
+        return stmt->staticScope;
 
     if (!sc->isFunctionBox()) {
         MOZ_ASSERT(!parent);
@@ -835,8 +820,8 @@ BytecodeEmitter::computeLocalOffset(Handle<StaticBlockObject*> blockObj)
                           : 0;
     unsigned localOffset = nbodyfixed;
 
-    if (topStaticScope()) {
-        Rooted<NestedScopeObject*> outer(cx, topStaticScope());
+    if (StmtInfoBCE* stmt = topScopeStmt()) {
+        Rooted<NestedScopeObject*> outer(cx, stmt->staticScope);
         for (; outer; outer = outer->enclosingNestedScope()) {
             if (outer->is<StaticBlockObject>()) {
                 StaticBlockObject& outerBlock = outer->as<StaticBlockObject>();
@@ -935,10 +920,8 @@ BytecodeEmitter::enterNestedScope(StmtInfoBCE* stmt, ObjectBox* objbox, StmtType
     }
 
     uint32_t parent = BlockScopeNote::NoBlockScopeIndex;
-    if (StmtInfoBCE* stmt = topScopeStmt()) {
-        for (; stmt->staticScope != topStaticScope(); stmt = stmt->down) {}
+    if (StmtInfoBCE* stmt = topScopeStmt())
         parent = stmt->blockScopeIndex;
-    }
 
     stmt->blockScopeIndex = blockScopeList.length();
     if (!blockScopeList.append(scopeObjectIndex, offset(), parent))
@@ -969,8 +952,7 @@ BytecodeEmitter::popStatement()
 bool
 BytecodeEmitter::leaveNestedScope(StmtInfoBCE* stmt)
 {
-    MOZ_ASSERT(stmt == topStmt());
-    MOZ_ASSERT(stmt->linksScope());
+    MOZ_ASSERT(stmt == topScopeStmt());
     MOZ_ASSERT(stmt->isBlockScope == !(stmt->type == StmtType::WITH));
     uint32_t blockScopeIndex = stmt->blockScopeIndex;
 
@@ -980,7 +962,6 @@ BytecodeEmitter::leaveNestedScope(StmtInfoBCE* stmt)
     ObjectBox* blockObjBox = objectList.find(blockObjIndex);
     NestedScopeObject* staticScope = &blockObjBox->object->as<NestedScopeObject>();
     MOZ_ASSERT(stmt->staticScope == staticScope);
-    MOZ_ASSERT(staticScope == topStaticScope());
     MOZ_ASSERT_IF(!stmt->isBlockScope, staticScope->is<StaticWithObject>());
 #endif
 
@@ -1181,9 +1162,11 @@ unsigned
 BytecodeEmitter::dynamicNestedScopeDepth()
 {
     unsigned depth = 0;
-    for (NestedScopeObject* b = topStaticScope(); b; b = b->enclosingNestedScope()) {
-        if (!b->is<StaticBlockObject>() || b->as<StaticBlockObject>().needsClone())
-            ++depth;
+    if (StmtInfoBCE* stmt = topScopeStmt()) {
+        for (NestedScopeObject* b = stmt->staticScope; b; b = b->enclosingNestedScope()) {
+            if (!b->is<StaticBlockObject>() || b->as<StaticBlockObject>().needsClone())
+                ++depth;
+        }
     }
 
     return depth;
@@ -1323,8 +1306,9 @@ BytecodeEmitter::emitAliasedVarOp(JSOp op, ParseNode* pn)
             JS_ALWAYS_TRUE(bceOfDef->lookupAliasedNameSlot(pn->name(), &sc));
         } else {
             MOZ_ASSERT_IF(this->sc->isFunctionBox(), local <= bceOfDef->script->bindings.numLocals());
-            MOZ_ASSERT(bceOfDef->topStaticScope()->is<StaticBlockObject>());
-            Rooted<StaticBlockObject*> b(cx, &bceOfDef->topStaticScope()->as<StaticBlockObject>());
+            MOZ_ASSERT(bceOfDef->topScopeStmt()->staticScope->is<StaticBlockObject>());
+            StmtInfoBCE* stmt = bceOfDef->topScopeStmt();
+            Rooted<StaticBlockObject*> b(cx, &stmt->staticScope->as<StaticBlockObject>());
             local = bceOfDef->localsToFrameSlots_[local];
             while (local < b->localOffset()) {
                 if (b->needsClone())

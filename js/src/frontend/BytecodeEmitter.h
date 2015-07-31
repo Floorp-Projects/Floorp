@@ -221,7 +221,6 @@ struct BytecodeEmitter
 
     StmtInfoBCE* topStmt() const { return stmtStack.top(); }
     StmtInfoBCE* topScopeStmt() const { return stmtStack.topScopal(); }
-    NestedScopeObject* topStaticScope() const;
 
     bool isAliasedName(ParseNode* pn);
 

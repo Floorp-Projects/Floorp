@@ -3002,9 +3002,10 @@ Parser<ParseHandler>::reportRedeclaration(Node pn, Definition::Kind redeclKind, 
  * already be in such a scope.
  *
  * Throw a SyntaxError if 'atom' is an invalid name. Otherwise create a
- * property for the new variable on the block object, pc->topStaticScope();
- * populate data->pn->pn_{op,cookie,defn,dflags}; and stash a pointer to
- * data->pn in a slot of the block object.
+ * property for the new variable on the block object,
+ * pc->topStmtScope()->staticScope; populate
+ * data->pn->pn_{op,cookie,defn,dflags}; and stash a pointer to data->pn in a
+ * slot of the block object.
  */
 template <>
 /* static */ bool
@@ -3173,7 +3174,10 @@ Parser<ParseHandler>::AutoPushStmtInfoPC::AutoPushStmtInfoPC(Parser<ParseHandler
     stmt_(parser.context)
 {
     stmt_.blockid = parser.pc->blockid();
-    staticScope.initEnclosingNestedScopeFromParser(parser.pc->topStaticScope());
+    NestedScopeObject* enclosing = nullptr;
+    if (StmtInfoPC* stmt = parser.pc->topScopeStmt())
+        enclosing = stmt->staticScope;
+    staticScope.initEnclosingNestedScopeFromParser(enclosing);
     parser.pc->stmtStack.pushNestedScope(&stmt_, type, staticScope);
 }
 
@@ -4093,13 +4097,16 @@ Parser<FullParseHandler>::checkAndPrepareLexical(bool isConst, const TokenPos& e
 
     if (stmt->isBlockScope) {
         // Nothing to do, the top statement already has a block scope.
-        MOZ_ASSERT(pc->topStaticScope() == stmt->staticScope);
+        MOZ_ASSERT(pc->topScopeStmt() == stmt);
     } else {
         /* Convert the block statement into a scope statement. */
         StaticBlockObject* blockObj = StaticBlockObject::create(context);
         if (!blockObj)
             return false;
-        blockObj->initEnclosingNestedScopeFromParser(pc->topStaticScope());
+        NestedScopeObject* enclosing = nullptr;
+        if (StmtInfoPC* stmt = pc->topScopeStmt())
+            enclosing = stmt->staticScope;
+        blockObj->initEnclosingNestedScopeFromParser(enclosing);
 
         ObjectBox* blockbox = newObjectBox(blockObj);
         if (!blockbox)
@@ -5866,7 +5873,8 @@ Parser<ParseHandler>::tryStatement(YieldHandling yieldHandling)
              * scoped, not a property of a new Object instance.  This is
              * an intentional change that anticipates ECMA Ed. 4.
              */
-            data.initLexical(HoistVars, &pc->topStaticScope()->template as<StaticBlockObject>(),
+            data.initLexical(HoistVars,
+                             &pc->topScopeStmt()->staticScope->template as<StaticBlockObject>(),
                              JSMSG_TOO_MANY_CATCH_VARS);
             MOZ_ASSERT(data.let.blockObj);
 
@@ -7234,8 +7242,9 @@ Parser<FullParseHandler>::legacyComprehensionTail(ParseNode* bodyExpr, unsigned 
     if (!transplanter.transplant(bodyExpr))
         return null();
 
-    MOZ_ASSERT(pc->topStaticScope() && pc->topStaticScope() == pn->pn_objbox->object);
-    data.initLexical(HoistVars, &pc->topStaticScope()->as<StaticBlockObject>(),
+    MOZ_ASSERT(pc->topScopeStmt() && pc->topScopeStmt()->staticScope == pn->pn_objbox->object);
+    data.initLexical(HoistVars,
+                     &pc->topScopeStmt()->staticScope->as<StaticBlockObject>(),
                      JSMSG_ARRAY_INIT_TOO_BIG);
 
     while (true) {
