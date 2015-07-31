@@ -5,17 +5,38 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/PermissionStatus.h"
-#include "mozilla/Services.h"
 
+#include "mozilla/Services.h"
+#include "mozilla/UniquePtr.h"
 #include "nsIPermissionManager.h"
+#include "PermissionUtils.h"
 
 namespace mozilla {
 namespace dom {
 
+/* static */ nsresult
+PermissionStatus::Create(nsPIDOMWindow* aWindow,
+                         PermissionName aName,
+                         PermissionStatus** aStatus)
+{
+  MOZ_ASSERT(aStatus);
+  *aStatus = nullptr;
+
+  UniquePtr<PermissionStatus> status(new PermissionStatus(aWindow, aName));
+  nsresult rv = status->UpdateState();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  *aStatus = status.release();
+  return NS_OK;
+}
+
 PermissionStatus::PermissionStatus(nsPIDOMWindow* aWindow,
-                                   PermissionState aState)
+                                   PermissionName aName)
   : DOMEventTargetHelper(aWindow)
-  , mState(aState)
+  , mName(aName)
+  , mState(PermissionState::Denied)
 {
 }
 
@@ -27,6 +48,31 @@ JSObject*
 PermissionStatus::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return PermissionStatusBinding::Wrap(aCx, this, aGivenProto);
+}
+
+nsresult
+PermissionStatus::UpdateState()
+{
+  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
+  if (NS_WARN_IF(!permMgr)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(GetOwner());
+  if (NS_WARN_IF(!window)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  uint32_t action = nsIPermissionManager::DENY_ACTION;
+  nsresult rv = permMgr->TestPermissionFromWindow(window,
+                                                  PermissionNameToType(mName),
+                                                  &action);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  mState = ActionToPermissionState(action);
+  return NS_OK;
 }
 
 } // namespace dom
