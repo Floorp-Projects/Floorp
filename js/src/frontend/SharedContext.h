@@ -449,25 +449,25 @@ SharedContext::allLocalsAliased()
  * Also remember to keep the statementName array in BytecodeEmitter.cpp in
  * sync.
  */
-enum StmtType {
-    STMT_LABEL,                 /* labeled statement:  L: s */
-    STMT_IF,                    /* if (then) statement */
-    STMT_ELSE,                  /* else clause of if statement */
-    STMT_SEQ,                   /* synthetic sequence of statements */
-    STMT_BLOCK,                 /* compound statement: { s1[;... sN] } */
-    STMT_SWITCH,                /* switch statement */
-    STMT_WITH,                  /* with statement */
-    STMT_CATCH,                 /* catch block */
-    STMT_TRY,                   /* try block */
-    STMT_FINALLY,               /* finally block */
-    STMT_SUBROUTINE,            /* gosub-target subroutine body */
-    STMT_DO_LOOP,               /* do/while loop statement */
-    STMT_FOR_LOOP,              /* for loop statement */
-    STMT_FOR_IN_LOOP,           /* for/in loop statement */
-    STMT_FOR_OF_LOOP,           /* for/of loop statement */
-    STMT_WHILE_LOOP,            /* while loop statement */
-    STMT_SPREAD,                /* spread operator (pseudo for/of) */
-    STMT_LIMIT
+enum class StmtType : uint16_t {
+    LABEL,                 /* labeled statement:  L: s */
+    IF,                    /* if (then) statement */
+    ELSE,                  /* else clause of if statement */
+    SEQ,                   /* synthetic sequence of statements */
+    BLOCK,                 /* compound statement: { s1[;... sN] } */
+    SWITCH,                /* switch statement */
+    WITH,                  /* with statement */
+    CATCH,                 /* catch block */
+    TRY,                   /* try block */
+    FINALLY,               /* finally block */
+    SUBROUTINE,            /* gosub-target subroutine body */
+    DO_LOOP,               /* do/while loop statement */
+    FOR_LOOP,              /* for loop statement */
+    FOR_IN_LOOP,           /* for/in loop statement */
+    FOR_OF_LOOP,           /* for/of loop statement */
+    WHILE_LOOP,            /* while loop statement */
+    SPREAD,                /* spread operator (pseudo for/of) */
+    LIMIT
 };
 
 /*
@@ -498,14 +498,14 @@ enum StmtType {
 
 struct StmtInfoBase {
     // Statement type (StmtType).
-    uint16_t        type;
+    StmtType type;
 
-    // True if type is STMT_BLOCK, STMT_TRY, STMT_SWITCH, or STMT_FINALLY and
-    // the block contains at least one let-declaration, or if type is
-    // STMT_CATCH.
+    // True if type is StmtType::BLOCK, StmtType::TRY, StmtType::SWITCH, or
+    // StmtType::FINALLY and the block contains at least one let-declaration,
+    // or if type is StmtType::CATCH.
     bool isBlockScope:1;
 
-    // True if isBlockScope or type == STMT_WITH.
+    // True if isBlockScope or type == StmtType::WITH.
     bool isNestedScope:1;
 
     // for (let ...) induced block scope
@@ -524,14 +524,12 @@ struct StmtInfoBase {
     {}
 
     bool maybeScope() const {
-        return STMT_BLOCK <= type && type <= STMT_SUBROUTINE && type != STMT_WITH;
+        return StmtType::BLOCK <= type && type <= StmtType::SUBROUTINE &&
+               type != StmtType::WITH;
     }
 
     bool linksScope() const {
         return isNestedScope;
-    }
-
-    void setStaticScope() {
     }
 
     StaticBlockObject& staticBlock() const {
@@ -541,11 +539,11 @@ struct StmtInfoBase {
     }
 
     bool isLoop() const {
-        return type >= STMT_DO_LOOP;
+        return type >= StmtType::DO_LOOP;
     }
 
     bool isTrying() const {
-        return STMT_TRY <= type && type <= STMT_SUBROUTINE;
+        return StmtType::TRY <= type && type <= StmtType::SUBROUTINE;
     }
 };
 
