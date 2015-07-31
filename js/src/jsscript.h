@@ -206,7 +206,7 @@ JS_STATIC_ASSERT(sizeof(Binding) == sizeof(uintptr_t));
  * both function and top-level scripts (the latter is needed to track names in
  * strict mode eval code, to give such code its own lexical environment).
  */
-class Bindings : public JS::StaticTraceable
+class Bindings : public JS::Traceable
 {
     friend class BindingIter;
     friend class AliasedFormalIter;
