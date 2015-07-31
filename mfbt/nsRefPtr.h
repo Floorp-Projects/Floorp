@@ -263,9 +263,10 @@ public:
         mFunction(aFunction)
     {
     }
-    R operator()(Args... aArgs)
+    template<typename... ActualArgs>
+    R operator()(ActualArgs&&... aArgs)
     {
-      return ((*mRawPtr).*mFunction)(mozilla::Forward<Args>(aArgs)...);
+      return ((*mRawPtr).*mFunction)(mozilla::Forward<ActualArgs>(aArgs)...);
     }
   };
 
