@@ -507,11 +507,9 @@ var popupTests = [
       }
     }
 
-    var openX = 8;
-    var openY = 16;
     var rect = gMenuPopup.getBoundingClientRect();
-    is(rect.left, openX + (platformIsMac() ? 1 : 2), testname + " left");
-    is(rect.top, openY + (platformIsMac() ? -6 : 2), testname + " top");
+    is(rect.left, 10, testname + " left");
+    is(rect.top, 18, testname + " top");
     ok(rect.right, testname + " right is " + rect.right);
     ok(rect.bottom, testname + " bottom is " + rect.bottom);
   }
@@ -751,7 +749,7 @@ var popupTests = [
   autohide: "thepopup",
   test: function(testname, step) {
     gTrigger.focus();
-    synthesizeKey("VK_DOWN", { altKey: !platformIsMac() });
+    synthesizeKey("VK_DOWN", { altKey: (navigator.platform.indexOf("Mac") == -1) });
   },
   result: function(testname, step) {
     checkOpen("trigger", testname);
@@ -764,7 +762,7 @@ var popupTests = [
   events: [ "popupshowing thepopup", "popupshown thepopup" ],
   test: function(testname, step) {
     gTrigger.focus();
-    synthesizeKey("VK_UP", { altKey: !platformIsMac() });
+    synthesizeKey("VK_UP", { altKey: (navigator.platform.indexOf("Mac") == -1) });
   },
   result: function(testname, step) {
     checkOpen("trigger", testname);
@@ -791,7 +789,7 @@ var popupTests = [
   autohide: "thepopup",
   test: function(testname, step) {
     gTrigger.focus();
-    synthesizeKey(platformIsMac() ? " " : "VK_F4", { });
+    synthesizeKey((navigator.platform.indexOf("Mac") == -1) ? "VK_F4" : " ", { });
   },
   result: function(testname, step) {
     checkOpen("trigger", testname);
@@ -804,10 +802,10 @@ var popupTests = [
   condition: function() { return gIsMenu; },
   test: function(testname, step) {
     gTrigger.focus();
-    if (platformIsMac())
-      synthesizeKey("VK_F4", { altKey: true });
-    else
+    if (navigator.platform.indexOf("Mac") == -1)
       synthesizeKey("", { metaKey: true });
+    else
+      synthesizeKey("VK_F4", { altKey: true });
   },
   result: function(testname, step) {
     checkClosed("trigger", testname);
@@ -852,8 +850,3 @@ var popupTests = [
 }
 
 ];
-
-function platformIsMac()
-{
-    return navigator.platform.indexOf("Mac") > -1;
-}

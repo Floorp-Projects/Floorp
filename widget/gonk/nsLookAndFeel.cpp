@@ -392,11 +392,6 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
             aResult = atoi(propValue);
             break;
         }
-            
-        case eIntID_ContextMenuOffsetVertical:
-        case eIntID_ContextMenuOffsetHorizontal:
-            aResult = 2;
-            break;
 
         default:
             aResult = 0;
