@@ -25,8 +25,8 @@ namespace frontend {
 
 struct StmtInfoPC : public StmtInfoBase
 {
-    StmtInfoPC*     down;          /* info for enclosing statement */
-    StmtInfoPC*     downScope;     /* next enclosing lexical scope */
+    StmtInfoPC*     enclosing;
+    StmtInfoPC*     enclosingScope;
 
     uint32_t        blockid;        /* for simplified dominance computation */
     uint32_t        innerBlockScopeDepth; /* maximum depth of nested block scopes, in slots */
@@ -284,10 +284,10 @@ struct ParseContext : public GenericParseContext
 
     bool init(TokenStream& ts);
 
-    unsigned blockid() { return stmtStack.top() ? stmtStack.top()->blockid : bodyid; }
+    unsigned blockid() { return stmtStack.innermost() ? stmtStack.innermost()->blockid : bodyid; }
 
-    StmtInfoPC* topStmt() const { return stmtStack.top(); }
-    StmtInfoPC* topScopeStmt() const { return stmtStack.topScopal(); }
+    StmtInfoPC* innermostStmt() const { return stmtStack.innermost(); }
+    StmtInfoPC* innermostScopeStmt() const { return stmtStack.innermostScopal(); }
 
     // True if we are at the topmost level of a entire script or function body.
     // For example, while parsing this code we would encounter f1 and f2 at
@@ -296,8 +296,8 @@ struct ParseContext : public GenericParseContext
     //   function f1() { function f2() { } }
     //   if (cond) { function f3() { if (cond) { function f4() { } } } }
     //
-    bool atBodyLevel() { return !topStmt(); }
-    bool atGlobalLevel() { return atBodyLevel() && !sc->isFunctionBox() && !topScopeStmt(); }
+    bool atBodyLevel() { return !innermostStmt(); }
+    bool atGlobalLevel() { return atBodyLevel() && !sc->isFunctionBox() && !innermostScopeStmt(); }
 
     // True if this is the ParseContext for the body of a function created by
     // the Function constructor.
@@ -354,7 +354,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
         ~AutoPushStmtInfoPC();
 
         bool generateBlockId();
-        bool makeTopLexicalScope(StaticBlockObject& blockObj);
+        bool makeInnermostLexicalScope(StaticBlockObject& blockObj);
 
         StmtInfoPC& operator*() { return stmt_; }
         StmtInfoPC* operator->() { return &stmt_; }
