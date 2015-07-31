@@ -25,7 +25,11 @@ static const int MAX_DRAW_CALLS_SINCE_FLUSH = 100;
 bool
 WebGLContext::DrawInstanced_check(const char* info)
 {
-    if (!mBufferFetchingHasPerVertex) {
+    // This restriction was removed in GLES3, so WebGL2 shouldn't have it.
+    if (!IsWebGL2() &&
+        IsExtensionEnabled(WebGLExtensionID::ANGLE_instanced_arrays) &&
+        !mBufferFetchingHasPerVertex)
+    {
         /* http://www.khronos.org/registry/gles/extensions/ANGLE/ANGLE_instanced_arrays.txt
          *  If all of the enabled vertex attribute arrays that are bound to active
          *  generic attributes in the program have a non-zero divisor, the draw
