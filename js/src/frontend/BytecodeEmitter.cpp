@@ -573,7 +573,7 @@ class NonLocalExitScope {
             StmtInfoBCE* stmt = bce->topStmt;
             while (1) {
                 MOZ_ASSERT(stmt);
-                if (stmt->isNestedScope) {
+                if (stmt->linksScope()) {
                     openScopeIndex = stmt->blockScopeIndex;
                     break;
                 }
@@ -622,7 +622,7 @@ NonLocalExitScope::prepareForNonLocalJump(StmtInfoBCE* toStmt)
           case StmtType::WITH:
             if (!bce->emit1(JSOP_LEAVEWITH))
                 return false;
-            MOZ_ASSERT(stmt->isNestedScope);
+            MOZ_ASSERT(stmt->linksScope());
             if (!popScopeForNonLocalExit(stmt->blockScopeIndex))
                 return false;
             break;
@@ -655,7 +655,6 @@ NonLocalExitScope::prepareForNonLocalJump(StmtInfoBCE* toStmt)
         }
 
         if (stmt->isBlockScope) {
-            MOZ_ASSERT(stmt->isNestedScope);
             StaticBlockObject& blockObj = stmt->staticBlock();
             if (blockObj.needsClone()) {
                 if (!bce->emit1(JSOP_POPBLOCKSCOPE))
@@ -941,7 +940,7 @@ BytecodeEmitter::enterNestedScope(StmtInfoBCE* stmt, ObjectBox* objbox, StmtType
     pushStatement(stmt, stmtType, offset());
     scopeObj->initEnclosingNestedScope(enclosingStaticScope());
     FinishPushNestedScope(this, stmt, *scopeObj);
-    MOZ_ASSERT(stmt->isNestedScope);
+    MOZ_ASSERT(stmt->linksScope());
     stmt->isBlockScope = (stmtType == StmtType::BLOCK);
 
     return true;
@@ -964,7 +963,7 @@ bool
 BytecodeEmitter::leaveNestedScope(StmtInfoBCE* stmt)
 {
     MOZ_ASSERT(stmt == topStmt);
-    MOZ_ASSERT(stmt->isNestedScope);
+    MOZ_ASSERT(stmt->linksScope());
     MOZ_ASSERT(stmt->isBlockScope == !(stmt->type == StmtType::WITH));
     uint32_t blockScopeIndex = stmt->blockScopeIndex;
 
