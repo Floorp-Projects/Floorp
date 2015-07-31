@@ -23,6 +23,7 @@ python_modules = [
     'mozprocess',
     'mozprofile',
     'mozrunner',
+    'mozscreenshot',
     'mozsystemmonitor',
     'moztest',
     'mozversion',

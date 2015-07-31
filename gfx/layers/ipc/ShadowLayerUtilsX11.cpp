@@ -62,15 +62,21 @@ GetXRenderPictFormatFromId(Display* aDisplay, PictFormat aFormatId)
   return XRenderFindFormat(aDisplay, PictFormatID, &tmplate, 0);
 }
 
-SurfaceDescriptorX11::SurfaceDescriptorX11(gfxXlibSurface* aSurf)
+SurfaceDescriptorX11::SurfaceDescriptorX11(gfxXlibSurface* aSurf,
+                                           bool aForwardGLX)
   : mId(aSurf->XDrawable())
   , mSize(aSurf->GetSize())
+  , mGLXPixmap(None)
 {
   const XRenderPictFormat *pictFormat = aSurf->XRenderFormat();
   if (pictFormat) {
     mFormat = pictFormat->id;
   } else {
     mFormat = cairo_xlib_surface_get_visual(aSurf->CairoSurface())->visualid;
+  }
+
+  if (aForwardGLX) {
+    mGLXPixmap = aSurf->GetGLXPixmap();
   }
 }
 
@@ -79,6 +85,7 @@ SurfaceDescriptorX11::SurfaceDescriptorX11(Drawable aDrawable, XID aFormatID,
   : mId(aDrawable)
   , mFormat(aFormatID)
   , mSize(aSize)
+  , mGLXPixmap(None)
 { }
 
 already_AddRefed<gfxXlibSurface>
@@ -100,6 +107,12 @@ SurfaceDescriptorX11::OpenForeign() const
 
     surf = new gfxXlibSurface(display, mId, visual, mSize);
   }
+
+#ifdef GL_PROVIDER_GLX
+  if (mGLXPixmap)
+    surf->BindGLXPixmap(mGLXPixmap);
+#endif
+
   return surf->CairoStatus() ? nullptr : surf.forget();
 }
 

@@ -69,6 +69,15 @@ public:
 
   virtual void RenderLayerWithReadback(ReadbackProcessor *aReadback) override;
 
+  virtual bool IsOptimizedFor(LayerManager::PaintedLayerCreationHint aCreationHint) override
+  {
+#ifdef MOZ_B2G
+    return aCreationHint == GetCreationHint();
+#else
+    return true;
+#endif
+  }
+
   virtual void ClearCachedResources() override
   {
     if (mContentClient) {

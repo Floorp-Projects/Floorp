@@ -32,6 +32,7 @@ nsSMILAnimationController::nsSMILAnimationController(nsIDocument* aDoc)
     mDeferredStartSampling(false),
     mRunningSample(false),
     mRegisteredWithRefreshDriver(false),
+    mMightHavePendingStyleUpdates(false),
     mDocument(aDoc)
 {
   MOZ_ASSERT(aDoc, "need a non-null document");
@@ -439,6 +440,7 @@ nsSMILAnimationController::DoSample(bool aSkipUnchangedContainers)
 
   // Update last compositor table
   mLastCompositorTable = currentCompositorTable.forget();
+  mMightHavePendingStyleUpdates = true;
 
   NS_ASSERTION(!mResampleNeeded, "Resample dirty flag set during sample!");
 }
@@ -704,6 +706,9 @@ nsSMILAnimationController::GetTargetIdentifierForAnimation(
 void
 nsSMILAnimationController::AddStyleUpdatesTo(RestyleTracker& aTracker)
 {
+  MOZ_ASSERT(mMightHavePendingStyleUpdates,
+             "Should only add style updates when we think we might have some");
+
   for (auto iter = mAnimationElementTable.Iter(); !iter.Done(); iter.Next()) {
     SVGAnimationElement* animElement = iter.Get()->GetKey();
 
@@ -721,6 +726,8 @@ nsSMILAnimationController::AddStyleUpdatesTo(RestyleTracker& aTracker)
                                       : eRestyle_SVGAttrAnimations;
     aTracker.AddPendingRestyle(key.mElement, rshint, nsChangeHint(0));
   }
+
+  mMightHavePendingStyleUpdates = false;
 }
 
 //----------------------------------------------------------------------
