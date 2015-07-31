@@ -220,7 +220,7 @@ struct BytecodeEmitter
     bool updateLocalsToFrameSlots();
 
     StmtInfoBCE* innermostStmt() const { return stmtStack.innermost(); }
-    StmtInfoBCE* innermostScopeStmt() const { return stmtStack.innermostScopal(); }
+    StmtInfoBCE* innermostScopeStmt() const { return stmtStack.innermostScopeStmt(); }
 
     bool isAliasedName(ParseNode* pn);
 
