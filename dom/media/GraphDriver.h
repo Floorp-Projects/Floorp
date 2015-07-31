@@ -50,15 +50,6 @@ static const int SCHEDULE_SAFETY_MARGIN_MS = 10;
 static const int AUDIO_TARGET_MS = 2*MEDIA_GRAPH_TARGET_PERIOD_MS +
     SCHEDULE_SAFETY_MARGIN_MS;
 
-/**
- * Try have this much video buffered. Video frames are set
- * near the end of the iteration of the control loop. The maximum delay
- * to the setting of the next video frame is 2*MEDIA_GRAPH_TARGET_PERIOD_MS +
- * SCHEDULE_SAFETY_MARGIN_MS. This is not optimal yet.
- */
-static const int VIDEO_TARGET_MS = 2*MEDIA_GRAPH_TARGET_PERIOD_MS +
-    SCHEDULE_SAFETY_MARGIN_MS;
-
 class MediaStreamGraphImpl;
 
 /**
