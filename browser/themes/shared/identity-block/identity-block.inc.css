@@ -49,7 +49,7 @@
 }
 
 #notification-popup-box:not([hidden]) + #identity-box {
-  -moz-padding-start: 10px;
+  padding-inline-start: 10px;
   border-radius: 0;
 }
 
@@ -61,12 +61,8 @@
   transition: padding-left, padding-right;
 }
 
-@conditionalForwardWithUrlbar@ > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(ltr) {
-  padding-left: calc(var(--backbutton-urlbar-overlap) + 4px);
-}
-
-@conditionalForwardWithUrlbar@ > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(rtl) {
-  padding-right: calc(var(--backbutton-urlbar-overlap) + 4px);
+@conditionalForwardWithUrlbar@ > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box {
+  padding-inline-start: calc(var(--backbutton-urlbar-overlap) + 4px);
 }
 
 @conditionalForwardWithUrlbar@:hover:not([switchingtabs]) > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box {
@@ -74,14 +70,9 @@
   transition-delay: 100s;
 }
 
-@conditionalForwardWithUrlbar@:not(:hover) > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(ltr) {
+@conditionalForwardWithUrlbar@:not(:hover) > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box {
   /* when not hovered anymore, trigger a new non-delayed transition to react to the forward button hiding */
-  padding-left: calc(var(--backbutton-urlbar-overlap) + 4.01px);
-}
-
-@conditionalForwardWithUrlbar@:not(:hover) > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(rtl) {
-  /* when not hovered anymore, trigger a new non-delayed transition to react to the forward button hiding */
-  padding-right: calc(var(--backbutton-urlbar-overlap) + 4.01px);
+  padding-inline-start: calc(var(--backbutton-urlbar-overlap) + 4.01px);
 }
 
 /* TRACKING PROTECTION ICON */

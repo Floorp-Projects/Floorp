@@ -24,11 +24,15 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
             Restriction.DISALLOW_DEVELOPER_TOOLS,
             Restriction.DISALLOW_CUSTOMIZE_HOME,
             Restriction.DISALLOW_PRIVATE_BROWSING,
-            Restriction.DISALLOW_LOCATION_SERVICE
+            Restriction.DISALLOW_LOCATION_SERVICE,
+            Restriction.DISALLOW_DISPLAY_SETTINGS,
+            Restriction.DISALLOW_CLEAR_HISTORY,
+            Restriction.DISALLOW_MASTER_PASSWORD
     );
 
     private static final String ABOUT_ADDONS = "about:addons";
     private static final String ABOUT_PRIVATE_BROWSING = "about:privatebrowsing";
+    private static final String ABOUT_CONFIG = "about:config";
 
     private Context context;
 
@@ -56,6 +60,11 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
         }
 
         if (!isAllowed(Restriction.DISALLOW_PRIVATE_BROWSING) && url.toLowerCase().startsWith(ABOUT_PRIVATE_BROWSING)) {
+            return false;
+        }
+
+        if (url.toLowerCase().startsWith(ABOUT_CONFIG)) {
+            // Always block access to about:config to prevent circumventing restrictions (Bug 1189233)
             return false;
         }
 
