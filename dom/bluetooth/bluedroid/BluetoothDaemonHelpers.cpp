@@ -1468,6 +1468,13 @@ UnpackPDU(DaemonSocketPDU& aPDU, BluetoothHandsfreeNRECState& aOut)
 }
 
 nsresult
+UnpackPDU(DaemonSocketPDU& aPDU, BluetoothHandsfreeWbsConfig& aOut)
+{
+  return UnpackPDU(
+    aPDU, UnpackConversion<uint8_t, BluetoothHandsfreeWbsConfig>(aOut));
+}
+
+nsresult
 UnpackPDU(DaemonSocketPDU& aPDU,
           BluetoothHandsfreeVoiceRecognitionState& aOut)
 {
