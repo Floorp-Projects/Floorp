@@ -10,6 +10,7 @@ import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PanZoomController;
 import org.mozilla.gecko.gfx.PointUtils;
 import org.mozilla.gecko.mozglue.DirectBufferAllocator;
+import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -51,7 +52,7 @@ public class ZoomedView extends FrameLayout implements LayerView.OnMetricsChange
         LayerView.ZoomedViewListener, GeckoEventListener {
     private static final String LOGTAG = "Gecko" + ZoomedView.class.getSimpleName();
 
-    private static final float[] ZOOM_FACTORS_LIST = {2.0f, 3.0f, 1.5f};
+    private static final float[] ZOOM_FACTORS_LIST = {2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 1.5f};
     private static final int W_CAPTURED_VIEW_IN_PERCENT = 50;
     private static final int H_CAPTURED_VIEW_IN_PERCENT = 50;
     private static final int MINIMUM_DELAY_BETWEEN_TWO_RENDER_CALLS_NS = 1000000;
@@ -62,6 +63,11 @@ public class ZoomedView extends FrameLayout implements LayerView.OnMetricsChange
 
     private float zoomFactor;
     private int currentZoomFactorIndex;
+    private boolean isSimplifiedUI;
+    private int defaultZoomFactor;
+    private int prefDefaultZoomFactorObserverId;
+    private int prefSimplifiedUIObserverId;
+
     private ImageView zoomedImageView;
     private LayerView layerView;
     private int viewWidth;
@@ -213,10 +219,11 @@ public class ZoomedView extends FrameLayout implements LayerView.OnMetricsChange
 
     public ZoomedView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+        isSimplifiedUI = true;
+        getPrefs();
+        currentZoomFactorIndex = 0;
         returnValue = new PointF();
         animationStart = new PointF();
-        currentZoomFactorIndex = 0;
-        zoomFactor = ZOOM_FACTORS_LIST[currentZoomFactorIndex];
         requestRenderRunnable = new Runnable() {
             @Override
             public void run() {
@@ -230,6 +237,8 @@ public class ZoomedView extends FrameLayout implements LayerView.OnMetricsChange
     }
 
     void destroy() {
+        PrefsHelper.removeObserver(prefDefaultZoomFactorObserverId);
+        PrefsHelper.removeObserver(prefSimplifiedUIObserverId);
         ThreadUtils.removeCallbacksFromUiThread(requestRenderRunnable);
         EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
                 "Gesture:clusteredLinksClicked", "Window:Resize", "Content:LocationChange",
@@ -246,7 +255,7 @@ public class ZoomedView extends FrameLayout implements LayerView.OnMetricsChange
         changeZoomFactorButton = (TextView) findViewById(R.id.change_zoom_factor);
         zoomedImageView = (ImageView) findViewById(R.id.zoomed_image_view);
 
-        setTextInZoomFactorButton(ZOOM_FACTORS_LIST[0]);
+        setTextInZoomFactorButton(zoomFactor);
 
         toolbarHeight = getResources().getDimensionPixelSize(R.dimen.zoomed_view_toolbar_height);
         containterSize = getResources().getDimensionPixelSize(R.dimen.drawable_dropshadow_size);
@@ -262,9 +271,17 @@ public class ZoomedView extends FrameLayout implements LayerView.OnMetricsChange
             }
         });
 
-        changeZoomFactorButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View view) {
-                changeZoomFactor();
+        changeZoomFactorButton.setOnTouchListener(new  OnTouchListener() {
+            public boolean onTouch(View v, MotionEvent event) {
+
+                if (event.getAction() == MotionEvent.ACTION_UP) {
+                    if (event.getX() >= (changeZoomFactorButton.getLeft() + changeZoomFactorButton.getWidth() / 2)) {
+                        changeZoomFactor(true);
+                    } else {
+                        changeZoomFactor(false);
+                    }
+                }
+                return true;
             }
         });
 
@@ -274,7 +291,7 @@ public class ZoomedView extends FrameLayout implements LayerView.OnMetricsChange
     private void removeListeners() {
         closeButton.setOnClickListener(null);
 
-        changeZoomFactorButton.setOnClickListener(null);
+        changeZoomFactorButton.setOnTouchListener(null);
 
         setOnTouchListener(null);
     }
@@ -479,7 +496,47 @@ public class ZoomedView extends FrameLayout implements LayerView.OnMetricsChange
         return (GeckoAppShell.getScreenDepth() == 24) ? Bitmap.Config.ARGB_8888 : Bitmap.Config.RGB_565;
     }
 
-    private void startZoomDisplay(LayerView aLayerView, final int leftFromGecko, final int topFromGecko) {
+    private void getPrefs() {
+        prefSimplifiedUIObserverId = PrefsHelper.getPref("ui.zoomedview.simplified", new PrefsHelper.PrefHandlerBase() {
+            @Override
+            public void prefValue(String pref, boolean simplified) {
+                isSimplifiedUI = simplified;
+                if (simplified) {
+                    changeZoomFactorButton.setVisibility(View.INVISIBLE);
+                    zoomFactor = (float) defaultZoomFactor;
+                } else {
+                    zoomFactor = ZOOM_FACTORS_LIST[currentZoomFactorIndex];
+                    setTextInZoomFactorButton(zoomFactor);
+                    changeZoomFactorButton.setVisibility(View.VISIBLE);
+                }
+            }
+
+            @Override
+            public boolean isObserver() {
+                return true;
+            }
+        });
+
+        prefDefaultZoomFactorObserverId = PrefsHelper.getPref("ui.zoomedview.defaultZoomFactor", new PrefsHelper.PrefHandlerBase() {
+            @Override
+            public void prefValue(String pref, int defaultZoomFactorFromSettings) {
+                defaultZoomFactor = defaultZoomFactorFromSettings;
+                if (isSimplifiedUI) {
+                    zoomFactor = (float) defaultZoomFactor;
+                } else {
+                    zoomFactor = ZOOM_FACTORS_LIST[currentZoomFactorIndex];
+                    setTextInZoomFactorButton(zoomFactor);
+                }
+            }
+
+            @Override
+            public boolean isObserver() {
+                return true;
+            }
+        });
+    }
+
+private void startZoomDisplay(LayerView aLayerView, final int leftFromGecko, final int topFromGecko) {
         if (layerView == null) {
             layerView = aLayerView;
             layerView.addZoomedViewListener(this);
@@ -514,11 +571,15 @@ public class ZoomedView extends FrameLayout implements LayerView.OnMetricsChange
         }
     }
 
-    private void changeZoomFactor() {
-        if (currentZoomFactorIndex < ZOOM_FACTORS_LIST.length - 1) {
+    private void changeZoomFactor(boolean zoomIn) {
+        if (zoomIn && currentZoomFactorIndex < ZOOM_FACTORS_LIST.length - 1) {
             currentZoomFactorIndex++;
-        } else {
+        } else if (zoomIn && currentZoomFactorIndex >= ZOOM_FACTORS_LIST.length - 1) {
             currentZoomFactorIndex = 0;
+        } else if (!zoomIn && currentZoomFactorIndex > 0) {
+            currentZoomFactorIndex--;
+        } else {
+            currentZoomFactorIndex = ZOOM_FACTORS_LIST.length - 1;
         }
         zoomFactor = ZOOM_FACTORS_LIST[currentZoomFactorIndex];
 
@@ -529,7 +590,7 @@ public class ZoomedView extends FrameLayout implements LayerView.OnMetricsChange
 
     private void setTextInZoomFactorButton(float zoom) {
         final String percentageValue = Integer.toString((int) (100*zoom));
-        changeZoomFactorButton.setText(getResources().getString(R.string.percent, percentageValue));
+        changeZoomFactorButton.setText("- " + getResources().getString(R.string.percent, percentageValue) + " +");
     }
 
     @Override
