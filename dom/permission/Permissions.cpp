@@ -42,48 +42,52 @@ Permissions::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 
 namespace {
 
-nsresult
+already_AddRefed<PermissionStatus>
 CreatePushPermissionStatus(JSContext* aCx,
                            JS::Handle<JSObject*> aPermission,
                            nsPIDOMWindow* aWindow,
-                           PermissionStatus** aResult)
+                           ErrorResult& aRv)
 {
   PushPermissionDescriptor permission;
   JS::Rooted<JS::Value> value(aCx, JS::ObjectOrNullValue(aPermission));
   if (NS_WARN_IF(!permission.Init(aCx, value))) {
-    return NS_ERROR_UNEXPECTED;
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
   }
 
   if (permission.mUserVisible) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
   }
 
-  return PermissionStatus::Create(aWindow, permission.mName, aResult);
+  return PermissionStatus::Create(aWindow, permission.mName, aRv);
 }
 
-nsresult
+already_AddRefed<PermissionStatus>
 CreatePermissionStatus(JSContext* aCx,
                        JS::Handle<JSObject*> aPermission,
                        nsPIDOMWindow* aWindow,
-                       PermissionStatus** aResult)
+                       ErrorResult& aRv)
 {
   PermissionDescriptor permission;
   JS::Rooted<JS::Value> value(aCx, JS::ObjectOrNullValue(aPermission));
   if (NS_WARN_IF(!permission.Init(aCx, value))) {
-    return NS_ERROR_UNEXPECTED;
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
   }
 
   switch (permission.mName) {
     case PermissionName::Geolocation:
     case PermissionName::Notifications:
-      return PermissionStatus::Create(aWindow, permission.mName, aResult);
+      return PermissionStatus::Create(aWindow, permission.mName, aRv);
 
     case PermissionName::Push:
-      return CreatePushPermissionStatus(aCx, aPermission, aWindow, aResult);
+      return CreatePushPermissionStatus(aCx, aPermission, aWindow, aRv);
 
     case PermissionName::Midi:
     default:
-      return NS_ERROR_NOT_IMPLEMENTED;
+      aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+      return nullptr;
   }
 }
 
@@ -105,11 +109,11 @@ Permissions::Query(JSContext* aCx,
     return nullptr;
   }
 
-  PermissionStatus* status = nullptr;
-  nsresult rv = CreatePermissionStatus(aCx, aPermission, mWindow, &status);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  nsRefPtr<PermissionStatus> status =
+    CreatePermissionStatus(aCx, aPermission, mWindow, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
     MOZ_ASSERT(!status);
-    promise->MaybeReject(rv);
+    promise->MaybeReject(aRv);
   } else {
     MOZ_ASSERT(status);
     promise->MaybeResolve(status);

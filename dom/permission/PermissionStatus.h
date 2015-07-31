@@ -22,11 +22,9 @@ class PermissionStatus final
   friend class PermissionObserver;
 
 public:
-  ~PermissionStatus();
-
-  static nsresult Create(nsPIDOMWindow* aWindow,
-                         PermissionName aName,
-                         PermissionStatus** aStatus);
+  static already_AddRefed<PermissionStatus> Create(nsPIDOMWindow* aWindow,
+                                                   PermissionName aName,
+                                                   ErrorResult& aRv);
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
@@ -36,6 +34,8 @@ public:
   IMPL_EVENT_HANDLER(change)
 
 private:
+  ~PermissionStatus();
+
   PermissionStatus(nsPIDOMWindow* aWindow, PermissionName aName);
 
   nsresult Init();
