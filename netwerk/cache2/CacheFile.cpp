@@ -212,7 +212,6 @@ nsresult
 CacheFile::Init(const nsACString &aKey,
                 bool aCreateNew,
                 bool aMemoryOnly,
-                uint32_t aPinningAppID,
                 bool aPriority,
                 CacheFileListener *aCallback)
 {
@@ -267,7 +266,7 @@ CacheFile::Init(const nsACString &aKey,
 
     mOpeningFile = true;
     mListener = aCallback;
-    rv = CacheFileIOManager::OpenFile(mKey, aPinningAppID, flags, this);
+    rv = CacheFileIOManager::OpenFile(mKey, flags, this);
     if (NS_FAILED(rv)) {
       mListener = nullptr;
       mOpeningFile = false;

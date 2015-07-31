@@ -40,7 +40,6 @@ UNIFIED_SOURCES += [
     'CacheStorage.cpp',
     'CacheStorageService.cpp',
     'OldWrappers.cpp',
-    'PinningCacheStorage.cpp',
 ]
 
 # AppCacheStorage.cpp cannot be built in unified mode because it uses plarena.h.

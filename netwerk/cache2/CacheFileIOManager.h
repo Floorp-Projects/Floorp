@@ -15,7 +15,6 @@
 #include "nsTArray.h"
 #include "nsString.h"
 #include "nsTHashtable.h"
-#include "nsRefPtrHashtable.h"
 #include "prio.h"
 
 //#define DEBUG_HANDLES 1
@@ -29,7 +28,6 @@ namespace mozilla {
 namespace net {
 
 class CacheFile;
-class CacheFileIOManager;
 #ifdef DEBUG_HANDLES
 class CacheFileHandlesEntry;
 #endif
@@ -45,8 +43,8 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   bool DispatchRelease();
 
-  CacheFileHandle(CacheFileIOManager* aManager, const SHA1Sum::Hash *aHash, bool aPriority);
-  CacheFileHandle(CacheFileIOManager* aManager, const nsACString &aKey, bool aPriority);
+  CacheFileHandle(const SHA1Sum::Hash *aHash, bool aPriority);
+  CacheFileHandle(const nsACString &aKey, bool aPriority);
   CacheFileHandle(const CacheFileHandle &aOther);
   void Log();
   bool IsDoomed() const { return mIsDoomed; }
@@ -58,7 +56,6 @@ public:
   bool IsClosed() const { return mClosed; }
   bool IsSpecialFile() const { return mSpecialFile; }
   nsCString & Key() { return mKey; }
-  CacheFileIOManager* Manager() const { return mManager; }
 
   // Memory reporting
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
@@ -70,8 +67,6 @@ private:
   friend class ReleaseNSPRHandleEvent;
 
   virtual ~CacheFileHandle();
-
-  nsRefPtr<CacheFileIOManager> mManager;
 
   const SHA1Sum::Hash *mHash;
   bool                 mIsDoomed;
@@ -91,7 +86,7 @@ private:
 
 class CacheFileHandles {
 public:
-  CacheFileHandles(CacheFileIOManager* aManager);
+  CacheFileHandles();
   ~CacheFileHandles();
 
   nsresult GetHandle(const SHA1Sum::Hash *aHash, CacheFileHandle **_retval);
@@ -173,7 +168,6 @@ public:
 
 private:
   nsTHashtable<HandleHashKey> mTable;
-  CacheFileIOManager* mManager;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -224,12 +218,6 @@ public:
     SPECIAL_FILE = 8U
   };
 
-  enum EKind {
-    UNKNOWN,
-    GENERAL,
-    PINNING
-  };
-
   CacheFileIOManager();
 
   static nsresult Init();
@@ -241,8 +229,6 @@ public:
   static bool IsOnIOThreadOrCeased();
   static bool IsShutdown();
 
-  EKind Kind() const { return mKind; }
-
   // Make aFile's WriteMetadataIfNeeded be called automatically after
   // a short interval.
   static nsresult ScheduleMetadataWrite(CacheFile * aFile);
@@ -253,8 +239,6 @@ public:
   static nsresult ShutdownMetadataWriteScheduling();
 
   static nsresult OpenFile(const nsACString &aKey,
-                           uint32_t aFlags, CacheFileIOListener *aCallback);
-  static nsresult OpenFile(const nsACString &aKey, uint32_t aPinningAppId,
                            uint32_t aFlags, CacheFileIOListener *aCallback);
   static nsresult Read(CacheFileHandle *aHandle, int64_t aOffset,
                        char *aBuf, int32_t aCount,
@@ -275,9 +259,7 @@ public:
                              CacheFileIOListener *aCallback);
   static nsresult EvictIfOverLimit();
   static nsresult EvictAll();
-  static nsresult EvictPinned(uint32_t aPinningAppId);
-  static nsresult EvictByContext(nsILoadContextInfo *aLoadContextInfo,
-                                 bool aIsPinning);
+  static nsresult EvictByContext(nsILoadContextInfo *aLoadContextInfo);
 
   static nsresult InitIndexEntry(CacheFileHandle *aHandle,
                                  uint32_t         aAppId,
@@ -310,9 +292,6 @@ public:
   static size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
   static size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
-  size_t SizeOfIncludingThisInternal(mozilla::MallocSizeOf mallocSizeOf) const;
-  size_t SizeOfExcludingThisInternal(mozilla::MallocSizeOf mallocSizeOf) const;
-
 private:
   friend class CacheFileHandle;
   friend class CacheFileChunk;
@@ -334,8 +313,6 @@ private:
   virtual ~CacheFileIOManager();
 
   nsresult InitInternal();
-  nsresult InitAsPinning(uint32_t aAppId, nsIFile* aProfileDir);
-
   nsresult ShutdownInternal();
 
   nsresult OpenFileInternal(const SHA1Sum::Hash *aHash,
@@ -399,44 +376,10 @@ private:
   // before we start an eviction loop.
   nsresult UpdateSmartCacheSize(int64_t aFreeSpace);
 
+  // Memory reporting (private part)
+  size_t SizeOfExcludingThisInternal(mozilla::MallocSizeOf mallocSizeOf) const;
+
   static CacheFileIOManager           *gInstance;
-  // Each pinning app has its own intance of an IO manager setup to point to
-  // the roaming part of the profile plus identification by the appid.
-  class Pinning
-  {
-    nsRefPtrHashtable<nsUint32HashKey, CacheFileIOManager> mTable;
-    mozilla::Mutex mLock;
-    nsCOMPtr<nsIFile> mRoamingProfileDir;
-
-    static Pinning* sSelf;
-    static bool sDestroyed;
-
-    static PLDHashOperator Collect(uint32_t const& aAppId,
-                                   nsRefPtr<CacheFileIOManager>& aIoMan,
-                                   void* aClosure);
-    static PLDHashOperator Copy(uint32_t const& aAppId,
-                                nsRefPtr<CacheFileIOManager>& aIoMan,
-                                void* aClosure);
-  public:
-    Pinning();
-    ~Pinning();
-
-    static Pinning* Self();
-    static void Destroy();
-
-    nsresult OnProfile();
-    already_AddRefed<CacheFileIOManager> Get(uint32_t aPinningAppId);
-    void ShutdownInternal();
-#ifdef DEBUG
-    uint32_t Length() { return mTable.Count(); }
-#endif
-
-    size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
-    size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
-  };
-
-  EKind mKind;
-
   TimeStamp                            mStartTime;
   bool                                 mShuttingDown;
   nsRefPtr<CacheIOThread>              mIOThread;
@@ -450,7 +393,7 @@ private:
 #endif
   bool                                 mTreeCreated;
   CacheFileHandles                     mHandles;
-  nsTArray<CacheFileHandle *>   mHandlesByLastUsed;
+  nsTArray<CacheFileHandle *>          mHandlesByLastUsed;
   nsTArray<CacheFileHandle *>          mSpecialHandles;
   nsTArray<nsRefPtr<CacheFile> >       mScheduledMetadataWrites;
   nsCOMPtr<nsITimer>                   mMetadataWritesTimer;
