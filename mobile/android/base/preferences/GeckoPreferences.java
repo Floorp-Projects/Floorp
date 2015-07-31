@@ -7,6 +7,7 @@ package org.mozilla.gecko.preferences;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -37,6 +38,7 @@ import org.mozilla.gecko.TelemetryContract.Method;
 import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.background.healthreport.HealthReportConstants;
 import org.mozilla.gecko.db.BrowserContract.SuggestedSites;
+import org.mozilla.gecko.restrictions.Restriction;
 import org.mozilla.gecko.updater.UpdateService;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.GeckoEventListener;
@@ -130,6 +132,9 @@ OnSharedPreferenceChangeListener
     public static final String PREFS_VOICE_INPUT_ENABLED = NON_PREF_PREFIX + "voice_input_enabled";
     public static final String PREFS_QRCODE_ENABLED = NON_PREF_PREFIX + "qrcode_enabled";
     private static final String PREFS_DEVTOOLS = NON_PREF_PREFIX + "devtools.enabled";
+    private static final String PREFS_CUSTOMIZE_HOME = NON_PREF_PREFIX + "customize_home";
+    private static final String PREFS_TRACKING_PROTECTION_PRIVATE_BROWSING = "privacy.trackingprotection.pbmode.enabled";
+    private static final String PREFS_TRACKING_PROTECTION_LEARN_MORE = NON_PREF_PREFIX + "trackingprotection.learn_more";
 
     private static final String ACTION_STUMBLER_UPLOAD_PREF = AppConstants.ANDROID_PACKAGE_NAME + ".STUMBLER_PREF";
 
@@ -309,9 +314,6 @@ OnSharedPreferenceChangeListener
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // Make sure RestrictedProfiles is ready.
-        RestrictedProfiles.initWithProfile(GeckoProfile.get(this));
-
         // Apply the current user-selected locale, if necessary.
         checkLocale();
 
@@ -477,15 +479,18 @@ OnSharedPreferenceChangeListener
         if (onIsMultiPane()) {
             loadHeadersFromResource(R.xml.preference_headers, target);
 
-            // If locale switching is disabled, remove the section
-            // entirely. This logic will need to be extended when
-            // content language selection (Bug 881510) is implemented.
-            if (!localeSwitchingIsEnabled) {
-                for (Header header : target) {
-                    if (header.id == R.id.pref_header_language) {
-                        target.remove(header);
-                        break;
-                    }
+            Iterator<Header> iterator = target.iterator();
+
+            while (iterator.hasNext()) {
+                Header header = iterator.next();
+
+                if (header.id == R.id.pref_header_language && !localeSwitchingIsEnabled) {
+                    // If locale switching is disabled, remove the section
+                    // entirely. This logic will need to be extended when
+                    // content language selection (Bug 881510) is implemented.
+                    iterator.remove();
+                } else if (header.id == R.id.pref_header_devtools && !RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_DEVELOPER_TOOLS)) {
+                    iterator.remove();
                 }
             }
         }
@@ -703,6 +708,14 @@ OnSharedPreferenceChangeListener
                     continue;
                 }
 
+                if (PREFS_CUSTOMIZE_HOME.equals(key)) {
+                    if (!RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_CUSTOMIZE_HOME)) {
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
+                }
+
                 setupPreferences((PreferenceGroup) pref, prefs);
             } else {
                 pref.setOnPreferenceChangeListener(this);
@@ -727,7 +740,7 @@ OnSharedPreferenceChangeListener
                     }
                 } else if (PREFS_OPEN_URLS_IN_PRIVATE.equals(key)) {
                     // Remove UI for opening external links in private browsing on non-Nightly builds.
-                    if (!AppConstants.NIGHTLY_BUILD) {
+                    if (!AppConstants.NIGHTLY_BUILD || !RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_PRIVATE_BROWSING)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
@@ -753,19 +766,19 @@ OnSharedPreferenceChangeListener
                     }
                 } else if (PREFS_GEO_REPORTING.equals(key) ||
                            PREFS_GEO_LEARN_MORE.equals(key)) {
-                    if (!AppConstants.MOZ_STUMBLER_BUILD_TIME_ENABLED) {
+                    if (!AppConstants.MOZ_STUMBLER_BUILD_TIME_ENABLED || !RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_LOCATION_SERVICE)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
                     }
                 } else if (PREFS_DEVTOOLS_REMOTE_USB_ENABLED.equals(key)) {
-                    if (!RestrictedProfiles.isAllowed(this, RestrictedProfiles.Restriction.DISALLOW_REMOTE_DEBUGGING)) {
+                    if (!RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_REMOTE_DEBUGGING)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
                     }
                 } else if (PREFS_DEVTOOLS_REMOTE_WIFI_ENABLED.equals(key)) {
-                    if (!RestrictedProfiles.isAllowed(this, RestrictedProfiles.Restriction.DISALLOW_REMOTE_DEBUGGING)) {
+                    if (!RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_REMOTE_DEBUGGING)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
@@ -788,7 +801,7 @@ OnSharedPreferenceChangeListener
                     continue;
                 } else if (PREFS_SYNC.equals(key)) {
                     // Don't show sync prefs while in guest mode.
-                    if (!RestrictedProfiles.isAllowed(this, RestrictedProfiles.Restriction.DISALLOW_MODIFY_ACCOUNTS)) {
+                    if (!RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_MODIFY_ACCOUNTS)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
@@ -833,6 +846,18 @@ OnSharedPreferenceChangeListener
                 } else if (PREFS_QRCODE_ENABLED.equals(key)) {
                     if (!InputOptionsUtils.supportsQrCodeReader(getApplicationContext())) {
                         // Remove UI for qr code input on non nightly builds
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
+                } else if (PREFS_TRACKING_PROTECTION_PRIVATE_BROWSING.equals(key)) {
+                    if (!RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_PRIVATE_BROWSING)) {
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
+                } else if (PREFS_TRACKING_PROTECTION_LEARN_MORE.equals(key)) {
+                    if (!RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_PRIVATE_BROWSING)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;

@@ -9,14 +9,16 @@ import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.RestrictedProfiles;
+import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.animation.PropertyAnimator;
-import org.mozilla.gecko.Tab;
-import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.lwt.LightweightTheme;
 import org.mozilla.gecko.lwt.LightweightThemeDrawable;
+import org.mozilla.gecko.restrictions.Restriction;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.widget.GeckoPopupMenu;
 import org.mozilla.gecko.widget.IconTabWidget;
@@ -139,6 +141,10 @@ public class TabsPanel extends LinearLayout
         mTabWidget.addTab(R.drawable.tabs_normal, R.string.tabs_normal);
         mTabWidget.addTab(R.drawable.tabs_private, R.string.tabs_private);
 
+        if (!RestrictedProfiles.isAllowed(mContext, Restriction.DISALLOW_PRIVATE_BROWSING)) {
+            mTabWidget.setVisibility(View.GONE);
+        }
+
         mTabWidget.setTabSelectionListener(this);
 
         mMenuButton = (ImageButton) findViewById(R.id.menu);
@@ -166,7 +172,8 @@ public class TabsPanel extends LinearLayout
 
         // Each panel has a "+" shortcut button, so don't show it for that panel.
         menu.findItem(R.id.new_tab).setVisible(mCurrentPanel != Panel.NORMAL_TABS);
-        menu.findItem(R.id.new_private_tab).setVisible(mCurrentPanel != Panel.PRIVATE_TABS);
+        menu.findItem(R.id.new_private_tab).setVisible(mCurrentPanel != Panel.PRIVATE_TABS
+                && RestrictedProfiles.isAllowed(mContext, Restriction.DISALLOW_PRIVATE_BROWSING));
 
         // Only show "Clear * tabs" for current panel.
         menu.findItem(R.id.close_all_tabs).setVisible(mCurrentPanel == Panel.NORMAL_TABS);

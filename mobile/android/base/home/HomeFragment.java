@@ -7,14 +7,13 @@ package org.mozilla.gecko.home;
 
 import java.util.EnumSet;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.mozilla.gecko.EditBookmarkDialog;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.ReaderModeUtils;
+import org.mozilla.gecko.RestrictedProfiles;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserDB;
@@ -24,6 +23,7 @@ import org.mozilla.gecko.home.HomeContextMenuInfo.RemoveItemType;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenInBackgroundListener;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.TopSitesGridView.TopSitesGridContextMenuInfo;
+import org.mozilla.gecko.restrictions.Restriction;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -150,6 +150,10 @@ public abstract class HomeFragment extends Fragment {
 
         if (!StringUtils.isShareableUrl(info.url) || GeckoProfile.get(getActivity()).inGuestMode()) {
             menu.findItem(R.id.home_share).setVisible(false);
+        }
+
+        if (!RestrictedProfiles.isAllowed(view.getContext(), Restriction.DISALLOW_PRIVATE_BROWSING)) {
+            menu.findItem(R.id.home_open_private_tab).setVisible(false);
         }
     }
 
