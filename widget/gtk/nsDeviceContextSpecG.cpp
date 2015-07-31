@@ -157,18 +157,6 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
       // There is nothing to detect on Print Preview, use PS.
       format = nsIPrintSettings::kOutputFormatPS;
     } else {
-      const gchar* fmtGTK = gtk_print_settings_get(mGtkPrintSettings, GTK_PRINT_SETTINGS_OUTPUT_FILE_FORMAT);
-      if (fmtGTK) {
-        if (nsDependentCString(fmtGTK).EqualsIgnoreCase("pdf")) {
-          format = nsIPrintSettings::kOutputFormatPDF;
-        } else {
-          format = nsIPrintSettings::kOutputFormatPS;
-        }
-      }
-    }
-
-    // If we haven't found the format at this point, we're sunk. :(
-    if (format == nsIPrintSettings::kOutputFormatNative) {
       return NS_ERROR_FAILURE;
     }
   }
