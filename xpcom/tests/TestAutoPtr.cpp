@@ -13,6 +13,12 @@ class TestObjectBaseA {
     public:
         // Virtual dtor for deleting through base class pointer
         virtual ~TestObjectBaseA() { }
+        void MemberFunction( int, int*, int& )
+        {
+          printf("member function is invoked.\n");
+        }
+        virtual void VirtualMemberFunction(int, int*, int&) { };
+        virtual void VirtualConstMemberFunction(int, int*, int&) const { };
         int fooA;
 };
 
@@ -36,6 +42,15 @@ class TestObject : public TestObjectBaseA, public TestObjectBaseB {
         {
             printf("  Destroying TestObject %p.\n",
                    static_cast<void*>(this));
+        }
+
+        virtual void VirtualMemberFunction(int, int*, int&) override
+        {
+          printf("override virtual member function is invoked.\n");
+        }
+        virtual void VirtualConstMemberFunction(int, int*, int&) const override
+        {
+          printf("override virtual const member function is invoked.\n");
         }
 };
 
@@ -537,6 +552,20 @@ int main()
         printf("Should do something with one |TestRefObject|:\n");
         DoSomethingWithConstTestRefObjectBaseB(pobj);
         printf("Should Release and destroy one |TestRefObject|:\n");
+    }
+
+    {
+        int test = 1;
+        void (TestObjectBaseA::*fPtr)( int, int*, int& ) = &TestObjectBaseA::MemberFunction;
+        void (TestObjectBaseA::*fVPtr)( int, int*, int& ) = &TestObjectBaseA::VirtualMemberFunction;
+        void (TestObjectBaseA::*fVCPtr)( int, int*, int& ) const = &TestObjectBaseA::VirtualConstMemberFunction;
+        printf("Should create one |TestObject|:\n");
+        nsAutoPtr<TestObjectBaseA> pobj(new TestObject());
+        printf("Should do something with operator->*:\n");
+        (pobj->*fPtr)(test, &test, test);
+        (pobj->*fVPtr)(test, &test, test);
+        (pobj->*fVCPtr)(test, &test, test);
+        printf("Should destroy one |TestObject|:\n");
     }
 
     return 0;
