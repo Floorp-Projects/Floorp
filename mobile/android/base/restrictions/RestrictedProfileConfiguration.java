@@ -25,7 +25,8 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
             Restriction.DISALLOW_CUSTOMIZE_HOME,
             Restriction.DISALLOW_PRIVATE_BROWSING,
             Restriction.DISALLOW_LOCATION_SERVICE,
-            Restriction.DISALLOW_DISPLAY_SETTINGS
+            Restriction.DISALLOW_DISPLAY_SETTINGS,
+            Restriction.DISALLOW_CLEAR_HISTORY
     );
 
     private static final String ABOUT_ADDONS = "about:addons";
