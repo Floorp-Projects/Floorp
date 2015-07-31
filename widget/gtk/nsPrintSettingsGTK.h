@@ -113,6 +113,8 @@ public:
   NS_IMETHOD GetDuplex(int32_t *aDuplex) override;
   NS_IMETHOD SetDuplex(int32_t aDuplex) override;
 
+  NS_IMETHOD GetOutputFormat(int16_t *aOutputFormat) override;
+
 protected:
   virtual ~nsPrintSettingsGTK();
 
