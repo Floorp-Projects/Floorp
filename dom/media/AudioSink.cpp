@@ -193,9 +193,26 @@ AudioSink::SetPreservesPitch(bool aPreservesPitch)
 void
 AudioSink::SetPlaying(bool aPlaying)
 {
-  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  mPlaying = aPlaying;
-  ScheduleNextLoopCrossThread();
+  AssertNotOnAudioThread();
+  nsRefPtr<AudioSink> self = this;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
+    if (self->mState != AUDIOSINK_STATE_PLAYING ||
+        self->mPlaying == aPlaying) {
+      return;
+    }
+    self->mPlaying = aPlaying;
+    // pause/resume AudioStream as necessary.
+    if (!aPlaying && !self->mAudioStream->IsPaused()) {
+      self->mAudioStream->Pause();
+    } else if (aPlaying && self->mAudioStream->IsPaused()) {
+      self->mAudioStream->Resume();
+    }
+    // Wake up the audio loop to play next sample.
+    if (aPlaying && !self->mAudioLoopScheduled) {
+      self->AudioLoop();
+    }
+  });
+  DispatchTask(r.forget());
 }
 
 void
@@ -261,9 +278,6 @@ AudioSink::WaitingForAudioToPlay()
   // playing and we've got no audio to play.
   AssertCurrentThreadInMonitor();
   if (!mStopAudioThread && (!mPlaying || ExpectMoreAudioData())) {
-    if (!mPlaying && !mAudioStream->IsPaused()) {
-      mAudioStream->Pause();
-    }
     return true;
   }
   return false;
@@ -273,10 +287,6 @@ bool
 AudioSink::IsPlaybackContinuing()
 {
   AssertCurrentThreadInMonitor();
-  if (mPlaying && mAudioStream->IsPaused()) {
-    mAudioStream->Resume();
-  }
-
   // If we're shutting down, captured, or at EOS, break out and exit the audio
   // thread.
   if (mStopAudioThread || AudioQueue().AtEndOfStream()) {
