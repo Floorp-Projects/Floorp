@@ -49,17 +49,19 @@
 
     </LinearLayout>
 
-    <RelativeLayout android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:padding="@dimen/new_tablet_tab_highlight_stroke_width"
-                    android:background="@drawable/tab_thumbnail"
-                    android:duplicateParentState="true">
+    <org.mozilla.gecko.widget.TabThumbnailWrapper
+            android:id="@+id/wrapper"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/new_tablet_tab_highlight_stroke_width"
+            android:background="@drawable/tab_thumbnail"
+            android:duplicateParentState="true">
 
         <org.mozilla.gecko.widget.ThumbnailView android:id="@+id/thumbnail"
                                                 android:layout_width="@dimen/new_tablet_tab_thumbnail_width"
                                                 android:layout_height="@dimen/new_tablet_tab_thumbnail_height"
                                                 />
 
-    </RelativeLayout>
+    </org.mozilla.gecko.widget.TabThumbnailWrapper>
 
 </org.mozilla.gecko.tabs.TabsLayoutItemView>

@@ -7,7 +7,9 @@
                   xmlns:gecko="http://schemas.android.com/apk/res-auto"
                   android:enabled="false">
 
-    <PreferenceScreen android:title="@string/pref_category_home"
+    <PreferenceScreen
+                      android:key="android.not_a_preference.customize_home"
+                      android:title="@string/pref_category_home"
                       android:summary="@string/pref_category_home_summary" >
         <intent android:action="android.intent.action.VIEW"
                 android:targetPackage="@string/android_package_name"

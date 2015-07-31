@@ -2,11 +2,11 @@ package org.mozilla.gecko.widget;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.widget.FrameLayout;
+import android.widget.RelativeLayout;
 import org.mozilla.gecko.R;
 
 
-public class TabThumbnailWrapper extends FrameLayout {
+public class TabThumbnailWrapper extends RelativeLayout {
     private boolean mRecording;
     private static final int[] STATE_RECORDING = { R.attr.state_recording };
 

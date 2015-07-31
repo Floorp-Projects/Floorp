@@ -3387,7 +3387,7 @@
     "description": "Number of thumbnails stored in the browser DB *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
   },
   "FENNEC_READING_LIST_COUNT": {
-    "expires_in_version": "40",
+    "expires_in_version": "50",
     "kind": "exponential",
     "high": "1000",
     "n_buckets": 10,
@@ -8230,6 +8230,12 @@
     "n_buckets": 30,
     "extended_statistics_ok": true,
     "description": "How long getAllLogins() on about:logins takes for mobile users"
+  },
+  "PWMGR_ABOUT_LOGINS_USAGE": {
+    "expires_in_version": "55",
+    "kind": "enumerated",
+    "n_values": 12,
+    "description": "Usage of about:logins 0= list of logins viewed, 1=a login's specifics page was viewed, 2=user edited login credentials 3=user toggled the show/hide button"
   },
   "PWMGR_BLOCKLIST_NUM_SITES": {
     "expires_in_version": "never",

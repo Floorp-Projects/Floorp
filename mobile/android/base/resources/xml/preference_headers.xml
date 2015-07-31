@@ -10,4 +10,7 @@
     <header android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment"
             android:id="@+id/pref_header_language">
     </header>
+    <header android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment"
+            android:id="@+id/pref_header_devtools">
+    </header>
 </preference-headers>
