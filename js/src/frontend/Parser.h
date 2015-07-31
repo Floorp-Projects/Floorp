@@ -288,7 +288,6 @@ struct ParseContext : public GenericParseContext
 
     StmtInfoPC* topStmt() const { return stmtStack.top(); }
     StmtInfoPC* topScopeStmt() const { return stmtStack.topScopal(); }
-    NestedScopeObject* topStaticScope() const { return stmtStack.topStaticScope(); }
 
     // True if we are at the topmost level of a entire script or function body.
     // For example, while parsing this code we would encounter f1 and f2 at
