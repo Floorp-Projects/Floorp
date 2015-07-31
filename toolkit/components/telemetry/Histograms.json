@@ -4655,6 +4655,18 @@
     "n_buckets": 20,
     "description": "Time (ms) it takes for evicting over-quota pings"
   },
+  "TELEMETRY_PENDING_LOAD_FAILURE_READ": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Number of pending Telemetry pings that failed to load from the disk"
+  },
+  "TELEMETRY_PENDING_LOAD_FAILURE_PARSE": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Number of pending Telemetry pings that failed to parse once loaded from the disk"
+  },
   "TELEMETRY_PENDING_PINGS_SIZE_MB": {
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
@@ -4744,6 +4756,12 @@
     "kind": "count",
     "keyed": true,
     "description": "Count of individual invalid ping types that were submitted to Telemetry."
+  },
+  "TELEMETRY_PING_EVICTED_FOR_SERVER_ERRORS": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Number of Telemetry ping files evicted due to server errors (4XX HTTP code received)"
   },
   "TELEMETRY_TEST_FLAG": {
     "expires_in_version": "never",

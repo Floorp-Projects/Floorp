@@ -28,6 +28,7 @@ BEGIN_BLUETOOTH_NAMESPACE
 
 class BluetoothDevice;
 class BluetoothDiscoveryHandle;
+class BluetoothGattServer;
 class BluetoothNamedValue;
 class BluetoothPairingListener;
 class BluetoothSignal;
@@ -76,6 +77,8 @@ public:
   {
     return mPairingReqs;
   }
+
+  BluetoothGattServer* GetGattServer();
 
   /****************************************************************************
    * Event Handlers
@@ -358,6 +361,18 @@ private:
    * Whether this adapter is discovering nearby devices.
    */
   bool mDiscovering;
+
+  /**
+   * GATT server object of this adapter.
+   *
+   * A new GATT server object will be created at the first time when
+   * |GetGattServer| is called after the adapter has been enabled. If the
+   * adapter has been disabled later on, the created GATT server will be
+   * discard by the adapter, and this GATT object should stop working till the
+   * end of its life. When |GetGattServer| is called after the adapter has been
+   * enabled again, a new GATT server object will be created.
+   */
+  nsRefPtr<BluetoothGattServer> mGattServer;
 
   /**
    * Handle to fire pairing requests of different pairing types.
