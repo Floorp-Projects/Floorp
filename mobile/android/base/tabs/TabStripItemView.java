@@ -44,6 +44,7 @@ public class TabStripItemView extends ThemedLinearLayout
     private final ImageView faviconView;
     private final ThemedTextView titleView;
     private final ThemedImageButton closeView;
+    private final ThemedImageButton audioPlayingView;
 
     private final ResizablePathDrawable backgroundDrawable;
     private final Region tabRegion;
@@ -100,6 +101,8 @@ public class TabStripItemView extends ThemedLinearLayout
                 tabs.closeTab(tabs.getTab(id), true);
             }
         });
+
+        audioPlayingView = (ThemedImageButton) findViewById(R.id.audio_playing);
     }
 
     @Override
@@ -191,6 +194,7 @@ public class TabStripItemView extends ThemedLinearLayout
         updateTitle(tab);
         updateFavicon(tab.getFavicon());
         setPrivateMode(tab.isPrivate());
+        audioPlayingView.setVisibility(tab.isAudioPlaying() ? View.VISIBLE : View.GONE);
     }
 
     private void updateTitle(Tab tab) {
