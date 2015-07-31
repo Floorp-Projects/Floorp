@@ -49,9 +49,9 @@ Decoder::Decoder(RasterImage* aImage)
 
 Decoder::~Decoder()
 {
-  MOZ_ASSERT(mProgress == NoProgress,
+  MOZ_ASSERT(mProgress == NoProgress || !mImage,
              "Destroying Decoder without taking all its progress changes");
-  MOZ_ASSERT(mInvalidRect.IsEmpty(),
+  MOZ_ASSERT(mInvalidRect.IsEmpty() || !mImage,
              "Destroying Decoder without taking all its invalidations");
   mInitialized = false;
 
@@ -288,7 +288,8 @@ Decoder::AllocateFrameInternal(uint32_t aFrameNum,
   }
 
   const uint32_t bytesPerPixel = aPaletteDepth == 0 ? 4 : 1;
-  if (!SurfaceCache::CanHold(aFrameRect.Size(), bytesPerPixel)) {
+  if (ShouldUseSurfaceCache() &&
+      !SurfaceCache::CanHold(aFrameRect.Size(), bytesPerPixel)) {
     NS_WARNING("Trying to add frame that's too large for the SurfaceCache");
     return RawAccessFrameRef();
   }
@@ -308,24 +309,26 @@ Decoder::AllocateFrameInternal(uint32_t aFrameNum,
     return RawAccessFrameRef();
   }
 
-  InsertOutcome outcome =
-    SurfaceCache::Insert(frame, ImageKey(mImage.get()),
-                         RasterSurfaceKey(aTargetSize,
-                                          aDecodeFlags,
-                                          aFrameNum),
-                         Lifetime::Persistent);
-  if (outcome == InsertOutcome::FAILURE) {
-    // We couldn't insert the surface, almost certainly due to low memory. We
-    // treat this as a permanent error to help the system recover; otherwise, we
-    // might just end up attempting to decode this image again immediately.
-    ref->Abort();
-    return RawAccessFrameRef();
-  } else if (outcome == InsertOutcome::FAILURE_ALREADY_PRESENT) {
-    // Another decoder beat us to decoding this frame. We abort this decoder
-    // rather than treat this as a real error.
-    mDecodeAborted = true;
-    ref->Abort();
-    return RawAccessFrameRef();
+  if (ShouldUseSurfaceCache()) {
+    InsertOutcome outcome =
+      SurfaceCache::Insert(frame, ImageKey(mImage.get()),
+                           RasterSurfaceKey(aTargetSize,
+                                            aDecodeFlags,
+                                            aFrameNum),
+                           Lifetime::Persistent);
+    if (outcome == InsertOutcome::FAILURE) {
+      // We couldn't insert the surface, almost certainly due to low memory. We
+      // treat this as a permanent error to help the system recover; otherwise,
+      // we might just end up attempting to decode this image again immediately.
+      ref->Abort();
+      return RawAccessFrameRef();
+    } else if (outcome == InsertOutcome::FAILURE_ALREADY_PRESENT) {
+      // Another decoder beat us to decoding this frame. We abort this decoder
+      // rather than treat this as a real error.
+      mDecodeAborted = true;
+      ref->Abort();
+      return RawAccessFrameRef();
+    }
   }
 
   nsIntRect refreshArea;
@@ -354,7 +357,10 @@ Decoder::AllocateFrameInternal(uint32_t aFrameNum,
   }
 
   mFrameCount++;
-  mImage->OnAddedFrame(mFrameCount, refreshArea);
+
+  if (mImage) {
+    mImage->OnAddedFrame(mFrameCount, refreshArea);
+  }
 
   return ref;
 }
