@@ -1362,6 +1362,46 @@ nsIOService::EnumerateWifiAppsChangingState(const unsigned int &aKey,
     return PL_DHASH_NEXT;
 }
 
+class
+nsWakeupNotifier : public nsRunnable
+{
+public:
+    explicit nsWakeupNotifier(nsIIOServiceInternal *ioService)
+        :mIOService(ioService)
+    { }
+
+    NS_IMETHOD Run()
+    {
+        return mIOService->NotifyWakeup();
+    }
+
+private:
+    virtual ~nsWakeupNotifier() { }
+    nsCOMPtr<nsIIOServiceInternal> mIOService;
+};
+
+NS_IMETHODIMP
+nsIOService::NotifyWakeup()
+{
+    nsCOMPtr<nsIObserverService> observerService =
+        mozilla::services::GetObserverService();
+
+    NS_ASSERTION(observerService, "The observer service should not be null");
+
+    if (observerService && mNetworkNotifyChanged) {
+        (void)observerService->
+            NotifyObservers(nullptr,
+                            NS_NETWORK_LINK_TOPIC,
+                            MOZ_UTF16(NS_NETWORK_LINK_DATA_CHANGED));
+    }
+
+    if (mCaptivePortalService) {
+        mCaptivePortalService->RecheckCaptivePortal();
+    }
+
+    return NS_OK;
+}
+
 // nsIObserver interface
 NS_IMETHODIMP
 nsIOService::Observe(nsISupports *subject,
@@ -1414,21 +1454,10 @@ nsIOService::Observe(nsISupports *subject,
         OnNetworkLinkEvent(NS_ConvertUTF16toUTF8(data).get());
     } else if (!strcmp(topic, NS_WIDGET_WAKE_OBSERVER_TOPIC)) {
         // coming back alive from sleep
-        nsCOMPtr<nsIObserverService> observerService =
-            mozilla::services::GetObserverService();
-
-        NS_ASSERTION(observerService, "The observer service should not be null");
-
-        if (observerService && mNetworkNotifyChanged) {
-            (void)observerService->
-                NotifyObservers(nullptr,
-                                NS_NETWORK_LINK_TOPIC,
-                                MOZ_UTF16(NS_NETWORK_LINK_DATA_CHANGED));
-        }
-
-        if (mCaptivePortalService) {
-            mCaptivePortalService->RecheckCaptivePortal();
-        }
+        // this indirection brought to you by:
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=1152048#c19
+        nsCOMPtr<nsIRunnable> wakeupNotifier = new nsWakeupNotifier(this);
+        NS_DispatchToMainThread(wakeupNotifier);
     } else if (!strcmp(topic, kNetworkActiveChanged)) {
 #ifdef MOZ_WIDGET_GONK
         if (IsNeckoChild()) {
