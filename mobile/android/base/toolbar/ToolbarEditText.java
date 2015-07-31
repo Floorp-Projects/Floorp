@@ -12,11 +12,13 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.toolbar.BrowserToolbar.OnCommitListener;
 import org.mozilla.gecko.toolbar.BrowserToolbar.OnDismissListener;
 import org.mozilla.gecko.toolbar.BrowserToolbar.OnFilterListener;
+import org.mozilla.gecko.util.DrawableUtil;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.HardwareUtils;
 
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.graphics.Rect;
 import android.text.Editable;
 import android.text.NoCopySpan;
@@ -160,11 +162,18 @@ public class ToolbarEditText extends CustomEditText
         }
 
         // When on tablet show a magnifying glass in editing mode
-        if (isActive) {
-            setCompoundDrawablesWithIntrinsicBounds(R.drawable.search_icon_active, 0, 0, 0);
+        final int searchDrawableId = R.drawable.search_icon_active;
+        final Drawable searchDrawable;
+        if (!isActive) {
+            searchDrawable = DrawableUtil.tintDrawable(getContext(), searchDrawableId, R.color.placeholder_grey);
         } else {
-            setCompoundDrawablesWithIntrinsicBounds(R.drawable.search_icon_inactive, 0, 0, 0);
+            if (isPrivateMode()) {
+                searchDrawable = DrawableUtil.tintDrawable(getContext(), searchDrawableId, R.color.tabs_tray_icon_grey);
+            } else {
+                searchDrawable = getResources().getDrawable(searchDrawableId);
+            }
         }
+        setCompoundDrawablesWithIntrinsicBounds(searchDrawable, null, null, null);
     }
 
     /**
