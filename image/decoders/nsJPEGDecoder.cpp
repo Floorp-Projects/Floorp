@@ -248,7 +248,7 @@ nsJPEGDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
         return; // I/O suspension
       }
 
-      int sampleSize = mImage->GetRequestedSampleSize();
+      int sampleSize = GetImage()->GetRequestedSampleSize();
       if (sampleSize > 0) {
         mInfo.scale_num = 1;
         mInfo.scale_denom = sampleSize;
