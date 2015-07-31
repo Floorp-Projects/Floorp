@@ -5118,6 +5118,19 @@
     "keyed": true,
     "description": "Longest blocking operation performed by the add-on (log2(duration in ms), keyed by add-on, updated every 15s by default)"
   },
+  "SLOW_ADDON_WARNING_STATES": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 20,
+    "description": "The states the Slow Add-on Warning goes through. 0: Displayed the warning. 1: User clicked on 'Disable add-on'. 2: User clicked 'Ignore add-on for now'. 3: User clicked 'Ignore add-on permanently'. 4: User closed notification. Other values are reserved for future uses."
+  },
+  "SLOW_ADDON_WARNING_RESPONSE_TIME": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "86400000",
+    "n_buckets": 30,
+    "description": "Time elapsed between before responding to Slow Add-on Warning UI (ms). Not updated if the user doesn't respond at all."
+  },
   "SEARCH_COUNTS": {
     "expires_in_version": "never",
     "kind": "count",
