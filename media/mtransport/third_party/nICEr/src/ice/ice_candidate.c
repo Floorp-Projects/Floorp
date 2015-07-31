@@ -554,8 +554,8 @@ int nr_ice_candidate_initialize(nr_ice_candidate *cand, NR_async_cb ready_cb, vo
         cand->state=NR_ICE_CAND_STATE_INITIALIZING;
 
         if(cand->stun_server->type == NR_ICE_STUN_SERVER_TYPE_ADDR) {
-          if(cand->base.ip_version != cand->stun_server->u.addr.ip_version) {
-            r_log(LOG_ICE, LOG_INFO, "ICE-CANDIDATE(%s): Skipping srflx/relayed candidate with different IP version (%u) than STUN/TURN server (%u).", cand->label,cand->base.ip_version,cand->stun_server->u.addr.ip_version);
+          if(nr_transport_addr_cmp(&cand->base,&cand->stun_server->u.addr,NR_TRANSPORT_ADDR_CMP_MODE_PROTOCOL)) {
+            r_log(LOG_ICE, LOG_INFO, "ICE-CANDIDATE(%s): Skipping srflx/relayed candidate because of IP version/transport mis-match with STUN/TURN server (%u/%s - %u/%s).", cand->label,cand->base.ip_version,cand->base.protocol==IPPROTO_UDP?"UDP":"TCP",cand->stun_server->u.addr.ip_version,cand->stun_server->u.addr.protocol==IPPROTO_UDP?"UDP":"TCP");
             ABORT(R_NOT_FOUND); /* Same error code when DNS lookup fails */
           }
 
