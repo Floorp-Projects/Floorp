@@ -88,6 +88,24 @@ public enum Restriction {
             17, "no_location_service",
             R.string.restriction_disallow_location_services_title,
             R.string.restriction_disallow_location_services_description
+    ),
+
+    DISALLOW_DISPLAY_SETTINGS(
+            18, "no_display_settings",
+            R.string.restriction_disallow_display_settings_title,
+            R.string.restriction_disallow_display_settings_description
+    ),
+
+    DISALLOW_CLEAR_HISTORY(
+            19, "no_clear_history",
+            R.string.restriction_disallow_clear_history_title,
+            R.string.restriction_disallow_clear_history_description
+    ),
+
+    DISALLOW_MASTER_PASSWORD(
+            20, "no_master_password",
+            R.string.restriction_disallow_master_password_title,
+            R.string.restriction_disallow_master_password_description
     );
 
     public final int id;
