@@ -313,7 +313,7 @@ size_t
 nsPropertyTable::PropertyList::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 {
   size_t n = aMallocSizeOf(this);
-  n += PL_DHashTableSizeOfExcludingThis(&mObjectValueMap, nullptr, aMallocSizeOf);
+  n += mObjectValueMap.ShallowSizeOfExcludingThis(aMallocSizeOf);
   return n;
 }
 

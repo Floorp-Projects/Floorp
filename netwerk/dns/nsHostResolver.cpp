@@ -1356,22 +1356,18 @@ nsHostResolver::CancelAsyncRequest(const char            *host,
     }
 }
 
-static size_t
-SizeOfHostDBEntExcludingThis(PLDHashEntryHdr* hdr, MallocSizeOf mallocSizeOf,
-                             void*)
-{
-    nsHostDBEnt* ent = static_cast<nsHostDBEnt*>(hdr);
-    return ent->rec->SizeOfIncludingThis(mallocSizeOf);
-}
-
 size_t
 nsHostResolver::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const
 {
     MutexAutoLock lock(mLock);
 
     size_t n = mallocSizeOf(this);
-    n += PL_DHashTableSizeOfExcludingThis(&mDB, SizeOfHostDBEntExcludingThis,
-                                          mallocSizeOf);
+
+    n += mDB.ShallowSizeOfExcludingThis(mallocSizeOf);
+    for (auto iter = mDB.ConstIter(); !iter.Done(); iter.Next()) {
+        auto entry = static_cast<nsHostDBEnt*>(iter.Get());
+        n += entry->rec->SizeOfIncludingThis(mallocSizeOf);
+    }
 
     // The following fields aren't measured.
     // - mHighQ, mMediumQ, mLowQ, mEvictionQ, because they just point to

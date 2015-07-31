@@ -508,26 +508,16 @@ nsHTMLStyleSheet::LangRuleFor(const nsString& aLanguage)
   return entry->mRule;
 }
 
-static size_t
-SizeOfAttributesEntryExcludingThis(PLDHashEntryHdr* aEntry,
-                                   MallocSizeOf aMallocSizeOf,
-                                   void* aArg)
-{
-  NS_PRECONDITION(aEntry, "The entry should not be null!");
-
-  MappedAttrTableEntry* entry = static_cast<MappedAttrTableEntry*>(aEntry);
-  NS_ASSERTION(entry->mAttributes, "entry->mAttributes should not be null!");
-  return entry->mAttributes->SizeOfIncludingThis(aMallocSizeOf);
-}
-
 size_t
 nsHTMLStyleSheet::DOMSizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
 
-  n += PL_DHashTableSizeOfExcludingThis(&mMappedAttrTable,
-                                        SizeOfAttributesEntryExcludingThis,
-                                        aMallocSizeOf);
+  n += mMappedAttrTable.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  for (auto iter = mMappedAttrTable.ConstIter(); !iter.Done(); iter.Next()) {
+    auto entry = static_cast<MappedAttrTableEntry*>(iter.Get());
+    n += entry->mAttributes->SizeOfIncludingThis(aMallocSizeOf);
+  }
 
   // Measurement of the following members may be added later if DMD finds it is
   // worthwhile:

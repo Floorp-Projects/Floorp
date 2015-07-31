@@ -727,6 +727,9 @@ var Input = {
         this.quickNavMode.previous();
         AccessFu.announce('quicknav_' + this.quickNavMode.current);
         break;
+      case 'tripletap3':
+        Utils.dispatchChromeEvent('accessibility-control', 'toggle-shade');
+        break;
     }
   },
 

@@ -510,34 +510,6 @@ EGLBoolean __stdcall eglQuerySurfacePointerANGLE(EGLDisplay dpy, EGLSurface surf
     return egl::success(EGL_TRUE);
 }
 
-EGLBoolean __stdcall eglSurfaceReleaseSyncANGLE(EGLDisplay dpy, EGLSurface surface)
-{
-    TRACE("(EGLDisplay dpy = 0x%0.8p, EGLSurface surface = 0x%0.8p)",
-          dpy, surface);
-
-    egl::Display *display = static_cast<egl::Display*>(dpy);
-    egl::Surface *eglSurface = (egl::Surface*)surface;
-
-    if (!validateSurface(display, eglSurface))
-    {
-        return EGL_FALSE;
-    }
-
-    if (surface == EGL_NO_SURFACE)
-    {
-        return egl::error(EGL_BAD_SURFACE, EGL_FALSE);
-    }
-
-    rx::SwapChain *swapchain = eglSurface->getSwapChain();
-    if (swapchain)
-    {
-      swapchain->releaseSync();
-    }
-
-    return egl::success(EGL_TRUE);
-}
-
-
 EGLBoolean __stdcall eglBindAPI(EGLenum api)
 {
     EVENT("(EGLenum api = 0x%X)", api);
@@ -1050,7 +1022,6 @@ __eglMustCastToProperFunctionPointerType __stdcall eglGetProcAddress(const char 
     static const Extension eglExtensions[] =
     {
         { "eglQuerySurfacePointerANGLE", (__eglMustCastToProperFunctionPointerType)eglQuerySurfacePointerANGLE },
-        { "eglSurfaceReleaseSyncANGLE", (__eglMustCastToProperFunctionPointerType)eglSurfaceReleaseSyncANGLE },
         { "eglPostSubBufferNV", (__eglMustCastToProperFunctionPointerType)eglPostSubBufferNV },
         { "eglGetPlatformDisplayEXT", (__eglMustCastToProperFunctionPointerType)eglGetPlatformDisplayEXT },
         { "", NULL },

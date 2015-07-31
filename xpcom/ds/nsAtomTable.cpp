@@ -503,24 +503,18 @@ AtomImpl::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
 
 //----------------------------------------------------------------------
 
-static size_t
-SizeOfAtomTableEntryExcludingThis(PLDHashEntryHdr* aHdr,
-                                  MallocSizeOf aMallocSizeOf,
-                                  void* aArg)
-{
-  AtomTableEntry* entry = static_cast<AtomTableEntry*>(aHdr);
-  return entry->mAtom->SizeOfIncludingThis(aMallocSizeOf);
-}
-
 void
 NS_SizeOfAtomTablesIncludingThis(MallocSizeOf aMallocSizeOf,
                                  size_t* aMain, size_t* aStatic)
 {
-  *aMain = gAtomTable
-         ? PL_DHashTableSizeOfExcludingThis(gAtomTable,
-                                            SizeOfAtomTableEntryExcludingThis,
-                                            aMallocSizeOf)
-         : 0;
+  *aMain = 0;
+  if (gAtomTable) {
+    *aMain += gAtomTable->ShallowSizeOfIncludingThis(aMallocSizeOf);
+    for (auto iter = gAtomTable->Iter(); !iter.Done(); iter.Next()) {
+      auto entry = static_cast<AtomTableEntry*>(iter.Get());
+      *aMain += entry->mAtom->SizeOfIncludingThis(aMallocSizeOf);
+    }
+  }
 
   // The atoms in the this table are almost certainly stored in static data, so
   // we don't need a SizeOfEntry function.

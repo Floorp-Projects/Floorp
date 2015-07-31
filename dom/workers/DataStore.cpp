@@ -233,10 +233,8 @@ public:
     aWorkerPrivate->AssertIsOnWorkerThread();
 
     // This needs to be structured cloned while it's still on the worker thread.
-    if (!Write(aCx, aObj)) {
-      JS_ClearPendingException(aCx);
-      mRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
-    }
+    Write(aCx, aObj, mRv);
+    NS_WARN_IF(mRv.Failed());
   }
 
 protected:
@@ -254,9 +252,8 @@ protected:
     JSContext* cx = jsapi.cx();
 
     JS::Rooted<JS::Value> value(cx);
-    if (!Read(mBackingStore->GetParentObject(), cx, &value)) {
-      JS_ClearPendingException(cx);
-      mRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
+    Read(mBackingStore->GetParentObject(), cx, &value, mRv);
+    if (NS_WARN_IF(mRv.Failed())) {
       return true;
     }
 
@@ -297,10 +294,8 @@ public:
     aWorkerPrivate->AssertIsOnWorkerThread();
 
     // This needs to be structured cloned while it's still on the worker thread.
-    if (!Write(aCx, aObj)) {
-      JS_ClearPendingException(aCx);
-      mRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
-    }
+    Write(aCx, aObj, mRv);
+    NS_WARN_IF(mRv.Failed());
   }
 
 protected:
@@ -318,9 +313,8 @@ protected:
     JSContext* cx = jsapi.cx();
 
     JS::Rooted<JS::Value> value(cx);
-    if (!Read(mBackingStore->GetParentObject(), cx, &value)) {
-      JS_ClearPendingException(cx);
-      mRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
+    Read(mBackingStore->GetParentObject(), cx, &value, mRv);
+    if (NS_WARN_IF(mRv.Failed())) {
       return true;
     }
 

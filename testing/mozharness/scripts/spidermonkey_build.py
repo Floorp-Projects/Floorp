@@ -220,7 +220,7 @@ class SpidermonkeyBuild(MockMixin,
             # None.
             revision = self.config.get('revision')
 
-        return revision[0:12] if revision else None
+        return revision
 
     def query_branch(self):
         if self.buildbot_config and 'properties' in self.buildbot_config:

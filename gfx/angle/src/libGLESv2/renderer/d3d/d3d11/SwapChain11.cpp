@@ -637,24 +637,7 @@ ID3D11Texture2D *SwapChain11::getOffscreenTexture()
 
 ID3D11RenderTargetView *SwapChain11::getRenderTarget()
 {
-    if (!mOffscreenRTView) {
-        ID3D11Device *device = mRenderer->getDevice();
-        D3D11_RENDER_TARGET_VIEW_DESC offscreenRTVDesc;
-        const d3d11::TextureFormat &backbufferFormatInfo = d3d11::GetTextureFormatInfo(mBackBufferFormat);
-        offscreenRTVDesc.Format = backbufferFormatInfo.rtvFormat;
-        offscreenRTVDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-        offscreenRTVDesc.Texture2D.MipSlice = 0;
-
-        HRESULT result = device->CreateRenderTargetView(mOffscreenTexture, &offscreenRTVDesc, &mOffscreenRTView);
-        ASSERT(SUCCEEDED(result));
-        d3d11::SetDebugName(mOffscreenRTView, "Offscreen back buffer render target");
-    }
     return mOffscreenRTView;
-}
-
-void SwapChain11::releaseSync()
-{
-    //SafeRelease(mOffscreenRTView);
 }
 
 ID3D11ShaderResourceView *SwapChain11::getRenderTargetShaderResource()

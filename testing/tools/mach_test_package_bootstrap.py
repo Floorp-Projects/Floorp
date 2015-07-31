@@ -25,6 +25,7 @@ SEARCH_PATHS = [
     'mozbase/mozrunner',
     'mozbase/mozsystemmonitor',
     'mozbase/mozinfo',
+    'mozbase/mozscreenshot',
     'mozbase/moztest',
     'mozbase/mozversion',
     'mozbase/manifestparser',

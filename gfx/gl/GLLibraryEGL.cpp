@@ -402,25 +402,6 @@ GLLibraryEGL::EnsureInitialized(bool forceAccel)
         }
     }
 
-    //XXX: use correct extension name
-    if (IsExtensionSupported(ANGLE_surface_d3d_texture_2d_share_handle)) {
-        GLLibraryLoader::SymLoadStruct d3dSymbols[] = {
-            { (PRFuncPtr*)&mSymbols.fSurfaceReleaseSyncANGLE, { "eglSurfaceReleaseSyncANGLE", nullptr } },
-            { nullptr, { nullptr } }
-        };
-
-        bool success = GLLibraryLoader::LoadSymbols(mEGLLibrary,
-                                                    &d3dSymbols[0],
-                                                    lookupFunction);
-        if (!success) {
-            NS_ERROR("EGL supports ANGLE_surface_d3d_texture_2d_share_handle without exposing its functions!");
-
-            MarkExtensionUnsupported(ANGLE_surface_d3d_texture_2d_share_handle);
-
-            mSymbols.fSurfaceReleaseSyncANGLE = nullptr;
-        }
-    }
-
     if (IsExtensionSupported(KHR_fence_sync)) {
         GLLibraryLoader::SymLoadStruct syncSymbols[] = {
             { (PRFuncPtr*) &mSymbols.fCreateSync,     { "eglCreateSyncKHR",     nullptr } },

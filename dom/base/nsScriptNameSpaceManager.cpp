@@ -725,14 +725,6 @@ nsScriptNameSpaceManager::RegisterNavigatorDOMConstructor(
   }
 }
 
-static size_t
-SizeOfEntryExcludingThis(PLDHashEntryHdr *aHdr, MallocSizeOf aMallocSizeOf,
-                         void *aArg)
-{
-  GlobalNameMapEntry* entry = static_cast<GlobalNameMapEntry*>(aHdr);
-  return entry->SizeOfExcludingThis(aMallocSizeOf);
-}
-
 MOZ_DEFINE_MALLOC_SIZE_OF(ScriptNameSpaceManagerMallocSizeOf)
 
 NS_IMETHODIMP
@@ -746,12 +738,22 @@ nsScriptNameSpaceManager::CollectReports(
 }
 
 size_t
-nsScriptNameSpaceManager::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
+nsScriptNameSpaceManager::SizeOfIncludingThis(
+    mozilla::MallocSizeOf aMallocSizeOf) const
 {
   size_t n = 0;
-  n += PL_DHashTableSizeOfExcludingThis(&mGlobalNames,
-         SizeOfEntryExcludingThis, aMallocSizeOf);
-  n += PL_DHashTableSizeOfExcludingThis(&mNavigatorNames,
-         SizeOfEntryExcludingThis, aMallocSizeOf);
+
+  n += mGlobalNames.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  for (auto iter = mGlobalNames.ConstIter(); !iter.Done(); iter.Next()) {
+    auto entry = static_cast<GlobalNameMapEntry*>(iter.Get());
+    n += entry->SizeOfExcludingThis(aMallocSizeOf);
+  }
+
+  n += mNavigatorNames.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  for (auto iter = mNavigatorNames.ConstIter(); !iter.Done(); iter.Next()) {
+    auto entry = static_cast<GlobalNameMapEntry*>(iter.Get());
+    n += entry->SizeOfExcludingThis(aMallocSizeOf);
+  }
+
   return n;
 }

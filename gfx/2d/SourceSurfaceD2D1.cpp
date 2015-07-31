@@ -39,7 +39,10 @@ SourceSurfaceD2D1::GetDataSurface()
 {
   HRESULT hr;
 
-  EnsureRealizedBitmap();
+  if (!EnsureRealizedBitmap()) {
+    gfxCriticalError() << "Failed to realize a bitmap, device " << hexa(mDevice);
+    return nullptr;
+  }
 
   RefPtr<ID2D1Bitmap1> softwareBitmap;
   D2D1_BITMAP_PROPERTIES1 props;
@@ -69,15 +72,21 @@ SourceSurfaceD2D1::GetDataSurface()
   return MakeAndAddRef<DataSourceSurfaceD2D1>(softwareBitmap, mFormat);
 }
 
-void
+bool
 SourceSurfaceD2D1::EnsureRealizedBitmap()
 {
   if (mRealizedBitmap) {
-    return;
+    return true;
+  }
+
+  // Why aren't we using mDevice here or anywhere else?
+  ID2D1Device* device = Factory::GetD2D1Device();
+  if (!device) {
+    return false;
   }
 
   RefPtr<ID2D1DeviceContext> dc;
-  Factory::GetD2D1Device()->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_NONE, byRef(dc));
+  device->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_NONE, byRef(dc));
 
   D2D1_BITMAP_PROPERTIES1 props;
   props.dpiX = 96;
@@ -92,6 +101,8 @@ SourceSurfaceD2D1::EnsureRealizedBitmap()
   dc->BeginDraw();
   dc->DrawImage(mImage);
   dc->EndDraw();
+
+  return true;
 }
 
 void

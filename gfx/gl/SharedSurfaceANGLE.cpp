@@ -172,12 +172,10 @@ void
 SharedSurface_ANGLEShareHandle::ProducerReleaseImpl()
 {
     if (mKeyedMutex) {
-        GLLibraryEGL* egl = &sEGLLibrary;
-        mGL->fFlush();
-        egl->fSurfaceReleaseSyncANGLE(mEGL->Display(), mPBuffer);
         // XXX: ReleaseSync() has an implicit flush of the D3D commands
         // whether we need Flush() or not depends on the ANGLE semantics.
         // For now, we'll just do it
+        mGL->fFlush();
         mKeyedMutex->ReleaseSync(0);
         return;
     }
