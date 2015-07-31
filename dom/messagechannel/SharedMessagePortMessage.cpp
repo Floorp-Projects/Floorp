@@ -34,13 +34,10 @@ SharedMessagePortMessage::Read(nsISupports* aParent,
   size_t dataLen = mData.Length();
   MOZ_ASSERT(!(dataLen % sizeof(*data)));
 
-  bool ok = ReadFromBuffer(aParent, aCx, data, dataLen, aValue);
-  Free();
+  ReadFromBuffer(aParent, aCx, data, dataLen, aValue, aRv);
+  NS_WARN_IF(aRv.Failed());
 
-  if (NS_WARN_IF(!ok)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
+  Free();
 }
 
 void
@@ -49,8 +46,8 @@ SharedMessagePortMessage::Write(JSContext* aCx,
                                 JS::Handle<JS::Value> aTransfer,
                                 ErrorResult& aRv)
 {
-  if (NS_WARN_IF(!StructuredCloneHelper::Write(aCx, aValue, aTransfer))) {
-    aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
+  StructuredCloneHelper::Write(aCx, aValue, aTransfer, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
 
