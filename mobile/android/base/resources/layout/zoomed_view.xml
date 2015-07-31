@@ -20,6 +20,10 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:background="@drawable/toolbar_grey_round">
+        <!--
+           Zoom factor button is invisible by default. Set ui.zoomedview.simplified to false
+           in order to display the button in the zoomed view tool bar
+        -->
         <TextView
             android:id="@+id/change_zoom_factor"
             android:layout_width="wrap_content"
@@ -28,7 +32,8 @@
             android:padding="12dip"
             android:layout_alignLeft="@+id/zoomed_image_view"
             android:textSize="16sp"
-            android:textColor="@color/text_and_tabs_tray_grey"/>
+            android:textColor="@color/text_and_tabs_tray_grey"
+            android:visibility="invisible"/>
         <ImageView
             android:id="@+id/dialog_close"
             android:scaleType="center"
