@@ -265,8 +265,6 @@ void
 MediaStreamGraphImpl::UpdateBufferSufficiencyState(SourceMediaStream* aStream)
 {
   StreamTime desiredEnd = GetDesiredBufferEnd(aStream);
-  nsTArray<SourceMediaStream::ThreadAndRunnable> runnables;
-
   {
     MutexAutoLock lock(aStream->mMutex);
     for (uint32_t i = 0; i < aStream->mUpdateTracks.Length(); ++i) {
@@ -279,8 +277,7 @@ MediaStreamGraphImpl::UpdateBufferSufficiencyState(SourceMediaStream* aStream)
         continue;
       }
       if (data->mCommands & SourceMediaStream::TRACK_END) {
-        // This track will end, so no point in firing not-enough-data
-        // callbacks.
+        // This track will end, so no point updating.
         continue;
       }
       StreamBuffer::Track* track = aStream->mBuffer.FindTrack(data->mID);
@@ -288,18 +285,7 @@ MediaStreamGraphImpl::UpdateBufferSufficiencyState(SourceMediaStream* aStream)
       // removed the track from mUpdateTracks already.
       NS_ASSERTION(!track->IsEnded(), "What is this track doing here?");
       data->mHaveEnough = track->GetEnd() >= desiredEnd;
-      if (!data->mHaveEnough) {
-        runnables.MoveElementsFrom(data->mDispatchWhenNotEnough);
-      }
     }
-  }
-
-  for (uint32_t i = 0; i < runnables.Length(); ++i) {
-    // This dispatch was observed to fail in test_video_dimensions.html on
-    // win8 64 debug when invoked from noop_resampler::fill on the cubeb audio
-    // thread.
-    nsCOMPtr<nsIRunnable> r = runnables[i].mRunnable;
-    runnables[i].mTarget->Dispatch(r.forget(), AbstractThread::DontAssertDispatchSuccess);
   }
 }
 
@@ -2667,28 +2653,6 @@ SourceMediaStream::GetEndOfAppendedData(TrackID aID)
   }
   NS_ERROR("Track not found");
   return 0;
-}
-
-void
-SourceMediaStream::DispatchWhenNotEnoughBuffered(TrackID aID,
-    TaskQueue* aSignalQueue, nsIRunnable* aSignalRunnable)
-{
-  MutexAutoLock lock(mMutex);
-  TrackData* data = FindDataForTrack(aID);
-  if (!data) {
-    nsCOMPtr<nsIRunnable> r = aSignalRunnable;
-    aSignalQueue->Dispatch(r.forget());
-    return;
-  }
-
-  if (data->mHaveEnough) {
-    if (data->mDispatchWhenNotEnough.IsEmpty()) {
-      data->mDispatchWhenNotEnough.AppendElement()->Init(aSignalQueue, aSignalRunnable);
-    }
-  } else {
-    nsCOMPtr<nsIRunnable> r = aSignalRunnable;
-    aSignalQueue->Dispatch(r.forget());
-  }
 }
 
 void
