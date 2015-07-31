@@ -347,8 +347,6 @@ MediaStreamGraphImpl::StreamReadyToFinish(MediaStream* aStream)
   // out.
   if (mProcessedTime >=
       aStream->StreamTimeToGraphTime(aStream->GetStreamBuffer().GetAllTracksEnd()))  {
-    NS_WARN_IF_FALSE(aStream->mNotifiedBlocked,
-      "Should've notified blocked=true for a fully finished stream");
     aStream->mNotifiedFinished = true;
     SetStreamOrderDirty();
     for (uint32_t j = 0; j < aStream->mListeners.Length(); ++j) {
