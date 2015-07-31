@@ -11,7 +11,7 @@ interface nsIFile;
 interface nsIInterfaceRequestor;
 interface nsIArray;
 
-[scriptable, uuid(6f0127f8-3066-45ad-b0f4-8bb718252273)]
+[scriptable, uuid(7091a3af-30be-4cf7-a48c-347071d61b5e)]
 interface nsIParentalControlsService : nsISupports
 {
   /**
@@ -33,6 +33,7 @@ interface nsIParentalControlsService : nsISupports
   const short PRIVATE_BROWSING = 16; // Disallow usage of private browsing
   const short LOCATION_SERVICE = 17; // Sharing of location data to location service
   const short DISPLAY_SETTINGS = 18; // Website display settings
+  const short CLEAR_HISTORY = 19; // Clear browsing history
 
   /**
    * @returns true if the current user account has parental controls

@@ -703,3 +703,5 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY restriction_disallow_location_services_description "Disallow sharing of location data to improve geolocation service.">
 <!ENTITY restriction_disallow_display_settings_title "Disallow display settings">
 <!ENTITY restriction_disallow_display_settings_description "Disallow changing of advanced display settings.">
+<!ENTITY restriction_disallow_clear_history_title "Disallow clearing history">
+<!ENTITY restriction_disallow_clear_history_description "Disallow clearing of browser history.">
