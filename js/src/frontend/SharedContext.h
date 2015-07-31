@@ -555,24 +555,19 @@ template <class StmtInfo>
 class MOZ_STACK_CLASS StmtInfoStack
 {
     // Top of the stack.
-    StmtInfo* topStmt_;
+    StmtInfo* innermostStmt_;
 
     // Top scope statement with a nested scope.
-    StmtInfo* topScopeStmt_;
+    StmtInfo* innermostScopeStmt_;
 
   public:
     explicit StmtInfoStack(ExclusiveContext* cx)
-      : topStmt_(nullptr),
-        topScopeStmt_(nullptr)
+      : innermostStmt_(nullptr),
+        innermostScopeStmt_(nullptr)
     { }
 
-    StmtInfo* top() const { return topStmt_; }
-    StmtInfo* topScopal() const { return topScopeStmt_; }
-    NestedScopeObject* topStaticScope() const {
-        if (!topScopal())
-            return nullptr;
-        return topScopal()->staticScope;
-    }
+    StmtInfo* innermost() const { return innermostStmt_; }
+    StmtInfo* innermostScopal() const { return innermostScopeStmt_; }
 
     void push(StmtInfo* stmt, StmtType type) {
         stmt->type = type;
@@ -580,36 +575,36 @@ class MOZ_STACK_CLASS StmtInfoStack
         stmt->isForLetBlock = false;
         stmt->label = nullptr;
         stmt->staticScope = nullptr;
-        stmt->down = topStmt_;
-        stmt->downScope = nullptr;
-        topStmt_ = stmt;
+        stmt->enclosing = innermostStmt_;
+        stmt->enclosingScope = nullptr;
+        innermostStmt_ = stmt;
     }
 
     void pushNestedScope(StmtInfo* stmt, StmtType type, NestedScopeObject& staticScope) {
         push(stmt, type);
-        linkAsTopScopal(stmt, staticScope);
+        linkAsInnermostScopal(stmt, staticScope);
     }
 
     void pop() {
-        StmtInfo* stmt = topStmt_;
-        topStmt_ = stmt->down;
+        StmtInfo* stmt = innermostStmt_;
+        innermostStmt_ = stmt->enclosing;
         if (stmt->linksScope())
-            topScopeStmt_ = stmt->downScope;
+            innermostScopeStmt_ = stmt->enclosingScope;
     }
 
-    void linkAsTopScopal(StmtInfo* stmt, NestedScopeObject& staticScope) {
-        MOZ_ASSERT(stmt != topScopal());
-        MOZ_ASSERT(!stmt->downScope);
-        stmt->downScope = topScopeStmt_;
-        topScopeStmt_ = stmt;
+    void linkAsInnermostScopal(StmtInfo* stmt, NestedScopeObject& staticScope) {
+        MOZ_ASSERT(stmt != innermostScopal());
+        MOZ_ASSERT(!stmt->enclosingScope);
+        stmt->enclosingScope = innermostScopeStmt_;
+        innermostScopeStmt_ = stmt;
         stmt->staticScope = &staticScope;
     }
 
-    void makeTopLexicalScope(StaticBlockObject& blockObj) {
-        MOZ_ASSERT(!topStmt_->isBlockScope);
-        MOZ_ASSERT(topStmt_->canBeBlockScope());
-        topStmt_->isBlockScope = true;
-        linkAsTopScopal(topStmt_, blockObj);
+    void makeInnermostLexicalScope(StaticBlockObject& blockObj) {
+        MOZ_ASSERT(!innermostStmt_->isBlockScope);
+        MOZ_ASSERT(innermostStmt_->canBeBlockScope());
+        innermostStmt_->isBlockScope = true;
+        linkAsInnermostScopal(innermostStmt_, blockObj);
     }
 };
 
