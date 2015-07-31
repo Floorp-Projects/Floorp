@@ -140,12 +140,12 @@ imgFrame::imgFrame()
   , mBlendMethod(BlendMethod::OVER)
   , mHasNoAlpha(false)
   , mAborted(false)
+  , mOptimizable(false)
   , mPalettedImageData(nullptr)
   , mPaletteDepth(0)
   , mNonPremult(false)
   , mSinglePixel(false)
   , mCompositingFailed(false)
-  , mOptimizable(false)
 {
   static bool hasCheckedOptimize = false;
   if (!hasCheckedOptimize) {
@@ -952,8 +952,8 @@ imgFrame::UnlockImageData()
 void
 imgFrame::SetOptimizable()
 {
-  MOZ_ASSERT(NS_IsMainThread());
   AssertImageDataLocked();
+  MonitorAutoLock lock(mMonitor);
   mOptimizable = true;
 }
 
