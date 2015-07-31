@@ -28,7 +28,7 @@
 
 #include "convolver.h"
 #include <algorithm>
-#include "skia/SkTypes.h"
+#include "skia/include/core/SkTypes.h"
 
 #if defined(_MIPS_ARCH_LOONGSON3A)
 

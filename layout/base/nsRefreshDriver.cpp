@@ -1848,6 +1848,8 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
     observer->DidRefresh();
   }
 
+  ConfigureHighPrecision();
+
   NS_ASSERTION(mInRefresh, "Still in refresh");
 }
 

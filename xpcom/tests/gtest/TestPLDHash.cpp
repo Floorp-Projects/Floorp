@@ -137,10 +137,7 @@ TEST(PLDHashTableTest, LazyStorage)
     ASSERT_TRUE(false); // shouldn't hit this on an empty table
   }
 
-  // Using a null |mallocSizeOf| should be fine because it shouldn't be called
-  // for an empty table.
-  mozilla::MallocSizeOf mallocSizeOf = nullptr;
-  ASSERT_EQ(PL_DHashTableSizeOfExcludingThis(&t, nullptr, mallocSizeOf), 0u);
+  ASSERT_EQ(t.ShallowSizeOfExcludingThis(moz_malloc_size_of), 0u);
 }
 
 // A trivial hash function is good enough here. It's also super-fast for

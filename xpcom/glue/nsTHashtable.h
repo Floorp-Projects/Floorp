@@ -300,12 +300,14 @@ public:
                              mozilla::MallocSizeOf aMallocSizeOf,
                              void* aUserArg = nullptr) const
   {
+    size_t n = 0;
+    n += mTable.ShallowSizeOfExcludingThis(aMallocSizeOf);
     if (aSizeOfEntryExcludingThis) {
-      s_SizeOfArgs args = { aSizeOfEntryExcludingThis, aUserArg };
-      return PL_DHashTableSizeOfExcludingThis(&mTable, s_SizeOfStub,
-                                              aMallocSizeOf, &args);
+      for (auto iter = ConstIter(); !iter.Done(); iter.Next()) {
+        n += aSizeOfEntryExcludingThis(iter.Get(), aMallocSizeOf, aUserArg);
+      }
     }
-    return PL_DHashTableSizeOfExcludingThis(&mTable, nullptr, aMallocSizeOf);
+    return n;
   }
 
   /**
@@ -376,22 +378,6 @@ protected:
   static void s_ClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
 
   static void s_InitEntry(PLDHashEntryHdr* aEntry, const void* aKey);
-
-  /**
-   * passed internally during sizeOf counting.  Allocated on the stack.
-   *
-   * @param userFunc the SizeOfEntryExcludingThisFun passed to
-   *                 SizeOf{In,Ex}cludingThis by the client
-   * @param userArg the userArg passed unaltered
-   */
-  struct s_SizeOfArgs
-  {
-    SizeOfEntryExcludingThisFun userFunc;
-    void* userArg;
-  };
-
-  static size_t s_SizeOfStub(PLDHashEntryHdr* aEntry,
-                             mozilla::MallocSizeOf aMallocSizeOf, void* aArg);
 
 private:
   // copy constructor, not implemented
@@ -507,19 +493,6 @@ nsTHashtable<EntryType>::s_InitEntry(PLDHashEntryHdr* aEntry,
                                      const void* aKey)
 {
   new (aEntry) EntryType(reinterpret_cast<KeyTypePointer>(aKey));
-}
-
-template<class EntryType>
-size_t
-nsTHashtable<EntryType>::s_SizeOfStub(PLDHashEntryHdr* aEntry,
-                                      mozilla::MallocSizeOf aMallocSizeOf,
-                                      void* aArg)
-{
-  // dereferences the function-pointer to the user's enumeration function
-  return (*reinterpret_cast<s_SizeOfArgs*>(aArg)->userFunc)(
-    static_cast<EntryType*>(aEntry),
-    aMallocSizeOf,
-    reinterpret_cast<s_SizeOfArgs*>(aArg)->userArg);
 }
 
 class nsCycleCollectionTraversalCallback;

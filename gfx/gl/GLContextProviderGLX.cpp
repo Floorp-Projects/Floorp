@@ -30,6 +30,7 @@
 #include "GLContextGLX.h"
 #include "gfxUtils.h"
 #include "gfx2DGlue.h"
+#include "GLScreenBuffer.h"
 
 #include "gfxCrashReporterUtils.h"
 
@@ -910,6 +911,35 @@ GLContextGLX::SwapBuffers()
     mGLX->xSwapBuffers(mDisplay, mDrawable);
     mGLX->xWaitGL();
     return true;
+}
+
+Maybe<gfx::IntSize>
+GLContextGLX::GetTargetSize()
+{
+    unsigned int width = 0, height = 0;
+    Window root;
+    int x, y;
+    unsigned int border, depth;
+    XGetGeometry(mDisplay, mDrawable, &root, &x, &y, &width, &height,
+                 &border, &depth);
+    Maybe<gfx::IntSize> size;
+    size.emplace(width, height);
+    return size;
+}
+
+bool
+GLContextGLX::OverrideDrawable(GLXDrawable drawable)
+{
+    if (Screen())
+        Screen()->AssureBlitted();
+    Bool result = mGLX->xMakeCurrent(mDisplay, drawable, mContext);
+    return result;
+}
+
+bool
+GLContextGLX::RestoreDrawable()
+{
+    return mGLX->xMakeCurrent(mDisplay, mDrawable, mContext);
 }
 
 GLContextGLX::GLContextGLX(

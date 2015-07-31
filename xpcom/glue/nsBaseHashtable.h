@@ -318,29 +318,20 @@ public:
                              mozilla::MallocSizeOf aMallocSizeOf,
                              void* aUserArg = nullptr) const
   {
+    size_t n = 0;
+    n += this->mTable.ShallowSizeOfExcludingThis(aMallocSizeOf);
     if (aSizeOfEntryExcludingThis) {
-      s_SizeOfArgs args = { aSizeOfEntryExcludingThis, aUserArg };
-      return PL_DHashTableSizeOfExcludingThis(&this->mTable, s_SizeOfStub,
-                                              aMallocSizeOf, &args);
+      for (auto iter = ConstIter(); !iter.Done(); iter.Next()) {
+        n += aSizeOfEntryExcludingThis(iter.Key(), iter.Data(), aMallocSizeOf,
+                                       aUserArg);
+      }
     }
-    return PL_DHashTableSizeOfExcludingThis(&this->mTable, nullptr,
-                                            aMallocSizeOf);
+    return n;
   }
 
 #ifdef DEBUG
   using nsTHashtable<EntryType>::MarkImmutable;
 #endif
-
-protected:
-  struct s_SizeOfArgs
-  {
-    SizeOfEntryExcludingThisFun func;
-    void* userArg;
-  };
-
-  static size_t s_SizeOfStub(PLDHashEntryHdr* aEntry,
-                             mozilla::MallocSizeOf aMallocSizeOf,
-                             void* aArg);
 };
 
 //
@@ -365,22 +356,6 @@ nsBaseHashtableET<KeyClass, DataType>::nsBaseHashtableET(
 template<class KeyClass, class DataType>
 nsBaseHashtableET<KeyClass, DataType>::~nsBaseHashtableET()
 {
-}
-
-
-//
-// nsBaseHashtable definitions
-//
-
-template<class KeyClass, class DataType, class UserDataType>
-size_t
-nsBaseHashtable<KeyClass, DataType, UserDataType>::s_SizeOfStub(
-    PLDHashEntryHdr* aHdr, mozilla::MallocSizeOf aMallocSizeOf, void* aArg)
-{
-  EntryType* ent = static_cast<EntryType*>(aHdr);
-  s_SizeOfArgs* eargs = static_cast<s_SizeOfArgs*>(aArg);
-
-  return (eargs->func)(ent->GetKey(), ent->mData, aMallocSizeOf, eargs->userArg);
 }
 
 #endif // nsBaseHashtable_h__

@@ -142,6 +142,24 @@ function runTests(obj) {
     });
   })
 
+  // non transfering tests
+  .then(function() {
+    if (obj.transferableObjects) {
+      return;
+    }
+
+    // MessagePort
+    return new Promise(function(r, rr) {
+      var mc = new MessageChannel();
+      obj.send(42, [mc.port1]).then(function(received) {
+        ok(false, "This object should not support port transferring");
+      }, function() {
+        ok(true, "This object should not support port transferring");
+      })
+      .then(r);
+    });
+  })
+
   // done.
   .then(function() {
     obj.finished();
@@ -170,7 +188,13 @@ function test_windowToWindow() {
     send: function(what, ports) {
       return new Promise(function(r, rr) {
         resolve = r;
-        postMessage(what, '*', ports);
+
+        try {
+          postMessage(what, '*', ports);
+        } catch(e) {
+          resolve = null;
+          rr();
+        }
       });
     },
 
@@ -217,7 +241,12 @@ function test_windowToIframeURL(url) {
       send: function(what, ports) {
         return new Promise(function(r, rr) {
           resolve = r;
-          ifr.contentWindow.postMessage(what, '*', ports);
+          try {
+            ifr.contentWindow.postMessage(what, '*', ports);
+          } catch(e) {
+            resolve = null;
+            rr();
+          }
         });
       },
 
@@ -255,8 +284,12 @@ function test_broadcastChannel() {
     clonableObjects: true,
     transferableObjects: false,
     send: function(what, ports) {
-      is(ports.length, 0, "No ports for this test!");
       return new Promise(function(r, rr) {
+        if (ports.length) {
+          rr();
+          return;
+        }
+
         resolve = r;
         bc1.postMessage(what);
       });
@@ -293,7 +326,12 @@ function test_messagePort() {
     send: function(what, ports) {
       return new Promise(function(r, rr) {
         resolve = r;
-        mc.port1.postMessage(what, ports);
+        try {
+          mc.port1.postMessage(what, ports);
+        } catch(e) {
+          resolve = null;
+          rr();
+        }
       });
     },
 

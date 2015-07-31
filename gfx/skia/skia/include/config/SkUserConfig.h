@@ -179,21 +179,21 @@
 //#define SK_ATOMICS_PLATFORM_H "SkAtomics_xxx.h"
 //#define SK_MUTEX_PLATFORM_H "SkMutex_xxx.h"
 #if defined(_MSC_VER)
-#  define SK_ATOMICS_PLATFORM_H "skia/SkAtomics_win.h"
+#  define SK_ATOMICS_PLATFORM_H "../../src/ports/SkAtomics_win.h"
 #else
-#  define SK_ATOMICS_PLATFORM_H "skia/SkAtomics_sync.h"
+#  define SK_ATOMICS_PLATFORM_H "../../src/ports/SkAtomics_sync.h"
 #endif
 
 #if defined(_WIN32)
-#  define SK_MUTEX_PLATFORM_H   "skia/SkMutex_win.h"
+#  define SK_MUTEX_PLATFORM_H   "../../src/ports/SkMutex_win.h"
 #else
-#  define SK_MUTEX_PLATFORM_H   "skia/SkMutex_pthread.h"
+#  define SK_MUTEX_PLATFORM_H   "../../src/ports/SkMutex_pthread.h"
 #endif
 
 #if defined(SK_CPU_ARM32) || defined(SK_CPU_ARM64)
-#  define SK_BARRIERS_PLATFORM_H "skia/SkBarriers_arm.h"
+#  define SK_BARRIERS_PLATFORM_H "../../src/ports/SkBarriers_arm.h"
 #else
-#  define SK_BARRIERS_PLATFORM_H "skia/SkBarriers_x86.h"
+#  define SK_BARRIERS_PLATFORM_H "../../src/ports/SkBarriers_x86.h"
 #endif
 
 // On all platforms we have this byte order

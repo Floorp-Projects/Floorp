@@ -81,8 +81,6 @@ void
 BroadcastChannelService::PostMessage(BroadcastChannelParent* aParent,
                                      const ClonedMessageData& aData,
                                      const nsACString& aOrigin,
-                                     uint64_t aAppId,
-                                     bool aIsInBrowserElement,
                                      const nsAString& aChannel,
                                      bool aPrivateBrowsing)
 {
@@ -109,7 +107,6 @@ BroadcastChannelService::PostMessage(BroadcastChannelParent* aParent,
 
     if (parent != aParent) {
       parent->CheckAndDeliver(aData, PromiseFlatCString(aOrigin),
-                              aAppId, aIsInBrowserElement,
                               PromiseFlatString(aChannel), aPrivateBrowsing);
     }
   }
