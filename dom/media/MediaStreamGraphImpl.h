@@ -54,8 +54,8 @@ public:
     MOZ_COUNT_DTOR(ControlMessage);
   }
   // Do the action of this message on the MediaStreamGraph thread. Any actions
-  // affecting graph processing should take effect at mStateComputedTime.
-  // All stream data for times < mStateComputedTime has already been
+  // affecting graph processing should take effect at mProcessedTime.
+  // All stream data for times < mProcessedTime has already been
   // computed.
   virtual void Run() = 0;
   // When we're shutting down the application, most messages are ignored but
@@ -562,11 +562,16 @@ public:
    */
   uint32_t mFirstCycleBreaker;
   /**
-   * Blocking decisions and all stream contents have been computed up to this
-   * time. The next batch of updates from the main thread will be processed
-   * at this time.
+   * Blocking decisions have been computed up to this time.
+   * Between each iteration, this is the same as mProcessedTime.
    */
   GraphTime mStateComputedTime = 0;
+  /**
+   * All stream contents have been computed up to this time.
+   * The next batch of updates from the main thread will be processed
+   * at this time.  This is behind mStateComputedTime during processing.
+   */
+  GraphTime mProcessedTime = 0;
   /**
    * Date of the last time we updated the main thread with the graph state.
    */
