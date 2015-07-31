@@ -456,7 +456,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     /*
      * Parse a top-level JS script.
      */
-    Node parse(JSObject* chain);
+    Node parse();
 
     /*
      * Allocate a new parsed object or function container from
