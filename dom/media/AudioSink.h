@@ -114,8 +114,6 @@ private:
   // audio data to the audio hardware.  Called on the audio thread.
   uint32_t PlayFromAudioQueue();
 
-  void UpdateStreamSettings();
-
   // If we have already written enough frames to the AudioStream, start the
   // playback.
   void StartAudioStreamPlaybackIfNeeded();
@@ -172,15 +170,7 @@ private:
 
   dom::AudioChannel mChannel;
 
-  double mVolume;
-  double mPlaybackRate;
-  bool mPreservesPitch;
-
   bool mStopAudioThread;
-
-  bool mSetVolume;
-  bool mSetPlaybackRate;
-  bool mSetPreservesPitch;
 
   bool mPlaying;
 
