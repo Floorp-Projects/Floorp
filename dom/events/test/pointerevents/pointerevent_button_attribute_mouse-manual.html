@@ -5,18 +5,22 @@
         <meta name="viewport" content="width=device-width">
         <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
-        <script src="/resources/testharnessreport.js"></script>
+        <!--script src="/resources/testharnessreport.js"></script-->
         <script type="text/javascript" src="pointerevent_support.js"></script>
+        <script type="text/javascript" src="mochitest_support_internal.js"></script>
     </head>
     <body onload="run()">
         <h1>Button attribute test for mouse</h1>
+        <!--
         <h2>This test is for mouse only</h2>
         <h4>
             Test Description: This test checks if button attribute for mouse handled properly.
             <p>Put your mouse over the black rectangle</p>
         </h4>
         <p>
+        -->
         <div id="target0" style="background:black"></div>
+        <div id="target1" style="background:yellow"></div>
         <script>
             var eventTested = false;
             var detected_pointertypes = {};
