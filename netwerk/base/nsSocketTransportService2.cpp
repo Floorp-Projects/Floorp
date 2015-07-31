@@ -67,7 +67,7 @@ DebugMutexAutoLock::DebugMutexAutoLock(Mutex& mutex)
     :mLock(&mutex)
 {
   PRThread *currentThread = PR_GetCurrentThread();
-  MOZ_RELEASE_ASSERT(sDebugOwningThread != currentThread);
+  MOZ_DIAGNOSTIC_ASSERT(sDebugOwningThread != currentThread);
   SOCKET_LOG(("Acquiring lock on thread %p", currentThread));
   mLock->Lock();
   sDebugOwningThread = currentThread;
