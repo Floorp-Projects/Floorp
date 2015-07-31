@@ -348,34 +348,19 @@ RespondWithHandler::CancelRequest(nsresult aStatus)
 } // namespace
 
 void
-FetchEvent::RespondWith(const ResponseOrPromise& aArg, ErrorResult& aRv)
+FetchEvent::RespondWith(Promise& aArg, ErrorResult& aRv)
 {
   if (mWaitToRespond) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
 
-  nsRefPtr<Promise> promise;
-
-  if (aArg.IsResponse()) {
-    nsRefPtr<Response> res = &aArg.GetAsResponse();
-    WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
-    MOZ_ASSERT(worker);
-    worker->AssertIsOnWorkerThread();
-    promise = Promise::Create(worker->GlobalScope(), aRv);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return;
-    }
-    promise->MaybeResolve(res);
-  } else if (aArg.IsPromise()) {
-    promise = &aArg.GetAsPromise();
-  }
   nsRefPtr<InternalRequest> ir = mRequest->GetInternalRequest();
   mWaitToRespond = true;
   nsRefPtr<RespondWithHandler> handler =
     new RespondWithHandler(mChannel, mServiceWorker, mRequest->Mode(),
                            ir->IsClientRequest());
-  promise->AppendNativeHandler(handler);
+  aArg.AppendNativeHandler(handler);
 }
 
 already_AddRefed<ServiceWorkerClient>
