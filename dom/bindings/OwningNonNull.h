@@ -73,7 +73,7 @@ public:
   }
 
   OwningNonNull<T>&
-  operator=(const already_AddRefed<T>& aValue)
+  operator=(already_AddRefed<T>&& aValue)
   {
     init(aValue);
     return *this;

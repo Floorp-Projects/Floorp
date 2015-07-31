@@ -4929,6 +4929,11 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             return JSToNativeConversionInfo(template, declType=declType,
                                             dealWithOptional=isOptional)
 
+        if descriptor.interface.identifier.name == "AbortablePromise":
+            raise TypeError("Need to figure out what argument conversion "
+                            "should look like for AbortablePromise: %s" %
+                            sourceDescription)
+
         # This is an interface that we implement as a concrete class
         # or an XPCOM interface.
 
@@ -4938,17 +4943,20 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         argIsPointer = (type.nullable() or type.unroll().inner.isExternal() or
                         isCallbackReturnValue)
 
-        # Sequences and non-worker callbacks have to hold a strong ref to the
-        # thing being passed down.  Union return values must hold a strong ref
-        # because they may be returning an addrefed pointer.
-        # Also, callback return values always end up
-        # addrefing anyway, so there is no point trying to avoid it here and it
-        # makes other things simpler since we can assume the return value is a
-        # strong ref.
-        forceOwningType = ((descriptor.interface.isCallback() and
-                            not descriptor.workers) or
-                           isMember or
-                           isCallbackReturnValue)
+        # Sequence and dictionary members, as well as owning unions (which can
+        # appear here as return values in JS-implemented interfaces) have to
+        # hold a strong ref to the thing being passed down.  Those all set
+        # isMember.
+        #
+        # Also, callback return values always end up addrefing anyway, so there
+        # is no point trying to avoid it here and it makes other things simpler
+        # since we can assume the return value is a strong ref.
+        #
+        # Finally, promises need to hold a strong ref because that's what
+        # Promise.resolve returns.
+        assert not descriptor.interface.isCallback()
+        isPromise = descriptor.interface.identifier.name == "Promise"
+        forceOwningType = isMember or isCallbackReturnValue or isPromise
 
         typeName = descriptor.nativeType
         typePtr = typeName + "*"
@@ -4975,7 +4983,29 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         templateBody = ""
         if forceOwningType:
             templateBody += 'static_assert(IsRefcounted<%s>::value, "We can only store refcounted classes.");' % typeName
-        if not descriptor.skipGen and not descriptor.interface.isConsequential() and not descriptor.interface.isExternal():
+
+        if isPromise:
+            templateBody = fill(
+                """
+                { // Scope for our GlobalObject and ErrorResult
+
+                  // Might as well use CurrentGlobalOrNull here; that will at
+                  // least give us the same behavior as if the caller just called
+                  // Promise.resolve() themselves.
+                  GlobalObject promiseGlobal(cx, JS::CurrentGlobalOrNull(cx));
+                  if (promiseGlobal.Failed()) {
+                    $*{exceptionCode}
+                  }
+                  ErrorResult promiseRv;
+                  $${declName} = Promise::Resolve(promiseGlobal, $${val}, promiseRv);
+                  if (promiseRv.Failed()) {
+                    ThrowMethodFailed(cx, promiseRv);
+                    $*{exceptionCode}
+                  }
+                }
+                """,
+                exceptionCode=exceptionCode)
+        elif not descriptor.skipGen and not descriptor.interface.isConsequential() and not descriptor.interface.isExternal():
             if failureCode is not None:
                 templateBody += str(CastableObjectUnwrapper(
                     descriptor,
@@ -5016,11 +5046,24 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             # And store our value in ${declName}
             templateBody += "${declName} = ${holderName};\n"
 
-        # Just pass failureCode, not onFailureBadType, here, so we'll report the
-        # thing as not an object as opposed to not implementing whatever our
-        # interface is.
-        templateBody = wrapObjectTemplate(templateBody, type,
-                                          "${declName} = nullptr;\n", failureCode)
+        if isPromise:
+            if type.nullable():
+                codeToSetNull = "${declName} = nullptr;\n"
+                templateBody = CGIfElseWrapper(
+                    "${val}.isNullOrUndefined()",
+                    CGGeneric(codeToSetNull),
+                    CGGeneric(templateBody)).define()
+                if isinstance(defaultValue, IDLNullValue):
+                    templateBody = handleDefault(templateBody, codeToSetNull)
+            else:
+                assert defaultValue is None
+        else:
+            # Just pass failureCode, not onFailureBadType, here, so we'll report
+            # the thing as not an object as opposed to not implementing whatever
+            # our interface is.
+            templateBody = wrapObjectTemplate(templateBody, type,
+                                              "${declName} = nullptr;\n",
+                                              failureCode)
 
         declType = CGGeneric(declType)
         if holderType is not None:
@@ -13186,7 +13229,8 @@ class CGNativeMember(ClassMethod):
         if type.isGeckoInterface() and not type.isCallbackInterface():
             iface = type.unroll().inner
             argIsPointer = type.nullable() or iface.isExternal()
-            forceOwningType = iface.isCallback() or isMember
+            forceOwningType = (iface.isCallback() or isMember or
+                               iface.identifier.name == "Promise")
             if argIsPointer:
                 if (optional or isMember) and forceOwningType:
                     typeDecl = "nsRefPtr<%s>"
