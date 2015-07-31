@@ -2477,7 +2477,9 @@ pref("plugin.sessionPermissionNow.intervalInMinutes", 60);
 // to allow it persistently.
 pref("plugin.persistentPermissionAlways.intervalInDays", 90);
 
-#if !defined(DEBUG) && !defined(MOZ_ASAN)
+// Set IPC timeouts for plugins and tabs, except in leak-checking builds.
+// (NS_FREE_PERMANENT_DATA is C++ only, so approximate its definition here.)
+#if !defined(DEBUG) && !defined(MOZ_ASAN) && !defined(MOZ_VALGRIND)
 // How long a plugin is allowed to process a synchronous IPC message
 // before we consider it "hung".
 pref("dom.ipc.plugins.timeoutSecs", 45);
@@ -2503,7 +2505,7 @@ pref("dom.ipc.plugins.hangUIMinDisplaySecs", 10);
 // we fear the worst and kill it.
 pref("dom.ipc.tabs.shutdownTimeoutSecs", 5);
 #else
-// No timeout in DEBUG or ASan builds
+// No timeout in leak-checking builds
 pref("dom.ipc.plugins.timeoutSecs", 0);
 pref("dom.ipc.plugins.contentTimeoutSecs", 0);
 pref("dom.ipc.plugins.processLaunchTimeoutSecs", 0);
