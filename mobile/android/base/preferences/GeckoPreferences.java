@@ -872,6 +872,12 @@ OnSharedPreferenceChangeListener
                         i--;
                         continue;
                     }
+                } else if (PREFS_MP_ENABLED.equals(key)) {
+                    if (!RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_MASTER_PASSWORD)) {
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
                 }
 
                 // Some Preference UI elements are not actually preferences,
