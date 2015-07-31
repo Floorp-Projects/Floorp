@@ -14,9 +14,11 @@
 namespace mozilla {
 namespace image {
 
-void
-ImageMetadata::SetOnImage(RasterImage* image)
+nsresult
+ImageMetadata::SetOnImage(RasterImage* aImage)
 {
+  nsresult rv = NS_OK;
+
   if (mHotspotX != -1 && mHotspotY != -1) {
     nsCOMPtr<nsISupportsPRUint32> intwrapx =
       do_CreateInstance(NS_SUPPORTS_PRUINT32_CONTRACTID);
@@ -24,11 +26,18 @@ ImageMetadata::SetOnImage(RasterImage* image)
       do_CreateInstance(NS_SUPPORTS_PRUINT32_CONTRACTID);
     intwrapx->SetData(mHotspotX);
     intwrapy->SetData(mHotspotY);
-    image->Set("hotspotX", intwrapx);
-    image->Set("hotspotY", intwrapy);
+    aImage->Set("hotspotX", intwrapx);
+    aImage->Set("hotspotY", intwrapy);
   }
 
-  image->SetLoopCount(mLoopCount);
+  aImage->SetLoopCount(mLoopCount);
+
+  if (HasSize()) {
+    MOZ_ASSERT(HasOrientation(), "Should have orientation");
+    rv = aImage->SetSize(GetWidth(), GetHeight(), GetOrientation());
+  }
+
+  return rv;
 }
 
 } // namespace image
