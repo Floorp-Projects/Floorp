@@ -31,7 +31,7 @@ struct SurfaceDescriptorX11 {
   SurfaceDescriptorX11()
   { }
 
-  explicit SurfaceDescriptorX11(gfxXlibSurface* aSurf);
+  explicit SurfaceDescriptorX11(gfxXlibSurface* aSurf, bool aForwardGLX = false);
 
   SurfaceDescriptorX11(Drawable aDrawable, XID aFormatID,
                        const gfx::IntSize& aSize);
@@ -52,6 +52,7 @@ struct SurfaceDescriptorX11 {
   Drawable mId;
   XID mFormat; // either a PictFormat or VisualID
   gfx::IntSize mSize;
+  Drawable mGLXPixmap; // used to prevent multiple bindings to the same GLXPixmap in-process
 };
 
 } // namespace layers
@@ -67,12 +68,15 @@ struct ParamTraits<mozilla::layers::SurfaceDescriptorX11> {
     WriteParam(aMsg, aParam.mId);
     WriteParam(aMsg, aParam.mSize);
     WriteParam(aMsg, aParam.mFormat);
+    WriteParam(aMsg, aParam.mGLXPixmap);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult) {
     return (ReadParam(aMsg, aIter, &aResult->mId) &&
             ReadParam(aMsg, aIter, &aResult->mSize) &&
-            ReadParam(aMsg, aIter, &aResult->mFormat));
+            ReadParam(aMsg, aIter, &aResult->mFormat) &&
+            ReadParam(aMsg, aIter, &aResult->mGLXPixmap)
+            );
   }
 };
 

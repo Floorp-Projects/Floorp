@@ -4,6 +4,8 @@ struct Foo {
   Foo(int); // expected-error {{bad implicit conversion constructor for 'Foo'}} expected-note {{consider adding the explicit keyword to the constructor}}
   Foo(int, char=0); // expected-error {{bad implicit conversion constructor for 'Foo'}} expected-note {{consider adding the explicit keyword to the constructor}}
   Foo(...); // expected-error {{bad implicit conversion constructor for 'Foo'}} expected-note {{consider adding the explicit keyword to the constructor}}
+  template<class T>
+  Foo(float); // expected-error {{bad implicit conversion constructor for 'Foo'}} expected-note {{consider adding the explicit keyword to the constructor}}
   Foo(int, unsigned);
   Foo(Foo&);
   Foo(const Foo&);
@@ -38,4 +40,11 @@ struct Abstract {
   Abstract(int, char=0);
   Abstract(...);
   virtual void f() = 0;
+};
+
+template<class T>
+struct Template {
+  Template(int); // expected-error {{bad implicit conversion constructor for 'Template'}} expected-note {{consider adding the explicit keyword to the constructor}}
+  template<class U>
+  Template(float); // expected-error {{bad implicit conversion constructor for 'Template'}} expected-note {{consider adding the explicit keyword to the constructor}}
 };

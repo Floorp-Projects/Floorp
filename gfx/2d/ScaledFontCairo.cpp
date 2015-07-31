@@ -13,8 +13,8 @@
 #endif
 
 #if defined(USE_SKIA) && defined(MOZ_ENABLE_FREETYPE)
-#include "skia/SkTypeface.h"
-#include "skia/SkTypeface_cairo.h"
+#include "skia/include/core/SkTypeface.h"
+#include "skia/include/ports/SkTypeface_cairo.h"
 #endif
 
 #include <string>

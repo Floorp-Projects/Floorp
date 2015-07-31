@@ -19,7 +19,7 @@ class SourceBufferResource;
 class ContainerParser {
 public:
   explicit ContainerParser(const nsACString& aType);
-  virtual ~ContainerParser() = default;
+  virtual ~ContainerParser();
 
   // Return true if aData starts with an initialization segment.
   // The base implementation exists only for debug logging and is expected
@@ -51,6 +51,9 @@ public:
     return mHasInitData;
   }
 
+  // Return true if a complete initialization segment has been passed
+  // to ParseStartAndEndTimestamps(). The calls below to retrieve
+  // MediaByteRanges will be valid from when this call first succeeds.
   bool HasCompleteInitData();
   // Returns the byte range of the first complete init segment, or an empty
   // range if not complete.
