@@ -828,14 +828,6 @@ public:
    */
   StreamTime GetEndOfAppendedData(TrackID aID);
   /**
-   * Ensures that aSignalRunnable will be dispatched to aSignalThread
-   * when we don't have enough buffered data in the track (which could be
-   * immediately). Will dispatch the runnable immediately if the track
-   * does not exist. No op if a runnable is already present for this track.
-   */
-  void DispatchWhenNotEnoughBuffered(TrackID aID,
-      TaskQueue* aSignalQueue, nsIRunnable* aSignalRunnable);
-  /**
    * Indicate that a track has ended. Do not do any more API calls
    * affecting this track.
    * Ignored if the track does not exist.
@@ -930,7 +922,6 @@ protected:
     // Each time the track updates are flushed to the media graph thread,
     // the segment buffer is emptied.
     nsAutoPtr<MediaSegment> mData;
-    nsTArray<ThreadAndRunnable> mDispatchWhenNotEnough;
     // Each time the track updates are flushed to the media graph thread,
     // this is cleared.
     uint32_t mCommands;
