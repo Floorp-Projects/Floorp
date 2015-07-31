@@ -1427,7 +1427,7 @@ MediaStreamGraphImpl::Process(GraphTime aFrom, GraphTime aTo)
 
 bool
 MediaStreamGraphImpl::OneIteration(GraphTime aFrom, GraphTime aTo,
-                                   GraphTime aStateFrom, GraphTime aStateEnd)
+                                   GraphTime aStateEnd)
 {
   {
     MonitorAutoLock lock(mMemoryReportMonitor);
@@ -1449,10 +1449,11 @@ MediaStreamGraphImpl::OneIteration(GraphTime aFrom, GraphTime aTo,
 
   UpdateCurrentTimeForStreams(aFrom, aTo);
 
+  GraphTime stateFrom = mStateComputedTime;
   GraphTime stateEnd = std::min(aStateEnd, mEndTime);
   UpdateGraph(stateEnd);
 
-  Process(aStateFrom, stateEnd);
+  Process(stateFrom, stateEnd);
 
   // Send updates to the main thread and wait for the next control loop
   // iteration.
