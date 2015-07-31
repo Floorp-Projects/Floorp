@@ -226,6 +226,17 @@ Decoder::CompleteDecode()
       mProgress |= FLAG_HAS_ERROR;
     }
   }
+
+  if (mDecodeDone && !IsMetadataDecode()) {
+    MOZ_ASSERT(HasError() || mCurrentFrame, "Should have an error or a frame");
+
+    // If this image wasn't animated and isn't a transient image, mark its frame
+    // as optimizable. We don't support optimizing animated images and
+    // optimizing transient images isn't worth it.
+    if (!mIsAnimated && !mImageIsTransient && mCurrentFrame) {
+      mCurrentFrame->SetOptimizable();
+    }
+  }
 }
 
 void
@@ -272,15 +283,6 @@ Decoder::Finish()
   }
 
   if (mDecodeDone && !IsMetadataDecode()) {
-    MOZ_ASSERT(HasError() || mCurrentFrame, "Should have an error or a frame");
-
-    // If this image wasn't animated and isn't a transient image, mark its frame
-    // as optimizable. We don't support optimizing animated images and
-    // optimizing transient images isn't worth it.
-    if (!mIsAnimated && !mImageIsTransient && mCurrentFrame) {
-      mCurrentFrame->SetOptimizable();
-    }
-
     mImage->OnDecodingComplete(mIsAnimated);
   }
 }
