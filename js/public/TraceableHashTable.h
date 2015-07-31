@@ -34,14 +34,15 @@ template <typename Key,
           typename KeyTraceFunc = DefaultTracer<Key>,
           typename ValueTraceFunc = DefaultTracer<Value>>
 class TraceableHashMap : public HashMap<Key, Value, HashPolicy, AllocPolicy>,
-                         public JS::DynamicTraceable
+                         public JS::Traceable
 {
     using Base = HashMap<Key, Value, HashPolicy, AllocPolicy>;
 
   public:
     explicit TraceableHashMap(AllocPolicy a = AllocPolicy()) : Base(a)  {}
 
-    void trace(JSTracer* trc) override {
+    static void trace(TraceableHashMap* map, JSTracer* trc) { map->trace(trc); }
+    void trace(JSTracer* trc) {
         if (!this->initialized())
             return;
         for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {

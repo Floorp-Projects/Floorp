@@ -37,7 +37,7 @@ class TraceableVector
                                MinInlineCapacity,
                                AllocPolicy,
                                TraceableVector<T, MinInlineCapacity, AllocPolicy, TraceFunc>>,
-    public JS::DynamicTraceable
+    public JS::Traceable
 {
     using Base = mozilla::VectorBase<T, MinInlineCapacity, AllocPolicy, TraceableVector>;
 
@@ -48,7 +48,8 @@ class TraceableVector
         return Base::operator=(mozilla::Forward<TraceableVector>(vec));
     }
 
-    void trace(JSTracer* trc) override {
+    static void trace(TraceableVector* vec, JSTracer* trc) { vec->trace(trc); }
+    void trace(JSTracer* trc) {
         for (size_t i = 0; i < this->length(); ++i)
             TraceFunc::trace(trc, &Base::operator[](i), "vector element");
     }

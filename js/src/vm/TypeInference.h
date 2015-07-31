@@ -272,7 +272,7 @@ class TypeSet
     // Information about a single concrete type. We pack this into one word,
     // where small values are particular primitive or other singleton types and
     // larger values are either specific JS objects or object groups.
-    class Type : public JS::StaticTraceable
+    class Type : public JS::Traceable
     {
         friend class TypeSet;
 
