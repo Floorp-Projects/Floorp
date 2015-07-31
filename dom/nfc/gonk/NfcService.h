@@ -29,13 +29,16 @@ public:
 
   void DispatchNfcEvent(const mozilla::dom::NfcEventOptions& aOptions);
 
-  bool PostToNfcDaemon(const uint8_t* aData, size_t aSize);
-
   nsCOMPtr<nsIThread> GetThread() {
     return mThread;
   }
 
 private:
+  class CleanupRunnable;
+  class SendRunnable;
+  class ShutdownConsumerRunnable;
+  class StartConsumerRunnable;
+
   NfcService();
   ~NfcService();
 
