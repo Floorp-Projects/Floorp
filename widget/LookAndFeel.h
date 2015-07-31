@@ -404,14 +404,7 @@ public:
       * Overlay scrollbar animation constants.
       */
      eIntID_ScrollbarFadeBeginDelay,
-     eIntID_ScrollbarFadeDuration,
-      
-     /**
-      * Distance in pixels to offset the context menu from the cursor
-      * on open.
-      */
-     eIntID_ContextMenuOffsetVertical,
-     eIntID_ContextMenuOffsetHorizontal
+     eIntID_ScrollbarFadeDuration
   };
 
   /**
