@@ -56,7 +56,6 @@ public:
   nsresult Init(const nsACString &aKey,
                 bool aCreateNew,
                 bool aMemoryOnly,
-                uint32_t aPinningAppID,
                 bool aPriority,
                 CacheFileListener *aCallback);
 
@@ -104,10 +103,6 @@ public:
   void Key(nsACString& aKey) { aKey = mKey; }
   bool IsDoomed();
   bool IsWriteInProgress();
-  CacheFileIOManager* Manager()
-  {
-    return mHandle ? mHandle->Manager() : nullptr;
-  }
 
   // Memory reporting
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;

@@ -108,9 +108,8 @@ NS_INTERFACE_MAP_BEGIN(CacheFileHandle)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-CacheFileHandle::CacheFileHandle(CacheFileIOManager* aManager, const SHA1Sum::Hash *aHash, bool aPriority)
-  : mManager(aManager)
-  , mHash(aHash)
+CacheFileHandle::CacheFileHandle(const SHA1Sum::Hash *aHash, bool aPriority)
+  : mHash(aHash)
   , mIsDoomed(false)
   , mPriority(aPriority)
   , mClosed(false)
@@ -124,9 +123,8 @@ CacheFileHandle::CacheFileHandle(CacheFileIOManager* aManager, const SHA1Sum::Ha
        , this, LOGSHA1(aHash)));
 }
 
-CacheFileHandle::CacheFileHandle(CacheFileIOManager* aManager, const nsACString &aKey, bool aPriority)
-  : mManager(aManager)
-  , mHash(nullptr)
+CacheFileHandle::CacheFileHandle(const nsACString &aKey, bool aPriority)
+  : mHash(nullptr)
   , mIsDoomed(false)
   , mPriority(aPriority)
   , mClosed(false)
@@ -147,8 +145,9 @@ CacheFileHandle::~CacheFileHandle()
 
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
 
-  if (!IsClosed() && mManager) {
-    mManager->CloseHandleInternal(this);
+  nsRefPtr<CacheFileIOManager> ioMan = CacheFileIOManager::gInstance;
+  if (!IsClosed() && ioMan) {
+    ioMan->CloseHandleInternal(this);
   }
 }
 
@@ -296,8 +295,7 @@ CacheFileHandles::HandleHashKey::SizeOfExcludingThis(mozilla::MallocSizeOf mallo
  *  CacheFileHandles
  *****************************************************************************/
 
-CacheFileHandles::CacheFileHandles(CacheFileIOManager* aManager)
-  : mManager(aManager)
+CacheFileHandles::CacheFileHandles()
 {
   LOG(("CacheFileHandles::CacheFileHandles() [this=%p]", this));
   MOZ_COUNT_CTOR(CacheFileHandles);
@@ -378,7 +376,7 @@ CacheFileHandles::NewHandle(const SHA1Sum::Hash *aHash,
   entry->AssertHandlesState();
 #endif
 
-  nsRefPtr<CacheFileHandle> handle = new CacheFileHandle(mManager, entry->Hash(), aPriority);
+  nsRefPtr<CacheFileHandle> handle = new CacheFileHandle(entry->Hash(), aPriority);
   entry->AddHandle(handle);
 
   LOG(("CacheFileHandles::NewHandle() hash=%08x%08x%08x%08x%08x "
@@ -546,15 +544,14 @@ protected:
 
 class OpenFileEvent : public nsRunnable {
 public:
-  OpenFileEvent(CacheFileIOManager *aIOMan,
-                const nsACString &aKey, uint32_t aFlags,
+  OpenFileEvent(const nsACString &aKey, uint32_t aFlags,
                 CacheFileIOListener *aCallback)
     : mFlags(aFlags)
     , mCallback(aCallback)
-    , mIOMan(aIOMan)
     , mKey(aKey)
   {
     MOZ_COUNT_CTOR(OpenFileEvent);
+    mIOMan = CacheFileIOManager::gInstance;
   }
 
 protected:
@@ -632,7 +629,7 @@ public:
     if (mHandle->IsClosed()) {
       rv = NS_ERROR_NOT_INITIALIZED;
     } else {
-      rv = mHandle->Manager()->ReadInternal(
+      rv = CacheFileIOManager::gInstance->ReadInternal(
         mHandle, mOffset, mBuf, mCount);
     }
 
@@ -682,11 +679,11 @@ public:
     if (mHandle->IsClosed()) {
       rv = NS_ERROR_NOT_INITIALIZED;
     } else {
-      rv = mHandle->Manager()->WriteInternal(
+      rv = CacheFileIOManager::gInstance->WriteInternal(
           mHandle, mOffset, mBuf, mCount, mValidate, mTruncate);
       if (NS_FAILED(rv) && !mCallback) {
         // No listener is going to handle the error, doom the file
-        mHandle->Manager()->DoomFileInternal(mHandle);
+        CacheFileIOManager::gInstance->DoomFileInternal(mHandle);
       }
     }
     if (mCallback) {
@@ -733,7 +730,7 @@ public:
     if (mHandle->IsClosed()) {
       rv = NS_ERROR_NOT_INITIALIZED;
     } else {
-      rv = mHandle->Manager()->DoomFileInternal(mHandle);
+      rv = CacheFileIOManager::gInstance->DoomFileInternal(mHandle);
     }
 
     if (mCallback) {
@@ -752,10 +749,8 @@ protected:
 class DoomFileByKeyEvent : public nsRunnable {
 public:
   DoomFileByKeyEvent(const nsACString &aKey,
-                     CacheFileIOManager *aManager,
                      CacheFileIOListener *aCallback)
     : mCallback(aCallback)
-    , mIOMan(aManager)
   {
     MOZ_COUNT_CTOR(DoomFileByKeyEvent);
 
@@ -763,7 +758,7 @@ public:
     sum.update(aKey.BeginReading(), aKey.Length());
     sum.finish(mHash);
 
-    mIOMan = aManager;
+    mIOMan = CacheFileIOManager::gInstance;
   }
 
 protected:
@@ -815,7 +810,7 @@ public:
   NS_IMETHOD Run()
   {
     if (mHandle->mFD && !mHandle->IsClosed()) {
-      mHandle->Manager()->ReleaseNSPRHandleInternal(mHandle);
+      CacheFileIOManager::gInstance->ReleaseNSPRHandleInternal(mHandle);
     }
 
     return NS_OK;
@@ -851,7 +846,7 @@ public:
     if (mHandle->IsClosed()) {
       rv = NS_ERROR_NOT_INITIALIZED;
     } else {
-      rv = mHandle->Manager()->TruncateSeekSetEOFInternal(
+      rv = CacheFileIOManager::gInstance->TruncateSeekSetEOFInternal(
         mHandle, mTruncatePos, mEOFPos);
     }
 
@@ -894,7 +889,8 @@ public:
     if (mHandle->IsClosed()) {
       rv = NS_ERROR_NOT_INITIALIZED;
     } else {
-      rv = mHandle->Manager()->RenameFileInternal(mHandle, mNewName);
+      rv = CacheFileIOManager::gInstance->RenameFileInternal(mHandle,
+                                                             mNewName);
     }
 
     if (mCallback) {
@@ -1025,7 +1021,8 @@ public:
 
   NS_IMETHOD Run()
   {
-    if (!mIOMan) {
+    nsRefPtr<CacheFileIOManager> ioMan = CacheFileIOManager::gInstance;
+    if (!ioMan) {
       NS_WARNING("CacheFileIOManager already gone in MetadataWriteScheduleEvent::Run()");
       return NS_OK;
     }
@@ -1033,13 +1030,13 @@ public:
     switch (mMode)
     {
     case SCHEDULE:
-      mIOMan->ScheduleMetadataWriteInternal(mFile);
+      ioMan->ScheduleMetadataWriteInternal(mFile);
       break;
     case UNSCHEDULE:
-      mIOMan->UnscheduleMetadataWriteInternal(mFile);
+      ioMan->UnscheduleMetadataWriteInternal(mFile);
       break;
     case SHUTDOWN:
-      mIOMan->ShutdownMetadataWriteSchedulingInternal();
+      ioMan->ShutdownMetadataWriteSchedulingInternal();
       break;
     }
     return NS_OK;
@@ -1051,19 +1048,20 @@ CacheFileIOManager * CacheFileIOManager::gInstance = nullptr;
 NS_IMPL_ISUPPORTS(CacheFileIOManager, nsITimerCallback)
 
 CacheFileIOManager::CacheFileIOManager()
-  : mKind(UNKNOWN)
-  , mShuttingDown(false)
+  : mShuttingDown(false)
   , mTreeCreated(false)
-  , mHandles(this)
   , mOverLimitEvicting(false)
   , mRemovingTrashDirs(false)
 {
   LOG(("CacheFileIOManager::CacheFileIOManager [this=%p]", this));
+  MOZ_COUNT_CTOR(CacheFileIOManager);
+  MOZ_ASSERT(!gInstance, "multiple CacheFileIOManager instances!");
 }
 
 CacheFileIOManager::~CacheFileIOManager()
 {
   LOG(("CacheFileIOManager::~CacheFileIOManager [this=%p]", this));
+  MOZ_COUNT_DTOR(CacheFileIOManager);
 }
 
 // static
@@ -1084,10 +1082,6 @@ CacheFileIOManager::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 
   ioMan.swap(gInstance);
-
-  // Ensure pinning managers static to avoid concurrent thread initiation.
-  Pinning::Self();
-
   return NS_OK;
 }
 
@@ -1096,44 +1090,11 @@ CacheFileIOManager::InitInternal()
 {
   nsresult rv;
 
-  mKind = GENERAL;
   mIOThread = new CacheIOThread();
 
   rv = mIOThread->Init();
   MOZ_ASSERT(NS_SUCCEEDED(rv), "Can't create background thread");
   NS_ENSURE_SUCCESS(rv, rv);
-
-  mStartTime = TimeStamp::NowLoRes();
-
-  return NS_OK;
-}
-
-nsresult
-CacheFileIOManager::InitAsPinning(uint32_t aAppId, nsIFile* aProfileDir)
-{
-  if (!aProfileDir || !gInstance) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  mKind = PINNING;
-
-  MOZ_ASSERT(!mCacheDirectory);
-  MOZ_ASSERT(!mIOThread);
-
-  nsresult rv;
-
-  rv = aProfileDir->Clone(getter_AddRefs(mCacheDirectory));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mCacheDirectory->Append(NS_LITERAL_STRING("cache2"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString appIdString;
-  appIdString.AppendInt(aAppId);
-  rv = mCacheDirectory->Append(appIdString);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mIOThread = gInstance->mIOThread;
 
   mStartTime = TimeStamp::NowLoRes();
 
@@ -1172,7 +1133,6 @@ CacheFileIOManager::Shutdown()
 
   MOZ_ASSERT(gInstance->mHandles.HandleCount() == 0);
   MOZ_ASSERT(gInstance->mHandlesByLastUsed.Length() == 0);
-  MOZ_ASSERT(Pinning::Self()->Length() == 0);
 
   if (gInstance->mIOThread) {
     gInstance->mIOThread->Shutdown();
@@ -1183,13 +1143,10 @@ CacheFileIOManager::Shutdown()
   if (CacheObserver::ClearCacheOnShutdown()) {
     Telemetry::AutoTimer<Telemetry::NETWORK_DISK_CACHE2_SHUTDOWN_CLEAR_PRIVATE> totalTimer;
     gInstance->SyncRemoveAllCacheFiles();
-    // mayhemer: should this apply to pinning apps as well? followup sufficient...
   }
 
   nsRefPtr<CacheFileIOManager> ioMan;
   ioMan.swap(gInstance);
-
-  Pinning::Self()->Destroy();
 
   return NS_OK;
 }
@@ -1227,8 +1184,7 @@ CacheFileIOManager::ShutdownInternal()
     }
 
     if (!h->IsSpecialFile() && !h->mIsDoomed &&
-        (h->mInvalid || !h->mFileExists) &&
-        mKind != PINNING) {
+        (h->mInvalid || !h->mFileExists)) {
       CacheIndex::RemoveEntry(h->Hash());
     }
 
@@ -1258,8 +1214,6 @@ CacheFileIOManager::ShutdownInternal()
     mTrashDirEnumerator->Close();
     mTrashDirEnumerator = nullptr;
   }
-
-  Pinning::Self()->ShutdownInternal();
 
   return NS_OK;
 }
@@ -1345,8 +1299,6 @@ CacheFileIOManager::OnProfile()
     CacheIndex::Init(ioMan->mCacheDirectory);
   }
 
-  Pinning::Self()->OnProfile();
-
   return NS_OK;
 }
 
@@ -1413,11 +1365,9 @@ CacheFileIOManager::IsShutdown()
 nsresult
 CacheFileIOManager::ScheduleMetadataWrite(CacheFile * aFile)
 {
-  // This can freely go to the global IO manager, no need for distinction
-  // since the timer code calls on the file that delegates to its handle
-  // which is already correctly bound to the correct manager.
   nsRefPtr<CacheFileIOManager> ioMan = gInstance;
   NS_ENSURE_TRUE(ioMan, NS_ERROR_NOT_INITIALIZED);
+
   NS_ENSURE_TRUE(!ioMan->mShuttingDown, NS_ERROR_NOT_INITIALIZED);
 
   nsRefPtr<MetadataWriteScheduleEvent> event = new MetadataWriteScheduleEvent(
@@ -1459,6 +1409,7 @@ CacheFileIOManager::UnscheduleMetadataWrite(CacheFile * aFile)
 {
   nsRefPtr<CacheFileIOManager> ioMan = gInstance;
   NS_ENSURE_TRUE(ioMan, NS_ERROR_NOT_INITIALIZED);
+
   NS_ENSURE_TRUE(!ioMan->mShuttingDown, NS_ERROR_NOT_INITIALIZED);
 
   nsRefPtr<MetadataWriteScheduleEvent> event = new MetadataWriteScheduleEvent(
@@ -1521,33 +1472,19 @@ CacheFileIOManager::ShutdownMetadataWriteSchedulingInternal()
 NS_IMETHODIMP
 CacheFileIOManager::Notify(nsITimer * aTimer)
 {
-  if (mTrashTimer == aTimer) {
-    LOG(("CacheFileIOManager, trash timer [this=%p]", this));
+  MOZ_ASSERT(IsOnIOThreadOrCeased());
+  MOZ_ASSERT(mMetadataWritesTimer == aTimer);
 
-    mTrashTimer = nullptr;
-    StartRemovingTrash();
+  mMetadataWritesTimer = nullptr;
 
-    return NS_OK;
+  nsTArray<nsRefPtr<CacheFile> > files;
+  files.SwapElements(mScheduledMetadataWrites);
+  for (uint32_t i = 0; i < files.Length(); ++i) {
+    CacheFile * file = files[i];
+    file->WriteMetadataIfNeeded();
   }
 
-  if (mMetadataWritesTimer == aTimer) {
-    LOG(("CacheFileIOManager, metadata write timer [this=%p]", this));
-
-    MOZ_ASSERT(IsOnIOThreadOrCeased());
-    mMetadataWritesTimer = nullptr;
-
-    nsTArray<nsRefPtr<CacheFile> > files;
-    files.SwapElements(mScheduledMetadataWrites);
-    for (uint32_t i = 0; i < files.Length(); ++i) {
-      CacheFile * file = files[i];
-      file->WriteMetadataIfNeeded();
-    }
-
-    return NS_OK;
-  }
-
-  MOZ_ASSERT(false, "Unexpected timer in CacheFileIOManager::Notify()!");
-  return NS_ERROR_UNEXPECTED;
+  return NS_OK;
 }
 
 // static
@@ -1555,29 +1492,18 @@ nsresult
 CacheFileIOManager::OpenFile(const nsACString &aKey,
                              uint32_t aFlags, CacheFileIOListener *aCallback)
 {
-  return OpenFile(aKey, nsILoadContextInfo::NO_APP_ID, aFlags, aCallback);
-}
-
-// static
-nsresult
-CacheFileIOManager::OpenFile(const nsACString &aKey, uint32_t aPinningAppId,
-                             uint32_t aFlags, CacheFileIOListener *aCallback)
-{
   LOG(("CacheFileIOManager::OpenFile() [key=%s, flags=%d, listener=%p]",
        PromiseFlatCString(aKey).get(), aFlags, aCallback));
 
   nsresult rv;
   nsRefPtr<CacheFileIOManager> ioMan = gInstance;
-  if (aPinningAppId != nsILoadContextInfo::NO_APP_ID && ioMan) {
-    ioMan = Pinning::Self()->Get(aPinningAppId);
-  }
 
   if (!ioMan) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
   bool priority = aFlags & CacheFileIOManager::PRIORITY;
-  nsRefPtr<OpenFileEvent> ev = new OpenFileEvent(ioMan, aKey, aFlags, aCallback);
+  nsRefPtr<OpenFileEvent> ev = new OpenFileEvent(aKey, aFlags, aCallback);
   rv = ioMan->mIOThread->Dispatch(ev, priority
     ? CacheIOThread::OPEN_PRIORITY
     : CacheIOThread::OPEN);
@@ -1631,9 +1557,7 @@ CacheFileIOManager::OpenFileInternal(const SHA1Sum::Hash *aHash,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (exists) {
-      if (mKind != PINNING) {
-        CacheIndex::RemoveEntry(aHash);
-      }
+      CacheIndex::RemoveEntry(aHash);
 
       LOG(("CacheFileIOManager::OpenFileInternal() - Removing old file from "
            "disk"));
@@ -1645,10 +1569,7 @@ CacheFileIOManager::OpenFileInternal(const SHA1Sum::Hash *aHash,
       }
     }
 
-    if (mKind != PINNING) {
-      CacheIndex::AddEntry(aHash);
-    }
-
+    CacheIndex::AddEntry(aHash);
     handle->mFile.swap(file);
     handle->mFileSize = 0;
   }
@@ -1673,10 +1594,7 @@ CacheFileIOManager::OpenFileInternal(const SHA1Sum::Hash *aHash,
              "entry was evicted by EvictByContext()"));
         exists = false;
         file->Remove(false);
-
-        if (mKind != PINNING) {
-          CacheIndex::RemoveEntry(aHash);
-        }
+        CacheIndex::RemoveEntry(aHash);
       }
     }
   }
@@ -1694,15 +1612,11 @@ CacheFileIOManager::OpenFileInternal(const SHA1Sum::Hash *aHash,
 
     handle->mFileExists = true;
 
-    if (mKind != PINNING) {
-      CacheIndex::EnsureEntryExists(aHash);
-    }
+    CacheIndex::EnsureEntryExists(aHash);
   } else {
     handle->mFileSize = 0;
 
-    if (mKind != PINNING) {
-      CacheIndex::AddEntry(aHash);
-    }
+    CacheIndex::AddEntry(aHash);
   }
 
   handle->mFile.swap(file);
@@ -1750,7 +1664,7 @@ CacheFileIOManager::OpenSpecialFileInternal(const nsACString &aKey,
       handle = nullptr;
     }
 
-    handle = new CacheFileHandle(this, aKey, aFlags & PRIORITY);
+    handle = new CacheFileHandle(aKey, aFlags & PRIORITY);
     mSpecialHandles.AppendElement(handle);
 
     bool exists;
@@ -1785,7 +1699,7 @@ CacheFileIOManager::OpenSpecialFileInternal(const nsACString &aKey,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  handle = new CacheFileHandle(this, aKey, aFlags & PRIORITY);
+  handle = new CacheFileHandle(aKey, aFlags & PRIORITY);
   mSpecialHandles.AppendElement(handle);
 
   if (exists) {
@@ -1826,8 +1740,7 @@ CacheFileIOManager::CloseHandleInternal(CacheFileHandle *aHandle)
   }
 
   if (!aHandle->IsSpecialFile() && !aHandle->mIsDoomed &&
-      (aHandle->mInvalid || !aHandle->mFileExists) &&
-      mKind != PINNING) {
+      (aHandle->mInvalid || !aHandle->mFileExists)) {
     CacheIndex::RemoveEntry(aHandle->Hash());
   }
 
@@ -1853,7 +1766,7 @@ CacheFileIOManager::Read(CacheFileHandle *aHandle, int64_t aOffset,
        "listener=%p]", aHandle, aOffset, aCount, aCallback));
 
   nsresult rv;
-  nsRefPtr<CacheFileIOManager> ioMan = aHandle->Manager();
+  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
 
   if (aHandle->IsClosed() || !ioMan) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -1920,7 +1833,7 @@ CacheFileIOManager::Write(CacheFileHandle *aHandle, int64_t aOffset,
        aValidate, aTruncate, aCallback));
 
   nsresult rv;
-  nsRefPtr<CacheFileIOManager> ioMan = aHandle->Manager();
+  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
 
   if (aHandle->IsClosed() || !ioMan) {
     if (!aCallback) {
@@ -2037,7 +1950,7 @@ CacheFileIOManager::WriteInternal(CacheFileHandle *aHandle, int64_t aOffset,
     uint32_t newSizeInK = aHandle->FileSizeInK();
 
     if (oldSizeInK != newSizeInK && !aHandle->IsDoomed() &&
-        !aHandle->IsSpecialFile() && mKind != PINNING) {
+        !aHandle->IsSpecialFile()) {
       CacheIndex::UpdateEntry(aHandle->Hash(), nullptr, nullptr, &newSizeInK);
 
       if (oldSizeInK < newSizeInK) {
@@ -2067,7 +1980,7 @@ CacheFileIOManager::DoomFile(CacheFileHandle *aHandle,
        aHandle, aCallback));
 
   nsresult rv;
-  nsRefPtr<CacheFileIOManager> ioMan = aHandle->Manager();
+  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
 
   if (aHandle->IsClosed() || !ioMan) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -2124,7 +2037,7 @@ CacheFileIOManager::DoomFileInternal(CacheFileHandle *aHandle)
     }
   }
 
-  if (!aHandle->IsSpecialFile() && mKind != PINNING) {
+  if (!aHandle->IsSpecialFile()) {
     CacheIndex::RemoveEntry(aHandle->Hash());
   }
 
@@ -2133,12 +2046,12 @@ CacheFileIOManager::DoomFileInternal(CacheFileHandle *aHandle)
   if (!aHandle->IsSpecialFile()) {
     nsRefPtr<CacheStorageService> storageService = CacheStorageService::Self();
     if (storageService) {
-      CacheFileUtils::KeyInfo keyInfo;
+      nsAutoCString idExtension, url;
       nsCOMPtr<nsILoadContextInfo> info =
-        CacheFileUtils::ParseKey(aHandle->Key(), &keyInfo);
+        CacheFileUtils::ParseKey(aHandle->Key(), &idExtension, &url);
       MOZ_ASSERT(info);
       if (info) {
-        storageService->CacheFileDoomed(info, &keyInfo);
+        storageService->CacheFileDoomed(info, idExtension, url);
       }
     }
   }
@@ -2154,21 +2067,14 @@ CacheFileIOManager::DoomFileByKey(const nsACString &aKey,
   LOG(("CacheFileIOManager::DoomFileByKey() [key=%s, listener=%p]",
        PromiseFlatCString(aKey).get(), aCallback));
 
-  CacheFileUtils::KeyInfo keyInfo;
-  nsCOMPtr<nsILoadContextInfo> info = CacheFileUtils::ParseKey(aKey, &keyInfo);
-
   nsresult rv;
   nsRefPtr<CacheFileIOManager> ioMan = gInstance;
-
-  if (keyInfo.mPinningStorage && ioMan) {
-    ioMan = Pinning::Self()->Get(info->AppId());
-  }
 
   if (!ioMan) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  nsRefPtr<DoomFileByKeyEvent> ev = new DoomFileByKeyEvent(aKey, ioMan, aCallback);
+  nsRefPtr<DoomFileByKeyEvent> ev = new DoomFileByKeyEvent(aKey, aCallback);
   rv = ioMan->mIOThread->DispatchAfterPendingOpens(ev);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2225,9 +2131,7 @@ CacheFileIOManager::DoomFileByKeyInternal(const SHA1Sum::Hash *aHash)
          "[rv=0x%08x]", rv));
   }
 
-  if (mKind != PINNING) {
-    CacheIndex::RemoveEntry(aHash);
-  }
+  CacheIndex::RemoveEntry(aHash);
 
   return NS_OK;
 }
@@ -2239,7 +2143,7 @@ CacheFileIOManager::ReleaseNSPRHandle(CacheFileHandle *aHandle)
   LOG(("CacheFileIOManager::ReleaseNSPRHandle() [handle=%p]", aHandle));
 
   nsresult rv;
-  nsRefPtr<CacheFileIOManager> ioMan = aHandle->Manager();
+  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
 
   if (aHandle->IsClosed() || !ioMan) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -2261,7 +2165,7 @@ CacheFileIOManager::ReleaseNSPRHandleInternal(CacheFileHandle *aHandle)
   MOZ_ASSERT(aHandle->mFD);
 
   DebugOnly<bool> found;
-  found = gInstance->mHandlesByLastUsed.RemoveElement(aHandle);
+  found = mHandlesByLastUsed.RemoveElement(aHandle);
   MOZ_ASSERT(found);
 
   PR_Close(aHandle->mFD);
@@ -2280,7 +2184,7 @@ CacheFileIOManager::TruncateSeekSetEOF(CacheFileHandle *aHandle,
        "EOFPos=%lld, listener=%p]", aHandle, aTruncatePos, aEOFPos, aCallback));
 
   nsresult rv;
-  nsRefPtr<CacheFileIOManager> ioMan = aHandle->Manager();
+  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
 
   if (aHandle->IsClosed() || !ioMan) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -2334,19 +2238,19 @@ CacheFileIOManager::GetEntryInfo(const SHA1Sum::Hash *aHash,
 
   nsresult rv;
 
-  // mayhemer: This method should take aPinningAppId argument.
   nsRefPtr<CacheFileIOManager> ioMan = gInstance;
   if (!ioMan) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  CacheFileUtils::KeyInfo keyInfo;
+  nsAutoCString enhanceId;
+  nsAutoCString uriSpec;
 
   nsRefPtr<CacheFileHandle> handle;
   ioMan->mHandles.GetHandle(aHash, getter_AddRefs(handle));
   if (handle) {
     nsRefPtr<nsILoadContextInfo> info =
-      CacheFileUtils::ParseKey(handle->Key(), &keyInfo);
+      CacheFileUtils::ParseKey(handle->Key(), &enhanceId, &uriSpec);
 
     MOZ_ASSERT(info);
     if (!info) {
@@ -2359,7 +2263,7 @@ CacheFileIOManager::GetEntryInfo(const SHA1Sum::Hash *aHash,
     }
 
     // Invokes OnCacheEntryInfo when an existing entry is found
-    if (service->GetCacheEntryInfo(info, &keyInfo, aCallback)) {
+    if (service->GetCacheEntryInfo(info, enhanceId, uriSpec, aCallback)) {
       return NS_OK;
     }
 
@@ -2383,7 +2287,7 @@ CacheFileIOManager::GetEntryInfo(const SHA1Sum::Hash *aHash,
   metadata->GetKey(key);
 
   nsRefPtr<nsILoadContextInfo> info =
-    CacheFileUtils::ParseKey(key, &keyInfo);
+    CacheFileUtils::ParseKey(key, &enhanceId, &uriSpec);
   MOZ_ASSERT(info);
   if (!info) {
     return NS_OK;
@@ -2405,8 +2309,8 @@ CacheFileIOManager::GetEntryInfo(const SHA1Sum::Hash *aHash,
   }
 
   // Call directly on the callback.
-  aCallback->OnEntryInfo(keyInfo.mURISpec, keyInfo.mIdEnhance,
-                         dataSize, fetchCount, lastModified, expirationTime);
+  aCallback->OnEntryInfo(uriSpec, enhanceId, dataSize, fetchCount,
+                         lastModified, expirationTime);
 
   return NS_OK;
 }
@@ -2493,7 +2397,7 @@ CacheFileIOManager::RenameFile(CacheFileHandle *aHandle,
        aHandle, PromiseFlatCString(aNewName).get(), aCallback));
 
   nsresult rv;
-  nsRefPtr<CacheFileIOManager> ioMan = aHandle->Manager();
+  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
 
   if (aHandle->IsClosed() || !ioMan) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -2604,10 +2508,6 @@ CacheFileIOManager::EvictIfOverLimitInternal()
 
   MOZ_ASSERT(mIOThread->IsCurrentThread());
 
-  if (mKind == PINNING) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
   if (mShuttingDown) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -2669,7 +2569,6 @@ CacheFileIOManager::OverLimitEvictionInternal()
   nsresult rv;
 
   MOZ_ASSERT(mIOThread->IsCurrentThread());
-  MOZ_ASSERT(mKind != PINNING);
 
   // mOverLimitEvicting is accessed only on IO thread, so we can set it to false
   // here and set it to true again once we dispatch another event that will
@@ -2802,31 +2701,6 @@ CacheFileIOManager::EvictAll()
   return NS_OK;
 }
 
-// static
-nsresult
-CacheFileIOManager::EvictPinned(uint32_t aPinningAppId)
-{
-  LOG(("CacheFileIOManager::EvictPinned(appId=%d)", aPinningAppId));
-
-  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
-  if (ioMan) {
-    ioMan = Pinning::Self()->Get(aPinningAppId);
-  }
-  if (!ioMan) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  nsCOMPtr<nsIRunnable> ev;
-  ev = NS_NewRunnableMethod(ioMan, &CacheFileIOManager::EvictAllInternal);
-
-  nsresult rv = ioMan->mIOThread->DispatchAfterPendingOpens(ev);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
 namespace {
 
 class EvictionNotifierRunnable : public nsRunnable
@@ -2850,7 +2724,7 @@ EvictionNotifierRunnable::Run()
 nsresult
 CacheFileIOManager::EvictAllInternal()
 {
-  LOG(("CacheFileIOManager::EvictAllInternal(), this=%p", this));
+  LOG(("CacheFileIOManager::EvictAllInternal()"));
 
   nsresult rv;
 
@@ -2915,28 +2789,17 @@ CacheFileIOManager::EvictAllInternal()
     return rv;
   }
 
-  if (mKind != PINNING) {
-    CacheIndex::RemoveAll();
-  }
+  CacheIndex::RemoveAll();
 
   return NS_OK;
 }
 
 // static
 nsresult
-CacheFileIOManager::EvictByContext(nsILoadContextInfo *aLoadContextInfo,
-                                   bool aIsPinning)
+CacheFileIOManager::EvictByContext(nsILoadContextInfo *aLoadContextInfo)
 {
   LOG(("CacheFileIOManager::EvictByContext() [loadContextInfo=%p]",
        aLoadContextInfo));
-
-  if (aIsPinning) {
-    // This is a kinda hacky workaround, we simply delete everything that
-    // the app has pinned with disrespect to the load context separation.
-    // This API is dependent on the index, but index is global and only
-    // works for the general manager.
-    return CacheFileIOManager::EvictPinned(aLoadContextInfo->AppId());
-  }
 
   nsresult rv;
   nsRefPtr<CacheFileIOManager> ioMan = gInstance;
@@ -3074,7 +2937,7 @@ CacheFileIOManager::TrashDirectory(nsIFile *aFile)
 {
   nsAutoCString path;
   aFile->GetNativePath(path);
-  LOG(("CacheFileIOManager::TrashDirectory() [this=%p, file=%s]", this, path.get()));
+  LOG(("CacheFileIOManager::TrashDirectory() [file=%s]", path.get()));
 
   nsresult rv;
 
@@ -3138,6 +3001,23 @@ CacheFileIOManager::TrashDirectory(nsIFile *aFile)
   return NS_OK;
 }
 
+// static
+void
+CacheFileIOManager::OnTrashTimer(nsITimer *aTimer, void *aClosure)
+{
+  LOG(("CacheFileIOManager::OnTrashTimer() [timer=%p, closure=%p]", aTimer,
+       aClosure));
+
+  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
+
+  if (!ioMan) {
+    return;
+  }
+
+  ioMan->mTrashTimer = nullptr;
+  ioMan->StartRemovingTrash();
+}
+
 nsresult
 CacheFileIOManager::StartRemovingTrash()
 {
@@ -3177,8 +3057,9 @@ CacheFileIOManager::StartRemovingTrash()
     rv = timer->SetTarget(ioTarget);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = timer->InitWithCallback(this, kRemoveTrashStartDelay - elapsed,
-                                 nsITimer::TYPE_ONE_SHOT);
+    rv = timer->InitWithFuncCallback(CacheFileIOManager::OnTrashTimer, nullptr,
+                                     kRemoveTrashStartDelay - elapsed,
+                                     nsITimer::TYPE_ONE_SHOT);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mTrashTimer.swap(timer);
@@ -3379,14 +3260,10 @@ CacheFileIOManager::InitIndexEntry(CacheFileHandle *aHandle,
        ", inBrowser=%d]", aHandle, aAppId, aAnonymous, aInBrowser));
 
   nsresult rv;
-  nsRefPtr<CacheFileIOManager> ioMan = aHandle->Manager();
+  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
 
   if (aHandle->IsClosed() || !ioMan) {
     return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  if (ioMan->Kind() == PINNING) {
-    return NS_ERROR_NOT_IMPLEMENTED;
   }
 
   if (aHandle->IsSpecialFile()) {
@@ -3413,14 +3290,10 @@ CacheFileIOManager::UpdateIndexEntry(CacheFileHandle *aHandle,
        aExpirationTime ? nsPrintfCString("%u", *aExpirationTime).get() : ""));
 
   nsresult rv;
-  nsRefPtr<CacheFileIOManager> ioMan = aHandle->Manager();
+  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
 
   if (aHandle->IsClosed() || !ioMan) {
     return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  if (ioMan->Kind() == PINNING) {
-    return NS_ERROR_NOT_IMPLEMENTED;
   }
 
   if (aHandle->IsSpecialFile()) {
@@ -3750,16 +3623,16 @@ CacheFileIOManager::OpenNSPRHandle(CacheFileHandle *aHandle, bool aCreate)
 {
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
   MOZ_ASSERT(!aHandle->mFD);
-  MOZ_ASSERT(gInstance->mHandlesByLastUsed.IndexOf(aHandle) == gInstance->mHandlesByLastUsed.NoIndex);
-  MOZ_ASSERT(gInstance->mHandlesByLastUsed.Length() <= kOpenHandlesLimit);
+  MOZ_ASSERT(mHandlesByLastUsed.IndexOf(aHandle) == mHandlesByLastUsed.NoIndex);
+  MOZ_ASSERT(mHandlesByLastUsed.Length() <= kOpenHandlesLimit);
   MOZ_ASSERT((aCreate && !aHandle->mFileExists) ||
              (!aCreate && aHandle->mFileExists));
 
   nsresult rv;
 
-  if (gInstance->mHandlesByLastUsed.Length() == kOpenHandlesLimit) {
+  if (mHandlesByLastUsed.Length() == kOpenHandlesLimit) {
     // close handle that hasn't been used for the longest time
-    rv = ReleaseNSPRHandleInternal(gInstance->mHandlesByLastUsed[0]);
+    rv = ReleaseNSPRHandleInternal(mHandlesByLastUsed[0]);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -3816,7 +3689,7 @@ CacheFileIOManager::OpenNSPRHandle(CacheFileHandle *aHandle, bool aCreate)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  gInstance->mHandlesByLastUsed.AppendElement(aHandle);
+  mHandlesByLastUsed.AppendElement(aHandle);
   return NS_OK;
 }
 
@@ -3827,10 +3700,10 @@ CacheFileIOManager::NSPRHandleUsed(CacheFileHandle *aHandle)
   MOZ_ASSERT(aHandle->mFD);
 
   DebugOnly<bool> found;
-  found = gInstance->mHandlesByLastUsed.RemoveElement(aHandle);
+  found = mHandlesByLastUsed.RemoveElement(aHandle);
   MOZ_ASSERT(found);
 
-  gInstance->mHandlesByLastUsed.AppendElement(aHandle);
+  mHandlesByLastUsed.AppendElement(aHandle);
 }
 
 nsresult
@@ -3967,10 +3840,6 @@ CacheFileIOManager::UpdateSmartCacheSize(int64_t aFreeSpace)
   }
 
   if (!CacheObserver::SmartCacheSizeEnabled()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  if (mKind == PINNING) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -4115,17 +3984,7 @@ CacheFileIOManager::SizeOfExcludingThisInternal(mozilla::MallocSizeOf mallocSize
     n += mFailedTrashDirs[i].SizeOfExcludingThisIfUnshared(mallocSizeOf);
   }
 
-  if (mKind == GENERAL) {
-    Pinning::Self()->SizeOfIncludingThis(mallocSizeOf);
-  }
-
   return n;
-}
-
-size_t
-CacheFileIOManager::SizeOfIncludingThisInternal(mozilla::MallocSizeOf mallocSizeOf) const
-{
-  return mallocSizeOf(this) + SizeOfExcludingThisInternal(mallocSizeOf);
 }
 
 // static
@@ -4143,129 +4002,6 @@ size_t
 CacheFileIOManager::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
 {
   return mallocSizeOf(gInstance) + SizeOfExcludingThis(mallocSizeOf);
-}
-
-// CacheFileIOManager::Pinning
-
-CacheFileIOManager::Pinning*
-CacheFileIOManager::Pinning::sSelf = nullptr;
-
-bool
-CacheFileIOManager::Pinning::sDestroyed = false;
-
-CacheFileIOManager::Pinning::Pinning()
-  : mLock("CacheFileIOManager::Pinning")
-{
-  MOZ_ASSERT(!sSelf);
-  sSelf = this;
-  MOZ_COUNT_CTOR(CacheFileIOManager::Pinning);
-}
-
-CacheFileIOManager::Pinning::~Pinning()
-{
-  MOZ_ASSERT(sSelf);
-  sSelf = nullptr;
-  MOZ_COUNT_DTOR(CacheFileIOManager::Pinning);
-}
-
-// static
-CacheFileIOManager::Pinning*
-CacheFileIOManager::Pinning::Self()
-{
-  MOZ_ASSERT(!sDestroyed);
-  if (!sSelf) {
-    sSelf = new Pinning();
-  }
-  return sSelf;
-}
-
-void
-CacheFileIOManager::Pinning::Destroy()
-{
-  delete sSelf;
-  sDestroyed = true;
-}
-
-nsresult
-CacheFileIOManager::Pinning::OnProfile()
-{
-  nsresult rv;
-
-  rv = NS_GetSpecialDirectory(
-    NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mRoamingProfileDir));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-already_AddRefed<CacheFileIOManager>
-CacheFileIOManager::Pinning::Get(uint32_t aAppId)
-{
-  mozilla::MutexAutoLock lock(mLock);
-
-  nsRefPtr<CacheFileIOManager> pinningIOMan;
-  if (!mTable.Get(aAppId, getter_AddRefs(pinningIOMan))) {
-    pinningIOMan = new CacheFileIOManager();
-    LOG(("CacheFileIOManager::Pinning::Get, new manager %p for appid=%u",
-         pinningIOMan.get(), aAppId));
-
-    nsresult rv = pinningIOMan->InitAsPinning(aAppId, mRoamingProfileDir);
-    if (NS_FAILED(rv)) {
-      return nullptr;
-    }
-    mTable.Put(aAppId, pinningIOMan);
-  }
-
-  return pinningIOMan.forget();
-}
-
-// static
-PLDHashOperator
-CacheFileIOManager::Pinning::Collect(uint32_t const& aAppId,
-                                     nsRefPtr<CacheFileIOManager>& aIoMan,
-                                     void* aClosure)
-{
-  nsTArray<nsRefPtr<CacheFileIOManager> >* managers =
-    static_cast<nsTArray<nsRefPtr<CacheFileIOManager> >*>(aClosure);
-
-  managers->AppendElement()->swap(aIoMan);
-  return PL_DHASH_REMOVE;
-}
-
-void
-CacheFileIOManager::Pinning::ShutdownInternal()
-{
-  nsTArray<nsRefPtr<CacheFileIOManager> > managers;
-  {
-    mozilla::MutexAutoLock lock(mLock);
-    mTable.Enumerate(&Pinning::Collect, &managers);
-  }
-
-  for (uint32_t i = 0; i < managers.Length(); ++i) {
-    CacheFileIOManager* ioMan = managers[i];
-    ioMan->ShutdownInternal();
-  }
-}
-
-static
-size_t CollectManagerMemory(uint32_t const & aAppId,
-                            nsRefPtr<mozilla::net::CacheFileIOManager> const & aManager,
-                            mozilla::MallocSizeOf mallocSizeOf,
-                            void * aClosure)
-{
-  return aManager->SizeOfIncludingThisInternal(mallocSizeOf);
-}
-
-size_t
-CacheFileIOManager::Pinning::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
-{
-  return mTable.SizeOfExcludingThis(&CollectManagerMemory, mallocSizeOf, nullptr);
-}
-
-size_t
-CacheFileIOManager::Pinning::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
-{
-  return mallocSizeOf(this) + SizeOfExcludingThis(mallocSizeOf);
 }
 
 } // namespace net

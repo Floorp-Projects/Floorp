@@ -29,17 +29,6 @@ class nsIEventTarget;
 namespace mozilla {
 namespace net {
 
-namespace CacheFileUtils {
-
-class KeyInfo {
-public:
-  bool mPinningStorage;
-  nsCString mIdEnhance;
-  nsCString mURISpec;
-};
-
-} // CacheFileUtils
-
 class CacheStorageService;
 class CacheStorage;
 class CacheEntry;
@@ -240,18 +229,20 @@ private:
    * removal was originated by CacheStorageService.
    */
   void CacheFileDoomed(nsILoadContextInfo* aLoadContextInfo,
-                       CacheFileUtils::KeyInfo* aKeyInfo);
+                       const nsACString & aIdExtension,
+                       const nsACString & aURISpec);
 
   /**
    * Tries to find an existing entry in the hashtables and synchronously call
    * OnCacheEntryInfo of the aVisitor callback when found.
    * @retuns
    *   true, when the entry has been found that also implies the callbacks has
-   *        been invoked
+   *        beem invoked
    *   false, when an entry has not been found
    */
   bool GetCacheEntryInfo(nsILoadContextInfo* aLoadContextInfo,
-                         CacheFileUtils::KeyInfo* aKeyInfo,
+                         const nsACString & aIdExtension,
+                         const nsACString & aURISpec,
                          EntryInfoCallback *aCallback);
 
 private:
@@ -282,13 +273,11 @@ private:
   nsresult DoomStorageEntries(nsCSubstring const& aContextKey,
                               nsILoadContextInfo* aContext,
                               bool aDiskStorage,
-                              bool aPinningStorage,
                               nsICacheEntryDoomCallback* aCallback);
   nsresult AddStorageEntry(nsCSubstring const& aContextKey,
                            nsIURI* aURI,
                            const nsACString & aIdExtension,
                            bool aWriteToDisk,
-                           uint32_t aPinningAppId,
                            bool aCreateIfNotExist,
                            bool aReplace,
                            CacheEntryHandle** aResult);

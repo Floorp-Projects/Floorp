@@ -479,9 +479,6 @@ private:
     uint32_t                          mIsPartialRequest : 1;
     // true iff there is AutoRedirectVetoNotifier on the stack
     uint32_t                          mHasAutoRedirectVetoNotifier : 1;
-    // consumers set this to true to use cache pinning, this has effect
-    // only when the channel is in an app context (load context has an appid)
-    uint32_t                          mPinCacheContent : 1;
     // Whether fetching the content is meant to be handled by the
     // packaged app service, which behaves like a caching layer.
     // Upon successfully fetching the package, the resource will be placed in

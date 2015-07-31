@@ -4,7 +4,6 @@
 
 #include "CacheLog.h"
 #include "CacheFileUtils.h"
-#include "CacheStorage.h"
 #include "LoadContextInfo.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
@@ -28,7 +27,6 @@ public:
     : caret(aCaret)
     , end(aEnd)
     // Initialize attributes to their default values
-    , pinningStorage(false)
     , appId(nsILoadContextInfo::NO_APP_ID)
     , isPrivate(false)
     , isInBrowser(false)
@@ -46,7 +44,6 @@ private:
   nsACString::const_iterator const end;
 
   // Results
-  bool pinningStorage;
   uint32_t appId;
   bool isPrivate;
   bool isInBrowser;
@@ -79,9 +76,6 @@ private:
       cacheKey = caret;
       caret = end;
       return true;
-    case 'P':
-      pinningStorage = true;
-      break;
     case 'p':
       isPrivate = true;
       break;
@@ -200,18 +194,14 @@ public:
   {
     result.Assign(idEnhance);
   }
-
-  void PinningStorage(bool &result)
-  {
-    result = pinningStorage;
-  }
 };
 
 } // namespace
 
 already_AddRefed<nsILoadContextInfo>
 ParseKey(const nsCSubstring &aKey,
-         KeyInfo* aKeyInfo)
+         nsCSubstring *aIdEnhance,
+         nsCSubstring *aURISpec)
 {
   nsACString::const_iterator caret, end;
   aKey.BeginReading(caret);
@@ -220,25 +210,18 @@ ParseKey(const nsCSubstring &aKey,
   KeyParser parser(caret, end);
   nsRefPtr<LoadContextInfo> info = parser.Parse();
 
-  if (info && aKeyInfo) {
-    parser.IdEnhance(aKeyInfo->mIdEnhance);
-    parser.URISpec(aKeyInfo->mURISpec);
-    parser.PinningStorage(aKeyInfo->mPinningStorage);
+  if (info) {
+    if (aIdEnhance)
+      parser.IdEnhance(*aIdEnhance);
+    if (aURISpec)
+      parser.URISpec(*aURISpec);
   }
 
   return info.forget();
 }
 
 void
-AppendKeyPrefix(CacheStorage const* aStorage, nsACString &_retval)
-{
-  AppendKeyPrefix(aStorage->LoadInfo(), aStorage->IsPinning(), _retval);
-}
-
-void
-AppendKeyPrefix(nsILoadContextInfo* aInfo,
-                bool aPin,
-                nsACString &_retval)
+AppendKeyPrefix(nsILoadContextInfo* aInfo, nsACString &_retval)
 {
   /**
    * This key is used to salt file hashes.  When form of the key is changed
@@ -247,10 +230,6 @@ AppendKeyPrefix(nsILoadContextInfo* aInfo,
    * IMPORTANT NOTE:
    * Keep the attributes list sorted according their ASCII code.
    */
-
-  if (aPin) {
-    _retval.AppendLiteral("P,");
-  }
 
   if (aInfo->IsAnonymous()) {
     _retval.AppendLiteral("a,");
