@@ -300,7 +300,7 @@ public class ZoomedView extends FrameLayout implements LayerView.OnMetricsChange
                         /* Conversion of the left side position of the zoomed view
                          *   Minimum value for the left side of the zoomed view is 0
                          *     and we return 0 after conversion
-                         *   Maximum value for the left side of the zoomed view is (parentWidth - offset.x - viewWidth)
+                         *   Maximum value for the left side of the zoomed view is (parentWidth - offset.x - viewContainerWidth)
                          *     and we return (parentWidth - offset.x - (viewWidth / zoomFactor)) after conversion.
                          */
                         (((float) params.leftMargin) - offset.x) *
