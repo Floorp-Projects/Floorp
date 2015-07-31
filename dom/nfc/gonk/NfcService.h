@@ -22,7 +22,7 @@ class NfcConsumer;
 class NfcService final : public nsINfcService
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSINFCSERVICE
 
   static already_AddRefed<NfcService> FactoryCreate();
