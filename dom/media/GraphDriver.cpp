@@ -101,7 +101,7 @@ void GraphDriver::EnsureImmediateWakeUpLocked()
 
 void GraphDriver::UpdateStateComputedTime(GraphTime aStateComputedTime)
 {
-  MOZ_ASSERT(aStateComputedTime > mIterationEnd);
+  MOZ_ASSERT(aStateComputedTime >= mIterationEnd);
   // The next state computed time can be the same as the previous, here: it
   // means the driver would be have been blocking indefinitly, but the graph has
   // been woken up right after having been to sleep.
