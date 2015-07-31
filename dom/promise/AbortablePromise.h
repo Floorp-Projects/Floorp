@@ -48,7 +48,8 @@ public:
 
   static already_AddRefed<AbortablePromise>
   Constructor(const GlobalObject& aGlobal, PromiseInit& aInit,
-              AbortCallback& aAbortCallback, ErrorResult& aRv);
+              AbortCallback& aAbortCallback, ErrorResult& aRv,
+              JS::Handle<JSObject*> aDesiredProto);
 
   void Abort();
 

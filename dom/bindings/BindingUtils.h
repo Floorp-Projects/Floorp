@@ -927,26 +927,35 @@ struct CheckWrapperCacheTracing<T, true>
   }
 };
 
-#endif
+void
+AssertReflectorHasGivenProto(JSContext* aCx, JSObject* aReflector,
+                             JS::Handle<JSObject*> aGivenProto);
+#endif // DEBUG
 
 template <class T, GetOrCreateReflectorWrapBehavior wrapBehavior>
 MOZ_ALWAYS_INLINE bool
 DoGetOrCreateDOMReflector(JSContext* cx, T* value,
+                          JS::Handle<JSObject*> givenProto,
                           JS::MutableHandle<JS::Value> rval)
 {
   MOZ_ASSERT(value);
-  JSObject* obj = value->GetWrapperPreserveColor();
   // We can get rid of this when we remove support for hasXPConnectImpls.
   bool couldBeDOMBinding = CouldBeDOMBinding(value);
+  JSObject* obj = value->GetWrapper();
   if (obj) {
-    JS::ExposeObjectToActiveJS(obj);
+#ifdef DEBUG
+    AssertReflectorHasGivenProto(cx, obj, givenProto);
+    // Have to reget obj because AssertReflectorHasGivenProto can
+    // trigger gc so the pointer may now be invalid.
+    obj = value->GetWrapper();
+#endif
   } else {
     // Inline this here while we have non-dom objects in wrapper caches.
     if (!couldBeDOMBinding) {
       return false;
     }
 
-    obj = value->WrapObject(cx, nullptr);
+    obj = value->WrapObject(cx, givenProto);
     if (!obj) {
       // At this point, obj is null, so just return false.
       // Callers seem to be testing JS_IsExceptionPending(cx) to
@@ -1011,10 +1020,12 @@ DoGetOrCreateDOMReflector(JSContext* cx, T* value,
 template <class T>
 MOZ_ALWAYS_INLINE bool
 GetOrCreateDOMReflector(JSContext* cx, T* value,
-                        JS::MutableHandle<JS::Value> rval)
+                        JS::MutableHandle<JS::Value> rval,
+                        JS::Handle<JSObject*> givenProto = nullptr)
 {
   using namespace binding_detail;
   return DoGetOrCreateDOMReflector<T, eWrapIntoContextCompartment>(cx, value,
+                                                                   givenProto,
                                                                    rval);
 }
 
@@ -1028,6 +1039,7 @@ GetOrCreateDOMReflectorNoWrap(JSContext* cx, T* value,
   using namespace binding_detail;
   return DoGetOrCreateDOMReflector<T, eDontWrapIntoContextCompartment>(cx,
                                                                        value,
+                                                                       nullptr,
                                                                        rval);
 }
 
@@ -1039,7 +1051,8 @@ inline bool
 WrapNewBindingNonWrapperCachedObject(JSContext* cx,
                                      JS::Handle<JSObject*> scopeArg,
                                      T* value,
-                                     JS::MutableHandle<JS::Value> rval)
+                                     JS::MutableHandle<JS::Value> rval,
+                                     JS::Handle<JSObject*> givenProto = nullptr)
 {
   static_assert(IsRefcounted<T>::value, "Don't pass owned classes in here.");
   MOZ_ASSERT(value);
@@ -1053,15 +1066,19 @@ WrapNewBindingNonWrapperCachedObject(JSContext* cx,
     // more Maybe (one for a Rooted and one for a Handle) adds more
     // code (and branches!) than just adding a single rooted.
     JS::Rooted<JSObject*> scope(cx, scopeArg);
+    JS::Rooted<JSObject*> proto(cx, givenProto);
     if (js::IsWrapper(scope)) {
       scope = js::CheckedUnwrap(scope, /* stopAtOuter = */ false);
       if (!scope)
         return false;
       ac.emplace(cx, scope);
+      if (!JS_WrapObject(cx, &proto)) {
+        return false;
+      }
     }
 
     MOZ_ASSERT(js::IsObjectInContextCompartment(scope, cx));
-    if (!value->WrapObject(cx, nullptr, &obj)) {
+    if (!value->WrapObject(cx, proto, &obj)) {
       return false;
     }
   }
@@ -1081,7 +1098,8 @@ inline bool
 WrapNewBindingNonWrapperCachedObject(JSContext* cx,
                                      JS::Handle<JSObject*> scopeArg,
                                      nsAutoPtr<T>& value,
-                                     JS::MutableHandle<JS::Value> rval)
+                                     JS::MutableHandle<JS::Value> rval,
+                                     JS::Handle<JSObject*> givenProto = nullptr)
 {
   static_assert(!IsRefcounted<T>::value, "Only pass owned classes in here.");
   // We do a runtime check on value, because otherwise we might in
@@ -1099,15 +1117,19 @@ WrapNewBindingNonWrapperCachedObject(JSContext* cx,
     // more Maybe (one for a Rooted and one for a Handle) adds more
     // code (and branches!) than just adding a single rooted.
     JS::Rooted<JSObject*> scope(cx, scopeArg);
+    JS::Rooted<JSObject*> proto(cx, givenProto);
     if (js::IsWrapper(scope)) {
       scope = js::CheckedUnwrap(scope, /* stopAtOuter = */ false);
       if (!scope)
         return false;
       ac.emplace(cx, scope);
+      if (!JS_WrapObject(cx, &proto)) {
+        return false;
+      }
     }
 
     MOZ_ASSERT(js::IsObjectInContextCompartment(scope, cx));
-    if (!value->WrapObject(cx, nullptr, &obj)) {
+    if (!value->WrapObject(cx, proto, &obj)) {
       return false;
     }
 
@@ -1126,9 +1148,11 @@ template <template <typename> class SmartPtr, typename T,
 inline bool
 WrapNewBindingNonWrapperCachedObject(JSContext* cx, JS::Handle<JSObject*> scope,
                                      const SmartPtr<T>& value,
-                                     JS::MutableHandle<JS::Value> rval)
+                                     JS::MutableHandle<JS::Value> rval,
+                                     JS::Handle<JSObject*> givenProto = nullptr)
 {
-  return WrapNewBindingNonWrapperCachedObject(cx, scope, value.get(), rval);
+  return WrapNewBindingNonWrapperCachedObject(cx, scope, value.get(), rval,
+                                              givenProto);
 }
 
 // Only set allowNativeWrapper to false if you really know you need it, if in
@@ -1650,9 +1674,10 @@ template <class T, bool isSmartPtr=IsSmartPtr<T>::value>
 struct GetOrCreateDOMReflectorHelper
 {
   static inline bool GetOrCreate(JSContext* cx, const T& value,
+                                 JS::Handle<JSObject*> givenProto,
                                  JS::MutableHandle<JS::Value> rval)
   {
-    return GetOrCreateDOMReflector(cx, value.get(), rval);
+    return GetOrCreateDOMReflector(cx, value.get(), rval, givenProto);
   }
 };
 
@@ -1660,30 +1685,22 @@ template <class T>
 struct GetOrCreateDOMReflectorHelper<T, false>
 {
   static inline bool GetOrCreate(JSContext* cx, T& value,
+                                 JS::Handle<JSObject*> givenProto,
                                  JS::MutableHandle<JS::Value> rval)
   {
     static_assert(IsRefcounted<T>::value, "Don't pass owned classes in here.");
-    return GetOrCreateDOMReflector(cx, &value, rval);
+    return GetOrCreateDOMReflector(cx, &value, rval, givenProto);
   }
 };
 
 template<class T>
 inline bool
 GetOrCreateDOMReflector(JSContext* cx, T& value,
-                        JS::MutableHandle<JS::Value> rval)
+                        JS::MutableHandle<JS::Value> rval,
+                        JS::Handle<JSObject*> givenProto = nullptr)
 {
-  return GetOrCreateDOMReflectorHelper<T>::GetOrCreate(cx, value, rval);
-}
-
-// We need this version of GetOrCreateDOMReflector for codegen, so it'll have
-// the same signature as WrapNewBindingNonWrapperCachedObject and
-// WrapNewBindingNonWrapperCachedOwnedObject, which still need the scope.
-template<class T>
-inline bool
-GetOrCreateDOMReflector(JSContext* cx, JS::Handle<JSObject*> scope, T& value,
-                        JS::MutableHandle<JS::Value> rval)
-{
-  return GetOrCreateDOMReflector(cx, value, rval);
+  return GetOrCreateDOMReflectorHelper<T>::GetOrCreate(cx, value, givenProto,
+                                                       rval);
 }
 
 // Helper for calling GetOrCreateDOMReflectorNoWrap with smart pointers
@@ -3294,6 +3311,11 @@ bool GetSetlikeBackingObject(JSContext* aCx, JS::Handle<JSObject*> aObj,
                              JS::MutableHandle<JSObject*> aBackingObj,
                              bool* aBackingObjCreated);
 
+// Get the desired prototype object for an object construction from the given
+// CallArgs.  Null is returned if the default prototype should be used.
+bool
+GetDesiredProto(JSContext* aCx, const JS::CallArgs& aCallArgs,
+                JS::MutableHandle<JSObject*> aDesiredProto);
 
 } // namespace dom
 } // namespace mozilla
