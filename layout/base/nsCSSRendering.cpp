@@ -777,7 +777,8 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
   aDrawTarget.FillRect(joinedBorderAreaPx, color);
 #endif
 
-  nsCSSBorderRenderer br(&aDrawTarget,
+  nsCSSBorderRenderer br(aPresContext->Type(),
+                         &aDrawTarget,
                          joinedBorderAreaPx,
                          borderStyles,
                          borderWidths,
@@ -912,7 +913,8 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
   // start drawing
   gfxContext *ctx = aRenderingContext.ThebesContext();
 
-  nsCSSBorderRenderer br(ctx->GetDrawTarget(),
+  nsCSSBorderRenderer br(aPresContext->Type(),
+                         ctx->GetDrawTarget(),
                          oRect,
                          outlineStyles,
                          outlineWidths,
@@ -960,7 +962,8 @@ nsCSSRendering::PaintFocus(nsPresContext* aPresContext,
   // something that CSS can style, this function will then have access
   // to a style context and can use the same logic that PaintBorder
   // and PaintOutline do.)
-  nsCSSBorderRenderer br(ctx->GetDrawTarget(),
+  nsCSSBorderRenderer br(aPresContext->Type(),
+                         ctx->GetDrawTarget(),
                          focusRect,
                          focusStyles,
                          focusWidths,

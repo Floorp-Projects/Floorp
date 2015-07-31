@@ -15,6 +15,7 @@
 #include "nsColor.h"
 #include "nsCOMPtr.h"
 #include "nsStyleConsts.h"
+#include "nsPresContext.h"
 
 struct nsBorderColors;
 
@@ -85,7 +86,8 @@ class nsCSSBorderRenderer final
 
 public:
 
-  nsCSSBorderRenderer(DrawTarget* aDrawTarget,
+  nsCSSBorderRenderer(nsPresContext::nsPresContextType aPresContextType,
+                      DrawTarget* aDrawTarget,
                       Rect& aOuterRect,
                       const uint8_t* aBorderStyles,
                       const Float* aBorderWidths,
@@ -113,6 +115,9 @@ public:
 private:
 
   RectCornerRadii mBorderCornerDimensions;
+
+  // the PresContext type
+  nsPresContext::nsPresContextType mPresContextType;
 
   // destination DrawTarget
   DrawTarget* mDrawTarget;

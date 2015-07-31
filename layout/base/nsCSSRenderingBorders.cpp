@@ -118,7 +118,8 @@ typedef enum {
   CORNER_DOT
 } CornerStyle;
 
-nsCSSBorderRenderer::nsCSSBorderRenderer(DrawTarget* aDrawTarget,
+nsCSSBorderRenderer::nsCSSBorderRenderer(nsPresContext::nsPresContextType aPresContextType,
+                                         DrawTarget* aDrawTarget,
                                          Rect& aOuterRect,
                                          const uint8_t* aBorderStyles,
                                          const Float* aBorderWidths,
@@ -126,7 +127,8 @@ nsCSSBorderRenderer::nsCSSBorderRenderer(DrawTarget* aDrawTarget,
                                          const nscolor* aBorderColors,
                                          nsBorderColors* const* aCompositeColors,
                                          nscolor aBackgroundColor)
-  : mDrawTarget(aDrawTarget),
+  : mPresContextType(aPresContextType),
+    mDrawTarget(aDrawTarget),
     mOuterRect(aOuterRect),
     mBorderStyles(aBorderStyles),
     mBorderWidths(aBorderWidths),
@@ -1448,7 +1450,8 @@ nsCSSBorderRenderer::DrawNoCompositeColorSolidBorder()
 
     Float skirtSize = 0.0f, skirtSlope = 0.0f;
     // the sides don't match, so compute a skirt
-    if (firstColor != secondColor) {
+    if (firstColor != secondColor &&
+        mPresContextType != nsPresContext::eContext_Print) {
       Point cornerDir = outerCorner - innerCorner;
       ComputeCornerSkirtSize(firstColor.a, secondColor.a,
                              cornerDir.DotProduct(cornerMults[i]),
