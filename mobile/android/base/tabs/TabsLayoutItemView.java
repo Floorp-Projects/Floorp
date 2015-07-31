@@ -33,6 +33,7 @@ public class TabsLayoutItemView extends LinearLayout
     private TextView mTitle;
     private ImageView mThumbnail;
     private ImageView mCloseButton;
+    private ImageView mAudioPlayingButton;
     private TabThumbnailWrapper mThumbnailWrapper;
 
     public TabsLayoutItemView(Context context, AttributeSet attrs) {
@@ -93,6 +94,7 @@ public class TabsLayoutItemView extends LinearLayout
         mTitle = (TextView) findViewById(R.id.title);
         mThumbnail = (ImageView) findViewById(R.id.thumbnail);
         mCloseButton = (ImageView) findViewById(R.id.close);
+        mAudioPlayingButton = (ImageView) findViewById(R.id.audio_playing);
         mThumbnailWrapper = (TabThumbnailWrapper) findViewById(R.id.wrapper);
 
         if (HardwareUtils.isTablet()) {
@@ -138,7 +140,7 @@ public class TabsLayoutItemView extends LinearLayout
         }
         mTitle.setText(tab.getDisplayTitle());
         mCloseButton.setTag(this);
-
+        mAudioPlayingButton.setVisibility(tab.isAudioPlaying() ? View.VISIBLE : View.GONE);
     }
 
     public int getTabId() {

@@ -68,6 +68,8 @@
 <!ENTITY edit_mode_cancel "Cancel">
 
 <!ENTITY close_tab "Close Tab">
+<!ENTITY tab_audio_playing "This tab is playing audio">
+<!ENTITY tab_audio_muted "This tab has been muted">
 <!ENTITY one_tab "1 tab">
 <!-- Localization note (num_tabs2) : Number of tabs is always more than one.
      We can't use android plural forms, sadly. See bug #753859. -->
