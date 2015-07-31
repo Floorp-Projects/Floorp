@@ -45,12 +45,133 @@ assertIsNfcServiceThread()
   MOZ_ASSERT(thread == gNfcService->GetThread());
 }
 
-// Runnable used dispatch the NfcEventOptions on the main thread.
-class NfcEventDispatcher : public nsRunnable
+//
+// NfcConsumer
+//
+
+/**
+ * |NfcConsumer| implements the details of the connection to an NFC daemon
+ * as well as the message passing.
+ */
+class NfcConsumer
+  : public ListenSocketConsumer
+  , public StreamSocketConsumer
 {
 public:
-  NfcEventDispatcher(EventOptions& aEvent)
-    : mEvent(aEvent)
+  NfcConsumer(NfcService* aNfcService);
+
+  nsresult Start();
+  void Shutdown();
+
+  nsresult Send(const CommandOptions& aCommandOptions);
+  nsresult Receive(UnixSocketBuffer* aBuffer);
+
+  // Methods for |StreamSocketConsumer| and |ListenSocketConsumer|
+  //
+
+  void ReceiveSocketData(
+    int aIndex, nsAutoPtr<mozilla::ipc::UnixSocketBuffer>& aBuffer) override;
+
+  void OnConnectSuccess(int aIndex) override;
+  void OnConnectError(int aIndex) override;
+  void OnDisconnect(int aIndex) override;
+
+private:
+  class DispatchNfcEventRunnable;
+  class ShutdownServiceRunnable;
+
+  enum SocketType {
+    LISTEN_SOCKET,
+    STREAM_SOCKET
+  };
+
+  nsRefPtr<NfcService> mNfcService;
+  nsRefPtr<mozilla::ipc::ListenSocket> mListenSocket;
+  nsRefPtr<mozilla::ipc::StreamSocket> mStreamSocket;
+  nsAutoPtr<NfcMessageHandler> mHandler;
+  nsCString mListenSocketName;
+};
+
+NfcConsumer::NfcConsumer(NfcService* aNfcService)
+  : mNfcService(aNfcService)
+{
+  MOZ_ASSERT(mNfcService);
+}
+
+nsresult
+NfcConsumer::Start()
+{
+  static const char BASE_SOCKET_NAME[] = "nfcd";
+
+  assertIsNfcServiceThread();
+  MOZ_ASSERT(!mListenSocket);
+
+  // If we could not cleanup properly before and an old
+  // instance of the daemon is still running, we kill it
+  // here.
+  unused << NS_WARN_IF(property_set("ctl.stop", "nfcd") < 0);
+
+  mHandler = new NfcMessageHandler();
+
+  mStreamSocket = new StreamSocket(this, STREAM_SOCKET);
+
+  mListenSocketName = BASE_SOCKET_NAME;
+
+  mListenSocket = new ListenSocket(this, LISTEN_SOCKET);
+  nsresult rv = mListenSocket->Listen(new NfcConnector(mListenSocketName),
+                                      mStreamSocket);
+  if (NS_FAILED(rv)) {
+    mStreamSocket = nullptr;
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+void
+NfcConsumer::Shutdown()
+{
+  assertIsNfcServiceThread();
+
+  mListenSocket->Close();
+  mListenSocket = nullptr;
+  mStreamSocket->Close();
+  mStreamSocket = nullptr;
+
+  mHandler = nullptr;
+}
+
+nsresult
+NfcConsumer::Send(const CommandOptions& aOptions)
+{
+  assertIsNfcServiceThread();
+
+  if (NS_WARN_IF(!mStreamSocket) ||
+      NS_WARN_IF(mStreamSocket->GetConnectionStatus() != SOCKET_CONNECTED)) {
+    return NS_OK; // Probably shutting down.
+  }
+
+  Parcel parcel;
+  parcel.writeInt32(0); // Parcel Size.
+  mHandler->Marshall(parcel, aOptions);
+  parcel.setDataPosition(0);
+  uint32_t sizeBE = htonl(parcel.dataSize() - sizeof(int));
+  parcel.writeInt32(sizeBE);
+
+  // TODO: Zero-copy buffer transfers
+  mStreamSocket->SendSocketData(
+    new UnixSocketRawData(parcel.data(), parcel.dataSize()));
+
+  return NS_OK;
+}
+
+// Runnable used dispatch the NfcEventOptions on the main thread.
+class NfcConsumer::DispatchNfcEventRunnable final : public nsRunnable
+{
+public:
+  DispatchNfcEventRunnable(NfcService* aNfcService, const EventOptions& aEvent)
+    : mNfcService(aNfcService)
+    , mEvent(aEvent)
   {
     assertIsNfcServiceThread();
   }
@@ -191,132 +312,14 @@ public:
 #undef COPY_FIELD
 #undef COPY_OPT_FIELD
 
-    gNfcService->DispatchNfcEvent(event);
+    mNfcService->DispatchNfcEvent(event);
     return NS_OK;
   }
 
 private:
+  nsRefPtr<NfcService> mNfcService;
   EventOptions mEvent;
 };
-
-//
-// NfcConsumer
-//
-
-/**
- * |NfcConsumer| implements the details of the connection to an NFC daemon
- * as well as the message passing.
- */
-class NfcConsumer
-  : public ListenSocketConsumer
-  , public StreamSocketConsumer
-{
-public:
-  NfcConsumer(NfcService* aNfcService);
-
-  nsresult Start();
-  void Shutdown();
-
-  nsresult Send(const CommandOptions& aCommandOptions);
-  nsresult Receive(UnixSocketBuffer* aBuffer);
-
-  // Methods for |StreamSocketConsumer| and |ListenSocketConsumer|
-  //
-
-  void ReceiveSocketData(
-    int aIndex, nsAutoPtr<mozilla::ipc::UnixSocketBuffer>& aBuffer) override;
-
-  void OnConnectSuccess(int aIndex) override;
-  void OnConnectError(int aIndex) override;
-  void OnDisconnect(int aIndex) override;
-
-private:
-  class ShutdownServiceRunnable;
-
-  enum SocketType {
-    LISTEN_SOCKET,
-    STREAM_SOCKET
-  };
-
-  nsRefPtr<NfcService> mNfcService;
-  nsRefPtr<mozilla::ipc::ListenSocket> mListenSocket;
-  nsRefPtr<mozilla::ipc::StreamSocket> mStreamSocket;
-  nsAutoPtr<NfcMessageHandler> mHandler;
-  nsCString mListenSocketName;
-};
-
-NfcConsumer::NfcConsumer(NfcService* aNfcService)
-  : mNfcService(aNfcService)
-{
-  MOZ_ASSERT(mNfcService);
-}
-
-nsresult
-NfcConsumer::Start()
-{
-  static const char BASE_SOCKET_NAME[] = "nfcd";
-
-  assertIsNfcServiceThread();
-  MOZ_ASSERT(!mListenSocket);
-
-  // If we could not cleanup properly before and an old
-  // instance of the daemon is still running, we kill it
-  // here.
-  unused << NS_WARN_IF(property_set("ctl.stop", "nfcd") < 0);
-
-  mHandler = new NfcMessageHandler();
-
-  mStreamSocket = new StreamSocket(this, STREAM_SOCKET);
-
-  mListenSocketName = BASE_SOCKET_NAME;
-
-  mListenSocket = new ListenSocket(this, LISTEN_SOCKET);
-  nsresult rv = mListenSocket->Listen(new NfcConnector(mListenSocketName),
-                                      mStreamSocket);
-  if (NS_FAILED(rv)) {
-    mStreamSocket = nullptr;
-    return rv;
-  }
-
-  return NS_OK;
-}
-
-void
-NfcConsumer::Shutdown()
-{
-  assertIsNfcServiceThread();
-
-  mListenSocket->Close();
-  mListenSocket = nullptr;
-  mStreamSocket->Close();
-  mStreamSocket = nullptr;
-
-  mHandler = nullptr;
-}
-
-nsresult
-NfcConsumer::Send(const CommandOptions& aOptions)
-{
-  assertIsNfcServiceThread();
-
-  if (NS_WARN_IF(!mStreamSocket) ||
-      NS_WARN_IF(mStreamSocket->GetConnectionStatus() != SOCKET_CONNECTED)) {
-    return NS_OK; // Probably shutting down.
-  }
-
-  Parcel parcel;
-  parcel.writeInt32(0); // Parcel Size.
-  mHandler->Marshall(parcel, aOptions);
-  parcel.setDataPosition(0);
-  uint32_t sizeBE = htonl(parcel.dataSize() - sizeof(int));
-  parcel.writeInt32(sizeBE);
-
-  // TODO: Zero-copy buffer transfers
-  mStreamSocket->SendSocketData(
-    new UnixSocketRawData(parcel.data(), parcel.dataSize()));
-
-  return NS_OK;
-}
 
 nsresult
 NfcConsumer::Receive(UnixSocketBuffer* aBuffer)
@@ -341,7 +344,7 @@ NfcConsumer::Receive(UnixSocketBuffer* aBuffer)
     EventOptions event;
     mHandler->Unmarshall(parcel, event);
 
-    NS_DispatchToMainThread(new NfcEventDispatcher(event));
+    NS_DispatchToMainThread(new DispatchNfcEventRunnable(mNfcService, event));
   }
 
   return NS_OK;
@@ -638,6 +641,11 @@ void
 NfcService::DispatchNfcEvent(const mozilla::dom::NfcEventOptions& aOptions)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mListener);
+
+  if (!mNfcConsumer) {
+    return; // NFC has been shutdown meanwhile; not en error
+  }
 
   mozilla::AutoSafeJSContext cx;
   JS::RootedValue val(cx);
