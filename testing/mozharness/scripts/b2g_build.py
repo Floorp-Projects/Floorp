@@ -524,7 +524,8 @@ class B2GBuild(LocalesMixin, PurgeMixin,
         cmd = ['./build.sh']
         if target is not None:
             # Workaround bug 984061
-            if target == 'package-tests':
+            # wcosta: blobfree builds also should run with -j1
+            if target in ('package-tests', 'blobfree'):
                 cmd.append('-j1')
             else:
                 # Ensure we always utilize the correct number of cores
