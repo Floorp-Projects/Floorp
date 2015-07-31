@@ -128,6 +128,22 @@ public:
   }
 
   /**
+   * Set the requested sample size for this decoder. Used to implement the
+   * -moz-sample-size media fragment.
+   *
+   *  XXX(seth): Support for -moz-sample-size will be removed in bug 1120056.
+   */
+  virtual void SetSampleSize(int aSampleSize) { }
+
+  /**
+   * Set the requested resolution for this decoder. Used to implement the
+   * -moz-resolution media fragment.
+   *
+   *  XXX(seth): Support for -moz-resolution will be removed in bug 1118926.
+   */
+  virtual void SetResolution(const gfx::IntSize& aResolution) { }
+
+  /**
    * Set whether should send partial invalidations.
    *
    * If @aSend is true, we'll send partial invalidations when decoding the first

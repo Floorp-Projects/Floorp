@@ -36,6 +36,11 @@ public:
     return mDirEntry.mHeight == 0 ? 256 : mDirEntry.mHeight;
   }
 
+  virtual void SetResolution(const gfx::IntSize& aResolution) override
+  {
+    mResolution = aResolution;
+  }
+
   virtual void WriteInternal(const char* aBuffer, uint32_t aCount) override;
   virtual void FinishInternal() override;
   virtual void FinishWithErrorInternal() override;
@@ -76,6 +81,7 @@ private:
   // Obtains the number of colors from the BPP, mBPP must be filled in
   uint16_t GetNumColors();
 
+  gfx::IntSize mResolution;  // The requested -moz-resolution for this icon.
   uint16_t mBPP; // Stores the images BPP
   uint32_t mPos; // Keeps track of the position we have decoded up until
   uint16_t mNumIcons; // Stores the number of icons in the ICO file
