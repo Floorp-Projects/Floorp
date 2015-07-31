@@ -94,6 +94,12 @@ public enum Restriction {
             18, "no_display_settings",
             R.string.restriction_disallow_display_settings_title,
             R.string.restriction_disallow_display_settings_description
+    ),
+
+    DISALLOW_CLEAR_HISTORY(
+            19, "no_clear_history",
+            R.string.restriction_disallow_clear_history_title,
+            R.string.restriction_disallow_clear_history_description
     );
 
     public final int id;
