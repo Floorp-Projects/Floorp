@@ -8,9 +8,14 @@
 #define mozilla_dom_PermissionUtils_h_
 
 #include "mozilla/dom/PermissionsBinding.h"
+#include "mozilla/dom/PermissionStatusBinding.h"
+#include "mozilla/Maybe.h"
 
 namespace mozilla {
 namespace dom {
+
+const char* PermissionNameToType(PermissionName aName);
+Maybe<PermissionName> TypeToPermissionName(const char* aType);
 
 PermissionState ActionToPermissionState(uint32_t aAction);
 
