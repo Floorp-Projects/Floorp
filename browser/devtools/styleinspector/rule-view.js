@@ -2298,9 +2298,16 @@ CssRuleView.prototype = {
   _onTogglePseudoClassPanel: function() {
     if (this.pseudoClassPanel.hidden) {
       this.pseudoClassToggle.setAttribute("checked", "true");
+      this.hoverCheckbox.setAttribute("tabindex", "0");
+      this.activeCheckbox.setAttribute("tabindex", "0");
+      this.focusCheckbox.setAttribute("tabindex", "0");
     } else {
       this.pseudoClassToggle.removeAttribute("checked");
+      this.hoverCheckbox.setAttribute("tabindex", "-1");
+      this.activeCheckbox.setAttribute("tabindex", "-1");
+      this.focusCheckbox.setAttribute("tabindex", "-1");
     }
+
     this.pseudoClassPanel.hidden = !this.pseudoClassPanel.hidden;
   },
 

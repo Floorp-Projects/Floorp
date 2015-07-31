@@ -99,6 +99,3 @@ endif
 
 libs:: automation.py
 
-ifdef ENABLE_TESTS
-GARBAGE += $(srcdir)/automationutils.pyc
-endif # ENABLE_TESTS

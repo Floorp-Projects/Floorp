@@ -690,27 +690,35 @@ var BrowserApp = {
         });
       });
 
-    NativeWindow.contextmenus.add(stringGetter("contextmenu.openInPrivateTab"),
-      NativeWindow.contextmenus.linkOpenableContext,
-      function(aTarget) {
-        UITelemetry.addEvent("action.1", "contextmenu", null, "web_open_private_tab");
-        UITelemetry.addEvent("loadurl.1", "contextmenu", null);
+    let showOpenInPrivateTab = true;
+    if ("@mozilla.org/parental-controls-service;1" in Cc) {
+      let pc = Cc["@mozilla.org/parental-controls-service;1"].createInstance(Ci.nsIParentalControlsService);
+      showOpenInPrivateTab = pc.isAllowed(Ci.nsIParentalControlsService.PRIVATE_BROWSING);
+    }
 
-        let url = NativeWindow.contextmenus._getLinkURL(aTarget);
-        ContentAreaUtils.urlSecurityCheck(url, aTarget.ownerDocument.nodePrincipal);
-        let tab = BrowserApp.addTab(url, { selected: false, parentId: BrowserApp.selectedTab.id, isPrivate: true });
+    if (showOpenInPrivateTab) {
+      NativeWindow.contextmenus.add(stringGetter("contextmenu.openInPrivateTab"),
+        NativeWindow.contextmenus.linkOpenableContext,
+        function (aTarget) {
+          UITelemetry.addEvent("action.1", "contextmenu", null, "web_open_private_tab");
+          UITelemetry.addEvent("loadurl.1", "contextmenu", null);
 
-        let newtabStrings = Strings.browser.GetStringFromName("newprivatetabpopup.opened");
-        let label = PluralForm.get(1, newtabStrings).replace("#1", 1);
-        let buttonLabel = Strings.browser.GetStringFromName("newtabpopup.switch");
-        NativeWindow.toast.show(label, "long", {
-          button: {
-            icon: "drawable://switch_button_icon",
-            label: buttonLabel,
-            callback: () => { BrowserApp.selectTab(tab); },
-          }
+          let url = NativeWindow.contextmenus._getLinkURL(aTarget);
+          ContentAreaUtils.urlSecurityCheck(url, aTarget.ownerDocument.nodePrincipal);
+          let tab = BrowserApp.addTab(url, {selected: false, parentId: BrowserApp.selectedTab.id, isPrivate: true});
+
+          let newtabStrings = Strings.browser.GetStringFromName("newprivatetabpopup.opened");
+          let label = PluralForm.get(1, newtabStrings).replace("#1", 1);
+          let buttonLabel = Strings.browser.GetStringFromName("newtabpopup.switch");
+          NativeWindow.toast.show(label, "long", {
+            button: {
+              icon: "drawable://switch_button_icon",
+              label: buttonLabel,
+              callback: () => { BrowserApp.selectTab(tab); },
+            }
+          });
         });
-      });
+    }
 
     NativeWindow.contextmenus.add(stringGetter("contextmenu.addToReadingList"),
       NativeWindow.contextmenus.linkOpenableContext,

@@ -80,8 +80,8 @@ FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
     '/dom/system/android',
-    '/gfx/skia/trunk/include/config',
-    '/gfx/skia/trunk/include/core',
+    '/gfx/skia/skia/include/config',
+    '/gfx/skia/skia/include/core',
     '/widget',
 ]
 
