@@ -57,7 +57,7 @@ Decoder::~Decoder()
              "Destroying Decoder without taking all its invalidations");
   mInitialized = false;
 
-  if (!NS_IsMainThread()) {
+  if (mImage && !NS_IsMainThread()) {
     // Dispatch mImage to main thread to prevent it from being destructed by the
     // decode thread.
     nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
