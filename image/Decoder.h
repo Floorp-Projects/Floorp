@@ -253,7 +253,6 @@ public:
   uint32_t GetDecodeFlags() const { return DecodeFlags(mFlags); }
 
   bool HasSize() const { return mImageMetadata.HasSize(); }
-  void SetSizeOnImage();
 
   nsIntSize GetSize() const
   {

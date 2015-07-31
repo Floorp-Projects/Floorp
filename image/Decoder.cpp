@@ -274,12 +274,9 @@ Decoder::Finish()
     }
   }
 
-  // Set image metadata before calling DecodingComplete, because
-  // DecodingComplete calls Optimize().
-  mImageMetadata.SetOnImage(mImage);
-
-  if (HasSize()) {
-    SetSizeOnImage();
+  nsresult rv = mImageMetadata.SetOnImage(mImage);
+  if (NS_FAILED(rv)) {
+    PostResizeError();
   }
 
   if (mDecodeDone && !IsMetadataDecode()) {
@@ -407,20 +404,6 @@ Decoder::AllocateFrameInternal(uint32_t aFrameNum,
   mImage->OnAddedFrame(mFrameCount, refreshArea);
 
   return ref;
-}
-
-void
-Decoder::SetSizeOnImage()
-{
-  MOZ_ASSERT(mImageMetadata.HasSize(), "Should have size");
-  MOZ_ASSERT(mImageMetadata.HasOrientation(), "Should have orientation");
-
-  nsresult rv = mImage->SetSize(mImageMetadata.GetWidth(),
-                                mImageMetadata.GetHeight(),
-                                mImageMetadata.GetOrientation());
-  if (NS_FAILED(rv)) {
-    PostResizeError();
-  }
 }
 
 /*
