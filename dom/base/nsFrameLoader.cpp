@@ -308,9 +308,6 @@ nsFrameLoader::ReallyStartLoadingInternal()
         return NS_ERROR_FAILURE;
     }
 
-    // Execute pending frame scripts before loading URL
-    ReallyLoadFrameScripts();
-
     // FIXME get error codes from child
     mRemoteBrowser->LoadURL(mURIToLoad);
     
@@ -788,9 +785,6 @@ nsFrameLoader::ShowRemoteFrame(const ScreenIntSize& size,
     mRemoteBrowser->Show(size, parentIsActive);
     mRemoteBrowserShown = true;
 
-    ReallyLoadFrameScripts();
-
-    InitializeBrowserAPI();
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     if (os) {
       os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, this),
@@ -1792,8 +1786,6 @@ nsFrameLoader::MaybeCreateDocShell()
     webNav->SetSessionHistory(sessionHistory);
   }
 
-  ReallyLoadFrameScripts();
-
   if (OwnerIsAppFrame()) {
     // You can't be both an app and a browser frame.
     MOZ_ASSERT(!OwnerIsBrowserFrame());
@@ -1821,18 +1813,7 @@ nsFrameLoader::MaybeCreateDocShell()
     mDocShell->SetIsBrowserInsideApp(containingAppId);
   }
 
-  InitializeBrowserAPI();
-  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-  if (os) {
-    os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, this),
-                        "inprocess-browser-shown", nullptr);
-  }
-
-  if (OwnerIsBrowserOrAppFrame() && mMessageManager) {
-    mMessageManager->LoadFrameScript(
-      NS_LITERAL_STRING("chrome://global/content/BrowserElementChild.js"),
-      /* allowDelayedLoad = */ true,
-      /* aRunInGlobalScope */ true);
+  if (OwnerIsBrowserOrAppFrame()) {
     // For inproc frames, set the docshell properties.
     nsCOMPtr<nsIDocShellTreeItem> item = do_GetInterface(docShell);
     nsAutoString name;
@@ -1857,6 +1838,15 @@ nsFrameLoader::MaybeCreateDocShell()
         context->SetUsePrivateBrowsing(true);
       }
     }
+  }
+
+  ReallyLoadFrameScripts();
+  InitializeBrowserAPI();
+
+  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+  if (os) {
+    os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, this),
+                        "inprocess-browser-shown", nullptr);
   }
 
   return NS_OK;
@@ -2238,7 +2228,10 @@ nsFrameLoader::TryRemoteBrowser()
     unused << mRemoteBrowser->SendSetUpdateHitRegion(true);
   }
 
-  return true;
+  ReallyLoadFrameScripts();
+  InitializeBrowserAPI();
+
+ return true;
 }
 
 mozilla::dom::PBrowserParent*
@@ -2567,6 +2560,8 @@ nsFrameLoader::SetRemoteBrowser(nsITabParent* aTabParent)
   mRemoteFrame = true;
   mRemoteBrowser = TabParent::GetFrom(aTabParent);
   mChildID = mRemoteBrowser ? mRemoteBrowser->Manager()->ChildID() : 0;
+  ReallyLoadFrameScripts();
+  InitializeBrowserAPI();
   ShowRemoteFrame(ScreenIntSize(0, 0));
 }
 
@@ -2833,8 +2828,22 @@ nsFrameLoader::GetLoadContext(nsILoadContext** aLoadContext)
 void
 nsFrameLoader::InitializeBrowserAPI()
 {
-  nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(mOwnerContent);
-  if (browserFrame) {
-    browserFrame->InitializeBrowserAPI();
+  if (OwnerIsBrowserOrAppFrame()) {
+    if (!IsRemoteFrame()) {
+      nsresult rv = EnsureMessageManager();
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return;
+      }
+      if (mMessageManager) {
+        mMessageManager->LoadFrameScript(
+          NS_LITERAL_STRING("chrome://global/content/BrowserElementChild.js"),
+          /* allowDelayedLoad = */ true,
+          /* aRunInGlobalScope */ true);
+      }
+    }
+    nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(mOwnerContent);
+    if (browserFrame) {
+      browserFrame->InitializeBrowserAPI();
+    }
   }
 }
