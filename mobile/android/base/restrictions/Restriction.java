@@ -88,6 +88,12 @@ public enum Restriction {
             17, "no_location_service",
             R.string.restriction_disallow_location_services_title,
             R.string.restriction_disallow_location_services_description
+    ),
+
+    DISALLOW_DISPLAY_SETTINGS(
+            18, "no_display_settings",
+            R.string.restriction_disallow_display_settings_title,
+            R.string.restriction_disallow_display_settings_description
     );
 
     public final int id;

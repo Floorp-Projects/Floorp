@@ -491,6 +491,8 @@ OnSharedPreferenceChangeListener
                     iterator.remove();
                 } else if (header.id == R.id.pref_header_devtools && !RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_DEVELOPER_TOOLS)) {
                     iterator.remove();
+                } else if (header.id == R.id.pref_header_display && !RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_DISPLAY_SETTINGS)) {
+                    iterator.remove();
                 }
             }
         }

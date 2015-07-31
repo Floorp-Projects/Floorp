@@ -557,6 +557,8 @@
   <string name="restriction_disallow_private_browsing_description">&restriction_disallow_private_browsing_description;</string>
   <string name="restriction_disallow_location_services_title">&restriction_disallow_location_services_title;</string>
   <string name="restriction_disallow_location_services_description">&restriction_disallow_location_services_description;</string>
+  <string name="restriction_disallow_display_settings_title">&restriction_disallow_display_settings_title;</string>
+  <string name="restriction_disallow_display_settings_description">&restriction_disallow_display_settings_description;</string>
 
   <!-- Miscellaneous -->
   <string name="ellipsis">&ellipsis;</string>
