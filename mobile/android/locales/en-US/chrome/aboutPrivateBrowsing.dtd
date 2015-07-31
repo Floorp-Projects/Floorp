@@ -3,14 +3,15 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!ENTITY privatebrowsingpage.title "Private Browsing">
+
+<!-- Localisation note: the plus sign here is a shorthand way of expressing the word "and". Contextually the privatebrowsingpage.title.private string
+                        is used as a title, with the privatebrowsingpage.title string preceding it but on a separate line.
+                        So the final line will say "Private Browsing + Tracking Protection". -->
+<!ENTITY privatebrowsingpage.title.private "+ Tracking Protection">
 <!ENTITY privatebrowsingpage.title.normal "You are not in private browsing">
 
-<!ENTITY privatebrowsingpage.issueDesc.normal2 "In private browsing, we won't keep any of your browsing history or cookies.">
-<!ENTITY privatebrowsingpage.issueDesc.private2 "We won't keep any of your browsing history or cookies.">
-
-<!ENTITY privatebrowsingpage.description2 "Bookmarks you add and files you download will still be saved on your device.">
-<!ENTITY privatebrowsingpage.description.normal "&privatebrowsingpage.issueDesc.normal2; &privatebrowsingpage.description2;">
-<!ENTITY privatebrowsingpage.description.private2 "&privatebrowsingpage.issueDesc.private2; &privatebrowsingpage.description2;">
+<!ENTITY privatebrowsingpage.description.private3 "Firefox will prevent you from being tracked and won't remember any history, but downloaded files and new bookmarks will still be saved to your device.">
+<!ENTITY privatebrowsingpage.description.normal1 "In private browsing, we won't keep any of your browsing history or cookies. Bookmarks you add and files you download will still be saved on your device.">
 
 <!ENTITY privatebrowsingpage.link.private "Want to learn more?">
 <!ENTITY privatebrowsingpage.link.normal "Open a new private tab">
