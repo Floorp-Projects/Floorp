@@ -8,7 +8,6 @@
 
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Services.h"
-#include "mozilla/UniquePtr.h"
 #include "nsIPermissionManager.h"
 #include "PermissionObserver.h"
 #include "PermissionUtils.h"
@@ -16,22 +15,18 @@
 namespace mozilla {
 namespace dom {
 
-/* static */ nsresult
+/* static */ already_AddRefed<PermissionStatus>
 PermissionStatus::Create(nsPIDOMWindow* aWindow,
                          PermissionName aName,
-                         PermissionStatus** aStatus)
+                         ErrorResult& aRv)
 {
-  MOZ_ASSERT(aStatus);
-  *aStatus = nullptr;
-
-  UniquePtr<PermissionStatus> status(new PermissionStatus(aWindow, aName));
-  nsresult rv = status->Init();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  nsRefPtr<PermissionStatus> status = new PermissionStatus(aWindow, aName);
+  aRv = status->Init();
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
   }
 
-  *aStatus = status.release();
-  return NS_OK;
+  return status.forget();
 }
 
 PermissionStatus::PermissionStatus(nsPIDOMWindow* aWindow,
