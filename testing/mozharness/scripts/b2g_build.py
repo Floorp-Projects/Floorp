@@ -711,6 +711,18 @@ class B2GBuild(LocalesMixin, PurgeMixin,
                 if base_pattern in public_upload_patterns:
                     public_files.append(f)
 
+        device_name = self.config['target'].split('-')[0]
+        blobfree_zip = os.path.join(
+                        dirs['work_dir'],
+                        'out',
+                        'target',
+                        'product',
+                        device_name,
+                        device_name + '.blobfree-dist.zip')
+
+        if os.path.exists(blobfree_zip):
+            public_files.append(blobfree_zip)
+
         for base_f in files + public_files:
             f = base_f
             if f.endswith(".img"):
