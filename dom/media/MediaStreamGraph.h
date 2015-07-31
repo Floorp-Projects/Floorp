@@ -816,11 +816,6 @@ public:
    */
   bool AppendToTrack(TrackID aID, MediaSegment* aSegment, MediaSegment *aRawSegment = nullptr);
   /**
-   * Returns true if the buffer currently has enough data.
-   * Returns false if there isn't enough data or if no such track exists.
-   */
-  bool HaveEnoughBuffered(TrackID aID);
-  /**
    * Get the stream time of the end of the data that has been appended so far.
    * Can be called from any thread but won't be useful if it can race with
    * an AppendToTrack call, so should probably just be called from the thread
@@ -925,7 +920,6 @@ protected:
     // Each time the track updates are flushed to the media graph thread,
     // this is cleared.
     uint32_t mCommands;
-    bool mHaveEnough;
   };
 
   bool NeedsMixing();
