@@ -256,7 +256,7 @@ public:
   // Constructor.
   FrameParser();
 
-  // Returns the currently parsed frame. Reset via Reset or FinishParsing.
+  // Returns the currently parsed frame. Reset via Reset or EndFrameSession.
   const Frame& CurrentFrame() const;
 
 #ifdef ENABLE_TESTS
@@ -280,7 +280,7 @@ public:
   // - sets PrevFrame to CurrentFrame
   // - resets the CurrentFrame
   // - resets ID3Header if no valid header was parsed yet
-  void FinishParsing();
+  void EndFrameSession();
 
   // Parses given buffer [aBeg, aEnd) for a valid frame header.
   // Returns begin of frame header if a frame header was found or aEnd otherwise.
