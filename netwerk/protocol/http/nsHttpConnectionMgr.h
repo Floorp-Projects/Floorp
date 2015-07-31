@@ -242,11 +242,6 @@ public:
     // bit different.
     void ReportSpdyConnection(nsHttpConnection *, bool usingSpdy);
 
-    // A spdy server can supply cwnd information for the session that is used
-    // in future sessions to speed up the opening portions of the connection.
-    void ReportSpdyCWNDSetting(nsHttpConnectionInfo *host, uint32_t cwndValue);
-    uint32_t GetSpdyCWNDSetting(nsHttpConnectionInfo *host);
-
     bool     SupportsPipelining(nsHttpConnectionInfo *);
 
     bool GetConnectionData(nsTArray<HttpRetParams> *);
@@ -365,11 +360,6 @@ private:
         // mSpdyPreferred hash.
         //
         nsTArray<nsCString> mCoalescingKeys;
-
-        // The value of a recevied SPDY settings type 5 previously received
-        // for this connection entry and the time it was set.
-        uint32_t            mSpdyCWND;
-        TimeStamp  mSpdyCWNDTimeStamp;
 
         // To have the UsingSpdy flag means some host with the same connection
         // entry has done NPN=spdy/* at some point. It does not mean every
