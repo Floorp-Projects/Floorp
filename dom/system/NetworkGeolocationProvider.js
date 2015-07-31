@@ -505,12 +505,6 @@ WifiGeoPositionProvider.prototype = {
     xhr.responseType = "json";
     xhr.mozBackgroundRequest = true;
     xhr.channel.loadFlags = Ci.nsIChannel.LOAD_ANONYMOUS;
-    xhr.timeout = Services.prefs.getIntPref("geo.wifi.xhr.timeout");
-    xhr.ontimeout = (function() {
-      LOG("Location request XHR timed out.")
-      this.notifyListener("notifyError",
-                          [POSITION_UNAVAILABLE]);
-    }).bind(this);
     xhr.onerror = (function() {
       this.notifyListener("notifyError",
                           [POSITION_UNAVAILABLE]);
