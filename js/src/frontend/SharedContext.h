@@ -493,8 +493,7 @@ enum class StmtType : uint16_t {
 
 // StmtInfoPC is used by the Parser.  StmtInfoBCE is used by the
 // BytecodeEmitter.  The two types have some overlap, encapsulated by
-// StmtInfoBase.  Several functions below (e.g. PushStatement) are templated to
-// work with both types.
+// StmtInfoBase.
 
 struct StmtInfoBase
 {
@@ -613,47 +612,6 @@ class MOZ_STACK_CLASS StmtInfoStack
         linkAsTopScopal(topStmt_, blockObj);
     }
 };
-
-// Push the C-stack-allocated struct at stmt onto the StmtInfoPC stack.
-template <class ContextT>
-void
-PushStatement(ContextT* ct, typename ContextT::StmtInfo* stmt, StmtType type)
-{
-    stmt->type = type;
-    stmt->isBlockScope = false;
-    stmt->isForLetBlock = false;
-    stmt->label = nullptr;
-    stmt->staticScope = nullptr;
-    stmt->down = ct->topStmt;
-    ct->topStmt = stmt;
-    stmt->downScope = nullptr;
-}
-
-template <class ContextT>
-void
-FinishPushNestedScope(ContextT* ct, typename ContextT::StmtInfo* stmt, NestedScopeObject& staticScope)
-{
-    stmt->downScope = ct->topScopeStmt;
-    ct->topScopeStmt = stmt;
-    ct->staticScope = &staticScope;
-    stmt->staticScope = &staticScope;
-}
-
-// Pop pc->topStmt. If the top StmtInfoPC struct is not stack-allocated, it
-// is up to the caller to free it.  The dummy argument is just to make the
-// template matching work.
-template <class ContextT>
-void
-FinishPopStatement(ContextT* ct)
-{
-    typename ContextT::StmtInfo* stmt = ct->topStmt;
-    ct->topStmt = stmt->down;
-    if (stmt->linksScope()) {
-        ct->topScopeStmt = stmt->downScope;
-        if (stmt->staticScope)
-            ct->staticScope = stmt->staticScope->enclosingNestedScope();
-    }
-}
 
 } // namespace frontend
 
