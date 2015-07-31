@@ -22,8 +22,8 @@ function test() {
         "The first tab in the details pane should be selected.");
       is($("#preview-tab").hidden, true,
         "The preview tab should be hidden for non html responses.");
-      is($("#preview-tabpanel").hidden, true,
-        "The preview tabpanel should be hidden for non html responses.");
+      is($("#preview-tabpanel").hidden, false,
+        "The preview tabpanel is not hidden for non html responses.");
 
       RequestsMenu.selectedIndex = 4;
       NetMonitorView.toggleDetailsPane({ visible: true, animated: false }, 6);
@@ -32,8 +32,6 @@ function test() {
         "The sixth tab in the details pane should be selected.");
       is($("#preview-tab").hidden, false,
         "The preview tab should be visible now.");
-      is($("#preview-tabpanel").hidden, false,
-        "The preview tabpanel should be visible now.");
 
       waitFor(aMonitor.panelWin, EVENTS.RESPONSE_HTML_PREVIEW_DISPLAYED).then(() => {
         let iframe = $("#response-preview");
@@ -50,8 +48,8 @@ function test() {
           "The first tab in the details pane should be selected again.");
         is($("#preview-tab").hidden, true,
           "The preview tab should be hidden again for non html responses.");
-        is($("#preview-tabpanel").hidden, true,
-          "The preview tabpanel should be hidden again for non html responses.");
+        is($("#preview-tabpanel").hidden, false,
+          "The preview tabpanel is not hidden again for non html responses.");
 
         teardown(aMonitor).then(finish);
       });

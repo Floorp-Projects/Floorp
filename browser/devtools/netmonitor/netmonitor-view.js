@@ -2475,14 +2475,14 @@ NetworkDetailsView.prototype = {
     let isHtml = RequestsMenuView.prototype.isHtml({ attachment: aData });
 
     // Show the "Preview" tabpanel only for plain HTML responses.
-    this.sidebar.toggleTab(isHtml, "preview-tab", "preview-tabpanel");
+    this.sidebar.toggleTab(isHtml, "preview-tab");
 
     // Show the "Security" tab only for requests that
     //   1) are https (state != insecure)
     //   2) come from a target that provides security information.
     let hasSecurityInfo = aData.securityState &&
                           aData.securityState !== "insecure";
-    this.sidebar.toggleTab(hasSecurityInfo, "security-tab", "security-tabpanel");
+    this.sidebar.toggleTab(hasSecurityInfo, "security-tab");
 
     // Switch to the "Headers" tabpanel if the "Preview" previously selected
     // and this is not an HTML response or "Security" was selected but this

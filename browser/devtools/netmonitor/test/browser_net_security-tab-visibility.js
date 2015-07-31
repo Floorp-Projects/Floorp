@@ -45,6 +45,7 @@ add_task(function* () {
                        waitForNetworkEvents(monitor, 1);
 
     let tab = $("#security-tab");
+    let tabpanel = $("#security-tabpanel");
 
     info("Performing a request to " + testcase.uri);
     debuggee.performRequests(1, testcase.uri);
@@ -61,6 +62,8 @@ add_task(function* () {
        "Security tab is " +
         (testcase.visibleOnNewEvent ? "visible" : "hidden") +
        " after new request was added to the menu.");
+    is(tabpanel.hidden, false,
+      "#security-tabpanel is visible after new request was added to the menu.");
 
     info("Waiting for security information to arrive.");
     yield onSecurityInfo;
@@ -71,6 +74,8 @@ add_task(function* () {
        "Security tab is " +
         (testcase.visibleOnSecurityInfo ? "visible" : "hidden") +
        " after security information arrived.");
+    is(tabpanel.hidden, false,
+      "#security-tabpanel is visible after security information arrived.");
 
     info("Waiting for request to complete.");
     yield onComplete;
@@ -78,6 +83,8 @@ add_task(function* () {
        "Security tab is " +
         (testcase.visibleOnceComplete ? "visible" : "hidden") +
        " after request has been completed.");
+    is(tabpanel.hidden, false,
+      "#security-tabpanel is visible after request is complete.");
 
     info("Clearing requests.");
     RequestsMenu.clear();
