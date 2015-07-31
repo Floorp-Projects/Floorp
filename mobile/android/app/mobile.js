@@ -934,3 +934,6 @@ pref("dom.serviceWorkers.interception.enabled", true);
 
 // Enable Cardboard VR on mobile, assuming VR at all is enabled
 pref("dom.vr.cardboard.enabled", true);
+
+// TODO: Disabled until bug 1190301 is fixed.
+pref("browser.tabs.showAudioPlayingIcon", false);

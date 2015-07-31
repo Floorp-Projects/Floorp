@@ -81,6 +81,7 @@ public class Tab {
     private ErrorType mErrorType = ErrorType.NONE;
     private volatile int mLoadProgress;
     private volatile int mRecordingCount;
+    private volatile boolean mIsAudioPlaying;
     private String mMostRecentHomePanel;
 
     private int mHistoryIndex;
@@ -904,6 +905,14 @@ public class Tab {
 
     public boolean isRecording() {
         return mRecordingCount > 0;
+    }
+
+    public void setIsAudioPlaying(boolean isAudioPlaying) {
+        mIsAudioPlaying = isAudioPlaying;
+    }
+
+    public boolean isAudioPlaying() {
+        return mIsAudioPlaying;
     }
 
     public boolean isEditing() {

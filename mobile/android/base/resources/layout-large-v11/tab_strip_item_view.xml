@@ -29,6 +29,17 @@
         android:duplicateParentState="true"/>
 
     <org.mozilla.gecko.widget.ThemedImageButton
+        android:id="@+id/audio_playing"
+        android:visibility="gone"
+        android:layout_width="20dip"
+        android:layout_height="match_parent"
+        android:layout_marginRight="-15dp"
+        android:background="@drawable/action_bar_button_inverse"
+        android:scaleType="center"
+        android:contentDescription="@string/tab_audio_playing"
+        android:src="@drawable/tab_audio_playing"/>
+
+    <org.mozilla.gecko.widget.ThemedImageButton
         android:id="@+id/close"
         android:layout_width="40dip"
         android:layout_height="match_parent"

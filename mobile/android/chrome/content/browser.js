@@ -3578,6 +3578,8 @@ Tab.prototype = {
     this.browser.addEventListener("DOMLinkChanged", this, true);
     this.browser.addEventListener("DOMMetaAdded", this, false);
     this.browser.addEventListener("DOMTitleChanged", this, true);
+    this.browser.addEventListener("DOMMediaPlaybackStarted", this, true);
+    this.browser.addEventListener("DOMMediaPlaybackStopped", this, true);
     this.browser.addEventListener("DOMWindowClose", this, true);
     this.browser.addEventListener("DOMWillOpenModalDialog", this, true);
     this.browser.addEventListener("DOMAutoComplete", this, true);
@@ -3760,6 +3762,8 @@ Tab.prototype = {
     this.browser.removeEventListener("DOMLinkChanged", this, true);
     this.browser.removeEventListener("DOMMetaAdded", this, false);
     this.browser.removeEventListener("DOMTitleChanged", this, true);
+    this.browser.removeEventListener("DOMMediaPlaybackStarted", this, true);
+    this.browser.removeEventListener("DOMMediaPlaybackStopped", this, true);
     this.browser.removeEventListener("DOMWindowClose", this, true);
     this.browser.removeEventListener("DOMWillOpenModalDialog", this, true);
     this.browser.removeEventListener("DOMAutoComplete", this, true);
@@ -4382,6 +4386,26 @@ Tab.prototype = {
           title: truncate(aEvent.target.title, MAX_TITLE_LENGTH)
         });
         break;
+      }
+
+      case "DOMMediaPlaybackStarted":
+      case "DOMMediaPlaybackStopped": {
+        if (!Services.prefs.getBoolPref("browser.tabs.showAudioPlayingIcon") ||
+            !aEvent.isTrusted) {
+          return;
+        }
+
+        let browser = aEvent.originalTarget;
+        if (browser != this.browser) {
+          return;
+        }
+
+        Messaging.sendRequest({
+          type: "Tab:AudioPlayingChange",
+          tabID: this.id,
+          isAudioPlaying: aEvent.type === "DOMMediaPlaybackStarted"
+        });
+        return;
       }
 
       case "DOMWindowClose": {
