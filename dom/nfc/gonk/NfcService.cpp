@@ -38,13 +38,6 @@ static NfcService* gNfcService;
 
 NS_IMPL_ISUPPORTS(NfcService, nsINfcService)
 
-void
-assertIsNfcServiceThread()
-{
-  nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
-  MOZ_ASSERT(thread == gNfcService->GetThread());
-}
-
 //
 // NfcConsumer
 //
@@ -85,7 +78,10 @@ private:
     STREAM_SOCKET
   };
 
+  bool IsNfcServiceThread() const;
+
   nsRefPtr<NfcService> mNfcService;
+  nsCOMPtr<nsIThread> mThread;
   nsRefPtr<mozilla::ipc::ListenSocket> mListenSocket;
   nsRefPtr<mozilla::ipc::StreamSocket> mStreamSocket;
   nsAutoPtr<NfcMessageHandler> mHandler;
@@ -103,8 +99,11 @@ NfcConsumer::Start()
 {
   static const char BASE_SOCKET_NAME[] = "nfcd";
 
-  assertIsNfcServiceThread();
-  MOZ_ASSERT(!mListenSocket);
+  MOZ_ASSERT(!mThread); // already started
+
+  // Store a pointer of the consumer's NFC thread for
+  // use with |IsNfcServiceThread|.
+  mThread = do_GetCurrentThread();
 
   // If we could not cleanup properly before and an old
   // instance of the daemon is still running, we kill it
@@ -122,6 +121,8 @@ NfcConsumer::Start()
                                       mStreamSocket);
   if (NS_FAILED(rv)) {
     mStreamSocket = nullptr;
+    mHandler = nullptr;
+    mThread = nullptr;
     return rv;
   }
 
@@ -131,7 +132,7 @@ NfcConsumer::Start()
 void
 NfcConsumer::Shutdown()
 {
-  assertIsNfcServiceThread();
+  MOZ_ASSERT(IsNfcServiceThread());
 
   mListenSocket->Close();
   mListenSocket = nullptr;
@@ -139,12 +140,14 @@ NfcConsumer::Shutdown()
   mStreamSocket = nullptr;
 
   mHandler = nullptr;
+
+  mThread = nullptr;
 }
 
 nsresult
 NfcConsumer::Send(const CommandOptions& aOptions)
 {
-  assertIsNfcServiceThread();
+  MOZ_ASSERT(IsNfcServiceThread());
 
   if (NS_WARN_IF(!mStreamSocket) ||
       NS_WARN_IF(mStreamSocket->GetConnectionStatus() != SOCKET_CONNECTED)) {
@@ -173,7 +176,7 @@ public:
     : mNfcService(aNfcService)
     , mEvent(aEvent)
   {
-    assertIsNfcServiceThread();
+    MOZ_ASSERT(mNfcService);
   }
 
   NS_IMETHOD Run()
@@ -324,7 +327,7 @@ private:
 nsresult
 NfcConsumer::Receive(UnixSocketBuffer* aBuffer)
 {
-  assertIsNfcServiceThread();
+  MOZ_ASSERT(IsNfcServiceThread());
   MOZ_ASSERT(mHandler);
   MOZ_ASSERT(aBuffer);
 
@@ -350,13 +353,19 @@ NfcConsumer::Receive(UnixSocketBuffer* aBuffer)
   return NS_OK;
 }
 
+bool
+NfcConsumer::IsNfcServiceThread() const
+{
+  return nsCOMPtr<nsIThread>(do_GetCurrentThread()) == mThread;
+}
+
 // |StreamSocketConsumer|, |ListenSocketConsumer|
 
 void
 NfcConsumer::ReceiveSocketData(
   int aIndex, nsAutoPtr<mozilla::ipc::UnixSocketBuffer>& aBuffer)
 {
-  assertIsNfcServiceThread();
+  MOZ_ASSERT(IsNfcServiceThread());
   MOZ_ASSERT(aIndex == STREAM_SOCKET);
 
   Receive(aBuffer);
@@ -365,7 +374,7 @@ NfcConsumer::ReceiveSocketData(
 void
 NfcConsumer::OnConnectSuccess(int aIndex)
 {
-  assertIsNfcServiceThread();
+  MOZ_ASSERT(IsNfcServiceThread());
 
   switch (aIndex) {
     case LISTEN_SOCKET: {
@@ -407,7 +416,7 @@ private:
 void
 NfcConsumer::OnConnectError(int aIndex)
 {
-  assertIsNfcServiceThread();
+  MOZ_ASSERT(IsNfcServiceThread());
 
   NS_DispatchToMainThread(new ShutdownServiceRunnable(mNfcService));
 }
@@ -415,7 +424,7 @@ NfcConsumer::OnConnectError(int aIndex)
 void
 NfcConsumer::OnDisconnect(int aIndex)
 {
-  assertIsNfcServiceThread();
+  MOZ_ASSERT(IsNfcServiceThread());
 }
 
 //
