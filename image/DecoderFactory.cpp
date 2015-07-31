@@ -110,6 +110,8 @@ DecoderFactory::CreateDecoder(DecoderType aType,
                               SourceBuffer* aSourceBuffer,
                               const Maybe<IntSize>& aTargetSize,
                               uint32_t aFlags,
+                              int aSampleSize,
+                              const IntSize& aResolution,
                               bool aIsRedecode,
                               bool aImageIsTransient,
                               bool aImageIsLocked)
@@ -125,6 +127,8 @@ DecoderFactory::CreateDecoder(DecoderType aType,
   decoder->SetMetadataDecode(false);
   decoder->SetIterator(aSourceBuffer->Iterator());
   decoder->SetFlags(aFlags);
+  decoder->SetSampleSize(aSampleSize);
+  decoder->SetResolution(aResolution);
   decoder->SetSendPartialInvalidations(!aIsRedecode);
   decoder->SetImageIsTransient(aImageIsTransient);
 
@@ -151,7 +155,9 @@ DecoderFactory::CreateDecoder(DecoderType aType,
 /* static */ already_AddRefed<Decoder>
 DecoderFactory::CreateMetadataDecoder(DecoderType aType,
                                       RasterImage* aImage,
-                                      SourceBuffer* aSourceBuffer)
+                                      SourceBuffer* aSourceBuffer,
+                                      int aSampleSize,
+                                      const IntSize& aResolution)
 {
   if (aType == DecoderType::UNKNOWN) {
     return nullptr;
@@ -164,6 +170,8 @@ DecoderFactory::CreateMetadataDecoder(DecoderType aType,
   // Initialize the decoder.
   decoder->SetMetadataDecode(true);
   decoder->SetIterator(aSourceBuffer->Iterator());
+  decoder->SetSampleSize(aSampleSize);
+  decoder->SetResolution(aResolution);
 
   decoder->Init();
   if (NS_FAILED(decoder->GetDecoderError())) {

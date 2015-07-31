@@ -176,9 +176,8 @@ nsPNGDecoder::CreateFrame(png_uint_32 aXOffset, png_uint_32 aYOffset,
 
   MOZ_LOG(GetPNGDecoderAccountingLog(), LogLevel::Debug,
          ("PNGDecoderAccounting: nsPNGDecoder::CreateFrame -- created "
-          "image frame with %dx%d pixels in container %p",
-          aWidth, aHeight,
-          GetImage()));
+          "image frame with %dx%d pixels for decoder %p",
+          aWidth, aHeight, this));
 
 #ifdef PNG_APNG_SUPPORTED
   if (png_get_valid(mPNG, mInfo, PNG_INFO_acTL)) {
