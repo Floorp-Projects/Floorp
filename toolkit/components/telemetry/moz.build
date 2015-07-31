@@ -32,7 +32,6 @@ EXTRA_COMPONENTS += [
 EXTRA_JS_MODULES += [
     'TelemetryArchive.jsm',
     'TelemetryLog.jsm',
-    'TelemetryReportingPolicy.jsm',
     'TelemetrySend.jsm',
     'TelemetryStopwatch.jsm',
     'TelemetryStorage.jsm',
