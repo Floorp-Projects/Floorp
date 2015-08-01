@@ -296,10 +296,13 @@ TextureHost::TextureHost(TextureFlags aFlags)
     : mActor(nullptr)
     , mFlags(aFlags)
     , mCompositableCount(0)
-{}
+{
+  MOZ_COUNT_CTOR(TextureHost);
+}
 
 TextureHost::~TextureHost()
 {
+  MOZ_COUNT_DTOR(TextureHost);
 }
 
 void TextureHost::Finalize()

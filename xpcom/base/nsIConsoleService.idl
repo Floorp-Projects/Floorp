@@ -8,7 +8,7 @@
 interface nsIConsoleListener;
 interface nsIConsoleMessage;
 
-[scriptable, uuid(2436031e-2167-4307-9f1c-a3f38b55a224)]
+[scriptable, uuid(0eb81d20-c37e-42d4-82a8-ca9ae96bdf52)]
 interface nsIConsoleService : nsISupports
 {
     void logMessage(in nsIConsoleMessage message);
@@ -44,11 +44,6 @@ interface nsIConsoleService : nsISupports
      * Clear the message buffer (e.g. for privacy reasons).
      */
     void reset();
-
-    /**
-     * Clear the message buffer for a given inner window.
-     */
-    void clearMessagesForWindowID(in uint64_t innerWindowID);
 };
 
 

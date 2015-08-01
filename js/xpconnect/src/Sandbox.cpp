@@ -293,7 +293,7 @@ SandboxFetch(JSContext* cx, JS::HandleObject scope, const CallArgs& args)
     if (rv.Failed()) {
         return ThrowMethodFailed(cx, rv);
     }
-    if (!GetOrCreateDOMReflector(cx, scope, response, args.rval())) {
+    if (!GetOrCreateDOMReflector(cx, response, args.rval())) {
         return false;
     }
     return true;

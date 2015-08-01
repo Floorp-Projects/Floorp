@@ -14,9 +14,15 @@ MacIOSurfaceTextureHostOGL::MacIOSurfaceTextureHostOGL(TextureFlags aFlags,
                                                        const SurfaceDescriptorMacIOSurface& aDescriptor)
   : TextureHost(aFlags)
 {
+  MOZ_COUNT_CTOR(MacIOSurfaceTextureHostOGL);
   mSurface = MacIOSurface::LookupSurface(aDescriptor.surfaceId(),
                                          aDescriptor.scaleFactor(),
                                          !aDescriptor.isOpaque());
+}
+
+MacIOSurfaceTextureHostOGL::~MacIOSurfaceTextureHostOGL()
+{
+  MOZ_COUNT_DTOR(MacIOSurfaceTextureHostOGL);
 }
 
 bool
@@ -77,10 +83,14 @@ MacIOSurfaceTextureSourceOGL::MacIOSurfaceTextureSourceOGL(
                                 MacIOSurface* aSurface)
   : mCompositor(aCompositor)
   , mSurface(aSurface)
-{}
+{
+  MOZ_COUNT_CTOR(MacIOSurfaceTextureSourceOGL);
+}
 
 MacIOSurfaceTextureSourceOGL::~MacIOSurfaceTextureSourceOGL()
-{}
+{
+  MOZ_COUNT_DTOR(MacIOSurfaceTextureSourceOGL);
+}
 
 gfx::IntSize
 MacIOSurfaceTextureSourceOGL::GetSize() const

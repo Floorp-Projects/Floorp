@@ -563,12 +563,20 @@ let settingsToObserve = {
     prefName: 'nglayout.debug.paint_flashing',
     defaultValue: false
   },
+  // FIXME: Bug 1185806 - Provide a common device name setting.
+  // Borrow device name from developer's menu to avoid multiple name settings.
+  'devtools.discovery.device': {
+    prefName: 'dom.presentation.device.name',
+    defaultValue: 'Firefox OS'
+  },
   'devtools.eventlooplag.threshold': 100,
   'devtools.remote.wifi.visible': {
     resetToPref: true
   },
   'dom.mozApps.use_reviewer_certs': false,
   'dom.mozApps.signed_apps_installable_from': 'https://marketplace.firefox.com',
+  'dom.presentation.discovery.enabled': true,
+  'dom.presentation.discoverable': false,
   'dom.serviceWorkers.interception.enabled': true,
   'dom.serviceWorkers.testing.enabled': false,
   'gfx.layerscope.enabled': false,

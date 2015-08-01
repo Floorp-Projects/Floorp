@@ -52,7 +52,7 @@ DetailedPromise::Create(nsIGlobalObject* aGlobal,
                         const nsACString& aName)
 {
   nsRefPtr<DetailedPromise> promise = new DetailedPromise(aGlobal, aName);
-  promise->CreateWrapper(aRv);
+  promise->CreateWrapper(nullptr, aRv);
   return aRv.Failed() ? nullptr : promise.forget();
 }
 

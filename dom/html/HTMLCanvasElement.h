@@ -36,6 +36,7 @@ class HTMLCanvasPrintState;
 class PrintCallback;
 
 enum class CanvasContextType : uint8_t {
+  NoContext,
   Canvas2D,
   WebGL1,
   WebGL2
@@ -262,6 +263,10 @@ public:
   void ResetPrintCallback();
 
   HTMLCanvasElement* GetOriginalCanvas();
+
+  CanvasContextType GetCurrentContextType() {
+    return mCurrentContextType;
+  }
 };
 
 class HTMLCanvasPrintState final : public nsWrapperCache

@@ -45,13 +45,6 @@ using namespace mozilla::gfx;
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Canvas)
 
-namespace {
-
-typedef mozilla::dom::HTMLImageElementOrHTMLCanvasElementOrHTMLVideoElement
-HTMLImageOrCanvasOrVideoElement;
-
-} // namespace
-
 namespace mozilla {
 namespace dom {
 
@@ -283,10 +276,10 @@ HTMLCanvasElement::CopyInnerTo(Element* aDest)
     nsRefPtr<CanvasRenderingContext2D> context2d =
       static_cast<CanvasRenderingContext2D*>(cxt.get());
     if (context2d && !mPrintCallback) {
-      HTMLImageOrCanvasOrVideoElement element;
-      element.SetAsHTMLCanvasElement() = this;
+      CanvasImageSource source;
+      source.SetAsHTMLCanvasElement() = this;
       ErrorResult err;
-      context2d->DrawImage(element,
+      context2d->DrawImage(source,
                            0.0, 0.0, err);
       rv = err.StealNSResult();
     }
@@ -749,9 +742,12 @@ GetCanvasContextType(const nsAString& str, CanvasContextType* const out_type)
 static already_AddRefed<nsICanvasRenderingContextInternal>
 CreateContextForCanvas(CanvasContextType contextType, HTMLCanvasElement* canvas)
 {
+  MOZ_ASSERT(contextType != CanvasContextType::NoContext);
   nsRefPtr<nsICanvasRenderingContextInternal> ret;
 
   switch (contextType) {
+  case CanvasContextType::NoContext:
+    break;
   case CanvasContextType::Canvas2D:
     Telemetry::Accumulate(Telemetry::CANVAS_2D_USED, 1);
     ret = new CanvasRenderingContext2D();
