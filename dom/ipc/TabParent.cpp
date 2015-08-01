@@ -3240,7 +3240,7 @@ TabParent::RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
   nsIPresShell* shell = mFrameElement->OwnerDoc()->GetShell();
   if (!shell) {
     if (Manager()->IsContentParent()) {
-      Manager()->AsContentParent()->SendEndDragSession(true, true);
+      unused << Manager()->AsContentParent()->SendEndDragSession(true, true);
     }
     return true;
   }
