@@ -1046,7 +1046,7 @@ nsXULElement::UnregisterAccessKey(const nsAString& aOldValue)
 
 nsresult
 nsXULElement::BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
-                            const nsAttrValueOrString* aValue, bool aNotify)
+                            nsAttrValueOrString* aValue, bool aNotify)
 {
     if (aNamespaceID == kNameSpaceID_None && aName == nsGkAtoms::accesskey &&
         IsInDoc()) {
