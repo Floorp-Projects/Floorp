@@ -2191,6 +2191,12 @@ Element::SetAttr(int32_t aNamespaceID, nsIAtom* aName,
   nsAutoScriptBlocker scriptBlocker;
 
   nsAttrValue attrValue;
+  nsAttrValue* preparsedAttrValue = value.GetStoredAttrValue();
+  if (preparsedAttrValue) {
+    attrValue.SwapValueWith(*preparsedAttrValue);
+  }
+  // Even the value was pre-parsed in BeforeSetAttr, we still need to call
+  // ParseAttribute because it can have side effects.
   if (!ParseAttribute(aNamespaceID, aName, aValue, attrValue)) {
     attrValue.SetTo(aValue);
   }
