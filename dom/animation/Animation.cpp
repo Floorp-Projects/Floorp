@@ -7,7 +7,9 @@
 #include "Animation.h"
 #include "AnimationUtils.h"
 #include "mozilla/dom/AnimationBinding.h"
+#include "mozilla/dom/AnimationPlaybackEvent.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/AsyncEventDispatcher.h" //For AsyncEventDispatcher
 #include "AnimationCommon.h" // For AnimationCollection,
                              // CommonAnimationManager
 #include "nsIDocument.h" // For nsIDocument
@@ -22,14 +24,17 @@ namespace dom {
 // Static members
 uint64_t Animation::sNextSequenceNum = 0;
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Animation, mGlobal, mTimeline,
-                                      mEffect, mReady, mFinished)
-NS_IMPL_CYCLE_COLLECTING_ADDREF(Animation)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(Animation)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Animation)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED(Animation, DOMEventTargetHelper,
+                                   mTimeline,
+                                   mEffect,
+                                   mReady,
+                                   mFinished)
+
+NS_IMPL_ADDREF_INHERITED(Animation, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(Animation, DOMEventTargetHelper)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(Animation)
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 JSObject*
 Animation::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
@@ -190,8 +195,9 @@ Animation::PlayState() const
 Promise*
 Animation::GetReady(ErrorResult& aRv)
 {
-  if (!mReady && mGlobal) {
-    mReady = Promise::Create(mGlobal, aRv); // Lazily create on demand
+  nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
+  if (!mReady && global) {
+    mReady = Promise::Create(global, aRv); // Lazily create on demand
   }
   if (!mReady) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -204,8 +210,9 @@ Animation::GetReady(ErrorResult& aRv)
 Promise*
 Animation::GetFinished(ErrorResult& aRv)
 {
-  if (!mFinished && mGlobal) {
-    mFinished = Promise::Create(mGlobal, aRv); // Lazily create on demand
+  nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
+  if (!mFinished && global) {
+    mFinished = Promise::Create(global, aRv); // Lazily create on demand
   }
   if (!mFinished) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -470,6 +477,8 @@ Animation::DoCancel()
     mFinished->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
   }
   ResetFinishedPromise();
+
+  DispatchPlaybackEvent(NS_LITERAL_STRING("cancel"));
 
   mHoldTime.SetNull();
   mStartTime.SetNull();
@@ -1067,10 +1076,10 @@ void
 Animation::DoFinishNotification(SyncNotifyFlag aSyncNotifyFlag)
 {
   if (aSyncNotifyFlag == SyncNotifyFlag::Sync) {
-    MaybeResolveFinishedPromise();
+    DoFinishNotificationImmediately();
   } else if (!mFinishNotificationTask.IsPending()) {
     nsRefPtr<nsRunnableMethod<Animation>> runnable =
-      NS_NewRunnableMethod(this, &Animation::MaybeResolveFinishedPromise);
+      NS_NewRunnableMethod(this, &Animation::DoFinishNotificationImmediately);
     Promise::DispatchToMicroTask(runnable);
     mFinishNotificationTask = runnable;
   }
@@ -1086,16 +1095,45 @@ Animation::ResetFinishedPromise()
 void
 Animation::MaybeResolveFinishedPromise()
 {
+  if (mFinished) {
+    mFinished->MaybeResolve(this);
+  }
+  mFinishedIsResolved = true;
+}
+
+void
+Animation::DoFinishNotificationImmediately()
+{
   mFinishNotificationTask.Revoke();
 
   if (PlayState() != AnimationPlayState::Finished) {
     return;
   }
 
-  if (mFinished) {
-    mFinished->MaybeResolve(this);
+  MaybeResolveFinishedPromise();
+
+  DispatchPlaybackEvent(NS_LITERAL_STRING("finish"));
+}
+
+void
+Animation::DispatchPlaybackEvent(const nsAString& aName)
+{
+  AnimationPlaybackEventInit init;
+
+  if (aName.EqualsLiteral("finish")) {
+    init.mCurrentTime = GetCurrentTimeAsDouble();
   }
-  mFinishedIsResolved = true;
+  if (mTimeline) {
+    init.mTimelineTime = mTimeline->GetCurrentTimeAsDouble();
+  }
+
+  nsRefPtr<AnimationPlaybackEvent> event =
+    AnimationPlaybackEvent::Constructor(this, aName, init);
+  event->SetTrusted(true);
+
+  nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
+    new AsyncEventDispatcher(this, event);
+  asyncDispatcher->PostDOMEvent();
 }
 
 } // namespace dom

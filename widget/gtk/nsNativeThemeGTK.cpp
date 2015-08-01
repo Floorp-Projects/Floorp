@@ -1456,6 +1456,19 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
         *aIsOverridable = false;
       }
       break;
+    case NS_THEME_RANGE:
+      {
+        gint scale_width, scale_height;
+
+        moz_gtk_get_scale_metrics(IsRangeHorizontal(aFrame) ?
+            GTK_ORIENTATION_HORIZONTAL : GTK_ORIENTATION_VERTICAL,
+            &scale_width, &scale_height);
+        aResult->width = scale_width;
+        aResult->height = scale_height;
+
+        *aIsOverridable = true;
+      }
+      break;
     case NS_THEME_SCALE_THUMB_HORIZONTAL:
     case NS_THEME_SCALE_THUMB_VERTICAL:
       {

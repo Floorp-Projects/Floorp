@@ -22,6 +22,7 @@
 namespace mozilla {
 namespace dom {
 class TestExternalInterface;
+class Promise;
 } // namespace dom
 } // namespace mozilla
 
@@ -706,6 +707,18 @@ public:
   void PassNullableDateSequence(const Sequence<Nullable<Date> >&);
   Date ReceiveDate();
   Nullable<Date> ReceiveNullableDate();
+
+  // Promise types
+  void PassPromise(Promise&);
+  void PassNullablePromise(Promise*);
+  void PassOptionalPromise(const Optional<OwningNonNull<Promise>>&);
+  void PassOptionalNullablePromise(const Optional<nsRefPtr<Promise>>&);
+  void PassOptionalNullablePromiseWithDefaultValue(Promise*);
+  void PassPromiseSequence(const Sequence<OwningNonNull<Promise>>&);
+  void PassPromiseMozMap(const MozMap<nsRefPtr<Promise>>&);
+  void PassNullablePromiseSequence(const Sequence<nsRefPtr<Promise>> &);
+  Promise* ReceivePromise();
+  already_AddRefed<Promise> ReceiveAddrefedPromise();
 
   // binaryNames tests
   void MethodRenamedTo();

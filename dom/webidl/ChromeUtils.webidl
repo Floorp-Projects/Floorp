@@ -46,11 +46,13 @@ interface ChromeUtils : ThreadSafeChromeUtils {
  */
 dictionary OriginAttributesDictionary {
   unsigned long appId = 0;
+  unsigned long userContextId = 0;
   boolean inBrowser = false;
   DOMString addonId = "";
 };
 dictionary OriginAttributesPatternDictionary {
   unsigned long appId;
+  unsigned long userContextId;
   boolean inBrowser;
   DOMString addonId;
 };

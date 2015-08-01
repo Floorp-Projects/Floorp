@@ -160,13 +160,15 @@ def WebIDLTest(parser, harness):
                  "optional Dict2", "sequence<long>", "sequence<short>",
                  "MozMap<object>", "MozMap<Dict>", "MozMap<long>",
                  "long[]", "short[]", "Date", "Date?", "any",
+                 "Promise<any>", "Promise<any>?",
                  "USVString", "ArrayBuffer", "ArrayBufferView", "SharedArrayBuffer", "SharedArrayBufferView",
                  "Uint8Array", "SharedUint8Array", "Uint16Array", "SharedUint16Array" ]
     # When we can parse Date and RegExp, we need to add them here.
 
     # Try to categorize things a bit to keep list lengths down
     def allBut(list1, list2):
-        return [a for a in list1 if a not in list2 and a != "any"]
+        return [a for a in list1 if a not in list2 and
+                (a != "any" and a != "Promise<any>" and a != "Promise<any>?")]
     numerics = [ "long", "short", "long?", "short?" ]
     booleans = [ "boolean", "boolean?" ]
     primitives = numerics + booleans
@@ -182,7 +184,7 @@ def WebIDLTest(parser, harness):
                    "UnrelatedInterface", "ImplementedInterface" ] + bufferSourceTypes + sharedBufferSourceTypes
     nullables = ["long?", "short?", "boolean?", "Interface?",
                  "CallbackInterface?", "optional Dict", "optional Dict2",
-                 "Date?", "any"]
+                 "Date?", "any", "Promise<any>?"]
     dates = [ "Date", "Date?" ]
     sequences = [ "sequence<long>", "sequence<short>" ]
     arrays = [ "long[]", "short[]" ]
@@ -238,6 +240,8 @@ def WebIDLTest(parser, harness):
     setDistinguishable("Date", allBut(argTypes, dates + ["object"]))
     setDistinguishable("Date?", allBut(argTypes, dates + nullables + ["object"]))
     setDistinguishable("any", [])
+    setDistinguishable("Promise<any>", [])
+    setDistinguishable("Promise<any>?", [])
     setDistinguishable("ArrayBuffer", allBut(argTypes, ["ArrayBuffer", "object"]))
     setDistinguishable("ArrayBufferView", allBut(argTypes, ["ArrayBufferView", "Uint8Array", "Uint16Array", "object"]))
     setDistinguishable("Uint8Array", allBut(argTypes, ["ArrayBufferView", "Uint8Array", "object"]))
@@ -265,6 +269,7 @@ def WebIDLTest(parser, harness):
           callback Callback2 = long(short arg);
           dictionary Dict {};
           dictionary Dict2 {};
+          interface _Promise {};
           interface TestInterface {%s
           };
         """

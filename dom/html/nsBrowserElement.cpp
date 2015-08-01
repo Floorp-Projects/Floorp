@@ -625,6 +625,79 @@ nsBrowserElement::GetAllowedAudioChannels(
   aAudioChannels.AppendElements(mBrowserElementAudioChannels);
 }
 
+already_AddRefed<DOMRequest>
+nsBrowserElement::GetMuted(ErrorResult& aRv)
+{
+  NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
+  NS_ENSURE_TRUE(IsNotWidgetOrThrow(aRv), nullptr);
+
+  nsCOMPtr<nsIDOMDOMRequest> req;
+  nsresult rv = mBrowserElementAPI->GetMuted(getter_AddRefs(req));
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  return req.forget().downcast<DOMRequest>();
+}
+
+void
+nsBrowserElement::Mute(ErrorResult& aRv)
+{
+  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
+  NS_ENSURE_TRUE_VOID(IsNotWidgetOrThrow(aRv));
+
+  nsresult rv = mBrowserElementAPI->Mute();
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
+}
+
+void
+nsBrowserElement::Unmute(ErrorResult& aRv)
+{
+  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
+  NS_ENSURE_TRUE_VOID(IsNotWidgetOrThrow(aRv));
+
+  nsresult rv = mBrowserElementAPI->Unmute();
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
+}
+
+already_AddRefed<DOMRequest>
+nsBrowserElement::GetVolume(ErrorResult& aRv)
+{
+  NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
+  NS_ENSURE_TRUE(IsNotWidgetOrThrow(aRv), nullptr);
+
+  nsCOMPtr<nsIDOMDOMRequest> req;
+  nsresult rv = mBrowserElementAPI->GetVolume(getter_AddRefs(req));
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  return req.forget().downcast<DOMRequest>();
+}
+
+void
+nsBrowserElement::SetVolume(float aVolume, ErrorResult& aRv)
+{
+  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
+  NS_ENSURE_TRUE_VOID(IsNotWidgetOrThrow(aRv));
+
+  nsresult rv = mBrowserElementAPI->SetVolume(aVolume);
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
+}
+
 void
 nsBrowserElement::SetNFCFocus(bool aIsFocus,
                               ErrorResult& aRv)

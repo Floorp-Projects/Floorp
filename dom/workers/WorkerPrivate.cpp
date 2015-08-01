@@ -35,6 +35,7 @@
 #include "nsPIDOMWindow.h"
 
 #include <algorithm>
+#include "ImageContainer.h"
 #include "jsfriendapi.h"
 #include "js/MemoryMetrics.h"
 #include "mozilla/Assertions.h"
@@ -49,6 +50,8 @@
 #include "mozilla/dom/ErrorEventBinding.h"
 #include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/FunctionBinding.h"
+#include "mozilla/dom/ImageBitmap.h"
+#include "mozilla/dom/ImageBitmapBinding.h"
 #include "mozilla/dom/ImageData.h"
 #include "mozilla/dom/ImageDataBinding.h"
 #include "mozilla/dom/MessageEvent.h"
@@ -634,6 +637,18 @@ struct WorkerStructuredCloneCallbacks
       return formData;
     }
 
+    // See if the object is an ImageBitmap.
+    if (aTag == SCTAG_DOM_IMAGEBITMAP) {
+      NS_ASSERTION(aClosure, "Null pointer!");
+
+      // Get the current global object.
+      auto* closure = static_cast<WorkerStructuredCloneClosure*>(aClosure);
+      nsCOMPtr<nsIGlobalObject> parent = do_QueryInterface(closure->mParentWindow);
+      // aData is the index of the cloned image.
+      return ImageBitmap::ReadStructuredClone(aCx, aReader, parent,
+                                              closure->mClonedImages, aData);
+    }
+
     Error(aCx, 0);
     return nullptr;
   }
@@ -674,6 +689,16 @@ struct WorkerStructuredCloneCallbacks
         if (WriteFormData(aCx, aWriter, formData, *closure)) {
           return true;
         }
+      }
+    }
+
+    // See if this is an ImageBitmap object.
+    {
+      ImageBitmap* imageBitmap = nullptr;
+      if (NS_SUCCEEDED(UNWRAP_OBJECT(ImageBitmap, aObj, imageBitmap))) {
+        return ImageBitmap::WriteStructuredClone(aWriter,
+                                                 closure->mClonedImages,
+                                                 imageBitmap);
       }
     }
 
@@ -810,6 +835,18 @@ struct MainThreadWorkerStructuredCloneCallbacks
       return formData;
     }
 
+    // See if the object is a ImageBitmap
+    if (aTag == SCTAG_DOM_IMAGEBITMAP) {
+      NS_ASSERTION(aClosure, "Null pointer!");
+
+      // Get the current global object.
+      auto* closure = static_cast<WorkerStructuredCloneClosure*>(aClosure);
+      nsCOMPtr<nsIGlobalObject> parent = do_QueryInterface(closure->mParentWindow);
+      // aData is the index of the cloned image.
+      return ImageBitmap::ReadStructuredClone(aCx, aReader, parent,
+                                              closure->mClonedImages, aData);
+    }
+
     JS_ClearPendingException(aCx);
     return NS_DOMReadStructuredClone(aCx, aReader, aTag, aData, nullptr);
   }
@@ -836,6 +873,16 @@ struct MainThreadWorkerStructuredCloneCallbacks
         } else if (WriteBlobOrFile(aCx, aWriter, blobImpl, *closure)) {
           return true;
         }
+      }
+    }
+
+    // Handle imageBitmap cloning
+    {
+      ImageBitmap* imageBitmap = nullptr;
+      if (NS_SUCCEEDED(UNWRAP_OBJECT(ImageBitmap, aObj, imageBitmap))) {
+        return ImageBitmap::WriteStructuredClone(aWriter,
+                                                 closure->mClonedImages,
+                                                 imageBitmap);
       }
     }
 
@@ -1286,6 +1333,7 @@ public:
     // cloning into worker when array goes out of scope.
     WorkerStructuredCloneClosure closure;
     closure.mClonedObjects.SwapElements(mClosure.mClonedObjects);
+    closure.mClonedImages.SwapElements(mClosure.mClonedImages);
     MOZ_ASSERT(mClosure.mMessagePorts.IsEmpty());
     closure.mMessagePortIdentifiers.SwapElements(mClosure.mMessagePortIdentifiers);
 
@@ -3583,6 +3631,7 @@ WorkerPrivateParent<Derived>::DispatchMessageEventToMessagePort(
 
   WorkerStructuredCloneClosure closure;
   closure.mClonedObjects.SwapElements(aClosure.mClonedObjects);
+  closure.mClonedImages.SwapElements(aClosure.mClonedImages);
   MOZ_ASSERT(aClosure.mMessagePorts.IsEmpty());
   closure.mMessagePortIdentifiers.SwapElements(aClosure.mMessagePortIdentifiers);
 
@@ -7536,6 +7585,7 @@ WorkerStructuredCloneClosure::Clear()
 {
   mParentWindow = nullptr;
   mClonedObjects.Clear();
+  mClonedImages.Clear();
   mMessagePorts.Clear();
   mMessagePortIdentifiers.Clear();
   mTransferredPorts.Clear();
