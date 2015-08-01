@@ -61,6 +61,8 @@ imgTools::DecodeImage(nsIInputStream* aInStr,
                       const nsACString& aMimeType,
                       imgIContainer** aContainer)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   nsresult rv;
 
   NS_ENSURE_ARG_POINTER(aInStr);

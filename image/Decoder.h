@@ -290,9 +290,6 @@ public:
    */
   RasterImage* GetImage() const { MOZ_ASSERT(mImage); return mImage.get(); }
 
-  // XXX(seth): This should be removed once we can optimize imgFrame objects
-  // off-main-thread. It only exists to support the code in Finish() for
-  // nsICODecoder.
   RawAccessFrameRef GetCurrentFrameRef()
   {
     return mCurrentFrame ? mCurrentFrame->RawAccessRef()

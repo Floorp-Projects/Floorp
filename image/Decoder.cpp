@@ -82,6 +82,11 @@ Decoder::Init()
   // No re-initializing
   MOZ_ASSERT(!mInitialized, "Can't re-initialize a decoder!");
 
+  // It doesn't make sense to decode anything but the first frame if we can't
+  // store anything in the SurfaceCache, since only the last frame we decode
+  // will be retrievable.
+  MOZ_ASSERT(ShouldUseSurfaceCache() || IsFirstFrameDecode());
+
   // Implementation-specific initialization
   InitInternal();
 
