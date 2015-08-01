@@ -87,11 +87,23 @@ function* test_playing_icon_on_tab(tab, browser, isPinned) {
 
   yield test_tooltip(icon, "This tab is playing audio");
 
+  yield test_mute_tab(tab, icon, true);
+
   yield ContentTask.spawn(browser, {}, function* () {
     let audio = content.document.querySelector("audio");
     audio.pause();
   });
   yield wait_for_tab_playing_event(tab, false);
+
+  ok(tab.hasAttribute("muted") &&
+     !tab.hasAttribute("soundplaying"), "Tab should still be muted but not playing");
+
+  yield test_tooltip(icon, "This tab has been muted");
+
+  yield test_mute_tab(tab, icon, false);
+
+  ok(!tab.hasAttribute("muted") &&
+     !tab.hasAttribute("soundplaying"), "Tab should not be be muted or playing");
 }
 
 function* test_on_browser(browser) {

@@ -5885,20 +5885,24 @@
     <handlers>
       <handler event="mouseover"><![CDATA[
         let anonid = event.originalTarget.getAttribute("anonid");
+        let iconVisible = this.hasAttribute("soundplaying") ||
+                          this.hasAttribute("muted");
         if (anonid == "close-button")
           this.mOverCloseButton = true;
         else if ((anonid == "soundplaying-icon") ||
-                 ((anonid == "overlay-icon") && this.hasAttribute("soundplaying")))
+                 ((anonid == "overlay-icon") && iconVisible))
           this._overPlayingIcon = true;
 
         this._mouseenter();
       ]]></handler>
       <handler event="mouseout"><![CDATA[
         let anonid = event.originalTarget.getAttribute("anonid");
+        let iconVisible = this.hasAttribute("soundplaying") ||
+                          this.hasAttribute("muted");
         if (anonid == "close-button")
           this.mOverCloseButton = false;
         else if ((anonid == "soundplaying-icon") ||
-                 ((anonid == "overlay-icon") && this.hasAttribute("soundplaying")))
+                 ((anonid == "overlay-icon") && iconVisible))
           this._overPlayingIcon = false;
 
         this._mouseleave();
@@ -5928,8 +5932,10 @@
         }
 
         let anonid = event.originalTarget.getAttribute("anonid");
+        let iconVisible = this.hasAttribute("soundplaying") ||
+                          this.hasAttribute("muted");
         if ((anonid == "soundplaying-icon") ||
-            ((anonid == "overlay-icon") && this.hasAttribute("soundplaying"))) {
+            ((anonid == "overlay-icon") && iconVisible)) {
           this._toggleMuteAudio();
         }
       ]]>
