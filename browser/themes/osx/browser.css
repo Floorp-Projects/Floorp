@@ -1593,7 +1593,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   #urlbar {
     border-color: #fff;
     border-radius: 3px;
-    box-shadow: 0 1px 0 0 rgba(0,0,0,0.2);
+    box-shadow: 0 .5px 0 0 rgba(0,0,0,0.2);
     background-image: none;
   }
   .searchbar-textbox:-moz-window-inactive,
