@@ -124,10 +124,9 @@ nsSound::~nsSound()
 
 void nsSound::ShutdownOldPlayerThread()
 {
-  if (mPlayerThread) {
-    mPlayerThread->Shutdown();
-    mPlayerThread = nullptr;
-  }
+  nsCOMPtr<nsIThread> playerThread(mPlayerThread.forget());
+  if (playerThread)
+    playerThread->Shutdown();
 }
 
 void nsSound::PurgeLastSound() 
