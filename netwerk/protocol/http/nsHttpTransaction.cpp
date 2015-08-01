@@ -1052,6 +1052,7 @@ nsHttpTransaction::Close(nsresult reason)
 
     // closing this pipe triggers the channel's OnStopRequest method.
     mPipeOut->CloseWithStatus(reason);
+    mPipeOut = nullptr;
 }
 
 nsHttpConnectionInfo *
