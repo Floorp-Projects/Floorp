@@ -2694,136 +2694,128 @@ protected:
   mozilla::dom::VisibilityState mVisibilityState;
 
   // True if BIDI is enabled.
-  bool mBidiEnabled;
+  bool mBidiEnabled : 1;
   // True if a MathML element has ever been owned by this document.
-  bool mMathMLEnabled;
+  bool mMathMLEnabled : 1;
 
   // True if this document is the initial document for a window.  This should
   // basically be true only for documents that exist in newly-opened windows or
   // documents created to satisfy a GetDocument() on a window when there's no
   // document in it.
-  bool mIsInitialDocumentInWindow;
+  bool mIsInitialDocumentInWindow : 1;
 
   // True if we're loaded as data and therefor has any dangerous stuff, such
   // as scripts and plugins, disabled.
-  bool mLoadedAsData;
+  bool mLoadedAsData : 1;
 
   // This flag is only set in XMLDocument, for e.g. documents used in XBL. We
   // don't want animations to play in such documents, so we need to store the
   // flag here so that we can check it in nsDocument::GetAnimationController.
-  bool mLoadedAsInteractiveData;
+  bool mLoadedAsInteractiveData : 1;
 
   // If true, whoever is creating the document has gotten it to the
   // point where it's safe to start layout on it.
-  bool mMayStartLayout;
+  bool mMayStartLayout : 1;
 
   // True iff we've ever fired a DOMTitleChanged event for this document
-  bool mHaveFiredTitleChange;
+  bool mHaveFiredTitleChange : 1;
 
   // True iff IsShowing() should be returning true
-  bool mIsShowing;
+  bool mIsShowing : 1;
 
   // True iff the document "page" is not hidden (i.e. currently in the
   // bfcache)
-  bool mVisible;
+  bool mVisible : 1;
 
   // True if our content viewer has been removed from the docshell
   // (it may still be displayed, but in zombie state). Form control data
   // has been saved.
-  bool mRemovedFromDocShell;
+  bool mRemovedFromDocShell : 1;
 
   // True iff DNS prefetch is allowed for this document.  Note that if the
   // document has no window, DNS prefetch won't be performed no matter what.
-  bool mAllowDNSPrefetch;
+  bool mAllowDNSPrefetch : 1;
 
   // True when this document is a static clone of a normal document
-  bool mIsStaticDocument;
+  bool mIsStaticDocument : 1;
 
   // True while this document is being cloned to a static document.
-  bool mCreatingStaticClone;
+  bool mCreatingStaticClone : 1;
 
   // True iff the document is being unlinked or deleted.
-  bool mInUnlinkOrDeletion;
+  bool mInUnlinkOrDeletion : 1;
 
   // True if document has ever had script handling object.
-  bool mHasHadScriptHandlingObject;
+  bool mHasHadScriptHandlingObject : 1;
 
   // True if we're an SVG document being used as an image.
-  bool mIsBeingUsedAsImage;
+  bool mIsBeingUsedAsImage : 1;
 
   // True is this document is synthetic : stand alone image, video, audio
   // file, etc.
-  bool mIsSyntheticDocument;
+  bool mIsSyntheticDocument : 1;
 
   // True if this document has links whose state needs updating
-  bool mHasLinksToUpdate;
+  bool mHasLinksToUpdate : 1;
 
   // True if a layout flush might not be a no-op
-  bool mNeedLayoutFlush;
+  bool mNeedLayoutFlush : 1;
 
   // True if a style flush might not be a no-op
-  bool mNeedStyleFlush;
+  bool mNeedStyleFlush : 1;
 
   // True if a DOMMutationObserver is perhaps attached to a node in the document.
-  bool mMayHaveDOMMutationObservers;
+  bool mMayHaveDOMMutationObservers : 1;
 
   // True if an nsIAnimationObserver is perhaps attached to a node in the document.
-  bool mMayHaveAnimationObservers;
+  bool mMayHaveAnimationObservers : 1;
 
   // True if a document has loaded Mixed Active Script (see nsMixedContentBlocker.cpp)
-  bool mHasMixedActiveContentLoaded;
+  bool mHasMixedActiveContentLoaded : 1;
 
   // True if a document has blocked Mixed Active Script (see nsMixedContentBlocker.cpp)
-  bool mHasMixedActiveContentBlocked;
+  bool mHasMixedActiveContentBlocked : 1;
 
   // True if a document has loaded Mixed Display/Passive Content (see nsMixedContentBlocker.cpp)
-  bool mHasMixedDisplayContentLoaded;
+  bool mHasMixedDisplayContentLoaded : 1;
 
   // True if a document has blocked Mixed Display/Passive Content (see nsMixedContentBlocker.cpp)
-  bool mHasMixedDisplayContentBlocked;
+  bool mHasMixedDisplayContentBlocked : 1;
 
   // True if a document has blocked Tracking Content
-  bool mHasTrackingContentBlocked;
+  bool mHasTrackingContentBlocked : 1;
 
   // True if a document has loaded Tracking Content
-  bool mHasTrackingContentLoaded;
+  bool mHasTrackingContentLoaded : 1;
 
   // True if DisallowBFCaching has been called on this document.
-  bool mBFCacheDisallowed;
+  bool mBFCacheDisallowed : 1;
 
   // If true, we have an input encoding.  If this is false, then the
   // document was created entirely in memory
-  bool mHaveInputEncoding;
+  bool mHaveInputEncoding : 1;
 
-  bool mHasHadDefaultView;
+  bool mHasHadDefaultView : 1;
 
   // Whether style sheet change events will be dispatched for this document
-  bool mStyleSheetChangeEventsEnabled;
+  bool mStyleSheetChangeEventsEnabled : 1;
 
   // Whether the document was created by a srcdoc iframe.
-  bool mIsSrcdocDocument;
+  bool mIsSrcdocDocument : 1;
 
   // Records whether we've done a document.open. If this is true, it's possible
   // for nodes from this document to have outdated wrappers in their wrapper
   // caches.
-  bool mDidDocumentOpen;
-
-#ifdef DEBUG
-  /**
-   * This is true while FlushPendingLinkUpdates executes.  Calls to
-   * [Un]RegisterPendingLinkUpdate will assert when this is true.
-   */
-  bool mIsLinkUpdateRegistrationsForbidden;
-#endif
+  bool mDidDocumentOpen : 1;
 
   // Is the current mFontFaceSet valid?
-  bool mFontFaceSetDirty;
+  bool mFontFaceSetDirty : 1;
 
   // Has GetUserFontSet() been called?
-  bool mGetUserFontSetCalled;
+  bool mGetUserFontSetCalled : 1;
 
   // Do we currently have an event posted to call FlushUserFontSet?
-  bool mPostedFlushUserFontSet;
+  bool mPostedFlushUserFontSet : 1;
 
   enum Type {
     eUnknown, // should never be used
@@ -2834,17 +2826,25 @@ protected:
     eXUL
   };
 
-  uint8_t mType;
+  Type mType;
 
   uint8_t mDefaultElementType;
 
-  enum {
+  enum Tri {
     eTriUnset = 0,
     eTriFalse,
     eTriTrue
   };
 
-  uint8_t mAllowXULXBL;
+  Tri mAllowXULXBL;
+
+#ifdef DEBUG
+  /**
+   * This is true while FlushPendingLinkUpdates executes.  Calls to
+   * [Un]RegisterPendingLinkUpdate will assert when this is true.
+   */
+  bool mIsLinkUpdateRegistrationsForbidden;
+#endif
 
   // The document's script global object, the object from which the
   // document can get its script context and scope. This is the
