@@ -170,12 +170,6 @@ public:
   // Methods inherited from Image
   virtual void OnSurfaceDiscarded() override;
 
-  // Raster-specific methods
-  static NS_METHOD WriteToSourceBuffer(nsIInputStream* aIn, void* aClosure,
-                                       const char* aFromRawSegment,
-                                       uint32_t aToOffset, uint32_t aCount,
-                                       uint32_t* aWriteCount);
-
   /* The total number of frames in this image. */
   uint32_t GetNumFrames() const { return mFrameCount; }
 

@@ -21,6 +21,8 @@
 #include "mozilla/nsRefPtr.h"
 #include "nsTArray.h"
 
+class nsIInputStream;
+
 namespace mozilla {
 namespace image {
 
@@ -228,6 +230,9 @@ public:
 
   /// Append the provided data to the buffer.
   nsresult Append(const char* aData, size_t aLength);
+
+  /// Append the data available on the provided nsIInputStream to the buffer.
+  nsresult AppendFromInputStream(nsIInputStream* aInputStream, uint32_t aCount);
 
   /**
    * Mark the buffer complete, with a status that will be available to
