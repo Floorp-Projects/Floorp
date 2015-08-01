@@ -29,14 +29,19 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace CanvasUtils {
 
+/**
+ * This security check utility might be called from an source that never taints
+ * others. For example, while painting a CanvasPattern, which is created from an
+ * ImageBitmap, onto a canvas. In this case, the caller could set the CORSUsed
+ * true in order to pass this check and leave the aPrincipal to be a nullptr
+ * since the aPrincipal is not going to be used.
+ */
 void
 DoDrawImageSecurityCheck(dom::HTMLCanvasElement *aCanvasElement,
                          nsIPrincipal *aPrincipal,
                          bool forceWriteOnly,
                          bool CORSUsed)
 {
-    NS_PRECONDITION(aPrincipal, "Must have a principal here");
-
     // Callers should ensure that mCanvasElement is non-null before calling this
     if (!aCanvasElement) {
         NS_WARNING("DoDrawImageSecurityCheck called without canvas element!");
@@ -55,6 +60,8 @@ DoDrawImageSecurityCheck(dom::HTMLCanvasElement *aCanvasElement,
     // No need to do a security check if the image used CORS for the load
     if (CORSUsed)
         return;
+
+    NS_PRECONDITION(aPrincipal, "Must have a principal here");
 
     if (aCanvasElement->NodePrincipal()->Subsumes(aPrincipal)) {
         // This canvas has access to that image anyway

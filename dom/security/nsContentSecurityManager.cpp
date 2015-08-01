@@ -118,7 +118,12 @@ DoContentSecurityChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
   nsCOMPtr<nsINode> requestingContext = nullptr;
 
   switch(contentPolicyType) {
-    case nsIContentPolicy::TYPE_OTHER:
+    case nsIContentPolicy::TYPE_OTHER: {
+      mimeTypeGuess = EmptyCString();
+      requestingContext = aLoadInfo->LoadingNode();
+      break;
+    }
+
     case nsIContentPolicy::TYPE_SCRIPT:
     case nsIContentPolicy::TYPE_IMAGE:
     case nsIContentPolicy::TYPE_STYLESHEET:

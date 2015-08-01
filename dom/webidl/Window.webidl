@@ -483,3 +483,4 @@ interface ChromeWindow {
 
 Window implements ChromeWindow;
 Window implements GlobalFetch;
+Window implements ImageBitmapFactories;

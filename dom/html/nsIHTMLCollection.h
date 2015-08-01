@@ -10,6 +10,7 @@
 #include "nsIDOMHTMLCollection.h"
 #include "nsTArrayForwardDeclare.h"
 #include "nsWrapperCache.h"
+#include "js/GCAPI.h"
 #include "js/TypeDecls.h"
 
 class nsINode;
@@ -81,6 +82,14 @@ public:
   JSObject* GetWrapperPreserveColor()
   {
     return GetWrapperPreserveColorInternal();
+  }
+  JSObject* GetWrapper()
+  {
+    JSObject* obj = GetWrapperPreserveColor();
+    if (obj) {
+      JS::ExposeObjectToActiveJS(obj);
+    }
+    return obj;
   }
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) = 0;
 protected:

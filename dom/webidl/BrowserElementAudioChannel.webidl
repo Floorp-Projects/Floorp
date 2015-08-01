@@ -34,4 +34,44 @@ partial interface BrowserElementPrivileged {
    Pref="dom.mozBrowserFramesEnabled",
    CheckAnyPermissions="browser"]
   readonly attribute sequence<BrowserElementAudioChannel> allowedAudioChannels;
+
+  /**
+   * Mutes all audio in this browser.
+   */
+  [Throws,
+   Pref="dom.mozBrowserFramesEnabled",
+   CheckAnyPermissions="browser"]
+  void mute();
+
+  /**
+   * Unmutes all audio in this browser.
+   */
+  [Throws,
+   Pref="dom.mozBrowserFramesEnabled",
+   CheckAnyPermissions="browser"]
+  void unmute();
+
+  /**
+   * Obtains whether or not the browser is muted.
+   */
+  [Throws,
+   Pref="dom.mozBrowserFramesEnabled",
+   CheckAnyPermissions="browser"]
+  DOMRequest getMuted();
+
+  /**
+   * Sets the volume for the browser.
+   */
+  [Throws,
+   Pref="dom.mozBrowserFramesEnabled",
+   CheckAnyPermissions="browser"]
+  void setVolume(float volume);
+
+  /**
+   * Gets the volume for the browser.
+   */
+  [Throws,
+   Pref="dom.mozBrowserFramesEnabled",
+   CheckAnyPermissions="browser"]
+  DOMRequest getVolume();
 };

@@ -35,6 +35,10 @@ public:
 private:
   virtual ~PresentationDeviceManager();
 
+  void Init();
+
+  void Shutdown();
+
   void LoadDeviceProviders();
 
   void UnloadDeviceProviders();

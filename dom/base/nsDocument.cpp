@@ -1289,57 +1289,22 @@ nsExternalResourceMap::PendingLoad::StartLoad(nsIURI* aURI,
   NS_PRECONDITION(aURI, "Must have a URI");
   NS_PRECONDITION(aRequestingNode, "Must have a node");
 
-  // Time to start a load.  First, the security checks.
+  nsCOMPtr<nsILoadGroup> loadGroup =
+    aRequestingNode->OwnerDoc()->GetDocumentLoadGroup();
 
-  nsIPrincipal* requestingPrincipal = aRequestingNode->NodePrincipal();
-
-  nsresult rv = nsContentUtils::GetSecurityManager()->
-    CheckLoadURIWithPrincipal(requestingPrincipal, aURI,
-                              nsIScriptSecurityManager::STANDARD);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Allow data URIs and other URI's that inherit their principal by passing
-  // true as the 3rd argument of CheckMayLoad, since we want
-  // to allow external resources from data URIs regardless of the difference
-  // in URI scheme.
-  rv = requestingPrincipal->CheckMayLoad(aURI, true, true);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OTHER,
-                                 aURI,
-                                 requestingPrincipal,
-                                 aRequestingNode,
-                                 EmptyCString(), //mime guess
-                                 nullptr,         //extra
-                                 &shouldLoad,
-                                 nsContentUtils::GetContentPolicy(),
-                                 nsContentUtils::GetSecurityManager());
-  if (NS_FAILED(rv)) return rv;
-  if (NS_CP_REJECTED(shouldLoad)) {
-    // Disallowed by content policy
-    return NS_ERROR_CONTENT_BLOCKED;
-  }
-
-  nsIDocument* doc = aRequestingNode->OwnerDoc();
-
-  nsCOMPtr<nsIInterfaceRequestor> req = nsContentUtils::SameOriginChecker();
-
-  nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();
+  nsresult rv = NS_OK;
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannel(getter_AddRefs(channel),
                      aURI,
                      aRequestingNode,
-                     nsILoadInfo::SEC_NORMAL,
+                     nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS,
                      nsIContentPolicy::TYPE_OTHER,
-                     loadGroup,
-                     req); // aCallbacks
-
+                     loadGroup);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mURI = aURI;
 
-  return channel->AsyncOpen(this, nullptr);
+  return channel->AsyncOpen2(this);
 }
 
 NS_IMPL_ISUPPORTS(nsExternalResourceMap::LoadgroupCallbacks,

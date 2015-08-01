@@ -19,7 +19,8 @@
 
 #include "nsIConsoleService.h"
 
-class nsConsoleService final : public nsIConsoleService
+class nsConsoleService final : public nsIConsoleService,
+                               public nsIObserver
 {
 public:
   nsConsoleService();
@@ -27,6 +28,7 @@ public:
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICONSOLESERVICE
+  NS_DECL_NSIOBSERVER
 
   void SetIsDelivering()
   {
@@ -59,6 +61,8 @@ public:
 
 private:
   ~nsConsoleService();
+
+  void ClearMessagesForWindowID(const uint64_t innerID);
 
   // Circular buffer of saved messages
   nsIConsoleMessage** mMessages;

@@ -2026,6 +2026,9 @@ class IDLNullableType(IDLType):
     def isInterface(self):
         return self.inner.isInterface()
 
+    def isPromise(self):
+        return self.inner.isPromise()
+
     def isCallbackInterface(self):
         return self.inner.isCallbackInterface()
 
@@ -2158,11 +2161,14 @@ class IDLSequenceType(IDLType):
         return self.inner.unroll()
 
     def isDistinguishableFrom(self, other):
+        if other.isPromise():
+            return False
         if other.isUnion():
             # Just forward to the union; it'll deal
             return other.isDistinguishableFrom(self)
         return (other.isPrimitive() or other.isString() or other.isEnum() or
-                other.isDate() or other.isInterface() or other.isDictionary() or
+                other.isDate() or other.isInterface() or
+                other.isDictionary() or
                 other.isCallback() or other.isMozMap())
 
     def _getDependentObjects(self):
@@ -2217,6 +2223,8 @@ class IDLMozMapType(IDLType):
         return self
 
     def isDistinguishableFrom(self, other):
+        if other.isPromise():
+            return False
         if other.isUnion():
             # Just forward to the union; it'll deal
             return other.isDistinguishableFrom(self)
@@ -2442,6 +2450,8 @@ class IDLArrayType(IDLType):
         return self.inner.unroll()
 
     def isDistinguishableFrom(self, other):
+        if other.isPromise():
+            return False
         if other.isUnion():
             # Just forward to the union; it'll deal
             return other.isDistinguishableFrom(self)
@@ -2676,6 +2686,10 @@ class IDLWrapperType(IDLType):
             assert False
 
     def isDistinguishableFrom(self, other):
+        if self.isPromise():
+            return False
+        if other.isPromise():
+            return False
         if other.isUnion():
             # Just forward to the union; it'll deal
             return other.isDistinguishableFrom(self)
@@ -2935,6 +2949,8 @@ class IDLBuiltinType(IDLType):
         return IDLBuiltinType.TagLookup[self._typeTag]
 
     def isDistinguishableFrom(self, other):
+        if other.isPromise():
+            return False
         if other.isUnion():
             # Just forward to the union; it'll deal
             return other.isDistinguishableFrom(self)
@@ -4192,6 +4208,8 @@ class IDLCallbackType(IDLType):
         return IDLType.Tags.callback
 
     def isDistinguishableFrom(self, other):
+        if other.isPromise():
+            return False
         if other.isUnion():
             # Just forward to the union; it'll deal
             return other.isDistinguishableFrom(self)
