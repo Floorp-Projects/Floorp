@@ -13,8 +13,9 @@
 #ifdef MOZ_NUWA_PROCESS
 #include "ipc/Nuwa.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/dom/ContentParent.h"
-#include "mozilla/hal_sandbox/PHalParent.h"
+#include "mozilla/dom/PContent.h"
+#include "mozilla/dom/PNuwa.h"
+#include "mozilla/hal_sandbox/PHal.h"
 #endif
 
 #include "mozilla/Assertions.h"
@@ -176,8 +177,8 @@ ProcessLink::SendMessage(Message *msg)
 #ifdef MOZ_NUWA_PROCESS
     if (mIsToNuwaProcess && mozilla::dom::ContentParent::IsNuwaReady()) {
         switch (msg->type()) {
-        case mozilla::dom::PContent::Msg_NuwaFork__ID:
-        case mozilla::dom::PContent::Reply_AddNewProcess__ID:
+        case mozilla::dom::PNuwa::Msg_Fork__ID:
+        case mozilla::dom::PNuwa::Reply_AddNewProcess__ID:
         case mozilla::dom::PContent::Msg_NotifyPhoneStateChange__ID:
         case mozilla::hal_sandbox::PHal::Msg_NotifyNetworkChange__ID:
         case GOODBYE_MESSAGE_TYPE:

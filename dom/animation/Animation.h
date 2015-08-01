@@ -13,6 +13,7 @@
 #include "mozilla/TimeStamp.h" // for TimeStamp, TimeDuration
 #include "mozilla/dom/AnimationBinding.h" // for AnimationPlayState
 #include "mozilla/dom/AnimationTimeline.h" // for AnimationTimeline
+#include "mozilla/DOMEventTargetHelper.h" // for DOMEventTargetHelper
 #include "mozilla/dom/KeyframeEffect.h" // for KeyframeEffectReadOnly
 #include "mozilla/dom/Promise.h" // for Promise
 #include "nsCSSProperty.h" // for nsCSSProperty
@@ -47,15 +48,14 @@ class CSSAnimation;
 class CSSTransition;
 
 class Animation
-  : public nsISupports
-  , public nsWrapperCache
+  : public DOMEventTargetHelper
 {
 protected:
   virtual ~Animation() {}
 
 public:
   explicit Animation(nsIGlobalObject* aGlobal)
-    : mGlobal(aGlobal)
+    : DOMEventTargetHelper(aGlobal)
     , mPlaybackRate(1.0)
     , mPendingState(PendingState::NotPending)
     , mSequenceNum(kUnsequenced)
@@ -66,8 +66,9 @@ public:
   {
   }
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Animation)
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Animation,
+                                           DOMEventTargetHelper)
 
   AnimationTimeline* GetParentObject() const { return mTimeline; }
   virtual JSObject* WrapObject(JSContext* aCx,
@@ -110,6 +111,8 @@ public:
   virtual void Pause(ErrorResult& aRv);
   virtual void Reverse(ErrorResult& aRv);
   bool IsRunningOnCompositor() const { return mIsRunningOnCompositor; }
+  IMPL_EVENT_HANDLER(finish);
+  IMPL_EVENT_HANDLER(cancel);
 
   // Wrapper functions for Animation DOM methods when called
   // from script.
@@ -338,6 +341,8 @@ protected:
   void ResetFinishedPromise();
   void MaybeResolveFinishedPromise();
   void DoFinishNotification(SyncNotifyFlag aSyncNotifyFlag);
+  void DoFinishNotificationImmediately();
+  void DispatchPlaybackEvent(const nsAString& aName);
 
   /**
    * Remove this animation from the pending animation tracker and reset
@@ -354,7 +359,6 @@ protected:
   virtual css::CommonAnimationManager* GetAnimationManager() const = 0;
   AnimationCollection* GetCollection() const;
 
-  nsCOMPtr<nsIGlobalObject> mGlobal;
   nsRefPtr<AnimationTimeline> mTimeline;
   nsRefPtr<KeyframeEffectReadOnly> mEffect;
   // The beginning of the delay period.

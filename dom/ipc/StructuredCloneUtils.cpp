@@ -13,6 +13,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/ToJSValue.h"
 #include "nsContentUtils.h"
 #include "nsJSEnvironment.h"
 #include "MainThreadUtils.h"

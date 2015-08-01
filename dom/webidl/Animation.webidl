@@ -13,7 +13,7 @@
 enum AnimationPlayState { "idle", "pending", "running", "paused", "finished" };
 
 [Func="nsDocument::IsWebAnimationsEnabled"]
-interface Animation {
+interface Animation : EventTarget {
   // Bug 1049975: Make 'effect' writeable
   [Pure]
   readonly attribute AnimationEffectReadOnly? effect;
@@ -30,6 +30,8 @@ interface Animation {
   readonly attribute Promise<Animation> ready;
   [Throws]
   readonly attribute Promise<Animation> finished;
+           attribute EventHandler       onfinish;
+           attribute EventHandler       oncancel;
   void cancel ();
   [Throws]
   void finish ();

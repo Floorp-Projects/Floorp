@@ -446,9 +446,15 @@ RenderMinimap(ContainerT* aContainer, LayerManagerComposite* aManager,
 
   // Rects
   const FrameMetrics& fm = aLayer->GetFrameMetrics(0);
+  ParentLayerRect compositionBounds = fm.GetCompositionBounds();
   LayerRect scrollRect = fm.GetScrollableRect() * fm.LayersPixelsPerCSSPixel();
-  LayerRect viewRect = ParentLayerRect(scrollOffset, fm.GetCompositionBounds().Size()) / LayerToParentLayerScale(1);
+  LayerRect viewRect = ParentLayerRect(scrollOffset, compositionBounds.Size()) / LayerToParentLayerScale(1);
   LayerRect dp = (fm.GetDisplayPort() + fm.GetScrollOffset()) * fm.LayersPixelsPerCSSPixel();
+
+  // Don't render trivial minimap. They can show up from textboxes and other tiny frames.
+  if (viewRect.width < 64 && viewRect.height < 64) {
+    return;
+  }
 
   // Compute a scale with an appropriate aspect ratio
   // We allocate up to 100px of width and the height of this layer.
@@ -460,7 +466,7 @@ RenderMinimap(ContainerT* aContainer, LayerManagerComposite* aManager,
   scaleFactor = std::min(scaleFactorX, scaleFactorY);
 
   Matrix4x4 transform = Matrix4x4::Scaling(scaleFactor, scaleFactor, 1);
-  transform.PostTranslate(horizontalPadding, verticalPadding, 0);
+  transform.PostTranslate(horizontalPadding + compositionBounds.x, verticalPadding + compositionBounds.y, 0);
 
   Rect clipRect = aContainer->GetEffectiveTransform().TransformBounds(
                     transform.TransformBounds(scrollRect.ToUnknownRect()));

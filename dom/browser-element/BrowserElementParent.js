@@ -184,6 +184,8 @@ BrowserElementParent.prototype = {
       "got-contentdimensions": this._gotDOMRequestResult,
       "got-can-go-back": this._gotDOMRequestResult,
       "got-can-go-forward": this._gotDOMRequestResult,
+      "got-muted": this._gotDOMRequestResult,
+      "got-volume": this._gotDOMRequestResult,
       "requested-dom-fullscreen": this._requestedDOMFullscreen,
       "fullscreen-origin-change": this._fullscreenOriginChange,
       "exit-dom-fullscreen": this._exitDomFullscreen,
@@ -662,6 +664,22 @@ BrowserElementParent.prototype = {
 
   clearMatch: defineNoReturnMethod(function() {
     return this._sendAsyncMsg('clear-match');
+  }),
+
+  mute: defineNoReturnMethod(function() {
+    this._sendAsyncMsg('mute');
+  }),
+
+  unmute: defineNoReturnMethod(function() {
+    this._sendAsyncMsg('unmute');
+  }),
+
+  getMuted: defineDOMRequestMethod('get-muted'),
+
+  getVolume: defineDOMRequestMethod('get-volume'),
+
+  setVolume: defineNoReturnMethod(function(volume) {
+    this._sendAsyncMsg('set-volume', {volume});
   }),
 
   goBack: defineNoReturnMethod(function() {

@@ -1,0 +1,342 @@
+<!DOCTYPE HTML>
+<title>Test ImageBitmap</title>
+<meta charset="utf-8">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<body>
+
+<img src="image_anim-gr.gif" id="image" class="resource">
+<video width="320" height="240" src="http://example.com/tests/dom/canvas/test/crossorigin/video.sjs?name=tests/dom/media/test/320x240.ogv&type=video/ogg&cors=anonymous" id="video" crossOrigin="anonymous" autoplay></video>
+
+<canvas id="c1" class="output" width="128" height="128"></canvas>
+<canvas id="c2" width="128" height="128"></canvas>
+
+<script type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+/**
+ * [isPixel description]
+ * @param  {[type]}  ctx : canvas context
+ * @param  {[type]}  x   : pixel x coordinate
+ * @param  {[type]}  y   : pixel y coordinate
+ * @param  {[type]}  c   : a rgba color code
+ * @param  {[type]}  d   : error duration
+ * @return {Promise}
+ */
+function isPixel(ctx, x, y, c, d) {
+  var pos = x + "," + y;
+  var color = c[0] + "," + c[1] + "," + c[2] + "," + c[3];
+  var pixel = ctx.getImageData(x, y, 1, 1);
+  var pr = pixel.data[0],
+      pg = pixel.data[1],
+      pb = pixel.data[2],
+      pa = pixel.data[3];
+  ok(c[0]-d <= pr && pr <= c[0]+d &&
+     c[1]-d <= pg && pg <= c[1]+d &&
+     c[2]-d <= pb && pb <= c[2]+d &&
+     c[3]-d <= pa && pa <= c[3]+d,
+     "pixel "+pos+" of "+ctx.canvas.id+" is "+pr+","+pg+","+pb+","+pa+"; expected "+color+" +/- "+d);
+}
+
+var TEST_BITMAPS = [
+    {'rect': [0, 0, 128, 128],        'draw': [0, 0, 64, 64, 0, 0, 64, 64],       'test': [[0,    0,    [255, 0, 0, 255], 5]]},
+    {'rect': [128, 0, 128, 128],      'draw': [0, 0, 64, 64, 0, 0, 64, 64],       'test': [[0,    0,    [0, 255, 0, 255], 5]]},
+    {'rect': [230, 230, 128, 128],    'draw': [0, 0, 128, 128, 0, 0, 128, 128],   'test': [[0,    0,    [255, 0, 0, 255], 5],
+                                                                                           [100,  100,  [0, 0, 0, 0],     5]]},
+    {'rect': [-64, -64, 512, 512],    'draw': [0, 0, 128, 128, 0, 0, 128, 128],   'test': [[0,    0,    [0, 0, 0, 0],     5],
+                                                                                           [100,  100,  [255, 0, 0, 255], 5]]},
+    {'rect': [128, 128, -128, -128],  'draw': [0, 0, 128, 128, 0, 0, 128, 128],   'test': [[0,    0,    [255, 0, 0, 255], 5]]},
+    {'rect': [0, 0, 256, 256],        'draw': [0, 128, 128, 128, 0, 0, 128, 128], 'test': [[0,    0,    [0, 255, 0, 255], 5]]},
+];
+
+var canvas, ctx, ctx2, completedImage;
+
+function failed(ex) {
+  ok(false, "Promise failure: " + ex);
+}
+
+function testDraw() {
+  var resolver, bitmaps = [], image = new Image();
+
+  image.src = 'image_rgrg-256x256.png';
+  var promise = new Promise(function (arg) { resolver = arg; });
+
+  function createBitmap(def) {
+    return createImageBitmap(image, def.rect[0], def.rect[1], def.rect[2], def.rect[3])
+      .then(function (bitmap) { def.bitmap = bitmap; }, failed);
+  };
+
+  image.onload = function() {
+    completedImage = image;
+    resolver(Promise.all(TEST_BITMAPS.map(createBitmap)));
+  };
+
+  function testPixel(test) {
+    isPixel(ctx, test[0], test[1], test[2], test[3]);
+  };
+
+  return promise.then(function() {
+    TEST_BITMAPS.forEach(function (test) {
+      if (!test.bitmap) { return; }
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(test.bitmap, test.draw[0], test.draw[1], test.draw[2], test.draw[3], test.draw[4], test.draw[5], test.draw[6], test.draw[7]);
+      test.test.forEach(testPixel);
+      is(test.bitmap.width, Math.abs(test.rect[2]), "Bitmap has correct width " + test.bitmap.width);
+      is(test.bitmap.height, Math.abs(test.rect[3]), "Bitmap has correct height " + test.bitmap.height);
+    });
+  });
+}
+
+function testSources() {
+  ctx.fillStyle="#00FF00";
+  ctx.fillRect(0, 0, 128, 128);
+
+  function check(bitmap) {
+    ctx2.clearRect(0, 0, 128, 128);
+    ctx2.drawImage(bitmap, 0, 0);
+    isPixel(ctx2, 0, 0, [0, 255, 0, 255], 5);
+  };
+
+  function getPNGBlobBitmapPromise() {
+    return new Promise(function(resolve, reject) {
+      canvas.toBlob(function(blob) {
+        resolve(createImageBitmap(blob));
+      })
+    });
+  }
+
+  function getJPGBlobBitmapPromise() {
+    return new Promise(function(resolve, reject) {
+      canvas.toBlob(function(blob) {
+        resolve(createImageBitmap(blob));
+      }, "image/jpeg", 0.95)
+    });
+  }
+
+  return Promise.all([
+    createImageBitmap(document.getElementById('image')).then(check, failed),                                         // HTMLImageElement
+    createImageBitmap(ctx).then(check, failed),                                                                      // CanvasRenderingContext2D
+    createImageBitmap(canvas).then(check, failed),                                                                   // HTMLCanvasElement
+    createImageBitmap(ctx).then(function (bitmap) { return createImageBitmap(bitmap).then(check, failed); }, failed), // ImageBitmap
+    createImageBitmap(document.getElementById('video'), 140, 0, 20, 20).then(check, failed),                         // HTMLVideoElement
+    createImageBitmap(ctx.getImageData(0, 0, 128, 128)).then(check, failed),                                          // ImageData
+    getPNGBlobBitmapPromise().then(check, failed),                                                                   // PNG blob
+    getJPGBlobBitmapPromise().then(check, failed),                                                                   // JPEG blob
+  ]);
+}
+
+function promiseThrows(p, name) {
+  var didThrow;
+  return p.then(function() { didThrow = false; },
+                function() { didThrow = true; })
+          .then(function() { ok(didThrow, name); });
+}
+
+function testExceptions() {
+
+  function createImageBitmapWithNeuturedImageData() {
+    return new Promise(function(resolve, reject) {
+      var tempImage = document.createElement('img');
+      tempImage.src = 'image_rgrg-256x256.png';
+      tempImage.onload = function() {
+        var tempCanvas = document.createElement('canvas');
+        var tempCtx = tempCanvas.getContext('2d');
+        tempCanvas.with = tempImage.naturalWidth;
+        tempCanvas.height = tempImage.naturalHeight;
+        tempCtx.drawImage(tempImage, 0, 0);
+        var tempWorker = new Worker("test_imagebitmap_on_worker.js");
+        var imageData = tempCtx.getImageData(0, 0, tempImage.naturalWidth, tempImage.naturalHeight);
+        tempWorker.postMessage(imageData.data.buffer, [imageData.data.buffer]);
+        tempWorker.terminate();
+
+        ok(imageData.data.length == 0, "Get a neutured ImageData.");
+        resolve(createImageBitmap(imageData));
+      }
+    });
+  }
+
+  function createImageBitmapWithCorruptedBlob() {
+    return new Promise(function(resolve, reject) {
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", "image_error-early.png");
+      xhr.responseType = "blob";//force the HTTP response, response-type header to be blob
+      xhr.onload = function()
+      {
+        ok(xhr.response, "Get a corrupted blob");
+        resolve(createImageBitmap(xhr.response));
+      }
+      xhr.send();
+    });
+  }
+
+  function createImageBitmapWithNonImageFile() {
+    return new Promise(function(resolve, reject) {
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", "test_imagebitmap_on_worker.js");
+      xhr.responseType = "blob";//force the HTTP response, response-type header to be blob
+      xhr.onload = function()
+      {
+        ok(xhr.response, "Get a non-image blob");
+        resolve(createImageBitmap(xhr.response));
+      }
+      xhr.send();
+    });
+  }
+
+  return Promise.all([
+    promiseThrows(createImageBitmap(new Image()), 'createImageBitmap should throw with unloaded image'),
+    promiseThrows(createImageBitmap(completedImage, 0, 0, 0, 0), 'createImageBitmap should throw with 0 width/height'),
+    promiseThrows(createImageBitmap(null), 'createImageBitmap should throw with null source'),
+    promiseThrows(createImageBitmapWithNeuturedImageData(), "createImageBitmap should throw with neutured ImageData"),
+    promiseThrows(createImageBitmapWithCorruptedBlob(), "createImageBitmap should throw with corrupted blob"),
+    promiseThrows(createImageBitmapWithNonImageFile(), "createImageBitmap should throw with non-image blob"),
+  ]);
+}
+
+function testSecurityErrors() {
+
+  function getUncleanImagePromise() {
+    return new Promise(function(resolve, reject) {
+      var uncleanImage = document.createElement('img');
+
+      uncleanImage.onload = function() {
+        resolve(createImageBitmap(uncleanImage));
+      }
+
+      uncleanImage.onerror = function() {
+        reject();
+      }
+
+      uncleanImage.src = "http://example.com/tests/dom/canvas/test/crossorigin/image.png";
+    });
+  }
+
+  function getUncleanVideoPromise() {
+    return new Promise(function(resolve, reject) {
+      var uncleanVideo = document.createElement('video');
+
+      uncleanVideo.onloadeddata = function() {
+        resolve(createImageBitmap(uncleanVideo));
+      }
+
+      uncleanVideo.onerror = function() {
+        reject();
+      }
+
+      uncleanVideo.src = "http://example.com/tests/dom/canvas/test/crossorigin/video.sjs?name=tests/dom/media/test/320x240.ogv&type=video/ogg";
+      uncleanVideo.play();
+    });
+  }
+
+  function getTaintedCanvasPromise() {
+    return new Promise(function(resolve, reject) {
+      var uncleanImage = document.createElement('img');
+
+      uncleanImage.onload = function() {
+        var taintedCanvas = document.createElement('canvas');
+        var taintedCtx = taintedCanvas.getContext('2d');
+        taintedCtx.drawImage(uncleanImage, 0, 0);
+        resolve(createImageBitmap(taintedCanvas));
+      }
+
+      uncleanImage.onerror = function() {
+        reject();
+      }
+
+      uncleanImage.src = "http://example.com/tests/dom/canvas/test/crossorigin/image.png";
+    });
+  }
+
+  function getTaintedCanvasRenderingContex2dPromise() {
+    return new Promise(function(resolve, reject) {
+      var uncleanImage = document.createElement('img');
+
+      uncleanImage.onload = function() {
+        var taintedCanvas = document.createElement('canvas');
+        var taintedCtx = taintedCanvas.getContext('2d');
+        taintedCtx.drawImage(uncleanImage, 0, 0);
+        resolve(createImageBitmap(taintedCtx));
+      }
+
+      uncleanImage.onerror = function() {
+        reject();
+      }
+
+      uncleanImage.src = "http://example.com/tests/dom/canvas/test/crossorigin/image.png";
+    });
+  }
+
+  function checkPromiseFailedWithSecurityError(p) {
+    return p.then( function(reason) { ok(false, "Did not get SecurityError with unclean source. ImageBitmap was created successfully."); },
+                   function(reason) { if (reason == "SecurityError: The operation is insecure.") {
+                                        ok(true, reason);
+                                      }
+                                      else {
+                                        ok(false, "Did not get SecurityError with unclean source. Error Message: " + reason);
+                                      }});
+  }
+
+  return Promise.all([
+    checkPromiseFailedWithSecurityError(getUncleanImagePromise()),
+    checkPromiseFailedWithSecurityError(getUncleanVideoPromise()),
+    checkPromiseFailedWithSecurityError(getTaintedCanvasPromise()),
+    checkPromiseFailedWithSecurityError(getTaintedCanvasRenderingContex2dPromise()),
+  ]);
+}
+
+function testCreatePattern() {
+  var resolve;
+  var promise = new Promise(function (arg) { resolve = arg; });
+
+  var TEST_PATTERN = [
+    [0,   0,   [255, 0, 0, 255], 1],
+    [128, 128, [255, 0, 0, 255], 1],
+    [256, 256, [255, 0, 0, 255], 1],
+    [384, 0,   [0, 255, 0, 255], 1],
+    [0,   384, [0, 255, 0, 255], 1],
+  ];
+
+  var canvas = document.createElement('canvas');
+  canvas.width = "512";
+  canvas.height = "512";
+  var ctx = canvas.getContext('2d');
+
+  var image = new Image();
+  image.src = 'image_rgrg-256x256.png';
+  image.onload = function() {
+    var p = createImageBitmap(image);
+    p.then(function(bitmap) {
+      ctx.rect(0, 0, 512, 512);
+      ctx.fillStyle = ctx.createPattern(bitmap, "repeat");
+      ctx.fill();
+      document.body.appendChild(canvas);
+    });
+    resolve(p);
+  }
+
+  return promise.then(function() {
+    TEST_PATTERN.forEach(function(test) {
+      isPixel(ctx, test[0], test[1], test[2], test[3]);
+    });
+  });
+}
+
+
+function runTests() {
+  canvas = document.getElementById('c1');
+  ctx = canvas.getContext('2d');
+  ctx2 = document.getElementById('c2').getContext('2d');
+
+  testDraw()
+    .then(testCreatePattern)
+    .then(testSources)
+    .then(testExceptions)
+    .then(testSecurityErrors)
+    .then(SimpleTest.finish, function(ev) { failed(ev); SimpleTest.finish(); });
+}
+
+addLoadEvent(runTests);
+
+</script>
+</body>
