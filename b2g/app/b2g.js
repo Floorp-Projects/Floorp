@@ -1165,3 +1165,6 @@ pref("dom.vr.cardboard.enabled", true);
 
 // In B2G by deafult any AudioChannelAgent is muted when created.
 pref("dom.audiochannel.mutedByDefault", true);
+
+// Default device name for Presentation API
+pref("dom.presentation.device.name", "Firefox OS");

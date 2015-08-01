@@ -36,6 +36,28 @@ PresentationDeviceManager::~PresentationDeviceManager()
 }
 
 void
+PresentationDeviceManager::Init()
+{
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+  }
+
+  LoadDeviceProviders();
+}
+
+void
+PresentationDeviceManager::Shutdown()
+{
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+  }
+
+  UnloadDeviceProviders();
+}
+
+void
 PresentationDeviceManager::LoadDeviceProviders()
 {
   MOZ_ASSERT(mProviders.IsEmpty());
@@ -223,7 +245,9 @@ PresentationDeviceManager::Observe(nsISupports *aSubject,
                                    const char16_t *aData)
 {
   if (!strcmp(aTopic, "profile-after-change")) {
-    LoadDeviceProviders();
+    Init();
+  } else if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+    Shutdown();
   }
 
   return NS_OK;

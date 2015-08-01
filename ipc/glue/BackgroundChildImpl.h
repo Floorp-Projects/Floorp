@@ -122,6 +122,12 @@ protected:
 
   virtual bool
   DeallocPMessagePortChild(PMessagePortChild* aActor) override;
+
+  virtual PNuwaChild*
+  AllocPNuwaChild() override;
+
+  virtual bool
+  DeallocPNuwaChild(PNuwaChild* aActor) override;
 };
 
 class BackgroundChildImpl::ThreadLocal final

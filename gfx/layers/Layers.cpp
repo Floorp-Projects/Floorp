@@ -225,10 +225,14 @@ Layer::Layer(LayerManager* aManager, void* aImplData) :
   mIsScrollbarContainer(false),
   mDebugColorIndex(0),
   mAnimationGeneration(0)
-{}
+{
+  MOZ_COUNT_CTOR(Layer);
+}
 
 Layer::~Layer()
-{}
+{
+  MOZ_COUNT_DTOR(Layer);
+}
 
 Animation*
 Layer::AddAnimation()
@@ -989,10 +993,14 @@ ContainerLayer::ContainerLayer(LayerManager* aManager, void* aImplData)
     mChildrenChanged(false),
     mEventRegionsOverride(EventRegionsOverride::NoOverride)
 {
+  MOZ_COUNT_CTOR(ContainerLayer);
   mContentFlags = 0; // Clear NO_TEXT, NO_TEXT_OVER_TRANSPARENT
 }
 
-ContainerLayer::~ContainerLayer() {}
+ContainerLayer::~ContainerLayer()
+{
+  MOZ_COUNT_DTOR(ContainerLayer);
+}
 
 bool
 ContainerLayer::InsertAfter(Layer* aChild, Layer* aAfter)

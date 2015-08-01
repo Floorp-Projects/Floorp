@@ -63,6 +63,10 @@ public:
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
                  bool aAnonymize) override
   {
+    if (!mCompressor) {
+      return NS_OK;
+    }
+
     return MOZ_COLLECT_REPORT(
       "explicit/network/hpack/dynamic-tables", KIND_HEAP, UNITS_BYTES,
       mCompressor->SizeOfExcludingThis(MallocSizeOf),
@@ -75,6 +79,8 @@ private:
   ~HpackDynamicTableReporter() {}
 
   Http2BaseCompressor* mCompressor;
+
+  friend class Http2BaseCompressor;
 };
 
 NS_IMPL_ISUPPORTS(HpackDynamicTableReporter, nsIMemoryReporter)
@@ -282,6 +288,8 @@ Http2BaseCompressor::Http2BaseCompressor()
 Http2BaseCompressor::~Http2BaseCompressor()
 {
   UnregisterStrongMemoryReporter(mDynamicReporter);
+  mDynamicReporter->mCompressor = nullptr;
+  mDynamicReporter = nullptr;
 }
 
 void

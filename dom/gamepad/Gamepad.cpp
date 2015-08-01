@@ -31,7 +31,7 @@ Gamepad::UpdateTimestamp()
   if(newWindow) {
     nsPerformance* perf = newWindow->GetPerformance();
     if (perf) {
-      mTimestamp =  perf->GetDOMTiming()->TimeStampToDOMHighRes(TimeStamp::Now());
+      mTimestamp =  perf->Now();
     }
   }
 }
