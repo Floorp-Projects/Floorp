@@ -332,7 +332,10 @@ protected:
   // See the comment in nsSVGElement::WillChangeValue.
   virtual nsresult BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                  nsAttrValueOrString* aValue,
-                                 bool aNotify) override final { return NS_OK; }
+                                 bool aNotify) override final
+  {
+    return nsSVGElementBase::BeforeSetAttr(aNamespaceID, aName, aValue, aNotify);
+  }
 #endif // DEBUG
   virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue, bool aNotify) override;
