@@ -762,7 +762,7 @@ ThreadActor.prototype = {
   _makeOnEnterFrame: function ({ pauseAndRespond }) {
     return aFrame => {
       const generatedLocation = this.sources.getFrameLocation(aFrame);
-      let { originalSourceActor } = this.synchronize(this.sources.getOriginalLocation(
+      let { originalSourceActor } = this.unsafeSynchronize(this.sources.getOriginalLocation(
         generatedLocation));
       let url = originalSourceActor.url;
 
@@ -777,7 +777,7 @@ ThreadActor.prototype = {
       // onPop is called with 'this' set to the current frame.
 
       const generatedLocation = thread.sources.getFrameLocation(this);
-      const { originalSourceActor } = thread.synchronize(thread.sources.getOriginalLocation(
+      const { originalSourceActor } = thread.unsafeSynchronize(thread.sources.getOriginalLocation(
         generatedLocation));
       const url = originalSourceActor.url;
 
@@ -819,7 +819,7 @@ ThreadActor.prototype = {
       // onStep is called with 'this' set to the current frame.
 
       const generatedLocation = thread.sources.getFrameLocation(this);
-      const newLocation = thread.synchronize(thread.sources.getOriginalLocation(
+      const newLocation = thread.unsafeSynchronize(thread.sources.getOriginalLocation(
         generatedLocation));
 
       // Cases when we should pause because we have executed enough to consider
@@ -1041,11 +1041,15 @@ ThreadActor.prototype = {
   /**
    * Spin up a nested event loop so we can synchronously resolve a promise.
    *
+   * DON'T USE THIS UNLESS YOU ABSOLUTELY MUST! Nested event loops suck: the
+   * world's state can change out from underneath your feet because JS is no
+   * longer run-to-completion.
+   *
    * @param aPromise
    *        The promise we want to resolve.
    * @returns The promise's resolution.
    */
-  synchronize: function(aPromise) {
+  unsafeSynchronize: function(aPromise) {
     let needNest = true;
     let eventLoop;
     let returnVal;
@@ -1056,7 +1060,7 @@ ThreadActor.prototype = {
         returnVal = aResolvedVal;
       })
       .then(null, (aError) => {
-        reportError(aError, "Error inside synchronize:");
+        reportError(aError, "Error inside unsafeSynchronize:");
       })
       .then(() => {
         if (eventLoop) {
@@ -1786,7 +1790,7 @@ ThreadActor.prototype = {
     // Don't pause if we are currently stepping (in or over) or the frame is
     // black-boxed.
     const generatedLocation = this.sources.getFrameLocation(aFrame);
-    const { originalSourceActor } = this.synchronize(this.sources.getOriginalLocation(
+    const { originalSourceActor } = this.unsafeSynchronize(this.sources.getOriginalLocation(
       generatedLocation));
     const url = originalSourceActor ? originalSourceActor.url : null;
 
@@ -1818,7 +1822,7 @@ ThreadActor.prototype = {
     }
 
     const generatedLocation = this.sources.getFrameLocation(aFrame);
-    const { sourceActor } = this.synchronize(this.sources.getOriginalLocation(
+    const { sourceActor } = this.unsafeSynchronize(this.sources.getOriginalLocation(
       generatedLocation));
     const url = sourceActor ? sourceActor.url : null;
 
@@ -1905,12 +1909,12 @@ ThreadActor.prototype = {
     // fetches sourcemaps if available and sends onNewSource
     // notifications.
     //
-    // We need to use synchronize here because if the page is being reloaded,
+    // We need to use unsafeSynchronize here because if the page is being reloaded,
     // this call will replace the previous set of source actors for this source
     // with a new one. If the source actors have not been replaced by the time
     // we try to reset the breakpoints below, their location objects will still
     // point to the old set of source actors, which point to different scripts.
-    this.synchronize(this.sources.createSourceActors(aSource));
+    this.unsafeSynchronize(this.sources.createSourceActors(aSource));
 
     // Set any stored breakpoints.
     let promises = [];
@@ -1938,7 +1942,7 @@ ThreadActor.prototype = {
     }
 
     if (promises.length > 0) {
-      this.synchronize(promise.all(promises));
+      this.unsafeSynchronize(promise.all(promises));
     }
 
     return true;
@@ -3275,7 +3279,7 @@ BreakpointActor.prototype = {
     // Don't pause if we are currently stepping (in or over) or the frame is
     // black-boxed.
     let generatedLocation = this.threadActor.sources.getFrameLocation(aFrame);
-    let { originalSourceActor } = this.threadActor.synchronize(
+    let { originalSourceActor } = this.threadActor.unsafeSynchronize(
       this.threadActor.sources.getOriginalLocation(generatedLocation));
     let url = originalSourceActor.url;
 
