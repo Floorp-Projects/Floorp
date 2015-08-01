@@ -132,7 +132,7 @@ public:
     if (observerService) {
       observerService->NotifyObservers(
         ToSupports(mWindow),
-        "media-playback",
+        "audio-playback",
         mActive ? NS_LITERAL_STRING("active").get()
                 : NS_LITERAL_STRING("inactive").get());
     }

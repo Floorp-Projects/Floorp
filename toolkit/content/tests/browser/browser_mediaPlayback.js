@@ -10,8 +10,8 @@ function wait_for_event(browser, event) {
 
 function* test_on_browser(url, browser) {
   browser.loadURI(url);
-  yield wait_for_event(browser, "DOMMediaPlaybackStarted");
-  yield wait_for_event(browser, "DOMMediaPlaybackStopped");
+  yield wait_for_event(browser, "DOMAudioPlaybackStarted");
+  yield wait_for_event(browser, "DOMAudioPlaybackStopped");
 }
 
 add_task(function*() {
