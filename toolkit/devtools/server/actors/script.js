@@ -32,6 +32,7 @@ loader.lazyRequireGetter(this, "SourceMapGenerator", "source-map", true);
 loader.lazyRequireGetter(this, "CssLogic", "devtools/styleinspector/css-logic", true);
 loader.lazyRequireGetter(this, "events", "sdk/event/core");
 loader.lazyRequireGetter(this, "mapURIToAddonID", "devtools/server/actors/utils/map-uri-to-addon-id");
+loader.lazyRequireGetter(this, "setTimeout", "sdk/timers", true);
 
 /**
  * A BreakpointActorMap is a map from locations to instances of BreakpointActor.
@@ -428,6 +429,8 @@ function ThreadActor(aParent, aGlobal)
   this.breakpointActorMap = new BreakpointActorMap();
   this.sourceActorStore = new SourceActorStore();
 
+  this._debuggerSourcesSeen = null;
+
   // A map of actorID -> actor for breakpoints created and managed by the
   // server.
   this._hiddenBreakpoints = new Map();
@@ -618,6 +621,7 @@ ThreadActor.prototype = {
     }
 
     this._state = "attached";
+    this._debuggerSourcesSeen = new Set();
 
     update(this._options, aRequest.options || {});
     this.sources.reconfigure(this._options);
@@ -665,6 +669,7 @@ ThreadActor.prototype = {
   onDetach: function (aRequest) {
     this.disconnect();
     this._state = "detached";
+    this._debuggerSourcesSeen = null;
 
     dumpn("ThreadActor.prototype.onDetach: returning 'detached' packet");
     return {
@@ -1329,6 +1334,11 @@ ThreadActor.prototype = {
 
   onSources: function (aRequest) {
     return this._discoverSources().then(() => {
+      // No need to flush the new source packets here, as we are sending the
+      // list of sources out immediately and we don't need to invoke the
+      // overhead of an RDP packet for every source right now. Let the default
+      // timeout flush the buffered packets.
+
       return {
         sources: this.sources.iter().map(s => s.form())
       };
@@ -1899,7 +1909,7 @@ ThreadActor.prototype = {
    * @returns true, if the source was added; false otherwise.
    */
   _addSource: function (aSource) {
-    if (!this.sources.allowSource(aSource)) {
+    if (!this.sources.allowSource(aSource) || this._debuggerSourcesSeen.has(aSource)) {
       return false;
     }
 
@@ -1926,9 +1936,8 @@ ThreadActor.prototype = {
     let promises = [];
 
     for (let _actor of this.breakpointActorMap.findActors()) {
-      // XXX bug 1142115: We do async work in here, so we need to
-      // create a fresh binding because for/of does not yet do that in
-      // SpiderMonkey
+      // XXX bug 1142115: We do async work in here, so we need to create a fresh
+      // binding because for/of does not yet do that in SpiderMonkey.
       let actor = _actor;
 
       if (actor.isPending) {
@@ -1951,6 +1960,7 @@ ThreadActor.prototype = {
       this.unsafeSynchronize(promise.all(promises));
     }
 
+    this._debuggerSourcesSeen.add(aSource);
     return true;
   },
 
