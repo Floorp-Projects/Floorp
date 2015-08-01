@@ -4256,7 +4256,7 @@
           this.setIcon(tab, icon);
         ]]>
       </handler>
-      <handler event="DOMMediaPlaybackStarted">
+      <handler event="DOMAudioPlaybackStarted">
         <![CDATA[
           if (!Services.prefs.getBoolPref("browser.tabs.showAudioPlayingIcon") ||
               !event.isTrusted)
@@ -4273,7 +4273,7 @@
           }
         ]]>
       </handler>
-      <handler event="DOMMediaPlaybackStopped">
+      <handler event="DOMAudioPlaybackStopped">
         <![CDATA[
           if (!Services.prefs.getBoolPref("browser.tabs.showAudioPlayingIcon") ||
               !event.isTrusted)

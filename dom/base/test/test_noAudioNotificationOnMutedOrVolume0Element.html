@@ -18,11 +18,11 @@ var expectedNotification = null;
 var observer = {
   observe: function(subject, topic, data) {
     if (expectedNotification !== null) {
-      is(topic, "media-playback", "media-playback received");
+      is(topic, "audio-playback", "audio-playback received");
       is(data, expectedNotification, "This is the right notification");
       runTest();
     } else {
-      ok(false, "should not receive media-playback notification!");
+      ok(false, "should not receive audio-playback notification!");
     }
   }
 };
@@ -39,7 +39,7 @@ var tests = [
   },
 
   function() {
-    observerService.addObserver(observer, "media-playback", false);
+    observerService.addObserver(observer, "audio-playback", false);
     ok(true, "Observer set");
 
     audio.src = "audio.ogg";
@@ -61,7 +61,7 @@ var tests = [
   function() {
     expectedNotification = null;
     audio.volume = 0;
-    // Yield to the event loop a few times to make sure that media-playback is not dispatched.
+    // Yield to the event loop a few times to make sure that audio-playback is not dispatched.
     SimpleTest.executeSoon(function() {
       SimpleTest.executeSoon(function() {
         SimpleTest.executeSoon(function() {
@@ -74,7 +74,7 @@ var tests = [
   function() {
     expectedNotification = null;
     audio.muted = false;
-    // Yield to the event loop a few times to make sure that media-playback is not dispatched.
+    // Yield to the event loop a few times to make sure that audio-playback is not dispatched.
     SimpleTest.executeSoon(function() {
       SimpleTest.executeSoon(function() {
         SimpleTest.executeSoon(function() {
@@ -108,7 +108,7 @@ var tests = [
   function() {
     expectedNotification = null;
     audio.volume = 0;
-    // Yield to the event loop a few times to make sure that media-playback is not dispatched.
+    // Yield to the event loop a few times to make sure that audio-playback is not dispatched.
     SimpleTest.executeSoon(function() {
       SimpleTest.executeSoon(function() {
         SimpleTest.executeSoon(function() {
@@ -121,7 +121,7 @@ var tests = [
   function() {
     expectedNotification = null;
     audio.volume = 0.5;
-    // Yield to the event loop a few times to make sure that media-playback is not dispatched.
+    // Yield to the event loop a few times to make sure that audio-playback is not dispatched.
     SimpleTest.executeSoon(function() {
       SimpleTest.executeSoon(function() {
         SimpleTest.executeSoon(function() {
@@ -142,7 +142,7 @@ var tests = [
   },
 
   function() {
-    observerService.removeObserver(observer, "media-playback");
+    observerService.removeObserver(observer, "audio-playback");
     ok(true, "Observer removed");
     runTest();
   }
