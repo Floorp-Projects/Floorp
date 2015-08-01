@@ -115,6 +115,7 @@ nsPNGDecoder::nsPNGDecoder(RasterImage* aImage)
    mHeaderBytesRead(0), mCMSMode(0),
    mChannels(0), mFrameIsHidden(false),
    mDisablePremultipliedAlpha(false),
+   mSuccessfulEarlyFinish(false),
    mNumFrames(0)
 {
 }
@@ -375,7 +376,7 @@ nsPNGDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
 
       // We might not really know what caused the error, but it makes more
       // sense to blame the data.
-      if (!HasError()) {
+      if (!mSuccessfulEarlyFinish && !HasError()) {
         PostDataError();
       }
 
@@ -826,6 +827,14 @@ nsPNGDecoder::frame_info_callback(png_structp png_ptr, png_uint_32 frame_num)
 
   // old frame is done
   decoder->EndImageFrame();
+
+  if (!decoder->mFrameIsHidden && decoder->IsFirstFrameDecode()) {
+    // We're about to get a second non-hidden frame, but we only want the first.
+    // Stop decoding now.
+    decoder->PostDecodeDone();
+    decoder->mSuccessfulEarlyFinish = true;
+    png_longjmp(decoder->mPNG, 1);
+  }
 
   // Only the first frame can be hidden, so unhide unconditionally here.
   decoder->mFrameIsHidden = false;
