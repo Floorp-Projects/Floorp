@@ -14,7 +14,7 @@
 #include "nsIInputStream.h"
 #include "nsIProperties.h"
 #include "nsNetUtil.h"
-#include "nsRefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsString.h"
 
 namespace mozilla {
