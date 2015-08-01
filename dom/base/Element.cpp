@@ -2370,6 +2370,25 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
   return NS_OK;
 }
 
+nsresult
+Element::BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
+                       nsAttrValueOrString* aValue, bool aNotify)
+{
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (aName == nsGkAtoms::_class) {
+      // aValue->GetAttrValue will only be non-null here when this is called
+      // via Element::SetParsedAttr. This shouldn't happen for "class", but
+      // this will handle it.
+      if (aValue && !aValue->GetAttrValue()) {
+        nsAttrValue attr;
+        attr.ParseAtomArray(aValue->String());
+        aValue->TakeParsedValue(attr);
+      }
+    }
+  }
+  return NS_OK;
+}
+
 bool
 Element::ParseAttribute(int32_t aNamespaceID,
                         nsIAtom* aAttribute,
@@ -2379,7 +2398,7 @@ Element::ParseAttribute(int32_t aNamespaceID,
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::_class) {
       SetFlags(NODE_MAY_HAVE_CLASS);
-      aResult.ParseAtomArray(aValue);
+      // Result should have been preparsed above.
       return true;
     }
     if (aAttribute == nsGkAtoms::id) {

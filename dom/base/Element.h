@@ -1179,10 +1179,7 @@ protected:
   // inlined.  Those calls don't go through a vtable.
   virtual nsresult BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                  nsAttrValueOrString* aValue,
-                                 bool aNotify)
-  {
-    return NS_OK;
-  }
+                                 bool aNotify);
 
   /**
    * Hook that is called by Element::SetAttr to allow subclasses to
