@@ -79,7 +79,7 @@ public:
    * @return A SourceSurface containing the first frame of the image at its
    *         intrinsic size, or nullptr if the image cannot be decoded.
    */
-  already_AddRefed<gfx::SourceSurface>
+  static already_AddRefed<gfx::SourceSurface>
   DecodeToSurface(nsIInputStream* aInputStream,
                   const nsACString& aMimeType,
                   uint32_t aFlags);

@@ -6,8 +6,6 @@
 
 #include "ImageOps.h"
 
-#include "mozilla/gfx/2D.h"
-
 #include "ClippedImage.h"
 #include "DecodePool.h"
 #include "Decoder.h"
@@ -16,6 +14,7 @@
 #include "FrozenImage.h"
 #include "Image.h"
 #include "imgIContainer.h"
+#include "mozilla/gfx/2D.h"
 #include "nsStreamUtils.h"
 #include "OrientedImage.h"
 #include "SourceBuffer.h"
