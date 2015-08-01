@@ -12,9 +12,35 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
                                   "resource://gre/modules/BrowserUtils.jsm");
 
-const Ci = Components.interfaces;
+const { interfaces: Ci, classes: Cc } = Components;
 
 this.Feeds = {
+  init() {
+    let mm = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
+    mm.addMessageListener("WCCR:registerProtocolHandler", this);
+  },
+
+  receiveMessage(aMessage) {
+    switch (aMessage.name) {
+      case "WCCR:registerProtocolHandler": {
+        let data = aMessage.data;
+        let registrar = Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].
+                          getService(Ci.nsIWebContentHandlerRegistrar);
+        registrar.registerProtocolHandler(data.protocol, data.uri, data.title,
+                                          aMessage.target);
+        break;
+      }
+
+      case "WCCR:registerContentHandler": {
+        let data = aMessage.data;
+        let registrar = Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].
+                          getService(Ci.nsIWebContentHandlerRegistrar);
+        registrar.registerContentHandler(data.contentType, data.uri, data.title,
+                                         aMessage.target);
+        break;
+      }
+    }
+  },
 
   /**
    * isValidFeed: checks whether the given data represents a valid feed.
