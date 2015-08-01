@@ -414,7 +414,11 @@ int nr_netaddr_to_transport_addr(const net::NetAddr *netaddr,
           ABORT(r);
         break;
       case AF_INET6:
-        ABORT(R_BAD_ARGS);
+        if ((r = nr_ip6_port_to_transport_addr((in6_addr *)&netaddr->inet6.ip.u8,
+                                               ntohs(netaddr->inet6.port),
+                                               protocol, addr)))
+          ABORT(r);
+        break;
       default:
         MOZ_ASSERT(false);
         ABORT(R_BAD_ARGS);
