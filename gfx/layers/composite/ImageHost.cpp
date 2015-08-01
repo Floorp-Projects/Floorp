@@ -19,6 +19,8 @@
 
 class nsIntRegion;
 
+#define BIAS_TIME_MS 1.0
+
 namespace mozilla {
 namespace gfx {
 class Matrix4x4;
@@ -102,6 +104,22 @@ ImageHost::UseTextureHost(const nsTArray<TimedTexture>& aTextures)
     img.mFrontBuffer->PrepareTextureSource(img.mTextureSource);
   }
   mImages.SwapElements(newImages);
+
+  // Video producers generally send replacement images with the same frameID but
+  // slightly different timestamps in order to sync with the audio clock. This
+  // means that any CompositeUntil() call we made in Composite() may no longer
+  // guarantee that we'll composite until the next frame is ready. Fix that here.
+  if (GetCompositor() && mLastFrameID >= 0) {
+    for (size_t i = 0; i < mImages.Length(); ++i) {
+      bool frameComesAfter = mImages[i].mFrameID > mLastFrameID ||
+                             mImages[i].mProducerID != mLastProducerID;
+      if (frameComesAfter && !mImages[i].mTimeStamp.IsNull()) {
+        GetCompositor()->CompositeUntil(mImages[i].mTimeStamp +
+                                        TimeDuration::FromMilliseconds(BIAS_TIME_MS));
+        break;
+      }
+    }
+  }
 }
 
 void
@@ -124,9 +142,9 @@ GetBiasedTime(const TimeStamp& aInput, ImageHost::Bias aBias)
 {
   switch (aBias) {
   case ImageHost::BIAS_NEGATIVE:
-    return aInput - TimeDuration::FromMilliseconds(1.0);
+    return aInput - TimeDuration::FromMilliseconds(BIAS_TIME_MS);
   case ImageHost::BIAS_POSITIVE:
-    return aInput + TimeDuration::FromMilliseconds(1.0);
+    return aInput + TimeDuration::FromMilliseconds(BIAS_TIME_MS);
   default:
     return aInput;
   }
@@ -257,7 +275,7 @@ ImageHost::Composite(LayerComposite* aLayer,
   }
 
   if (uint32_t(imageIndex) + 1 < mImages.Length()) {
-    GetCompositor()->CompositeUntil(mImages[imageIndex + 1].mTimeStamp);
+    GetCompositor()->CompositeUntil(mImages[imageIndex + 1].mTimeStamp + TimeDuration::FromMilliseconds(BIAS_TIME_MS));
   }
 
   TimedImage* img = &mImages[imageIndex];
