@@ -1180,8 +1180,9 @@ CompositorParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRect* aRe
   // We're not really taking advantage of the stored composite-again-time here.
   // We might be able to skip the next few composites altogether. However,
   // that's a bit complex to implement and we'll get most of the advantage
-  // by skipping compositing when we detect there's nothing invalid.
-  if (!mCompositor->GetCompositeAgainTime().IsNull() ||
+  // by skipping compositing when we detect there's nothing invalid. This is why
+  // we do "composite until" rather than "composite again at".
+  if (!mCompositor->GetCompositeUntilTime().IsNull() ||
       mLayerManager->DebugOverlayWantsNextFrame()) {
     ScheduleComposition();
   }

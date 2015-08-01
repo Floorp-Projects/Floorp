@@ -257,7 +257,7 @@ ImageHost::Composite(LayerComposite* aLayer,
   }
 
   if (uint32_t(imageIndex) + 1 < mImages.Length()) {
-    GetCompositor()->CompositeAgainAt(mImages[imageIndex + 1].mTimeStamp);
+    GetCompositor()->CompositeUntil(mImages[imageIndex + 1].mTimeStamp);
   }
 
   TimedImage* img = &mImages[imageIndex];
