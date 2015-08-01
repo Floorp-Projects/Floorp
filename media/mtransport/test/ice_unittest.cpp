@@ -2914,11 +2914,6 @@ static std::string get_environment(const char *name) {
 
 int main(int argc, char **argv)
 {
-#ifdef LINUX
-  // This test can cause intermittent oranges on the builders on Linux
-  CHECK_ENVIRONMENT_FLAG("MOZ_WEBRTC_TESTS")
-#endif
-
   g_turn_server = get_environment("TURN_SERVER_ADDRESS");
   g_turn_user = get_environment("TURN_SERVER_USER");
   g_turn_password = get_environment("TURN_SERVER_PASSWORD");
