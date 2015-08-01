@@ -194,6 +194,18 @@ public:
 
   bool ImageIsLocked() const { return mImageIsLocked; }
 
+
+  /**
+   * Set whether we should stop decoding after the first frame.
+   */
+  void SetIsFirstFrameDecode()
+  {
+    MOZ_ASSERT(!mInitialized, "Shouldn't be initialized yet");
+    mFirstFrameDecode = true;
+  }
+
+  bool IsFirstFrameDecode() const { return mFirstFrameDecode; }
+
   size_t BytesDecoded() const { return mBytesDecoded; }
 
   // The amount of time we've spent inside Write() so far for this decoder.
@@ -443,6 +455,7 @@ private:
   bool mSendPartialInvalidations : 1;
   bool mImageIsTransient : 1;
   bool mImageIsLocked : 1;
+  bool mFirstFrameDecode : 1;
   bool mInFrame : 1;
   bool mIsAnimated : 1;
   bool mDataDone : 1;
