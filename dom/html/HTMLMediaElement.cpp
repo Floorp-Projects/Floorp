@@ -89,6 +89,7 @@
 #include "ImageContainer.h"
 #include "nsRange.h"
 #include <algorithm>
+#include <cmath>
 
 static PRLogModuleInfo* gMediaElementLog;
 static PRLogModuleInfo* gMediaElementEventsLog;
@@ -1800,6 +1801,8 @@ void HTMLMediaElement::SetVolumeInternal()
   } else if (mSrcStream) {
     GetSrcMediaStream()->SetAudioOutputVolume(this, effectiveVolume);
   }
+
+  UpdateAudioChannelPlayingState();
 }
 
 NS_IMETHODIMP HTMLMediaElement::SetMuted(bool aMuted)
@@ -4474,6 +4477,8 @@ void HTMLMediaElement::UpdateAudioChannelPlayingState()
 
   bool playingThroughTheAudioChannel =
      (!mPaused &&
+      !Muted() &&
+      std::fabs(Volume()) > 1e-7 &&
       (HasAttr(kNameSpaceID_None, nsGkAtoms::loop) ||
        (mReadyState >= nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA &&
         !IsPlaybackEnded()) ||
