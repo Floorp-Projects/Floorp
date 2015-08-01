@@ -300,7 +300,7 @@ BrowserElementChild.prototype = {
         break;
       case 'media-playback':
         if (subject === content) {
-          sendAsyncMsg('mediaplaybackchange', { _payload_: data });
+          sendAsyncMsg('audioplaybackchange', { _payload_: data });
         }
         break;
       case 'xpcom-shutdown':
