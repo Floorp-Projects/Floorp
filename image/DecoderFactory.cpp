@@ -181,5 +181,39 @@ DecoderFactory::CreateMetadataDecoder(DecoderType aType,
   return decoder.forget();
 }
 
+/* static */ already_AddRefed<Decoder>
+DecoderFactory::CreateAnonymousDecoder(DecoderType aType,
+                                       SourceBuffer* aSourceBuffer,
+                                       uint32_t aFlags)
+{
+  if (aType == DecoderType::UNKNOWN) {
+    return nullptr;
+  }
+
+  nsRefPtr<Decoder> decoder =
+    GetDecoder(aType, /* aImage = */ nullptr, /* aIsRedecode = */ false);
+  MOZ_ASSERT(decoder, "Should have a decoder now");
+
+  // Initialize the decoder.
+  decoder->SetMetadataDecode(false);
+  decoder->SetIterator(aSourceBuffer->Iterator());
+  decoder->SetFlags(aFlags);
+  decoder->SetImageIsTransient(true);
+
+  // Without an image, the decoder can't store anything in the SurfaceCache, so
+  // callers will only be able to retrieve the most recent frame via
+  // Decoder::GetCurrentFrame(). That means that anonymous decoders should
+  // always be first-frame-only decoders, because nobody ever wants the *last*
+  // frame.
+  decoder->SetIsFirstFrameDecode();
+
+  decoder->Init();
+  if (NS_FAILED(decoder->GetDecoderError())) {
+    return nullptr;
+  }
+
+  return decoder.forget();
+}
+
 } // namespace image
 } // namespace mozilla
