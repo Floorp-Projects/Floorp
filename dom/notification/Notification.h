@@ -17,7 +17,6 @@
 #include "nsCycleCollectionParticipant.h"
 
 class nsIPrincipal;
-class nsIStructuredCloneContainer;
 class nsIVariant;
 
 namespace mozilla {
@@ -124,7 +123,7 @@ public:
   IMPL_EVENT_HANDLER(close)
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Notification, DOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(Notification, DOMEventTargetHelper)
 
   static bool PrefEnabled(JSContext* aCx, JSObject* aObj);
   // Returns if Notification.get() is allowed for the current global.
@@ -177,8 +176,6 @@ public:
   {
     return mIsStored;
   }
-
-  nsIStructuredCloneContainer* GetDataCloneContainer();
 
   static bool RequestPermissionEnabledForScope(JSContext* aCx, JSObject* /* unused */);
 
@@ -292,11 +289,11 @@ protected:
   const nsString mLang;
   const nsString mTag;
   const nsString mIconUrl;
-  nsCOMPtr<nsIStructuredCloneContainer> mDataObjectContainer;
+  nsString mDataAsBase64;
   const NotificationBehavior mBehavior;
 
   // It's null until GetData is first called
-  nsCOMPtr<nsIVariant> mData;
+  JS::Heap<JS::Value> mData;
 
   nsString mAlertName;
 

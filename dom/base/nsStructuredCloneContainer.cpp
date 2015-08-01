@@ -95,6 +95,24 @@ nsStructuredCloneContainer::InitFromBase64(const nsAString &aData,
   return NS_OK;
 }
 
+nsresult
+nsStructuredCloneContainer::DeserializeToJsval(JSContext* aCx,
+                                               JS::MutableHandle<JS::Value> aValue)
+{
+  aValue.setNull();
+  JS::Rooted<JS::Value> jsStateObj(aCx);
+  bool hasTransferable = false;
+  bool success = JS_ReadStructuredClone(aCx, mData, mSize, mVersion,
+                                        &jsStateObj, nullptr, nullptr) &&
+                 JS_StructuredCloneHasTransferables(mData, mSize,
+                                                    &hasTransferable);
+  // We want to be sure that mData doesn't contain transferable objects
+  MOZ_ASSERT(!hasTransferable);
+  NS_ENSURE_STATE(success && !hasTransferable);
+
+  aValue.set(jsStateObj);
+  return NS_OK;
+}
 
 nsresult
 nsStructuredCloneContainer::DeserializeToVariant(JSContext *aCx,
@@ -106,14 +124,8 @@ nsStructuredCloneContainer::DeserializeToVariant(JSContext *aCx,
 
   // Deserialize to a JS::Value.
   JS::Rooted<JS::Value> jsStateObj(aCx);
-  bool hasTransferable = false;
-  bool success = JS_ReadStructuredClone(aCx, mData, mSize, mVersion,
-                                        &jsStateObj, nullptr, nullptr) &&
-                 JS_StructuredCloneHasTransferables(mData, mSize,
-                                                    &hasTransferable);
-  // We want to be sure that mData doesn't contain transferable objects
-  MOZ_ASSERT(!hasTransferable);
-  NS_ENSURE_STATE(success && !hasTransferable);
+  nsresult rv = DeserializeToJsval(aCx, &jsStateObj);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Now wrap the JS::Value as an nsIVariant.
   nsCOMPtr<nsIVariant> varStateObj;
