@@ -689,26 +689,26 @@ addMessageListener("WebChannelMessageToContent", function (e) {
   }
 });
 
-let MediaPlaybackListener = {
+let AudioPlaybackListener = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
   init() {
-    Services.obs.addObserver(this, "media-playback", false);
-    addMessageListener("MediaPlaybackMute", this);
+    Services.obs.addObserver(this, "audio-playback", false);
+    addMessageListener("AudioPlaybackMute", this);
     addEventListener("unload", () => {
-      MediaPlaybackListener.uninit();
+      AudioPlaybackListener.uninit();
     });
   },
 
   uninit() {
-    Services.obs.removeObserver(this, "media-playback");
-    removeMessageListener("MediaPlaybackMute", this);
+    Services.obs.removeObserver(this, "audio-playback");
+    removeMessageListener("AudioPlaybackMute", this);
   },
 
   observe(subject, topic, data) {
-    if (topic === "media-playback") {
+    if (topic === "audio-playback") {
       if (subject && subject.top == global.content) {
-        let name = "MediaPlayback:";
+        let name = "AudioPlayback:";
         name += (data === "active") ? "Start" : "Stop";
         sendAsyncMessage(name);
       }
@@ -716,11 +716,11 @@ let MediaPlaybackListener = {
   },
 
   receiveMessage(msg) {
-    if (msg.name == "MediaPlaybackMute") {
+    if (msg.name == "AudioPlaybackMute") {
       let utils = global.content.QueryInterface(Ci.nsIInterfaceRequestor)
                                 .getInterface(Ci.nsIDOMWindowUtils);
       utils.audioMuted = msg.data.type === "mute";
     }
   },
 };
-MediaPlaybackListener.init();
+AudioPlaybackListener.init();

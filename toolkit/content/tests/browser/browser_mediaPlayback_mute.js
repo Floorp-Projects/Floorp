@@ -33,7 +33,7 @@ function* test_audio_in_browser() {
 
 function* test_on_browser(url, browser) {
   browser.loadURI(url);
-  yield wait_for_event(browser, "DOMMediaPlaybackStarted");
+  yield wait_for_event(browser, "DOMAudioPlaybackStarted");
 
   var result = yield ContentTask.spawn(browser, null, test_audio_in_browser);
   is(result.computedVolume, 1, "Audio volume is 1");
@@ -43,7 +43,7 @@ function* test_on_browser(url, browser) {
   browser.mute();
   ok(browser.audioMuted, "Audio should be muted now");
 
-  yield wait_for_event(browser, "DOMMediaPlaybackStopped");
+  yield wait_for_event(browser, "DOMAudioPlaybackStopped");
 
   result = yield ContentTask.spawn(browser, null, test_audio_in_browser);
   is(result.computedVolume, 0, "Audio volume is 0 when muted");
@@ -52,7 +52,7 @@ function* test_on_browser(url, browser) {
 
 function* test_visibility(url, browser) {
   browser.loadURI(url);
-  yield wait_for_event(browser, "DOMMediaPlaybackStarted");
+  yield wait_for_event(browser, "DOMAudioPlaybackStarted");
 
   var result = yield ContentTask.spawn(browser, null, test_audio_in_browser);
   is(result.computedVolume, 1, "Audio volume is 1");
@@ -67,7 +67,7 @@ function* test_visibility(url, browser) {
     url: "about:blank",
   }, function() {});
 
-  yield wait_for_event(browser, "DOMMediaPlaybackStopped");
+  yield wait_for_event(browser, "DOMAudioPlaybackStopped");
 
   result = yield ContentTask.spawn(browser, null, test_audio_in_browser);
   is(result.computedVolume, 0, "Audio volume is 0 when muted");
