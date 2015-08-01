@@ -60,6 +60,13 @@ BreakpointActorMap.prototype = {
    *        The location for which matching BreakpointActors should be generated.
    */
   findActors: function* (location = new OriginalLocation()) {
+    // Fast shortcut for when we know we won't find any actors. Surprisingly
+    // enough, this speeds up refreshing when there are no breakpoints set by
+    // about 2x!
+    if (this.size === 0) {
+      return;
+    }
+
     function* findKeys(object, key) {
       if (key !== undefined) {
         if (key in object) {
