@@ -8,6 +8,8 @@
 
 #include "TabChild.h"
 
+#include "AudioChannelService.h"
+#include "gfxPrefs.h"
 #ifdef ACCESSIBILITY
 #include "mozilla/a11y/DocAccessibleChild.h"
 #endif
@@ -31,6 +33,7 @@
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/layout/RenderFrameChild.h"
+#include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"

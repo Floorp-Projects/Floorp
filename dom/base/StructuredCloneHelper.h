@@ -12,6 +12,10 @@
 #include "nsTArray.h"
 
 namespace mozilla {
+namespace layers {
+class Image;
+}
+
 namespace dom {
 
 class StructuredCloneHelperInternal
@@ -177,6 +181,11 @@ public:
     return mPortIdentifiers;
   }
 
+  nsTArray<nsRefPtr<layers::Image>>& GetImages()
+  {
+    return mClonedImages;
+  }
+
   // Custom Callbacks
 
   virtual JSObject* ReadCallback(JSContext* aCx,
@@ -213,6 +222,12 @@ private:
   // Useful for the structured clone algorithm:
 
   nsTArray<nsRefPtr<BlobImpl>> mBlobImplArray;
+
+  // This is used for sharing the backend of ImageBitmaps.
+  // The layers::Image object must be thread-safely reference-counted.
+  // The layers::Image object will not be written ever via any ImageBitmap
+  // instance, so no race condition will occur.
+  nsTArray<nsRefPtr<layers::Image>> mClonedImages;
 
   // This raw pointer is set and unset into the ::Read(). It's always null
   // outside that method. For this reason it's a raw pointer.

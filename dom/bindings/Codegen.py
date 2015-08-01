@@ -1655,6 +1655,10 @@ class CGClassConstructor(CGAbstractStaticMethod):
               // Adding more relocations
               return ThrowConstructorWithoutNew(cx, "${ctorName}");
             }
+            JS::Rooted<JSObject*> desiredProto(cx);
+            if (!GetDesiredProto(cx, args, &desiredProto)) {
+              return false;
+            }
             """,
             chromeOnlyCheck=chromeOnlyCheck,
             ctorName=ctorName)
@@ -3408,6 +3412,9 @@ def DeclareProto():
         JS::Rooted<JSObject*> proto(aCx);
         if (aGivenProto) {
           proto = aGivenProto;
+          // Unfortunately, while aGivenProto was in the compartment of aCx
+          // coming in, we changed compartments to that of "parent" so may need
+          // to wrap the proto here.
           if (js::GetContextCompartment(aCx) != js::GetObjectCompartment(proto)) {
             if (!JS_WrapObject(aCx, &proto)) {
               return false;
@@ -3436,6 +3443,16 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
         self.properties = properties
 
     def definition_body(self):
+        if self.descriptor.proxy:
+            preserveWrapper = dedent(
+                """
+                // For DOM proxies, the only reliable way to preserve the wrapper
+                // is to force creation of the expando object.
+                JS::Rooted<JSObject*> unused(aCx,
+                  DOMProxyHandler::EnsureExpandoObject(aCx, aReflector));
+                """)
+        else:
+            preserveWrapper = "PreserveWrapper(aObject);\n"
         return fill(
             """
             $*{assertInheritance}
@@ -3455,8 +3472,9 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
             // of XBL.  Check for that, and bail out as needed.
             aReflector.set(aCache->GetWrapper());
             if (aReflector) {
-              MOZ_ASSERT(!aGivenProto,
-                         "How are we supposed to change the proto now?");
+            #ifdef DEBUG
+              binding_detail::AssertReflectorHasGivenProto(aCx, aReflector, aGivenProto);
+            #endif // DEBUG
               return true;
             }
 
@@ -3470,13 +3488,27 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
             $*{unforgeable}
             $*{slots}
             creator.InitializationSucceeded();
+
+            MOZ_ASSERT(aCache->GetWrapperPreserveColor() &&
+                       aCache->GetWrapperPreserveColor() == aReflector);
+            // If proto != canonicalProto, we have to preserve our wrapper;
+            // otherwise we won't be able to properly recreate it later, since
+            // we won't know what proto to use.  Note that we don't check
+            // aGivenProto here, since it's entirely possible (and even
+            // somewhat common) to have a non-null aGivenProto which is the
+            // same as canonicalProto.
+            if (proto != canonicalProto) {
+              $*{preserveWrapper}
+            }
+
             return true;
             """,
             assertInheritance=AssertInheritanceChain(self.descriptor),
             declareProto=DeclareProto(),
             createObject=CreateBindingJSObject(self.descriptor, self.properties),
             unforgeable=CopyUnforgeablePropertiesToInstance(self.descriptor, True),
-            slots=InitMemberSlots(self.descriptor, True))
+            slots=InitMemberSlots(self.descriptor, True),
+            preserveWrapper=preserveWrapper)
 
 
 class CGWrapMethod(CGAbstractMethod):
@@ -4897,6 +4929,11 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             return JSToNativeConversionInfo(template, declType=declType,
                                             dealWithOptional=isOptional)
 
+        if descriptor.interface.identifier.name == "AbortablePromise":
+            raise TypeError("Need to figure out what argument conversion "
+                            "should look like for AbortablePromise: %s" %
+                            sourceDescription)
+
         # This is an interface that we implement as a concrete class
         # or an XPCOM interface.
 
@@ -4906,17 +4943,20 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         argIsPointer = (type.nullable() or type.unroll().inner.isExternal() or
                         isCallbackReturnValue)
 
-        # Sequences and non-worker callbacks have to hold a strong ref to the
-        # thing being passed down.  Union return values must hold a strong ref
-        # because they may be returning an addrefed pointer.
-        # Also, callback return values always end up
-        # addrefing anyway, so there is no point trying to avoid it here and it
-        # makes other things simpler since we can assume the return value is a
-        # strong ref.
-        forceOwningType = ((descriptor.interface.isCallback() and
-                            not descriptor.workers) or
-                           isMember or
-                           isCallbackReturnValue)
+        # Sequence and dictionary members, as well as owning unions (which can
+        # appear here as return values in JS-implemented interfaces) have to
+        # hold a strong ref to the thing being passed down.  Those all set
+        # isMember.
+        #
+        # Also, callback return values always end up addrefing anyway, so there
+        # is no point trying to avoid it here and it makes other things simpler
+        # since we can assume the return value is a strong ref.
+        #
+        # Finally, promises need to hold a strong ref because that's what
+        # Promise.resolve returns.
+        assert not descriptor.interface.isCallback()
+        isPromise = descriptor.interface.identifier.name == "Promise"
+        forceOwningType = isMember or isCallbackReturnValue or isPromise
 
         typeName = descriptor.nativeType
         typePtr = typeName + "*"
@@ -4943,7 +4983,29 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         templateBody = ""
         if forceOwningType:
             templateBody += 'static_assert(IsRefcounted<%s>::value, "We can only store refcounted classes.");' % typeName
-        if not descriptor.skipGen and not descriptor.interface.isConsequential() and not descriptor.interface.isExternal():
+
+        if isPromise:
+            templateBody = fill(
+                """
+                { // Scope for our GlobalObject and ErrorResult
+
+                  // Might as well use CurrentGlobalOrNull here; that will at
+                  // least give us the same behavior as if the caller just called
+                  // Promise.resolve() themselves.
+                  GlobalObject promiseGlobal(cx, JS::CurrentGlobalOrNull(cx));
+                  if (promiseGlobal.Failed()) {
+                    $*{exceptionCode}
+                  }
+                  ErrorResult promiseRv;
+                  $${declName} = Promise::Resolve(promiseGlobal, $${val}, promiseRv);
+                  if (promiseRv.Failed()) {
+                    ThrowMethodFailed(cx, promiseRv);
+                    $*{exceptionCode}
+                  }
+                }
+                """,
+                exceptionCode=exceptionCode)
+        elif not descriptor.skipGen and not descriptor.interface.isConsequential() and not descriptor.interface.isExternal():
             if failureCode is not None:
                 templateBody += str(CastableObjectUnwrapper(
                     descriptor,
@@ -4984,11 +5046,24 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             # And store our value in ${declName}
             templateBody += "${declName} = ${holderName};\n"
 
-        # Just pass failureCode, not onFailureBadType, here, so we'll report the
-        # thing as not an object as opposed to not implementing whatever our
-        # interface is.
-        templateBody = wrapObjectTemplate(templateBody, type,
-                                          "${declName} = nullptr;\n", failureCode)
+        if isPromise:
+            if type.nullable():
+                codeToSetNull = "${declName} = nullptr;\n"
+                templateBody = CGIfElseWrapper(
+                    "${val}.isNullOrUndefined()",
+                    CGGeneric(codeToSetNull),
+                    CGGeneric(templateBody)).define()
+                if isinstance(defaultValue, IDLNullValue):
+                    templateBody = handleDefault(templateBody, codeToSetNull)
+            else:
+                assert defaultValue is None
+        else:
+            # Just pass failureCode, not onFailureBadType, here, so we'll report
+            # the thing as not an object as opposed to not implementing whatever
+            # our interface is.
+            templateBody = wrapObjectTemplate(templateBody, type,
+                                              "${declName} = nullptr;\n",
+                                              failureCode)
 
         declType = CGGeneric(declType)
         if holderType is not None:
@@ -5745,7 +5820,8 @@ mozMapWrapLevel = 0
 
 
 def getWrapTemplateForType(type, descriptorProvider, result, successCode,
-                           returnsNewObject, exceptionCode, typedArraysAreStructs):
+                           returnsNewObject, exceptionCode, typedArraysAreStructs,
+                           isConstructorRetval=False):
     """
     Reflect a C++ value stored in "result", of IDL type "type" into JS.  The
     "successCode" is the code to run once we have successfully done the
@@ -5990,11 +6066,15 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
         if not descriptor.interface.isExternal() and not descriptor.skipGen:
             if descriptor.wrapperCache:
                 wrapMethod = "GetOrCreateDOMReflector"
+                wrapArgs = "cx, %s, ${jsvalHandle}" % result
             else:
                 if not returnsNewObject:
                     raise MethodNotNewObjectError(descriptor.interface.identifier.name)
                 wrapMethod = "WrapNewBindingNonWrapperCachedObject"
-            wrap = "%s(cx, ${obj}, %s, ${jsvalHandle})" % (wrapMethod, result)
+                wrapArgs = "cx, ${obj}, %s, ${jsvalHandle}" % result
+            if isConstructorRetval:
+                wrapArgs += ", desiredProto"
+            wrap = "%s(%s)" % (wrapMethod, wrapArgs)
             if not descriptor.hasXPConnectImpls:
                 # Can only fail to wrap as a new-binding object
                 # if they already threw an exception.
@@ -6189,15 +6269,17 @@ def wrapForType(type, descriptorProvider, templateValues):
       * 'exceptionCode' (optional): Code to run when a JS exception is thrown.
                                     The default is "return false;".  The code
                                     passed here must return.
+      * 'isConstructorRetval' (optional): If true, we're wrapping a constructor
+                                          return value.
     """
-    wrap = getWrapTemplateForType(type, descriptorProvider,
-                                  templateValues.get('result', 'result'),
-                                  templateValues.get('successCode', None),
-                                  templateValues.get('returnsNewObject', False),
-                                  templateValues.get('exceptionCode',
-                                                     "return false;\n"),
-                                  templateValues.get('typedArraysAreStructs',
-                                                     False))[0]
+    wrap = getWrapTemplateForType(
+        type, descriptorProvider,
+        templateValues.get('result', 'result'),
+        templateValues.get('successCode', None),
+        templateValues.get('returnsNewObject', False),
+        templateValues.get('exceptionCode', "return false;\n"),
+        templateValues.get('typedArraysAreStructs', False),
+        isConstructorRetval=templateValues.get('isConstructorRetval', False))[0]
 
     defaultValues = {'obj': 'obj'}
     return string.Template(wrap).substitute(defaultValues, **templateValues)
@@ -6741,6 +6823,7 @@ class CGPerSignatureCall(CGThing):
                                                                    setter=setter)
         self.arguments = arguments
         self.argCount = len(arguments)
+        self.isConstructor = isConstructor
         cgThings = []
 
         # Here, we check if the current getter, setter, method, interface or
@@ -6825,6 +6908,10 @@ class CGPerSignatureCall(CGThing):
             needsUnwrap = True
             needsUnwrappedVar = False
             unwrappedVar = "obj"
+            if descriptor.name == "Promise" or descriptor.name == "MozAbortablePromise":
+                # Hack for Promise for now: pass in our desired proto so the
+                # implementation can create the reflector with the right proto.
+                argsPost.append("desiredProto")
         elif descriptor.interface.isJSImplemented():
             if not idlNode.isStatic():
                 needsUnwrap = True
@@ -6905,6 +6992,12 @@ class CGPerSignatureCall(CGThing):
                 # original list of JS::Values.
                 cgThings.append(CGGeneric("Maybe<JSAutoCompartment> ac;\n"))
                 xraySteps.append(CGGeneric("ac.emplace(cx, obj);\n"))
+                xraySteps.append(CGGeneric(dedent(
+                    """
+                    if (!JS_WrapObject(cx, &desiredProto)) {
+                      return false;
+                    }
+                    """)))
                 xraySteps.extend(
                     wrapArgIntoCurrentCompartment(arg, argname, isMember=False)
                     for arg, argname in self.getArguments())
@@ -6958,6 +7051,7 @@ class CGPerSignatureCall(CGThing):
             'jsvalRef': 'args.rval()',
             'jsvalHandle': 'args.rval()',
             'returnsNewObject': returnsNewObject,
+            'isConstructorRetval': self.isConstructor,
             'successCode': successCode,
             'obj': "reflector" if setSlot else "obj"
         }
@@ -13135,7 +13229,8 @@ class CGNativeMember(ClassMethod):
         if type.isGeckoInterface() and not type.isCallbackInterface():
             iface = type.unroll().inner
             argIsPointer = type.nullable() or iface.isExternal()
-            forceOwningType = iface.isCallback() or isMember
+            forceOwningType = (iface.isCallback() or isMember or
+                               iface.identifier.name == "Promise")
             if argIsPointer:
                 if (optional or isMember) and forceOwningType:
                     typeDecl = "nsRefPtr<%s>"

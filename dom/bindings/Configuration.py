@@ -136,10 +136,10 @@ class Configuration:
             while True:
                 if t.isMozMap():
                     t = t.inner
-                elif t.isPromise():
-                    t = t.promiseInnerType()
                 elif t.unroll() != t:
                     t = t.unroll()
+                elif t.isPromise():
+                    t = t.promiseInnerType()
                 else:
                     break
             if t.isUnion():

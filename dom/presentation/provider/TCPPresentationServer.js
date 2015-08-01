@@ -26,7 +26,7 @@ function TCPPresentationServer() {
   this._id = null;
   this._port = 0;
   this._serverSocket = null;
-  this._devices = null;
+  this._devices = new Map(); // id -> device
 }
 
 TCPPresentationServer.prototype = {
@@ -78,7 +78,6 @@ TCPPresentationServer.prototype = {
      */
     this.id = aId;
     this._port = this._serverSocket.port;
-    this._devices = new Map(); // id -> device
   },
 
   get id() {
@@ -251,7 +250,6 @@ TCPPresentationServer.prototype = {
     this._id = null;
     this._port = 0;
     this._devices && this._devices.clear();
-    this._devices = null;
   },
 
   classID: Components.ID("{f4079b8b-ede5-4b90-a112-5b415a931deb}"),

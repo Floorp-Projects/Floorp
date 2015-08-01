@@ -20,7 +20,7 @@ interface nsIContentSecurityPolicy;
 [ptr] native JSPrincipals(JSPrincipals);
 [ptr] native PrincipalArray(nsTArray<nsCOMPtr<nsIPrincipal> >);
 
-[scriptable, builtinclass, uuid(7a9aa074-7565-4567-af2f-9e3704c7af9e)]
+[scriptable, builtinclass, uuid(a083acd0-1ebf-4585-85ab-08cfdd9c96bd)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -258,6 +258,13 @@ interface nsIPrincipal : nsISerializable
      * appStatus as well.
      */
     [infallible] readonly attribute unsigned long appId;
+
+    /**
+     * Gets the id of the user context this principal is inside.  If this
+     * principal is inside the default userContext, this returns
+     * nsIScriptSecurityManager::DEFAULT_USER_CONTEXT_ID.
+     */
+    [infallible] readonly attribute unsigned long userContextId;
 
     /**
      * Returns true iff the principal is inside a browser element.  (<iframe
