@@ -628,8 +628,8 @@ Notification::Notification(const nsAString& aID, const nsAString& aTitle, const 
   : DOMEventTargetHelper(),
     mWorkerPrivate(nullptr), mObserver(nullptr),
     mID(aID), mTitle(aTitle), mBody(aBody), mDir(aDir), mLang(aLang),
-    mTag(aTag), mIconUrl(aIconUrl), mBehavior(aBehavior), mIsClosed(false),
-    mIsStored(false), mTaskCount(0)
+    mTag(aTag), mIconUrl(aIconUrl), mBehavior(aBehavior), mData(JS::NullValue()),
+    mIsClosed(false), mIsStored(false), mTaskCount(0)
 {
   nsAutoString alertName;
   if (NS_IsMainThread()) {
@@ -738,13 +738,6 @@ Notification::PersistNotification()
   nsString alertName;
   GetAlertName(alertName);
 
-  nsString dataString;
-  nsCOMPtr<nsIStructuredCloneContainer> scContainer;
-  scContainer = GetDataCloneContainer();
-  if (scContainer) {
-    scContainer->GetDataAsBase64(dataString);
-  }
-
   nsAutoString behavior;
   if (!mBehavior.ToJSON(behavior)) {
     return NS_ERROR_FAILURE;
@@ -759,7 +752,7 @@ Notification::PersistNotification()
                                 mTag,
                                 mIconUrl,
                                 alertName,
-                                dataString,
+                                mDataAsBase64,
                                 behavior);
 
   if (NS_FAILED(rv)) {
@@ -825,6 +818,8 @@ Notification::CreateInternal(nsIGlobalObject* aGlobal,
 
 Notification::~Notification()
 {
+  mData.setUndefined();
+  mozilla::DropJSObjects(this);
   AssertIsOnTargetThread();
   MOZ_ASSERT(!mFeature);
   MOZ_ASSERT(!mTempRef);
@@ -832,14 +827,15 @@ Notification::~Notification()
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(Notification)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(Notification, DOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mData)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDataObjectContainer)
+  tmp->mData.setUndefined();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(Notification, DOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mData)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDataObjectContainer)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(Notification, DOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(mData);
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_ADDREF_INHERITED(Notification, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(Notification, DOMEventTargetHelper)
@@ -1126,13 +1122,6 @@ Notification::ShowInternal()
     observer = new NotificationObserver(Move(ownership));
   }
 
-  // mDataObjectContainer might be uninitialized here because the notification
-  // was constructed with an undefined data property.
-  nsString dataStr;
-  if (mDataObjectContainer) {
-    mDataObjectContainer->GetDataAsBase64(dataStr);
-  }
-
 #ifdef MOZ_B2G
   nsCOMPtr<nsIAppNotificationService> appNotifier =
     do_GetService("@mozilla.org/system-alerts-service;1");
@@ -1160,7 +1149,7 @@ Notification::ShowInternal()
         ops.mDir = DirectionToString(mDir);
         ops.mLang = mLang;
         ops.mTag = mTag;
-        ops.mData = dataStr;
+        ops.mData = mDataAsBase64;
         ops.mMozbehavior = mBehavior;
         ops.mMozbehavior.mSoundFile = soundUrl;
 
@@ -1200,7 +1189,7 @@ Notification::ShowInternal()
   alertService->ShowAlertNotification(iconUrl, mTitle, mBody, true,
                                       uniqueCookie, observer, mAlertName,
                                       DirectionToString(mDir), mLang,
-                                      dataStr, GetPrincipal(),
+                                      mDataAsBase64, GetPrincipal(),
                                       inPrivateBrowsing);
 }
 
@@ -1510,52 +1499,76 @@ Notification::GetOriginWorker(nsString& aOrigin)
   return NS_OK;
 }
 
-nsIStructuredCloneContainer* Notification::GetDataCloneContainer()
-{
-  return mDataObjectContainer;
-}
-
 void
 Notification::GetData(JSContext* aCx,
                       JS::MutableHandle<JS::Value> aRetval)
 {
-  if (!mData && mDataObjectContainer) {
+  if (mData.isNull() && !mDataAsBase64.IsEmpty()) {
     nsresult rv;
-    rv = mDataObjectContainer->DeserializeToVariant(aCx, getter_AddRefs(mData));
+    nsRefPtr<nsStructuredCloneContainer> container =
+      new nsStructuredCloneContainer();
+    rv = container->InitFromBase64(mDataAsBase64, JS_STRUCTURED_CLONE_VERSION,
+                                   aCx);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       aRetval.setNull();
       return;
     }
+
+    JS::Rooted<JS::Value> data(aCx);
+    rv = container->DeserializeToJsval(aCx, &data);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aRetval.setNull();
+      return;
+    }
+
+    if (data.isGCThing()) {
+      mozilla::HoldJSObjects(this);
+    }
+    mData = data;
   }
-  if (!mData) {
+  if (mData.isNull()) {
     aRetval.setNull();
     return;
   }
-  VariantToJsval(aCx, mData, aRetval);
+
+  JS::ExposeValueToActiveJS(mData);
+  aRetval.set(mData);
 }
 
 void
 Notification::InitFromJSVal(JSContext* aCx, JS::Handle<JS::Value> aData,
                             ErrorResult& aRv)
 {
-  if (mDataObjectContainer || aData.isNull()) {
+  if (!mDataAsBase64.IsEmpty() || aData.isNull()) {
     return;
   }
-  mDataObjectContainer = new nsStructuredCloneContainer();
-  aRv = mDataObjectContainer->InitFromJSVal(aData, aCx);
+  nsRefPtr<nsStructuredCloneContainer> dataObjectContainer =
+    new nsStructuredCloneContainer();
+  aRv = dataObjectContainer->InitFromJSVal(aData, aCx);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  dataObjectContainer->GetDataAsBase64(mDataAsBase64);
 }
 
 void Notification::InitFromBase64(JSContext* aCx, const nsAString& aData,
                                   ErrorResult& aRv)
 {
-  if (mDataObjectContainer || aData.IsEmpty()) {
+  if (!mDataAsBase64.IsEmpty() || aData.IsEmpty()) {
     return;
   }
 
-  auto container = new nsStructuredCloneContainer();
+  // To and fro to ensure it is valid base64.
+  nsRefPtr<nsStructuredCloneContainer> container =
+    new nsStructuredCloneContainer();
   aRv = container->InitFromBase64(aData, JS_STRUCTURED_CLONE_VERSION,
                                   aCx);
-  mDataObjectContainer = container;
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  container->GetDataAsBase64(mDataAsBase64);
 }
 
 bool
