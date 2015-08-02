@@ -11,7 +11,6 @@
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
-#include "nsISpeechRecognitionService.h"
 
 struct JSContext;
 
@@ -29,7 +28,7 @@ class SpeechGrammarList final : public nsISupports,
                                 public nsWrapperCache
 {
 public:
-  explicit SpeechGrammarList(nsISupports* aParent, nsISpeechRecognitionService* aRecognitionService);
+  explicit SpeechGrammarList(nsISupports* aParent);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(SpeechGrammarList)
@@ -49,8 +48,6 @@ public:
   void AddFromString(const nsAString& aString, const Optional<float>& aWeight, ErrorResult& aRv);
 
   already_AddRefed<SpeechGrammar> IndexedGetter(uint32_t aIndex, bool& aPresent, ErrorResult& aRv);
-
-  nsCOMPtr<nsISpeechRecognitionService> mRecognitionService;
 
 private:
   ~SpeechGrammarList();
