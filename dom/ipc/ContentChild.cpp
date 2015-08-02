@@ -764,6 +764,14 @@ ContentChild::AppendProcessId(nsACString& aName)
 }
 
 void
+ContentChild::InitGraphicsDeviceData()
+{
+    // Initialize the graphics platform. This may contact the parent process
+    // to read device preferences.
+    gfxPlatform::GetPlatform();
+}
+
+void
 ContentChild::InitXPCOM()
 {
     // Do this as early as possible to get the parent process to initialize the
