@@ -49,8 +49,6 @@ class SpeechEvent;
 PRLogModuleInfo* GetSpeechRecognitionLog();
 #define SR_LOG(...) MOZ_LOG(GetSpeechRecognitionLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
 
-already_AddRefed<nsISpeechRecognitionService> GetSpeechRecognitionService();
-
 class SpeechRecognition final : public DOMEventTargetHelper,
                                 public nsIObserver,
                                 public SupportsWeakPtr<SpeechRecognition>
@@ -60,6 +58,7 @@ public:
   explicit SpeechRecognition(nsPIDOMWindow* aOwnerWindow);
 
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SpeechRecognition, DOMEventTargetHelper)
 
   NS_DECL_NSIOBSERVER
 
@@ -72,13 +71,13 @@ public:
   static already_AddRefed<SpeechRecognition>
   Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
 
-  already_AddRefed<SpeechGrammarList> GetGrammars(ErrorResult& aRv) const;
+  already_AddRefed<SpeechGrammarList> Grammars() const;
 
-  void SetGrammars(mozilla::dom::SpeechGrammarList& aArg, ErrorResult& aRv);
+  void SetGrammars(mozilla::dom::SpeechGrammarList& aArg);
 
-  void GetLang(nsString& aRetVal, ErrorResult& aRv) const;
+  void GetLang(nsString& aRetVal) const;
 
-  void SetLang(const nsAString& aArg, ErrorResult& aRv);
+  void SetLang(const nsAString& aArg);
 
   bool GetContinuous(ErrorResult& aRv) const;
 
@@ -176,6 +175,9 @@ private:
   void SetState(FSMState state);
   bool StateBetween(FSMState begin, FSMState end);
 
+  bool SetRecognitionService(ErrorResult& aRv);
+  bool ValidateAndSetGrammarList(ErrorResult& aRv);
+
   class GetUserMediaSuccessCallback : public nsIDOMGetUserMediaSuccessCallback
   {
   public:
@@ -248,6 +250,10 @@ private:
 
   nsCOMPtr<nsITimer> mSpeechDetectionTimer;
   bool mAborted;
+
+  nsString mLang;
+
+  nsRefPtr<SpeechGrammarList> mSpeechGrammarList;
 
   void ProcessTestEventRequest(nsISupports* aSubject, const nsAString& aEventName);
 
