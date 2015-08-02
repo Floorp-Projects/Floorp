@@ -190,34 +190,27 @@ void PeriodicWave::createBandLimitedTables(const float* realData, const float* i
     for (unsigned rangeIndex = 0; rangeIndex < m_numberOfRanges; ++rangeIndex) {
         // This FFTBlock is used to cull partials (represented by frequency bins).
         FFTBlock frame(fftSize);
-        nsAutoArrayPtr<float> realP(new float[halfSize + 1]);
-        nsAutoArrayPtr<float> imagP(new float[halfSize + 1]);
 
         // Find the starting bin where we should start culling the aliasing
         // partials for this pitch range.  We need to clear out the highest
         // frequencies to band-limit the waveform.
         unsigned numberOfPartials = numberOfPartialsForRange(rangeIndex);
-        // Also clear bins where components are not provided.
+        // Also limit to the number of components that are provided.
         numberOfPartials = std::min(numberOfPartials, numberOfComponents - 1);
 
-        // Copy from loaded frequency data and scale.
-        float scale = fftSize;
-        AudioBufferCopyWithScale(realData, scale, realP, numberOfPartials + 1);
-        // Generate complex conjugate because of the way the
-        // inverse FFT is defined.
-        AudioBufferCopyWithScale(imagData, -scale, imagP, numberOfPartials + 1);
-
-        // Clear the remaining bins.
-        for (i = numberOfPartials + 1; i < halfSize + 1; ++i) {
-            realP[i] = 0;
-            imagP[i] = 0;
+        // Copy from loaded frequency data and generate complex conjugate
+        // because of the way the inverse FFT is defined.
+        // The coefficients of higher partials remain zero, as initialized in
+        // the FFTBlock constructor.
+        for (i = 0; i < numberOfPartials + 1; ++i) {
+            frame.RealData(i) = realData[i];
+            frame.ImagData(i) = -imagData[i];
         }
 
         // Clear any DC-offset.
-        realP[0] = 0;
-
+        frame.RealData(0) = 0;
         // Clear value which has no effect.
-        imagP[0] = 0;
+        frame.ImagData(0) = 0;
 
         // Create the band-limited table.
         AlignedAudioFloatArray* table = new AlignedAudioFloatArray(m_periodicWaveSize);
@@ -225,7 +218,7 @@ void PeriodicWave::createBandLimitedTables(const float* realData, const float* i
 
         // Apply an inverse FFT to generate the time-domain table data.
         float* data = m_bandLimitedTables[rangeIndex]->Elements();
-        frame.PerformInverseFFT(realP, imagP, data);
+        frame.GetInverseWithoutScaling(data);
 
         // For the first range (which has the highest power), calculate
         // its peak value then compute normalization scale.
