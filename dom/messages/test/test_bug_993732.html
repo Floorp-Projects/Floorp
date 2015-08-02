@@ -19,6 +19,20 @@
   // listening system message is broadcast. So this test case uses the alarm message
   // to test if a running app can receive the system message.
 
+  function registerPage() {
+    var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('system_message_chrome_script.js'));
+    gScript.addMessageListener("page-registered", function pageRegisteredHandler() {
+      gScript.removeMessageListener("page-registered", pageRegisteredHandler);
+      gScript.destroy();
+      testAlarm(10000);
+    });
+
+    gScript.sendAsyncMessage("trigger-register-page",
+                             { type: "alarm",
+                               manifestURL: window.location.origin + "/manifest.webapp",
+                               pageURL: window.location.href });
+  }
+
   function testAlarm(aMillisecondsFromNow) {
     var at = new Date();
     at.setTime(at.getTime() + aMillisecondsFromNow);
@@ -40,7 +54,7 @@
       // Waiting for alarm message.
     };
     domRequest.onerror = function(e) {
-      ok(false, "Unable to add alarm for tomorrow`.");
+      ok(false, "Unable to add alarm.");
       SimpleTest.finish();
     };
   }
@@ -52,7 +66,7 @@
       if (navigator.userAgent.indexOf("Mobile") != -1 &&
           navigator.appVersion.indexOf("Android") == -1)
       {
-        testAlarm(10000);
+        registerPage();
       } else {
         ok(true, "mozAlarms on Firefox OS only.");
         SimpleTest.finish();
