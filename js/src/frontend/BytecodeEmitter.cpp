@@ -5861,7 +5861,6 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
                    bi->kind() == Binding::ARGUMENT);
         MOZ_ASSERT(bi.argOrLocalIndex() < JS_BIT(20));
 #endif
-        pn->pn_index = index;
         if (!emitIndexOp(JSOP_LAMBDA, index))
             return false;
         MOZ_ASSERT(pn->getOp() == JSOP_GETLOCAL || pn->getOp() == JSOP_GETARG);
