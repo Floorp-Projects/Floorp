@@ -112,6 +112,7 @@ class mozilla::gl::SkiaGLGlue : public GenericAtomicRefCounted {
 #include "VsyncSource.h"
 #include "SoftwareVsyncSource.h"
 #include "nscore.h" // for NS_FREE_PERMANENT_DATA
+#include "mozilla/dom/ContentChild.h"
 
 namespace mozilla {
 namespace layers {
@@ -2487,4 +2488,25 @@ gfxPlatform::NotifyCompositorCreated(LayersBackend aBackend)
   if (nsCOMPtr<nsIObserverService> obsvc = services::GetObserverService()) {
     obsvc->NotifyObservers(nullptr, "compositor:created", nullptr);
   }
+}
+
+void
+gfxPlatform::GetDeviceInitData(mozilla::gfx::DeviceInitData* aOut)
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+  aOut->useAcceleration() = ShouldUseLayersAcceleration();
+}
+
+void
+gfxPlatform::UpdateDeviceInitData()
+{
+  if (XRE_IsParentProcess()) {
+    // The parent process figures out device initialization on its own.
+    return;
+  }
+
+  mozilla::gfx::DeviceInitData data;
+  mozilla::dom::ContentChild::GetSingleton()->SendGetGraphicsDeviceInitData(&data);
+
+  SetDeviceInitData(data);
 }
