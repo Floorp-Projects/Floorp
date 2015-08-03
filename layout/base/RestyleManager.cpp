@@ -759,7 +759,7 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
       }
     }
 
-    if ((hint & nsChangeHint_UpdateContainingBlock) && frame &&
+    if ((hint & nsChangeHint_AddOrRemoveTransform) && frame &&
         !(hint & nsChangeHint_ReconstructFrame)) {
       if (NeedToReframeForAddingOrRemovingTransform(frame) ||
           frame->GetType() == nsGkAtoms::fieldSetFrame ||
@@ -773,7 +773,7 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
           // Normally frame construction would set state bits as needed,
           // but we're not going to reconstruct the frame so we need to set them.
           // It's because we need to set this state on each affected frame
-          // that we can't coalesce nsChangeHint_UpdateContainingBlock hints up
+          // that we can't coalesce nsChangeHint_AddOrRemoveTransform hints up
           // to ancestors (i.e. it can't be an inherited change hint).
           if (cont->IsAbsPosContaininingBlock()) {
             if (cont->StyleDisplay()->HasTransform(cont)) {
@@ -2627,7 +2627,7 @@ ElementRestyler::AddLayerChangesForAnimation()
       // If we have a transform layer but don't have any transform style, we
       // probably just removed the transform but haven't destroyed the layer
       // yet. In this case we will add the appropriate change hint
-      // (nsChangeHint_UpdateContainingBlock) when we compare style contexts
+      // (nsChangeHint_AddOrRemoveTransform) when we compare style contexts
       // so we can skip adding any change hint here. (If we *were* to add
       // nsChangeHint_UpdateTransformLayer, ApplyRenderingChangeToTree would
       // complain that we're updating a transform layer without a transform).
