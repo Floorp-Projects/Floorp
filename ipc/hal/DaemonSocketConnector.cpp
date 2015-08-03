@@ -5,32 +5,87 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "BluetoothDaemonConnector.h"
+#include "DaemonSocketConnector.h"
 #include <fcntl.h>
+#include <limits.h>
+#include <stddef.h>
+#include <string.h>
 #include <sys/un.h>
 #include "nsISupportsImpl.h" // for MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
-#include "nsThreadUtils.h"
+#include "prrng.h"
 
-BEGIN_BLUETOOTH_NAMESPACE
+#ifdef CHROMIUM_LOG
+#undef CHROMIUM_LOG
+#endif
 
-BluetoothDaemonConnector::BluetoothDaemonConnector(
-  const nsACString& aSocketName)
-  : mSocketName(aSocketName)
+#if defined(MOZ_WIDGET_GONK)
+#include <android/log.h>
+#define CHROMIUM_LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "I/O", args);
+#else
+#include <stdio.h>
+#define IODEBUG true
+#define CHROMIUM_LOG(args...) if (IODEBUG) printf(args);
+#endif
+
+namespace mozilla {
+namespace ipc {
+
+nsresult
+DaemonSocketConnector::CreateRandomAddressString(
+  const nsACString& aPrefix, unsigned long aPostfixLength,
+  nsACString& aAddress)
 {
-  MOZ_COUNT_CTOR_INHERITED(BluetoothDaemonConnector, UnixSocketConnector);
+  static const char sHexChar[16] = {
+    [0x0] = '0', [0x1] = '1', [0x2] = '2', [0x3] = '3',
+    [0x4] = '4', [0x5] = '5', [0x6] = '6', [0x7] = '7',
+    [0x8] = '8', [0x9] = '9', [0xa] = 'a', [0xb] = 'b',
+    [0xc] = 'c', [0xd] = 'd', [0xe] = 'e', [0xf] = 'f'
+  };
+
+  unsigned short seed[3];
+
+  if (NS_WARN_IF(!PR_GetRandomNoise(seed, sizeof(seed)))) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  aAddress = aPrefix;
+  aAddress.Append('-');
+
+  while (aPostfixLength) {
+    // Android doesn't provide rand_r, so we use nrand48 here,
+    // even though it's deprecated.
+    long value = nrand48(seed);
+
+    size_t bits = sizeof(value) * CHAR_BIT;
+
+    while ((bits > 4) && aPostfixLength) {
+      aAddress.Append(sHexChar[value&0xf]);
+      bits -= 4;
+      value >>= 4;
+      --aPostfixLength;
+    }
+  }
+
+  return NS_OK;
 }
 
-BluetoothDaemonConnector::~BluetoothDaemonConnector()
+DaemonSocketConnector::DaemonSocketConnector(const nsACString& aSocketName)
+  : mSocketName(aSocketName)
 {
-  MOZ_COUNT_CTOR_INHERITED(BluetoothDaemonConnector, UnixSocketConnector);
+  MOZ_COUNT_CTOR_INHERITED(DaemonSocketConnector, UnixSocketConnector);
+}
+
+DaemonSocketConnector::~DaemonSocketConnector()
+{
+  MOZ_COUNT_CTOR_INHERITED(DaemonSocketConnector, UnixSocketConnector);
 }
 
 nsresult
-BluetoothDaemonConnector::CreateSocket(int& aFd) const
+DaemonSocketConnector::CreateSocket(int& aFd) const
 {
   aFd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
   if (aFd < 0) {
-    BT_WARNING("Could not open Bluetooth daemon socket!");
+    CHROMIUM_LOG("Could not open daemon socket!");
     return NS_ERROR_FAILURE;
   }
 
@@ -38,7 +93,7 @@ BluetoothDaemonConnector::CreateSocket(int& aFd) const
 }
 
 nsresult
-BluetoothDaemonConnector::SetSocketFlags(int aFd) const
+DaemonSocketConnector::SetSocketFlags(int aFd) const
 {
   static const int sReuseAddress = 1;
 
@@ -75,7 +130,7 @@ BluetoothDaemonConnector::SetSocketFlags(int aFd) const
 }
 
 nsresult
-BluetoothDaemonConnector::CreateAddress(struct sockaddr& aAddress,
+DaemonSocketConnector::CreateAddress(struct sockaddr& aAddress,
                                         socklen_t& aAddressLength) const
 {
   static const size_t sNameOffset = 1;
@@ -102,7 +157,7 @@ BluetoothDaemonConnector::CreateAddress(struct sockaddr& aAddress,
 // |UnixSocketConnector|
 
 nsresult
-BluetoothDaemonConnector::ConvertAddressToString(
+DaemonSocketConnector::ConvertAddressToString(
   const struct sockaddr& aAddress, socklen_t aAddressLength,
   nsACString& aAddressString)
 {
@@ -119,7 +174,7 @@ BluetoothDaemonConnector::ConvertAddressToString(
 }
 
 nsresult
-BluetoothDaemonConnector::CreateListenSocket(struct sockaddr* aAddress,
+DaemonSocketConnector::CreateListenSocket(struct sockaddr* aAddress,
                                              socklen_t* aAddressLength,
                                              int& aListenFd)
 {
@@ -146,7 +201,7 @@ BluetoothDaemonConnector::CreateListenSocket(struct sockaddr* aAddress,
 }
 
 nsresult
-BluetoothDaemonConnector::AcceptStreamSocket(int aListenFd,
+DaemonSocketConnector::AcceptStreamSocket(int aListenFd,
                                              struct sockaddr* aAddress,
                                              socklen_t* aAddressLength,
                                              int& aStreamFd)
@@ -154,7 +209,7 @@ BluetoothDaemonConnector::AcceptStreamSocket(int aListenFd,
   ScopedClose fd(
     TEMP_FAILURE_RETRY(accept(aListenFd, aAddress, aAddressLength)));
   if (fd < 0) {
-    NS_WARNING("Cannot accept file descriptor!");
+    CHROMIUM_LOG("Cannot accept file descriptor!");
     return NS_ERROR_FAILURE;
   }
   nsresult rv = SetSocketFlags(fd);
@@ -168,21 +223,22 @@ BluetoothDaemonConnector::AcceptStreamSocket(int aListenFd,
 }
 
 nsresult
-BluetoothDaemonConnector::CreateStreamSocket(struct sockaddr* aAddress,
+DaemonSocketConnector::CreateStreamSocket(struct sockaddr* aAddress,
                                              socklen_t* aAddressLength,
                                              int& aStreamFd)
 {
-  MOZ_CRASH("|BluetoothDaemonConnector| does not support "
+  MOZ_CRASH("|DaemonSocketConnector| does not support "
             "creating stream sockets.");
   return NS_ERROR_ABORT;
 }
 
 nsresult
-BluetoothDaemonConnector::Duplicate(UnixSocketConnector*& aConnector)
+DaemonSocketConnector::Duplicate(UnixSocketConnector*& aConnector)
 {
-  aConnector = new BluetoothDaemonConnector(*this);
+  aConnector = new DaemonSocketConnector(*this);
 
   return NS_OK;
 }
 
-END_BLUETOOTH_NAMESPACE
+} // namespace ipc
+} // namespace mozilla
