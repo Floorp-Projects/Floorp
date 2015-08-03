@@ -61,6 +61,9 @@ TexTarget TexImageTargetToTexTarget(TexImageTarget texImageTarget);
 // Helper function to create a JS::Value from a C string
 JS::Value StringValue(JSContext* cx, const char* str, ErrorResult& rv);
 
+bool IsCompressedTextureFormat(GLenum format);
+bool IsTextureFormatCompressed(TexInternalFormat format);
+
 struct GLComponents
 {
     unsigned char mComponents;
