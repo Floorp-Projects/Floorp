@@ -72,7 +72,6 @@ if CONFIG['OS_TARGET'] == 'WINNT':
     DEFINES['WIN'] = True
     # for stun.h
     DEFINES['WIN32'] = True
-    DEFINES['NOMINMAX'] = True
     DEFINES['__Userspace_os_Windows'] = 1
 else:
     # Works for Darwin, Linux, Android. Probably doesn't work for others.
