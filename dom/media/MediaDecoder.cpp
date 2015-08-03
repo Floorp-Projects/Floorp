@@ -130,7 +130,6 @@ MediaDecoder::InitStatics()
 {
   MOZ_ASSERT(NS_IsMainThread());
   AbstractThread::InitStatics();
-  SharedThreadPool::InitStatics();
 
   // Log modules.
   gMediaDecoderLog = PR_NewLogModule("MediaDecoder");
