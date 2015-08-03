@@ -9,7 +9,6 @@ let {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/ExtensionContent.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils",
   "resource:///modules/E10SUtils.jsm");
@@ -657,8 +656,3 @@ let DOMFullscreenHandler = {
   }
 };
 DOMFullscreenHandler.init();
-
-ExtensionContent.init(this);
-addEventListener("unload", () => {
-  ExtensionContent.uninit(this);
-});

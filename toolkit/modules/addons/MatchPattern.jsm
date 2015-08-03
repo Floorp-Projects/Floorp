@@ -63,7 +63,7 @@ function SingleMatchPattern(pat)
 }
 
 SingleMatchPattern.prototype = {
-  matches(uri, ignorePath = false) {
+  matches(uri) {
     if (this.scheme.indexOf(uri.scheme) == -1) {
       return false;
     }
@@ -83,7 +83,7 @@ SingleMatchPattern.prototype = {
       }
     }
 
-    if (!ignorePath && !this.path.test(uri.path)) {
+    if (!this.path.test(uri.path)) {
       return false;
     }
 
@@ -108,15 +108,6 @@ MatchPattern.prototype = {
   matches(uri) {
     for (let matcher of this.matchers) {
       if (matcher.matches(uri)) {
-        return true;
-      }
-    }
-    return false;
-  },
-
-  matchesIgnoringPath(uri) {
-    for (let matcher of this.matchers) {
-      if (matcher.matches(uri, true)) {
         return true;
       }
     }
