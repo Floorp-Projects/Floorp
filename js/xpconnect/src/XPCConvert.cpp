@@ -932,8 +932,8 @@ XPCConvert::JSObject2NativeInterface(void** dest, HandleObject src,
 
     // else...
 
-    nsXPCWrappedJS* wrapper;
-    nsresult rv = nsXPCWrappedJS::GetNewOrUsed(src, *iid, &wrapper);
+    nsRefPtr<nsXPCWrappedJS> wrapper;
+    nsresult rv = nsXPCWrappedJS::GetNewOrUsed(src, *iid, getter_AddRefs(wrapper));
     if (pErr)
         *pErr = rv;
     if (NS_SUCCEEDED(rv) && wrapper) {
@@ -951,7 +951,6 @@ XPCConvert::JSObject2NativeInterface(void** dest, HandleObject src,
                       wrapper->QueryInterface(*iid, dest);
         if (pErr)
             *pErr = rv;
-        NS_RELEASE(wrapper);
         return NS_SUCCEEDED(rv);
     }
 
@@ -1160,18 +1159,17 @@ XPCConvert::JSValToXPCException(MutableHandleValue s,
         else {
             // XXX all this nsISupportsDouble code seems a little redundant
             // now that we're storing the Value in the exception...
-            nsISupportsDouble* data;
+            nsCOMPtr<nsISupportsDouble> data;
             nsCOMPtr<nsIComponentManager> cm;
             if (NS_FAILED(NS_GetComponentManager(getter_AddRefs(cm))) || !cm ||
                 NS_FAILED(cm->CreateInstanceByContractID(NS_SUPPORTS_DOUBLE_CONTRACTID,
                                                          nullptr,
                                                          NS_GET_IID(nsISupportsDouble),
-                                                         (void**)&data)))
+                                                         getter_AddRefs(data))))
                 return NS_ERROR_FAILURE;
             data->SetData(number);
             rv = ConstructException(NS_ERROR_XPC_JS_THREW_NUMBER, nullptr,
                                     ifaceName, methodName, data, exceptn, cx, s.address());
-            NS_RELEASE(data);
             return rv;
         }
     }
