@@ -46,6 +46,7 @@ PluginContent.prototype = {
     global.addEventListener("pagehide",              this, true);
     global.addEventListener("pageshow",              this, true);
     global.addEventListener("unload",                this);
+    global.addEventListener("HiddenPlugin",          this, true);
 
     global.addMessageListener("BrowserPlugins:ActivatePlugins", this);
     global.addMessageListener("BrowserPlugins:NotificationShown", this);
@@ -66,6 +67,7 @@ PluginContent.prototype = {
     global.removeEventListener("pagehide",              this, true);
     global.removeEventListener("pageshow",              this, true);
     global.removeEventListener("unload",                this);
+    global.removeEventListener("HiddenPlugin",          this, true);
 
     global.removeMessageListener("BrowserPlugins:ActivatePlugins", this);
     global.removeMessageListener("BrowserPlugins:NotificationShown", this);
@@ -190,6 +192,45 @@ PluginContent.prototype = {
              pluginTag: pluginTag,
              permissionString: permissionString,
              fallbackType: fallbackType,
+             blocklistState: blocklistState,
+           };
+  },
+
+  _getPluginInfoForTag: function (pluginTag, tagMimetype) {
+    let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
+
+    let pluginName = gNavigatorBundle.GetStringFromName("pluginInfo.unknownPlugin");
+    let permissionString = null;
+    let blocklistState = null;
+
+    if (pluginTag) {
+      pluginName = BrowserUtils.makeNicePluginName(pluginTag.name);
+
+      permissionString = pluginHost.getPermissionStringForTag(pluginTag);
+      blocklistState = pluginTag.blocklistState;
+
+      // Convert this from nsIPluginTag so it can be serialized.
+      let properties = ["name", "description", "filename", "version", "enabledState", "niceName"];
+      let pluginTagCopy = {};
+      for (let prop of properties) {
+        pluginTagCopy[prop] = pluginTag[prop];
+      }
+      pluginTag = pluginTagCopy;
+
+      // Make state-softblocked == state-notblocked for our purposes,
+      // they have the same UI. STATE_OUTDATED should not exist for plugin
+      // items, but let's alias it anyway, just in case.
+      if (blocklistState == Ci.nsIBlocklistService.STATE_SOFTBLOCKED ||
+          blocklistState == Ci.nsIBlocklistService.STATE_OUTDATED) {
+        blocklistState = Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
+      }
+    }
+
+    return { mimetype: tagMimetype,
+             pluginName: pluginName,
+             pluginTag: pluginTag,
+             permissionString: permissionString,
+             fallbackType: null,
              blocklistState: blocklistState,
            };
   },
@@ -351,6 +392,14 @@ PluginContent.prototype = {
       // <embed> element), this call is for a window-global plugin.
       this.onPluginCrashed(event.target, event);
       return;
+    }
+
+    if (eventType == "HiddenPlugin") {
+      let pluginTag = event.tag.QueryInterface(Ci.nsIPluginTag);
+      if (event.target.defaultView.top.document != this.content.document) {
+	return;
+      }
+      this._showClickToPlayNotification(pluginTag, true);
     }
 
     let plugin = event.target;
@@ -713,7 +762,13 @@ PluginContent.prototype = {
     let location = this.content.document.location.href;
 
     for (let p of plugins) {
-      let pluginInfo = this._getPluginInfo(p);
+      let pluginInfo;
+      if (p instanceof Ci.nsIPluginTag) {
+        let mimeType = p.getMimeTypes() > 0 ? p.getMimeTypes()[0] : null;
+        pluginInfo = this._getPluginInfoForTag(p, mimeType);
+      } else {
+        pluginInfo = this._getPluginInfo(p);
+      }
       if (pluginInfo.permissionString === null) {
         Cu.reportError("No permission string for active plugin.");
         continue;
