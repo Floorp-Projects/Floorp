@@ -464,13 +464,9 @@ public:
     nsRefPtr<PromiseWorkerProxy> proxy = mProxy.forget();
     nsRefPtr<Promise> promise = proxy->GetWorkerPromise();
     if (NS_SUCCEEDED(mStatus)) {
-      if (mEndpoint.IsEmpty()) {
-        promise->MaybeResolve(JS::NullHandleValue);
-      } else {
-        nsRefPtr<WorkerPushSubscription> sub =
-          new WorkerPushSubscription(mEndpoint, mScope);
-        promise->MaybeResolve(sub);
-      }
+      nsRefPtr<WorkerPushSubscription> sub =
+        new WorkerPushSubscription(mEndpoint, mScope);
+      promise->MaybeResolve(sub);
     } else {
       promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
     }
