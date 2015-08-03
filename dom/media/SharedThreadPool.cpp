@@ -7,9 +7,9 @@
 #include "SharedThreadPool.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/ReentrantMonitor.h"
 #include "mozilla/StaticPtr.h"
 #include "nsDataHashtable.h"
-#include "VideoUtils.h"
 #include "nsXPCOMCIDInternal.h"
 #include "nsComponentManagerUtils.h"
 #ifdef XP_WIN
@@ -147,7 +147,7 @@ SharedThreadPool::~SharedThreadPool()
 nsresult
 SharedThreadPool::EnsureThreadLimitIsAtLeast(uint32_t aLimit)
 {
-  // We limit the number of threads that we use for media. Note that we
+  // We limit the number of threads that we use. Note that we
   // set the thread limit to the same as the idle limit so that we're not
   // constantly creating and destroying threads (see Bug 881954). When the
   // thread pool threads shutdown they dispatch an event to the main thread
@@ -184,7 +184,7 @@ CreateThreadPool(const nsCString& aName)
   rv = pool->SetName(aName);
   NS_ENSURE_SUCCESS(rv, nullptr);
 
-  rv = pool->SetThreadStackSize(MEDIA_THREAD_STACK_SIZE);
+  rv = pool->SetThreadStackSize(SharedThreadPool::kStackSize);
   NS_ENSURE_SUCCESS(rv, nullptr);
 
 #ifdef XP_WIN
