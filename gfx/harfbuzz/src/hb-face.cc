@@ -347,7 +347,7 @@ hb_face_reference_table (hb_face_t *face,
  *
  * Return value: (transfer full):
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 hb_blob_t *
 hb_face_reference_blob (hb_face_t *face)
@@ -362,7 +362,7 @@ hb_face_reference_blob (hb_face_t *face)
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 void
 hb_face_set_index (hb_face_t    *face,
@@ -382,7 +382,7 @@ hb_face_set_index (hb_face_t    *face,
  *
  * Return value: 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 unsigned int
 hb_face_get_index (hb_face_t    *face)
@@ -397,7 +397,7 @@ hb_face_get_index (hb_face_t    *face)
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 void
 hb_face_set_upem (hb_face_t    *face,
@@ -441,7 +441,7 @@ hb_face_t::load_upem (void) const
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.7
  **/
 void
 hb_face_set_glyph_count (hb_face_t    *face,
@@ -461,7 +461,7 @@ hb_face_set_glyph_count (hb_face_t    *face,
  *
  * Return value: 
  *
- * Since: 1.0
+ * Since: 0.9.7
  **/
 unsigned int
 hb_face_get_glyph_count (hb_face_t *face)
