@@ -13,6 +13,80 @@
 namespace mozilla {
 namespace gfx {
 
+// Kappa constant for 90-degree angle
+const Float kKappaFactor = 0.55191497064665766025f;
+
+// Calculate kappa constant for partial curve. The sign of angle in the
+// tangent will actually ensure this is negative for a counter clockwise
+// sweep, so changing signs later isn't needed.
+inline Float ComputeKappaFactor(Float aAngle)
+{
+  return (4.0f / 3.0f) * tanf(aAngle / 4.0f);
+}
+
+/**
+ * Draws a partial arc <= 90 degrees given exact start and end points.
+ * Assumes that it is continuing from an already specified start point.
+ */
+template <typename T>
+inline void PartialArcToBezier(T* aSink,
+                               const Size& aRadius,
+                               const Point& aStartPoint, const Point& aEndPoint,
+                               const Point& aStartOffset, const Point& aEndOffset,
+                               Float aKappaFactor = kKappaFactor)
+{
+  Float kappaX = aKappaFactor * aRadius.width;
+  Float kappaY = aKappaFactor * aRadius.height;
+
+  Point cp1 =
+    aStartPoint + Point(-aStartOffset.y * kappaX, aStartOffset.x * kappaY);
+
+  Point cp2 =
+    aEndPoint + Point(aEndOffset.y * kappaX, -aEndOffset.x * kappaY);
+
+  aSink->BezierTo(cp1, cp2, aEndPoint);
+}
+
+/**
+ * Draws an acute arc (<= 90 degrees) given exact start and end points.
+ * Specialized version avoiding kappa calculation.
+ */
+template <typename T>
+inline void AcuteArcToBezier(T* aSink,
+                             const Point& aOrigin, const Size& aRadius,
+                             const Point& aStartPoint, const Point& aEndPoint,
+                             Float aKappaFactor = kKappaFactor)
+{
+  aSink->LineTo(aStartPoint);
+  if (!aRadius.IsEmpty()) {
+    Point startOffset = aStartPoint - aOrigin;
+    startOffset.x /= aRadius.width;
+    startOffset.y /= aRadius.height;
+    Point endOffset = aEndPoint - aOrigin;
+    endOffset.x /= aRadius.width;
+    endOffset.y /= aRadius.height;
+    PartialArcToBezier(aSink, aRadius,
+                       aStartPoint, aEndPoint,
+                       startOffset, endOffset,
+                       aKappaFactor);
+  } else if (aEndPoint != aStartPoint) {
+    aSink->LineTo(aEndPoint);
+  }
+}
+
+/**
+ * Draws an acute arc (<= 90 degrees) given exact start and end points.
+ */
+template <typename T>
+inline void AcuteArcToBezier(T* aSink,
+                             const Point& aOrigin, const Size& aRadius,
+                             const Point& aStartPoint, const Point& aEndPoint,
+                             Float aStartAngle, Float aEndAngle)
+{
+  AcuteArcToBezier(aSink, aOrigin, aRadius, aStartPoint, aEndPoint,
+                   ComputeKappaFactor(aEndAngle - aStartAngle));
+}
+
 template <typename T>
 void ArcToBezier(T* aSink, const Point &aOrigin, const Size &aRadius,
                  float aStartAngle, float aEndAngle, bool aAntiClockwise)
@@ -35,39 +109,30 @@ void ArcToBezier(T* aSink, const Point &aOrigin, const Size &aRadius,
   }
 
   Float currentStartAngle = aStartAngle;
-  Point currentStartPoint(aOrigin.x + cosf(aStartAngle) * aRadius.width,
-                          aOrigin.y + sinf(aStartAngle) * aRadius.height);
+  Point currentStartOffset(cosf(aStartAngle), sinf(aStartAngle));
+  Point currentStartPoint(aOrigin.x + currentStartOffset.x * aRadius.width,
+                          aOrigin.y + currentStartOffset.y * aRadius.height);
 
   aSink->LineTo(currentStartPoint);
 
   while (arcSweepLeft > 0) {
-    // We guarantee here the current point is the start point of the next
-    // curve segment.
     Float currentEndAngle =
       currentStartAngle + std::min(arcSweepLeft, Float(M_PI / 2.0f)) * sweepDirection;
 
-    Point currentEndPoint(aOrigin.x + cosf(currentEndAngle) * aRadius.width,
-                          aOrigin.y + sinf(currentEndAngle) * aRadius.height);
+    Point currentEndOffset(cosf(currentEndAngle), sinf(currentEndAngle));
+    Point currentEndPoint(aOrigin.x + currentEndOffset.x * aRadius.width,
+                          aOrigin.y + currentEndOffset.y * aRadius.height);
 
-    // Calculate kappa constant for partial curve. The sign of angle in the
-    // tangent will actually ensure this is negative for a counter clockwise
-    // sweep, so changing signs later isn't needed.
-    Float kappaFactor = (4.0f / 3.0f) * tanf((currentEndAngle - currentStartAngle) / 4.0f);
-    Float kappaX = kappaFactor * aRadius.width;
-    Float kappaY = kappaFactor * aRadius.height;
+    PartialArcToBezier(aSink, aRadius,
+                       currentStartPoint, currentEndPoint,
+                       currentStartOffset, currentEndOffset,
+                       ComputeKappaFactor(currentEndAngle - currentStartAngle));
 
-    Point tangentStart(-sinf(currentStartAngle), cosf(currentStartAngle));
-    Point cp1 = currentStartPoint;
-    cp1 += Point(tangentStart.x * kappaX, tangentStart.y * kappaY);
-
-    Point revTangentEnd(sinf(currentEndAngle), -cosf(currentEndAngle));
-    Point cp2 = currentEndPoint;
-    cp2 += Point(revTangentEnd.x * kappaX, revTangentEnd.y * kappaY);
-
-    aSink->BezierTo(cp1, cp2, currentEndPoint);
-
+    // We guarantee here the current point is the start point of the next
+    // curve segment.
     arcSweepLeft -= Float(M_PI / 2.0f);
     currentStartAngle = currentEndAngle;
+    currentStartOffset = currentEndOffset;
     currentStartPoint = currentEndPoint;
   }
 }
@@ -78,42 +143,26 @@ void ArcToBezier(T* aSink, const Point &aOrigin, const Size &aRadius,
 template <typename T>
 void EllipseToBezier(T* aSink, const Point &aOrigin, const Size &aRadius)
 {
-  Point startPoint(aOrigin.x + aRadius.width,
-                   aOrigin.y);
+  Point currentStartOffset(1, 0);
+  Point currentStartPoint(aOrigin.x + aRadius.width, aOrigin.y);
 
-  aSink->LineTo(startPoint);
+  aSink->LineTo(currentStartPoint);
 
-  // Calculate kappa constant for partial curve. The sign of angle in the
-  // tangent will actually ensure this is negative for a counter clockwise
-  // sweep, so changing signs later isn't needed.
-  Float kappaFactor = (4.0f / 3.0f) * tan((M_PI/2.0f) / 4.0f);
-  Float kappaX = kappaFactor * aRadius.width;
-  Float kappaY = kappaFactor * aRadius.height;
-  Float cosStartAngle = 1;
-  Float sinStartAngle = 0;
   for (int i = 0; i < 4; i++) {
-    // We guarantee here the current point is the start point of the next
-    // curve segment.
-    Point currentStartPoint(aOrigin.x + cosStartAngle * aRadius.width,
-                            aOrigin.y + sinStartAngle * aRadius.height);
-    Point currentEndPoint(aOrigin.x + -sinStartAngle * aRadius.width,
-                          aOrigin.y + cosStartAngle * aRadius.height);
-
-    Point tangentStart(-sinStartAngle, cosStartAngle);
-    Point cp1 = currentStartPoint;
-    cp1 += Point(tangentStart.x * kappaX, tangentStart.y * kappaY);
-
-    Point revTangentEnd(cosStartAngle, sinStartAngle);
-    Point cp2 = currentEndPoint;
-    cp2 += Point(revTangentEnd.x * kappaX, revTangentEnd.y * kappaY);
-
-    aSink->BezierTo(cp1, cp2, currentEndPoint);
-
     // cos(x+pi/2) == -sin(x)
     // sin(x+pi/2) == cos(x)
-    Float tmp = cosStartAngle;
-    cosStartAngle = -sinStartAngle;
-    sinStartAngle = tmp;
+    Point currentEndOffset(-currentStartOffset.y, currentStartOffset.x);
+    Point currentEndPoint(aOrigin.x + currentEndOffset.x * aRadius.width,
+                          aOrigin.y + currentEndOffset.y * aRadius.height);
+
+    PartialArcToBezier(aSink, aRadius,
+                       currentStartPoint, currentEndPoint,
+                       currentStartOffset, currentEndOffset);
+
+    // We guarantee here the current point is the start point of the next
+    // curve segment.
+    currentStartOffset = currentEndOffset;
+    currentStartPoint = currentEndPoint;
   }
 }
 

@@ -36,7 +36,15 @@
  * "approximate member query".  Conceptually these are like Bloom
  * Filter and Quotient Filter, however, much smaller, faster, and
  * designed to fit the requirements of our uses for glyph coverage
- * queries.  As a result, our filters have much higher.
+ * queries.
+ *
+ * Our filters are highly accurate if the lookup covers fairly local
+ * set of glyphs, but fully flooded and ineffective if coverage is
+ * all over the place.
+ *
+ * The frozen-set can be used instead of a digest, to trade more
+ * memory for 100% accuracy, but in practice, that doesn't look like
+ * an attractive trade-off.
  */
 
 template <typename mask_t, unsigned int shift>

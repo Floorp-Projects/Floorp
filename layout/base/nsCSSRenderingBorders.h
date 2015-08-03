@@ -15,6 +15,7 @@
 #include "nsColor.h"
 #include "nsCOMPtr.h"
 #include "nsStyleConsts.h"
+#include "nsPresContext.h"
 
 struct nsBorderColors;
 
@@ -85,7 +86,8 @@ class nsCSSBorderRenderer final
 
 public:
 
-  nsCSSBorderRenderer(DrawTarget* aDrawTarget,
+  nsCSSBorderRenderer(nsPresContext::nsPresContextType aPresContextType,
+                      DrawTarget* aDrawTarget,
                       Rect& aOuterRect,
                       const uint8_t* aBorderStyles,
                       const Float* aBorderWidths,
@@ -113,6 +115,9 @@ public:
 private:
 
   RectCornerRadii mBorderCornerDimensions;
+
+  // the PresContext type
+  nsPresContext::nsPresContextType mPresContextType;
 
   // destination DrawTarget
   DrawTarget* mDrawTarget;
@@ -210,12 +215,6 @@ private:
   // borders because they can be considered 'solid' borders of 0 width and
   // with no color effect.
   bool AllBordersSolid(bool *aHasCompositeColors);
-
-  // Azure variant of CreateCornerGradient.
-  already_AddRefed<mozilla::gfx::GradientStops>
-  CreateCornerGradient(mozilla::css::Corner aCorner, nscolor aFirstColor,
-                       nscolor aSecondColor, mozilla::gfx::DrawTarget *aDT,
-                       mozilla::gfx::Point &aPoint1, mozilla::gfx::Point &aPoint2);
 
   // Draw a solid color border that is uniformly the same width.
   void DrawSingleWidthSolidBorder();

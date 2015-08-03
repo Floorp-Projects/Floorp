@@ -1221,6 +1221,12 @@ gfxFont::SpaceMayParticipateInShaping(int32_t aRunScript)
         }
     }
 
+    if (FontCanSupportGraphite()) {
+        if (gfxPlatform::GetPlatform()->UseGraphiteShaping()) {
+            return mFontEntry->HasGraphiteSpaceContextuals();
+        }
+    }
+
     // We record the presence of space-dependent features in the font entry
     // so that subsequent instantiations for the same font face won't
     // require us to re-check the tables; however, the actual check is done

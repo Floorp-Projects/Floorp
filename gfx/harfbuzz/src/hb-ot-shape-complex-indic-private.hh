@@ -161,8 +161,6 @@ enum indic_matra_category_t {
   INDIC_MATRA_CATEGORY_VISUAL_ORDER_LEFT		= POS_PRE_M
 };
 
-/* Note: We use ASSERT_STATIC_EXPR_ZERO() instead of ASSERT_STATIC_EXPR() and the comma operation
- * because gcc fails to optimize the latter and fills the table in at runtime. */
 #define INDIC_COMBINE_CATEGORIES(S,M) \
   (ASSERT_STATIC_EXPR_ZERO (M == INDIC_MATRA_CATEGORY_NOT_APPLICABLE || \
 			    ( \

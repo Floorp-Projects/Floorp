@@ -10,7 +10,6 @@
 #include <stdlib.h>
 #include "BluetoothDaemonA2dpInterface.h"
 #include "BluetoothDaemonAvrcpInterface.h"
-#include "BluetoothDaemonConnector.h"
 #include "BluetoothDaemonGattInterface.h"
 #include "BluetoothDaemonHandsfreeInterface.h"
 #include "BluetoothDaemonHelpers.h"
@@ -18,9 +17,9 @@
 #include "BluetoothDaemonSocketInterface.h"
 #include "mozilla/ipc/DaemonRunnables.h"
 #include "mozilla/ipc/DaemonSocket.h"
+#include "mozilla/ipc/DaemonSocketConnector.h"
 #include "mozilla/ipc/ListenSocket.h"
 #include "mozilla/unused.h"
-#include "prrng.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
 
@@ -1763,46 +1762,6 @@ private:
   bool mRegisteredSocketModule;
 };
 
-nsresult
-BluetoothDaemonInterface::CreateRandomAddressString(
-  const nsACString& aPrefix, unsigned long aPostfixLength,
-  nsACString& aAddress)
-{
-  static const char sHexChar[16] = {
-    [0x0] = '0', [0x1] = '1', [0x2] = '2', [0x3] = '3',
-    [0x4] = '4', [0x5] = '5', [0x6] = '6', [0x7] = '7',
-    [0x8] = '8', [0x9] = '9', [0xa] = 'a', [0xb] = 'b',
-    [0xc] = 'c', [0xd] = 'd', [0xe] = 'e', [0xf] = 'f'
-  };
-
-  unsigned short seed[3];
-
-  if (NS_WARN_IF(!PR_GetRandomNoise(seed, sizeof(seed)))) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  aAddress = aPrefix;
-  aAddress.Append('-');
-
-  while (aPostfixLength) {
-
-    // Android doesn't provide rand_r, so we use nrand48 here,
-    // even though it's deprecated.
-    long value = nrand48(seed);
-
-    size_t bits = sizeof(value) * CHAR_BIT;
-
-    while ((bits > 4) && aPostfixLength) {
-      aAddress.Append(sHexChar[value&0xf]);
-      bits -= 4;
-      value >>= 4;
-      --aPostfixLength;
-    }
-  }
-
-  return NS_OK;
-}
-
 /*
  * The init procedure consists of several steps.
  *
@@ -1874,14 +1833,13 @@ BluetoothDaemonInterface::Init(
   // external programs to capture the socket name or connect before
   // the daemon can do so. If no random postfix can be generated, we
   // simply use the base name as-is.
-  nsresult rv = CreateRandomAddressString(NS_LITERAL_CSTRING(BASE_SOCKET_NAME),
-                                          POSTFIX_LENGTH,
-                                          mListenSocketName);
+  nsresult rv = DaemonSocketConnector::CreateRandomAddressString(
+    NS_LITERAL_CSTRING(BASE_SOCKET_NAME), POSTFIX_LENGTH, mListenSocketName);
   if (NS_FAILED(rv)) {
     mListenSocketName.AssignLiteral(BASE_SOCKET_NAME);
   }
 
-  rv = mListenSocket->Listen(new BluetoothDaemonConnector(mListenSocketName),
+  rv = mListenSocket->Listen(new DaemonSocketConnector(mListenSocketName),
                              mCmdChannel);
   if (NS_FAILED(rv)) {
     OnConnectError(CMD_CHANNEL);

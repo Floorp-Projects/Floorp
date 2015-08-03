@@ -772,123 +772,18 @@ GetBytecodeInteger(jsbytecode* pc)
  */
 class PCCounts
 {
-    friend class ::JSScript;
-    double* counts;
-#ifdef DEBUG
-    size_t capacity;
-#elif JS_BITS_PER_WORD == 32
-    void* padding;
-#endif
+    double numExec_;
 
  public:
 
-    enum BaseCounts {
-        BASE_INTERP = 0,
-
-        BASE_LIMIT
-    };
-
-    enum AccessCounts {
-        ACCESS_MONOMORPHIC = BASE_LIMIT,
-        ACCESS_DIMORPHIC,
-        ACCESS_POLYMORPHIC,
-
-        ACCESS_BARRIER,
-        ACCESS_NOBARRIER,
-
-        ACCESS_UNDEFINED,
-        ACCESS_NULL,
-        ACCESS_BOOLEAN,
-        ACCESS_INT32,
-        ACCESS_DOUBLE,
-        ACCESS_STRING,
-        ACCESS_OBJECT,
-
-        ACCESS_LIMIT
-    };
-
-    static bool accessOp(JSOp op) {
-        /*
-         * Access ops include all name, element and property reads, as well as
-         * SETELEM and SETPROP (for ElementCounts/PropertyCounts alignment).
-         */
-        if (op == JSOP_SETELEM || op == JSOP_SETPROP)
-            return true;
-        int format = js_CodeSpec[op].format;
-        return !!(format & (JOF_NAME | JOF_GNAME | JOF_ELEM | JOF_PROP))
-            && !(format & JOF_SET);
+    double& numExec() {
+        return numExec_;
+    }
+    double numExec() const {
+        return numExec_;
     }
 
-    enum ElementCounts {
-        ELEM_ID_INT = ACCESS_LIMIT,
-        ELEM_ID_DOUBLE,
-        ELEM_ID_OTHER,
-        ELEM_ID_UNKNOWN,
-
-        ELEM_OBJECT_TYPED,
-        ELEM_OBJECT_PACKED,
-        ELEM_OBJECT_DENSE,
-        ELEM_OBJECT_OTHER,
-
-        ELEM_LIMIT
-    };
-
-    static bool elementOp(JSOp op) {
-        return accessOp(op) && (JOF_MODE(js_CodeSpec[op].format) == JOF_ELEM);
-    }
-
-    enum PropertyCounts {
-        PROP_STATIC = ACCESS_LIMIT,
-        PROP_DEFINITE,
-        PROP_OTHER,
-
-        PROP_LIMIT
-    };
-
-    static bool propertyOp(JSOp op) {
-        return accessOp(op) && (JOF_MODE(js_CodeSpec[op].format) == JOF_PROP);
-    }
-
-    enum ArithCounts {
-        ARITH_INT = BASE_LIMIT,
-        ARITH_DOUBLE,
-        ARITH_OTHER,
-        ARITH_UNKNOWN,
-
-        ARITH_LIMIT
-    };
-
-    static bool arithOp(JSOp op) {
-        return !!(js_CodeSpec[op].format & JOF_ARITH);
-    }
-
-    static size_t numCounts(JSOp op)
-    {
-        if (accessOp(op)) {
-            if (elementOp(op))
-                return ELEM_LIMIT;
-            if (propertyOp(op))
-                return PROP_LIMIT;
-            return ACCESS_LIMIT;
-        }
-        if (arithOp(op))
-            return ARITH_LIMIT;
-        return BASE_LIMIT;
-    }
-
-    static const char* countName(JSOp op, size_t which);
-
-    double* rawCounts() const { return counts; }
-
-    double& get(size_t which) {
-        MOZ_ASSERT(which < capacity);
-        return counts[which];
-    }
-
-    /* Boolean conversion, for 'if (counters) ...' */
-    operator void*() const {
-        return counts;
-    }
+    static const char* numExecName;
 };
 
 /* Necessary for alignment with the script. */

@@ -44,6 +44,11 @@ function EventManager(sr) {
 
   var isDone = false;
 
+  // set up grammar
+  var sgl = new SpeechGrammarList();
+  sgl.addFromString("#JSGF V1.0; grammar test; public <simple> = hello ;", 1);
+  sr.grammars = sgl;
+
   // AUDIO_DATA events are asynchronous,
   // so we queue events requested while they are being
   // issued to make them seem synchronous
