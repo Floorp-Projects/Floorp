@@ -776,10 +776,9 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
           // that we can't coalesce nsChangeHint_AddOrRemoveTransform hints up
           // to ancestors (i.e. it can't be an inherited change hint).
           if (cont->IsAbsPosContaininingBlock()) {
-            // If a transform has been added, we'll be taking this path,
-            // but we may be taking this path even if a transform has been
-            // removed. It's OK to add the bit even if it's not needed.
-            cont->AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
+            if (cont->StyleDisplay()->HasTransform(cont)) {
+              cont->AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
+            }
             if (!cont->IsAbsoluteContainer() &&
                 (cont->GetStateBits() & NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN)) {
               cont->MarkAsAbsoluteContainingBlock();

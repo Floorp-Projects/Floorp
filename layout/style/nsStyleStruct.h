@@ -2133,7 +2133,7 @@ struct nsStyleDisplay {
   uint8_t mTransformBox;        // [reset] see nsStyleConsts.h
   nsRefPtr<nsCSSValueSharedList> mSpecifiedTransform; // [reset]
   nsStyleCoord mTransformOrigin[3]; // [reset] percent, coord, calc, 3rd param is coord, calc only
-  nsStyleCoord mChildPerspective; // [reset] coord
+  nsStyleCoord mChildPerspective; // [reset] none, coord
   nsStyleCoord mPerspectiveOrigin[2]; // [reset] percent, coord, calc
 
   nsAutoTArray<mozilla::StyleTransition, 1> mTransitions; // [reset]
@@ -3163,8 +3163,10 @@ struct nsStyleSVGReset {
 
   nsChangeHint CalcDifference(const nsStyleSVGReset& aOther) const;
   static nsChangeHint MaxDifference() {
-    return NS_CombineHint(nsChangeHint_UpdateEffects,
-            NS_CombineHint(nsChangeHint_UpdateOverflow, NS_STYLE_HINT_REFLOW));
+    return nsChangeHint_UpdateEffects |
+           nsChangeHint_UpdateOverflow |
+           nsChangeHint_AddOrRemoveTransform |
+           NS_STYLE_HINT_REFLOW;
   }
   static nsChangeHint DifferenceAlwaysHandledForDescendants() {
     // CalcDifference never returns the reflow hints that are sometimes
@@ -3175,7 +3177,7 @@ struct nsStyleSVGReset {
   }
 
   bool HasFilters() const {
-    return mFilters.Length() > 0;
+    return !mFilters.IsEmpty();
   }
 
   bool HasNonScalingStroke() const {
