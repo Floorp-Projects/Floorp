@@ -102,7 +102,7 @@ MarkerDetails.prototype = {
    * for the moment.
    */
   _onClick: function (e) {
-    let data = findActionFromEvent(e.target);
+    let data = findActionFromEvent(e.target, this._parent);
     if (!data) {
       return;
     }
@@ -121,7 +121,7 @@ MarkerDetails.prototype = {
 };
 
 /**
- * Take an element from an event `target`, and asend through
+ * Take an element from an event `target`, and ascend through
  * the DOM, looking for an element with a `data-action` attribute. Return
  * the parsed `data-action` value found, or null if none found before
  * reaching the parent `container`.

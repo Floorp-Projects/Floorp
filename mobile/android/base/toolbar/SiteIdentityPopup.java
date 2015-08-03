@@ -50,10 +50,12 @@ import org.mozilla.gecko.widget.SiteLogins;
  */
 public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListener {
 
-    public static enum ButtonType { DISABLE, ENABLE, KEEP_BLOCKING, CANCEL, COPY };
+    public static enum ButtonType { DISABLE, ENABLE, KEEP_BLOCKING, CANCEL, COPY }
 
     private static final String LOGTAG = "GeckoSiteIdentityPopup";
 
+    private static final String MIXED_CONTENT_SUPPORT_URL =
+        "https://support.mozilla.org/kb/how-does-insecure-content-affect-safety-android";
     private static final String TRACKING_CONTENT_SUPPORT_URL =
         "https://support.mozilla.org/kb/firefox-android-tracking-protection";
 
@@ -74,6 +76,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
     private TextView mOwner;
     private TextView mOwnerSupplemental;
     private TextView mVerifier;
+    private TextView mLink;
     private TextView mSiteSettingsLink;
 
     private View mDivider;
@@ -117,6 +120,14 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
         mOwnerSupplemental = (TextView) mIdentityKnownContainer.findViewById(R.id.owner_supplemental);
         mVerifier = (TextView) mIdentityKnownContainer.findViewById(R.id.verifier);
         mDivider = mIdentity.findViewById(R.id.divider_doorhanger);
+
+        mLink = (TextView) mIdentity.findViewById(R.id.site_identity_link);
+        mLink.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Tabs.getInstance().loadUrlInTab(MIXED_CONTENT_SUPPORT_URL);
+            }
+        });
 
         mSiteSettingsLink = (TextView) mIdentity.findViewById(R.id.site_settings_link);
     }
@@ -299,17 +310,21 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
             if (siteIdentity.getMixedMode() == MixedMode.MIXED_CONTENT_BLOCKED) {
                 mMixedContentActivity.setVisibility(View.VISIBLE);
                 mMixedContentActivity.setText(R.string.mixed_content_blocked_all);
+                mLink.setVisibility(View.VISIBLE);
             } else {
                 mMixedContentActivity.setVisibility(View.GONE);
+                mLink.setVisibility(View.GONE);
             }
         } else {
             if (siteIdentity.getMixedMode() == MixedMode.MIXED_CONTENT_LOADED) {
                 mIcon.setImageResource(R.drawable.lock_disabled);
                 mMixedContentActivity.setVisibility(View.VISIBLE);
                 mMixedContentActivity.setText(R.string.mixed_content_protection_disabled);
+                mLink.setVisibility(View.VISIBLE);
             } else {
                 mIcon.setImageResource(R.drawable.globe_light);
                 mMixedContentActivity.setVisibility(View.GONE);
+                mLink.setVisibility(View.GONE);
             }
 
             mSecurityState.setText(R.string.identity_connection_insecure);
