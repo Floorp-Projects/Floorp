@@ -284,6 +284,26 @@ public:
     uint32_t mIndex;
   };
 
+  Chunk* FindChunkContaining(StreamTime aOffset, StreamTime* aStart = nullptr)
+  {
+    if (aOffset < 0) {
+      return nullptr;
+    }
+    StreamTime offset = 0;
+    for (uint32_t i = 0; i < mChunks.Length(); ++i) {
+      Chunk& c = mChunks[i];
+      StreamTime nextOffset = offset + c.GetDuration();
+      if (aOffset < nextOffset) {
+        if (aStart) {
+          *aStart = offset;
+        }
+        return &c;
+      }
+      offset = nextOffset;
+    }
+    return nullptr;
+  }
+
   void RemoveLeading(StreamTime aDuration)
   {
     RemoveLeading(aDuration, 0);
@@ -354,26 +374,6 @@ protected:
     c->mDuration = aDuration;
     mDuration += aDuration;
     return c;
-  }
-
-  Chunk* FindChunkContaining(StreamTime aOffset, StreamTime* aStart = nullptr)
-  {
-    if (aOffset < 0) {
-      return nullptr;
-    }
-    StreamTime offset = 0;
-    for (uint32_t i = 0; i < mChunks.Length(); ++i) {
-      Chunk& c = mChunks[i];
-      StreamTime nextOffset = offset + c.GetDuration();
-      if (aOffset < nextOffset) {
-        if (aStart) {
-          *aStart = offset;
-        }
-        return &c;
-      }
-      offset = nextOffset;
-    }
-    return nullptr;
   }
 
   Chunk* GetLastChunk()
