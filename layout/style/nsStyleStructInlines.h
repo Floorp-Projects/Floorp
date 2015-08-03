@@ -138,10 +138,8 @@ nsStyleDisplay::HasTransform(const nsIFrame* aContextFrame) const
 bool
 nsStyleDisplay::IsFixedPosContainingBlock(const nsIFrame* aContextFrame) const
 {
-  NS_ASSERTION(aContextFrame->StyleDisplay() == this,
-               "unexpected aContextFrame");
   return (HasTransform(aContextFrame) || HasPerspectiveStyle() ||
-          aContextFrame->StyleSVGReset()->HasFilters()) &&
+          !aContextFrame->StyleSVGReset()->mFilters.IsEmpty()) &&
       !aContextFrame->IsSVGText();
 }
 
