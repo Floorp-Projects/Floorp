@@ -204,12 +204,6 @@
   </vbox>
 
   <!-- These panels are for the Firefox Accounts identity provider -->
-  <vbox id="fxaDeterminingStatus" align="center">
-    <spacer flex="1"/>
-    <label>&determiningAcctStatus.label;</label>
-    <spacer flex="1"/>
-  </vbox>
-
   <vbox id="noFxaAccount" align="start">
     <label>&welcome.description;</label>
     <label id="noFxaSignUp" class="text-link">
