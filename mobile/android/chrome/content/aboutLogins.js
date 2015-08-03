@@ -102,7 +102,7 @@ let Logins = {
     window.addEventListener("popstate", this , false);
 
     Services.obs.addObserver(this, "passwordmgr-storage-changed", false);
-    document.getElementById("save-btn").addEventListener("click", this._onSaveEditLogin.bind(this), false);
+    document.getElementById("update-btn").addEventListener("click", this._onSaveEditLogin.bind(this), false);
     document.getElementById("password-btn").addEventListener("click", this._onPasswordBtn.bind(this), false);
 
     this._loadList(this._getLogins());
@@ -214,6 +214,19 @@ let Logins = {
     else {
       headerText.textContent = gStringBundle.GetStringFromName("editLogin.fallbackTitle");
     }
+
+    passwordField.addEventListener("input", (event) => {
+      let newPassword = passwordField.value;
+      let updateBtn = document.getElementById("update-btn");
+
+      if (newPassword === "") {
+        updateBtn.disabled = true;
+        updateBtn.classList.add("disabled-btn");
+      } else if ((newPassword !== "") && (updateBtn.disabled === true)) {
+        updateBtn.disabled = false;
+        updateBtn.classList.remove("disabled-btn");
+      }
+    }, false);
   },
 
   _onSaveEditLogin: function() {

@@ -99,7 +99,7 @@ body {
 }
 
 
-#save-btn {
+.update-button {
   flex: 1;
   height: 60px;
   background-color: #E66000; /*matched to action_orange in java codebase*/
@@ -109,6 +109,10 @@ body {
   border-radius: 4px;
   border-width: 0px;
   margin-top: 10px;
+}
+
+.disabled-btn {
+  background-color: #BFBFBF; /*matched to disabled_grey in the java codebase,in colors.xml*/
 }
 
 .password-btn-hide {

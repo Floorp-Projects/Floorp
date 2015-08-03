@@ -32,6 +32,7 @@ loader.lazyRequireGetter(this, "SourceMapGenerator", "source-map", true);
 loader.lazyRequireGetter(this, "CssLogic", "devtools/styleinspector/css-logic", true);
 loader.lazyRequireGetter(this, "events", "sdk/event/core");
 loader.lazyRequireGetter(this, "mapURIToAddonID", "devtools/server/actors/utils/map-uri-to-addon-id");
+loader.lazyRequireGetter(this, "setTimeout", "sdk/timers", true);
 
 /**
  * A BreakpointActorMap is a map from locations to instances of BreakpointActor.
@@ -60,6 +61,13 @@ BreakpointActorMap.prototype = {
    *        The location for which matching BreakpointActors should be generated.
    */
   findActors: function* (location = new OriginalLocation()) {
+    // Fast shortcut for when we know we won't find any actors. Surprisingly
+    // enough, this speeds up refreshing when there are no breakpoints set by
+    // about 2x!
+    if (this.size === 0) {
+      return;
+    }
+
     function* findKeys(object, key) {
       if (key !== undefined) {
         if (key in object) {
@@ -421,6 +429,8 @@ function ThreadActor(aParent, aGlobal)
   this.breakpointActorMap = new BreakpointActorMap();
   this.sourceActorStore = new SourceActorStore();
 
+  this._debuggerSourcesSeen = null;
+
   // A map of actorID -> actor for breakpoints created and managed by the
   // server.
   this._hiddenBreakpoints = new Map();
@@ -611,6 +621,7 @@ ThreadActor.prototype = {
     }
 
     this._state = "attached";
+    this._debuggerSourcesSeen = new Set();
 
     update(this._options, aRequest.options || {});
     this.sources.reconfigure(this._options);
@@ -658,6 +669,7 @@ ThreadActor.prototype = {
   onDetach: function (aRequest) {
     this.disconnect();
     this._state = "detached";
+    this._debuggerSourcesSeen = null;
 
     dumpn("ThreadActor.prototype.onDetach: returning 'detached' packet");
     return {
@@ -762,7 +774,7 @@ ThreadActor.prototype = {
   _makeOnEnterFrame: function ({ pauseAndRespond }) {
     return aFrame => {
       const generatedLocation = this.sources.getFrameLocation(aFrame);
-      let { originalSourceActor } = this.synchronize(this.sources.getOriginalLocation(
+      let { originalSourceActor } = this.unsafeSynchronize(this.sources.getOriginalLocation(
         generatedLocation));
       let url = originalSourceActor.url;
 
@@ -777,7 +789,7 @@ ThreadActor.prototype = {
       // onPop is called with 'this' set to the current frame.
 
       const generatedLocation = thread.sources.getFrameLocation(this);
-      const { originalSourceActor } = thread.synchronize(thread.sources.getOriginalLocation(
+      const { originalSourceActor } = thread.unsafeSynchronize(thread.sources.getOriginalLocation(
         generatedLocation));
       const url = originalSourceActor.url;
 
@@ -819,7 +831,7 @@ ThreadActor.prototype = {
       // onStep is called with 'this' set to the current frame.
 
       const generatedLocation = thread.sources.getFrameLocation(this);
-      const newLocation = thread.synchronize(thread.sources.getOriginalLocation(
+      const newLocation = thread.unsafeSynchronize(thread.sources.getOriginalLocation(
         generatedLocation));
 
       // Cases when we should pause because we have executed enough to consider
@@ -1041,11 +1053,15 @@ ThreadActor.prototype = {
   /**
    * Spin up a nested event loop so we can synchronously resolve a promise.
    *
+   * DON'T USE THIS UNLESS YOU ABSOLUTELY MUST! Nested event loops suck: the
+   * world's state can change out from underneath your feet because JS is no
+   * longer run-to-completion.
+   *
    * @param aPromise
    *        The promise we want to resolve.
    * @returns The promise's resolution.
    */
-  synchronize: function(aPromise) {
+  unsafeSynchronize: function(aPromise) {
     let needNest = true;
     let eventLoop;
     let returnVal;
@@ -1056,7 +1072,7 @@ ThreadActor.prototype = {
         returnVal = aResolvedVal;
       })
       .then(null, (aError) => {
-        reportError(aError, "Error inside synchronize:");
+        reportError(aError, "Error inside unsafeSynchronize:");
       })
       .then(() => {
         if (eventLoop) {
@@ -1318,6 +1334,11 @@ ThreadActor.prototype = {
 
   onSources: function (aRequest) {
     return this._discoverSources().then(() => {
+      // No need to flush the new source packets here, as we are sending the
+      // list of sources out immediately and we don't need to invoke the
+      // overhead of an RDP packet for every source right now. Let the default
+      // timeout flush the buffered packets.
+
       return {
         sources: this.sources.iter().map(s => s.form())
       };
@@ -1786,7 +1807,7 @@ ThreadActor.prototype = {
     // Don't pause if we are currently stepping (in or over) or the frame is
     // black-boxed.
     const generatedLocation = this.sources.getFrameLocation(aFrame);
-    const { originalSourceActor } = this.synchronize(this.sources.getOriginalLocation(
+    const { originalSourceActor } = this.unsafeSynchronize(this.sources.getOriginalLocation(
       generatedLocation));
     const url = originalSourceActor ? originalSourceActor.url : null;
 
@@ -1818,7 +1839,7 @@ ThreadActor.prototype = {
     }
 
     const generatedLocation = this.sources.getFrameLocation(aFrame);
-    const { sourceActor } = this.synchronize(this.sources.getOriginalLocation(
+    const { sourceActor } = this.unsafeSynchronize(this.sources.getOriginalLocation(
       generatedLocation));
     const url = sourceActor ? sourceActor.url : null;
 
@@ -1856,13 +1877,6 @@ ThreadActor.prototype = {
    *        A Debugger.Object instance whose referent is the global object.
    */
   onNewScript: function (aScript, aGlobal) {
-    // XXX: The scripts must be added to the ScriptStore before restoring
-    // breakpoints in _addScript. If we try to add them to the ScriptStore
-    // inside _addScript, we can accidentally set a breakpoint in a top level
-    // script as a "closest match" because we wouldn't have added the child
-    // scripts to the ScriptStore yet.
-    this.scripts.addScripts(this.dbg.findScripts({ source: aScript.source }));
-
     this._addSource(aScript.source);
   },
 
@@ -1895,9 +1909,15 @@ ThreadActor.prototype = {
    * @returns true, if the source was added; false otherwise.
    */
   _addSource: function (aSource) {
-    if (!this.sources.allowSource(aSource)) {
+    if (!this.sources.allowSource(aSource) || this._debuggerSourcesSeen.has(aSource)) {
       return false;
     }
+
+    // The scripts must be added to the ScriptStore before restoring
+    // breakpoints. If we try to add them to the ScriptStore any later, we can
+    // accidentally set a breakpoint in a top level script as a "closest match"
+    // because we wouldn't have added the child scripts to the ScriptStore yet.
+    this.scripts.addScripts(this.dbg.findScripts({ source: aSource }));
 
     let sourceActor = this.sources.createNonSourceMappedActor(aSource);
 
@@ -1905,20 +1925,19 @@ ThreadActor.prototype = {
     // fetches sourcemaps if available and sends onNewSource
     // notifications.
     //
-    // We need to use synchronize here because if the page is being reloaded,
+    // We need to use unsafeSynchronize here because if the page is being reloaded,
     // this call will replace the previous set of source actors for this source
     // with a new one. If the source actors have not been replaced by the time
     // we try to reset the breakpoints below, their location objects will still
     // point to the old set of source actors, which point to different scripts.
-    this.synchronize(this.sources.createSourceActors(aSource));
+    this.unsafeSynchronize(this.sources.createSourceActors(aSource));
 
     // Set any stored breakpoints.
     let promises = [];
 
     for (let _actor of this.breakpointActorMap.findActors()) {
-      // XXX bug 1142115: We do async work in here, so we need to
-      // create a fresh binding because for/of does not yet do that in
-      // SpiderMonkey
+      // XXX bug 1142115: We do async work in here, so we need to create a fresh
+      // binding because for/of does not yet do that in SpiderMonkey.
       let actor = _actor;
 
       if (actor.isPending) {
@@ -1938,9 +1957,10 @@ ThreadActor.prototype = {
     }
 
     if (promises.length > 0) {
-      this.synchronize(promise.all(promises));
+      this.unsafeSynchronize(promise.all(promises));
     }
 
+    this._debuggerSourcesSeen.add(aSource);
     return true;
   },
 
@@ -3275,7 +3295,7 @@ BreakpointActor.prototype = {
     // Don't pause if we are currently stepping (in or over) or the frame is
     // black-boxed.
     let generatedLocation = this.threadActor.sources.getFrameLocation(aFrame);
-    let { originalSourceActor } = this.threadActor.synchronize(
+    let { originalSourceActor } = this.threadActor.unsafeSynchronize(
       this.threadActor.sources.getOriginalLocation(generatedLocation));
     let url = originalSourceActor.url;
 

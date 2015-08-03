@@ -753,6 +753,7 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "aus4.mozilla.org", true, true, true, 3, &kPinset_mozilla },
   { "blog.torproject.org", true, false, false, -1, &kPinset_tor },
   { "blogger.com", true, false, false, -1, &kPinset_google_root_pems },
+  { "blogspot.com", true, false, false, -1, &kPinset_google_root_pems },
   { "business.facebook.com", true, false, false, -1, &kPinset_facebook },
   { "business.twitter.com", true, false, false, -1, &kPinset_twitterCom },
   { "cdn.mozilla.net", true, false, true, -1, &kPinset_mozilla },
@@ -783,6 +784,7 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "exclude-subdomains.pinning.example.com", false, false, false, 0, &kPinset_mozilla_test },
   { "facebook.com", false, false, false, -1, &kPinset_facebook },
   { "g.co", true, false, false, -1, &kPinset_google_root_pems },
+  { "ggpht.com", true, false, false, -1, &kPinset_google_root_pems },
   { "glass.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "gmail.com", false, false, false, -1, &kPinset_google_root_pems },
   { "goo.gl", true, false, false, -1, &kPinset_google_root_pems },
@@ -1093,8 +1095,8 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "ytimg.com", true, false, false, -1, &kPinset_google_root_pems },
 };
 
-// Pinning Preload List Length = 354;
+// Pinning Preload List Length = 356;
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1446756090891000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1446891927723000);
