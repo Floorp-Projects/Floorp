@@ -266,6 +266,14 @@ public:
            uint32_t(r * 255.0f) << 16 | uint32_t(a * 255.0f) << 24;
   }
 
+  bool operator==(const Color& aColor) const {
+    return r == aColor.r && g == aColor.g && b == aColor.b && a == aColor.a;
+  }
+
+  bool operator!=(const Color& aColor) const {
+    return !(*this == aColor);
+  }
+
   Float r, g, b, a;
 };
 

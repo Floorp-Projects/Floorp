@@ -146,13 +146,8 @@ hb_unicode_funcs_get_default (void)
 }
 
 #if !defined(HB_NO_UNICODE_FUNCS) && defined(HB_UNICODE_FUNCS_NIL)
-#ifdef _MSC_VER
-#pragma error("Could not find any Unicode functions implementation, you have to provide your own.")
-#pragma error("Consider building hb-ucdn.c.  If you absolutely want to build without any, check the code.")
-#else
 #error "Could not find any Unicode functions implementation, you have to provide your own"
 #error "Consider building hb-ucdn.c.  If you absolutely want to build without any, check the code."
-#endif
 #endif
 
 /**
@@ -400,7 +395,7 @@ HB_UNICODE_FUNCS_IMPLEMENT_CALLBACKS_SIMPLE
  *
  * Return value: 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 hb_bool_t
 hb_unicode_compose (hb_unicode_funcs_t *ufuncs,
@@ -422,7 +417,7 @@ hb_unicode_compose (hb_unicode_funcs_t *ufuncs,
  *
  * Return value: 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 hb_bool_t
 hb_unicode_decompose (hb_unicode_funcs_t *ufuncs,
@@ -443,7 +438,7 @@ hb_unicode_decompose (hb_unicode_funcs_t *ufuncs,
  *
  * Return value: 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 unsigned int
 hb_unicode_decompose_compatibility (hb_unicode_funcs_t *ufuncs,

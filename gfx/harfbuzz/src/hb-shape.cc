@@ -33,6 +33,17 @@
 #include "hb-buffer-private.hh"
 #include "hb-font-private.hh"
 
+/**
+ * SECTION:hb-shape
+ * @title: Shaping
+ * @short_description: Conversion of text strings into positioned glyphs
+ * @include: hb.h
+ *
+ * Shaping is the central operation of HarfBuzz. Shaping operates on buffers,
+ * which are sequences of Unicode characters that use the same font and have
+ * the same text direction, script and language. After shaping the buffer
+ * contains the output glyphs and their positions.
+ **/
 
 static bool
 parse_space (const char **pp, const char *end)
@@ -198,15 +209,16 @@ parse_one_feature (const char **pp, const char *end, hb_feature_t *feature)
 
 /**
  * hb_feature_from_string:
- * @str: (array length=len) (element-type uint8_t):
- * @len: 
- * @feature: (out) (optional):
+ * @str: (array length=len) (element-type uint8_t): a string to parse
+ * @len: length of @str, or -1 if string is nul-terminated
+ * @feature: (out): the #hb_feature_t to initialize with the parsed values
  *
- * 
+ * Parses a string into a #hb_feature_t. If @len is -1 then @str is
+ * %NULL-terminated.
  *
- * Return value: 
+ * Return value: %TRUE if @str is successfully parsed, %FALSE otherwise
  *
- * Since: 1.0
+ * Since: 0.9.5
  **/
 hb_bool_t
 hb_feature_from_string (const char *str, int len,
@@ -231,13 +243,15 @@ hb_feature_from_string (const char *str, int len,
 
 /**
  * hb_feature_to_string:
- * @feature: 
- * @buf: (array length=size):
- * @size: 
+ * @feature: an #hb_feature_t to convert
+ * @buf: (array length=size) (out): output string
+ * @size: the allocated size of @buf
  *
- * 
+ * Converts a #hb_feature_t into a %NULL-terminated string in the format
+ * understood by hb_feature_from_string(). The client in responsible for
+ * allocating big enough size for @buf, 128 bytes is more than enough.
  *
- * Since: 1.0
+ * Since: 0.9.5
  **/
 void
 hb_feature_to_string (hb_feature_t *feature,
@@ -290,11 +304,12 @@ void free_static_shaper_list (void)
 /**
  * hb_shape_list_shapers:
  *
- * 
+ * Retrieves the list of shapers supported by HarfBuzz.
  *
- * Return value: (transfer none):
+ * Return value: (transfer none) (array zero-terminated=1): an array of
+ *    constant strings
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 const char **
 hb_shape_list_shapers (void)
@@ -333,17 +348,21 @@ retry:
 
 /**
  * hb_shape_full:
- * @font: a font.
- * @buffer: a buffer.
- * @features: (array length=num_features):
- * @num_features: 
- * @shaper_list: (array zero-terminated=1):
+ * @font: an #hb_font_t to use for shaping
+ * @buffer: an #hb_buffer_t to shape
+ * @features: (array length=num_features) (allow-none): an array of user
+ *    specified #hb_feature_t or %NULL
+ * @num_features: the length of @features array
+ * @shaper_list: (array zero-terminated=1) (allow-none): a %NULL-terminated
+ *    array of shapers to use or %NULL
  *
- * 
+ * See hb_shape() for details. If @shaper_list is not %NULL, the specified
+ * shapers will be used in the given order, otherwise the default shapers list
+ * will be used.
  *
- * Return value: 
+ * Return value: %FALSE if all shapers failed, %TRUE otherwise
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 hb_bool_t
 hb_shape_full (hb_font_t          *font,
@@ -368,12 +387,17 @@ hb_shape_full (hb_font_t          *font,
 
 /**
  * hb_shape:
- * @font: a font.
- * @buffer: a buffer.
- * @features: (array length=num_features):
- * @num_features: 
+ * @font: an #hb_font_t to use for shaping
+ * @buffer: an #hb_buffer_t to shape
+ * @features: (array length=num_features) (allow-none): an array of user
+ *    specified #hb_feature_t or %NULL
+ * @num_features: the length of @features array
  *
- * 
+ * Shapes @buffer using @font turning its Unicode characters content to
+ * positioned glyphs. If @features is not %NULL, it will be used to control the
+ * features applied during shaping.
+ *
+ * Return value: %FALSE if all shapers failed, %TRUE otherwise
  *
  * Since: 1.0
  **/

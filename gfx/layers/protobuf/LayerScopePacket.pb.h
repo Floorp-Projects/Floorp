@@ -183,16 +183,26 @@ class FramePacket : public ::google::protobuf::MessageLite {
   inline ::google::protobuf::uint64 value() const;
   inline void set_value(::google::protobuf::uint64 value);
 
+  // optional float scale = 2;
+  inline bool has_scale() const;
+  inline void clear_scale();
+  static const int kScaleFieldNumber = 2;
+  inline float scale() const;
+  inline void set_scale(float value);
+
   // @@protoc_insertion_point(class_scope:mozilla.layers.layerscope.FramePacket)
  private:
   inline void set_has_value();
   inline void clear_has_value();
+  inline void set_has_scale();
+  inline void clear_has_scale();
 
   ::std::string _unknown_fields_;
 
   ::google::protobuf::uint32 _has_bits_[1];
   mutable int _cached_size_;
   ::google::protobuf::uint64 value_;
+  float scale_;
   #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
   friend void  protobuf_AddDesc_LayerScopePacket_2eproto_impl();
   #else
@@ -1351,6 +1361,25 @@ class LayersPacket_Layer : public ::google::protobuf::MessageLite {
   inline ::mozilla::layers::layerscope::LayersPacket_Layer_Size* release_size();
   inline void set_allocated_size(::mozilla::layers::layerscope::LayersPacket_Layer_Size* size);
 
+  // optional uint32 displayListLogLength = 105;
+  inline bool has_displaylistloglength() const;
+  inline void clear_displaylistloglength();
+  static const int kDisplayListLogLengthFieldNumber = 105;
+  inline ::google::protobuf::uint32 displaylistloglength() const;
+  inline void set_displaylistloglength(::google::protobuf::uint32 value);
+
+  // optional bytes displayListLog = 106;
+  inline bool has_displaylistlog() const;
+  inline void clear_displaylistlog();
+  static const int kDisplayListLogFieldNumber = 106;
+  inline const ::std::string& displaylistlog() const;
+  inline void set_displaylistlog(const ::std::string& value);
+  inline void set_displaylistlog(const char* value);
+  inline void set_displaylistlog(const void* value, size_t size);
+  inline ::std::string* mutable_displaylistlog();
+  inline ::std::string* release_displaylistlog();
+  inline void set_allocated_displaylistlog(::std::string* displaylistlog);
+
   // @@protoc_insertion_point(class_scope:mozilla.layers.layerscope.LayersPacket.Layer)
  private:
   inline void set_has_type();
@@ -1399,6 +1428,10 @@ class LayersPacket_Layer : public ::google::protobuf::MessageLite {
   inline void clear_has_refid();
   inline void set_has_size();
   inline void clear_has_size();
+  inline void set_has_displaylistloglength();
+  inline void clear_has_displaylistloglength();
+  inline void set_has_displaylistlog();
+  inline void clear_has_displaylistlog();
 
   ::std::string _unknown_fields_;
 
@@ -1427,6 +1460,8 @@ class LayersPacket_Layer : public ::google::protobuf::MessageLite {
   int filter_;
   ::google::protobuf::uint64 refid_;
   ::mozilla::layers::layerscope::LayersPacket_Layer_Size* size_;
+  ::std::string* displaylistlog_;
+  ::google::protobuf::uint32 displaylistloglength_;
   #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
   friend void  protobuf_AddDesc_LayerScopePacket_2eproto_impl();
   #else
@@ -1863,6 +1898,30 @@ class DrawPacket : public ::google::protobuf::MessageLite {
   inline ::google::protobuf::uint64 layerref() const;
   inline void set_layerref(::google::protobuf::uint64 value);
 
+  // repeated uint32 texIDs = 7;
+  inline int texids_size() const;
+  inline void clear_texids();
+  static const int kTexIDsFieldNumber = 7;
+  inline ::google::protobuf::uint32 texids(int index) const;
+  inline void set_texids(int index, ::google::protobuf::uint32 value);
+  inline void add_texids(::google::protobuf::uint32 value);
+  inline const ::google::protobuf::RepeatedField< ::google::protobuf::uint32 >&
+      texids() const;
+  inline ::google::protobuf::RepeatedField< ::google::protobuf::uint32 >*
+      mutable_texids();
+
+  // repeated .mozilla.layers.layerscope.DrawPacket.Rect textureRect = 8;
+  inline int texturerect_size() const;
+  inline void clear_texturerect();
+  static const int kTextureRectFieldNumber = 8;
+  inline const ::mozilla::layers::layerscope::DrawPacket_Rect& texturerect(int index) const;
+  inline ::mozilla::layers::layerscope::DrawPacket_Rect* mutable_texturerect(int index);
+  inline ::mozilla::layers::layerscope::DrawPacket_Rect* add_texturerect();
+  inline const ::google::protobuf::RepeatedPtrField< ::mozilla::layers::layerscope::DrawPacket_Rect >&
+      texturerect() const;
+  inline ::google::protobuf::RepeatedPtrField< ::mozilla::layers::layerscope::DrawPacket_Rect >*
+      mutable_texturerect();
+
   // @@protoc_insertion_point(class_scope:mozilla.layers.layerscope.DrawPacket)
  private:
   inline void set_has_offsetx();
@@ -1883,6 +1942,8 @@ class DrawPacket : public ::google::protobuf::MessageLite {
   ::google::protobuf::RepeatedField< float > mvmatrix_;
   ::google::protobuf::RepeatedPtrField< ::mozilla::layers::layerscope::DrawPacket_Rect > layerrect_;
   ::google::protobuf::uint64 layerref_;
+  ::google::protobuf::RepeatedField< ::google::protobuf::uint32 > texids_;
+  ::google::protobuf::RepeatedPtrField< ::mozilla::layers::layerscope::DrawPacket_Rect > texturerect_;
   ::google::protobuf::uint32 totalrects_;
   #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
   friend void  protobuf_AddDesc_LayerScopePacket_2eproto_impl();
@@ -2220,6 +2281,30 @@ inline void FramePacket::set_value(::google::protobuf::uint64 value) {
   set_has_value();
   value_ = value;
   // @@protoc_insertion_point(field_set:mozilla.layers.layerscope.FramePacket.value)
+}
+
+// optional float scale = 2;
+inline bool FramePacket::has_scale() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void FramePacket::set_has_scale() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void FramePacket::clear_has_scale() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void FramePacket::clear_scale() {
+  scale_ = 0;
+  clear_has_scale();
+}
+inline float FramePacket::scale() const {
+  // @@protoc_insertion_point(field_get:mozilla.layers.layerscope.FramePacket.scale)
+  return scale_;
+}
+inline void FramePacket::set_scale(float value) {
+  set_has_scale();
+  scale_ = value;
+  // @@protoc_insertion_point(field_set:mozilla.layers.layerscope.FramePacket.scale)
 }
 
 // -------------------------------------------------------------------
@@ -3791,6 +3876,106 @@ inline void LayersPacket_Layer::set_allocated_size(::mozilla::layers::layerscope
   // @@protoc_insertion_point(field_set_allocated:mozilla.layers.layerscope.LayersPacket.Layer.size)
 }
 
+// optional uint32 displayListLogLength = 105;
+inline bool LayersPacket_Layer::has_displaylistloglength() const {
+  return (_has_bits_[0] & 0x00800000u) != 0;
+}
+inline void LayersPacket_Layer::set_has_displaylistloglength() {
+  _has_bits_[0] |= 0x00800000u;
+}
+inline void LayersPacket_Layer::clear_has_displaylistloglength() {
+  _has_bits_[0] &= ~0x00800000u;
+}
+inline void LayersPacket_Layer::clear_displaylistloglength() {
+  displaylistloglength_ = 0u;
+  clear_has_displaylistloglength();
+}
+inline ::google::protobuf::uint32 LayersPacket_Layer::displaylistloglength() const {
+  // @@protoc_insertion_point(field_get:mozilla.layers.layerscope.LayersPacket.Layer.displayListLogLength)
+  return displaylistloglength_;
+}
+inline void LayersPacket_Layer::set_displaylistloglength(::google::protobuf::uint32 value) {
+  set_has_displaylistloglength();
+  displaylistloglength_ = value;
+  // @@protoc_insertion_point(field_set:mozilla.layers.layerscope.LayersPacket.Layer.displayListLogLength)
+}
+
+// optional bytes displayListLog = 106;
+inline bool LayersPacket_Layer::has_displaylistlog() const {
+  return (_has_bits_[0] & 0x01000000u) != 0;
+}
+inline void LayersPacket_Layer::set_has_displaylistlog() {
+  _has_bits_[0] |= 0x01000000u;
+}
+inline void LayersPacket_Layer::clear_has_displaylistlog() {
+  _has_bits_[0] &= ~0x01000000u;
+}
+inline void LayersPacket_Layer::clear_displaylistlog() {
+  if (displaylistlog_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    displaylistlog_->clear();
+  }
+  clear_has_displaylistlog();
+}
+inline const ::std::string& LayersPacket_Layer::displaylistlog() const {
+  // @@protoc_insertion_point(field_get:mozilla.layers.layerscope.LayersPacket.Layer.displayListLog)
+  return *displaylistlog_;
+}
+inline void LayersPacket_Layer::set_displaylistlog(const ::std::string& value) {
+  set_has_displaylistlog();
+  if (displaylistlog_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    displaylistlog_ = new ::std::string;
+  }
+  displaylistlog_->assign(value);
+  // @@protoc_insertion_point(field_set:mozilla.layers.layerscope.LayersPacket.Layer.displayListLog)
+}
+inline void LayersPacket_Layer::set_displaylistlog(const char* value) {
+  set_has_displaylistlog();
+  if (displaylistlog_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    displaylistlog_ = new ::std::string;
+  }
+  displaylistlog_->assign(value);
+  // @@protoc_insertion_point(field_set_char:mozilla.layers.layerscope.LayersPacket.Layer.displayListLog)
+}
+inline void LayersPacket_Layer::set_displaylistlog(const void* value, size_t size) {
+  set_has_displaylistlog();
+  if (displaylistlog_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    displaylistlog_ = new ::std::string;
+  }
+  displaylistlog_->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:mozilla.layers.layerscope.LayersPacket.Layer.displayListLog)
+}
+inline ::std::string* LayersPacket_Layer::mutable_displaylistlog() {
+  set_has_displaylistlog();
+  if (displaylistlog_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    displaylistlog_ = new ::std::string;
+  }
+  // @@protoc_insertion_point(field_mutable:mozilla.layers.layerscope.LayersPacket.Layer.displayListLog)
+  return displaylistlog_;
+}
+inline ::std::string* LayersPacket_Layer::release_displaylistlog() {
+  clear_has_displaylistlog();
+  if (displaylistlog_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    return NULL;
+  } else {
+    ::std::string* temp = displaylistlog_;
+    displaylistlog_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+    return temp;
+  }
+}
+inline void LayersPacket_Layer::set_allocated_displaylistlog(::std::string* displaylistlog) {
+  if (displaylistlog_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    delete displaylistlog_;
+  }
+  if (displaylistlog) {
+    set_has_displaylistlog();
+    displaylistlog_ = displaylistlog;
+  } else {
+    clear_has_displaylistlog();
+    displaylistlog_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  }
+  // @@protoc_insertion_point(field_set_allocated:mozilla.layers.layerscope.LayersPacket.Layer.displayListLog)
+}
+
 // -------------------------------------------------------------------
 
 // LayersPacket
@@ -4111,6 +4296,66 @@ inline void DrawPacket::set_layerref(::google::protobuf::uint64 value) {
   set_has_layerref();
   layerref_ = value;
   // @@protoc_insertion_point(field_set:mozilla.layers.layerscope.DrawPacket.layerref)
+}
+
+// repeated uint32 texIDs = 7;
+inline int DrawPacket::texids_size() const {
+  return texids_.size();
+}
+inline void DrawPacket::clear_texids() {
+  texids_.Clear();
+}
+inline ::google::protobuf::uint32 DrawPacket::texids(int index) const {
+  // @@protoc_insertion_point(field_get:mozilla.layers.layerscope.DrawPacket.texIDs)
+  return texids_.Get(index);
+}
+inline void DrawPacket::set_texids(int index, ::google::protobuf::uint32 value) {
+  texids_.Set(index, value);
+  // @@protoc_insertion_point(field_set:mozilla.layers.layerscope.DrawPacket.texIDs)
+}
+inline void DrawPacket::add_texids(::google::protobuf::uint32 value) {
+  texids_.Add(value);
+  // @@protoc_insertion_point(field_add:mozilla.layers.layerscope.DrawPacket.texIDs)
+}
+inline const ::google::protobuf::RepeatedField< ::google::protobuf::uint32 >&
+DrawPacket::texids() const {
+  // @@protoc_insertion_point(field_list:mozilla.layers.layerscope.DrawPacket.texIDs)
+  return texids_;
+}
+inline ::google::protobuf::RepeatedField< ::google::protobuf::uint32 >*
+DrawPacket::mutable_texids() {
+  // @@protoc_insertion_point(field_mutable_list:mozilla.layers.layerscope.DrawPacket.texIDs)
+  return &texids_;
+}
+
+// repeated .mozilla.layers.layerscope.DrawPacket.Rect textureRect = 8;
+inline int DrawPacket::texturerect_size() const {
+  return texturerect_.size();
+}
+inline void DrawPacket::clear_texturerect() {
+  texturerect_.Clear();
+}
+inline const ::mozilla::layers::layerscope::DrawPacket_Rect& DrawPacket::texturerect(int index) const {
+  // @@protoc_insertion_point(field_get:mozilla.layers.layerscope.DrawPacket.textureRect)
+  return texturerect_.Get(index);
+}
+inline ::mozilla::layers::layerscope::DrawPacket_Rect* DrawPacket::mutable_texturerect(int index) {
+  // @@protoc_insertion_point(field_mutable:mozilla.layers.layerscope.DrawPacket.textureRect)
+  return texturerect_.Mutable(index);
+}
+inline ::mozilla::layers::layerscope::DrawPacket_Rect* DrawPacket::add_texturerect() {
+  // @@protoc_insertion_point(field_add:mozilla.layers.layerscope.DrawPacket.textureRect)
+  return texturerect_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::mozilla::layers::layerscope::DrawPacket_Rect >&
+DrawPacket::texturerect() const {
+  // @@protoc_insertion_point(field_list:mozilla.layers.layerscope.DrawPacket.textureRect)
+  return texturerect_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::mozilla::layers::layerscope::DrawPacket_Rect >*
+DrawPacket::mutable_texturerect() {
+  // @@protoc_insertion_point(field_mutable_list:mozilla.layers.layerscope.DrawPacket.textureRect)
+  return &texturerect_;
 }
 
 // -------------------------------------------------------------------

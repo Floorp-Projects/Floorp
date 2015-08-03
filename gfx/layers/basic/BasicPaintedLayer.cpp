@@ -91,7 +91,7 @@ BasicPaintedLayer::PaintThebes(gfxContext* aContext,
         groupContext = aContext;
       }
       SetAntialiasingFlags(this, groupContext->GetDrawTarget());
-      aCallback(this, groupContext, toDraw, toDraw,
+      aCallback(this, groupContext, toDraw, &toDraw,
                 DrawRegionClip::NONE, nsIntRegion(), aCallbackData);
       if (needsGroup) {
         aContext->PopGroupToSource();

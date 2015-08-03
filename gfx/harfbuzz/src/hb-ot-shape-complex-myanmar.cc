@@ -154,7 +154,7 @@ is_one_of (const hb_glyph_info_t &info, unsigned int flags)
 {
   /* If it ligated, all bets are off. */
   if (_hb_glyph_info_ligated (&info)) return false;
-  return !!(FLAG (info.myanmar_category()) & flags);
+  return !!(FLAG_SAFE (info.myanmar_category()) & flags);
 }
 
 static inline bool
@@ -304,9 +304,7 @@ compare_myanmar_order (const hb_glyph_info_t *pa, const hb_glyph_info_t *pb)
  * http://www.microsoft.com/typography/OpenTypeDev/myanmar/intro.htm */
 
 static void
-initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan,
-				       hb_face_t *face,
-				       hb_buffer_t *buffer,
+initial_reordering_consonant_syllable (hb_buffer_t *buffer,
 				       unsigned int start, unsigned int end)
 {
   hb_glyph_info_t *info = buffer->info;
@@ -399,37 +397,6 @@ initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan,
 }
 
 static void
-initial_reordering_broken_cluster (const hb_ot_shape_plan_t *plan,
-				   hb_face_t *face,
-				   hb_buffer_t *buffer,
-				   unsigned int start, unsigned int end)
-{
-  /* We already inserted dotted-circles, so just call the consonant_syllable. */
-  initial_reordering_consonant_syllable (plan, face, buffer, start, end);
-}
-
-static void
-initial_reordering_punctuation_cluster (const hb_ot_shape_plan_t *plan HB_UNUSED,
-					hb_face_t *face HB_UNUSED,
-					hb_buffer_t *buffer HB_UNUSED,
-					unsigned int start HB_UNUSED, unsigned int end HB_UNUSED)
-{
-  /* Nothing to do right now.  If we ever switch to using the output
-   * buffer in the reordering process, we'd need to next_glyph() here. */
-}
-
-static void
-initial_reordering_non_myanmar_cluster (const hb_ot_shape_plan_t *plan HB_UNUSED,
-					hb_face_t *face HB_UNUSED,
-					hb_buffer_t *buffer HB_UNUSED,
-					unsigned int start HB_UNUSED, unsigned int end HB_UNUSED)
-{
-  /* Nothing to do right now.  If we ever switch to using the output
-   * buffer in the reordering process, we'd need to next_glyph() here. */
-}
-
-
-static void
 initial_reordering_syllable (const hb_ot_shape_plan_t *plan,
 			     hb_face_t *face,
 			     hb_buffer_t *buffer,
@@ -437,10 +404,15 @@ initial_reordering_syllable (const hb_ot_shape_plan_t *plan,
 {
   syllable_type_t syllable_type = (syllable_type_t) (buffer->info[start].syllable() & 0x0F);
   switch (syllable_type) {
-  case consonant_syllable:	initial_reordering_consonant_syllable  (plan, face, buffer, start, end); return;
-  case punctuation_cluster:	initial_reordering_punctuation_cluster (plan, face, buffer, start, end); return;
-  case broken_cluster:		initial_reordering_broken_cluster      (plan, face, buffer, start, end); return;
-  case non_myanmar_cluster:	initial_reordering_non_myanmar_cluster (plan, face, buffer, start, end); return;
+
+    case broken_cluster: /* We already inserted dotted-circles, so just call the consonant_syllable. */
+    case consonant_syllable:
+      initial_reordering_consonant_syllable  (buffer, start, end);
+      break;
+
+    case punctuation_cluster:
+    case non_myanmar_cluster:
+      break;
   }
 }
 
@@ -505,18 +477,8 @@ initial_reordering (const hb_ot_shape_plan_t *plan,
 {
   insert_dotted_circles (plan, font, buffer);
 
-  hb_glyph_info_t *info = buffer->info;
-  unsigned int count = buffer->len;
-  if (unlikely (!count)) return;
-  unsigned int last = 0;
-  unsigned int last_syllable = info[0].syllable();
-  for (unsigned int i = 1; i < count; i++)
-    if (last_syllable != info[i].syllable()) {
-      initial_reordering_syllable (plan, font->face, buffer, last, i);
-      last = i;
-      last_syllable = info[last].syllable();
-    }
-  initial_reordering_syllable (plan, font->face, buffer, last, count);
+  foreach_syllable (buffer, start, end)
+    initial_reordering_syllable (plan, font->face, buffer, start, end);
 }
 
 static void

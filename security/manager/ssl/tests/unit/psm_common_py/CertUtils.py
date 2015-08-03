@@ -10,15 +10,6 @@ import pexpect
 import time
 import sys
 
-aia_prefix = 'authorityInfoAccess = OCSP;URI:http://www.example.com:8888/'
-aia_suffix = '/\n'
-
-mozilla_testing_ev_policy = ('certificatePolicies = @v3_ca_ev_cp\n\n' +
-                             '[ v3_ca_ev_cp ]\n' +
-                             'policyIdentifier = ' +
-                             '1.3.6.1.4.1.13769.666.666.666.1.500.9.1\n\n' +
-                             'CPS.1 = "http://mytestdomain.local/cps"')
-
 default_validity_in_days = 10 * 365
 
 def generate_cert_generic(db_dir, dest_dir, serial_num,  key_type, name,
@@ -182,24 +173,6 @@ def generate_pkcs12(db_dir, dest_dir, der_cert_filename, key_pem_filename,
     child.sendline('')
     child.expect(pexpect.EOF)
     return pk12_filename
-
-def import_cert_and_pkcs12(db_dir, cert_filename, pkcs12_filename, nickname,
-                           trust_flags):
-    """
-    Imports a given certificate file and PKCS12 file into the SQL NSS DB.
-
-    Arguments:
-      db_dir -- the location of the database and password file
-      cert_filename -- the filename of the cert in DER format
-      pkcs12_filename -- the filename of the private key of the cert in PEM
-                         format
-      nickname -- the nickname to assign to the cert
-      trust_flags -- the trust flags the cert should have
-    """
-    os.system('certutil -A -d sql:' + db_dir + ' -n ' + nickname + ' -i ' +
-              cert_filename + ' -t "' + trust_flags + '"')
-    os.system('pk12util -i ' + pkcs12_filename + ' -d sql:' + db_dir +
-              ' -w ' + db_dir + '/pwfile')
 
 def print_cert_info(cert_filename):
     """
