@@ -33,7 +33,7 @@
 #ifdef XP_WIN
 # include "jswin.h"
 #endif
-
+#include "prmjtime.h"
 
 #include "builtin/AtomicsObject.h"
 #include "frontend/Parser.h"
@@ -41,8 +41,6 @@
 #include "js/Class.h"
 #include "js/Conversions.h"
 #include "js/MemoryMetrics.h"
-
-#include "vm/Time.h"
 
 #include "jsobjinlines.h"
 
