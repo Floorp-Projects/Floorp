@@ -1969,8 +1969,11 @@ TSFTextStore::LockedContent()
 
   MOZ_LOG(sTextStoreLog, LogLevel::Debug,
          ("TSF: 0x%p   TSFTextStore::LockedContent(): "
-          "mLockedContent={ mText.Length()=%d }",
-          this, mLockedContent.Text().Length()));
+          "mLockedContent={ mText.Length()=%d, mLastCompositionString=\"%s\", "
+          "mMinTextModifiedOffset=%u }",
+          this, mLockedContent.Text().Length(),
+          NS_ConvertUTF16toUTF8(mLockedContent.LastCompositionString()).get(),
+          mLockedContent.MinTextModifiedOffset()));
 
   return mLockedContent;
 }
@@ -3399,7 +3402,9 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
   if (mComposition.IsComposing() && mComposition.mStart < acpEnd &&
       mLockedContent.IsLayoutChangedAfter(acpEnd)) {
     const Selection& currentSel = CurrentSelection();
-    if (!IsWin10OrLater()) {
+    if ((sDoNotReturnNoLayoutErrorToGoogleJaInputAtFirstChar ||
+         sDoNotReturnNoLayoutErrorToGoogleJaInputAtCaret) &&
+        kSink->IsGoogleJapaneseInputActive()) {
       // Google Japanese Input doesn't handle ITfContextView::GetTextExt()
       // properly due to the same bug of TSF mentioned above.  Google Japanese
       // Input calls this twice for the first character of changing range of
@@ -3407,10 +3412,9 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
       // composition string.  The formar is used for showing candidate window.
       // This is typically shown at wrong position.  We should avoid only this
       // case. This is not necessary on Windows 10.
-      if (!mLockedContent.IsLayoutChangedAfter(acpStart) &&
-          acpStart < acpEnd &&
-          sDoNotReturnNoLayoutErrorToGoogleJaInputAtFirstChar &&
-          kSink->IsGoogleJapaneseInputActive()) {
+      if (sDoNotReturnNoLayoutErrorToGoogleJaInputAtFirstChar &&
+          !mLockedContent.IsLayoutChangedAfter(acpStart) &&
+          acpStart < acpEnd) {
         acpEnd = acpStart;
         MOZ_LOG(sTextStoreLog, LogLevel::Debug,
                ("TSF: 0x%p   TSFTextStore::GetTextExt() hacked the offsets of "
@@ -3423,10 +3427,9 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
       // offset of selected clause. However, it's difficult to get where is
       // selected clause for now.  Instead, we should use the first character
       // which is modified. This is useful in most cases.
-      else if (acpStart == acpEnd &&
-               currentSel.IsCollapsed() && currentSel.EndOffset() == acpEnd &&
-               sDoNotReturnNoLayoutErrorToGoogleJaInputAtCaret &&
-               kSink->IsGoogleJapaneseInputActive()) {
+      else if (sDoNotReturnNoLayoutErrorToGoogleJaInputAtCaret &&
+               acpStart == acpEnd &&
+               currentSel.IsCollapsed() && currentSel.EndOffset() == acpEnd) {
         acpEnd = acpStart = mLockedContent.MinOffsetOfLayoutChanged();
         MOZ_LOG(sTextStoreLog, LogLevel::Debug,
                ("TSF: 0x%p   TSFTextStore::GetTextExt() hacked the offsets of "
@@ -5311,7 +5314,29 @@ TSFTextStore::Content::ReplaceTextWith(LONG aStart,
           mComposition.mStart +
             FirstDifferentCharOffset(mComposition.mString,
                                      mLastCompositionString);
+        // The previous change to the composition string is canceled.
+        if (mMinTextModifiedOffset >=
+              static_cast<uint32_t>(mComposition.mStart) &&
+            mMinTextModifiedOffset < firstDifferentOffset) {
+          mMinTextModifiedOffset = firstDifferentOffset;
+        }
+      } else if (mMinTextModifiedOffset >=
+                   static_cast<uint32_t>(mComposition.mStart) &&
+                 mMinTextModifiedOffset <
+                   static_cast<uint32_t>(mComposition.EndOffset())) {
+        // The previous change to the composition string is canceled.
+        mMinTextModifiedOffset = firstDifferentOffset =
+          mComposition.EndOffset();
       }
+      MOZ_LOG(sTextStoreLog, LogLevel::Debug,
+        ("TSF: 0x%p   TSFTextStore::Content::ReplaceTextWith(aStart=%d, "
+         "aLength=%d, aReplaceString=\"%s\"), mComposition={ mStart=%d, "
+         "mString=\"%s\" }, mLastCompositionString=\"%s\", "
+         "mMinTextModifiedOffset=%u, firstDifferentOffset=%u",
+         this, aStart, aLength, NS_ConvertUTF16toUTF8(aReplaceString).get(),
+         mComposition.mStart, NS_ConvertUTF16toUTF8(mComposition.mString).get(),
+         NS_ConvertUTF16toUTF8(mLastCompositionString).get(),
+         mMinTextModifiedOffset, firstDifferentOffset));
     } else {
       firstDifferentOffset =
         static_cast<uint32_t>(aStart) +
