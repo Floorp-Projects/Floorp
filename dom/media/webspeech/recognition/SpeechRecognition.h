@@ -87,9 +87,9 @@ public:
 
   void SetInterimResults(bool aArg);
 
-  uint32_t GetMaxAlternatives(ErrorResult& aRv) const;
+  uint32_t MaxAlternatives() const;
 
-  void SetMaxAlternatives(uint32_t aArg, ErrorResult& aRv);
+  void SetMaxAlternatives(uint32_t aArg);
 
   void GetServiceURI(nsString& aRetVal, ErrorResult& aRv) const;
 

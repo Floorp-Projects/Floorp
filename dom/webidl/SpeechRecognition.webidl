@@ -20,7 +20,6 @@ interface SpeechRecognition : EventTarget {
     [Throws]
     attribute boolean continuous;
     attribute boolean interimResults;
-    [Throws]
     attribute unsigned long maxAlternatives;
     [Throws]
     attribute DOMString serviceURI;
