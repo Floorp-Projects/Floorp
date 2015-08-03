@@ -126,7 +126,7 @@ enum nsChangeHint {
    * has changed whether the frame is a container for fixed-pos or abs-pos
    * elements, but reframing is otherwise not needed.
    */
-  nsChangeHint_UpdateContainingBlock = 0x20000,
+  nsChangeHint_AddOrRemoveTransform = 0x20000,
 
   /**
    * This change hint has *no* change handling behavior.  However, it
@@ -284,7 +284,7 @@ inline nsChangeHint operator^=(nsChangeHint& aLeft, nsChangeHint aRight)
           nsChangeHint_UpdateParentOverflow | \
           nsChangeHint_ChildrenOnlyTransform | \
           nsChangeHint_RecomputePosition | \
-          nsChangeHint_UpdateContainingBlock | \
+          nsChangeHint_AddOrRemoveTransform | \
           nsChangeHint_BorderStyleNoneChange | \
           nsChangeHint_NeedReflow | \
           nsChangeHint_ReflowChangesSizeOrPosition | \
@@ -302,7 +302,7 @@ inline nsChangeHint NS_HintsNotHandledForDescendantsIn(nsChangeHint aChangeHint)
     nsChangeHint_UpdateParentOverflow |
     nsChangeHint_ChildrenOnlyTransform |
     nsChangeHint_RecomputePosition |
-    nsChangeHint_UpdateContainingBlock |
+    nsChangeHint_AddOrRemoveTransform |
     nsChangeHint_BorderStyleNoneChange |
     nsChangeHint_UpdateComputedBSize));
 
