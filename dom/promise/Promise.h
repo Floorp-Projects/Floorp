@@ -85,8 +85,8 @@ class Promise : public nsISupports,
   friend class PromiseWorkerProxyRunnable;
   friend class RejectPromiseCallback;
   friend class ResolvePromiseCallback;
-  friend class ThenableResolverTask;
-  friend class FastThenableResolverTask;
+  friend class PromiseResolveThenableJob;
+  friend class FastPromiseResolveThenableJob;
   friend class WrapperPromiseCallback;
 
 public:
