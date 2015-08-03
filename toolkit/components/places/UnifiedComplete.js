@@ -941,6 +941,9 @@ Search.prototype = {
       );
     let promise = this._searchSuggestionController.fetchCompletePromise
       .then(() => {
+        // The search has been canceled already.
+        if (!this._searchSuggestionController)
+          return;
         if (this._searchSuggestionController.resultsCount >= 0 &&
             this._searchSuggestionController.resultsCount < 2) {
           // The original string is used to properly compare with the next search.
