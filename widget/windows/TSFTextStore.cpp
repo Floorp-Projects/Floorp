@@ -1281,6 +1281,8 @@ StaticRefPtr<TSFTextStore> TSFTextStore::sEnabledTextStore;
 DWORD TSFTextStore::sClientId  = 0;
 
 bool TSFTextStore::sCreateNativeCaretForATOK = false;
+bool TSFTextStore::sDoNotReturnNoLayoutErrorToMSSimplifiedTIP = false;
+bool TSFTextStore::sDoNotReturnNoLayoutErrorToMSTraditionalTIP = false;
 bool TSFTextStore::sDoNotReturnNoLayoutErrorToFreeChangJie = false;
 bool TSFTextStore::sDoNotReturnNoLayoutErrorToEasyChangjei = false;
 bool TSFTextStore::sDoNotReturnNoLayoutErrorToGoogleJaInputAtFirstChar = false;
@@ -3499,6 +3501,21 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
              ("TSF: 0x%p   TSFTextStore::GetTextExt() hacked the offsets for "
               "TIP acpStart=%d, acpEnd=%d", this, acpStart, acpEnd));
     }
+    // Some Chinese TIPs of Microsoft doesn't show candidate window in e10s
+    // mode on Win8 or later.
+    else if (IsWin8OrLater() &&
+             ((sDoNotReturnNoLayoutErrorToMSTraditionalTIP &&
+               (kSink->IsMSChangJieActive() ||
+                kSink->IsMSQuickQuickActive())) ||
+              (sDoNotReturnNoLayoutErrorToMSSimplifiedTIP &&
+                (kSink->IsMSPinyinActive() ||
+                 kSink->IsMSWubiActive())))) {
+      acpEnd = mComposition.mStart;
+      acpStart = std::min(acpStart, acpEnd);
+      MOZ_LOG(sTextStoreLog, LogLevel::Debug,
+             ("TSF: 0x%p   TSFTextStore::GetTextExt() hacked the offsets for "
+              "TIP acpStart=%d, acpEnd=%d", this, acpStart, acpEnd));
+    }
   }
 
   if (mLockedContent.IsLayoutChangedAfter(acpEnd)) {
@@ -5151,6 +5168,14 @@ TSFTextStore::Initialize()
 
   sCreateNativeCaretForATOK =
     Preferences::GetBool("intl.tsf.hack.atok.create_native_caret", true);
+  sDoNotReturnNoLayoutErrorToMSSimplifiedTIP =
+    Preferences::GetBool(
+      "intl.tsf.hack.ms_simplified_chinese.do_not_return_no_layout_error",
+      true);
+  sDoNotReturnNoLayoutErrorToMSTraditionalTIP =
+    Preferences::GetBool(
+      "intl.tsf.hack.ms_traditional_chinese.do_not_return_no_layout_error",
+      true);
   sDoNotReturnNoLayoutErrorToFreeChangJie =
     Preferences::GetBool(
       "intl.tsf.hack.free_chang_jie.do_not_return_no_layout_error", true);
