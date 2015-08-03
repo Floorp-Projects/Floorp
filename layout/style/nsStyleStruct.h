@@ -2065,7 +2065,7 @@ struct nsStyleDisplay {
                         nsChangeHint_UpdateTransformLayer |
                         nsChangeHint_UpdateOverflow |
                         nsChangeHint_UpdatePostTransformOverflow |
-                        nsChangeHint_AddOrRemoveTransform |
+                        nsChangeHint_UpdateContainingBlock |
                         nsChangeHint_NeutralChange);
   }
   static nsChangeHint DifferenceAlwaysHandledForDescendants() {
@@ -3165,7 +3165,7 @@ struct nsStyleSVGReset {
   static nsChangeHint MaxDifference() {
     return nsChangeHint_UpdateEffects |
            nsChangeHint_UpdateOverflow |
-           nsChangeHint_AddOrRemoveTransform |
+           nsChangeHint_UpdateContainingBlock |
            NS_STYLE_HINT_REFLOW;
   }
   static nsChangeHint DifferenceAlwaysHandledForDescendants() {
