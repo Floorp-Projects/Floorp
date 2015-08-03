@@ -5,8 +5,6 @@
 
 Cu.import("resource://gre/modules/Services.jsm", this);
 
-const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
-
 // Constants from prio.h for nsIFileOutputStream.init
 const PR_WRONLY = 0x2;
 const PR_CREATE_FILE = 0x8;
