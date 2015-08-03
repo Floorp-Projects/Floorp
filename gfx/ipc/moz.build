@@ -26,6 +26,10 @@ SOURCES += [
     'SharedDIB.cpp',
 ]
 
+IPDL_SOURCES = [
+    'GraphicsMessages.ipdlh',
+]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

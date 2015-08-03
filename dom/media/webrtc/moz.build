@@ -83,9 +83,6 @@ if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
   ]
 
 FINAL_LIBRARY = 'xul'
-if CONFIG['OS_ARCH'] == 'WINNT':
-    DEFINES['NOMINMAX'] = True
-
 
 if CONFIG['_MSC_VER']:
   CXXFLAGS += [
