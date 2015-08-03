@@ -3012,21 +3012,11 @@ DateOneArgument(JSContext* cx, const CallArgs& args)
     MOZ_ASSERT(args.length() == 1);
 
     if (args.isConstructing()) {
-        if (args[0].isObject()) {
-            RootedObject obj(cx, &args[0].toObject());
-            if (ObjectClassIs(obj, ESClass_Date, cx)) {
-                RootedValue unboxed(cx);
-                if (!Unbox(cx, obj, &unboxed))
-                    return false;
-
-                return NewDateObject(cx, args, TimeClip(unboxed.toNumber()));
-            }
-        }
+        ClippedTime t;
 
         if (!ToPrimitive(cx, args[0]))
             return false;
 
-        ClippedTime t;
         if (args[0].isString()) {
             JSLinearString* linearStr = args[0].toString()->ensureLinear(cx);
             if (!linearStr)
