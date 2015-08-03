@@ -99,6 +99,7 @@ struct StaticDescriptorInitializer_LayerScopePacket_2eproto {
 
 #ifndef _MSC_VER
 const int FramePacket::kValueFieldNumber;
+const int FramePacket::kScaleFieldNumber;
 #endif  // !_MSC_VER
 
 FramePacket::FramePacket()
@@ -120,6 +121,7 @@ FramePacket::FramePacket(const FramePacket& from)
 void FramePacket::SharedCtor() {
   _cached_size_ = 0;
   value_ = GOOGLE_ULONGLONG(0);
+  scale_ = 0;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -158,7 +160,21 @@ FramePacket* FramePacket::New() const {
 }
 
 void FramePacket::Clear() {
-  value_ = GOOGLE_ULONGLONG(0);
+#define OFFSET_OF_FIELD_(f) (reinterpret_cast<char*>(      \
+  &reinterpret_cast<FramePacket*>(16)->f) - \
+   reinterpret_cast<char*>(16))
+
+#define ZR_(first, last) do {                              \
+    size_t f = OFFSET_OF_FIELD_(first);                    \
+    size_t n = OFFSET_OF_FIELD_(last) - f + sizeof(last);  \
+    ::memset(&first, 0, n);                                \
+  } while (0)
+
+  ZR_(value_, scale_);
+
+#undef OFFSET_OF_FIELD_
+#undef ZR_
+
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   mutable_unknown_fields()->clear();
 }
@@ -184,6 +200,21 @@ bool FramePacket::MergePartialFromCodedStream(
                    ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
                  input, &value_)));
           set_has_value();
+        } else {
+          goto handle_unusual;
+        }
+        if (input->ExpectTag(21)) goto parse_scale;
+        break;
+      }
+
+      // optional float scale = 2;
+      case 2: {
+        if (tag == 21) {
+         parse_scale:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                 input, &scale_)));
+          set_has_scale();
         } else {
           goto handle_unusual;
         }
@@ -221,6 +252,11 @@ void FramePacket::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteUInt64(1, this->value(), output);
   }
 
+  // optional float scale = 2;
+  if (has_scale()) {
+    ::google::protobuf::internal::WireFormatLite::WriteFloat(2, this->scale(), output);
+  }
+
   output->WriteRaw(unknown_fields().data(),
                    unknown_fields().size());
   // @@protoc_insertion_point(serialize_end:mozilla.layers.layerscope.FramePacket)
@@ -235,6 +271,11 @@ int FramePacket::ByteSize() const {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::UInt64Size(
           this->value());
+    }
+
+    // optional float scale = 2;
+    if (has_scale()) {
+      total_size += 1 + 4;
     }
 
   }
@@ -257,6 +298,9 @@ void FramePacket::MergeFrom(const FramePacket& from) {
     if (from.has_value()) {
       set_value(from.value());
     }
+    if (from.has_scale()) {
+      set_scale(from.scale());
+    }
   }
   mutable_unknown_fields()->append(from.unknown_fields());
 }
@@ -275,6 +319,7 @@ bool FramePacket::IsInitialized() const {
 void FramePacket::Swap(FramePacket* other) {
   if (other != this) {
     std::swap(value_, other->value_);
+    std::swap(scale_, other->scale_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.swap(other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);
@@ -2459,6 +2504,8 @@ const int LayersPacket_Layer::kColorFieldNumber;
 const int LayersPacket_Layer::kFilterFieldNumber;
 const int LayersPacket_Layer::kRefIDFieldNumber;
 const int LayersPacket_Layer::kSizeFieldNumber;
+const int LayersPacket_Layer::kDisplayListLogLengthFieldNumber;
+const int LayersPacket_Layer::kDisplayListLogFieldNumber;
 #endif  // !_MSC_VER
 
 LayersPacket_Layer::LayersPacket_Layer()
@@ -2544,6 +2591,7 @@ LayersPacket_Layer::LayersPacket_Layer(const LayersPacket_Layer& from)
 }
 
 void LayersPacket_Layer::SharedCtor() {
+  ::google::protobuf::internal::GetEmptyString();
   _cached_size_ = 0;
   type_ = 0;
   ptr_ = GOOGLE_ULONGLONG(0);
@@ -2568,6 +2616,8 @@ void LayersPacket_Layer::SharedCtor() {
   filter_ = 0;
   refid_ = GOOGLE_ULONGLONG(0);
   size_ = NULL;
+  displaylistloglength_ = 0u;
+  displaylistlog_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -2577,6 +2627,9 @@ LayersPacket_Layer::~LayersPacket_Layer() {
 }
 
 void LayersPacket_Layer::SharedDtor() {
+  if (displaylistlog_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    delete displaylistlog_;
+  }
   #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
   if (this != &default_instance()) {
   #else
@@ -2657,7 +2710,7 @@ void LayersPacket_Layer::Clear() {
       if (noactionregion_ != NULL) noactionregion_->::mozilla::layers::layerscope::LayersPacket_Layer_Region::Clear();
     }
   }
-  if (_has_bits_[16 / 32] & 8323072) {
+  if (_has_bits_[16 / 32] & 16711680) {
     ZR_(color_, refid_);
     if (has_hpanregion()) {
       if (hpanregion_ != NULL) hpanregion_->::mozilla::layers::layerscope::LayersPacket_Layer_Region::Clear();
@@ -2670,6 +2723,12 @@ void LayersPacket_Layer::Clear() {
     }
     if (has_size()) {
       if (size_ != NULL) size_->::mozilla::layers::layerscope::LayersPacket_Layer_Size::Clear();
+    }
+    displaylistloglength_ = 0u;
+  }
+  if (has_displaylistlog()) {
+    if (displaylistlog_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+      displaylistlog_->clear();
     }
   }
 
@@ -3030,6 +3089,34 @@ bool LayersPacket_Layer::MergePartialFromCodedStream(
         } else {
           goto handle_unusual;
         }
+        if (input->ExpectTag(840)) goto parse_displayListLogLength;
+        break;
+      }
+
+      // optional uint32 displayListLogLength = 105;
+      case 105: {
+        if (tag == 840) {
+         parse_displayListLogLength:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
+                 input, &displaylistloglength_)));
+          set_has_displaylistloglength();
+        } else {
+          goto handle_unusual;
+        }
+        if (input->ExpectTag(850)) goto parse_displayListLog;
+        break;
+      }
+
+      // optional bytes displayListLog = 106;
+      case 106: {
+        if (tag == 850) {
+         parse_displayListLog:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+                input, this->mutable_displaylistlog()));
+        } else {
+          goto handle_unusual;
+        }
         if (input->ExpectAtEnd()) goto success;
         break;
       }
@@ -3186,6 +3273,17 @@ void LayersPacket_Layer::SerializeWithCachedSizes(
   if (has_size()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
       104, this->size(), output);
+  }
+
+  // optional uint32 displayListLogLength = 105;
+  if (has_displaylistloglength()) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt32(105, this->displaylistloglength(), output);
+  }
+
+  // optional bytes displayListLog = 106;
+  if (has_displaylistlog()) {
+    ::google::protobuf::internal::WireFormatLite::WriteBytesMaybeAliased(
+      106, this->displaylistlog(), output);
   }
 
   output->WriteRaw(unknown_fields().data(),
@@ -3353,6 +3451,22 @@ int LayersPacket_Layer::ByteSize() const {
           this->size());
     }
 
+    // optional uint32 displayListLogLength = 105;
+    if (has_displaylistloglength()) {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::UInt32Size(
+          this->displaylistloglength());
+    }
+
+  }
+  if (_has_bits_[24 / 32] & (0xffu << (24 % 32))) {
+    // optional bytes displayListLog = 106;
+    if (has_displaylistlog()) {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::BytesSize(
+          this->displaylistlog());
+    }
+
   }
   total_size += unknown_fields().size();
 
@@ -3443,6 +3557,14 @@ void LayersPacket_Layer::MergeFrom(const LayersPacket_Layer& from) {
     if (from.has_size()) {
       mutable_size()->::mozilla::layers::layerscope::LayersPacket_Layer_Size::MergeFrom(from.size());
     }
+    if (from.has_displaylistloglength()) {
+      set_displaylistloglength(from.displaylistloglength());
+    }
+  }
+  if (from._has_bits_[24 / 32] & (0xffu << (24 % 32))) {
+    if (from.has_displaylistlog()) {
+      set_displaylistlog(from.displaylistlog());
+    }
   }
   mutable_unknown_fields()->append(from.unknown_fields());
 }
@@ -3484,6 +3606,8 @@ void LayersPacket_Layer::Swap(LayersPacket_Layer* other) {
     std::swap(filter_, other->filter_);
     std::swap(refid_, other->refid_);
     std::swap(size_, other->size_);
+    std::swap(displaylistloglength_, other->displaylistloglength_);
+    std::swap(displaylistlog_, other->displaylistlog_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.swap(other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);
@@ -4177,6 +4301,8 @@ const int DrawPacket::kMvMatrixFieldNumber;
 const int DrawPacket::kTotalRectsFieldNumber;
 const int DrawPacket::kLayerRectFieldNumber;
 const int DrawPacket::kLayerrefFieldNumber;
+const int DrawPacket::kTexIDsFieldNumber;
+const int DrawPacket::kTextureRectFieldNumber;
 #endif  // !_MSC_VER
 
 DrawPacket::DrawPacket()
@@ -4249,14 +4375,19 @@ void DrawPacket::Clear() {
     ::memset(&first, 0, n);                                \
   } while (0)
 
-  ZR_(offsetx_, offsety_);
-  ZR_(layerref_, totalrects_);
+  if (_has_bits_[0 / 32] & 43) {
+    ZR_(offsetx_, offsety_);
+    totalrects_ = 0u;
+    layerref_ = GOOGLE_ULONGLONG(0);
+  }
 
 #undef OFFSET_OF_FIELD_
 #undef ZR_
 
   mvmatrix_.Clear();
   layerrect_.Clear();
+  texids_.Clear();
+  texturerect_.Clear();
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   mutable_unknown_fields()->clear();
 }
@@ -4363,6 +4494,39 @@ bool DrawPacket::MergePartialFromCodedStream(
         } else {
           goto handle_unusual;
         }
+        if (input->ExpectTag(56)) goto parse_texIDs;
+        break;
+      }
+
+      // repeated uint32 texIDs = 7;
+      case 7: {
+        if (tag == 56) {
+         parse_texIDs:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadRepeatedPrimitive<
+                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
+                 1, 56, input, this->mutable_texids())));
+        } else if (tag == 58) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPackedPrimitiveNoInline<
+                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
+                 input, this->mutable_texids())));
+        } else {
+          goto handle_unusual;
+        }
+        if (input->ExpectTag(56)) goto parse_texIDs;
+        if (input->ExpectTag(66)) goto parse_textureRect;
+        break;
+      }
+
+      // repeated .mozilla.layers.layerscope.DrawPacket.Rect textureRect = 8;
+      case 8: {
+        if (tag == 66) {
+         parse_textureRect:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+                input, add_texturerect()));
+        } else {
+          goto handle_unusual;
+        }
+        if (input->ExpectTag(66)) goto parse_textureRect;
         if (input->ExpectAtEnd()) goto success;
         break;
       }
@@ -4424,6 +4588,18 @@ void DrawPacket::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteUInt64(6, this->layerref(), output);
   }
 
+  // repeated uint32 texIDs = 7;
+  for (int i = 0; i < this->texids_size(); i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt32(
+      7, this->texids(i), output);
+  }
+
+  // repeated .mozilla.layers.layerscope.DrawPacket.Rect textureRect = 8;
+  for (int i = 0; i < this->texturerect_size(); i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      8, this->texturerect(i), output);
+  }
+
   output->WriteRaw(unknown_fields().data(),
                    unknown_fields().size());
   // @@protoc_insertion_point(serialize_end:mozilla.layers.layerscope.DrawPacket)
@@ -4473,6 +4649,24 @@ int DrawPacket::ByteSize() const {
         this->layerrect(i));
   }
 
+  // repeated uint32 texIDs = 7;
+  {
+    int data_size = 0;
+    for (int i = 0; i < this->texids_size(); i++) {
+      data_size += ::google::protobuf::internal::WireFormatLite::
+        UInt32Size(this->texids(i));
+    }
+    total_size += 1 * this->texids_size() + data_size;
+  }
+
+  // repeated .mozilla.layers.layerscope.DrawPacket.Rect textureRect = 8;
+  total_size += 1 * this->texturerect_size();
+  for (int i = 0; i < this->texturerect_size(); i++) {
+    total_size +=
+      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+        this->texturerect(i));
+  }
+
   total_size += unknown_fields().size();
 
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
@@ -4490,6 +4684,8 @@ void DrawPacket::MergeFrom(const DrawPacket& from) {
   GOOGLE_CHECK_NE(&from, this);
   mvmatrix_.MergeFrom(from.mvmatrix_);
   layerrect_.MergeFrom(from.layerrect_);
+  texids_.MergeFrom(from.texids_);
+  texturerect_.MergeFrom(from.texturerect_);
   if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
     if (from.has_offsetx()) {
       set_offsetx(from.offsetx());
@@ -4517,6 +4713,7 @@ bool DrawPacket::IsInitialized() const {
   if ((_has_bits_[0] & 0x0000002b) != 0x0000002b) return false;
 
   if (!::google::protobuf::internal::AllAreInitialized(this->layerrect())) return false;
+  if (!::google::protobuf::internal::AllAreInitialized(this->texturerect())) return false;
   return true;
 }
 
@@ -4528,6 +4725,8 @@ void DrawPacket::Swap(DrawPacket* other) {
     std::swap(totalrects_, other->totalrects_);
     layerrect_.Swap(&other->layerrect_);
     std::swap(layerref_, other->layerref_);
+    texids_.Swap(&other->texids_);
+    texturerect_.Swap(&other->texturerect_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.swap(other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);
