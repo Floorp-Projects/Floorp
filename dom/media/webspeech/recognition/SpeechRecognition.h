@@ -83,9 +83,9 @@ public:
 
   void SetContinuous(bool aArg, ErrorResult& aRv);
 
-  bool GetInterimResults(ErrorResult& aRv) const;
+  bool InterimResults() const;
 
-  void SetInterimResults(bool aArg, ErrorResult& aRv);
+  void SetInterimResults(bool aArg);
 
   uint32_t GetMaxAlternatives(ErrorResult& aRv) const;
 
@@ -254,6 +254,17 @@ private:
   nsString mLang;
 
   nsRefPtr<SpeechGrammarList> mSpeechGrammarList;
+
+  // WebSpeechAPI (http://bit.ly/1gIl7DC) states:
+  //
+  // 1. Default value MUST be false
+  // 2. If true, interim results SHOULD be returned
+  // 3. If false, interim results MUST NOT be returned
+  //
+  // Pocketsphinx does not return interm results; so, defaulting
+  // mInterimResults to false, then ignoring its subsequent value
+  // is a conforming implementation.
+  bool mInterimResults;
 
   void ProcessTestEventRequest(nsISupports* aSubject, const nsAString& aEventName);
 

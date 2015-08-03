@@ -19,7 +19,6 @@ interface SpeechRecognition : EventTarget {
     attribute DOMString lang;
     [Throws]
     attribute boolean continuous;
-    [Throws]
     attribute boolean interimResults;
     [Throws]
     attribute unsigned long maxAlternatives;
