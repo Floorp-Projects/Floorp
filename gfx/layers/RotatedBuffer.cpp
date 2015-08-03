@@ -735,20 +735,18 @@ RotatedContentBuffer::BorrowDrawTargetForPainting(PaintState& aPaintState,
     return nullptr;
   }
 
-  if (result->GetBackendType() == BackendType::DIRECT2D ||
-      result->GetBackendType() == BackendType::DIRECT2D1_1) {
-    // Simplify the draw region to avoid hitting expensive drawing paths for
-    // complex regions. Must be applied to the entire draw region so that it
-    // remains a superset of the iterator's draw region.
-    aPaintState.mRegionToDraw.SimplifyOutwardByArea(100 * 100);
-  }
-
   nsIntRegion* drawPtr = &aPaintState.mRegionToDraw;
   if (aIter) {
     // The iterators draw region currently only contains the bounds of the region,
     // this makes it the precise region.
     aIter->mDrawRegion.And(aIter->mDrawRegion, aPaintState.mRegionToDraw);
     drawPtr = &aIter->mDrawRegion;
+  }
+  if (result->GetBackendType() == BackendType::DIRECT2D ||
+      result->GetBackendType() == BackendType::DIRECT2D1_1) {
+    // Simplify the draw region to avoid hitting expensive drawing paths
+    // for complex regions.
+    drawPtr->SimplifyOutwardByArea(100 * 100);
   }
 
   if (aPaintState.mMode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
