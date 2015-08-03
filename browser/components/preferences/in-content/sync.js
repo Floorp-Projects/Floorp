@@ -18,9 +18,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "fxaMigrator",
 const PAGE_NO_ACCOUNT = 0;
 const PAGE_HAS_ACCOUNT = 1;
 const PAGE_NEEDS_UPDATE = 2;
-const PAGE_PLEASE_WAIT = 3;
-const FXA_PAGE_LOGGED_OUT = 4;
-const FXA_PAGE_LOGGED_IN = 5;
+const FXA_PAGE_LOGGED_OUT = 3;
+const FXA_PAGE_LOGGED_IN = 4;
 
 // Indexes into the "login status" deck.
 // We are in a successful verified state - everything should work!
@@ -68,7 +67,7 @@ let gSyncPane = {
 
     // it may take some time before we can determine what provider to use
     // and the state of that provider, so show the "please wait" page.
-    this.page = PAGE_PLEASE_WAIT;
+    this._showLoadPage(xps);
 
     let onUnload = function () {
       window.removeEventListener("unload", onUnload, false);
@@ -87,6 +86,30 @@ let gSyncPane = {
     window.addEventListener("unload", onUnload, false);
 
     xps.ensureLoaded();
+  },
+
+  _showLoadPage: function (xps) {
+    let username;
+    try {
+      username = Services.prefs.getCharPref("services.sync.username");
+    } catch (e) {}
+    if (!username) {
+      this.page = FXA_PAGE_LOGGED_OUT;
+    } else if (xps.fxAccountsEnabled) {
+      // Use cached values while we wait for the up-to-date values
+      let cachedComputerName;
+      try {
+        cachedComputerName = Services.prefs.getCharPref("services.sync.client.name");
+      }
+      catch (e) {
+        cachedComputerName = "";
+      }
+      document.getElementById("fxaEmailAddress1").textContent = username;
+      document.getElementById("fxaSyncComputerName").value = cachedComputerName;
+      this.page = FXA_PAGE_LOGGED_IN;
+    } else { // Old Sync
+      this.page = PAGE_HAS_ACCOUNT;
+    }
   },
 
   _init: function () {
@@ -307,7 +330,7 @@ let gSyncPane = {
       } catch (ex) {}
 
       // determine the fxa status...
-      this.page = PAGE_PLEASE_WAIT;
+      this._showLoadPage(service);
 
       fxAccounts.getSignedInUser().then(data => {
         if (!data) {
