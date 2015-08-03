@@ -568,14 +568,13 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
         // Instead, simply do the nsXPCWrappedJS part of
         // XPConvert::JSObject2NativeInterface() here to make sure we
         // get a new (or used) nsXPCWrappedJS.
-        nsXPCWrappedJS* wrapper;
-        nsresult rv = nsXPCWrappedJS::GetNewOrUsed(jsobj, aIID, &wrapper);
+        nsRefPtr<nsXPCWrappedJS> wrapper;
+        nsresult rv = nsXPCWrappedJS::GetNewOrUsed(jsobj, aIID, getter_AddRefs(wrapper));
         if (NS_SUCCEEDED(rv) && wrapper) {
             // We need to go through the QueryInterface logic to make
             // this return the right thing for the various 'special'
             // interfaces; e.g.  nsIPropertyBag.
             rv = wrapper->QueryInterface(aIID, aInstancePtr);
-            NS_RELEASE(wrapper);
             return rv;
         }
     }

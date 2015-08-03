@@ -58,20 +58,15 @@ JSValIsInterfaceOfType(JSContext* cx, HandleValue v, REFNSIID iid)
 
     nsCOMPtr<nsIXPConnectWrappedNative> wn;
     nsCOMPtr<nsISupports> sup;
-    nsISupports* iface;
+    nsCOMPtr<nsISupports> iface;
 
     if (v.isPrimitive())
         return false;
 
     nsXPConnect* xpc = nsXPConnect::XPConnect();
     RootedObject obj(cx, &v.toObject());
-    if (NS_SUCCEEDED(xpc->GetWrappedNativeOfJSObject(cx, obj, getter_AddRefs(wn))) && wn &&
-        NS_SUCCEEDED(wn->Native()->QueryInterface(iid, (void**)&iface)) && iface)
-    {
-        NS_RELEASE(iface);
-        return true;
-    }
-    return false;
+    return NS_SUCCEEDED(xpc->GetWrappedNativeOfJSObject(cx, obj, getter_AddRefs(wn))) && wn &&
+        NS_SUCCEEDED(wn->Native()->QueryInterface(iid, getter_AddRefs(iface))) && iface;
 }
 
 char*
