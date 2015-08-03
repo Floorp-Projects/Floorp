@@ -5,13 +5,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/SharedThreadPool.h"
-#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/ReentrantMonitor.h"
+#include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "nsDataHashtable.h"
 #include "nsXPCOMCIDInternal.h"
 #include "nsComponentManagerUtils.h"
+#include "nsIObserver.h"
+#include "nsIObserverService.h"
 #ifdef XP_WIN
 #include "ThreadPoolCOMListener.h"
 #endif
@@ -28,6 +30,28 @@ static StaticAutoPtr<nsDataHashtable<nsCStringHashKey, SharedThreadPool*>> sPool
 static already_AddRefed<nsIThreadPool>
 CreateThreadPool(const nsCString& aName);
 
+class SharedThreadPoolShutdownObserver : public nsIObserver
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+protected:
+  virtual ~SharedThreadPoolShutdownObserver() {}
+};
+
+NS_IMPL_ISUPPORTS(SharedThreadPoolShutdownObserver, nsIObserver, nsISupports)
+
+NS_IMETHODIMP
+SharedThreadPoolShutdownObserver::Observe(nsISupports* aSubject, const char *aTopic,
+                                          const char16_t *aData)
+{
+  MOZ_RELEASE_ASSERT(!strcmp(aTopic, "xpcom-shutdown-threads"));
+  SharedThreadPool::SpinUntilEmpty();
+  sMonitor = nullptr;
+  sPools = nullptr;
+  return NS_OK;
+}
+
 void
 SharedThreadPool::InitStatics()
 {
@@ -35,8 +59,9 @@ SharedThreadPool::InitStatics()
   MOZ_ASSERT(!sMonitor && !sPools);
   sMonitor = new ReentrantMonitor("SharedThreadPool");
   sPools = new nsDataHashtable<nsCStringHashKey, SharedThreadPool*>();
-  ClearOnShutdown(&sMonitor);
-  ClearOnShutdown(&sPools);
+  nsCOMPtr<nsIObserverService> obsService = mozilla::services::GetObserverService();
+  nsCOMPtr<nsIObserver> obs = new SharedThreadPoolShutdownObserver();
+  obsService->AddObserver(obs, "xpcom-shutdown-threads", false);
 }
 
 /* static */
