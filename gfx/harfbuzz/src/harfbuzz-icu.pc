@@ -1,0 +1,13 @@
+prefix=/usr/local
+exec_prefix=/usr/local
+libdir=/usr/local/lib
+includedir=/usr/local/include
+
+Name: harfbuzz
+Description: HarfBuzz text shaping library ICU integration
+Version: 1.0.1
+
+Requires: harfbuzz
+Requires.private: icu-uc
+Libs: -L${libdir} -lharfbuzz-icu
+Cflags: -I${includedir}/harfbuzz

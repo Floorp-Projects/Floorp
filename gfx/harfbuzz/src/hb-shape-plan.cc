@@ -106,7 +106,7 @@ hb_shape_plan_plan (hb_shape_plan_t    *shape_plan,
  *
  * Return value: (transfer full):
  *
- * Since: 1.0
+ * Since: 0.9.7
  **/
 hb_shape_plan_t *
 hb_shape_plan_create (hb_face_t                     *face,
@@ -158,7 +158,7 @@ hb_shape_plan_create (hb_face_t                     *face,
  *
  * Return value: (transfer full):
  *
- * Since: 1.0
+ * Since: 0.9.7
  **/
 hb_shape_plan_t *
 hb_shape_plan_get_empty (void)
@@ -194,7 +194,7 @@ hb_shape_plan_get_empty (void)
  *
  * Return value: (transfer full):
  *
- * Since: 1.0
+ * Since: 0.9.7
  **/
 hb_shape_plan_t *
 hb_shape_plan_reference (hb_shape_plan_t *shape_plan)
@@ -208,7 +208,7 @@ hb_shape_plan_reference (hb_shape_plan_t *shape_plan)
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.7
  **/
 void
 hb_shape_plan_destroy (hb_shape_plan_t *shape_plan)
@@ -236,7 +236,7 @@ hb_shape_plan_destroy (hb_shape_plan_t *shape_plan)
  *
  * Return value: 
  *
- * Since: 1.0
+ * Since: 0.9.7
  **/
 hb_bool_t
 hb_shape_plan_set_user_data (hb_shape_plan_t    *shape_plan,
@@ -257,7 +257,7 @@ hb_shape_plan_set_user_data (hb_shape_plan_t    *shape_plan,
  *
  * Return value: (transfer none):
  *
- * Since: 1.0
+ * Since: 0.9.7
  **/
 void *
 hb_shape_plan_get_user_data (hb_shape_plan_t    *shape_plan,
@@ -279,7 +279,7 @@ hb_shape_plan_get_user_data (hb_shape_plan_t    *shape_plan,
  *
  * Return value: 
  *
- * Since: 1.0
+ * Since: 0.9.7
  **/
 hb_bool_t
 hb_shape_plan_execute (hb_shape_plan_t    *shape_plan,
@@ -395,7 +395,7 @@ hb_non_global_user_features_present (const hb_feature_t *user_features,
  *
  * Return value: (transfer full):
  *
- * Since: 1.0
+ * Since: 0.9.7
  **/
 hb_shape_plan_t *
 hb_shape_plan_create_cached (hb_face_t                     *face,
@@ -486,7 +486,7 @@ retry:
  *
  * Return value: (transfer none):
  *
- * Since: 1.0
+ * Since: 0.9.7
  **/
 const char *
 hb_shape_plan_get_shaper (hb_shape_plan_t *shape_plan)

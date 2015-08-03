@@ -292,7 +292,7 @@ hb_font_funcs_set_glyph_contour_point_func (hb_font_funcs_t *ffuncs,
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 void
 hb_font_funcs_set_glyph_name_func (hb_font_funcs_t *ffuncs,
@@ -308,7 +308,7 @@ hb_font_funcs_set_glyph_name_func (hb_font_funcs_t *ffuncs,
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 void
 hb_font_funcs_set_glyph_from_name_func (hb_font_funcs_t *ffuncs,

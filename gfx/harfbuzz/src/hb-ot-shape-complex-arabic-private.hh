@@ -1,5 +1,6 @@
 /*
- * Copyright © 2012  Google, Inc.
+ * Copyright © 2015  Mozilla Foundation.
+ * Copyright © 2015  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -21,19 +22,29 @@
  * ON AN "AS IS" BASIS, AND THE COPYRIGHT HOLDER HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  *
+ * Mozilla Author(s): Jonathan Kew
  * Google Author(s): Behdad Esfahbod
  */
 
-#include "hb-atomic-private.hh"
-#include "hb-mutex-private.hh"
+#ifndef HB_OT_SHAPE_COMPLEX_ARABIC_PRIVATE_HH
+#define HB_OT_SHAPE_COMPLEX_ARABIC_PRIVATE_HH
+
+#include "hb-private.hh"
+
+#include "hb-ot-shape-complex-private.hh"
 
 
-#if defined(HB_ATOMIC_INT_NIL)
-#error "Could not find any system to define atomic_int macros, library WILL NOT be thread-safe"
-#error "Check hb-atomic-private.hh for possible resolutions."
-#endif
+struct arabic_shape_plan_t;
 
-#if defined(HB_MUTEX_IMPL_NIL)
-#error "Could not find any system to define mutex macros, library WILL NOT be thread-safe"
-#error "Check hb-mutex-private.hh for possible resolutions."
-#endif
+HB_INTERNAL void *
+data_create_arabic (const hb_ot_shape_plan_t *plan);
+
+HB_INTERNAL void
+data_destroy_arabic (void *data);
+
+HB_INTERNAL void
+setup_masks_arabic_plan (const arabic_shape_plan_t *arabic_plan,
+			 hb_buffer_t               *buffer,
+			 hb_script_t                script);
+
+#endif /* HB_OT_SHAPE_COMPLEX_ARABIC_PRIVATE_HH */
