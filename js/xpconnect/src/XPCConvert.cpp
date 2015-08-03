@@ -1281,7 +1281,7 @@ XPCConvert::NativeArray2JS(MutableHandleValue d, const void** s,
         for (i = 0; i < count; i++) {                                                   \
             if (!NativeData2JS(&current, ((_t*)*s)+i, type, iid, pErr) ||               \
                 !JS_DefineElement(cx, array, i, current, JSPROP_ENUMERATE))             \
-                goto failure;                                                           \
+                return false;                                                           \
         }                                                                               \
     PR_END_MACRO
 
@@ -1301,26 +1301,23 @@ XPCConvert::NativeArray2JS(MutableHandleValue d, const void** s,
     case nsXPTType::T_BOOL          : POPULATE(bool);           break;
     case nsXPTType::T_CHAR          : POPULATE(char);           break;
     case nsXPTType::T_WCHAR         : POPULATE(char16_t);       break;
-    case nsXPTType::T_VOID          : NS_ERROR("bad type");     goto failure;
+    case nsXPTType::T_VOID          : NS_ERROR("bad type");     return false;
     case nsXPTType::T_IID           : POPULATE(nsID*);          break;
-    case nsXPTType::T_DOMSTRING     : NS_ERROR("bad type");     goto failure;
+    case nsXPTType::T_DOMSTRING     : NS_ERROR("bad type");     return false;
     case nsXPTType::T_CHAR_STR      : POPULATE(char*);          break;
     case nsXPTType::T_WCHAR_STR     : POPULATE(char16_t*);      break;
     case nsXPTType::T_INTERFACE     : POPULATE(nsISupports*);   break;
     case nsXPTType::T_INTERFACE_IS  : POPULATE(nsISupports*);   break;
-    case nsXPTType::T_UTF8STRING    : NS_ERROR("bad type");     goto failure;
-    case nsXPTType::T_CSTRING       : NS_ERROR("bad type");     goto failure;
-    case nsXPTType::T_ASTRING       : NS_ERROR("bad type");     goto failure;
-    default                         : NS_ERROR("bad type");     goto failure;
+    case nsXPTType::T_UTF8STRING    : NS_ERROR("bad type");     return false;
+    case nsXPTType::T_CSTRING       : NS_ERROR("bad type");     return false;
+    case nsXPTType::T_ASTRING       : NS_ERROR("bad type");     return false;
+    default                         : NS_ERROR("bad type");     return false;
     }
 
     if (pErr)
         *pErr = NS_OK;
     d.setObject(*array);
     return true;
-
-failure:
-    return false;
 
 #undef POPULATE
 }
