@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>MSE: append initialization only</title>
+  <title>MSE: append initialization</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="mediasource.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
@@ -12,7 +12,7 @@
 
 SimpleTest.waitForExplicitFinish();
 
-// This test should be removed when we implement sequence mode in bug 1116353 
+// MSE supports setting mode now. make sure it does not throw.
 runWithMSE(function (ms, v) {
   ms.addEventListener("sourceopen", function () {
     var sb = ms.addSourceBuffer("video/webm");
@@ -21,8 +21,8 @@ runWithMSE(function (ms, v) {
     ok("true", "Setting to segments does not throw");
     try {
       sb.mode = "sequence";
-      ok(false, "Should have thrown");
-    } catch (e) { ok(/supported/.test(e), "Correctly threw not supported: " + e); }
+      ok("true", "Setting to sequence does not throw");
+    } catch (e) { ok(false, "Should not throw setting mode to sequence: " + e); }
 
     SimpleTest.finish();
   });
