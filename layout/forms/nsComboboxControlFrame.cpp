@@ -1221,6 +1221,14 @@ nsComboboxControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   mButtonContent->SetAttr(kNameSpaceID_None, nsGkAtoms::tabindex,
                           NS_LITERAL_STRING("-1"), false);
 
+  WritingMode wm = GetWritingMode();
+  if (wm.IsVertical()) {
+    mButtonContent->SetAttr(kNameSpaceID_None, nsGkAtoms::orientation,
+                            wm.IsVerticalRL() ? NS_LITERAL_STRING("left")
+                                              : NS_LITERAL_STRING("right"),
+                            false);
+  }
+
   if (!aElements.AppendElement(mButtonContent))
     return NS_ERROR_OUT_OF_MEMORY;
 
