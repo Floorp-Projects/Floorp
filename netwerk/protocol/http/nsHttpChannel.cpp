@@ -697,9 +697,6 @@ nsHttpChannel::SetupTransactionSchedulingContext()
     }
 
     nsCOMPtr<nsISchedulingContext> sc;
-    char scid[NSID_LENGTH];
-    mSchedulingContextID.ToProvidedString(scid);
-    fprintf(stderr, "NWGH: nsHttpChannel %p getting scheduling context %s\n", this, scid);
     nsresult rv = scsvc->GetSchedulingContext(mSchedulingContextID,
                                               getter_AddRefs(sc));
 
