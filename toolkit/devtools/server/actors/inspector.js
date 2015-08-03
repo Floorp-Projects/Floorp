@@ -113,7 +113,6 @@ const PSEUDO_SELECTORS = [
   ["::selection", 0]
 ];
 
-
 let HELPER_SHEET = ".__fx-devtools-hide-shortcut__ { visibility: hidden !important } ";
 HELPER_SHEET += ":-moz-devtools-highlighted { outline: 2px dashed #F06!important; outline-offset: -2px!important } ";
 
@@ -312,24 +311,20 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
       return 0;
     }
 
-    let numChildren = this.rawNode.childNodes.length;
+    let rawNode = this.rawNode;
+    let numChildren = rawNode.childNodes.length;
+    let hasAnonChildren = rawNode.nodeType === Ci.nsIDOMNode.ELEMENT_NODE &&
+                          rawNode.ownerDocument.getAnonymousNodes(rawNode);
+
     if (numChildren === 0 &&
-        (this.rawNode.contentDocument || this.rawNode.getSVGDocument)) {
+        (rawNode.contentDocument || rawNode.getSVGDocument)) {
       // This might be an iframe with virtual children.
       numChildren = 1;
     }
 
-    // Count any anonymous children
-    if (this.rawNode.nodeType === Ci.nsIDOMNode.ELEMENT_NODE) {
-      let anonChildren = this.rawNode.ownerDocument.getAnonymousNodes(this.rawNode);
-      if (anonChildren) {
-        numChildren += anonChildren.length;
-      }
-    }
-
-    // Normal counting misses ::before/::after, so we have to check to make sure
-    // we aren't missing anything
-    if (numChildren === 0) {
+    // Normal counting misses ::before/::after.  Also, some anonymous children
+    // may ultimately be skipped, so we have to consult with the walker.
+    if (numChildren === 0 || hasAnonChildren) {
       numChildren = this.walker.children(this).nodes.length;
     }
 
@@ -3861,9 +3856,11 @@ DocumentWalker.prototype = {
   }
 };
 
-function isXULElement(el) {
-  return el &&
-         el.namespaceURI === XUL_NS;
+function isInXULDocument(el) {
+  let doc = nodeDocument(el);
+  return doc &&
+         doc.documentElement &&
+         doc.documentElement.namespaceURI === XUL_NS;
 }
 
 /**
@@ -3872,24 +3869,26 @@ function isXULElement(el) {
  * in XUL document (needed to show all elements in the browser toolbox).
  */
 function standardTreeWalkerFilter(aNode) {
+  // ::before and ::after are native anonymous content, but we always
+  // want to show them
+  if (aNode.nodeName === "_moz_generated_content_before" ||
+      aNode.nodeName === "_moz_generated_content_after") {
+    return Ci.nsIDOMNodeFilter.FILTER_ACCEPT;
+  }
+
   // Ignore empty whitespace text nodes.
   if (aNode.nodeType == Ci.nsIDOMNode.TEXT_NODE &&
       !/[^\s]/.exec(aNode.nodeValue)) {
     return Ci.nsIDOMNodeFilter.FILTER_SKIP;
   }
 
-  // Ignore all native anonymous content (like internals for form
-  // controls).  Except for:
-  //   1) Anonymous content in a XUL document. This is needed for all
-  //      elements within the Browser Toolbox to properly show up.
-  //   2) ::before/::after - we do want this to show in the walker so
-  //      they can be inspected.
-  if (LayoutHelpers.isNativeAnonymous(aNode) &&
-      !isXULElement(aNode.parentNode) &&
-      (
-        aNode.nodeName !== "_moz_generated_content_before" &&
-        aNode.nodeName !== "_moz_generated_content_after")
-      ) {
+  // Ignore all native and XBL anonymous content inside a non-XUL document
+  if (!isInXULDocument(aNode) && (LayoutHelpers.isXBLAnonymous(aNode) ||
+                                  LayoutHelpers.isNativeAnonymous(aNode))) {
+    // Note: this will skip inspecting the contents of feedSubscribeLine since
+    // that's XUL content injected in an HTML document, but we need to because
+    // this also skips many other elements that need to be skipped - like form
+    // controls, scrollbars, video controls, etc (see bug 1187482).
     return Ci.nsIDOMNodeFilter.FILTER_SKIP;
   }
 

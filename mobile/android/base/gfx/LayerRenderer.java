@@ -71,7 +71,6 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
     private RenderContext mLastPageContext;
     private int mMaxTextureSize;
     private int mBackgroundColor;
-    private int mOverscrollColor;
 
     private long mLastFrameTime;
     private final CopyOnWriteArrayList<RenderTask> mTasks;
@@ -146,7 +145,6 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
 
     public LayerRenderer(LayerView view) {
         mView = view;
-        setOverscrollColor(R.color.toolbar_grey);
 
         final BitmapFactory.Options bitmapOptions = new BitmapFactory.Options();
         bitmapOptions.inScaled = false;
@@ -203,12 +201,6 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         checkMonitoringEnabled();
         createDefaultProgram();
         activateDefaultProgram();
-    }
-
-    void setOverscrollColor(int colorId) {
-        try {
-            mOverscrollColor = mView.getContext().getResources().getColor(colorId);
-        } catch (Resources.NotFoundException nfe) { mOverscrollColor = Color.BLACK; }
     }
 
     public void createDefaultProgram() {
@@ -462,28 +454,6 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
             mPageRect = RectUtils.round(pageRect);
         }
 
-        private void setScissorRect() {
-            Rect scissorRect = transformToScissorRect(mPageRect);
-            GLES20.glEnable(GLES20.GL_SCISSOR_TEST);
-            GLES20.glScissor(scissorRect.left, scissorRect.top,
-                             scissorRect.width(), scissorRect.height());
-        }
-
-        private Rect transformToScissorRect(Rect rect) {
-            IntSize screenSize = new IntSize(mFrameMetrics.getSize());
-
-            int left = Math.max(0, rect.left);
-            int top = Math.max(0, rect.top);
-            int right = Math.min(screenSize.width, rect.right);
-            int bottom = Math.min(screenSize.height, rect.bottom);
-
-            Rect scissorRect = new Rect(left, screenSize.height - bottom, right,
-                                        (screenSize.height - bottom) + (bottom - top));
-            scissorRect.offset(Math.round(-mRenderOffset.x), Math.round(-mRenderOffset.y));
-
-            return scissorRect;
-        }
-
         /** This function is invoked via JNI; be careful when modifying signature. */
         @JNITarget
         public void beginDrawing() {
@@ -550,16 +520,11 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
 
             GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
 
-            // Draw the overscroll background area as a solid color
-            clear(mOverscrollColor);
-
             // Update background color.
             mBackgroundColor = mView.getBackgroundColor();
 
             // Clear the page area to the page background colour.
-            setScissorRect();
             clear(mBackgroundColor);
-            GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
         }
 
         @JNITarget
@@ -690,10 +655,6 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         // thread, so this may need to be changed if any problems appear.
         if (msg == Tabs.TabEvents.SELECTED) {
             if (mView != null) {
-                final int overscrollColor =
-                        (tab.isPrivate() ? R.color.tabs_tray_grey_pressed : R.color.toolbar_grey);
-                setOverscrollColor(overscrollColor);
-
                 if (mView.getChildAt(0) != null) {
                     mView.getChildAt(0).setBackgroundColor(tab.getBackgroundColor());
                 }
