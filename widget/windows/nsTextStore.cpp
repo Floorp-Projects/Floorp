@@ -786,6 +786,10 @@ public:
 
   bool EnsureInitActiveTIPKeyboard();
 
+  /****************************************************************************
+   * Japanese TIP
+   ****************************************************************************/
+
   // Note that TIP name may depend on the language of the environment.
   // For example, some TIP may use localized name for its target language
   // environment but English name for the others.
@@ -803,6 +807,28 @@ public:
                             NS_LITERAL_STRING("ATOK "));
   }
 
+  /****************************************************************************
+   * Traditional Chinese TIP
+   ****************************************************************************/
+
+  bool IsMSChangJieActive() const
+  {
+    return mActiveTIPKeyboardDescription.EqualsLiteral("Microsoft ChangJie") ||
+      mActiveTIPKeyboardDescription.Equals(
+        NS_LITERAL_STRING("\x5FAE\x8F6F\x4ED3\x9889")) ||
+      mActiveTIPKeyboardDescription.Equals(
+        NS_LITERAL_STRING("\x5FAE\x8EDF\x5009\x9821"));
+  }
+
+  bool IsMSQuickQuickActive() const
+  {
+    return mActiveTIPKeyboardDescription.EqualsLiteral("Microsoft Quick") ||
+      mActiveTIPKeyboardDescription.Equals(
+        NS_LITERAL_STRING("\x5FAE\x8F6F\x901F\x6210")) ||
+      mActiveTIPKeyboardDescription.Equals(
+        NS_LITERAL_STRING("\x5FAE\x8EDF\x901F\x6210"));
+  }
+
   bool IsFreeChangJieActive() const
   {
     // FYI: The TIP name is misspelled...
@@ -815,6 +841,28 @@ public:
       mActiveTIPKeyboardDescription.Equals(
         NS_LITERAL_STRING(
           "\x4E2D\x6587 (\x7E41\x9AD4) - \x6613\x9821\x8F38\x5165\x6CD5"));
+  }
+
+  /****************************************************************************
+   * Simplified Chinese TIP
+   ****************************************************************************/
+
+  bool IsMSPinyinActive() const
+  {
+    return mActiveTIPKeyboardDescription.EqualsLiteral("Microsoft Pinyin") ||
+      mActiveTIPKeyboardDescription.Equals(
+        NS_LITERAL_STRING("\x5FAE\x8F6F\x62FC\x97F3")) ||
+      mActiveTIPKeyboardDescription.Equals(
+        NS_LITERAL_STRING("\x5FAE\x8EDF\x62FC\x97F3"));
+  }
+
+  bool IsMSWubiActive() const
+  {
+    return mActiveTIPKeyboardDescription.EqualsLiteral("Microsoft Wubi") ||
+      mActiveTIPKeyboardDescription.Equals(
+        NS_LITERAL_STRING("\x5FAE\x8F6F\x4E94\x7B14")) ||
+      mActiveTIPKeyboardDescription.Equals(
+        NS_LITERAL_STRING("\x5FAE\x8EDF\x4E94\x7B46"));
   }
 
 public: // ITfActiveLanguageProfileNotifySink
