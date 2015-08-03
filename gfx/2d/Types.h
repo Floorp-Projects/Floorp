@@ -37,6 +37,7 @@ enum class SurfaceFormat : int8_t {
   R5G6B5,
   A8,
   YUV,
+  NV12,
   UNKNOWN
 };
 
@@ -47,6 +48,7 @@ inline bool IsOpaque(SurfaceFormat aFormat)
   case SurfaceFormat::R8G8B8X8:
   case SurfaceFormat::R5G6B5:
   case SurfaceFormat::YUV:
+  case SurfaceFormat::NV12:
     return true;
   default:
     return false;
