@@ -10,7 +10,6 @@
 #include <stdlib.h>
 #include "BluetoothDaemonA2dpInterface.h"
 #include "BluetoothDaemonAvrcpInterface.h"
-#include "BluetoothDaemonConnector.h"
 #include "BluetoothDaemonGattInterface.h"
 #include "BluetoothDaemonHandsfreeInterface.h"
 #include "BluetoothDaemonHelpers.h"
@@ -18,6 +17,7 @@
 #include "BluetoothDaemonSocketInterface.h"
 #include "mozilla/ipc/DaemonRunnables.h"
 #include "mozilla/ipc/DaemonSocket.h"
+#include "mozilla/ipc/DaemonSocketConnector.h"
 #include "mozilla/ipc/ListenSocket.h"
 #include "mozilla/unused.h"
 #include "prrng.h"
@@ -1874,14 +1874,13 @@ BluetoothDaemonInterface::Init(
   // external programs to capture the socket name or connect before
   // the daemon can do so. If no random postfix can be generated, we
   // simply use the base name as-is.
-  nsresult rv = CreateRandomAddressString(NS_LITERAL_CSTRING(BASE_SOCKET_NAME),
-                                          POSTFIX_LENGTH,
-                                          mListenSocketName);
+  nsresult rv = DaemonSocketConnector::CreateRandomAddressString(
+    NS_LITERAL_CSTRING(BASE_SOCKET_NAME), POSTFIX_LENGTH, mListenSocketName);
   if (NS_FAILED(rv)) {
     mListenSocketName.AssignLiteral(BASE_SOCKET_NAME);
   }
 
-  rv = mListenSocket->Listen(new BluetoothDaemonConnector(mListenSocketName),
+  rv = mListenSocket->Listen(new DaemonSocketConnector(mListenSocketName),
                              mCmdChannel);
   if (NS_FAILED(rv)) {
     OnConnectError(CMD_CHANNEL);
