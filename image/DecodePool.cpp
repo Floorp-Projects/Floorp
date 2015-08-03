@@ -96,7 +96,6 @@ public:
   NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
-    mDecoder->Finish();
     mDecoder->GetImage()->FinalizeDecoder(mDecoder);
     return NS_OK;
   }
@@ -492,7 +491,6 @@ DecodePool::NotifyDecodeComplete(Decoder* aDecoder)
     return;
   }
 
-  aDecoder->Finish();
   aDecoder->GetImage()->FinalizeDecoder(aDecoder);
 }
 

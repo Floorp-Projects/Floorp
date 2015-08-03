@@ -671,10 +671,8 @@ opensl_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name
 static void
 opensl_stream_destroy(cubeb_stream * stm)
 {
-  if (stm->playerObj) {
-    (*stm->bufq)->Clear(stm->bufq);
+  if (stm->playerObj)
     (*stm->playerObj)->Destroy(stm->playerObj);
-  }
   int i;
   for (i = 0; i < NBUFS; i++) {
     free(stm->queuebuf[i]);

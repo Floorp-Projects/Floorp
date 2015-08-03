@@ -3237,9 +3237,15 @@ TabParent::RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
                                  const int32_t& aDragAreaX, const int32_t& aDragAreaY)
 {
   mInitialDataTransferItems.Clear();
-  nsPresContext* pc = mFrameElement->OwnerDoc()->GetShell()->GetPresContext();
-  EventStateManager* esm = pc->EventStateManager();
+  nsIPresShell* shell = mFrameElement->OwnerDoc()->GetShell();
+  if (!shell) {
+    if (Manager()->IsContentParent()) {
+      unused << Manager()->AsContentParent()->SendEndDragSession(true, true);
+    }
+    return true;
+  }
 
+  EventStateManager* esm = shell->GetPresContext()->EventStateManager();
   for (uint32_t i = 0; i < aTransfers.Length(); ++i) {
     auto& items = aTransfers[i].items();
     nsTArray<DataTransferItem>* itemArray = mInitialDataTransferItems.AppendElement();

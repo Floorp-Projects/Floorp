@@ -1354,12 +1354,13 @@ nsCocoaWindow::PerformFullscreenTransition(FullscreenTransitionStage aStage,
 void nsCocoaWindow::EnteredFullScreen(bool aFullScreen, bool aNativeMode)
 {
   mInFullScreenTransition = false;
+  bool wasInFullscreen = mInFullScreenMode;
   mInFullScreenMode = aFullScreen;
   if (aNativeMode || mInNativeFullScreenMode) {
     mInNativeFullScreenMode = aFullScreen;
   }
   DispatchSizeModeEvent();
-  if (mWidgetListener) {
+  if (mWidgetListener && wasInFullscreen != aFullScreen) {
     mWidgetListener->FullscreenChanged(aFullScreen);
   }
 }

@@ -26,6 +26,7 @@ MobileViewportManager::MobileViewportManager(nsIPresShell* aPresShell,
   : mDocument(aDocument)
   , mPresShell(aPresShell)
   , mIsFirstPaint(false)
+  , mPainted(false)
 {
   MOZ_ASSERT(mPresShell);
   MOZ_ASSERT(mDocument);
@@ -85,7 +86,7 @@ MobileViewportManager::HandleEvent(nsIDOMEvent* event)
 
   if (type.Equals(DOM_META_ADDED)) {
     MVM_LOG("%p: got a dom-meta-added event\n", this);
-    RefreshViewportSize(true);
+    RefreshViewportSize(mPainted);
   } else if (type.Equals(FULL_ZOOM_CHANGE)) {
     MVM_LOG("%p: got a full-zoom-change event\n", this);
     RefreshViewportSize(false);
@@ -99,6 +100,7 @@ MobileViewportManager::Observe(nsISupports* aSubject, const char* aTopic, const 
   if (SameCOMIdentity(aSubject, mDocument) && BEFORE_FIRST_PAINT.EqualsASCII(aTopic)) {
     MVM_LOG("%p: got a before-first-paint event\n", this);
     mIsFirstPaint = true;
+    mPainted = true;
     RefreshViewportSize(false);
   }
   return NS_OK;
@@ -149,8 +151,8 @@ MobileViewportManager::UpdateResolution(const nsViewportInfo& aViewportInfo,
   //
   // aDisplayWidthChangeRatio is non-empty if:
   // (a) The meta-viewport tag information changes, and so the CSS viewport
-  //     might change as a result. In this case, we want to adjust the zoom to
-  //     compensate. OR
+  //     might change as a result. If this happens after the content has been
+  //     painted, we want to adjust the zoom to compensate. OR
   // (b) The display size changed from a nonzero value to another nonzero value.
   //     This covers the case where e.g. the device was rotated, and again we
   //     want to adjust the zoom to compensate.

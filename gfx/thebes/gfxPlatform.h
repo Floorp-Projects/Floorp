@@ -49,6 +49,7 @@ class DataSourceSurface;
 class ScaledFont;
 class DrawEventRecorder;
 class VsyncSource;
+class DeviceInitData;
 
 inline uint32_t
 BackendTypeBit(BackendType b)
@@ -485,7 +486,8 @@ public:
     virtual bool CanUseHardwareVideoDecoding();
     static bool CanUseDirect3D11ANGLE();
 
-    // Returns whether or not layers acceleration should be used.
+    // Returns whether or not layers acceleration should be used. This should
+    // only be called on the parent process.
     bool ShouldUseLayersAcceleration();
 
     // Returns a prioritized list of all available compositor backends.
@@ -646,6 +648,10 @@ public:
     virtual void TestDeviceReset(DeviceResetReason aReason)
     {}
 
+    // Return information on how child processes should initialize graphics
+    // devices. Currently this is only used on Windows.
+    virtual void GetDeviceInitData(mozilla::gfx::DeviceInitData* aOut);
+
 protected:
     gfxPlatform();
     virtual ~gfxPlatform();
@@ -677,6 +683,17 @@ protected:
      */
     void InitBackendPrefs(uint32_t aCanvasBitmask, mozilla::gfx::BackendType aCanvasDefault,
                           uint32_t aContentBitmask, mozilla::gfx::BackendType aContentDefault);
+
+    /**
+     * If in a child process, triggers a refresh of device preferences.
+     */
+    void UpdateDeviceInitData();
+
+    /**
+     * Called when new device preferences are available.
+     */
+    virtual void SetDeviceInitData(mozilla::gfx::DeviceInitData& aData)
+    {}
 
     /**
      * returns the first backend named in the pref gfx.canvas.azure.backends

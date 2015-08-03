@@ -28,7 +28,7 @@ public:
   { }
 
   // Set the metadata this object represents on an image.
-  void SetOnImage(RasterImage* image);
+  nsresult SetOnImage(RasterImage* aImage);
 
   void SetHotspot(uint16_t hotspotx, uint16_t hotspoty)
   {

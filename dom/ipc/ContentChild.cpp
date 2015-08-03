@@ -193,6 +193,7 @@
 #include "mozilla/RemoteSpellCheckEngineChild.h"
 #include "GMPServiceChild.h"
 #include "gfxPlatform.h"
+#include "nscore.h" // for NS_FREE_PERMANENT_DATA
 
 using namespace mozilla;
 using namespace mozilla::docshell;
@@ -760,6 +761,14 @@ ContentChild::AppendProcessId(nsACString& aName)
     }
     unsigned pid = getpid();
     aName.Append(nsPrintfCString("(pid %u)", pid));
+}
+
+void
+ContentChild::InitGraphicsDeviceData()
+{
+    // Initialize the graphics platform. This may contact the parent process
+    // to read device preferences.
+    gfxPlatform::GetPlatform();
 }
 
 void
@@ -1897,7 +1906,7 @@ ContentChild::ActorDestroy(ActorDestroyReason why)
         QuickExit();
     }
 
-#if !defined(DEBUG) && !defined(MOZ_ASAN)
+#ifndef NS_FREE_PERMANENT_DATA
     // In release builds, there's no point in the content process
     // going through the full XPCOM shutdown path, because it doesn't
     // keep persistent state.

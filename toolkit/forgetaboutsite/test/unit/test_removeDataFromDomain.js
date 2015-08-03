@@ -462,6 +462,67 @@ function test_content_preferences_not_cleared_with_uri_contains_domain()
   do_check_false(yield preference_exists(TEST_URI));
 }
 
+// Push
+function test_push_cleared()
+{
+  let ps;
+  try {
+    ps = Cc["@mozilla.org/push/NotificationService;1"].
+           getService(Ci.nsIPushNotificationService);
+  } catch(e) {
+    // No push service, skip test.
+    return;
+  }
+
+  do_get_profile();
+  setPrefs();
+  const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
+  const userAgentID = 'bd744428-f125-436a-b6d0-dd0c9845837f';
+  const channelID = '0ef2ad4a-6c49-41ad-af6e-95d2425276bf';
+
+  let db = PushServiceWebSocket.newPushDB();
+  do_register_cleanup(() => {return db.drop().then(_ => db.close());});
+
+  PushService.init({
+    serverURI: "wss://push.example.org/",
+    networkInfo: new MockDesktopNetworkInfo(),
+    db,
+    makeWebSocket(uri) {
+      return new MockWebSocket(uri, {
+        onHello(request) {
+          this.serverSendMsg(JSON.stringify({
+            messageType: 'hello',
+            status: 200,
+            uaid: userAgentID,
+          }));
+        },
+      });
+    }
+  });
+
+  function push_registration_exists(aURL, ps)
+  {
+    return ps.registration(aURL, ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }))
+      .then(record => !!record)
+      .catch(_ => false);
+  }
+
+  const TEST_URL = "https://www.mozilla.org/scope/";
+  do_check_false(yield push_registration_exists(TEST_URL, ps));
+  yield db.put({
+    channelID,
+    pushEndpoint: 'https://example.org/update/clear-success',
+    scope: TEST_URL,
+    version: 1,
+    originAttributes: '',
+    quota: Infinity,
+  });
+  do_check_true(yield push_registration_exists(TEST_URL, ps));
+  ForgetAboutSite.removeDataFromDomain("mozilla.org");
+  yield waitForPurgeNotification();
+  do_check_false(yield push_registration_exists(TEST_URL, ps));
+}
+
 // Cache
 function test_cache_cleared()
 {
@@ -554,6 +615,9 @@ let tests = [
   test_content_preferences_cleared_with_direct_match,
   test_content_preferences_cleared_with_subdomain,
   test_content_preferences_not_cleared_with_uri_contains_domain,
+
+  // Push
+  test_push_cleared,
 
   // Storage
   test_storage_cleared,

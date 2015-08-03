@@ -10,8 +10,6 @@
 #include "DecodePool.h"
 #include "GeckoProfiler.h"
 #include "imgIContainer.h"
-#include "nsIConsoleService.h"
-#include "nsIScriptError.h"
 #include "nsProxyRelease.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
@@ -24,38 +22,41 @@ namespace mozilla {
 namespace image {
 
 Decoder::Decoder(RasterImage* aImage)
-  : mImage(aImage)
-  , mProgress(NoProgress)
-  , mImageData(nullptr)
+  : mImageData(nullptr)
+  , mImageDataLength(0)
   , mColormap(nullptr)
+  , mColormapSize(0)
+  , mImage(aImage)
+  , mProgress(NoProgress)
+  , mFrameCount(0)
+  , mFailCode(NS_OK)
   , mChunkCount(0)
   , mFlags(0)
   , mBytesDecoded(0)
+  , mInitialized(false)
+  , mMetadataDecode(false)
   , mSendPartialInvalidations(false)
+  , mImageIsTransient(false)
+  , mImageIsLocked(false)
+  , mFirstFrameDecode(false)
+  , mInFrame(false)
+  , mIsAnimated(false)
   , mDataDone(false)
   , mDecodeDone(false)
   , mDataError(false)
   , mDecodeAborted(false)
   , mShouldReportError(false)
-  , mImageIsTransient(false)
-  , mImageIsLocked(false)
-  , mFrameCount(0)
-  , mFailCode(NS_OK)
-  , mInitialized(false)
-  , mMetadataDecode(false)
-  , mInFrame(false)
-  , mIsAnimated(false)
 { }
 
 Decoder::~Decoder()
 {
-  MOZ_ASSERT(mProgress == NoProgress,
+  MOZ_ASSERT(mProgress == NoProgress || !mImage,
              "Destroying Decoder without taking all its progress changes");
-  MOZ_ASSERT(mInvalidRect.IsEmpty(),
+  MOZ_ASSERT(mInvalidRect.IsEmpty() || !mImage,
              "Destroying Decoder without taking all its invalidations");
   mInitialized = false;
 
-  if (!NS_IsMainThread()) {
+  if (mImage && !NS_IsMainThread()) {
     // Dispatch mImage to main thread to prevent it from being destructed by the
     // decode thread.
     nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
@@ -80,6 +81,11 @@ Decoder::Init()
 {
   // No re-initializing
   MOZ_ASSERT(!mInitialized, "Can't re-initialize a decoder!");
+
+  // It doesn't make sense to decode anything but the first frame if we can't
+  // store anything in the SurfaceCache, since only the last frame we decode
+  // will be retrievable.
+  MOZ_ASSERT(ShouldUseSurfaceCache() || IsFirstFrameDecode());
 
   // Implementation-specific initialization
   InitInternal();
@@ -224,50 +230,6 @@ Decoder::CompleteDecode()
       mProgress |= FLAG_HAS_ERROR;
     }
   }
-}
-
-void
-Decoder::Finish()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  MOZ_ASSERT(HasError() || !mInFrame, "Finishing while we're still in a frame");
-
-  // If we detected an error in CompleteDecode(), log it to the error console.
-  if (mShouldReportError && !WasAborted()) {
-    nsCOMPtr<nsIConsoleService> consoleService =
-      do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-    nsCOMPtr<nsIScriptError> errorObject =
-      do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
-
-    if (consoleService && errorObject && !HasDecoderError()) {
-      nsAutoString msg(NS_LITERAL_STRING("Image corrupt or truncated."));
-      nsAutoString src;
-      if (mImage->GetURI()) {
-        nsCString uri;
-        if (mImage->GetURI()->GetSpecTruncatedTo1k(uri) == ImageURL::TruncatedTo1k) {
-          msg += NS_LITERAL_STRING(" URI in this note truncated due to length.");
-        }
-        src = NS_ConvertUTF8toUTF16(uri);
-      }
-      if (NS_SUCCEEDED(errorObject->InitWithWindowID(
-                         msg,
-                         src,
-                         EmptyString(), 0, 0, nsIScriptError::errorFlag,
-                         "Image", mImage->InnerWindowID()
-                       ))) {
-        consoleService->LogMessage(errorObject);
-      }
-    }
-  }
-
-  // Set image metadata before calling DecodingComplete, because
-  // DecodingComplete calls Optimize().
-  mImageMetadata.SetOnImage(mImage);
-
-  if (HasSize()) {
-    SetSizeOnImage();
-  }
 
   if (mDecodeDone && !IsMetadataDecode()) {
     MOZ_ASSERT(HasError() || mCurrentFrame, "Should have an error or a frame");
@@ -278,8 +240,6 @@ Decoder::Finish()
     if (!mIsAnimated && !mImageIsTransient && mCurrentFrame) {
       mCurrentFrame->SetOptimizable();
     }
-
-    mImage->OnDecodingComplete(mIsAnimated);
   }
 }
 
@@ -334,7 +294,8 @@ Decoder::AllocateFrameInternal(uint32_t aFrameNum,
   }
 
   const uint32_t bytesPerPixel = aPaletteDepth == 0 ? 4 : 1;
-  if (!SurfaceCache::CanHold(aFrameRect.Size(), bytesPerPixel)) {
+  if (ShouldUseSurfaceCache() &&
+      !SurfaceCache::CanHold(aFrameRect.Size(), bytesPerPixel)) {
     NS_WARNING("Trying to add frame that's too large for the SurfaceCache");
     return RawAccessFrameRef();
   }
@@ -354,24 +315,26 @@ Decoder::AllocateFrameInternal(uint32_t aFrameNum,
     return RawAccessFrameRef();
   }
 
-  InsertOutcome outcome =
-    SurfaceCache::Insert(frame, ImageKey(mImage.get()),
-                         RasterSurfaceKey(aTargetSize,
-                                          aDecodeFlags,
-                                          aFrameNum),
-                         Lifetime::Persistent);
-  if (outcome == InsertOutcome::FAILURE) {
-    // We couldn't insert the surface, almost certainly due to low memory. We
-    // treat this as a permanent error to help the system recover; otherwise, we
-    // might just end up attempting to decode this image again immediately.
-    ref->Abort();
-    return RawAccessFrameRef();
-  } else if (outcome == InsertOutcome::FAILURE_ALREADY_PRESENT) {
-    // Another decoder beat us to decoding this frame. We abort this decoder
-    // rather than treat this as a real error.
-    mDecodeAborted = true;
-    ref->Abort();
-    return RawAccessFrameRef();
+  if (ShouldUseSurfaceCache()) {
+    InsertOutcome outcome =
+      SurfaceCache::Insert(frame, ImageKey(mImage.get()),
+                           RasterSurfaceKey(aTargetSize,
+                                            aDecodeFlags,
+                                            aFrameNum),
+                           Lifetime::Persistent);
+    if (outcome == InsertOutcome::FAILURE) {
+      // We couldn't insert the surface, almost certainly due to low memory. We
+      // treat this as a permanent error to help the system recover; otherwise,
+      // we might just end up attempting to decode this image again immediately.
+      ref->Abort();
+      return RawAccessFrameRef();
+    } else if (outcome == InsertOutcome::FAILURE_ALREADY_PRESENT) {
+      // Another decoder beat us to decoding this frame. We abort this decoder
+      // rather than treat this as a real error.
+      mDecodeAborted = true;
+      ref->Abort();
+      return RawAccessFrameRef();
+    }
   }
 
   nsIntRect refreshArea;
@@ -400,23 +363,12 @@ Decoder::AllocateFrameInternal(uint32_t aFrameNum,
   }
 
   mFrameCount++;
-  mImage->OnAddedFrame(mFrameCount, refreshArea);
+
+  if (mImage) {
+    mImage->OnAddedFrame(mFrameCount, refreshArea);
+  }
 
   return ref;
-}
-
-void
-Decoder::SetSizeOnImage()
-{
-  MOZ_ASSERT(mImageMetadata.HasSize(), "Should have size");
-  MOZ_ASSERT(mImageMetadata.HasOrientation(), "Should have orientation");
-
-  nsresult rv = mImage->SetSize(mImageMetadata.GetWidth(),
-                                mImageMetadata.GetHeight(),
-                                mImageMetadata.GetOrientation());
-  if (NS_FAILED(rv)) {
-    PostResizeError();
-  }
 }
 
 /*
