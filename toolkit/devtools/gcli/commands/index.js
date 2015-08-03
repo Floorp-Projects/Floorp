@@ -54,25 +54,25 @@ exports.baseModules = [
  * modules that are *not* owned by a tool.
  */
 exports.devtoolsModules = [
-  "gcli/commands/addon",
-  "gcli/commands/appcache",
-  "gcli/commands/calllog",
-  "gcli/commands/cmd",
-  "gcli/commands/cookie",
-  "gcli/commands/csscoverage",
-  "gcli/commands/folder",
-  "gcli/commands/highlight",
-  "gcli/commands/inject",
-  "gcli/commands/jsb",
-  "gcli/commands/listen",
-  "gcli/commands/media",
-  "gcli/commands/pagemod",
-  "gcli/commands/paintflashing",
-  "gcli/commands/restart",
-  "gcli/commands/rulers",
-  "gcli/commands/screenshot",
-  "gcli/commands/security",
-  "gcli/commands/tools",
+  "devtools/toolkit/gcli/commands/addon",
+  "devtools/toolkit/gcli/commands/appcache",
+  "devtools/toolkit/gcli/commands/calllog",
+  "devtools/toolkit/gcli/commands/cmd",
+  "devtools/toolkit/gcli/commands/cookie",
+  "devtools/toolkit/gcli/commands/csscoverage",
+  "devtools/toolkit/gcli/commands/folder",
+  "devtools/toolkit/gcli/commands/highlight",
+  "devtools/toolkit/gcli/commands/inject",
+  "devtools/toolkit/gcli/commands/jsb",
+  "devtools/toolkit/gcli/commands/listen",
+  "devtools/toolkit/gcli/commands/media",
+  "devtools/toolkit/gcli/commands/pagemod",
+  "devtools/toolkit/gcli/commands/paintflashing",
+  "devtools/toolkit/gcli/commands/restart",
+  "devtools/toolkit/gcli/commands/rulers",
+  "devtools/toolkit/gcli/commands/screenshot",
+  "devtools/toolkit/gcli/commands/security",
+  "devtools/toolkit/gcli/commands/tools",
 ];
 
 /**
@@ -111,7 +111,7 @@ exports.addAllItemsByModule = function(system) {
   system.addItemsByModule(exports.devtoolsToolModules, { delayedLoad: true });
   system.addItemsByModule(exports.devtoolsButtonModules, { delayedLoad: true });
 
-  const { mozDirLoader } = require("gcli/commands/cmd");
+  const { mozDirLoader } = require("devtools/toolkit/gcli/commands/cmd");
   system.addItemsByModule("mozcmd", { delayedLoad: true, loader: mozDirLoader });
 };
 

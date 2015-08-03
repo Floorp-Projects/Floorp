@@ -5,20 +5,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_bluetooth_bluedroid_bluetoothdaemonconnector_h
-#define mozilla_dom_bluetooth_bluedroid_bluetoothdaemonconnector_h
+#ifndef mozilla_ipc_DaemonSocketConnector_h
+#define mozilla_ipc_DaemonSocketConnector_h
 
-#include "mozilla/dom/bluetooth/BluetoothCommon.h"
 #include "mozilla/ipc/UnixSocketConnector.h"
+#include "nsString.h"
 
-BEGIN_BLUETOOTH_NAMESPACE
+namespace mozilla {
+namespace ipc {
 
-class BluetoothDaemonConnector final
-  : public mozilla::ipc::UnixSocketConnector
+class DaemonSocketConnector final : public UnixSocketConnector
 {
 public:
-  BluetoothDaemonConnector(const nsACString& aSocketName);
-  ~BluetoothDaemonConnector();
+  static nsresult CreateRandomAddressString(const nsACString& aPrefix,
+                                            unsigned long aPostfixLength,
+                                            nsACString& aAddress);
+
+  DaemonSocketConnector(const nsACString& aSocketName);
+  ~DaemonSocketConnector();
 
   // Methods for |UnixSocketConnector|
   //
@@ -51,6 +55,7 @@ private:
   nsCString mSocketName;
 };
 
-END_BLUETOOTH_NAMESPACE
+} // namespace ipc
+} // namespace mozilla
 
-#endif
+#endif // mozilla_ipc_DaemonSocketConnector_h

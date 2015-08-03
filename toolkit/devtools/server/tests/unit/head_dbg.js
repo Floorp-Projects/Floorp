@@ -318,6 +318,7 @@ function startTestDebuggerServer(title, server = DebuggerServer) {
 function finishClient(aClient)
 {
   aClient.close(function() {
+    DebuggerServer.destroy();
     do_test_finished();
   });
 }
