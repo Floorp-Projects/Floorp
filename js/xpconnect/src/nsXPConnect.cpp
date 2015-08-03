@@ -860,33 +860,30 @@ nsXPConnect::DebugDumpObject(nsISupports* p, int16_t depth)
         return NS_OK;
     }
 
-    nsIXPConnect* xpc;
-    nsIXPCWrappedJSClass* wjsc;
-    nsIXPConnectWrappedNative* wn;
-    nsIXPConnectWrappedJS* wjs;
+    nsCOMPtr<nsIXPConnect> xpc;
+    nsCOMPtr<nsIXPCWrappedJSClass> wjsc;
+    nsCOMPtr<nsIXPConnectWrappedNative> wn;
+    nsCOMPtr<nsIXPConnectWrappedJS> wjs;
 
     if (NS_SUCCEEDED(p->QueryInterface(NS_GET_IID(nsIXPConnect),
-                                       (void**)&xpc))) {
+                                       getter_AddRefs(xpc)))) {
         XPC_LOG_ALWAYS(("Dumping a nsIXPConnect..."));
         xpc->DebugDump(depth);
-        NS_RELEASE(xpc);
     } else if (NS_SUCCEEDED(p->QueryInterface(NS_GET_IID(nsIXPCWrappedJSClass),
-                                              (void**)&wjsc))) {
+                                              getter_AddRefs(wjsc)))) {
         XPC_LOG_ALWAYS(("Dumping a nsIXPCWrappedJSClass..."));
         wjsc->DebugDump(depth);
-        NS_RELEASE(wjsc);
     } else if (NS_SUCCEEDED(p->QueryInterface(NS_GET_IID(nsIXPConnectWrappedNative),
-                                              (void**)&wn))) {
+                                              getter_AddRefs(wn)))) {
         XPC_LOG_ALWAYS(("Dumping a nsIXPConnectWrappedNative..."));
         wn->DebugDump(depth);
-        NS_RELEASE(wn);
     } else if (NS_SUCCEEDED(p->QueryInterface(NS_GET_IID(nsIXPConnectWrappedJS),
-                                              (void**)&wjs))) {
+                                              getter_AddRefs(wjs)))) {
         XPC_LOG_ALWAYS(("Dumping a nsIXPConnectWrappedJS..."));
         wjs->DebugDump(depth);
-        NS_RELEASE(wjs);
-    } else
+    } else {
         XPC_LOG_ALWAYS(("*** Could not dump the nsISupports @ %x", p));
+    }
 #endif
     return NS_OK;
 }
