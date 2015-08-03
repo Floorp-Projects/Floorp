@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="e862ab9177af664f00b4522e2350f4cb13866d73">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="2ca27bbdd84526c6a3b198d9cf10f2caff1dadde"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="8dba2077f5e7137253fbb3faf10cd0b5f7da25c2"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="9f45c1988fe72749f0659409e6e3320fabf7b79a"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
@@ -38,7 +38,7 @@
   <project name="platform/bootable/recovery" path="bootable/recovery" revision="286354e69491f7cba5b9ec6b551831fe6f85ad0d"/>
   <project name="platform/external/aac" path="external/aac" revision="fa3eba16446cc8f2f5e2dfc20d86a49dbd37299e"/>
   <project name="platform/external/bison" path="external/bison" revision="c2418b886165add7f5a31fc5609f0ce2d004a90e"/>
-  <project name="platform/external/bluetooth/bluedroid" path="external/bluetooth/bluedroid" revision="d6cfe067653ee2625827b08b3e8b3662c51f575b"/>
+  <project name="platform/external/bluetooth/bluedroid" path="external/bluetooth/bluedroid" revision="c93b7fd610b050178fade814ea88f00a682ff8b4"/>
   <project name="platform/external/bsdiff" path="external/bsdiff" revision="23e322ab19fb7d74c2c37e40ce364d9f709bdcee"/>
   <project name="platform/external/bzip2" path="external/bzip2" revision="1cb636bd8e9e5cdfd5d5b2909a122f6e80db62de"/>
   <project name="platform/external/checkpolicy" path="external/checkpolicy" revision="0d73ef7049feee794f14cf1af88d05dae8139914"/>
@@ -105,7 +105,7 @@
   <project name="platform/frameworks/native" path="frameworks/native" revision="8d54940d9bdad8fec3208ff58ddab590be9fe0d4"/>
   <project name="platform/frameworks/opt/emoji" path="frameworks/opt/emoji" revision="dbbe673145107e99883f62bafd70c5f43f11065c"/>
   <project name="platform/frameworks/wilhelm" path="frameworks/wilhelm" revision="aac6c4bb59a6577c97cbda68699829b507b7490d"/>
-  <project name="platform/hardware/libhardware" path="hardware/libhardware" revision="264e408d639c94a922965e3cbee5b1819674992b"/>
+  <project name="platform/hardware/libhardware" path="hardware/libhardware" revision="61e39189aee90fbd49b4ef6fc2102d48e9279209"/>
   <project name="platform/hardware/libhardware_legacy" path="hardware/libhardware_legacy" revision="68b0c269fd1889f47ecfb9119c05281e9b6db0af"/>
   <project name="platform/libcore" path="libcore" revision="e195beab082c09217318fc19250caeaf4c1bd800"/>
   <project name="platform/libnativehelper" path="libnativehelper" revision="feeb36c2bd4adfe285f98f5de92e0f3771b2c115"/>

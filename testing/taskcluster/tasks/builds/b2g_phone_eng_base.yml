@@ -9,11 +9,9 @@ task:
       VARIANT: eng
       GAIA_OPTIMIZE: '1'
       B2G_SYSTEM_APPS: '1'
-      MOZILLA_OFFICIAL: '1'
       MOZ_TELEMETRY_REPORTING: '1'
       MOZ_CRASHREPORTER_NO_REPORT: '1'
       GAIA_KEYBOARD_LAYOUTS: 'en,pt-BR,es,de,fr,pl,zh-Hans-Pinyin,zh-Hant-Zhuyin,en-Dvorak'
-      B2G_UPDATER: '1'
       B2G_UPDATE_CHANNEL: 'default'
     command:
       - >
