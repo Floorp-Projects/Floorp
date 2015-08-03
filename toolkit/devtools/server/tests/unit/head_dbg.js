@@ -330,6 +330,7 @@ function initTestTracerServer(aServer = DebuggerServer)
 function finishClient(aClient)
 {
   aClient.close(function() {
+    DebuggerServer.destroy();
     do_test_finished();
   });
 }
