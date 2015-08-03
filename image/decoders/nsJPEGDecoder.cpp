@@ -84,6 +84,7 @@ nsJPEGDecoder::nsJPEGDecoder(RasterImage* aImage,
                              Decoder::DecodeStyle aDecodeStyle)
  : Decoder(aImage)
  , mDecodeStyle(aDecodeStyle)
+ , mSampleSize(0)
 {
   mState = JPEG_HEADER;
   mReading = true;
@@ -248,10 +249,10 @@ nsJPEGDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
         return; // I/O suspension
       }
 
-      int sampleSize = mImage->GetRequestedSampleSize();
-      if (sampleSize > 0) {
+      // If we have a sample size specified for -moz-sample-size, use it.
+      if (mSampleSize > 0) {
         mInfo.scale_num = 1;
-        mInfo.scale_denom = sampleSize;
+        mInfo.scale_denom = mSampleSize;
       }
 
       // Used to set up image size so arrays can be allocated

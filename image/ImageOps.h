@@ -12,8 +12,14 @@
 
 class gfxDrawable;
 class imgIContainer;
+class nsIInputStream;
 
 namespace mozilla {
+
+namespace gfx {
+class SourceSurface;
+}
+
 namespace image {
 
 class Image;
@@ -60,6 +66,23 @@ public:
    */
   static already_AddRefed<imgIContainer>
   CreateFromDrawable(gfxDrawable* aDrawable);
+
+  /**
+   * Decodes an image from an nsIInputStream directly into a SourceSurface,
+   * without ever creating an Image or imgIContainer (which are mostly
+   * main-thread-only). That means that this function may be called
+   * off-main-thread.
+   *
+   * @param aInputStream An input stream containing an encoded image.
+   * @param aMimeType The MIME type of the image.
+   * @param aFlags Flags of the imgIContainer::FLAG_DECODE_* variety.
+   * @return A SourceSurface containing the first frame of the image at its
+   *         intrinsic size, or nullptr if the image cannot be decoded.
+   */
+  static already_AddRefed<gfx::SourceSurface>
+  DecodeToSurface(nsIInputStream* aInputStream,
+                  const nsACString& aMimeType,
+                  uint32_t aFlags);
 
 private:
   // This is a static utility class, so disallow instantiation.

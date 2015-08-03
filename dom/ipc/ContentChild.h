@@ -76,6 +76,7 @@ public:
               IPC::Channel* aChannel);
     void InitProcessAttributes();
     void InitXPCOM();
+    void InitGraphicsDeviceData();
 
     static ContentChild* GetSingleton() {
         return sSingleton;

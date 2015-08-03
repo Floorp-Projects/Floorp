@@ -200,6 +200,7 @@ treecol {
 #doNotTrackInfo,
 #trackingProtectionPBMLearnMore,
 #trackingProtectionLearnMore {
+  -moz-margin-start: 1.5em !important;
   margin-top: 0;
 }
 

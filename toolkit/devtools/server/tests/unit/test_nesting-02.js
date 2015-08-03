@@ -14,7 +14,8 @@ function run_test() {
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect(function () {
     attachTestTabAndResume(gClient, "test-nesting", function (aResponse, aTabClient, aThreadClient) {
-      // Reach over the protocol connection and get a reference to the thread actor.
+      // Reach over the protocol connection and get a reference to the thread
+      // actor.
       gThreadActor = aThreadClient._transport._serverConnection.getActor(aThreadClient._actor);
 
       test_nesting();
@@ -28,10 +29,10 @@ function test_nesting() {
   const { resolve, reject, promise: p } = promise.defer();
 
   // The following things should happen (in order):
-  // 1. In the new event loop (created by synchronize)
+  // 1. In the new event loop (created by unsafeSynchronize)
   // 2. Resolve the promise (shouldn't exit any event loops)
-  // 3. Exit the event loop (should also then exit synchronize's event loop)
-  // 4. Be after the synchronize call
+  // 3. Exit the event loop (should also then exit unsafeSynchronize's event loop)
+  // 4. Be after the unsafeSynchronize call
   let currentStep = 0;
 
   executeSoon(function () {
@@ -40,14 +41,15 @@ function test_nesting() {
     executeSoon(function () {
       // Should be at step 2
       do_check_eq(++currentStep, 2);
-      // Before resolving, should have the synchronize event loop and the one just created.
+      // Before resolving, should have the unsafeSynchronize event loop and the
+      // one just created.
       do_check_eq(thread._nestedEventLoops.size, 2);
 
       executeSoon(function () {
         // Should be at step 3
         do_check_eq(++currentStep, 3);
         // Before exiting the manually created event loop, should have the
-        // synchronize event loop and the manual event loop.
+        // unsafeSynchronize event loop and the manual event loop.
         do_check_eq(thread._nestedEventLoops.size, 2);
         // Should have the event loop
         do_check_true(!!eventLoop);
@@ -55,19 +57,20 @@ function test_nesting() {
       });
 
       resolve(true);
-      // Shouldn't exit any event loops because a new one started since the call to synchronize
+      // Shouldn't exit any event loops because a new one started since the call
+      // to unsafeSynchronize
       do_check_eq(thread._nestedEventLoops.size, 2);
     });
 
     // Should be at step 1
     do_check_eq(++currentStep, 1);
-    // Should have only the synchronize event loop
+    // Should have only the unsafeSynchronize event loop
     do_check_eq(thread._nestedEventLoops.size, 1);
     eventLoop = thread._nestedEventLoops.push();
     eventLoop.enter();
   });
 
-  do_check_eq(thread.synchronize(p), true);
+  do_check_eq(thread.unsafeSynchronize(p), true);
 
   // Should be on the fourth step
   do_check_eq(++currentStep, 4);

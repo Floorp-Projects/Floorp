@@ -101,20 +101,27 @@
   list-style-image: url("chrome://browser/skin/tabbrowser/crashed.svg");
 }
 
-.tab-icon-overlay[soundplaying][pinned] {
+.tab-icon-overlay[soundplaying][pinned],
+.tab-icon-overlay[muted][pinned] {
   display: -moz-box;
-  list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio-small.svg#tab-audio");
   border-radius: 8px;
+}
+
+.tab-icon-overlay[soundplaying][pinned]:hover,
+.tab-icon-overlay[muted][pinned]:hover {
+  background-color: white;
+}
+
+.tab-icon-overlay[soundplaying][pinned] {
+  list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio-small.svg#tab-audio");
 }
 
 .tab-icon-overlay[soundplaying][pinned]:hover {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio-small.svg#tab-audio-hover");
-  background-color: white;
 }
 
 .tab-icon-overlay[soundplaying][pinned]:hover:active {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio-small.svg#tab-audio-pressed");
-  background-color: white;
 }
 
 .tab-icon-overlay[muted][pinned] {
@@ -179,7 +186,7 @@
   padding: 0;
 }
 
-.tab-icon-sound:not([soundplaying]),
+.tab-icon-sound:not([soundplaying]):not([muted]),
 .tab-icon-sound[pinned] {
   display: none;
 }
@@ -414,6 +421,7 @@
 .tab-background-middle,
 .tabs-newtab-button,
 .tab-icon-overlay[soundplaying],
+.tab-icon-overlay[muted],
 .tab-icon-sound,
 .tab-close-button {
   pointer-events: auto;

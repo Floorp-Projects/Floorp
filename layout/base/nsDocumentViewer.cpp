@@ -17,7 +17,6 @@
 #include "nsIDocumentViewerPrint.h"
 #include "nsIDOMBeforeUnloadEvent.h"
 #include "nsIDocument.h"
-#include "nsIDOMWindowUtils.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsStyleSet.h"
@@ -69,6 +68,7 @@
 #include "nsIClipboardHelper.h"
 
 #include "nsPIDOMWindow.h"
+#include "nsGlobalWindow.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsPIWindowRoot.h"
 #include "nsJSEnvironment.h"
@@ -1115,23 +1115,23 @@ nsDocumentViewer::PermitUnloadInternal(bool aCallerClosesWindow,
   // onbeforeunload event, don't let that happen. (see also bug#331040)
   nsRefPtr<nsDocumentViewer> kungFuDeathGrip(this);
 
+  bool dialogsAreEnabled = false;
   {
     // Never permit popups from the beforeunload handler, no matter
     // how we get here.
     nsAutoPopupStatePusher popupStatePusher(openAbused, true);
 
     // Never permit dialogs from the beforeunload handler
-    nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(window);
-    bool dialogsWereEnabled = false;
-    utils->AreDialogsEnabled(&dialogsWereEnabled);
-    utils->DisableDialogs();
+    nsGlobalWindow *globalWindow = static_cast<nsGlobalWindow*>(window);
+    dialogsAreEnabled = globalWindow->AreDialogsEnabled();
+    globalWindow->DisableDialogs();
 
     mInPermitUnload = true;
     EventDispatcher::DispatchDOMEvent(window, nullptr, event, mPresContext,
                                       nullptr);
     mInPermitUnload = false;
-    if (dialogsWereEnabled) {
-      utils->EnableDialogs();
+    if (dialogsAreEnabled) {
+      globalWindow->EnableDialogs();
     }
   }
 
@@ -1139,7 +1139,7 @@ nsDocumentViewer::PermitUnloadInternal(bool aCallerClosesWindow,
   nsAutoString text;
   beforeUnload->GetReturnValue(text);
 
-  if (!sIsBeforeUnloadDisabled && *aShouldPrompt &&
+  if (!sIsBeforeUnloadDisabled && *aShouldPrompt && dialogsAreEnabled &&
       (event->GetInternalNSEvent()->mFlags.mDefaultPrevented ||
        !text.IsEmpty())) {
     // Ask the user if it's ok to unload the current page

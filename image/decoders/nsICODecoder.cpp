@@ -266,9 +266,10 @@ nsICODecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
   }
 
   uint16_t colorDepth = 0;
-  nsIntSize prefSize = mImage->GetRequestedResolution();
-  if (prefSize.width == 0 && prefSize.height == 0) {
-    prefSize.SizeTo(PREFICONSIZE, PREFICONSIZE);
+
+  // If we didn't get a #-moz-resolution, default to PREFICONSIZE.
+  if (mResolution.width == 0 && mResolution.height == 0) {
+    mResolution.SizeTo(PREFICONSIZE, PREFICONSIZE);
   }
 
   // A measure of the difference in size between the entry we've found
@@ -306,8 +307,8 @@ nsICODecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
       // Calculate the delta between this image's size and the desired size,
       // so we can see if it is better than our current-best option.
       // In the case of several equally-good images, we use the last one.
-      int32_t delta = (e.mWidth == 0 ? 256 : e.mWidth) - prefSize.width +
-                      (e.mHeight == 0 ? 256 : e.mHeight) - prefSize.height;
+      int32_t delta = (e.mWidth == 0 ? 256 : e.mWidth) - mResolution.width +
+                      (e.mHeight == 0 ? 256 : e.mHeight) - mResolution.height;
       if (e.mBitCount >= colorDepth &&
           ((diff < 0 && delta >= diff) || (delta >= 0 && delta <= diff))) {
         diff = delta;
@@ -360,6 +361,9 @@ nsICODecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
       mContainedDecoder = new nsPNGDecoder(mImage);
       mContainedDecoder->SetMetadataDecode(IsMetadataDecode());
       mContainedDecoder->SetSendPartialInvalidations(mSendPartialInvalidations);
+      if (mFirstFrameDecode) {
+        mContainedDecoder->SetIsFirstFrameDecode();
+      }
       mContainedDecoder->Init();
       if (!WriteToContainedDecoder(mSignature, PNGSIGNATURESIZE)) {
         return;
@@ -437,6 +441,9 @@ nsICODecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
     bmpDecoder->SetUseAlphaData(true);
     mContainedDecoder->SetMetadataDecode(IsMetadataDecode());
     mContainedDecoder->SetSendPartialInvalidations(mSendPartialInvalidations);
+    if (mFirstFrameDecode) {
+      mContainedDecoder->SetIsFirstFrameDecode();
+    }
     mContainedDecoder->Init();
 
     // The ICO format when containing a BMP does not include the 14 byte

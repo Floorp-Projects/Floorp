@@ -3261,14 +3261,11 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       }
     }
 
+    aLine->SetLineIsImpactedByFloat(false);
+
     // Here aState.mBCoord is the block-start border-edge of the block.
     // Compute the available space for the block
     nsFlowAreaRect floatAvailableSpace = aState.GetFloatAvailableSpace();
-#ifdef REALLY_NOISY_REFLOW
-    printf("setting line %p isImpacted to %s\n",
-           aLine.get(), floatAvailableSpace.mHasFloats?"true":"false");
-#endif
-    aLine->SetLineIsImpactedByFloat(floatAvailableSpace.mHasFloats);
     WritingMode wm = aState.mReflowState.GetWritingMode();
     LogicalRect availSpace(wm);
     aState.ComputeBlockAvailSpace(frame, display, floatAvailableSpace,
@@ -3304,14 +3301,13 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     }
 
     // Now put the block-dir coordinate back to the start of the
-    // block-start-margin + clearance, and flow the block.
+    // block-start-margin + clearance.
     aState.mBCoord -= bStartMargin;
     availSpace.BStart(wm) -= bStartMargin;
     if (NS_UNCONSTRAINEDSIZE != availSpace.BSize(wm)) {
       availSpace.BSize(wm) += bStartMargin;
     }
 
-    // Reflow the block into the available space
     // construct the html reflow state for the block. ReflowBlock
     // will initialize it
     nsHTMLReflowState
@@ -3320,17 +3316,120 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     blockHtmlRS.mFlags.mHasClearance = aLine->HasClearance();
 
     nsFloatManager::SavedState floatManagerState;
-    if (mayNeedRetry) {
-      blockHtmlRS.mDiscoveredClearance = &clearanceFrame;
-      aState.mFloatManager->PushState(&floatManagerState);
-    } else if (!applyBStartMargin) {
-      blockHtmlRS.mDiscoveredClearance = aState.mReflowState.mDiscoveredClearance;
-    }
+    nsReflowStatus frameReflowStatus;
+    do {
+      if (floatAvailableSpace.mHasFloats) {
+        // Set if floatAvailableSpace.mHasFloats is true for any
+        // iteration of the loop.
+        aLine->SetLineIsImpactedByFloat(true);
+      }
 
-    nsReflowStatus frameReflowStatus = NS_FRAME_COMPLETE;
-    brc.ReflowBlock(availSpace, applyBStartMargin, aState.mPrevBEndMargin,
-                    clearance, aState.IsAdjacentWithTop(),
-                    aLine.get(), blockHtmlRS, frameReflowStatus, aState);
+      // We might need to store into mDiscoveredClearance later if it's
+      // currently null; we want to overwrite any writes that
+      // brc.ReflowBlock() below does, so we need to remember now
+      // whether it's empty.
+      const bool shouldStoreClearance =
+        aState.mReflowState.mDiscoveredClearance &&
+        !*aState.mReflowState.mDiscoveredClearance;
+
+      // Reflow the block into the available space
+      if (mayNeedRetry || replacedBlock) {
+        aState.mFloatManager->PushState(&floatManagerState);
+      }
+
+      if (mayNeedRetry) {
+        blockHtmlRS.mDiscoveredClearance = &clearanceFrame;
+      } else if (!applyBStartMargin) {
+        blockHtmlRS.mDiscoveredClearance =
+          aState.mReflowState.mDiscoveredClearance;
+      }
+
+      frameReflowStatus = NS_FRAME_COMPLETE;
+      brc.ReflowBlock(availSpace, applyBStartMargin, aState.mPrevBEndMargin,
+                      clearance, aState.IsAdjacentWithTop(),
+                      aLine.get(), blockHtmlRS, frameReflowStatus, aState);
+
+      // Now the block has a height.  Using that height, get the
+      // available space again and call ComputeBlockAvailSpace again.
+      // If ComputeBlockAvailSpace gives a different result, we need to
+      // reflow again.
+      if (!replacedBlock) {
+        break;
+      }
+
+      LogicalRect oldFloatAvailableSpaceRect(floatAvailableSpace.mRect);
+      floatAvailableSpace = aState.GetFloatAvailableSpaceForBSize(
+                              aState.mBCoord + bStartMargin,
+                              brc.GetMetrics().Height(),
+                              &floatManagerState);
+      NS_ASSERTION(floatAvailableSpace.mRect.BStart(wm) ==
+                     oldFloatAvailableSpaceRect.BStart(wm),
+                   "yikes");
+      // Restore the height to the position of the next band.
+      floatAvailableSpace.mRect.BSize(wm) =
+        oldFloatAvailableSpaceRect.BSize(wm);
+      if (!AvailableSpaceShrunk(wm, oldFloatAvailableSpaceRect,
+                                floatAvailableSpace.mRect)) {
+        break;
+      }
+
+      bool advanced = false;
+      if (!aState.ReplacedBlockFitsInAvailSpace(replacedBlock,
+                                                floatAvailableSpace)) {
+        // Advance to the next band.
+        nscoord newBCoord = aState.mBCoord;
+        if (aState.AdvanceToNextBand(floatAvailableSpace.mRect, &newBCoord)) {
+          advanced = true;
+        }
+        // ClearFloats might be able to advance us further once we're there.
+        aState.mBCoord =
+          aState.ClearFloats(newBCoord, NS_STYLE_CLEAR_NONE, replacedBlock);
+        // Start over with a new available space rect at the new height.
+        floatAvailableSpace =
+          aState.GetFloatAvailableSpaceWithState(aState.mBCoord,
+                                                 &floatManagerState);
+      }
+
+      LogicalRect oldAvailSpace(availSpace);
+      aState.ComputeBlockAvailSpace(frame, display, floatAvailableSpace,
+                                    replacedBlock != nullptr, availSpace);
+
+      if (!advanced && availSpace.IsEqualEdges(oldAvailSpace)) {
+        break;
+      }
+
+      // We need another reflow.
+      aState.mFloatManager->PopState(&floatManagerState);
+
+      if (!treatWithClearance && !applyBStartMargin &&
+          aState.mReflowState.mDiscoveredClearance) {
+        // We set shouldStoreClearance above to record only the first
+        // frame that requires clearance.
+        if (shouldStoreClearance) {
+          *aState.mReflowState.mDiscoveredClearance = frame;
+        }
+        aState.mPrevChild = frame;
+        // Exactly what we do now is flexible since we'll definitely be
+        // reflowed.
+        return;
+      }
+
+      if (advanced) {
+        // We're pushing down the border-box, so we don't apply margin anymore.
+        // This should never cause us to move up since the call to
+        // GetFloatAvailableSpaceForBSize above included the margin.
+        applyBStartMargin = false;
+        bStartMargin = 0;
+        treatWithClearance = true; // avoid hitting test above
+        clearance = 0;
+      }
+
+      blockHtmlRS.~nsHTMLReflowState();
+      new (&blockHtmlRS) nsHTMLReflowState(aState.mPresContext,
+                           aState.mReflowState, frame,
+                           availSpace.Size(wm).ConvertTo(
+                             frame->GetWritingMode(), wm));
+    } while (true);
 
     if (mayNeedRetry && clearanceFrame) {
       aState.mFloatManager->PopState(&floatManagerState);
@@ -7205,7 +7304,7 @@ nsBlockFrame::BlockCanIntersectFloats(nsIFrame* aFrame)
 // matter.
 /* static */
 nsBlockFrame::ReplacedElementISizeToClear
-nsBlockFrame::ISizeToClearPastFloats(nsBlockReflowState& aState,
+nsBlockFrame::ISizeToClearPastFloats(const nsBlockReflowState& aState,
                                      const LogicalRect& aFloatAvailableSpace,
                                      nsIFrame* aFrame)
 {

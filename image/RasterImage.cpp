@@ -21,7 +21,9 @@
 #include "ImageRegion.h"
 #include "Layers.h"
 #include "LookupResult.h"
+#include "nsIConsoleService.h"
 #include "nsIInputStream.h"
+#include "nsIScriptError.h"
 #include "nsPresContext.h"
 #include "SourceBuffer.h"
 #include "SurfaceCache.h"
@@ -979,42 +981,6 @@ RasterImage::SetSize(int32_t aWidth, int32_t aHeight, Orientation aOrientation)
   return NS_OK;
 }
 
-void
-RasterImage::OnDecodingComplete(bool aIsAnimated)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (mError) {
-    return;
-  }
-
-  // Flag that we've been decoded before.
-  mHasBeenDecoded = true;
-
-  if (aIsAnimated) {
-    if (mAnim) {
-      mAnim->SetDoneDecoding(true);
-    } else {
-      // The OnAddedFrame event that will create mAnim is still in the event
-      // queue. Wait for it.
-      nsCOMPtr<nsIRunnable> runnable =
-        NS_NewRunnableMethod(this, &RasterImage::MarkAnimationDecoded);
-      NS_DispatchToMainThread(runnable);
-    }
-  }
-}
-
-void
-RasterImage::MarkAnimationDecoded()
-{
-  MOZ_ASSERT(mAnim, "Should have an animation now");
-  if (!mAnim) {
-    return;
-  }
-
-  mAnim->SetDoneDecoding(true);
-}
-
 NS_IMETHODIMP
 RasterImage::SetAnimationMode(uint16_t aAnimationMode)
 {
@@ -1222,20 +1188,16 @@ RasterImage::NotifyForLoadEvent(Progress aProgress)
 nsresult
 RasterImage::OnImageDataAvailable(nsIRequest*,
                                   nsISupports*,
-                                  nsIInputStream* aInStr,
-                                  uint64_t aOffset,
+                                  nsIInputStream* aInputStream,
+                                  uint64_t,
                                   uint32_t aCount)
 {
-  nsresult rv;
+  nsresult rv = mSourceBuffer->AppendFromInputStream(aInputStream, aCount);
+  MOZ_ASSERT(rv == NS_OK || rv == NS_ERROR_OUT_OF_MEMORY);
 
-  // WriteToSourceBuffer always consumes everything it gets if it doesn't run
-  // out of memory.
-  uint32_t bytesRead;
-  rv = aInStr->ReadSegments(WriteToSourceBuffer, this, aCount, &bytesRead);
-
-  MOZ_ASSERT(bytesRead == aCount || HasError() || NS_FAILED(rv),
-    "WriteToSourceBuffer should consume everything if ReadSegments succeeds or "
-    "the image must be in error!");
+  if (MOZ_UNLIKELY(rv == NS_ERROR_OUT_OF_MEMORY)) {
+    DoError();
+  }
 
   return rv;
 }
@@ -1445,8 +1407,8 @@ RasterImage::Decode(const IntSize& aSize, uint32_t aFlags)
   // Create a decoder.
   nsRefPtr<Decoder> decoder =
     DecoderFactory::CreateDecoder(mDecoderType, this, mSourceBuffer, targetSize,
-                                  aFlags, mHasBeenDecoded, mTransient,
-                                  imageIsLocked);
+                                  aFlags, mRequestedSampleSize, mRequestedResolution,
+                                  mHasBeenDecoded, mTransient, imageIsLocked);
 
   // Make sure DecoderFactory was able to create a decoder successfully.
   if (!decoder) {
@@ -1499,7 +1461,9 @@ RasterImage::DecodeMetadata(uint32_t aFlags)
 
   // Create a decoder.
   nsRefPtr<Decoder> decoder =
-    DecoderFactory::CreateMetadataDecoder(mDecoderType, this, mSourceBuffer);
+    DecoderFactory::CreateMetadataDecoder(mDecoderType, this, mSourceBuffer,
+                                          mRequestedSampleSize,
+                                          mRequestedResolution);
 
   // Make sure DecoderFactory was able to create a decoder successfully.
   if (!decoder) {
@@ -1934,36 +1898,6 @@ RasterImage::HandleErrorWorker::Run()
   return NS_OK;
 }
 
-// nsIInputStream callback to copy the incoming image data directly to the
-// RasterImage without processing. The RasterImage is passed as the closure.
-// Always reads everything it gets, even if the data is erroneous.
-NS_METHOD
-RasterImage::WriteToSourceBuffer(nsIInputStream* /* unused */,
-                                 void*          aClosure,
-                                 const char*    aFromRawSegment,
-                                 uint32_t       /* unused */,
-                                 uint32_t       aCount,
-                                 uint32_t*      aWriteCount)
-{
-  // Retrieve the RasterImage
-  RasterImage* image = static_cast<RasterImage*>(aClosure);
-
-  // Copy the source data. Unless we hit OOM, we squelch the return value
-  // here, because returning an error means that ReadSegments stops
-  // reading data, violating our invariant that we read everything we get.
-  // If we hit OOM then we fail and the load is aborted.
-  nsresult rv = image->mSourceBuffer->Append(aFromRawSegment, aCount);
-  if (rv == NS_ERROR_OUT_OF_MEMORY) {
-    image->DoError();
-    return rv;
-  }
-
-  // We wrote everything we got
-  *aWriteCount = aCount;
-
-  return NS_OK;
-}
-
 bool
 RasterImage::ShouldAnimate()
 {
@@ -2010,8 +1944,39 @@ RasterImage::FinalizeDecoder(Decoder* aDecoder)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aDecoder);
+  MOZ_ASSERT(aDecoder->HasError() || !aDecoder->InFrame(),
+             "Finalizing a decoder in the middle of a frame");
+
+  // If the decoder detected an error, log it to the error console.
+  if (aDecoder->ShouldReportError() && !aDecoder->WasAborted()) {
+    ReportDecoderError(aDecoder);
+  }
+
+  // Record all the metadata the decoder gathered about this image.
+  nsresult rv = aDecoder->GetImageMetadata().SetOnImage(this);
+  if (NS_FAILED(rv)) {
+    aDecoder->PostResizeError();
+  }
+
   MOZ_ASSERT(mError || mHasSize || !aDecoder->HasSize(),
              "Should have handed off size by now");
+
+  if (aDecoder->GetDecodeTotallyDone() && !mError) {
+    // Flag that we've been decoded before.
+    mHasBeenDecoded = true;
+
+    if (aDecoder->HasAnimation()) {
+      if (mAnim) {
+        mAnim->SetDoneDecoding(true);
+      } else {
+        // The OnAddedFrame event that will create mAnim is still in the event
+        // queue. Wait for it.
+        nsCOMPtr<nsIRunnable> runnable =
+          NS_NewRunnableMethod(this, &RasterImage::MarkAnimationDecoded);
+        NS_DispatchToMainThread(runnable);
+      }
+    }
+  }
 
   // Send out any final notifications.
   NotifyProgress(aDecoder->TakeProgress(),
@@ -2066,6 +2031,46 @@ RasterImage::FinalizeDecoder(Decoder* aDecoder)
   if (done && wasMetadata && mWantFullDecode) {
     mWantFullDecode = false;
     RequestDecode();
+  }
+}
+
+void
+RasterImage::MarkAnimationDecoded()
+{
+  MOZ_ASSERT(mAnim, "Should have an animation now");
+  if (!mAnim) {
+    return;
+  }
+
+  mAnim->SetDoneDecoding(true);
+}
+
+void
+RasterImage::ReportDecoderError(Decoder* aDecoder)
+{
+  nsCOMPtr<nsIConsoleService> consoleService =
+    do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+  nsCOMPtr<nsIScriptError> errorObject =
+    do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
+
+  if (consoleService && errorObject && !aDecoder->HasDecoderError()) {
+    nsAutoString msg(NS_LITERAL_STRING("Image corrupt or truncated."));
+    nsAutoString src;
+    if (GetURI()) {
+      nsCString uri;
+      if (GetURI()->GetSpecTruncatedTo1k(uri) == ImageURL::TruncatedTo1k) {
+        msg += NS_LITERAL_STRING(" URI in this note truncated due to length.");
+      }
+      src = NS_ConvertUTF8toUTF16(uri);
+    }
+    if (NS_SUCCEEDED(errorObject->InitWithWindowID(
+                       msg,
+                       src,
+                       EmptyString(), 0, 0, nsIScriptError::errorFlag,
+                       "Image", InnerWindowID()
+                     ))) {
+      consoleService->LogMessage(errorObject);
+    }
   }
 }
 

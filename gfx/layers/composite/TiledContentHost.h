@@ -195,14 +195,17 @@ public:
       TextureHost* host = mTiledBuffer.GetTile(0).mTextureHost;
       if (host) {
         MOZ_ASSERT(!mTiledBuffer.GetTile(0).mTextureHostOnWhite, "Component alpha not supported!");
-        LayerRenderState state = host->GetRenderState();
 
-        // Offset by the distance between the start of the valid (visible) region and the top-left
-        // of the tile.
         gfx::IntPoint offset = mTiledBuffer.GetTileOffset(mTiledBuffer.GetPlacement().TilePosition(0));
 
-        state.SetOffset(offset - GetValidRegion().GetBounds().TopLeft());
-        return host->GetRenderState();
+        // Don't try to use HWC if the content doesn't start at the top-left of the tile.
+        if (offset != GetValidRegion().GetBounds().TopLeft()) {
+          return LayerRenderState();
+        }
+
+        LayerRenderState state = host->GetRenderState();
+        state.SetOffset(offset);
+        return state;
       }
     }
     return LayerRenderState();

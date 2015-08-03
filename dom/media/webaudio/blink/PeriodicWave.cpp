@@ -178,9 +178,11 @@ void PeriodicWave::createBandLimitedTables(const float* realData, const float* i
     float normalizationScale = 1;
 
     unsigned fftSize = m_periodicWaveSize;
-    unsigned halfSize = fftSize / 2 + 1;
+    unsigned halfSize = fftSize / 2;
     unsigned i;
 
+    // Limit the number of components used to those for frequencies below the
+    // Nyquist of the fixed length inverse FFT.
     numberOfComponents = std::min(numberOfComponents, halfSize);
 
     m_bandLimitedTables.SetCapacity(m_numberOfRanges);
@@ -188,46 +190,27 @@ void PeriodicWave::createBandLimitedTables(const float* realData, const float* i
     for (unsigned rangeIndex = 0; rangeIndex < m_numberOfRanges; ++rangeIndex) {
         // This FFTBlock is used to cull partials (represented by frequency bins).
         FFTBlock frame(fftSize);
-        nsAutoArrayPtr<float> realP(new float[halfSize]);
-        nsAutoArrayPtr<float> imagP(new float[halfSize]);
 
-        // Copy from loaded frequency data and scale.
-        float scale = fftSize;
-        AudioBufferCopyWithScale(realData, scale, realP, numberOfComponents);
-        AudioBufferCopyWithScale(imagData, scale, imagP, numberOfComponents);
-
-        // If fewer components were provided than 1/2 FFT size,
-        // then clear the remaining bins.
-        for (i = numberOfComponents; i < halfSize; ++i) {
-            realP[i] = 0;
-            imagP[i] = 0;
-        }
-
-        // Generate complex conjugate because of the way the
-        // inverse FFT is defined.
-        float minusOne = -1;
-        AudioBufferInPlaceScale(imagP, minusOne, halfSize);
-
-        // Find the starting bin where we should start culling.
-        // We need to clear out the highest frequencies to band-limit
-        // the waveform.
+        // Find the starting bin where we should start culling the aliasing
+        // partials for this pitch range.  We need to clear out the highest
+        // frequencies to band-limit the waveform.
         unsigned numberOfPartials = numberOfPartialsForRange(rangeIndex);
+        // Also limit to the number of components that are provided.
+        numberOfPartials = std::min(numberOfPartials, numberOfComponents - 1);
 
-        // Cull the aliasing partials for this pitch range.
-        for (i = numberOfPartials + 1; i < halfSize; ++i) {
-            realP[i] = 0;
-            imagP[i] = 0;
+        // Copy from loaded frequency data and generate complex conjugate
+        // because of the way the inverse FFT is defined.
+        // The coefficients of higher partials remain zero, as initialized in
+        // the FFTBlock constructor.
+        for (i = 0; i < numberOfPartials + 1; ++i) {
+            frame.RealData(i) = realData[i];
+            frame.ImagData(i) = -imagData[i];
         }
-        // Clear nyquist if necessary.
-        if (numberOfPartials < halfSize)
-            realP[halfSize-1] = 0;
 
         // Clear any DC-offset.
-        realP[0] = 0;
-
-        // Clear values which have no effect.
-        imagP[0] = 0;
-        imagP[halfSize-1] = 0;
+        frame.RealData(0) = 0;
+        // Clear value which has no effect.
+        frame.ImagData(0) = 0;
 
         // Create the band-limited table.
         AlignedAudioFloatArray* table = new AlignedAudioFloatArray(m_periodicWaveSize);
@@ -235,7 +218,7 @@ void PeriodicWave::createBandLimitedTables(const float* realData, const float* i
 
         // Apply an inverse FFT to generate the time-domain table data.
         float* data = m_bandLimitedTables[rangeIndex]->Elements();
-        frame.PerformInverseFFT(realP, imagP, data);
+        frame.GetInverseWithoutScaling(data);
 
         // For the first range (which has the highest power), calculate
         // its peak value then compute normalization scale.
@@ -256,18 +239,16 @@ void PeriodicWave::generateBasicWaveform(OscillatorType shape)
 {
     const float piFloat = M_PI;
     unsigned fftSize = periodicWaveSize();
-    unsigned halfSize = fftSize / 2 + 1;
+    unsigned halfSize = fftSize / 2;
 
     AudioFloatArray real(halfSize);
     AudioFloatArray imag(halfSize);
     float* realP = real.Elements();
     float* imagP = imag.Elements();
 
-    // Clear DC and Nyquist.
+    // Clear DC and imag value which is ignored.
     realP[0] = 0;
     imagP[0] = 0;
-    realP[halfSize-1] = 0;
-    imagP[halfSize-1] = 0;
 
     for (unsigned n = 1; n < halfSize; ++n) {
         float omega = 2 * piFloat * n;
