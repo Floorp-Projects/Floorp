@@ -499,29 +499,29 @@ interface nsIDOMWindowUtils : nsISupports {
    *                           scroll.
    * @param aOptions           Set following flags.
    */
-   const unsigned long WHEEL_EVENT_CAUSED_BY_NO_LINE_OR_PAGE_DELTA_DEVICE = 0x0001;
-   // @deprecated Use WHEEL_EVENT_CAUSED_BY_NO_LINE_OR_PAGE_DELTA_DEVICE.
-   const unsigned long WHEEL_EVENT_CAUSED_BY_PIXEL_ONLY_DEVICE            = 0x0001;
-   const unsigned long WHEEL_EVENT_CAUSED_BY_MOMENTUM          	          = 0x0002;
-   const unsigned long WHEEL_EVENT_CUSTOMIZED_BY_USER_PREFS               = 0x0004;
-   // If any of the following flags is specified this method will throw an
-   // exception in case the relevant overflowDelta has an unexpected value.
-   const unsigned long WHEEL_EVENT_EXPECTED_OVERFLOW_DELTA_X_ZERO      = 0x0010;
-   const unsigned long WHEEL_EVENT_EXPECTED_OVERFLOW_DELTA_X_POSITIVE  = 0x0020;
-   const unsigned long WHEEL_EVENT_EXPECTED_OVERFLOW_DELTA_X_NEGATIVE  = 0x0040;
-   const unsigned long WHEEL_EVENT_EXPECTED_OVERFLOW_DELTA_Y_ZERO      = 0x0100;
-   const unsigned long WHEEL_EVENT_EXPECTED_OVERFLOW_DELTA_Y_POSITIVE  = 0x0200;
-   const unsigned long WHEEL_EVENT_EXPECTED_OVERFLOW_DELTA_Y_NEGATIVE  = 0x0400;
-   void sendWheelEvent(in float aX,
-                       in float aY,
-                       in double aDeltaX,
-                       in double aDeltaY,
-                       in double aDeltaZ,
-                       in unsigned long aDeltaMode,
-                       in long aModifiers,
-                       in long aLineOrPageDeltaX,
-                       in long aLineOrPageDeltaY,
-                       in unsigned long aOptions);
+  const unsigned long WHEEL_EVENT_CAUSED_BY_NO_LINE_OR_PAGE_DELTA_DEVICE = 0x0001;
+  // @deprecated Use WHEEL_EVENT_CAUSED_BY_NO_LINE_OR_PAGE_DELTA_DEVICE.
+  const unsigned long WHEEL_EVENT_CAUSED_BY_PIXEL_ONLY_DEVICE            = 0x0001;
+  const unsigned long WHEEL_EVENT_CAUSED_BY_MOMENTUM                     = 0x0002;
+  const unsigned long WHEEL_EVENT_CUSTOMIZED_BY_USER_PREFS               = 0x0004;
+  // If any of the following flags is specified this method will throw an
+  // exception in case the relevant overflowDelta has an unexpected value.
+  const unsigned long WHEEL_EVENT_EXPECTED_OVERFLOW_DELTA_X_ZERO      = 0x0010;
+  const unsigned long WHEEL_EVENT_EXPECTED_OVERFLOW_DELTA_X_POSITIVE  = 0x0020;
+  const unsigned long WHEEL_EVENT_EXPECTED_OVERFLOW_DELTA_X_NEGATIVE  = 0x0040;
+  const unsigned long WHEEL_EVENT_EXPECTED_OVERFLOW_DELTA_Y_ZERO      = 0x0100;
+  const unsigned long WHEEL_EVENT_EXPECTED_OVERFLOW_DELTA_Y_POSITIVE  = 0x0200;
+  const unsigned long WHEEL_EVENT_EXPECTED_OVERFLOW_DELTA_Y_NEGATIVE  = 0x0400;
+  void sendWheelEvent(in float aX,
+                      in float aY,
+                      in double aDeltaX,
+                      in double aDeltaY,
+                      in double aDeltaZ,
+                      in unsigned long aDeltaMode,
+                      in long aModifiers,
+                      in long aLineOrPageDeltaX,
+                      in long aLineOrPageDeltaY,
+                      in unsigned long aOptions);
 
   /**
    * Synthesize a key event to the window. The event types supported are:
@@ -1359,16 +1359,16 @@ interface nsIDOMWindowUtils : nsISupports {
   /**
    * Returns a handle which represents current recording start position.
    */
-   void startFrameTimeRecording([retval] out unsigned long startIndex);
+  void startFrameTimeRecording([retval] out unsigned long startIndex);
 
   /**
    * Returns number of recorded frames since startIndex was issued,
    *   and allocates+populates 2 arraye with the recorded data.
    * - Allocation is infallible. Should be released even if size is 0.
    */
-   void stopFrameTimeRecording(in unsigned long startIndex,
-                              [optional] out unsigned long frameCount,
-                              [retval, array, size_is(frameCount)] out float frameIntervals);
+  void stopFrameTimeRecording(in unsigned long startIndex,
+                             [optional] out unsigned long frameCount,
+                             [retval, array, size_is(frameCount)] out float frameIntervals);
 
   /**
    * Signals that we're begining to tab switch. This is used by painting code to
@@ -1697,7 +1697,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * After calling the method, the window for which this DOMWindowUtils
    * was created can be closed using scripts.
    */
-   void allowScriptsToClose();
+  void allowScriptsToClose();
 
   /**
    * Is the parent window's main widget visible?  If it isn't, we probably
@@ -1710,109 +1710,109 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   readonly attribute boolean isParentWindowMainWidgetVisible;
 
-   /**
-    * In certain cases the event handling of nodes, form controls in practice,
-    * may be disabled. Such cases are for example the existence of disabled
-    * attribute or -moz-user-input: none/disabled.
-    */
-   boolean isNodeDisabledForEvents(in nsIDOMNode aNode);
+  /**
+   * In certain cases the event handling of nodes, form controls in practice,
+   * may be disabled. Such cases are for example the existence of disabled
+   * attribute or -moz-user-input: none/disabled.
+   */
+  boolean isNodeDisabledForEvents(in nsIDOMNode aNode);
 
-   /**
-    * Setting paintFlashing to true will flash newly painted area.
-    */
-   attribute boolean paintFlashing;
+  /**
+   * Setting paintFlashing to true will flash newly painted area.
+   */
+  attribute boolean paintFlashing;
 
-   /**
-    * Add a "synchronous section", in the form of an nsIRunnable run once the
-    * event loop has reached a "stable state". |runnable| must not cause any
-    * queued events to be processed (i.e. must not spin the event loop).
-    * We've reached a stable state when the currently executing task/event has
-    * finished, see:
-    * http://www.whatwg.org/specs/web-apps/current-work/multipage/webappapis.html#synchronous-section
-    * In practice this runs aRunnable once the currently executing event
-    * finishes. If called multiple times per task/event, all the runnables will
-    * be executed, in the order in which runInStableState() was called.
-    *
-    * XXX - This can wreak havoc if you're not using this for very simple
-    * purposes, eg testing or setting a flag.
-    */
-   void runInStableState(in nsIRunnable runnable);
+  /**
+   * Add a "synchronous section", in the form of an nsIRunnable run once the
+   * event loop has reached a "stable state". |runnable| must not cause any
+   * queued events to be processed (i.e. must not spin the event loop).
+   * We've reached a stable state when the currently executing task/event has
+   * finished, see:
+   * http://www.whatwg.org/specs/web-apps/current-work/multipage/webappapis.html#synchronous-section
+   * In practice this runs aRunnable once the currently executing event
+   * finishes. If called multiple times per task/event, all the runnables will
+   * be executed, in the order in which runInStableState() was called.
+   *
+   * XXX - This can wreak havoc if you're not using this for very simple
+   * purposes, eg testing or setting a flag.
+   */
+  void runInStableState(in nsIRunnable runnable);
 
-   /**
-    * Run the given runnable before the next iteration of the event loop (this
-    * includes native events too). If a nested loop is spawned within the current
-    * event then the runnable will not be run until that loop has terminated.
-    *
-    * XXX - This can wreak havoc if you're not using this for very simple
-    * purposes, eg testing or setting a flag.
-    */
-   void runBeforeNextEvent(in nsIRunnable runnable);
+  /**
+   * Run the given runnable before the next iteration of the event loop (this
+   * includes native events too). If a nested loop is spawned within the current
+   * event then the runnable will not be run until that loop has terminated.
+   *
+   * XXX - This can wreak havoc if you're not using this for very simple
+   * purposes, eg testing or setting a flag.
+   */
+  void runBeforeNextEvent(in nsIRunnable runnable);
 
-   /*
-    * Returns the value of a given property animated on the compositor thread.
-    * If the property is NOT currently being animated on the compositor thread,
-    * returns an empty string.
-    */
-   AString getOMTAStyle(in nsIDOMElement aElement, in AString aProperty,
-                        [optional] in AString aPseudoElement);
+  /*
+   * Returns the value of a given property animated on the compositor thread.
+   * If the property is NOT currently being animated on the compositor thread,
+   * returns an empty string.
+   */
+  AString getOMTAStyle(in nsIDOMElement aElement, in AString aProperty,
+                       [optional] in AString aPseudoElement);
 
-   /**
-    * Special function that gets a property syncronously from the last composite
-    * that occured.
-    *
-    * Supported properties:
-    *   "overdraw": Report a percentage between 0 and 999 indicate how many times
-    *               each pixels on the destination window have been touched.
-    *   "missed_hwc": Report a bool if hardware composer is supported but was
-    *                 not used for the last frame.
-    */
-   float requestCompositorProperty(in AString aProperty);
+  /**
+   * Special function that gets a property syncronously from the last composite
+   * that occured.
+   *
+   * Supported properties:
+   *   "overdraw": Report a percentage between 0 and 999 indicate how many times
+   *               each pixels on the destination window have been touched.
+   *   "missed_hwc": Report a bool if hardware composer is supported but was
+   *                 not used for the last frame.
+   */
+  float requestCompositorProperty(in AString aProperty);
 
-   /**
-    * If aHandlingInput is true, this informs the event state manager that
-    * we're handling user input. Otherwise, this is a no-op (as by default
-    * we're not handling user input).
-    * Remember to call destruct() on the return value!
-    * See also nsIDOMWindowUtils::isHandlingUserInput.
-    */
-   nsIJSRAIIHelper setHandlingUserInput(in boolean aHandlingInput);
+  /**
+   * If aHandlingInput is true, this informs the event state manager that
+   * we're handling user input. Otherwise, this is a no-op (as by default
+   * we're not handling user input).
+   * Remember to call destruct() on the return value!
+   * See also nsIDOMWindowUtils::isHandlingUserInput.
+   */
+  nsIJSRAIIHelper setHandlingUserInput(in boolean aHandlingInput);
 
-   /**
-    * Get the content- and compositor-side APZ test data instances.
-    * The return values are of type APZTestData (see APZTestData.webidl).
-    */
-   [implicit_jscontext] jsval getContentAPZTestData();
-   [implicit_jscontext] jsval getCompositorAPZTestData();
+  /**
+   * Get the content- and compositor-side APZ test data instances.
+   * The return values are of type APZTestData (see APZTestData.webidl).
+   */
+  [implicit_jscontext] jsval getContentAPZTestData();
+  [implicit_jscontext] jsval getCompositorAPZTestData();
 
-   /**
-    * Posts an eRestyle_Self restyle event for the given element.
-    */
-   void postRestyleSelfEvent(in nsIDOMElement aElement);
+  /**
+   * Posts an eRestyle_Self restyle event for the given element.
+   */
+  void postRestyleSelfEvent(in nsIDOMElement aElement);
 
-   /**
-    * With this it's possible to mute all the MediaElements in this window.
-    * We have audioMuted and audioVolume to preserve the volume across
-    * mute/umute.
-    */
-   attribute boolean audioMuted;
+  /**
+   * With this it's possible to mute all the MediaElements in this window.
+   * We have audioMuted and audioVolume to preserve the volume across
+   * mute/umute.
+   */
+  attribute boolean audioMuted;
 
-    /**
-     * range: greater or equal to 0. The real volume level is affected by the
-     * volume of all ancestor windows.
-     */
-    attribute float audioVolume;
+  /**
+   * range: greater or equal to 0. The real volume level is affected by the
+   * volume of all ancestor windows.
+   */
+  attribute float audioVolume;
 
-    /**
-     * This method doesn't do anything useful.  It was solely added for the
-     * purpose of the test for bug 503926.
-     */
-    void xpconnectArgument(in nsIDOMWindowUtils aThis);
+  /**
+   * This method doesn't do anything useful.  It was solely added for the
+   * purpose of the test for bug 503926.
+   */
+  void xpconnectArgument(in nsIDOMWindowUtils aThis);
 
-    /**
-     * Helper for JS components that need to send permission requests with
-     * e10s support properly.
-     */
-     void askPermission(in nsIContentPermissionRequest aRequest);
+  /**
+   * Helper for JS components that need to send permission requests with
+   * e10s support properly.
+   */
+  void askPermission(in nsIContentPermissionRequest aRequest);
 
   /**
    * Number of frames constructed (excluding breaking) for the curent

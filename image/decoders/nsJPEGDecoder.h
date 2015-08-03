@@ -57,6 +57,11 @@ public:
 
   virtual nsresult SetTargetSize(const nsIntSize& aSize) override;
 
+  virtual void SetSampleSize(int aSampleSize) override
+  {
+    mSampleSize = aSampleSize;
+  }
+
   virtual void InitInternal() override;
   virtual void WriteInternal(const char* aBuffer, uint32_t aCount) override;
   virtual void FinishInternal() override;
@@ -103,6 +108,8 @@ public:
   const Decoder::DecodeStyle mDecodeStyle;
 
   uint32_t mCMSMode;
+
+  int mSampleSize;
 };
 
 } // namespace image
