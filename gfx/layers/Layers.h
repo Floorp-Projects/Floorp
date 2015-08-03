@@ -1583,6 +1583,16 @@ public:
   // instead of a StringStream. It is also internally used to implement Dump();
   virtual void DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent);
 
+  /**
+   * Store display list log.
+   */
+  void SetDisplayListLog(const char *log);
+
+  /**
+   * Return display list log.
+   */
+  void GetDisplayListLog(nsCString& log);
+
   static bool IsLogEnabled() { return LayerManager::IsLogEnabled(); }
 
   /**
@@ -1785,6 +1795,8 @@ protected:
 #ifdef MOZ_DUMP_PAINTING
   nsTArray<nsCString> mExtraDumpInfo;
 #endif
+  // Store display list log.
+  nsCString mDisplayListLog;
 };
 
 /**
