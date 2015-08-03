@@ -15,7 +15,7 @@
 #include "MediaFormatReader.h"
 #include "MediaResource.h"
 #include "SharedDecoderManager.h"
-#include "SharedThreadPool.h"
+#include "mozilla/SharedThreadPool.h"
 #include "VideoUtils.h"
 
 #include <algorithm>

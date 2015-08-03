@@ -15,7 +15,7 @@
 
 #include <queue>
 
-#include "SharedThreadPool.h"
+#include "mozilla/SharedThreadPool.h"
 #include "nsThreadUtils.h"
 
 class nsIRunnable;
