@@ -49,6 +49,7 @@ const gXPInstallObserver = {
     var options = {
       displayURI: installInfo.originatingURI,
       timeout: Date.now() + 30000,
+      removeOnDismissal: true,
     };
 
     let cancelInstallation = () => {
