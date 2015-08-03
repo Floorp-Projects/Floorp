@@ -4040,9 +4040,9 @@ CASE(JSOP_INITHOMEOBJECT)
     MOZ_ASSERT(func->allowSuperProperty());
 
     /* Load the home object */
-    ReservedRooted<NativeObject*> obj(&rootNativeObject0);
-    obj = &REGS.sp[int(-2 - skipOver)].toObject().as<NativeObject>();
-    MOZ_ASSERT(obj->is<PlainObject>() || obj->is<JSFunction>());
+    ReservedRooted<JSObject*> obj(&rootObject0);
+    obj = &REGS.sp[int(-2 - skipOver)].toObject();
+    MOZ_ASSERT(obj->is<PlainObject>() || obj->is<UnboxedPlainObject>() || obj->is<JSFunction>());
 
     func->setExtendedSlot(FunctionExtended::METHOD_HOMEOBJECT_SLOT, ObjectValue(*obj));
 }
