@@ -6,11 +6,12 @@
   
   <title>Test 'stroke-linecap: round' with zero length path segments</title>
 
-  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=1075399 -->
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=1075399 for paths and
+       https://bugzilla.mozilla.org/show_bug.cgi?id=1187770 for lines -->
 
   <style>
 
-path {
+path, line {
   stroke-width: 20px;
   stroke-linecap: round;
 }
@@ -20,7 +21,7 @@ circle {
 }
 
 /* expect lime circles to cover red circles */
-path.circles-expected {
+path.circles-expected, line.circles-expected {
   stroke: lime;
 }
 
@@ -158,4 +159,11 @@ path.coverer {
     <circle cy="80" r="8"/>
     <path class="circles-expected" d="M0,0v81" stroke-dasharray="0" />
   </g>
+
+  <!-- Column 6: test zero-length line -->
+  <g transform="translate(625, 25)">
+    <circle cy="0" r="8" />
+    <line class="circles-expected" x1="0" y1="0" x2="0" y2="0" />
+  </g>
+
 </svg>

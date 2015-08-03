@@ -1627,7 +1627,7 @@ CompositorOGL::BindAndDrawQuads(ShaderProgramOGL *aProg,
   // We are using GL_TRIANGLES here because the Mac Intel drivers fail to properly
   // process uniform arrays with GL_TRIANGLE_STRIP. Go figure.
   mGLContext->fDrawArrays(LOCAL_GL_TRIANGLES, 0, 6 * aQuads);
-  LayerScope::SetLayerRects(aQuads, aLayerRects);
+  LayerScope::SetDrawRects(aQuads, aLayerRects, aTextureRects);
 }
 
 GLBlitTextureImageHelper*

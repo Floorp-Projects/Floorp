@@ -964,7 +964,7 @@ ClientMultiTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
     PROFILER_LABEL("ClientMultiTiledLayerBuffer", "PaintThebesSingleBufferDraw",
       js::ProfileEntry::Category::GRAPHICS);
 
-    mCallback(mPaintedLayer, ctxt, aPaintRegion, aDirtyRegion,
+    mCallback(mPaintedLayer, ctxt, aPaintRegion, &aDirtyRegion,
               DrawRegionClip::NONE, nsIntRegion(), mCallbackData);
   }
 
@@ -1171,7 +1171,7 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
     ctx->SetMatrix(
       ctx->CurrentMatrix().Scale(mResolution, mResolution).Translate(ThebesPoint(-mTilingOrigin)));
 
-    mCallback(mPaintedLayer, ctx, aPaintRegion, aDirtyRegion,
+    mCallback(mPaintedLayer, ctx, aPaintRegion, &aDirtyRegion,
               DrawRegionClip::DRAW, nsIntRegion(), mCallbackData);
     mMoz2DTiles.clear();
     // Reset:

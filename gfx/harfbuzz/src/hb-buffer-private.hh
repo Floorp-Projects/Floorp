@@ -50,6 +50,7 @@ struct hb_buffer_t {
   /* Information about how the text in the buffer should be treated */
   hb_unicode_funcs_t *unicode; /* Unicode functions */
   hb_buffer_flags_t flags; /* BOT / EOT / etc. */
+  hb_buffer_cluster_level_t cluster_level;
   hb_codepoint_t replacement; /* U+FFFD or something else. */
 
   /* Buffer contents */
@@ -171,9 +172,18 @@ struct hb_buffer_t {
 			      unsigned int cluster_end);
 
   HB_INTERNAL void merge_clusters (unsigned int start,
-				   unsigned int end);
+				   unsigned int end)
+  {
+    if (end - start < 2)
+      return;
+    merge_clusters_impl (start, end);
+  }
+  HB_INTERNAL void merge_clusters_impl (unsigned int start,
+					unsigned int end);
   HB_INTERNAL void merge_out_clusters (unsigned int start,
 				       unsigned int end);
+  /* Merge clusters for deleting current glyph, and skip it. */
+  HB_INTERNAL void delete_glyph (void);
 
   /* Internal methods */
   HB_INTERNAL bool enlarge (unsigned int size);

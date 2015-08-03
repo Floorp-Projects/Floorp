@@ -7213,7 +7213,7 @@ HTMLInputElement::SetFilePickerFiltersFromAccept(nsIFilePicker* filePicker)
       filterBundle->GetStringFromName(MOZ_UTF16("videoFilter"),
                                       getter_Copies(extensionListStr));
     } else if (token.First() == '.') {
-      if (token.FindChar(';') >= 0  || token.FindChar('*') >= 0) {
+      if (token.Contains(';') || token.Contains('*')) {
         // Ignore this filter as it contains reserved characters
         continue;
       }

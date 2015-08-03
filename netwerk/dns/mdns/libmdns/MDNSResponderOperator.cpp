@@ -287,7 +287,7 @@ MDNSResponderOperator::ResetService(DNSServiceRef aService)
 
     if (aService) {
       nsRefPtr<ServiceWatcher> watcher = new ServiceWatcher(aService);
-      if (NS_WARN_IF(NS_FAILED(watcher->Init()))) {
+      if (NS_WARN_IF(NS_FAILED(rv = watcher->Init()))) {
         return rv;
       }
       mWatcher = watcher;

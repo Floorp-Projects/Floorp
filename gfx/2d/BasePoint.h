@@ -69,6 +69,10 @@ struct BasePoint {
     return Sub(-x, -y);
   }
 
+  T DotProduct(const Sub& aPoint) const {
+      return x * aPoint.x + y * aPoint.y;
+  }
+
   T Length() const {
     return hypot(x, y);
   }

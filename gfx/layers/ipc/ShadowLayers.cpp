@@ -613,6 +613,10 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
       auto layer = Shadow(mutant->GetAncestorMaskLayerAt(i)->AsShadowableLayer());
       common.ancestorMaskLayersChild().AppendElement(layer);
     }
+    nsCString log;
+    mutant->GetDisplayListLog(log);
+    common.displayListLog() = log;
+
     attrs.specific() = null_t();
     mutant->FillSpecificAttributes(attrs.specific());
 

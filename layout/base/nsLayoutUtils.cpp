@@ -3364,6 +3364,10 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
     gfxUtils::sDumpPaintFile = savedDumpFile;
     gPaintCount++;
 #endif
+
+    std::stringstream lsStream;
+    nsFrame::PrintDisplayList(&builder, list, lsStream);
+    layerManager->GetRoot()->SetDisplayListLog(lsStream.str().c_str());
   }
 
 #ifdef MOZ_DUMP_PAINTING

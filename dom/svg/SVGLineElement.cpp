@@ -37,6 +37,23 @@ SVGLineElement::SVGLineElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeIn
 {
 }
 
+void
+SVGLineElement::MaybeAdjustForZeroLength(float aX1, float aY1,
+                                         float& aX2, float aY2)
+{
+  if (aX1 == aX2 && aY1 == aY2) {
+    SVGContentUtils::AutoStrokeOptions strokeOptions;
+    SVGContentUtils::GetStrokeOptions(&strokeOptions, this, nullptr, nullptr,
+                                      SVGContentUtils::eIgnoreStrokeDashing);
+
+    if (strokeOptions.mLineCap != CapStyle::BUTT) {
+      float tinyLength =
+        strokeOptions.mLineWidth / SVG_ZERO_LENGTH_PATH_FIX_FACTOR;
+      aX2 += tinyLength;
+    }
+  }
+}
+
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
@@ -112,6 +129,8 @@ SVGLineElement::GetAsSimplePath(SimplePath* aSimplePath)
 {
   float x1, y1, x2, y2;
   GetAnimatedLengthValues(&x1, &y1, &x2, &y2, nullptr);
+
+  MaybeAdjustForZeroLength(x1, y1, x2, y2);
   aSimplePath->SetLine(x1, y1, x2, y2);
 }
 
@@ -121,6 +140,7 @@ SVGLineElement::BuildPath(PathBuilder* aBuilder)
   float x1, y1, x2, y2;
   GetAnimatedLengthValues(&x1, &y1, &x2, &y2, nullptr);
 
+  MaybeAdjustForZeroLength(x1, y1, x2, y2);
   aBuilder->MoveTo(Point(x1, y1));
   aBuilder->LineTo(Point(x2, y2));
 

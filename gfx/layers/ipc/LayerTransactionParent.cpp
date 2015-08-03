@@ -347,6 +347,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
       layer->SetAnimations(common.animations());
       layer->SetInvalidRegion(common.invalidRegion());
       layer->SetFrameMetrics(common.metrics());
+      layer->SetDisplayListLog(common.displayListLog().get());
 
       nsTArray<nsRefPtr<Layer>> maskLayers;
       for (size_t i = 0; i < common.ancestorMaskLayersParent().Length(); i++) {

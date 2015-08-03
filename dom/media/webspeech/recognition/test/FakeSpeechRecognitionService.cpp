@@ -102,12 +102,15 @@ FakeSpeechRecognitionService::BuildMockResultList()
 {
   SpeechRecognitionResultList* resultList = new SpeechRecognitionResultList(mRecognition);
   SpeechRecognitionResult* result = new SpeechRecognitionResult(mRecognition);
-  SpeechRecognitionAlternative* alternative = new SpeechRecognitionAlternative(mRecognition);
+  ErrorResult rv;
+  if (0 < mRecognition->GetMaxAlternatives(rv)) { // GetMaxAlternatives can't fail
+    SpeechRecognitionAlternative* alternative = new SpeechRecognitionAlternative(mRecognition);
 
-  alternative->mTranscript = NS_LITERAL_STRING("Mock final result");
-  alternative->mConfidence = 0.0f;
+    alternative->mTranscript = NS_LITERAL_STRING("Mock final result");
+    alternative->mConfidence = 0.0f;
 
-  result->mItems.AppendElement(alternative);
+    result->mItems.AppendElement(alternative);
+  }
   resultList->mItems.AppendElement(result);
 
   return resultList;

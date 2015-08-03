@@ -36,6 +36,9 @@
 #endif
 
 
+/**
+ * Since: 0.9.7
+ **/
 hb_bool_t
 hb_segment_properties_equal (const hb_segment_properties_t *a,
 			     const hb_segment_properties_t *b)
@@ -48,6 +51,9 @@ hb_segment_properties_equal (const hb_segment_properties_t *a,
 
 }
 
+/**
+ * Since: 0.9.7
+ **/
 unsigned int
 hb_segment_properties_hash (const hb_segment_properties_t *p)
 {
@@ -498,14 +504,10 @@ hb_buffer_t::reverse_clusters (void)
 }
 
 void
-hb_buffer_t::merge_clusters (unsigned int start,
-			     unsigned int end)
+hb_buffer_t::merge_clusters_impl (unsigned int start,
+				  unsigned int end)
 {
-#ifdef HB_NO_MERGE_CLUSTERS
-  return;
-#endif
-
-  if (unlikely (end - start < 2))
+  if (cluster_level == HB_BUFFER_CLUSTER_LEVEL_CHARACTERS)
     return;
 
   unsigned int cluster = info[start].cluster;
@@ -523,7 +525,7 @@ hb_buffer_t::merge_clusters (unsigned int start,
 
   /* If we hit the start of buffer, continue in out-buffer. */
   if (idx == start)
-    for (unsigned i = out_len; i && out_info[i - 1].cluster == info[start].cluster; i--)
+    for (unsigned int i = out_len; i && out_info[i - 1].cluster == info[start].cluster; i--)
       out_info[i - 1].cluster = cluster;
 
   for (unsigned int i = start; i < end; i++)
@@ -533,9 +535,8 @@ void
 hb_buffer_t::merge_out_clusters (unsigned int start,
 				 unsigned int end)
 {
-#ifdef HB_NO_MERGE_CLUSTERS
-  return;
-#endif
+  if (cluster_level == HB_BUFFER_CLUSTER_LEVEL_CHARACTERS)
+    return;
 
   if (unlikely (end - start < 2))
     return;
@@ -555,11 +556,43 @@ hb_buffer_t::merge_out_clusters (unsigned int start,
 
   /* If we hit the end of out-buffer, continue in buffer. */
   if (end == out_len)
-    for (unsigned i = idx; i < len && info[i].cluster == out_info[end - 1].cluster; i++)
+    for (unsigned int i = idx; i < len && info[i].cluster == out_info[end - 1].cluster; i++)
       info[i].cluster = cluster;
 
   for (unsigned int i = start; i < end; i++)
     out_info[i].cluster = cluster;
+}
+void
+hb_buffer_t::delete_glyph ()
+{
+  unsigned int cluster = info[idx].cluster;
+  if (idx + 1 < len && cluster == info[idx + 1].cluster)
+  {
+    /* Cluster survives; do nothing. */
+    goto done;
+  }
+
+  if (out_len)
+  {
+    /* Merge cluster backward. */
+    if (cluster < out_info[out_len - 1].cluster)
+    {
+      unsigned int old_cluster = out_info[out_len - 1].cluster;
+      for (unsigned i = out_len; i && out_info[i - 1].cluster == old_cluster; i--)
+	out_info[i - 1].cluster = cluster;
+    }
+    goto done;
+  }
+
+  if (idx + 1 < len)
+  {
+    /* Merge cluster forward. */
+    merge_clusters (idx, idx + 2);
+    goto done;
+  }
+
+done:
+  skip_glyph ();
 }
 
 void
@@ -703,6 +736,7 @@ hb_buffer_get_empty (void)
 
     const_cast<hb_unicode_funcs_t *> (&_hb_unicode_funcs_nil),
     HB_BUFFER_FLAG_DEFAULT,
+    HB_BUFFER_CLUSTER_LEVEL_DEFAULT,
     HB_BUFFER_REPLACEMENT_CODEPOINT_DEFAULT,
 
     HB_BUFFER_CONTENT_TYPE_INVALID,
@@ -804,7 +838,7 @@ hb_buffer_get_user_data (hb_buffer_t        *buffer,
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.5
  **/
 void
 hb_buffer_set_content_type (hb_buffer_t              *buffer,
@@ -821,7 +855,7 @@ hb_buffer_set_content_type (hb_buffer_t              *buffer,
  *
  * Return value: 
  *
- * Since: 1.0
+ * Since: 0.9.5
  **/
 hb_buffer_content_type_t
 hb_buffer_get_content_type (hb_buffer_t *buffer)
@@ -984,7 +1018,7 @@ hb_buffer_get_language (hb_buffer_t *buffer)
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.7
  **/
 void
 hb_buffer_set_segment_properties (hb_buffer_t *buffer,
@@ -1003,7 +1037,7 @@ hb_buffer_set_segment_properties (hb_buffer_t *buffer,
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.7
  **/
 void
 hb_buffer_get_segment_properties (hb_buffer_t *buffer,
@@ -1020,7 +1054,7 @@ hb_buffer_get_segment_properties (hb_buffer_t *buffer,
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.7
  **/
 void
 hb_buffer_set_flags (hb_buffer_t       *buffer,
@@ -1040,12 +1074,47 @@ hb_buffer_set_flags (hb_buffer_t       *buffer,
  *
  * Return value: 
  *
- * Since: 1.0
+ * Since: 0.9.7
  **/
 hb_buffer_flags_t
 hb_buffer_get_flags (hb_buffer_t *buffer)
 {
   return buffer->flags;
+}
+
+/**
+ * hb_buffer_set_cluster_level:
+ * @buffer: a buffer.
+ * @cluster_level: 
+ *
+ * 
+ *
+ * Since: 0.9.42
+ **/
+void
+hb_buffer_set_cluster_level (hb_buffer_t       *buffer,
+		     hb_buffer_cluster_level_t  cluster_level)
+{
+  if (unlikely (hb_object_is_inert (buffer)))
+    return;
+
+  buffer->cluster_level = cluster_level;
+}
+
+/**
+ * hb_buffer_get_cluster_level:
+ * @buffer: a buffer.
+ *
+ * 
+ *
+ * Return value: 
+ *
+ * Since: 0.9.42
+ **/
+hb_buffer_cluster_level_t
+hb_buffer_get_cluster_level (hb_buffer_t *buffer)
+{
+  return buffer->cluster_level;
 }
 
 
@@ -1056,7 +1125,7 @@ hb_buffer_get_flags (hb_buffer_t *buffer)
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.31
  **/
 void
 hb_buffer_set_replacement_codepoint (hb_buffer_t    *buffer,
@@ -1076,7 +1145,7 @@ hb_buffer_set_replacement_codepoint (hb_buffer_t    *buffer,
  *
  * Return value: 
  *
- * Since: 1.0
+ * Since: 0.9.31
  **/
 hb_codepoint_t
 hb_buffer_get_replacement_codepoint (hb_buffer_t    *buffer)
@@ -1105,7 +1174,7 @@ hb_buffer_reset (hb_buffer_t *buffer)
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.11
  **/
 void
 hb_buffer_clear_contents (hb_buffer_t *buffer)
@@ -1283,6 +1352,23 @@ hb_buffer_reverse (hb_buffer_t *buffer)
 }
 
 /**
+ * hb_buffer_reverse_range:
+ * @buffer: a buffer.
+ * @start: start index.
+ * @end: end index.
+ *
+ * Reverses buffer contents between  start to end.
+ *
+ * Since: 1.0
+ **/
+void
+hb_buffer_reverse_range (hb_buffer_t *buffer,
+			 unsigned int start, unsigned int end)
+{
+  buffer->reverse_range (start, end);
+}
+
+/**
  * hb_buffer_reverse_clusters:
  * @buffer: a buffer.
  *
@@ -1320,7 +1406,7 @@ hb_buffer_reverse_clusters (hb_buffer_t *buffer)
  * hb_language_get_default().  This may change in the future by
  * taking buffer script into consideration when choosing a language.
  *
- * Since: 1.0
+ * Since: 0.9.7
  **/
 void
 hb_buffer_guess_segment_properties (hb_buffer_t *buffer)
@@ -1473,7 +1559,7 @@ hb_buffer_add_utf32 (hb_buffer_t    *buffer,
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.39
  **/
 void
 hb_buffer_add_latin1 (hb_buffer_t   *buffer,
@@ -1495,7 +1581,7 @@ hb_buffer_add_latin1 (hb_buffer_t   *buffer,
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.31
  **/
 void
 hb_buffer_add_codepoints (hb_buffer_t          *buffer,
@@ -1569,7 +1655,7 @@ normalize_glyphs_cluster (hb_buffer_t *buffer,
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 void
 hb_buffer_normalize_glyphs (hb_buffer_t *buffer)

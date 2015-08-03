@@ -604,7 +604,7 @@ hb_font_get_glyph_contour_point (hb_font_t *font,
  *
  * Return value: 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 hb_bool_t
 hb_font_get_glyph_name (hb_font_t *font,
@@ -625,7 +625,7 @@ hb_font_get_glyph_name (hb_font_t *font,
  *
  * Return value: 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 hb_bool_t
 hb_font_get_glyph_from_name (hb_font_t *font,
@@ -800,7 +800,7 @@ hb_font_get_glyph_contour_point_for_origin (hb_font_t *font,
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 void
 hb_font_glyph_to_string (hb_font_t *font,
@@ -822,7 +822,7 @@ hb_font_glyph_to_string (hb_font_t *font,
  *
  * Return value: 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 hb_bool_t
 hb_font_glyph_from_string (hb_font_t *font,
@@ -1078,7 +1078,7 @@ hb_font_get_parent (hb_font_t *font)
  *
  * Return value: (transfer none): 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 hb_face_t *
 hb_font_get_face (hb_font_t *font)
@@ -1096,7 +1096,7 @@ hb_font_get_face (hb_font_t *font)
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 void
 hb_font_set_funcs (hb_font_t         *font,
@@ -1131,7 +1131,7 @@ hb_font_set_funcs (hb_font_t         *font,
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 void
 hb_font_set_funcs_data (hb_font_t         *font,

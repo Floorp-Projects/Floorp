@@ -205,6 +205,12 @@ AliasAnalysis::analyze()
             if (set.isNone())
                 continue;
 
+            // For the purposes of alias analysis, all recoverable operations
+            // are treated as effect free as the memory represented by these
+            // operations cannot be aliased by others.
+            if (def->canRecoverOnBailout())
+                continue;
+
             if (set.isStore()) {
                 for (AliasSetIterator iter(set); iter; iter++) {
                     if (!stores[*iter].append(*def))
