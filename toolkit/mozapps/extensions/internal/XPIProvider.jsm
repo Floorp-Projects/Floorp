@@ -22,8 +22,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "ChromeManifestParser",
                                   "resource://gre/modules/ChromeManifestParser.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
                                   "resource://gre/modules/LightweightThemeManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Locale",
-                                  "resource://gre/modules/Locale.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ZipUtils",
@@ -69,6 +67,8 @@ const PREF_INSTALL_CACHE              = "extensions.installCache";
 const PREF_XPI_STATE                  = "extensions.xpiState";
 const PREF_BOOTSTRAP_ADDONS           = "extensions.bootstrappedAddons";
 const PREF_PENDING_OPERATIONS         = "extensions.pendingOperations";
+const PREF_MATCH_OS_LOCALE            = "intl.locale.matchOS";
+const PREF_SELECTED_LOCALE            = "general.useragent.locale";
 const PREF_EM_DSS_ENABLED             = "extensions.dss.enabled";
 const PREF_DSS_SWITCHPENDING          = "extensions.dss.switchPending";
 const PREF_DSS_SKIN_TO_SELECT         = "extensions.lastSelectedSkin";
@@ -513,6 +513,84 @@ SafeInstallOperation.prototype = {
       recursiveRemove(this._createdDirs.pop());
   }
 };
+
+/**
+ * Gets the currently selected locale for display.
+ * @return  the selected locale or "en-US" if none is selected
+ */
+function getLocale() {
+  if (Preferences.get(PREF_MATCH_OS_LOCALE, false))
+    return Services.locale.getLocaleComponentForUserAgent();
+  try {
+    let locale = Preferences.get(PREF_SELECTED_LOCALE, null, Ci.nsIPrefLocalizedString);
+    if (locale)
+      return locale;
+  }
+  catch (e) {}
+  return Preferences.get(PREF_SELECTED_LOCALE, "en-US");
+}
+
+/**
+ * Selects the closest matching locale from a list of locales.
+ *
+ * @param  aLocales
+ *         An array of locales
+ * @return the best match for the currently selected locale
+ */
+function findClosestLocale(aLocales) {
+  let appLocale = getLocale();
+
+  // Holds the best matching localized resource
+  var bestmatch = null;
+  // The number of locale parts it matched with
+  var bestmatchcount = 0;
+  // The number of locale parts in the match
+  var bestpartcount = 0;
+
+  var matchLocales = [appLocale.toLowerCase()];
+  /* If the current locale is English then it will find a match if there is
+     a valid match for en-US so no point searching that locale too. */
+  if (matchLocales[0].substring(0, 3) != "en-")
+    matchLocales.push("en-us");
+
+  for each (var locale in matchLocales) {
+    var lparts = locale.split("-");
+    for each (var localized in aLocales) {
+      for each (let found in localized.locales) {
+        found = found.toLowerCase();
+        // Exact match is returned immediately
+        if (locale == found)
+          return localized;
+
+        var fparts = found.split("-");
+        /* If we have found a possible match and this one isn't any longer
+           then we dont need to check further. */
+        if (bestmatch && fparts.length < bestmatchcount)
+          continue;
+
+        // Count the number of parts that match
+        var maxmatchcount = Math.min(fparts.length, lparts.length);
+        var matchcount = 0;
+        while (matchcount < maxmatchcount &&
+               fparts[matchcount] == lparts[matchcount])
+          matchcount++;
+
+        /* If we matched more than the last best match or matched the same and
+           this locale is less specific than the last best match. */
+        if (matchcount > bestmatchcount ||
+           (matchcount == bestmatchcount && fparts.length < bestpartcount)) {
+          bestmatch = localized;
+          bestmatchcount = matchcount;
+          bestpartcount = fparts.length;
+        }
+      }
+    }
+    // If we found a valid match for this locale return it
+    if (bestmatch)
+      return bestmatch;
+  }
+  return null;
+}
 
 /**
  * Sets the userDisabled and softDisabled properties of an add-on based on what
@@ -6415,7 +6493,7 @@ AddonInternal.prototype = {
   get selectedLocale() {
     if (this._selectedLocale)
       return this._selectedLocale;
-    let locale = Locale.findClosestLocale(this.locales);
+    let locale = findClosestLocale(this.locales);
     this._selectedLocale = locale ? locale : this.defaultLocale;
     return this._selectedLocale;
   },
