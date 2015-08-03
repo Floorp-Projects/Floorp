@@ -330,6 +330,7 @@ public:
 #ifdef ENABLE_TESTS
   const FrameParser::Frame& LastFrame() const;
   nsRefPtr<MediaRawData> DemuxSample();
+  media::TimeUnit SeekPosition() const;
 #endif
 
   const ID3Parser::ID3Header& ID3Header() const;

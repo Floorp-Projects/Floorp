@@ -134,6 +134,11 @@ nsRefPtr<MediaRawData>
 MP3TrackDemuxer::DemuxSample() {
   return GetNextFrame(FindNextFrame());
 }
+
+media::TimeUnit
+MP3TrackDemuxer::SeekPosition() const {
+  return Duration(mFrameIndex);
+}
 #endif
 
 const ID3Parser::ID3Header&
