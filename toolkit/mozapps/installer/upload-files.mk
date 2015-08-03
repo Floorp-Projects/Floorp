@@ -503,29 +503,10 @@ endif
 
 ifeq ($(MOZ_PKG_FORMAT),DMG)
 PKG_SUFFIX	= .dmg
-PKG_DMG_FLAGS	=
-ifneq (,$(MOZ_PKG_MAC_DSSTORE))
-PKG_DMG_FLAGS += --copy '$(MOZ_PKG_MAC_DSSTORE):/.DS_Store'
-endif
-ifneq (,$(MOZ_PKG_MAC_BACKGROUND))
-PKG_DMG_FLAGS += --mkdir /.background --copy '$(MOZ_PKG_MAC_BACKGROUND):/.background'
-endif
-ifneq (,$(MOZ_PKG_MAC_ICON))
-PKG_DMG_FLAGS += --icon '$(MOZ_PKG_MAC_ICON)'
-endif
-ifneq (,$(MOZ_PKG_MAC_RSRC))
-PKG_DMG_FLAGS += --resource '$(MOZ_PKG_MAC_RSRC)'
-endif
-ifneq (,$(MOZ_PKG_MAC_EXTRA))
-PKG_DMG_FLAGS += $(MOZ_PKG_MAC_EXTRA)
-endif
+
 _ABS_MOZSRCDIR = $(shell cd $(MOZILLA_DIR) && pwd)
-ifndef PKG_DMG_SOURCE
 PKG_DMG_SOURCE = $(STAGEPATH)$(MOZ_PKG_DIR)
-endif
-INNER_MAKE_PACKAGE	= $(_ABS_MOZSRCDIR)/build/package/mac_osx/pkg-dmg \
-  --source '$(PKG_DMG_SOURCE)' --target '$(PACKAGE)' \
-  --volname '$(MOZ_APP_DISPLAYNAME)' $(PKG_DMG_FLAGS)
+INNER_MAKE_PACKAGE	= $(call py_action,make_dmg,'$(PKG_DMG_SOURCE)' '$(PACKAGE)')
 INNER_UNMAKE_PACKAGE	= \
   set -ex; \
   rm -rf $(_ABS_DIST)/unpack.tmp; \
