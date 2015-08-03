@@ -408,9 +408,8 @@ MediaStreamGraphImpl::UpdateCurrentTimeForStreams(GraphTime aPrevCurrentTime,
 
       stream->AdvanceTimeVaryingValuesToCurrentTime(aNextCurrentTime,
                                                     blockedTime);
-      // Advance mBlocked last so that implementations of
-      // AdvanceTimeVaryingValuesToCurrentTime can rely on the value of
-      // mBlocked.
+      // Advance mBlocked last so that AdvanceTimeVaryingValuesToCurrentTime
+      // can rely on the value of mBlocked.
       stream->mBlocked.AdvanceCurrentTime(aNextCurrentTime);
 
       if (runningAndSuspendedPair[array] == &mStreams) {
