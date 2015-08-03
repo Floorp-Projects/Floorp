@@ -1907,29 +1907,45 @@ let Impl = {
    *                            loading has completed, with false otherwise.
    */
   _loadSessionData: Task.async(function* () {
-    let dataFile = OS.Path.join(OS.Constants.Path.profileDir, DATAREPORTING_DIRECTORY,
-                                SESSION_STATE_FILE_NAME);
+    const dataFile = OS.Path.join(OS.Constants.Path.profileDir, DATAREPORTING_DIRECTORY,
+                                  SESSION_STATE_FILE_NAME);
 
-    // Try to load info about the previous session from the state file.
+    let content;
     try {
-      let data = yield CommonUtils.readJSON(dataFile);
-      if (data &&
-          "profileSubsessionCounter" in data &&
-          typeof(data.profileSubsessionCounter) == "number" &&
-          "subsessionId" in data && "sessionId" in data) {
-        this._previousSessionId = data.sessionId;
-        this._previousSubsessionId = data.subsessionId;
-        // Add |_subsessionCounter| to the |_profileSubsessionCounter| to account for
-        // new subsession while loading still takes place. This will always be exactly
-        // 1 - the current subsessions.
-        this._profileSubsessionCounter = data.profileSubsessionCounter +
-                                         this._subsessionCounter;
-        return true;
-      }
-    } catch (e) {
-      this._log.info("_loadSessionData - Cannot load session data file " + dataFile, e);
+      content = yield OS.File.read(dataFile, { encoding: "utf-8" });
+    } catch (ex) {
+      this._log.info("_loadSessionData - can not load session data file", ex);
+      Telemetry.getHistogramById("TELEMETRY_SESSIONDATA_FAILED_LOAD").add(1);
+      return false;
     }
-    return false;
+
+    let data;
+    try {
+      data = JSON.parse(content);
+    } catch (ex) {
+      this._log.error("_loadSessionData - failed to parse session data", ex);
+      Telemetry.getHistogramById("TELEMETRY_SESSIONDATA_FAILED_PARSE").add(1);
+      return false;
+    }
+
+    if (!data ||
+        !("profileSubsessionCounter" in data) ||
+        !(typeof(data.profileSubsessionCounter) == "number") ||
+        !("subsessionId" in data) || !("sessionId" in data)) {
+      this._log.error("_loadSessionData - session data is invalid");
+      Telemetry.getHistogramById("TELEMETRY_SESSIONDATA_FAILED_VALIDATION").add(1);
+      return false;
+    }
+
+    this._previousSessionId = data.sessionId;
+    this._previousSubsessionId = data.subsessionId;
+    // Add |_subsessionCounter| to the |_profileSubsessionCounter| to account for
+    // new subsession while loading still takes place. This will always be exactly
+    // 1 - the current subsessions.
+    this._profileSubsessionCounter = data.profileSubsessionCounter +
+                                     this._subsessionCounter;
+
+    return true;
   }),
 
   /**
@@ -1955,6 +1971,7 @@ let Impl = {
       yield CommonUtils.writeJSON(sessionData, filePath);
     } catch(e) {
       this._log.error("_saveSessionData - Failed to write session data to " + filePath, e);
+      Telemetry.getHistogramById("TELEMETRY_SESSIONDATA_FAILED_SAVE").add(1);
     }
   }),
 
