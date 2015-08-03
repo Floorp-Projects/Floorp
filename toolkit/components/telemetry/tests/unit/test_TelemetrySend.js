@@ -14,8 +14,6 @@ Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
 
-const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
-
 const PREF_TELEMETRY_ENABLED = "toolkit.telemetry.enabled";
 const PREF_TELEMETRY_SERVER = "toolkit.telemetry.server";
 

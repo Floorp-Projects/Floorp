@@ -5,8 +5,6 @@
 
 Cu.import("resource://gre/modules/Services.jsm", this);
 
-const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
-
 const LOCK_FILE_NAME = "Telemetry.FailedProfileLocks.txt";
 const N_FAILED_LOCKS = 10;
 

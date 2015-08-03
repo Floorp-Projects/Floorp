@@ -24,8 +24,6 @@ XPCOMUtils.defineLazyGetter(this, "gDatareportingService",
           .getService(Ci.nsISupports)
           .wrappedJSObject);
 
-const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
-
 // We increment TelemetryStorage's MAX_PING_FILE_AGE and
 // OVERDUE_PING_FILE_AGE by 1 minute so that our test pings exceed
 // those points in time, even taking into account file system imprecision.
