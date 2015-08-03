@@ -31,9 +31,22 @@ LOCAL_INCLUDES += ['/media/libav']
 # Suppress warnings in third-party code.
 if CONFIG['GNU_CC']:
     CFLAGS += [
+        '-Wno-parentheses',
+        '-Wno-pointer-sign',
         '-Wno-sign-compare',
+        '-Wno-switch',
         '-Wno-type-limits',
-        '-Wno-pointer-sign'
+    ]
+    if CONFIG['CLANG_CXX']:
+        CFLAGS += [
+            '-Wno-incompatible-pointer-types-discards-qualifiers',
+            '-Wno-logical-op-parentheses',
+        ]
+elif CONFIG['_MSC_VER']:
+    CFLAGS += [
+        '-wd4090', # 'return' : different 'const' qualifiers
+        '-wd4018', # '>' : signed/unsigned mismatch
+        '-wd4305', # 'initializing' : truncation from '__int64' to 'double'
     ]
 
 FINAL_LIBRARY = 'lgpllibs'
