@@ -1667,7 +1667,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
           text = L10N.getStr("networkMenu.sizeUnavailable");
         }
         else if(aValue === "cached") {
-          text = aValue;
+          text = L10N.getStr("networkMenu.sizeCached");
           node.classList.add('theme-comment');
         }
         else {
