@@ -42,22 +42,4 @@ $WORKSPACE/gecko/testing/mozharness/scripts/b2g_build.py \
   --platform $PLATFORM \
   --complete-mar-url https://queue.taskcluster.net/v1/task/$TASK_ID/runs/$RUN_ID/artifacts/public/build/$mar_file
 
-# Don't cache backups
-rm -rf $WORKSPACE/B2G/backup-*
-rm -f balrog_credentials
-
-mkdir -p $HOME/artifacts
-mkdir -p $HOME/artifacts-public
-
-mv $WORKSPACE/B2G/upload-public/$mar_file $HOME/artifacts-public/
-mv $WORKSPACE/B2G/upload/sources.xml $HOME/artifacts/sources.xml
-mv $WORKSPACE/B2G/upload/b2g-*.android-arm.tar.gz $HOME/artifacts/b2g-android-arm.tar.gz
-mv $WORKSPACE/B2G/upload/${TARGET}.zip $HOME/artifacts/${TARGET}.zip
-mv $WORKSPACE/B2G/upload/gaia.zip $HOME/artifacts/gaia.zip
-
-if [ -f $WORKSPACE/B2G/upload/b2g-*.crashreporter-symbols.zip ]; then
-  mv $WORKSPACE/B2G/upload/b2g-*.crashreporter-symbols.zip $HOME/artifacts/b2g-crashreporter-symbols.zip
-fi
-
-ccache -s
-
+. post-build.sh

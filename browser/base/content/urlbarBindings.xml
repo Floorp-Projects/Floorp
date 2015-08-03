@@ -967,8 +967,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             this.getAttribute("pageproxystate") != "valid")
           return;
 
-        var urlString = content.location.href;
-        var title = content.document.title || urlString;
+        var urlString = gBrowser.selectedBrowser.currentURI.spec;
+        var title = gBrowser.selectedBrowser.contentTitle || urlString;
         var htmlString = "<a href=\"" + urlString + "\">" + urlString + "</a>";
 
         var dt = event.dataTransfer;

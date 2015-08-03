@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1449175283973000);
+const PRTime gPreloadListExpirationTime = INT64_C(1449311122438000);
 
 class nsSTSPreload
 {
@@ -88,12 +88,10 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "aiticon.com", true },
   { "ajouin.com", true },
   { "akachanikuji.com", true },
-  { "akclinics.org", true },
   { "akselinurmio.fi", true },
   { "aktiv-naturheilmittel.at", true },
   { "aktiv-naturheilmittel.ch", true },
   { "aktiv-naturheilmittel.de", true },
-  { "al-shami.net", true },
   { "aladdinschools.appspot.com", true },
   { "alainwolf.net", true },
   { "alaninkenya.org", true },
@@ -462,7 +460,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "cotonea.de", true },
   { "courtlistener.com", true },
   { "covenantoftheriver.org", true },
-  { "covoiturage.fr", true },
+  { "covoiturage.fr", false },
   { "cpvmatch.eu", true },
   { "cracker.in.th", true },
   { "cradlepointecm.com", true },
@@ -1390,6 +1388,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "minikneet.com", true },
   { "minkondom.nu", true },
   { "minnesotadata.com", true },
+  { "minora.io", true },
   { "mironet.cz", true },
   { "miskatonic.org", true },
   { "miss-inventory.co.uk", true },
@@ -1414,7 +1413,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "moniquedekermadec.com", true },
   { "morethanadream.lv", true },
   { "moriz.de", true },
-  { "moriz.net", true },
   { "mothereff.in", true },
   { "moula.com.au", true },
   { "mountainmusicpromotions.com", true },
@@ -1426,7 +1424,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "mqas.net", true },
   { "mr-hosting.com", true },
   { "msa-aesch.ch", true },
-  { "msc-seereisen.net", true },
   { "msebera.cz", true },
   { "mtau.com", true },
   { "mthode.org", true },
@@ -1949,7 +1946,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "social-media-strategies.it", true },
   { "socialrank.com", false },
   { "socialspirit.com.br", false },
-  { "sockeye.cc", true },
   { "soia.ca", true },
   { "solihullcarnival.co.uk", true },
   { "solihulllionsclub.org.uk", true },
@@ -2068,7 +2064,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "techloaner.com", true },
   { "technotonic.com.au", false },
   { "techvalue.gr", true },
-  { "tegelsensanitaironline.nl", true },
   { "tehrabbitt.com", true },
   { "tekshrek.com", true },
   { "temp.pm", true },
