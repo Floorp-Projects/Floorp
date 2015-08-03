@@ -30,6 +30,7 @@ import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.mozglue.ContextUtils;
 import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.firstrun.FirstrunPane;
+import org.mozilla.gecko.RestrictedProfiles;
 import org.mozilla.gecko.util.INIParser;
 import org.mozilla.gecko.util.INISection;
 
@@ -906,6 +907,9 @@ public final class GeckoProfile {
                 synchronized (GeckoProfile.this) {
                     // Skip initialization if the profile directory has been removed.
                     if (!profileDir.exists()) {
+                        return;
+                    }
+                    if (RestrictedProfiles.isUserRestricted(context)) {
                         return;
                     }
 

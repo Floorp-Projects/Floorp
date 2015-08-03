@@ -621,6 +621,8 @@ protected:
       mText = aText;
       if (mComposition.IsComposing()) {
         mLastCompositionString = mComposition.mString;
+      } else {
+        mLastCompositionString.Truncate();
       }
       mMinTextModifiedOffset = NOT_MODIFIED;
       mInitialized = true;
@@ -646,6 +648,16 @@ protected:
     {
       MOZ_ASSERT(mInitialized);
       return mText;
+    }
+    const nsString& LastCompositionString() const
+    {
+      MOZ_ASSERT(mInitialized);
+      return mLastCompositionString;
+    }
+    uint32_t MinTextModifiedOffset() const
+    {
+      MOZ_ASSERT(mInitialized);
+      return mMinTextModifiedOffset;
     }
 
     // Returns true if layout of the character at the aOffset has not been
@@ -823,6 +835,8 @@ protected:
 
   // Enables/Disables hack for specific TIP.
   static bool sCreateNativeCaretForATOK;
+  static bool sDoNotReturnNoLayoutErrorToMSSimplifiedTIP;
+  static bool sDoNotReturnNoLayoutErrorToMSTraditionalTIP;
   static bool sDoNotReturnNoLayoutErrorToFreeChangJie;
   static bool sDoNotReturnNoLayoutErrorToEasyChangjei;
   static bool sDoNotReturnNoLayoutErrorToGoogleJaInputAtFirstChar;

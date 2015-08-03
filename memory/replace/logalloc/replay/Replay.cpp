@@ -8,9 +8,6 @@
 #include "mozmemory_wrap.h"
 
 #ifdef _WIN32
-/* windef.h, which windows.h includes, #defines min and max, which
- * breaks std::min. Defining NOMINMAX prevents those #defines. */
-#define NOMINMAX
 #include <windows.h>
 #include <io.h>
 typedef int ssize_t;

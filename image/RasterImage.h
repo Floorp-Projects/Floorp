@@ -170,12 +170,6 @@ public:
   // Methods inherited from Image
   virtual void OnSurfaceDiscarded() override;
 
-  // Raster-specific methods
-  static NS_METHOD WriteToSourceBuffer(nsIInputStream* aIn, void* aClosure,
-                                       const char* aFromRawSegment,
-                                       uint32_t aToOffset, uint32_t aCount,
-                                       uint32_t* aWriteCount);
-
   /* The total number of frames in this image. */
   uint32_t GetNumFrames() const { return mFrameCount; }
 
@@ -206,12 +200,6 @@ public:
    */
   void     SetLoopCount(int32_t aLoopCount);
 
-  /// Notification that the entire image has been decoded.
-  void OnDecodingComplete(bool aIsAnimated);
-
-  /// Helper method for OnDecodingComplete.
-  void MarkAnimationDecoded();
-
   /**
    * Sends the provided progress notifications to ProgressTracker.
    *
@@ -233,6 +221,10 @@ public:
    * Main-thread only.
    */
   void FinalizeDecoder(Decoder* aDecoder);
+
+  // Helper methods for FinalizeDecoder.
+  void MarkAnimationDecoded();
+  void ReportDecoderError(Decoder* aDecoder);
 
 
   //////////////////////////////////////////////////////////////////////////////
@@ -269,16 +261,9 @@ public:
     mRequestedResolution = requestedResolution;
   }
 
-  nsIntSize GetRequestedResolution() {
-    return mRequestedResolution;
-  }
   /* Provide a hint for the requested dimension of the resulting image. */
   void SetRequestedSampleSize(int requestedSampleSize) {
     mRequestedSampleSize = requestedSampleSize;
-  }
-
-  int GetRequestedSampleSize() {
-    return mRequestedSampleSize;
   }
 
  nsCString GetURIString() {
