@@ -56,6 +56,10 @@ public:
    *                    downscale-during-decode.
    * @param aFlags Flags specifying what type of output the decoder should
    *               produce; see GetDecodeFlags() in RasterImage.h.
+   * @param aSampleSize The sample size requested using #-moz-samplesize (or 0
+   *                    if none).
+   * @param aResolution The resolution requested using #-moz-resolution (or an
+   *                    empty rect if none).
    * @param aIsRedecode Specify 'true' if this image has been decoded before.
    * @param aImageIsTransient Specify 'true' if this image is transient.
    * @param aImageIsLocked Specify 'true' if this image is locked for the
@@ -68,6 +72,8 @@ public:
                 SourceBuffer* aSourceBuffer,
                 const Maybe<gfx::IntSize>& aTargetSize,
                 uint32_t aFlags,
+                int aSampleSize,
+                const gfx::IntSize& aResolution,
                 bool aIsRedecode,
                 bool aImageIsTransient,
                 bool aImageIsLocked);
@@ -83,11 +89,22 @@ public:
    *               notifications as decoding progresses.
    * @param aSourceBuffer The SourceBuffer which the decoder will read its data
    *                      from.
+   * @param aSampleSize The sample size requested using #-moz-samplesize (or 0
+   *                    if none).
+   * @param aResolution The resolution requested using #-moz-resolution (or an
+   *                    empty rect if none).
    */
   static already_AddRefed<Decoder>
   CreateMetadataDecoder(DecoderType aType,
                         RasterImage* aImage,
-                        SourceBuffer* aSourceBuffer);
+                        SourceBuffer* aSourceBuffer,
+                        int aSampleSize,
+                        const gfx::IntSize& aResolution);
+
+  static already_AddRefed<Decoder>
+  CreateAnonymousDecoder(DecoderType aType,
+                         SourceBuffer* aSourceBuffer,
+                         uint32_t aFlags);
 
 private:
   virtual ~DecoderFactory() = 0;

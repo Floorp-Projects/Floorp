@@ -807,6 +807,10 @@ public:
 
   bool EnsureInitActiveTIPKeyboard();
 
+  /****************************************************************************
+   * Japanese TIP
+   ****************************************************************************/
+
   // Note that TIP name may depend on the language of the environment.
   // For example, some TIP may use localized name for its target language
   // environment but English name for the others.
@@ -824,6 +828,28 @@ public:
                             NS_LITERAL_STRING("ATOK "));
   }
 
+  /****************************************************************************
+   * Traditional Chinese TIP
+   ****************************************************************************/
+
+  bool IsMSChangJieActive() const
+  {
+    return mActiveTIPKeyboardDescription.EqualsLiteral("Microsoft ChangJie") ||
+      mActiveTIPKeyboardDescription.Equals(
+        NS_LITERAL_STRING("\x5FAE\x8F6F\x4ED3\x9889")) ||
+      mActiveTIPKeyboardDescription.Equals(
+        NS_LITERAL_STRING("\x5FAE\x8EDF\x5009\x9821"));
+  }
+
+  bool IsMSQuickQuickActive() const
+  {
+    return mActiveTIPKeyboardDescription.EqualsLiteral("Microsoft Quick") ||
+      mActiveTIPKeyboardDescription.Equals(
+        NS_LITERAL_STRING("\x5FAE\x8F6F\x901F\x6210")) ||
+      mActiveTIPKeyboardDescription.Equals(
+        NS_LITERAL_STRING("\x5FAE\x8EDF\x901F\x6210"));
+  }
+
   bool IsFreeChangJieActive() const
   {
     // FYI: The TIP name is misspelled...
@@ -836,6 +862,28 @@ public:
       mActiveTIPKeyboardDescription.Equals(
         NS_LITERAL_STRING(
           "\x4E2D\x6587 (\x7E41\x9AD4) - \x6613\x9821\x8F38\x5165\x6CD5"));
+  }
+
+  /****************************************************************************
+   * Simplified Chinese TIP
+   ****************************************************************************/
+
+  bool IsMSPinyinActive() const
+  {
+    return mActiveTIPKeyboardDescription.EqualsLiteral("Microsoft Pinyin") ||
+      mActiveTIPKeyboardDescription.Equals(
+        NS_LITERAL_STRING("\x5FAE\x8F6F\x62FC\x97F3")) ||
+      mActiveTIPKeyboardDescription.Equals(
+        NS_LITERAL_STRING("\x5FAE\x8EDF\x62FC\x97F3"));
+  }
+
+  bool IsMSWubiActive() const
+  {
+    return mActiveTIPKeyboardDescription.EqualsLiteral("Microsoft Wubi") ||
+      mActiveTIPKeyboardDescription.Equals(
+        NS_LITERAL_STRING("\x5FAE\x8F6F\x4E94\x7B14")) ||
+      mActiveTIPKeyboardDescription.Equals(
+        NS_LITERAL_STRING("\x5FAE\x8EDF\x4E94\x7B46"));
   }
 
 public: // ITfActiveLanguageProfileNotifySink
@@ -1233,6 +1281,8 @@ StaticRefPtr<TSFTextStore> TSFTextStore::sEnabledTextStore;
 DWORD TSFTextStore::sClientId  = 0;
 
 bool TSFTextStore::sCreateNativeCaretForATOK = false;
+bool TSFTextStore::sDoNotReturnNoLayoutErrorToMSSimplifiedTIP = false;
+bool TSFTextStore::sDoNotReturnNoLayoutErrorToMSTraditionalTIP = false;
 bool TSFTextStore::sDoNotReturnNoLayoutErrorToFreeChangJie = false;
 bool TSFTextStore::sDoNotReturnNoLayoutErrorToEasyChangjei = false;
 bool TSFTextStore::sDoNotReturnNoLayoutErrorToGoogleJaInputAtFirstChar = false;
@@ -1969,8 +2019,11 @@ TSFTextStore::LockedContent()
 
   MOZ_LOG(sTextStoreLog, LogLevel::Debug,
          ("TSF: 0x%p   TSFTextStore::LockedContent(): "
-          "mLockedContent={ mText.Length()=%d }",
-          this, mLockedContent.Text().Length()));
+          "mLockedContent={ mText.Length()=%d, mLastCompositionString=\"%s\", "
+          "mMinTextModifiedOffset=%u }",
+          this, mLockedContent.Text().Length(),
+          NS_ConvertUTF16toUTF8(mLockedContent.LastCompositionString()).get(),
+          mLockedContent.MinTextModifiedOffset()));
 
   return mLockedContent;
 }
@@ -3399,7 +3452,9 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
   if (mComposition.IsComposing() && mComposition.mStart < acpEnd &&
       mLockedContent.IsLayoutChangedAfter(acpEnd)) {
     const Selection& currentSel = CurrentSelection();
-    if (!IsWin10OrLater()) {
+    if ((sDoNotReturnNoLayoutErrorToGoogleJaInputAtFirstChar ||
+         sDoNotReturnNoLayoutErrorToGoogleJaInputAtCaret) &&
+        kSink->IsGoogleJapaneseInputActive()) {
       // Google Japanese Input doesn't handle ITfContextView::GetTextExt()
       // properly due to the same bug of TSF mentioned above.  Google Japanese
       // Input calls this twice for the first character of changing range of
@@ -3407,10 +3462,9 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
       // composition string.  The formar is used for showing candidate window.
       // This is typically shown at wrong position.  We should avoid only this
       // case. This is not necessary on Windows 10.
-      if (!mLockedContent.IsLayoutChangedAfter(acpStart) &&
-          acpStart < acpEnd &&
-          sDoNotReturnNoLayoutErrorToGoogleJaInputAtFirstChar &&
-          kSink->IsGoogleJapaneseInputActive()) {
+      if (sDoNotReturnNoLayoutErrorToGoogleJaInputAtFirstChar &&
+          !mLockedContent.IsLayoutChangedAfter(acpStart) &&
+          acpStart < acpEnd) {
         acpEnd = acpStart;
         MOZ_LOG(sTextStoreLog, LogLevel::Debug,
                ("TSF: 0x%p   TSFTextStore::GetTextExt() hacked the offsets of "
@@ -3423,10 +3477,9 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
       // offset of selected clause. However, it's difficult to get where is
       // selected clause for now.  Instead, we should use the first character
       // which is modified. This is useful in most cases.
-      else if (acpStart == acpEnd &&
-               currentSel.IsCollapsed() && currentSel.EndOffset() == acpEnd &&
-               sDoNotReturnNoLayoutErrorToGoogleJaInputAtCaret &&
-               kSink->IsGoogleJapaneseInputActive()) {
+      else if (sDoNotReturnNoLayoutErrorToGoogleJaInputAtCaret &&
+               acpStart == acpEnd &&
+               currentSel.IsCollapsed() && currentSel.EndOffset() == acpEnd) {
         acpEnd = acpStart = mLockedContent.MinOffsetOfLayoutChanged();
         MOZ_LOG(sTextStoreLog, LogLevel::Debug,
                ("TSF: 0x%p   TSFTextStore::GetTextExt() hacked the offsets of "
@@ -3442,6 +3495,21 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
               kSink->IsFreeChangJieActive()) ||
              (sDoNotReturnNoLayoutErrorToEasyChangjei &&
               kSink->IsEasyChangjeiActive())) {
+      acpEnd = mComposition.mStart;
+      acpStart = std::min(acpStart, acpEnd);
+      MOZ_LOG(sTextStoreLog, LogLevel::Debug,
+             ("TSF: 0x%p   TSFTextStore::GetTextExt() hacked the offsets for "
+              "TIP acpStart=%d, acpEnd=%d", this, acpStart, acpEnd));
+    }
+    // Some Chinese TIPs of Microsoft doesn't show candidate window in e10s
+    // mode on Win8 or later.
+    else if (IsWin8OrLater() &&
+             ((sDoNotReturnNoLayoutErrorToMSTraditionalTIP &&
+               (kSink->IsMSChangJieActive() ||
+                kSink->IsMSQuickQuickActive())) ||
+              (sDoNotReturnNoLayoutErrorToMSSimplifiedTIP &&
+                (kSink->IsMSPinyinActive() ||
+                 kSink->IsMSWubiActive())))) {
       acpEnd = mComposition.mStart;
       acpStart = std::min(acpStart, acpEnd);
       MOZ_LOG(sTextStoreLog, LogLevel::Debug,
@@ -5100,6 +5168,14 @@ TSFTextStore::Initialize()
 
   sCreateNativeCaretForATOK =
     Preferences::GetBool("intl.tsf.hack.atok.create_native_caret", true);
+  sDoNotReturnNoLayoutErrorToMSSimplifiedTIP =
+    Preferences::GetBool(
+      "intl.tsf.hack.ms_simplified_chinese.do_not_return_no_layout_error",
+      true);
+  sDoNotReturnNoLayoutErrorToMSTraditionalTIP =
+    Preferences::GetBool(
+      "intl.tsf.hack.ms_traditional_chinese.do_not_return_no_layout_error",
+      true);
   sDoNotReturnNoLayoutErrorToFreeChangJie =
     Preferences::GetBool(
       "intl.tsf.hack.free_chang_jie.do_not_return_no_layout_error", true);
@@ -5311,7 +5387,29 @@ TSFTextStore::Content::ReplaceTextWith(LONG aStart,
           mComposition.mStart +
             FirstDifferentCharOffset(mComposition.mString,
                                      mLastCompositionString);
+        // The previous change to the composition string is canceled.
+        if (mMinTextModifiedOffset >=
+              static_cast<uint32_t>(mComposition.mStart) &&
+            mMinTextModifiedOffset < firstDifferentOffset) {
+          mMinTextModifiedOffset = firstDifferentOffset;
+        }
+      } else if (mMinTextModifiedOffset >=
+                   static_cast<uint32_t>(mComposition.mStart) &&
+                 mMinTextModifiedOffset <
+                   static_cast<uint32_t>(mComposition.EndOffset())) {
+        // The previous change to the composition string is canceled.
+        mMinTextModifiedOffset = firstDifferentOffset =
+          mComposition.EndOffset();
       }
+      MOZ_LOG(sTextStoreLog, LogLevel::Debug,
+        ("TSF: 0x%p   TSFTextStore::Content::ReplaceTextWith(aStart=%d, "
+         "aLength=%d, aReplaceString=\"%s\"), mComposition={ mStart=%d, "
+         "mString=\"%s\" }, mLastCompositionString=\"%s\", "
+         "mMinTextModifiedOffset=%u, firstDifferentOffset=%u",
+         this, aStart, aLength, NS_ConvertUTF16toUTF8(aReplaceString).get(),
+         mComposition.mStart, NS_ConvertUTF16toUTF8(mComposition.mString).get(),
+         NS_ConvertUTF16toUTF8(mLastCompositionString).get(),
+         mMinTextModifiedOffset, firstDifferentOffset));
     } else {
       firstDifferentOffset =
         static_cast<uint32_t>(aStart) +

@@ -6602,7 +6602,7 @@ var ViewportHandler = {
         minZoom: kViewportMinScale,
         maxZoom: kViewportMaxScale,
         width: kDefaultCSSViewportWidth,
-        height: kDefaultCSSViewportHeight,
+        height: -1,
         allowZoom: true,
         allowDoubleTapZoom: true,
         isSpecified: false

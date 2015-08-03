@@ -16,7 +16,7 @@ Library('google_breakpad_libxul_s')
 
 FINAL_LIBRARY = 'xul'
 
-for var in ('UNICODE', 'UNICODE_', 'BREAKPAD_NO_TERMINATE_THREAD', 'NOMINMAX'):
+for var in ('UNICODE', 'UNICODE_', 'BREAKPAD_NO_TERMINATE_THREAD'):
     DEFINES[var] = True
 
 LOCAL_INCLUDES += [
