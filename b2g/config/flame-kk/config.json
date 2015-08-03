@@ -7,7 +7,7 @@
         ["/home/cltbld/.ssh", "/home/mock_mozilla/.ssh"],
         ["/builds/crash-stats-api.token", "/builds/crash-stats-api.token"]
     ],
-    "build_targets": [],
+    "build_targets": ["", "blobfree"],
     "upload_files": [
         "{objdir}/dist/b2g-*.crashreporter-symbols.zip",
         "{objdir}/dist/b2g-*.tar.gz",
