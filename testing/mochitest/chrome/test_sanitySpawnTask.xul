@@ -58,8 +58,8 @@
       return 10;
     };
 
-    spawnTask(variousTests).then(function(result) {
-      is(result, 10, "spawnTask(...) returns promise");
+    spawn_task(variousTests).then(function(result) {
+      is(result, 10, "spawn_task(...) returns promise");
       SimpleTest.finish();
     });
     ]]>
