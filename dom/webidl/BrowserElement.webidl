@@ -151,7 +151,7 @@ interface BrowserElementPrivileged {
 
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckAllPermissions="browser setNFCFocus"]
+   CheckAllPermissions="browser nfc-manager"]
   void setNFCFocus(boolean isFocus);
 
   [Throws,

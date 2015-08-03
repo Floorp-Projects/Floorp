@@ -255,7 +255,7 @@ ApproximateZeroLengthSubpathSquareCaps(PathBuilder* aPB,
   // line is rather arbitrary, other than being chosen to meet the requirements
   // described in the comment above.
 
-  Float tinyLength = aStrokeWidth / 512;
+  Float tinyLength = aStrokeWidth / SVG_ZERO_LENGTH_PATH_FIX_FACTOR;
 
   aPB->LineTo(aPoint + Point(tinyLength, 0));
   aPB->MoveTo(aPoint);

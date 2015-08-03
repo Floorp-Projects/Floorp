@@ -25,6 +25,10 @@ protected:
   virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
   friend nsresult (::NS_NewSVGLineElement(nsIContent **aResult,
                                           already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
+  // If the input line has length zero and linecaps aren't butt, adjust |aX2| by
+  // a tiny amount to a barely-nonzero-length line that all of our draw targets
+  // will render
+  void MaybeAdjustForZeroLength(float aX1, float aY1, float& aX2, float aY2);
 
 public:
   // nsIContent interface

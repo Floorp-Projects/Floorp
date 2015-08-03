@@ -1410,6 +1410,10 @@ gfxFcPlatformFontList::FindGenericFamily(const nsAString& aGeneric,
     nsAutoRef<FcFontSet> faces(FcFontSort(nullptr, genericPattern, FcFalse,
                                           nullptr, &result));
 
+    if (!faces) {
+      return nullptr;
+    }
+
     // -- pick the first font for which a font family exists
     for (int i = 0; i < faces->nfont; i++) {
         FcPattern* font = faces->fonts[i];

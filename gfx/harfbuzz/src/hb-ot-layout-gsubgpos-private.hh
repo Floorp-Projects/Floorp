@@ -328,8 +328,7 @@ struct hb_apply_context_t
 
       if (unlikely (_hb_glyph_info_is_default_ignorable (&info) &&
 		    (ignore_zwnj || !_hb_glyph_info_is_zwnj (&info)) &&
-		    (ignore_zwj || !_hb_glyph_info_is_zwj (&info)) &&
-		    !_hb_glyph_info_ligated (&info)))
+		    (ignore_zwj || !_hb_glyph_info_is_zwj (&info))))
 	return SKIP_MAYBE;
 
       return SKIP_NO;
@@ -720,7 +719,7 @@ static inline bool match_input (hb_apply_context_t *c,
 {
   TRACE_APPLY (NULL);
 
-  if (unlikely (count > MAX_CONTEXT_LENGTH)) TRACE_RETURN (false);
+  if (unlikely (count > MAX_CONTEXT_LENGTH)) return TRACE_RETURN (false);
 
   hb_buffer_t *buffer = c->buffer;
 
@@ -2165,7 +2164,7 @@ struct ExtensionFormat1
   {
     TRACE_DISPATCH (this, format);
     if (unlikely (!c->may_dispatch (this, this))) TRACE_RETURN (c->default_return_value ());
-    return get_subtable<typename T::LookupSubTable> ().dispatch (c, get_type ());
+    return TRACE_RETURN (get_subtable<typename T::LookupSubTable> ().dispatch (c, get_type ()));
   }
 
   /* This is called from may_dispatch() above with hb_sanitize_context_t. */

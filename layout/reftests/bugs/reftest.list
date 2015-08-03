@@ -691,8 +691,9 @@ skip-if(B2G||Mulet) == 378937-1.html 378937-1-ref.html # Initial mulet triage: p
 skip-if(B2G||Mulet) fails-if(Android) random-if(cocoaWidget) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,170) fuzzy-if(gtkWidget,1,191) == 379316-2.html 379316-2-ref.html # bug 379786 # Initial mulet triage: parity with B2G/B2G Desktop
 == 379328-1.html 379328-1-ref.html
 == 379349-1a.xhtml 379349-1-ref.xhtml
-== 379349-1b.xhtml 379349-1-ref.xhtml
-== 379349-1c.xhtml 379349-1-ref.xhtml
+# fuzzy because of different border rendering approach in bug 1185636
+fuzzy(37,20) == 379349-1b.xhtml 379349-1-ref.xhtml
+fuzzy(37,20) == 379349-1c.xhtml 379349-1-ref.xhtml
 == 379349-2a.xhtml 379349-2-ref.xhtml
 == 379349-2b.xhtml 379349-2-ref.xhtml
 skip-if(B2G||Mulet) fuzzy-if(Android,2,140) == 379349-3a.xhtml 379349-3-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop

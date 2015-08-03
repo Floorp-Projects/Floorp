@@ -216,6 +216,16 @@ hb_ot_map_builder_t::compile (hb_ot_map_t &m)
 						   info->tag,
 						   &feature_index[table_index]);
     }
+    if (!found && (info->flags & F_GLOBAL_SEARCH))
+    {
+      for (unsigned int table_index = 0; table_index < 2; table_index++)
+      {
+	found |= hb_ot_layout_table_find_feature (face,
+						  table_tags[table_index],
+						  info->tag,
+						  &feature_index[table_index]);
+      }
+    }
     if (!found && !(info->flags & F_HAS_FALLBACK))
       continue;
 

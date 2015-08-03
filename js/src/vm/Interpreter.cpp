@@ -1988,7 +1988,7 @@ CASE(EnableInterruptsPseudoOpcode)
 
     if (script->hasScriptCounts()) {
         PCCounts counts = script->getPCCounts(REGS.pc);
-        counts.get(PCCounts::BASE_INTERP)++;
+        counts.numExec()++;
         moreInterrupts = true;
     }
 
