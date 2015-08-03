@@ -37,6 +37,14 @@ fails == 345369-2.html 345369-2-ref.html
 == float-in-rtl-4c.html float-in-rtl-4-ref.html
 == float-in-rtl-4d.html float-in-rtl-4-ref.html
 
+== bfc-displace-1a.html bfc-displace-1a-ref.html
+== bfc-displace-1b.html bfc-displace-1b-ref.html
+== bfc-displace-2a.html bfc-displace-2a-ref.html
+== bfc-displace-2b.html bfc-displace-2b-ref.html
+== bfc-displace-3a.html bfc-displace-3a-ref.html
+== bfc-displace-3b.html bfc-displace-3b-ref.html
+== bfc-shrink-1.html bfc-shrink-1-ref.html
+
 # Testcases that involve vertical writing mode.
 #
 # XXX The default-preferences setting here can be removed after the
