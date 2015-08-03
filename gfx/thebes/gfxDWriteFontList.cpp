@@ -1801,6 +1801,7 @@ private:
     BundledFontFileEnumerator() = delete;
     BundledFontFileEnumerator(const BundledFontFileEnumerator&) = delete;
     BundledFontFileEnumerator& operator=(const BundledFontFileEnumerator&) = delete;
+    virtual ~BundledFontFileEnumerator() {}
 
     nsRefPtr<IDWriteFactory>      mFactory;
 
@@ -1868,6 +1869,7 @@ public:
 private:
     BundledFontLoader(const BundledFontLoader&) = delete;
     BundledFontLoader& operator=(const BundledFontLoader&) = delete;
+    virtual ~BundledFontLoader() { }
 };
 
 IFACEMETHODIMP
