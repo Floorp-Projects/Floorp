@@ -99,7 +99,7 @@ AudioContext::AudioContext(nsPIDOMWindow* aWindow,
   , mIsShutDown(false)
   , mCloseCalled(false)
 {
-  aWindow->AddAudioContext(this);
+  bool mute = aWindow->AddAudioContext(this);
 
   // Note: AudioDestinationNode needs an AudioContext that must already be
   // bound to the window.
@@ -110,6 +110,11 @@ AudioContext::AudioContext(nsPIDOMWindow* aWindow,
   // call them after mDestination has been set up.
   mDestination->CreateAudioChannelAgent();
   mDestination->SetIsOnlyNodeForContext(true);
+
+  // The context can't be muted until it has a destination.
+  if (mute) {
+    Mute();
+  }
 }
 
 AudioContext::~AudioContext()
