@@ -6,6 +6,9 @@ task:
       Android phones + b2g environment used in full stack testing.
   payload:
     env:
+      MOZILLA_OFFICIAL: '1'
+      ENABLE_DEFAULT_BOOTANIMATION: 'true'
+      B2G_UPDATER: '1'
       REPO_TRACE: 1
       VARIANT: user
 
