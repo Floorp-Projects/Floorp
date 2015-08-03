@@ -258,11 +258,11 @@ public:
    * The callee must draw all of aRegionToDraw.
    * This region is relative to 0,0 in the PaintedLayer.
    *
-   * aDirtyRegion contains the region that is due to be painted at some point,
-   * even though only aRegionToDraw should be drawn during this call.
-   * They will often be equal, but aDirtyRegion may be larger, for example
-   * when painting progressively. aRegionToDraw must be entirely contained
-   * within aDirtyRegion.
+   * aDirtyRegion, if non-null, contains the total region that is due to be
+   * painted during the transaction, even though only aRegionToDraw should
+   * be drawn during this call. The sum of every aRegionToDraw over the
+   * course of the transaction must equal aDirtyRegion. aDirtyRegion can be
+   * null if the total dirty region is unknown.
    *
    * aRegionToInvalidate contains a region whose contents have been
    * changed by the layer manager and which must therefore be invalidated.
@@ -284,7 +284,7 @@ public:
   typedef void (* DrawPaintedLayerCallback)(PaintedLayer* aLayer,
                                            gfxContext* aContext,
                                            const nsIntRegion& aRegionToDraw,
-                                           const nsIntRegion& aDirtyRegion,
+                                           const nsIntRegion* aDirtyRegion,
                                            DrawRegionClip aClip,
                                            const nsIntRegion& aRegionToInvalidate,
                                            void* aCallbackData);
