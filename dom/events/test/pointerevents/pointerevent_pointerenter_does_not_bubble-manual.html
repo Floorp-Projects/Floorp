@@ -8,10 +8,9 @@
         <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
         <!-- /resources/testharness.js -->
         <script src="/resources/testharness.js"></script>
-        <!--script src="/resources/testharnessreport.js"></script-->
+        <script src="/resources/testharnessreport.js"></script>
         <!-- Additional helper script for common checks across event types -->
         <script type="text/javascript" src="pointerevent_support.js"></script>
-        <script type="text/javascript" src="mochitest_support_internal.js"></script>
         <script type="text/javascript">
             var detected_pointertypes = {};
             var test_pointerEvent = async_test("pointerEnter event does not bubble"); // set up test harness
@@ -69,7 +68,6 @@
     </head>
     <body onload="run()">
         <h1> Pointer Event: pointerenter does not bubble</h1>
-        <!--
         <h4>
             Test Description:
             The pointerenter event must not bubble up to parent elements.
@@ -77,7 +75,6 @@
         <div id="instructions">
             Use the mouse or pen to hover over then out of the purple box nested in the black box. Or with touch, tap on the purple box.
         </div>
-        -->
         <div id="parent0">
             <div id="target0"></div>
         </div>
