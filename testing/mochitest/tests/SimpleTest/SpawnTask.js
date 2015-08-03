@@ -3,11 +3,11 @@
 // See https://github.com/tj/co/tree/4.6.0
 // For use with mochitest-plain and mochitest-chrome.
 
-// __spawnTask(generatorFunction)__.
+// spawn_task(generatorFunction):
 // Expose only the `co` function, which is very similar to Task.spawn in Task.jsm.
-// We call this function spawnTask to make its purpose more plain, and to
+// We call this function spawn_task to make its purpose more plain, and to
 // reduce the chance of name collisions.
-var spawnTask = (function () {
+var spawn_task = (function () {
 
 /**
  * slice() reference.
@@ -241,4 +241,43 @@ function isObject(val) {
 }
 
 return co;
+})();
+
+// add_task(generatorFunction):
+// Call `add_task(generatorFunction)` for each separate
+// asynchronous task in a mochitest. Tasks are run consecutively.
+// Before the first task, `SimpleTest.waitForExplicitFinish()`
+// will be called automatically, and after the last task,
+// `SimpleTest.finish()` will be called.
+var add_task = (function () {
+  // The list of tasks to run.
+  var task_list = [];
+  // The "add_task" function
+  return function (generatorFunction) {
+    if (task_list.length === 0) {
+      // This is the first time add_task has been called.
+      // First, confirm that SimpleTest is available.
+      if (!SimpleTest) {
+        throw new Error("SimpleTest not available.");
+      }
+      // Don't stop tests until asynchronous tasks are finished.
+      SimpleTest.waitForExplicitFinish();
+      // Because the client is using add_task for this set of tests,
+      // we need to spawn a "master task" that calls each task in succesion.
+      // Use setTimeout to ensure the master task runs after the client
+      // script finishes.
+      setTimeout(function () {
+        spawn_task(function* () {
+          for (var task of task_list) {
+            yield task();
+          }
+          // All tasks are finished.
+          SimpleTest.finish();
+        });
+      });
+    }
+    // Add the task to the list of tasks to run after
+    // the main thread is finished.
+    task_list.push(generatorFunction);
+  };
 })();
