@@ -77,13 +77,19 @@ class MutableTraceableVectorOperations
   : public TraceableVectorOperations<Outer, T, Capacity, AllocPolicy, TraceFunc>
 {
     using Vec = TraceableVector<T, Capacity, AllocPolicy, TraceFunc>;
+    const Vec& vec() const { return static_cast<const Outer*>(this)->extract(); }
     Vec& vec() { return static_cast<Outer*>(this)->extract(); }
 
   public:
+    const AllocPolicy& allocPolicy() const { return vec().allocPolicy(); }
     AllocPolicy& allocPolicy() { return vec().allocPolicy(); }
+    const T* begin() const { return vec().begin(); }
     T* begin() { return vec().begin(); }
+    const T* end() const { return vec().end(); }
     T* end() { return vec().end(); }
+    const T& operator[](size_t aIndex) const { return vec().operator[](aIndex); }
     T& operator[](size_t aIndex) { return vec().operator[](aIndex); }
+    const T& back() const { return vec().back(); }
     T& back() { return vec().back(); }
 
     bool initCapacity(size_t aRequest) { return vec().initCapacity(aRequest); }
