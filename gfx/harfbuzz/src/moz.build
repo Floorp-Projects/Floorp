@@ -29,7 +29,7 @@ SOURCES += [
     'hb-common.cc', # error: use of undeclared identifier 'strdup'
     'hb-ot-shape-complex-hangul.cc', # error: redefinition of enumerator 'NONE'
     'hb-ot-shape-complex-indic.cc', # error: redefinition of enumerator 'INIT'
-    'hb-ot-shape-complex-sea.cc', # error: redefinition of 'basic_features'
+    'hb-ot-shape-complex-use.cc', # error: redefinition of 'basic_features'
     'hb-ot-shape.cc', # error: functions that differ only in their return type cannot be overloaded
     'hb-shape-plan.cc', # error: redefinition of 'hb_ot_shaper_face_data_ensure'
 ]
@@ -48,6 +48,7 @@ UNIFIED_SOURCES += [
     'hb-ot-shape-complex-myanmar.cc',
     'hb-ot-shape-complex-thai.cc',
     'hb-ot-shape-complex-tibetan.cc',
+    'hb-ot-shape-complex-use-table.cc',
     'hb-ot-shape-fallback.cc',
     'hb-ot-shape-normalize.cc',
     'hb-ot-tag.cc',

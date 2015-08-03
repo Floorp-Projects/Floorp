@@ -6,10 +6,10 @@
  *
  * on files with these headers:
  *
- * # ArabicShaping-7.0.0.txt
- * # Date: 2014-02-14, 21:00:00 GMT [RP, KW, LI]
- * # Blocks-7.0.0.txt
- * # Date: 2014-04-03, 23:23:00 GMT [RP, KW]
+ * # ArabicShaping-8.0.0.txt
+ * # Date: 2015-02-17, 23:33:00 GMT [RP]
+ * # Blocks-8.0.0.txt
+ * # Date: 2014-11-10, 23:04:00 GMT [KW]
  * UnicodeData.txt does not have a header.
  */
 
@@ -76,9 +76,9 @@ static const uint8_t joining_table[] =
 
   /* Arabic Extended-A */
 
-  /* 08A0 */ D,D,D,D,D,D,D,D,D,D,R,R,R,U,R,D,D,R,R,
+  /* 08A0 */ D,D,D,D,D,D,D,D,D,D,R,R,R,U,R,D,D,R,R,D,D,
 
-#define joining_offset_0x1806u 691
+#define joining_offset_0x1806u 693
 
   /* Mongolian */
 
@@ -89,40 +89,40 @@ static const uint8_t joining_table[] =
   /* 1880 */ U,U,U,U,U,U,U,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,
   /* 18A0 */ D,D,D,D,D,D,D,D,D,X,D,
 
-#define joining_offset_0x200cu 856
+#define joining_offset_0x200cu 858
 
   /* General Punctuation */
 
   /* 2000 */                         U,C,
 
-#define joining_offset_0x2066u 858
+#define joining_offset_0x2066u 860
 
   /* General Punctuation */
 
   /* 2060 */             U,U,U,U,
 
-#define joining_offset_0xa840u 862
+#define joining_offset_0xa840u 864
 
   /* Phags-pa */
 
   /* A840 */ D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,
   /* A860 */ D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,L,U,
 
-#define joining_offset_0x10ac0u 914
+#define joining_offset_0x10ac0u 916
 
   /* Manichaean */
 
   /* 10AC0 */ D,D,D,D,D,R,U,R,U,R,R,U,U,L,R,R,R,R,R,D,D,D,D,L,D,D,D,D,D,R,D,D,
   /* 10AE0 */ D,R,U,U,R,X,X,X,X,X,X,D,D,D,D,R,
 
-#define joining_offset_0x10b80u 962
+#define joining_offset_0x10b80u 964
 
   /* Psalter Pahlavi */
 
   /* 10B80 */ D,R,D,R,R,R,D,D,D,R,D,D,R,D,R,R,D,R,X,X,X,X,X,X,X,X,X,X,X,X,X,X,
   /* 10BA0 */ X,X,X,X,X,X,X,X,X,R,R,R,R,D,D,U,
 
-}; /* Table items: 1010; occupancy: 57% */
+}; /* Table items: 1012; occupancy: 57% */
 
 
 static unsigned int
@@ -131,7 +131,7 @@ joining_type (hb_codepoint_t u)
   switch (u >> 12)
   {
     case 0x0u:
-      if (hb_in_range (u, 0x0600u, 0x08B2u)) return joining_table[u - 0x0600u + joining_offset_0x0600u];
+      if (hb_in_range (u, 0x0600u, 0x08B4u)) return joining_table[u - 0x0600u + joining_offset_0x0600u];
       break;
 
     case 0x1u:

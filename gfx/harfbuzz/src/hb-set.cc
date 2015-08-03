@@ -35,7 +35,7 @@
  *
  * Return value: (transfer full):
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 hb_set_t *
 hb_set_create (void)
@@ -55,7 +55,7 @@ hb_set_create (void)
  *
  * Return value: (transfer full):
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 hb_set_t *
 hb_set_get_empty (void)
@@ -76,7 +76,7 @@ hb_set_get_empty (void)
  *
  * Return value: (transfer full):
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 hb_set_t *
 hb_set_reference (hb_set_t *set)
@@ -88,7 +88,7 @@ hb_set_reference (hb_set_t *set)
  * hb_set_destroy: (skip)
  * @set: a set.
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 void
 hb_set_destroy (hb_set_t *set)
@@ -110,7 +110,7 @@ hb_set_destroy (hb_set_t *set)
  *
  * Return value:
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 hb_bool_t
 hb_set_set_user_data (hb_set_t           *set,
@@ -129,7 +129,7 @@ hb_set_set_user_data (hb_set_t           *set,
  *
  * Return value: (transfer none):
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 void *
 hb_set_get_user_data (hb_set_t           *set,
@@ -147,7 +147,7 @@ hb_set_get_user_data (hb_set_t           *set,
  *
  * Return value: 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 hb_bool_t
 hb_set_allocation_successful (const hb_set_t  *set HB_UNUSED)
@@ -161,7 +161,7 @@ hb_set_allocation_successful (const hb_set_t  *set HB_UNUSED)
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 void
 hb_set_clear (hb_set_t *set)
@@ -177,7 +177,7 @@ hb_set_clear (hb_set_t *set)
  *
  * Return value: 
  *
- * Since: 1.0
+ * Since: 0.9.7
  **/
 hb_bool_t
 hb_set_is_empty (const hb_set_t *set)
@@ -194,7 +194,7 @@ hb_set_is_empty (const hb_set_t *set)
  *
  * Return value: 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 hb_bool_t
 hb_set_has (const hb_set_t *set,
@@ -210,7 +210,7 @@ hb_set_has (const hb_set_t *set,
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 void
 hb_set_add (hb_set_t       *set,
@@ -227,7 +227,7 @@ hb_set_add (hb_set_t       *set,
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.7
  **/
 void
 hb_set_add_range (hb_set_t       *set,
@@ -244,7 +244,7 @@ hb_set_add_range (hb_set_t       *set,
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 void
 hb_set_del (hb_set_t       *set,
@@ -261,7 +261,7 @@ hb_set_del (hb_set_t       *set,
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.7
  **/
 void
 hb_set_del_range (hb_set_t       *set,
@@ -280,7 +280,7 @@ hb_set_del_range (hb_set_t       *set,
  *
  * Return value: 
  *
- * Since: 1.0
+ * Since: 0.9.7
  **/
 hb_bool_t
 hb_set_is_equal (const hb_set_t *set,
@@ -296,7 +296,7 @@ hb_set_is_equal (const hb_set_t *set,
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 void
 hb_set_set (hb_set_t       *set,
@@ -312,7 +312,7 @@ hb_set_set (hb_set_t       *set,
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 void
 hb_set_union (hb_set_t       *set,
@@ -328,7 +328,7 @@ hb_set_union (hb_set_t       *set,
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 void
 hb_set_intersect (hb_set_t       *set,
@@ -344,7 +344,7 @@ hb_set_intersect (hb_set_t       *set,
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 void
 hb_set_subtract (hb_set_t       *set,
@@ -360,7 +360,7 @@ hb_set_subtract (hb_set_t       *set,
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 void
 hb_set_symmetric_difference (hb_set_t       *set,
@@ -375,7 +375,7 @@ hb_set_symmetric_difference (hb_set_t       *set,
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.10
  **/
 void
 hb_set_invert (hb_set_t *set)
@@ -391,7 +391,7 @@ hb_set_invert (hb_set_t *set)
  *
  * Return value: set population.
  *
- * Since: 1.0
+ * Since: 0.9.7
  **/
 unsigned int
 hb_set_get_population (const hb_set_t *set)
@@ -407,7 +407,7 @@ hb_set_get_population (const hb_set_t *set)
  *
  * Return value: minimum of the set, or %HB_SET_VALUE_INVALID if set is empty.
  *
- * Since: 1.0
+ * Since: 0.9.7
  **/
 hb_codepoint_t
 hb_set_get_min (const hb_set_t *set)
@@ -423,7 +423,7 @@ hb_set_get_min (const hb_set_t *set)
  *
  * Return value: minimum of the set, or %HB_SET_VALUE_INVALID if set is empty.
  *
- * Since: 1.0
+ * Since: 0.9.7
  **/
 hb_codepoint_t
 hb_set_get_max (const hb_set_t *set)
@@ -440,7 +440,7 @@ hb_set_get_max (const hb_set_t *set)
  *
  * Return value: whether there was a next value.
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 hb_bool_t
 hb_set_next (const hb_set_t *set,
@@ -460,7 +460,7 @@ hb_set_next (const hb_set_t *set,
  *
  * Return value: whether there was a next range.
  *
- * Since: 1.0
+ * Since: 0.9.7
  **/
 hb_bool_t
 hb_set_next_range (const hb_set_t *set,

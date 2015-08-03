@@ -36,6 +36,15 @@
 #include "hb-set-private.hh"
 
 
+/* Private API corresponding to hb-ot-layout.h: */
+
+HB_INTERNAL hb_bool_t
+hb_ot_layout_table_find_feature (hb_face_t    *face,
+				 hb_tag_t      table_tag,
+				 hb_tag_t      feature_tag,
+				 unsigned int *feature_index);
+
+
 /*
  * GDEF
  */
@@ -179,6 +188,30 @@ _hb_ot_layout_destroy (hb_ot_layout_t *layout);
 #define lig_props()		var1.u8[2] /* GSUB/GPOS ligature tracking */
 #define syllable()		var1.u8[3] /* GSUB/GPOS shaping boundaries */
 
+
+/* loop over syllables */
+
+#define foreach_syllable(buffer, start, end) \
+  for (unsigned int \
+       _count = buffer->len, \
+       start = 0, end = _count ? _next_syllable (buffer, 0) : 0; \
+       start < _count; \
+       start = end, end = _next_syllable (buffer, start))
+
+static inline unsigned int
+_next_syllable (hb_buffer_t *buffer, unsigned int start)
+{
+  hb_glyph_info_t *info = buffer->info;
+  unsigned int count = buffer->len;
+
+  unsigned int syllable = info[start].syllable();
+  while (++start < count && syllable == info[start].syllable())
+    ;
+
+  return start;
+}
+
+
 /* unicode_props */
 
 enum {
@@ -225,10 +258,12 @@ _hb_glyph_info_get_modified_combining_class (const hb_glyph_info_t *info)
   return info->unicode_props1();
 }
 
+static inline bool _hb_glyph_info_ligated (const hb_glyph_info_t *info);
+
 static inline hb_bool_t
 _hb_glyph_info_is_default_ignorable (const hb_glyph_info_t *info)
 {
-  return !!(info->unicode_props0() & MASK0_IGNORABLE);
+  return (info->unicode_props0() & MASK0_IGNORABLE) && !_hb_glyph_info_ligated (info);
 }
 
 static inline hb_bool_t
@@ -403,6 +438,14 @@ static inline void
 _hb_glyph_info_clear_ligated_and_multiplied (hb_glyph_info_t *info)
 {
   info->glyph_props() &= ~(HB_OT_LAYOUT_GLYPH_PROPS_LIGATED |
+			   HB_OT_LAYOUT_GLYPH_PROPS_MULTIPLIED);
+}
+
+static inline void
+_hb_glyph_info_clear_substituted_and_ligated_and_multiplied (hb_glyph_info_t *info)
+{
+  info->glyph_props() &= ~(HB_OT_LAYOUT_GLYPH_PROPS_SUBSTITUTED |
+			   HB_OT_LAYOUT_GLYPH_PROPS_LIGATED |
 			   HB_OT_LAYOUT_GLYPH_PROPS_MULTIPLIED);
 }
 
