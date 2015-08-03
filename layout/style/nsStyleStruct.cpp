@@ -1305,6 +1305,11 @@ nsChangeHint nsStyleSVGReset::CalcDifference(const nsStyleSVGReset& aOther) cons
 {
   nsChangeHint hint = nsChangeHint(0);
 
+  if (HasFilters() != aOther.HasFilters()) {
+    // A change from/to being a containing block for position:fixed.
+    NS_UpdateHint(hint, nsChangeHint_AddOrRemoveTransform);
+  }
+
   if (mClipPath != aOther.mClipPath ||
       !EqualURIs(mMask, aOther.mMask) ||
       mFilters != aOther.mFilters) {
@@ -2846,6 +2851,11 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
         NS_UpdateHint(transformHint, kUpdateOverflowAndRepaintHint);
         break;
       }
+
+    if (HasPerspectiveStyle() != aOther.HasPerspectiveStyle()) {
+      // A change from/to being a containing block for position:fixed.
+      NS_UpdateHint(hint, nsChangeHint_AddOrRemoveTransform);
+    }
 
     if (mChildPerspective != aOther.mChildPerspective ||
         mTransformStyle != aOther.mTransformStyle ||
