@@ -358,6 +358,10 @@ public:
     gr_face* GetGrFace();
     virtual void ReleaseGrFace(gr_face* aFace);
 
+    // Does the font have graphite contextuals that involve the space glyph
+    // (and therefore we should bypass the word cache)?
+    bool HasGraphiteSpaceContextuals();
+
     // Release any SVG-glyphs document this font may have loaded.
     void DisconnectSVG();
 
@@ -402,6 +406,8 @@ public:
     bool             mHasSpaceFeaturesKerning : 1;
     bool             mHasSpaceFeaturesNonKerning : 1;
     bool             mSkipDefaultFeatureSpaceCheck : 1;
+    bool             mGraphiteSpaceContextualsInitialized : 1;
+    bool             mHasGraphiteSpaceContextuals : 1;
     bool             mSpaceGlyphIsInvisible : 1;
     bool             mSpaceGlyphIsInvisibleInitialized : 1;
     bool             mHasGraphiteTables : 1;
