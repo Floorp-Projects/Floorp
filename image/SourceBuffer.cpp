@@ -9,6 +9,7 @@
 #include <cmath>
 #include <cstring>
 #include "mozilla/Likely.h"
+#include "nsIInputStream.h"
 #include "MainThreadUtils.h"
 #include "SurfaceCache.h"
 
@@ -352,6 +353,46 @@ SourceBuffer::Append(const char* aData, size_t aLength)
   }
 
   return NS_OK;
+}
+
+static NS_METHOD
+AppendToSourceBuffer(nsIInputStream*,
+                     void* aClosure,
+                     const char* aFromRawSegment,
+                     uint32_t,
+                     uint32_t aCount,
+                     uint32_t* aWriteCount)
+{
+  SourceBuffer* sourceBuffer = static_cast<SourceBuffer*>(aClosure);
+
+  // Copy the source data. Unless we hit OOM, we squelch the return value here,
+  // because returning an error means that ReadSegments stops reading data, and
+  // we want to ensure that we read everything we get. If we hit OOM then we
+  // return a failed status to the caller.
+  nsresult rv = sourceBuffer->Append(aFromRawSegment, aCount);
+  if (rv == NS_ERROR_OUT_OF_MEMORY) {
+    return rv;
+  }
+
+  // Report that we wrote everything we got.
+  *aWriteCount = aCount;
+
+  return NS_OK;
+}
+
+nsresult
+SourceBuffer::AppendFromInputStream(nsIInputStream* aInputStream,
+                                    uint32_t aCount)
+{
+  uint32_t bytesRead;
+  nsresult rv = aInputStream->ReadSegments(AppendToSourceBuffer, this,
+                                           aCount, &bytesRead);
+
+  MOZ_ASSERT(bytesRead == aCount || rv == NS_ERROR_OUT_OF_MEMORY,
+             "AppendToSourceBuffer should consume everything unless "
+             "we run out of memory");
+
+  return rv;
 }
 
 void

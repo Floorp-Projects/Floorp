@@ -10,8 +10,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.graphics.drawable.DrawableCompat;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
@@ -25,6 +23,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.util.DrawableUtil;
 import org.mozilla.gecko.widget.TwoWayView;
 
 import java.util.ArrayList;
@@ -184,9 +183,8 @@ public class SearchEngineBar extends TwoWayView
                 view = LayoutInflater.from(getContext()).inflate(R.layout.search_engine_bar_label, parent, false);
             }
 
-            final Drawable icon = DrawableCompat.wrap(
-                    ContextCompat.getDrawable(parent.getContext(), R.drawable.search_icon_active).mutate());
-            DrawableCompat.setTint(icon, getResources().getColor(R.color.disabled_grey));
+            final Drawable icon =
+                    DrawableUtil.tintDrawable(parent.getContext(), R.drawable.search_icon_active, R.color.disabled_grey);
 
             final ImageView iconView = (ImageView) view.findViewById(R.id.search_engine_label);
             iconView.setImageDrawable(icon);

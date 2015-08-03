@@ -29,8 +29,6 @@ DEFINES['SHARED_LIBRARY'] = '%s%s%s' % (
     CONFIG['DLL_SUFFIX']
 )
 
-DEFINES['NOMINMAX'] = True
-
 LOCAL_INCLUDES += [
     '../google-breakpad/src/',
 ]

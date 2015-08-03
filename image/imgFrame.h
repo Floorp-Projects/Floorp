@@ -342,6 +342,7 @@ private: // data
 
   bool mHasNoAlpha;
   bool mAborted;
+  bool mOptimizable;
 
 
   //////////////////////////////////////////////////////////////////////////////
@@ -371,7 +372,6 @@ private: // data
 
   bool mSinglePixel;
   bool mCompositingFailed;
-  bool mOptimizable;
 };
 
 /**

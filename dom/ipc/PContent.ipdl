@@ -60,6 +60,7 @@ include PluginTypes;
 include ProtocolTypes;
 include PContentPermission;
 include BrowserConfiguration;
+include GraphicsMessages;
 
 // Workaround to prevent error if PContentChild.cpp & PContentBridgeParent.cpp
 // are put into different UnifiedProtocolsXX.cpp files.
@@ -1052,6 +1053,12 @@ parent:
     GamepadListenerRemoved();
 
     async Profile(nsCString aProfile);
+
+    /**
+     * Request graphics initialization information from the parent.
+     */
+    sync GetGraphicsDeviceInitData()
+        returns (DeviceInitData aData);
 
 both:
      AsyncMessage(nsString aMessage, ClonedMessageData aData,

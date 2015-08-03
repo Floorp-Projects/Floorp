@@ -3,7 +3,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Test that we can nest event loops when needed in
-// ThreadActor.prototype.synchronize.
+// ThreadActor.prototype.unsafeSynchronize.
 
 var gClient;
 var gThreadActor;
@@ -32,12 +32,12 @@ function test_nesting() {
   executeSoon(function () {
     // Should be on the first step
     do_check_eq(++currentStep, 1);
-    // We should have one nested event loop from synchronize
+    // We should have one nested event loop from unsfeSynchronize
     do_check_eq(thread._nestedEventLoops.size, 1);
     resolve(true);
   });
 
-  do_check_eq(thread.synchronize(p), true);
+  do_check_eq(thread.unsafeSynchronize(p), true);
 
   // Should be on the second step
   do_check_eq(++currentStep, 2);
