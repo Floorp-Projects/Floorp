@@ -7,6 +7,7 @@
 EXPORTS.mozilla.ipc += [
     'DaemonRunnables.h',
     'DaemonSocket.h',
+    'DaemonSocketConnector.h',
     'DaemonSocketConsumer.h',
     'DaemonSocketPDU.h',
     'DaemonSocketPDUHelpers.h'
@@ -14,6 +15,7 @@ EXPORTS.mozilla.ipc += [
 
 UNIFIED_SOURCES += [
     'DaemonSocket.cpp',
+    'DaemonSocketConnector.cpp',
     'DaemonSocketConsumer.cpp',
     'DaemonSocketPDU.cpp',
     'DaemonSocketPDUHelpers.cpp'
