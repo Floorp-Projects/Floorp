@@ -55,7 +55,6 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
-import android.provider.Browser;
 import android.text.TextUtils;
 import android.util.Log;
 import org.mozilla.gecko.util.IOUtils;
@@ -889,7 +888,7 @@ public class LocalBrowserDB implements BrowserDB {
         final long now = System.currentTimeMillis();
         ContentValues values = new ContentValues();
         if (title != null) {
-            values.put(Browser.BookmarkColumns.TITLE, title);
+            values.put(Bookmarks.TITLE, title);
         }
 
         values.put(Bookmarks.URL, uri);
@@ -992,7 +991,7 @@ public class LocalBrowserDB implements BrowserDB {
     @RobocopTarget
     public void updateBookmark(ContentResolver cr, int id, String uri, String title, String keyword) {
         ContentValues values = new ContentValues();
-        values.put(Browser.BookmarkColumns.TITLE, title);
+        values.put(Bookmarks.TITLE, title);
         values.put(Bookmarks.URL, uri);
         values.put(Bookmarks.KEYWORD, keyword);
         values.put(Bookmarks.DATE_MODIFIED, System.currentTimeMillis());
