@@ -118,7 +118,8 @@ typedef enum {
   CORNER_DOT
 } CornerStyle;
 
-nsCSSBorderRenderer::nsCSSBorderRenderer(DrawTarget* aDrawTarget,
+nsCSSBorderRenderer::nsCSSBorderRenderer(nsPresContext::nsPresContextType aPresContextType,
+                                         DrawTarget* aDrawTarget,
                                          Rect& aOuterRect,
                                          const uint8_t* aBorderStyles,
                                          const Float* aBorderWidths,
@@ -126,7 +127,8 @@ nsCSSBorderRenderer::nsCSSBorderRenderer(DrawTarget* aDrawTarget,
                                          const nscolor* aBorderColors,
                                          nsBorderColors* const* aCompositeColors,
                                          nscolor aBackgroundColor)
-  : mDrawTarget(aDrawTarget),
+  : mPresContextType(aPresContextType),
+    mDrawTarget(aDrawTarget),
     mOuterRect(aOuterRect),
     mBorderStyles(aBorderStyles),
     mBorderWidths(aBorderWidths),
@@ -1032,66 +1034,26 @@ bool IsVisible(int aStyle)
   return false;
 }
 
-already_AddRefed<GradientStops>
-nsCSSBorderRenderer::CreateCornerGradient(mozilla::css::Corner aCorner,
-                                          nscolor aFirstColor,
-                                          nscolor aSecondColor,
-                                          DrawTarget *aDT,
-                                          Point &aPoint1,
-                                          Point &aPoint2)
+struct twoFloats
 {
-  typedef struct { Float a, b; } twoFloats;
+    Float a, b;
 
-  const twoFloats gradientCoeff[4] = { { -1, +1 },
-                                       { -1, -1 },
-                                       { +1, -1 },
-                                       { +1, +1 } };
+    twoFloats operator*(const Size& aSize) const {
+      return { a * aSize.width, b * aSize.height };
+    }
 
-  // Sides which form the 'width' and 'height' for the calculation of the angle
-  // for our gradient.
-  const int cornerWidth[4] = { 3, 1, 1, 3 };
-  const int cornerHeight[4] = { 0, 0, 2, 2 };
+    twoFloats operator*(Float aScale) const {
+      return { a * aScale, b * aScale };
+    }
 
-  Point cornerOrigin = mOuterRect.AtCorner(aCorner);
+    twoFloats operator+(const Point& aPoint) const {
+      return { a + aPoint.x, b + aPoint.y };
+    }
 
-  Point pat1, pat2;
-  pat1.x = cornerOrigin.x +
-    mBorderWidths[cornerHeight[aCorner]] * gradientCoeff[aCorner].a;
-  pat1.y = cornerOrigin.y +
-    mBorderWidths[cornerWidth[aCorner]]  * gradientCoeff[aCorner].b;
-  pat2.x = cornerOrigin.x -
-    mBorderWidths[cornerHeight[aCorner]] * gradientCoeff[aCorner].a;
-  pat2.y = cornerOrigin.y -
-    mBorderWidths[cornerWidth[aCorner]]  * gradientCoeff[aCorner].b;
-
-  aPoint1 = Point(pat1.x, pat1.y);
-  aPoint2 = Point(pat2.x, pat2.y);
-
-  Color firstColor = Color::FromABGR(aFirstColor);
-  Color secondColor = Color::FromABGR(aSecondColor);
-
-  nsTArray<gfx::GradientStop> rawStops(2);
-  rawStops.SetLength(2);
-  rawStops[0].color = firstColor;
-  rawStops[0].offset = 0.5;
-  rawStops[1].color = secondColor;
-  rawStops[1].offset = 0.5;
-  RefPtr<GradientStops> gs =
-    gfxGradientCache::GetGradientStops(aDT, rawStops, ExtendMode::CLAMP);
-  if (!gs) {
-    // Having two corners, both with reversed color stops is pretty common
-    // for certain border types. Let's optimize it!
-    rawStops[0].color = secondColor;
-    rawStops[1].color = firstColor;
-    Point tmp = aPoint1;
-    aPoint1 = aPoint2;
-    aPoint2 = tmp;
-    gs = gfxGradientCache::GetOrCreateGradientStops(aDT, rawStops, ExtendMode::CLAMP);
-  }
-  return gs.forget();
-}
-
-typedef struct { Float a, b; } twoFloats;
+    operator Point() const {
+      return Point(a, b);
+    }
+};
 
 void
 nsCSSBorderRenderer::DrawSingleWidthSolidBorder()
@@ -1105,12 +1067,8 @@ nsCSSBorderRenderer::DrawSingleWidthSolidBorder()
                                        { -0.5,  0   },
                                        {    0, -0.5 } };
   NS_FOR_CSS_SIDES(side) {
-    Point firstCorner = rect.CCWCorner(side);
-    firstCorner.x += cornerAdjusts[side].a;
-    firstCorner.y += cornerAdjusts[side].b;
-    Point secondCorner = rect.CWCorner(side);
-    secondCorner.x += cornerAdjusts[side].a;
-    secondCorner.y += cornerAdjusts[side].b;
+    Point firstCorner = rect.CCWCorner(side) + cornerAdjusts[side];
+    Point secondCorner = rect.CWCorner(side) + cornerAdjusts[side];
 
     ColorPattern color(ToDeviceColor(mBorderColors[side]));
 
@@ -1118,11 +1076,308 @@ nsCSSBorderRenderer::DrawSingleWidthSolidBorder()
   }
 }
 
+// Intersect a ray from the inner corner to the outer corner
+// with the border radius, yielding the intersection point.
+static Point
+IntersectBorderRadius(const Point& aCenter, const Size& aRadius,
+                      const Point& aInnerCorner,
+                      const Point& aCornerDirection)
+{
+  Point toCorner = aCornerDirection;
+  // transform to-corner ray to unit-circle space
+  toCorner.x /= aRadius.width;
+  toCorner.y /= aRadius.height;
+  // normalize to-corner ray
+  Float cornerDist = toCorner.Length();
+  if (cornerDist < 1.0e-6f) {
+    return aInnerCorner;
+  }
+  toCorner = toCorner / cornerDist;
+  // ray from inner corner to border radius center
+  Point toCenter = aCenter - aInnerCorner;
+  // transform to-center ray to unit-circle space
+  toCenter.x /= aRadius.width;
+  toCenter.y /= aRadius.height;
+  // compute offset of intersection with border radius unit circle
+  Float offset = toCenter.DotProduct(toCorner);
+  // compute discriminant to check for intersections
+  Float discrim = 1.0f - toCenter.DotProduct(toCenter) + offset * offset;
+  // choose farthest intersection
+  offset += sqrtf(std::max(discrim, 0.0f));
+  // transform to-corner ray back out of unit-circle space
+  toCorner.x *= aRadius.width;
+  toCorner.y *= aRadius.height;
+  return aInnerCorner + toCorner * offset;
+}
+
+// Calculate the split point and split angle for a border radius with
+// differing sides.
+static inline void
+SplitBorderRadius(const Point& aCenter, const Size& aRadius,
+                  const Point& aOuterCorner, const Point& aInnerCorner,
+                  const twoFloats& aCornerMults, Float aStartAngle,
+                  Point& aSplit, Float& aSplitAngle)
+{
+  Point cornerDir = aOuterCorner - aInnerCorner;
+  if (cornerDir.x == cornerDir.y && aRadius.IsSquare()) {
+    // optimize 45-degree intersection with circle since we can assume
+    // the circle center lies along the intersection edge
+    aSplit = aCenter - aCornerMults * (aRadius * Float(1.0f / M_SQRT2));
+    aSplitAngle = aStartAngle + 0.5f * M_PI / 2.0f;
+  } else {
+    aSplit = IntersectBorderRadius(aCenter, aRadius, aInnerCorner, cornerDir);
+    aSplitAngle =
+      atan2f((aSplit.y - aCenter.y) / aRadius.height,
+             (aSplit.x - aCenter.x) / aRadius.width);
+  }
+}
+
+// Compute the size of the skirt needed, given the color alphas
+// of each corner side and the slope between them.
+static void
+ComputeCornerSkirtSize(Float aAlpha1, Float aAlpha2,
+                       Float aSlopeY, Float aSlopeX,
+                       Float& aSizeResult, Float& aSlopeResult)
+{
+  // If either side is (almost) invisible or there is no diagonal edge,
+  // then don't try to render a skirt.
+  if (aAlpha1 < 0.01f || aAlpha2 < 0.01f) {
+    return;
+  }
+  aSlopeX = fabs(aSlopeX);
+  aSlopeY = fabs(aSlopeY);
+  if (aSlopeX < 1.0e-6f || aSlopeY < 1.0e-6f) {
+    return;
+  }
+
+  // If first and second color don't match, we need to split the corner in
+  // half. The diagonal edges created may not have full pixel coverage given
+  // anti-aliasing, so we need to compute a small subpixel skirt edge. This
+  // assumes each half has half coverage to start with, and that coverage
+  // increases as the skirt is pushed over, with the end result that we want
+  // to roughly preserve the alpha value along this edge.
+  // Given slope m, alphas a and A, use quadratic formula to solve for S in:
+  //   a*(1 - 0.5*(1-S)*(1-mS))*(1 - 0.5*A) + 0.5*A = A
+  // yielding:
+  //   S = ((1+m) - sqrt((1+m)*(1+m) + 4*m*(1 - A/(a*(1-0.5*A))))) / (2*m)
+  // and substitute k = (1+m)/(2*m):
+  //   S = k - sqrt(k*k + (1 - A/(a*(1-0.5*A)))/m)
+  Float slope = aSlopeY / aSlopeX;
+  Float slopeScale = (1.0f + slope) / (2.0f * slope);
+  Float discrim =
+    slopeScale*slopeScale +
+      (1 - aAlpha2 / (aAlpha1 * (1.0f - 0.49f * aAlpha2))) / slope;
+  if (discrim >= 0) {
+    aSizeResult = slopeScale - sqrtf(discrim);
+    aSlopeResult = slope;
+  }
+}
+
+// Draws a border radius with possibly different sides.
+// A skirt is drawn underneath the corner intersection to hide possible
+// seams when anti-aliased drawing is used.
+// As an optimization, this tries to combine the drawing of the side itself
+// with the drawing of the border radius where possible.
+static void
+DrawBorderRadius(DrawTarget* aDrawTarget,
+                 const Point& aSideStart, Float aSideWidth,
+                 mozilla::css::Corner c,
+                 const Point& aOuterCorner, const Point& aInnerCorner,
+                 const twoFloats& aCornerMultPrev, const twoFloats& aCornerMultNext,
+                 const Size& aCornerDims,
+                 const Size& aOuterRadius, const Size& aInnerRadius,
+                 const Color& aFirstColor, const Color& aSecondColor,
+                 Float aSkirtSize, Float aSkirtSlope)
+{
+  // Connect edge to outer arc start point
+  Point outerCornerStart = aOuterCorner + aCornerMultPrev * aCornerDims;
+  // Connect edge to outer arc end point
+  Point outerCornerEnd = aOuterCorner + aCornerMultNext * aCornerDims;
+  // Connect edge to inner arc start point
+  Point innerCornerStart =
+    outerCornerStart +
+      aCornerMultNext * (aCornerDims - aInnerRadius);
+  // Connect edge to inner arc end point
+  Point innerCornerEnd =
+    outerCornerEnd +
+      aCornerMultPrev * (aCornerDims - aInnerRadius);
+
+  // Outer arc start point
+  Point outerArcStart = aOuterCorner + aCornerMultPrev * aOuterRadius;
+  // Outer arc end point
+  Point outerArcEnd = aOuterCorner + aCornerMultNext * aOuterRadius;
+  // Inner arc start point
+  Point innerArcStart = aInnerCorner + aCornerMultPrev * aInnerRadius;
+  // Inner arc end point
+  Point innerArcEnd = aInnerCorner + aCornerMultNext * aInnerRadius;
+
+  // Outer radius center
+  Point outerCenter = aOuterCorner + (aCornerMultPrev + aCornerMultNext) * aOuterRadius;
+  // Inner radius center
+  Point innerCenter = aInnerCorner + (aCornerMultPrev + aCornerMultNext) * aInnerRadius;
+
+  RefPtr<PathBuilder> builder;
+  RefPtr<Path> path;
+
+  if (aFirstColor.a > 0) {
+    builder = aDrawTarget->CreatePathBuilder();
+    // Combine stroke with corner if color matches.
+    if (aSideWidth > 0) {
+      builder->MoveTo(aSideStart + aCornerMultNext * aSideWidth);
+      builder->LineTo(aSideStart);
+      builder->LineTo(outerCornerStart);
+    } else {
+      builder->MoveTo(outerCornerStart);
+    }
+  }
+
+  if (aFirstColor != aSecondColor) {
+    // Start and end angles of corner quadrant
+    Float startAngle = (c * M_PI) / 2.0f - M_PI,
+          endAngle = startAngle + M_PI / 2.0f,
+          outerSplitAngle, innerSplitAngle;
+    Point outerSplit, innerSplit;
+
+    // Outer half-way point
+    SplitBorderRadius(outerCenter, aOuterRadius, aOuterCorner, aInnerCorner,
+                      aCornerMultPrev + aCornerMultNext, startAngle,
+                      outerSplit, outerSplitAngle);
+    // Inner half-way point
+    if (aInnerRadius.IsEmpty()) {
+      innerSplit = aInnerCorner;
+      innerSplitAngle = endAngle;
+    } else {
+      SplitBorderRadius(innerCenter, aInnerRadius, aOuterCorner, aInnerCorner,
+                        aCornerMultPrev + aCornerMultNext, startAngle,
+                        innerSplit, innerSplitAngle);
+    }
+
+    // Draw first half with first color
+    if (aFirstColor.a > 0) {
+      AcuteArcToBezier(builder.get(), outerCenter, aOuterRadius,
+                       outerArcStart, outerSplit, startAngle, outerSplitAngle);
+      // Draw skirt as part of first half
+      if (aSkirtSize > 0) {
+        builder->LineTo(outerSplit + aCornerMultNext * aSkirtSize);
+        builder->LineTo(innerSplit - aCornerMultPrev * (aSkirtSize * aSkirtSlope));
+      }
+      AcuteArcToBezier(builder.get(), innerCenter, aInnerRadius,
+                       innerSplit, innerArcStart, innerSplitAngle, startAngle);
+      if ((innerCornerStart - innerArcStart).DotProduct(aCornerMultPrev) > 0) {
+        builder->LineTo(innerCornerStart);
+      }
+      builder->Close();
+      path = builder->Finish();
+      aDrawTarget->Fill(path, ColorPattern(aFirstColor));
+    }
+
+    // Draw second half with second color
+    if (aSecondColor.a > 0) {
+      builder = aDrawTarget->CreatePathBuilder();
+      builder->MoveTo(outerCornerEnd);
+      if ((innerArcEnd - innerCornerEnd).DotProduct(aCornerMultNext) < 0) {
+        builder->LineTo(innerCornerEnd);
+      }
+      AcuteArcToBezier(builder.get(), innerCenter, aInnerRadius,
+                       innerArcEnd, innerSplit, endAngle, innerSplitAngle);
+      AcuteArcToBezier(builder.get(), outerCenter, aOuterRadius,
+                       outerSplit, outerArcEnd, outerSplitAngle, endAngle);
+      builder->Close();
+      path = builder->Finish();
+      aDrawTarget->Fill(path, ColorPattern(aSecondColor));
+    }
+  } else if (aFirstColor.a > 0) {
+    // Draw corner with single color
+    AcuteArcToBezier(builder.get(), outerCenter, aOuterRadius,
+                     outerArcStart, outerArcEnd);
+    builder->LineTo(outerCornerEnd);
+    if ((innerArcEnd - innerCornerEnd).DotProduct(aCornerMultNext) < 0) {
+      builder->LineTo(innerCornerEnd);
+    }
+    AcuteArcToBezier(builder.get(), innerCenter, aInnerRadius,
+                     innerArcEnd, innerArcStart, -kKappaFactor);
+    if ((innerCornerStart - innerArcStart).DotProduct(aCornerMultPrev) > 0) {
+      builder->LineTo(innerCornerStart);
+    }
+    builder->Close();
+    path = builder->Finish();
+    aDrawTarget->Fill(path, ColorPattern(aFirstColor));
+  }
+}
+
+// Draw a corner with possibly different sides.
+// A skirt is drawn underneath the corner intersection to hide possible
+// seams when anti-aliased drawing is used.
+// As an optimization, this tries to combine the drawing of the side itself
+// with the drawing of the corner where possible.
+static void
+DrawCorner(DrawTarget* aDrawTarget,
+           const Point& aSideStart, Float aSideWidth,
+           mozilla::css::Corner c,
+           const Point& aOuterCorner, const Point& aInnerCorner,
+           const twoFloats& aCornerMultPrev, const twoFloats& aCornerMultNext,
+           const Size& aCornerDims,
+           const Color& aFirstColor, const Color& aSecondColor,
+           Float aSkirtSize, Float aSkirtSlope)
+{
+  // Corner box start point
+  Point cornerStart = aOuterCorner + aCornerMultPrev * aCornerDims;
+  // Corner box end point
+  Point cornerEnd = aOuterCorner + aCornerMultNext * aCornerDims;
+
+  RefPtr<PathBuilder> builder;
+  RefPtr<Path> path;
+
+  if (aFirstColor.a > 0) {
+    builder = aDrawTarget->CreatePathBuilder();
+    // Combine stroke with corner if color matches.
+    if (aSideWidth > 0) {
+      builder->MoveTo(aSideStart + aCornerMultNext * aSideWidth);
+      builder->LineTo(aSideStart);
+    } else {
+      builder->MoveTo(cornerStart);
+    }
+  }
+
+  if (aFirstColor != aSecondColor) {
+    // Draw first half with first color
+    if (aFirstColor.a > 0) {
+      builder->LineTo(aOuterCorner);
+      // Draw skirt as part of first half
+      if (aSkirtSize > 0) {
+        builder->LineTo(aOuterCorner + aCornerMultNext * aSkirtSize);
+        builder->LineTo(aInnerCorner - aCornerMultPrev * (aSkirtSize * aSkirtSlope));
+      }
+      builder->LineTo(aInnerCorner);
+      builder->Close();
+      path = builder->Finish();
+      aDrawTarget->Fill(path, ColorPattern(aFirstColor));
+    }
+
+    // Draw second half with second color
+    if (aSecondColor.a > 0) {
+      builder = aDrawTarget->CreatePathBuilder();
+      builder->MoveTo(cornerEnd);
+      builder->LineTo(aInnerCorner);
+      builder->LineTo(aOuterCorner);
+      builder->Close();
+      path = builder->Finish();
+      aDrawTarget->Fill(path, ColorPattern(aSecondColor));
+    }
+  } else if (aFirstColor.a > 0) {
+    // Draw corner with single color
+    builder->LineTo(aOuterCorner);
+    builder->LineTo(cornerEnd);
+    builder->LineTo(aInnerCorner);
+    builder->Close();
+    path = builder->Finish();
+    aDrawTarget->Fill(path, ColorPattern(aFirstColor));
+  }
+}
+
 void
 nsCSSBorderRenderer::DrawNoCompositeColorSolidBorder()
 {
-  const Float alpha = 0.55191497064665766025f;
-
   const twoFloats cornerMults[4] = { { -1,  0 },
                                      {  0, -1 },
                                      { +1,  0 },
@@ -1133,8 +1388,6 @@ nsCSSBorderRenderer::DrawNoCompositeColorSolidBorder()
                                        { 0, -0.5 },
                                        { +0.5, 0 } };
 
-  Point pc, pci, p0, p1, p2, p3, pd, p3i;
-
   RectCornerRadii innerRadii;
   ComputeInnerRadii(mBorderRadii, mBorderWidths, &innerRadii);
 
@@ -1142,11 +1395,16 @@ nsCSSBorderRenderer::DrawNoCompositeColorSolidBorder()
   strokeRect.Deflate(Margin(mBorderWidths[0] / 2.0, mBorderWidths[1] / 2.0,
                             mBorderWidths[2] / 2.0, mBorderWidths[3] / 2.0));
 
-  ColorPattern colorPat(Color(0, 0, 0, 0));
-  LinearGradientPattern gradPat(Point(), Point(), nullptr);
+  NS_FOR_CSS_SIDES(i) {
+    // We now draw the current side and the CW corner following it.
+    // The CCW corner of this side was already drawn in the previous iteration.
+    // The side will either be drawn as an explicit stroke or combined
+    // with the drawing of the CW corner.
+    // If the next side does not have a matching color, then we split the
+    // corner into two halves, one of each side's color and draw both.
+    // Thus, the CCW corner of the next side will end up drawn here.
 
-  NS_FOR_CSS_CORNERS(i) {
-      // the corner index -- either 1 2 3 0 (cw) or 0 3 2 1 (ccw)
+    // the corner index -- either 1 2 3 0 (cw) or 0 3 2 1 (ccw)
     mozilla::css::Corner c = mozilla::css::Corner((i+1) % 4);
     mozilla::css::Corner prevCorner = mozilla::css::Corner(i);
 
@@ -1157,122 +1415,73 @@ nsCSSBorderRenderer::DrawNoCompositeColorSolidBorder()
     int i2 = (i+2) % 4;
     int i3 = (i+3) % 4;
 
-    pc = mOuterRect.AtCorner(c);
-    pci = mInnerRect.AtCorner(c);
-
-    nscolor firstColor, secondColor;
-    if (IsVisible(mBorderStyles[i]) && IsVisible(mBorderStyles[i1])) {
-      firstColor = mBorderColors[i];
-      secondColor = mBorderColors[i1];
-    } else if (IsVisible(mBorderStyles[i])) {
-      firstColor = mBorderColors[i];
-      secondColor = mBorderColors[i];
+    Float sideWidth = 0.0f;
+    Color firstColor, secondColor;
+    if (IsVisible(mBorderStyles[i]) && mBorderWidths[i]) {
+      // draw the side since it is visible
+      sideWidth = mBorderWidths[i];
+      firstColor = ToDeviceColor(mBorderColors[i]);
+      // if the next side is visible, use its color for corner
+      secondColor =
+        IsVisible(mBorderStyles[i1]) && mBorderWidths[i1] ?
+          ToDeviceColor(mBorderColors[i1]) :
+          firstColor;
+    } else if (IsVisible(mBorderStyles[i1]) && mBorderWidths[i1]) {
+      // assign next side's color to both corner sides
+      firstColor = ToDeviceColor(mBorderColors[i1]);
+      secondColor = firstColor;
     } else {
-      firstColor = mBorderColors[i1];
-      secondColor = mBorderColors[i1];
+      // neither side is visible, so nothing to do
+      continue;
     }
 
-    RefPtr<PathBuilder> builder = mDrawTarget->CreatePathBuilder();
+    Point outerCorner = mOuterRect.AtCorner(c);
+    Point innerCorner = mInnerRect.AtCorner(c);
 
-    Point strokeStart, strokeEnd;
-
-    strokeStart.x = mOuterRect.AtCorner(prevCorner).x +
-      mBorderCornerDimensions[prevCorner].width * cornerMults[i2].a;
-    strokeStart.y = mOuterRect.AtCorner(prevCorner).y +
-      mBorderCornerDimensions[prevCorner].height * cornerMults[i2].b;
-
-    strokeEnd.x = pc.x + mBorderCornerDimensions[c].width * cornerMults[i].a;
-    strokeEnd.y = pc.y + mBorderCornerDimensions[c].height * cornerMults[i].b;
-
-    strokeStart.x += centerAdjusts[i].a * mBorderWidths[i];
-    strokeStart.y += centerAdjusts[i].b * mBorderWidths[i];
-    strokeEnd.x += centerAdjusts[i].a * mBorderWidths[i];
-    strokeEnd.y += centerAdjusts[i].b * mBorderWidths[i];
-
-    builder->MoveTo(strokeStart);
-    builder->LineTo(strokeEnd);
-    RefPtr<Path> path = builder->Finish();
-    mDrawTarget->Stroke(path, ColorPattern(ToDeviceColor(mBorderColors[i])),
-                        StrokeOptions(mBorderWidths[i]));
-    builder = nullptr;
-    path = nullptr;
-
-    Pattern *pattern;
-
-    if (firstColor != secondColor) {
-      gradPat.mStops = CreateCornerGradient(c, firstColor, secondColor,
-                                            mDrawTarget, gradPat.mBegin,
-                                            gradPat.mEnd);
-      pattern = &gradPat;
-    } else {
-      colorPat.mColor = ToDeviceColor(firstColor);
-      pattern = &colorPat;
+    // start and end points of border side stroke between corners
+    Point sideStart =
+      mOuterRect.AtCorner(prevCorner) +
+        cornerMults[i2] * mBorderCornerDimensions[prevCorner];
+    Point sideEnd = outerCorner + cornerMults[i] * mBorderCornerDimensions[c];
+    // if the side is inverted, don't draw it
+    if (-(sideEnd - sideStart).DotProduct(cornerMults[i]) <= 0) {
+      sideWidth = 0.0f;
     }
 
-    builder = mDrawTarget->CreatePathBuilder();
+    Float skirtSize = 0.0f, skirtSlope = 0.0f;
+    // the sides don't match, so compute a skirt
+    if (firstColor != secondColor &&
+        mPresContextType != nsPresContext::eContext_Print) {
+      Point cornerDir = outerCorner - innerCorner;
+      ComputeCornerSkirtSize(firstColor.a, secondColor.a,
+                             cornerDir.DotProduct(cornerMults[i]),
+                             cornerDir.DotProduct(cornerMults[i3]),
+                             skirtSize, skirtSlope);
+    }
 
-    if (mBorderRadii[c].width > 0 && mBorderRadii[c].height > 0) {
-      p0.x = pc.x + cornerMults[i].a * mBorderRadii[c].width;
-      p0.y = pc.y + cornerMults[i].b * mBorderRadii[c].height;
-
-      p3.x = pc.x + cornerMults[i3].a * mBorderRadii[c].width;
-      p3.y = pc.y + cornerMults[i3].b * mBorderRadii[c].height;
-
-      p1.x = p0.x + alpha * cornerMults[i2].a * mBorderRadii[c].width;
-      p1.y = p0.y + alpha * cornerMults[i2].b * mBorderRadii[c].height;
-
-      p2.x = p3.x - alpha * cornerMults[i3].a * mBorderRadii[c].width;
-      p2.y = p3.y - alpha * cornerMults[i3].b * mBorderRadii[c].height;
-
-      Point cornerStart;
-      cornerStart.x = pc.x + cornerMults[i].a * mBorderCornerDimensions[c].width;
-      cornerStart.y = pc.y + cornerMults[i].b * mBorderCornerDimensions[c].height;
-
-      builder->MoveTo(cornerStart);
-      builder->LineTo(p0);
-
-      builder->BezierTo(p1, p2, p3);
-
-      Point outerCornerEnd;
-      outerCornerEnd.x = pc.x + cornerMults[i3].a * mBorderCornerDimensions[c].width;
-      outerCornerEnd.y = pc.y + cornerMults[i3].b * mBorderCornerDimensions[c].height;
-
-      builder->LineTo(outerCornerEnd);
-
-      p0.x = pci.x + cornerMults[i].a * innerRadii[c].width;
-      p0.y = pci.y + cornerMults[i].b * innerRadii[c].height;
-
-      p3i.x = pci.x + cornerMults[i3].a * innerRadii[c].width;
-      p3i.y = pci.y + cornerMults[i3].b * innerRadii[c].height;
-
-      p1.x = p0.x + alpha * cornerMults[i2].a * innerRadii[c].width;
-      p1.y = p0.y + alpha * cornerMults[i2].b * innerRadii[c].height;
-
-      p2.x = p3i.x - alpha * cornerMults[i3].a * innerRadii[c].width;
-      p2.y = p3i.y - alpha * cornerMults[i3].b * innerRadii[c].height;
-      builder->LineTo(p3i);
-      builder->BezierTo(p2, p1, p0);
-      builder->Close();
-      path = builder->Finish();
-      mDrawTarget->Fill(path, *pattern);
-    } else {
-      Point c1, c2, c3, c4;
-
-      c1.x = pc.x + cornerMults[i].a * mBorderCornerDimensions[c].width;
-      c1.y = pc.y + cornerMults[i].b * mBorderCornerDimensions[c].height;
-      c2 = pc;
-      c3.x = pc.x + cornerMults[i3].a * mBorderCornerDimensions[c].width;
-      c3.y = pc.y + cornerMults[i3].b * mBorderCornerDimensions[c].height;
-
-      builder->MoveTo(c1);
-      builder->LineTo(c2);
-      builder->LineTo(c3);
-      builder->LineTo(pci);
-      builder->Close();
-
-      path = builder->Finish();
-
-      mDrawTarget->Fill(path, *pattern);
+    if (!mBorderRadii[c].IsEmpty()) {
+      // the corner has a border radius
+      DrawBorderRadius(mDrawTarget,
+                       sideStart, sideWidth,
+                       c, outerCorner, innerCorner,
+                       cornerMults[i], cornerMults[i3],
+                       mBorderCornerDimensions[c],
+                       mBorderRadii[c], innerRadii[c],
+                       firstColor, secondColor, skirtSize, skirtSlope);
+    } else if (!mBorderCornerDimensions[c].IsEmpty()) {
+      // a corner with no border radius
+      DrawCorner(mDrawTarget,
+                 sideStart, sideWidth,
+                 c, outerCorner, innerCorner,
+                 cornerMults[i], cornerMults[i3],
+                 mBorderCornerDimensions[c],
+                 firstColor, secondColor, skirtSize, skirtSlope);
+    } else if (sideWidth > 0 && firstColor.a > 0) {
+      // if there is no corner, then stroke the border side separately
+      mDrawTarget->StrokeLine(sideStart + centerAdjusts[i] * sideWidth,
+                              sideEnd + centerAdjusts[i] * sideWidth,
+                              ColorPattern(firstColor),
+                              StrokeOptions(sideWidth));
     }
   }
 }
@@ -1294,12 +1503,8 @@ nsCSSBorderRenderer::DrawRectangularCompositeColors()
     NS_FOR_CSS_SIDES(side) {
       int sideNext = (side + 1) % 4;
 
-      Point firstCorner = rect.CCWCorner(side);
-      firstCorner.x += cornerAdjusts[side].a;
-      firstCorner.y += cornerAdjusts[side].b;
-      Point secondCorner = rect.CWCorner(side);
-      secondCorner.x -= cornerAdjusts[side].a;
-      secondCorner.y -= cornerAdjusts[side].b;
+      Point firstCorner = rect.CCWCorner(side) + cornerAdjusts[side];
+      Point secondCorner = rect.CWCorner(side) - cornerAdjusts[side];
 
       Color currentColor = Color::FromABGR(
         currentColors[side] ? currentColors[side]->mColor
@@ -1308,9 +1513,7 @@ nsCSSBorderRenderer::DrawRectangularCompositeColors()
       mDrawTarget->StrokeLine(firstCorner, secondCorner,
                               ColorPattern(ToDeviceColor(currentColor)));
 
-      Point cornerTopLeft = rect.CWCorner(side);
-      cornerTopLeft.x -= 0.5;
-      cornerTopLeft.y -= 0.5;
+      Point cornerTopLeft = rect.CWCorner(side) - Point(0.5, 0.5);
       Color nextColor = Color::FromABGR(
         currentColors[sideNext] ? currentColors[sideNext]->mColor
                                 : mBorderColors[sideNext]);

@@ -148,6 +148,12 @@ static const hb_script_t ucdn_script_translate[] =
     HB_SCRIPT_SIDDHAM,
     HB_SCRIPT_TIRHUTA,
     HB_SCRIPT_WARANG_CITI,
+    HB_SCRIPT_AHOM,
+    HB_SCRIPT_ANATOLIAN_HIEROGLYPHS,
+    HB_SCRIPT_HATRAN,
+    HB_SCRIPT_MULTANI,
+    HB_SCRIPT_OLD_HUNGARIAN,
+    HB_SCRIPT_SIGNWRITING,
 };
 
 static hb_unicode_combining_class_t

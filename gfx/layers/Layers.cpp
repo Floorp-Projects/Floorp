@@ -36,6 +36,7 @@
 #include "nsPrintfCString.h"            // for nsPrintfCString
 #include "nsStyleStruct.h"              // for nsTimingFunction, etc
 #include "protobuf/LayerScopePacket.pb.h"
+#include "mozilla/Compression.h"
 
 uint8_t gLayerManagerLayerBuilder;
 
@@ -51,6 +52,7 @@ FILEOrDefault(FILE* aFile)
 typedef FrameMetrics::ViewID ViewID;
 
 using namespace mozilla::gfx;
+using namespace mozilla::Compression;
 
 //--------------------------------------------------
 // LayerManager
@@ -1592,6 +1594,35 @@ Layer::Dump(layerscope::LayersPacket* aPacket, const void* aParent)
 }
 
 void
+Layer::SetDisplayListLog(const char* log)
+{
+  if (gfxUtils::DumpDisplayList()) {
+    mDisplayListLog = log;
+  }
+}
+
+void
+Layer::GetDisplayListLog(nsCString& log)
+{
+  log.SetLength(0);
+
+  if (gfxUtils::DumpDisplayList()) {
+    // This function returns a plain text string which consists of two things
+    //   1. DisplayList log.
+    //   2. Memory address of this layer.
+    // We know the target layer of each display item by information in #1.
+    // Here is an example of a Text display item line log in #1
+    //   Text p=0xa9850c00 f=0x0xaa405b00(.....
+    // f keeps the address of the target client layer of a display item.
+    // For LayerScope, display-item-to-client-layer mapping is not enough since
+    // LayerScope, which lives in the chrome process, knows only composite layers.
+    // As so, we need display-item-to-client-layer-to-layer-composite
+    // mapping. That's the reason we insert #2 into the log
+    log.AppendPrintf("0x%p\n%s",(void*) this, mDisplayListLog.get());
+  }
+}
+
+void
 Layer::Log(const char* aPrefix)
 {
   if (!IsLogEnabled())
@@ -1807,9 +1838,21 @@ Layer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent)
                       LayersPacket::Layer::HORIZONTAL);
     layer->set_barid(GetScrollbarTargetContainerId());
   }
+
   // Mask layer
   if (mMaskLayer) {
     layer->set_mask(reinterpret_cast<uint64_t>(mMaskLayer.get()));
+  }
+
+  // DisplayList log.
+  if (mDisplayListLog.Length() > 0) {
+    layer->set_displaylistloglength(mDisplayListLog.Length());
+    auto compressedData =
+      MakeUnique<char[]>(LZ4::maxCompressedSize(mDisplayListLog.Length()));
+    int compressedSize = LZ4::compress((char*)mDisplayListLog.get(),
+                                       mDisplayListLog.Length(),
+                                       compressedData.get());
+    layer->set_displaylistlog(compressedData.get(), compressedSize);
   }
 }
 

@@ -30,6 +30,10 @@ struct BaseSize {
     return width == 0 || height == 0;
   }
 
+  bool IsSquare() const {
+    return width == height;
+  }
+
   // Note that '=' isn't defined so we'll get the
   // compiler generated default assignment operator
 

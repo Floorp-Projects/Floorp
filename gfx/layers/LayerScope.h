@@ -26,7 +26,9 @@ public:
     static void DrawBegin();
     static void SetRenderOffset(float aX, float aY);
     static void SetLayerTransform(const gfx::Matrix4x4& aMatrix);
-    static void SetLayerRects(size_t aRects, const gfx::Rect* aLayerRects);
+    static void SetDrawRects(size_t aRects,
+                             const gfx::Rect* aLayerRects,
+                             const gfx::Rect* aTextureRects);
     static void DrawEnd(gl::GLContext* aGLContext,
                         const EffectChain& aEffectChain,
                         int aWidth,
@@ -40,6 +42,7 @@ public:
     static void CleanLayer();
     static void SetHWComposed();
 
+    static void SetPixelScale(double devPixelsPerCSSPixel);
     static void ContentChanged(TextureHost *host);
 private:
     static void Init();

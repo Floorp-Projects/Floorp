@@ -1,0 +1,11 @@
+prefix=/usr/local
+exec_prefix=/usr/local
+libdir=/usr/local/lib
+includedir=/usr/local/include
+
+Name: harfbuzz
+Description: HarfBuzz text shaping library
+Version: 1.0.1
+
+Libs: -L${libdir} -lharfbuzz
+Cflags: -I${includedir}/harfbuzz

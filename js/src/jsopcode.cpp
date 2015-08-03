@@ -138,88 +138,7 @@ js::StackDefs(JSScript* script, jsbytecode* pc)
     return cs.ndefs;
 }
 
-static const char * const countBaseNames[] = {
-    "interp"
-};
-
-JS_STATIC_ASSERT(JS_ARRAY_LENGTH(countBaseNames) == PCCounts::BASE_LIMIT);
-
-static const char * const countAccessNames[] = {
-    "infer_mono",
-    "infer_di",
-    "infer_poly",
-    "infer_barrier",
-    "infer_nobarrier",
-    "observe_undefined",
-    "observe_null",
-    "observe_boolean",
-    "observe_int32",
-    "observe_double",
-    "observe_string",
-    "observe_object"
-};
-
-JS_STATIC_ASSERT(JS_ARRAY_LENGTH(countBaseNames) +
-                 JS_ARRAY_LENGTH(countAccessNames) == PCCounts::ACCESS_LIMIT);
-
-static const char * const countElementNames[] = {
-    "id_int",
-    "id_double",
-    "id_other",
-    "id_unknown",
-    "elem_typed",
-    "elem_packed",
-    "elem_dense",
-    "elem_other"
-};
-
-JS_STATIC_ASSERT(JS_ARRAY_LENGTH(countBaseNames) +
-                 JS_ARRAY_LENGTH(countAccessNames) +
-                 JS_ARRAY_LENGTH(countElementNames) == PCCounts::ELEM_LIMIT);
-
-static const char * const countPropertyNames[] = {
-    "prop_static",
-    "prop_definite",
-    "prop_other"
-};
-
-JS_STATIC_ASSERT(JS_ARRAY_LENGTH(countBaseNames) +
-                 JS_ARRAY_LENGTH(countAccessNames) +
-                 JS_ARRAY_LENGTH(countPropertyNames) == PCCounts::PROP_LIMIT);
-
-static const char * const countArithNames[] = {
-    "arith_int",
-    "arith_double",
-    "arith_other",
-    "arith_unknown",
-};
-
-JS_STATIC_ASSERT(JS_ARRAY_LENGTH(countBaseNames) +
-                 JS_ARRAY_LENGTH(countArithNames) == PCCounts::ARITH_LIMIT);
-
-/* static */ const char*
-PCCounts::countName(JSOp op, size_t which)
-{
-    MOZ_ASSERT(which < numCounts(op));
-
-    if (which < BASE_LIMIT)
-        return countBaseNames[which];
-
-    if (accessOp(op)) {
-        if (which < ACCESS_LIMIT)
-            return countAccessNames[which - BASE_LIMIT];
-        if (elementOp(op))
-            return countElementNames[which - ACCESS_LIMIT];
-        if (propertyOp(op))
-            return countPropertyNames[which - ACCESS_LIMIT];
-        MOZ_CRASH("bad op");
-    }
-
-    if (arithOp(op))
-        return countArithNames[which - BASE_LIMIT];
-
-    MOZ_CRASH("bad op");
-}
+const char * PCCounts::numExecName = "interp";
 
 void
 js::DumpIonScriptCounts(Sprinter* sp, jit::IonScriptCounts* ionCounts)
@@ -245,26 +164,15 @@ js::DumpPCCounts(JSContext* cx, HandleScript script, Sprinter* sp)
 #ifdef DEBUG
     jsbytecode* pc = script->code();
     while (pc < script->codeEnd()) {
-        JSOp op = JSOp(*pc);
         jsbytecode* next = GetNextPc(pc);
 
         if (!Disassemble1(cx, script, pc, script->pcToOffset(pc), true, sp))
             return;
 
-        size_t total = PCCounts::numCounts(op);
-        double* raw = script->getPCCounts(pc).rawCounts();
-
         Sprint(sp, "                  {");
-        bool printed = false;
-        for (size_t i = 0; i < total; i++) {
-            double val = raw[i];
-            if (val) {
-                if (printed)
-                    Sprint(sp, ", ");
-                Sprint(sp, "\"%s\": %.0f", PCCounts::countName(op, i), val);
-                printed = true;
-            }
-        }
+        double val = script->getPCCounts(pc).numExec();
+        if (val)
+            Sprint(sp, "\"%s\": %.0f", PCCounts::numExecName, val);
         Sprint(sp, "}\n");
 
         pc = next;
@@ -1846,39 +1754,13 @@ js::GetPCCountScriptSummary(JSContext* cx, size_t index)
         }
     }
 
-    double baseTotals[PCCounts::BASE_LIMIT] = {0.0};
-    double accessTotals[PCCounts::ACCESS_LIMIT - PCCounts::BASE_LIMIT] = {0.0};
-    double elementTotals[PCCounts::ELEM_LIMIT - PCCounts::ACCESS_LIMIT] = {0.0};
-    double propertyTotals[PCCounts::PROP_LIMIT - PCCounts::ACCESS_LIMIT] = {0.0};
-    double arithTotals[PCCounts::ARITH_LIMIT - PCCounts::BASE_LIMIT] = {0.0};
+    double total = 0.0;
 
-    for (unsigned i = 0; i < script->length(); i++) {
-        PCCounts& counts = sac.getPCCounts(script->offsetToPC(i));
-        if (!counts)
-            continue;
-
-        JSOp op = (JSOp)script->code()[i];
-        unsigned numCounts = PCCounts::numCounts(op);
-
-        for (unsigned j = 0; j < numCounts; j++) {
-            double value = counts.get(j);
-            if (j < PCCounts::BASE_LIMIT) {
-                baseTotals[j] += value;
-            } else if (PCCounts::accessOp(op)) {
-                if (j < PCCounts::ACCESS_LIMIT)
-                    accessTotals[j - PCCounts::BASE_LIMIT] += value;
-                else if (PCCounts::elementOp(op))
-                    elementTotals[j - PCCounts::ACCESS_LIMIT] += value;
-                else if (PCCounts::propertyOp(op))
-                    propertyTotals[j - PCCounts::ACCESS_LIMIT] += value;
-                else
-                    MOZ_CRASH("Bad opcode");
-            } else if (PCCounts::arithOp(op)) {
-                arithTotals[j - PCCounts::BASE_LIMIT] += value;
-            } else {
-                MOZ_CRASH("Bad opcode");
-            }
-        }
+    jsbytecode* codeEnd = script->codeEnd();
+    for (jsbytecode* pc = script->code(); pc < codeEnd; pc = GetNextPc(pc)) {
+        PCCounts& counts = sac.getPCCounts(pc);
+        double value = counts.numExec();
+        total += value;
     }
 
     AppendJSONProperty(buf, "totals");
@@ -1886,16 +1768,7 @@ js::GetPCCountScriptSummary(JSContext* cx, size_t index)
 
     MaybeComma comma = NO_COMMA;
 
-    AppendArrayJSONProperties(cx, buf, baseTotals, countBaseNames,
-                              JS_ARRAY_LENGTH(baseTotals), comma);
-    AppendArrayJSONProperties(cx, buf, accessTotals, countAccessNames,
-                              JS_ARRAY_LENGTH(accessTotals), comma);
-    AppendArrayJSONProperties(cx, buf, elementTotals, countElementNames,
-                              JS_ARRAY_LENGTH(elementTotals), comma);
-    AppendArrayJSONProperties(cx, buf, propertyTotals, countPropertyNames,
-                              JS_ARRAY_LENGTH(propertyTotals), comma);
-    AppendArrayJSONProperties(cx, buf, arithTotals, countArithNames,
-                              JS_ARRAY_LENGTH(arithTotals), comma);
+    AppendArrayJSONProperties(cx, buf, &total, &PCCounts::numExecName, 1, comma);
 
     uint64_t ionActivity = 0;
     jit::IonScriptCounts* ionCounts = sac.getIonCounts();
@@ -1986,19 +1859,14 @@ GetPCCountJSON(JSContext* cx, const ScriptAndCounts& sac, StringBuffer& buf)
         }
 
         PCCounts& counts = sac.getPCCounts(pc);
-        unsigned numCounts = PCCounts::numCounts(op);
 
         AppendJSONProperty(buf, "counts");
         buf.append('{');
 
-        MaybeComma comma = NO_COMMA;
-        for (unsigned i = 0; i < numCounts; i++) {
-            double value = counts.get(i);
-            if (value > 0) {
-                AppendJSONProperty(buf, PCCounts::countName(op, i), comma);
-                comma = COMMA;
-                NumberValueToStringBuffer(cx, DoubleValue(value), buf);
-            }
+        double value = counts.numExec();
+        if (value > 0) {
+            AppendJSONProperty(buf, PCCounts::numExecName, NO_COMMA);
+            NumberValueToStringBuffer(cx, DoubleValue(value), buf);
         }
 
         buf.append('}');
