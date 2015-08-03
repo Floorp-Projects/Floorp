@@ -23,7 +23,7 @@ nsresult FileBlockCache::Open(PRFileDesc* aFD)
     MonitorAutoLock mon(mDataMonitor);
     nsresult res = NS_NewThread(getter_AddRefs(mThread),
                                 nullptr,
-                                MEDIA_THREAD_STACK_SIZE);
+                                SharedThreadPool::kStackSize);
     mIsOpen = NS_SUCCEEDED(res);
     return res;
   }
