@@ -655,7 +655,6 @@ class ParseNode
 #define pn_cookie       pn_u.name.cookie
 #define pn_dflags       pn_u.name.dflags
 #define pn_blockid      pn_u.name.blockid
-#define pn_index        pn_u.name.blockid /* reuse as object table index */
 #define pn_head         pn_u.list.head
 #define pn_tail         pn_u.list.tail
 #define pn_count        pn_u.list.count

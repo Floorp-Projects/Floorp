@@ -257,6 +257,10 @@ nsBlockReflowContext::ReflowBlock(const LogicalRect&  aSpace,
         aFrameRS.AvailableBSize() -= mBStartMargin.get() + aClearance;
       }
     }
+  } else {
+    // nsBlockFrame::ReflowBlock might call us multiple times with
+    // *different* values of aApplyBStartMargin.
+    mBStartMargin.Zero();
   }
 
   nscoord tI = 0, tB = 0;

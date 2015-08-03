@@ -161,7 +161,7 @@ nsBlockReflowState::ComputeReplacedBlockOffsetsForFloats(
                       nsIFrame* aFrame,
                       const LogicalRect& aFloatAvailableSpace,
                       nscoord& aIStartResult,
-                      nscoord& aIEndResult)
+                      nscoord& aIEndResult) const
 {
   WritingMode wm = mReflowState.GetWritingMode();
   // The frame is clueless about the float manager and therefore we
@@ -300,6 +300,30 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
   printf("  CBAS: result %d %d %d %d\n", aResult.IStart(wm), aResult.BStart(wm),
          aResult.ISize(wm), aResult.BSize(wm));
 #endif
+}
+
+bool
+nsBlockReflowState::ReplacedBlockFitsInAvailSpace(nsIFrame* aReplacedBlock,
+                            const nsFlowAreaRect& aFloatAvailableSpace) const
+{
+  if (!aFloatAvailableSpace.mHasFloats) {
+    // If there aren't any floats here, then we always fit.
+    // We check this before calling ISizeToClearPastFloats, which is
+    // somewhat expensive.
+    return true;
+  }
+  WritingMode wm = mReflowState.GetWritingMode();
+  nsBlockFrame::ReplacedElementISizeToClear replacedISize =
+    nsBlockFrame::ISizeToClearPastFloats(*this, aFloatAvailableSpace.mRect,
+                                         aReplacedBlock);
+  return std::max(aFloatAvailableSpace.mRect.IStart(wm) -
+                    mContentArea.IStart(wm),
+                  replacedISize.marginIStart) +
+           replacedISize.borderBoxISize +
+           std::max(mContentArea.IEnd(wm) -
+                      aFloatAvailableSpace.mRect.IEnd(wm),
+                    replacedISize.marginIEnd) <=
+         mContentArea.ISize(wm);
 }
 
 nsFlowAreaRect
@@ -1078,7 +1102,6 @@ nsBlockReflowState::ClearFloats(nscoord aBCoord, uint8_t aBreakType,
   }
 
   nscoord newBCoord = aBCoord;
-  WritingMode wm = mReflowState.GetWritingMode();
 
   if (aBreakType != NS_STYLE_CLEAR_NONE) {
     newBCoord = mFloatManager->ClearFloats(newBCoord, aBreakType, aFlags);
@@ -1087,37 +1110,14 @@ nsBlockReflowState::ClearFloats(nscoord aBCoord, uint8_t aBreakType,
   if (aReplacedBlock) {
     for (;;) {
       nsFlowAreaRect floatAvailableSpace = GetFloatAvailableSpace(newBCoord);
-      if (!floatAvailableSpace.mHasFloats) {
-        // If there aren't any floats here, then we always fit.
-        // We check this before calling ISizeToClearPastFloats, which is
-        // somewhat expensive.
-        break;
-      }
-      nsBlockFrame::ReplacedElementISizeToClear replacedISize =
-        nsBlockFrame::ISizeToClearPastFloats(*this, floatAvailableSpace.mRect,
-                                             aReplacedBlock);
-      if (std::max(floatAvailableSpace.mRect.IStart(wm) -
-                    mContentArea.IStart(wm),
-                   replacedISize.marginIStart) +
-            replacedISize.borderBoxISize +
-            std::max(mContentArea.IEnd(wm) -
-                     floatAvailableSpace.mRect.IEnd(wm),
-                     replacedISize.marginIEnd) <=
-          mContentArea.ISize(wm)) {
+      if (ReplacedBlockFitsInAvailSpace(aReplacedBlock, floatAvailableSpace)) {
         break;
       }
       // See the analogous code for inlines in nsBlockFrame::DoReflowInlineFrames
-      if (floatAvailableSpace.mRect.BSize(wm) > 0) {
-        // See if there's room in the next band.
-        newBCoord += floatAvailableSpace.mRect.BSize(wm);
-      } else {
-        if (mReflowState.AvailableHeight() != NS_UNCONSTRAINEDSIZE) {
-          // Stop trying to clear here; we'll just get pushed to the
-          // next column or page and try again there.
-          break;
-        }
-        NS_NOTREACHED("avail space rect with zero height!");
-        newBCoord += 1;
+      if (!AdvanceToNextBand(floatAvailableSpace.mRect, &newBCoord)) {
+        // Stop trying to clear here; we'll just get pushed to the
+        // next column or page and try again there.
+        break;
       }
     }
   }

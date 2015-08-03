@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<title>Test of block formatting context displacement by floats</title>
+<link rel="help" href="https://drafts.csswg.org/css2/visuren.html#floats">
+<meta name="assert" content="The border box of a table, a block-level replaced element, or an element in the normal flow that establishes a new block formatting context (such as an element with 'overflow' other than 'visible') must not overlap the margin box of any floats in the same block formatting context as the element itself.">
+<style>
+
+.contain {
+  border: medium solid;
+  width: 400px;
+  height: 400px;
+  background: yellow;
+}
+
+.block {
+  height: 10px;
+  background: aqua;
+}
+
+.float {
+  float: left;
+  clear: left;
+  height: 20px;
+  background: blue;
+}
+
+.bfc {
+  overflow: hidden;
+  width: 250px;
+  margin-top: 7px;
+  height: 13px; /* fits exactly */
+  margin-bottom: 20px;
+  background: fuchsia;
+}
+
+</style>
+
+
+<div class="contain">
+  <div class="block"></div>
+  <div class="float" style="width: 100px"></div>
+  <div class="float" style="width: 200px"></div>
+  <div class="bfc"></div>
+</div>

@@ -33,6 +33,59 @@ function MapForEach(callbackfn, thisArg = undefined) {
     }
 }
 
+var iteratorTemp = { mapIterationResultPair : null };
+
+function MapIteratorNext() {
+    // Step 1.
+    var O = this;
+
+    // Steps 2-3.
+    if (!IsObject(O) || !IsMapIterator(O))
+        return callFunction(CallMapIteratorMethodIfWrapped, O, "MapIteratorNext");
+
+    // Steps 4-5 (implemented in _GetNextMapEntryForIterator).
+    // Steps 8-9 (omitted).
+
+    var mapIterationResultPair = iteratorTemp.mapIterationResultPair;
+    if (!mapIterationResultPair) {
+        mapIterationResultPair = iteratorTemp.mapIterationResultPair = NewDenseArray(2);
+        mapIterationResultPair[0] = null;
+        mapIterationResultPair[1] = null;
+    }
+
+    var retVal = {value: undefined, done: true};
+
+    // Step 10.a, 11.
+    var done = _GetNextMapEntryForIterator(O, mapIterationResultPair);
+    if (!done) {
+        // Steps 10.b-c (omitted).
+
+        // Step 6.
+        var itemKind = UnsafeGetInt32FromReservedSlot(this, ITERATOR_SLOT_ITEM_KIND);
+
+        var result;
+        if (itemKind === ITEM_KIND_KEY) {
+            // Step 10.d.i.
+            result = mapIterationResultPair[0];
+        } else if (itemKind === ITEM_KIND_VALUE) {
+            // Step 10.d.ii.
+            result = mapIterationResultPair[1];
+        } else {
+            // Step 10.d.iii.
+            assert(itemKind === ITEM_KIND_KEY_AND_VALUE, itemKind);
+            result = [mapIterationResultPair[0], mapIterationResultPair[1]];
+        }
+
+        mapIterationResultPair[0] = null;
+        mapIterationResultPair[1] = null;
+        retVal.value = result;
+        retVal.done = false;
+    }
+
+    // Steps 7, 12.
+    return retVal;
+}
+
 // ES6 final draft 23.1.2.2.
 function MapSpecies() {
     // Step 1.

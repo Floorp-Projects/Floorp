@@ -95,6 +95,7 @@ public:
   uint8_t mChannels;
   bool mFrameIsHidden;
   bool mDisablePremultipliedAlpha;
+  bool mSuccessfulEarlyFinish;
 
   struct AnimFrameInfo
   {

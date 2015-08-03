@@ -54,6 +54,7 @@ private:
   nsIPresShell* MOZ_NON_OWNING_REF mPresShell; // raw ref since the presShell owns this
   nsCOMPtr<nsIDOMEventTarget> mEventTarget;
   bool mIsFirstPaint;
+  bool mPainted;
   mozilla::LayoutDeviceIntSize mDisplaySize;
   mozilla::CSSSize mMobileViewportSize;
 };
