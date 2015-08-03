@@ -20,7 +20,6 @@
 #include "mozilla/ipc/DaemonSocketConnector.h"
 #include "mozilla/ipc/ListenSocket.h"
 #include "mozilla/unused.h"
-#include "prrng.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
 
@@ -1762,46 +1761,6 @@ private:
   nsRefPtr<BluetoothResultHandler> mRes;
   bool mRegisteredSocketModule;
 };
-
-nsresult
-BluetoothDaemonInterface::CreateRandomAddressString(
-  const nsACString& aPrefix, unsigned long aPostfixLength,
-  nsACString& aAddress)
-{
-  static const char sHexChar[16] = {
-    [0x0] = '0', [0x1] = '1', [0x2] = '2', [0x3] = '3',
-    [0x4] = '4', [0x5] = '5', [0x6] = '6', [0x7] = '7',
-    [0x8] = '8', [0x9] = '9', [0xa] = 'a', [0xb] = 'b',
-    [0xc] = 'c', [0xd] = 'd', [0xe] = 'e', [0xf] = 'f'
-  };
-
-  unsigned short seed[3];
-
-  if (NS_WARN_IF(!PR_GetRandomNoise(seed, sizeof(seed)))) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  aAddress = aPrefix;
-  aAddress.Append('-');
-
-  while (aPostfixLength) {
-
-    // Android doesn't provide rand_r, so we use nrand48 here,
-    // even though it's deprecated.
-    long value = nrand48(seed);
-
-    size_t bits = sizeof(value) * CHAR_BIT;
-
-    while ((bits > 4) && aPostfixLength) {
-      aAddress.Append(sHexChar[value&0xf]);
-      bits -= 4;
-      value >>= 4;
-      --aPostfixLength;
-    }
-  }
-
-  return NS_OK;
-}
 
 /*
  * The init procedure consists of several steps.
