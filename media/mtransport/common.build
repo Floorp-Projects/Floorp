@@ -77,7 +77,6 @@ elif CONFIG['OS_TARGET'] == 'WINNT':
     DEFINES['WIN'] = True
     # for stun.h
     DEFINES['WIN32'] = True
-    DEFINES['NOMINMAX'] = True
     LOCAL_INCLUDES += [
         '/media/mtransport/third_party/nrappkit/src/port/win32/include',
     ]
