@@ -283,12 +283,15 @@ public:
     static mozilla::Atomic<size_t> sD3D9SurfaceImageUsed;
     static mozilla::Atomic<size_t> sD3D9SharedTextureUsed;
 
+    void GetDeviceInitData(mozilla::gfx::DeviceInitData* aOut) override;
+
 protected:
     bool AccelerateLayersByDefault() override {
       return true;
     }
     void GetAcceleratedCompositorBackends(nsTArray<mozilla::layers::LayersBackend>& aBackends);
     virtual void GetPlatformCMSOutputProfile(void* &mem, size_t &size);
+    void SetDeviceInitData(mozilla::gfx::DeviceInitData& aData) override;
 
 protected:
     RenderMode mRenderMode;
@@ -307,6 +310,7 @@ private:
 
     void DisableD2D();
 
+    mozilla::gfx::FeatureStatus CheckAccelerationSupport();
     mozilla::gfx::FeatureStatus CheckD3D11Support(bool* aCanUseHardware);
     mozilla::gfx::FeatureStatus CheckD2DSupport();
     mozilla::gfx::FeatureStatus CheckD2D1Support();
@@ -314,6 +318,7 @@ private:
     void AttemptWARPDeviceCreation();
     void AttemptD3D11ImageBridgeDeviceCreation();
     bool AttemptD3D11ContentDeviceCreation();
+    bool CanUseD3D11ImageBridge();
 
     IDXGIAdapter1 *GetDXGIAdapter();
     bool IsDeviceReset(HRESULT hr, DeviceResetReason* aReason);

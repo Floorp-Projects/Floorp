@@ -789,7 +789,9 @@ NewImageChannel(nsIChannel** aResult,
     // we should always have a requestingNode, or we are loading something
     // outside a document, in which case the triggeringPrincipal
     // should always be the systemPrincipal.
-    MOZ_ASSERT(nsContentUtils::IsSystemPrincipal(triggeringPrincipal));
+    // However, there are two exceptions: one is Notifications and the
+    // other one is Favicons which create a channel in the parent prcoess
+    // in which case we can't get a requestingNode.
     rv = NS_NewChannel(aResult,
                        aURI,
                        triggeringPrincipal,

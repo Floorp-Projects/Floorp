@@ -186,7 +186,7 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
 
   // Mark the area we just drew into the back buffer as invalid in the front buffer as they're
   // now out of sync.
-  mTile.mInvalidFront.OrWith(paintRegion);
+  mTile.mInvalidFront.OrWith(tileDirtyRegion);
 
   // The new buffer is now validated, remove the dirty region from it.
   mTile.mInvalidBack.SubOut(tileDirtyRegion);

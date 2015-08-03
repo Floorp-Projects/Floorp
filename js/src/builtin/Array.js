@@ -624,21 +624,13 @@ function ArrayIncludes(searchElement, fromIndex = 0) {
     return false;
 }
 
-#define ARRAY_ITERATOR_SLOT_ITERATED_OBJECT 0
-#define ARRAY_ITERATOR_SLOT_NEXT_INDEX 1
-#define ARRAY_ITERATOR_SLOT_ITEM_KIND 2
-
-#define ITEM_KIND_VALUE 0
-#define ITEM_KIND_KEY_AND_VALUE 1
-#define ITEM_KIND_KEY 2
-
 // ES6 draft specification, section 22.1.5.1, version 2013-09-05.
 function CreateArrayIteratorAt(obj, kind, n) {
     var iteratedObject = ToObject(obj);
     var iterator = NewArrayIterator();
-    UnsafeSetReservedSlot(iterator, ARRAY_ITERATOR_SLOT_ITERATED_OBJECT, iteratedObject);
-    UnsafeSetReservedSlot(iterator, ARRAY_ITERATOR_SLOT_NEXT_INDEX, n);
-    UnsafeSetReservedSlot(iterator, ARRAY_ITERATOR_SLOT_ITEM_KIND, kind);
+    UnsafeSetReservedSlot(iterator, ITERATOR_SLOT_TARGET, iteratedObject);
+    UnsafeSetReservedSlot(iterator, ITERATOR_SLOT_NEXT_INDEX, n);
+    UnsafeSetReservedSlot(iterator, ITERATOR_SLOT_ITEM_KIND, kind);
     return iterator;
 }
 function CreateArrayIterator(obj, kind) {
@@ -655,22 +647,22 @@ function ArrayIteratorNext() {
                             "ArrayIteratorNext");
     }
 
-    var a = UnsafeGetObjectFromReservedSlot(this, ARRAY_ITERATOR_SLOT_ITERATED_OBJECT);
+    var a = UnsafeGetObjectFromReservedSlot(this, ITERATOR_SLOT_TARGET);
     // The index might not be an integer, so we have to do a generic get here.
-    var index = UnsafeGetReservedSlot(this, ARRAY_ITERATOR_SLOT_NEXT_INDEX);
-    var itemKind = UnsafeGetInt32FromReservedSlot(this, ARRAY_ITERATOR_SLOT_ITEM_KIND);
+    var index = UnsafeGetReservedSlot(this, ITERATOR_SLOT_NEXT_INDEX);
+    var itemKind = UnsafeGetInt32FromReservedSlot(this, ITERATOR_SLOT_ITEM_KIND);
     var result = { value: undefined, done: false };
 
     // FIXME: This should be ToLength, which clamps at 2**53.  Bug 924058.
     if (index >= TO_UINT32(a.length)) {
         // When the above is changed to ToLength, use +1/0 here instead
         // of MAX_UINT32.
-        UnsafeSetReservedSlot(this, ARRAY_ITERATOR_SLOT_NEXT_INDEX, 0xffffffff);
+        UnsafeSetReservedSlot(this, ITERATOR_SLOT_NEXT_INDEX, 0xffffffff);
         result.done = true;
         return result;
     }
 
-    UnsafeSetReservedSlot(this, ARRAY_ITERATOR_SLOT_NEXT_INDEX, index + 1);
+    UnsafeSetReservedSlot(this, ITERATOR_SLOT_NEXT_INDEX, index + 1);
 
     if (itemKind === ITEM_KIND_VALUE) {
         result.value = a[index];

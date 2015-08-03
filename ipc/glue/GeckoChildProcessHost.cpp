@@ -47,6 +47,7 @@
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
 #include "nsNativeCharsetUtils.h"
+#include "nscore.h" // for NS_FREE_PERMANENT_DATA
 
 using mozilla::MonitorAutoLock;
 using mozilla::ipc::GeckoChildProcessHost;
@@ -125,7 +126,7 @@ GeckoChildProcessHost::~GeckoChildProcessHost()
     SharedMemoryBasic::CleanupForPid(mChildProcessHandle);
 #endif
     ProcessWatcher::EnsureProcessTerminated(mChildProcessHandle
-#if defined(NS_BUILD_REFCNT_LOGGING) || defined(MOZ_ASAN)
+#ifdef NS_FREE_PERMANENT_DATA
     // If we're doing leak logging, shutdown can be slow.
                                             , false // don't "force"
 #endif
@@ -382,7 +383,7 @@ GeckoChildProcessHost::WaitUntilConnected(int32_t aTimeoutMs)
 {
   // NB: this uses a different mechanism than the chromium parent
   // class.
-  PRIntervalTime timeoutTicks = (aTimeoutMs > 0) ? 
+  PRIntervalTime timeoutTicks = (aTimeoutMs > 0) ?
     PR_MillisecondsToInterval(aTimeoutMs) : PR_INTERVAL_NO_TIMEOUT;
 
   MonitorAutoLock lock(mMonitor);
@@ -563,26 +564,27 @@ MaybeAddNsprLogFileAccess(std::vector<std::wstring>& aAllowedFilesReadWrite)
     return;
   }
 
-  nsCOMPtr<nsIFile> file;
-  nsresult rv = NS_GetSpecialDirectory(NS_OS_CURRENT_WORKING_DIR,
-                                       getter_AddRefs(file));
-  if (NS_FAILED(rv) || !file) {
-    NS_WARNING("Failed to get current working directory");
-    return;
-  }
-
-  nsDependentCString nsprLogFile(nsprLogFileEnv);
-  rv = file->AppendRelativeNativePath(nsprLogFile);
+  nsDependentCString nsprLogFilePath(nsprLogFileEnv);
+  nsCOMPtr<nsIFile> nsprLogFile;
+  nsresult rv = NS_NewNativeLocalFile(nsprLogFilePath, true,
+                                      getter_AddRefs(nsprLogFile));
   if (NS_FAILED(rv)) {
-    // Not a relative path, try it as an absolute one.
-    rv = file->InitWithNativePath(nsprLogFile);
+    // Not an absolute path, try it as a relative one.
+    nsresult rv = NS_GetSpecialDirectory(NS_OS_CURRENT_WORKING_DIR,
+                                         getter_AddRefs(nsprLogFile));
+    if (NS_FAILED(rv) || !nsprLogFile) {
+      NS_WARNING("Failed to get current working directory");
+      return;
+    }
+
+    rv = nsprLogFile->AppendRelativeNativePath(nsprLogFilePath);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return;
     }
   }
 
   nsAutoString resolvedFilePath;
-  rv = file->GetPath(resolvedFilePath);
+  rv = nsprLogFile->GetPath(resolvedFilePath);
   if (NS_WARN_IF(NS_FAILED(rv))) {
       return;
   }
