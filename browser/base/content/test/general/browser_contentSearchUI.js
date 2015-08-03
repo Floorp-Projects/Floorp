@@ -9,6 +9,8 @@ const TEST_ENGINE_2_BASENAME = "searchSuggestionEngine2.xml";
 
 const TEST_MSG = "ContentSearchUIControllerTest";
 
+requestLongerTimeout(2);
+
 add_task(function* emptyInput() {
   yield setUp();
 
