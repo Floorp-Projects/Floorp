@@ -1,0 +1,100 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1136477
+Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1136477</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript;version=1.7">
+
+  "use strict"
+
+  const { interfaces: Ci, utils: Cu } = Components;
+
+  Cu.import("resource://gre/modules/AppConstants.jsm");
+  Cu.import("resource://gre/modules/Services.jsm");
+
+  const LOGIN_FIELDS = {
+    hostname: "http://example.org/tests/robocop/robocop_blank_01.html",
+    formSubmitUrl: "",
+    realmAny: null,
+    username: "username1",
+    password: "password1",
+    usernameField: "",
+    passwordField: ""
+  };
+
+  const LoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1", "nsILoginInfo", "init");
+
+  let BrowserApp;
+  let browser;
+
+  SimpleTest.waitForExplicitFinish();
+
+  function add_login(login) {
+    let newLogin = new LoginInfo(login.hostname,
+                                 login.formSubmitUrl,
+                                 login.realmAny,
+                                 login.username,
+                                 login.password,
+                                 login.usernameField,
+                                 login.passwordField);
+
+    Services.logins.addLogin(newLogin);
+  }
+
+  function password_setup() {
+    add_login(LOGIN_FIELDS);
+
+    // Load about:logins.
+    BrowserApp = Services.wm.getMostRecentWindow("navigator:browser").BrowserApp;
+    browser = BrowserApp.addTab("about:logins", { selected: true, parentId: BrowserApp.selectedTab.id }).browser;
+
+    browser.addEventListener("load", function handle(event) {
+      browser.removeEventListener("load", handle, true);
+      Services.tm.mainThread.dispatch(test_passwords_list, Ci.nsIThread.DISPATCH_NORMAL);
+    }, true);
+  }
+
+  function test_passwords_list() {
+    // Test that the (single) entry added in setup is correct.
+    let logins_list = browser.contentDocument.getElementById("logins-list");
+
+    let hostname = logins_list.querySelector(".hostname");
+    is(hostname.textContent, LOGIN_FIELDS.hostname, "hostname is correct");
+
+    let username = logins_list.querySelector(".username");
+    is(username.textContent, LOGIN_FIELDS.username, "username is correct");
+
+    // Cleanup: close about:logins, opened in password_setup()
+    BrowserApp.closeTab(BrowserApp.selectedTab);
+
+    SimpleTest.finish();
+  }
+
+  if (AppConstants.NIGHTLY_BUILD) {
+    password_setup();
+  } else {
+    ok(true, "this test is disabled on non-Nightly builds");
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1136477">Mozilla Bug 1136477</a>
+<br>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1184186">Migrated from Robocop testAboutLogins</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
