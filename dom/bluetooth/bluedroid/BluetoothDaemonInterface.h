@@ -139,10 +139,6 @@ protected:
   BluetoothDaemonInterface();
   ~BluetoothDaemonInterface();
 
-  nsresult CreateRandomAddressString(const nsACString& aPrefix,
-                                     unsigned long aPostfixLength,
-                                     nsACString& aAddress);
-
   // Methods for |DaemonSocketConsumer| and |ListenSocketConsumer|
   //
 
