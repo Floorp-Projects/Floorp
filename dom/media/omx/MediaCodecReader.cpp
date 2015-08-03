@@ -36,7 +36,7 @@
 #include "nsMimeTypes.h"
 #include "nsThreadUtils.h"
 #include "ImageContainer.h"
-#include "SharedThreadPool.h"
+#include "mozilla/SharedThreadPool.h"
 #include "VideoFrameContainer.h"
 #include "VideoUtils.h"
 

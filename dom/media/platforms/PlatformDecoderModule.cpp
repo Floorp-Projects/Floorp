@@ -30,7 +30,7 @@
 #include "EMEDecoderModule.h"
 #include "mozilla/CDMProxy.h"
 #endif
-#include "SharedThreadPool.h"
+#include "mozilla/SharedThreadPool.h"
 
 #include "MediaInfo.h"
 #include "H264Converter.h"

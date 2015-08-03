@@ -8,7 +8,7 @@
 #include "nsContentUtils.h"
 #include "mozilla/StaticPtr.h"
 #include "MediaDecoder.h"
-#include "SharedThreadPool.h"
+#include "mozilla/SharedThreadPool.h"
 #include "mozilla/Logging.h"
 
 namespace mozilla {
