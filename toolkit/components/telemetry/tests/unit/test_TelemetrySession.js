@@ -70,8 +70,6 @@ const DATAREPORTING_DIR = "datareporting";
 const ABORTED_PING_FILE_NAME = "aborted-session-ping";
 const ABORTED_SESSION_UPDATE_INTERVAL_MS = 5 * 60 * 1000;
 
-const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
-
 XPCOMUtils.defineLazyGetter(this, "DATAREPORTING_PATH", function() {
   return OS.Path.join(OS.Constants.Path.profileDir, DATAREPORTING_DIR);
 });
@@ -1139,6 +1137,9 @@ add_task(function* test_savedSessionData() {
   // Create the directory which will contain the data file, if it doesn't already
   // exist.
   yield OS.File.makeDir(DATAREPORTING_PATH);
+  getHistogram("TELEMETRY_SESSIONDATA_FAILED_LOAD").clear();
+  getHistogram("TELEMETRY_SESSIONDATA_FAILED_PARSE").clear();
+  getHistogram("TELEMETRY_SESSIONDATA_FAILED_VALIDATION").clear();
 
   // Write test data to the session data file.
   const dataFilePath = OS.Path.join(DATAREPORTING_PATH, "session-state.json");
@@ -1169,8 +1170,11 @@ add_task(function* test_savedSessionData() {
 
   // Start TelemetrySession so that it loads the session data file.
   yield TelemetrySession.reset();
-  // Watch a test preference, trigger and environment change and wait for it to propagate.
+  Assert.equal(0, getSnapshot("TELEMETRY_SESSIONDATA_FAILED_LOAD").sum);
+  Assert.equal(0, getSnapshot("TELEMETRY_SESSIONDATA_FAILED_PARSE").sum);
+  Assert.equal(0, getSnapshot("TELEMETRY_SESSIONDATA_FAILED_VALIDATION").sum);
 
+  // Watch a test preference, trigger and environment change and wait for it to propagate.
   // _watchPreferences triggers a subsession notification
   fakeNow(new Date(2050, 1, 1, 12, 0, 0));
   TelemetryEnvironment._watchPreferences(PREFS_TO_WATCH);
@@ -1205,6 +1209,9 @@ add_task(function* test_sessionData_ShortSession() {
   // Shut down Telemetry and remove the session state file.
   yield TelemetrySession.shutdown();
   yield OS.File.remove(SESSION_STATE_PATH, { ignoreAbsent: true });
+  getHistogram("TELEMETRY_SESSIONDATA_FAILED_LOAD").clear();
+  getHistogram("TELEMETRY_SESSIONDATA_FAILED_PARSE").clear();
+  getHistogram("TELEMETRY_SESSIONDATA_FAILED_VALIDATION").clear();
 
   const expectedSessionUUID = "ff602e52-47a1-b7e8-4c1a-ffffffffc87a";
   const expectedSubsessionUUID = "009fd1ad-b85e-4817-b3e5-000000003785";
@@ -1214,6 +1221,10 @@ add_task(function* test_sessionData_ShortSession() {
   // short sessions. We expect the profile subsession counter to be 1.
   TelemetrySession.reset();
   yield TelemetrySession.shutdown();
+
+  Assert.equal(1, getSnapshot("TELEMETRY_SESSIONDATA_FAILED_LOAD").sum);
+  Assert.equal(0, getSnapshot("TELEMETRY_SESSIONDATA_FAILED_PARSE").sum);
+  Assert.equal(0, getSnapshot("TELEMETRY_SESSIONDATA_FAILED_VALIDATION").sum);
 
   // Restore the UUID generation functions.
   fakeGenerateUUID(generateUUID, generateUUID);
@@ -1227,15 +1238,34 @@ add_task(function* test_sessionData_ShortSession() {
   Assert.equal(payload.info.profileSubsessionCounter, 2);
   Assert.equal(payload.info.previousSessionId, expectedSessionUUID);
   Assert.equal(payload.info.previousSubsessionId, expectedSubsessionUUID);
+  Assert.equal(1, getSnapshot("TELEMETRY_SESSIONDATA_FAILED_LOAD").sum);
+  Assert.equal(0, getSnapshot("TELEMETRY_SESSIONDATA_FAILED_PARSE").sum);
+  Assert.equal(0, getSnapshot("TELEMETRY_SESSIONDATA_FAILED_VALIDATION").sum);
 });
 
 add_task(function* test_invalidSessionData() {
   // Create the directory which will contain the data file, if it doesn't already
   // exist.
   yield OS.File.makeDir(DATAREPORTING_PATH);
+  getHistogram("TELEMETRY_SESSIONDATA_FAILED_LOAD").clear();
+  getHistogram("TELEMETRY_SESSIONDATA_FAILED_PARSE").clear();
+  getHistogram("TELEMETRY_SESSIONDATA_FAILED_VALIDATION").clear();
 
-  // Write test data to the session data file.
+  // Write test data to the session data file. This should fail to parse.
   const dataFilePath = OS.Path.join(DATAREPORTING_PATH, "session-state.json");
+  const unparseableData = "{asdf:@äü";
+  OS.File.writeAtomic(dataFilePath, unparseableData,
+                      {encoding: "utf-8", tmpPath: dataFilePath + ".tmp"});
+
+  // Start TelemetrySession so that it loads the session data file.
+  yield TelemetrySession.reset();
+
+  // The session data file should not load. Only expect the current subsession.
+  Assert.equal(0, getSnapshot("TELEMETRY_SESSIONDATA_FAILED_LOAD").sum);
+  Assert.equal(1, getSnapshot("TELEMETRY_SESSIONDATA_FAILED_PARSE").sum);
+  Assert.equal(0, getSnapshot("TELEMETRY_SESSIONDATA_FAILED_VALIDATION").sum);
+
+  // Write test data to the session data file. This should fail validation.
   const sessionState = {
     profileSubsessionCounter: "not-a-number?",
     someOtherField: 12,
@@ -1247,10 +1277,16 @@ add_task(function* test_invalidSessionData() {
   const expectedSessionUUID = "ff602e52-47a1-b7e8-4c1a-ffffffffc87a";
   const expectedSubsessionUUID = "009fd1ad-b85e-4817-b3e5-000000003785";
   fakeGenerateUUID(() => expectedSessionUUID, () => expectedSubsessionUUID);
+
   // Start TelemetrySession so that it loads the session data file.
   yield TelemetrySession.reset();
+
   let payload = TelemetrySession.getPayload();
   Assert.equal(payload.info.profileSubsessionCounter, expectedSubsessions);
+  Assert.equal(0, getSnapshot("TELEMETRY_SESSIONDATA_FAILED_LOAD").sum);
+  Assert.equal(1, getSnapshot("TELEMETRY_SESSIONDATA_FAILED_PARSE").sum);
+  Assert.equal(1, getSnapshot("TELEMETRY_SESSIONDATA_FAILED_VALIDATION").sum);
+
   yield TelemetrySession.shutdown();
 
   // Restore the UUID generator so we don't mess with other tests.
