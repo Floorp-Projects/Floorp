@@ -119,7 +119,7 @@ NS_IMETHODIMP_(MozExternalRefCountType) SharedThreadPool::Release(void)
   // the nsIThreadPool. The Runnable here  will add a refcount to the pool,
   // and when the Runnable releases the nsIThreadPool it will be deleted.
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(mPool, &nsIThreadPool::Shutdown);
-  AbstractThread::MainThread()->Dispatch(r.forget());
+  NS_DispatchToMainThread(r);
 
   // Stabilize refcount, so that if something in the dtor QIs, it won't explode.
   mRefCnt = 1;
