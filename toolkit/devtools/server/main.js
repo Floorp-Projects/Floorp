@@ -883,13 +883,12 @@ var DebuggerServer = {
 
   /**
    * Check if the caller is running in a content child process.
+   * (Eventually set by child.js)
    *
    * @return boolean
    *         true if the caller is running in a content
    */
-  get isInChildProcess() {
-    return !!this.parentMessageManager;
-  },
+  isInChildProcess: false,
 
   /**
    * In a chrome parent process, ask all content child processes
@@ -906,40 +905,19 @@ var DebuggerServer = {
       return;
     }
 
-    const gMessageManager = Cc["@mozilla.org/globalmessagemanager;1"].
-      getService(Ci.nsIMessageListenerManager);
-
-    gMessageManager.broadcastAsyncMessage("debug:setup-in-child", {
-      module: module,
-      setupChild: setupChild,
-      args: args,
+    this._childMessageManagers.forEach(mm => {
+      mm.sendAsyncMessage("debug:setup-in-child", {
+        module: module,
+        setupChild: setupChild,
+        args: args,
+      });
     });
   },
 
   /**
-   * In a content child process, ask the DebuggerServer in the parent process
-   * to execute a given module setup helper.
-   *
-   * @param module
-   *        The module to be required
-   * @param setupParent
-   *        The name of the setup helper exported by the above module
-   *        (setup helper signature: function ({mm}) { ... })
-   * @return boolean
-   *         true if the setup helper returned successfully
+   * Live list of all currenctly attached child's message managers.
    */
-  setupInParent: function({ module, setupParent }) {
-    if (!this.isInChildProcess) {
-      return false;
-    }
-
-    let { sendSyncMessage } = DebuggerServer.parentMessageManager;
-
-    return sendSyncMessage("debug:setup-in-parent", {
-      module: module,
-      setupParent: setupParent
-    });
-  },
+  _childMessageManagers: new Set(),
 
   /**
    * Connect to a child process.
@@ -962,6 +940,7 @@ var DebuggerServer = {
     let mm = aFrame.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader
              .messageManager;
     mm.loadFrameScript("resource://gre/modules/devtools/server/child.js", false);
+    this._childMessageManagers.add(mm);
 
     let actor, childTransport;
     let prefix = aConnection.allocID("child");
@@ -1067,6 +1046,8 @@ var DebuggerServer = {
         mm.removeMessageListener("debug:actor", onActorCreated);
       }
       events.off(aConnection, "closed", destroy);
+
+      DebuggerServer._childMessageManagers.delete(mm);
     });
 
     // Listen for app process exit
@@ -1337,6 +1318,13 @@ DebuggerServerConnection.prototype = {
 
   _transport: null,
   get transport() { return this._transport },
+
+  /**
+   * Message manager used to communicate with the parent process,
+   * set by child.js. Is only defined for connections instantiated
+   * within a child process.
+   */
+  parentMessageManager: null,
 
   close: function() {
     this._transport.close();
@@ -1726,5 +1714,30 @@ DebuggerServerConnection.prototype = {
     dumpn("/-------------------- dumping pool:");
     dumpn("--------------------- actorPool actors: " +
           uneval(Object.keys(aPool._actors)));
-  }
+  },
+
+  /**
+   * In a content child process, ask the DebuggerServer in the parent process
+   * to execute a given module setup helper.
+   *
+   * @param module
+   *        The module to be required
+   * @param setupParent
+   *        The name of the setup helper exported by the above module
+   *        (setup helper signature: function ({mm}) { ... })
+   * @return boolean
+   *         true if the setup helper returned successfully
+   */
+  setupInParent: function({ conn, module, setupParent }) {
+    if (!this.parentMessageManager) {
+      return false;
+    }
+
+    let { sendSyncMessage } = this.parentMessageManager;
+
+    return sendSyncMessage("debug:setup-in-parent", {
+      module: module,
+      setupParent: setupParent
+    });
+  },
 };

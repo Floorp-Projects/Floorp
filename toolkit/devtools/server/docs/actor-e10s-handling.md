@@ -25,7 +25,9 @@ E.g. in the **director-registry**:
   }
 
   function setupChildProcess() {
-    DebuggerServer.setupInParent({
+    // `setupInParent`  is defined on DebuggerServerConnection,
+    // your actor receive a reference to one instance in its constructor.
+    conn.setupInParent({
       module: "devtools/server/actors/director-registry",
       setupParent: "setupParentProcess"
     });
@@ -33,7 +35,7 @@ E.g. in the **director-registry**:
   }
 ```
 
-The `setupChildProcess` helper defined and used in the previous example uses the `DebuggerServer.setupInParent` to run a given setup function in the parent process Debugger Server, e.g. in the **director-registry** module.
+The `setupChildProcess` helper defined and used in the previous example uses the `DebuggerServerConnection.setupInParent` to run a given setup function in the parent process Debugger Server, e.g. in the **director-registry** module.
 
 With this, the `DebuggerServer` running in the parent process will require the requested module (**director-registry**) and call its `setupParentProcess` function (which should be exported on the module).
 
@@ -81,7 +83,7 @@ exports.setupParentProcess = function setupParentProcess({ mm, prefix }) {
   }
 ```
 
-The `DebuggerServer` emits "disconnected-from-child:CHILDID" events to give the actor modules the chance to cleanup their handlers registered on the disconnected message manager.
+The `DebuggerServer` emits "disconnected-from-child:PREFIX" events to give the actor modules the chance to cleanup their handlers registered on the disconnected message manager.
 
 ## Summary of the setup flow
 
@@ -89,13 +91,13 @@ In the child process:
 
 * The `DebuggerServer` loads an actor module,
 * the actor module checks `DebuggerServer.isInChildProcess` to know whether it runs in a child process or not,
-* the actor module then uses the `DebuggerServer.setupInParent` helper to start setting up a parent-process counterpart,
-* the `DebuggerServer.setupInParent` helper asks the parent process to run the required module's setup function,
-* the actor module uses the `DebuggerServer.parentMessageManager.sendSyncMessage` and `DebuggerServer.parentMessageManager.addMessageListener` helpers to send or listen to message.
+* the actor module then uses the `DebuggerServerConnection.setupInParent` helper to start setting up a parent-process counterpart,
+* the `DebuggerServerConnection.setupInParent` helper asks the parent process to run the required module's setup function,
+* the actor module uses the `DebuggerServerConnection.parentMessageManager.sendSyncMessage` and `DebuggerServerConnection.parentMessageManager.addMessageListener` helpers to send or listen to message.
 
 In the parent process:
 
-* The DebuggerServer receives the `DebuggerServer.setupInParent` request,
+* The DebuggerServer receives the `DebuggerServerConnection.setupInParent` request,
 * tries to load the required module,
 * tries to call the `module[setupParent]` function with the frame message manager and the prefix as parameters `{ mm, prefix }`,
 * the `setupParent` function then uses the mm to subscribe the messagemanager events,
