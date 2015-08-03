@@ -24,8 +24,15 @@ namespace mozilla {
 // the same name get the same SharedThreadPool. Users must store a reference
 // to the pool, and when the last reference to a SharedThreadPool is dropped
 // the pool is shutdown and deleted. Users aren't required to manually
-// shutdown the pool, and can release references on any thread. On Windows
-// all threads in the pool have MSCOM initialized with COINIT_MULTITHREADED.
+// shutdown the pool, and can release references on any thread.
+//
+// On Windows all threads in the pool have MSCOM initialized with
+// COINIT_MULTITHREADED. Note that not all users of MSCOM use this mode see [1],
+// and mixing MSCOM objects between the two is terrible for performance, and can
+// cause some functions to fail. So be careful when using Win32 APIs on a
+// SharedThreadPool, and avoid sharing objects if at all possible.
+//
+// [1] http://mxr.mozilla.org/mozilla-central/search?string=coinitialize
 class SharedThreadPool : public nsIThreadPool
 {
 public:
