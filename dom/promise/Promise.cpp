@@ -174,32 +174,32 @@ GetPromise(JSContext* aCx, JS::Handle<JSObject*> aFunc)
 
 // Runnable to resolve thenables.
 // Equivalent to the specification's ResolvePromiseViaThenableTask.
-class ThenableResolverTask final : public nsRunnable
+class PromiseResolveThenableJob final : public nsRunnable
 {
 public:
-  ThenableResolverTask(Promise* aPromise,
-                        JS::Handle<JSObject*> aThenable,
-                        PromiseInit* aThen)
+  PromiseResolveThenableJob(Promise* aPromise,
+                            JS::Handle<JSObject*> aThenable,
+                            PromiseInit* aThen)
     : mPromise(aPromise)
     , mThenable(CycleCollectedJSRuntime::Get()->Runtime(), aThenable)
     , mThen(aThen)
   {
     MOZ_ASSERT(aPromise);
-    MOZ_COUNT_CTOR(ThenableResolverTask);
+    MOZ_COUNT_CTOR(PromiseResolveThenableJob);
   }
 
   virtual
-  ~ThenableResolverTask()
+  ~PromiseResolveThenableJob()
   {
-    NS_ASSERT_OWNINGTHREAD(ThenableResolverTask);
-    MOZ_COUNT_DTOR(ThenableResolverTask);
+    NS_ASSERT_OWNINGTHREAD(PromiseResolveThenableJob);
+    MOZ_COUNT_DTOR(PromiseResolveThenableJob);
   }
 
 protected:
   NS_IMETHOD
   Run() override
   {
-    NS_ASSERT_OWNINGTHREAD(ThenableResolverTask);
+    NS_ASSERT_OWNINGTHREAD(PromiseResolveThenableJob);
     ThreadsafeAutoJSContext cx;
     JS::Rooted<JSObject*> wrapper(cx, mPromise->GetWrapper());
     MOZ_ASSERT(wrapper); // It was preserved!
@@ -275,16 +275,16 @@ private:
   NS_DECL_OWNINGTHREAD;
 };
 
-// Fast version of ThenableResolverTask for use in the cases when we know we're
+// Fast version of PromiseResolveThenableJob for use in the cases when we know we're
 // calling the canonical Promise.prototype.then on an actual DOM Promise.  In
 // that case we can just bypass the jumping into and out of JS and call
 // AppendCallbacks on that promise directly.
-class FastThenableResolverTask final : public nsRunnable
+class FastPromiseResolveThenableJob final : public nsRunnable
 {
 public:
-  FastThenableResolverTask(PromiseCallback* aResolveCallback,
-                           PromiseCallback* aRejectCallback,
-                           Promise* aNextPromise)
+  FastPromiseResolveThenableJob(PromiseCallback* aResolveCallback,
+                                PromiseCallback* aRejectCallback,
+                                Promise* aNextPromise)
     : mResolveCallback(aResolveCallback)
     , mRejectCallback(aRejectCallback)
     , mNextPromise(aNextPromise)
@@ -292,21 +292,21 @@ public:
     MOZ_ASSERT(aResolveCallback);
     MOZ_ASSERT(aRejectCallback);
     MOZ_ASSERT(aNextPromise);
-    MOZ_COUNT_CTOR(FastThenableResolverTask);
+    MOZ_COUNT_CTOR(FastPromiseResolveThenableJob);
   }
 
   virtual
-  ~FastThenableResolverTask()
+  ~FastPromiseResolveThenableJob()
   {
-    NS_ASSERT_OWNINGTHREAD(FastThenableResolverTask);
-    MOZ_COUNT_DTOR(FastThenableResolverTask);
+    NS_ASSERT_OWNINGTHREAD(FastPromiseResolveThenableJob);
+    MOZ_COUNT_DTOR(FastPromiseResolveThenableJob);
   }
 
 protected:
   NS_IMETHOD
   Run() override
   {
-    NS_ASSERT_OWNINGTHREAD(FastThenableResolverTask);
+    NS_ASSERT_OWNINGTHREAD(FastPromiseResolveThenableJob);
     mNextPromise->AppendCallbacks(mResolveCallback, mRejectCallback);
     return NS_OK;
   }
@@ -1299,8 +1299,8 @@ Promise::ResolveInternal(JSContext* aCx,
       Promise* nextPromise;
       if (PromiseBinding::IsThenMethod(thenObj) &&
           NS_SUCCEEDED(UNWRAP_OBJECT(Promise, valueObj, nextPromise))) {
-        // If we were taking the codepath that involves ThenableResolverTask and
-        // PromiseInit below, then eventually, in ThenableResolverTask::Run, we
+        // If we were taking the codepath that involves PromiseResolveThenableJob and
+        // PromiseInit below, then eventually, in PromiseResolveThenableJob::Run, we
         // would create some JSFunctions in the compartment of
         // this->GetWrapper() and pass them to the PromiseInit. So by the time
         // we'd see the resolution value it would be wrapped into the
@@ -1310,16 +1310,16 @@ Promise::ResolveInternal(JSContext* aCx,
         JS::Rooted<JSObject*> glob(aCx, GlobalJSObject());
         nsRefPtr<PromiseCallback> resolveCb = new ResolvePromiseCallback(this, glob);
         nsRefPtr<PromiseCallback> rejectCb = new RejectPromiseCallback(this, glob);
-        nsRefPtr<FastThenableResolverTask> task =
-          new FastThenableResolverTask(resolveCb, rejectCb, nextPromise);
+        nsRefPtr<FastPromiseResolveThenableJob> task =
+          new FastPromiseResolveThenableJob(resolveCb, rejectCb, nextPromise);
         DispatchToMicroTask(task);
         return;
       }
 
       nsRefPtr<PromiseInit> thenCallback =
         new PromiseInit(nullptr, thenObj, mozilla::dom::GetIncumbentGlobal());
-      nsRefPtr<ThenableResolverTask> task =
-        new ThenableResolverTask(this, valueObj, thenCallback);
+      nsRefPtr<PromiseResolveThenableJob> task =
+        new PromiseResolveThenableJob(this, valueObj, thenCallback);
       DispatchToMicroTask(task);
       return;
     }
