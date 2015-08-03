@@ -24,4 +24,4 @@ HTTP(..) != bengali-3c.html bengali-3b.html
 != 686225-1-bangla-aat.html 686225-1-bangla-aat-notref.html
 != 686225-2-kannada-aat.html 686225-2-kannada-aat-notref.html
 
-fails-if(Android) HTTP(..) == balinese-1.html balinese-1-ref.html # fails on builds without ICU normalization
+HTTP(..) == balinese-1.html balinese-1-ref.html

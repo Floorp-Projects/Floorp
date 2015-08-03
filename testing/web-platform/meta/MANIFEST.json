@@ -16868,8 +16868,12 @@
         "url": "/html/semantics/forms/the-fieldset-element/HTMLFieldSetElement.html"
       },
       {
-        "path": "html/semantics/forms/the-fieldset-element/disabled.html",
-        "url": "/html/semantics/forms/the-fieldset-element/disabled.html"
+        "path": "html/semantics/forms/the-fieldset-element/disabled-001.html",
+        "url": "/html/semantics/forms/the-fieldset-element/disabled-001.html"
+      },
+      {
+        "path": "html/semantics/forms/the-fieldset-element/disabled-002.xhtml",
+        "url": "/html/semantics/forms/the-fieldset-element/disabled-002.xhtml"
       },
       {
         "path": "html/semantics/forms/the-form-element/form-autocomplete.html",
@@ -17034,6 +17038,10 @@
       {
         "path": "html/semantics/forms/the-label-element/labelable-elements.html",
         "url": "/html/semantics/forms/the-label-element/labelable-elements.html"
+      },
+      {
+        "path": "html/semantics/forms/the-legend-element/legend-form.html",
+        "url": "/html/semantics/forms/the-legend-element/legend-form.html"
       },
       {
         "path": "html/semantics/forms/the-meter-element/meter.html",
@@ -18244,6 +18252,14 @@
         "url": "/mixed-content/allowed/http-csp/same-host-https/xhr-request/top-level/no-redirect/allowed.https.html"
       },
       {
+        "path": "mixed-content/allowed/http-csp/same-host-wss/websocket-request/top-level/keep-scheme-redirect/websocket-allowed.https.html",
+        "url": "/mixed-content/allowed/http-csp/same-host-wss/websocket-request/top-level/keep-scheme-redirect/websocket-allowed.https.html"
+      },
+      {
+        "path": "mixed-content/allowed/http-csp/same-host-wss/websocket-request/top-level/no-redirect/websocket-allowed.https.html",
+        "url": "/mixed-content/allowed/http-csp/same-host-wss/websocket-request/top-level/no-redirect/websocket-allowed.https.html"
+      },
+      {
         "path": "mixed-content/allowed/meta-csp/same-host-https/audio-tag/top-level/no-redirect/allowed.https.html",
         "url": "/mixed-content/allowed/meta-csp/same-host-https/audio-tag/top-level/no-redirect/allowed.https.html"
       },
@@ -18294,6 +18310,10 @@
       {
         "path": "mixed-content/allowed/meta-csp/same-host-https/xhr-request/top-level/no-redirect/allowed.https.html",
         "url": "/mixed-content/allowed/meta-csp/same-host-https/xhr-request/top-level/no-redirect/allowed.https.html"
+      },
+      {
+        "path": "mixed-content/allowed/meta-csp/same-host-wss/websocket-request/top-level/no-redirect/websocket-allowed.https.html",
+        "url": "/mixed-content/allowed/meta-csp/same-host-wss/websocket-request/top-level/no-redirect/websocket-allowed.https.html"
       },
       {
         "path": "mixed-content/allowed/no-opt-in/same-host-https/audio-tag/top-level/keep-scheme-redirect/allowed.https.html",
@@ -18398,6 +18418,14 @@
       {
         "path": "mixed-content/allowed/no-opt-in/same-host-https/xhr-request/top-level/no-redirect/allowed.https.html",
         "url": "/mixed-content/allowed/no-opt-in/same-host-https/xhr-request/top-level/no-redirect/allowed.https.html"
+      },
+      {
+        "path": "mixed-content/allowed/no-opt-in/same-host-wss/websocket-request/top-level/keep-scheme-redirect/websocket-allowed.https.html",
+        "url": "/mixed-content/allowed/no-opt-in/same-host-wss/websocket-request/top-level/keep-scheme-redirect/websocket-allowed.https.html"
+      },
+      {
+        "path": "mixed-content/allowed/no-opt-in/same-host-wss/websocket-request/top-level/no-redirect/websocket-allowed.https.html",
+        "url": "/mixed-content/allowed/no-opt-in/same-host-wss/websocket-request/top-level/no-redirect/websocket-allowed.https.html"
       },
       {
         "path": "mixed-content/blockable/http-csp/cross-origin-http/fetch-request/top-level/keep-scheme-redirect/opt-in-blocks.https.html",
@@ -18508,6 +18536,18 @@
         "url": "/mixed-content/blockable/http-csp/cross-origin-http/xhr-request/top-level/swap-scheme-redirect/opt-in-blocks.https.html"
       },
       {
+        "path": "mixed-content/blockable/http-csp/cross-origin-ws/websocket-request/top-level/keep-scheme-redirect/ws-downgrade-blocks.https.html",
+        "url": "/mixed-content/blockable/http-csp/cross-origin-ws/websocket-request/top-level/keep-scheme-redirect/ws-downgrade-blocks.https.html"
+      },
+      {
+        "path": "mixed-content/blockable/http-csp/cross-origin-ws/websocket-request/top-level/no-redirect/ws-downgrade-blocks.https.html",
+        "url": "/mixed-content/blockable/http-csp/cross-origin-ws/websocket-request/top-level/no-redirect/ws-downgrade-blocks.https.html"
+      },
+      {
+        "path": "mixed-content/blockable/http-csp/cross-origin-ws/websocket-request/top-level/swap-scheme-redirect/ws-downgrade-blocks.https.html",
+        "url": "/mixed-content/blockable/http-csp/cross-origin-ws/websocket-request/top-level/swap-scheme-redirect/ws-downgrade-blocks.https.html"
+      },
+      {
         "path": "mixed-content/blockable/http-csp/same-host-http/fetch-request/top-level/keep-scheme-redirect/opt-in-blocks.https.html",
         "url": "/mixed-content/blockable/http-csp/same-host-http/fetch-request/top-level/keep-scheme-redirect/opt-in-blocks.https.html"
       },
@@ -18616,6 +18656,18 @@
         "url": "/mixed-content/blockable/http-csp/same-host-http/xhr-request/top-level/swap-scheme-redirect/opt-in-blocks.https.html"
       },
       {
+        "path": "mixed-content/blockable/http-csp/same-host-ws/websocket-request/top-level/keep-scheme-redirect/ws-downgrade-blocks.https.html",
+        "url": "/mixed-content/blockable/http-csp/same-host-ws/websocket-request/top-level/keep-scheme-redirect/ws-downgrade-blocks.https.html"
+      },
+      {
+        "path": "mixed-content/blockable/http-csp/same-host-ws/websocket-request/top-level/no-redirect/ws-downgrade-blocks.https.html",
+        "url": "/mixed-content/blockable/http-csp/same-host-ws/websocket-request/top-level/no-redirect/ws-downgrade-blocks.https.html"
+      },
+      {
+        "path": "mixed-content/blockable/http-csp/same-host-ws/websocket-request/top-level/swap-scheme-redirect/ws-downgrade-blocks.https.html",
+        "url": "/mixed-content/blockable/http-csp/same-host-ws/websocket-request/top-level/swap-scheme-redirect/ws-downgrade-blocks.https.html"
+      },
+      {
         "path": "mixed-content/blockable/meta-csp/cross-origin-http/fetch-request/top-level/no-redirect/opt-in-blocks.https.html",
         "url": "/mixed-content/blockable/meta-csp/cross-origin-http/fetch-request/top-level/no-redirect/opt-in-blocks.https.html"
       },
@@ -18652,6 +18704,10 @@
         "url": "/mixed-content/blockable/meta-csp/cross-origin-http/xhr-request/top-level/no-redirect/opt-in-blocks.https.html"
       },
       {
+        "path": "mixed-content/blockable/meta-csp/cross-origin-ws/websocket-request/top-level/no-redirect/ws-downgrade-blocks.https.html",
+        "url": "/mixed-content/blockable/meta-csp/cross-origin-ws/websocket-request/top-level/no-redirect/ws-downgrade-blocks.https.html"
+      },
+      {
         "path": "mixed-content/blockable/meta-csp/same-host-http/fetch-request/top-level/no-redirect/opt-in-blocks.https.html",
         "url": "/mixed-content/blockable/meta-csp/same-host-http/fetch-request/top-level/no-redirect/opt-in-blocks.https.html"
       },
@@ -18686,6 +18742,10 @@
       {
         "path": "mixed-content/blockable/meta-csp/same-host-http/xhr-request/top-level/no-redirect/opt-in-blocks.https.html",
         "url": "/mixed-content/blockable/meta-csp/same-host-http/xhr-request/top-level/no-redirect/opt-in-blocks.https.html"
+      },
+      {
+        "path": "mixed-content/blockable/meta-csp/same-host-ws/websocket-request/top-level/no-redirect/ws-downgrade-blocks.https.html",
+        "url": "/mixed-content/blockable/meta-csp/same-host-ws/websocket-request/top-level/no-redirect/ws-downgrade-blocks.https.html"
       },
       {
         "path": "mixed-content/blockable/no-opt-in/cross-origin-http/fetch-request/top-level/keep-scheme-redirect/no-opt-in-blocks.https.html",
@@ -18796,6 +18856,18 @@
         "url": "/mixed-content/blockable/no-opt-in/cross-origin-http/xhr-request/top-level/swap-scheme-redirect/no-opt-in-blocks.https.html"
       },
       {
+        "path": "mixed-content/blockable/no-opt-in/cross-origin-ws/websocket-request/top-level/keep-scheme-redirect/ws-downgrade-blocks.https.html",
+        "url": "/mixed-content/blockable/no-opt-in/cross-origin-ws/websocket-request/top-level/keep-scheme-redirect/ws-downgrade-blocks.https.html"
+      },
+      {
+        "path": "mixed-content/blockable/no-opt-in/cross-origin-ws/websocket-request/top-level/no-redirect/ws-downgrade-blocks.https.html",
+        "url": "/mixed-content/blockable/no-opt-in/cross-origin-ws/websocket-request/top-level/no-redirect/ws-downgrade-blocks.https.html"
+      },
+      {
+        "path": "mixed-content/blockable/no-opt-in/cross-origin-ws/websocket-request/top-level/swap-scheme-redirect/ws-downgrade-blocks.https.html",
+        "url": "/mixed-content/blockable/no-opt-in/cross-origin-ws/websocket-request/top-level/swap-scheme-redirect/ws-downgrade-blocks.https.html"
+      },
+      {
         "path": "mixed-content/blockable/no-opt-in/same-host-http/fetch-request/top-level/keep-scheme-redirect/no-opt-in-blocks.https.html",
         "url": "/mixed-content/blockable/no-opt-in/same-host-http/fetch-request/top-level/keep-scheme-redirect/no-opt-in-blocks.https.html"
       },
@@ -18902,6 +18974,18 @@
       {
         "path": "mixed-content/blockable/no-opt-in/same-host-http/xhr-request/top-level/swap-scheme-redirect/no-opt-in-blocks.https.html",
         "url": "/mixed-content/blockable/no-opt-in/same-host-http/xhr-request/top-level/swap-scheme-redirect/no-opt-in-blocks.https.html"
+      },
+      {
+        "path": "mixed-content/blockable/no-opt-in/same-host-ws/websocket-request/top-level/keep-scheme-redirect/ws-downgrade-blocks.https.html",
+        "url": "/mixed-content/blockable/no-opt-in/same-host-ws/websocket-request/top-level/keep-scheme-redirect/ws-downgrade-blocks.https.html"
+      },
+      {
+        "path": "mixed-content/blockable/no-opt-in/same-host-ws/websocket-request/top-level/no-redirect/ws-downgrade-blocks.https.html",
+        "url": "/mixed-content/blockable/no-opt-in/same-host-ws/websocket-request/top-level/no-redirect/ws-downgrade-blocks.https.html"
+      },
+      {
+        "path": "mixed-content/blockable/no-opt-in/same-host-ws/websocket-request/top-level/swap-scheme-redirect/ws-downgrade-blocks.https.html",
+        "url": "/mixed-content/blockable/no-opt-in/same-host-ws/websocket-request/top-level/swap-scheme-redirect/ws-downgrade-blocks.https.html"
       },
       {
         "path": "mixed-content/optionally-blockable/http-csp/cross-origin-http/audio-tag/top-level/keep-scheme-redirect/opt-in-blocks.https.html",
@@ -25698,6 +25782,10 @@
       {
         "path": "websockets/Close-Reason-124Bytes.htm",
         "url": "/websockets/Close-Reason-124Bytes.htm"
+      },
+      {
+        "path": "websockets/Close-clamp.htm",
+        "url": "/websockets/Close-clamp.htm"
       },
       {
         "path": "websockets/Close-null.htm",
@@ -34114,7 +34202,7 @@
       }
     ]
   },
-  "rev": "4bc69f287365a67585d470300a2ef109689cf465",
+  "rev": "2bd8c7dcf2e216e58ece63491f31b5d087ec740e",
   "url_base": "/",
   "version": 2
 }

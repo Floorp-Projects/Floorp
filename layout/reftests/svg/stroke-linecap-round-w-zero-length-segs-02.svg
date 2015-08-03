@@ -6,13 +6,15 @@
   
   <title>Test invalidation for 'stroke-linecap: round' with zero length path segments</title>
 
-  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=1075399 -->
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=1075399 for path and
+       https://bugzilla.mozilla.org/show_bug.cgi?id=1187770 for line -->
 
   <script>
 
 function run()
 {
   document.getElementById('path').setAttribute('stroke-linecap', 'butt');
+  document.getElementById('line').setAttribute('stroke-linecap', 'butt');
   document.documentElement.removeAttribute('class');
 }
 
@@ -24,5 +26,7 @@ window.addEventListener("MozReftestInvalidate", run, false);
 
   <path id="path" stroke="red" stroke-width="200" stroke-linecap="round"
         d="M100,100 L100,100"/>
+  <line id="line" stroke="red" stroke-width="200" stroke-linecap="round"
+        x1="300" y1="300" x2="300" y2="300"/>
 
 </svg>

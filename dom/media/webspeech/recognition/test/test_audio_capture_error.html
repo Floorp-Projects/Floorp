@@ -23,11 +23,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=650295
   performTest({
     eventsToRequest: ['EVENT_AUDIO_ERROR'],
     expectedEvents: {
+      'start': null,
+      'audiostart': null,
+      'speechstart': null,
+      'speechend': null,
+      'audioend': null,
       'error': buildErrorCallback(errorCodes.AUDIO_CAPTURE),
       'end': null
     },
     doneFunc: SimpleTest.finish,
-    prefs: [["media.webspeech.test.fake_fsm_events", true]]
+    prefs: [["media.webspeech.test.fake_fsm_events", true], ["media.webspeech.test.fake_recognition_service", true]]
   });
 </script>
 </pre>

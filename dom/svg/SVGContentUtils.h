@@ -39,6 +39,8 @@ class Matrix;
 } // namespace gfx
 } // namespace mozilla
 
+#define SVG_ZERO_LENGTH_PATH_FIX_FACTOR 512
+
 inline bool
 IsSVGWhitespace(char aChar)
 {

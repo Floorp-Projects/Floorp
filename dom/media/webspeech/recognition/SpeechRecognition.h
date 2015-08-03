@@ -49,8 +49,6 @@ class SpeechEvent;
 PRLogModuleInfo* GetSpeechRecognitionLog();
 #define SR_LOG(...) MOZ_LOG(GetSpeechRecognitionLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
 
-already_AddRefed<nsISpeechRecognitionService> GetSpeechRecognitionService();
-
 class SpeechRecognition final : public DOMEventTargetHelper,
                                 public nsIObserver,
                                 public SupportsWeakPtr<SpeechRecognition>
@@ -60,6 +58,7 @@ public:
   explicit SpeechRecognition(nsPIDOMWindow* aOwnerWindow);
 
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SpeechRecognition, DOMEventTargetHelper)
 
   NS_DECL_NSIOBSERVER
 
@@ -72,21 +71,21 @@ public:
   static already_AddRefed<SpeechRecognition>
   Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
 
-  already_AddRefed<SpeechGrammarList> GetGrammars(ErrorResult& aRv) const;
+  already_AddRefed<SpeechGrammarList> Grammars() const;
 
-  void SetGrammars(mozilla::dom::SpeechGrammarList& aArg, ErrorResult& aRv);
+  void SetGrammars(mozilla::dom::SpeechGrammarList& aArg);
 
-  void GetLang(nsString& aRetVal, ErrorResult& aRv) const;
+  void GetLang(nsString& aRetVal) const;
 
-  void SetLang(const nsAString& aArg, ErrorResult& aRv);
+  void SetLang(const nsAString& aArg);
 
   bool GetContinuous(ErrorResult& aRv) const;
 
   void SetContinuous(bool aArg, ErrorResult& aRv);
 
-  bool GetInterimResults(ErrorResult& aRv) const;
+  bool InterimResults() const;
 
-  void SetInterimResults(bool aArg, ErrorResult& aRv);
+  void SetInterimResults(bool aArg);
 
   uint32_t GetMaxAlternatives(ErrorResult& aRv) const;
 
@@ -176,6 +175,9 @@ private:
   void SetState(FSMState state);
   bool StateBetween(FSMState begin, FSMState end);
 
+  bool SetRecognitionService(ErrorResult& aRv);
+  bool ValidateAndSetGrammarList(ErrorResult& aRv);
+
   class GetUserMediaSuccessCallback : public nsIDOMGetUserMediaSuccessCallback
   {
   public:
@@ -248,6 +250,32 @@ private:
 
   nsCOMPtr<nsITimer> mSpeechDetectionTimer;
   bool mAborted;
+
+  nsString mLang;
+
+  nsRefPtr<SpeechGrammarList> mSpeechGrammarList;
+
+  // WebSpeechAPI (http://bit.ly/1gIl7DC) states:
+  //
+  // 1. Default value MUST be false
+  // 2. If true, interim results SHOULD be returned
+  // 3. If false, interim results MUST NOT be returned
+  //
+  // Pocketsphinx does not return interm results; so, defaulting
+  // mInterimResults to false, then ignoring its subsequent value
+  // is a conforming implementation.
+  bool mInterimResults;
+
+  // WebSpeechAPI (http://bit.ly/1JAiqeo) states:
+  //
+  // 1. Default value is 1
+  // 2. Subsequent value is the "maximum number of SpeechRecognitionAlternatives per result"
+  //
+  // Pocketsphinx can only return at maximum a single SpeechRecognitionAlternative
+  // per SpeechRecognitionResult. So defaulting mMaxAlternatives to 1, for all non
+  // zero values ignoring mMaxAlternatives while for a 0 value returning no
+  // SpeechRecognitionAlternative per result is a conforming implementation.
+  uint32_t mMaxAlternatives;
 
   void ProcessTestEventRequest(nsISupports* aSubject, const nsAString& aEventName);
 

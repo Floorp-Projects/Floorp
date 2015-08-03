@@ -92,7 +92,7 @@ hb_tag_from_string (const char *str, int len)
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.5
  **/
 void
 hb_tag_to_string (hb_tag_t tag, char *buf)
@@ -334,7 +334,7 @@ hb_language_to_string (hb_language_t language)
  *
  * 
  *
- * Return value: 
+ * Return value: (transfer none):
  *
  * Since: 1.0
  **/
@@ -493,6 +493,9 @@ hb_script_get_horizontal_direction (hb_script_t script)
     case HB_SCRIPT_PALMYRENE:
     case HB_SCRIPT_PSALTER_PAHLAVI:
 
+    /* Unicode-8.0 additions */
+    case HB_SCRIPT_OLD_HUNGARIAN:
+
       return HB_DIRECTION_RTL;
   }
 
@@ -579,7 +582,7 @@ hb_version_string (void)
  *
  * Return value: 
  *
- * Since: 1.0
+ * Since: 0.9.30
  **/
 hb_bool_t
 hb_version_atleast (unsigned int major,

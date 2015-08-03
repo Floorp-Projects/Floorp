@@ -1275,17 +1275,16 @@ JSScript::initScriptCounts(JSContext* cx)
 {
     MOZ_ASSERT(!hasScriptCounts());
 
-    size_t n = 0;
+    // We allocate one PCCounts for each offset, instead of for each bytecode,
+    // because the pcCountsVector maps an offset to a PCCounts structure.
+    size_t nbytes = length() * sizeof(PCCounts);
 
-    for (jsbytecode* pc = code(); pc < codeEnd(); pc += GetBytecodeLength(pc))
-        n += PCCounts::numCounts(JSOp(*pc));
-
-    size_t nbytes = (length() * sizeof(PCCounts)) + (n * sizeof(double));
+    // Initialize all PCCounts counters to 0.
     uint8_t* base = zone()->pod_calloc<uint8_t>(nbytes);
     if (!base)
         return false;
 
-    /* Create compartment's scriptCountsMap if necessary. */
+    // Create compartment's scriptCountsMap if necessary.
     ScriptCountsMap* map = compartment()->scriptCountsMap;
     if (!map) {
         map = cx->new_<ScriptCountsMap>();
@@ -1297,29 +1296,15 @@ JSScript::initScriptCounts(JSContext* cx)
         compartment()->scriptCountsMap = map;
     }
 
-    uint8_t* cursor = base;
-
     ScriptCounts scriptCounts;
-    scriptCounts.pcCountsVector = (PCCounts*) cursor;
-    cursor += length() * sizeof(PCCounts);
+    scriptCounts.pcCountsVector = (PCCounts*) base;
 
-    for (jsbytecode* pc = code(); pc < codeEnd(); pc += GetBytecodeLength(pc)) {
-        MOZ_ASSERT(uintptr_t(cursor) % sizeof(double) == 0);
-        scriptCounts.pcCountsVector[pcToOffset(pc)].counts = (double*) cursor;
-        size_t capacity = PCCounts::numCounts(JSOp(*pc));
-#ifdef DEBUG
-        scriptCounts.pcCountsVector[pcToOffset(pc)].capacity = capacity;
-#endif
-        cursor += capacity * sizeof(double);
-    }
-
+    // Register the current ScriptCount in the compartment's map.
     if (!map->putNew(this, scriptCounts)) {
         js_free(base);
         return false;
     }
     hasScriptCounts_ = true; // safe to set this;  we can't fail after this point
-
-    MOZ_ASSERT(size_t(cursor - base) == nbytes);
 
     /* Enable interrupts in any interpreter frames running on this script. */
     for (ActivationIterator iter(cx->runtime()); !iter.done(); ++iter) {

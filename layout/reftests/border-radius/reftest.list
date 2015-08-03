@@ -76,7 +76,7 @@ skip-if(B2G||Mulet) fails-if(Android) == scrollbar-clamping-2.html scrollbar-cla
 
 # Test for bad corner joins.
 fuzzy-if(true,1,1) == corner-joins-1.xhtml corner-joins-1-ref.xhtml
-skip-if(B2G||Mulet) random-if(winWidget) HTTP(..) == corner-joins-2.xhtml corner-joins-2-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy(255,20) skip-if(B2G||Mulet) random-if(winWidget) HTTP(..) == corner-joins-2.xhtml corner-joins-2-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
 
 skip-if(B2G||Mulet) fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,20) fuzzy-if(Android&&browserIsRemote,7,146) fuzzy-if(Android&&!browserIsRemote,166,400) fails-if(Android&&AndroidVersion==15) == scroll-1.html scroll-1-ref.html # see bug 732535 #Bug 959166 # Initial mulet triage: parity with B2G/B2G Desktop
 
@@ -90,3 +90,5 @@ skip-if(B2G||Mulet) fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,20) fuz
 fuzzy-if(winWidget&&!d2d,1,9) fuzzy-if(d2d,5,40) fuzzy-if(Android||B2G,1,5) == curved-border-background-nogap.html curved-border-background-nogap-ref.html
 
 == color-layer-1a.html color-layer-1-ref.html
+
+== corner-split.html corner-split-ref.svg # bug 1185636

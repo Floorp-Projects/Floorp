@@ -17,7 +17,7 @@
 
 /*
  * MOZ_FOR_EACH(aMacro, aFixedArgs, aArgs) expands to N calls to the macro
- * |aMacro| where N is equal the number of items in the list |aArgs|. The
+ * |aMacro| where N is equal the number of items in the list |aArgs|. The
  * arguments for each |aMacro| call are composed of *all* arguments in the list
  * |aFixedArgs| as well as a single argument in the list |aArgs|. For example:
  *

@@ -282,12 +282,14 @@ public:
    * must be the nsDisplayListBuilder containing this FrameLayerBuilder.
    * This function can be called multiple times in a row to draw
    * different regions. This will occur when, for example, progressive paint is
-   * enabled, in which case aRegionToDraw will be a subregion of aDirtyRegion.
+   * enabled. In these cases aDirtyRegion can optionally be used to specify the
+   * total region that will be drawn during the transaction, possibly allowing
+   * the callback to make optimizations.
    */
   static void DrawPaintedLayer(PaintedLayer* aLayer,
                               gfxContext* aContext,
                               const nsIntRegion& aRegionToDraw,
-                              const nsIntRegion& aDirtyRegion,
+                              const nsIntRegion* aDirtyRegion,
                               mozilla::layers::DrawRegionClip aClip,
                               const nsIntRegion& aRegionToInvalidate,
                               void* aCallbackData);

@@ -9,6 +9,7 @@ package mozilla.layers.layerscope;
 // ===============================
 message FramePacket {
   optional uint64 value = 1;
+  optional float  scale = 2;
 }
 
 message ColorPacket {
@@ -114,6 +115,8 @@ message LayersPacket {
     optional uint64 refID = 103;
     // Readback Layer
     optional Size size = 104;
+    optional uint32 displayListLogLength = 105;
+    optional bytes displayListLog = 106;
   }
   repeated Layer layer = 1;
 }
@@ -136,6 +139,8 @@ message DrawPacket {
   required uint32 totalRects = 4;
   repeated Rect   layerRect = 5;
   required uint64 layerref = 6;
+  repeated uint32 texIDs = 7;
+  repeated Rect   textureRect = 8;
 }
 
 // We only need to use this Packet.

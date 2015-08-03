@@ -185,7 +185,19 @@ hb_buffer_set_flags (hb_buffer_t       *buffer,
 hb_buffer_flags_t
 hb_buffer_get_flags (hb_buffer_t *buffer);
 
+typedef enum {
+  HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES	= 0,
+  HB_BUFFER_CLUSTER_LEVEL_MONOTONE_CHARACTERS	= 1,
+  HB_BUFFER_CLUSTER_LEVEL_CHARACTERS		= 2,
+  HB_BUFFER_CLUSTER_LEVEL_DEFAULT = HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES
+} hb_buffer_cluster_level_t;
 
+void
+hb_buffer_set_cluster_level (hb_buffer_t               *buffer,
+			     hb_buffer_cluster_level_t  cluster_level);
+
+hb_buffer_cluster_level_t
+hb_buffer_get_cluster_level (hb_buffer_t *buffer);
 
 #define HB_BUFFER_REPLACEMENT_CODEPOINT_DEFAULT 0xFFFDu
 
@@ -220,6 +232,10 @@ hb_buffer_allocation_successful (hb_buffer_t  *buffer);
 
 void
 hb_buffer_reverse (hb_buffer_t *buffer);
+
+void
+hb_buffer_reverse_range (hb_buffer_t *buffer,
+			 unsigned int start, unsigned int end);
 
 void
 hb_buffer_reverse_clusters (hb_buffer_t *buffer);
