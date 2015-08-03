@@ -467,14 +467,6 @@ PushEvent::PushEvent(EventTarget* aOwner)
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(PushEvent, ExtendableEvent)
-NS_IMPL_RELEASE_INHERITED(PushEvent, ExtendableEvent)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(PushEvent)
-NS_INTERFACE_MAP_END_INHERITING(ExtendableEvent)
-
-NS_IMPL_CYCLE_COLLECTION_INHERITED(PushEvent, ExtendableEvent, mData)
-
 #endif /* ! MOZ_SIMPLEPUSH */
 
 END_WORKERS_NAMESPACE

@@ -6,13 +6,8 @@ this.onpush = handlePush;
 function handlePush(event) {
 
   self.clients.matchAll().then(function(result) {
-    if (event instanceof PushEvent &&
-      event.data instanceof PushMessageData &&
-      event.data.text === undefined &&
-      event.data.json === undefined &&
-      event.data.arrayBuffer === undefined &&
-      event.data.blob === undefined) {
-
+    // FIXME(nsm): Bug 1149195 will fix data exposure.
+    if (event instanceof PushEvent && !('data' in event)) {
       result[0].postMessage({type: "finished", okay: "yes"});
       return;
     }
