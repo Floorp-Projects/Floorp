@@ -383,18 +383,19 @@ add_task(function* formHistory() {
 
 add_task(function* cycleEngines() {
   yield setUp();
-  yield msg("key", "VK_DOWN");
+  yield msg("key", { key: "VK_DOWN", waitForSuggestions: true });
 
-  function promiseEngineChange(newEngineName) {
+  let promiseEngineChange = function(newEngineName) {
     let deferred = Promise.defer();
     Services.obs.addObserver(function resolver(subj, topic, data) {
       if (data != "engine-current") {
         return;
       }
-      is(subj.name, newEngineName, "Engine cycled correctly");
+      SimpleTest.is(subj.name, newEngineName, "Engine cycled correctly");
       Services.obs.removeObserver(resolver, "browser-search-engine-modified");
       deferred.resolve();
     }, "browser-search-engine-modified", false);
+    return deferred.promise;
   }
 
   let p = promiseEngineChange(TEST_ENGINE_PREFIX + " " + TEST_ENGINE_2_BASENAME);
