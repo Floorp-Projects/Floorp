@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1004825
+Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1004825</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript;version=1.7">
+
+  /*globals AndroidLog */
+
+  const TAG = "AndroidLogTest";
+
+  const VERBOSE_MESSAGE = "This is a verbose message.";
+  const DEBUG_MESSAGE = "This is a debug message.";
+  const INFO_MESSAGE = "This is an info message.";
+  const WARNING_MESSAGE = "This is a warning message.";
+  const ERROR_MESSAGE = "This is an error message.";
+
+  // Number of bytes we expect to log.  This isn't equivalent to the number
+  // of characters, although the difference is consistent, so we can calculate it
+  // from the lengths of the messages and tag.  We include the length of "Gecko"
+  // because the module prepends it to the tag.
+  const VERBOSE_BYTES = "Gecko".length + TAG.length + VERBOSE_MESSAGE.length + 3;
+  const DEBUG_BYTES = "Gecko".length + TAG.length + DEBUG_MESSAGE.length + 3;
+  const INFO_BYTES = "Gecko".length + TAG.length + INFO_MESSAGE.length + 3;
+  const WARNING_BYTES = "Gecko".length + TAG.length + WARNING_MESSAGE.length + 3;
+  const ERROR_BYTES = "Gecko".length + TAG.length + ERROR_MESSAGE.length + 3;
+
+  Components.utils.import("resource://gre/modules/AndroidLog.jsm");
+
+  ok(!!AndroidLog, "AndroidLog is defined");
+
+  ok("v" in AndroidLog && typeof AndroidLog.v == "function", "v function found");
+  ok("d" in AndroidLog && typeof AndroidLog.d == "function", "d function found");
+  ok("i" in AndroidLog && typeof AndroidLog.i == "function", "i function found");
+  ok("w" in AndroidLog && typeof AndroidLog.w == "function", "w function found");
+  ok("e" in AndroidLog && typeof AndroidLog.e == "function", "e function found");
+
+  // Ensure that the functions don't cause the test process to crash
+  // (because of some change to the native object being accessed via ctypes)
+  // and return the right values (the number of bytes logged).
+  // XXX Ensure that these messages actually make it to the log (bug 1046096).
+  is(VERBOSE_BYTES, AndroidLog.v(TAG, VERBOSE_MESSAGE), "verbose bytes correct");
+  is(DEBUG_BYTES, AndroidLog.d(TAG, DEBUG_MESSAGE), "debug bytes correct");
+  is(INFO_BYTES, AndroidLog.i(TAG, INFO_MESSAGE), "info bytes correct");
+  is(WARNING_BYTES, AndroidLog.w(TAG, WARNING_MESSAGE), "warning bytes correct");
+  is(ERROR_BYTES, AndroidLog.e(TAG, ERROR_MESSAGE), "error bytes correct");
+
+  // Ensure the functions work when bound with null value for thisArg parameter.
+  is(VERBOSE_BYTES, AndroidLog.v.bind(null, TAG)(VERBOSE_MESSAGE), "verbose bytes correct with bind");
+  is(DEBUG_BYTES, AndroidLog.d.bind(null, TAG)(DEBUG_MESSAGE), "debug bytes correct with bind");
+  is(INFO_BYTES, AndroidLog.i.bind(null, TAG)(INFO_MESSAGE), "info bytes correct with bind");
+  is(WARNING_BYTES, AndroidLog.w.bind(null, TAG)(WARNING_MESSAGE), "warning bytes correct with bind");
+  is(ERROR_BYTES, AndroidLog.e.bind(null, TAG)(ERROR_MESSAGE), "error bytes correct with bind");
+
+  // Ensure the functions work when the module object is "bound" to a tag.
+  let Log = AndroidLog.bind(TAG);
+  is(VERBOSE_BYTES, Log.v(VERBOSE_MESSAGE), "verbose bytes correct after bind");
+  is(DEBUG_BYTES, Log.d(DEBUG_MESSAGE), "debug bytes correct after bind");
+  is(INFO_BYTES, Log.i(INFO_MESSAGE), "info bytes correct after bind");
+  is(WARNING_BYTES, Log.w(WARNING_MESSAGE), "warning bytes correct after bind");
+  is(ERROR_BYTES, Log.e(ERROR_MESSAGE), "error bytes correct after bind");
+
+  // Ensure the functions work when the tag length is greater than the maximum
+  // tag length.
+  let tag = "X".repeat(AndroidLog.MAX_TAG_LENGTH + 1);
+  is(AndroidLog.MAX_TAG_LENGTH + 54, AndroidLog.v(tag, "This is a verbose message with a too-long tag."), "verbose message with too-long tag");
+  is(AndroidLog.MAX_TAG_LENGTH + 52, AndroidLog.d(tag, "This is a debug message with a too-long tag."), "debug message with too-long tag");
+  is(AndroidLog.MAX_TAG_LENGTH + 52, AndroidLog.i(tag, "This is an info message with a too-long tag."), "info message with too-long tag");
+  is(AndroidLog.MAX_TAG_LENGTH + 54, AndroidLog.w(tag, "This is a warning message with a too-long tag."), "warning message with too-long tag");
+  is(AndroidLog.MAX_TAG_LENGTH + 53, AndroidLog.e(tag, "This is an error message with a too-long tag."), "error message with too-long tag");
+
+  // We should also ensure that the module is accessible from a ChromeWorker,
+  // but there doesn't seem to be a way to load a ChromeWorker from this test.
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1004825">Mozilla Bug 1004825</a>
+<br>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1184186">Migrated from Robocop testAndroidLog</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
