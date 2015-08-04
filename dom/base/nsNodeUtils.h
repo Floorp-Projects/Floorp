@@ -48,12 +48,15 @@ public:
    * @param aNameSpaceID  Namespace of changing attribute
    * @param aAttribute    Local-name of changing attribute
    * @param aModType      Type of change (add/change/removal)
+   * @param aNewValue     The parsed new value, but only if BeforeSetAttr
+   *                      preparsed it!!!
    * @see nsIMutationObserver::AttributeWillChange
    */
   static void AttributeWillChange(mozilla::dom::Element* aElement,
                                   int32_t aNameSpaceID,
                                   nsIAtom* aAttribute,
-                                  int32_t aModType);
+                                  int32_t aModType,
+                                  const nsAttrValue* aNewValue);
 
   /**
    * Send AttributeChanged notifications to nsIMutationObservers.
@@ -61,12 +64,16 @@ public:
    * @param aNameSpaceID  Namespace of changed attribute
    * @param aAttribute    Local-name of changed attribute
    * @param aModType      Type of change (add/change/removal)
+   * @param aOldValue     If the old value was StoresOwnData() (or absent),
+   *                      that value, otherwise null
    * @see nsIMutationObserver::AttributeChanged
    */
   static void AttributeChanged(mozilla::dom::Element* aElement,
                                int32_t aNameSpaceID,
                                nsIAtom* aAttribute,
-                               int32_t aModType);
+                               int32_t aModType,
+                               const nsAttrValue* aOldValue);
+
   /**
    * Send AttributeSetToCurrentValue notifications to nsIMutationObservers.
    * @param aElement      Element whose data changed

@@ -274,6 +274,22 @@ select > button:active {
   background-image: url("arrowd.gif") !important;
 }
 
+select > button[orientation="left"] {
+  background-image: url("arrow-left.gif") !important;
+}
+
+select > button[orientation="right"] {
+  background-image: url("arrow-right.gif") !important;
+}
+
+select > button[orientation="left"]:active {
+  background-image: url("arrowd-left.gif") !important;
+}
+
+select > button[orientation="right"]:active {
+  background-image: url("arrowd-right.gif") !important;
+}
+
 select:empty {
   inline-size: 2.5em;
 }

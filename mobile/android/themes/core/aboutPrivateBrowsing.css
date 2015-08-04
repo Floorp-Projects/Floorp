@@ -20,7 +20,7 @@ div.contentSection {
 }
 
 body.private {
-  background-color: #45494E; /* tabs_tray_grey_pressed */
+  background-color: #363b40; /* text_and_tabs_tray_grey */
   color: #afb1b3; /* tabs_tray_icon_grey */
 }
 
@@ -47,9 +47,16 @@ a {
 
 .masq {
   display: block;
-  width: 80px;
   height: auto;
   margin: 0 auto 20px auto;
+}
+
+.masq.showNormal {
+  width: 80px;
+}
+
+.masq.showPrivate {
+  width: 160px;
 }
 
 @media all and (max-height: 399px) {
@@ -66,12 +73,12 @@ a {
 
 @media all and (min-height: 600px) and (max-height: 799px) {
   body {
-    margin-top: 150px;
+    margin-top: 120px;
   }
 }
 
 @media all and (min-height: 800px) {
   body {
-    margin-top: 250px;
+    margin-top: 240px;
   }
 }

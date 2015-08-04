@@ -2167,7 +2167,8 @@ public:
     GlobalObject globalObj(aCx, aWorkerPrivate->GlobalScope()->GetWrapper());
 
     PushEventInit pei;
-    pei.mData.Construct(mData);
+    // FIXME(nsm): Bug 1149195.
+    // pei.mData.Construct(mData);
     pei.mBubbles = false;
     pei.mCancelable = true;
 
@@ -4443,9 +4444,9 @@ HasRootDomain(nsIURI* aURI, const nsACString& aDomain)
   return prevChar == '.';
 }
 
-struct UnregisterIfMatchesHostOrPrincipalData
+struct UnregisterIfMatchesUserData final
 {
-  UnregisterIfMatchesHostOrPrincipalData(
+  UnregisterIfMatchesUserData(
     ServiceWorkerManager::RegistrationDataPerPrincipal* aRegistrationData,
     void* aUserData)
     : mRegistrationData(aRegistrationData)
@@ -4462,8 +4463,8 @@ UnregisterIfMatchesHost(const nsACString& aScope,
                         ServiceWorkerRegistrationInfo* aReg,
                         void* aPtr)
 {
-  UnregisterIfMatchesHostOrPrincipalData* data =
-    static_cast<UnregisterIfMatchesHostOrPrincipalData*>(aPtr);
+  UnregisterIfMatchesUserData* data =
+    static_cast<UnregisterIfMatchesUserData*>(aPtr);
 
   // We avoid setting toRemove = aReg by default since there is a possibility
   // of failure when data->mUserData is passed, in which case we don't want to
@@ -4495,25 +4496,76 @@ UnregisterIfMatchesHostPerPrincipal(const nsACString& aKey,
                                     ServiceWorkerManager::RegistrationDataPerPrincipal* aData,
                                     void* aUserData)
 {
-  UnregisterIfMatchesHostOrPrincipalData data(aData, aUserData);
+  UnregisterIfMatchesUserData data(aData, aUserData);
   aData->mInfos.EnumerateRead(UnregisterIfMatchesHost, &data);
   return PL_DHASH_NEXT;
 }
 
 PLDHashOperator
-UnregisterIfMatchesPrincipal(const nsACString& aScope,
-                             ServiceWorkerRegistrationInfo* aReg,
-                             void* aPtr)
+UnregisterIfMatchesClearPrivateDataParams(const nsACString& aScope,
+                                          ServiceWorkerRegistrationInfo* aReg,
+                                          void* aPtr)
 {
-  UnregisterIfMatchesHostOrPrincipalData* data =
-    static_cast<UnregisterIfMatchesHostOrPrincipalData*>(aPtr);
+  UnregisterIfMatchesUserData* data =
+    static_cast<UnregisterIfMatchesUserData*>(aPtr);
 
   if (data->mUserData) {
-    nsIPrincipal *principal = static_cast<nsIPrincipal*>(data->mUserData);
-    MOZ_ASSERT(principal);
+    mozIApplicationClearPrivateDataParams *params =
+      static_cast<mozIApplicationClearPrivateDataParams*>(data->mUserData);
+    MOZ_ASSERT(params);
     MOZ_ASSERT(aReg->mPrincipal);
-    bool equals;
-    aReg->mPrincipal->Equals(principal, &equals);
+
+    uint32_t appId;
+    nsresult rv = params->GetAppId(&appId);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return PL_DHASH_NEXT;
+    }
+
+    bool browserOnly;
+    rv = params->GetBrowserOnly(&browserOnly);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return PL_DHASH_NEXT;
+    }
+
+    bool equals = false;
+
+    if (browserOnly) {
+      // When we do a system wide "clear cookies and stored data" on B2G we get
+      // the "webapps-clear-data" notification with the System app appID and
+      // the browserOnly flag set to true.
+      // Web sites registering a service worker on B2G have a principal with the
+      // following information: web site origin + System app appId + inBrowser=1
+      // So we need to check if the service worker registration info contains
+      // the System app appID and the enabled inBrowser flag and in that case
+      // remove it from the registry.
+      equals = (appId == aReg->mPrincipal->GetAppId()) &&
+               aReg->mPrincipal->GetIsInBrowserElement();
+    } else {
+      // If we get the "webapps-clear-data" notification because of an app
+      // uninstallation, we need to check the full principal to get the match
+      // in the service workers registry. If we find a match, we unregister the
+      // worker.
+      nsCOMPtr<nsIAppsService> appsService =
+        do_GetService(APPS_SERVICE_CONTRACTID);
+      if (NS_WARN_IF(!appsService)) {
+        return PL_DHASH_NEXT;
+      }
+
+      nsCOMPtr<mozIApplication> app;
+      appsService->GetAppByLocalId(appId, getter_AddRefs(app));
+      if (NS_WARN_IF(!app)) {
+        return PL_DHASH_NEXT;
+      }
+
+      nsCOMPtr<nsIPrincipal> principal;
+      app->GetPrincipal(getter_AddRefs(principal));
+      if (NS_WARN_IF(!principal)) {
+        return PL_DHASH_NEXT;
+      }
+
+      aReg->mPrincipal->Equals(principal, &equals);
+    }
+
     if (equals) {
       nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
       swm->ForceUnregister(data->mRegistrationData, aReg);
@@ -4524,15 +4576,16 @@ UnregisterIfMatchesPrincipal(const nsACString& aScope,
 }
 
 PLDHashOperator
-UnregisterIfMatchesPrincipal(const nsACString& aKey,
+UnregisterIfMatchesClearPrivateDataParams(const nsACString& aKey,
                              ServiceWorkerManager::RegistrationDataPerPrincipal* aData,
                              void* aUserData)
 {
-  UnregisterIfMatchesHostOrPrincipalData data(aData, aUserData);
+  UnregisterIfMatchesUserData data(aData, aUserData);
   // We can use EnumerateRead because ForceUnregister (and Unregister) are async.
   // Otherwise doing some R/W operations on an hashtable during an EnumerateRead
   // will crash.
-  aData->mInfos.EnumerateRead(UnregisterIfMatchesPrincipal, &data);
+  aData->mInfos.EnumerateRead(UnregisterIfMatchesClearPrivateDataParams,
+                              &data);
   return PL_DHASH_NEXT;
 }
 
@@ -4749,14 +4802,15 @@ UpdateEachRegistration(const nsACString& aKey,
 }
 
 void
-ServiceWorkerManager::RemoveAllRegistrations(nsIPrincipal* aPrincipal)
+ServiceWorkerManager::RemoveAllRegistrations(
+    mozIApplicationClearPrivateDataParams* aParams)
 {
   AssertIsOnMainThread();
 
-  MOZ_ASSERT(aPrincipal);
+  MOZ_ASSERT(aParams);
 
-  mRegistrationInfos.EnumerateRead(UnregisterIfMatchesPrincipal,
-                                   aPrincipal);
+  mRegistrationInfos.EnumerateRead(UnregisterIfMatchesClearPrivateDataParams,
+                                   aParams);
 }
 
 static PLDHashOperator
@@ -4804,29 +4858,7 @@ ServiceWorkerManager::Observe(nsISupports* aSubject,
       return NS_OK;
     }
 
-    uint32_t appId;
-    nsresult rv = params->GetAppId(&appId);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIAppsService> appsService =
-      do_GetService(APPS_SERVICE_CONTRACTID);
-    if (NS_WARN_IF(!appsService)) {
-      return NS_OK;
-    }
-
-    nsCOMPtr<mozIApplication> app;
-    appsService->GetAppByLocalId(appId, getter_AddRefs(app));
-    if (NS_WARN_IF(!app)) {
-      return NS_OK;
-    }
-
-    nsCOMPtr<nsIPrincipal> principal;
-    app->GetPrincipal(getter_AddRefs(principal));
-    if (NS_WARN_IF(!principal)) {
-      return NS_OK;
-    }
-
-    RemoveAllRegistrations(principal);
+    RemoveAllRegistrations(params);
     return NS_OK;
   }
 

@@ -372,16 +372,15 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   // Also, PING requests have no bearing on the rendering or operation of
   // the page when used as designed, so even though they are lower risk than
   // scripts, blocking them is basically risk-free as far as compatibility is
-  // concerned.  Ping is turned off by default in Firefox, so unless a user
-  // opts into ping, no request will be made.  Categorizing this as Mixed
-  // Display Content for now, but this is subject to change.
+  // concerned.
   //
   // TYPE_STYLESHEET: XSLT stylesheets can insert scripts. CSS positioning
   // and other advanced CSS features can possibly be exploited to cause
   // spoofing attacks (e.g. make a "grant permission" button look like a
   // "refuse permission" button).
   //
-  // TYPE_BEACON: Beacon requests are similar to TYPE_PING, but are default on.
+  // TYPE_BEACON: Beacon requests are similar to TYPE_PING, and are blocked by
+  // default.
   //
   // TYPE_WEBSOCKET: The Websockets API requires browsers to
   // reject mixed-content websockets: "If secure is false but the origin of
@@ -425,23 +424,23 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
     case TYPE_IMAGE:
     case TYPE_MEDIA:
     case TYPE_OBJECT_SUBREQUEST:
-    case TYPE_PING:
-    case TYPE_BEACON:
       classification = eMixedDisplay;
       break;
 
     // Active content (or content with a low value/risk-of-blocking ratio)
     // that has been explicitly evaluated; listed here for documentation
     // purposes and to avoid the assertion and warning for the default case.
-    case TYPE_IMAGESET:
+    case TYPE_BEACON:
     case TYPE_CSP_REPORT:
     case TYPE_DTD:
     case TYPE_FETCH:
     case TYPE_FONT:
+    case TYPE_IMAGESET:
     case TYPE_OBJECT:
     case TYPE_SCRIPT:
     case TYPE_STYLESHEET:
     case TYPE_SUBDOCUMENT:
+    case TYPE_PING:
     case TYPE_WEB_MANIFEST:
     case TYPE_XBL:
     case TYPE_XMLHTTPREQUEST:

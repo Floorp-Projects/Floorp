@@ -1510,7 +1510,8 @@ nsXULContentBuilder::AttributeChanged(nsIDocument* aDocument,
                                       Element*     aElement,
                                       int32_t      aNameSpaceID,
                                       nsIAtom*     aAttribute,
-                                      int32_t      aModType)
+                                      int32_t      aModType,
+                                      const nsAttrValue* aOldValue)
 {
     nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
 
@@ -1536,7 +1537,7 @@ nsXULContentBuilder::AttributeChanged(nsIDocument* aDocument,
 
     // Pass along to the generic template builder.
     nsXULTemplateBuilder::AttributeChanged(aDocument, aElement, aNameSpaceID,
-                                           aAttribute, aModType);
+                                           aAttribute, aModType, aOldValue);
 }
 
 void

@@ -40,7 +40,7 @@ BEGIN_TEST(testGCSuppressions)
 }
 END_TEST(testGCSuppressions)
 
-struct MyContainer : public JS::StaticTraceable
+struct MyContainer : public JS::Traceable
 {
     RelocatablePtrObject obj;
     RelocatablePtrString str;
@@ -60,23 +60,16 @@ struct RootedBase<MyContainer> {
     RelocatablePtrObject& obj() { return static_cast<Rooted<MyContainer>*>(this)->get().obj; }
     RelocatablePtrString& str() { return static_cast<Rooted<MyContainer>*>(this)->get().str; }
 };
+template <>
+struct PersistentRootedBase<MyContainer> {
+    RelocatablePtrObject& obj() {
+        return static_cast<PersistentRooted<MyContainer>*>(this)->get().obj;
+    }
+    RelocatablePtrString& str() {
+        return static_cast<PersistentRooted<MyContainer>*>(this)->get().str;
+    }
+};
 } // namespace js
-
-BEGIN_TEST(testGCRootedStaticStructInternalStackStorage)
-{
-    JS::Rooted<MyContainer> container(cx);
-    container.get().obj = JS_NewObject(cx, nullptr);
-    container.get().str = JS_NewStringCopyZ(cx, "Hello");
-
-    JS_GC(cx->runtime());
-    JS_GC(cx->runtime());
-
-    JS::RootedObject obj(cx, container.get().obj);
-    JS::RootedValue val(cx, StringValue(container.get().str));
-    CHECK(JS_SetProperty(cx, obj, "foo", val));
-    return true;
-}
-END_TEST(testGCRootedStaticStructInternalStackStorage)
 
 BEGIN_TEST(testGCRootedStaticStructInternalStackStorageAugmented)
 {
@@ -90,72 +83,43 @@ BEGIN_TEST(testGCRootedStaticStructInternalStackStorageAugmented)
     JS::RootedObject obj(cx, container.obj());
     JS::RootedValue val(cx, StringValue(container.str()));
     CHECK(JS_SetProperty(cx, obj, "foo", val));
+    obj = nullptr;
+    val = UndefinedValue();
+
+    {
+        JS::RootedString actual(cx);
+        bool same;
+
+        // Automatic move from stack to heap.
+        JS::PersistentRooted<MyContainer> heap(cx, container);
+
+        // clear prior rooting.
+        container.obj() = nullptr;
+        container.str() = nullptr;
+
+        obj = heap.obj();
+        CHECK(JS_GetProperty(cx, obj, "foo", &val));
+        actual = val.toString();
+        CHECK(JS_StringEqualsAscii(cx, actual, "Hello", &same));
+        CHECK(same);
+        obj = nullptr;
+        actual = nullptr;
+
+        JS_GC(cx->runtime());
+        JS_GC(cx->runtime());
+
+        obj = heap.obj();
+        CHECK(JS_GetProperty(cx, obj, "foo", &val));
+        actual = val.toString();
+        CHECK(JS_StringEqualsAscii(cx, actual, "Hello", &same));
+        CHECK(same);
+        obj = nullptr;
+        actual = nullptr;
+    }
+
     return true;
 }
 END_TEST(testGCRootedStaticStructInternalStackStorageAugmented)
-
-struct DynamicBase : public JS::DynamicTraceable
-{
-    RelocatablePtrObject obj;
-    DynamicBase() : obj(nullptr) {}
-
-    void trace(JSTracer* trc) override {
-        if (obj)
-            js::TraceEdge(trc, &obj, "test container");
-    }
-};
-
-struct DynamicContainer : public DynamicBase
-{
-    RelocatablePtrString str;
-    DynamicContainer() : str(nullptr) {}
-
-    void trace(JSTracer* trc) override {
-        this->DynamicBase::trace(trc);
-        if (str)
-            js::TraceEdge(trc, &str, "test container");
-    }
-};
-
-namespace js {
-template <>
-struct RootedBase<DynamicContainer> {
-    RelocatablePtrObject& obj() { return static_cast<Rooted<DynamicContainer>*>(this)->get().obj; }
-    RelocatablePtrString& str() { return static_cast<Rooted<DynamicContainer>*>(this)->get().str; }
-};
-} // namespace js
-
-BEGIN_TEST(testGCRootedDynamicStructInternalStackStorage)
-{
-    JS::Rooted<DynamicContainer> container(cx);
-    container.get().obj = JS_NewObject(cx, nullptr);
-    container.get().str = JS_NewStringCopyZ(cx, "Hello");
-
-    JS_GC(cx->runtime());
-    JS_GC(cx->runtime());
-
-    JS::RootedObject obj(cx, container.get().obj);
-    JS::RootedValue val(cx, StringValue(container.get().str));
-    CHECK(JS_SetProperty(cx, obj, "foo", val));
-    return true;
-}
-END_TEST(testGCRootedDynamicStructInternalStackStorage)
-
-BEGIN_TEST(testGCRootedDynamicStructInternalStackStorageAugmented)
-{
-    JS::Rooted<DynamicContainer> container(cx);
-    container.obj() = JS_NewObject(cx, nullptr);
-    container.str() = JS_NewStringCopyZ(cx, "Hello");
-
-    JS_GC(cx->runtime());
-    JS_GC(cx->runtime());
-
-    JS::RootedObject obj(cx, container.obj());
-    JS::RootedValue val(cx, StringValue(container.str()));
-    CHECK(JS_SetProperty(cx, obj, "foo", val));
-    return true;
-}
-END_TEST(testGCRootedDynamicStructInternalStackStorageAugmented)
 
 using MyHashMap = js::TraceableHashMap<js::Shape*, JSObject*>;
 
@@ -236,9 +200,10 @@ BEGIN_TEST(testGCHandleHashMap)
 }
 END_TEST(testGCHandleHashMap)
 
+using ShapeVec = TraceableVector<Shape*>;
+
 BEGIN_TEST(testGCRootedVector)
 {
-    using ShapeVec = TraceableVector<Shape*>;
     JS::Rooted<ShapeVec> shapes(cx, ShapeVec(cx));
 
     for (size_t i = 0; i < 10; ++i) {
@@ -310,8 +275,6 @@ receiveMutableHandleToShapeVector(JS::MutableHandle<TraceableVector<Shape*>> han
     return true;
 }
 END_TEST(testGCRootedVector)
-
-using ShapeVec = TraceableVector<Shape*>;
 
 static bool
 FillVector(JSContext* cx, MutableHandle<ShapeVec> shapes)

@@ -1693,6 +1693,11 @@ HttpChannelChild::ContinueAsyncOpen()
   nsresult rv = mozilla::ipc::LoadInfoToLoadInfoArgs(mLoadInfo, &openArgs.loadInfo());
   NS_ENSURE_SUCCESS(rv, rv);
 
+  EnsureSchedulingContextID();
+  char scid[NSID_LENGTH];
+  mSchedulingContextID.ToProvidedString(scid);
+  openArgs.schedulingContextID().AssignASCII(scid);
+
   // The socket transport in the chrome process now holds a logical ref to us
   // until OnStopRequest, or we do a redirect, or we hit an IPDL error.
   AddIPDLReference();

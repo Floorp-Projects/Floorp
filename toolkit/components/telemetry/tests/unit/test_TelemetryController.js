@@ -34,8 +34,6 @@ const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 const PREF_FHR_SERVICE_ENABLED = "datareporting.healthreport.service.enabled";
 const PREF_UNIFIED = PREF_BRANCH + "unified";
 
-const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
-
 let gClientID = null;
 
 function sendPing(aSendClientId, aSendEnvironment) {
