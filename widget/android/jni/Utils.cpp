@@ -111,14 +111,8 @@ uintptr_t GetNativeHandle(JNIEnv* env, jobject instance)
         return 0;
     }
 
-    auto handle = static_cast<uintptr_t>(
+    return static_cast<uintptr_t>(
             env->GetLongField(instance, sJNIObjectHandleField));
-
-    if (!handle && !env->ExceptionCheck()) {
-        ThrowException(env, "java/lang/NullPointerException",
-                       "Null native pointer");
-    }
-    return handle;
 }
 
 void SetNativeHandle(JNIEnv* env, jobject instance, uintptr_t handle)
