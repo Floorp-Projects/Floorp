@@ -2307,7 +2307,7 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
     // Read Node Info
     uint32_t number = 0;
     nsresult rv = aStream->Read32(&number);
-    mNodeInfo = aNodeInfos->ElementAt(number);
+    mNodeInfo = aNodeInfos->SafeElementAt(number, nullptr);
     if (!mNodeInfo)
         return NS_ERROR_UNEXPECTED;
 
@@ -2330,7 +2330,7 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
             if (NS_FAILED(tmp)) {
               rv = tmp;
             }
-            mozilla::dom::NodeInfo* ni = aNodeInfos->ElementAt(number);
+            mozilla::dom::NodeInfo* ni = aNodeInfos->SafeElementAt(number, nullptr);
             if (!ni)
                 return NS_ERROR_UNEXPECTED;
 
