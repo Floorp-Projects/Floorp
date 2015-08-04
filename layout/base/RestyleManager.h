@@ -127,6 +127,10 @@ public:
    */
   nsresult ReparentStyleContext(nsIFrame* aFrame);
 
+  void ClearSelectors() {
+    mPendingRestyles.ClearSelectors();
+  }
+
 private:
   // Used when restyling an element with a frame.
   void ComputeAndProcessStyleChange(nsIFrame*              aFrame,
