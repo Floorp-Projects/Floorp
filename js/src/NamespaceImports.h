@@ -13,6 +13,7 @@
 // These includes are needed these for some typedefs (e.g. HandleValue) and
 // functions (e.g. NullValue())...
 #include "js/CallNonGenericMethod.h"
+#include "js/TraceableVector.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
 
@@ -33,7 +34,6 @@ class AutoVectorRooter;
 typedef AutoVectorRooter<Value> AutoValueVector;
 typedef AutoVectorRooter<jsid> AutoIdVector;
 typedef AutoVectorRooter<JSObject*> AutoObjectVector;
-typedef AutoVectorRooter<JSFunction*> AutoFunctionVector;
 typedef AutoVectorRooter<JSScript*> AutoVector;
 
 class AutoIdArray;
@@ -81,8 +81,11 @@ using JS::AutoVectorRooter;
 typedef AutoVectorRooter<Value> AutoValueVector;
 typedef AutoVectorRooter<jsid> AutoIdVector;
 typedef AutoVectorRooter<JSObject*> AutoObjectVector;
-typedef AutoVectorRooter<JSFunction*> AutoFunctionVector;
 typedef AutoVectorRooter<JSScript*> AutoScriptVector;
+
+using ValueVector = TraceableVector<JS::Value>;
+using IdVector = TraceableVector<jsid>;
+using ScriptVector = TraceableVector<JSScript*>;
 
 using JS::AutoIdArray;
 

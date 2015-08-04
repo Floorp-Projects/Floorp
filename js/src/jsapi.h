@@ -29,6 +29,7 @@
 #include "js/Id.h"
 #include "js/Principals.h"
 #include "js/RootingAPI.h"
+#include "js/TraceableVector.h"
 #include "js/TracingAPI.h"
 #include "js/Utility.h"
 #include "js/Value.h"
@@ -215,8 +216,11 @@ class MOZ_STACK_CLASS AutoVectorRooter : public AutoVectorRooterBase<T>
 typedef AutoVectorRooter<Value> AutoValueVector;
 typedef AutoVectorRooter<jsid> AutoIdVector;
 typedef AutoVectorRooter<JSObject*> AutoObjectVector;
-typedef AutoVectorRooter<JSFunction*> AutoFunctionVector;
 typedef AutoVectorRooter<JSScript*> AutoScriptVector;
+
+using ValueVector = js::TraceableVector<JS::Value>;
+using IdVector = js::TraceableVector<jsid>;
+using ScriptVector = js::TraceableVector<JSScript*>;
 
 template<class Key, class Value>
 class AutoHashMapRooter : protected AutoGCRooter
