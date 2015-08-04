@@ -30,6 +30,7 @@
 #endif
 
 #include "mozilla/unused.h"
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/UniquePtr.h"
 
 #include "mozilla/dom/SmsMessage.h"
@@ -706,20 +707,6 @@ Java_org_mozilla_gecko_GeckoAppShell_notifyFilePickerResult(JNIEnv* jenv, jclass
     NS_DispatchToMainThread(runnable);
 }
 
-static int
-NextPowerOfTwo(int value) {
-    // code taken from http://acius2.blogspot.com/2007/11/calculating-next-power-of-2.html
-    if (0 == value--) {
-        return 1;
-    }
-    value = (value >> 1) | value;
-    value = (value >> 2) | value;
-    value = (value >> 4) | value;
-    value = (value >> 8) | value;
-    value = (value >> 16) | value;
-    return value + 1;
-}
-
 #define MAX_LOCK_ATTEMPTS 10
 
 static bool LockWindowWithRetry(void* window, unsigned char** bits, int* width, int* height, int* format, int* stride)
@@ -778,8 +765,8 @@ Java_org_mozilla_gecko_GeckoAppShell_getSurfaceBits(JNIEnv* jenv, jclass, jobjec
         goto cleanup;
     }
 
-    dstWidth = NextPowerOfTwo(srcWidth);
-    dstHeight = NextPowerOfTwo(srcHeight);
+    dstWidth = mozilla::RoundUpPow2(srcWidth);
+    dstHeight = mozilla::RoundUpPow2(srcHeight);
     dstSize = dstWidth * dstHeight * bpp;
 
     bitsCopy = (unsigned char*)malloc(dstSize);
