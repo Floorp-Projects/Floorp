@@ -115,15 +115,6 @@ AutoGCRooter::trace(JSTracer* trc)
         return;
       }
 
-      case IDVALVECTOR: {
-        AutoIdValueVector::VectorImpl& vector = static_cast<AutoIdValueVector*>(this)->vector;
-        for (size_t i = 0; i < vector.length(); i++) {
-            TraceRoot(trc, &vector[i].id, "js::AutoIdValueVector id");
-            TraceRoot(trc, &vector[i].value, "js::AutoIdValueVector value");
-        }
-        return;
-      }
-
       case OBJVECTOR: {
         AutoObjectVector::VectorImpl& vector = static_cast<AutoObjectVector*>(this)->vector;
         TraceRootRange(trc, vector.length(), vector.begin(), "JS::AutoObjectVector.vector");
