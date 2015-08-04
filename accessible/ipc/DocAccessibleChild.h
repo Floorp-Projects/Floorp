@@ -69,7 +69,7 @@ public:
   virtual bool RecvName(const uint64_t& aID, nsString* aName) override;
 
   virtual bool RecvValue(const uint64_t& aID, nsString* aValue) override;
-  
+
   /*
    * Get the description for the accessible with given id.
    */
@@ -79,6 +79,12 @@ public:
   virtual bool RecvRelations(const uint64_t& aID,
                              nsTArray<RelationTargets>* aRelations)
     override;
+
+  virtual bool RecvIsSearchbox(const uint64_t& aID, bool* aRetVal) override;
+
+  virtual bool RecvLandmarkRole(const uint64_t& aID, nsString* aLandmark) override;
+
+  virtual bool RecvARIARoleAtom(const uint64_t& aID, nsString* aRole) override;
 
   virtual bool RecvAttributes(const uint64_t& aID,
                               nsTArray<Attribute> *aAttributes) override;

@@ -80,6 +80,9 @@ child:
   prio(high) sync RelationByType(uint64_t aID, uint32_t aRelationType)
     returns(uint64_t[] targets);
   prio(high) sync Relations(uint64_t aID) returns(RelationTargets[] relations);
+  prio(high) sync IsSearchbox(uint64_t aID) returns(bool retval);
+  prio(high) sync LandmarkRole(uint64_t aID) returns(nsString landmark);
+  prio(high) sync ARIARoleAtom(uint64_t aID) returns(nsString role);
 
   // AccessibleText
 
