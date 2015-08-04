@@ -403,8 +403,7 @@ size_t MediaCacheStream::SizeOfExcludingThis(
 size_t MediaCacheStream::BlockList::SizeOfExcludingThis(
                                 MallocSizeOf aMallocSizeOf) const
 {
-  return mEntries.SizeOfExcludingThis(/* sizeOfEntryExcludingThis = */ nullptr,
-                                      aMallocSizeOf);
+  return mEntries.ShallowSizeOfExcludingThis(aMallocSizeOf);
 }
 
 void MediaCacheStream::BlockList::AddFirstBlock(int32_t aBlock)

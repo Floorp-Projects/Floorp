@@ -36,6 +36,11 @@ struct nsID
 
   //@{
   /**
+   * Ensures everything is zeroed out.
+   */
+  void Clear();
+
+  /**
    * Equivalency method. Compares this nsID with another.
    * @return <b>true</b> if they are the same, <b>false</b> if not.
    */

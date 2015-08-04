@@ -104,7 +104,10 @@ interface HTMLMediaElement : HTMLElement {
 partial interface HTMLMediaElement {
   [ChromeOnly]
   readonly attribute MediaSource? mozMediaSourceObject;
+  attribute MediaStream? srcObject;
+  // TODO: remove prefixed version soon (1183495).
   attribute MediaStream? mozSrcObject;
+
   attribute boolean mozPreservesPitch;
   readonly attribute boolean mozAutoplayEnabled;
 

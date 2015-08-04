@@ -517,9 +517,9 @@ NS_SizeOfAtomTablesIncludingThis(MallocSizeOf aMallocSizeOf,
   }
 
   // The atoms in the this table are almost certainly stored in static data, so
-  // we don't need a SizeOfEntry function.
+  // we don't need to measure entries separately.
   *aStatic = gStaticAtomTable
-           ? gStaticAtomTable->SizeOfIncludingThis(nullptr, aMallocSizeOf)
+           ? gStaticAtomTable->ShallowSizeOfIncludingThis(aMallocSizeOf)
            : 0;
 }
 

@@ -127,6 +127,12 @@ public:
   static void Shutdown();
 
   ValueType Type() const;
+  // Returns true when this value is self-contained and does not depend on
+  // the state of its associated element.
+  // Returns false when this value depends on the state of its associated
+  // element and may be invalid if that state has been changed by changes to
+  // that element state outside of attribute setting.
+  inline bool StoresOwnData() const;
 
   void Reset();
 
