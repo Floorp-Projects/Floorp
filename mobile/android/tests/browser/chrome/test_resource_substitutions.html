@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=948465
+Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 948465</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript;version=1.7">
+
+  const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+
+  Cu.import("resource://gre/modules/Promise.jsm"); /*global Promise */
+  Cu.import("resource://gre/modules/Services.jsm"); /*global Services */
+  Cu.import("resource://gre/modules/NetUtil.jsm"); /*global NetUtil */
+
+  function readChannel(url) {
+    let deferred = Promise.defer();
+
+    let channel = NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
+
+    channel.contentType = "text/plain";
+
+    NetUtil.asyncFetch(channel, function(inputStream, status) {
+      if (!Components.isSuccessCode(status)) {
+        deferred.reject();
+        return;
+      }
+
+      let content = NetUtil.readInputStreamToString(inputStream, inputStream.available());
+      deferred.resolve(content);
+    });
+
+    return deferred.promise;
+  }
+
+  add_task(function* () {
+    let protocolHandler = Services.io
+       .getProtocolHandler("resource")
+       .QueryInterface(Ci.nsIResProtocolHandler);
+
+    ok(protocolHandler.hasSubstitution("android"));
+
+    // This can be any file that we know exists in the root of every APK.
+    let packageName = yield readChannel("resource://android/package-name.txt");
+    info(packageName);
+
+    // It's difficult to fish ANDROID_PACKAGE_NAME from JavaScript, so we test the
+    // following weaker condition.
+    let expectedPrefix = "org.mozilla.";
+    is(packageName.substring(0, expectedPrefix.length), expectedPrefix);
+  });
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=948465">Mozilla Bug 948465</a>
+<br>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1184186">Migrated from Robocop testResourceSubstitutions</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

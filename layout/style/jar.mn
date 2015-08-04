@@ -14,7 +14,11 @@ toolkit.jar:
    res/noframes.css (noframes.css)
 *  res/forms.css    (forms.css)
    res/number-control.css    (number-control.css)
-   res/arrow.gif    (arrow.gif)
-   res/arrowd.gif   (arrowd.gif)
+   res/arrow.gif        (arrow.gif)
+   res/arrow-left.gif   (arrow-left.gif)
+   res/arrow-right.gif  (arrow-right.gif)
+   res/arrowd.gif       (arrowd.gif)
+   res/arrowd-left.gif  (arrowd-left.gif)
+   res/arrowd-right.gif (arrowd-right.gif)
 
 % resource gre-resources %res/

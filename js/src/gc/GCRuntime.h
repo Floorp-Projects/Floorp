@@ -632,13 +632,7 @@ class GCRuntime
         TraceRuntime,
         MarkRuntime
     };
-    enum TraceRootsOrUsedSaved {
-        TraceRoots,
-        UseSavedRoots
-    };
-    void markRuntime(JSTracer* trc,
-                     TraceOrMarkRuntime traceOrMark = TraceRuntime,
-                     TraceRootsOrUsedSaved rootsSource = TraceRoots);
+    void markRuntime(JSTracer* trc, TraceOrMarkRuntime traceOrMark = TraceRuntime);
 
     void notifyDidPaint();
     void shrinkBuffers();
