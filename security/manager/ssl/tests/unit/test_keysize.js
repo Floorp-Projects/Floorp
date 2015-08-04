@@ -12,17 +12,6 @@ do_get_profile(); // must be called before getting nsIX509CertDB
 const certdb = Cc["@mozilla.org/security/x509certdb;1"]
                  .getService(Ci.nsIX509CertDB);
 
-function certFromFile(filename) {
-  let der = readFile(do_get_file("test_keysize/" + filename, false));
-  return certdb.constructX509(der, der.length);
-}
-
-function loadCert(certName, trustString) {
-  let certFilename = certName + ".der";
-  addCertFromFile(certdb, "test_keysize/" + certFilename, trustString);
-  return certFromFile(certFilename);
-}
-
 /**
  * Tests a cert chain.
  *
@@ -45,9 +34,9 @@ function checkChain(rootKeyType, rootKeySize, intKeyType, intKeySize,
   let intFullName = intName + "-" + rootName;
   let eeFullName = eeName + "-" + intName + "-" + rootName;
 
-  loadCert(rootName, "CTu,CTu,CTu");
-  loadCert(intFullName, ",,");
-  let eeCert = certFromFile(eeFullName + ".der");
+  addCertFromFile(certdb, `test_keysize/${rootName}.pem`, "CTu,CTu,CTu");
+  addCertFromFile(certdb, `test_keysize/${intFullName}.pem`, ",,");
+  let eeCert = constructCertFromFile(`test_keysize/${eeFullName}.pem`);
 
   do_print("cert o=" + eeCert.organization);
   do_print("cert issuer o=" + eeCert.issuerOrganization);
