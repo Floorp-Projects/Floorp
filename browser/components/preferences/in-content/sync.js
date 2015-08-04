@@ -240,16 +240,12 @@ let gSyncPane = {
       gSyncPane.startOver(true);
       return false;
     });
-    setEventListener("noFxaSignUp", "click", function () {
+    setEventListener("noFxaSignUp", "command", function () {
       gSyncPane.signUp();
       return false;
     });
-    setEventListener("noFxaSignIn", "click", function () {
+    setEventListener("noFxaSignIn", "command", function () {
       gSyncPane.signIn();
-      return false;
-    });
-    setEventListener("noFxaUseOldSync", "click", function () {
-      gSyncPane.openOldSyncSupportPage();
       return false;
     });
     setEventListener("verifiedManage", "command",
@@ -259,13 +255,13 @@ let gSyncPane = {
     });
     setEventListener("verifyFxaAccount", "command",
       gSyncPane.verifyFirefoxAccount);
-    setEventListener("unverifiedUnlinkFxaAccount", "click", function () {
+    setEventListener("unverifiedUnlinkFxaAccount", "command", function () {
       /* no warning as account can't have previously synced */
       gSyncPane.unlinkFirefoxAccount(false);
     });
     setEventListener("rejectReSignIn", "command",
       gSyncPane.reSignIn);
-    setEventListener("rejectUnlinkFxaAccount", "click", function () {
+    setEventListener("rejectUnlinkFxaAccount", "command", function () {
       gSyncPane.unlinkFirefoxAccount(true);
     });
     setEventListener("tosPP-small-ToS", "click", gSyncPane.openToS);
