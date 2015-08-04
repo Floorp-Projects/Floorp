@@ -24,23 +24,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=940229
  * Inspired by mistake in quotes noticed while reviewing bug 189519.
  */
 
-var gPropsNeedComma = {
+let gPropsNeedComma = {
   "font": true,
   "font-family": true,
   "voice-family": true,
 };
 
-var gElement = document.getElementById("testnode");
-var gDeclaration = gElement.style;
+let gElement = document.getElementById("testnode");
+let gDeclaration = gElement.style;
 
 function test_property(property)
 {
-  var info = gCSSProperties[property];
+  let info = gCSSProperties[property];
 
-  var delim = (property in gPropsNeedComma) ? ", " : " ";
+  let delim = (property in gPropsNeedComma) ? ", " : " ";
 
   function test_value_pair(relation, val1, val2, extraval) {
-    var decl = property + ": " + val1 + delim + val2;
+    let decl = property + ": " + val1 + delim + val2;
     gElement.setAttribute("style", decl);
     if ("subproperties" in info) {
       // Shorthand property; inspect each subproperty value.
@@ -67,18 +67,19 @@ function test_property(property)
     test_value_pair("before", "unset", value, "unset");
   }
 
-  var idx;
-  for (idx in info.initial_values)
+  for (let idx in info.initial_values) {
     test_value(info.initial_values[idx]);
-  for (idx in info.other_values)
-    test_value(info.other_values[idx]);
+  }
+  for (let idx in info.other_values) {
+    test_value(info.initial_values[idx]);
+  }
 }
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestLongerTimeout(4);
 
 function start_test() {
-  for (var prop in gCSSProperties) {
+  for (let prop in gCSSProperties) {
     test_property(prop);
   }
   SimpleTest.finish();
