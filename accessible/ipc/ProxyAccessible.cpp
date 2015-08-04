@@ -153,6 +153,30 @@ ProxyAccessible::Relations(nsTArray<RelationType>* aTypes,
   }
 }
 
+bool
+ProxyAccessible::IsSearchbox() const
+{
+  bool retVal = false;
+  unused << mDoc->SendIsSearchbox(mID, &retVal);
+  return retVal;
+}
+
+nsIAtom*
+ProxyAccessible::LandmarkRole() const
+{
+  nsString landmark;
+  unused << mDoc->SendLandmarkRole(mID, &landmark);
+  return NS_GetStaticAtom(landmark);
+}
+
+nsIAtom*
+ProxyAccessible::ARIARoleAtom() const
+{
+  nsString role;
+  unused << mDoc->SendARIARoleAtom(mID, &role);
+  return NS_GetStaticAtom(role);
+}
+
 int32_t
 ProxyAccessible::CaretOffset()
 {
