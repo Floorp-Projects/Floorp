@@ -286,8 +286,7 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
         nodeInfo = aDocument->NodeInfoManager()->
           GetNodeInfo(ni->NameAtom(), ni->GetPrefixAtom(), ni->NamespaceID(),
                       nsIDOMNode::ELEMENT_NODE);
-    }
-    else {
+    } else {
         nodeInfo = aPrototype->mNodeInfo;
     }
 
@@ -597,8 +596,7 @@ nsXULElement::IsFocusableInternal(int32_t *aTabIndex, bool aWithMouse)
         xulControl->GetTabIndex(&tabIndex);
         shouldFocus = *aTabIndex >= 0 || tabIndex >= 0;
         *aTabIndex = tabIndex;
-      }
-      else {
+      } else {
         // otherwise, if there is no tabindex attribute, just use the value of
         // *aTabIndex to indicate focusability. Reset any supplied tabindex to 0.
         shouldFocus = *aTabIndex >= 0;
@@ -618,8 +616,7 @@ nsXULElement::IsFocusableInternal(int32_t *aTabIndex, bool aWithMouse)
         if (IsNonList(mNodeInfo))
           *aTabIndex = -1;
       }
-    }
-    else {
+    } else {
       shouldFocus = *aTabIndex >= 0;
     }
   }
@@ -677,8 +674,7 @@ nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
                   element = do_QueryInterface(selectControl);
                 }
               }
-            }
-            else {
+            } else {
               element = do_QueryInterface(content);
             }
             if (element)
@@ -689,8 +685,7 @@ nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
             !content->IsAnyOfXULElements(nsGkAtoms::textbox, nsGkAtoms::menulist)) {
           elm->ClickWithInputSource(nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD);
         }
-    }
-    else {
+    } else {
         content->PerformAccesskey(aKeyCausesActivation, aIsTrustedEvent);
     }
 }
@@ -988,9 +983,9 @@ nsXULElement::RemoveChildAt(uint32_t aIndex, bool aNotify)
 
     nsStyledElement::RemoveChildAt(aIndex, aNotify);
 
-    if (newCurrentIndex == -2)
+    if (newCurrentIndex == -2) {
         controlElement->SetCurrentItem(nullptr);
-    else if (newCurrentIndex > -1) {
+    } else if (newCurrentIndex > -1) {
         // Make sure the index is still valid
         int32_t treeRows;
         listBox->GetRowCount(&treeRows);
@@ -1054,9 +1049,9 @@ nsXULElement::BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
         if (GetAttr(aNamespaceID, aName, oldValue)) {
             UnregisterAccessKey(oldValue);
         }
-    }
-    else if (aNamespaceID == kNameSpaceID_None && (aName ==
-             nsGkAtoms::command || aName == nsGkAtoms::observes) && IsInDoc()) {
+    } else if (aNamespaceID == kNameSpaceID_None &&
+               (aName == nsGkAtoms::command || aName == nsGkAtoms::observes) &&
+               IsInDoc()) {
 //         XXX sXBL/XBL2 issue! Owner or current document?
         nsAutoString oldValue;
         GetAttr(kNameSpaceID_None, nsGkAtoms::observes, oldValue);
@@ -1067,11 +1062,10 @@ nsXULElement::BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
         if (!oldValue.IsEmpty()) {
           RemoveBroadcaster(oldValue);
         }
-    }
-    else if (aNamespaceID == kNameSpaceID_None &&
-             aValue &&
-             mNodeInfo->Equals(nsGkAtoms::window) &&
-             aName == nsGkAtoms::chromemargin) {
+    } else if (aNamespaceID == kNameSpaceID_None &&
+               aValue &&
+               mNodeInfo->Equals(nsGkAtoms::window) &&
+               aName == nsGkAtoms::chromemargin) {
       nsAttrValue attrValue;
       // Make sure the margin format is valid first
       if (!attrValue.ParseIntMarginValue(aValue->String())) {
@@ -1109,13 +1103,10 @@ nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                 if (aName == nsGkAtoms::hidechrome) {
                     HideWindowChrome(
                       aValue->Equals(NS_LITERAL_STRING("true"), eCaseMatters));
-                }
-                else if (aName == nsGkAtoms::chromemargin) {
+                } else if (aName == nsGkAtoms::chromemargin) {
                     SetChromeMargins(aValue);
-                }
-
-                else if (aName == nsGkAtoms::windowtype &&
-                         document && document->GetRootElement() == this) {
+                } else if (aName == nsGkAtoms::windowtype &&
+                           document && document->GetRootElement() == this) {
                     MaybeUpdatePrivateLifetime();
                 }
             }
@@ -1124,9 +1115,8 @@ nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
             if (document && document->GetRootElement() == this) {
                 if (aName == nsGkAtoms::title) {
                     document->NotifyPossibleTitleChange(false);
-                }
-                else if ((aName == nsGkAtoms::activetitlebarcolor ||
-                          aName == nsGkAtoms::inactivetitlebarcolor)) {
+                } else if ((aName == nsGkAtoms::activetitlebarcolor ||
+                            aName == nsGkAtoms::inactivetitlebarcolor)) {
                     nscolor color = NS_RGBA(0, 0, 0, 0);
                     if (aValue->Type() == nsAttrValue::eColor) {
                         aValue->GetColorValue(color);
@@ -1138,23 +1128,19 @@ nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                         attrValue.GetColorValue(color);
                     }
                     SetTitlebarColor(color, aName == nsGkAtoms::activetitlebarcolor);
-                }
-                else if (aName == nsGkAtoms::drawintitlebar) {
+                } else if (aName == nsGkAtoms::drawintitlebar) {
                     SetDrawsInTitlebar(
                         aValue->Equals(NS_LITERAL_STRING("true"), eCaseMatters));
-                }
-                else if (aName == nsGkAtoms::drawtitle) {
+                } else if (aName == nsGkAtoms::drawtitle) {
                     SetDrawsTitle(
                         aValue->Equals(NS_LITERAL_STRING("true"), eCaseMatters));
-                }
-                else if (aName == nsGkAtoms::localedir) {
+                } else if (aName == nsGkAtoms::localedir) {
                     // if the localedir changed on the root element, reset the document direction
                     nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(document);
                     if (xuldoc) {
                         xuldoc->ResetDocumentDirection();
                     }
-                }
-                else if (aName == nsGkAtoms::lwtheme ||
+                } else if (aName == nsGkAtoms::lwtheme ||
                          aName == nsGkAtoms::lwthemetextcolor) {
                     // if the lwtheme changed, make sure to reset the document lwtheme cache
                     nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(document);
@@ -1162,8 +1148,7 @@ nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                         xuldoc->ResetDocumentLWTheme();
                         UpdateBrightTitlebarForeground(document);
                     }
-                }
-                else if (aName == nsGkAtoms::brighttitlebarforeground) {
+                } else if (aName == nsGkAtoms::brighttitlebarforeground) {
                     UpdateBrightTitlebarForeground(document);
                 }
             }
@@ -1171,12 +1156,11 @@ nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
             if (aName == nsGkAtoms::src && document) {
                 LoadSrc();
             }
-        } else  {
+        } else {
             if (mNodeInfo->Equals(nsGkAtoms::window)) {
                 if (aName == nsGkAtoms::hidechrome) {
                     HideWindowChrome(false);
-                }
-                else if (aName == nsGkAtoms::chromemargin) {
+                } else if (aName == nsGkAtoms::chromemargin) {
                     ResetChromeMargins();
                 }
             }
@@ -1187,30 +1171,25 @@ nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                      aName == nsGkAtoms::inactivetitlebarcolor)) {
                     // Use 0, 0, 0, 0 as the "none" color.
                     SetTitlebarColor(NS_RGBA(0, 0, 0, 0), aName == nsGkAtoms::activetitlebarcolor);
-                }
-                else if (aName == nsGkAtoms::localedir) {
+                } else if (aName == nsGkAtoms::localedir) {
                     // if the localedir changed on the root element, reset the document direction
                     nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(doc);
                     if (xuldoc) {
                         xuldoc->ResetDocumentDirection();
                     }
-                }
-                else if ((aName == nsGkAtoms::lwtheme ||
-                          aName == nsGkAtoms::lwthemetextcolor)) {
+                } else if ((aName == nsGkAtoms::lwtheme ||
+                            aName == nsGkAtoms::lwthemetextcolor)) {
                     // if the lwtheme changed, make sure to restyle appropriately
                     nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(doc);
                     if (xuldoc) {
                         xuldoc->ResetDocumentLWTheme();
                         UpdateBrightTitlebarForeground(doc);
                     }
-                }
-                else if (aName == nsGkAtoms::brighttitlebarforeground) {
+                } else if (aName == nsGkAtoms::brighttitlebarforeground) {
                     UpdateBrightTitlebarForeground(doc);
-                }
-                else if (aName == nsGkAtoms::drawintitlebar) {
+                } else if (aName == nsGkAtoms::drawintitlebar) {
                     SetDrawsInTitlebar(false);
-                }
-                else if (aName == nsGkAtoms::drawtitle) {
+                } else if (aName == nsGkAtoms::drawtitle) {
                     SetDrawsTitle(false);
                 }
             }
@@ -1889,16 +1868,14 @@ nsXULElement::MakeHeavyweight(nsXULPrototypeElement* aPrototype)
 
             nsRefPtr<css::StyleRule> styleRule = do_QueryObject(ruleClone);
             attrValue.SetTo(styleRule, &stringValue);
-        }
-        else {
+        } else {
             attrValue.SetTo(protoattr->mValue);
         }
 
         // XXX we might wanna have a SetAndTakeAttr that takes an nsAttrName
         if (protoattr->mName.IsAtom()) {
             rv = mAttrsAndChildren.SetAndSwapAttr(protoattr->mName.Atom(), attrValue);
-        }
-        else {
+        } else {
             rv = mAttrsAndChildren.SetAndSwapAttr(protoattr->mName.NodeInfo(),
                                                   attrValue);
         }
@@ -2131,8 +2108,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULPrototypeNode)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXULPrototypeNode)
     if (tmp->mType == nsXULPrototypeNode::eType_Element) {
         static_cast<nsXULPrototypeElement*>(tmp)->Unlink();
-    }
-    else if (tmp->mType == nsXULPrototypeNode::eType_Script) {
+    } else if (tmp->mType == nsXULPrototypeNode::eType_Script) {
         static_cast<nsXULPrototypeScript*>(tmp)->UnlinkJSObjects();
     }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -2218,8 +2194,7 @@ nsXULPrototypeElement::Serialize(nsIObjectOutputStream* aStream,
                             kNameSpaceID_None,
                             nsIDOMNode::ATTRIBUTE_NODE);
             NS_ASSERTION(ni, "the nodeinfo should already exist");
-        }
-        else {
+        } else {
             ni = mAttributes[i].mName.NodeInfo();
         }
 
@@ -2485,15 +2460,13 @@ nsXULPrototypeElement::SetAttrAt(uint32_t aPos, const nsAString& aValue,
         mAttributes[aPos].mValue.ParseAtom(aValue);
 
         return NS_OK;
-    }
-    else if (mAttributes[aPos].mName.Equals(nsGkAtoms::_class)) {
+    } else if (mAttributes[aPos].mName.Equals(nsGkAtoms::_class)) {
         mHasClassAttribute = true;
         // Compute the element's class list
         mAttributes[aPos].mValue.ParseAtomArray(aValue);
 
         return NS_OK;
-    }
-    else if (mAttributes[aPos].mName.Equals(nsGkAtoms::style)) {
+    } else if (mAttributes[aPos].mName.Equals(nsGkAtoms::style)) {
         mHasStyleAttribute = true;
         // Parse the element's 'style' attribute
         nsRefPtr<css::StyleRule> rule;
