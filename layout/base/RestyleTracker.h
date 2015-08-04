@@ -231,6 +231,7 @@ public:
   explicit RestyleTracker(Element::FlagsType aRestyleBits)
     : mRestyleBits(aRestyleBits)
     , mHaveLaterSiblingRestyles(false)
+    , mHaveSelectors(false)
   {
     NS_PRECONDITION((mRestyleBits & ~ELEMENT_ALL_RESTYLE_FLAGS) == 0,
                     "Why do we have these bits set?");
@@ -353,6 +354,14 @@ public:
                                   const nsTArray<nsRefPtr<Element>>& aElements);
 
   /**
+   * Converts any eRestyle_SomeDescendants restyle hints in the pending restyle
+   * table into eRestyle_Subtree hints and clears out the associated arrays of
+   * nsCSSSelector pointers.  This is called in response to a style sheet change
+   * that might have cause an nsCSSSelector to be destroyed.
+   */
+  void ClearSelectors();
+
+  /**
    * The document we're associated with.
    */
   inline nsIDocument* Document() const;
@@ -402,6 +411,9 @@ private:
   // flag.  We need this to avoid enumerating the hashtable looking
   // for such entries when we can't possibly have any.
   bool mHaveLaterSiblingRestyles;
+  // True if we have some entries with selectors in the restyle hint data.
+  // We use this to skip iterating over mPendingRestyles in ClearSelectors.
+  bool mHaveSelectors;
 };
 
 inline bool
@@ -411,6 +423,11 @@ RestyleTracker::AddPendingRestyleToTable(Element* aElement,
                                          const RestyleHintData* aRestyleHintData)
 {
   RestyleData* existingData;
+
+  if (aRestyleHintData &&
+      !aRestyleHintData->mSelectorsForDescendants.IsEmpty()) {
+    mHaveSelectors = true;
+  }
 
   // Check the RestyleBit() flag before doing the hashtable Get, since
   // it's possible that the data in the hashtable isn't actually
