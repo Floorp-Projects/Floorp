@@ -36,10 +36,8 @@ public:
     return mPtr == other.mPtr;
   }
 
-  operator const nsCOMPtr<T>() const { return GetValue(); }
-
   nsISupports* GetRawValue() const { return mPtr.get(); }
-protected:
+
   const nsCOMPtr<T> GetValue() const {
     return nsCOMPtr<T>(dont_AddRef(static_cast<T*>
                                               (GetValueAs(NS_GET_TEMPLATE_IID(T)))));
@@ -99,7 +97,7 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
 
 #define ENUMERATE_WEAKARRAY(array, type, method)                           \
   for (uint32_t array_idx = 0; array_idx < array.Length(); ++array_idx) {  \
-    const nsCOMPtr<type> &e = array.ElementAt(array_idx);                  \
+    const nsCOMPtr<type> &e = array.ElementAt(array_idx).GetValue();       \
     if (e)                                                                 \
       e->method;                                                           \
   }
