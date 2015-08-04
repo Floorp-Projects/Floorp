@@ -73,7 +73,6 @@ XPC_MAP_CLASSNAME::GetScriptableFlags()
 /**************************************************************/
 
 #ifndef XPC_MAP_WANT_PRECREATE
-/* void preCreate (in nsISupports nativeObj, in JSContextPtr cx, in JSObjectPtr globalObj, out JSObjectPtr parentObj); */
 NS_IMETHODIMP XPC_MAP_CLASSNAME::PreCreate(nsISupports* nativeObj, JSContext * cx, JSObject * globalObj, JSObject * *parentObj)
     {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
 #endif

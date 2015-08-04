@@ -72,7 +72,6 @@ nsPKIParamBlock::SetObjects(nsIMutableArray * aObjects)
 
 
 
-/* void setISupportAtIndex (in int32_t index, in nsISupports object); */
 NS_IMETHODIMP 
 nsPKIParamBlock::SetISupportAtIndex(int32_t index, nsISupports *object)
 {
@@ -87,7 +86,6 @@ nsPKIParamBlock::SetISupportAtIndex(int32_t index, nsISupports *object)
   return NS_OK;
 }
 
-/* nsISupports getISupportAtIndex (in int32_t index); */
 NS_IMETHODIMP 
 nsPKIParamBlock::GetISupportAtIndex(int32_t index, nsISupports **_retval)
 {

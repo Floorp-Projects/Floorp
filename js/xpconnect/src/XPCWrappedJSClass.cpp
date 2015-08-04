@@ -407,14 +407,12 @@ xpcProperty::xpcProperty(const char16_t* aName, uint32_t aNameLen,
 {
 }
 
-/* readonly attribute AString name; */
 NS_IMETHODIMP xpcProperty::GetName(nsAString & aName)
 {
     aName.Assign(mName);
     return NS_OK;
 }
 
-/* readonly attribute nsIVariant value; */
 NS_IMETHODIMP xpcProperty::GetValue(nsIVariant * *aValue)
 {
     nsCOMPtr<nsIVariant> rval = mValue;

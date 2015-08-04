@@ -19,7 +19,6 @@ nsIMEPicker::~nsIMEPicker()
   /* destructor code */
 }
 
-/* void show (); */
 NS_IMETHODIMP nsIMEPicker::Show()
 {
     widget::GeckoAppShell::ShowInputMethodPicker();

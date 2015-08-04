@@ -27,7 +27,6 @@ FocusEvent::FocusEvent(EventTarget* aOwner,
   }
 }
 
-/* readonly attribute nsIDOMEventTarget relatedTarget; */
 NS_IMETHODIMP
 FocusEvent::GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget)
 {

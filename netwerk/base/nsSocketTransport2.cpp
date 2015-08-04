@@ -2357,7 +2357,6 @@ nsSocketTransport::Bind(NetAddr *aLocalAddr)
     return NS_OK;
 }
 
-/* nsINetAddr getScriptablePeerAddr (); */
 NS_IMETHODIMP
 nsSocketTransport::GetScriptablePeerAddr(nsINetAddr * *addr)
 {
@@ -2373,7 +2372,6 @@ nsSocketTransport::GetScriptablePeerAddr(nsINetAddr * *addr)
     return NS_OK;
 }
 
-/* nsINetAddr getScriptableSelfAddr (); */
 NS_IMETHODIMP
 nsSocketTransport::GetScriptableSelfAddr(nsINetAddr * *addr)
 {

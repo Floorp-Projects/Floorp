@@ -36,7 +36,6 @@ nsIScrollableFrame* ScrollBoxObject::GetScrollFrame()
   return do_QueryFrame(GetFrame(false));
 }
 
-/* void scrollTo (long x, long y); */
 void ScrollBoxObject::ScrollTo(int32_t x, int32_t y, ErrorResult& aRv)
 {
   nsIScrollableFrame* sf = GetScrollFrame();
@@ -48,7 +47,6 @@ void ScrollBoxObject::ScrollTo(int32_t x, int32_t y, ErrorResult& aRv)
   sf->ScrollToCSSPixels(CSSIntPoint(x, y));
 }
 
-/* void scrollBy (long dx, long dy); */
 void ScrollBoxObject::ScrollBy(int32_t dx, int32_t dy, ErrorResult& aRv)
 {
   CSSIntPoint pt;
@@ -61,7 +59,6 @@ void ScrollBoxObject::ScrollBy(int32_t dx, int32_t dy, ErrorResult& aRv)
   ScrollTo(pt.x + dx, pt.y + dy, aRv);
 }
 
-/* void scrollByLine (long dlines); */
 void ScrollBoxObject::ScrollByLine(int32_t dlines, ErrorResult& aRv)
 {
   nsIScrollableFrame* sf = GetScrollFrame();
@@ -98,7 +95,6 @@ static nsIFrame* GetScrolledBox(BoxObject* aScrollBox) {
   return nsBox::GetChildBox(scrolledFrame);
 }
 
-/* void scrollByIndex (long dindexes); */
 void ScrollBoxObject::ScrollByIndex(int32_t dindexes, ErrorResult& aRv)
 {
     nsIScrollableFrame* sf = GetScrollFrame();
@@ -216,7 +212,6 @@ void ScrollBoxObject::ScrollByIndex(int32_t dindexes, ErrorResult& aRv)
    }
 }
 
-/* void scrollToLine (in long line); */
 void ScrollBoxObject::ScrollToLine(int32_t line, ErrorResult& aRv)
 {
   nsIScrollableFrame* sf = GetScrollFrame();
@@ -231,7 +226,6 @@ void ScrollBoxObject::ScrollToLine(int32_t line, ErrorResult& aRv)
   sf->ScrollTo(nsPoint(0, y), nsIScrollableFrame::INSTANT, &range);
 }
 
-/* void scrollToElement (Element child); */
 void ScrollBoxObject::ScrollToElement(Element& child, ErrorResult& aRv)
 {
   nsCOMPtr<nsIPresShell> shell = GetPresShell(false);
@@ -251,7 +245,6 @@ void ScrollBoxObject::ScrollToElement(Element& child, ErrorResult& aRv)
                                nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
 }
 
-/* void scrollToIndex (long index); */
 void ScrollBoxObject::ScrollToIndex(int32_t index, ErrorResult& aRv)
 {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
@@ -351,7 +344,6 @@ void ScrollBoxObject::GetScrolledSize(JSContext* cx,
   }
 }
 
-/* void ensureElementIsVisible (in nsIDOMElement child); */
 void ScrollBoxObject::EnsureElementIsVisible(Element& child, ErrorResult& aRv)
 {
     nsCOMPtr<nsIPresShell> shell = GetPresShell(false);
@@ -367,13 +359,11 @@ void ScrollBoxObject::EnsureElementIsVisible(Element& child, ErrorResult& aRv)
                                  nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
 }
 
-/* void ensureIndexIsVisible (long index); */
 void ScrollBoxObject::EnsureIndexIsVisible(int32_t index, ErrorResult& aRv)
 {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
-/* void ensureLineIsVisible (long line); */
 void ScrollBoxObject::EnsureLineIsVisible(int32_t line, ErrorResult& aRv)
 {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);

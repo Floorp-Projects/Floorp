@@ -23,7 +23,6 @@
  */
 NS_IMPL_ISUPPORTS(nsZipHeader, nsIZipEntry)
 
-/* readonly attribute unsigned short compression; */
 NS_IMETHODIMP nsZipHeader::GetCompression(uint16_t *aCompression)
 {
     NS_ASSERTION(mInited, "Not initalised");
@@ -32,7 +31,6 @@ NS_IMETHODIMP nsZipHeader::GetCompression(uint16_t *aCompression)
     return NS_OK;
 }
 
-/* readonly attribute unsigned long size; */
 NS_IMETHODIMP nsZipHeader::GetSize(uint32_t *aSize)
 {
     NS_ASSERTION(mInited, "Not initalised");
@@ -41,7 +39,6 @@ NS_IMETHODIMP nsZipHeader::GetSize(uint32_t *aSize)
     return NS_OK;
 }
 
-/* readonly attribute unsigned long realSize; */
 NS_IMETHODIMP nsZipHeader::GetRealSize(uint32_t *aRealSize)
 {
     NS_ASSERTION(mInited, "Not initalised");
@@ -50,7 +47,6 @@ NS_IMETHODIMP nsZipHeader::GetRealSize(uint32_t *aRealSize)
     return NS_OK;
 }
 
-/* readonly attribute unsigned long CRC32; */
 NS_IMETHODIMP nsZipHeader::GetCRC32(uint32_t *aCRC32)
 {
     NS_ASSERTION(mInited, "Not initalised");
@@ -59,7 +55,6 @@ NS_IMETHODIMP nsZipHeader::GetCRC32(uint32_t *aCRC32)
     return NS_OK;
 }
 
-/* readonly attribute boolean isDirectory; */
 NS_IMETHODIMP nsZipHeader::GetIsDirectory(bool *aIsDirectory)
 {
     NS_ASSERTION(mInited, "Not initalised");
@@ -71,7 +66,6 @@ NS_IMETHODIMP nsZipHeader::GetIsDirectory(bool *aIsDirectory)
     return NS_OK;
 }
 
-/* readonly attribute PRTime lastModifiedTime; */
 NS_IMETHODIMP nsZipHeader::GetLastModifiedTime(PRTime *aLastModifiedTime)
 {
     NS_ASSERTION(mInited, "Not initalised");
@@ -118,7 +112,6 @@ NS_IMETHODIMP nsZipHeader::GetLastModifiedTime(PRTime *aLastModifiedTime)
     return NS_OK;
 }
 
-/* readonly attribute boolean isSynthetic; */
 NS_IMETHODIMP nsZipHeader::GetIsSynthetic(bool *aIsSynthetic)
 {
     NS_ASSERTION(mInited, "Not initalised");
@@ -127,7 +120,6 @@ NS_IMETHODIMP nsZipHeader::GetIsSynthetic(bool *aIsSynthetic)
     return NS_OK;
 }
 
-/* readonly attribute unsigned long permissions; */
 NS_IMETHODIMP nsZipHeader::GetPermissions(uint32_t *aPermissions)
 {
     NS_ASSERTION(mInited, "Not initalised");
