@@ -932,7 +932,8 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
     // The first pres context that has its mPrefChangedTimer called will
     // be the one to cause the reconstruction of the pref style sheet.
     nsLayoutStylesheetCache::InvalidatePreferenceSheets();
-    if (!InitTimer(mPrefChangedTimer, nsPresContext::PrefChangedUpdateTimerCallback, 0)) {
+    mPrefChangedTimer = CreateTimer(PrefChangedUpdateTimerCallback, 0);
+    if (!mPrefChangedTimer) {
       return;
     }
   }
@@ -1580,7 +1581,7 @@ nsPresContext::SetContainer(nsIDocShell* aDocShell)
     mContainer = static_cast<nsDocShell*>(aDocShell);
     if (mNeedsPrefUpdate) {
       if (!mPrefChangedTimer) {
-        InitTimer(mPrefChangedTimer, nsPresContext::PrefChangedUpdateTimerCallback, 0);
+        mPrefChangedTimer = CreateTimer(PrefChangedUpdateTimerCallback, 0);
       }
       mNeedsPrefUpdate = false;
     }
@@ -2544,19 +2545,20 @@ nsPresContext::HasCachedStyleData()
   return mShell && mShell->StyleSet()->HasCachedStyleData();
 }
 
-bool
-nsPresContext::InitTimer(nsCOMPtr<nsITimer>& aTimer,
-                         nsTimerCallbackFunc aCallback,
-                         uint32_t aDelay)
+already_AddRefed<nsITimer>
+nsPresContext::CreateTimer(nsTimerCallbackFunc aCallback,
+                           uint32_t aDelay)
 {
-  aTimer = do_CreateInstance("@mozilla.org/timer;1");
-  if (!aTimer) {
-    return false;
+  nsCOMPtr<nsITimer> timer = do_CreateInstance("@mozilla.org/timer;1");
+  if (timer) {
+    nsresult rv = timer->InitWithFuncCallback(aCallback, this, aDelay,
+                                              nsITimer::TYPE_ONE_SHOT);
+    if (NS_SUCCEEDED(rv)) {
+      return timer.forget();
+    }
   }
 
-  nsresult rv = aTimer->InitWithFuncCallback(aCallback, this, aDelay,
-                                             nsITimer::TYPE_ONE_SHOT);
-  return NS_SUCCEEDED(rv);
+  return nullptr;
 }
 
 static bool sGotInterruptEnv = false;
@@ -2948,9 +2950,8 @@ nsRootPresContext::InitApplyPluginGeometryTimer()
   // so set a backup timer to do this too.  We want to make sure this
   // won't fire before our normal paint notifications, if those would
   // update the geometry, so set it for double the refresh driver interval.
-  InitTimer(mApplyPluginGeometryTimer,
-            ApplyPluginGeometryUpdatesCallback,
-            nsRefreshDriver::DefaultInterval() * 2);
+  mApplyPluginGeometryTimer = CreateTimer(ApplyPluginGeometryUpdatesCallback,
+                                          nsRefreshDriver::DefaultInterval() * 2);
 }
 
 void
@@ -3121,7 +3122,7 @@ nsRootPresContext::EnsureEventualDidPaintEvent()
   if (mNotifyDidPaintTimer)
     return;
 
-  InitTimer(mNotifyDidPaintTimer, NotifyDidPaintForSubtreeCallback, 100);
+  mNotifyDidPaintTimer = CreateTimer(NotifyDidPaintForSubtreeCallback, 100);
 }
 
 void
