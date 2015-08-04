@@ -37,6 +37,7 @@
 
 /* System headers. */
 #include <string.h>
+#include <limits.h> // We need this for LONG_MIN
 
 /* SphinxBase headers. */
 #include <sphinxbase/pio.h>
@@ -249,14 +250,14 @@ dict_write(dict_t *dict, char const *filename, char const *format)
 
 
 dict_t *
-dict_init(cmd_ln_t *config, bin_mdef_t * mdef)
+dict_init(cmd_ln_t *config, bin_mdef_t * mdef, logmath_t *logmath)
 {
     FILE *fp, *fp2;
     int32 n;
     lineiter_t *li;
     dict_t *d;
     s3cipid_t sil;
-    char const *dictfile = NULL, *fillerfile = NULL;
+    char const *dictfile = NULL, *fillerfile = NULL, *arpafile = NULL;
 
     if (config) {
         dictfile = cmd_ln_str_r(config, "-dict");
@@ -303,6 +304,19 @@ dict_init(cmd_ln_t *config, bin_mdef_t * mdef)
      * Also check for type size restrictions.
      */
     d = (dict_t *) ckd_calloc(1, sizeof(dict_t));       /* freed in dict_free() */
+    if (config){
+        arpafile = string_join(dictfile, ".dmp",  NULL);
+    }
+    if (arpafile) {
+        ngram_model_t *ngram_g2p_model = ngram_model_read(NULL,arpafile,NGRAM_AUTO,logmath);
+        ckd_free(arpafile);
+        if (!ngram_g2p_model) {
+            E_ERROR("No arpa model found  \n");
+            return NULL;
+        }
+        d->ngram_g2p_model = ngram_g2p_model;
+    }
+
     d->refcnt = 1;
     d->max_words =
         (n + S3DICT_INC_SZ < MAX_S3WID) ? n + S3DICT_INC_SZ : MAX_S3WID;
@@ -474,6 +488,8 @@ dict_free(dict_t * d)
         hash_table_free(d->ht);
     if (d->mdef)
         bin_mdef_free(d->mdef);
+    if (d->ngram_g2p_model)
+        ngram_model_free(d->ngram_g2p_model);
     ckd_free((void *) d);
 
     return 0;
@@ -486,4 +502,234 @@ dict_report(dict_t * d)
     E_INFO_NOFN("Max word: %d\n", d->max_words);
     E_INFO_NOFN("No of word: %d\n", d->n_word);
     E_INFO_NOFN("\n");
+}
+
+// This function returns if a string (str) starts with the passed prefix (*pre)
+int
+dict_starts_with(const char *pre, const char *str)
+{
+    size_t lenpre = strlen(pre), lenstr = strlen(str);
+    return lenstr < lenpre ? 0 : strncmp(pre, str, lenpre) == 0;
+}
+
+// Helper function to clear unigram
+void
+free_unigram_t(unigram_t *unigram)
+{
+    ckd_free(unigram->word);
+    ckd_free(unigram->phone);
+}
+
+// This function splits an unigram received (in format e|w}UW) and return a structure
+// containing two fields: the grapheme (before }) in unigram.word and the phoneme (after }) unigram.phone
+unigram_t
+dict_split_unigram(const char * word)
+{
+    size_t total_graphemes = 0;
+    size_t total_phone = 0;
+    int token_pos = 0;
+    int w ;
+    char *phone;
+    char *letter;
+    size_t lenword = 0;
+    char unigram_letter;
+    int add;
+
+    lenword = strlen(word);
+    for (w = 0; w < lenword; w++) {
+        unigram_letter = word[w];
+        if (unigram_letter == '}') {
+            token_pos = w;
+            continue;
+        }
+        if (!token_pos)
+            total_graphemes++;
+        else
+            total_phone++;
+    }
+
+    letter = ckd_calloc(1, total_graphemes+1);
+    add = 0;
+    for (w = 0; w < total_graphemes; w++) {
+        if (word[w] == '|')
+        {
+            add++;
+            continue;
+        }
+        letter[w - add] = word[w];
+    }
+
+    phone = ckd_calloc(1, total_phone+1);
+    for (w = 0; w < total_phone; w++) {
+        if (word[w + 1 + total_graphemes] == '|') {
+            phone[w] = ' ';
+        } else {
+            phone[w] = word[w + 1 + total_graphemes];
+        }
+    }
+
+    unigram_t unigram = { letter , phone};
+
+    return unigram;
+};
+
+// This function calculates the most likely unigram to appear in the current position at the word
+// based on the three latest chosen/winners unigrams (history) and return a structure containing
+// the word id (wid), and lengths of the phoneme and the word
+struct winner_t
+dict_get_winner_wid(ngram_model_t *model, const char * word_grapheme, glist_t history_list, int word_offset)
+{
+    long current_prob = LONG_MIN;
+    struct winner_t winner;
+    int32 i = 0, j = 0;
+    int nused;
+    int32 ngram_order = ngram_model_get_size(model);
+    int32 *history = ckd_calloc((size_t)ngram_order, sizeof(int32));
+    gnode_t *gn;
+    const char *vocab;
+    const char *sub;
+    int32 prob;
+    unigram_t unigram;
+    const int32 *total_unigrams = ngram_model_get_counts(model);
+
+    for (gn = history_list; gn; gn = gnode_next(gn)) {
+        // we need to build history from last to first because glist returns itens from last to first
+        history[ngram_order - j - 1] = gnode_int32(gn);
+        j++;
+        if (j >= ngram_order)
+            break;
+    }
+
+    for (i = 0; i < *total_unigrams; i++) {
+        vocab = ngram_word(model, i);
+        unigram  = dict_split_unigram(vocab);
+        sub = word_grapheme + word_offset;
+        if (dict_starts_with(unigram.word, sub)) {
+            prob = ngram_ng_prob(model, i, history, j, &nused);
+            if (current_prob < prob) {
+                current_prob = prob;
+                winner.winner_wid = i;
+                winner.length_match = strlen(unigram.word);
+                winner.len_phoneme = strlen(unigram.phone);
+            }
+        }
+
+        free_unigram_t(&unigram);
+    }
+
+    if (history)
+        ckd_free(history);
+
+    return winner;
+}
+
+// This function manages the winner unigrams and builds the history of winners to properly generate the final phoneme. In the first part,
+// it gets the most likely unigrams which graphemes compose the word and build a history of wids that is used in this search. In second part, the we
+// use the history of wids to get each correspondent unigram, and on third part, we build the final phoneme word from this history.
+char *
+dict_g2p(char const *word_grapheme, ngram_model_t *ngram_g2p_model)
+{
+    char *final_phone = NULL;
+    int totalh = 0;
+    size_t increment = 1;
+    int word_offset = 0;
+    int j;
+    size_t grapheme_len = 0, final_phoneme_len = 0;
+    glist_t history_list = NULL;
+    gnode_t *gn;
+    int first = 0;
+    struct winner_t winner;
+    const char *word;
+    unigram_t unigram;
+
+    int32 wid_sentence = ngram_wid(ngram_g2p_model,"<s>"); // start with sentence
+    history_list = glist_add_int32(history_list, wid_sentence);
+    grapheme_len = strlen(word_grapheme);
+    for (j = 0 ; j < grapheme_len ; j += increment) {
+        winner = dict_get_winner_wid(ngram_g2p_model, word_grapheme, history_list, word_offset);
+        increment = winner.length_match;
+        if (increment == 0) {
+            E_ERROR("Error trying to find matching phoneme (%s) Exiting.. \n" , word_grapheme);
+            ckd_free(history_list);
+            return NULL;
+        }
+        history_list = glist_add_int32(history_list, winner.winner_wid);
+        totalh = j + 1;
+        word_offset += winner.length_match;
+        final_phoneme_len += winner.len_phoneme;
+    }
+
+    history_list = glist_reverse(history_list);
+    final_phone = ckd_calloc(1, (final_phoneme_len * 2)+1);
+    for (gn = history_list; gn; gn = gnode_next(gn)) {
+        if (!first) {
+            first = 1;
+            continue;
+        }
+        word = ngram_word(ngram_g2p_model, gnode_int32(gn));
+
+        if (!word)
+            continue;
+
+        unigram  = dict_split_unigram(word);
+
+        if (strcmp(unigram.phone, "_") == 0) {
+            free_unigram_t(&unigram);
+            continue;
+        }
+        strcat(final_phone, unigram.phone);
+        strcat(final_phone, " ");
+
+        free_unigram_t(&unigram);
+    }
+
+    if (history_list)
+        glist_free(history_list);
+
+    return final_phone;
+}
+
+// This function just receives the dict lacking word from fsg_search, call the main function dict_g2p, and then adds the word to the memory dict.
+// The second part of this function is the same as pocketsphinx.c: https://github.com/cmusphinx/pocketsphinx/blob/ba6bd21b3601339646d2db6d2297d02a8a6b7029/src/libpocketsphinx/pocketsphinx.c#L816
+int
+dict_add_g2p_word(dict_t *dict, char const *word)
+{
+    int32 wid = 0;
+    s3cipid_t *pron;
+    char **phonestr, *tmp;
+    int np, i;
+    char *phones;
+
+    phones = dict_g2p(word, dict->ngram_g2p_model);
+    if (phones == NULL)
+        return 0;
+
+    E_INFO("Adding phone %s for word %s \n",  phones, word);
+    tmp = ckd_salloc(phones);
+    np = str2words(tmp, NULL, 0);
+    phonestr = ckd_calloc(np, sizeof(*phonestr));
+    str2words(tmp, phonestr, np);
+    pron = ckd_calloc(np, sizeof(*pron));
+    for (i = 0; i < np; ++i) {
+        pron[i] = bin_mdef_ciphone_id(dict->mdef, phonestr[i]);
+        if (pron[i] == -1) {
+            E_ERROR("Unknown phone %s in phone string %s\n",
+                    phonestr[i], tmp);
+            ckd_free(phonestr);
+            ckd_free(tmp);
+            ckd_free(pron);
+            ckd_free(phones);
+            return -1;
+        }
+    }
+    ckd_free(phonestr);
+    ckd_free(tmp);
+    ckd_free(phones);
+    if ((wid = dict_add_word(dict, word, pron, np)) == -1) {
+        ckd_free(pron);
+        return -1;
+    }
+    ckd_free(pron);
+
+    return wid;
 }
