@@ -685,10 +685,14 @@ CreateOffscreen(GLContext* gl, const WebGLContextOptions& options,
     if (!baseCaps.alpha)
         baseCaps.premultAlpha = true;
 
-    if (gl->IsANGLE() || gl->GetContextType() == GLContextType::GLX) {
+    if (gl->IsANGLE() ||
+        (gl->GetContextType() == GLContextType::GLX &&
+         gfxPlatform::GetPlatform()->GetCompositorBackend() == LayersBackend::LAYERS_OPENGL))
+    {
         // We can't use no-alpha formats on ANGLE yet because of:
         // https://code.google.com/p/angleproject/issues/detail?id=764
-        // GLX only supports GL_RGBA pixmaps as well.
+        // GLX only supports GL_RGBA pixmaps as well. Since we can't blit from
+        // an RGB FB to GLX's RGBA FB, force RGBA when surface sharing.
         baseCaps.alpha = true;
     }
 
