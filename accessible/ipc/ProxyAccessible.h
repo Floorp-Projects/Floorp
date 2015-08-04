@@ -110,6 +110,12 @@ public:
   void Relations(nsTArray<RelationType>* aTypes,
                  nsTArray<nsTArray<ProxyAccessible*>>* aTargetSets) const;
 
+  bool IsSearchbox() const;
+
+  nsIAtom* LandmarkRole() const;
+
+  nsIAtom* ARIARoleAtom() const;
+
   int32_t CaretOffset();
   bool SetCaretOffset(int32_t aOffset);
 
