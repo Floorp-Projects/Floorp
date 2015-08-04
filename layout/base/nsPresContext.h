@@ -1193,9 +1193,10 @@ protected:
 
   bool IsChromeSlow() const;
 
-  bool InitTimer(nsCOMPtr<nsITimer>& aTimer,
-                 nsTimerCallbackFunc aCallback,
-                 uint32_t aDelay);
+  // Creates a one-shot timer with the given aCallback & aDelay.
+  // Returns a refcounted pointer to the timer (or nullptr on failure).
+  already_AddRefed<nsITimer> CreateTimer(nsTimerCallbackFunc aCallback,
+                                         uint32_t aDelay);
 
   // IMPORTANT: The ownership implicit in the following member variables
   // has been explicitly checked.  If you add any members to this class,
