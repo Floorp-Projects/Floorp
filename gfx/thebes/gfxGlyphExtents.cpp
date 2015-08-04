@@ -141,7 +141,7 @@ size_t
 gfxGlyphExtents::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
     return mContainedGlyphWidths.SizeOfExcludingThis(aMallocSizeOf) +
-        mTightGlyphExtents.SizeOfExcludingThis(nullptr, aMallocSizeOf);
+        mTightGlyphExtents.ShallowSizeOfExcludingThis(aMallocSizeOf);
 }
 
 size_t

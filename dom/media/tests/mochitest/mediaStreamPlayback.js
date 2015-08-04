@@ -122,7 +122,7 @@ MediaStreamPlayback.prototype = {
                                          false);
 
       // Hooks up the media stream to the media element and starts playing it
-      this.mediaElement.mozSrcObject = this.mediaStream;
+      this.mediaElement.srcObject = this.mediaStream;
       this.mediaElement.play();
 
       // If canplaythrough doesn't fire in enough time, we fail the test
@@ -142,7 +142,7 @@ MediaStreamPlayback.prototype = {
    */
   stopMediaElement : function() {
     this.mediaElement.pause();
-    this.mediaElement.mozSrcObject = null;
+    this.mediaElement.srcObject = null;
   }
 }
 

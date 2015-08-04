@@ -4805,6 +4805,30 @@
     "kind": "count",
     "description": "Number of Telemetry ping files evicted due to server errors (4XX HTTP code received)"
   },
+  "TELEMETRY_SESSIONDATA_FAILED_LOAD": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "flag",
+    "description": "Set if Telemetry failed to load the session data from disk."
+  },
+  "TELEMETRY_SESSIONDATA_FAILED_PARSE": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "flag",
+    "description": "Set if Telemetry failed to parse the session data loaded from disk."
+  },
+  "TELEMETRY_SESSIONDATA_FAILED_VALIDATION": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "flag",
+    "description": "Set if Telemetry failed to validate the session data loaded from disk."
+  },
+  "TELEMETRY_SESSIONDATA_FAILED_SAVE": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "flag",
+    "description": "Set if Telemetry failed to save the session data to disk."
+  },
   "TELEMETRY_TEST_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",

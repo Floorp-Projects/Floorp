@@ -4,15 +4,21 @@
 
 package org.mozilla.gecko.tabs;
 
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.widget.TabThumbnailWrapper;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.content.Context;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.TouchDelegate;
 import android.view.View;
@@ -33,6 +39,7 @@ public class TabsLayoutItemView extends LinearLayout
     private TextView mTitle;
     private ImageView mThumbnail;
     private ImageView mCloseButton;
+    private ImageView mAudioPlayingButton;
     private TabThumbnailWrapper mThumbnailWrapper;
 
     public TabsLayoutItemView(Context context, AttributeSet attrs) {
@@ -93,11 +100,30 @@ public class TabsLayoutItemView extends LinearLayout
         mTitle = (TextView) findViewById(R.id.title);
         mThumbnail = (ImageView) findViewById(R.id.thumbnail);
         mCloseButton = (ImageView) findViewById(R.id.close);
+        mAudioPlayingButton = (ImageView) findViewById(R.id.audio_playing);
         mThumbnailWrapper = (TabThumbnailWrapper) findViewById(R.id.wrapper);
 
         if (HardwareUtils.isTablet()) {
             growCloseButtonHitArea();
         }
+
+        mAudioPlayingButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mTabId < 0) {
+                    throw new IllegalStateException("Invalid tab id:" + mTabId);
+                }
+
+                // TODO: Toggle icon in the UI as well (bug 1190301)
+                final JSONObject args = new JSONObject();
+                try {
+                    args.put("tabId", mTabId);
+                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:ToggleMuteAudio", args.toString()));
+                } catch (JSONException e) {
+                    Log.e(LOGTAG, "Error toggling mute audio: error building json arguments", e);
+                }
+            }
+        });
     }
 
     private void growCloseButtonHitArea() {
@@ -138,7 +164,7 @@ public class TabsLayoutItemView extends LinearLayout
         }
         mTitle.setText(tab.getDisplayTitle());
         mCloseButton.setTag(this);
-
+        mAudioPlayingButton.setVisibility(tab.isAudioPlaying() ? View.VISIBLE : View.GONE);
     }
 
     public int getTabId() {

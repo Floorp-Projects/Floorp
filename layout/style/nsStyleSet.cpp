@@ -2371,9 +2371,10 @@ nsStyleSet::HasStateDependentStyle(Element* aElement,
 struct MOZ_STACK_CLASS AttributeData : public AttributeRuleProcessorData {
   AttributeData(nsPresContext* aPresContext,
                 Element* aElement, nsIAtom* aAttribute, int32_t aModType,
-                bool aAttrHasChanged, TreeMatchContext& aTreeMatchContext)
+                bool aAttrHasChanged, const nsAttrValue* aOtherValue,
+                TreeMatchContext& aTreeMatchContext)
     : AttributeRuleProcessorData(aPresContext, aElement, aAttribute, aModType,
-                                 aAttrHasChanged, aTreeMatchContext),
+                                 aAttrHasChanged, aOtherValue, aTreeMatchContext),
       mHint(nsRestyleHint(0))
   {}
   nsRestyleHint   mHint;
@@ -2393,13 +2394,14 @@ nsRestyleHint
 nsStyleSet::HasAttributeDependentStyle(Element*       aElement,
                                        nsIAtom*       aAttribute,
                                        int32_t        aModType,
-                                       bool           aAttrHasChanged)
+                                       bool           aAttrHasChanged,
+                                       const nsAttrValue* aOtherValue)
 {
   TreeMatchContext treeContext(false, nsRuleWalker::eLinksVisitedOrUnvisited,
                                aElement->OwnerDoc());
   InitStyleScopes(treeContext, aElement);
   AttributeData data(PresContext(), aElement, aAttribute,
-                     aModType, aAttrHasChanged, treeContext);
+                     aModType, aAttrHasChanged, aOtherValue, treeContext);
   WalkRuleProcessors(SheetHasAttributeStyle, &data, false);
   return data.mHint;
 }

@@ -379,9 +379,10 @@ this.UITour = {
   },
 
   onLocationChange: function(aLocation) {
-    // The ReadingList/ReaderView tour page is expected to run in Reader View,
+    // The ReaderView tour page is expected to run in Reader View,
     // which disables JavaScript on the page. To get around that, we
-    // automatically start a pre-defined tour on page load.
+    // automatically start a pre-defined tour on page load (for hysterical
+    // raisins the ReaderView tour is known as "readinglist")
     let originalUrl = ReaderMode.getOriginalUrl(aLocation);
     if (this._readerViewTriggerRegEx.test(originalUrl)) {
       this.startSubTour("readinglist");

@@ -191,6 +191,16 @@ nsAttrValue::IsSVGType(ValueType aType) const
   return aType >= eSVGTypesBegin && aType <= eSVGTypesEnd;
 }
 
+inline bool
+nsAttrValue::StoresOwnData() const
+{
+  if (BaseType() != eOtherBase) {
+    return true;
+  }
+  ValueType t = Type();
+  return t != eCSSStyleRule && !IsSVGType(t);
+}
+
 inline void
 nsAttrValue::SetPtrValueAndType(void* aValue, ValueBaseType aType)
 {
