@@ -156,6 +156,8 @@ public:
   NS_IMETHOD GetResponseStatusText(nsACString& aValue) override;
   NS_IMETHOD GetRequestSucceeded(bool *aValue) override;
   NS_IMETHOD RedirectTo(nsIURI *newURI) override;
+  NS_IMETHOD GetSchedulingContextID(nsID *aSCID) override;
+  NS_IMETHOD SetSchedulingContextID(const nsID aSCID) override;
 
   // nsIHttpChannelInternal
   NS_IMETHOD GetDocumentURI(nsIURI **aDocumentURI) override;
@@ -431,6 +433,9 @@ protected:
 
   // The network interface id that's associated with this channel.
   nsCString mNetworkInterfaceId;
+
+  nsID mSchedulingContextID;
+  bool EnsureSchedulingContextID();
 };
 
 // Share some code while working around C++'s absurd inability to handle casting

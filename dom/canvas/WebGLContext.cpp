@@ -1821,163 +1821,17 @@ WebGLContext::DidRefresh()
     }
 }
 
-bool
-WebGLContext::TexImageFromVideoElement(const TexImageTarget texImageTarget,
-                                       GLint level, GLenum internalFormat,
-                                       GLenum format, GLenum type,
-                                       mozilla::dom::Element& elt)
-{
-    if (type == LOCAL_GL_HALF_FLOAT_OES &&
-        !gl->IsExtensionSupported(gl::GLContext::OES_texture_half_float))
-    {
-        type = LOCAL_GL_HALF_FLOAT;
-    }
-
-    if (!ValidateTexImageFormatAndType(format, type,
-                                       WebGLTexImageFunc::TexImage,
-                                       WebGLTexDimensions::Tex2D))
-    {
-        return false;
-    }
-
-    HTMLVideoElement* video = HTMLVideoElement::FromContentOrNull(&elt);
-    if (!video)
-        return false;
-
-    uint16_t readyState;
-    if (NS_SUCCEEDED(video->GetReadyState(&readyState)) &&
-        readyState < nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA)
-    {
-        //No frame inside, just return
-        return false;
-    }
-
-    // If it doesn't have a principal, just bail
-    nsCOMPtr<nsIPrincipal> principal = video->GetCurrentPrincipal();
-    if (!principal)
-        return false;
-
-    mozilla::layers::ImageContainer* container = video->GetImageContainer();
-    if (!container)
-        return false;
-
-    if (video->GetCORSMode() == CORS_NONE) {
-        bool subsumes;
-        nsresult rv = mCanvasElement->NodePrincipal()->Subsumes(principal, &subsumes);
-        if (NS_FAILED(rv) || !subsumes) {
-            GenerateWarning("It is forbidden to load a WebGL texture from a cross-domain element that has not been validated with CORS. "
-                                "See https://developer.mozilla.org/en/WebGL/Cross-Domain_Textures");
-            return false;
-        }
-    }
-
-    AutoLockImage lockedImage(container);
-    Image* srcImage = lockedImage.GetImage();
-    if (!srcImage) {
-      return false;
-    }
-
-    gl->MakeCurrent();
-
-    WebGLTexture* tex = ActiveBoundTextureForTexImageTarget(texImageTarget);
-
-    const WebGLTexture::ImageInfo& info = tex->ImageInfoAt(texImageTarget, 0);
-    bool dimensionsMatch = info.Width() == srcImage->GetSize().width &&
-                           info.Height() == srcImage->GetSize().height;
-    if (!dimensionsMatch) {
-        // we need to allocation
-        gl->fTexImage2D(texImageTarget.get(), level, internalFormat,
-                        srcImage->GetSize().width, srcImage->GetSize().height,
-                        0, format, type, nullptr);
-    }
-
-    const gl::OriginPos destOrigin = mPixelStoreFlipY ? gl::OriginPos::BottomLeft
-                                                      : gl::OriginPos::TopLeft;
-    bool ok = gl->BlitHelper()->BlitImageToTexture(srcImage,
-                                                   srcImage->GetSize(),
-                                                   tex->mGLName,
-                                                   texImageTarget.get(),
-                                                   destOrigin);
-    if (ok) {
-        TexInternalFormat effectiveInternalFormat =
-            EffectiveInternalFormatFromInternalFormatAndType(internalFormat,
-                                                             type);
-        MOZ_ASSERT(effectiveInternalFormat != LOCAL_GL_NONE);
-        tex->SetImageInfo(texImageTarget, level, srcImage->GetSize().width,
-                          srcImage->GetSize().height, 1,
-                          effectiveInternalFormat,
-                          WebGLImageDataStatus::InitializedImageData);
-        tex->Bind(TexImageTargetToTexTarget(texImageTarget));
-    }
-    return ok;
-}
-
-void
-WebGLContext::TexSubImage2D(GLenum rawTexImageTarget, GLint level, GLint xoffset,
-                            GLint yoffset, GLenum format, GLenum type,
-                            dom::Element* elt, ErrorResult* const out_rv)
-{
-    // TODO: Consolidate all the parameter validation
-    // checks. Instead of spreading out the cheks in multple
-    // places, consolidate into one spot.
-
-    if (IsContextLost())
-        return;
-
-    if (!ValidateTexImageTarget(rawTexImageTarget,
-                                WebGLTexImageFunc::TexSubImage,
-                                WebGLTexDimensions::Tex2D))
-    {
-        ErrorInvalidEnumInfo("texSubImage2D: target", rawTexImageTarget);
-        return;
-    }
-
-    const TexImageTarget texImageTarget(rawTexImageTarget);
-
-    if (level < 0)
-        return ErrorInvalidValue("texSubImage2D: level is negative");
-
-    const int32_t maxLevel = MaxTextureLevelForTexImageTarget(texImageTarget);
-    if (level > maxLevel) {
-        ErrorInvalidValue("texSubImage2D: level %d is too large, max is %d",
-                          level, maxLevel);
-        return;
-    }
-
-    WebGLTexture* tex = ActiveBoundTextureForTexImageTarget(texImageTarget);
-    if (!tex)
-        return ErrorInvalidOperation("texSubImage2D: no texture bound on active texture unit");
-
-    const WebGLTexture::ImageInfo& imageInfo = tex->ImageInfoAt(texImageTarget, level);
-    const TexInternalFormat internalFormat = imageInfo.EffectiveInternalFormat();
-
-    // Trying to handle the video by GPU directly first
-    if (TexImageFromVideoElement(texImageTarget, level,
-                                 internalFormat.get(), format, type, *elt))
-    {
-        return;
-    }
-
-    RefPtr<gfx::DataSourceSurface> data;
-    WebGLTexelFormat srcFormat;
-    nsLayoutUtils::SurfaceFromElementResult res = SurfaceFromElement(*elt);
-    *out_rv = SurfaceFromElementResultToImageSurface(res, data, &srcFormat);
-    if (out_rv->Failed() || !data)
-        return;
-
-    gfx::IntSize size = data->GetSize();
-    uint32_t byteLength = data->Stride() * size.height;
-    TexSubImage2D_base(texImageTarget.get(), level, xoffset, yoffset, size.width,
-                       size.height, data->Stride(), format, type, data->GetData(),
-                       byteLength, js::Scalar::MaxTypedArrayViewType, srcFormat,
-                       res.mIsPremultiplied);
-}
-
 size_t
 RoundUpToMultipleOf(size_t value, size_t multiple)
 {
     size_t overshoot = value + multiple - 1;
     return overshoot - (overshoot % multiple);
+}
+
+CheckedUint32
+RoundedToNextMultipleOf(CheckedUint32 x, CheckedUint32 y)
+{
+    return ((x + y - 1) / y) * y;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

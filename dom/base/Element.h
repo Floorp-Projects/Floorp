@@ -477,6 +477,8 @@ public:
 
   virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
                            const nsAString& aValue, bool aNotify) override;
+  // aParsedValue receives the old value of the attribute. That's useful if
+  // either the input or output value of aParsedValue is StoresOwnData.
   nsresult SetParsedAttr(int32_t aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
                          nsAttrValue& aParsedValue, bool aNotify);
   // GetAttr is not inlined on purpose, to keep down codesize from all
@@ -1087,10 +1089,15 @@ protected:
    * @param aNamespaceID  namespace of attribute
    * @param aAttribute    local-name of attribute
    * @param aPrefix       aPrefix of attribute
-   * @param aOldValue     previous value of attribute. Only needed if
-   *                      aFireMutation is true or if the element is a
-   *                      custom element (in web components).
-   * @param aParsedValue  parsed new value of attribute
+   * @param aOldValue     The old value of the attribute to use as a fallback
+   *                      in the cases where the actual old value (i.e.
+   *                      its current value) is !StoresOwnData() --- in which
+   *                      case the current value is probably already useless.
+   *                      If the current value is StoresOwnData() (or absent),
+   *                      aOldValue will not be used.
+   * @param aParsedValue  parsed new value of attribute. Replaced by the
+   *                      old value of the attribute. This old value is only
+   *                      useful if either it or the new value is StoresOwnData.
    * @param aModType      nsIDOMMutationEvent::MODIFICATION or ADDITION.  Only
    *                      needed if aFireMutation or aNotify is true.
    * @param aFireMutation should mutation-events be fired?
@@ -1163,17 +1170,16 @@ protected:
    * @param aName the localname of the attribute being set
    * @param aValue the value it's being set to represented as either a string or
    *        a parsed nsAttrValue. Alternatively, if the attr is being removed it
-   *        will be null.
+   *        will be null. BeforeSetAttr is allowed to modify aValue by parsing
+   *        the string to an nsAttrValue (to avoid having to reparse it in
+   *        ParseAttribute).
    * @param aNotify Whether we plan to notify document observers.
    */
   // Note that this is inlined so that when subclasses call it it gets
   // inlined.  Those calls don't go through a vtable.
   virtual nsresult BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
-                                 const nsAttrValueOrString* aValue,
-                                 bool aNotify)
-  {
-    return NS_OK;
-  }
+                                 nsAttrValueOrString* aValue,
+                                 bool aNotify);
 
   /**
    * Hook that is called by Element::SetAttr to allow subclasses to

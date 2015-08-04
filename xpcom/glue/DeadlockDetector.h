@@ -144,15 +144,6 @@ public:
     PR_DestroyLock(mLock);
   }
 
-  static size_t
-  SizeOfEntryExcludingThis(const T* aKey, const nsAutoPtr<OrderingEntry>& aEntry,
-                           MallocSizeOf aMallocSizeOf, void* aUserArg)
-  {
-    // NB: Key is accounted for in the entry.
-    size_t n = aEntry->SizeOfIncludingThis(aMallocSizeOf);
-    return n;
-  }
-
   size_t
   SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   {
@@ -160,7 +151,11 @@ public:
 
     {
       PRAutoLock _(mLock);
-      n += mOrdering.SizeOfExcludingThis(SizeOfEntryExcludingThis, aMallocSizeOf);
+      n += mOrdering.ShallowSizeOfExcludingThis(aMallocSizeOf);
+      for (auto iter = mOrdering.ConstIter(); !iter.Done(); iter.Next()) {
+        // NB: Key is accounted for in the entry.
+        n += iter.Data()->SizeOfIncludingThis(aMallocSizeOf);
+      }
     }
 
     return n;

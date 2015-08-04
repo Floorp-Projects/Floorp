@@ -657,7 +657,7 @@ protected:
     nsresult MakeHeavyweight(nsXULPrototypeElement* aPrototype);
 
     virtual nsresult BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
-                                   const nsAttrValueOrString* aValue,
+                                   nsAttrValueOrString* aValue,
                                    bool aNotify) override;
     virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                   const nsAttrValue* aValue, bool aNotify) override;

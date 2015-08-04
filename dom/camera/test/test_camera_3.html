@@ -54,7 +54,7 @@ var Camera = {
     function onSuccess(d) {
       Camera.cameraObj = d.camera;
       Camera.cameraObj.addEventListener('previewstatechange', Camera.onPreviewStateChange);
-      Camera.viewfinder.mozSrcObject = d.camera;
+      Camera.viewfinder.srcObject = d.camera;
       Camera.viewfinder.play();
     };
     navigator.mozCameras.getCamera(whichCamera, options).then(onSuccess, onError);
@@ -64,7 +64,7 @@ var Camera = {
 SimpleTest.waitForExplicitFinish();
 
 window.addEventListener('beforeunload', function() {
-  Camera.viewfinder.mozSrcObject = null;
+  Camera.viewfinder.srcObject = null;
   Camera.cameraObj.release();
   Camera.cameraObj = null;
 });

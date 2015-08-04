@@ -28,8 +28,8 @@ GMPProcessChild::~GMPProcessChild()
 bool
 GMPProcessChild::Init()
 {
-  std::string pluginFilename;
-  std::string voucherFilename;
+  nsAutoString pluginFilename;
+  nsAutoString voucherFilename;
 
 #if defined(OS_POSIX)
   // NB: need to be very careful in ensuring that the first arg
@@ -37,13 +37,13 @@ GMPProcessChild::Init()
   // Keep in sync with dom/plugins/PluginModuleParent.
   std::vector<std::string> values = CommandLine::ForCurrentProcess()->argv();
   MOZ_ASSERT(values.size() >= 3, "not enough args");
-  pluginFilename = values[1];
-  voucherFilename = values[2];
+  pluginFilename = NS_ConvertUTF8toUTF16(nsDependentCString(values[1].c_str()));
+  voucherFilename = NS_ConvertUTF8toUTF16(nsDependentCString(values[2].c_str()));
 #elif defined(OS_WIN)
   std::vector<std::wstring> values = CommandLine::ForCurrentProcess()->GetLooseValues();
   MOZ_ASSERT(values.size() >= 2, "not enough loose args");
-  pluginFilename = WideToUTF8(values[0]);
-  voucherFilename = WideToUTF8(values[1]);
+  pluginFilename = nsDependentString(values[0].c_str());
+  voucherFilename = nsDependentString(values[1].c_str());
 #else
 #error Not implemented
 #endif

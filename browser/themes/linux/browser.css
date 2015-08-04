@@ -1944,3 +1944,7 @@ chatbox {
   -moz-padding-end: 0 !important;
   -moz-margin-end: 0 !important;
 }
+
+.browser-action-panel > .panel-arrowcontainer > .panel-arrowcontent {
+  padding: 0;
+}

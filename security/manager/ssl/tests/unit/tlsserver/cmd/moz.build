@@ -8,7 +8,6 @@ FAIL_ON_WARNINGS = True
 
 GeckoSimplePrograms([
     'BadCertServer',
-    'ClientAuthServer',
     'GenerateOCSPResponse',
     'OCSPStaplingServer',
 ], linkage=None)
