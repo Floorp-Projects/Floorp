@@ -22,16 +22,13 @@ function setupButtons() {
     // FXOS_SIMULATOR turned on.
     return;
   }
-  // The touch event helper is enabled on shell.html document,
-  // so that click events are delayed and it is better to
-  // listen for touch events.
-  homeButton.addEventListener('touchstart', function() {
+  homeButton.addEventListener('mousedown', function() {
     let window = shell.contentBrowser.contentWindow;
     let e = new window.KeyboardEvent('keydown', {key: 'Home'});
     window.dispatchEvent(e);
     homeButton.classList.add('active');
   });
-  homeButton.addEventListener('touchend', function() {
+  homeButton.addEventListener('mouseup', function() {
     let window = shell.contentBrowser.contentWindow;
     let e = new window.KeyboardEvent('keyup', {key: 'Home'});
     window.dispatchEvent(e);
@@ -40,10 +37,10 @@ function setupButtons() {
 
   Cu.import("resource://gre/modules/GlobalSimulatorScreen.jsm");
   let rotateButton = document.getElementById('rotate-button');
-  rotateButton.addEventListener('touchstart', function () {
+  rotateButton.addEventListener('mousedown', function() {
     rotateButton.classList.add('active');
   });
-  rotateButton.addEventListener('touchend', function() {
+  rotateButton.addEventListener('mouseup', function() {
     GlobalSimulatorScreen.flipScreen();
     rotateButton.classList.remove('active');
   });
