@@ -58,10 +58,10 @@ public:
 
 private:
     Mutex *mLock;
-    static PRThread *sDebugOwningThread;
+    static Atomic<PRThread *, Relaxed> sDebugOwningThread;
 };
 
-PRThread *DebugMutexAutoLock::sDebugOwningThread = nullptr;
+Atomic<PRThread *, Relaxed> DebugMutexAutoLock::sDebugOwningThread;
 
 DebugMutexAutoLock::DebugMutexAutoLock(Mutex& mutex)
     :mLock(&mutex)
