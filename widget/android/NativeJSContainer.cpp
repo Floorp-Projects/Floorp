@@ -14,7 +14,6 @@
 #include "nsJSUtils.h"
 
 #include <mozilla/Vector.h>
-#include <mozilla/WeakPtr.h>
 #include <mozilla/jni/Accessors.h>
 #include <mozilla/jni/Refs.h>
 #include <mozilla/jni/Utils.h>
@@ -104,8 +103,7 @@ public:
 } // namepsace
 
 class NativeJSContainerImpl final
-    : public SupportsWeakPtr<NativeJSContainerImpl>
-    , public NativeJSObject::Natives<NativeJSContainerImpl>
+    : public NativeJSObject::Natives<NativeJSContainerImpl>
     , public NativeJSContainer::Natives<NativeJSContainerImpl>
 {
     typedef NativeJSContainerImpl Self;
@@ -576,45 +574,45 @@ class NativeJSContainerImpl final
         return (this->*Prop::FromValue)(val);
     }
 
+    NativeJSObject::LocalRef CreateChild(JS::HandleObject object)
+    {
+        auto instance = NativeJSObject::New();
+        mozilla::UniquePtr<NativeJSContainerImpl> impl(
+                new NativeJSContainerImpl(instance.Env(), mJSContext, object));
+
+        ObjectBase::AttachNative(instance, mozilla::Move(impl));
+        mChildren.append(NativeJSObject::GlobalRef(instance));
+        return instance;
+    }
+
     NativeJSContainerImpl(JNIEnv* env, JSContext* cx, JS::HandleObject object)
         : mEnv(env)
         , mJSContext(cx)
         , mJSObject(cx, object)
     {}
 
+public:
     ~NativeJSContainerImpl()
     {
         // Dispose of all children on destruction. The children will in turn
         // dispose any of their children (i.e. our grandchildren) and so on.
-        NativeJSObject::LocalRef childObj(mEnv);
+        NativeJSObject::LocalRef child(mEnv);
         for (size_t i = 0; i < mChildren.length(); i++) {
-            childObj = mChildren[i];
-            Self* const child = ObjectBase::GetNative(childObj);
-            child->ObjectBase::DisposeNative(childObj);
-            delete child;
+            child = mChildren[i];
+            ObjectBase::GetNative(child)->ObjectBase::DisposeNative(child);
         }
     }
 
-    NativeJSObject::LocalRef CreateChild(JS::HandleObject object)
-    {
-        auto instance = NativeJSObject::New();
-        (new NativeJSContainerImpl(instance.Env(), mJSContext, object))
-                ->ObjectBase::AttachNative(instance);
-        mChildren.append(NativeJSObject::GlobalRef(instance));
-        return instance;
-    }
-
-public:
     static NativeJSContainer::LocalRef
     CreateInstance(JSContext* cx, JS::HandleObject object)
     {
         auto instance = NativeJSContainer::New();
-        (new NativeJSContainerImpl(instance.Env(), cx, object))
-                ->ContainerBase::AttachNative(instance);
+        mozilla::UniquePtr<NativeJSContainerImpl> impl(
+                new NativeJSContainerImpl(instance.Env(), cx, object));
+
+        ContainerBase::AttachNative(instance, mozilla::Move(impl));
         return instance;
     }
-
-    MOZ_DECLARE_WEAKREFERENCE_TYPENAME(NativeJSContainerImpl)
 
     // NativeJSContainer methods
 
@@ -624,7 +622,6 @@ public:
             return;
         }
         ContainerBase::DisposeNative(instance);
-        delete this;
     }
 
     NativeJSContainer::LocalRef Clone()
