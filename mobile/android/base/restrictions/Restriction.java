@@ -52,7 +52,7 @@ public enum Restriction {
             10, "no_remote_debugging", 0, 0),
 
     DISALLOW_IMPORT_SETTINGS(
-            11, "no_report_site_issue",
+            11, "no_import_settings",
             R.string.restriction_disallow_import_settings_title,
             R.string.restriction_disallow_import_settings_description),
 
