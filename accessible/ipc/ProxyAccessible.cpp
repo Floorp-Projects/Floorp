@@ -83,6 +83,14 @@ ProxyAccessible::State() const
   return state;
 }
 
+uint64_t
+ProxyAccessible::NativeState() const
+{
+  uint64_t state = 0;
+  unused << mDoc->SendNativeState(mID, &state);
+  return state;
+}
+
 void
 ProxyAccessible::Name(nsString& aName) const
 {

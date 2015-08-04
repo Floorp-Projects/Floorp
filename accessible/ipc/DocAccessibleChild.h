@@ -64,6 +64,11 @@ public:
   virtual bool RecvState(const uint64_t& aID, uint64_t* aState) override;
 
   /*
+   * Return the native state for the accessible with given ID.
+   */
+  virtual bool RecvNativeState(const uint64_t& aID, uint64_t* aState) override;
+
+  /*
    * Get the name for the accessible with given id.
    */
   virtual bool RecvName(const uint64_t& aID, nsString* aName) override;
