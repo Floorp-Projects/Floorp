@@ -695,7 +695,10 @@ public:
    * or false if the smooth scroll has ended.
    */
   bool DoSample(FrameMetrics& aFrameMetrics, const TimeDuration& aDelta) {
-    if (mXAxisModel.IsFinished() && mYAxisModel.IsFinished()) {
+    nsPoint oneParentLayerPixel =
+      CSSPoint::ToAppUnits(ParentLayerPoint(1, 1) / aFrameMetrics.GetZoom());
+    if (mXAxisModel.IsFinished(oneParentLayerPixel.x) &&
+        mYAxisModel.IsFinished(oneParentLayerPixel.y)) {
       return false;
     }
 
@@ -712,12 +715,12 @@ public:
 
     // Keep the velocity updated for the Axis class so that any animations
     // chained off of the smooth scroll will inherit it.
-    if (mXAxisModel.IsFinished()) {
+    if (mXAxisModel.IsFinished(oneParentLayerPixel.x)) {
       mApzc.mX.SetVelocity(0);
     } else {
       mApzc.mX.SetVelocity(velocity.x);
     }
-    if (mYAxisModel.IsFinished()) {
+    if (mYAxisModel.IsFinished(oneParentLayerPixel.y)) {
       mApzc.mY.SetVelocity(0);
     } else {
       mApzc.mY.SetVelocity(velocity.y);
