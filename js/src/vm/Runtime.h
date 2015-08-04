@@ -1513,11 +1513,6 @@ struct JSRuntime : public JS::shadow::Runtime,
         }
 
         /**
-         * Performance data on the entire runtime.
-         */
-        js::PerformanceGroupHolder performance;
-
-        /**
          * The number of times we have entered the event loop.
          * Used to reset counters whenever we enter the loop,
          * which may be caused either by having completed the
@@ -1527,6 +1522,17 @@ struct JSRuntime : public JS::shadow::Runtime,
          * Always incremented by 1, may safely overflow.
          */
         uint64_t iteration;
+
+        /**
+         * `true` if no stopwatch has been registered for the
+         * current run of the event loop, `false` until then.
+         */
+        bool isEmpty;
+
+        /**
+         * Performance data on the entire runtime.
+         */
+        js::PerformanceData performance;
 
         /**
          * Callback used to ask the embedding to determine in which
@@ -1540,9 +1546,9 @@ struct JSRuntime : public JS::shadow::Runtime,
          */
         JSCurrentPerfGroupCallback currentPerfGroupCallback;
 
-        explicit Stopwatch(JSRuntime* runtime)
-          : performance(runtime)
-          , iteration(0)
+        Stopwatch()
+          : iteration(0)
+          , isEmpty(true)
           , currentPerfGroupCallback(nullptr)
           , isMonitoringJank_(false)
           , isMonitoringCPOW_(false)
@@ -1559,6 +1565,7 @@ struct JSRuntime : public JS::shadow::Runtime,
          */
         void reset() {
             ++iteration;
+            isEmpty = true;
         }
         /**
          * Activate/deactivate stopwatch measurement of jank.
@@ -1645,9 +1652,6 @@ struct JSRuntime : public JS::shadow::Runtime,
         MonotonicTimeStamp userTimeFix;
 
     private:
-        Stopwatch(const Stopwatch&) = delete;
-        Stopwatch& operator=(const Stopwatch&) = delete;
-
         Groups groups_;
         friend struct js::PerformanceGroupHolder;
 
