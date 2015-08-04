@@ -17,8 +17,6 @@ config = {
     "install_app_path":  "/builds/sut_tools/installApp.py",
     "talos_from_code_url": "https://hg.mozilla.org/%s/raw-file/%s/testing/talos/talos_from_code.py",
     "talos_json_url": "https://hg.mozilla.org/%s/raw-file/%s/testing/talos/talos.json",
-    "datazilla_urls": ["https://datazilla.mozilla.org/talos"],
-    "datazilla_authfile": os.path.join(os.getcwd(), "oauth.txt"),
     #remotePerfConfigurator.py options
     "preflight_talos_options": [
         "-v", "-e", "%(app_name)s",
