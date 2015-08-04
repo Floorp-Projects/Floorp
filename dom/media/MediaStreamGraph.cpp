@@ -1470,8 +1470,7 @@ MediaStreamGraphImpl::Process(GraphTime aFrom, GraphTime aTo)
 }
 
 bool
-MediaStreamGraphImpl::OneIteration(GraphTime aFrom, GraphTime aTo,
-                                   GraphTime aStateEnd)
+MediaStreamGraphImpl::OneIteration(GraphTime aStateEnd)
 {
   {
     MonitorAutoLock lock(mMemoryReportMonitor);
