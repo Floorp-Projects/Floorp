@@ -133,7 +133,7 @@ class MutableTraceableVectorOperations
         vec().infallibleAppend(aBegin, aLength);
     }
     void popBack() { vec().popBack(); }
-    T popCopy() { return vec().podCopy(); }
+    T popCopy() { return vec().popCopy(); }
     template<typename U> T* insert(T* aP, U&& aVal) {
         return vec().insert(aP, mozilla::Forward<U>(aVal));
     }

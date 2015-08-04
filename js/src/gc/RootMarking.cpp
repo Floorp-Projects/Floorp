@@ -130,12 +130,6 @@ AutoGCRooter::trace(JSTracer* trc)
         return;
       }
 
-      case STRINGVECTOR: {
-        AutoStringVector::VectorImpl& vector = static_cast<AutoStringVector*>(this)->vector;
-        TraceRootRange(trc, vector.length(), vector.begin(), "js::AutoStringVector.vector");
-        return;
-      }
-
       case NAMEVECTOR: {
         AutoNameVector::VectorImpl& vector = static_cast<AutoNameVector*>(this)->vector;
         TraceRootRange(trc, vector.length(), vector.begin(), "js::AutoNameVector.vector");
