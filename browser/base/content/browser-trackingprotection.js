@@ -63,6 +63,10 @@ let TrackingProtection = {
     return Services.telemetry.getHistogramById("TRACKING_PROTECTION_EVENTS");
   },
 
+  get shieldHistogram() {
+    return Services.telemetry.getHistogramById("TRACKING_PROTECTION_SHIELD");
+  },
+
   onSecurityChange(state, isSimulated) {
     if (!this.enabled) {
       return;
@@ -91,14 +95,21 @@ let TrackingProtection = {
         gPrefService.savePrefFile(null);
         this.showIntroPanel();
       }
+
+      this.shieldHistogram.add(2);
     } else if (isAllowing) {
       this.icon.setAttribute("tooltiptext", this.disabledTooltipText);
       this.icon.setAttribute("state", "loaded-tracking-content");
       this.content.setAttribute("state", "loaded-tracking-content");
+
+      this.shieldHistogram.add(1);
     } else {
       this.icon.removeAttribute("tooltiptext");
       this.icon.removeAttribute("state");
       this.content.removeAttribute("state");
+
+      // We didn't show the shield
+      this.shieldHistogram.add(0);
     }
 
     // Telemetry for state change.
