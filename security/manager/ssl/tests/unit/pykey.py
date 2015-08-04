@@ -21,16 +21,24 @@ evRSA2040: a 2040-bit RSA key that, when combined with the right pycert
            specification, results in a certificate that is enabled for
            extended validation in debug Firefox.
 rsa2040: a 2040-bit RSA key
-
-In the future it will be possible to specify other properties of the key
-(type, strength, signature algorithm, etc.).
+rsa1024: a 1024-bit RSA key
+rsa1016: a 1016-bit RSA key
+secp256k1: an ECC key on the curve secp256k1
+secp244r1: an ECC key on the curve secp244r1
+secp256r1: an ECC key on the curve secp256r1
+secp384r1: an ECC key on the curve secp384r1
+secp521r1: an ECC key on the curve secp521r1
 """
 
 from pyasn1.codec.der import encoder
 from pyasn1.type import univ, namedtype
 from pyasn1_modules import rfc2459
+from ecc import encoding
+from ecc import Key
+from ecc.ecdsa import randkey
 import base64
 import binascii
+import mock
 import rsa
 import sys
 
@@ -78,6 +86,14 @@ class RSAPrivateKey(univ.Sequence):
         namedtype.NamedType('exponent1', univ.Integer()),
         namedtype.NamedType('exponent2', univ.Integer()),
         namedtype.NamedType('coefficient', univ.Integer()),
+    )
+
+
+class ECPoint(univ.Sequence):
+    """Helper type for encoding a EC point"""
+    componentType = namedtype.NamedTypes(
+        namedtype.NamedType('x', univ.Integer()),
+        namedtype.NamedType('y', univ.Integer())
     )
 
 
@@ -306,56 +322,124 @@ class RSAKey:
         '93edf57b10ebe796', 16)
 
     rsa2040_N = long(
-      '00bac0652fdfbc0055882ffbaeaceec88fa2d083c297dd5d40664dd3d90f'
-      '52f9aa02bd8a50fba16e0fd991878ef475f9b350d9f8e3eb2abd717ce327'
-      'b09788531f13df8e3e4e3b9d616bb8a41e5306eed2472163161051180127'
-      '6a4eb66f07331b5cbc8bcae7016a8f9b3d4f2ac4553c624cf5263bcb348e'
-      '8840de6612870960a792191b138fb217f765cec7bff8e94f16b39419bf75'
-      '04c59a7e4f79bd6d173e9c7bf3d9d2a4e73cc180b0590a73d584fb7fc9b5'
-      '4fa544607e53fc685c7a55fd44a81d4142b6af51ea6fa6cea52965a2e8c5'
-      'd84f3ca024d6fbb9b005b9651ce5d9f2ecf40ed404981a9ffc02636e311b'
-      '095c6332a0c87dc39271b5551481774b', 16)
+        '00bac0652fdfbc0055882ffbaeaceec88fa2d083c297dd5d40664dd3d90f'
+        '52f9aa02bd8a50fba16e0fd991878ef475f9b350d9f8e3eb2abd717ce327'
+        'b09788531f13df8e3e4e3b9d616bb8a41e5306eed2472163161051180127'
+        '6a4eb66f07331b5cbc8bcae7016a8f9b3d4f2ac4553c624cf5263bcb348e'
+        '8840de6612870960a792191b138fb217f765cec7bff8e94f16b39419bf75'
+        '04c59a7e4f79bd6d173e9c7bf3d9d2a4e73cc180b0590a73d584fb7fc9b5'
+        '4fa544607e53fc685c7a55fd44a81d4142b6af51ea6fa6cea52965a2e8c5'
+        'd84f3ca024d6fbb9b005b9651ce5d9f2ecf40ed404981a9ffc02636e311b'
+        '095c6332a0c87dc39271b5551481774b', 16)
     rsa2040_E = 65537L
     rsa2040_D = long(
-      '603db267df97555cbed86b8df355034af28f1eb7f3e7829d239bcc273a7c'
-      '7a69a10be8f21f1b6c4b02c6bae3731c3158b5bbff4605f57ab7b7b2a0cb'
-      'a2ec005a2db5b1ea6e0aceea5bc745dcd2d0e9d6b80d7eb0ea2bc08127bc'
-      'e35fa50c42cc411871ba591e23ba6a38484a33eff1347f907ee9a5a92a23'
-      '11bb0b435510020f78e3bb00099db4d1182928096505fcba84f3ca1238fd'
-      '1eba5eea1f391bbbcc5424b168063fc17e1ca6e1912ccba44f9d0292308a'
-      '1fedb80612529b39f59d0a3f8180b5ba201132197f93a5815ded938df8e7'
-      'd93c9b15766588f339bb59100afda494a7e452d7dd4c9a19ce2ec3a33a18'
-      'b20f0b4dade172bee19f26f0dcbe41', 16)
+        '603db267df97555cbed86b8df355034af28f1eb7f3e7829d239bcc273a7c'
+        '7a69a10be8f21f1b6c4b02c6bae3731c3158b5bbff4605f57ab7b7b2a0cb'
+        'a2ec005a2db5b1ea6e0aceea5bc745dcd2d0e9d6b80d7eb0ea2bc08127bc'
+        'e35fa50c42cc411871ba591e23ba6a38484a33eff1347f907ee9a5a92a23'
+        '11bb0b435510020f78e3bb00099db4d1182928096505fcba84f3ca1238fd'
+        '1eba5eea1f391bbbcc5424b168063fc17e1ca6e1912ccba44f9d0292308a'
+        '1fedb80612529b39f59d0a3f8180b5ba201132197f93a5815ded938df8e7'
+        'd93c9b15766588f339bb59100afda494a7e452d7dd4c9a19ce2ec3a33a18'
+        'b20f0b4dade172bee19f26f0dcbe41', 16)
     rsa2040_P = long(
-      '0ec3869cb92d406caddf7a319ab29448bc505a05913707873361fc5b986a'
-      '499fb65eeb815a7e37687d19f128087289d9bb8818e7bcca502c4900ad9a'
-      'ece1179be12ff3e467d606fc820ea8f07ac9ebffe2236e38168412028822'
-      '3e42dbe68dfd972a85a6447e51695f234da7911c67c9ab9531f33df3b994'
-      '32d4ee88c9a4efbb', 16)
+        '0ec3869cb92d406caddf7a319ab29448bc505a05913707873361fc5b986a'
+        '499fb65eeb815a7e37687d19f128087289d9bb8818e7bcca502c4900ad9a'
+        'ece1179be12ff3e467d606fc820ea8f07ac9ebffe2236e38168412028822'
+        '3e42dbe68dfd972a85a6447e51695f234da7911c67c9ab9531f33df3b994'
+        '32d4ee88c9a4efbb', 16)
     rsa2040_Q = long(
-      '0ca63934549e85feac8e0f5604303fd1849fe88af4b7f7e1213283bbc7a2'
-      'c2a509f9273c428c68de3db93e6145f1b400bd6d4a262614e9043ad362d4'
-      'eba4a6b995399c8934a399912199e841d8e8dbff0489f69e663796730b29'
-      '80530b31cb70695a21625ea2adccc09d930516fa872211a91e22dd89fd9e'
-      'b7da8574b72235b1', 16)
+        '0ca63934549e85feac8e0f5604303fd1849fe88af4b7f7e1213283bbc7a2'
+        'c2a509f9273c428c68de3db93e6145f1b400bd6d4a262614e9043ad362d4'
+        'eba4a6b995399c8934a399912199e841d8e8dbff0489f69e663796730b29'
+        '80530b31cb70695a21625ea2adccc09d930516fa872211a91e22dd89fd9e'
+        'b7da8574b72235b1', 16)
     rsa2040_exp1 = long(
-      '0d7d3a75e17f65f8a658a485c4095c10a4f66979e2b73bca9cf8ef21253e'
-      '1facac6d4791f58392ce8656f88f1240cc90c29653e3100c6d7a38ed44b1'
-      '63b339e5f3b6e38912126c69b3ceff2e5192426d9649b6ffca1abb75d2ba'
-      '2ed6d9a26aa383c5973d56216ff2edb90ccf887742a0f183ac92c94cf187'
-      '657645c7772d9ad7', 16)
+        '0d7d3a75e17f65f8a658a485c4095c10a4f66979e2b73bca9cf8ef21253e'
+        '1facac6d4791f58392ce8656f88f1240cc90c29653e3100c6d7a38ed44b1'
+        '63b339e5f3b6e38912126c69b3ceff2e5192426d9649b6ffca1abb75d2ba'
+        '2ed6d9a26aa383c5973d56216ff2edb90ccf887742a0f183ac92c94cf187'
+        '657645c7772d9ad7', 16)
     rsa2040_exp2 = long(
-      '03f550194c117f24bea285b209058032f42985ff55acebe88b16df9a3752'
-      '7b4e61dc91a68dbc9a645134528ce5f248bda2893c96cb7be79ee73996c7'
-      'c22577f6c2f790406f3472adb3b211b7e94494f32c5c6fcc0978839fe472'
-      '4c31b06318a2489567b4fca0337acb1b841227aaa5f6c74800a2306929f0'
-      '2ce038bad943df41', 16)
+        '03f550194c117f24bea285b209058032f42985ff55acebe88b16df9a3752'
+        '7b4e61dc91a68dbc9a645134528ce5f248bda2893c96cb7be79ee73996c7'
+        'c22577f6c2f790406f3472adb3b211b7e94494f32c5c6fcc0978839fe472'
+        '4c31b06318a2489567b4fca0337acb1b841227aaa5f6c74800a2306929f0'
+        '2ce038bad943df41', 16)
     rsa2040_coef = long(
-      '080a7dbfa8c2584814c71664c56eb62ce4caf16afe88d4499159d674774a'
-      '3a3ecddf1256c02fc91525c527692422d0aba94e5c41ee12dc71bb66f867'
-      '9fa17e096f28080851ba046eb31885c1414e8985ade599d907af17453d1c'
-      'caea2c0d06443f8367a6be154b125e390ee0d90f746f08801dd3f5367f59'
-      'fba2e5a67c05f375', 16)
+        '080a7dbfa8c2584814c71664c56eb62ce4caf16afe88d4499159d674774a'
+        '3a3ecddf1256c02fc91525c527692422d0aba94e5c41ee12dc71bb66f867'
+        '9fa17e096f28080851ba046eb31885c1414e8985ade599d907af17453d1c'
+        'caea2c0d06443f8367a6be154b125e390ee0d90f746f08801dd3f5367f59'
+        'fba2e5a67c05f375', 16)
+
+    rsa1024_N = long(
+        '00d3a97440101eba8c5df9503e6f935eb52ffeb3ebe9d0dc5cace26f973c'
+        'a94cbc0d9c31d66c0c013bce9c82d0d480328df05fb6bcd7990a5312ddae'
+        '6152ad6ee61c8c1bdd8663c68bd36224a9882ae78e89f556dfdbe6f51da6'
+        '112cbfc27c8a49336b41afdb75321b52b24a7344d1348e646351a551c757'
+        '1ccda0b8fe35f61a75', 16)
+    rsa1024_E = 65537L
+    rsa1024_D = long(
+        '5b6708e185548fc07ff062dba3792363e106ff9177d60ee3227162391024'
+        '1813f958a318f26db8b6a801646863ebbc69190d6c2f5e7723433e99666d'
+        '76b3987892cd568f1f18451e8dc05477c0607ee348380ebb7f4c98d0c036'
+        'a0260bc67b2dab46cbaa4ce87636d839d8fddcbae2da3e02e8009a21225d'
+        'd7e47aff2f82699d', 16)
+    rsa1024_P = long(
+        '00fcdee570323e8fc399dbfc63d8c1569546fb3cd6886c628668ab1e1d0f'
+        'ca71058febdf76d702970ad6579d80ac2f9521075e40ef8f3f39983bd819'
+        '07e898bad3', 16)
+    rsa1024_Q = long(
+        '00d64801c955b4eb75fbae230faa8b28c9cc5e258be63747ff5ac8d2af25'
+        '3e9f6d6ce03ea2eb13ae0eb32572feb848c32ca00743635374338fedacd8'
+        'c5885f7897', 16)
+    rsa1024_exp1 = long(
+        '76c0526d5b1b28368a75d5d42a01b9a086e20b9310241e2cd2d0b166a278'
+        'c694ff1e9d25d9193d47789b52bb0fa194de1af0b77c09007f12afdfeef9'
+        '58d108c3', 16)
+    rsa1024_exp2 = long(
+        '008a41898d8b14217c4d782cbd15ef95d0a660f45ed09a4884f4e170367b'
+        '946d2f20398b907896890e88fe17b54bd7febe133ebc7720c86fe0649cca'
+        '7ca121e05f', 16)
+    rsa1024_coef = long(
+        '22db133445f7442ea2a0f582031ee214ff5f661972986f172651d8d6b4ec'
+        '3163e99bff1c82fe58ec3d075c6d8f26f277020edb77c3ba821b9ba3ae18'
+        'ff8cb2cb', 16)
+
+    rsa1016_N = long(
+        '00d29bb12fb84fddcd29b3a519cb66c43b8d8f8be545ba79384ce663ed03'
+        'df75991600eb920790d2530cece544db99a71f05896a3ed207165534aa99'
+        '057e47c47e3bc81ada6fa1e12e37268b5046a55268f9dad7ccb485d81a2e'
+        '19d50d4f0b6854acaf6d7be69d9a083136e15afa8f53c1c8c84fc6077279'
+        'dd0e55d7369a5bdd', 16)
+    rsa1016_E = 65537L
+    rsa1016_D = long(
+        '3c4965070bf390c251d5a2c5277c5b5fd0bdee85cad7fe2b27982bb28511'
+        '4a507004036ae1cf8ae54b25e4db39215abd7e903f618c2d8b2f08cc6cd1'
+        '2dbccd72205e4945b6b3df389e5e43de0a148bb2c84e2431fdbe5920b044'
+        'bb272f45ecff0721b7dfb60397fc613a9ea35c22300530cae8f9159c534d'
+        'f3bf0910951901', 16)
+    rsa1016_P = long(
+        '0f9f17597c85b8051b9c69afb55ef576c996dbd09047d0ccde5b9d60ea5c'
+        '67fe4fac67be803f4b6ac5a3f050f76b966fb14f5cf105761e5ade6dd960'
+        'b183ba55', 16)
+    rsa1016_Q = long(
+        '0d7b637112ce61a55168c0f9c9386fb279ab40cba0d549336bba65277263'
+        'aac782611a2c81d9b635cf78c40018859e018c5e9006d12e3d2ee6f346e7'
+        '9fa43369', 16)
+    rsa1016_exp1 = long(
+        '09fd6c9a3ea6e91ae32070f9fc1c210ff9352f97be5d1eeb951bb39681e9'
+        'dc5b672a532221b3d8900c9a9d99b9d0a4e102dc450ca1b87b0b1389de65'
+        '16c0ae0d', 16)
+    rsa1016_exp2 = long(
+        '0141b832491b7dd4a83308920024c79cae64bd447df883bb4c5672a96bab'
+        '48b7123b34f26324452cdceb17f21e570e347cbe2fd4c2d8f9910eac2cb6'
+        'd895b8c9', 16)
+    rsa1016_coef = long(
+        '0458dd6aee18c88b2f9b81f1bc3075ae20dc1f9973d20724f20b06043d61'
+        '47c8789d4a07ae88bc82c8438c893e017b13947f62e0b18958a31eb664b1'
+        '9e64d3e0', 16)
 
     def __init__(self, specification):
         if specification == 'default':
@@ -403,6 +487,24 @@ class RSAKey:
             self.RSA_exp1 = self.rsa2040_exp1
             self.RSA_exp2 = self.rsa2040_exp2
             self.RSA_coef = self.rsa2040_coef
+        elif specification == 'rsa1024':
+            self.RSA_N = self.rsa1024_N
+            self.RSA_E = self.rsa1024_E
+            self.RSA_D = self.rsa1024_D
+            self.RSA_P = self.rsa1024_P
+            self.RSA_Q = self.rsa1024_Q
+            self.RSA_exp1 = self.rsa1024_exp1
+            self.RSA_exp2 = self.rsa1024_exp2
+            self.RSA_coef = self.rsa1024_coef
+        elif specification == 'rsa1016':
+            self.RSA_N = self.rsa1016_N
+            self.RSA_E = self.rsa1016_E
+            self.RSA_D = self.rsa1016_D
+            self.RSA_P = self.rsa1016_P
+            self.RSA_Q = self.rsa1016_Q
+            self.RSA_exp1 = self.rsa1016_exp1
+            self.RSA_exp2 = self.rsa1016_exp2
+            self.RSA_coef = self.rsa1016_coef
         else:
             raise UnknownKeySpecificationError(specification)
 
@@ -461,14 +563,145 @@ class RSAKey:
         return byteStringToHexifiedBitString(signature)
 
 
+ecPublicKey = univ.ObjectIdentifier('1.2.840.10045.2.1')
+secp256k1 = univ.ObjectIdentifier('1.3.132.0.10')
+secp224r1 = univ.ObjectIdentifier('1.3.132.0.33')
+secp256r1 = univ.ObjectIdentifier('1.2.840.10045.3.1.7')
+secp384r1 = univ.ObjectIdentifier('1.3.132.0.34')
+secp521r1 = univ.ObjectIdentifier('1.3.132.0.35')
+
+# ecc.curves.DOMAINS uses a 5-tuple to define curves.
+# The first number is p where F_p is the finite field of the curve.
+# The second number is the order n of the base point G.
+# The third number is the parameter b of the definition of the curve
+#   E: y^2 = x^3 + ax + b (a in this case is 0)
+# The fourth and fifth numbers constitute the base point G.
+secp256k1Params = (long('fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f', 16),
+                   long('fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141', 16),
+                   7,
+                   long('79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798', 16),
+                   long('483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8', 16))
+
+def longToEvenLengthHexString(val):
+    h = format(val, 'x')
+    if not len(h) % 2 == 0:
+        h = '0' + h
+    return h
+
+def notRandom(n):
+    return n * '\x04'
+
+class ECCKey:
+    secp256k1Encoded = str('08fd87b04fba98090100004035ee7c7289d8fef7a8'
+        '6afe5da66d8bc2ebb6a8543fd2fead089f45ce7acd0fa64382a9500c41dad'
+        '770ffd4b511bf4b492eb1238800c32c4f76c73a3f3294e7c5002067cebc20'
+        '8a5fa3df16ec2bb34acc59a42ab4abb0538575ca99b92b6a2149a04f')
+
+    secp224r1Encoded = str('0ee5587c4d18526f00e00038668d72cca6fd6a1b35'
+        '57b5366104d84408ecb637f08e8c86bbff82cc00e88f0066d7af63c3298ba'
+        '377348a1202b03b37fd6b1ff415aa311e001c04389459926c3296c242b83e'
+        '10a6cd2011c8fe2dae1b772ea5b21067')
+
+    secp256r1Encoded = str('cb872ac99cd31827010000404fbfbbbb61e0f8f9b1'
+        'a60a59ac8704e2ec050b423e3cf72e923f2c4f794b455c2a69d233456c36c'
+        '4119d0706e00eedc8d19390d7991b7b2d07a304eaa04aa6c000202191403d'
+        '5710bf15a265818cd42ed6fedf09add92d78b18e7a1e9feb95524702')
+
+    secp384r1Encoded = str('d3103f5ac81741e801800060a1687243362b5c7b18'
+        '89f379154615a1c73fb48dee863e022915db608e252de4b7132da8ce98e83'
+        '1534e6a9c0c0b09c8d639ade83206e5ba813473a11fa330e05da8c96e4383'
+        'fe27873da97103be2888cff002f05af71a1fddcc8374aa6ea9ce0030035c7'
+        'a1b10d9fafe837b64ad92f22f5ced0789186538669b5c6d872cec3d926122'
+        'b393772b57602ff31365efe1393246')
+
+    secp521r1Encoded = str('77f4b0ac81948ddc02090084014cdc9cacc4794109'
+        '6bc9cc66752ec27f597734fa66c62b792f88c519d6d37f0d16ea1c483a182'
+        '7a010b9128e3a08070ca33ef5f57835b7c1ba251f6cc3521dc42b01065345'
+        '1981b445d343eed3782a35d6cff0ff484f5a883d209f1b9042b726703568b'
+        '2f326e18b833bdd8aa0734392bcd19501e10d698a79f53e11e0a22bdd2aad'
+        '900042014f3284fa698dd9fe1118dd331851cdfaac5a3829278eb8994839d'
+        'e9471c940b858c69d2d05e8c01788a7d0b6e235aa5e783fc1bee807dcc386'
+        '5f920e12cf8f2d29')
+
+    def __init__(self, specification = None):
+        if specification == 'secp256k1':
+            self.key = Key.Key.decode(binascii.unhexlify(self.secp256k1Encoded))
+            self.keyOID = secp256k1
+        elif specification == 'secp224r1':
+            self.key = Key.Key.decode(binascii.unhexlify(self.secp224r1Encoded))
+            self.keyOID = secp224r1
+        elif specification == 'secp256r1':
+            self.key = Key.Key.decode(binascii.unhexlify(self.secp256r1Encoded))
+            self.keyOID = secp256r1
+        elif specification == 'secp384r1':
+            self.key = Key.Key.decode(binascii.unhexlify(self.secp384r1Encoded))
+            self.keyOID = secp384r1
+        elif specification == 'secp521r1':
+            self.key = Key.Key.decode(binascii.unhexlify(self.secp521r1Encoded))
+            self.keyOID = secp521r1
+        else:
+            raise UnknownKeySpecificationError(specification)
+
+    def asSubjectPublicKeyInfo(self):
+        """Returns a subject public key info representing
+        this key for use by pyasn1."""
+        algorithmIdentifier = rfc2459.AlgorithmIdentifier()
+        algorithmIdentifier.setComponentByName('algorithm', ecPublicKey)
+        algorithmIdentifier.setComponentByName('parameters', self.keyOID)
+        spki = rfc2459.SubjectPublicKeyInfo()
+        spki.setComponentByName('algorithm', algorithmIdentifier)
+        # We need to extract the point that represents this key.
+        # The library encoding of the key is an 8-byte id, followed by 2
+        # bytes for the key length in bits, followed by the point on the
+        # curve (represented by two python longs). There appear to also
+        # be 2 bytes indicating the length of the point as encoded, but
+        # Decoder takes care of that.
+        encoded = self.key.encode()
+        _, _, points = encoding.Decoder(encoded).int(8).int(2).point(2).out()
+        # '04' indicates that the points are in uncompressed form.
+        hexifiedBitString = "'%s%s%s'H" % ('04', longToEvenLengthHexString(points[0]),
+                                           longToEvenLengthHexString(points[1]))
+        subjectPublicKey = univ.BitString(hexifiedBitString)
+        spki.setComponentByName('subjectPublicKey', subjectPublicKey)
+        return spki
+
+    def sign(self, data):
+        """Returns a hexified bit string representing a
+        signature by this key over the specified data.
+        Intended for use with pyasn1.type.univ.BitString"""
+        # There is some non-determinism in ECDSA signatures. Work around
+        # this by patching ecc.ecdsa.urandom to not be random.
+        with mock.patch('ecc.ecdsa.urandom', side_effect=notRandom):
+            # For some reason Key.sign returns an encoded point.
+            # Decode it so we can encode it as a BITSTRING consisting
+            # of a SEQUENCE of two INTEGERs.
+            # Also patch in secp256k1 if applicable.
+            if self.keyOID == secp256k1:
+                with mock.patch('ecc.curves.DOMAINS', {256: secp256k1Params}):
+                    x, y = encoding.dec_point(self.key.sign(data, 'sha256'))
+            else:
+                x, y = encoding.dec_point(self.key.sign(data, 'sha256'))
+            point = ECPoint()
+            point.setComponentByName('x', x)
+            point.setComponentByName('y', y)
+            return byteStringToHexifiedBitString(encoder.encode(point))
+
+
+def keyFromSpecification(specification):
+    """Pass in a specification, get the appropriate key back."""
+    if specification.startswith('secp'):
+        return ECCKey(specification)
+    else:
+        return RSAKey(specification)
+
 # The build harness will call this function with an output file-like
 # object and a path to a file containing a specification. This will
 # read the specification and output the key as ASCII-encoded PKCS #8.
 def main(output, inputPath):
     with open(inputPath) as configStream:
-        output.write(RSAKey(configStream.read().strip()).toPEM())
+        output.write(keyFromSpecification(configStream.read().strip()).toPEM())
 
 # When run as a standalone program, this will read a specification from
 # stdin and output the certificate as PEM to stdout.
 if __name__ == '__main__':
-    print RSAKey(sys.stdin.read()).toPEM()
+    print keyFromSpecification(sys.stdin.read()).toPEM()
