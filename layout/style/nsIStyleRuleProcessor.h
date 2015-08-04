@@ -115,9 +115,8 @@ public:
    * only, and may err on the side of reporting more dependencies than
    * really exist.
    */
-  virtual nsRestyleHint HasAttributeDependentStyle(
-      AttributeRuleProcessorData* aData,
-      mozilla::RestyleHintData& aRestyleHintDataResult) = 0;
+  virtual nsRestyleHint
+    HasAttributeDependentStyle(AttributeRuleProcessorData* aData) = 0;
 
   /**
    * Do any processing that needs to happen as a result of a change in
