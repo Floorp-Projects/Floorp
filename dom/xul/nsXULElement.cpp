@@ -2305,7 +2305,7 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
     NS_PRECONDITION(aNodeInfos, "missing nodeinfo array");
 
     // Read Node Info
-    uint32_t number;
+    uint32_t number = 0;
     nsresult rv = aStream->Read32(&number);
     mNodeInfo = aNodeInfos->ElementAt(number);
     if (!mNodeInfo)
