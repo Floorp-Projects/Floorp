@@ -4,6 +4,7 @@ const FRAME = "https://example.com/browser/toolkit/content/tests/browser/file_me
 function wait_for_event(browser, event) {
   return BrowserTestUtils.waitForEvent(browser, event, false, (event) => {
     is(event.originalTarget, browser, "Event must be dispatched to correct browser.");
+    ok(!event.cancelable, "The event should not be cancelable");
     return true;
   });
 }
