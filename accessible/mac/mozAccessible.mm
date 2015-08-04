@@ -1242,11 +1242,13 @@ struct RoleDescrComparator
 
 - (BOOL)focus
 {
-  AccessibleWrap* accWrap = [self getGeckoAccessible];
-  if (!accWrap)
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible])
+    accWrap->TakeFocus();
+  else if (ProxyAccessible* proxy = [self getProxyAccessible])
+    proxy->TakeFocus();
+  else
     return NO;
 
-  accWrap->TakeFocus();
   return YES;
 }
 
