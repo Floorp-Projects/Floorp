@@ -2320,7 +2320,7 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
 
     uint32_t i;
     if (mNumAttributes > 0) {
-        mAttributes = new nsXULPrototypeAttribute[mNumAttributes];
+        mAttributes = new (fallible) nsXULPrototypeAttribute[mNumAttributes];
         if (! mAttributes)
             return NS_ERROR_OUT_OF_MEMORY;
 
