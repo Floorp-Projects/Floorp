@@ -1629,7 +1629,7 @@ class JSScript : public js::gc::TenuredCell
 
   public:
     bool initScriptCounts(JSContext* cx);
-    js::PCCounts getPCCounts(jsbytecode* pc);
+    js::PCCounts& getPCCounts(jsbytecode* pc);
     void addIonCounts(js::jit::IonScriptCounts* ionCounts);
     js::jit::IonScriptCounts* getIonCounts();
     js::ScriptCounts releaseScriptCounts();

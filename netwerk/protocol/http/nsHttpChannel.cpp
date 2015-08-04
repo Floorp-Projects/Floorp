@@ -1397,13 +1397,21 @@ nsHttpChannel::ProcessResponse()
     nsresult rv;
     uint32_t httpStatus = mResponseHead->Status();
 
-    // Gather data on whether the transaction and page (if this is
-    // the initial page load) is being loaded with SSL.
-    Telemetry::Accumulate(Telemetry::HTTP_TRANSACTION_IS_SSL,
-                          mConnectionInfo->EndToEndSSL());
-    if (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI) {
-        Telemetry::Accumulate(Telemetry::HTTP_PAGELOAD_IS_SSL,
+    // do some telemetry
+    if (gHttpHandler->IsTelemetryEnabled()) {
+        // Gather data on whether the transaction and page (if this is
+        // the initial page load) is being loaded with SSL.
+        Telemetry::Accumulate(Telemetry::HTTP_TRANSACTION_IS_SSL,
                               mConnectionInfo->EndToEndSSL());
+        if (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI) {
+            Telemetry::Accumulate(Telemetry::HTTP_PAGELOAD_IS_SSL,
+                                  mConnectionInfo->EndToEndSSL());
+        }
+
+        // how often do we see something like Alternate-Protocol: "443:quic,p=1"
+        const char *alt_protocol = mResponseHead->PeekHeader(nsHttp::Alternate_Protocol);
+        bool saw_quic = (alt_protocol && PL_strstr(alt_protocol, "quic")) ? 1 : 0;
+        Telemetry::Accumulate(Telemetry::HTTP_SAW_QUIC_ALT_PROTOCOL, saw_quic);
     }
 
     LOG(("nsHttpChannel::ProcessResponse [this=%p httpStatus=%u]\n",
