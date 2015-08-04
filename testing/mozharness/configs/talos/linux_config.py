@@ -19,7 +19,6 @@ config = {
         'virtualenv': [PYTHON, '/tools/misc-python/virtualenv.py'],
     },
     "title": os.uname()[1].lower().split('.')[0],
-    "results_url": "http://graphs.mozilla.org/server/collect.cgi",
     "default_actions": [
         "clobber",
         "read-buildbot-config",

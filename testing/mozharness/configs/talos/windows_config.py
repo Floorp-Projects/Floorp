@@ -28,7 +28,6 @@ config = {
         'hg': 'c:/mozilla-build/hg/hg',
     },
     "title": socket.gethostname().split('.')[0],
-    "results_url": "http://graphs.mozilla.org/server/collect.cgi",
     "default_actions": [
         "clobber",
         "read-buildbot-config",
