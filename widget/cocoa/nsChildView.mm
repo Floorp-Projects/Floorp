@@ -5400,7 +5400,8 @@ static int32_t RoundUp(double aDouble)
   }
 
 #if !defined(RELEASE_BUILD) || defined(DEBUG)
-  if (mGeckoChild && mTextInputHandler && mTextInputHandler->IsFocused()) {
+  if (!Preferences::GetBool("intl.allow-insecure-text-input", false) &&
+      mGeckoChild && mTextInputHandler && mTextInputHandler->IsFocused()) {
 #ifdef MOZ_CRASHREPORTER
     NSWindow* window = [self window];
     NSString* info = [NSString stringWithFormat:@"\nview [%@], window [%@], window is key %i, is fullscreen %i, app is active %i",
