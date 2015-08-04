@@ -65,6 +65,7 @@
 #include "fsg_search_internal.h"
 #include "fsg_history.h"
 #include "fsg_lextree.h"
+#include "dict.h"
 
 /* Turn this on for detailed debugging dump */
 #define __FSG_DBG__		0
@@ -139,9 +140,21 @@ fsg_search_check_dict(fsg_search_t *fsgs, fsg_model_t *fsg)
         word = fsg_model_word_str(fsg, i);
         wid = dict_wordid(dict, word);
         if (wid == BAD_S3WID) {
-    	    E_ERROR("The word '%s' is missing in the dictionary\n", word);
-    	    return FALSE;
-    	}
+            E_WARN("The word '%s' is missing in the dictionary. Trying to create new phoneme \n", word);
+            if (!dict->ngram_g2p_model) {
+                E_ERROR("NO dict->ngram_g2p_model. Aborting..");
+                return FALSE;
+            }
+
+            int new_wid = dict_add_g2p_word(dict, word);
+            if (new_wid > 0){
+                /* Now we also have to add it to dict2pid. */
+                dict2pid_add_word(ps_search_dict2pid(fsgs), new_wid);
+            } else {
+                E_ERROR("Exiting... \n");
+                return FALSE;
+            }
+        }
     }
 
     return TRUE;
