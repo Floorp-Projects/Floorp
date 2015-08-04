@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -532,7 +532,7 @@ static bool IsNonList(mozilla::dom::NodeInfo* aNodeInfo)
 bool
 nsXULElement::IsFocusableInternal(int32_t *aTabIndex, bool aWithMouse)
 {
-  /* 
+  /*
    * Returns true if an element may be focused, and false otherwise. The inout
    * argument aTabIndex will be set to the tab order index to be used; -1 for
    * elements that should not be part of the tab order and a greater value to
@@ -568,7 +568,7 @@ nsXULElement::IsFocusableInternal(int32_t *aTabIndex, bool aWithMouse)
   // or if it's a remote target, since the remote target must handle
   // the focus.
   if (aWithMouse &&
-      IsNonList(mNodeInfo) && 
+      IsNonList(mNodeInfo) &&
       !EventStateManager::IsRemoteTarget(this))
   {
     return false;
@@ -987,7 +987,7 @@ nsXULElement::RemoveChildAt(uint32_t aIndex, bool aNotify)
     }
 
     nsStyledElement::RemoveChildAt(aIndex, aNotify);
-    
+
     if (newCurrentIndex == -2)
         controlElement->SetCurrentItem(nullptr);
     else if (newCurrentIndex > -1) {
@@ -1054,7 +1054,7 @@ nsXULElement::BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
         if (GetAttr(aNamespaceID, aName, oldValue)) {
             UnregisterAccessKey(oldValue);
         }
-    } 
+    }
     else if (aNamespaceID == kNameSpaceID_None && (aName ==
              nsGkAtoms::command || aName == nsGkAtoms::observes) && IsInDoc()) {
 //         XXX sXBL/XBL2 issue! Owner or current document?
@@ -1101,7 +1101,7 @@ nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                     SetEventHandler(aName, body, true);
                 }
             }
-    
+
             nsIDocument* document = GetUncomposedDoc();
 
             // Hide chrome if needed
@@ -1167,7 +1167,7 @@ nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                     UpdateBrightTitlebarForeground(document);
                 }
             }
-    
+
             if (aName == nsGkAtoms::src && document) {
                 LoadSrc();
             }
@@ -1180,7 +1180,7 @@ nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                     ResetChromeMargins();
                 }
             }
-    
+
             nsIDocument* doc = GetUncomposedDoc();
             if (doc && doc->GetRootElement() == this) {
                 if ((aName == nsGkAtoms::activetitlebarcolor ||
@@ -1771,7 +1771,7 @@ nsXULElement::ClickWithInputSource(uint16_t aInputSource)
                                      nullptr, WidgetMouseEvent::eReal);
             WidgetMouseEvent eventClick(isCallerChrome, NS_MOUSE_CLICK, nullptr,
                                         WidgetMouseEvent::eReal);
-            eventDown.inputSource = eventUp.inputSource = eventClick.inputSource 
+            eventDown.inputSource = eventUp.inputSource = eventClick.inputSource
                                   = aInputSource;
 
             // send mouse down
@@ -1878,7 +1878,7 @@ nsXULElement::MakeHeavyweight(nsXULPrototypeElement* aPrototype)
     for (i = 0; i < aPrototype->mNumAttributes; ++i) {
         nsXULPrototypeAttribute* protoattr = &aPrototype->mAttributes[i];
         nsAttrValue attrValue;
-        
+
         // Style rules need to be cloned.
         if (protoattr->mValue.Type() == nsAttrValue::eCSSStyleRule) {
             nsRefPtr<css::Rule> ruleClone =
@@ -2149,7 +2149,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXULPrototypeNode)
             if (!name.IsAtom()) {
                 NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
                     "mAttributes[i].mName.NodeInfo()");
-                cb.NoteNativeChild(name.NodeInfo(), 
+                cb.NoteNativeChild(name.NodeInfo(),
                                    NS_CYCLE_COLLECTION_PARTICIPANT(NodeInfo));
             }
         }
@@ -2632,7 +2632,7 @@ nsXULPrototypeScript::SerializeOutOfLine(nsIObjectOutputStream* aStream,
     nsCOMPtr<nsIObjectOutputStream> oos;
     rv = cache->GetOutputStream(mSrcURI, getter_AddRefs(oos));
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     nsresult tmp = Serialize(oos, aProtoDoc, nullptr);
     if (NS_FAILED(tmp)) {
       rv = tmp;
@@ -2684,13 +2684,13 @@ nsXULPrototypeScript::DeserializeOutOfLine(nsIObjectInputStream* aInput,
     // AbortCaching if things look bad.
     nsresult rv = NS_OK;
     nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
-  
+
     nsCOMPtr<nsIObjectInputStream> objectInput = aInput;
     if (cache) {
         bool useXULCache = true;
         if (mSrcURI) {
             // NB: we must check the XUL script cache early, to avoid
-            // multiple deserialization attempts for a given script.            
+            // multiple deserialization attempts for a given script.
             // Note that XULDocument::LoadScript
             // checks the XUL script cache too, in order to handle the
             // serialization case.
@@ -2711,10 +2711,10 @@ nsXULPrototypeScript::DeserializeOutOfLine(nsIObjectInputStream* aInput,
         if (!mScriptObject) {
             if (mSrcURI) {
                 rv = cache->GetInputStream(mSrcURI, getter_AddRefs(objectInput));
-            } 
-            // If !mSrcURI, we have an inline script. We shouldn't have 
+            }
+            // If !mSrcURI, we have an inline script. We shouldn't have
             // to do anything else in that case, I think.
- 
+
             // We do reflect errors into rv, but our caller may want to
             // ignore our return value, because mScriptObject will be null
             // after any error, and that suffices to cause the script to
