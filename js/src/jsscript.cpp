@@ -1324,7 +1324,7 @@ static inline ScriptCountsMap::Ptr GetScriptCountsMapEntry(JSScript* script)
     return p;
 }
 
-js::PCCounts
+js::PCCounts&
 JSScript::getPCCounts(jsbytecode* pc) {
     MOZ_ASSERT(containsPC(pc));
     ScriptCountsMap::Ptr p = GetScriptCountsMapEntry(this);

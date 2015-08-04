@@ -3728,12 +3728,14 @@ bool HTMLMediaElement::CanActivateAutoplay()
 {
   // For stream inputs, we activate autoplay on HAVE_NOTHING because
   // this element itself might be blocking the stream from making progress by
-  // being paused.
+  // being paused. We also activate autopaly when playing a media source since
+  // the data download is controlled by the script and there is no way to
+  // evaluate MediaDecoder::CanPlayThrough().
   return !mPausedForInactiveDocumentOrChannel &&
          mAutoplaying &&
          mPaused &&
          ((mDecoder && mReadyState >= nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA) ||
-          mSrcStream) &&
+          mSrcStream || mMediaSource) &&
          HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay) &&
          mAutoplayEnabled &&
          !IsEditable();

@@ -68,7 +68,6 @@ WMFAudioMFTManager::WMFAudioMFTManager(
   const AudioInfo& aConfig)
   : mAudioChannels(aConfig.mChannels)
   , mAudioRate(aConfig.mRate)
-  , mAudioFrameOffset(0)
   , mAudioFrameSum(0)
   , mMustRecaptureAudioPosition(true)
 {
@@ -267,8 +266,7 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset,
     LONGLONG timestampHns = 0;
     hr = sample->GetSampleTime(&timestampHns);
     NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-    hr = HNsToFrames(timestampHns, mAudioRate, &mAudioFrameOffset);
-    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+    mAudioTimeOffset = media::TimeUnit::FromMicroseconds(timestampHns / 10);
     mMustRecaptureAudioPosition = false;
   }
   // We can assume PCM 16 output.
@@ -292,7 +290,7 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset,
   buffer->Unlock();
 
   media::TimeUnit timestamp =
-    FramesToTimeUnit(mAudioFrameOffset + mAudioFrameSum, mAudioRate);
+    mAudioTimeOffset + FramesToTimeUnit(mAudioFrameSum, mAudioRate);
   NS_ENSURE_TRUE(timestamp.IsValid(), E_FAIL);
 
   mAudioFrameSum += numFrames;

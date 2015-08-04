@@ -12,7 +12,6 @@ import tempfile
 import xml.dom.minidom
 import zipfile
 
-import mozdevice
 import mozfile
 import mozlog
 
@@ -188,6 +187,13 @@ class RemoteB2GVersion(B2GVersion):
                  device_serial=None, adb_host=None, adb_port=None,
                  **kwargs):
         B2GVersion.__init__(self, sources, **kwargs)
+
+        try:
+            import mozdevice
+        except ImportError:
+            self._logger.critical("mozdevice is required to get the version"
+                                  " of a remote device")
+            raise
 
         if dm_type == 'adb':
             dm = mozdevice.DeviceManagerADB(deviceSerial=device_serial,
