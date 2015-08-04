@@ -18,6 +18,7 @@
 #define ANDROID_VECTOR_H
 
 #include <new>
+#include <assert.h>
 #include <stdint.h>
 #include <sys/types.h>
 
@@ -191,7 +192,7 @@ public:
      inline iterator end()   { return editArray() + size(); }
      inline const_iterator begin() const { return array(); }
      inline const_iterator end() const   { return array() + size(); }
-     inline void reserve(size_t n) { setCapacity(n); }
+     inline void reserve(size_t n) { assert(setCapacity(n) >= 0); }
      inline bool empty() const{ return isEmpty(); }
      inline void push_back(const TYPE& item)  { insertAt(item, size(), 1); }
      inline void push_front(const TYPE& item) { insertAt(item, 0, 1); }
