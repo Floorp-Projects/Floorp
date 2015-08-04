@@ -18,6 +18,7 @@ namespace mozilla {
 
 namespace dom {
 class SourceBuffer;
+class SourceBufferAttributes;
 }
 
 class SourceBufferContentManager {
@@ -28,7 +29,8 @@ public:
   typedef AppendPromise RangeRemovalPromise;
 
   static already_AddRefed<SourceBufferContentManager>
-  CreateManager(dom::SourceBuffer* aParent, MediaSourceDecoder* aParentDecoder,
+  CreateManager(dom::SourceBufferAttributes* aAttributes,
+                MediaSourceDecoder* aParentDecoder,
                 const nsACString& aType);
 
   // Add data to the end of the input buffer.

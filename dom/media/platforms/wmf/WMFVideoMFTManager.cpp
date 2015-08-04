@@ -30,6 +30,8 @@ using mozilla::layers::IMFYCbCrImage;
 using mozilla::layers::LayerManager;
 using mozilla::layers::LayersBackend;
 
+#if MOZ_WINSDK_MAXVER < 0x0A000000
+// Windows 10+ SDK has VP80 and VP90 defines
 const GUID MFVideoFormat_VP80 =
 {
   0x30385056,
@@ -45,6 +47,7 @@ const GUID MFVideoFormat_VP90 =
   0x0010,
   {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}
 };
+#endif
 
 const CLSID CLSID_WebmMfVp8Dec =
 {

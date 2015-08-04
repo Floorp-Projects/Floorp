@@ -50,22 +50,7 @@ static const int SCHEDULE_SAFETY_MARGIN_MS = 10;
 static const int AUDIO_TARGET_MS = 2*MEDIA_GRAPH_TARGET_PERIOD_MS +
     SCHEDULE_SAFETY_MARGIN_MS;
 
-/**
- * Try have this much video buffered. Video frames are set
- * near the end of the iteration of the control loop. The maximum delay
- * to the setting of the next video frame is 2*MEDIA_GRAPH_TARGET_PERIOD_MS +
- * SCHEDULE_SAFETY_MARGIN_MS. This is not optimal yet.
- */
-static const int VIDEO_TARGET_MS = 2*MEDIA_GRAPH_TARGET_PERIOD_MS +
-    SCHEDULE_SAFETY_MARGIN_MS;
-
 class MediaStreamGraphImpl;
-
-/**
- * Microseconds relative to the start of the graph timeline.
- */
-typedef int64_t GraphTime;
-const GraphTime GRAPH_TIME_MAX = MEDIA_TIME_MAX;
 
 class AudioCallbackDriver;
 class OfflineClockDriver;
@@ -84,13 +69,6 @@ public:
   explicit GraphDriver(MediaStreamGraphImpl* aGraphImpl);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GraphDriver);
-  /* When the graph wakes up to do an iteration, this returns the range of time
-   * that will be processed. */
-  virtual void GetIntervalForIteration(GraphTime& aFrom,
-                                       GraphTime& aTo) = 0;
-  /* Returns the current time for this graph. This is the end of the current
-   * iteration. */
-  virtual GraphTime GetCurrentTime() = 0;
   /* For real-time graphs, this waits until it's time to process more data. For
    * offline graphs, this is a no-op. */
   virtual void WaitForNextIteration() = 0;
@@ -277,6 +255,11 @@ public:
 
   virtual bool OnThread() override { return !mThread || NS_GetCurrentThread() == mThread; }
 
+  /* When the graph wakes up to do an iteration, implementations return the
+   * range of time that will be processed.  This is called only once per
+   * iteration; it may determine the interval from state in a previous
+   * call. */
+  virtual MediaTime GetIntervalForIteration() = 0;
 protected:
   nsCOMPtr<nsIThread> mThread;
 };
@@ -290,9 +273,7 @@ class SystemClockDriver : public ThreadedDriver
 public:
   explicit SystemClockDriver(MediaStreamGraphImpl* aGraphImpl);
   virtual ~SystemClockDriver();
-  virtual void GetIntervalForIteration(GraphTime& aFrom,
-                                       GraphTime& aTo) override;
-  virtual GraphTime GetCurrentTime() override;
+  virtual MediaTime GetIntervalForIteration() override;
   virtual void WaitForNextIteration() override;
   virtual void WakeUp() override;
 
@@ -311,9 +292,7 @@ class OfflineClockDriver : public ThreadedDriver
 public:
   OfflineClockDriver(MediaStreamGraphImpl* aGraphImpl, GraphTime aSlice);
   virtual ~OfflineClockDriver();
-  virtual void GetIntervalForIteration(GraphTime& aFrom,
-                                       GraphTime& aTo) override;
-  virtual GraphTime GetCurrentTime() override;
+  virtual MediaTime GetIntervalForIteration() override;
   virtual void WaitForNextIteration() override;
   virtual void WakeUp() override;
   virtual TimeStamp GetCurrentTimeStamp() override;
@@ -374,9 +353,6 @@ public:
   virtual void Stop() override;
   virtual void Resume() override;
   virtual void Revive() override;
-  virtual void GetIntervalForIteration(GraphTime& aFrom,
-                                       GraphTime& aTo) override;
-  virtual GraphTime GetCurrentTime() override;
   virtual void WaitForNextIteration() override;
   virtual void WakeUp() override;
 
