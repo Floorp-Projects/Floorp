@@ -46,6 +46,13 @@ public class AboutPages {
         return HOME.equals(url.split("\\?")[0]);
     }
 
+    public static final boolean isPrivateHome(final String url) {
+        if (url == null || !url.startsWith(PRIVATEBROWSING)) {
+            return false;
+        }
+        return true;
+    }
+
     public static final String getPanelIdFromAboutHomeUrl(String aboutHomeUrl) {
         return StringUtils.getQueryParameter(aboutHomeUrl, PANEL_PARAM);
     }
