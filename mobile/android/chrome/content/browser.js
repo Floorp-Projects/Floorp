@@ -7087,11 +7087,11 @@ var IdentityHandler = {
   // No mixed content information. No mixed content icon is shown.
   MIXED_MODE_UNKNOWN: "unknown",
 
-  // Blocked active mixed content.
-  MIXED_MODE_CONTENT_BLOCKED: "blocked",
+  // Blocked active mixed content. Shield icon is shown, with a popup option to load content.
+  MIXED_MODE_CONTENT_BLOCKED: "mixed_content_blocked",
 
-  // Loaded active mixed content.
-  MIXED_MODE_CONTENT_LOADED: "loaded",
+  // Loaded active mixed content. Yellow triangle icon is shown.
+  MIXED_MODE_CONTENT_LOADED: "mixed_content_loaded",
 
   // The following tracking content modes are only used if tracking protection
   // is enabled. Our Java frontend coalesces them into one indicator.
@@ -7157,27 +7157,15 @@ var IdentityHandler = {
     return this.IDENTITY_MODE_UNKNOWN;
   },
 
-  getMixedDisplayMode: function getMixedDisplayMode(aState) {
-    if ((aState & Ci.nsIWebProgressListener.STATE_LOADED_MIXED_DISPLAY_CONTENT)) {
-        return this.MIXED_MODE_CONTENT_LOADED;
+  getMixedMode: function getMixedMode(aState) {
+    if (aState & Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT) {
+      return this.MIXED_MODE_CONTENT_BLOCKED;
     }
 
-    if (aState & Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_DISPLAY_CONTENT) {
-        return this.MIXED_MODE_CONTENT_BLOCKED;
-    }
-
-    return this.MIXED_MODE_UNKNOWN;
-  },
-
-  getMixedActiveMode: function getActiveDisplayMode(aState) {
     // Only show an indicator for loaded mixed content if the pref to block it is enabled
     if ((aState & Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT) &&
          !Services.prefs.getBoolPref("security.mixed_content.block_active_content")) {
       return this.MIXED_MODE_CONTENT_LOADED;
-    }
-
-    if (aState & Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT) {
-      return this.MIXED_MODE_CONTENT_BLOCKED;
     }
 
     return this.MIXED_MODE_UNKNOWN;
@@ -7230,17 +7218,13 @@ var IdentityHandler = {
     this._lastLocation = locationObj;
 
     let identityMode = this.getIdentityMode(aState);
-    let mixedDisplay = this.getMixedDisplayMode(aState);
-    let mixedActive = this.getMixedActiveMode(aState);
-//    let mixedMode = this.getMixedMode(aState);
+    let mixedMode = this.getMixedMode(aState);
     let trackingMode = this.getTrackingMode(aState, aBrowser);
     let result = {
       origin: locationObj.origin,
       mode: {
         identity: identityMode,
-        mixed_display: mixedDisplay,
-        mixed_active: mixedActive,
-//        mixed: mixedMode,
+        mixed: mixedMode,
         tracking: trackingMode
       }
     };
