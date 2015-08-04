@@ -763,6 +763,9 @@ function BuildConditionSandbox(aURL) {
         dump("REFTEST INFO | " + JSON.stringify(CU.waiveXrays(sandbox)) + " \n");
         gDumpedConditionSandbox = true;
     }
+
+    // Graphics features
+    sandbox.usesRepeatResampling = sandbox.d2d;
     return sandbox;
 }
 
