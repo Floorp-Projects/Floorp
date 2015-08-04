@@ -446,7 +446,11 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
   // We can alias `subarray` to `slice` when the latter is not available, because
   // they're semantically identical.
   if (!Uint8Array.prototype.slice) {
+    /* eslint-disable */
+    // Eslint disabled for no-extend-native; Specific override needed for Firefox 37
+    // and earlier, also for other browsers.
     Uint8Array.prototype.slice = Uint8Array.prototype.subarray;
+    /* eslint-enable */
   }
 
   /**
