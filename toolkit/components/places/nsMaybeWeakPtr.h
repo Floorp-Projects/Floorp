@@ -39,26 +39,54 @@ private:
 // grab a weak reference to a given object if requested.  It only allows a
 // given object to appear in the array once.
 
-typedef nsTArray< nsMaybeWeakPtr<nsISupports> > isupports_array_type;
-nsresult NS_AppendWeakElementBase(isupports_array_type *aArray,
-                                  nsISupports *aElement, bool aWeak);
-nsresult NS_RemoveWeakElementBase(isupports_array_type *aArray,
-                                  nsISupports *aElement);
-
 template<class T>
 class nsMaybeWeakPtrArray : public nsTArray< nsMaybeWeakPtr<T> >
 {
+  typedef nsTArray<nsMaybeWeakPtr<T>> MaybeWeakArray;
+
 public:
   nsresult AppendWeakElement(T *aElement, bool aOwnsWeak)
   {
-    return NS_AppendWeakElementBase(
-      reinterpret_cast<isupports_array_type*>(this), aElement, aOwnsWeak);
+    nsCOMPtr<nsISupports> ref;
+    if (aOwnsWeak) {
+      ref = do_GetWeakReference(aElement);
+    } else {
+      ref = aElement;
+    }
+
+    if (MaybeWeakArray::IndexOf(ref.get()) != MaybeWeakArray::NoIndex) {
+      return NS_ERROR_INVALID_ARG; // already present
+    }
+    if (!MaybeWeakArray::AppendElement(ref)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    return NS_OK;
   }
 
   nsresult RemoveWeakElement(T *aElement)
   {
-    return NS_RemoveWeakElementBase(
-      reinterpret_cast<isupports_array_type*>(this), aElement);
+    size_t index = MaybeWeakArray::IndexOf(aElement);
+    if (index != MaybeWeakArray::NoIndex) {
+      MaybeWeakArray::RemoveElementAt(index);
+      return NS_OK;
+    }
+
+    // Don't use do_GetWeakReference; it should only be called if we know
+    // the object supports weak references.
+    nsCOMPtr<nsISupportsWeakReference> supWeakRef = do_QueryInterface(aElement);
+    NS_ENSURE_TRUE(supWeakRef, NS_ERROR_INVALID_ARG);
+
+    nsCOMPtr<nsIWeakReference> weakRef;
+    nsresult rv = supWeakRef->GetWeakReference(getter_AddRefs(weakRef));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    index = MaybeWeakArray::IndexOf(weakRef);
+    if (index == MaybeWeakArray::NoIndex) {
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    MaybeWeakArray::RemoveElementAt(index);
+    return NS_OK;
   }
 };
 
