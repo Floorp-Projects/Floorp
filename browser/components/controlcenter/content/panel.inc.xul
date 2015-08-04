@@ -10,7 +10,8 @@
        orient="vertical">
 
   <broadcasterset>
-    <broadcaster id="identity-popup-content-host" value=""/>
+    <broadcaster id="identity-popup-content-host" class="identity-popup-headline" crop="end"/>
+    <broadcaster id="identity-popup-mcb-learn-more" class="text-link plain" value="&identity.learnMore;"/>
   </broadcasterset>
 
   <panelmultiview id="identity-popup-multiView"
@@ -18,39 +19,50 @@
     <panelview id="identity-popup-mainView" flex="1">
 
       <!-- Security Section -->
-      <hbox class="identity-popup-section">
+      <hbox id="identity-popup-security" class="identity-popup-section">
         <vbox id="identity-popup-security-content" flex="1">
-          <label class="identity-popup-headline" crop="end">
-            <observes element="identity-popup-content-host" attribute="value"/>
-          </label>
-          <label class="identity-popup-connection-secure identity-popup-text"
-                 value="&identity.connectionSecure;"/>
-          <label class="identity-popup-connection-not-secure identity-popup-text"
-                 value="&identity.connectionNotSecure;"/>
-          <label class="identity-popup-connection-file-uri identity-popup-text"
-                 value="&identity.connectionFile;"/>
-          <label class="identity-popup-connection-internal identity-popup-text"
-                 value="&identity.connectionInternal;"/>
+          <label observes="identity-popup-content-host"/>
+          <description class="identity-popup-connection-not-secure"
+                       value="&identity.connectionNotSecure;"
+                       when-connection="not-secure"/>
+          <description class="identity-popup-connection-secure"
+                       value="&identity.connectionSecure;"
+                       when-connection="secure secure-ev"/>
+          <description value="&identity.connectionInternal;"
+                       when-connection="chrome"/>
+          <description value="&identity.connectionFile;"
+                       when-connection="file"/>
+
+          <vbox id="identity-popup-security-descriptions">
+            <description class="identity-popup-warning-gray"
+                         when-mixedcontent="active-blocked">&identity.activeBlocked;</description>
+            <description class="identity-popup-warning-yellow"
+                         when-mixedcontent="passive-loaded">&identity.passiveLoaded;</description>
+            <description when-mixedcontent="active-loaded">&identity.activeLoaded;</description>
+            <description class="identity-popup-warning-yellow"
+                         when-ciphers="weak">&identity.weakEncryption;</description>
+          </vbox>
         </vbox>
-        <button class="identity-popup-expander"
+        <button id="identity-popup-security-expander"
+                class="identity-popup-expander"
+                when-connection="not-secure secure secure-ev"
                 oncommand="gIdentityHandler.toggleSubView('security', this)"/>
       </hbox>
 
       <!-- Tracking Protection Section -->
-      <hbox id="tracking-protection-container" class="identity-popup-section">
+      <hbox id="tracking-protection-container"
+            class="identity-popup-section"
+            when-connection="not-secure secure secure-ev file">
         <vbox id="tracking-protection-content" flex="1">
-          <description class="identity-popup-text identity-popup-headline"
+          <description class="identity-popup-headline"
                        crop="end"
                        value="&trackingProtection.title;" />
 
           <label id="tracking-blocked"
-                 class="identity-popup-text"
                  crop="end">&trackingProtection.detectedBlocked2;</label>
           <label id="tracking-loaded"
-                 class="identity-popup-text"
                  crop="end">&trackingProtection.detectedNotBlocked2;</label>
           <label id="tracking-not-detected"
-                 class="identity-popup-text"
                  crop="end">&trackingProtection.notDetected2;</label>
 
           <button id="tracking-action-unblock"
@@ -71,7 +83,7 @@
       <!-- Permissions Section -->
       <hbox id="identity-popup-permissions" class="identity-popup-section">
         <vbox id="identity-popup-permissions-content" flex="1">
-          <label class="identity-popup-text identity-popup-headline"
+          <label class="identity-popup-headline"
                  value="&identity.permissions;"/>
           <vbox id="identity-popup-permission-list"/>
         </vbox>
@@ -90,29 +102,63 @@
     <!-- Security SubView -->
     <panelview id="identity-popup-securityView" flex="1">
       <vbox id="identity-popup-securityView-header">
-        <label class="identity-popup-headline" crop="end">
-          <observes element="identity-popup-content-host" attribute="value"/>
-        </label>
-        <label class="identity-popup-connection-secure identity-popup-text"
-               value="&identity.connectionSecure;"/>
-        <label class="identity-popup-connection-not-secure identity-popup-text"
-               value="&identity.connectionNotSecure;"/>
-        <label class="identity-popup-connection-file-uri identity-popup-text"
-               value="&identity.connectionFile;"/>
-        <label class="identity-popup-connection-internal identity-popup-text"
-               value="&identity.connectionInternal;"/>
+        <label observes="identity-popup-content-host"/>
+        <description class="identity-popup-connection-not-secure"
+                     value="&identity.connectionNotSecure;"
+                     when-connection="not-secure"/>
+        <description class="identity-popup-connection-secure"
+                     value="&identity.connectionSecure;"
+                     when-connection="secure secure-ev"/>
       </vbox>
 
-      <description id="identity-popup-content-verifier"
-                   class="identity-popup-text"/>
+      <vbox id="identity-popup-securityView-body">
+        <!-- (EV) Certificate Information -->
+        <description id="identity-popup-content-verified-by"
+                     when-connection="secure-ev">&identity.connectionVerified;</description>
+        <description id="identity-popup-content-owner"
+                     when-connection="secure-ev"
+                     class="header"/>
+        <description id="identity-popup-content-supplemental"
+                     when-connection="secure-ev"/>
+        <description id="identity-popup-content-verifier"
+                     when-connection="secure secure-ev"/>
 
-      <description id="identity-popup-securityView-connection"
-                   class="identity-popup-text">&identity.connectionVerified;</description>
+        <!-- Connection is Not Secure -->
+        <description when-connection="not-secure">&identity.description.insecure;</description>
 
-      <description id="identity-popup-content-owner"
-                   class="identity-popup-text"/>
-      <description id="identity-popup-content-supplemental"
-                   class="identity-popup-text"/>
+        <!-- Weak Cipher -->
+        <description when-ciphers="weak">&identity.description.weakCipher;</description>
+        <description class="identity-popup-warning-yellow"
+                     when-ciphers="weak">&identity.description.weakCipher2;</description>
+
+        <!-- Active Mixed Content Blocked -->
+        <description class="identity-popup-warning-gray"
+                     when-mixedcontent="active-blocked">&identity.description.activeBlocked; <label observes="identity-popup-mcb-learn-more"/></description>
+
+        <!-- Passive Mixed Content Loaded -->
+        <description when-mixedcontent="passive-loaded">&identity.description.passiveLoaded;</description>
+        <description class="identity-popup-warning-yellow"
+                     when-mixedcontent="passive-loaded">&identity.description.passiveLoaded2; <label observes="identity-popup-mcb-learn-more"/></description>
+
+        <!-- Passive Mixed Content Loaded, Active Mixed Content Blocked -->
+        <description when-mixedcontent="passive-loaded active-blocked">&identity.description.passiveLoaded;</description>
+        <description when-mixedcontent="passive-loaded active-blocked"
+                     class="identity-popup-warning-yellow">&identity.description.passiveLoaded3; <label observes="identity-popup-mcb-learn-more"/></description>
+
+        <!-- Active Mixed Content Blocking Disabled -->
+        <description when-mixedcontent="active-loaded">&identity.description.activeLoaded;</description>
+        <description when-mixedcontent="active-loaded">&identity.description.activeLoaded2;</description>
+
+        <!-- Buttons to enable/disable mixed content blocking. -->
+        <button when-mixedcontent="active-blocked"
+                label="&identity.disableMixedContentBlocking.label;"
+                accesskey="&identity.disableMixedContentBlocking.accesskey;"
+                oncommand="gIdentityHandler.disableMixedContentProtection()"/>
+        <button when-mixedcontent="active-loaded"
+                label="&identity.enableMixedContentBlocking.label;"
+                accesskey="&identity.enableMixedContentBlocking.accesskey;"
+                oncommand="gIdentityHandler.enableMixedContentProtection()"/>
+      </vbox>
     </panelview>
   </panelmultiview>
 </panel>
