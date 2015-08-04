@@ -11,7 +11,6 @@ import zipfile
 from xml.dom import minidom
 
 import mozfile
-from manifestparser import ManifestParser
 from mozlog.unstructured import getLogger
 
 # Needed for the AMO's rest API - https://developer.mozilla.org/en/addons.mozilla.org_%28AMO%29_API_Developers%27_Guide/The_generic_AMO_API
@@ -185,6 +184,14 @@ class AddonManager(object):
         Installs addons from a manifest
         :param filepath: path to the manifest of addons to install
         """
+        try:
+            from manifestparser import ManifestParser
+        except ImportError:
+            module_logger.critical(
+                "Installing addons from manifest requires the"
+                " manifestparser package to be installed.")
+            raise
+
         manifest = ManifestParser()
         manifest.read(filepath)
         addons = manifest.get()
