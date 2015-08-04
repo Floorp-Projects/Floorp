@@ -436,7 +436,7 @@ js::CompletePropertyDescriptor(MutableHandle<PropertyDescriptor> desc)
 
 bool
 js::ReadPropertyDescriptors(JSContext* cx, HandleObject props, bool checkAccessors,
-                            AutoIdVector* ids, AutoPropertyDescriptorVector* descs)
+                            AutoIdVector* ids, MutableHandle<PropertyDescriptorVector> descs)
 {
     if (!GetPropertyKeys(cx, props, JSITER_OWNONLY | JSITER_SYMBOLS, ids))
         return false;
@@ -448,7 +448,7 @@ js::ReadPropertyDescriptors(JSContext* cx, HandleObject props, bool checkAccesso
         RootedValue v(cx);
         if (!GetProperty(cx, props, props, id, &v) ||
             !ToPropertyDescriptor(cx, v, checkAccessors, &desc) ||
-            !descs->append(desc))
+            !descs.append(desc))
         {
             return false;
         }
@@ -460,7 +460,7 @@ bool
 js::DefineProperties(JSContext* cx, HandleObject obj, HandleObject props)
 {
     AutoIdVector ids(cx);
-    AutoPropertyDescriptorVector descs(cx);
+    Rooted<PropertyDescriptorVector> descs(cx, PropertyDescriptorVector(cx));
     if (!ReadPropertyDescriptors(cx, props, true, &ids, &descs))
         return false;
 

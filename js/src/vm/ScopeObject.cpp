@@ -796,7 +796,7 @@ js::XDRStaticBlockObject(XDRState<mode>* xdr, HandleObject enclosingScope,
             return false;
 
         for (Shape::Range<NoGC> r(obj->lastProperty()); !r.empty(); r.popFront())
-            shapes[obj->shapeToIndex(r.front())] = &r.front();
+            shapes[obj->shapeToIndex(r.front())].set(&r.front());
 
         RootedShape shape(cx);
         RootedId propid(cx);
@@ -849,7 +849,7 @@ CloneStaticBlockObject(JSContext* cx, HandleObject enclosingScope, Handle<Static
         return nullptr;
 
     for (Shape::Range<NoGC> r(srcBlock->lastProperty()); !r.empty(); r.popFront())
-        shapes[srcBlock->shapeToIndex(r.front())] = &r.front();
+        shapes[srcBlock->shapeToIndex(r.front())].set(&r.front());
 
     RootedId id(cx);
     for (Shape* shape : shapes) {
