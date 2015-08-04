@@ -19,9 +19,9 @@ template<class T>
 class nsMaybeWeakPtr
 {
 public:
-  MOZ_IMPLICIT nsMaybeWeakPtr(nsISupports *ref) { mPtr = ref; }
-  MOZ_IMPLICIT nsMaybeWeakPtr(const nsCOMPtr<nsIWeakReference> &ref) { mPtr = ref; }
-  MOZ_IMPLICIT nsMaybeWeakPtr(const nsCOMPtr<T> &ref) { mPtr = ref; }
+  MOZ_IMPLICIT nsMaybeWeakPtr(nsISupports* aRef) : mPtr(aRef) {}
+  MOZ_IMPLICIT nsMaybeWeakPtr(const nsCOMPtr<nsIWeakReference>& aRef) : mPtr(aRef) {}
+  MOZ_IMPLICIT nsMaybeWeakPtr(const nsCOMPtr<T>& aRef) : mPtr(aRef) {}
 
   bool operator==(const nsMaybeWeakPtr<T> &other) const {
     return mPtr == other.mPtr;
@@ -40,12 +40,12 @@ private:
 // given object to appear in the array once.
 
 template<class T>
-class nsMaybeWeakPtrArray : public nsTArray< nsMaybeWeakPtr<T> >
+class nsMaybeWeakPtrArray : public nsTArray<nsMaybeWeakPtr<T>>
 {
   typedef nsTArray<nsMaybeWeakPtr<T>> MaybeWeakArray;
 
 public:
-  nsresult AppendWeakElement(T *aElement, bool aOwnsWeak)
+  nsresult AppendWeakElement(T* aElement, bool aOwnsWeak)
   {
     nsCOMPtr<nsISupports> ref;
     if (aOwnsWeak) {
@@ -63,7 +63,7 @@ public:
     return NS_OK;
   }
 
-  nsresult RemoveWeakElement(T *aElement)
+  nsresult RemoveWeakElement(T* aElement)
   {
     if (MaybeWeakArray::RemoveElement(aElement)) {
       return NS_OK;
