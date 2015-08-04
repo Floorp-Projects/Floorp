@@ -1,6 +1,17 @@
 // nsDoTestsForAutoCompleteWithComposition tests autocomplete with composition.
 // Users must include SimpleTest.js and EventUtils.js.
 
+function waitForCondition(condition, nextTest) {
+  var tries = 0;
+  var interval = setInterval(function() {
+    if (condition() || tries >= 30) {
+      moveOn();
+    }
+    tries++;
+  }, 100);
+  var moveOn = function() { clearInterval(interval); nextTest(); };
+}
+
 function nsDoTestsForAutoCompleteWithComposition(aDescription,
                                                  aWindow,
                                                  aTarget,
@@ -52,18 +63,11 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
     }
     test.execute(this._window);
 
-    var timeout = this._controller.input.timeout + 10;
-    this._waitResult(timeout);
-  },
-
-  _waitResult: function (aTimes)
-  {
-    var obj = this;
-    if (aTimes-- > 0) {
-      setTimeout(function () { obj._waitResult(aTimes); }, 0);
-    } else {
-      setTimeout(function () { obj._checkResult(); }, 0);
-    }
+    waitForCondition(() => {
+      return this._controller.searchStatus >=
+             Components.interfaces.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH;
+    },
+    this._checkResult.bind(this));
   },
 
   _checkResult: function ()
@@ -270,7 +274,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
           }, aWindow);
       }, popup: false, value: "Mo", searchString: "Mozi"
     },
-    { description: "canceled compositionend should seach the result with the latest value",
+    { description: "canceled compositionend should search the result with the latest value",
       completeDefaultIndex: false,
       execute: function (aWindow) {
         synthesizeComposition({ type: "compositioncommitasis",

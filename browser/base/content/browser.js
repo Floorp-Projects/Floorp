@@ -274,7 +274,6 @@ let gInitialPages = [
 #include browser-loop.js
 #include browser-places.js
 #include browser-plugins.js
-#include browser-readinglist.js
 #include browser-safebrowsing.js
 #include browser-sidebar.js
 #include browser-social.js
@@ -1267,8 +1266,6 @@ var gBrowserInit = {
 #ifdef E10S_TESTING_ONLY
     gRemoteTabsUI.init();
 #endif
-    ReadingListUI.init();
-
     // Initialize the full zoom setting.
     // We do this before the session restore service gets initialized so we can
     // apply full zoom settings to tabs restored by the session restore service.
@@ -1548,8 +1545,6 @@ var gBrowserInit = {
     TrackingProtection.uninit();
 
     gMenuButtonUpdateBadge.uninit();
-
-    ReadingListUI.uninit();
 
     SidebarUI.uninit();
 
@@ -2549,8 +2544,6 @@ function UpdatePageProxyState()
 function SetPageProxyState(aState)
 {
   BookmarkingUI.onPageProxyStateChanged(aState);
-  ReadingListUI.onPageProxyStateChanged(aState);
-
   if (!gURLBar)
     return;
 
