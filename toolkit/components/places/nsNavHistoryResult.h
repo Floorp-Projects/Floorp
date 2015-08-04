@@ -175,7 +175,7 @@ public:
                                bool aExpand);
 
   void InvalidateTree();
-  
+
   bool mBatchInProgress;
 
   nsMaybeWeakPtrArray<nsINavHistoryResultObserver> mObservers;
