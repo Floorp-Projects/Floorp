@@ -9,6 +9,7 @@
 #include <nsTArray.h>
 #include "AndroidGraphicBuffer.h"
 #include "AndroidBridge.h"
+#include "GLTypes.h"
 #include "mozilla/Preferences.h"
 
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "AndroidGraphicBuffer" , ## args)
@@ -25,7 +26,6 @@ typedef uint32_t EGLBoolean;
 #define EGL_TRUE 1
 #define EGL_FALSE 0
 #define EGL_NONE 0x3038
-#define EGL_NO_CONTEXT (EGLContext)0
 #define EGL_DEFAULT_DISPLAY  (void*)0
 
 #define ANDROID_LIBUI_PATH "libui.so"
