@@ -322,7 +322,6 @@ private:
   // Strong references to external objects.
   nsRefPtr<dom::SourceBufferAttributes> mSourceBufferAttributes;
   nsMainThreadPtrHandle<MediaSourceDecoder> mParentDecoder;
-  nsRefPtr<MediaSourceDemuxer> mMediaSourceDemuxer;
 
   // MediaSource duration mirrored from MediaDecoder on the main thread..
   Mirror<Maybe<double>> mMediaSourceDuration;
