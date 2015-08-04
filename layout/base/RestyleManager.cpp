@@ -1170,13 +1170,15 @@ RestyleManager::AttributeWillChange(Element* aElement,
                                     int32_t aModType,
                                     const nsAttrValue* aNewValue)
 {
+  RestyleHintData rsdata;
   nsRestyleHint rshint =
     mPresContext->StyleSet()->HasAttributeDependentStyle(aElement,
                                                          aAttribute,
                                                          aModType,
                                                          false,
-                                                         aNewValue);
-  PostRestyleEvent(aElement, rshint, NS_STYLE_HINT_NONE);
+                                                         aNewValue,
+                                                         rsdata);
+  PostRestyleEvent(aElement, rshint, NS_STYLE_HINT_NONE, &rsdata);
 }
 
 // Forwarded nsIMutationObserver method, to handle restyling (and
@@ -1259,14 +1261,15 @@ RestyleManager::AttributeChanged(Element* aElement,
 
   // See if we can optimize away the style re-resolution -- must be called after
   // the frame's AttributeChanged() in case it does something that affects the style
+  RestyleHintData rsdata;
   nsRestyleHint rshint =
     mPresContext->StyleSet()->HasAttributeDependentStyle(aElement,
                                                          aAttribute,
                                                          aModType,
                                                          true,
-                                                         aOldValue);
-
-  PostRestyleEvent(aElement, rshint, hint);
+                                                         aOldValue,
+                                                         rsdata);
+  PostRestyleEvent(aElement, rshint, hint, &rsdata);
 }
 
 /* static */ uint64_t
