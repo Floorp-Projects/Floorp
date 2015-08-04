@@ -1375,6 +1375,7 @@ js::gc::FinishPersistentRootedChains(RootLists& roots)
     FinishPersistentRootedChain(roots.getPersistentRootedList<JSString*>());
     FinishPersistentRootedChain(roots.getPersistentRootedList<jsid>());
     FinishPersistentRootedChain(roots.getPersistentRootedList<Value>());
+    FinishPersistentRootedChain(roots.heapRoots_[THING_ROOT_TRACEABLE]);
 }
 
 void
@@ -4200,7 +4201,7 @@ js::gc::MarkingValidator::nonIncrementalMark()
                 chunk->bitmap.clear();
         }
 
-        gc->markRuntime(gcmarker, GCRuntime::MarkRuntime, GCRuntime::UseSavedRoots);
+        gc->markRuntime(gcmarker, GCRuntime::MarkRuntime);
 
         SliceBudget budget;
         gc->incrementalState = MARK;

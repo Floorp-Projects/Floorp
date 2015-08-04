@@ -1001,7 +1001,7 @@ WebGLContext::EnumName(GLenum glenum, nsACString* out_name)
 }
 
 bool
-WebGLContext::IsCompressedTextureFormat(GLenum format)
+IsCompressedTextureFormat(GLenum format)
 {
     switch (format) {
     case LOCAL_GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
@@ -1034,7 +1034,7 @@ WebGLContext::IsCompressedTextureFormat(GLenum format)
 
 
 bool
-WebGLContext::IsTextureFormatCompressed(TexInternalFormat format)
+IsTextureFormatCompressed(TexInternalFormat format)
 {
     return IsCompressedTextureFormat(format.get());
 }

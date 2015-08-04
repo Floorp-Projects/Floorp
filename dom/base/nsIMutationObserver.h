@@ -9,6 +9,7 @@
 
 #include "nsISupports.h"
 
+class nsAttrValue;
 class nsIAtom;
 class nsIContent;
 class nsIDocument;
@@ -21,8 +22,8 @@ class Element;
 } // namespace mozilla
 
 #define NS_IMUTATION_OBSERVER_IID \
-{ 0x16fe5e3e, 0xeadc, 0x4312, \
-  { 0x9d, 0x44, 0xb6, 0xbe, 0xdd, 0x6b, 0x54, 0x74 } }
+{ 0xdd74f0cc, 0x2849, 0x4d05, \
+  { 0x9c, 0xe3, 0xb0, 0x95, 0x3e, 0xc2, 0xfd, 0x44 } }
 
 /**
  * Information details about a characterdata change.  Basically, we
@@ -157,6 +158,8 @@ public:
    * @param aModType     Whether or not the attribute will be added, changed, or
    *                     removed. The constants are defined in
    *                     nsIDOMMutationEvent.h.
+   * @param aNewValue    The new value, IF it has been preparsed by
+   *                     BeforeSetAttr, otherwise null.
    *
    * @note Callers of this method might not hold a strong reference to the
    *       observer.  The observer is responsible for making sure it stays
@@ -168,7 +171,8 @@ public:
                                    mozilla::dom::Element* aElement,
                                    int32_t      aNameSpaceID,
                                    nsIAtom*     aAttribute,
-                                   int32_t      aModType) = 0;
+                                   int32_t      aModType,
+                                   const nsAttrValue* aNewValue) = 0;
 
   /**
    * Notification that an attribute of an element has changed.
@@ -180,6 +184,8 @@ public:
    * @param aModType     Whether or not the attribute was added, changed, or
    *                     removed. The constants are defined in
    *                     nsIDOMMutationEvent.h.
+   * @param aOldValue    The old value, if either the old value or the new
+   *                     value are StoresOwnData() (or absent); null otherwise.
    *
    * @note Callers of this method might not hold a strong reference to the
    *       observer.  The observer is responsible for making sure it stays
@@ -191,7 +197,8 @@ public:
                                 mozilla::dom::Element* aElement,
                                 int32_t      aNameSpaceID,
                                 nsIAtom*     aAttribute,
-                                int32_t      aModType) = 0;
+                                int32_t      aModType,
+                                const nsAttrValue* aOldValue) = 0;
 
   /**
    * Notification that an attribute of an element has been
@@ -336,14 +343,16 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIMutationObserver, NS_IMUTATION_OBSERVER_IID)
                                      mozilla::dom::Element* aElement,        \
                                      int32_t aNameSpaceID,                   \
                                      nsIAtom* aAttribute,                    \
-                                     int32_t aModType) override;
+                                     int32_t aModType,                       \
+                                     const nsAttrValue* aNewValue) override;
 
 #define NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED                         \
     virtual void AttributeChanged(nsIDocument* aDocument,                    \
                                   mozilla::dom::Element* aElement,           \
                                   int32_t aNameSpaceID,                      \
                                   nsIAtom* aAttribute,                       \
-                                  int32_t aModType) override;
+                                  int32_t aModType,                          \
+                                  const nsAttrValue* aOldValue) override;
 
 #define NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED                          \
     virtual void ContentAppended(nsIDocument* aDocument,                     \
@@ -405,7 +414,8 @@ _class::AttributeWillChange(nsIDocument* aDocument,                       \
                             mozilla::dom::Element* aElement,              \
                             int32_t aNameSpaceID,                         \
                             nsIAtom* aAttribute,                          \
-                            int32_t aModType)                             \
+                            int32_t aModType,                             \
+                            const nsAttrValue* aNewValue)                 \
 {                                                                         \
 }                                                                         \
 void                                                                      \
@@ -413,7 +423,8 @@ _class::AttributeChanged(nsIDocument* aDocument,                          \
                          mozilla::dom::Element* aElement,                 \
                          int32_t aNameSpaceID,                            \
                          nsIAtom* aAttribute,                             \
-                         int32_t aModType)                                \
+                         int32_t aModType,                                \
+                         const nsAttrValue* aOldValue)                    \
 {                                                                         \
 }                                                                         \
 void                                                                      \

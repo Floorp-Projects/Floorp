@@ -441,34 +441,28 @@ mozJSComponentLoader::FindTargetObject(JSContext* aCx,
     return NS_OK;
 }
 
-/* static */ size_t
-mozJSComponentLoader::DataEntrySizeOfExcludingThis(const nsACString& aKey,
-                                                   ModuleEntry* const& aData,
-                                                   MallocSizeOf aMallocSizeOf, void*)
+// This requires that the keys be strings and the values be pointers.
+template <class Key, class Data, class UserData>
+static size_t
+SizeOfTableExcludingThis(const nsBaseHashtable<Key, Data, UserData>& aTable,
+                         MallocSizeOf aMallocSizeOf)
 {
-    return aKey.SizeOfExcludingThisIfUnshared(aMallocSizeOf) +
-        aData->SizeOfIncludingThis(aMallocSizeOf);
-}
-
-/* static */ size_t
-mozJSComponentLoader::ClassEntrySizeOfExcludingThis(const nsACString& aKey,
-                                                    const nsAutoPtr<ModuleEntry>& aData,
-                                                    MallocSizeOf aMallocSizeOf, void*)
-{
-    return aKey.SizeOfExcludingThisIfUnshared(aMallocSizeOf) +
-        aData->SizeOfIncludingThis(aMallocSizeOf);
+    size_t n = aTable.ShallowSizeOfExcludingThis(aMallocSizeOf);
+    for (auto iter = aTable.ConstIter(); !iter.Done(); iter.Next()) {
+        n += iter.Key().SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+        n += iter.Data()->SizeOfIncludingThis(aMallocSizeOf);
+    }
+    return n;
 }
 
 size_t
 mozJSComponentLoader::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
 {
-    size_t amount = aMallocSizeOf(this);
-
-    amount += mModules.SizeOfExcludingThis(DataEntrySizeOfExcludingThis, aMallocSizeOf);
-    amount += mImports.SizeOfExcludingThis(ClassEntrySizeOfExcludingThis, aMallocSizeOf);
-    amount += mInProgressImports.SizeOfExcludingThis(DataEntrySizeOfExcludingThis, aMallocSizeOf);
-
-    return amount;
+    size_t n = aMallocSizeOf(this);
+    n += SizeOfTableExcludingThis(mModules, aMallocSizeOf);
+    n += SizeOfTableExcludingThis(mImports, aMallocSizeOf);
+    n += SizeOfTableExcludingThis(mInProgressImports, aMallocSizeOf);
+    return n;
 }
 
 // Some stack based classes for cleaning up on early return

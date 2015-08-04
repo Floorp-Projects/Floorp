@@ -91,6 +91,15 @@ public:
     return img ? img->mFrameID : -1;
   }
 
+  int32_t GetProducerID()
+  {
+    const TimedImage* img = ChooseImage();
+    return img ? img->mProducerID : -1;
+  }
+
+  int32_t GetLastFrameID() const { return mLastFrameID; }
+  int32_t GetLastProducerID() const { return mLastProducerID; }
+
   enum Bias {
     // Don't apply bias to frame times
     BIAS_NONE,
