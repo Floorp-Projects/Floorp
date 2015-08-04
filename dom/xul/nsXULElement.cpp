@@ -2437,10 +2437,11 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                 break;
             }
             default:
-                NS_NOTREACHED("Unexpected child type!");
-                rv = NS_ERROR_UNEXPECTED;
+                MOZ_ASSERT(false, "Unexpected child type!");
+                return NS_ERROR_UNEXPECTED;
             }
 
+            MOZ_ASSERT(child, "Don't append null to mChildren");
             mChildren.AppendElement(child);
 
             // Oh dear. Something failed during the deserialization.
