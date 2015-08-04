@@ -33,7 +33,7 @@ function runTest() {
   gl.clear(gl.COLOR_BUFFER_BIT);
 
   var video = document.getElementById('video');
-  video.mozSrcObject = canvas.captureStream(0);
+  video.srcObject = canvas.captureStream(0);
   video.play();
   video.onloadeddata = finished;
   video.onerror = finished;

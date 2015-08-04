@@ -813,7 +813,7 @@ PeerConnectionWrapper.prototype = {
 
     var element = createMediaElement(type, this.label + '_' + side + this.streams.length);
     this.mediaElements.push(element);
-    element.mozSrcObject = stream;
+    element.srcObject = stream;
     element.play();
 
     // Store local media elements so that we can stop them when done.

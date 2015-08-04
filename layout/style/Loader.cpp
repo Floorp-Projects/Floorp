@@ -2547,36 +2547,26 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(Loader, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(Loader, Release)
 
-struct SheetMemoryCounter {
-  size_t size;
-  mozilla::MallocSizeOf mallocSizeOf;
-};
-
-static size_t
-CountSheetMemory(URIPrincipalReferrerPolicyAndCORSModeHashKey* /* unused */,
-                 const nsRefPtr<CSSStyleSheet>& aSheet,
-                 mozilla::MallocSizeOf aMallocSizeOf,
-                 void* /* unused */)
-{
-  // If aSheet has a parent, then its parent will report it so we don't
-  // have to worry about it here.
-  // Likewise, if aSheet has an owning node, then the document that
-  // node is in will report it.
-  if (aSheet->GetOwnerNode() || aSheet->GetParentSheet()) {
-    return 0;
-  }
-  return aSheet->SizeOfIncludingThis(aMallocSizeOf);
-}
-
 size_t
 Loader::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
-  size_t s = aMallocSizeOf(this);
+  size_t n = aMallocSizeOf(this);
 
   if (mSheets) {
-    s += mSheets->mCompleteSheets.SizeOfExcludingThis(CountSheetMemory, aMallocSizeOf);
+    n += mSheets->mCompleteSheets.ShallowSizeOfExcludingThis(aMallocSizeOf);
+    for (auto iter = mSheets->mCompleteSheets.ConstIter();
+         !iter.Done();
+         iter.Next()) {
+      // If aSheet has a parent, then its parent will report it so we don't
+      // have to worry about it here. Likewise, if aSheet has an owning node,
+      // then the document that node is in will report it.
+      const nsRefPtr<CSSStyleSheet>& aSheet = iter.Data();
+      n += (aSheet->GetOwnerNode() || aSheet->GetParentSheet())
+         ? 0
+         : aSheet->SizeOfIncludingThis(aMallocSizeOf);
+    }
   }
-  s += mObservers.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  n += mObservers.ShallowSizeOfExcludingThis(aMallocSizeOf);
 
   // Measurement of the following members may be added later if DMD finds it is
   // worthwhile:
@@ -2589,7 +2579,7 @@ Loader::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   // - mDocument, because it's a weak backpointer
   // - mPreferredSheet, because it can be a shared string
 
-  return s;
+  return n;
 }
 
 } // namespace css

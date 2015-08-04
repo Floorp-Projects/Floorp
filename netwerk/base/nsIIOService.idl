@@ -275,7 +275,7 @@ interface nsIAppOfflineInfo : nsISupports
 #define NS_IOSERVICE_APP_OFFLINE_STATUS_TOPIC "network:app-offline-status-changed"
 %}
 
-[builtinclass, uuid(cd66ffef-3bc3-40de-841a-e2dcbea213a2)]
+[builtinclass, uuid(6633c0bf-d97a-428f-8ece-cb6a655fb95a)]
 interface nsIIOServiceInternal : nsISupports
 {
     /**
@@ -284,4 +284,10 @@ interface nsIIOServiceInternal : nsISupports
      * content process. It throws if called outside the content process.
      */
     void SetConnectivity(in boolean connectivity);
+
+    /**
+     * An internal method to asynchronously run our notifications that happen
+     * when we wake from sleep
+     */
+    void NotifyWakeup();
 };

@@ -47,6 +47,13 @@ leak:webrtc::DesktopApplication::
 # Bug 1187518 - SCTP leaks in child process while running WebRTC tests.
 leak:recv_function_udp
 
+# Bug 1074310 - Very large e10s vp8 leaks, maybe in WebRTC tests.
+leak:set_noise_sensitivity
+leak:vp8_alloc_compressor_data
+leak:vp8_change_config
+leak:vp8_lookahead_init
+leak:vpx_codec_enc_init_ver
+
 
 ###
 ### Many leaks only affect some test suites.  The suite annotations are not checked.
@@ -106,6 +113,14 @@ leak:MessageLoop::MessageLoop
 # This may not actually be related to MessageLoop.
 leak:base::WaitableEvent::TimedWait
 leak:MessageLoop::PostTask_Helper
+
+# Bug 1189430 - DNS leaks in mochitest-chrome.
+leak:nsDNSService::AsyncResolveExtended
+leak:_GetAddrInfo_Portable
+
+# Bug 1189568 - Indirect leaks of IMContextWrapper and nsIntRect.
+leak:nsWindow::Create
+leak:nsBaseWidget::StoreWindowClipRegion
 
 
 ###

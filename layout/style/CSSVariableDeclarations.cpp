@@ -204,24 +204,16 @@ CSSVariableDeclarations::AddVariablesToResolver(
                            aResolver);
 }
 
-static size_t
-SizeOfTableEntry(const nsAString& aKey,
-                 const nsString& aValue,
-                 MallocSizeOf aMallocSizeOf,
-                 void* aUserArg)
-{
-  size_t n = 0;
-  n += aKey.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-  n += aValue.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-  return n;
-}
-
 size_t
 CSSVariableDeclarations::SizeOfIncludingThis(
                                       mozilla::MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
-  n += mVariables.SizeOfExcludingThis(SizeOfTableEntry, aMallocSizeOf);
+  n += mVariables.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  for (auto iter = mVariables.ConstIter(); !iter.Done(); iter.Next()) {
+    n += iter.Key().SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+    n += iter.Data().SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+  }
   return n;
 }
 

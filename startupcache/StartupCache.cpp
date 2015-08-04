@@ -377,20 +377,21 @@ StartupCache::SizeOfMapping()
 }
 
 size_t
-StartupCache::HeapSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
+StartupCache::HeapSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
     // This function could measure more members, but they haven't been found by
     // DMD to be significant.  They can be added later if necessary.
-    return aMallocSizeOf(this) +
-           mTable.SizeOfExcludingThis(SizeOfEntryExcludingThis, aMallocSizeOf) +
-           mPendingWrites.ShallowSizeOfExcludingThis(aMallocSizeOf);
-}
 
-/* static */ size_t
-StartupCache::SizeOfEntryExcludingThis(const nsACString& key, const nsAutoPtr<CacheEntry>& data,
-                                       mozilla::MallocSizeOf mallocSizeOf, void *)
-{
-    return data->SizeOfExcludingThis(mallocSizeOf);
+    size_t n = aMallocSizeOf(this);
+
+    n += mTable.ShallowSizeOfExcludingThis(aMallocSizeOf);
+    for (auto iter = mTable.ConstIter(); !iter.Done(); iter.Next()) {
+        n += iter.Data()->SizeOfIncludingThis(aMallocSizeOf);
+    }
+
+    n += mPendingWrites.ShallowSizeOfExcludingThis(aMallocSizeOf);
+
+    return n;
 }
 
 struct CacheWriteHolder
