@@ -2763,20 +2763,23 @@ private:
  * against mSelectorsForDescendants more than once.
  */
 void
-ElementRestyler::AddPendingRestylesForDescendantsMatchingSelectors(Element* aElement)
+ElementRestyler::AddPendingRestylesForDescendantsMatchingSelectors(
+    Element* aElement,
+    Element* aRestyleRoot)
 {
+  if (aElement->HasFlag(mRestyleTracker.RootBit())) {
+    aRestyleRoot = aElement;
+  }
+
   if (mRestyleTracker.HasRestyleData(aElement)) {
     nsRestyleHint rshint = eRestyle_SomeDescendants;
     if (SelectorMatchesForRestyle(aElement)) {
       rshint |= eRestyle_Self;
     }
-    // XXX Traversing up the tree in AddPendingRestyle can be wasteful,
-    // as we can do this multiple times for descendants of the element
-    // we stopped restyling at, up in Restyle().  We should track the
-    // current restyle root as we traverse down here to avoid that.
     RestyleHintData data;
     data.mSelectorsForDescendants = mSelectorsForDescendants;
-    mRestyleTracker.AddPendingRestyle(aElement, rshint, nsChangeHint(0), &data);
+    mRestyleTracker.AddPendingRestyle(aElement, rshint, nsChangeHint(0), &data,
+                                      Some(aRestyleRoot));
     return;
   }
 
@@ -2785,14 +2788,16 @@ ElementRestyler::AddPendingRestylesForDescendantsMatchingSelectors(Element* aEle
     data.mSelectorsForDescendants = mSelectorsForDescendants;
     mRestyleTracker.AddPendingRestyle(aElement,
                                       eRestyle_Self | eRestyle_SomeDescendants,
-                                      nsChangeHint(0), &data);
+                                      nsChangeHint(0), &data,
+                                      Some(aRestyleRoot));
     return;
   }
 
   FlattenedChildIterator it(aElement);
   for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
     if (n->IsElement()) {
-      AddPendingRestylesForDescendantsMatchingSelectors(n->AsElement());
+      AddPendingRestylesForDescendantsMatchingSelectors(n->AsElement(),
+                                                        aRestyleRoot);
     }
   }
 }
@@ -2985,10 +2990,13 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
     if (mContent->IsElement()) {
       if ((aRestyleHint & eRestyle_SomeDescendants) &&
           !mSelectorsForDescendants.IsEmpty()) {
-        FlattenedChildIterator it(mContent->AsElement());
+        Element* element = mContent->AsElement();
+        Element* restyleRoot = mRestyleTracker.FindClosestRestyleRoot(element);
+        FlattenedChildIterator it(element);
         for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
           if (n->IsElement()) {
-            AddPendingRestylesForDescendantsMatchingSelectors(n->AsElement());
+            AddPendingRestylesForDescendantsMatchingSelectors(n->AsElement(),
+                                                              restyleRoot);
           }
         }
       }
