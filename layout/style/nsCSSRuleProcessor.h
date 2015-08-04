@@ -112,21 +112,6 @@ public:
    */
   static bool IsLink(mozilla::dom::Element* aElement);
 
-  /**
-   * Returns true if the given aElement matches aSelector.
-   * Like nsCSSRuleProcessor.cpp's SelectorMatches (and unlike
-   * SelectorMatchesTree), this does not check an entire selector list
-   * separated by combinators.
-   *
-   * :visited and :link will match both visited and non-visited links,
-   * as if aTreeMatchContext->mVisitedHandling were eLinksVisitedOrUnvisited.
-   *
-   * aSelector is restricted to not containing pseudo-elements.
-   */
-  static bool RestrictedSelectorMatches(mozilla::dom::Element* aElement,
-                                        nsCSSSelector* aSelector,
-                                        TreeMatchContext& aTreeMatchContext);
-
   // nsIStyleRuleProcessor
   virtual void RulesMatching(ElementRuleProcessorData* aData) override;
 
@@ -144,9 +129,7 @@ public:
   virtual bool HasDocumentStateDependentStyle(StateRuleProcessorData* aData) override;
 
   virtual nsRestyleHint
-    HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
-                               mozilla::RestyleHintData& aRestyleHintDataResult)
-                                 override;
+    HasAttributeDependentStyle(AttributeRuleProcessorData* aData) override;
 
   virtual bool MediumFeaturesChanged(nsPresContext* aPresContext) override;
 

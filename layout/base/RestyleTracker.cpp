@@ -169,9 +169,6 @@ CollectRestyles(nsISupports* aElement,
   currentRestyle->mElement = element;
   currentRestyle->mRestyleHint = aData->mRestyleHint;
   currentRestyle->mChangeHint = aData->mChangeHint;
-  // We can move aData since we'll be clearing mPendingRestyles after
-  // we finish enumerating it.
-  currentRestyle->mRestyleHintData = Move(aData->mRestyleHintData);
 #if defined(MOZ_ENABLE_PROFILER_SPS) && !defined(MOZILLA_XPCOMRT_API)
   currentRestyle->mBacktrace = Move(aData->mBacktrace);
 #endif
@@ -189,8 +186,7 @@ CollectRestyles(nsISupports* aElement,
 inline void
 RestyleTracker::ProcessOneRestyle(Element* aElement,
                                   nsRestyleHint aRestyleHint,
-                                  nsChangeHint aChangeHint,
-                                  const RestyleHintData& aRestyleHintData)
+                                  nsChangeHint aChangeHint)
 {
   NS_PRECONDITION((aRestyleHint & eRestyle_LaterSiblings) == 0,
                   "Someone should have handled this before calling us");
@@ -215,7 +211,7 @@ RestyleTracker::ProcessOneRestyle(Element* aElement,
     }
 #endif
     mRestyleManager->RestyleElement(aElement, primaryFrame, aChangeHint,
-                                    *this, aRestyleHint, aRestyleHintData);
+                                    *this, aRestyleHint);
   } else if (aChangeHint &&
              (primaryFrame ||
               (aChangeHint & nsChangeHint_ReconstructFrame))) {
@@ -371,8 +367,7 @@ RestyleTracker::DoProcessRestyles()
           profilerRAII.emplace("Paint", "Styles", Move(data->mBacktrace));
         }
 #endif
-        ProcessOneRestyle(element, data->mRestyleHint, data->mChangeHint,
-                          data->mRestyleHintData);
+        ProcessOneRestyle(element, data->mRestyleHint, data->mChangeHint);
         AddRestyleRootsIfAwaitingRestyle(data->mDescendants);
 
         if (isTimelineRecording) {
@@ -432,8 +427,7 @@ RestyleTracker::DoProcessRestyles()
 
           ProcessOneRestyle(currentRestyle->mElement,
                             currentRestyle->mRestyleHint,
-                            currentRestyle->mChangeHint,
-                            currentRestyle->mRestyleHintData);
+                            currentRestyle->mChangeHint);
 
           if (isTimelineRecording) {
             mozilla::UniquePtr<TimelineMarker> marker =
@@ -446,9 +440,6 @@ RestyleTracker::DoProcessRestyles()
       }
     }
   }
-
-  // mPendingRestyles is now empty.
-  mHaveSelectors = false;
 
   mRestyleManager->EndProcessingRestyles();
 }
@@ -513,25 +504,6 @@ RestyleTracker::AddRestyleRootsIfAwaitingRestyle(
       mRestyleRoots.AppendElement(element);
     }
   }
-}
-
-void
-RestyleTracker::ClearSelectors()
-{
-  if (!mHaveSelectors) {
-    return;
-  }
-  for (auto it = mPendingRestyles.Iter(); !it.Done(); it.Next()) {
-    RestyleData* data = it.Data();
-    if (data->mRestyleHint & eRestyle_SomeDescendants) {
-      data->mRestyleHint =
-        (data->mRestyleHint & ~eRestyle_SomeDescendants) | eRestyle_Subtree;
-      data->mRestyleHintData.mSelectorsForDescendants.Clear();
-    } else {
-      MOZ_ASSERT(data->mRestyleHintData.mSelectorsForDescendants.IsEmpty());
-    }
-  }
-  mHaveSelectors = false;
 }
 
 } // namespace mozilla
