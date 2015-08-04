@@ -286,7 +286,9 @@ class nsStyleSet final
                                            nsIAtom*       aAttribute,
                                            int32_t        aModType,
                                            bool           aAttrHasChanged,
-                                           const nsAttrValue* aOtherValue);
+                                           const nsAttrValue* aOtherValue,
+                                           mozilla::RestyleHintData&
+                                             aRestyleHintDataResult);
 
   /*
    * Do any processing that needs to happen as a result of a change in
