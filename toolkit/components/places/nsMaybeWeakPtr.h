@@ -103,7 +103,7 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
   aFlags |= CycleCollectionEdgeNameArrayFlag;
   size_t length = aField.Length();
   for (size_t i = 0; i < length; ++i) {
-    CycleCollectionNoteChild(aCallback, aField[i].get(), aName, aFlags);
+    CycleCollectionNoteChild(aCallback, aField[i].GetRawValue(), aName, aFlags);
   }
 }
 
