@@ -141,21 +141,31 @@ enum CheckboxValue {
 
 - (BOOL)isTab
 {
-  AccessibleWrap* accWrap = [self getGeckoAccessible];
-  return (accWrap && (accWrap->Role() == roles::PAGETAB));
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible])
+    return accWrap->Role() == roles::PAGETAB;
+
+  if (ProxyAccessible* proxy = [self getProxyAccessible])
+    return proxy->Role() == roles::PAGETAB;
+
+  return false;
 }
 
 - (BOOL)hasPopup
 {
-  AccessibleWrap* accWrap = [self getGeckoAccessible];
-  return accWrap && (accWrap->NativeState() & mozilla::a11y::states::HASPOPUP);
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible])
+    return accWrap->NativeState() & states::HASPOPUP;
+
+  if (ProxyAccessible* proxy = [self getProxyAccessible])
+    return proxy->NativeState() & states::HASPOPUP;
+
+  return false;
 }
 
 @end
 
 @implementation mozCheckboxAccessible
 
-- (NSString*)accessibilityActionDescription:(NSString*)action 
+- (NSString*)accessibilityActionDescription:(NSString*)action
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
@@ -173,7 +183,11 @@ enum CheckboxValue {
 
 - (int)isChecked
 {
-  uint64_t state = [self getGeckoAccessible]->NativeState();
+  uint64_t state = 0;
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible])
+    state = accWrap->NativeState();
+  else if (ProxyAccessible* proxy = [self getProxyAccessible])
+    state = proxy->NativeState();
 
   // check if we're checked or in a mixed state
   if (state & states::CHECKED) {
@@ -279,13 +293,19 @@ enum CheckboxValue {
 
 - (NSUInteger)accessibilityArrayAttributeCount:(NSString*)attribute
 {
-  if (![self getGeckoAccessible])
+  AccessibleWrap* accWrap = [self getGeckoAccessible];
+  ProxyAccessible* proxy = [self getProxyAccessible];
+  if (!accWrap && !proxy)
     return 0;
 
   // By default this calls -[[mozAccessible children] count].
   // Since we don't cache mChildren. This is faster.
-  if ([attribute isEqualToString:NSAccessibilityChildrenAttribute])
-    return [self getGeckoAccessible]->ChildCount() ? 1 : 0;
+  if ([attribute isEqualToString:NSAccessibilityChildrenAttribute]) {
+    if (accWrap)
+      return accWrap->ChildCount() ? 1 : 0;
+
+    return proxy->ChildrenCount() ? 1 : 0;
+  }
 
   return [super accessibilityArrayAttributeCount:attribute];
 }

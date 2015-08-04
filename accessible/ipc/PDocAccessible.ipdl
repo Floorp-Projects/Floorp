@@ -73,6 +73,7 @@ child:
 
   // Accessible
   prio(high) sync State(uint64_t aID) returns(uint64_t states);
+  prio(high) sync NativeState(uint64_t aID) returns(uint64_t states);
   prio(high) sync Name(uint64_t aID) returns(nsString name);
   prio(high) sync Value(uint64_t aID) returns(nsString value);
   prio(high) sync Help(uint64_t aID) returns(nsString help);
