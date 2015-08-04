@@ -28,8 +28,6 @@
       <preference id="engine.tabs"      name="services.sync.engine.tabs"      type="bool"/>
       <preference id="engine.prefs"     name="services.sync.engine.prefs"     type="bool"/>
       <preference id="engine.passwords" name="services.sync.engine.passwords" type="bool"/>
-      <!-- non Sync-Engine engines -->
-      <preference id="engine.readinglist" name="readinglist.scheduler.enabled" type="bool"/>
     </preferences>
 
 
@@ -301,12 +299,6 @@
                           accesskey="&engine.history.accesskey;"
                           onsynctopreference="gSyncPane.onPreferenceChanged(this);"
                           preference="engine.history"/>
-                <!-- onpreferencechanged not needed for the readinglist engine -->
-                <checkbox id="readinglist-engine"
-                          label="&engine.readinglist.label;"
-                          accesskey="&engine.readinglist.accesskey;"
-                          preference="engine.readinglist"
-                          hidden="true"/>
                 <checkbox label="&engine.addons.label;"
                           accesskey="&engine.addons.accesskey;"
                           onsynctopreference="gSyncPane.onPreferenceChanged();"

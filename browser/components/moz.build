@@ -16,7 +16,6 @@ DIRS += [
     'pocket',
     'preferences',
     'privatebrowsing',
-    'readinglist',
     'search',
     'sessionstore',
     'shell',
