@@ -1066,9 +1066,7 @@ AndroidBridge::HandleGeckoMessage(JSContext* cx, JS::HandleObject object)
 {
     ALOG_BRIDGE("%s", __PRETTY_FUNCTION__);
 
-    JNIEnv* const env = GetJNIEnv();
-    auto message = Object::LocalRef::Adopt(env,
-        mozilla::widget::CreateNativeJSContainer(env, cx, object));
+    auto message = mozilla::widget::CreateNativeJSContainer(cx, object);
     GeckoAppShell::HandleGeckoMessageWrapper(message);
 }
 
