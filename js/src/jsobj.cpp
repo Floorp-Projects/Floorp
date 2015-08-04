@@ -2583,8 +2583,10 @@ js::GetOwnPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
     } else {
         // This is either a straight-up data property or (rarely) a
         // property with a JSGetterOp/JSSetterOp. The latter must be
-        // reported to the caller as a plain data property, so don't
-        // populate desc.getter/setter, and mask away the SHARED bit.
+        // reported to the caller as a plain data property, so clear
+        // desc.getter/setter, and mask away the SHARED bit.
+        desc.setGetter(nullptr);
+        desc.setSetter(nullptr);
         desc.attributesRef() &= ~JSPROP_SHARED;
 
         if (IsImplicitDenseOrTypedArrayElement(shape)) {
