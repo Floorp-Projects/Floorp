@@ -1,4 +1,4 @@
 == transform-containing-block-dynamic-1a.html containing-block-dynamic-1-ref.html
 == transform-containing-block-dynamic-1b.html containing-block-dynamic-1-ref.html
-fails == perspective-containing-block-dynamic-1a.html containing-block-dynamic-1-ref.html # bug 1187851
-fails == perspective-containing-block-dynamic-1b.html containing-block-dynamic-1-ref.html # bug 1187851
+== perspective-containing-block-dynamic-1a.html containing-block-dynamic-1-ref.html
+== perspective-containing-block-dynamic-1b.html containing-block-dynamic-1-ref.html
