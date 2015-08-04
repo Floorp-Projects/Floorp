@@ -946,6 +946,9 @@ static const int FLAGS_END = VERSION_END + FLAGS_LEN;
 static const int SIZE_END = FLAGS_END + SIZE_LEN;
 
 static const uint8_t ID[ID_LEN] = {'I', 'D', '3'};
+
+static const uint8_t MIN_MAJOR_VER = 2;
+static const uint8_t MAX_MAJOR_VER = 4;
 } // namespace id3_header
 
 const uint8_t*
@@ -1025,17 +1028,20 @@ ID3Parser::ID3Header::IsValid(int aPos) const {
     return true;
   }
   const uint8_t c = mRaw[aPos];
-  if (aPos < id3_header::ID_END) {
-    return id3_header::ID[aPos] == c;
-  }
-  if (aPos < id3_header::VERSION_END) {
-    return c < 0xFF;
-  }
-  if (aPos < id3_header::FLAGS_END) {
-    return true;
-  }
-  if (aPos < id3_header::SIZE_END) {
-    return c < 0x80;
+  switch (aPos) {
+    case 0: case 1: case 2:
+      // Expecting "ID3".
+      return id3_header::ID[aPos] == c;
+    case 3:
+      return MajorVersion() >= id3_header::MIN_MAJOR_VER &&
+             MajorVersion() <= id3_header::MAX_MAJOR_VER;
+    case 4:
+      return MinorVersion() < 0xFF;
+    case 5:
+      // Validate flags for supported versions, see bug 949036.
+      return ((0xFF >> MajorVersion()) & c) == 0;
+    case 6: case 7: case 8: case 9:
+      return c < 0x80;
   }
   return true;
 }
