@@ -2290,7 +2290,6 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
     }
     mNumAttributes = int32_t(number);
 
-    uint32_t i;
     if (mNumAttributes > 0) {
         mAttributes = new (fallible) nsXULPrototypeAttribute[mNumAttributes];
         if (!mAttributes) {
@@ -2298,7 +2297,7 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
         }
 
         nsAutoString attributeValue;
-        for (i = 0; i < mNumAttributes; ++i) {
+        for (uint32_t i = 0; i < mNumAttributes; ++i) {
             tmp = aStream->Read32(&number);
             if (NS_FAILED(tmp)) {
               rv = tmp;
@@ -2330,7 +2329,7 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
     if (numChildren > 0) {
         mChildren.SetCapacity(numChildren);
 
-        for (i = 0; i < numChildren; i++) {
+        for (uint32_t i = 0; i < numChildren; i++) {
             tmp = aStream->Read32(&number);
             if (NS_FAILED(tmp)) {
               rv = tmp;
