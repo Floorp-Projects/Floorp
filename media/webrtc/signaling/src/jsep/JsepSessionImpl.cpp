@@ -289,7 +289,7 @@ JsepSessionImpl::GetRemoteTracksRemoved() const
 }
 
 nsresult
-JsepSessionImpl::AddOfferMSections(const JsepOfferOptions& options, Sdp* sdp)
+JsepSessionImpl::SetupOfferMSections(const JsepOfferOptions& options, Sdp* sdp)
 {
   // First audio, then video, then datachannel, for interop
   // TODO(bug 1121756): We need to group these by stream-id, _then_ by media
@@ -297,19 +297,19 @@ JsepSessionImpl::AddOfferMSections(const JsepOfferOptions& options, Sdp* sdp)
   // older versions of Firefox if a video-only stream is added before an
   // audio-only stream.
   // We should probably wait until 38 is ESR before trying to do this.
-  nsresult rv = AddOfferMSectionsByType(
+  nsresult rv = SetupOfferMSectionsByType(
       SdpMediaSection::kAudio, options.mOfferToReceiveAudio, sdp);
 
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = AddOfferMSectionsByType(
+  rv = SetupOfferMSectionsByType(
       SdpMediaSection::kVideo, options.mOfferToReceiveVideo, sdp);
 
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!(options.mDontOfferDataChannel.isSome() &&
         *options.mDontOfferDataChannel)) {
-    rv = AddOfferMSectionsByType(
+    rv = SetupOfferMSectionsByType(
         SdpMediaSection::kApplication, Maybe<size_t>(), sdp);
 
     NS_ENSURE_SUCCESS(rv, rv);
@@ -325,9 +325,9 @@ JsepSessionImpl::AddOfferMSections(const JsepOfferOptions& options, Sdp* sdp)
 }
 
 nsresult
-JsepSessionImpl::AddOfferMSectionsByType(SdpMediaSection::MediaType mediatype,
-                                         Maybe<size_t> offerToReceiveMaybe,
-                                         Sdp* sdp)
+JsepSessionImpl::SetupOfferMSectionsByType(SdpMediaSection::MediaType mediatype,
+                                           Maybe<size_t> offerToReceiveMaybe,
+                                           Sdp* sdp)
 {
   // Convert the Maybe into a size_t*, since that is more readable, especially
   // when using it as an in/out param.
@@ -467,7 +467,7 @@ JsepSessionImpl::SetRecvAsNeededOrDisable(SdpMediaSection::MediaType mediatype,
 
     if (!msection.IsSending()) {
       // Unused m-section, and no reason to offer to recv on it
-      DisableMsection(sdp, &msection);
+      mSdpHelper.DisableMsection(sdp, &msection);
     }
   }
 
@@ -491,15 +491,15 @@ JsepSessionImpl::AddRecvonlyMsections(SdpMediaSection::MediaType mediatype,
 // This function creates a skeleton SDP based on the old descriptions
 // (ie; all m-sections are inactive).
 nsresult
-JsepSessionImpl::CreateReoffer(const Sdp& oldLocalSdp,
-                               const Sdp& oldAnswer,
-                               Sdp* newSdp)
+JsepSessionImpl::AddReofferMsections(const Sdp& oldLocalSdp,
+                                     const Sdp& oldAnswer,
+                                     Sdp* newSdp)
 {
   nsresult rv;
 
   for (size_t i = 0; i < oldLocalSdp.GetMediaSectionCount(); ++i) {
     // We do not set the direction in this function (or disable when previously
-    // disabled), that happens in |AddOfferMSectionsByType|
+    // disabled), that happens in |SetupOfferMSectionsByType|
     rv = CreateOfferMSection(oldLocalSdp.GetMediaSection(i).GetMediaType(),
                              SdpDirectionAttribute::kInactive,
                              newSdp);
@@ -513,8 +513,6 @@ JsepSessionImpl::CreateReoffer(const Sdp& oldLocalSdp,
   return NS_OK;
 }
 
-// TODO(1142105): Do we teach SdpHelper about BundlePolicy, or are
-// we getting too much JSEP in there at that point?
 void
 JsepSessionImpl::SetupBundle(Sdp* sdp) const
 {
@@ -608,41 +606,42 @@ JsepSessionImpl::CreateOffer(const JsepOfferOptions& options,
     return NS_ERROR_UNEXPECTED;
   }
 
+  // Undo track assignments from a previous call to CreateOffer
+  // (ie; if the track has not been negotiated yet, it doesn't necessarily need
+  // to stay in the same m-section that it was in)
+  for (auto i = mLocalTracks.begin(); i != mLocalTracks.end(); ++i) {
+    if (!i->mNegotiated) {
+      i->mAssignedMLine.reset();
+    }
+  }
+
   UniquePtr<Sdp> sdp;
 
   // Make the basic SDP that is common to offer/answer.
   nsresult rv = CreateGenericSDP(&sdp);
   NS_ENSURE_SUCCESS(rv, rv);
-  ++mSessionVersion;
 
   if (mCurrentLocalDescription) {
-    rv = CreateReoffer(*mCurrentLocalDescription, *GetAnswer(), sdp.get());
+    rv = AddReofferMsections(*mCurrentLocalDescription,
+                             *GetAnswer(),
+                             sdp.get());
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // Get rid of all m-line assignments that have not been negotiated
-  if (NS_SUCCEEDED(rv)) {
-    for (auto i = mLocalTracks.begin(); i != mLocalTracks.end(); ++i) {
-      if (!i->mNegotiated) {
-        i->mAssignedMLine.reset();
-      }
-    }
-  }
-
-  // Now add all the m-lines that we are attempting to negotiate.
-  rv = AddOfferMSections(options, sdp.get());
+  // Ensure that we have all the m-sections we need, and disable extras
+  rv = SetupOfferMSections(options, sdp.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
   SetupBundle(sdp.get());
 
-  if (GetAnswer()) {
-    // We have an old answer from a previous negotiation
-    rv = SetupTransportParams(*GetAnswer(), *sdp, sdp.get());
+  if (mCurrentLocalDescription) {
+    rv = CopyPreviousTransportParams(*GetAnswer(), *sdp, sdp.get());
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
   *offer = sdp->ToString();
   mGeneratedLocalDescription = Move(sdp);
+  ++mSessionVersion;
 
   return NS_OK;
 }
@@ -774,36 +773,10 @@ void
 JsepSessionImpl::AddCommonExtmaps(const SdpMediaSection& remoteMsection,
                                   SdpMediaSection* msection)
 {
-  if (!remoteMsection.GetAttributeList().HasAttribute(
-        SdpAttribute::kExtmapAttribute)) {
-    return;
-  }
-
   auto* ourExtensions = GetRtpExtensions(remoteMsection.GetMediaType());
 
-  if (!ourExtensions) {
-    return;
-  }
-
-  UniquePtr<SdpExtmapAttributeList> ourExtmap(new SdpExtmapAttributeList);
-  auto& theirExtmap = remoteMsection.GetAttributeList().GetExtmap().mExtmaps;
-  for (auto i = theirExtmap.begin(); i != theirExtmap.end(); ++i) {
-    for (auto j = ourExtensions->begin(); j != ourExtensions->end(); ++j) {
-      if (i->extensionname == j->extensionname) {
-        ourExtmap->mExtmaps.push_back(*i);
-
-        // RFC 5285 says that ids >= 4096 can be used by the offerer to
-        // force the answerer to pick, otherwise the value in the offer is
-        // used.
-        if (ourExtmap->mExtmaps.back().entry >= 4096) {
-          ourExtmap->mExtmaps.back().entry = j->entry;
-        }
-      }
-    }
-  }
-
-  if (!ourExtmap->mExtmaps.empty()) {
-    msection->GetAttributeList().SetAttribute(ourExtmap.release());
+  if (ourExtensions) {
+    mSdpHelper.AddCommonExtmaps(remoteMsection, *ourExtensions, msection);
   }
 }
 
@@ -836,8 +809,6 @@ JsepSessionImpl::CreateAnswer(const JsepAnswerOptions& options,
 
   const Sdp& offer = *mPendingRemoteDescription;
 
-  std::vector<SdpGroupAttributeList::Group> bundleGroups;
-
   // Copy the bundle groups into our answer
   UniquePtr<SdpGroupAttributeList> groupAttr(new SdpGroupAttributeList);
   mSdpHelper.GetBundleGroups(offer, &groupAttr->mGroups);
@@ -869,9 +840,8 @@ JsepSessionImpl::CreateAnswer(const JsepAnswerOptions& options,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (GetAnswer()) {
-    // We have an old answer from a previous negotiation
-    rv = SetupTransportParams(*GetAnswer(), *sdp, sdp.get());
+  if (mCurrentLocalDescription) {
+    rv = CopyPreviousTransportParams(*GetAnswer(), *sdp, sdp.get());
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -953,7 +923,7 @@ JsepSessionImpl::CreateAnswerMSection(const JsepAnswerOptions& options,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mSdpHelper.MsectionIsDisabled(remoteMsection)) {
-    DisableMsection(sdp, &msection);
+    mSdpHelper.DisableMsection(sdp, &msection);
     return NS_OK;
   }
 
@@ -995,13 +965,13 @@ JsepSessionImpl::CreateAnswerMSection(const JsepAnswerOptions& options,
   AddCommonExtmaps(remoteMsection, &msection);
 
   if (!msection.IsReceiving() && !msection.IsSending()) {
-    DisableMsection(sdp, &msection);
+    mSdpHelper.DisableMsection(sdp, &msection);
     return NS_OK;
   }
 
   if (msection.GetFormats().empty()) {
     // Could not negotiate anything. Disable m-section.
-    DisableMsection(sdp, &msection);
+    mSdpHelper.DisableMsection(sdp, &msection);
   }
 
   return NS_OK;
@@ -1158,7 +1128,7 @@ JsepSessionImpl::SetLocalDescription(JsepSdpType type, const std::string& sdp)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Create transport objects.
-  mOldTransports = mTransports;
+  mOldTransports = mTransports; // Save in case we need to rollback
   for (size_t t = 0; t < parsed->GetMediaSectionCount(); ++t) {
     if (t >= mTransports.size()) {
       mTransports.push_back(RefPtr<JsepTransport>(new JsepTransport));
@@ -1385,11 +1355,9 @@ JsepSessionImpl::HandleNegotiatedSession(const UniquePtr<Sdp>& local,
   mNegotiatedTrackPairs = trackPairs;
 
   // Mark all assigned local tracks as negotiated
-  if (NS_SUCCEEDED(rv)) {
-    for (auto i = mLocalTracks.begin(); i != mLocalTracks.end(); ++i) {
-      if (i->mAssignedMLine.isSome()) {
-        i->mNegotiated = true;
-      }
+  for (auto i = mLocalTracks.begin(); i != mLocalTracks.end(); ++i) {
+    if (i->mAssignedMLine.isSome()) {
+      i->mNegotiated = true;
     }
   }
 
@@ -1679,9 +1647,9 @@ JsepSessionImpl::AddTransportAttributes(SdpMediaSection* msection,
 }
 
 nsresult
-JsepSessionImpl::SetupTransportParams(const Sdp& oldAnswer,
-                                      const Sdp& newOffer,
-                                      Sdp* newLocal)
+JsepSessionImpl::CopyPreviousTransportParams(const Sdp& oldAnswer,
+                                             const Sdp& newOffer,
+                                             Sdp* newLocal)
 {
   for (size_t i = 0; i < oldAnswer.GetMediaSectionCount(); ++i) {
     if (!mSdpHelper.MsectionIsDisabled(newLocal->GetMediaSection(i)) &&
@@ -2368,14 +2336,6 @@ JsepSessionImpl::EndOfLocalCandidates(const std::string& defaultCandidateAddr,
     return NS_OK;
   }
 
-  SdpHelper::BundledMids bundledMids;
-  nsresult rv = GetNegotiatedBundledMids(&bundledMids);
-  if (NS_FAILED(rv)) {
-    MOZ_ASSERT(false);
-    mLastError += " (This should have been caught sooner!)";
-    return NS_ERROR_FAILURE;
-  }
-
   std::string defaultRtcpCandidateAddrCopy(defaultRtcpCandidateAddr);
   if (mState == kJsepStateStable && mTransports[level]->mComponents == 1) {
     // We know we're doing rtcp-mux by now. Don't create an rtcp attr.
@@ -2383,56 +2343,26 @@ JsepSessionImpl::EndOfLocalCandidates(const std::string& defaultCandidateAddr,
     defaultRtcpCandidatePort = 0;
   }
 
-  SdpMediaSection& msection = sdp->GetMediaSection(level);
-
-  // TODO(bug 1142105): Factor some of this out into a helper class
+  // If offer/answer isn't done, it is too early to tell whether these defaults
+  // need to be applied to other m-sections.
+  SdpHelper::BundledMids bundledMids;
   if (mState == kJsepStateStable) {
-    // offer/answer is done. Do we actually incorporate these defaults?
-    if (msection.GetAttributeList().HasAttribute(SdpAttribute::kMidAttribute)) {
-      std::string mid(msection.GetAttributeList().GetMid());
-      if (bundledMids.count(mid)) {
-        const SdpMediaSection* masterBundleMsection(bundledMids[mid]);
-        if (msection.GetLevel() != masterBundleMsection->GetLevel()) {
-          // Slave bundle m-section. Skip.
-          return NS_OK;
-        }
-
-        // Master bundle m-section. Set defaultCandidateAddr and
-        // defaultCandidatePort on all bundled m-sections.
-        for (auto i = bundledMids.begin(); i != bundledMids.end(); ++i) {
-          if (i->second != masterBundleMsection) {
-            continue;
-          }
-          SdpMediaSection* bundledMsection =
-            mSdpHelper.FindMsectionByMid(*sdp, i->first);
-          if (!bundledMsection) {
-            MOZ_ASSERT(false);
-            continue;
-          }
-          mSdpHelper.SetDefaultAddresses(defaultCandidateAddr,
-                                         defaultCandidatePort,
-                                         defaultRtcpCandidateAddrCopy,
-                                         defaultRtcpCandidatePort,
-                                         bundledMsection);
-        }
-      }
+    nsresult rv = GetNegotiatedBundledMids(&bundledMids);
+    if (NS_FAILED(rv)) {
+      MOZ_ASSERT(false);
+      mLastError += " (This should have been caught sooner!)";
+      return NS_ERROR_FAILURE;
     }
   }
 
-  mSdpHelper.SetDefaultAddresses(defaultCandidateAddr,
-                                 defaultCandidatePort,
-                                 defaultRtcpCandidateAddrCopy,
-                                 defaultRtcpCandidatePort,
-                                 &msection);
-
-  // TODO(bug 1095793): Will this have an mid someday?
-
-  SdpAttributeList& attrs = msection.GetAttributeList();
-  attrs.SetAttribute(
-      new SdpFlagAttribute(SdpAttribute::kEndOfCandidatesAttribute));
-  if (!mIsOfferer) {
-    attrs.RemoveAttribute(SdpAttribute::kIceOptionsAttribute);
-  }
+  mSdpHelper.SetDefaultAddresses(
+      defaultCandidateAddr,
+      defaultCandidatePort,
+      defaultRtcpCandidateAddrCopy,
+      defaultRtcpCandidatePort,
+      sdp,
+      level,
+      bundledMids);
 
   return NS_OK;
 }
@@ -2447,19 +2377,6 @@ JsepSessionImpl::GetNegotiatedBundledMids(SdpHelper::BundledMids* bundledMids)
   }
 
   return mSdpHelper.GetBundledMids(*answerSdp, bundledMids);
-}
-
-void
-JsepSessionImpl::DisableMsection(Sdp* sdp, SdpMediaSection* msection) const
-{
-  mSdpHelper.DisableMsection(sdp, msection);
-  msection->ClearCodecs();
-
-  // We need to have something here to fit the grammar
-  // TODO(bcampen@mozilla.com): What's the accepted way of doing this? Just
-  // add the codecs we do support? Does it matter? Most endpoints just pick
-  // something that the other end supported.
-  msection->AddCodec("111", "NULL", 0, 0);
 }
 
 nsresult

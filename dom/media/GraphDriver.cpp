@@ -280,13 +280,25 @@ ThreadedDriver::RunThread()
 
   bool stillProcessing = true;
   while (stillProcessing) {
-    GraphTime prevCurrentTime, nextCurrentTime;
-    GetIntervalForIteration(prevCurrentTime, nextCurrentTime);
+    mIterationStart = IterationEnd();
+    mIterationEnd += GetIntervalForIteration();
 
-    mStateComputedTime = mNextStateComputedTime;
+    if (mStateComputedTime < mIterationEnd) {
+      STREAM_LOG(LogLevel::Warning, ("Media graph global underrun detected"));
+      mIterationEnd = mStateComputedTime;
+    }
+
+    if (mIterationStart >= mIterationEnd) {
+      NS_ASSERTION(mIterationStart == mIterationEnd ,
+                   "Time can't go backwards!");
+      // This could happen due to low clock resolution, maybe?
+      STREAM_LOG(LogLevel::Debug, ("Time did not advance"));
+    }
+
+    MOZ_ASSERT(mStateComputedTime == mNextStateComputedTime);
     mNextStateComputedTime =
       mGraphImpl->RoundUpToNextAudioBlock(
-        nextCurrentTime + mGraphImpl->MillisecondsToMediaTime(AUDIO_TARGET_MS));
+        mIterationEnd + mGraphImpl->MillisecondsToMediaTime(AUDIO_TARGET_MS));
     STREAM_LOG(LogLevel::Debug,
                ("interval[%ld; %ld] state[%ld; %ld]",
                (long)mIterationStart, (long)mIterationEnd,
@@ -294,8 +306,8 @@ ThreadedDriver::RunThread()
 
     mGraphImpl->mFlushSourcesNow = mGraphImpl->mFlushSourcesOnNextIteration;
     mGraphImpl->mFlushSourcesOnNextIteration = false;
-    stillProcessing = mGraphImpl->OneIteration(prevCurrentTime,
-                                               nextCurrentTime,
+    stillProcessing = mGraphImpl->OneIteration(mIterationStart,
+                                               mIterationEnd,
                                                StateComputedTime(),
                                                mNextStateComputedTime);
 
@@ -310,36 +322,21 @@ ThreadedDriver::RunThread()
   }
 }
 
-void
-SystemClockDriver::GetIntervalForIteration(GraphTime& aFrom, GraphTime& aTo)
+MediaTime
+SystemClockDriver::GetIntervalForIteration()
 {
   TimeStamp now = TimeStamp::Now();
-  aFrom = mIterationStart = IterationEnd();
-  aTo = mIterationEnd = mGraphImpl->SecondsToMediaTime((now - mCurrentTimeStamp).ToSeconds()) + IterationEnd();
-
+  MediaTime interval =
+    mGraphImpl->SecondsToMediaTime((now - mCurrentTimeStamp).ToSeconds());
   mCurrentTimeStamp = now;
 
-  MOZ_LOG(gMediaStreamGraphLog, LogLevel::Verbose, ("Updating current time to %f (real %f, mStateComputedTime %f)",
-         mGraphImpl->MediaTimeToSeconds(aTo),
-         (now - mInitialTimeStamp).ToSeconds(),
-         mGraphImpl->MediaTimeToSeconds(StateComputedTime())));
+  MOZ_LOG(gMediaStreamGraphLog, LogLevel::Verbose,
+          ("Updating current time to %f (real %f, mStateComputedTime %f)",
+           mGraphImpl->MediaTimeToSeconds(IterationEnd() + interval),
+           (now - mInitialTimeStamp).ToSeconds(),
+           mGraphImpl->MediaTimeToSeconds(StateComputedTime())));
 
-  if (mStateComputedTime < aTo) {
-    STREAM_LOG(LogLevel::Warning, ("Media graph global underrun detected"));
-    aTo = mIterationEnd = mStateComputedTime;
-  }
-
-  if (aFrom >= aTo) {
-    NS_ASSERTION(aFrom == aTo , "Time can't go backwards!");
-    // This could happen due to low clock resolution, maybe?
-    STREAM_LOG(LogLevel::Debug, ("Time did not advance"));
-  }
-}
-
-GraphTime
-SystemClockDriver::GetCurrentTime()
-{
-  return IterationEnd();
+  return interval;
 }
 
 TimeStamp
@@ -432,30 +429,11 @@ OfflineClockDriver::~OfflineClockDriver()
   }
 }
 
-void
-OfflineClockDriver::GetIntervalForIteration(GraphTime& aFrom, GraphTime& aTo)
+MediaTime
+OfflineClockDriver::GetIntervalForIteration()
 {
-  aFrom = mIterationStart = IterationEnd();
-  aTo = mIterationEnd = IterationEnd() + mGraphImpl->MillisecondsToMediaTime(mSlice);
-
-  if (mStateComputedTime < aTo) {
-    STREAM_LOG(LogLevel::Warning, ("Media graph global underrun detected"));
-    aTo = mIterationEnd = mStateComputedTime;
-  }
-
-  if (aFrom >= aTo) {
-    NS_ASSERTION(aFrom == aTo , "Time can't go backwards!");
-    // This could happen due to low clock resolution, maybe?
-    STREAM_LOG(LogLevel::Debug, ("Time did not advance"));
-  }
+  return mGraphImpl->MillisecondsToMediaTime(mSlice);
 }
-
-GraphTime
-OfflineClockDriver::GetCurrentTime()
-{
-  return mIterationEnd;
-}
-
 
 void
 OfflineClockDriver::WaitForNextIteration()
@@ -705,24 +683,6 @@ AudioCallbackDriver::Revive()
   }
 }
 
-void
-AudioCallbackDriver::GetIntervalForIteration(GraphTime& aFrom,
-                                             GraphTime& aTo)
-{
-}
-
-GraphTime
-AudioCallbackDriver::GetCurrentTime()
-{
-  uint64_t position = 0;
-
-  if (cubeb_stream_get_position(mAudioStream, &position) != CUBEB_OK) {
-    NS_WARNING("Could not get current time from cubeb.");
-  }
-
-  return mSampleRate * position;
-}
-
 void AudioCallbackDriver::WaitForNextIteration()
 {
 }
@@ -862,7 +822,7 @@ AudioCallbackDriver::DataCallback(AudioDataValue* aBuffer, long aFrames)
   // we don't need to run an iteration and if we do so we may overflow.
   if (mBuffer.Available()) {
 
-    mStateComputedTime = mNextStateComputedTime;
+    MOZ_ASSERT(mStateComputedTime == mNextStateComputedTime);
 
     // State computed time is decided by the audio callback's buffer length. We
     // compute the iteration start and end from there, trying to keep the amount

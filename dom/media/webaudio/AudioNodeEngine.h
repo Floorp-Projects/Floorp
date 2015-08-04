@@ -380,7 +380,7 @@ public:
                            AudioNodeSizes& aUsage) const
   {
     aUsage.mEngine = SizeOfIncludingThis(aMallocSizeOf);
-    if (HasNode()) {
+    if (mNode) {
       aUsage.mDomNode = mNode->SizeOfIncludingThis(aMallocSizeOf);
       aUsage.mNodeType = mNode->NodeType();
     }
