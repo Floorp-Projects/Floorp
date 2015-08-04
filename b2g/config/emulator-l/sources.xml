@@ -94,7 +94,6 @@
   <project name="platform/external/protobuf" path="external/protobuf" revision="cdb14929d7c934944079ce070f5eb2f9459f824c"/>
   <project name="platform/external/safe-iop" path="external/safe-iop" revision="33d0429591d345687755c25f23ea2e46df5cd293"/>
   <project name="platform/external/scrypt" path="external/scrypt" revision="d809e38af0d89747cde00970271fb64d42333302"/>
-  <project name="platform/external/sepolicy" path="external/sepolicy" revision="bb16e19f8bb7a2fe6bbd4b6e0bebf465fdd0fc30"/>
   <project name="platform/external/sfntly" path="external/sfntly" revision="d2bab207acad60e098d0652b5ed7348c96a249f3"/>
   <project name="platform/external/skia" path="external/skia" revision="b0fe7c355d4d95ff89b8e9e459285fe2b98e366d"/>
   <project name="platform/external/sonivox" path="external/sonivox" revision="3d04f03d824d5ea8835e577785b51022820ae763"/>
@@ -143,6 +142,7 @@
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="fe7df1bc8dd0fd71571505d7be1c31a4ad1e40fb"/>
   <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="48132ec0b0dfe9fc29c7c3f0e799066be8999198"/>
   <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="59e434cbecc02653f44cedeb2ef5cc88dc8bb61b"/>
+  <project name="platform_external_sepolicy" path="external/sepolicy" remote="b2g" revision="3f6be48a46c54dd8cacaf216ab5b145de5ffefd2"/>
   <project name="platform_external_wpa_supplicant_8" path="external/wpa_supplicant_8" remote="b2g" revision="cbda29a58abc4ea1f7f4611fe354ab67b606219d"/>
   <project name="platform/development" path="development" revision="0c51f6e0aa2ee57fcb75ec3b2ff6bf754cece63e"/>
   <project name="android-sdk" path="sdk" remote="b2g" revision="ff4190dc603f62a7caa48342aa268acf99863c5c"/>
