@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_bluetooth_bluetoothhidmanager_h__
-#define mozilla_dom_bluetooth_bluetoothhidmanager_h__
+#ifndef mozilla_dom_bluetooth_BluetoothHidManager_h
+#define mozilla_dom_bluetooth_BluetoothHidManager_h
 
 #include "BluetoothCommon.h"
 #include "BluetoothProfileController.h"
@@ -46,4 +46,4 @@ private:
 
 END_BLUETOOTH_NAMESPACE
 
-#endif //#ifndef mozilla_dom_bluetooth_bluetoothhidmanager_h__
+#endif // mozilla_dom_bluetooth_BluetoothHidManager_h
