@@ -457,7 +457,7 @@ private:
   FenceHandle mReleaseFenceHandle;
   ShaderProgramOGL *mCurrentProgram;
 
-  gfx::Rect mRenderBoundsOut;
+  gfx::Rect mRenderBound;
 
   CompositorOGLVRObjects mVR;
 };
