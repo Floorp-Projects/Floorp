@@ -33,6 +33,8 @@ let gPropsNeedComma = {
 let gElement = document.getElementById("testnode");
 let gDeclaration = gElement.style;
 
+let kValuesToTestThoroughly = 3;
+
 function test_property(property)
 {
   let info = gCSSProperties[property];
@@ -58,19 +60,31 @@ function test_property(property)
     }
   }
 
-  function test_value(value) {
+  function test_value(value, valueIdx) {
     let specialKeywords = [ "inherit", "initial", "unset" ];
-    for (let keyword of specialKeywords) {
+
+    if (valueIdx < kValuesToTestThoroughly) {
+      // For the first few values, we test each special-keyword both before
+      // and after the value.
+      for (let keyword of specialKeywords) {
+        test_value_pair("before", keyword, value, keyword);
+        test_value_pair("after", value, keyword, keyword);
+      }
+    } else {
+      // For later values, only test one keyword before & after it.
+      let keywordIdx =
+        (valueIdx - kValuesToTestThoroughly) % specialKeywords.length;
+      keyword = specialKeywords[keywordIdx];
       test_value_pair("before", keyword, value, keyword);
       test_value_pair("after", value, keyword, keyword);
     }
   }
 
   for (let idx in info.initial_values) {
-    test_value(info.initial_values[idx]);
+    test_value(info.initial_values[idx], idx);
   }
   for (let idx in info.other_values) {
-    test_value(info.initial_values[idx]);
+    test_value(info.initial_values[idx], idx);
   }
 }
 
