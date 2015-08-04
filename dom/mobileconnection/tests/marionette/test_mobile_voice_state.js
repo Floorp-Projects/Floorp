@@ -4,25 +4,6 @@
 MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = "head.js";
 
-const INITIAL_STATES = {
-  state: "registered",
-  connected: true,
-  emergencyCallsOnly: false,
-  roaming: false,
-  signalStrength: -99,
-  relSignalStrength: 44,
-
-  cell: {
-    gsmLocationAreaCode: 0,
-    gsmCellId: 0,
-    cdmaBaseStationId: -1,
-    cdmaBaseStationLatitude: -2147483648,
-    cdmaBaseStationLongitude: -2147483648,
-    cdmaSystemId: -1,
-    cdmaNetworkId: -1,
-  }
-};
-
 const TEST_DATA = [{
     // Test state becomes to "unregistered"
     state: "unregistered",
@@ -125,8 +106,6 @@ function testVoiceStateUpdate(aNewState, aExpected) {
 
 startTestCommon(function() {
   log("Test initial voice connection info");
-
-  verifyVoiceInfo(INITIAL_STATES);
 
   let promise = Promise.resolve();
   for (let i = 0; i < TEST_DATA.length; i++) {
