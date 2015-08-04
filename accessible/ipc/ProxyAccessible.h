@@ -89,6 +89,11 @@ public:
    */
   void Value(nsString& aValue) const;
 
+  /*
+   * Set aHelp to the help string of the proxied accessible.
+   */
+  void Help(nsString& aHelp) const;
+
   /**
    * Set aDesc to the description of the proxied accessible.
    */

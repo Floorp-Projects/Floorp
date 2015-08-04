@@ -168,6 +168,18 @@ DocAccessibleChild::RecvValue(const uint64_t& aID, nsString* aValue)
 }
 
 bool
+DocAccessibleChild::RecvHelp(const uint64_t& aID, nsString* aHelp)
+{
+  Accessible* acc = IdToAccessible(aID);
+  if (!acc) {
+    return true;
+  }
+
+  acc->Help(*aHelp);
+  return true;
+}
+
+bool
 DocAccessibleChild::RecvDescription(const uint64_t& aID, nsString* aDesc)
 {
   Accessible* acc = IdToAccessible(aID);
