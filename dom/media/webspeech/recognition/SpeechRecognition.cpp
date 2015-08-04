@@ -684,13 +684,13 @@ SpeechRecognition::SetInterimResults(bool aArg)
 }
 
 uint32_t
-SpeechRecognition::GetMaxAlternatives(ErrorResult& aRv) const
+SpeechRecognition::MaxAlternatives() const
 {
   return mMaxAlternatives;
 }
 
 void
-SpeechRecognition::SetMaxAlternatives(uint32_t aArg, ErrorResult& aRv)
+SpeechRecognition::SetMaxAlternatives(uint32_t aArg)
 {
   mMaxAlternatives = aArg;
   return;

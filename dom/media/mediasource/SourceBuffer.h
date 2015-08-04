@@ -25,6 +25,7 @@
 #include "nsString.h"
 #include "nscore.h"
 #include "SourceBufferContentManager.h"
+#include "mozilla/Monitor.h"
 
 class JSObject;
 struct JSContext;
@@ -40,13 +41,103 @@ namespace dom {
 
 class TimeRanges;
 
+class SourceBufferAttributes {
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SourceBufferAttributes);
+  explicit SourceBufferAttributes(bool aGenerateTimestamp)
+    : mGenerateTimestamps(aGenerateTimestamp)
+    , mMonitor("SourceBufferAttributes")
+    , mAppendWindowStart(0)
+    , mAppendWindowEnd(PositiveInfinity<double>())
+    , mAppendMode(SourceBufferAppendMode::Segments)
+    , mApparentTimestampOffset(0)
+  {}
+
+  double GetAppendWindowStart()
+  {
+    MonitorAutoLock mon(mMonitor);
+    return mAppendWindowStart;
+  }
+
+  double GetAppendWindowEnd()
+  {
+    MonitorAutoLock mon(mMonitor);
+    return mAppendWindowEnd;
+  }
+
+  void SetAppendWindowStart(double aWindowStart)
+  {
+    MonitorAutoLock mon(mMonitor);
+    mAppendWindowStart = aWindowStart;
+  }
+
+  void SetAppendWindowEnd(double aWindowEnd)
+  {
+    MonitorAutoLock mon(mMonitor);
+    mAppendWindowEnd = aWindowEnd;
+  }
+
+  double GetApparentTimestampOffset()
+  {
+    MonitorAutoLock mon(mMonitor);
+    return mApparentTimestampOffset;
+  }
+
+  void SetApparentTimestampOffset(double aTimestampOffset)
+  {
+    MonitorAutoLock mon(mMonitor);
+    mApparentTimestampOffset = aTimestampOffset;
+    mTimestampOffset = media::TimeUnit::FromSeconds(aTimestampOffset);
+  }
+
+  media::TimeUnit GetTimestampOffset()
+  {
+    MonitorAutoLock mon(mMonitor);
+    return mTimestampOffset;
+  }
+
+  void SetTimestampOffset(media::TimeUnit& aTimestampOffset)
+  {
+    MonitorAutoLock mon(mMonitor);
+    mTimestampOffset = aTimestampOffset;
+    mApparentTimestampOffset = aTimestampOffset.ToSeconds();
+  }
+
+  SourceBufferAppendMode GetAppendMode()
+  {
+    MonitorAutoLock mon(mMonitor);
+    return mAppendMode;
+  }
+
+  void SetAppendMode(SourceBufferAppendMode aAppendMode)
+  {
+    MonitorAutoLock mon(mMonitor);
+    mAppendMode = aAppendMode;
+  }
+
+  // mGenerateTimestamp isn't mutable once the source buffer has been constructed
+  // We don't need a monitor to protect it across threads.
+  const bool mGenerateTimestamps;
+
+private:
+  ~SourceBufferAttributes() {};
+
+  // Monitor protecting all members below.
+  Monitor mMonitor;
+  double mAppendWindowStart;
+  double mAppendWindowEnd;
+  SourceBufferAppendMode mAppendMode;
+  double mApparentTimestampOffset;
+  media::TimeUnit mTimestampOffset;
+};
+
 class SourceBuffer final : public DOMEventTargetHelper
 {
 public:
   /** WebIDL Methods. */
   SourceBufferAppendMode Mode() const
   {
-    return mAppendMode;
+    return mAttributes->GetAppendMode();
   }
 
   void SetMode(SourceBufferAppendMode aMode, ErrorResult& aRv);
@@ -61,21 +152,21 @@ public:
 
   double TimestampOffset() const
   {
-    return mApparentTimestampOffset;
+    return mAttributes->GetApparentTimestampOffset();
   }
 
   void SetTimestampOffset(double aTimestampOffset, ErrorResult& aRv);
 
   double AppendWindowStart() const
   {
-    return mAppendWindowStart;
+    return mAttributes->GetAppendWindowStart();
   }
 
   void SetAppendWindowStart(double aAppendWindowStart, ErrorResult& aRv);
 
   double AppendWindowEnd() const
   {
-    return mAppendWindowEnd;
+    return mAttributes->GetAppendWindowEnd();
   }
 
   void SetAppendWindowEnd(double aAppendWindowEnd, ErrorResult& aRv);
@@ -164,24 +255,14 @@ private:
   void AppendDataCompletedWithSuccess(bool aHasActiveTracks);
   void AppendDataErrored(nsresult aError);
 
-  // Set timestampOffset, must be called on the main thread.
-  void SetTimestampOffset(const media::TimeUnit& aTimestampOffset);
-
   nsRefPtr<MediaSource> mMediaSource;
 
   uint32_t mEvictionThreshold;
 
   nsRefPtr<SourceBufferContentManager> mContentManager;
+  nsRefPtr<SourceBufferAttributes> mAttributes;
 
-  double mAppendWindowStart;
-  double mAppendWindowEnd;
-
-  double mApparentTimestampOffset;
-  media::TimeUnit mTimestampOffset;
-
-  SourceBufferAppendMode mAppendMode;
   bool mUpdating;
-  bool mGenerateTimestamps;
   bool mIsUsingFormatReader;
 
   mozilla::Atomic<bool> mActive;

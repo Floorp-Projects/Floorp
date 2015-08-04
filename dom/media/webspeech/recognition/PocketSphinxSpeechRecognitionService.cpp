@@ -54,8 +54,7 @@ public:
     SpeechRecognitionResultList* resultList =
       new SpeechRecognitionResultList(mRecognition);
     SpeechRecognitionResult* result = new SpeechRecognitionResult(mRecognition);
-    ErrorResult rv;
-    if (0 < mRecognition->GetMaxAlternatives(rv)) { // GetMaxAlternatives can't fail
+    if (0 < mRecognition->MaxAlternatives()) {
       SpeechRecognitionAlternative* alternative =
         new SpeechRecognitionAlternative(mRecognition);
 
@@ -331,8 +330,7 @@ PocketSphinxSpeechRecognitionService::BuildMockResultList()
   SpeechRecognitionResultList* resultList =
     new SpeechRecognitionResultList(mRecognition);
   SpeechRecognitionResult* result = new SpeechRecognitionResult(mRecognition);
-  ErrorResult rv;
-  if (0 < mRecognition->GetMaxAlternatives(rv)) { // GetMaxAlternatives can't fail
+  if (0 < mRecognition->MaxAlternatives()) {
     SpeechRecognitionAlternative* alternative =
       new SpeechRecognitionAlternative(mRecognition);
 
