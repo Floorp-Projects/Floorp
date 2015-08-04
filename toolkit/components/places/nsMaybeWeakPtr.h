@@ -90,13 +90,14 @@ template<class T>
 const nsCOMPtr<T>
 nsMaybeWeakPtr<T>::GetValue() const
 {
+  if (!mPtr) {
+    return nullptr;
+  }
+
   nsresult rv;
-  nsCOMPtr<T> ref;
-  if (mPtr) {
-    ref = do_QueryInterface(mPtr, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      return ref;
-    }
+  nsCOMPtr<T> ref = do_QueryInterface(mPtr, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    return ref;
   }
 
   nsCOMPtr<nsIWeakReference> weakRef = do_QueryInterface(mPtr);
