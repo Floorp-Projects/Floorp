@@ -660,6 +660,16 @@ private:
   bool MustRestyleSelf(nsRestyleHint aRestyleHint, Element* aElement);
 
   /**
+   * Returns true iff aRestyleHint indicates that we can call
+   * ReparentStyleContext rather than any other restyling method of
+   * nsStyleSet that looks up a new rule node, and if we are
+   * not in the process of reconstructing the whole rule tree.
+   * This is used to check whether it is appropriate to call
+   * ReparentStyleContext.
+   */
+  bool CanReparentStyleContext(nsRestyleHint aRestyleHint);
+
+  /**
    * Helpers for Restyle().
    */
   void AddLayerChangesForAnimation();
