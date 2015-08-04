@@ -37,6 +37,7 @@ class Rooted;
 class JS_FRIEND_API(CompileOptions);
 class JS_FRIEND_API(ReadOnlyCompileOptions);
 class JS_FRIEND_API(OwningCompileOptions);
+class JS_FRIEND_API(TransitiveCompileOptions);
 class JS_PUBLIC_API(CompartmentOptions);
 
 class Value;
@@ -285,8 +286,7 @@ enum ThingRootKind
     THING_ROOT_LAZY_SCRIPT,
     THING_ROOT_ID,
     THING_ROOT_VALUE,
-    THING_ROOT_STATIC_TRACEABLE,
-    THING_ROOT_DYNAMIC_TRACEABLE,
+    THING_ROOT_TRACEABLE,
     THING_ROOT_LIMIT
 };
 

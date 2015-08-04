@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=861164
+Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 861164</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript;version=1.7">
+
+  Components.utils.import("resource://gre/modules/Services.jsm");
+
+  var Cc = Components.classes;
+  var Ci = Components.interfaces;
+
+  SimpleTest.waitForExplicitFinish();
+
+  function search_observer(aSubject, aTopic, aData) {
+    let engine = aSubject.QueryInterface(Ci.nsISearchEngine);
+    info("Observer: " + aData + " for " + engine.name);
+
+    if (aData != "engine-added")
+      return;
+
+    if (engine.name != "Test search engine")
+      return;
+
+    function check_submission(aExpected, aSearchTerm, aType) {
+      is(engine.getSubmission(aSearchTerm, aType).uri.spec, "http://example.com/search" + aExpected, "submission matches");
+    }
+
+    // Force the type and check for the expected URL
+    check_submission("?q=foo", "foo", "text/html");
+    check_submission("/tablet?q=foo", "foo", "application/x-moz-tabletsearch");
+    check_submission("/phone?q=foo", "foo", "application/x-moz-phonesearch");
+
+    // Let the service pick the appropriate type based on the device
+    // and check for expected URL
+    let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
+    if (sysInfo.get("tablet")) {
+      info("Device: tablet");
+      check_submission("/tablet?q=foo", "foo", null);
+    } else {
+      info("Device: phone");
+      check_submission("/phone?q=foo", "foo", null);
+    }
+
+    SimpleTest.finish();
+  };
+
+  SimpleTest.registerCleanupFunction(function() {
+    Services.obs.removeObserver(search_observer, "browser-search-engine-modified");
+  });
+  Services.obs.addObserver(search_observer, "browser-search-engine-modified", false);
+  info("Loading search engine");
+  Services.search.addEngine("http://mochi.test:8888/chrome/mobile/android/tests/browser/chrome/devicesearch.xml", Ci.nsISearchEngine.DATA_XML, null, false);
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=861164">Mozilla Bug 861164</a>
+<br>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1184186">Migrated from Robocop testDeviceSearchEngine</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

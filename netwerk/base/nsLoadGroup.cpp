@@ -14,15 +14,15 @@
 #include "mozilla/Logging.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/Telemetry.h"
-#include "nsAutoPtr.h"
-#include "mozilla/net/PSpdyPush.h"
 #include "nsITimedChannel.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIRequestObserver.h"
+#include "nsISchedulingContext.h"
 #include "CacheObserver.h"
 #include "MainThreadUtils.h"
+
+#include "mozilla/net/NeckoChild.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -42,69 +42,6 @@ static PRLogModuleInfo* gLoadGroupLog = nullptr;
 
 #undef LOG
 #define LOG(args) MOZ_LOG(gLoadGroupLog, mozilla::LogLevel::Debug, args)
-
-////////////////////////////////////////////////////////////////////////////////
-// nsLoadGroupConnectionInfo
-
-class nsLoadGroupConnectionInfo final : public nsILoadGroupConnectionInfo
-{
-    ~nsLoadGroupConnectionInfo() {}
-
-public:
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSILOADGROUPCONNECTIONINFO
-
-    nsLoadGroupConnectionInfo();
-private:
-    Atomic<uint32_t>       mBlockingTransactionCount;
-    nsAutoPtr<mozilla::net::SpdyPushCache> mSpdyCache;
-};
-
-NS_IMPL_ISUPPORTS(nsLoadGroupConnectionInfo, nsILoadGroupConnectionInfo)
-
-nsLoadGroupConnectionInfo::nsLoadGroupConnectionInfo()
-    : mBlockingTransactionCount(0)
-{
-}
-
-NS_IMETHODIMP
-nsLoadGroupConnectionInfo::GetBlockingTransactionCount(uint32_t *aBlockingTransactionCount)
-{
-    NS_ENSURE_ARG_POINTER(aBlockingTransactionCount);
-    *aBlockingTransactionCount = mBlockingTransactionCount;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLoadGroupConnectionInfo::AddBlockingTransaction()
-{
-    mBlockingTransactionCount++;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLoadGroupConnectionInfo::RemoveBlockingTransaction(uint32_t *_retval)
-{
-    NS_ENSURE_ARG_POINTER(_retval);
-        mBlockingTransactionCount--;
-        *_retval = mBlockingTransactionCount;
-    return NS_OK;
-}
-
-/* [noscript] attribute SpdyPushCachePtr spdyPushCache; */
-NS_IMETHODIMP
-nsLoadGroupConnectionInfo::GetSpdyPushCache(mozilla::net::SpdyPushCache **aSpdyPushCache)
-{
-    *aSpdyPushCache = mSpdyCache.get();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLoadGroupConnectionInfo::SetSpdyPushCache(mozilla::net::SpdyPushCache *aSpdyPushCache)
-{
-    mSpdyCache = aSpdyPushCache;
-    return NS_OK;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -170,7 +107,6 @@ nsLoadGroup::nsLoadGroup(nsISupports* outer)
     : mForegroundCount(0)
     , mLoadFlags(LOAD_NORMAL)
     , mDefaultLoadFlags(0)
-    , mConnectionInfo(new nsLoadGroupConnectionInfo())
     , mRequests(&sRequestHashOps, sizeof(RequestMapEntry))
     , mStatus(NS_OK)
     , mPriority(PRIORITY_NORMAL)
@@ -195,6 +131,23 @@ nsLoadGroup::~nsLoadGroup()
     NS_ASSERTION(NS_SUCCEEDED(rv), "Cancel failed");
 
     mDefaultLoadRequest = 0;
+
+    if (mSchedulingContext) {
+        nsID scid;
+        mSchedulingContext->GetID(&scid);
+
+        if (IsNeckoChild() && gNeckoChild) {
+            char scid_str[NSID_LENGTH];
+            scid.ToProvidedString(scid_str);
+
+            nsCString scid_nscs;
+            scid_nscs.AssignASCII(scid_str);
+
+            gNeckoChild->SendRemoveSchedulingContext(scid_nscs);
+        } else {
+            mSchedulingContextService->RemoveSchedulingContext(scid);
+        }
+    }
 
     LOG(("LOADGROUP [%x]: Destroyed.\n", this));
 }
@@ -758,12 +711,12 @@ nsLoadGroup::SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks)
 }
 
 NS_IMETHODIMP
-nsLoadGroup::GetConnectionInfo(nsILoadGroupConnectionInfo **aCI)
+nsLoadGroup::GetSchedulingContextID(nsID *aSCID)
 {
-    NS_ENSURE_ARG_POINTER(aCI);
-    *aCI = mConnectionInfo;
-    NS_IF_ADDREF(*aCI);
-    return NS_OK;
+    if (!mSchedulingContext) {
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+    return mSchedulingContext->GetID(aSCID);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1111,6 +1064,20 @@ nsresult nsLoadGroup::MergeDefaultLoadFlags(nsIRequest *aRequest,
     }
     outFlags = flags;
     return rv;
+}
+
+nsresult nsLoadGroup::Init()
+{
+    mSchedulingContextService = do_GetService("@mozilla.org/network/scheduling-context-service;1");
+    if (mSchedulingContextService) {
+        nsID schedulingContextID;
+        if (NS_SUCCEEDED(mSchedulingContextService->NewSchedulingContextID(&schedulingContextID))) {
+            mSchedulingContextService->GetSchedulingContext(schedulingContextID,
+                                                            getter_AddRefs(mSchedulingContext));
+        }
+    }
+
+    return NS_OK;
 }
 
 #undef LOG

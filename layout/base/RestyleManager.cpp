@@ -759,7 +759,7 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
       }
     }
 
-    if ((hint & nsChangeHint_AddOrRemoveTransform) && frame &&
+    if ((hint & nsChangeHint_UpdateContainingBlock) && frame &&
         !(hint & nsChangeHint_ReconstructFrame)) {
       if (NeedToReframeForAddingOrRemovingTransform(frame) ||
           frame->GetType() == nsGkAtoms::fieldSetFrame ||
@@ -773,13 +773,12 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
           // Normally frame construction would set state bits as needed,
           // but we're not going to reconstruct the frame so we need to set them.
           // It's because we need to set this state on each affected frame
-          // that we can't coalesce nsChangeHint_AddOrRemoveTransform hints up
+          // that we can't coalesce nsChangeHint_UpdateContainingBlock hints up
           // to ancestors (i.e. it can't be an inherited change hint).
           if (cont->IsAbsPosContaininingBlock()) {
-            // If a transform has been added, we'll be taking this path,
-            // but we may be taking this path even if a transform has been
-            // removed. It's OK to add the bit even if it's not needed.
-            cont->AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
+            if (cont->StyleDisplay()->HasTransform(cont)) {
+              cont->AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
+            }
             if (!cont->IsAbsoluteContainer() &&
                 (cont->GetStateBits() & NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN)) {
               cont->MarkAsAbsoluteContainingBlock();
@@ -1161,13 +1160,15 @@ void
 RestyleManager::AttributeWillChange(Element* aElement,
                                     int32_t aNameSpaceID,
                                     nsIAtom* aAttribute,
-                                    int32_t aModType)
+                                    int32_t aModType,
+                                    const nsAttrValue* aNewValue)
 {
   nsRestyleHint rshint =
     mPresContext->StyleSet()->HasAttributeDependentStyle(aElement,
                                                          aAttribute,
                                                          aModType,
-                                                         false);
+                                                         false,
+                                                         aNewValue);
   PostRestyleEvent(aElement, rshint, NS_STYLE_HINT_NONE);
 }
 
@@ -1177,7 +1178,8 @@ void
 RestyleManager::AttributeChanged(Element* aElement,
                                  int32_t aNameSpaceID,
                                  nsIAtom* aAttribute,
-                                 int32_t aModType)
+                                 int32_t aModType,
+                                 const nsAttrValue* aOldValue)
 {
   // Hold onto the PresShell to prevent ourselves from being destroyed.
   // XXXbz how, exactly, would this attribute change cause us to be
@@ -1254,7 +1256,8 @@ RestyleManager::AttributeChanged(Element* aElement,
     mPresContext->StyleSet()->HasAttributeDependentStyle(aElement,
                                                          aAttribute,
                                                          aModType,
-                                                         true);
+                                                         true,
+                                                         aOldValue);
 
   PostRestyleEvent(aElement, rshint, hint);
 }
@@ -2628,7 +2631,7 @@ ElementRestyler::AddLayerChangesForAnimation()
       // If we have a transform layer but don't have any transform style, we
       // probably just removed the transform but haven't destroyed the layer
       // yet. In this case we will add the appropriate change hint
-      // (nsChangeHint_AddOrRemoveTransform) when we compare style contexts
+      // (nsChangeHint_UpdateContainingBlock) when we compare style contexts
       // so we can skip adding any change hint here. (If we *were* to add
       // nsChangeHint_UpdateTransformLayer, ApplyRenderingChangeToTree would
       // complain that we're updating a transform layer without a transform).

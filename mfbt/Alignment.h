@@ -9,6 +9,7 @@
 #ifndef mozilla_Alignment_h
 #define mozilla_Alignment_h
 
+#include "mozilla/Attributes.h"
 #include <stddef.h>
 #include <stdint.h>
 
@@ -122,7 +123,7 @@ struct AlignedStorage
 };
 
 template<typename T>
-struct AlignedStorage2
+struct MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS AlignedStorage2
 {
   union U
   {

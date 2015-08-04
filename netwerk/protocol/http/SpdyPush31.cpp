@@ -40,7 +40,7 @@ SpdyPushedStream31::SpdyPushedStream31(SpdyPush31TransactionBuffer *aTransaction
   LOG3(("SpdyPushedStream31 ctor this=%p id=0x%X\n", this, aID));
   mStreamID = aID;
   mBufferedPush->SetPushStream(this);
-  mLoadGroupCI = aAssociatedStream->LoadGroupConnectionInfo();
+  mSchedulingContext = aAssociatedStream->SchedulingContext();
   mLastRead = TimeStamp::Now();
 }
 

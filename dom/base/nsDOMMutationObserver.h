@@ -374,7 +374,7 @@ public:
   {
     // We can reuse AttributeWillChange implementation.
     AttributeWillChange(aDocument, aElement, aNameSpaceID, aAttribute,
-                        nsIDOMMutationEvent::MODIFICATION);
+                        nsIDOMMutationEvent::MODIFICATION, nullptr);
   }
 
 protected:

@@ -567,11 +567,6 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
   }
 }
 
-/* #menu_readingList, svg icons don't work in the mac native menubar */
-#BMB_readingList {
-  list-style-image: url("chrome://browser/skin/readinglist/readinglist-icon.svg");
-}
-
 #panelMenu_pocket,
 #menu_pocket,
 #BMB_pocket {
@@ -2021,8 +2016,6 @@ richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-
     -moz-image-region: rect(0, 64px, 32px, 32px);
   }
 }
-
-%include ../shared/readinglist/readinglist.inc.css
 
 /* Reader mode button */
 
@@ -3691,4 +3684,8 @@ window > chatbox {
 #context-navigation > .menuitem-iconic {
   padding-left: 0;
   padding-right: 0;
+}
+
+.browser-action-panel > .panel-arrowcontainer > .panel-arrowcontent {
+  padding: 0;
 }

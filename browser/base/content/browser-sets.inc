@@ -146,11 +146,6 @@
                  sidebarurl="chrome://browser/content/history/history-panel.xul"
                  oncommand="SidebarUI.toggle('viewHistorySidebar');"/>
 
-    <broadcaster id="readingListSidebar" hidden="true" autoCheck="false" disabled="true"
-                 sidebartitle="&readingList.label;" type="checkbox" group="sidebar"
-                 sidebarurl="chrome://browser/content/readinglist/sidebar.xhtml"
-                 oncommand="SidebarUI.toggle('readingListSidebar');"/>
-
     <broadcaster id="viewWebPanelsSidebar" autoCheck="false"
                  type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/web-panels.xul"
                  oncommand="SidebarUI.toggle('viewWebPanelsSidebar');"/>
@@ -420,11 +415,6 @@
          modifiers="accel"
 #endif
          command="viewHistorySidebar"/>
-
-    <key id="key_readingListSidebar"
-         key="&readingList.sidebar.commandKey;"
-         modifiers="accel,alt"
-         command="readingListSidebar"/>
 
     <key id="key_fullZoomReduce"  key="&fullZoomReduceCmd.commandkey;"   command="cmd_fullZoomReduce"  modifiers="accel"/>
     <key                          key="&fullZoomReduceCmd.commandkey2;"  command="cmd_fullZoomReduce"  modifiers="accel"/>

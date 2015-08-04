@@ -1165,13 +1165,10 @@ nsStandardURL::SetSpec(const nsACString &input)
         return NS_ERROR_MALFORMED_URI;
     }
 
-    int32_t refPos = input.FindChar('#');
-    if (refPos != kNotFound) {
-        const nsCSubstring& sub = Substring(input, refPos, input.Length());
-        nsresult rv = CheckRefCharacters(sub);
-        if (NS_FAILED(rv)) {
-            return rv;
-        }
+    // NUL characters aren't allowed
+    // \r\n\t are stripped out instead of returning error(see below)
+    if (input.FindChar('\0') != kNotFound) {
+        return NS_ERROR_MALFORMED_URI;
     }
 
     // Make a backup of the curent URL
@@ -2446,27 +2443,6 @@ nsStandardURL::SetQuery(const nsACString &input)
     return NS_OK;
 }
 
-nsresult
-nsStandardURL::CheckRefCharacters(const nsACString &input)
-{
-    nsACString::const_iterator start, end;
-    input.BeginReading(start);
-    input.EndReading(end);
-    for (; start != end; ++start) {
-        switch (*start) {
-            case 0x00:
-            case 0x09:
-            case 0x0A:
-            case 0x0D:
-                // These characters are not allowed in the Ref part.
-                return NS_ERROR_MALFORMED_URI;
-            default:
-                continue;
-        }
-    }
-    return NS_OK;
-}
-
 NS_IMETHODIMP
 nsStandardURL::SetRef(const nsACString &input)
 {
@@ -2477,9 +2453,8 @@ nsStandardURL::SetRef(const nsACString &input)
 
     LOG(("nsStandardURL::SetRef [ref=%s]\n", ref));
 
-    nsresult rv = CheckRefCharacters(input);
-    if (NS_FAILED(rv)) {
-        return rv;
+    if (input.FindChar('\0') != kNotFound) {
+        return NS_ERROR_MALFORMED_URI;
     }
 
     if (mPath.mLen < 0)

@@ -567,26 +567,15 @@ struct GCMethods<JSFunction*>
 
 namespace JS {
 
-// If a class containing GC pointers has (or can gain) a vtable, then it can be
-// trivially used with Rooted/Handle/MutableHandle by deriving from
-// DynamicTraceable and overriding |void trace(JSTracer*)|.
-class DynamicTraceable
+// Non pointer types -- structs or classes that contain GC pointers, either as
+// a member or in a more complex container layout -- can also be stored in a
+// [Persistent]Rooted if it derives from JS::Traceable. A JS::Traceable stored
+// in a [Persistent]Rooted must implement the method:
+//     |static void trace(T*, JSTracer*)|
+class Traceable
 {
   public:
-    static js::ThingRootKind rootKind() { return js::THING_ROOT_DYNAMIC_TRACEABLE; }
-
-    virtual ~DynamicTraceable() {}
-    virtual void trace(JSTracer* trc) = 0;
-};
-
-// To use a static class or struct (e.g. not containing a vtable) as part of a
-// Rooted/Handle/MutableHandle, ensure that it derives from StaticTraceable
-// (i.e. so that automatic upcast via calls works) and ensure that a method
-// |static void trace(T*, JSTracer*)| exists on the class.
-class StaticTraceable
-{
-  public:
-    static js::ThingRootKind rootKind() { return js::THING_ROOT_STATIC_TRACEABLE; }
+    static js::ThingRootKind rootKind() { return js::THING_ROOT_TRACEABLE; }
 };
 
 } /* namespace JS */
@@ -596,8 +585,8 @@ namespace js {
 template <typename T>
 class DispatchWrapper
 {
-    static_assert(mozilla::IsBaseOf<JS::StaticTraceable, T>::value,
-                  "DispatchWrapper is intended only for usage with a StaticTraceable");
+    static_assert(mozilla::IsBaseOf<JS::Traceable, T>::value,
+                  "DispatchWrapper is intended only for usage with a Traceable");
 
     using TraceFn = void (*)(T*, JSTracer*);
     TraceFn tracer;
@@ -620,7 +609,7 @@ class DispatchWrapper
 
     // Trace the contained storage (of unknown type) using the trace function
     // we set aside when we did know the type.
-    static void TraceWrapped(JSTracer* trc, JS::StaticTraceable* thingp, const char* name) {
+    static void TraceWrapped(JSTracer* trc, JS::Traceable* thingp, const char* name) {
         auto wrapper = reinterpret_cast<DispatchWrapper*>(
                            uintptr_t(thingp) - offsetof(DispatchWrapper, storage));
         wrapper->tracer(&wrapper->storage, trc);
@@ -666,8 +655,7 @@ namespace JS {
 template <typename T>
 class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
 {
-    static_assert(!mozilla::IsConvertible<T, StaticTraceable*>::value &&
-                  !mozilla::IsConvertible<T, DynamicTraceable*>::value,
+    static_assert(!mozilla::IsConvertible<T, Traceable*>::value,
                   "Rooted takes pointer or Traceable types but not Traceable* type");
 
     /* Note: CX is a subclass of either ContextFriendFields or PerThreadDataFriendFields. */
@@ -730,13 +718,13 @@ class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
     /*
      * For pointer types, the TraceKind for tracing is based on the list it is
      * in (selected via rootKind), so no additional storage is required here.
-     * All StaticTraceable, however, share the same list, so the function to
+     * All Traceable, however, share the same list, so the function to
      * call for tracing is stored adjacent to the struct. Since C++ cannot
      * templatize on storage class, this is implemented via the wrapper class
      * DispatchWrapper.
      */
     using MaybeWrapped = typename mozilla::Conditional<
-        mozilla::IsBaseOf<StaticTraceable, T>::value,
+        mozilla::IsBaseOf<Traceable, T>::value,
         js::DispatchWrapper<T>,
         T>::Type;
     MaybeWrapped ptr;
@@ -1016,7 +1004,8 @@ class PersistentRooted : public js::PersistentRootedBase<T>,
                    kind == js::THING_ROOT_SCRIPT ||
                    kind == js::THING_ROOT_STRING ||
                    kind == js::THING_ROOT_ID ||
-                   kind == js::THING_ROOT_VALUE);
+                   kind == js::THING_ROOT_VALUE ||
+                   kind == js::THING_ROOT_TRACEABLE);
     }
 
   public:
@@ -1096,7 +1085,13 @@ class PersistentRooted : public js::PersistentRootedBase<T>,
         ptr = value;
     }
 
-    T ptr;
+    // See the comment above Rooted::ptr.
+    using MaybeWrapped = typename mozilla::Conditional<
+        mozilla::IsBaseOf<Traceable, T>::value,
+        js::DispatchWrapper<T>,
+        T>::Type;
+
+    MaybeWrapped ptr;
 };
 
 class JS_PUBLIC_API(ObjectPtr)

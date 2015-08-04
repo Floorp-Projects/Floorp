@@ -65,7 +65,7 @@
 
   function checkAudio(constraintApplied, stream) {
     var audio = mkElement('audio');
-    audio.mozSrcObject = stream;
+    audio.srcObject = stream;
     audio.play();
 
     var context = new AudioContext();
@@ -93,7 +93,7 @@
 
   function checkVideo(constraintApplied, stream) {
     var video = mkElement('video');
-    video.mozSrcObject = stream;
+    video.srcObject = stream;
     video.play();
 
     return periodicCheck(() => {
