@@ -627,6 +627,7 @@ function Search(searchString, searchParam, autocompleteListener,
   this._enableActions = params.has("enable-actions");
   this._disablePrivateActions = params.has("disable-private-actions");
   this._inPrivateWindow = params.has("private-window");
+  this._prohibitAutoFill = params.has("prohibit-autofill");
 
   this._searchTokens =
     this.filterTokens(getUnfilteredSearchTokens(this._searchString));
@@ -941,6 +942,9 @@ Search.prototype = {
       );
     let promise = this._searchSuggestionController.fetchCompletePromise
       .then(() => {
+        // The search has been canceled already.
+        if (!this._searchSuggestionController)
+          return;
         if (this._searchSuggestionController.resultsCount >= 0 &&
             this._searchSuggestionController.resultsCount < 2) {
           // The original string is used to properly compare with the next search.
@@ -1591,6 +1595,9 @@ Search.prototype = {
     if (this._searchString.length == 0)
       return false;
 
+    if (this._prohibitAutoFill)
+      return false;
+
     return true;
   },
 
@@ -1831,7 +1838,13 @@ UnifiedComplete.prototype = {
   //////////////////////////////////////////////////////////////////////////////
   //// nsIAutoCompleteSearchDescriptor
 
-  get searchType() Ci.nsIAutoCompleteSearchDescriptor.SEARCH_TYPE_IMMEDIATE,
+  get searchType() {
+    return Ci.nsIAutoCompleteSearchDescriptor.SEARCH_TYPE_IMMEDIATE;
+  },
+
+  get clearingAutoFillSearchesAgain() {
+    return true;
+  },
 
   //////////////////////////////////////////////////////////////////////////////
   //// nsISupports

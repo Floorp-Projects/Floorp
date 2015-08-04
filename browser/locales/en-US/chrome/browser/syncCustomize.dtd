@@ -15,8 +15,6 @@
 -->
 <!ENTITY engine.bookmarks.label           "Bookmarks">
 <!ENTITY engine.bookmarks.accesskey       "m">
-<!ENTITY engine.readinglist.label         "Reading List">
-<!ENTITY engine.readinglist.accesskey     "L">
 <!ENTITY engine.history.label             "History">
 <!ENTITY engine.history.accesskey         "r">
 <!ENTITY engine.tabs.label                "Tabs">

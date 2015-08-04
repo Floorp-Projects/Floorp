@@ -118,7 +118,8 @@ public class Tabs implements GeckoEventListener {
             "DesktopMode:Changed",
             "Tab:ViewportMetadata",
             "Tab:StreamStart",
-            "Tab:StreamStop");
+            "Tab:StreamStop",
+            "Tab:AudioPlayingChange");
 
     }
 
@@ -581,6 +582,9 @@ public class Tabs implements GeckoEventListener {
             } else if (event.equals("Tab:StreamStop")) {
                 tab.setRecording(false);
                 notifyListeners(tab, TabEvents.RECORDING_CHANGE);
+            } else if (event.equals("Tab:AudioPlayingChange")) {
+                tab.setIsAudioPlaying(message.getBoolean("isAudioPlaying"));
+                notifyListeners(tab, TabEvents.AUDIO_PLAYING_CHANGE);
             }
 
         } catch (Exception e) {
@@ -641,6 +645,7 @@ public class Tabs implements GeckoEventListener {
         BOOKMARK_REMOVED,
         READING_LIST_ADDED,
         READING_LIST_REMOVED,
+        AUDIO_PLAYING_CHANGE,
     }
 
     public void notifyListeners(Tab tab, TabEvents msg) {
