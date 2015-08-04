@@ -2279,8 +2279,9 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
     uint32_t number = 0;
     nsresult rv = aStream->Read32(&number);
     mNodeInfo = aNodeInfos->SafeElementAt(number, nullptr);
-    if (!mNodeInfo)
+    if (!mNodeInfo) {
         return NS_ERROR_UNEXPECTED;
+    }
 
     // Read Attributes
     nsresult tmp = aStream->Read32(&number);
@@ -2292,8 +2293,9 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
     uint32_t i;
     if (mNumAttributes > 0) {
         mAttributes = new (fallible) nsXULPrototypeAttribute[mNumAttributes];
-        if (! mAttributes)
+        if (!mAttributes) {
             return NS_ERROR_OUT_OF_MEMORY;
+        }
 
         nsAutoString attributeValue;
         for (i = 0; i < mNumAttributes; ++i) {
@@ -2302,8 +2304,9 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
               rv = tmp;
             }
             mozilla::dom::NodeInfo* ni = aNodeInfos->SafeElementAt(number, nullptr);
-            if (!ni)
+            if (!ni) {
                 return NS_ERROR_UNEXPECTED;
+            }
 
             mAttributes[i].mName.SetTo(ni);
 
