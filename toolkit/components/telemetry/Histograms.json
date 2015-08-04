@@ -1456,7 +1456,7 @@
     "description": "SPDY: KB read per connection"
   },
   "SPDY_SETTINGS_UL_BW": {
-    "expires_in_version": "never",
+    "expires_in_version": "42",
     "kind": "exponential",
     "high": "10000",
     "n_buckets": 100,
@@ -1464,7 +1464,7 @@
     "description": "SPDY: Settings Upload Bandwidth"
   },
   "SPDY_SETTINGS_DL_BW": {
-    "expires_in_version": "never",
+    "expires_in_version": "42",
     "kind": "exponential",
     "high": "10000",
     "n_buckets": 100,
@@ -1472,7 +1472,7 @@
     "description": "SPDY: Settings Download Bandwidth"
   },
   "SPDY_SETTINGS_RTT": {
-    "expires_in_version": "never",
+    "expires_in_version": "42",
     "kind": "exponential",
     "high": "1000",
     "n_buckets": 100,
@@ -1485,10 +1485,10 @@
     "high": "5000",
     "n_buckets": 100,
     "extended_statistics_ok": true,
-    "description": "SPDY: Settings Max Streams parameter"
+    "description": "H2: Settings Max Streams parameter"
   },
   "SPDY_SETTINGS_CWND": {
-    "expires_in_version": "never",
+    "expires_in_version": "42",
     "kind": "exponential",
     "high": "500",
     "n_buckets": 50,
@@ -1496,7 +1496,7 @@
     "description": "SPDY: Settings CWND (packets)"
   },
   "SPDY_SETTINGS_RETRANS": {
-    "expires_in_version": "never",
+    "expires_in_version": "42",
     "kind": "exponential",
     "high": "100",
     "n_buckets": 50,
@@ -1509,7 +1509,7 @@
     "high": "1000",
     "n_buckets": 50,
     "extended_statistics_ok": true,
-    "description": "SPDY: Settings IW (rounded to KB)"
+    "description": "H2: Settings Initial Window (rounded to KB)"
   },
   "DISK_CACHE_CORRUPT_DETAILS": {
     "expires_in_version": "40",
@@ -1657,7 +1657,12 @@
     "extended_statistics_ok": true,
     "description": "Time from submission to dispatch of SPDY transaction (ms)"
   },
-  "HTTP_DISK_CACHE_OVERHEAD": {
+  "HTTP_SAW_QUIC_ALT_PROTOCOL": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Fraction of responses with a quic alt-protocol advertisement."
+  },
+ "HTTP_DISK_CACHE_OVERHEAD": {
     "expires_in_version": "default",
     "kind": "exponential",
     "high": "32000000",
