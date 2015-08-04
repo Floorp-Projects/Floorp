@@ -69,7 +69,7 @@ nsMaybeWeakPtr<T>::GetValue() const
   nsresult rv;
   nsCOMPtr<T> ref;
   if (mPtr) {
-    rv = mPtr->QueryInterface(NS_GET_TEMPLATE_IID(T), getter_AddRefs(ref));
+    ref = do_QueryInterface(mPtr, &rv);
     if (NS_SUCCEEDED(rv)) {
       return ref;
     }
@@ -77,7 +77,7 @@ nsMaybeWeakPtr<T>::GetValue() const
 
   nsCOMPtr<nsIWeakReference> weakRef = do_QueryInterface(mPtr);
   if (weakRef) {
-    rv = weakRef->QueryReferent(NS_GET_TEMPLATE_IID(T), getter_AddRefs(ref));
+    ref = do_QueryReferent(weakRef, &rv);
     if (NS_SUCCEEDED(rv)) {
       return ref;
     }
