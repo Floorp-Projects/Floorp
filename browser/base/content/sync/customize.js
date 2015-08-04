@@ -6,15 +6,6 @@
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-addEventListener("load", function () {
-  // unhide the reading-list engine if readinglist is enabled (note this
-  // dialog is only used with FxA sync, so no special action is needed
-  // for legacy sync.)
-  if (Services.prefs.getBoolPref("browser.readinglist.enabled")) {
-    document.getElementById("readinglist-engine").removeAttribute("hidden");
-  }
-});
-
 addEventListener("dialogaccept", function () {
   let pane = document.getElementById("sync-customize-pane");
   // First determine what the preference for the "global" sync enabled pref

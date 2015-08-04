@@ -318,12 +318,6 @@ let gSyncPane = {
       fxaEmailAddress1Label.hidden = false;
       displayNameLabel.hidden = true;
 
-      // unhide the reading-list engine if readinglist is enabled (note we do
-      // it here as it must remain disabled for legacy sync users)
-      if (Services.prefs.getBoolPref("browser.readinglist.enabled")) {
-        document.getElementById("readinglist-engine").removeAttribute("hidden");
-      }
-
       let profileInfoEnabled;
       try {
         profileInfoEnabled = Services.prefs.getBoolPref("identity.fxaccounts.profile_image.enabled");
