@@ -57,15 +57,13 @@ const TEST_DATA = [
                   "Return Result message not containing an error has been " +
                   "received from the network, the ME shall inform the SIM " +
                   "that the command has"}},
-  {command: "D046" + // Length
+  {command: "D044" + // Length
             "8103011200" + // Command details
             "82028183" + // Device identities
-            "8500" + // Alpha identifier
             "8A39F041E19058341E9149E592D9743EA151E9945AB55E" + // USSD string
             "B1596D2B2C1E93CBE6333AAD5EB3DBEE373C2E9FD3EBF6" +
             "3B3EAF6FC564335ACD76C3E560",
-   expect: {commandQualifier: 0x00,
-            text: ""}},
+   expect: {commandQualifier: 0x00}},
   {command: "D054" + // Length
             "8103011200" + // Command details
             "82028183" + // Device identities
@@ -126,7 +124,16 @@ const TEST_DATA = [
             text: "你好"}},
 ];
 
-function testSendUSSD(aCommand, aExpect) {
+const TEST_CMD_NULL_ALPHA_ID =
+        "D046" + // Length
+        "8103011200" + // Command details
+        "82028183" + // Device identities
+        "8500" + // Alpha identifier
+        "8A39F041E19058341E9149E592D9743EA151E9945AB55E" + // USSD string
+        "B1596D2B2C1E93CBE6333AAD5EB3DBEE373C2E9FD3EBF6" +
+        "3B3EAF6FC564335ACD76C3E560";
+
+function verifySendUSSD(aCommand, aExpect) {
   is(aCommand.commandNumber, 0x01, "commandNumber");
   is(aCommand.typeOfCommand, MozIccManager.STK_CMD_SEND_USSD, "typeOfCommand");
   is(aCommand.commandQualifier, aExpect.commandQualifier, "commandQualifier");
@@ -144,8 +151,7 @@ function testSendUSSD(aCommand, aExpect) {
   }
 }
 
-// Start tests
-startTestCommon(function() {
+function testSendUSSD() {
   let icc = getMozIcc();
   let promise = Promise.resolve();
   for (let i = 0; i < TEST_DATA.length; i++) {
@@ -156,12 +162,12 @@ startTestCommon(function() {
       let promises = [];
       // Wait onstkcommand event.
       promises.push(waitForTargetEvent(icc, "stkcommand")
-        .then((aEvent) => testSendUSSD(aEvent.command, data.expect)));
+        .then((aEvent) => verifySendUSSD(aEvent.command, data.expect)));
       // Wait icc-stkcommand system message.
       promises.push(waitForSystemMessage("icc-stkcommand")
         .then((aMessage) => {
           is(aMessage.iccId, icc.iccInfo.iccid, "iccId");
-          testSendUSSD(aMessage.command, data.expect);
+          verifySendUSSD(aMessage.command, data.expect);
         }));
       // Send emulator command to generate stk unsolicited event.
       promises.push(sendEmulatorStkPdu(data.command));
@@ -170,4 +176,31 @@ startTestCommon(function() {
     });
   }
   return promise;
+}
+
+function testSendUSSDNullAlphaId() {
+  let icc = getMozIcc();
+
+  // No "stkcommand" event should occur.
+  icc.addEventListener("stkcommand",
+    (event) => ok(false, event + " should not occur."));
+
+  // No "icc-stkcommand" system message should be sent.
+  workingFrame.contentWindow.navigator.mozSetMessageHandler("icc-stkcommand",
+    (msg) => ok(false, msg + " should not be sent."));
+
+  // If nothing happens within 3 seconds after the emulator command sent,
+  // treat as success.
+  log("send_ussd_cmd: " + TEST_CMD_NULL_ALPHA_ID);
+  return sendEmulatorStkPdu(TEST_CMD_NULL_ALPHA_ID)
+    .then(() => new Promise(function(resolve, reject) {
+      setTimeout(() => resolve(), 3000);
+    }));
+}
+
+// Start tests
+startTestCommon(function() {
+  return Promise.resolve()
+    .then(() => testSendUSSD())
+    .then(() => testSendUSSDNullAlphaId());
 });
