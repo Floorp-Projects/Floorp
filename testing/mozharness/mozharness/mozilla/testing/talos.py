@@ -41,8 +41,20 @@ TalosErrorList = PythonErrorList + [
 
 class TalosOutputParser(OutputParser):
     minidump_regex = re.compile(r'''talosError: "error executing: '(\S+) (\S+) (\S+)'"''')
-    minidump_output = None
     worst_tbpl_status = TBPL_SUCCESS
+
+    def __init__(self, **kwargs):
+        super(TalosOutputParser, self).__init__(**kwargs)
+        self.minidump_output = None
+        self.found_talosdata = False
+
+    def update_worst_log_and_tbpl_levels(self, log_level, tbpl_level):
+        self.worst_log_level = self.worst_level(log_level,
+                                                self.worst_log_level)
+        self.worst_tbpl_status = self.worst_level(
+            tbpl_level, self.worst_tbpl_status,
+            levels=TBPL_WORST_LEVEL_TUPLE
+        )
 
     def parse_single_line(self, line):
         """ In Talos land, every line that starts with RETURN: needs to be
@@ -53,16 +65,14 @@ class TalosOutputParser(OutputParser):
         if m:
             self.minidump_output = (m.group(1), m.group(2), m.group(3))
 
+        if line.startswith('INFO : TALOSDATA: '):
+            self.found_talosdata = True
+
         # now let's check if buildbot should retry
         harness_retry_re = TinderBoxPrintRe['harness_error']['retry_regex']
         if harness_retry_re.search(line):
             self.critical(' %s' % line)
-            self.worst_log_level = self.worst_level(CRITICAL,
-                                                    self.worst_log_level)
-            self.worst_tbpl_status = self.worst_level(
-                TBPL_RETRY, self.worst_tbpl_status,
-                levels=TBPL_WORST_LEVEL_TUPLE
-            )
+            self.update_worst_log_and_tbpl_levels(CRITICAL, TBPL_RETRY)
             return  # skip base parse_single_line
         super(TalosOutputParser, self).parse_single_line(line)
 
@@ -593,6 +603,10 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
             self.info("Looking at the minidump files for debugging purposes...")
             for item in parser.minidump_output:
                 self.run_command(["ls", "-l", item])
+        if not parser.found_talosdata:
+            self.critical("No talos data in output!")
+            parser.update_worst_log_and_tbpl_levels(WARNING, TBPL_WARNING)
+
         if self.return_code not in [0]:
             # update the worst log level and tbpl status
             log_level = ERROR
@@ -604,12 +618,7 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
                 log_level = WARNING
                 tbpl_level = TBPL_RETRY
 
-            parser.worst_log_level = parser.worst_level(
-                log_level, parser.worst_log_level
-            )
-            parser.worst_tbpl_status = parser.worst_level(
-                tbpl_level, parser.worst_tbpl_status,
-                levels=TBPL_WORST_LEVEL_TUPLE
-            )
+            parser.update_worst_log_and_tbpl_levels(log_level, tbpl_level)
+
         self.buildbot_status(parser.worst_tbpl_status,
                              level=parser.worst_log_level)
