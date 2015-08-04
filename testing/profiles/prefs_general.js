@@ -313,8 +313,7 @@ user_pref("browser.tabs.remote.autostart.2", false);
 // Don't forceably kill content processes after a timeout
 user_pref("dom.ipc.tabs.shutdownTimeoutSecs", 0);
 
-// Avoid performing Reading List and Reader Mode intros during tests.
-user_pref("browser.readinglist.introShown", true);
+// Avoid performing Reader Mode intros during tests.
 user_pref("browser.reader.detectedFirstArticle", true);
 
 // Don't let PAC generator to set PAC, as mochitest framework has its own PAC

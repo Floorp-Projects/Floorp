@@ -4,13 +4,10 @@
 
 /**
  * Test that the reader mode button appears and works properly on
- * reader-able content, and that ReadingList button can open and close
- * its Sidebar UI.
+ * reader-able content.
  */
 const TEST_PREFS = [
   ["reader.parse-on-load.enabled", true],
-  ["browser.readinglist.enabled", true],
-  ["browser.readinglist.introShown", false],
 ];
 
 const TEST_PATH = "http://example.com/browser/browser/base/content/test/general/";
@@ -62,26 +59,6 @@ add_task(function* test_reader_button() {
 
   is(gURLBar.value, readerUrl, "gURLBar value is about:reader URL");
   is(gURLBar.textValue, url.substring("http://".length), "gURLBar is displaying original article URL");
-
-  // Readinglist button should be present, and status should be "openned", as the
-  // first time in readerMode opens the Sidebar ReadingList as a feature introduction.
-  let listButton;
-  yield promiseWaitForCondition(() =>
-    listButton = gBrowser.contentDocument.getElementById("list-button"));
-  is_element_visible(listButton, "List button is present on a reader-able page");
-  yield promiseWaitForCondition(() => listButton.classList.contains("on"));
-  ok(listButton.classList.contains("on"),
-    "List button should indicate SideBar-ReadingList open.");
-  ok(ReadingListUI.isSidebarOpen,
-    "The ReadingListUI should indicate SideBar-ReadingList open.");
-
-  // Now close the Sidebar ReadingList.
-  listButton.click();
-  yield promiseWaitForCondition(() => !listButton.classList.contains("on"));
-  ok(!listButton.classList.contains("on"),
-    "List button should now indicate SideBar-ReadingList closed.");
-  ok(!ReadingListUI.isSidebarOpen,
-    "The ReadingListUI should now indicate SideBar-ReadingList closed.");
 
   // Switch page back out of reader mode.
   readerButton.click();

@@ -119,6 +119,7 @@ chrome.jar:
   skin/images/reader-style-icon-xhdpi.png        (images/reader-style-icon-xhdpi.png)
   skin/images/reader-style-icon-xxhdpi.png       (images/reader-style-icon-xxhdpi.png)
   skin/images/privatebrowsing-mask.png           (images/privatebrowsing-mask.png)
+  skin/images/privatebrowsing-mask-and-shield.svg (images/privatebrowsing-mask-and-shield.svg)
   skin/images/icon_floaty_hdpi.png               (images/icon_floaty_hdpi.png)
   skin/images/icon_floaty_mdpi.png               (images/icon_floaty_mdpi.png)
   skin/images/icon_floaty_xhdpi.png              (images/icon_floaty_xhdpi.png)

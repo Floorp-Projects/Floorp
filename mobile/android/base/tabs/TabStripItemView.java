@@ -6,6 +6,8 @@
 package org.mozilla.gecko.tabs;
 
 import org.mozilla.gecko.AboutPages;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -15,6 +17,9 @@ import org.mozilla.gecko.widget.ThemedImageButton;
 import org.mozilla.gecko.widget.ThemedLinearLayout;
 import org.mozilla.gecko.widget.ThemedTextView;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.content.res.Resources;
@@ -23,6 +28,7 @@ import android.graphics.Canvas;
 import android.graphics.Path;
 import android.graphics.Region;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -31,7 +37,6 @@ import android.widget.ImageView;
 
 public class TabStripItemView extends ThemedLinearLayout
                               implements Checkable {
-    @SuppressWarnings("unused")
     private static final String LOGTAG = "GeckoTabStripItem";
 
     private static final int[] STATE_CHECKED = {
@@ -44,6 +49,7 @@ public class TabStripItemView extends ThemedLinearLayout
     private final ImageView faviconView;
     private final ThemedTextView titleView;
     private final ThemedImageButton closeView;
+    private final ThemedImageButton audioPlayingView;
 
     private final ResizablePathDrawable backgroundDrawable;
     private final Region tabRegion;
@@ -98,6 +104,25 @@ public class TabStripItemView extends ThemedLinearLayout
 
                 final Tabs tabs = Tabs.getInstance();
                 tabs.closeTab(tabs.getTab(id), true);
+            }
+        });
+
+        audioPlayingView = (ThemedImageButton) findViewById(R.id.audio_playing);
+        audioPlayingView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (id < 0) {
+                    throw new IllegalStateException("Invalid tab id:" + id);
+                }
+
+                // TODO: Toggle icon in the UI as well (bug 1190301)
+                final JSONObject args = new JSONObject();
+                try {
+                    args.put("tabId", id);
+                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:ToggleMuteAudio", args.toString()));
+                } catch (JSONException e) {
+                    Log.e(LOGTAG, "Error toggling mute audio: error building json arguments", e);
+                }
             }
         });
     }
@@ -191,6 +216,7 @@ public class TabStripItemView extends ThemedLinearLayout
         updateTitle(tab);
         updateFavicon(tab.getFavicon());
         setPrivateMode(tab.isPrivate());
+        audioPlayingView.setVisibility(tab.isAudioPlaying() ? View.VISIBLE : View.GONE);
     }
 
     private void updateTitle(Tab tab) {
