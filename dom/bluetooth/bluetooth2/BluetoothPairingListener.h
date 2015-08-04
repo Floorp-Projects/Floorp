@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_bluetooth_bluetoothpairinglistener_h
-#define mozilla_dom_bluetooth_bluetoothpairinglistener_h
+#ifndef mozilla_dom_bluetooth_BluetoothPairingListener_h
+#define mozilla_dom_bluetooth_BluetoothPairingListener_h
 
 #include "BluetoothCommon.h"
 #include "mozilla/Attributes.h"
@@ -68,4 +68,4 @@ private:
 
 END_BLUETOOTH_NAMESPACE
 
-#endif // mozilla_dom_bluetooth_bluetoothpairinglistener_h
+#endif // mozilla_dom_bluetooth_BluetoothPairingListener_h
