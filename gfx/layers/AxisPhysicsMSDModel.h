@@ -38,7 +38,7 @@ public:
    * Returns true when the position is close to the destination and the
    * velocity is low.
    */
-  bool IsFinished();
+  bool IsFinished(double aSmallestVisibleIncrement);
 
 protected:
   virtual double Acceleration(const State &aState);
