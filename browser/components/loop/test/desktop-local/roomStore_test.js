@@ -152,7 +152,7 @@ describe("loop.store.RoomStore", function () {
 
           expect(store.getStoreState().rooms).to.have.length.of(3);
           expect(store.getStoreState().rooms.reduce(function(count, room) {
-            return count += room.roomToken === sampleRoom.roomToken ? 1 : 0;
+            return count + (room.roomToken === sampleRoom.roomToken ? 1 : 0);
           }, 0)).eql(1);
         });
       });
