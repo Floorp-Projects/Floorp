@@ -54,8 +54,8 @@ public:
       ref = aElement;
     }
 
-    if (MaybeWeakArray::IndexOf(ref.get()) != MaybeWeakArray::NoIndex) {
-      return NS_ERROR_INVALID_ARG; // already present
+    if (MaybeWeakArray::Contains(ref.get())) {
+      return NS_ERROR_INVALID_ARG;
     }
     if (!MaybeWeakArray::AppendElement(ref)) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -65,9 +65,7 @@ public:
 
   nsresult RemoveWeakElement(T *aElement)
   {
-    size_t index = MaybeWeakArray::IndexOf(aElement);
-    if (index != MaybeWeakArray::NoIndex) {
-      MaybeWeakArray::RemoveElementAt(index);
+    if (MaybeWeakArray::RemoveElement(aElement)) {
       return NS_OK;
     }
 
@@ -80,13 +78,11 @@ public:
     nsresult rv = supWeakRef->GetWeakReference(getter_AddRefs(weakRef));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    index = MaybeWeakArray::IndexOf(weakRef);
-    if (index == MaybeWeakArray::NoIndex) {
-      return NS_ERROR_INVALID_ARG;
+    if (MaybeWeakArray::RemoveElement(weakRef)) {
+      return NS_OK;
     }
 
-    MaybeWeakArray::RemoveElementAt(index);
-    return NS_OK;
+    return NS_ERROR_INVALID_ARG;
   }
 };
 
