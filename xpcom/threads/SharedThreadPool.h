@@ -24,7 +24,9 @@ namespace mozilla {
 // the same name get the same SharedThreadPool. Users must store a reference
 // to the pool, and when the last reference to a SharedThreadPool is dropped
 // the pool is shutdown and deleted. Users aren't required to manually
-// shutdown the pool, and can release references on any thread.
+// shutdown the pool, and can release references on any thread. This can make
+// it significantly easier to use thread pools, because the caller doesn't need
+// to worry about joining and tearing it down.
 //
 // On Windows all threads in the pool have MSCOM initialized with
 // COINIT_MULTITHREADED. Note that not all users of MSCOM use this mode see [1],
@@ -39,7 +41,6 @@ public:
 
   // Gets (possibly creating) the shared thread pool singleton instance with
   // thread pool named aName.
-  // *Must* be called on the main thread.
   static already_AddRefed<SharedThreadPool> Get(const nsCString& aName,
                                             uint32_t aThreadLimit = 4);
 
