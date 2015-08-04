@@ -15,9 +15,9 @@
   <project name="platform_build" path="build" remote="b2g" revision="07c383a786f188904311a37f6062c2cb84c9b61d">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="dbacf8364f4505d021b7d8fb9cabea325004dbcc"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="caba8b26c52d3c771e9ea6fe288acdaf74c7707e"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="9f45c1988fe72749f0659409e6e3320fabf7b79a"/>
+  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="4d9fbc08e87731447c19e96e13d8c7444baafcca"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="657894b4a1dc0a926117f4812e0940229f9f676f"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
@@ -94,7 +94,6 @@
   <project name="platform/external/protobuf" path="external/protobuf" revision="cdb14929d7c934944079ce070f5eb2f9459f824c"/>
   <project name="platform/external/safe-iop" path="external/safe-iop" revision="33d0429591d345687755c25f23ea2e46df5cd293"/>
   <project name="platform/external/scrypt" path="external/scrypt" revision="d809e38af0d89747cde00970271fb64d42333302"/>
-  <project name="platform/external/sepolicy" path="external/sepolicy" revision="bb16e19f8bb7a2fe6bbd4b6e0bebf465fdd0fc30"/>
   <project name="platform/external/sfntly" path="external/sfntly" revision="d2bab207acad60e098d0652b5ed7348c96a249f3"/>
   <project name="platform/external/skia" path="external/skia" revision="b0fe7c355d4d95ff89b8e9e459285fe2b98e366d"/>
   <project name="platform/external/sonivox" path="external/sonivox" revision="3d04f03d824d5ea8835e577785b51022820ae763"/>
@@ -141,8 +140,9 @@
   <default remote="caf" revision="refs/tags/android-5.1.0_r1" sync-j="4"/>
   <!-- Nexus 5 specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="fe7df1bc8dd0fd71571505d7be1c31a4ad1e40fb"/>
-  <project name="device-hammerhead" path="device/lge/hammerhead" remote="b2g" revision="1ad7478309fd43981973e297f5a68a480f3a3c07"/>
+  <project name="device-hammerhead" path="device/lge/hammerhead" remote="b2g" revision="e728bf3ff61dfab1b97c2416096a3b850b47cf25"/>
   <project name="device_lge_hammerhead-kernel" path="device/lge/hammerhead-kernel" remote="b2g" revision="8b3ffcfdd3d3852eca5488628f8bb2a08acbffa7"/>
+  <project name="platform_external_sepolicy" path="external/sepolicy" remote="b2g" revision="3f6be48a46c54dd8cacaf216ab5b145de5ffefd2"/>
   <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="5d0ae53d9588c3d70c005aec9be94af9a534de16"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="c15b6e266136cd0cdd9b94d0bbed1962d9dd6672"/>
   <project name="platform/hardware/broadcom/libbt" path="hardware/broadcom/libbt" revision="399fe3d3c8f38c599a56becddc456133e62a5d70"/>
