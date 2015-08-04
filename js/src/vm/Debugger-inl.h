@@ -73,7 +73,7 @@ js::Debugger::observesIonCompilation(JSContext* cx)
 }
 
 /* static */ void
-js::Debugger::onIonCompilation(JSContext* cx, AutoScriptVector& scripts, LSprinter& graph)
+js::Debugger::onIonCompilation(JSContext* cx, Handle<ScriptVector> scripts, LSprinter& graph)
 {
     if (!observesIonCompilation(cx))
         return;

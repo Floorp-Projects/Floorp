@@ -219,7 +219,6 @@ class MOZ_STACK_CLASS AutoVectorRooter : public AutoVectorRooterBase<T>
 typedef AutoVectorRooter<Value> AutoValueVector;
 typedef AutoVectorRooter<jsid> AutoIdVector;
 typedef AutoVectorRooter<JSObject*> AutoObjectVector;
-typedef AutoVectorRooter<JSScript*> AutoScriptVector;
 
 using ValueVector = js::TraceableVector<JS::Value>;
 using IdVector = js::TraceableVector<jsid>;
