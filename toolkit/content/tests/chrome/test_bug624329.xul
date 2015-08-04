@@ -103,8 +103,23 @@ function openContextMenu() {
 
         var x = menubox.screenX - winbox.screenX;
         var y = menubox.screenY - winbox.screenY;
-        ok(y >= mouseY,
-           "menu top " + y + " should be below click point " + mouseY);
+
+        if (navigator.userAgent.indexOf("Mac") > -1)
+        {
+          // This check is alterered slightly for OSX which adds padding to the top
+          // and bottom of its context menus. The menu position calculation must
+          // be changed to allow for the pointer to be outside this padding
+          // when the menu opens.
+          // (Bug 1075089)
+          ok(y + 6 >= mouseY,
+             "menu top " + (y + 6) + " should be below click point " + mouseY);
+        }
+        else
+        {
+          ok(y >= mouseY,
+             "menu top " + y + " should be below click point " + mouseY);
+        }
+        
         ok(y <= mouseY + 20,
            "menu top " + y + " should not be too far below click point " + mouseY);
 
