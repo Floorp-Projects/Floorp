@@ -12,7 +12,7 @@
 #include "nsDebug.h"
 #include "nsTArray.h"
 
-class nsCSSSelector;
+struct nsCSSSelector;
 
 // Defines for various style related constants
 
