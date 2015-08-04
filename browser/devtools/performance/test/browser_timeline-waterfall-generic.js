@@ -7,7 +7,8 @@
 
 function* spawnTest() {
   let { target, panel } = yield initPerformance(SIMPLE_URL);
-  let { $, $$, EVENTS, PerformanceController, OverviewView, WaterfallView } = panel.panelWin;
+  let { $, $$, EVENTS, PerformanceController, OverviewView, WaterfallView, DetailsView } = panel.panelWin;
+  let { WATERFALL_MARKER_SIDEBAR_SAFE_BOUNDS } = devtools.require("devtools/performance/marker-view");
 
   yield startRecording(panel);
   ok(true, "Recording has started.");
@@ -20,8 +21,16 @@ function* spawnTest() {
   ok((yield waitUntil(() => PerformanceController.getCurrentRecording().getMarkers().length > 0)),
     "There are some markers available.");
 
+  let rendered = Promise.all([
+    DetailsView.selectView("waterfall"),
+    once(WaterfallView, EVENTS.WATERFALL_RENDERED)
+  ]);
+
   yield stopRecording(panel);
   ok(true, "Recording has ended.");
+
+  yield rendered;
+  ok(true, "Recording has rendered.");
 
   // Test the header container.
 
@@ -57,6 +66,43 @@ function* spawnTest() {
     "Some marker waterfall nodes should have been created.");
   ok($$(".waterfall-tree-item > .waterfall-marker > .waterfall-marker-bar").length,
     "Some marker color bars should have been created inside the waterfall.");
+
+  // Test the sidebar
+
+  let detailsView = WaterfallView.details;
+  let markersRoot = WaterfallView._markersRoot;
+
+  let parentWidthBefore = $("#waterfall-view").getBoundingClientRect().width;
+  let sidebarWidthBefore = $(".waterfall-sidebar").getBoundingClientRect().width;
+  let detailsWidthBefore = $("#waterfall-details").getBoundingClientRect().width;
+
+  ok(detailsView.hidden,
+    "The details view in the waterfall view is hidden by default.");
+  is(detailsWidthBefore, 0,
+    "The details view width should be 0 when hidden.");
+  is(markersRoot._waterfallWidth, parentWidthBefore - sidebarWidthBefore - WATERFALL_MARKER_SIDEBAR_SAFE_BOUNDS,
+    "The waterfall width is correct.")
+
+  let receivedFocusEvent = markersRoot.once("focus");
+  let waterfallRerendered = once(WaterfallView, EVENTS.WATERFALL_RENDERED);
+  WaterfallView._markersRoot.getChild(0).focus();
+  yield receivedFocusEvent;
+  yield waterfallRerendered;
+
+  let parentWidthAfter = $("#waterfall-view").getBoundingClientRect().width;
+  let sidebarWidthAfter = $(".waterfall-sidebar").getBoundingClientRect().width;
+  let detailsWidthAfter = $("#waterfall-details").getBoundingClientRect().width;
+
+  ok(!detailsView.hidden,
+    "The details view in the waterfall view is now visible.");
+  is(parentWidthBefore, parentWidthAfter,
+    "The parent view's width should not have changed.");
+  is(sidebarWidthBefore, sidebarWidthAfter,
+    "The sidebar view's width should not have changed.");
+  isnot(detailsWidthAfter, 0,
+    "The details view width should not be 0 when visible.");
+  is(markersRoot._waterfallWidth, parentWidthAfter - sidebarWidthAfter - detailsWidthAfter - WATERFALL_MARKER_SIDEBAR_SAFE_BOUNDS,
+    "The waterfall width is correct (2).")
 
   yield teardown(panel);
   finish();

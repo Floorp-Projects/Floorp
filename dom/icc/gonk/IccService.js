@@ -96,7 +96,7 @@ function IccContact(aContact) {
 
   let anrLen = aContact.anr ? aContact.anr.length : 0;
   for (let i = 0; i < anrLen; i++) {
-    this._numbers.push(anr[i]);
+    this._numbers.push(aContact.anr[i]);
   }
 
   if (aContact.email) {
@@ -717,7 +717,7 @@ Icc.prototype = {
       if (length > 0) {
         iccContact.anr = [];
         for (let i = 0; i < length; i++) {
-          iccContact.anr.push(anrArray[i].value);
+          iccContact.anr.push(anrArray[i]);
         }
       }
     }

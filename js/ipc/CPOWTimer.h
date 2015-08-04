@@ -38,7 +38,7 @@ class MOZ_STACK_CLASS CPOWTimer final {
      * The instant at which the stopwatch was started. Undefined
      * if CPOW monitoring was off when the timer was created.
      */
-    PRIntervalTime startInterval_;
+    int64_t startInterval_;
 };
 
 #endif
