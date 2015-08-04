@@ -19,6 +19,9 @@ include css21/reftest.list
 # Conditional Rules Level 3
 include conditional3/reftest.list
 
+# Filter Effects Module
+include filters/reftest.list
+
 # Flexible Box Layout Module
 include flexbox/reftest.list
 
@@ -53,7 +56,7 @@ include text3/reftest.list
 include text-decor-3/reftest.list
 
 # Transforms
-# include transforms/reftest.list
+include transforms/reftest.list
 
 # Transitions
 # include transitions/reftest.list
