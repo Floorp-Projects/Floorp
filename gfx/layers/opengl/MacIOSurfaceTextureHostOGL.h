@@ -95,8 +95,6 @@ public:
 #endif
 
 protected:
-  GLTextureSource* CreateTextureSourceForPlane(size_t aPlane);
-
   RefPtr<CompositorOGL> mCompositor;
   RefPtr<GLTextureSource> mTextureSource;
   RefPtr<MacIOSurface> mSurface;

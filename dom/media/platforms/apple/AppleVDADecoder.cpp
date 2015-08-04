@@ -474,7 +474,7 @@ AppleVDADecoder::CreateOutputConfiguration()
                        &kCFTypeDictionaryKeyCallBacks,
                        &kCFTypeDictionaryValueCallBacks);
 
-  SInt32 PixelFormatTypeValue = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
+  SInt32 PixelFormatTypeValue = kCVPixelFormatType_32BGRA;
   AutoCFRelease<CFNumberRef> PixelFormatTypeNumber =
     CFNumberCreate(kCFAllocatorDefault,
                    kCFNumberSInt32Type,

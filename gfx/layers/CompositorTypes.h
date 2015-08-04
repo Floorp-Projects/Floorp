@@ -121,7 +121,6 @@ enum class EffectTypes : uint8_t {
   MAX_SECONDARY, // sentinel for the count of secondary effect types
   RGB,
   YCBCR,
-  NV12,
   COMPONENT_ALPHA,
   SOLID_COLOR,
   RENDER_TARGET,

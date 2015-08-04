@@ -350,12 +350,14 @@ AppleVTDecoder::CreateDecoderExtensions()
   const void* extensionKeys[] =
     { kCVImageBufferChromaLocationBottomFieldKey,
       kCVImageBufferChromaLocationTopFieldKey,
-      AppleCMLinker::skPropExtensionAtoms };
+      AppleCMLinker::skPropExtensionAtoms,
+      AppleCMLinker::skPropFullRangeVideo /* Not defined in 10.6 */ };
 
   const void* extensionValues[] =
     { kCVImageBufferChromaLocation_Left,
       kCVImageBufferChromaLocation_Left,
-      atoms };
+      atoms,
+      kCFBooleanTrue };
   static_assert(ArrayLength(extensionKeys) == ArrayLength(extensionValues),
                 "Non matching keys/values array size");
 

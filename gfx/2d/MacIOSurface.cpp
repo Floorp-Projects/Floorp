@@ -46,10 +46,10 @@ IOSurfaceGetIDFunc            MacIOSurfaceLib::sGetID;
 IOSurfaceLookupFunc           MacIOSurfaceLib::sLookup;
 IOSurfaceGetBaseAddressFunc   MacIOSurfaceLib::sGetBaseAddress;
 IOSurfaceGetBaseAddressOfPlaneFunc  MacIOSurfaceLib::sGetBaseAddressOfPlane;
-IOSurfaceSizePlaneTFunc       MacIOSurfaceLib::sWidth;
-IOSurfaceSizePlaneTFunc       MacIOSurfaceLib::sHeight;
+IOSurfaceSizeTFunc            MacIOSurfaceLib::sWidth;
+IOSurfaceSizeTFunc            MacIOSurfaceLib::sHeight;
 IOSurfaceSizeTFunc            MacIOSurfaceLib::sPlaneCount;
-IOSurfaceSizePlaneTFunc       MacIOSurfaceLib::sBytesPerRow;
+IOSurfaceSizeTFunc            MacIOSurfaceLib::sBytesPerRow;
 IOSurfaceGetPropertyMaximumFunc   MacIOSurfaceLib::sGetPropertyMaximum;
 IOSurfaceVoidFunc             MacIOSurfaceLib::sIncrementUseCount;
 IOSurfaceVoidFunc             MacIOSurfaceLib::sDecrementUseCount;
@@ -61,7 +61,6 @@ IOSurfaceContextCreateImageFunc   MacIOSurfaceLib::sIOSurfaceContextCreateImage;
 IOSurfaceContextGetSurfaceFunc    MacIOSurfaceLib::sIOSurfaceContextGetSurface;
 CVPixelBufferGetIOSurfaceFunc MacIOSurfaceLib::sCVPixelBufferGetIOSurface;
 unsigned int                  (*MacIOSurfaceLib::sCGContextGetTypePtr) (CGContextRef) = nullptr;
-IOSurfacePixelFormatFunc      MacIOSurfaceLib::sPixelFormat;
 
 CFStringRef                   MacIOSurfaceLib::kPropWidth;
 CFStringRef                   MacIOSurfaceLib::kPropHeight;
@@ -103,24 +102,20 @@ size_t MacIOSurfaceLib::IOSurfaceGetPlaneCount(IOSurfacePtr aIOSurfacePtr) {
   return sPlaneCount(aIOSurfacePtr);
 }
 
-size_t MacIOSurfaceLib::IOSurfaceGetWidth(IOSurfacePtr aIOSurfacePtr, size_t plane) {
-  return sWidth(aIOSurfacePtr, plane);
+size_t MacIOSurfaceLib::IOSurfaceGetWidth(IOSurfacePtr aIOSurfacePtr) {
+  return sWidth(aIOSurfacePtr);
 }
 
-size_t MacIOSurfaceLib::IOSurfaceGetHeight(IOSurfacePtr aIOSurfacePtr, size_t plane) {
-  return sHeight(aIOSurfacePtr, plane);
+size_t MacIOSurfaceLib::IOSurfaceGetHeight(IOSurfacePtr aIOSurfacePtr) {
+  return sHeight(aIOSurfacePtr);
 }
 
-size_t MacIOSurfaceLib::IOSurfaceGetBytesPerRow(IOSurfacePtr aIOSurfacePtr, size_t plane) {
-  return sBytesPerRow(aIOSurfacePtr, plane);
+size_t MacIOSurfaceLib::IOSurfaceGetBytesPerRow(IOSurfacePtr aIOSurfacePtr) {
+  return sBytesPerRow(aIOSurfacePtr);
 }
 
 size_t MacIOSurfaceLib::IOSurfaceGetPropertyMaximum(CFStringRef property) {
   return sGetPropertyMaximum(property);
-}
-
-OSType MacIOSurfaceLib::IOSurfaceGetPixelFormat(IOSurfacePtr aIOSurfacePtr) {
-  return sPixelFormat(aIOSurfacePtr);
 }
 
 IOReturn MacIOSurfaceLib::IOSurfaceLock(IOSurfacePtr aIOSurfacePtr,
@@ -223,9 +218,9 @@ void MacIOSurfaceLib::LoadLibrary() {
   kPropIsGlobal = GetIOConst("kIOSurfaceIsGlobal");
   sCreate = GET_IOSYM(sCreate, "IOSurfaceCreate");
   sGetID  = GET_IOSYM(sGetID,  "IOSurfaceGetID");
-  sWidth = GET_IOSYM(sWidth, "IOSurfaceGetWidthOfPlane");
-  sHeight = GET_IOSYM(sHeight, "IOSurfaceGetHeightOfPlane");
-  sBytesPerRow = GET_IOSYM(sBytesPerRow, "IOSurfaceGetBytesPerRowOfPlane");
+  sWidth = GET_IOSYM(sWidth, "IOSurfaceGetWidth");
+  sHeight = GET_IOSYM(sHeight, "IOSurfaceGetHeight");
+  sBytesPerRow = GET_IOSYM(sBytesPerRow, "IOSurfaceGetBytesPerRow");
   sGetPropertyMaximum = GET_IOSYM(sGetPropertyMaximum, "IOSurfaceGetPropertyMaximum");
   sLookup = GET_IOSYM(sLookup, "IOSurfaceLookup");
   sLock = GET_IOSYM(sLock, "IOSurfaceLock");
@@ -238,7 +233,6 @@ void MacIOSurfaceLib::LoadLibrary() {
   sGetBaseAddressOfPlane =
     GET_IOSYM(sGetBaseAddressOfPlane, "IOSurfaceGetBaseAddressOfPlane");
   sPlaneCount = GET_IOSYM(sPlaneCount, "IOSurfaceGetPlaneCount");
-  sPixelFormat = GET_IOSYM(sPixelFormat, "IOSurfaceGetPixelFormat");
 
   sTexImage = GET_CGLSYM(sTexImage, "CGLTexImageIOSurface2D");
   sCGContextGetTypePtr = (unsigned int (*)(CGContext*))dlsym(RTLD_DEFAULT, "CGContextGetType");
@@ -380,14 +374,14 @@ void* MacIOSurface::GetBaseAddressOfPlane(size_t aPlaneIndex)
                                                          aPlaneIndex);
 }
 
-size_t MacIOSurface::GetWidth(size_t plane) {
+size_t MacIOSurface::GetWidth() {
   size_t intScaleFactor = ceil(mContentsScaleFactor);
-  return GetDevicePixelWidth(plane) / intScaleFactor;
+  return GetDevicePixelWidth() / intScaleFactor;
 }
 
-size_t MacIOSurface::GetHeight(size_t plane) {
+size_t MacIOSurface::GetHeight() {
   size_t intScaleFactor = ceil(mContentsScaleFactor);
-  return GetDevicePixelHeight(plane) / intScaleFactor;
+  return GetDevicePixelHeight() / intScaleFactor;
 }
 
 size_t MacIOSurface::GetPlaneCount() {
@@ -406,20 +400,16 @@ size_t MacIOSurface::GetPlaneCount() {
   return MacIOSurfaceLib::IOSurfaceGetPropertyMaximum(MacIOSurfaceLib::kPropHeight);
 }
 
-size_t MacIOSurface::GetDevicePixelWidth(size_t plane) {
-  return MacIOSurfaceLib::IOSurfaceGetWidth(mIOSurfacePtr, plane);
+size_t MacIOSurface::GetDevicePixelWidth() {
+  return MacIOSurfaceLib::IOSurfaceGetWidth(mIOSurfacePtr);
 }
 
-size_t MacIOSurface::GetDevicePixelHeight(size_t plane) {
-  return MacIOSurfaceLib::IOSurfaceGetHeight(mIOSurfacePtr, plane);
+size_t MacIOSurface::GetDevicePixelHeight() {
+  return MacIOSurfaceLib::IOSurfaceGetHeight(mIOSurfacePtr);
 }
 
-size_t MacIOSurface::GetBytesPerRow(size_t plane) {
-  return MacIOSurfaceLib::IOSurfaceGetBytesPerRow(mIOSurfacePtr, plane);
-}
-
-OSType MacIOSurface::GetPixelFormat() {
-  return MacIOSurfaceLib::IOSurfaceGetPixelFormat(mIOSurfacePtr);
+size_t MacIOSurface::GetBytesPerRow() { 
+  return MacIOSurfaceLib::IOSurfaceGetBytesPerRow(mIOSurfacePtr);
 }
 
 void MacIOSurface::IncrementUseCount() {
@@ -470,52 +460,17 @@ MacIOSurface::GetAsSurface() {
   return surf.forget();
 }
 
-SurfaceFormat
-MacIOSurface::GetFormat()
-{
-  OSType pixelFormat = GetPixelFormat();
-  if (pixelFormat == '420v') {
-    return SurfaceFormat::NV12;
-  } else  {
-    return HasAlpha() ? SurfaceFormat::R8G8B8A8 : SurfaceFormat::R8G8B8X8;
-  }
-}
-
 CGLError
-MacIOSurface::CGLTexImageIOSurface2D(CGLContextObj ctx, size_t plane)
+MacIOSurface::CGLTexImageIOSurface2D(CGLContextObj ctx)
 {
-  MOZ_ASSERT(plane >= 0);
-  OSType pixelFormat = GetPixelFormat();
-
-  GLenum internalFormat;
-  GLenum format;
-  GLenum type;
-  if (pixelFormat == '420v') {
-    MOZ_ASSERT(GetPlaneCount() == 2);
-    MOZ_ASSERT(plane < 2);
-
-    if (plane == 0) {
-      internalFormat = format = GL_LUMINANCE;
-    } else {
-      internalFormat = format = GL_LUMINANCE_ALPHA;
-    }
-    type = GL_UNSIGNED_BYTE;
-  } else  {
-    MOZ_ASSERT(plane == 0);
-
-    internalFormat = HasAlpha() ? GL_RGBA : GL_RGB;
-    format = GL_BGRA;
-    type = GL_UNSIGNED_INT_8_8_8_8_REV;
-  }
-  CGLError temp =  MacIOSurfaceLib::CGLTexImageIOSurface2D(ctx,
+  return MacIOSurfaceLib::CGLTexImageIOSurface2D(ctx,
                                                 GL_TEXTURE_RECTANGLE_ARB,
-                                                internalFormat,
-                                                GetDevicePixelWidth(plane),
-                                                GetDevicePixelHeight(plane),
-                                                format,
-                                                type,
-                                                mIOSurfacePtr, plane);
-  return temp;
+                                                HasAlpha() ? GL_RGBA : GL_RGB,
+                                                GetDevicePixelWidth(),
+                                                GetDevicePixelHeight(),
+                                                GL_BGRA,
+                                                GL_UNSIGNED_INT_8_8_8_8_REV,
+                                                mIOSurfacePtr, 0);
 }
 
 static
