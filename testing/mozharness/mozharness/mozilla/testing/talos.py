@@ -522,26 +522,13 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
         talos from its source, we have to wrap that method here."""
         # XXX This method could likely be replaced with a PreScriptAction hook.
         if self.has_cloned_talos:
-            requirements = self.read_from_file(
-                os.path.join(self.talos_path, 'requirements.txt'),
-                verbose=False
+            # talos in harness requires mozinstall and what is
+            # listed in talos requirements.txt file.
+            return super(Talos, self).create_virtualenv(
+                modules=['mozinstall'],
+                requirements=[os.path.join(self.talos_path,
+                                           'requirements.txt')]
             )
-            virtualenv_modules = []
-            for requirement in requirements.splitlines():
-                requirement = requirement.strip()
-                if requirement:
-                    virtualenv_modules.append(requirement)
-
-            # Bug 900015 - Silent warnings on osx when libyaml is not found
-            pyyaml_module = {
-                'name': 'PyYAML',
-                'url': None,
-                'global_options': ['--without-libyaml']
-            }
-            virtualenv_modules.insert(0, pyyaml_module)
-
-            self.info(pprint.pformat(virtualenv_modules))
-            return super(Talos, self).create_virtualenv(modules=virtualenv_modules)
         else:
             return super(Talos, self).create_virtualenv(**kwargs)
 
@@ -581,6 +568,12 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
         if not os.path.isdir(env['MOZ_UPLOAD_DIR']):
             self.mkdir_p(env['MOZ_UPLOAD_DIR'])
         env = self.query_env(partial_env=env, log_level=INFO)
+        # adjust PYTHONPATH to be able to use talos as a python package
+        if 'PYTHONPATH' in env:
+            env['PYTHONPATH'] = self.talos_path + os.pathsep + env['PYTHONPATH']
+        else:
+            env['PYTHONPATH'] = self.talos_path
+
         # sets a timeout for how long talos should run without output
         output_timeout = self.config.get('talos_output_timeout', 3600)
         # run talos tests
