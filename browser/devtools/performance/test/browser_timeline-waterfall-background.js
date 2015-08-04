@@ -9,6 +9,7 @@
 function* spawnTest() {
   let { target, panel } = yield initPerformance(SIMPLE_URL);
   let { $, EVENTS, PerformanceController, OverviewView, DetailsView, WaterfallView } = panel.panelWin;
+  let { WATERFALL_MARKER_SIDEBAR_SAFE_BOUNDS } = devtools.require("devtools/performance/marker-view");
 
   yield startRecording(panel);
   ok(true, "Recording has started.");
@@ -38,7 +39,8 @@ function* spawnTest() {
   let sidebarWidth = $(".waterfall-sidebar").getBoundingClientRect().width;
   let detailsWidth = $("#waterfall-details").getBoundingClientRect().width;
   let waterfallWidth = WaterfallView._markersRoot._waterfallWidth;
-  is(waterfallWidth, parentWidth - sidebarWidth - detailsWidth,
+
+  is(waterfallWidth, parentWidth - sidebarWidth - detailsWidth - WATERFALL_MARKER_SIDEBAR_SAFE_BOUNDS,
     "The waterfall width is correct.")
 
   ok(WaterfallView._waterfallHeader._canvas,

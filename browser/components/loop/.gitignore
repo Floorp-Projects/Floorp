@@ -1,2 +1,4 @@
 .module-cache
-test/coverage
+test/coverage/desktop
+test/coverage/shared_standalone
+test/node_modules
