@@ -1278,11 +1278,17 @@ struct RoleDescrComparator
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  AccessibleWrap* accWrap = [self getGeckoAccessible];
-
   // Get a pointer to the native window (NSWindow) we reside in.
   NSWindow *nativeWindow = nil;
-  DocAccessible* docAcc = accWrap->Document();
+  DocAccessible* docAcc = nullptr;
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
+    docAcc = accWrap->Document();
+  } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
+    Accessible* outerDoc = proxy->OuterDocOfRemoteBrowser();
+    if (outerDoc)
+      docAcc = outerDoc->Document();
+  }
+
   if (docAcc)
     nativeWindow = static_cast<NSWindow*>(docAcc->GetNativeWindow());
 
