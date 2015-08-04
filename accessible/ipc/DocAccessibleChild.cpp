@@ -145,6 +145,20 @@ DocAccessibleChild::RecvState(const uint64_t& aID, uint64_t* aState)
 }
 
 bool
+DocAccessibleChild::RecvNativeState(const uint64_t& aID, uint64_t* aState)
+{
+  Accessible* acc = IdToAccessible(aID);
+  if (!acc) {
+    *aState = states::DEFUNCT;
+    return true;
+  }
+
+  *aState = acc->NativeState();
+
+  return true;
+}
+
+bool
 DocAccessibleChild::RecvName(const uint64_t& aID, nsString* aName)
 {
   Accessible* acc = IdToAccessible(aID);
