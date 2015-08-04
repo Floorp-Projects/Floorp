@@ -402,7 +402,7 @@ MapObject::set(JSContext* cx, HandleObject obj, HandleValue k, HandleValue v)
     if (!map)
         return false;
 
-    AutoHashableValueRooter key(cx);
+    Rooted<HashableValue> key(cx);
     if (!key.setValue(cx, k))
         return false;
 
@@ -411,7 +411,7 @@ MapObject::set(JSContext* cx, HandleObject obj, HandleValue k, HandleValue v)
         ReportOutOfMemory(cx);
         return false;
     }
-    WriteBarrierPost(cx->runtime(), map, key.get());
+    WriteBarrierPost(cx->runtime(), map, key.value());
     return true;
 }
 
@@ -470,7 +470,7 @@ MapObject::construct(JSContext* cx, unsigned argc, Value* vp)
             return false;
         RootedValue pairVal(cx);
         RootedObject pairObj(cx);
-        AutoHashableValueRooter hkey(cx);
+        Rooted<HashableValue> hkey(cx);
         ValueMap* map = obj->getData();
         while (true) {
             bool done;
@@ -538,7 +538,7 @@ MapObject::is(HandleObject o)
 }
 
 #define ARG0_KEY(cx, args, key)                                               \
-    AutoHashableValueRooter key(cx);                                          \
+    Rooted<HashableValue> key(cx);                                          \
     if (args.length() > 0 && !key.setValue(cx, args[0]))                      \
         return false
 
@@ -586,7 +586,7 @@ MapObject::get(JSContext* cx, HandleObject obj,
                HandleValue key, MutableHandleValue rval)
 {
     ValueMap& map = extract(obj);
-    AutoHashableValueRooter k(cx);
+    Rooted<HashableValue> k(cx);
 
     if (!k.setValue(cx, key))
         return false;
@@ -617,7 +617,7 @@ bool
 MapObject::has(JSContext* cx, HandleObject obj, HandleValue key, bool* rval)
 {
     ValueMap& map = extract(obj);
-    AutoHashableValueRooter k(cx);
+    Rooted<HashableValue> k(cx);
 
     if (!k.setValue(cx, key))
         return false;
@@ -657,7 +657,7 @@ MapObject::set_impl(JSContext* cx, CallArgs args)
         ReportOutOfMemory(cx);
         return false;
     }
-    WriteBarrierPost(cx->runtime(), &map, key.get());
+    WriteBarrierPost(cx->runtime(), &map, key.value());
     args.rval().set(args.thisv());
     return true;
 }
@@ -673,7 +673,7 @@ bool
 MapObject::delete_(JSContext *cx, HandleObject obj, HandleValue key, bool *rval)
 {
     ValueMap &map = extract(obj);
-    AutoHashableValueRooter k(cx);
+    Rooted<HashableValue> k(cx);
 
     if (!k.setValue(cx, key))
         return false;
@@ -1058,7 +1058,7 @@ SetObject::add(JSContext* cx, HandleObject obj, HandleValue k)
     if (!set)
         return false;
 
-    AutoHashableValueRooter key(cx);
+    Rooted<HashableValue> key(cx);
     if (!key.setValue(cx, k))
         return false;
 
@@ -1066,7 +1066,7 @@ SetObject::add(JSContext* cx, HandleObject obj, HandleValue k)
         ReportOutOfMemory(cx);
         return false;
     }
-    WriteBarrierPost(cx->runtime(), set, key.get());
+    WriteBarrierPost(cx->runtime(), set, key.value());
     return true;
 }
 
@@ -1134,7 +1134,7 @@ SetObject::construct(JSContext* cx, unsigned argc, Value* vp)
         ForOfIterator iter(cx);
         if (!iter.init(args[0]))
             return false;
-        AutoHashableValueRooter key(cx);
+        Rooted<HashableValue> key(cx);
         ValueSet* set = obj->getData();
         while (true) {
             bool done;
@@ -1242,7 +1242,7 @@ SetObject::has(JSContext *cx, HandleObject obj, HandleValue key, bool *rval)
     MOZ_ASSERT(SetObject::is(obj));
 
     ValueSet &set = extract(obj);
-    AutoHashableValueRooter k(cx);
+    Rooted<HashableValue> k(cx);
 
     if (!k.setValue(cx, key))
         return false;
@@ -1269,7 +1269,7 @@ SetObject::add_impl(JSContext* cx, CallArgs args)
         ReportOutOfMemory(cx);
         return false;
     }
-    WriteBarrierPost(cx->runtime(), &set, key.get());
+    WriteBarrierPost(cx->runtime(), &set, key.value());
     args.rval().set(args.thisv());
     return true;
 }
@@ -1287,7 +1287,7 @@ SetObject::delete_(JSContext *cx, HandleObject obj, HandleValue key, bool *rval)
     MOZ_ASSERT(SetObject::is(obj));
 
     ValueSet &set = extract(obj);
-    AutoHashableValueRooter k(cx);
+    Rooted<HashableValue> k(cx);
 
     if (!k.setValue(cx, key))
         return false;
