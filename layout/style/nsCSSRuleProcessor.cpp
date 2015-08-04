@@ -2293,6 +2293,36 @@ static bool SelectorMatches(Element* aElement,
 
 #undef STATE_CHECK
 
+/* static */ bool
+nsCSSRuleProcessor::RestrictedSelectorMatches(
+    Element* aElement,
+    nsCSSSelector* aSelector,
+    TreeMatchContext& aTreeMatchContext)
+{
+  MOZ_ASSERT(aSelector->IsRestrictedSelector(),
+             "aSelector must not have a pseudo-element");
+
+  // We match aSelector as if :visited and :link both match visited and
+  // unvisited links.
+
+  NodeMatchContext nodeContext(EventStates(),
+                               nsCSSRuleProcessor::IsLink(aElement));
+  if (nodeContext.mIsRelevantLink) {
+    aTreeMatchContext.SetHaveRelevantLink();
+  }
+  aTreeMatchContext.ResetForUnvisitedMatching();
+  bool matches = SelectorMatches(aElement, aSelector, nodeContext,
+                                 aTreeMatchContext, SelectorMatchesFlags::NONE);
+  if (nodeContext.mIsRelevantLink) {
+    aTreeMatchContext.ResetForVisitedMatching();
+    if (SelectorMatches(aElement, aSelector, nodeContext, aTreeMatchContext,
+                        SelectorMatchesFlags::NONE)) {
+      matches = true;
+    }
+  }
+  return matches;
+}
+
 // Right now, there are four operators:
 //   ' ', the descendant combinator, is greedy
 //   '~', the indirect adjacent sibling combinator, is greedy
