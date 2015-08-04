@@ -11,8 +11,6 @@
 
 <!ENTITY abouthome.pageTitle "&brandFullName; Start Page">
 
-<!ENTITY abouthome.search.placeholder    "Search">
-
 <!-- LOCALIZATION NOTE (abouthome.defaultSnippet1.v1):
      text in <a/> will be linked to the Firefox features page on mozilla.com
 -->

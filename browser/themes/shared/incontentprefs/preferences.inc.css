@@ -210,9 +210,8 @@ treecol {
 #historyPane:not([selectedIndex="2"]) > #historyCustomPane,
 #weavePrefsDeck:not([selectedIndex="1"]) > #hasAccount,
 #weavePrefsDeck:not([selectedIndex="2"]) > #needsUpdate,
-#weavePrefsDeck:not([selectedIndex="3"]) > #fxaDeterminingStatus,
-#weavePrefsDeck:not([selectedIndex="4"]) > #noFxaAccount,
-#weavePrefsDeck:not([selectedIndex="5"]) > #hasFxaAccount,
+#weavePrefsDeck:not([selectedIndex="3"]) > #noFxaAccount,
+#weavePrefsDeck:not([selectedIndex="4"]) > #hasFxaAccount,
 #fxaLoginStatus:not([selectedIndex="1"]) > #fxaLoginUnverified,
 #fxaLoginStatus:not([selectedIndex="2"]) > #fxaLoginRejected {
   visibility: collapse;

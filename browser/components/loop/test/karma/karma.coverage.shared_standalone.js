@@ -34,6 +34,8 @@ module.exports = function(config) {
     "content/shared/js/views.js",
     "content/shared/js/textChatStore.js",
     "content/shared/js/textChatView.js",
+    "content/shared/js/urlRegExps.js",
+    "content/shared/js/linkifiedTextView.js",
     "standalone/content/js/multiplexGum.js",
     "standalone/content/js/standaloneAppStore.js",
     "standalone/content/js/standaloneClient.js",

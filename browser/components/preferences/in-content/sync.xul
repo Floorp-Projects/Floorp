@@ -24,10 +24,6 @@
   <preference id="engine.passwords"
               name="services.sync.engine.passwords"
               type="bool"/>
-  <!-- non Sync-Engine engines -->
-  <preference id="engine.readinglist"
-              name="readinglist.scheduler.enabled"
-              type="bool"/>
 </preferences>
 
 <script type="application/javascript"
@@ -204,12 +200,6 @@
   </vbox>
 
   <!-- These panels are for the Firefox Accounts identity provider -->
-  <vbox id="fxaDeterminingStatus" align="center">
-    <spacer flex="1"/>
-    <label>&determiningAcctStatus.label;</label>
-    <spacer flex="1"/>
-  </vbox>
-
   <vbox id="noFxaAccount" align="start">
     <label>&welcome.description;</label>
     <label id="noFxaSignUp" class="text-link">
@@ -306,11 +296,6 @@
           <checkbox label="&engine.history.label;"
                     accesskey="&engine.history.accesskey;"
                     preference="engine.history"/>
-          <checkbox id="readinglist-engine"
-                    label="&engine.readinglist.label;"
-                    accesskey="&engine.readinglist.accesskey;"
-                    preference="engine.readinglist"
-                    hidden="true"/>
           <checkbox label="&engine.addons.label;"
                     accesskey="&engine.addons.accesskey;"
                     preference="engine.addons"/>

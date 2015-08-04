@@ -86,9 +86,11 @@
       // Dummy function to stop warnings.
     },
 
-    sendTextChatMessage: function(message) {
+    sendTextChatMessage: function(actionData) {
       dispatcher.dispatch(new loop.shared.actions.ReceivedTextChatMessage({
-        message: message.message
+        contentType: loop.store.CHAT_CONTENT_TYPES.TEXT,
+        message: actionData.message,
+        receivedTimestamp: actionData.sentTimestamp
       }));
     }
   };
@@ -396,25 +398,20 @@
   }));
   dispatcher.dispatch(new sharedActions.ReceivedTextChatMessage({
     contentType: loop.store.CHAT_CONTENT_TYPES.TEXT,
-    message: "Hi there",
-    receivedTimestamp: "2015-06-23T22:21:45.590Z"
-  }));
-  dispatcher.dispatch(new sharedActions.ReceivedTextChatMessage({
-    contentType: loop.store.CHAT_CONTENT_TYPES.TEXT,
     message: "Hello",
     receivedTimestamp: "2015-06-23T23:24:45.590Z"
+  }));
+  dispatcher.dispatch(new sharedActions.SendTextChatMessage({
+    contentType: loop.store.CHAT_CONTENT_TYPES.TEXT,
+    message: "Nowforareallylongwordwithoutspacesorpunctuationwhichshouldcause" +
+    "linewrappingissuesifthecssiswrong",
+    sentTimestamp: "2015-06-23T22:23:45.590Z"
   }));
   dispatcher.dispatch(new sharedActions.SendTextChatMessage({
     contentType: loop.store.CHAT_CONTENT_TYPES.TEXT,
     message: "Check out this menu from DNA Pizza:" +
     " http://example.com/DNA/pizza/menu/lots-of-different-kinds-of-pizza/" +
     "%8D%E0%B8%88%E0%B8%A1%E0%B8%A3%E0%8D%E0%B8%88%E0%B8%A1%E0%B8%A3%E0%",
-    sentTimestamp: "2015-06-23T22:23:45.590Z"
-  }));
-  dispatcher.dispatch(new sharedActions.SendTextChatMessage({
-    contentType: loop.store.CHAT_CONTENT_TYPES.TEXT,
-    message: "Nowforareallylongwordwithoutspacesorpunctuationwhichshouldcause" +
-    "linewrappingissuesifthecssiswrong",
     sentTimestamp: "2015-06-23T22:23:45.590Z"
   }));
   dispatcher.dispatch(new sharedActions.ReceivedTextChatMessage({
@@ -427,10 +424,10 @@
     message: "What time should we meet?",
     sentTimestamp: "2015-06-23T22:27:45.590Z"
   }));
-  dispatcher.dispatch(new sharedActions.SendTextChatMessage({
+  dispatcher.dispatch(new sharedActions.ReceivedTextChatMessage({
     contentType: loop.store.CHAT_CONTENT_TYPES.TEXT,
-    message: "Cool",
-    sentTimestamp: "2015-06-23T22:27:45.590Z"
+    message: "8:00 PM",
+    receivedTimestamp: "2015-06-23T22:27:45.590Z"
   }));
 
   loop.store.StoreMixin.register({
