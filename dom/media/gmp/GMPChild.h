@@ -50,7 +50,7 @@ public:
 private:
   friend class GMPContentChild;
 
-  bool PreLoadPluginVoucher(const nsAString& aPluginPath);
+  bool PreLoadPluginVoucher();
   void PreLoadSandboxVoucher();
 
   bool GetUTF8LibPath(nsACString& aOutLibPath);
