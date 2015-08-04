@@ -285,6 +285,15 @@ ThreadedDriver::RunThread()
     GraphTime nextStateComputedTime =
       mGraphImpl->RoundUpToNextAudioBlock(
         mIterationEnd + mGraphImpl->MillisecondsToMediaTime(AUDIO_TARGET_MS));
+    if (nextStateComputedTime < stateComputedTime) {
+      // A previous driver may have been processing further ahead of
+      // iterationEnd.
+      STREAM_LOG(LogLevel::Warning,
+                 ("Prevent state from going backwards. interval[%ld; %ld] state[%ld; %ld]",
+                  (long)mIterationStart, (long)mIterationEnd,
+                  (long)stateComputedTime, (long)nextStateComputedTime));
+      nextStateComputedTime = stateComputedTime;
+    }
     STREAM_LOG(LogLevel::Debug,
                ("interval[%ld; %ld] state[%ld; %ld]",
                (long)mIterationStart, (long)mIterationEnd,

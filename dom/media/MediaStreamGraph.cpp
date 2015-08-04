@@ -793,10 +793,7 @@ MediaStreamGraphImpl::RecomputeBlocking(GraphTime aEndBlockingDecisions)
   // The next state computed time can be the same as the previous: it
   // means the driver would be have been blocking indefinitly, but the graph has
   // been woken up right after having been to sleep.
-  if (aEndBlockingDecisions < mStateComputedTime) {
-    printf("State time can't go backward %ld < %ld.\n", static_cast<long>(aEndBlockingDecisions), static_cast<long>(mStateComputedTime));
-  }
-
+  MOZ_ASSERT(aEndBlockingDecisions >= mStateComputedTime);
   mStateComputedTime = aEndBlockingDecisions;
 
   if (blockingDecisionsWillChange) {
