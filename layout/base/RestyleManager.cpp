@@ -41,6 +41,8 @@
 #include "nsDisplayList.h"
 #include "RestyleTrackerInlines.h"
 #include "nsSMILAnimationController.h"
+#include "nsCSSRuleProcessor.h"
+#include "ChildIterator.h"
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -1011,6 +1013,9 @@ RestyleManager::RestyleElement(Element*               aElement,
           newContext->StyleFont()->mFont.size) {
         // The basis for 'rem' units has changed.
         mRebuildAllRestyleHint |= aRestyleHint;
+        if (aRestyleHint & eRestyle_SomeDescendants) {
+          mRebuildAllRestyleHint |= eRestyle_Subtree;
+        }
         NS_UpdateHint(mRebuildAllExtraHint, aMinHint);
         StartRebuildAllStyleData(aRestyleTracker);
         return;
@@ -1558,6 +1563,9 @@ RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
   NS_ASSERTION(!(aExtraHint & nsChangeHint_ReconstructFrame),
                "Should not reconstruct the root of the frame tree.  "
                "Use ReconstructDocElementHierarchy instead.");
+  MOZ_ASSERT(!(aRestyleHint & ~(eRestyle_Subtree | eRestyle_ForceDescendants)),
+             "the only bits allowed in aRestyleHint are eRestyle_Subtree and "
+             "eRestyle_ForceDescendants");
 
   NS_UpdateHint(mRebuildAllExtraHint, aExtraHint);
   mRebuildAllRestyleHint |= aRestyleHint;
@@ -1875,6 +1883,9 @@ RestyleManager::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
   NS_ASSERTION(!(aExtraHint & nsChangeHint_ReconstructFrame),
                "Should not reconstruct the root of the frame tree.  "
                "Use ReconstructDocElementHierarchy instead.");
+  MOZ_ASSERT(!(aRestyleHint & eRestyle_SomeDescendants),
+             "PostRebuildAllStyleDataEvent does not handle "
+             "eRestyle_SomeDescendants");
 
   mDoRebuildAllStyleData = true;
   NS_UpdateHint(mRebuildAllExtraHint, aExtraHint);
@@ -2472,6 +2483,8 @@ ElementRestyler::ElementRestyler(nsPresContext* aPresContext,
                                  nsStyleChangeList* aChangeList,
                                  nsChangeHint aHintsHandledByAncestors,
                                  RestyleTracker& aRestyleTracker,
+                                 nsTArray<nsCSSSelector*>&
+                                   aSelectorsForDescendants,
                                  TreeMatchContext& aTreeMatchContext,
                                  nsTArray<nsIContent*>&
                                    aVisibleKidsOfHiddenElement,
@@ -2490,6 +2503,7 @@ ElementRestyler::ElementRestyler(nsPresContext* aPresContext,
   , mParentFrameHintsNotHandledForDescendants(nsChangeHint(0))
   , mHintsNotHandledForDescendants(nsChangeHint(0))
   , mRestyleTracker(aRestyleTracker)
+  , mSelectorsForDescendants(aSelectorsForDescendants)
   , mTreeMatchContext(aTreeMatchContext)
   , mResolvedChild(nullptr)
   , mContextsToClear(aContextsToClear)
@@ -2522,6 +2536,7 @@ ElementRestyler::ElementRestyler(const ElementRestyler& aParentRestyler,
       aParentRestyler.mHintsNotHandledForDescendants)
   , mHintsNotHandledForDescendants(nsChangeHint(0))
   , mRestyleTracker(aParentRestyler.mRestyleTracker)
+  , mSelectorsForDescendants(aParentRestyler.mSelectorsForDescendants)
   , mTreeMatchContext(aParentRestyler.mTreeMatchContext)
   , mResolvedChild(nullptr)
   , mContextsToClear(aParentRestyler.mContextsToClear)
@@ -2568,6 +2583,7 @@ ElementRestyler::ElementRestyler(ParentContextFromChildFrame,
       nsChangeHint_Hints_NotHandledForDescendants)
   , mHintsNotHandledForDescendants(nsChangeHint(0))
   , mRestyleTracker(aParentRestyler.mRestyleTracker)
+  , mSelectorsForDescendants(aParentRestyler.mSelectorsForDescendants)
   , mTreeMatchContext(aParentRestyler.mTreeMatchContext)
   , mResolvedChild(nullptr)
   , mContextsToClear(aParentRestyler.mContextsToClear)
@@ -2589,6 +2605,7 @@ ElementRestyler::ElementRestyler(nsPresContext* aPresContext,
                                  nsStyleChangeList* aChangeList,
                                  nsChangeHint aHintsHandledByAncestors,
                                  RestyleTracker& aRestyleTracker,
+                                 nsTArray<nsCSSSelector*>& aSelectorsForDescendants,
                                  TreeMatchContext& aTreeMatchContext,
                                  nsTArray<nsIContent*>&
                                    aVisibleKidsOfHiddenElement,
@@ -2605,6 +2622,7 @@ ElementRestyler::ElementRestyler(nsPresContext* aPresContext,
   , mParentFrameHintsNotHandledForDescendants(nsChangeHint(0))
   , mHintsNotHandledForDescendants(nsChangeHint(0))
   , mRestyleTracker(aRestyleTracker)
+  , mSelectorsForDescendants(aSelectorsForDescendants)
   , mTreeMatchContext(aTreeMatchContext)
   , mResolvedChild(nullptr)
   , mContextsToClear(aContextsToClear)
@@ -2704,6 +2722,78 @@ ElementRestyler::CaptureChange(nsStyleContext* aOldContext,
               RestyleManager::ChangeHintToString(mHintsNotHandledForDescendants).get());
 }
 
+class MOZ_STACK_CLASS AutoSelectorArrayTruncater final
+{
+public:
+  AutoSelectorArrayTruncater(nsTArray<nsCSSSelector*>& aSelectorsForDescendants)
+    : mSelectorsForDescendants(aSelectorsForDescendants)
+    , mOriginalLength(aSelectorsForDescendants.Length())
+  {
+  }
+
+  ~AutoSelectorArrayTruncater()
+  {
+    mSelectorsForDescendants.TruncateLength(mOriginalLength);
+  }
+
+private:
+  nsTArray<nsCSSSelector*>& mSelectorsForDescendants;
+  size_t mOriginalLength;
+};
+
+/**
+ * Called when we are stopping a restyle with eRestyle_SomeDescendants, to
+ * search for descendants that match any of the selectors in
+ * mSelectorsForDescendants.  If the element does match one of the selectors,
+ * we cause it to be restyled with eRestyle_Self.
+ *
+ * We traverse down the flattened tree unless we find an element that
+ * (a) already has a pending restyle, or (b) does not have a pending restyle
+ * but does match one of the selectors in mSelectorsForDescendants.  For (a),
+ * we add the current mSelectorsForDescendants into the existing restyle data,
+ * and for (b) we add a new pending restyle with that array.  So in both
+ * cases, when we come to restyling this element back up in
+ * ProcessPendingRestyles, we will again find the eRestyle_SomeDescendants
+ * hint and its selectors array.
+ *
+ * This ensures that we don't visit descendant elements and check them
+ * against mSelectorsForDescendants more than once.
+ */
+void
+ElementRestyler::AddPendingRestylesForDescendantsMatchingSelectors(Element* aElement)
+{
+  if (mRestyleTracker.HasRestyleData(aElement)) {
+    nsRestyleHint rshint = eRestyle_SomeDescendants;
+    if (SelectorMatchesForRestyle(aElement)) {
+      rshint |= eRestyle_Self;
+    }
+    // XXX Traversing up the tree in AddPendingRestyle can be wasteful,
+    // as we can do this multiple times for descendants of the element
+    // we stopped restyling at, up in Restyle().  We should track the
+    // current restyle root as we traverse down here to avoid that.
+    RestyleHintData data;
+    data.mSelectorsForDescendants = mSelectorsForDescendants;
+    mRestyleTracker.AddPendingRestyle(aElement, rshint, nsChangeHint(0), &data);
+    return;
+  }
+
+  if (SelectorMatchesForRestyle(aElement)) {
+    RestyleHintData data;
+    data.mSelectorsForDescendants = mSelectorsForDescendants;
+    mRestyleTracker.AddPendingRestyle(aElement,
+                                      eRestyle_Self | eRestyle_SomeDescendants,
+                                      nsChangeHint(0), &data);
+    return;
+  }
+
+  FlattenedChildIterator it(aElement);
+  for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
+    if (n->IsElement()) {
+      AddPendingRestylesForDescendantsMatchingSelectors(n->AsElement());
+    }
+  }
+}
+
 /**
  * Recompute style for mFrame (which should not have a prev continuation
  * with the same style), all of its next continuations with the same
@@ -2740,6 +2830,8 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
   AutoDisplayContentsAncestorPusher adcp(mTreeMatchContext, mFrame->PresContext(),
       mFrame->GetContent() ? mFrame->GetContent()->GetParent() : nullptr);
 
+  AutoSelectorArrayTruncater asat(mSelectorsForDescendants);
+
   // List of descendant elements of mContent we know we will eventually need to
   // restyle.  Before we return from this function, we call
   // RestyleTracker::AddRestyleRootsIfAwaitingRestyle to ensure they get
@@ -2769,6 +2861,8 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
       if (NS_UpdateHint(mHintsHandled, restyleData->mChangeHint)) {
         mChangeList->AppendChange(mFrame, mContent, restyleData->mChangeHint);
       }
+      mSelectorsForDescendants.AppendElements(
+          restyleData->mRestyleHintData.mSelectorsForDescendants);
       hintToRestore = restyleData->mRestyleHint;
       hintDataToRestore = Move(restyleData->mRestyleHintData);
       aRestyleHint = nsRestyleHint(aRestyleHint | restyleData->mRestyleHint);
@@ -2780,7 +2874,8 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
   // we restyle children with nsRestyleHint(0).  But we pass the
   // eRestyle_ForceDescendants flag down too.
   nsRestyleHint childRestyleHint =
-    nsRestyleHint(aRestyleHint & (eRestyle_Subtree |
+    nsRestyleHint(aRestyleHint & (eRestyle_SomeDescendants |
+                                  eRestyle_Subtree |
                                   eRestyle_ForceDescendants));
 
   nsRefPtr<nsStyleContext> oldContext = mFrame->StyleContext();
@@ -2883,6 +2978,18 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
     }
 
     mRestyleTracker.AddRestyleRootsIfAwaitingRestyle(descendants);
+
+    if (mContent->IsElement()) {
+      if ((aRestyleHint & eRestyle_SomeDescendants) &&
+          !mSelectorsForDescendants.IsEmpty()) {
+        FlattenedChildIterator it(mContent->AsElement());
+        for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
+          if (n->IsElement()) {
+            AddPendingRestylesForDescendantsMatchingSelectors(n->AsElement());
+          }
+        }
+      }
+    }
     return;
   }
 
@@ -3084,6 +3191,30 @@ ElementRestyler::ComputeRestyleResultFromNewContext(nsIFrame* aSelf,
   return eRestyleResult_Stop;
 }
 
+bool
+ElementRestyler::SelectorMatchesForRestyle(Element* aElement)
+{
+  if (!aElement) {
+    return false;
+  }
+  for (nsCSSSelector* selector : mSelectorsForDescendants) {
+    if (nsCSSRuleProcessor::RestrictedSelectorMatches(aElement, selector,
+                                                      mTreeMatchContext)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool
+ElementRestyler::MustRestyleSelf(nsRestyleHint aRestyleHint,
+                                 Element* aElement)
+{
+  return (aRestyleHint & (eRestyle_Self | eRestyle_Subtree)) ||
+         ((aRestyleHint & eRestyle_SomeDescendants) &&
+          SelectorMatchesForRestyle(aElement));
+}
+
 ElementRestyler::RestyleResult
 ElementRestyler::RestyleSelf(nsIFrame* aSelf,
                              nsRestyleHint aRestyleHint,
@@ -3107,7 +3238,7 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
 
   RestyleResult result;
 
-  if (aRestyleHint) {
+  if (aRestyleHint & ~eRestyle_SomeDescendants) {
     result = eRestyleResult_Continue;
   } else {
     result = ComputeRestyleResultFromFrame(aSelf);
@@ -3192,89 +3323,91 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
                  "non pseudo-element frame without content node");
     newContext = styleSet->ResolveStyleForNonElement(parentContext);
   }
-  else if (!(aRestyleHint & (eRestyle_Self | eRestyle_Subtree))) {
-    Element* element = ElementForStyleContext(mParentContent, aSelf, pseudoType);
-    if (!(aRestyleHint & ~(eRestyle_Force | eRestyle_ForceDescendants)) &&
-        !styleSet->IsInRuleTreeReconstruct()) {
-      LOG_RESTYLE("reparenting style context");
-      newContext =
-        styleSet->ReparentStyleContext(oldContext, parentContext, element);
-    } else {
-      // Use ResolveStyleWithReplacement either for actual replacements
-      // or, with no replacements, as a substitute for
-      // ReparentStyleContext that rebuilds the path in the rule tree
-      // rather than reusing the rule node, as we need to do during a
-      // rule tree reconstruct.
-      Element* pseudoElement = PseudoElementForStyleContext(aSelf, pseudoType);
-      MOZ_ASSERT(!element || element != pseudoElement,
-                 "pseudo-element for selector matching should be "
-                 "the anonymous content node that we create, "
-                 "not the real element");
-      LOG_RESTYLE("resolving style with replacement");
-      newContext =
-        styleSet->ResolveStyleWithReplacement(element, pseudoElement,
-                                              parentContext, oldContext,
-                                              aRestyleHint);
-    }
-  } else if (pseudoType == nsCSSPseudoElements::ePseudo_AnonBox) {
-    newContext = styleSet->ResolveAnonymousBoxStyle(pseudoTag,
-                                                    parentContext);
-  }
   else {
     Element* element = ElementForStyleContext(mParentContent, aSelf, pseudoType);
-    if (pseudoTag) {
-      if (pseudoTag == nsCSSPseudoElements::before ||
-          pseudoTag == nsCSSPseudoElements::after) {
-        // XXX what other pseudos do we need to treat like this?
-        newContext = styleSet->ProbePseudoElementStyle(element,
-                                                       pseudoType,
-                                                       parentContext,
-                                                       mTreeMatchContext);
-        if (!newContext) {
-          // This pseudo should no longer exist; gotta reframe
-          NS_UpdateHint(mHintsHandled, nsChangeHint_ReconstructFrame);
-          mChangeList->AppendChange(aSelf, element,
-                                    nsChangeHint_ReconstructFrame);
-          // We're reframing anyway; just keep the same context
-          newContext = oldContext;
-#ifdef DEBUG
-          // oldContext's parent might have had its style structs swapped out
-          // with parentContext, so to avoid any assertions that might
-          // otherwise trigger in oldContext's parent's destructor, we set a
-          // flag on oldContext to skip it and its descendants in
-          // nsStyleContext::AssertStructsNotUsedElsewhere.
-          if (oldContext->GetParent() != parentContext) {
-            oldContext->AddStyleBit(NS_STYLE_IS_GOING_AWAY);
-          }
-#endif
-        }
+    if (!MustRestyleSelf(aRestyleHint, element)) {
+      if (!(aRestyleHint & ~(eRestyle_Force | eRestyle_ForceDescendants)) &&
+          !styleSet->IsInRuleTreeReconstruct()) {
+        LOG_RESTYLE("reparenting style context");
+        newContext =
+          styleSet->ReparentStyleContext(oldContext, parentContext, element);
       } else {
-        // Don't expect XUL tree stuff here, since it needs a comparator and
-        // all.
-        NS_ASSERTION(pseudoType <
-                       nsCSSPseudoElements::ePseudo_PseudoElementCount,
-                     "Unexpected pseudo type");
-        Element* pseudoElement =
-          PseudoElementForStyleContext(aSelf, pseudoType);
-        MOZ_ASSERT(element != pseudoElement,
+        // Use ResolveStyleWithReplacement either for actual replacements
+        // or, with no replacements, as a substitute for
+        // ReparentStyleContext that rebuilds the path in the rule tree
+        // rather than reusing the rule node, as we need to do during a
+        // rule tree reconstruct.
+        Element* pseudoElement = PseudoElementForStyleContext(aSelf, pseudoType);
+        MOZ_ASSERT(!element || element != pseudoElement,
                    "pseudo-element for selector matching should be "
                    "the anonymous content node that we create, "
                    "not the real element");
-        newContext = styleSet->ResolvePseudoElementStyle(element,
-                                                         pseudoType,
-                                                         parentContext,
-                                                         pseudoElement);
+        LOG_RESTYLE("resolving style with replacement");
+        nsRestyleHint rshint = aRestyleHint & ~eRestyle_SomeDescendants;
+        newContext =
+          styleSet->ResolveStyleWithReplacement(element, pseudoElement,
+                                                parentContext, oldContext,
+                                                rshint);
       }
+    } else if (pseudoType == nsCSSPseudoElements::ePseudo_AnonBox) {
+      newContext = styleSet->ResolveAnonymousBoxStyle(pseudoTag,
+                                                      parentContext);
     }
     else {
-      NS_ASSERTION(aSelf->GetContent(),
-                   "non pseudo-element frame without content node");
-      // Skip parent display based style fixup for anonymous subtrees:
-      TreeMatchContext::AutoParentDisplayBasedStyleFixupSkipper
-        parentDisplayBasedFixupSkipper(mTreeMatchContext,
-                               element->IsRootOfNativeAnonymousSubtree());
-      newContext = styleSet->ResolveStyleFor(element, parentContext,
-                                             mTreeMatchContext);
+      if (pseudoTag) {
+        if (pseudoTag == nsCSSPseudoElements::before ||
+            pseudoTag == nsCSSPseudoElements::after) {
+          // XXX what other pseudos do we need to treat like this?
+          newContext = styleSet->ProbePseudoElementStyle(element,
+                                                         pseudoType,
+                                                         parentContext,
+                                                         mTreeMatchContext);
+          if (!newContext) {
+            // This pseudo should no longer exist; gotta reframe
+            NS_UpdateHint(mHintsHandled, nsChangeHint_ReconstructFrame);
+            mChangeList->AppendChange(aSelf, element,
+                                      nsChangeHint_ReconstructFrame);
+            // We're reframing anyway; just keep the same context
+            newContext = oldContext;
+#ifdef DEBUG
+            // oldContext's parent might have had its style structs swapped out
+            // with parentContext, so to avoid any assertions that might
+            // otherwise trigger in oldContext's parent's destructor, we set a
+            // flag on oldContext to skip it and its descendants in
+            // nsStyleContext::AssertStructsNotUsedElsewhere.
+            if (oldContext->GetParent() != parentContext) {
+              oldContext->AddStyleBit(NS_STYLE_IS_GOING_AWAY);
+            }
+#endif
+          }
+        } else {
+          // Don't expect XUL tree stuff here, since it needs a comparator and
+          // all.
+          NS_ASSERTION(pseudoType <
+                         nsCSSPseudoElements::ePseudo_PseudoElementCount,
+                       "Unexpected pseudo type");
+          Element* pseudoElement =
+            PseudoElementForStyleContext(aSelf, pseudoType);
+          MOZ_ASSERT(element != pseudoElement,
+                     "pseudo-element for selector matching should be "
+                     "the anonymous content node that we create, "
+                     "not the real element");
+          newContext = styleSet->ResolvePseudoElementStyle(element,
+                                                           pseudoType,
+                                                           parentContext,
+                                                           pseudoElement);
+        }
+      }
+      else {
+        NS_ASSERTION(aSelf->GetContent(),
+                     "non pseudo-element frame without content node");
+        // Skip parent display based style fixup for anonymous subtrees:
+        TreeMatchContext::AutoParentDisplayBasedStyleFixupSkipper
+          parentDisplayBasedFixupSkipper(mTreeMatchContext,
+                                 element->IsRootOfNativeAnonymousSubtree());
+        newContext = styleSet->ResolveStyleFor(element, parentContext,
+                                               mTreeMatchContext);
+      }
     }
   }
 
@@ -3464,9 +3597,9 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
     NS_ASSERTION(extraPseudoTag &&
                  extraPseudoTag != nsCSSAnonBoxes::mozNonElement,
                  "extra style context is not pseudo element");
-    if (!(aRestyleHint & (eRestyle_Self | eRestyle_Subtree))) {
-      Element* element = extraPseudoType != nsCSSPseudoElements::ePseudo_AnonBox
-                           ? mContent->AsElement() : nullptr;
+    Element* element = extraPseudoType != nsCSSPseudoElements::ePseudo_AnonBox
+                         ? mContent->AsElement() : nullptr;
+    if (!MustRestyleSelf(aRestyleHint, element)) {
       if (styleSet->IsInRuleTreeReconstruct()) {
         // Use ResolveStyleWithReplacement as a substitute for
         // ReparentStyleContext that rebuilds the path in the rule tree
@@ -3693,6 +3826,9 @@ ElementRestyler::ComputeStyleChangeFor(nsIFrame*          aFrame,
   Element* parent =
     content ? content->GetParentElementCrossingShadowRoot() : nullptr;
   treeMatchContext.InitAncestors(parent);
+  nsTArray<nsCSSSelector*> selectorsForDescendants;
+  selectorsForDescendants.AppendElements(
+      aRestyleHintData.mSelectorsForDescendants);
   nsTArray<nsIContent*> visibleKidsOfHiddenElement;
   for (nsIFrame* ibSibling = aFrame; ibSibling;
        ibSibling = GetNextBlockInInlineSibling(propTable, ibSibling)) {
@@ -3707,6 +3843,7 @@ ElementRestyler::ComputeStyleChangeFor(nsIFrame*          aFrame,
       // Inner loop over next-in-flows of the current frame
       ElementRestyler restyler(presContext, cont, aChangeList,
                                aMinChange, aRestyleTracker,
+                               selectorsForDescendants,
                                treeMatchContext,
                                visibleKidsOfHiddenElement,
                                aContextsToClear, aSwappedStructOwners);
@@ -3805,21 +3942,25 @@ ElementRestyler::RestyleUndisplayedNodes(nsRestyleHint    aChildRestyleHint,
     }
     nsRefPtr<nsStyleContext> undisplayedContext;
     nsStyleSet* styleSet = mPresContext->StyleSet();
-    if (thisChildHint & (eRestyle_Self | eRestyle_Subtree)) {
+    if (MustRestyleSelf(thisChildHint, element)) {
       undisplayedContext =
         styleSet->ResolveStyleFor(element, aParentContext, mTreeMatchContext);
     } else if (thisChildHint ||
                styleSet->IsInRuleTreeReconstruct()) {
+      // XXX Should the above condition ignore eRestyle_Force(Descendants)
+      // like the corresponding check in RestyleSelf?
+
       // Use ResolveStyleWithReplacement either for actual
       // replacements, or as a substitute for ReparentStyleContext
       // that rebuilds the path in the rule tree rather than reusing
       // the rule node, as we need to do during a rule tree
       // reconstruct.
+      nsRestyleHint rshint = thisChildHint & ~eRestyle_SomeDescendants;
       undisplayedContext =
         styleSet->ResolveStyleWithReplacement(element, nullptr,
                                               aParentContext,
                                               undisplayed->mStyle,
-                                              thisChildHint);
+                                              rshint);
     } else {
       undisplayedContext =
         styleSet->ReparentStyleContext(undisplayed->mStyle,
@@ -4141,6 +4282,8 @@ RestyleManager::ComputeAndProcessStyleChange(nsStyleContext*        aNewContext,
   Element* parentElement =
     parent && parent->IsElement() ? parent->AsElement() : nullptr;
   treeMatchContext.InitAncestors(parentElement);
+
+  nsTArray<nsCSSSelector*> selectorsForDescendants;
   nsTArray<nsIContent*> visibleKidsOfHiddenElement;
   nsTArray<ElementRestyler::ContextToClear> contextsToClear;
 
@@ -4150,7 +4293,7 @@ RestyleManager::ComputeAndProcessStyleChange(nsStyleContext*        aNewContext,
   nsTArray<nsRefPtr<nsStyleContext>> swappedStructOwners;
   nsStyleChangeList changeList;
   ElementRestyler r(frame->PresContext(), aElement, &changeList, aMinChange,
-                    aRestyleTracker, treeMatchContext,
+                    aRestyleTracker, selectorsForDescendants, treeMatchContext,
                     visibleKidsOfHiddenElement, contextsToClear,
                     swappedStructOwners);
   r.RestyleChildrenOfDisplayContentsElement(frame, aNewContext, aMinChange,
