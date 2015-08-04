@@ -669,6 +669,11 @@
 
                   // If the browser is loading it must not be crashed anymore
                   this.mTab.removeAttribute("crashed");
+
+                  // If the browser was previously muted, we should restore the muted state.
+                  if (this.mTab.hasAttribute("muted")) {
+                    this.mTab.linkedBrowser.mute();
+                  }
                 }
 
                 if (this._shouldShowProgress(aRequest)) {
