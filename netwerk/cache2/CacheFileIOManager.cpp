@@ -110,7 +110,6 @@ NS_INTERFACE_MAP_END_THREADSAFE
 
 CacheFileHandle::CacheFileHandle(const SHA1Sum::Hash *aHash, bool aPriority)
   : mHash(aHash)
-  , mIsDoomed(false)
   , mPriority(aPriority)
   , mClosed(false)
   , mSpecialFile(false)
@@ -119,13 +118,17 @@ CacheFileHandle::CacheFileHandle(const SHA1Sum::Hash *aHash, bool aPriority)
   , mFileSize(-1)
   , mFD(nullptr)
 {
+  // If we initialize mDoomed in the initialization list, that initialization is
+  // not guaranteeded to be atomic.  Whereas this assignment here is guaranteed
+  // to be atomic.  TSan will see this (atomic) assignment and be satisfied
+  // that cross-thread accesses to mIsDoomed are properly synchronized.
+  mIsDoomed = false;
   LOG(("CacheFileHandle::CacheFileHandle() [this=%p, hash=%08x%08x%08x%08x%08x]"
        , this, LOGSHA1(aHash)));
 }
 
 CacheFileHandle::CacheFileHandle(const nsACString &aKey, bool aPriority)
   : mHash(nullptr)
-  , mIsDoomed(false)
   , mPriority(aPriority)
   , mClosed(false)
   , mSpecialFile(true)
@@ -135,6 +138,8 @@ CacheFileHandle::CacheFileHandle(const nsACString &aKey, bool aPriority)
   , mFD(nullptr)
   , mKey(aKey)
 {
+  // See comment above about the initialization of mIsDoomed.
+  mIsDoomed = false;
   LOG(("CacheFileHandle::CacheFileHandle() [this=%p, key=%s]", this,
        PromiseFlatCString(aKey).get()));
 }
@@ -162,13 +167,13 @@ CacheFileHandle::Log()
   if (mSpecialFile) {
     LOG(("CacheFileHandle::Log() - special file [this=%p, isDoomed=%d, "
          "priority=%d, closed=%d, invalid=%d, fileExists=%d, fileSize=%lld, "
-         "leafName=%s, key=%s]", this, mIsDoomed, mPriority, mClosed, mInvalid,
+         "leafName=%s, key=%s]", this, int(mIsDoomed), mPriority, mClosed, mInvalid,
          mFileExists, mFileSize, leafName.get(), mKey.get()));
   } else {
     LOG(("CacheFileHandle::Log() - entry file [this=%p, hash=%08x%08x%08x%08x"
          "%08x, isDoomed=%d, priority=%d, closed=%d, invalid=%d, fileExists=%d,"
          " fileSize=%lld, leafName=%s, key=%s]", this, LOGSHA1(mHash),
-         mIsDoomed, mPriority, mClosed, mInvalid, mFileExists, mFileSize,
+         int(mIsDoomed), mPriority, mClosed, mInvalid, mFileExists, mFileSize,
          leafName.get(), mKey.get()));
   }
 }
