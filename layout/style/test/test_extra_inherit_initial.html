@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=940229
   
 </div>
 <pre id="test">
-<script class="testbody" type="text/javascript">
+<script class="testbody" type="application/javascript;version=1.7">
 
 /*
  * Inspired by mistake in quotes noticed while reviewing bug 189519.
@@ -43,14 +43,15 @@ function test_property(property)
     var decl = property + ": " + val1 + delim + val2;
     gElement.setAttribute("style", decl);
     if ("subproperties" in info) {
-      for (idx in info.subproperties) {
-        var subprop = info.subproperties[idx];
+      // Shorthand property; inspect each subproperty value.
+      for (let subprop of info.subproperties) {
         is(gDeclaration.getPropertyValue(subprop), "",
            ["expected", extraval, "ignored", relation, "value in",
             "'" + decl + "'", "when looking at subproperty",
             "'" + subprop + "'"].join(" "));
       }
     } else {
+      // Longhand property.
       is(gDeclaration.getPropertyValue(property), "",
          ["expected", extraval, "ignored", relation, "value in",
           "'" + decl + "'"].join(" "));
