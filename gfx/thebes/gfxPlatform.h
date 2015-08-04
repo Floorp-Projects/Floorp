@@ -41,6 +41,7 @@ class SRGBOverrideObserver;
 namespace mozilla {
 namespace gl {
 class SkiaGLGlue;
+class GLContext;
 } // namespace gl
 namespace gfx {
 class DrawTarget;
@@ -228,7 +229,7 @@ public:
       CreateOffscreenCanvasDrawTarget(const mozilla::gfx::IntSize& aSize, mozilla::gfx::SurfaceFormat aFormat);
 
     virtual already_AddRefed<DrawTarget>
-      CreateDrawTargetForData(unsigned char* aData, const mozilla::gfx::IntSize& aSize, 
+      CreateDrawTargetForData(unsigned char* aData, const mozilla::gfx::IntSize& aSize,
                               int32_t aStride, mozilla::gfx::SurfaceFormat aFormat);
 
     /**
@@ -342,8 +343,8 @@ public:
     *CreateFontGroup(const mozilla::FontFamilyList& aFontFamilyList,
                      const gfxFontStyle *aStyle,
                      gfxUserFontSet *aUserFontSet) = 0;
-                                          
-                                          
+
+
     /**
      * Look up a local platform font using the full font face name.
      * (Needed to support @font-face src local().)
@@ -434,7 +435,7 @@ public:
 
     // in some situations, need to make decisions about ambiguous characters, may need to look at multiple pref langs
     void GetLangPrefs(eFontPrefLang aPrefLangs[], uint32_t &aLen, eFontPrefLang aCharLang, eFontPrefLang aPageLang);
-    
+
     /**
      * Iterate over pref fonts given a list of lang groups.  For a single lang
      * group, multiple pref fonts are possible.  If error occurs, returns false,
@@ -457,13 +458,13 @@ public:
 
     // convert a enum constant to lang group string (i.e. eFontPrefLang_ChineseTW ==> "zh-TW")
     static const char* GetPrefLangName(eFontPrefLang aLang);
-   
+
     // map a Unicode range (based on char code) to a font language for Preferences
     static eFontPrefLang GetFontPrefLangFor(uint8_t aUnicodeRange);
 
     // returns true if a pref lang is CJK
     static bool IsLangCJK(eFontPrefLang aLang);
-    
+
     // helper method to add a pref lang to an array, if not already in array
     static void AppendPrefLang(eFontPrefLang aPrefLangs[], uint32_t& aLen, eFontPrefLang aAddLang);
 
@@ -652,6 +653,12 @@ public:
     // devices. Currently this is only used on Windows.
     virtual void GetDeviceInitData(mozilla::gfx::DeviceInitData* aOut);
 
+    /**
+     * Used to test whether surface texture detach is enabled. Ability to detach
+     * is based on API Version and device GPU as well as a preference.
+     */
+    bool CanDetachSurfaceTexture() { return mCanDetachSurfaceTexture; }
+
 protected:
     gfxPlatform();
     virtual ~gfxPlatform();
@@ -729,7 +736,7 @@ protected:
 
     int8_t  mBidiNumeralOption;
 
-    // whether to always search font cmaps globally 
+    // whether to always search font cmaps globally
     // when doing system font fallback
     int8_t  mFallbackUsesCmaps;
 
@@ -787,6 +794,8 @@ private:
     // Backend that we are compositing with. NONE, if no compositor has been
     // created yet.
     mozilla::layers::LayersBackend mCompositorBackend;
+
+    bool mCanDetachSurfaceTexture;
 };
 
 #endif /* GFX_PLATFORM_H */
