@@ -74,12 +74,6 @@ talos_config_options = [
       "default": [],
       "help": "Specify the tests to run"
       }],
-    [["--results-url"],
-     {'action': 'store',
-      'dest': 'results_url',
-      'default': None,
-      'help': "URL to send results to"
-      }],
 ]
 
 
@@ -163,11 +157,6 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
 
         self.workdir = self.query_abs_dirs()['abs_work_dir']  # convenience
 
-        # results output
-        self.results_url = self.config.get('results_url')
-        if self.results_url is None:
-            # use a results_url by default based on the class name in the working directory
-            self.results_url = 'file://%s' % os.path.join(self.workdir, self.__class__.__name__.lower() + '.txt')
         self.installer_url = self.config.get("installer_url")
         self.talos_json_url = self.config.get("talos_json_url")
         self.talos_json = self.config.get("talos_json")
@@ -422,8 +411,7 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
         if binary_path.endswith('.exe'):
             binary_path = binary_path[:-4]
         kw_options = {'output': 'talos.yml',  # options overwritten from **kw
-                      'executablePath': binary_path,
-                      'results_url': self.results_url}
+                      'executablePath': binary_path}
         kw_options['activeTests'] = self.query_tests()
         if self.config.get('title'):
             kw_options['title'] = self.config['title']
