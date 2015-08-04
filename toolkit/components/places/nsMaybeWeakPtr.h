@@ -15,17 +15,8 @@
 // nsMaybeWeakPtr is a helper object to hold a strong-or-weak reference
 // to the template class.  It's pretty minimal, but sufficient.
 
-class nsMaybeWeakPtr_base
-{
-protected:
-  // Returns an addref'd pointer to the requested interface
-  void* GetValueAs(const nsIID& iid) const;
-
-  nsCOMPtr<nsISupports> mPtr;
-};
-
 template<class T>
-class nsMaybeWeakPtr : private nsMaybeWeakPtr_base
+class nsMaybeWeakPtr
 {
 public:
   MOZ_IMPLICIT nsMaybeWeakPtr(nsISupports *ref) { mPtr = ref; }
@@ -38,10 +29,10 @@ public:
 
   nsISupports* GetRawValue() const { return mPtr.get(); }
 
-  const nsCOMPtr<T> GetValue() const {
-    return nsCOMPtr<T>(dont_AddRef(static_cast<T*>
-                                              (GetValueAs(NS_GET_TEMPLATE_IID(T)))));
-  }
+  const nsCOMPtr<T> GetValue() const;
+
+private:
+  nsCOMPtr<nsISupports> mPtr;
 };
 
 // nsMaybeWeakPtrArray is an array of MaybeWeakPtr objects, that knows how to
@@ -70,6 +61,30 @@ public:
       reinterpret_cast<isupports_array_type*>(this), aElement);
   }
 };
+
+template<class T>
+const nsCOMPtr<T>
+nsMaybeWeakPtr<T>::GetValue() const
+{
+  nsresult rv;
+  nsCOMPtr<T> ref;
+  if (mPtr) {
+    rv = mPtr->QueryInterface(NS_GET_TEMPLATE_IID(T), getter_AddRefs(ref));
+    if (NS_SUCCEEDED(rv)) {
+      return ref;
+    }
+  }
+
+  nsCOMPtr<nsIWeakReference> weakRef = do_QueryInterface(mPtr);
+  if (weakRef) {
+    rv = weakRef->QueryReferent(NS_GET_TEMPLATE_IID(T), getter_AddRefs(ref));
+    if (NS_SUCCEEDED(rv)) {
+      return ref;
+    }
+  }
+
+  return nullptr;
+}
 
 template <typename T>
 inline void

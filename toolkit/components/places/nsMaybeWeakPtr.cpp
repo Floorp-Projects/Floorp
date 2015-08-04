@@ -5,29 +5,6 @@
 
 #include "nsMaybeWeakPtr.h"
 
-void*
-nsMaybeWeakPtr_base::GetValueAs(const nsIID &iid) const
-{
-  nsresult rv;
-  void *ref;
-  if (mPtr) {
-    rv = mPtr->QueryInterface(iid, &ref);
-    if (NS_SUCCEEDED(rv)) {
-      return ref;
-    }
-  }
-
-  nsCOMPtr<nsIWeakReference> weakRef = do_QueryInterface(mPtr);
-  if (weakRef) {
-    rv = weakRef->QueryReferent(iid, &ref);
-    if (NS_SUCCEEDED(rv)) {
-      return ref;
-    }
-  }
-
-  return nullptr;
-}
-
 nsresult
 NS_AppendWeakElementBase(isupports_array_type *aArray,
                          nsISupports *aElement,
