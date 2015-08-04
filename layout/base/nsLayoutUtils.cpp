@@ -4270,17 +4270,6 @@ GetIntrinsicCoord(const nsStyleCoord& aStyle,
 static int32_t gNoiseIndent = 0;
 #endif
 
-static void
-AddStateBitToAncestors(nsIFrame* aFrame, nsFrameState aBit)
-{
-  for (nsIFrame* f = aFrame; f; f = f->GetParent()) {
-    if (f->HasAnyStateBits(aBit)) {
-      break;
-    }
-    f->AddStateBits(aBit);
-  }
-}
-
 /* static */ nscoord
 nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
                                      nsIFrame *aFrame,
@@ -4417,9 +4406,6 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
       LogicalSize ratio(wm, aFrame->GetIntrinsicRatio());
 
       if (ratio.BSize(wm) != 0) {
-        AddStateBitToAncestors(aFrame,
-            NS_FRAME_DESCENDANT_INTRINSIC_ISIZE_DEPENDS_ON_BSIZE);
-
         nscoord bSizeTakenByBoxSizing = 0;
         switch (boxSizing) {
         case NS_STYLE_BOX_SIZING_BORDER: {
