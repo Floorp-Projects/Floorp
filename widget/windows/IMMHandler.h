@@ -436,11 +436,29 @@ protected:
     bool Update(const IMENotification& aIMENotification);
     bool Init(nsWindow* aWindow);
     bool EnsureValidSelection(nsWindow* aWindow);
+  private:
+    Selection(const Selection& aOther) = delete;
+    void operator =(const Selection& aOther) = delete;
   };
+  // mSelection stores the latest selection data only when sHasFocus is true.
+  // Don't access mSelection directly.  You should use GetSelection() for
+  // getting proper state.
   Selection mSelection;
-  // mSelection stores the latest selection data only when sHasFocus it true.
-  // Therefore, if sHasFocus is false, temporary instance should be used.
-  Selection GetSelection() { return sHasFocus ? mSelection : Selection(); }
+
+  Selection& GetSelection()
+  {
+    // When IME has focus, mSelection is automatically updated by
+    // NOTIFY_IME_OF_SELECTION_CHANGE.
+    if (sHasFocus) {
+      return mSelection;
+    }
+    // Otherwise, i.e., While IME doesn't have focus, we cannot observe
+    // selection changes.  So, in such case, we need to query selection
+    // when it's necessary.
+    static Selection sTempSelection;
+    sTempSelection.Clear();
+    return sTempSelection;
+  }
 
   bool mIsComposing;
   bool mIsComposingOnPlugin;
