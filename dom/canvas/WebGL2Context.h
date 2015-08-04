@@ -356,6 +356,7 @@ public:
 
 private:
     WebGL2Context();
+    virtual UniquePtr<webgl::FormatUsageAuthority> CreateFormatUsage() const override;
 
     virtual bool IsTexParamValid(GLenum pname) const override;
 
