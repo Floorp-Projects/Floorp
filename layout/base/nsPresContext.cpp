@@ -1576,7 +1576,7 @@ void
 nsPresContext::SetContainer(nsIDocShell* aDocShell)
 {
   if (aDocShell) {
-    NS_ASSERTION(!(!!mContainer && mNeedsPrefUpdate),
+    NS_ASSERTION(!(mContainer && mNeedsPrefUpdate),
                  "Should only need pref update if mContainer is null.");
     mContainer = static_cast<nsDocShell*>(aDocShell);
     if (mNeedsPrefUpdate) {
