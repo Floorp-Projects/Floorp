@@ -136,7 +136,10 @@ enum CheckboxValue {
 {
   // both buttons and checkboxes have only one action. we should really stop using arbitrary
   // arrays with actions, and define constants for these actions.
-  [self getGeckoAccessible]->DoAction(0);
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible])
+    accWrap->DoAction(0);
+  else if (ProxyAccessible* proxy = [self getProxyAccessible])
+    proxy->DoAction(0);
 }
 
 - (BOOL)isTab
@@ -246,15 +249,14 @@ enum CheckboxValue {
  */
 - (id)value
 {
-  if (![self getGeckoAccessible])
-    return nil;
-
-  Accessible* accessible = [self getGeckoAccessible]->GetSelectedItem(0);
-  if (!accessible)
-    return nil;
-
   mozAccessible* nativeAcc = nil;
-  accessible->GetNativeInterface((void**)&nativeAcc);
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
+    Accessible* accTab = accWrap->GetSelectedItem(0);
+    accTab->GetNativeInterface((void**)&nativeAcc);
+  } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
+    ProxyAccessible* proxyTab = proxy->GetSelectedItem(0);
+    nativeAcc = GetNativeFromProxy(proxyTab);
+  }
 
   return nativeAcc;
 }
