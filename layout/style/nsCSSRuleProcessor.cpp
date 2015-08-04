@@ -2781,13 +2781,76 @@ nsCSSRuleProcessor::HasDocumentStateDependentStyle(StateRuleProcessorData* aData
 }
 
 struct AttributeEnumData {
-  explicit AttributeEnumData(AttributeRuleProcessorData *aData)
-    : data(aData), change(nsRestyleHint(0)) {}
+  AttributeEnumData(AttributeRuleProcessorData *aData,
+                    RestyleHintData& aRestyleHintData)
+    : data(aData), change(nsRestyleHint(0)), hintData(aRestyleHintData) {}
 
   AttributeRuleProcessorData *data;
   nsRestyleHint change;
+  RestyleHintData& hintData;
 };
 
+
+static inline nsRestyleHint
+RestyleHintForSelectorWithAttributeChange(nsRestyleHint aCurrentHint,
+                                          nsCSSSelector* aSelector,
+                                          nsCSSSelector* aRightmostSelector)
+{
+  MOZ_ASSERT(aSelector);
+
+  char16_t oper = aSelector->mOperator;
+
+  if (oper == char16_t('+') || oper == char16_t('~')) {
+    return eRestyle_LaterSiblings;
+  }
+
+  if (oper == char16_t(':')) {
+    return eRestyle_Subtree;
+  }
+
+  if (oper != char16_t(0)) {
+    // Check whether the selector is in a form that supports
+    // eRestyle_SomeDescendants.  If it isn't, return eRestyle_Subtree.
+
+    if (aCurrentHint & eRestyle_Subtree) {
+      // No point checking, since we'll end up restyling the whole
+      // subtree anyway.
+      return eRestyle_Subtree;
+    }
+
+    if (!aRightmostSelector) {
+      // aSelector wasn't a top-level selector, which means we were inside
+      // a :not() or :-moz-any().  We don't support that.
+      return eRestyle_Subtree;
+    }
+
+    MOZ_ASSERT(aSelector != aRightmostSelector,
+               "if aSelector == aRightmostSelector then we should have "
+               "no operator");
+
+    // Check that aRightmostSelector can be passed to RestrictedSelectorMatches.
+    if (!aRightmostSelector->IsRestrictedSelector()) {
+      return eRestyle_Subtree;
+    }
+
+    // We also don't support pseudo-elements on any of the selectors
+    // between aRightmostSelector and aSelector.
+    // XXX Can we lift this restriction, so that we don't have to loop
+    // over all the selectors?
+    for (nsCSSSelector* sel = aRightmostSelector->mNext;
+         sel != aSelector;
+         sel = sel->mNext) {
+      MOZ_ASSERT(sel, "aSelector must be reachable from aRightmostSelector");
+      if (sel->PseudoType() != nsCSSPseudoElements::ePseudo_NotPseudoElement) {
+        return eRestyle_Subtree;
+      }
+    }
+
+    return eRestyle_SomeDescendants;
+  }
+
+  return eRestyle_Self;
+}
 
 static void
 AttributeEnumFunc(nsCSSSelector* aSelector,
@@ -2803,18 +2866,26 @@ AttributeEnumFunc(nsCSSSelector* aSelector,
     return;
   }
 
-  nsRestyleHint possibleChange = RestyleHintForOp(aSelector->mOperator);
+  nsRestyleHint possibleChange =
+    RestyleHintForSelectorWithAttributeChange(aData->change,
+                                              aSelector, aRightmostSelector);
 
-  // If enumData->change already includes all the bits of possibleChange, don't
-  // bother calling SelectorMatches, since even if it returns false
-  // enumData->change won't change.
+  // If, ignoring eRestyle_SomeDescendants, enumData->change already includes
+  // all the bits of possibleChange, don't bother calling SelectorMatches, since
+  // even if it returns false enumData->change won't change.  If possibleChange
+  // has eRestyle_SomeDescendants, we need to call SelectorMatches(Tree)
+  // regardless as it might give us new selectors to append to
+  // mSelectorsForDescendants.
   NodeMatchContext nodeContext(EventStates(), false);
-  if ((possibleChange & ~(aData->change)) &&
+  if (((possibleChange & (~(aData->change) | eRestyle_SomeDescendants))) &&
       SelectorMatches(data->mElement, aSelector, nodeContext,
                       data->mTreeMatchContext, SelectorMatchesFlags::UNKNOWN) &&
       SelectorMatchesTree(data->mElement, aSelector->mNext,
                           data->mTreeMatchContext, false)) {
     aData->change = nsRestyleHint(aData->change | possibleChange);
+    if (possibleChange & eRestyle_SomeDescendants) {
+      aData->hintData.mSelectorsForDescendants.AppendElement(aRightmostSelector);
+    }
   }
 }
 
@@ -2846,7 +2917,7 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(
   //  We could try making use of aData->mModType, but :not rules make it a bit
   //  of a pain to do so...  So just ignore it for now.
 
-  AttributeEnumData data(aData);
+  AttributeEnumData data(aData, aRestyleHintDataResult);
 
   // Don't do our special handling of certain attributes if the attr
   // hasn't changed yet.
