@@ -74,7 +74,6 @@ JumpListBuilder::~JumpListBuilder()
   ::CoUninitialize();
 }
 
-/* readonly attribute short available; */
 NS_IMETHODIMP JumpListBuilder::GetAvailable(int16_t *aAvailable)
 {
   *aAvailable = false;
@@ -85,7 +84,6 @@ NS_IMETHODIMP JumpListBuilder::GetAvailable(int16_t *aAvailable)
   return NS_OK;
 }
 
-/* readonly attribute boolean isListCommitted; */
 NS_IMETHODIMP JumpListBuilder::GetIsListCommitted(bool *aCommit)
 {
   *aCommit = mHasCommit;
@@ -93,7 +91,6 @@ NS_IMETHODIMP JumpListBuilder::GetIsListCommitted(bool *aCommit)
   return NS_OK;
 }
 
-/* readonly attribute short maxItems; */
 NS_IMETHODIMP JumpListBuilder::GetMaxListItems(int16_t *aMaxItems)
 {
   if (!mJumpListMgr)
@@ -119,7 +116,6 @@ NS_IMETHODIMP JumpListBuilder::GetMaxListItems(int16_t *aMaxItems)
   return NS_OK;
 }
 
-/* boolean initListBuild(in nsIMutableArray removedItems); */
 NS_IMETHODIMP JumpListBuilder::InitListBuild(nsIMutableArray *removedItems, bool *_retval)
 {
   NS_ENSURE_ARG_POINTER(removedItems);
@@ -250,7 +246,6 @@ nsresult JumpListBuilder::RemoveIconCacheForAllItems()
   return NS_OK;
 }
 
-/* boolean addListToBuild(in short aCatType, [optional] in nsIArray items, [optional] in AString catName); */
 NS_IMETHODIMP JumpListBuilder::AddListToBuild(int16_t aCatType, nsIArray *items, const nsAString &catName, bool *_retval)
 {
   nsresult rv;
@@ -402,7 +397,6 @@ NS_IMETHODIMP JumpListBuilder::AddListToBuild(int16_t aCatType, nsIArray *items,
   return NS_OK;
 }
 
-/* void abortListBuild(); */
 NS_IMETHODIMP JumpListBuilder::AbortListBuild()
 {
   if (!mJumpListMgr)
@@ -414,7 +408,6 @@ NS_IMETHODIMP JumpListBuilder::AbortListBuild()
   return NS_OK;
 }
 
-/* boolean commitListBuild(); */
 NS_IMETHODIMP JumpListBuilder::CommitListBuild(bool *_retval)
 {
   *_retval = false;
@@ -434,7 +427,6 @@ NS_IMETHODIMP JumpListBuilder::CommitListBuild(bool *_retval)
   return NS_OK;
 }
 
-/* boolean deleteActiveList(); */
 NS_IMETHODIMP JumpListBuilder::DeleteActiveList(bool *_retval)
 {
   *_retval = false;

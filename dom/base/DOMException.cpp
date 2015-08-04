@@ -294,7 +294,6 @@ Exception::StowJSVal(JS::Value& aVp)
   }
 }
 
-/* readonly attribute AUTF8String message; */
 NS_IMETHODIMP
 Exception::GetMessageMoz(nsACString& aMessage)
 {
@@ -304,7 +303,6 @@ Exception::GetMessageMoz(nsACString& aMessage)
   return NS_OK;
 }
 
-/* readonly attribute nsresult result; */
 NS_IMETHODIMP
 Exception::GetResult(nsresult* aResult)
 {
@@ -315,7 +313,6 @@ Exception::GetResult(nsresult* aResult)
   return NS_OK;
 }
 
-/* readonly attribute AUTF8String name; */
 NS_IMETHODIMP
 Exception::GetName(nsACString& aName)
 {
@@ -337,7 +334,6 @@ Exception::GetName(nsACString& aName)
   return NS_OK;
 }
 
-/* readonly attribute AString filename; */
 NS_IMETHODIMP
 Exception::GetFilename(nsAString& aFilename)
 {
@@ -351,7 +347,6 @@ Exception::GetFilename(nsAString& aFilename)
   return NS_OK;
 }
 
-/* readonly attribute uint32_t lineNumber; */
 NS_IMETHODIMP
 Exception::GetLineNumber(uint32_t *aLineNumber)
 {
@@ -369,7 +364,6 @@ Exception::GetLineNumber(uint32_t *aLineNumber)
   return NS_OK;
 }
 
-/* readonly attribute uint32_t columnNumber; */
 NS_IMETHODIMP
 Exception::GetColumnNumber(uint32_t* aColumnNumber)
 {
@@ -380,7 +374,6 @@ Exception::GetColumnNumber(uint32_t* aColumnNumber)
   return NS_OK;
 }
 
-/* readonly attribute nsIStackFrame location; */
 NS_IMETHODIMP
 Exception::GetLocation(nsIStackFrame** aLocation)
 {
@@ -392,7 +385,6 @@ Exception::GetLocation(nsIStackFrame** aLocation)
   return NS_OK;
 }
 
-/* readonly attribute nsISupports data; */
 NS_IMETHODIMP
 Exception::GetData(nsISupports** aData)
 {
@@ -404,7 +396,6 @@ Exception::GetData(nsISupports** aData)
   return NS_OK;
 }
 
-/* readonly attribute nsIException inner; */
 NS_IMETHODIMP
 Exception::GetInner(nsIException** aException)
 {
@@ -416,7 +407,6 @@ Exception::GetInner(nsIException** aException)
   return NS_OK;
 }
 
-/* AUTF8String toString (); */
 NS_IMETHODIMP
 Exception::ToString(nsACString& _retval)
 {

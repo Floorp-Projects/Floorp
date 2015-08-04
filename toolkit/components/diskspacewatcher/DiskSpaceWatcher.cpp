@@ -82,7 +82,6 @@ DiskSpaceWatcher::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_ERROR_UNEXPECTED;
 }
 
-/* readonly attribute bool isDiskFull; */
 NS_IMETHODIMP DiskSpaceWatcher::GetIsDiskFull(bool* aIsDiskFull)
 {
   *aIsDiskFull = sIsDiskFull;
@@ -94,7 +93,6 @@ NS_IMETHODIMP DiskSpaceWatcher::GetIsDiskFull(bool* aIsDiskFull)
 #ifdef XP_WIN
 #undef GetFreeSpace
 #endif
-/* readonly attribute long freeSpace; */
 NS_IMETHODIMP DiskSpaceWatcher::GetFreeSpace(uint64_t* aFreeSpace)
 {
   *aFreeSpace = sFreeSpace;

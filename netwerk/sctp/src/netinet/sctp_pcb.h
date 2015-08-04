@@ -846,7 +846,6 @@ sctp_set_primary_addr(struct sctp_tcb *, struct sockaddr *,
 
 int sctp_is_vtag_good(uint32_t, uint16_t lport, uint16_t rport, struct timeval *);
 
-/* void sctp_drain(void); */
 
 int sctp_destination_is_reachable(struct sctp_tcb *, struct sockaddr *);
 

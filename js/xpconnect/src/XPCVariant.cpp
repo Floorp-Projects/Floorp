@@ -640,104 +640,87 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
 // some more interesting conversions.
 
 
-/* readonly attribute uint16_t dataType; */
 NS_IMETHODIMP XPCVariant::GetDataType(uint16_t* aDataType)
 {
     *aDataType = mData.GetType();
     return NS_OK;
 }
 
-/* uint8_t getAsInt8 (); */
 NS_IMETHODIMP XPCVariant::GetAsInt8(uint8_t* _retval)
 {
     return mData.ConvertToInt8(_retval);
 }
 
-/* int16_t getAsInt16 (); */
 NS_IMETHODIMP XPCVariant::GetAsInt16(int16_t* _retval)
 {
     return mData.ConvertToInt16(_retval);
 }
 
-/* int32_t getAsInt32 (); */
 NS_IMETHODIMP XPCVariant::GetAsInt32(int32_t* _retval)
 {
     return mData.ConvertToInt32(_retval);
 }
 
-/* int64_t getAsInt64 (); */
 NS_IMETHODIMP XPCVariant::GetAsInt64(int64_t* _retval)
 {
     return mData.ConvertToInt64(_retval);
 }
 
-/* uint8_t getAsUint8 (); */
 NS_IMETHODIMP XPCVariant::GetAsUint8(uint8_t* _retval)
 {
     return mData.ConvertToUint8(_retval);
 }
 
-/* uint16_t getAsUint16 (); */
 NS_IMETHODIMP XPCVariant::GetAsUint16(uint16_t* _retval)
 {
     return mData.ConvertToUint16(_retval);
 }
 
-/* uint32_t getAsUint32 (); */
 NS_IMETHODIMP XPCVariant::GetAsUint32(uint32_t* _retval)
 {
     return mData.ConvertToUint32(_retval);
 }
 
-/* uint64_t getAsUint64 (); */
 NS_IMETHODIMP XPCVariant::GetAsUint64(uint64_t* _retval)
 {
     return mData.ConvertToUint64(_retval);
 }
 
-/* float getAsFloat (); */
 NS_IMETHODIMP XPCVariant::GetAsFloat(float* _retval)
 {
     return mData.ConvertToFloat(_retval);
 }
 
-/* double getAsDouble (); */
 NS_IMETHODIMP XPCVariant::GetAsDouble(double* _retval)
 {
     return mData.ConvertToDouble(_retval);
 }
 
-/* bool getAsBool (); */
 NS_IMETHODIMP XPCVariant::GetAsBool(bool* _retval)
 {
     return mData.ConvertToBool(_retval);
 }
 
-/* char getAsChar (); */
 NS_IMETHODIMP XPCVariant::GetAsChar(char* _retval)
 {
     return mData.ConvertToChar(_retval);
 }
 
-/* wchar getAsWChar (); */
 NS_IMETHODIMP XPCVariant::GetAsWChar(char16_t* _retval)
 {
     return mData.ConvertToWChar(_retval);
 }
 
-/* [notxpcom] nsresult getAsID (out nsID retval); */
 NS_IMETHODIMP_(nsresult) XPCVariant::GetAsID(nsID* retval)
 {
     return mData.ConvertToID(retval);
 }
 
-/* AString getAsAString (); */
 NS_IMETHODIMP XPCVariant::GetAsAString(nsAString & _retval)
 {
     return mData.ConvertToAString(_retval);
 }
 
-/* DOMString getAsDOMString (); */
 NS_IMETHODIMP XPCVariant::GetAsDOMString(nsAString & _retval)
 {
     // A DOMString maps to an AString internally, so we can re-use
@@ -745,56 +728,47 @@ NS_IMETHODIMP XPCVariant::GetAsDOMString(nsAString & _retval)
     return mData.ConvertToAString(_retval);
 }
 
-/* ACString getAsACString (); */
 NS_IMETHODIMP XPCVariant::GetAsACString(nsACString & _retval)
 {
     return mData.ConvertToACString(_retval);
 }
 
-/* AUTF8String getAsAUTF8String (); */
 NS_IMETHODIMP XPCVariant::GetAsAUTF8String(nsAUTF8String & _retval)
 {
     return mData.ConvertToAUTF8String(_retval);
 }
 
-/* string getAsString (); */
 NS_IMETHODIMP XPCVariant::GetAsString(char** _retval)
 {
     return mData.ConvertToString(_retval);
 }
 
-/* wstring getAsWString (); */
 NS_IMETHODIMP XPCVariant::GetAsWString(char16_t** _retval)
 {
     return mData.ConvertToWString(_retval);
 }
 
-/* nsISupports getAsISupports (); */
 NS_IMETHODIMP XPCVariant::GetAsISupports(nsISupports** _retval)
 {
     return mData.ConvertToISupports(_retval);
 }
 
-/* void getAsInterface (out nsIIDPtr iid, [iid_is (iid), retval] out nsQIResult iface); */
 NS_IMETHODIMP XPCVariant::GetAsInterface(nsIID** iid, void** iface)
 {
     return mData.ConvertToInterface(iid, iface);
 }
 
 
-/* [notxpcom] nsresult getAsArray (out uint16_t type, out nsIID iid, out uint32_t count, out voidPtr ptr); */
 NS_IMETHODIMP_(nsresult) XPCVariant::GetAsArray(uint16_t* type, nsIID* iid, uint32_t* count, void * *ptr)
 {
     return mData.ConvertToArray(type, iid, count, ptr);
 }
 
-/* void getAsStringWithSize (out uint32_t size, [size_is (size), retval] out string str); */
 NS_IMETHODIMP XPCVariant::GetAsStringWithSize(uint32_t* size, char** str)
 {
     return mData.ConvertToStringWithSize(size, str);
 }
 
-/* void getAsWStringWithSize (out uint32_t size, [size_is (size), retval] out wstring str); */
 NS_IMETHODIMP XPCVariant::GetAsWStringWithSize(uint32_t* size, char16_t** str)
 {
     return mData.ConvertToWStringWithSize(size, str);

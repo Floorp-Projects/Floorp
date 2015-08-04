@@ -339,7 +339,6 @@ nsNSSASN1PrintableItem::~nsNSSASN1PrintableItem()
     free(mData);
 }
 
-/* readonly attribute wstring value; */
 NS_IMETHODIMP 
 nsNSSASN1PrintableItem::GetDisplayValue(nsAString &aValue)
 {
@@ -416,7 +415,6 @@ nsNSSASN1PrintableItem::GetData(char **outData, uint32_t *outLen)
   return NS_OK;
 }
 
-/* attribute wstring displayName; */
 NS_IMETHODIMP 
 nsNSSASN1PrintableItem::GetDisplayName(nsAString &aDisplayName)
 {

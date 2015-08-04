@@ -126,7 +126,6 @@ nsDBusHandlerApp::LaunchWithURI(nsIURI *aURI,
 ////////////////////////////////////////////////////////////////////////////////
 //// nsIDBusHandlerApp
 
-/* attribute AUTF8String service; */
 NS_IMETHODIMP nsDBusHandlerApp::GetService(nsACString & aService)
 {
   aService.Assign(mService);
@@ -139,7 +138,6 @@ NS_IMETHODIMP nsDBusHandlerApp::SetService(const nsACString & aService)
   return NS_OK;
 }
 
-/* attribute AUTF8String method; */
 NS_IMETHODIMP nsDBusHandlerApp::GetMethod(nsACString & aMethod)
 {
   aMethod.Assign(mMethod);
@@ -152,7 +150,6 @@ NS_IMETHODIMP nsDBusHandlerApp::SetMethod(const nsACString & aMethod)
   return NS_OK;
 }
 
-/* attribute AUTF8String interface; */
 NS_IMETHODIMP nsDBusHandlerApp::GetDBusInterface(nsACString & aInterface)
 {
   aInterface.Assign(mInterface);
@@ -165,7 +162,6 @@ NS_IMETHODIMP nsDBusHandlerApp::SetDBusInterface(const nsACString & aInterface)
   return NS_OK;
 }
 
-/* attribute AUTF8String objpath; */
 NS_IMETHODIMP nsDBusHandlerApp::GetObjectPath(nsACString & aObjpath)
 {
   aObjpath.Assign(mObjpath);

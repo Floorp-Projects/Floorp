@@ -524,7 +524,6 @@ nsPNGEncoder::ParseOptions(const nsAString& aOptions,
 }
 
 
-/* void close (); */
 NS_IMETHODIMP
 nsPNGEncoder::Close()
 {
@@ -538,7 +537,6 @@ nsPNGEncoder::Close()
   return NS_OK;
 }
 
-/* unsigned long available (); */
 NS_IMETHODIMP
 nsPNGEncoder::Available(uint64_t* _retval)
 {
@@ -592,7 +590,6 @@ nsPNGEncoder::ReadSegments(nsWriteSegmentFun aWriter,
   return NS_OK;
 }
 
-/* boolean isNonBlocking (); */
 NS_IMETHODIMP
 nsPNGEncoder::IsNonBlocking(bool* _retval)
 {

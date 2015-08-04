@@ -16,7 +16,6 @@ nsOpenURIInFrameParams::nsOpenURIInFrameParams() :
 nsOpenURIInFrameParams::~nsOpenURIInFrameParams() {
 }
 
-/* attribute DOMString referrer; */
 NS_IMETHODIMP
 nsOpenURIInFrameParams::GetReferrer(nsAString& aReferrer)
 {
@@ -30,7 +29,6 @@ nsOpenURIInFrameParams::SetReferrer(const nsAString& aReferrer)
   return NS_OK;
 }
 
-/* attribute boolean isPrivate; */
 NS_IMETHODIMP
 nsOpenURIInFrameParams::GetIsPrivate(bool* aIsPrivate)
 {

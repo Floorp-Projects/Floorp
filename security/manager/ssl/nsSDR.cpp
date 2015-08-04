@@ -47,7 +47,6 @@ nsSecretDecoderRing::~nsSecretDecoderRing()
 {
 }
 
-/* [noscript] long encrypt (in buffer data, in long dataLen, out buffer result); */
 NS_IMETHODIMP nsSecretDecoderRing::
 Encrypt(unsigned char * data, int32_t dataLen, unsigned char * *result, int32_t *_retval)
 {
@@ -89,7 +88,6 @@ loser:
   return rv;
 }
 
-/* [noscript] long decrypt (in buffer data, in long dataLen, out buffer result); */
 NS_IMETHODIMP nsSecretDecoderRing::
 Decrypt(unsigned char * data, int32_t dataLen, unsigned char * *result, int32_t *_retval)
 {
@@ -129,7 +127,6 @@ loser:
   return rv;
 }
 
-/* string encryptString (in string text); */
 NS_IMETHODIMP nsSecretDecoderRing::
 EncryptString(const char *text, char **_retval)
 {
@@ -154,7 +151,6 @@ loser:
   return rv;
 }
 
-/* string decryptString (in string crypt); */
 NS_IMETHODIMP nsSecretDecoderRing::
 DecryptString(const char *crypt, char **_retval)
 {
@@ -194,7 +190,6 @@ loser:
   return rv;
 }
 
-/* void changePassword(); */
 NS_IMETHODIMP nsSecretDecoderRing::
 ChangePassword()
 {
@@ -279,7 +274,6 @@ LogoutAndTeardown()
   return rv;
 }
 
-/* void setWindow(in nsISupports w); */
 NS_IMETHODIMP nsSecretDecoderRing::
 SetWindow(nsISupports *w)
 {

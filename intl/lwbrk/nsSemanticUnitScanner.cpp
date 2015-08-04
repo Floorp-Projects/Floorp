@@ -18,14 +18,12 @@ nsSemanticUnitScanner::~nsSemanticUnitScanner()
 }
 
 
-/* void start (in string characterSet); */
 NS_IMETHODIMP nsSemanticUnitScanner::Start(const char *characterSet)
 {
     // do nothing for now.
     return NS_OK;
 }
 
-/* void next (in wstring text, in long length, in long pos, out boolean hasMoreUnits, out long begin, out long end); */
 NS_IMETHODIMP nsSemanticUnitScanner::Next(const char16_t *text, int32_t length, int32_t pos, bool isLastBuffer, int32_t *begin, int32_t *end, bool *_retval)
 {
     // xxx need to bullet proff and check input pointer 

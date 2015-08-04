@@ -270,7 +270,6 @@ NS_IMETHODIMP nsWebBrowserPersist::GetInterface(const nsIID & aIID, void **aIFac
 // nsWebBrowserPersist::nsIWebBrowserPersist
 //*****************************************************************************
 
-/* attribute unsigned long persistFlags; */
 NS_IMETHODIMP nsWebBrowserPersist::GetPersistFlags(uint32_t *aPersistFlags)
 {
     NS_ENSURE_ARG_POINTER(aPersistFlags);
@@ -285,7 +284,6 @@ NS_IMETHODIMP nsWebBrowserPersist::SetPersistFlags(uint32_t aPersistFlags)
     return NS_OK;
 }
 
-/* readonly attribute unsigned long currentState; */
 NS_IMETHODIMP nsWebBrowserPersist::GetCurrentState(uint32_t *aCurrentState)
 {
     NS_ENSURE_ARG_POINTER(aCurrentState);
@@ -304,7 +302,6 @@ NS_IMETHODIMP nsWebBrowserPersist::GetCurrentState(uint32_t *aCurrentState)
     return NS_OK;
 }
 
-/* readonly attribute unsigned long result; */
 NS_IMETHODIMP nsWebBrowserPersist::GetResult(nsresult *aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
@@ -312,7 +309,6 @@ NS_IMETHODIMP nsWebBrowserPersist::GetResult(nsresult *aResult)
     return NS_OK;
 }
 
-/* attribute nsIWebBrowserPersistProgress progressListener; */
 NS_IMETHODIMP nsWebBrowserPersist::GetProgressListener(
     nsIWebProgressListener * *aProgressListener)
 {
@@ -366,7 +362,6 @@ NS_IMETHODIMP nsWebBrowserPersist::SavePrivacyAwareURI(
     return NS_FAILED(rv) ? rv : NS_OK;
 }
 
-/* void saveChannel (in nsIChannel aChannel, in nsISupports aFile); */
 NS_IMETHODIMP nsWebBrowserPersist::SaveChannel(
     nsIChannel *aChannel, nsISupports *aFile)
 {
@@ -480,7 +475,6 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(
     return rv;
 }
 
-/* void cancel(nsresult aReason); */
 NS_IMETHODIMP nsWebBrowserPersist::Cancel(nsresult aReason)
 {
     mCancel = true;
@@ -489,7 +483,6 @@ NS_IMETHODIMP nsWebBrowserPersist::Cancel(nsresult aReason)
 }
 
 
-/* void cancelSave(); */
 NS_IMETHODIMP nsWebBrowserPersist::CancelSave()
 {
     return Cancel(NS_BINDING_ABORTED);
