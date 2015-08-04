@@ -5,7 +5,7 @@
     },
     "global": {
         "talos_repo": "https://hg.mozilla.org/build/talos",
-        "talos_revision": "8a61f8d21fc0"
+        "talos_revision": "d44548b8feb9"
     },
     "extra_options": {
         "android": [ "--apkPath=%(apk_path)s" ]
@@ -44,10 +44,10 @@
             "talos_options": ["--e10s"]
         },
         "other_l64": {
-            "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_no_auto_restore", "media_tests"]
+            "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_no_auto_restore"]
         },
         "other-e10s_l64": {
-            "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_no_auto_restore", "media_tests"],
+            "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_no_auto_restore"],
             "talos_options": ["--e10s"]
         },
         "g1": {
@@ -149,8 +149,7 @@
             },
             "talos_options": [
                 "--xperf_path",
-                "\"c:/Program Files/Microsoft Windows Performance Toolkit/xperf.exe\"",
-                "C:/slave/talos-data/talos/xperf.config"
+                "\"c:/Program Files/Microsoft Windows Performance Toolkit/xperf.exe\""
             ]
         },
         "xperf-e10s": {
@@ -165,8 +164,7 @@
             "talos_options": [
                 "--e10s",
                 "--xperf_path",
-                "\"c:/Program Files/Microsoft Windows Performance Toolkit/xperf.exe\"",
-                "C:/slave/talos-data/talos/xperf.config"
+                "\"c:/Program Files/Microsoft Windows Performance Toolkit/xperf.exe\""
             ]
         }
     },
