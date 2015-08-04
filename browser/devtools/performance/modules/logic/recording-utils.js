@@ -106,7 +106,9 @@ function offsetMarkerTimes(markers, timeOffset) {
 function offsetAndScaleTimestamps(timestamps, timeOffset, timeScale) {
   for (let i = 0, len = timestamps.length; i < len; i++) {
     timestamps[i] -= timeOffset;
-    timestamps[i] /= timeScale;
+    if (timeScale) {
+      timestamps[i] /= timeScale;
+    }
   }
 }
 
