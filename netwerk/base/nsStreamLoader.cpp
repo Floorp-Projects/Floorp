@@ -55,7 +55,6 @@ nsStreamLoader::GetNumBytesRead(uint32_t* aNumBytes)
   return NS_OK;
 }
 
-/* readonly attribute nsIRequest request; */
 NS_IMETHODIMP 
 nsStreamLoader::GetRequest(nsIRequest **aRequest)
 {

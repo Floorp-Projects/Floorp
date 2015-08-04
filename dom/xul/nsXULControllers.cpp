@@ -201,7 +201,6 @@ nsXULControllers::RemoveController(nsIController *controller)
   return NS_ERROR_FAILURE;      // right thing to return if no controller found?
 }
     
-/* unsigned long getControllerId (in nsIController controller); */
 NS_IMETHODIMP
 nsXULControllers::GetControllerId(nsIController *controller, uint32_t *_retval)
 {
@@ -225,7 +224,6 @@ nsXULControllers::GetControllerId(nsIController *controller, uint32_t *_retval)
   return NS_ERROR_FAILURE;  // none found
 }
 
-/* nsIController getControllerById (in unsigned long controllerID); */
 NS_IMETHODIMP
 nsXULControllers::GetControllerById(uint32_t controllerID, nsIController **_retval)
 {

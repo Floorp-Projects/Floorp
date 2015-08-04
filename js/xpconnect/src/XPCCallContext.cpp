@@ -233,7 +233,6 @@ XPCCallContext::~XPCCallContext()
     }
 }
 
-/* readonly attribute nsISupports Callee; */
 NS_IMETHODIMP
 XPCCallContext::GetCallee(nsISupports * *aCallee)
 {
@@ -242,7 +241,6 @@ XPCCallContext::GetCallee(nsISupports * *aCallee)
     return NS_OK;
 }
 
-/* readonly attribute uint16_t CalleeMethodIndex; */
 NS_IMETHODIMP
 XPCCallContext::GetCalleeMethodIndex(uint16_t* aCalleeMethodIndex)
 {
@@ -250,7 +248,6 @@ XPCCallContext::GetCalleeMethodIndex(uint16_t* aCalleeMethodIndex)
     return NS_OK;
 }
 
-/* readonly attribute XPCNativeInterface CalleeInterface; */
 NS_IMETHODIMP
 XPCCallContext::GetCalleeInterface(nsIInterfaceInfo * *aCalleeInterface)
 {
@@ -259,7 +256,6 @@ XPCCallContext::GetCalleeInterface(nsIInterfaceInfo * *aCalleeInterface)
     return NS_OK;
 }
 
-/* readonly attribute nsIClassInfo CalleeClassInfo; */
 NS_IMETHODIMP
 XPCCallContext::GetCalleeClassInfo(nsIClassInfo * *aCalleeClassInfo)
 {
@@ -268,7 +264,6 @@ XPCCallContext::GetCalleeClassInfo(nsIClassInfo * *aCalleeClassInfo)
     return NS_OK;
 }
 
-/* readonly attribute JSContextPtr JSContext; */
 NS_IMETHODIMP
 XPCCallContext::GetJSContext(JSContext * *aJSContext)
 {
@@ -277,7 +272,6 @@ XPCCallContext::GetJSContext(JSContext * *aJSContext)
     return NS_OK;
 }
 
-/* readonly attribute uint32_t Argc; */
 NS_IMETHODIMP
 XPCCallContext::GetArgc(uint32_t* aArgc)
 {
@@ -285,7 +279,6 @@ XPCCallContext::GetArgc(uint32_t* aArgc)
     return NS_OK;
 }
 
-/* readonly attribute JSValPtr ArgvPtr; */
 NS_IMETHODIMP
 XPCCallContext::GetArgvPtr(Value** aArgvPtr)
 {

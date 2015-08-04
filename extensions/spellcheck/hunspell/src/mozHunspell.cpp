@@ -136,7 +136,6 @@ mozHunspell::~mozHunspell()
   delete mHunspell;
 }
 
-/* attribute wstring dictionary; */
 NS_IMETHODIMP mozHunspell::GetDictionary(char16_t **aDictionary)
 {
   NS_ENSURE_ARG_POINTER(aDictionary);
@@ -237,7 +236,6 @@ NS_IMETHODIMP mozHunspell::SetDictionary(const char16_t *aDictionary)
   return NS_OK;
 }
 
-/* readonly attribute wstring language; */
 NS_IMETHODIMP mozHunspell::GetLanguage(char16_t **aLanguage)
 {
   NS_ENSURE_ARG_POINTER(aLanguage);
@@ -249,7 +247,6 @@ NS_IMETHODIMP mozHunspell::GetLanguage(char16_t **aLanguage)
   return *aLanguage ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-/* readonly attribute boolean providesPersonalDictionary; */
 NS_IMETHODIMP mozHunspell::GetProvidesPersonalDictionary(bool *aProvidesPersonalDictionary)
 {
   NS_ENSURE_ARG_POINTER(aProvidesPersonalDictionary);
@@ -258,7 +255,6 @@ NS_IMETHODIMP mozHunspell::GetProvidesPersonalDictionary(bool *aProvidesPersonal
   return NS_OK;
 }
 
-/* readonly attribute boolean providesWordUtils; */
 NS_IMETHODIMP mozHunspell::GetProvidesWordUtils(bool *aProvidesWordUtils)
 {
   NS_ENSURE_ARG_POINTER(aProvidesWordUtils);
@@ -267,19 +263,16 @@ NS_IMETHODIMP mozHunspell::GetProvidesWordUtils(bool *aProvidesWordUtils)
   return NS_OK;
 }
 
-/* readonly attribute wstring name; */
 NS_IMETHODIMP mozHunspell::GetName(char16_t * *aName)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* readonly attribute wstring copyright; */
 NS_IMETHODIMP mozHunspell::GetCopyright(char16_t * *aCopyright)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* attribute mozIPersonalDictionary personalDictionary; */
 NS_IMETHODIMP mozHunspell::GetPersonalDictionary(mozIPersonalDictionary * *aPersonalDictionary)
 {
   *aPersonalDictionary = mPersonalDictionary;
@@ -314,7 +307,6 @@ AppendNewString(const nsAString& aString, nsIFile* aFile, void* aClosure)
   return PL_DHASH_NEXT;
 }
 
-/* void GetDictionaryList ([array, size_is (count)] out wstring dictionaries, out uint32_t count); */
 NS_IMETHODIMP mozHunspell::GetDictionaryList(char16_t ***aDictionaries,
                                             uint32_t *aCount)
 {
@@ -519,7 +511,6 @@ nsresult mozHunspell::ConvertCharset(const char16_t* aStr, char ** aDst)
   return rv;
 }
 
-/* boolean Check (in wstring word); */
 NS_IMETHODIMP mozHunspell::Check(const char16_t *aWord, bool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aWord);
@@ -539,7 +530,6 @@ NS_IMETHODIMP mozHunspell::Check(const char16_t *aWord, bool *aResult)
   return rv;
 }
 
-/* void Suggest (in wstring word, [array, size_is (count)] out wstring suggestions, out uint32_t count); */
 NS_IMETHODIMP mozHunspell::Suggest(const char16_t *aWord, char16_t ***aSuggestions, uint32_t *aSuggestionCount)
 {
   NS_ENSURE_ARG_POINTER(aSuggestions);
@@ -603,7 +593,6 @@ mozHunspell::Observe(nsISupports* aSubj, const char *aTopic,
   return NS_OK;
 }
 
-/* void addDirectory(in nsIFile dir); */
 NS_IMETHODIMP mozHunspell::AddDirectory(nsIFile *aDir)
 {
   mDynamicDirectories.AppendObject(aDir);
@@ -611,7 +600,6 @@ NS_IMETHODIMP mozHunspell::AddDirectory(nsIFile *aDir)
   return NS_OK;
 }
 
-/* void removeDirectory(in nsIFile dir); */
 NS_IMETHODIMP mozHunspell::RemoveDirectory(nsIFile *aDir)
 {
   mDynamicDirectories.RemoveObject(aDir);

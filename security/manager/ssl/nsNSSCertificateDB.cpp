@@ -1267,7 +1267,6 @@ finish:
   *_certNames = tmpArray;
 }
 
-/* nsIX509Cert getDefaultEmailEncryptionCert (); */
 NS_IMETHODIMP
 nsNSSCertificateDB::FindEmailEncryptionCert(const nsAString& aNickname,
                                             nsIX509Cert** _retval)
@@ -1305,7 +1304,6 @@ nsNSSCertificateDB::FindEmailEncryptionCert(const nsAString& aNickname,
   return NS_OK;
 }
 
-/* nsIX509Cert getDefaultEmailSigningCert (); */
 NS_IMETHODIMP
 nsNSSCertificateDB::FindEmailSigningCert(const nsAString& aNickname,
                                          nsIX509Cert** _retval)
@@ -1396,7 +1394,6 @@ nsNSSCertificateDB::FindCertByEmailAddress(nsISupports *aToken, const char *aEma
   return NS_OK;
 }
 
-/* nsIX509Cert constructX509FromBase64 (in string base64); */
 NS_IMETHODIMP
 nsNSSCertificateDB::ConstructX509FromBase64(const char *base64,
                                             nsIX509Cert **_retval)
@@ -1435,7 +1432,6 @@ nsNSSCertificateDB::ConstructX509FromBase64(const char *base64,
   return rv;
 }
 
-/* nsIX509Cert constructX509 (in string certDER, unsigned long len); */
 NS_IMETHODIMP
 nsNSSCertificateDB::ConstructX509(const char* certDER,
                                   uint32_t lengthDER,

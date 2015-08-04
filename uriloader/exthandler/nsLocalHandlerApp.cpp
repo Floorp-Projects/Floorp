@@ -126,7 +126,6 @@ nsLocalHandlerApp::LaunchWithIProcess(const nsCString& aArg)
 ////////////////////////////////////////////////////////////////////////////////
 //// nsILocalHandlerApp
 
-/* attribute nsIFile executable; */
 NS_IMETHODIMP
 nsLocalHandlerApp::GetExecutable(nsIFile **aExecutable)
 {
@@ -141,7 +140,6 @@ nsLocalHandlerApp::SetExecutable(nsIFile *aExecutable)
   return NS_OK;
 }
 
-/* readonly attribute unsigned long parameterCount; */
 NS_IMETHODIMP
 nsLocalHandlerApp::GetParameterCount(uint32_t *aParameterCount)
 {
@@ -149,7 +147,6 @@ nsLocalHandlerApp::GetParameterCount(uint32_t *aParameterCount)
   return NS_OK;
 }
 
-/* void clearParameters (); */
 NS_IMETHODIMP
 nsLocalHandlerApp::ClearParameters()
 {
@@ -157,7 +154,6 @@ nsLocalHandlerApp::ClearParameters()
   return NS_OK;
 }
 
-/* void appendParameter (in AString param); */
 NS_IMETHODIMP
 nsLocalHandlerApp::AppendParameter(const nsAString & aParam)
 {
@@ -165,7 +161,6 @@ nsLocalHandlerApp::AppendParameter(const nsAString & aParam)
   return NS_OK;
 }
 
-/* AString getParameter (in unsigned long parameterIndex); */
 NS_IMETHODIMP
 nsLocalHandlerApp::GetParameter(uint32_t parameterIndex, nsAString & _retval)
 {
@@ -176,7 +171,6 @@ nsLocalHandlerApp::GetParameter(uint32_t parameterIndex, nsAString & _retval)
   return NS_OK;
 }
 
-/* boolean parameterExists (in AString param); */
 NS_IMETHODIMP
 nsLocalHandlerApp::ParameterExists(const nsAString & aParam, bool *_retval)
 {

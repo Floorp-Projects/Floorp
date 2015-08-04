@@ -80,7 +80,6 @@ NS_IMETHODIMP nsZipDataStream::OnDataAvailable(nsIRequest *aRequest,
     return ProcessData(aRequest, aContext, buffer.get(), aOffset, aCount);
 }
 
-/* void onStartRequest (in nsIRequest aRequest, in nsISupports aContext); */
 NS_IMETHODIMP nsZipDataStream::OnStartRequest(nsIRequest *aRequest,
                                               nsISupports *aContext)
 {

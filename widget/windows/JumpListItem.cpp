@@ -43,7 +43,6 @@ NS_IMPL_CYCLE_COLLECTION(JumpListShortcut, mHandlerApp)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(JumpListShortcut)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(JumpListShortcut)
 
-/* attribute short type; */
 NS_IMETHODIMP JumpListItem::GetType(int16_t *aType)
 {
   NS_ENSURE_ARG_POINTER(aType);
@@ -53,7 +52,6 @@ NS_IMETHODIMP JumpListItem::GetType(int16_t *aType)
   return NS_OK;
 }
 
-/* boolean equals(nsIJumpListItem item); */
 NS_IMETHODIMP JumpListItem::Equals(nsIJumpListItem *aItem, bool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aItem);
@@ -75,7 +73,6 @@ NS_IMETHODIMP JumpListItem::Equals(nsIJumpListItem *aItem, bool *aResult)
 
 /* link impl. */
 
-/* attribute nsIURI uri; */
 NS_IMETHODIMP JumpListLink::GetUri(nsIURI **aURI)
 {
   NS_IF_ADDREF(*aURI = mURI);
@@ -90,7 +87,6 @@ NS_IMETHODIMP JumpListLink::SetUri(nsIURI *aURI)
   return NS_OK;
 }
 
-/* attribute AString uriTitle; */
 NS_IMETHODIMP JumpListLink::SetUriTitle(const nsAString &aUriTitle)
 {
   mUriTitle.Assign(aUriTitle);
@@ -105,7 +101,6 @@ NS_IMETHODIMP JumpListLink::GetUriTitle(nsAString& aUriTitle)
   return NS_OK;
 }
 
-/* readonly attribute long uriHash; */
 NS_IMETHODIMP JumpListLink::GetUriHash(nsACString& aUriHash)
 {
   if (!mURI)
@@ -114,7 +109,6 @@ NS_IMETHODIMP JumpListLink::GetUriHash(nsACString& aUriHash)
   return mozilla::widget::FaviconHelper::HashURI(mCryptoHash, mURI, aUriHash);
 }
 
-/* boolean compareHash(in nsIURI uri); */
 NS_IMETHODIMP JumpListLink::CompareHash(nsIURI *aUri, bool *aResult)
 {
   nsresult rv;
@@ -138,7 +132,6 @@ NS_IMETHODIMP JumpListLink::CompareHash(nsIURI *aUri, bool *aResult)
   return NS_OK;
 }
 
-/* boolean equals(nsIJumpListItem item); */
 NS_IMETHODIMP JumpListLink::Equals(nsIJumpListItem *aItem, bool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aItem);
@@ -184,7 +177,6 @@ NS_IMETHODIMP JumpListLink::Equals(nsIJumpListItem *aItem, bool *aResult)
 
 /* shortcut impl. */
 
-/* attribute nsILocalHandlerApp app; */
 NS_IMETHODIMP JumpListShortcut::GetApp(nsILocalHandlerApp **aApp)
 {
   NS_IF_ADDREF(*aApp = mHandlerApp);
@@ -203,7 +195,6 @@ NS_IMETHODIMP JumpListShortcut::SetApp(nsILocalHandlerApp *aApp)
   return NS_OK;
 }
 
-/* attribute long iconIndex; */
 NS_IMETHODIMP JumpListShortcut::GetIconIndex(int32_t *aIconIndex)
 {
   NS_ENSURE_ARG_POINTER(aIconIndex);
@@ -218,7 +209,6 @@ NS_IMETHODIMP JumpListShortcut::SetIconIndex(int32_t aIconIndex)
   return NS_OK;
 }
 
-/* attribute long iconURI; */
 NS_IMETHODIMP JumpListShortcut::GetFaviconPageUri(nsIURI **aFaviconPageURI)
 {
   NS_IF_ADDREF(*aFaviconPageURI = mFaviconPageURI);
@@ -232,7 +222,6 @@ NS_IMETHODIMP JumpListShortcut::SetFaviconPageUri(nsIURI *aFaviconPageURI)
   return NS_OK;
 }
 
-/* boolean equals(nsIJumpListItem item); */
 NS_IMETHODIMP JumpListShortcut::Equals(nsIJumpListItem *aItem, bool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aItem);

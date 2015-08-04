@@ -97,7 +97,6 @@ nsPrintOptionsWin::DeserializeToPrintSettings(const PrintData& data,
   return NS_OK;
 }
 
-/* nsIPrintSettings CreatePrintSettings (); */
 nsresult nsPrintOptionsWin::_CreatePrintSettings(nsIPrintSettings **_retval)
 {
   *_retval = nullptr;

@@ -77,7 +77,6 @@ SVGGradientElement::GradientUnits()
   return mEnumAttributes[GRADIENTUNITS].ToDOMAnimatedEnum(this);
 }
 
-/* readonly attribute SVGAnimatedTransformList gradientTransform; */
 already_AddRefed<SVGAnimatedTransformList>
 SVGGradientElement::GradientTransform()
 {
