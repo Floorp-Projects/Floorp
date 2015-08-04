@@ -124,6 +124,7 @@ public class TabStrip extends ThemedLinearLayout
                 case TITLE:
                 case FAVICON:
                 case RECORDING_CHANGE:
+                case AUDIO_PLAYING_CHANGE:
                     tabStripView.updateTab(tab);
                     break;
             }

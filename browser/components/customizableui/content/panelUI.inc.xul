@@ -139,17 +139,6 @@
                        label="&unsortedBookmarksCmd.label;"
                        class="subviewbutton cui-withicon"
                        oncommand="PlacesCommandHook.showPlacesOrganizer('UnfiledBookmarks'); PanelUI.hide();"/>
-        <toolbarseparator>
-          <observes element="readingListSidebar" attribute="hidden"/>
-        </toolbarseparator>
-        <toolbarbutton id="panelMenu_viewReadingListSidebar"
-                       label="&readingList.showSidebar.label;"
-                       class="subviewbutton"
-                       key="key_readingListSidebar"
-                       oncommand="SidebarUI.toggle('readingListSidebar'); PanelUI.hide();">
-          <observes element="readingListSidebar" attribute="checked"/>
-          <observes element="readingListSidebar" attribute="hidden"/>
-        </toolbarbutton>
         <toolbarseparator class="small-separator"/>
         <toolbaritem id="panelMenu_bookmarksMenu"
                      orient="vertical"

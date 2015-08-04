@@ -238,6 +238,7 @@ class TabsGridLayout extends GridView
             case THUMBNAIL:
             case TITLE:
             case RECORDING_CHANGE:
+            case AUDIO_PLAYING_CHANGE:
                 View view = getChildAt(mTabsAdapter.getPositionForTab(tab) - getFirstVisiblePosition());
                 if (view == null)
                     return;

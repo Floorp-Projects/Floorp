@@ -4,8 +4,7 @@
 
 /**
  * Test that the reader mode button appears and works properly on
- * reader-able content, and that ReadingList button can open and close
- * its Sidebar UI.
+ * reader-able content.
  */
 const TEST_PREFS = [
   ["reader.parse-on-load.enabled", true],
