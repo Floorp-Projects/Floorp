@@ -2737,7 +2737,7 @@ ElementRestyler::CaptureChange(nsStyleContext* aOldContext,
 class MOZ_STACK_CLASS AutoSelectorArrayTruncater final
 {
 public:
-  AutoSelectorArrayTruncater(nsTArray<nsCSSSelector*>& aSelectorsForDescendants)
+  explicit AutoSelectorArrayTruncater(nsTArray<nsCSSSelector*>& aSelectorsForDescendants)
     : mSelectorsForDescendants(aSelectorsForDescendants)
     , mOriginalLength(aSelectorsForDescendants.Length())
   {
