@@ -165,3 +165,9 @@ body {
 .standalone.text-chat-example .text-chat-view {
   height: 400px;
 }
+
+/* Force dropdown menus to display. */
+.force-menu-show * {
+  display: inline-block !important;
+}
+
