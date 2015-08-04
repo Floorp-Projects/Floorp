@@ -49,6 +49,12 @@ typedef MediaTime StreamTime;
 const StreamTime STREAM_TIME_MAX = MEDIA_TIME_MAX;
 
 /**
+ * Media time relative to the start of the graph timeline.
+ */
+typedef MediaTime GraphTime;
+const GraphTime GRAPH_TIME_MAX = MEDIA_TIME_MAX;
+
+/**
  * A MediaSegment is a chunk of media data sequential in time. Different
  * types of data have different subclasses of MediaSegment, all inheriting
  * from MediaSegmentBase.

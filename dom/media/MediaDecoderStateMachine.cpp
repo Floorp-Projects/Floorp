@@ -414,9 +414,8 @@ bool MediaDecoderStateMachine::HaveEnoughDecodedAudio(int64_t aAmpleAudioUSecs)
     return false;
   }
 
-  // We don't have to check SourceMediaStream::HaveEnoughBuffered() in the
-  // case of stream-capture for MDSM will ensure buffering level is high enough
-  // for playback speed at 1x at which the DecodedStream is playing.
+  // MDSM will ensure buffering level is high enough for playback speed at 1x
+  // at which the DecodedStream is playing.
   return true;
 }
 
@@ -1275,7 +1274,6 @@ void MediaDecoderStateMachine::SetDormant(bool aDormant)
   } else if ((aDormant != true) && (mState == DECODER_STATE_DORMANT)) {
     mDecodingFrozenAtStateDecoding = true;
     ScheduleStateMachine();
-    mCurrentPosition = 0;
     mDecodingFirstFrame = true;
     SetState(DECODER_STATE_DECODING_NONE);
     mDecoder->GetReentrantMonitor().NotifyAll();

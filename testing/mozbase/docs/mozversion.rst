@@ -6,6 +6,15 @@ provides version information such as the application name and the changesets
 that it has been built from. This is commonly used in reporting or for
 conditional logic based on the application under test.
 
+Note that mozversion can report the version of remote devices (e.g. Firefox OS)
+but it requires the :mod:`mozdevice` dependency in that case. You can require it
+along with mozversion by using the extra *device* dependency:
+
+.. code-block:: bash
+
+  pip install mozversion[device]
+
+
 API Usage
 ---------
 
