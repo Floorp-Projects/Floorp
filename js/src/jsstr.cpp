@@ -1348,7 +1348,7 @@ class StringSegmentRange
 {
     // If malloc() shows up in any profiles from this vector, we can add a new
     // StackAllocPolicy which stashes a reusable freed-at-gc buffer in the cx.
-    AutoStringVector stack;
+    Rooted<StringVector> stack;
     RootedLinearString cur;
 
     bool settle(JSString* str) {
@@ -1364,7 +1364,7 @@ class StringSegmentRange
 
   public:
     explicit StringSegmentRange(JSContext* cx)
-      : stack(cx), cur(cx)
+      : stack(cx, StringVector(cx)), cur(cx)
     {}
 
     MOZ_WARN_UNUSED_RESULT bool init(JSString* str) {
