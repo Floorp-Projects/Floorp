@@ -2104,7 +2104,7 @@ GenerateLcovInfo(JSContext* cx, JSCompartment* comp, GenericPrinter& out)
     JSRuntime* rt = cx->runtime();
 
     // Collect the list of scripts which are part of the current compartment.
-    AutoScriptVector topScripts(cx);
+    Rooted<ScriptVector> topScripts(cx, ScriptVector(cx));
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
         for (ZoneCellIter i(zone, AllocKind::SCRIPT); !i.done(); i.next()) {
             JSScript* script = i.get<JSScript>();
@@ -2166,7 +2166,7 @@ GenerateLcovInfo(JSContext* cx, JSCompartment* comp, GenericPrinter& out)
 
         // We found the top-level script, visit all the functions reachable
         // from the top-level function.
-        AutoScriptVector queue(cx);
+        Rooted<ScriptVector> queue(cx, ScriptVector(cx));
         if (!queue.append(topLevel))
             return false;
 
