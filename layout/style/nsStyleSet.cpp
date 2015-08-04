@@ -385,14 +385,6 @@ SortStyleSheetsByScope(nsTArray<CSSStyleSheet*>& aSheets)
 nsresult
 nsStyleSet::GatherRuleProcessors(sheetType aType)
 {
-  // We might be in GatherRuleProcessors because we are dropping a sheet,
-  // resulting in an nsCSSSelector being destroyed.  Tell the
-  // RestyleManager for each document we're used in so that they can
-  // drop any nsCSSSelector pointers (used for eRestyle_SomeDescendants)
-  // in their mPendingRestyles.
-  if (IsCSSSheetType(aType)) {
-    ClearSelectors();
-  }
   nsCOMPtr<nsIStyleRuleProcessor> oldRuleProcessor(mRuleProcessors[aType]);
   nsTArray<nsCOMPtr<nsIStyleRuleProcessor>> oldScopedDocRuleProcessors;
   if (aType == eAgentSheet || aType == eUserSheet) {
@@ -2385,16 +2377,14 @@ struct MOZ_STACK_CLASS AttributeData : public AttributeRuleProcessorData {
                                  aAttrHasChanged, aOtherValue, aTreeMatchContext),
       mHint(nsRestyleHint(0))
   {}
-  nsRestyleHint mHint;
-  RestyleHintData mHintData;
+  nsRestyleHint   mHint;
 };
 
 static bool
 SheetHasAttributeStyle(nsIStyleRuleProcessor* aProcessor, void *aData)
 {
   AttributeData* data = (AttributeData*)aData;
-  nsRestyleHint hint =
-    aProcessor->HasAttributeDependentStyle(data, data->mHintData);
+  nsRestyleHint hint = aProcessor->HasAttributeDependentStyle(data);
   data->mHint = nsRestyleHint(data->mHint | hint);
   return true; // continue
 }
@@ -2405,9 +2395,7 @@ nsStyleSet::HasAttributeDependentStyle(Element*       aElement,
                                        nsIAtom*       aAttribute,
                                        int32_t        aModType,
                                        bool           aAttrHasChanged,
-                                       const nsAttrValue* aOtherValue,
-                                       mozilla::RestyleHintData&
-                                         aRestyleHintDataResult)
+                                       const nsAttrValue* aOtherValue)
 {
   TreeMatchContext treeContext(false, nsRuleWalker::eLinksVisitedOrUnvisited,
                                aElement->OwnerDoc());
@@ -2415,11 +2403,6 @@ nsStyleSet::HasAttributeDependentStyle(Element*       aElement,
   AttributeData data(PresContext(), aElement, aAttribute,
                      aModType, aAttrHasChanged, aOtherValue, treeContext);
   WalkRuleProcessors(SheetHasAttributeStyle, &data, false);
-  if (!(data.mHint & eRestyle_Subtree)) {
-    // No point keeping the list of selectors around if we are going to
-    // restyle the whole subtree unconditionally.
-    aRestyleHintDataResult = Move(data.mHintData);
-  }
   return data.mHint;
 }
 
@@ -2505,10 +2488,4 @@ nsStyleSet::HasRuleProcessorUsedByMultipleStyleSets(sheetType aSheetType)
   nsCSSRuleProcessor* rp =
     static_cast<nsCSSRuleProcessor*>(mRuleProcessors[aSheetType].get());
   return rp->IsUsedByMultipleStyleSets();
-}
-
-void
-nsStyleSet::ClearSelectors()
-{
-  PresContext()->RestyleManager()->ClearSelectors();
 }

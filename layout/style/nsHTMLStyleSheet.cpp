@@ -335,9 +335,7 @@ nsHTMLStyleSheet::HasDocumentStateDependentStyle(StateRuleProcessorData* aData)
 }
 
 /* virtual */ nsRestyleHint
-nsHTMLStyleSheet::HasAttributeDependentStyle(
-    AttributeRuleProcessorData* aData,
-    RestyleHintData& aRestyleHintDataResult)
+nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
 {
   // Do nothing on before-change checks
   if (!aData->mAttrHasChanged) {
