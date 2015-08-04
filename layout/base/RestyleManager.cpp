@@ -63,6 +63,15 @@ FrameTagToString(const nsIFrame* aFrame)
   aFrame->ListTag(result);
   return result;
 }
+
+static nsCString
+ElementTagToString(dom::Element* aElement)
+{
+  nsCString result;
+  nsDependentAtomString buf(aElement->NodeInfo()->NameAtom());
+  result.AppendPrintf("(%s@%p)", NS_ConvertUTF16toUTF8(buf).get(), aElement);
+  return result;
+}
 #endif
 
 RestyleManager::RestyleManager(nsPresContext* aPresContext)
@@ -2767,6 +2776,10 @@ ElementRestyler::AddPendingRestylesForDescendantsMatchingSelectors(
     Element* aElement,
     Element* aRestyleRoot)
 {
+  LOG_RESTYLE("considering element %s for eRestyle_SomeDescendants",
+              ElementTagToString(aElement).get());
+  LOG_RESTYLE_INDENT();
+
   if (aElement->HasFlag(mRestyleTracker.RootBit())) {
     aRestyleRoot = aElement;
   }
@@ -2774,7 +2787,10 @@ ElementRestyler::AddPendingRestylesForDescendantsMatchingSelectors(
   if (mRestyleTracker.HasRestyleData(aElement)) {
     nsRestyleHint rshint = eRestyle_SomeDescendants;
     if (SelectorMatchesForRestyle(aElement)) {
+      LOG_RESTYLE("element has existing restyle data and matches a selector");
       rshint |= eRestyle_Self;
+    } else {
+      LOG_RESTYLE("element has existing restyle data but doesn't match selectors");
     }
     RestyleHintData data;
     data.mSelectorsForDescendants = mSelectorsForDescendants;
@@ -2784,6 +2800,7 @@ ElementRestyler::AddPendingRestylesForDescendantsMatchingSelectors(
   }
 
   if (SelectorMatchesForRestyle(aElement)) {
+    LOG_RESTYLE("element has no restyle data but matches a selector");
     RestyleHintData data;
     data.mSelectorsForDescendants = mSelectorsForDescendants;
     mRestyleTracker.AddPendingRestyle(aElement,
@@ -2991,6 +3008,16 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
       if ((aRestyleHint & eRestyle_SomeDescendants) &&
           !mSelectorsForDescendants.IsEmpty()) {
         Element* element = mContent->AsElement();
+        LOG_RESTYLE("traversing descendants of element %s to propagate "
+                    "eRestyle_SomeDescendants for these %d selectors:",
+                    ElementTagToString(element).get(),
+                    int(mSelectorsForDescendants.Length()));
+        LOG_RESTYLE_INDENT();
+#ifdef RESTYLE_LOGGING
+        for (nsCSSSelector* sel : mSelectorsForDescendants) {
+          LOG_RESTYLE("%s", sel->RestrictedSelectorToString().get());
+        }
+#endif
         Element* restyleRoot = mRestyleTracker.FindClosestRestyleRoot(element);
         FlattenedChildIterator it(element);
         for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
