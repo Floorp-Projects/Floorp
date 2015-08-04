@@ -232,7 +232,7 @@ struct ParseContext : public GenericParseContext
                                        the same name. */
 
     // All inner functions in this context. Only filled in when parsing syntax.
-    AutoFunctionVector innerFunctions;
+    Rooted<TraceableVector<JSFunction*>> innerFunctions;
 
     // In a function context, points to a Directive struct that can be updated
     // to reflect new directives encountered in the Directive Prologue that
@@ -273,7 +273,7 @@ struct ParseContext : public GenericParseContext
         oldpc(prs->pc),
         lexdeps(prs->context),
         funcStmts(nullptr),
-        innerFunctions(prs->context),
+        innerFunctions(prs->context, TraceableVector<JSFunction*>(prs->context)),
         newDirectives(newDirectives),
         inDeclDestructuring(false)
     {
