@@ -1236,8 +1236,13 @@ struct RoleDescrComparator
 
 - (BOOL)canBeFocused
 {
-  AccessibleWrap* accWrap = [self getGeckoAccessible];
-  return accWrap && (accWrap->InteractiveState() & states::FOCUSABLE);
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible])
+      return accWrap->InteractiveState() & states::FOCUSABLE;
+
+  if (ProxyAccessible* proxy = [self getProxyAccessible])
+    return proxy->State() & states::FOCUSABLE;
+
+  return false;
 }
 
 - (BOOL)focus
