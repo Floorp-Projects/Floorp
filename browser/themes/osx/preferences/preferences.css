@@ -238,10 +238,6 @@ html|a.inline-link:-moz-focusring {
   margin-bottom: 1em;
 }
 
-#fxaUnlinkButton {
-  margin: 0;
-}
-
 #noFxaAccount {
   margin: 12px 4px;
   line-height: 1.2em;
