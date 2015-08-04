@@ -1976,7 +1976,7 @@ CacheStorageService::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) con
   n += Pool(false).mExpirationArray.ShallowSizeOfExcludingThis(mallocSizeOf);
   // Entries reported manually in CacheStorageService::CollectReports callback
   if (sGlobalEntryTables) {
-    n += sGlobalEntryTables->SizeOfIncludingThis(nullptr, mallocSizeOf);
+    n += sGlobalEntryTables->ShallowSizeOfIncludingThis(mallocSizeOf);
   }
 
   return n;
@@ -1997,36 +1997,28 @@ public:
   nsISupports *mData;
 };
 
-size_t CollectEntryMemory(nsACString const & aKey,
-                          nsRefPtr<mozilla::net::CacheEntry> const & aEntry,
-                          mozilla::MallocSizeOf mallocSizeOf,
-                          void * aClosure)
-{
-  CacheStorageService::Self()->Lock().AssertCurrentThreadOwns();
-
-  CacheEntryTable* aTable = static_cast<CacheEntryTable*>(aClosure);
-
-  size_t n = 0;
-  n += aKey.SizeOfExcludingThisIfUnshared(mallocSizeOf);
-
-  // Bypass memory-only entries, those will be reported when iterating
-  // the memory only table. Memory-only entries are stored in both ALL_ENTRIES
-  // and MEMORY_ONLY hashtables.
-  if (aTable->Type() == CacheEntryTable::MEMORY_ONLY || aEntry->IsUsingDisk())
-    n += aEntry->SizeOfIncludingThis(mallocSizeOf);
-
-  return n;
-}
-
 PLDHashOperator ReportStorageMemory(const nsACString& aKey,
                                     CacheEntryTable* aTable,
                                     void* aClosure)
 {
   CacheStorageService::Self()->Lock().AssertCurrentThreadOwns();
 
-  size_t size = aTable->SizeOfIncludingThis(&CollectEntryMemory,
-                                            CacheStorageService::MallocSizeOf,
-                                            aTable);
+  size_t size = 0;
+  mozilla::MallocSizeOf mallocSizeOf = CacheStorageService::MallocSizeOf;
+
+  size += aTable->ShallowSizeOfIncludingThis(mallocSizeOf);
+  for (auto iter = aTable->Iter(); !iter.Done(); iter.Next()) {
+    size += iter.Key().SizeOfExcludingThisIfUnshared(mallocSizeOf);
+
+    // Bypass memory-only entries, those will be reported when iterating
+    // the memory only table. Memory-only entries are stored in both ALL_ENTRIES
+    // and MEMORY_ONLY hashtables.
+    nsRefPtr<mozilla::net::CacheEntry> const& entry = iter.Data();
+    if (aTable->Type() == CacheEntryTable::MEMORY_ONLY ||
+        entry->IsUsingDisk()) {
+      size += entry->SizeOfIncludingThis(mallocSizeOf);
+    }
+  }
 
   ReportStorageMemoryData& data =
     *static_cast<ReportStorageMemoryData*>(aClosure);

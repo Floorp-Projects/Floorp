@@ -744,7 +744,8 @@ IMEContentObserver::AttributeWillChange(nsIDocument* aDocument,
                                         dom::Element* aElement,
                                         int32_t aNameSpaceID,
                                         nsIAtom* aAttribute,
-                                        int32_t aModType)
+                                        int32_t aModType,
+                                        const nsAttrValue* aNewValue)
 {
   nsIContent *content = GetContentBR(aElement);
   mPreAttrChangeLength = content ?
@@ -756,7 +757,8 @@ IMEContentObserver::AttributeChanged(nsIDocument* aDocument,
                                      dom::Element* aElement,
                                      int32_t aNameSpaceID,
                                      nsIAtom* aAttribute,
-                                     int32_t aModType)
+                                     int32_t aModType,
+                                     const nsAttrValue* aOldValue)
 {
   mEndOfAddedTextCache.Clear();
   mStartOfRemovingTextRangeCache.Clear();

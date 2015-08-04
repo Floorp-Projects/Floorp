@@ -919,7 +919,8 @@ nsImageMap::AttributeChanged(nsIDocument*  aDocument,
                              dom::Element* aElement,
                              int32_t       aNameSpaceID,
                              nsIAtom*      aAttribute,
-                             int32_t       aModType)
+                             int32_t       aModType,
+                             const nsAttrValue* aOldValue)
 {
   // If the parent of the changing content node is our map then update
   // the map.  But only do this if the node is an HTML <area> or <a>

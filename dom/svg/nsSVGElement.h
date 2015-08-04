@@ -331,8 +331,11 @@ protected:
   // BeforeSetAttr since it would involve allocating extra SVG value types.
   // See the comment in nsSVGElement::WillChangeValue.
   virtual nsresult BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
-                                 const nsAttrValueOrString* aValue,
-                                 bool aNotify) override final { return NS_OK; }
+                                 nsAttrValueOrString* aValue,
+                                 bool aNotify) override final
+  {
+    return nsSVGElementBase::BeforeSetAttr(aNamespaceID, aName, aValue, aNotify);
+  }
 #endif // DEBUG
   virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue, bool aNotify) override;
@@ -347,6 +350,8 @@ protected:
   mozilla::css::StyleRule* GetAnimatedContentStyleRule();
 
   nsAttrValue WillChangeValue(nsIAtom* aName);
+  // aNewValue is set to the old value. This value may be invalid if
+  // !StoresOwnData.
   void DidChangeValue(nsIAtom* aName, const nsAttrValue& aEmptyOrOldValue,
                       nsAttrValue& aNewValue);
   void MaybeSerializeAttrBeforeRemoval(nsIAtom* aName, bool aNotify);

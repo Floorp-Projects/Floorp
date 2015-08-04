@@ -9,6 +9,7 @@ DIRS += [
     'customizableui',
     'dirprovider',
     'downloads',
+    'extensions',
     'feeds',
     'loop',
     'migration',

@@ -19,7 +19,7 @@ function runTest() {
   context.fillRect(0, 0, canvas.width, canvas.height);
 
   var video = document.getElementById('video');
-  video.mozSrcObject = canvas.captureStream(0);
+  video.srcObject = canvas.captureStream(0);
   video.play();
   video.onloadeddata = finished;
   video.onerror = finished;

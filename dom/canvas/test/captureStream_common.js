@@ -35,7 +35,7 @@ CaptureStreamTestHelper.prototype = {
   /* Request a frame from the stream played by |video|. */
   requestFrame: function (video) {
     info("Requesting frame from " + video.id);
-    video.mozSrcObject.requestFrame();
+    video.srcObject.requestFrame();
   },
 
   /* Tests the top left pixel of |video| against |refData|. Format [R,G,B,A]. */

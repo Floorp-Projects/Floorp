@@ -267,66 +267,23 @@ public:
   void Clear() { nsTHashtable<EntryType>::Clear(); }
 
   /**
-   * client must provide a SizeOfEntryExcludingThisFun function for
-   *   SizeOfExcludingThis.
-   * @param     aKey the key being enumerated
-   * @param     aData Reference to data being enumerated.
-   * @param     aMallocSizeOf the function used to measure heap-allocated blocks
-   * @param     aUserArg passed unchanged from SizeOf{In,Ex}cludingThis
-   * @return    summed size of the things pointed to by the entries
-   */
-  typedef size_t
-    (*SizeOfEntryExcludingThisFun)(KeyType aKey,
-                                   const DataType& aData,
-                                   mozilla::MallocSizeOf aMallocSizeOf,
-                                   void* aUserArg);
-
-  /**
-   * Measure the size of the table's entry storage and the table itself.
-   * If |aSizeOfEntryExcludingThis| is non-nullptr, measure the size of things
-   * pointed to by entries.
+   * Measure the size of the table's entry storage. The size of things pointed
+   * to by entries must be measured separately; hence the "Shallow" prefix.
    *
-   * @param    aSizeOfEntryExcludingThis
-   *           the <code>SizeOfEntryExcludingThisFun</code> function to call
-   * @param    aMallocSizeOf the function used to meeasure heap-allocated blocks
-   * @param    aUserArg a point to pass to the
-   *           <code>SizeOfEntryExcludingThisFun</code> function
-   * @return   the summed size of the entries, the table, and the table's storage
+   * @param   aMallocSizeOf the function used to measure heap-allocated blocks
+   * @return  the summed size of the table's storage
    */
-  size_t SizeOfIncludingThis(SizeOfEntryExcludingThisFun aSizeOfEntryExcludingThis,
-                             mozilla::MallocSizeOf aMallocSizeOf,
-                             void* aUserArg = nullptr)
+  size_t ShallowSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   {
-    return aMallocSizeOf(this) +
-      this->SizeOfExcludingThis(aSizeOfEntryExcludingThis, aMallocSizeOf,
-                                aUserArg);
+    return this->mTable.ShallowSizeOfExcludingThis(aMallocSizeOf);
   }
 
   /**
-   * Measure the size of the table's entry storage, and if
-   * |aSizeOfEntryExcludingThis| is non-nullptr, measure the size of things
-   * pointed to by entries.
-   *
-   * @param     aSizeOfEntryExcludingThis the
-   *            <code>SizeOfEntryExcludingThisFun</code> function to call
-   * @param     aMallocSizeOf the function used to measure heap-allocated blocks
-   * @param     aUserArg a pointer to pass to the
-   *            <code>SizeOfEntryExcludingThisFun</code> function
-   * @return    the summed size of all the entries
+   * Like ShallowSizeOfExcludingThis, but includes sizeof(*this).
    */
-  size_t SizeOfExcludingThis(SizeOfEntryExcludingThisFun aSizeOfEntryExcludingThis,
-                             mozilla::MallocSizeOf aMallocSizeOf,
-                             void* aUserArg = nullptr) const
+  size_t ShallowSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   {
-    size_t n = 0;
-    n += this->mTable.ShallowSizeOfExcludingThis(aMallocSizeOf);
-    if (aSizeOfEntryExcludingThis) {
-      for (auto iter = ConstIter(); !iter.Done(); iter.Next()) {
-        n += aSizeOfEntryExcludingThis(iter.Key(), iter.Data(), aMallocSizeOf,
-                                       aUserArg);
-      }
-    }
-    return n;
+    return aMallocSizeOf(this) + ShallowSizeOfExcludingThis(aMallocSizeOf);
   }
 
 #ifdef DEBUG

@@ -85,8 +85,8 @@ struct CacheEntry
   {
   }
 
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
-    return mallocSizeOf(data);
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
+    return mallocSizeOf(this) + mallocSizeOf(data);
   }
 };
 
@@ -135,7 +135,7 @@ public:
 
   // This measures all the heap memory used by the StartupCache, i.e. it
   // excludes the mapping.
-  size_t HeapSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
+  size_t HeapSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
   size_t SizeOfMapping();
 
@@ -158,11 +158,6 @@ private:
   static nsresult InitSingleton();
   static void WriteTimeout(nsITimer *aTimer, void *aClosure);
   static void ThreadedWrite(void *aClosure);
-
-  static size_t SizeOfEntryExcludingThis(const nsACString& key,
-                                         const nsAutoPtr<CacheEntry>& data,
-                                         mozilla::MallocSizeOf mallocSizeOf,
-                                         void *);
 
   nsClassHashtable<nsCStringHashKey, CacheEntry> mTable;
   nsTArray<nsCString> mPendingWrites;

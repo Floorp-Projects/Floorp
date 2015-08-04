@@ -106,9 +106,7 @@ public:
     rv = ps_end_utt(mPs);
     if (rv >= 0) {
       hyp = ps_get_hyp(mPs, &score);
-      if (hyp == nullptr) {
-        hypoValue.Assign("ERROR");
-      } else {
+      if (hyp) {
         hypoValue.Assign(hyp);
       }
     }
