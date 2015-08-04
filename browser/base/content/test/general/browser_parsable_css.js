@@ -55,6 +55,16 @@ function ignoredError(aErrorObject) {
   return false;
 }
 
+function once(target, name) {
+  return new Promise((resolve, reject) => {
+    let cb = () => {
+      target.removeEventListener(name, cb);
+      resolve();
+    };
+    target.addEventListener(name, cb);
+  });
+}
+
 add_task(function checkAllTheCSS() {
   let appDir = Services.dirsvc.get("XCurProcD", Ci.nsIFile);
   // This asynchronously produces a list of URLs (sadly, mostly sync on our
@@ -62,12 +72,20 @@ add_task(function checkAllTheCSS() {
   // our zipreader APIs are all sync)
   let uris = yield generateURIsFromDirTree(appDir, ".css");
 
-  // Create a clean iframe to load all the files into:
-  let hiddenWin = Services.appShell.hiddenDOMWindow;
-  let iframe = hiddenWin.document.createElementNS("http://www.w3.org/1999/xhtml", "html:iframe");
-  hiddenWin.document.documentElement.appendChild(iframe);
+  // Create a clean iframe to load all the files into. This needs to live at a
+  // file or jar URI (depending on whether we're using a packaged build or not)
+  // so that it's allowed to load other same-scheme URIs (i.e. the browser css).
+  let resHandler = Services.io.getProtocolHandler("resource")
+                           .QueryInterface(Ci.nsISubstitutingProtocolHandler);
+  let resURI = Services.io.newURI('resource://testing-common/resource_test_file.html', null, null);
+  let testFile = resHandler.resolveURI(resURI);
+  let windowless = Services.appShell.createWindowlessBrowser();
+  let iframe = windowless.document.createElementNS("http://www.w3.org/1999/xhtml", "html:iframe");
+  windowless.document.documentElement.appendChild(iframe);
+  let iframeLoaded = once(iframe, 'load');
+  iframe.contentWindow.location = testFile;
+  yield iframeLoaded;
   let doc = iframe.contentWindow.document;
-
 
   // Listen for errors caused by the CSS:
   let errorListener = {
