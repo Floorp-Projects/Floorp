@@ -2874,7 +2874,7 @@ IonBuilder::inlineAtomicsStore(CallInfo& callInfo)
     }
     MStoreUnboxedScalar* store =
         MStoreUnboxedScalar::New(alloc(), elements, index, toWrite, arrayType,
-                                 DoesRequireMemoryBarrier);
+                                 MStoreUnboxedScalar::TruncateInput, DoesRequireMemoryBarrier);
     current->add(store);
     current->push(value);
 
@@ -3404,7 +3404,8 @@ IonBuilder::inlineSimdStore(CallInfo& callInfo, JSNative native, SimdTypeDescr::
 
     MDefinition* valueToWrite = callInfo.getArg(2);
     MStoreUnboxedScalar* store = MStoreUnboxedScalar::New(alloc(), elements, index,
-                                                          valueToWrite, arrayType);
+                                                          valueToWrite, arrayType,
+                                                          MStoreUnboxedScalar::TruncateInput);
     store->setSimdWrite(simdType, numElems);
 
     current->add(store);
