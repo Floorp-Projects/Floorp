@@ -96,6 +96,12 @@ ProxyAccessible::Value(nsString& aValue) const
 }
 
 void
+ProxyAccessible::Help(nsString& aHelp) const
+{
+  unused << mDoc->SendHelp(mID, &aHelp);
+}
+
+void
 ProxyAccessible::Description(nsString& aDesc) const
 {
   unused << mDoc->SendDescription(mID, &aDesc);
