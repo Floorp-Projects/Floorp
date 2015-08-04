@@ -150,12 +150,10 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
-    'AbstractThread.h',
     'MediaManager.h',
     'MozPromise.h',
     'StateMirroring.h',
     'StateWatching.h',
-    'TaskDispatcher.h',
     'TaskQueue.h',
 ]
 
@@ -194,7 +192,6 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
-    'AbstractThread.cpp',
     'AudioCaptureStream.cpp',
     'AudioChannelFormat.cpp',
     'AudioCompactor.cpp',
