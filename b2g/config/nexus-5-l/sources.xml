@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="07c383a786f188904311a37f6062c2cb84c9b61d">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="581de383687dc441a878d2c91a0167c6ec688fef"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="4ede0c6bf5fb0c2896d5393032b395999a154619"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="4d9fbc08e87731447c19e96e13d8c7444baafcca"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
@@ -137,12 +137,12 @@
   <project name="platform_frameworks_base" path="frameworks/base" remote="b2g" revision="04e26ebdc36ca83f4ee3e9e2082b3fcf04c5b971"/>
   <project name="platform_frameworks_wilhelm" path="frameworks/wilhelm" remote="b2g" revision="0dbf5baafadf6d233c0a29e392fa3293f0121673"/>
   <project name="platform_system_core" path="system/core" remote="b2g" revision="f594bc64eacac490857748b1139ffcb34c856bbd"/>
+  <project name="platform_external_sepolicy" path="external/sepolicy" remote="b2g" revision="3f6be48a46c54dd8cacaf216ab5b145de5ffefd2"/>
   <default remote="caf" revision="refs/tags/android-5.1.0_r1" sync-j="4"/>
   <!-- Nexus 5 specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="fe7df1bc8dd0fd71571505d7be1c31a4ad1e40fb"/>
   <project name="device-hammerhead" path="device/lge/hammerhead" remote="b2g" revision="e728bf3ff61dfab1b97c2416096a3b850b47cf25"/>
   <project name="device_lge_hammerhead-kernel" path="device/lge/hammerhead-kernel" remote="b2g" revision="8b3ffcfdd3d3852eca5488628f8bb2a08acbffa7"/>
-  <project name="platform_external_sepolicy" path="external/sepolicy" remote="b2g" revision="3f6be48a46c54dd8cacaf216ab5b145de5ffefd2"/>
   <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="5d0ae53d9588c3d70c005aec9be94af9a534de16"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="c15b6e266136cd0cdd9b94d0bbed1962d9dd6672"/>
   <project name="platform/hardware/broadcom/libbt" path="hardware/broadcom/libbt" revision="399fe3d3c8f38c599a56becddc456133e62a5d70"/>

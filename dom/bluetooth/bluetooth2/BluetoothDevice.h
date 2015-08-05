@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_bluetooth_bluetoothdevice_h__
-#define mozilla_dom_bluetooth_bluetoothdevice_h__
+#ifndef mozilla_dom_bluetooth_BluetoothDevice_h
+#define mozilla_dom_bluetooth_BluetoothDevice_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
@@ -244,4 +244,4 @@ public:
   }
 };
 
-#endif
+#endif // mozilla_dom_bluetooth_BluetoothDevice_h
