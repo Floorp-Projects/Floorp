@@ -146,5 +146,5 @@
   <project name="platform_external_wpa_supplicant_8" path="external/wpa_supplicant_8" remote="b2g" revision="cbda29a58abc4ea1f7f4611fe354ab67b606219d"/>
   <project name="platform/development" path="development" revision="0c51f6e0aa2ee57fcb75ec3b2ff6bf754cece63e"/>
   <project name="android-sdk" path="sdk" remote="b2g" revision="ff4190dc603f62a7caa48342aa268acf99863c5c"/>
-  <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="2210a0276fa000ef7224f26b24f00cb34a372e8d"/>
+  <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="10d289639ea62f2f6fcfb5bbf6121c484e95f767"/>
 </manifest>
