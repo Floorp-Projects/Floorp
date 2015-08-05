@@ -551,7 +551,8 @@ nsNavBookmarks::InsertBookmark(int64_t aFolder,
                                      TYPE_BOOKMARK,
                                      bookmarks[i].parentId,
                                      bookmarks[i].guid,
-                                     bookmarks[i].parentGuid));
+                                     bookmarks[i].parentGuid,
+                                     EmptyCString()));
     }
   }
 
@@ -656,7 +657,8 @@ nsNavBookmarks::RemoveItem(int64_t aItemId)
                                      TYPE_BOOKMARK,
                                      bookmarks[i].parentId,
                                      bookmarks[i].guid,
-                                     bookmarks[i].parentGuid));
+                                     bookmarks[i].parentGuid,
+                                     EmptyCString()));
     }
 
   }
@@ -1132,7 +1134,8 @@ nsNavBookmarks::RemoveFolderChildren(int64_t aFolderId)
                                        TYPE_BOOKMARK,
                                        bookmarks[i].parentId,
                                        bookmarks[i].guid,
-                                       bookmarks[i].parentGuid));
+                                       bookmarks[i].parentGuid,
+                                       EmptyCString()));
       }
     }
   }
@@ -1413,7 +1416,8 @@ nsNavBookmarks::SetItemDateAdded(int64_t aItemId, PRTime aDateAdded)
                                  bookmark.type,
                                  bookmark.parentId,
                                  bookmark.guid,
-                                 bookmark.parentGuid));
+                                 bookmark.parentGuid,
+                                 EmptyCString()));
   return NS_OK;
 }
 
@@ -1459,7 +1463,8 @@ nsNavBookmarks::SetItemLastModified(int64_t aItemId, PRTime aLastModified)
                                  bookmark.type,
                                  bookmark.parentId,
                                  bookmark.guid,
-                                 bookmark.parentGuid));
+                                 bookmark.parentGuid,
+                                 EmptyCString()));
   return NS_OK;
 }
 
@@ -1527,7 +1532,8 @@ nsNavBookmarks::SetItemTitle(int64_t aItemId, const nsACString& aTitle)
                                  bookmark.type,
                                  bookmark.parentId,
                                  bookmark.guid,
-                                 bookmark.parentGuid));
+                                 bookmark.parentGuid,
+                                 EmptyCString()));
   return NS_OK;
 }
 
@@ -2010,7 +2016,8 @@ nsNavBookmarks::ChangeBookmarkURI(int64_t aBookmarkId, nsIURI* aNewURI)
                                  bookmark.type,
                                  bookmark.parentId,
                                  bookmark.guid,
-                                 bookmark.parentGuid));
+                                 bookmark.parentGuid,
+                                 bookmark.url));
   return NS_OK;
 }
 
@@ -2044,6 +2051,7 @@ nsNavBookmarks::GetBookmarkIdsForURITArray(nsIURI* aURI,
   // importing, syncing or due to extensions.
   // Note: not using a JOIN is cheaper in this case.
   nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
+    "/* do not warn (bug 1175249) */ "
     "SELECT b.id, b.guid, b.parent, b.lastModified, t.guid, t.parent "
     "FROM moz_bookmarks b "
     "JOIN moz_bookmarks t on t.id = b.parent "
@@ -2087,6 +2095,7 @@ nsNavBookmarks::GetBookmarksForURI(nsIURI* aURI,
   // importing, syncing or due to extensions.
   // Note: not using a JOIN is cheaper in this case.
   nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
+    "/* do not warn (bug 1175249) */ "
     "SELECT b.id, b.guid, b.parent, b.lastModified, t.guid, t.parent "
     "FROM moz_bookmarks b "
     "JOIN moz_bookmarks t on t.id = b.parent "
@@ -2302,7 +2311,8 @@ nsNavBookmarks::SetKeywordForBookmark(int64_t aBookmarkId,
                                      TYPE_BOOKMARK,
                                      bookmarks[i].parentId,
                                      bookmarks[i].guid,
-                                     bookmarks[i].parentGuid));
+                                     bookmarks[i].parentGuid,
+                                     EmptyCString()));
     }
 
     return NS_OK;
@@ -2354,7 +2364,8 @@ nsNavBookmarks::SetKeywordForBookmark(int64_t aBookmarkId,
                                      TYPE_BOOKMARK,
                                      bookmarks[i].parentId,
                                      bookmarks[i].guid,
-                                     bookmarks[i].parentGuid));
+                                     bookmarks[i].parentGuid,
+                                     EmptyCString()));
     }
 
     stmt = mDB->GetStatement(
@@ -2393,7 +2404,8 @@ nsNavBookmarks::SetKeywordForBookmark(int64_t aBookmarkId,
                                    TYPE_BOOKMARK,
                                    bookmarks[i].parentId,
                                    bookmarks[i].guid,
-                                   bookmarks[i].parentGuid));
+                                   bookmarks[i].parentGuid,
+                                   EmptyCString()));
   }
 
   return NS_OK;
@@ -2589,7 +2601,8 @@ nsNavBookmarks::NotifyItemChanged(const ItemChangeData& aData)
                                  aData.bookmark.type,
                                  aData.bookmark.parentId,
                                  aData.bookmark.guid,
-                                 aData.bookmark.parentGuid));
+                                 aData.bookmark.parentGuid,
+                                 aData.oldValue));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2820,7 +2833,8 @@ nsNavBookmarks::OnItemAnnotationSet(int64_t aItemId, const nsACString& aName)
                                  bookmark.type,
                                  bookmark.parentId,
                                  bookmark.guid,
-                                 bookmark.parentGuid));
+                                 bookmark.parentGuid,
+                                 EmptyCString()));
   return NS_OK;
 }
 
