@@ -159,6 +159,12 @@ public:
   void ToString(nsAString& aString, mozilla::CSSStyleSheet* aSheet,
                 bool aAppend = false) const;
 
+#ifdef DEBUG
+  bool IsRestrictedSelector() const {
+    return PseudoType() == nsCSSPseudoElements::ePseudo_NotPseudoElement;
+  }
+#endif
+
 private:
   void AddPseudoClassInternal(nsPseudoClassList *aPseudoClass);
   nsCSSSelector* Clone(bool aDeepNext, bool aDeepNegations) const;
