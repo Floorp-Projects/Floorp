@@ -44,6 +44,12 @@ var keys = [
             [Symbol.toPrimitive](hint) { return hint; }
         },
         expected: "string"
+    },
+    {
+        value: {
+            [Symbol.toPrimitive](hint) { return Symbol.for(hint); }
+        },
+        expected: Symbol.for("string")
     }
 ];
 
