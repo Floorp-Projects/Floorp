@@ -65,14 +65,21 @@ public:
   virtual void OnSocketDetached(PRFileDesc *fd) override
   {
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    MOZ_ASSERT(mThread);
     MOZ_ASSERT(fd == mFD);
 
     if (!mFD) {
       return;
     }
 
+    // Bug 1175387: do not double close the handle here.
+    PR_ChangeFileDescNativeHandle(mFD, -1);
     PR_Close(mFD);
     mFD = nullptr;
+
+    nsCOMPtr<nsIRunnable> ev =
+      NS_NewRunnableMethod(this, &ServiceWatcher::Deallocate);
+    mThread->Dispatch(ev, NS_DISPATCH_NORMAL);
   }
 
   virtual void IsLocal(bool *aIsLocal) override { *aIsLocal = true; }
@@ -86,7 +93,8 @@ public:
   virtual uint64_t ByteCountReceived() override { return 0; }
 
   explicit ServiceWatcher(DNSServiceRef aService)
-    : mSts(nullptr)
+    : mThread(nullptr)
+    , mSts(nullptr)
     , mService(aService)
     , mFD(nullptr)
     , mAttached(false)
@@ -101,6 +109,7 @@ public:
   nsresult Init()
   {
     MOZ_ASSERT(PR_GetCurrentThread() != gSocketThread);
+    mThread = NS_GetCurrentThread();
 
     if (!mService) {
       return NS_OK;
@@ -124,12 +133,8 @@ public:
   {
     MOZ_ASSERT(PR_GetCurrentThread() != gSocketThread);
 
-    if (mService) {
-      DNSServiceRefDeallocate(mService);
-      mService = nullptr;
-    }
-
     if (!gSocketTransportService) {
+      Deallocate();
       return;
     }
 
@@ -138,6 +143,14 @@ public:
 
 private:
   ~ServiceWatcher() = default;
+
+  void Deallocate()
+  {
+    if (mService) {
+      DNSServiceRefDeallocate(mService);
+      mService = nullptr;
+    }
+  }
 
   nsresult PostEvent(void(ServiceWatcher::*func)(void))
   {
@@ -232,6 +245,7 @@ private:
     return NS_OK;
   }
 
+  nsCOMPtr<nsIThread> mThread;
   nsRefPtr<nsSocketTransportService> mSts;
   DNSServiceRef mService;
   PRFileDesc* mFD;

@@ -840,14 +840,7 @@ bool
 HwcComposer2D::Render(nsIWidget* aWidget)
 {
     nsScreenGonk* screen = static_cast<nsWindow*>(aWidget)->GetScreen();
-    GetGonkDisplay()->SwapBuffers(screen->GetEGLDisplay(), screen->GetEGLSurface());
-
-    if (!mHal->HasHwc()) {
-        return true;
-    }
-
-    mHal->Prepare(nullptr, screen->GetDisplayType(), nullptr, -1);
-    return !mHal->Set(nullptr, screen->GetDisplayType());
+    return GetGonkDisplay()->SwapBuffers(screen->GetEGLDisplay(), screen->GetEGLSurface());
 }
 #endif
 

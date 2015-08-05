@@ -762,9 +762,6 @@ loop.store.ActiveRoomStore = (function() {
         roomState: ROOM_STATES.HAS_PARTICIPANTS,
         used: true
       });
-
-      // We've connected with a third-party, therefore stop displaying the ToS etc.
-      this._mozLoop.setLoopPref("seenToS", "seen");
     },
 
     /**

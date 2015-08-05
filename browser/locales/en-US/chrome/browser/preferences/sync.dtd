@@ -83,3 +83,17 @@ both, to better adapt this sentence to their language.
 <!ENTITY welcome.createAccount.label "Create Account">
 
 <!ENTITY welcome.useOldSync.label "Using an older version of Sync?">
+
+<!ENTITY signedOut.caption            "Take your Web with you">
+<!ENTITY signedOut.description        "Synchronize your bookmarks, history, tabs, passwords, add-ons, and preferences across all your devices.">
+<!ENTITY signedOut.accountBox.title   "Connect with a &syncBrand.fxAccount.label;">
+<!ENTITY signedOut.accountBox.create  "Create Account">
+<!ENTITY signedOut.accountBox.signin  "Sign In">
+
+<!ENTITY signedIn.engines.caption     "Sync between all devices">
+
+<!ENTITY mobilePromo.start            "Download Firefox for ">
+<!-- LOCALIZATION NOTE (mobilePromo.androidLink): This is a link title that links to https://www.mozilla.org/firefox/android/ -->
+<!ENTITY mobilePromo.androidLink      "Android™">
+<!ENTITY mobilePromo.end              " to sync with your mobile device.">
+<!ENTITY androidAttribution           "Android is a trademark of Google Inc.">

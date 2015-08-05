@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_bluetooth_bluetoothprofilemanagerbase_h__
-#define mozilla_dom_bluetooth_bluetoothprofilemanagerbase_h__
+#ifndef mozilla_dom_bluetooth_BluetoothProfileManagerBase_h
+#define mozilla_dom_bluetooth_BluetoothProfileManagerBase_h
 
 /**
  * Error Messages used in Bluetooth profiles
@@ -108,4 +108,4 @@ public:                                                                      \
 
 END_BLUETOOTH_NAMESPACE
 
-#endif  //#ifndef mozilla_dom_bluetooth_bluetoothprofilemanagerbase_h__
+#endif  // mozilla_dom_bluetooth_BluetoothProfileManagerBase_h

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_bluetooth_bluetoothledeviceevent_h
-#define mozilla_dom_bluetooth_bluetoothledeviceevent_h
+#ifndef mozilla_dom_bluetooth_BluetoothLeDeviceEvent_h
+#define mozilla_dom_bluetooth_BluetoothLeDeviceEvent_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
@@ -61,4 +61,4 @@ public:
 
 END_BLUETOOTH_NAMESPACE
 
-#endif // mozilla_dom_bluetooth_bluetoothledeviceevent_h
+#endif // mozilla_dom_bluetooth_BluetoothLeDeviceEvent_h
