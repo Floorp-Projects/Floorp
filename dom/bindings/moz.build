@@ -31,7 +31,6 @@ EXPORTS.mozilla.dom += [
     'MozMap.h',
     'NonRefcountedDOMObject.h',
     'Nullable.h',
-    'OwningNonNull.h',
     'PrimitiveConversions.h',
     'RootedDictionary.h',
     'StructuredClone.h',

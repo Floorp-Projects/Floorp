@@ -210,7 +210,9 @@ CommonAnimationManager::HasDocumentStateDependentStyle(StateRuleProcessorData* a
 }
 
 nsRestyleHint
-CommonAnimationManager::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
+CommonAnimationManager::HasAttributeDependentStyle(
+    AttributeRuleProcessorData* aData,
+    RestyleHintData& aRestyleHintDataResult)
 {
   return nsRestyleHint(0);
 }

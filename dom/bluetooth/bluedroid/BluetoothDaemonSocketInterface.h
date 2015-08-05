@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_bluetooth_bluedroid_bluetoothdaemonsocketinterface_h__
-#define mozilla_dom_bluetooth_bluedroid_bluetoothdaemonsocketinterface_h__
+#ifndef mozilla_dom_bluetooth_bluedroid_BluetoothDaemonSocketInterface_h
+#define mozilla_dom_bluetooth_bluedroid_BluetoothDaemonSocketInterface_h
 
 #include "BluetoothDaemonHelpers.h"
 #include "BluetoothInterface.h"
@@ -122,4 +122,4 @@ private:
 
 END_BLUETOOTH_NAMESPACE
 
-#endif
+#endif // mozilla_dom_bluetooth_bluedroid_BluetoothDaemonSocketInterface_h

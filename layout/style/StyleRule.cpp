@@ -559,7 +559,7 @@ nsCSSSelector::ToString(nsAString& aString, CSSStyleSheet* aSheet,
     const nsCSSSelector *s = stack.ElementAt(index);
     stack.RemoveElementAt(index);
 
-    s->AppendToStringWithoutCombinators(aString, aSheet);
+    s->AppendToStringWithoutCombinators(aString, aSheet, false);
 
     // Append the combinator, if needed.
     if (!stack.IsEmpty()) {
@@ -583,24 +583,85 @@ nsCSSSelector::ToString(nsAString& aString, CSSStyleSheet* aSheet,
 }
 
 void
-nsCSSSelector::AppendToStringWithoutCombinators
-                   (nsAString& aString, CSSStyleSheet* aSheet) const
+nsCSSSelector::AppendToStringWithoutCombinators(
+    nsAString& aString,
+    CSSStyleSheet* aSheet,
+    bool aUseStandardNamespacePrefixes) const
 {
-  AppendToStringWithoutCombinatorsOrNegations(aString, aSheet, false);
+  AppendToStringWithoutCombinatorsOrNegations(aString, aSheet, false,
+                                              aUseStandardNamespacePrefixes);
 
   for (const nsCSSSelector* negation = mNegations; negation;
        negation = negation->mNegations) {
     aString.AppendLiteral(":not(");
-    negation->AppendToStringWithoutCombinatorsOrNegations(aString, aSheet,
-                                                          true);
+    negation->AppendToStringWithoutCombinatorsOrNegations(
+        aString, aSheet, true, aUseStandardNamespacePrefixes);
     aString.Append(char16_t(')'));
   }
 }
 
+#ifdef DEBUG
+nsCString
+nsCSSSelector::RestrictedSelectorToString() const
+{
+  MOZ_ASSERT(IsRestrictedSelector());
+
+  nsString result;
+  AppendToStringWithoutCombinators(result, nullptr, true);
+  return NS_ConvertUTF16toUTF8(result);
+}
+
+static bool
+AppendStandardNamespacePrefixToString(nsAString& aString, int32_t aNameSpace)
+{
+  if (aNameSpace == kNameSpaceID_Unknown) {
+    // Wildcard namespace; no prefix to write.
+    return false;
+  }
+  switch (aNameSpace) {
+    case kNameSpaceID_None:
+      break;
+    case kNameSpaceID_XML:
+      aString.AppendLiteral("xml");
+      break;
+    case kNameSpaceID_XHTML:
+      aString.AppendLiteral("html");
+      break;
+    case kNameSpaceID_XLink:
+      aString.AppendLiteral("xlink");
+      break;
+    case kNameSpaceID_XSLT:
+      aString.AppendLiteral("xsl");
+      break;
+    case kNameSpaceID_XBL:
+      aString.AppendLiteral("xbl");
+      break;
+    case kNameSpaceID_MathML:
+      aString.AppendLiteral("math");
+      break;
+    case kNameSpaceID_RDF:
+      aString.AppendLiteral("rdf");
+      break;
+    case kNameSpaceID_XUL:
+      aString.AppendLiteral("xul");
+      break;
+    case kNameSpaceID_SVG:
+      aString.AppendLiteral("svg");
+      break;
+    default:
+      aString.AppendLiteral("ns");
+      aString.AppendInt(aNameSpace);
+      break;
+  }
+  return true;
+}
+#endif
+
 void
 nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
                    (nsAString& aString, CSSStyleSheet* aSheet,
-                   bool aIsNegated) const
+                   bool aIsNegated,
+                   bool aUseStandardNamespacePrefixes) const
 {
   nsAutoString temp;
   bool isPseudoElement = IsPseudoElement();
@@ -616,7 +677,18 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
     // null, that means that the only namespaces we could have are the
     // wildcard namespace (which can be implicit in this case) and the "none"
     // namespace, which then needs to be explicitly specified.
-    if (!sheetNS) {
+    if (aUseStandardNamespacePrefixes) {
+#ifdef DEBUG
+      // We have no sheet to look up prefix information from.  This is
+      // only for debugging, so use some "standard" prefixes that
+      // are recognizable.
+      wroteNamespace =
+        AppendStandardNamespacePrefixToString(aString, mNameSpace);
+      if (wroteNamespace) {
+        aString.Append(char16_t('|'));
+      }
+#endif
+    } else if (!sheetNS) {
       NS_ASSERTION(mNameSpace == kNameSpaceID_Unknown ||
                    mNameSpace == kNameSpaceID_None,
                    "How did we get this namespace?");
@@ -740,7 +812,12 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
         aString.Append(char16_t('*'));
         aString.Append(char16_t('|'));
       } else if (list->mNameSpace != kNameSpaceID_None) {
-        if (aSheet) {
+        if (aUseStandardNamespacePrefixes) {
+#ifdef DEBUG
+          AppendStandardNamespacePrefixToString(aString, list->mNameSpace);
+          aString.Append(char16_t('|'));
+#endif
+        } else if (aSheet) {
           nsXMLNameSpaceMap *sheetNS = aSheet->GetNameSpaceMap();
           nsIAtom *prefixAtom = sheetNS->FindPrefix(list->mNameSpace);
           // Default namespaces don't apply to attribute selectors, so

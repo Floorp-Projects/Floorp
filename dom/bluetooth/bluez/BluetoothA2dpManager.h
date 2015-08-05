@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_bluetooth_bluetootha2dpmanager_h__
-#define mozilla_dom_bluetooth_bluetootha2dpmanager_h__
+#ifndef mozilla_dom_bluetooth_bluez_BluetoothA2dpManager_h
+#define mozilla_dom_bluetooth_bluez_BluetoothA2dpManager_h
 
 #include "BluetoothCommon.h"
 #include "BluetoothProfileController.h"
@@ -87,4 +87,4 @@ private:
 
 END_BLUETOOTH_NAMESPACE
 
-#endif
+#endif // mozilla_dom_bluetooth_bluez_BluetoothA2dpManager_h

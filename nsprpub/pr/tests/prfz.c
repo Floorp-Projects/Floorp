@@ -17,11 +17,15 @@ main(int argc, char **argv)
     char buffer[128];
 
     size_t  unsigned_small  = 266;
+#ifdef XP_UNIX
     ssize_t signed_small_p  = 943;
     ssize_t signed_small_n  = -1;
+#endif
     size_t  unsigned_max    = SIZE_MAX;
     size_t  unsigned_min    = 0;
+#ifdef XP_UNIX
     ssize_t signed_max      = SSIZE_MAX;
+#endif
 
     printf("Test: unsigned small '%%zu' : ");
     PR_snprintf(buffer, sizeof(buffer), "%zu", unsigned_small);
@@ -31,6 +35,7 @@ main(int argc, char **argv)
     }
     printf("OK\n");
 
+#ifdef XP_UNIX
     printf("Test: signed small positive '%%zd' : ");
     PR_snprintf(buffer, sizeof(buffer), "%zd", signed_small_p);
     if (strncmp(buffer, "943", sizeof(buffer)) != 0) {
@@ -38,7 +43,7 @@ main(int argc, char **argv)
         return -1;
     }
     printf("OK\n");
-        
+
     printf("Test: signed small negative '%%zd' : ");
     PR_snprintf(buffer, sizeof(buffer), "%zd", signed_small_n);
     if (strncmp(buffer, "-1", sizeof(buffer)) != 0) {
@@ -46,7 +51,8 @@ main(int argc, char **argv)
         return -1;
     }
     printf("OK\n");
-        
+#endif
+
     printf("Test: 0 '%%zu' : ");
     PR_snprintf(buffer, sizeof(buffer), "%zu", unsigned_min);
     if (strncmp(buffer, "0", sizeof(buffer)) != 0) {
@@ -62,7 +68,8 @@ main(int argc, char **argv)
         return -1;
     }
     printf("OK\n");
-        
+
+#ifdef XP_UNIX
     printf("Test: SSIZE_MAX '%%zx' : ");
     PR_snprintf(buffer, sizeof(buffer), "%zx", signed_max);
     if (*buffer != '7' ||
@@ -71,6 +78,7 @@ main(int argc, char **argv)
         return -1;
     }
     printf("OK\n");
+#endif
 
     return 0;
 }
