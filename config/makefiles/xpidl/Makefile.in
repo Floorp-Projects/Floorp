@@ -42,6 +42,14 @@ endif
 		$(process_py) --cache-dir $(IDL_PARSER_CACHE_DIR) $(dist_idl_dir) \
 		$(dist_include_dir) $(@D) $(idl_deps_dir) $(libxul_sdk_includes) \
 		$(basename $(notdir $@)) $($(basename $(notdir $@))_deps)
+# When some IDL is added or removed, if the actual IDL file was already, or
+# still is, in the tree, simple dependencies can't detect that the XPT needs
+# to be rebuilt.
+# Add the current value of $($(xpidl_module)_deps) in the depend file, such that
+# we can later check if the value has changed since last build, which will
+# indicate whether IDLs were added or removed.
+# Note that removing previously built files is not covered.
+	@echo $(basename $(notdir $@))_deps_built = $($(basename $(notdir $@))_deps) >> $(idl_deps_dir)/$(basename $(notdir $@)).pp
 
 # Chrome manifests may be written from several Makefiles at various times during
 # the build. The 'buildlist' action adds to the file if it already exists, but
@@ -66,13 +74,16 @@ xpidl:: $(xpt_files) $(chrome_manifests)
 
 $(xpt_files): $(process_py) $(call mkdir_deps,$(idl_deps_dir) $(dist_include_dir))
 
+-include $(depends_files)
+
 define xpt_deps
 $(1): $(call mkdir_deps,$(dir $(1)))
 $(1): $(addsuffix .idl,$(addprefix $(dist_idl_dir)/,$($(basename $(notdir $(1)))_deps)))
+ifneq ($($(basename $(notdir $(1)))_deps),$($(basename $(notdir $(1)))_deps_built))
+$(1): FORCE
+endif
 endef
 
 $(foreach xpt,$(xpt_files),$(eval $(call xpt_deps,$(xpt))))
-
-$(call include_deps,$(depends_files))
 
 .PHONY: xpidl
