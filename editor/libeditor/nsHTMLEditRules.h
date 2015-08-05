@@ -292,7 +292,7 @@ protected:
       TouchContent aTouchContent = TouchContent::yes);
   void LookInsideDivBQandList(nsTArray<mozilla::OwningNonNull<nsINode>>& aNodeArray);
   nsresult BustUpInlinesAtRangeEndpoints(nsRangeStore &inRange);
-  nsresult BustUpInlinesAtBRs(nsINode& aNode,
+  nsresult BustUpInlinesAtBRs(nsIContent& aNode,
                               nsTArray<mozilla::OwningNonNull<nsINode>>& aOutArrayOfNodes);
   nsCOMPtr<nsIDOMNode> GetHighestInlineParent(nsIDOMNode* aNode);
   void MakeTransitionList(nsTArray<mozilla::OwningNonNull<nsINode>>& aNodeArray,
