@@ -821,7 +821,7 @@
             // |webNavigation.sessionHistory| will have been set by the frame
             // loader when creating the docShell as long as this xul:browser
             // doesn't have the 'disablehistory' attribute set.
-            if (!this.hasAttribute("disablehistory")) {
+            if (this.docShell && this.webNavigation.sessionHistory) {
               var os = Components.classes["@mozilla.org/observer-service;1"]
                                  .getService(Components.interfaces.nsIObserverService);
               os.addObserver(this, "browser:purge-session-history", false);
@@ -879,7 +879,7 @@
             return;
           this.mDestroyed = true;
 
-          if (!this.hasAttribute("disablehistory")) {
+          if (this.docShell && this.webNavigation.sessionHistory) {
             var os = Components.classes["@mozilla.org/observer-service;1"]
                                .getService(Components.interfaces.nsIObserverService);
             try {
@@ -969,18 +969,23 @@
         <parameter name="aState"/>
         <body>
           <![CDATA[
-            if (aTopic != "browser:purge-session-history")
+            if (aTopic != "browser:purge-session-history" || !this.sessionHistory)
               return;
 
-            this.purgeSessionHistory();
-          ]]>
-        </body>
-      </method>
+            // place the entry at current index at the end of the history list, so it won't get removed
+            if (this.sessionHistory.index < this.sessionHistory.count - 1) {
+              var indexEntry = this.sessionHistory.getEntryAtIndex(this.sessionHistory.index, false);
+              this.sessionHistory.QueryInterface(Components.interfaces.nsISHistoryInternal);
+              indexEntry.QueryInterface(Components.interfaces.nsISHEntry);
+              this.sessionHistory.addEntry(indexEntry, true);
+            }
 
-      <method name="purgeSessionHistory">
-        <body>
-          <![CDATA[
-            this.messageManager.sendAsyncMessage("Browser:PurgeSessionHistory");
+            var purge = this.sessionHistory.count;
+            if (this.currentURI != "about:blank")
+              --purge; // Don't remove the page the user's staring at from shistory
+
+            if (purge > 0)
+              this.sessionHistory.PurgeHistory(purge);
           ]]>
         </body>
       </method>
