@@ -120,28 +120,9 @@ private:
   // Additionally, IME context is always disassociated from focused window.
   static bool sIsIMMEnabled;
   static bool sPluginHasFocus;
-  static bool sShowingOnScreenKeyboard;
 
   static bool IsTSFAvailable() { return (sIsInTSFMode && !sPluginHasFocus); }
   static bool IsIMMActive();
-
-  static void MaybeShowOnScreenKeyboard();
-  static void MaybeDismissOnScreenKeyboard();
-  static bool WStringStartsWithCaseInsensitive(const std::wstring& aHaystack,
-                                               const std::wstring& aNeedle);
-  static bool IsKeyboardPresentOnSlate();
-
-  /**
-   * Show the Windows on-screen keyboard. Only allowed for
-   * chrome documents and Windows 8 and higher.
-   */
-  static void ShowOnScreenKeyboard();
-
-  /**
-   * Dismiss the Windows on-screen keyboard. Only allowed for
-   * Windows 8 and higher.
-   */
-  static void DismissOnScreenKeyboard();
 #endif // #ifdef NS_ENABLE_TSF
 };
 
