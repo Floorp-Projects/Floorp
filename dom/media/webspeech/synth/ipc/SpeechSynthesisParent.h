@@ -24,8 +24,11 @@ class SpeechSynthesisParent : public PSpeechSynthesisParent
 public:
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  bool RecvReadVoiceList(InfallibleTArray<RemoteVoice>* aVoices,
-                         InfallibleTArray<nsString>* aDefaults) override;
+  bool RecvReadVoicesAndState(InfallibleTArray<RemoteVoice>* aVoices,
+                              InfallibleTArray<nsString>* aDefaults,
+                              bool* aIsSpeaking) override;
+
+  bool RecvDropGlobalQueue() override;
 
 protected:
   SpeechSynthesisParent();

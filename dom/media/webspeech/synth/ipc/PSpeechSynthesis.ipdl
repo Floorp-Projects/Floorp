@@ -31,12 +31,18 @@ child:
 
     SetDefaultVoice(nsString aUri, bool aIsDefault);
 
+    IsSpeakingChanged(bool aIsSpeaking);
+
 parent:
     __delete__();
 
     PSpeechSynthesisRequest(nsString aText, nsString aUri, nsString aLang,
                             float aVolume, float aRate, float aPitch);
-    sync ReadVoiceList() returns (RemoteVoice[] aVoices, nsString[] aDefaults);
+
+    sync ReadVoicesAndState() returns (RemoteVoice[] aVoices,
+                                       nsString[] aDefaults, bool aIsSpeaking);
+
+    DropGlobalQueue();
 };
 
 } // namespace dom
