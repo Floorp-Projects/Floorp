@@ -1942,9 +1942,8 @@ pref("browser.pocket.enabledLocales", "cs de en-GB en-US en-ZA es-ES es-MX fr hu
 
 pref("view_source.tab", true);
 
-// Enable ServiceWorkers for Push API consumers.
-// Interception is still disabled.
+// Enable Service Workers for desktop on non-release builds
+#ifndef RELEASE_BUILD
 pref("dom.serviceWorkers.enabled", true);
-
-// Enable Push API.
-pref("dom.push.enabled", true);
+pref("dom.serviceWorkers.interception.enabled", true);
+#endif
