@@ -7,21 +7,22 @@
 
 interface nsISpeechService;
 
-[scriptable, builtinclass, uuid(53dcc868-4193-4c3c-a1d9-fe5a0a6af2fb)]
+[scriptable, builtinclass, uuid(dac09c3a-156e-4025-a4ab-bc88b0ea92e7)]
 interface nsISynthVoiceRegistry : nsISupports
 {
   /**
    * Register a speech synthesis voice.
    *
-   * @param aService      the service that provides this voice.
-   * @param aUri          a unique identifier for this voice.
-   * @param aName         human-readable name for this voice.
-   * @param aLang         a BCP 47 language tag.
-   * @param aLocalService true if service does not require network.
+   * @param aService          the service that provides this voice.
+   * @param aUri              a unique identifier for this voice.
+   * @param aName             human-readable name for this voice.
+   * @param aLang             a BCP 47 language tag.
+   * @param aLocalService     true if service does not require network.
+   * @param aQueuesUtterances true if voice only speaks one utterance at a time
    */
   void addVoice(in nsISpeechService aService, in DOMString aUri,
                 in DOMString aName, in DOMString aLang,
-                in boolean aLocalService);
+                in boolean aLocalService, in boolean aQueuesUtterances);
 
   /**
    * Remove a speech synthesis voice.

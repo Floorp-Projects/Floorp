@@ -17,6 +17,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/unused.h"
 
 #include "SpeechSynthesisChild.h"
@@ -72,12 +73,14 @@ private:
 
 public:
   VoiceData(nsISpeechService* aService, const nsAString& aUri,
-            const nsAString& aName, const nsAString& aLang, bool aIsLocal)
+            const nsAString& aName, const nsAString& aLang,
+            bool aIsLocal, bool aQueuesUtterances)
     : mService(aService)
     , mUri(aUri)
     , mName(aName)
     , mLang(aLang)
-    , mIsLocal(aIsLocal) {}
+    , mIsLocal(aIsLocal)
+    , mIsQueued(aQueuesUtterances) {}
 
   NS_INLINE_DECL_REFCOUNTING(VoiceData)
 
@@ -90,16 +93,20 @@ public:
   nsString mLang;
 
   bool mIsLocal;
+
+  bool mIsQueued;
 };
 
 // nsSynthVoiceRegistry
 
 static StaticRefPtr<nsSynthVoiceRegistry> gSynthVoiceRegistry;
+static bool sForceGlobalQueue = false;
 
 NS_IMPL_ISUPPORTS(nsSynthVoiceRegistry, nsISynthVoiceRegistry)
 
 nsSynthVoiceRegistry::nsSynthVoiceRegistry()
   : mSpeechSynthChild(nullptr)
+  , mUseGlobalQueue(false)
 {
   if (XRE_IsContentProcess()) {
 
@@ -115,7 +122,7 @@ nsSynthVoiceRegistry::nsSynthVoiceRegistry()
       RemoteVoice voice = voices[i];
       AddVoiceImpl(nullptr, voice.voiceURI(),
                    voice.name(), voice.lang(),
-                   voice.localService());
+                   voice.localService(), voice.queued());
     }
 
     for (uint32_t i = 0; i < defaults.Length(); ++i) {
@@ -149,6 +156,8 @@ nsSynthVoiceRegistry::GetInstance()
 
   if (!gSynthVoiceRegistry) {
     gSynthVoiceRegistry = new nsSynthVoiceRegistry();
+    Preferences::AddBoolVarCache(&sForceGlobalQueue,
+                                 "media.webspeech.synth.force_global_queue");
   }
 
   return gSynthVoiceRegistry;
@@ -178,7 +187,7 @@ nsSynthVoiceRegistry::SendVoices(InfallibleTArray<RemoteVoice>* aVoices,
     nsRefPtr<VoiceData> voice = mVoices[i];
 
     aVoices->AppendElement(RemoteVoice(voice->mUri, voice->mName, voice->mLang,
-                                       voice->mIsLocal));
+                                       voice->mIsLocal, voice->mIsQueued));
   }
 
   for (uint32_t i=0; i < mDefaultVoices.Length(); ++i) {
@@ -209,7 +218,7 @@ nsSynthVoiceRegistry::RecvAddVoice(const RemoteVoice& aVoice)
 
   gSynthVoiceRegistry->AddVoiceImpl(nullptr, aVoice.voiceURI(),
                                     aVoice.name(), aVoice.lang(),
-                                    aVoice.localService());
+                                    aVoice.localService(), aVoice.queued());
 }
 
 void
@@ -229,20 +238,21 @@ nsSynthVoiceRegistry::AddVoice(nsISpeechService* aService,
                                const nsAString& aUri,
                                const nsAString& aName,
                                const nsAString& aLang,
-                               bool aLocalService)
+                               bool aLocalService,
+                               bool aQueuesUtterances)
 {
   LOG(LogLevel::Debug,
-      ("nsSynthVoiceRegistry::AddVoice uri='%s' name='%s' lang='%s' local=%s",
+      ("nsSynthVoiceRegistry::AddVoice uri='%s' name='%s' lang='%s' local=%s queued=%s",
        NS_ConvertUTF16toUTF8(aUri).get(), NS_ConvertUTF16toUTF8(aName).get(),
        NS_ConvertUTF16toUTF8(aLang).get(),
-       aLocalService ? "true" : "false"));
+       aLocalService ? "true" : "false",
+       aQueuesUtterances ? "true" : "false"));
 
   if(NS_WARN_IF(XRE_IsContentProcess())) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  return AddVoiceImpl(aService, aUri, aName, aLang,
-                      aLocalService);
+  return AddVoiceImpl(aService, aUri, aName, aLang, aLocalService, aQueuesUtterances);
 }
 
 NS_IMETHODIMP
@@ -267,6 +277,22 @@ nsSynthVoiceRegistry::RemoveVoice(nsISpeechService* aService,
   mVoices.RemoveElement(retval);
   mDefaultVoices.RemoveElement(retval);
   mUriVoiceMap.Remove(aUri);
+
+  if (retval->mIsQueued && !sForceGlobalQueue) {
+    // Check if this is the last queued voice, and disable the global queue if
+    // it is.
+    bool queued = false;
+    for (uint32_t i = 0; i < mVoices.Length(); i++) {
+      VoiceData* voice = mVoices[i];
+      if (voice->mIsQueued) {
+        queued = true;
+        break;
+      }
+    }
+    if (!queued) {
+      mUseGlobalQueue = false;
+    }
+  }
 
   nsTArray<SpeechSynthesisParent*> ssplist;
   GetAllSpeechSynthActors(ssplist);
@@ -395,7 +421,8 @@ nsSynthVoiceRegistry::AddVoiceImpl(nsISpeechService* aService,
                                    const nsAString& aUri,
                                    const nsAString& aName,
                                    const nsAString& aLang,
-                                   bool aLocalService)
+                                   bool aLocalService,
+                                   bool aQueuesUtterances)
 {
   bool found = false;
   mUriVoiceMap.GetWeak(aUri, &found);
@@ -404,10 +431,11 @@ nsSynthVoiceRegistry::AddVoiceImpl(nsISpeechService* aService,
   }
 
   nsRefPtr<VoiceData> voice = new VoiceData(aService, aUri, aName, aLang,
-                                            aLocalService);
+                                            aLocalService, aQueuesUtterances);
 
   mVoices.AppendElement(voice);
   mUriVoiceMap.Put(aUri, voice);
+  mUseGlobalQueue |= aQueuesUtterances;
 
   nsTArray<SpeechSynthesisParent*> ssplist;
   GetAllSpeechSynthActors(ssplist);
@@ -416,7 +444,8 @@ nsSynthVoiceRegistry::AddVoiceImpl(nsISpeechService* aService,
     mozilla::dom::RemoteVoice ssvoice(nsString(aUri),
                                       nsString(aName),
                                       nsString(aLang),
-                                      aLocalService);
+                                      aLocalService,
+                                      aQueuesUtterances);
 
     for (uint32_t i = 0; i < ssplist.Length(); ++i) {
       unused << ssplist[i]->SendVoiceAdded(ssvoice);

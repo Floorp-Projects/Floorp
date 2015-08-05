@@ -65,7 +65,8 @@ private:
                         const nsAString& aUri,
                         const nsAString& aName,
                         const nsAString& aLang,
-                        bool aLocalService);
+                        bool aLocalService,
+                        bool aQueuesUtterances);
 
   nsTArray<nsRefPtr<VoiceData> > mVoices;
 
@@ -76,6 +77,8 @@ private:
   SpeechSynthesisChild* mSpeechSynthChild;
 
   nsRefPtr<ProcessedMediaStream> mStream;
+
+  bool mUseGlobalQueue;
 };
 
 } // namespace dom
