@@ -90,11 +90,14 @@
         <item name="android:scaleType">fitCenter</item>
     </style>
 
-    <style name="Widget.MenuItemSecondaryActionBar">
+    <style name="Widget.MenuItemSecondaryActionBarBase">
         <item name="android:padding">8dip</item>
         <item name="android:background">@drawable/action_bar_button</item>
         <item name="android:scaleType">centerInside</item>
-        <item name="drawableTintList">@color/secondary_menu_item_colors</item>
+    </style>
+
+    <style name="Widget.MenuItemSecondaryActionBar" parent="Widget.MenuItemSecondaryActionBarBase">
+        <!-- Overridden in large config -->
     </style>
 
     <style name="Widget.MenuItemActionView">
