@@ -1867,64 +1867,6 @@ JS_SetNativeStackQuota(JSRuntime* cx, size_t systemCodeStackSize,
 
 /************************************************************************/
 
-extern JS_PUBLIC_API(int)
-JS_IdArrayLength(JSContext* cx, JSIdArray* ida);
-
-extern JS_PUBLIC_API(jsid)
-JS_IdArrayGet(JSContext* cx, JSIdArray* ida, unsigned index);
-
-extern JS_PUBLIC_API(void)
-JS_DestroyIdArray(JSContext* cx, JSIdArray* ida);
-
-namespace JS {
-
-class AutoIdArray : private AutoGCRooter
-{
-  public:
-    AutoIdArray(JSContext* cx, JSIdArray* ida
-                MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, IDARRAY), context(cx), idArray(ida)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-    ~AutoIdArray() {
-        if (idArray)
-            JS_DestroyIdArray(context, idArray);
-    }
-    bool operator!() const {
-        return !idArray;
-    }
-    jsid operator[](size_t i) const {
-        MOZ_ASSERT(idArray);
-        return JS_IdArrayGet(context, idArray, unsigned(i));
-    }
-    size_t length() const {
-        return JS_IdArrayLength(context, idArray);
-    }
-
-    friend void AutoGCRooter::trace(JSTracer* trc);
-
-    JSIdArray* steal() {
-        JSIdArray* copy = idArray;
-        idArray = nullptr;
-        return copy;
-    }
-
-  protected:
-    inline void trace(JSTracer* trc);
-
-  private:
-    JSContext* context;
-    JSIdArray* idArray;
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-
-    /* No copy or assignment semantics. */
-    AutoIdArray(AutoIdArray& ida) = delete;
-    void operator=(AutoIdArray& ida) = delete;
-};
-
-} /* namespace JS */
-
 extern JS_PUBLIC_API(bool)
 JS_ValueToId(JSContext* cx, JS::HandleValue v, JS::MutableHandleId idp);
 
@@ -3151,8 +3093,8 @@ JS_CreateMappedArrayBufferContents(int fd, size_t offset, size_t length);
 extern JS_PUBLIC_API(void)
 JS_ReleaseMappedArrayBufferContents(void* contents, size_t length);
 
-extern JS_PUBLIC_API(JSIdArray*)
-JS_Enumerate(JSContext* cx, JS::HandleObject obj);
+extern JS_PUBLIC_API(bool)
+JS_Enumerate(JSContext* cx, JS::HandleObject obj, JS::MutableHandle<JS::IdVector> props);
 
 extern JS_PUBLIC_API(JS::Value)
 JS_GetReservedSlot(JSObject* obj, uint32_t index);

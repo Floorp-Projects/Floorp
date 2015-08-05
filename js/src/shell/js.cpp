@@ -4954,8 +4954,8 @@ Help(JSContext* cx, unsigned argc, Value* vp)
     RootedObject obj(cx);
     if (args.length() == 0) {
         RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
-        AutoIdArray ida(cx, JS_Enumerate(cx, global));
-        if (!ida)
+        Rooted<IdVector> ida(cx, IdVector(cx));
+        if (!JS_Enumerate(cx, global, &ida))
             return false;
 
         for (size_t i = 0; i < ida.length(); i++) {
