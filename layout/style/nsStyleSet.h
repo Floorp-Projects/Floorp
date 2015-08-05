@@ -399,6 +399,10 @@ class nsStyleSet final
 
   bool HasRuleProcessorUsedByMultipleStyleSets(sheetType aSheetType);
 
+  // Tells the RestyleManager for the document using this style set
+  // to drop any nsCSSSelector pointers it has.
+  void ClearSelectors();
+
  private:
   nsStyleSet(const nsStyleSet& aCopy) = delete;
   nsStyleSet& operator=(const nsStyleSet& aCopy) = delete;
