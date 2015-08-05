@@ -36,7 +36,9 @@ typedef AutoVectorRooter<jsid> AutoIdVector;
 typedef AutoVectorRooter<JSObject*> AutoObjectVector;
 typedef AutoVectorRooter<JSScript*> AutoVector;
 
-class AutoIdArray;
+using ValueVector = js::TraceableVector<JS::Value>;
+using IdVector = js::TraceableVector<jsid>;
+using ScriptVector = js::TraceableVector<JSScript*>;
 
 template <typename T> class AutoVectorRooter;
 template<typename K, typename V> class AutoHashMapRooter;
@@ -82,11 +84,9 @@ typedef AutoVectorRooter<jsid> AutoIdVector;
 typedef AutoVectorRooter<JSObject*> AutoObjectVector;
 typedef AutoVectorRooter<JSScript*> AutoScriptVector;
 
-using ValueVector = TraceableVector<JS::Value>;
-using IdVector = TraceableVector<jsid>;
-using ScriptVector = TraceableVector<JSScript*>;
-
-using JS::AutoIdArray;
+using JS::ValueVector;
+using JS::IdVector;
+using JS::ScriptVector;
 
 using JS::AutoHashMapRooter;
 using JS::AutoHashSetRooter;
