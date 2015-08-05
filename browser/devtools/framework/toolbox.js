@@ -1743,52 +1743,52 @@ Toolbox.prototype = {
    * Returns a promise that resolves when the fronts are destroyed
    */
   destroyInspector: function() {
-    if (this._destroying) {
-      return this._destroying;
+    if (this._destroyingInspector) {
+      return this._destroyingInspector;
     }
 
-    if (!this._inspector) {
-      return promise.resolve();
-    }
+    return this._destroyingInspector = Task.spawn(function*() {
+      if (!this._inspector) {
+        return;
+      }
 
-    let outstanding = () => {
-      return Task.spawn(function*() {
-        yield this.highlighterUtils.stopPicker();
-        yield this._inspector.destroy();
-        if (this._highlighter) {
-          // Note that if the toolbox is closed, this will work fine, but will fail
-          // in case the browser is closed and will trigger a noSuchActor message.
-          // We ignore the promise that |_hideBoxModel| returns, since we should still
-          // proceed with the rest of destruction if it fails.
-          // FF42+ now does the cleanup from the actor.
-          if (!this.highlighter.traits.autoHideOnDestroy) {
-            this.highlighterUtils.unhighlight();
-          }
-          yield this._highlighter.destroy();
+      // Releasing the walker (if it has been created)
+      // This can fail, but in any case, we want to continue destroying the
+      // inspector/highlighter/selection
+      // FF42+: Inspector actor starts managing Walker actor and auto destroy it.
+      if (this._walker && !this.walker.traits.autoReleased) {
+        try {
+          yield this._walker.release();
+        } catch(e) {}
+      }
+
+      yield this.highlighterUtils.stopPicker();
+      yield this._inspector.destroy();
+      if (this._highlighter) {
+        // Note that if the toolbox is closed, this will work fine, but will fail
+        // in case the browser is closed and will trigger a noSuchActor message.
+        // We ignore the promise that |_hideBoxModel| returns, since we should still
+        // proceed with the rest of destruction if it fails.
+        // FF42+ now does the cleanup from the actor.
+        if (!this.highlighter.traits.autoHideOnDestroy) {
+          this.highlighterUtils.unhighlight();
         }
-        if (this._selection) {
-          this._selection.destroy();
-        }
+        yield this._highlighter.destroy();
+      }
+      if (this._selection) {
+        this._selection.destroy();
+      }
 
-        if (this.walker) {
-          this.walker.off("highlighter-ready", this._highlighterReady);
-          this.walker.off("highlighter-hide", this._highlighterHidden);
-        }
+      if (this.walker) {
+        this.walker.off("highlighter-ready", this._highlighterReady);
+        this.walker.off("highlighter-hide", this._highlighterHidden);
+      }
 
-        this._inspector = null;
-        this._highlighter = null;
-        this._selection = null;
-        this._walker = null;
-      }.bind(this));
-    };
-
-    // Releasing the walker (if it has been created)
-    // This can fail, but in any case, we want to continue destroying the
-    // inspector/highlighter/selection
-    let walker = (this._destroying = this._walker) ?
-                 this._walker.release() :
-                 promise.resolve();
-    return walker.then(outstanding, outstanding);
+      this._inspector = null;
+      this._highlighter = null;
+      this._selection = null;
+      this._walker = null;
+    }.bind(this));
   },
 
   /**
