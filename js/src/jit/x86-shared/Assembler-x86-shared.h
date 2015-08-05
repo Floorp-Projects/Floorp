@@ -1129,6 +1129,24 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_CRASH("unexpected operand kind");
         }
     }
+    void addw(Imm32 imm, const Operand& op) {
+        switch (op.kind()) {
+          case Operand::REG:
+            masm.addw_ir(imm.value, op.reg());
+            break;
+          case Operand::MEM_REG_DISP:
+            masm.addw_im(imm.value, op.disp(), op.base());
+            break;
+          case Operand::MEM_ADDRESS32:
+            masm.addw_im(imm.value, op.address());
+            break;
+          case Operand::MEM_SCALE:
+            masm.addw_im(imm.value, op.disp(), op.base(), op.index(), op.scale());
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
+    }
     void subl(Imm32 imm, Register dest) {
         masm.subl_ir(imm.value, dest.encoding());
     }
@@ -1147,6 +1165,21 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_CRASH("unexpected operand kind");
         }
     }
+    void subw(Imm32 imm, const Operand& op) {
+        switch (op.kind()) {
+          case Operand::REG:
+            masm.subw_ir(imm.value, op.reg());
+            break;
+          case Operand::MEM_REG_DISP:
+            masm.subw_im(imm.value, op.disp(), op.base());
+            break;
+          case Operand::MEM_SCALE:
+            masm.subw_im(imm.value, op.disp(), op.base(), op.index(), op.scale());
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
+    }
     void addl(Register src, Register dest) {
         masm.addl_rr(src.encoding(), dest.encoding());
     }
@@ -1160,6 +1193,21 @@ class AssemblerX86Shared : public AssemblerShared
             break;
           case Operand::MEM_SCALE:
             masm.addl_rm(src.encoding(), dest.disp(), dest.base(), dest.index(), dest.scale());
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
+    }
+    void addw(Register src, const Operand& dest) {
+        switch (dest.kind()) {
+          case Operand::REG:
+            masm.addw_rr(src.encoding(), dest.reg());
+            break;
+          case Operand::MEM_REG_DISP:
+            masm.addw_rm(src.encoding(), dest.disp(), dest.base());
+            break;
+          case Operand::MEM_SCALE:
+            masm.addw_rm(src.encoding(), dest.disp(), dest.base(), dest.index(), dest.scale());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
@@ -1195,6 +1243,21 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_CRASH("unexpected operand kind");
         }
     }
+    void subw(Register src, const Operand& dest) {
+        switch (dest.kind()) {
+          case Operand::REG:
+            masm.subw_rr(src.encoding(), dest.reg());
+            break;
+          case Operand::MEM_REG_DISP:
+            masm.subw_rm(src.encoding(), dest.disp(), dest.base());
+            break;
+          case Operand::MEM_SCALE:
+            masm.subw_rm(src.encoding(), dest.disp(), dest.base(), dest.index(), dest.scale());
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
+    }
     void orl(Register reg, Register dest) {
         masm.orl_rr(reg.encoding(), dest.encoding());
     }
@@ -1208,6 +1271,21 @@ class AssemblerX86Shared : public AssemblerShared
             break;
           case Operand::MEM_SCALE:
             masm.orl_rm(src.encoding(), dest.disp(), dest.base(), dest.index(), dest.scale());
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
+    }
+    void orw(Register src, const Operand& dest) {
+        switch (dest.kind()) {
+          case Operand::REG:
+            masm.orw_rr(src.encoding(), dest.reg());
+            break;
+          case Operand::MEM_REG_DISP:
+            masm.orw_rm(src.encoding(), dest.disp(), dest.base());
+            break;
+          case Operand::MEM_SCALE:
+            masm.orw_rm(src.encoding(), dest.disp(), dest.base(), dest.index(), dest.scale());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
@@ -1231,6 +1309,21 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_CRASH("unexpected operand kind");
         }
     }
+    void orw(Imm32 imm, const Operand& op) {
+        switch (op.kind()) {
+          case Operand::REG:
+            masm.orw_ir(imm.value, op.reg());
+            break;
+          case Operand::MEM_REG_DISP:
+            masm.orw_im(imm.value, op.disp(), op.base());
+            break;
+          case Operand::MEM_SCALE:
+            masm.orw_im(imm.value, op.disp(), op.base(), op.index(), op.scale());
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
+    }
     void xorl(Register src, Register dest) {
         masm.xorl_rr(src.encoding(), dest.encoding());
     }
@@ -1244,6 +1337,21 @@ class AssemblerX86Shared : public AssemblerShared
             break;
           case Operand::MEM_SCALE:
             masm.xorl_rm(src.encoding(), dest.disp(), dest.base(), dest.index(), dest.scale());
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
+    }
+    void xorw(Register src, const Operand& dest) {
+        switch (dest.kind()) {
+          case Operand::REG:
+            masm.xorw_rr(src.encoding(), dest.reg());
+            break;
+          case Operand::MEM_REG_DISP:
+            masm.xorw_rm(src.encoding(), dest.disp(), dest.base());
+            break;
+          case Operand::MEM_SCALE:
+            masm.xorw_rm(src.encoding(), dest.disp(), dest.base(), dest.index(), dest.scale());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
@@ -1267,6 +1375,21 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_CRASH("unexpected operand kind");
         }
     }
+    void xorw(Imm32 imm, const Operand& op) {
+        switch (op.kind()) {
+          case Operand::REG:
+            masm.xorw_ir(imm.value, op.reg());
+            break;
+          case Operand::MEM_REG_DISP:
+            masm.xorw_im(imm.value, op.disp(), op.base());
+            break;
+          case Operand::MEM_SCALE:
+            masm.xorw_im(imm.value, op.disp(), op.base(), op.index(), op.scale());
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
+    }
     void andl(Register src, Register dest) {
         masm.andl_rr(src.encoding(), dest.encoding());
     }
@@ -1285,6 +1408,21 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_CRASH("unexpected operand kind");
         }
     }
+    void andw(Register src, const Operand& dest) {
+        switch (dest.kind()) {
+          case Operand::REG:
+            masm.andw_rr(src.encoding(), dest.reg());
+            break;
+          case Operand::MEM_REG_DISP:
+            masm.andw_rm(src.encoding(), dest.disp(), dest.base());
+            break;
+          case Operand::MEM_SCALE:
+            masm.andw_rm(src.encoding(), dest.disp(), dest.base(), dest.index(), dest.scale());
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
+    }
     void andl(Imm32 imm, Register dest) {
         masm.andl_ir(imm.value, dest.encoding());
     }
@@ -1298,6 +1436,21 @@ class AssemblerX86Shared : public AssemblerShared
             break;
           case Operand::MEM_SCALE:
             masm.andl_im(imm.value, op.disp(), op.base(), op.index(), op.scale());
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
+    }
+    void andw(Imm32 imm, const Operand& op) {
+        switch (op.kind()) {
+          case Operand::REG:
+            masm.andw_ir(imm.value, op.reg());
+            break;
+          case Operand::MEM_REG_DISP:
+            masm.andw_im(imm.value, op.disp(), op.base());
+            break;
+          case Operand::MEM_SCALE:
+            masm.andw_im(imm.value, op.disp(), op.base(), op.index(), op.scale());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
@@ -1622,32 +1775,27 @@ class AssemblerX86Shared : public AssemblerShared
     template<typename T>
     void lock_addw(T src, const Operand& op) {
         masm.prefix_lock();
-        masm.prefix_16_for_32();
-        addl(src, op);
+        addw(src, op);
     }
     template<typename T>
     void lock_subw(T src, const Operand& op) {
         masm.prefix_lock();
-        masm.prefix_16_for_32();
-        subl(src, op);
+        subw(src, op);
     }
     template<typename T>
     void lock_andw(T src, const Operand& op) {
         masm.prefix_lock();
-        masm.prefix_16_for_32();
-        andl(src, op);
+        andw(src, op);
     }
     template<typename T>
     void lock_orw(T src, const Operand& op) {
         masm.prefix_lock();
-        masm.prefix_16_for_32();
-        orl(src, op);
+        orw(src, op);
     }
     template<typename T>
     void lock_xorw(T src, const Operand& op) {
         masm.prefix_lock();
-        masm.prefix_16_for_32();
-        xorl(src, op);
+        xorw(src, op);
     }
 
     // Note, lock_addl(imm, op) is used for a memory barrier on non-SSE2 systems,
