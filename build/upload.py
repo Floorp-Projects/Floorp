@@ -23,8 +23,10 @@
 # to the base path.
 
 import sys, os
+import re
+import json
 from optparse import OptionParser
-from subprocess import check_call, check_output
+from subprocess import check_call, check_output, STDOUT
 import redo
 
 def RequireEnvironmentVariable(v):
@@ -61,7 +63,9 @@ def WindowsPathToMsysPath(path):
     """Translate a Windows pathname to an MSYS pathname.
     Necessary because we call out to ssh/scp, which are MSYS binaries
     and expect MSYS paths."""
-    if sys.platform != 'win32':
+    # If we're not on Windows, or if we already have an MSYS path (starting
+    # with '/' instead of 'c:' or something), then just return.
+    if sys.platform != 'win32' or path.startswith('/'):
         return path
     (drive, path) = os.path.splitdrive(os.path.abspath(path))
     return "/" + drive[0] + path.replace('\\','/')
@@ -85,7 +89,7 @@ def DoSSHCommand(command, user, host, port=None, ssh_key=None):
     cmdline.extend(["%s@%s" % (user, host), command])
 
     with redo.retrying(check_output, sleeptime=10) as f:
-        output = f(cmdline).strip()
+        output = f(cmdline, stderr=STDOUT).strip()
         return output
 
     raise Exception("Command %s returned non-zero exit code" % cmdline)
@@ -115,7 +119,44 @@ def GetRemotePath(path, local_file, base_path):
     dir = dir[len(base_path)+1:].replace('\\','/')
     return path + dir
 
-def UploadFiles(user, host, path, files, verbose=False, port=None, ssh_key=None, base_path=None, upload_to_temp_dir=False, post_upload_command=None):
+def GetUrlProperties(output, package):
+    # let's create a switch case using name-spaces/dict
+    # rather than a long if/else with duplicate code
+    property_conditions = [
+        # key: property name, value: condition
+        ('symbolsUrl', lambda m: m.endswith('crashreporter-symbols.zip') or
+                       m.endswith('crashreporter-symbols-full.zip')),
+        ('testsUrl', lambda m: m.endswith(('tests.tar.bz2', 'tests.zip'))),
+        ('unsignedApkUrl', lambda m: m.endswith('apk') and
+                           'unsigned-unaligned' in m),
+        ('robocopApkUrl', lambda m: m.endswith('apk') and 'robocop' in m),
+        ('jsshellUrl', lambda m: 'jsshell-' in m and m.endswith('.zip')),
+        ('completeMarUrl', lambda m: m.endswith('.complete.mar')),
+        ('partialMarUrl', lambda m: m.endswith('.mar') and '.partial.' in m),
+        ('codeCoverageURL', lambda m: m.endswith('code-coverage-gcno.zip')),
+        ('sdkUrl', lambda m: m.endswith(('sdk.tar.bz2', 'sdk.zip'))),
+        ('testPackagesUrl', lambda m: m.endswith('test_packages.json')),
+        ('packageUrl', lambda m: m.endswith(package)),
+    ]
+    url_re = re.compile(r'''^(https?://.*?\.(?:tar\.bz2|dmg|zip|apk|rpm|mar|tar\.gz|json))$''')
+    properties = {}
+
+    try:
+        for line in output.splitlines():
+            m = url_re.match(line.strip())
+            if m:
+                m = m.group(1)
+                for prop, condition in property_conditions:
+                    if condition(m):
+                        properties.update({prop: m})
+                        break
+    except IOError as e:
+        if e.errno != errno.ENOENT:
+            raise
+        properties = {prop: 'UNKNOWN' for prop, condition in property_conditions}
+    return properties
+
+def UploadFiles(user, host, path, files, verbose=False, port=None, ssh_key=None, base_path=None, upload_to_temp_dir=False, post_upload_command=None, properties_file=None, package=None):
     """Upload each file in the list files to user@host:path. Optionally pass
     port and ssh_key to the ssh commands. If base_path is not None, upload
     files including their path relative to base_path. If upload_to_temp_dir is
@@ -149,7 +190,13 @@ def UploadFiles(user, host, path, files, verbose=False, port=None, ssh_key=None,
             if verbose:
                 print "Running post-upload command: " + post_upload_command
             file_list = '"' + '" "'.join(remote_files) + '"'
-            DoSSHCommand('%s "%s" %s' % (post_upload_command, path, file_list), user, host, port=port, ssh_key=ssh_key)
+            output = DoSSHCommand('%s "%s" %s' % (post_upload_command, path, file_list), user, host, port=port, ssh_key=ssh_key)
+            if properties_file:
+                with open(properties_file, 'w') as outfile:
+                    properties = GetUrlProperties(output, package)
+                    properties['packageFilename'] = package
+                    properties['uploadFiles'] = [os.path.abspath(f) for f in files]
+                    json.dump(properties, outfile, indent=4)
     finally:
         if upload_to_temp_dir:
             DoSSHCommand("rm -rf %s" % path, user, host, port=port,
@@ -179,8 +226,14 @@ if __name__ == '__main__':
 
     parser = OptionParser(usage="usage: %prog [options] <files>")
     parser.add_option("-b", "--base-path",
-                      action="store", dest="base_path",
+                      action="store",
                       help="Preserve file paths relative to this path when uploading. If unset, all files will be uploaded directly to UPLOAD_PATH.")
+    parser.add_option("--properties-file",
+                      action="store",
+                      help="Path to the properties file to store the upload properties.")
+    parser.add_option("--package",
+                      action="store",
+                      help="Name of the main package.")
     (options, args) = parser.parse_args()
     if len(args) < 1:
         print "You must specify at least one file to upload"
@@ -189,6 +242,7 @@ if __name__ == '__main__':
         UploadFiles(user, host, path, args, base_path=options.base_path,
                     port=port, ssh_key=key, upload_to_temp_dir=upload_to_temp_dir,
                     post_upload_command=post_upload_command,
+                    properties_file=options.properties_file, package=options.package,
                     verbose=True)
     except IOError, (strerror):
         print strerror
