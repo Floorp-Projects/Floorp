@@ -257,6 +257,20 @@ interface nsIContentPolicyBase : nsISupports
    */
   const nsContentPolicyType TYPE_INTERNAL_TRACK = 32;
 
+  /**
+   * Indicates an internal constant for an XMLHttpRequest.
+   *
+   * This will be mapped to TYPE_XMLHTTPREQUEST.
+   */
+  const nsContentPolicyType TYPE_INTERNAL_XMLHTTPREQUEST = 33;
+
+  /**
+   * Indicates an internal constant for EventSource.
+   *
+   * This will be mapped to TYPE_DATAREQUEST.
+   */
+  const nsContentPolicyType TYPE_INTERNAL_EVENTSOURCE = 34;
+
   /* When adding new content types, please update nsContentBlocker,
    * NS_CP_ContentTypeName, nsCSPContext, all nsIContentPolicy
    * implementations, the static_assert in dom/cache/DBSchema.cpp,
