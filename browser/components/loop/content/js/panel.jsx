@@ -263,16 +263,6 @@ loop.panel = (function(_, mozL10n) {
   var ToSView = React.createClass({
     mixins: [sharedMixins.WindowCloseMixin],
 
-    getInitialState: function() {
-      var getPref = navigator.mozLoop.getLoopPref.bind(navigator.mozLoop);
-
-      return {
-        seenToS: getPref("seenToS"),
-        gettingStartedSeen: getPref("gettingStarted.seen"),
-        showPartnerLogo: getPref("showPartnerLogo")
-      };
-    },
-
     handleLinkClick: function(event) {
       if (!event.target || !event.target.href) {
         return;
@@ -283,50 +273,35 @@ loop.panel = (function(_, mozL10n) {
       this.closeWindow();
     },
 
-    renderPartnerLogo: function() {
-      if (!this.state.showPartnerLogo) {
-        return null;
-      }
-
-      var locale = mozL10n.getLanguage();
-      navigator.mozLoop.setLoopPref("showPartnerLogo", false);
-      return (
-        <p className="powered-by" id="powered-by">
-          {mozL10n.get("powered_by_beforeLogo")}
-          <img className={locale} id="powered-by-logo" />
-          {mozL10n.get("powered_by_afterLogo")}
-        </p>
-      );
-    },
-
     render: function() {
-      if (!this.state.gettingStartedSeen || this.state.seenToS == "unseen") {
-        var terms_of_use_url = navigator.mozLoop.getLoopPref("legal.ToS_url");
-        var privacy_notice_url = navigator.mozLoop.getLoopPref("legal.privacy_url");
-        var tosHTML = mozL10n.get("legal_text_and_links3", {
-          "clientShortname": mozL10n.get("clientShortname2"),
-          "terms_of_use": React.renderToStaticMarkup(
-            <a href={terms_of_use_url} target="_blank">
-              {mozL10n.get("legal_text_tos")}
-            </a>
-          ),
-          "privacy_notice": React.renderToStaticMarkup(
-            <a href={privacy_notice_url} target="_blank">
-              {mozL10n.get("legal_text_privacy")}
-            </a>
-          )
-        });
-        return (
-          <div id="powered-by-wrapper">
-            {this.renderPartnerLogo()}
-            <p className="terms-service"
-               dangerouslySetInnerHTML={{__html: tosHTML}}
-               onClick={this.handleLinkClick}></p>
-           </div>
-        );
-      } else {
-        return <div />;
-      }
+      var locale = mozL10n.getLanguage();
+      var terms_of_use_url = navigator.mozLoop.getLoopPref("legal.ToS_url");
+      var privacy_notice_url = navigator.mozLoop.getLoopPref("legal.privacy_url");
+      var tosHTML = mozL10n.get("legal_text_and_links3", {
+        "clientShortname": mozL10n.get("clientShortname2"),
+        "terms_of_use": React.renderToStaticMarkup(
+          <a href={terms_of_use_url} target="_blank">
+            {mozL10n.get("legal_text_tos")}
+          </a>
+        ),
+        "privacy_notice": React.renderToStaticMarkup(
+          <a href={privacy_notice_url} target="_blank">
+            {mozL10n.get("legal_text_privacy")}
+          </a>
+        )
+      });
+      return (
+        <div id="powered-by-wrapper">
+          <p className="powered-by" id="powered-by">
+            {mozL10n.get("powered_by_beforeLogo")}
+            <img className={locale} id="powered-by-logo" />
+            {mozL10n.get("powered_by_afterLogo")}
+          </p>
+          <p className="terms-service"
+             dangerouslySetInnerHTML={{__html: tosHTML}}
+             onClick={this.handleLinkClick}></p>
+         </div>
+      );
     }
   });
 
@@ -970,7 +945,6 @@ loop.panel = (function(_, mozL10n) {
                         mozLoop={this.props.mozLoop}
                         store={this.props.roomStore}
                         userProfile={this.state.userProfile} />
-              <ToSView />
             </Tab>
             <Tab name="contacts">
               <ContactsList
