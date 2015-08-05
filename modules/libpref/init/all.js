@@ -160,6 +160,9 @@ pref("dom.enable_user_timing", true);
 // Enable printing performance marks/measures to log
 pref("dom.performance.enable_user_timing_logging", false);
 
+// Enable notification of performance timing
+pref("dom.performance.enable_notify_performance_timing", false);
+
 // Whether the Gamepad API is enabled
 pref("dom.gamepad.enabled", true);
 #ifdef RELEASE_BUILD

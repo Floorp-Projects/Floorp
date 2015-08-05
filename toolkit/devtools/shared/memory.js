@@ -95,7 +95,7 @@ let Memory = exports.Memory = Class({
 
   _clearDebuggees: function() {
     if (this._dbg) {
-      if (this.dbg.memory.trackingAllocationSites) {
+      if (this.isRecordingAllocations()) {
         this.dbg.memory.drainAllocationsLog();
       }
       this._clearFrames();
@@ -104,7 +104,7 @@ let Memory = exports.Memory = Class({
   },
 
   _clearFrames: function() {
-    if (this.dbg.memory.trackingAllocationSites) {
+    if (this.isRecordingAllocations()) {
       this._frameCache.clearFrames();
     }
   },
@@ -114,12 +114,20 @@ let Memory = exports.Memory = Class({
    */
   _onWindowReady: function({ isTopLevel }) {
     if (this.state == "attached") {
-      if (isTopLevel && this.dbg.memory.trackingAllocationSites) {
+      if (isTopLevel && this.isRecordingAllocations()) {
         this._clearDebuggees();
         this._frameCache.initFrames();
       }
       this.dbg.addDebuggees();
     }
+  },
+
+  /**
+   * Returns a boolean indicating whether or not allocation
+   * sites are being tracked.
+   */
+  isRecordingAllocations: function () {
+    return this.dbg.memory.trackingAllocationSites;
   },
 
   /**
@@ -146,8 +154,8 @@ let Memory = exports.Memory = Class({
    *                 resetting the timer.
    */
   startRecordingAllocations: expectState("attached", function(options = {}) {
-    if (this.dbg.memory.trackingAllocationSites) {
-      return Date.now();
+    if (this.isRecordingAllocations()) {
+      return this._getCurrentTime();
     }
 
     this._frameCache.initFrames();
@@ -171,13 +179,16 @@ let Memory = exports.Memory = Class({
     }
     this.dbg.memory.trackingAllocationSites = true;
 
-    return Date.now();
+    return this._getCurrentTime();
   }, `starting recording allocations`),
 
   /**
    * Stop recording allocation sites.
    */
   stopRecordingAllocations: expectState("attached", function() {
+    if (!this.isRecordingAllocations()) {
+      return this._getCurrentTime();
+    }
     this.dbg.memory.trackingAllocationSites = false;
     this._clearFrames();
 
@@ -186,7 +197,7 @@ let Memory = exports.Memory = Class({
       this._poller = null;
     }
 
-    return Date.now();
+    return this._getCurrentTime();
   }, `stopping recording allocations`),
 
   /**
@@ -380,4 +391,12 @@ let Memory = exports.Memory = Class({
     events.emit(this, "allocations", this.getAllocations());
     this._poller.arm();
   },
+
+  /**
+   * Accesses the docshell to return the current process time.
+   */
+  _getCurrentTime: function () {
+    return (this.parent.isRootActor ? this.parent.docShell : this.parent.originalDocShell).now();
+  },
+
 });

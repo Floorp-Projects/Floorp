@@ -729,10 +729,13 @@
 
       <property name="_selected">
         <setter><![CDATA[
-          if (val)
+          if (val) {
             this.setAttribute("selected", "true");
-          else
+            this.setAttribute("visuallyselected", "true");
+          } else {
             this.removeAttribute("selected");
+            this.removeAttribute("visuallyselected");
+          }
 
           this._setPositionAttributes(val);
 

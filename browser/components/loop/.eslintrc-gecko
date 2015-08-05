@@ -56,9 +56,12 @@
     "Assert": false,
   },
   "rules": {
+    "arrow-parens": 0, // TBD
+    "arrow-spacing": 2,
     "generator-star-spacing": [2, "after"],
     // We should fix the errors and enable this (set to 2)
     "no-var": 0,
+    "require-yield": 0,        // TODO: Set to 2.
     "strict": [2, "global"]
   }
 }

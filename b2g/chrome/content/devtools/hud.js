@@ -25,6 +25,10 @@ XPCOMUtils.defineLazyGetter(this, 'EventLoopLagFront', function() {
   return devtools.require('devtools/server/actors/eventlooplag').EventLoopLagFront;
 });
 
+XPCOMUtils.defineLazyGetter(this, 'PerformanceEntriesFront', function() {
+  return devtools.require('devtools/server/actors/performance-entries').PerformanceEntriesFront;
+});
+
 XPCOMUtils.defineLazyGetter(this, 'MemoryFront', function() {
   return devtools.require('devtools/server/actors/memory').MemoryFront;
 });
@@ -588,6 +592,76 @@ let eventLoopLagWatcher = {
 };
 developerHUD.registerWatcher(eventLoopLagWatcher);
 
+/*
+ * The performanceEntriesWatcher determines the delta between the epoch
+ * of an app's launch time and the app's performance entry marks.
+ * When it receives an "appLaunch" performance entry mark it records the
+ * name of the app being launched and the epoch of when the launch ocurred.
+ * When it receives subsequent performance entry events for the app being
+ * launched, it records the delta of the performance entry opoch compared
+ * to the app-launch epoch and emits an "app-start-time-<performance mark name>"
+ * event containing the delta.
+ */
+let performanceEntriesWatcher = {
+  _client: null,
+  _fronts: new Map(),
+  _appLaunchName: null,
+  _appLaunchStartTime: null,
+
+  init(client) {
+    this._client = client;
+  },
+
+  trackTarget(target) {
+    // The performanceEntries watcher doesn't register a metric because
+    // currently the metrics generated are not displayed in
+    // in the front-end.
+
+    let front = new PerformanceEntriesFront(this._client, target.actor);
+    this._fronts.set(target, front);
+
+    // User timings are always gathered; there is no setting to enable/
+    // disable.
+    front.start();
+
+    front.on('entry', detail => {
+      if (detail.type === 'mark') {
+        let name = detail.name;
+        let epoch = detail.epoch;
+        let CHARS_UNTIL_APP_NAME = 7; // '@app://'
+
+        // FIXME There is a potential race condition that can result
+        // in some performance entries being disregarded. See bug 1189942.
+        if (name.indexOf('appLaunch') != -1) {
+          let appStartPos = name.indexOf('@app') + CHARS_UNTIL_APP_NAME;
+          let length = (name.indexOf('.') - appStartPos);
+          this._appLaunchName = name.substr(appStartPos, length);
+          this._appLaunchStartTime = epoch;
+        } else {
+          let origin = detail.origin;
+          origin = origin.substr(0, origin.indexOf('.'));
+          if (this._appLaunchName === origin) {
+            let time = epoch - this._appLaunchStartTime;
+            let eventName = 'app-startup-time-' + name;
+
+            // Events based on performance marks are for telemetry only, they are
+            // not displayed in the HUD front end.
+            target._sendTelemetryEvent({name: eventName, value: time});
+          }
+        }
+      }
+    });
+  },
+
+  untrackTarget(target) {
+    let fronts = this._fronts;
+    if (fronts.has(target)) {
+      fronts.get(target).destroy();
+      fronts.delete(target);
+    }
+  }
+};
+developerHUD.registerWatcher(performanceEntriesWatcher);
 
 /**
  * The Memory Watcher uses devtools actors to track memory usage.

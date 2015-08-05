@@ -24,8 +24,8 @@ loader.lazyRequireGetter(this, "getColor",
   "devtools/shared/theme", true);
 loader.lazyRequireGetter(this, "ProfilerGlobal",
   "devtools/performance/global");
-loader.lazyRequireGetter(this, "TimelineGlobal",
-  "devtools/performance/global");
+loader.lazyRequireGetter(this, "L10N",
+  "devtools/performance/global", true);
 loader.lazyRequireGetter(this, "MarkersOverview",
   "devtools/performance/markers-overview", true);
 
@@ -124,7 +124,7 @@ FramerateGraph.prototype = Heritage.extend(PerformanceGraph.prototype, {
  *        The parent node holding the overview.
  */
 function MemoryGraph(parent) {
-  PerformanceGraph.call(this, parent, TimelineGlobal.L10N.getStr("graphs.memory"));
+  PerformanceGraph.call(this, parent, L10N.getStr("graphs.memory"));
 }
 
 MemoryGraph.prototype = Heritage.extend(PerformanceGraph.prototype, {

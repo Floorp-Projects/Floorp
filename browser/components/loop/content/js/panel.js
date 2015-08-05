@@ -143,36 +143,35 @@ loop.panel = (function(_, mozL10n) {
     },
 
     render: function() {
-      // XXX https://github.com/facebook/react/issues/310 for === htmlFor
       var cx = React.addons.classSet;
-      var availabilityStatus = cx({
-        "status": true,
-        "status-dnd": this.state.doNotDisturb,
-        "status-available": !this.state.doNotDisturb
-      });
       var availabilityDropdown = cx({
         "dropdown-menu": true,
         "hide": !this.state.showMenu
       });
+      var statusIcon = cx({
+        "status-unavailable": this.state.doNotDisturb,
+        "status-available": !this.state.doNotDisturb
+      });
       var availabilityText = this.state.doNotDisturb ?
-                              mozL10n.get("display_name_dnd_status") :
-                              mozL10n.get("display_name_available_status");
+                             mozL10n.get("display_name_dnd_status") :
+                             mozL10n.get("display_name_available_status");
 
       return (
         React.createElement("div", {className: "dropdown"}, 
-          React.createElement("p", {className: "dnd-status", onClick: this.toggleDropdownMenu, ref: "menu-button"}, 
-            React.createElement("span", null, availabilityText), 
-            React.createElement("i", {className: availabilityStatus})
+          React.createElement("p", {className: "dnd-status"}, 
+            React.createElement("span", {className: statusIcon, 
+                  onClick: this.toggleDropdownMenu, 
+                  ref: "menu-button"}, 
+              availabilityText
+            )
           ), 
           React.createElement("ul", {className: availabilityDropdown}, 
-            React.createElement("li", {className: "dropdown-menu-item dnd-make-available", 
+            React.createElement("li", {className: "dropdown-menu-item status-available", 
                 onClick: this.changeAvailability("available")}, 
-              React.createElement("i", {className: "status status-available"}), 
               React.createElement("span", null, mozL10n.get("display_name_available_status"))
             ), 
-            React.createElement("li", {className: "dropdown-menu-item dnd-make-unavailable", 
+            React.createElement("li", {className: "dropdown-menu-item status-unavailable", 
                 onClick: this.changeAvailability("do-not-disturb")}, 
-              React.createElement("i", {className: "status status-dnd"}), 
               React.createElement("span", null, mozL10n.get("display_name_dnd_status"))
             )
           )
@@ -409,7 +408,7 @@ loop.panel = (function(_, mozL10n) {
 
       return (
         React.createElement("div", {className: "settings-menu dropdown"}, 
-          React.createElement("a", {className: "button-settings", 
+          React.createElement("button", {className: "button-settings", 
              onClick: this.toggleDropdownMenu, 
              ref: "menu-button", 
              title: mozL10n.get("settings_menu_button_tooltip")}), 
@@ -443,40 +442,37 @@ loop.panel = (function(_, mozL10n) {
   /**
    * FxA sign in/up link component.
    */
-  var AuthLink = React.createClass({displayName: "AuthLink",
+  var AccountLink = React.createClass({displayName: "AccountLink",
     mixins: [sharedMixins.WindowCloseMixin],
 
-    handleSignUpLinkClick: function() {
+    propTypes: {
+      fxAEnabled: React.PropTypes.bool.isRequired,
+      userProfile: userProfileValidator
+    },
+
+    handleSignInLinkClick: function() {
       navigator.mozLoop.logInToFxA();
       this.closeWindow();
     },
 
     render: function() {
-      if (!navigator.mozLoop.fxAEnabled || navigator.mozLoop.userProfile) {
+      if (!this.props.fxAEnabled) {
         return null;
       }
+
+      if (this.props.userProfile && this.props.userProfile.email) {
+        return (
+          React.createElement("div", {className: "user-identity"}, 
+            loop.shared.utils.truncate(this.props.userProfile.email, 24)
+          )
+        );
+      }
+
       return (
         React.createElement("p", {className: "signin-link"}, 
-          React.createElement("a", {href: "#", onClick: this.handleSignUpLinkClick}, 
+          React.createElement("a", {href: "#", onClick: this.handleSignInLinkClick}, 
             mozL10n.get("panel_footer_signin_or_signup_link")
           )
-        )
-      );
-    }
-  });
-
-  /**
-   * FxA user identity (guest/authenticated) component.
-   */
-  var UserIdentity = React.createClass({displayName: "UserIdentity",
-    propTypes: {
-      displayName: React.PropTypes.string.isRequired
-    },
-
-    render: function() {
-      return (
-        React.createElement("p", {className: "user-identity"}, 
-          this.props.displayName
         )
       );
     }
@@ -612,6 +608,18 @@ loop.panel = (function(_, mozL10n) {
     }
   });
 
+  /*
+   * User profile prop can be either an object or null as per mozLoopAPI
+   * and there is no way to express this with React 0.12.2
+   */
+  function userProfileValidator(props, propName, componentName) {
+    if (Object.prototype.toString.call(props[propName]) !== "[object Object]" &&
+        !_.isNull(props[propName])) {
+      return new Error("Required prop `" + propName +
+        "` was not correctly specified in `" + componentName + "`.");
+    }
+  }
+
   /**
    * Room list.
    */
@@ -622,7 +630,8 @@ loop.panel = (function(_, mozL10n) {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       mozLoop: React.PropTypes.object.isRequired,
       store: React.PropTypes.instanceOf(loop.store.RoomStore).isRequired,
-      userDisplayName: React.PropTypes.string.isRequired  // for room creation
+      // Used for room creation, associated with room owner.
+      userProfile: userProfileValidator
     },
 
     getInitialState: function() {
@@ -663,6 +672,11 @@ loop.panel = (function(_, mozL10n) {
       return mozL10n.get("rooms_list_current_conversations", {num: numRooms});
     },
 
+    _getUserDisplayName: function() {
+      return this.props.userProfile && this.props.userProfile.email ||
+        mozL10n.get("display_name_guest");
+    },
+
     render: function() {
       if (this.state.error) {
         // XXX Better end user reporting of errors.
@@ -687,7 +701,7 @@ loop.panel = (function(_, mozL10n) {
             mozLoop: this.props.mozLoop, 
             pendingOperation: this.state.pendingCreation ||
               this.state.pendingInitialRetrieval, 
-            userDisplayName: this.props.userDisplayName})
+            userDisplayName: this._getUserDisplayName()})
         )
       );
     }
@@ -815,15 +829,13 @@ loop.panel = (function(_, mozL10n) {
         React.PropTypes.instanceOf(loop.store.RoomStore).isRequired,
       selectedTab: React.PropTypes.string,
       // Used only for unit tests.
-      showTabButtons: React.PropTypes.bool,
-      // Mostly used for UI components showcase and unit tests
-      userProfile: React.PropTypes.object
+      showTabButtons: React.PropTypes.bool
     },
 
     getInitialState: function() {
       return {
         hasEncryptionKey: this.props.mozLoop.hasEncryptionKey,
-        userProfile: this.props.userProfile || this.props.mozLoop.userProfile,
+        userProfile: this.props.mozLoop.userProfile,
         gettingStartedSeen: this.props.mozLoop.getLoopPref("gettingStarted.seen")
       };
     },
@@ -918,11 +930,6 @@ loop.panel = (function(_, mozL10n) {
       window.removeEventListener("UIAction", this._UIActionHandler);
     },
 
-    _getUserDisplayName: function() {
-      return this.state.userProfile && this.state.userProfile.email ||
-             mozL10n.get("display_name_guest");
-    },
-
     render: function() {
       var NotificationListView = sharedViews.NotificationListView;
 
@@ -962,7 +969,7 @@ loop.panel = (function(_, mozL10n) {
               React.createElement(RoomList, {dispatcher: this.props.dispatcher, 
                         mozLoop: this.props.mozLoop, 
                         store: this.props.roomStore, 
-                        userDisplayName: this._getUserDisplayName()}), 
+                        userProfile: this.state.userProfile}), 
               React.createElement(ToSView, null)
             ), 
             React.createElement(Tab, {name: "contacts"}, 
@@ -992,12 +999,11 @@ loop.panel = (function(_, mozL10n) {
           ), 
           React.createElement("div", {className: "footer"}, 
             React.createElement("div", {className: "user-details"}, 
-              React.createElement(UserIdentity, {displayName: this._getUserDisplayName()}), 
               React.createElement(AvailabilityDropdown, null)
             ), 
             React.createElement("div", {className: "signin-details"}, 
-              React.createElement(AuthLink, null), 
-              React.createElement("div", {className: "footer-signin-separator"}), 
+              React.createElement(AccountLink, {fxAEnabled: this.props.mozLoop.fxAEnabled, 
+                           userProfile: this.state.userProfile}), 
               React.createElement(SettingsDropdown, {mozLoop: this.props.mozLoop})
             )
           )
@@ -1038,18 +1044,17 @@ loop.panel = (function(_, mozL10n) {
   }
 
   return {
-    init: init,
-    AuthLink: AuthLink,
+    AccountLink: AccountLink,
     AvailabilityDropdown: AvailabilityDropdown,
     GettingStartedView: GettingStartedView,
+    init: init,
     NewRoomView: NewRoomView,
     PanelView: PanelView,
     RoomEntry: RoomEntry,
     RoomList: RoomList,
     SettingsDropdown: SettingsDropdown,
     SignInRequestView: SignInRequestView,
-    ToSView: ToSView,
-    UserIdentity: UserIdentity
+    ToSView: ToSView
   };
 })(_, document.mozL10n);
 
