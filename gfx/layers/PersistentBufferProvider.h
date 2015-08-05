@@ -59,7 +59,7 @@ public:
 
   PersistentBufferProviderBasic(LayerManager* aManager, gfx::IntSize aSize,
                                 gfx::SurfaceFormat aFormat, gfx::BackendType aBackend);
-  PersistentBufferProviderBasic(gfx::DrawTarget* aTarget) : mDrawTarget(aTarget) {}
+  explicit PersistentBufferProviderBasic(gfx::DrawTarget* aTarget) : mDrawTarget(aTarget) {}
 
   bool IsValid() { return !!mDrawTarget; }
   virtual LayersBackend GetType() { return LayersBackend::LAYERS_BASIC; }
