@@ -223,6 +223,19 @@
     </content>
   </binding>
 
+  <binding id="menuitem-iconic-both" extends="chrome://global/content/bindings/menu.xml#menuitem">
+    <content>
+      <xul:hbox class="menu-iconic-left" align="center" pack="center"
+                xbl:inherits="selected,_moz-menuactive,disabled,checked">
+        <xul:image class="menu-iconic-icon" xbl:inherits="src=image,validate,src"/>
+      </xul:hbox>
+      <xul:label class="menu-iconic-text" flex="1" xbl:inherits="value=label,accesskey,crop" crop="right"/>
+      <xul:hbox class="menu-iconic-right" align="center" pack="center">
+        <xul:image class="menu-iconic-icon" xbl:inherits="src=endimage"/>
+      </xul:hbox>
+    </content>
+  </binding>
+
   <binding id="menuitem-iconic-noaccel" extends="chrome://global/content/bindings/menu.xml#menuitem">
     <content>
       <xul:hbox class="menu-iconic-left" align="center" pack="center"
