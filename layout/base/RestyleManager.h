@@ -715,7 +715,8 @@ private:
     eNotifyHidden
   };
 
-  void AddPendingRestylesForDescendantsMatchingSelectors(Element* aElement);
+  void AddPendingRestylesForDescendantsMatchingSelectors(Element* aElement,
+                                                         Element* aRestyleRoot);
 
 #ifdef RESTYLE_LOGGING
   int32_t& LoggingDepth() { return mLoggingDepth; }
