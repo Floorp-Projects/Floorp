@@ -59,8 +59,6 @@ class WorkerGlobalScope : public DOMEventTargetHelper,
   nsRefPtr<IDBFactory> mIndexedDB;
   nsRefPtr<cache::CacheStorage> mCacheStorage;
 
-  uint32_t mWindowInteractionsAllowed;
-
 protected:
   WorkerPrivate* mWorkerPrivate;
 
@@ -164,25 +162,6 @@ public:
   CreateImageBitmap(const ImageBitmapSource& aImage,
                     int32_t aSx, int32_t aSy, int32_t aSw, int32_t aSh,
                     ErrorResult& aRv);
-
-  bool
-  WindowInteractionAllowed() const
-  {
-    return mWindowInteractionsAllowed > 0;
-  }
-
-  void
-  AllowWindowInteraction()
-  {
-    mWindowInteractionsAllowed++;
-  }
-
-  void
-  ConsumeWindowInteraction()
-  {
-    MOZ_ASSERT(mWindowInteractionsAllowed > 0);
-    mWindowInteractionsAllowed--;
-  }
 };
 
 class DedicatedWorkerGlobalScope final : public WorkerGlobalScope

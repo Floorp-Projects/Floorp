@@ -3983,7 +3983,6 @@
               popup.openPopupAtScreen(event.screenX, event.screenY, true);
               break;
             }
-            case "DOMServiceWorkerFocusClient":
             case "DOMWebNotificationClicked": {
               let tab = this.getTabForBrowser(browser);
               if (!tab)
@@ -4080,7 +4079,6 @@
                                               this.mCurrentBrowser);
           }
           messageManager.addMessageListener("DOMWebNotificationClicked", this);
-          messageManager.addMessageListener("DOMServiceWorkerFocusClient", this);
           messageManager.addMessageListener("Findbar:Keypress", this);
         ]]>
       </constructor>
