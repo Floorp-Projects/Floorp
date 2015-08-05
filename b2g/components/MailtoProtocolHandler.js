@@ -40,7 +40,7 @@ MailtoProtocolHandler.prototype = {
   },
 
   newChannel: function Proto_newChannel(aURI) {
-    return newChannel2(aURI, null);
+    return this.newChannel2(aURI, null);
   },
 
   classID: Components.ID("{50777e53-0331-4366-a191-900999be386c}"),
