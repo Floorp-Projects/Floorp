@@ -1,0 +1,26 @@
+/* -*- Mode: IDL; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PWebBrowserPersistDocument;
+
+namespace mozilla {
+
+// == nsIWebBrowserPersistResourceVisitor
+protocol PWebBrowserPersistResources {
+  manager PWebBrowserPersistDocument;
+
+parent:
+  VisitResource(nsCString aURI);
+
+  // The actor sent here is in the START state; the parent-side
+  // receiver will have to wait for it to enter the MAIN state
+  // before exposing it with a visitDocument call.
+  VisitDocument(PWebBrowserPersistDocument aSubDocument);
+
+  // This reflects the endVisit method.
+  __delete__(nsresult aStatus);
+};
+
+} // namespace mozilla

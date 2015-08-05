@@ -1,0 +1,30 @@
+/* -*- Mode: IDL; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIWebBrowserPersistDocumentReceiver;
+
+/**
+ * Interface for objects which represent a document that can be
+ * serialized with nsIWebBrowserPersist.  This interface is
+ * asynchronous because the actual document can be in another process
+ * (e.g., if this object is an nsFrameLoader for an out-of-process
+ * frame).
+ *
+ * Warning: this is currently implemented only by nsFrameLoader, and
+ * may change in the future to become more frame-loader-specific or be
+ * merged into nsIFrameLoader.  See bug 1101100 comment #34.
+ *
+ * @see nsIWebBrowserPersistDocumentReceiver
+ * @see nsIWebBrowserPersistDocument
+ * @see nsIWebBrowserPersist
+ */
+[scriptable, function, uuid(24d0dc9e-b970-4cca-898f-cbba03abaa73)]
+interface nsIWebBrowserPersistable : nsISupports
+{
+  void startPersistence(in nsIWebBrowserPersistDocumentReceiver aRecv);
+};
