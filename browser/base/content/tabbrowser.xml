@@ -6082,6 +6082,13 @@
             aMenuitem.setAttribute("selected", "true");
           else
             aMenuitem.removeAttribute("selected");
+
+          if (aTab.hasAttribute("muted"))
+            aMenuitem.setAttribute("endimage", "chrome://browser/skin/tabbrowser/tab-audio.svg#tab-audio-muted");
+          else if (aTab.hasAttribute("soundplaying"))
+            aMenuitem.setAttribute("endimage", "chrome://browser/skin/tabbrowser/tab-audio.svg#tab-audio");
+          else
+            aMenuitem.removeAttribute("endimage");
         ]]></body>
       </method>
     </implementation>
