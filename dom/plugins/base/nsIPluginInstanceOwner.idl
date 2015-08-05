@@ -26,7 +26,7 @@ enum nsPluginTagType {
 
 // Do not make this interface scriptable, because the virtual functions in C++
 // blocks will make script call the wrong functions.
-[uuid(8ff5f46e-96fa-4905-a75c-35aac30bdcee)]
+[uuid(518e7465-e1bc-4490-a30e-0ba9d791aaa8)]
 interface nsIPluginInstanceOwner : nsISupports
 {
   /**
@@ -66,7 +66,8 @@ interface nsIPluginInstanceOwner : nsISupports
   NS_IMETHOD
   GetURL(const char *aURL, const char *aTarget, 
          nsIInputStream *aPostStream,
-         void *aHeadersData, uint32_t aHeadersDataLen) = 0;
+         void *aHeadersData, uint32_t aHeadersDataLen,
+         bool aDoCheckLoadURIChecks) = 0;
 %}
 
   /**

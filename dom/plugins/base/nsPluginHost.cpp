@@ -88,7 +88,6 @@
 #include "nsIWeakReferenceUtils.h"
 #include "nsIPresShell.h"
 #include "nsPluginNativeWindow.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsIContentPolicy.h"
 #include "nsContentPolicyUtils.h"
 #include "mozilla/TimeStamp.h"
@@ -516,32 +515,24 @@ nsresult nsPluginHost::GetURLWithHeaders(nsNPAPIPluginInstance* pluginInst,
 {
   // we can only send a stream back to the plugin (as specified by a
   // null target) if we also have a nsNPAPIPluginStreamListener to talk to
-  if (!target && !streamListener)
+  if (!target && !streamListener) {
     return NS_ERROR_ILLEGAL_VALUE;
+  }
 
   nsresult rv = NS_OK;
 
   if (target) {
-    rv = DoURLLoadSecurityCheck(pluginInst, url);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     nsRefPtr<nsPluginInstanceOwner> owner = pluginInst->GetOwner();
     if (owner) {
-      if ((0 == PL_strcmp(target, "newwindow")) ||
-          (0 == PL_strcmp(target, "_new")))
-        target = "_blank";
-      else if (0 == PL_strcmp(target, "_current"))
-        target = "_self";
-
-      rv = owner->GetURL(url, target, nullptr, nullptr, 0);
+      rv = owner->GetURL(url, target, nullptr, nullptr, 0, true);
     }
   }
 
-  if (streamListener)
+  if (streamListener) {
     rv = NewPluginURLStream(NS_ConvertUTF8toUTF16(url), pluginInst,
                             streamListener, nullptr,
                             getHeaders, getHeadersLength);
-
+  }
   return rv;
 }
 
@@ -609,28 +600,19 @@ nsresult nsPluginHost::PostURL(nsISupports* pluginInst,
   }
 
   if (target) {
-    rv = DoURLLoadSecurityCheck(instance, url);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     nsRefPtr<nsPluginInstanceOwner> owner = instance->GetOwner();
     if (owner) {
-      if ((0 == PL_strcmp(target, "newwindow")) ||
-          (0 == PL_strcmp(target, "_new"))) {
-        target = "_blank";
-      } else if (0 == PL_strcmp(target, "_current")) {
-        target = "_self";
-      }
       rv = owner->GetURL(url, target, postStream,
-                         (void*)postHeaders, postHeadersLength);
+                         (void*)postHeaders, postHeadersLength, true);
     }
   }
 
   // if we don't have a target, just create a stream.
-  if (streamListener)
+  if (streamListener) {
     rv = NewPluginURLStream(NS_ConvertUTF8toUTF16(url), instance,
                             streamListener,
                             postStream, postHeaders, postHeadersLength);
-
+  }
   return rv;
 }
 
@@ -3529,45 +3511,6 @@ nsresult nsPluginHost::NewPluginURLStream(const nsString& aURL,
   if (NS_SUCCEEDED(rv))
     listenerPeer->TrackRequest(channel);
   return rv;
-}
-
-// Called by GetURL and PostURL
-nsresult
-nsPluginHost::DoURLLoadSecurityCheck(nsNPAPIPluginInstance *aInstance,
-                                     const char* aURL)
-{
-  if (!aURL || *aURL == '\0')
-    return NS_OK;
-
-  // get the base URI for the plugin element
-  nsRefPtr<nsPluginInstanceOwner> owner = aInstance->GetOwner();
-  if (!owner)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIURI> baseURI = owner->GetBaseURI();
-  if (!baseURI)
-    return NS_ERROR_FAILURE;
-
-  // Create an absolute URL for the target in case the target is relative
-  nsCOMPtr<nsIURI> targetURL;
-  NS_NewURI(getter_AddRefs(targetURL), aURL, baseURI);
-  if (!targetURL)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDocument> doc;
-  owner->GetDocument(getter_AddRefs(doc));
-  if (!doc)
-    return NS_ERROR_FAILURE;
-
-  nsresult rv;
-  nsCOMPtr<nsIScriptSecurityManager> secMan(
-    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
-  if (NS_FAILED(rv))
-    return rv;
-
-  return secMan->CheckLoadURIWithPrincipal(doc->NodePrincipal(), targetURL,
-                                           nsIScriptSecurityManager::STANDARD);
-
 }
 
 nsresult
