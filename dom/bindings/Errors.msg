@@ -76,3 +76,4 @@ MSG_DEF(MSG_BAD_FORMDATA, 0, JSEXN_TYPEERR, "Could not parse content as FormData
 MSG_DEF(MSG_NO_ACTIVE_WORKER, 1, JSEXN_TYPEERR, "No active worker for scope {0}.")
 MSG_DEF(MSG_NOTIFICATION_PERMISSION_DENIED, 0, JSEXN_TYPEERR, "Permission to show Notification denied.")
 MSG_DEF(MSG_NOTIFICATION_NO_CONSTRUCTOR_IN_SERVICEWORKER, 0, JSEXN_TYPEERR, "Notification constructor cannot be used in ServiceWorkerGlobalScope. Use registration.showNotification() instead.")
+MSG_DEF(MSG_INVALID_SCOPE, 2, JSEXN_TYPEERR, "Invalid scope trying to resolve {0} with base URL {1}.")

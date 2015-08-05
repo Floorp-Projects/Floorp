@@ -131,15 +131,25 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
 
   // Step 4. If none passed, parse against script's URL
   if (!aOptions.mScope.WasPassed()) {
-    nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), NS_LITERAL_CSTRING("./"),
-                            nullptr, scriptURI);
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(rv));
+    NS_NAMED_LITERAL_STRING(defaultScope, "./");
+    rv = NS_NewURI(getter_AddRefs(scopeURI), defaultScope,
+                   nullptr, scriptURI);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      nsAutoCString spec;
+      scriptURI->GetSpec(spec);
+      aRv.ThrowTypeError(MSG_INVALID_SCOPE, &defaultScope, &spec);
+      return nullptr;
+    }
   } else {
     // Step 5. Parse against entry settings object's base URL.
-    nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), aOptions.mScope.Value(),
-                            nullptr, window->GetDocBaseURI());
+    rv = NS_NewURI(getter_AddRefs(scopeURI), aOptions.mScope.Value(),
+                   nullptr, window->GetDocBaseURI());
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      aRv.ThrowTypeError(MSG_INVALID_URL, &aOptions.mScope.Value());
+      nsAutoCString spec;
+      if (window->GetDocBaseURI()) {
+        window->GetDocBaseURI()->GetSpec(spec);
+      }
+      aRv.ThrowTypeError(MSG_INVALID_SCOPE, &aOptions.mScope.Value(), &spec);
       return nullptr;
     }
   }
