@@ -94,7 +94,7 @@ add_task(function* insert_bookmark_tag_notification() {
                    { name: "onItemChanged",
                      arguments: [ itemId, "tags", false, "",
                                   bm.lastModified, bm.type, parentId,
-                                  bm.guid, bm.parentGuid, "" ] }
+                                  bm.guid, bm.parentGuid ] }
                  ]);
 });
 
@@ -111,7 +111,7 @@ add_task(function* update_bookmark_lastModified() {
   observer.check([ { name: "onItemChanged",
                      arguments: [ itemId, "lastModified", false,
                                   `${bm.lastModified * 1000}`, bm.lastModified,
-                                  bm.type, parentId, bm.guid, bm.parentGuid, "" ] }
+                                  bm.type, parentId, bm.guid, bm.parentGuid ] }
                  ]);
 });
 
@@ -128,7 +128,7 @@ add_task(function* update_bookmark_title() {
   observer.check([ { name: "onItemChanged",
                      arguments: [ itemId, "title", false, bm.title,
                                   bm.lastModified, bm.type, parentId, bm.guid,
-                                  bm.parentGuid, "" ] }
+                                  bm.parentGuid ] }
                  ]);
 });
 
@@ -145,7 +145,7 @@ add_task(function* update_bookmark_uri() {
   observer.check([ { name: "onItemChanged",
                      arguments: [ itemId, "uri", false, bm.url.href,
                                   bm.lastModified, bm.type, parentId, bm.guid,
-                                  bm.parentGuid, "http://url.example.com/" ] }
+                                  bm.parentGuid ] }
                  ]);
 });
 
@@ -264,7 +264,7 @@ add_task(function* remove_bookmark_tag_notification() {
                    { name: "onItemChanged",
                      arguments: [ itemId, "tags", false, "",
                                   bm.lastModified, bm.type, parentId,
-                                  bm.guid, bm.parentGuid, "" ] }
+                                  bm.guid, bm.parentGuid ] }
                  ]);
 });
 

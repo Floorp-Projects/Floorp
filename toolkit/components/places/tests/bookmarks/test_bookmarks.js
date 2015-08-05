@@ -43,13 +43,11 @@ let bookmarksObserver = {
     this._itemRemovedIndex = index;
   },
   onItemChanged: function(id, property, isAnnotationProperty, value,
-                          lastModified, itemType, parentId, guid, parentGuid,
-                          oldValue) {
+                          lastModified, itemType) {
     this._itemChangedId = id;
     this._itemChangedProperty = property;
     this._itemChanged_isAnnotationProperty = isAnnotationProperty;
     this._itemChangedValue = value;
-    this._itemChangedOldValue = oldValue;
   },
   onItemVisited: function(id, visitID, time) {
     this._itemVisitedId = id;
@@ -454,7 +452,6 @@ add_task(function test_bookmarks() {
   do_check_eq(bookmarksObserver._itemChangedId, newId10);
   do_check_eq(bookmarksObserver._itemChangedProperty, "uri");
   do_check_eq(bookmarksObserver._itemChangedValue, "http://foo11.com/");
-  do_check_eq(bookmarksObserver._itemChangedOldValue, "http://foo10.com/");
 
   // test getBookmarkURI
   let newId11 = bs.insertBookmark(testRoot, uri("http://foo11.com/"),

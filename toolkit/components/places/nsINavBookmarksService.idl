@@ -13,7 +13,7 @@ interface nsINavHistoryBatchCallback;
 /**
  * Observer for bookmarks changes.
  */
-[scriptable, uuid(cff3efcc-e144-490d-9f23-8b6f6dd09e7f)]
+[scriptable, uuid(8ab925f8-af9b-4837-afa0-ffed507212ce)]
 interface nsINavBookmarkObserver : nsISupports
 {
   /**
@@ -122,30 +122,17 @@ interface nsINavBookmarkObserver : nsISupports
    *        The unique ID associated with the item.
    * @param aParentGuid
    *        The unique ID associated with the item's parent.
-   * @param aOldValue
-   *        For certain properties, this is set to the new value of the
-   *        property (see the list below).
    *
    * @note List of values that may be associated with properties:
    *       aProperty     | aNewValue
    *       =====================================================================
-   *       cleartime     | Empty string (all visits to this item were removed).
+   *       cleartime      | Empty string (all visits to this item were removed).
    *       title         | The new title.
    *       favicon       | The "moz-anno" URL of the new favicon.
    *       uri           | new URL.
    *       tags          | Empty string (tags for this item changed)
    *       dateAdded     | PRTime (as string) when the item was first added.
    *       lastModified  | PRTime (as string) when the item was last modified.
-   *
-   *       aProperty     | aOldValue
-   *       =====================================================================
-   *       cleartime     | Empty string (currently unused).
-   *       title         | Empty string (currently unused).
-   *       favicon       | Empty string (currently unused).
-   *       uri           | old URL.
-   *       tags          | Empty string (currently unused).
-   *       dateAdded     | Empty string (currently unused).
-   *       lastModified  | Empty string (currently unused).
    */
   void onItemChanged(in long long aItemId,
                      in ACString aProperty,
@@ -155,8 +142,7 @@ interface nsINavBookmarkObserver : nsISupports
                      in unsigned short aItemType,
                      in long long aParentId,
                      in ACString aGuid,
-                     in ACString aParentGuid,
-                     in AUTF8String aOldValue);
+                     in ACString aParentGuid);
 
   /**
    * Notifies that the item was visited.  Can be invoked only for TYPE_BOOKMARK

@@ -187,8 +187,7 @@ let Bookmarks = Object.freeze({
           notify(observers, "onItemChanged", [ entry._id, "tags", false, "",
                                                toPRTime(entry.lastModified),
                                                entry.type, entry._parentId,
-                                               entry.guid, entry.parentGuid,
-                                               "" ]);
+                                               entry.guid, entry.parentGuid ]);
         }
       }
 
@@ -326,7 +325,7 @@ let Bookmarks = Object.freeze({
                                                updatedItem.type,
                                                updatedItem._parentId,
                                                updatedItem.guid,
-                                               updatedItem.parentGuid, "" ]);
+                                               updatedItem.parentGuid ]);
         }
         if (updateInfo.hasOwnProperty("title")) {
           notify(observers, "onItemChanged", [ updatedItem._id, "title",
@@ -335,7 +334,7 @@ let Bookmarks = Object.freeze({
                                                updatedItem.type,
                                                updatedItem._parentId,
                                                updatedItem.guid,
-                                               updatedItem.parentGuid, "" ]);
+                                               updatedItem.parentGuid ]);
         }
         if (updateInfo.hasOwnProperty("url")) {
           notify(observers, "onItemChanged", [ updatedItem._id, "uri",
@@ -344,8 +343,7 @@ let Bookmarks = Object.freeze({
                                                updatedItem.type,
                                                updatedItem._parentId,
                                                updatedItem.guid,
-                                               updatedItem.parentGuid,
-                                               item.url.href ]);
+                                               updatedItem.parentGuid ]);
         }
         // If the item was moved, notify onItemMoved.
         if (item.parentGuid != updatedItem.parentGuid ||
@@ -412,8 +410,7 @@ let Bookmarks = Object.freeze({
           notify(observers, "onItemChanged", [ entry._id, "tags", false, "",
                                                toPRTime(entry.lastModified),
                                                entry.type, entry._parentId,
-                                               entry.guid, entry.parentGuid,
-                                               "" ]);
+                                               entry.guid, entry.parentGuid ]);
         }
       }
 
@@ -875,8 +872,7 @@ function fetchBookmarksByURL(info) {
     Task.async(function*(db) {
 
     let rows = yield db.executeCached(
-      `/* do not warn (bug no): not worth to add an index */
-       SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
+      `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
               b.dateAdded, b.lastModified, b.type, b.title, h.url AS url,
               b.id AS _id, b.parent AS _parentId,
               (SELECT count(*) FROM moz_bookmarks WHERE parent = b.id) AS _childCount,
@@ -1432,8 +1428,7 @@ Task.async(function* (db, folderGuids) {
         notify(observers, "onItemChanged", [ entry._id, "tags", false, "",
                                              toPRTime(entry.lastModified),
                                              entry.type, entry._parentId,
-                                             entry.guid, entry.parentGuid,
-                                             "" ]);
+                                             entry.guid, entry.parentGuid ]);
       }
     }
   }
