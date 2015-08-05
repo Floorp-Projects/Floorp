@@ -76,7 +76,7 @@ class TraceableHashMapOperations
     using Range = typename Map::Range;
     using Enum = typename Map::Enum;
 
-    const Map& map() const { return static_cast<const Outer*>(this)->extract(); }
+    const Map& map() const { return static_cast<const Outer*>(this)->get(); }
 
   public:
     bool initialized() const                   { return map().initialized(); }
@@ -101,7 +101,7 @@ class MutableTraceableHashMapOperations
     using Range = typename Map::Range;
     using Enum = typename Map::Enum;
 
-    Map& map() { return static_cast<Outer*>(this)->extract(); }
+    Map& map() { return static_cast<Outer*>(this)->get(); }
 
   public:
     bool init(uint32_t len = 16) { return map().init(len); }
@@ -140,40 +140,18 @@ class MutableTraceableHashMapOperations
 template <typename A, typename B, typename C, typename D, typename E, typename F>
 class RootedBase<TraceableHashMap<A,B,C,D,E,F>>
   : public MutableTraceableHashMapOperations<JS::Rooted<TraceableHashMap<A,B,C,D,E,F>>, A,B,C,D,E,F>
-{
-    using Map = TraceableHashMap<A,B,C,D,E,F>;
-
-    friend class TraceableHashMapOperations<JS::Rooted<Map>, A,B,C,D,E,F>;
-    const Map& extract() const { return *static_cast<const JS::Rooted<Map>*>(this)->address(); }
-
-    friend class MutableTraceableHashMapOperations<JS::Rooted<Map>, A,B,C,D,E,F>;
-    Map& extract() { return *static_cast<JS::Rooted<Map>*>(this)->address(); }
-};
+{};
 
 template <typename A, typename B, typename C, typename D, typename E, typename F>
 class MutableHandleBase<TraceableHashMap<A,B,C,D,E,F>>
   : public MutableTraceableHashMapOperations<JS::MutableHandle<TraceableHashMap<A,B,C,D,E,F>>,
                                              A,B,C,D,E,F>
-{
-    using Map = TraceableHashMap<A,B,C,D,E,F>;
-
-    friend class TraceableHashMapOperations<JS::MutableHandle<Map>, A,B,C,D,E,F>;
-    const Map& extract() const {
-        return *static_cast<const JS::MutableHandle<Map>*>(this)->address();
-    }
-
-    friend class MutableTraceableHashMapOperations<JS::MutableHandle<Map>, A,B,C,D,E,F>;
-    Map& extract() { return *static_cast<JS::MutableHandle<Map>*>(this)->address(); }
-};
+{};
 
 template <typename A, typename B, typename C, typename D, typename E, typename F>
 class HandleBase<TraceableHashMap<A,B,C,D,E,F>>
   : public TraceableHashMapOperations<JS::Handle<TraceableHashMap<A,B,C,D,E,F>>, A,B,C,D,E,F>
-{
-    using Map = TraceableHashMap<A,B,C,D,E,F>;
-    friend class TraceableHashMapOperations<JS::Handle<Map>, A,B,C,D,E,F>;
-    const Map& extract() const { return *static_cast<const JS::Handle<Map>*>(this)->address(); }
-};
+{};
 
 } /* namespace js */
 
