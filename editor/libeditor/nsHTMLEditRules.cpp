@@ -5762,7 +5762,7 @@ nsHTMLEditRules::GetNodesForOperation(nsTArray<nsRefPtr<nsRange>>& aArrayOfRange
   nsCOMPtr<nsIEditor> kungFuDeathGrip(mHTMLEditor);
 
   int32_t rangeCount = aArrayOfRanges.Length();
-  nsresult res;
+  nsresult res = NS_OK;
 
   // Bust up any inlines that cross our range endpoints, but only if we are
   // allowed to touch content.
@@ -5795,7 +5795,7 @@ nsHTMLEditRules::GetNodesForOperation(nsTArray<nsRefPtr<nsRange>>& aArrayOfRange
   // Gather up a list of all the nodes
   for (auto& range : aArrayOfRanges) {
     nsDOMSubtreeIterator iter;
-    nsresult res = iter.Init(*range);
+    res = iter.Init(*range);
     NS_ENSURE_SUCCESS(res, res);
     if (aOutArrayOfNodes.Length() == 0) {
       iter.AppendList(nsTrivialFunctor(), aOutArrayOfNodes);
