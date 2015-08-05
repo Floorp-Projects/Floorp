@@ -9348,6 +9348,30 @@
     "releaseChannelCollection": "opt-out",
     "description": "Reason for reporting the Adobe CDM to be unsupported. (1 = NOT_WINDOWS; 2 = WINDOWS_VERSION)"
   },
+  "PUSH_API_USED": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "flag",
+    "description": "A Push API subscribe() operation was performed at least once this session."
+  },
+  "PUSH_API_PERMISSION_REQUESTED": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "count",
+    "description": "Count of number of times the PermissionManager explicitly prompted user for Push Notifications permission"
+  },
+  "PUSH_API_PERMISSION_DENIED": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "count",
+    "description": "User explicitly denied Push Notifications permission"
+  },
+  "PUSH_API_PERMISSION_GRANTED": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "count",
+    "description": "User explicitly granted Push Notifications permission"
+  },
   "FXA_CONFIGURED": {
     "alert_emails": ["fx-team@mozilla.com"],
     "expires_in_version": "45",
