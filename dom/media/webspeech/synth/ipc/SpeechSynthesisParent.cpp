@@ -25,10 +25,20 @@ SpeechSynthesisParent::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 bool
-SpeechSynthesisParent::RecvReadVoiceList(InfallibleTArray<RemoteVoice>* aVoices,
-                                         InfallibleTArray<nsString>* aDefaults)
+SpeechSynthesisParent::RecvReadVoicesAndState(InfallibleTArray<RemoteVoice>* aVoices,
+                                              InfallibleTArray<nsString>* aDefaults,
+                                              bool* aIsSpeaking)
 {
-  nsSynthVoiceRegistry::GetInstance()->SendVoices(aVoices, aDefaults);
+  nsSynthVoiceRegistry::GetInstance()->SendVoicesAndState(aVoices, aDefaults,
+                                                          aIsSpeaking);
+  return true;
+}
+
+bool
+SpeechSynthesisParent::RecvDropGlobalQueue()
+{
+  nsSynthVoiceRegistry::GetInstance()->DropGlobalQueue();
+
   return true;
 }
 
