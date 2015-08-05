@@ -25,12 +25,10 @@ SpeechSynthesisParent::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 bool
-SpeechSynthesisParent::RecvReadVoicesAndState(InfallibleTArray<RemoteVoice>* aVoices,
-                                              InfallibleTArray<nsString>* aDefaults,
-                                              bool* aIsSpeaking)
+SpeechSynthesisParent::RecvReadVoiceList(InfallibleTArray<RemoteVoice>* aVoices,
+                                         InfallibleTArray<nsString>* aDefaults)
 {
-  nsSynthVoiceRegistry::GetInstance()->SendVoicesAndState(aVoices, aDefaults,
-                                                          aIsSpeaking);
+  nsSynthVoiceRegistry::GetInstance()->SendVoices(aVoices, aDefaults);
   return true;
 }
 
@@ -116,14 +114,6 @@ SpeechSynthesisRequestParent::RecvCancel()
 {
   MOZ_ASSERT(mTask);
   mTask->Cancel();
-  return true;
-}
-
-bool
-SpeechSynthesisRequestParent::RecvForceEnd()
-{
-  MOZ_ASSERT(mTask);
-  mTask->ForceEnd();
   return true;
 }
 
