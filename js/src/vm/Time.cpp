@@ -6,7 +6,7 @@
 
 /* PR time code. */
 
-#include "prmjtime.h"
+#include "vm/Time.h"
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"

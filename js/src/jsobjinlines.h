@@ -622,8 +622,6 @@ IsInternalFunctionObject(JSObject& funobj)
     return fun.isLambda() && fun.isInterpreted() && !fun.environment();
 }
 
-typedef AutoVectorRooter<PropertyDescriptor> AutoPropertyDescriptorVector;
-
 /*
  * Make an object with the specified prototype. If parent is null, it will
  * default to the prototype's global if the prototype is non-null.

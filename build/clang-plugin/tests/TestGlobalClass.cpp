@@ -17,17 +17,17 @@ void gobble(void *) { }
 void misuseGlobalClass(int len) {
   Global notValid; // expected-error {{variable of type 'Global' only valid as global}}
   Global alsoNotValid[2]; // expected-error {{variable of type 'Global [2]' only valid as global}} expected-note {{'Global [2]' is a global type because it is an array of global type 'Global'}}
-  static Global valid; // expected-error {{variable of type 'Global' only valid as global}}
-  static Global alsoValid[2]; // expected-error {{variable of type 'Global [2]' only valid as global}} expected-note {{'Global [2]' is a global type because it is an array of global type 'Global'}}
+  static Global notValid2; // expected-error {{variable of type 'Global' only valid as global}}
+  static Global alsoNotValid2[2]; // expected-error {{variable of type 'Global [2]' only valid as global}} expected-note {{'Global [2]' is a global type because it is an array of global type 'Global'}}
 
-  gobble(&valid);
+  gobble(&notValid2);
   gobble(&notValid);
-  gobble(&alsoValid[0]);
+  gobble(&alsoNotValid2[0]);
 
   gobble(new Global); // expected-error {{variable of type 'Global' only valid as global}}
   gobble(new Global[10]); // expected-error {{variable of type 'Global' only valid as global}}
   gobble(new TemplateClass<int>); // expected-error {{variable of type 'TemplateClass<int>' only valid as global}}
-  gobble(len <= 5 ? &valid : new Global); // expected-error {{variable of type 'Global' only valid as global}}
+  gobble(len <= 5 ? &notValid2 : new Global); // expected-error {{variable of type 'Global' only valid as global}}
 
   char buffer[sizeof(Global)];
   gobble(new (buffer) Global); // expected-error {{variable of type 'Global' only valid as global}}

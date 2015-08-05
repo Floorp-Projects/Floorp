@@ -6,7 +6,7 @@
 #include "gtest/gtest.h"
 #include "MP4Reader.h"
 #include "MP4Decoder.h"
-#include "SharedThreadPool.h"
+#include "mozilla/SharedThreadPool.h"
 #include "MockMediaResource.h"
 #include "MockMediaDecoderOwner.h"
 #include "mozilla/Preferences.h"

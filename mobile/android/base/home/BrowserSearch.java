@@ -51,7 +51,6 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.ViewStub;
-import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;

@@ -12,7 +12,7 @@ EXPORTS.mozilla.jni += [
     'Utils.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'Utils.cpp',
 ]
 

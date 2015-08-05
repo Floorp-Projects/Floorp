@@ -49,7 +49,7 @@ UpdategDisableXULCache()
     if (gDisableXULCache) {
         Telemetry::Accumulate(Telemetry::XUL_CACHE_DISABLED, true);
     }
-    
+
 }
 
 static void
@@ -104,7 +104,7 @@ nsXULPrototypeCache::GetInstance()
             obsSvc->AddObserver(p, "chrome-flush-caches", false);
             obsSvc->AddObserver(p, "startupcache-invalidate", false);
         }
-		
+
     }
     return sInstance;
 }
@@ -153,19 +153,19 @@ nsXULPrototypeCache::GetPrototype(nsIURI* aURI)
     rv = GetInputStream(aURI, getter_AddRefs(ois));
     if (NS_FAILED(rv))
         return nullptr;
-    
+
     nsRefPtr<nsXULPrototypeDocument> newProto;
     rv = NS_NewXULPrototypeDocument(getter_AddRefs(newProto));
     if (NS_FAILED(rv))
         return nullptr;
-    
+
     rv = newProto->Read(ois);
     if (NS_SUCCEEDED(rv)) {
         rv = PutPrototype(newProto);
     } else {
         newProto = nullptr;
     }
-    
+
     mInputStreamTable.Remove(aURI);
     return newProto;
 }
@@ -349,13 +349,13 @@ nsXULPrototypeCache::WritePrototype(nsXULPrototypeDocument* aPrototypeDocument)
 }
 
 nsresult
-nsXULPrototypeCache::GetInputStream(nsIURI* uri, nsIObjectInputStream** stream) 
+nsXULPrototypeCache::GetInputStream(nsIURI* uri, nsIObjectInputStream** stream)
 {
     nsAutoCString spec(kXULCachePrefix);
     nsresult rv = PathifyURI(uri, spec);
-    if (NS_FAILED(rv)) 
+    if (NS_FAILED(rv))
         return NS_ERROR_NOT_AVAILABLE;
-    
+
     nsAutoArrayPtr<char> buf;
     uint32_t len;
     nsCOMPtr<nsIObjectInputStream> ois;
@@ -372,7 +372,7 @@ nsXULPrototypeCache::GetInputStream(nsIURI* uri, nsIObjectInputStream** stream)
     buf.forget();
 
     mInputStreamTable.Put(uri, ois);
-    
+
     ois.forget(stream);
     return NS_OK;
 }
@@ -397,7 +397,7 @@ nsXULPrototypeCache::GetOutputStream(nsIURI* uri, nsIObjectOutputStream** stream
             = do_QueryInterface(storageStream);
         objectOutput->SetOutputStream(outputStream);
     } else {
-        rv = NewObjectOutputWrappedStorageStream(getter_AddRefs(objectOutput), 
+        rv = NewObjectOutputWrappedStorageStream(getter_AddRefs(objectOutput),
                                                  getter_AddRefs(storageStream),
                                                  false);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -408,7 +408,7 @@ nsXULPrototypeCache::GetOutputStream(nsIURI* uri, nsIObjectOutputStream** stream
 }
 
 nsresult
-nsXULPrototypeCache::FinishOutputStream(nsIURI* uri) 
+nsXULPrototypeCache::FinishOutputStream(nsIURI* uri)
 {
     nsresult rv;
     StartupCache* sc = StartupCache::GetSingleton();
@@ -422,10 +422,10 @@ nsXULPrototypeCache::FinishOutputStream(nsIURI* uri)
     nsCOMPtr<nsIOutputStream> outputStream
         = do_QueryInterface(storageStream);
     outputStream->Close();
-    
+
     nsAutoArrayPtr<char> buf;
     uint32_t len;
-    rv = NewBufferFromStorageStream(storageStream, getter_Transfers(buf), 
+    rv = NewBufferFromStorageStream(storageStream, getter_Transfers(buf),
                                     &len);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -514,16 +514,16 @@ nsXULPrototypeCache::BeginCaching(nsIURI* aURI)
         return rv;
 
     nsAutoCString fileChromePath, fileLocale;
-    
+
     nsAutoArrayPtr<char> buf;
     uint32_t len, amtRead;
     nsCOMPtr<nsIObjectInputStream> objectInput;
 
-    rv = startupCache->GetBuffer(kXULCacheInfoKey, getter_Transfers(buf), 
+    rv = startupCache->GetBuffer(kXULCacheInfoKey, getter_Transfers(buf),
                                  &len);
     if (NS_SUCCEEDED(rv))
         rv = NewObjectInputStreamFromBuffer(buf, len, getter_AddRefs(objectInput));
-    
+
     if (NS_SUCCEEDED(rv)) {
         buf.forget();
         rv = objectInput->ReadCString(fileLocale);
@@ -579,7 +579,7 @@ nsXULPrototypeCache::BeginCaching(nsIURI* aURI)
                 rv = NS_ERROR_FILE_TOO_BIG;
             }
         }
-        
+
         if (NS_SUCCEEDED(rv)) {
             buf = new char[len];
             rv = inputStream->Read(buf, len, &amtRead);

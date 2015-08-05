@@ -9,7 +9,7 @@
 #include "ContainerParser.h"
 #include "MediaData.h"
 #include "MediaSourceDecoder.h"
-#include "SharedThreadPool.h"
+#include "mozilla/SharedThreadPool.h"
 #include "mozilla/TaskQueue.h"
 #include "SourceBufferDecoder.h"
 #include "SourceBufferResource.h"

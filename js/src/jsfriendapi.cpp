@@ -18,12 +18,12 @@
 #include "jswatchpoint.h"
 #include "jsweakmap.h"
 #include "jswrapper.h"
-#include "prmjtime.h"
 
 #include "builtin/TestingFunctions.h"
 #include "js/Proxy.h"
 #include "proxy/DeadObjectProxy.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/Time.h"
 #include "vm/WeakMapObject.h"
 #include "vm/WrapperObject.h"
 

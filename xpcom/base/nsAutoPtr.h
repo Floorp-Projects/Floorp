@@ -197,19 +197,32 @@ public:
     return get();
   }
 
-  // This operator is needed for gcc <= 4.0.* and for Sun Studio; it
-  // causes internal compiler errors for some MSVC versions.  (It's not
-  // clear to me whether it should be needed.)
-#ifndef _MSC_VER
-  template <class U, class V>
-  U&
-  operator->*(U V::* aMember)
+  template <typename R, typename... Args>
+  class Proxy
+  {
+    typedef R (T::*member_function)(Args...);
+    T* mRawPtr;
+    member_function mFunction;
+  public:
+    Proxy(T* aRawPtr, member_function aFunction)
+      : mRawPtr(aRawPtr),
+        mFunction(aFunction)
+    {
+    }
+    template<typename... ActualArgs>
+    R operator()(ActualArgs&&... aArgs)
+    {
+      return ((*mRawPtr).*mFunction)(mozilla::Forward<ActualArgs>(aArgs)...);
+    }
+  };
+
+  template <typename R, typename C, typename... Args>
+  Proxy<R, Args...> operator->*(R (C::*aFptr)(Args...)) const
   {
     NS_PRECONDITION(mRawPtr != 0,
                     "You can't dereference a NULL nsAutoPtr with operator->*().");
-    return get()->*aMember;
+    return Proxy<R, Args...>(get(), aFptr);
   }
-#endif
 
   nsAutoPtr<T>*
   get_address()

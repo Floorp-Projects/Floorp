@@ -206,9 +206,7 @@ class TaskCache(CacheManager):
                 'Unknown job {job}')
             raise KeyError("Unknown job")
 
-        # Bug 1175655: it appears that the Task Cluster index only takes
-        # 12-char hex hashes.
-        key = '{rev}.{tree}.{job}'.format(rev=rev[:12], tree=tree, job=job)
+        key = '{rev}.{tree}.{job}'.format(rev=rev, tree=tree, job=job)
         try:
             namespace = 'buildbot.revisions.{key}'.format(key=key)
             task = self._index.findTask(namespace)
@@ -355,6 +353,9 @@ class Artifacts(object):
         with self._task_cache as task_cache, self._pushhead_cache as pushhead_cache:
             # with blocks handle handle persistence.
             for pushhead in pushhead_cache.pushheads(self._tree, revset):
+                self.log(logging.DEBUG, 'artifact',
+                    {'pushhead': pushhead},
+                    'Trying to find artifacts for pushhead {pushhead}.')
                 try:
                     url = task_cache.artifact_url(self._tree, self._job, pushhead)
                     break
@@ -362,6 +363,9 @@ class Artifacts(object):
                     pass
         if url:
             return self.install_from_url(url, distdir)
+        self.log(logging.ERROR, 'artifact',
+                 {'revset': revset},
+                 'No built artifacts for {revset} found.')
         return 1
 
     def install_from(self, source, distdir):

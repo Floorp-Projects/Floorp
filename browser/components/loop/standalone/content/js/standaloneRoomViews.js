@@ -151,7 +151,17 @@ loop.standaloneRoomViews = (function(mozL10n) {
             React.createElement("div", {className: "room-inner-info-area"}, 
               React.createElement("p", {className: "empty-room-message"}, 
                 mozL10n.get("rooms_only_occupant_label")
-              )
+              ), 
+              React.createElement("p", {className: "room-waiting-area"}, 
+                mozL10n.get("rooms_read_while_wait_offer"), 
+                React.createElement("a", {href: loop.config.tilesSupportUrl, 
+                  onClick: this.recordClick, 
+                  rel: "noreferrer", 
+                  target: "_blank"}, 
+                  React.createElement("i", {className: "room-waiting-help"})
+                )
+              ), 
+              React.createElement("iframe", {className: "room-waiting-tile", src: loop.config.tilesIframeUrl})
             )
           );
         }
@@ -461,13 +471,6 @@ loop.standaloneRoomViews = (function(mozL10n) {
         React.createElement("div", {className: "room-conversation-wrapper standalone-room-wrapper"}, 
           React.createElement("div", {className: "beta-logo"}), 
           React.createElement(StandaloneRoomHeader, {dispatcher: this.props.dispatcher}), 
-          React.createElement(StandaloneRoomInfoArea, {activeRoomStore: this.props.activeRoomStore, 
-                                  dispatcher: this.props.dispatcher, 
-                                  failureReason: this.state.failureReason, 
-                                  isFirefox: this.props.isFirefox, 
-                                  joinRoom: this.joinRoom, 
-                                  roomState: this.state.roomState, 
-                                  roomUsed: this.state.used}), 
           React.createElement(sharedViews.MediaLayoutView, {
             dispatcher: this.props.dispatcher, 
             displayScreenShare: displayScreenShare, 
@@ -484,7 +487,15 @@ loop.standaloneRoomViews = (function(mozL10n) {
             screenSharePosterUrl: this.props.screenSharePosterUrl, 
             screenShareVideoObject: this.state.screenShareVideoObject, 
             showContextRoomName: true, 
-            useDesktopPaths: false}), 
+            useDesktopPaths: false}, 
+            React.createElement(StandaloneRoomInfoArea, {activeRoomStore: this.props.activeRoomStore, 
+              dispatcher: this.props.dispatcher, 
+              failureReason: this.state.failureReason, 
+              isFirefox: this.props.isFirefox, 
+              joinRoom: this.joinRoom, 
+              roomState: this.state.roomState, 
+              roomUsed: this.state.used})
+          ), 
           React.createElement(sharedViews.ConversationToolbar, {
             audio: {enabled: !this.state.audioMuted,
                     visible: this._roomIsActive()}, 
