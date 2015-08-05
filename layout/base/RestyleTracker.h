@@ -17,6 +17,7 @@
 #include "mozilla/SplayTree.h"
 #include "mozilla/RestyleLogging.h"
 #include "GeckoProfiler.h"
+#include "mozilla/Maybe.h"
 
 #if defined(MOZ_ENABLE_PROFILER_SPS) && !defined(MOZILLA_XPCOMRT_API)
 #include "ProfilerBacktrace.h"
@@ -256,10 +257,19 @@ public:
   /**
    * Add a restyle for the given element to the tracker.  Returns true
    * if the element already had eRestyle_LaterSiblings set on it.
+   *
+   * aRestyleRoot is the closest restyle root for aElement.  If the caller
+   * does not know what the closest restyle root is, Nothing should be
+   * passed.  A Some(nullptr) restyle root can be passed if there is no
+   * ancestor element that is a restyle root.
    */
   bool AddPendingRestyle(Element* aElement, nsRestyleHint aRestyleHint,
                          nsChangeHint aMinChangeHint,
-                         const RestyleHintData* aRestyleHintData = nullptr);
+                         const RestyleHintData* aRestyleHintData = nullptr,
+                         mozilla::Maybe<Element*> aRestyleRoot =
+                           mozilla::Nothing());
+
+  Element* FindClosestRestyleRoot(Element* aElement);
 
   /**
    * Process the restyles we've been tracking.
@@ -437,11 +447,40 @@ RestyleTracker::AddPendingRestyleToTable(Element* aElement,
   return hadRestyleLaterSiblings;
 }
 
+inline mozilla::dom::Element*
+RestyleTracker::FindClosestRestyleRoot(Element* aElement)
+{
+  Element* cur = aElement;
+  while (!cur->HasFlag(RootBit())) {
+    nsIContent* parent = cur->GetFlattenedTreeParent();
+    // Stop if we have no parent or the parent is not an element or
+    // we're part of the viewport scrollbars (because those are not
+    // frametree descendants of the primary frame of the root
+    // element).
+    // XXXbz maybe the primary frame of the root should be the root scrollframe?
+    if (!parent || !parent->IsElement() ||
+        // If we've hit the root via a native anonymous kid and that
+        // this native anonymous kid is not obviously a descendant
+        // of the root's primary frame, assume we're under the root
+        // scrollbars.  Since those don't get reresolved when
+        // reresolving the root, we need to make sure to add the
+        // element to mRestyleRoots.
+        (cur->IsInNativeAnonymousSubtree() && !parent->GetParent() &&
+         cur->GetPrimaryFrame() &&
+         cur->GetPrimaryFrame()->GetParent() != parent->GetPrimaryFrame())) {
+      return nullptr;
+    }
+    cur = parent->AsElement();
+  }
+  return cur;
+}
+
 inline bool
 RestyleTracker::AddPendingRestyle(Element* aElement,
                                   nsRestyleHint aRestyleHint,
                                   nsChangeHint aMinChangeHint,
-                                  const RestyleHintData* aRestyleHintData)
+                                  const RestyleHintData* aRestyleHintData,
+                                  mozilla::Maybe<Element*> aRestyleRoot)
 {
   bool hadRestyleLaterSiblings =
     AddPendingRestyleToTable(aElement, aRestyleHint, aMinChangeHint,
@@ -452,29 +491,11 @@ RestyleTracker::AddPendingRestyle(Element* aElement,
   // ReResolveStyleContext on it or just reframe it).
   if ((aRestyleHint & ~eRestyle_LaterSiblings) ||
       (aMinChangeHint & nsChangeHint_ReconstructFrame)) {
-    Element* cur = aElement;
-    while (!cur->HasFlag(RootBit())) {
-      nsIContent* parent = cur->GetFlattenedTreeParent();
-      // Stop if we have no parent or the parent is not an element or
-      // we're part of the viewport scrollbars (because those are not
-      // frametree descendants of the primary frame of the root
-      // element).
-      // XXXbz maybe the primary frame of the root should be the root scrollframe?
-      if (!parent || !parent->IsElement() ||
-          // If we've hit the root via a native anonymous kid and that
-          // this native anonymous kid is not obviously a descendant
-          // of the root's primary frame, assume we're under the root
-          // scrollbars.  Since those don't get reresolved when
-          // reresolving the root, we need to make sure to add the
-          // element to mRestyleRoots.
-          (cur->IsInNativeAnonymousSubtree() && !parent->GetParent() &&
-           cur->GetPrimaryFrame() &&
-           cur->GetPrimaryFrame()->GetParent() != parent->GetPrimaryFrame())) {
-        mRestyleRoots.AppendElement(aElement);
-        cur = aElement;
-        break;
-      }
-      cur = parent->AsElement();
+    Element* cur =
+      aRestyleRoot ? *aRestyleRoot : FindClosestRestyleRoot(aElement);
+    if (!cur) {
+      mRestyleRoots.AppendElement(aElement);
+      cur = aElement;
     }
     // At this point some ancestor of aElement (possibly aElement
     // itself) is in mRestyleRoots.  Set the root bit on aElement, to
