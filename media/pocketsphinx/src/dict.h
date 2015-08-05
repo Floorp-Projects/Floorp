@@ -44,6 +44,7 @@
 
 /* SphinxBase headers. */
 #include <sphinxbase/hash_table.h>
+#include <sphinxbase/ngram_model.h>
 
 /* Local headers. */
 #include "s3types.h"
@@ -86,8 +87,21 @@ typedef struct {
     s3wid_t finishwid;	/**< FOR INTERNAL-USE ONLY */
     s3wid_t silwid;	/**< FOR INTERNAL-USE ONLY */
     int nocase;
+    ngram_model_t *ngram_g2p_model;
 } dict_t;
 
+struct winner_t
+{
+    size_t length_match;
+    int winner_wid;
+    size_t len_phoneme;
+};
+
+typedef struct
+{
+    char *word;
+    char *phone;
+} unigram_t;
 
 /**
  * Initialize a new dictionary.
@@ -101,7 +115,8 @@ typedef struct {
  * Return ptr to dict_t if successful, NULL otherwise.
  */
 dict_t *dict_init(cmd_ln_t *config, /**< Configuration (-dict, -fdict, -dictcase) or NULL */
-                  bin_mdef_t *mdef  /**< For looking up CI phone IDs (or NULL) */
+                  bin_mdef_t *mdef,  /**< For looking up CI phone IDs (or NULL) */
+                  logmath_t *logmath // To load ngram_model for g2p load. logmath must be retained with logmath_retain() if it is to be used elsewhere.
     );
 
 /**
@@ -202,6 +217,9 @@ int dict_free(dict_t *d);
 /** Report a dictionary structure */
 void dict_report(dict_t *d /**< A dictionary structure */
     );
+
+// g2p functions
+int dict_add_g2p_word(dict_t * dict, char const *word);
 
 #ifdef __cplusplus
 }
