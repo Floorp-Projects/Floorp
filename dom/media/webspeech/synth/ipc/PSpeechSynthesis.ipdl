@@ -15,6 +15,7 @@ struct RemoteVoice {
   nsString name;
   nsString lang;
   bool localService;
+  bool queued;
 };
 
 sync protocol PSpeechSynthesis

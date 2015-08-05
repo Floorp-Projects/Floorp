@@ -278,8 +278,11 @@ SapiService::RegisterVoices()
     uri.AppendLiteral("?");
     uri.Append(locale);
 
+    // This service can only speak one utterance at a time, se we set
+    // aQueuesUtterances to true in order to track global state and schedule
+    // access to this service.
     rv = registry->AddVoice(this, uri, nsDependentString(description), locale,
-                            true);
+                            true, true);
     CoTaskMemFree(description);
     if (NS_FAILED(rv)) {
       continue;
