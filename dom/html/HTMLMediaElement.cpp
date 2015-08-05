@@ -4509,6 +4509,11 @@ void HTMLMediaElement::UpdateAudioChannelPlayingState()
 void
 HTMLMediaElement::NotifyAudioChannelAgent(bool aPlaying)
 {
+  // Don't do anything if this element doesn't have any audio tracks.
+  if (!HasAudio()) {
+    return;
+  }
+
   // Immediately check if this should go to the MSG instead of the normal
   // media playback route.
   WindowAudioCaptureChanged();
