@@ -670,8 +670,7 @@ WinUtils::GetRegistryKey(HKEY aRoot,
     ::RegQueryValueExW(key, aValueName, nullptr, &type, (BYTE*) aBuffer,
                        &aBufferLength);
   ::RegCloseKey(key);
-  if (result != ERROR_SUCCESS ||
-      (type != REG_SZ && type != REG_EXPAND_SZ)) {
+  if (result != ERROR_SUCCESS || type != REG_SZ) {
     return false;
   }
   if (aBuffer) {
