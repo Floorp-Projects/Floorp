@@ -1512,11 +1512,16 @@
             // Make sure the browser is destroyed so it unregisters from observer notifications
             aBrowser.destroy();
 
+            // Make sure to restore the original droppedLinkHandler.
+            let droppedLinkHandler = aBrowser.droppedLinkHandler;
+
             // Change the "remote" attribute.
             let parent = aBrowser.parentNode;
             parent.removeChild(aBrowser);
             aBrowser.setAttribute("remote", aShouldBeRemote ? "true" : "false");
             parent.appendChild(aBrowser);
+
+            aBrowser.droppedLinkHandler = droppedLinkHandler;
 
             // Switching a browser's remoteness will create a new frameLoader.
             // As frameLoaders start out with an active docShell we have to
