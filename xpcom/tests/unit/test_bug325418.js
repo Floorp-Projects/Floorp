@@ -52,10 +52,12 @@ function run_test() {
 
   // Initialize the timer (with some delay), then cancel it.
   gStartTime1 = Date.now();
-  timer.init(observer1, kExpectedDelay1 * 1000, timer.TYPE_REPEATING_PRECISE);
+  timer.init(observer1, kExpectedDelay1 * 1000,
+             timer.TYPE_REPEATING_PRECISE_CAN_SKIP);
   timer.cancel();
 
   // Re-initialize the timer (with a different delay).
   gStartTime2 = Date.now();
-  timer.init(observer2, kExpectedDelay2 * 1000, timer.TYPE_REPEATING_PRECISE);
+  timer.init(observer2, kExpectedDelay2 * 1000,
+             timer.TYPE_REPEATING_PRECISE_CAN_SKIP);
 }
