@@ -52,6 +52,9 @@
  */
 #  define MOZ_HAVE_NEVER_INLINE          __declspec(noinline)
 #  define MOZ_HAVE_NORETURN              __declspec(noreturn)
+#  if _MSC_VER >= 1900
+#    define MOZ_HAVE_EXPLICIT_CONVERSION
+#  endif
 #  ifdef __clang__
      /* clang-cl probably supports constexpr and explicit conversions. */
 #    if __has_extension(cxx_constexpr)
