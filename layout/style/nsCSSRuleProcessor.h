@@ -144,7 +144,9 @@ public:
   virtual bool HasDocumentStateDependentStyle(StateRuleProcessorData* aData) override;
 
   virtual nsRestyleHint
-    HasAttributeDependentStyle(AttributeRuleProcessorData* aData) override;
+    HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
+                               mozilla::RestyleHintData& aRestyleHintDataResult)
+                                 override;
 
   virtual bool MediumFeaturesChanged(nsPresContext* aPresContext) override;
 
