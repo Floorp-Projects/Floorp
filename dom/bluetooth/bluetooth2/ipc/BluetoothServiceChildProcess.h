@@ -129,9 +129,6 @@ public:
              uint16_t aServiceUuid,
              BluetoothReplyRunnable* aRunnable) override;
 
-  virtual bool
-  IsConnected(uint16_t aServiceUuid) override;
-
   virtual void
   SendFile(const nsAString& aDeviceAddress,
            BlobParent* aBlobParent,
