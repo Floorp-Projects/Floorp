@@ -7876,7 +7876,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 4,
-    "description": "Tracking protection shield (0 = not shown, 1 = loaded, 2 = blocked, 3 = due to mixed content"
+    "description": "Tracking protection shield (0 = not shown, 1 = loaded, 2 = blocked)"
   },
   "TRACKING_PROTECTION_EVENTS": {
     "expires_in_version": "never",

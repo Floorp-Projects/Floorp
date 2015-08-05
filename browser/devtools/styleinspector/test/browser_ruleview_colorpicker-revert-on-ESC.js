@@ -6,33 +6,32 @@
 
 // Test that a color change in the color picker is reverted when ESC is pressed
 
-const PAGE_CONTENT = [
-  '<style type="text/css">',
-  '  body {',
-  '    background-color: #ededed;',
-  '  }',
-  '</style>',
-  'Testing the color picker tooltip!'
+let TEST_URI = [
+  "<style type='text/css'>",
+  "  body {",
+  "    background-color: #EDEDED;",
+  "  }",
+  "</style>",
 ].join("\n");
 
 add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8,rule view color picker tooltip test");
-  content.document.body.innerHTML = PAGE_CONTENT;
-  let {toolbox, inspector, view} = yield openRuleView();
-
-  let swatch = getRuleViewProperty(view, "body", "background-color").valueSpan
-    .querySelector(".ruleview-colorswatch");
-  yield testPressingEscapeRevertsChanges(swatch, view);
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {view} = yield openRuleView();
+  yield testPressingEscapeRevertsChanges(view);
+  yield testPressingEscapeRevertsChangesAndDisables(view);
 });
 
-function* testPressingEscapeRevertsChanges(swatch, ruleView) {
-  let cPicker = ruleView.tooltips.colorPicker;
+function* testPressingEscapeRevertsChanges(view) {
+  let ruleEditor = getRuleViewRuleEditor(view, 1);
+  let propEditor = ruleEditor.rule.textProps[0].editor;
+  let swatch = propEditor.valueSpan.querySelector(".ruleview-colorswatch");
+  let cPicker = view.tooltips.colorPicker;
 
   let onShown = cPicker.tooltip.once("shown");
   swatch.click();
   yield onShown;
 
-  yield simulateColorPickerChange(ruleView, cPicker, [0, 0, 0, 1], {
+  yield simulateColorPickerChange(view, cPicker, [0, 0, 0, 1], {
     element: content.document.body,
     name: "backgroundColor",
     value: "rgb(0, 0, 0)"
@@ -40,17 +39,83 @@ function* testPressingEscapeRevertsChanges(swatch, ruleView) {
 
   is(swatch.style.backgroundColor, "rgb(0, 0, 0)",
     "The color swatch's background was updated");
-  is(getRuleViewProperty(ruleView, "body", "background-color").valueSpan.textContent,
-    "#000", "The text of the background-color css property was updated");
+  is(propEditor.valueSpan.textContent, "#000",
+    "The text of the background-color css property was updated");
 
   let spectrum = yield cPicker.spectrum;
 
-  // ESC out of the color picker
+  info("Pressing ESCAPE to close the tooltip");
   let onHidden = cPicker.tooltip.once("hidden");
   EventUtils.sendKey("ESCAPE", spectrum.element.ownerDocument.defaultView);
   yield onHidden;
+  yield ruleEditor.rule._applyingModifications;
 
-  yield waitForSuccess(() => {
-    return content.getComputedStyle(content.document.body).backgroundColor === "rgb(237, 237, 237)";
-  }, "The element's background-color was reverted");
+  yield waitForComputedStyleProperty("body", null, "background-color",
+    "rgb(237, 237, 237)");
+  is(propEditor.valueSpan.textContent, "#EDEDED",
+    "Got expected property value.");
+}
+
+function* testPressingEscapeRevertsChangesAndDisables(view) {
+  let ruleEditor = getRuleViewRuleEditor(view, 1);
+  let propEditor = ruleEditor.rule.textProps[0].editor;
+  let swatch = propEditor.valueSpan.querySelector(".ruleview-colorswatch");
+  let cPicker = view.tooltips.colorPicker;
+
+  info("Disabling background-color property");
+  propEditor.enable.click();
+  yield ruleEditor.rule._applyingModifications;
+
+  ok(propEditor.element.classList.contains("ruleview-overridden"),
+    "property is overridden.");
+  is(propEditor.enable.style.visibility, "visible",
+    "property enable checkbox is visible.");
+  ok(!propEditor.enable.getAttribute("checked"),
+    "property enable checkbox is not checked.");
+  ok(!propEditor.prop.enabled,
+    "background-color property is disabled.");
+  let newValue = yield getRulePropertyValue("background-color");
+  is(newValue, "", "background-color should have been unset.");
+
+  let onShown = cPicker.tooltip.once("shown");
+  swatch.click();
+  yield onShown;
+
+  ok(!propEditor.element.classList.contains("ruleview-overridden"),
+    "property overridden is not displayed.");
+  is(propEditor.enable.style.visibility, "hidden",
+    "property enable checkbox is hidden.");
+
+  let spectrum = yield cPicker.spectrum;
+  info("Simulating a color picker change in the widget");
+  spectrum.rgb = [0, 0, 0, 1];
+  yield ruleEditor.rule._applyingModifications;
+
+  info("Pressing ESCAPE to close the tooltip");
+  let onHidden = cPicker.tooltip.once("hidden");
+  EventUtils.sendKey("ESCAPE", spectrum.element.ownerDocument.defaultView);
+  yield onHidden;
+  yield ruleEditor.rule._applyingModifications;
+
+  ok(propEditor.element.classList.contains("ruleview-overridden"),
+    "property is overridden.");
+  is(propEditor.enable.style.visibility, "visible",
+    "property enable checkbox is visible.");
+  ok(!propEditor.enable.getAttribute("checked"),
+    "property enable checkbox is not checked.");
+  ok(!propEditor.prop.enabled,
+    "background-color property is disabled.");
+  newValue = yield getRulePropertyValue("background-color");
+  is(newValue, "", "background-color should have been unset.");
+  is(propEditor.valueSpan.textContent, "#EDEDED",
+    "Got expected property value.");
+}
+
+function* getRulePropertyValue(name) {
+  let propValue = yield executeInContent("Test:GetRulePropertyValue", {
+    styleSheetIndex: 0,
+    ruleIndex: 0,
+    name: name
+  });
+  return propValue;
 }

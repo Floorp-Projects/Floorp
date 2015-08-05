@@ -16,6 +16,6 @@
         android:layout_width="16dp"
         android:layout_height="16dp"
         android:layout_gravity="center"
-        android:scaleType="fitCenter"/>
+        android:scaleType="fitXY"/>
 
 </FrameLayout>
