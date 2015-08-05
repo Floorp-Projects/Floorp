@@ -15,8 +15,10 @@
 #include "mozilla/Preferences.h"
 
 #include "nsIObserver.h"
+#include "nsIEventListenerService.h"
 
 class nsImageFrame;
+class nsIArray;
 class nsIPersistentProperties;
 class nsPluginFrame;
 class nsITreeView;
@@ -67,11 +69,15 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
                                      public mozilla::a11y::FocusManager,
                                      public mozilla::a11y::SelectionManager,
                                      public nsIAccessibilityService,
+                                     public nsIListenerChangeListener,
                                      public nsIObserver
 {
 public:
   typedef mozilla::a11y::Accessible Accessible;
   typedef mozilla::a11y::DocAccessible DocAccessible;
+
+  // nsIListenerChangeListener
+  NS_IMETHOD ListenersChanged(nsIArray* aEventChanges) override;
 
 protected:
   virtual ~nsAccessibilityService();
