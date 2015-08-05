@@ -65,6 +65,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
                                   implements Animation.AnimationListener {
 
     private static final String LOGTAG = "GeckoToolbarDisplayLayout";
+    private boolean mTrackingProtectionEnabled;
 
     // To be used with updateFromTab() to allow the caller
     // to give enough context for the requested state change.
@@ -205,7 +206,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
                     // immediately based on the stopped tab.
                     final Tab tab = mStopListener.onStop();
                     if (tab != null) {
-                        updateUiMode(tab, UIMode.DISPLAY, EnumSet.noneOf(UpdateFlags.class));
+                        updateUiMode(UIMode.DISPLAY, EnumSet.noneOf(UpdateFlags.class));
                     }
                 }
             }
@@ -457,16 +458,22 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
             mSiteSecurity.setImageLevel(mSecurityImageLevel);
             updatePageActions(flags);
         }
+
+        mTrackingProtectionEnabled = trackingMode == TrackingMode.TRACKING_CONTENT_BLOCKED;
     }
 
     private void updateProgress(Tab tab, EnumSet<UpdateFlags> flags) {
         final boolean shouldShowThrobber = (tab != null &&
                                             tab.getState() == Tab.STATE_LOADING);
 
-        updateUiMode(tab, shouldShowThrobber ? UIMode.PROGRESS : UIMode.DISPLAY, flags);
+        updateUiMode(shouldShowThrobber ? UIMode.PROGRESS : UIMode.DISPLAY, flags);
+
+        if (Tab.STATE_SUCCESS == tab.getState() && mTrackingProtectionEnabled) {
+            mActivity.showTrackingProtectionPromptIfApplicable();
+        }
     }
 
-    private void updateUiMode(Tab tab, UIMode uiMode, EnumSet<UpdateFlags> flags) {
+    private void updateUiMode(UIMode uiMode, EnumSet<UpdateFlags> flags) {
         if (mUiMode == uiMode) {
             return;
         }

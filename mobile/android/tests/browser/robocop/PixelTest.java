@@ -63,11 +63,6 @@ abstract class PixelTest extends BaseTest {
         tabEventExpecter.blockForEvent();
         contentEventExpecter.blockForEvent();
 
-        if (isPrivate) {
-            waitForText(mStringHelper.TRACKING_PROTECTION_PROMPT_TITLE);
-            mSolo.clickOnText(mStringHelper.TRACKING_PROTECTION_PROMPT_BUTTON);
-        }
-
         waitForText(mStringHelper.TITLE_PLACE_HOLDER);
         loadAndPaint(url);
         tabEventExpecter.unregisterListener();
