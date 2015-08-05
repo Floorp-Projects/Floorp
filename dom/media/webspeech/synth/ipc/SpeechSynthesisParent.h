@@ -28,8 +28,6 @@ public:
                               InfallibleTArray<nsString>* aDefaults,
                               bool* aIsSpeaking) override;
 
-  bool RecvDropGlobalQueue() override;
-
 protected:
   SpeechSynthesisParent();
   virtual ~SpeechSynthesisParent();
@@ -69,6 +67,8 @@ protected:
   virtual bool RecvResume() override;
 
   virtual bool RecvCancel() override;
+
+  virtual bool RecvForceEnd() override;
 };
 
 class SpeechTaskParent : public nsSpeechTask

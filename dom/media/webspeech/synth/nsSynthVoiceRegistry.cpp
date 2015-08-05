@@ -757,17 +757,6 @@ nsSynthVoiceRegistry::SetIsSpeaking(bool aIsSpeaking)
 }
 
 void
-nsSynthVoiceRegistry::DropGlobalQueue()
-{
-  if (XRE_IsParentProcess()) {
-    mGlobalQueue.Clear();
-    SetIsSpeaking(false);
-  } else {
-    mSpeechSynthChild->SendDropGlobalQueue();
-  }
-}
-
-void
 nsSynthVoiceRegistry::SpeakImpl(VoiceData* aVoice,
                                 nsSpeechTask* aTask,
                                 const nsAString& aText,

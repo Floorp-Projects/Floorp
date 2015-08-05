@@ -21,6 +21,8 @@ async protocol PSpeechSynthesisRequest
 
   Cancel();
 
+  ForceEnd();
+
  child:
 
   __delete__(bool aIsError, float aElapsedTime, uint32_t aCharIndex);

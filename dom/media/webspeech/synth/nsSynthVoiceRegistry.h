@@ -52,8 +52,6 @@ public:
 
   void SetIsSpeaking(bool aIsSpeaking);
 
-  void DropGlobalQueue();
-
   static nsSynthVoiceRegistry* GetInstance();
 
   static already_AddRefed<nsSynthVoiceRegistry> GetInstanceForService();
