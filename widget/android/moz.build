@@ -22,7 +22,7 @@ EXPORTS += [
     'GeneratedJNIWrappers.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'AndroidBridge.cpp',
     'AndroidContentController.cpp',
     'AndroidDirectTexture.cpp',

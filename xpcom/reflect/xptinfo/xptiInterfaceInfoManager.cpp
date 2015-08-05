@@ -202,7 +202,6 @@ XPTInterfaceInfoManager::GetInterfaceEntryForIID(const nsIID *iid)
     return mWorkingSet.mIIDTable.Get(*iid);
 }
 
-/* nsIInterfaceInfo getInfoForIID (in nsIIDPtr iid); */
 NS_IMETHODIMP
 XPTInterfaceInfoManager::GetInfoForIID(const nsIID * iid, nsIInterfaceInfo **_retval)
 {
@@ -214,7 +213,6 @@ XPTInterfaceInfoManager::GetInfoForIID(const nsIID * iid, nsIInterfaceInfo **_re
     return EntryToInfo(entry, _retval);
 }
 
-/* nsIInterfaceInfo getInfoForName (in string name); */
 NS_IMETHODIMP
 XPTInterfaceInfoManager::GetInfoForName(const char *name, nsIInterfaceInfo **_retval)
 {
@@ -226,7 +224,6 @@ XPTInterfaceInfoManager::GetInfoForName(const char *name, nsIInterfaceInfo **_re
     return EntryToInfo(entry, _retval);
 }
 
-/* nsIIDPtr getIIDForName (in string name); */
 NS_IMETHODIMP
 XPTInterfaceInfoManager::GetIIDForName(const char *name, nsIID * *_retval)
 {
@@ -243,7 +240,6 @@ XPTInterfaceInfoManager::GetIIDForName(const char *name, nsIID * *_retval)
     return entry->GetIID(_retval);
 }
 
-/* string getNameForIID (in nsIIDPtr iid); */
 NS_IMETHODIMP
 XPTInterfaceInfoManager::GetNameForIID(const nsIID * iid, char **_retval)
 {
@@ -260,7 +256,6 @@ XPTInterfaceInfoManager::GetNameForIID(const nsIID * iid, char **_retval)
     return entry->GetName(_retval);
 }
 
-/* nsIEnumerator enumerateInterfaces (); */
 void
 XPTInterfaceInfoManager::GetScriptableInterfaces(nsCOMArray<nsIInterfaceInfo>& aInterfaces)
 {
@@ -280,7 +275,6 @@ XPTInterfaceInfoManager::GetScriptableInterfaces(nsCOMArray<nsIInterfaceInfo>& a
     }
 }
 
-/* nsIEnumerator enumerateInterfacesWhoseNamesStartWith (in string prefix); */
 NS_IMETHODIMP
 XPTInterfaceInfoManager::EnumerateInterfacesWhoseNamesStartWith(const char *prefix, nsIEnumerator **_retval)
 {
@@ -305,7 +299,6 @@ XPTInterfaceInfoManager::EnumerateInterfacesWhoseNamesStartWith(const char *pref
     return array->Enumerate(_retval);
 }
 
-/* void autoRegisterInterfaces (); */
 NS_IMETHODIMP
 XPTInterfaceInfoManager::AutoRegisterInterfaces()
 {

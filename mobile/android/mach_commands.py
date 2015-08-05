@@ -138,6 +138,9 @@ class MachCommands(MachCommandBase):
         srcdir('base/src/main/java/org/mozilla/mozstumbler', 'mobile/android/stumbler/java/org/mozilla/mozstumbler')
         srcdir('base/src/main/java/org/mozilla/search', 'mobile/android/search/java/org/mozilla/search')
         srcdir('base/src/main/java/org/mozilla/javaaddons', 'mobile/android/javaaddons/java/org/mozilla/javaaddons')
+        srcdir('base/src/webrtc_audio_device/java', 'media/webrtc/trunk/webrtc/modules/audio_device/android/java/src')
+        srcdir('base/src/webrtc_video_capture/java', 'media/webrtc/trunk/webrtc/modules/video_capture/android/java/src')
+        srcdir('base/src/webrtc_video_render/java', 'media/webrtc/trunk/webrtc/modules/video_render/android/java/src')
         srcdir('base/src/main/res', 'mobile/android/base/resources')
         srcdir('base/src/crashreporter/res', 'mobile/android/base/crashreporter/res')
 

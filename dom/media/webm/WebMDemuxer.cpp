@@ -12,7 +12,7 @@
 #include "WebMBufferedParser.h"
 #include "gfx2DGlue.h"
 #include "mozilla/Preferences.h"
-#include "SharedThreadPool.h"
+#include "mozilla/SharedThreadPool.h"
 #include "MediaDataDemuxer.h"
 #include "nsAutoRef.h"
 #include "NesteggPacketHolder.h"

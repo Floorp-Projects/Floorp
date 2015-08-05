@@ -5,7 +5,7 @@
 
 const URL_LABEL_TOOLTIP = L10N.getStr("table.url.tooltiptext");
 const OPTIMIZATION_FAILURE = L10N.getStr("jit.optimizationFailure");
-const JIT_SAMPLES = L10N.getStr("jit.samples2");
+const JIT_SAMPLES = L10N.getStr("jit.samples");
 const JIT_EMPTY_TEXT = L10N.getStr("jit.empty");
 const PROPNAME_MAX_LENGTH = 4;
 

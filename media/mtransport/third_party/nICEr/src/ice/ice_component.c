@@ -237,6 +237,10 @@ static int nr_ice_component_initialize_udp(struct nr_ice_ctx_ *ctx,nr_ice_compon
 
       /* And a srvrflx candidate for each STUN server */
       for(j=0;j<ctx->stun_server_ct;j++){
+        /* Skip non-UDP */
+        if(ctx->stun_servers[j].transport!=IPPROTO_UDP)
+          continue;
+
         if(r=nr_ice_candidate_create(ctx,component,
           isock,sock,SERVER_REFLEXIVE,0,
           &ctx->stun_servers[j],component->component_id,&cand))

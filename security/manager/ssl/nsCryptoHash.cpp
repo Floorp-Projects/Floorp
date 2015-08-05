@@ -256,7 +256,6 @@ nsCryptoHMAC::destructorSafeDestroyNSSReference()
   mHMACContext = nullptr;
 }
 
-/* void init (in unsigned long aAlgorithm, in nsIKeyObject aKeyObject); */
 NS_IMETHODIMP
 nsCryptoHMAC::Init(uint32_t aAlgorithm, nsIKeyObject *aKeyObject)
 {
@@ -318,7 +317,6 @@ nsCryptoHMAC::Init(uint32_t aAlgorithm, nsIKeyObject *aKeyObject)
   return NS_OK;
 }
 
-/* void update ([array, size_is (aLen), const] in octet aData, in unsigned long aLen); */
 NS_IMETHODIMP
 nsCryptoHMAC::Update(const uint8_t *aData, uint32_t aLen)
 {
@@ -339,7 +337,6 @@ nsCryptoHMAC::Update(const uint8_t *aData, uint32_t aLen)
   return NS_OK;
 }
 
-/* void updateFromStream (in nsIInputStream aStream, in unsigned long aLen); */
 NS_IMETHODIMP
 nsCryptoHMAC::UpdateFromStream(nsIInputStream *aStream, uint32_t aLen)
 {
@@ -396,7 +393,6 @@ nsCryptoHMAC::UpdateFromStream(nsIInputStream *aStream, uint32_t aLen)
   return rv;
 }
 
-/* ACString finish (in bool aASCII); */
 NS_IMETHODIMP
 nsCryptoHMAC::Finish(bool aASCII, nsACString & _retval)
 {
@@ -429,7 +425,6 @@ nsCryptoHMAC::Finish(bool aASCII, nsACString & _retval)
   return NS_OK;
 }
 
-/* void reset (); */
 NS_IMETHODIMP
 nsCryptoHMAC::Reset()
 {

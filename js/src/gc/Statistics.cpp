@@ -17,12 +17,12 @@
 
 #include "jsprf.h"
 #include "jsutil.h"
-#include "prmjtime.h"
 
 #include "gc/Memory.h"
 #include "vm/Debugger.h"
 #include "vm/HelperThreads.h"
 #include "vm/Runtime.h"
+#include "vm/Time.h"
 
 using namespace js;
 using namespace js::gc;

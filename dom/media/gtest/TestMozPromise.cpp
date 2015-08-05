@@ -9,7 +9,7 @@
 #include "mozilla/MozPromise.h"
 
 #include "nsISupportsImpl.h"
-#include "SharedThreadPool.h"
+#include "mozilla/SharedThreadPool.h"
 #include "VideoUtils.h"
 
 using namespace mozilla;

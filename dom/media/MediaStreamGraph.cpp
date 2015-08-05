@@ -326,14 +326,6 @@ MediaStreamGraphImpl::StreamTimeToGraphTime(MediaStream* aStream,
 }
 
 GraphTime
-MediaStreamGraphImpl::GetAudioPosition(MediaStream* aStream)
-{
-  /* This is correlated to the audio clock when using an AudioCallbackDriver,
-   * and is using a system timer otherwise. */
-  return IterationEnd();
-}
-
-GraphTime
 MediaStreamGraphImpl::IterationEnd() const
 {
   return CurrentDriver()->IterationEnd();
@@ -408,9 +400,8 @@ MediaStreamGraphImpl::UpdateCurrentTimeForStreams(GraphTime aPrevCurrentTime,
 
       stream->AdvanceTimeVaryingValuesToCurrentTime(aNextCurrentTime,
                                                     blockedTime);
-      // Advance mBlocked last so that implementations of
-      // AdvanceTimeVaryingValuesToCurrentTime can rely on the value of
-      // mBlocked.
+      // Advance mBlocked last so that AdvanceTimeVaryingValuesToCurrentTime
+      // can rely on the value of mBlocked.
       stream->mBlocked.AdvanceCurrentTime(aNextCurrentTime);
 
       if (runningAndSuspendedPair[array] == &mStreams) {
@@ -1228,7 +1219,6 @@ MediaStreamGraphImpl::PrepareUpdatesToMainThreadState(bool aFinalUpdate)
         continue;
       }
       StreamUpdate* update = mStreamUpdates.AppendElement();
-      update->mGraphUpdateIndex = stream->mGraphUpdateIndices.GetAt(IterationEnd());
       update->mStream = stream;
       update->mNextMainThreadCurrentTime =
         GraphTimeToStreamTime(stream, IterationEnd());
@@ -1304,7 +1294,6 @@ MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecision)
   // batch corresponding to an event loop task). This isolates the performance
   // of different scripts to some extent.
   for (uint32_t i = 0; i < mFrontMessageQueue.Length(); ++i) {
-    mProcessingGraphUpdateIndex = mFrontMessageQueue[i].mGraphUpdateIndex;
     nsTArray<nsAutoPtr<ControlMessage> >& messages = mFrontMessageQueue[i].mMessages;
 
     for (uint32_t j = 0; j < messages.Length(); ++j) {
@@ -1452,16 +1441,17 @@ MediaStreamGraphImpl::OneIteration(GraphTime aFrom, GraphTime aTo,
 
   UpdateCurrentTimeForStreams(aFrom, aTo);
 
-  UpdateGraph(aStateEnd);
+  GraphTime stateEnd = std::min(aStateEnd, mEndTime);
+  UpdateGraph(stateEnd);
 
-  Process(aStateFrom, aStateEnd);
+  Process(aStateFrom, stateEnd);
 
   // Send updates to the main thread and wait for the next control loop
   // iteration.
   {
     MonitorAutoLock lock(mMonitor);
     bool finalUpdate = mForceShutDown ||
-      (IterationEnd() >= mEndTime && AllFinishedStreamsNotified()) ||
+      (stateEnd >= mEndTime && AllFinishedStreamsNotified()) ||
       (IsEmpty() && mBackMessageQueue.IsEmpty());
     PrepareUpdatesToMainThreadState(finalUpdate);
     if (finalUpdate) {
@@ -1687,8 +1677,6 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
       if (mLifecycleState <= LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP) {
         MessageBlock* block = mBackMessageQueue.AppendElement();
         block->mMessages.SwapElements(mCurrentTaskMessageQueue);
-        block->mGraphUpdateIndex = mNextGraphUpdateIndex;
-        ++mNextGraphUpdateIndex;
         EnsureNextIterationLocked();
       }
 
@@ -1855,7 +1843,6 @@ MediaStream::MediaStream(DOMMediaStream* aWrapper)
   : mBufferStartTime(0)
   , mExplicitBlockerCount(0)
   , mBlocked(false)
-  , mGraphUpdateIndices(0)
   , mFinished(false)
   , mNotifiedFinished(false)
   , mNotifiedBlocked(false)
@@ -1900,7 +1887,6 @@ MediaStream::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   amount += mMainThreadListeners.ShallowSizeOfExcludingThis(aMallocSizeOf);
   amount += mDisabledTrackIDs.ShallowSizeOfExcludingThis(aMallocSizeOf);
   amount += mBlocked.SizeOfExcludingThis(aMallocSizeOf);
-  amount += mGraphUpdateIndices.SizeOfExcludingThis(aMallocSizeOf);
   amount += mConsumers.ShallowSizeOfExcludingThis(aMallocSizeOf);
 
   return amount;
@@ -1971,12 +1957,6 @@ void
 MediaStream::FinishOnGraphThread()
 {
   GraphImpl()->FinishStream(this);
-}
-
-int64_t
-MediaStream::GetProcessingGraphUpdateIndex()
-{
-  return GraphImpl()->GetProcessingGraphUpdateIndex();
 }
 
 StreamBuffer::Track*
@@ -2846,7 +2826,6 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime,
                                            bool aStartWithAudioDriver,
                                            dom::AudioChannel aChannel)
   : MediaStreamGraph(aSampleRate)
-  , mProcessingGraphUpdateIndex(0)
   , mPortCount(0)
   , mNeedAnotherIteration(false)
   , mGraphDriverAsleep(false)
@@ -3465,7 +3444,9 @@ MediaStreamGraph::StartNonRealtimeProcessing(uint32_t aTicksToProcess)
   if (graph->mNonRealtimeProcessing)
     return;
 
-  graph->mEndTime = graph->IterationEnd() + aTicksToProcess;
+  graph->mEndTime =
+    graph->RoundUpToNextAudioBlock(graph->CurrentDriver()->StateComputedTime() +
+                                   aTicksToProcess - 1);
   graph->mNonRealtimeProcessing = true;
   graph->EnsureRunInStableState();
 }

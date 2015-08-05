@@ -41,7 +41,6 @@ if CONFIG['MOZ_PLACES']:
         'nsAnnoProtocolHandler.cpp',
         'nsAnnotationService.cpp',
         'nsFaviconService.cpp',
-        'nsMaybeWeakPtr.cpp',
         'nsNavBookmarks.cpp',
         'nsNavHistory.cpp',
         'nsNavHistoryQuery.cpp',

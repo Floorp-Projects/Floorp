@@ -316,7 +316,6 @@ WinTaskbar::GetAppUserModelID(nsAString & aDefaultGroupId) {
   return true;
 }
 
-/* readonly attribute AString defaultGroupId; */
 NS_IMETHODIMP
 WinTaskbar::GetDefaultGroupId(nsAString & aDefaultGroupId) {
   if (!GetAppUserModelID(aDefaultGroupId))
@@ -438,7 +437,6 @@ WinTaskbar::GetOverlayIconController(nsIDocShell *shell,
   return CallQueryInterface(preview, _retval);
 }
 
-/* nsIJumpListBuilder createJumpListBuilder(); */
 NS_IMETHODIMP
 WinTaskbar::CreateJumpListBuilder(nsIJumpListBuilder * *aJumpListBuilder) {
   nsresult rv;
@@ -456,14 +454,12 @@ WinTaskbar::CreateJumpListBuilder(nsIJumpListBuilder * *aJumpListBuilder) {
   return NS_OK;
 }
 
-/* void setGroupIdForWindow (in nsIDOMWindow aParent, in AString aIdentifier); */
 NS_IMETHODIMP
 WinTaskbar::SetGroupIdForWindow(nsIDOMWindow *aParent,
                                 const nsAString & aIdentifier) {
   return SetWindowAppUserModelProp(aParent, nsString(aIdentifier));
 }
 
-/* void prepareFullScreen(in nsIDOMWindow aWindow, in boolean aFullScreen); */
 NS_IMETHODIMP
 WinTaskbar::PrepareFullScreen(nsIDOMWindow *aWindow, bool aFullScreen) {
   NS_ENSURE_ARG_POINTER(aWindow);
@@ -475,7 +471,6 @@ WinTaskbar::PrepareFullScreen(nsIDOMWindow *aWindow, bool aFullScreen) {
   return PrepareFullScreenHWND(toplevelHWND, aFullScreen);
 }
 
-/* void prepareFullScreen(in voidPtr aWindow, in boolean aFullScreen); */
 NS_IMETHODIMP
 WinTaskbar::PrepareFullScreenHWND(void *aHWND, bool aFullScreen) {
   if (!Initialize())

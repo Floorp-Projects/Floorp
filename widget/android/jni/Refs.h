@@ -88,23 +88,27 @@ public:
     typedef jni::LocalRef<Object>  LocalRef;
     typedef jni::GlobalRef<Object> GlobalRef;
     typedef const jni::Param<Object>& Param;
+
+    static constexpr char name[] = "java/lang/Object";
 };
 
 
 // Binding for a built-in object reference other than jobject.
 template<typename T>
-class TypedObject : public Object
+class TypedObject : public Class<TypedObject<T>>
 {
     typedef TypedObject<T> Self;
 
 protected:
-    TypedObject(jobject instance) : Object(instance) {}
+    TypedObject(jobject instance) : Class<TypedObject<T>>(instance) {}
 
 public:
     typedef jni::Ref<Self> Ref;
     typedef jni::LocalRef<Self>  LocalRef;
     typedef jni::GlobalRef<Self> GlobalRef;
     typedef const jni::Param<Self>& Param;
+
+    static const char name[];
 };
 
 // Define bindings for built-in types.
@@ -265,6 +269,14 @@ namespace {
 // See explanation in LocalRef.
 template<class Cls> struct GenericObject { typedef Object Type; };
 template<> struct GenericObject<Object> { typedef struct {} Type; };
+template<class Cls> struct GenericLocalRef
+{
+    template<class C> struct Type : jni::Object {};
+};
+template<> struct GenericLocalRef<Object>
+{
+    template<class C> using Type = jni::LocalRef<C>;
+};
 
 } // namespace
 
@@ -281,6 +293,12 @@ private:
     // avoid this conflict, we use GenericObject, which is defined as Object for
     // LocalRef<non-Object> and defined as a dummy class for LocalRef<Object>.
     typedef typename GenericObject<Cls>::Type GenericObject;
+
+    // Similarly, GenericLocalRef is useed to convert LocalRef<Cls> to,
+    // LocalRef<Object>. It's defined as LocalRef<C> for Cls == Object,
+    // and defined as a dummy template class for Cls != Object.
+    template<class C> using GenericLocalRef
+            = typename GenericLocalRef<Cls>::template Type<C>;
 
     JNIEnv* const mEnv;
 
@@ -348,6 +366,14 @@ public:
         ref.mInstance = nullptr;
     }
 
+    template<class C>
+    MOZ_IMPLICIT LocalRef(GenericLocalRef<C>&& ref)
+        : Ref<Cls>(ref.mInstance)
+        , mEnv(ref.mEnv)
+    {
+        ref.mInstance = nullptr;
+    }
+
     // Implicitly converts nullptr to LocalRef.
     MOZ_IMPLICIT LocalRef(decltype(nullptr))
         : Ref<Cls>(nullptr)
@@ -384,13 +410,20 @@ public:
 
     LocalRef<Cls>& operator=(const Ref<Cls>& ref)
     {
-        LocalRef<Cls> newRef(mEnv, ref.mInstance);
+        LocalRef<Cls> newRef(mEnv, mEnv->NewLocalRef(ref.mInstance));
         return swap(newRef);
     }
 
     LocalRef<Cls>& operator=(LocalRef<GenericObject>&& ref)
     {
-        LocalRef<Cls> newRef(mozilla::Forward<LocalRef<GenericObject>>(ref));
+        LocalRef<Cls> newRef(mozilla::Move(ref));
+        return swap(newRef);
+    }
+
+    template<class C>
+    LocalRef<Cls>& operator=(GenericLocalRef<C>&& ref)
+    {
+        LocalRef<Cls> newRef(mozilla::Move(ref));
         return swap(newRef);
     }
 
@@ -432,7 +465,7 @@ public:
 
     // Copy constructor
     GlobalRef(const GlobalRef& ref)
-        : Ref<Cls>(ref.mInstance)
+        : Ref<Cls>(NewGlobalRef(nullptr, ref.mInstance))
     {}
 
     // Move constructor
@@ -521,7 +554,7 @@ public:
     // Convert jstring to a nsString.
     operator nsString() const
     {
-        MOZ_ASSERT(Object::mInstance);
+        MOZ_ASSERT(String::mInstance);
 
         JNIEnv* const env = GetJNIForThread();
         const jchar* const str = env->GetStringChars(Get(), nullptr);
@@ -588,6 +621,14 @@ public:
         if (mEnv) {
             mEnv->DeleteLocalRef(Get());
         }
+    }
+
+    operator String::LocalRef() const
+    {
+        JNIEnv* const env = mEnv ? mEnv : GetJNIForThread();
+        // We can't return our existing ref because the returned
+        // LocalRef could be freed first, so we need a new local ref.
+        return String::LocalRef::Adopt(env, env->NewLocalRef(Get()));
     }
 };
 

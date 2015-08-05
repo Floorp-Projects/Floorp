@@ -833,7 +833,6 @@ nsImageBoxListener::Notify(imgIRequest *request, int32_t aType, const nsIntRect*
   return mFrame->Notify(request, aType, aData);
 }
 
-/* void blockOnload (in imgIRequest aRequest); */
 NS_IMETHODIMP
 nsImageBoxListener::BlockOnload(imgIRequest *aRequest)
 {
@@ -844,7 +843,6 @@ nsImageBoxListener::BlockOnload(imgIRequest *aRequest)
   return NS_OK;
 }
 
-/* void unblockOnload (in imgIRequest aRequest); */
 NS_IMETHODIMP
 nsImageBoxListener::UnblockOnload(imgIRequest *aRequest)
 {
