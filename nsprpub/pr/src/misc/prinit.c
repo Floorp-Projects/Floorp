@@ -642,7 +642,10 @@ PR_IMPLEMENT(PRFileDesc *) PR_GetInheritedFD(
     while (1) {
         if ((ptr[len] == ':') && (strncmp(ptr, name, len) == 0)) {
             ptr += len + 1;
-            PR_sscanf(ptr, "%d:0x%" PR_SCNxOSFD, &fileType, &osfd);
+            if (PR_sscanf(ptr, "%d:0x%" PR_SCNxOSFD, &fileType, &osfd) != 2) {
+                PR_SetError(PR_UNKNOWN_ERROR, 0);
+                return NULL;
+            }
             switch ((PRDescType)fileType) {
                 case PR_DESC_FILE:
                     fd = PR_ImportFile(osfd);
