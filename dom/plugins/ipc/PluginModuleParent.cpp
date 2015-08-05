@@ -33,7 +33,6 @@
 #include "nsCRT.h"
 #include "nsIFile.h"
 #include "nsIObserverService.h"
-#include "nsIXULRuntime.h"
 #include "nsNPAPIPlugin.h"
 #include "nsPrintfCString.h"
 #include "prsystem.h"
@@ -642,9 +641,7 @@ PluginModuleParent::PluginModuleParent(bool aIsChrome)
     , mAsyncNewRv(NS_ERROR_NOT_INITIALIZED)
 {
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_GTK)
-    // Until some e10s bugs are resolved, disable asyncInit with e10s
-    mIsStartingAsync = Preferences::GetBool(kAsyncInitPref, false) &&
-                       !BrowserTabsRemoteAutostart();
+    mIsStartingAsync = Preferences::GetBool(kAsyncInitPref, false);
 #if defined(MOZ_CRASHREPORTER)
     CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AsyncPluginInit"),
                                        mIsStartingAsync ?
