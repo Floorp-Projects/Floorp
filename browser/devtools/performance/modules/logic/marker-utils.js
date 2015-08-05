@@ -93,12 +93,8 @@ function getMarkerFields (marker) {
   // If blueprint.fields is a function, use that
   if (typeof blueprint.fields === "function") {
     let fields = blueprint.fields(marker);
-    // Add a ":" to the label since the localization files contain the ":"
-    // if not present. This should be changed, ugh.
     return Object.keys(fields || []).map(label => {
-      // TODO revisit localization strings for markers bug 1163763
-      let normalizedLabel = label.indexOf(":") !== -1 ? label : (label + ":");
-      return { label: normalizedLabel, value: fields[label] };
+      return { label, value: fields[label] };
     });
   }
 
@@ -168,7 +164,7 @@ const DOM = {
    * @return {Element}
    */
   buildDuration: function (doc, marker) {
-    let label = L10N.getStr("timeline.markerDetail.duration");
+    let label = L10N.getStr("marker.field.duration");
     let start = L10N.getFormatStrWithNumbers("timeline.tick", marker.start);
     let end = L10N.getFormatStrWithNumbers("timeline.tick", marker.end);
     let duration = L10N.getFormatStrWithNumbers("timeline.tick", marker.end - marker.start);
@@ -217,7 +213,7 @@ const DOM = {
     let container = doc.createElement("vbox");
     let labelName = doc.createElement("label");
     labelName.className = "plain marker-details-labelname";
-    labelName.setAttribute("value", L10N.getStr(`timeline.markerDetail.${type}`));
+    labelName.setAttribute("value", L10N.getStr(`marker.field.${type}`));
     container.setAttribute("type", type);
     container.className = "marker-details-stack";
     container.appendChild(labelName);
@@ -235,7 +231,7 @@ const DOM = {
         let asyncBox = doc.createElement("hbox");
         let asyncLabel = doc.createElement("label");
         asyncLabel.className = "devtools-monospace";
-        asyncLabel.setAttribute("value", L10N.getFormatStr("timeline.markerDetail.asyncStack",
+        asyncLabel.setAttribute("value", L10N.getFormatStr("marker.field.asyncStack",
                                                            frame.asyncCause));
         asyncBox.appendChild(asyncLabel);
         container.appendChild(asyncBox);
@@ -278,7 +274,7 @@ const DOM = {
 
       if (!displayName && !url) {
         let label = doc.createElement("label");
-        label.setAttribute("value", L10N.getStr("timeline.markerDetail.unknownFrame"));
+        label.setAttribute("value", L10N.getStr("marker.value.unknownFrame"));
         hbox.appendChild(label);
       }
 
@@ -301,18 +297,19 @@ const DOM = {
  * markers that are considered "from content" should be labeled here.
  */
 const JS_MARKER_MAP = {
-  "<script> element":          "Script Tag",
+  "<script> element":          L10N.getStr("marker.label.javascript.scriptElement"),
+  "promise callback":          L10N.getStr("marker.label.javascript.promiseCallback"),
+  "promise initializer":       L10N.getStr("marker.label.javascript.promiseInit"),
+  "Worker runnable":           L10N.getStr("marker.label.javascript.workerRunnable"),
+  "javascript: URI":           L10N.getStr("marker.label.javascript.jsURI"),
+  // The difference between these two event handler markers are differences
+  // in their WebIDL implementation, so distinguishing them is not necessary.
+  "EventHandlerNonNull":       L10N.getStr("marker.label.javascript.eventHandler"),
+  "EventListener.handleEvent": L10N.getStr("marker.label.javascript.eventHandler"),
+  // These markers do not get L10N'd because they're JS names.
   "setInterval handler":       "setInterval",
   "setTimeout handler":        "setTimeout",
   "FrameRequestCallback":      "requestAnimationFrame",
-  "promise callback":          "Promise Callback",
-  "promise initializer":       "Promise Init",
-  "Worker runnable":           "Worker",
-  "javascript: URI":           "JavaScript URI",
-  // The difference between these two event handler markers are differences
-  // in their WebIDL implementation, so distinguishing them is not necessary.
-  "EventHandlerNonNull":       "Event Handler",
-  "EventListener.handleEvent": "Event Handler",
 };
 
 /**
@@ -324,21 +321,20 @@ const Formatters = {
    * a blueprint entry. Uses "Other" in the marker filter menu.
    */
   UnknownLabel: function (marker={}) {
-    return marker.name || L10N.getStr("timeline.label.unknown");
+    return marker.name || L10N.getStr("marker.label.unknown");
   },
 
   GCLabel: function (marker={}) {
-    let label = L10N.getStr("timeline.label.garbageCollection");
     // Only if a `nonincrementalReason` exists, do we want to label
     // this as a non incremental GC event.
     if ("nonincrementalReason" in marker) {
-      label = `${label} (Non-incremental)`;
+      return L10N.getStr("marker.label.garbageCollection.nonIncremental");
     }
-    return label;
+    return L10N.getStr("marker.label.garbageCollection");
   },
 
   JSLabel: function (marker={}) {
-    let generic = L10N.getStr("timeline.label.javascript2");
+    let generic = L10N.getStr("marker.label.javascript");
     if ("causeName" in marker) {
       return JS_MARKER_MAP[marker.causeName] || generic;
     }
@@ -357,40 +353,44 @@ const Formatters = {
    */
   JSFields: function (marker) {
     if ("causeName" in marker && !JS_MARKER_MAP[marker.causeName]) {
-      return { Reason: PREFS["show-platform-data"] ? marker.causeName : GECKO_SYMBOL };
+      let cause = PREFS["show-platform-data"] ? marker.causeName : GECKO_SYMBOL;
+      return {
+        [L10N.getStr("marker.field.causeName")]: cause
+      };
     }
   },
 
   DOMEventFields: function (marker) {
     let fields = Object.create(null);
     if ("type" in marker) {
-      fields[L10N.getStr("timeline.markerDetail.DOMEventType")] = marker.type;
+      fields[L10N.getStr("marker.field.DOMEventType")] = marker.type;
     }
     if ("eventPhase" in marker) {
       let phase;
       if (marker.eventPhase === Ci.nsIDOMEvent.AT_TARGET) {
-        phase = L10N.getStr("timeline.markerDetail.DOMEventTargetPhase");
+        phase = L10N.getStr("marker.value.DOMEventTargetPhase");
       } else if (marker.eventPhase === Ci.nsIDOMEvent.CAPTURING_PHASE) {
-        phase = L10N.getStr("timeline.markerDetail.DOMEventCapturingPhase");
+        phase = L10N.getStr("marker.value.DOMEventCapturingPhase");
       } else if (marker.eventPhase === Ci.nsIDOMEvent.BUBBLING_PHASE) {
-        phase = L10N.getStr("timeline.markerDetail.DOMEventBubblingPhase");
+        phase = L10N.getStr("marker.value.DOMEventBubblingPhase");
       }
-      fields[L10N.getStr("timeline.markerDetail.DOMEventPhase")] = phase;
+      fields[L10N.getStr("marker.field.DOMEventPhase")] = phase;
     }
     return fields;
   },
 
   StylesFields: function (marker) {
     if ("restyleHint" in marker) {
-      return { "Restyle Hint": marker.restyleHint.replace(/eRestyle_/g, "") };
+      return {
+        [L10N.getStr("marker.field.restyleHint")]: marker.restyleHint.replace(/eRestyle_/g, "")
+      };
     }
   },
 
   CycleCollectionFields: function (marker) {
-    let Type = PREFS["show-platform-data"]
-        ? marker.name
-        : marker.name.replace(/nsCycleCollector::/g, "");
-    return { Type };
+    return {
+      [L10N.getStr("marker.field.type")]: marker.name.replace(/nsCycleCollector::/g, "")
+    };
   },
 };
 

@@ -29,7 +29,7 @@ let TrackingProtection = {
     this.disabledTooltipText =
       gNavigatorBundle.getString("trackingProtection.icon.disabledTooltip");
 
-    this.enabledHistogram.add(this.enabledGlobally);
+    this.enabledHistogramAdd(this.enabledGlobally);
   },
 
   uninit() {
@@ -55,12 +55,25 @@ let TrackingProtection = {
     this.container.hidden = !this.enabled;
   },
 
-  get enabledHistogram() {
-    return Services.telemetry.getHistogramById("TRACKING_PROTECTION_ENABLED");
+  enabledHistogramAdd(value) {
+    if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+      return;
+    }
+    Services.telemetry.getHistogramById("TRACKING_PROTECTION_ENABLED").add(value);
   },
 
-  get eventsHistogram() {
-    return Services.telemetry.getHistogramById("TRACKING_PROTECTION_EVENTS");
+  eventsHistogramAdd(value) {
+    if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+      return;
+    }
+    Services.telemetry.getHistogramById("TRACKING_PROTECTION_EVENTS").add(value);
+  },
+
+  shieldHistogramAdd(value) {
+    if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+      return;
+    }
+    Services.telemetry.getHistogramById("TRACKING_PROTECTION_SHIELD").add(value);
   },
 
   onSecurityChange(state, isSimulated) {
@@ -91,18 +104,25 @@ let TrackingProtection = {
         gPrefService.savePrefFile(null);
         this.showIntroPanel();
       }
+
+      this.shieldHistogramAdd(2);
     } else if (isAllowing) {
       this.icon.setAttribute("tooltiptext", this.disabledTooltipText);
       this.icon.setAttribute("state", "loaded-tracking-content");
       this.content.setAttribute("state", "loaded-tracking-content");
+
+      this.shieldHistogramAdd(1);
     } else {
       this.icon.removeAttribute("tooltiptext");
       this.icon.removeAttribute("state");
       this.content.removeAttribute("state");
+
+      // We didn't show the shield
+      this.shieldHistogramAdd(0);
     }
 
     // Telemetry for state change.
-    this.eventsHistogram.add(0);
+    this.eventsHistogramAdd(0);
   },
 
   disableForCurrentPage() {
@@ -124,7 +144,7 @@ let TrackingProtection = {
     }
 
     // Telemetry for disable protection.
-    this.eventsHistogram.add(1);
+    this.eventsHistogramAdd(1);
 
     // Hide the control center.
     document.getElementById("identity-popup").hidePopup();
@@ -147,7 +167,7 @@ let TrackingProtection = {
     }
 
     // Telemetry for enable protection.
-    this.eventsHistogram.add(2);
+    this.eventsHistogramAdd(2);
 
     // Hide the control center.
     document.getElementById("identity-popup").hidePopup();

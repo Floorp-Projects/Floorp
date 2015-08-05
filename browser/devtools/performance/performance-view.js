@@ -173,7 +173,7 @@ let PerformanceView = {
       $container.setAttribute("buffer-status", "in-progress");
     }
 
-    $bufferLabel.value = `Buffer ${percent}% full`;
+    $bufferLabel.value = L10N.getFormatStr("profiler.bufferFull", percent);
     this.emit(EVENTS.UI_BUFFER_UPDATED, percent);
   },
 
@@ -289,8 +289,7 @@ let PerformanceView = {
    */
   _onImportButtonClick: function(e) {
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-    // TODO localize? in bug 1163763
-    fp.init(window, "Import recording…", Ci.nsIFilePicker.modeOpen);
+    fp.init(window, L10N.getStr("recordingsList.importDialogTitle"), Ci.nsIFilePicker.modeOpen);
     fp.appendFilter(L10N.getStr("recordingsList.saveDialogJSONFilter"), "*.json");
     fp.appendFilter(L10N.getStr("recordingsList.saveDialogAllFilter"), "*.*");
 
