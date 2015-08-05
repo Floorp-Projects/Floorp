@@ -359,7 +359,7 @@ function makeSearchMatch(input, extra = {}) {
   let params = {
     engineName: extra.engineName || "MozSearch",
     input,
-    searchQuery: extra.searchQuery || input,
+    searchQuery: "searchQuery" in extra ? extra.searchQuery : input,
     alias: extra.alias, // may be undefined which is expected.
   }
   return {
