@@ -783,12 +783,39 @@ RuleHash::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 
 //--------------------------------
 
+/**
+ * A struct that stores an nsCSSSelector pointer along side a pointer to
+ * the rightmost nsCSSSelector in the selector.  For example, for
+ *
+ *   .main p > span
+ *
+ * if mSelector points to the |p| nsCSSSelector, mRightmostSelector would
+ * point to the |span| nsCSSSelector.
+ *
+ * Both mSelector and mRightmostSelector are always top-level selectors,
+ * i.e. they aren't selectors within a :not() or :-moz-any().
+ */
+struct SelectorPair
+{
+  SelectorPair(nsCSSSelector* aSelector, nsCSSSelector* aRightmostSelector)
+    : mSelector(aSelector), mRightmostSelector(aRightmostSelector)
+  {
+    MOZ_ASSERT(aSelector);
+    MOZ_ASSERT(mRightmostSelector);
+  }
+  SelectorPair(const SelectorPair& aOther)
+    : mSelector(aOther.mSelector)
+    , mRightmostSelector(aOther.mRightmostSelector) {}
+  nsCSSSelector* const mSelector;
+  nsCSSSelector* const mRightmostSelector;
+};
+
 // A hash table mapping atoms to lists of selectors
 struct AtomSelectorEntry : public PLDHashEntryHdr {
   nsIAtom *mAtom;
   // Auto length 2, because a decent fraction of these arrays ends up
   // with 2 elements, and each entry is cheap.
-  nsAutoTArray<nsCSSSelector*, 2> mSelectors;
+  nsAutoTArray<SelectorPair, 2> mSelectors;
 };
 
 static void
@@ -911,7 +938,7 @@ struct RuleCascadeData {
 
   // Looks up or creates the appropriate list in |mAttributeSelectors|.
   // Returns null only on allocation failure.
-  nsTArray<nsCSSSelector*>* AttributeListFor(nsIAtom* aAttribute);
+  nsTArray<SelectorPair>* AttributeListFor(nsIAtom* aAttribute);
 
   nsMediaQueryResultCacheKey mCacheKey;
   RuleCascadeData*  mNext; // for a different medium
@@ -975,7 +1002,7 @@ RuleCascadeData::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   return n;
 }
 
-nsTArray<nsCSSSelector*>*
+nsTArray<SelectorPair>*
 RuleCascadeData::AttributeListFor(nsIAtom* aAttribute)
 {
   AtomSelectorEntry *entry =
@@ -2763,7 +2790,9 @@ struct AttributeEnumData {
 
 
 static void
-AttributeEnumFunc(nsCSSSelector* aSelector, AttributeEnumData* aData)
+AttributeEnumFunc(nsCSSSelector* aSelector,
+                  nsCSSSelector* aRightmostSelector,
+                  AttributeEnumData* aData)
 {
   AttributeRuleProcessorData *data = aData->data;
 
@@ -2790,12 +2819,22 @@ AttributeEnumFunc(nsCSSSelector* aSelector, AttributeEnumData* aData)
 }
 
 static MOZ_ALWAYS_INLINE void
+EnumerateSelectors(nsTArray<SelectorPair>& aSelectors, AttributeEnumData* aData)
+{
+  SelectorPair *iter = aSelectors.Elements(),
+               *end = iter + aSelectors.Length();
+  for (; iter != end; ++iter) {
+    AttributeEnumFunc(iter->mSelector, iter->mRightmostSelector, aData);
+  }
+}
+
+static MOZ_ALWAYS_INLINE void
 EnumerateSelectors(nsTArray<nsCSSSelector*>& aSelectors, AttributeEnumData* aData)
 {
   nsCSSSelector **iter = aSelectors.Elements(),
                 **end = iter + aSelectors.Length();
   for (; iter != end; ++iter) {
-    AttributeEnumFunc(*iter, aData);
+    AttributeEnumFunc(*iter, nullptr, aData);
   }
 }
 
@@ -3127,7 +3166,9 @@ AddSelector(RuleCascadeData* aCascade,
             // The part between combinators at the top level of the selector
             nsCSSSelector* aSelectorInTopLevel,
             // The part we should look through (might be in :not or :-moz-any())
-            nsCSSSelector* aSelectorPart)
+            nsCSSSelector* aSelectorPart,
+            // The right-most selector at the top level
+            nsCSSSelector* aRightmostSelector)
 {
   // It's worth noting that this loop over negations isn't quite
   // optimal for two reasons.  One, we could add something to one of
@@ -3152,12 +3193,13 @@ AddSelector(RuleCascadeData* aCascade,
           break;
         }
         case nsCSSPseudoClasses::ePseudoClass_mozTableBorderNonzero: {
-          nsTArray<nsCSSSelector*> *array =
+          nsTArray<SelectorPair> *array =
             aCascade->AttributeListFor(nsGkAtoms::border);
           if (!array) {
             return false;
           }
-          array->AppendElement(aSelectorInTopLevel);
+          array->AppendElement(SelectorPair(aSelectorInTopLevel,
+                                            aRightmostSelector));
           break;
         }
         default: {
@@ -3181,7 +3223,8 @@ AddSelector(RuleCascadeData* aCascade,
         AtomSelectorEntry *entry = static_cast<AtomSelectorEntry*>
           (PL_DHashTableAdd(&aCascade->mIdSelectors, curID->mAtom, fallible));
         if (entry) {
-          entry->mSelectors.AppendElement(aSelectorInTopLevel);
+          entry->mSelectors.AppendElement(SelectorPair(aSelectorInTopLevel,
+                                                       aRightmostSelector));
         }
       }
     } else if (negation->mIDList) {
@@ -3196,7 +3239,8 @@ AddSelector(RuleCascadeData* aCascade,
           (PL_DHashTableAdd(&aCascade->mClassSelectors, curClass->mAtom,
                             fallible));
         if (entry) {
-          entry->mSelectors.AppendElement(aSelectorInTopLevel);
+          entry->mSelectors.AppendElement(SelectorPair(aSelectorInTopLevel,
+                                                       aRightmostSelector));
         }
       }
     } else if (negation->mClassList) {
@@ -3206,18 +3250,20 @@ AddSelector(RuleCascadeData* aCascade,
     // Build mAttributeSelectors.
     for (nsAttrSelector *attr = negation->mAttrList; attr;
          attr = attr->mNext) {
-      nsTArray<nsCSSSelector*> *array =
+      nsTArray<SelectorPair> *array =
         aCascade->AttributeListFor(attr->mCasedAttr);
       if (!array) {
         return false;
       }
-      array->AppendElement(aSelectorInTopLevel);
+      array->AppendElement(SelectorPair(aSelectorInTopLevel,
+                                        aRightmostSelector));
       if (attr->mLowercaseAttr != attr->mCasedAttr) {
         array = aCascade->AttributeListFor(attr->mLowercaseAttr);
         if (!array) {
           return false;
         }
-        array->AppendElement(aSelectorInTopLevel);
+        array->AppendElement(SelectorPair(aSelectorInTopLevel,
+                                          aRightmostSelector));
       }
     }
 
@@ -3227,7 +3273,8 @@ AddSelector(RuleCascadeData* aCascade,
       if (pseudoClass->mType == nsCSSPseudoClasses::ePseudoClass_any) {
         for (nsCSSSelectorList *l = pseudoClass->u.mSelectors; l; l = l->mNext) {
           nsCSSSelector *s = l->mSelectors;
-          if (!AddSelector(aCascade, aSelectorInTopLevel, s)) {
+          if (!AddSelector(aCascade, aSelectorInTopLevel, s,
+                           aRightmostSelector)) {
             return false;
           }
         }
@@ -3308,7 +3355,7 @@ AddRule(RuleSelectorPair* aRuleInfo, RuleCascadeData* aCascade)
         continue;
       }
     }
-    if (!AddSelector(cascade, selector, selector)) {
+    if (!AddSelector(cascade, selector, selector, aRuleInfo->mSelector)) {
       return false;
     }
   }
