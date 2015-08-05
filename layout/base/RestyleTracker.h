@@ -320,6 +320,14 @@ public:
   bool GetRestyleData(Element* aElement, nsAutoPtr<RestyleData>& aData);
 
   /**
+   * Returns whether there is a RestyleData entry in mPendingRestyles
+   * for the given element.
+   */
+  bool HasRestyleData(Element* aElement) {
+    return mPendingRestyles.Contains(aElement);
+  }
+
+  /**
    * For each element in aElements, appends it to mRestyleRoots if it
    * has its restyle bit set.  This is used to ensure we restyle elements
    * that we did not add as restyle roots initially (due to there being
