@@ -7,8 +7,9 @@
 
 const TEST_URI = "https://example.com/browser/browser/devtools/webconsole/" +
                  "test/test-bug-846918-hsts-invalid-headers.html";
-const HSTS_INVALID_HEADER_MSG = "The site specified an invalid " +
-                                "Strict-Transport-Security header.";
+const HSTS_INVALID_HEADER_MSG = "Strict-Transport-Security: The site " +
+                                "specified a header that did not include a " +
+                                "'max-age' directive.";
 const LEARN_MORE_URI = "https://developer.mozilla.org/docs/Security/" +
                        "HTTP_Strict_Transport_Security";
 

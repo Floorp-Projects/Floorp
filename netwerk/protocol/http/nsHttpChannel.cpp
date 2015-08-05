@@ -1150,8 +1150,88 @@ nsHttpChannel::ProcessFailedProxyConnect(uint32_t httpStatus)
     return rv;
 }
 
+static void
+GetSTSConsoleErrorTag(uint32_t failureResult, nsAString& consoleErrorTag)
+{
+    switch (failureResult) {
+        case nsISiteSecurityService::ERROR_UNTRUSTWORTHY_CONNECTION:
+            consoleErrorTag = NS_LITERAL_STRING("STSUntrustworthyConnection");
+            break;
+        case nsISiteSecurityService::ERROR_COULD_NOT_PARSE_HEADER:
+            consoleErrorTag = NS_LITERAL_STRING("STSCouldNotParseHeader");
+            break;
+        case nsISiteSecurityService::ERROR_NO_MAX_AGE:
+            consoleErrorTag = NS_LITERAL_STRING("STSNoMaxAge");
+            break;
+        case nsISiteSecurityService::ERROR_MULTIPLE_MAX_AGES:
+            consoleErrorTag = NS_LITERAL_STRING("STSMultipleMaxAges");
+            break;
+        case nsISiteSecurityService::ERROR_INVALID_MAX_AGE:
+            consoleErrorTag = NS_LITERAL_STRING("STSInvalidMaxAge");
+            break;
+        case nsISiteSecurityService::ERROR_MULTIPLE_INCLUDE_SUBDOMAINS:
+            consoleErrorTag = NS_LITERAL_STRING("STSMultipleIncludeSubdomains");
+            break;
+        case nsISiteSecurityService::ERROR_INVALID_INCLUDE_SUBDOMAINS:
+            consoleErrorTag = NS_LITERAL_STRING("STSInvalidIncludeSubdomains");
+            break;
+        case nsISiteSecurityService::ERROR_COULD_NOT_SAVE_STATE:
+            consoleErrorTag = NS_LITERAL_STRING("STSCouldNotSaveState");
+            break;
+        default:
+            consoleErrorTag = NS_LITERAL_STRING("STSUnknownError");
+            break;
+    }
+}
+
+static void
+GetPKPConsoleErrorTag(uint32_t failureResult, nsAString& consoleErrorTag)
+{
+    switch (failureResult) {
+        case nsISiteSecurityService::ERROR_UNTRUSTWORTHY_CONNECTION:
+            consoleErrorTag = NS_LITERAL_STRING("PKPUntrustworthyConnection");
+            break;
+        case nsISiteSecurityService::ERROR_COULD_NOT_PARSE_HEADER:
+            consoleErrorTag = NS_LITERAL_STRING("PKPCouldNotParseHeader");
+            break;
+        case nsISiteSecurityService::ERROR_NO_MAX_AGE:
+            consoleErrorTag = NS_LITERAL_STRING("PKPNoMaxAge");
+            break;
+        case nsISiteSecurityService::ERROR_MULTIPLE_MAX_AGES:
+            consoleErrorTag = NS_LITERAL_STRING("PKPMultipleMaxAges");
+            break;
+        case nsISiteSecurityService::ERROR_INVALID_MAX_AGE:
+            consoleErrorTag = NS_LITERAL_STRING("PKPInvalidMaxAge");
+            break;
+        case nsISiteSecurityService::ERROR_MULTIPLE_INCLUDE_SUBDOMAINS:
+            consoleErrorTag = NS_LITERAL_STRING("PKPMultipleIncludeSubdomains");
+            break;
+        case nsISiteSecurityService::ERROR_INVALID_INCLUDE_SUBDOMAINS:
+            consoleErrorTag = NS_LITERAL_STRING("PKPInvalidIncludeSubdomains");
+            break;
+        case nsISiteSecurityService::ERROR_INVALID_PIN:
+            consoleErrorTag = NS_LITERAL_STRING("PKPInvalidPin");
+            break;
+        case nsISiteSecurityService::ERROR_MULTIPLE_REPORT_URIS:
+            consoleErrorTag = NS_LITERAL_STRING("PKPMultipleReportURIs");
+            break;
+        case nsISiteSecurityService::ERROR_PINSET_DOES_NOT_MATCH_CHAIN:
+            consoleErrorTag = NS_LITERAL_STRING("PKPPinsetDoesNotMatch");
+            break;
+        case nsISiteSecurityService::ERROR_NO_BACKUP_PIN:
+            consoleErrorTag = NS_LITERAL_STRING("PKPNoBackupPin");
+            break;
+        case nsISiteSecurityService::ERROR_COULD_NOT_SAVE_STATE:
+            consoleErrorTag = NS_LITERAL_STRING("PKPCouldNotSaveState");
+            break;
+        default:
+            consoleErrorTag = NS_LITERAL_STRING("PKPUnknownError");
+            break;
+    }
+}
+
 /**
- * Process a single security header. Only two types are suported HSTS and HPKP.
+ * Process a single security header. Only two types are supported: HSTS and HPKP.
  */
 nsresult
 nsHttpChannel::ProcessSingleSecurityHeader(uint32_t aType,
@@ -1178,18 +1258,19 @@ nsHttpChannel::ProcessSingleSecurityHeader(uint32_t aType,
         NS_ENSURE_TRUE(sss, NS_ERROR_OUT_OF_MEMORY);
         // Process header will now discard the headers itself if the channel
         // wasn't secure (whereas before it had to be checked manually)
+        uint32_t failureResult;
         rv = sss->ProcessHeader(aType, mURI, securityHeader.get(), aSSLStatus,
-                                aFlags, nullptr, nullptr);
+                                aFlags, nullptr, nullptr, &failureResult);
         if (NS_FAILED(rv)) {
             nsAutoString consoleErrorCategory;
             nsAutoString consoleErrorTag;
             switch (aType) {
                 case nsISiteSecurityService::HEADER_HSTS:
-                    consoleErrorTag = NS_LITERAL_STRING("InvalidSTSHeaders");
+                    GetSTSConsoleErrorTag(failureResult, consoleErrorTag);
                     consoleErrorCategory = NS_LITERAL_STRING("Invalid HSTS Headers");
                     break;
                 case nsISiteSecurityService::HEADER_HPKP:
-                    consoleErrorTag = NS_LITERAL_STRING("InvalidPKPHeaders");
+                    GetPKPConsoleErrorTag(failureResult, consoleErrorTag);
                     consoleErrorCategory = NS_LITERAL_STRING("Invalid HPKP Headers");
                     break;
                 default:
