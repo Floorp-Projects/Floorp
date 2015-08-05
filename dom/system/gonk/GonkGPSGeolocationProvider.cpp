@@ -134,6 +134,12 @@ GonkGPSGeolocationProvider::LocationCallback(GpsLocation* location)
   // current time, most notably: the geolocation service which respects maximumAge
   // set in the DOM JS.
 
+  if (gDebug_isLoggingEnabled) {
+    nsContentUtils::LogMessageToConsole("geo: GPS got a fix (%f, %f). accuracy: %f",
+                                        location->latitude,
+                                        location->longitude,
+                                        location->accuracy);
+  }
 
   NS_DispatchToMainThread(new UpdateLocationEvent(somewhere));
 }
@@ -141,11 +147,78 @@ GonkGPSGeolocationProvider::LocationCallback(GpsLocation* location)
 void
 GonkGPSGeolocationProvider::StatusCallback(GpsStatus* status)
 {
+  if (gDebug_isLoggingEnabled) {
+    switch (status->status) {
+      case GPS_STATUS_NONE:
+        nsContentUtils::LogMessageToConsole("geo: GPS_STATUS_NONE\n");
+        break;
+      case GPS_STATUS_SESSION_BEGIN:
+        nsContentUtils::LogMessageToConsole("geo: GPS_STATUS_SESSION_BEGIN\n");
+        break;
+      case GPS_STATUS_SESSION_END:
+        nsContentUtils::LogMessageToConsole("geo: GPS_STATUS_SESSION_END\n");
+        break;
+      case GPS_STATUS_ENGINE_ON:
+        nsContentUtils::LogMessageToConsole("geo: GPS_STATUS_ENGINE_ON\n");
+        break;
+      case GPS_STATUS_ENGINE_OFF:
+        nsContentUtils::LogMessageToConsole("geo: GPS_STATUS_ENGINE_OFF\n");
+        break;
+      default:
+        nsContentUtils::LogMessageToConsole("geo: Unknown GPS status\n");
+        break;
+    }
+  }
 }
 
 void
 GonkGPSGeolocationProvider::SvStatusCallback(GpsSvStatus* sv_info)
 {
+  if (gDebug_isLoggingEnabled) {
+    static int numSvs = 0;
+    static uint32_t numEphemeris = 0;
+    static uint32_t numAlmanac = 0;
+    static uint32_t numUsedInFix = 0;
+
+    unsigned int i = 1;
+    uint32_t svAlmanacCount = 0;
+    for (i = 1; i > 0; i <<= 1) {
+      if (i & sv_info->almanac_mask) {
+        svAlmanacCount++;
+      }
+    }
+
+    uint32_t svEphemerisCount = 0;
+    for (i = 1; i > 0; i <<= 1) {
+      if (i & sv_info->ephemeris_mask) {
+        svEphemerisCount++;
+      }
+    }
+
+    uint32_t svUsedCount = 0;
+    for (i = 1; i > 0; i <<= 1) {
+      if (i & sv_info->used_in_fix_mask) {
+        svUsedCount++;
+      }
+    }
+
+    // Log the message only if the the status changed.
+    if (sv_info->num_svs != numSvs ||
+        svAlmanacCount != numAlmanac ||
+        svEphemerisCount != numEphemeris ||
+        svUsedCount != numUsedInFix) {
+
+      nsContentUtils::LogMessageToConsole(
+        "geo: Number of SVs have (visibility, almanac, ephemeris): (%d, %d, %d)."
+        "  %d of these SVs were used in fix.\n",
+        sv_info->num_svs, svAlmanacCount, svEphemerisCount, svUsedCount);
+
+      numSvs = sv_info->num_svs;
+      numAlmanac = svAlmanacCount;
+      numEphemeris = svEphemerisCount;
+      numUsedInFix = svUsedCount;
+    }
+  }
 }
 
 void
