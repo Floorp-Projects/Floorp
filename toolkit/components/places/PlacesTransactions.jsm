@@ -883,7 +883,7 @@ DefineTransaction.defineInputProps(["guid", "parentGuid", "newParentGuid"],
                                    DefineTransaction.guidValidate);
 DefineTransaction.defineInputProps(["title"],
                                    DefineTransaction.strOrNullValidate, null);
-DefineTransaction.defineInputProps(["keyword", "postData", "tag",
+DefineTransaction.defineInputProps(["keyword", "oldKeyword", "postData", "tag",
                                     "excludingAnnotation"],
                                    DefineTransaction.strValidate, "");
 DefineTransaction.defineInputProps(["index", "newIndex"],
@@ -1335,14 +1335,30 @@ PT.Annotate.prototype = {
  *
  * Required Input Properties: guid, keyword.
  */
-PT.EditKeyword = DefineTransaction(["guid", "keyword"]);
+PT.EditKeyword = DefineTransaction(["guid", "keyword"],
+                                   ["postData", "oldKeyword"]);
 PT.EditKeyword.prototype = Object.seal({
-  execute: function* (aGuid, aKeyword) {
-    let itemId = yield PlacesUtils.promiseItemId(aGuid),
-        oldKeyword = PlacesUtils.bookmarks.getKeywordForBookmark(itemId);
-    PlacesUtils.bookmarks.setKeywordForBookmark(itemId, aKeyword);
-    this.undo = () => {
-      PlacesUtils.bookmarks.setKeywordForBookmark(itemId, oldKeyword);
+  execute: function* (aGuid, aKeyword, aPostData, aOldKeyword) {
+    let url;
+    let oldEntry;
+    if (aOldKeyword) {
+      oldEntry = yield PlacesUtils.keywords.fetch(aOldKeyword);
+      url = oldEntry.url;
+      yield PlacesUtils.keywords.remove(aOldKeyword);
+    }
+
+    if (!url)
+      url = (yield PlacesUtils.bookmarks.fetch(aGuid)).url;
+    yield PlacesUtils.keywords.insert({
+      url: url,
+      keyword: aKeyword,
+      postData: aPostData || (oldEntry ? oldEntry.postData : "")
+    });
+
+    this.undo = function* () {
+      yield PlacesUtils.keywords.remove(aKeyword);
+      if (oldEntry)
+        yield PlacesUtils.keywords.insert(oldEntry);
     };
   }
 });
