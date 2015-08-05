@@ -22,27 +22,23 @@
 #include "nsIProgressEventSink.h"
 #include "nsIFile.h"
 #include "nsIWebProgressListener2.h"
+#include "nsIWebBrowserPersistDocument.h"
 
+#include "mozilla/UniquePtr.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
 #include "nsTArray.h"
 
 #include "nsCWebBrowserPersist.h"
 
-class nsEncoderNodeFixup;
 class nsIStorageStream;
+class nsIWebBrowserPersistDocument;
 
-struct CleanupData;
-struct DocData;
-struct OutputData;
-struct UploadData;
-struct URIData;
-
-class nsWebBrowserPersist : public nsIInterfaceRequestor,
-                            public nsIWebBrowserPersist,
-                            public nsIStreamListener,
-                            public nsIProgressEventSink,
-                            public nsSupportsWeakReference
+class nsWebBrowserPersist final : public nsIInterfaceRequestor,
+                                  public nsIWebBrowserPersist,
+                                  public nsIStreamListener,
+                                  public nsIProgressEventSink,
+                                  public nsSupportsWeakReference
 {
     friend class nsEncoderNodeFixup;
 
@@ -58,11 +54,9 @@ public:
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIPROGRESSEVENTSINK
 
-// Protected members
-protected:
+// Private members
+private:
     virtual ~nsWebBrowserPersist();
-    nsresult CloneNodeWithFixedUpAttributes(
-        nsIDOMNode *aNodeIn, bool *aSerializeCloneKids, nsIDOMNode **aNodeOut);
     nsresult SaveURIInternal(
         nsIURI *aURI, nsISupports *aCacheKey, nsIURI *aReferrer,
         uint32_t aReferrerPolicy, nsIInputStream *aPostData,
@@ -71,22 +65,33 @@ protected:
     nsresult SaveChannelInternal(
         nsIChannel *aChannel, nsIURI *aFile, bool aCalcFileExt);
     nsresult SaveDocumentInternal(
-        nsIDOMDocument *aDocument, nsIURI *aFile, nsIURI *aDataPath);
+        nsIWebBrowserPersistDocument *aDocument,
+        nsIURI *aFile,
+        nsIURI *aDataPath);
     nsresult SaveDocuments();
-    nsresult GetDocEncoderContentType(
-        nsIDOMDocument *aDocument, const char16_t *aContentType,
-        char16_t **aRealContentType);
+    void FinishSaveDocumentInternal(nsIURI* aFile, nsIFile* aDataPath);
     nsresult GetExtensionForContentType(
         const char16_t *aContentType, char16_t **aExt);
-    nsresult GetDocumentExtension(nsIDOMDocument *aDocument, char16_t **aExt);
 
-// Private members
-private:
+    struct CleanupData;
+    struct DocData;
+    struct OutputData;
+    struct UploadData;
+    struct URIData;
+    struct WalkData;
+
+    class OnWalk;
+    class OnWrite;
+    class FlatURIMap;
+    friend class OnWalk;
+    friend class OnWrite;
+
+    nsresult SaveDocumentDeferred(mozilla::UniquePtr<WalkData>&& aData);
     void Cleanup();
     void CleanupLocalFiles();
     nsresult GetValidURIFromObject(nsISupports *aObject, nsIURI **aURI) const;
     nsresult GetLocalFileFromURI(nsIURI *aURI, nsIFile **aLocalFile) const;
-    nsresult AppendPathToURI(nsIURI *aURI, const nsAString & aPath) const;
+    static nsresult AppendPathToURI(nsIURI *aURI, const nsAString & aPath);
     nsresult MakeAndStoreLocalFilenameInURIMap(
         nsIURI *aURI, bool aNeedsPersisting, URIData **aData);
     nsresult MakeOutputStream(
@@ -112,46 +117,20 @@ private:
         nsIURI *aURI,
         bool aNeedsPersisting = true,
         URIData **aData = nullptr);
-    nsresult StoreURIAttributeNS(
-        nsIDOMNode *aNode, const char *aNamespaceURI, const char *aAttribute,
-        bool aNeedsPersisting = true,
-        URIData **aData = nullptr);
-    nsresult StoreURIAttribute(
-        nsIDOMNode *aNode, const char *aAttribute,
-        bool aNeedsPersisting = true,
-        URIData **aData = nullptr)
-    {
-        return StoreURIAttributeNS(aNode, "", aAttribute, aNeedsPersisting, aData);
-    }
-    bool DocumentEncoderExists(const char16_t *aContentType);
+    bool DocumentEncoderExists(const char *aContentType);
 
-    nsresult GetNodeToFixup(nsIDOMNode *aNodeIn, nsIDOMNode **aNodeOut);
-    nsresult FixupURI(nsAString &aURI);
-    nsresult FixupNodeAttributeNS(nsIDOMNode *aNode, const char *aNamespaceURI, const char *aAttribute);
-    nsresult FixupNodeAttribute(nsIDOMNode *aNode, const char *aAttribute)
-    {
-        return FixupNodeAttributeNS(aNode, "", aAttribute);
-    }
-    nsresult FixupAnchor(nsIDOMNode *aNode);
-    nsresult FixupXMLStyleSheetLink(nsIDOMProcessingInstruction *aPI, const nsAString &aHref);
-    nsresult GetXMLStyleSheetLink(nsIDOMProcessingInstruction *aPI, nsAString &aHref);
-
-    nsresult StoreAndFixupStyleSheet(nsIStyleSheet *aStyleSheet);
-    nsresult SaveDocumentWithFixup(
-        nsIDOMDocument *pDocument,
-        nsIURI *aFile, bool aReplaceExisting, const nsACString &aFormatType,
-        const nsCString &aSaveCharset, uint32_t  aFlags);
     nsresult SaveSubframeContent(
-        nsIDOMDocument *aFrameContent, URIData *aData);
+        nsIWebBrowserPersistDocument *aFrameContent,
+        const nsCString& aURISpec,
+        URIData *aData);
     nsresult SendErrorStatusChange(
         bool aIsReadError, nsresult aResult, nsIRequest *aRequest, nsIURI *aURI);
-    nsresult OnWalkDOMNode(nsIDOMNode *aNode);
 
     nsresult FixRedirectedChannelEntry(nsIChannel *aNewChannel);
 
-    void EndDownload(nsresult aResult = NS_OK);
-    nsresult SaveGatheredURIs(nsIURI *aFileAsURI);
-    bool SerializeNextFile();
+    void EndDownload(nsresult aResult);
+    void FinishDownload();
+    void SerializeNextFile();
     void CalcTotalProgress();
 
     void SetApplyConversionIfNeeded(nsIChannel *aChannel);
@@ -170,6 +149,8 @@ private:
     static PLDHashOperator EnumFixRedirect(
         nsISupports *aKey, OutputData *aData, void* aClosure);
     static PLDHashOperator EnumCountURIsToPersist(
+        const nsACString &aKey, URIData *aData, void* aClosure);
+    static PLDHashOperator EnumCopyURIsToFlatMap(
         const nsACString &aKey, URIData *aData, void* aClosure);
 
     nsCOMPtr<nsIURI>          mCurrentDataPath;
@@ -193,12 +174,14 @@ private:
     nsClassHashtable<nsISupportsHashKey, OutputData> mOutputMap;
     nsClassHashtable<nsISupportsHashKey, UploadData> mUploadList;
     nsClassHashtable<nsCStringHashKey, URIData> mURIMap;
+    nsCOMPtr<nsIWebBrowserPersistURIMap> mFlatURIMap;
+    nsTArray<mozilla::UniquePtr<WalkData>> mWalkStack;
     nsTArray<DocData*>        mDocList;
     nsTArray<CleanupData*>    mCleanupList;
     nsTArray<nsCString>       mFilenameList;
     bool                      mFirstAndOnlyUse;
+    bool                      mSavingDocument;
     bool                      mCancel;
-    bool                      mJustStartedLoading;
     bool                      mCompleted;
     bool                      mStartSaving;
     bool                      mReplaceExisting;
@@ -211,21 +194,6 @@ private:
     int16_t                   mWrapColumn;
     uint32_t                  mEncodingFlags;
     nsString                  mContentType;
-};
-
-// Helper class does node fixup during persistence
-class nsEncoderNodeFixup : public nsIDocumentEncoderNodeFixup
-{
-public:
-    nsEncoderNodeFixup();
-
-    NS_DECL_ISUPPORTS
-    NS_IMETHOD FixupNode(nsIDOMNode *aNode, bool *aSerializeCloneKids, nsIDOMNode **aOutNode) override;
-
-    nsWebBrowserPersist *mWebBrowserPersist;
-
-protected:
-    virtual ~nsEncoderNodeFixup();
 };
 
 #endif

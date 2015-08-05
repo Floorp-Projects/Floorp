@@ -95,6 +95,7 @@
 #include "ImageOps.h"
 #include "UnitTransforms.h"
 #include <algorithm>
+#include "mozilla/WebBrowserPersistDocumentParent.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
@@ -256,7 +257,8 @@ NS_IMPL_ISUPPORTS(TabParent,
                   nsITabParent,
                   nsIAuthPromptProvider,
                   nsISecureBrowserUI,
-                  nsISupportsWeakReference)
+                  nsISupportsWeakReference,
+                  nsIWebBrowserPersistable)
 
 TabParent::TabParent(nsIContentParent* aManager,
                      const TabId& aTabId,
@@ -3343,6 +3345,29 @@ TabParent::AsyncPanZoomEnabled() const
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   return widget && widget->AsyncPanZoomEnabled();
+}
+
+PWebBrowserPersistDocumentParent*
+TabParent::AllocPWebBrowserPersistDocumentParent()
+{
+  return new WebBrowserPersistDocumentParent();
+}
+
+bool
+TabParent::DeallocPWebBrowserPersistDocumentParent(PWebBrowserPersistDocumentParent* aActor)
+{
+  delete aActor;
+  return true;
+}
+
+NS_IMETHODIMP
+TabParent::StartPersistence(nsIWebBrowserPersistDocumentReceiver* aRecv)
+{
+  auto* actor = new WebBrowserPersistDocumentParent();
+  actor->SetOnReady(aRecv);
+  return SendPWebBrowserPersistDocumentConstructor(actor)
+    ? NS_OK : NS_ERROR_FAILURE;
+  // (The actor will be destroyed on constructor failure.)
 }
 
 NS_IMETHODIMP
