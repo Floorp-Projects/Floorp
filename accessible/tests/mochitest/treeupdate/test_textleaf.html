@@ -40,17 +40,10 @@
 
     function setOnClickAttr(aID)
     {
-      this.__proto__ = new textLeafUpdate(aID, true);
-
-      this.invoke = function setOnClickAttr_invoke()
-      {
-        this.node.setAttribute("onclick", "alert(3);");
-      }
-
-      this.getID = function setOnClickAttr_getID()
-      {
-        return "make " + prettyName(aID) + " linkable";
-      }
+      var node = getNode(aID);
+      node.setAttribute("onclick", "alert(3);");
+      var textLeaf = getAccessible(node).firstChild;
+      is(textLeaf.actionCount, 1, "Wrong action numbers!");
     }
 
     function removeOnClickAttr(aID)
@@ -134,11 +127,10 @@
 
     function doTest()
     {
-      gQueue = new eventQueue();
-
       // adds onclick on element, text leaf should inherit its action
-      gQueue.push(new setOnClickAttr("div"));
-
+      setOnClickAttr("div");
+      // Call rest of event tests.
+      gQueue = new eventQueue();
       // remove onclick attribute, text leaf shouldn't have any action
       gQueue.push(new removeOnClickAttr("div"));
 

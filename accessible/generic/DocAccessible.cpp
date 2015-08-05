@@ -1611,8 +1611,7 @@ DocAccessible::UpdateAccessibleOnAttrChange(dom::Element* aElement,
     return true;
   }
 
-  if (aAttribute == nsGkAtoms::href ||
-      aAttribute == nsGkAtoms::onclick) {
+  if (aAttribute == nsGkAtoms::href) {
     // Not worth the expense to ensure which namespace these are in. It doesn't
     // kill use to recreate the accessible even if the attribute was used in
     // the wrong namespace or an element that doesn't support it.

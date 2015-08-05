@@ -1,0 +1,103 @@
+<html>
+
+<head>
+  <title>Test hide/show events on event listener changes</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+
+    function dummyListener() {}
+
+    function testAddListener()
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, getNode("parent")),
+      ];
+
+      this.invoke = function testAddListener_invoke()
+      {
+        is(getAccessible("parent", null, null, DONOTFAIL_IF_NO_ACC), null, "Check that parent is not accessible.");
+        is(getAccessible("child", null, null, DONOTFAIL_IF_NO_ACC), null, "Check that child is not accessible.");
+        getNode("parent").addEventListener("click", dummyListener);
+      }
+
+      this.finalCheck = function testAddListener_finalCheck()
+      {
+        var tree = { TEXT: [] };
+        testAccessibleTree("parent", tree);
+      }
+
+      this.getID = function testAddListener_getID()
+      {
+        return "Test that show event is sent when click listener is added";
+      }
+    }
+
+    function testRemoveListener()
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, getNode("parent")),
+      ];
+
+      this.invoke = function testRemoveListener_invoke()
+      {
+        getNode("parent").removeEventListener("click", dummyListener);
+      }
+
+      this.finalCheck = function testRemoveListener_finalCheck()
+      {
+        is(getAccessible("parent", null, null, DONOTFAIL_IF_NO_ACC), null, "Check that parent is not accessible.");
+        is(getAccessible("child", null, null, DONOTFAIL_IF_NO_ACC), null, "Check that child is not accessible.");
+      }
+
+      this.getID = function testRemoveListener_getID()
+      {
+        return "Test that hide event is sent when click listener is removed";
+      }
+    }
+
+    var gQueue = null;
+    function doTest()
+    {
+      gQueue = new eventQueue();
+      gQueue.push(new testAddListener());
+      gQueue.push(new testRemoveListener());
+      gQueue.invoke(); // SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1175913"
+     title="Crash in mozilla::a11y::DocAccessibleParent::RemoveAccessible(ProxyAccessible* aAccessible)">
+    Mozilla Bug 1175913
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <span id="parent">
+      <span id="child">
+      </span>
+  </span>
+
+</body>
+</html>
