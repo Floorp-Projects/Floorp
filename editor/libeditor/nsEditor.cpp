@@ -600,7 +600,6 @@ nsEditor::GetWidget()
   return widget.forget();
 }
 
-/* attribute string contentsMIMEType; */
 NS_IMETHODIMP
 nsEditor::GetContentsMIMEType(char * *aContentsMIMEType)
 {

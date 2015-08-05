@@ -8,7 +8,7 @@
 #include "MP4Stream.h"
 #include "MozPromise.h"
 #include "MediaDataDemuxer.h"
-#include "SharedThreadPool.h"
+#include "mozilla/SharedThreadPool.h"
 #include "TaskQueue.h"
 #include "mozilla/ArrayUtils.h"
 #include "MockMediaResource.h"

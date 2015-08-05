@@ -545,6 +545,11 @@ var DebuggerServer = {
       constructor: "PromisesActor",
       type: { global: true, tab: true }
     });
+    this.registerModule("devtools/server/actors/performance-entries", {
+      prefix: "performanceEntries",
+      constructor: "PerformanceEntriesActor",
+      type: { tab: true }
+    });
   },
 
   /**

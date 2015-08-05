@@ -145,6 +145,20 @@ DocAccessibleChild::RecvState(const uint64_t& aID, uint64_t* aState)
 }
 
 bool
+DocAccessibleChild::RecvNativeState(const uint64_t& aID, uint64_t* aState)
+{
+  Accessible* acc = IdToAccessible(aID);
+  if (!acc) {
+    *aState = states::DEFUNCT;
+    return true;
+  }
+
+  *aState = acc->NativeState();
+
+  return true;
+}
+
+bool
 DocAccessibleChild::RecvName(const uint64_t& aID, nsString* aName)
 {
   Accessible* acc = IdToAccessible(aID);
@@ -164,6 +178,18 @@ DocAccessibleChild::RecvValue(const uint64_t& aID, nsString* aValue)
   }
 
   acc->Value(*aValue);
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvHelp(const uint64_t& aID, nsString* aHelp)
+{
+  Accessible* acc = IdToAccessible(aID);
+  if (!acc) {
+    return true;
+  }
+
+  acc->Help(*aHelp);
   return true;
 }
 
@@ -269,6 +295,49 @@ DocAccessibleChild::RecvRelations(const uint64_t& aID,
 
 #include "RelationTypeMap.h"
 #undef RELATIONTYPE
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvIsSearchbox(const uint64_t& aID, bool* aRetVal)
+{
+  Accessible* acc = IdToAccessible(aID);
+  if (!acc)
+    return true;
+
+  *aRetVal = acc->IsSearchbox();
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvLandmarkRole(const uint64_t& aID, nsString* aLandmark)
+{
+  Accessible* acc = IdToAccessible(aID);
+  if (!acc) {
+    return true;
+  }
+
+  if (nsIAtom* roleAtom = acc->LandmarkRole()) {
+    roleAtom->ToString(*aLandmark);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvARIARoleAtom(const uint64_t& aID, nsString* aRole)
+{
+  Accessible* acc = IdToAccessible(aID);
+  if (!acc) {
+    return true;
+  }
+
+  if (nsRoleMapEntry* roleMap = acc->ARIARoleMap()) {
+    if (nsIAtom* roleAtom = *(roleMap->roleAtom)) {
+      roleAtom->ToString(*aRole);
+    }
+  }
 
   return true;
 }

@@ -67,15 +67,6 @@ LeafAccessible::CacheChildren()
 // LinkableAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-LinkableAccessible::
-  LinkableAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  AccessibleWrap(aContent, aDoc),
-  mActionAcc(nullptr),
-  mIsLink(false),
-  mIsOnclick(false)
-{
-}
-
 NS_IMPL_ISUPPORTS_INHERITED0(LinkableAccessible, AccessibleWrap)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -84,17 +75,22 @@ NS_IMPL_ISUPPORTS_INHERITED0(LinkableAccessible, AccessibleWrap)
 void
 LinkableAccessible::TakeFocus()
 {
-  if (mActionAcc)
-    mActionAcc->TakeFocus();
-  else
+  if (Accessible* actionAcc = ActionWalk()) {
+    actionAcc->TakeFocus();
+  } else {
     AccessibleWrap::TakeFocus();
+  }
 }
 
 uint64_t
 LinkableAccessible::NativeLinkState() const
 {
-  if (mIsLink)
-    return states::LINKED | (mActionAcc->LinkState() & states::TRAVERSED);
+  bool isLink;
+  Accessible* actionAcc =
+    const_cast<LinkableAccessible*>(this)->ActionWalk(&isLink);
+  if (isLink) {
+    return states::LINKED | (actionAcc->LinkState() & states::TRAVERSED);
+  }
 
   return 0;
 }
@@ -105,18 +101,62 @@ LinkableAccessible::Value(nsString& aValue)
   aValue.Truncate();
 
   Accessible::Value(aValue);
-  if (!aValue.IsEmpty())
+  if (!aValue.IsEmpty()) {
     return;
+  }
 
-  if (aValue.IsEmpty() && mIsLink)
-    mActionAcc->Value(aValue);
+  bool isLink;
+  Accessible* actionAcc = ActionWalk(&isLink);
+  if (isLink) {
+    actionAcc->Value(aValue);
+  }
 }
-
 
 uint8_t
 LinkableAccessible::ActionCount()
 {
-  return (mIsOnclick || mIsLink) ? 1 : 0;
+  bool isLink, isOnclick;
+  ActionWalk(&isLink, &isOnclick);
+  return (isLink || isOnclick) ? 1 : 0;
+}
+
+Accessible*
+LinkableAccessible::ActionWalk(bool* aIsLink, bool* aIsOnclick)
+{
+  if (aIsOnclick) {
+    *aIsOnclick = false;
+  }
+  if (aIsLink) {
+    *aIsLink = false;
+  }
+
+  if (nsCoreUtils::HasClickListener(mContent)) {
+    if (aIsOnclick) {
+      *aIsOnclick = true;
+    }
+    return nullptr;
+  }
+
+  // XXX: The logic looks broken since the click listener may be registered
+  // on non accessible node in parent chain but this node is skipped when tree
+  // is traversed.
+  Accessible* walkUpAcc = this;
+  while ((walkUpAcc = walkUpAcc->Parent()) && !walkUpAcc->IsDoc()) {
+    if (walkUpAcc->LinkState() & states::LINKED) {
+      if (aIsLink) {
+        *aIsLink = true;
+      }
+      return walkUpAcc;
+    }
+
+    if (nsCoreUtils::HasClickListener(walkUpAcc->GetContent())) {
+      if (aIsOnclick) {
+        *aIsOnclick = true;
+      }
+      return walkUpAcc;
+    }
+  }
+  return nullptr;
 }
 
 void
@@ -126,40 +166,39 @@ LinkableAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 
   // Action 0 (default action): Jump to link
   if (aIndex == eAction_Jump) {
-    if (mIsLink)
+    bool isOnclick, isLink;
+    ActionWalk(&isLink, &isOnclick);
+    if (isLink) {
       aName.AssignLiteral("jump");
-    else if (mIsOnclick)
+    } else if (isOnclick) {
       aName.AssignLiteral("click");
+    }
   }
 }
 
 bool
 LinkableAccessible::DoAction(uint8_t aIndex)
 {
-  if (aIndex != eAction_Jump)
+  if (aIndex != eAction_Jump) {
     return false;
+  }
 
-  return mActionAcc ? mActionAcc->DoAction(aIndex) :
-    AccessibleWrap::DoAction(aIndex);
+  if (Accessible* actionAcc = ActionWalk()) {
+    return actionAcc->DoAction(aIndex);
+  }
+
+  return AccessibleWrap::DoAction(aIndex);
 }
 
 KeyBinding
 LinkableAccessible::AccessKey() const
 {
-  return mActionAcc ?
-    mActionAcc->AccessKey() : Accessible::AccessKey();
-}
+  if (const Accessible* actionAcc =
+    const_cast<LinkableAccessible*>(this)->ActionWalk()) {
+    return actionAcc->AccessKey();
+  }
 
-////////////////////////////////////////////////////////////////////////////////
-// LinkableAccessible. Accessible
-
-void
-LinkableAccessible::Shutdown()
-{
-  mIsLink = false;
-  mIsOnclick = false;
-  mActionAcc = nullptr;
-  AccessibleWrap::Shutdown();
+  return Accessible::AccessKey();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -168,63 +207,19 @@ LinkableAccessible::Shutdown()
 already_AddRefed<nsIURI>
 LinkableAccessible::AnchorURIAt(uint32_t aAnchorIndex)
 {
-  if (mIsLink) {
-    NS_ASSERTION(mActionAcc->IsLink(), "HyperLink isn't implemented.");
+  bool isLink;
+  Accessible* actionAcc = ActionWalk(&isLink);
+  if (isLink) {
+    NS_ASSERTION(actionAcc->IsLink(), "HyperLink isn't implemented.");
 
-    if (mActionAcc->IsLink())
-      return mActionAcc->AnchorURIAt(aAnchorIndex);
+    if (actionAcc->IsLink()) {
+      return actionAcc->AnchorURIAt(aAnchorIndex);
+    }
   }
 
   return nullptr;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// LinkableAccessible: Accessible protected
-
-void
-LinkableAccessible::BindToParent(Accessible* aParent,
-                                 uint32_t aIndexInParent)
-{
-  AccessibleWrap::BindToParent(aParent, aIndexInParent);
-
-  // Cache action content.
-  mActionAcc = nullptr;
-  mIsLink = false;
-  mIsOnclick = false;
-
-  if (nsCoreUtils::HasClickListener(mContent)) {
-    mIsOnclick = true;
-    return;
-  }
-
-  // XXX: The logic looks broken since the click listener may be registered
-  // on non accessible node in parent chain but this node is skipped when tree
-  // is traversed.
-  Accessible* walkUpAcc = this;
-  while ((walkUpAcc = walkUpAcc->Parent()) && !walkUpAcc->IsDoc()) {
-    if (walkUpAcc->LinkState() & states::LINKED) {
-      mIsLink = true;
-      mActionAcc = walkUpAcc;
-      return;
-    }
-
-    if (nsCoreUtils::HasClickListener(walkUpAcc->GetContent())) {
-      mActionAcc = walkUpAcc;
-      mIsOnclick = true;
-      return;
-    }
-  }
-}
-
-void
-LinkableAccessible::UnbindFromParent()
-{
-  mActionAcc = nullptr;
-  mIsLink = false;
-  mIsOnclick = false;
-
-  AccessibleWrap::UnbindFromParent();
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // DummyAccessible

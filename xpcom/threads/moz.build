@@ -32,6 +32,7 @@ EXPORTS.mozilla += [
     'HangAnnotations.h',
     'HangMonitor.h',
     'LazyIdleThread.h',
+    'SharedThreadPool.h',
     'SyncRunnable.h',
 ]
 
@@ -48,6 +49,7 @@ UNIFIED_SOURCES += [
     'nsThreadManager.cpp',
     'nsThreadPool.cpp',
     'nsTimerImpl.cpp',
+    'SharedThreadPool.cpp',
     'ThreadStackHelper.cpp',
     'TimerThread.cpp',
 ]

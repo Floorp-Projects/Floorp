@@ -2462,6 +2462,16 @@
             if (!remoteBrowser._beginRemoveTab(aOtherTab, true, true))
               return;
 
+            let modifiedAttrs = [];
+            if (aOtherTab.hasAttribute("muted")) {
+              aOurTab.setAttribute("muted", "true");
+              modifiedAttrs.push("muted");
+            }
+            if (aOtherTab.hasAttribute("soundplaying")) {
+              aOurTab.setAttribute("soundplaying", "true");
+              modifiedAttrs.push("soundplaying");
+            }
+
             let ourBrowser = this.getBrowserForTab(aOurTab);
             let otherBrowser = aOtherTab.linkedBrowser;
 
@@ -2481,7 +2491,7 @@
               var isBusy = aOtherTab.hasAttribute("busy");
               if (isBusy) {
                 aOurTab.setAttribute("busy", "true");
-                this._tabAttrModified(aOurTab, ["busy"]);
+                modifiedAttrs.push("busy");
                 if (aOurTab.selected)
                   this.mIsBusy = true;
               }
@@ -2511,6 +2521,10 @@
             // of replaceTabWithWindow), notify onLocationChange, etc.
             if (aOurTab.selected)
               this.updateCurrentBrowser(true);
+
+            if (modifiedAttrs.length) {
+              this._tabAttrModified(aOurTab, modifiedAttrs);
+            }
           ]]>
         </body>
       </method>
@@ -4254,7 +4268,7 @@
           this.setIcon(tab, icon);
         ]]>
       </handler>
-      <handler event="DOMMediaPlaybackStarted">
+      <handler event="DOMAudioPlaybackStarted">
         <![CDATA[
           if (!Services.prefs.getBoolPref("browser.tabs.showAudioPlayingIcon") ||
               !event.isTrusted)
@@ -4271,7 +4285,7 @@
           }
         ]]>
       </handler>
-      <handler event="DOMMediaPlaybackStopped">
+      <handler event="DOMAudioPlaybackStopped">
         <![CDATA[
           if (!Services.prefs.getBoolPref("browser.tabs.showAudioPlayingIcon") ||
               !event.isTrusted)

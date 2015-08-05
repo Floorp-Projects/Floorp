@@ -35,7 +35,6 @@ nsX509CertValidity::~nsX509CertValidity()
   /* destructor code */
 }
 
-/* readonly attribute PRTime notBefore; */
 NS_IMETHODIMP nsX509CertValidity::GetNotBefore(PRTime *aNotBefore)
 {
   NS_ENSURE_ARG(aNotBefore);
@@ -106,7 +105,6 @@ NS_IMETHODIMP nsX509CertValidity::GetNotBeforeGMT(nsAString &aNotBeforeGMT)
   return NS_OK;
 }
 
-/* readonly attribute PRTime notAfter; */
 NS_IMETHODIMP nsX509CertValidity::GetNotAfter(PRTime *aNotAfter)
 {
   NS_ENSURE_ARG(aNotAfter);

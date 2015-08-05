@@ -36,6 +36,7 @@ public class testEventDispatcher extends UITest
     private static final String NATIVE_EXCEPTION_EVENT = "Robocop:TestNativeException";
 
     private JavascriptBridge js;
+    private NativeJSObject savedMessage;
 
     @Override
     public void setUp() throws Exception {
@@ -72,6 +73,14 @@ public class testEventDispatcher extends UITest
         js.syncCall("send_message_for_response", NATIVE_RESPONSE_EVENT, "success");
         js.syncCall("send_message_for_response", NATIVE_RESPONSE_EVENT, "error");
         js.syncCall("send_test_message", NATIVE_EXCEPTION_EVENT);
+
+        fAssertNotSame("Should have saved a message", null, savedMessage);
+        try {
+            savedMessage.toString();
+            fFail("Using NativeJSContainer should throw after disposal");
+        } catch (final NullPointerException e) {
+        }
+
         js.syncCall("finish_test");
     }
 
@@ -174,6 +183,9 @@ public class testEventDispatcher extends UITest
                 fFail("Wrong property type should throw InvalidPropertyException");
             } catch (final NativeJSObject.InvalidPropertyException e) {
             }
+
+            // Save this message for post-disposal check.
+            savedMessage = message;
 
             // Save this test for last; make sure EventDispatcher catches InvalidPropertyException.
             message.getString("nonexistent_string");

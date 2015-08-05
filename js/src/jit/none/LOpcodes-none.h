@@ -7,6 +7,8 @@
 #ifndef jit_none_LOpcodes_none_h__
 #define jit_none_LOpcodes_none_h__
 
+#include "jit/shared/LOpcodes-shared.h"
+
 #define LIR_CPU_OPCODE_LIST(_)
 
 #endif // jit_none_LOpcodes_none_h__

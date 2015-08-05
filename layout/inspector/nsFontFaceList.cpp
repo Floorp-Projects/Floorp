@@ -25,7 +25,6 @@ NS_IMPL_ISUPPORTS(nsFontFaceList, nsIDOMFontFaceList)
 ////////////////////////////////////////////////////////////////////////
 // nsIDOMFontFaceList
 
-/* nsIDOMFontFace item (in unsigned long index); */
 struct FindByIndexData {
   uint32_t mTarget;
   uint32_t mCurrent;
@@ -58,7 +57,6 @@ nsFontFaceList::Item(uint32_t index, nsIDOMFontFace **_retval)
   return NS_OK;
 }
 
-/* readonly attribute unsigned long length; */
 NS_IMETHODIMP
 nsFontFaceList::GetLength(uint32_t *aLength)
 {

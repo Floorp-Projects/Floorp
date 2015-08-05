@@ -291,14 +291,12 @@ SVGSVGElement::SuspendRedraw(uint32_t max_wait_milliseconds)
   return 1;
 }
 
-/* void unsuspendRedraw (in unsigned long suspend_handle_id); */
 void
 SVGSVGElement::UnsuspendRedraw(uint32_t suspend_handle_id)
 {
   // no-op
 }
 
-/* void unsuspendRedrawAll (); */
 void
 SVGSVGElement::UnsuspendRedrawAll()
 {

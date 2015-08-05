@@ -28,7 +28,6 @@ nsFindService::~nsFindService()
 
 NS_IMPL_ISUPPORTS(nsFindService, nsIFindService)
 
-/* attribute AString searchString; */
 NS_IMETHODIMP nsFindService::GetSearchString(nsAString & aSearchString)
 {
     aSearchString = mSearchString;
@@ -41,7 +40,6 @@ NS_IMETHODIMP nsFindService::SetSearchString(const nsAString & aSearchString)
     return NS_OK;
 }
 
-/* attribute AString replaceString; */
 NS_IMETHODIMP nsFindService::GetReplaceString(nsAString & aReplaceString)
 {
     aReplaceString = mReplaceString;
@@ -53,7 +51,6 @@ NS_IMETHODIMP nsFindService::SetReplaceString(const nsAString & aReplaceString)
     return NS_OK;
 }
 
-/* attribute boolean findBackwards; */
 NS_IMETHODIMP nsFindService::GetFindBackwards(bool *aFindBackwards)
 {
     NS_ENSURE_ARG_POINTER(aFindBackwards);
@@ -66,7 +63,6 @@ NS_IMETHODIMP nsFindService::SetFindBackwards(bool aFindBackwards)
     return NS_OK;
 }
 
-/* attribute boolean wrapFind; */
 NS_IMETHODIMP nsFindService::GetWrapFind(bool *aWrapFind)
 {
     NS_ENSURE_ARG_POINTER(aWrapFind);
@@ -79,7 +75,6 @@ NS_IMETHODIMP nsFindService::SetWrapFind(bool aWrapFind)
     return NS_OK;
 }
 
-/* attribute boolean entireWord; */
 NS_IMETHODIMP nsFindService::GetEntireWord(bool *aEntireWord)
 {
     NS_ENSURE_ARG_POINTER(aEntireWord);
@@ -92,7 +87,6 @@ NS_IMETHODIMP nsFindService::SetEntireWord(bool aEntireWord)
     return NS_OK;
 }
 
-/* attribute boolean matchCase; */
 NS_IMETHODIMP nsFindService::GetMatchCase(bool *aMatchCase)
 {
     NS_ENSURE_ARG_POINTER(aMatchCase);

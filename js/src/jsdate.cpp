@@ -33,7 +33,6 @@
 #include "jstypes.h"
 #include "jsutil.h"
 #include "jswrapper.h"
-#include "prmjtime.h"
 
 #include "js/Conversions.h"
 #include "js/Date.h"
@@ -42,6 +41,7 @@
 #include "vm/Interpreter.h"
 #include "vm/String.h"
 #include "vm/StringBuffer.h"
+#include "vm/Time.h"
 
 #include "jsobjinlines.h"
 

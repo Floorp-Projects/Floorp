@@ -381,7 +381,7 @@ class GaiaMixin(object):
             'error_list': self.npm_error_list
         }
         code = self.retry(self.run_command, attempts=3, good_statuses=(0,),
-                          args=[cmd, dirs['abs_gaia_dir']], kwargs=kwargs)
+                          args=[cmd, dirs['abs_gaia_dir']], cleanup=cleanup_node_modules, kwargs=kwargs)
         if code:
             # Dump npm-debug.log, if it exists
             npm_debug = os.path.join(dirs['abs_gaia_dir'], 'npm-debug.log')

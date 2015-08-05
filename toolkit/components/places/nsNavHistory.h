@@ -509,7 +509,7 @@ protected:
    */
   static void expireNowTimerCallback(nsITimer* aTimer, void* aClosure);
 
-  nsresult ConstructQueryString(const nsCOMArray<nsNavHistoryQuery>& aQueries, 
+  nsresult ConstructQueryString(const nsCOMArray<nsNavHistoryQuery>& aQueries,
                                 nsNavHistoryQueryOptions* aOptions,
                                 nsCString& queryString,
                                 bool& aParamsPresent,

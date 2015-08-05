@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko.util;
 
+import org.mozilla.gecko.mozglue.generatorannotations.WrapEntireClassForJNI;
+import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.mozglue.JNITarget;
 
 import android.os.Bundle;
@@ -14,7 +16,8 @@ import android.os.Bundle;
  * access Javascript objects in Java.
  */
 @JNITarget
-public class NativeJSObject
+@WrapEntireClassForJNI
+public class NativeJSObject extends JNIObject
 {
     @SuppressWarnings("serial")
     @JNITarget
@@ -24,17 +27,12 @@ public class NativeJSObject
         }
     }
 
-    private final NativeJSContainer mContainer;
-    private final int mObjectIndex;
-
     protected NativeJSObject() {
-        mContainer = (NativeJSContainer)this;
-        mObjectIndex = -1;
     }
 
-    private NativeJSObject(NativeJSContainer container, int index) {
-        mContainer = container;
-        mObjectIndex = index;
+    @Override
+    protected void disposeNative() {
+        // NativeJSObject is disposed as part of NativeJSContainer disposal.
     }
 
     /**
