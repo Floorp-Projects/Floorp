@@ -2839,7 +2839,9 @@ EnumerateSelectors(nsTArray<nsCSSSelector*>& aSelectors, AttributeEnumData* aDat
 }
 
 nsRestyleHint
-nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
+nsCSSRuleProcessor::HasAttributeDependentStyle(
+    AttributeRuleProcessorData* aData,
+    RestyleHintData& aRestyleHintDataResult)
 {
   //  We could try making use of aData->mModType, but :not rules make it a bit
   //  of a pain to do so...  So just ignore it for now.

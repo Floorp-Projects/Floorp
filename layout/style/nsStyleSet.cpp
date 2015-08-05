@@ -2377,14 +2377,16 @@ struct MOZ_STACK_CLASS AttributeData : public AttributeRuleProcessorData {
                                  aAttrHasChanged, aOtherValue, aTreeMatchContext),
       mHint(nsRestyleHint(0))
   {}
-  nsRestyleHint   mHint;
+  nsRestyleHint mHint;
+  RestyleHintData mHintData;
 };
 
 static bool
 SheetHasAttributeStyle(nsIStyleRuleProcessor* aProcessor, void *aData)
 {
   AttributeData* data = (AttributeData*)aData;
-  nsRestyleHint hint = aProcessor->HasAttributeDependentStyle(data);
+  nsRestyleHint hint =
+    aProcessor->HasAttributeDependentStyle(data, data->mHintData);
   data->mHint = nsRestyleHint(data->mHint | hint);
   return true; // continue
 }
@@ -2395,7 +2397,9 @@ nsStyleSet::HasAttributeDependentStyle(Element*       aElement,
                                        nsIAtom*       aAttribute,
                                        int32_t        aModType,
                                        bool           aAttrHasChanged,
-                                       const nsAttrValue* aOtherValue)
+                                       const nsAttrValue* aOtherValue,
+                                       mozilla::RestyleHintData&
+                                         aRestyleHintDataResult)
 {
   TreeMatchContext treeContext(false, nsRuleWalker::eLinksVisitedOrUnvisited,
                                aElement->OwnerDoc());
@@ -2403,6 +2407,11 @@ nsStyleSet::HasAttributeDependentStyle(Element*       aElement,
   AttributeData data(PresContext(), aElement, aAttribute,
                      aModType, aAttrHasChanged, aOtherValue, treeContext);
   WalkRuleProcessors(SheetHasAttributeStyle, &data, false);
+  if (!(data.mHint & eRestyle_Subtree)) {
+    // No point keeping the list of selectors around if we are going to
+    // restyle the whole subtree unconditionally.
+    aRestyleHintDataResult = Move(data.mHintData);
+  }
   return data.mHint;
 }
 
