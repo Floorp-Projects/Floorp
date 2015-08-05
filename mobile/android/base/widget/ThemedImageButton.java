@@ -111,6 +111,7 @@ public class ThemedImageButton extends android.widget.ImageButton
         if (mIsPrivate != isPrivate) {
             mIsPrivate = isPrivate;
             refreshDrawableState();
+            invalidate();
         }
     }
 
@@ -127,6 +128,7 @@ public class ThemedImageButton extends android.widget.ImageButton
             }
 
             refreshDrawableState();
+            invalidate();
         }
     }
 
@@ -135,6 +137,7 @@ public class ThemedImageButton extends android.widget.ImageButton
             mIsLight = false;
             mIsDark = false;
             refreshDrawableState();
+            invalidate();
         }
     }
 

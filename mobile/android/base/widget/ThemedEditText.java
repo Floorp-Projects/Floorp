@@ -111,6 +111,7 @@ public class ThemedEditText extends android.widget.EditText
         if (mIsPrivate != isPrivate) {
             mIsPrivate = isPrivate;
             refreshDrawableState();
+            invalidate();
         }
     }
 
@@ -127,6 +128,7 @@ public class ThemedEditText extends android.widget.EditText
             }
 
             refreshDrawableState();
+            invalidate();
         }
     }
 
@@ -135,6 +137,7 @@ public class ThemedEditText extends android.widget.EditText
             mIsLight = false;
             mIsDark = false;
             refreshDrawableState();
+            invalidate();
         }
     }
 

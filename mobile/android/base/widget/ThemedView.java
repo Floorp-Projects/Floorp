@@ -111,6 +111,7 @@ public class ThemedView extends android.view.View
         if (mIsPrivate != isPrivate) {
             mIsPrivate = isPrivate;
             refreshDrawableState();
+            invalidate();
         }
     }
 
@@ -127,6 +128,7 @@ public class ThemedView extends android.view.View
             }
 
             refreshDrawableState();
+            invalidate();
         }
     }
 
@@ -135,6 +137,7 @@ public class ThemedView extends android.view.View
             mIsLight = false;
             mIsDark = false;
             refreshDrawableState();
+            invalidate();
         }
     }
 

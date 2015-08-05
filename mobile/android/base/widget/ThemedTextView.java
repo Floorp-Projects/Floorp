@@ -111,6 +111,7 @@ public class ThemedTextView extends android.widget.TextView
         if (mIsPrivate != isPrivate) {
             mIsPrivate = isPrivate;
             refreshDrawableState();
+            invalidate();
         }
     }
 
@@ -127,6 +128,7 @@ public class ThemedTextView extends android.widget.TextView
             }
 
             refreshDrawableState();
+            invalidate();
         }
     }
 
@@ -135,6 +137,7 @@ public class ThemedTextView extends android.widget.TextView
             mIsLight = false;
             mIsDark = false;
             refreshDrawableState();
+            invalidate();
         }
     }
 
