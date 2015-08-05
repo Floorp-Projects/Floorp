@@ -47,7 +47,7 @@ add_task(function () {
 
   equal(Utils.getMarkerClassName("Javascript"), "Function Call",
     "getMarkerClassName() returns correct string when defined via function");
-  equal(Utils.getMarkerClassName("GarbageCollection"), "GC Event",
+  equal(Utils.getMarkerClassName("GarbageCollection"), "Incremental GC",
     "getMarkerClassName() returns correct string when defined via function");
   equal(Utils.getMarkerClassName("Reflow"), "Layout",
     "getMarkerClassName() returns correct string when defined via string");
@@ -60,7 +60,7 @@ add_task(function () {
     ok(true, "getMarkerClassName() should throw when no label on blueprint.");
   }
 
-  TIMELINE_BLUEPRINT["fakemarker"] = { group: 0, label: () => void 0};
+  TIMELINE_BLUEPRINT["fakemarker"] = { group: 0, label: () => void 0 };
   try {
     Utils.getMarkerClassName("fakemarker");
     ok(false, "getMarkerClassName() should throw when label function returnd undefined.");

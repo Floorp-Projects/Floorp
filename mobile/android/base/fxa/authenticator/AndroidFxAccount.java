@@ -789,7 +789,7 @@ public class AndroidFxAccount {
           updateBundleValues(BUNDLE_KEY_PROFILE_JSON, resultData);
           Logger.info(LOG_TAG, "Profile JSON fetch succeeeded!");
           FxAccountUtils.pii(LOG_TAG, "Profile JSON fetch returned: " + resultData);
-          LocalBroadcastManager.getInstance(context).sendBroadcast(makeDeletedAccountIntent());
+          LocalBroadcastManager.getInstance(context).sendBroadcast(makeProfileJSONUpdatedIntent());
           break;
         case Activity.RESULT_CANCELED:
           Logger.warn(LOG_TAG, "Failed to fetch profile JSON; ignoring.");

@@ -3,10 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-// This should be removed with bug 1163763.
-const DBG_STRINGS_URI = "chrome://browser/locale/devtools/debugger.properties";
-const DBG_L10N = new ViewHelpers.L10N(DBG_STRINGS_URI);
-
 /**
  * Functions handling the recordings UI.
  */
@@ -151,7 +147,7 @@ let RecordingsView = Heritage.extend(WidgetMethods, {
 
     // Mark the corresponding item as loading.
     let durationNode = $(".recording-item-duration", recordingItem.target);
-    durationNode.setAttribute("value", DBG_L10N.getStr("loadingText"));
+    durationNode.setAttribute("value", L10N.getStr("recordingsList.loadingLabel"));
   },
 
   /**
@@ -214,8 +210,7 @@ let RecordingsView = Heritage.extend(WidgetMethods, {
    */
   _onSaveButtonClick: function (e) {
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-    // TODO localize? in bug 1163763
-    fp.init(window, "Save recording…", Ci.nsIFilePicker.modeSave);
+    fp.init(window, L10N.getStr("recordingsList.saveDialogTitle"), Ci.nsIFilePicker.modeSave);
     fp.appendFilter(L10N.getStr("recordingsList.saveDialogJSONFilter"), "*.json");
     fp.appendFilter(L10N.getStr("recordingsList.saveDialogAllFilter"), "*.*");
     fp.defaultString = "profile.json";

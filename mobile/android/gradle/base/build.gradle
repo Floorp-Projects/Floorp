@@ -30,9 +30,23 @@ android {
             java {
                 exclude 'org/mozilla/gecko/tests/**'
                 exclude 'org/mozilla/gecko/resources/**'
+
                 if (!mozconfig.substs.MOZ_CRASHREPORTER) {
                     exclude 'org/mozilla/gecko/CrashReporter.java'
                 }
+
+                if (!mozconfig.substs.MOZ_NATIVE_DEVICES) {
+                    exclude 'org/mozilla/gecko/ChromeCast.java'
+                    exclude 'org/mozilla/gecko/GeckoMediaPlayer.java'
+                    exclude 'org/mozilla/gecko/MediaPlayerManager.java'
+                }
+
+                if (mozconfig.substs.MOZ_WEBRTC) {
+                    srcDir 'src/webrtc_audio_device'
+                    srcDir 'src/webrtc_video_capture'
+                    srcDir 'src/webrtc_video_render'
+                }
+
                 // Adjust helpers are included in the preprocessed_code project.
                 exclude 'org/mozilla/gecko/adjust/**'
             }
