@@ -7,11 +7,10 @@ const { ViewHelpers } = require("resource:///modules/devtools/ViewHelpers.jsm");
 
 /**
  * Localization convenience methods.
- + TODO: merge these into a single file: Bug 1082695.
  */
 const L10N = new ViewHelpers.MultiL10N([
-  "chrome://browser/locale/devtools/timeline.properties",
-  "chrome://browser/locale/devtools/profiler.properties"
+  "chrome://browser/locale/devtools/markers.properties",
+  "chrome://browser/locale/devtools/performance.properties"
 ]);
 
 /**

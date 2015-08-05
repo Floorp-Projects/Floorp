@@ -663,21 +663,21 @@
          onget="return this.blockedPopups;"
          readonly="true"/>
 
-      <method name="mediaPlaybackStarted">
+      <method name="audioPlaybackStarted">
         <body>
           <![CDATA[
             let event = document.createEvent("Events");
-            event.initEvent("DOMMediaPlaybackStarted", true, true);
+            event.initEvent("DOMAudioPlaybackStarted", true, false);
             this.dispatchEvent(event);
           ]]>
         </body>
       </method>
 
-      <method name="mediaPlaybackStopped">
+      <method name="audioPlaybackStopped">
         <body>
           <![CDATA[
             let event = document.createEvent("Events");
-            event.initEvent("DOMMediaPlaybackStopped", true, true);
+            event.initEvent("DOMAudioPlaybackStopped", true, false);
             this.dispatchEvent(event);
           ]]>
         </body>
@@ -692,7 +692,7 @@
         <body>
           <![CDATA[
             this._audioMuted = true;
-            this.messageManager.sendAsyncMessage("MediaPlaybackMute",
+            this.messageManager.sendAsyncMessage("AudioPlaybackMute",
                                                  {type: "mute"});
           ]]>
         </body>
@@ -702,7 +702,7 @@
         <body>
           <![CDATA[
             this._audioMuted = false;
-            this.messageManager.sendAsyncMessage("MediaPlaybackMute",
+            this.messageManager.sendAsyncMessage("AudioPlaybackMute",
                                                  {type: "unmute"});
           ]]>
         </body>
@@ -858,8 +858,8 @@
             this.messageManager.addMessageListener("PopupBlocking:UpdateBlockedPopups", this);
             this.messageManager.addMessageListener("Autoscroll:Start", this);
             this.messageManager.addMessageListener("Autoscroll:Cancel", this);
-            this.messageManager.addMessageListener("MediaPlayback:Start", this);
-            this.messageManager.addMessageListener("MediaPlayback:Stop", this);
+            this.messageManager.addMessageListener("AudioPlayback:Start", this);
+            this.messageManager.addMessageListener("AudioPlayback:Stop", this);
           }
         ]]>
       </constructor>
@@ -946,11 +946,11 @@
             case "Autoscroll:Cancel":
               this._autoScrollPopup.hidePopup();
               break;
-            case "MediaPlayback:Start":
-              this.mediaPlaybackStarted();
+            case "AudioPlayback:Start":
+              this.audioPlaybackStarted();
               break;
-            case "MediaPlayback:Stop":
-              this.mediaPlaybackStopped();
+            case "AudioPlayback:Stop":
+              this.audioPlaybackStopped();
               break;
           }
         ]]></body>

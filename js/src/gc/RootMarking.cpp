@@ -103,14 +103,6 @@ AutoGCRooter::trace(JSTracer* trc)
         return;
       }
 
-      case DESCVECTOR: {
-        AutoPropertyDescriptorVector::VectorImpl& descriptors =
-            static_cast<AutoPropertyDescriptorVector*>(this)->vector;
-        for (size_t i = 0, len = descriptors.length(); i < len; i++)
-            descriptors[i].trace(trc);
-        return;
-      }
-
       case VALVECTOR: {
         AutoValueVector::VectorImpl& vector = static_cast<AutoValueVector*>(this)->vector;
         TraceRootRange(trc, vector.length(), vector.begin(), "JS::AutoValueVector.vector");
@@ -132,22 +124,9 @@ AutoGCRooter::trace(JSTracer* trc)
         return;
       }
 
-      case SHAPEVECTOR: {
-        AutoShapeVector::VectorImpl& vector = static_cast<js::AutoShapeVector*>(this)->vector;
-        TraceRootRange(trc, vector.length(), const_cast<Shape**>(vector.begin()),
-                       "js::AutoShapeVector.vector");
-        return;
-      }
-
       case OBJVECTOR: {
         AutoObjectVector::VectorImpl& vector = static_cast<AutoObjectVector*>(this)->vector;
         TraceRootRange(trc, vector.length(), vector.begin(), "JS::AutoObjectVector.vector");
-        return;
-      }
-
-      case STRINGVECTOR: {
-        AutoStringVector::VectorImpl& vector = static_cast<AutoStringVector*>(this)->vector;
-        TraceRootRange(trc, vector.length(), vector.begin(), "js::AutoStringVector.vector");
         return;
       }
 

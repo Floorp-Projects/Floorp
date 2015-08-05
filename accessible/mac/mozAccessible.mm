@@ -892,13 +892,14 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
 - (NSString*)role
 {
   AccessibleWrap* accWrap = [self getGeckoAccessible];
-  if (!accWrap)
+  if (accWrap) {
+    #ifdef DEBUG_A11Y
+      NS_ASSERTION(nsAccUtils::IsTextInterfaceSupportCorrect(accWrap),
+                   "Does not support Text when it should");
+    #endif
+  } else if (![self getProxyAccessible]) {
     return nil;
-
-#ifdef DEBUG_A11Y
-  NS_ASSERTION(nsAccUtils::IsTextInterfaceSupportCorrect(accWrap),
-               "Does not support Text when it should");
-#endif
+  }
 
 #define ROLE(geckoRole, stringRole, atkRole, macRole, msaaRole, ia2Role, nameRule) \
   case roles::geckoRole: \
@@ -917,11 +918,15 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
 - (NSString*)subrole
 {
   AccessibleWrap* accWrap = [self getGeckoAccessible];
-  if (!accWrap)
-    return nil;
+  ProxyAccessible* proxy = [self getProxyAccessible];
 
   // Deal with landmarks first
-  nsIAtom* landmark = accWrap->LandmarkRole();
+  nsIAtom* landmark = nullptr;
+  if (accWrap)
+    landmark = accWrap->LandmarkRole();
+  else if (proxy)
+    landmark = proxy->LandmarkRole();
+
   if (landmark) {
     if (landmark == nsGkAtoms::application)
       return @"AXLandmarkApplication";
@@ -944,35 +949,42 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
   }
 
   // Now, deal with widget roles
-  if (accWrap->HasARIARole()) {
+  nsIAtom* roleAtom = nullptr;
+  if (accWrap && accWrap->HasARIARole()) {
     nsRoleMapEntry* roleMap = accWrap->ARIARoleMap();
-    if (roleMap->Is(nsGkAtoms::alert))
+    roleAtom = *roleMap->roleAtom;
+  }
+  if (proxy)
+    roleAtom = proxy->ARIARoleAtom();
+
+  if (roleAtom) {
+    if (roleAtom == nsGkAtoms::alert)
       return @"AXApplicationAlert";
-    if (roleMap->Is(nsGkAtoms::alertdialog))
+    if (roleAtom == nsGkAtoms::alertdialog)
       return @"AXApplicationAlertDialog";
-    if (roleMap->Is(nsGkAtoms::article))
+    if (roleAtom == nsGkAtoms::article)
       return @"AXDocumentArticle";
-    if (roleMap->Is(nsGkAtoms::dialog))
+    if (roleAtom == nsGkAtoms::dialog)
       return @"AXApplicationDialog";
-    if (roleMap->Is(nsGkAtoms::document))
+    if (roleAtom == nsGkAtoms::document)
       return @"AXDocument";
-    if (roleMap->Is(nsGkAtoms::log_))
+    if (roleAtom == nsGkAtoms::log_)
       return @"AXApplicationLog";
-    if (roleMap->Is(nsGkAtoms::marquee))
+    if (roleAtom == nsGkAtoms::marquee)
       return @"AXApplicationMarquee";
-    if (roleMap->Is(nsGkAtoms::math))
+    if (roleAtom == nsGkAtoms::math)
       return @"AXDocumentMath";
-    if (roleMap->Is(nsGkAtoms::note_))
+    if (roleAtom == nsGkAtoms::note_)
       return @"AXDocumentNote";
-    if (roleMap->Is(nsGkAtoms::region))
+    if (roleAtom == nsGkAtoms::region)
       return @"AXDocumentRegion";
-    if (roleMap->Is(nsGkAtoms::status))
+    if (roleAtom == nsGkAtoms::status)
       return @"AXApplicationStatus";
-    if (roleMap->Is(nsGkAtoms::tabpanel))
+    if (roleAtom == nsGkAtoms::tabpanel)
       return @"AXTabPanel";
-    if (roleMap->Is(nsGkAtoms::timer))
+    if (roleAtom == nsGkAtoms::timer)
       return @"AXApplicationTimer";
-    if (roleMap->Is(nsGkAtoms::tooltip))
+    if (roleAtom == nsGkAtoms::tooltip)
       return @"AXUserInterfaceTooltip";
   }
 
@@ -981,7 +993,8 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
       return @"AXContentList"; // 10.6+ NSAccessibilityContentListSubrole;
 
     case roles::ENTRY:
-      if (accWrap->IsSearchbox())
+      if ((accWrap && accWrap->IsSearchbox()) ||
+          (proxy && proxy->IsSearchbox()))
         return @"AXSearchField";
       break;
 
@@ -1143,7 +1156,11 @@ struct RoleDescrComparator
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   nsAutoString title;
-  [self getGeckoAccessible]->Name(title);
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible])
+    accWrap->Name(title);
+  else if (ProxyAccessible* proxy = [self getProxyAccessible])
+    proxy->Name(title);
+
   return nsCocoaUtils::ToNSString(title);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
@@ -1154,7 +1171,11 @@ struct RoleDescrComparator
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   nsAutoString value;
-  [self getGeckoAccessible]->Value(value);
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible])
+    accWrap->Value(value);
+  else if (ProxyAccessible* proxy = [self getProxyAccessible])
+    proxy->Value(value);
+
   return nsCocoaUtils::ToNSString(value);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
@@ -1200,7 +1221,11 @@ struct RoleDescrComparator
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   nsAutoString helpText;
-  [self getGeckoAccessible]->Help(helpText);
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible])
+    accWrap->Help(helpText);
+  else if (ProxyAccessible* proxy = [self getProxyAccessible])
+    proxy->Help(helpText);
+
   return nsCocoaUtils::ToNSString(helpText);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
@@ -1223,24 +1248,36 @@ struct RoleDescrComparator
 
 - (BOOL)canBeFocused
 {
-  AccessibleWrap* accWrap = [self getGeckoAccessible];
-  return accWrap && (accWrap->InteractiveState() & states::FOCUSABLE);
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible])
+      return accWrap->InteractiveState() & states::FOCUSABLE;
+
+  if (ProxyAccessible* proxy = [self getProxyAccessible])
+    return proxy->State() & states::FOCUSABLE;
+
+  return false;
 }
 
 - (BOOL)focus
 {
-  AccessibleWrap* accWrap = [self getGeckoAccessible];
-  if (!accWrap)
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible])
+    accWrap->TakeFocus();
+  else if (ProxyAccessible* proxy = [self getProxyAccessible])
+    proxy->TakeFocus();
+  else
     return NO;
 
-  accWrap->TakeFocus();
   return YES;
 }
 
 - (BOOL)isEnabled
 {
-  AccessibleWrap* accWrap = [self getGeckoAccessible];
-  return accWrap && ((accWrap->InteractiveState() & states::UNAVAILABLE) == 0);
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible])
+    return ((accWrap->InteractiveState() & states::UNAVAILABLE) == 0);
+
+  if (ProxyAccessible* proxy = [self getProxyAccessible])
+    return ((proxy->State() & states::UNAVAILABLE) == 0);
+
+  return false;
 }
 
 // The root accessible calls this when the focused node was
@@ -1263,11 +1300,17 @@ struct RoleDescrComparator
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  AccessibleWrap* accWrap = [self getGeckoAccessible];
-
   // Get a pointer to the native window (NSWindow) we reside in.
   NSWindow *nativeWindow = nil;
-  DocAccessible* docAcc = accWrap->Document();
+  DocAccessible* docAcc = nullptr;
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
+    docAcc = accWrap->Document();
+  } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
+    Accessible* outerDoc = proxy->OuterDocOfRemoteBrowser();
+    if (outerDoc)
+      docAcc = outerDoc->Document();
+  }
+
   if (docAcc)
     nativeWindow = static_cast<NSWindow*>(docAcc->GetNativeWindow());
 
@@ -1312,7 +1355,7 @@ struct RoleDescrComparator
 
 - (BOOL)isExpired
 {
-  return ![self getGeckoAccessible];
+  return ![self getGeckoAccessible] && ![self getProxyAccessible];
 }
 
 #pragma mark -

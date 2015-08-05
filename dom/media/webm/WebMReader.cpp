@@ -13,7 +13,7 @@
 #include "gfx2DGlue.h"
 #include "Layers.h"
 #include "mozilla/Preferences.h"
-#include "SharedThreadPool.h"
+#include "mozilla/SharedThreadPool.h"
 
 #include <algorithm>
 

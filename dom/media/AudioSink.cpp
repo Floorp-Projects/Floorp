@@ -90,7 +90,7 @@ AudioSink::Init()
   nsresult rv = NS_NewNamedThread("Media Audio",
                                   getter_AddRefs(mThread),
                                   nullptr,
-                                  MEDIA_THREAD_STACK_SIZE);
+                                  SharedThreadPool::kStackSize);
   if (NS_FAILED(rv)) {
     mEndPromise.Reject(rv, __func__);
     return p;

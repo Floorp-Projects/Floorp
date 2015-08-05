@@ -10,13 +10,13 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Variant.h"
 
-#include "prmjtime.h"
 #include "builtin/RegExp.h"
 #include "gc/Barrier.h"
 #include "gc/Zone.h"
 #include "vm/GlobalObject.h"
 #include "vm/PIC.h"
 #include "vm/SavedStacks.h"
+#include "vm/Time.h"
 
 namespace js {
 

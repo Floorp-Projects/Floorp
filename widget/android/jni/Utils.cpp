@@ -39,6 +39,20 @@ DEFINE_PRIMITIVE_TYPE_ADAPTER(double,   jdouble,  Double);
 
 } // namespace detail
 
+constexpr char Object::name[];
+template<> const char TypedObject<jstring>::name[] = "java/lang/String";
+template<> const char TypedObject<jclass>::name[] = "java/lang/Class";
+template<> const char TypedObject<jthrowable>::name[] = "java/lang/Throwable";
+template<> const char TypedObject<jbooleanArray>::name[] = "[Z";
+template<> const char TypedObject<jbyteArray>::name[] = "[B";
+template<> const char TypedObject<jcharArray>::name[] = "[C";
+template<> const char TypedObject<jshortArray>::name[] = "[S";
+template<> const char TypedObject<jintArray>::name[] = "[I";
+template<> const char TypedObject<jlongArray>::name[] = "[J";
+template<> const char TypedObject<jfloatArray>::name[] = "[F";
+template<> const char TypedObject<jdoubleArray>::name[] = "[D";
+template<> const char TypedObject<jobjectArray>::name[] = "[Ljava/lang/Object;";
+
 
 bool ThrowException(JNIEnv *aEnv, const char *aClass,
                     const char *aMessage)
@@ -97,14 +111,8 @@ uintptr_t GetNativeHandle(JNIEnv* env, jobject instance)
         return 0;
     }
 
-    auto handle = static_cast<uintptr_t>(
+    return static_cast<uintptr_t>(
             env->GetLongField(instance, sJNIObjectHandleField));
-
-    if (!handle && !env->ExceptionCheck()) {
-        ThrowException(env, "java/lang/NullPointerException",
-                       "Null native pointer");
-    }
-    return handle;
 }
 
 void SetNativeHandle(JNIEnv* env, jobject instance, uintptr_t handle)

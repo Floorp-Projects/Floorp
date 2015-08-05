@@ -4,602 +4,437 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "NativeJSContainer.h"
-#include "AndroidBridge.h"
-#include "js/StructuredClone.h"
-#include "mozilla/UniquePtr.h"
-#include "mozilla/Vector.h"
-#include "prthread.h"
+
+#include <jni.h>
+
+#include "Bundle.h"
+#include "GeneratedJNINatives.h"
+#include "MainThreadUtils.h"
+#include "jsapi.h"
 #include "nsJSUtils.h"
 
-using namespace mozilla;
-using namespace mozilla::widget;
+#include <mozilla/Vector.h>
+#include <mozilla/jni/Accessors.h>
+#include <mozilla/jni/Refs.h>
+#include <mozilla/jni/Utils.h>
+
+/**
+ * NativeJSContainer.cpp implements the native methods in both
+ * NativeJSContainer and NativeJSObject, using JSAPI to retrieve values from a
+ * JSObject and using JNI to return those values to Java code.
+ */
 
 namespace mozilla {
 namespace widget {
 
-class NativeJSContainer
-{
-public:
-    static void InitJNI(JNIEnv* env) {
-        if (jNativeJSContainer) {
-            return;
-        }
-        jNativeJSContainer = AndroidBridge::GetClassGlobalRef(
-            env, "org/mozilla/gecko/util/NativeJSContainer");
-        MOZ_ASSERT(jNativeJSContainer);
-        jContainerNativeObject = AndroidBridge::GetFieldID(
-            env, jNativeJSContainer, "mNativeObject", "J");
-        MOZ_ASSERT(jContainerNativeObject);
-        jContainerConstructor = AndroidBridge::GetMethodID(
-            env, jNativeJSContainer, "<init>", "(J)V");
-        MOZ_ASSERT(jContainerConstructor);
-
-        jNativeJSObject = AndroidBridge::GetClassGlobalRef(
-            env, "org/mozilla/gecko/util/NativeJSObject");
-        MOZ_ASSERT(jNativeJSObject);
-        jObjectContainer = AndroidBridge::GetFieldID(
-            env, jNativeJSObject, "mContainer",
-            "Lorg/mozilla/gecko/util/NativeJSContainer;");
-        MOZ_ASSERT(jObjectContainer);
-        jObjectIndex = AndroidBridge::GetFieldID(
-            env, jNativeJSObject, "mObjectIndex", "I");
-        MOZ_ASSERT(jObjectIndex);
-        jObjectConstructor = AndroidBridge::GetMethodID(
-            env, jNativeJSObject, "<init>",
-            "(Lorg/mozilla/gecko/util/NativeJSContainer;I)V");
-        MOZ_ASSERT(jContainerConstructor);
-
-        jBundle = AndroidBridge::GetClassGlobalRef(
-            env, "android/os/Bundle");
-        MOZ_ASSERT(jBundle);
-        jBundleConstructor = AndroidBridge::GetMethodID(
-            env, jBundle, "<init>", "(I)V");
-        MOZ_ASSERT(jBundleConstructor);
-        jBundlePutBoolean = AndroidBridge::GetMethodID(
-            env, jBundle, "putBoolean",
-            "(Ljava/lang/String;Z)V");
-        MOZ_ASSERT(jBundlePutBoolean);
-        jBundlePutBundle = AndroidBridge::GetMethodID(
-            env, jBundle, "putBundle",
-            "(Ljava/lang/String;Landroid/os/Bundle;)V");
-        MOZ_ASSERT(jBundlePutBundle);
-        jBundlePutDouble = AndroidBridge::GetMethodID(
-            env, jBundle, "putDouble",
-            "(Ljava/lang/String;D)V");
-        MOZ_ASSERT(jBundlePutDouble);
-        jBundlePutInt = AndroidBridge::GetMethodID(
-            env, jBundle, "putInt",
-            "(Ljava/lang/String;I)V");
-        MOZ_ASSERT(jBundlePutInt);
-        jBundlePutString = AndroidBridge::GetMethodID(
-            env, jBundle, "putString",
-            "(Ljava/lang/String;Ljava/lang/String;)V");
-        MOZ_ASSERT(jBundlePutString);
-        jBundlePutBooleanArray = AndroidBridge::GetMethodID(
-            env, jBundle, "putBooleanArray",
-            "(Ljava/lang/String;[Z)V");
-        MOZ_ASSERT(jBundlePutBooleanArray);
-        jBundlePutDoubleArray = AndroidBridge::GetMethodID(
-            env, jBundle, "putDoubleArray",
-            "(Ljava/lang/String;[D)V");
-        MOZ_ASSERT(jBundlePutDoubleArray);
-        jBundlePutIntArray = AndroidBridge::GetMethodID(
-            env, jBundle, "putIntArray",
-            "(Ljava/lang/String;[I)V");
-        MOZ_ASSERT(jBundlePutIntArray);
-        jBundlePutStringArray = AndroidBridge::GetMethodID(
-            env, jBundle, "putStringArray",
-            "(Ljava/lang/String;[Ljava/lang/String;)V");
-        MOZ_ASSERT(jBundlePutStringArray);
-
-        jObject = AndroidBridge::GetClassGlobalRef(
-            env, "java/lang/Object");
-        MOZ_ASSERT(jObject);
-        jString = AndroidBridge::GetClassGlobalRef(
-            env, "java/lang/String");
-        MOZ_ASSERT(jString);
-    }
-
-    static jobject CreateInstance(JNIEnv* env, JSContext* cx,
-                                  JS::HandleObject object) {
-        return CreateInstance(env, new NativeJSContainer(cx, object));
-    }
-
-    static NativeJSContainer* FromInstance(JNIEnv* env, jobject instance) {
-        MOZ_ASSERT(instance);
-
-        const jlong fieldValue =
-            env->GetLongField(instance, jContainerNativeObject);
-        NativeJSContainer* const nativeObject =
-            reinterpret_cast<NativeJSContainer* const>(
-            static_cast<uintptr_t>(fieldValue));
-        if (!nativeObject) {
-            AndroidBridge::ThrowException(env,
-                "java/lang/NullPointerException",
-                "Uninitialized NativeJSContainer");
-        }
-        return nativeObject;
-    }
-
-    static void DisposeInstance(JNIEnv* env, jobject instance) {
-        NativeJSContainer* const container = FromInstance(env, instance);
-        if (container) {
-            env->SetLongField(instance, jContainerNativeObject,
-                static_cast<jlong>(reinterpret_cast<uintptr_t>(nullptr)));
-            delete container;
-        }
-    }
-
-    static jobject CloneInstance(JNIEnv* env, jobject instance) {
-        NativeJSContainer* const container = FromInstance(env, instance);
-        if (!container || !container->EnsureObject(env)) {
-            return nullptr;
-        }
-        JSContext* const cx = container->mThreadContext;
-        JS::RootedObject object(cx, *container->mJSObject);
-        MOZ_ASSERT(object);
-
-        JSAutoStructuredCloneBuffer buffer;
-        if (!buffer.write(cx, JS::RootedValue(cx, JS::ObjectValue(*object)))) {
-            AndroidBridge::ThrowException(env,
-                "java/lang/UnsupportedOperationException",
-                "Cannot serialize object");
-            return nullptr;
-        }
-        return CreateInstance(env, new NativeJSContainer(cx, Move(buffer)));
-    }
-
-    static jobject GetInstanceFromObject(JNIEnv* env, jobject object) {
-        MOZ_ASSERT(object);
-
-        const jobject instance = env->GetObjectField(object, jObjectContainer);
-        MOZ_ASSERT(instance);
-        return instance;
-    }
-
-    static JSContext* GetContextFromObject(JNIEnv* env, jobject object) {
-        MOZ_ASSERT(object);
-        AutoLocalJNIFrame frame(env, 1);
-
-        NativeJSContainer* const container =
-            FromInstance(env, GetInstanceFromObject(env, object));
-        if (!container) {
-            return nullptr;
-        }
-        return container->mThreadContext;
-    }
-
-    static JSObject* GetObjectFromObject(JNIEnv* env, jobject object) {
-        MOZ_ASSERT(object);
-        AutoLocalJNIFrame frame(env, 1);
-
-        NativeJSContainer* const container =
-            FromInstance(env, GetInstanceFromObject(env, object));
-        if (!container ||
-            !container->EnsureObject(env)) { // Do thread check
-            return nullptr;
-        }
-        const jint index = env->GetIntField(object, jObjectIndex);
-        if (index < 0) {
-            // -1 for index field means it's the root object of the container
-            return *container->mJSObject;
-        }
-        return *container->mRootedObjects[index];
-    }
-
-    static jobject CreateObjectInstance(JNIEnv* env, jobject object,
-                                        JSContext* cx,
-                                        JS::HandleObject jsObject) {
-        MOZ_ASSERT(object);
-        MOZ_ASSERT(jsObject);
-        AutoLocalJNIFrame frame(env, 2);
-
-        jobject instance = GetInstanceFromObject(env, object);
-        NativeJSContainer* const container = FromInstance(env, instance);
-        if (!container) {
-            return nullptr;
-        }
-        size_t newIndex = container->mRootedObjects.length();
-        PersistentObjectPtr rootedJSObject =
-            MakeUnique<PersistentObject>(cx, jsObject);
-        if (!container->mRootedObjects.append(Move(rootedJSObject))) {
-            AndroidBridge::ThrowException(env,
-                "java/lang/OutOfMemoryError", "Cannot allocate object");
-            return nullptr;
-        }
-        const jobject newObject =
-            env->NewObject(jNativeJSObject, jObjectConstructor,
-                           instance, newIndex);
-        MOZ_ASSERT(newObject);
-        return frame.Pop(newObject);
-    }
-
-    // Make sure we have a JSObject and deserialize if necessary/possible
-    bool EnsureObject(JNIEnv* env) {
-        if (mJSObject) {
-            if (PR_GetCurrentThread() != mThread) {
-                AndroidBridge::ThrowException(env,
-                    "java/lang/IllegalThreadStateException",
-                    "Using NativeJSObject off its thread");
-                return false;
-            }
-            return true;
-        }
-        if (!SwitchContextToCurrentThread()) {
-            AndroidBridge::ThrowException(env,
-                "java/lang/IllegalThreadStateException",
-                "Not available for this thread");
-            return false;
-        }
-
-        JS::RootedValue value(mThreadContext);
-        MOZ_ASSERT(mBuffer.data());
-        MOZ_ALWAYS_TRUE(mBuffer.read(mThreadContext, &value));
-        if (value.isObject()) {
-            mJSObject = MakeUnique<PersistentObject>(mThreadContext, &value.toObject());
-        }
-        if (!mJSObject) {
-            AndroidBridge::ThrowException(env,
-                "java/lang/IllegalStateException", "Cannot deserialize data");
-            return false;
-        }
-        mBuffer.clear();
-        return true;
-    }
-
-    static jclass jBundle;
-    static jclass jNativeJSContainer;
-    static jclass jNativeJSObject;
-    static jclass jObject;
-    static jclass jString;
-
-    static jmethodID jBundleConstructor;
-    static jmethodID jBundlePutBoolean;
-    static jmethodID jBundlePutBundle;
-    static jmethodID jBundlePutDouble;
-    static jmethodID jBundlePutInt;
-    static jmethodID jBundlePutString;
-    static jmethodID jBundlePutBooleanArray;
-    static jmethodID jBundlePutDoubleArray;
-    static jmethodID jBundlePutIntArray;
-    static jmethodID jBundlePutStringArray;
-
-private:
-    static jfieldID jContainerNativeObject;
-    static jmethodID jContainerConstructor;
-    static jfieldID jObjectContainer;
-    static jfieldID jObjectIndex;
-    static jmethodID jObjectConstructor;
-
-    static jobject CreateInstance(JNIEnv* env,
-                                  NativeJSContainer* nativeObject) {
-        InitJNI(env);
-        const jobject newObject =
-            env->NewObject(jNativeJSContainer, jContainerConstructor,
-                           static_cast<jlong>(
-                           reinterpret_cast<uintptr_t>(nativeObject)));
-        AndroidBridge::HandleUncaughtException(env);
-        MOZ_ASSERT(newObject);
-        return newObject;
-    }
-
-    typedef JS::PersistentRooted<JSObject*>   PersistentObject;
-    typedef UniquePtr<PersistentObject> PersistentObjectPtr;
-
-    // Thread that the object is valid on
-    PRThread* mThread;
-    // Context that the object is valid in
-    JSContext* mThreadContext;
-    // Deserialized object, or nullptr if object is in serialized form
-    PersistentObjectPtr mJSObject;
-    // Serialized object, or empty if object is in deserialized form
-    JSAutoStructuredCloneBuffer mBuffer;
-    // Objects derived from mJSObject
-    Vector<PersistentObjectPtr, 0> mRootedObjects;
-
-    // Create a new container containing the given deserialized object
-    NativeJSContainer(JSContext* cx, JS::HandleObject object)
-            : mThread(PR_GetCurrentThread())
-            , mThreadContext(cx)
-            , mJSObject(new PersistentObject(cx, object))
-    {
-    }
-
-    // Create a new container containing the given serialized object
-    NativeJSContainer(JSContext* cx, JSAutoStructuredCloneBuffer&& buffer)
-            : mThread(PR_GetCurrentThread())
-            , mThreadContext(cx)
-            , mJSObject(nullptr)
-            , mBuffer(Forward<JSAutoStructuredCloneBuffer>(buffer))
-    {
-    }
-
-    bool SwitchContextToCurrentThread() {
-        PRThread* const currentThread = PR_GetCurrentThread();
-        if (currentThread == mThread) {
-            return true;
-        }
-        return false;
-    }
-};
-
-jclass NativeJSContainer::jNativeJSContainer = 0;
-jfieldID NativeJSContainer::jContainerNativeObject = 0;
-jmethodID NativeJSContainer::jContainerConstructor = 0;
-jclass NativeJSContainer::jNativeJSObject = 0;
-jfieldID NativeJSContainer::jObjectContainer = 0;
-jfieldID NativeJSContainer::jObjectIndex = 0;
-jmethodID NativeJSContainer::jObjectConstructor = 0;
-jclass NativeJSContainer::jBundle = 0;
-jmethodID NativeJSContainer::jBundleConstructor = 0;
-jmethodID NativeJSContainer::jBundlePutBoolean = 0;
-jmethodID NativeJSContainer::jBundlePutBundle = 0;
-jmethodID NativeJSContainer::jBundlePutDouble = 0;
-jmethodID NativeJSContainer::jBundlePutInt = 0;
-jmethodID NativeJSContainer::jBundlePutString = 0;
-jmethodID NativeJSContainer::jBundlePutBooleanArray = 0;
-jmethodID NativeJSContainer::jBundlePutDoubleArray = 0;
-jmethodID NativeJSContainer::jBundlePutIntArray = 0;
-jmethodID NativeJSContainer::jBundlePutStringArray = 0;
-jclass NativeJSContainer::jString = 0;
-jclass NativeJSContainer::jObject = 0;
-
-jobject
-CreateNativeJSContainer(JNIEnv* env, JSContext* cx, JS::HandleObject object)
-{
-    return NativeJSContainer::CreateInstance(env, cx, object);
-}
-
-} // namespace widget
-} // namespace mozilla
-
 namespace {
 
-class JSJNIString
+bool CheckThread()
 {
-public:
-    JSJNIString(JNIEnv* env, jstring str)
-        : mEnv(env)
-        , mJNIString(str)
-        , mJSString(!str ? nullptr :
-            reinterpret_cast<const char16_t*>(env->GetStringChars(str, nullptr)))
-    {
+    if (!NS_IsMainThread()) {
+        jni::ThrowException("java/lang/IllegalThreadStateException",
+                            "Not on Gecko thread");
+        return false;
     }
-    ~JSJNIString() {
-        if (mJNIString) {
-            mEnv->ReleaseStringChars(mJNIString,
-                reinterpret_cast<const jchar*>(mJSString));
-        }
-    }
-    operator const char16_t*() const {
-        return mJSString;
-    }
-    size_t Length() const {
-        return static_cast<size_t>(mEnv->GetStringLength(mJNIString));
-    }
-private:
-    JNIEnv* const mEnv;
-    const jstring mJNIString;
-    const char16_t* const mJSString;
-};
+    return true;
+}
 
 bool
-CheckJSCall(JNIEnv* env, bool result)
+CheckJSCall(bool result)
 {
     if (!result) {
-        AndroidBridge::ThrowException(env,
-            "java/lang/UnsupportedOperationException", "JSAPI call failed");
+        jni::ThrowException("java/lang/UnsupportedOperationException",
+                            "JSAPI call failed");
     }
     return result;
 }
 
-bool
-CheckJNIArgument(JNIEnv* env, jobject arg)
+template<class C> bool
+CheckJNIArgument(const jni::Ref<C>& arg)
 {
     if (!arg) {
-        AndroidBridge::ThrowException(env,
-            "java/lang/IllegalArgumentException", "Null argument");
-        return false;
+        jni::ThrowException("java/lang/IllegalArgumentException",
+                            "Null argument");
     }
-    return true;
+    return !!arg;
 }
 
-template <bool (*InValue)(JSContext*, JS::HandleValue)> bool
-CheckProperty(JNIEnv* env, JSContext* cx, JS::HandleValue val) {
-    if (!(*InValue)(cx, val)) {
-        AndroidBridge::ThrowException(env,
-            "org/mozilla/gecko/util/NativeJSObject$InvalidPropertyException",
-            "Property type mismatch");
-        return false;
-    }
-    return true;
-}
-
-bool
-AppendJSON(const char16_t* buf, uint32_t len, void* data)
+nsresult
+CheckSDKCall(nsresult rv)
 {
-    static_cast<nsAutoString*>(data)->Append(buf, len);
-    return true;
+    if (NS_FAILED(rv)) {
+        jni::ThrowException("java/lang/UnsupportedOperationException",
+                            "SDK JNI call failed");
+    }
+    return rv;
 }
 
-template <typename U, typename V,
-          bool (JS::Value::*IsMethod)() const,
-          V (JS::Value::*ToMethod)() const,
-          typename UA,
-          UA (JNIEnv::*NewArrayMethod)(jsize),
-          void (JNIEnv::*SetArrayRegionMethod)(UA, jsize, jsize, const U*)>
-struct PrimitiveProperty
+// Convert a JNI string to a char16_t string that JSAPI expects.
+class JSJNIString final
 {
-    typedef U Type; // JNI type
-    typedef UA ArrayType; // JNI array type
-    typedef V NativeType; // JSAPI type
+    JNIEnv* const mEnv;
+    jni::String::Param mJNIString;
+    const char16_t* const mJSString;
 
-    static bool InValue(JSContext* cx, JS::HandleValue val) {
-        return (static_cast<const JS::Value&>(val).*IsMethod)();
+public:
+    JSJNIString(JNIEnv* env, jni::String::Param str)
+        : mEnv(env)
+        , mJNIString(str)
+        , mJSString(!str ? nullptr : reinterpret_cast<const char16_t*>(
+                mEnv->GetStringChars(str.Get(), nullptr)))
+    {}
+
+    ~JSJNIString() {
+        if (mJNIString) {
+            mEnv->ReleaseStringChars(mJNIString.Get(),
+                reinterpret_cast<const jchar*>(mJSString));
+        }
     }
 
-    static Type FromValue(JNIEnv* env, jobject instance,
-                          JSContext* cx, JS::HandleValue val) {
-        return static_cast<Type>(
-            (static_cast<const JS::Value&>(val).*ToMethod)());
+    operator const char16_t*() const {
+        return mJSString;
     }
 
-    static ArrayType NewArray(JNIEnv* env, jobject instance, JSContext* cx,
-                              JS::HandleObject array, size_t length) {
-        UniquePtr<Type[]> buffer = MakeUnique<Type[]>(length);
-        for (size_t i = 0; i < length; i++) {
-            JS::RootedValue elem(cx);
-            if (!CheckJSCall(env, JS_GetElement(cx, array, i, &elem)) ||
-                !CheckProperty<PrimitiveProperty::InValue>(env, cx, elem)) {
-                return nullptr;
-            }
-            buffer[i] = FromValue(env, instance, cx, elem);
-        }
-        AutoLocalJNIFrame frame(env, 1);
-        ArrayType jarray = (env->*NewArrayMethod)(length);
-        if (!jarray) {
-            return nullptr;
-        }
-        (env->*SetArrayRegionMethod)(jarray, 0, length, buffer.get());
-        if (env->ExceptionCheck()) {
-            return nullptr;
-        }
-        return frame.Pop(jarray);
+    size_t Length() const {
+        return static_cast<size_t>(mEnv->GetStringLength(mJNIString.Get()));
     }
 };
 
-// Statically cast from bool to jboolean (unsigned char); it works
-// since false and JNI_FALSE have the same value (0), and true and
-// JNI_TRUE have the same value (1).
-typedef PrimitiveProperty<jboolean, bool,
-    &JS::Value::isBoolean, &JS::Value::toBoolean,
-    jbooleanArray, &JNIEnv::NewBooleanArray,
-    &JNIEnv::SetBooleanArrayRegion> BooleanProperty;
+} // namepsace
 
-typedef PrimitiveProperty<jdouble, double,
-    &JS::Value::isNumber, &JS::Value::toNumber,
-    jdoubleArray, &JNIEnv::NewDoubleArray,
-    &JNIEnv::SetDoubleArrayRegion> DoubleProperty;
-
-typedef PrimitiveProperty<jint, int32_t,
-    &JS::Value::isInt32, &JS::Value::toInt32,
-    jintArray, &JNIEnv::NewIntArray,
-    &JNIEnv::SetIntArrayRegion> IntProperty;
-
-struct StringProperty
+class NativeJSContainerImpl final
+    : public NativeJSObject::Natives<NativeJSContainerImpl>
+    , public NativeJSContainer::Natives<NativeJSContainerImpl>
 {
-    typedef jstring Type;
+    typedef NativeJSContainerImpl Self;
+    typedef NativeJSContainer::Natives<NativeJSContainerImpl> ContainerBase;
+    typedef NativeJSObject::Natives<NativeJSContainerImpl> ObjectBase;
 
-    static jclass Class() {
-        return NativeJSContainer::jString;
+    typedef JS::PersistentRooted<JSObject*> PersistentObject;
+
+    JNIEnv* const mEnv;
+    // Context that the object is valid in
+    JSContext* const mJSContext;
+    // Root JS object
+    PersistentObject mJSObject;
+    // Children objects
+    Vector<NativeJSObject::GlobalRef, 0> mChildren;
+
+    bool CheckObject() const
+    {
+        if (!mJSObject) {
+            jni::ThrowException("java/lang/NullPointerException",
+                                "Null JSObject");
+        }
+        return !!mJSObject;
     }
 
-    static bool InValue(JSContext* cx, JS::HandleValue val) {
+    // Check that a JS Value contains a particular property type as indicaed by
+    // the property's InValue method (e.g. StringProperty::InValue).
+    bool CheckProperty(bool (Self::*InValue)(JS::HandleValue) const,
+                       JS::HandleValue val) const
+    {
+        if (!(this->*InValue)(val)) {
+            // XXX this can happen when converting a double array inside a
+            // Bundle, because double arrays can be misidentified as an int
+            // array. The workaround is to add a dummy first element to the
+            // array that is a floating point value, i.e. [0.5, ...].
+            jni::ThrowException(
+                "org/mozilla/gecko/util/NativeJSObject$InvalidPropertyException",
+                "Property type mismatch");
+            return false;
+        }
+        return true;
+    }
+
+    // Primitive properties
+
+    template<bool (JS::Value::*IsType)() const> bool
+    PrimitiveInValue(JS::HandleValue val) const
+    {
+        return (static_cast<const JS::Value&>(val).*IsType)();
+    }
+
+    template<typename U, U (JS::Value::*ToType)() const> U
+    PrimitiveFromValue(JS::HandleValue val) const
+    {
+        return (static_cast<const JS::Value&>(val).*ToType)();
+    }
+
+    template<class Prop> typename Prop::NativeArray
+    PrimitiveNewArray(JS::HandleObject array, size_t length) const
+    {
+        typedef typename Prop::JNIType JNIType;
+
+        // Fill up a temporary buffer for our array, then use
+        // JNIEnv::Set*ArrayRegion to fill out array in one go.
+
+        UniquePtr<JNIType[]> buffer = MakeUnique<JNIType[]>(length);
+        for (size_t i = 0; i < length; i++) {
+            JS::RootedValue elem(mJSContext);
+            if (!CheckJSCall(JS_GetElement(mJSContext, array, i, &elem)) ||
+                !CheckProperty(Prop::InValue, elem)) {
+                return nullptr;
+            }
+            buffer[i] = JNIType((this->*Prop::FromValue)(elem));
+        }
+        auto jarray = Prop::NativeArray::Adopt(
+                mEnv, (mEnv->*Prop::NewJNIArray)(length));
+        if (!jarray) {
+            return nullptr;
+        }
+        (mEnv->*Prop::SetJNIArrayRegion)(
+                jarray.Get(), 0, length, buffer.get());
+        if (mEnv->ExceptionCheck()) {
+            return nullptr;
+        }
+        return jarray;
+    }
+
+    template<typename U, typename UA, typename V, typename VA,
+             bool (JS::Value::*IsType)() const,
+             U (JS::Value::*ToType)() const,
+             VA (JNIEnv::*NewArray_)(jsize),
+             void (JNIEnv::*SetArrayRegion_)(VA, jsize, jsize, const V*)>
+    struct PrimitiveProperty
+    {
+        // C++ type for a primitive property (e.g. bool)
+        typedef U NativeType;
+        // C++ type for the fallback value used in opt* methods
+        typedef U NativeFallback;
+        // Type for an array of the primitive type (e.g. BooleanArray::LocalRef)
+        typedef typename UA::LocalRef NativeArray;
+        // Type for the fallback value used in opt*Array methods
+        typedef const typename UA::Ref ArrayFallback;
+        // JNI type (e.g. jboolean)
+        typedef V JNIType;
+
+        // JNIEnv function to create a new JNI array of the primiive type
+        typedef decltype(NewArray_) NewJNIArray_t;
+        static constexpr NewJNIArray_t NewJNIArray = NewArray_;
+
+        // JNIEnv function to fill a JNI array of the primiive type
+        typedef decltype(SetArrayRegion_) SetJNIArrayRegion_t;
+        static constexpr SetJNIArrayRegion_t SetJNIArrayRegion = SetArrayRegion_;
+
+        // Function to determine if a JS Value contains the primitive type
+        typedef decltype(&Self::PrimitiveInValue<IsType>) InValue_t;
+        static constexpr InValue_t InValue = &Self::PrimitiveInValue<IsType>;
+
+        // Function to convert a JS Value to the primitive type
+        typedef decltype(&Self::PrimitiveFromValue<U, ToType>) FromValue_t;
+        static constexpr FromValue_t FromValue
+                = &Self::PrimitiveFromValue<U, ToType>;
+
+        // Function to convert a JS array to a JNI array
+        typedef decltype(&Self::PrimitiveNewArray<PrimitiveProperty>) NewArray_t;
+        static constexpr NewArray_t NewArray
+                = &Self::PrimitiveNewArray<PrimitiveProperty>;
+    };
+
+    // String properties
+
+    bool StringInValue(JS::HandleValue val) const
+    {
         return val.isString();
     }
 
-    static Type FromValue(JNIEnv* env, jobject instance,
-                          JSContext* cx, JS::HandleValue val) {
-        const JS::RootedString str(cx, val.toString());
-        return FromValue(env, instance, cx, str);
-    }
-
-    static Type FromValue(JNIEnv* env, jobject instance,
-                          JSContext* cx, const JS::HandleString str) {
+    jni::String::LocalRef
+    StringFromValue(const JS::HandleString str) const
+    {
         nsAutoJSString autoStr;
-        if (!CheckJSCall(env, autoStr.init(cx, str))) {
+        if (!CheckJSCall(autoStr.init(mJSContext, str))) {
             return nullptr;
         }
-        jstring ret = env->NewString(
-            reinterpret_cast<const jchar*>(autoStr.BeginReading()),
-            autoStr.Length());
-        MOZ_ASSERT(ret);
-        return ret;
-    }
-};
-
-template <jclass& C, jobject (*FactoryMethod)
-    (JNIEnv*, jobject, JSContext*, JS::HandleObject)>
-struct BaseObjectProperty
-{
-    typedef jobject Type;
-
-    static jclass Class() {
-        return C;
+        // Param<String> can automatically convert a nsString to jstring.
+        return jni::Param<jni::String>(autoStr, mEnv);
     }
 
-    static bool InValue(JSContext* cx, JS::HandleValue val) {
-        return val.isObjectOrNull();
+    jni::String::LocalRef
+    StringFromValue(JS::HandleValue val)
+    {
+        const JS::RootedString str(mJSContext, val.toString());
+        return StringFromValue(str);
     }
 
-    static Type FromValue(JNIEnv* env, jobject instance,
-                          JSContext* cx, JS::HandleValue val) {
+    // Bundle properties
+
+    sdk::Bundle::LocalRef
+    BundleFromValue(const JS::HandleObject obj)
+    {
+        const JS::AutoIdArray ids(mJSContext,
+                                  JS_Enumerate(mJSContext, obj));
+        if (!CheckJSCall(!!ids)) {
+            return nullptr;
+        }
+
+        const size_t length = ids.length();
+        sdk::Bundle::LocalRef newBundle(mEnv);
+        NS_ENSURE_SUCCESS(CheckSDKCall(
+                sdk::Bundle::New(length, &newBundle)), nullptr);
+
+        // Iterate through each property of the JS object. For each property,
+        // determine its type from a list of supported types, and convert that
+        // proeprty to the supported type.
+
+        for (size_t i = 0; i < ids.length(); i++) {
+            const JS::RootedId id(mJSContext, ids[i]);
+            JS::RootedValue idVal(mJSContext);
+            if (!CheckJSCall(JS_IdToValue(mJSContext, id, &idVal))) {
+                return nullptr;
+            }
+
+            const JS::RootedString idStr(mJSContext,
+                                         JS::ToString(mJSContext, idVal));
+            if (!CheckJSCall(!!idStr)) {
+                return nullptr;
+            }
+
+            jni::String::LocalRef name = StringFromValue(idStr);
+            JS::RootedValue val(mJSContext);
+            if (!name ||
+                !CheckJSCall(JS_GetPropertyById(mJSContext, obj, id, &val))) {
+                return nullptr;
+            }
+
+#define PUT_IN_BUNDLE_IF_TYPE_IS(TYPE)                                  \
+            if ((this->*TYPE##Property::InValue)(val)) {                \
+                auto jval = (this->*TYPE##Property::FromValue)(val);    \
+                if (mEnv->ExceptionCheck()) {                           \
+                    return nullptr;                                     \
+                }                                                       \
+                NS_ENSURE_SUCCESS(CheckSDKCall(                         \
+                        newBundle->Put##TYPE(name, jval)), nullptr);    \
+                continue;                                               \
+            }                                                           \
+            ((void) 0) // Accommodate trailing semicolon.
+
+            // Scalar values are faster to check, so check them first.
+            PUT_IN_BUNDLE_IF_TYPE_IS(Boolean);
+            // Int can be casted to double, so check int first.
+            PUT_IN_BUNDLE_IF_TYPE_IS(Int);
+            PUT_IN_BUNDLE_IF_TYPE_IS(Double);
+            PUT_IN_BUNDLE_IF_TYPE_IS(String);
+            // There's no "putObject", so don't check ObjectProperty
+
+            // Check for array types if scalar checks all failed.
+            // XXX empty arrays are treated as boolean arrays. Workaround is
+            // to always have a dummy element to create a non-empty array.
+            PUT_IN_BUNDLE_IF_TYPE_IS(BooleanArray);
+            // XXX because we only check the first element of an array,
+            // a double array can potentially be seen as an int array.
+            // When that happens, the Bundle conversion will fail.
+            PUT_IN_BUNDLE_IF_TYPE_IS(IntArray);
+            PUT_IN_BUNDLE_IF_TYPE_IS(DoubleArray);
+            PUT_IN_BUNDLE_IF_TYPE_IS(StringArray);
+            // There's no "putObjectArray", so don't check ObjectArrayProperty
+            // There's no "putBundleArray", so don't check BundleArrayProperty
+
+            // Use Bundle as the default catch-all for objects
+            PUT_IN_BUNDLE_IF_TYPE_IS(Bundle);
+
+#undef PUT_IN_BUNDLE_IF_TYPE_IS
+
+            // We tried all supported types; just bail.
+            jni::ThrowException("java/lang/UnsupportedOperationException",
+                                "Unsupported property type");
+            return nullptr;
+        }
+        return jni::Object::LocalRef::Adopt(newBundle.Env(),
+                                            newBundle.Forget());
+    }
+
+    sdk::Bundle::LocalRef
+    BundleFromValue(JS::HandleValue val)
+    {
         if (val.isNull()) {
             return nullptr;
         }
-        JS::RootedObject object(cx, &val.toObject());
-        return FactoryMethod(env, instance, cx, object);
+        JS::RootedObject object(mJSContext, &val.toObject());
+        return BundleFromValue(object);
     }
-};
 
-jobject GetBundle(JNIEnv*, jobject, JSContext*, JS::HandleObject);
+    // Object properties
 
-// Returns a NativeJSObject from a JSObject
-typedef BaseObjectProperty<NativeJSContainer::jNativeJSObject,
-    NativeJSContainer::CreateObjectInstance> ObjectProperty;
+    bool ObjectInValue(JS::HandleValue val) const
+    {
+        return val.isObjectOrNull();
+    }
 
-// Returns a Bundle from a JSObject
-typedef BaseObjectProperty<NativeJSContainer::jBundle,
-    GetBundle> BundleProperty;
+    NativeJSObject::LocalRef
+    ObjectFromValue(JS::HandleValue val)
+    {
+        if (val.isNull()) {
+            return nullptr;
+        }
+        JS::RootedObject object(mJSContext, &val.toObject());
+        return CreateChild(object);
+    }
 
-template <class BaseProperty>
-struct ObjectArrayWrapper : public BaseProperty
-{
-    typedef jobjectArray ArrayType;
-
-    static ArrayType NewArray(JNIEnv* env, jobject instance, JSContext* cx,
-                              JS::HandleObject array, size_t length) {
-        AutoLocalJNIFrame frame(env, 2);
-        ArrayType jarray = env->NewObjectArray(
-            length, BaseProperty::Class(), nullptr);
+    template<class Prop> typename Prop::NativeArray
+    ObjectNewArray(JS::HandleObject array, size_t length)
+    {
+        auto jarray = Prop::NativeArray::Adopt(mEnv, mEnv->NewObjectArray(
+                length,
+                jni::Accessor::EnsureClassRef<typename Prop::ClassType>(mEnv),
+                nullptr));
         if (!jarray) {
             return nullptr;
         }
+
+        // For object arrays, we have to set each element separately.
         for (size_t i = 0; i < length; i++) {
-            JS::RootedValue elem(cx);
-            if (!CheckJSCall(env, JS_GetElement(cx, array, i, &elem)) ||
-                !CheckProperty<BaseProperty::InValue>(env, cx, elem)) {
+            JS::RootedValue elem(mJSContext);
+            if (!CheckJSCall(JS_GetElement(mJSContext, array, i, &elem)) ||
+                !CheckProperty(Prop::InValue, elem)) {
                 return nullptr;
             }
-            typename BaseProperty::Type jelem =
-                BaseProperty::FromValue(env, instance, cx, elem);
-            if (env->ExceptionCheck()) {
-                return nullptr;
-            }
-            env->SetObjectArrayElement(jarray, i, jelem);
-            env->DeleteLocalRef(jelem);
-            if (env->ExceptionCheck()) {
+            mEnv->SetObjectArrayElement(
+                    jarray.Get(), i, (this->*Prop::FromValue)(elem).Get());
+            if (mEnv->ExceptionCheck()) {
                 return nullptr;
             }
         }
-        return frame.Pop(jarray);
+        return jarray;
     }
-};
 
-template <class T>
-struct ArrayProperty
-{
-    typedef T Base;
-    typedef typename T::ArrayType Type;
+    template<class Class,
+             bool (Self::*InValue_)(JS::HandleValue) const,
+             typename Class::LocalRef (Self::*FromValue_)(JS::HandleValue)>
+    struct BaseObjectProperty
+    {
+        // JNI class for the object type (e.g. jni::String)
+        typedef Class ClassType;
 
-    static bool InValue(JSContext* cx, JS::HandleValue val) {
+        // See comments in PrimitiveProperty.
+        typedef typename ClassType::LocalRef NativeType;
+        typedef const typename ClassType::Ref NativeFallback;
+        typedef typename jni::ObjectArray::LocalRef NativeArray;
+        typedef const jni::ObjectArray::Ref ArrayFallback;
+
+        typedef decltype(InValue_) InValue_t;
+        static constexpr InValue_t InValue = InValue_;
+
+        typedef decltype(FromValue_) FromValue_t;
+        static constexpr FromValue_t FromValue = FromValue_;
+
+        typedef decltype(&Self::ObjectNewArray<BaseObjectProperty>) NewArray_t;
+        static constexpr NewArray_t NewArray
+                = &Self::ObjectNewArray<BaseObjectProperty>;
+    };
+
+    // Array properties
+
+    template<class Prop> bool
+    ArrayInValue(JS::HandleValue val) const
+    {
         if (!val.isObject()) {
             return false;
         }
-        JS::RootedObject obj(cx, &val.toObject());
+        JS::RootedObject obj(mJSContext, &val.toObject());
         uint32_t length = 0;
-        if (!JS_IsArrayObject(cx, obj) ||
-            !JS_GetArrayLength(cx, obj, &length)) {
+        if (!JS_IsArrayObject(mJSContext, obj) ||
+            !JS_GetArrayLength(mJSContext, obj, &length)) {
             return false;
         }
         if (!length) {
@@ -608,404 +443,433 @@ struct ArrayProperty
         }
         // We only check to see the first element is the target type. If the
         // array has mixed types, we'll throw an error during actual conversion.
-        JS::RootedValue element(cx);
-        return JS_GetElement(cx, obj, 0, &element) &&
-               Base::InValue(cx, element);
+        JS::RootedValue element(mJSContext);
+        return JS_GetElement(mJSContext, obj, 0, &element) &&
+               (this->*Prop::InValue)(element);
     }
 
-    static Type FromValue(JNIEnv* env, jobject instance,
-                               JSContext* cx, JS::HandleValue val) {
-        JS::RootedObject obj(cx, &val.toObject());
+    template<class Prop> typename Prop::NativeArray
+    ArrayFromValue(JS::HandleValue val)
+    {
+        JS::RootedObject obj(mJSContext, &val.toObject());
         uint32_t length = 0;
-        if (!CheckJSCall(env, JS_GetArrayLength(cx, obj, &length))) {
+        if (!CheckJSCall(JS_GetArrayLength(mJSContext, obj, &length))) {
             return nullptr;
         }
-        return Base::NewArray(env, instance, cx, obj, length);
+        return (this->*Prop::NewArray)(obj, length);
     }
-};
 
-typedef ArrayProperty<BooleanProperty> BooleanArrayProperty;
-typedef ArrayProperty<DoubleProperty> DoubleArrayProperty;
-typedef ArrayProperty<IntProperty> IntArrayProperty;
-typedef ArrayProperty<ObjectArrayWrapper<StringProperty>> StringArrayProperty;
-typedef ArrayProperty<ObjectArrayWrapper<ObjectProperty>> ObjectArrayProperty;
-typedef ArrayProperty<ObjectArrayWrapper<BundleProperty>> BundleArrayProperty;
+    template<class Prop>
+    struct ArrayProperty
+    {
+        // See comments in PrimitiveProperty.
+        typedef typename Prop::NativeArray NativeType;
+        typedef typename Prop::ArrayFallback NativeFallback;
 
-struct HasProperty
-{
-    typedef jboolean Type;
+        typedef decltype(&Self::ArrayInValue<Prop>) InValue_t;
+        static constexpr InValue_t InValue
+                = &Self::ArrayInValue<Prop>;
 
-    static bool InValue(JSContext* cx, JS::HandleValue val) {
+        typedef decltype(&Self::ArrayFromValue<Prop>) FromValue_t;
+        static constexpr FromValue_t FromValue
+                = &Self::ArrayFromValue<Prop>;
+    };
+
+    // "Has" property is a special property type that is used to implement
+    // NativeJSObject.has, by returning true from InValue and FromValue for
+    // every existing property, and having false as the fallback value for
+    // when a property doesn't exist.
+
+    bool HasValue(JS::HandleValue val) const
+    {
         return true;
     }
 
-    static Type FromValue(JNIEnv* env, jobject instance,
-                          JSContext* cx, JS::HandleValue val) {
-        return JNI_TRUE;
-    }
-};
+    struct HasProperty
+    {
+        // See comments in PrimitiveProperty.
+        typedef bool NativeType;
+        typedef bool NativeFallback;
 
-enum class FallbackOption {
-    THROW,
-    RETURN,
-};
+        typedef decltype(&Self::HasValue) HasValue_t;
+        static constexpr HasValue_t InValue = &Self::HasValue;
+        static constexpr HasValue_t FromValue = &Self::HasValue;
+    };
 
-template <class Property>
-typename Property::Type
-GetProperty(JNIEnv* env, jobject instance, jstring name,
-            FallbackOption option = FallbackOption::THROW,
-            typename Property::Type fallback = typename Property::Type())
-{
-    MOZ_ASSERT(env);
-    MOZ_ASSERT(instance);
+    // Statically cast from bool to jboolean (unsigned char); it works
+    // since false and JNI_FALSE have the same value (0), and true and
+    // JNI_TRUE have the same value (1).
+    typedef PrimitiveProperty<
+            bool, jni::BooleanArray, jboolean, jbooleanArray,
+            &JS::Value::isBoolean, &JS::Value::toBoolean,
+            &JNIEnv::NewBooleanArray, &JNIEnv::SetBooleanArrayRegion>
+        BooleanProperty;
 
-    JSContext* const cx =
-        NativeJSContainer::GetContextFromObject(env, instance);
-    if (!cx) {
-        return typename Property::Type();
-    }
+    typedef PrimitiveProperty<
+            double, jni::DoubleArray, jdouble, jdoubleArray,
+            &JS::Value::isNumber, &JS::Value::toNumber,
+            &JNIEnv::NewDoubleArray, &JNIEnv::SetDoubleArrayRegion>
+        DoubleProperty;
 
-    const JS::RootedObject object(cx,
-        NativeJSContainer::GetObjectFromObject(env, instance));
-    const JSJNIString strName(env, name);
-    JS::RootedValue val(cx);
+    typedef PrimitiveProperty<
+            int32_t, jni::IntArray, jint, jintArray,
+            &JS::Value::isInt32, &JS::Value::toInt32,
+            &JNIEnv::NewIntArray, &JNIEnv::SetIntArrayRegion>
+        IntProperty;
 
-    if (!object ||
-        !CheckJNIArgument(env, name) ||
-        !CheckJSCall(env,
-            JS_GetUCProperty(cx, object, strName, strName.Length(), &val))) {
-        return typename Property::Type();
-    }
-    if (val.isUndefined() || val.isNull()) {
-        if (option == FallbackOption::THROW) {
-            AndroidBridge::ThrowException(env,
+    typedef BaseObjectProperty<
+            jni::String, &Self::StringInValue, &Self::StringFromValue>
+        StringProperty;
+
+    typedef BaseObjectProperty<
+            sdk::Bundle, &Self::ObjectInValue, &Self::BundleFromValue>
+        BundleProperty;
+
+    typedef BaseObjectProperty<
+            NativeJSObject, &Self::ObjectInValue, &Self::ObjectFromValue>
+        ObjectProperty;
+
+    typedef ArrayProperty<BooleanProperty> BooleanArrayProperty;
+    typedef ArrayProperty<DoubleProperty> DoubleArrayProperty;
+    typedef ArrayProperty<IntProperty> IntArrayProperty;
+    typedef ArrayProperty<StringProperty> StringArrayProperty;
+    typedef ArrayProperty<BundleProperty> BundleArrayProperty;
+    typedef ArrayProperty<ObjectProperty> ObjectArrayProperty;
+
+    template<class Prop>
+    typename Prop::NativeType
+    GetProperty(jni::String::Param name,
+                typename Prop::NativeFallback* fallback = nullptr)
+    {
+        if (!CheckThread() || !CheckObject()) {
+            return typename Prop::NativeType();
+        }
+
+        const JSJNIString nameStr(mEnv, name);
+        JS::RootedValue val(mJSContext);
+
+        if (!CheckJNIArgument(name) ||
+            !CheckJSCall(JS_GetUCProperty(
+                    mJSContext, mJSObject, nameStr, nameStr.Length(), &val))) {
+            return typename Prop::NativeType();
+        }
+
+        // Strictly, null is different from undefined in JS. However, in
+        // practice, null is often used to indicate a property doesn't exist in
+        // the same manner as undefined. Therefore, we treat null in the same
+        // way as undefined when checking property existence (bug 1014965).
+        if (val.isUndefined() || val.isNull()) {
+            if (fallback) {
+                return mozilla::Move(*fallback);
+            }
+            jni::ThrowException(
                 "org/mozilla/gecko/util/NativeJSObject$InvalidPropertyException",
                 "Property does not exist");
+            return typename Prop::NativeType();
         }
-        return fallback;
-    }
-    if (!CheckProperty<Property::InValue>(env, cx, val)) {
-        return fallback;
-    }
-    return Property::FromValue(env, instance, cx, val);
-}
 
-jobject
-GetBundle(JNIEnv* env, jobject instance, JSContext* cx, JS::HandleObject obj)
-{
-    AutoLocalJNIFrame frame(env, 1);
-
-    const JS::AutoIdArray ids(cx, JS_Enumerate(cx, obj));
-    if (!CheckJSCall(env, !!ids)) {
-        return nullptr;
+        if (!CheckProperty(Prop::InValue, val)) {
+            return typename Prop::NativeType();
+        }
+        return (this->*Prop::FromValue)(val);
     }
 
-    const size_t length = ids.length();
-    const jobject newBundle = env->NewObject(
-        NativeJSContainer::jBundle,
-        NativeJSContainer::jBundleConstructor,
-        static_cast<jint>(length));
-    if (!newBundle) {
-        return nullptr;
+    NativeJSObject::LocalRef CreateChild(JS::HandleObject object)
+    {
+        auto instance = NativeJSObject::New();
+        mozilla::UniquePtr<NativeJSContainerImpl> impl(
+                new NativeJSContainerImpl(instance.Env(), mJSContext, object));
+
+        ObjectBase::AttachNative(instance, mozilla::Move(impl));
+        mChildren.append(NativeJSObject::GlobalRef(instance));
+        return instance;
     }
 
-    for (size_t i = 0; i < ids.length(); i++) {
-        AutoLocalJNIFrame loopFrame(env, 2);
+    NativeJSContainerImpl(JNIEnv* env, JSContext* cx, JS::HandleObject object)
+        : mEnv(env)
+        , mJSContext(cx)
+        , mJSObject(cx, object)
+    {}
 
-        const JS::RootedId id(cx, ids[i]);
-        JS::RootedValue idVal(cx);
-        if (!CheckJSCall(env, JS_IdToValue(cx, id, &idVal))) {
+public:
+    ~NativeJSContainerImpl()
+    {
+        // Dispose of all children on destruction. The children will in turn
+        // dispose any of their children (i.e. our grandchildren) and so on.
+        NativeJSObject::LocalRef child(mEnv);
+        for (size_t i = 0; i < mChildren.length(); i++) {
+            child = mChildren[i];
+            ObjectBase::GetNative(child)->ObjectBase::DisposeNative(child);
+        }
+    }
+
+    static NativeJSContainer::LocalRef
+    CreateInstance(JSContext* cx, JS::HandleObject object)
+    {
+        auto instance = NativeJSContainer::New();
+        mozilla::UniquePtr<NativeJSContainerImpl> impl(
+                new NativeJSContainerImpl(instance.Env(), cx, object));
+
+        ContainerBase::AttachNative(instance, mozilla::Move(impl));
+        return instance;
+    }
+
+    // NativeJSContainer methods
+
+    void DisposeNative(const NativeJSContainer::LocalRef& instance)
+    {
+        if (!CheckThread()) {
+            return;
+        }
+        ContainerBase::DisposeNative(instance);
+    }
+
+    NativeJSContainer::LocalRef Clone()
+    {
+        if (!CheckThread()) {
+            return nullptr;
+        }
+        return CreateInstance(mJSContext, mJSObject);
+    }
+
+    // NativeJSObject methods
+
+    bool GetBoolean(jni::String::Param name)
+    {
+        return GetProperty<BooleanProperty>(name);
+    }
+
+    bool OptBoolean(jni::String::Param name, bool fallback)
+    {
+        return GetProperty<BooleanProperty>(name, &fallback);
+    }
+
+    jni::BooleanArray::LocalRef
+    GetBooleanArray(jni::String::Param name)
+    {
+        return GetProperty<BooleanArrayProperty>(name);
+    }
+
+    jni::BooleanArray::LocalRef
+    OptBooleanArray(jni::String::Param name, jni::BooleanArray::Param fallback)
+    {
+        return GetProperty<BooleanArrayProperty>(name, &fallback);
+    }
+
+    jni::Object::LocalRef
+    GetBundle(jni::String::Param name)
+    {
+        return GetProperty<BundleProperty>(name);
+    }
+
+    jni::Object::LocalRef
+    OptBundle(jni::String::Param name, jni::Object::Param fallback)
+    {
+        // Because the GetProperty expects a sdk::Bundle::Param,
+        // we have to do conversions here from jni::Object::Param.
+        const auto& fb = sdk::Bundle::Ref::From(fallback.Get());
+        return GetProperty<BundleProperty>(name, &fb);
+    }
+
+    jni::ObjectArray::LocalRef
+    GetBundleArray(jni::String::Param name)
+    {
+        return GetProperty<BundleArrayProperty>(name);
+    }
+
+    jni::ObjectArray::LocalRef
+    OptBundleArray(jni::String::Param name, jni::ObjectArray::Param fallback)
+    {
+        return GetProperty<BundleArrayProperty>(name, &fallback);
+    }
+
+    double GetDouble(jni::String::Param name)
+    {
+        return GetProperty<DoubleProperty>(name);
+    }
+
+    double OptDouble(jni::String::Param name, double fallback)
+    {
+        return GetProperty<DoubleProperty>(name, &fallback);
+    }
+
+    jni::DoubleArray::LocalRef
+    GetDoubleArray(jni::String::Param name)
+    {
+        return GetProperty<DoubleArrayProperty>(name);
+    }
+
+    jni::DoubleArray::LocalRef
+    OptDoubleArray(jni::String::Param name, jni::DoubleArray::Param fallback)
+    {
+        jni::DoubleArray::LocalRef fb(fallback);
+        return GetProperty<DoubleArrayProperty>(name, &fb);
+    }
+
+    int GetInt(jni::String::Param name)
+    {
+        return GetProperty<IntProperty>(name);
+    }
+
+    int OptInt(jni::String::Param name, int fallback)
+    {
+        return GetProperty<IntProperty>(name, &fallback);
+    }
+
+    jni::IntArray::LocalRef
+    GetIntArray(jni::String::Param name)
+    {
+        return GetProperty<IntArrayProperty>(name);
+    }
+
+    jni::IntArray::LocalRef
+    OptIntArray(jni::String::Param name, jni::IntArray::Param fallback)
+    {
+        jni::IntArray::LocalRef fb(fallback);
+        return GetProperty<IntArrayProperty>(name, &fb);
+    }
+
+    NativeJSObject::LocalRef
+    GetObject(jni::String::Param name)
+    {
+        return GetProperty<ObjectProperty>(name);
+    }
+
+    NativeJSObject::LocalRef
+    OptObject(jni::String::Param name, NativeJSObject::Param fallback)
+    {
+        return GetProperty<ObjectProperty>(name, &fallback);
+    }
+
+    jni::ObjectArray::LocalRef
+    GetObjectArray(jni::String::Param name)
+    {
+        return GetProperty<ObjectArrayProperty>(name);
+    }
+
+    jni::ObjectArray::LocalRef
+    OptObjectArray(jni::String::Param name, jni::ObjectArray::Param fallback)
+    {
+        return GetProperty<ObjectArrayProperty>(name, &fallback);
+    }
+
+    jni::String::LocalRef
+    GetString(jni::String::Param name)
+    {
+        return GetProperty<StringProperty>(name);
+    }
+
+    jni::String::LocalRef
+    OptString(jni::String::Param name, jni::String::Param fallback)
+    {
+        return GetProperty<StringProperty>(name, &fallback);
+    }
+
+    jni::ObjectArray::LocalRef
+    GetStringArray(jni::String::Param name)
+    {
+        return GetProperty<StringArrayProperty>(name);
+    }
+
+    jni::ObjectArray::LocalRef
+    OptStringArray(jni::String::Param name, jni::ObjectArray::Param fallback)
+    {
+        return GetProperty<StringArrayProperty>(name, &fallback);
+    }
+
+    bool Has(jni::String::Param name)
+    {
+        bool no = false;
+        // Fallback to false indicating no such property.
+        return GetProperty<HasProperty>(name, &no);
+    }
+
+    jni::Object::LocalRef ToBundle()
+    {
+        if (!CheckThread() || !CheckObject()) {
+            return nullptr;
+        }
+        return BundleFromValue(mJSObject);
+    }
+
+private:
+    static bool AppendJSON(const char16_t* buf, uint32_t len, void* data)
+    {
+        static_cast<nsAutoString*>(data)->Append(buf, len);
+        return true;
+    }
+
+public:
+    jni::String::LocalRef ToString()
+    {
+        if (!CheckThread() || !CheckObject()) {
             return nullptr;
         }
 
-        const JS::RootedString idStr(cx, JS::ToString(cx, idVal));
-        if (!CheckJSCall(env, !!idStr)) {
+        JS::RootedValue value(mJSContext, JS::ObjectValue(*mJSObject));
+        nsAutoString json;
+        if (!CheckJSCall(JS_Stringify(mJSContext, &value, nullptr,
+                                      JS::NullHandleValue, AppendJSON, &json))) {
             return nullptr;
         }
-
-        const jstring name =
-            StringProperty::FromValue(env, instance, cx, idStr);
-        JS::RootedValue val(cx);
-        if (!name ||
-            !CheckJSCall(env, JS_GetPropertyById(cx, obj, id, &val))) {
-            return nullptr;
-        }
-
-#define PUT_IN_BUNDLE_IF_TYPE_IS(TYPE)                              \
-        if (TYPE##Property::InValue(cx, val)) {                     \
-            const TYPE##Property::Type jval =                       \
-                TYPE##Property::FromValue(env, instance, cx, val);  \
-            if (env->ExceptionCheck()) {                            \
-                return nullptr;                                     \
-            }                                                       \
-            env->CallVoidMethod(newBundle,                          \
-                NativeJSContainer::jBundlePut##TYPE, name, jval);   \
-            if (env->ExceptionCheck()) {                            \
-                return nullptr;                                     \
-            }                                                       \
-            continue;                                               \
-        }                                                           \
-        ((void) 0) // Accommodate trailing semicolon.
-
-        // Scalar values are faster to check, so check them first.
-        PUT_IN_BUNDLE_IF_TYPE_IS(Boolean);
-        // Int can be casted to double, so check int first.
-        PUT_IN_BUNDLE_IF_TYPE_IS(Int);
-        PUT_IN_BUNDLE_IF_TYPE_IS(Double);
-        PUT_IN_BUNDLE_IF_TYPE_IS(String);
-        // There's no "putObject", so don't check ObjectProperty
-
-        // Check for array types if scalar checks all failed.
-        PUT_IN_BUNDLE_IF_TYPE_IS(BooleanArray);
-        // XXX because we only check the first element of an array,
-        // a double array can potentially be seen as an int array.
-        PUT_IN_BUNDLE_IF_TYPE_IS(IntArray);
-        PUT_IN_BUNDLE_IF_TYPE_IS(DoubleArray);
-        PUT_IN_BUNDLE_IF_TYPE_IS(StringArray);
-        // There's no "putObjectArray", so don't check ObjectArrayProperty
-        // There's no "putBundleArray", so don't check BundleArrayProperty
-
-        // Use Bundle as the default catch-all for objects
-        PUT_IN_BUNDLE_IF_TYPE_IS(Bundle);
-
-#undef PUT_IN_BUNDLE_IF_TYPE_IS
-
-        // We tried all supported types; just bail.
-        AndroidBridge::ThrowException(env,
-            "java/lang/UnsupportedOperationException",
-            "Unsupported property type");
-        return nullptr;
+        return jni::Param<jni::String>(json, mEnv);
     }
-    return frame.Pop(newBundle);
-}
+};
 
-} // namespace
 
-extern "C" {
+// Define the "static constexpr" members of our property types (e.g.
+// PrimitiveProperty<>::InValue). This is tricky because there are a lot of
+// template parameters, so we use macros to make it simpler.
 
-NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_util_NativeJSContainer_dispose(JNIEnv* env, jobject instance)
+#define DEFINE_PRIMITIVE_PROPERTY_MEMBER(Name) \
+    template<typename U, typename UA, typename V, typename VA, \
+             bool (JS::Value::*I)() const, \
+             U (JS::Value::*T)() const, \
+             VA (JNIEnv::*N)(jsize), \
+             void (JNIEnv::*S)(VA, jsize, jsize, const V*)> \
+    constexpr typename NativeJSContainerImpl \
+        ::PrimitiveProperty<U, UA, V, VA, I, T, N, S>::Name##_t \
+    NativeJSContainerImpl::PrimitiveProperty<U, UA, V, VA, I, T, N, S>::Name
+
+DEFINE_PRIMITIVE_PROPERTY_MEMBER(NewJNIArray);
+DEFINE_PRIMITIVE_PROPERTY_MEMBER(SetJNIArrayRegion);
+DEFINE_PRIMITIVE_PROPERTY_MEMBER(InValue);
+DEFINE_PRIMITIVE_PROPERTY_MEMBER(FromValue);
+DEFINE_PRIMITIVE_PROPERTY_MEMBER(NewArray);
+
+#undef DEFINE_PRIMITIVE_PROPERTY_MEMBER
+
+#define DEFINE_OBJECT_PROPERTY_MEMBER(Name) \
+    template<class C, \
+             bool (NativeJSContainerImpl::*I)(JS::HandleValue) const, \
+             typename C::LocalRef (NativeJSContainerImpl::*F)(JS::HandleValue)> \
+    constexpr typename NativeJSContainerImpl \
+        ::BaseObjectProperty<C, I, F>::Name##_t \
+    NativeJSContainerImpl::BaseObjectProperty<C, I, F>::Name
+
+DEFINE_OBJECT_PROPERTY_MEMBER(InValue);
+DEFINE_OBJECT_PROPERTY_MEMBER(FromValue);
+DEFINE_OBJECT_PROPERTY_MEMBER(NewArray);
+
+#undef DEFINE_OBJECT_PROPERTY_MEMBER
+
+template<class P> constexpr typename NativeJSContainerImpl::ArrayProperty<P>
+        ::InValue_t NativeJSContainerImpl::ArrayProperty<P>::InValue;
+template<class P> constexpr typename NativeJSContainerImpl::ArrayProperty<P>
+        ::FromValue_t NativeJSContainerImpl::ArrayProperty<P>::FromValue;
+
+constexpr NativeJSContainerImpl::HasProperty::HasValue_t
+        NativeJSContainerImpl::HasProperty::InValue;
+constexpr NativeJSContainerImpl::HasProperty::HasValue_t
+        NativeJSContainerImpl::HasProperty::FromValue;
+
+
+NativeJSContainer::LocalRef
+CreateNativeJSContainer(JSContext* cx, JS::HandleObject object)
 {
-    MOZ_ASSERT(env);
-    NativeJSContainer::DisposeInstance(env, instance);
+    return NativeJSContainerImpl::CreateInstance(cx, object);
 }
 
-NS_EXPORT jobject JNICALL
-Java_org_mozilla_gecko_util_NativeJSContainer_clone(JNIEnv* env, jobject instance)
-{
-    MOZ_ASSERT(env);
-    return NativeJSContainer::CloneInstance(env, instance);
-}
+} // namespace widget
+} // namespace mozilla
 
-NS_EXPORT jboolean JNICALL
-Java_org_mozilla_gecko_util_NativeJSObject_getBoolean(JNIEnv* env, jobject instance, jstring name)
-{
-    return GetProperty<BooleanProperty>(env, instance, name);
-}
-
-NS_EXPORT jboolean JNICALL
-Java_org_mozilla_gecko_util_NativeJSObject_optBoolean(JNIEnv* env, jobject instance,
-                                                      jstring name, jboolean fallback)
-{
-    return GetProperty<BooleanProperty>(env, instance, name, FallbackOption::RETURN, fallback);
-}
-
-NS_EXPORT jbooleanArray JNICALL
-Java_org_mozilla_gecko_util_NativeJSObject_getBooleanArray(
-    JNIEnv* env, jobject instance, jstring name)
-{
-    return GetProperty<BooleanArrayProperty>(env, instance, name);
-}
-
-NS_EXPORT jbooleanArray JNICALL
-Java_org_mozilla_gecko_util_NativeJSObject_optBooleanArray(
-    JNIEnv* env, jobject instance, jstring name, jbooleanArray fallback)
-{
-    return GetProperty<BooleanArrayProperty>(env, instance, name, FallbackOption::RETURN, fallback);
-}
-
-NS_EXPORT jobject JNICALL
-Java_org_mozilla_gecko_util_NativeJSObject_getBundle(JNIEnv* env, jobject instance, jstring name)
-{
-    return GetProperty<BundleProperty>(env, instance, name);
-}
-
-NS_EXPORT jobject JNICALL
-Java_org_mozilla_gecko_util_NativeJSObject_optBundle(JNIEnv* env, jobject instance,
-                                                     jstring name, jobject fallback)
-{
-    return GetProperty<BundleProperty>(env, instance, name, FallbackOption::RETURN, fallback);
-}
-
-NS_EXPORT jobjectArray JNICALL
-Java_org_mozilla_gecko_util_NativeJSObject_getBundleArray(
-    JNIEnv* env, jobject instance, jstring name)
-{
-    return GetProperty<BundleArrayProperty>(env, instance, name);
-}
-
-NS_EXPORT jobjectArray JNICALL
-Java_org_mozilla_gecko_util_NativeJSObject_optBundleArray(
-    JNIEnv* env, jobject instance, jstring name, jobjectArray fallback)
-{
-    return GetProperty<BundleArrayProperty>(env, instance, name, FallbackOption::RETURN, fallback);
-}
-
-NS_EXPORT jdouble JNICALL
-Java_org_mozilla_gecko_util_NativeJSObject_getDouble(JNIEnv* env, jobject instance, jstring name)
-{
-    return GetProperty<DoubleProperty>(env, instance, name);
-}
-
-NS_EXPORT jdouble JNICALL
-Java_org_mozilla_gecko_util_NativeJSObject_optDouble(JNIEnv* env, jobject instance,
-                                                     jstring name, jdouble fallback)
-{
-    return GetProperty<DoubleProperty>(env, instance, name, FallbackOption::RETURN, fallback);
-}
-
-NS_EXPORT jdoubleArray JNICALL
-Java_org_mozilla_gecko_util_NativeJSObject_getDoubleArray(
-    JNIEnv* env, jobject instance, jstring name)
-{
-    return GetProperty<DoubleArrayProperty>(env, instance, name);
-}
-
-NS_EXPORT jdoubleArray JNICALL
-Java_org_mozilla_gecko_util_NativeJSObject_optDoubleArray(
-    JNIEnv* env, jobject instance, jstring name, jdoubleArray fallback)
-{
-    return GetProperty<DoubleArrayProperty>(env, instance, name, FallbackOption::RETURN, fallback);
-}
-
-NS_EXPORT jint JNICALL
-Java_org_mozilla_gecko_util_NativeJSObject_getInt(JNIEnv* env, jobject instance, jstring name)
-{
-    return GetProperty<IntProperty>(env, instance, name);
-}
-
-NS_EXPORT jint JNICALL
-Java_org_mozilla_gecko_util_NativeJSObject_optInt(JNIEnv* env, jobject instance,
-                                                  jstring name, jint fallback)
-{
-    return GetProperty<IntProperty>(env, instance, name, FallbackOption::RETURN, fallback);
-}
-
-NS_EXPORT jintArray JNICALL
-Java_org_mozilla_gecko_util_NativeJSObject_getIntArray(
-    JNIEnv* env, jobject instance, jstring name)
-{
-    return GetProperty<IntArrayProperty>(env, instance, name);
-}
-
-NS_EXPORT jintArray JNICALL
-Java_org_mozilla_gecko_util_NativeJSObject_optIntArray(
-    JNIEnv* env, jobject instance, jstring name, jintArray fallback)
-{
-    return GetProperty<IntArrayProperty>(env, instance, name, FallbackOption::RETURN, fallback);
-}
-
-NS_EXPORT jobject JNICALL
-Java_org_mozilla_gecko_util_NativeJSObject_getObject(JNIEnv* env, jobject instance, jstring name)
-{
-    return GetProperty<ObjectProperty>(env, instance, name);
-}
-
-NS_EXPORT jobject JNICALL
-Java_org_mozilla_gecko_util_NativeJSObject_optObject(JNIEnv* env, jobject instance,
-                                                     jstring name, jobject fallback)
-{
-    return GetProperty<ObjectProperty>(env, instance, name, FallbackOption::RETURN, fallback);
-}
-
-NS_EXPORT jobjectArray JNICALL
-Java_org_mozilla_gecko_util_NativeJSObject_getObjectArray(
-    JNIEnv* env, jobject instance, jstring name)
-{
-    return GetProperty<ObjectArrayProperty>(env, instance, name);
-}
-
-NS_EXPORT jobjectArray JNICALL
-Java_org_mozilla_gecko_util_NativeJSObject_optObjectArray(
-    JNIEnv* env, jobject instance, jstring name, jobjectArray fallback)
-{
-    return GetProperty<ObjectArrayProperty>(env, instance, name, FallbackOption::RETURN, fallback);
-}
-
-NS_EXPORT jstring JNICALL
-Java_org_mozilla_gecko_util_NativeJSObject_getString(JNIEnv* env, jobject instance, jstring name)
-{
-    return GetProperty<StringProperty>(env, instance, name);
-}
-
-NS_EXPORT jstring JNICALL
-Java_org_mozilla_gecko_util_NativeJSObject_optString(JNIEnv* env, jobject instance,
-                                                     jstring name, jstring fallback)
-{
-    return GetProperty<StringProperty>(env, instance, name, FallbackOption::RETURN, fallback);
-}
-
-NS_EXPORT jobjectArray JNICALL
-Java_org_mozilla_gecko_util_NativeJSObject_getStringArray(
-    JNIEnv* env, jobject instance, jstring name)
-{
-    return GetProperty<StringArrayProperty>(env, instance, name);
-}
-
-NS_EXPORT jobjectArray JNICALL
-Java_org_mozilla_gecko_util_NativeJSObject_optStringArray(
-    JNIEnv* env, jobject instance, jstring name, jobjectArray fallback)
-{
-    return GetProperty<StringArrayProperty>(env, instance, name, FallbackOption::RETURN, fallback);
-}
-
-NS_EXPORT jboolean JNICALL
-Java_org_mozilla_gecko_util_NativeJSObject_has(JNIEnv* env, jobject instance, jstring name)
-{
-    return GetProperty<HasProperty>(env, instance, name, FallbackOption::RETURN, JNI_FALSE);
-}
-
-NS_EXPORT jobject JNICALL
-Java_org_mozilla_gecko_util_NativeJSObject_toBundle(JNIEnv* env, jobject instance)
-{
-    MOZ_ASSERT(env);
-    MOZ_ASSERT(instance);
-
-    JSContext* const cx = NativeJSContainer::GetContextFromObject(env, instance);
-    if (!cx) {
-        return nullptr;
-    }
-
-    const JS::RootedObject object(cx, NativeJSContainer::GetObjectFromObject(env, instance));
-    if (!object) {
-        return nullptr;
-    }
-    return GetBundle(env, instance, cx, object);
-}
-
-NS_EXPORT jstring JNICALL
-Java_org_mozilla_gecko_util_NativeJSObject_toString(JNIEnv* env, jobject instance)
-{
-    MOZ_ASSERT(env);
-    MOZ_ASSERT(instance);
-
-    JSContext* const cx = NativeJSContainer::GetContextFromObject(env, instance);
-    if (!cx) {
-        return nullptr;
-    }
-
-    const JS::RootedObject object(cx, NativeJSContainer::GetObjectFromObject(env, instance));
-    JS::RootedValue value(cx, JS::ObjectValue(*object));
-    nsAutoString json;
-
-    if (!object ||
-        !CheckJSCall(env,
-            JS_Stringify(cx, &value, nullptr, JS::NullHandleValue, AppendJSON, &json))) {
-        return nullptr;
-    }
-    jstring ret = env->NewString(reinterpret_cast<const jchar*>(json.get()), json.Length());
-    MOZ_ASSERT(ret);
-    return ret;
-}
-
-} // extern "C"

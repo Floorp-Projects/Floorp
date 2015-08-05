@@ -113,7 +113,6 @@ nsInProcessTabChildGlobal::~nsInProcessTabChildGlobal()
   mozilla::DropJSObjects(this);
 }
 
-/* [notxpcom] boolean markForCC (); */
 // This method isn't automatically forwarded safely because it's notxpcom, so
 // the IDL binding doesn't know what value to return.
 NS_IMETHODIMP_(bool)

@@ -64,12 +64,19 @@ public:
   virtual bool RecvState(const uint64_t& aID, uint64_t* aState) override;
 
   /*
+   * Return the native state for the accessible with given ID.
+   */
+  virtual bool RecvNativeState(const uint64_t& aID, uint64_t* aState) override;
+
+  /*
    * Get the name for the accessible with given id.
    */
   virtual bool RecvName(const uint64_t& aID, nsString* aName) override;
 
   virtual bool RecvValue(const uint64_t& aID, nsString* aValue) override;
-  
+
+  virtual bool RecvHelp(const uint64_t& aID, nsString* aHelp) override;
+
   /*
    * Get the description for the accessible with given id.
    */
@@ -79,6 +86,12 @@ public:
   virtual bool RecvRelations(const uint64_t& aID,
                              nsTArray<RelationTargets>* aRelations)
     override;
+
+  virtual bool RecvIsSearchbox(const uint64_t& aID, bool* aRetVal) override;
+
+  virtual bool RecvLandmarkRole(const uint64_t& aID, nsString* aLandmark) override;
+
+  virtual bool RecvARIARoleAtom(const uint64_t& aID, nsString* aRole) override;
 
   virtual bool RecvAttributes(const uint64_t& aID,
                               nsTArray<Attribute> *aAttributes) override;

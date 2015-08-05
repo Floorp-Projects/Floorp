@@ -663,11 +663,10 @@ CheckForInterrupt(JSContext* cx)
 
 /************************************************************************/
 
-typedef JS::AutoVectorRooter<JSString*> AutoStringVector;
 typedef JS::AutoVectorRooter<PropertyName*> AutoPropertyNameVector;
-typedef JS::AutoVectorRooter<Shape*> AutoShapeVector;
 
 using ShapeVector = js::TraceableVector<Shape*>;
+using StringVector = js::TraceableVector<JSString*>;
 
 /* AutoArrayRooter roots an external array of Values. */
 class AutoArrayRooter : private JS::AutoGCRooter

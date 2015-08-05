@@ -15,7 +15,7 @@
 #include "nsSize.h"
 #include "VorbisUtils.h"
 #include "ImageContainer.h"
-#include "SharedThreadPool.h"
+#include "mozilla/SharedThreadPool.h"
 #include "nsIRandomGenerator.h"
 #include "nsIServiceManager.h"
 

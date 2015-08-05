@@ -30,7 +30,7 @@
 #include "nsITimer.h"
 #include "nsContentUtils.h"
 #include "MediaShutdownManager.h"
-#include "SharedThreadPool.h"
+#include "mozilla/SharedThreadPool.h"
 #include "mozilla/TaskQueue.h"
 #include "nsIEventTarget.h"
 #include "prenv.h"
