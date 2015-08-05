@@ -129,16 +129,18 @@ public:
 
 private:
   // Used when restyling an element with a frame.
-  void ComputeAndProcessStyleChange(nsIFrame*       aFrame,
-                                    nsChangeHint    aMinChange,
-                                    RestyleTracker& aRestyleTracker,
-                                    nsRestyleHint   aRestyleHint);
+  void ComputeAndProcessStyleChange(nsIFrame*              aFrame,
+                                    nsChangeHint           aMinChange,
+                                    RestyleTracker&        aRestyleTracker,
+                                    nsRestyleHint          aRestyleHint,
+                                    const RestyleHintData& aRestyleHintData);
   // Used when restyling a display:contents element.
-  void ComputeAndProcessStyleChange(nsStyleContext* aNewContext,
-                                    Element*        aElement,
-                                    nsChangeHint    aMinChange,
-                                    RestyleTracker& aRestyleTracker,
-                                    nsRestyleHint   aRestyleHint);
+  void ComputeAndProcessStyleChange(nsStyleContext*        aNewContext,
+                                    Element*               aElement,
+                                    nsChangeHint           aMinChange,
+                                    RestyleTracker&        aRestyleTracker,
+                                    nsRestyleHint          aRestyleHint,
+                                    const RestyleHintData& aRestyleHintData);
 
 public:
 
@@ -335,10 +337,12 @@ public:
    *                      on them.
    * @param aMinChangeHint: A minimum change hint for aContent and its
    *                        descendants.
+   * @param aRestyleHintData: Additional data to go with aRestyleHint.
    */
   void PostRestyleEvent(Element* aElement,
                         nsRestyleHint aRestyleHint,
-                        nsChangeHint aMinChangeHint);
+                        nsChangeHint aMinChangeHint,
+                        const RestyleHintData* aRestyleHintData = nullptr);
 
   void PostRestyleEventForLazyConstruction()
   {
@@ -423,7 +427,8 @@ private:
                       nsIFrame*       aPrimaryFrame,
                       nsChangeHint    aMinHint,
                       RestyleTracker& aRestyleTracker,
-                      nsRestyleHint   aRestyleHint);
+                      nsRestyleHint   aRestyleHint,
+                      const RestyleHintData& aRestyleHintData);
 
   void StartRebuildAllStyleData(RestyleTracker& aRestyleTracker);
   void FinishRebuildAllStyleData();
@@ -577,7 +582,9 @@ public:
                                                nsStyleContext* aNewContext,
                                                nsChangeHint    aMinHint,
                                                RestyleTracker& aRestyleTracker,
-                                               nsRestyleHint   aRestyleHint);
+                                               nsRestyleHint   aRestyleHint,
+                                               const RestyleHintData&
+                                                 aRestyleHintData);
 
   /**
    * Re-resolve the style contexts for a frame tree, building aChangeList
@@ -588,6 +595,7 @@ public:
                                     nsChangeHint       aMinChange,
                                     RestyleTracker&    aRestyleTracker,
                                     nsRestyleHint      aRestyleHint,
+                                    const RestyleHintData& aRestyleHintData,
                                     nsTArray<ContextToClear>& aContextsToClear,
                                     nsTArray<nsRefPtr<nsStyleContext>>&
                                       aSwappedStructOwners);
