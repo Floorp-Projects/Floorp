@@ -132,12 +132,18 @@ DoContentSecurityChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
     case nsIContentPolicy::TYPE_SUBDOCUMENT:
     case nsIContentPolicy::TYPE_REFRESH:
     case nsIContentPolicy::TYPE_XBL:
-    case nsIContentPolicy::TYPE_PING:
-    case nsIContentPolicy::TYPE_XMLHTTPREQUEST: {
-    // alias nsIContentPolicy::TYPE_DATAREQUEST:
+    case nsIContentPolicy::TYPE_PING: {
       MOZ_ASSERT(false, "contentPolicyType not supported yet");
       break;
     }
+
+    case nsIContentPolicy::TYPE_XMLHTTPREQUEST: {
+      // alias nsIContentPolicy::TYPE_DATAREQUEST:
+      mimeTypeGuess = NS_LITERAL_CSTRING(TEXT_EVENT_STREAM);
+      requestingContext = aLoadInfo->LoadingNode();
+      break;
+    }
+
 
     case nsIContentPolicy::TYPE_OBJECT_SUBREQUEST: {
       mimeTypeGuess = EmptyCString();
