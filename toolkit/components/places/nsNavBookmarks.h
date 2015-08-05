@@ -55,7 +55,6 @@ namespace places {
     nsCString property;
     bool isAnnotation;
     nsCString newValue;
-    nsCString oldValue;
   };
 
   typedef void (nsNavBookmarks::*ItemVisitMethod)(const ItemVisitData&);
