@@ -204,12 +204,9 @@ nsJARChannel::nsJARChannel()
     , mOpeningRemote(false)
     , mSynthesizedStreamLength(0)
     , mForceNoIntercept(false)
-    , mBlockRemoteFiles(false)
 {
     if (!gJarProtocolLog)
         gJarProtocolLog = PR_NewLogModule("nsJarProtocol");
-
-    mBlockRemoteFiles = Preferences::GetBool("network.jar.block-remote-files", false);
 
     // hold an owning reference to the jar handler
     NS_ADDREF(gJarHandler);
@@ -1009,13 +1006,6 @@ nsJARChannel::ContinueAsyncOpen()
 
     if (!mJarFile) {
         // Not a local file...
-
-        // Check preferences to see if all remote jar support should be disabled
-        if (mBlockRemoteFiles) {
-            mIsUnsafe = true;
-            return NS_ERROR_UNSAFE_CONTENT_TYPE;
-        }
-
         // kick off an async download of the base URI...
         nsCOMPtr<nsIStreamListener> downloader = new MemoryDownloader(this);
         uint32_t loadFlags =
@@ -1194,10 +1184,6 @@ nsJARChannel::OnDownloadComplete(MemoryDownloader* aDownloader,
         channel->GetContentDispositionHeader(mContentDispositionHeader);
         mContentDisposition = NS_GetContentDispositionFromHeader(mContentDispositionHeader, this);
     }
-
-    // This is a defense-in-depth check for the preferences to see if all remote jar
-    // support should be disabled. This check may not be needed.
-    MOZ_RELEASE_ASSERT(!mBlockRemoteFiles);
 
     if (NS_SUCCEEDED(status) && mIsUnsafe &&
         !Preferences::GetBool("network.jar.open-unsafe-types", false)) {
