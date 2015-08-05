@@ -2335,7 +2335,7 @@ public class GeckoAppShell
     @WrapElementForJNI(stubName = "HandleGeckoMessageWrapper")
     public static void handleGeckoMessage(final NativeJSContainer message) {
         EventDispatcher.getInstance().dispatchEvent(message);
-        message.dispose();
+        message.disposeNative();
     }
 
     @WrapElementForJNI

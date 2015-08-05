@@ -427,37 +427,13 @@ CacheFileHandles::RemoveHandle(CacheFileHandle *aHandle)
   }
 }
 
-static PLDHashOperator
-GetAllHandlesEnum(CacheFileHandles::HandleHashKey* aEntry, void *aClosure)
-{
-  nsTArray<nsRefPtr<CacheFileHandle> > *array =
-    static_cast<nsTArray<nsRefPtr<CacheFileHandle> > *>(aClosure);
-
-  aEntry->GetHandles(*array);
-  return PL_DHASH_NEXT;
-}
-
 void
 CacheFileHandles::GetAllHandles(nsTArray<nsRefPtr<CacheFileHandle> > *_retval)
 {
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
-  mTable.EnumerateEntries(&GetAllHandlesEnum, _retval);
-}
-
-static PLDHashOperator
-GetActiveHandlesEnum(CacheFileHandles::HandleHashKey* aEntry, void *aClosure)
-{
-  nsTArray<nsRefPtr<CacheFileHandle> > *array =
-    static_cast<nsTArray<nsRefPtr<CacheFileHandle> > *>(aClosure);
-
-  nsRefPtr<CacheFileHandle> handle = aEntry->GetNewestHandle();
-  MOZ_ASSERT(handle);
-
-  if (!handle->IsDoomed()) {
-    array->AppendElement(handle);
+  for (auto iter = mTable.Iter(); !iter.Done(); iter.Next()) {
+    iter.Get()->GetHandles(*_retval);
   }
-
-  return PL_DHASH_NEXT;
 }
 
 void
@@ -465,7 +441,14 @@ CacheFileHandles::GetActiveHandles(
   nsTArray<nsRefPtr<CacheFileHandle> > *_retval)
 {
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
-  mTable.EnumerateEntries(&GetActiveHandlesEnum, _retval);
+  for (auto iter = mTable.Iter(); !iter.Done(); iter.Next()) {
+    nsRefPtr<CacheFileHandle> handle = iter.Get()->GetNewestHandle();
+    MOZ_ASSERT(handle);
+
+    if (!handle->IsDoomed()) {
+      _retval->AppendElement(handle);
+    }
+  }
 }
 
 void

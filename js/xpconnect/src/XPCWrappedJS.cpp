@@ -579,7 +579,6 @@ nsXPCWrappedJS::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 
 /***************************************************************************/
 
-/* readonly attribute nsISimpleEnumerator enumerator; */
 NS_IMETHODIMP
 nsXPCWrappedJS::GetEnumerator(nsISimpleEnumerator * *aEnumerate)
 {
@@ -592,7 +591,6 @@ nsXPCWrappedJS::GetEnumerator(nsISimpleEnumerator * *aEnumerate)
                                                         aEnumerate);
 }
 
-/* nsIVariant getProperty (in AString name); */
 NS_IMETHODIMP
 nsXPCWrappedJS::GetProperty(const nsAString & name, nsIVariant** _retval)
 {

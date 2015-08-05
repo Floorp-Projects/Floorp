@@ -113,7 +113,6 @@ oom:
     return NS_ERROR_OUT_OF_MEMORY;
 }
 
-/* nsIXPCScriptable getScriptableHelper (); */
 NS_IMETHODIMP
 BackstagePass::GetScriptableHelper(nsIXPCScriptable** retval)
 {
@@ -122,7 +121,6 @@ BackstagePass::GetScriptableHelper(nsIXPCScriptable** retval)
     return NS_OK;
 }
 
-/* readonly attribute string contractID; */
 NS_IMETHODIMP
 BackstagePass::GetContractID(char * *aContractID)
 {
@@ -130,7 +128,6 @@ BackstagePass::GetContractID(char * *aContractID)
     return NS_ERROR_NOT_AVAILABLE;
 }
 
-/* readonly attribute string classDescription; */
 NS_IMETHODIMP
 BackstagePass::GetClassDescription(char * *aClassDescription)
 {
@@ -139,7 +136,6 @@ BackstagePass::GetClassDescription(char * *aClassDescription)
     return *aClassDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-/* readonly attribute nsCIDPtr classID; */
 NS_IMETHODIMP
 BackstagePass::GetClassID(nsCID * *aClassID)
 {
@@ -147,7 +143,6 @@ BackstagePass::GetClassID(nsCID * *aClassID)
     return NS_OK;
 }
 
-/* readonly attribute uint32_t flags; */
 NS_IMETHODIMP
 BackstagePass::GetFlags(uint32_t* aFlags)
 {
@@ -155,7 +150,6 @@ BackstagePass::GetFlags(uint32_t* aFlags)
     return NS_OK;
 }
 
-/* [notxpcom] readonly attribute nsCID classIDNoAlloc; */
 NS_IMETHODIMP
 BackstagePass::GetClassIDNoAlloc(nsCID* aClassIDNoAlloc)
 {

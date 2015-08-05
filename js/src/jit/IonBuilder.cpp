@@ -9391,7 +9391,8 @@ IonBuilder::jsop_setelem_typed(Scalar::Type arrayType,
         ins = MStoreTypedArrayElementHole::New(alloc(), elements, length, id, toWrite, arrayType);
     } else {
         MStoreUnboxedScalar* store =
-            MStoreUnboxedScalar::New(alloc(), elements, id, toWrite, arrayType);
+            MStoreUnboxedScalar::New(alloc(), elements, id, toWrite, arrayType,
+                                     MStoreUnboxedScalar::TruncateInput);
         ins = store;
     }
 
@@ -11660,16 +11661,19 @@ IonBuilder::storeUnboxedValue(MDefinition* obj, MDefinition* elements, int32_t e
     switch (unboxedType) {
       case JSVAL_TYPE_BOOLEAN:
         store = MStoreUnboxedScalar::New(alloc(), elements, scaledOffset, value, Scalar::Uint8,
+                                         MStoreUnboxedScalar::DontTruncateInput,
                                          DoesNotRequireMemoryBarrier, elementsOffset);
         break;
 
       case JSVAL_TYPE_INT32:
         store = MStoreUnboxedScalar::New(alloc(), elements, scaledOffset, value, Scalar::Int32,
+                                         MStoreUnboxedScalar::DontTruncateInput,
                                          DoesNotRequireMemoryBarrier, elementsOffset);
         break;
 
       case JSVAL_TYPE_DOUBLE:
         store = MStoreUnboxedScalar::New(alloc(), elements, scaledOffset, value, Scalar::Float64,
+                                         MStoreUnboxedScalar::DontTruncateInput,
                                          DoesNotRequireMemoryBarrier, elementsOffset);
         break;
 
@@ -13033,7 +13037,8 @@ IonBuilder::storeScalarTypedObjectValue(MDefinition* typedObj,
 
     MStoreUnboxedScalar* store =
         MStoreUnboxedScalar::New(alloc(), elements, scaledOffset, toWrite,
-                                 type, DoesNotRequireMemoryBarrier, adjustment);
+                                 type, MStoreUnboxedScalar::TruncateInput,
+                                 DoesNotRequireMemoryBarrier, adjustment);
     current->add(store);
 
     return true;

@@ -17,7 +17,6 @@ nsPrintProgressParams::~nsPrintProgressParams()
 {
 }
 
-/* attribute wstring docTitle; */
 NS_IMETHODIMP nsPrintProgressParams::GetDocTitle(char16_t * *aDocTitle)
 {
   NS_ENSURE_ARG(aDocTitle);
@@ -32,7 +31,6 @@ NS_IMETHODIMP nsPrintProgressParams::SetDocTitle(const char16_t * aDocTitle)
   return NS_OK;
 }
 
-/* attribute wstring docURL; */
 NS_IMETHODIMP nsPrintProgressParams::GetDocURL(char16_t * *aDocURL)
 {
   NS_ENSURE_ARG(aDocURL);

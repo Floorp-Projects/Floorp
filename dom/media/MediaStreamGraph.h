@@ -557,10 +557,6 @@ public:
   GraphTime StreamTimeToGraphTime(StreamTime aTime);
   bool IsFinishedOnGraphThread() { return mFinished; }
   void FinishOnGraphThread();
-  /**
-   * Identify which graph update index we are currently processing.
-   */
-  int64_t GetProcessingGraphUpdateIndex();
 
   bool HasCurrentData() { return mHasCurrentData; }
 
@@ -587,11 +583,9 @@ public:
   dom::AudioChannel AudioChannelType() const { return mAudioChannelType; }
 
 protected:
-  virtual void AdvanceTimeVaryingValuesToCurrentTime(GraphTime aCurrentTime, GraphTime aBlockedTime)
+  void AdvanceTimeVaryingValuesToCurrentTime(GraphTime aCurrentTime, GraphTime aBlockedTime)
   {
     mBufferStartTime += aBlockedTime;
-    mGraphUpdateIndices.InsertTimeAtStart(aBlockedTime);
-    mGraphUpdateIndices.AdvanceCurrentTime(aCurrentTime);
     mExplicitBlockerCount.AdvanceCurrentTime(aCurrentTime);
 
     mBuffer.ForgetUpTo(aCurrentTime - mBufferStartTime);
@@ -656,8 +650,6 @@ protected:
   // as necessary to account for that time instead) --- this avoids us having to
   // record the entire history of the stream's blocking-ness in mBlocked.
   TimeVarying<GraphTime,bool,5> mBlocked;
-  // Maps graph time to the graph update that affected this stream at that time
-  TimeVarying<GraphTime,int64_t,0> mGraphUpdateIndices;
 
   // MediaInputPorts to which this is connected
   nsTArray<MediaInputPort*> mConsumers;
@@ -1315,8 +1307,7 @@ public:
 
 protected:
   explicit MediaStreamGraph(TrackRate aSampleRate)
-    : mNextGraphUpdateIndex(1)
-    , mSampleRate(aSampleRate)
+    : mSampleRate(aSampleRate)
   {
     MOZ_COUNT_CTOR(MediaStreamGraph);
   }
@@ -1327,11 +1318,6 @@ protected:
 
   // Media graph thread only
   nsTArray<nsCOMPtr<nsIRunnable> > mPendingUpdateRunnables;
-
-  // Main thread only
-  // The number of updates we have sent to the media graph thread + 1.
-  // We start this at 1 just to ensure that 0 is usable as a special value.
-  int64_t mNextGraphUpdateIndex;
 
   /**
    * Sample rate at which this graph runs. For real time graphs, this is

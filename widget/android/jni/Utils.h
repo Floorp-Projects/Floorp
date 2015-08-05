@@ -19,6 +19,16 @@ inline bool ThrowException(JNIEnv *aEnv, const char *aMessage)
     return ThrowException(aEnv, "java/lang/Exception", aMessage);
 }
 
+inline bool ThrowException(const char *aClass, const char *aMessage)
+{
+    return ThrowException(GetJNIForThread(), aClass, aMessage);
+}
+
+inline bool ThrowException(const char *aMessage)
+{
+    return ThrowException(GetJNIForThread(), aMessage);
+}
+
 void HandleUncaughtException(JNIEnv *aEnv);
 
 uintptr_t GetNativeHandle(JNIEnv* env, jobject instance);

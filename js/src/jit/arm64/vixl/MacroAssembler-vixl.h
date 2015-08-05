@@ -328,10 +328,7 @@ class MacroAssembler : public js::jit::Assembler {
   void B(Label* label) {
     b(label);
   }
-  void B(Label* label, Condition cond) {
-    VIXL_ASSERT((cond != al) && (cond != nv));
-    b(label, cond);
-  }
+  void B(Label* label, Condition cond);
   void B(Condition cond, Label* label) {
     B(label, cond);
   }
@@ -1075,6 +1072,10 @@ class MacroAssembler : public js::jit::Assembler {
   // Note that size is per register, and is specified in bytes.
   void PrepareForPush(int count, int size);
   void PrepareForPop(int count, int size);
+
+  bool LabelIsOutOfRange(Label* label, ImmBranchType branch_type) {
+    return !Instruction::IsValidImmPCOffset(branch_type, nextOffset().diffB<int32_t>(label));
+  }
 
 #if DEBUG
   // Tell whether any of the macro instruction can be used. When false the

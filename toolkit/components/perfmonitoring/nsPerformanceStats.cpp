@@ -420,7 +420,6 @@ nsPerformanceSnapshot::Init(JSContext* cx, uint64_t processId) {
 }
 
 
-/* void getComponentsData (out nsIArray aComponents); */
 NS_IMETHODIMP nsPerformanceSnapshot::GetComponentsData(nsIArray * *aComponents)
 {
   const size_t length = mComponentsData.Length();
@@ -434,7 +433,6 @@ NS_IMETHODIMP nsPerformanceSnapshot::GetComponentsData(nsIArray * *aComponents)
   return NS_OK;
 }
 
-/* readonly attribute nsIPerformanceStats process; */
 NS_IMETHODIMP nsPerformanceSnapshot::GetProcessData(nsIPerformanceStats * *aProcess)
 {
   NS_IF_ADDREF(*aProcess = mProcessData);
@@ -501,7 +499,6 @@ NS_IMETHODIMP nsPerformanceStatsService::SetIsMonitoringPerCompartment(JSContext
   return NS_OK;
 }
 
-/* readonly attribute nsIPerformanceSnapshot snapshot; */
 NS_IMETHODIMP nsPerformanceStatsService::GetSnapshot(JSContext* cx, nsIPerformanceSnapshot * *aSnapshot)
 {
   nsRefPtr<nsPerformanceSnapshot> snapshot = new nsPerformanceSnapshot();

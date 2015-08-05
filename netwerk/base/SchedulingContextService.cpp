@@ -73,7 +73,6 @@ SchedulingContext::RemoveBlockingTransaction(uint32_t *outval)
   return NS_OK;
 }
 
-/* [noscript] attribute SpdyPushCachePtr spdyPushCache; */
 NS_IMETHODIMP
 SchedulingContext::GetSpdyPushCache(mozilla::net::SpdyPushCache **aSpdyPushCache)
 {
@@ -88,7 +87,6 @@ SchedulingContext::SetSpdyPushCache(mozilla::net::SpdyPushCache *aSpdyPushCache)
   return NS_OK;
 }
 
-/* [noscript] readonly attribute nsID ID; */
 NS_IMETHODIMP
 SchedulingContext::GetID(nsID *outval)
 {

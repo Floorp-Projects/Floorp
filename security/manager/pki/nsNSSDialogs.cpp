@@ -377,7 +377,6 @@ nsNSSDialogs::GetPKCS12FilePassword(nsIInterfaceRequestor* ctx,
   return NS_OK;
 }
 
-/* void viewCert (in nsIX509Cert cert); */
 NS_IMETHODIMP 
 nsNSSDialogs::ViewCert(nsIInterfaceRequestor *ctx, 
                        nsIX509Cert *cert)

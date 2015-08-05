@@ -892,7 +892,7 @@ pack<WebGLTexelFormat::RA32F, WebGLTexelPremultiplicationOp::Premultiply, float,
 {
     float scaleFactor = src[3];
     dst[0] = src[0] * scaleFactor;
-    dst[1] = scaleFactor;
+    dst[1] = src[3];
 }
 
 template<> MOZ_ALWAYS_INLINE void
@@ -1011,7 +1011,7 @@ pack<WebGLTexelFormat::RA16F, WebGLTexelPremultiplicationOp::Premultiply, uint16
 {
     float scaleFactor = unpackFromFloat16(src[3]);
     dst[0] = packToFloat16(unpackFromFloat16(src[0]) * scaleFactor);
-    dst[1] = scaleFactor;
+    dst[1] = src[3];
 }
 
 template<> MOZ_ALWAYS_INLINE void

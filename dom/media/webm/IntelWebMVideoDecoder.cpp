@@ -12,7 +12,7 @@
 #include "MediaResource.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "nsError.h"
-#include "SharedThreadPool.h"
+#include "mozilla/SharedThreadPool.h"
 #include "VorbisUtils.h"
 #include "nestegg/nestegg.h"
 
