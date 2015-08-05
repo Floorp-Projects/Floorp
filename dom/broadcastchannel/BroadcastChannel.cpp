@@ -737,10 +737,6 @@ BroadcastChannel::Observe(nsISupports* aSubject, const char* aTopic,
 
   // If the window is destroyed we have to release the reference that we are
   // keeping.
-  if (!mIsKeptAlive) {
-    return NS_OK;
-  }
-
   nsCOMPtr<nsISupportsPRUint64> wrapper = do_QueryInterface(aSubject);
   NS_ENSURE_TRUE(wrapper, NS_ERROR_FAILURE);
 
