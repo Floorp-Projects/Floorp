@@ -4,14 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "SharedThreadPool.h"
-#include "mozilla/ClearOnShutdown.h"
+#include "mozilla/SharedThreadPool.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/ReentrantMonitor.h"
+#include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "nsDataHashtable.h"
-#include "VideoUtils.h"
 #include "nsXPCOMCIDInternal.h"
 #include "nsComponentManagerUtils.h"
+#include "nsIObserver.h"
+#include "nsIObserverService.h"
 #ifdef XP_WIN
 #include "ThreadPoolCOMListener.h"
 #endif
@@ -28,6 +30,28 @@ static StaticAutoPtr<nsDataHashtable<nsCStringHashKey, SharedThreadPool*>> sPool
 static already_AddRefed<nsIThreadPool>
 CreateThreadPool(const nsCString& aName);
 
+class SharedThreadPoolShutdownObserver : public nsIObserver
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+protected:
+  virtual ~SharedThreadPoolShutdownObserver() {}
+};
+
+NS_IMPL_ISUPPORTS(SharedThreadPoolShutdownObserver, nsIObserver, nsISupports)
+
+NS_IMETHODIMP
+SharedThreadPoolShutdownObserver::Observe(nsISupports* aSubject, const char *aTopic,
+                                          const char16_t *aData)
+{
+  MOZ_RELEASE_ASSERT(!strcmp(aTopic, "xpcom-shutdown-threads"));
+  SharedThreadPool::SpinUntilEmpty();
+  sMonitor = nullptr;
+  sPools = nullptr;
+  return NS_OK;
+}
+
 void
 SharedThreadPool::InitStatics()
 {
@@ -35,8 +59,9 @@ SharedThreadPool::InitStatics()
   MOZ_ASSERT(!sMonitor && !sPools);
   sMonitor = new ReentrantMonitor("SharedThreadPool");
   sPools = new nsDataHashtable<nsCStringHashKey, SharedThreadPool*>();
-  ClearOnShutdown(&sMonitor);
-  ClearOnShutdown(&sPools);
+  nsCOMPtr<nsIObserverService> obsService = mozilla::services::GetObserverService();
+  nsCOMPtr<nsIObserver> obs = new SharedThreadPoolShutdownObserver();
+  obsService->AddObserver(obs, "xpcom-shutdown-threads", false);
 }
 
 /* static */
@@ -119,7 +144,7 @@ NS_IMETHODIMP_(MozExternalRefCountType) SharedThreadPool::Release(void)
   // the nsIThreadPool. The Runnable here  will add a refcount to the pool,
   // and when the Runnable releases the nsIThreadPool it will be deleted.
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(mPool, &nsIThreadPool::Shutdown);
-  AbstractThread::MainThread()->Dispatch(r.forget());
+  NS_DispatchToMainThread(r);
 
   // Stabilize refcount, so that if something in the dtor QIs, it won't explode.
   mRefCnt = 1;
@@ -147,7 +172,7 @@ SharedThreadPool::~SharedThreadPool()
 nsresult
 SharedThreadPool::EnsureThreadLimitIsAtLeast(uint32_t aLimit)
 {
-  // We limit the number of threads that we use for media. Note that we
+  // We limit the number of threads that we use. Note that we
   // set the thread limit to the same as the idle limit so that we're not
   // constantly creating and destroying threads (see Bug 881954). When the
   // thread pool threads shutdown they dispatch an event to the main thread
@@ -184,7 +209,7 @@ CreateThreadPool(const nsCString& aName)
   rv = pool->SetName(aName);
   NS_ENSURE_SUCCESS(rv, nullptr);
 
-  rv = pool->SetThreadStackSize(MEDIA_THREAD_STACK_SIZE);
+  rv = pool->SetThreadStackSize(SharedThreadPool::kStackSize);
   NS_ENSURE_SUCCESS(rv, nullptr);
 
 #ifdef XP_WIN

@@ -106,6 +106,59 @@ function* test_playing_icon_on_tab(tab, browser, isPinned) {
      !tab.hasAttribute("soundplaying"), "Tab should not be be muted or playing");
 }
 
+function* test_swapped_browser(oldTab, newBrowser, isPlaying) {
+  ok(oldTab.hasAttribute("muted"), "Expected the correct muted attribute on the old tab");
+  is(oldTab.hasAttribute("soundplaying"), isPlaying, "Expected the correct soundplaying attribute on the old tab");
+
+  let newTab = gBrowser.getTabForBrowser(newBrowser);
+  let AttrChangePromise = BrowserTestUtils.waitForEvent(newTab, "TabAttrModified", false, event => {
+    return (event.detail.changed.indexOf("soundplaying") >= 0 || !isPlaying) &&
+           event.detail.changed.indexOf("muted") >= 0;
+  });
+
+  gBrowser.swapBrowsersAndCloseOther(newTab, oldTab);
+  yield AttrChangePromise;
+
+  ok(newTab.hasAttribute("muted"), "Expected the correct muted attribute on the new tab");
+  is(newTab.hasAttribute("soundplaying"), isPlaying, "Expected the correct soundplaying attribute on the new tab");
+}
+
+function* test_browser_swapping(tab, browser) {
+  // First, test swapping with a playing but muted tab.
+  yield ContentTask.spawn(browser, {}, function* () {
+    let audio = content.document.querySelector("audio");
+    audio.play();
+  });
+  yield wait_for_tab_playing_event(tab, true);
+
+  let icon = document.getAnonymousElementByAttribute(tab, "anonid",
+                                                     "soundplaying-icon");
+  yield test_mute_tab(tab, icon, true);
+
+  yield BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: "about:blank",
+  }, function*(newBrowser) {
+    yield test_swapped_browser(tab, newBrowser, true)
+
+    // FIXME: this is needed to work around bug 1190903.
+    yield new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Now, test swapping with a muted but not playing tab.
+    // Note that the tab remains muted, so we only need to pause playback.
+    tab = gBrowser.getTabForBrowser(newBrowser);
+    yield ContentTask.spawn(newBrowser, {}, function* () {
+      let audio = content.document.querySelector("audio");
+      audio.pause();
+    });
+
+    yield BrowserTestUtils.withNewTab({
+      gBrowser,
+      url: "about:blank",
+    }, newBrowser => test_swapped_browser(tab, newBrowser, false));
+  });
+}
+
 function* test_on_browser(browser) {
   let tab = gBrowser.getTabForBrowser(browser);
 
@@ -125,6 +178,8 @@ function* test_on_browser(browser) {
       gBrowser,
       url: "data:text/html,test"
     }, () => test_on_browser(browser));
+  } else {
+    yield test_browser_swapping(tab, browser);
   }
 }
 

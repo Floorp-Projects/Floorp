@@ -1042,7 +1042,6 @@ GfxInfoBase::LogFailure(const nsACString &failure)
   gfxCriticalError(CriticalLog::DefaultOptions(false)) << "(LF) " << failure.BeginReading();
 }
 
-/* void getFailures (out unsigned long failureCount, [optional, array, size_is (failureCount)] out long indices, [array, size_is (failureCount), retval] out string failures); */
 /* XPConnect method of returning arrays is very ugly. Would not recommend. */
 NS_IMETHODIMP GfxInfoBase::GetFailures(uint32_t* failureCount,
                                        int32_t** indices,

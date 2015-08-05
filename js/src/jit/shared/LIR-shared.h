@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_LIR_Common_h
-#define jit_LIR_Common_h
+#ifndef jit_shared_LIR_shared_h
+#define jit_shared_LIR_shared_h
 
 #include "jsutil.h"
 
@@ -7121,4 +7121,4 @@ class LArrowNewTarget : public LInstructionHelper<BOX_PIECES, 1, 0>
 } // namespace jit
 } // namespace js
 
-#endif /* jit_LIR_Common_h */
+#endif /* jit_shared_LIR_shared_h */

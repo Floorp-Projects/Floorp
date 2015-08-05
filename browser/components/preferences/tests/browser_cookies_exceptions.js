@@ -123,6 +123,55 @@ var testRunner = {
         },
         observances: [{ type: "cookie", origin: "https://test.com:12345", data: "deleted" }],
       },
+      {
+        test: function(params) {
+          params.url.value = "localhost:12345";
+          params.btnAllow.doCommand();
+          is(params.tree.view.rowCount, 1, "added exception shows up in treeview");
+          is(params.tree.view.getCellText(0, params.nameCol), "http://localhost:12345",
+                                          "origin name should be set correctly");
+          is(params.tree.view.getCellText(0, params.statusCol), params.allowText,
+                                          "permission text should be set correctly");
+          params.btnApplyChanges.doCommand();
+        },
+        observances: [{ type: "cookie", origin: "http://localhost:12345", data: "added",
+                        capability: Ci.nsIPermissionManager.ALLOW_ACTION }],
+      },
+      {
+        test: function(params) {
+          params.url.value = "localhost:12345";
+          params.btnBlock.doCommand();
+          is(params.tree.view.getCellText(0, params.nameCol), "http://localhost:12345",
+                                          "origin name should be set correctly");
+          is(params.tree.view.getCellText(0, params.statusCol), params.denyText,
+                                          "permission should change to deny in UI");
+          params.btnApplyChanges.doCommand();
+        },
+        observances: [{ type: "cookie", origin: "http://localhost:12345", data: "changed",
+                        capability: Ci.nsIPermissionManager.DENY_ACTION  }],
+      },
+      {
+        test: function(params) {
+          params.url.value = "localhost:12345";
+          params.btnAllow.doCommand();
+          is(params.tree.view.getCellText(0, params.nameCol), "http://localhost:12345",
+                                          "origin name should be set correctly");
+          is(params.tree.view.getCellText(0, params.statusCol), params.allowText,
+                                          "permission should revert back to allow");
+          params.btnApplyChanges.doCommand();
+        },
+        observances: [{ type: "cookie", origin: "http://localhost:12345", data: "changed",
+                        capability: Ci.nsIPermissionManager.ALLOW_ACTION }],
+      },
+      {
+        test: function(params) {
+          params.url.value = "localhost:12345";
+          params.btnRemove.doCommand();
+          is(params.tree.view.rowCount, 0, "exception should be removed");
+          params.btnApplyChanges.doCommand();
+        },
+        observances: [{ type: "cookie", origin: "http://localhost:12345", data: "deleted" }],
+      },
     ],
 
   _currentTest: -1,

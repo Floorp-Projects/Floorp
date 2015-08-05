@@ -101,7 +101,6 @@ nsSVGElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 
 //----------------------------------------------------------------------
 
-/* readonly attribute SVGAnimatedString className; */
 NS_IMETHODIMP
 nsSVGElement::GetSVGClassName(nsISupports** aClassName)
 {
@@ -109,7 +108,6 @@ nsSVGElement::GetSVGClassName(nsISupports** aClassName)
   return NS_OK;
 }
 
-/* readonly attribute nsIDOMCSSStyleDeclaration style; */
 NS_IMETHODIMP
 nsSVGElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
 {
@@ -1084,7 +1082,6 @@ nsSVGElement::sMaskMap[] = {
 //----------------------------------------------------------------------
 // nsIDOMSVGElement methods
 
-/* readonly attribute nsIDOMSVGSVGElement ownerSVGElement; */
 NS_IMETHODIMP
 nsSVGElement::GetOwnerSVGElement(nsIDOMSVGElement * *aOwnerSVGElement)
 {
@@ -1098,7 +1095,6 @@ nsSVGElement::GetOwnerSVGElement()
   return GetCtx(); // this may return nullptr
 }
 
-/* readonly attribute nsIDOMSVGElement viewportElement; */
 NS_IMETHODIMP
 nsSVGElement::GetViewportElement(nsIDOMSVGElement * *aViewportElement)
 {

@@ -75,6 +75,7 @@ EXTRA_JS_MODULES.devtools.server.actors += [
     'actors/memory.js',
     'actors/monitor.js',
     'actors/object.js',
+    'actors/performance-entries.js',
     'actors/preference.js',
     'actors/pretty-print-worker.js',
     'actors/profiler.js',

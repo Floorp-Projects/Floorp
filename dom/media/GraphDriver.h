@@ -156,7 +156,6 @@ public:
   void SetGraphTime(GraphDriver* aPreviousDriver,
                     GraphTime aLastSwitchNextIterationStart,
                     GraphTime aLastSwitchNextIterationEnd,
-                    GraphTime aLastSwitchNextStateComputedTime,
                     GraphTime aLastSwitchStateComputedTime);
 
   /**
@@ -197,7 +196,6 @@ protected:
   GraphTime mIterationEnd;
   // Time, in the future, for which blocking has been computed.
   GraphTime mStateComputedTime;
-  GraphTime mNextStateComputedTime;
   // The MediaStreamGraphImpl that owns this driver. This has a lifetime longer
   // than the driver, and will never be null.
   MediaStreamGraphImpl* mGraphImpl;

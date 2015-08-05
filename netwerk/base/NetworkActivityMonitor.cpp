@@ -170,7 +170,6 @@ public:
     return NS_OK;
   }
 private:
-  nsCOMPtr<nsIObserverService>      mObs;
   NetworkActivityMonitor::Direction mDirection;
 };
 

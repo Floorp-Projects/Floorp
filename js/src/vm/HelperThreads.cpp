@@ -10,12 +10,12 @@
 
 #include "jsnativestack.h"
 #include "jsnum.h" // For FIX_FPU()
-#include "prmjtime.h"
 
 #include "frontend/BytecodeCompiler.h"
 #include "gc/GCInternals.h"
 #include "jit/IonBuilder.h"
 #include "vm/Debugger.h"
+#include "vm/Time.h"
 #include "vm/TraceLogging.h"
 
 #include "jscntxtinlines.h"

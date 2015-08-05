@@ -13,7 +13,6 @@
 #include "jscompartment.h"
 #include "jsgc.h"
 #include "jsutil.h"
-#include "prmjtime.h"
 
 #include "gc/GCInternals.h"
 #include "gc/Memory.h"
@@ -23,6 +22,7 @@
 #if defined(DEBUG)
 #include "vm/ScopeObject.h"
 #endif
+#include "vm/Time.h"
 #include "vm/TypedArrayObject.h"
 #include "vm/TypeInference.h"
 

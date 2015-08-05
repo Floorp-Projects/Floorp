@@ -10,6 +10,7 @@
 #include <queue>
 #include "mozilla/RefPtr.h"
 #include "nsThreadUtils.h"
+#include "nsIThreadManager.h"
 #include "nsIThreadPool.h"
 #include "nsISupports.h"
 #include "nsISupportsImpl.h"
@@ -23,15 +24,23 @@ namespace mozilla {
 // the same name get the same SharedThreadPool. Users must store a reference
 // to the pool, and when the last reference to a SharedThreadPool is dropped
 // the pool is shutdown and deleted. Users aren't required to manually
-// shutdown the pool, and can release references on any thread. On Windows
-// all threads in the pool have MSCOM initialized with COINIT_MULTITHREADED.
+// shutdown the pool, and can release references on any thread. This can make
+// it significantly easier to use thread pools, because the caller doesn't need
+// to worry about joining and tearing it down.
+//
+// On Windows all threads in the pool have MSCOM initialized with
+// COINIT_MULTITHREADED. Note that not all users of MSCOM use this mode see [1],
+// and mixing MSCOM objects between the two is terrible for performance, and can
+// cause some functions to fail. So be careful when using Win32 APIs on a
+// SharedThreadPool, and avoid sharing objects if at all possible.
+//
+// [1] http://mxr.mozilla.org/mozilla-central/search?string=coinitialize
 class SharedThreadPool : public nsIThreadPool
 {
 public:
 
   // Gets (possibly creating) the shared thread pool singleton instance with
   // thread pool named aName.
-  // *Must* be called on the main thread.
   static already_AddRefed<SharedThreadPool> Get(const nsCString& aName,
                                             uint32_t aThreadLimit = 4);
 
@@ -65,6 +74,17 @@ public:
   // Spins the event loop until all thread pools are shutdown.
   // *Must* be called on the main thread.
   static void SpinUntilEmpty();
+
+#if defined(MOZ_ASAN)
+  // Use the system default in ASAN builds, because the default is assumed to be
+  // larger than the size we want to use and is hopefully sufficient for ASAN.
+  static const uint32_t kStackSize = nsIThreadManager::DEFAULT_STACK_SIZE;
+#elif defined(XP_WIN) || defined(XP_MACOSX) || defined(LINUX)
+  static const uint32_t kStackSize = (256 * 1024);
+#else
+  // All other platforms use their system defaults.
+  static const uint32_t kStackSize = nsIThreadManager::DEFAULT_STACK_SIZE;
+#endif
 
 private:
 

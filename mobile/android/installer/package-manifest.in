@@ -334,8 +334,6 @@
 @BINPATH@/components/nsLoginManagerPrompter.js
 @BINPATH@/components/storage-mozStorage.js
 @BINPATH@/components/crypto-SDR.js
-@BINPATH@/components/jsconsole-clhandler.manifest
-@BINPATH@/components/jsconsole-clhandler.js
 @BINPATH@/components/nsHelperAppDlg.manifest
 @BINPATH@/components/nsHelperAppDlg.js
 @BINPATH@/components/NetworkGeolocationProvider.manifest
@@ -374,8 +372,6 @@
 @BINPATH@/components/@DLL_PREFIX@browsercomps@DLL_SUFFIX@
 @BINPATH@/components/txEXSLTRegExFunctions.manifest
 @BINPATH@/components/txEXSLTRegExFunctions.js
-@BINPATH@/components/nsDefaultCLH.manifest
-@BINPATH@/components/nsDefaultCLH.js
 @BINPATH@/components/nsContentPrefService.manifest
 @BINPATH@/components/nsContentPrefService.js
 @BINPATH@/components/nsContentDispatchChooser.manifest

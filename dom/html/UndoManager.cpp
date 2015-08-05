@@ -57,7 +57,6 @@ protected:
   virtual ~UndoTxn() {}
 };
 
-/* void doTransaction (); */
 NS_IMETHODIMP
 UndoTxn::DoTransaction()
 {
@@ -66,21 +65,18 @@ UndoTxn::DoTransaction()
   return NS_OK;
 }
 
-/* void doTransaction (); */
 NS_IMETHODIMP
 UndoTxn::RedoTransaction()
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* void doTransaction (); */
 NS_IMETHODIMP
 UndoTxn::UndoTransaction()
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* readonly attribute boolean isTransient; */
 NS_IMETHODIMP
 UndoTxn::GetIsTransient(bool* aIsTransient)
 {
@@ -88,7 +84,6 @@ UndoTxn::GetIsTransient(bool* aIsTransient)
   return NS_OK;
 }
 
-/* boolean merge (in nsITransaction aTransaction); */
 NS_IMETHODIMP
 UndoTxn::Merge(nsITransaction* aTransaction, bool* aResult)
 {

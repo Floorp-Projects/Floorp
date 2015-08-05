@@ -7,7 +7,7 @@
 #include "mozilla/TaskQueue.h"
 
 #include "nsThreadUtils.h"
-#include "SharedThreadPool.h"
+#include "mozilla/SharedThreadPool.h"
 
 namespace mozilla {
 

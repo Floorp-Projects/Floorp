@@ -12,7 +12,6 @@ using namespace mozilla::dom;
 
 NS_IMPL_ISUPPORTS(nsColorPickerProxy, nsIColorPicker)
 
-/* void init (in nsIDOMWindow parent, in AString title, in short mode); */
 NS_IMETHODIMP
 nsColorPickerProxy::Init(nsIDOMWindow* aParent, const nsAString& aTitle,
                          const nsAString& aInitialColor)
@@ -29,7 +28,6 @@ nsColorPickerProxy::Init(nsIDOMWindow* aParent, const nsAString& aTitle,
   return NS_OK;
 }
 
-/* void open (in nsIColorPickerShownCallback aColorPickerShownCallback); */
 NS_IMETHODIMP
 nsColorPickerProxy::Open(nsIColorPickerShownCallback* aColorPickerShownCallback)
 {
