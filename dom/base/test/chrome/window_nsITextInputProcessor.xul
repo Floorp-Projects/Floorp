@@ -15,7 +15,7 @@
         src="data:text/html,&lt;textarea id='textarea' cols='20' rows='4'&gt;&lt;/textarea&gt;"></iframe><br/>
 </p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 </pre>
@@ -2340,8 +2340,8 @@ function runKeyTests()
   reset();
   var doDefaultKeydown = TIP.keydown(keyA);
 
-  ok(!doDefaultKeydown,
-     description + "TIP.keydown(keyA) should return false because the keypress event should be consumed by the input element");
+  is(doDefaultKeydown, TIP.KEYPRESS_IS_CONSUMED,
+     description + "TIP.keydown(keyA) should return 0x02 because the keypress event should be consumed by the input element");
   is(events.length, 2,
      description + "TIP.keydown(keyA) should cause keydown and keypress event");
   checkKeyAttrs("TIP.keydown(keyA)", events[0],
@@ -2371,8 +2371,8 @@ function runKeyTests()
   reset();
   doDefaultKeydown = TIP.keydown(keyEnter);
 
-  ok(doDefaultKeydown,
-     description + "TIP.keydown(keyEnter) should return true");
+  is(doDefaultKeydown, 0,
+     description + "TIP.keydown(keyEnter) should return 0");
   is(events.length, 2,
      description + "TIP.keydown(keyEnter) should cause keydown and keypress event");
   checkKeyAttrs("TIP.keydown(keyEnter)", events[0],
@@ -2402,8 +2402,8 @@ function runKeyTests()
   doDefaultKeydown = TIP.keydown(keyB, TIP.KEY_DEFAULT_PREVENTED);
   doDefaultKeyup   = TIP.keyup(keyB, TIP.KEY_DEFAULT_PREVENTED);
 
-  ok(!doDefaultKeydown,
-     description + "TIP.keydown(keyB, TIP.KEY_DEFAULT_PREVENTED) should return false because it's marked as consumed at dispatching the event");
+  is(doDefaultKeydown, TIP.KEYDOWN_IS_CONSUMED,
+     description + "TIP.keydown(keyB, TIP.KEY_DEFAULT_PREVENTED) should return 0x01 because it's marked as consumed at dispatching the event");
   ok(!doDefaultKeyup,
      description + "TIP.keyup(keyB, TIP.KEY_DEFAULT_PREVENTED) should return false because it's marked as consumed at dispatching the event");
   is(events.length, 2,
@@ -2423,7 +2423,7 @@ function runKeyTests()
   doDefaultKeydown = TIP.keydown(keyABC);
   doDefaultKeyup   = TIP.keyup(keyABC);
 
-  ok(!doDefaultKeydown,
+  is(doDefaultKeydown, TIP.KEYPRESS_IS_CONSUMED,
      description + "TIP.keydown(keyABC) should return false because the keypress events should be consumed by the input element");
   ok(doDefaultKeyup,
      description + "TIP.keyup(keyABC) should return true");
@@ -2450,8 +2450,8 @@ function runKeyTests()
   doDefaultKeydown = TIP.keydown(keyEnterPrintable, TIP.KEY_FORCE_PRINTABLE_KEY);
   doDefaultKeyup   = TIP.keyup(keyEnterPrintable, TIP.KEY_FORCE_PRINTABLE_KEY);
 
-  ok(!doDefaultKeydown,
-     description + "TIP.keydown(keyEnterPrintable, TIP.KEY_FORCE_PRINTABLE_KEY) should return false because the keypress events should be consumed by the input element");
+  is(doDefaultKeydown, TIP.KEYPRESS_IS_CONSUMED,
+     description + "TIP.keydown(keyEnterPrintable, TIP.KEY_FORCE_PRINTABLE_KEY) should return 0x02 because the keypress events should be consumed by the input element");
   ok(doDefaultKeyup,
      description + "TIP.keyup(keyEnterPrintable, TIP.KEY_FORCE_PRINTABLE_KEY) should return true");
   is(events.length, 7,
@@ -2480,8 +2480,8 @@ function runKeyTests()
   doDefaultKeydown = TIP.keydown(keyWithModifiers);
   doDefaultKeyup   = TIP.keyup(keyWithModifiers);
 
-  ok(doDefaultKeydown,
-     description + "TIP.keydown(keyWithModifiers) should return true");
+  is(doDefaultKeydown, 0,
+     description + "TIP.keydown(keyWithModifiers) should return 0");
   ok(doDefaultKeyup,
      description + "TIP.keyup(keyWithModifiers) should return true");
   is(events.length, 3,
@@ -2502,8 +2502,8 @@ function runKeyTests()
   doDefaultKeydown = TIP.keydown(keyA);
   doDefaultKeyup   = TIP.keyup(keyA);
 
-  ok(!doDefaultKeydown,
-     description + "TIP.keydown(keyA) should return false because keydown event's preventDefault should be called");
+  is(doDefaultKeydown, TIP.KEYDOWN_IS_CONSUMED,
+     description + "TIP.keydown(keyA) should return 0x01 because keydown event's preventDefault should be called");
   ok(doDefaultKeyup,
      description + "TIP.keyup(keyA) should return true");
   is(events.length, 2,
@@ -2521,8 +2521,8 @@ function runKeyTests()
   doDefaultKeydown = TIP.keydown(keyA);
   doDefaultKeyup   = TIP.keyup(keyA);
 
-  ok(!doDefaultKeydown,
-     description + "TIP.keydown(keyA) should return false because keypress event's preventDefault should be called");
+  is(doDefaultKeydown, TIP.KEYPRESS_IS_CONSUMED,
+     description + "TIP.keydown(keyA) should return 0x02 because keypress event's preventDefault should be called");
   ok(doDefaultKeyup,
      description + "TIP.keyup(keyA) should return true");
   is(events.length, 3,
@@ -2543,8 +2543,8 @@ function runKeyTests()
   doDefaultKeydown = TIP.keydown(keyA);
   doDefaultKeyup   = TIP.keyup(keyA);
 
-  ok(!doDefaultKeydown,
-     description + "TIP.keydown(keyA) should return false because the key event should be consumed by the input element");
+  is(doDefaultKeydown, TIP.KEYPRESS_IS_CONSUMED,
+     description + "TIP.keydown(keyA) should return 0x02 because the key event should be consumed by the input element");
   ok(!doDefaultKeyup,
      description + "TIP.keyup(keyA) should return false because keyup event's preventDefault should be called");
   is(events.length, 3,
