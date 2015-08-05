@@ -77,6 +77,7 @@ EXPORTS.mozilla += [
     'JSObjectHolder.h',
     'LinuxUtils.h',
     'nsMemoryInfoDumper.h',
+    'OwningNonNull.h',
     'StaticMutex.h',
     'StaticPtr.h',
     'SystemMemoryReporter.h',

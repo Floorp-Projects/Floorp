@@ -21,7 +21,7 @@
 #include "nsTArray.h"
 #include "nsAutoPtr.h" // for nsRefPtr member variables
 #include "mozilla/dom/DOMString.h"
-#include "mozilla/dom/OwningNonNull.h"
+#include "mozilla/OwningNonNull.h"
 
 class nsWrapperCache;
 

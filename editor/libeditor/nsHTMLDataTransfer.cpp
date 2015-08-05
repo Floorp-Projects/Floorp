@@ -7,7 +7,7 @@
 #include <string.h>
 
 #include "mozilla/dom/DocumentFragment.h"
-#include "mozilla/dom/OwningNonNull.h"
+#include "mozilla/OwningNonNull.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Base64.h"
 #include "mozilla/BasicEvents.h"

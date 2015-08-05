@@ -309,13 +309,11 @@ struct nsTArray_SafeElementAtHelper<nsRefPtr<E>, Derived>
 };
 
 namespace mozilla {
-namespace dom {
 template<class T> class OwningNonNull;
-} // namespace dom
 } // namespace mozilla
 
 template<class E, class Derived>
-struct nsTArray_SafeElementAtHelper<mozilla::dom::OwningNonNull<E>, Derived>
+struct nsTArray_SafeElementAtHelper<mozilla::OwningNonNull<E>, Derived>
 {
   typedef E*     elem_type;
   typedef size_t index_type;
