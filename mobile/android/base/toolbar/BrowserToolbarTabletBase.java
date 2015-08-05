@@ -145,7 +145,6 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
         for (int i = 0; i < actionItemBar.getChildCount(); ++i) {
             final MenuItemActionBar child = (MenuItemActionBar) actionItemBar.getChildAt(i);
             child.setPrivateMode(isPrivate);
-            child.setColorFilter(colorFilter);
         }
     }
 
