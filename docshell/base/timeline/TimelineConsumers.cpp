@@ -84,8 +84,8 @@ TimelineConsumers::AddMarkerForDocShell(nsDocShell* aDocShell,
 }
 
 void
-TimelineConsumers::AddMarkerToDocShellsList(Vector<nsRefPtr<nsDocShell>>& aDocShells,
-                                            const char* aName, TracingMetadata aMetaData)
+TimelineConsumers::AddMarkerForDocShellsList(Vector<nsRefPtr<nsDocShell>>& aDocShells,
+                                             const char* aName, TracingMetadata aMetaData)
 {
   for (Vector<nsRefPtr<nsDocShell>>::Range range = aDocShells.all();
        !range.empty();
@@ -95,7 +95,7 @@ TimelineConsumers::AddMarkerToDocShellsList(Vector<nsRefPtr<nsDocShell>>& aDocSh
 }
 
 void
-TimelineConsumers::AddMarkerToAllObservedDocShells(const char* aName, TracingMetadata aMetaData)
+TimelineConsumers::AddMarkerForAllObservedDocShells(const char* aName, TracingMetadata aMetaData)
 {
   Vector<nsRefPtr<nsDocShell>> docShells;
   if (!GetKnownDocShells(docShells)) {
@@ -104,7 +104,7 @@ TimelineConsumers::AddMarkerToAllObservedDocShells(const char* aName, TracingMet
     return;
   }
 
-  AddMarkerToDocShellsList(docShells, aName, aMetaData);
+  AddMarkerForDocShellsList(docShells, aName, aMetaData);
 }
 
 } // namespace mozilla
