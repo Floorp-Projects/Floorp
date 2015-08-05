@@ -388,6 +388,10 @@ menuitem.menuitem-non-iconic {
   -moz-binding: url("chrome://global/content/bindings/menu.xml#menubutton-item");
 }
 
+menuitem.menuitem-iconic[endimage] {
+  -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem-iconic-both");
+}
+
 menucaption {
   -moz-binding: url("chrome://global/content/bindings/menu.xml#menucaption");
 }
