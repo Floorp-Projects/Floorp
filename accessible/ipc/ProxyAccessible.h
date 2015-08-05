@@ -30,7 +30,7 @@ public:
   ProxyAccessible(uint64_t aID, ProxyAccessible* aParent,
                   DocAccessibleParent* aDoc, role aRole) :
      mParent(aParent), mDoc(aDoc), mWrapper(0), mID(aID), mRole(aRole),
-     mOuterDoc(false)
+     mOuterDoc(false), mIsDoc(false)
   {
     MOZ_COUNT_CTOR(ProxyAccessible);
   }
@@ -322,10 +322,16 @@ public:
    */
   uint64_t ID() const { return mID; }
 
+  /**
+   * Return true if this proxy is a DocAccessibleParent.
+   */
+  bool IsDoc() const { return mIsDoc; }
+  DocAccessibleParent* AsDoc() const { return IsDoc() ? mDoc : nullptr; }
+
 protected:
   explicit ProxyAccessible(DocAccessibleParent* aThisAsDoc) :
     mParent(nullptr), mDoc(aThisAsDoc), mWrapper(0), mID(0),
-    mRole(roles::DOCUMENT), mOuterDoc(false)
+    mRole(roles::DOCUMENT), mOuterDoc(false), mIsDoc(true)
   { MOZ_COUNT_CTOR(ProxyAccessible); }
 
 protected:
@@ -336,8 +342,9 @@ private:
   DocAccessibleParent* mDoc;
   uintptr_t mWrapper;
   uint64_t mID;
-  role mRole : 31;
+  role mRole : 30;
   bool mOuterDoc : 1;
+  const bool mIsDoc: 1;
 };
 
 enum Interfaces
