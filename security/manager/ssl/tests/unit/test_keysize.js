@@ -77,44 +77,44 @@ function checkRSAChains(inadequateKeySize, adequateKeySize) {
 }
 
 function checkECCChains() {
-  checkChain("prime256v1", 256,
+  checkChain("secp256r1", 256,
              "secp384r1", 384,
              "secp521r1", 521,
              PRErrorCodeSuccess);
-  checkChain("prime256v1", 256,
+  checkChain("secp256r1", 256,
              "secp224r1", 224,
-             "prime256v1", 256,
+             "secp256r1", 256,
              SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
-  checkChain("prime256v1", 256,
-             "prime256v1", 256,
+  checkChain("secp256r1", 256,
+             "secp256r1", 256,
              "secp224r1", 224,
              SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
   checkChain("secp224r1", 224,
-             "prime256v1", 256,
-             "prime256v1", 256,
+             "secp256r1", 256,
+             "secp256r1", 256,
              SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
-  checkChain("prime256v1", 256,
-             "prime256v1", 256,
+  checkChain("secp256r1", 256,
+             "secp256r1", 256,
              "secp256k1", 256,
              SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
   checkChain("secp256k1", 256,
-             "prime256v1", 256,
-             "prime256v1", 256,
+             "secp256r1", 256,
+             "secp256r1", 256,
              SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
 }
 
 function checkCombinationChains() {
   checkChain("rsa", 2048,
-             "prime256v1", 256,
+             "secp256r1", 256,
              "secp384r1", 384,
              PRErrorCodeSuccess);
   checkChain("rsa", 2048,
-             "prime256v1", 256,
+             "secp256r1", 256,
              "secp224r1", 224,
              SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
-  checkChain("prime256v1", 256,
+  checkChain("secp256r1", 256,
              "rsa", 1016,
-             "prime256v1", 256,
+             "secp256r1", 256,
              MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE);
 }
 
