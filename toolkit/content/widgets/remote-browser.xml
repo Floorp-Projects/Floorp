@@ -389,6 +389,15 @@
         </body>
       </method>
 
+      <method name="purgeSessionHistory">
+        <body>
+          <![CDATA[
+            this.messageManager.sendAsyncMessage("Browser:PurgeSessionHistory");
+            this.webNavigation.canGoBack = false;
+            this.webNavigation.canGoForward = false;
+          ]]>
+        </body>
+      </method>
     </implementation>
 
   </binding>
