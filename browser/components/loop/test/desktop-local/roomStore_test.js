@@ -581,7 +581,7 @@ describe("loop.store.RoomStore", function () {
 
         sinon.assert.calledOnce(fakeMozLoop.socialShareRoom);
         sinon.assert.calledWithExactly(fakeMozLoop.socialShareRoom, origin,
-          roomUrl, "share_email_subject5", "share_email_body5");
+          roomUrl, "share_email_subject6", "share_email_body6" + "share_email_footer");
       });
 
       it("should pass the correct data for all other Social Providers", function() {
