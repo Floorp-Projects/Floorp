@@ -8,6 +8,7 @@ if [ -d "$TOOLTOOL_DIR/gtk3" ]; then
   fi
   export PKG_CONFIG_SYSROOT_DIR="$TOOLTOOL_DIR/gtk3"
   export PKG_CONFIG_PATH="$TOOLTOOL_DIR/gtk3/usr/local/lib/pkgconfig"
+  PKG_CONFIG="$TOOLTOOL_DIR/gtk3/usr/local/bin/pkg-config"
   export PATH="$TOOLTOOL_DIR/gtk3/usr/local/bin:${PATH}"
   # Ensure cairo, gdk-pixbuf, etc. are not taken from the system installed packages.
   LDFLAGS="-L$TOOLTOOL_DIR/gtk3/usr/local/lib ${LDFLAGS}"
@@ -24,5 +25,6 @@ if [ -d "$TOOLTOOL_DIR/gtk3" ]; then
   # Until a tooltool with bug 1188571 landed is available everywhere
   $TOOLTOOL_DIR/gtk3/setup.sh
 else
+  PKG_CONFIG=pkg-config
   ac_add_options --enable-default-toolkit=cairo-gtk2
 fi
