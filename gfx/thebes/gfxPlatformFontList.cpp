@@ -163,7 +163,7 @@ gfxPlatformFontList::MemoryReporter::CollectReports(
 gfxPlatformFontList::gfxPlatformFontList(bool aNeedFullnamePostscriptNames)
     : mFontFamilies(64), mOtherFamilyNames(16),
       mPrefFonts(8), mBadUnderlineFamilyNames(8), mSharedCmaps(8),
-      mStartIndex(0), mIncrement(1), mNumFamilies(0)
+      mStartIndex(0), mIncrement(1), mNumFamilies(0), mFontlistInitCount(0)
 {
     mOtherFamilyNamesInitialized = false;
 
@@ -195,6 +195,8 @@ gfxPlatformFontList::~gfxPlatformFontList()
 nsresult
 gfxPlatformFontList::InitFontList()
 {
+    mFontlistInitCount++;
+
     if (LOG_FONTINIT_ENABLED()) {
         LOG_FONTINIT(("(fontinit) system fontlist initialization\n"));
     }

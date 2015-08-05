@@ -194,6 +194,11 @@ public:
 
     static const gfxFontEntry::ScriptRange sComplexScriptRanges[];
 
+    void GetFontlistInitInfo(uint32_t& aNumInits, uint32_t& aLoaderState) {
+        aNumInits = mFontlistInitCount;
+        aLoaderState = (uint32_t) mState;
+    }
+
 protected:
     class MemoryReporter final : public nsIMemoryReporter
     {
@@ -358,6 +363,10 @@ protected:
     uint32_t mStartIndex;
     uint32_t mIncrement;
     uint32_t mNumFamilies;
+
+    // xxx - info for diagnosing no default font aborts
+    // see bugs 636957, 1070983, 1189129
+    uint32_t mFontlistInitCount; // num times InitFontList called
 
     nsTHashtable<nsPtrHashKey<gfxUserFontSet> > mUserFontSetList;
 };
