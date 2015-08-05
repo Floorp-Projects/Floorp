@@ -23,6 +23,7 @@ add_test(function test_registration_returns_hawk_session_token() {
     try {
       hawkSessionPref = Services.prefs.getCharPref("loop.hawk-session-token");
     } catch (ex) {
+      // Do nothing
     }
     Assert.equal(hawkSessionPref, fakeSessionToken, "Should store" +
       " Hawk-Session-Token header contents in loop.hawk-session-token pref");
