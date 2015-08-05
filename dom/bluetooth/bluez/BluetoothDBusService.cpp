@@ -3715,21 +3715,7 @@ BluetoothDBusService::Disconnect(const nsAString& aDeviceAddress,
 }
 
 #ifndef MOZ_B2G_BT_API_V1
-bool
-BluetoothDBusService::IsConnected(const uint16_t aServiceUuid)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  BluetoothProfileManagerBase* profile =
-    BluetoothUuidHelper::GetBluetoothProfileManager(aServiceUuid);
-  if (!profile) {
-    BT_WARNING(ERR_UNKNOWN_PROFILE);
-    return false;
-  }
-
-  NS_ENSURE_TRUE(profile, false);
-  return profile->IsConnected();
-}
+  // Missing in bluetooth2
 #else
 void
 BluetoothDBusService::IsConnected(const uint16_t aServiceUuid,
