@@ -1506,6 +1506,8 @@ pref("dom.server-events.default-reconnection-time", 5000); // in milliseconds
 // application/java-archive or application/x-jar will not be opened
 // by the jar channel.
 pref("network.jar.open-unsafe-types", false);
+// If true, loading remote JAR files using the jar: protocol will be prevented.
+pref("network.jar.block-remote-files", false);
 
 // This preference, if true, causes all UTF-8 domain names to be normalized to
 // punycode.  The intention is to allow UTF-8 domain names as input, but never
