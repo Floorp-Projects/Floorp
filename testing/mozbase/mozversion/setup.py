@@ -4,7 +4,7 @@
 
 from setuptools import setup
 
-PACKAGE_VERSION = '1.3'
+PACKAGE_VERSION = '1.4'
 
 
 setup(name='mozversion',

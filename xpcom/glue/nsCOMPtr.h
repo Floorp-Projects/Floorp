@@ -110,9 +110,7 @@
 #endif
 
 namespace mozilla {
-namespace dom {
 template<class T> class OwningNonNull;
-} // namespace dom
 } // namespace mozilla
 
 template<class T>
@@ -535,7 +533,7 @@ public:
 
   // Defined in OwningNonNull.h
   template<class U>
-  MOZ_IMPLICIT nsCOMPtr(const mozilla::dom::OwningNonNull<U>& aOther);
+  MOZ_IMPLICIT nsCOMPtr(const mozilla::OwningNonNull<U>& aOther);
 
 
   // Assignment operators
@@ -630,7 +628,7 @@ public:
 
   // Defined in OwningNonNull.h
   template<class U>
-  nsCOMPtr<T>& operator=(const mozilla::dom::OwningNonNull<U>& aOther);
+  nsCOMPtr<T>& operator=(const mozilla::OwningNonNull<U>& aOther);
 
   // Exchange ownership with |aRhs|; can save a pair of refcount operations.
   void swap(nsCOMPtr<T>& aRhs)

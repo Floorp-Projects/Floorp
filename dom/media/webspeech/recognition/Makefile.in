@@ -2,6 +2,7 @@ ifdef MOZ_WEBSPEECH_MODELS
 MODELSPS_KEEP_PATH := 1
 
 MODELSPS_FILES := models/dict/en-US.dic \
+		models/dict/en-US.dic.dmp \
 		models/en-US/mixture_weights \
 		models/en-US/feat.params \
 		models/en-US/mdef \

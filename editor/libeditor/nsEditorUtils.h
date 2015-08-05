@@ -20,8 +20,8 @@ class nsIContentIterator;
 class nsIDOMDocument;
 class nsRange;
 namespace mozilla {
-namespace dom {
 template <class T> class OwningNonNull;
+namespace dom {
 class Selection;
 } // namespace dom
 } // namespace mozilla
@@ -181,7 +181,7 @@ class MOZ_STACK_CLASS nsDOMIterator
     nsresult Init(nsRange& aRange);
 
     void AppendList(const nsBoolDomIterFunctor& functor,
-                    nsTArray<mozilla::dom::OwningNonNull<nsINode>>& arrayOfNodes) const;
+                    nsTArray<mozilla::OwningNonNull<nsINode>>& arrayOfNodes) const;
   protected:
     nsCOMPtr<nsIContentIterator> mIter;
 };
