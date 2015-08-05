@@ -40,7 +40,7 @@ Structure::
           loadPath: <string>, // where the engine line is located; missing if no default
           submissionURL: <string> // missing if no default or for user-installed engines
         },
-        e10sEnabled: <bool>, // false on failure
+        e10sEnabled: <bool>, // whether e10s is on, i.e. browser tabs open by default in a different process
         telemetryEnabled: <bool>, // false on failure
         locale: <string>, // e.g. "it", null on failure
         update: {

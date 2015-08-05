@@ -146,7 +146,6 @@ const PREF_DISTRIBUTION_ID = "distribution.id";
 const PREF_DISTRIBUTION_VERSION = "distribution.version";
 const PREF_DISTRIBUTOR = "app.distributor";
 const PREF_DISTRIBUTOR_CHANNEL = "app.distributor.channel";
-const PREF_E10S_ENABLED = "browser.tabs.remote.autostart";
 const PREF_HOTFIX_LASTVERSION = "extensions.hotfix.lastVersion";
 const PREF_APP_PARTNER_BRANCH = "app.partner.";
 const PREF_PARTNER_ID = "mozilla.partner.id";
@@ -977,7 +976,7 @@ EnvironmentCache.prototype = {
 #ifndef MOZ_WIDGET_ANDROID
       isDefaultBrowser: this._isDefaultBrowser(),
 #endif
-      e10sEnabled: Preferences.get(PREF_E10S_ENABLED, false),
+      e10sEnabled: Services.appinfo.browserTabsRemoteAutostart,
       telemetryEnabled: Preferences.get(PREF_TELEMETRY_ENABLED, false),
       locale: getBrowserLocale(),
       update: {
