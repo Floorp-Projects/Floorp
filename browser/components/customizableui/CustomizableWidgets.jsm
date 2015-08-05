@@ -315,8 +315,8 @@ const CustomizableWidgets = [
       let win = aEvent.target &&
                 aEvent.target.ownerDocument &&
                 aEvent.target.ownerDocument.defaultView;
-      if (win && typeof win.saveDocument == "function") {
-        win.saveDocument(win.gBrowser.selectedBrowser.contentDocumentAsCPOW);
+      if (win && typeof win.saveBrowser == "function") {
+        win.saveBrowser(win.gBrowser.selectedBrowser);
       }
     }
   }, {
