@@ -52,6 +52,11 @@ function runTest() {
   function iframeLoaded() {
     bc.postMessage("Hello world from the window!");
   }
+
+  // A leak test
+  var dummyBc = new BroadcastChannel("dont_leak_this");
+  dummyBc.foo = "bar";
+  // don't add message listener!
 }
 
 SimpleTest.waitForExplicitFinish();
