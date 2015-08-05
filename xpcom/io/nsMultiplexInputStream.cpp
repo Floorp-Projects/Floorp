@@ -133,7 +133,6 @@ nsMultiplexInputStream::nsMultiplexInputStream()
 {
 }
 
-/* readonly attribute unsigned long count; */
 NS_IMETHODIMP
 nsMultiplexInputStream::GetCount(uint32_t* aCount)
 {
@@ -155,7 +154,6 @@ SeekableStreamAtBeginning(nsIInputStream* aStream)
 }
 #endif
 
-/* void appendStream (in nsIInputStream stream); */
 NS_IMETHODIMP
 nsMultiplexInputStream::AppendStream(nsIInputStream* aStream)
 {
@@ -165,7 +163,6 @@ nsMultiplexInputStream::AppendStream(nsIInputStream* aStream)
   return mStreams.AppendElement(aStream) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-/* void insertStream (in nsIInputStream stream, in unsigned long index); */
 NS_IMETHODIMP
 nsMultiplexInputStream::InsertStream(nsIInputStream* aStream, uint32_t aIndex)
 {
@@ -180,7 +177,6 @@ nsMultiplexInputStream::InsertStream(nsIInputStream* aStream, uint32_t aIndex)
   return NS_OK;
 }
 
-/* void removeStream (in unsigned long index); */
 NS_IMETHODIMP
 nsMultiplexInputStream::RemoveStream(uint32_t aIndex)
 {
@@ -195,7 +191,6 @@ nsMultiplexInputStream::RemoveStream(uint32_t aIndex)
   return NS_OK;
 }
 
-/* nsIInputStream getStream (in unsigned long index); */
 NS_IMETHODIMP
 nsMultiplexInputStream::GetStream(uint32_t aIndex, nsIInputStream** aResult)
 {
@@ -209,7 +204,6 @@ nsMultiplexInputStream::GetStream(uint32_t aIndex, nsIInputStream** aResult)
   return NS_OK;
 }
 
-/* void close (); */
 NS_IMETHODIMP
 nsMultiplexInputStream::Close()
 {
@@ -229,7 +223,6 @@ nsMultiplexInputStream::Close()
   return rv;
 }
 
-/* unsigned long long available (); */
 NS_IMETHODIMP
 nsMultiplexInputStream::Available(uint64_t* aResult)
 {
@@ -254,7 +247,6 @@ nsMultiplexInputStream::Available(uint64_t* aResult)
   return NS_OK;
 }
 
-/* [noscript] unsigned long read (in charPtr buf, in unsigned long count); */
 NS_IMETHODIMP
 nsMultiplexInputStream::Read(char* aBuf, uint32_t aCount, uint32_t* aResult)
 {
@@ -385,7 +377,6 @@ nsMultiplexInputStream::ReadSegCb(nsIInputStream* aIn, void* aClosure,
   return rv;
 }
 
-/* readonly attribute boolean nonBlocking; */
 NS_IMETHODIMP
 nsMultiplexInputStream::IsNonBlocking(bool* aNonBlocking)
 {
@@ -415,7 +406,6 @@ nsMultiplexInputStream::IsNonBlocking(bool* aNonBlocking)
   return NS_OK;
 }
 
-/* void seek (in int32_t whence, in int32_t offset); */
 NS_IMETHODIMP
 nsMultiplexInputStream::Seek(int32_t aWhence, int64_t aOffset)
 {
@@ -658,7 +648,6 @@ nsMultiplexInputStream::Seek(int32_t aWhence, int64_t aOffset)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* uint32_t tell (); */
 NS_IMETHODIMP
 nsMultiplexInputStream::Tell(int64_t* aResult)
 {
@@ -690,7 +679,6 @@ nsMultiplexInputStream::Tell(int64_t* aResult)
   return NS_OK;
 }
 
-/* void setEOF (); */
 NS_IMETHODIMP
 nsMultiplexInputStream::SetEOF()
 {

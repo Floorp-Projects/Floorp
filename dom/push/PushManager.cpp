@@ -215,38 +215,29 @@ WorkerPushSubscription::Constructor(GlobalObject& aGlobal, const nsAString& aEnd
   return sub.forget();
 }
 
-class MOZ_STACK_CLASS AutoReleasePromiseWorkerProxy final
+namespace {
+// The caller MUST take ownership of the proxy's lock before it calls this.
+void
+ReleasePromiseWorkerProxy(already_AddRefed<PromiseWorkerProxy> aProxy)
 {
-public:
-  explicit AutoReleasePromiseWorkerProxy(PromiseWorkerProxy* aProxy)
-    : mProxy(aProxy)
-  {
-    AssertIsOnMainThread();
-    MOZ_ASSERT(aProxy);
-    aProxy->GetCleanUpLock().AssertCurrentThreadOwns();
-    if (aProxy->IsClean()) {
-      mProxy = nullptr;
-    }
+  AssertIsOnMainThread();
+  nsRefPtr<PromiseWorkerProxy> proxy = aProxy;
+  MOZ_ASSERT(proxy);
+  proxy->GetCleanUpLock().AssertCurrentThreadOwns();
+  if (proxy->IsClean()) {
+    return;
   }
 
-  ~AutoReleasePromiseWorkerProxy()
-  {
-    if (mProxy) {
-      AutoJSAPI jsapi;
-      jsapi.Init();
+  AutoJSAPI jsapi;
+  jsapi.Init();
 
-      nsRefPtr<PromiseWorkerProxyControlRunnable> cr =
-        new PromiseWorkerProxyControlRunnable(mProxy->GetWorkerPrivate(),
-                                              mProxy);
+  nsRefPtr<PromiseWorkerProxyControlRunnable> cr =
+    new PromiseWorkerProxyControlRunnable(proxy->GetWorkerPrivate(),
+                                          proxy);
 
-      DebugOnly<bool> ok = cr->Dispatch(jsapi.cx());
-      MOZ_ASSERT(ok);
-      mProxy = nullptr;
-    }
-  }
-private:
-  nsRefPtr<PromiseWorkerProxy> mProxy;
-};
+  MOZ_ALWAYS_TRUE(cr->Dispatch(jsapi.cx()));
+}
+} // anonymous namespace
 
 class UnsubscribeResultRunnable final : public WorkerRunnable
 {
@@ -281,12 +272,7 @@ public:
   }
 private:
   ~UnsubscribeResultRunnable()
-  {
-    if (mProxy) {
-      AutoReleasePromiseWorkerProxy autoRelease(mProxy);
-      mProxy = nullptr;
-    }
-  }
+  {}
 
   nsRefPtr<PromiseWorkerProxy> mProxy;
   nsresult mStatus;
@@ -300,6 +286,7 @@ public:
 
   explicit WorkerUnsubscribeResultCallback(PromiseWorkerProxy* aProxy)
     : mProxy(aProxy)
+    , mCallbackCalled(false)
   {
     AssertIsOnMainThread();
   }
@@ -308,6 +295,7 @@ public:
   OnUnsubscribe(nsresult aStatus, bool aSuccess) override
   {
     AssertIsOnMainThread();
+    mCallbackCalled = true;
     if (!mProxy) {
       return NS_OK;
     }
@@ -322,22 +310,23 @@ public:
 
     nsRefPtr<UnsubscribeResultRunnable> r =
       new UnsubscribeResultRunnable(mProxy, aStatus, aSuccess);
-    mProxy = nullptr;
+    if (!r->Dispatch(jsapi.cx())) {
+      ReleasePromiseWorkerProxy(mProxy.forget());
+    }
 
-    r->Dispatch(jsapi.cx());
     return NS_OK;
   }
 
 private:
   ~WorkerUnsubscribeResultCallback()
   {
-    if (mProxy) {
-      AutoReleasePromiseWorkerProxy autoRelease(mProxy);
-      mProxy = nullptr;
-    }
+    // Enforces that UnsubscribeRunnable uses the callback for error
+    // reporting once it creates the callback.
+    MOZ_ASSERT(mCallbackCalled);
   }
 
   nsRefPtr<PromiseWorkerProxy> mProxy;
+  DebugOnly<bool> mCallbackCalled;
 };
 
 NS_IMPL_ISUPPORTS(WorkerUnsubscribeResultCallback, nsIUnsubscribeResultCallback)
@@ -363,36 +352,27 @@ public:
       return NS_OK;
     }
 
+    nsRefPtr<WorkerUnsubscribeResultCallback> callback =
+      new WorkerUnsubscribeResultCallback(mProxy);
+
     nsCOMPtr<nsIPushClient> client =
       do_CreateInstance("@mozilla.org/push/PushClient;1");
     if (!client) {
-      AutoJSAPI jsapi;
-      jsapi.Init();
-
-      nsRefPtr<UnsubscribeResultRunnable> r =
-        new UnsubscribeResultRunnable(mProxy, NS_ERROR_FAILURE, false);
-      mProxy = nullptr;
-
-      r->Dispatch(jsapi.cx());
-      return NS_OK;
+      callback->OnUnsubscribe(NS_ERROR_FAILURE, false);
     }
 
     nsCOMPtr<nsIPrincipal> principal = mProxy->GetWorkerPrivate()->GetPrincipal();
-    nsRefPtr<WorkerUnsubscribeResultCallback> callback =
-      new WorkerUnsubscribeResultCallback(mProxy);
-    mProxy = nullptr;
-    client->Unsubscribe(mScope, principal, callback);
+    if (NS_WARN_IF(NS_FAILED(client->Unsubscribe(mScope, principal, callback)))) {
+      callback->OnUnsubscribe(NS_ERROR_FAILURE, false);
+      return NS_ERROR_FAILURE;
+    }
     return NS_OK;
   }
 
 private:
   ~UnsubscribeRunnable()
-  {
-    if (mProxy) {
-      AutoReleasePromiseWorkerProxy autoRelease(mProxy);
-      mProxy = nullptr;
-    }
-  }
+  {}
+
   nsRefPtr<PromiseWorkerProxy> mProxy;
   nsString mScope;
 };
@@ -418,7 +398,7 @@ WorkerPushSubscription::Unsubscribe(ErrorResult &aRv)
 
   nsRefPtr<UnsubscribeRunnable> r =
     new UnsubscribeRunnable(proxy, mScope);
-  NS_DispatchToMainThread(r);
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
 
   return p.forget();
 }
@@ -464,9 +444,13 @@ public:
     nsRefPtr<PromiseWorkerProxy> proxy = mProxy.forget();
     nsRefPtr<Promise> promise = proxy->GetWorkerPromise();
     if (NS_SUCCEEDED(mStatus)) {
-      nsRefPtr<WorkerPushSubscription> sub =
-        new WorkerPushSubscription(mEndpoint, mScope);
-      promise->MaybeResolve(sub);
+      if (mEndpoint.IsEmpty()) {
+        promise->MaybeResolve(JS::NullHandleValue);
+      } else {
+        nsRefPtr<WorkerPushSubscription> sub =
+          new WorkerPushSubscription(mEndpoint, mScope);
+        promise->MaybeResolve(sub);
+      }
     } else {
       promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
     }
@@ -476,12 +460,7 @@ public:
   }
 private:
   ~GetSubscriptionResultRunnable()
-  {
-    if (mProxy) {
-      AutoReleasePromiseWorkerProxy autoRelease(mProxy);
-      mProxy = nullptr;
-    }
-  }
+  {}
 
   nsRefPtr<PromiseWorkerProxy> mProxy;
   nsresult mStatus;
@@ -498,12 +477,15 @@ public:
                                    const nsAString& aScope)
     : mProxy(aProxy)
     , mScope(aScope)
+    , mCallbackCalled(false)
   {}
 
   NS_IMETHOD
   OnPushEndpoint(nsresult aStatus, const nsAString& aEndpoint) override
   {
     AssertIsOnMainThread();
+    mCallbackCalled = true;
+
     if (!mProxy) {
       return NS_OK;
     }
@@ -518,24 +500,24 @@ public:
 
     nsRefPtr<GetSubscriptionResultRunnable> r =
       new GetSubscriptionResultRunnable(mProxy, aStatus, aEndpoint, mScope);
-    mProxy = nullptr;
-
-    r->Dispatch(jsapi.cx());
+    if (!r->Dispatch(jsapi.cx())) {
+      ReleasePromiseWorkerProxy(mProxy.forget());
+    }
     return NS_OK;
   }
 
 protected:
   ~GetSubscriptionCallback()
   {
-    if (mProxy) {
-      AutoReleasePromiseWorkerProxy autoRelease(mProxy);
-      mProxy = nullptr;
-    }
+    // Enforces that GetSubscriptionRunnable uses the callback for error
+    // reporting once it creates the callback.
+    MOZ_ASSERT(mCallbackCalled);
   }
 
 private:
   nsRefPtr<PromiseWorkerProxy> mProxy;
   nsString mScope;
+  DebugOnly<bool> mCallbackCalled;
 };
 
 NS_IMPL_ISUPPORTS(GetSubscriptionCallback, nsIPushEndpointCallback)
@@ -559,14 +541,12 @@ public:
       return NS_OK;
     }
 
+    nsRefPtr<GetSubscriptionCallback> callback = new GetSubscriptionCallback(mProxy, mScope);
+
     nsCOMPtr<nsIPermissionManager> permManager =
       mozilla::services::GetPermissionManager();
-
-    AutoJSAPI jsapi;
-    jsapi.Init();
-
     if (!permManager) {
-      Fail(jsapi.cx());
+      callback->OnPushEndpoint(NS_ERROR_FAILURE, EmptyString());
       return NS_OK;
     }
 
@@ -577,47 +557,38 @@ public:
                     &permission);
 
     if (NS_WARN_IF(NS_FAILED(rv)) || permission != nsIPermissionManager::ALLOW_ACTION) {
-      Fail(jsapi.cx());
+      callback->OnPushEndpoint(NS_ERROR_FAILURE, EmptyString());
       return NS_OK;
     }
 
     nsCOMPtr<nsIPushClient> client =
       do_CreateInstance("@mozilla.org/push/PushClient;1");
     if (!client) {
-      Fail(jsapi.cx());
+      callback->OnPushEndpoint(NS_ERROR_FAILURE, EmptyString());
       return NS_OK;
     }
 
     nsCOMPtr<nsIPrincipal> principal = mProxy->GetWorkerPrivate()->GetPrincipal();
-    nsRefPtr<GetSubscriptionCallback> callback = new GetSubscriptionCallback(mProxy, mScope);
     mProxy = nullptr;
 
     if (mAction == WorkerPushManager::SubscribeAction) {
-      return client->Subscribe(mScope, principal, callback);
+      rv = client->Subscribe(mScope, principal, callback);
     } else {
       MOZ_ASSERT(mAction == WorkerPushManager::GetSubscriptionAction);
-      return client->GetSubscription(mScope, principal, callback);
+      rv = client->GetSubscription(mScope, principal, callback);
     }
+
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      callback->OnPushEndpoint(NS_ERROR_FAILURE, EmptyString());
+      return rv;
+    }
+
+    return NS_OK;
   }
 
 private:
-  void
-  Fail(JSContext* aCx)
-  {
-    nsRefPtr<GetSubscriptionResultRunnable> r =
-      new GetSubscriptionResultRunnable(mProxy, NS_ERROR_FAILURE, EmptyString(), mScope);
-    mProxy = nullptr;
-
-    r->Dispatch(aCx);
-  }
-
   ~GetSubscriptionRunnable()
-  {
-    if (mProxy) {
-      AutoReleasePromiseWorkerProxy autoRelease(mProxy);
-      mProxy = nullptr;
-    }
-  }
+  {}
 
   nsRefPtr<PromiseWorkerProxy> mProxy;
   nsString mScope;
@@ -645,7 +616,7 @@ WorkerPushManager::PerformSubscriptionAction(SubscriptionAction aAction, ErrorRe
 
   nsRefPtr<GetSubscriptionRunnable> r =
     new GetSubscriptionRunnable(proxy, mScope, aAction);
-  NS_DispatchToMainThread(r);
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
 
   return p.forget();
 }
@@ -698,12 +669,7 @@ public:
 
 private:
   ~PermissionResultRunnable()
-  {
-    if (mProxy) {
-      AutoReleasePromiseWorkerProxy autoRelease(mProxy);
-      mProxy = nullptr;
-    }
-  }
+  {}
 
   nsRefPtr<PromiseWorkerProxy> mProxy;
   nsresult mStatus;
@@ -729,55 +695,46 @@ public:
     nsCOMPtr<nsIPermissionManager> permManager =
       mozilla::services::GetPermissionManager();
 
+    nsresult rv = NS_ERROR_FAILURE;
     PushPermissionState state = PushPermissionState::Denied;
+
+    if (permManager) {
+      uint32_t permission = nsIPermissionManager::DENY_ACTION;
+      rv = permManager->TestExactPermissionFromPrincipal(
+             mProxy->GetWorkerPrivate()->GetPrincipal(),
+             "push",
+             &permission);
+
+      if (NS_SUCCEEDED(rv)) {
+        switch (permission) {
+          case nsIPermissionManager::ALLOW_ACTION:
+            state = PushPermissionState::Granted;
+            break;
+          case nsIPermissionManager::DENY_ACTION:
+            state = PushPermissionState::Denied;
+            break;
+          case nsIPermissionManager::PROMPT_ACTION:
+            state = PushPermissionState::Prompt;
+            break;
+          default:
+            MOZ_CRASH("Unexpected case!");
+        }
+      }
+    }
 
     AutoJSAPI jsapi;
     jsapi.Init();
-
-    if (!permManager) {
-      nsRefPtr<PermissionResultRunnable> r =
-        new PermissionResultRunnable(mProxy, NS_ERROR_FAILURE, state);
-      mProxy = nullptr;
-
-      r->Dispatch(jsapi.cx());
-      return NS_OK;
-    }
-
-    uint32_t permission = nsIPermissionManager::DENY_ACTION;
-    nsresult rv = permManager->TestExactPermissionFromPrincipal(
-                    mProxy->GetWorkerPrivate()->GetPrincipal(),
-                    "push",
-                    &permission);
-
-    switch (permission) {
-      case nsIPermissionManager::ALLOW_ACTION:
-        state = PushPermissionState::Granted;
-        break;
-      case nsIPermissionManager::DENY_ACTION:
-        state = PushPermissionState::Denied;
-        break;
-      case nsIPermissionManager::PROMPT_ACTION:
-        state = PushPermissionState::Prompt;
-        break;
-      default:
-        MOZ_CRASH("Unexpected case!");
-    }
-
     nsRefPtr<PermissionResultRunnable> r =
       new PermissionResultRunnable(mProxy, rv, state);
-    mProxy = nullptr;
-    r->Dispatch(jsapi.cx());
+    if (!r->Dispatch(jsapi.cx())) {
+      ReleasePromiseWorkerProxy(mProxy.forget());
+    }
     return NS_OK;
   }
 
 private:
   ~PermissionStateRunnable()
-  {
-    if (mProxy) {
-      AutoReleasePromiseWorkerProxy autoRelease(mProxy);
-      mProxy = nullptr;
-    }
-  }
+  {}
 
   nsRefPtr<PromiseWorkerProxy> mProxy;
 };

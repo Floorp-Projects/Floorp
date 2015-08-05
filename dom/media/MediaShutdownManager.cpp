@@ -8,7 +8,6 @@
 #include "nsContentUtils.h"
 #include "mozilla/StaticPtr.h"
 #include "MediaDecoder.h"
-#include "SharedThreadPool.h"
 #include "mozilla/Logging.h"
 
 namespace mozilla {
@@ -119,11 +118,6 @@ MediaShutdownManager::Shutdown()
     iter.Get()->GetKey()->Shutdown();
     iter.Remove();
   }
-
-  // Ensure all media shared thread pools are shutdown. This joins with all
-  // threads in the state machine thread pool, the decoder thread pool, and
-  // any others.
-  SharedThreadPool::SpinUntilEmpty();
 
   // Remove the MediaShutdownManager instance from the shutdown observer
   // list.

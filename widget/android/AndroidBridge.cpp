@@ -3,12 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/layers/CompositorChild.h"
-#include "mozilla/layers/CompositorParent.h"
-
 #include <android/log.h>
 #include <dlfcn.h>
 #include <math.h>
+#include <GLES2/gl2.h>
+
+#include "mozilla/layers/CompositorChild.h"
+#include "mozilla/layers/CompositorParent.h"
 
 #include "mozilla/Hal.h"
 #include "nsXULAppAPI.h"
@@ -1066,9 +1067,7 @@ AndroidBridge::HandleGeckoMessage(JSContext* cx, JS::HandleObject object)
 {
     ALOG_BRIDGE("%s", __PRETTY_FUNCTION__);
 
-    JNIEnv* const env = GetJNIEnv();
-    auto message = Object::LocalRef::Adopt(env,
-        mozilla::widget::CreateNativeJSContainer(env, cx, object));
+    auto message = mozilla::widget::CreateNativeJSContainer(cx, object);
     GeckoAppShell::HandleGeckoMessageWrapper(message);
 }
 
@@ -1586,7 +1585,6 @@ nsAndroidBridge::~nsAndroidBridge()
 {
 }
 
-/* void handleGeckoEvent (in AString message); */
 NS_IMETHODIMP nsAndroidBridge::HandleGeckoMessage(JS::HandleValue val,
                                                   JSContext *cx)
 {
@@ -1620,21 +1618,18 @@ NS_IMETHODIMP nsAndroidBridge::HandleGeckoMessage(JS::HandleValue val,
     return NS_OK;
 }
 
-/* nsIAndroidDisplayport getDisplayPort(in boolean aPageSizeUpdate, in boolean isBrowserContentDisplayed, in int32_t tabId, in nsIAndroidViewport metrics); */
 NS_IMETHODIMP nsAndroidBridge::GetDisplayPort(bool aPageSizeUpdate, bool aIsBrowserContentDisplayed, int32_t tabId, nsIAndroidViewport* metrics, nsIAndroidDisplayport** displayPort)
 {
     AndroidBridge::Bridge()->GetDisplayPort(aPageSizeUpdate, aIsBrowserContentDisplayed, tabId, metrics, displayPort);
     return NS_OK;
 }
 
-/* void displayedDocumentChanged(); */
 NS_IMETHODIMP nsAndroidBridge::ContentDocumentChanged()
 {
     AndroidBridge::Bridge()->ContentDocumentChanged();
     return NS_OK;
 }
 
-/* boolean isContentDocumentDisplayed(); */
 NS_IMETHODIMP nsAndroidBridge::IsContentDocumentDisplayed(bool *aRet)
 {
     *aRet = AndroidBridge::Bridge()->IsContentDocumentDisplayed();
@@ -1728,7 +1723,6 @@ AndroidBridge::PumpMessageLoop()
     return GeckoAppShell::PumpMessageLoop(msg);
 }
 
-/* attribute nsIAndroidBrowserApp browserApp; */
 NS_IMETHODIMP nsAndroidBridge::GetBrowserApp(nsIAndroidBrowserApp * *aBrowserApp)
 {
     if (nsAppShell::gAppShell)

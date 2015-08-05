@@ -3122,6 +3122,565 @@ public:
 
 };
 
+class NativeJSContainer : public mozilla::jni::Class<NativeJSContainer>
+{
+public:
+    typedef mozilla::jni::Ref<NativeJSContainer> Ref;
+    typedef mozilla::jni::LocalRef<NativeJSContainer> LocalRef;
+    typedef mozilla::jni::GlobalRef<NativeJSContainer> GlobalRef;
+    typedef const mozilla::jni::Param<NativeJSContainer>& Param;
+
+    static constexpr char name[] =
+            "org/mozilla/gecko/util/NativeJSContainer";
+
+protected:
+    NativeJSContainer(jobject instance) : Class(instance) {}
+
+public:
+    struct New_t {
+        typedef NativeJSContainer Owner;
+        typedef NativeJSContainer::LocalRef ReturnType;
+        typedef NativeJSContainer::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "<init>";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static NativeJSContainer::LocalRef New();
+
+public:
+    struct Clone2_t {
+        typedef NativeJSContainer Owner;
+        typedef NativeJSContainer::LocalRef ReturnType;
+        typedef NativeJSContainer::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "clone";
+        static constexpr char signature[] =
+                "()Lorg/mozilla/gecko/util/NativeJSContainer;";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct DisposeNative_t {
+        typedef NativeJSContainer Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "disposeNative";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    template<class Impl> class Natives;
+};
+
+class NativeJSObject : public mozilla::jni::Class<NativeJSObject>
+{
+public:
+    typedef mozilla::jni::Ref<NativeJSObject> Ref;
+    typedef mozilla::jni::LocalRef<NativeJSObject> LocalRef;
+    typedef mozilla::jni::GlobalRef<NativeJSObject> GlobalRef;
+    typedef const mozilla::jni::Param<NativeJSObject>& Param;
+
+    static constexpr char name[] =
+            "org/mozilla/gecko/util/NativeJSObject";
+
+protected:
+    NativeJSObject(jobject instance) : Class(instance) {}
+
+public:
+    struct New_t {
+        typedef NativeJSObject Owner;
+        typedef NativeJSObject::LocalRef ReturnType;
+        typedef NativeJSObject::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "<init>";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static NativeJSObject::LocalRef New();
+
+public:
+    struct DisposeNative_t {
+        typedef NativeJSObject Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "disposeNative";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    void DisposeNative() const;
+
+public:
+    struct GetBoolean_t {
+        typedef NativeJSObject Owner;
+        typedef bool ReturnType;
+        typedef bool SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "getBoolean";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;)Z";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct GetBooleanArray_t {
+        typedef NativeJSObject Owner;
+        typedef mozilla::jni::BooleanArray::LocalRef ReturnType;
+        typedef mozilla::jni::BooleanArray::Param SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "getBooleanArray";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;)[Z";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct GetBundle_t {
+        typedef NativeJSObject Owner;
+        typedef mozilla::jni::Object::LocalRef ReturnType;
+        typedef mozilla::jni::Object::Param SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "getBundle";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;)Landroid/os/Bundle;";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct GetBundleArray_t {
+        typedef NativeJSObject Owner;
+        typedef mozilla::jni::ObjectArray::LocalRef ReturnType;
+        typedef mozilla::jni::ObjectArray::Param SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "getBundleArray";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;)[Landroid/os/Bundle;";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct GetDouble_t {
+        typedef NativeJSObject Owner;
+        typedef double ReturnType;
+        typedef double SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "getDouble";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;)D";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct GetDoubleArray_t {
+        typedef NativeJSObject Owner;
+        typedef mozilla::jni::DoubleArray::LocalRef ReturnType;
+        typedef mozilla::jni::DoubleArray::Param SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "getDoubleArray";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;)[D";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct GetInt_t {
+        typedef NativeJSObject Owner;
+        typedef int32_t ReturnType;
+        typedef int32_t SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "getInt";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;)I";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct GetIntArray_t {
+        typedef NativeJSObject Owner;
+        typedef mozilla::jni::IntArray::LocalRef ReturnType;
+        typedef mozilla::jni::IntArray::Param SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "getIntArray";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;)[I";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct GetObject_t {
+        typedef NativeJSObject Owner;
+        typedef NativeJSObject::LocalRef ReturnType;
+        typedef NativeJSObject::Param SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "getObject";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;)Lorg/mozilla/gecko/util/NativeJSObject;";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct GetObjectArray_t {
+        typedef NativeJSObject Owner;
+        typedef mozilla::jni::ObjectArray::LocalRef ReturnType;
+        typedef mozilla::jni::ObjectArray::Param SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "getObjectArray";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;)[Lorg/mozilla/gecko/util/NativeJSObject;";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct GetString_t {
+        typedef NativeJSObject Owner;
+        typedef mozilla::jni::String::LocalRef ReturnType;
+        typedef mozilla::jni::String::Param SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "getString";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;)Ljava/lang/String;";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct GetStringArray_t {
+        typedef NativeJSObject Owner;
+        typedef mozilla::jni::ObjectArray::LocalRef ReturnType;
+        typedef mozilla::jni::ObjectArray::Param SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "getStringArray";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;)[Ljava/lang/String;";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct Has_t {
+        typedef NativeJSObject Owner;
+        typedef bool ReturnType;
+        typedef bool SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "has";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;)Z";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct OptBoolean_t {
+        typedef NativeJSObject Owner;
+        typedef bool ReturnType;
+        typedef bool SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param,
+                bool> Args;
+        static constexpr char name[] = "optBoolean";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;Z)Z";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct OptBooleanArray_t {
+        typedef NativeJSObject Owner;
+        typedef mozilla::jni::BooleanArray::LocalRef ReturnType;
+        typedef mozilla::jni::BooleanArray::Param SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param,
+                mozilla::jni::BooleanArray::Param> Args;
+        static constexpr char name[] = "optBooleanArray";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;[Z)[Z";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct OptBundle_t {
+        typedef NativeJSObject Owner;
+        typedef mozilla::jni::Object::LocalRef ReturnType;
+        typedef mozilla::jni::Object::Param SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param,
+                mozilla::jni::Object::Param> Args;
+        static constexpr char name[] = "optBundle";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;Landroid/os/Bundle;)Landroid/os/Bundle;";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct OptBundleArray_t {
+        typedef NativeJSObject Owner;
+        typedef mozilla::jni::ObjectArray::LocalRef ReturnType;
+        typedef mozilla::jni::ObjectArray::Param SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param,
+                mozilla::jni::ObjectArray::Param> Args;
+        static constexpr char name[] = "optBundleArray";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;[Landroid/os/Bundle;)[Landroid/os/Bundle;";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct OptDouble_t {
+        typedef NativeJSObject Owner;
+        typedef double ReturnType;
+        typedef double SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param,
+                double> Args;
+        static constexpr char name[] = "optDouble";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;D)D";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct OptDoubleArray_t {
+        typedef NativeJSObject Owner;
+        typedef mozilla::jni::DoubleArray::LocalRef ReturnType;
+        typedef mozilla::jni::DoubleArray::Param SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param,
+                mozilla::jni::DoubleArray::Param> Args;
+        static constexpr char name[] = "optDoubleArray";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;[D)[D";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct OptInt_t {
+        typedef NativeJSObject Owner;
+        typedef int32_t ReturnType;
+        typedef int32_t SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param,
+                int32_t> Args;
+        static constexpr char name[] = "optInt";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;I)I";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct OptIntArray_t {
+        typedef NativeJSObject Owner;
+        typedef mozilla::jni::IntArray::LocalRef ReturnType;
+        typedef mozilla::jni::IntArray::Param SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param,
+                mozilla::jni::IntArray::Param> Args;
+        static constexpr char name[] = "optIntArray";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;[I)[I";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct OptObject_t {
+        typedef NativeJSObject Owner;
+        typedef NativeJSObject::LocalRef ReturnType;
+        typedef NativeJSObject::Param SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param,
+                NativeJSObject::Param> Args;
+        static constexpr char name[] = "optObject";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;Lorg/mozilla/gecko/util/NativeJSObject;)Lorg/mozilla/gecko/util/NativeJSObject;";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct OptObjectArray_t {
+        typedef NativeJSObject Owner;
+        typedef mozilla::jni::ObjectArray::LocalRef ReturnType;
+        typedef mozilla::jni::ObjectArray::Param SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param,
+                mozilla::jni::ObjectArray::Param> Args;
+        static constexpr char name[] = "optObjectArray";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;[Lorg/mozilla/gecko/util/NativeJSObject;)[Lorg/mozilla/gecko/util/NativeJSObject;";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct OptString_t {
+        typedef NativeJSObject Owner;
+        typedef mozilla::jni::String::LocalRef ReturnType;
+        typedef mozilla::jni::String::Param SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param,
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "optString";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct OptStringArray_t {
+        typedef NativeJSObject Owner;
+        typedef mozilla::jni::ObjectArray::LocalRef ReturnType;
+        typedef mozilla::jni::ObjectArray::Param SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param,
+                mozilla::jni::ObjectArray::Param> Args;
+        static constexpr char name[] = "optStringArray";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;[Ljava/lang/String;)[Ljava/lang/String;";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct ToBundle_t {
+        typedef NativeJSObject Owner;
+        typedef mozilla::jni::Object::LocalRef ReturnType;
+        typedef mozilla::jni::Object::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "toBundle";
+        static constexpr char signature[] =
+                "()Landroid/os/Bundle;";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct ToString_t {
+        typedef NativeJSObject Owner;
+        typedef mozilla::jni::String::LocalRef ReturnType;
+        typedef mozilla::jni::String::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "toString";
+        static constexpr char signature[] =
+                "()Ljava/lang/String;";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    template<class Impl> class Natives;
+};
+
 } /* widget */
 } /* mozilla */
 #endif // GeneratedJNIWrappers_h

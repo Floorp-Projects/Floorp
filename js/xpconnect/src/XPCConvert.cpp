@@ -923,40 +923,33 @@ XPCConvert::JSObject2NativeInterface(void** dest, HandleObject src,
 
         // Deal with slim wrappers here.
         if (GetISupportsFromJSObject(inner ? inner : src, &iface)) {
-            if (iface)
-                return NS_SUCCEEDED(iface->QueryInterface(*iid, dest));
-
-            return false;
+            return iface && NS_SUCCEEDED(iface->QueryInterface(*iid, dest));
         }
     }
 
-    // else...
-
-    nsXPCWrappedJS* wrapper;
-    nsresult rv = nsXPCWrappedJS::GetNewOrUsed(src, *iid, &wrapper);
+    nsRefPtr<nsXPCWrappedJS> wrapper;
+    nsresult rv = nsXPCWrappedJS::GetNewOrUsed(src, *iid, getter_AddRefs(wrapper));
     if (pErr)
         *pErr = rv;
-    if (NS_SUCCEEDED(rv) && wrapper) {
-        // If the caller wanted to aggregate this JS object to a native,
-        // attach it to the wrapper. Note that we allow a maximum of one
-        // aggregated native for a given XPCWrappedJS.
-        if (aOuter)
-            wrapper->SetAggregatedNativeObject(aOuter);
 
-        // We need to go through the QueryInterface logic to make this return
-        // the right thing for the various 'special' interfaces; e.g.
-        // nsIPropertyBag. We must use AggregatedQueryInterface in cases where
-        // there is an outer to avoid nasty recursion.
-        rv = aOuter ? wrapper->AggregatedQueryInterface(*iid, dest) :
-                      wrapper->QueryInterface(*iid, dest);
-        if (pErr)
-            *pErr = rv;
-        NS_RELEASE(wrapper);
-        return NS_SUCCEEDED(rv);
-    }
+    if (NS_FAILED(rv) || !wrapper)
+        return false;
 
-    // else...
-    return false;
+    // If the caller wanted to aggregate this JS object to a native,
+    // attach it to the wrapper. Note that we allow a maximum of one
+    // aggregated native for a given XPCWrappedJS.
+    if (aOuter)
+        wrapper->SetAggregatedNativeObject(aOuter);
+
+    // We need to go through the QueryInterface logic to make this return
+    // the right thing for the various 'special' interfaces; e.g.
+    // nsIPropertyBag. We must use AggregatedQueryInterface in cases where
+    // there is an outer to avoid nasty recursion.
+    rv = aOuter ? wrapper->AggregatedQueryInterface(*iid, dest) :
+        wrapper->QueryInterface(*iid, dest);
+    if (pErr)
+        *pErr = rv;
+    return NS_SUCCEEDED(rv);
 }
 
 /***************************************************************************/
@@ -1160,18 +1153,17 @@ XPCConvert::JSValToXPCException(MutableHandleValue s,
         else {
             // XXX all this nsISupportsDouble code seems a little redundant
             // now that we're storing the Value in the exception...
-            nsISupportsDouble* data;
+            nsCOMPtr<nsISupportsDouble> data;
             nsCOMPtr<nsIComponentManager> cm;
             if (NS_FAILED(NS_GetComponentManager(getter_AddRefs(cm))) || !cm ||
                 NS_FAILED(cm->CreateInstanceByContractID(NS_SUPPORTS_DOUBLE_CONTRACTID,
                                                          nullptr,
                                                          NS_GET_IID(nsISupportsDouble),
-                                                         (void**)&data)))
+                                                         getter_AddRefs(data))))
                 return NS_ERROR_FAILURE;
             data->SetData(number);
             rv = ConstructException(NS_ERROR_XPC_JS_THREW_NUMBER, nullptr,
                                     ifaceName, methodName, data, exceptn, cx, s.address());
-            NS_RELEASE(data);
             return rv;
         }
     }

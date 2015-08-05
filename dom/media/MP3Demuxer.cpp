@@ -134,6 +134,11 @@ nsRefPtr<MediaRawData>
 MP3TrackDemuxer::DemuxSample() {
   return GetNextFrame(FindNextFrame());
 }
+
+media::TimeUnit
+MP3TrackDemuxer::SeekPosition() const {
+  return Duration(mFrameIndex);
+}
 #endif
 
 const ID3Parser::ID3Header&
@@ -164,7 +169,7 @@ MP3TrackDemuxer::FastSeek(TimeUnit aTime) {
     // Quick seek to the beginning of the stream.
     mOffset = mFirstFrameOffset;
     mFrameIndex = 0;
-    mParser.FinishParsing();
+    mParser.EndFrameSession();
     return TimeUnit();
   }
 
@@ -176,7 +181,8 @@ MP3TrackDemuxer::FastSeek(TimeUnit aTime) {
                             mSamplesPerSecond / mSamplesPerFrame;
   mOffset = mFirstFrameOffset + numFrames * AverageFrameLength();
   mFrameIndex = numFrames;
-  mParser.FinishParsing();
+
+  mParser.EndFrameSession();
 
   return Duration(mFrameIndex);
 }
@@ -234,6 +240,8 @@ MP3TrackDemuxer::Reset() {
   mSamplesPerFrame = 0;
   mSamplesPerSecond = 0;
   mChannels = 0;
+
+  mParser.Reset();
 }
 
 nsRefPtr<MP3TrackDemuxer::SkipAccessPointPromise>
@@ -392,7 +400,7 @@ MP3TrackDemuxer::UpdateState(const MediaByteRange& aRange) {
   MOZ_ASSERT(mFrameIndex > 0);
 
   // Prepare the parser for the next frame parsing session.
-  mParser.FinishParsing();
+  mParser.EndFrameSession();
 }
 
 int32_t
@@ -440,7 +448,7 @@ FrameParser::Reset() {
 }
 
 void
-FrameParser::FinishParsing() {
+FrameParser::EndFrameSession() {
   if (!mID3Parser.Header().IsValid()) {
     // Reset ID3 tags only if we have not parsed a valid ID3 header yet.
     mID3Parser.Reset();

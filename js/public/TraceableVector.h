@@ -68,9 +68,12 @@ class TraceableVectorOperations
     size_t capacity() const { return vec().capacity(); }
     const T* begin() const { return vec().begin(); }
     const T* end() const { return vec().end(); }
-    const T& operator[](size_t aIndex) const { return vec().operator[](aIndex); }
     const T& back() const { return vec().back(); }
     bool canAppendWithoutRealloc(size_t aNeeded) const { return vec().canAppendWithoutRealloc(); }
+
+    JS::Handle<T> operator[](size_t aIndex) const {
+        return JS::Handle<T>::fromMarkedLocation(&vec().operator[](aIndex));
+    }
 };
 
 template <typename Outer, typename T, size_t Capacity, typename AllocPolicy, typename TraceFunc>
@@ -89,9 +92,12 @@ class MutableTraceableVectorOperations
     const T* end() const { return vec().end(); }
     T* end() { return vec().end(); }
     const T& operator[](size_t aIndex) const { return vec().operator[](aIndex); }
-    T& operator[](size_t aIndex) { return vec().operator[](aIndex); }
     const T& back() const { return vec().back(); }
     T& back() { return vec().back(); }
+
+    JS::MutableHandle<T> operator[](size_t aIndex) {
+        return JS::MutableHandle<T>::fromMarkedLocation(&vec().operator[](aIndex));
+    }
 
     bool initCapacity(size_t aRequest) { return vec().initCapacity(aRequest); }
     bool reserve(size_t aRequest) { return vec().reserve(aRequest); }
@@ -127,7 +133,7 @@ class MutableTraceableVectorOperations
         vec().infallibleAppend(aBegin, aLength);
     }
     void popBack() { vec().popBack(); }
-    T popCopy() { return vec().podCopy(); }
+    T popCopy() { return vec().popCopy(); }
     template<typename U> T* insert(T* aP, U&& aVal) {
         return vec().insert(aP, mozilla::Forward<U>(aVal));
     }

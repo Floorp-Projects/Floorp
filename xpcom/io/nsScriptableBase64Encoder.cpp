@@ -11,7 +11,6 @@ using namespace mozilla;
 
 NS_IMPL_ISUPPORTS(nsScriptableBase64Encoder, nsIScriptableBase64Encoder)
 
-/* ACString encodeToCString (in nsIInputStream stream, in unsigned long length); */
 NS_IMETHODIMP
 nsScriptableBase64Encoder::EncodeToCString(nsIInputStream* aStream,
                                            uint32_t aLength,
@@ -20,7 +19,6 @@ nsScriptableBase64Encoder::EncodeToCString(nsIInputStream* aStream,
   return Base64EncodeInputStream(aStream, aResult, aLength);
 }
 
-/* AString encodeToString (in nsIInputStream stream, in unsigned long length); */
 NS_IMETHODIMP
 nsScriptableBase64Encoder::EncodeToString(nsIInputStream* aStream,
                                           uint32_t aLength,

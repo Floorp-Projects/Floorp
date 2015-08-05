@@ -18,66 +18,81 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=940229
   
 </div>
 <pre id="test">
-<script class="testbody" type="text/javascript">
+<script class="testbody" type="application/javascript;version=1.7">
 
 /*
  * Inspired by mistake in quotes noticed while reviewing bug 189519.
  */
 
-var gPropsNeedComma = {
+let gPropsNeedComma = {
   "font": true,
   "font-family": true,
   "voice-family": true,
 };
 
-var gElement = document.getElementById("testnode");
-var gDeclaration = gElement.style;
+let gElement = document.getElementById("testnode");
+let gDeclaration = gElement.style;
+
+let kValuesToTestThoroughly = 3;
 
 function test_property(property)
 {
-  var info = gCSSProperties[property];
+  let info = gCSSProperties[property];
 
-  var delim = (property in gPropsNeedComma) ? ", " : " ";
+  let delim = (property in gPropsNeedComma) ? ", " : " ";
 
   function test_value_pair(relation, val1, val2, extraval) {
-    var decl = property + ": " + val1 + delim + val2;
+    let decl = property + ": " + val1 + delim + val2;
     gElement.setAttribute("style", decl);
     if ("subproperties" in info) {
-      for (idx in info.subproperties) {
-        var subprop = info.subproperties[idx];
+      // Shorthand property; inspect each subproperty value.
+      for (let subprop of info.subproperties) {
         is(gDeclaration.getPropertyValue(subprop), "",
            ["expected", extraval, "ignored", relation, "value in",
             "'" + decl + "'", "when looking at subproperty",
             "'" + subprop + "'"].join(" "));
       }
     } else {
+      // Longhand property.
       is(gDeclaration.getPropertyValue(property), "",
          ["expected", extraval, "ignored", relation, "value in",
           "'" + decl + "'"].join(" "));
     }
   }
 
-  function test_value(value) {
-    test_value_pair("after", value, "inherit", "inherit");
-    test_value_pair("after", value, "initial", "initial");
-    test_value_pair("after", value, "unset", "unset");
-    test_value_pair("before", "inherit", value, "inherit");
-    test_value_pair("before", "initial", value, "initial");
-    test_value_pair("before", "unset", value, "unset");
+  function test_value(value, valueIdx) {
+    let specialKeywords = [ "inherit", "initial", "unset" ];
+
+    if (valueIdx < kValuesToTestThoroughly) {
+      // For the first few values, we test each special-keyword both before
+      // and after the value.
+      for (let keyword of specialKeywords) {
+        test_value_pair("before", keyword, value, keyword);
+        test_value_pair("after", value, keyword, keyword);
+      }
+    } else {
+      // For later values, only test one keyword before & after it.
+      let keywordIdx =
+        (valueIdx - kValuesToTestThoroughly) % specialKeywords.length;
+      keyword = specialKeywords[keywordIdx];
+      test_value_pair("before", keyword, value, keyword);
+      test_value_pair("after", value, keyword, keyword);
+    }
   }
 
-  var idx;
-  for (idx in info.initial_values)
-    test_value(info.initial_values[idx]);
-  for (idx in info.other_values)
-    test_value(info.other_values[idx]);
+  for (let idx in info.initial_values) {
+    test_value(info.initial_values[idx], idx);
+  }
+  for (let idx in info.other_values) {
+    test_value(info.initial_values[idx], idx);
+  }
 }
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestLongerTimeout(4);
 
 function start_test() {
-  for (var prop in gCSSProperties) {
+  for (let prop in gCSSProperties) {
     test_property(prop);
   }
   SimpleTest.finish();
