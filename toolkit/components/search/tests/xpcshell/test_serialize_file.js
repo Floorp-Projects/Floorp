@@ -41,7 +41,7 @@ add_test(function test_addParam() {
     NetUtil.asyncFetch({
       uri: NetUtil.newURI(aFile),
       loadUsingSystemPrincipal: true,
-      contentPolicyType: Ci.nsIContentPolicy.TYPE_DATAREQUEST
+      contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_XMLHTTPREQUEST
     }, function(inputStream, status) {
         do_check_true(Components.isSuccessCode(status));
 
