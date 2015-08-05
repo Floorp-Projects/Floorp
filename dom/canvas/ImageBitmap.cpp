@@ -32,49 +32,114 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ImageBitmap)
 NS_INTERFACE_MAP_END
 
 /*
+ * If either aRect.width or aRect.height are negative, then return a new IntRect
+ * which represents the same rectangle as the aRect does but with positive width
+ * and height.
+ */
+static IntRect
+FixUpNegativeDimension(const IntRect& aRect, ErrorResult& aRv)
+{
+  gfx::IntRect rect = aRect;
+
+  // fix up negative dimensions
+  if (rect.width < 0) {
+    CheckedInt32 checkedX = CheckedInt32(rect.x) + rect.width;
+
+    if (!checkedX.isValid()) {
+      aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+      return rect;
+    }
+
+    rect.x = checkedX.value();
+    rect.width = -(rect.width);
+  }
+
+  if (rect.height < 0) {
+    CheckedInt32 checkedY = CheckedInt32(rect.y) + rect.height;
+
+    if (!checkedY.isValid()) {
+      aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+      return rect;
+    }
+
+    rect.y = checkedY.value();
+    rect.height = -(rect.height);
+  }
+
+  return rect;
+}
+
+/*
  * This helper function copies the data of the given DataSourceSurface,
  *  _aSurface_, in the given area, _aCropRect_, into a new DataSourceSurface.
  * This might return null if it can not create a new SourceSurface or it cannot
  * read data from the given _aSurface_.
+ *
+ * Warning: Even though the area of _aCropRect_ is just the same as the size of
+ *          _aSurface_, this function still copy data into a new
+ *          DataSourceSurface.
  */
 static already_AddRefed<DataSourceSurface>
-CropDataSourceSurface(DataSourceSurface* aSurface, const IntRect& aCropRect)
+CropAndCopyDataSourceSurface(DataSourceSurface* aSurface, const IntRect& aCropRect)
 {
   MOZ_ASSERT(aSurface);
 
+  // Check the aCropRect
+  ErrorResult error;
+  const IntRect positiveCropRect = FixUpNegativeDimension(aCropRect, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return nullptr;
+  }
+
   // Calculate the size of the new SourceSurface.
-  const SurfaceFormat format = aSurface->GetFormat();
-  const IntSize  dstSize = gfx::IntSize(aCropRect.width, aCropRect.height);
-  const uint32_t dstStride = dstSize.width * BytesPerPixel(format);
+  // We cannot keep using aSurface->GetFormat() to create new DataSourceSurface,
+  // since it might be SurfaceFormat::B8G8R8X8 which does not handle opacity,
+  // however the specification explicitly define that "If any of the pixels on
+  // this rectangle are outside the area where the input bitmap was placed, then
+  // they will be transparent black in output."
+  // So, instead, we force the output format to be SurfaceFormat::B8G8R8A8.
+  const SurfaceFormat format = SurfaceFormat::B8G8R8A8;
+  const int bytesPerPixel = BytesPerPixel(format);
+  const IntSize dstSize = IntSize(positiveCropRect.width,
+                                  positiveCropRect.height);
+  const uint32_t dstStride = dstSize.width * bytesPerPixel;
 
   // Create a new SourceSurface.
   RefPtr<DataSourceSurface> dstDataSurface =
-    Factory::CreateDataSourceSurfaceWithStride(dstSize, format, dstStride);
+    Factory::CreateDataSourceSurfaceWithStride(dstSize, format, dstStride, true);
 
   if (NS_WARN_IF(!dstDataSurface)) {
     return nullptr;
   }
 
-  // Copy the raw data into the newly created DataSourceSurface.
-  RefPtr<DataSourceSurface> srcDataSurface = aSurface;
-  DataSourceSurface::MappedSurface srcMap;
-  DataSourceSurface::MappedSurface dstMap;
-  if (NS_WARN_IF(!srcDataSurface->Map(DataSourceSurface::MapType::READ, &srcMap)) ||
-      NS_WARN_IF(!dstDataSurface->Map(DataSourceSurface::MapType::WRITE, &dstMap))) {
-    return nullptr;
-  }
+  // Only do copying and cropping when the positiveCropRect intersects with
+  // the size of aSurface.
+  const IntRect surfRect(IntPoint(0, 0), aSurface->GetSize());
+  if (surfRect.Intersects(positiveCropRect)) {
+    const IntRect surfPortion = surfRect.Intersect(positiveCropRect);
+    const IntPoint dest(std::max(0, surfPortion.X() - positiveCropRect.X()),
+                        std::max(0, surfPortion.Y() - positiveCropRect.Y()));
 
-  uint8_t* srcBufferPtr = srcMap.mData + aCropRect.y * srcMap.mStride
-                                       + aCropRect.x * BytesPerPixel(format);
-  uint8_t* dstBufferPtr = dstMap.mData;
-  for (int i = 0; i < dstSize.height; ++i) {
-    memcpy(dstBufferPtr, srcBufferPtr, dstMap.mStride);
-    srcBufferPtr += srcMap.mStride;
-    dstBufferPtr += dstMap.mStride;
-  }
+    // Copy the raw data into the newly created DataSourceSurface.
+    DataSourceSurface::ScopedMap srcMap(aSurface, DataSourceSurface::READ);
+    DataSourceSurface::ScopedMap dstMap(dstDataSurface, DataSourceSurface::WRITE);
+    if (NS_WARN_IF(!srcMap.IsMapped()) ||
+        NS_WARN_IF(!dstMap.IsMapped())) {
+      return nullptr;
+    }
 
-  srcDataSurface->Unmap();
-  dstDataSurface->Unmap();
+    uint8_t* srcBufferPtr = srcMap.GetData() + surfPortion.y * srcMap.GetStride()
+                                             + surfPortion.x * bytesPerPixel;
+    uint8_t* dstBufferPtr = dstMap.GetData() + dest.y * dstMap.GetStride()
+                                             + dest.x * bytesPerPixel;
+    const uint32_t copiedBytesPerRaw = surfPortion.width * bytesPerPixel;
+
+    for (int i = 0; i < surfPortion.height; ++i) {
+      memcpy(dstBufferPtr, srcBufferPtr, copiedBytesPerRaw);
+      srcBufferPtr += srcMap.GetStride();
+      dstBufferPtr += dstMap.GetStride();
+    }
+  }
 
   return dstDataSurface.forget();
 }
@@ -129,7 +194,7 @@ CreateSurfaceFromRawData(const gfx::IntSize& aSize,
   const IntRect cropRect = aCropRect.valueOr(IntRect(0, 0, aSize.width, aSize.height));
 
   // Copy the source buffer in the _cropRect_ area into a new SourceSurface.
-  RefPtr<DataSourceSurface> result = CropDataSourceSurface(dataSurface, cropRect);
+  RefPtr<DataSourceSurface> result = CropAndCopyDataSourceSurface(dataSurface, cropRect);
 
   if (NS_WARN_IF(!result)) {
     aRv.Throw(NS_ERROR_NOT_AVAILABLE);
@@ -354,34 +419,7 @@ ImageBitmap::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 void
 ImageBitmap::SetPictureRect(const IntRect& aRect, ErrorResult& aRv)
 {
-  gfx::IntRect rect = aRect;
-
-  // fix up negative dimensions
-  if (rect.width < 0) {
-    CheckedInt32 checkedX = CheckedInt32(rect.x) + rect.width;
-
-    if (!checkedX.isValid()) {
-      aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
-      return;
-    }
-
-    rect.x = checkedX.value();
-    rect.width = -(rect.width);
-  }
-
-  if (rect.height < 0) {
-    CheckedInt32 checkedY = CheckedInt32(rect.y) + rect.height;
-
-    if (!checkedY.isValid()) {
-      aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
-      return;
-    }
-
-    rect.y = checkedY.value();
-    rect.height = -(rect.height);
-  }
-
-  mPictureRect = rect;
+  mPictureRect = FixUpNegativeDimension(aRect, aRv);
 }
 
 already_AddRefed<SourceSurface>
@@ -443,6 +481,7 @@ ImageBitmap::PrepareForDrawTarget(gfx::DrawTarget* aTarget)
   mSurface = target->OptimizeSourceSurface(mSurface);
 
   RefPtr<gfx::SourceSurface> surface(mSurface);
+
   return surface.forget();
 }
 
@@ -562,7 +601,7 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLCanvasElement& aCanvas
                "The snapshot SourceSurface from WebGL rendering contest is not \
                DataSourceSurface.");
     RefPtr<DataSourceSurface> dataSurface = surface->GetDataSurface();
-    croppedSurface = CropDataSourceSurface(dataSurface, cropRect);
+    croppedSurface = CropAndCopyDataSourceSurface(dataSurface, cropRect);
     cropRect.MoveTo(0, 0);
   }
   else {
@@ -838,7 +877,7 @@ DecodeAndCropBlob(Blob& aBlob, Maybe<IntRect>& aCropRect, ErrorResult& aRv)
     MOZ_ASSERT(surface->GetType() == SurfaceType::DATA,
           "The SourceSurface from just decoded Blob is not DataSourceSurface.");
     RefPtr<DataSourceSurface> dataSurface = surface->GetDataSurface();
-    croppedSurface = CropDataSourceSurface(dataSurface, aCropRect.ref());
+    croppedSurface = CropAndCopyDataSourceSurface(dataSurface, aCropRect.ref());
     aCropRect->MoveTo(0, 0);
   }
 
