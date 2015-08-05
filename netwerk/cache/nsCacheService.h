@@ -254,6 +254,7 @@ private:
      * Internal Methods
      */
 
+    static void      Lock();
     static void      Lock(::mozilla::Telemetry::ID mainThreadLockerID);
     static void      Unlock();
     void             LockAcquired();
@@ -380,6 +381,9 @@ private:
 // execution scope.
 class nsCacheServiceAutoLock {
 public:
+    nsCacheServiceAutoLock() {
+        nsCacheService::Lock();
+    }
     explicit nsCacheServiceAutoLock(mozilla::Telemetry::ID mainThreadLockerID) {
         nsCacheService::Lock(mainThreadLockerID);
     }

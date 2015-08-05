@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for select popup in vertical writing mode</title>
+<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+<script>
+SimpleTest.waitForExplicitFinish();
+
+function test() {
+  SimpleTest.waitForFocus(function() {
+    var vlr = document.getElementById("vlr");
+    var selWidth = vlr.offsetWidth;
+    var optWidth = vlr.children[0].offsetWidth;
+
+    // We should be able to choose options from the vertical-lr <select>
+    // at positions increasingly to the right of the element itself.
+    is(vlr.value, "1", "(vertical-lr) initial value should be 1");
+
+    synthesizeMouse(vlr, 5, 5, { type : "mousedown", button: 0 });
+    synthesizeMouse(vlr, selWidth + 1.5 * optWidth, 5, { type : "mouseup", button: 0 });
+
+    is(vlr.value, "2", "(vertical-lr) new value should be 2");
+
+    synthesizeMouse(vlr, 5, 5, { type : "mousedown", button: 0 });
+    synthesizeMouse(vlr, selWidth + 2.5 * optWidth, 5, { type : "mouseup", button: 0 });
+
+    is(vlr.value, "3", "(vertical-lr) new value should be 3");
+
+    synthesizeMouse(vlr, 5, 5, { type : "mousedown", button: 0 });
+    synthesizeMouse(vlr, selWidth + 0.5 * optWidth, 5, { type : "mouseup", button: 0 });
+
+    is(vlr.value, "1", "(vertical-lr) value should be back to 1");
+
+    var vrl = document.getElementById("vrl");
+
+    // We should be able to choose options from the vertical-rl <select>
+    // at positions increasingly to the left of the element itself.
+    is(vrl.value, "1", "(vertical-rl) initial value should be 1");
+
+    synthesizeMouse(vrl, 5, 5, { type : "mousedown", button: 0 });
+    synthesizeMouse(vrl, -1.5 * optWidth, 5, { type : "mouseup", button: 0 });
+
+    is(vrl.value, "2", "(vertical-rl) new value should be 2");
+
+    synthesizeMouse(vrl, 5, 5, { type : "mousedown", button: 0 });
+    synthesizeMouse(vrl, -2.5 * optWidth, 5, { type : "mouseup", button: 0 });
+
+    is(vrl.value, "3", "(vertical-rl) new value should be 3");
+
+    synthesizeMouse(vrl, 5, 5, { type : "mousedown", button: 0 });
+    synthesizeMouse(vrl, -0.5 * optWidth, 5, { type : "mouseup", button: 0 });
+
+    is(vrl.value, "1", "(vertical-rl) value should be back to 1");
+
+    SimpleTest.finish();
+  });
+}
+</script>
+
+<body onload="test();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1113206">Mozilla Bug 1113206</a>
+<div>
+  <select id="vlr" style="writing-mode: vertical-lr; margin: 80px;">
+    <option value="1">one
+    <option value="2">two
+    <option value="3">three
+    <option value="4">four
+  </select>
+  <select id="vrl" style="writing-mode: vertical-rl; margin: 80px;">
+    <option value="1">one
+    <option value="2">two
+    <option value="3">three
+    <option value="4">four
+  </select>
+</div>
