@@ -1208,6 +1208,10 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
   nsresult rv = Accessible::HandleAccEvent(aEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (IPCAccessibilityActive()) {
+    return NS_OK;
+  }
+
   uint32_t eventType = aEvent->GetEventType();
 
   static_assert(sizeof(gWinEventMap)/sizeof(gWinEventMap[0]) == nsIAccessibleEvent::EVENT_LAST_ENTRY,
