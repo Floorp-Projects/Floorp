@@ -6,14 +6,13 @@
 
 /* A class for non-null strong pointers to reference-counted objects. */
 
-#ifndef mozilla_dom_OwningNonNull_h
-#define mozilla_dom_OwningNonNull_h
+#ifndef mozilla_OwningNonNull_h
+#define mozilla_OwningNonNull_h
 
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionNoteChild.h"
 
 namespace mozilla {
-namespace dom {
 
 template<class T>
 class OwningNonNull
@@ -131,33 +130,32 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
   CycleCollectionNoteChild(aCallback, aField.get(), aName, aFlags);
 }
 
-} // namespace dom
 } // namespace mozilla
 
 // Declared in nsCOMPtr.h
 template<class T> template<class U>
-nsCOMPtr<T>::nsCOMPtr(const mozilla::dom::OwningNonNull<U>& aOther)
+nsCOMPtr<T>::nsCOMPtr(const mozilla::OwningNonNull<U>& aOther)
   : nsCOMPtr(aOther.get())
 {}
 
 template<class T> template<class U>
 nsCOMPtr<T>&
-nsCOMPtr<T>::operator=(const mozilla::dom::OwningNonNull<U>& aOther)
+nsCOMPtr<T>::operator=(const mozilla::OwningNonNull<U>& aOther)
 {
   return operator=(aOther.get());
 }
 
 // Declared in mozilla/nsRefPtr.h
 template<class T> template<class U>
-nsRefPtr<T>::nsRefPtr(const mozilla::dom::OwningNonNull<U>& aOther)
+nsRefPtr<T>::nsRefPtr(const mozilla::OwningNonNull<U>& aOther)
   : nsRefPtr(aOther.get())
 {}
 
 template<class T> template<class U>
 nsRefPtr<T>&
-nsRefPtr<T>::operator=(const mozilla::dom::OwningNonNull<U>& aOther)
+nsRefPtr<T>::operator=(const mozilla::OwningNonNull<U>& aOther)
 {
   return operator=(aOther.get());
 }
 
-#endif // mozilla_dom_OwningNonNull_h
+#endif // mozilla_OwningNonNull_h

@@ -22,7 +22,7 @@ AutoGlobalTimelineMarker::AutoGlobalTimelineMarker(const char* aName
     return;
   }
 
-  TimelineConsumers::AddMarkerToAllObservedDocShells(mName, TRACING_INTERVAL_START);
+  TimelineConsumers::AddMarkerForAllObservedDocShells(mName, TRACING_INTERVAL_START);
 }
 
 AutoGlobalTimelineMarker::~AutoGlobalTimelineMarker()
@@ -31,7 +31,7 @@ AutoGlobalTimelineMarker::~AutoGlobalTimelineMarker()
     return;
   }
 
-  TimelineConsumers::AddMarkerToAllObservedDocShells(mName, TRACING_INTERVAL_END);
+  TimelineConsumers::AddMarkerForAllObservedDocShells(mName, TRACING_INTERVAL_END);
 }
 
 } // namespace mozilla

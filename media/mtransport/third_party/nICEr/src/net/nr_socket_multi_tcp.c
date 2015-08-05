@@ -175,7 +175,8 @@ static int nr_socket_multi_tcp_create_stun_server_socket(
       ABORT(R_BAD_ARGS);
     }
 
-    if (stun_server->u.addr.ip_version!=addr->ip_version) {
+    if (stun_server->type == NR_ICE_STUN_SERVER_TYPE_ADDR &&
+        nr_transport_addr_cmp(&stun_server->u.addr,addr,NR_TRANSPORT_ADDR_CMP_MODE_VERSION)) {
       r_log(LOG_ICE,LOG_INFO,"%s:%d function %s skipping STUN with different IP version (%u) than local socket (%u),",__FILE__,__LINE__,__FUNCTION__,stun_server->u.addr.ip_version,addr->ip_version);
       ABORT(R_BAD_ARGS);
     }

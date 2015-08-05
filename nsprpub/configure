@@ -2666,19 +2666,6 @@ fi
 
 if test -n "$gonkdir" ; then
 
-        if test -z "$HOST_CPPFLAGS" ; then
-        HOST_CPPFLAGS=" "
-    fi
-    if test -z "$HOST_CFLAGS" ; then
-        HOST_CFLAGS=" "
-    fi
-    if test -z "$HOST_CXXFLAGS" ; then
-        HOST_CXXFLAGS=" "
-    fi
-    if test -z "$HOST_LDFLAGS" ; then
-        HOST_LDFLAGS=" "
-    fi
-
     $as_echo "#define ANDROID 1" >>confdefs.h
 
 else
@@ -2762,19 +2749,6 @@ $as_echo "$android_platform" >&6; }
     CFLAGS="-mandroid -I$android_platform/usr/include -fno-short-enums -fno-exceptions $CFLAGS"
     CXXFLAGS="-mandroid -I$android_platform/usr/include -fpic -fno-short-enums -fno-exceptions $CXXFLAGS"
     LDFLAGS="-mandroid -L$android_platform/usr/lib -Wl,-rpath-link=$android_platform/usr/lib --sysroot=$android_platform $LDFLAGS"
-
-        if test -z "$HOST_CPPFLAGS" ; then
-        HOST_CPPFLAGS=" "
-    fi
-    if test -z "$HOST_CFLAGS" ; then
-        HOST_CFLAGS=" "
-    fi
-    if test -z "$HOST_CXXFLAGS" ; then
-        HOST_CXXFLAGS=" "
-    fi
-    if test -z "$HOST_LDFLAGS" ; then
-        HOST_LDFLAGS=" "
-    fi
 
     $as_echo "#define ANDROID 1" >>confdefs.h
 
@@ -3151,12 +3125,6 @@ if test "$target" != "$host"; then
         _SAVE_CXXFLAGS=$CXXFLAGS
         CFLAGS="-isysroot /Developer/SDKs/MacOSX10.4u.sdk $CFLAGS"
         CXXFLAGS="-isysroot /Developer/SDKs/MacOSX10.4u.sdk $CXXFLAGS"
-        ;;
-      *:arm*-apple-darwin*)
-                                _SAVE_CFLAGS=$CFLAGS
-        _SAVE_CXXFLAGS=$CXXFLAGS
-        CFLAGS="-isysroot $MACOS_SDK_DIR $CFLAGS"
-        CXXFLAGS="-isysroot $MACOS_SDK_DIR $CXXFLAGS"
         ;;
     esac
 
@@ -4621,12 +4589,6 @@ test -n "$HOST_CC" || HOST_CC=""""
     fi
     { $as_echo "$as_me:${as_lineno-$LINENO}: result: $HOST_CC" >&5
 $as_echo "$HOST_CC" >&6; }
-    if test -z "$HOST_CFLAGS"; then
-        HOST_CFLAGS="$CFLAGS"
-    fi
-    if test -z "$HOST_LDFLAGS"; then
-        HOST_LDFLAGS="$LDFLAGS"
-    fi
 
     CC="$HOST_CC"
     CFLAGS="$HOST_CFLAGS"
@@ -7125,7 +7087,11 @@ tools are selected during the Xcode/Developer Tools installation." "$LINENO" 5
 
         _MSVC_VER_FILTER='s|.* \([0-9]\+\.[0-9]\+\.[0-9]\+\(\.[0-9]\+\)\?\).*|\1|p'
 
-        CC_VERSION=`"${CC}" -v 2>&1 | sed -ne "$_MSVC_VER_FILTER"`
+        CC_VERSION=`${CC} -v 2>&1 | sed -ne "$_MSVC_VER_FILTER"`
+        if test -z "$CC_VERSION"; then
+            as_fn_error $? "Could not determine MSC version." "$LINENO" 5
+        fi
+
         _CC_MAJOR_VERSION=`echo ${CC_VERSION} | awk -F\. '{ print $1 }'`
         _CC_MINOR_VERSION=`echo ${CC_VERSION} | awk -F\. '{ print $2 }'`
         _CC_RELEASE=`echo ${CC_VERSION} | awk -F\. '{ print $3 }'`

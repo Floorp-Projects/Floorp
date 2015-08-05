@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1173171
+-->
+<head>
+  <title>Test for Bug 1173171</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<iframe id="testFrame"></iframe>
+
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.7">
+
+/** Test for Bug 1173171 **/
+
+// __setPref(key, value)__.
+// Set a pref value asynchronously, returning a prmoise that resolves
+// when it succeeds.
+let pushPref = function (key, value) {
+  return new Promise(function(resolve, reject) {
+    SpecialPowers.pushPrefEnv({"set": [[key, value]]}, resolve);
+  });
+};
+
+// __xhr(method, url, responseType__.
+// A simple async XMLHttpRequest call.
+// Returns a promise with the response.
+let xhr = function (method, url, responseType) {
+  return new Promise(function (resolve, reject) {
+    let xhr = new XMLHttpRequest();
+    xhr.open(method, url, true);
+    xhr.onload = function () {
+      resolve(xhr.response);
+    };
+    xhr.responseType = responseType;
+    xhr.send();
+  });
+};
+
+let jarURL = "jar:http://mochi.test:8888/tests/modules/libjar/test/mochitest/bug403331.zip!/test.html";
+
+// Test behavior when blocking is deactivated and activated.
+add_task(function* () {
+  for (let shouldBlock of [false, true]) {
+    yield pushPref("network.jar.block-remote-files", shouldBlock);
+    try {
+      let response = yield xhr("GET", jarURL, "document");
+      didBlock = false;
+    } catch (e) {
+      didBlock = true;
+    }
+    ok(didBlock === shouldBlock,
+       "Remote jars should be blocked if and only if the 'network.jar.block-remote-files' pref is active.");
+  }
+});
+
+</script>
+</pre>
+
+</body>
+</html>

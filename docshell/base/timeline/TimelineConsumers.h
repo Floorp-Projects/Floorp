@@ -37,9 +37,9 @@ public:
                                    UniquePtr<TimelineMarker>&& aMarker);
   static void AddMarkerForDocShell(nsDocShell* aDocShell,
                                    const char* aName, TracingMetadata aMetaData);
-  static void AddMarkerToDocShellsList(Vector<nsRefPtr<nsDocShell>>& aDocShells,
-                                       const char* aName, TracingMetadata aMetaData);
-  static void AddMarkerToAllObservedDocShells(const char* aName, TracingMetadata aMetaData);
+  static void AddMarkerForDocShellsList(Vector<nsRefPtr<nsDocShell>>& aDocShells,
+                                        const char* aName, TracingMetadata aMetaData);
+  static void AddMarkerForAllObservedDocShells(const char* aName, TracingMetadata aMetaData);
 };
 
 } // namespace mozilla

@@ -53,9 +53,9 @@ class nsRange;
 struct PropItem;
 
 namespace mozilla {
+template<class T> class OwningNonNull;
 namespace dom {
 class DocumentFragment;
-template<class T> class OwningNonNull;
 } // namespace dom
 namespace widget {
 struct IMEState;
@@ -596,7 +596,7 @@ protected:
                            mozilla::dom::DocumentFragment** aFragment,
                            bool aTrustedInput);
   void       CreateListOfNodesToPaste(mozilla::dom::DocumentFragment& aFragment,
-                                      nsTArray<mozilla::dom::OwningNonNull<nsINode>>& outNodeList,
+                                      nsTArray<mozilla::OwningNonNull<nsINode>>& outNodeList,
                                       nsINode* aStartNode,
                                       int32_t aStartOffset,
                                       nsINode* aEndNode,
@@ -605,16 +605,16 @@ protected:
                           nsIDOMNode *aNode);
   enum class StartOrEnd { start, end };
   void GetListAndTableParents(StartOrEnd aStartOrEnd,
-                              nsTArray<mozilla::dom::OwningNonNull<nsINode>>& aNodeList,
-                              nsTArray<mozilla::dom::OwningNonNull<mozilla::dom::Element>>& outArray);
-  int32_t DiscoverPartialListsAndTables(nsTArray<mozilla::dom::OwningNonNull<nsINode>>& aPasteNodes,
-                                        nsTArray<mozilla::dom::OwningNonNull<mozilla::dom::Element>>& aListsAndTables);
+                              nsTArray<mozilla::OwningNonNull<nsINode>>& aNodeList,
+                              nsTArray<mozilla::OwningNonNull<mozilla::dom::Element>>& outArray);
+  int32_t DiscoverPartialListsAndTables(nsTArray<mozilla::OwningNonNull<nsINode>>& aPasteNodes,
+                                        nsTArray<mozilla::OwningNonNull<mozilla::dom::Element>>& aListsAndTables);
   nsINode* ScanForListAndTableStructure(StartOrEnd aStartOrEnd,
-                                        nsTArray<mozilla::dom::OwningNonNull<nsINode>>& aNodes,
+                                        nsTArray<mozilla::OwningNonNull<nsINode>>& aNodes,
                                         mozilla::dom::Element& aListOrTable);
   void ReplaceOrphanedStructure(StartOrEnd aStartOrEnd,
-                                nsTArray<mozilla::dom::OwningNonNull<nsINode>>& aNodeArray,
-                                nsTArray<mozilla::dom::OwningNonNull<mozilla::dom::Element>>& aListAndTableArray,
+                                nsTArray<mozilla::OwningNonNull<nsINode>>& aNodeArray,
+                                nsTArray<mozilla::OwningNonNull<mozilla::dom::Element>>& aListAndTableArray,
                                 int32_t aHighWaterMark);
 
   /* small utility routine to test if a break node is visible to user */
@@ -764,7 +764,7 @@ protected:
 // Data members
 protected:
 
-  nsTArray<mozilla::dom::OwningNonNull<nsIContentFilter>> mContentFilters;
+  nsTArray<mozilla::OwningNonNull<nsIContentFilter>> mContentFilters;
 
   nsRefPtr<TypeInState>        mTypeInState;
 
@@ -854,7 +854,7 @@ protected:
   nsCOMPtr<nsISelectionListener> mSelectionListenerP;
   nsCOMPtr<nsIDOMEventListener>  mResizeEventListenerP;
 
-  nsTArray<mozilla::dom::OwningNonNull<nsIHTMLObjectResizeListener>> mObjectResizeEventListeners;
+  nsTArray<mozilla::OwningNonNull<nsIHTMLObjectResizeListener>> mObjectResizeEventListeners;
 
   int32_t mOriginalX;
   int32_t mOriginalY;

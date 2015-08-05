@@ -391,7 +391,7 @@ IsSafeImageTransformComponent(gfxFloat aValue)
   return aValue >= -32768 && aValue <= 32767;
 }
 
-#ifndef MOZ_GFX_OPTIMIZE_MOBILE
+#if !defined(MOZ_GFX_OPTIMIZE_MOBILE)
 /**
  * This returns the fastest operator to use for solid surfaces which have no
  * alpha channel or their alpha channel is uniformly opaque.
@@ -423,6 +423,12 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
 {
     PROFILER_LABEL("gfxUtils", "CreateSamplingRestricedDrawable",
       js::ProfileEntry::Category::GRAPHICS);
+
+    DrawTarget* destDrawTarget = aContext->GetDrawTarget();
+    if ((destDrawTarget->GetBackendType() == BackendType::DIRECT2D1_1) ||
+        (destDrawTarget->GetBackendType() == BackendType::DIRECT2D)) {
+      return nullptr;
+    }
 
     gfxRect clipExtents = aContext->GetClipExtents();
 
@@ -756,18 +762,18 @@ gfxUtils::DrawPixelSnapped(gfxContext*         aContext,
             // On Mobile, we don't ever want to do this; it has the potential for
             // allocating very large temporary surfaces, especially since we'll
             // do full-page snapshots often (see bug 749426).
-#ifndef MOZ_GFX_OPTIMIZE_MOBILE
+#if !defined(MOZ_GFX_OPTIMIZE_MOBILE)
             nsRefPtr<gfxDrawable> restrictedDrawable =
               CreateSamplingRestrictedDrawable(aDrawable, aContext,
                                                aRegion, aFormat);
             if (restrictedDrawable) {
-                drawable.swap(restrictedDrawable);
-            }
+              drawable.swap(restrictedDrawable);
 
-            // We no longer need to tile: Either we never needed to, or we already
-            // filled a surface with the tiled pattern; this surface can now be
-            // drawn without tiling.
-            doTile = false;
+              // We no longer need to tile: Either we never needed to, or we already
+              // filled a surface with the tiled pattern; this surface can now be
+              // drawn without tiling.
+              doTile = false;
+            }
 #endif
         }
     }

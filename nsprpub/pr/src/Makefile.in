@@ -165,9 +165,9 @@ endif
 
 ifeq ($(OS_ARCH),WINNT)
 ifdef NS_USE_GCC
-OS_LIBS		= -ladvapi32 -lws2_32 -lwinmm
+OS_LIBS		= -ladvapi32 -lws2_32 -lmswsock -lwinmm
 else
-OS_LIBS		= advapi32.lib ws2_32.lib winmm.lib
+OS_LIBS		= advapi32.lib ws2_32.lib mswsock.lib winmm.lib
 endif
 endif
 

@@ -276,6 +276,13 @@ public:
         m_formatter.oneByteOp(OP_ADD_GvEv, src, dst);
     }
 
+    void addw_rr(RegisterID src, RegisterID dst)
+    {
+        spew("addw       %s, %s", GPReg16Name(src), GPReg16Name(dst));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        m_formatter.oneByteOp(OP_ADD_GvEv, src, dst);
+    }
+
     void addl_mr(int32_t offset, RegisterID base, RegisterID dst)
     {
         spew("addl       " MEM_ob ", %s", ADDR_ob(offset, base), GPReg32Name(dst));
@@ -308,6 +315,15 @@ public:
             m_formatter.immediate32(imm);
         }
     }
+
+    void addw_ir(int32_t imm, RegisterID dst)
+    {
+        spew("addw       $%d, %s", int16_t(imm), GPReg16Name(dst));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        m_formatter.oneByteOp(OP_GROUP1_EvIz, dst, GROUP1_OP_ADD);
+        m_formatter.immediate16(imm);
+    }
+
     void addl_i32r(int32_t imm, RegisterID dst)
     {
         // 32-bit immediate always, for patching.
@@ -411,6 +427,46 @@ public:
             m_formatter.oneByteOp(OP_GROUP1_EvIz, addr, GROUP1_OP_ADD);
             m_formatter.immediate32(imm);
         }
+    }
+    void addw_im(int32_t imm, const void* addr)
+    {
+        spew("addw       $%d, %p", int16_t(imm), addr);
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        if (CAN_SIGN_EXTEND_8_32(imm)) {
+            m_formatter.oneByteOp(OP_GROUP1_EvIb, addr, GROUP1_OP_ADD);
+            m_formatter.immediate8s(imm);
+        } else {
+            m_formatter.oneByteOp(OP_GROUP1_EvIz, addr, GROUP1_OP_ADD);
+            m_formatter.immediate16(imm);
+        }
+    }
+
+    void addw_im(int32_t imm, int32_t offset, RegisterID base) {
+        spew("addw       $%d, " MEM_ob, int16_t(imm), ADDR_ob(offset, base));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, GROUP1_OP_ADD);
+        m_formatter.immediate16(imm);
+    }
+
+    void addw_im(int32_t imm, int32_t offset, RegisterID base, RegisterID index, int scale)
+    {
+        spew("addw       $%d, " MEM_obs, int16_t(imm), ADDR_obs(offset, base, index, scale));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, index, scale, GROUP1_OP_ADD);
+        m_formatter.immediate16(imm);
+    }
+
+    void addw_rm(RegisterID src, int32_t offset, RegisterID base) {
+        spew("addw       %s, " MEM_ob, GPReg16Name(src), ADDR_ob(offset, base));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        m_formatter.oneByteOp(OP_ADD_EvGv, offset, base, src);
+    }
+
+    void addw_rm(RegisterID src, int32_t offset, RegisterID base, RegisterID index, int scale)
+    {
+        spew("addw       %s, " MEM_obs, GPReg16Name(src), ADDR_obs(offset, base, index, scale));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        m_formatter.oneByteOp(OP_ADD_EvGv, offset, base, index, scale, src);
     }
 
     void addb_im(int32_t imm, int32_t offset, RegisterID base) {
@@ -693,6 +749,13 @@ public:
         m_formatter.oneByteOp(OP_AND_GvEv, src, dst);
     }
 
+    void andw_rr(RegisterID src, RegisterID dst)
+    {
+        spew("andw       %s, %s", GPReg16Name(src), GPReg16Name(dst));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        m_formatter.oneByteOp(OP_AND_GvEv, src, dst);
+    }
+
     void andl_mr(int32_t offset, RegisterID base, RegisterID dst)
     {
         spew("andl       " MEM_ob ", %s", ADDR_ob(offset, base), GPReg32Name(dst));
@@ -705,9 +768,23 @@ public:
         m_formatter.oneByteOp(OP_AND_EvGv, offset, base, src);
     }
 
+    void andw_rm(RegisterID src, int32_t offset, RegisterID base)
+    {
+        spew("andw       %s, " MEM_ob, GPReg16Name(src), ADDR_ob(offset, base));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        m_formatter.oneByteOp(OP_AND_EvGv, offset, base, src);
+    }
+
     void andl_rm(RegisterID src, int32_t offset, RegisterID base, RegisterID index, int scale)
     {
         spew("andl       %s, " MEM_obs, GPReg32Name(src), ADDR_obs(offset, base, index, scale));
+        m_formatter.oneByteOp(OP_AND_EvGv, offset, base, index, scale, src);
+    }
+
+    void andw_rm(RegisterID src, int32_t offset, RegisterID base, RegisterID index, int scale)
+    {
+        spew("andw       %s, " MEM_obs, GPReg16Name(src), ADDR_obs(offset, base, index, scale));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
         m_formatter.oneByteOp(OP_AND_EvGv, offset, base, index, scale, src);
     }
 
@@ -726,6 +803,22 @@ public:
         }
     }
 
+    void andw_ir(int32_t imm, RegisterID dst)
+    {
+        spew("andw       $0x%x, %s", int16_t(imm), GPReg16Name(dst));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        if (CAN_SIGN_EXTEND_8_32(imm)) {
+            m_formatter.oneByteOp(OP_GROUP1_EvIb, dst, GROUP1_OP_AND);
+            m_formatter.immediate8s(imm);
+        } else {
+            if (dst == rax)
+                m_formatter.oneByteOp(OP_AND_EAXIv);
+            else
+                m_formatter.oneByteOp(OP_GROUP1_EvIz, dst, GROUP1_OP_AND);
+            m_formatter.immediate16(imm);
+        }
+    }
+
     void andl_im(int32_t imm, int32_t offset, RegisterID base)
     {
         spew("andl       $0x%x, " MEM_ob, imm, ADDR_ob(offset, base));
@@ -738,6 +831,19 @@ public:
         }
     }
 
+    void andw_im(int32_t imm, int32_t offset, RegisterID base)
+    {
+        spew("andw       $0x%x, " MEM_ob, int16_t(imm), ADDR_ob(offset, base));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        if (CAN_SIGN_EXTEND_8_32(imm)) {
+            m_formatter.oneByteOp(OP_GROUP1_EvIb, offset, base, GROUP1_OP_AND);
+            m_formatter.immediate8s(imm);
+        } else {
+            m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, GROUP1_OP_AND);
+            m_formatter.immediate16(imm);
+        }
+    }
+
     void andl_im(int32_t imm, int32_t offset, RegisterID base, RegisterID index, int scale)
     {
         spew("andl       $%d, " MEM_obs, imm, ADDR_obs(offset, base, index, scale));
@@ -747,6 +853,19 @@ public:
         } else {
             m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, index, scale, GROUP1_OP_AND);
             m_formatter.immediate32(imm);
+        }
+    }
+
+    void andw_im(int32_t imm, int32_t offset, RegisterID base, RegisterID index, int scale)
+    {
+        spew("andw       $%d, " MEM_obs, int16_t(imm), ADDR_obs(offset, base, index, scale));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        if (CAN_SIGN_EXTEND_8_32(imm)) {
+            m_formatter.oneByteOp(OP_GROUP1_EvIb, offset, base, index, scale, GROUP1_OP_AND);
+            m_formatter.immediate8s(imm);
+        } else {
+            m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, index, scale, GROUP1_OP_AND);
+            m_formatter.immediate16(imm);
         }
     }
 
@@ -871,6 +990,13 @@ public:
         m_formatter.oneByteOp(OP_OR_GvEv, src, dst);
     }
 
+    void orw_rr(RegisterID src, RegisterID dst)
+    {
+        spew("orw        %s, %s", GPReg16Name(src), GPReg16Name(dst));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        m_formatter.oneByteOp(OP_OR_GvEv, src, dst);
+    }
+
     void orl_mr(int32_t offset, RegisterID base, RegisterID dst)
     {
         spew("orl        " MEM_ob ", %s", ADDR_ob(offset, base), GPReg32Name(dst));
@@ -883,9 +1009,23 @@ public:
         m_formatter.oneByteOp(OP_OR_EvGv, offset, base, src);
     }
 
+    void orw_rm(RegisterID src, int32_t offset, RegisterID base)
+    {
+        spew("orw        %s, " MEM_ob, GPReg16Name(src), ADDR_ob(offset, base));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        m_formatter.oneByteOp(OP_OR_EvGv, offset, base, src);
+    }
+
     void orl_rm(RegisterID src, int32_t offset, RegisterID base, RegisterID index, int scale)
     {
         spew("orl        %s, " MEM_obs, GPReg32Name(src), ADDR_obs(offset, base, index, scale));
+        m_formatter.oneByteOp(OP_OR_EvGv, offset, base, index, scale, src);
+    }
+
+    void orw_rm(RegisterID src, int32_t offset, RegisterID base, RegisterID index, int scale)
+    {
+        spew("orw        %s, " MEM_obs, GPReg16Name(src), ADDR_obs(offset, base, index, scale));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
         m_formatter.oneByteOp(OP_OR_EvGv, offset, base, index, scale, src);
     }
 
@@ -904,6 +1044,22 @@ public:
         }
     }
 
+    void orw_ir(int32_t imm, RegisterID dst)
+    {
+        spew("orw        $0x%x, %s", int16_t(imm), GPReg16Name(dst));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        if (CAN_SIGN_EXTEND_8_32(imm)) {
+            m_formatter.oneByteOp(OP_GROUP1_EvIb, dst, GROUP1_OP_OR);
+            m_formatter.immediate8s(imm);
+        } else {
+            if (dst == rax)
+                m_formatter.oneByteOp(OP_OR_EAXIv);
+            else
+                m_formatter.oneByteOp(OP_GROUP1_EvIz, dst, GROUP1_OP_OR);
+            m_formatter.immediate16(imm);
+        }
+    }
+
     void orl_im(int32_t imm, int32_t offset, RegisterID base)
     {
         spew("orl        $0x%x, " MEM_ob, imm, ADDR_ob(offset, base));
@@ -916,6 +1072,19 @@ public:
         }
     }
 
+    void orw_im(int32_t imm, int32_t offset, RegisterID base)
+    {
+        spew("orw        $0x%x, " MEM_ob, int16_t(imm), ADDR_ob(offset, base));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        if (CAN_SIGN_EXTEND_8_32(imm)) {
+            m_formatter.oneByteOp(OP_GROUP1_EvIb, offset, base, GROUP1_OP_OR);
+            m_formatter.immediate8s(imm);
+        } else {
+            m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, GROUP1_OP_OR);
+            m_formatter.immediate16(imm);
+        }
+    }
+
     void orl_im(int32_t imm, int32_t offset, RegisterID base, RegisterID index, int scale)
     {
         spew("orl        $%d, " MEM_obs, imm, ADDR_obs(offset, base, index, scale));
@@ -925,6 +1094,19 @@ public:
         } else {
             m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, index, scale, GROUP1_OP_OR);
             m_formatter.immediate32(imm);
+        }
+    }
+
+    void orw_im(int32_t imm, int32_t offset, RegisterID base, RegisterID index, int scale)
+    {
+        spew("orw        $%d, " MEM_obs, int16_t(imm), ADDR_obs(offset, base, index, scale));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        if (CAN_SIGN_EXTEND_8_32(imm)) {
+            m_formatter.oneByteOp(OP_GROUP1_EvIb, offset, base, index, scale, GROUP1_OP_OR);
+            m_formatter.immediate8s(imm);
+        } else {
+            m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, index, scale, GROUP1_OP_OR);
+            m_formatter.immediate16(imm);
         }
     }
 
@@ -981,6 +1163,13 @@ public:
         m_formatter.oneByteOp(OP_SUB_GvEv, src, dst);
     }
 
+    void subw_rr(RegisterID src, RegisterID dst)
+    {
+        spew("subw       %s, %s", GPReg16Name(src), GPReg16Name(dst));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        m_formatter.oneByteOp(OP_SUB_GvEv, src, dst);
+    }
+
     void subl_mr(int32_t offset, RegisterID base, RegisterID dst)
     {
         spew("subl       " MEM_ob ", %s", ADDR_ob(offset, base), GPReg32Name(dst));
@@ -993,9 +1182,23 @@ public:
         m_formatter.oneByteOp(OP_SUB_EvGv, offset, base, src);
     }
 
+    void subw_rm(RegisterID src, int32_t offset, RegisterID base)
+    {
+        spew("subw       %s, " MEM_ob, GPReg16Name(src), ADDR_ob(offset, base));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        m_formatter.oneByteOp(OP_SUB_EvGv, offset, base, src);
+    }
+
     void subl_rm(RegisterID src, int32_t offset, RegisterID base, RegisterID index, int scale)
     {
         spew("subl       %s, " MEM_obs, GPReg32Name(src), ADDR_obs(offset, base, index, scale));
+        m_formatter.oneByteOp(OP_SUB_EvGv, offset, base, index, scale, src);
+    }
+
+    void subw_rm(RegisterID src, int32_t offset, RegisterID base, RegisterID index, int scale)
+    {
+        spew("subw       %s, " MEM_obs, GPReg16Name(src), ADDR_obs(offset, base, index, scale));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
         m_formatter.oneByteOp(OP_SUB_EvGv, offset, base, index, scale, src);
     }
 
@@ -1014,6 +1217,22 @@ public:
         }
     }
 
+    void subw_ir(int32_t imm, RegisterID dst)
+    {
+        spew("subw       $%d, %s", int16_t(imm), GPReg16Name(dst));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        if (CAN_SIGN_EXTEND_8_32(imm)) {
+            m_formatter.oneByteOp(OP_GROUP1_EvIb, dst, GROUP1_OP_SUB);
+            m_formatter.immediate8s(imm);
+        } else {
+            if (dst == rax)
+                m_formatter.oneByteOp(OP_SUB_EAXIv);
+            else
+                m_formatter.oneByteOp(OP_GROUP1_EvIz, dst, GROUP1_OP_SUB);
+            m_formatter.immediate16(imm);
+        }
+    }
+
     void subl_im(int32_t imm, int32_t offset, RegisterID base)
     {
         spew("subl       $%d, " MEM_ob, imm, ADDR_ob(offset, base));
@@ -1026,6 +1245,19 @@ public:
         }
     }
 
+    void subw_im(int32_t imm, int32_t offset, RegisterID base)
+    {
+        spew("subw       $%d, " MEM_ob, int16_t(imm), ADDR_ob(offset, base));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        if (CAN_SIGN_EXTEND_8_32(imm)) {
+            m_formatter.oneByteOp(OP_GROUP1_EvIb, offset, base, GROUP1_OP_SUB);
+            m_formatter.immediate8s(imm);
+        } else {
+            m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, GROUP1_OP_SUB);
+            m_formatter.immediate16(imm);
+        }
+    }
+
     void subl_im(int32_t imm, int32_t offset, RegisterID base, RegisterID index, int scale)
     {
         spew("subl       $%d, " MEM_obs, imm, ADDR_obs(offset, base, index, scale));
@@ -1035,6 +1267,19 @@ public:
         } else {
             m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, index, scale, GROUP1_OP_SUB);
             m_formatter.immediate32(imm);
+        }
+    }
+
+    void subw_im(int32_t imm, int32_t offset, RegisterID base, RegisterID index, int scale)
+    {
+        spew("subw       $%d, " MEM_obs, int16_t(imm), ADDR_obs(offset, base, index, scale));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        if (CAN_SIGN_EXTEND_8_32(imm)) {
+            m_formatter.oneByteOp(OP_GROUP1_EvIb, offset, base, index, scale, GROUP1_OP_SUB);
+            m_formatter.immediate8s(imm);
+        } else {
+            m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, index, scale, GROUP1_OP_SUB);
+            m_formatter.immediate16(imm);
         }
     }
 
@@ -1097,6 +1342,13 @@ public:
         m_formatter.oneByteOp(OP_XOR_GvEv, src, dst);
     }
 
+    void xorw_rr(RegisterID src, RegisterID dst)
+    {
+        spew("xorw       %s, %s", GPReg16Name(src), GPReg16Name(dst));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        m_formatter.oneByteOp(OP_XOR_GvEv, src, dst);
+    }
+
     void xorl_mr(int32_t offset, RegisterID base, RegisterID dst)
     {
         spew("xorl       " MEM_ob ", %s", ADDR_ob(offset, base), GPReg32Name(dst));
@@ -1109,9 +1361,23 @@ public:
         m_formatter.oneByteOp(OP_XOR_EvGv, offset, base, src);
     }
 
+    void xorw_rm(RegisterID src, int32_t offset, RegisterID base)
+    {
+        spew("xorw       %s, " MEM_ob, GPReg16Name(src), ADDR_ob(offset, base));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        m_formatter.oneByteOp(OP_XOR_EvGv, offset, base, src);
+    }
+
     void xorl_rm(RegisterID src, int32_t offset, RegisterID base, RegisterID index, int scale)
     {
         spew("xorl       %s, " MEM_obs, GPReg32Name(src), ADDR_obs(offset, base, index, scale));
+        m_formatter.oneByteOp(OP_XOR_EvGv, offset, base, index, scale, src);
+    }
+
+    void xorw_rm(RegisterID src, int32_t offset, RegisterID base, RegisterID index, int scale)
+    {
+        spew("xorw       %s, " MEM_obs, GPReg16Name(src), ADDR_obs(offset, base, index, scale));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
         m_formatter.oneByteOp(OP_XOR_EvGv, offset, base, index, scale, src);
     }
 
@@ -1127,6 +1393,19 @@ public:
         }
     }
 
+    void xorw_im(int32_t imm, int32_t offset, RegisterID base)
+    {
+        spew("xorw       $0x%x, " MEM_ob, int16_t(imm), ADDR_ob(offset, base));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        if (CAN_SIGN_EXTEND_8_32(imm)) {
+            m_formatter.oneByteOp(OP_GROUP1_EvIb, offset, base, GROUP1_OP_XOR);
+            m_formatter.immediate8s(imm);
+        } else {
+            m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, GROUP1_OP_XOR);
+            m_formatter.immediate16(imm);
+        }
+    }
+
     void xorl_im(int32_t imm, int32_t offset, RegisterID base, RegisterID index, int scale)
     {
         spew("xorl       $%d, " MEM_obs, imm, ADDR_obs(offset, base, index, scale));
@@ -1136,6 +1415,19 @@ public:
         } else {
             m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, index, scale, GROUP1_OP_XOR);
             m_formatter.immediate32(imm);
+        }
+    }
+
+    void xorw_im(int32_t imm, int32_t offset, RegisterID base, RegisterID index, int scale)
+    {
+        spew("xorw       $%d, " MEM_obs, int16_t(imm), ADDR_obs(offset, base, index, scale));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        if (CAN_SIGN_EXTEND_8_32(imm)) {
+            m_formatter.oneByteOp(OP_GROUP1_EvIb, offset, base, index, scale, GROUP1_OP_XOR);
+            m_formatter.immediate8s(imm);
+        } else {
+            m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, index, scale, GROUP1_OP_XOR);
+            m_formatter.immediate16(imm);
         }
     }
 
@@ -1151,6 +1443,22 @@ public:
             else
                 m_formatter.oneByteOp(OP_GROUP1_EvIz, dst, GROUP1_OP_XOR);
             m_formatter.immediate32(imm);
+        }
+    }
+
+    void xorw_ir(int32_t imm, RegisterID dst)
+    {
+        spew("xorw       $%d, %s", int16_t(imm), GPReg16Name(dst));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        if (CAN_SIGN_EXTEND_8_32(imm)) {
+            m_formatter.oneByteOp(OP_GROUP1_EvIb, dst, GROUP1_OP_XOR);
+            m_formatter.immediate8s(imm);
+        } else {
+            if (dst == rax)
+                m_formatter.oneByteOp(OP_XOR_EAXIv);
+            else
+                m_formatter.oneByteOp(OP_GROUP1_EvIz, dst, GROUP1_OP_XOR);
+            m_formatter.immediate16(imm);
         }
     }
 
