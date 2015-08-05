@@ -519,6 +519,7 @@ public:
                   nsStyleChangeList* aChangeList,
                   nsChangeHint aHintsHandledByAncestors,
                   RestyleTracker& aRestyleTracker,
+                  nsTArray<nsCSSSelector*>& aSelectorsForDescendants,
                   TreeMatchContext& aTreeMatchContext,
                   nsTArray<nsIContent*>& aVisibleKidsOfHiddenElement,
                   nsTArray<ContextToClear>& aContextsToClear,
@@ -549,6 +550,7 @@ public:
                   nsStyleChangeList* aChangeList,
                   nsChangeHint aHintsHandledByAncestors,
                   RestyleTracker& aRestyleTracker,
+                  nsTArray<nsCSSSelector*>& aSelectorsForDescendants,
                   TreeMatchContext& aTreeMatchContext,
                   nsTArray<nsIContent*>& aVisibleKidsOfHiddenElement,
                   nsTArray<ContextToClear>& aContextsToClear,
@@ -639,6 +641,21 @@ private:
   void RestyleChildren(nsRestyleHint aChildRestyleHint);
 
   /**
+   * Returns true iff a selector in mSelectorsForDescendants matches aElement.
+   * This is called when processing a eRestyle_SomeDescendants restyle hint.
+   */
+  bool SelectorMatchesForRestyle(Element* aElement);
+
+  /**
+   * Returns true iff aRestyleHint indicates that we should be restyling.
+   * Specifically, this will return true when eRestyle_Self or
+   * eRestyle_Subtree is present, or if eRestyle_SomeDescendants is
+   * present and the specified element matches one of the selectors in
+   * mSelectorsForDescendants.
+   */
+  bool MustRestyleSelf(nsRestyleHint aRestyleHint, Element* aElement);
+
+  /**
    * Helpers for Restyle().
    */
   void AddLayerChangesForAnimation();
@@ -698,6 +715,8 @@ private:
     eNotifyHidden
   };
 
+  void AddPendingRestylesForDescendantsMatchingSelectors(Element* aElement);
+
 #ifdef RESTYLE_LOGGING
   int32_t& LoggingDepth() { return mLoggingDepth; }
 #endif
@@ -725,6 +744,7 @@ private:
   nsChangeHint mParentFrameHintsNotHandledForDescendants;
   nsChangeHint mHintsNotHandledForDescendants;
   RestyleTracker& mRestyleTracker;
+  nsTArray<nsCSSSelector*>& mSelectorsForDescendants;
   TreeMatchContext& mTreeMatchContext;
   nsIFrame* mResolvedChild; // child that provides our parent style context
   // Array of style context subtrees in which we need to clear out cached

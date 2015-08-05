@@ -2293,6 +2293,28 @@ static bool SelectorMatches(Element* aElement,
 
 #undef STATE_CHECK
 
+#ifdef DEBUG
+static bool
+HasPseudoClassSelectorArgsWithCombinators(nsCSSSelector* aSelector)
+{
+  for (nsPseudoClassList* p = aSelector->mPseudoClassList; p; p = p->mNext) {
+    if (nsCSSPseudoClasses::HasSelectorListArg(p->mType)) {
+      for (nsCSSSelectorList* l = p->u.mSelectors; l; l = l->mNext) {
+        if (l->mSelectors->mNext) {
+          return true;
+        }
+      }
+    }
+  }
+  for (nsCSSSelector* n = aSelector->mNegations; n; n = n->mNegations) {
+    if (n->mNext) {
+      return true;
+    }
+  }
+  return false;
+}
+#endif
+
 /* static */ bool
 nsCSSRuleProcessor::RestrictedSelectorMatches(
     Element* aElement,
@@ -2301,6 +2323,11 @@ nsCSSRuleProcessor::RestrictedSelectorMatches(
 {
   MOZ_ASSERT(aSelector->IsRestrictedSelector(),
              "aSelector must not have a pseudo-element");
+
+  NS_WARN_IF_FALSE(!HasPseudoClassSelectorArgsWithCombinators(aSelector),
+                   "processing eRestyle_SomeDescendants can be slow if "
+                   "pseudo-classes with selector arguments can now have "
+                   "combinators in them");
 
   // We match aSelector as if :visited and :link both match visited and
   // unvisited links.
