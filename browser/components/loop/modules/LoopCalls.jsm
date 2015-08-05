@@ -210,11 +210,6 @@ let LoopCallsInternal = {
       return;
     }
 
-    // We set this here as it is assumed that once the user receives an incoming
-    // call, they'll have had enough time to see the terms of service. See
-    // bug 1046039 for background.
-    Services.prefs.setCharPref("loop.seenToS", "seen");
-
     // Request the information on the new call(s) associated with this version.
     // The registered FxA session is checked first, then the anonymous session.
     // Make the call to get the GUEST session regardless of whether the FXA

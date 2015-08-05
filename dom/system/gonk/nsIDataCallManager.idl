@@ -55,9 +55,11 @@ interface nsIDataCallHandler : nsISupports
   void updateRILNetworkInterface();
 };
 
-[scriptable, uuid(aac54873-5771-4093-a72b-fe39967c6607)]
+[scriptable, uuid(2c46e37d-88dc-4d25-bb37-e1c0d3e9cb5f)]
 interface nsIDataCallManager : nsISupports
 {
+  readonly attribute long dataDefaultServiceId;
+
   /**
    * Get the corresponding data call handler.
    *

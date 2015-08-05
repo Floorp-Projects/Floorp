@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_bluetooth_bluetoothutils_h
-#define mozilla_dom_bluetooth_bluetoothutils_h
+#ifndef mozilla_dom_bluetooth_BluetoothUtils_h
+#define mozilla_dom_bluetooth_BluetoothUtils_h
 
 #include "BluetoothCommon.h"
 #include "js/TypeDecls.h"
@@ -159,4 +159,4 @@ DispatchStatusChangedEvent(const nsAString& aType,
 
 END_BLUETOOTH_NAMESPACE
 
-#endif
+#endif // mozilla_dom_bluetooth_BluetoothUtils_h

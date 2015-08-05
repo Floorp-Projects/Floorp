@@ -370,16 +370,11 @@ loop.store = loop.store || {};
 
       switch (providerOrigin) {
         case "mail.google.com":
-          shareTitle = mozL10n.get("share_email_subject5", {
-            clientShortname2: mozL10n.get("clientShortname2")
+          shareTitle = mozL10n.get("share_email_subject6");
+          shareBody = mozL10n.get("share_email_body6", {
+            callUrl: actionData.roomUrl
           });
-          shareBody = mozL10n.get("share_email_body5", {
-            callUrl: actionData.roomUrl,
-            brandShortname: mozL10n.get("brandShortname"),
-            clientShortname2: mozL10n.get("clientShortname2"),
-            clientSuperShortname: mozL10n.get("clientSuperShortname"),
-            learnMoreUrl: this._mozLoop.getLoopPref("learnMoreUrl")
-          });
+          shareBody += mozL10n.get("share_email_footer");
           break;
         case "twitter.com":
         default:

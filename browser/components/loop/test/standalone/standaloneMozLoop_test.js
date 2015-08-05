@@ -55,12 +55,6 @@ describe("loop.StandaloneMozLoop", function() {
 
       expect(localStorage.getItem("fakePref")).eql("fakeValue");
     });
-
-    it("should not store the value of seenToS", function() {
-      mozLoop.setLoopPref("seenToS", "fakeValue1");
-
-      expect(localStorage.getItem("seenToS")).eql(null);
-    });
   });
 
   describe("#getLoopPref", function() {

@@ -60,6 +60,14 @@ XPCOMUtils.defineLazyServiceGetter(this, "gIccService",
                                    "@mozilla.org/icc/iccservice;1",
                                    "nsIIccService");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gDataCallManager",
+                                   "@mozilla.org/datacall/manager;1",
+                                   "nsIDataCallManager");
+
+XPCOMUtils.defineLazyModuleGetter(this, "gTelephonyUtils",
+                                  "resource://gre/modules/TelephonyUtils.jsm",
+                                  "TelephonyUtils");
+
 XPCOMUtils.defineLazyGetter(this, "gRadioInterfaceLayer", function() {
   let ril = { numRadioInterfaces: 0 };
   try {
@@ -720,6 +728,105 @@ MobileConnectionProvider.prototype = {
     if (isUpdated && !aBatch) {
       this.deliverListenerEvent("notifyDataChanged");
     }
+
+    if (isUpdated) {
+      this._ensureDataRegistration();
+    }
+  },
+
+  _dataRegistrationFailed: false,
+  _ensureDataRegistration: function() {
+    let isDataRegistered =
+      this.data &&
+      this.data.state == RIL.GECKO_MOBILE_CONNECTION_STATE_REGISTERED;
+    let isVoiceRegistered =
+      this.voice &&
+      this.voice.state == RIL.GECKO_MOBILE_CONNECTION_STATE_REGISTERED;
+
+    if (isVoiceRegistered && isDataRegistered) {
+      if (DEBUG) {
+        this._debug("Voice and data registered.");
+      }
+      this._dataRegistrationFailed = false;
+      return;
+    }
+
+    if (isVoiceRegistered && !isDataRegistered &&
+        this._clientId == gDataCallManager.dataDefaultServiceId) {
+
+      // We have been here before, no more recovery.
+      if (this._dataRegistrationFailed) {
+        if (DEBUG) {
+          this._debug("Voice and data not consistent: " + this.voice.state +
+                      " != " + this.data.state + ".");
+        }
+        return;
+      }
+
+      if (DEBUG) {
+        this._debug("Voice and data not consistent: " + this.voice.state +
+                    " != " + this.data.state + ", try to recover.");
+      }
+
+      this._dataRegistrationFailed = true;
+      // If there is any ongoing call, wait for them to disconnect.
+      if (gTelephonyUtils.hasAnyCalls(this._clientId)) {
+        gTelephonyUtils.waitForNoCalls(this._clientId)
+          .then(() => {
+            if (this._dataRegistrationFailed) {
+              this._recoverDataRegistration();
+            }
+          });
+        return;
+      }
+
+      this._recoverDataRegistration();
+    }
+  },
+
+
+  /**
+   * To recover data registration, get the current preferred network type first,
+   * then set it to a temporary preferred network type, and last set back to the
+   * previous preferred network type. This is will cause deregistration and
+   * registration on both voice and data networks.
+   */
+  _recoverDataRegistration: function() {
+    if (DEBUG) {
+      this._debug("Trying to recover data registration...");
+    }
+
+    let currentPreferredNetworkType;
+
+    let resetPreferredNetworkType = () => {
+      this.setPreferredNetworkType(currentPreferredNetworkType, {
+        QueryInterface: XPCOMUtils.generateQI([Ci.nsIMobileConnectionCallback]),
+        notifySuccess: () => {},
+        notifyError: aErrorMsg => {}
+      });
+    };
+
+    let setTemporaryPreferredNetworkType = () => {
+      this.setPreferredNetworkType(
+        Ci.nsIMobileConnection.PREFERRED_NETWORK_TYPE_WCDMA_GSM_CDMA_EVDO, {
+          QueryInterface: XPCOMUtils.generateQI([Ci.nsIMobileConnectionCallback]),
+          notifySuccess: () =>  resetPreferredNetworkType(),
+          notifyError: aErrorMsg => resetPreferredNetworkType()
+      });
+    };
+
+    this.getPreferredNetworkType({
+      QueryInterface: XPCOMUtils.generateQI([Ci.nsIMobileConnectionCallback]),
+      notifyGetPreferredNetworkTypeSuccess: networkType => {
+        currentPreferredNetworkType = networkType;
+        setTemporaryPreferredNetworkType();
+      },
+      notifyError: aErrorMsg => {
+        currentPreferredNetworkType =
+          Ci.nsIMobileConnection.PREFERRED_NETWORK_TYPE_LTE_WCDMA_GSM_CDMA_EVDO;
+        setTemporaryPreferredNetworkType();
+      }
+    });
   },
 
   updateOperatorInfo: function(aNewInfo, aBatch = false) {
