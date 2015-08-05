@@ -127,7 +127,7 @@ this.NetworkStatsService = {
 
     // Stats for all interfaces are updated periodically
     this.timer.initWithCallback(this, this._db.sampleRate,
-                                Ci.nsITimer.TYPE_REPEATING_PRECISE);
+                                Ci.nsITimer.TYPE_REPEATING_PRECISE_CAN_SKIP);
 
     // Stats not from netd are firstly stored in the cached.
     this.cachedStats = Object.create(null);
