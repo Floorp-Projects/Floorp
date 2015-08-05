@@ -33,7 +33,7 @@ ProxyAccessible::Shutdown()
     if (mChildren.Length() != 1)
       MOZ_CRASH("outer doc doesn't own adoc!");
 
-    static_cast<DocAccessibleParent*>(mChildren[0])->Unbind();
+    mChildren[0]->AsDoc()->Unbind();
   }
 
   mChildren.Clear();
