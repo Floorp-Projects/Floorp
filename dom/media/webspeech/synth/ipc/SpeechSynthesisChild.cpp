@@ -40,6 +40,13 @@ SpeechSynthesisChild::RecvSetDefaultVoice(const nsString& aUri,
   return true;
 }
 
+bool
+SpeechSynthesisChild::RecvIsSpeakingChanged(const bool& aIsSpeaking)
+{
+  nsSynthVoiceRegistry::RecvIsSpeakingChanged(aIsSpeaking);
+  return true;
+}
+
 PSpeechSynthesisRequestChild*
 SpeechSynthesisChild::AllocPSpeechSynthesisRequestChild(const nsString& aText,
                                                         const nsString& aLang,
