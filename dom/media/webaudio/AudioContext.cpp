@@ -12,7 +12,7 @@
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/AudioContextBinding.h"
 #include "mozilla/dom/OfflineAudioContextBinding.h"
-#include "mozilla/dom/OwningNonNull.h"
+#include "mozilla/OwningNonNull.h"
 #include "MediaStreamGraph.h"
 #include "AudioChannelService.h"
 #include "AudioDestinationNode.h"
