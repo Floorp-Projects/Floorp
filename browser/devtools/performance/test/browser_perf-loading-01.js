@@ -9,11 +9,7 @@
 let test = Task.async(function*() {
   let { target, panel, toolbox } = yield initPerformance(SIMPLE_URL);
   let { RecordingsView, PerformanceController, PerformanceView,
-        EVENTS, $, L10N, ViewHelpers } = panel.panelWin;
-
-  // This should be removed with bug 1163763.
-  let DBG_STRINGS_URI = "chrome://browser/locale/devtools/debugger.properties";
-  let DBG_L10N = new ViewHelpers.L10N(DBG_STRINGS_URI);
+        EVENTS, $, L10N } = panel.panelWin;
 
   info("Start to record");
   yield startRecording(panel);
@@ -34,7 +30,7 @@ let test = Task.async(function*() {
   yield willStop;
 
   is(durationNode.getAttribute("value"),
-    DBG_L10N.getStr("loadingText"),
+    L10N.getStr("recordingsList.loadingLabel"),
     "The duration node should show the 'loading' message while stopping");
 
   let stateChanged = once(PerformanceView, EVENTS.UI_STATE_CHANGED);
