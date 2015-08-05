@@ -110,7 +110,7 @@ ClientCanvasLayer::Initialize(const Data& aData)
         // are both WARP or both not WARP
         if (mGLContext->IsANGLE() &&
             (mGLContext->IsWARP() == gfxWindowsPlatform::GetPlatform()->IsWARP()) &&
-            gfxWindowsPlatform::GetPlatform()->DoesD3D11TextureSharingWork())
+            gfxWindowsPlatform::GetPlatform()->CompositorD3D11TextureSharingWorks())
         {
           factory = SurfaceFactory_ANGLEShareHandle::Create(mGLContext, caps, forwarder,
                                                             mFlags);
