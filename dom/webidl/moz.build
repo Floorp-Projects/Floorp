@@ -779,6 +779,7 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'MozStkCommandEvent.webidl',
     'MozVoicemailEvent.webidl',
     'PageTransitionEvent.webidl',
+    'PerformanceEntryEvent.webidl',
     'PluginCrashedEvent.webidl',
     'PopStateEvent.webidl',
     'PopupBlockedEvent.webidl',

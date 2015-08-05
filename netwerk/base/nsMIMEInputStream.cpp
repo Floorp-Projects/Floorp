@@ -114,7 +114,6 @@ NS_METHOD nsMIMEInputStream::Init()
 }
 
 
-/* attribute boolean addContentLength; */
 NS_IMETHODIMP
 nsMIMEInputStream::GetAddContentLength(bool *aAddContentLength)
 {
@@ -129,7 +128,6 @@ nsMIMEInputStream::SetAddContentLength(bool aAddContentLength)
     return NS_OK;
 }
 
-/* void addHeader ([const] in string name, [const] in string value); */
 NS_IMETHODIMP
 nsMIMEInputStream::AddHeader(const char *aName, const char *aValue)
 {
@@ -147,7 +145,6 @@ nsMIMEInputStream::AddHeader(const char *aName, const char *aValue)
     return NS_OK;
 }
 
-/* void setData (in nsIInputStream stream); */
 NS_IMETHODIMP
 nsMIMEInputStream::SetData(nsIInputStream *aStream)
 {

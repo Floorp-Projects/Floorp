@@ -132,7 +132,6 @@ TransportSecurityInfo::SetSecurityState(uint32_t aState)
   return NS_OK;
 }
 
-/* attribute unsigned long countSubRequestsBrokenSecurity; */
 NS_IMETHODIMP
 TransportSecurityInfo::GetCountSubRequestsBrokenSecurity(
   int32_t *aSubRequestsBrokenSecurity)
@@ -149,7 +148,6 @@ TransportSecurityInfo::SetCountSubRequestsBrokenSecurity(
   return NS_OK;
 }
 
-/* attribute unsigned long countSubRequestsNoSecurity; */
 NS_IMETHODIMP
 TransportSecurityInfo::GetCountSubRequestsNoSecurity(
   int32_t *aSubRequestsNoSecurity)
@@ -277,7 +275,6 @@ TransportSecurityInfo::GetErrorCode(int32_t* state)
   return NS_OK;
 }
 
-/* void getInterface (in nsIIDRef uuid, [iid_is (uuid), retval] out nsQIResult result); */
 NS_IMETHODIMP
 TransportSecurityInfo::GetInterface(const nsIID & uuid, void * *result)
 {

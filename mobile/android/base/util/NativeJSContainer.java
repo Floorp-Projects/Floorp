@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.util;
 
+import org.mozilla.gecko.mozglue.generatorannotations.WrapEntireClassForJNI;
 import org.mozilla.gecko.mozglue.JNITarget;
 
 /**
@@ -16,12 +17,10 @@ import org.mozilla.gecko.mozglue.JNITarget;
  * When a copy is first used, it becomes attached to the thread using it.
  */
 @JNITarget
+@WrapEntireClassForJNI
 public final class NativeJSContainer extends NativeJSObject
 {
-    private final long mNativeObject;
-
-    private NativeJSContainer(long nativeObject) {
-        mNativeObject = nativeObject;
+    private NativeJSContainer() {
     }
 
     /**
@@ -35,5 +34,6 @@ public final class NativeJSContainer extends NativeJSObject
      * Dispose all associated native objects. Subsequent use of any objects derived from
      * this container will throw a NullPointerException.
      */
-    public native void dispose();
+    @Override
+    public native void disposeNative();
 }

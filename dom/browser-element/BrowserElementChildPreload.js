@@ -55,7 +55,7 @@ let CERTIFICATE_ERROR_PAGE_PREF = 'security.alternate_certificate_error_page';
 
 const OBSERVED_EVENTS = [
   'xpcom-shutdown',
-  'media-playback',
+  'audio-playback',
   'activity-done',
   'invalid-widget'
 ];
@@ -288,7 +288,7 @@ BrowserElementChild.prototype = {
     // Ignore notifications not about our document.  (Note that |content| /can/
     // be null; see bug 874900.)
 
-    if (topic !== 'activity-done' && topic !== 'media-playback' &&
+    if (topic !== 'activity-done' && topic !== 'audio-playback' &&
         (!content || subject !== content.document)) {
       return;
     }
@@ -298,9 +298,9 @@ BrowserElementChild.prototype = {
       case 'activity-done':
         sendAsyncMsg('activitydone', { success: (data == 'activity-success') });
         break;
-      case 'media-playback':
+      case 'audio-playback':
         if (subject === content) {
-          sendAsyncMsg('mediaplaybackchange', { _payload_: data });
+          sendAsyncMsg('audioplaybackchange', { _payload_: data });
         }
         break;
       case 'xpcom-shutdown':

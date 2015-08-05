@@ -12,7 +12,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/RefPtr.h"
-#include "SharedThreadPool.h"
+#include "mozilla/SharedThreadPool.h"
 
 namespace mozilla {
 

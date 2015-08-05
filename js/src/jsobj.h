@@ -23,6 +23,7 @@
 #include "js/Conversions.h"
 #include "js/GCAPI.h"
 #include "js/HeapAPI.h"
+#include "js/TraceableVector.h"
 #include "vm/Shape.h"
 #include "vm/String.h"
 #include "vm/Xdr.h"
@@ -33,7 +34,7 @@ struct ClassInfo;
 
 namespace js {
 
-typedef AutoVectorRooter<PropertyDescriptor> AutoPropertyDescriptorVector;
+using PropertyDescriptorVector = TraceableVector<PropertyDescriptor>;
 class GCMarker;
 class Nursery;
 
@@ -1163,7 +1164,7 @@ CompletePropertyDescriptor(MutableHandle<PropertyDescriptor> desc);
  */
 extern bool
 ReadPropertyDescriptors(JSContext* cx, HandleObject props, bool checkAccessors,
-                        AutoIdVector* ids, AutoPropertyDescriptorVector* descs);
+                        AutoIdVector* ids, MutableHandle<PropertyDescriptorVector> descs);
 
 /* Read the name using a dynamic lookup on the scopeChain. */
 extern bool

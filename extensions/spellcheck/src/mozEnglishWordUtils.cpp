@@ -36,7 +36,6 @@ mozEnglishWordUtils::~mozEnglishWordUtils()
 {
 }
 
-/* attribute wstring language; */
 NS_IMETHODIMP mozEnglishWordUtils::GetLanguage(char16_t * *aLanguage)
 {
   nsresult rv = NS_OK;
@@ -47,7 +46,6 @@ NS_IMETHODIMP mozEnglishWordUtils::GetLanguage(char16_t * *aLanguage)
   return rv;
  }
 
-/* void GetRootForm (in wstring aWord, in uint32_t type, [array, size_is (count)] out wstring words, out uint32_t count); */
 // return the possible root forms of aWord.
 NS_IMETHODIMP mozEnglishWordUtils::GetRootForm(const char16_t *aWord, uint32_t type, char16_t ***words, uint32_t *count)
 {
@@ -138,7 +136,6 @@ bool mozEnglishWordUtils::ucIsAlpha(char16_t aChar)
   return nsIUGenCategory::kLetter == mozilla::unicode::GetGenCategory(aChar);
 }
 
-/* void FindNextWord (in wstring word, in uint32_t length, in uint32_t offset, out uint32_t begin, out uint32_t end); */
 NS_IMETHODIMP mozEnglishWordUtils::FindNextWord(const char16_t *word, uint32_t length, uint32_t offset, int32_t *begin, int32_t *end)
 {
   const char16_t *p = word + offset;

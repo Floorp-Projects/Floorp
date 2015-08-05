@@ -61,21 +61,18 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(dom::TreeWalker)
  * nsIDOMTreeWalker Getters/Setters
  */
 
-/* readonly attribute nsIDOMNode root; */
 NS_IMETHODIMP TreeWalker::GetRoot(nsIDOMNode * *aRoot)
 {
     NS_ADDREF(*aRoot = Root()->AsDOMNode());
     return NS_OK;
 }
 
-/* readonly attribute unsigned long whatToShow; */
 NS_IMETHODIMP TreeWalker::GetWhatToShow(uint32_t *aWhatToShow)
 {
     *aWhatToShow = WhatToShow();
     return NS_OK;
 }
 
-/* readonly attribute nsIDOMNodeFilter filter; */
 NS_IMETHODIMP TreeWalker::GetFilter(nsIDOMNodeFilter * *aFilter)
 {
     NS_ENSURE_ARG_POINTER(aFilter);
@@ -85,7 +82,6 @@ NS_IMETHODIMP TreeWalker::GetFilter(nsIDOMNodeFilter * *aFilter)
     return NS_OK;
 }
 
-/* attribute nsIDOMNode currentNode; */
 NS_IMETHODIMP TreeWalker::GetCurrentNode(nsIDOMNode * *aCurrentNode)
 {
     if (mCurrentNode) {
@@ -124,7 +120,6 @@ TreeWalker::SetCurrentNode(nsINode& aNode, ErrorResult& aResult)
  * nsIDOMTreeWalker functions
  */
 
-/* nsIDOMNode parentNode (); */
 NS_IMETHODIMP TreeWalker::ParentNode(nsIDOMNode **_retval)
 {
     return ImplNodeGetter(&TreeWalker::ParentNode, _retval);
@@ -153,7 +148,6 @@ TreeWalker::ParentNode(ErrorResult& aResult)
     return nullptr;
 }
 
-/* nsIDOMNode firstChild (); */
 NS_IMETHODIMP TreeWalker::FirstChild(nsIDOMNode **_retval)
 {
     return ImplNodeGetter(&TreeWalker::FirstChild, _retval);
@@ -165,7 +159,6 @@ TreeWalker::FirstChild(ErrorResult& aResult)
     return FirstChildInternal(false, aResult);
 }
 
-/* nsIDOMNode lastChild (); */
 NS_IMETHODIMP TreeWalker::LastChild(nsIDOMNode **_retval)
 {
     return ImplNodeGetter(&TreeWalker::LastChild, _retval);
@@ -177,7 +170,6 @@ TreeWalker::LastChild(ErrorResult& aResult)
     return FirstChildInternal(true, aResult);
 }
 
-/* nsIDOMNode previousSibling (); */
 NS_IMETHODIMP TreeWalker::PreviousSibling(nsIDOMNode **_retval)
 {
     return ImplNodeGetter(&TreeWalker::PreviousSibling, _retval);
@@ -189,7 +181,6 @@ TreeWalker::PreviousSibling(ErrorResult& aResult)
     return NextSiblingInternal(true, aResult);
 }
 
-/* nsIDOMNode nextSibling (); */
 NS_IMETHODIMP TreeWalker::NextSibling(nsIDOMNode **_retval)
 {
     return ImplNodeGetter(&TreeWalker::NextSibling, _retval);
@@ -201,7 +192,6 @@ TreeWalker::NextSibling(ErrorResult& aResult)
     return NextSiblingInternal(false, aResult);
 }
 
-/* nsIDOMNode previousNode (); */
 NS_IMETHODIMP TreeWalker::PreviousNode(nsIDOMNode **_retval)
 {
     return ImplNodeGetter(&TreeWalker::PreviousNode, _retval);
@@ -260,7 +250,6 @@ TreeWalker::PreviousNode(ErrorResult& aResult)
     return nullptr;
 }
 
-/* nsIDOMNode nextNode (); */
 NS_IMETHODIMP TreeWalker::NextNode(nsIDOMNode **_retval)
 {
     return ImplNodeGetter(&TreeWalker::NextNode, _retval);

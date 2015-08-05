@@ -7171,7 +7171,7 @@ DebuggerObject_defineProperties(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     AutoIdVector ids(cx);
-    AutoPropertyDescriptorVector descs(cx);
+    Rooted<PropertyDescriptorVector> descs(cx, PropertyDescriptorVector(cx));
     if (!ReadPropertyDescriptors(cx, props, false, &ids, &descs))
         return false;
     size_t n = ids.length();

@@ -238,7 +238,6 @@ nsJPEGEncoder::EndImageEncode()
 }
 
 
-/* void close (); */
 NS_IMETHODIMP
 nsJPEGEncoder::Close()
 {
@@ -252,7 +251,6 @@ nsJPEGEncoder::Close()
   return NS_OK;
 }
 
-/* unsigned long available (); */
 NS_IMETHODIMP
 nsJPEGEncoder::Available(uint64_t* _retval)
 {
@@ -264,7 +262,6 @@ nsJPEGEncoder::Available(uint64_t* _retval)
   return NS_OK;
 }
 
-/* [noscript] unsigned long read (in charPtr aBuf, in unsigned long aCount); */
 NS_IMETHODIMP
 nsJPEGEncoder::Read(char* aBuf, uint32_t aCount, uint32_t* _retval)
 {
@@ -302,7 +299,6 @@ nsJPEGEncoder::ReadSegments(nsWriteSegmentFun aWriter,
   return NS_OK;
 }
 
-/* boolean isNonBlocking (); */
 NS_IMETHODIMP
 nsJPEGEncoder::IsNonBlocking(bool* _retval)
 {

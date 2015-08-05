@@ -99,7 +99,6 @@ nsFilePickerProxy::SetFilterIndex(int32_t aFilterIndex)
   return NS_OK;
 }
 
-/* readonly attribute nsIFile file; */
 NS_IMETHODIMP
 nsFilePickerProxy::GetFile(nsIFile** aFile)
 {
@@ -107,7 +106,6 @@ nsFilePickerProxy::GetFile(nsIFile** aFile)
   return NS_ERROR_FAILURE;
 }
 
-/* readonly attribute nsIFileURL fileURL; */
 NS_IMETHODIMP
 nsFilePickerProxy::GetFileURL(nsIURI** aFileURL)
 {
@@ -115,7 +113,6 @@ nsFilePickerProxy::GetFileURL(nsIURI** aFileURL)
   return NS_ERROR_FAILURE;
 }
 
-/* readonly attribute nsISimpleEnumerator files; */
 NS_IMETHODIMP
 nsFilePickerProxy::GetFiles(nsISimpleEnumerator** aFiles)
 {
