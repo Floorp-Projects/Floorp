@@ -323,6 +323,12 @@ public:
   uint64_t ID() const { return mID; }
 
   /**
+   * Return the document containing this proxy, or the proxy itself if it is a
+   * document.
+   */
+  DocAccessibleParent* Document() const { return mDoc; }
+
+  /**
    * Return true if this proxy is a DocAccessibleParent.
    */
   bool IsDoc() const { return mIsDoc; }
