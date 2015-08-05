@@ -12,8 +12,6 @@
 
 const {Cc, Ci, Cu} = require("chrome");
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
-const {setTimeout, clearTimeout} =
-      Cu.import("resource://gre/modules/Timer.jsm", {});
 const {CssLogic} = require("devtools/styleinspector/css-logic");
 const {InplaceEditor, editableField, editableItem} =
       require("devtools/shared/inplace-editor");
@@ -22,14 +20,6 @@ const {ELEMENT_STYLE, PSEUDO_ELEMENTS} =
 const {OutputParser} = require("devtools/output-parser");
 const {PrefObserver, PREF_ORIG_SOURCES} = require("devtools/styleeditor/utils");
 const {
-  createChild,
-  appendText,
-  advanceValidate,
-  blurOnMultipleProperties,
-  promiseWarn,
-  throttle
-} = require("devtools/styleinspector/utils");
-const {
   parseDeclarations,
   parseSingleValue,
   parsePseudoClassesAndAttributes,
@@ -37,6 +27,7 @@ const {
   SELECTOR_ELEMENT,
   SELECTOR_PSEUDO_CLASS
 } = require("devtools/styleinspector/css-parsing-utils");
+
 loader.lazyRequireGetter(this, "overlays", "devtools/styleinspector/style-inspector-overlays");
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/toolkit/event-emitter");
 loader.lazyRequireGetter(this, "StyleInspectorMenu", "devtools/styleinspector/style-inspector-menu");
@@ -58,6 +49,11 @@ const FILTER_PROP_RE = /\s*([^:\s]*)\s*:\s*(.*?)\s*;?$/;
 
 const IOService = Cc["@mozilla.org/network/io-service;1"]
                   .getService(Ci.nsIIOService);
+
+function promiseWarn(err) {
+  console.error(err);
+  return promise.reject(err);
+}
 
 /**
  * To figure out how shorthand properties are interpreted by the
@@ -3613,6 +3609,77 @@ UserProperties.prototype = {
  */
 
 /**
+ * Create a child element with a set of attributes.
+ *
+ * @param {Element} aParent
+ *        The parent node.
+ * @param {string} aTag
+ *        The tag name.
+ * @param {object} aAttributes
+ *        A set of attributes to set on the node.
+ */
+function createChild(aParent, aTag, aAttributes) {
+  let elt = aParent.ownerDocument.createElementNS(HTML_NS, aTag);
+  for (let attr in aAttributes) {
+    if (aAttributes.hasOwnProperty(attr)) {
+      if (attr === "textContent") {
+        elt.textContent = aAttributes[attr];
+      } else if (attr === "child") {
+        elt.appendChild(aAttributes[attr]);
+      } else {
+        elt.setAttribute(attr, aAttributes[attr]);
+      }
+    }
+  }
+  aParent.appendChild(elt);
+  return elt;
+}
+
+function setTimeout() {
+  let window = Services.appShell.hiddenDOMWindow;
+  return window.setTimeout.apply(window, arguments);
+}
+
+function clearTimeout() {
+  let window = Services.appShell.hiddenDOMWindow;
+  return window.clearTimeout.apply(window, arguments);
+}
+
+function throttle(func, wait, scope) {
+  let timer = null;
+  return function() {
+    if (timer) {
+      clearTimeout(timer);
+    }
+    let args = arguments;
+    timer = setTimeout(function() {
+      timer = null;
+      func.apply(scope, args);
+    }, wait);
+  };
+}
+
+/**
+ * Event handler that causes a blur on the target if the input has
+ * multiple CSS properties as the value.
+ */
+function blurOnMultipleProperties(e) {
+  setTimeout(() => {
+    let props = parseDeclarations(e.target.value);
+    if (props.length > 1) {
+      e.target.blur();
+    }
+  }, 0);
+}
+
+/**
+ * Append a text node to an element.
+ */
+function appendText(aParent, aText) {
+  aParent.appendChild(aParent.ownerDocument.createTextNode(aText));
+}
+
+/**
  * Walk up the DOM from a given node until a parent property holder is found.
  * For elements inside the computed property list, the non-computed parent
  * property holder will be returned
@@ -3674,6 +3741,48 @@ function getPropertyNameAndValue(node) {
     node = node.parentNode;
   }
 }
+
+/**
+ * Called when a character is typed in a value editor.  This decides
+ * whether to advance or not, first by checking to see if ";" was
+ * typed, and then by lexing the input and seeing whether the ";"
+ * would be a terminator at this point.
+ *
+ * @param {number} aKeyCode Key code to be checked.
+ * @param {String} aValue   Current text editor value.
+ * @param {number} aInsertionPoint The index of the insertion point.
+ * @return {Boolean} True if the focus should advance; false if
+ *        the character should be inserted.
+ */
+function advanceValidate(aKeyCode, aValue, aInsertionPoint) {
+  // Only ";" has special handling here.
+  if (aKeyCode !== Ci.nsIDOMKeyEvent.DOM_VK_SEMICOLON) {
+    return false;
+  }
+
+  // Insert the character provisionally and see what happens.  If we
+  // end up with a ";" symbol token, then the semicolon terminates the
+  // value.  Otherwise it's been inserted in some spot where it has a
+  // valid meaning, like a comment or string.
+  aValue = aValue.slice(0, aInsertionPoint) + ";" +
+    aValue.slice(aInsertionPoint);
+  let lexer = domUtils.getCSSLexer(aValue);
+  while (true) {
+    let token = lexer.nextToken();
+    if (token.endOffset > aInsertionPoint) {
+      if (token.tokenType === "symbol" && token.text === ";") {
+        // The ";" is a terminator.
+        return true;
+      }
+      // The ";" is not a terminator in this context.
+      break;
+    }
+  }
+  return false;
+}
+
+// We're exporting _advanceValidate for unit tests.
+exports._advanceValidate = advanceValidate;
 
 XPCOMUtils.defineLazyGetter(this, "clipboardHelper", function() {
   return Cc["@mozilla.org/widget/clipboardhelper;1"]

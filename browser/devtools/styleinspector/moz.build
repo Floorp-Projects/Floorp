@@ -14,5 +14,4 @@ EXTRA_JS_MODULES.devtools.styleinspector += [
     'style-inspector-menu.js',
     'style-inspector-overlays.js',
     'style-inspector.js',
-    'utils.js',
 ]
