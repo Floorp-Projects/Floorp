@@ -263,16 +263,6 @@ loop.panel = (function(_, mozL10n) {
   var ToSView = React.createClass({displayName: "ToSView",
     mixins: [sharedMixins.WindowCloseMixin],
 
-    getInitialState: function() {
-      var getPref = navigator.mozLoop.getLoopPref.bind(navigator.mozLoop);
-
-      return {
-        seenToS: getPref("seenToS"),
-        gettingStartedSeen: getPref("gettingStarted.seen"),
-        showPartnerLogo: getPref("showPartnerLogo")
-      };
-    },
-
     handleLinkClick: function(event) {
       if (!event.target || !event.target.href) {
         return;
@@ -283,50 +273,35 @@ loop.panel = (function(_, mozL10n) {
       this.closeWindow();
     },
 
-    renderPartnerLogo: function() {
-      if (!this.state.showPartnerLogo) {
-        return null;
-      }
-
-      var locale = mozL10n.getLanguage();
-      navigator.mozLoop.setLoopPref("showPartnerLogo", false);
-      return (
-        React.createElement("p", {className: "powered-by", id: "powered-by"}, 
-          mozL10n.get("powered_by_beforeLogo"), 
-          React.createElement("img", {className: locale, id: "powered-by-logo"}), 
-          mozL10n.get("powered_by_afterLogo")
-        )
-      );
-    },
-
     render: function() {
-      if (!this.state.gettingStartedSeen || this.state.seenToS == "unseen") {
-        var terms_of_use_url = navigator.mozLoop.getLoopPref("legal.ToS_url");
-        var privacy_notice_url = navigator.mozLoop.getLoopPref("legal.privacy_url");
-        var tosHTML = mozL10n.get("legal_text_and_links3", {
-          "clientShortname": mozL10n.get("clientShortname2"),
-          "terms_of_use": React.renderToStaticMarkup(
-            React.createElement("a", {href: terms_of_use_url, target: "_blank"}, 
-              mozL10n.get("legal_text_tos")
-            )
-          ),
-          "privacy_notice": React.renderToStaticMarkup(
-            React.createElement("a", {href: privacy_notice_url, target: "_blank"}, 
-              mozL10n.get("legal_text_privacy")
-            )
+      var locale = mozL10n.getLanguage();
+      var terms_of_use_url = navigator.mozLoop.getLoopPref("legal.ToS_url");
+      var privacy_notice_url = navigator.mozLoop.getLoopPref("legal.privacy_url");
+      var tosHTML = mozL10n.get("legal_text_and_links3", {
+        "clientShortname": mozL10n.get("clientShortname2"),
+        "terms_of_use": React.renderToStaticMarkup(
+          React.createElement("a", {href: terms_of_use_url, target: "_blank"}, 
+            mozL10n.get("legal_text_tos")
           )
-        });
-        return (
-          React.createElement("div", {id: "powered-by-wrapper"}, 
-            this.renderPartnerLogo(), 
-            React.createElement("p", {className: "terms-service", 
-               dangerouslySetInnerHTML: {__html: tosHTML}, 
-               onClick: this.handleLinkClick})
-           )
-        );
-      } else {
-        return React.createElement("div", null);
-      }
+        ),
+        "privacy_notice": React.renderToStaticMarkup(
+          React.createElement("a", {href: privacy_notice_url, target: "_blank"}, 
+            mozL10n.get("legal_text_privacy")
+          )
+        )
+      });
+      return (
+        React.createElement("div", {id: "powered-by-wrapper"}, 
+          React.createElement("p", {className: "powered-by", id: "powered-by"}, 
+            mozL10n.get("powered_by_beforeLogo"), 
+            React.createElement("img", {className: locale, id: "powered-by-logo"}), 
+            mozL10n.get("powered_by_afterLogo")
+          ), 
+          React.createElement("p", {className: "terms-service", 
+             dangerouslySetInnerHTML: {__html: tosHTML}, 
+             onClick: this.handleLinkClick})
+         )
+      );
     }
   });
 
@@ -969,8 +944,7 @@ loop.panel = (function(_, mozL10n) {
               React.createElement(RoomList, {dispatcher: this.props.dispatcher, 
                         mozLoop: this.props.mozLoop, 
                         store: this.props.roomStore, 
-                        userProfile: this.state.userProfile}), 
-              React.createElement(ToSView, null)
+                        userProfile: this.state.userProfile})
             ), 
             React.createElement(Tab, {name: "contacts"}, 
               React.createElement(ContactsList, {

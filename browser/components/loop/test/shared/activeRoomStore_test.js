@@ -1272,14 +1272,6 @@ describe("loop.store.ActiveRoomStore", function () {
 
       expect(store.getStoreState().roomState).eql(ROOM_STATES.HAS_PARTICIPANTS);
     });
-
-    it("should set the pref for ToS to `seen`", function() {
-      store.remotePeerConnected();
-
-      sinon.assert.calledOnce(fakeMozLoop.setLoopPref);
-      sinon.assert.calledWithExactly(fakeMozLoop.setLoopPref,
-        "seenToS", "seen");
-    });
   });
 
   describe("#remotePeerDisconnected", function() {

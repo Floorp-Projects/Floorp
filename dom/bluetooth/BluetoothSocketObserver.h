@@ -52,4 +52,4 @@ public:                                                                     \
 
 END_BLUETOOTH_NAMESPACE
 
-#endif
+#endif // mozilla_dom_bluetooth_BluetoothSocketObserver_h

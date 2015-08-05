@@ -459,22 +459,26 @@ describe("loop.panel", function() {
     });
 
     describe("#render", function() {
-      it("should render a ToSView", function() {
-        var view = createTestPanelView();
-
-        TestUtils.findRenderedComponentWithType(view, loop.panel.ToSView);
-      });
-
-      it("should not render a ToSView when the view has been 'seen'", function() {
+      it("should not render a ToSView when gettingStarted.seen is true", function() {
         navigator.mozLoop.getLoopPref = function() {
-          return "seen";
+          return true;
         };
         var view = createTestPanelView();
 
-        try {
+        expect(function() {
           TestUtils.findRenderedComponentWithType(view, loop.panel.ToSView);
-          sinon.assert.fail("Should not find the ToSView if it has been 'seen'");
-        } catch (ex) {}
+        }).to.Throw(/not find/);
+      });
+
+      it("should not render a ToSView when gettingStarted.seen is false", function() {
+        navigator.mozLoop.getLoopPref = function() {
+          return false;
+        };
+        var view = createTestPanelView();
+
+        expect(function() {
+          TestUtils.findRenderedComponentWithType(view, loop.panel.ToSView);
+        }).to.not.Throw();
       });
 
       it("should render a GettingStarted view", function() {
@@ -987,70 +991,6 @@ describe("loop.panel", function() {
       var contextPreview = view.getDOMNode().querySelector(".context-preview");
       expect(contextPreview.src).eql(favicon);
     });
-  });
-
-  describe("loop.panel.ToSView", function() {
-
-    it("should render when the value of loop.seenToS is not set", function() {
-      navigator.mozLoop.getLoopPref = function(key) {
-        return {
-          "gettingStarted.seen": true,
-          "seenToS": "unseen"
-        }[key];
-      };
-
-      var view = TestUtils.renderIntoDocument(
-        React.createElement(loop.panel.ToSView));
-
-      TestUtils.findRenderedDOMComponentWithClass(view, "terms-service");
-    });
-
-    it("should not render when the value of loop.seenToS is set to 'seen'", function() {
-        navigator.mozLoop.getLoopPref = function(key) {
-          return {
-            "gettingStarted.seen": true,
-            "seenToS": "seen"
-          }[key];
-        };
-
-        var view = TestUtils.renderIntoDocument(
-          React.createElement(loop.panel.ToSView));
-
-        expect(function() {
-          TestUtils.findRenderedDOMComponentWithClass(view, "terms-service");
-        }).to.Throw(/not find/);
-    });
-
-    it("should render when the value of loop.gettingStarted.seen is false",
-       function() {
-         navigator.mozLoop.getLoopPref = function(key) {
-           return {
-             "gettingStarted.seen": false,
-             "seenToS": "seen"
-           }[key];
-         };
-         var view = TestUtils.renderIntoDocument(
-           React.createElement(loop.panel.ToSView));
-
-         TestUtils.findRenderedDOMComponentWithClass(view, "terms-service");
-       });
-
-    it("should render the telefonica logo after the first time use",
-       function() {
-         navigator.mozLoop.getLoopPref = function(key) {
-           return {
-             "gettingStarted.seen": false,
-             "seenToS": "unseen",
-             "showPartnerLogo": false
-           }[key];
-         };
-
-         var view = TestUtils.renderIntoDocument(
-           React.createElement(loop.panel.ToSView));
-
-         expect(view.getDOMNode().querySelector(".powered-by")).eql(null);
-       });
-
   });
 
   describe("loop.panel.SignInRequestView", function() {

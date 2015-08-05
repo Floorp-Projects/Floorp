@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_bluetooth_bluetoothcommon_h
-#define mozilla_dom_bluetooth_bluetoothcommon_h
+#ifndef mozilla_dom_bluetooth_BluetoothCommon_h
+#define mozilla_dom_bluetooth_BluetoothCommon_h
 
 #include "mozilla/Compiler.h"
 #include "mozilla/Observer.h"
@@ -810,4 +810,4 @@ enum BluetoothGapDataType {
 
 END_BLUETOOTH_NAMESPACE
 
-#endif // mozilla_dom_bluetooth_bluetoothcommon_h__
+#endif // mozilla_dom_bluetooth_BluetoothCommon_h
