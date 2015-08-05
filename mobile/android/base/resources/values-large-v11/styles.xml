@@ -78,6 +78,7 @@
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:background">@drawable/new_tablet_action_bar_button</item>
+        <item name="drawableTintList">@color/action_bar_menu_item_colors</item>
         <item name="android:scaleType">center</item>
 
         <!-- layout_width/height doesn't work here, likely because it's
