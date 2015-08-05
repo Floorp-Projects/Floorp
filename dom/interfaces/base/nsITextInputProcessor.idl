@@ -254,7 +254,7 @@ interface nsITextInputProcessorCallback;
  *   TIP.keyup(leftShift);
  */
 
-[scriptable, builtinclass, uuid(6617a9f6-3e16-4086-9e1e-c8a6c5d505c7)]
+[scriptable, builtinclass, uuid(581f6619-76ed-478c-905d-b8e6553a714a)]
 interface nsITextInputProcessor : nsISupports
 {
   /**
@@ -489,6 +489,12 @@ interface nsITextInputProcessor : nsISupports
   // or emulating legacy API behavior.
   const unsigned long KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT         = 0x00000020;
 
+  // These values can be used to do bitwise operation with the return value of
+  // the keydown() method.
+  const unsigned long KEYEVENT_NOT_CONSUMED                        = 0x00000000;
+  const unsigned long KEYDOWN_IS_CONSUMED                          = 0x00000001;
+  const unsigned long KEYPRESS_IS_CONSUMED                         = 0x00000002;
+
   /**
    * keydown() may dispatch a keydown event and some keypress events if
    * preceding keydown event isn't consumed and they are necessary.
@@ -529,13 +535,20 @@ interface nsITextInputProcessor : nsISupports
    *                        each instance and set automatically.
    * @param aKeyFlags       Special flags.  The values can be some of KEY_*
    *                        constants.
-   * @return                true if neither the keydown event or following
-   *                        keypress events is *not* consumed.
-   *                        Otherwise, i.e., preventDefault() is called, false.
+   * @return                KEYEVENT_NOT_CONSUMED, if the keydown event nor
+   *                        the following keypress event(s) are consumed.
+   *                        KEYDOWN_IS_CONSUMED, if the keydown event is
+   *                        consumed. No keypress event will be dispatched in
+   *                        this case.
+   *                        KEYPRESS_IS_CONSUMED, if the keypress event(s) is
+   *                        consumed when dispatched.
+   *                        Note that keypress event is always consumed by
+   *                        native code for the printable keys (indicating the
+   *                        default action has been taken).
    */
   [optional_argc]
-    boolean keydown(in nsIDOMKeyEvent aKeyboardEvent,
-                    [optional] in unsigned long aKeyFlags);
+    unsigned long keydown(in nsIDOMKeyEvent aKeyboardEvent,
+                          [optional] in unsigned long aKeyFlags);
 
   /**
    * Similar to keydown(), but this dispatches only a keyup event.
