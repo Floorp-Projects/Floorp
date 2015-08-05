@@ -485,8 +485,15 @@ BrowserGlue.prototype = {
         this._handleFlashHang();
         break;
       case "xpi-signature-changed":
-        if (JSON.parse(data).disabled.length)
-          this._notifyUnsignedAddonsDisabled();
+        let disabledAddons = JSON.parse(data).disabled;
+        AddonManager.getAddonsByIDs(disabledAddons, (addons) => {
+          for (let addon of addons) {
+            if (addon.type != "experiment") {
+              this._notifyUnsignedAddonsDisabled();
+              break;
+            }
+          }
+        });
         break;
     }
   },
@@ -1087,6 +1094,9 @@ BrowserGlue.prototype = {
     let disabledAddons = AddonManager.getStartupChanges(AddonManager.STARTUP_CHANGE_DISABLED);
     AddonManager.getAddonsByIDs(disabledAddons, (addons) => {
       for (let addon of addons) {
+        if (addon.type == "experiment")
+          continue;
+
         if (addon.signedState <= AddonManager.SIGNEDSTATE_MISSING) {
           this._notifyUnsignedAddonsDisabled();
           break;
