@@ -19,7 +19,7 @@ var iframe = null;
 
 var observer = {
   observe: function(subject, topic, data) {
-    is(topic, "media-playback", "media-playback received");
+    is(topic, "audio-playback", "audio-playback received");
     is(data, expectedNotification, "This is the right notification");
     SimpleTest.executeSoon(runTest);
   }
@@ -39,7 +39,7 @@ var tests = [
   },
 
   function() {
-    observerService.addObserver(observer, "media-playback", false);
+    observerService.addObserver(observer, "audio-playback", false);
     ok(true, "Observer set");
     runTest();
   },
@@ -60,7 +60,7 @@ var tests = [
   },
 
   function() {
-    observerService.removeObserver(observer, "media-playback");
+    observerService.removeObserver(observer, "audio-playback");
     ok(true, "Observer removed");
     runTest();
   }

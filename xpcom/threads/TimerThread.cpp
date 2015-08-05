@@ -393,7 +393,6 @@ struct IntervalComparator
 
 } // namespace
 
-/* void Run(); */
 NS_IMETHODIMP
 TimerThread::Run()
 {
@@ -790,7 +789,6 @@ TimerThread::DoAfterSleep()
 }
 
 
-/* void observe (in nsISupports aSubject, in string aTopic, in wstring aData); */
 NS_IMETHODIMP
 TimerThread::Observe(nsISupports* /* aSubject */, const char* aTopic,
                      const char16_t* /* aData */)

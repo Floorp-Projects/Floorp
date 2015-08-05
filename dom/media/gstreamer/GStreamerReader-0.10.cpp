@@ -162,12 +162,15 @@ void GStreamerReader::CopyIntoImageBuffer(GstBuffer* aBuffer,
 GstCaps* GStreamerReader::BuildAudioSinkCaps()
 {
   GstCaps* caps;
+
 #if MOZ_LITTLE_ENDIAN
   int endianness = 1234;
 #else
   int endianness = 4321;
 #endif
+
   gint width;
+
 #ifdef MOZ_SAMPLE_TYPE_FLOAT32
   caps = gst_caps_from_string("audio/x-raw-float, channels={1,2}");
   width = 32;
@@ -175,10 +178,11 @@ GstCaps* GStreamerReader::BuildAudioSinkCaps()
   caps = gst_caps_from_string("audio/x-raw-int, channels={1,2}");
   width = 16;
 #endif
+
   gst_caps_set_simple(caps,
       "width", G_TYPE_INT, width,
       "endianness", G_TYPE_INT, endianness,
-      NULL);
+      nullptr);
 
   return caps;
 }

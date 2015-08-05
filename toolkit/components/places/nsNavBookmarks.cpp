@@ -2536,7 +2536,7 @@ nsNavBookmarks::GetObservers(uint32_t* _count,
 
   // Then add the other observers.
   for (uint32_t i = 0; i < mObservers.Length(); ++i) {
-    const nsCOMPtr<nsINavBookmarkObserver> &observer = mObservers.ElementAt(i);
+    const nsCOMPtr<nsINavBookmarkObserver> &observer = mObservers.ElementAt(i).GetValue();
     // Skip nullified weak observers.
     if (observer)
       observers.AppendElement(observer);

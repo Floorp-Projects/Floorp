@@ -214,7 +214,6 @@ SVGDocumentWrapper::OnDataAvailable(nsIRequest* aRequest, nsISupports* ctxt,
 
 /** nsIRequestObserver methods **/
 
-/* void onStartRequest (in nsIRequest request, in nsISupports ctxt); */
 NS_IMETHODIMP
 SVGDocumentWrapper::OnStartRequest(nsIRequest* aRequest, nsISupports* ctxt)
 {

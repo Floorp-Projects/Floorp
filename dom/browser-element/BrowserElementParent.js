@@ -205,7 +205,7 @@ BrowserElementParent.prototype = {
     };
 
     let mmSecuritySensitiveCalls = {
-      "mediaplaybackchange": this._fireEventFromMsg,
+      "audioplaybackchange": this._fireEventFromMsg,
       "showmodalprompt": this._handleShowModalPrompt,
       "contextmenu": this._fireCtxMenuEvent,
       "securitychange": this._fireEventFromMsg,

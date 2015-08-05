@@ -1840,7 +1840,6 @@ nsXULTreeBuilder::SortSubtree(nsTreeRows::Subtree* aSubtree)
 }
 
 
-/* boolean canDrop (in long index, in long orientation); */
 NS_IMETHODIMP
 nsXULTreeBuilder::CanDrop(int32_t index, int32_t orientation,
                           nsIDOMDataTransfer* dataTransfer, bool *_retval)

@@ -1316,7 +1316,6 @@ void imgLoader::ReadAcceptHeaderPref()
   }
 }
 
-/* void clearCache (in boolean chrome); */
 NS_IMETHODIMP
 imgLoader::ClearCache(bool chrome)
 {
@@ -1327,7 +1326,6 @@ imgLoader::ClearCache(bool chrome)
   }
 }
 
-/* void removeEntry(in nsIURI uri); */
 NS_IMETHODIMP
 imgLoader::RemoveEntry(nsIURI* aURI)
 {
@@ -1338,7 +1336,6 @@ imgLoader::RemoveEntry(nsIURI* aURI)
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-/* imgIRequest findEntry(in nsIURI uri); */
 NS_IMETHODIMP
 imgLoader::FindEntryProperties(nsIURI* uri, nsIProperties** _retval)
 {
@@ -2579,7 +2576,6 @@ ProxyListener::~ProxyListener()
 
 /** nsIRequestObserver methods **/
 
-/* void onStartRequest (in nsIRequest request, in nsISupports ctxt); */
 NS_IMETHODIMP
 ProxyListener::OnStartRequest(nsIRequest* aRequest, nsISupports* ctxt)
 {
@@ -2726,7 +2722,6 @@ imgCacheValidator::AddProxy(imgRequestProxy* aProxy)
 
 /** nsIRequestObserver methods **/
 
-/* void onStartRequest (in nsIRequest request, in nsISupports ctxt); */
 NS_IMETHODIMP
 imgCacheValidator::OnStartRequest(nsIRequest* aRequest, nsISupports* ctxt)
 {

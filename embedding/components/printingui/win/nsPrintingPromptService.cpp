@@ -157,7 +157,6 @@ nsPrintingPromptService::ShowPrintDialog(nsIDOMWindow *parent, nsIWebBrowserPrin
 }
 
 
-/* void showProgress (in nsIDOMWindow parent, in nsIWebBrowserPrint webBrowserPrint, in nsIPrintSettings printSettings, in nsIObserver openDialogObserver, in boolean isForPrinting, out nsIWebProgressListener webProgressListener, out nsIPrintProgressParams printProgressParams, out boolean notifyOnOpen); */
 NS_IMETHODIMP 
 nsPrintingPromptService::ShowProgress(nsIDOMWindow*            parent, 
                                       nsIWebBrowserPrint*      webBrowserPrint,    // ok to be null
@@ -203,7 +202,6 @@ nsPrintingPromptService::ShowProgress(nsIDOMWindow*            parent,
     return NS_OK;
 }
 
-/* void showPageSetup (in nsIDOMWindow parent, in nsIPrintSettings printSettings); */
 NS_IMETHODIMP 
 nsPrintingPromptService::ShowPageSetup(nsIDOMWindow *parent, nsIPrintSettings *printSettings, nsIObserver *aObs)
 {
@@ -229,7 +227,6 @@ nsPrintingPromptService::ShowPageSetup(nsIDOMWindow *parent, nsIPrintSettings *p
     return rv;
 }
 
-/* void showPrinterProperties (in nsIDOMWindow parent, in wstring printerName, in nsIPrintSettings printSettings); */
 NS_IMETHODIMP 
 nsPrintingPromptService::ShowPrinterProperties(nsIDOMWindow *parent, const char16_t *printerName, nsIPrintSettings *printSettings)
 {
@@ -293,7 +290,6 @@ nsPrintingPromptService::DoDialog(nsIDOMWindow *aParent,
 // nsIWebProgressListener
 //////////////////////////////////////////////////////////////////////
 
-/* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aStateFlags, in nsresult aStatus); */
 NS_IMETHODIMP 
 nsPrintingPromptService::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, uint32_t aStateFlags, nsresult aStatus)
 {
@@ -310,7 +306,6 @@ nsPrintingPromptService::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest 
     return NS_OK;
 }
 
-/* void onProgressChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aCurSelfProgress, in long aMaxSelfProgress, in long aCurTotalProgress, in long aMaxTotalProgress); */
 NS_IMETHODIMP 
 nsPrintingPromptService::OnProgressChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, int32_t aCurSelfProgress, int32_t aMaxSelfProgress, int32_t aCurTotalProgress, int32_t aMaxTotalProgress)
 {
@@ -321,7 +316,6 @@ nsPrintingPromptService::OnProgressChange(nsIWebProgress *aWebProgress, nsIReque
   return NS_ERROR_FAILURE;
 }
 
-/* void onLocationChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsIURI location, in unsigned long aFlags); */
 NS_IMETHODIMP 
 nsPrintingPromptService::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsIURI *location, uint32_t aFlags)
 {
@@ -332,7 +326,6 @@ nsPrintingPromptService::OnLocationChange(nsIWebProgress *aWebProgress, nsIReque
   return NS_ERROR_FAILURE;
 }
 
-/* void onStatusChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsresult aStatus, in wstring aMessage); */
 NS_IMETHODIMP 
 nsPrintingPromptService::OnStatusChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsresult aStatus, const char16_t *aMessage)
 {
@@ -343,7 +336,6 @@ nsPrintingPromptService::OnStatusChange(nsIWebProgress *aWebProgress, nsIRequest
   return NS_ERROR_FAILURE;
 }
 
-/* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in unsigned long state); */
 NS_IMETHODIMP 
 nsPrintingPromptService::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, uint32_t state)
 {
