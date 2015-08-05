@@ -157,6 +157,7 @@ int nr_ice_ctx_create(char *label, UINT4 flags, nr_ice_ctx **ctxp);
 #define NR_ICE_CTX_FLAGS_ANSWERER                          (1<<1)
 #define NR_ICE_CTX_FLAGS_AGGRESSIVE_NOMINATION             (1<<2)
 #define NR_ICE_CTX_FLAGS_LITE                              (1<<3)
+#define NR_ICE_CTX_FLAGS_RELAY_ONLY                        (1<<4)
 
 int nr_ice_ctx_destroy(nr_ice_ctx **ctxp);
 int nr_ice_gather(nr_ice_ctx *ctx, NR_async_cb done_cb, void *cb_arg);

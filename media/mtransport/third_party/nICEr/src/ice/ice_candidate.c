@@ -134,6 +134,7 @@ static int nr_ice_candidate_format_stun_label(char *label, size_t size, nr_ice_c
 
 int nr_ice_candidate_create(nr_ice_ctx *ctx,nr_ice_component *comp,nr_ice_socket *isock, nr_socket *osock, nr_ice_candidate_type ctype, nr_socket_tcp_type tcp_type, nr_ice_stun_server *stun_server, UCHAR component_id, nr_ice_candidate **candp)
   {
+    assert(!(ctx->flags & NR_ICE_CTX_FLAGS_RELAY_ONLY) || ctype == RELAYED);
     nr_ice_candidate *cand=0;
     nr_ice_candidate *tmp=0;
     int r,_status;
@@ -921,6 +922,7 @@ int nr_ice_format_candidate_attribute(nr_ice_candidate *cand, char *attr, int ma
     char addr[64];
     int port;
     int len;
+    nr_transport_addr *raddr;
 
     assert(!strcmp(nr_ice_candidate_type_names[HOST], "host"));
     assert(!strcmp(nr_ice_candidate_type_names[RELAYED], "relay"));
@@ -939,23 +941,26 @@ int nr_ice_format_candidate_attribute(nr_ice_candidate *cand, char *attr, int ma
     len=strlen(attr); attr+=len; maxlen-=len;
 
     /* raddr, rport */
+    raddr = (cand->stream->ctx->flags & NR_ICE_CTX_FLAGS_RELAY_ONLY) ?
+      &cand->addr : &cand->base;
+
     switch(cand->type){
       case HOST:
         break;
       case SERVER_REFLEXIVE:
       case PEER_REFLEXIVE:
-        if(r=nr_transport_addr_get_addrstring(&cand->base,addr,sizeof(addr)))
+        if(r=nr_transport_addr_get_addrstring(raddr,addr,sizeof(addr)))
           ABORT(r);
-        if(r=nr_transport_addr_get_port(&cand->base,&port))
+        if(r=nr_transport_addr_get_port(raddr,&port))
           ABORT(r);
 
         snprintf(attr,maxlen," raddr %s rport %d",addr,port);
         break;
       case RELAYED:
         // comes from XorMappedAddress via AllocateResponse
-        if(r=nr_transport_addr_get_addrstring(&cand->base,addr,sizeof(addr)))
+        if(r=nr_transport_addr_get_addrstring(raddr,addr,sizeof(addr)))
           ABORT(r);
-        if(r=nr_transport_addr_get_port(&cand->base,&port))
+        if(r=nr_transport_addr_get_port(raddr,&port))
           ABORT(r);
 
         snprintf(attr,maxlen," raddr %s rport %d",addr,port);
