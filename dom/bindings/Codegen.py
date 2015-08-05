@@ -12806,7 +12806,7 @@ class CGBindingRoot(CGThing):
         hasCode = (descriptors or callbackDescriptors or dictionaries or
                    mainCallbacks or workerCallbacks)
         bindingHeaders["mozilla/dom/BindingUtils.h"] = hasCode
-        bindingHeaders["mozilla/dom/OwningNonNull.h"] = hasCode
+        bindingHeaders["mozilla/OwningNonNull.h"] = hasCode
         bindingHeaders["mozilla/dom/BindingDeclarations.h"] = (
             not hasCode and enums)
 
@@ -15550,7 +15550,7 @@ class GlobalGenRoots():
                         [CGUnionStruct(t, config.getDescriptorProvider(False), True) for t in unionStructs],
                         "\n")
 
-        includes.add("mozilla/dom/OwningNonNull.h")
+        includes.add("mozilla/OwningNonNull.h")
         includes.add("mozilla/dom/UnionMember.h")
         includes.add("mozilla/dom/BindingDeclarations.h")
         # Need BindingUtils.h for FakeString

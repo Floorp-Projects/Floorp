@@ -72,6 +72,7 @@ public:
   void Destroy();
   virtual void ActorDestroy(ActorDestroyReason aWhy) override
   {
+    CheckDocTree();
     if (!mShutdown)
       Destroy();
   }

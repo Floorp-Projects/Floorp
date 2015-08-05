@@ -149,6 +149,10 @@ DataCallManager.prototype = {
     dump("-*- DataCallManager: " + aMsg + "\n");
   },
 
+  get dataDefaultServiceId() {
+    return this._dataDefaultClientId;
+  },
+
   getDataCallHandler: function(aClientId) {
     let handler = this._connectionHandlers[aClientId]
     if (!handler) {
