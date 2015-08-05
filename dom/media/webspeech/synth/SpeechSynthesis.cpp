@@ -274,12 +274,14 @@ SpeechSynthesis::GetVoices(nsTArray< nsRefPtr<SpeechSynthesisVoice> >& aResult)
   }
 }
 
-// For testing purposes, allows us to drop anything in the global queue from
-// content, and bring the browser to initial state.
+// For testing purposes, allows us to cancel the current task that is
+// misbehaving, and flush the queue.
 void
-SpeechSynthesis::DropGlobalQueue()
+SpeechSynthesis::ForceEnd()
 {
-  nsSynthVoiceRegistry::GetInstance()->DropGlobalQueue();
+  if (mCurrentTask) {
+    mCurrentTask->ForceEnd();
+  }
 }
 
 } // namespace dom
