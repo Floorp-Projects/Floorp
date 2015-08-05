@@ -1021,21 +1021,91 @@ add_task(function* test_edit_keyword() {
   bm_info.guid = yield PT.NewBookmark(bm_info).transact();
 
   observer.reset();
-  yield PT.EditKeyword({ guid: bm_info.guid, keyword: KEYWORD }).transact();
+  yield PT.EditKeyword({ guid: bm_info.guid, keyword: KEYWORD, postData: "postData" }).transact();
   ensureKeywordChange(KEYWORD);
+  let entry = yield PlacesUtils.keywords.fetch(KEYWORD);
+  Assert.equal(entry.url.href, bm_info.url.spec);
+  Assert.equal(entry.postData, "postData");
 
   observer.reset();
   yield PT.undo();
   ensureKeywordChange();
+  entry = yield PlacesUtils.keywords.fetch(KEYWORD);
+  Assert.equal(entry, null);
 
   observer.reset();
   yield PT.redo();
   ensureKeywordChange(KEYWORD);
+  entry = yield PlacesUtils.keywords.fetch(KEYWORD);
+  Assert.equal(entry.url.href, bm_info.url.spec);
+  Assert.equal(entry.postData, "postData");
 
   // Cleanup
   observer.reset();
   yield PT.undo();
   ensureKeywordChange();
+  yield PT.undo();
+  ensureItemsRemoved(bm_info);
+
+  yield PT.clearTransactionsHistory();
+  ensureUndoState();
+});
+
+add_task(function* test_edit_specific_keyword() {
+  let bm_info = { parentGuid: rootGuid
+                , url: NetUtil.newURI("http://test.edit.keyword") };
+  bm_info.guid = yield PT.NewBookmark(bm_info).transact();
+  function ensureKeywordChange(aCurrentKeyword = "", aPreviousKeyword = "") {
+    ensureItemsChanged({ guid: bm_info.guid
+                       , property: "keyword"
+                       , newValue: aCurrentKeyword
+                       });
+  }
+
+  yield PlacesUtils.keywords.insert({ keyword: "kw1", url: bm_info.url.spec, postData: "postData1" });
+  yield PlacesUtils.keywords.insert({ keyword: "kw2", url: bm_info.url.spec, postData: "postData2" });
+  bm_info.guid = yield PT.NewBookmark(bm_info).transact();
+
+  observer.reset();
+  yield PT.EditKeyword({ guid: bm_info.guid, keyword: "keyword", oldKeyword: "kw2" }).transact();
+  ensureKeywordChange("keyword", "kw2");
+  let entry = yield PlacesUtils.keywords.fetch("kw1");
+  Assert.equal(entry.url.href, bm_info.url.spec);
+  Assert.equal(entry.postData, "postData1");
+  entry = yield PlacesUtils.keywords.fetch("keyword");
+  Assert.equal(entry.url.href, bm_info.url.spec);
+  Assert.equal(entry.postData, "postData2");
+  entry = yield PlacesUtils.keywords.fetch("kw2");
+  Assert.equal(entry, null);
+
+  observer.reset();
+  yield PT.undo();
+  ensureKeywordChange("kw2", "keyword");
+  entry = yield PlacesUtils.keywords.fetch("kw1");
+  Assert.equal(entry.url.href, bm_info.url.spec);
+  Assert.equal(entry.postData, "postData1");
+  entry = yield PlacesUtils.keywords.fetch("kw2");
+  Assert.equal(entry.url.href, bm_info.url.spec);
+  Assert.equal(entry.postData, "postData2");
+  entry = yield PlacesUtils.keywords.fetch("keyword");
+  Assert.equal(entry, null);
+
+  observer.reset();
+  yield PT.redo();
+  ensureKeywordChange("keyword", "kw2");
+  entry = yield PlacesUtils.keywords.fetch("kw1");
+  Assert.equal(entry.url.href, bm_info.url.spec);
+  Assert.equal(entry.postData, "postData1");
+  entry = yield PlacesUtils.keywords.fetch("keyword");
+  Assert.equal(entry.url.href, bm_info.url.spec);
+  Assert.equal(entry.postData, "postData2");
+  entry = yield PlacesUtils.keywords.fetch("kw2");
+  Assert.equal(entry, null);
+
+  // Cleanup
+  observer.reset();
+  yield PT.undo();
+  ensureKeywordChange("kw2");
   yield PT.undo();
   ensureItemsRemoved(bm_info);
 
