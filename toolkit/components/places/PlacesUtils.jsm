@@ -1864,7 +1864,8 @@ this.PlacesUtils = {
     }.bind(this);
 
     const QUERY_STR =
-      `WITH RECURSIVE
+      `/* do not warn (bug no): cannot use an index */
+       WITH RECURSIVE
        descendants(fk, level, type, id, guid, parent, parentGuid, position,
                    title, dateAdded, lastModified) AS (
          SELECT b1.fk, 0, b1.type, b1.id, b1.guid, b1.parent,
@@ -2349,29 +2350,49 @@ XPCOMUtils.defineLazyGetter(this, "gKeywordsCachePromise", () =>
           }).catch(Cu.reportError);
         },
 
-        onItemChanged(id, prop, isAnno, val, lastMod, itemType, parentId, guid) {
-          if (gIgnoreKeywordNotifications ||
-              prop != "keyword")
+        onItemChanged(id, prop, isAnno, val, lastMod, itemType, parentId, guid,
+                      parentGuid, oldVal) {
+          if (gIgnoreKeywordNotifications)
+            return;
+          if (prop == "keyword") {
+            this._onKeywordChanged(guid, val).catch(Cu.reportError);
+          } else if (prop == "uri") {
+            this._onUrlChanged(guid, val, oldVal).catch(Cu.reportError);
+          }
+        },
+
+        _onKeywordChanged: Task.async(function* (guid, keyword) {
+          let bookmark = yield PlacesUtils.bookmarks.fetch(guid);
+          // By this time the bookmark could be gone, there's nothing we can do.
+          if (!bookmark)
             return;
 
-          Task.spawn(function* () {
-            let bookmark = yield PlacesUtils.bookmarks.fetch(guid);
-            // By this time the bookmark could have gone, there's nothing we can do.
-            if (!bookmark)
-              return;
-
-            if (val.length == 0) {
-              // We are removing a keyword.
-              let keywords = keywordsForHref(bookmark.url.href)
-              for (let keyword of keywords) {
-                cache.delete(keyword);
-              }
-            } else {
-              // We are adding a new keyword.
-              cache.set(val, { keyword: val, url: bookmark.url });
+          if (keyword.length == 0) {
+            // We are removing a keyword.
+            let keywords = keywordsForHref(bookmark.url.href)
+            for (let kw of keywords) {
+              cache.delete(kw);
             }
-          }).catch(Cu.reportError);
-        }
+          } else {
+            // We are adding a new keyword.
+            cache.set(keyword, { keyword, url: bookmark.url });
+          }
+        }),
+
+        _onUrlChanged: Task.async(function* (guid, url, oldUrl) {
+          // Check if the old url is associated with keywords.
+          let entries = [];
+          yield PlacesUtils.keywords.fetch({ url: oldUrl }, e => entries.push(e));
+          if (entries.length == 0)
+            return;
+
+          // Move the keywords to the new url.
+          for (let entry of entries) {
+            yield PlacesUtils.keywords.remove(entry.keyword);
+            entry.url = new URL(url);
+            yield PlacesUtils.keywords.insert(entry);
+          }
+        }),
       };
 
       PlacesUtils.bookmarks.addObserver(observer, false);
@@ -3388,14 +3409,18 @@ PlacesSetPageAnnotationTransaction.prototype = {
  *        new keyword for the bookmark
  * @param aNewPostData [optional]
  *        new keyword's POST data, if available
+ * @param aOldKeyword [optional]
+ *        old keyword of the bookmark
  *
  * @return nsITransaction object
  */
 this.PlacesEditBookmarkKeywordTransaction =
- function PlacesEditBookmarkKeywordTransaction(aItemId, aNewKeyword, aNewPostData)
-{
+  function PlacesEditBookmarkKeywordTransaction(aItemId, aNewKeyword,
+                                                aNewPostData, aOldKeyword) {
   this.item = new TransactionItemCache();
   this.item.id = aItemId;
+  this.item.keyword = aOldKeyword;
+  this.item.href = (PlacesUtils.bookmarks.getBookmarkURI(aItemId)).spec;
   this.new = new TransactionItemCache();
   this.new.keyword = aNewKeyword;
   this.new.postData = aNewPostData
@@ -3406,22 +3431,51 @@ PlacesEditBookmarkKeywordTransaction.prototype = {
 
   doTransaction: function EBKTXN_doTransaction()
   {
-    // Store the current values.
-    this.item.keyword = PlacesUtils.bookmarks.getKeywordForBookmark(this.item.id);
-    if (this.item.keyword)
-      this.item.postData = PlacesUtils.getPostDataForBookmark(this.item.id);
+    let done = false;
+    Task.spawn(function* () {
+      if (this.item.keyword) {
+        let oldEntry = yield PlacesUtils.keywords.fetch(this.item.keyword);
+        this.item.postData = oldEntry.postData;
+        yield PlacesUtils.keywords.remove(this.item.keyword);
+      }
 
-    // Update the keyword.
-    PlacesUtils.bookmarks.setKeywordForBookmark(this.item.id, this.new.keyword);
-    if (this.new.keyword && this.new.postData)
-      PlacesUtils.setPostDataForBookmark(this.item.id, this.new.postData);
+      yield PlacesUtils.keywords.insert({
+        url: this.item.href,
+        keyword: this.new.keyword,
+        postData: this.new.postData || this.item.postData
+      });
+    }.bind(this)).catch(Cu.reportError)
+                 .then(() => done = true);
+    // TODO: This hack is needed until we can use PlacesTransactions.jsm.
+    let thread = Services.tm.currentThread;
+    while (!done) {
+      thread.processNextEvent(true);
+    }
   },
 
   undoTransaction: function EBKTXN_undoTransaction()
   {
-    PlacesUtils.bookmarks.setKeywordForBookmark(this.item.id, this.item.keyword);
-    if (this.item.postData)
-      PlacesUtils.setPostDataForBookmark(this.item.id, this.item.postData);
+
+    let done = false;
+    Task.spawn(function* () {
+      if (this.new.keyword) {
+        yield PlacesUtils.keywords.remove(this.new.keyword);
+      }
+
+      if (this.item.keyword) {
+        yield PlacesUtils.keywords.insert({
+          url: this.item.href,
+          keyword: this.item.keyword,
+          postData: this.item.postData
+        });
+      }
+    }.bind(this)).catch(Cu.reportError)
+                 .then(() => done = true);
+    // TODO: This hack is needed until we can use PlacesTransactions.jsm.
+    let thread = Services.tm.currentThread;
+    while (!done) {
+      thread.processNextEvent(true);
+    }
   }
 };
 
