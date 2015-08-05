@@ -509,7 +509,7 @@ WebGLFramebuffer::GetAttachPoint(FBAttachment attachPoint)
 
     if (attachPoint >= LOCAL_GL_COLOR_ATTACHMENT1) {
         size_t colorAttachmentId = attachPoint.get() - LOCAL_GL_COLOR_ATTACHMENT0;
-        if (colorAttachmentId < WebGLContext::kMaxColorAttachments) {
+        if (colorAttachmentId < (size_t)mContext->mGLMaxColorAttachments) {
             EnsureColorAttachPoints(colorAttachmentId);
             return mMoreColorAttachments[colorAttachmentId - 1];
         }
@@ -832,17 +832,19 @@ WebGLFramebuffer::CheckAndInitializeAttachments()
 
 void WebGLFramebuffer::EnsureColorAttachPoints(size_t colorAttachmentId)
 {
-    MOZ_ASSERT(colorAttachmentId < WebGLContext::kMaxColorAttachments);
+    size_t maxColorAttachments = mContext->mGLMaxColorAttachments;
+
+    MOZ_ASSERT(colorAttachmentId < maxColorAttachments);
 
     if (colorAttachmentId < ColorAttachmentCount())
         return;
 
-    while (ColorAttachmentCount() < WebGLContext::kMaxColorAttachments) {
+    while (ColorAttachmentCount() < maxColorAttachments) {
         GLenum nextAttachPoint = LOCAL_GL_COLOR_ATTACHMENT0 + ColorAttachmentCount();
         mMoreColorAttachments.AppendElement(WebGLFBAttachPoint(this, nextAttachPoint));
     }
 
-    MOZ_ASSERT(ColorAttachmentCount() == WebGLContext::kMaxColorAttachments);
+    MOZ_ASSERT(ColorAttachmentCount() == maxColorAttachments);
 }
 
 static void
