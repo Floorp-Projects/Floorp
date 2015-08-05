@@ -111,6 +111,7 @@ public class ThemedImageView extends android.widget.ImageView
         if (mIsPrivate != isPrivate) {
             mIsPrivate = isPrivate;
             refreshDrawableState();
+            invalidate();
         }
     }
 
@@ -127,6 +128,7 @@ public class ThemedImageView extends android.widget.ImageView
             }
 
             refreshDrawableState();
+            invalidate();
         }
     }
 
@@ -135,6 +137,7 @@ public class ThemedImageView extends android.widget.ImageView
             mIsLight = false;
             mIsDark = false;
             refreshDrawableState();
+            invalidate();
         }
     }
 

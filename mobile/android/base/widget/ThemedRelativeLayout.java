@@ -111,6 +111,7 @@ public class ThemedRelativeLayout extends android.widget.RelativeLayout
         if (mIsPrivate != isPrivate) {
             mIsPrivate = isPrivate;
             refreshDrawableState();
+            invalidate();
         }
     }
 
@@ -127,6 +128,7 @@ public class ThemedRelativeLayout extends android.widget.RelativeLayout
             }
 
             refreshDrawableState();
+            invalidate();
         }
     }
 
@@ -135,6 +137,7 @@ public class ThemedRelativeLayout extends android.widget.RelativeLayout
             mIsLight = false;
             mIsDark = false;
             refreshDrawableState();
+            invalidate();
         }
     }
 

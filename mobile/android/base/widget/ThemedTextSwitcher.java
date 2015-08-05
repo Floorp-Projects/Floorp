@@ -106,6 +106,7 @@ public class ThemedTextSwitcher extends android.widget.TextSwitcher
         if (mIsPrivate != isPrivate) {
             mIsPrivate = isPrivate;
             refreshDrawableState();
+            invalidate();
         }
     }
 
@@ -122,6 +123,7 @@ public class ThemedTextSwitcher extends android.widget.TextSwitcher
             }
 
             refreshDrawableState();
+            invalidate();
         }
     }
 
@@ -130,6 +132,7 @@ public class ThemedTextSwitcher extends android.widget.TextSwitcher
             mIsLight = false;
             mIsDark = false;
             refreshDrawableState();
+            invalidate();
         }
     }
 
