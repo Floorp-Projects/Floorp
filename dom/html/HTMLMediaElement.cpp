@@ -3095,7 +3095,11 @@ void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream)
   GetSrcMediaStream()->AddAudioOutput(this);
   SetVolumeInternal();
 
+#ifdef MOZ_WIDGET_GONK
   bool bUseOverlayImage = mSrcStream->AsDOMHwMediaStream() != nullptr;
+#else
+  bool bUseOverlayImage = false;
+#endif
   VideoFrameContainer* container;
 
   if (bUseOverlayImage) {
