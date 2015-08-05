@@ -83,7 +83,6 @@
 
 #ifdef MOZ_WIDGET_ANDROID
 #include "TexturePoolOGL.h"
-#include "AndroidBridge.h"
 #endif
 
 #ifdef MOZ_WIDGET_GONK
@@ -580,18 +579,6 @@ gfxPlatform::Init()
     if (XRE_IsParentProcess() && gfxPrefs::HardwareVsyncEnabled()) {
       gPlatform->mVsyncSource = gPlatform->CreateHardwareVsyncSource();
     }
-
-    // The API for attach/detach only exists on 16+, and PowerVR has some sort of
-    // fencing issue. Additionally, attach/detach seems to be busted on at least some
-    // Mali adapters (400MP2 for sure, bug 1131793)
-#ifdef MOZ_WIDGET_ANDROID
-    nsString vendorID;
-    gfxInfo->GetAdapterVendorID(vendorID);
-    gPlatform->mCanDetachSurfaceTexture = AndroidBridge::Bridge()->GetAPIVersion() >= 16 &&
-      !vendorID.EqualsLiteral("Imagination") &&
-      !vendorID.EqualsLiteral("ARM") &&
-      Preferences::GetBool("gfx.SurfaceTexture.detach.enabled", true);
-#endif
 }
 
 static bool sLayersIPCIsUp = false;
