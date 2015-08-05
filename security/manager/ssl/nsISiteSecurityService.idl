@@ -23,12 +23,27 @@ namespace mozilla
 [ref] native nsCStringTArrayRef(nsTArray<nsCString>);
 [ref] native mozillaPkixTime(mozilla::pkix::Time);
 
-[scriptable, uuid(e219eace-0e04-42ba-b203-58a8b327867c)]
+[scriptable, uuid(e6cac961-9f03-4cc3-ad00-a829ae7304dc)]
 interface nsISiteSecurityService : nsISupports
 {
     const uint32_t HEADER_HSTS = 0;
     const uint32_t HEADER_HPKP = 1;
     const uint32_t HEADER_OMS = 2;
+
+    const uint32_t Success = 0;
+    const uint32_t ERROR_UNKNOWN = 1;
+    const uint32_t ERROR_UNTRUSTWORTHY_CONNECTION = 2;
+    const uint32_t ERROR_COULD_NOT_PARSE_HEADER = 3;
+    const uint32_t ERROR_NO_MAX_AGE = 4;
+    const uint32_t ERROR_MULTIPLE_MAX_AGES = 5;
+    const uint32_t ERROR_INVALID_MAX_AGE = 6;
+    const uint32_t ERROR_MULTIPLE_INCLUDE_SUBDOMAINS = 7;
+    const uint32_t ERROR_INVALID_INCLUDE_SUBDOMAINS = 8;
+    const uint32_t ERROR_INVALID_PIN = 9;
+    const uint32_t ERROR_MULTIPLE_REPORT_URIS = 10;
+    const uint32_t ERROR_PINSET_DOES_NOT_MATCH_CHAIN = 11;
+    const uint32_t ERROR_NO_BACKUP_PIN = 12;
+    const uint32_t ERROR_COULD_NOT_SAVE_STATE = 13;
 
     /**
      * Parses a given HTTP header and records the results internally.
@@ -37,9 +52,9 @@ interface nsISiteSecurityService : nsISupports
      * https://tools.ietf.org/html/rfc6797
      * and allows a host to specify that future HTTP requests should be
      * upgraded to HTTPS.
-     * The Format of the HPKP header is currently defined by:
-     * https://tools.ietf.org/html/draft-ietf-websec-key-pinning-20
-     * and allows a host to speficy a subset of trusted anchors to be used
+     * The format of the HPKP header is defined by the HPKP specification:
+     * https://tools.ietf.org/html/rfc7469
+     * and allows a host to specify a subset of trusted anchors to be used
      * in future HTTPS connections.
      *
      * @param aType the type of security header in question.
@@ -50,6 +65,8 @@ interface nsISiteSecurityService : nsISupports
      *                  NO_PERMANENT_STORAGE
      * @param aMaxAge the parsed max-age directive of the header.
      * @param aIncludeSubdomains the parsed includeSubdomains directive.
+     * @param aFailureResult a more specific failure result if NS_ERROR_FAILURE
+                             was returned.
      * @return NS_OK            if it succeeds
      *         NS_ERROR_FAILURE if it can't be parsed
      *         NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA
@@ -61,7 +78,8 @@ interface nsISiteSecurityService : nsISupports
                        in nsISSLStatus aSSLStatus,
                        in uint32_t aFlags,
                        [optional] out unsigned long long aMaxAge,
-                       [optional] out boolean aIncludeSubdomains);
+                       [optional] out boolean aIncludeSubdomains,
+                       [optional] out uint32_t aFailureResult);
 
     /**
      * Same as processHeader but without checking for the security properties
@@ -72,7 +90,8 @@ interface nsISiteSecurityService : nsISupports
                              in string aHeader,
                              in uint32_t aFlags,
                              [optional] out unsigned long long aMaxAge,
-                             [optional] out boolean aIncludeSubdomains);
+                             [optional] out boolean aIncludeSubdomains,
+                             [optional] out uint32_t aFailureResult);
 
     /**
      * Given a header type, removes state relating to that header of a host,
