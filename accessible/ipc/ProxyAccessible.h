@@ -325,7 +325,7 @@ public:
 protected:
   explicit ProxyAccessible(DocAccessibleParent* aThisAsDoc) :
     mParent(nullptr), mDoc(aThisAsDoc), mWrapper(0), mID(0),
-    mRole(roles::DOCUMENT)
+    mRole(roles::DOCUMENT), mOuterDoc(false)
   { MOZ_COUNT_CTOR(ProxyAccessible); }
 
 protected:
