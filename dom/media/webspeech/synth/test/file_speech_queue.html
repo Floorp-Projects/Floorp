@@ -44,32 +44,39 @@ ok(langUriMap['en-CA'], 'No English-Canadian voice');
 ok(langUriMap['fr-CA'], 'No French-Canadian voice');
 ok(langUriMap['es-MX'], 'No Spanish-Mexican voice');
 
-synthTestQueue(
-  [[{text: "Hello, world."},
-    { uri: langUriMap['en-JM'] }],
-   [{text: "Bonjour tout le monde .", lang: "fr", rate: 0.5, pitch: 0.75},
-    { uri: langUriMap['fr-CA'], rate: 0.5, pitch: 0.75}],
-   [{text: "How are you doing?", lang: "en-GB"},
-    { rate: 1, pitch: 1, uri: langUriMap['en-GB']}],
-   [{text: "¡hasta mañana!", lang: "es-MX"},
-    { uri: langUriMap['es-MX'] }]],
-  function () {
-    var test_data = [];
-    var voices = speechSynthesis.getVoices();
-    for (var voice of voices) {
-      if (voice.voiceURI.indexOf('urn:moz-tts:fake-direct') < 0) {
-        continue;
+function testFunc(done_cb) {
+  synthTestQueue(
+    [[{text: "Hello, world."},
+      { uri: langUriMap['en-JM'] }],
+     [{text: "Bonjour tout le monde .",
+       args: { lang: "fr", rate: 0.5, pitch: 0.75 }},
+      { uri: langUriMap['fr-CA'], rate: 0.5, pitch: 0.75}],
+     [{text: "How are you doing?", args: { lang: "en-GB" } },
+      { rate: 1, pitch: 1, uri: langUriMap['en-GB']}],
+     [{text: "¡hasta mañana!", args: { lang: "es-MX" } },
+      { uri: langUriMap['es-MX'] }]],
+    function () {
+      var test_data = [];
+      var voices = speechSynthesis.getVoices();
+      for (var voice of voices) {
+        if (voice.voiceURI.indexOf('urn:moz-tts:fake-direct') < 0) {
+          continue;
+        }
+        test_data.push([{text: "Hello world", args: { voice: voice} },
+                        {uri: voice.voiceURI}]);
       }
-      test_data.push([{text: "Hello world", voice: voice},
-                      {uri: voice.voiceURI}]);
-    }
 
-    synthTestQueue(test_data,
-                   function () {
-                     SimpleTest.finish();
-                   });
-  });
+      synthTestQueue(test_data, done_cb);
+    });
+}
 
+// Run test with no global queue, and then run it with a global queue.
+testFunc(function() {
+  SpecialPowers.pushPrefEnv(
+    { set: [['media.webspeech.synth.force_global_queue', true]] }, function() {
+      testFunc(SimpleTest.finish)
+    });
+});
 
 
 </script>
