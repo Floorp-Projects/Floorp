@@ -181,10 +181,6 @@ public:
                     const char* getHeaders = nullptr);
 
   nsresult
-  DoURLLoadSecurityCheck(nsNPAPIPluginInstance *aInstance,
-                         const char* aURL);
-
-  nsresult
   AddHeadersToChannel(const char *aHeadersData, uint32_t aHeadersDataLen,
                       nsIChannel *aGenericChannel);
 
