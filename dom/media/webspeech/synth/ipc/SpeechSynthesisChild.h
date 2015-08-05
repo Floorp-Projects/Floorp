@@ -28,8 +28,6 @@ public:
 
   bool RecvSetDefaultVoice(const nsString& aUri, const bool& aIsDefault) override;
 
-  bool RecvIsSpeakingChanged(const bool& aIsSpeaking) override;
-
 protected:
   SpeechSynthesisChild();
   virtual ~SpeechSynthesisChild();
@@ -89,8 +87,6 @@ public:
   virtual void Resume() override;
 
   virtual void Cancel() override;
-
-  virtual void ForceEnd() override;
 
 private:
   SpeechSynthesisRequestChild* mActor;
