@@ -2,13 +2,12 @@ function synthTestQueue(aTestArgs, aEndFunc) {
   var utterances = [];
   for (var i in aTestArgs) {
     var uargs = aTestArgs[i][0];
-    var win = uargs.win || window;
-    var u = new win.SpeechSynthesisUtterance(uargs.text);
+    var u = new SpeechSynthesisUtterance(uargs.text);
 
-    if (uargs.args) {
-      for (var attr in uargs.args)
-        u[attr] = uargs.args[attr];
-    }
+    delete uargs.text;
+
+    for (var attr in uargs)
+      u[attr] = uargs[attr];
 
     function onend_handler(e) {
       is(e.target, utterances.shift(), "Target matches utterances");
@@ -44,27 +43,9 @@ function synthTestQueue(aTestArgs, aEndFunc) {
       });
 
     utterances.push(u);
-    win.speechSynthesis.speak(u);
+    speechSynthesis.speak(u);
   }
 
   ok(!speechSynthesis.speaking, "speechSynthesis is not speaking yet.");
   ok(speechSynthesis.pending, "speechSynthesis has an utterance queued.");
-}
-
-function loadFrame(frameId) {
-  return new Promise(function(resolve, reject) {
-    var frame = document.getElementById(frameId);
-    frame.addEventListener('load', function (e) {
-      frame.contentWindow.document.title = frameId;
-      resolve(frame);
-    });
-    frame1.src = 'data:text/html,' + encodeURI('<html><head></head><body></body></html>');
-  });
-}
-
-function testSynthState(win, expectedState) {
-  for (var attr in expectedState) {
-    is(win.speechSynthesis[attr], expectedState[attr],
-      win.document.title + ": '" + attr + '" does not match');
-  }
 }
