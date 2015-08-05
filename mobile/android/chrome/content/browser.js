@@ -4674,12 +4674,13 @@ Tab.prototype = {
     this.pluginDoorhangerTimeout = null;
     this.shouldShowPluginDoorhanger = true;
     this.clickToPlayPluginsActivated = false;
-    // Borrowed from desktop Firefox: http://mxr.mozilla.org/mozilla-central/source/browser/base/content/urlbarBindings.xml#174
-    let documentURI = contentWin.document.documentURIObject.spec
+
+    let documentURI = contentWin.document.documentURIObject.spec;
 
     // If reader mode, get the base domain for the original url.
     let strippedURI = this._stripAboutReaderURL(documentURI);
 
+    // Borrowed from desktop Firefox: http://hg.mozilla.org/mozilla-central/annotate/72835344333f/browser/base/content/urlbarBindings.xml#l236
     let matchedURL = strippedURI.match(/^((?:[a-z]+:\/\/)?(?:[^\/]+@)?)(.+?)(?::\d+)?(?:\/|$)/);
     let baseDomain = "";
     if (matchedURL) {
@@ -4696,13 +4697,24 @@ Tab.prototype = {
       } catch (e) {}
     }
 
+    // If we are navigating to a new location with a different host,
+    // clear any URL origin that might have been pinned to this tab.
+    let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+    let appOrigin = ss.getTabValue(this, "appOrigin");
+    if (appOrigin) {
+      let originHost = Services.io.newURI(appOrigin, null, null).host;
+      if (originHost != aLocationURI.host) {
+        // Note: going 'back' will not make this tab pinned again
+        ss.deleteTabValue(this, "appOrigin");
+      }
+    }
+
     // Update the page actions URI for helper apps.
     if (BrowserApp.selectedTab == this) {
       ExternalApps.updatePageActionUri(fixedURI);
     }
 
-    let webNav = contentWin.QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIWebNavigation);
+    let webNav = contentWin.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation);
 
     let message = {
       type: "Content:LocationChange",

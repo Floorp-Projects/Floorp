@@ -1072,6 +1072,7 @@ html[dir="rtl"] .room-context-btn-close {
 }
 
 .media-wrapper > .focus-stream {
+  display: flex;
   /* We want this to be the width, minus 200px which is for the right-side text
      chat and video displays. */
   width: calc(100% - 200px);
@@ -1347,21 +1348,10 @@ html[dir="rtl"] .room-context-btn-close {
 }
 
 .standalone .room-conversation-wrapper .room-inner-info-area {
-  position: absolute;
-  /* `top` is chosen to vertically position the area near the center
-     of the media element. */
-  top: calc(50% - 140px);
-  left: 25%;
-  z-index: 1000;
-  /* `width` here is specified by the design spec. */
-  width: 250px;
   color: #fff;
-  box-sizing: content-box;
-}
-
-html[dir="rtl"] .standalone .room-conversation-wrapper .room-inner-info-area {
-  right: 25%;
-  left: auto;
+  margin: auto;
+  /* 290px is the width of the widest info child, i.e., a tile */
+  width: 290px;
 }
 
 .standalone .prompt-media-message {

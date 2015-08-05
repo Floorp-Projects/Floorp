@@ -371,9 +371,8 @@ RecordingModel.prototype = {
       case "allocations": {
         if (!config.withAllocations) { break; }
         let [{ sites, timestamps, frames, counts }] = data;
-        let timeOffset = this._memoryStartTime * 1000;
-        let timeScale = 1000;
-        RecordingUtils.offsetAndScaleTimestamps(timestamps, timeOffset, timeScale);
+        let timeOffset = this._memoryStartTime;
+        RecordingUtils.offsetAndScaleTimestamps(timestamps, timeOffset);
         pushAll(this._allocations.sites, sites);
         pushAll(this._allocations.timestamps, timestamps);
         pushAll(this._allocations.frames, frames);

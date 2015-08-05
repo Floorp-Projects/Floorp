@@ -10,6 +10,7 @@ import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.home.HomePager;
 
 import android.support.v4.view.ViewPager;
+import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
@@ -208,7 +209,7 @@ abstract class AboutHomeTest extends PixelTest {
 
     /**
      * Swipes to an about:home tab.
-     * @param int swipeVector Value and direction to swipe (go left for negative, right for positive).
+     * @param swipeVector swipeVector Value and direction to swipe (go left for negative, right for positive).
      */
     private void swipeAboutHome(int swipeVector) {
         // Increase swipe width, which will especially impact tablets.
@@ -232,8 +233,6 @@ abstract class AboutHomeTest extends PixelTest {
 
     /**
      * This method can be used to open the different tabs of about:home.
-     *
-     * @param AboutHomeTabs enum item
      */
     protected void openAboutHomeTab(AboutHomeTabs tab) {
         focusUrlBar();

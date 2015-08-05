@@ -181,6 +181,20 @@ describe("loop.standaloneRoomViews", function() {
               .not.eql(null);
           });
 
+        it("should display a waiting room message and tile iframe on JOINED",
+          function() {
+            var DUMMY_TILE_URL = "http://tile/";
+            loop.config.tilesIframeUrl = DUMMY_TILE_URL;
+            activeRoomStore.setStoreState({roomState: ROOM_STATES.JOINED});
+
+            expect(view.getDOMNode().querySelector(".room-waiting-area"))
+              .not.eql(null);
+
+            var tile = view.getDOMNode().querySelector(".room-waiting-tile");
+            expect(tile).not.eql(null);
+            expect(tile.src).eql(DUMMY_TILE_URL);
+          });
+
         it("should display an empty room message on SESSION_CONNECTED",
           function() {
             activeRoomStore.setStoreState({roomState: ROOM_STATES.SESSION_CONNECTED});
