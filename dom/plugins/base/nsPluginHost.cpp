@@ -519,11 +519,12 @@ nsresult nsPluginHost::GetURLWithHeaders(nsNPAPIPluginInstance* pluginInst,
   if (!target && !streamListener)
     return NS_ERROR_ILLEGAL_VALUE;
 
-  nsresult rv = DoURLLoadSecurityCheck(pluginInst, url);
-  if (NS_FAILED(rv))
-    return rv;
+  nsresult rv = NS_OK;
 
   if (target) {
+    rv = DoURLLoadSecurityCheck(pluginInst, url);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsRefPtr<nsPluginInstanceOwner> owner = pluginInst->GetOwner();
     if (owner) {
       if ((0 == PL_strcmp(target, "newwindow")) ||
@@ -567,10 +568,6 @@ nsresult nsPluginHost::PostURL(nsISupports* pluginInst,
 
   nsNPAPIPluginInstance* instance = static_cast<nsNPAPIPluginInstance*>(pluginInst);
 
-  rv = DoURLLoadSecurityCheck(instance, url);
-  if (NS_FAILED(rv))
-    return rv;
-
   nsCOMPtr<nsIInputStream> postStream;
   if (isFile) {
     nsCOMPtr<nsIFile> file;
@@ -612,6 +609,9 @@ nsresult nsPluginHost::PostURL(nsISupports* pluginInst,
   }
 
   if (target) {
+    rv = DoURLLoadSecurityCheck(instance, url);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsRefPtr<nsPluginInstanceOwner> owner = instance->GetOwner();
     if (owner) {
       if ((0 == PL_strcmp(target, "newwindow")) ||
@@ -3434,8 +3434,13 @@ nsresult nsPluginHost::NewPluginURLStream(const nsString& aURL,
     absUrl.Assign(aURL);
 
   rv = NS_NewURI(getter_AddRefs(url), absUrl);
-  if (NS_FAILED(rv))
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRefPtr<nsPluginStreamListenerPeer> listenerPeer = new nsPluginStreamListenerPeer();
+  NS_ENSURE_TRUE(listenerPeer, NS_ERROR_OUT_OF_MEMORY);
+
+  rv = listenerPeer->Initialize(url, aInstance, aListener);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMElement> element;
   nsCOMPtr<nsIDocument> doc;
@@ -3443,63 +3448,24 @@ nsresult nsPluginHost::NewPluginURLStream(const nsString& aURL,
     owner->GetDOMElement(getter_AddRefs(element));
     owner->GetDocument(getter_AddRefs(doc));
   }
-  nsCOMPtr<nsIPrincipal> principal = doc ? doc->NodePrincipal() : nullptr;
 
-  int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OBJECT_SUBREQUEST,
-                                 url,
-                                 principal,
-                                 element,
-                                 EmptyCString(), //mime guess
-                                 nullptr,         //extra
-                                 &shouldLoad);
-  if (NS_FAILED(rv))
-    return rv;
-  if (NS_CP_REJECTED(shouldLoad)) {
-    // Disallowed by content policy
-    return NS_ERROR_CONTENT_BLOCKED;
-  }
+  nsCOMPtr<nsINode> requestingNode(do_QueryInterface(element));
+  NS_ENSURE_TRUE(requestingNode, NS_ERROR_FAILURE);
 
-  nsRefPtr<nsPluginStreamListenerPeer> listenerPeer = new nsPluginStreamListenerPeer();
-  if (!listenerPeer)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  rv = listenerPeer->Initialize(url, aInstance, aListener);
-  if (NS_FAILED(rv))
-    return rv;
-
+  nsCOMPtr<nsIChannel> channel;
   // @arg loadgroup:
   // do not add this internal plugin's channel on the
   // load group otherwise this channel could be canceled
   // form |nsDocShell::OnLinkClickSync| bug 166613
-  nsCOMPtr<nsIChannel> channel;
-  nsCOMPtr<nsINode> requestingNode(do_QueryInterface(element));
-  if (requestingNode) {
-    rv = NS_NewChannel(getter_AddRefs(channel),
-                       url,
-                       requestingNode,
-                       nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
-                       nsIContentPolicy::TYPE_OBJECT_SUBREQUEST,
-                       nullptr,  // aLoadGroup
-                       listenerPeer);
-  }
-  else {
-    // in this else branch we really don't know where the load is coming
-    // from and in fact should use something better than just using
-    // a nullPrincipal as the loadingPrincipal.
-    principal = nsNullPrincipal::Create();
-    NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
-    rv = NS_NewChannel(getter_AddRefs(channel),
-                       url,
-                       principal,
-                       nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
-                       nsIContentPolicy::TYPE_OBJECT_SUBREQUEST,
-                       nullptr,  // aLoadGroup
-                       listenerPeer);
-  }
-
-  if (NS_FAILED(rv))
-    return rv;
+  rv = NS_NewChannel(getter_AddRefs(channel),
+                     url,
+                     requestingNode,
+                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
+                     nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
+                     nsIContentPolicy::TYPE_OBJECT_SUBREQUEST,
+                     nullptr,  // aLoadGroup
+                     listenerPeer);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (doc) {
     // And if it's a script allow it to execute against the
@@ -3559,7 +3525,7 @@ nsresult nsPluginHost::NewPluginURLStream(const nsString& aURL,
       NS_ENSURE_SUCCESS(rv,rv);
     }
   }
-  rv = channel->AsyncOpen(listenerPeer, nullptr);
+  rv = channel->AsyncOpen2(listenerPeer);
   if (NS_SUCCEEDED(rv))
     listenerPeer->TrackRequest(channel);
   return rv;
