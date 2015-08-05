@@ -139,8 +139,6 @@ private:
     // True if this channel should skip any interception checks.
     bool                            mForceNoIntercept;
 
-    // True if this channel should not download any remote files.
-    bool                            mBlockRemoteFiles;
     friend class mozilla::net::InterceptedJARChannel;
 };
 
