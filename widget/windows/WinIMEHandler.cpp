@@ -13,8 +13,19 @@
 #include "TSFTextStore.h"
 #endif // #ifdef NS_ENABLE_TSF
 
+#include "nsLookAndFeel.h"
 #include "nsWindow.h"
 #include "WinUtils.h"
+
+#include "shellapi.h"
+#include "Shlobj.h"
+#include "PowrProf.h"
+#include "Setupapi.h"
+#include "cfgmgr32.h"
+
+const char* kOskPathPrefName = "ui.osk.on_screen_keyboard_path";
+const char* kOskEnabled = "ui.osk.enabled";
+const char* kOskDetectPhysicalKeyboard = "ui.osk.detect_physical_keyboard";
 
 namespace mozilla {
 namespace widget {
@@ -27,6 +38,7 @@ namespace widget {
 bool IMEHandler::sIsInTSFMode = false;
 bool IMEHandler::sIsIMMEnabled = true;
 bool IMEHandler::sPluginHasFocus = false;
+bool IMEHandler::sShowingOnScreenKeyboard = false;
 decltype(SetInputScopes)* IMEHandler::sSetInputScopes = nullptr;
 #endif // #ifdef NS_ENABLE_TSF
 
@@ -197,11 +209,16 @@ IMEHandler::NotifyIME(nsWindow* aWindow,
         return NS_OK;
       case NOTIFY_IME_OF_TEXT_CHANGE:
         return TSFTextStore::OnTextChange(aIMENotification);
-      case NOTIFY_IME_OF_FOCUS:
+      case NOTIFY_IME_OF_FOCUS: {
         IMMHandler::OnFocusChange(true, aWindow);
-        return TSFTextStore::OnFocusChange(true, aWindow,
-                                           aWindow->GetInputContext());
+        nsresult rv =
+          TSFTextStore::OnFocusChange(true, aWindow,
+                                      aWindow->GetInputContext());
+        IMEHandler::MaybeShowOnScreenKeyboard();
+        return rv;
+      }
       case NOTIFY_IME_OF_BLUR:
+        IMEHandler::MaybeDismissOnScreenKeyboard();
         IMMHandler::OnFocusChange(false, aWindow);
         return TSFTextStore::OnFocusChange(false, aWindow,
                                            aWindow->GetInputContext());
@@ -251,8 +268,10 @@ IMEHandler::NotifyIME(nsWindow* aWindow,
       return IMMHandler::OnMouseButtonEvent(aWindow, aIMENotification);
     case NOTIFY_IME_OF_FOCUS:
       IMMHandler::OnFocusChange(true, aWindow);
+      IMEHandler::MaybeShowOnScreenKeyboard();
       return NS_OK;
     case NOTIFY_IME_OF_BLUR:
+      IMEHandler::MaybeDismissOnScreenKeyboard();
       IMMHandler::OnFocusChange(false, aWindow);
 #ifdef NS_ENABLE_TSF
       // If a plugin gets focus while TSF has focus, we need to notify TSF of
@@ -499,6 +518,273 @@ IMEHandler::SetInputScopeForIMM32(nsWindow* aWindow,
   if (scopes && arraySize > 0) {
     sSetInputScopes(aWindow->GetWindowHandle(), scopes, arraySize, nullptr, 0,
                     nullptr, nullptr);
+  }
+}
+
+// static
+void
+IMEHandler::MaybeShowOnScreenKeyboard()
+{
+  if (sPluginHasFocus) {
+    return;
+  }
+  IMEHandler::ShowOnScreenKeyboard();
+}
+
+// static
+void
+IMEHandler::MaybeDismissOnScreenKeyboard()
+{
+  if (sPluginHasFocus) {
+    return;
+  }
+  IMEHandler::DismissOnScreenKeyboard();
+}
+
+// static
+bool
+IMEHandler::WStringStartsWithCaseInsensitive(const std::wstring& aHaystack,
+                                             const std::wstring& aNeedle)
+{
+  std::wstring lowerCaseHaystack(aHaystack);
+  std::wstring lowerCaseNeedle(aNeedle);
+  std::transform(lowerCaseHaystack.begin(), lowerCaseHaystack.end(),
+                 lowerCaseHaystack.begin(), ::tolower);
+  std::transform(lowerCaseNeedle.begin(), lowerCaseNeedle.end(),
+                 lowerCaseNeedle.begin(), ::tolower);
+  return wcsstr(lowerCaseHaystack.c_str(),
+                lowerCaseNeedle.c_str()) == lowerCaseHaystack.c_str();
+}
+
+// Returns true if a physical keyboard is detected on Windows 8 and up.
+// Uses the Setup APIs to enumerate the attached keyboards and returns true
+// if the keyboard count is 1 or more. While this will work in most cases
+// it won't work if there are devices which expose keyboard interfaces which
+// are attached to the machine.
+// Based on IsKeyboardPresentOnSlate() in Chromium's base/win/win_util.cc.
+// static
+bool
+IMEHandler::IsKeyboardPresentOnSlate()
+{
+  // This function is only supported for Windows 8 and up.
+  if (!IsWin8OrLater()) {
+    return true;
+  }
+
+  if (!Preferences::GetBool(kOskDetectPhysicalKeyboard, true)) {
+    // Detection for physical keyboard has been disabled for testing.
+    return false;
+  }
+
+  // This function should be only invoked for machines with touch screens.
+  if ((::GetSystemMetrics(SM_DIGITIZER) & NID_INTEGRATED_TOUCH)
+        != NID_INTEGRATED_TOUCH) {
+    return true;
+  }
+
+  // If the device is docked, the user is treating the device as a PC.
+  if (::GetSystemMetrics(SM_SYSTEMDOCKED) != 0) {
+    return true;
+  }
+
+  // To determine whether a keyboard is present on the device, we do the
+  // following:-
+  // 1. Check whether the device supports auto rotation. If it does then
+  //    it possibly supports flipping from laptop to slate mode. If it
+  //    does not support auto rotation, then we assume it is a desktop
+  //    or a normal laptop and assume that there is a keyboard.
+
+  // 2. If the device supports auto rotation, then we get its platform role
+  //    and check the system metric SM_CONVERTIBLESLATEMODE to see if it is
+  //    being used in slate mode. If yes then we return false here to ensure
+  //    that the OSK is displayed.
+
+  // 3. If step 1 and 2 fail then we check attached keyboards and return true
+  //    if we find ACPI\* or HID\VID* keyboards.
+
+  typedef BOOL (WINAPI* GetAutoRotationState)(PAR_STATE state);
+  GetAutoRotationState get_rotation_state =
+    reinterpret_cast<GetAutoRotationState>(::GetProcAddress(
+      ::GetModuleHandleW(L"user32.dll"), "GetAutoRotationState"));
+
+  if (get_rotation_state) {
+    AR_STATE auto_rotation_state = AR_ENABLED;
+    get_rotation_state(&auto_rotation_state);
+    if ((auto_rotation_state & AR_NOSENSOR) ||
+        (auto_rotation_state & AR_NOT_SUPPORTED)) {
+      // If there is no auto rotation sensor or rotation is not supported in
+      // the current configuration, then we can assume that this is a desktop
+      // or a traditional laptop.
+      return true;
+    }
+  }
+
+  // Check if the device is being used as a laptop or a tablet. This can be
+  // checked by first checking the role of the device and then the
+  // corresponding system metric (SM_CONVERTIBLESLATEMODE). If it is being
+  // used as a tablet then we want the OSK to show up.
+  typedef POWER_PLATFORM_ROLE (WINAPI* PowerDeterminePlatformRole)();
+  PowerDeterminePlatformRole power_determine_platform_role =
+    reinterpret_cast<PowerDeterminePlatformRole>(::GetProcAddress(
+      ::LoadLibraryW(L"PowrProf.dll"), "PowerDeterminePlatformRole"));
+  if (power_determine_platform_role) {
+    POWER_PLATFORM_ROLE role = power_determine_platform_role();
+    if (((role == PlatformRoleMobile) || (role == PlatformRoleSlate)) &&
+         (::GetSystemMetrics(SM_CONVERTIBLESLATEMODE) == 0)) {
+      return false;
+    }
+  }
+
+  const GUID KEYBOARD_CLASS_GUID =
+    { 0x4D36E96B, 0xE325,  0x11CE,
+      { 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18 } };
+
+  bool result = false;
+  // Query for all the keyboard devices.
+  HDEVINFO device_info =
+    ::SetupDiGetClassDevs(&KEYBOARD_CLASS_GUID, nullptr,
+                          nullptr, DIGCF_PRESENT);
+  if (device_info == INVALID_HANDLE_VALUE) {
+    return result;
+  }
+
+  // Enumerate all keyboards and look for ACPI\PNP and HID\VID devices. If
+  // the count is more than 1 we assume that a keyboard is present. This is
+  // under the assumption that there will always be one keyboard device.
+  for (DWORD i = 0;; ++i) {
+    SP_DEVINFO_DATA device_info_data = { 0 };
+    device_info_data.cbSize = sizeof(device_info_data);
+    if (!::SetupDiEnumDeviceInfo(device_info, i, &device_info_data)) {
+      break;
+    }
+
+    // Get the device ID.
+    wchar_t device_id[MAX_DEVICE_ID_LEN];
+    CONFIGRET status = ::CM_Get_Device_ID(device_info_data.DevInst,
+                                          device_id,
+                                          MAX_DEVICE_ID_LEN,
+                                          0);
+    if (status == CR_SUCCESS) {
+      // To reduce the scope of the hack we only look for ACPI and HID\\VID
+      // prefixes in the keyboard device ids.
+      if (IMEHandler::WStringStartsWithCaseInsensitive(device_id,
+                                                       L"ACPI") ||
+          IMEHandler::WStringStartsWithCaseInsensitive(device_id,
+                                                       L"HID\\VID")) {
+        // The heuristic we are using is to check the count of keyboards and
+        // return true if the API's report one or more keyboards. Please note
+        // that this will break for non keyboard devices which expose a
+        // keyboard PDO.
+        result = true;
+      }
+    }
+  }
+  return result;
+}
+
+// Based on DisplayVirtualKeyboard() in Chromium's base/win/win_util.cc.
+// static
+void
+IMEHandler::ShowOnScreenKeyboard()
+{
+  if (!IsWin8OrLater() ||
+      !Preferences::GetBool(kOskEnabled, true) ||
+      sShowingOnScreenKeyboard ||
+      IMEHandler::IsKeyboardPresentOnSlate()) {
+    return;
+  }
+
+  nsAutoString cachedPath;
+  nsresult result = Preferences::GetString(kOskPathPrefName, &cachedPath);
+  if (NS_FAILED(result) || cachedPath.IsEmpty()) {
+    wchar_t path[MAX_PATH];
+    // The path to TabTip.exe is defined at the following registry key.
+    // This is pulled out of the 64-bit registry hive directly.
+    const wchar_t kRegKeyName[] =
+      L"Software\\Classes\\CLSID\\"
+      L"{054AAE20-4BEA-4347-8A35-64A533254A9D}\\LocalServer32";
+    if (!WinUtils::GetRegistryKey(HKEY_LOCAL_MACHINE,
+                                  kRegKeyName,
+                                  0,
+                                  path,
+                                  sizeof path)) {
+      return;
+    }
+
+    std::wstring wstrpath(path);
+    // The path provided by the registry will often contain
+    // %CommonProgramFiles%, which will need to be replaced if it is present.
+    size_t commonProgramFilesOffset = wstrpath.find(L"%CommonProgramFiles%");
+    if (commonProgramFilesOffset != std::wstring::npos) {
+      // The path read from the registry contains the %CommonProgramFiles%
+      // environment variable prefix. On 64 bit Windows the
+      // SHGetKnownFolderPath function returns the common program files path
+      // with the X86 suffix for the FOLDERID_ProgramFilesCommon value.
+      // To get the correct path to TabTip.exe we first read the environment
+      // variable CommonProgramW6432 which points to the desired common
+      // files path. Failing that we fallback to the SHGetKnownFolderPath API.
+
+      // We then replace the %CommonProgramFiles% value with the actual common
+      // files path found in the process.
+      std::wstring commonProgramFilesPath;
+      std::vector<wchar_t> commonProgramFilesPathW6432;
+      DWORD bufferSize = ::GetEnvironmentVariableW(L"CommonProgramW6432",
+                                                   nullptr, 0);
+      if (bufferSize) {
+        commonProgramFilesPathW6432.resize(bufferSize);
+        ::GetEnvironmentVariableW(L"CommonProgramW6432",
+                                  commonProgramFilesPathW6432.data(),
+                                  bufferSize);
+        commonProgramFilesPath =
+          std::wstring(commonProgramFilesPathW6432.data());
+      } else {
+        PWSTR path = nullptr;
+        HRESULT hres = ::SHGetKnownFolderPath(FOLDERID_ProgramFilesCommon, 0,
+                                              nullptr, &path);
+        if (FAILED(hres) || !path) {
+          return;
+        }
+        commonProgramFilesPath = nsDependentString(path).get();
+        ::CoTaskMemFree(path);
+      }
+      wstrpath.replace(commonProgramFilesOffset,
+                       wcslen(L"%CommonProgramFiles%"),
+                       commonProgramFilesPath);
+    }
+
+    cachedPath.Assign(wstrpath.data());
+    Preferences::SetString(kOskPathPrefName, cachedPath);
+  }
+
+  LPCWSTR cachedPathPtr;
+  cachedPath.GetData(&cachedPathPtr);
+  HINSTANCE ret = ::ShellExecuteW(nullptr,
+                                  L"",
+                                  cachedPathPtr,
+                                  nullptr,
+                                  nullptr,
+                                  SW_SHOW);
+  sShowingOnScreenKeyboard = true;
+}
+
+// Based on DismissVirtualKeyboard() in Chromium's base/win/win_util.cc.
+// static
+void
+IMEHandler::DismissOnScreenKeyboard()
+{
+  if (!IsWin8OrLater() ||
+      !sShowingOnScreenKeyboard) {
+    return;
+  }
+
+  sShowingOnScreenKeyboard = false;
+
+  // Dismiss the virtual keyboard by generating the ESC keystroke
+  // programmatically.
+  const wchar_t kOSKClassName[] = L"IPTip_Main_Window";
+  HWND osk = ::FindWindowW(kOSKClassName, nullptr);
+  if (::IsWindow(osk) && ::IsWindowEnabled(osk)) {
+    ::PostMessage(osk, WM_SYSCOMMAND, SC_CLOSE, 0);
   }
 }
 
