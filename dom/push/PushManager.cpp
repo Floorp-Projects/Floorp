@@ -286,7 +286,6 @@ public:
 
   explicit WorkerUnsubscribeResultCallback(PromiseWorkerProxy* aProxy)
     : mProxy(aProxy)
-    , mCallbackCalled(false)
   {
     AssertIsOnMainThread();
   }
@@ -295,7 +294,6 @@ public:
   OnUnsubscribe(nsresult aStatus, bool aSuccess) override
   {
     AssertIsOnMainThread();
-    mCallbackCalled = true;
     if (!mProxy) {
       return NS_OK;
     }
@@ -319,14 +317,9 @@ public:
 
 private:
   ~WorkerUnsubscribeResultCallback()
-  {
-    // Enforces that UnsubscribeRunnable uses the callback for error
-    // reporting once it creates the callback.
-    MOZ_ASSERT(mCallbackCalled);
-  }
+  {}
 
   nsRefPtr<PromiseWorkerProxy> mProxy;
-  DebugOnly<bool> mCallbackCalled;
 };
 
 NS_IMPL_ISUPPORTS(WorkerUnsubscribeResultCallback, nsIUnsubscribeResultCallback)
@@ -477,14 +470,12 @@ public:
                                    const nsAString& aScope)
     : mProxy(aProxy)
     , mScope(aScope)
-    , mCallbackCalled(false)
   {}
 
   NS_IMETHOD
   OnPushEndpoint(nsresult aStatus, const nsAString& aEndpoint) override
   {
     AssertIsOnMainThread();
-    mCallbackCalled = true;
 
     if (!mProxy) {
       return NS_OK;
@@ -508,16 +499,11 @@ public:
 
 protected:
   ~GetSubscriptionCallback()
-  {
-    // Enforces that GetSubscriptionRunnable uses the callback for error
-    // reporting once it creates the callback.
-    MOZ_ASSERT(mCallbackCalled);
-  }
+  {}
 
 private:
   nsRefPtr<PromiseWorkerProxy> mProxy;
   nsString mScope;
-  DebugOnly<bool> mCallbackCalled;
 };
 
 NS_IMPL_ISUPPORTS(GetSubscriptionCallback, nsIPushEndpointCallback)
