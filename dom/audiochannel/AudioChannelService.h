@@ -26,7 +26,7 @@ namespace dom {
 class SpeakerManagerService;
 #endif
 
-#define NUMBER_OF_AUDIO_CHANNELS (uint32_t)AudioChannel::Publicnotification + 1
+#define NUMBER_OF_AUDIO_CHANNELS (uint32_t)AudioChannel::EndGuard_
 
 class AudioChannelService final : public nsIAudioChannelService
                                 , public nsIObserver
