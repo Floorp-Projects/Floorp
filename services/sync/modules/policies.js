@@ -575,7 +575,7 @@ ErrorHandler.prototype = {
     root.level = Log.Level[Svc.Prefs.get("log.rootLogger")];
 
     let logs = ["Sync", "FirefoxAccounts", "Hawk", "Common.TokenServerClient",
-                "Sync.SyncMigration"];
+                "Sync.SyncMigration", "browserwindow.syncui"];
 
     this._logManager = new LogManager(Svc.Prefs, logs, "sync");
   },
@@ -728,6 +728,9 @@ ErrorHandler.prototype = {
     }
   },
 
+  // A function to indicate if Sync errors should be "reported" - which in this
+  // context really means "should be notify observers of an error" - but note
+  // that since bug 1180587, no one is going to surface an error to the user.
   shouldReportError: function shouldReportError() {
     if (Status.login == MASTER_PASSWORD_LOCKED) {
       this._log.trace("shouldReportError: false (master password locked).");

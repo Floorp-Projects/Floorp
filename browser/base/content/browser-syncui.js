@@ -16,7 +16,6 @@ let gSyncUI = {
   _obs: ["weave:service:sync:start",
          "weave:service:sync:finish",
          "weave:service:sync:error",
-         "weave:service:quota:remaining",
          "weave:service:setup-complete",
          "weave:service:login:start",
          "weave:service:login:finish",
@@ -124,6 +123,9 @@ let gSyncUI = {
            firstSync == "notReady";
   },
 
+  // Note that we don't show login errors in a notification bar here, but do
+  // still need to track a login-failed state so the "Tools" menu updates
+  // with the correct state.
   _loginFailed: function () {
     this.log.debug("_loginFailed has sync state=${sync}",
                    { sync: Weave.Status.login});
@@ -142,8 +144,8 @@ let gSyncUI = {
     if (CloudSync && CloudSync.ready && CloudSync().adapters.count) {
       document.getElementById("sync-syncnow-state").hidden = false;
     } else if (loginFailed) {
+      // unhiding this element makes the menubar show the login failure state.
       document.getElementById("sync-reauth-state").hidden = false;
-      this.showLoginError();
     } else if (needsSetup) {
       document.getElementById("sync-setup-state").hidden = false;
     } else {
@@ -167,7 +169,6 @@ let gSyncUI = {
     this._updateLastSyncTime();
   },
 
-
   // Functions called by observers
   onActivityStart() {
     if (!gBrowser)
@@ -184,6 +185,7 @@ let gSyncUI = {
         container.setAttribute("syncstatus", "active");
       }
     }
+    this.updateUI();
   },
 
   onActivityStop() {
@@ -209,70 +211,16 @@ let gSyncUI = {
     if (fxaContainer) {
       fxaContainer.removeAttribute("syncstatus");
     }
-  },
-
-  onLoginFinish: function SUI_onLoginFinish() {
-    // Clear out any login failure notifications
-    let title = this._stringBundle.GetStringFromName("error.login.title");
-    this.clearError(title);
-  },
-
-  onSetupComplete: function SUI_onSetupComplete() {
-    this.onLoginFinish();
+    this.updateUI();
   },
 
   onLoginError: function SUI_onLoginError() {
     this.log.debug("onLoginError: login=${login}, sync=${sync}", Weave.Status);
     Weave.Notifications.removeAll();
 
-    // if we haven't set up the client, don't show errors
-    if (this._needsSetup()) {
-      this.updateUI();
-      return;
-    }
-    // if we are still waiting for the identity manager to initialize, or it's
-    // a network/server error, don't show errors.  If it weren't for the legacy
-    // provider we could just check LOGIN_FAILED_LOGIN_REJECTED, but the legacy
-    // provider has states like LOGIN_FAILED_INVALID_PASSPHRASE which we
-    // probably do want to surface.
-    if (Weave.Status.login == Weave.LOGIN_FAILED_NOT_READY ||
-        Weave.Status.login == Weave.LOGIN_FAILED_NETWORK_ERROR ||
-        Weave.Status.login == Weave.LOGIN_FAILED_SERVER_ERROR) {
-      this.updateUI();
-      return;
-    }
-    this.showLoginError();
+    // We don't show any login errors here; browser-fxaccounts shows them in
+    // the hamburger menu.
     this.updateUI();
-  },
-
-  showLoginError() {
-    let title = this._stringBundle.GetStringFromName("error.login.title");
-
-    let description;
-    if (Weave.Status.sync == Weave.PROLONGED_SYNC_FAILURE) {
-      this.log.debug("showLoginError has a prolonged login error");
-      // Convert to days
-      let lastSync =
-        Services.prefs.getIntPref("services.sync.errorhandler.networkFailureReportTimeout") / 86400;
-      description =
-        this._stringBundle.formatStringFromName("error.sync.prolonged_failure", [lastSync], 1);
-    } else {
-      let reason = Weave.Utils.getErrorString(Weave.Status.login);
-      description =
-        this._stringBundle.formatStringFromName("error.sync.description", [reason], 1);
-      this.log.debug("showLoginError has a non-prolonged error", reason);
-    }
-
-    let buttons = [];
-    buttons.push(new Weave.NotificationButton(
-      this._stringBundle.GetStringFromName("error.login.prefs.label"),
-      this._stringBundle.GetStringFromName("error.login.prefs.accesskey"),
-      function() { gSyncUI.openPrefs(); return true; }
-    ));
-
-    let notification = new Weave.Notification(title, description, null,
-                                              Weave.Notifications.PRIORITY_WARNING, buttons);
-    Weave.Notifications.replaceTitle(notification);
   },
 
   onLogout: function SUI_onLogout() {
@@ -283,29 +231,9 @@ let gSyncUI = {
     this.clearError();
   },
 
-  onQuotaNotice: function onQuotaNotice(subject, data) {
-    let title = this._stringBundle.GetStringFromName("warning.sync.quota.label");
-    let description = this._stringBundle.GetStringFromName("warning.sync.quota.description");
-    let buttons = [];
-    buttons.push(new Weave.NotificationButton(
-      this._stringBundle.GetStringFromName("error.sync.viewQuotaButton.label"),
-      this._stringBundle.GetStringFromName("error.sync.viewQuotaButton.accesskey"),
-      function() { gSyncUI.openQuotaDialog(); return true; }
-    ));
-
-    let notification = new Weave.Notification(
-      title, description, null, Weave.Notifications.PRIORITY_WARNING, buttons);
-    Weave.Notifications.replaceTitle(notification);
-  },
-
   _getAppName: function () {
     let brand = new StringBundle("chrome://branding/locale/brand.properties");
     return brand.get("brandShortName");
-  },
-
-  openServerStatus: function () {
-    let statusURL = Services.prefs.getCharPref("services.sync.statusURL");
-    window.openUILinkIn(statusURL, "tab");
   },
 
   // Commands
@@ -325,9 +253,6 @@ let gSyncUI = {
     else
       this.doSync();
   },
-
-  //XXXzpao should be part of syncCommon.js - which we might want to make a module...
-  //        To be fixed in a followup (bug 583366)
 
   /**
    * Invoke the Sync setup wizard.
@@ -382,16 +307,6 @@ let gSyncUI = {
     else
       window.openDialog("chrome://browser/content/sync/addDevice.xul",
                         "syncAddDevice", "centerscreen,chrome,resizable=no");
-  },
-
-  openQuotaDialog: function SUI_openQuotaDialog() {
-    let win = Services.wm.getMostRecentWindow("Sync:ViewQuota");
-    if (win)
-      win.focus();
-    else
-      Services.ww.activeWindow.openDialog(
-        "chrome://browser/content/sync/quota.xul", "",
-        "centerscreen,chrome,dialog,modal");
   },
 
   openPrefs: function SUI_openPrefs() {
@@ -450,81 +365,6 @@ let gSyncUI = {
     this.clearError(title);
   },
 
-  onSyncError: function SUI_onSyncError() {
-    this.log.debug("onSyncError: login=${login}, sync=${sync}", Weave.Status);
-    let title = this._stringBundle.GetStringFromName("error.sync.title");
-
-    if (Weave.Status.login != Weave.LOGIN_SUCCEEDED) {
-      this.onLoginError();
-      return;
-    }
-
-    let description;
-    if (Weave.Status.sync == Weave.PROLONGED_SYNC_FAILURE) {
-      // Convert to days
-      let lastSync =
-        Services.prefs.getIntPref("services.sync.errorhandler.networkFailureReportTimeout") / 86400;
-      description =
-        this._stringBundle.formatStringFromName("error.sync.prolonged_failure", [lastSync], 1);
-    } else {
-      let error = Weave.Utils.getErrorString(Weave.Status.sync);
-      description =
-        this._stringBundle.formatStringFromName("error.sync.description", [error], 1);
-    }
-    let priority = Weave.Notifications.PRIORITY_WARNING;
-    let buttons = [];
-
-    // Check if the client is outdated in some way (but note: we've never in the
-    // past, and probably never will, bump the relevent version numbers, so
-    // this is effectively dead code!)
-    let outdated = Weave.Status.sync == Weave.VERSION_OUT_OF_DATE;
-    for (let [engine, reason] in Iterator(Weave.Status.engines))
-      outdated = outdated || reason == Weave.VERSION_OUT_OF_DATE;
-
-    if (outdated) {
-      description = this._stringBundle.GetStringFromName(
-        "error.sync.needUpdate.description");
-      buttons.push(new Weave.NotificationButton(
-        this._stringBundle.GetStringFromName("error.sync.needUpdate.label"),
-        this._stringBundle.GetStringFromName("error.sync.needUpdate.accesskey"),
-        function() { window.openUILinkIn("https://services.mozilla.com/update/", "tab"); return true; }
-      ));
-    }
-    else if (Weave.Status.sync == Weave.OVER_QUOTA) {
-      description = this._stringBundle.GetStringFromName(
-        "error.sync.quota.description");
-      buttons.push(new Weave.NotificationButton(
-        this._stringBundle.GetStringFromName(
-          "error.sync.viewQuotaButton.label"),
-        this._stringBundle.GetStringFromName(
-          "error.sync.viewQuotaButton.accesskey"),
-        function() { gSyncUI.openQuotaDialog(); return true; } )
-      );
-    }
-    else if (Weave.Status.enforceBackoff) {
-      priority = Weave.Notifications.PRIORITY_INFO;
-      buttons.push(new Weave.NotificationButton(
-        this._stringBundle.GetStringFromName("error.sync.serverStatusButton.label"),
-        this._stringBundle.GetStringFromName("error.sync.serverStatusButton.accesskey"),
-        function() { gSyncUI.openServerStatus(); return true; }
-      ));
-    }
-    else {
-      priority = Weave.Notifications.PRIORITY_INFO;
-      buttons.push(new Weave.NotificationButton(
-        this._stringBundle.GetStringFromName("error.sync.tryAgainButton.label"),
-        this._stringBundle.GetStringFromName("error.sync.tryAgainButton.accesskey"),
-        function() { gSyncUI.doSync(); return true; }
-      ));
-    }
-
-    let notification =
-      new Weave.Notification(title, description, null, priority, buttons);
-    Weave.Notifications.replaceTitle(notification);
-
-    this.updateUI();
-  },
-
   observe: function SUI_observe(subject, topic, data) {
     this.log.debug("observed", topic);
     if (this._unloaded) {
@@ -559,16 +399,8 @@ let gSyncUI = {
         this.onSyncFinish();
         break;
       case "weave:ui:sync:error":
-        this.onSyncError();
-        break;
-      case "weave:service:quota:remaining":
-        this.onQuotaNotice();
-        break;
       case "weave:service:setup-complete":
-        this.onSetupComplete();
-        break;
-      case "weave:service:login:finish":
-        this.onLoginFinish();
+        this.updateUI();
         break;
       case "weave:ui:login:error":
         this.onLoginError();
