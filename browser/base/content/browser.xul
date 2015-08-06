@@ -960,7 +960,7 @@
                    class="chromeclass-toolbar-additional"
                    removable="false">
         <toolbarbutton id="PanelUI-menu-button"
-                       class="toolbarbutton-1"
+                       class="toolbarbutton-1 badged-button"
                        consumeanchor="PanelUI-button"
                        label="&brandShortName;"
                        tooltiptext="&appmenu.tooltip;"/>
