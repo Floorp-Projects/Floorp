@@ -34,7 +34,7 @@ public:
   already_AddRefed<TextureClient>
   CreateOrRecycleForDrawing(gfx::SurfaceFormat aFormat,
                             gfx::IntSize aSize,
-                            BackendSelector aSelector,
+                            gfx::BackendType aMoz2dBackend,
                             TextureFlags aTextureFlags,
                             TextureAllocationFlags flags);
 
@@ -141,7 +141,7 @@ already_AddRefed<TextureClient>
 TextureClientRecycleAllocatorImp::CreateOrRecycleForDrawing(
                                              gfx::SurfaceFormat aFormat,
                                              gfx::IntSize aSize,
-                                             BackendSelector aSelector,
+                                             gfx::BackendType aMoz2DBackend,
                                              TextureFlags aTextureFlags,
                                              TextureAllocationFlags aAllocFlags)
 {
@@ -153,6 +153,10 @@ TextureClientRecycleAllocatorImp::CreateOrRecycleForDrawing(
   aTextureFlags = aTextureFlags | TextureFlags::RECYCLE; // Set recycle flag
 
   RefPtr<TextureClientHolder> textureHolder;
+
+  if (aMoz2DBackend == gfx::BackendType::NONE) {
+    aMoz2DBackend = gfxPlatform::GetPlatform()->GetContentBackend();
+  }
 
   {
     MutexAutoLock lock(mLock);
@@ -179,7 +183,7 @@ TextureClientRecycleAllocatorImp::CreateOrRecycleForDrawing(
   if (!textureHolder) {
     // Allocate new TextureClient
     RefPtr<TextureClient> texture;
-    texture = TextureClient::CreateForDrawing(this, aFormat, aSize, aSelector,
+    texture = TextureClient::CreateForDrawing(this, aFormat, aSize, aMoz2DBackend,
                                               aTextureFlags, aAllocFlags);
     if (!texture) {
       return nullptr;
@@ -257,13 +261,13 @@ already_AddRefed<TextureClient>
 TextureClientRecycleAllocator::CreateOrRecycleForDrawing(
                                             gfx::SurfaceFormat aFormat,
                                             gfx::IntSize aSize,
-                                            BackendSelector aSelector,
+                                            gfx::BackendType aMoz2DBackend,
                                             TextureFlags aTextureFlags,
                                             TextureAllocationFlags aAllocFlags)
 {
   return mAllocator->CreateOrRecycleForDrawing(aFormat,
                                                aSize,
-                                               aSelector,
+                                               aMoz2DBackend,
                                                aTextureFlags,
                                                aAllocFlags);
 }

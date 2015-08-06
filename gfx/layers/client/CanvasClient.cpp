@@ -126,13 +126,14 @@ CanvasClient2D::CreateTextureClientForCanvas(gfx::SurfaceFormat aFormat,
                                                    mTextureFlags | aFlags);
   }
 
+  gfx::BackendType backend = gfxPlatform::GetPlatform()->GetPreferredCanvasBackend();
 #ifdef XP_WIN
-  return CreateTextureClientForDrawing(aFormat, aSize, BackendSelector::Canvas, aFlags);
+  return CreateTextureClientForDrawing(aFormat, aSize, backend, aFlags);
 #else
   // XXX - We should use CreateTextureClientForDrawing, but we first need
   // to use double buffering.
   return TextureClient::CreateForRawBufferAccess(GetForwarder(),
-                                                 aFormat, aSize, gfx::BackendType::NONE,
+                                                 aFormat, aSize, backend,
                                                  mTextureFlags | aFlags);
 #endif
 }
