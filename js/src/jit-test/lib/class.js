@@ -1,1 +1,1 @@
-load(libdir + "../../tests/ecma_6/Class/shell.js");
+load(libdir + "../../tests/ecma_6/shell.js");
