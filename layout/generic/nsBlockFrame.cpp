@@ -3313,7 +3313,6 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     nsHTMLReflowState
       blockHtmlRS(aState.mPresContext, aState.mReflowState, frame,
                   availSpace.Size(wm).ConvertTo(frame->GetWritingMode(), wm));
-    blockHtmlRS.mFlags.mHasClearance = aLine->HasClearance();
 
     nsFloatManager::SavedState floatManagerState;
     nsReflowStatus frameReflowStatus;

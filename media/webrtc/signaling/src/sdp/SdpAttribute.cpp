@@ -6,6 +6,8 @@
 
 #include "signaling/src/sdp/SdpAttribute.h"
 
+#include "plstr.h"
+
 #include <iomanip>
 
 #ifdef CRLF
@@ -147,9 +149,628 @@ void SdpIdentityAttribute::Serialize(std::ostream& os) const
 #endif
 
 void
+SdpImageattrAttributeList::XYRange::Serialize(std::ostream& os) const
+{
+  if (discreteValues.size() == 0) {
+    os << "[" << min << ":";
+    if (step != 1) {
+      os << step << ":";
+    }
+    os << max << "]";
+  } else if (discreteValues.size() == 1) {
+    os << discreteValues.front();
+  } else {
+    os << "[";
+    bool first = true;
+    for (auto value : discreteValues) {
+      if (!first) {
+        os << ",";
+      }
+      first = false;
+      os << value;
+    }
+    os << "]";
+  }
+}
+
+static unsigned char
+PeekChar(std::istream& is, std::string* error)
+{
+  int next = is.peek();
+  if (next == EOF) {
+    *error = "Truncated";
+    return 0;
+  }
+
+  return next;
+}
+
+static bool
+SkipChar(std::istream& is, unsigned char c, std::string* error)
+{
+  if (PeekChar(is, error) != c) {
+    *error = "Expected \'";
+    error->push_back(c);
+    error->push_back('\'');
+    return false;
+  }
+
+  is.get();
+  return true;
+}
+
+template<typename T>
+bool
+GetUnsigned(std::istream& is, T min, T max, T* value, std::string* error)
+{
+  if (PeekChar(is, error) == '-') {
+    *error = "Value is less than 0";
+    return false;
+  }
+
+  is >> std::noskipws >> *value;
+
+  if (is.fail()) {
+    *error = "Malformed";
+    return false;
+  }
+
+  if (*value < min) {
+    *error = "Value too small";
+    return false;
+  }
+
+  if (*value > max) {
+    *error = "Value too large";
+    return false;
+  }
+
+  return true;
+}
+
+static bool
+GetXYValue(std::istream& is, uint32_t* value, std::string* error)
+{
+  return GetUnsigned<uint32_t>(is, 1, 999999, value, error);
+}
+
+bool
+SdpImageattrAttributeList::XYRange::ParseDiscreteValues(std::istream& is,
+                                                        std::string* error)
+{
+  do {
+    uint32_t value;
+    if (!GetXYValue(is, &value, error)) {
+      return false;
+    }
+    discreteValues.push_back(value);
+  } while (SkipChar(is, ',', error));
+
+  return SkipChar(is, ']', error);
+}
+
+bool
+SdpImageattrAttributeList::XYRange::ParseAfterMin(std::istream& is,
+                                                  std::string* error)
+{
+  // We have already parsed "[320:", and now expect another uint
+  uint32_t value;
+  if (!GetXYValue(is, &value, error)) {
+    return false;
+  }
+
+  if (SkipChar(is, ':', error)) {
+    // Range with step eg [320:16:640]
+    step = value;
+    // Now |value| should be the max
+    if (!GetXYValue(is, &value, error)) {
+      return false;
+    }
+  }
+
+  max = value;
+  if (min >= max) {
+    *error = "Min is not smaller than max";
+    return false;
+  }
+
+  return SkipChar(is, ']', error);
+}
+
+bool
+SdpImageattrAttributeList::XYRange::ParseAfterBracket(std::istream& is,
+                                                      std::string* error)
+{
+  // Either a range, or a list of discrete values
+  // [320:640], [320:16:640], or [320,640]
+  uint32_t value;
+  if (!GetXYValue(is, &value, error)) {
+    return false;
+  }
+
+  if (SkipChar(is, ':', error)) {
+    // Range - [640:480] or [640:16:480]
+    min = value;
+    return ParseAfterMin(is, error);
+  }
+
+  if (SkipChar(is, ',', error)) {
+    discreteValues.push_back(value);
+    return ParseDiscreteValues(is, error);
+  }
+
+  *error = "Expected \':\' or \',\'";
+  return false;
+}
+
+bool
+SdpImageattrAttributeList::XYRange::Parse(std::istream& is, std::string* error)
+{
+  if (SkipChar(is, '[', error)) {
+    return ParseAfterBracket(is, error);
+  }
+
+  // Single discrete value
+  uint32_t value;
+  if (!GetXYValue(is, &value, error)) {
+    return false;
+  }
+  discreteValues.push_back(value);
+
+  return true;
+}
+
+static bool
+GetSPValue(std::istream& is, float* value, std::string* error)
+{
+  return GetUnsigned<float>(is, 0.1f, 9.9999f, value, error);
+}
+
+static bool
+GetQValue(std::istream& is, float* value, std::string* error)
+{
+  return GetUnsigned<float>(is, 0.0f, 1.0f, value, error);
+}
+
+bool
+SdpImageattrAttributeList::SRange::ParseDiscreteValues(std::istream& is,
+                                                        std::string* error)
+{
+  do {
+    float value;
+    if (!GetSPValue(is, &value, error)) {
+      return false;
+    }
+    discreteValues.push_back(value);
+  } while (SkipChar(is, ',', error));
+
+  return SkipChar(is, ']', error);
+}
+
+bool
+SdpImageattrAttributeList::SRange::ParseAfterMin(std::istream& is,
+                                                  std::string* error)
+{
+  if (!GetSPValue(is, &max, error)) {
+    return false;
+  }
+
+  if (min >= max) {
+    *error = "Min is not smaller than max";
+    return false;
+  }
+
+  return SkipChar(is, ']', error);
+}
+
+bool
+SdpImageattrAttributeList::SRange::ParseAfterBracket(std::istream& is,
+                                                     std::string* error)
+{
+  // Either a range, or a list of discrete values
+  float value;
+  if (!GetSPValue(is, &value, error)) {
+    return false;
+  }
+
+  if (SkipChar(is, '-', error)) {
+    min = value;
+    return ParseAfterMin(is, error);
+  }
+
+  if (SkipChar(is, ',', error)) {
+    discreteValues.push_back(value);
+    return ParseDiscreteValues(is, error);
+  }
+
+  *error = "Expected either \'-\' or \',\'";
+  return false;
+}
+
+bool
+SdpImageattrAttributeList::SRange::Parse(std::istream& is, std::string* error)
+{
+  if (SkipChar(is, '[', error)) {
+    return ParseAfterBracket(is, error);
+  }
+
+  // Single discrete value
+  float value;
+  if (!GetSPValue(is, &value, error)) {
+    return false;
+  }
+  discreteValues.push_back(value);
+  return true;
+}
+
+bool
+SdpImageattrAttributeList::PRange::Parse(std::istream& is, std::string* error)
+{
+  if (!SkipChar(is, '[', error)) {
+    return false;
+  }
+
+  if (!GetSPValue(is, &min, error)) {
+    return false;
+  }
+
+  if (!SkipChar(is, '-', error)) {
+    return false;
+  }
+
+  if (!GetSPValue(is, &max, error)) {
+    return false;
+  }
+
+  if (min >= max) {
+    *error = "min must be smaller than max";
+    return false;
+  }
+
+  if (!SkipChar(is, ']', error)) {
+    return false;
+  }
+  return true;
+}
+
+void
+SdpImageattrAttributeList::SRange::Serialize(std::ostream& os) const
+{
+  os << std::setprecision(4) << std::fixed;
+  if (discreteValues.size() == 0) {
+    os << "[" << min << "-" << max << "]";
+  } else if (discreteValues.size() == 1) {
+    os << discreteValues.front();
+  } else {
+    os << "[";
+    bool first = true;
+    for (auto value : discreteValues) {
+      if (!first) {
+        os << ",";
+      }
+      first = false;
+      os << value;
+    }
+    os << "]";
+  }
+}
+
+void
+SdpImageattrAttributeList::PRange::Serialize(std::ostream& os) const
+{
+  os << std::setprecision(4) << std::fixed;
+  os << "[" << min << "-" << max << "]";
+}
+
+static std::string ParseKey(std::istream& is, std::string* error)
+{
+  is >> std::ws;
+  std::string key;
+  while (is && PeekChar(is, error) != '=') {
+    key.push_back(std::tolower(is.get()));
+  }
+
+  if (!SkipChar(is, '=', error)) {
+    return "";
+  }
+
+  return key;
+}
+
+static bool SkipBraces(std::istream& is, std::string* error)
+{
+  if (PeekChar(is, error) != '[') {
+    *error = "Expected \'[\'";
+    return false;
+  }
+
+  size_t braceCount = 0;
+  do {
+    switch (PeekChar(is, error)) {
+      case '[':
+        ++braceCount;
+        break;
+      case ']':
+        --braceCount;
+        break;
+      default:
+        break;
+    }
+    is.get();
+  } while (braceCount && is);
+
+  if (!is) {
+    *error = "Expected closing brace";
+    return false;
+  }
+
+  return true;
+}
+
+// Assumptions:
+// 1. If the value contains '[' or ']', they are balanced.
+// 2. The value contains no ',' outside of brackets.
+static bool SkipValue(std::istream& is, std::string* error)
+{
+  while (is) {
+    switch (PeekChar(is, error)) {
+      case ',':
+      case ']':
+        return true;
+      case '[':
+        if (!SkipBraces(is, error)) {
+          return false;
+        }
+        break;
+      default:
+        is.get();
+    }
+  }
+
+  *error = "No closing \']\' on set";
+  return false;
+}
+
+bool
+SdpImageattrAttributeList::Set::Parse(std::istream& is, std::string* error)
+{
+  if (!SkipChar(is, '[', error)) {
+    return false;
+  }
+
+  if (ParseKey(is, error) != "x") {
+    *error = "Expected x=";
+    return false;
+  }
+
+  if (!xRange.Parse(is, error)) {
+    return false;
+  }
+
+  if (!SkipChar(is, ',', error)) {
+    return false;
+  }
+
+  if (ParseKey(is, error) != "y") {
+    *error = "Expected y=";
+    return false;
+  }
+
+  if (!yRange.Parse(is, error)) {
+    return false;
+  }
+
+  qValue = 0.5f; // default
+
+  bool gotSar = false;
+  bool gotPar = false;
+  bool gotQ = false;
+
+  while (SkipChar(is, ',', error)) {
+    std::string key = ParseKey(is, error);
+    if (key.empty()) {
+      *error = "Expected key-value";
+      return false;
+    }
+
+    if (key == "sar") {
+      if (gotSar) {
+        *error = "Extra sar parameter";
+        return false;
+      }
+      gotSar = true;
+      if (!sRange.Parse(is, error)) {
+        return false;
+      }
+    } else if (key == "par") {
+      if (gotPar) {
+        *error = "Extra par parameter";
+        return false;
+      }
+      gotPar = true;
+      if (!pRange.Parse(is, error)) {
+        return false;
+      }
+    } else if (key == "q") {
+      if (gotQ) {
+        *error = "Extra q parameter";
+        return false;
+      }
+      gotQ = true;
+      if (!GetQValue(is, &qValue, error)) {
+        return false;
+      }
+    } else {
+      if (!SkipValue(is, error)) {
+        return false;
+      }
+    }
+  }
+
+  return SkipChar(is, ']', error);
+}
+
+void
+SdpImageattrAttributeList::Set::Serialize(std::ostream& os) const
+{
+  os << "[x=";
+  xRange.Serialize(os);
+  os << ",y=";
+  yRange.Serialize(os);
+  if (sRange.IsSet()) {
+    os << ",sar=";
+    sRange.Serialize(os);
+  }
+  if (pRange.IsSet()) {
+    os << ",par=";
+    pRange.Serialize(os);
+  }
+  if (qValue >= 0) {
+    os << std::setprecision(2) << std::fixed << ",q=" << qValue;
+  }
+  os << "]";
+}
+
+bool
+SdpImageattrAttributeList::Imageattr::ParseSets(std::istream& is,
+                                                std::string* error)
+{
+  // Either "send" or "recv"
+  static const size_t kMaxTypeLength = 4;
+  char type[kMaxTypeLength + 1] = {0};
+  is.read(type, kMaxTypeLength);
+
+  bool* isAll = nullptr;
+  std::vector<Set>* sets = nullptr;
+
+  if (!PL_strncasecmp(type, "send", kMaxTypeLength)) {
+    isAll = &sendAll;
+    sets = &sendSets;
+  } else if (!PL_strncasecmp(type, "recv", kMaxTypeLength)) {
+    isAll = &recvAll;
+    sets = &recvSets;
+  } else {
+    *error = "Unknown type, must be either send or recv";
+    return false;
+  }
+
+  if (*isAll || !sets->empty()) {
+    *error = "Multiple send or recv set lists";
+    return false;
+  }
+
+  is >> std::ws;
+  if (SkipChar(is, '*', error)) {
+    *isAll = true;
+    return true;
+  }
+
+  do {
+    Set set;
+    if (!set.Parse(is, error)) {
+      return false;
+    }
+
+    sets->push_back(set);
+    is >> std::ws;
+  } while (PeekChar(is, error) == '[');
+
+  return true;
+}
+
+bool
+SdpImageattrAttributeList::Imageattr::Parse(std::istream& is,
+                                            std::string* error)
+{
+  if (!SkipChar(is, '*', error)) {
+    uint16_t value;
+    if (!GetUnsigned<uint16_t>(is, 0, UINT16_MAX, &value, error)) {
+      return false;
+    }
+    pt = Some(value);
+  }
+
+  is >> std::ws;
+  if (!ParseSets(is, error)) {
+    return false;
+  }
+
+  // There might be a second one
+  is >> std::ws;
+  if (is.eof()) {
+    return true;
+  }
+
+  if (!ParseSets(is, error)) {
+    return false;
+  }
+
+  is >> std::ws;
+  if (!is.eof()) {
+    *error = "Trailing characters";
+    return false;
+  }
+
+  return true;
+}
+
+void
+SdpImageattrAttributeList::Imageattr::Serialize(std::ostream& os) const
+{
+  if (pt.isSome()) {
+    os << *pt;
+  } else {
+    os << "*";
+  }
+
+  if (sendAll) {
+    os << " send *";
+  } else if (!sendSets.empty()) {
+    os << " send";
+    for (auto& set : sendSets) {
+      os << " ";
+      set.Serialize(os);
+    }
+  }
+
+  if (recvAll) {
+    os << " recv *";
+  } else if (!recvSets.empty()) {
+    os << " recv";
+    for (auto& set : recvSets) {
+      os << " ";
+      set.Serialize(os);
+    }
+  }
+}
+
+void
 SdpImageattrAttributeList::Serialize(std::ostream& os) const
 {
-  MOZ_ASSERT(false, "Serializer not yet implemented");
+  for (auto& imageattr : mImageattrs) {
+    os << "a=" << mType << ":";
+    imageattr.Serialize(os);
+    os << CRLF;
+  }
+}
+
+bool
+SdpImageattrAttributeList::PushEntry(const std::string& raw,
+                                     std::string* error,
+                                     size_t* errorPos)
+{
+  std::istringstream is;
+  is.str(raw);
+
+  Imageattr imageattr;
+  if (!imageattr.Parse(is, error)) {
+    is.clear();
+    *errorPos = is.tellg();
+    return false;
+  }
+
+  mImageattrs.push_back(imageattr);
+  return true;
 }
 
 void

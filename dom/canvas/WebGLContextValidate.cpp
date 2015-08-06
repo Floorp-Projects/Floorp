@@ -1653,6 +1653,11 @@ WebGLContext::InitAndValidateGL()
     if (!gl)
         return false;
 
+    // Unconditionally create a new format usage authority. This is
+    // important when restoring contexts and extensions need to add
+    // formats back into the authority.
+    mFormatUsage = CreateFormatUsage();
+
     GLenum error = gl->fGetError();
     if (error != LOCAL_GL_NO_ERROR) {
         GenerateWarning("GL error 0x%x occurred during OpenGL context"

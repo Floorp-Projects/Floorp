@@ -19,6 +19,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Maybe.h"
 
 #include "signaling/src/sdp/SdpEnum.h"
 
@@ -605,7 +606,87 @@ class SdpImageattrAttributeList : public SdpAttribute
 public:
   SdpImageattrAttributeList() : SdpAttribute(kImageattrAttribute) {}
 
+  class XYRange
+  {
+    public:
+      XYRange() : min(0), max(0), step(1) {}
+      void Serialize(std::ostream& os) const;
+      bool Parse(std::istream& is, std::string* error);
+      bool ParseAfterBracket(std::istream& is, std::string* error);
+      bool ParseAfterMin(std::istream& is, std::string* error);
+      bool ParseDiscreteValues(std::istream& is, std::string* error);
+      std::vector<uint32_t> discreteValues;
+      // min/max are used iff discreteValues is empty
+      uint32_t min;
+      uint32_t max;
+      uint32_t step;
+  };
+
+  class SRange
+  {
+    public:
+      SRange() : min(0), max(0) {}
+      void Serialize(std::ostream& os) const;
+      bool Parse(std::istream& is, std::string* error);
+      bool ParseAfterBracket(std::istream& is, std::string* error);
+      bool ParseAfterMin(std::istream& is, std::string* error);
+      bool ParseDiscreteValues(std::istream& is, std::string* error);
+      bool IsSet() const
+      {
+        return !discreteValues.empty() || (min && max);
+      }
+      std::vector<float> discreteValues;
+      // min/max are used iff discreteValues is empty
+      float min;
+      float max;
+  };
+
+  class PRange
+  {
+    public:
+      PRange() : min(0), max(0) {}
+      void Serialize(std::ostream& os) const;
+      bool Parse(std::istream& is, std::string* error);
+      bool IsSet() const
+      {
+        return min && max;
+      }
+      float min;
+      float max;
+  };
+
+  class Set
+  {
+    public:
+      Set() : qValue(-1) {}
+      void Serialize(std::ostream& os) const;
+      bool Parse(std::istream& is, std::string* error);
+      XYRange xRange;
+      XYRange yRange;
+      SRange sRange;
+      PRange pRange;
+      float qValue;
+  };
+
+  class Imageattr
+  {
+    public:
+      Imageattr() : pt(), sendAll(false), recvAll(false) {}
+      void Serialize(std::ostream& os) const;
+      bool Parse(std::istream& is, std::string* error);
+      bool ParseSets(std::istream& is, std::string* error);
+      // If not set, this means all payload types
+      Maybe<uint16_t> pt;
+      bool sendAll;
+      std::vector<Set> sendSets;
+      bool recvAll;
+      std::vector<Set> recvSets;
+  };
+
   virtual void Serialize(std::ostream& os) const override;
+  bool PushEntry(const std::string& raw, std::string* error, size_t* errorPos);
+
+  std::vector<Imageattr> mImageattrs;
 };
 
 ///////////////////////////////////////////////////////////////////////////

@@ -759,11 +759,11 @@ LayerManagerComposite::Render()
       js::ProfileEntry::Category::GRAPHICS);
 
     mCompositor->EndFrame();
+    mCompositor->SetDispAcquireFence(mRoot); // Call after EndFrame()
   }
 
   if (composer2D) {
     composer2D->Render(mCompositor->GetWidget());
-    mCompositor->SetDispAcquireFence(mRoot);
   }
 
   mCompositor->GetWidget()->PostRender(this);

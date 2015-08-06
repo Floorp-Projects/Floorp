@@ -24,18 +24,18 @@ AnnexB::ConvertSampleToAnnexB(mozilla::MediaRawData* aSample)
   if (!IsAVCC(aSample)) {
     return true;
   }
-  MOZ_ASSERT(aSample->mData);
+  MOZ_ASSERT(aSample->Data());
 
   if (!ConvertSampleTo4BytesAVCC(aSample)) {
     return false;
   }
 
-  if (aSample->mSize < 4) {
+  if (aSample->Size() < 4) {
     // Nothing to do, it's corrupted anyway.
     return true;
   }
 
-  ByteReader reader(aSample->mData, aSample->mSize);
+  ByteReader reader(aSample->Data(), aSample->Size());
 
   mozilla::Vector<uint8_t> tmp;
   ByteWriter writer(tmp);
@@ -226,7 +226,7 @@ AnnexB::ConvertSampleToAVCC(mozilla::MediaRawData* aSample)
 
   mozilla::Vector<uint8_t> nalu;
   ByteWriter writer(nalu);
-  ByteReader reader(aSample->mData, aSample->mSize);
+  ByteReader reader(aSample->Data(), aSample->Size());
 
   ParseNALUnits(writer, reader);
   nsAutoPtr<MediaRawDataWriter> samplewriter(aSample->CreateWriter());
@@ -263,7 +263,7 @@ AnnexB::ExtractExtraData(const mozilla::MediaRawData* aSample)
     // ConvertSampleToAVCC.
     nalLenSize = 4;
   }
-  ByteReader reader(aSample->mData, aSample->mSize);
+  ByteReader reader(aSample->Data(), aSample->Size());
 
   // Find SPS and PPS NALUs in AVCC data
   while (reader.Remaining() > nalLenSize) {
@@ -344,7 +344,7 @@ AnnexB::ConvertSampleTo4BytesAVCC(mozilla::MediaRawData* aSample)
   }
   mozilla::Vector<uint8_t> dest;
   ByteWriter writer(dest);
-  ByteReader reader(aSample->mData, aSample->mSize);
+  ByteReader reader(aSample->Data(), aSample->Size());
   while (reader.Remaining() > nalLenSize) {
     uint32_t nalLen;
     switch (nalLenSize) {
@@ -367,17 +367,17 @@ AnnexB::ConvertSampleTo4BytesAVCC(mozilla::MediaRawData* aSample)
 bool
 AnnexB::IsAVCC(const mozilla::MediaRawData* aSample)
 {
-  return aSample->mSize >= 3 && aSample->mExtraData &&
+  return aSample->Size() >= 3 && aSample->mExtraData &&
     aSample->mExtraData->Length() >= 7 && (*aSample->mExtraData)[0] == 1;
 }
 
 bool
 AnnexB::IsAnnexB(const mozilla::MediaRawData* aSample)
 {
-  if (aSample->mSize < 4) {
+  if (aSample->Size() < 4) {
     return false;
   }
-  uint32_t header = mozilla::BigEndian::readUint32(aSample->mData);
+  uint32_t header = mozilla::BigEndian::readUint32(aSample->Data());
   return header == 0x00000001 || (header >> 8) == 0x000001;
 }
 

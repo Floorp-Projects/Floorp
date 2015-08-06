@@ -585,7 +585,7 @@ TextureClientD3D9::BorrowDrawTarget()
 }
 
 void
-TextureClientD3D9::UpdateFromSurface(gfx::DataSourceSurface* aSurface)
+TextureClientD3D9::UpdateFromSurface(gfx::SourceSurface* aSurface)
 {
   MOZ_ASSERT(mIsLocked && mD3D9Surface);
 
@@ -599,21 +599,31 @@ TextureClientD3D9::UpdateFromSurface(gfx::DataSourceSurface* aSurface)
     return;
   }
 
-  if (mSize != aSurface->GetSize() || mFormat != aSurface->GetFormat()) {
-    gfxCriticalError() << "Attempt to update texture client from a surface with a different size or format! This: " << mSize << " " << mFormat << " Other: " << aSurface->GetSize() << " " << aSurface->GetFormat();
+  RefPtr<DataSourceSurface> srcSurf = aSurface->GetDataSurface();
+
+  if (!srcSurf) {
+    gfxCriticalError() << "Failed to GetDataSurface in UpdateFromSurface.";
+    return;
+  }
+
+  if (mSize != srcSurf->GetSize() || mFormat != srcSurf->GetFormat()) {
+    gfxCriticalError() << "Attempt to update texture client from a surface with a different size or format! This: " << mSize << " " << mFormat << " Other: " << srcSurf->GetSize() << " " << srcSurf->GetFormat();
     return;
   }
 
   DataSourceSurface::MappedSurface sourceMap;
-  aSurface->Map(DataSourceSurface::READ, &sourceMap);
-
-  for (int y = 0; y < aSurface->GetSize().height; y++) {
-    memcpy((uint8_t*)rect.pBits + rect.Pitch * y,
-           sourceMap.mData + sourceMap.mStride * y,
-           aSurface->GetSize().width * BytesPerPixel(aSurface->GetFormat()));
+  if (!srcSurf->Map(DataSourceSurface::READ, &sourceMap)) {
+    gfxCriticalError() << "Failed to map source surface for UpdateFromSurface.";
+    return;
   }
 
-  aSurface->Unmap();
+  for (int y = 0; y < srcSurf->GetSize().height; y++) {
+    memcpy((uint8_t*)rect.pBits + rect.Pitch * y,
+           sourceMap.mData + sourceMap.mStride * y,
+           srcSurf->GetSize().width * BytesPerPixel(srcSurf->GetFormat()));
+  }
+
+  srcSurf->Unmap();
   mD3D9Surface->UnlockRect();
 }
 

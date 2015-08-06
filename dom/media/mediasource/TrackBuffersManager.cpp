@@ -430,7 +430,7 @@ TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
     if (frame->mTime >= lowerLimit.ToMicroseconds()) {
       break;
     }
-    partialEvict += sizeof(*frame) + frame->mSize;
+    partialEvict += frame->ComputedSizeOfIncludingThis();
   }
 
   int64_t finalSize = mSizeSourceBuffer - aSizeToEvict;
@@ -468,7 +468,7 @@ TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
     if (frame->mTime <= upperLimit.ToMicroseconds()) {
       break;
     }
-    partialEvict += sizeof(*frame) + frame->mSize;
+    partialEvict += frame->ComputedSizeOfIncludingThis();
   }
   if (lastKeyFrameIndex < buffer.Length()) {
     MSE_DEBUG("Step2. Evicting %u bytes from trailing data",
@@ -1400,7 +1400,7 @@ TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples, TrackData& aTrackData)
     }
 
     samplesRange += sampleInterval;
-    sizeNewSamples += sizeof(*sample) + sample->mSize;
+    sizeNewSamples += sample->ComputedSizeOfIncludingThis();
     sample->mTime = sampleInterval.mStart.ToMicroseconds();
     sample->mTimecode = decodeTimestamp.ToMicroseconds();
     sample->mTrackInfo = trackBuffer.mLastInfo;
@@ -1606,7 +1606,7 @@ TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
     if (sample->mDuration > maxSampleDuration) {
       maxSampleDuration = sample->mDuration;
     }
-    aTrackData.mSizeBuffer -= sizeof(*sample) + sample->mSize;
+    aTrackData.mSizeBuffer -= sample->ComputedSizeOfIncludingThis();
   }
 
   removedIntervals.SetFuzz(TimeUnit::FromMicroseconds(maxSampleDuration));
