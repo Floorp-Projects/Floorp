@@ -112,7 +112,8 @@ class MOZ_STACK_CLASS RegExpMacroAssembler
     virtual void CheckGreedyLoop(jit::Label* on_tos_equals_current_position) = 0;
     virtual void CheckNotAtStart(jit::Label* on_not_at_start) = 0;
     virtual void CheckNotBackReference(int start_reg, jit::Label* on_no_match) = 0;
-    virtual void CheckNotBackReferenceIgnoreCase(int start_reg, jit::Label* on_no_match) = 0;
+    virtual void CheckNotBackReferenceIgnoreCase(int start_reg, jit::Label* on_no_match,
+                                                 bool unicode) = 0;
 
     // Check the current character for a match with a literal character.  If we
     // fail to match then goto the on_failure label.  End of input always
@@ -221,6 +222,11 @@ template <typename CharT>
 int
 CaseInsensitiveCompareStrings(const CharT* substring1, const CharT* substring2, size_t byteLength);
 
+template <typename CharT>
+int
+CaseInsensitiveCompareUCStrings(const CharT* substring1, const CharT* substring2,
+                                size_t byteLength);
+
 class MOZ_STACK_CLASS InterpretedRegExpMacroAssembler : public RegExpMacroAssembler
 {
   public:
@@ -241,7 +247,7 @@ class MOZ_STACK_CLASS InterpretedRegExpMacroAssembler : public RegExpMacroAssemb
     void CheckGreedyLoop(jit::Label* on_tos_equals_current_position);
     void CheckNotAtStart(jit::Label* on_not_at_start);
     void CheckNotBackReference(int start_reg, jit::Label* on_no_match);
-    void CheckNotBackReferenceIgnoreCase(int start_reg, jit::Label* on_no_match);
+    void CheckNotBackReferenceIgnoreCase(int start_reg, jit::Label* on_no_match, bool unicode);
     void CheckNotCharacter(unsigned c, jit::Label* on_not_equal);
     void CheckNotCharacterAfterAnd(unsigned c, unsigned and_with, jit::Label* on_not_equal);
     void CheckNotCharacterAfterMinusAnd(char16_t c, char16_t minus, char16_t and_with,

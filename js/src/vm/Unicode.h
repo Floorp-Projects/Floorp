@@ -234,6 +234,55 @@ CanLowerCase(char16_t ch)
     return CharInfo(ch).lowerCase != 0;
 }
 
+class FoldingInfo {
+  public:
+    uint16_t folding;
+    uint16_t reverse1;
+    uint16_t reverse2;
+    uint16_t reverse3;
+};
+
+extern const uint8_t folding_index1[];
+extern const uint8_t folding_index2[];
+extern const FoldingInfo js_foldinfo[];
+
+inline const FoldingInfo&
+CaseFoldInfo(char16_t code)
+{
+    const size_t shift = 6;
+    size_t index = folding_index1[code >> shift];
+    index = folding_index2[(index << shift) + (code & ((1 << shift) - 1))];
+    return js_foldinfo[index];
+}
+
+inline char16_t
+FoldCase(char16_t ch)
+{
+    const FoldingInfo& info = CaseFoldInfo(ch);
+    return uint16_t(ch) + info.folding;
+}
+
+inline char16_t
+ReverseFoldCase1(char16_t ch)
+{
+    const FoldingInfo& info = CaseFoldInfo(ch);
+    return uint16_t(ch) + info.reverse1;
+}
+
+inline char16_t
+ReverseFoldCase2(char16_t ch)
+{
+    const FoldingInfo& info = CaseFoldInfo(ch);
+    return uint16_t(ch) + info.reverse2;
+}
+
+inline char16_t
+ReverseFoldCase3(char16_t ch)
+{
+    const FoldingInfo& info = CaseFoldInfo(ch);
+    return uint16_t(ch) + info.reverse3;
+}
+
 const size_t LeadSurrogateMin = 0xD800;
 const size_t LeadSurrogateMax = 0xDBFF;
 const size_t TrailSurrogateMin = 0xDC00;
