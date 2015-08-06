@@ -14,7 +14,13 @@
 
 let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
   .getService(Components.interfaces.mozIJSSubScriptLoader);
-loader.loadSubScript("resource://gre/modules/devtools/sourcemap/source-map.js", this);
+let exports = {};
+loader.loadSubScript("resource://gre/modules/devtools/sourcemap/source-map.js", exports);
+
+// Also bind on `this` for b2g bug on EXPORTED_SYMBOLS
+let define = this.define = exports.define;
+
+let require = exports.require;
 
 this.EXPORTED_SYMBOLS = [ "define", "runSourceMapTests" ];
 /* -*- Mode: js; js-indent-level: 2; -*- */
