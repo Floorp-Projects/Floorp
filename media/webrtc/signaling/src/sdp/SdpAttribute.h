@@ -68,6 +68,7 @@ public:
     kSendonlyAttribute,
     kSendrecvAttribute,
     kSetupAttribute,
+    kSimulcastAttribute,
     kSsrcAttribute,
     kSsrcGroupAttribute,
     kLastAttribute = kSsrcGroupAttribute
@@ -1294,6 +1295,63 @@ inline std::ostream& operator<<(std::ostream& os, SdpSetupAttribute::Role r)
   }
   return os;
 }
+
+// Note: This ABNF is buggy since it does not include a ':' after "a=simulcast"
+// The authors have said this will be fixed in a subsequent version.
+// TODO(bug 1191986): Update this ABNF once the new version is out.
+// simulcast-attribute = "a=simulcast" 1*3( WSP sc-dir-list )
+// sc-dir-list         = sc-dir WSP sc-fmt-list *( ";" sc-fmt-list )
+// sc-dir              = "send" / "recv" / "sendrecv"
+// sc-fmt-list         = sc-fmt *( "," sc-fmt )
+// sc-fmt              = fmt
+// ; WSP defined in [RFC5234]
+// ; fmt defined in [RFC4566]
+class SdpSimulcastAttribute : public SdpAttribute
+{
+public:
+  SdpSimulcastAttribute() : SdpAttribute(kSimulcastAttribute) {}
+
+  void Serialize(std::ostream& os) const override;
+  bool Parse(std::istream& is, std::string* error);
+
+  class Version
+  {
+    public:
+      void Serialize(std::ostream& os) const;
+      bool IsSet() const
+      {
+        return !choices.empty();
+      }
+      bool Parse(std::istream& is, std::string* error);
+
+      std::vector<uint16_t> choices;
+  };
+
+  class Versions : public std::vector<Version>
+  {
+    public:
+      void Serialize(std::ostream& os) const;
+      bool IsSet() const
+      {
+        if (empty()) {
+          return false;
+        }
+
+        for (const Version& version : *this) {
+          if (version.IsSet()) {
+            return true;
+          }
+        }
+
+        return false;
+      }
+      bool Parse(std::istream& is, std::string* error);
+  };
+
+  Versions sendVersions;
+  Versions recvVersions;
+  Versions sendrecvVersions;
+};
 
 ///////////////////////////////////////////////////////////////////////////
 // a=ssrc, RFC5576
