@@ -17,6 +17,10 @@ let tests = [
     is_element_hidden(CONTROL_CENTER_PANEL, "Panel should initially be hidden");
     yield showMenuPromise(CONTROL_CENTER_MENU_NAME);
     is_element_visible(CONTROL_CENTER_PANEL, "Panel should be visible after showMenu");
+
+    yield gURLBar.focus();
+    is_element_visible(CONTROL_CENTER_PANEL, "Panel should remain visible after focus outside");
+
     yield showMenuPromise(CONTROL_CENTER_MENU_NAME);
     is_element_visible(CONTROL_CENTER_PANEL,
                        "Panel should remain visible and callback called after a 2nd showMenu");

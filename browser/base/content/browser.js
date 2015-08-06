@@ -7199,9 +7199,11 @@ var gIdentityHandler = {
     let position = elem.compareDocumentPosition(this._identityPopup);
 
     if (!(position & (Node.DOCUMENT_POSITION_CONTAINS |
-                      Node.DOCUMENT_POSITION_CONTAINED_BY))) {
+                      Node.DOCUMENT_POSITION_CONTAINED_BY)) &&
+        !this._identityPopup.hasAttribute("noautohide")) {
       // Hide the panel when focusing an element that is
-      // neither an ancestor nor descendant.
+      // neither an ancestor nor descendant unless the panel has
+      // @noautohide (e.g. for a tour).
       this._identityPopup.hidePopup();
     }
   },
