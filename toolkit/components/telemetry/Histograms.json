@@ -9537,5 +9537,37 @@
     "expires_in_version": "55",
     "kind": "count",
     "description": "Attempt to unsubscribe with Push Server succeeded."
+  },
+  "PUSH_API_SUBSCRIBE_WS_TIME": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "exponential",
+    "high": "15000",
+    "n_buckets": 10,
+    "description": "Time taken to subscribe over WebSocket (ms)."
+  },
+  "PUSH_API_SUBSCRIBE_HTTP2_TIME": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "exponential",
+    "high": "15000",
+    "n_buckets": 10,
+    "description": "Time taken to subscribe over HTTP2 (ms)."
+  },
+  "PUSH_API_QUOTA_EXPIRATION_TIME": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "exponential",
+    "high": "31622400",
+    "n_buckets": 20,
+    "description": "Time taken for a push subscription to expire its quota (seconds). The maximum is just over an year."
+  }
+  "PUSH_API_QUOTA_RESET_TO": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "exponential",
+    "high": "200",
+    "n_buckets": 10,
+    "description": "The value a push record quota (a count) is reset to based on the user's browsing history."
   }
 }
