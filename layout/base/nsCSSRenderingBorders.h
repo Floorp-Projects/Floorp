@@ -65,8 +65,10 @@ class nsCSSBorderRenderer final
   typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::gfx::Float Float;
   typedef mozilla::gfx::Path Path;
+  typedef mozilla::gfx::Point Point;
   typedef mozilla::gfx::Rect Rect;
   typedef mozilla::gfx::RectCornerRadii RectCornerRadii;
+  typedef mozilla::gfx::StrokeOptions StrokeOptions;
 
 public:
 
@@ -134,6 +136,9 @@ private:
   // For the given style, is the given corner a solid color?
   bool IsSolidCornerStyle(uint8_t aStyle, mozilla::css::Corner aCorner);
 
+  // For the given corner, is the given corner mergeable into one dot?
+  bool IsCornerMergeable(mozilla::css::Corner aCorner);
+
   // For the given solid corner, what color style should be used?
   BorderColorStyle BorderColorStyleForSolidCorner(uint8_t aStyle, mozilla::css::Corner aCorner);
 
@@ -155,6 +160,11 @@ private:
   // don't ever (mathematically) overlap; the pixel overlap
   // is taken care of by the ADD compositing.
   already_AddRefed<Path> GetSideClipSubPath(mozilla::css::Side aSide);
+
+  // Return start or end point for dashed/dotted side
+  Point GetStraightBorderPoint(mozilla::css::Side aSide,
+                               mozilla::css::Corner aCorner,
+                               bool* aIsUnfilled);
 
   // Given a set of sides to fill and a color, do so in the fastest way.
   //
@@ -186,11 +196,16 @@ private:
   // function used by the above to handle -moz-border-colors
   void DrawBorderSidesCompositeColors(int aSides, const nsBorderColors *compositeColors);
 
-  // draw the given dashed side
-  void DrawDashedSide (mozilla::css::Side aSide);
+  // Setup the stroke options for the given dashed/dotted side
+  void SetupDashedOptions(StrokeOptions* aStrokeOptions,
+                          Float aDash[2], mozilla::css::Side aSide,
+                          Float aBorderLength);
 
-  // Setup the stroke style for a given side
-  void SetupStrokeStyle(mozilla::css::Side aSize);
+  // Draw the given dashed/dotte side
+  void DrawDashedOrDottedSide(mozilla::css::Side aSide);
+
+  // Draw the given dotted side, each dot separately
+  void DrawDottedSideSlow(mozilla::css::Side aSide);
 
   // Analyze if all border sides have the same width.
   bool AllBordersSameWidth();
