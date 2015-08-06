@@ -289,7 +289,7 @@ AsmJSModule::finish(ExclusiveContext* cx, TokenStream& tokenStream, MacroAssembl
 
     uint32_t endBeforeCurly = tokenStream.currentToken().pos.end;
     TokenPos pos;
-    if (!tokenStream.peekTokenPos(&pos))
+    if (!tokenStream.peekTokenPos(&pos, TokenStream::Operand))
         return false;
     uint32_t endAfterCurly = pos.end;
     MOZ_ASSERT(endBeforeCurly >= srcBodyStart_);
@@ -2046,7 +2046,7 @@ class ModuleChars
 
     static uint32_t endOffset(AsmJSParser& parser) {
         TokenPos pos(0, 0);  // initialize to silence GCC warning
-        MOZ_ALWAYS_TRUE(parser.tokenStream.peekTokenPos(&pos));
+        MOZ_ALWAYS_TRUE(parser.tokenStream.peekTokenPos(&pos, TokenStream::Operand));
         return pos.end;
     }
 };
