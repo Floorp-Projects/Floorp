@@ -214,7 +214,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
 
     void generateInvalidateEpilogue();
 
-    void visitRandom(LRandom* ins);
+    void setReturnDoubleRegs(LiveRegisterSet* regs);
 
   protected:
     void visitEffectiveAddress(LEffectiveAddress* ins);

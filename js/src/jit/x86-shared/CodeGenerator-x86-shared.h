@@ -289,6 +289,8 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     void visitOutOfLineTableSwitch(OutOfLineTableSwitch* ool);
     void visitOutOfLineSimdFloatToIntCheck(OutOfLineSimdFloatToIntCheck* ool);
     void generateInvalidateEpilogue();
+
+    void setReturnDoubleRegs(LiveRegisterSet* regs);
 };
 
 // An out-of-line bailout thunk.
