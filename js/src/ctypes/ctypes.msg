@@ -48,3 +48,10 @@ MSG_DEF(CTYPESMSG_WRONG_ARG_LENGTH,3, JSEXN_TYPEERR, "{0} takes {1} argument{2}"
 /* overflow */
 MSG_DEF(CTYPESMSG_SIZE_OVERFLOW, 2, JSEXN_RANGEERR, "{0} does not fit in {1}")
 MSG_DEF(CTYPESMSG_TYPE_OVERFLOW, 2, JSEXN_RANGEERR, "{0} does not fit in the type {1}")
+
+/* function */
+MSG_DEF(CTYPESMSG_ARG_COUNT_MISMATCH,4, JSEXN_RANGEERR, "number of arguments does not match declaration of {0} (expected {1}{2}, got {3})")
+MSG_DEF(CTYPESMSG_ARG_TYPE_ERROR,3, JSEXN_TYPEERR, "the type of argument {0} {1} (got {2})")
+MSG_DEF(CTYPESMSG_FUNCTION_CONSTRUCT,0, JSEXN_TYPEERR, "cannot construct from FunctionType; use FunctionType.ptr instead")
+MSG_DEF(CTYPESMSG_RET_TYPE_ERROR,2, JSEXN_TYPEERR, "return type {0} (got {1})")
+MSG_DEF(CTYPESMSG_VARG_TYPE_ERROR,2, JSEXN_TYPEERR, "variadic argument {0} must be a CData object (got {1})")
