@@ -215,7 +215,7 @@ GrallocTextureClientOGL::BorrowDrawTarget()
 }
 
 void
-GrallocTextureClientOGL::UpdateFromSurface(gfx::DataSourceSurface* aSurface)
+GrallocTextureClientOGL::UpdateFromSurface(gfx::SourceSurface* aSurface)
 {
   MOZ_ASSERT(IsValid());
   MOZ_ASSERT(mMappedBuffer, "Calling TextureClient::BorrowDrawTarget without locking :(");
@@ -224,9 +224,16 @@ GrallocTextureClientOGL::UpdateFromSurface(gfx::DataSourceSurface* aSurface)
     return;
   }
 
+  RefPtr<DataSourceSurface> srcSurf = aSurface->GetDataSurface();
+
+  if (!srcSurf) {
+    gfxCriticalError() << "Failed to GetDataSurface in UpdateFromSurface.";
+    return;
+  }
+
   gfx::SurfaceFormat format = SurfaceFormatForPixelFormat(mGraphicBuffer->getPixelFormat());
-  if (mSize != aSurface->GetSize() || mFormat != aSurface->GetFormat()) {
-    gfxCriticalError() << "Attempt to update texture client from a surface with a different size or format! This: " << mSize << " " << format << " Other: " << aSurface->GetSize() << " " << aSurface->GetFormat();
+  if (mSize != srcSurf->GetSize() || mFormat != srcSurf->GetFormat()) {
+    gfxCriticalError() << "Attempt to update texture client from a surface with a different size or format! This: " << mSize << " " << format << " Other: " << srcSurf->GetSize() << " " << srcSurf->GetFormat();
     return;
   }
 
@@ -235,17 +242,20 @@ GrallocTextureClientOGL::UpdateFromSurface(gfx::DataSourceSurface* aSurface)
 
   DataSourceSurface::MappedSurface sourceMap;
 
-  aSurface->Map(DataSourceSurface::READ, &sourceMap);
+  if (!srcSurf->Map(DataSourceSurface::READ, &sourceMap)) {
+    gfxCriticalError() << "Failed to map source surface for UpdateFromSurface.";
+    return;
+  }
 
   uint8_t* buffer = GetBuffer();
 
-  for (int y = 0; y < aSurface->GetSize().height; y++) {
+  for (int y = 0; y < srcSurf->GetSize().height; y++) {
     memcpy(buffer + byteStride * y,
            sourceMap.mData + sourceMap.mStride * y,
-           aSurface->GetSize().width * BytesPerPixel(aSurface->GetFormat()));
+           srcSurf->GetSize().width * BytesPerPixel(srcSurf->GetFormat()));
   }
 
-  aSurface->Unmap();
+  srcSurf->Unmap();
 }
 
 bool
