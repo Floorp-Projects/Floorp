@@ -3,6 +3,7 @@ import sys
 
 config = {
     "platform": "win32",
+    "stage_product": "firefox",
     "update_platform": "WINNT_x86-msvc",
     "mozconfig": "%(branch)s/browser/config/mozconfigs/win32/l10n-mozconfig",
     "bootstrap_env": {

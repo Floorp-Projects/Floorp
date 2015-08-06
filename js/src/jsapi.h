@@ -3384,20 +3384,10 @@ namespace JS {
  * it doesn't care who owns them, or what's keeping them alive. It does its own
  * addrefs/copies/tracing/etc.
  *
- * Furthermore, in some cases compile options are propagated from one entity to
- * another (e.g. from a scriipt to a function defined in that script).  This
- * involves copying over some, but not all, of the options.
+ * So, we have a class hierarchy that reflects these three use cases:
  *
- * So, we have a class hierarchy that reflects these four use cases:
- *
- * - TransitiveCompileOptions is the common base class, representing options
- *   that should get propagated from a script to functions defined in that
- *   script.  This is never instantiated directly.
- *
- * - ReadOnlyCompileOptions is the only subclass of TransitiveCompileOptions,
- *   representing a full set of compile options.  It can be used by code that
- *   simply needs to access options set elsewhere, like the compiler.  This,
- *   again, is never instantiated directly.
+ * - ReadOnlyCompileOptions is the common base class. It can be used by code
+ *   that simply needs to access options set elsewhere, like the compiler.
  *
  * - The usual CompileOptions class must be stack-allocated, and holds
  *   non-owning references to the filename, element, and so on. It's derived
@@ -3411,11 +3401,15 @@ namespace JS {
 /*
  * The common base class for the CompileOptions hierarchy.
  *
- * Use this in code that needs to propagate compile options from one compilation
- * unit to another.
+ * Use this in code that only needs to access compilation options created
+ * elsewhere, like the compiler. Don't instantiate this class (the constructor
+ * is protected anyway); instead, create instances only of the derived classes:
+ * CompileOptions and OwningCompileOptions.
  */
-class JS_FRIEND_API(TransitiveCompileOptions)
+class JS_FRIEND_API(ReadOnlyCompileOptions)
 {
+    friend class CompileOptions;
+
   protected:
     // The Web Platform allows scripts to be loaded from arbitrary cross-origin
     // sources. This allows an attack by which a malicious website loads a
@@ -3437,7 +3431,7 @@ class JS_FRIEND_API(TransitiveCompileOptions)
     // is unusable until that's set to something more specific; the derived
     // classes' constructors take care of that, in ways appropriate to their
     // purpose.
-    TransitiveCompileOptions()
+    ReadOnlyCompileOptions()
       : mutedErrors_(false),
         filename_(nullptr),
         introducerFilename_(nullptr),
@@ -3445,6 +3439,11 @@ class JS_FRIEND_API(TransitiveCompileOptions)
         version(JSVERSION_UNKNOWN),
         versionSet(false),
         utf8(false),
+        lineno(1),
+        column(0),
+        isRunOnce(false),
+        forEval(false),
+        noScriptRval(false),
         selfHostingMode(false),
         canLazilyParse(true),
         strictOption(false),
@@ -3458,68 +3457,6 @@ class JS_FRIEND_API(TransitiveCompileOptions)
         introductionLineno(0),
         introductionOffset(0),
         hasIntroductionInfo(false)
-    { }
-
-    // Set all POD options (those not requiring reference counts, copies,
-    // rooting, or other hand-holding) to their values in |rhs|.
-    void copyPODTransitiveOptions(const TransitiveCompileOptions& rhs);
-
-  public:
-    // Read-only accessors for non-POD options. The proper way to set these
-    // depends on the derived type.
-    bool mutedErrors() const { return mutedErrors_; }
-    const char* filename() const { return filename_; }
-    const char* introducerFilename() const { return introducerFilename_; }
-    const char16_t* sourceMapURL() const { return sourceMapURL_; }
-    virtual JSObject* element() const = 0;
-    virtual JSString* elementAttributeName() const = 0;
-    virtual JSScript* introductionScript() const = 0;
-
-    // POD options.
-    JSVersion version;
-    bool versionSet;
-    bool utf8;
-    bool selfHostingMode;
-    bool canLazilyParse;
-    bool strictOption;
-    bool extraWarningsOption;
-    bool werrorOption;
-    bool asmJSOption;
-    bool forceAsync;
-    bool installedFile;  // 'true' iff pre-compiling js file in packaged app
-    bool sourceIsLazy;
-
-    // |introductionType| is a statically allocated C string:
-    // one of "eval", "Function", or "GeneratorFunction".
-    const char* introductionType;
-    unsigned introductionLineno;
-    uint32_t introductionOffset;
-    bool hasIntroductionInfo;
-
-  private:
-    void operator=(const TransitiveCompileOptions&) = delete;
-};
-
-/*
- * The class representing a full set of compile options.
- *
- * Use this in code that only needs to access compilation options created
- * elsewhere, like the compiler. Don't instantiate this class (the constructor
- * is protected anyway); instead, create instances only of the derived classes:
- * CompileOptions and OwningCompileOptions.
- */
-class JS_FRIEND_API(ReadOnlyCompileOptions) : public TransitiveCompileOptions
-{
-    friend class CompileOptions;
-
-  protected:
-    ReadOnlyCompileOptions()
-      : TransitiveCompileOptions(),
-        lineno(1),
-        column(0),
-        isRunOnce(false),
-        forEval(false),
-        noScriptRval(false)
     { }
 
     // Set all POD options (those not requiring reference counts, copies,
@@ -3538,14 +3475,34 @@ class JS_FRIEND_API(ReadOnlyCompileOptions) : public TransitiveCompileOptions
     virtual JSScript* introductionScript() const = 0;
 
     // POD options.
+    JSVersion version;
+    bool versionSet;
+    bool utf8;
     unsigned lineno;
     unsigned column;
     // isRunOnce only applies to non-function scripts.
     bool isRunOnce;
     bool forEval;
     bool noScriptRval;
+    bool selfHostingMode;
+    bool canLazilyParse;
+    bool strictOption;
+    bool extraWarningsOption;
+    bool werrorOption;
+    bool asmJSOption;
+    bool forceAsync;
+    bool installedFile;  // 'true' iff pre-compiling js file in packaged app
+    bool sourceIsLazy;
+
+    // |introductionType| is a statically allocated C string:
+    // one of "eval", "Function", or "GeneratorFunction".
+    const char* introductionType;
+    unsigned introductionLineno;
+    uint32_t introductionOffset;
+    bool hasIntroductionInfo;
 
   private:
+    static JSObject * const nullObjectPtr;
     void operator=(const ReadOnlyCompileOptions&) = delete;
 };
 
@@ -3660,22 +3617,8 @@ class MOZ_STACK_CLASS JS_FRIEND_API(CompileOptions) : public ReadOnlyCompileOpti
     {
         copyPODOptions(rhs);
 
+        mutedErrors_ = rhs.mutedErrors_;
         filename_ = rhs.filename();
-        introducerFilename_ = rhs.introducerFilename();
-        sourceMapURL_ = rhs.sourceMapURL();
-        elementRoot = rhs.element();
-        elementAttributeNameRoot = rhs.elementAttributeName();
-        introductionScriptRoot = rhs.introductionScript();
-    }
-
-    CompileOptions(js::ContextFriendFields* cx, const TransitiveCompileOptions& rhs)
-      : ReadOnlyCompileOptions(), elementRoot(cx), elementAttributeNameRoot(cx),
-        introductionScriptRoot(cx)
-    {
-        copyPODTransitiveOptions(rhs);
-
-        filename_ = rhs.filename();
-        introducerFilename_ = rhs.introducerFilename();
         sourceMapURL_ = rhs.sourceMapURL();
         elementRoot = rhs.element();
         elementAttributeNameRoot = rhs.elementAttributeName();

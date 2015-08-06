@@ -1529,8 +1529,10 @@ protected:
 
   void NotifyStyleSheetApplicableStateChanged();
 
-  // Apply the fullscreen state to the document, and trigger related events.
-  void ApplyFullscreen(const FullscreenRequest& aRequest);
+  // Apply the fullscreen state to the document, and trigger related
+  // events. It returns false if the fullscreen element ready check
+  // fails and nothing gets changed.
+  bool ApplyFullscreen(const FullscreenRequest& aRequest);
 
   nsTArray<nsIObserver*> mCharSetObservers;
 

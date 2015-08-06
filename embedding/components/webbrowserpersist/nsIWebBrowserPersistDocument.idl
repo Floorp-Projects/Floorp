@@ -1,0 +1,197 @@
+/* -*- Mode: IDL; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMDocument;
+interface nsIInputStream;
+interface nsIOutputStream;
+interface nsITabParent;
+interface nsIWebBrowserPersistResourceVisitor;
+interface nsIWebBrowserPersistWriteCompletion;
+
+/**
+ * Interface for the URI-mapping information that can be supplied when
+ * serializing the DOM of an nsIWebBrowserPersistDocument.
+ *
+ * @see nsIWebBrowserPersistDocument
+ */
+[scriptable, uuid(d52e8b93-2771-45e8-a5b0-6e12b667046b)]
+interface nsIWebBrowserPersistURIMap : nsISupports
+{
+  /**
+   * The number of URI mappings.
+   */
+  readonly attribute unsigned long numMappedURIs;
+
+  /**
+   * Obtain the URI mapping at the given index, which must be less than
+   * numMappedURIs, as a pair of URI spec strings.
+   */
+  void getURIMapping(in unsigned long aIndex,
+                     out AUTF8String aMapFrom,
+                     out AUTF8String aMapTo);
+
+  /**
+   * The spec of the base URI that the document will have after it is
+   * serialized.
+   */
+  readonly attribute AUTF8String targetBaseURI;
+};
+
+/**
+ * Interface representing a document that can be serialized with
+ * nsIWebBrowserPersist; it may or may not be in this process.  Some
+ * information is exposed as attributes, which may or may not reflect
+ * changes made to the underlying document; most of these are
+ * self-explanatory from their names and types.
+ */
+[scriptable, uuid(74aa4918-5d15-46b6-9ccf-74f9696d721d)]
+interface nsIWebBrowserPersistDocument : nsISupports
+{
+  readonly attribute boolean isPrivate;
+  readonly attribute AUTF8String documentURI;
+  readonly attribute AUTF8String baseURI;
+  readonly attribute ACString contentType;
+  readonly attribute ACString characterSet;
+  readonly attribute AString title;
+  readonly attribute AString referrer;
+  readonly attribute AString contentDisposition;
+  readonly attribute nsIInputStream postData;
+
+  /**
+   * The cache key.  Unlike in nsISHEntry, where it's wrapped in an
+   * nsISupportsPRUint32, this is just the integer.
+   */
+  readonly attribute unsigned long cacheKey;
+
+  /**
+   * This attribute is set by nsIWebBrowserPersist implementations to
+   * propagate persist flags that apply to the DOM traversal and
+   * serialization (rather than to managing file I/O).
+   */
+  attribute unsigned long persistFlags;
+
+  /**
+   * Walk the DOM searching for external resources needed to render it.
+   * The visitor callbacks may be called either before or after
+   * readResources returns.
+   *
+   * @see nsIWebBrowserPersistResourceVisitor
+   */
+  void readResources(in nsIWebBrowserPersistResourceVisitor aVisitor);
+
+  /**
+   * Serialize the document's DOM.
+   *
+   * @param aStream       The output stream to write the document to.
+   *
+   * @param aURIMap       Optional; specifies URI rewriting to perform on
+   *                      external references (as read by readResources).
+   *                      If given, also causes relative hyperlinks to be
+   *                      converted to absolute in the written text.
+   *
+   * @param aRequestedContentType
+   *                      The desired MIME type to save the document as;
+   *                      optional and defaults to the document's type.
+   *                      (If no encoder exists for that type, "text/html"
+   *                      is used instead.)
+   *
+   * @param aEncoderFlags Flags to pass to the encoder.
+   *
+   * @param aWrapColumn   Desired text width, ignored if wrapping is not
+   *                      specified by the encoding flags, or if 0.
+   *
+   * @param aCompletion   Callback invoked when writing is complete.
+   *                      It may be called either before or after writeContent
+   *                      returns.
+   *
+   * @see nsIDocumentEncoder
+   */
+  void writeContent(in nsIOutputStream aStream,
+                    in nsIWebBrowserPersistURIMap aURIMap,
+                    in ACString aRequestedContentType,
+                    in unsigned long aEncoderFlags,
+                    in unsigned long aWrapColumn,
+                    in nsIWebBrowserPersistWriteCompletion aCompletion);
+};
+
+/**
+ * Asynchronous visitor that receives external resources linked by an
+ * nsIWebBrowserPersistDocument and which are needed to render the
+ * document.
+ */
+[scriptable, uuid(8ce37706-b7d3-481a-be68-54f174fc0d0a)]
+interface nsIWebBrowserPersistResourceVisitor : nsISupports
+{
+  /**
+   * Indicates a resource that is not a document; e.g., an image, script,
+   * or stylesheet.
+   *
+   * @param aDocument   The document containing the reference.
+   * @param aURI        The absolute URI spec for the referenced resource.
+   */
+  void visitResource(in nsIWebBrowserPersistDocument aDocument,
+                     in AUTF8String aURI);
+  /**
+   * Indicates a subdocument resource; e.g., a frame or iframe.
+   *
+   * @param aDocument     The document containing the reference.
+   * @param aSubDocument  The referenced document.
+   */
+  void visitDocument(in nsIWebBrowserPersistDocument aDocument,
+                     in nsIWebBrowserPersistDocument aSubDocument);
+
+  /**
+   * Indicates that the document traversal is complete.
+   *
+   * @param aDocument   The document that was being traversed.
+   * @param aStatus     Indicates whether the traversal encountered an error.
+   */
+  void endVisit(in nsIWebBrowserPersistDocument aDocument,
+                in nsresult aStatus);
+};
+
+/**
+ * Asynchronous callback for when nsIWebBrowserPersistDocument is finished
+ * serializing the document's DOM.
+ */
+[scriptable, function, uuid(a07e6892-38ae-4207-8340-7fa6ec446ed6)]
+interface nsIWebBrowserPersistWriteCompletion : nsISupports
+{
+  /**
+   * Indicates that serialization is finished.
+   *
+   * @param aDocument     The document that was being serialized.
+   *
+   * @param aStream       The stream that was being written to.  If it
+   *                      needs to be closed, the callback must do that;
+   *                      the serialization process leaves it open.
+   *
+   * @param aContentType  The content type with which the document was
+   *                      actually serialized; this may be useful to set
+   *                      metadata on the result, or if uploading it.
+   *
+   * @param aStatus       Indicates whether serialization encountered an error.
+   */
+  void onFinish(in nsIWebBrowserPersistDocument aDocument,
+                in nsIOutputStream aStream,
+                in ACString aContentType,
+                in nsresult aStatus);
+};
+
+/**
+ * Asynchronous callback for creating a persistable document from some
+ * other object.
+ *
+ * @see nsIWebBrowserPersistable.
+ */
+[scriptable, uuid(321e3174-594f-4036-b7be-791b821bd376)]
+interface nsIWebBrowserPersistDocumentReceiver : nsISupports
+{
+  void onDocumentReady(in nsIWebBrowserPersistDocument aDocument);
+  void onError(in nsresult aFailure);
+};

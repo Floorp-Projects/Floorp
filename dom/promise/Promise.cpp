@@ -6,32 +6,35 @@
 
 #include "mozilla/dom/Promise.h"
 
-#include "jsfriendapi.h"
 #include "js/Debug.h"
+
+#include "mozilla/Atomics.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
+#include "mozilla/OwningNonNull.h"
+#include "mozilla/Preferences.h"
+
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMError.h"
 #include "mozilla/dom/DOMException.h"
-#include "mozilla/OwningNonNull.h"
+#include "mozilla/dom/MediaStreamError.h"
 #include "mozilla/dom/PromiseBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/MediaStreamError.h"
-#include "mozilla/Atomics.h"
-#include "mozilla/CycleCollectedJSRuntime.h"
-#include "mozilla/Preferences.h"
+
+#include "jsfriendapi.h"
+#include "nsContentUtils.h"
+#include "nsGlobalWindow.h"
+#include "nsIScriptObjectPrincipal.h"
+#include "nsJSEnvironment.h"
+#include "nsJSPrincipals.h"
+#include "nsJSUtils.h"
+#include "nsPIDOMWindow.h"
 #include "PromiseCallback.h"
 #include "PromiseDebugging.h"
 #include "PromiseNativeHandler.h"
 #include "PromiseWorkerProxy.h"
-#include "nsContentUtils.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
-#include "nsJSPrincipals.h"
-#include "nsJSUtils.h"
-#include "nsPIDOMWindow.h"
-#include "nsJSEnvironment.h"
-#include "nsIScriptObjectPrincipal.h"
 #include "xpcpublic.h"
-#include "nsGlobalWindow.h"
 
 namespace mozilla {
 namespace dom {

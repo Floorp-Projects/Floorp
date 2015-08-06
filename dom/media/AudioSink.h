@@ -53,10 +53,6 @@ public:
   void SetPreservesPitch(bool aPreservesPitch);
   void SetPlaying(bool aPlaying);
 
-  // Wake up the audio loop if it is waiting for data to play or the audio
-  // queue is finished.
-  void NotifyData();
-
 private:
   enum State {
     AUDIOSINK_STATE_INIT,
@@ -72,6 +68,10 @@ private:
   void SetState(State aState);
   void ScheduleNextLoop();
   void ScheduleNextLoopCrossThread();
+
+  void OnAudioQueueEvent();
+  void ConnectListener();
+  void DisconnectListener();
 
   // The main loop for the audio thread. Sent to the thread as
   // an nsRunnableMethod. This continually does blocking writes to
@@ -175,6 +175,9 @@ private:
   bool mPlaying;
 
   MozPromiseHolder<GenericPromise> mEndPromise;
+
+  MediaEventListener mPushListener;
+  MediaEventListener mFinishListener;
 };
 
 } // namespace mozilla

@@ -409,10 +409,14 @@ TextureClientD3D11::BorrowDrawTarget()
 }
 
 void
-TextureClientD3D11::UpdateFromSurface(gfx::DataSourceSurface* aSurface)
+TextureClientD3D11::UpdateFromSurface(gfx::SourceSurface* aSurface)
 {
-  DataSourceSurface::MappedSurface sourceMap;
-  aSurface->Map(DataSourceSurface::READ, &sourceMap);
+  RefPtr<DataSourceSurface> srcSurf = aSurface->GetDataSurface();
+
+  if (!srcSurf) {
+    gfxCriticalError() << "Failed to GetDataSurface in UpdateFromSurface.";
+    return;
+  }
 
   if (mDrawTarget) {
     // Ensure unflushed work from our outstanding drawtarget won't override this
@@ -420,8 +424,14 @@ TextureClientD3D11::UpdateFromSurface(gfx::DataSourceSurface* aSurface)
     mDrawTarget->Flush();
   }
 
-  if (mSize != aSurface->GetSize() || mFormat != aSurface->GetFormat()) {
+  if (mSize != srcSurf->GetSize() || mFormat != srcSurf->GetFormat()) {
     gfxCriticalError() << "Attempt to update texture client from a surface with a different size or format!";
+    return;
+  }
+
+  DataSourceSurface::MappedSurface sourceMap;
+  if (!srcSurf->Map(DataSourceSurface::READ, &sourceMap)) {
+    gfxCriticalError() << "Failed to map source surface for UpdateFromSurface.";
     return;
   }
 
@@ -452,7 +462,7 @@ TextureClientD3D11::UpdateFromSurface(gfx::DataSourceSurface* aSurface)
 
     device->UpdateSubresource(mTexture10, 0, &box, sourceMap.mData, sourceMap.mStride, 0);
   }
-  aSurface->Unmap();
+  srcSurf->Unmap();
 }
 
 static const GUID sD3D11TextureUsage =

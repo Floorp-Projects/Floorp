@@ -660,7 +660,7 @@ CDMProxy::gmp_Decrypt(nsRefPtr<DecryptJob> aJob)
 
   aJob->mId = ++mDecryptionJobCount;
   nsTArray<uint8_t> data;
-  data.AppendElements(aJob->mSample->mData, aJob->mSample->mSize);
+  data.AppendElements(aJob->mSample->Data(), aJob->mSample->Size());
   mCDM->Decrypt(aJob->mId, aJob->mSample->mCrypto, data);
   mDecryptionJobs.AppendElement(aJob.forget());
 }
@@ -701,14 +701,14 @@ CDMProxy::DecryptJob::PostResult(GMPErr aResult)
 void
 CDMProxy::DecryptJob::PostResult(GMPErr aResult, const nsTArray<uint8_t>& aDecryptedData)
 {
-  if (aDecryptedData.Length() != mSample->mSize) {
+  if (aDecryptedData.Length() != mSample->Size()) {
     NS_WARNING("CDM returned incorrect number of decrypted bytes");
   }
   if (GMP_SUCCEEDED(aResult)) {
     nsAutoPtr<MediaRawDataWriter> writer(mSample->CreateWriter());
-    PodCopy(writer->mData,
+    PodCopy(writer->Data(),
             aDecryptedData.Elements(),
-            std::min<size_t>(aDecryptedData.Length(), mSample->mSize));
+            std::min<size_t>(aDecryptedData.Length(), mSample->Size()));
   } else if (aResult == GMPNoKeyErr) {
     NS_WARNING("CDM returned GMPNoKeyErr");
     // We still have the encrypted sample, so we can re-enqueue it to be

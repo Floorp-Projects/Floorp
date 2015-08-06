@@ -16,10 +16,14 @@ function parseLogArray(array) {
   let data = new DataView(array.buffer);
   let byteString = String.fromCharCode.apply(null, array);
 
+  // Length of bytes that precede the payload of a log message
+  // From the 5 Uint32 and 1 Uint8 reads
+  const HEADER_LENGTH = 21;
+
   let logMessages = [];
   let pos = 0;
 
-  while (pos < byteString.length) {
+  while (pos + HEADER_LENGTH < byteString.length) {
     // Parse a single log entry
 
     // Track current offset from global position
