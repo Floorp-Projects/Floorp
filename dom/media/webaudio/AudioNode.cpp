@@ -227,6 +227,7 @@ AudioNode::Connect(AudioNode& aDestination, uint32_t aOutput,
                             static_cast<uint16_t>(aInput),
                             static_cast<uint16_t>(aOutput));
   }
+  aDestination.NotifyInputsChanged();
 
   // This connection may have connected a panner and a source.
   Context()->UpdatePannerSource();
@@ -351,6 +352,7 @@ AudioNode::Disconnect(uint32_t aOutput, ErrorResult& aRv)
         // could be for different output ports.
         nsRefPtr<AudioNode> output = mOutputNodes[i].forget();
         mOutputNodes.RemoveElementAt(i);
+        output->NotifyInputsChanged();
         if (mStream) {
           nsRefPtr<nsIRunnable> runnable = new RunnableRelease(output.forget());
           mStream->RunAfterPendingUpdates(runnable.forget());
