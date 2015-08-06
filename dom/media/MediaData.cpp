@@ -489,9 +489,9 @@ VideoData::Create(const VideoInfo& aInfo,
 
 MediaRawData::MediaRawData()
   : MediaData(RAW_DATA, 0)
+  , mCrypto(mCryptoInternal)
   , mData(nullptr)
   , mSize(0)
-  , mCrypto(mCryptoInternal)
   , mBuffer(new MediaByteBuffer())
   , mPadding(0)
 {
@@ -500,9 +500,9 @@ MediaRawData::MediaRawData()
 
 MediaRawData::MediaRawData(const uint8_t* aData, size_t aSize)
   : MediaData(RAW_DATA, 0)
+  , mCrypto(mCryptoInternal)
   , mData(nullptr)
   , mSize(0)
-  , mCrypto(mCryptoInternal)
   , mBuffer(new MediaByteBuffer())
   , mPadding(0)
 {
@@ -592,28 +592,21 @@ MediaRawData::CreateWriter()
 }
 
 MediaRawDataWriter::MediaRawDataWriter(MediaRawData* aMediaRawData)
-  : mData(nullptr)
-  , mSize(0)
-  , mCrypto(aMediaRawData->mCryptoInternal)
+  : mCrypto(aMediaRawData->mCryptoInternal)
   , mTarget(aMediaRawData)
   , mBuffer(aMediaRawData->mBuffer.get())
 {
-  if (aMediaRawData->mData) {
-    mData = mBuffer->Elements() + mTarget->mPadding;
-    mSize = mTarget->mSize;
-  }
 }
 
 bool
 MediaRawDataWriter::EnsureSize(size_t aSize)
 {
-  if (aSize <= mSize) {
+  if (aSize <= mTarget->mSize) {
     return true;
   }
   if (!mTarget->EnsureCapacity(aSize)) {
     return false;
   }
-  mData = mBuffer->Elements() + mTarget->mPadding;
   return true;
 }
 
@@ -628,7 +621,7 @@ MediaRawDataWriter::SetSize(size_t aSize)
   MOZ_ALWAYS_TRUE(
     mBuffer->SetLength(aSize + mTarget->mPadding + RAW_DATA_ALIGNMENT,
                        fallible));
-  mTarget->mSize = mSize = aSize;
+  mTarget->mSize = aSize;
   return true;
 }
 
@@ -643,7 +636,6 @@ MediaRawDataWriter::Prepend(const uint8_t* aData, size_t aSize)
   MOZ_ALWAYS_TRUE(mBuffer->InsertElementsAt(mTarget->mPadding, aData, aSize,
                                             fallible));
   mTarget->mSize += aSize;
-  mSize = mTarget->mSize;
   return true;
 }
 
@@ -657,7 +649,7 @@ MediaRawDataWriter::Replace(const uint8_t* aData, size_t aSize)
   // We ensure sufficient capacity above so this shouldn't fail.
   MOZ_ALWAYS_TRUE(mBuffer->ReplaceElementsAt(mTarget->mPadding, mTarget->mSize,
                                              aData, aSize, fallible));
-  mTarget->mSize = mSize = aSize;
+  mTarget->mSize = aSize;
   return true;
 }
 
@@ -665,8 +657,20 @@ void
 MediaRawDataWriter::Clear()
 {
   mBuffer->RemoveElementsAt(mTarget->mPadding, mTarget->mSize);
-  mTarget->mSize = mSize = 0;
-  mTarget->mData = mData = nullptr;
+  mTarget->mSize = 0;
+  mTarget->mData = nullptr;
+}
+
+uint8_t*
+MediaRawDataWriter::Data()
+{
+  return mTarget->mData;
+}
+
+size_t
+MediaRawDataWriter::Size()
+{
+  return mTarget->Size();
 }
 
 } // namespace mozilla
