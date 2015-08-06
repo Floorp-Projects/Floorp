@@ -127,6 +127,8 @@ public:
 
   nsIAtom* ARIARoleAtom() const;
 
+  int32_t GetLevelInternal();
+
   int32_t CaretLineNumber();
   int32_t CaretOffset();
   bool SetCaretOffset(int32_t aOffset);
@@ -310,6 +312,7 @@ public:
 
   void Language(nsString& aLocale);
   void DocType(nsString& aType);
+  void Title(nsString& aTitle);
   void URL(nsString& aURL);
   void MimeType(nsString aMime);
   void URLDocTypeMimeType(nsString& aURL, nsString& aDocType,
