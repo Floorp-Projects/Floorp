@@ -113,10 +113,18 @@ public:
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_oldText(
       /* [retval][out] */ IA2TextSegment *oldText);
 
+  static void InitTextChangeData();
+
 protected:
   virtual nsresult GetModifiedText(bool aGetInsertedText, nsAString& aText,
                                    uint32_t *aStartOffset,
                                    uint32_t *aEndOffset) = 0;
+
+  static StaticRefPtr<Accessible> sLastTextChangeAcc;
+  static StaticAutoPtr<nsString> sLastTextChangeString;
+  static bool sLastTextChangeWasInsert;
+  static uint32_t sLastTextChangeStart;
+  static uint32_t sLastTextChangeEnd;
 
 private:
   HRESULT GetModifiedText(bool aGetInsertedText, IA2TextSegment *aNewText);
