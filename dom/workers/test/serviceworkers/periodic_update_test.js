@@ -68,7 +68,6 @@ function runTheTest() {
     ["dom.serviceWorkers.interception.enabled", true],
     ["dom.serviceWorkers.enabled", true],
     ["dom.serviceWorkers.testing.enabled", true],
-    ['dom.serviceWorkers.interception.enabled', true],
   ]}, function() {
     start();
   });
