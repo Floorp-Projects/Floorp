@@ -62,6 +62,12 @@ public:
   {
     UpdateConnectedStatus();
   }
+  virtual void NotifyHasPhantomInput() override
+  {
+    mHasPhantomInput = true;
+    // No need to UpdateConnectedStatus() because there was previously an
+    // input in InputNodes().
+  }
 
   virtual void SetChannelCount(uint32_t aChannelCount, ErrorResult& aRv) override
   {
@@ -105,6 +111,7 @@ private:
 
   const uint32_t mBufferSize;
   const uint32_t mNumberOfOutputChannels;
+  bool mHasPhantomInput = false;
 };
 
 } // namespace dom
