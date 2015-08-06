@@ -214,6 +214,9 @@ function WebappsActor(aConnection) {
   Cu.import("resource://gre/modules/FileUtils.jsm");
   Cu.import("resource://gre/modules/MessageBroadcaster.jsm");
 
+  this.appsChild = {};
+  Cu.import("resource://gre/modules/AppsServiceChild.jsm", this.appsChild);
+
   // Keep reference of already connected app processes.
   // values: app frame message manager
   this._connectedApps = new Set();
@@ -688,8 +691,7 @@ WebappsActor.prototype = {
     debug("getAll");
 
     let deferred = promise.defer();
-    let reg = DOMApplicationRegistry;
-    reg.getAll(apps => {
+    this.appsChild.DOMApplicationRegistry.getAll(apps => {
       deferred.resolve({ apps: this._filterAllowedApps(apps) });
     });
 
