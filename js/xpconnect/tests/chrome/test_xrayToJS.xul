@@ -198,7 +198,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
 
   gPrototypeProperties['RegExp'] =
     ["constructor", "toSource", "toString", "compile", "exec", "test",
-     "flags", "global", "ignoreCase", "multiline", "source", "sticky",
+     "flags", "global", "ignoreCase", "multiline", "source", "sticky", "unicode",
      "lastIndex"];
 
   // Sort an array that may contain symbols as well as strings.
@@ -612,7 +612,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
 
       // Test with modified flags accessors
       iwin.eval(`
-var props = ["global", "ignoreCase", "multiline", "sticky", "source"];
+var props = ["global", "ignoreCase", "multiline", "sticky", "source", "unicode"];
 var origDescs = {};
 for (var prop of props) {
   origDescs[prop] = Object.getOwnPropertyDescriptor(RegExp.prototype, prop);
