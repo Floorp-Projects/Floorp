@@ -811,8 +811,10 @@ this.PushServiceWebSocket = {
         originAttributes: tmp.record.originAttributes,
         version: null,
         quota: tmp.record.maxQuota,
+        ctime: Date.now(),
       });
       dump("PushWebSocket " +  JSON.stringify(record));
+      Services.telemetry.getHistogramById("PUSH_API_SUBSCRIBE_WS_TIME").add(Date.now() - tmp.ctime);
       tmp.resolve(record);
     } else {
       tmp.reject(reply);
