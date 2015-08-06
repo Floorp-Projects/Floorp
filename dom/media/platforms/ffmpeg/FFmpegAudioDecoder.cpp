@@ -88,8 +88,8 @@ FFmpegAudioDecoder<LIBAV_VER>::DecodePacket(MediaRawData* aSample)
   AVPacket packet;
   av_init_packet(&packet);
 
-  packet.data = const_cast<uint8_t*>(aSample->mData);
-  packet.size = aSample->mSize;
+  packet.data = const_cast<uint8_t*>(aSample->Data());
+  packet.size = aSample->Size();
 
   if (!PrepareFrame()) {
     NS_WARNING("FFmpeg audio decoder failed to allocate frame.");

@@ -152,8 +152,8 @@ VorbisDataDecoder::Decode(MediaRawData* aSample)
 int
 VorbisDataDecoder::DoDecode(MediaRawData* aSample)
 {
-  const unsigned char* aData = aSample->mData;
-  size_t aLength = aSample->mSize;
+  const unsigned char* aData = aSample->Data();
+  size_t aLength = aSample->Size();
   int64_t aOffset = aSample->mOffset;
   uint64_t aTstampUsecs = aSample->mTime;
   int64_t aTotalFrames = 0;

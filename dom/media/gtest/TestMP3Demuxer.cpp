@@ -209,7 +209,7 @@ TEST_F(MP3DemuxerTest, FrameParsing) {
       }
 
       ++numFrames;
-      parsedLength += frameData->mSize;
+      parsedLength += frameData->Size();
 
       const auto& frame = target.mDemuxer->LastFrame();
       const auto& header = frame.Header();

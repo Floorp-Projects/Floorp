@@ -215,7 +215,7 @@ IntelWebMVideoDecoder::Demux(nsRefPtr<VP8Sample>& aSample, bool* aEOS)
                           data,
                           length,
                           si.is_kf);
-  if (!aSample->mData) {
+  if (!aSample->Data()) {
     return false;
   }
 
