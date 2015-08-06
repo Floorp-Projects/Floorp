@@ -115,6 +115,9 @@ public:
       /* [retval][out] */ IA2TextSegment *oldText);
 
   static void InitTextChangeData();
+  static void UpdateTextChangeData(HyperTextAccessibleWrap* aAcc, bool aInsert,
+                                   const nsString& aStr, int32_t aStart,
+                                   uint32_t aLen);
 
 protected:
   static StaticRefPtr<HyperTextAccessibleWrap> sLastTextChangeAcc;
