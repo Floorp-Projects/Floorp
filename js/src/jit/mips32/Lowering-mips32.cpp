@@ -173,3 +173,14 @@ LIRGeneratorMIPS::lowerTruncateFToInt32(MTruncateToInt32* ins)
 
     define(new(alloc()) LTruncateFToInt32(useRegister(opd), LDefinition::BogusTemp()), ins);
 }
+
+void
+LIRGeneratorMIPS::visitRandom(MRandom* ins)
+{
+    LRandom *lir = new(alloc()) LRandom(temp(),
+                                        temp(),
+                                        temp(),
+                                        temp(),
+                                        temp());
+    defineFixed(lir, ins, LFloatReg(ReturnDoubleReg));
+}
