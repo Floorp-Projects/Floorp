@@ -1434,6 +1434,69 @@ FinalizerSizeError(JSContext* cx, HandleObject funObj, HandleValue actual)
 }
 
 static bool
+FunctionArgumentLengthMismatch(JSContext* cx,
+                               unsigned expectedCount, unsigned actualCount,
+                               HandleObject funObj, HandleObject typeObj,
+                               bool isVariadic)
+{
+  AutoString funSource;
+  JSAutoByteString funBytes;
+  Value slot = JS_GetReservedSlot(funObj, SLOT_REFERENT);
+  if (!slot.isUndefined() && Library::IsLibrary(&slot.toObject())) {
+    BuildFunctionTypeSource(cx, funObj, funSource);
+  } else {
+    BuildFunctionTypeSource(cx, typeObj, funSource);
+  }
+  const char* funStr = EncodeLatin1(cx, funSource, funBytes);
+  if (!funStr)
+    return false;
+
+  char expectedCountStr[16];
+  JS_snprintf(expectedCountStr, 16, "%u", expectedCount);
+  char actualCountStr[16];
+  JS_snprintf(actualCountStr, 16, "%u", actualCount);
+
+  const char* variadicStr = isVariadic ? " or more": "";
+
+  JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                       CTYPESMSG_ARG_COUNT_MISMATCH,
+                       funStr, expectedCountStr, variadicStr, actualCountStr);
+  return false;
+}
+
+static bool
+FunctionArgumentTypeError(JSContext* cx,
+                          uint32_t index, Value type, const char* reason)
+{
+  RootedValue val(cx, type);
+  JSAutoByteString valBytes;
+  const char* valStr = CTypesToSourceForError(cx, val, valBytes);
+  if (!valStr)
+    return false;
+
+  char indexStr[16];
+  JS_snprintf(indexStr, 16, "%u", index + 1);
+
+  JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                       CTYPESMSG_ARG_TYPE_ERROR, indexStr, reason, valStr);
+  return false;
+}
+
+static bool
+FunctionReturnTypeError(JSContext* cx, Value type, const char* reason)
+{
+  RootedValue val(cx, type);
+  JSAutoByteString valBytes;
+  const char* valStr = CTypesToSourceForError(cx, val, valBytes);
+  if (!valStr)
+    return false;
+
+  JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                       CTYPESMSG_RET_TYPE_ERROR, reason, valStr);
+  return false;
+}
+
+static bool
 IncompatibleCallee(JSContext* cx, const char* funName, HandleObject actualObj)
 {
   JSAutoByteString valBytes;
@@ -1609,6 +1672,22 @@ TypeOverflow(JSContext* cx, const char* expected, HandleValue actual)
 
   JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                        CTYPESMSG_TYPE_OVERFLOW, valStr, expected);
+  return false;
+}
+
+static bool
+VariadicArgumentTypeError(JSContext* cx, uint32_t index, HandleValue actual)
+{
+  JSAutoByteString valBytes;
+  const char* valStr = CTypesToSourceForError(cx, actual, valBytes);
+  if (!valStr)
+    return false;
+
+  char indexStr[16];
+  JS_snprintf(indexStr, 16, "%u", index + 1);
+
+  JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                       CTYPESMSG_VARG_TYPE_ERROR, indexStr, valStr);
   return false;
 }
 
@@ -4027,7 +4106,8 @@ CType::ConstructData(JSContext* cx,
     JS_ReportError(cx, "cannot construct from void_t");
     return false;
   case TYPE_function:
-    JS_ReportError(cx, "cannot construct from FunctionType; use FunctionType.ptr instead");
+    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                         CTYPESMSG_FUNCTION_CONSTRUCT);
     return false;
   case TYPE_pointer:
     return PointerType::ConstructData(cx, obj, args);
@@ -6282,10 +6362,10 @@ GetABI(JSContext* cx, Value abiType, ffi_abi* result)
 }
 
 static JSObject*
-PrepareType(JSContext* cx, Value type)
+PrepareType(JSContext* cx, uint32_t index, HandleValue type)
 {
   if (type.isPrimitive() || !CType::IsCType(type.toObjectOrNull())) {
-    JS_ReportError(cx, "not a ctypes type");
+    FunctionArgumentTypeError(cx, index, type, "is not a ctypes type");
     return nullptr;
   }
 
@@ -6302,12 +6382,12 @@ PrepareType(JSContext* cx, Value type)
 
   } else if (typeCode == TYPE_void_t || typeCode == TYPE_function) {
     // disallow void or function argument types
-    JS_ReportError(cx, "Cannot have void or function argument type");
+    FunctionArgumentTypeError(cx, index, type, "cannot be void or function");
     return nullptr;
   }
 
   if (!CType::IsSizeDefined(result)) {
-    JS_ReportError(cx, "Argument type must have defined size");
+    FunctionArgumentTypeError(cx, index, type, "must have defined size");
     return nullptr;
   }
 
@@ -6321,7 +6401,7 @@ static JSObject*
 PrepareReturnType(JSContext* cx, Value type)
 {
   if (type.isPrimitive() || !CType::IsCType(type.toObjectOrNull())) {
-    JS_ReportError(cx, "not a ctypes type");
+    FunctionReturnTypeError(cx, type, "is not a ctypes type");
     return nullptr;
   }
 
@@ -6330,12 +6410,12 @@ PrepareReturnType(JSContext* cx, Value type)
 
   // Arrays and functions can never be return types.
   if (typeCode == TYPE_array || typeCode == TYPE_function) {
-    JS_ReportError(cx, "Return type cannot be an array or function");
+    FunctionReturnTypeError(cx, type, "cannot be an array or function");
     return nullptr;
   }
 
   if (typeCode != TYPE_void_t && !CType::IsSizeDefined(result)) {
-    JS_ReportError(cx, "Return type must have defined size");
+    FunctionReturnTypeError(cx, type, "must have defined size");
     return nullptr;
   }
 
@@ -6503,7 +6583,7 @@ CreateFunctionInfo(JSContext* cx,
       break;
     }
 
-    JSObject* argType = PrepareType(cx, args[i]);
+    JSObject* argType = PrepareType(cx, i, args[i]);
     if (!argType)
       return false;
 
@@ -6718,8 +6798,8 @@ FunctionType::Call(JSContext* cx,
 
   if ((!fninfo->mIsVariadic && args.length() != argcFixed) ||
       (fninfo->mIsVariadic && args.length() < argcFixed)) {
-    JS_ReportError(cx, "Number of arguments does not match declaration");
-    return false;
+    return FunctionArgumentLengthMismatch(cx, argcFixed, args.length(),
+                                          obj, typeObj, fninfo->mIsVariadic);
   }
 
   // Check if we have a Library object. If we do, make sure it's open.
@@ -6759,17 +6839,25 @@ FunctionType::Call(JSContext* cx,
           !CData::IsCData(obj = &args[i].toObject())) {
         // Since we know nothing about the CTypes of the ... arguments,
         // they absolutely must be CData objects already.
-        JS_ReportError(cx, "argument %d of type %s is not a CData object",
-                       i, InformalValueTypeName(args[i]));
+        return VariadicArgumentTypeError(cx, i, args[i]);
+      }
+      type = CData::GetCType(obj);
+      if (!type) {
+        // These functions report their own errors.
         return false;
       }
-      if (!(type = CData::GetCType(obj)) ||
-          !(type = PrepareType(cx, ObjectValue(*type))) ||
-          // Relying on ImplicitConvert only for the limited purpose of
-          // converting one CType to another (e.g., T[] to T*).
-          !ConvertArgument(cx, obj, i, args[i], type, &values[i], &strings) ||
-          !(fninfo->mFFITypes[i] = CType::GetFFIType(cx, type))) {
-        // These functions report their own errors.
+      RootedValue typeVal(cx, ObjectValue(*type));
+      type = PrepareType(cx, i, typeVal);
+      if (!type) {
+        return false;
+      }
+      // Relying on ImplicitConvert only for the limited purpose of
+      // converting one CType to another (e.g., T[] to T*).
+      if (!ConvertArgument(cx, obj, i, args[i], type, &values[i], &strings)) {
+        return false;
+      }
+      fninfo->mFFITypes[i] = CType::GetFFIType(cx, type);
+      if (!fninfo->mFFITypes[i]) {
         return false;
       }
     }
