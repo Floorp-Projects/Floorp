@@ -870,6 +870,12 @@ function ArrayToString() {
     return callContentFunction(func, array);
 }
 
+// ES 2016 draft Mar 25, 2016 22.1.2.5.
+function ArraySpecies() {
+    // Step 1.
+    return this;
+}
+
 // ES 2016 draft Mar 25, 2016 22.1.3.1.
 // Note: Array.prototype.concat.length is 1.
 function ArrayConcat(arg1) {
