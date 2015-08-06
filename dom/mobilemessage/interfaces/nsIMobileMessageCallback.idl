@@ -10,7 +10,7 @@ interface nsIMobileMessageCallback : nsISupports
   /**
    * All SMS related errors.
    * Make sure to keep this list in sync with the list in:
-   * embedding/android/GeckoSmsManager.java
+   * mobile/android/base/GeckoSmsManager.java
    */
   const unsigned short SUCCESS_NO_ERROR          = 0;
   const unsigned short NO_SIGNAL_ERROR           = 1;
