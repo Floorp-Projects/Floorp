@@ -1318,6 +1318,10 @@ private:
   // Pitch preservation for the playback rate.
   Mirror<bool> mPreservesPitch;
 
+  // True if the media is same-origin with the element. Data can only be
+  // passed to MediaStreams when this is true.
+  Mirror<bool> mSameOriginMedia;
+
   // Duration of the media. This is guaranteed to be non-null after we finish
   // decoding the first frame.
   Canonical<media::NullableTimeUnit> mDuration;

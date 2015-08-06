@@ -242,6 +242,8 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
                        "MediaDecoderStateMachine::mLogicalPlaybackRate (Mirror)"),
   mPreservesPitch(mTaskQueue, true,
                   "MediaDecoderStateMachine::mPreservesPitch (Mirror)"),
+  mSameOriginMedia(mTaskQueue, false,
+                   "MediaDecoderStateMachine::mSameOriginMedia (Mirror)"),
   mDuration(mTaskQueue, NullableTimeUnit(),
             "MediaDecoderStateMachine::mDuration (Canonical"),
   mIsShutdown(mTaskQueue, false,
@@ -317,6 +319,7 @@ MediaDecoderStateMachine::InitializationTask()
   mVolume.Connect(mDecoder->CanonicalVolume());
   mLogicalPlaybackRate.Connect(mDecoder->CanonicalPlaybackRate());
   mPreservesPitch.Connect(mDecoder->CanonicalPreservesPitch());
+  mSameOriginMedia.Connect(mDecoder->CanonicalSameOriginMedia());
 
   // Initialize watchers.
   mWatchManager.Watch(mBuffered, &MediaDecoderStateMachine::BufferedRangeUpdated);
@@ -373,7 +376,7 @@ void MediaDecoderStateMachine::SendStreamData()
   AssertCurrentThreadInMonitor();
   MOZ_ASSERT(!mAudioSink, "Should've been stopped in RunStateMachine()");
 
-  bool finished = mDecodedStream->SendData(mVolume, mDecoder->IsSameOriginMedia());
+  bool finished = mDecodedStream->SendData(mVolume, mSameOriginMedia);
 
   const auto clockTime = GetClock();
   while (true) {
@@ -2217,6 +2220,7 @@ MediaDecoderStateMachine::FinishShutdown()
   mVolume.DisconnectIfConnected();
   mLogicalPlaybackRate.DisconnectIfConnected();
   mPreservesPitch.DisconnectIfConnected();
+  mSameOriginMedia.DisconnectIfConnected();
   mDuration.DisconnectAll();
   mIsShutdown.DisconnectAll();
   mNextFrameStatus.DisconnectAll();

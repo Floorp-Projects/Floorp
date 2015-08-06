@@ -572,10 +572,6 @@ public:
   // The actual playback rate computation. The monitor must be held.
   virtual double ComputePlaybackRate(bool* aReliable);
 
-  // Return true when the media is same-origin with the element. The monitor
-  // must be held.
-  bool IsSameOriginMedia();
-
   // Returns true if we can play the entire media through without stopping
   // to buffer, given the current download and playback rates.
   bool CanPlayThrough();
@@ -942,10 +938,6 @@ protected:
   // True if the media is seekable (i.e. supports random access).
   bool mMediaSeekable;
 
-  // True if the media is same-origin with the element. Data can only be
-  // passed to MediaStreams when this is true.
-  bool mSameOriginMedia;
-
   /******
    * The following member variables can be accessed from any thread.
    ******/
@@ -1120,6 +1112,10 @@ protected:
   // True if the decoder is seeking.
   Canonical<bool> mLogicallySeeking;
 
+  // True if the media is same-origin with the element. Data can only be
+  // passed to MediaStreams when this is true.
+  Canonical<bool> mSameOriginMedia;
+
 public:
   AbstractCanonical<media::NullableTimeUnit>* CanonicalDurationOrNull() override;
   AbstractCanonical<double>* CanonicalVolume() {
@@ -1145,6 +1141,9 @@ public:
   }
   AbstractCanonical<bool>* CanonicalLogicallySeeking() {
     return &mLogicallySeeking;
+  }
+  AbstractCanonical<bool>* CanonicalSameOriginMedia() {
+    return &mSameOriginMedia;
   }
 };
 
