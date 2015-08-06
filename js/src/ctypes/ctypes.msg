@@ -28,7 +28,14 @@ MSG_DEF(CTYPESMSG_INVALID_INDEX, 1, JSEXN_TYPEERR, "{0} is not a valid array ind
 MSG_DEF(CTYPESMSG_INVALID_RANGE, 2, JSEXN_RANGEERR, "array index {0} is out of bounds for array of length {1}")
 
 /* struct */
+MSG_DEF(CTYPESMSG_DUPLICATE_FIELD, 1, JSEXN_TYPEERR, "struct fields must have unique names, '{0}' field appears twice")
+MSG_DEF(CTYPESMSG_FIELD_DESC_COUNT,2, JSEXN_TYPEERR, "struct field descriptors must contain one property (got {0} with {1} properties)")
+MSG_DEF(CTYPESMSG_FIELD_DESC_NAME,1, JSEXN_TYPEERR, "{0} is not a valid name of struct field descriptors")
+MSG_DEF(CTYPESMSG_FIELD_DESC_SIZE,2, JSEXN_TYPEERR, "struct field type must have defined and nonzero size (got {0} for '{1}' field)")
+MSG_DEF(CTYPESMSG_FIELD_DESC_NAMETYPE,1, JSEXN_TYPEERR, "struct field descriptors require a valid name and type (got {0})")
+MSG_DEF(CTYPESMSG_FIELD_DESC_TYPE,2, JSEXN_TYPEERR, "{0} is not a valid type of struct field descriptors for '{1}' field")
 MSG_DEF(CTYPESMSG_FIELD_MISMATCH,5, JSEXN_TYPEERR, "property count of {0} does not match to field count of the type {1} (expected {2}, got {3}){4}")
+MSG_DEF(CTYPESMSG_FIELD_MISSING, 2, JSEXN_TYPEERR, "{0} does not have a field named '{1}'")
 MSG_DEF(CTYPESMSG_PROP_NONSTRING,3, JSEXN_TYPEERR, "property name {0} of {1} is not a string{2}")
 
 /* data finalizer */
