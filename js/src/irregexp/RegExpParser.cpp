@@ -558,6 +558,7 @@ class WideCharRange
         return WideCharRange(from, to);
     }
 
+    bool Contains(widechar i) const { return from_ <= i && i <= to_; }
     widechar from() const { return from_; }
     widechar to() const { return to_; }
 
@@ -747,14 +748,73 @@ NegateUnicodeRanges(LifoAlloc* alloc, Vector<RangeType, 1, LifoAllocPolicy<Infal
     *ranges = tmp_ranges;
 }
 
+static bool
+WideCharRangesContain(WideCharRangeVector* wide_ranges, widechar c)
+{
+    for (size_t i = 0; i < wide_ranges->length(); i++) {
+        const WideCharRange& range = (*wide_ranges)[i];
+        if (range.Contains(c))
+            return true;
+    }
+    return false;
+}
+
+static void
+CalculateCaseInsensitiveRanges(LifoAlloc* alloc, widechar from, widechar to, int32_t diff,
+                               WideCharRangeVector* wide_ranges,
+                               WideCharRangeVector** tmp_wide_ranges)
+{
+    widechar contains_from = 0;
+    widechar contains_to = 0;
+    for (widechar c = from; c <= to; c++) {
+        if (WideCharRangesContain(wide_ranges, c) &&
+            !WideCharRangesContain(wide_ranges, c + diff))
+        {
+            if (contains_from == 0)
+                contains_from = c;
+            contains_to = c;
+        } else if (contains_from != 0) {
+            if (!*tmp_wide_ranges)
+                *tmp_wide_ranges = alloc->newInfallible<WideCharRangeVector>(*alloc);
+
+            (*tmp_wide_ranges)->append(WideCharRange::Range(contains_from + diff,
+                                                            contains_to + diff));
+            contains_from = 0;
+        }
+    }
+
+    if (contains_from != 0) {
+        if (!*tmp_wide_ranges)
+            *tmp_wide_ranges = alloc->newInfallible<WideCharRangeVector>(*alloc);
+
+        (*tmp_wide_ranges)->append(WideCharRange::Range(contains_from + diff,
+                                                        contains_to + diff));
+    }
+}
+
 static RegExpTree*
 UnicodeRangesAtom(LifoAlloc* alloc,
                   CharacterRangeVector* ranges,
                   CharacterRangeVector* lead_ranges,
                   CharacterRangeVector* trail_ranges,
                   WideCharRangeVector* wide_ranges,
-                  bool is_negated)
+                  bool is_negated,
+                  bool ignore_case)
 {
+    // Calculate case folding for non-BMP first and negate the range if needed.
+    if (ignore_case) {
+        WideCharRangeVector* tmp_wide_ranges = nullptr;
+#define CALL_CALC(FROM, TO, LEAD, TRAIL_FROM, TRAIL_TO, DIFF) \
+        CalculateCaseInsensitiveRanges(alloc, FROM, TO, DIFF, wide_ranges, &tmp_wide_ranges);
+        FOR_EACH_NON_BMP_CASE_FOLDING(CALL_CALC)
+#undef CALL_CALC
+
+        if (tmp_wide_ranges) {
+            for (size_t i = 0; i < tmp_wide_ranges->length(); i++)
+                wide_ranges->append((*tmp_wide_ranges)[i]);
+        }
+    }
+
     if (is_negated) {
         NegateUnicodeRanges(alloc, &lead_ranges, LeadSurrogateRange());
         NegateUnicodeRanges(alloc, &trail_ranges, TrailSurrogateRange());
@@ -952,7 +1012,8 @@ RegExpParser<CharT>::ParseCharacterClass()
         return alloc->newInfallible<RegExpCharacterClass>(ranges, true);
     }
 
-    return UnicodeRangesAtom(alloc, ranges, lead_ranges, trail_ranges, wide_ranges, is_negated);
+    return UnicodeRangesAtom(alloc, ranges, lead_ranges, trail_ranges, wide_ranges, is_negated,
+                             ignore_case_);
 }
 
 template <typename CharT>
@@ -1166,8 +1227,30 @@ RegExpParser<CharT>::ParsePattern()
 }
 
 static inline RegExpTree*
-SurrogatePairAtom(LifoAlloc* alloc, char16_t lead, char16_t trail)
+CaseFoldingSurrogatePairAtom(LifoAlloc* alloc, char16_t lead, char16_t trail, int32_t diff)
 {
+    RegExpBuilder* builder = alloc->newInfallible<RegExpBuilder>(alloc);
+
+    builder->AddCharacter(lead);
+    CharacterRangeVector* ranges = alloc->newInfallible<CharacterRangeVector>(*alloc);
+    ranges->append(CharacterRange::Range(trail, trail));
+    ranges->append(CharacterRange::Range(trail + diff, trail + diff));
+    builder->AddAtom(alloc->newInfallible<RegExpCharacterClass>(ranges, false));
+
+    return builder->ToRegExp();
+}
+
+static inline RegExpTree*
+SurrogatePairAtom(LifoAlloc* alloc, char16_t lead, char16_t trail, bool ignore_case)
+{
+    if (ignore_case) {
+#define CALL_ATOM(FROM, TO, LEAD, TRAIL_FROM, TRAIL_TO, DIFF) \
+        if (lead == LEAD &&trail >= TRAIL_FROM && trail <= TRAIL_TO) \
+            return CaseFoldingSurrogatePairAtom(alloc, lead, trail, DIFF);
+        FOR_EACH_NON_BMP_CASE_FOLDING(CALL_ATOM)
+#undef CALL_ATOM
+    }
+
     RegExpBuilder* builder = alloc->newInfallible<RegExpBuilder>(alloc);
     builder->AddCharacter(lead);
     builder->AddCharacter(trail);
@@ -1239,7 +1322,7 @@ UnicodeCharacterClassEscapeAtom(LifoAlloc* alloc, char16_t char_class, bool igno
     AddCharOrEscapeUnicode(alloc, ranges, lead_ranges, trail_ranges, wide_ranges, char_class, 0,
                            ignore_case);
 
-    return UnicodeRangesAtom(alloc, ranges, lead_ranges, trail_ranges, wide_ranges, false);
+    return UnicodeRangesAtom(alloc, ranges, lead_ranges, trail_ranges, wide_ranges, false, false);
 }
 
 // Disjunction ::
@@ -1523,17 +1606,20 @@ RegExpParser<CharT>::ParseDisjunction()
                         } else if (value >= unicode::NonBMPMin) {
                             size_t lead, trail;
                             unicode::UTF16Encode(value, &lead, &trail);
-                            builder->AddAtom(SurrogatePairAtom(alloc, lead, trail));
+                            builder->AddAtom(SurrogatePairAtom(alloc, lead, trail,
+                                                               ignore_case_));
                         } else {
                             builder->AddCharacter(value);
                         }
                     } else if (ParseHexEscape(4, &value)) {
                         if (unicode::IsLeadSurrogate(value)) {
                             size_t trail;
-                            if (ParseTrailSurrogate(&trail))
-                                builder->AddAtom(SurrogatePairAtom(alloc, value, trail));
-                            else
+                            if (ParseTrailSurrogate(&trail)) {
+                                builder->AddAtom(SurrogatePairAtom(alloc, value, trail,
+                                                                   ignore_case_));
+                            } else {
                                 builder->AddAtom(LeadSurrogateAtom(alloc, value));
+                            }
                         } else if (unicode::IsTrailSurrogate(value)) {
                             builder->AddAtom(TrailSurrogateAtom(alloc, value));
                         } else {
@@ -1568,7 +1654,7 @@ RegExpParser<CharT>::ParseDisjunction()
             if (unicode_) {
                 char16_t lead, trail;
                 if (ParseRawSurrogatePair(&lead, &trail)) {
-                    builder->AddAtom(SurrogatePairAtom(alloc, lead, trail));
+                    builder->AddAtom(SurrogatePairAtom(alloc, lead, trail, ignore_case_));
                 } else {
                     widechar c = current();
                     if (unicode::IsLeadSurrogate(c))

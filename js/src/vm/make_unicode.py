@@ -177,9 +177,6 @@ def generate_unicode_stuff(unicode_data, case_folding,
         folding_codes.add(mapping)
 
     for code in sorted(folding_codes):
-        if code > MAX:
-            continue
-
         if code in folding_map:
             folding = folding_map[code]
         else:
@@ -199,6 +196,9 @@ def generate_unicode_stuff(unicode_data, case_folding,
             if folding != code:
                 item.append(folding)
             folding_tests.append(item + rev_folding)
+
+        if code > MAX:
+            continue
 
         folding_d = folding - code
         rev_folding_ds = [v - code for v in rev_folding]
