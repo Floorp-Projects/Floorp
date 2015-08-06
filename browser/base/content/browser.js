@@ -6858,6 +6858,14 @@ var gIdentityHandler = {
   checkIdentity : function(state, uri) {
     let nsIWebProgressListener = Ci.nsIWebProgressListener;
 
+    // For some URIs like data: we can't get a host. URIs without a host will
+    // usually be treated as a non-secure connection if they're not on the
+    // whitelist below and don't resolve to file:// URIs internally.
+    let unknown = false;
+    try {
+      uri.host;
+    } catch (e) { unknown = true; }
+
     // Chrome URIs however get special treatment. Some chrome URIs are
     // whitelisted to provide a positive security signal to the user.
     let whitelist = /^about:(accounts|addons|app-manager|config|crashes|customizing|downloads|healthreport|home|license|newaddon|permissions|preferences|privatebrowsing|rights|sessionrestore|support|welcomeback)/i;
@@ -6866,6 +6874,8 @@ var gIdentityHandler = {
 
     if (isChromeUI) {
       mode = this.IDENTITY_MODE_CHROMEUI;
+    } else if (unknown) {
+      // Use default mode.
     } else if (state & nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL) {
       if (state & nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT) {
         mode = this.IDENTITY_MODE_MIXED_ACTIVE_BLOCKED_IDENTIFIED;
