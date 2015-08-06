@@ -809,5 +809,319 @@ FormatUsageAuthority::AddUnpackOption(GLenum unpackFormat, GLenum unpackType,
     MOZ_ALWAYS_TRUE(didInsert);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+struct ComponentSizes
+{
+    GLubyte redSize;
+    GLubyte greenSize;
+    GLubyte blueSize;
+    GLubyte alphaSize;
+    GLubyte depthSize;
+    GLubyte stencilSize;
+};
+
+static ComponentSizes kComponentSizes[] = {
+    // GLES 3.0.4, p128-129, "Required Texture Formats"
+    // "Texture and renderbuffer color formats"
+    { 32, 32, 32, 32,  0,  0 }, // RGBA32I,
+    { 32, 32, 32, 32,  0,  0 }, // RGBA32UI,
+    { 16, 16, 16, 16,  0,  0 }, // RGBA16I,
+    { 16, 16, 16, 16,  0,  0 }, // RGBA16UI,
+    {  8,  8,  8,  8,  0,  0 }, // RGBA8,
+    {  8,  8,  8,  8,  0,  0 }, // RGBA8I,
+    {  8,  8,  8,  8,  0,  0 }, // RGBA8UI,
+    {  8,  8,  8,  8,  0,  0 }, // SRGB8_ALPHA8,
+    { 10, 10, 10,  2,  0,  0 }, // RGB10_A2,
+    { 10, 10, 10,  2,  0,  0 }, // RGB10_A2UI,
+    {  4,  4,  4,  4,  0,  0 }, // RGBA4,
+    {  5,  5,  5,  1,  0,  0 }, // RGB5_A1,
+
+    {  8,  8,  8,  0,  0,  0 }, // RGB8,
+    {  8,  8,  8,  0,  0,  0 }, // RGB565,
+
+    { 32, 32,  0,  0,  0,  0 }, // RG32I,
+    { 32, 32,  0,  0,  0,  0 }, // RG32UI,
+    { 16, 16,  0,  0,  0,  0 }, // RG16I,
+    { 16, 16,  0,  0,  0,  0 }, // RG16UI,
+    {  8,  8,  0,  0,  0,  0 }, // RG8,
+    {  8,  8,  0,  0,  0,  0 }, // RG8I,
+    {  8,  8,  0,  0,  0,  0 }, // RG8UI,
+
+    { 32,  0,  0,  0,  0,  0 }, // R32I,
+    { 32,  0,  0,  0,  0,  0 }, // R32UI,
+    { 16,  0,  0,  0,  0,  0 }, // R16I,
+    { 16,  0,  0,  0,  0,  0 }, // R16UI,
+    {  8,  0,  0,  0,  0,  0 }, // R8,
+    {  8,  0,  0,  0,  0,  0 }, // R8I,
+    {  8,  0,  0,  0,  0,  0 }, // R8UI,
+
+    // "Texture-only color formats"
+    { 32, 32, 32, 32,  0,  0 }, // RGBA32F,
+    { 16, 16, 16, 16,  0,  0 }, // RGBA16F,
+    {  8,  8,  8,  8,  0,  0 }, // RGBA8_SNORM,
+
+    { 32, 32, 32,  0,  0,  0 }, // RGB32F,
+    { 32, 32, 32,  0,  0,  0 }, // RGB32I,
+    { 32, 32, 32,  0,  0,  0 }, // RGB32UI,
+
+    { 16, 16, 16,  0,  0,  0 }, // RGB16F,
+    { 16, 16, 16,  0,  0,  0 }, // RGB16I,
+    { 16, 16, 16,  0,  0,  0 }, // RGB16UI,
+
+    {  8,  8,  8,  0,  0,  0 }, // RGB8_SNORM,
+    {  8,  8,  8,  0,  0,  0 }, // RGB8I,
+    {  8,  8,  8,  0,  0,  0 }, // RGB8UI,
+    {  8,  8,  8,  0,  0,  0 }, // SRGB8,
+
+    { 11, 11, 11,  0,  0,  0 }, // R11F_G11F_B10F,
+    {  9,  9,  9,  0,  0,  0 }, // RGB9_E5,
+
+    { 32, 32,  0,  0,  0,  0 }, // RG32F,
+    { 16, 16,  0,  0,  0,  0 }, // RG16F,
+    {  8,  8,  0,  0,  0,  0 }, // RG8_SNORM,
+
+    { 32,  0,  0,  0,  0,  0 }, // R32F,
+    { 16,  0,  0,  0,  0,  0 }, // R16F,
+    {  8,  0,  0,  0,  0,  0 }, // R8_SNORM,
+
+    // "Depth formats"
+    {  0,  0,  0,  0, 32,  0 }, // DEPTH_COMPONENT32F,
+    {  0,  0,  0,  0, 24,  0 }, // DEPTH_COMPONENT24,
+    {  0,  0,  0,  0, 16,  0 }, // DEPTH_COMPONENT16,
+
+    // "Combined depth+stencil formats"
+    {  0,  0,  0,  0, 32,  8 }, // DEPTH32F_STENCIL0,
+    {  0,  0,  0,  0, 24,  8 }, // DEPTH24_STENCIL8,
+
+    // GLES 3.0.4, p205-206, "Required Renderbuffer Formats"
+    {  0,  0,  0,  0,  0,  8 }, // STENCIL_INDEX8,
+
+    // GLES 3.0.4, p128, table 3.12.
+    {  8,  8,  8,  8,  0,  0 }, // Luminance8Alpha8,
+    {  8,  8,  8,  0,  0,  0 }, // Luminance8,
+    {  0,  0,  0,  8,  0,  0 }, // Alpha8,
+
+    // GLES 3.0.4, p147, table 3.19
+    // GLES 3.0.4, p286+, $C.1 "ETC Compressed Texture Image Formats"
+    {  8,  8,  8,  8,  0,  0 }, // COMPRESSED_R11_EAC,
+    {  8,  8,  8,  8,  0,  0 }, // COMPRESSED_SIGNED_R11_EAC,
+    {  8,  8,  8,  8,  0,  0 }, // COMPRESSED_RG11_EAC,
+    {  8,  8,  8,  8,  0,  0 }, // COMPRESSED_SIGNED_RG11_EAC,
+    {  8,  8,  8,  8,  0,  0 }, // COMPRESSED_RGB8_ETC2,
+    {  8,  8,  8,  8,  0,  0 }, // COMPRESSED_SRGB8_ETC2,
+    {  8,  8,  8,  8,  0,  0 }, // COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2,
+    {  8,  8,  8,  8,  0,  0 }, // COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2,
+    {  8,  8,  8,  8,  0,  0 }, // COMPRESSED_RGBA8_ETC2_EAC,
+    {  8,  8,  8,  8,  0,  0 }, // COMPRESSED_SRGB8_ALPHA8_ETC2_EAC,
+
+    // AMD_compressed_ATC_texture
+    {  8,  8,  8,  0,  0,  0 }, // ATC_RGB_AMD,
+    {  8,  8,  8,  8,  0,  0 }, // ATC_RGBA_EXPLICIT_ALPHA_AMD,
+    {  8,  8,  8,  8,  0,  0 }, // ATC_RGBA_INTERPOLATED_ALPHA_AMD,
+
+    // EXT_texture_compression_s3tc
+    {  8,  8,  8,  0,  0,  0 }, // COMPRESSED_RGB_S3TC_DXT1,
+    {  8,  8,  8,  8,  0,  0 }, // COMPRESSED_RGBA_S3TC_DXT1,
+    {  8,  8,  8,  8,  0,  0 }, // COMPRESSED_RGBA_S3TC_DXT3,
+    {  8,  8,  8,  8,  0,  0 }, // COMPRESSED_RGBA_S3TC_DXT5,
+
+    // IMG_texture_compression_pvrtc
+    {  8,  8,  8,  0,  0,  0 }, // COMPRESSED_RGB_PVRTC_4BPPV1,
+    {  8,  8,  8,  8,  0,  0 }, // COMPRESSED_RGBA_PVRTC_4BPPV1,
+    {  8,  8,  8,  0,  0,  0 }, // COMPRESSED_RGB_PVRTC_2BPPV1,
+    {  8,  8,  8,  8,  0,  0 }, // COMPRESSED_RGBA_PVRTC_2BPPV1,
+
+    // OES_compressed_ETC1_RGB8_texture
+    {  8,  8,  8,  0,  0,  0 }, // ETC1_RGB8,
+
+    // OES_texture_float
+    { 32, 32, 32, 32,  0,  0 }, // Luminance32FAlpha32F,
+    { 32, 32, 32,  0,  0,  0 }, // Luminance32F,
+    {  0,  0,  0, 32,  0,  0 }, // Alpha32F,
+
+    // OES_texture_half_float
+    { 16, 16, 16, 16, 0, 0 }, // Luminance16FAlpha16F,
+    { 16, 16, 16,  0, 0, 0 }, // Luminance16F,
+    {  0,  0,  0, 16, 0, 0 }, // Alpha16F,
+
+    {  0, } // MAX
+};
+
+GLint
+GetComponentSize(EffectiveFormat format, GLenum component)
+{
+    ComponentSizes compSize = kComponentSizes[(int) format];
+    switch (component) {
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_RED_SIZE:
+    case LOCAL_GL_RENDERBUFFER_RED_SIZE:
+    case LOCAL_GL_RED_BITS:
+        return compSize.redSize;
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_GREEN_SIZE:
+    case LOCAL_GL_RENDERBUFFER_GREEN_SIZE:
+    case LOCAL_GL_GREEN_BITS:
+        return compSize.greenSize;
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_BLUE_SIZE:
+    case LOCAL_GL_RENDERBUFFER_BLUE_SIZE:
+    case LOCAL_GL_BLUE_BITS:
+        return compSize.blueSize;
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE:
+    case LOCAL_GL_RENDERBUFFER_ALPHA_SIZE:
+    case LOCAL_GL_ALPHA_BITS:
+        return compSize.alphaSize;
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE:
+    case LOCAL_GL_RENDERBUFFER_DEPTH_SIZE:
+    case LOCAL_GL_DEPTH_BITS:
+        return compSize.depthSize;
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE:
+    case LOCAL_GL_RENDERBUFFER_STENCIL_SIZE:
+    case LOCAL_GL_STENCIL_BITS:
+        return compSize.stencilSize;
+    }
+
+    return 0;
+}
+
+static GLenum kComponentTypes[] = {
+    // GLES 3.0.4, p128-129, "Required Texture Formats"
+    // "Texture and renderbuffer color formats"
+    LOCAL_GL_INT,                       // RGBA32I,
+    LOCAL_GL_UNSIGNED_INT,              // RGBA32UI,
+    LOCAL_GL_INT,                       // RGBA16I,
+    LOCAL_GL_UNSIGNED_INT,              // RGBA16UI,
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // RGBA8,
+    LOCAL_GL_INT,                       // RGBA8I,
+    LOCAL_GL_UNSIGNED_INT,              // RGBA8UI,
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // SRGB8_ALPHA8,
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // RGB10_A2,
+    LOCAL_GL_UNSIGNED_INT,              // RGB10_A2UI,
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // RGBA4,
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // RGB5_A1,
+
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // RGB8,
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // RGB565,
+
+    LOCAL_GL_INT,                       // RG32I,
+    LOCAL_GL_UNSIGNED_INT,              // RG32UI,
+    LOCAL_GL_INT,                       // RG16I,
+    LOCAL_GL_UNSIGNED_INT,              // RG16UI,
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // RG8,
+    LOCAL_GL_INT,                       // RG8I,
+    LOCAL_GL_UNSIGNED_INT,              // RG8UI,
+
+    LOCAL_GL_INT,                       // R32I,
+    LOCAL_GL_UNSIGNED_INT,              // R32UI,
+    LOCAL_GL_INT,                       // R16I,
+    LOCAL_GL_UNSIGNED_INT,              // R16UI,
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // R8,
+    LOCAL_GL_INT,                       // R8I,
+    LOCAL_GL_UNSIGNED_INT,              // R8UI,
+
+    // "Texture-only color formats"
+    LOCAL_GL_FLOAT,                     // RGBA32F,
+    LOCAL_GL_FLOAT,                     // RGBA16F,
+    LOCAL_GL_SIGNED_NORMALIZED,         // RGBA8_SNORM,
+
+    LOCAL_GL_FLOAT,                     // RGB32F,
+    LOCAL_GL_INT,                       // RGB32I,
+    LOCAL_GL_UNSIGNED_INT,              // RGB32UI,
+
+    LOCAL_GL_FLOAT,                     // RGB16F,
+    LOCAL_GL_INT,                       // RGB16I,
+    LOCAL_GL_UNSIGNED_INT,              // RGB16UI,
+
+    LOCAL_GL_SIGNED_NORMALIZED,         // RGB8_SNORM,
+    LOCAL_GL_INT,                       // RGB8I,
+    LOCAL_GL_UNSIGNED_INT,              // RGB8UI,
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // SRGB8,
+
+    LOCAL_GL_FLOAT,                     // R11F_G11F_B10F,
+    LOCAL_GL_FLOAT,                     // RGB9_E5,
+
+    LOCAL_GL_FLOAT,                     // RG32F,
+    LOCAL_GL_FLOAT,                     // RG16F,
+    LOCAL_GL_SIGNED_NORMALIZED,         // RG8_SNORM,
+
+    LOCAL_GL_FLOAT,                     // R32F,
+    LOCAL_GL_FLOAT,                     // R16F,
+    LOCAL_GL_SIGNED_NORMALIZED,         // R8_SNORM,
+
+    // "Depth formats"
+    LOCAL_GL_FLOAT,                     // DEPTH_COMPONENT32F,
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // DEPTH_COMPONENT24,
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // DEPTH_COMPONENT16,
+
+    // "Combined depth+stencil formats"
+    LOCAL_GL_FLOAT,                     // DEPTH32F_STENCIL8,
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // DEPTH24_STENCIL8,
+
+    // GLES 3.0.4, p205-206, "Required Renderbuffer Formats"
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // STENCIL_INDEX8,
+
+    // GLES 3.0.4, p128, table 3.12.
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // Luminance8Alpha8,
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // Luminance8,
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // Alpha8,
+
+    // GLES 3.0.4, p147, table 3.19
+    // GLES 3.0.4, p286+, $C.1 "ETC Compressed Texture Image Formats"
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // COMPRESSED_R11_EAC,
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // COMPRESSED_SIGNED_R11_EAC,
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // COMPRESSED_RG11_EAC,
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // COMPRESSED_SIGNED_RG11_EAC,
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // COMPRESSED_RGB8_ETC2,
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // COMPRESSED_SRGB8_ETC2,
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2,
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2,
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // COMPRESSED_RGBA8_ETC2_EAC,
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // COMPRESSED_SRGB8_ALPHA8_ETC2_EAC,
+
+    // AMD_compressed_ATC_texture
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // ATC_RGB_AMD,
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // ATC_RGBA_EXPLICIT_ALPHA_AMD,
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // ATC_RGBA_INTERPOLATED_ALPHA_AMD,
+
+    // EXT_texture_compression_s3tc
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // COMPRESSED_RGB_S3TC_DXT1,
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // COMPRESSED_RGBA_S3TC_DXT1,
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // COMPRESSED_RGBA_S3TC_DXT3,
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // COMPRESSED_RGBA_S3TC_DXT5,
+
+    // IMG_texture_compression_pvrtc
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // COMPRESSED_RGB_PVRTC_4BPPV1,
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // COMPRESSED_RGBA_PVRTC_4BPPV1,
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // COMPRESSED_RGB_PVRTC_2BPPV1,
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // COMPRESSED_RGBA_PVRTC_2BPPV1,
+
+    // OES_compressed_ETC1_RGB8_texture
+    LOCAL_GL_UNSIGNED_NORMALIZED,       // ETC1_RGB8,
+
+    // OES_texture_float
+    LOCAL_GL_FLOAT,                     // Luminance32FAlpha32F,
+    LOCAL_GL_FLOAT,                     // Luminance32F,
+    LOCAL_GL_FLOAT,                     // Alpha32F,
+
+    // OES_texture_half_float
+    LOCAL_GL_FLOAT,                     // Luminance16FAlpha16F,
+    LOCAL_GL_FLOAT,                     // Luminance16F,
+    LOCAL_GL_FLOAT,                     // Alpha16F,
+
+    LOCAL_GL_NONE // MAX
+};
+
+GLenum
+GetComponentType(EffectiveFormat format)
+{
+    return kComponentTypes[(int) format];
+}
+
+GLenum
+GetColorEncoding(EffectiveFormat format)
+{
+    const bool isSRGB = (GetFormatInfo(format)->colorComponentType ==
+                         ComponentType::NormUIntSRGB);
+    return (isSRGB) ? LOCAL_GL_SRGB : LOCAL_GL_LINEAR;
+}
+
 } // namespace webgl
 } // namespace mozilla

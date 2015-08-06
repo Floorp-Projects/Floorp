@@ -252,12 +252,20 @@ public:
                          EffectiveFormat effectiveFormat);
 
     FormatUsageInfo* GetUsage(EffectiveFormat format);
-
     FormatUsageInfo* GetUsage(const FormatInfo* format)
     {
+        if (!format)
+            return nullptr;
+
         return GetUsage(format->effectiveFormat);
     }
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+GLint GetComponentSize(EffectiveFormat format, GLenum component);
+GLenum GetComponentType(EffectiveFormat format);
+GLenum GetColorEncoding(EffectiveFormat format);
 
 } // namespace webgl
 } // namespace mozilla
