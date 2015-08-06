@@ -9,7 +9,7 @@ var gDebuggee;
 var gClient;
 var gThreadClient;
 
-Components.utils.import('resource:///modules/devtools/SourceMap.jsm');
+const {SourceNode} = devtools.require("source-map");
 
 function run_test()
 {
