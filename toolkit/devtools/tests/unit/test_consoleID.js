@@ -3,7 +3,6 @@
 
 const { console, ConsoleAPI } = Cu.import("resource://gre/modules/devtools/Console.jsm");
 
-const { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
 const { ConsoleAPIListener } = require("devtools/toolkit/webconsole/utils");
 
 var seenMessages = 0;

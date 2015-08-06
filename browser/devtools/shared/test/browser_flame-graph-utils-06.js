@@ -4,8 +4,8 @@
 // Tests that the text displayed is the function name, file name and line number
 // if applicable.
 
-let {FlameGraphUtils} = devtools.require("devtools/shared/widgets/FlameGraph");
-let {PALLETTE_SIZE} = devtools.require("devtools/shared/widgets/FlameGraph");
+let {FlameGraphUtils} = require("devtools/shared/widgets/FlameGraph");
+let {PALLETTE_SIZE} = require("devtools/shared/widgets/FlameGraph");
 
 add_task(function*() {
   yield promiseTab("about:blank");

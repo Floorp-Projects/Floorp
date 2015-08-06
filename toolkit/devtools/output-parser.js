@@ -40,9 +40,9 @@ loader.lazyGetter(this, "DOMUtils", function() {
  * border radius, cubic-bezier etc.).
  *
  * Usage:
- *   const {devtools} =
+ *   const {require} =
  *      Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
- *   const {OutputParser} = devtools.require("devtools/output-parser");
+ *   const {OutputParser} = require("devtools/output-parser");
  *
  *   let parser = new OutputParser(document);
  *

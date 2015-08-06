@@ -3,7 +3,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Components.utils.import("resource://gre/modules/Task.jsm");
-let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 const TESTCASE_URI_HTML = TEST_BASE_HTTP + "sourcemaps-watching.html";

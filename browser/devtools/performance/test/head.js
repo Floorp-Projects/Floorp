@@ -8,15 +8,15 @@ let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 let { Preferences } = Cu.import("resource://gre/modules/Preferences.jsm", {});
 let { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 let { Promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
-let { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+let { TargetFactory } = require("devtools/framework/target");
 let { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-const DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils");
+const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 let { DebuggerServer } = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
-let { console } = devtools.require("resource://gre/modules/devtools/Console.jsm");
-let { merge } = devtools.require("sdk/util/object");
+let { console } = require("resource://gre/modules/devtools/Console.jsm");
+let { merge } = require("sdk/util/object");
 let { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
-let { getPerformanceFront, PerformanceFront } = devtools.require("devtools/performance/front");
-let TargetFactory = devtools.TargetFactory;
+let { getPerformanceFront, PerformanceFront } = require("devtools/performance/front");
 
 let mm = null;
 
@@ -546,7 +546,7 @@ function getInflatedStackLocations(thread, sample) {
  * Synthesize a profile for testing.
  */
 function synthesizeProfileForTest(samples) {
-  const RecordingUtils = devtools.require("devtools/performance/recording-utils");
+  const RecordingUtils = require("devtools/performance/recording-utils");
 
   samples.unshift({
     time: 0,

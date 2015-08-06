@@ -5,7 +5,7 @@
 "use strict";
 
 const { Cc, Ci, Cu } = require("chrome");
-const TargetFactory = require("resource://gre/modules/devtools/Loader.jsm").devtools.TargetFactory;
+const {TargetFactory} = require("devtools/framework/target");
 
 let telemetry;
 try {

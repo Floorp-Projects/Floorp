@@ -19,14 +19,14 @@ window.onload = function() {
   var Ci = Components.interfaces;
 
   Cu.import("resource://gre/modules/PermissionsTable.jsm");
-  Cu.import("resource://gre/modules/devtools/Loader.jsm");
+  var {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
   Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
   Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
   Cu.import("resource://gre/modules/Services.jsm");
 
   SimpleTest.waitForExplicitFinish();
 
-  var {getDeviceFront} = devtools.require("devtools/server/actors/device");
+  var {getDeviceFront} = require("devtools/server/actors/device");
 
   if (!DebuggerServer.initialized) {
     DebuggerServer.init();

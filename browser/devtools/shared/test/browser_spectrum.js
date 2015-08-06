@@ -5,7 +5,7 @@
 // Tests that the spectrum color picker works correctly
 
 const TEST_URI = "chrome://browser/content/devtools/spectrum-frame.xhtml";
-const {Spectrum} = devtools.require("devtools/shared/widgets/Spectrum");
+const {Spectrum} = require("devtools/shared/widgets/Spectrum");
 
 add_task(function*() {
   yield promiseTab("about:blank");

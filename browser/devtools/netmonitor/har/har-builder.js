@@ -6,7 +6,6 @@
 const { Cu, Ci, Cc } = require("chrome");
 const { defer, all, resolve } = require("sdk/core/promise");
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 
 loader.lazyImporter(this, "ViewHelpers", "resource:///modules/devtools/ViewHelpers.jsm");
 loader.lazyRequireGetter(this, "NetworkHelper", "devtools/toolkit/webconsole/network-helper");

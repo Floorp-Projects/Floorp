@@ -9,7 +9,7 @@
 
 const TEST_URI = "chrome://browser/content/devtools/cubic-bezier-frame.xhtml";
 const {CubicBezierWidget} =
-  devtools.require("devtools/shared/widgets/CubicBezierWidget");
+  require("devtools/shared/widgets/CubicBezierWidget");
 const {PRESETS} = require("devtools/shared/widgets/CubicBezierPresets");
 
 add_task(function*() {

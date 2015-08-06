@@ -17,10 +17,7 @@ function test() {
 }
 
 function consoleOpened(HUD) {
-  let tools = Cu.import("resource://gre/modules/devtools/Loader.jsm", {})
-                .devtools;
-  let JSPropertyProvider = tools.require("devtools/toolkit/webconsole/utils")
-                                .JSPropertyProvider;
+  let {JSPropertyProvider} = require("devtools/toolkit/webconsole/utils");
 
   let tmp = Cu.import("resource://gre/modules/jsdebugger.jsm", {});
   tmp.addDebuggerToGlobal(tmp);

@@ -1,12 +1,12 @@
 var Cu = Components.utils;
 
-Cu.import("resource://gre/modules/devtools/Loader.jsm");
+const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
 Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
-const Services = devtools.require("Services");
-const {_documentWalker} = devtools.require("devtools/server/actors/inspector");
+const Services = require("Services");
+const {_documentWalker} = require("devtools/server/actors/inspector");
 
 // Always log packets when running tests.
 Services.prefs.setBoolPref("devtools.debugger.log", true);

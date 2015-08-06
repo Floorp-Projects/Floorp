@@ -8,8 +8,7 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_auto-pretty-print-01.html";
 
-let devtools = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
-let { RootActor } = devtools.require("devtools/server/actors/root");
+let { RootActor } = require("devtools/server/actors/root");
 
 function test() {
   let gTab, gDebuggee, gPanel, gDebugger;

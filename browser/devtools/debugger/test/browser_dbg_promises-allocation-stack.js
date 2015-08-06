@@ -8,8 +8,8 @@
 "use strict";
 
 const TAB_URL = EXAMPLE_URL + "doc_promise-get-allocation-stack.html";
-const { PromisesFront } = devtools.require("devtools/server/actors/promises");
-let events = devtools.require("sdk/event/core");
+const { PromisesFront } = require("devtools/server/actors/promises");
+let events = require("sdk/event/core");
 
 function test() {
   Task.spawn(function* () {

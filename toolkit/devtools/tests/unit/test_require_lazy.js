@@ -9,7 +9,7 @@ function run_test() {
   const path = "devtools/async-utils";
   const o = {};
   devtools.lazyRequireGetter(o, name, path);
-  const asyncUtils = devtools.require(path);
+  const asyncUtils = require(path);
   // XXX: do_check_eq only works on primitive types, so we have this
   // do_check_true of an equality expression.
   do_check_true(o.asyncUtils === asyncUtils);

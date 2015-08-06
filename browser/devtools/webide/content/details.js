@@ -5,7 +5,7 @@
 const Cu = Components.utils;
 Cu.import("resource:///modules/devtools/gDevTools.jsm");
 const {Services} = Cu.import("resource://gre/modules/Services.jsm");
-const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
+const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const {AppProjects} = require("devtools/app-manager/app-projects");
 const {AppValidator} = require("devtools/app-manager/app-validator");
 const {AppManager} = require("devtools/webide/app-manager");
