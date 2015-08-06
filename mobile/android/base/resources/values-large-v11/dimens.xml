@@ -8,6 +8,11 @@
     <dimen name="doorhanger_offsetY">100dp</dimen>
 
     <dimen name="browser_toolbar_height">56dp</dimen>
+    <!-- This value is the height of the Tabs Panel header view
+         (browser_toolbar_height) minus the height of the indicator
+         (6dp). This value should change when the height of the view changes. -->
+    <dimen name="tabs_panel_indicator_selected_padding_top">50dp</dimen>
+
     <dimen name="browser_toolbar_height_flipper">60dp</dimen>
     <dimen name="browser_toolbar_button_padding">16dp</dimen>
     <dimen name="browser_toolbar_favicon_size">16dp</dimen>
