@@ -890,8 +890,15 @@ DecodeAndCropBlob(Blob& aBlob, Maybe<IntRect>& aCropRect, ErrorResult& aRv)
     // The blob is just decoded into a RasterImage and not optimized yet, so the
     // _surface_ we get is a DataSourceSurface which wraps the RasterImage's
     // raw buffer.
-    MOZ_ASSERT(surface->GetType() == SurfaceType::DATA,
-          "The SourceSurface from just decoded Blob is not DataSourceSurface.");
+    //
+    // The _surface_ might already be optimized so that its type is not
+    // SurfaceType::DATA. However, we could keep using the generic cropping and
+    // copying since the decoded buffer is only used in this ImageBitmap so we
+    // should crop it to save memory usage.
+    //
+    // TODO: Bug1189632 is going to refactor this create-from-blob part to
+    //       decode the blob off the main thread. Re-check if we should do
+    //       cropping at this moment again there.
     RefPtr<DataSourceSurface> dataSurface = surface->GetDataSurface();
     croppedSurface = CropAndCopyDataSourceSurface(dataSurface, aCropRect.ref());
     aCropRect->MoveTo(0, 0);
