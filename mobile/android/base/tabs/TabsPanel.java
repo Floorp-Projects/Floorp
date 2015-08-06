@@ -38,6 +38,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import org.mozilla.gecko.widget.ThemedImageButton;
 
 public class TabsPanel extends LinearLayout
                        implements GeckoPopupMenu.OnMenuItemClickListener,
@@ -139,7 +140,9 @@ public class TabsPanel extends LinearLayout
         mTabWidget = (IconTabWidget) findViewById(R.id.tab_widget);
 
         mTabWidget.addTab(R.drawable.tabs_normal, R.string.tabs_normal);
-        mTabWidget.addTab(R.drawable.tabs_private, R.string.tabs_private);
+        final ThemedImageButton privateTabsPanel =
+                (ThemedImageButton) mTabWidget.addTab(R.drawable.tabs_private, R.string.tabs_private);
+        privateTabsPanel.setPrivateMode(true);
 
         if (!RestrictedProfiles.isAllowed(mContext, Restriction.DISALLOW_PRIVATE_BROWSING)) {
             mTabWidget.setVisibility(View.GONE);
