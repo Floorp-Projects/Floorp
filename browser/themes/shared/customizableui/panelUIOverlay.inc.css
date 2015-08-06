@@ -533,6 +533,27 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   top: 25%;
 }
 
+#PanelUI-update-status[update-status]::after {
+  content: "";
+  width: 14px;
+  height: 14px;
+  margin-right: 16.5px;
+  box-shadow: 0px 1px 0px rgba(255, 255, 255, 0.2) inset, 0px -1px 0px rgba(0, 0, 0, 0.1) inset, 0px 1px 0px rgba(12, 27, 38, 0.2);
+  border-radius: 2px;
+  background-size: contain;
+  display: -moz-box;
+}
+
+#PanelUI-update-status[update-status="succeeded"]::after {
+  background-image: url(chrome://browser/skin/update-badge.svg);
+  background-color: #74BF43;
+}
+
+#PanelUI-update-status[update-status="failed"]::after {
+  background-image: url(chrome://browser/skin/update-badge-failed.svg);
+  background-color: #D90000;
+}
+
 #PanelUI-fxa-status {
   display: flex;
   flex: 1 1 0%;

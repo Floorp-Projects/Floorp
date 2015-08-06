@@ -1391,6 +1391,8 @@ var gBrowserInit = {
     // Add Devtools menuitems and listeners
     gDevToolsBrowser.registerBrowserWindow(window);
 
+    gMenuButtonBadgeManager.init();
+
     gMenuButtonUpdateBadge.init();
 
     window.addEventListener("mousemove", MousePosTracker, false);
@@ -1545,6 +1547,8 @@ var gBrowserInit = {
     TrackingProtection.uninit();
 
     gMenuButtonUpdateBadge.uninit();
+
+    gMenuButtonBadgeManager.uninit();
 
     SidebarUI.uninit();
 
@@ -2576,6 +2580,20 @@ let gMenuButtonBadgeManager = {
   fxaBadge: null,
   appUpdateBadge: null,
 
+  init: function () {
+    PanelUI.panel.addEventListener("popupshowing", this, true);
+  },
+
+  uninit: function () {
+    PanelUI.panel.removeEventListener("popupshowing", this, true);
+  },
+
+  handleEvent: function (e) {
+    if (e.type === "popupshowing") {
+      this.clearBadges();
+    }
+  },
+
   _showBadge: function () {
     let badgeToShow = this.appUpdateBadge || this.fxaBadge;
 
@@ -2607,6 +2625,12 @@ let gMenuButtonBadgeManager = {
 
   removeBadge: function (badgeId) {
     this._changeBadge(badgeId);
+  },
+
+  clearBadges: function () {
+    this.appUpdateBadge = null;
+    this.fxaBadge = null;
+    this._showBadge();
   }
 };
 
