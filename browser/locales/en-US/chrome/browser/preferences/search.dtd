@@ -9,6 +9,9 @@
 <!ENTITY provideSearchSuggestions.label        "Provide search suggestions">
 <!ENTITY provideSearchSuggestions.accesskey    "s">
 
+<!ENTITY showURLBarSuggestions.label           "Show search suggestions in location bar results">
+<!ENTITY showURLBarSuggestions.accesskey       "l">
+
 <!ENTITY redirectWindowsSearch.label "Use this search engine for searches from Windows">
 <!ENTITY redirectWindowsSearch.accesskey "W">
 
