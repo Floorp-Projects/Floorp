@@ -10,7 +10,6 @@ let Services = require("Services");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource://gre/modules/devtools/SourceMap.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
@@ -20,6 +19,7 @@ const {Arg, Option, method, RetVal, types} = protocol;
 const {LongStringActor, ShortLongString} = require("devtools/server/actors/string");
 const {fetch} = require("devtools/toolkit/DevToolsUtils");
 const {listenOnce} = require("devtools/async-utils");
+const {SourceMapConsumer} = require("source-map");
 
 loader.lazyGetter(this, "CssLogic", () => require("devtools/styleinspector/css-logic").CssLogic);
 

@@ -18,8 +18,8 @@ define("test/source-map/test-api", ["require", "exports", "module"], function (r
   try {
     sourceMap = require('source-map');
   } catch (e) {
-    sourceMap = {};
-    Components.utils.import('resource:///modules/devtools/SourceMap.jsm', sourceMap);
+    var loader = Components.utils.import("resource://gre/modules/devtools/Loader.jsm", {});
+    sourceMap = loader.devtools.require("devtools/toolkit/sourcemap/source-map");
   }
 
   exports['test that the api is properly exposed in the top level'] = function (assert, util) {
