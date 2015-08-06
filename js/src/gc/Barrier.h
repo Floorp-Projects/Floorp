@@ -342,7 +342,12 @@ class BarrieredBase : public BarrieredBaseMixins<T>
 
 template <>
 class BarrieredBaseMixins<JS::Value> : public ValueOperations<BarrieredBase<JS::Value> >
-{};
+{
+    friend class ValueOperations<BarrieredBase<JS::Value> >;
+    const JS::Value * extract() const {
+        return static_cast<const BarrieredBase<JS::Value>*>(this)->unsafeGet();
+    }
+};
 
 /*
  * PreBarriered only automatically handles pre-barriers. Post-barriers must
