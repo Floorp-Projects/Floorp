@@ -429,7 +429,6 @@ function run_Int64_tests() {
   do_check_eq(i.toString(2), "111111111111111111111111111111111111111111111111111111111111111");
 
   let vals = [-0x8000000000001000, 0x8000000000000000,
-              "-0x8000000000000001", "0x8000000000000000",
               ctypes.UInt64("0x8000000000000000"),
               Infinity, -Infinity, NaN, 0.1,
               5.68e21, null, undefined, "", {}, [], new Number(16),
@@ -437,6 +436,10 @@ function run_Int64_tests() {
               {valueOf: function () { return 7; }}];
   for (let i = 0; i < vals.length; i++)
     do_check_throws(function () { ctypes.Int64(vals[i]); }, TypeError);
+
+  vals = ["-0x8000000000000001", "0x8000000000000000"];
+  for (let i = 0; i < vals.length; i++)
+    do_check_throws(function () { ctypes.Int64(vals[i]); }, RangeError);
 
   // Test ctypes.Int64.compare.
   do_check_eq(ctypes.Int64.compare(ctypes.Int64(5), ctypes.Int64(5)), 0);
@@ -580,13 +583,17 @@ function run_UInt64_tests() {
   do_check_eq(i.toString(16), "7fffffffffffffff");
   do_check_eq(i.toString(2), "111111111111111111111111111111111111111111111111111111111111111");
 
-  let vals = [-1, 0x10000000000000000, "-1", "-0x1", "0x10000000000000000",
+  let vals = [-1, 0x10000000000000000, "-1", "-0x1",
               ctypes.Int64("-1"), Infinity, -Infinity, NaN, 0.1,
               5.68e21, null, undefined, "", {}, [], new Number(16),
               {toString: function () { return 7; }},
               {valueOf: function () { return 7; }}];
   for (let i = 0; i < vals.length; i++)
     do_check_throws(function () { ctypes.UInt64(vals[i]); }, TypeError);
+
+  vals = ["0x10000000000000000"];
+  for (let i = 0; i < vals.length; i++)
+    do_check_throws(function () { ctypes.UInt64(vals[i]); }, RangeError);
 
   // Test ctypes.UInt64.compare.
   do_check_eq(ctypes.UInt64.compare(ctypes.UInt64(5), ctypes.UInt64(5)), 0);
@@ -1495,7 +1502,7 @@ function run_StructType_tests() {
     do_check_eq(large_t.size, 0xffffffff);
     do_check_throws(function() {
       ctypes.StructType("large_t", [{"a": large_t}, {"b": ctypes.int8_t}]);
-    }, Error);
+    }, RangeError);
 
     // Test 2: overflow struct size + struct tail padding.
     // To do this, we use a struct with maximum size and alignment 2.
@@ -1504,7 +1511,7 @@ function run_StructType_tests() {
     do_check_eq(large_t.size, 0xfffffffe);
     do_check_throws(function() {
       ctypes.StructType("large_t", [{"a": large_t}, {"b": ctypes.int8_t}]);
-    }, Error);
+    }, RangeError);
 
   } else {
     // Test 1: overflow struct size when converting from size_t to jsdouble.
@@ -1513,25 +1520,25 @@ function run_StructType_tests() {
     do_check_eq(large_t.size, 0xfffffffffffff800);
     do_check_throws(function() {
       ctypes.StructType("large_t", [{"a": large_t}, {"b": ctypes.int8_t}]);
-    }, Error);
+    }, RangeError);
     let small_t = ctypes.int8_t.array(0x400);
     do_check_throws(function() {
       ctypes.StructType("large_t", [{"a": large_t}, {"b": small_t}]);
-    }, Error);
+    }, RangeError);
 
     large_t = ctypes.StructType("large_t",
       [{"a": ctypes.int8_t.array(0x1fffffffffffff)}]);
     do_check_eq(large_t.size, 0x1fffffffffffff);
     do_check_throws(function() {
       ctypes.StructType("large_t", [{"a": large_t.array(2)}, {"b": ctypes.int8_t}]);
-    }, Error);
+    }, RangeError);
 
     // Test 2: overflow struct size + field padding + field size.
     large_t = ctypes.int8_t.array(0xfffffffffffff800);
     small_t = ctypes.int8_t.array(0x800);
     do_check_throws(function() {
       ctypes.StructType("large_t", [{"a": large_t}, {"b": small_t}]);
-    }, Error);
+    }, RangeError);
 
     // Test 3: overflow struct size + struct tail padding.
     // To do this, we use a struct with maximum size and alignment 2.
@@ -1541,7 +1548,7 @@ function run_StructType_tests() {
     small_t = ctypes.int8_t.array(0xfff);
     do_check_throws(function() {
       ctypes.StructType("large_t", [{"a": large_t}, {"b": small_t}]);
-    }, Error);
+    }, RangeError);
   }
 
   let g = g_t();
@@ -2049,10 +2056,10 @@ function run_ArrayType_tests() {
     }, TypeError);
     do_check_throws(function() {
       ctypes.ArrayType(ctypes.int16_t, 0x80000000);
-    }, Error);
+    }, RangeError);
 
     let large_t = ctypes.int8_t.array(0x80000000);
-    do_check_throws(function() { large_t.array(2); }, Error);
+    do_check_throws(function() { large_t.array(2); }, RangeError);
 
   } else {
     do_check_throws(function() {
@@ -2060,10 +2067,10 @@ function run_ArrayType_tests() {
     }, TypeError);
     do_check_throws(function() {
       ctypes.ArrayType(ctypes.int16_t, ctypes.UInt64("0x8000000000000000"));
-    }, Error);
+    }, RangeError);
 
     let large_t = ctypes.int8_t.array(0x8000000000000000);
-    do_check_throws(function() { large_t.array(2); }, Error);
+    do_check_throws(function() { large_t.array(2); }, RangeError);
   }
 
   // Test that arrays ImplicitConvert to pointers.
