@@ -115,15 +115,6 @@ AutoGCRooter::trace(JSTracer* trc)
         return;
       }
 
-      case IDVALVECTOR: {
-        AutoIdValueVector::VectorImpl& vector = static_cast<AutoIdValueVector*>(this)->vector;
-        for (size_t i = 0; i < vector.length(); i++) {
-            TraceRoot(trc, &vector[i].id, "js::AutoIdValueVector id");
-            TraceRoot(trc, &vector[i].value, "js::AutoIdValueVector value");
-        }
-        return;
-      }
-
       case OBJVECTOR: {
         AutoObjectVector::VectorImpl& vector = static_cast<AutoObjectVector*>(this)->vector;
         TraceRootRange(trc, vector.length(), vector.begin(), "JS::AutoObjectVector.vector");
@@ -149,12 +140,6 @@ AutoGCRooter::trace(JSTracer* trc)
       case SCRIPTVECTOR: {
         AutoScriptVector::VectorImpl& vector = static_cast<AutoScriptVector*>(this)->vector;
         TraceRootRange(trc, vector.length(), vector.begin(), "js::AutoScriptVector.vector");
-        return;
-      }
-
-      case HASHABLEVALUE: {
-        AutoHashableValueRooter* rooter = static_cast<AutoHashableValueRooter*>(this);
-        rooter->trace(trc);
         return;
       }
 
@@ -216,12 +201,6 @@ AutoGCRooter::traceAllWrappers(JSTracer* trc)
                 gcr->trace(trc);
         }
     }
-}
-
-void
-AutoHashableValueRooter::trace(JSTracer* trc)
-{
-    TraceRoot(trc, reinterpret_cast<Value*>(&value), "AutoHashableValueRooter");
 }
 
 void
@@ -339,6 +318,18 @@ js::gc::GCRuntime::markRuntime(JSTracer* trc, TraceOrMarkRuntime traceOrMark)
         }
 
         MarkPersistentRootedChains(trc);
+    }
+
+    if (rt->asyncStackForNewActivations)
+        TraceRoot(trc, &rt->asyncStackForNewActivations, "asyncStackForNewActivations");
+
+    if (rt->asyncCauseForNewActivations)
+        TraceRoot(trc, &rt->asyncCauseForNewActivations, "asyncCauseForNewActivations");
+
+    if (rt->scriptAndCountsVector) {
+        ScriptAndCountsVector& vec = *rt->scriptAndCountsVector;
+        for (size_t i = 0; i < vec.length(); i++)
+            TraceRoot(trc, &vec[i].script, "scriptAndCountsVector");
     }
 
     if (!rt->isBeingDestroyed() && !rt->isHeapMinorCollecting()) {

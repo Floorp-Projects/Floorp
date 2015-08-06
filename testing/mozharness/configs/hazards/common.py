@@ -4,6 +4,8 @@ PYTHON_DIR = "/tools/python27"
 SRCDIR = "source"
 
 config = {
+    "platform": "linux64",
+    "build_type": "br-haz",
     "log_name": "hazards",
     "shell-objdir": "obj-opt-js",
     "analysis-dir": "analysis",

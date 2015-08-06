@@ -3,6 +3,7 @@ import os
 config = {
     # mozconfig file to use, it depends on branch and platform names
     "platform": "macosx64",
+    "stage_product": "firefox",
     "update_platform": "Darwin_x86_64-gcc3",
     "mozconfig": "%(branch)s/browser/config/mozconfigs/macosx-universal/l10n-mozconfig",
     "bootstrap_env": {

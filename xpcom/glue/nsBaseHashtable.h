@@ -13,6 +13,17 @@
 #include "prlock.h"
 #include "nsDebug.h"
 
+// These are the codes returned by |EnumReadFunction| and |EnumFunction|, which
+// control the behavior of EnumerateRead() and Enumerate(). The PLD/PL_D prefix
+// is because they originated in PLDHashTable, but that class no longer uses
+// them.
+enum PLDHashOperator
+{
+  PL_DHASH_NEXT = 0,          // enumerator says continue
+  PL_DHASH_STOP = 1,          // enumerator says stop
+  PL_DHASH_REMOVE = 2         // enumerator says remove
+};
+
 template<class KeyClass, class DataType, class UserDataType>
 class nsBaseHashtable; // forward declaration
 

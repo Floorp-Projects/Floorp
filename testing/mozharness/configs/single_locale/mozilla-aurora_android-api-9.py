@@ -10,6 +10,7 @@ STAGE_SSH_KEY = "~/.ssh/ffxbld_rsa"
 HG_SHARE_BASE_DIR = "/builds/hg-shared"
 
 config = {
+    "branch": BRANCH,
     "log_name": "single_locale",
     "objdir": OBJDIR,
     "is_automation": True,
@@ -73,6 +74,9 @@ config = {
     "mozilla_dir": MOZILLA_DIR,
     "mozconfig": "%s/mobile/android/config/mozconfigs/android-api-9-10-constrained/l10n-nightly" % MOZILLA_DIR,
     "signature_verification_script": "tools/release/signing/verify-android-signature.sh",
+    "stage_product": "mobile",
+    "platform": "android",
+    "build_type": "api-9-opt",
 
     # Balrog
     "build_target": "Android_arm-eabi-gcc3",

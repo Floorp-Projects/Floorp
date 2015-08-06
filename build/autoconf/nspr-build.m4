@@ -248,7 +248,7 @@ if test -z "$MOZ_NATIVE_NSPR"; then
       export CPPFLAGS="-include $_topsrcdir/mozglue/linker/dladdr.h $CPPFLAGS"
     fi
     export LDFLAGS="$LDFLAGS $NSPR_LDFLAGS"
-    export CFLAGS="$CFLAGS $MOZ_FRAMEPTR_FLAGS"
+    export CFLAGS="$CFLAGS $MOZ_FRAMEPTR_FLAGS $MOZ_FOLD_LIBS_FLAGS"
 
     AC_OUTPUT_SUBDIRS(nsprpub)
 

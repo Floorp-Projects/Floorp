@@ -15,6 +15,7 @@ namespace mozilla {
 namespace a11y {
 class Accessible;
 class HyperTextAccessible;
+class TextLeafAccessible;
 class ImageAccessible;
 class TableAccessible;
 class TableCellAccessible;
@@ -93,9 +94,13 @@ public:
 
   virtual bool RecvARIARoleAtom(const uint64_t& aID, nsString* aRole) override;
 
+  virtual bool RecvGetLevelInternal(const uint64_t& aID, int32_t* aLevel) override;
+
   virtual bool RecvAttributes(const uint64_t& aID,
                               nsTArray<Attribute> *aAttributes) override;
 
+  virtual bool RecvCaretLineNumber(const uint64_t& aID, int32_t* aLineNumber)
+    override;
   virtual bool RecvCaretOffset(const uint64_t& aID, int32_t* aOffset)
     override;
   virtual bool RecvSetCaretOffset(const uint64_t& aID, const int32_t& aOffset,
@@ -193,6 +198,9 @@ public:
                                           const uint32_t& aCoordinateType,
                                           const int32_t& aX,
                                           const int32_t& aY) override;
+
+  virtual bool RecvText(const uint64_t& aID,
+                        nsString* aText) override;
 
   virtual bool RecvReplaceText(const uint64_t& aID,
                                const nsString& aText) override;
@@ -448,6 +456,7 @@ public:
 
   virtual bool RecvLanguage(const uint64_t& aID, nsString* aLocale) override;
   virtual bool RecvDocType(const uint64_t& aID, nsString* aType) override;
+  virtual bool RecvTitle(const uint64_t& aID, nsString* aTitle) override;
   virtual bool RecvURL(const uint64_t& aID, nsString* aURL) override;
   virtual bool RecvMimeType(const uint64_t& aID, nsString* aMime) override;
   virtual bool RecvURLDocTypeMimeType(const uint64_t& aID,
@@ -460,6 +469,7 @@ private:
   Accessible* IdToAccessibleLink(const uint64_t& aID) const;
   Accessible* IdToAccessibleSelect(const uint64_t& aID) const;
   HyperTextAccessible* IdToHyperTextAccessible(const uint64_t& aID) const;
+  TextLeafAccessible* IdToTextLeafAccessible(const uint64_t& aID) const;
   ImageAccessible* IdToImageAccessible(const uint64_t& aID) const;
   TableCellAccessible* IdToTableCellAccessible(const uint64_t& aID) const;
   TableAccessible* IdToTableAccessible(const uint64_t& aID) const;

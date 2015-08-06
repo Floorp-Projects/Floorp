@@ -206,7 +206,9 @@ PushSocket.prototype = {
     try {
       this._websocket.close(this._websocket.CLOSE_NORMAL);
     }
-    catch (e) {}
+    catch (e) {
+      // Do nothing
+    }
   }
 };
 
@@ -783,13 +785,15 @@ let MozLoopPushHandler = {
     try {
       this.pushServerUri = Services.prefs.getCharPref("loop.debug.pushserver");
     }
-    catch (e) {}
+    catch (e) {
+      // Do nothing
+    }
 
     if (!this.pushServerUri) {
       // Get push server to use from the Loop server
       let pushUrlEndpoint = Services.prefs.getCharPref("loop.server") + "/push-server-config";
-      let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
-                  createInstance(Ci.nsIXMLHttpRequest);
+      let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(
+                Ci.nsIXMLHttpRequest);
       req.open("GET", pushUrlEndpoint);
       req.onload = () => {
         if (req.status >= 200 && req.status < 300) {

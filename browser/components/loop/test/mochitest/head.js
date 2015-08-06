@@ -131,8 +131,8 @@ function loadLoopPanel(aOverrideOptions = {}) {
 
 function promiseOAuthParamsSetup(baseURL, params) {
   return new Promise((resolve, reject) => {
-    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
-                createInstance(Ci.nsIXMLHttpRequest);
+    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(
+              Ci.nsIXMLHttpRequest);
     xhr.open("POST", baseURL + "/setup_params", true);
     xhr.setRequestHeader("X-Params", JSON.stringify(params));
     xhr.addEventListener("load", () => resolve(xhr));
@@ -173,8 +173,8 @@ function checkLoggedOutState() {
 
 function promiseDeletedOAuthParams(baseURL) {
   return new Promise((resolve, reject) => {
-    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
-                createInstance(Ci.nsIXMLHttpRequest);
+    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(
+              Ci.nsIXMLHttpRequest);
     xhr.open("DELETE", baseURL + "/setup_params", true);
     xhr.addEventListener("load", () => resolve(xhr));
     xhr.addEventListener("error", reject);
@@ -197,8 +197,8 @@ function promiseObserverNotified(aTopic, aExpectedData = null) {
  */
 function promiseOAuthGetRegistration(baseURL) {
   return new Promise((resolve, reject) => {
-    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
-                createInstance(Ci.nsIXMLHttpRequest);
+    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(
+              Ci.nsIXMLHttpRequest);
     xhr.open("GET", baseURL + "/get_registration", true);
     xhr.responseType = "json";
     xhr.addEventListener("load", () => resolve(xhr));

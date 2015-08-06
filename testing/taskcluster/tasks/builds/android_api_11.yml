@@ -1,5 +1,5 @@
 $inherits:
-  from: 'tasks/build.yml'
+  from: 'tasks/builds/mobile_base.yml'
   variables:
     build_name: 'android'
     build_type: 'opt'

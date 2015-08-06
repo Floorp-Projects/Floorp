@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1154504
+Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1154504</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript;version=1.7">
+
+  Components.utils.import("resource://gre/modules/Services.jsm");
+
+  Services.prefs.clearUserPref("browser.migration.version");
+  Services.prefs.setBoolPref("nglayout.debug.paint_flashing", true);
+
+  let BrowserApp = Services.wm.getMostRecentWindow("navigator:browser").BrowserApp;
+  BrowserApp._migrateUI();
+
+  // Check that migration version increased.
+  is(Services.prefs.getIntPref("browser.migration.version"), 1, "found expected version");
+
+  // Check that user pref value was reset.
+  is(Services.prefs.prefHasUserValue("nglayout.debug.paint_flashing"), false, "found expected user value");
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1154504">Mozilla Bug 1154504</a>
+<br>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1184186">Migrated from Robocop testMigrateUI</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

@@ -44,7 +44,7 @@ TestSuccess(const char* hdr, bool extraTokens,
   uint64_t maxAge = 0;
   bool includeSubdomains = false;
   rv = sss->UnsafeProcessHeader(nsISiteSecurityService::HEADER_HSTS, dummyUri,
-                                hdr, 0, &maxAge, &includeSubdomains);
+                                hdr, 0, &maxAge, &includeSubdomains, nullptr);
   EXPECT_SUCCESS(rv, "Failed to process valid header: %s", hdr);
 
   REQUIRE_EQUAL(maxAge, expectedMaxAge, "Did not correctly parse maxAge");
@@ -69,7 +69,7 @@ bool TestFailure(const char* hdr,
   EXPECT_SUCCESS(rv, "Failed to create URI");
 
   rv = sss->UnsafeProcessHeader(nsISiteSecurityService::HEADER_HSTS, dummyUri,
-                                hdr, 0, nullptr, nullptr);
+                                hdr, 0, nullptr, nullptr, nullptr);
   EXPECT_FAILURE(rv, "Parsed invalid header: %s", hdr);
   passed(hdr);
   return true;

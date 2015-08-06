@@ -17,7 +17,7 @@ interface nsILoadContext;
 /**
  * Interface for persisting DOM documents and URIs to local or remote storage.
  */
-[scriptable, uuid(effe7374-5c7d-4b1e-a96f-27b283df189b)]
+[scriptable, uuid(8cd752a4-60b1-42c3-a819-65c7a1138a28)]
 interface nsIWebBrowserPersist : nsICancelable
 {
   /** No special persistence behaviour. */
@@ -248,7 +248,8 @@ interface nsIWebBrowserPersist : nsICancelable
    *
    * @param aDocument          Document to save to file. Some implementations of
    *                           this interface may also support <CODE>nullptr</CODE>
-   *                           to imply the currently loaded document.
+   *                           to imply the currently loaded document.  Can be an
+   *                           nsIWebBrowserPersistDocument or nsIDOMDocument.
    * @param aFile              Target local file. This may be a nsIFile object or an
    *                           nsIURI object with a file scheme or a scheme that
    *                           supports uploading (e.g. ftp).
@@ -264,12 +265,14 @@ interface nsIWebBrowserPersist : nsICancelable
    *                           wrap text at. Parameter is ignored if wrapping is not
    *                           specified by the encoding flags.
    *
+   * @see nsIWebBrowserPersistDocument
+   * @see nsIWebBrowserPersistable
    * @see nsIFile
    * @see nsIURI
    *
    * @throws NS_ERROR_INVALID_ARG One or more arguments was invalid.
    */
-  void saveDocument(in nsIDOMDocument aDocument,
+  void saveDocument(in nsISupports aDocument,
      in nsISupports aFile, in nsISupports aDataPath,
      in string aOutputContentType, in unsigned long aEncodingFlags,
      in unsigned long aWrapColumn);

@@ -19,6 +19,7 @@ dictionary CaretStateChangedEventInit : EventInit {
   CaretChangedReason reason = "visibilitychange";
   boolean caretVisible = false;
   boolean selectionVisible = false;
+  boolean selectionEditable = false;
 };
 
 [Constructor(DOMString type, optional CaretStateChangedEventInit eventInit),
@@ -29,4 +30,5 @@ interface CaretStateChangedEvent : Event {
   readonly attribute CaretChangedReason reason;
   readonly attribute boolean caretVisible;
   readonly attribute boolean selectionVisible;
+  readonly attribute boolean selectionEditable;
 };

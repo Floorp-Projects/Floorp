@@ -376,6 +376,9 @@
   <string name="pref_titlebar_mode_title">&pref_titlebar_mode_title;</string>
   <string name="pref_titlebar_mode_url">&pref_titlebar_mode_url;</string>
 
+  <string name="pref_prevent_magnifying_glass">&pref_prevent_magnifying_glass;</string>
+  <string name="pref_prevent_magnifying_glass_summary">&pref_prevent_magnifying_glass_summary;</string>
+
   <string name="pref_scroll_title_bar2">&pref_scroll_title_bar2;</string>
   <string name="pref_scroll_title_bar_summary">&pref_scroll_title_bar_summary;</string>
 

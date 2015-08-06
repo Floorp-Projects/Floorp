@@ -456,10 +456,10 @@ MP3TrackDemuxer::GetNextFrame(const MediaByteRange& aRange) {
     return nullptr;
   }
 
-  const uint32_t read = Read(frameWriter->mData, frame->mOffset, frame->mSize);
+  const uint32_t read = Read(frameWriter->Data(), frame->mOffset, frame->Size());
 
   if (read != aRange.Length()) {
-    MP3DEMUXER_LOG("GetNext() Exit read=%u frame->mSize=%u", read, frame->mSize);
+    MP3DEMUXER_LOG("GetNext() Exit read=%u frame->Size()=%u", read, frame->Size());
     return nullptr;
   }
 
@@ -474,7 +474,7 @@ MP3TrackDemuxer::GetNextFrame(const MediaByteRange& aRange) {
   if (mNumParsedFrames == 1) {
     // First frame parsed, let's read VBR info if available.
     // TODO: read info that helps with seeking (bug 1163667).
-    mParser.ParseVBRHeader(frame->mData, frame->mData + frame->mSize);
+    mParser.ParseVBRHeader(frame->Data(), frame->Data() + frame->Size());
     mFirstFrameOffset = frame->mOffset;
   }
 

@@ -10,6 +10,7 @@
 #include "ProxyAccessible.h"
 #include "Relation.h"
 #include "HyperTextAccessible-inl.h"
+#include "TextLeafAccessible.h"
 #include "ImageAccessible.h"
 #include "TableAccessible.h"
 #include "TableCellAccessible.h"
@@ -95,6 +96,13 @@ DocAccessibleChild::IdToHyperTextAccessible(const uint64_t& aID) const
 {
   Accessible* acc = IdToAccessible(aID);
   return acc && acc->IsHyperText() ? acc->AsHyperText() : nullptr;
+}
+
+TextLeafAccessible*
+DocAccessibleChild::IdToTextLeafAccessible(const uint64_t& aID) const
+{
+  Accessible* acc = IdToAccessible(aID);
+  return acc && acc->IsTextLeaf() ? acc->AsTextLeaf() : nullptr;
 }
 
 ImageAccessible*
@@ -339,6 +347,24 @@ DocAccessibleChild::RecvARIARoleAtom(const uint64_t& aID, nsString* aRole)
     }
   }
 
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvGetLevelInternal(const uint64_t& aID, int32_t* aLevel)
+{
+  Accessible* acc = IdToAccessible(aID);
+  if (acc) {
+    *aLevel = acc->GetLevelInternal();
+  }
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvCaretLineNumber(const uint64_t& aID, int32_t* aLineNumber)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  *aLineNumber = acc && acc->IsTextRole() ? acc->CaretLineNumber() : 0;
   return true;
 }
 
@@ -636,6 +662,17 @@ DocAccessibleChild::RecvScrollSubstringToPoint(const uint64_t& aID,
   return true;
 }
 
+bool
+DocAccessibleChild::RecvText(const uint64_t& aID,
+                             nsString* aText)
+{
+  TextLeafAccessible* acc = IdToTextLeafAccessible(aID);
+  if (acc) {
+    *aText = acc->Text();
+  }
+
+  return true;
+}
 
 bool
 DocAccessibleChild::RecvReplaceText(const uint64_t& aID,
@@ -1794,6 +1831,19 @@ DocAccessibleChild::RecvDocType(const uint64_t& aID,
   Accessible* acc = IdToAccessible(aID);
   if (acc && acc->IsDoc()) {
     acc->AsDoc()->DocType(*aType);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTitle(const uint64_t& aID,
+                            nsString* aTitle)
+{
+  Accessible* acc = IdToAccessible(aID);
+  if (acc) {
+    mozilla::ErrorResult rv;
+    acc->GetContent()->GetTextContent(*aTitle, rv);
   }
 
   return true;

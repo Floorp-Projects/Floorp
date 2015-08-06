@@ -132,13 +132,15 @@ private:
   nsresult ProcessHeaderInternal(uint32_t aType, nsIURI* aSourceURI,
                                  const char* aHeader, nsISSLStatus* aSSLStatus,
                                  uint32_t aFlags, uint64_t* aMaxAge,
-                                 bool* aIncludeSubdomains);
+                                 bool* aIncludeSubdomains,
+                                 uint32_t* aFailureResult);
   nsresult ProcessSTSHeader(nsIURI* aSourceURI, const char* aHeader,
                             uint32_t flags, uint64_t* aMaxAge,
-                            bool* aIncludeSubdomains);
+                            bool* aIncludeSubdomains, uint32_t* aFailureResult);
   nsresult ProcessPKPHeader(nsIURI* aSourceURI, const char* aHeader,
                             nsISSLStatus* aSSLStatus, uint32_t flags,
-                            uint64_t* aMaxAge, bool* aIncludeSubdomains);
+                            uint64_t* aMaxAge, bool* aIncludeSubdomains,
+                            uint32_t* aFailureResult);
   nsresult SetHPKPState(const char* aHost, SiteHPKPState& entry, uint32_t flags);
 
   const nsSTSPreload *GetPreloadListEntry(const char *aHost);

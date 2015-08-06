@@ -12,7 +12,13 @@ add_task(function*() {
   yield check_autocomplete({
     search: "doit",
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch("doit") ]
+    matches: [ makeSearchMatch("doit", { engineName: "AliasedMozSearch", searchQuery: "", alias: "doit" }) ]
+  });
+
+  yield check_autocomplete({
+    search: "doit ",
+    searchParam: "enable-actions",
+    matches: [ makeSearchMatch("doit ", { engineName: "AliasedMozSearch", searchQuery: "", alias: "doit" }) ]
   });
 
   yield check_autocomplete({
