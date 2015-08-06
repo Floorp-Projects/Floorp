@@ -89,6 +89,7 @@ child:
   // AccessibleText
 
   // TextSubstring is getText in IDL.
+  prio(high) sync CaretLineNumber(uint64_t aID) returns(int32_t aLineNumber);
   prio(high) sync CaretOffset(uint64_t aID) returns(int32_t aOffset);
   prio(high) sync SetCaretOffset(uint64_t aID, int32_t aOffset) returns (bool aValid);
   prio(high) sync CharacterCount(uint64_t aID) returns(int32_t aCount);
@@ -135,6 +136,7 @@ child:
                          uint32_t aCoordinateType,
                          int32_t aX, int32_t aY);
 
+  prio(high) sync Text(uint64_t aID) returns(nsString aText);
   prio(high) sync ReplaceText(uint64_t aID, nsString aText);
   prio(high) sync InsertText(uint64_t aID, nsString aText, int32_t aPosition)
     returns(bool aValid);

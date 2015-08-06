@@ -192,6 +192,14 @@ ProxyAccessible::ARIARoleAtom() const
 }
 
 int32_t
+ProxyAccessible::CaretLineNumber()
+{
+  int32_t line = -1;
+  unused << mDoc->SendCaretOffset(mID, &line);
+  return line;
+}
+
+int32_t
 ProxyAccessible::CaretOffset()
 {
   int32_t offset = 0;
@@ -369,6 +377,12 @@ ProxyAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
 {
   unused << mDoc->SendScrollSubstringToPoint(mID, aStartOffset, aEndOffset,
                                              aCoordinateType, aX, aY);
+}
+
+void
+ProxyAccessible::Text(nsString* aText)
+{
+  unused << mDoc->SendText(mID, aText);
 }
 
 void

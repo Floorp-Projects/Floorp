@@ -9,6 +9,7 @@
 
 #include "mozilla/a11y/Role.h"
 #include "nsIAccessibleText.h"
+#include "nsIAccessibleTypes.h"
 #include "Accessible.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -126,6 +127,7 @@ public:
 
   nsIAtom* ARIARoleAtom() const;
 
+  int32_t CaretLineNumber();
   int32_t CaretOffset();
   bool SetCaretOffset(int32_t aOffset);
 
@@ -160,7 +162,7 @@ public:
   void DefaultTextAttributes(nsTArray<Attribute>* aAttrs);
 
   nsIntRect TextBounds(int32_t aStartOffset, int32_t aEndOffset,
-                       uint32_t aCoordType);
+                       uint32_t aCoordType = nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE);
 
   nsIntRect CharBounds(int32_t aOffset, uint32_t aCoordType);
 
@@ -187,6 +189,8 @@ public:
                               int32_t aEndOffset,
                               uint32_t aCoordinateType,
                               int32_t aX, int32_t aY);
+
+  void Text(nsString* aText);
 
   void ReplaceText(const nsString& aText);
 
