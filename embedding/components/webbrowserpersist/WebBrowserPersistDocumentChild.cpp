@@ -1,0 +1,155 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "WebBrowserPersistDocumentChild.h"
+
+#include "mozilla/ipc/InputStreamUtils.h"
+#include "nsIDocument.h"
+#include "nsIInputStream.h"
+#include "WebBrowserPersistLocalDocument.h"
+#include "WebBrowserPersistResourcesChild.h"
+#include "WebBrowserPersistSerializeChild.h"
+
+namespace mozilla {
+
+WebBrowserPersistDocumentChild::WebBrowserPersistDocumentChild()
+{
+}
+
+WebBrowserPersistDocumentChild::~WebBrowserPersistDocumentChild()
+{
+}
+
+void
+WebBrowserPersistDocumentChild::Start(nsIDocument* aDocument)
+{
+    nsRefPtr<WebBrowserPersistLocalDocument> doc;
+    if (aDocument) {
+        doc = new WebBrowserPersistLocalDocument(aDocument);
+    }
+    Start(doc);
+}
+
+void
+WebBrowserPersistDocumentChild::Start(nsIWebBrowserPersistDocument* aDocument)
+{
+    MOZ_ASSERT(!mDocument);
+    if (!aDocument) {
+        SendInitFailure(NS_ERROR_FAILURE);
+        return;
+    }
+
+    WebBrowserPersistDocumentAttrs attrs;
+    nsCOMPtr<nsIInputStream> postDataStream;
+    OptionalInputStreamParams postData;
+    nsTArray<FileDescriptor> postFiles;
+#define ENSURE(e) do {           \
+        nsresult rv = (e);       \
+        if (NS_FAILED(rv)) {     \
+            SendInitFailure(rv); \
+            return;              \
+        }                        \
+    } while(0)
+    ENSURE(aDocument->GetIsPrivate(&(attrs.isPrivate())));
+    ENSURE(aDocument->GetDocumentURI(attrs.documentURI()));
+    ENSURE(aDocument->GetBaseURI(attrs.baseURI()));
+    ENSURE(aDocument->GetContentType(attrs.contentType()));
+    ENSURE(aDocument->GetCharacterSet(attrs.characterSet()));
+    ENSURE(aDocument->GetTitle(attrs.title()));
+    ENSURE(aDocument->GetReferrer(attrs.referrer()));
+    ENSURE(aDocument->GetContentDisposition(attrs.contentDisposition()));
+    ENSURE(aDocument->GetCacheKey(&(attrs.cacheKey())));
+    ENSURE(aDocument->GetPersistFlags(&(attrs.persistFlags())));
+    ENSURE(aDocument->GetPostData(getter_AddRefs(postDataStream)));
+    ipc::SerializeInputStream(postDataStream,
+                              postData,
+                              postFiles);
+#undef ENSURE
+    mDocument = aDocument;
+    SendAttributes(attrs, postData, postFiles);
+}
+
+bool
+WebBrowserPersistDocumentChild::RecvSetPersistFlags(const uint32_t& aNewFlags)
+{
+    mDocument->SetPersistFlags(aNewFlags);
+    return true;
+}
+
+PWebBrowserPersistResourcesChild*
+WebBrowserPersistDocumentChild::AllocPWebBrowserPersistResourcesChild()
+{
+    auto* actor = new WebBrowserPersistResourcesChild();
+    NS_ADDREF(actor);
+    return actor;
+}
+
+bool
+WebBrowserPersistDocumentChild::RecvPWebBrowserPersistResourcesConstructor(PWebBrowserPersistResourcesChild* aActor)
+{
+    nsRefPtr<WebBrowserPersistResourcesChild> visitor =
+        static_cast<WebBrowserPersistResourcesChild*>(aActor);
+    nsresult rv = mDocument->ReadResources(visitor);
+    if (NS_FAILED(rv)) {
+        visitor->EndVisit(mDocument, rv);
+    }
+    return true;
+}
+
+bool
+WebBrowserPersistDocumentChild::DeallocPWebBrowserPersistResourcesChild(PWebBrowserPersistResourcesChild* aActor)
+{
+    auto* castActor =
+        static_cast<WebBrowserPersistResourcesChild*>(aActor);
+    NS_RELEASE(castActor);
+    return true;
+}
+
+PWebBrowserPersistSerializeChild*
+WebBrowserPersistDocumentChild::AllocPWebBrowserPersistSerializeChild(
+            const WebBrowserPersistURIMap& aMap,
+            const nsCString& aRequestedContentType,
+            const uint32_t& aEncoderFlags,
+            const uint32_t& aWrapColumn)
+{
+    auto* actor = new WebBrowserPersistSerializeChild(aMap);
+    NS_ADDREF(actor);
+    return actor;
+}
+
+bool
+WebBrowserPersistDocumentChild::RecvPWebBrowserPersistSerializeConstructor(
+            PWebBrowserPersistSerializeChild* aActor,
+            const WebBrowserPersistURIMap& aMap,
+            const nsCString& aRequestedContentType,
+            const uint32_t& aEncoderFlags,
+            const uint32_t& aWrapColumn)
+{
+    auto* castActor =
+        static_cast<WebBrowserPersistSerializeChild*>(aActor);
+    // This actor performs the roles of: completion, URI map, and output stream.
+    nsresult rv = mDocument->WriteContent(castActor,
+                                          castActor,
+                                          aRequestedContentType,
+                                          aEncoderFlags,
+                                          aWrapColumn,
+                                          castActor);
+    if (NS_FAILED(rv)) {
+        castActor->OnFinish(mDocument, castActor, aRequestedContentType, rv);
+    }
+    return true;
+}
+
+bool
+WebBrowserPersistDocumentChild::DeallocPWebBrowserPersistSerializeChild(PWebBrowserPersistSerializeChild* aActor)
+{
+    auto* castActor =
+        static_cast<WebBrowserPersistSerializeChild*>(aActor);
+    NS_RELEASE(castActor);
+    return true;
+}
+
+} // namespace mozilla

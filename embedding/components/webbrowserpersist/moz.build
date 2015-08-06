@@ -7,15 +7,39 @@
 XPIDL_SOURCES += [
     'nsCWebBrowserPersist.idl',
     'nsIWebBrowserPersist.idl',
+    'nsIWebBrowserPersistable.idl',
+    'nsIWebBrowserPersistDocument.idl',
 ]
 
 XPIDL_MODULE = 'webbrowserpersist'
 
+IPDL_SOURCES += [
+    'PWebBrowserPersistDocument.ipdl',
+    'PWebBrowserPersistResources.ipdl',
+    'PWebBrowserPersistSerialize.ipdl',
+]
+
 SOURCES += [
     'nsWebBrowserPersist.cpp',
+    'WebBrowserPersistDocumentChild.cpp',
+    'WebBrowserPersistDocumentParent.cpp',
+    'WebBrowserPersistLocalDocument.cpp',
+    'WebBrowserPersistRemoteDocument.cpp',
+    'WebBrowserPersistResourcesChild.cpp',
+    'WebBrowserPersistResourcesParent.cpp',
+    'WebBrowserPersistSerializeChild.cpp',
+    'WebBrowserPersistSerializeParent.cpp',
+]
+
+EXPORTS.mozilla += [
+    'WebBrowserPersistDocumentChild.h',
+    'WebBrowserPersistDocumentParent.h',
+    'WebBrowserPersistLocalDocument.h',
 ]
 
 FAIL_ON_WARNINGS = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [

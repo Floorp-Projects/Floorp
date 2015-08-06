@@ -105,6 +105,7 @@ private:
   void LoadCandidate(sdp_t* sdp, uint16_t level);
   void LoadSetup(sdp_t* sdp, uint16_t level);
   void LoadSsrc(sdp_t* sdp, uint16_t level);
+  bool LoadImageattr(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
   bool LoadGroups(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
   bool LoadMsidSemantics(sdp_t* sdp,
                          uint16_t level,

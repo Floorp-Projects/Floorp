@@ -2,6 +2,7 @@ import os
 
 config = {
     "platform": "linux",
+    "stage_product": "firefox",
     "update_platform": "Linux_x86-gcc3",
     "mozconfig": "%(branch)s/browser/config/mozconfigs/linux32/l10n-mozconfig",
     "bootstrap_env": {

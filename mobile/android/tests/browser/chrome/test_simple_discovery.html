@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=938571
+Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 938571</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript;version=1.7">
+
+  "use strict";
+
+  /*globals SimpleServiceDiscovery */
+
+  const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+
+  Cu.import("resource://gre/modules/Services.jsm");
+  Cu.import("resource://gre/modules/SimpleServiceDiscovery.jsm");
+
+  function discovery_observer(subject, topic, data) {
+    dump("Observer: " + data);
+
+    let service = SimpleServiceDiscovery.findServiceForID(data);
+    if (!service)
+      return;
+
+    is(service.friendlyName, "Pretend Device");
+    is(service.uuid, "uuid:5ec9ff92-e8b2-4a94-a72c-76b34e6dabb1");
+    is(service.manufacturer, "Copy Cat Inc.");
+    is(service.modelName, "Eureka Dongle");
+
+    SimpleTest.finish();
+  };
+
+  var testDevice = {
+    id: "test:dummy",
+    target: "test:service",
+    factory: function(service) { /* dummy */  },
+    types: ["video/mp4"],
+    extensions: ["mp4"]
+  };
+
+  function test_default() {
+    SimpleTest.registerCleanupFunction(function cleanup() {
+      SimpleServiceDiscovery.unregisterDevice(testDevice);
+      Services.obs.removeObserver(discovery_observer, "ssdp-service-found");
+    });
+
+    Services.obs.addObserver(discovery_observer, "ssdp-service-found", false);
+
+    // We need to register a device or processService will ignore us
+    SimpleServiceDiscovery.registerDevice(testDevice);
+
+    // Create a pretend service
+    let service = {
+      location: "http://mochi.test:8888/chrome/mobile/android/tests/browser/chrome/simpleservice.xml",
+      target: "test:service"
+    };
+
+    dump("Force a detailed ping from a pretend service");
+
+    // Poke the service directly to get the discovery to happen
+    SimpleServiceDiscovery._processService(service);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  test_default();
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=938571">Mozilla Bug 938571</a>
+<br>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1184186">Migrated from Robocop testSimpleDiscovery</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
