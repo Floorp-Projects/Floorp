@@ -234,6 +234,44 @@ CanLowerCase(char16_t ch)
     return CharInfo(ch).lowerCase != 0;
 }
 
+const size_t LeadSurrogateMin = 0xD800;
+const size_t LeadSurrogateMax = 0xDBFF;
+const size_t TrailSurrogateMin = 0xDC00;
+const size_t TrailSurrogateMax = 0xDFFF;
+const size_t UTF16Max = 0xFFFF;
+const size_t NonBMPMin = 0x10000;
+const size_t NonBMPMax = 0x10FFFF;
+
+inline bool
+IsLeadSurrogate(size_t value)
+{
+    return value >= LeadSurrogateMin && value <= LeadSurrogateMax;
+}
+
+inline bool
+IsTrailSurrogate(size_t value)
+{
+    return value >= TrailSurrogateMin && value <= TrailSurrogateMax;
+}
+
+inline void
+UTF16Encode(size_t cp, size_t* lead, size_t* trail)
+{
+    MOZ_ASSERT(cp >= NonBMPMin && cp <= NonBMPMax);
+
+    *lead = (cp - NonBMPMin) / 1024 + LeadSurrogateMin;
+    *trail = ((cp - NonBMPMin) % 1024) + TrailSurrogateMin;
+}
+
+inline size_t
+UTF16Decode(size_t lead, size_t trail)
+{
+    MOZ_ASSERT(IsLeadSurrogate(lead));
+    MOZ_ASSERT(IsTrailSurrogate(trail));
+
+    return (lead - LeadSurrogateMin) * 1024 + (trail - TrailSurrogateMin) + NonBMPMin;
+}
+
 } /* namespace unicode */
 } /* namespace js */
 
