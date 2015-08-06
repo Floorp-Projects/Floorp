@@ -3849,6 +3849,30 @@ nsContentUtils::MatchElementId(nsIContent *aContent, const nsAString& aId)
   return MatchElementId(aContent, id);
 }
 
+/* static */
+nsIDocument*
+nsContentUtils::GetSubdocumentWithOuterWindowId(nsIDocument *aDocument,
+                                                uint64_t aOuterWindowId)
+{
+  if (!aDocument || !aOuterWindowId) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsPIDOMWindow> window = nsGlobalWindow::GetOuterWindowWithId(aOuterWindowId);
+  if (!window) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIDocument> foundDoc = window->GetDoc();
+  if (nsContentUtils::ContentIsCrossDocDescendantOf(foundDoc, aDocument)) {
+    // Note that ContentIsCrossDocDescendantOf will return true if
+    // foundDoc == aDocument.
+    return foundDoc;
+  }
+
+  return nullptr;
+}
+
 // Convert the string from the given encoding to Unicode.
 /* static */
 nsresult

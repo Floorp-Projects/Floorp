@@ -346,7 +346,10 @@ ResourceReader::OnWalkSubframe(nsIDOMNode* aNode)
     NS_ENSURE_STATE(loader);
 
     ++mOutstandingDocuments;
-    nsresult rv = loader->StartPersistence(this);
+    // Pass in 0 as the outer window ID so that we start
+    // persisting the root of this subframe, and not some other
+    // subframe child of this subframe.
+    nsresult rv = loader->StartPersistence(0, this);
     if (NS_FAILED(rv)) {
         if (rv == NS_ERROR_NO_CONTENT) {
             // Just ignore frames with no content document.

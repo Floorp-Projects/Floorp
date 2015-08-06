@@ -495,8 +495,9 @@ public:
 
     virtual ScreenIntSize GetInnerSize() override;
 
-    virtual PWebBrowserPersistDocumentChild* AllocPWebBrowserPersistDocumentChild() override;
-    virtual bool RecvPWebBrowserPersistDocumentConstructor(PWebBrowserPersistDocumentChild *aActor) override;
+    virtual PWebBrowserPersistDocumentChild* AllocPWebBrowserPersistDocumentChild(const uint64_t& aOuterWindowID) override;
+    virtual bool RecvPWebBrowserPersistDocumentConstructor(PWebBrowserPersistDocumentChild *aActor,
+                                                           const uint64_t& aOuterWindowID) override;
     virtual bool DeallocPWebBrowserPersistDocumentChild(PWebBrowserPersistDocumentChild* aActor) override;
 
 protected:
