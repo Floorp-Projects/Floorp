@@ -1052,7 +1052,7 @@ struct JSRuntime : public JS::shadow::Runtime,
 #endif
 
     /* Strong references on scripts held for PCCount profiling API. */
-    JS::PersistentRooted<js::ScriptAndCountsVector>* scriptAndCountsVector;
+    js::ScriptAndCountsVector* scriptAndCountsVector;
 
     /* Well-known numbers held for use by this runtime's contexts. */
     const js::Value     NaNValue;

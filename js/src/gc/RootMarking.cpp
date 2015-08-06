@@ -320,6 +320,9 @@ js::gc::GCRuntime::markRuntime(JSTracer* trc, TraceOrMarkRuntime traceOrMark)
         MarkPersistentRootedChains(trc);
     }
 
+    if (rt->scriptAndCountsVector)
+        rt->scriptAndCountsVector->trace(trc);
+
     if (!rt->isBeingDestroyed() && !rt->isHeapMinorCollecting()) {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_RUNTIME_DATA);
 
