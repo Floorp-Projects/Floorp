@@ -54,16 +54,22 @@ public class RoundedCornerLayout extends LinearLayout {
         setWillNotDraw(false);
     }
 
+
+    @Override
+    protected void onLayout(final boolean changed, final int l, final int t, final int r, final int b) {
+        super.onLayout(changed, l, t, r, b);
+        if (changed) {
+            maskBitmap = createMask(r, b);
+        }
+    }
+
+
     @Override
     public void draw(Canvas canvas) {
         Bitmap offscreenBitmap = Bitmap.createBitmap(canvas.getWidth(), canvas.getHeight(), Bitmap.Config.ARGB_8888);
         Canvas offscreenCanvas = new Canvas(offscreenBitmap);
 
         super.draw(offscreenCanvas);
-
-        if (maskBitmap == null) {
-            maskBitmap = createMask(canvas.getWidth(), canvas.getHeight());
-        }
 
         offscreenCanvas.drawBitmap(maskBitmap, 0f, 0f, maskPaint);
         canvas.drawBitmap(offscreenBitmap, 0f, 0f, paint);

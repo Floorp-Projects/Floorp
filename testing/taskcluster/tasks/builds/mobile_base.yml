@@ -1,0 +1,4 @@
+$inherits:
+  from: 'tasks/build.yml'
+  variables:
+    build_product: 'mobile'

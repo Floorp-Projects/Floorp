@@ -62,6 +62,7 @@ config = {
     'base_name': 'Linux_%(branch)s',
     'platform': 'linux',
     'stage_platform': 'linux',
+    'publish_nightly_en_US_routes': True,
     'env': {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),
         'MOZ_AUTOMATION': '1',

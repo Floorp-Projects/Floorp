@@ -37,7 +37,7 @@ def buffer_handler_wrapper(handler, buffer_limit):
         buffer_limit = None
     else:
         buffer_limit = int(buffer_limit)
-    return handlers.BufferingLogFilter(handler, buffer_limit)
+    return handlers.BufferHandler(handler, buffer_limit)
 
 def default_formatter_options(log_type, overrides):
     formatter_option_defaults = {

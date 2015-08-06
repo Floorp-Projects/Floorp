@@ -263,6 +263,13 @@ struct LayoutDevicePixel {
                              NSAppUnitsToFloatPixels(aPoint.y, aAppUnitsPerDevPixel));
   }
 
+  static LayoutDeviceMargin FromAppUnits(const nsMargin& aMargin, nscoord aAppUnitsPerDevPixel) {
+    return LayoutDeviceMargin(NSAppUnitsToFloatPixels(aMargin.top, aAppUnitsPerDevPixel),
+                              NSAppUnitsToFloatPixels(aMargin.right, aAppUnitsPerDevPixel),
+                              NSAppUnitsToFloatPixels(aMargin.bottom, aAppUnitsPerDevPixel),
+                              NSAppUnitsToFloatPixels(aMargin.left, aAppUnitsPerDevPixel));
+  }
+
   static LayoutDeviceIntPoint FromAppUnitsRounded(const nsPoint& aPoint, nscoord aAppUnitsPerDevPixel) {
     return LayoutDeviceIntPoint(NSAppUnitsToIntPixels(aPoint.x, aAppUnitsPerDevPixel),
                                 NSAppUnitsToIntPixels(aPoint.y, aAppUnitsPerDevPixel));

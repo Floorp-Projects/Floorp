@@ -126,13 +126,13 @@ GMPVideoDecoder::CreateFrame(MediaRawData* aSample)
   }
 
   GMPUniquePtr<GMPVideoEncodedFrame> frame(static_cast<GMPVideoEncodedFrame*>(ftmp));
-  err = frame->CreateEmptyFrame(aSample->mSize);
+  err = frame->CreateEmptyFrame(aSample->Size());
   if (GMP_FAILED(err)) {
     mCallback->Error();
     return nullptr;
   }
 
-  memcpy(frame->Buffer(), aSample->mData, frame->Size());
+  memcpy(frame->Buffer(), aSample->Data(), frame->Size());
 
   // Convert 4-byte NAL unit lengths to host-endian 4-byte buffer lengths to
   // suit the GMP API.

@@ -93,8 +93,8 @@ add_task(function* token_request_invalid_state() {
 
 function promiseParams() {
   return new Promise((resolve, reject) => {
-    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
-                createInstance(Ci.nsIXMLHttpRequest);
+    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(
+              Ci.nsIXMLHttpRequest);
     xhr.open("POST", BASE_URL + "/fxa-oauth/params", true);
     xhr.responseType = "json";
     xhr.addEventListener("load", () => {
@@ -108,8 +108,8 @@ function promiseParams() {
 
 function promiseToken(code, state) {
   return new Promise((resolve, reject) => {
-    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
-                createInstance(Ci.nsIXMLHttpRequest);
+    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(
+              Ci.nsIXMLHttpRequest);
     xhr.open("POST", BASE_URL + "/fxa-oauth/token", true);
     xhr.setRequestHeader("Authorization", "Hawk ...");
     xhr.responseType = "json";

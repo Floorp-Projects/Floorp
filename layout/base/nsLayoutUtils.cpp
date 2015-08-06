@@ -7901,8 +7901,9 @@ nsLayoutUtils::CalculateRootCompositionSize(nsIFrame* aFrame,
   // Adjust composition size for the size of scroll bars.
   nsIFrame* rootRootScrollFrame = rootPresShell ? rootPresShell->GetRootScrollFrame() : nullptr;
   nsMargin scrollbarMargins = ScrollbarAreaToExcludeFromCompositionBoundsFor(rootRootScrollFrame);
-  CSSMargin margins = CSSMargin::FromAppUnits(scrollbarMargins);
-  // Scrollbars are not subject to scaling, so CSS pixels = layer pixels for them.
+  LayoutDeviceMargin margins = LayoutDeviceMargin::FromAppUnits(scrollbarMargins,
+    rootPresContext->AppUnitsPerDevPixel());
+  // Scrollbars are not subject to resolution scaling, so LD pixels = layer pixels for them.
   rootCompositionSize.width -= margins.LeftRight();
   rootCompositionSize.height -= margins.TopBottom();
 
@@ -8433,8 +8434,9 @@ nsLayoutUtils::ComputeFrameMetrics(nsIFrame* aForFrame,
   }
 
   nsMargin sizes = ScrollbarAreaToExcludeFromCompositionBoundsFor(aScrollFrame);
-  // Scrollbars are not subject to scaling, so CSS pixels = layer pixels for them.
-  ParentLayerMargin boundMargins = CSSMargin::FromAppUnits(sizes) * CSSToParentLayerScale(1.0f);
+  // Scrollbars are not subject to resolution scaling, so LD pixels = layer pixels for them.
+  ParentLayerMargin boundMargins = LayoutDeviceMargin::FromAppUnits(sizes, auPerDevPixel)
+    * LayoutDeviceToParentLayerScale(1.0f);
   frameBounds.Deflate(boundMargins);
 
   metrics.SetCompositionBounds(frameBounds);

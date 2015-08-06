@@ -493,6 +493,42 @@ SipccSdpAttributeList::LoadSsrc(sdp_t* sdp, uint16_t level)
 }
 
 bool
+SipccSdpAttributeList::LoadImageattr(sdp_t* sdp,
+                                     uint16_t level,
+                                     SdpErrorHolder& errorHolder)
+{
+  UniquePtr<SdpImageattrAttributeList> imageattrs(
+      new SdpImageattrAttributeList);
+
+  for (uint16_t i = 1; i < UINT16_MAX; ++i) {
+    const char* imageattrRaw = sdp_attr_get_simple_string(sdp,
+                                                          SDP_ATTR_IMAGEATTR,
+                                                          level,
+                                                          0,
+                                                          i);
+    if (!imageattrRaw) {
+      break;
+    }
+
+    std::string error;
+    size_t errorPos;
+    if (!imageattrs->PushEntry(imageattrRaw, &error, &errorPos)) {
+      std::ostringstream fullError;
+      fullError << error << " at column " << errorPos;
+      errorHolder.AddParseError(
+        sdp_attr_line_number(sdp, SDP_ATTR_IMAGEATTR, level, 0, i),
+        fullError.str());
+      return false;
+    }
+  }
+
+  if (!imageattrs->mImageattrs.empty()) {
+    SetAttribute(imageattrs.release());
+  }
+  return true;
+}
+
+bool
 SipccSdpAttributeList::LoadGroups(sdp_t* sdp, uint16_t level,
                                   SdpErrorHolder& errorHolder)
 {
@@ -925,6 +961,7 @@ SipccSdpAttributeList::Load(sdp_t* sdp, uint16_t level,
     LoadRtcpFb(sdp, level, errorHolder);
     LoadRtcp(sdp, level, errorHolder);
     LoadSsrc(sdp, level);
+    LoadImageattr(sdp, level, errorHolder);
   }
 
   LoadIceAttributes(sdp, level);
@@ -1082,7 +1119,11 @@ SipccSdpAttributeList::GetIdentity() const
 const SdpImageattrAttributeList&
 SipccSdpAttributeList::GetImageattr() const
 {
-  MOZ_CRASH("Not yet implemented.");
+  if (!HasAttribute(SdpAttribute::kImageattrAttribute)) {
+    MOZ_CRASH();
+  }
+  const SdpAttribute* attr = GetAttribute(SdpAttribute::kImageattrAttribute);
+  return *static_cast<const SdpImageattrAttributeList*>(attr);
 }
 
 const std::string&

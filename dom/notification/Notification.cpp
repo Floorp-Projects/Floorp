@@ -5,46 +5,49 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/Notification.h"
+
+#include "mozilla/Move.h"
+#include "mozilla/OwningNonNull.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/Services.h"
+#include "mozilla/unused.h"
+
 #include "mozilla/dom/AppNotificationServiceOptionsBinding.h"
 #include "mozilla/dom/BindingUtils.h"
-#include "mozilla/OwningNonNull.h"
+#include "mozilla/dom/NotificationEvent.h"
+#include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
-#include "mozilla/Move.h"
-#include "mozilla/Preferences.h"
-#include "mozilla/unused.h"
+#include "mozilla/dom/ServiceWorkerGlobalScopeBinding.h"
+
+#include "nsContentPermissionHelper.h"
 #include "nsContentUtils.h"
+#include "nsDOMJSUtils.h"
+#include "nsGlobalWindow.h"
 #include "nsIAlertsService.h"
 #include "nsIAppsService.h"
 #include "nsIContentPermissionPrompt.h"
 #include "nsIDocument.h"
+#include "nsILoadContext.h"
 #include "nsINotificationStorage.h"
 #include "nsIPermissionManager.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIServiceWorkerManager.h"
 #include "nsIUUIDGenerator.h"
+#include "nsIXPConnect.h"
+#include "nsNetUtil.h"
+#include "nsProxyRelease.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStructuredCloneContainer.h"
 #include "nsToolkitCompsCID.h"
-#include "nsGlobalWindow.h"
-#include "nsDOMJSUtils.h"
-#include "nsProxyRelease.h"
-#include "nsNetUtil.h"
-#include "nsIScriptSecurityManager.h"
-#include "nsIXPConnect.h"
-#include "mozilla/dom/ServiceWorkerGlobalScopeBinding.h"
-#include "mozilla/dom/NotificationEvent.h"
-#include "mozilla/dom/PermissionMessageUtils.h"
-#include "mozilla/Services.h"
-#include "nsContentPermissionHelper.h"
-#include "nsILoadContext.h"
-#ifdef MOZ_B2G
-#include "nsIDOMDesktopNotification.h"
-#endif
-
 #include "ServiceWorkerManager.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
+
+#ifdef MOZ_B2G
+#include "nsIDOMDesktopNotification.h"
+#endif
 
 namespace mozilla {
 namespace dom {

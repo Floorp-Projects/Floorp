@@ -93,6 +93,7 @@
 #include "mozilla/layers/CompositorChild.h"
 
 #include "mozilla/dom/StructuredCloneUtils.h"
+#include "mozilla/WebBrowserPersistLocalDocument.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
@@ -130,6 +131,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFrameLoader)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFrameLoader)
   NS_INTERFACE_MAP_ENTRY(nsIFrameLoader)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIFrameLoader)
+  NS_INTERFACE_MAP_ENTRY(nsIWebBrowserPersistable)
 NS_INTERFACE_MAP_END
 
 nsFrameLoader::nsFrameLoader(Element* aOwner, bool aNetworkCreated)
@@ -2846,4 +2848,21 @@ nsFrameLoader::InitializeBrowserAPI()
       browserFrame->InitializeBrowserAPI();
     }
   }
+}
+
+NS_IMETHODIMP
+nsFrameLoader::StartPersistence(nsIWebBrowserPersistDocumentReceiver* aRecv)
+{
+  if (mRemoteBrowser) {
+    return mRemoteBrowser->StartPersistence(aRecv);
+  }
+  if (mDocShell) {
+    nsCOMPtr<nsIDocument> doc = do_GetInterface(mDocShell);
+    NS_ENSURE_STATE(doc);
+    nsCOMPtr<nsIWebBrowserPersistDocument> pdoc =
+      new mozilla::WebBrowserPersistLocalDocument(doc);
+    aRecv->OnDocumentReady(pdoc);
+    return NS_OK;
+  }
+  return NS_ERROR_NO_CONTENT;
 }

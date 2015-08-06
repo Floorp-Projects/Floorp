@@ -766,8 +766,8 @@ fails-if(Android&&AndroidVersion==18) != block-float-2b.html block-float-2b-nore
 == block-float-3b-dyn.html block-float-3b-ref.html
 # Tests for various cases where clearance is applied and collapsing is
 # prevented or only allows for certain margins.
-fails == block-clear-1a.html block-clear-1a-ref.html # Bug 451791
-fails == block-clear-1b.html block-clear-1b-ref.html # Bug 451791
+== block-clear-1a.html block-clear-1a-ref.html
+== block-clear-1b.html block-clear-1b-ref.html
 == block-clear-2.html block-clear-2-ref.html
 != block-clear-2.html block-clear-2-noref.html
 == block-clear-3a.html block-clear-3-ref-left.html

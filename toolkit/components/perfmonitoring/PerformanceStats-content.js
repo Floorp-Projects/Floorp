@@ -27,8 +27,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
  * For the sake of simplicity, rather than attempting to map each PerformanceMonitor
  * of the parent to a PerformanceMonitor in each child process, we maintain a single
  * PerformanceMonitor in each child process. Probes activation/deactivation for this
- * monitor is controlled by the activation/deactivation of probes marked as "-content"
- * in the parent.
+ * monitor is controlled by the activation/deactivation of probes in the parent.
  *
  * In the parent, this is always an empty monitor.
  */

@@ -46,6 +46,7 @@ config = {
     'base_name': 'OS X 10.7 %(branch)s',
     'platform': 'macosx64',
     'stage_platform': 'macosx64',
+    'publish_nightly_en_US_routes': True,
     'use_platform_in_symbols_extra_buildid': True,
     'env': {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),
