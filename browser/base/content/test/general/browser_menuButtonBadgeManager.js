@@ -25,4 +25,13 @@ add_task(function* testButtonActivities() {
 
   gMenuButtonBadgeManager.removeBadge(gMenuButtonBadgeManager.BADGEID_FXA);
   is(menuButton.hasAttribute("badge-status"), false, "Should not have a badge status");
+
+  yield PanelUI.show();
+  is(menuButton.hasAttribute("badge-status"), false, "Should not have a badge status (Hamburger menu opened)");
+  PanelUI.hide();
+
+  gMenuButtonBadgeManager.addBadge(gMenuButtonBadgeManager.BADGEID_FXA, "fxa-needs-authentication");
+  gMenuButtonBadgeManager.addBadge(gMenuButtonBadgeManager.BADGEID_UPDATE, "update-succeeded");
+  gMenuButtonBadgeManager.clearBadges();
+  is(menuButton.hasAttribute("badge-status"), false, "Should not have a badge status (clearBadges called)");
 });
