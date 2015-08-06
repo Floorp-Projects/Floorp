@@ -6782,7 +6782,7 @@ _recalloc(void *ptr, size_t count, size_t size)
 	 * trailing bytes.
 	 */
 
-	ptr = realloc(ptr, newsize);
+	ptr = realloc_impl(ptr, newsize);
 	if (ptr != NULL && oldsize < newsize) {
 		memset((void *)((uintptr_t)ptr + oldsize), 0, newsize -
 		    oldsize);
