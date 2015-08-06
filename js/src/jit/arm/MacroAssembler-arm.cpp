@@ -90,6 +90,19 @@ MacroAssemblerARM::convertUInt32ToDouble(Register src, FloatRegister dest_)
     as_vcvt(dest, dest.uintOverlay());
 }
 
+static const double TO_DOUBLE_HIGH_SCALE = 0x100000000;
+
+void
+MacroAssemblerARMCompat::convertUInt64ToDouble(Register64 src, Register temp, FloatRegister dest)
+{
+    convertUInt32ToDouble(src.high, dest);
+    movePtr(ImmPtr(&TO_DOUBLE_HIGH_SCALE), ScratchRegister);
+    loadDouble(Address(ScratchRegister, 0), ScratchDoubleReg);
+    mulDouble(ScratchDoubleReg, dest);
+    convertUInt32ToDouble(src.low, ScratchDoubleReg);
+    addDouble(ScratchDoubleReg, dest);
+}
+
 void
 MacroAssemblerARM::convertUInt32ToFloat32(Register src, FloatRegister dest_)
 {

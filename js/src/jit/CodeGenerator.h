@@ -45,6 +45,7 @@ class OutOfLineIsCallable;
 class OutOfLineRegExpExec;
 class OutOfLineRegExpTest;
 class OutOfLineLambdaArrow;
+class OutOfLineRandom;
 
 class CodeGenerator : public CodeGeneratorSpecific
 {
@@ -382,6 +383,9 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitInterruptCheck(LInterruptCheck* lir);
     void visitAsmJSInterruptCheck(LAsmJSInterruptCheck* lir);
     void visitRecompileCheck(LRecompileCheck* ins);
+
+    void visitRandom(LRandom* ins);
+    void visitOutOfLineRandom(OutOfLineRandom* ool);
 
     IonScriptCounts* extractScriptCounts() {
         IonScriptCounts* counts = scriptCounts_;

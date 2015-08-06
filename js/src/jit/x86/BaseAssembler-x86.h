@@ -20,6 +20,14 @@ class BaseAssemblerX86 : public BaseAssembler
 
     // Arithmetic operations:
 
+    void adcl_ir(int32_t imm, RegisterID dst)
+    {
+        spew("adcl       $%d, %s", imm, GPReg32Name(dst));
+        MOZ_ASSERT(CAN_SIGN_EXTEND_8_32(imm));
+        m_formatter.oneByteOp(OP_GROUP1_EvIb, dst, GROUP1_OP_ADC);
+        m_formatter.immediate8s(imm);
+    }
+
     void adcl_im(int32_t imm, const void* addr)
     {
         spew("adcl       %d, %p", imm, addr);
@@ -71,6 +79,22 @@ class BaseAssemblerX86 : public BaseAssembler
         }
     }
 
+    void shldl_irr(int32_t imm, RegisterID src, RegisterID dst)
+    {
+        MOZ_ASSERT(imm < 32);
+        spew("shldl      $%d, %s, %s", imm, GPReg32Name(src), GPReg32Name(dst));
+        m_formatter.twoByteOp8(OP2_SHLD, dst, src);
+        m_formatter.immediate8u(imm);
+    }
+
+    void shrdl_irr(int32_t imm, RegisterID src, RegisterID dst)
+    {
+        MOZ_ASSERT(imm < 32);
+        spew("shrdl      $%d, %s, %s", imm, GPReg32Name(src), GPReg32Name(dst));
+        m_formatter.twoByteOp8(OP2_SHRD, dst, src);
+        m_formatter.immediate8u(imm);
+    }
+
     // SSE operations:
 
     using BaseAssembler::vcvtsi2sd_mr;
@@ -89,6 +113,36 @@ class BaseAssemblerX86 : public BaseAssembler
     void vmovdqa_mr(const void* address, XMMRegisterID dst)
     {
         twoByteOpSimd("vmovdqa", VEX_PD, OP2_MOVDQ_VdqWdq, address, invalid_xmm, dst);
+    }
+
+    void vhaddpd_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        twoByteOpSimdFlags("vhaddpd", VEX_PD, OP2_HADDPD, src, dst);
+    }
+
+    void vsubpd_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vsubpd", VEX_PD, OP2_SUBPS_VpsWps, src1, src0, dst);
+    }
+    void vsubpd_mr(int32_t offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vsubpd", VEX_PD, OP2_SUBPS_VpsWps, offset, base, src0, dst);
+    }
+    void vsubpd_mr(const void* address, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vsubpd", VEX_PD, OP2_SUBPS_VpsWps, address, src0, dst);
+    }
+
+    void vpunpckldq_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst) {
+        twoByteOpSimd("vpunpckldq", VEX_PD, OP2_PUNPCKLDQ, src1, src0, dst);
+    }
+    void vpunpckldq_mr(int32_t offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpunpckldq", VEX_PD, OP2_PUNPCKLDQ, offset, base, src0, dst);
+    }
+    void vpunpckldq_mr(const void* addr, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpunpckldq", VEX_PD, OP2_PUNPCKLDQ, addr, src0, dst);
     }
 
     // Misc instructions:
