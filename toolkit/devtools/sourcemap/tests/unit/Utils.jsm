@@ -12,8 +12,9 @@
  * https://github.com/mozilla/source-map/
  */
 
-Components.utils.import('resource://gre/modules/devtools/Require.jsm');
-Components.utils.import('resource://gre/modules/devtools/SourceMap.jsm');
+let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+  .getService(Components.interfaces.mozIJSSubScriptLoader);
+loader.loadSubScript("resource://gre/modules/devtools/sourcemap/source-map.js", this);
 
 this.EXPORTED_SYMBOLS = [ "define", "runSourceMapTests" ];
 /* -*- Mode: js; js-indent-level: 2; -*- */
@@ -22,7 +23,7 @@ this.EXPORTED_SYMBOLS = [ "define", "runSourceMapTests" ];
  * Licensed under the New BSD license. See LICENSE or:
  * http://opensource.org/licenses/BSD-3-Clause
  */
-define('test/source-map/assert', ['exports'], function (exports) {
+define('test/source-map/assert', ['require', 'exports'], function (require, exports) {
 
   let do_throw = function (msg) {
     throw new Error(msg);

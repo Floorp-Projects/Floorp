@@ -98,7 +98,7 @@ BuiltinProvider.prototype = {
         "acorn": "resource://gre/modules/devtools/acorn",
         "acorn/util/walk": "resource://gre/modules/devtools/acorn/walk.js",
         "tern": "resource://gre/modules/devtools/tern",
-        "source-map": "resource://gre/modules/devtools/SourceMap.jsm",
+        "source-map": "resource://gre/modules/devtools/sourcemap/source-map.js",
 
         // Allow access to xpcshell test items from the loader.
         "xpcshell-test": "resource://test"
@@ -156,7 +156,7 @@ SrcdirProvider.prototype = {
     let acornURI = this.fileURI(OS.Path.join(toolkitDir, "acorn"));
     let acornWalkURI = OS.Path.join(acornURI, "walk.js");
     let ternURI = OS.Path.join(toolkitDir, "tern");
-    let sourceMapURI = this.fileURI(OS.Path.join(toolkitDir), "SourceMap.jsm");
+    let sourceMapURI = this.fileURI(OS.Path.join(toolkitDir, "sourcemap", "source-map.js"));
     this.loader = new loader.Loader({
       id: "fx-devtools",
       modules: loaderModules,
