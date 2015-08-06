@@ -206,7 +206,7 @@ RegExpBuilder::AddQuantifierToAtom(int min, int max,
 template <typename CharT>
 RegExpParser<CharT>::RegExpParser(frontend::TokenStream& ts, LifoAlloc* alloc,
                                   const CharT* chars, const CharT* end, bool multiline_mode,
-                                  bool unicode)
+                                  bool unicode, bool ignore_case)
   : ts(ts),
     alloc(alloc),
     captures_(nullptr),
@@ -217,6 +217,7 @@ RegExpParser<CharT>::RegExpParser(frontend::TokenStream& ts, LifoAlloc* alloc,
     has_more_(true),
     multiline_(multiline_mode),
     unicode_(unicode),
+    ignore_case_(ignore_case),
     simple_(false),
     contains_anchor_(false),
     is_scanned_for_captures_(false)
@@ -609,10 +610,11 @@ AddCharOrEscapeUnicode(LifoAlloc* alloc,
                        CharacterRangeVector* trail_ranges,
                        WideCharRangeVector* wide_ranges,
                        char16_t char_class,
-                       widechar c)
+                       widechar c,
+                       bool ignore_case)
 {
     if (char_class != kNoCharClass) {
-        CharacterRange::AddClassEscapeUnicode(alloc, char_class, ranges);
+        CharacterRange::AddClassEscapeUnicode(alloc, char_class, ranges, ignore_case);
         switch (char_class) {
           case 'S':
           case 'W':
@@ -896,7 +898,7 @@ RegExpParser<CharT>::ParseCharacterClass()
             } else if (current() == ']') {
                 if (unicode_) {
                     AddCharOrEscapeUnicode(alloc, ranges, lead_ranges, trail_ranges, wide_ranges,
-                                           char_class, first);
+                                           char_class, first, ignore_case_);
                 } else {
                     AddCharOrEscape(alloc, ranges, char_class, first);
                 }
@@ -926,7 +928,7 @@ RegExpParser<CharT>::ParseCharacterClass()
         } else {
             if (unicode_) {
                 AddCharOrEscapeUnicode(alloc, ranges, lead_ranges, trail_ranges, wide_ranges,
-                                       char_class, first);
+                                       char_class, first, ignore_case_);
             } else {
                 AddCharOrEscape(alloc, ranges, char_class, first);
             }
@@ -1228,13 +1230,14 @@ UnicodeEverythingAtom(LifoAlloc* alloc)
 }
 
 RegExpTree*
-UnicodeCharacterClassEscapeAtom(LifoAlloc* alloc, char16_t char_class)
+UnicodeCharacterClassEscapeAtom(LifoAlloc* alloc, char16_t char_class, bool ignore_case)
 {
     CharacterRangeVector* ranges = alloc->newInfallible<CharacterRangeVector>(*alloc);
     CharacterRangeVector* lead_ranges = alloc->newInfallible<CharacterRangeVector>(*alloc);
     CharacterRangeVector* trail_ranges = alloc->newInfallible<CharacterRangeVector>(*alloc);
     WideCharRangeVector* wide_ranges = alloc->newInfallible<WideCharRangeVector>(*alloc);
-    AddCharOrEscapeUnicode(alloc, ranges, lead_ranges, trail_ranges, wide_ranges, char_class, 0);
+    AddCharOrEscapeUnicode(alloc, ranges, lead_ranges, trail_ranges, wide_ranges, char_class, 0,
+                           ignore_case);
 
     return UnicodeRangesAtom(alloc, ranges, lead_ranges, trail_ranges, wide_ranges, false);
 }
@@ -1406,7 +1409,8 @@ RegExpParser<CharT>::ParseDisjunction()
               case 'D': case 'S': case 'W':
                 if (unicode_) {
                     Advance();
-                    builder->AddAtom(UnicodeCharacterClassEscapeAtom(alloc, current()));
+                    builder->AddAtom(UnicodeCharacterClassEscapeAtom(alloc, current(),
+                                                                     ignore_case_));
                     Advance();
                     break;
                 }
@@ -1416,7 +1420,10 @@ RegExpParser<CharT>::ParseDisjunction()
                 Advance(2);
                 CharacterRangeVector* ranges =
                     alloc->newInfallible<CharacterRangeVector>(*alloc);
-                CharacterRange::AddClassEscape(alloc, c, ranges);
+                if (unicode_)
+                    CharacterRange::AddClassEscapeUnicode(alloc, c, ranges, ignore_case_);
+                else
+                    CharacterRange::AddClassEscape(alloc, c, ranges);
                 RegExpTree* atom = alloc->newInfallible<RegExpCharacterClass>(ranges, false);
                 builder->AddAtom(atom);
                 break;
@@ -1628,7 +1635,8 @@ template class irregexp::RegExpParser<char16_t>;
 template <typename CharT>
 static bool
 ParsePattern(frontend::TokenStream& ts, LifoAlloc& alloc, const CharT* chars, size_t length,
-             bool multiline, bool match_only, bool unicode, RegExpCompileData* data)
+             bool multiline, bool match_only, bool unicode, bool ignore_case,
+             RegExpCompileData* data)
 {
     if (match_only) {
         // Try to strip a leading '.*' from the RegExp, but only if it is not
@@ -1651,7 +1659,7 @@ ParsePattern(frontend::TokenStream& ts, LifoAlloc& alloc, const CharT* chars, si
         }
     }
 
-    RegExpParser<CharT> parser(ts, &alloc, chars, chars + length, multiline, unicode);
+    RegExpParser<CharT> parser(ts, &alloc, chars, chars + length, multiline, unicode, ignore_case);
     data->tree = parser.ParsePattern();
     if (!data->tree)
         return false;
@@ -1664,15 +1672,15 @@ ParsePattern(frontend::TokenStream& ts, LifoAlloc& alloc, const CharT* chars, si
 
 bool
 irregexp::ParsePattern(frontend::TokenStream& ts, LifoAlloc& alloc, JSAtom* str,
-                       bool multiline, bool match_only, bool unicode,
+                       bool multiline, bool match_only, bool unicode, bool ignore_case,
                        RegExpCompileData* data)
 {
     JS::AutoCheckCannotGC nogc;
     return str->hasLatin1Chars()
            ? ::ParsePattern(ts, alloc, str->latin1Chars(nogc), str->length(),
-                            multiline, match_only, unicode, data)
+                            multiline, match_only, unicode, ignore_case, data)
            : ::ParsePattern(ts, alloc, str->twoByteChars(nogc), str->length(),
-                            multiline, match_only, unicode, data);
+                            multiline, match_only, unicode, ignore_case, data);
 }
 
 template <typename CharT>
@@ -1682,7 +1690,7 @@ ParsePatternSyntax(frontend::TokenStream& ts, LifoAlloc& alloc, const CharT* cha
 {
     LifoAllocScope scope(&alloc);
 
-    RegExpParser<CharT> parser(ts, &alloc, chars, chars + length, false, unicode);
+    RegExpParser<CharT> parser(ts, &alloc, chars, chars + length, false, unicode, false);
     return parser.ParsePattern() != nullptr;
 }
 

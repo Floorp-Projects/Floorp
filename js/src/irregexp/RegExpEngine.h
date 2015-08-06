@@ -88,7 +88,8 @@ struct RegExpCode
 RegExpCode
 CompilePattern(JSContext* cx, RegExpShared* shared, RegExpCompileData* data,
                HandleLinearString sample,  bool is_global, bool ignore_case,
-               bool is_ascii, bool match_only, bool force_bytecode, bool sticky);
+               bool is_ascii, bool match_only, bool force_bytecode, bool sticky,
+               bool unicode);
 
 // Note: this may return RegExpRunStatus_Error if an interrupt was requested
 // while the code was executing.
@@ -145,7 +146,7 @@ class CharacterRange
 
     static void AddClassEscape(LifoAlloc* alloc, char16_t type, CharacterRangeVector* ranges);
     static void AddClassEscapeUnicode(LifoAlloc* alloc, char16_t type,
-                                      CharacterRangeVector* ranges);
+                                      CharacterRangeVector* ranges, bool ignoreCase);
 
     static inline CharacterRange Singleton(char16_t value) {
         return CharacterRange(value, value);
@@ -165,7 +166,7 @@ class CharacterRange
     bool is_valid() { return from_ <= to_; }
     bool IsEverything(char16_t max) { return from_ == 0 && to_ >= max; }
     bool IsSingleton() { return (from_ == to_); }
-    void AddCaseEquivalents(bool is_ascii, CharacterRangeVector* ranges);
+    void AddCaseEquivalents(bool is_ascii, bool unicode, CharacterRangeVector* ranges);
 
     static void Split(const LifoAlloc* alloc,
                       CharacterRangeVector base,
@@ -518,7 +519,7 @@ class RegExpNode
     // If we know that the input is ASCII then there are some nodes that can
     // never match.  This method returns a node that can be substituted for
     // itself, or nullptr if the node can never match.
-    virtual RegExpNode* FilterASCII(int depth, bool ignore_case) { return this; }
+    virtual RegExpNode* FilterASCII(int depth, bool ignore_case, bool unicode) { return this; }
 
     // Helper for FilterASCII.
     RegExpNode* replacement() {
@@ -625,14 +626,14 @@ class SeqRegExpNode : public RegExpNode
 
     RegExpNode* on_success() { return on_success_; }
     void set_on_success(RegExpNode* node) { on_success_ = node; }
-    virtual RegExpNode* FilterASCII(int depth, bool ignore_case);
+    virtual RegExpNode* FilterASCII(int depth, bool ignore_case, bool unicode);
     virtual bool FillInBMInfo(int offset,
                               int budget,
                               BoyerMooreLookahead* bm,
                               bool not_at_start);
 
   protected:
-    RegExpNode* FilterSuccessor(int depth, bool ignore_case);
+    RegExpNode* FilterSuccessor(int depth, bool ignore_case, bool unicode);
 
   private:
     RegExpNode* on_success_;
@@ -750,7 +751,7 @@ class TextNode : public SeqRegExpNode
                                       int characters_filled_in,
                                       bool not_at_start);
     TextElementVector& elements() { return *elements_; }
-    void MakeCaseIndependent(bool is_ascii);
+    void MakeCaseIndependent(bool is_ascii, bool unicode);
     virtual int GreedyLoopTextLength();
     virtual RegExpNode* GetSuccessorOfOmnivorousTextNode(
                                                          RegExpCompiler* compiler);
@@ -759,7 +760,7 @@ class TextNode : public SeqRegExpNode
                               BoyerMooreLookahead* bm,
                               bool not_at_start);
     void CalculateOffsets();
-    virtual RegExpNode* FilterASCII(int depth, bool ignore_case);
+    virtual RegExpNode* FilterASCII(int depth, bool ignore_case, bool unicode);
 
   private:
     enum TextEmitPassType {
@@ -1013,7 +1014,7 @@ class ChoiceNode : public RegExpNode
     void set_not_at_start() { not_at_start_ = true; }
     void set_being_calculated(bool b) { being_calculated_ = b; }
     virtual bool try_to_emit_quick_check_for_alternative(int i) { return true; }
-    virtual RegExpNode* FilterASCII(int depth, bool ignore_case);
+    virtual RegExpNode* FilterASCII(int depth, bool ignore_case, bool unicode);
 
   protected:
     int GreedyLoopTextLengthForAlternative(GuardedAlternative* alternative);
@@ -1066,7 +1067,7 @@ class NegativeLookaheadChoiceNode : public ChoiceNode
     // characters, but on a negative lookahead the negative branch did not take
     // part in that calculation (EatsAtLeast) so the assumptions don't hold.
     virtual bool try_to_emit_quick_check_for_alternative(int i) { return i != 0; }
-    virtual RegExpNode* FilterASCII(int depth, bool ignore_case);
+    virtual RegExpNode* FilterASCII(int depth, bool ignore_case, bool unicode);
 };
 
 class LoopChoiceNode : public ChoiceNode
@@ -1095,7 +1096,7 @@ class LoopChoiceNode : public ChoiceNode
     RegExpNode* continue_node() { return continue_node_; }
     bool body_can_be_zero_length() { return body_can_be_zero_length_; }
     virtual void Accept(NodeVisitor* visitor);
-    virtual RegExpNode* FilterASCII(int depth, bool ignore_case);
+    virtual RegExpNode* FilterASCII(int depth, bool ignore_case, bool unicode);
 
   private:
     // AddAlternative is made private for loop nodes because alternatives
@@ -1466,10 +1467,11 @@ class NodeVisitor
 class Analysis : public NodeVisitor
 {
   public:
-    Analysis(JSContext* cx, bool ignore_case, bool is_ascii)
+    Analysis(JSContext* cx, bool ignore_case, bool is_ascii, bool unicode)
       : cx(cx),
         ignore_case_(ignore_case),
         is_ascii_(is_ascii),
+        unicode_(unicode),
         error_message_(nullptr)
     {}
 
@@ -1494,6 +1496,7 @@ class Analysis : public NodeVisitor
     JSContext* cx;
     bool ignore_case_;
     bool is_ascii_;
+    bool unicode_;
     const char* error_message_;
 
     Analysis(Analysis&) = delete;

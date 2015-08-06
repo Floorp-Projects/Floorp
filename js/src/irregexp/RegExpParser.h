@@ -43,7 +43,7 @@ namespace irregexp {
 
 bool
 ParsePattern(frontend::TokenStream& ts, LifoAlloc& alloc, JSAtom* str,
-             bool multiline, bool match_only, bool unicode,
+             bool multiline, bool match_only, bool unicode, bool ignore_case,
              RegExpCompileData* data);
 
 bool
@@ -175,7 +175,8 @@ class RegExpParser
 {
   public:
     RegExpParser(frontend::TokenStream& ts, LifoAlloc* alloc,
-                 const CharT* chars, const CharT* end, bool multiline_mode, bool unicode);
+                 const CharT* chars, const CharT* end, bool multiline_mode, bool unicode,
+                 bool ignore_case);
 
     RegExpTree* ParsePattern();
     RegExpTree* ParseDisjunction();
@@ -296,6 +297,7 @@ class RegExpParser
     bool has_more_;
     bool multiline_;
     bool unicode_;
+    bool ignore_case_;
     bool simple_;
     bool contains_anchor_;
     bool is_scanned_for_captures_;
