@@ -63,7 +63,7 @@
             style="@style/UrlBar.ImageButton.NewTablet"
             android:layout_toLeftOf="@id/menu"
             android:layout_alignWithParentIfMissing="true"
-            android:background="@drawable/new_tablet_action_bar_button"/>
+            android:background="@drawable/browser_toolbar_action_bar_button"/>
 
     <!-- In a 56x60dp space, centering 24dp image will leave 16x18dp. -->
     <org.mozilla.gecko.toolbar.TabCounter android:id="@+id/tabs_counter"
@@ -84,7 +84,7 @@
             android:layout_alignParentRight="true"
             android:layout_marginRight="6dp"
             android:contentDescription="@string/menu"
-            android:background="@drawable/new_tablet_action_bar_button"
+            android:background="@drawable/browser_toolbar_action_bar_button"
             android:visibility="gone"/>
 
     <org.mozilla.gecko.widget.ThemedImageView
