@@ -15,12 +15,6 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 
-StaticRefPtr<Accessible> HyperTextAccessibleWrap::sLastTextChangeAcc;
-StaticAutoPtr<nsString> HyperTextAccessibleWrap::sLastTextChangeString;
-uint32_t HyperTextAccessibleWrap::sLastTextChangeStart = 0;
-uint32_t HyperTextAccessibleWrap::sLastTextChangeEnd = 0;
-bool HyperTextAccessibleWrap::sLastTextChangeWasInsert = false;
-
 NS_IMPL_ISUPPORTS_INHERITED0(HyperTextAccessibleWrap,
                              HyperTextAccessible)
 

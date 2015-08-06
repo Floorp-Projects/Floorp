@@ -13,8 +13,15 @@
 #include "HyperTextAccessibleWrap.h"
 #include "HyperTextAccessible-inl.h"
 #include "ProxyWrappers.h"
+#include "mozilla/ClearOnShutdown.h"
 
 using namespace mozilla::a11y;
+
+StaticRefPtr<Accessible> ia2AccessibleText::sLastTextChangeAcc;
+StaticAutoPtr<nsString> ia2AccessibleText::sLastTextChangeString;
+uint32_t ia2AccessibleText::sLastTextChangeStart = 0;
+uint32_t ia2AccessibleText::sLastTextChangeEnd = 0;
+bool ia2AccessibleText::sLastTextChangeWasInsert = false;
 
 // IAccessibleText
 
@@ -608,3 +615,9 @@ ia2AccessibleText::GetGeckoTextBoundary(enum IA2TextBoundaryType aBoundaryType)
   }
 }
 
+void
+ia2AccessibleText::InitTextChangeData()
+{
+  ClearOnShutdown(&sLastTextChangeAcc);
+  ClearOnShutdown(&sLastTextChangeString);
+}
