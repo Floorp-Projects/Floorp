@@ -65,3 +65,8 @@ MSG_DEF(CTYPESMSG_VARG_TYPE_ERROR,2, JSEXN_TYPEERR, "variadic argument {0} must 
 
 /* ctype */
 MSG_DEF(CTYPESMSG_CANNOT_CONSTRUCT,1, JSEXN_TYPEERR, "cannot construct from {0}")
+
+/* pointer */
+MSG_DEF(CTYPESMSG_UNDEFINED_SIZE,2, JSEXN_TYPEERR, "cannot {0} pointer of undefined size {1}")
+MSG_DEF(CTYPESMSG_NULL_POINTER,  2, JSEXN_TYPEERR, "cannot {0} null pointer {1}")
+MSG_DEF(CTYPESMSG_NON_STRING_BASE,1, JSEXN_TYPEERR, "base type {0} is not an 8-bit or 16-bit integer or character type")

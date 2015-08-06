@@ -1691,8 +1691,8 @@ function run_PointerType_tests() {
   let p = p_t();
   do_check_throws(function() { p.value; }, TypeError);
   do_check_eq(ptrValue(p), 0);
-  do_check_throws(function() { p.contents; }, Error);
-  do_check_throws(function() { p.contents = g; }, Error);
+  do_check_throws(function() { p.contents; }, TypeError);
+  do_check_throws(function() { p.contents = g; }, TypeError);
   p = p_t(5);
   do_check_eq(ptrValue(p), 5);
   p = p_t(ctypes.UInt64(10));
@@ -1708,10 +1708,10 @@ function run_PointerType_tests() {
   do_check_eq(f_t.name, "FILE*");
   do_check_eq(f_t.toSource(), 'ctypes.StructType("FILE").ptr');
   let f = new f_t();
-  do_check_throws(function() { f.contents; }, Error);
-  do_check_throws(function() { f.contents = 0; }, Error);
+  do_check_throws(function() { f.contents; }, TypeError);
+  do_check_throws(function() { f.contents = 0; }, TypeError);
   f = f_t(5);
-  do_check_throws(function() { f.contents = 0; }, Error);
+  do_check_throws(function() { f.contents = 0; }, TypeError);
   do_check_eq(f.toSource(), 'FILE.ptr(ctypes.UInt64("0x5"))');
 
   do_check_throws(function() { f_t(p); }, TypeError);
@@ -1754,7 +1754,7 @@ function run_PointerType_tests() {
   // but that the former cannot be dereferenced.
   let z_t = ctypes.int32_t.array().ptr;
   do_check_eq(ptrValue(z_t()), 0);
-  do_check_throws(function() { z_t().contents }, Error);
+  do_check_throws(function() { z_t().contents }, TypeError);
   z_t = ctypes.int32_t.array(0).ptr;
   do_check_eq(ptrValue(z_t()), 0);
   let z = ctypes.int32_t.array(0)().address();
