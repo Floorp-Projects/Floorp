@@ -199,7 +199,6 @@ compartment.
         * "CC_WAITING"
         * "CC_FORCED"
         * "LOAD_END"
-        * "POST_COMPARTMENT"
         * "PAGE_HIDE"
         * "NSJSCONTEXT_DESTROY"
         * "SET_NEW_DOCUMENT"

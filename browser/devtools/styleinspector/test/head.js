@@ -999,3 +999,16 @@ function waitForStyleEditor(toolbox, href) {
 
   return def.promise;
 }
+
+/**
+ * Reload the current page and wait for the inspector to be initialized after
+ * the navigation
+ * @param {InspectorPanel} inspector
+ *        The instance of InspectorPanel currently loaded in the toolbox
+ * @return a promise that resolves after page reload and inspector initialization
+ */
+function reloadPage(inspector) {
+  let onNewRoot = inspector.once("new-root");
+  content.location.reload();
+  return onNewRoot.then(inspector.markup._waitForChildren);
+}
