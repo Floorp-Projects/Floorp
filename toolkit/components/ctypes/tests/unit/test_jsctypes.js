@@ -1866,7 +1866,7 @@ function run_FunctionType_tests() {
   do_check_throws(function() { ctypes.FunctionType(); }, TypeError);
   do_check_throws(function() {
     ctypes.FunctionType(ctypes.default_abi, ctypes.void_t, [ ctypes.void_t ]);
-  }, Error);
+  }, TypeError);
   do_check_throws(function() {
     ctypes.FunctionType(ctypes.default_abi, ctypes.void_t, [ ctypes.void_t ], 5);
   }, TypeError);
@@ -1878,7 +1878,7 @@ function run_FunctionType_tests() {
   }, TypeError);
   do_check_throws(function() {
     ctypes.FunctionType(ctypes.default_abi, ctypes.int32_t());
-  }, Error);
+  }, TypeError);
   do_check_throws(function() {
     ctypes.FunctionType(ctypes.void_t, ctypes.void_t);
   }, Error);
@@ -1908,7 +1908,7 @@ function run_FunctionType_tests() {
     "ctypes.FunctionType(ctypes.default_abi, g_t).ptr");
 
   // Check that constructing a FunctionType CData directly throws.
-  do_check_throws(function() { f_t(); }, Error);
+  do_check_throws(function() { f_t(); }, TypeError);
 
   // Test ExplicitConvert.
   let f = fp_t();
@@ -2244,7 +2244,7 @@ function run_void_tests(library) {
   // Test that library.declare throws with void function args.
   do_check_throws(function() {
     library.declare("test_void_t_cdecl", ctypes.default_abi, ctypes.void_t, ctypes.void_t);
-  }, Error);
+  }, TypeError);
 
   if ("winLastError" in ctypes) {
     test_void_t = library.declare("test_void_t_stdcall", ctypes.stdcall_abi, ctypes.void_t);
