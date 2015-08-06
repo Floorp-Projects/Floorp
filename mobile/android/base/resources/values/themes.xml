@@ -130,6 +130,4 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
-    <style name="TabQueueActivity" parent="android:style/Theme.NoDisplay" />
-
 </resources>
