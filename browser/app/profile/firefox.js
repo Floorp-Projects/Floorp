@@ -1446,6 +1446,10 @@ pref("devtools.performance.ui.enable-allocations", false);
 pref("devtools.performance.ui.enable-framerate", true);
 pref("devtools.performance.ui.enable-jit-optimizations", false);
 
+// Temporary pref disabling memory flame views
+// TODO remove once we have flame charts via bug 1148663
+pref("devtools.performance.ui.enable-memory-flame", false);
+
 // Enable experimental options in the UI only in Nightly
 #if defined(NIGHTLY_BUILD)
 pref("devtools.performance.ui.experimental", true);
