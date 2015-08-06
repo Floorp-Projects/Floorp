@@ -260,7 +260,8 @@ CreateTestH264Decoder(layers::LayersBackend aBackend,
   aConfig.mId = 1;
   aConfig.mDuration = 40000;
   aConfig.mMediaTime = 0;
-  aConfig.mDisplay = aConfig.mImage = nsIntSize(64, 64);
+  aConfig.mDisplay = nsIntSize(64, 64);
+  aConfig.mImage = nsIntRect(0, 0, 64, 64);
   aConfig.mExtraData = new MediaByteBuffer();
   aConfig.mExtraData->AppendElements(sTestH264ExtraData,
                                      MOZ_ARRAY_LENGTH(sTestH264ExtraData));
