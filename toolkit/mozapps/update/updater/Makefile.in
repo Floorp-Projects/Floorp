@@ -57,5 +57,3 @@ libs::
 	$(NSINSTALL) $(DIST)/bin/updater $(DIST)/bin/updater.app/Contents/MacOS
 	rm -f $(DIST)/bin/updater
 endif
-
-CXXFLAGS += $(MOZ_BZ2_CFLAGS)
