@@ -320,6 +320,12 @@ js::gc::GCRuntime::markRuntime(JSTracer* trc, TraceOrMarkRuntime traceOrMark)
         MarkPersistentRootedChains(trc);
     }
 
+    if (rt->asyncStackForNewActivations)
+        TraceRoot(trc, &rt->asyncStackForNewActivations, "asyncStackForNewActivations");
+
+    if (rt->asyncCauseForNewActivations)
+        TraceRoot(trc, &rt->asyncCauseForNewActivations, "asyncCauseForNewActivations");
+
     if (rt->scriptAndCountsVector) {
         ScriptAndCountsVector& vec = *rt->scriptAndCountsVector;
         for (size_t i = 0; i < vec.length(); i++)
