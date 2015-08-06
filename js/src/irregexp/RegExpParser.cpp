@@ -1178,6 +1178,41 @@ TrailSurrogateAtom(LifoAlloc* alloc, char16_t value)
     return builder->ToRegExp();
 }
 
+static inline RegExpTree*
+UnicodeEverythingAtom(LifoAlloc* alloc)
+{
+    RegExpBuilder* builder = alloc->newInfallible<RegExpBuilder>(alloc);
+
+    // everything except \x0a, \x0d, \u2028 and \u2029
+
+    CharacterRangeVector* ranges = alloc->newInfallible<CharacterRangeVector>(*alloc);
+    ranges->append(CharacterRange::Range(0x0, 0x09));
+    ranges->append(CharacterRange::Range(0x0b, 0x0c));
+    ranges->append(CharacterRange::Range(0x0e, 0x2027));
+    ranges->append(CharacterRange::Range(0x202A, unicode::LeadSurrogateMin - 1));
+    ranges->append(CharacterRange::Range(unicode::TrailSurrogateMax + 1, unicode::UTF16Max));
+    builder->AddAtom(alloc->newInfallible<RegExpCharacterClass>(ranges, false));
+
+    builder->NewAlternative();
+
+    builder->AddAtom(RangeAtom(alloc, unicode::LeadSurrogateMin, unicode::LeadSurrogateMax));
+    builder->AddAtom(NegativeLookahead(alloc, unicode::TrailSurrogateMin,
+                                       unicode::TrailSurrogateMax));
+
+    builder->NewAlternative();
+
+    builder->AddAssertion(alloc->newInfallible<RegExpAssertion>(
+        RegExpAssertion::NOT_AFTER_LEAD_SURROGATE));
+    builder->AddAtom(RangeAtom(alloc, unicode::TrailSurrogateMin, unicode::TrailSurrogateMax));
+
+    builder->NewAlternative();
+
+    builder->AddAtom(RangeAtom(alloc, unicode::LeadSurrogateMin, unicode::LeadSurrogateMax));
+    builder->AddAtom(RangeAtom(alloc, unicode::TrailSurrogateMin, unicode::TrailSurrogateMax));
+
+    return builder->ToRegExp();
+}
+
 // Disjunction ::
 //   Alternative
 //   Alternative | Disjunction
@@ -1275,6 +1310,10 @@ RegExpParser<CharT>::ParseDisjunction()
           case '.': {
             Advance();
             // everything except \x0a, \x0d, \u2028 and \u2029
+            if (unicode_) {
+                builder->AddAtom(UnicodeEverythingAtom(alloc));
+                break;
+            }
             CharacterRangeVector* ranges = alloc->newInfallible<CharacterRangeVector>(*alloc);
             CharacterRange::AddClassEscape(alloc, '.', ranges);
             RegExpTree* atom = alloc->newInfallible<RegExpCharacterClass>(ranges, false);
