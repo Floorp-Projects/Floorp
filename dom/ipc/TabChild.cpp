@@ -2392,11 +2392,18 @@ TabChild::RecvSwappedWithOtherRemoteLoader()
     return true;
   }
 
+  nsRefPtr<nsDocShell> docShell = static_cast<nsDocShell*>(ourDocShell.get());
+
   nsCOMPtr<EventTarget> ourEventTarget = ourWindow->GetParentTarget();
+
+  docShell->SetInFrameSwap(true);
 
   nsContentUtils::FirePageShowEvent(ourDocShell, ourEventTarget, false);
   nsContentUtils::FirePageHideEvent(ourDocShell, ourEventTarget);
   nsContentUtils::FirePageShowEvent(ourDocShell, ourEventTarget, true);
+
+  docShell->SetInFrameSwap(false);
+
   return true;
 }
 
