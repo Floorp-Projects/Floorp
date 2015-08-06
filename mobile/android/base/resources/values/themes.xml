@@ -112,7 +112,6 @@
     </style>
 
     <style name="Gecko.Preferences" parent="GeckoPreferencesBase">
-        <item name="android:filterTouchesWhenObscured">true</item>
         <item name="floatingHintEditTextStyle">@style/FloatingHintEditText</item>
     </style>
 
@@ -131,9 +130,6 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
-    <style name="TabQueueActivity" parent="android:style/Theme.NoDisplay">
-        <item name="android:filterTouchesWhenObscured">true</item>
-    </style>
-
+    <style name="TabQueueActivity" parent="android:style/Theme.NoDisplay" />
 
 </resources>
