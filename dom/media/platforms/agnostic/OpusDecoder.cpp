@@ -149,15 +149,15 @@ OpusDataDecoder::DoDecode(MediaRawData* aSample)
   }
 
   // Maximum value is 63*2880, so there's no chance of overflow.
-  int32_t frames_number = opus_packet_get_nb_frames(aSample->mData,
-                                                    aSample->mSize);
+  int32_t frames_number = opus_packet_get_nb_frames(aSample->Data(),
+                                                    aSample->Size());
   if (frames_number <= 0) {
     OPUS_DEBUG("Invalid packet header: r=%ld length=%ld",
-               frames_number, aSample->mSize);
+               frames_number, aSample->Size());
     return -1;
   }
 
-  int32_t samples = opus_packet_get_samples_per_frame(aSample->mData,
+  int32_t samples = opus_packet_get_samples_per_frame(aSample->Data(),
                                            opus_int32(mOpusParser->mRate));
 
 
@@ -173,11 +173,11 @@ OpusDataDecoder::DoDecode(MediaRawData* aSample)
   // Decode to the appropriate sample type.
 #ifdef MOZ_SAMPLE_TYPE_FLOAT32
   int ret = opus_multistream_decode_float(mOpusDecoder,
-                                          aSample->mData, aSample->mSize,
+                                          aSample->Data(), aSample->Size(),
                                           buffer, frames, false);
 #else
   int ret = opus_multistream_decode(mOpusDecoder,
-                                    aSample->mData, aSample->mSize,
+                                    aSample->Data(), aSample->Size(),
                                     buffer, frames, false);
 #endif
   if (ret < 0) {

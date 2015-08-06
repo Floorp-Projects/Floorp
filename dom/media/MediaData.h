@@ -360,9 +360,9 @@ class MediaRawDataWriter
 {
 public:
   // Pointer to data or null if not-yet allocated
-  uint8_t* mData;
+  uint8_t* Data();
   // Writeable size of buffer.
-  size_t mSize;
+  size_t Size();
   // Writeable reference to MediaRawData::mCryptoInternal
   CryptoSample& mCrypto;
 
@@ -375,7 +375,7 @@ public:
   bool Prepend(const uint8_t* aData, size_t aSize);
   // Replace current content with aData.
   bool Replace(const uint8_t* aData, size_t aSize);
-  // Clear the memory buffer. Will set mData and mSize to 0.
+  // Clear the memory buffer. Will set target mData and mSize to 0.
   void Clear();
 
 private:
@@ -392,9 +392,15 @@ public:
   MediaRawData(const uint8_t* aData, size_t mSize);
 
   // Pointer to data or null if not-yet allocated
-  const uint8_t* mData;
+  const uint8_t* Data() const
+  {
+    return mData;
+  }
   // Size of buffer.
-  size_t mSize;
+  size_t Size() const
+  {
+    return mSize;
+  }
 
   const CryptoSample& mCrypto;
   nsRefPtr<MediaByteBuffer> mExtraData;
@@ -419,6 +425,8 @@ private:
   // read as required by some data decoders.
   // Returns false if memory couldn't be allocated.
   bool EnsureCapacity(size_t aSize);
+  uint8_t* mData;
+  size_t mSize;
   nsRefPtr<MediaByteBuffer> mBuffer;
   CryptoSample mCryptoInternal;
   uint32_t mPadding;
