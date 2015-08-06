@@ -25,6 +25,7 @@ function startTest(test, token) {
   element.src = test.name;
   element.test = test;
   element.stream = element.mozCaptureStream();
+  element.loop = true;
 
   var mediaRecorder = new MediaRecorder(element.stream);
 
@@ -68,7 +69,7 @@ function startTest(test, token) {
         if (!onDataAvailableFirst) {
           ok(false, 'onstop unexpectedly fired before ondataavailable');
         }
-
+        element.pause();
         manager.finished(token);
       };
 
@@ -84,9 +85,9 @@ function startTest(test, token) {
     }
   };
 
-  // Start recording once canplaythrough fires
-  element.oncanplaythrough = function() {
-    element.oncanplaythrough = null;
+  // Start recording once metadataloaded fires
+  element.onloadedmetadata = function() {
+    element.onloadedmetadata = null;
     mediaRecorder.start(250);
     is(mediaRecorder.state, 'recording', 'Media recorder should be recording');
     is(mediaRecorder.stream, element.stream,
