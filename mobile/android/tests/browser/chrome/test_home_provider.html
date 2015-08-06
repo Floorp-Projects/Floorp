@@ -1,0 +1,165 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=942288
+Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 942288</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript;version=1.7">
+
+  const { utils: Cu } = Components;
+
+  Cu.import("resource://gre/modules/HomeProvider.jsm");
+  Cu.import("resource://gre/modules/osfile.jsm");
+  Cu.import("resource://gre/modules/Services.jsm");
+  Cu.import("resource://gre/modules/Sqlite.jsm");
+  Cu.import("resource://gre/modules/Task.jsm");
+
+  const TEST_DATASET_ID = "test-dataset-id";
+  const TEST_URL = "http://test.com";
+  const TEST_TITLE = "Test";
+  const TEST_BACKGROUND_URL = "http://example.com/background";
+  const TEST_BACKGROUND_COLOR = "#FF9500";
+
+  const PREF_SYNC_CHECK_INTERVAL_SECS = "home.sync.checkIntervalSecs";
+  const TEST_INTERVAL_SECS = 1;
+
+  const DB_PATH = OS.Path.join(OS.Constants.Path.profileDir, "home.sqlite");
+
+  test_request_sync();
+  test_periodic_sync();
+
+  function test_request_sync() {
+    // The current implementation of requestSync is synchronous.
+    let success = HomeProvider.requestSync(TEST_DATASET_ID, function callback(datasetId) {
+      is(datasetId, TEST_DATASET_ID, "expected dataset ID");
+    });
+
+    ok(success, "requestSync success");
+  }
+
+  function test_periodic_sync() {
+    SimpleTest.registerCleanupFunction(function() {
+      Services.prefs.clearUserPref(PREF_SYNC_CHECK_INTERVAL_SECS);
+      HomeProvider.removePeriodicSync(TEST_DATASET_ID);
+    });
+
+    // Lower the check interval for testing purposes.
+    Services.prefs.setIntPref(PREF_SYNC_CHECK_INTERVAL_SECS, TEST_INTERVAL_SECS);
+
+    HomeProvider.addPeriodicSync(TEST_DATASET_ID, TEST_INTERVAL_SECS, function callback(datasetId) {
+      is(datasetId, TEST_DATASET_ID, "expected dataset ID");
+    });
+  }
+
+  add_task(function* test_save_and_delete() {
+    // Use the HomeProvider API to save some data.
+    let storage = HomeProvider.getStorage(TEST_DATASET_ID);
+    yield storage.save([{
+      title: TEST_TITLE,
+      url: TEST_URL,
+      background_url: TEST_BACKGROUND_URL,
+      background_color: TEST_BACKGROUND_COLOR
+    }]);
+
+    // Peek in the DB to make sure we have the right data.
+    let db = yield Sqlite.openConnection({ path: DB_PATH });
+
+    // Make sure the items table was created.
+    ok((yield db.tableExists("items")), "items table exists");
+
+    // Make sure the correct values for the item ended up in there.
+    let result = yield db.execute("SELECT * FROM items", null, function onRow(row){
+      is(row.getResultByName("dataset_id"), TEST_DATASET_ID, "expected dataset ID");
+      is(row.getResultByName("url"), TEST_URL, "expected test url");
+      is(row.getResultByName("background_url"), TEST_BACKGROUND_URL, "expected background url");
+      is(row.getResultByName("background_color"), TEST_BACKGROUND_COLOR, "expected background color");
+    });
+
+    // Use the HomeProvider API to delete the data.
+    yield storage.deleteAll();
+
+    // Make sure the data was deleted.
+    result = yield db.execute("SELECT * FROM items");
+    is(result.length, 0, "length is 0");
+
+    db.close();
+  });
+
+  add_task(function* test_row_validation() {
+    // Use the HomeProvider API to save some data.
+    let storage = HomeProvider.getStorage(TEST_DATASET_ID);
+
+    let invalidRows = [
+      { url: "url" },
+      { title: "title" },
+      { description: "description" },
+      { image_url: "image_url" }
+    ];
+
+    // None of these save calls should save anything
+    for (let row of invalidRows) {
+      try {
+        yield storage.save([row]);
+      } catch (e if e instanceof HomeProvider.ValidationError) {
+        // Just catch and ignore validation errors
+      }
+    }
+
+    // Peek in the DB to make sure we have the right data.
+    let db = yield Sqlite.openConnection({ path: DB_PATH });
+
+    // Make sure no data has been saved.
+    let result = yield db.execute("SELECT * FROM items");
+    is(result.length, 0, "length is 0");
+
+    db.close();
+  });
+
+  add_task(function* test_save_transaction() {
+    // Use the HomeProvider API to save some data.
+    let storage = HomeProvider.getStorage(TEST_DATASET_ID);
+
+    // One valid, one invalid
+    let rows = [
+      { title: TEST_TITLE, url: TEST_URL },
+      { image_url: "image_url" }
+    ];
+
+    // Try to save all the rows at once
+    try {
+      yield storage.save(rows);
+    } catch (e if e instanceof HomeProvider.ValidationError) {
+      // Just catch and ignore validation errors
+    }
+
+    // Peek in the DB to make sure we have the right data.
+    let db = yield Sqlite.openConnection({ path: DB_PATH });
+
+    // Make sure no data has been saved.
+    let result = yield db.execute("SELECT * FROM items");
+    is(result.length, 0, "length is 0");
+
+    db.close();
+  });
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=942288">Mozilla Bug 942288</a>
+<br>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1184186">Migrated from Robocop testHomeProvider</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
