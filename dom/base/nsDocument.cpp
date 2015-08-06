@@ -11011,37 +11011,6 @@ nsIDocument::MozCancelFullScreen()
   RestorePreviousFullScreenState();
 }
 
-// Runnable to set window full-screen mode. Used as a script runner
-// to ensure we only call nsGlobalWindow::SetFullScreen() when it's safe to
-// run script. nsGlobalWindow::SetFullScreen() dispatches a synchronous event
-// (handled in chome code) which is unsafe to run if this is called in
-// Element::UnbindFromTree().
-class nsSetWindowFullScreen : public nsRunnable {
-public:
-  nsSetWindowFullScreen(nsIDocument* aDoc, bool aValue, gfx::VRHMDInfo* aHMD = nullptr)
-    : mDoc(aDoc), mValue(aValue), mHMD(aHMD) {}
-
-  NS_IMETHOD Run()
-  {
-    if (mDoc->GetWindow()) {
-      mDoc->GetWindow()->SetFullscreenInternal(
-        nsPIDOMWindow::eForFullscreenAPI, mValue, mHMD);
-    }
-    return NS_OK;
-  }
-
-private:
-  nsCOMPtr<nsIDocument> mDoc;
-  bool mValue;
-  nsRefPtr<gfx::VRHMDInfo> mHMD;
-};
-
-static void
-SetWindowFullScreen(nsIDocument* aDoc, bool aValue, gfx::VRHMDInfo *aVRHMD = nullptr)
-{
-  nsContentUtils::AddScriptRunner(new nsSetWindowFullScreen(aDoc, aValue, aVRHMD));
-}
-
 static void
 AskWindowToExitFullscreen(nsIDocument* aDoc)
 {
@@ -11051,7 +11020,9 @@ AskWindowToExitFullscreen(nsIDocument* aDoc)
       /* Bubbles */ true, /* Cancelable */ false,
       /* DefaultAction */ nullptr);
   } else {
-    SetWindowFullScreen(aDoc, false);
+    if (nsPIDOMWindow* win = aDoc->GetWindow()) {
+      win->SetFullscreenInternal(nsPIDOMWindow::eForFullscreenAPI, false);
+    }
   }
 }
 
@@ -11175,7 +11146,9 @@ nsIDocument::ExitFullscreenInDocTree(nsIDocument* aMaybeNotARootDoc)
     /* Bubbles */ true, /* Cancelable */ false, /* DefaultAction */ nullptr);
   // Move the top-level window out of fullscreen mode.
   FullscreenRoots::Remove(root);
-  SetWindowFullScreen(root, false);
+  if (nsPIDOMWindow* win = root->GetWindow()) {
+    win->SetFullscreenInternal(nsPIDOMWindow::eForFullscreenAPI, false);
+  }
 }
 
 bool
@@ -11633,7 +11606,8 @@ nsDocument::RequestFullScreen(UniquePtr<FullscreenRequest>&& aRequest)
   } else {
     // Make the window fullscreen.
     FullscreenRequest* lastRequest = sPendingFullscreenRequests.getLast();
-    SetWindowFullScreen(this, true, lastRequest->mVRHMDDevice);
+    rootWin->SetFullscreenInternal(nsPIDOMWindow::eForFullscreenAPI, true,
+                                   lastRequest->mVRHMDDevice);
   }
 }
 
