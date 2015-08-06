@@ -3907,8 +3907,8 @@
             stringID = "tabs.closeTab.tooltip";
           } else if (tab._overPlayingIcon) {
             stringID = tab.linkedBrowser.audioMuted ?
-              "tabs.mutedAudio.tooltip" :
-              "tabs.playingAudio.tooltip";
+              "tabs.unmuteAudio.tooltip" :
+              "tabs.muteAudio.tooltip";
           } else {
             label = tab.getAttribute("label") +
                       (this.AppConstants.E10S_TESTING_ONLY && tab.linkedBrowser && tab.linkedBrowser.isRemoteBrowser ? " - e10s" : "");
