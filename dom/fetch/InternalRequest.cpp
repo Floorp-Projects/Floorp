@@ -152,11 +152,8 @@ InternalRequest::MapContentPolicyTypeToRequestContext(nsContentPolicyType aConte
   case nsIContentPolicy::TYPE_PING:
     context = RequestContext::Ping;
     break;
-  case nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST:
+  case nsIContentPolicy::TYPE_XMLHTTPREQUEST:
     context = RequestContext::Xmlhttprequest;
-    break;
-  case nsIContentPolicy::TYPE_INTERNAL_EVENTSOURCE:
-    context = RequestContext::Eventsource;
     break;
   case nsIContentPolicy::TYPE_OBJECT_SUBREQUEST:
     context = RequestContext::Plugin;

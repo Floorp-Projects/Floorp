@@ -210,7 +210,7 @@ BookmarkImporter.prototype = {
       let channel = NetUtil.newChannel({
         uri,
         loadingPrincipal: Services.scriptSecurityManager.getNoAppCodebasePrincipal(uri),
-        contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_XMLHTTPREQUEST
+        contentPolicyType: Ci.nsIContentPolicy.TYPE_DATAREQUEST
       });
       let streamLoader = Cc["@mozilla.org/network/stream-loader;1"]
                            .createInstance(Ci.nsIStreamLoader);
