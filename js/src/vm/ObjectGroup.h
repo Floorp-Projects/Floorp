@@ -81,36 +81,26 @@ template <> struct GCMethods<TaggedProto>
 template<class Outer>
 class TaggedProtoOperations
 {
-    const TaggedProto* value() const {
-        return static_cast<const Outer*>(this)->extract();
+    const TaggedProto& value() const {
+        return static_cast<const Outer*>(this)->get();
     }
 
   public:
-    uintptr_t toWord() const { return value()->toWord(); }
-    inline bool isLazy() const { return value()->isLazy(); }
-    inline bool isObject() const { return value()->isObject(); }
-    inline JSObject* toObject() const { return value()->toObject(); }
-    inline JSObject* toObjectOrNull() const { return value()->toObjectOrNull(); }
-    JSObject* raw() const { return value()->raw(); }
+    uintptr_t toWord() const { return value().toWord(); }
+    inline bool isLazy() const { return value().isLazy(); }
+    inline bool isObject() const { return value().isObject(); }
+    inline JSObject* toObject() const { return value().toObject(); }
+    inline JSObject* toObjectOrNull() const { return value().toObjectOrNull(); }
+    JSObject* raw() const { return value().raw(); }
 };
 
 template <>
 class HandleBase<TaggedProto> : public TaggedProtoOperations<Handle<TaggedProto> >
-{
-    friend class TaggedProtoOperations<Handle<TaggedProto> >;
-    const TaggedProto * extract() const {
-        return static_cast<const Handle<TaggedProto>*>(this)->address();
-    }
-};
+{};
 
 template <>
 class RootedBase<TaggedProto> : public TaggedProtoOperations<Rooted<TaggedProto> >
-{
-    friend class TaggedProtoOperations<Rooted<TaggedProto> >;
-    const TaggedProto* extract() const {
-        return static_cast<const Rooted<TaggedProto>*>(this)->address();
-    }
-};
+{};
 
 // Since JSObject pointers are either nullptr or a valid object and since the
 // object layout of TaggedProto is identical to a bare object pointer, we can
