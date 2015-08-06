@@ -174,8 +174,11 @@ RegExpInitialize(JSContext* cx, Handle<RegExpObject*> obj, HandleValue patternVa
     /* Steps 9-10. */
     CompileOptions options(cx);
     frontend::TokenStream dummyTokenStream(cx, options, nullptr, 0, nullptr);
-    if (!irregexp::ParsePatternSyntax(dummyTokenStream, cx->tempLifoAlloc(), pattern))
+    if (!irregexp::ParsePatternSyntax(dummyTokenStream, cx->tempLifoAlloc(), pattern,
+                                      flags & UnicodeFlag))
+    {
         return false;
+    }
 
     if (staticsUse == UseRegExpStatics) {
         RegExpStatics* res = cx->global()->getRegExpStatics(cx);
@@ -557,6 +560,24 @@ regexp_sticky(JSContext* cx, unsigned argc, JS::Value* vp)
     return CallNonGenericMethod<IsRegExpObject, regexp_sticky_impl>(cx, args);
 }
 
+/* ES6 21.2.5.15. */
+MOZ_ALWAYS_INLINE bool
+regexp_unicode_impl(JSContext* cx, const CallArgs& args)
+{
+    MOZ_ASSERT(IsRegExpObject(args.thisv()));
+    /* Steps 4-6. */
+    args.rval().setBoolean(args.thisv().toObject().as<RegExpObject>().unicode());
+    return true;
+}
+
+static bool
+regexp_unicode(JSContext* cx, unsigned argc, JS::Value* vp)
+{
+    /* Steps 1-3. */
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod<IsRegExpObject, regexp_unicode_impl>(cx, args);
+}
+
 const JSPropertySpec js::regexp_properties[] = {
     JS_SELF_HOSTED_GET("flags", "RegExpFlagsGetter", 0),
     JS_PSG("global", regexp_global, 0),
@@ -564,6 +585,7 @@ const JSPropertySpec js::regexp_properties[] = {
     JS_PSG("multiline", regexp_multiline, 0),
     JS_PSG("source", regexp_source, 0),
     JS_PSG("sticky", regexp_sticky, 0),
+    JS_PSG("unicode", regexp_unicode, 0),
     JS_PS_END
 };
 

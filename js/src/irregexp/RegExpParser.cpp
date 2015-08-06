@@ -205,7 +205,8 @@ RegExpBuilder::AddQuantifierToAtom(int min, int max,
 
 template <typename CharT>
 RegExpParser<CharT>::RegExpParser(frontend::TokenStream& ts, LifoAlloc* alloc,
-                                  const CharT* chars, const CharT* end, bool multiline_mode)
+                                  const CharT* chars, const CharT* end, bool multiline_mode,
+                                  bool unicode)
   : ts(ts),
     alloc(alloc),
     captures_(nullptr),
@@ -215,6 +216,7 @@ RegExpParser<CharT>::RegExpParser(frontend::TokenStream& ts, LifoAlloc* alloc,
     capture_count_(0),
     has_more_(true),
     multiline_(multiline_mode),
+    unicode_(unicode),
     simple_(false),
     contains_anchor_(false),
     is_scanned_for_captures_(false)
@@ -1002,7 +1004,7 @@ template class irregexp::RegExpParser<char16_t>;
 template <typename CharT>
 static bool
 ParsePattern(frontend::TokenStream& ts, LifoAlloc& alloc, const CharT* chars, size_t length,
-             bool multiline, bool match_only, RegExpCompileData* data)
+             bool multiline, bool match_only, bool unicode, RegExpCompileData* data)
 {
     if (match_only) {
         // Try to strip a leading '.*' from the RegExp, but only if it is not
@@ -1025,7 +1027,7 @@ ParsePattern(frontend::TokenStream& ts, LifoAlloc& alloc, const CharT* chars, si
         }
     }
 
-    RegExpParser<CharT> parser(ts, &alloc, chars, chars + length, multiline);
+    RegExpParser<CharT> parser(ts, &alloc, chars, chars + length, multiline, unicode);
     data->tree = parser.ParsePattern();
     if (!data->tree)
         return false;
@@ -1038,32 +1040,34 @@ ParsePattern(frontend::TokenStream& ts, LifoAlloc& alloc, const CharT* chars, si
 
 bool
 irregexp::ParsePattern(frontend::TokenStream& ts, LifoAlloc& alloc, JSAtom* str,
-                       bool multiline, bool match_only,
+                       bool multiline, bool match_only, bool unicode,
                        RegExpCompileData* data)
 {
     JS::AutoCheckCannotGC nogc;
     return str->hasLatin1Chars()
            ? ::ParsePattern(ts, alloc, str->latin1Chars(nogc), str->length(),
-                            multiline, match_only, data)
+                            multiline, match_only, unicode, data)
            : ::ParsePattern(ts, alloc, str->twoByteChars(nogc), str->length(),
-                            multiline, match_only, data);
+                            multiline, match_only, unicode, data);
 }
 
 template <typename CharT>
 static bool
-ParsePatternSyntax(frontend::TokenStream& ts, LifoAlloc& alloc, const CharT* chars, size_t length)
+ParsePatternSyntax(frontend::TokenStream& ts, LifoAlloc& alloc, const CharT* chars, size_t length,
+                   bool unicode)
 {
     LifoAllocScope scope(&alloc);
 
-    RegExpParser<CharT> parser(ts, &alloc, chars, chars + length, false);
+    RegExpParser<CharT> parser(ts, &alloc, chars, chars + length, false, unicode);
     return parser.ParsePattern() != nullptr;
 }
 
 bool
-irregexp::ParsePatternSyntax(frontend::TokenStream& ts, LifoAlloc& alloc, JSAtom* str)
+irregexp::ParsePatternSyntax(frontend::TokenStream& ts, LifoAlloc& alloc, JSAtom* str,
+                             bool unicode)
 {
     JS::AutoCheckCannotGC nogc;
     return str->hasLatin1Chars()
-           ? ::ParsePatternSyntax(ts, alloc, str->latin1Chars(nogc), str->length())
-           : ::ParsePatternSyntax(ts, alloc, str->twoByteChars(nogc), str->length());
+           ? ::ParsePatternSyntax(ts, alloc, str->latin1Chars(nogc), str->length(), unicode)
+           : ::ParsePatternSyntax(ts, alloc, str->twoByteChars(nogc), str->length(), unicode);
 }
