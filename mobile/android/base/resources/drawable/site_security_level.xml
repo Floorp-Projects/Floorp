@@ -7,10 +7,10 @@
 
     <item android:maxLevel="0" android:drawable="@android:color/transparent"/>
     <item android:maxLevel="1" android:drawable="@drawable/lock_secure"/>
-    <!-- Bug 1185600 will handle Passive Mixed Content and resolve this icon duplication -->
     <item android:maxLevel="2" android:drawable="@drawable/lock_secure"/>
-    <item android:maxLevel="3" android:drawable="@drawable/shield_enabled"/>
-    <item android:maxLevel="4" android:drawable="@drawable/shield_disabled"/>
-    <item android:maxLevel="5" android:drawable="@drawable/lock_disabled"/>
+    <item android:maxLevel="3" android:drawable="@drawable/warning_minor"/>
+    <item android:maxLevel="4" android:drawable="@drawable/lock_disabled"/>
+    <item android:maxLevel="5" android:drawable="@drawable/shield_enabled"/>
+    <item android:maxLevel="6" android:drawable="@drawable/shield_disabled"/>
 
 </level-list>
