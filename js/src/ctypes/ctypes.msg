@@ -23,7 +23,7 @@ MSG_DEF(CTYPESMSG_TYPE_ERROR,    2, JSEXN_TYPEERR, "expected {0}, got {1}")
 
 /* array */
 MSG_DEF(CTYPESMSG_ARRAY_MISMATCH,4, JSEXN_TYPEERR, "length of {0} does not match to the length of the type {1} (expected {2}, got {3})")
-MSG_DEF(CTYPESMSG_ARRAY_OVERFLOW,4, JSEXN_TYPEERR, "length of {0} does not fit to the length of the type {1} (expected {2} or lower, got {3})")
+MSG_DEF(CTYPESMSG_ARRAY_OVERFLOW,4, JSEXN_TYPEERR, "length of {0} does not fit in the length of the type {1} (expected {2} or lower, got {3})")
 
 /* struct */
 MSG_DEF(CTYPESMSG_FIELD_MISMATCH,5, JSEXN_TYPEERR, "property count of {0} does not match to field count of the type {1} (expected {2}, got {3}){4}")
@@ -37,3 +37,7 @@ MSG_DEF(CTYPESMSG_FIN_SIZE_ERROR,2, JSEXN_TYPEERR, "expected an object with the 
 MSG_DEF(CTYPESMSG_ARG_RANGE_MISMATCH,3, JSEXN_RANGEERR, "{0}argument of {1} must be {2}")
 MSG_DEF(CTYPESMSG_ARG_TYPE_MISMATCH,3, JSEXN_TYPEERR, "{0}argument of {1} must be {2}")
 MSG_DEF(CTYPESMSG_WRONG_ARG_LENGTH,3, JSEXN_TYPEERR, "{0} takes {1} argument{2}")
+
+/* overflow */
+MSG_DEF(CTYPESMSG_SIZE_OVERFLOW, 2, JSEXN_RANGEERR, "{0} does not fit in {1}")
+MSG_DEF(CTYPESMSG_TYPE_OVERFLOW, 2, JSEXN_RANGEERR, "{0} does not fit in the type {1}")
