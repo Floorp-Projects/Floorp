@@ -100,6 +100,11 @@ public:
   // Called after input nodes have been explicitly added or removed through
   // the Connect() or Disconnect() methods.
   virtual void NotifyInputsChanged() {}
+  // Indicate that the node should continue indefinitely to behave as if an
+  // input is connected, even though there is no longer a corresponding entry
+  // in mInputNodes.  Called after an input node has been removed because it
+  // is being garbage collected.
+  virtual void NotifyHasPhantomInput() {}
 
   // The following two virtual methods must be implemented by each node type
   // to provide their number of input and output ports. These numbers are
