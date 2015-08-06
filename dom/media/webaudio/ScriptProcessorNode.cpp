@@ -268,6 +268,21 @@ public:
     return mSharedBuffers;
   }
 
+  enum {
+    IS_CONNECTED,
+  };
+
+  virtual void SetInt32Parameter(uint32_t aIndex, int32_t aParam) override
+  {
+    switch (aIndex) {
+      case IS_CONNECTED:
+        mIsConnected = aParam;
+        break;
+      default:
+        NS_ERROR("Bad Int32Parameter");
+    } // End index switch.
+  }
+
   virtual void ProcessBlock(AudioNodeStream* aStream,
                             const AudioChunk& aInput,
                             AudioChunk* aOutput,
@@ -276,8 +291,7 @@ public:
     // This node is not connected to anything. Per spec, we don't fire the
     // onaudioprocess event. We also want to clear out the input and output
     // buffer queue, and output a null buffer.
-    if (!(aStream->ConsumerCount() ||
-          aStream->AsProcessedStream()->InputPortCount())) {
+    if (!mIsConnected) {
       aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
       mSharedBuffers->Reset();
       mSeenNonSilenceInput = false;
@@ -483,6 +497,7 @@ private:
   const uint32_t mBufferSize;
   // The write index into the current input buffer
   uint32_t mInputWriteIndex;
+  bool mIsConnected = false;
   bool mSeenNonSilenceInput;
 };
 
@@ -553,7 +568,14 @@ ScriptProcessorNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProt
 void
 ScriptProcessorNode::UpdateConnectedStatus()
 {
-  bool isConnected = !(OutputNodes().IsEmpty() && OutputParams().IsEmpty());
+  bool isConnected = !(OutputNodes().IsEmpty() && OutputParams().IsEmpty()
+                       && InputNodes().IsEmpty());
+
+  // Events are queued even when there is no listener because a listener
+  // may be added while events are in the queue.
+  SendInt32ParameterToStream(ScriptProcessorNodeEngine::IS_CONNECTED,
+                             isConnected);
+
   if (isConnected && HasListenersFor(nsGkAtoms::onaudioprocess)) {
     MarkActive();
   } else {
