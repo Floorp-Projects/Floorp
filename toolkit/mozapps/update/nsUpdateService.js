@@ -1262,7 +1262,7 @@ function getLocale() {
                                       Services.scriptSecurityManager.getSystemPrincipal(),
                                       null,      // aTriggeringPrincipal
                                       Ci.nsILoadInfo.SEC_NORMAL,
-                                      Ci.nsIContentPolicy.TYPE_INTERNAL_XMLHTTPREQUEST);
+                                      Ci.nsIContentPolicy.TYPE_DATAREQUEST);
     try {
       var inputStream = channel.open();
       gLocale = readStringFromInputStream(inputStream);
