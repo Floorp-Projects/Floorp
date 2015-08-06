@@ -1006,6 +1006,116 @@ function test_syntax(replacements, check_error, ignore_opts) {
   test("({a: b}) @");
   test("({a: b}) => @");
 
+  if (classesEnabled()) {
+    // ---- Class declaration ----
+
+    test("class @");
+    test("class a @");
+    test("class a { @");
+    test("class a { constructor @");
+    test("class a { constructor( @");
+    test("class a { constructor() @");
+    test("class a { constructor() { @");
+    test("class a { constructor() { } @");
+    test("class a { constructor() { } } @");
+
+    test("class a { constructor() { } static @");
+    test("class a { constructor() { } static m @");
+    test("class a { constructor() { } static m( @");
+    test("class a { constructor() { } static m() @");
+    test("class a { constructor() { } static m() { @");
+    test("class a { constructor() { } static m() {} @");
+    test("class a { constructor() { } static m() {} } @");
+
+    test("class a { constructor() { } static ( @");
+    test("class a { constructor() { } static () @");
+    test("class a { constructor() { } static () { @");
+    test("class a { constructor() { } static () {} @");
+    test("class a { constructor() { } static () {} } @");
+
+    test("class a { constructor() { } static get @");
+    test("class a { constructor() { } static get p @");
+    test("class a { constructor() { } static get p( @");
+    test("class a { constructor() { } static get p() @");
+    test("class a { constructor() { } static get p() { @");
+    test("class a { constructor() { } static get p() {} @");
+    test("class a { constructor() { } static get p() {} } @");
+
+    test("class a { constructor() { } static set @");
+    test("class a { constructor() { } static set p @");
+    test("class a { constructor() { } static set p( @");
+    test("class a { constructor() { } static set p(v @");
+    test("class a { constructor() { } static set p(v) @");
+    test("class a { constructor() { } static set p(v) { @");
+    test("class a { constructor() { } static set p(v) {} @");
+    test("class a { constructor() { } static set p(v) {} } @");
+
+    test("class a { constructor() { } * @");
+    test("class a { constructor() { } *m @");
+    test("class a { constructor() { } *m( @");
+    test("class a { constructor() { } *m() @");
+    test("class a { constructor() { } *m() { @");
+    test("class a { constructor() { } *m() {} @");
+    test("class a { constructor() { } *m() {} } @");
+
+    test("class a { constructor() { } static * @");
+    test("class a { constructor() { } static *m @");
+    test("class a { constructor() { } static *m( @");
+    test("class a { constructor() { } static *m() @");
+    test("class a { constructor() { } static *m() { @");
+    test("class a { constructor() { } static *m() {} @");
+    test("class a { constructor() { } static *m() {} } @");
+
+    test("class a extends @");
+    test("class a extends b @");
+    test("class a extends b { @");
+
+    test("class a extends ( @");
+    test("class a extends ( b @");
+    test("class a extends ( b ) @");
+    test("class a extends ( b ) { @");
+
+    // ---- Class expression ----
+
+    test("( class @");
+    test("( class a @");
+    test("( class a { @");
+    test("( class a { constructor @");
+    test("( class a { constructor( @");
+    test("( class a { constructor() @");
+    test("( class a { constructor() { @");
+    test("( class a { constructor() { } @");
+    test("( class a { constructor() { } } @");
+    test("( class a { constructor() { } } ) @");
+
+    test("(class a extends @");
+    test("(class a extends b @");
+    test("(class a extends b { @");
+
+    test("(class a extends ( @");
+    test("(class a extends ( b @");
+    test("(class a extends ( b ) @");
+    test("(class a extends ( b ) { @");
+
+    test("( class { @");
+    test("( class { constructor @");
+    test("( class { constructor( @");
+    test("( class { constructor() @");
+    test("( class { constructor() { @");
+    test("( class { constructor() { } @");
+    test("( class { constructor() { } } @");
+    test("( class { constructor() { } } ) @");
+
+    test("(class extends @");
+    test("(class extends b @");
+    test("(class extends b { @");
+
+    test("(class extends ( @");
+    test("(class extends ( b @");
+    test("(class extends ( b ) @");
+    test("(class extends ( b ) { @");
+  }
+
   // ---- Other ----
 
   // Literals
