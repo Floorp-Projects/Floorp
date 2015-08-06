@@ -17,22 +17,27 @@
 - (NSString*)title
 {
   nsAutoString title;
-  mozilla::ErrorResult rv;
-  // XXX use the flattening API when there are available
-  // see bug 768298
-  [self getGeckoAccessible]->GetContent()->GetTextContent(title, rv);
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
+    mozilla::ErrorResult rv;
+    // XXX use the flattening API when there are available
+    // see bug 768298
+    accWrap->GetContent()->GetTextContent(title, rv);
+  } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
+    proxy->Title(title);
+  }
 
   return nsCocoaUtils::ToNSString(title);
 }
 
 - (id)value
 {
-  AccessibleWrap* accWrap = [self getGeckoAccessible];
+  uint32_t level = 0;
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
+    level = accWrap->GetLevelInternal();
+  } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
+    level = proxy->GetLevelInternal();
+  }
 
-  if (!accWrap || !accWrap->IsHyperText())
-    return nil;
-
-  uint32_t level = accWrap->AsHyperText()->GetLevelInternal();
   return [NSNumber numberWithInt:level];
 }
 
@@ -47,11 +52,11 @@
 - (NSArray*)accessibilityAttributeNames
 {
   // if we're expired, we don't support any attributes.
-  if (![self getGeckoAccessible])
+  if (![self getGeckoAccessible] && ![self getProxyAccessible])
     return [NSArray array];
-  
+
   static NSMutableArray* attributes = nil;
-  
+
   if (!attributes) {
     attributes = [[super accessibilityAttributeNames] mutableCopy];
     [attributes addObject:NSAccessibilityURLAttribute];
@@ -68,10 +73,10 @@
   return [super accessibilityAttributeValue:attribute];
 }
 
-- (NSArray*)accessibilityActionNames 
+- (NSArray*)accessibilityActionNames
 {
     // if we're expired, we don't support any attributes.
-  if (![self getGeckoAccessible])
+  if (![self getGeckoAccessible] && ![self getProxyAccessible])
     return [NSArray array];
 
   static NSArray* actionNames = nil;
@@ -84,17 +89,25 @@
   return actionNames;
 }
 
-- (void)accessibilityPerformAction:(NSString*)action 
+- (void)accessibilityPerformAction:(NSString*)action
 {
   AccessibleWrap* accWrap = [self getGeckoAccessible];
-
-  if (!accWrap)
+  ProxyAccessible* proxy = [self getProxyAccessible];
+  if (!accWrap && !proxy) {
     return;
+  }
 
-  if ([action isEqualToString:NSAccessibilityPressAction])
-    accWrap->DoAction(0);
-  else
-    [super accessibilityPerformAction:action];
+  if ([action isEqualToString:NSAccessibilityPressAction]) {
+    if (accWrap) {
+      accWrap->DoAction(0);
+    } else if (proxy) {
+      proxy->DoAction(0);
+    }
+    return;
+  }
+
+  [super accessibilityPerformAction:action];
+
 }
 
 - (NSString*)customDescription
@@ -109,11 +122,12 @@
 
 - (NSURL*)url
 {
-  if (![self getGeckoAccessible] || [self getGeckoAccessible]->IsDefunct())
-    return nil;
-
   nsAutoString value;
-  [self getGeckoAccessible]->Value(value);
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
+    accWrap->Value(value);
+  } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
+    proxy->Value(value);
+  }
 
   NSString* urlString = value.IsEmpty() ? nil : nsCocoaUtils::ToNSString(value);
   if (!urlString)

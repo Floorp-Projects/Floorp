@@ -351,6 +351,16 @@ DocAccessibleChild::RecvARIARoleAtom(const uint64_t& aID, nsString* aRole)
 }
 
 bool
+DocAccessibleChild::RecvGetLevelInternal(const uint64_t& aID, int32_t* aLevel)
+{
+  Accessible* acc = IdToAccessible(aID);
+  if (acc) {
+    *aLevel = acc->GetLevelInternal();
+  }
+  return true;
+}
+
+bool
 DocAccessibleChild::RecvCaretLineNumber(const uint64_t& aID, int32_t* aLineNumber)
 {
   HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
@@ -1821,6 +1831,19 @@ DocAccessibleChild::RecvDocType(const uint64_t& aID,
   Accessible* acc = IdToAccessible(aID);
   if (acc && acc->IsDoc()) {
     acc->AsDoc()->DocType(*aType);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTitle(const uint64_t& aID,
+                            nsString* aTitle)
+{
+  Accessible* acc = IdToAccessible(aID);
+  if (acc) {
+    mozilla::ErrorResult rv;
+    acc->GetContent()->GetTextContent(*aTitle, rv);
   }
 
   return true;
