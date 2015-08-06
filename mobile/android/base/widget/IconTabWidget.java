@@ -38,7 +38,7 @@ public class IconTabWidget extends TabWidget {
         }
     }
 
-    public void addTab(int imageResId, int stringResId) {
+    public View addTab(final int imageResId, final int stringResId) {
         View button = LayoutInflater.from(getContext()).inflate(mButtonLayoutId, this, false);
         if (mIsIcon) {
             ((ImageButton) button).setImageResource(imageResId);
@@ -50,6 +50,7 @@ public class IconTabWidget extends TabWidget {
         addView(button);
         button.setOnClickListener(new TabClickListener(getTabCount() - 1));
         button.setOnFocusChangeListener(this);
+        return button;
     }
 
     public void setTabSelectionListener(OnTabChangedListener listener) {
