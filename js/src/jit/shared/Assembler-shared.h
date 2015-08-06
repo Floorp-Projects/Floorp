@@ -125,6 +125,15 @@ struct ImmWord
     { }
 };
 
+// Used for 64-bit immediates which do not require relocation.
+struct Imm64
+{
+    uint64_t value;
+
+    explicit Imm64(uint64_t value) : value(value)
+    { }
+};
+
 #ifdef DEBUG
 static inline bool
 IsCompilingAsmJS()

@@ -608,12 +608,6 @@ CodeGeneratorARM64::generateInvalidateEpilogue()
     MOZ_CRASH("generateInvalidateEpilogue");
 }
 
-void
-CodeGeneratorARM64::visitRandom(LRandom* ins)
-{
-    MOZ_CRASH("visitRandom");
-}
-
 template <class U>
 Register
 getBase(U* mir)
@@ -731,4 +725,15 @@ void
 CodeGeneratorARM64::visitNegF(LNegF* ins)
 {
     MOZ_CRASH("visitNegF");
+}
+
+void
+CodeGeneratorARM64::setReturnDoubleRegs(LiveRegisterSet* regs)
+{
+    MOZ_ASSERT(ReturnFloat32Reg.code_ == FloatRegisters::s0);
+    MOZ_ASSERT(ReturnDoubleReg.code_ == FloatRegisters::d0);
+    FloatRegister s1 = {FloatRegisters::s1, FloatRegisters::Single};
+    regs->add(ReturnFloat32Reg);
+    regs->add(s1);
+    regs->add(ReturnDoubleReg);
 }

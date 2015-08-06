@@ -30,6 +30,13 @@ MacroAssembler::andPtr(Imm32 imm, Register dest)
 }
 
 void
+MacroAssembler::and64(Imm64 imm, Register64 dest)
+{
+    andl(Imm32(imm.value & 0xFFFFFFFFL), dest.low);
+    andl(Imm32((imm.value >> 32) & 0xFFFFFFFFL), dest.high);
+}
+
+void
 MacroAssembler::orPtr(Register src, Register dest)
 {
     orl(src, dest);
@@ -39,6 +46,13 @@ void
 MacroAssembler::orPtr(Imm32 imm, Register dest)
 {
     orl(imm, dest);
+}
+
+void
+MacroAssembler::or64(Register64 src, Register64 dest)
+{
+    orl(src.low, dest.low);
+    orl(src.high, dest.high);
 }
 
 void

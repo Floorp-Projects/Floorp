@@ -300,6 +300,8 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     // Generating no result.
     template<typename S, typename T>
     void atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType, const S& value, const T& mem);
+
+    void setReturnDoubleRegs(LiveRegisterSet* regs);
 };
 
 // An out-of-line bailout thunk.

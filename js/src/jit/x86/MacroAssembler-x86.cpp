@@ -6,6 +6,7 @@
 
 #include "jit/x86/MacroAssembler-x86.h"
 
+#include "mozilla/Alignment.h"
 #include "mozilla/Casting.h"
 
 #include "jit/Bailouts.h"
@@ -19,6 +20,62 @@
 
 using namespace js;
 using namespace js::jit;
+
+// vpunpckldq requires 16-byte boundary for memory operand.
+// See convertUInt64ToDouble for the details.
+MOZ_ALIGNED_DECL(static const uint64_t, 16) TO_DOUBLE[4] = {
+    0x4530000043300000LL,
+    0x0LL,
+    0x4330000000000000LL,
+    0x4530000000000000LL
+};
+
+void
+MacroAssemblerX86::convertUInt64ToDouble(Register64 src, Register temp, FloatRegister dest)
+{
+    // Following operation uses entire 128-bit of dest XMM register.
+    // Currently higher 64-bit is free when we have access to lower 64-bit.
+    MOZ_ASSERT(dest.size() == 8);
+    FloatRegister dest128 = FloatRegister(dest.encoding(), FloatRegisters::Int32x4);
+
+    // Assume that src is represented as following:
+    //   src      = 0x HHHHHHHH LLLLLLLL
+
+    // Move src to dest (=dest128) and ScratchInt32x4Reg (=scratch):
+    //   dest     = 0x 00000000 00000000  00000000 LLLLLLLL
+    //   scratch  = 0x 00000000 00000000  00000000 HHHHHHHH
+    vmovd(src.low, dest128);
+    vmovd(src.high, ScratchInt32x4Reg);
+
+    // Unpack and interleave dest and scratch to dest:
+    //   dest     = 0x 00000000 00000000  HHHHHHHH LLLLLLLL
+    vpunpckldq(ScratchInt32x4Reg, dest128, dest128);
+
+    // Unpack and interleave dest and a constant C1 to dest:
+    //   C1       = 0x 00000000 00000000  45300000 43300000
+    //   dest     = 0x 45300000 HHHHHHHH  43300000 LLLLLLLL
+    // here, each 64-bit part of dest represents following double:
+    //   HI(dest) = 0x 1.00000HHHHHHHH * 2**84 == 2**84 + 0x HHHHHHHH 00000000
+    //   LO(dest) = 0x 1.00000LLLLLLLL * 2**52 == 2**52 + 0x 00000000 LLLLLLLL
+    movePtr(ImmPtr(TO_DOUBLE), temp);
+    vpunpckldq(Operand(temp, 0), dest128, dest128);
+
+    // Subtract a constant C2 from dest, for each 64-bit part:
+    //   C2       = 0x 45300000 00000000  43300000 00000000
+    // here, each 64-bit part of C2 represents following double:
+    //   HI(C2)   = 0x 1.0000000000000 * 2**84 == 2**84
+    //   LO(C2)   = 0x 1.0000000000000 * 2**52 == 2**52
+    // after the operation each 64-bit part of dest represents following:
+    //   HI(dest) = double(0x HHHHHHHH 00000000)
+    //   LO(dest) = double(0x 00000000 LLLLLLLL)
+    vsubpd(Operand(temp, sizeof(uint64_t) * 2), dest128, dest128);
+
+    // Add HI(dest) and LO(dest) in double and store it into LO(dest),
+    //   LO(dest) = double(0x HHHHHHHH 00000000) + double(0x 00000000 LLLLLLLL)
+    //            = double(0x HHHHHHHH LLLLLLLL)
+    //            = double(src)
+    vhaddpd(dest128, dest128);
+}
 
 MacroAssemblerX86::Double*
 MacroAssemblerX86::getDouble(double d)
