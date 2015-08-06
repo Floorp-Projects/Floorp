@@ -12,7 +12,6 @@
 #include "AppleVTLinker.h"
 #include "mp4_demuxer/H264.h"
 #include "MediaData.h"
-#include "MacIOSurfaceImage.h"
 #include "mozilla/ArrayUtils.h"
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
