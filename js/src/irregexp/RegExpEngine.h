@@ -144,6 +144,8 @@ class CharacterRange
     {}
 
     static void AddClassEscape(LifoAlloc* alloc, char16_t type, CharacterRangeVector* ranges);
+    static void AddClassEscapeUnicode(LifoAlloc* alloc, char16_t type,
+                                      CharacterRangeVector* ranges);
 
     static inline CharacterRange Singleton(char16_t value) {
         return CharacterRange(value, value);

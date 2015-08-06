@@ -611,9 +611,23 @@ AddCharOrEscapeUnicode(LifoAlloc* alloc,
                        char16_t char_class,
                        widechar c)
 {
-    if (char_class != kNoCharClass)
-        CharacterRange::AddClassEscape(alloc, char_class, ranges);
-    else if (unicode::IsLeadSurrogate(c))
+    if (char_class != kNoCharClass) {
+        CharacterRange::AddClassEscapeUnicode(alloc, char_class, ranges);
+        switch (char_class) {
+          case 'S':
+          case 'W':
+          case 'D':
+            lead_ranges->append(LeadSurrogateRange());
+            trail_ranges->append(TrailSurrogateRange());
+            wide_ranges->append(NonBMPRange());
+            break;
+          case '.':
+            MOZ_CRASH("Bad char_class!");
+        }
+        return;
+    }
+
+    if (unicode::IsLeadSurrogate(c))
         lead_ranges->append(CharacterRange::Singleton(c));
     else if (unicode::IsTrailSurrogate(c))
         trail_ranges->append(CharacterRange::Singleton(c));
@@ -1213,6 +1227,18 @@ UnicodeEverythingAtom(LifoAlloc* alloc)
     return builder->ToRegExp();
 }
 
+RegExpTree*
+UnicodeCharacterClassEscapeAtom(LifoAlloc* alloc, char16_t char_class)
+{
+    CharacterRangeVector* ranges = alloc->newInfallible<CharacterRangeVector>(*alloc);
+    CharacterRangeVector* lead_ranges = alloc->newInfallible<CharacterRangeVector>(*alloc);
+    CharacterRangeVector* trail_ranges = alloc->newInfallible<CharacterRangeVector>(*alloc);
+    WideCharRangeVector* wide_ranges = alloc->newInfallible<WideCharRangeVector>(*alloc);
+    AddCharOrEscapeUnicode(alloc, ranges, lead_ranges, trail_ranges, wide_ranges, char_class, 0);
+
+    return UnicodeRangesAtom(alloc, ranges, lead_ranges, trail_ranges, wide_ranges, false);
+}
+
 // Disjunction ::
 //   Alternative
 //   Alternative | Disjunction
@@ -1377,7 +1403,15 @@ RegExpParser<CharT>::ParseDisjunction()
                 //
                 // CharacterClassEscape :: one of
                 //   d D s S w W
-              case 'd': case 'D': case 's': case 'S': case 'w': case 'W': {
+              case 'D': case 'S': case 'W':
+                if (unicode_) {
+                    Advance();
+                    builder->AddAtom(UnicodeCharacterClassEscapeAtom(alloc, current()));
+                    Advance();
+                    break;
+                }
+                // Fall through
+              case 'd': case 's': case 'w': {
                 widechar c = Next();
                 Advance(2);
                 CharacterRangeVector* ranges =
