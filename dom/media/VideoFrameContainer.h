@@ -56,6 +56,15 @@ public:
   // E.g. if the last painted frame should have been painted at time t,
   // but was actually painted at t+n, this returns n in seconds. Threadsafe.
   double GetFrameDelay();
+
+  // Returns a new frame ID for SetCurrentFrames().  The client must either
+  // call this on only one thread or provide barriers.  Do not use together
+  // with SetCurrentFrame().
+  ImageContainer::FrameID NewFrameID()
+  {
+    return ++mFrameID;
+  }
+
   // Call on main thread
   enum {
     INVALIDATE_DEFAULT,
@@ -83,8 +92,8 @@ protected:
   // specifies that the Image should be stretched to have the correct aspect
   // ratio.
   gfxIntSize mIntrinsicSize;
-  // For SetCurrentFrame callers we maintain our own mFrameID which is auto-
-  // incremented at every SetCurrentFrame.
+  // We maintain our own mFrameID which is auto-incremented at every
+  // SetCurrentFrame() or NewFrameID() call.
   ImageContainer::FrameID mFrameID;
   // True when the intrinsic size has been changed by SetCurrentFrame() since
   // the last call to Invalidate().
