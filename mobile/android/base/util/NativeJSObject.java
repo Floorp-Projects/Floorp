@@ -5,7 +5,7 @@
 
 package org.mozilla.gecko.util;
 
-import org.mozilla.gecko.mozglue.generatorannotations.WrapEntireClassForJNI;
+import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
 import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.mozglue.JNITarget;
 
@@ -16,7 +16,7 @@ import android.os.Bundle;
  * access Javascript objects in Java.
  */
 @JNITarget
-@WrapEntireClassForJNI
+@WrapElementForJNI
 public class NativeJSObject extends JNIObject
 {
     @SuppressWarnings("serial")
