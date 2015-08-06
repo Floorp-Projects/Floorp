@@ -54,7 +54,6 @@ mgjar.sources += [
     'mozglue/ContextUtils.java',
     'mozglue/DirectBufferAllocator.java',
     'mozglue/GeckoLoader.java',
-    'mozglue/generatorannotations/OptionalGeneratedParameter.java',
     'mozglue/generatorannotations/WrapElementForJNI.java',
     'mozglue/JNIObject.java',
     'mozglue/JNITarget.java',
