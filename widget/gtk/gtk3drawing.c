@@ -870,6 +870,24 @@ moz_gtk_splitter_get_metrics(gint orientation, gint* size)
 }
 
 static gint
+moz_gtk_window_paint(cairo_t *cr, GdkRectangle* rect,
+                     GtkTextDirection direction)
+{
+    GtkStyleContext* style;
+
+    ensure_window_widget();
+    gtk_widget_set_direction(gProtoWindow, direction);
+
+    style = gtk_widget_get_style_context(gProtoWindow);	
+    gtk_style_context_save(style);
+    gtk_style_context_add_class(style, GTK_STYLE_CLASS_BACKGROUND);
+    gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
+    gtk_style_context_restore(style);
+
+    return MOZ_GTK_SUCCESS;
+}
+
+static gint
 moz_gtk_button_paint(cairo_t *cr, GdkRectangle* rect,
                      GtkWidgetState* state,
                      GtkReliefStyle relief, GtkWidget* widget,
@@ -2389,6 +2407,10 @@ moz_gtk_menu_popup_paint(cairo_t *cr, GdkRectangle* rect,
     ensure_menu_popup_widget();
     gtk_widget_set_direction(gMenuPopupWidget, direction);
 
+    // Draw a backing toplevel. This fixes themes that don't provide a menu
+    // background, and depend on the GtkMenu's implementation window to provide it.
+    moz_gtk_window_paint(cr, rect, direction);
+
     style = gtk_widget_get_style_context(gMenuPopupWidget);
     gtk_style_context_save(style);
     gtk_style_context_add_class(style, GTK_STYLE_CLASS_MENU);
@@ -2576,24 +2598,6 @@ moz_gtk_check_menu_item_paint(cairo_t *cr, GdkRectangle* rect,
     } else {
       gtk_render_check(style, cr, x, y, indicator_size, indicator_size);
     }
-    gtk_style_context_restore(style);
-
-    return MOZ_GTK_SUCCESS;
-}
-
-static gint
-moz_gtk_window_paint(cairo_t *cr, GdkRectangle* rect,
-                     GtkTextDirection direction)
-{
-    GtkStyleContext* style;
-
-    ensure_window_widget();
-    gtk_widget_set_direction(gProtoWindow, direction);
-
-    style = gtk_widget_get_style_context(gProtoWindow);	
-    gtk_style_context_save(style);
-    gtk_style_context_add_class(style, GTK_STYLE_CLASS_BACKGROUND);
-    gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
     gtk_style_context_restore(style);
 
     return MOZ_GTK_SUCCESS;
