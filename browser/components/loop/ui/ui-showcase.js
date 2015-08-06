@@ -508,7 +508,8 @@
       ],
       "14x14": ["audio", "audio-active", "audio-disabled", "facemute",
         "facemute-active", "facemute-disabled", "hangup", "hangup-active",
-        "hangup-disabled", "incoming", "incoming-active", "incoming-disabled",
+        "hangup-disabled", "hello", "hello-hover", "hello-active",
+        "incoming", "incoming-active", "incoming-disabled",
         "link", "link-active", "link-disabled", "mute", "mute-active",
         "mute-disabled", "pause", "pause-active", "pause-disabled", "video",
         "video-white", "video-active", "video-disabled", "volume", "volume-active",
@@ -518,11 +519,10 @@
         "block", "block-red", "block-hover", "block-active", "contacts", "contacts-hover",
         "contacts-active", "copy", "checkmark", "delete", "globe", "google", "google-hover",
         "google-active", "history", "history-hover", "history-active", "leave",
-        "precall", "precall-hover", "precall-active", "screen-white", "screenmute-white",
-        "settings", "settings-hover", "settings-active", "share-darkgrey", "tag",
-        "tag-hover", "tag-active", "trash", "unblock", "unblock-hover", "unblock-active",
-        "video", "video-hover", "video-active", "tour", "status-available",
-        "status-unavailable"
+        "screen-white", "screenmute-white", "settings", "settings-hover", "settings-active",
+        "share-darkgrey", "tag", "tag-hover", "tag-active", "trash", "unblock",
+        "unblock-hover", "unblock-active", "video", "video-hover", "video-active", "tour",
+        "status-available", "status-unavailable"
       ]
     },
 
