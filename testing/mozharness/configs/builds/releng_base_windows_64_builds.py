@@ -36,7 +36,7 @@ config = {
                 'c:\\mozilla-build\\buildbotve\\scripts\\buildbot'
             ],
             'puppet_location': [
-                sys.executable,
+                'c:\\mozilla-build\\buildbot-0.8.4-pre-moz6\\Scripts\\python.exe',
                 'c:\\mozilla-build\\buildbot-0.8.4-pre-moz6\\scripts\\buildbot'
             ]
         },
