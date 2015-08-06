@@ -185,9 +185,11 @@ class RegExpParser
     // out parameters.
     bool ParseIntervalQuantifier(int* min_out, int* max_out);
 
-    // Parses and returns a single escaped character.  The character
-    // must not be 'b' or 'B' since they are usually handled specially.
-    widechar ParseClassCharacterEscape();
+    // Tries to parse the input as a single escaped character.  If successful
+    // it stores the result in the output parameter and returns true.
+    // Otherwise it throws an error and returns false.  The character must not
+    // be 'b' or 'B' since they are usually handled specially.
+    bool ParseClassCharacterEscape(widechar* code);
 
     // Checks whether the following is a length-digit hexadecimal number,
     // and sets the value if it is.
@@ -205,7 +207,7 @@ class RegExpParser
     // can be reparsed.
     bool ParseBackReferenceIndex(int* index_out);
 
-    bool ParseClassAtom(char16_t* char_class, CharacterRange* char_range);
+    bool ParseClassAtom(char16_t* char_class, widechar *value);
     RegExpTree* ReportError(unsigned errorNumber);
     void Advance();
     void Advance(int dist) {
