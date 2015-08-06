@@ -13,6 +13,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AppsUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Webapps.jsm");
+Cu.import("resource://gre/modules/MessageBroadcaster.jsm");
 
 Cu.importGlobalProperties(['File']);
 
@@ -475,10 +476,10 @@ this.ImportExport = {
 
       app = AppsUtils.cloneAppObject(meta);
       app.manifest = manifest;
-      DOMApplicationRegistry.broadcastMessage("Webapps:AddApp",
-                                              { id: meta.id, app: app });
-      DOMApplicationRegistry.broadcastMessage("Webapps:Install:Return:OK",
-                                              { app: app });
+      MessageBroadcaster.broadcastMessage("Webapps:AddApp",
+                                          { id: meta.id, app: app });
+      MessageBroadcaster.broadcastMessage("Webapps:Install:Return:OK",
+                                          { app: app });
       Services.obs.notifyObservers(null, "webapps-installed",
         JSON.stringify({ manifestURL: meta.manifestURL }));
 

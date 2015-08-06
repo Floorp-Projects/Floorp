@@ -533,6 +533,10 @@ Service::initialize()
     return convertResultCode(rc);
 #endif
 
+  // TODO (bug 1191405): do not preallocate the connections caches until we
+  // have figured the impact on our consumers and memory.
+  sqlite3_config(SQLITE_CONFIG_PAGECACHE, NULL, 0, 0);
+
   // Explicitly initialize sqlite3.  Although this is implicitly called by
   // various sqlite3 functions (and the sqlite3_open calls in our case),
   // the documentation suggests calling this directly.  So we do.
