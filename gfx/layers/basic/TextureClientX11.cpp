@@ -154,7 +154,7 @@ TextureClientX11::BorrowDrawTarget()
 }
 
 void
-TextureClientX11::UpdateFromSurface(gfx::DataSourceSurface* aSurface)
+TextureClientX11::UpdateFromSurface(gfx::SourceSurface* aSurface)
 {
   MOZ_ASSERT(CanExposeDrawTarget());
 

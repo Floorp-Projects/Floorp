@@ -132,8 +132,8 @@ GonkVideoDecoderManager::Input(MediaRawData* aSample)
     nsRefPtr<MediaRawData> data = mQueueSample.ElementAt(0);
     {
       MonitorAutoUnlock mon_unlock(mMonitor);
-      rv = mDecoder->Input(reinterpret_cast<const uint8_t*>(data->mData),
-                           data->mSize,
+      rv = mDecoder->Input(reinterpret_cast<const uint8_t*>(data->Data()),
+                           data->Size(),
                            data->mTime,
                            0);
     }

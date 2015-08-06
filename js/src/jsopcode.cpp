@@ -1606,7 +1606,7 @@ ReleaseScriptCounts(FreeOp* fop)
     JSRuntime* rt = fop->runtime();
     MOZ_ASSERT(rt->scriptAndCountsVector);
 
-    ScriptAndCountsVector& vec = rt->scriptAndCountsVector->get();
+    ScriptAndCountsVector& vec = *rt->scriptAndCountsVector;
 
     for (size_t i = 0; i < vec.length(); i++)
         vec[i].scriptCounts.destroy(fop);
@@ -1642,8 +1642,7 @@ js::StopPCCountProfiling(JSContext* cx)
 
     ReleaseAllJITCode(rt->defaultFreeOp());
 
-    auto* vec = cx->new_<PersistentRooted<ScriptAndCountsVector>>(cx,
-        ScriptAndCountsVector(SystemAllocPolicy()));
+    ScriptAndCountsVector* vec = cx->new_<ScriptAndCountsVector>(SystemAllocPolicy());
     if (!vec)
         return;
 

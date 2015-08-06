@@ -1,5 +1,5 @@
 $inherits:
-  from: 'tasks/build.yml'
+  from: 'tasks/builds/b2g_base.yml'
   variables:
     build_name: 'mulet'
     build_type: 'opt'

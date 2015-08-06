@@ -1065,7 +1065,7 @@ nsWebBrowser::SaveChannel(nsIChannel* aChannel, nsISupports* aFile)
 }
 
 NS_IMETHODIMP
-nsWebBrowser::SaveDocument(nsIDOMDocument* aDocument,
+nsWebBrowser::SaveDocument(nsISupports* aDocumentish,
                            nsISupports* aFile,
                            nsISupports* aDataPath,
                            const char* aOutputContentType,
@@ -1086,11 +1086,13 @@ nsWebBrowser::SaveDocument(nsIDOMDocument* aDocument,
   // Use the specified DOM document, or if none is specified, the one
   // attached to the web browser.
 
-  nsCOMPtr<nsIDOMDocument> doc;
-  if (aDocument) {
-    doc = do_QueryInterface(aDocument);
+  nsCOMPtr<nsISupports> doc;
+  if (aDocumentish) {
+    doc = aDocumentish;
   } else {
-    GetDocument(getter_AddRefs(doc));
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    GetDocument(getter_AddRefs(domDoc));
+    doc = domDoc.forget();
   }
   if (!doc) {
     return NS_ERROR_FAILURE;

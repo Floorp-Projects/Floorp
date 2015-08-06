@@ -151,15 +151,16 @@ nsBaseWidget::nsBaseWidget()
 , mLayerManager(nullptr)
 , mCompositorVsyncDispatcher(nullptr)
 , mCursor(eCursor_standard)
-, mUpdateCursor(true)
 , mBorderStyle(eBorderStyle_none)
-, mUseAttachedEvents(false)
 , mBounds(0,0,0,0)
 , mOriginalBounds(nullptr)
 , mClipRectCount(0)
 , mSizeMode(nsSizeMode_Normal)
 , mPopupLevel(ePopupLevelTop)
 , mPopupType(ePopupTypeAny)
+, mUpdateCursor(true)
+, mUseAttachedEvents(false)
+, mIMEHasFocus(false)
 {
 #ifdef NOISY_WIDGET_LEAKS
   gNumWidgets++;
@@ -1560,7 +1561,7 @@ nsBaseWidget::NotifyWindowMoved(int32_t aX, int32_t aY)
     mWidgetListener->WindowMoved(this, aX, aY);
   }
 
-  if (GetIMEUpdatePreference().WantPositionChanged()) {
+  if (mIMEHasFocus && GetIMEUpdatePreference().WantPositionChanged()) {
     NotifyIME(IMENotification(IMEMessage::NOTIFY_IME_OF_POSITION_CHANGE));
   }
 }
@@ -1617,14 +1618,23 @@ nsBaseWidget::NotifyIME(const IMENotification& aIMENotification)
       // Otherwise, it should be handled by native IME.
       return NotifyIMEInternal(aIMENotification);
     case NOTIFY_IME_OF_FOCUS:
-    case NOTIFY_IME_OF_BLUR:
-      // If the notification is a notification which is supported by
-      // nsITextInputProcessorCallback, we should notify the
-      // TextEventDispatcher, first.  After that, notify native IME too.
+      mIMEHasFocus = true;
+      // We should notify TextEventDispatcher of focus notification, first.
+      // After that, notify native IME too.
       if (mTextEventDispatcher) {
         mTextEventDispatcher->NotifyIME(aIMENotification);
       }
       return NotifyIMEInternal(aIMENotification);
+    case NOTIFY_IME_OF_BLUR: {
+      // We should notify TextEventDispatcher of blur notification, first.
+      // After that, notify native IME too.
+      if (mTextEventDispatcher) {
+        mTextEventDispatcher->NotifyIME(aIMENotification);
+      }
+      nsresult rv = NotifyIMEInternal(aIMENotification);
+      mIMEHasFocus = false;
+      return rv;
+    }
     default:
       // Otherwise, notify only native IME for now.
       return NotifyIMEInternal(aIMENotification);

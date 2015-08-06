@@ -59,6 +59,7 @@ task:
       TOOLTOOL_REV: 'master'
 
   extra:
+    build_product: '{{build_product}}'
     index:
       rank: {{pushlog_id}}
     treeherder:

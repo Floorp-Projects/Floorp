@@ -467,7 +467,11 @@ public:
     // Toggling the fullscreen mode requires trusted context.
     eForFullscreenMode,
     // Fullscreen API is the API provided to untrusted content.
-    eForFullscreenAPI
+    eForFullscreenAPI,
+    // This reason can only be used with exiting fullscreen.
+    // It is otherwise identical to eForFullscreenAPI except it would
+    // suppress the fullscreen transition.
+    eForForceExitFullscreen
   };
 
   /**
