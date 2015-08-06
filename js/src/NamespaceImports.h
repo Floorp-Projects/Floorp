@@ -99,7 +99,6 @@ using JS::NativeImpl;
 using JS::OwningCompileOptions;
 using JS::ReadOnlyCompileOptions;
 using JS::SourceBufferHolder;
-using JS::TransitiveCompileOptions;
 
 using JS::Rooted;
 using JS::RootedFunction;

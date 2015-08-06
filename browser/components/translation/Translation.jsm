@@ -110,7 +110,7 @@ this.Translation = {
    */
   get translationEngine() {
     let engine = Services.prefs.getCharPref("browser.translation.engine");
-    return Object.keys(this.supportedEngines).includes(engine) ? engine : this.defaultEngine;
+    return Object.keys(this.supportedEngines).indexOf(engine) == -1 ? this.defaultEngine : engine;
   },
 };
 
