@@ -9,6 +9,7 @@ SOURCES += [
     'TestCustomHeap.cpp',
     'TestExplicitOperatorBool.cpp',
     'TestGlobalClass.cpp',
+    'TestHeapClass.cpp',
     'TestInheritTypeAnnotationsFromTemplateArgs.cpp',
     'TestMultipleAnnotations.cpp',
     'TestMustOverride.cpp',

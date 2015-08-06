@@ -262,6 +262,8 @@ static CustomTypeAnnotation GlobalClass =
   CustomTypeAnnotation("moz_global_class", "global");
 static CustomTypeAnnotation NonHeapClass =
   CustomTypeAnnotation("moz_nonheap_class", "non-heap");
+static CustomTypeAnnotation HeapClass =
+  CustomTypeAnnotation("moz_heap_class", "heap");
 static CustomTypeAnnotation MustUse =
   CustomTypeAnnotation("moz_must_use", "must-use");
 
@@ -1103,6 +1105,11 @@ void DiagnosticsMatcher::ScopeChecker::run(
       Diag.Report(Loc, GlobalNoteID);
       StackClass.dumpAnnotationReason(Diag, T, Loc);
     }
+    if (HeapClass.hasEffectiveAnnotation(T)) {
+      Diag.Report(Loc, HeapID) << T;
+      Diag.Report(Loc, GlobalNoteID);
+      HeapClass.dumpAnnotationReason(Diag, T, Loc);
+    }
     break;
 
   case AV_Automatic:
@@ -1111,6 +1118,11 @@ void DiagnosticsMatcher::ScopeChecker::run(
       Diag.Report(Loc, StackNoteID);
       GlobalClass.dumpAnnotationReason(Diag, T, Loc);
     }
+    if (HeapClass.hasEffectiveAnnotation(T)) {
+      Diag.Report(Loc, HeapID) << T;
+      Diag.Report(Loc, StackNoteID);
+      HeapClass.dumpAnnotationReason(Diag, T, Loc);
+    }
     break;
 
   case AV_Temporary:
@@ -1118,6 +1130,11 @@ void DiagnosticsMatcher::ScopeChecker::run(
       Diag.Report(Loc, GlobalID) << T;
       Diag.Report(Loc, TemporaryNoteID);
       GlobalClass.dumpAnnotationReason(Diag, T, Loc);
+    }
+    if (HeapClass.hasEffectiveAnnotation(T)) {
+      Diag.Report(Loc, HeapID) << T;
+      Diag.Report(Loc, TemporaryNoteID);
+      HeapClass.dumpAnnotationReason(Diag, T, Loc);
     }
     break;
 
