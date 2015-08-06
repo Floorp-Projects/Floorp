@@ -40,7 +40,7 @@ function* test_tooltip(icon, expectedTooltip) {
   let tooltip = document.getElementById("tabbrowser-tab-tooltip");
 
   yield hover_icon(icon, tooltip);
-  is(tooltip.getAttribute("label"), expectedTooltip, "Correct tooltip expected");
+  is(tooltip.getAttribute("label").indexOf(expectedTooltip), 0, "Correct tooltip expected");
   leave_icon(icon);
 }
 
@@ -77,15 +77,15 @@ function* test_playing_icon_on_tab(tab, browser, isPinned) {
 
   yield wait_for_tab_playing_event(tab, true);
 
-  yield test_tooltip(icon, "This tab is playing audio");
+  yield test_tooltip(icon, "Mute tab");
 
   yield test_mute_tab(tab, icon, true);
 
-  yield test_tooltip(icon, "This tab has been muted");
+  yield test_tooltip(icon, "Unmute tab");
 
   yield test_mute_tab(tab, icon, false);
 
-  yield test_tooltip(icon, "This tab is playing audio");
+  yield test_tooltip(icon, "Mute tab");
 
   yield test_mute_tab(tab, icon, true);
 
@@ -98,7 +98,7 @@ function* test_playing_icon_on_tab(tab, browser, isPinned) {
   ok(tab.hasAttribute("muted") &&
      !tab.hasAttribute("soundplaying"), "Tab should still be muted but not playing");
 
-  yield test_tooltip(icon, "This tab has been muted");
+  yield test_tooltip(icon, "Unmute tab");
 
   yield test_mute_tab(tab, icon, false);
 
