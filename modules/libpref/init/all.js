@@ -476,12 +476,8 @@ pref("media.mediasource.enabled", false);
 pref("media.mediasource.mp4.enabled", true);
 pref("media.mediasource.webm.enabled", false);
 
-#if defined(MOZ_WIDGET_GONK)
-pref("media.mediasource.format-reader", false);
-#else
 // Enable new MediaSource architecture.
 pref("media.mediasource.format-reader", true);
-#endif
 
 // Enable new MediaFormatReader architecture for webm in MSE
 pref("media.mediasource.format-reader.webm", false);
