@@ -762,7 +762,7 @@
     </style>
 
     <style name="TabInput.Tab">
-        <item name="android:background">@drawable/tabs_panel_indicator</item>
+        <item name="android:background">@drawable/tabs_strip_indicator</item>
         <item name="android:gravity">center</item>
         <item name="android:minHeight">@dimen/menu_item_row_height</item>
     </style>
