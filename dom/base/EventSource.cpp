@@ -781,7 +781,7 @@ EventSource::InitChannelAndRequestEventSource()
                        mSrc,
                        doc,
                        securityFlags,
-                       nsIContentPolicy::TYPE_INTERNAL_EVENTSOURCE,
+                       nsIContentPolicy::TYPE_DATAREQUEST,
                        mLoadGroup,       // loadGroup
                        nullptr,          // aCallbacks
                        loadFlags);       // aLoadFlags
@@ -791,7 +791,7 @@ EventSource::InitChannelAndRequestEventSource()
                        mSrc,
                        mPrincipal,
                        securityFlags,
-                       nsIContentPolicy::TYPE_INTERNAL_EVENTSOURCE,
+                       nsIContentPolicy::TYPE_DATAREQUEST,
                        mLoadGroup,       // loadGroup
                        nullptr,          // aCallbacks
                        loadFlags);       // aLoadFlags
