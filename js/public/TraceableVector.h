@@ -59,7 +59,7 @@ template <typename Outer, typename T, size_t Capacity, typename AllocPolicy, typ
 class TraceableVectorOperations
 {
     using Vec = TraceableVector<T, Capacity, AllocPolicy, TraceFunc>;
-    const Vec& vec() const { return static_cast<const Outer*>(this)->extract(); }
+    const Vec& vec() const { return static_cast<const Outer*>(this)->get(); }
 
   public:
     const AllocPolicy& allocPolicy() const { return vec().allocPolicy(); }
@@ -81,8 +81,8 @@ class MutableTraceableVectorOperations
   : public TraceableVectorOperations<Outer, T, Capacity, AllocPolicy, TraceFunc>
 {
     using Vec = TraceableVector<T, Capacity, AllocPolicy, TraceFunc>;
-    const Vec& vec() const { return static_cast<const Outer*>(this)->extract(); }
-    Vec& vec() { return static_cast<Outer*>(this)->extract(); }
+    const Vec& vec() const { return static_cast<const Outer*>(this)->get(); }
+    Vec& vec() { return static_cast<Outer*>(this)->get(); }
 
   public:
     const AllocPolicy& allocPolicy() const { return vec().allocPolicy(); }
@@ -144,42 +144,17 @@ class MutableTraceableVectorOperations
 template <typename A, size_t B, typename C, typename D>
 class RootedBase<TraceableVector<A,B,C,D>>
   : public MutableTraceableVectorOperations<JS::Rooted<TraceableVector<A,B,C,D>>, A,B,C,D>
-{
-    using Vec = TraceableVector<A,B,C,D>;
-
-    friend class TraceableVectorOperations<JS::Rooted<Vec>, A,B,C,D>;
-    const Vec& extract() const { return *static_cast<const JS::Rooted<Vec>*>(this)->address(); }
-
-    friend class MutableTraceableVectorOperations<JS::Rooted<Vec>, A,B,C,D>;
-    Vec& extract() { return *static_cast<JS::Rooted<Vec>*>(this)->address(); }
-};
+{};
 
 template <typename A, size_t B, typename C, typename D>
 class MutableHandleBase<TraceableVector<A,B,C,D>>
   : public MutableTraceableVectorOperations<JS::MutableHandle<TraceableVector<A,B,C,D>>, A,B,C,D>
-{
-    using Vec = TraceableVector<A,B,C,D>;
-
-    friend class TraceableVectorOperations<JS::MutableHandle<Vec>, A,B,C,D>;
-    const Vec& extract() const {
-        return *static_cast<const JS::MutableHandle<Vec>*>(this)->address();
-    }
-
-    friend class MutableTraceableVectorOperations<JS::MutableHandle<Vec>, A,B,C,D>;
-    Vec& extract() { return *static_cast<JS::MutableHandle<Vec>*>(this)->address(); }
-};
+{};
 
 template <typename A, size_t B, typename C, typename D>
 class HandleBase<TraceableVector<A,B,C,D>>
   : public TraceableVectorOperations<JS::Handle<TraceableVector<A,B,C,D>>, A,B,C,D>
-{
-    using Vec = TraceableVector<A,B,C,D>;
-
-    friend class TraceableVectorOperations<JS::Handle<Vec>, A,B,C,D>;
-    const Vec& extract() const {
-        return *static_cast<const JS::Handle<Vec>*>(this)->address();
-    }
-};
+{};
 
 } // namespace js
 
