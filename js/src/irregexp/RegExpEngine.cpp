@@ -2056,6 +2056,8 @@ RegExpAssertion::ToNode(RegExpCompiler* compiler,
         result->AddAlternative(end_alternative);
         return result;
       }
+      case NOT_AFTER_LEAD_SURROGATE:
+        return AssertionNode::NotAfterLeadSurrogate(on_success);
       default:
         MOZ_CRASH("Bad assertion type");
     }
@@ -2843,6 +2845,31 @@ EmitHat(RegExpCompiler* compiler, RegExpNode* on_success, Trace* trace)
     on_success->Emit(compiler, &new_trace);
 }
 
+// Assert that the next character cannot be a part of a surrogate pair.
+static void
+EmitNotAfterLeadSurrogate(RegExpCompiler* compiler, RegExpNode* on_success, Trace* trace)
+{
+    RegExpMacroAssembler* assembler = compiler->macro_assembler();
+
+    // We will be loading the previous character into the current character
+    // register.
+    Trace new_trace(*trace);
+    new_trace.InvalidateCurrentCharacter();
+
+    jit::Label ok;
+    if (new_trace.cp_offset() == 0)
+        assembler->CheckAtStart(&ok);
+
+    // We already checked that we are not at the start of input so it must be
+    // OK to load the previous character.
+    assembler->LoadCurrentCharacter(new_trace.cp_offset() - 1, new_trace.backtrack(), false);
+    assembler->CheckCharacterInRange(unicode::LeadSurrogateMin, unicode::LeadSurrogateMax,
+                                     new_trace.backtrack());
+
+    assembler->Bind(&ok);
+    on_success->Emit(compiler, &new_trace);
+}
+
 // Check for [0-9A-Z_a-z].
 static void
 EmitWordCheck(RegExpMacroAssembler* assembler,
@@ -2996,6 +3023,9 @@ AssertionNode::Emit(RegExpCompiler* compiler, Trace* trace)
         EmitBoundaryCheck(compiler, trace);
         return;
       }
+      case NOT_AFTER_LEAD_SURROGATE:
+        EmitNotAfterLeadSurrogate(compiler, on_success(), trace);
+        return;
     }
     on_success()->Emit(compiler, trace);
 }

@@ -302,6 +302,108 @@ RegExpParser<CharT>::ParseHexEscape(int length, size_t* value)
     return true;
 }
 
+template <typename CharT>
+bool
+RegExpParser<CharT>::ParseBracedHexEscape(size_t* value)
+{
+    MOZ_ASSERT(current() == '{');
+    Advance();
+
+    bool first = true;
+    uint32_t code = 0;
+    while (true) {
+        widechar c = current();
+        if (c == kEndMarker) {
+            ReportError(JSMSG_INVALID_UNICODE_ESCAPE);
+            return false;
+        }
+        if (c == '}') {
+            if (first) {
+                ReportError(JSMSG_INVALID_UNICODE_ESCAPE);
+                return false;
+            }
+            Advance();
+            break;
+        }
+
+        int d = HexValue(c);
+        if (d < 0) {
+            ReportError(JSMSG_INVALID_UNICODE_ESCAPE);
+            return false;
+        }
+        code = (code << 4) | d;
+        if (code > unicode::NonBMPMax) {
+            ReportError(JSMSG_UNICODE_OVERFLOW);
+            return false;
+        }
+        Advance();
+        first = false;
+    }
+
+    *value = code;
+    return true;
+}
+
+template <typename CharT>
+bool
+RegExpParser<CharT>::ParseTrailSurrogate(size_t* value)
+{
+    if (current() != '\\')
+        return false;
+
+    const CharT* start = position();
+    Advance();
+    if (current() != 'u') {
+        Reset(start);
+        return false;
+    }
+    Advance();
+    if (!ParseHexEscape(4, value)) {
+        Reset(start);
+        return false;
+    }
+    if (!unicode::IsTrailSurrogate(*value)) {
+        Reset(start);
+        return false;
+    }
+    return true;
+}
+
+template <typename CharT>
+bool
+RegExpParser<CharT>::ParseRawSurrogatePair(char16_t* lead, char16_t* trail)
+{
+    widechar c1 = current();
+    if (!unicode::IsLeadSurrogate(c1))
+        return false;
+
+    const CharT* start = position();
+    Advance();
+    widechar c2 = current();
+    if (!unicode::IsTrailSurrogate(c2)) {
+        Reset(start);
+        return false;
+    }
+    Advance();
+    *lead = c1;
+    *trail = c2;
+    return true;
+}
+
+static inline RegExpTree*
+RangeAtom(LifoAlloc* alloc, char16_t from, char16_t to)
+{
+    CharacterRangeVector* ranges = alloc->newInfallible<CharacterRangeVector>(*alloc);
+    ranges->append(CharacterRange::Range(from, to));
+    return alloc->newInfallible<RegExpCharacterClass>(ranges, false);
+}
+
+static inline RegExpTree*
+NegativeLookahead(LifoAlloc* alloc, char16_t from, char16_t to)
+{
+    return alloc->newInfallible<RegExpLookahead>(RangeAtom(alloc, from, to), false, 0, 0);
+}
+
 #ifdef DEBUG
 // Currently only used in an assert.kASSERT.
 static bool
@@ -675,6 +777,35 @@ RegExpParser<CharT>::ParsePattern()
     return result;
 }
 
+static inline RegExpTree*
+SurrogatePairAtom(LifoAlloc* alloc, char16_t lead, char16_t trail)
+{
+    RegExpBuilder* builder = alloc->newInfallible<RegExpBuilder>(alloc);
+    builder->AddCharacter(lead);
+    builder->AddCharacter(trail);
+    return builder->ToRegExp();
+}
+
+static inline RegExpTree*
+LeadSurrogateAtom(LifoAlloc* alloc, char16_t value)
+{
+    RegExpBuilder* builder = alloc->newInfallible<RegExpBuilder>(alloc);
+    builder->AddCharacter(value);
+    builder->AddAtom(NegativeLookahead(alloc, unicode::TrailSurrogateMin,
+                                       unicode::TrailSurrogateMax));
+    return builder->ToRegExp();
+}
+
+static inline RegExpTree*
+TrailSurrogateAtom(LifoAlloc* alloc, char16_t value)
+{
+    RegExpBuilder* builder = alloc->newInfallible<RegExpBuilder>(alloc);
+    builder->AddAssertion(alloc->newInfallible<RegExpAssertion>(
+        RegExpAssertion::NOT_AFTER_LEAD_SURROGATE));
+    builder->AddCharacter(value);
+    return builder->ToRegExp();
+}
+
 // Disjunction ::
 //   Alternative
 //   Alternative | Disjunction
@@ -929,6 +1060,38 @@ RegExpParser<CharT>::ParseDisjunction()
               case 'u': {
                 Advance(2);
                 size_t value;
+                if (unicode_) {
+                    if (current() == '{') {
+                        if (!ParseBracedHexEscape(&value))
+                            return nullptr;
+                        if (unicode::IsLeadSurrogate(value)) {
+                            builder->AddAtom(LeadSurrogateAtom(alloc, value));
+                        } else if (unicode::IsTrailSurrogate(value)) {
+                            builder->AddAtom(TrailSurrogateAtom(alloc, value));
+                        } else if (value >= unicode::NonBMPMin) {
+                            size_t lead, trail;
+                            unicode::UTF16Encode(value, &lead, &trail);
+                            builder->AddAtom(SurrogatePairAtom(alloc, lead, trail));
+                        } else {
+                            builder->AddCharacter(value);
+                        }
+                    } else if (ParseHexEscape(4, &value)) {
+                        if (unicode::IsLeadSurrogate(value)) {
+                            size_t trail;
+                            if (ParseTrailSurrogate(&trail))
+                                builder->AddAtom(SurrogatePairAtom(alloc, value, trail));
+                            else
+                                builder->AddAtom(LeadSurrogateAtom(alloc, value));
+                        } else if (unicode::IsTrailSurrogate(value)) {
+                            builder->AddAtom(TrailSurrogateAtom(alloc, value));
+                        } else {
+                            builder->AddCharacter(value);
+                        }
+                    } else {
+                        return ReportError(JSMSG_INVALID_UNICODE_ESCAPE);
+                    }
+                    break;
+                }
                 if (ParseHexEscape(4, &value)) {
                     builder->AddCharacter(value);
                 } else {
@@ -950,6 +1113,22 @@ RegExpParser<CharT>::ParseDisjunction()
             // fallthrough
           }
           default:
+            if (unicode_) {
+                char16_t lead, trail;
+                if (ParseRawSurrogatePair(&lead, &trail)) {
+                    builder->AddAtom(SurrogatePairAtom(alloc, lead, trail));
+                } else {
+                    widechar c = current();
+                    if (unicode::IsLeadSurrogate(c))
+                        builder->AddAtom(LeadSurrogateAtom(alloc, c));
+                    else if (unicode::IsTrailSurrogate(c))
+                        builder->AddAtom(TrailSurrogateAtom(alloc, c));
+                    else
+                        builder->AddCharacter(c);
+                    Advance();
+                }
+                break;
+            }
             builder->AddCharacter(current());
             Advance();
             break;

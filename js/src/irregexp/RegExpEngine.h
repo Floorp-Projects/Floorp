@@ -788,7 +788,8 @@ class AssertionNode : public SeqRegExpNode
         AT_START,
         AT_BOUNDARY,
         AT_NON_BOUNDARY,
-        AFTER_NEWLINE
+        AFTER_NEWLINE,
+        NOT_AFTER_LEAD_SURROGATE
     };
     AssertionNode(AssertionType t, RegExpNode* on_success)
       : SeqRegExpNode(on_success), assertion_type_(t)
@@ -808,6 +809,10 @@ class AssertionNode : public SeqRegExpNode
     }
     static AssertionNode* AfterNewline(RegExpNode* on_success) {
         return on_success->alloc()->newInfallible<AssertionNode>(AFTER_NEWLINE, on_success);
+    }
+    static AssertionNode* NotAfterLeadSurrogate(RegExpNode* on_success) {
+        return on_success->alloc()->newInfallible<AssertionNode>(NOT_AFTER_LEAD_SURROGATE,
+                                                                 on_success);
     }
     virtual void Accept(NodeVisitor* visitor);
     virtual void Emit(RegExpCompiler* compiler, Trace* trace);
