@@ -338,8 +338,8 @@ describe("loop.OTSdkDriver", function () {
       driver.connectSession(_.extend(sessionData,
                                      {sendTwoWayMediaTelemetry: true}));
 
-      expect(driver._getTwoWayMediaStartTime()).to.
-        eql(driver.CONNECTION_START_TIME_UNINITIALIZED);
+      expect(driver._getTwoWayMediaStartTime()).to.eql(
+        driver.CONNECTION_START_TIME_UNINITIALIZED);
     });
 
     describe("On connection complete", function() {
@@ -456,8 +456,8 @@ describe("loop.OTSdkDriver", function () {
 
       driver.disconnectSession();
 
-      expect(driver._getTwoWayMediaStartTime()).to.
-        eql(driver.CONNECTION_START_TIME_UNINITIALIZED);
+      expect(driver._getTwoWayMediaStartTime()).to.eql(
+        driver.CONNECTION_START_TIME_UNINITIALIZED);
     });
   });
 
@@ -473,8 +473,8 @@ describe("loop.OTSdkDriver", function () {
       var endTimeMS = 3;
       driver._noteConnectionLengthIfNeeded(startTimeMS, endTimeMS);
 
-      expect(driver._getTwoWayMediaStartTime()).to.
-        eql(driver.CONNECTION_START_TIME_ALREADY_NOTED);
+      expect(driver._getTwoWayMediaStartTime()).to.eql(
+        driver.CONNECTION_START_TIME_ALREADY_NOTED);
     });
 
     it("should call mozLoop.noteConnectionLength with SHORTER_THAN_10S for calls less than 10s", function() {
