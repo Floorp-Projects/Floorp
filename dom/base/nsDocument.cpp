@@ -9233,6 +9233,8 @@ DispatchFullScreenChange(nsIDocument* aTarget)
     /* Bubbles */ true, /* OnlyChrome */ false);
 }
 
+static void ClearPendingFullscreenRequests(nsIDocument* aDoc);
+
 void
 nsDocument::OnPageHide(bool aPersisted,
                        EventTarget* aDispatchStartTarget)
@@ -9297,6 +9299,7 @@ nsDocument::OnPageHide(bool aPersisted,
   EnumerateExternalResources(NotifyPageHide, &aPersisted);
   EnumerateActivityObservers(NotifyActivityChanged, nullptr);
 
+  ClearPendingFullscreenRequests(this);
   if (IsFullScreenDoc()) {
     // If this document was fullscreen, we should exit fullscreen in this
     // doctree branch. This ensures that if the user navigates while in
@@ -11681,6 +11684,35 @@ nsIDocument::HandlePendingFullscreenRequests(nsIDocument* aDoc)
     }
   }
   return handled;
+}
+
+static void
+ClearPendingFullscreenRequests(nsIDocument* aDoc)
+{
+  nsIDocShellTreeItem* shell = aDoc->GetDocShell();
+  if (!shell) {
+    return;
+  }
+
+  FullscreenRequest* request = sPendingFullscreenRequests.getFirst();
+  while (request) {
+    nsIDocument* doc = request->GetDocument();
+    bool shouldRemove = false;
+    for (nsCOMPtr<nsIDocShellTreeItem> docShell = doc->GetDocShell();
+         docShell; docShell->GetParent(getter_AddRefs(docShell))) {
+      if (docShell == shell) {
+        shouldRemove = true;
+        break;
+      }
+    }
+    if (shouldRemove) {
+      FullscreenRequest* thisRequest = request;
+      request = request->getNext();
+      delete thisRequest;
+    } else {
+      request = request->getNext();
+    }
+  }
 }
 
 void
