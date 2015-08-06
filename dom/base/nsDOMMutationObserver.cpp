@@ -7,15 +7,17 @@
 #include "nsDOMMutationObserver.h"
 
 #include "mozilla/OwningNonNull.h"
-#include "nsError.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsContentUtils.h"
-#include "nsThreadUtils.h"
-#include "nsIDOMMutationEvent.h"
-#include "nsTextFragment.h"
-#include "nsServiceManagerUtils.h"
+
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/KeyframeEffect.h"
+
+#include "nsContentUtils.h"
+#include "nsError.h"
+#include "nsIDOMMutationEvent.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsServiceManagerUtils.h"
+#include "nsTextFragment.h"
+#include "nsThreadUtils.h"
 
 using mozilla::dom::Animation;
 
