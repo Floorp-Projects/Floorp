@@ -970,6 +970,15 @@ static char* searchForTZFile(const char* path, DefaultTZInfo* tzInfo) {
     return result;
 }
 #endif
+
+U_CAPI void U_EXPORT2
+uprv_tzname_clear_cache()
+{
+#if defined(CHECK_LOCALTIME_LINK) && !defined(DEBUG_SKIP_LOCALTIME_LINK)
+    gTimeZoneBufferPtr = NULL;
+#endif
+}
+
 U_CAPI const char* U_EXPORT2
 uprv_tzname(int n)
 {
