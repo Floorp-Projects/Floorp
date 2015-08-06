@@ -273,7 +273,7 @@ this.PushService = {
                   // just for it
                   if (this._ws) {
                     debug("Had a connection, so telling the server");
-                    this._sendRequest("unregister", {channelID: record.channelID})
+                    this._sendUnregister({channelID: record.channelID})
                         .catch(function(e) {
                           debug("Unregister errored " + e);
                         });
@@ -286,7 +286,7 @@ this.PushService = {
                   // just for it
                   if (this._ws) {
                     debug("Had a connection, so telling the server");
-                    this._sendRequest("unregister", {channelID: record.channelID})
+                    this._sendUnregister({channelID: record.channelID})
                         .catch(function(e) {
                           debug("Unregister errored " + e);
                         });
@@ -778,7 +778,7 @@ this.PushService = {
         // Drop the registration in the background. If the user returns to the
         // site, the service worker will be notified on the next `idle-daily`
         // event.
-        this._sendRequest("unregister", record).catch(error => {
+        this._sendUnregister(record).catch(error => {
           debug("receivedPushMessage: Unregister error: " + error);
         });
       }
@@ -853,6 +853,7 @@ this.PushService = {
   _registerWithServer: function(aPageRecord) {
     debug("registerWithServer()" + JSON.stringify(aPageRecord));
 
+    Services.telemetry.getHistogramById("PUSH_API_SUBSCRIBE_ATTEMPT").add();
     return this._sendRequest("register", aPageRecord)
       .then(record => this._onRegisterSuccess(record),
             err => this._onRegisterError(err))
@@ -896,6 +897,17 @@ this.PushService = {
       });
   },
 
+  _sendUnregister: function(aRecord) {
+    Services.telemetry.getHistogramById("PUSH_API_UNSUBSCRIBE_ATTEMPT").add();
+    return this._sendRequest("unregister", aRecord).then(function(v) {
+      Services.telemetry.getHistogramById("PUSH_API_UNSUBSCRIBE_SUCCEEDED").add();
+      return v;
+    }).catch(function(e) {
+      Services.telemetry.getHistogramById("PUSH_API_UNSUBSCRIBE_FAILED").add();
+      return Promise.reject(e);
+    });
+  },
+
   /**
    * Exceptions thrown in _onRegisterSuccess are caught by the promise obtained
    * from _service.request, causing the promise to be rejected instead.
@@ -904,9 +916,14 @@ this.PushService = {
     debug("_onRegisterSuccess()");
 
     return this._db.put(aRecord)
+      .then(record => {
+        Services.telemetry.getHistogramById("PUSH_API_SUBSCRIBE_SUCCEEDED").add();
+        return record;
+      })
       .catch(error => {
+        Services.telemetry.getHistogramById("PUSH_API_SUBSCRIBE_FAILED").add()
         // Unable to save. Destroy the subscription in the background.
-        this._sendRequest("unregister", aRecord).catch(err => {
+        this._sendUnregister(aRecord).catch(err => {
           debug("_onRegisterSuccess: Error unregistering stale subscription" +
             err);
         });
@@ -920,6 +937,7 @@ this.PushService = {
    */
   _onRegisterError: function(reply) {
     debug("_onRegisterError()");
+    Services.telemetry.getHistogramById("PUSH_API_SUBSCRIBE_FAILED").add()
     if (!reply.error) {
       debug("Called without valid error message!");
       throw "Registration error";
@@ -1043,7 +1061,7 @@ this.PushService = {
         }
 
         return Promise.all([
-          this._sendRequest("unregister", record),
+          this._sendUnregister(record),
           this._db.delete(record.keyID),
         ]).then(() => true);
       });
