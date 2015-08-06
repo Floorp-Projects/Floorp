@@ -469,6 +469,8 @@
   <string name="identity_connection_insecure">&identity_connection_insecure;</string>
 
   <string name="mixed_content_blocked_all">&mixed_content_blocked_all;</string>
+  <string name="mixed_content_blocked_some">&mixed_content_blocked_some;</string>
+  <string name="mixed_content_display_loaded">&mixed_content_display_loaded;</string>
   <string name="mixed_content_protection_disabled">&mixed_content_protection_disabled;</string>
 
   <string name="doorhanger_tracking_title">&doorhanger_tracking_title;</string>
