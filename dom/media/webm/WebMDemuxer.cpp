@@ -316,8 +316,7 @@ WebMDemuxer::ReadMetadata()
       mHasVideo = true;
 
       mInfo.mVideo.mDisplay = displaySize;
-
-      mPicture = pictureRect;
+      mInfo.mVideo.mImage = pictureRect;
 
       switch (params.stereo_mode) {
         case NESTEGG_VIDEO_MONO:
