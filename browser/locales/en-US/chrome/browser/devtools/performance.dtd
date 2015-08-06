@@ -51,7 +51,7 @@
 <!ENTITY performanceUI.exportButton "Save">
 
 <!-- LOCALIZATION NOTE (performanceUI.clearButton): This string is displayed
-  -  on a button that remvoes all the recordings. -->
+  -  on a button that removes all the recordings. -->
 <!ENTITY performanceUI.clearButton "Clear">
 
 <!-- LOCALIZATION NOTE (performanceUI.toolbar.*): These strings are displayed

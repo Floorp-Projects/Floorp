@@ -491,8 +491,15 @@ BrowserGlue.prototype = {
         this._handleFlashHang();
         break;
       case "xpi-signature-changed":
-        if (JSON.parse(data).disabled.length)
-          this._notifyUnsignedAddonsDisabled();
+        let disabledAddons = JSON.parse(data).disabled;
+        AddonManager.getAddonsByIDs(disabledAddons, (addons) => {
+          for (let addon of addons) {
+            if (addon.type != "experiment") {
+              this._notifyUnsignedAddonsDisabled();
+              break;
+            }
+          }
+        });
         break;
       case "autocomplete-did-enter-text":
         this._handleURLBarTelemetry(subject.QueryInterface(Ci.nsIAutoCompleteInput));
@@ -1005,7 +1012,7 @@ BrowserGlue.prototype = {
     // handler and init message manager child shim for privileged api access.
     // With older versions of the extension installed, this load will fail
     // passively.
-    aWindow.messageManager.loadFrameScript("resource://pdf.js/pdfjschildbootstrap.js", true);
+    Services.ppmm.loadProcessScript("resource://pdf.js/pdfjschildbootstrap.js", true);
 
 #ifdef NIGHTLY_BUILD
     // Registering Shumway bootstrap script the child processes.
@@ -1057,16 +1064,6 @@ BrowserGlue.prototype = {
     }
 
     this._checkForOldBuildUpdates();
-
-    let disabledAddons = AddonManager.getStartupChanges(AddonManager.STARTUP_CHANGE_DISABLED);
-    AddonManager.getAddonsByIDs(disabledAddons, (addons) => {
-      for (let addon of addons) {
-        if (addon.signedState <= AddonManager.SIGNEDSTATE_MISSING) {
-          this._notifyUnsignedAddonsDisabled();
-          break;
-        }
-      }
-    });
 
     this._firstWindowTelemetry(aWindow);
   },
@@ -1166,6 +1163,19 @@ BrowserGlue.prototype = {
         })
       });
     }
+
+    let disabledAddons = AddonManager.getStartupChanges(AddonManager.STARTUP_CHANGE_DISABLED);
+    AddonManager.getAddonsByIDs(disabledAddons, (addons) => {
+      for (let addon of addons) {
+        if (addon.type == "experiment")
+          continue;
+
+        if (addon.signedState <= AddonManager.SIGNEDSTATE_MISSING) {
+          this._notifyUnsignedAddonsDisabled();
+          break;
+        }
+      }
+    });
 
     // Perform default browser checking.
     if (ShellService) {
