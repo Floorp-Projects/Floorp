@@ -248,15 +248,6 @@
   fill: #fff;
 }
 
-/*
-  Setting `stroke-width` with a low floating point number, ensure that `path`
-  draws always 1px despites the zoom level, with `crispEdges` on the ancestor.
-*/
-:-moz-native-anonymous .rulers-highlighter-ruler-graduations,
-:-moz-native-anonymous .rulers-highlighter-ruler-markers {
-  stroke-width: 0.0001;
-}
-
 :-moz-native-anonymous .rulers-highlighter-ruler-graduations {
   stroke: #bebebe;
 }
@@ -282,4 +273,3 @@
   transform: rotate(-90deg);
   text-anchor: end;
 }
-
