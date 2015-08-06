@@ -622,3 +622,18 @@ ia2AccessibleText::InitTextChangeData()
   ClearOnShutdown(&sLastTextChangeAcc);
   ClearOnShutdown(&sLastTextChangeString);
 }
+
+void
+ia2AccessibleText::UpdateTextChangeData(HyperTextAccessibleWrap* aAcc,
+                                        bool aInsert, const nsString& aStr,
+                                        int32_t aStart, uint32_t aLen)
+{
+  if (!sLastTextChangeString)
+    sLastTextChangeString = new nsString();
+
+  sLastTextChangeAcc = aAcc;
+  sLastTextChangeStart = aStart;
+  sLastTextChangeEnd = aStart + aLen;
+  sLastTextChangeWasInsert = aInsert;
+  *sLastTextChangeString = aStr;
+}
