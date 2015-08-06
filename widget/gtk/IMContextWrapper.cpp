@@ -200,6 +200,23 @@ IMContextWrapper::~IMContextWrapper()
         ("GTKIM: %p ~IMContextWrapper()", this));
 }
 
+nsIMEUpdatePreference
+IMContextWrapper::GetIMEUpdatePreference() const
+{
+    nsIMEUpdatePreference::Notifications notifications =
+        nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE;
+    // If it's not enabled, we don't need position change notification.
+    if (IsEnabled()) {
+        notifications |= nsIMEUpdatePreference::NOTIFY_POSITION_CHANGE;
+    }
+    nsIMEUpdatePreference updatePreference(notifications);
+    // We shouldn't notify IME of selection change caused by changes of
+    // composition string.  Therefore, we don't need to be notified selection
+    // changes which are caused by compositionchange events handled.
+    updatePreference.DontNotifyChangesCausedByComposition();
+    return updatePreference;
+}
+
 void
 IMContextWrapper::OnDestroyWindow(nsWindow* aWindow)
 {

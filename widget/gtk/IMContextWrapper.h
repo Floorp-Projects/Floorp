@@ -39,6 +39,8 @@ public:
     // I.e., the focus is in the normal editors.
     bool IsEnabled() const;
 
+    nsIMEUpdatePreference GetIMEUpdatePreference() const;
+
     // OnFocusWindow is a notification that aWindow is going to be focused.
     void OnFocusWindow(nsWindow* aWindow);
     // OnBlurWindow is a notification that aWindow is going to be unfocused.
