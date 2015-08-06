@@ -4335,6 +4335,27 @@ this.DOMApplicationRegistry = {
     });
   },
 
+  getAll: function(aCallback) {
+    debug("getAll");
+    let apps = [];
+    let tmp = [];
+
+    for (let id in this.webapps) {
+      let app = AppsUtils.cloneAppObject(this.webapps[id]);
+      if (!this._isLaunchable(app))
+        continue;
+
+      apps.push(app);
+      tmp.push({ id: id });
+    }
+
+    this._readManifests(tmp).then((aResult) => {
+      for (let i = 0; i < aResult.length; i++)
+        apps[i].manifest = aResult[i].manifest;
+      aCallback(apps);
+    });
+  },
+
   /* Check if |data| is actually a receipt */
   isReceipt: function(data) {
     try {
