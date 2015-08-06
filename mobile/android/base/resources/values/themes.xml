@@ -5,15 +5,6 @@
 
 <resources>
 
-    <!-- Bug 1147265: to prevent tap jacking, we should set
-         filterTouchesWhenObscured=true for all activities. This theme
-         should be used when there is no other relevant theme for the
-         Activity. Note: it may be helpful to inherit from a base
-         Android theme (i.e. what GeckoBase inherits from). -->
-    <style name="FilteredTouches">
-        <item name="android:filterTouchesWhenObscured">true</item>
-    </style>
-
     <!--
         Base application theme. This could be overridden by GeckoBaseTheme
         in other res/values-XXX/themes.xml.
