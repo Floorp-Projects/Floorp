@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1437165748000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1438726683000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -264,6 +264,12 @@
     </emItem>
       <emItem  blockID="i348" id="{13c9f1f9-2322-4d5c-81df-6d4bf8476ba4}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i972" id="831778-poidjao88DASfsAnindsd@jetpack">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -1329,6 +1335,12 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i968" id="{184AA5E6-741D-464a-820E-94B3ABC2F3B4}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i754" id="{bb7b7a60-f574-47c2-8a0b-4c56f2da9802}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
@@ -2339,6 +2351,12 @@
               </prefs>
     </emItem>
       <emItem  blockID="i786" id="{63eb5ed4-e1b3-47ec-a253-f8462f205350}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i970" id="hha8771ui3-Fo9j9h7aH98jsdfa8sda@jetpack">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
