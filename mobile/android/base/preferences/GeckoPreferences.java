@@ -118,6 +118,7 @@ OnSharedPreferenceChangeListener
     private static final String PREFS_MENU_CHAR_ENCODING = "browser.menu.showCharacterEncoding";
     private static final String PREFS_MP_ENABLED = "privacy.masterpassword.enabled";
     private static final String PREFS_LOGIN_MANAGE = NON_PREF_PREFIX + "signon.manage";
+    private static final String PREFS_DISABLE_ZOOMED_VIEW = "ui.zoomedview.disabled";
     private static final String PREFS_UPDATER_AUTODOWNLOAD = "app.update.autodownload";
     private static final String PREFS_UPDATER_URL = "app.update.url.android";
     private static final String PREFS_GEO_REPORTING = NON_PREF_PREFIX + "app.geo.reportdata";
@@ -736,6 +737,13 @@ OnSharedPreferenceChangeListener
                         continue;
                     }
                 } else if (PREFS_LOGIN_MANAGE.equals(key)) {
+                    if (!AppConstants.NIGHTLY_BUILD) {
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
+                } else if (PREFS_DISABLE_ZOOMED_VIEW.equals(key)) {
+                    // Only enable the ZoomedView / magnifying pref on Nightly.
                     if (!AppConstants.NIGHTLY_BUILD) {
                         preferences.removePreference(pref);
                         i--;
