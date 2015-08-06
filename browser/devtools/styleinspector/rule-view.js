@@ -2553,8 +2553,8 @@ RuleEditor.prototype = {
               selectorClass = "ruleview-selector";
               break;
             case SELECTOR_PSEUDO_CLASS:
-              selectorClass =
-                [":active", ":focus", ":hover"].includes(selectorText.value) ?
+              selectorClass = [":active", ":focus", ":hover"].some(
+                  pseudo => selectorText.value === pseudo) ?
                 "ruleview-selector-pseudo-class-lock" :
                 "ruleview-selector-pseudo-class";
               break;
