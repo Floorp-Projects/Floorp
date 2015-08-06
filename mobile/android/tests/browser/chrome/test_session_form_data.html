@@ -1,7 +1,17 @@
-// -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=671993
+Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 671993</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript;version=1.7">
 
 "use strict";
 
@@ -11,15 +21,17 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
+setup_browser();
+
 // Make the timer global so it doesn't get GC'd
 let gTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
 function sleep(wait) {
   return new Promise((resolve, reject) => {
-    do_print("sleep start");
+    dump("sleep start");
     gTimer.initWithCallback({
       notify: function () {
-        do_print("sleep end");
+        dump("sleep end");
         resolve();
       },
     }, wait, gTimer.TYPE_ONE_SHOT);
@@ -28,16 +40,16 @@ function sleep(wait) {
 
 function promiseBrowserLoaded(browser, eventType="load") {
   return new Promise((resolve, reject) => {
-    do_print("Wait browser event: " + eventType);
+    dump("Wait browser event: " + eventType);
 
     function handle(event) {
       if (event.target != browser.contentDocument) {
-        do_print("Skipping spurious '" + eventType + "' event" + " for " + event.target.location.href);
+        dump("Skipping spurious '" + eventType + "' event" + " for " + event.target.location.href);
         return;
       }
 
       browser.removeEventListener(eventType, handle, true);
-      do_print("Browser event received: " + eventType);
+      dump("Browser event received: " + eventType);
       resolve(event);
     }
 
@@ -95,19 +107,17 @@ let gBrowserApp;
 // enough pre/post events, messages or notifications to handle this without a delay.
 const CLOSE_TAB_WAIT = 2000;
 
-add_test(function setup_browser() {
+function setup_browser() {
   gChromeWin = Services.wm.getMostRecentWindow("navigator:browser");
   gBrowserApp = gChromeWin.BrowserApp;
-
-  Services.tm.mainThread.dispatch(run_next_test, Ci.nsIThread.DISPATCH_NORMAL);
-});
+}
 
 /**
  * This test ensures that form data collection respects the privacy level as
  * set by the user.
  */
-add_task(function test_formdata() {
-  const URL = "http://example.org/tests/robocop/session_formdata_sample.html";
+add_task(function* test_formdata() {
+  const URL = "http://example.org/chrome/mobile/android/tests/browser/chrome/session_formdata_sample.html";
 
   const OUTER_VALUE = "browser_formdata_" + Math.random();
   const INNER_VALUE = "browser_formdata_" + Math.random();
@@ -161,8 +171,8 @@ add_task(function test_formdata() {
 /**
  * This test ensures that form data collection restores correctly.
  */
-add_task(function test_formdata() {
-  const URL = "http://example.org/tests/robocop/session_formdata_sample.html";
+add_task(function* test_formdata2() {
+  const URL = "http://example.org/chrome/mobile/android/tests/browser/chrome/session_formdata_sample.html";
 
   const OUTER_VALUE = "browser_formdata_" + Math.random();
   const INNER_VALUE = "browser_formdata_" + Math.random();
@@ -205,4 +215,17 @@ add_task(function test_formdata() {
   gBrowserApp.closeTab(gBrowserApp.getTabForBrowser(browser));
 });
 
-run_next_test();
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=671993">Mozilla Bug 671993</a>
+<br>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1184186">Migrated from Robocop testSessionFormData</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
