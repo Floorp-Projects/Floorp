@@ -7,7 +7,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 let { console } = require("resource://gre/modules/devtools/Console.jsm");
-const RecordingUtils = require("devtools/performance/recording-utils");
+const RecordingUtils = require("devtools/toolkit/performance/utils");
 
 const PLATFORM_DATA_PREF = "devtools.performance.ui.show-platform-data";
 

@@ -15,8 +15,11 @@ const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 let { DebuggerServer } = require("devtools/server/main");
 let { console } = require("resource://gre/modules/devtools/Console.jsm");
 let { merge } = require("sdk/util/object");
-let { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
-let { getPerformanceFront, PerformanceFront } = require("devtools/performance/front");
+let { createPerformanceFront } = require("devtools/server/actors/performance");
+let RecordingUtils = require("devtools/toolkit/performance/utils");
+let {
+  PMM_loadProfilerScripts, PMM_isProfilerActive, PMM_stopProfiler, sendProfilerCommand
+} = require("devtools/toolkit/shared/profiler");
 
 let mm = null;
 
@@ -188,17 +191,16 @@ function initBackend(aUrl, targetOps={}) {
 
     yield target.makeRemote();
 
-    // Attach addition options to `target`. This is used to force mock fronts
+    // Attach addition options to `client`. This is used to force mock fronts
     // to smokescreen test different servers where memory or timeline actors
     // may not exist. Possible options that will actually work:
-    // TEST_MOCK_MEMORY_ACTOR = true
+    // TEST_PERFORMANCE_LEGACY_FRONT = true
     // TEST_MOCK_TIMELINE_ACTOR = true
-    // TEST_MOCK_PROFILER_CHECK_TIMER = number
     // TEST_PROFILER_FILTER_STATUS = array
     merge(target, targetOps);
 
-    let front = getPerformanceFront(target);
-    yield front.open();
+    let front = createPerformanceFront(target);
+    yield front.connect();
     return { target, front };
   });
 }
@@ -212,12 +214,11 @@ function initPerformance(aUrl, tool="performance", targetOps={}) {
 
     yield target.makeRemote();
 
-    // Attach addition options to `target`. This is used to force mock fronts
+    // Attach addition options to `client`. This is used to force mock fronts
     // to smokescreen test different servers where memory or timeline actors
     // may not exist. Possible options that will actually work:
-    // TEST_MOCK_MEMORY_ACTOR = true
+    // TEST_PERFORMANCE_LEGACY_FRONT = true
     // TEST_MOCK_TIMELINE_ACTOR = true
-    // TEST_MOCK_PROFILER_CHECK_TIMER = number
     // TEST_PROFILER_FILTER_STATUS = array
     merge(target, targetOps);
 
@@ -231,9 +232,9 @@ function initPerformance(aUrl, tool="performance", targetOps={}) {
  * Initializes a webconsole panel. Returns a target, panel and toolbox reference.
  * Also returns a console property that allows calls to `profile` and `profileEnd`.
  */
-function initConsole(aUrl) {
+function initConsole(aUrl, options) {
   return Task.spawn(function*() {
-    let { target, toolbox, panel } = yield initPerformance(aUrl, "webconsole");
+    let { target, toolbox, panel } = yield initPerformance(aUrl, "webconsole", options);
     let { hud } = panel;
     return {
       target, toolbox, panel, console: {
@@ -263,13 +264,6 @@ function consoleExecute (console, method, val) {
     }
   }
   return promise;
-}
-
-function waitForProfilerConnection() {
-  let { promise, resolve } = Promise.defer();
-  Services.obs.addObserver(resolve, "performance-tools-connection-opened", false);
-  return promise.then(() =>
-    Services.obs.removeObserver(resolve, "performance-tools-connection-opened"));
 }
 
 function* teardown(panel) {
@@ -337,9 +331,12 @@ function* startRecording(panel, options = {
 }) {
   let win = panel.panelWin;
   let clicked = panel.panelWin.PerformanceView.once(win.EVENTS.UI_START_RECORDING);
-  let willStart = panel.panelWin.PerformanceController.once(win.EVENTS.RECORDING_WILL_START);
   let hasStarted = panel.panelWin.PerformanceController.once(win.EVENTS.RECORDING_STARTED);
   let button = win.$("#main-record-button");
+  let stateChanged = options.waitForStateChanged
+    ? once(win.PerformanceView, win.EVENTS.UI_STATE_CHANGED)
+    : Promise.resolve();
+
 
   ok(!button.hasAttribute("checked"),
     "The record button should not be checked yet.");
@@ -349,25 +346,17 @@ function* startRecording(panel, options = {
   click(win, button);
   yield clicked;
 
-  yield willStart;
-
   ok(button.hasAttribute("checked"),
     "The record button should now be checked.");
   ok(button.hasAttribute("locked"),
     "The record button should be locked.");
 
-  let stateChanged = options.waitForStateChanged
-    ? once(win.PerformanceView, win.EVENTS.UI_STATE_CHANGED)
-    : Promise.resolve();
-
   yield hasStarted;
-
-  let overviewRendered = options.waitForOverview
+  yield options.waitForOverview
     ? once(win.OverviewView, win.EVENTS.OVERVIEW_RENDERED)
     : Promise.resolve();
 
   yield stateChanged;
-  yield overviewRendered;
 
   is(win.PerformanceView.getState(), "recording",
     "The current state is 'recording'.");
@@ -386,6 +375,7 @@ function* stopRecording(panel, options = {
   let clicked = panel.panelWin.PerformanceView.once(win.EVENTS.UI_STOP_RECORDING);
   let willStop = panel.panelWin.PerformanceController.once(win.EVENTS.RECORDING_WILL_STOP);
   let hasStopped = panel.panelWin.PerformanceController.once(win.EVENTS.RECORDING_STOPPED);
+  let controllerStopped = panel.panelWin.PerformanceController.once(win.EVENTS.CONTROLLER_STOPPED_RECORDING);
   let button = win.$("#main-record-button");
   let overviewRendered = null;
 
@@ -427,6 +417,8 @@ function* stopRecording(panel, options = {
     "The record button should not be checked.");
   ok(!button.hasAttribute("locked"),
     "The record button should not be locked.");
+
+  yield controllerStopped;
 }
 
 function waitForWidgetsRendered(panel) {
@@ -546,8 +538,6 @@ function getInflatedStackLocations(thread, sample) {
  * Synthesize a profile for testing.
  */
 function synthesizeProfileForTest(samples) {
-  const RecordingUtils = require("devtools/performance/recording-utils");
-
   samples.unshift({
     time: 0,
     frames: [
@@ -560,40 +550,4 @@ function synthesizeProfileForTest(samples) {
     samples: samples,
     markers: []
   }, uniqueStacks);
-}
-
-function PMM_isProfilerActive () {
-  return sendProfilerCommand("IsActive");
-}
-
-function PMM_stopProfiler () {
-  return Task.spawn(function*() {
-    let isActive = (yield sendProfilerCommand("IsActive")).isActive;
-    if (isActive) {
-      return sendProfilerCommand("StopProfiler");
-    }
-  });
-}
-
-function sendProfilerCommand (method, args=[]) {
-  let deferred = Promise.defer();
-
-  if (!mm) {
-    throw new Error("`loadFrameScripts()` must be called when using MessageManager.");
-  }
-
-  let id = generateUUID().toString();
-  mm.addMessageListener("devtools:test:profiler:response", handler);
-  mm.sendAsyncMessage("devtools:test:profiler", { method, args, id });
-
-  function handler ({ data }) {
-    if (id !== data.id) {
-      return;
-    }
-
-    mm.removeMessageListener("devtools:test:profiler:response", handler);
-    deferred.resolve(data.data);
-  }
-
-  return deferred.promise;
 }

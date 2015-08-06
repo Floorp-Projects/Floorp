@@ -5,8 +5,6 @@
  * Tests if the performance tool can import profiler data from the
  * original profiler tool (Performance Recording v1, and Profiler data v2) and the correct views and graphs are loaded.
  */
-let RecordingUtils = require("devtools/performance/recording-utils");
-
 let TICKS_DATA = (function () {
   let ticks = [];
   for (let i = 0; i < 100; i++) {
