@@ -509,10 +509,39 @@ ScriptProcessorNode::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
+void
+ScriptProcessorNode::EventListenerAdded(nsIAtom* aType)
+{
+  AudioNode::EventListenerAdded(aType);
+  if (aType == nsGkAtoms::onaudioprocess) {
+    UpdateConnectedStatus();
+  }
+}
+
+void
+ScriptProcessorNode::EventListenerRemoved(nsIAtom* aType)
+{
+  AudioNode::EventListenerRemoved(aType);
+  if (aType == nsGkAtoms::onaudioprocess) {
+    UpdateConnectedStatus();
+  }
+}
+
 JSObject*
 ScriptProcessorNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return ScriptProcessorNodeBinding::Wrap(aCx, this, aGivenProto);
+}
+
+void
+ScriptProcessorNode::UpdateConnectedStatus()
+{
+  bool isConnected = !(OutputNodes().IsEmpty() && OutputParams().IsEmpty());
+  if (isConnected && HasListenersFor(nsGkAtoms::onaudioprocess)) {
+    MarkActive();
+  } else {
+    MarkInactive();
+  }
 }
 
 } // namespace dom
