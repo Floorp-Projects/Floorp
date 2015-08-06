@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko.restrictions;
 
+import org.mozilla.gecko.AboutPages;
+
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
@@ -17,9 +19,6 @@ import java.util.List;
 public class RestrictedProfileConfiguration implements RestrictionConfiguration {
     static List<Restriction> DEFAULT_RESTRICTIONS = Arrays.asList(
             Restriction.DISALLOW_INSTALL_EXTENSION,
-            Restriction.DISALLOW_INSTALL_APPS,
-            Restriction.DISALLOW_TOOLS_MENU,
-            Restriction.DISALLOW_REPORT_SITE_ISSUE,
             Restriction.DISALLOW_IMPORT_SETTINGS,
             Restriction.DISALLOW_DEVELOPER_TOOLS,
             Restriction.DISALLOW_CUSTOMIZE_HOME,
@@ -27,12 +26,9 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
             Restriction.DISALLOW_LOCATION_SERVICE,
             Restriction.DISALLOW_DISPLAY_SETTINGS,
             Restriction.DISALLOW_CLEAR_HISTORY,
-            Restriction.DISALLOW_MASTER_PASSWORD
+            Restriction.DISALLOW_MASTER_PASSWORD,
+            Restriction.DISALLOW_GUEST_BROWSING
     );
-
-    private static final String ABOUT_ADDONS = "about:addons";
-    private static final String ABOUT_PRIVATE_BROWSING = "about:privatebrowsing";
-    private static final String ABOUT_CONFIG = "about:config";
 
     private Context context;
 
@@ -55,15 +51,15 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
 
     @Override
     public boolean canLoadUrl(String url) {
-        if (!isAllowed(Restriction.DISALLOW_INSTALL_EXTENSION) && url.toLowerCase().startsWith(ABOUT_ADDONS)) {
+        if (!isAllowed(Restriction.DISALLOW_INSTALL_EXTENSION) && AboutPages.isAboutAddons(url)) {
             return false;
         }
 
-        if (!isAllowed(Restriction.DISALLOW_PRIVATE_BROWSING) && url.toLowerCase().startsWith(ABOUT_PRIVATE_BROWSING)) {
+        if (!isAllowed(Restriction.DISALLOW_PRIVATE_BROWSING) && AboutPages.isAboutPrivateBrowsing(url)) {
             return false;
         }
 
-        if (url.toLowerCase().startsWith(ABOUT_CONFIG)) {
+        if (AboutPages.isAboutConfig(url)) {
             // Always block access to about:config to prevent circumventing restrictions (Bug 1189233)
             return false;
         }

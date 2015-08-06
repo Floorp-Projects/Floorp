@@ -50,11 +50,25 @@ public class AboutPages {
         return StringUtils.getQueryParameter(aboutHomeUrl, PANEL_PARAM);
     }
 
-    public static final boolean isAboutReader(final String url) {
-        if (url == null) {
-            return false;
-        }
-        return url.startsWith(READER);
+    public static boolean isAboutReader(final String url) {
+        return isAboutPage(READER, url);
+    }
+
+    public static boolean isAboutConfig(final String url) {
+        return isAboutPage(CONFIG, url);
+    }
+
+    public static boolean isAboutAddons(final String url) {
+        return isAboutPage(ADDONS, url);
+    }
+
+    public static boolean isAboutPrivateBrowsing(final String url) {
+        return isAboutPage(PRIVATEBROWSING, url);
+    }
+
+    public static boolean isAboutPage(String page, String url) {
+        return url != null && url.toLowerCase().startsWith(page);
+
     }
 
     private static final String[] DEFAULT_ICON_PAGES = new String[] {
