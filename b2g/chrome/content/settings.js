@@ -78,6 +78,12 @@ var SettingsListener = {
 
 SettingsListener.init();
 
+// =================== Mono Audio ======================
+
+SettingsListener.observe('accessibility.monoaudio.enable', false, function(value) {
+  Services.prefs.setBoolPref('accessibility.monoaudio.enable', value);
+});
+
 // =================== Console ======================
 
 SettingsListener.observe('debug.console.enabled', true, function(value) {

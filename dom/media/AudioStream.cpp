@@ -17,6 +17,7 @@
 #include "mozilla/Telemetry.h"
 #include "CubebUtils.h"
 #include "nsPrintfCString.h"
+#include "gfxPrefs.h"
 
 namespace mozilla {
 
@@ -130,6 +131,7 @@ AudioStream::AudioStream()
   , mBytesPerFrame(0)
   , mState(INITIALIZED)
   , mLastGoodPosition(0)
+  , mIsMonoAudioEnabled(gfxPrefs::MonoAudio())
 {
 }
 
@@ -421,9 +423,12 @@ AudioStream::Write(const AudioDataValue* aBuf, uint32_t aFrames)
   // Downmix to Stereo.
   if (mChannels > 2 && mChannels <= 8) {
     DownmixAudioToStereo(const_cast<AudioDataValue*> (aBuf), mChannels, aFrames);
-  }
-  else if (mChannels > 8) {
+  } else if (mChannels > 8) {
     return NS_ERROR_FAILURE;
+  }
+
+  if (mChannels >= 2 && mIsMonoAudioEnabled) {
+    DownmixStereoToMono(const_cast<AudioDataValue*> (aBuf), aFrames);
   }
 
   const uint8_t* src = reinterpret_cast<const uint8_t*>(aBuf);
