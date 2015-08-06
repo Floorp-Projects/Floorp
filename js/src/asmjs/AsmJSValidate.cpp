@@ -485,7 +485,7 @@ PeekToken(AsmJSParser& parser, TokenKind* tkp)
             return false;
         if (tk != TOK_SEMI)
             break;
-        ts.consumeKnownToken(TOK_SEMI);
+        ts.consumeKnownToken(TOK_SEMI, TokenStream::Operand);
     }
     *tkp = tk;
     return true;
@@ -1605,7 +1605,8 @@ class MOZ_STACK_CLASS ModuleCompiler
         // delayed until the compilation is off the stack and more memory can be freed.
         gc::AutoSuppressGC nogc(cx_);
         TokenPos pos;
-        if (!tokenStream().peekTokenPos(&pos))
+        TokenStream::Modifier modifier = tokenStream().hasLookahead() ? tokenStream().getLookaheadModifier() : TokenStream::None;
+        if (!tokenStream().peekTokenPos(&pos, modifier))
             return false;
         return failOffset(pos.begin, str);
     }
@@ -4911,7 +4912,7 @@ CheckModuleProcessingDirectives(ModuleCompiler& m)
     TokenStream& ts = m.parser().tokenStream;
     while (true) {
         bool matched;
-        if (!ts.matchToken(&matched, TOK_STRING))
+        if (!ts.matchToken(&matched, TOK_STRING, TokenStream::Operand))
             return false;
         if (!matched)
             return true;
@@ -9777,12 +9778,12 @@ ParseFunction(ModuleCompiler& m, ParseNode** fnOut)
 {
     TokenStream& tokenStream = m.tokenStream();
 
-    tokenStream.consumeKnownToken(TOK_FUNCTION);
+    tokenStream.consumeKnownToken(TOK_FUNCTION, TokenStream::Operand);
 
     RootedPropertyName name(m.cx());
 
     TokenKind tk;
-    if (!tokenStream.getToken(&tk))
+    if (!tokenStream.getToken(&tk, TokenStream::Operand))
         return false;
     if (tk == TOK_NAME) {
         name = tokenStream.currentName();
