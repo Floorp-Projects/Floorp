@@ -30,6 +30,13 @@ MacroAssembler::andPtr(Imm32 imm, Register dest)
 }
 
 void
+MacroAssembler::and64(Imm64 imm, Register64 dest)
+{
+    movq(ImmWord(uintptr_t(imm.value)), ScratchReg);
+    andq(ScratchReg, dest.reg);
+}
+
+void
 MacroAssembler::orPtr(Register src, Register dest)
 {
     orq(src, dest);
@@ -39,6 +46,12 @@ void
 MacroAssembler::orPtr(Imm32 imm, Register dest)
 {
     orq(imm, dest);
+}
+
+void
+MacroAssembler::or64(Register64 src, Register64 dest)
+{
+    orq(src.reg, dest.reg);
 }
 
 void

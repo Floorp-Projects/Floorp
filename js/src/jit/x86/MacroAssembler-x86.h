@@ -240,6 +240,14 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         push(tagOf(addr));
         push(payloadOfAfterStackPush(addr));
     }
+    void push64(Register64 src) {
+        push(src.high);
+        push(src.low);
+    }
+    void pop64(Register64 dest) {
+        pop(dest.low);
+        pop(dest.high);
+    }
     void storePayload(const Value& val, Operand dest) {
         jsval_layout jv = JSVAL_TO_IMPL(val);
         if (val.isMarkable())
@@ -607,6 +615,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void addPtr(const Address& src, Register dest) {
         addl(Operand(src), dest);
     }
+    void add64(Imm32 imm, Register64 dest) {
+        addl(imm, dest.low);
+        adcl(Imm32(0), dest.high);
+    }
     void subPtr(Imm32 imm, Register dest) {
         sub32(imm, dest);
     }
@@ -621,6 +633,38 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
     void mulBy3(const Register& src, const Register& dest) {
         lea(Operand(src, src, TimesTwo), dest);
+    }
+    // Note: this function clobbers eax and edx.
+    void mul64(Imm64 imm, const Register64& dest) {
+        // LOW32  = LOW(LOW(dest) * LOW(imm));
+        // HIGH32 = LOW(HIGH(dest) * LOW(imm)) [multiply imm into upper bits]
+        //        + LOW(LOW(dest) * HIGH(imm)) [multiply dest into upper bits]
+        //        + HIGH(LOW(dest) * LOW(imm)) [carry]
+
+        MOZ_ASSERT(dest.low != eax && dest.low != edx);
+        MOZ_ASSERT(dest.high != eax && dest.high != edx);
+
+        // HIGH(dest) = LOW(HIGH(dest) * LOW(imm));
+        movl(Imm32(imm.value & 0xFFFFFFFFL), edx);
+        imull(edx, dest.high);
+
+        // edx:eax = LOW(dest) * LOW(imm);
+        movl(Imm32(imm.value & 0xFFFFFFFFL), edx);
+        movl(dest.low, eax);
+        mull(edx);
+
+        // HIGH(dest) += edx;
+        addl(edx, dest.high);
+
+        // HIGH(dest) += LOW(LOW(dest) * HIGH(imm));
+        if (((imm.value >> 32) & 0xFFFFFFFFL) == 5)
+            leal(Operand(dest.low, dest.low, TimesFour), edx);
+        else
+            MOZ_CRASH("Unsupported imm");
+        addl(edx, dest.high);
+
+        // LOW(dest) = eax;
+        movl(eax, dest.low);
     }
 
     void branch32(Condition cond, AbsoluteAddress lhs, Imm32 rhs, Label* label) {
@@ -712,6 +756,18 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         j(cond, label);
     }
 
+    void branchTest64(Condition cond, Register64 lhs, Register64 rhs, Register temp, Label* label) {
+        if (cond == Assembler::Zero) {
+            MOZ_ASSERT(lhs.low == rhs.low);
+            MOZ_ASSERT(lhs.high == rhs.high);
+            movl(lhs.low, temp);
+            orl(lhs.high, temp);
+            branchTestPtr(cond, temp, temp, label);
+        } else {
+            MOZ_CRASH("Unsupported condition");
+        }
+    }
+
     void movePtr(ImmWord imm, Register dest) {
         movl(Imm32(imm.value), dest);
     }
@@ -723,6 +779,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
     void movePtr(ImmGCPtr imm, Register dest) {
         movl(imm, dest);
+    }
+    void move64(Register64 src, Register64 dest) {
+        movl(src.low, dest.low);
+        movl(src.high, dest.high);
     }
     void loadPtr(const Address& address, Register dest) {
         movl(Operand(address), dest);
@@ -741,6 +801,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
     void load32(AbsoluteAddress address, Register dest) {
         movl(Operand(address), dest);
+    }
+    void load64(const Address& address, Register64 dest) {
+        movl(Operand(address), dest.low);
+        movl(Operand(Address(address.base, address.offset + 4)), dest.high);
     }
     template <typename T>
     void storePtr(ImmWord imm, T address) {
@@ -768,6 +832,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
     void store32(Register src, AbsoluteAddress address) {
         movl(src, Operand(address));
+    }
+    void store64(Register64 src, Address address) {
+        movl(src.low, Operand(address));
+        movl(src.high, Operand(Address(address.base, address.offset + 4)));
     }
 
     void setStackArg(Register reg, uint32_t arg) {
@@ -1060,8 +1128,16 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void rshiftPtrArithmetic(Imm32 imm, Register dest) {
         sarl(imm, dest);
     }
+    void rshift64(Imm32 imm, Register64 dest) {
+        shrdl(imm, dest.high, dest.low);
+        shrl(imm, dest.high);
+    }
     void lshiftPtr(Imm32 imm, Register dest) {
         shll(imm, dest);
+    }
+    void lshift64(Imm32 imm, Register64 dest) {
+        shldl(imm, dest.low, dest.high);
+        shll(imm, dest.low);
     }
 
     void loadInstructionPointerAfterCall(Register dest) {
@@ -1085,6 +1161,13 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void convertUInt32ToFloat32(Register src, FloatRegister dest) {
         convertUInt32ToDouble(src, dest);
         convertDoubleToFloat32(dest, dest);
+    }
+
+    void convertUInt64ToDouble(Register64 src, Register temp, FloatRegister dest);
+
+    void mulDoublePtr(ImmPtr imm, Register temp, FloatRegister dest) {
+        movl(imm, temp);
+        vmulsd(Operand(temp, 0), dest, dest);
     }
 
     void inc64(AbsoluteAddress dest) {
