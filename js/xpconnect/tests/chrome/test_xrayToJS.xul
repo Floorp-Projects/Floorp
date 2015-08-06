@@ -187,7 +187,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     constructorProps(["join", "reverse", "sort", "push", "pop", "shift",
                       "unshift", "splice", "concat", "slice", "isArray",
                       "lastIndexOf", "indexOf", "forEach", "map", "filter",
-                      "every", "some", "reduce", "reduceRight", "from", "of"]);
+                      "every", "some", "reduce", "reduceRight", "from", "of",
+                      Symbol.species]);
   for (var c of typedArrayClasses) {
     gPrototypeProperties[c] = ["constructor", "BYTES_PER_ELEMENT"];
     gConstructorProperties[c] = constructorProps(["BYTES_PER_ELEMENT"]);
