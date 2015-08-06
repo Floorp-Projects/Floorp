@@ -154,10 +154,6 @@ MediaFormatReader::Shutdown()
 void
 MediaFormatReader::InitLayersBackendType()
 {
-  if (!IsVideoContentType(mDecoder->GetResource()->GetContentType())) {
-    // Not playing video, we don't care about the layers backend type.
-    return;
-  }
   // Extract the layer manager backend type so that platform decoders
   // can determine whether it's worthwhile using hardware accelerated
   // video decoding.
