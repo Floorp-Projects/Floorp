@@ -293,7 +293,7 @@
               </deck>
         </groupbox>
         <groupbox id="syncOptions">
-          <caption><label>&signedIn.engines.caption;</label></caption>
+          <caption><label>&signedIn.engines.label;</label></caption>
           <hbox id="fxaSyncEngines">
             <vbox align="start">
               <checkbox label="&engine.tabs.label;"

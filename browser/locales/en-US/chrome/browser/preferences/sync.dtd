@@ -89,7 +89,7 @@ both, to better adapt this sentence to their language.
 <!ENTITY signedOut.accountBox.create  "Create Account">
 <!ENTITY signedOut.accountBox.signin  "Sign In">
 
-<!ENTITY signedIn.engines.caption     "Sync between all devices">
+<!ENTITY signedIn.engines.label       "Sync across all devices">
 
 <!ENTITY mobilePromo.start            "Download Firefox for ">
 <!-- LOCALIZATION NOTE (mobilePromo.androidLink): This is a link title that links to https://www.mozilla.org/firefox/android/ -->
