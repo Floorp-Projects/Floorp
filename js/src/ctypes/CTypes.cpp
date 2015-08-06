@@ -1828,6 +1828,55 @@ TypeOverflow(JSContext* cx, const char* expected, HandleValue actual)
 }
 
 static bool
+UndefinedSizeCastError(JSContext* cx, HandleObject targetTypeObj)
+{
+  AutoString targetTypeSource;
+  JSAutoByteString targetTypeBytes;
+  BuildTypeSource(cx, targetTypeObj, true, targetTypeSource);
+  const char* targetTypeStr = EncodeLatin1(cx, targetTypeSource,
+                                           targetTypeBytes);
+  if (!targetTypeStr)
+    return false;
+
+  JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                       CTYPESMSG_UNDEFINED_SIZE_CAST, targetTypeStr);
+  return false;
+}
+
+static bool
+SizeMismatchCastError(JSContext* cx,
+                      HandleObject sourceTypeObj, HandleObject targetTypeObj,
+                      size_t sourceSize, size_t targetSize)
+{
+  AutoString sourceTypeSource;
+  JSAutoByteString sourceTypeBytes;
+  BuildTypeSource(cx, sourceTypeObj, true, sourceTypeSource);
+  const char* sourceTypeStr = EncodeLatin1(cx, sourceTypeSource,
+                                           sourceTypeBytes);
+  if (!sourceTypeStr)
+    return false;
+
+  AutoString targetTypeSource;
+  JSAutoByteString targetTypeBytes;
+  BuildTypeSource(cx, targetTypeObj, true, targetTypeSource);
+  const char* targetTypeStr = EncodeLatin1(cx, targetTypeSource,
+                                           targetTypeBytes);
+  if (!targetTypeStr)
+    return false;
+
+  char sourceSizeStr[16];
+  char targetSizeStr[16];
+  JS_snprintf(sourceSizeStr, 16, "%u", sourceSize);
+  JS_snprintf(targetSizeStr, 16, "%u", targetSize);
+
+  JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                       CTYPESMSG_SIZE_MISMATCH_CAST,
+                       targetTypeStr, sourceTypeStr,
+                       targetSizeStr, sourceSizeStr);
+  return false;
+}
+
+static bool
 UndefinedSizePointerError(JSContext* cx, const char* action, HandleObject obj)
 {
   JSAutoByteString valBytes;
@@ -7667,7 +7716,7 @@ CData::Cast(JSContext* cx, unsigned argc, Value* vp)
     return ArgumentTypeMismatch(cx, "first ", "ctypes.cast", "a CData");
   }
   RootedObject sourceData(cx, &args[0].toObject());
-  JSObject* sourceType = CData::GetCType(sourceData);
+  RootedObject sourceType(cx, CData::GetCType(sourceData));
 
   if (args[1].isPrimitive() || !CType::IsCType(&args[1].toObject())) {
     return ArgumentTypeMismatch(cx, "second ", "ctypes.cast", "a CType");
@@ -7675,11 +7724,12 @@ CData::Cast(JSContext* cx, unsigned argc, Value* vp)
 
   RootedObject targetType(cx, &args[1].toObject());
   size_t targetSize;
-  if (!CType::GetSafeSize(targetType, &targetSize) ||
-      targetSize > CType::GetSize(sourceType)) {
-    JS_ReportError(cx,
-      "target CType has undefined or larger size than source CType");
-    return false;
+  if (!CType::GetSafeSize(targetType, &targetSize)) {
+    return UndefinedSizeCastError(cx, targetType);
+  }
+  if (targetSize > CType::GetSize(sourceType)) {
+    return SizeMismatchCastError(cx, sourceType, targetType,
+                                 CType::GetSize(sourceType), targetSize);
   }
 
   // Construct a new CData object with a type of 'targetType' and a referent

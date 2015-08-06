@@ -2204,9 +2204,9 @@ function run_cast_tests() {
   do_check_eq(i.value, k.value);
 
   // Test casting to a type of undefined or larger size.
-  do_check_throws(function() { ctypes.cast(i, ctypes.void_t); }, Error);
-  do_check_throws(function() { ctypes.cast(i, ctypes.int32_t.array()); }, Error);
-  do_check_throws(function() { ctypes.cast(i, ctypes.int64_t); }, Error);
+  do_check_throws(function() { ctypes.cast(i, ctypes.void_t); }, TypeError);
+  do_check_throws(function() { ctypes.cast(i, ctypes.int32_t.array()); }, TypeError);
+  do_check_throws(function() { ctypes.cast(i, ctypes.int64_t); }, TypeError);
 
   // Test casting between special types.
   let g_t = ctypes.StructType("g_t", [{ a: ctypes.int32_t }, { b: ctypes.double }]);
