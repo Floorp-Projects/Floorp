@@ -11650,8 +11650,9 @@ nsIDocument::HandlePendingFullscreenRequest(const FullscreenRequest& aRequest,
     return false;
   }
 
-  doc->ApplyFullscreen(aRequest);
-  *aHandled = true;
+  if (doc->ApplyFullscreen(aRequest)) {
+    *aHandled = true;
+  }
   return true;
 }
 
@@ -11712,12 +11713,12 @@ ClearPendingFullscreenRequests(nsIDocument* aDoc)
   }
 }
 
-void
+bool
 nsDocument::ApplyFullscreen(const FullscreenRequest& aRequest)
 {
   Element* elem = aRequest.GetElement();
   if (!FullscreenElementReadyCheck(elem, aRequest.mIsCallerChrome)) {
-    return;
+    return false;
   }
 
   // Stash a reference to any existing fullscreen doc, we'll use this later
@@ -11813,6 +11814,7 @@ nsDocument::ApplyFullscreen(const FullscreenRequest& aRequest)
   for (uint32_t i = 0; i < changed.Length(); ++i) {
     DispatchFullScreenChange(changed[changed.Length() - i - 1]);
   }
+  return true;
 }
 
 NS_IMETHODIMP
