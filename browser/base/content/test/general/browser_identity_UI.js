@@ -43,7 +43,6 @@ var tests = [
   {
     name: "subdomain HTTPS",
     location: "https://test1.example.com/",
-
     effectiveHost: "example.com",
     isHTTPS: true
   },
@@ -104,12 +103,14 @@ function nextTest() {
 
 function checkResult() {
   // Sanity check other values, and the value of gIdentityHandler.getEffectiveHost()
-  is(gIdentityHandler._lastUri.spec, gCurrentTest.location, "location matches for test " + gTestDesc);
+  is(gIdentityHandler._uri.spec, gCurrentTest.location, "location matches for test " + gTestDesc);
   // getEffectiveHost can't be called for all modes
-  if (gCurrentTest.effectiveHost === null)
-    is(gIdentityHandler._mode == gIdentityHandler.IDENTITY_MODE_UNKNOWN || gIdentityHandler._mode == gIdentityHandler.IDENTITY_MODE_CHROMEUI, true, "mode matched");
-  else
+  if (gCurrentTest.effectiveHost === null) {
+    let identityBox = document.getElementById("identity-box");
+    is(identityBox.className == gIdentityHandler.IDENTITY_MODE_UNKNOWN || identityBox.className == gIdentityHandler.IDENTITY_MODE_CHROMEUI, true, "mode matched");
+  } else {
     is(gIdentityHandler.getEffectiveHost(), gCurrentTest.effectiveHost, "effectiveHost matches for test " + gTestDesc);
+  }
 
   executeSoon(nextTest);
 }
