@@ -72,8 +72,6 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     void visitOutOfLineTruncate(OutOfLineTruncate* ool);
     void visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32* ool);
 
-    void visitRandom(LRandom* ins);
-
   private:
     void asmJSAtomicComputeAddress(Register addrTemp, Register ptrReg, bool boundsCheck,
                                    int32_t offset, int32_t endOffset);

@@ -604,6 +604,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void addPtr(const Address& src, Register dest) {
         addq(Operand(src), dest);
     }
+    void add64(Imm32 imm, Register64 dest) {
+        addq(imm, dest.reg);
+    }
     void subPtr(Imm32 imm, Register dest) {
         subq(imm, dest);
     }
@@ -618,6 +621,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void mulBy3(const Register& src, const Register& dest) {
         lea(Operand(src, src, TimesTwo), dest);
+    }
+    void mul64(Imm64 imm, const Register64& dest) {
+        movq(ImmWord(uintptr_t(imm.value)), ScratchReg);
+        imulq(ScratchReg, dest.reg);
     }
 
     void branch32(Condition cond, AbsoluteAddress lhs, Imm32 rhs, Label* label) {
@@ -741,6 +748,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         j(cond, label);
     }
 
+    void branchTest64(Condition cond, Register64 lhs, Register64 rhs, Register temp, Label* label) {
+        branchTestPtr(cond, lhs.reg, rhs.reg, label);
+    }
+
     void movePtr(Register src, Register dest) {
         movq(src, dest);
     }
@@ -758,6 +769,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void movePtr(ImmGCPtr imm, Register dest) {
         movq(imm, dest);
+    }
+    void move64(Register64 src, Register64 dest) {
+        movq(src.reg, dest.reg);
     }
     void loadPtr(AbsoluteAddress address, Register dest) {
         if (X86Encoding::IsAddressImmediate(address.addr)) {
@@ -789,6 +803,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
             mov(ImmPtr(address.addr), scratch);
             load32(Address(scratch, 0x0), dest);
         }
+    }
+    void load64(const Address& address, Register64 dest) {
+        movq(Operand(address), dest.reg);
     }
     template <typename T>
     void storePtr(ImmWord imm, T address) {
@@ -837,14 +854,23 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
             store32(src, Address(scratch, 0x0));
         }
     }
+    void store64(Register64 src, Address address) {
+        movq(src.reg, Operand(address));
+    }
     void rshiftPtr(Imm32 imm, Register dest) {
         shrq(imm, dest);
     }
     void rshiftPtrArithmetic(Imm32 imm, Register dest) {
         sarq(imm, dest);
     }
+    void rshift64(Imm32 imm, Register64 dest) {
+        shrq(imm, dest.reg);
+    }
     void lshiftPtr(Imm32 imm, Register dest) {
         shlq(imm, dest);
+    }
+    void lshift64(Imm32 imm, Register64 dest) {
+        shlq(imm, dest.reg);
     }
     void xorPtr(Imm32 imm, Register dest) {
         xorq(imm, dest);
@@ -858,11 +884,18 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void orPtr(Register src, Register dest) {
         orq(src, dest);
     }
+    void or64(Register64 src, Register64 dest) {
+        orq(src.reg, dest.reg);
+    }
     void andPtr(Imm32 imm, Register dest) {
         andq(imm, dest);
     }
     void andPtr(Register src, Register dest) {
         andq(src, dest);
+    }
+    void and64(Imm64 imm, Register64 dest) {
+        movq(ImmWord(uintptr_t(imm.value)), ScratchReg);
+        andq(ScratchReg, dest.reg);
     }
 
     void splitTag(Register src, Register dest) {
@@ -1386,6 +1419,15 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
 
     void convertUInt32ToFloat32(Register src, FloatRegister dest) {
         vcvtsq2ss(src, dest, dest);
+    }
+
+    void convertUInt64ToDouble(Register64 src, Register temp, FloatRegister dest) {
+        vcvtsi2sdq(src.reg, dest);
+    }
+
+    void mulDoublePtr(ImmPtr imm, Register temp, FloatRegister dest) {
+        movq(imm, ScratchReg);
+        vmulsd(Operand(ScratchReg, 0), dest, dest);
     }
 
     void inc64(AbsoluteAddress dest) {

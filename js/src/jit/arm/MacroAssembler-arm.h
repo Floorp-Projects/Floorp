@@ -987,6 +987,17 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         subPtr(imm, lhs);
         branch32(cond, lhs, Imm32(0), label);
     }
+    void branchTest64(Condition cond, Register64 lhs, Register64 rhs, Register temp, Label* label) {
+        if (cond == Assembler::Zero) {
+            MOZ_ASSERT(lhs.low == rhs.low);
+            MOZ_ASSERT(lhs.high == rhs.high);
+            mov(lhs.low, ScratchRegister);
+            or32(lhs.high, ScratchRegister);
+            branchTestPtr(cond, ScratchRegister, ScratchRegister, label);
+        } else {
+            MOZ_CRASH("Unsupported condition");
+        }
+    }
     void moveValue(const Value& val, Register type, Register data);
 
     CodeOffsetJump jumpWithPatch(RepatchLabel* label, Condition cond = Always,
@@ -1206,6 +1217,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void and32(Imm32 imm, Register dest);
     void and32(Imm32 imm, const Address& dest);
     void and32(const Address& src, Register dest);
+    void and64(Imm64 imm, Register64 dest) {
+        and32(Imm32(imm.value & 0xFFFFFFFFL), dest.low);
+        and32(Imm32((imm.value >> 32) & 0xFFFFFFFFL), dest.high);
+    }
     void or32(Register src, Register dest);
     void or32(Imm32 imm, Register dest);
     void or32(Imm32 imm, const Address& dest);
@@ -1213,10 +1228,18 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void xorPtr(Register src, Register dest);
     void orPtr(Imm32 imm, Register dest);
     void orPtr(Register src, Register dest);
+    void or64(Register64 src, Register64 dest) {
+        or32(src.low, dest.low);
+        or32(src.high, dest.high);
+    }
     void andPtr(Imm32 imm, Register dest);
     void andPtr(Register src, Register dest);
     void addPtr(Register src, Register dest);
     void addPtr(const Address& src, Register dest);
+    void add64(Imm32 imm, Register64 dest) {
+        ma_add(imm, dest.low, SetCC);
+        ma_adc(Imm32(0), dest.high, LeaveCC);
+    }
     void not32(Register reg);
 
     void move32(Imm32 imm, Register dest);
@@ -1227,6 +1250,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void movePtr(ImmPtr imm, Register dest);
     void movePtr(AsmJSImmPtr imm, Register dest);
     void movePtr(ImmGCPtr imm, Register dest);
+    void move64(Register64 src, Register64 dest) {
+        move32(src.low, dest.low);
+        move32(src.high, dest.high);
+    }
 
     void load8SignExtend(const Address& address, Register dest);
     void load8SignExtend(const BaseIndex& src, Register dest);
@@ -1243,6 +1270,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void load32(const Address& address, Register dest);
     void load32(const BaseIndex& address, Register dest);
     void load32(AbsoluteAddress address, Register dest);
+    void load64(const Address& address, Register64 dest) {
+        load32(address, dest.low);
+        load32(Address(address.base, address.offset + 4), dest.high);
+    }
 
     void loadPtr(const Address& address, Register dest);
     void loadPtr(const BaseIndex& src, Register dest);
@@ -1308,6 +1339,11 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void store32(Imm32 src, const BaseIndex& address);
 
     void store32_NoSecondScratch(Imm32 src, const Address& address);
+
+    void store64(Register64 src, Address address) {
+        store32(src.low, address);
+        store32(src.high, Address(address.base, address.offset + 4));
+    }
 
     template <typename T> void storePtr(ImmWord imm, T address);
     template <typename T> void storePtr(ImmPtr imm, T address);
@@ -1653,6 +1689,39 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void mulBy3(const Register& src, const Register& dest) {
         as_add(dest, src, lsl(src, 1));
     }
+    void mul64(Imm64 imm, const Register64& dest) {
+        // LOW32  = LOW(LOW(dest) * LOW(imm));
+        // HIGH32 = LOW(HIGH(dest) * LOW(imm)) [multiply imm into upper bits]
+        //        + LOW(LOW(dest) * HIGH(imm)) [multiply dest into upper bits]
+        //        + HIGH(LOW(dest) * LOW(imm)) [carry]
+
+        // HIGH(dest) = LOW(HIGH(dest) * LOW(imm));
+        ma_mov(Imm32(imm.value & 0xFFFFFFFFL), ScratchRegister);
+        as_mul(dest.high, dest.high, ScratchRegister);
+
+        // high:low = LOW(dest) * LOW(imm);
+        as_umull(secondScratchReg_, ScratchRegister, dest.low, ScratchRegister);
+
+        // HIGH(dest) += high;
+        as_add(dest.high, dest.high, O2Reg(secondScratchReg_));
+
+        // HIGH(dest) += LOW(LOW(dest) * HIGH(imm));
+        if (((imm.value >> 32) & 0xFFFFFFFFL) == 5)
+            as_add(secondScratchReg_, dest.low, lsl(dest.low, 2));
+        else
+            MOZ_CRASH("Not supported imm");
+        as_add(dest.high, dest.high, O2Reg(secondScratchReg_));
+
+        // LOW(dest) = low;
+        ma_mov(ScratchRegister, dest.low);
+    }
+
+    void convertUInt64ToDouble(Register64 src, Register temp, FloatRegister dest);
+    void mulDoublePtr(ImmPtr imm, Register temp, FloatRegister dest) {
+        movePtr(imm, ScratchRegister);
+        loadDouble(Address(ScratchRegister, 0), ScratchDoubleReg);
+        mulDouble(ScratchDoubleReg, dest);
+    }
 
     void setStackArg(Register reg, uint32_t arg);
 
@@ -1681,8 +1750,18 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void rshiftPtrArithmetic(Imm32 imm, Register dest) {
         ma_asr(imm, dest, dest);
     }
+    void rshift64(Imm32 imm, Register64 dest) {
+        as_mov(dest.low, lsr(dest.low, imm.value));
+        as_orr(dest.low, dest.low, lsl(dest.high, 32 - imm.value));
+        as_mov(dest.high, lsr(dest.high, imm.value));
+    }
     void lshiftPtr(Imm32 imm, Register dest) {
         ma_lsl(imm, dest, dest);
+    }
+    void lshift64(Imm32 imm, Register64 dest) {
+        as_mov(dest.high, lsl(dest.high, imm.value));
+        as_orr(dest.high, dest.high, lsr(dest.low, 32 - imm.value));
+        as_mov(dest.low, lsl(dest.low, imm.value));
     }
 
     // If source is a double, load it into dest. If source is int32, convert it
