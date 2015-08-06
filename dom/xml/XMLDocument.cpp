@@ -348,7 +348,7 @@ XMLDocument::Load(const nsAString& aUrl, ErrorResult& aRv)
     }
 
     int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-    rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_XMLHTTPREQUEST,
+    rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST,
                                    uri,
                                    principal,
                                    callingDoc ? callingDoc.get() :
@@ -445,7 +445,7 @@ XMLDocument::Load(const nsAString& aUrl, ErrorResult& aRv)
                      callingDoc ? callingDoc.get() :
                                   static_cast<nsIDocument*>(this),
                      nsILoadInfo::SEC_NORMAL,
-                     nsIContentPolicy::TYPE_XMLHTTPREQUEST,
+                     nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST,
                      loadGroup,
                      req,
                      nsIRequest::LOAD_BACKGROUND);
