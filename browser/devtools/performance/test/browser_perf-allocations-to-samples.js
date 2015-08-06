@@ -8,8 +8,6 @@
  */
 
 function test() {
-  let RecordingUtils = require("devtools/performance/recording-utils");
-
   let output = RecordingUtils.getProfileThreadFromAllocations(TEST_DATA);
   is(output.toSource(), EXPECTED_OUTPUT.toSource(), "The output is correct.");
 
