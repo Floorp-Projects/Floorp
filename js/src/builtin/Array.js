@@ -265,38 +265,39 @@ function ArrayStaticForEach(list, callbackfn/*, thisArg*/) {
     callFunction(ArrayForEach, list, callbackfn, T);
 }
 
-/* ES5 15.4.4.19. */
+/* ES 2016 draft Mar 25, 2016 22.1.3.15. */
 function ArrayMap(callbackfn/*, thisArg*/) {
     /* Step 1. */
     var O = ToObject(this);
 
-    /* Step 2-3. */
+    /* Step 2. */
+    /* FIXME: Array operations should use ToLength (bug 924058). */
     var len = TO_UINT32(O.length);
 
-    /* Step 4. */
+    /* Step 3. */
     if (arguments.length === 0)
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.map');
     if (!IsCallable(callbackfn))
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
-    /* Step 5. */
+    /* Step 4. */
     var T = arguments.length > 1 ? arguments[1] : void 0;
 
-    /* Step 6. */
-    var A = std_Array(len);
+    /* Steps 5. */
+    var A = ArraySpeciesCreate(O, len);
 
-    /* Step 7-8. */
-    /* Step a (implicit), and d. */
+    /* Steps 6-7. */
+    /* Steps 7.a (implicit), and 7.d. */
     for (var k = 0; k < len; k++) {
-        /* Step b */
+        /* Steps 7.b-c. */
         if (k in O) {
-            /* Step c.i-iii. */
+            /* Steps 7.c.i-iii. */
             var mappedValue = callContentFunction(callbackfn, T, O[k], k, O);
             _DefineDataProperty(A, k, mappedValue);
         }
     }
 
-    /* Step 9. */
+    /* Step 8. */
     return A;
 }
 
