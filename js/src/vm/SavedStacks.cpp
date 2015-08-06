@@ -737,7 +737,7 @@ GetSavedFrameParent(JSContext* cx, HandleObject savedFrame, MutableHandleObject 
 }
 
 JS_PUBLIC_API(bool)
-BuildStackString(JSContext* cx, HandleObject stack, MutableHandleString stringp)
+BuildStackString(JSContext* cx, HandleObject stack, MutableHandleString stringp, size_t indent)
 {
     js::StringBuffer sb(cx);
 
@@ -764,7 +764,8 @@ BuildStackString(JSContext* cx, HandleObject stack, MutableHandleString stringp)
                     asyncCause.set(cx->names().Async);
 
                 js::RootedAtom name(cx, frame->getFunctionDisplayName());
-                if ((asyncCause && (!sb.append(asyncCause) || !sb.append('*')))
+                if ((indent && !sb.appendN(' ', indent))
+                    || (asyncCause && (!sb.append(asyncCause) || !sb.append('*')))
                     || (name && !sb.append(name))
                     || !sb.append('@')
                     || !sb.append(frame->getSource())
