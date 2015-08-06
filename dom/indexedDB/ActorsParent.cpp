@@ -4372,11 +4372,11 @@ class DatabaseConnection final
 {
   friend class ConnectionPool;
 
-  enum CheckpointMode
+  enum class CheckpointMode
   {
-    CheckpointMode_Full,
-    CheckpointMode_Restart,
-    CheckpointMode_Truncate
+    Full,
+    Restart,
+    Truncate
   };
 
 public:
@@ -4457,7 +4457,7 @@ public:
   {
     AssertIsOnConnectionThread();
 
-    return CheckpointInternal(CheckpointMode_Full);
+    return CheckpointInternal(CheckpointMode::Full);
   }
 
   void
@@ -9131,21 +9131,20 @@ DatabaseConnection::CheckpointInternal(CheckpointMode aMode)
   stmtString.AssignLiteral("PRAGMA wal_checkpoint(");
 
   switch (aMode) {
-    case CheckpointMode_Full:
+    case CheckpointMode::Full:
       // Ensures that the database is completely checkpointed and flushed to
       // disk.
       stmtString.AppendLiteral("FULL");
       break;
 
-    case CheckpointMode_Restart:
-      // Like CheckpointMode_Full, but also ensures that the next write will
-      // start overwriting the existing WAL file rather than letting the WAL
-      // file grow.
+    case CheckpointMode::Restart:
+      // Like Full, but also ensures that the next write will start overwriting
+      // the existing WAL file rather than letting the WAL file grow.
       stmtString.AppendLiteral("RESTART");
       break;
 
-    case CheckpointMode_Truncate:
-      // Like CheckpointMode_Restart but also truncates the existing WAL file.
+    case CheckpointMode::Truncate:
+      // Like Restart but also truncates the existing WAL file.
       stmtString.AppendLiteral("TRUNCATE");
       break;
 
@@ -9226,7 +9225,7 @@ DatabaseConnection::DoIdleProcessing(bool aNeedsCheckpoint)
 
   // Truncate the WAL if we were asked to or if we managed to free some space.
   if (aNeedsCheckpoint || freedSomePages) {
-    rv = CheckpointInternal(CheckpointMode_Truncate);
+    rv = CheckpointInternal(CheckpointMode::Truncate);
     unused << NS_WARN_IF(NS_FAILED(rv));
   }
 
@@ -9301,7 +9300,7 @@ DatabaseConnection::ReclaimFreePagesWhileIdle(
     // Freeing pages is a journaled operation, so it will require additional WAL
     // space. However, we're idle and are about to checkpoint anyway, so doing a
     // RESTART checkpoint here should allow us to reuse any existing space.
-    rv = CheckpointInternal(CheckpointMode_Restart);
+    rv = CheckpointInternal(CheckpointMode::Restart);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
