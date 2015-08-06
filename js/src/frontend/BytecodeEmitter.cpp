@@ -4659,7 +4659,7 @@ ParseNode::getConstantValue(ExclusiveContext* cx, AllowConstantObjects allowObje
         }
         MOZ_ASSERT(allowObjects == AllowObjects);
 
-        AutoIdValueVector properties(cx);
+        Rooted<IdValueVector> properties(cx, IdValueVector(cx));
 
         RootedValue value(cx), idvalue(cx);
         for (ParseNode* pn = pn_head; pn; pn = pn->pn_next) {

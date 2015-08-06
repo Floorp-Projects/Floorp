@@ -1216,7 +1216,8 @@ GetScriptArrayObjectElements(JSContext* cx, HandleObject obj, AutoValueVector& v
 }
 
 static bool
-GetScriptPlainObjectProperties(JSContext* cx, HandleObject obj, AutoIdValueVector& properties)
+GetScriptPlainObjectProperties(JSContext* cx, HandleObject obj,
+                               MutableHandle<IdValueVector> properties)
 {
     if (obj->is<PlainObject>()) {
         PlainObject* nobj = &obj->as<PlainObject>();
@@ -1302,8 +1303,8 @@ js::DeepCloneObjectLiteral(JSContext* cx, HandleObject obj, NewObjectKind newKin
                                            arrayKind);
     }
 
-    AutoIdValueVector properties(cx);
-    if (!GetScriptPlainObjectProperties(cx, obj, properties))
+    Rooted<IdValueVector> properties(cx, IdValueVector(cx));
+    if (!GetScriptPlainObjectProperties(cx, obj, &properties))
         return nullptr;
 
     for (size_t i = 0; i < properties.length(); i++) {
@@ -1453,8 +1454,8 @@ js::XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj)
     }
 
     // Code the properties in the object.
-    AutoIdValueVector properties(cx);
-    if (mode == XDR_ENCODE && !GetScriptPlainObjectProperties(cx, obj, properties))
+    Rooted<IdValueVector> properties(cx, IdValueVector(cx));
+    if (mode == XDR_ENCODE && !GetScriptPlainObjectProperties(cx, obj, &properties))
         return false;
 
     uint32_t nproperties = properties.length();

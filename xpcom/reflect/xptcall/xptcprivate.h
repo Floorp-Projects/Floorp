@@ -46,13 +46,13 @@ public:
 
 #include "xptcstubsdef.inc"
 
-    nsXPTCStubBase(nsIXPTCProxy* aOuter, xptiInterfaceEntry *aEntry) :
-        mOuter(aOuter), mEntry(aEntry) { }
+    nsXPTCStubBase(nsIXPTCProxy* aOuter, xptiInterfaceEntry *aEntry)
+        : mOuter(aOuter), mEntry(aEntry) { MOZ_COUNT_CTOR(nsXPTCStubBase); }
 
     nsIXPTCProxy*          mOuter;
     xptiInterfaceEntry*    mEntry;
 
-    ~nsXPTCStubBase() { }
+    ~nsXPTCStubBase() { MOZ_COUNT_DTOR(nsXPTCStubBase); }
 };
 
 #undef STUB_ENTRY

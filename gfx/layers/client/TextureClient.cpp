@@ -830,29 +830,50 @@ BufferTextureClient::BorrowDrawTarget()
 }
 
 void
-BufferTextureClient::UpdateFromSurface(gfx::DataSourceSurface* aSurface)
+BufferTextureClient::UpdateFromSurface(gfx::SourceSurface* aSurface)
 {
   ImageDataSerializer serializer(GetBuffer(), GetBufferSize());
 
   RefPtr<DataSourceSurface> surface = serializer.GetAsSurface();
 
-  if (surface->GetSize() != aSurface->GetSize() || surface->GetFormat() != aSurface->GetFormat()) {
+  if (!surface) {
+    gfxCriticalError() << "Failed to get serializer as surface!";
+    return;
+  }
+
+  RefPtr<DataSourceSurface> srcSurf = aSurface->GetDataSurface();
+
+  if (!srcSurf) {
+    gfxCriticalError() << "Failed to GetDataSurface in UpdateFromSurface.";
+    return;
+  }
+
+  if (surface->GetSize() != srcSurf->GetSize() || surface->GetFormat() != srcSurf->GetFormat()) {
     gfxCriticalError() << "Attempt to update texture client from a surface with a different size or format! This: " << surface->GetSize() << " " << surface->GetFormat() << " Other: " << aSurface->GetSize() << " " << aSurface->GetFormat();
     return;
   }
 
   DataSourceSurface::MappedSurface sourceMap;
   DataSourceSurface::MappedSurface destMap;
-  aSurface->Map(DataSourceSurface::READ, &sourceMap);
-  surface->Map(DataSourceSurface::WRITE, &destMap);
-
-  for (int y = 0; y < aSurface->GetSize().height; y++) {
-    memcpy(destMap.mData + destMap.mStride * y,
-           sourceMap.mData + sourceMap.mStride * y,
-           aSurface->GetSize().width * BytesPerPixel(aSurface->GetFormat()));
+  if (!srcSurf->Map(DataSourceSurface::READ, &sourceMap)) {
+    gfxCriticalError() << "Failed to map source surface for UpdateFromSurface.";
+    return;
   }
 
-  aSurface->Unmap();
+  if (!surface->Map(DataSourceSurface::WRITE, &destMap)) {
+    srcSurf->Unmap();
+    gfxCriticalError() << "Failed to map destination surface for UpdateFromSurface.";
+    return;
+  }
+
+
+  for (int y = 0; y < srcSurf->GetSize().height; y++) {
+    memcpy(destMap.mData + destMap.mStride * y,
+           sourceMap.mData + sourceMap.mStride * y,
+           srcSurf->GetSize().width * BytesPerPixel(srcSurf->GetFormat()));
+  }
+
+  srcSurf->Unmap();
   surface->Unmap();
 }
 

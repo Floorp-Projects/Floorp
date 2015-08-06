@@ -84,7 +84,7 @@ AppleVTDecoder::Input(MediaRawData* aSample)
       aSample->mTime,
       aSample->mDuration,
       aSample->mKeyframe ? " keyframe" : "",
-      aSample->mSize);
+      aSample->Size());
 
 #ifdef LOG_MEDIA_SHA1
   SHA1Sum hash;
@@ -215,12 +215,12 @@ AppleVTDecoder::SubmitFrame(MediaRawData* aSample)
   // But note that there may be a problem keeping the samples
   // alive over multiple frames.
   rv = CMBlockBufferCreateWithMemoryBlock(kCFAllocatorDefault, // Struct allocator.
-                                          const_cast<uint8_t*>(aSample->mData),
-                                          aSample->mSize,
+                                          const_cast<uint8_t*>(aSample->Data()),
+                                          aSample->Size(),
                                           kCFAllocatorNull, // Block allocator.
                                           NULL, // Block source.
                                           0,    // Data offset.
-                                          aSample->mSize,
+                                          aSample->Size(),
                                           false,
                                           block.receive());
   if (rv != noErr) {

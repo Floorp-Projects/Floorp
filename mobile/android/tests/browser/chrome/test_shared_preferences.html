@@ -1,0 +1,255 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=866271
+Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 866271</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript;version=1.7">
+
+  Components.utils.import("resource://gre/modules/SharedPreferences.jsm");
+  Components.utils.import("resource://gre/modules/Promise.jsm");
+  Components.utils.import("resource://gre/modules/Task.jsm");
+
+  let _observerId = 0;
+
+  function makeObserver() {
+    let deferred = Promise.defer();
+
+    let ret = {
+      id: _observerId++,
+      count: 0,
+      promise: deferred.promise,
+      observe: function (subject, topic, data) {
+        ret.count += 1;
+        let msg = { subject: subject,
+                    topic: topic,
+                    data: data };
+        deferred.resolve(msg);
+      },
+    };
+
+    return ret;
+  };
+
+  add_task(function* test_get_set() {
+    let branch = SharedPreferences.forAndroid("test");
+
+    branch.setBoolPref("boolKey", true);
+    branch.setCharPref("charKey", "string value");
+    branch.setIntPref("intKey", 1000);
+
+    is(branch.getBoolPref("boolKey"), true);
+    is(branch.getCharPref("charKey"), "string value");
+    is(branch.getIntPref("intKey"), 1000);
+
+    branch.setBoolPref("boolKey", false);
+    branch.setCharPref("charKey", "different string value");
+    branch.setIntPref("intKey", -2000);
+
+    is(branch.getBoolPref("boolKey"), false);
+    is(branch.getCharPref("charKey"), "different string value");
+    is(branch.getIntPref("intKey"), -2000);
+
+    is(typeof(branch.getBoolPref("boolKey")), "boolean");
+    is(typeof(branch.getCharPref("charKey")), "string");
+    is(typeof(branch.getIntPref("intKey")), "number");
+  });
+
+  add_task(function* test_default() {
+    let branch = SharedPreferences.forAndroid();
+
+    branch.setBoolPref("boolKey", true);
+    branch.setCharPref("charKey", "string value");
+    branch.setIntPref("intKey", 1000);
+
+    is(branch.getBoolPref("boolKey"), true);
+    is(branch.getCharPref("charKey"), "string value");
+    is(branch.getIntPref("intKey"), 1000);
+
+    branch.setBoolPref("boolKey", false);
+    branch.setCharPref("charKey", "different string value");
+    branch.setIntPref("intKey", -2000);
+
+    is(branch.getBoolPref("boolKey"), false);
+    is(branch.getCharPref("charKey"), "different string value");
+    is(branch.getIntPref("intKey"), -2000);
+
+    is(typeof(branch.getBoolPref("boolKey")), "boolean");
+    is(typeof(branch.getCharPref("charKey")), "string");
+    is(typeof(branch.getIntPref("intKey")), "number");
+  });
+
+  add_task(function* test_multiple_branches() {
+    let branch1 = SharedPreferences.forAndroid("test1");
+    let branch2 = SharedPreferences.forAndroid("test2");
+
+    branch1.setBoolPref("boolKey", true);
+    branch2.setBoolPref("boolKey", false);
+
+    is(branch1.getBoolPref("boolKey"), true);
+    is(branch2.getBoolPref("boolKey"), false);
+
+    branch1.setCharPref("charKey", "a value");
+    branch2.setCharPref("charKey", "a different value");
+
+    is(branch1.getCharPref("charKey"), "a value");
+    is(branch2.getCharPref("charKey"), "a different value");
+  });
+
+  add_task(function* test_add_remove_observer() {
+    let branch = SharedPreferences.forAndroid("test");
+
+    branch.setBoolPref("boolKey", false);
+    is(branch.getBoolPref("boolKey"), false);
+
+    let obs1 = makeObserver();
+    branch.addObserver("boolKey", obs1);
+
+    try {
+      branch.setBoolPref("boolKey", true);
+      is(branch.getBoolPref("boolKey"), true);
+
+      let value1 = yield obs1.promise;
+      is(obs1.count, 1);
+
+      is(value1.subject, obs1);
+      is(value1.topic, "boolKey");
+      is(typeof(value1.data), "boolean");
+      is(value1.data, true);
+    } finally {
+      branch.removeObserver("boolKey", obs1);
+    }
+
+    // Make sure the original observer is really gone, or as close as
+    // we: install a second observer, wait for it to be notified, and
+    // then verify the original observer was *not* notified.  This
+    // depends, of course, on the order that observers are notified, but
+    // is better than nothing.
+
+    let obs2 = makeObserver();
+    branch.addObserver("boolKey", obs2);
+
+    try {
+      branch.setBoolPref("boolKey", false);
+      is(branch.getBoolPref("boolKey"), false);
+
+      let value2 = yield obs2.promise;
+      is(obs2.count, 1);
+
+      is(value2.subject, obs2);
+      is(value2.topic, "boolKey");
+      is(typeof(value2.data), "boolean");
+      is(value2.data, false);
+
+      // Original observer count is preserved.
+      is(obs1.count, 1);
+    } finally {
+      branch.removeObserver("boolKey", obs2);
+    }
+  });
+
+  add_task(function* test_observer_ignores() {
+    let branch = SharedPreferences.forAndroid("test");
+
+    branch.setCharPref("charKey", "first value");
+    is(branch.getCharPref("charKey"), "first value");
+
+    let obs = makeObserver();
+    branch.addObserver("charKey", obs);
+
+    try {
+      // These should all be ignored.
+      branch.setBoolPref("boolKey", true);
+      branch.setBoolPref("boolKey", false);
+      branch.setIntPref("intKey", -3000);
+      branch.setIntPref("intKey", 4000);
+
+      branch.setCharPref("charKey", "a value");
+      let value = yield obs.promise;
+
+      // Observer should have been notified exactly once.
+      is(obs.count, 1);
+
+      is(value.subject, obs);
+      is(value.topic, "charKey");
+      is(typeof(value.data), "string");
+      is(value.data, "a value");
+    } finally {
+      branch.removeObserver("charKey", obs);
+    }
+  });
+
+  add_task(function* test_observer_ignores_branches() {
+    let branch = SharedPreferences.forAndroid("test");
+
+    branch.setCharPref("charKey", "first value");
+    is(branch.getCharPref("charKey"), "first value");
+
+    let obs = makeObserver();
+    branch.addObserver("charKey", obs);
+
+    try {
+      // These should all be ignored.
+      let branch2 = SharedPreferences.forAndroid("test2");
+      branch2.setCharPref("charKey", "a wrong value");
+      let branch3 = SharedPreferences.forAndroid("test.2");
+      branch3.setCharPref("charKey", "a different wrong value");
+
+      // This should not be ignored.
+      branch.setCharPref("charKey", "a value");
+
+      let value = yield obs.promise;
+
+      // Observer should have been notified exactly once.
+      is(obs.count, 1);
+
+      is(value.subject, obs);
+      is(value.topic, "charKey");
+      is(typeof(value.data), "string");
+      is(value.data, "a value");
+    } finally {
+      branch.removeObserver("charKey", obs);
+    }
+  });
+
+  add_task(function* test_scopes() {
+    let forApp = SharedPreferences.forApp();
+    let forProfile = SharedPreferences.forProfile();
+    let forProfileName = SharedPreferences.forProfileName("testProfile");
+    let forAndroidDefault = SharedPreferences.forAndroid();
+    let forAndroidBranch = SharedPreferences.forAndroid("testBranch");
+
+    forApp.setCharPref("charKey", "forApp");
+    forProfile.setCharPref("charKey", "forProfile");
+    forProfileName.setCharPref("charKey", "forProfileName");
+    forAndroidDefault.setCharPref("charKey", "forAndroidDefault");
+    forAndroidBranch.setCharPref("charKey", "forAndroidBranch");
+
+    is(forApp.getCharPref("charKey"), "forApp");
+    is(forProfile.getCharPref("charKey"), "forProfile");
+    is(forProfileName.getCharPref("charKey"), "forProfileName");
+    is(forAndroidDefault.getCharPref("charKey"), "forAndroidDefault");
+    is(forAndroidBranch.getCharPref("charKey"), "forAndroidBranch");
+  });
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=866271">Mozilla Bug 866271</a>
+<br>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1184186">Migrated from Robocop testSharedPreferences</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

@@ -473,7 +473,7 @@ void MediaCodecDataDecoder::DecoderLoop()
 
         void* directBuffer = frame.GetEnv()->GetDirectBufferAddress(buffer.Get());
 
-        MOZ_ASSERT(frame.GetEnv()->GetDirectBufferCapacity(buffer.Get()) >= sample->mSize,
+        MOZ_ASSERT(frame.GetEnv()->GetDirectBufferCapacity(buffer.Get()) >= sample->Size(),
           "Decoder buffer is not large enough for sample");
 
         {
@@ -482,9 +482,9 @@ void MediaCodecDataDecoder::DecoderLoop()
           mQueue.pop();
         }
 
-        PodCopy((uint8_t*)directBuffer, sample->mData, sample->mSize);
+        PodCopy((uint8_t*)directBuffer, sample->Data(), sample->Size());
 
-        res = mDecoder->QueueInputBuffer(inputIndex, 0, sample->mSize,
+        res = mDecoder->QueueInputBuffer(inputIndex, 0, sample->Size(),
                                          sample->mTime, 0);
         HANDLE_DECODER_ERROR();
 

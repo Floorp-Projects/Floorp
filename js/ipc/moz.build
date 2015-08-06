@@ -34,7 +34,6 @@ EXPORTS.mozilla.jsipc = [
 LOCAL_INCLUDES += [
     '/dom/base',
     '/js/ipc',
-    '/js/public',
     '/js/src',
     '/js/xpconnect/src',
     '/js/xpconnect/wrappers',

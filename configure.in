@@ -2201,6 +2201,12 @@ ia64*-hpux*)
         WIN32_CONSOLE_EXE_LDFLAGS=-mconsole
         WIN32_GUI_EXE_LDFLAGS=-mwindows
 
+        # GCC/binutils can't link to a function if we try to include dllexport function
+        # in the same library as dllimport caller. To work around it, we build NSPR
+        # and NSS with -mnop-fun-dllimport flag. The drawback of this solution is that
+        # function thunks need to be generated for cross-DLL calls.
+        MOZ_FOLD_LIBS_FLAGS=-mnop-fun-dllimport
+
         # We use mix of both POSIX and Win32 printf format across the tree, so format
         # warnings are useless on mingw.
         MOZ_C_SUPPORTS_WARNING(-Wno-, format, ac_c_has_wno_format)
@@ -4195,9 +4201,6 @@ cairo-windows)
     MOZ_WIDGET_TOOLKIT=windows
     MOZ_PDF_PRINTING=1
     MOZ_INSTRUMENT_EVENT_LOOP=1
-    if test -n "$GNU_CC"; then
-        MOZ_FOLD_LIBS=
-    fi
     ;;
 
 cairo-gtk3)
@@ -8980,6 +8983,7 @@ AC_SUBST_LIST(LIBAV_FFT_ASFLAGS)
 
 AC_SUBST(MOZ_PACKAGE_JSSHELL)
 AC_SUBST(MOZ_FOLD_LIBS)
+AC_SUBST(MOZ_FOLD_LIBS_FLAGS)
 AC_SUBST(SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE)
 
 AC_SUBST(MOZ_ENABLE_SZIP)

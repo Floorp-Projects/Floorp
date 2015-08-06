@@ -175,8 +175,8 @@ WMFAudioMFTManager::Init()
 HRESULT
 WMFAudioMFTManager::Input(MediaRawData* aSample)
 {
-  return mDecoder->Input(aSample->mData,
-                         uint32_t(aSample->mSize),
+  return mDecoder->Input(aSample->Data(),
+                         uint32_t(aSample->Size()),
                          aSample->mTime);
 }
 

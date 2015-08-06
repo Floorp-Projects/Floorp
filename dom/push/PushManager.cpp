@@ -286,7 +286,6 @@ public:
 
   explicit WorkerUnsubscribeResultCallback(PromiseWorkerProxy* aProxy)
     : mProxy(aProxy)
-    , mCallbackCalled(false)
   {
     AssertIsOnMainThread();
   }
@@ -295,7 +294,6 @@ public:
   OnUnsubscribe(nsresult aStatus, bool aSuccess) override
   {
     AssertIsOnMainThread();
-    mCallbackCalled = true;
     if (!mProxy) {
       return NS_OK;
     }
@@ -314,19 +312,27 @@ public:
       ReleasePromiseWorkerProxy(mProxy.forget());
     }
 
+    mProxy = nullptr;
     return NS_OK;
   }
 
 private:
   ~WorkerUnsubscribeResultCallback()
   {
-    // Enforces that UnsubscribeRunnable uses the callback for error
-    // reporting once it creates the callback.
-    MOZ_ASSERT(mCallbackCalled);
+    AssertIsOnMainThread();
+    if (mProxy) {
+      MutexAutoLock lock(mProxy->GetCleanUpLock());
+      if (!mProxy->IsClean()) {
+        AutoJSAPI jsapi;
+        jsapi.Init();
+        nsRefPtr<PromiseWorkerProxyControlRunnable> cr =
+          new PromiseWorkerProxyControlRunnable(mProxy->GetWorkerPrivate(), mProxy);
+        cr->Dispatch(jsapi.cx());
+      }
+    }
   }
 
   nsRefPtr<PromiseWorkerProxy> mProxy;
-  DebugOnly<bool> mCallbackCalled;
 };
 
 NS_IMPL_ISUPPORTS(WorkerUnsubscribeResultCallback, nsIUnsubscribeResultCallback)
@@ -444,13 +450,9 @@ public:
     nsRefPtr<PromiseWorkerProxy> proxy = mProxy.forget();
     nsRefPtr<Promise> promise = proxy->GetWorkerPromise();
     if (NS_SUCCEEDED(mStatus)) {
-      if (mEndpoint.IsEmpty()) {
-        promise->MaybeResolve(JS::NullHandleValue);
-      } else {
-        nsRefPtr<WorkerPushSubscription> sub =
-          new WorkerPushSubscription(mEndpoint, mScope);
-        promise->MaybeResolve(sub);
-      }
+      nsRefPtr<WorkerPushSubscription> sub =
+        new WorkerPushSubscription(mEndpoint, mScope);
+      promise->MaybeResolve(sub);
     } else {
       promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
     }
@@ -477,14 +479,12 @@ public:
                                    const nsAString& aScope)
     : mProxy(aProxy)
     , mScope(aScope)
-    , mCallbackCalled(false)
   {}
 
   NS_IMETHOD
   OnPushEndpoint(nsresult aStatus, const nsAString& aEndpoint) override
   {
     AssertIsOnMainThread();
-    mCallbackCalled = true;
 
     if (!mProxy) {
       return NS_OK;
@@ -503,21 +503,30 @@ public:
     if (!r->Dispatch(jsapi.cx())) {
       ReleasePromiseWorkerProxy(mProxy.forget());
     }
+
+    mProxy = nullptr;
     return NS_OK;
   }
 
 protected:
   ~GetSubscriptionCallback()
   {
-    // Enforces that GetSubscriptionRunnable uses the callback for error
-    // reporting once it creates the callback.
-    MOZ_ASSERT(mCallbackCalled);
+    AssertIsOnMainThread();
+    if (mProxy) {
+      MutexAutoLock lock(mProxy->GetCleanUpLock());
+      if (!mProxy->IsClean()) {
+        AutoJSAPI jsapi;
+        jsapi.Init();
+        nsRefPtr<PromiseWorkerProxyControlRunnable> cr =
+          new PromiseWorkerProxyControlRunnable(mProxy->GetWorkerPrivate(), mProxy);
+        cr->Dispatch(jsapi.cx());
+      }
+    }
   }
 
 private:
   nsRefPtr<PromiseWorkerProxy> mProxy;
   nsString mScope;
-  DebugOnly<bool> mCallbackCalled;
 };
 
 NS_IMPL_ISUPPORTS(GetSubscriptionCallback, nsIPushEndpointCallback)

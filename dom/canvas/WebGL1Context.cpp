@@ -20,11 +20,16 @@ WebGL1Context::Create()
 WebGL1Context::WebGL1Context()
     : WebGLContext()
 {
-    mFormatUsage = Move(webgl::FormatUsageAuthority::CreateForWebGL1());
 }
 
 WebGL1Context::~WebGL1Context()
 {
+}
+
+UniquePtr<webgl::FormatUsageAuthority>
+WebGL1Context::CreateFormatUsage() const
+{
+    return webgl::FormatUsageAuthority::CreateForWebGL1();
 }
 
 JSObject*
