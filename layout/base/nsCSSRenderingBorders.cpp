@@ -1616,7 +1616,7 @@ nsCSSBorderRenderer::DrawBorders()
     Float dash = mBorderWidths[0];
     strokeOptions.mDashPattern = &dash;
     strokeOptions.mDashLength = 1;
-    strokeOptions.mDashOffset = 0.5f;
+    strokeOptions.mDashOffset = 0.5f * dash;
     DrawOptions drawOptions;
     drawOptions.mAntialiasMode = AntialiasMode::NONE;
     mDrawTarget->StrokeRect(rect, color, strokeOptions, drawOptions);
