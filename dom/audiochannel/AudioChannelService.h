@@ -49,13 +49,16 @@ public:
    * Any audio channel agent that starts playing should register itself to
    * this service, sharing the AudioChannel.
    */
-  void RegisterAudioChannelAgent(AudioChannelAgent* aAgent, AudioChannel aChannel);
+  void RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
+                                 uint32_t aNotifyPlayback,
+                                 AudioChannel aChannel);
 
   /**
    * Any audio channel agent that stops playing should unregister itself to
    * this service.
    */
-  void UnregisterAudioChannelAgent(AudioChannelAgent* aAgent);
+  void UnregisterAudioChannelAgent(AudioChannelAgent* aAgent,
+                                   uint32_t aNotifyPlayback);
 
   /**
    * Return the state to indicate this audioChannel for his window should keep

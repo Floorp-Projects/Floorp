@@ -58,6 +58,33 @@ AudioSink::DispatchTask(already_AddRefed<nsIRunnable>&& event)
 }
 
 void
+AudioSink::OnAudioQueueEvent()
+{
+  AssertOnAudioThread();
+  if (!mAudioLoopScheduled) {
+    AudioLoop();
+  }
+}
+
+void
+AudioSink::ConnectListener()
+{
+  AssertOnAudioThread();
+  mPushListener = AudioQueue().PushEvent().Connect(
+    mThread, this, &AudioSink::OnAudioQueueEvent);
+  mFinishListener = AudioQueue().FinishEvent().Connect(
+    mThread, this, &AudioSink::OnAudioQueueEvent);
+}
+
+void
+AudioSink::DisconnectListener()
+{
+  AssertOnAudioThread();
+  mPushListener.Disconnect();
+  mFinishListener.Disconnect();
+}
+
+void
 AudioSink::ScheduleNextLoop()
 {
   AssertOnAudioThread();
@@ -221,12 +248,6 @@ AudioSink::SetPlaying(bool aPlaying)
   DispatchTask(r.forget());
 }
 
-void
-AudioSink::NotifyData()
-{
-  ScheduleNextLoopCrossThread();
-}
-
 nsresult
 AudioSink::InitializeAudioStream()
 {
@@ -316,12 +337,13 @@ AudioSink::AudioLoop()
         break;
       }
       SetState(AUDIOSINK_STATE_PLAYING);
+      ConnectListener();
       break;
     }
 
     case AUDIOSINK_STATE_PLAYING: {
       if (WaitingForAudioToPlay()) {
-        // NotifyData() will schedule next loop.
+        // OnAudioQueueEvent() will schedule next loop.
         break;
       }
       if (!IsPlaybackContinuing()) {
@@ -338,6 +360,7 @@ AudioSink::AudioLoop()
     }
 
     case AUDIOSINK_STATE_COMPLETE: {
+      DisconnectListener();
       FinishAudioLoop();
       SetState(AUDIOSINK_STATE_SHUTDOWN);
       break;

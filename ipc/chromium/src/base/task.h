@@ -267,6 +267,19 @@ struct RunnableMethodTraits {
   }
 };
 
+// This allows using the NewRunnableMethod() functions with a const pointer
+// to the callee object. See the similar support in nsRefPtr for a rationale
+// of why this is reasonable.
+template <class T>
+struct RunnableMethodTraits<const T> {
+  static void RetainCallee(const T* obj) {
+    const_cast<T*>(obj)->AddRef();
+  }
+  static void ReleaseCallee(const  T* obj) {
+    const_cast<T*>(obj)->Release();
+  }
+};
+
 // RunnableMethod and RunnableFunction -----------------------------------------
 //
 // Runnable methods are a type of task that call a function on an object when

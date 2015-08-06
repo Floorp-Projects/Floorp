@@ -71,8 +71,8 @@ FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample)
   AVPacket packet;
   av_init_packet(&packet);
 
-  packet.data = const_cast<uint8_t*>(aSample->mData);
-  packet.size = aSample->mSize;
+  packet.data = const_cast<uint8_t*>(aSample->Data());
+  packet.size = aSample->Size();
   packet.dts = aSample->mTimecode;
   packet.pts = aSample->mTime;
   packet.flags = aSample->mKeyframe ? AV_PKT_FLAG_KEY : 0;

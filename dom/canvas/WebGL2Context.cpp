@@ -21,13 +21,17 @@ WebGL2Context::WebGL2Context()
 {
     MOZ_ASSERT(IsSupported(), "not supposed to create a WebGL2Context"
                               "context when not supported");
-
-    mFormatUsage = Move(webgl::FormatUsageAuthority::CreateForWebGL2());
 }
 
 WebGL2Context::~WebGL2Context()
 {
 
+}
+
+UniquePtr<webgl::FormatUsageAuthority>
+WebGL2Context::CreateFormatUsage() const
+{
+    return webgl::FormatUsageAuthority::CreateForWebGL2();
 }
 
 /*static*/ bool

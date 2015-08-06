@@ -33,7 +33,7 @@ ProxyAccessible::Shutdown()
     if (mChildren.Length() != 1)
       MOZ_CRASH("outer doc doesn't own adoc!");
 
-    static_cast<DocAccessibleParent*>(mChildren[0])->Unbind();
+    mChildren[0]->AsDoc()->Unbind();
   }
 
   mChildren.Clear();
@@ -189,6 +189,22 @@ ProxyAccessible::ARIARoleAtom() const
   nsString role;
   unused << mDoc->SendARIARoleAtom(mID, &role);
   return NS_GetStaticAtom(role);
+}
+
+int32_t
+ProxyAccessible::GetLevelInternal()
+{
+  int32_t level = 0;
+  unused << mDoc->SendGetLevelInternal(mID, &level);
+  return level;
+}
+
+int32_t
+ProxyAccessible::CaretLineNumber()
+{
+  int32_t line = -1;
+  unused << mDoc->SendCaretOffset(mID, &line);
+  return line;
 }
 
 int32_t
@@ -369,6 +385,12 @@ ProxyAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
 {
   unused << mDoc->SendScrollSubstringToPoint(mID, aStartOffset, aEndOffset,
                                              aCoordinateType, aX, aY);
+}
+
+void
+ProxyAccessible::Text(nsString* aText)
+{
+  unused << mDoc->SendText(mID, aText);
 }
 
 void
@@ -1013,6 +1035,12 @@ void
 ProxyAccessible::DocType(nsString& aType)
 {
   unused << mDoc->SendDocType(mID, &aType);
+}
+
+void
+ProxyAccessible::Title(nsString& aTitle)
+{
+  unused << mDoc->SendTitle(mID, &aTitle);
 }
 
 void

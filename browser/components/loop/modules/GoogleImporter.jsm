@@ -547,14 +547,18 @@ this.GoogleImporter.prototype = {
           let email;
           try {
             email = getPreferred(contact);
-          } catch (ex) {}
+          } catch (ex) {
+            // Do nothing
+          }
           if (email) {
             contact.name = [email.value];
           } else {
             let tel;
             try {
               tel = getPreferred(contact, "tel");
-            } catch (ex) {}
+            } catch (ex) {
+              // Do nothing
+            }
             if (tel) {
               contact.name = [tel.value];
             }

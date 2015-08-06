@@ -87,15 +87,15 @@ VPXDecoder::DoDecodeFrame(MediaRawData* aSample)
   PodZero(&si);
   si.sz = sizeof(si);
   if (mCodec == Codec::VP8) {
-    vpx_codec_peek_stream_info(vpx_codec_vp8_dx(), aSample->mData, aSample->mSize, &si);
+    vpx_codec_peek_stream_info(vpx_codec_vp8_dx(), aSample->Data(), aSample->Size(), &si);
   } else if (mCodec == Codec::VP9) {
-    vpx_codec_peek_stream_info(vpx_codec_vp9_dx(), aSample->mData, aSample->mSize, &si);
+    vpx_codec_peek_stream_info(vpx_codec_vp9_dx(), aSample->Data(), aSample->Size(), &si);
   }
   NS_ASSERTION(bool(si.is_kf) == aSample->mKeyframe,
                "VPX Decode Keyframe error sample->mKeyframe and si.si_kf out of sync");
 #endif
 
-  if (vpx_codec_err_t r = vpx_codec_decode(&mVPX, aSample->mData, aSample->mSize, nullptr, 0)) {
+  if (vpx_codec_err_t r = vpx_codec_decode(&mVPX, aSample->Data(), aSample->Size(), nullptr, 0)) {
     LOG("VPX Decode error: %s", vpx_codec_err_to_string(r));
     return -1;
   }

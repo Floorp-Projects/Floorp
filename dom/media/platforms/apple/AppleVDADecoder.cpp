@@ -106,7 +106,7 @@ AppleVDADecoder::Input(MediaRawData* aSample)
       aSample->mTime,
       aSample->mDuration,
       aSample->mKeyframe ? " keyframe" : "",
-      aSample->mSize);
+      aSample->Size());
 
   nsCOMPtr<nsIRunnable> runnable =
       NS_NewRunnableMethodWithArg<nsRefPtr<MediaRawData>>(
@@ -307,7 +307,7 @@ nsresult
 AppleVDADecoder::SubmitFrame(MediaRawData* aSample)
 {
   AutoCFRelease<CFDataRef> block =
-    CFDataCreate(kCFAllocatorDefault, aSample->mData, aSample->mSize);
+    CFDataCreate(kCFAllocatorDefault, aSample->Data(), aSample->Size());
   if (!block) {
     NS_ERROR("Couldn't create CFData");
     return NS_ERROR_FAILURE;

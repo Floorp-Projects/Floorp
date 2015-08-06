@@ -82,9 +82,3 @@ function* assertRuleAndMarkupViewWidth(id, value, ruleView, inspector) {
   let attr = yield getContainerStyleAttrValue(id, inspector);
   is(attr.textContent.replace(/\s/g, ""), "width:" + value + ";", "Markup-view style attribute width is " + value);
 }
-
-function reloadPage(inspector) {
-  let onNewRoot = inspector.once("new-root");
-  content.location.reload();
-  return onNewRoot.then(inspector.markup._waitForChildren);
-}

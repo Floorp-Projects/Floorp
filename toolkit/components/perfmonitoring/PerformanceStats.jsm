@@ -79,6 +79,7 @@ Probe.prototype = {
   acquire: function() {
     if (this._counter == 0) {
       this._impl.isActive = true;
+      Process.broadcast("acquire", [this._name]);
     }
     this._counter++;
   },
@@ -92,6 +93,7 @@ Probe.prototype = {
     this._counter--;
     if (this._counter == 0) {
       this._impl.isActive = false;
+      Process.broadcast("release", [this._name]);
     }
   },
 
@@ -303,81 +305,6 @@ let Probes = {
     importChildCompartments: function() { /* nothing to do */ },
   }),
 
-  "jank-content": new Probe("jank-content", {
-    _isActive: false,
-    set isActive(x) {
-      this._isActive = x;
-      if (x) {
-        Process.broadcast("acquire", ["jank"]);
-      } else {
-        Process.broadcast("release", ["jank"]);
-      }
-    },
-    get isActive() {
-      return this._isActive;
-    },
-    extract: function(xpcom) {
-      return {};
-    },
-    isEqual: function(a, b) {
-      return true;
-    },
-    subtract: function(a, b) {
-      return null;
-    },
-    importChildCompartments: function() { /* nothing to do */ },
-  }),
-
-  "cpow-content": new Probe("cpow-content", {
-    _isActive: false,
-    set isActive(x) {
-      this._isActive = x;
-      if (x) {
-        Process.broadcast("acquire", ["cpow"]);
-      } else {
-        Process.broadcast("release", ["cpow"]);
-      }
-    },
-    get isActive() {
-      return this._isActive;
-    },
-    extract: function(xpcom) {
-      return {};
-    },
-    isEqual: function(a, b) {
-      return true;
-    },
-    subtract: function(a, b) {
-      return null;
-    },
-    importChildCompartments: function() { /* nothing to do */ },
-  }),
-
-  "ticks-content": new Probe("ticks-content", {
-    _isActive: false,
-    set isActive(x) {
-      this._isActive = x;
-      if (x) {
-        Process.broadcast("acquire", ["ticks"]);
-      } else {
-        Process.broadcast("release", ["ticks"]);
-      }
-    },
-    get isActive() {
-      return this._isActive;
-    },
-    extract: function(xpcom) {
-      return {};
-    },
-    isEqual: function(a, b) {
-      return true;
-    },
-    subtract: function(a, b) {
-      return null;
-    },
-    importChildCompartments: function() { /* nothing to do */ },
-  }),
-
   compartments: new Probe("compartments", {
     set isActive(x) {
       performanceStatsService.isMonitoringPerCompartment = x;
@@ -397,9 +324,8 @@ let Probes = {
     importChildCompartments: function(parent, children) {
       parent.children = children;
     },
-  })
+  }),
 };
-
 
 /**
  * A monitor for a set of probes.

@@ -372,7 +372,9 @@ nsContentPermissionUtils::AskPermission(nsIContentPermissionRequest* aRequest, n
   nsCOMPtr<nsIContentPermissionPrompt> prompt =
     do_GetService(NS_CONTENT_PERMISSION_PROMPT_CONTRACTID);
   if (prompt) {
-    prompt->Prompt(aRequest);
+    if (NS_FAILED(prompt->Prompt(aRequest))) {
+      return NS_ERROR_FAILURE;
+    }
   }
   return NS_OK;
 }

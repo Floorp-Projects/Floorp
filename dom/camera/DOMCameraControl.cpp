@@ -1101,7 +1101,7 @@ nsDOMCameraControl::ReleaseAudioChannelAgent()
 {
 #ifdef MOZ_B2G
   if (mAudioChannelAgent) {
-    mAudioChannelAgent->NotifyStoppedPlaying();
+    mAudioChannelAgent->NotifyStoppedPlaying(nsIAudioChannelAgent::AUDIO_AGENT_DONT_NOTIFY);
     mAudioChannelAgent = nullptr;
   }
 #endif
@@ -1137,7 +1137,8 @@ nsDOMCameraControl::NotifyRecordingStatusChange(const nsString& aMsg)
     // Video recording doesn't output any sound, so it's not necessary to check canPlay.
     float volume = 0.0;
     bool muted = true;
-    rv = mAudioChannelAgent->NotifyStartedPlaying(&volume, &muted);
+    rv = mAudioChannelAgent->NotifyStartedPlaying(nsIAudioChannelAgent::AUDIO_AGENT_DONT_NOTIFY,
+                                                  &volume, &muted);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

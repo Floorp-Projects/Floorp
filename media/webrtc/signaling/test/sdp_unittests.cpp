@@ -1193,6 +1193,8 @@ const std::string kBasicAudioVideoOffer =
 "a=end-of-candidates" CRLF
 "a=ssrc:1111 foo" CRLF
 "a=ssrc:1111 foo:bar" CRLF
+"a=imageattr:120 send * recv *" CRLF
+"a=imageattr:121 send [x=640,y=480] recv [x=640,y=480]" CRLF
 "m=audio 9 RTP/SAVPF 0" CRLF
 "a=mid:third" CRLF
 "a=rtpmap:0 PCMU/8000" CRLF
@@ -2002,6 +2004,50 @@ TEST_P(NewSdpTest, CheckRtcp) {
   ASSERT_EQ("", rtcpAttr_1.mAddress);
 }
 
+TEST_P(NewSdpTest, CheckImageattr)
+{
+  ParseSdp(kBasicAudioVideoOffer);
+  ASSERT_TRUE(!!mSdp);
+  ASSERT_EQ(3U, mSdp->GetMediaSectionCount()) << "Wrong number of media sections";
+
+  ASSERT_FALSE(mSdp->GetAttributeList().HasAttribute(
+        SdpAttribute::kImageattrAttribute));
+  ASSERT_FALSE(mSdp->GetMediaSection(0).GetAttributeList().HasAttribute(
+        SdpAttribute::kImageattrAttribute));
+  ASSERT_TRUE(mSdp->GetMediaSection(1).GetAttributeList().HasAttribute(
+        SdpAttribute::kImageattrAttribute));
+  ASSERT_FALSE(mSdp->GetMediaSection(2).GetAttributeList().HasAttribute(
+        SdpAttribute::kImageattrAttribute));
+
+  const SdpImageattrAttributeList& imageattrs =
+    mSdp->GetMediaSection(1).GetAttributeList().GetImageattr();
+
+  ASSERT_EQ(2U, imageattrs.mImageattrs.size());
+  const SdpImageattrAttributeList::Imageattr& imageattr_0(
+      imageattrs.mImageattrs[0]);
+  ASSERT_TRUE(imageattr_0.pt.isSome());
+  ASSERT_EQ(120U, *imageattr_0.pt);
+  ASSERT_TRUE(imageattr_0.sendAll);
+  ASSERT_TRUE(imageattr_0.recvAll);
+
+  const SdpImageattrAttributeList::Imageattr& imageattr_1(
+      imageattrs.mImageattrs[1]);
+  ASSERT_TRUE(imageattr_1.pt.isSome());
+  ASSERT_EQ(121U, *imageattr_1.pt);
+  ASSERT_FALSE(imageattr_1.sendAll);
+  ASSERT_FALSE(imageattr_1.recvAll);
+  ASSERT_EQ(1U, imageattr_1.sendSets.size());
+  ASSERT_EQ(1U, imageattr_1.sendSets[0].xRange.discreteValues.size());
+  ASSERT_EQ(640U, imageattr_1.sendSets[0].xRange.discreteValues.front());
+  ASSERT_EQ(1U, imageattr_1.sendSets[0].yRange.discreteValues.size());
+  ASSERT_EQ(480U, imageattr_1.sendSets[0].yRange.discreteValues.front());
+  ASSERT_EQ(1U, imageattr_1.recvSets.size());
+  ASSERT_EQ(1U, imageattr_1.recvSets[0].xRange.discreteValues.size());
+  ASSERT_EQ(640U, imageattr_1.recvSets[0].xRange.discreteValues.front());
+  ASSERT_EQ(1U, imageattr_1.recvSets[0].yRange.discreteValues.size());
+  ASSERT_EQ(480U, imageattr_1.recvSets[0].yRange.discreteValues.front());
+}
+
 TEST_P(NewSdpTest, CheckSctpmap) {
   ParseSdp(kBasicAudioVideoDataOffer);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
@@ -2484,6 +2530,28 @@ TEST_P(NewSdpTest, CheckSsrcGroupInSessionLevel) {
   }
 }
 
+const std::string kMalformedImageattr =
+"v=0" CRLF
+"o=Mozilla-SIPUA-35.0a1 5184 0 IN IP4 0.0.0.0" CRLF
+"s=SIP Call" CRLF
+"c=IN IP4 224.0.0.1/100/12" CRLF
+"t=0 0" CRLF
+"m=video 9 RTP/SAVPF 120" CRLF
+"c=IN IP4 0.0.0.0" CRLF
+"a=rtpmap:120 VP8/90000" CRLF
+"a=imageattr:flob" CRLF;
+
+TEST_P(NewSdpTest, CheckMalformedImageattr)
+{
+  if (GetParam()) {
+    // Don't do a parse/serialize before running this test
+    return;
+  }
+
+  ParseSdp(kMalformedImageattr, false);
+  ASSERT_NE("", GetParseErrors());
+}
+
 const std::string kNoAttributes =
 "v=0" CRLF
 "o=Mozilla-SIPUA-35.0a1 5184 0 IN IP4 0.0.0.0" CRLF
@@ -2545,6 +2613,815 @@ TEST(NewSdpTestNoFixture, CheckAttributeTypeSerialize) {
       ASSERT_NE("", os.str());
     }
   }
+}
+
+static SdpImageattrAttributeList::XYRange
+ParseXYRange(const std::string& input)
+{
+  std::istringstream is;
+  is.str(input + ",");
+  std::string error;
+  SdpImageattrAttributeList::XYRange range;
+  EXPECT_TRUE(range.Parse(is, &error)) << error;
+  EXPECT_EQ(',', is.get());
+  EXPECT_EQ(EOF, is.get());
+  return range;
+}
+
+TEST(NewSdpTestNoFixture, CheckImageattrXYRangeParseValid)
+{
+  {
+    SdpImageattrAttributeList::XYRange range(ParseXYRange("640"));
+    ASSERT_EQ(1U, range.discreteValues.size());
+    ASSERT_EQ(640U, range.discreteValues[0]);
+  }
+
+  {
+    SdpImageattrAttributeList::XYRange range(ParseXYRange("[320,640]"));
+    ASSERT_EQ(2U, range.discreteValues.size());
+    ASSERT_EQ(320U, range.discreteValues[0]);
+    ASSERT_EQ(640U, range.discreteValues[1]);
+  }
+
+  {
+    SdpImageattrAttributeList::XYRange range(ParseXYRange("[320,640,1024]"));
+    ASSERT_EQ(3U, range.discreteValues.size());
+    ASSERT_EQ(320U, range.discreteValues[0]);
+    ASSERT_EQ(640U, range.discreteValues[1]);
+    ASSERT_EQ(1024U, range.discreteValues[2]);
+  }
+
+  {
+    SdpImageattrAttributeList::XYRange range(ParseXYRange("[320:640]"));
+    ASSERT_EQ(0U, range.discreteValues.size());
+    ASSERT_EQ(320U, range.min);
+    ASSERT_EQ(1U, range.step);
+    ASSERT_EQ(640U, range.max);
+  }
+
+  {
+    SdpImageattrAttributeList::XYRange range(ParseXYRange("[320:16:640]"));
+    ASSERT_EQ(0U, range.discreteValues.size());
+    ASSERT_EQ(320U, range.min);
+    ASSERT_EQ(16U, range.step);
+    ASSERT_EQ(640U, range.max);
+  }
+}
+
+static void
+ParseInvalidXYRange(const std::string& input, size_t last)
+{
+  std::istringstream is;
+  is.str(input);
+  SdpImageattrAttributeList::XYRange range;
+  std::string error;
+  ASSERT_FALSE(range.Parse(is, &error))
+    << "\'" << input << "\' should not have parsed successfully";
+  is.clear();
+  ASSERT_EQ(last, static_cast<size_t>(is.tellg()))
+    << "Parse failed at unexpected location:" << std::endl
+    << input << std::endl
+    << std::string(is.tellg(), ' ') << "^" << std::endl;
+  // For a human to eyeball to make sure the error strings look sane
+  std::cout << "\"" << input << "\" - " << error << std::endl; \
+}
+
+TEST(NewSdpTestNoFixture, CheckImageattrXYRangeParseInvalid)
+{
+  ParseInvalidXYRange("[-1", 1);
+  ParseInvalidXYRange("[-", 1);
+  ParseInvalidXYRange("[-x", 1);
+  ParseInvalidXYRange("[640:-1", 5);
+  ParseInvalidXYRange("[640:16:-1", 8);
+  ParseInvalidXYRange("[640,-1", 5);
+  ParseInvalidXYRange("[640,-]", 5);
+  ParseInvalidXYRange("-x", 0);
+  ParseInvalidXYRange("-1", 0);
+  ParseInvalidXYRange("", 0);
+  ParseInvalidXYRange("[", 1);
+  ParseInvalidXYRange("[x", 1);
+  ParseInvalidXYRange("[", 1);
+  ParseInvalidXYRange("[ 640", 1);
+  // It looks like the overflow detection only happens once the whole number
+  // is scanned...
+  ParseInvalidXYRange("[99999999999999999:", 18);
+  ParseInvalidXYRange("[640", 4);
+  ParseInvalidXYRange("[640:", 5);
+  ParseInvalidXYRange("[640:x", 5);
+  ParseInvalidXYRange("[640:16", 7);
+  ParseInvalidXYRange("[640:16:", 8);
+  ParseInvalidXYRange("[640:16:x", 8);
+  ParseInvalidXYRange("[640:16:320]", 11);
+  ParseInvalidXYRange("[640:16:320", 11);
+  ParseInvalidXYRange("[640:16:320x", 11);
+  ParseInvalidXYRange("[640:1024", 9);
+  ParseInvalidXYRange("[640:320]", 8);
+  ParseInvalidXYRange("[640:1024x", 9);
+  ParseInvalidXYRange("[640,", 5);
+  ParseInvalidXYRange("[640,x", 5);
+  ParseInvalidXYRange("[640]", 4);
+  ParseInvalidXYRange("[640x", 4);
+  ParseInvalidXYRange("[640,]", 5);
+  ParseInvalidXYRange(" ", 0);
+  ParseInvalidXYRange("x", 0);
+}
+
+static SdpImageattrAttributeList::SRange
+ParseSRange(const std::string& input)
+{
+  std::istringstream is;
+  is.str(input + ",");
+  std::string error;
+  SdpImageattrAttributeList::SRange range;
+  EXPECT_TRUE(range.Parse(is, &error)) << error;
+  EXPECT_EQ(',', is.get());
+  EXPECT_EQ(EOF, is.get());
+  return range;
+}
+
+TEST(NewSdpTestNoFixture, CheckImageattrSRangeParseValid)
+{
+  {
+    SdpImageattrAttributeList::SRange range(ParseSRange("0.1"));
+    ASSERT_EQ(1U, range.discreteValues.size());
+    ASSERT_FLOAT_EQ(0.1f, range.discreteValues[0]);
+  }
+
+  {
+    SdpImageattrAttributeList::SRange range(ParseSRange("[0.1,0.2]"));
+    ASSERT_EQ(2U, range.discreteValues.size());
+    ASSERT_FLOAT_EQ(0.1f, range.discreteValues[0]);
+    ASSERT_FLOAT_EQ(0.2f, range.discreteValues[1]);
+  }
+
+  {
+    SdpImageattrAttributeList::SRange range(ParseSRange("[0.1,0.2,0.3]"));
+    ASSERT_EQ(3U, range.discreteValues.size());
+    ASSERT_FLOAT_EQ(0.1f, range.discreteValues[0]);
+    ASSERT_FLOAT_EQ(0.2f, range.discreteValues[1]);
+    ASSERT_FLOAT_EQ(0.3f, range.discreteValues[2]);
+  }
+
+  {
+    SdpImageattrAttributeList::SRange range(ParseSRange("[0.1-0.2]"));
+    ASSERT_EQ(0U, range.discreteValues.size());
+    ASSERT_FLOAT_EQ(0.1f, range.min);
+    ASSERT_FLOAT_EQ(0.2f, range.max);
+  }
+}
+
+static void
+ParseInvalidSRange(const std::string& input, size_t last)
+{
+  std::istringstream is;
+  is.str(input);
+  SdpImageattrAttributeList::SRange range;
+  std::string error;
+  ASSERT_FALSE(range.Parse(is, &error))
+    << "\'" << input << "\' should not have parsed successfully";
+  is.clear();
+  ASSERT_EQ(last, static_cast<size_t>(is.tellg()))
+    << "Parse failed at unexpected location:" << std::endl
+    << input << std::endl
+    << std::string(is.tellg(), ' ') << "^" << std::endl;
+  // For a human to eyeball to make sure the error strings look sane
+  std::cout << "\"" << input << "\" - " << error << std::endl; \
+}
+
+TEST(NewSdpTestNoFixture, CheckImageattrSRangeParseInvalid)
+{
+  ParseInvalidSRange("", 0);
+  ParseInvalidSRange("[", 1);
+  ParseInvalidSRange("[x", 1);
+  ParseInvalidSRange("[-1", 1);
+  ParseInvalidSRange("[", 1);
+  ParseInvalidSRange("[-", 1);
+  ParseInvalidSRange("[x", 1);
+  ParseInvalidSRange("[ 0.2", 1);
+  ParseInvalidSRange("[10.1-", 5);
+  ParseInvalidSRange("[0.08-", 5);
+  ParseInvalidSRange("[0.2", 4);
+  ParseInvalidSRange("[0.2-", 5);
+  ParseInvalidSRange("[0.2-x", 5);
+  ParseInvalidSRange("[0.2--1", 5);
+  ParseInvalidSRange("[0.2-0.3", 8);
+  ParseInvalidSRange("[0.2-0.1]", 8);
+  ParseInvalidSRange("[0.2-0.3x", 8);
+  ParseInvalidSRange("[0.2,", 5);
+  ParseInvalidSRange("[0.2,x", 5);
+  ParseInvalidSRange("[0.2,-1", 5);
+  ParseInvalidSRange("[0.2]", 4);
+  ParseInvalidSRange("[0.2x", 4);
+  ParseInvalidSRange("[0.2,]", 5);
+  ParseInvalidSRange("[0.2,-]", 5);
+  ParseInvalidSRange(" ", 0);
+  ParseInvalidSRange("x", 0);
+  ParseInvalidSRange("-x", 0);
+  ParseInvalidSRange("-1", 0);
+}
+
+static SdpImageattrAttributeList::PRange
+ParsePRange(const std::string& input)
+{
+  std::istringstream is;
+  is.str(input + ",");
+  std::string error;
+  SdpImageattrAttributeList::PRange range;
+  EXPECT_TRUE(range.Parse(is, &error)) << error;
+  EXPECT_EQ(',', is.get());
+  EXPECT_EQ(EOF, is.get());
+  return range;
+}
+
+TEST(NewSdpTestNoFixture, CheckImageattrPRangeParseValid)
+{
+  SdpImageattrAttributeList::PRange range(ParsePRange("[0.1000-9.9999]"));
+  ASSERT_FLOAT_EQ(0.1f, range.min);
+  ASSERT_FLOAT_EQ(9.9999f, range.max);
+}
+
+static void
+ParseInvalidPRange(const std::string& input, size_t last)
+{
+  std::istringstream is;
+  is.str(input);
+  SdpImageattrAttributeList::PRange range;
+  std::string error;
+  ASSERT_FALSE(range.Parse(is, &error))
+    << "\'" << input << "\' should not have parsed successfully";
+  is.clear();
+  ASSERT_EQ(last, static_cast<size_t>(is.tellg()))
+    << "Parse failed at unexpected location:" << std::endl
+    << input << std::endl
+    << std::string(is.tellg(), ' ') << "^" << std::endl;
+  // For a human to eyeball to make sure the error strings look sane
+  std::cout << "\"" << input << "\" - " << error << std::endl; \
+}
+
+TEST(NewSdpTestNoFixture, CheckImageattrPRangeParseInvalid)
+{
+  ParseInvalidPRange("", 0);
+  ParseInvalidPRange("[", 1);
+  ParseInvalidPRange("[x", 1);
+  ParseInvalidPRange("[-1", 1);
+  ParseInvalidPRange("[", 1);
+  ParseInvalidPRange("[-", 1);
+  ParseInvalidPRange("[x", 1);
+  ParseInvalidPRange("[ 0.2", 1);
+  ParseInvalidPRange("[10.1-", 5);
+  ParseInvalidPRange("[0.08-", 5);
+  ParseInvalidPRange("[0.2", 4);
+  ParseInvalidPRange("[0.2-", 5);
+  ParseInvalidPRange("[0.2-x", 5);
+  ParseInvalidPRange("[0.2--1", 5);
+  ParseInvalidPRange("[0.2-0.3", 8);
+  ParseInvalidPRange("[0.2-0.1]", 8);
+  ParseInvalidPRange("[0.2-0.3x", 8);
+  ParseInvalidPRange("[0.2,", 4);
+  ParseInvalidPRange("[0.2:", 4);
+  ParseInvalidPRange("[0.2]", 4);
+  ParseInvalidPRange("[0.2x", 4);
+  ParseInvalidPRange(" ", 0);
+  ParseInvalidPRange("x", 0);
+  ParseInvalidPRange("-x", 0);
+  ParseInvalidPRange("-1", 0);
+}
+
+static SdpImageattrAttributeList::Set
+ParseSet(const std::string& input)
+{
+  std::istringstream is;
+  is.str(input + " ");
+  std::string error;
+  SdpImageattrAttributeList::Set set;
+  EXPECT_TRUE(set.Parse(is, &error)) << error;
+  EXPECT_EQ(' ', is.get());
+  EXPECT_EQ(EOF, is.get());
+  return set;
+}
+
+TEST(NewSdpTestNoFixture, CheckImageattrSetParseValid)
+{
+  {
+    SdpImageattrAttributeList::Set set(ParseSet("[x=320,y=240]"));
+    ASSERT_EQ(1U, set.xRange.discreteValues.size());
+    ASSERT_EQ(320U, set.xRange.discreteValues[0]);
+    ASSERT_EQ(1U, set.yRange.discreteValues.size());
+    ASSERT_EQ(240U, set.yRange.discreteValues[0]);
+    ASSERT_FALSE(set.sRange.IsSet());
+    ASSERT_FALSE(set.pRange.IsSet());
+    ASSERT_FLOAT_EQ(0.5f, set.qValue);
+  }
+
+  {
+    SdpImageattrAttributeList::Set set(ParseSet("[X=320,Y=240]"));
+    ASSERT_EQ(1U, set.xRange.discreteValues.size());
+    ASSERT_EQ(320U, set.xRange.discreteValues[0]);
+    ASSERT_EQ(1U, set.yRange.discreteValues.size());
+    ASSERT_EQ(240U, set.yRange.discreteValues[0]);
+    ASSERT_FALSE(set.sRange.IsSet());
+    ASSERT_FALSE(set.pRange.IsSet());
+    ASSERT_FLOAT_EQ(0.5f, set.qValue);
+  }
+
+  {
+    SdpImageattrAttributeList::Set set(ParseSet("[x=320,y=240,par=[0.1-0.2]]"));
+    ASSERT_EQ(1U, set.xRange.discreteValues.size());
+    ASSERT_EQ(320U, set.xRange.discreteValues[0]);
+    ASSERT_EQ(1U, set.yRange.discreteValues.size());
+    ASSERT_EQ(240U, set.yRange.discreteValues[0]);
+    ASSERT_FALSE(set.sRange.IsSet());
+    ASSERT_TRUE(set.pRange.IsSet());
+    ASSERT_FLOAT_EQ(0.1f, set.pRange.min);
+    ASSERT_FLOAT_EQ(0.2f, set.pRange.max);
+    ASSERT_FLOAT_EQ(0.5f, set.qValue);
+  }
+
+  {
+    SdpImageattrAttributeList::Set set(ParseSet("[x=320,y=240,sar=[0.1-0.2]]"));
+    ASSERT_EQ(1U, set.xRange.discreteValues.size());
+    ASSERT_EQ(320U, set.xRange.discreteValues[0]);
+    ASSERT_EQ(1U, set.yRange.discreteValues.size());
+    ASSERT_EQ(240U, set.yRange.discreteValues[0]);
+    ASSERT_TRUE(set.sRange.IsSet());
+    ASSERT_FLOAT_EQ(0.1f, set.sRange.min);
+    ASSERT_FLOAT_EQ(0.2f, set.sRange.max);
+    ASSERT_FALSE(set.pRange.IsSet());
+    ASSERT_FLOAT_EQ(0.5f, set.qValue);
+  }
+
+  {
+    SdpImageattrAttributeList::Set set(ParseSet("[x=320,y=240,q=0.1]"));
+    ASSERT_EQ(1U, set.xRange.discreteValues.size());
+    ASSERT_EQ(320U, set.xRange.discreteValues[0]);
+    ASSERT_EQ(1U, set.yRange.discreteValues.size());
+    ASSERT_EQ(240U, set.yRange.discreteValues[0]);
+    ASSERT_FALSE(set.sRange.IsSet());
+    ASSERT_FALSE(set.pRange.IsSet());
+    ASSERT_FLOAT_EQ(0.1f, set.qValue);
+  }
+
+  {
+    SdpImageattrAttributeList::Set set(
+        ParseSet("[x=320,y=240,par=[0.1-0.2],sar=[0.3-0.4],q=0.6]"));
+    ASSERT_EQ(1U, set.xRange.discreteValues.size());
+    ASSERT_EQ(320U, set.xRange.discreteValues[0]);
+    ASSERT_EQ(1U, set.yRange.discreteValues.size());
+    ASSERT_EQ(240U, set.yRange.discreteValues[0]);
+    ASSERT_TRUE(set.sRange.IsSet());
+    ASSERT_FLOAT_EQ(0.3f, set.sRange.min);
+    ASSERT_FLOAT_EQ(0.4f, set.sRange.max);
+    ASSERT_TRUE(set.pRange.IsSet());
+    ASSERT_FLOAT_EQ(0.1f, set.pRange.min);
+    ASSERT_FLOAT_EQ(0.2f, set.pRange.max);
+    ASSERT_FLOAT_EQ(0.6f, set.qValue);
+  }
+
+  {
+    SdpImageattrAttributeList::Set set(ParseSet("[x=320,y=240,foo=bar,q=0.1]"));
+    ASSERT_EQ(1U, set.xRange.discreteValues.size());
+    ASSERT_EQ(320U, set.xRange.discreteValues[0]);
+    ASSERT_EQ(1U, set.yRange.discreteValues.size());
+    ASSERT_EQ(240U, set.yRange.discreteValues[0]);
+    ASSERT_FALSE(set.sRange.IsSet());
+    ASSERT_FALSE(set.pRange.IsSet());
+    ASSERT_FLOAT_EQ(0.1f, set.qValue);
+  }
+
+  {
+    SdpImageattrAttributeList::Set set(
+        ParseSet("[x=320,y=240,foo=bar,q=0.1,bar=baz]"));
+    ASSERT_EQ(1U, set.xRange.discreteValues.size());
+    ASSERT_EQ(320U, set.xRange.discreteValues[0]);
+    ASSERT_EQ(1U, set.yRange.discreteValues.size());
+    ASSERT_EQ(240U, set.yRange.discreteValues[0]);
+    ASSERT_FALSE(set.sRange.IsSet());
+    ASSERT_FALSE(set.pRange.IsSet());
+    ASSERT_FLOAT_EQ(0.1f, set.qValue);
+  }
+
+  {
+    SdpImageattrAttributeList::Set set(
+        ParseSet("[x=320,y=240,foo=[bar],q=0.1,bar=[baz]]"));
+    ASSERT_EQ(1U, set.xRange.discreteValues.size());
+    ASSERT_EQ(320U, set.xRange.discreteValues[0]);
+    ASSERT_EQ(1U, set.yRange.discreteValues.size());
+    ASSERT_EQ(240U, set.yRange.discreteValues[0]);
+    ASSERT_FALSE(set.sRange.IsSet());
+    ASSERT_FALSE(set.pRange.IsSet());
+    ASSERT_FLOAT_EQ(0.1f, set.qValue);
+  }
+
+  {
+    SdpImageattrAttributeList::Set set(
+        ParseSet("[x=320,y=240,foo=[par=foo,sar=bar],q=0.1,bar=[baz]]"));
+    ASSERT_EQ(1U, set.xRange.discreteValues.size());
+    ASSERT_EQ(320U, set.xRange.discreteValues[0]);
+    ASSERT_EQ(1U, set.yRange.discreteValues.size());
+    ASSERT_EQ(240U, set.yRange.discreteValues[0]);
+    ASSERT_FALSE(set.sRange.IsSet());
+    ASSERT_FALSE(set.pRange.IsSet());
+    ASSERT_FLOAT_EQ(0.1f, set.qValue);
+  }
+}
+
+static void
+ParseInvalidSet(const std::string& input, size_t last)
+{
+  std::istringstream is;
+  is.str(input);
+  SdpImageattrAttributeList::Set set;
+  std::string error;
+  ASSERT_FALSE(set.Parse(is, &error))
+    << "\'" << input << "\' should not have parsed successfully";
+  is.clear();
+  ASSERT_EQ(last, static_cast<size_t>(is.tellg()))
+    << "Parse failed at unexpected location:" << std::endl
+    << input << std::endl
+    << std::string(is.tellg(), ' ') << "^" << std::endl;
+  // For a human to eyeball to make sure the error strings look sane
+  std::cout << "\"" << input << "\" - " << error << std::endl; \
+}
+
+TEST(NewSdpTestNoFixture, CheckImageattrSetParseInvalid)
+{
+  ParseInvalidSet("", 0);
+  ParseInvalidSet("x", 0);
+  ParseInvalidSet("[", 1);
+  ParseInvalidSet("[=", 2);
+  ParseInvalidSet("[x", 2);
+  ParseInvalidSet("[y=", 3);
+  ParseInvalidSet("[x=[", 4);
+  ParseInvalidSet("[x=320", 6);
+  ParseInvalidSet("[x=320x", 6);
+  ParseInvalidSet("[x=320,", 7);
+  ParseInvalidSet("[x=320,=", 8);
+  ParseInvalidSet("[x=320,x", 8);
+  ParseInvalidSet("[x=320,x=", 9);
+  ParseInvalidSet("[x=320,y=[", 10);
+  ParseInvalidSet("[x=320,y=240", 12);
+  ParseInvalidSet("[x=320,y=240x", 12);
+  ParseInvalidSet("[x=320,y=240,", 13);
+  ParseInvalidSet("[x=320,y=240,q=", 15);
+  ParseInvalidSet("[x=320,y=240,q=x", 15);
+  ParseInvalidSet("[x=320,y=240,q=0.5", 18);
+  ParseInvalidSet("[x=320,y=240,q=0.5,", 19);
+  ParseInvalidSet("[x=320,y=240,q=0.5,]", 20);
+  ParseInvalidSet("[x=320,y=240,q=0.5,=]", 20);
+  ParseInvalidSet("[x=320,y=240,q=0.5,sar=x]", 23);
+  ParseInvalidSet("[x=320,y=240,q=0.5,q=0.4", 21);
+  ParseInvalidSet("[x=320,y=240,sar=", 17);
+  ParseInvalidSet("[x=320,y=240,sar=x", 17);
+  ParseInvalidSet("[x=320,y=240,sar=[0.5-0.6],sar=[0.7-0.8]", 31);
+  ParseInvalidSet("[x=320,y=240,par=", 17);
+  ParseInvalidSet("[x=320,y=240,par=x", 17);
+  ParseInvalidSet("[x=320,y=240,par=[0.5-0.6],par=[0.7-0.8]", 31);
+  ParseInvalidSet("[x=320,y=240,foo=", 17);
+  ParseInvalidSet("[x=320,y=240,foo=x", 18);
+}
+
+static SdpImageattrAttributeList::Imageattr
+ParseImageattr(const std::string& input)
+{
+  std::istringstream is;
+  is.str(input);
+  std::string error;
+  SdpImageattrAttributeList::Imageattr imageattr;
+  EXPECT_TRUE(imageattr.Parse(is, &error)) << error;
+  EXPECT_TRUE(is.eof());
+  return imageattr;
+}
+
+TEST(NewSdpTestNoFixture, CheckImageattrParseValid)
+{
+  {
+    SdpImageattrAttributeList::Imageattr imageattr(ParseImageattr("* send *"));
+    ASSERT_FALSE(imageattr.pt.isSome());
+    ASSERT_TRUE(imageattr.sendAll);
+    ASSERT_TRUE(imageattr.sendSets.empty());
+    ASSERT_FALSE(imageattr.recvAll);
+    ASSERT_TRUE(imageattr.recvSets.empty());
+  }
+
+  {
+    SdpImageattrAttributeList::Imageattr imageattr(ParseImageattr("* SEND *"));
+    ASSERT_FALSE(imageattr.pt.isSome());
+    ASSERT_TRUE(imageattr.sendAll);
+    ASSERT_TRUE(imageattr.sendSets.empty());
+    ASSERT_FALSE(imageattr.recvAll);
+    ASSERT_TRUE(imageattr.recvSets.empty());
+  }
+
+  {
+    SdpImageattrAttributeList::Imageattr imageattr(ParseImageattr("* recv *"));
+    ASSERT_FALSE(imageattr.pt.isSome());
+    ASSERT_FALSE(imageattr.sendAll);
+    ASSERT_TRUE(imageattr.sendSets.empty());
+    ASSERT_TRUE(imageattr.recvAll);
+    ASSERT_TRUE(imageattr.recvSets.empty());
+  }
+
+  {
+    SdpImageattrAttributeList::Imageattr imageattr(ParseImageattr("* RECV *"));
+    ASSERT_FALSE(imageattr.pt.isSome());
+    ASSERT_FALSE(imageattr.sendAll);
+    ASSERT_TRUE(imageattr.sendSets.empty());
+    ASSERT_TRUE(imageattr.recvAll);
+    ASSERT_TRUE(imageattr.recvSets.empty());
+  }
+
+  {
+    SdpImageattrAttributeList::Imageattr imageattr(
+        ParseImageattr("* recv * send *"));
+    ASSERT_FALSE(imageattr.pt.isSome());
+    ASSERT_TRUE(imageattr.sendAll);
+    ASSERT_TRUE(imageattr.sendSets.empty());
+    ASSERT_TRUE(imageattr.recvAll);
+    ASSERT_TRUE(imageattr.recvSets.empty());
+  }
+
+  {
+    SdpImageattrAttributeList::Imageattr imageattr(
+        ParseImageattr("* send * recv *"));
+    ASSERT_FALSE(imageattr.pt.isSome());
+    ASSERT_TRUE(imageattr.sendAll);
+    ASSERT_TRUE(imageattr.sendSets.empty());
+    ASSERT_TRUE(imageattr.recvAll);
+    ASSERT_TRUE(imageattr.recvSets.empty());
+  }
+
+  {
+    SdpImageattrAttributeList::Imageattr imageattr(
+        ParseImageattr("8 send * recv *"));
+    ASSERT_EQ(8U, *imageattr.pt);
+    ASSERT_TRUE(imageattr.sendAll);
+    ASSERT_TRUE(imageattr.sendSets.empty());
+    ASSERT_TRUE(imageattr.recvAll);
+    ASSERT_TRUE(imageattr.recvSets.empty());
+  }
+
+  {
+    SdpImageattrAttributeList::Imageattr imageattr(
+        ParseImageattr("8 send [x=320,y=240] recv *"));
+    ASSERT_EQ(8U, *imageattr.pt);
+    ASSERT_FALSE(imageattr.sendAll);
+    ASSERT_EQ(1U, imageattr.sendSets.size());
+    ASSERT_EQ(1U, imageattr.sendSets[0].xRange.discreteValues.size());
+    ASSERT_EQ(320U, imageattr.sendSets[0].xRange.discreteValues[0]);
+    ASSERT_EQ(1U, imageattr.sendSets[0].yRange.discreteValues.size());
+    ASSERT_EQ(240U, imageattr.sendSets[0].yRange.discreteValues[0]);
+    ASSERT_TRUE(imageattr.recvAll);
+    ASSERT_TRUE(imageattr.recvSets.empty());
+  }
+
+  {
+    SdpImageattrAttributeList::Imageattr imageattr(
+        ParseImageattr("8 send [x=320,y=240] [x=640,y=480] recv *"));
+    ASSERT_EQ(8U, *imageattr.pt);
+    ASSERT_FALSE(imageattr.sendAll);
+    ASSERT_EQ(2U, imageattr.sendSets.size());
+    ASSERT_EQ(1U, imageattr.sendSets[0].xRange.discreteValues.size());
+    ASSERT_EQ(320U, imageattr.sendSets[0].xRange.discreteValues[0]);
+    ASSERT_EQ(1U, imageattr.sendSets[0].yRange.discreteValues.size());
+    ASSERT_EQ(240U, imageattr.sendSets[0].yRange.discreteValues[0]);
+    ASSERT_EQ(1U, imageattr.sendSets[1].xRange.discreteValues.size());
+    ASSERT_EQ(640U, imageattr.sendSets[1].xRange.discreteValues[0]);
+    ASSERT_EQ(1U, imageattr.sendSets[1].yRange.discreteValues.size());
+    ASSERT_EQ(480U, imageattr.sendSets[1].yRange.discreteValues[0]);
+    ASSERT_TRUE(imageattr.recvAll);
+    ASSERT_TRUE(imageattr.recvSets.empty());
+  }
+
+  {
+    SdpImageattrAttributeList::Imageattr imageattr(
+        ParseImageattr("8 send * recv [x=320,y=240]"));
+    ASSERT_EQ(8U, *imageattr.pt);
+    ASSERT_FALSE(imageattr.recvAll);
+    ASSERT_EQ(1U, imageattr.recvSets.size());
+    ASSERT_EQ(1U, imageattr.recvSets[0].xRange.discreteValues.size());
+    ASSERT_EQ(320U, imageattr.recvSets[0].xRange.discreteValues[0]);
+    ASSERT_EQ(1U, imageattr.recvSets[0].yRange.discreteValues.size());
+    ASSERT_EQ(240U, imageattr.recvSets[0].yRange.discreteValues[0]);
+    ASSERT_TRUE(imageattr.sendAll);
+    ASSERT_TRUE(imageattr.sendSets.empty());
+  }
+
+  {
+    SdpImageattrAttributeList::Imageattr imageattr(
+        ParseImageattr("8 send * recv [x=320,y=240] [x=640,y=480]"));
+    ASSERT_EQ(8U, *imageattr.pt);
+    ASSERT_FALSE(imageattr.recvAll);
+    ASSERT_EQ(2U, imageattr.recvSets.size());
+    ASSERT_EQ(1U, imageattr.recvSets[0].xRange.discreteValues.size());
+    ASSERT_EQ(320U, imageattr.recvSets[0].xRange.discreteValues[0]);
+    ASSERT_EQ(1U, imageattr.recvSets[0].yRange.discreteValues.size());
+    ASSERT_EQ(240U, imageattr.recvSets[0].yRange.discreteValues[0]);
+    ASSERT_EQ(1U, imageattr.recvSets[1].xRange.discreteValues.size());
+    ASSERT_EQ(640U, imageattr.recvSets[1].xRange.discreteValues[0]);
+    ASSERT_EQ(1U, imageattr.recvSets[1].yRange.discreteValues.size());
+    ASSERT_EQ(480U, imageattr.recvSets[1].yRange.discreteValues[0]);
+    ASSERT_TRUE(imageattr.sendAll);
+    ASSERT_TRUE(imageattr.sendSets.empty());
+  }
+}
+
+static void
+ParseInvalidImageattr(const std::string& input, size_t last)
+{
+  std::istringstream is;
+  is.str(input);
+  SdpImageattrAttributeList::Imageattr imageattr;
+  std::string error;
+  ASSERT_FALSE(imageattr.Parse(is, &error))
+    << "\'" << input << "\' should not have parsed successfully";
+  is.clear();
+  ASSERT_EQ(last, static_cast<size_t>(is.tellg()))
+    << "Parse failed at unexpected location:" << std::endl
+    << input << std::endl
+    << std::string(is.tellg(), ' ') << "^" << std::endl;
+  // For a human to eyeball to make sure the error strings look sane
+  std::cout << "\"" << input << "\" - " << error << std::endl; \
+}
+
+TEST(NewSdpTestNoFixture, CheckImageattrParseInvalid)
+{
+  ParseInvalidImageattr("", 0);
+  ParseInvalidImageattr(" ", 0);
+  ParseInvalidImageattr("-1", 0);
+  ParseInvalidImageattr("99999 ", 5);
+  ParseInvalidImageattr("*", 1);
+  ParseInvalidImageattr("* sen", 5);
+  ParseInvalidImageattr("* vcer *", 6);
+  ParseInvalidImageattr("* send x", 7);
+  ParseInvalidImageattr("* send [x=640,y=480] [", 22);
+  ParseInvalidImageattr("* send * sen", 12);
+  ParseInvalidImageattr("* send * vcer *", 13);
+  ParseInvalidImageattr("* send * send *", 13);
+  ParseInvalidImageattr("* recv * recv *", 13);
+  ParseInvalidImageattr("* send * recv x", 14);
+  ParseInvalidImageattr("* send * recv [x=640,y=480] [", 29);
+  ParseInvalidImageattr("* send * recv [x=640,y=480] *", 28);
+  ParseInvalidImageattr("* send * recv [x=640,y=480] foobajooba", 28);
+}
+
+TEST(NewSdpTestNoFixture, CheckImageattrXYRangeSerialization)
+{
+  SdpImageattrAttributeList::XYRange range;
+  std::stringstream os;
+
+  range.min = 320;
+  range.max = 640;
+  range.Serialize(os);
+  ASSERT_EQ("[320:640]", os.str());
+  os.str(""); // clear
+
+  range.step = 16;
+  range.Serialize(os);
+  ASSERT_EQ("[320:16:640]", os.str());
+  os.str(""); // clear
+
+  range.min = 0;
+  range.max = 0;
+  range.discreteValues.push_back(320);
+  range.Serialize(os);
+  ASSERT_EQ("320", os.str());
+  os.str("");
+
+  range.discreteValues.push_back(640);
+  range.Serialize(os);
+  ASSERT_EQ("[320,640]", os.str());
+}
+
+TEST(NewSdpTestNoFixture, CheckImageattrSRangeSerialization)
+{
+  SdpImageattrAttributeList::SRange range;
+  std::ostringstream os;
+
+  range.min = 0.1f;
+  range.max = 0.9999f;
+  range.Serialize(os);
+  ASSERT_EQ("[0.1000-0.9999]", os.str());
+  os.str("");
+
+  range.min = 0.0f;
+  range.max = 0.0f;
+  range.discreteValues.push_back(0.1f);
+  range.Serialize(os);
+  ASSERT_EQ("0.1000", os.str());
+  os.str("");
+
+  range.discreteValues.push_back(0.5f);
+  range.Serialize(os);
+  ASSERT_EQ("[0.1000,0.5000]", os.str());
+}
+
+TEST(NewSdpTestNoFixture, CheckImageattrPRangeSerialization)
+{
+  SdpImageattrAttributeList::PRange range;
+  std::ostringstream os;
+
+  range.min = 0.1f;
+  range.max = 0.9999f;
+  range.Serialize(os);
+  ASSERT_EQ("[0.1000-0.9999]", os.str());
+}
+
+TEST(NewSdpTestNoFixture, CheckImageattrSetSerialization)
+{
+  SdpImageattrAttributeList::Set set;
+  std::ostringstream os;
+
+  set.xRange.discreteValues.push_back(640);
+  set.yRange.discreteValues.push_back(480);
+  set.Serialize(os);
+  ASSERT_EQ("[x=640,y=480]", os.str());
+  os.str("");
+
+  set.qValue = 0.00f;
+  set.Serialize(os);
+  ASSERT_EQ("[x=640,y=480,q=0.00]", os.str());
+  os.str("");
+
+  set.qValue = 0.10f;
+  set.Serialize(os);
+  ASSERT_EQ("[x=640,y=480,q=0.10]", os.str());
+  os.str("");
+
+  set.qValue = 1.00f;
+  set.Serialize(os);
+  ASSERT_EQ("[x=640,y=480,q=1.00]", os.str());
+  os.str("");
+
+  set.sRange.discreteValues.push_back(1.1f);
+  set.Serialize(os);
+  ASSERT_EQ("[x=640,y=480,sar=1.1000,q=1.00]", os.str());
+  os.str("");
+
+  set.pRange.min = 0.9f;
+  set.pRange.max = 1.1f;
+  set.Serialize(os);
+  ASSERT_EQ("[x=640,y=480,sar=1.1000,par=[0.9000-1.1000],q=1.00]", os.str());
+  os.str("");
+}
+
+TEST(NewSdpTestNoFixture, CheckImageattrSerialization)
+{
+  SdpImageattrAttributeList::Imageattr imageattr;
+  std::ostringstream os;
+
+  imageattr.sendAll = true;
+  imageattr.pt = Some<uint16_t>(8U);
+  imageattr.Serialize(os);
+  ASSERT_EQ("8 send *", os.str());
+  os.str("");
+
+  imageattr.pt.reset();;
+  imageattr.Serialize(os);
+  ASSERT_EQ("* send *", os.str());
+  os.str("");
+
+  imageattr.sendAll = false;
+  imageattr.recvAll = true;
+  imageattr.Serialize(os);
+  ASSERT_EQ("* recv *", os.str());
+  os.str("");
+
+  imageattr.sendAll = true;
+  imageattr.Serialize(os);
+  ASSERT_EQ("* send * recv *", os.str());
+  os.str("");
+
+  imageattr.sendAll = false;
+  imageattr.sendSets.push_back(SdpImageattrAttributeList::Set());
+  imageattr.sendSets.back().xRange.discreteValues.push_back(320);
+  imageattr.sendSets.back().yRange.discreteValues.push_back(240);
+  imageattr.Serialize(os);
+  ASSERT_EQ("* send [x=320,y=240] recv *", os.str());
+  os.str("");
+
+  imageattr.sendSets.push_back(SdpImageattrAttributeList::Set());
+  imageattr.sendSets.back().xRange.discreteValues.push_back(640);
+  imageattr.sendSets.back().yRange.discreteValues.push_back(480);
+  imageattr.Serialize(os);
+  ASSERT_EQ("* send [x=320,y=240] [x=640,y=480] recv *", os.str());
+  os.str("");
+
+  imageattr.recvAll = false;
+  imageattr.recvSets.push_back(SdpImageattrAttributeList::Set());
+  imageattr.recvSets.back().xRange.discreteValues.push_back(320);
+  imageattr.recvSets.back().yRange.discreteValues.push_back(240);
+  imageattr.Serialize(os);
+  ASSERT_EQ("* send [x=320,y=240] [x=640,y=480] recv [x=320,y=240]", os.str());
+  os.str("");
+
+  imageattr.recvSets.push_back(SdpImageattrAttributeList::Set());
+  imageattr.recvSets.back().xRange.discreteValues.push_back(640);
+  imageattr.recvSets.back().yRange.discreteValues.push_back(480);
+  imageattr.Serialize(os);
+  ASSERT_EQ(
+      "* send [x=320,y=240] [x=640,y=480] recv [x=320,y=240] [x=640,y=480]",
+      os.str());
+  os.str("");
 }
 
 } // End namespace test.

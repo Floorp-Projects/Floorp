@@ -452,6 +452,7 @@ BrowserElementParent.prototype = {
   //  - collapsed: Indicate current selection is collapsed or not.
   //  - caretVisible: Indicate the caret visiibility.
   //  - selectionVisible: Indicate current selection is visible or not.
+  //  - selectionEditable: Indicate current selection is editable or not.
   _handleCaretStateChanged: function(data) {
     let evt = this._createEvent('caretstatechanged', data.json,
                                 /* cancelable = */ false);
