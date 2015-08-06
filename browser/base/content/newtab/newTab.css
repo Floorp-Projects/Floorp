@@ -789,6 +789,10 @@ input[type=button] {
   color: #4A90E2;
 }
 
+#newtab-intro-text > p > a:hover {
+  color: #000000;
+}
+
 #newtab-intro-text .newtab-control {
   background-size: 18px auto;
   height: 18px;
