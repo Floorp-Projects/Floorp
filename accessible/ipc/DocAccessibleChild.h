@@ -15,6 +15,7 @@ namespace mozilla {
 namespace a11y {
 class Accessible;
 class HyperTextAccessible;
+class TextLeafAccessible;
 class ImageAccessible;
 class TableAccessible;
 class TableCellAccessible;
@@ -96,6 +97,8 @@ public:
   virtual bool RecvAttributes(const uint64_t& aID,
                               nsTArray<Attribute> *aAttributes) override;
 
+  virtual bool RecvCaretLineNumber(const uint64_t& aID, int32_t* aLineNumber)
+    override;
   virtual bool RecvCaretOffset(const uint64_t& aID, int32_t* aOffset)
     override;
   virtual bool RecvSetCaretOffset(const uint64_t& aID, const int32_t& aOffset,
@@ -193,6 +196,9 @@ public:
                                           const uint32_t& aCoordinateType,
                                           const int32_t& aX,
                                           const int32_t& aY) override;
+
+  virtual bool RecvText(const uint64_t& aID,
+                        nsString* aText) override;
 
   virtual bool RecvReplaceText(const uint64_t& aID,
                                const nsString& aText) override;
@@ -460,6 +466,7 @@ private:
   Accessible* IdToAccessibleLink(const uint64_t& aID) const;
   Accessible* IdToAccessibleSelect(const uint64_t& aID) const;
   HyperTextAccessible* IdToHyperTextAccessible(const uint64_t& aID) const;
+  TextLeafAccessible* IdToTextLeafAccessible(const uint64_t& aID) const;
   ImageAccessible* IdToImageAccessible(const uint64_t& aID) const;
   TableCellAccessible* IdToTableCellAccessible(const uint64_t& aID) const;
   TableAccessible* IdToTableAccessible(const uint64_t& aID) const;
