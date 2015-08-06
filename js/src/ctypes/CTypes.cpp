@@ -1338,6 +1338,19 @@ ArgumentTypeMismatch(JSContext* cx, const char* arg, const char* func,
 }
 
 static bool
+DuplicateFieldError(JSContext* cx, Handle<JSFlatString*> name)
+{
+  JSAutoByteString nameBytes;
+  const char* nameStr = nameBytes.encodeLatin1(cx, name);
+  if (!nameStr)
+    return false;
+
+  JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                       CTYPESMSG_DUPLICATE_FIELD, nameStr);
+  return false;
+}
+
+static bool
 EmptyFinalizerCallError(JSContext* cx, const char* funName)
 {
   JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
@@ -1408,6 +1421,110 @@ FieldCountMismatch(JSContext* cx,
                        CTYPESMSG_FIELD_MISMATCH,
                        valStr, structStr, expectedCountStr, actualCountStr,
                        posStr);
+  return false;
+}
+
+static bool
+FieldDescriptorCountError(JSContext* cx, Value val, size_t length)
+{
+  RootedValue typeVal(cx, val);
+  JSAutoByteString valBytes;
+  const char* valStr = CTypesToSourceForError(cx, typeVal, valBytes);
+  if (!valStr)
+    return false;
+
+  char lengthStr[16];
+  JS_snprintf(lengthStr, 16, "%u", length);
+
+  JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                       CTYPESMSG_FIELD_DESC_COUNT, valStr, lengthStr);
+  return false;
+}
+
+static bool
+FieldDescriptorNameError(JSContext* cx, HandleId id)
+{
+  JSAutoByteString idBytes;
+  RootedValue idVal(cx, IdToValue(id));
+  const char* propStr = CTypesToSourceForError(cx, idVal, idBytes);
+  if (!propStr)
+    return false;
+
+  JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                       CTYPESMSG_FIELD_DESC_NAME, propStr);
+  return false;
+}
+
+static bool
+FieldDescriptorSizeError(JSContext* cx, HandleObject typeObj, HandleId id)
+{
+  RootedValue typeVal(cx, ObjectValue(*typeObj));
+  JSAutoByteString typeBytes;
+  const char* typeStr = CTypesToSourceForError(cx, typeVal, typeBytes);
+  if (!typeStr)
+    return false;
+
+  RootedString idStr(cx, IdToString(cx, id));
+  JSAutoByteString idBytes;
+  const char* propStr = idBytes.encodeLatin1(cx, idStr);
+  if (!propStr)
+    return false;
+
+  JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                       CTYPESMSG_FIELD_DESC_SIZE, typeStr, propStr);
+  return false;
+}
+
+static bool
+FieldDescriptorNameTypeError(JSContext* cx, Value val)
+{
+  RootedValue typeVal(cx, val);
+  JSAutoByteString valBytes;
+  const char* valStr = CTypesToSourceForError(cx, typeVal, valBytes);
+  if (!valStr)
+    return false;
+
+  JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                       CTYPESMSG_FIELD_DESC_NAMETYPE, valStr);
+  return false;
+}
+
+static bool
+FieldDescriptorTypeError(JSContext* cx, HandleValue poroVal, HandleId id)
+{
+  JSAutoByteString typeBytes;
+  const char* typeStr = CTypesToSourceForError(cx, poroVal, typeBytes);
+  if (!typeStr)
+    return false;
+
+  RootedString idStr(cx, IdToString(cx, id));
+  JSAutoByteString idBytes;
+  const char* propStr = idBytes.encodeLatin1(cx, idStr);
+  if (!propStr)
+    return false;
+
+  JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                       CTYPESMSG_FIELD_DESC_TYPE, typeStr, propStr);
+  return false;
+}
+
+static bool
+FieldMissingError(JSContext* cx, JSObject* typeObj, JSFlatString* name_)
+{
+  JSAutoByteString typeBytes;
+  RootedString name(cx, name_);
+  RootedValue typeVal(cx, ObjectValue(*typeObj));
+  const char* typeStr = CTypesToSourceForError(cx, typeVal, typeBytes);
+  if (!typeStr)
+    return false;
+
+  JSAutoByteString nameBytes;
+  const char* nameStr = nameBytes.encodeLatin1(cx, name);
+  if (!nameStr)
+    return false;
+
+  JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                       CTYPESMSG_FIELD_MISSING, typeStr, nameStr);
   return false;
 }
 
@@ -5608,10 +5725,10 @@ ArrayType::AddressOfElement(JSContext* cx, unsigned argc, Value* vp)
 // For a struct field descriptor 'val' of the form { name : type }, extract
 // 'name' and 'type'.
 static JSFlatString*
-ExtractStructField(JSContext* cx, Value val, MutableHandleObject typeObj)
+ExtractStructField(JSContext* cx, HandleValue val, MutableHandleObject typeObj)
 {
   if (val.isPrimitive()) {
-    JS_ReportError(cx, "struct field descriptors require a valid name and type");
+    FieldDescriptorNameTypeError(cx, val);
     return nullptr;
   }
 
@@ -5622,13 +5739,13 @@ ExtractStructField(JSContext* cx, Value val, MutableHandleObject typeObj)
 
   // make sure we have one, and only one, property
   if (props.length() != 1) {
-    JS_ReportError(cx, "struct field descriptors must contain one property");
+    FieldDescriptorCountError(cx, val, props.length());
     return nullptr;
   }
 
   RootedId nameid(cx, props[0]);
   if (!JSID_IS_STRING(nameid)) {
-    JS_ReportError(cx, "struct field descriptors require a valid name and type");
+    FieldDescriptorNameError(cx, nameid);
     return nullptr;
   }
 
@@ -5637,7 +5754,7 @@ ExtractStructField(JSContext* cx, Value val, MutableHandleObject typeObj)
     return nullptr;
 
   if (propVal.isPrimitive() || !CType::IsCType(&propVal.toObject())) {
-    JS_ReportError(cx, "struct field descriptors require a valid name and type");
+    FieldDescriptorTypeError(cx, propVal, nameid);
     return nullptr;
   }
 
@@ -5647,7 +5764,7 @@ ExtractStructField(JSContext* cx, Value val, MutableHandleObject typeObj)
   typeObj.set(&propVal.toObject());
   size_t size;
   if (!CType::GetSafeSize(typeObj, &size) || size == 0) {
-    JS_ReportError(cx, "struct field types must have defined and nonzero size");
+    FieldDescriptorSizeError(cx, typeObj, nameid);
     return nullptr;
   }
 
@@ -5783,8 +5900,7 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
       // Make sure each field name is unique
       FieldInfoHash::AddPtr entryPtr = fields.lookupForAdd(name);
       if (entryPtr) {
-        JS_ReportError(cx, "struct fields must have unique names");
-        return false;
+        return DuplicateFieldError(cx, name);
       }
 
       // Add the field to the StructType's 'prototype' property.
@@ -6101,11 +6217,7 @@ StructType::LookupField(JSContext* cx, JSObject* obj, JSFlatString* name)
   if (ptr)
     return &ptr->value();
 
-  JSAutoByteString bytes(cx, name);
-  if (!bytes)
-    return nullptr;
-
-  JS_ReportError(cx, "%s does not name a field", bytes.ptr());
+  FieldMissingError(cx, obj, name);
   return nullptr;
 }
 
