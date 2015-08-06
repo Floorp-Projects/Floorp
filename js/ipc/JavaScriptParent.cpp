@@ -11,7 +11,7 @@
 #include "jsfriendapi.h"
 #include "jswrapper.h"
 #include "js/Proxy.h"
-#include "HeapAPI.h"
+#include "js/HeapAPI.h"
 #include "xpcprivate.h"
 #include "mozilla/Casting.h"
 
