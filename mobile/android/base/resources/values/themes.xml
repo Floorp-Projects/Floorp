@@ -26,7 +26,6 @@
     <style name="GeckoDialogBase" parent="@android:style/Theme.Dialog">
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowContentOverlay">@null</item>
-        <item name="android:filterTouchesWhenObscured">true</item>
     </style>
 
     <style name="GeckoTitleDialogBase" parent="@android:style/Theme.Dialog" />
@@ -40,8 +39,6 @@
         to a particular API level can go here.
     -->
     <style name="Gecko" parent="GeckoBase">
-        <item name="android:filterTouchesWhenObscured">true</item>
-
         <!-- Default colors -->
         <item name="android:textColorPrimary">@color/primary_text</item>
         <item name="android:textColorSecondary">@color/secondary_text</item>
