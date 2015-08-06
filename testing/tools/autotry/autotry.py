@@ -37,14 +37,13 @@ class AutoTry(object):
         else:
             self._use_git = True
 
-    def manifests_by_flavor(self, paths):
+    def resolve_manifests(self, paths=None, tags=None):
+        assert tags or paths
+        tests = list(self.resolver.resolve_tests(tags=tags,
+                                                 paths=paths,
+                                                 cwd=self.mach_context.cwd))
         manifests_by_flavor = defaultdict(set)
 
-        if not paths:
-            return dict(manifests_by_flavor)
-
-        tests = list(self.resolver.resolve_tests(paths=paths,
-                                                 cwd=self.mach_context.cwd))
         for t in tests:
             if t['flavor'] in AutoTry.test_flavors:
                 flavor = t['flavor']
