@@ -410,6 +410,11 @@ size. -->
 <!ENTITY pref_titlebar_mode_title "Show page title">
 <!ENTITY pref_titlebar_mode_url "Show page address">
 
+<!-- Localization note (pref_prevent_magnifying_glass): Label for setting that controls
+     whether or not the magnifying glass is disabled. -->
+<!ENTITY pref_prevent_magnifying_glass "Disable magnifying glass ">
+<!ENTITY pref_prevent_magnifying_glass_summary "Prevent magnifying glass for use in resolving ambiguous screen touches">
+
 <!-- Localization note (pref_scroll_title_bar2): Label for setting that controls
      whether or not the dynamic toolbar is enabled. -->
 <!ENTITY pref_scroll_title_bar2 "Full-screen browsing">
