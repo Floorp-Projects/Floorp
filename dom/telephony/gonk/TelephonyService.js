@@ -2362,6 +2362,10 @@ TelephonyService.prototype = {
   _handleCallStateChanged: function(aClientId, aCalls) {
     if (DEBUG) debug("handleCallStateChanged: " + JSON.stringify(aCalls));
 
+    if (aCalls.length === 0) {
+      return;
+    }
+
     if (aCalls.some(call => call.state == nsITelephonyService.CALL_STATE_DIALING)) {
       gTelephonyMessenger.notifyNewCall();
     }
