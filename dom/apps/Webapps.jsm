@@ -738,7 +738,11 @@ this.DOMApplicationRegistry = {
 
   loadAndUpdateApps: function() {
     return Task.spawn(function*() {
-      let runUpdate = AppsUtils.isFirstRun(Services.prefs);
+      let runUpdate = false;
+      try {
+        runUpdate = AppsUtils.isFirstRun(Services.prefs);
+      } catch(e) {}
+
       let loadAppPermission = Services.prefs.getBoolPref("dom.apps.reset-permissions");
 
       yield this.loadCurrentRegistry();
@@ -801,7 +805,7 @@ this.DOMApplicationRegistry = {
         // installPreinstalledApp() removes the ones failing to install.
         this._saveApps();
 
-	Services.prefs.setBoolPref("dom.apps.reset-permissions", true);
+        Services.prefs.setBoolPref("dom.apps.reset-permissions", true);
       }
 
       // DataStores must be initialized at startup.
@@ -4332,27 +4336,6 @@ this.DOMApplicationRegistry = {
     }).catch(() => {
       sendError("FETCH_ICON_FAILED");
       return;
-    });
-  },
-
-  getAll: function(aCallback) {
-    debug("getAll");
-    let apps = [];
-    let tmp = [];
-
-    for (let id in this.webapps) {
-      let app = AppsUtils.cloneAppObject(this.webapps[id]);
-      if (!this._isLaunchable(app))
-        continue;
-
-      apps.push(app);
-      tmp.push({ id: id });
-    }
-
-    this._readManifests(tmp).then((aResult) => {
-      for (let i = 0; i < aResult.length; i++)
-        apps[i].manifest = aResult[i].manifest;
-      aCallback(apps);
     });
   },
 
