@@ -257,7 +257,7 @@ function run_abstract_class_tests()
   do_check_throws(function() { ctypes.CType.prototype.name; }, TypeError);
   do_check_throws(function() { ctypes.CType.prototype.size; }, TypeError);
   do_check_throws(function() { ctypes.CType.prototype.ptr; }, TypeError);
-  do_check_throws(function() { ctypes.CType.prototype.array(); }, Error);
+  do_check_throws(function() { ctypes.CType.prototype.array(); }, TypeError);
 
 
   // toString and toSource are called by the web console during inspection,
@@ -290,8 +290,8 @@ function run_abstract_class_tests()
   // Check that the shared properties and functions on ctypes.CData.prototype throw.
   do_check_throws(function() { ctypes.CData.prototype.value; }, TypeError);
   do_check_throws(function() { ctypes.CData.prototype.value = null; }, TypeError);
-  do_check_throws(function() { ctypes.CData.prototype.address(); }, Error);
-  do_check_throws(function() { ctypes.CData.prototype.readString(); }, Error);
+  do_check_throws(function() { ctypes.CData.prototype.address(); }, TypeError);
+  do_check_throws(function() { ctypes.CData.prototype.readString(); }, TypeError);
 
   // toString and toSource are called by the web console during inspection,
   // so we don't want them to throw.
@@ -320,8 +320,8 @@ function run_Int64_tests() {
   do_check_true(ctypes.Int64.prototype.hasOwnProperty("toSource"));
 
   // Check that the shared functions on ctypes.Int64.prototype throw.
-  do_check_throws(function() { ctypes.Int64.prototype.toString(); }, Error);
-  do_check_throws(function() { ctypes.Int64.prototype.toSource(); }, Error);
+  do_check_throws(function() { ctypes.Int64.prototype.toString(); }, TypeError);
+  do_check_throws(function() { ctypes.Int64.prototype.toSource(); }, TypeError);
 
   let i = ctypes.Int64(0);
   do_check_true(i.__proto__ === ctypes.Int64.prototype);
@@ -494,8 +494,8 @@ function run_UInt64_tests() {
   do_check_true(ctypes.UInt64.prototype.hasOwnProperty("toSource"));
 
   // Check that the shared functions on ctypes.UInt64.prototype throw.
-  do_check_throws(function() { ctypes.UInt64.prototype.toString(); }, Error);
-  do_check_throws(function() { ctypes.UInt64.prototype.toSource(); }, Error);
+  do_check_throws(function() { ctypes.UInt64.prototype.toString(); }, TypeError);
+  do_check_throws(function() { ctypes.UInt64.prototype.toSource(); }, TypeError);
 
   let i = ctypes.UInt64(0);
   do_check_true(i.__proto__ === ctypes.UInt64.prototype);
@@ -759,8 +759,8 @@ function run_basic_class_tests(t)
   // Check that the shared properties and functions on 't.prototype' throw.
   do_check_throws(function() { t.prototype.value; }, TypeError);
   do_check_throws(function() { t.prototype.value = null; }, TypeError);
-  do_check_throws(function() { t.prototype.address(); }, Error);
-  do_check_throws(function() { t.prototype.readString(); }, Error);
+  do_check_throws(function() { t.prototype.address(); }, TypeError);
+  do_check_throws(function() { t.prototype.readString(); }, TypeError);
 
   // toString and toSource are called by the web console during inspection,
   // so we don't want them to throw.
@@ -1308,7 +1308,7 @@ function run_type_ctor_class_tests(c, t, t2, props=[], fns=[], instanceProps=[],
   for (let p of props)
     do_check_throws(function() { c.prototype[p]; }, TypeError);
   for (let f of fns)
-    do_check_throws(function() { c.prototype[f](); }, Error);
+    do_check_throws(function() { c.prototype[f](); }, TypeError);
 
   // Test that classes and prototypes are set up correctly on a constructed
   // type 't'.
@@ -1345,8 +1345,8 @@ function run_type_ctor_class_tests(c, t, t2, props=[], fns=[], instanceProps=[],
     do_check_throws(function() { t.prototype[p]; }, TypeError);
   }
   for (let f of instanceFns) {
-    do_check_throws(function() { t.prototype.__proto__[f]() }, Error);
-    do_check_throws(function() { t.prototype[f]() }, Error);
+    do_check_throws(function() { t.prototype.__proto__[f]() }, TypeError);
+    do_check_throws(function() { t.prototype[f]() }, TypeError);
   }
 
   // Check that 't.prototype' has the correct special properties.
@@ -1355,7 +1355,7 @@ function run_type_ctor_class_tests(c, t, t2, props=[], fns=[], instanceProps=[],
 
   // Check that the shared special properties on 't.prototype' throw.
   for (let p of specialProps)
-    do_check_throws(function() { t.prototype[p]; }, Error);
+    do_check_throws(function() { t.prototype[p]; }, TypeError);
 
   // Make sure we can access 'prototype' on a CTypeProto.
   if (t instanceof ctypes.FunctionType)
