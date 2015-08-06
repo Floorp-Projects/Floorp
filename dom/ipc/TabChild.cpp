@@ -3118,16 +3118,28 @@ TabChildGlobal::GetGlobalJSObject()
 }
 
 PWebBrowserPersistDocumentChild*
-TabChild::AllocPWebBrowserPersistDocumentChild()
+TabChild::AllocPWebBrowserPersistDocumentChild(const uint64_t& aOuterWindowID)
 {
   return new WebBrowserPersistDocumentChild();
 }
 
 bool
-TabChild::RecvPWebBrowserPersistDocumentConstructor(PWebBrowserPersistDocumentChild *aActor)
+TabChild::RecvPWebBrowserPersistDocumentConstructor(PWebBrowserPersistDocumentChild *aActor,
+                                                    const uint64_t& aOuterWindowID)
 {
-  nsCOMPtr<nsIDocument> doc = GetDocument();
-  static_cast<WebBrowserPersistDocumentChild*>(aActor)->Start(doc);
+  nsCOMPtr<nsIDocument> rootDoc = GetDocument();
+  nsCOMPtr<nsIDocument> foundDoc;
+  if (aOuterWindowID) {
+    foundDoc = nsContentUtils::GetSubdocumentWithOuterWindowId(rootDoc, aOuterWindowID);
+  } else {
+    foundDoc = rootDoc;
+  }
+
+  if (!foundDoc) {
+    aActor->SendInitFailure(NS_ERROR_NO_CONTENT);
+  } else {
+    static_cast<WebBrowserPersistDocumentChild*>(aActor)->Start(foundDoc);
+  }
   return true;
 }
 

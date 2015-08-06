@@ -3368,7 +3368,7 @@ TabParent::AsyncPanZoomEnabled() const
 }
 
 PWebBrowserPersistDocumentParent*
-TabParent::AllocPWebBrowserPersistDocumentParent()
+TabParent::AllocPWebBrowserPersistDocumentParent(const uint64_t& aOuterWindowID)
 {
   return new WebBrowserPersistDocumentParent();
 }
@@ -3381,11 +3381,12 @@ TabParent::DeallocPWebBrowserPersistDocumentParent(PWebBrowserPersistDocumentPar
 }
 
 NS_IMETHODIMP
-TabParent::StartPersistence(nsIWebBrowserPersistDocumentReceiver* aRecv)
+TabParent::StartPersistence(uint64_t aOuterWindowID,
+                            nsIWebBrowserPersistDocumentReceiver* aRecv)
 {
   auto* actor = new WebBrowserPersistDocumentParent();
   actor->SetOnReady(aRecv);
-  return SendPWebBrowserPersistDocumentConstructor(actor)
+  return SendPWebBrowserPersistDocumentConstructor(actor, aOuterWindowID)
     ? NS_OK : NS_ERROR_FAILURE;
   // (The actor will be destroyed on constructor failure.)
 }

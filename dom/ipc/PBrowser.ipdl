@@ -121,7 +121,7 @@ both:
      */
     PRenderFrame();
 
-    PWebBrowserPersistDocument();
+    PWebBrowserPersistDocument(uint64_t aOuterWindowID);
 
 parent:
     /**
@@ -523,6 +523,7 @@ parent:
     ClearNativeTouchSequence(uint64_t aObserverId);
 child:
     NativeSynthesisResponse(uint64_t aObserverId, nsCString aResponse);
+
 
 parent:
 
