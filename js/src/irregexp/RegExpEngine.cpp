@@ -72,12 +72,30 @@ static const int kSpaceRanges[] = { '\t', '\r' + 1, ' ', ' ' + 1,
     0xFEFF, 0xFF00, 0x10000 };
 static const int kSpaceRangeCount = ArrayLength(kSpaceRanges);
 
+static const int kSpaceAndSurrogateRanges[] = { '\t', '\r' + 1, ' ', ' ' + 1,
+    0x00A0, 0x00A1, 0x1680, 0x1681, 0x180E, 0x180F, 0x2000, 0x200B,
+    0x2028, 0x202A, 0x202F, 0x2030, 0x205F, 0x2060, 0x3000, 0x3001,
+    unicode::LeadSurrogateMin, unicode::TrailSurrogateMax + 1,
+    0xFEFF, 0xFF00, 0x10000 };
+static const int kSpaceAndSurrogateRangeCount = ArrayLength(kSpaceAndSurrogateRanges);
 static const int kWordRanges[] = {
     '0', '9' + 1, 'A', 'Z' + 1, '_', '_' + 1, 'a', 'z' + 1, 0x10000 };
 static const int kWordRangeCount = ArrayLength(kWordRanges);
+static const int kWordAndSurrogateRanges[] = {
+    '0', '9' + 1, 'A', 'Z' + 1, '_', '_' + 1, 'a', 'z' + 1,
+    unicode::LeadSurrogateMin, unicode::TrailSurrogateMax + 1,
+    0x10000 };
+static const int kWordAndSurrogateRangeCount = ArrayLength(kWordAndSurrogateRanges);
 static const int kDigitRanges[] = { '0', '9' + 1, 0x10000 };
 static const int kDigitRangeCount = ArrayLength(kDigitRanges);
-static const int kSurrogateRanges[] = { 0xd800, 0xe000, 0x10000 };
+static const int kDigitAndSurrogateRanges[] = {
+    '0', '9' + 1,
+    unicode::LeadSurrogateMin, unicode::TrailSurrogateMax + 1,
+    0x10000 };
+static const int kDigitAndSurrogateRangeCount = ArrayLength(kDigitAndSurrogateRanges);
+static const int kSurrogateRanges[] = {
+    unicode::LeadSurrogateMin, unicode::TrailSurrogateMax + 1,
+    0x10000 };
 static const int kSurrogateRangeCount = ArrayLength(kSurrogateRanges);
 static const int kLineTerminatorRanges[] = { 0x000A, 0x000B, 0x000D, 0x000E,
     0x2028, 0x202A, 0x10000 };
@@ -161,6 +179,26 @@ CharacterRange::AddClassEscape(LifoAlloc* alloc, char16_t type,
         break;
       default:
         MOZ_CRASH("Bad character class escape");
+    }
+}
+
+// Add class escape, excluding surrogate pair range.
+void
+CharacterRange::AddClassEscapeUnicode(LifoAlloc* alloc, char16_t type,
+                                      CharacterRangeVector* ranges)
+{
+    switch (type) {
+      case 'S':
+        AddClassNegated(kSpaceAndSurrogateRanges, kSpaceAndSurrogateRangeCount, ranges);
+        break;
+      case 'W':
+        AddClassNegated(kWordAndSurrogateRanges, kWordAndSurrogateRangeCount, ranges);
+        break;
+      case 'D':
+        AddClassNegated(kDigitAndSurrogateRanges, kDigitAndSurrogateRangeCount, ranges);
+        break;
+      default:
+        MOZ_CRASH("Bad type!");
     }
 }
 
