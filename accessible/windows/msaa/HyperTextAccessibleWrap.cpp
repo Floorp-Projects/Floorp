@@ -53,16 +53,13 @@ HyperTextAccessibleWrap::HandleAccEvent(AccEvent* aEvent)
       eventType == nsIAccessibleEvent::EVENT_TEXT_INSERTED) {
     Accessible* accessible = aEvent->GetAccessible();
     if (accessible && accessible->IsHyperText()) {
-      sLastTextChangeAcc =
-        static_cast<HyperTextAccessibleWrap*>(accessible->AsHyperText());
-      if (!sLastTextChangeString)
-        sLastTextChangeString = new nsString();
-
       AccTextChangeEvent* event = downcast_accEvent(aEvent);
-      event->GetModifiedText(*sLastTextChangeString);
-      sLastTextChangeStart = event->GetStartOffset();
-      sLastTextChangeEnd = sLastTextChangeStart + event->GetLength();
-      sLastTextChangeWasInsert = event->IsTextInserted();
+        HyperTextAccessibleWrap* text =
+          static_cast<HyperTextAccessibleWrap*>(accessible->AsHyperText());
+      ia2AccessibleText::UpdateTextChangeData(text, event->IsTextInserted(),
+                                              event->ModifiedText(),
+                                              event->GetStartOffset(),
+                                              event->GetLength());
     }
   }
 
