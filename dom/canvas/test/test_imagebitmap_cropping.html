@@ -1,0 +1,274 @@
+<!DOCTYPE HTML>
+<title>Test ImageBitmap Cropping (Bug 1190210)</title>
+<meta charset="utf-8">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<body>
+<script type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+/**
+ * [isPixel description]
+ * @param  {[type]}  ctx : canvas context
+ * @param  {[type]}  x   : pixel x coordinate
+ * @param  {[type]}  y   : pixel y coordinate
+ * @param  {[type]}  c   : a rgba color code
+ * @param  {[type]}  d   : error duration
+ * @return {Promise}
+ */
+function isPixel(ctx, x, y, c, d) {
+  var pos = x + "," + y;
+  var color = c[0] + "," + c[1] + "," + c[2] + "," + c[3];
+  var pixel = ctx.getImageData(x, y, 1, 1);
+  var pr = pixel.data[0],
+      pg = pixel.data[1],
+      pb = pixel.data[2],
+      pa = pixel.data[3];
+  ok(c[0]-d <= pr && pr <= c[0]+d &&
+     c[1]-d <= pg && pg <= c[1]+d &&
+     c[2]-d <= pb && pb <= c[2]+d &&
+     c[3]-d <= pa && pa <= c[3]+d,
+     "pixel "+pos+" of "+ctx.canvas.id+" is "+pr+","+pg+","+pb+","+pa+"; expected "+color+" +/- "+d);
+}
+
+//
+//  The pattern of the 320x240.ogv video.
+//  .------------------------------------------------.
+//  | 255  | 255  | 0    | 0    | 255  | 255  | 0    |
+//  | 255  | 255  | 255  | 255  | 0    | 0    | 0    |
+//  | 255  | 0    | 255  | 0    | 255  | 0    | 255  |
+//  |      |      |      |      |      |      |      |
+//  ^      ^      ^      ^      ^      ^      ^      ^
+//  0      46     92     138    184    230    276    319
+//
+//
+// TEST_BITMAPS is a collection of test cases.
+// Each object in the TEST_BITMAPS array is a test case with the following
+// properties:
+// 1) croppingArea: indicating the cropping area in format (x, y, width, height).
+// 2) testedPixels: an array of pixels that is going to be checked.
+//    Each item in the testedPixels array contains:
+//    2.1) "pixel": the coordinate of this pixel (x, y).
+//    2.2) "expectedColor": the expected color of this pixel (r, g, b, a).
+//    2.3) "tolerance": the acceptable tolerance of pixel values.
+//
+var TEST_BITMAPS = [
+  // Cropping area is exactly the same as source surface.
+  {'croppingArea': [0,    0,    320, 240],
+   'testedPixels': [{"pixel": [0,    0], "expectedColor": [255, 255, 255, 255], "tolerance": 5},
+                    {"pixel": [50,   0], "expectedColor": [255, 255, 0,   255], "tolerance": 5}]},
+  // Cropping area completely covers the source surface.
+  {'croppingArea': [-100, -100, 520, 440],
+   'testedPixels': [{"pixel": [0,    0],   "expectedColor": [0,   0,   0,   0], "tolerance": 5},
+                    {"pixel": [519,  0],   "expectedColor": [0,   0,   0,   0], "tolerance": 5},
+                    {"pixel": [0,    439], "expectedColor": [0,   0,   0,   0], "tolerance": 5},
+                    {"pixel": [519,  439], "expectedColor": [0,   0,   0,   0], "tolerance": 5},
+                    {"pixel": [100,  100], "expectedColor": [255, 255, 255, 255], "tolerance": 5},
+                    {"pixel": [150,  120], "expectedColor": [255, 255, 0,   255], "tolerance": 5},
+                    {"pixel": [200,  140], "expectedColor": [0,   255, 255, 255], "tolerance": 5}]},
+  // Cropping area partially covers the left-upper part of the source surface.
+  {'croppingArea': [-100, -100, 320, 240],
+   'testedPixels': [{"pixel": [0,    0],   "expectedColor": [0,   0,   0,   0  ], "tolerance": 5},
+                    {"pixel": [100,  100], "expectedColor": [255, 255, 255, 255], "tolerance": 5},
+                    {"pixel": [150,  100], "expectedColor": [255, 255, 0,   255], "tolerance": 5}]},
+  // Cropping area partially covers the middle-upper part of the source surface.
+  {'croppingArea': [ 100, -100, 220, 240],
+   'testedPixels': [{"pixel": [0,    0],   "expectedColor": [0,   0,   0,   0  ], "tolerance": 5},
+                    {"pixel": [0,    100], "expectedColor": [0,   255, 255, 255], "tolerance": 5},
+                    {"pixel": [150,  100], "expectedColor": [255, 0,   0,   255], "tolerance": 5}]},
+  // Cropping area partially covers the right-upper part of the source surface.
+  {'croppingArea': [ 200, -100, 320, 240],
+   'testedPixels': [{"pixel": [0,    0],   "expectedColor": [0,   0,   0,   0  ], "tolerance": 5},
+                    {"pixel": [0,    100], "expectedColor": [255, 0,   255, 255], "tolerance": 5},
+                    {"pixel": [100,  100], "expectedColor": [0,   0,   255, 255], "tolerance": 5}]},
+  // Cropping area partially covers the left-center part of the source surface.
+  {'croppingArea': [-100,  100, 320, 120],
+   'testedPixels': [{"pixel": [0,    0],   "expectedColor": [0,   0,   0,   0  ], "tolerance": 5},
+                    {"pixel": [200,  0],   "expectedColor": [0,   255, 255, 255], "tolerance": 5},
+                    {"pixel": [250,  10],  "expectedColor": [0,   255, 0,   255], "tolerance": 5}]},
+  // Cropping area partially covers the left-bottom part of the source surface.
+  {'croppingArea': [-100,  200, 320, 240],
+   'testedPixels': [{"pixel": [0,    0],   "expectedColor": [0,   0,   0,   0  ], "tolerance": 5},
+                    {"pixel": [100,  0],   "expectedColor": [0,   60,  136, 255], "tolerance": 5},
+                    {"pixel": [180,  10],  "expectedColor": [255, 255, 255, 255], "tolerance": 5}]},
+  // Cropping area partially covers the middle-bottom part of the source surface.
+  {'croppingArea': [  40,  200, 200, 100],
+   'testedPixels': [{"pixel": [0,    0],   "expectedColor": [0,   60,  136, 255], "tolerance": 5},
+                    {"pixel": [100,  20],  "expectedColor": [107, 0,   210, 255], "tolerance": 5},
+                    {"pixel": [80,   150], "expectedColor": [0,   0,   0,   0  ], "tolerance": 5}]},
+  // Cropping area partially covers the right-bottom part of the source surface.
+  {'croppingArea': [ 160,  100, 300, 300],
+   'testedPixels': [{"pixel": [0,    0],   "expectedColor": [0,   255, 0,   255], "tolerance": 5},
+                    {"pixel": [120,  20],  "expectedColor": [0,   0,   255, 255], "tolerance": 5},
+                    {"pixel": [299,  299], "expectedColor": [0,   0,   0,   0  ], "tolerance": 5}]},
+  // Cropping area is completely outside the source surface. (upper-left)
+  {'croppingArea': [-500, -500,  20,  20],
+   'testedPixels': [{"pixel": [0,    0],   "expectedColor": [0,   0,   0,   0], "tolerance": 5},
+                    {"pixel": [19,   19],  "expectedColor": [0,   0,   0,   0], "tolerance": 5}]},
+  // Cropping area is completely outside the source surface. (upper-right)
+  {'croppingArea': [ 500, -500,  20,  20],
+   'testedPixels': [{"pixel": [0,    0],   "expectedColor": [0,   0,   0,   0], "tolerance": 5},
+                    {"pixel": [19,   19],  "expectedColor": [0,   0,   0,   0], "tolerance": 5}]},
+  // Cropping area is completely outside the source surface. (bottom-left)
+  {'croppingArea': [-200,  500,  20,  20],
+   'testedPixels': [{"pixel": [0,    0],   "expectedColor": [0,   0,   0,   0], "tolerance": 5},
+                    {"pixel": [19,   19],  "expectedColor": [0,   0,   0,   0], "tolerance": 5}]},
+  // Cropping area is completely outside the source surface. (bottom-right)
+  {'croppingArea': [ 500,  200,  20,  20],
+   'testedPixels': [{"pixel": [0,    0],   "expectedColor": [0,   0,   0,   0], "tolerance": 5},
+                    {"pixel": [19,   19],  "expectedColor": [0,   0,   0,   0], "tolerance": 5}]},
+];
+
+function failed(ex) {
+  ok(false, "Promise failure: " + ex);
+}
+
+var gImage;
+var gVideo;
+var gCanvas;
+var gCtx;
+var gImageData;
+var gImageBitmap;
+var gPNGBlob;
+var gJPEGBlob;
+
+function prepareSources() {
+  gVideo = document.createElement("video");
+  gVideo.src = "http://example.com/tests/dom/canvas/test/crossorigin/video.sjs?name=tests/dom/media/test/320x240.ogv&type=video/ogg&cors=anonymous";
+  gVideo.crossOrigin = "anonymous";
+  gVideo.autoplay = "true"
+
+
+  gCanvas = document.createElement("canvas");
+  gCtx = gCanvas.getContext("2d");
+
+  var resolver;
+  var promise = new Promise(function(resolve, reject) {
+    resolver = resolve;
+  });
+
+  // Prepare video.
+  gVideo.onloadeddata = function() {
+    ok(gVideo, "[Prepare Sources] gVideo is ok.");
+
+    // Prepare canvas.
+    gCanvas.width = gVideo.videoWidth;
+    gCanvas.height = gVideo.videoHeight;
+    gCtx.drawImage(gVideo, 0, 0);
+    ok(gCanvas, "[Prepare Sources] gCanvas is ok.");
+    ok(gCtx, "[Prepare Sources] gCtx is ok.");
+
+    // Prepare image.
+    gImage = document.createElement("img");
+    gImage.src = gCanvas.toDataURL();
+    var resolverImage;
+    var promiseImage = new Promise(function(resolve, reject) {
+      resolverImage = resolve;
+    });
+    gImage.onload = function() {
+      resolverImage(true);
+    }
+
+    // Prepare ImageData.
+    gImageData = gCtx.getImageData(0, 0, gCanvas.width, gCanvas.height);
+    ok(gImageData, "[Prepare Sources] gImageData is ok.");
+
+    // Prepapre PNG Blob.
+    var promisePNGBlob = new Promise(function(resolve, reject) {
+      gCanvas.toBlob(function(blob) {
+        gPNGBlob = blob;
+        ok(gPNGBlob, "[Prepare Sources] gPNGBlob is ok.");
+        resolve(true);
+      });
+    });
+
+    // Prepare JPEG Blob.
+    var promiseJPEGBlob = new Promise(function(resolve, reject) {
+      gCanvas.toBlob(function(blob) {
+        gJPEGBlob = blob;
+        ok(gJPEGBlob, "[Prepare Sources] gJPEGBlob is ok.");
+        resolve(true);
+      }, "image/jpeg", 0.95);
+    });
+
+    // Prepare ImageBitmap.
+    var promiseImageBitmap = new Promise(function(resolve, reject) {
+      var p = createImageBitmap(gVideo);
+      p.then(function(bitmap) {
+        gImageBitmap = bitmap;
+        ok(gImageBitmap, "[Prepare Sources] gImageBitmap is ok.");
+        resolve(true);
+      });
+    });
+
+    resolver(Promise.all([
+      promiseImage,
+      promisePNGBlob,
+      promiseJPEGBlob,
+      promiseImageBitmap
+    ]))
+  }
+
+  return promise;
+}
+
+function testCropping_randomTest(source) {
+  var canvasSrouce = document.createElement("canvas");
+  var ctxSource = canvasSrouce.getContext("2d");
+
+  var p = createImageBitmap(source);
+  p.then(function(bitmap) {
+    canvasSrouce.width = bitmap.width;
+    canvasSrouce.height = bitmap.height;
+  });
+}
+
+function testCropping(source) {
+  var canvas = document.createElement("canvas");
+  var ctx = canvas.getContext("2d");
+  document.body.appendChild(canvas);
+
+  function createBitmap(def) {
+    return createImageBitmap(source, def.croppingArea[0], def.croppingArea[1], def.croppingArea[2], def.croppingArea[3])
+      .then(function (bitmap) { def.bitmap = bitmap; }, failed);
+  };
+
+  var promise = new Promise(function(resolve, reject) {
+    resolve(Promise.all(TEST_BITMAPS.map(createBitmap)))
+  });
+
+  function testPixel(testedPixel) {
+    isPixel(ctx, testedPixel.pixel[0], testedPixel.pixel[1], testedPixel.expectedColor, testedPixel.tolerance);
+  };
+
+  return promise.then(function() {
+    TEST_BITMAPS.forEach(function (testCase) {
+      if (!testCase.bitmap) { return; }
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      canvas.width = testCase.bitmap.width;
+      canvas.height = testCase.bitmap.height;
+      ctx.drawImage(testCase.bitmap, 0, 0);
+      testCase.testedPixels.forEach(testPixel);
+    });
+  });
+}
+
+function runTests() {
+
+  prepareSources().
+    then( function() { return Promise.all([testCropping(gImage),
+                                           testCropping(gVideo),
+                                           testCropping(gCanvas),
+                                           testCropping(gCtx),
+                                           testCropping(gImageData),
+                                           testCropping(gImageBitmap),
+                                           testCropping(gPNGBlob),
+                                           testCropping(gJPEGBlob)]); }).
+    then(SimpleTest.finish, function(ev) { failed(ev); SimpleTest.finish(); });
+}
+
+addLoadEvent(runTests);
+
+</script>
+</body>
