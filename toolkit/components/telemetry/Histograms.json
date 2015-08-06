@@ -9372,6 +9372,42 @@
     "kind": "count",
     "description": "User explicitly granted Push Notifications permission"
   },
+  "PUSH_API_SUBSCRIBE_ATTEMPT": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "count",
+    "description": "Push Service attempts to subscribe with Push Server."
+  },
+  "PUSH_API_SUBSCRIBE_FAILED": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "count",
+    "description": "Attempt to subscribe with Push Server failed."
+  },
+  "PUSH_API_SUBSCRIBE_SUCCEEDED": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "count",
+    "description": "Attempt to subscribe with Push Server succeeded."
+  },
+  "PUSH_API_UNSUBSCRIBE_ATTEMPT": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "count",
+    "description": "Push Service attempts to unsubscribe with Push Server."
+  },
+  "PUSH_API_UNSUBSCRIBE_FAILED": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "count",
+    "description": "Attempt to unsubscribe with Push Server failed."
+  },
+  "PUSH_API_UNSUBSCRIBE_SUCCEEDED": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "count",
+    "description": "Attempt to unsubscribe with Push Server succeeded."
+  },
   "FXA_CONFIGURED": {
     "alert_emails": ["fx-team@mozilla.com"],
     "expires_in_version": "45",
