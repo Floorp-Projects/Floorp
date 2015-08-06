@@ -94,6 +94,8 @@ public:
 
   virtual bool RecvARIARoleAtom(const uint64_t& aID, nsString* aRole) override;
 
+  virtual bool RecvGetLevelInternal(const uint64_t& aID, int32_t* aLevel) override;
+
   virtual bool RecvAttributes(const uint64_t& aID,
                               nsTArray<Attribute> *aAttributes) override;
 
@@ -454,6 +456,7 @@ public:
 
   virtual bool RecvLanguage(const uint64_t& aID, nsString* aLocale) override;
   virtual bool RecvDocType(const uint64_t& aID, nsString* aType) override;
+  virtual bool RecvTitle(const uint64_t& aID, nsString* aTitle) override;
   virtual bool RecvURL(const uint64_t& aID, nsString* aURL) override;
   virtual bool RecvMimeType(const uint64_t& aID, nsString* aMime) override;
   virtual bool RecvURLDocTypeMimeType(const uint64_t& aID,

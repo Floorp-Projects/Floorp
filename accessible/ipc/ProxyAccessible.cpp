@@ -192,6 +192,14 @@ ProxyAccessible::ARIARoleAtom() const
 }
 
 int32_t
+ProxyAccessible::GetLevelInternal()
+{
+  int32_t level = 0;
+  unused << mDoc->SendGetLevelInternal(mID, &level);
+  return level;
+}
+
+int32_t
 ProxyAccessible::CaretLineNumber()
 {
   int32_t line = -1;
@@ -1027,6 +1035,12 @@ void
 ProxyAccessible::DocType(nsString& aType)
 {
   unused << mDoc->SendDocType(mID, &aType);
+}
+
+void
+ProxyAccessible::Title(nsString& aTitle)
+{
+  unused << mDoc->SendTitle(mID, &aTitle);
 }
 
 void
