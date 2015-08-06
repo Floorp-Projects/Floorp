@@ -500,6 +500,10 @@ NS_IMETHODIMP nsCocoaWindow::CreatePopupContentView(const nsIntRect &aRect)
 
 NS_IMETHODIMP nsCocoaWindow::Destroy()
 {
+  if (mOnDestroyCalled)
+    return NS_OK;
+  mOnDestroyCalled = true;
+
   // If we don't hide here we run into problems with panels, this is not ideal.
   // (Bug 891424)
   Show(false);
