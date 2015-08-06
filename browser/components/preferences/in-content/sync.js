@@ -193,7 +193,6 @@ let gSyncPane = {
       aEvent.stopPropagation();
       gSyncPane.openSetup('pair');
     });
-    setEventListener("syncViewQuota", "command", gSyncPane.openQuotaDialog);
     setEventListener("syncChangePassword", "command",
       () => gSyncUtils.changePassword());
     setEventListener("syncResetPassphrase", "command",
@@ -712,15 +711,6 @@ let gSyncPane = {
     fxAccounts.signOut().then(() => {
       this.updateWeavePrefs();
     });
-  },
-
-  openQuotaDialog: function () {
-    let win = Services.wm.getMostRecentWindow("Sync:ViewQuota");
-    if (win)
-      win.focus();
-    else 
-      window.openDialog("chrome://browser/content/sync/quota.xul", "",
-                        "centerscreen,chrome,dialog,modal");
   },
 
   openAddDevice: function () {
