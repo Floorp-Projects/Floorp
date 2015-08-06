@@ -13,6 +13,7 @@ describe("loop.panel", function() {
   var sandbox, notifications;
   var fakeXHR, fakeWindow, fakeMozLoop;
   var requests = [];
+  var mozL10nGetSpy;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
@@ -77,6 +78,7 @@ describe("loop.panel", function() {
     };
 
     document.mozL10n.initialize(navigator.mozLoop);
+    sandbox.stub(document.mozL10n, "get").returns("Fake title");
   });
 
   afterEach(function() {
@@ -89,7 +91,6 @@ describe("loop.panel", function() {
     beforeEach(function() {
       sandbox.stub(React, "render");
       sandbox.stub(document.mozL10n, "initialize");
-      sandbox.stub(document.mozL10n, "get").returns("Fake title");
     });
 
     it("should initalize L10n", function() {
@@ -349,9 +350,9 @@ describe("loop.panel", function() {
            function() {
              var view = mountTestComponent();
 
-             expect(view.getDOMNode().querySelectorAll(".icon-signout"))
+             expect(view.getDOMNode().querySelectorAll(".entry-settings-signout"))
                .to.have.length.of(0);
-             expect(view.getDOMNode().querySelectorAll(".icon-signin"))
+             expect(view.getDOMNode().querySelectorAll(".entry-settings-signin"))
                .to.have.length.of(1);
            });
 
@@ -368,7 +369,7 @@ describe("loop.panel", function() {
           var view = mountTestComponent();
 
           TestUtils.Simulate.click(view.getDOMNode()
-                                     .querySelector(".icon-signin"));
+                                     .querySelector(".entry-settings-signin"));
 
           sinon.assert.calledOnce(navigator.mozLoop.logInToFxA);
         });
@@ -379,10 +380,10 @@ describe("loop.panel", function() {
 
         var view = mountTestComponent();
 
-        expect(view.getDOMNode().querySelectorAll(".icon-signout"))
-          .to.have.length.of(1);
-        expect(view.getDOMNode().querySelectorAll(".icon-signin"))
-          .to.have.length.of(0);
+        sinon.assert.calledWithExactly(document.mozL10n.get,
+                                       "settings_menu_item_signout");
+        sinon.assert.neverCalledWith(document.mozL10n.get,
+                                     "settings_menu_item_signin");
       });
 
       it("should show an account entry when user is authenticated", function() {
@@ -390,8 +391,8 @@ describe("loop.panel", function() {
 
         var view = mountTestComponent();
 
-        expect(view.getDOMNode().querySelectorAll(".icon-account"))
-          .to.have.length.of(1);
+        sinon.assert.calledWithExactly(document.mozL10n.get,
+                                       "settings_menu_item_settings");
       });
 
       it("should open the FxA settings when the account entry is clicked",
@@ -401,7 +402,7 @@ describe("loop.panel", function() {
            var view = mountTestComponent();
 
            TestUtils.Simulate.click(view.getDOMNode()
-                                      .querySelector(".icon-account"));
+                                      .querySelector(".entry-settings-account"));
 
            sinon.assert.calledOnce(navigator.mozLoop.openFxASettings);
          });
@@ -411,7 +412,7 @@ describe("loop.panel", function() {
         var view = mountTestComponent();
 
         TestUtils.Simulate.click(view.getDOMNode()
-                                   .querySelector(".icon-signout"));
+                                   .querySelector(".entry-settings-signout"));
 
         sinon.assert.calledOnce(navigator.mozLoop.logOutFromFxA);
       });
@@ -442,7 +443,7 @@ describe("loop.panel", function() {
         view = mountTestComponent();
 
         TestUtils.Simulate
-          .click(view.getDOMNode().querySelector(".icon-help"));
+          .click(view.getDOMNode().querySelector(".entry-settings-help"));
 
         sinon.assert.calledOnce(fakeMozLoop.openURL);
         sinon.assert.calledWithExactly(fakeMozLoop.openURL, supportUrl);
@@ -452,7 +453,7 @@ describe("loop.panel", function() {
         view = mountTestComponent();
 
         TestUtils.Simulate
-          .click(view.getDOMNode().querySelector(".icon-help"));
+          .click(view.getDOMNode().querySelector(".entry-settings-help"));
 
         sinon.assert.calledOnce(fakeWindow.close);
       });
@@ -837,7 +838,7 @@ describe("loop.panel", function() {
         TestUtils.Simulate.click(view.getDOMNode().querySelector(".new-room-button"));
 
         sinon.assert.calledWith(dispatch, new sharedActions.CreateRoom({
-          nameTemplate: "fakeText",
+          nameTemplate: "Fake title",
           roomOwner: fakeEmail
         }));
       });
@@ -868,7 +869,7 @@ describe("loop.panel", function() {
       TestUtils.Simulate.click(node.querySelector(".new-room-button"));
 
       sinon.assert.calledWith(dispatch, new sharedActions.CreateRoom({
-        nameTemplate: "fakeText",
+        nameTemplate: "Fake title",
         roomOwner: fakeEmail,
         urls: [{
           location: "http://invalid.com",
