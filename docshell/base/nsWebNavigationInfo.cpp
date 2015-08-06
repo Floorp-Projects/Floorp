@@ -44,6 +44,13 @@ nsWebNavigationInfo::IsTypeSupported(const nsACString& aType,
   // to say for itself.
   *aIsTypeSupported = nsIWebNavigationInfo::UNSUPPORTED;
 
+  // We want to claim that the type for PDF documents is unsupported,
+  // so that the internal PDF viewer's stream converted will get used.
+  if (aType.LowerCaseEqualsLiteral("application/pdf") &&
+      nsContentUtils::IsPDFJSEnabled()) {
+    return NS_OK;
+  }
+
   const nsCString& flatType = PromiseFlatCString(aType);
   nsresult rv = IsTypeSupportedInternal(flatType, aIsTypeSupported);
   NS_ENSURE_SUCCESS(rv, rv);
