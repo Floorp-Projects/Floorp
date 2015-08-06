@@ -8,7 +8,7 @@
 
 "use strict";
 
-const { PromisesFront } = devtools.require("devtools/server/actors/promises");
+const { PromisesFront } = require("devtools/server/actors/promises");
 const SECRET = "MyLittleSecret";
 
 add_task(function*() {

@@ -8,6 +8,8 @@
 
 "use strict";
 
+let {Tools} = require("definitions");
+
 let test = asyncTest(function* () {
   let currWindow, hud, mainWindow;
 
@@ -26,7 +28,7 @@ let test = asyncTest(function* () {
   });
 
   currWindow = Services.wm.getMostRecentWindow(null);
-  is(currWindow.document.documentURI, devtools.Tools.webConsole.url,
+  is(currWindow.document.documentURI, Tools.webConsole.url,
      "The Browser Console is open and has focus");
 
   mainWindow.focus();
@@ -34,7 +36,7 @@ let test = asyncTest(function* () {
   yield HUDService.openBrowserConsoleOrFocus();
 
   currWindow = Services.wm.getMostRecentWindow(null);
-  is(currWindow.document.documentURI, devtools.Tools.webConsole.url,
+  is(currWindow.document.documentURI, Tools.webConsole.url,
      "The Browser Console is open and has focus");
 
   yield HUDService.toggleBrowserConsole();

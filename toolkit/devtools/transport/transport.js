@@ -14,8 +14,8 @@
       factory.call(this, require, this);
     } else {
       const Cu = Components.utils;
-      const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-      factory.call(this, devtools.require, this);
+      const { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+      factory.call(this, require, this);
     }
   }
 }).call(this, function (require, exports) {

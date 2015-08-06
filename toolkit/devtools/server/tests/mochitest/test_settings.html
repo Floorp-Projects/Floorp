@@ -19,7 +19,7 @@ function runTests() {
   var Cc = Components.classes;
   var Ci = Components.interfaces;
 
-  Cu.import("resource://gre/modules/devtools/Loader.jsm");
+  var {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
   Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
   Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
 
@@ -29,7 +29,7 @@ function runTests() {
 
   SimpleTest.waitForExplicitFinish();
 
-  var {getSettingsFront, _setDefaultSettings} = devtools.require("devtools/server/actors/settings");
+  var {getSettingsFront, _setDefaultSettings} = require("devtools/server/actors/settings");
 
   DebuggerServer.init(function () { return true; });
   DebuggerServer.addBrowserActors();

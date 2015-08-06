@@ -37,13 +37,12 @@ Bug 901520 - [app manager] data store for device
         Cu.import("resource:///modules/devtools/gDevTools.jsm");
 
 
-        const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-        const {require} = devtools;
+        const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 
         const {ConnectionManager} = require("devtools/client/connection-manager");
         const DeviceStore = require("devtools/app-manager/device-store");
 
-        let {getDeviceFront} = devtools.require("devtools/server/actors/device");
+        let {getDeviceFront} = require("devtools/server/actors/device");
 
         let connection = ConnectionManager.createConnection();
         let store = new DeviceStore(connection);

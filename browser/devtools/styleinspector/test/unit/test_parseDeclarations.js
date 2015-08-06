@@ -4,8 +4,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const Cu = Components.utils;
-Cu.import("resource://gre/modules/devtools/Loader.jsm");
-const {parseDeclarations} = devtools.require("devtools/styleinspector/css-parsing-utils");
+const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const {parseDeclarations} = require("devtools/styleinspector/css-parsing-utils");
 
 const TEST_DATA = [
   // Simple test

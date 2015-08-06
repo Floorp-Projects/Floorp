@@ -19,9 +19,8 @@ const {colorUtils} = require("devtools/css-color");
 const Heritage = require("sdk/core/heritage");
 const {Eyedropper} = require("devtools/eyedropper/eyedropper");
 const Editor = require("devtools/sourceeditor/editor");
-const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 
-devtools.lazyRequireGetter(this, "beautify", "devtools/jsbeautify");
+loader.lazyRequireGetter(this, "beautify", "devtools/jsbeautify");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");

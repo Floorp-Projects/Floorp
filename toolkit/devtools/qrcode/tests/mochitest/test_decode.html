@@ -12,8 +12,7 @@ Test decoding a simple message
   <script type="application/javascript;version=1.8">
 window.onload = function() {
   const { utils: Cu } = Components;
-  const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-  const { require } = devtools;
+  const { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
   const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
   const { Promise: promise } =
     Cu.import("resource://gre/modules/Promise.jsm", {});

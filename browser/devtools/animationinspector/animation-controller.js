@@ -9,17 +9,15 @@
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://gre/modules/devtools/Loader.jsm");
+let { devtools: loader, require } = Cu.import("resource://gre/modules/devtools/Loader.jsm");
 Cu.import("resource://gre/modules/devtools/Console.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 
-devtools.lazyRequireGetter(this, "promise");
-devtools.lazyRequireGetter(this, "EventEmitter",
-                                 "devtools/toolkit/event-emitter");
-devtools.lazyRequireGetter(this, "AnimationsFront",
-                                 "devtools/server/actors/animation", true);
-
-const require = devtools.require;
+loader.lazyRequireGetter(this, "promise");
+loader.lazyRequireGetter(this, "EventEmitter",
+                               "devtools/toolkit/event-emitter");
+loader.lazyRequireGetter(this, "AnimationsFront",
+                               "devtools/server/actors/animation", true);
 
 const STRINGS_URI = "chrome://browser/locale/devtools/animationinspector.properties";
 const L10N = new ViewHelpers.L10N(STRINGS_URI);

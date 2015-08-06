@@ -6,11 +6,11 @@
  * when `contentOnly` is on correctly.
  */
 
-let { CATEGORY_MASK } = devtools.require("devtools/performance/global");
+let { CATEGORY_MASK } = require("devtools/performance/global");
 
 function test() {
-  let { ThreadNode } = devtools.require("devtools/performance/tree-model");
-  let { CallView } = devtools.require("devtools/performance/tree-view");
+  let { ThreadNode } = require("devtools/performance/tree-model");
+  let { CallView } = require("devtools/performance/tree-view");
 
   /*
    * should have a tree like:

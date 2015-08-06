@@ -3,8 +3,8 @@
 
 // Tests that flame graph widget works properly.
 
-let {FlameGraph} = devtools.require("devtools/shared/widgets/FlameGraph");
-let {Promise} = devtools.require("resource://gre/modules/Promise.jsm");
+let {FlameGraph} = require("devtools/shared/widgets/FlameGraph");
+let {Promise} = require("resource://gre/modules/Promise.jsm");
 
 add_task(function*() {
   yield promiseTab("about:blank");

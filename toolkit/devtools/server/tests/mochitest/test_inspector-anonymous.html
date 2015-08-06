@@ -12,14 +12,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=777674
   <script type="application/javascript;version=1.8" src="inspector-helpers.js"></script>
   <script type="application/javascript;version=1.8">
 window.onload = function() {
-  Components.utils.import("resource://gre/modules/devtools/Loader.jsm");
   const Ci = Components.interfaces;
   const {Promise: promise} =
     Components.utils.import("resource://gre/modules/Promise.jsm", {});
   const {InspectorFront} =
-    devtools.require("devtools/server/actors/inspector");
+    require("devtools/server/actors/inspector");
   const {_documentWalker} =
-    devtools.require("devtools/server/actors/inspector");
+    require("devtools/server/actors/inspector");
   const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
   Services.prefs.setBoolPref("dom.webcomponents.enabled", true);

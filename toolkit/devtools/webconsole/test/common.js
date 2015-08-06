@@ -13,14 +13,14 @@ const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 // This gives logging to stdout for tests
 var {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 
-let devtools = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
-let WebConsoleUtils = devtools.require("devtools/toolkit/webconsole/utils").Utils;
+let {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+let WebConsoleUtils = require("devtools/toolkit/webconsole/utils").Utils;
 
 let ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
                           .getService(Ci.nsIConsoleAPIStorage);
 
 let {ConsoleServiceListener, ConsoleAPIListener} =
-  devtools.require("devtools/toolkit/webconsole/utils");
+  require("devtools/toolkit/webconsole/utils");
 
 function initCommon()
 {
