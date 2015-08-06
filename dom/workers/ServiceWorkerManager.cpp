@@ -1622,7 +1622,7 @@ class KeepAliveHandler final : public PromiseNativeHandler
   {}
 
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   explicit KeepAliveHandler(const nsMainThreadPtrHandle<ServiceWorker>& aServiceWorker)
     : mServiceWorker(aServiceWorker)
