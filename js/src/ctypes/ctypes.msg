@@ -70,3 +70,7 @@ MSG_DEF(CTYPESMSG_CANNOT_CONSTRUCT,1, JSEXN_TYPEERR, "cannot construct from {0}"
 MSG_DEF(CTYPESMSG_UNDEFINED_SIZE,2, JSEXN_TYPEERR, "cannot {0} pointer of undefined size {1}")
 MSG_DEF(CTYPESMSG_NULL_POINTER,  2, JSEXN_TYPEERR, "cannot {0} null pointer {1}")
 MSG_DEF(CTYPESMSG_NON_STRING_BASE,1, JSEXN_TYPEERR, "base type {0} is not an 8-bit or 16-bit integer or character type")
+
+/* cast */
+MSG_DEF(CTYPESMSG_UNDEFINED_SIZE_CAST,1, JSEXN_TYPEERR, "target type {0} has undefined size")
+MSG_DEF(CTYPESMSG_SIZE_MISMATCH_CAST,4, JSEXN_TYPEERR, "target type {0} has larger size than source type {1} ({2} > {3})")
