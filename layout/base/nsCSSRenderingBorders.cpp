@@ -11,6 +11,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Helpers.h"
 #include "mozilla/gfx/PathHelpers.h"
+#include "BorderConsts.h"
 #include "nsLayoutUtils.h"
 #include "nsStyleConsts.h"
 #include "nsCSSColorUtils.h"
