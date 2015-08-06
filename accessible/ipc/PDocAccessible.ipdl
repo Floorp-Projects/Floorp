@@ -85,10 +85,12 @@ child:
   prio(high) sync IsSearchbox(uint64_t aID) returns(bool retval);
   prio(high) sync LandmarkRole(uint64_t aID) returns(nsString landmark);
   prio(high) sync ARIARoleAtom(uint64_t aID) returns(nsString role);
+  prio(high) sync GetLevelInternal(uint64_t aID) returns(int32_t aLevel);
 
   // AccessibleText
 
   // TextSubstring is getText in IDL.
+  prio(high) sync CaretLineNumber(uint64_t aID) returns(int32_t aLineNumber);
   prio(high) sync CaretOffset(uint64_t aID) returns(int32_t aOffset);
   prio(high) sync SetCaretOffset(uint64_t aID, int32_t aOffset) returns (bool aValid);
   prio(high) sync CharacterCount(uint64_t aID) returns(int32_t aCount);
@@ -135,6 +137,7 @@ child:
                          uint32_t aCoordinateType,
                          int32_t aX, int32_t aY);
 
+  prio(high) sync Text(uint64_t aID) returns(nsString aText);
   prio(high) sync ReplaceText(uint64_t aID, nsString aText);
   prio(high) sync InsertText(uint64_t aID, nsString aText, int32_t aPosition)
     returns(bool aValid);
@@ -235,6 +238,7 @@ child:
 
   prio(high) sync Language(uint64_t aID) returns(nsString aLocale);
   prio(high) sync DocType(uint64_t aID) returns(nsString aType);
+  prio(high) sync Title(uint64_t aID) returns(nsString aTitle);
   prio(high) sync URL(uint64_t aID) returns(nsString aURL);
   prio(high) sync MimeType(uint64_t aID) returns(nsString aMime);
   prio(high) sync URLDocTypeMimeType(uint64_t aID) returns(nsString aURL, nsString aDocType, nsString aMimeType);

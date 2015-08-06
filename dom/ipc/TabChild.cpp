@@ -35,6 +35,7 @@
 #include "mozilla/layout/RenderFrameChild.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/PWebBrowserPersistDocumentChild.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TextEvents.h"
@@ -98,6 +99,7 @@
 #include "nsIScriptError.h"
 #include "mozilla/EventForwards.h"
 #include "nsDeviceContext.h"
+#include "mozilla/WebBrowserPersistDocumentChild.h"
 
 #define BROWSER_ELEMENT_CHILD_SCRIPT \
     NS_LITERAL_STRING("chrome://global/content/BrowserElementChild.js")
@@ -3106,3 +3108,23 @@ TabChildGlobal::GetGlobalJSObject()
   return ref->GetJSObject();
 }
 
+PWebBrowserPersistDocumentChild*
+TabChild::AllocPWebBrowserPersistDocumentChild()
+{
+  return new WebBrowserPersistDocumentChild();
+}
+
+bool
+TabChild::RecvPWebBrowserPersistDocumentConstructor(PWebBrowserPersistDocumentChild *aActor)
+{
+  nsCOMPtr<nsIDocument> doc = GetDocument();
+  static_cast<WebBrowserPersistDocumentChild*>(aActor)->Start(doc);
+  return true;
+}
+
+bool
+TabChild::DeallocPWebBrowserPersistDocumentChild(PWebBrowserPersistDocumentChild* aActor)
+{
+  delete aActor;
+  return true;
+}

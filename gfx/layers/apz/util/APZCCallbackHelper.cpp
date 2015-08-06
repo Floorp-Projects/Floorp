@@ -264,7 +264,7 @@ APZCCallbackHelper::GetOrCreateScrollIdentifiers(nsIContent* aContent,
                                                  FrameMetrics::ViewID* aViewIdOut)
 {
     if (!aContent) {
-        return false;
+      return false;
     }
     *aViewIdOut = nsLayoutUtils::FindOrCreateIDFor(aContent);
     if (nsCOMPtr<nsIPresShell> shell = GetPresShell(aContent)) {
@@ -630,8 +630,23 @@ PrepareForSetTargetAPZCNotification(nsIWidget* aWidget,
     return false;
   }
 
+  if (!scrollAncestor) {
+    MOZ_ASSERT(false);  // If you hit this, please file a bug with STR.
+
+    // Attempt some sort of graceful handling based on a theory as to why we
+    // reach this point...
+    // If we get here, the document element is non-null, valid, but doesn't have
+    // a displayport. It's possible that the init code in ChromeProcessController
+    // failed for some reason, or the document element got swapped out at some
+    // later time. In this case let's try to set a displayport on the document
+    // element again and bail out on this operation.
+    APZCCH_LOG("Widget %p's document element %p didn't have a displayport\n",
+        aWidget, dpElement.get());
+    APZCCallbackHelper::InitializeRootDisplayport(aRootFrame->PresContext()->PresShell());
+    return false;
+  }
+
   APZCCH_LOG("%p didn't have a displayport, so setting one...\n", dpElement.get());
-  MOZ_ASSERT(scrollAncestor);
   return nsLayoutUtils::CalculateAndSetDisplayPortMargins(
       scrollAncestor, nsLayoutUtils::RepaintMode::Repaint);
 }

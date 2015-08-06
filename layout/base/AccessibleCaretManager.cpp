@@ -941,6 +941,11 @@ AccessibleCaretManager::DispatchCaretStateChangedEvent(CaretChangedReason aReaso
     init.mSelectionVisible = true;
   }
 
+  // Send isEditable info w/ event detail. This info can help determine
+  // whether to show cut command on selection dialog or not.
+  init.mSelectionEditable = commonAncestorFrame &&
+    commonAncestorFrame->GetContent()->GetEditingHost();
+
   init.mBoundingClientRect = domRect;
   init.mReason = aReason;
   init.mCollapsed = sel->IsCollapsed();

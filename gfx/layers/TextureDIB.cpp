@@ -57,22 +57,29 @@ TextureClientDIB::BorrowDrawTarget()
 }
 
 void
-TextureClientDIB::UpdateFromSurface(gfx::DataSourceSurface* aSurface)
+TextureClientDIB::UpdateFromSurface(gfx::SourceSurface* aSurface)
 {
   MOZ_ASSERT(mIsLocked && IsAllocated());
 
   nsRefPtr<gfxImageSurface> imgSurf = mSurface->GetAsImageSurface();
 
-  DataSourceSurface::MappedSurface sourceMap;
-  aSurface->Map(DataSourceSurface::READ, &sourceMap);
+  RefPtr<DataSourceSurface> srcSurf = aSurface->GetDataSurface();
 
-  for (int y = 0; y < aSurface->GetSize().height; y++) {
-    memcpy(imgSurf->Data() + imgSurf->Stride() * y,
-           sourceMap.mData + sourceMap.mStride * y,
-           aSurface->GetSize().width * BytesPerPixel(aSurface->GetFormat()));
+  if (!srcSurf) {
+    gfxCriticalError() << "Failed to GetDataSurface in UpdateFromSurface.";
+    return;
   }
 
-  aSurface->Unmap();
+  DataSourceSurface::MappedSurface sourceMap;
+  srcSurf->Map(DataSourceSurface::READ, &sourceMap);
+
+  for (int y = 0; y < srcSurf->GetSize().height; y++) {
+    memcpy(imgSurf->Data() + imgSurf->Stride() * y,
+           sourceMap.mData + sourceMap.mStride * y,
+           srcSurf->GetSize().width * BytesPerPixel(srcSurf->GetFormat()));
+  }
+
+  srcSurf->Unmap();
 }
 
 TextureClientMemoryDIB::TextureClientMemoryDIB(ISurfaceAllocator* aAllocator,

@@ -4518,13 +4518,17 @@ HTMLMediaElement::NotifyAudioChannelAgent(bool aPlaying)
   // this method has some content JS in its stack.
   AutoNoJSAPI nojsapi;
 
+  // Don't notify playback if this element doesn't have any audio tracks.
+  uint32_t notify = HasAudio() ? nsIAudioChannelAgent::AUDIO_AGENT_NOTIFY :
+                                 nsIAudioChannelAgent::AUDIO_AGENT_DONT_NOTIFY;
+
   if (aPlaying) {
     float volume = 0.0;
     bool muted = true;
-    mAudioChannelAgent->NotifyStartedPlaying(&volume, &muted);
+    mAudioChannelAgent->NotifyStartedPlaying(notify, &volume, &muted);
     WindowVolumeChanged(volume, muted);
   } else {
-    mAudioChannelAgent->NotifyStoppedPlaying();
+    mAudioChannelAgent->NotifyStoppedPlaying(notify);
     mAudioChannelAgent = nullptr;
   }
 }

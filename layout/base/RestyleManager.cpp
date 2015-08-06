@@ -3997,11 +3997,12 @@ ElementRestyler::RestyleUndisplayedNodes(nsRestyleHint    aChildRestyleHint,
     if (MustRestyleSelf(thisChildHint, element)) {
       undisplayedContext =
         styleSet->ResolveStyleFor(element, aParentContext, mTreeMatchContext);
-    } else if (thisChildHint ||
-               styleSet->IsInRuleTreeReconstruct()) {
-      // XXX Should the above condition ignore eRestyle_Force(Descendants)
-      // like the corresponding check in RestyleSelf?
-
+    } else if (CanReparentStyleContext(thisChildHint)) {
+      undisplayedContext =
+        styleSet->ReparentStyleContext(undisplayed->mStyle,
+                                       aParentContext,
+                                       element);
+    } else {
       // Use ResolveStyleWithReplacement either for actual
       // replacements, or as a substitute for ReparentStyleContext
       // that rebuilds the path in the rule tree rather than reusing
@@ -4013,11 +4014,6 @@ ElementRestyler::RestyleUndisplayedNodes(nsRestyleHint    aChildRestyleHint,
                                               aParentContext,
                                               undisplayed->mStyle,
                                               rshint);
-    } else {
-      undisplayedContext =
-        styleSet->ReparentStyleContext(undisplayed->mStyle,
-                                       aParentContext,
-                                       element);
     }
     const nsStyleDisplay* display = undisplayedContext->StyleDisplay();
     if (display->mDisplay != aDisplay) {

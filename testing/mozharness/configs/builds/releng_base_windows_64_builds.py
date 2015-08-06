@@ -74,6 +74,7 @@ config = {
     'base_name': 'WINNT_6.1_x86-64_%(branch)s',
     'platform': 'win64',
     'stage_platform': 'win64',
+    'publish_nightly_en_US_routes': True,
     'env': {
         'MOZ_SYMBOLS_EXTRA_BUILDID': 'win64',
         'MOZ_AUTOMATION': '1',

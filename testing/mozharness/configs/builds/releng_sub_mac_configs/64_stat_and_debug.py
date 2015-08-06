@@ -17,6 +17,7 @@ config = {
     ],
     'debug_build': True,
     'stage_platform': 'macosx64-st-an-debug',
+    'build_type': 'st-an-debug',
     'purge_minsize': 12,
     'tooltool_manifest_src': "browser/config/tooltool-manifests/macosx64/\
 clang.manifest",
@@ -44,7 +45,6 @@ clang.manifest",
         'PATH': '/tools/python/bin:/tools/buildbot/bin:/opt/local/bin:/usr/bin:'
                 '/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin',
     },
-    'src_mozconfig': 'browser/config/mozconfigs/macosx64/\
-debug-static-analysis',
+    'src_mozconfig': 'browser/config/mozconfigs/macosx64/debug-static-analysis',
     #######################
 }

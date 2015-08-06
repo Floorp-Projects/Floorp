@@ -11,7 +11,7 @@
 
 #include "nsIObserverService.h"
 #include "nsIBaseWindow.h"
-#include "nsIDocshell.h"
+#include "nsIDocShell.h"
 #include "nsIAppShellService.h"
 #include "nsAppShellCID.h"
 #include "nsIXULWindow.h"

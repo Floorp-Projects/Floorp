@@ -68,7 +68,7 @@ AppleATDecoder::Input(MediaRawData* aSample)
       aSample->mDuration,
       aSample->mTime,
       aSample->mKeyframe ? " keyframe" : "",
-      (unsigned long long)aSample->mSize);
+      (unsigned long long)aSample->Size());
 
   // Queue a task to perform the actual decoding on a separate thread.
   nsCOMPtr<nsIRunnable> runnable =
@@ -216,7 +216,7 @@ AppleATDecoder::DecodeSample(MediaRawData* aSample)
   // This API insists on having packets spoon-fed to it from a callback.
   // This structure exists only to pass our state.
   PassthroughUserData userData =
-    { channels, (UInt32)aSample->mSize, aSample->mData };
+    { channels, (UInt32)aSample->Size(), aSample->Data() };
 
   // Decompressed audio buffer
   nsAutoArrayPtr<AudioDataValue> decoded(new AudioDataValue[maxDecodedSamples]);
@@ -488,8 +488,8 @@ AppleATDecoder::GetImplicitAACMagicCookie(const MediaRawData* aSample)
   }
 
   OSStatus status = AudioFileStreamParseBytes(mStream,
-                                              adtssample->mSize,
-                                              adtssample->mData,
+                                              adtssample->Size(),
+                                              adtssample->Data(),
                                               0 /* discontinuity */);
   if (status) {
     NS_WARNING("Couldn't parse sample");

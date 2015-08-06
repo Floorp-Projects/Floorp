@@ -112,8 +112,8 @@ already_AddRefed<MediaRawData> SampleIterator::GetNext()
   }
 
   size_t bytesRead;
-  if (!mIndex->mSource->ReadAt(sample->mOffset, writer->mData, sample->mSize,
-                               &bytesRead) || bytesRead != sample->mSize) {
+  if (!mIndex->mSource->ReadAt(sample->mOffset, writer->Data(), sample->Size(),
+                               &bytesRead) || bytesRead != sample->Size()) {
     return nullptr;
   }
 
@@ -155,7 +155,7 @@ already_AddRefed<MediaRawData> SampleIterator::GetNext()
     } else {
       // No subsample information means the entire sample is encrypted.
       writer->mCrypto.mPlainSizes.AppendElement(0);
-      writer->mCrypto.mEncryptedSizes.AppendElement(sample->mSize);
+      writer->mCrypto.mEncryptedSizes.AppendElement(sample->Size());
     }
   }
 

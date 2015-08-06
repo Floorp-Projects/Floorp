@@ -1,0 +1,90 @@
+/* -*- Mode: IDL; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBrowser;
+include protocol PWebBrowserPersistResources;
+include protocol PWebBrowserPersistSerialize;
+
+include InputStreamParams;
+
+namespace mozilla {
+
+// nsIWebBrowserPersistDocument has attributes which can be read
+// synchronously.  To avoid using sync IPC for them, the actor sends
+// this structure from the child to the parent before the parent actor
+// is exposed to XPCOM.
+struct WebBrowserPersistDocumentAttrs {
+  bool isPrivate;
+  nsCString documentURI;
+  nsCString baseURI;
+  nsCString contentType;
+  nsCString characterSet;
+  nsString title;
+  nsString referrer;
+  nsString contentDisposition;
+  uint32_t cacheKey;
+  uint32_t persistFlags;
+};
+
+// IPDL doesn't have tuples, so this gives the pair of strings from
+// nsIWebBrowserPersistURIMap::getURIMapping a name.
+struct WebBrowserPersistURIMapEntry {
+  nsCString mapFrom;
+  nsCString mapTo;
+};
+
+// nsIWebBrowserPersistURIMap is just copied over IPC as one of these,
+// not proxied, to simplify the protocol.
+struct WebBrowserPersistURIMap {
+  WebBrowserPersistURIMapEntry[] mapURIs;
+  nsCString targetBaseURI;
+};
+
+// This remotes nsIWebBrowserPersistDocument and its visitors.  The
+// lifecycle is a little complicated: the initial document is
+// constructed parent->child, but subdocuments are constructed
+// child->parent and then passed back.  Subdocuments aren't subactors,
+// because that would impose a lifetime relationship that doesn't
+// exist in the XPIDL; instead they're all managed by the enclosing
+// PBrowser (== TabParent/TabChild).
+protocol PWebBrowserPersistDocument {
+  manager PBrowser;
+  manages PWebBrowserPersistResources;
+  manages PWebBrowserPersistSerialize;
+
+parent:
+  // The actor isn't exposed to XPCOM until after it gets one of these
+  // two messages; see also the state transition rules.  The message
+  // is either a response to the constructor (if it was parent->child)
+  // or sent after it (if it was child->parent).
+  Attributes(WebBrowserPersistDocumentAttrs aAttrs,
+             OptionalInputStreamParams postData,
+             FileDescriptor[] postFiles);
+  InitFailure(nsresult aStatus);
+
+child:
+  SetPersistFlags(uint32_t aNewFlags);
+  PWebBrowserPersistResources();
+  PWebBrowserPersistSerialize(WebBrowserPersistURIMap aMap,
+                              nsCString aRequestedContentType,
+                              uint32_t aEncoderFlags,
+                              uint32_t aWrapColumn);
+  __delete__();
+
+state START:
+  recv Attributes goto MAIN;
+  recv InitFailure goto FAILED;
+
+state MAIN:
+  send SetPersistFlags goto MAIN;
+  send PWebBrowserPersistResources goto MAIN;
+  send PWebBrowserPersistSerialize goto MAIN;
+  send __delete__;
+
+state FAILED:
+  send __delete__;
+};
+
+} // namespace mozilla

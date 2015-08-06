@@ -494,6 +494,10 @@ public:
 
     virtual ScreenIntSize GetInnerSize() override;
 
+    virtual PWebBrowserPersistDocumentChild* AllocPWebBrowserPersistDocumentChild() override;
+    virtual bool RecvPWebBrowserPersistDocumentConstructor(PWebBrowserPersistDocumentChild *aActor) override;
+    virtual bool DeallocPWebBrowserPersistDocumentChild(PWebBrowserPersistDocumentChild* aActor) override;
+
 protected:
     virtual ~TabChild();
 
