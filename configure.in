@@ -5873,9 +5873,9 @@ if test -n "$MOZ_ANGLE_RENDERER"; then
   # Find a D3D compiler DLL in a Windows SDK.
   MOZ_D3DCOMPILER_VISTA_DLL=
   case "$MOZ_WINSDK_MAXVER" in
-  0x0603*)
+  0x0603*|0x0A00*)
     MOZ_D3DCOMPILER_VISTA_DLL=d3dcompiler_47.dll
-    AC_MSG_RESULT([Found D3D compiler in Windows SDK 8.1.])
+    AC_MSG_RESULT([Found D3D compiler in Windows SDK.])
   ;;
   esac
 
@@ -5894,6 +5894,8 @@ if test -n "$MOZ_ANGLE_RENDERER"; then
     else
       AC_MSG_RESULT([Windows SDK not found.])
     fi
+  else
+    AC_MSG_ERROR([Couldn't find Windows SDK 8.1 or higher needed for ANGLE.])
   fi
 
   if test -z "$MOZ_D3DCOMPILER_VISTA_DLL_PATH"; then
