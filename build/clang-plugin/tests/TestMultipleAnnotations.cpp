@@ -3,7 +3,7 @@
 
 class MOZ_MUST_USE MOZ_STACK_CLASS TestClass {};
 
-TestClass foo; // expected-error {{variable of type 'TestClass' only valid on the stack}}
+TestClass foo; // expected-error {{variable of type 'TestClass' only valid on the stack}} expected-note {{value incorrectly allocated in a global variable}}
 
 TestClass f()
 {
