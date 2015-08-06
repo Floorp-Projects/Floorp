@@ -34,7 +34,7 @@ setup(name=PACKAGE_NAME,
       include_package_data=True,
       zip_safe=False,
       install_requires=deps,
-      extra_requires={'manifest': ['manifestparser >= 0.6']},
+      extras_require={'manifest': ['manifestparser >= 0.6']},
       tests_require=['mozhttpd'],
       entry_points="""
       # -*- Entry points: -*-
