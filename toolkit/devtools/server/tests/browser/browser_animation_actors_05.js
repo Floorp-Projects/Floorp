@@ -41,6 +41,10 @@ add_task(function*() {
       previousState = state;
       if (expected === 0) {
         player.off(player.AUTO_REFRESH_EVENT, onNewState);
+
+        info("Stop the auto-refresh");
+        player.stopAutoRefresh();
+
         resolve();
       }
     };
@@ -48,9 +52,6 @@ add_task(function*() {
   });
 
   yield onAllEventsReceived;
-
-  info("Stop the auto-refresh");
-  player.stopAutoRefresh();
 
   yield closeDebuggerClient(client);
   gBrowser.removeCurrentTab();
