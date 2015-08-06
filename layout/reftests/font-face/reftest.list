@@ -50,8 +50,8 @@ skip-if(B2G||Mulet) fails-if(Android) random-if(gtkWidget) == src-list-local-ps.
 random-if(!cocoaWidget) == helveticaneue-ultra.html helveticaneue-ultra-ref.html
 
 HTTP(..) == order-1.html order-1-ref.html
-pref(layout.css.unicode-range.enabled,true) HTTP(..) == order-2.html order-2-ref.html
-pref(layout.css.unicode-range.enabled,true) HTTP(..) == order-3.html order-3-ref.html
+pref(layout.css.unicode-range.enabled,true) random-if(gtkWidget) HTTP(..) == order-2.html order-2-ref.html # enable new linux font backend, bug 1180560
+pref(layout.css.unicode-range.enabled,true) random-if(gtkWidget) HTTP(..) == order-3.html order-3-ref.html # enable new linux font backend, bug 1180560
 HTTP(..) == multiple-in-family-1.html multiple-in-family-1-ref.html
 HTTP(..) == multiple-in-family-1b.html multiple-in-family-1-ref.html
 HTTP(..) != multiple-in-family-1.html multiple-in-family-1-notref.html
