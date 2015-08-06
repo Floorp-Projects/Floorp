@@ -173,6 +173,8 @@ AudioNode::DisconnectFromGraph()
     // It doesn't matter which one we remove, since we're going to remove all
     // entries for this node anyway.
     output->mInputNodes.RemoveElementAt(inputIndex);
+    // This effects of this connection will remain.
+    output->NotifyHasPhantomInput();
   }
 
   while (!mOutputParams.IsEmpty()) {
