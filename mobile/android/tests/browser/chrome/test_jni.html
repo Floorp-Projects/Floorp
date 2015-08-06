@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=873569
+Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 873569</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript;version=1.7">
+
+  Components.utils.import("resource://gre/modules/ctypes.jsm");
+  Components.utils.import("resource://gre/modules/JNI.jsm");
+
+  function test_JNI() {
+    var jenv = null;
+    try {
+      jenv = JNI.GetForThread();
+
+      // Test a simple static method.
+      var geckoAppShell = JNI.LoadClass(jenv, "org.mozilla.gecko.GeckoAppShell", {
+        static_methods: [
+          { name: "getPreferredIconSize", sig: "()I" },
+          { name: "getContext", sig: "()Landroid/content/Context;" },
+        ],
+      });
+
+      let iconSize = -1;
+      iconSize = geckoAppShell.getPreferredIconSize();
+      isnot(iconSize, -1, "icon size is valid");
+
+      // Test GeckoNetworkManager methods that are accessed by PaymentsUI.js.
+      // The return values can vary, so we can't test for equivalence, but we
+      // can ensure that the method calls return values of the correct type.
+      let jGeckoNetworkManager = JNI.LoadClass(jenv, "org/mozilla/gecko/GeckoNetworkManager", {
+        static_methods: [
+          { name: "getMNC", sig: "()I" },
+          { name: "getMCC", sig: "()I" },
+        ],
+      });
+      is(typeof jGeckoNetworkManager.getMNC(), "number", "typeof getMNC is number");
+      is(typeof jGeckoNetworkManager.getMCC(), "number", "typeof getMCC is number");
+
+      // Test retrieving the context's class's name, which tests dynamic method
+      // invocation as well as converting a Java string to JavaScript.
+      JNI.LoadClass(jenv, "android.content.Context", {
+        methods: [
+          { name: "getClass", sig: "()Ljava/lang/Class;" },
+        ],
+      });
+      JNI.LoadClass(jenv, "java.lang.Class", {
+        methods: [
+          { name: "getName", sig: "()Ljava/lang/String;" },
+        ],
+      });
+      is("org.mozilla.gecko.BrowserApp", JNI.ReadString(jenv, geckoAppShell.getContext().getClass().getName()), "class name is correct");
+    } finally {
+      if (jenv) {
+        JNI.UnloadClasses(jenv);
+      }
+    }
+  }
+
+  test_JNI();
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=873569">Mozilla Bug 873569</a>
+<br>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1184186">Migrated from Robocop testJNI</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
