@@ -1136,7 +1136,7 @@ or run without that action (ie: --no-{action})"
             if os.path.exists(source_path):
                 hg = self.query_exe('hg', return_type='list')
                 revision = self.get_output_from_command(
-                    hg + ['parent', '--template', '{node|short}'], cwd=source_path
+                    hg + ['parent', '--template', '{node}'], cwd=source_path
                 )
         return revision.encode('ascii', 'replace') if revision else None
 

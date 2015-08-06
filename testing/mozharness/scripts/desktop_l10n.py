@@ -413,7 +413,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
        """
         if self.revision:
             return self.revision
-        r = re.compile(r"^(gecko|fx)_revision ([0-9a-f]{12}\+?)$")
+        r = re.compile(r"^(gecko|fx)_revision ([0-9a-f]+\+?)$")
         output = self._query_make_ident_output()
         for line in output.splitlines():
             match = r.match(line)
