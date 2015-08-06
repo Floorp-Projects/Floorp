@@ -458,6 +458,8 @@ TimeZone::detectHostTimeZone()
 
     uprv_tzset(); // Initialize tz... system data
 
+    uprv_tzname_clear_cache();
+
     // Get the timezone ID from the host.  This function should do
     // any required host-specific remapping; e.g., on Windows this
     // function maps the Date and Time control panel setting to an
