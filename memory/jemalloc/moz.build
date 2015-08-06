@@ -61,7 +61,10 @@ if CONFIG['OS_TARGET'] == 'Linux':
     DEFINES['_GNU_SOURCE'] = True
 
 if CONFIG['MOZ_NUWA_PROCESS'] and CONFIG['MOZ_JEMALLOC3']:
-    DEFINES['pthread_mutex_lock'] = '__real_pthread_mutex_lock';
+    DEFINES['pthread_mutex_lock'] = '__real_pthread_mutex_lock'
+
+if CONFIG['GNU_CC']:
+    CFLAGS += ['-std=gnu99']
 
 DEFINES['abort'] = 'moz_abort'
 
