@@ -7,120 +7,162 @@
 @import url("chrome://global/skin/in-content/common.css");
 
 body {
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
-  min-height: 100vh;
-  padding: 0 48px;
   align-items: center;
   justify-content: center;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 300;
 }
 
-body.tour {
-  margin: 0;
-  padding: 0;
-  align-items: stretch;
-}
-
-body.normal .showPrivate,
 body.private .showNormal,
-body.tour #pageContainer,
-body:not(.tour) .showTour,
+body.normal .showPrivate,
 body[tpEnabled] .showTpDisabled,
 body:not([tpEnabled]) .showTpEnabled {
   display: none !important;
 }
 
-#pageContainer {
-  min-width: 320px;
-  max-width: 512px;
-}
-
-.titleText {
-  background: url("chrome://browser/skin/mask.png") left 0 no-repeat;
-  background-size: 45px;
-  -moz-margin-start: -2em;
-  -moz-padding-start: 2em;
-}
-
-.titleText:-moz-dir(rtl) {
-  background-position: right 0;
-}
-
-@media (min-resolution: 2dppx) {
-  .titleText {
-    background-image: url("chrome://browser/skin/mask@2x.png");
+@media screen and (min-width: 1200px) and (min-height: 700px) {
+  body.private {
+    font-size: 1.25em;
   }
 }
 
-@media (max-width: 675px) {
-  .titleText {
-    padding-top: 0;
-    background-image: none;
-    -moz-margin-start: 0;
-    -moz-padding-start: 0;
-  }
-}
-
-a {
-  font-size: 1rem;
-}
-
-#startPrivateBrowsing {
-  margin-top: 1.2em;
-  -moz-margin-start: 0;
-}
-
-/* TRACKING PROTECTION TOUR */
-
-#tourTop,
-#tourBottom,
-#tourFooter {
-  text-align: center;
-  padding: 0 31px;
-}
-
-#tourTop,
-#tourBottom {
-  flex: 1;
-}
-
-#tourTop {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  background-color: rgb(108,192,65);
+#bar {
+  align-self: stretch;
+  background: url("chrome://browser/skin/privatebrowsing/mask.svg") no-repeat 22px 50%,
+              #8d20ae;
+  background-size: 47px 26px;
+  padding-inline-start: 87px;
   color: white;
-  font-style: italic;
+  font-size: 24pt;
+  font-weight: 200;
+  line-height: 60pt;
 }
 
-#tourTitle {
-  margin: 16px 0 0;
-  background: url("chrome://browser/skin/mask-and-shield.svg") top no-repeat;
-  background-size: 179px 88px;
-  padding-top: 114px;
-  font-size: 38px;
+#main {
+  padding: 0 2em;
+  flex: 1;
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  justify-content: center;
 }
 
-#tourSubtitle {
-  margin: 12px 0 32px;
-  font-size: 24px;
+.sectionHeader {
+  font-size: 1.75em;
 }
 
-#tourDescription,
-#tourFooter {
-  margin: 16px auto;
-  max-width: 550px;
+/* PRIVATE BROWSING SECTION */
+
+#privateBrowsingSection {
+  margin: 1em;
+  padding: 0 1em;
+}
+
+ul {
+  margin-bottom: 0;
+  padding-inline-start: 8px;
+}
+
+li {
+  list-style: none;
+  padding-inline-start: 24px;
+  background-size: 16px 16px;
+  background-repeat: no-repeat;
+  background-position: 0 50%;
+}
+
+#forgotten > li {
+  background-image: url("chrome://browser/skin/privatebrowsing/check.png");
+}
+
+#kept > li {
+  background-image: url("chrome://browser/skin/privatebrowsing/attention.png");
+}
+
+@media (min-resolution: 1.1dppx) {
+  #forgotten li {
+    background-image: url("chrome://browser/skin/privatebrowsing/check@2x.png");
+  }
+
+  #kept li {
+    background-image: url("chrome://browser/skin/privatebrowsing/attention@2x.png");
+  }
+}
+
+#list-area {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+#list-area > div {
+  margin-inline-end: 1em;
+}
+
+.list-header {
+  font-weight: bold;
+}
+
+/* TRACKING PROTECTION SECTION */
+
+#trackingProtectionSection {
+  margin: 1em;
+  padding: 1em;
+  text-align: center;
+  border: lightgray 2px solid;
+  border-radius: 10px;
+}
+
+#tpEnabled,
+#tpDisabled {
+  display: inline-block;
+  margin-inline-start: 0.5em;
+  border-radius: 3px;
+  padding: 0.1em;
+  color: white;
+  font-size: 0.78em;
+  font-weight: bold;
+}
+
+#tpEnabled {
+  background-color: #6fbe4a;
+}
+
+#tpDisabled {
+  background-color: #c33b32;
+}
+
+#tpDiagram {
+  margin-left: auto;
+  margin-right: auto;
+  width: 145px;
+  height: 90px;
+  background: url("chrome://browser/skin/privatebrowsing/shield-page.png") no-repeat;
+  background-size: 145px 90px;
+}
+
+@media (min-resolution: 1.1dppx) {
+  #tpDiagram {
+    background-image: url("chrome://browser/skin/privatebrowsing/shield-page@2x.png");
+  }
+}
+
+#tpStartTour {
+  margin-bottom: 0;
 }
 
 #startTour {
   display: inline-block;
-  width: 255px;
+  width: 16em;
   border-radius: 2px;
   background-color: var(--in-content-primary-button-background);
   color: var(--in-content-selected-text);
-  padding: 2px 5px;
-  line-height: 36px;
+  padding: 0.1em 0.3em;
+  line-height: 2.25em;
   text-decoration: none;
 }
 
@@ -128,19 +170,16 @@ a {
   background-color: var(--in-content-primary-button-background-hover);
 }
 
-#enableTrackingProtection {
-  height: 40px;
+#startTour:hover:active {
+  background-color: var(--in-content-primary-button-background-active);
 }
 
-#tourFooter {
-  margin: 16px auto;
+#startTour:-moz-focusring {
+  outline: 1px dotted var(--in-content-border-focus);
 }
 
-#tourFooter,
-#tourLearnMore {
-  font-size: 12px;
-}
-
-#tourFooterText {
-  opacity: 0.6;
+#enableTrackingProtection,
+#disableTrackingProtection {
+  font-size: 0.875em;
+  cursor: pointer;
 }
