@@ -405,6 +405,31 @@ NegativeLookahead(LifoAlloc* alloc, char16_t from, char16_t to)
     return alloc->newInfallible<RegExpLookahead>(RangeAtom(alloc, from, to), false, 0, 0);
 }
 
+static bool
+IsSyntaxCharacter(widechar c)
+{
+  switch (c) {
+    case '^':
+    case '$':
+    case '\\':
+    case '.':
+    case '*':
+    case '+':
+    case '?':
+    case '(':
+    case ')':
+    case '[':
+    case ']':
+    case '{':
+    case '}':
+    case '|':
+    case '/':
+      return true;
+    default:
+      return false;
+  }
+}
+
 #ifdef DEBUG
 // Currently only used in an assert.kASSERT.
 static bool
@@ -459,15 +484,22 @@ RegExpParser<CharT>::ParseClassCharacterEscape(widechar* code)
         widechar controlLetter = Next();
         widechar letter = controlLetter & ~('A' ^ 'a');
         // For compatibility with JSC, inside a character class
-        // we also accept digits and underscore as control characters.
-        if ((controlLetter >= '0' && controlLetter <= '9') ||
-            controlLetter == '_' ||
-            (letter >= 'A' && letter <= 'Z')) {
+        // we also accept digits and underscore as control characters,
+        // but only in non-unicode mode
+        if ((!unicode_ &&
+             ((controlLetter >= '0' && controlLetter <= '9') ||
+              controlLetter == '_')) ||
+            (letter >= 'A' && letter <= 'Z'))
+        {
             Advance(2);
             // Control letters mapped to ASCII control characters in the range
             // 0x00-0x1f.
             *code = controlLetter & 0x1f;
             return true;
+        }
+        if (unicode_) {
+            ReportError(JSMSG_INVALID_IDENTITY_ESCAPE);
+            return false;
         }
         // We match JSC in reading the backslash as a literal
         // character instead of as starting an escape.
@@ -476,9 +508,18 @@ RegExpParser<CharT>::ParseClassCharacterEscape(widechar* code)
       }
       case '0': case '1': case '2': case '3': case '4': case '5':
       case '6': case '7':
-        // For compatibility, we interpret a decimal escape that isn't
-        // a back reference (and therefore either \0 or not valid according
-        // to the specification) as a 1..3 digit octal character code.
+        if (unicode_) {
+            if (current() == '0') {
+                *code = 0;
+                return true;
+            }
+            ReportError(JSMSG_INVALID_IDENTITY_ESCAPE);
+            return false;
+        }
+        // For compatibility, outside of unicode mode, we interpret a decimal
+        // escape that isn't a back reference (and therefore either \0 or not
+        // valid according to the specification) as a 1..3 digit octal
+        // character code.
         *code = ParseOctalLiteral();
         return true;
       case 'x': {
@@ -488,8 +529,12 @@ RegExpParser<CharT>::ParseClassCharacterEscape(widechar* code)
             *code = value;
             return true;
         }
+        if (unicode_) {
+            ReportError(JSMSG_INVALID_IDENTITY_ESCAPE);
+            return false;
+        }
         // If \x is not followed by a two-digit hexadecimal, treat it
-        // as an identity escape.
+        // as an identity escape in non-unicode mode.
         *code = 'x';
         return true;
       }
@@ -527,10 +572,14 @@ RegExpParser<CharT>::ParseClassCharacterEscape(widechar* code)
         return true;
       }
       default: {
-        // Extended identity escape. We accept any character that hasn't
-        // been matched by a more specific case, not just the subset required
-        // by the ECMAScript specification.
+        // Extended identity escape (non-unicode only). We accept any character
+        // that hasn't been matched by a more specific case, not just the subset
+        // required by the ECMAScript specification.
         widechar result = current();
+        if (unicode_ && result != '-' && !IsSyntaxCharacter(result)) {
+            ReportError(JSMSG_INVALID_IDENTITY_ESCAPE);
+            return false;
+        }
         Advance();
         *code = result;
         return true;
@@ -1388,6 +1437,8 @@ RegExpParser<CharT>::ParseDisjunction()
                                                    capture_index);
             }
             builder->AddAtom(body);
+            if (unicode_ && (group_type == POSITIVE_LOOKAHEAD || group_type == NEGATIVE_LOOKAHEAD))
+                continue;
             // For compatability with JSC and ES3, we allow quantifiers after
             // lookaheads, and break in all cases.
             break;
@@ -1527,6 +1578,8 @@ RegExpParser<CharT>::ParseDisjunction()
                     builder->AddAtom(atom);
                     break;
                 }
+                if (unicode_)
+                    return ReportError(JSMSG_BACK_REF_OUT_OF_RANGE);
                 widechar first_digit = Next();
                 if (first_digit == '8' || first_digit == '9') {
                     // Treat as identity escape
@@ -1537,6 +1590,14 @@ RegExpParser<CharT>::ParseDisjunction()
               }
                 // FALLTHROUGH
               case '0': {
+                if (unicode_) {
+                    Advance(2);
+                    if (IsDecimalDigit(current()))
+                        return ReportError(JSMSG_INVALID_DECIMAL_ESCAPE);
+                    builder->AddCharacter(0);
+                    break;
+                }
+
                 Advance();
                 size_t octal = ParseOctalLiteral();
                 builder->AddCharacter(octal);
@@ -1571,6 +1632,8 @@ RegExpParser<CharT>::ParseDisjunction()
                 // Convert lower case letters to uppercase.
                 widechar letter = controlLetter & ~('a' ^ 'A');
                 if (letter < 'A' || 'Z' < letter) {
+                    if (unicode_)
+                        return ReportError(JSMSG_INVALID_IDENTITY_ESCAPE);
                     // controlLetter is not in range 'A'-'Z' or 'a'-'z'.
                     // This is outside the specification. We match JSC in
                     // reading the backslash as a literal character instead
@@ -1588,6 +1651,8 @@ RegExpParser<CharT>::ParseDisjunction()
                 if (ParseHexEscape(2, &value)) {
                     builder->AddCharacter(value);
                 } else {
+                    if (unicode_)
+                        return ReportError(JSMSG_INVALID_IDENTITY_ESCAPE);
                     builder->AddCharacter('x');
                 }
                 break;
@@ -1639,12 +1704,16 @@ RegExpParser<CharT>::ParseDisjunction()
               }
               default:
                 // Identity escape.
+                if (unicode_ && !IsSyntaxCharacter(Next()))
+                    return ReportError(JSMSG_INVALID_IDENTITY_ESCAPE);
                 builder->AddCharacter(Next());
                 Advance(2);
                 break;
             }
             break;
           case '{': {
+            if (unicode_)
+                return ReportError(JSMSG_RAW_BRACE_IN_REGEP);
             int dummy;
             if (ParseIntervalQuantifier(&dummy, &dummy))
                 return ReportError(JSMSG_NOTHING_TO_REPEAT);
@@ -1661,6 +1730,10 @@ RegExpParser<CharT>::ParseDisjunction()
                         builder->AddAtom(LeadSurrogateAtom(alloc, c));
                     else if (unicode::IsTrailSurrogate(c))
                         builder->AddAtom(TrailSurrogateAtom(alloc, c));
+                    else if (c == ']')
+                        return ReportError(JSMSG_RAW_BRACKET_IN_REGEP);
+                    else if (c == '}')
+                        return ReportError(JSMSG_RAW_BRACE_IN_REGEP);
                     else
                         builder->AddCharacter(c);
                     Advance();
