@@ -13,15 +13,18 @@
 #ifndef mozilla_dom_BindingDeclarations_h__
 #define mozilla_dom_BindingDeclarations_h__
 
-#include "nsStringGlue.h"
-#include "js/Value.h"
 #include "js/RootingAPI.h"
+#include "js/Value.h"
+
 #include "mozilla/Maybe.h"
-#include "nsCOMPtr.h"
-#include "nsTArray.h"
-#include "nsAutoPtr.h" // for nsRefPtr member variables
-#include "mozilla/dom/DOMString.h"
 #include "mozilla/OwningNonNull.h"
+
+#include "mozilla/dom/DOMString.h"
+
+#include "nsAutoPtr.h" // for nsRefPtr member variables
+#include "nsCOMPtr.h"
+#include "nsStringGlue.h"
+#include "nsTArray.h"
 
 class nsWrapperCache;
 
