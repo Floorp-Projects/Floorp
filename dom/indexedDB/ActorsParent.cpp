@@ -4559,10 +4559,10 @@ class DatabaseConnection::UpdateRefcountFunction final
   class DatabaseUpdateFunction;
   class FileInfoEntry;
 
-  enum UpdateType
+  enum class UpdateType
   {
-    eIncrement,
-    eDecrement
+    Increment,
+    Decrement
   };
 
   DatabaseConnection* mConnection;
@@ -9787,13 +9787,13 @@ UpdateRefcountFunction::ProcessValue(mozIStorageValueArray* aValues,
     }
 
     switch (aUpdateType) {
-      case eIncrement:
+      case UpdateType::Increment:
         entry->mDelta++;
         if (mInSavepoint) {
           entry->mSavepointDelta++;
         }
         break;
-      case eDecrement:
+      case UpdateType::Decrement:
         entry->mDelta--;
         if (mInSavepoint) {
           entry->mSavepointDelta--;
@@ -9910,12 +9910,12 @@ UpdateRefcountFunction::OnFunctionCall(mozIStorageValueArray* aValues,
   }
 #endif
 
-  rv = ProcessValue(aValues, 0, eDecrement);
+  rv = ProcessValue(aValues, 0, UpdateType::Decrement);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = ProcessValue(aValues, 1, eIncrement);
+  rv = ProcessValue(aValues, 1, UpdateType::Increment);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
