@@ -5,15 +5,9 @@
 
 EXTRA_JS_MODULES.devtools.performance += [
     'modules/global.js',
-    'modules/logic/actors.js',
-    'modules/logic/compatibility.js',
     'modules/logic/frame-utils.js',
-    'modules/logic/front.js',
-    'modules/logic/io.js',
     'modules/logic/jit.js',
     'modules/logic/marker-utils.js',
-    'modules/logic/recording-model.js',
-    'modules/logic/recording-utils.js',
     'modules/logic/tree-model.js',
     'modules/logic/waterfall-utils.js',
     'modules/markers.js',

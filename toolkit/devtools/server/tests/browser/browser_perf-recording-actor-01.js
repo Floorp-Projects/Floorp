@@ -6,9 +6,16 @@
  * completed, and rec data.
  */
 
-function* spawnTest() {
-  let { target, panel, toolbox } = yield initPerformance(SIMPLE_URL);
-  let { EVENTS, gFront: front, PerformanceController } = panel.panelWin;
+const { PerformanceFront } = require("devtools/server/actors/performance");
+
+add_task(function*() {
+  let doc = yield addTab(MAIN_DOMAIN + "doc_perf.html");
+
+  initDebuggerServer();
+  let client = new DebuggerClient(DebuggerServer.connectPipe());
+  let form = yield connectDebuggerClient(client);
+  let front = PerformanceFront(client, form);
+  yield front.connect();
 
   let rec = yield front.startRecording({ withMarkers: true, withTicks: true, withMemory: true });
   ok(rec.isRecording(), "RecordingModel is recording when created");
@@ -35,6 +42,7 @@ function* spawnTest() {
     ok(rec.isCompleted(), "recording is completed once it has profile data");
   } else {
     ok(!rec.isCompleted(), "recording is not yet completed on 'recording-stopping'");
+    ok(rec.isFinalizing(), "recording is considered finalizing between 'recording-stopping' and 'recording-stopped'");
   }
 
   yield stopped;
@@ -44,19 +52,14 @@ function* spawnTest() {
   // Export and import a rec, and ensure it has the correct state.
   let file = FileUtils.getFile("TmpD", ["tmpprofile.json"]);
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("666", 8));
-  let exported = once(PerformanceController, EVENTS.RECORDING_EXPORTED);
-  yield PerformanceController.exportRecording("", rec, file);
-  yield exported;
+  yield rec.exportRecording(file);
 
-  let imported = once(PerformanceController, EVENTS.RECORDING_IMPORTED);
-  yield PerformanceController.importRecording("", file);
-
-  yield imported;
-  let importedModel = PerformanceController.getCurrentRecording();
+  let importedModel = yield front.importRecording(file);
 
   ok(importedModel.isCompleted(), "All imported recordings should be completed");
   ok(!importedModel.isRecording(), "All imported recordings should not be recording");
+  ok(importedModel.isImported(), "All imported recordings should be considerd imported");
 
-  yield teardown(panel);
-  finish();
-}
+  yield closeDebuggerClient(client);
+  gBrowser.removeCurrentTab();
+});
