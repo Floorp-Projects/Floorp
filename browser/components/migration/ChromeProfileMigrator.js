@@ -461,4 +461,51 @@ ChromeProfileMigrator.prototype.classDescription = "Chrome Profile Migrator";
 ChromeProfileMigrator.prototype.contractID = "@mozilla.org/profile/migrator;1?app=browser&type=chrome";
 ChromeProfileMigrator.prototype.classID = Components.ID("{4cec1de4-1671-4fc3-a53e-6c539dc77a26}");
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ChromeProfileMigrator]);
+
+/**
+ *  Chromium migration
+ **/
+function ChromiumProfileMigrator() {
+  let chromiumUserDataFolder = FileUtils.getDir(
+#ifdef XP_WIN
+    "LocalAppData", ["Chromium", "User Data"]
+#elifdef XP_MACOSX
+    "ULibDir", ["Application Support", "Chromium"]
+#else
+    "Home", [".config", "chromium"]
+#endif
+    , false);
+  this._chromeUserDataFolder = chromiumUserDataFolder.exists() ? chromiumUserDataFolder : null;
+}
+
+ChromiumProfileMigrator.prototype = Object.create(ChromeProfileMigrator.prototype);
+ChromiumProfileMigrator.prototype.classDescription = "Chromium Profile Migrator";
+ChromiumProfileMigrator.prototype.contractID = "@mozilla.org/profile/migrator;1?app=browser&type=chromium";
+ChromiumProfileMigrator.prototype.classID = Components.ID("{8cece922-9720-42de-b7db-7cef88cb07ca}");
+
+let componentsArray = [ChromeProfileMigrator, ChromiumProfileMigrator];
+
+#if defined(XP_WIN) || defined(XP_MACOSX)
+/**
+ * Chrome Canary
+ * Not available on Linux
+ **/
+function CanaryProfileMigrator() {
+  let chromeUserDataFolder = FileUtils.getDir(
+#ifdef XP_WIN
+    "LocalAppData", ["Google", "Chrome SxS", "User Data"]
+#elifdef XP_MACOSX
+    "ULibDir", ["Application Support", "Google", "Chrome Canary"]
+#endif
+    , false);
+  this._chromeUserDataFolder = chromeUserDataFolder.exists() ? chromeUserDataFolder : null;
+}
+CanaryProfileMigrator.prototype = Object.create(ChromeProfileMigrator.prototype);
+CanaryProfileMigrator.prototype.classDescription = "Chrome Canary Profile Migrator";
+CanaryProfileMigrator.prototype.contractID = "@mozilla.org/profile/migrator;1?app=browser&type=canary";
+CanaryProfileMigrator.prototype.classID = Components.ID("{4bf85aa5-4e21-46ca-825f-f9c51a5e8c76}");
+
+componentsArray.push(CanaryProfileMigrator);
+#endif
+
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory(componentsArray);

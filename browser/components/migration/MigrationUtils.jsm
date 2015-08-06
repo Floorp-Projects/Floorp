@@ -6,10 +6,7 @@
 
 this.EXPORTED_SYMBOLS = ["MigrationUtils", "MigratorPrototype"];
 
-const Cu = Components.utils;
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-
+const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 const TOPIC_WILL_IMPORT_BOOKMARKS = "initial-migration-will-import-default-bookmarks";
 const TOPIC_DID_IMPORT_BOOKMARKS = "initial-migration-did-import-default-bookmarks";
 
@@ -37,17 +34,20 @@ function getMigrationBundle() {
 /**
  * Figure out what is the default browser, and if there is a migrator
  * for it, return that migrator's internal name.
- * For the time being, the "internal name" of a migraotr is its contract-id
+ * For the time being, the "internal name" of a migrator is its contract-id
  * trailer (e.g. ie for @mozilla.org/profile/migrator;1?app=browser&type=ie),
  * but it will soon be exposed properly.
  */
 function getMigratorKeyForDefaultBrowser() {
+  // Canary uses the same description as Chrome so we can't distinguish them.
   const APP_DESC_TO_KEY = {
     "Internet Explorer":                 "ie",
     "Safari":                            "safari",
     "Firefox":                           "firefox",
     "Google Chrome":                     "chrome",  // Windows, Linux
     "Chrome":                            "chrome",  // OS X
+    "Chromium":                          "chromium", // Windows, OS X
+    "Chromium Web Browser":              "chromium", // Linux
     "360\u5b89\u5168\u6d4f\u89c8\u5668": "360se",
   };
 
@@ -399,13 +399,15 @@ this.MigrationUtils = Object.freeze({
    *
    * @param aKey
    *        The key of the string to retrieve.
-   * @param aReplacemts
+   * @param aReplacements
    *        [optioanl] Array of replacements to run on the retrieved string.
    * @return the retrieved string.
    *
    * @see nsIStringBundle
    */
   getLocalizedString: function MU_getLocalizedString(aKey, aReplacements) {
+    aKey = aKey.replace(/_(canary|chromium)$/, "_chrome");
+
     const OVERRIDES = {
       "4_firefox": "4_firefox_history_and_bookmarks",
       "64_firefox": "64_firefox_other"
@@ -450,7 +452,9 @@ this.MigrationUtils = Object.freeze({
    * @param aKey internal name of the migration source.
    *             Supported values: ie (windows),
    *                               safari (mac/windows),
+   *                               canary (mac/windows),
    *                               chrome (mac/windows/linux),
+   *                               chromium (mac/windows/linux),
    *                               360se (windows),
    *                               firefox.
    *
@@ -484,11 +488,11 @@ this.MigrationUtils = Object.freeze({
   get migrators() {
     let migratorKeysOrdered = [
 #ifdef XP_WIN
-      "firefox", "ie", "chrome", "safari", "360se"
+      "firefox", "ie", "chrome", "chromium", "safari", "360se", "canary"
 #elifdef XP_MACOSX
-      "firefox", "safari", "chrome"
+      "firefox", "safari", "chrome", "chromium", "canary"
 #elifdef XP_UNIX
-      "firefox", "chrome"
+      "firefox", "chrome", "chromium"
 #endif
     ];
 
