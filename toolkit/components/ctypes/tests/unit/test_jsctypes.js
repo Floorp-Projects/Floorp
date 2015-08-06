@@ -228,16 +228,16 @@ function run_test()
 function run_abstract_class_tests()
 {
   // Test that ctypes.CType is an abstract constructor that throws.
-  do_check_throws(function() { ctypes.CType(); }, Error);
-  do_check_throws(function() { new ctypes.CType() }, Error);
+  do_check_throws(function() { ctypes.CType(); }, TypeError);
+  do_check_throws(function() { new ctypes.CType() }, TypeError);
 
   // Test that classes and prototypes are set up correctly.
   do_check_class(ctypes.CType, "Function");
   do_check_class(ctypes.CType.prototype, "CType");
 
   do_check_true(ctypes.CType.hasOwnProperty("prototype"));
-  do_check_throws(function() { ctypes.CType.prototype(); }, Error);
-  do_check_throws(function() { new ctypes.CType.prototype() }, Error);
+  do_check_throws(function() { ctypes.CType.prototype(); }, TypeError);
+  do_check_throws(function() { new ctypes.CType.prototype() }, TypeError);
 
   do_check_true(ctypes.CType.prototype.hasOwnProperty("constructor"));
   do_check_true(ctypes.CType.prototype.constructor === ctypes.CType);
@@ -266,8 +266,8 @@ function run_abstract_class_tests()
   do_check_eq(typeof ctypes.CType.prototype.toSource(), 'string');
 
   // Test that ctypes.CData is an abstract constructor that throws.
-  do_check_throws(function() { ctypes.CData(); }, Error);
-  do_check_throws(function() { new ctypes.CData() }, Error);
+  do_check_throws(function() { ctypes.CData(); }, TypeError);
+  do_check_throws(function() { new ctypes.CData() }, TypeError);
 
   // Test that classes and prototypes are set up correctly.
   do_check_class(ctypes.CData, "Function");
