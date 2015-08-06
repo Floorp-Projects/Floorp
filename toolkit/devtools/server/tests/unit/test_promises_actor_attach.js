@@ -6,7 +6,7 @@
  * states.
  */
 
-const { PromisesFront } = devtools.require("devtools/server/actors/promises");
+const { PromisesFront } = require("devtools/server/actors/promises");
 
 add_task(function*() {
   let client = yield startTestDebuggerServer("promises-actor-test");

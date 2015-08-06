@@ -40,7 +40,7 @@ function run_test() {
 }
 
 add_task(function () {
-  const { computeIsContentAndCategory, parseLocation } = devtools.require("devtools/performance/frame-utils");
+  const { computeIsContentAndCategory, parseLocation } = require("devtools/performance/frame-utils");
   let isContent = (frame) => {
     computeIsContentAndCategory(frame);
     return frame.isContent;

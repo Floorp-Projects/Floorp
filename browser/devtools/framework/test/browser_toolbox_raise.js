@@ -2,15 +2,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://gre/modules/Services.jsm");
-let temp = {}
-Cu.import("resource:///modules/devtools/gDevTools.jsm", temp);
-let DevTools = temp.DevTools;
-
-Cu.import("resource://gre/modules/devtools/Loader.jsm", temp);
-let devtools = temp.devtools;
-
-let Toolbox = devtools.Toolbox;
+let {Toolbox} = require("devtools/framework/toolbox");
 
 let toolbox, target, tab1, tab2;
 
@@ -80,7 +72,7 @@ function cleanup() {
   Services.prefs.setCharPref("devtools.toolbox.host", Toolbox.HostType.BOTTOM);
 
   toolbox.destroy().then(function() {
-    DevTools = Toolbox = toolbox = target = null;
+    toolbox = target = null;
     gBrowser.removeCurrentTab();
     gBrowser.removeCurrentTab();
     finish();

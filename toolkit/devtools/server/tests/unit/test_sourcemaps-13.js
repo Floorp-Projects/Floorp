@@ -10,7 +10,7 @@ var gClient;
 var gThreadClient;
 var gTabClient;
 
-const {SourceNode} = devtools.require("source-map");
+const {SourceNode} = require("source-map");
 
 function run_test()
 {

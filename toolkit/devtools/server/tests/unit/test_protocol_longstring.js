@@ -4,10 +4,10 @@
 /**
  * Test simple requests using the protocol helpers.
  */
-let protocol = devtools.require("devtools/server/protocol");
+let protocol = require("devtools/server/protocol");
 let {method, RetVal, Arg, Option} = protocol;
-let events = devtools.require("sdk/event/core");
-let {LongStringActor} = devtools.require("devtools/server/actors/string");
+let events = require("sdk/event/core");
+let {LongStringActor} = require("devtools/server/actors/string");
 
 function simpleHello() {
   return {

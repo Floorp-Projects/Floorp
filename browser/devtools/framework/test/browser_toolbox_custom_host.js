@@ -3,9 +3,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function test() {
-  let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-
-  let Toolbox = devtools.Toolbox;
+  let {Toolbox} = require("devtools/framework/toolbox");
 
   let toolbox, iframe, target, tab;
 

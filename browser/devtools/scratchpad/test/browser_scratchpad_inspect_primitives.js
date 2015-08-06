@@ -5,7 +5,6 @@
 // inline comment.
 
 let {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
-let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 
 function test() {
   const options = {

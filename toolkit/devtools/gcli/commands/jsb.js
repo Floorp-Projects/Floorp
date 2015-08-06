@@ -7,11 +7,10 @@
 const { Cc, Ci, Cu } = require("chrome");
 const l10n = require("gcli/l10n");
 const XMLHttpRequest = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"];
-const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 
 loader.lazyImporter(this, "Preferences", "resource://gre/modules/Preferences.jsm");
 
-devtools.lazyRequireGetter(this, "beautify", "devtools/jsbeautify");
+loader.lazyRequireGetter(this, "beautify", "devtools/jsbeautify");
 
 exports.items = [
   {

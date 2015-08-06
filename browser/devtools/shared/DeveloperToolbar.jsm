@@ -13,7 +13,8 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-const { require, TargetFactory } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
+const { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const { TargetFactory } = require("devtools/framework/target");
 
 const Node = Ci.nsIDOMNode;
 

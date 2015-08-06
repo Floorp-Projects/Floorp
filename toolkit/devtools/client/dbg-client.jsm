@@ -28,6 +28,7 @@ this.EXPORTED_SYMBOLS = ["DebuggerTransport",
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+let {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 
 let promise = Cu.import("resource://gre/modules/devtools/deprecated-sync-thenables.js").Promise;
 const { defer, resolve, reject } = promise;
@@ -35,22 +36,19 @@ const { defer, resolve, reject } = promise;
 XPCOMUtils.defineLazyModuleGetter(this, "console",
                                   "resource://gre/modules/devtools/Console.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "devtools",
-                                  "resource://gre/modules/devtools/Loader.jsm");
-
 XPCOMUtils.defineLazyGetter(this, "events", () => {
-  return devtools.require("sdk/event/core");
+  return require("sdk/event/core");
 });
 
 Object.defineProperty(this, "WebConsoleClient", {
   get: function () {
-    return devtools.require("devtools/toolkit/webconsole/client").WebConsoleClient;
+    return require("devtools/toolkit/webconsole/client").WebConsoleClient;
   },
   configurable: true,
   enumerable: true
 });
 
-const DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils");
+const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 this.executeSoon = DevToolsUtils.executeSoon;
 this.makeInfallible = DevToolsUtils.makeInfallible;
 this.values = DevToolsUtils.values;
@@ -81,11 +79,11 @@ let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
 loader.loadSubScript("resource://gre/modules/devtools/transport/transport.js", this);
 
 DevToolsUtils.defineLazyGetter(this, "DebuggerSocket", () => {
-  let { DebuggerSocket } = devtools.require("devtools/toolkit/security/socket");
+  let { DebuggerSocket } = require("devtools/toolkit/security/socket");
   return DebuggerSocket;
 });
 DevToolsUtils.defineLazyGetter(this, "Authentication", () => {
-  return devtools.require("devtools/toolkit/security/auth");
+  return require("devtools/toolkit/security/auth");
 });
 
 /**

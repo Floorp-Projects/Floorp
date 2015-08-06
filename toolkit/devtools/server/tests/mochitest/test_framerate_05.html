@@ -26,13 +26,13 @@ window.onload = function() {
     Services.prefs.clearUserPref("devtools.debugger.log");
   });
 
-  Cu.import("resource://gre/modules/devtools/Loader.jsm");
+  var {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
   Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
   Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
 
   SimpleTest.waitForExplicitFinish();
 
-  var {FramerateFront} = devtools.require("devtools/server/actors/framerate");
+  var {FramerateFront} = require("devtools/server/actors/framerate");
 
   DebuggerServer.init();
   DebuggerServer.addBrowserActors();
