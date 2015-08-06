@@ -453,14 +453,10 @@ ImageBitmap::PrepareForDrawTarget(gfx::DrawTarget* aTarget)
     IntPoint dest(std::max(0, surfPortion.X() - mPictureRect.X()),
                   std::max(0, surfPortion.Y() - mPictureRect.Y()));
 
-    // Do not initialize this target with mPictureRect.Size().
-    // In the Windows8 D2D1 backend, it might trigger "partial upload" from a
-    // non-SourceSurfaceD2D1 surface to a D2D1Image in the following
-    // CopySurface() step. However, the "partial upload" only supports uploading
-    // a rectangle starts from the upper-left point, which means it cannot
-    // upload an arbitrary part of the source surface and this causes problems
-    // if the mPictureRect is not starts from the upper-left point.
-    target = target->CreateSimilarDrawTarget(mSurface->GetSize(),
+    // We must initialize this target with mPictureRect.Size() because the
+    // specification states that if the cropping area is given, then return an
+    // ImageBitmap with the size equals to the cropping area.
+    target = target->CreateSimilarDrawTarget(mPictureRect.Size(),
                                              target->GetFormat());
 
     if (!target) {
@@ -469,10 +465,31 @@ ImageBitmap::PrepareForDrawTarget(gfx::DrawTarget* aTarget)
       return surface.forget();
     }
 
+    // We need to fall back to generic copying and cropping for the Windows8.1,
+    // D2D1 backend.
+    // In the Windows8.1 D2D1 backend, it might trigger "partial upload" from a
+    // non-SourceSurfaceD2D1 surface to a D2D1Image in the following
+    // CopySurface() step. However, the "partial upload" only supports uploading
+    // a rectangle starts from the upper-left point, which means it cannot
+    // upload an arbitrary part of the source surface and this causes problems
+    // if the mPictureRect is not starts from the upper-left point.
+    if (target->GetBackendType() == BackendType::DIRECT2D1_1 &&
+        mSurface->GetType() != SurfaceType::D2D1_1_IMAGE) {
+      RefPtr<DataSourceSurface> dataSurface = mSurface->GetDataSurface();
+      if (NS_WARN_IF(!dataSurface)) {
+        mSurface = nullptr;
+        RefPtr<gfx::SourceSurface> surface(mSurface);
+        return surface.forget();
+      }
+
+      mSurface = CropAndCopyDataSourceSurface(dataSurface, mPictureRect);
+    } else {
+      target->CopySurface(mSurface, surfPortion, dest);
+      mSurface = target->Snapshot();
+    }
+
     // Make mCropRect match new surface we've cropped to
     mPictureRect.MoveTo(0, 0);
-    target->CopySurface(mSurface, surfPortion, dest);
-    mSurface = target->Snapshot();
   }
 
   // Replace our surface with one optimized for the target we're about to draw
@@ -481,7 +498,6 @@ ImageBitmap::PrepareForDrawTarget(gfx::DrawTarget* aTarget)
   mSurface = target->OptimizeSourceSurface(mSurface);
 
   RefPtr<gfx::SourceSurface> surface(mSurface);
-
   return surface.forget();
 }
 
