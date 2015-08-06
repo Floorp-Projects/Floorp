@@ -414,8 +414,12 @@ MediaFormatReader::EnsureDecodersSetup()
       {
         ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
         proxy = mDecoder->GetCDMProxy();
+        MOZ_ASSERT(proxy);
+
+        CDMCaps::AutoLock caps(proxy->Capabilites());
+        mInfo.mVideo.mIsRenderedExternally = caps.CanRenderVideo();
+        mInfo.mAudio.mIsRenderedExternally = caps.CanRenderAudio();
       }
-      MOZ_ASSERT(proxy);
 
       mPlatform = PlatformDecoderModule::CreateCDMWrapper(proxy);
       NS_ENSURE_TRUE(mPlatform, false);
