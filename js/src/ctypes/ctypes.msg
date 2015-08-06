@@ -62,3 +62,6 @@ MSG_DEF(CTYPESMSG_ARG_TYPE_ERROR,3, JSEXN_TYPEERR, "the type of argument {0} {1}
 MSG_DEF(CTYPESMSG_FUNCTION_CONSTRUCT,0, JSEXN_TYPEERR, "cannot construct from FunctionType; use FunctionType.ptr instead")
 MSG_DEF(CTYPESMSG_RET_TYPE_ERROR,2, JSEXN_TYPEERR, "return type {0} (got {1})")
 MSG_DEF(CTYPESMSG_VARG_TYPE_ERROR,2, JSEXN_TYPEERR, "variadic argument {0} must be a CData object (got {1})")
+
+/* ctype */
+MSG_DEF(CTYPESMSG_CANNOT_CONSTRUCT,1, JSEXN_TYPEERR, "cannot construct from {0}")
