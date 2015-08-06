@@ -2016,9 +2016,9 @@ function run_ArrayType_tests() {
   a[0] = g;
   do_check_eq(a[0].a, 1);
   do_check_eq(a[0].b, 2);
-  do_check_throws(function() { a[-1]; }, Error);
+  do_check_throws(function() { a[-1]; }, TypeError);
   do_check_eq(a[9].a, 0);
-  do_check_throws(function() { a[10]; }, Error);
+  do_check_throws(function() { a[10]; }, RangeError);
 
   do_check_eq(a[ctypes.Int64(0)].a, 1);
   do_check_eq(a[ctypes.UInt64(0)].b, 2);

@@ -24,6 +24,8 @@ MSG_DEF(CTYPESMSG_TYPE_ERROR,    2, JSEXN_TYPEERR, "expected {0}, got {1}")
 /* array */
 MSG_DEF(CTYPESMSG_ARRAY_MISMATCH,4, JSEXN_TYPEERR, "length of {0} does not match to the length of the type {1} (expected {2}, got {3})")
 MSG_DEF(CTYPESMSG_ARRAY_OVERFLOW,4, JSEXN_TYPEERR, "length of {0} does not fit in the length of the type {1} (expected {2} or lower, got {3})")
+MSG_DEF(CTYPESMSG_INVALID_INDEX, 1, JSEXN_TYPEERR, "{0} is not a valid array index")
+MSG_DEF(CTYPESMSG_INVALID_RANGE, 2, JSEXN_RANGEERR, "array index {0} is out of bounds for array of length {1}")
 
 /* struct */
 MSG_DEF(CTYPESMSG_FIELD_MISMATCH,5, JSEXN_TYPEERR, "property count of {0} does not match to field count of the type {1} (expected {2}, got {3}){4}")
