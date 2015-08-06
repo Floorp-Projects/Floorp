@@ -23,10 +23,10 @@
             "talos_options": ["--e10s"]
         },
         "dromaeojs": {
-            "tests": ["dromaeo_css", "dromaeo_dom", "kraken", "v8_7"]
+            "tests": ["dromaeo_css", "kraken", "v8_7"]
         },
         "dromaeojs-e10s": {
-            "tests": ["dromaeo_css", "dromaeo_dom", "kraken", "v8_7"],
+            "tests": ["dromaeo_css", "kraken", "v8_7"],
             "talos_options": ["--e10s"]
         },
         "other": {
