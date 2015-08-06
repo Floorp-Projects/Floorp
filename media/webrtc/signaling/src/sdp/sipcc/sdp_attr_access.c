@@ -683,7 +683,8 @@ static boolean sdp_attr_is_simple_string(sdp_attr_e attr_type) {
         (attr_type != SDP_ATTR_LABEL) &&
         (attr_type != SDP_ATTR_IDENTITY) &&
         (attr_type != SDP_ATTR_ICE_OPTIONS) &&
-        (attr_type != SDP_ATTR_IMAGEATTR)) {
+        (attr_type != SDP_ATTR_IMAGEATTR) &&
+        (attr_type != SDP_ATTR_SIMULCAST)) {
       return FALSE;
     }
     return TRUE;

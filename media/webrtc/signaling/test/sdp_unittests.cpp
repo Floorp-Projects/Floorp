@@ -1195,6 +1195,7 @@ const std::string kBasicAudioVideoOffer =
 "a=ssrc:1111 foo:bar" CRLF
 "a=imageattr:120 send * recv *" CRLF
 "a=imageattr:121 send [x=640,y=480] recv [x=640,y=480]" CRLF
+"a=simulcast:sendrecv 120;121" CRLF
 "m=audio 9 RTP/SAVPF 0" CRLF
 "a=mid:third" CRLF
 "a=rtpmap:0 PCMU/8000" CRLF
@@ -2048,6 +2049,33 @@ TEST_P(NewSdpTest, CheckImageattr)
   ASSERT_EQ(480U, imageattr_1.recvSets[0].yRange.discreteValues.front());
 }
 
+TEST_P(NewSdpTest, CheckSimulcast)
+{
+  ParseSdp(kBasicAudioVideoOffer);
+  ASSERT_TRUE(!!mSdp);
+  ASSERT_EQ(3U, mSdp->GetMediaSectionCount()) << "Wrong number of media sections";
+
+  ASSERT_FALSE(mSdp->GetAttributeList().HasAttribute(
+        SdpAttribute::kSimulcastAttribute));
+  ASSERT_FALSE(mSdp->GetMediaSection(0).GetAttributeList().HasAttribute(
+        SdpAttribute::kSimulcastAttribute));
+  ASSERT_TRUE(mSdp->GetMediaSection(1).GetAttributeList().HasAttribute(
+        SdpAttribute::kSimulcastAttribute));
+  ASSERT_FALSE(mSdp->GetMediaSection(2).GetAttributeList().HasAttribute(
+        SdpAttribute::kSimulcastAttribute));
+
+  const SdpSimulcastAttribute& simulcast =
+    mSdp->GetMediaSection(1).GetAttributeList().GetSimulcast();
+
+  ASSERT_EQ(0U, simulcast.sendVersions.size());
+  ASSERT_EQ(0U, simulcast.recvVersions.size());
+  ASSERT_EQ(2U, simulcast.sendrecvVersions.size());
+  ASSERT_EQ(1U, simulcast.sendrecvVersions[0].choices.size());
+  ASSERT_EQ(120U, simulcast.sendrecvVersions[0].choices[0]);
+  ASSERT_EQ(1U, simulcast.sendrecvVersions[1].choices.size());
+  ASSERT_EQ(121U, simulcast.sendrecvVersions[1].choices[0]);
+}
+
 TEST_P(NewSdpTest, CheckSctpmap) {
   ParseSdp(kBasicAudioVideoDataOffer);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
@@ -2618,8 +2646,7 @@ TEST(NewSdpTestNoFixture, CheckAttributeTypeSerialize) {
 static SdpImageattrAttributeList::XYRange
 ParseXYRange(const std::string& input)
 {
-  std::istringstream is;
-  is.str(input + ",");
+  std::istringstream is(input + ",");
   std::string error;
   SdpImageattrAttributeList::XYRange range;
   EXPECT_TRUE(range.Parse(is, &error)) << error;
@@ -2668,14 +2695,14 @@ TEST(NewSdpTestNoFixture, CheckImageattrXYRangeParseValid)
   }
 }
 
-static void
-ParseInvalidXYRange(const std::string& input, size_t last)
+template<typename T>
+void
+ParseInvalid(const std::string& input, size_t last)
 {
-  std::istringstream is;
-  is.str(input);
-  SdpImageattrAttributeList::XYRange range;
+  std::istringstream is(input);
+  T parsed;
   std::string error;
-  ASSERT_FALSE(range.Parse(is, &error))
+  ASSERT_FALSE(parsed.Parse(is, &error))
     << "\'" << input << "\' should not have parsed successfully";
   is.clear();
   ASSERT_EQ(last, static_cast<size_t>(is.tellg()))
@@ -2688,49 +2715,48 @@ ParseInvalidXYRange(const std::string& input, size_t last)
 
 TEST(NewSdpTestNoFixture, CheckImageattrXYRangeParseInvalid)
 {
-  ParseInvalidXYRange("[-1", 1);
-  ParseInvalidXYRange("[-", 1);
-  ParseInvalidXYRange("[-x", 1);
-  ParseInvalidXYRange("[640:-1", 5);
-  ParseInvalidXYRange("[640:16:-1", 8);
-  ParseInvalidXYRange("[640,-1", 5);
-  ParseInvalidXYRange("[640,-]", 5);
-  ParseInvalidXYRange("-x", 0);
-  ParseInvalidXYRange("-1", 0);
-  ParseInvalidXYRange("", 0);
-  ParseInvalidXYRange("[", 1);
-  ParseInvalidXYRange("[x", 1);
-  ParseInvalidXYRange("[", 1);
-  ParseInvalidXYRange("[ 640", 1);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[-1", 1);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[-", 1);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[-x", 1);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[640:-1", 5);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[640:16:-1", 8);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[640,-1", 5);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[640,-]", 5);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("-x", 0);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("-1", 0);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("", 0);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[", 1);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[x", 1);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[", 1);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[ 640", 1);
   // It looks like the overflow detection only happens once the whole number
   // is scanned...
-  ParseInvalidXYRange("[99999999999999999:", 18);
-  ParseInvalidXYRange("[640", 4);
-  ParseInvalidXYRange("[640:", 5);
-  ParseInvalidXYRange("[640:x", 5);
-  ParseInvalidXYRange("[640:16", 7);
-  ParseInvalidXYRange("[640:16:", 8);
-  ParseInvalidXYRange("[640:16:x", 8);
-  ParseInvalidXYRange("[640:16:320]", 11);
-  ParseInvalidXYRange("[640:16:320", 11);
-  ParseInvalidXYRange("[640:16:320x", 11);
-  ParseInvalidXYRange("[640:1024", 9);
-  ParseInvalidXYRange("[640:320]", 8);
-  ParseInvalidXYRange("[640:1024x", 9);
-  ParseInvalidXYRange("[640,", 5);
-  ParseInvalidXYRange("[640,x", 5);
-  ParseInvalidXYRange("[640]", 4);
-  ParseInvalidXYRange("[640x", 4);
-  ParseInvalidXYRange("[640,]", 5);
-  ParseInvalidXYRange(" ", 0);
-  ParseInvalidXYRange("x", 0);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[99999999999999999:", 18);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[640", 4);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[640:", 5);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[640:x", 5);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[640:16", 7);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[640:16:", 8);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[640:16:x", 8);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[640:16:320]", 11);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[640:16:320", 11);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[640:16:320x", 11);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[640:1024", 9);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[640:320]", 8);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[640:1024x", 9);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[640,", 5);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[640,x", 5);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[640]", 4);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[640x", 4);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[640,]", 5);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>(" ", 0);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("x", 0);
 }
 
 static SdpImageattrAttributeList::SRange
 ParseSRange(const std::string& input)
 {
-  std::istringstream is;
-  is.str(input + ",");
+  std::istringstream is(input + ",");
   std::string error;
   SdpImageattrAttributeList::SRange range;
   EXPECT_TRUE(range.Parse(is, &error)) << error;
@@ -2770,61 +2796,42 @@ TEST(NewSdpTestNoFixture, CheckImageattrSRangeParseValid)
   }
 }
 
-static void
-ParseInvalidSRange(const std::string& input, size_t last)
-{
-  std::istringstream is;
-  is.str(input);
-  SdpImageattrAttributeList::SRange range;
-  std::string error;
-  ASSERT_FALSE(range.Parse(is, &error))
-    << "\'" << input << "\' should not have parsed successfully";
-  is.clear();
-  ASSERT_EQ(last, static_cast<size_t>(is.tellg()))
-    << "Parse failed at unexpected location:" << std::endl
-    << input << std::endl
-    << std::string(is.tellg(), ' ') << "^" << std::endl;
-  // For a human to eyeball to make sure the error strings look sane
-  std::cout << "\"" << input << "\" - " << error << std::endl; \
-}
-
 TEST(NewSdpTestNoFixture, CheckImageattrSRangeParseInvalid)
 {
-  ParseInvalidSRange("", 0);
-  ParseInvalidSRange("[", 1);
-  ParseInvalidSRange("[x", 1);
-  ParseInvalidSRange("[-1", 1);
-  ParseInvalidSRange("[", 1);
-  ParseInvalidSRange("[-", 1);
-  ParseInvalidSRange("[x", 1);
-  ParseInvalidSRange("[ 0.2", 1);
-  ParseInvalidSRange("[10.1-", 5);
-  ParseInvalidSRange("[0.08-", 5);
-  ParseInvalidSRange("[0.2", 4);
-  ParseInvalidSRange("[0.2-", 5);
-  ParseInvalidSRange("[0.2-x", 5);
-  ParseInvalidSRange("[0.2--1", 5);
-  ParseInvalidSRange("[0.2-0.3", 8);
-  ParseInvalidSRange("[0.2-0.1]", 8);
-  ParseInvalidSRange("[0.2-0.3x", 8);
-  ParseInvalidSRange("[0.2,", 5);
-  ParseInvalidSRange("[0.2,x", 5);
-  ParseInvalidSRange("[0.2,-1", 5);
-  ParseInvalidSRange("[0.2]", 4);
-  ParseInvalidSRange("[0.2x", 4);
-  ParseInvalidSRange("[0.2,]", 5);
-  ParseInvalidSRange("[0.2,-]", 5);
-  ParseInvalidSRange(" ", 0);
-  ParseInvalidSRange("x", 0);
-  ParseInvalidSRange("-x", 0);
-  ParseInvalidSRange("-1", 0);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("", 0);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("[", 1);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("[x", 1);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("[-1", 1);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("[", 1);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("[-", 1);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("[x", 1);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("[ 0.2", 1);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("[10.1-", 5);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("[0.08-", 5);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2", 4);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2-", 5);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2-x", 5);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2--1", 5);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2-0.3", 8);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2-0.1]", 8);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2-0.3x", 8);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2,", 5);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2,x", 5);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2,-1", 5);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2]", 4);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2x", 4);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2,]", 5);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2,-]", 5);
+  ParseInvalid<SdpImageattrAttributeList::SRange>(" ", 0);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("x", 0);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("-x", 0);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("-1", 0);
 }
 
 static SdpImageattrAttributeList::PRange
 ParsePRange(const std::string& input)
 {
-  std::istringstream is;
-  is.str(input + ",");
+  std::istringstream is(input + ",");
   std::string error;
   SdpImageattrAttributeList::PRange range;
   EXPECT_TRUE(range.Parse(is, &error)) << error;
@@ -2840,58 +2847,39 @@ TEST(NewSdpTestNoFixture, CheckImageattrPRangeParseValid)
   ASSERT_FLOAT_EQ(9.9999f, range.max);
 }
 
-static void
-ParseInvalidPRange(const std::string& input, size_t last)
-{
-  std::istringstream is;
-  is.str(input);
-  SdpImageattrAttributeList::PRange range;
-  std::string error;
-  ASSERT_FALSE(range.Parse(is, &error))
-    << "\'" << input << "\' should not have parsed successfully";
-  is.clear();
-  ASSERT_EQ(last, static_cast<size_t>(is.tellg()))
-    << "Parse failed at unexpected location:" << std::endl
-    << input << std::endl
-    << std::string(is.tellg(), ' ') << "^" << std::endl;
-  // For a human to eyeball to make sure the error strings look sane
-  std::cout << "\"" << input << "\" - " << error << std::endl; \
-}
-
 TEST(NewSdpTestNoFixture, CheckImageattrPRangeParseInvalid)
 {
-  ParseInvalidPRange("", 0);
-  ParseInvalidPRange("[", 1);
-  ParseInvalidPRange("[x", 1);
-  ParseInvalidPRange("[-1", 1);
-  ParseInvalidPRange("[", 1);
-  ParseInvalidPRange("[-", 1);
-  ParseInvalidPRange("[x", 1);
-  ParseInvalidPRange("[ 0.2", 1);
-  ParseInvalidPRange("[10.1-", 5);
-  ParseInvalidPRange("[0.08-", 5);
-  ParseInvalidPRange("[0.2", 4);
-  ParseInvalidPRange("[0.2-", 5);
-  ParseInvalidPRange("[0.2-x", 5);
-  ParseInvalidPRange("[0.2--1", 5);
-  ParseInvalidPRange("[0.2-0.3", 8);
-  ParseInvalidPRange("[0.2-0.1]", 8);
-  ParseInvalidPRange("[0.2-0.3x", 8);
-  ParseInvalidPRange("[0.2,", 4);
-  ParseInvalidPRange("[0.2:", 4);
-  ParseInvalidPRange("[0.2]", 4);
-  ParseInvalidPRange("[0.2x", 4);
-  ParseInvalidPRange(" ", 0);
-  ParseInvalidPRange("x", 0);
-  ParseInvalidPRange("-x", 0);
-  ParseInvalidPRange("-1", 0);
+  ParseInvalid<SdpImageattrAttributeList::PRange>("", 0);
+  ParseInvalid<SdpImageattrAttributeList::PRange>("[", 1);
+  ParseInvalid<SdpImageattrAttributeList::PRange>("[x", 1);
+  ParseInvalid<SdpImageattrAttributeList::PRange>("[-1", 1);
+  ParseInvalid<SdpImageattrAttributeList::PRange>("[", 1);
+  ParseInvalid<SdpImageattrAttributeList::PRange>("[-", 1);
+  ParseInvalid<SdpImageattrAttributeList::PRange>("[x", 1);
+  ParseInvalid<SdpImageattrAttributeList::PRange>("[ 0.2", 1);
+  ParseInvalid<SdpImageattrAttributeList::PRange>("[10.1-", 5);
+  ParseInvalid<SdpImageattrAttributeList::PRange>("[0.08-", 5);
+  ParseInvalid<SdpImageattrAttributeList::PRange>("[0.2", 4);
+  ParseInvalid<SdpImageattrAttributeList::PRange>("[0.2-", 5);
+  ParseInvalid<SdpImageattrAttributeList::PRange>("[0.2-x", 5);
+  ParseInvalid<SdpImageattrAttributeList::PRange>("[0.2--1", 5);
+  ParseInvalid<SdpImageattrAttributeList::PRange>("[0.2-0.3", 8);
+  ParseInvalid<SdpImageattrAttributeList::PRange>("[0.2-0.1]", 8);
+  ParseInvalid<SdpImageattrAttributeList::PRange>("[0.2-0.3x", 8);
+  ParseInvalid<SdpImageattrAttributeList::PRange>("[0.2,", 4);
+  ParseInvalid<SdpImageattrAttributeList::PRange>("[0.2:", 4);
+  ParseInvalid<SdpImageattrAttributeList::PRange>("[0.2]", 4);
+  ParseInvalid<SdpImageattrAttributeList::PRange>("[0.2x", 4);
+  ParseInvalid<SdpImageattrAttributeList::PRange>(" ", 0);
+  ParseInvalid<SdpImageattrAttributeList::PRange>("x", 0);
+  ParseInvalid<SdpImageattrAttributeList::PRange>("-x", 0);
+  ParseInvalid<SdpImageattrAttributeList::PRange>("-1", 0);
 }
 
 static SdpImageattrAttributeList::Set
 ParseSet(const std::string& input)
 {
-  std::istringstream is;
-  is.str(input + " ");
+  std::istringstream is(input + " ");
   std::string error;
   SdpImageattrAttributeList::Set set;
   EXPECT_TRUE(set.Parse(is, &error)) << error;
@@ -3025,66 +3013,49 @@ TEST(NewSdpTestNoFixture, CheckImageattrSetParseValid)
   }
 }
 
-static void
-ParseInvalidSet(const std::string& input, size_t last)
-{
-  std::istringstream is;
-  is.str(input);
-  SdpImageattrAttributeList::Set set;
-  std::string error;
-  ASSERT_FALSE(set.Parse(is, &error))
-    << "\'" << input << "\' should not have parsed successfully";
-  is.clear();
-  ASSERT_EQ(last, static_cast<size_t>(is.tellg()))
-    << "Parse failed at unexpected location:" << std::endl
-    << input << std::endl
-    << std::string(is.tellg(), ' ') << "^" << std::endl;
-  // For a human to eyeball to make sure the error strings look sane
-  std::cout << "\"" << input << "\" - " << error << std::endl; \
-}
-
 TEST(NewSdpTestNoFixture, CheckImageattrSetParseInvalid)
 {
-  ParseInvalidSet("", 0);
-  ParseInvalidSet("x", 0);
-  ParseInvalidSet("[", 1);
-  ParseInvalidSet("[=", 2);
-  ParseInvalidSet("[x", 2);
-  ParseInvalidSet("[y=", 3);
-  ParseInvalidSet("[x=[", 4);
-  ParseInvalidSet("[x=320", 6);
-  ParseInvalidSet("[x=320x", 6);
-  ParseInvalidSet("[x=320,", 7);
-  ParseInvalidSet("[x=320,=", 8);
-  ParseInvalidSet("[x=320,x", 8);
-  ParseInvalidSet("[x=320,x=", 9);
-  ParseInvalidSet("[x=320,y=[", 10);
-  ParseInvalidSet("[x=320,y=240", 12);
-  ParseInvalidSet("[x=320,y=240x", 12);
-  ParseInvalidSet("[x=320,y=240,", 13);
-  ParseInvalidSet("[x=320,y=240,q=", 15);
-  ParseInvalidSet("[x=320,y=240,q=x", 15);
-  ParseInvalidSet("[x=320,y=240,q=0.5", 18);
-  ParseInvalidSet("[x=320,y=240,q=0.5,", 19);
-  ParseInvalidSet("[x=320,y=240,q=0.5,]", 20);
-  ParseInvalidSet("[x=320,y=240,q=0.5,=]", 20);
-  ParseInvalidSet("[x=320,y=240,q=0.5,sar=x]", 23);
-  ParseInvalidSet("[x=320,y=240,q=0.5,q=0.4", 21);
-  ParseInvalidSet("[x=320,y=240,sar=", 17);
-  ParseInvalidSet("[x=320,y=240,sar=x", 17);
-  ParseInvalidSet("[x=320,y=240,sar=[0.5-0.6],sar=[0.7-0.8]", 31);
-  ParseInvalidSet("[x=320,y=240,par=", 17);
-  ParseInvalidSet("[x=320,y=240,par=x", 17);
-  ParseInvalidSet("[x=320,y=240,par=[0.5-0.6],par=[0.7-0.8]", 31);
-  ParseInvalidSet("[x=320,y=240,foo=", 17);
-  ParseInvalidSet("[x=320,y=240,foo=x", 18);
+  ParseInvalid<SdpImageattrAttributeList::Set>("", 0);
+  ParseInvalid<SdpImageattrAttributeList::Set>("x", 0);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[", 1);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[=", 2);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[x", 2);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[y=", 3);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[x=[", 4);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320", 6);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320x", 6);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,", 7);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,=", 8);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,x", 8);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,x=", 9);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=[", 10);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240", 12);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240x", 12);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240,", 13);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240,q=", 15);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240,q=x", 15);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240,q=0.5", 18);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240,q=0.5,", 19);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240,q=0.5,]", 20);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240,q=0.5,=]", 20);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240,q=0.5,sar=x]", 23);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240,q=0.5,q=0.4", 21);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240,sar=", 17);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240,sar=x", 17);
+  ParseInvalid<SdpImageattrAttributeList::Set>(
+      "[x=320,y=240,sar=[0.5-0.6],sar=[0.7-0.8]", 31);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240,par=", 17);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240,par=x", 17);
+  ParseInvalid<SdpImageattrAttributeList::Set>(
+      "[x=320,y=240,par=[0.5-0.6],par=[0.7-0.8]", 31);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240,foo=", 17);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240,foo=x", 18);
 }
 
 static SdpImageattrAttributeList::Imageattr
 ParseImageattr(const std::string& input)
 {
-  std::istringstream is;
-  is.str(input);
+  std::istringstream is(input);
   std::string error;
   SdpImageattrAttributeList::Imageattr imageattr;
   EXPECT_TRUE(imageattr.Parse(is, &error)) << error;
@@ -3225,43 +3196,29 @@ TEST(NewSdpTestNoFixture, CheckImageattrParseValid)
   }
 }
 
-static void
-ParseInvalidImageattr(const std::string& input, size_t last)
-{
-  std::istringstream is;
-  is.str(input);
-  SdpImageattrAttributeList::Imageattr imageattr;
-  std::string error;
-  ASSERT_FALSE(imageattr.Parse(is, &error))
-    << "\'" << input << "\' should not have parsed successfully";
-  is.clear();
-  ASSERT_EQ(last, static_cast<size_t>(is.tellg()))
-    << "Parse failed at unexpected location:" << std::endl
-    << input << std::endl
-    << std::string(is.tellg(), ' ') << "^" << std::endl;
-  // For a human to eyeball to make sure the error strings look sane
-  std::cout << "\"" << input << "\" - " << error << std::endl; \
-}
-
 TEST(NewSdpTestNoFixture, CheckImageattrParseInvalid)
 {
-  ParseInvalidImageattr("", 0);
-  ParseInvalidImageattr(" ", 0);
-  ParseInvalidImageattr("-1", 0);
-  ParseInvalidImageattr("99999 ", 5);
-  ParseInvalidImageattr("*", 1);
-  ParseInvalidImageattr("* sen", 5);
-  ParseInvalidImageattr("* vcer *", 6);
-  ParseInvalidImageattr("* send x", 7);
-  ParseInvalidImageattr("* send [x=640,y=480] [", 22);
-  ParseInvalidImageattr("* send * sen", 12);
-  ParseInvalidImageattr("* send * vcer *", 13);
-  ParseInvalidImageattr("* send * send *", 13);
-  ParseInvalidImageattr("* recv * recv *", 13);
-  ParseInvalidImageattr("* send * recv x", 14);
-  ParseInvalidImageattr("* send * recv [x=640,y=480] [", 29);
-  ParseInvalidImageattr("* send * recv [x=640,y=480] *", 28);
-  ParseInvalidImageattr("* send * recv [x=640,y=480] foobajooba", 28);
+  ParseInvalid<SdpImageattrAttributeList::Imageattr>("", 0);
+  ParseInvalid<SdpImageattrAttributeList::Imageattr>(" ", 0);
+  ParseInvalid<SdpImageattrAttributeList::Imageattr>("-1", 0);
+  ParseInvalid<SdpImageattrAttributeList::Imageattr>("99999 ", 5);
+  ParseInvalid<SdpImageattrAttributeList::Imageattr>("*", 1);
+  ParseInvalid<SdpImageattrAttributeList::Imageattr>("* sen", 5);
+  ParseInvalid<SdpImageattrAttributeList::Imageattr>("* vcer *", 6);
+  ParseInvalid<SdpImageattrAttributeList::Imageattr>("* send x", 7);
+  ParseInvalid<SdpImageattrAttributeList::Imageattr>(
+      "* send [x=640,y=480] [", 22);
+  ParseInvalid<SdpImageattrAttributeList::Imageattr>("* send * sen", 12);
+  ParseInvalid<SdpImageattrAttributeList::Imageattr>("* send * vcer *", 13);
+  ParseInvalid<SdpImageattrAttributeList::Imageattr>("* send * send *", 13);
+  ParseInvalid<SdpImageattrAttributeList::Imageattr>("* recv * recv *", 13);
+  ParseInvalid<SdpImageattrAttributeList::Imageattr>("* send * recv x", 14);
+  ParseInvalid<SdpImageattrAttributeList::Imageattr>(
+      "* send * recv [x=640,y=480] [", 29);
+  ParseInvalid<SdpImageattrAttributeList::Imageattr>(
+      "* send * recv [x=640,y=480] *", 28);
+  ParseInvalid<SdpImageattrAttributeList::Imageattr>(
+      "* send * recv [x=640,y=480] foobajooba", 28);
 }
 
 TEST(NewSdpTestNoFixture, CheckImageattrXYRangeSerialization)
@@ -3422,6 +3379,266 @@ TEST(NewSdpTestNoFixture, CheckImageattrSerialization)
       "* send [x=320,y=240] [x=640,y=480] recv [x=320,y=240] [x=640,y=480]",
       os.str());
   os.str("");
+}
+
+TEST(NewSdpTestNoFixture, CheckSimulcastVersionSerialize)
+{
+  std::ostringstream os;
+
+  SdpSimulcastAttribute::Version version;
+  version.choices.push_back(8U);
+  version.Serialize(os);
+  ASSERT_EQ("8", os.str());
+  os.str("");
+
+  version.choices.push_back(9U);
+  version.Serialize(os);
+  ASSERT_EQ("8,9", os.str());
+  os.str("");
+
+  version.choices.push_back(0U);
+  version.Serialize(os);
+  ASSERT_EQ("8,9,0", os.str());
+  os.str("");
+}
+
+static SdpSimulcastAttribute::Version
+ParseSimulcastVersion(const std::string& input)
+{
+  std::istringstream is(input + ";");
+  std::string error;
+  SdpSimulcastAttribute::Version version;
+  EXPECT_TRUE(version.Parse(is, &error)) << error;
+  EXPECT_EQ(';', is.get());
+  EXPECT_EQ(EOF, is.get());
+  return version;
+}
+
+TEST(NewSdpTestNoFixture, CheckSimulcastVersionValidParse)
+{
+  {
+    SdpSimulcastAttribute::Version version(
+        ParseSimulcastVersion("1"));
+    ASSERT_EQ(1U, version.choices.size());
+    ASSERT_EQ(1U, version.choices[0]);
+  }
+
+  {
+    SdpSimulcastAttribute::Version version(
+        ParseSimulcastVersion("1,2"));
+    ASSERT_EQ(2U, version.choices.size());
+    ASSERT_EQ(1U, version.choices[0]);
+    ASSERT_EQ(2U, version.choices[1]);
+  }
+}
+
+TEST(NewSdpTestNoFixture, CheckSimulcastVersionInvalidParse)
+{
+  ParseInvalid<SdpSimulcastAttribute::Version>("", 0);
+  ParseInvalid<SdpSimulcastAttribute::Version>("x", 0);
+  ParseInvalid<SdpSimulcastAttribute::Version>("*", 0);
+  ParseInvalid<SdpSimulcastAttribute::Version>("8,", 2);
+  ParseInvalid<SdpSimulcastAttribute::Version>("8,x", 2);
+  ParseInvalid<SdpSimulcastAttribute::Version>("8,*", 2);
+  ParseInvalid<SdpSimulcastAttribute::Version>("-1", 0);
+  ParseInvalid<SdpSimulcastAttribute::Version>("8,-1", 2);
+  ParseInvalid<SdpSimulcastAttribute::Version>("99999", 5);
+  ParseInvalid<SdpSimulcastAttribute::Version>("8,99999", 7);
+}
+
+TEST(NewSdpTestNoFixture, CheckSimulcastVersionsSerialize)
+{
+  std::ostringstream os;
+
+  SdpSimulcastAttribute::Versions versions;
+  versions.push_back(SdpSimulcastAttribute::Version());
+  versions.back().choices.push_back(8U);
+  versions.Serialize(os);
+  ASSERT_EQ("8", os.str());
+  os.str("");
+
+  versions.push_back(SdpSimulcastAttribute::Version());
+  versions.Serialize(os);
+  ASSERT_EQ("8", os.str());
+  os.str("");
+
+  versions.back().choices.push_back(9U);
+  versions.Serialize(os);
+  ASSERT_EQ("8;9", os.str());
+  os.str("");
+
+  versions.push_back(SdpSimulcastAttribute::Version());
+  versions.back().choices.push_back(0U);
+  versions.Serialize(os);
+  ASSERT_EQ("8;9;0", os.str());
+  os.str("");
+}
+
+static SdpSimulcastAttribute::Versions
+ParseSimulcastVersions(const std::string& input)
+{
+  std::istringstream is(input + " ");
+  std::string error;
+  SdpSimulcastAttribute::Versions list;
+  EXPECT_TRUE(list.Parse(is, &error)) << error;
+  EXPECT_EQ(' ', is.get());
+  EXPECT_EQ(EOF, is.get());
+  return list;
+}
+
+TEST(NewSdpTestNoFixture, CheckSimulcastVersionsValidParse)
+{
+  {
+    SdpSimulcastAttribute::Versions versions(
+        ParseSimulcastVersions("8"));
+    ASSERT_EQ(1U, versions.size());
+    ASSERT_EQ(1U, versions[0].choices.size());
+    ASSERT_EQ(8U, versions[0].choices[0]);
+  }
+
+  {
+    SdpSimulcastAttribute::Versions versions(
+        ParseSimulcastVersions("8,9"));
+    ASSERT_EQ(1U, versions.size());
+    ASSERT_EQ(2U, versions[0].choices.size());
+    ASSERT_EQ(8U, versions[0].choices[0]);
+    ASSERT_EQ(9U, versions[0].choices[1]);
+  }
+
+  {
+    SdpSimulcastAttribute::Versions versions(
+        ParseSimulcastVersions("8,9;10"));
+    ASSERT_EQ(2U, versions.size());
+    ASSERT_EQ(2U, versions[0].choices.size());
+    ASSERT_EQ(8U, versions[0].choices[0]);
+    ASSERT_EQ(9U, versions[0].choices[1]);
+    ASSERT_EQ(1U, versions[1].choices.size());
+    ASSERT_EQ(10U, versions[1].choices[0]);
+  }
+}
+
+TEST(NewSdpTestNoFixture, CheckSimulcastVersionsInvalidParse)
+{
+  ParseInvalid<SdpSimulcastAttribute::Versions>("", 0);
+  ParseInvalid<SdpSimulcastAttribute::Versions>("x", 0);
+  ParseInvalid<SdpSimulcastAttribute::Versions>(";", 0);
+  ParseInvalid<SdpSimulcastAttribute::Versions>("8;", 2);
+  ParseInvalid<SdpSimulcastAttribute::Versions>("8;x", 2);
+  ParseInvalid<SdpSimulcastAttribute::Versions>("8;;", 2);
+}
+
+TEST(NewSdpTestNoFixture, CheckSimulcastSerialize)
+{
+  std::ostringstream os;
+
+  SdpSimulcastAttribute simulcast;
+  simulcast.recvVersions.push_back(SdpSimulcastAttribute::Version());
+  simulcast.recvVersions.back().choices.push_back(8U);
+  simulcast.Serialize(os);
+  ASSERT_EQ("a=simulcast: recv 8" CRLF, os.str());
+  os.str("");
+
+  simulcast.sendVersions.push_back(SdpSimulcastAttribute::Version());
+  simulcast.sendVersions.back().choices.push_back(9U);
+  simulcast.Serialize(os);
+  ASSERT_EQ("a=simulcast: send 9 recv 8" CRLF, os.str());
+  os.str("");
+
+  simulcast.sendrecvVersions.push_back(SdpSimulcastAttribute::Version());
+  simulcast.sendrecvVersions.back().choices.push_back(0U);
+  simulcast.Serialize(os);
+  ASSERT_EQ("a=simulcast: send 9 recv 8 sendrecv 0" CRLF, os.str());
+  os.str("");
+}
+
+static SdpSimulcastAttribute
+ParseSimulcast(const std::string& input)
+{
+  std::istringstream is(input);
+  std::string error;
+  SdpSimulcastAttribute simulcast;
+  EXPECT_TRUE(simulcast.Parse(is, &error)) << error;
+  EXPECT_TRUE(is.eof());
+  return simulcast;
+}
+
+TEST(NewSdpTestNoFixture, CheckSimulcastValidParse)
+{
+  {
+    SdpSimulcastAttribute simulcast(ParseSimulcast(" send 8"));
+    ASSERT_EQ(1U, simulcast.sendVersions.size());
+    ASSERT_EQ(1U, simulcast.sendVersions[0].choices.size());
+    ASSERT_EQ(8U, simulcast.sendVersions[0].choices[0]);
+    ASSERT_EQ(0U, simulcast.recvVersions.size());
+    ASSERT_EQ(0U, simulcast.sendrecvVersions.size());
+  }
+
+  {
+    SdpSimulcastAttribute simulcast(ParseSimulcast(" SEND 8"));
+    ASSERT_EQ(1U, simulcast.sendVersions.size());
+    ASSERT_EQ(1U, simulcast.sendVersions[0].choices.size());
+    ASSERT_EQ(8U, simulcast.sendVersions[0].choices[0]);
+    ASSERT_EQ(0U, simulcast.recvVersions.size());
+    ASSERT_EQ(0U, simulcast.sendrecvVersions.size());
+  }
+
+  {
+    SdpSimulcastAttribute simulcast(ParseSimulcast(" recv 8"));
+    ASSERT_EQ(1U, simulcast.recvVersions.size());
+    ASSERT_EQ(1U, simulcast.recvVersions[0].choices.size());
+    ASSERT_EQ(8U, simulcast.recvVersions[0].choices[0]);
+    ASSERT_EQ(0U, simulcast.sendVersions.size());
+    ASSERT_EQ(0U, simulcast.sendrecvVersions.size());
+  }
+
+  {
+    SdpSimulcastAttribute simulcast(ParseSimulcast(" sendrecv 8"));
+    ASSERT_EQ(1U, simulcast.sendrecvVersions.size());
+    ASSERT_EQ(1U, simulcast.sendrecvVersions[0].choices.size());
+    ASSERT_EQ(8U, simulcast.sendrecvVersions[0].choices[0]);
+    ASSERT_EQ(0U, simulcast.sendVersions.size());
+    ASSERT_EQ(0U, simulcast.recvVersions.size());
+  }
+
+  {
+    SdpSimulcastAttribute simulcast(
+        ParseSimulcast(" send 8,9;101;97,98 recv 101,120;97 sendrecv 101;97"));
+    ASSERT_EQ(3U, simulcast.sendVersions.size());
+    ASSERT_EQ(2U, simulcast.sendVersions[0].choices.size());
+    ASSERT_EQ(8U, simulcast.sendVersions[0].choices[0]);
+    ASSERT_EQ(9U, simulcast.sendVersions[0].choices[1]);
+    ASSERT_EQ(1U, simulcast.sendVersions[1].choices.size());
+    ASSERT_EQ(101U, simulcast.sendVersions[1].choices[0]);
+    ASSERT_EQ(2U, simulcast.sendVersions[2].choices.size());
+    ASSERT_EQ(97U, simulcast.sendVersions[2].choices[0]);
+    ASSERT_EQ(98U, simulcast.sendVersions[2].choices[1]);
+
+    ASSERT_EQ(2U, simulcast.recvVersions.size());
+    ASSERT_EQ(2U, simulcast.recvVersions[0].choices.size());
+    ASSERT_EQ(101U, simulcast.recvVersions[0].choices[0]);
+    ASSERT_EQ(120U, simulcast.recvVersions[0].choices[1]);
+    ASSERT_EQ(1U, simulcast.recvVersions[1].choices.size());
+    ASSERT_EQ(97U, simulcast.recvVersions[1].choices[0]);
+
+    ASSERT_EQ(2U, simulcast.sendrecvVersions.size());
+    ASSERT_EQ(1U, simulcast.sendrecvVersions[0].choices.size());
+    ASSERT_EQ(101U, simulcast.sendrecvVersions[0].choices[0]);
+    ASSERT_EQ(1U, simulcast.sendrecvVersions[1].choices.size());
+    ASSERT_EQ(97U, simulcast.sendrecvVersions[1].choices[0]);
+  }
+}
+
+TEST(NewSdpTestNoFixture, CheckSimulcastInvalidParse)
+{
+  ParseInvalid<SdpSimulcastAttribute>("", 0);
+  ParseInvalid<SdpSimulcastAttribute>(" ", 1);
+  ParseInvalid<SdpSimulcastAttribute>("vcer ", 4);
+  ParseInvalid<SdpSimulcastAttribute>(" send x", 6);
+  ParseInvalid<SdpSimulcastAttribute>(" recv x", 6);
+  ParseInvalid<SdpSimulcastAttribute>(" sendrecv x", 10);
+  ParseInvalid<SdpSimulcastAttribute>(" send 8 send ", 12);
+  ParseInvalid<SdpSimulcastAttribute>(" recv 8 recv ", 12);
+  ParseInvalid<SdpSimulcastAttribute>(" sendrecv 8 sendrecv ", 20);
 }
 
 } // End namespace test.
