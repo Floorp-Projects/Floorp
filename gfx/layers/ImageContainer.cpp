@@ -646,8 +646,7 @@ CairoImage::GetTextureClient(CompositableClient *aClient)
 
   TextureClientAutoUnlock autoUnlock(textureClient);
 
-  RefPtr<DataSourceSurface> dataSurf = surface->GetDataSurface();
-  textureClient->UpdateFromSurface(dataSurf);
+  textureClient->UpdateFromSurface(surface);
 
   textureClient->SyncWithObject(forwarder->GetSyncObject());
 
