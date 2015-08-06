@@ -37,7 +37,8 @@ public abstract class MulticastDNSManager {
 
     public static MulticastDNSManager getInstance(final Context context) {
         if (instance == null) {
-            if (Versions.feature16Plus) {
+            // Bug 1188935: There's a bug on Android 4.4 and before.
+            if (Versions.feature21Plus) {
                 instance = new NsdMulticastDNSManager(context);
             } else {
                 instance = new DummyMulticastDNSManager();
