@@ -9431,7 +9431,7 @@
     "high": "31622400",
     "n_buckets": 20,
     "description": "Time taken for a push subscription to expire its quota (seconds). The maximum is just over an year."
-  }
+  },
   "PUSH_API_QUOTA_RESET_TO": {
     "alert_emails": ["push@mozilla.com"],
     "expires_in_version": "55",
@@ -9439,6 +9439,31 @@
     "high": "200",
     "n_buckets": 10,
     "description": "The value a push record quota (a count) is reset to based on the user's browsing history."
+  },
+  "PUSH_API_NOTIFICATION_RECEIVED": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "count",
+    "description": "Push notification was received from server."
+  },
+  "PUSH_API_NOTIFICATION_RECEIVED_BUT_DID_NOT_NOTIFY": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "enumerated",
+    "n_values": 15,
+    "description": "Push notification was received from server, but not delivered to ServiceWorker. Enumeration values are defined in dom/push/PushService.jsm as kDROP_NOTIFICATION_REASON_*."
+  },
+  "PUSH_API_NOTIFY": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "count",
+    "description": "Attempt to notify ServiceWorker of push notification."
+  },
+  "PUSH_API_NOTIFY_REGISTRATION_LOST": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "count",
+    "description": "Attempt to notify ServiceWorker of push notification resubscription."
   },
   "FXA_CONFIGURED": {
     "alert_emails": ["fx-team@mozilla.com"],
