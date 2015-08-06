@@ -143,7 +143,9 @@ def main(platform):
         add_file_to_zip(zip, os.path.join(srcdir, "icon64.png"), "icon64.png")
 
         # Ship b2g-desktop, but prevent its gaia profile to be shipped in the xpi
-        add_dir_to_zip(zip, os.path.join(distdir, "b2g"), "b2g", ("gaia", "B2G.app/Contents/MacOS/gaia"))
+        add_dir_to_zip(zip, os.path.join(distdir, "b2g"), "b2g",
+                       ("gaia", "B2G.app/Contents/MacOS/gaia",
+                        "B2G.app/Contents/Resources/gaia"))
         # Then ship our own gaia profile
         add_dir_to_zip(zip, os.path.join(gaia_path, "profile"), "profile")
 
@@ -154,4 +156,3 @@ if __name__ == '__main__':
 """.format(sys.argv[0]))
         sys.exit(1)
     main(*sys.argv[1:])
-

@@ -1468,11 +1468,7 @@ BluetoothServiceBluedroid::Disconnect(
 }
 
 #ifndef MOZ_B2G_BT_API_V1
-bool
-BluetoothServiceBluedroid::IsConnected(uint16_t aProfileId)
-{
-  return true;
-}
+  // Missing in bluetooth2
 #else
 void
 BluetoothServiceBluedroid::IsConnected(const uint16_t aServiceUuid,

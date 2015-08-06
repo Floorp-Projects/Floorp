@@ -194,17 +194,26 @@ let LogCapture = {
    * as an ArrayBuffer.
    */
   getScreenshot: function() {
-    this.ensureLoaded();
     let deferred = Promise.defer();
+    try {
+      this.ensureLoaded();
 
-    let fr = Cc["@mozilla.org/files/filereader;1"]
-                .createInstance(Ci.nsIDOMFileReader);
+      let fr = Cc["@mozilla.org/files/filereader;1"]
+                  .createInstance(Ci.nsIDOMFileReader);
 
-    fr.onload = function(evt) {
-      deferred.resolve(new Uint8Array(evt.target.result));
-    };
+      fr.onload = function(evt) {
+        deferred.resolve(new Uint8Array(evt.target.result));
+      };
 
-    fr.readAsArrayBuffer(Screenshot.get());
+      fr.onerror = function(evt) {
+        deferred.reject(evt);
+      };
+
+      fr.readAsArrayBuffer(Screenshot.get());
+    } catch(e) {
+      // We pass any errors through to the deferred Promise
+      deferred.reject(e);
+    }
 
     return deferred.promise;
   }

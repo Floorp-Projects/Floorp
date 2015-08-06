@@ -159,8 +159,7 @@ public:
           BluetoothReplyRunnable* aRunnable);
 
 #ifndef MOZ_B2G_BT_API_V1
-  virtual bool
-  IsConnected(uint16_t aProfileId);
+  // Missing in bluetooth2
 #else
   virtual void
   IsConnected(const uint16_t aServiceUuid,

@@ -557,12 +557,6 @@ BluetoothServiceChildProcess::HandleShutdown()
   return NS_OK;
 }
 
-bool
-BluetoothServiceChildProcess::IsConnected(uint16_t aServiceUuid)
-{
-  MOZ_CRASH("This should never be called!");
-}
-
 nsresult
 BluetoothServiceChildProcess::SendSinkMessage(const nsAString& aDeviceAddresses,
                                               const nsAString& aMessage)
