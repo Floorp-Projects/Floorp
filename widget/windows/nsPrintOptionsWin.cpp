@@ -10,6 +10,8 @@
 #include "nsGfxCIID.h"
 #include "nsIServiceManager.h"
 #include "nsIWebBrowserPrint.h"
+#include "nsWindowsHelpers.h"
+#include "ipc/IPCMessageUtils.h"
 
 const char kPrinterEnumeratorContractID[] = "@mozilla.org/gfx/printerenumerator;1";
 
@@ -65,6 +67,38 @@ nsPrintOptionsWin::SerializeToPrintData(nsIPrintSettings* aSettings,
   free(deviceName);
   free(driverName);
 
+  // When creating the print dialog on Windows, the parent creates a DEVMODE
+  // which is used to convey print settings to the Windows printing backend.
+  // We don't, therefore, want or care about DEVMODEs sent up from the child.
+  if (XRE_IsParentProcess()) {
+    // A DEVMODE can actually be of arbitrary size. If it turns out that it'll
+    // make our IPC message larger than the limit, then we'll error out.
+    LPDEVMODEW devModeRaw;
+    psWin->GetDevMode(&devModeRaw); // This actually allocates a copy of the
+                                    // the nsIPrintSettingsWin DEVMODE, so
+                                    // we're now responsible for deallocating
+                                    // it. We'll use an nsAutoDevMode helper
+                                    // to do this.
+    if (devModeRaw) {
+      nsAutoDevMode devMode(devModeRaw);
+      devModeRaw = nullptr;
+
+      size_t devModeTotalSize = devMode->dmSize + devMode->dmDriverExtra;
+      size_t msgTotalSize = sizeof(PrintData) + devModeTotalSize;
+
+      if (msgTotalSize > IPC::MAX_MESSAGE_SIZE) {
+        return NS_ERROR_FAILURE;
+      }
+
+      // Instead of reaching in and manually reading each member, we'll just
+      // copy the bits over.
+      const char* devModeData = reinterpret_cast<const char*>(devMode.get());
+      nsTArray<uint8_t> arrayBuf;
+      arrayBuf.AppendElements(devModeData, devModeTotalSize);
+      data->devModeData().SwapElements(arrayBuf);
+    }
+  }
+
   return NS_OK;
 }
 
@@ -80,19 +114,31 @@ nsPrintOptionsWin::DeserializeToPrintSettings(const PrintData& data,
     return NS_ERROR_FAILURE;
   }
 
-  psWin->SetDeviceName(data.deviceName().get());
-  psWin->SetDriverName(data.driverName().get());
+  if (XRE_IsContentProcess()) {
+    psWin->SetDeviceName(data.deviceName().get());
+    psWin->SetDriverName(data.driverName().get());
 
-  // We also need to prepare a DevMode and stuff it into our newly
-  // created nsIPrintSettings...
-  nsXPIDLString printerName;
-  settings->GetPrinterName(getter_Copies(printerName));
-  HGLOBAL gDevMode = CreateGlobalDevModeAndInit(printerName, settings);
-  LPDEVMODEW devMode = (LPDEVMODEW)::GlobalLock(gDevMode);
-  psWin->SetDevMode(devMode);
+    nsXPIDLString printerName;
+    settings->GetPrinterName(getter_Copies(printerName));
 
-  ::GlobalUnlock(gDevMode);
-  ::GlobalFree(gDevMode);
+    DEVMODEW* devModeRaw = (DEVMODEW*)::HeapAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY,
+                                                  data.devModeData().Length());
+    if (!devModeRaw) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    nsAutoDevMode devMode(devModeRaw);
+    devModeRaw = nullptr;
+
+    // Seems a bit silly to copy the buffer out, just so that SetDevMode can
+    // copy it again. However, if I attempt to just pass
+    // data.devModeData.Elements() casted to an DEVMODEW* to SetDevMode, I get
+    // a "Conversion loses qualifiers" build-time error because
+    // data.devModeData.Elements() is of type const char *.
+    memcpy(devMode.get(), data.devModeData().Elements(), data.devModeData().Length());
+
+    psWin->SetDevMode(devMode); // Copies
+  }
 
   return NS_OK;
 }
