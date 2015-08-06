@@ -3017,6 +3017,11 @@ static const JSFunctionSpec array_static_methods[] = {
     JS_FS_END
 };
 
+const JSPropertySpec array_static_props[] = {
+    JS_SELF_HOSTED_SYM_GET(species, "ArraySpecies", 0),
+    JS_PS_END
+};
+
 /* ES5 15.4.2 */
 bool
 js::ArrayConstructor(JSContext* cx, unsigned argc, Value* vp)
@@ -3154,7 +3159,7 @@ const Class ArrayObject::class_ = {
         GenericCreateConstructor<ArrayConstructor, 1, AllocKind::FUNCTION, &jit::JitInfo_Array>,
         CreateArrayPrototype,
         array_static_methods,
-        nullptr,
+        array_static_props,
         array_methods,
         nullptr,
         array_proto_finish
