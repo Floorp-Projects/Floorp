@@ -316,7 +316,7 @@ loop.panel = (function(_, mozL10n) {
   var SettingsDropdownEntry = React.createClass({
     propTypes: {
       displayed: React.PropTypes.bool,
-      icon: React.PropTypes.string,
+      extraCSSClass: React.PropTypes.string,
       label: React.PropTypes.string.isRequired,
       onClick: React.PropTypes.func.isRequired
     },
@@ -326,15 +326,22 @@ loop.panel = (function(_, mozL10n) {
     },
 
     render: function() {
+      var cx = React.addons.classSet;
+
       if (!this.props.displayed) {
         return null;
       }
+
+      var extraCSSClass = {
+        "dropdown-menu-item": true
+      };
+      if (this.props.extraCSSClass) {
+        extraCSSClass[this.props.extraCSSClass] = true;
+      }
+
       return (
-        <li className="dropdown-menu-item" onClick={this.props.onClick}>
-          {this.props.icon ?
-            <i className={"icon icon-" + this.props.icon}></i> :
-            null}
-          <span>{this.props.label}</span>
+        <li className={cx(extraCSSClass)} onClick={this.props.onClick}>
+          {this.props.label}
         </li>
       );
     }
@@ -385,6 +392,8 @@ loop.panel = (function(_, mozL10n) {
 
     render: function() {
       var cx = React.addons.classSet;
+      var accountEntryCSSClass = this._isSignedIn() ? "entry-settings-signout" :
+                                                      "entry-settings-signin";
 
       return (
         <div className="settings-menu dropdown">
@@ -393,24 +402,23 @@ loop.panel = (function(_, mozL10n) {
              ref="menu-button"
              title={mozL10n.get("settings_menu_button_tooltip")} />
           <ul className={cx({"dropdown-menu": true, hide: !this.state.showMenu})}>
+            <SettingsDropdownEntry
+                displayed={this._isSignedIn() && this.props.mozLoop.fxAEnabled}
+                extraCSSClass="entry-settings-account"
+                label={mozL10n.get("settings_menu_item_account")}
+                onClick={this.handleClickAccountEntry} />
             <SettingsDropdownEntry displayed={false}
-                                   icon="settings"
                                    label={mozL10n.get("settings_menu_item_settings")}
                                    onClick={this.handleClickSettingsEntry} />
-            <SettingsDropdownEntry displayed={this._isSignedIn() && this.props.mozLoop.fxAEnabled}
-                                   icon="account"
-                                   label={mozL10n.get("settings_menu_item_account")}
-                                   onClick={this.handleClickAccountEntry} />
-            <SettingsDropdownEntry icon="tour"
-                                   label={mozL10n.get("tour_label")}
+            <SettingsDropdownEntry label={mozL10n.get("tour_label")}
                                    onClick={this.openGettingStartedTour} />
             <SettingsDropdownEntry displayed={this.props.mozLoop.fxAEnabled}
-                                   icon={this._isSignedIn() ? "signout" : "signin"}
+                                   extraCSSClass={accountEntryCSSClass}
                                    label={this._isSignedIn() ?
                                           mozL10n.get("settings_menu_item_signout") :
                                           mozL10n.get("settings_menu_item_signin")}
                                    onClick={this.handleClickAuthEntry} />
-            <SettingsDropdownEntry icon="help"
+            <SettingsDropdownEntry extraCSSClass="entry-settings-help"
                                    label={mozL10n.get("help_label")}
                                    onClick={this.handleHelpEntry} />
           </ul>
@@ -952,10 +960,10 @@ loop.panel = (function(_, mozL10n) {
                         userProfile={this.state.userProfile} />
             </Tab>
             <Tab name="contacts">
-              <ContactsList
-                notifications={this.props.notifications}
-                selectTab={this.selectTab}
-                startForm={this.startForm} />
+              <ContactsList mozLoop={this.props.mozLoop}
+                            notifications={this.props.notifications}
+                            selectTab={this.selectTab}
+                            startForm={this.startForm} />
             </Tab>
             <Tab hidden={true} name="contacts_add">
               <ContactDetailsForm
