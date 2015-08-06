@@ -11,3 +11,5 @@ DIST_INSTALL = False
 DEFINES['TEST_UPDATER'] = True
 include('../updater-common.build')
 FAIL_ON_WARNINGS = True
+
+CXXFLAGS += CONFIG['MOZ_BZ2_CFLAGS']
