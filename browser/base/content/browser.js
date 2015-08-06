@@ -7180,14 +7180,6 @@ var gIdentityHandler = {
   },
 
   _isURILoadedFromFile(uri) {
-    try {
-      uri.host;
-      // No internal/file URI if we have a host.
-      return false;
-    } catch (e) {
-      // All good, let's continue.
-    }
-
     // Create a channel for the sole purpose of getting the resolved URI
     // of the request to determine if it's loaded from the file system.
     let chanOptions = {uri, loadUsingSystemPrincipal: true};
