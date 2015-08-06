@@ -14,11 +14,9 @@ addLoadEvent(function() {
 
   var context = new AudioContext();
   var osc = context.createOscillator();
-  var sp = context.createScriptProcessor();
+  var sp = context.createScriptProcessor(0, 1, 0);
 
   osc.connect(sp);
-  // Work around bug 916387.
-  sp.connect(context.destination);
 
   sp.onaudioprocess = function (e) {
     var input = e.inputBuffer.getChannelData(0);
