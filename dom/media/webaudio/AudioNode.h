@@ -97,6 +97,10 @@ public:
 
   virtual void Disconnect(uint32_t aOutput, ErrorResult& aRv);
 
+  // Called after input nodes have been explicitly added or removed through
+  // the Connect() or Disconnect() methods.
+  virtual void NotifyInputsChanged() {}
+
   // The following two virtual methods must be implemented by each node type
   // to provide their number of input and output ports. These numbers are
   // constant for the lifetime of the node. Both default to 1.
