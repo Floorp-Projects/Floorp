@@ -633,9 +633,6 @@ MediaDecoderStateMachine::Push(AudioData* aSample)
   UpdateNextFrameStatus();
   DispatchDecodeTasksIfNeeded();
 
-  if (mAudioSink) {
-    mAudioSink->NotifyData();
-  }
 }
 
 void
@@ -779,10 +776,6 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
       }
       CheckIfDecodeComplete();
       mDecoder->GetReentrantMonitor().NotifyAll();
-      // Tell AudioSink to wake up for audio queue is finished.
-      if (mAudioSink) {
-        mAudioSink->NotifyData();
-      }
       // Schedule the state machine to notify track ended as soon as possible.
       if (mAudioCaptured) {
         ScheduleStateMachine();
