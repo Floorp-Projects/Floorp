@@ -553,7 +553,6 @@ public:
                                      // page?  When true, we force something
                                      // that's too tall for a page/column to
                                      // fit anyway to avoid infinite loops.
-    uint16_t mHasClearance:1;        // Block has clearance
     uint16_t mAssumingHScrollbar:1;  // parent frame is an nsIScrollableFrame and it
                                      // is assuming a horizontal scrollbar
     uint16_t mAssumingVScrollbar:1;  // parent frame is an nsIScrollableFrame and it
