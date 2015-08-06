@@ -1387,25 +1387,25 @@ function run_StructType_tests() {
   // Check that malformed descriptors are an error.
   do_check_throws(function() {
     ctypes.StructType("a", [{"x":ctypes.int32_t}, {"x":ctypes.int8_t}]);
-  }, Error);
+  }, TypeError);
   do_check_throws(function() {
     ctypes.StructType("a", [5]);
-  }, Error);
+  }, TypeError);
   do_check_throws(function() {
     ctypes.StructType("a", [{}]);
-  }, Error);
+  }, TypeError);
   do_check_throws(function() {
     ctypes.StructType("a", [{5:ctypes.int32_t}]);
-  }, Error);
+  }, TypeError);
   do_check_throws(function() {
     ctypes.StructType("a", [{"5":ctypes.int32_t}]);
-  }, Error);
+  }, TypeError);
   do_check_throws(function() {
     ctypes.StructType("a", [{"x":5}]);
-  }, Error);
+  }, TypeError);
   do_check_throws(function() {
     ctypes.StructType("a", [{"x":ctypes.int32_t()}]);
-  }, Error);
+  }, TypeError);
 
   // Check that opaque structs work.
   let opaque_t = ctypes.StructType("a");
@@ -1433,19 +1433,19 @@ function run_StructType_tests() {
   // Check that 'define' works.
   do_check_throws(function() { opaque_t.define(); }, TypeError);
   do_check_throws(function() { opaque_t.define([], 0); }, TypeError);
-  do_check_throws(function() { opaque_t.define([{}]); }, Error);
-  do_check_throws(function() { opaque_t.define([{ a: 0 }]); }, Error);
+  do_check_throws(function() { opaque_t.define([{}]); }, TypeError);
+  do_check_throws(function() { opaque_t.define([{ a: 0 }]); }, TypeError);
   do_check_throws(function() {
     opaque_t.define([{ a: ctypes.int32_t, b: ctypes.int64_t }]);
-  }, Error);
+  }, TypeError);
   do_check_throws(function() {
     opaque_t.define([{ a: ctypes.int32_t }, { b: 0 }]);
-  }, Error);
+  }, TypeError);
   do_check_false(opaque_t.hasOwnProperty("prototype"));
 
   // Check that circular references work with opaque structs...
   // but not crazy ones.
-  do_check_throws(function() { opaque_t.define([{ b: opaque_t }]); }, Error);
+  do_check_throws(function() { opaque_t.define([{ b: opaque_t }]); }, TypeError);
   let circular_t = ctypes.StructType("circular", [{ a: opaqueptr_t }]);
   opaque_t.define([{ b: circular_t }]);
   let opaque = opaque_t();
@@ -1584,7 +1584,7 @@ function run_StructType_tests() {
   do_check_true(g_a.constructor === g_t.ptr);
   do_check_eq(g_a.contents.a, s.b.a);
   do_check_throws(function() { s.addressOfField(); }, TypeError);
-  do_check_throws(function() { s.addressOfField("d"); }, Error);
+  do_check_throws(function() { s.addressOfField("d"); }, TypeError);
   do_check_throws(function() { s.addressOfField("a", 2); }, TypeError);
 
   do_check_eq(s.toSource(), "s_t(4, {\"a\": 7, \"b\": 2}, 10)");
@@ -1645,10 +1645,10 @@ function run_StructType_tests() {
   // are illegal, but arrays of defined length work.
   do_check_throws(function() {
     ctypes.StructType("z_t", [{ a: ctypes.int32_t.array() }]);
-  }, Error);
+  }, TypeError);
   do_check_throws(function() {
     ctypes.StructType("z_t", [{ a: ctypes.int32_t.array(0) }]);
-  }, Error);
+  }, TypeError);
   z_t = ctypes.StructType("z_t", [{ a: ctypes.int32_t.array(6) }]);
   do_check_eq(z_t.size, ctypes.int32_t.size * 6);
   let z = z_t([1, 2, 3, 4, 5, 6]);
