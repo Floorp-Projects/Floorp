@@ -31,7 +31,6 @@ public class StringHelper {
     public final String ABOUT_HEALTHREPORT_URL = "about:healthreport";
     public final String ABOUT_DOWNLOADS_URL = "about:downloads";
     public final String ABOUT_HOME_URL = "about:home";
-    public final String ABOUT_PRIVATE_BROWSING_URL = "about:privatebrowsing";
     public final String ABOUT_ADDONS_URL = "about:addons";
     public static final String ABOUT_LOGINS_URL = "about:logins";
     public final String ABOUT_ABOUT_URL = "about:about";
