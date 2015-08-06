@@ -24,6 +24,8 @@ const PREFS = new ViewHelpers.Prefs("devtools.performance", {
   "memory-max-log-length": ["Int", "memory.max-log-length"],
   "profiler-buffer-size": ["Int", "profiler.buffer-size"],
   "profiler-sample-frequency": ["Int", "profiler.sample-frequency-khz"],
+  // TODO re-enable once we flame charts via bug 1148663
+  "enable-memory-flame": ["Bool", "ui.enable-memory-flame"],
 }, {
   monitorChanges: true
 });
