@@ -5976,6 +5976,7 @@
         if ((anonid == "soundplaying-icon") ||
             ((anonid == "overlay-icon") && iconVisible)) {
           this.toggleMuteAudio();
+          this._overPlayingIcon = false;
         }
       ]]>
       </handler>

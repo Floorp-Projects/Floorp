@@ -159,6 +159,58 @@ function* test_browser_swapping(tab, browser) {
   });
 }
 
+function* test_click_on_pinned_tab_after_mute() {
+  function* test_on_browser(browser) {
+    let tab = gBrowser.getTabForBrowser(browser);
+
+    gBrowser.selectedTab = originallySelectedTab;
+    isnot(tab, gBrowser.selectedTab, "Sanity check, the tab should not be selected!");
+
+    // Steps to reproduce the bug:
+    //   Pin the tab.
+    gBrowser.pinTab(tab);
+
+    //   Start playbak.
+    yield ContentTask.spawn(browser, {}, function* () {
+      let audio = content.document.querySelector("audio");
+      audio.play();
+    });
+
+    //   Wait for playback to start.
+    yield wait_for_tab_playing_event(tab, true);
+
+    //   Mute the tab.
+    let icon = document.getAnonymousElementByAttribute(tab, "anonid", "overlay-icon");
+    yield test_mute_tab(tab, icon, true);
+
+    //   Stop playback
+    yield ContentTask.spawn(browser, {}, function* () {
+      let audio = content.document.querySelector("audio");
+      audio.pause();
+    });
+
+    // Unmute tab.
+    yield test_mute_tab(tab, icon, false);
+
+    // Now click on the tab.
+    let image = document.getAnonymousElementByAttribute(tab, "anonid", "tab-icon-image");
+    EventUtils.synthesizeMouseAtCenter(image, {button: 0});
+
+    is(tab, gBrowser.selectedTab, "Tab switch should be successful");
+
+    // Cleanup.
+    gBrowser.unpinTab(tab);
+    gBrowser.selectedTab = originallySelectedTab;
+  }
+
+  let originallySelectedTab = gBrowser.selectedTab;
+
+  yield BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: PAGE
+  }, test_on_browser);
+}
+
 function* test_on_browser(browser) {
   let tab = gBrowser.getTabForBrowser(browser);
 
@@ -180,6 +232,8 @@ function* test_on_browser(browser) {
     }, () => test_on_browser(browser));
   } else {
     yield test_browser_swapping(tab, browser);
+
+    yield test_click_on_pinned_tab_after_mute();
   }
 }
 
