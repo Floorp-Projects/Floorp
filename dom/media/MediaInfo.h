@@ -174,7 +174,7 @@ public:
                 EmptyString(), EmptyString(), true, 2)
     , mDisplay(nsIntSize(aWidth, aHeight))
     , mStereoMode(StereoMode::MONO)
-    , mImage(nsIntSize(aWidth, aHeight))
+    , mImage(nsIntRect(0, 0, aWidth, aHeight))
     , mCodecSpecificConfig(new MediaByteBuffer)
     , mExtraData(new MediaByteBuffer)
   {
@@ -217,8 +217,8 @@ public:
   // Indicates the frame layout for single track stereo videos.
   StereoMode mStereoMode;
 
-  // Size in pixels of decoded video's image.
-  nsIntSize mImage;
+  // Visible area of the decoded video's image.
+  nsIntRect mImage;
   nsRefPtr<MediaByteBuffer> mCodecSpecificConfig;
   nsRefPtr<MediaByteBuffer> mExtraData;
 };

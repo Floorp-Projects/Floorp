@@ -541,19 +541,6 @@ static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
     nullptr
   },
   {
-    // CN=Buypass Class 3 CA 1,O=Buypass AS-983163327,C=NO
-    "2.16.578.1.26.1.3.3",
-    "Buypass EV OID",
-    SEC_OID_UNKNOWN,
-    { 0xB7, 0xB1, 0x2B, 0x17, 0x1F, 0x82, 0x1D, 0xAA, 0x99, 0x0C, 0xD0,
-      0xFE, 0x50, 0x87, 0xB1, 0x28, 0x44, 0x8B, 0xA8, 0xE5, 0x18, 0x4F,
-      0x84, 0xC5, 0x1E, 0x02, 0xB5, 0xC8, 0xFB, 0x96, 0x2B, 0x24 },
-    "MEsxCzAJBgNVBAYTAk5PMR0wGwYDVQQKDBRCdXlwYXNzIEFTLTk4MzE2MzMyNzEd"
-    "MBsGA1UEAwwUQnV5cGFzcyBDbGFzcyAzIENBIDE=",
-    "Ag==",
-    nullptr
-  },
-  {
     // CN=Buypass Class 3 Root CA,O=Buypass AS-983163327,C=NO
     "2.16.578.1.26.1.3.3",
     "Buypass EV OID",
@@ -1251,8 +1238,9 @@ IdentityInfoInit()
 
     // If an entry is missing in the NSS root database, it may be because the
     // root database is out of sync with what we expect (e.g. a different
-    // version of system NSS is installed). We will just silently avoid
-    // treating that root cert as EV.
+    // version of system NSS is installed). We assert on debug builds, but
+    // silently continue on release builds. In both cases, the root cert does
+    // not get EV treatment.
     if (!entry.cert) {
 #ifdef DEBUG
       // The debug CA structs are at positions 0 to NUM_TEST_EV_ROOTS - 1, and
@@ -1261,7 +1249,7 @@ IdentityInfoInit()
         continue;
       }
 #endif
-      //PR_NOT_REACHED("Could not find EV root in NSS storage");
+      PR_NOT_REACHED("Could not find EV root in NSS storage");
       continue;
     }
 
