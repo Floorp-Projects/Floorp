@@ -1250,6 +1250,11 @@ PresShell::Destroy()
     }
   }
 
+  if (mPresContext) {
+    mPresContext->AnimationManager()->ClearEventQueue();
+    mPresContext->TransitionManager()->ClearEventQueue();
+  }
+
   // Revoke any pending events.  We need to do this and cancel pending reflows
   // before we destroy the frame manager, since apparently frame destruction
   // sometimes spins the event queue when plug-ins are involved(!).

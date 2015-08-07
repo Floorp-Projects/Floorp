@@ -11,3 +11,5 @@ include('updater-common.build')
 if CONFIG['ENABLE_TESTS']:
     DIRS += ['updater-xpcshell']
 FAIL_ON_WARNINGS = True
+
+CXXFLAGS += CONFIG['MOZ_BZ2_CFLAGS']

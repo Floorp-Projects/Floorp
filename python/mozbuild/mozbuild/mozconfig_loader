@@ -36,10 +36,23 @@ ac_add_app_options() {
 }
 
 mk_add_options() {
-  local opt
+  local opt name op value
   for opt; do
     echo "------BEGIN_MK_OPTION"
     echo $opt
+    # Remove any leading "export"
+    opt=${opt#export}
+    case "$opt" in
+    *\?=*) op="?=" ;;
+    *:=*) op=":=" ;;
+    *+=*) op="+=" ;;
+    *=*) op="=" ;;
+    esac
+    # Remove the operator and the value that follows
+    name=${opt%%${op}*}
+    # Note: $(echo ${name}) strips the variable from any leading and trailing
+    # whitespaces.
+    eval "$(echo ${name})_IS_SET=1"
     echo "------END_MK_OPTION"
   done
 }

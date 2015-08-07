@@ -138,6 +138,12 @@ protected:
   virtual ~TextureReadbackSink() {}
 };
 
+enum class BackendSelector
+{
+  Content,
+  Canvas
+};
+
 /**
  * TextureClient is a thin abstraction over texture data that need to be shared
  * between the content process and the compositor process. It is the
@@ -174,7 +180,7 @@ public:
   CreateForDrawing(ISurfaceAllocator* aAllocator,
                    gfx::SurfaceFormat aFormat,
                    gfx::IntSize aSize,
-                   gfx::BackendType aMoz2dBackend,
+                   BackendSelector aSelector,
                    TextureFlags aTextureFlags,
                    TextureAllocationFlags flags = ALLOC_DEFAULT);
 

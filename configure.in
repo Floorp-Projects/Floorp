@@ -2643,28 +2643,7 @@ esac
 AC_SUBST(WRAP_SYSTEM_INCLUDES)
 AC_SUBST(VISIBILITY_FLAGS)
 
-MOZ_GCC_PR49911
 MOZ_LLVM_PR8927
-
-dnl Check for __force_align_arg_pointer__ for SSE2 on gcc
-dnl ========================================================
-if test "$GNU_CC"; then
-  CFLAGS_save="${CFLAGS}"
-  CFLAGS="${CFLAGS} -Werror"
-  AC_CACHE_CHECK(for __force_align_arg_pointer__ attribute,
-                 ac_cv_force_align_arg_pointer,
-                 [AC_TRY_COMPILE([__attribute__ ((__force_align_arg_pointer__)) void test() {}],
-                                 [],
-                                 ac_cv_force_align_arg_pointer="yes",
-                                 ac_cv_force_align_arg_pointer="no")])
-  CFLAGS="${CFLAGS_save}"
-  if test "$ac_cv_force_align_arg_pointer" = "yes"; then
-    HAVE_GCC_ALIGN_ARG_POINTER=1
-  else
-    HAVE_GCC_ALIGN_ARG_POINTER=
-  fi
-fi
-AC_SUBST(HAVE_GCC_ALIGN_ARG_POINTER)
 
 dnl Checks for header files.
 dnl ========================================================
@@ -5873,9 +5852,9 @@ if test -n "$MOZ_ANGLE_RENDERER"; then
   # Find a D3D compiler DLL in a Windows SDK.
   MOZ_D3DCOMPILER_VISTA_DLL=
   case "$MOZ_WINSDK_MAXVER" in
-  0x0603*)
+  0x0603*|0x0A00*)
     MOZ_D3DCOMPILER_VISTA_DLL=d3dcompiler_47.dll
-    AC_MSG_RESULT([Found D3D compiler in Windows SDK 8.1.])
+    AC_MSG_RESULT([Found D3D compiler in Windows SDK.])
   ;;
   esac
 
@@ -5894,6 +5873,8 @@ if test -n "$MOZ_ANGLE_RENDERER"; then
     else
       AC_MSG_RESULT([Windows SDK not found.])
     fi
+  else
+    AC_MSG_ERROR([Couldn't find Windows SDK 8.1 or higher needed for ANGLE.])
   fi
 
   if test -z "$MOZ_D3DCOMPILER_VISTA_DLL_PATH"; then
@@ -8199,7 +8180,7 @@ AC_SUBST_LIST(MOZ_PIXMAN_LIBS)
 
 # Check for headers defining standard int types.
 if test -n "$COMPILE_ENVIRONMENT"; then
-    MOZ_CHECK_HEADERS(stdint.h inttypes.h sys/int_types.h)
+    MOZ_CHECK_HEADERS(stdint.h inttypes.h)
 
     if test "${ac_cv_header_inttypes_h}" = "yes"; then
         HAVE_INTTYPES_H=1
@@ -8864,7 +8845,7 @@ AC_SUBST(MOZ_NATIVE_BZ2)
 
 AC_SUBST(MOZ_JPEG_CFLAGS)
 AC_SUBST_LIST(MOZ_JPEG_LIBS)
-AC_SUBST(MOZ_BZ2_CFLAGS)
+AC_SUBST_LIST(MOZ_BZ2_CFLAGS)
 AC_SUBST_LIST(MOZ_BZ2_LIBS)
 AC_SUBST(MOZ_PNG_CFLAGS)
 AC_SUBST_LIST(MOZ_PNG_LIBS)

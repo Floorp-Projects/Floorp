@@ -99,3 +99,28 @@ fuzzy-if(cocoaWidget,15,5) fuzzy-if(d2d,102,164) == s71-abs-pos-non-replaced-vrl
 fuzzy-if(cocoaWidget,15,5) fuzzy-if(d2d,102,164) == s71-abs-pos-non-replaced-vrl-092.xht s71-abs-pos-non-replaced-vrl-092-ref.xht
 fuzzy-if(cocoaWidget,15,5) fuzzy-if(d2d,102,164) == s71-abs-pos-non-replaced-vrl-094.xht s71-abs-pos-non-replaced-vrl-094-ref.xht
 fuzzy-if(cocoaWidget,15,5) fuzzy-if(d2d,102,164) == s71-abs-pos-non-replaced-vrl-096.xht s71-abs-pos-non-replaced-vrl-096-ref.xht
+
+== 1183431-orthogonal-modes-1a.html 1183431-orthogonal-modes-1-ref.html
+== 1183431-orthogonal-modes-1b.html 1183431-orthogonal-modes-1-ref.html
+== 1183431-orthogonal-modes-1c.html 1183431-orthogonal-modes-1-ref.html
+== 1183431-orthogonal-modes-2a.html 1183431-orthogonal-modes-2-ref.html
+== 1183431-orthogonal-modes-2b.html 1183431-orthogonal-modes-2-ref.html
+== 1183431-orthogonal-modes-2c.html 1183431-orthogonal-modes-2-ref.html
+== 1183431-orthogonal-modes-3a.html 1183431-orthogonal-modes-3-ref.html
+== 1183431-orthogonal-modes-3b.html 1183431-orthogonal-modes-3-ref.html
+== 1183431-orthogonal-modes-3c.html 1183431-orthogonal-modes-3-ref.html
+== 1183431-orthogonal-modes-4a.html 1183431-orthogonal-modes-4-ref.html
+== 1183431-orthogonal-modes-4b.html 1183431-orthogonal-modes-4-ref.html
+== 1183431-orthogonal-modes-4c.html 1183431-orthogonal-modes-4-ref.html
+== 1183431-orthogonal-modes-5a.html 1183431-orthogonal-modes-5-ref.html
+== 1183431-orthogonal-modes-5b.html 1183431-orthogonal-modes-5-ref.html
+== 1183431-orthogonal-modes-5c.html 1183431-orthogonal-modes-5-ref.html
+fails == 1183431-orthogonal-modes-6a.html 1183431-orthogonal-modes-6-ref.html # bug 1191801
+== 1183431-orthogonal-modes-6b.html 1183431-orthogonal-modes-6-ref.html
+== 1183431-orthogonal-modes-6c.html 1183431-orthogonal-modes-6-ref.html
+== 1183431-orthogonal-modes-7a.html 1183431-orthogonal-modes-7-ref.html
+== 1183431-orthogonal-modes-7b.html 1183431-orthogonal-modes-7-ref.html
+== 1183431-orthogonal-modes-7c.html 1183431-orthogonal-modes-7-ref.html
+fails == 1183431-orthogonal-modes-8a.html 1183431-orthogonal-modes-8-ref.html # bug 1191801
+== 1183431-orthogonal-modes-8b.html 1183431-orthogonal-modes-8-ref.html
+== 1183431-orthogonal-modes-8c.html 1183431-orthogonal-modes-8-ref.html

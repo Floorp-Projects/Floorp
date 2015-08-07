@@ -216,7 +216,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
         RefPtr<gfx::SourceSurface> surface = image->GetAsSourceSurface();
         MOZ_ASSERT(surface);
         texture = CreateTextureClientForDrawing(surface->GetFormat(), image->GetSize(),
-                                                gfx::BackendType::NONE, mTextureFlags);
+                                                BackendSelector::Content, mTextureFlags);
         if (!texture) {
           return false;
         }

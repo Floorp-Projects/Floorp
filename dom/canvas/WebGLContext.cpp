@@ -1368,6 +1368,7 @@ WebGLContext::ForceClearFramebufferWithDefaultValues(bool fakeNoAlpha, GLbitfiel
     bool initializeStencilBuffer = 0 != (mask & LOCAL_GL_STENCIL_BUFFER_BIT);
     bool drawBuffersIsEnabled = IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers);
     bool shouldOverrideDrawBuffers = false;
+    bool usingDefaultFrameBuffer = !mBoundDrawFramebuffer;
 
     GLenum currentDrawBuffers[WebGLContext::kMaxColorAttachments];
 
@@ -1385,7 +1386,7 @@ WebGLContext::ForceClearFramebufferWithDefaultValues(bool fakeNoAlpha, GLbitfiel
 
             GLenum drawBuffersCommand[WebGLContext::kMaxColorAttachments] = { LOCAL_GL_NONE };
 
-            for(int32_t i = 0; i < mGLMaxDrawBuffers; i++) {
+            for (int32_t i = 0; i < mGLMaxDrawBuffers; i++) {
                 GLint temp;
                 gl->fGetIntegerv(LOCAL_GL_DRAW_BUFFER0 + i, &temp);
                 currentDrawBuffers[i] = temp;
@@ -1395,6 +1396,16 @@ WebGLContext::ForceClearFramebufferWithDefaultValues(bool fakeNoAlpha, GLbitfiel
                 }
                 if (currentDrawBuffers[i] != drawBuffersCommand[i])
                     shouldOverrideDrawBuffers = true;
+            }
+
+            // When clearing the default framebuffer, we must be clearing only
+            // GL_BACK, and nothing else, or else gl may return an error. We will
+            // only use the first element of currentDrawBuffers in this case.
+            if (usingDefaultFrameBuffer) {
+                gl->Screen()->SetDrawBuffer(LOCAL_GL_BACK);
+                if (currentDrawBuffers[0] == LOCAL_GL_COLOR_ATTACHMENT0)
+                    currentDrawBuffers[0] = LOCAL_GL_BACK;
+                shouldOverrideDrawBuffers = false;
             }
             // calling draw buffers can cause resolves on adreno drivers so
             // we try to avoid calling it
@@ -1441,8 +1452,13 @@ WebGLContext::ForceClearFramebufferWithDefaultValues(bool fakeNoAlpha, GLbitfiel
 
     // Restore GL state after clearing.
     if (initializeColorBuffer) {
-        if (shouldOverrideDrawBuffers) {
-            gl->fDrawBuffers(mGLMaxDrawBuffers, currentDrawBuffers);
+
+        if (drawBuffersIsEnabled) {
+            if (usingDefaultFrameBuffer) {
+                gl->Screen()->SetDrawBuffer(currentDrawBuffers[0]);
+            } else if (shouldOverrideDrawBuffers) {
+                gl->fDrawBuffers(mGLMaxDrawBuffers, currentDrawBuffers);
+            }
         }
 
         gl->fColorMask(mColorWriteMask[0],

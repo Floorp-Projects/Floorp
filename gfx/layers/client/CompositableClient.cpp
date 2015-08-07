@@ -207,12 +207,12 @@ CompositableClient::CreateBufferTextureClient(gfx::SurfaceFormat aFormat,
 already_AddRefed<TextureClient>
 CompositableClient::CreateTextureClientForDrawing(gfx::SurfaceFormat aFormat,
                                                   gfx::IntSize aSize,
-                                                  gfx::BackendType aMoz2DBackend,
+                                                  BackendSelector aSelector,
                                                   TextureFlags aTextureFlags,
                                                   TextureAllocationFlags aAllocFlags)
 {
   return TextureClient::CreateForDrawing(GetForwarder(),
-                                         aFormat, aSize, aMoz2DBackend,
+                                         aFormat, aSize, aSelector,
                                          aTextureFlags | mTextureFlags,
                                          aAllocFlags);
 }

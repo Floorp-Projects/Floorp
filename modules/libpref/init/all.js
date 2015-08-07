@@ -139,7 +139,6 @@ pref("dom.workers.maxPerDomain", 20);
 // Whether or not Shared Web Workers are enabled.
 pref("dom.workers.sharedWorkers.enabled", true);
 
-// Service workers
 pref("dom.serviceWorkers.enabled", false);
 
 // Allow service workers to intercept network requests using the fetch event
@@ -4460,19 +4459,12 @@ pref("dom.mozAlarms.enabled", false);
 
 // Push
 
-#if !defined(MOZ_B2G) && !defined(ANDROID)
-// Desktop prefs
-#ifdef RELEASE_BUILD
 pref("dom.push.enabled", false);
-#else
-pref("dom.push.enabled", true);
-#endif
-#else
-// Mobile prefs
-pref("dom.push.enabled", false);
+
+#if !defined(RELEASE_BUILD)
+pref("dom.push.debug", true);
 #endif
 
-pref("dom.push.debug", false);
 pref("dom.push.serverURL", "wss://push.services.mozilla.com/");
 pref("dom.push.userAgentID", "");
 
