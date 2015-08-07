@@ -1429,9 +1429,7 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
   color: GrayText;
 }
 
-#PopupAutoCompleteRichResult > richlistbox {
-  transition: height 100ms;
-}
+%include ../shared/urlbarSearchSuggestionsNotification.inc.css
 
 #search-container {
   min-width: calc(54px + 11ch);
@@ -1564,17 +1562,20 @@ richlistitem[type~="action"][actiontype="searchengine"] > .ac-title-box > .ac-si
   height: 16px;
 }
 
-.ac-comment {
+.ac-comment,
+#PopupAutoCompleteRichResult > hbox[anonid="search-suggestions-notification"] > description,
+#PopupAutoCompleteRichResult > hbox[anonid="search-suggestions-notification"] > button {
   font-size: 1.06em;
 }
 
-.ac-extra > .ac-comment {
+.ac-extra > .ac-comment,
+.ac-url-text,
+.ac-action-text {
   font-size: 1em;
 }
 
 .ac-url-text,
 .ac-action-text {
-  font-size: 1em;
   color: -moz-nativehyperlinktext;
 }
 

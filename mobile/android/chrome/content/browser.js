@@ -7092,11 +7092,11 @@ var IdentityHandler = {
   // No trusted identity information. No site identity icon is shown.
   IDENTITY_MODE_UNKNOWN: "unknown",
 
-  // Minimal SSL CA-signed domain verification. Blue lock icon is shown.
-  IDENTITY_MODE_DOMAIN_VERIFIED: "verified",
-
-  // High-quality identity information. Green lock icon is shown.
+  // Domain-Validation SSL CA-signed domain verification (DV).
   IDENTITY_MODE_IDENTIFIED: "identified",
+
+  // Extended-Validation SSL CA-signed identity information (EV). A more rigorous validation process.
+  IDENTITY_MODE_VERIFIED: "verified",
 
   // The following mixed content modes are only used if "security.mixed_content.block_active_content"
   // is enabled. Our Java frontend coalesces them into one indicator.
@@ -7104,11 +7104,11 @@ var IdentityHandler = {
   // No mixed content information. No mixed content icon is shown.
   MIXED_MODE_UNKNOWN: "unknown",
 
-  // Blocked active mixed content. Shield icon is shown, with a popup option to load content.
-  MIXED_MODE_CONTENT_BLOCKED: "mixed_content_blocked",
+  // Blocked active mixed content.
+  MIXED_MODE_CONTENT_BLOCKED: "blocked",
 
-  // Loaded active mixed content. Yellow triangle icon is shown.
-  MIXED_MODE_CONTENT_LOADED: "mixed_content_loaded",
+  // Loaded active mixed content.
+  MIXED_MODE_CONTENT_LOADED: "loaded",
 
   // The following tracking content modes are only used if tracking protection
   // is enabled. Our Java frontend coalesces them into one indicator.
@@ -7164,25 +7164,37 @@ var IdentityHandler = {
    */
   getIdentityMode: function getIdentityMode(aState) {
     if (aState & Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL) {
-      return this.IDENTITY_MODE_IDENTIFIED;
+      return this.IDENTITY_MODE_VERIFIED;
     }
 
     if (aState & Ci.nsIWebProgressListener.STATE_IS_SECURE) {
-      return this.IDENTITY_MODE_DOMAIN_VERIFIED;
+      return this.IDENTITY_MODE_IDENTIFIED;
     }
 
     return this.IDENTITY_MODE_UNKNOWN;
   },
 
-  getMixedMode: function getMixedMode(aState) {
-    if (aState & Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT) {
-      return this.MIXED_MODE_CONTENT_BLOCKED;
+  getMixedDisplayMode: function getMixedDisplayMode(aState) {
+    if (aState & Ci.nsIWebProgressListener.STATE_LOADED_MIXED_DISPLAY_CONTENT) {
+        return this.MIXED_MODE_CONTENT_LOADED;
     }
 
+    if (aState & Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_DISPLAY_CONTENT) {
+        return this.MIXED_MODE_CONTENT_BLOCKED;
+    }
+
+    return this.MIXED_MODE_UNKNOWN;
+  },
+
+  getMixedActiveMode: function getActiveDisplayMode(aState) {
     // Only show an indicator for loaded mixed content if the pref to block it is enabled
     if ((aState & Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT) &&
          !Services.prefs.getBoolPref("security.mixed_content.block_active_content")) {
       return this.MIXED_MODE_CONTENT_LOADED;
+    }
+
+    if (aState & Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT) {
+      return this.MIXED_MODE_CONTENT_BLOCKED;
     }
 
     return this.MIXED_MODE_UNKNOWN;
@@ -7235,13 +7247,15 @@ var IdentityHandler = {
     this._lastLocation = locationObj;
 
     let identityMode = this.getIdentityMode(aState);
-    let mixedMode = this.getMixedMode(aState);
+    let mixedDisplay = this.getMixedDisplayMode(aState);
+    let mixedActive = this.getMixedActiveMode(aState);
     let trackingMode = this.getTrackingMode(aState, aBrowser);
     let result = {
       origin: locationObj.origin,
       mode: {
         identity: identityMode,
-        mixed: mixedMode,
+        mixed_display: mixedDisplay,
+        mixed_active: mixedActive,
         tracking: trackingMode
       }
     };
@@ -7249,10 +7263,12 @@ var IdentityHandler = {
     // Don't show identity data for pages with an unknown identity or if any
     // mixed content is loaded (mixed display content is loaded by default).
     if (identityMode == this.IDENTITY_MODE_UNKNOWN || aState & Ci.nsIWebProgressListener.STATE_IS_BROKEN) {
+      result.secure = false;
       return result;
     }
 
-    result.encrypted = true;
+    result.secure = true;
+
     result.host = this.getEffectiveHost();
 
     let iData = this.getIdentityData();

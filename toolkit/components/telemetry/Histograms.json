@@ -8459,6 +8459,26 @@
     "kind": "count",
     "description": "The number of Sync 1.5 migrations completed by Android Sync."
   },
+  "FENNEC_SYNC_NUMBER_OF_SYNCS_STARTED": {
+    "expires_in_version": "45",
+    "kind": "count",
+    "description": "Counts the number of times that a sync has started."
+  },
+  "FENNEC_SYNC_NUMBER_OF_SYNCS_COMPLETED": {
+    "expires_in_version": "45",
+    "kind": "count",
+    "description": "Counts the number of times that a sync has completed with no errors."
+  },
+  "FENNEC_SYNC_NUMBER_OF_SYNCS_FAILED": {
+    "expires_in_version": "45",
+    "kind": "count",
+    "description": "Counts the number of times that a sync has failed with errors."
+  },
+  "FENNEC_SYNC_NUMBER_OF_SYNCS_FAILED_BACKOFF": {
+    "expires_in_version": "45",
+    "kind": "count",
+    "description": "Counts the number of times that a sync has failed because of trying to sync before server backoff interval has passed."
+  },
   "SLOW_SCRIPT_NOTICE_COUNT": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",

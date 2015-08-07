@@ -16,6 +16,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.background.common.telemetry.TelemetryWrapper;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.background.fxa.SkewHandler;
 import org.mozilla.gecko.browserid.JSONWebTokenUtils;
@@ -43,6 +44,7 @@ import org.mozilla.gecko.sync.delegates.ClientsDataDelegate;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.net.HawkAuthHeaderProvider;
 import org.mozilla.gecko.sync.stage.GlobalSyncStage.Stage;
+import org.mozilla.gecko.sync.telemetry.TelemetryContract;
 import org.mozilla.gecko.tokenserver.TokenServerClient;
 import org.mozilla.gecko.tokenserver.TokenServerClientDelegate;
 import org.mozilla.gecko.tokenserver.TokenServerException;
@@ -88,12 +90,14 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     public void handleSuccess() {
       Logger.info(LOG_TAG, "Sync succeeded.");
       super.handleSuccess();
+      TelemetryWrapper.addToHistogram(TelemetryContract.SYNC_COMPLETED, 1);
     }
 
     @Override
     public void handleError(Exception e) {
       Logger.error(LOG_TAG, "Got exception syncing.", e);
       super.handleError(e);
+      TelemetryWrapper.addToHistogram(TelemetryContract.SYNC_FAILED, 1);
     }
 
     @Override
@@ -403,6 +407,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
         (this.lastSyncRealtimeMillis + MINIMUM_SYNC_DELAY_MILLIS) > SystemClock.elapsedRealtime()) {
       Logger.info(LOG_TAG, "Not syncing FxAccount " + Utils.obfuscateEmail(account.name) +
                            ": minimum interval not met.");
+      TelemetryWrapper.addToHistogram(TelemetryContract.SYNC_FAILED_BACKOFF, 1);
       return;
     }
 
@@ -480,6 +485,8 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
         syncDelegate.handleError(e);
         return;
       }
+
+      TelemetryWrapper.addToHistogram(TelemetryContract.SYNC_STARTED, 1);
 
       final FxAccountLoginStateMachine stateMachine = new FxAccountLoginStateMachine();
       stateMachine.advance(state, StateLabel.Married, new FxADefaultLoginStateMachineDelegate(context, fxAccount) {
