@@ -2635,10 +2635,6 @@ public class BrowserApp extends GeckoApp
     }
 
     private void showFirstrunPager() {
-        // Do not show first run if we're in an Android Restricted Profile
-        if (RestrictedProfiles.isUserRestricted(this)) {
-            return;
-        }
         if (mFirstrunPane == null) {
             final ViewStub firstrunPagerStub = (ViewStub) findViewById(R.id.firstrun_pager_stub);
             mFirstrunPane = (FirstrunPane) firstrunPagerStub.inflate();
