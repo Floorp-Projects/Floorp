@@ -11,7 +11,7 @@
 <script>
 <![CDATA[
 
-SimpleTest.expectAssertions(12);
+SimpleTest.expectAssertions(6, 12);
 
 SimpleTest.waitForExplicitFinish();
 

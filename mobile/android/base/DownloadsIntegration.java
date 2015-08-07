@@ -5,11 +5,11 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.EventCallback;
-import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
 
 import java.io.File;
 import java.lang.IllegalArgumentException;
@@ -108,7 +108,7 @@ public class DownloadsIntegration implements NativeEventListener
                 PackageManager.COMPONENT_ENABLED_STATE_DEFAULT == state);
     }
 
-    @WrapElementForJNI
+    @WrapForJNI
     public static void scanMedia(final String aFile, String aMimeType) {
         String mimeType = aMimeType;
         if (UNKNOWN_MIME_TYPES.contains(mimeType)) {
