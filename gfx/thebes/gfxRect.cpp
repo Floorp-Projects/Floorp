@@ -30,36 +30,6 @@ gfxRect::TransformToQuad(const mozilla::gfx::Matrix4x4 &aMatrix) const
   return gfxQuad(points[0], points[1], points[2], points[3]);
 }
 
-void
-gfxRect::TransformBounds(const mozilla::gfx::Matrix4x4 &aMatrix)
-{
-  gfxPoint quad[4];
-
-  quad[0] = TopLeft();
-  quad[1] = TopRight();
-  quad[2] = BottomLeft();
-  quad[3] = BottomRight();
-
-  quad[0].Transform(aMatrix);
-  double min_x = quad[0].x;
-  double max_x = quad[0].x;
-  double min_y = quad[0].y;
-  double max_y = quad[0].y;
-
-  for (int i=1; i<4; i++) {
-    quad[i].Transform(aMatrix);
-    min_x = std::min(quad[i].x, min_x);
-    max_x = std::max(quad[i].x, max_x);
-    min_y = std::min(quad[i].y, min_y);
-    max_y = std::max(quad[i].y, max_y);
-  }
-
-  x = min_x;
-  y = min_y;
-  width = max_x - min_x;
-  height = max_y - min_y;
-}
-
 static bool
 WithinEpsilonOfInteger(gfxFloat aX, gfxFloat aEpsilon)
 {
