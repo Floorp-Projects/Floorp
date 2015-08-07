@@ -89,6 +89,8 @@ typedef gint (*style_prop_t)(GtkStyle*, const gchar*, gint);
 typedef enum {
   /* Paints a GtkButton. flags is a GtkReliefStyle. */
   MOZ_GTK_BUTTON,
+  /* Paints a button with image and no text */
+  MOZ_GTK_TOOLBAR_BUTTON,
   /* Paints a GtkCheckButton. flags is a boolean, 1=checked, 0=not checked. */
   MOZ_GTK_CHECKBUTTON,
   /* Paints a GtkRadioButton. flags is a boolean, 1=checked, 0=not checked. */
