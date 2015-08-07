@@ -8,7 +8,9 @@ package org.mozilla.gecko.home;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.home.PanelLayout.DatasetBacked;
 import org.mozilla.gecko.home.PanelLayout.PanelView;
-import org.mozilla.gecko.home.RecyclerViewItemClickListener.OnClickListener;
+import org.mozilla.gecko.widget.RecyclerViewClickSupport;
+import org.mozilla.gecko.widget.RecyclerViewClickSupport.OnItemClickListener;
+import org.mozilla.gecko.widget.RecyclerViewClickSupport.OnItemLongClickListener;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -22,7 +24,8 @@ import android.view.View;
  * RecyclerView implementation for grid home panels.
  */
 @SuppressLint("ViewConstructor") // View is only created from code
-public class PanelRecyclerView extends RecyclerView implements DatasetBacked, PanelView, OnClickListener {
+public class PanelRecyclerView extends RecyclerView
+        implements DatasetBacked, PanelView, OnItemClickListener, OnItemLongClickListener {
     private final PanelRecyclerViewAdapter adapter;
     private final GridLayoutManager layoutManager;
     private final PanelViewItemHandler itemHandler;
@@ -69,7 +72,9 @@ public class PanelRecyclerView extends RecyclerView implements DatasetBacked, Pa
         setPadding(outerSpacing, outerSpacing, outerSpacing, outerSpacing);
         setClipToPadding(false);
 
-        addOnItemTouchListener(new RecyclerViewItemClickListener(context, this, this));
+        RecyclerViewClickSupport.addTo(this)
+            .setOnItemClickListener(this)
+            .setOnItemLongClickListener(this);
     }
 
     @Override
@@ -123,7 +128,7 @@ public class PanelRecyclerView extends RecyclerView implements DatasetBacked, Pa
     }
 
     @Override
-    public void onClick(View view, int position) {
+    public void onItemClicked(RecyclerView recyclerView, int position, View v) {
         if (viewConfig.hasHeaderConfig()) {
             if (position == 0) {
                 itemOpenListener.onItemOpen(viewConfig.getHeaderConfig().getUrl(), null);
@@ -137,12 +142,12 @@ public class PanelRecyclerView extends RecyclerView implements DatasetBacked, Pa
     }
 
     @Override
-    public void onLongClick(View view, int position) {
+    public boolean onItemLongClicked(RecyclerView recyclerView, int position, View v) {
         Cursor cursor = adapter.getCursor();
         cursor.moveToPosition(position);
 
-        contextMenuInfo = contextMenuInfoFactory.makeInfoForCursor(view, position, -1, cursor);
-        showContextMenuForChild(PanelRecyclerView.this);
+        contextMenuInfo = contextMenuInfoFactory.makeInfoForCursor(recyclerView, position, -1, cursor);
+        return showContextMenuForChild(PanelRecyclerView.this);
     }
 
     private class PanelSpanSizeLookup extends GridLayoutManager.SpanSizeLookup {

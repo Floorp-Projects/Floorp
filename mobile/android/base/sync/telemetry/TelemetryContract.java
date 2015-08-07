@@ -45,4 +45,12 @@ public class TelemetryContract {
    * Firefox Account credentials.
    */
   public static final String SYNC11_MIGRATIONS_COMPLETED = "FENNEC_SYNC11_MIGRATIONS_COMPLETED";
+
+  public static final String SYNC_STARTED = "FENNEC_SYNC_NUMBER_OF_SYNCS_STARTED";
+
+  public static final String SYNC_COMPLETED = "FENNEC_SYNC_NUMBER_OF_SYNCS_COMPLETED";
+
+  public static final String SYNC_FAILED = "FENNEC_SYNC_NUMBER_OF_SYNCS_FAILED";
+
+  public static final String SYNC_FAILED_BACKOFF = "FENNEC_SYNC_NUMBER_OF_SYNCS_FAILED_BACKOFF";
 }
