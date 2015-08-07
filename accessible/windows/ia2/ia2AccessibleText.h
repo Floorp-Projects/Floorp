@@ -14,6 +14,7 @@
 
 namespace mozilla {
 namespace a11y {
+class HyperTextAccessibleWrap;
 
 class ia2AccessibleText: public IAccessibleText
 {
@@ -116,11 +117,7 @@ public:
   static void InitTextChangeData();
 
 protected:
-  virtual nsresult GetModifiedText(bool aGetInsertedText, nsAString& aText,
-                                   uint32_t *aStartOffset,
-                                   uint32_t *aEndOffset) = 0;
-
-  static StaticRefPtr<Accessible> sLastTextChangeAcc;
+  static StaticRefPtr<HyperTextAccessibleWrap> sLastTextChangeAcc;
   static StaticAutoPtr<nsString> sLastTextChangeString;
   static bool sLastTextChangeWasInsert;
   static uint32_t sLastTextChangeStart;
