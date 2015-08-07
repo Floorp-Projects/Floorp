@@ -22,33 +22,14 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '1.1.270';
-PDFJS.build = 'ccfafea';
+PDFJS.version = '1.1.366';
+PDFJS.build = '9e9df56';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
   'use strict';
 
-/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
-/* Copyright 2012 Mozilla Foundation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-/* globals Cmd, ColorSpace, Dict, MozBlobBuilder, Name, PDFJS, Ref, URL,
-           Promise */
 
-'use strict';
 
 var globalScope = (typeof window === 'undefined') ? this : window;
 
@@ -1416,14 +1397,9 @@ var ChunkedStream = (function ChunkedStreamClosure() {
     },
 
     nextEmptyChunk: function ChunkedStream_nextEmptyChunk(beginChunk) {
-      var chunk, n;
-      for (chunk = beginChunk, n = this.numChunks; chunk < n; ++chunk) {
-        if (!this.loadedChunks[chunk]) {
-          return chunk;
-        }
-      }
-      // Wrap around to beginning
-      for (chunk = 0; chunk < beginChunk; ++chunk) {
+      var chunk, numChunks = this.numChunks;
+      for (var i = 0; i < numChunks; ++i) {
+        chunk = (beginChunk + i) % numChunks; // Wrap around to beginning
         if (!this.loadedChunks[chunk]) {
           return chunk;
         }
@@ -1700,7 +1676,7 @@ var ChunkedStreamManager = (function ChunkedStreamManagerClosure() {
       this.requestChunks(chunksToRequest, callback);
     },
 
-    // Groups a sorted array of chunks into as few continguous larger
+    // Groups a sorted array of chunks into as few contiguous larger
     // chunks as possible
     groupChunks: function ChunkedStreamManager_groupChunks(chunks) {
       var groupedChunks = [];
@@ -1825,15 +1801,6 @@ var ChunkedStreamManager = (function ChunkedStreamManagerClosure() {
     },
 
     getEndChunk: function ChunkedStreamManager_getEndChunk(end) {
-      if (end % this.chunkSize === 0) {
-        return end / this.chunkSize;
-      }
-
-      // 0 -> 0
-      // 1 -> 1
-      // 99 -> 1
-      // 100 -> 1
-      // 101 -> 2
       var chunk = Math.floor((end - 1) / this.chunkSize) + 1;
       return chunk;
     }
@@ -2137,11 +2104,6 @@ var Page = (function PageClosure() {
       return shadow(this, 'view', cropBox);
     },
 
-    get annotationRefs() {
-      return shadow(this, 'annotationRefs',
-                    this.getInheritedPageProp('Annots'));
-    },
-
     get rotate() {
       var rotate = this.getInheritedPageProp('Rotate') || 0;
       // Normalize rotation so it's a multiple of 90 and between 0 and 270
@@ -2287,18 +2249,20 @@ var Page = (function PageClosure() {
       var annotations = this.annotations;
       var annotationsData = [];
       for (var i = 0, n = annotations.length; i < n; ++i) {
-        annotationsData.push(annotations[i].getData());
+        annotationsData.push(annotations[i].data);
       }
       return annotationsData;
     },
 
     get annotations() {
       var annotations = [];
-      var annotationRefs = (this.annotationRefs || []);
+      var annotationRefs = this.getInheritedPageProp('Annots') || [];
+      var annotationFactory = new AnnotationFactory();
       for (var i = 0, n = annotationRefs.length; i < n; ++i) {
         var annotationRef = annotationRefs[i];
-        var annotation = Annotation.fromRef(this.xref, annotationRef);
-        if (annotation) {
+        var annotation = annotationFactory.create(this.xref, annotationRef);
+        if (annotation &&
+            (annotation.isViewable() || annotation.isPrintable())) {
           annotations.push(annotation);
         }
       }
@@ -3037,7 +3001,7 @@ var Catalog = (function CatalogClosure() {
       }
 
       var xref = this.xref;
-      var dest, nameTreeRef, nameDictionaryRef;
+      var dest = null, nameTreeRef, nameDictionaryRef;
       var obj = this.catDict.get('Names');
       if (obj && obj.has('Dests')) {
         nameTreeRef = obj.getRaw('Dests');
@@ -3045,17 +3009,11 @@ var Catalog = (function CatalogClosure() {
         nameDictionaryRef = this.catDict.get('Dests');
       }
 
-      if (nameDictionaryRef) {
-        // reading simple destination dictionary
-        obj = nameDictionaryRef;
-        obj.forEach(function catalogForEach(key, value) {
-          if (!value) {
-            return;
-          }
-          if (key === destinationId) {
-            dest = fetchDestination(value);
-          }
-        });
+      if (nameDictionaryRef) { // Simple destination dictionary.
+        var value = nameDictionaryRef.get(destinationId);
+        if (value) {
+          dest = fetchDestination(value);
+        }
       }
       if (nameTreeRef) {
         var nameTree = new NameTree(nameTreeRef, xref);
@@ -3092,6 +3050,19 @@ var Catalog = (function CatalogClosure() {
       var obj = this.catDict.get('Names');
 
       var javaScript = [];
+      function appendIfJavaScriptDict(jsDict) {
+        var type = jsDict.get('S');
+        if (!isName(type) || type.name !== 'JavaScript') {
+          return;
+        }
+        var js = jsDict.get('JS');
+        if (isStream(js)) {
+          js = bytesToString(js.getBytes());
+        } else if (!isString(js)) {
+          return;
+        }
+        javaScript.push(stringToPDFString(js));
+      }
       if (obj && obj.has('JavaScript')) {
         var nameTree = new NameTree(obj.getRaw('JavaScript'), xref);
         var names = nameTree.getAll();
@@ -3102,36 +3073,25 @@ var Catalog = (function CatalogClosure() {
           // We don't really use the JavaScript right now. This code is
           // defensive so we don't cause errors on document load.
           var jsDict = names[name];
-          if (!isDict(jsDict)) {
-            continue;
+          if (isDict(jsDict)) {
+            appendIfJavaScriptDict(jsDict);
           }
-          var type = jsDict.get('S');
-          if (!isName(type) || type.name !== 'JavaScript') {
-            continue;
-          }
-          var js = jsDict.get('JS');
-          if (!isString(js) && !isStream(js)) {
-            continue;
-          }
-          if (isStream(js)) {
-            js = bytesToString(js.getBytes());
-          }
-          javaScript.push(stringToPDFString(js));
         }
       }
 
       // Append OpenAction actions to javaScript array
       var openactionDict = this.catDict.get('OpenAction');
-      if (isDict(openactionDict)) {
-        var objType = openactionDict.get('Type');
+      if (isDict(openactionDict, 'Action')) {
         var actionType = openactionDict.get('S');
-        var action = openactionDict.get('N');
-        var isPrintAction = (isName(objType) && objType.name === 'Action' &&
-                            isName(actionType) && actionType.name === 'Named' &&
-                            isName(action) && action.name === 'Print');
-
-        if (isPrintAction) {
-          javaScript.push('print(true);');
+        if (isName(actionType) && actionType.name === 'Named') {
+          // The named Print action is not a part of the PDF 1.7 specification,
+          // but is supported by many PDF readers/writers (including Adobe's).
+          var action = openactionDict.get('N');
+          if (isName(action) && action.name === 'Print') {
+            javaScript.push('print({});');
+          }
+        } else {
+          appendIfJavaScriptDict(openactionDict);
         }
       }
 
@@ -3633,7 +3593,7 @@ var XRef = (function XRefClosure() {
         } else if ((m = /^(\d+)\s+(\d+)\s+obj\b/.exec(token))) {
           if (typeof this.entries[m[1]] === 'undefined') {
             this.entries[m[1]] = {
-              offset: position,
+              offset: position - stream.start,
               gen: m[2] | 0,
               uncompressed: true
             };
@@ -3646,8 +3606,8 @@ var XRef = (function XRefClosure() {
           var xrefTagOffset = skipUntil(content, 0, xrefBytes);
           if (xrefTagOffset < contentLength &&
               content[xrefTagOffset + 5] < 64) {
-            xrefStms.push(position);
-            this.xrefstms[position] = 1; // don't read it recursively
+            xrefStms.push(position - stream.start);
+            this.xrefstms[position - stream.start] = 1; // Avoid recursion
           }
 
           position += contentLength;
@@ -3966,7 +3926,7 @@ var NameTree = (function NameTreeClosure() {
         var names = obj.get('Names');
         if (names) {
           for (i = 0, n = names.length; i < n; i += 2) {
-            dict[names[i]] = xref.fetchIfRef(names[i + 1]);
+            dict[xref.fetchIfRef(names[i])] = xref.fetchIfRef(names[i + 1]);
           }
         }
       }
@@ -4005,9 +3965,9 @@ var NameTree = (function NameTreeClosure() {
           var kid = xref.fetchIfRef(kids[m]);
           var limits = kid.get('Limits');
 
-          if (destinationId < limits[0]) {
+          if (destinationId < xref.fetchIfRef(limits[0])) {
             r = m - 1;
-          } else if (destinationId > limits[1]) {
+          } else if (destinationId > xref.fetchIfRef(limits[1])) {
             l = m + 1;
           } else {
             kidsOrNames = xref.fetchIfRef(kids[m]);
@@ -4031,9 +3991,9 @@ var NameTree = (function NameTreeClosure() {
           // Check only even indices (0, 2, 4, ...) because the
           // odd indices contain the actual D array.
           m = (l + r) & ~1;
-          if (destinationId < names[m]) {
+          if (destinationId < xref.fetchIfRef(names[m])) {
             r = m - 2;
-          } else if (destinationId > names[m]) {
+          } else if (destinationId > xref.fetchIfRef(names[m])) {
             l = m + 2;
           } else {
             return xref.fetchIfRef(names[m + 1]);
@@ -4381,7 +4341,54 @@ var ExpertSubsetCharset = [
 
 
 var DEFAULT_ICON_SIZE = 22; // px
-var SUPPORTED_TYPES = ['Link', 'Text', 'Widget'];
+
+/**
+ * @constructor
+ */
+function AnnotationFactory() {}
+AnnotationFactory.prototype = {
+  /**
+   * @param {XRef} xref
+   * @param {Object} ref
+   * @returns {Annotation}
+   */
+  create: function AnnotationFactory_create(xref, ref) {
+    var dict = xref.fetchIfRef(ref);
+    if (!isDict(dict)) {
+      return;
+    }
+
+    // Determine the annotation's subtype.
+    var subtype = dict.get('Subtype');
+    subtype = isName(subtype) ? subtype.name : '';
+
+    // Return the right annotation object based on the subtype and field type.
+    var parameters = {
+      dict: dict,
+      ref: ref
+    };
+
+    switch (subtype) {
+      case 'Link':
+        return new LinkAnnotation(parameters);
+
+      case 'Text':
+        return new TextAnnotation(parameters);
+
+      case 'Widget':
+        var fieldType = Util.getInheritableProperty(dict, 'FT');
+        if (isName(fieldType) && fieldType.name === 'Tx') {
+          return new TextWidgetAnnotation(parameters);
+        }
+        return new WidgetAnnotation(parameters);
+
+      default:
+        warn('Unimplemented annotation type "' + subtype + '", ' +
+             'falling back to base annotation');
+        return new Annotation(parameters);
+    }
+  }
+};
 
 var Annotation = (function AnnotationClosure() {
   // 12.5.5: Algorithm: Appearance streams
@@ -4434,32 +4441,13 @@ var Annotation = (function AnnotationClosure() {
     var data = this.data = {};
 
     data.subtype = dict.get('Subtype').name;
-    var rect = dict.get('Rect') || [0, 0, 0, 0];
-    data.rect = Util.normalizeRect(rect);
     data.annotationFlags = dict.get('F');
 
-    var color = dict.get('C');
-    if (!color) {
-      // The PDF spec does not mention how a missing color array is interpreted.
-      // Adobe Reader seems to default to black in this case.
-      data.color = [0, 0, 0];
-    } else if (isArray(color)) {
-      switch (color.length) {
-        case 0:
-          // Empty array denotes transparent border.
-          data.color = null;
-          break;
-        case 1:
-          // TODO: implement DeviceGray
-          break;
-        case 3:
-          data.color = color;
-          break;
-        case 4:
-          // TODO: implement DeviceCMYK
-          break;
-      }
-    }
+    this.setRectangle(dict.get('Rect'));
+    data.rect = this.rectangle;
+
+    this.setColor(dict.get('C'));
+    data.color = this.color;
 
     this.borderStyle = data.borderStyle = new AnnotationBorderStyle();
     this.setBorderStyle(dict);
@@ -4470,6 +4458,63 @@ var Annotation = (function AnnotationClosure() {
   }
 
   Annotation.prototype = {
+    /**
+     * Set the rectangle.
+     *
+     * @public
+     * @memberof Annotation
+     * @param {Array} rectangle - The rectangle array with exactly four entries
+     */
+    setRectangle: function Annotation_setRectangle(rectangle) {
+      if (isArray(rectangle) && rectangle.length === 4) {
+        this.rectangle = Util.normalizeRect(rectangle);
+      } else {
+        this.rectangle = [0, 0, 0, 0];
+      }
+    },
+
+    /**
+     * Set the color and take care of color space conversion.
+     *
+     * @public
+     * @memberof Annotation
+     * @param {Array} color - The color array containing either 0
+     *                        (transparent), 1 (grayscale), 3 (RGB) or
+     *                        4 (CMYK) elements
+     */
+    setColor: function Annotation_setColor(color) {
+      var rgbColor = new Uint8Array(3); // Black in RGB color space (default)
+      if (!isArray(color)) {
+        this.color = rgbColor;
+        return;
+      }
+
+      switch (color.length) {
+        case 0: // Transparent, which we indicate with a null value
+          this.color = null;
+          break;
+
+        case 1: // Convert grayscale to RGB
+          ColorSpace.singletons.gray.getRgbItem(color, 0, rgbColor, 0);
+          this.color = rgbColor;
+          break;
+
+        case 3: // Convert RGB percentages to RGB
+          ColorSpace.singletons.rgb.getRgbItem(color, 0, rgbColor, 0);
+          this.color = rgbColor;
+          break;
+
+        case 4: // Convert CMYK to RGB
+          ColorSpace.singletons.cmyk.getRgbItem(color, 0, rgbColor, 0);
+          this.color = rgbColor;
+          break;
+
+        default:
+          this.color = rgbColor;
+          break;
+      }
+    },
+
     /**
      * Set the border style (as AnnotationBorderStyle object).
      *
@@ -4497,7 +4542,6 @@ var Annotation = (function AnnotationClosure() {
           this.borderStyle.setHorizontalCornerRadius(array[0]);
           this.borderStyle.setVerticalCornerRadius(array[1]);
           this.borderStyle.setWidth(array[2]);
-          this.borderStyle.setStyle('S');
 
           if (array.length === 4) { // Dash array available
             this.borderStyle.setDashArray(array[3]);
@@ -4513,19 +4557,11 @@ var Annotation = (function AnnotationClosure() {
       }
     },
 
-    getData: function Annotation_getData() {
-      return this.data;
-    },
-
     isInvisible: function Annotation_isInvisible() {
       var data = this.data;
-      if (data && SUPPORTED_TYPES.indexOf(data.subtype) !== -1) {
-        return false;
-      } else {
-        return !!(data &&
-                  data.annotationFlags &&            // Default: not invisible
-                  data.annotationFlags & 0x1);       // Invisible
-      }
+      return !!(data &&
+                data.annotationFlags &&            // Default: not invisible
+                data.annotationFlags & 0x1);       // Invisible
     },
 
     isViewable: function Annotation_isViewable() {
@@ -4598,70 +4634,6 @@ var Annotation = (function AnnotationClosure() {
               return opList;
             });
         });
-    }
-  };
-
-  Annotation.getConstructor =
-      function Annotation_getConstructor(subtype, fieldType) {
-
-    if (!subtype) {
-      return;
-    }
-
-    // TODO(mack): Implement FreeText annotations
-    if (subtype === 'Link') {
-      return LinkAnnotation;
-    } else if (subtype === 'Text') {
-      return TextAnnotation;
-    } else if (subtype === 'Widget') {
-      if (!fieldType) {
-        return;
-      }
-
-      if (fieldType === 'Tx') {
-        return TextWidgetAnnotation;
-      } else {
-        return WidgetAnnotation;
-      }
-    } else {
-      return Annotation;
-    }
-  };
-
-  Annotation.fromRef = function Annotation_fromRef(xref, ref) {
-
-    var dict = xref.fetchIfRef(ref);
-    if (!isDict(dict)) {
-      return;
-    }
-
-    var subtype = dict.get('Subtype');
-    subtype = isName(subtype) ? subtype.name : '';
-    if (!subtype) {
-      return;
-    }
-
-    var fieldType = Util.getInheritableProperty(dict, 'FT');
-    fieldType = isName(fieldType) ? fieldType.name : '';
-
-    var Constructor = Annotation.getConstructor(subtype, fieldType);
-    if (!Constructor) {
-      return;
-    }
-
-    var params = {
-      dict: dict,
-      ref: ref,
-    };
-
-    var annotation = new Constructor(params);
-
-    if (annotation.isViewable() || annotation.isPrintable()) {
-      return annotation;
-    } else {
-      if (SUPPORTED_TYPES.indexOf(subtype) === -1) {
-        warn('unimplemented annotation type: ' + subtype);
-      }
     }
   };
 
@@ -6493,7 +6465,7 @@ var ColorSpace = (function ColorSpaceClosure() {
    * @param {Number} n Number of components the color space has.
    */
   ColorSpace.isDefaultDecode = function ColorSpace_isDefaultDecode(decode, n) {
-    if (!decode) {
+    if (!isArray(decode)) {
       return true;
     }
 
@@ -9431,7 +9403,7 @@ var CipherTransformFactory = (function CipherTransformFactoryClosure() {
 })();
 
 
-var PatternType = {
+var ShadingType = {
   FUNCTION_BASED: 1,
   AXIAL: 2,
   RADIAL: 3,
@@ -9463,17 +9435,17 @@ var Pattern = (function PatternClosure() {
 
     try {
       switch (type) {
-        case PatternType.AXIAL:
-        case PatternType.RADIAL:
+        case ShadingType.AXIAL:
+        case ShadingType.RADIAL:
           // Both radial and axial shadings are handled by RadialAxial shading.
           return new Shadings.RadialAxial(dict, matrix, xref, res);
-        case PatternType.FREE_FORM_MESH:
-        case PatternType.LATTICE_FORM_MESH:
-        case PatternType.COONS_PATCH_MESH:
-        case PatternType.TENSOR_PATCH_MESH:
+        case ShadingType.FREE_FORM_MESH:
+        case ShadingType.LATTICE_FORM_MESH:
+        case ShadingType.COONS_PATCH_MESH:
+        case ShadingType.TENSOR_PATCH_MESH:
           return new Shadings.Mesh(shading, matrix, xref, res);
         default:
-          throw new Error('Unknown PatternType: ' + type);
+          throw new Error('Unsupported ShadingType: ' + type);
       }
     } catch (ex) {
       if (ex instanceof MissingDataException) {
@@ -9521,7 +9493,7 @@ Shadings.RadialAxial = (function RadialAxialClosure() {
       extendEnd = extendArr[1];
     }
 
-    if (this.shadingType === PatternType.RADIAL &&
+    if (this.shadingType === ShadingType.RADIAL &&
        (!extendStart || !extendEnd)) {
       // Radial gradient only currently works if either circle is fully within
       // the other circle.
@@ -9596,13 +9568,13 @@ Shadings.RadialAxial = (function RadialAxialClosure() {
       var coordsArr = this.coordsArr;
       var shadingType = this.shadingType;
       var type, p0, p1, r0, r1;
-      if (shadingType === PatternType.AXIAL) {
+      if (shadingType === ShadingType.AXIAL) {
         p0 = [coordsArr[0], coordsArr[1]];
         p1 = [coordsArr[2], coordsArr[3]];
         r0 = null;
         r1 = null;
         type = 'axial';
-      } else if (shadingType === PatternType.RADIAL) {
+      } else if (shadingType === ShadingType.RADIAL) {
         p0 = [coordsArr[0], coordsArr[1]];
         p1 = [coordsArr[3], coordsArr[4]];
         r0 = coordsArr[2];
@@ -9636,7 +9608,7 @@ Shadings.Mesh = (function MeshClosure() {
 
     var numComps = context.numComps;
     this.tmpCompsBuf = new Float32Array(numComps);
-    var csNumComps = context.colorSpace;
+    var csNumComps = context.colorSpace.numComps;
     this.tmpCsCompsBuf = context.colorFn ? new Float32Array(csNumComps) :
                                            this.tmpCompsBuf;
   }
@@ -9756,13 +9728,10 @@ Shadings.Mesh = (function MeshClosure() {
 
       reader.align();
     }
-
-    var psPacked = new Int32Array(ps);
-
     mesh.figures.push({
       type: 'triangles',
-      coords: psPacked,
-      colors: psPacked
+      coords: new Int32Array(ps),
+      colors: new Int32Array(ps),
     });
   }
 
@@ -9777,13 +9746,10 @@ Shadings.Mesh = (function MeshClosure() {
       coords.push(coord);
       colors.push(color);
     }
-
-    var psPacked = new Int32Array(ps);
-
     mesh.figures.push({
       type: 'lattice',
-      coords: psPacked,
-      colors: psPacked,
+      coords: new Int32Array(ps),
+      colors: new Int32Array(ps),
       verticesPerRow: verticesPerRow
     });
   }
@@ -9925,29 +9891,32 @@ Shadings.Mesh = (function MeshClosure() {
           break;
         case 1:
           tmp1 = ps[12]; tmp2 = ps[13]; tmp3 = ps[14]; tmp4 = ps[15];
-          ps[12] = pi + 5; ps[13] = pi + 4;  ps[14] = pi + 3;  ps[15] = pi + 2;
-          ps[ 8] = pi + 6; /* values for 5, 6, 9, 10 are    */ ps[11] = pi + 1;
-          ps[ 4] = pi + 7; /* calculated below              */ ps[ 7] = pi;
-          ps[ 0] = tmp1;   ps[ 1] = tmp2;    ps[ 2] = tmp3;    ps[ 3] = tmp4;
+          ps[12] = tmp4; ps[13] = pi + 0;  ps[14] = pi + 1;  ps[15] = pi + 2;
+          ps[ 8] = tmp3; /* values for 5, 6, 9, 10 are    */ ps[11] = pi + 3;
+          ps[ 4] = tmp2; /* calculated below              */ ps[ 7] = pi + 4;
+          ps[ 0] = tmp1; ps[ 1] = pi + 7;   ps[ 2] = pi + 6; ps[ 3] = pi + 5;
           tmp1 = cs[2]; tmp2 = cs[3];
-          cs[2] = ci + 1; cs[3] = ci;
-          cs[0] = tmp1;   cs[1] = tmp2;
+          cs[2] = tmp2;   cs[3] = ci;
+          cs[0] = tmp1;   cs[1] = ci + 1;
           break;
         case 2:
-          ps[12] = ps[15]; ps[13] = pi + 7; ps[14] = pi + 6;   ps[15] = pi + 5;
-          ps[ 8] = ps[11]; /* values for 5, 6, 9, 10 are    */ ps[11] = pi + 4;
-          ps[ 4] = ps[7];  /* calculated below              */ ps[ 7] = pi + 3;
-          ps[ 0] = ps[3];  ps[ 1] = pi;     ps[ 2] = pi + 1;   ps[ 3] = pi + 2;
-          cs[2] = cs[3]; cs[3] = ci + 1;
-          cs[0] = cs[1]; cs[1] = ci;
+          tmp1 = ps[15];
+          tmp2 = ps[11];
+          ps[12] = ps[3];  ps[13] = pi + 0; ps[14] = pi + 1;   ps[15] = pi + 2;
+          ps[ 8] = ps[7];  /* values for 5, 6, 9, 10 are    */ ps[11] = pi + 3;
+          ps[ 4] = tmp2;   /* calculated below              */ ps[ 7] = pi + 4;
+          ps[ 0] = tmp1;  ps[ 1] = pi + 7;   ps[ 2] = pi + 6;  ps[ 3] = pi + 5;
+          tmp1 = cs[3];
+          cs[2] = cs[1]; cs[3] = ci;
+          cs[0] = tmp1;  cs[1] = ci + 1;
           break;
         case 3:
-          ps[12] = ps[0];  ps[13] = ps[1];   ps[14] = ps[2];   ps[15] = ps[3];
-          ps[ 8] = pi;     /* values for 5, 6, 9, 10 are    */ ps[11] = pi + 7;
-          ps[ 4] = pi + 1; /* calculated below              */ ps[ 7] = pi + 6;
-          ps[ 0] = pi + 2; ps[ 1] = pi + 3;  ps[ 2] = pi + 4;  ps[ 3] = pi + 5;
-          cs[2] = cs[0]; cs[3] = cs[1];
-          cs[0] = ci;    cs[1] = ci + 1;
+          ps[12] = ps[0];  ps[13] = pi + 0;   ps[14] = pi + 1; ps[15] = pi + 2;
+          ps[ 8] = ps[1];  /* values for 5, 6, 9, 10 are    */ ps[11] = pi + 3;
+          ps[ 4] = ps[2];  /* calculated below              */ ps[ 7] = pi + 4;
+          ps[ 0] = ps[3];  ps[ 1] = pi + 7;   ps[ 2] = pi + 6; ps[ 3] = pi + 5;
+          cs[2] = cs[0]; cs[3] = ci;
+          cs[0] = cs[1]; cs[1] = ci + 1;
           break;
       }
       // set p11, p12, p21, p22
@@ -10032,29 +10001,32 @@ Shadings.Mesh = (function MeshClosure() {
           break;
         case 1:
           tmp1 = ps[12]; tmp2 = ps[13]; tmp3 = ps[14]; tmp4 = ps[15];
-          ps[12] = pi + 5; ps[13] = pi + 4;  ps[14] = pi + 3;  ps[15] = pi + 2;
-          ps[ 8] = pi + 6; ps[ 9] = pi + 11; ps[10] = pi + 10; ps[11] = pi + 1;
-          ps[ 4] = pi + 7; ps[ 5] = pi + 8;  ps[ 6] = pi + 9;  ps[ 7] = pi;
-          ps[ 0] = tmp1;   ps[ 1] = tmp2;    ps[ 2] = tmp3;    ps[ 3] = tmp4;
+          ps[12] = tmp4;   ps[13] = pi + 0;  ps[14] = pi + 1;  ps[15] = pi + 2;
+          ps[ 8] = tmp3;   ps[ 9] = pi + 9;  ps[10] = pi + 10; ps[11] = pi + 3;
+          ps[ 4] = tmp2;   ps[ 5] = pi + 8;  ps[ 6] = pi + 11; ps[ 7] = pi + 4;
+          ps[ 0] = tmp1;   ps[ 1] = pi + 7;  ps[ 2] = pi + 6;  ps[ 3] = pi + 5;
           tmp1 = cs[2]; tmp2 = cs[3];
-          cs[2] = ci + 1; cs[3] = ci;
-          cs[0] = tmp1;   cs[1] = tmp2;
+          cs[2] = tmp2;   cs[3] = ci;
+          cs[0] = tmp1;   cs[1] = ci + 1;
           break;
         case 2:
-          ps[12] = ps[15]; ps[13] = pi + 7; ps[14] = pi + 6;  ps[15] = pi + 5;
-          ps[ 8] = ps[11]; ps[ 9] = pi + 8; ps[10] = pi + 11; ps[11] = pi + 4;
-          ps[ 4] = ps[7];  ps[ 5] = pi + 9; ps[ 6] = pi + 10; ps[ 7] = pi + 3;
-          ps[ 0] = ps[3];  ps[ 1] = pi;     ps[ 2] = pi + 1;  ps[ 3] = pi + 2;
-          cs[2] = cs[3]; cs[3] = ci + 1;
-          cs[0] = cs[1]; cs[1] = ci;
+          tmp1 = ps[15];
+          tmp2 = ps[11];
+          ps[12] = ps[3]; ps[13] = pi + 0; ps[14] = pi + 1;  ps[15] = pi + 2;
+          ps[ 8] = ps[7]; ps[ 9] = pi + 9; ps[10] = pi + 10; ps[11] = pi + 3;
+          ps[ 4] = tmp2;  ps[ 5] = pi + 8; ps[ 6] = pi + 11; ps[ 7] = pi + 4;
+          ps[ 0] = tmp1;  ps[ 1] = pi + 7; ps[ 2] = pi + 6;  ps[ 3] = pi + 5;
+          tmp1 = cs[3];
+          cs[2] = cs[1]; cs[3] = ci;
+          cs[0] = tmp1;  cs[1] = ci + 1;
           break;
         case 3:
-          ps[12] = ps[0];  ps[13] = ps[1];   ps[14] = ps[2];   ps[15] = ps[3];
-          ps[ 8] = pi;     ps[ 9] = pi + 9;  ps[10] = pi + 8;  ps[11] = pi + 7;
-          ps[ 4] = pi + 1; ps[ 5] = pi + 10; ps[ 6] = pi + 11; ps[ 7] = pi + 6;
-          ps[ 0] = pi + 2; ps[ 1] = pi + 3;  ps[ 2] = pi + 4;  ps[ 3] = pi + 5;
-          cs[2] = cs[0]; cs[3] = cs[1];
-          cs[0] = ci;    cs[1] = ci + 1;
+          ps[12] = ps[0];  ps[13] = pi + 0;  ps[14] = pi + 1;  ps[15] = pi + 2;
+          ps[ 8] = ps[1];  ps[ 9] = pi + 9;  ps[10] = pi + 10; ps[11] = pi + 3;
+          ps[ 4] = ps[2];  ps[ 5] = pi + 8;  ps[ 6] = pi + 11; ps[ 7] = pi + 4;
+          ps[ 0] = ps[3];  ps[ 1] = pi + 7;  ps[ 2] = pi + 6;  ps[ 3] = pi + 5;
+          cs[2] = cs[0]; cs[3] = ci;
+          cs[0] = cs[1]; cs[1] = ci + 1;
           break;
       }
       mesh.figures.push({
@@ -10143,19 +10115,19 @@ Shadings.Mesh = (function MeshClosure() {
 
     var patchMesh = false;
     switch (this.shadingType) {
-      case PatternType.FREE_FORM_MESH:
+      case ShadingType.FREE_FORM_MESH:
         decodeType4Shading(this, reader);
         break;
-      case PatternType.LATTICE_FORM_MESH:
+      case ShadingType.LATTICE_FORM_MESH:
         var verticesPerRow = dict.get('VerticesPerRow') | 0;
         assert(verticesPerRow >= 2, 'Invalid VerticesPerRow');
         decodeType5Shading(this, reader, verticesPerRow);
         break;
-      case PatternType.COONS_PATCH_MESH:
+      case ShadingType.COONS_PATCH_MESH:
         decodeType6Shading(this, reader);
         patchMesh = true;
         break;
-      case PatternType.TENSOR_PATCH_MESH:
+      case ShadingType.TENSOR_PATCH_MESH:
         decodeType7Shading(this, reader);
         patchMesh = true;
         break;
@@ -14339,6 +14311,13 @@ var GlyphMapForStandardFonts = {
   '3316': 578, '3379': 42785, '3393': 1159, '3416': 8377
 };
 
+// The glyph map for ArialBlack differs slightly from the glyph map used for
+// other well-known standard fonts. Hence we use this (incomplete) CID to GID
+// mapping to adjust the glyph map for non-embedded ArialBlack fonts.
+var SupplementalGlyphMapForArialBlack = {
+  '227': 322, '264': 261, '291': 346,
+};
+
 // Some characters, e.g. copyrightserif, are mapped to the private use area and
 // might not be displayed using standard fonts. Mapping/hacking well-known chars
 // to the similar equivalents in the normal characters range.
@@ -16347,8 +16326,13 @@ var Font = (function FontClosure() {
         // Standard fonts might be embedded as CID font without glyph mapping.
         // Building one based on GlyphMapForStandardFonts.
         var map = [];
-        for (var code in GlyphMapForStandardFonts) {
-          map[+code] = GlyphMapForStandardFonts[code];
+        for (charCode in GlyphMapForStandardFonts) {
+          map[+charCode] = GlyphMapForStandardFonts[charCode];
+        }
+        if (/ArialBlack/i.test(name)) {
+          for (charCode in SupplementalGlyphMapForArialBlack) {
+            map[+charCode] = SupplementalGlyphMapForArialBlack[charCode];
+          }
         }
         var isIdentityUnicode = this.toUnicode instanceof IdentityToUnicodeMap;
         if (!isIdentityUnicode) {
@@ -17872,7 +17856,7 @@ var Font = (function FontClosure() {
       var isTrueType = !tables['CFF '];
       if (!isTrueType) {
         // OpenType font
-        if (header.version === 'OTTO' ||
+        if ((header.version === 'OTTO' && properties.type !== 'CIDFontType2') ||
             !tables.head || !tables.hhea || !tables.maxp || !tables.post) {
           // no major tables: throwing everything at CFFFont
           cffFile = new Stream(tables['CFF '].data);
@@ -29889,6 +29873,16 @@ var Parser = (function ParserClosure() {
         this.buf2 = this.lexer.getObj();
       }
     },
+    tryShift: function Parser_tryShift() {
+      try {
+        this.shift();
+        return true;
+      } catch (e) {
+        // Upon failure, the caller should reset this.lexer.pos to a known good
+        // state and call this.shift() twice to reset the buffers.
+        return false;
+      }
+    },
     getObj: function Parser_getObj(cipherTransform) {
       var buf1 = this.buf1;
       this.shift();
@@ -30262,9 +30256,10 @@ var Parser = (function ParserClosure() {
       stream.pos = pos + length;
       lexer.nextChar();
 
-      this.shift(); // '>>'
-      this.shift(); // 'stream'
-      if (!isCmd(this.buf1, 'endstream')) {
+      // Shift '>>' and check whether the new object marks the end of the stream
+      if (this.tryShift() && isCmd(this.buf2, 'endstream')) {
+        this.shift(); // 'stream'
+      } else {
         // bad stream length, scanning for endstream
         stream.pos = pos;
         var SCAN_BLOCK_SIZE = 2048;
@@ -30496,6 +30491,11 @@ var Lexer = (function LexerClosure() {
       if (ch === 0x2D) { // '-'
         sign = -1;
         ch = this.nextChar();
+
+        if (ch === 0x2D) { // '-'
+          // Ignore double negative (this is consistent with Adobe Reader).
+          ch = this.nextChar();
+        }
       } else if (ch === 0x2B) { // '+'
         ch = this.nextChar();
       }
@@ -30674,9 +30674,8 @@ var Lexer = (function LexerClosure() {
           strBuf.push(String.fromCharCode(ch));
         }
       }
-      if (strBuf.length > 128) {
-        error('Warning: name token is longer than allowed by the spec: ' +
-              strBuf.length);
+      if (strBuf.length > 127) {
+        warn('name token is longer than allowed by the spec: ' + strBuf.length);
       }
       return Name.get(strBuf.join(''));
     },
@@ -32011,7 +32010,8 @@ var JpegStream = (function JpegStreamClosure() {
   JpegStream.prototype.isNativelySupported =
       function JpegStream_isNativelySupported(xref, res) {
     var cs = ColorSpace.parse(this.dict.get('ColorSpace', 'CS'), xref, res);
-    return cs.name === 'DeviceGray' || cs.name === 'DeviceRGB';
+    return (cs.name === 'DeviceGray' || cs.name === 'DeviceRGB') &&
+           cs.isDefaultDecode(this.dict.get('Decode', 'D'));
   };
   /**
    * Checks if the image can be decoded by the browser.
@@ -32019,8 +32019,8 @@ var JpegStream = (function JpegStreamClosure() {
   JpegStream.prototype.isNativelyDecodable =
       function JpegStream_isNativelyDecodable(xref, res) {
     var cs = ColorSpace.parse(this.dict.get('ColorSpace', 'CS'), xref, res);
-    var numComps = cs.numComps;
-    return numComps === 1 || numComps === 3;
+    return (cs.numComps === 1 || cs.numComps === 3) &&
+           cs.isDefaultDecode(this.dict.get('Decode', 'D'));
   };
 
   return JpegStream;
@@ -38859,30 +38859,6 @@ var bidi = PDFJS.bidi = (function bidiClosure() {
   return bidi;
 })();
 
-/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
-
-/* Copyright 2014 Opera Software ASA
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- *
- * Based on https://code.google.com/p/smhasher/wiki/MurmurHash3.
- * Hashes roughly 100 KB per millisecond on i7 3.4 GHz.
- */
-/* globals Uint32ArrayView */
-
-'use strict';
 
 var MurmurHash3_64 = (function MurmurHash3_64Closure (seed) {
   // Workaround for missing math precison in JS.

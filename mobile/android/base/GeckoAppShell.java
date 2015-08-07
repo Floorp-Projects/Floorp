@@ -41,7 +41,6 @@ import org.mozilla.gecko.mozglue.ContextUtils;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.mozglue.JNITarget;
 import org.mozilla.gecko.mozglue.RobocopTarget;
-import org.mozilla.gecko.mozglue.generatorannotations.OptionalGeneratedParameter;
 import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
 import org.mozilla.gecko.overlays.ui.ShareDialog;
 import org.mozilla.gecko.prompts.PromptService;
@@ -1098,10 +1097,10 @@ public class GeckoAppShell
     @WrapElementForJNI
     public static boolean openUriExternal(String targetURI,
                                           String mimeType,
-              @OptionalGeneratedParameter String packageName,
-              @OptionalGeneratedParameter String className,
-              @OptionalGeneratedParameter String action,
-              @OptionalGeneratedParameter String title) {
+                                          String packageName,
+                                          String className,
+                                          String action,
+                                          String title) {
         final Context context = getContext();
         final Intent intent = getOpenURIIntent(context, targetURI,
                                                mimeType, action, title);

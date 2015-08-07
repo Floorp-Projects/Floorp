@@ -5,9 +5,8 @@
 const TEST_BASE_HTTP = "http://example.com/browser/browser/devtools/commandline/test/";
 const TEST_BASE_HTTPS = "https://example.com/browser/browser/devtools/commandline/test/";
 
-let { require } =
-  Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
-let console = require("resource://gre/modules/devtools/Console.jsm").console;
+let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+let { console } = require("resource://gre/modules/devtools/Console.jsm");
 let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 
 // Import the GCLI test helper

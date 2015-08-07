@@ -12,8 +12,8 @@ let chromeGlobal = this;
 // more than once.
 (function () {
   let Cu = Components.utils;
-  let { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-  const DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils.js");
+  let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+  const DevToolsUtils = require("devtools/toolkit/DevToolsUtils.js");
   const { dumpn } = DevToolsUtils;
   const { DebuggerServer, ActorPool } = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
 
@@ -59,7 +59,7 @@ let chromeGlobal = this;
     let m, fn;
 
     try {
-      m = devtools.require(module);
+      m = require(module);
 
       if (!setupChild in m) {
         dumpn("ERROR: module '" + module + "' does not export '" +
@@ -102,7 +102,7 @@ let chromeGlobal = this;
     // (gInspectingNode). Later we'll fetch this variable again using
     // the findInspectingNode request over the remote debugging
     // protocol.
-    let inspector = devtools.require("devtools/server/actors/inspector");
+    let inspector = require("devtools/server/actors/inspector");
     inspector.setInspectingNode(msg.objects.node);
   });
   addMessageListener("debug:inspect", onInspect);

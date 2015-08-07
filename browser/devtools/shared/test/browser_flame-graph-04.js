@@ -5,10 +5,10 @@
 
 let HTML_NS = "http://www.w3.org/1999/xhtml";
 let {ViewHelpers} = Cu.import("resource:///modules/devtools/ViewHelpers.jsm", {});
-let {FlameGraph} = devtools.require("devtools/shared/widgets/FlameGraph");
-let {FLAME_GRAPH_BLOCK_TEXT_FONT_SIZE} = devtools.require("devtools/shared/widgets/FlameGraph");
-let {FLAME_GRAPH_BLOCK_TEXT_FONT_FAMILY} = devtools.require("devtools/shared/widgets/FlameGraph");
-let {Promise} = devtools.require("resource://gre/modules/Promise.jsm");
+let {FlameGraph} = require("devtools/shared/widgets/FlameGraph");
+let {FLAME_GRAPH_BLOCK_TEXT_FONT_SIZE} = require("devtools/shared/widgets/FlameGraph");
+let {FLAME_GRAPH_BLOCK_TEXT_FONT_FAMILY} = require("devtools/shared/widgets/FlameGraph");
+let {Promise} = require("resource://gre/modules/Promise.jsm");
 
 let L10N = new ViewHelpers.L10N();
 

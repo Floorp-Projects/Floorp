@@ -6,7 +6,7 @@
  * theme on load, and rerenders when changed.
  */
 
-const { setTheme } = devtools.require("devtools/shared/theme");
+const { setTheme } = require("devtools/shared/theme");
 
 const LIGHT_BG = "#fcfcfc";
 const DARK_BG = "#14171a";

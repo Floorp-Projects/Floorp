@@ -5,14 +5,14 @@
  * Tests that when displaying only content nodes, platform nodes are generalized.
  */
 
-let { CATEGORY_MASK } = devtools.require("devtools/performance/global");
+let { CATEGORY_MASK } = require("devtools/performance/global");
 
 function run_test() {
   run_next_test();
 }
 
 add_task(function test() {
-  let { ThreadNode } = devtools.require("devtools/performance/tree-model");
+  let { ThreadNode } = require("devtools/performance/tree-model");
   let url = (n) => `http://content/${n}`;
 
   // Create a root node from a given samples array.

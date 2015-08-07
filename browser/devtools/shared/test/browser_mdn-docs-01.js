@@ -21,7 +21,7 @@
 "use strict";
 
 const {CssDocsTooltip} = require("devtools/shared/widgets/Tooltip");
-const {setBaseCssDocsUrl, MdnDocsWidget} = devtools.require("devtools/shared/widgets/MdnDocsWidget");
+const {setBaseCssDocsUrl, MdnDocsWidget} = require("devtools/shared/widgets/MdnDocsWidget");
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 // frame to load the tooltip into

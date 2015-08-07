@@ -21,7 +21,7 @@ let loader = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {}).
 let promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
 
 this.EXPORTED_SYMBOLS = ["DevToolsLoader", "devtools", "BuiltinProvider",
-                         "SrcdirProvider"];
+                         "SrcdirProvider", "require"];
 
 /**
  * Providers are different strategies for loading the devtools.
@@ -98,7 +98,7 @@ BuiltinProvider.prototype = {
         "acorn": "resource://gre/modules/devtools/acorn",
         "acorn/util/walk": "resource://gre/modules/devtools/acorn/walk.js",
         "tern": "resource://gre/modules/devtools/tern",
-        "source-map": "resource://gre/modules/devtools/SourceMap.jsm",
+        "source-map": "resource://gre/modules/devtools/sourcemap/source-map.js",
 
         // Allow access to xpcshell test items from the loader.
         "xpcshell-test": "resource://test"
@@ -146,9 +146,9 @@ SrcdirProvider.prototype = {
     let cssColorURI = this.fileURI(OS.Path.join(toolkitDir, "css-color"));
     let outputParserURI = this.fileURI(OS.Path.join(toolkitDir, "output-parser"));
     let clientURI = this.fileURI(OS.Path.join(toolkitDir, "client"));
-    let prettyFastURI = this.fileURI(OS.Path.join(toolkitDir), "pretty-fast.js");
+    let prettyFastURI = this.fileURI(OS.Path.join(toolkitDir, "pretty-fast.js"));
     let jsBeautifyURI = this.fileURI(OS.Path.join(toolkitDir, "jsbeautify", "beautify.js"));
-    let asyncUtilsURI = this.fileURI(OS.Path.join(toolkitDir), "async-utils.js");
+    let asyncUtilsURI = this.fileURI(OS.Path.join(toolkitDir, "async-utils.js"));
     let contentObserverURI = this.fileURI(OS.Path.join(toolkitDir), "content-observer.js");
     let gcliURI = this.fileURI(OS.Path.join(toolkitDir, "gcli", "source", "lib", "gcli"));
     let projecteditorURI = this.fileURI(OS.Path.join(devtoolsDir, "projecteditor"));
@@ -156,7 +156,7 @@ SrcdirProvider.prototype = {
     let acornURI = this.fileURI(OS.Path.join(toolkitDir, "acorn"));
     let acornWalkURI = OS.Path.join(acornURI, "walk.js");
     let ternURI = OS.Path.join(toolkitDir, "tern");
-    let sourceMapURI = this.fileURI(OS.Path.join(toolkitDir), "SourceMap.jsm");
+    let sourceMapURI = this.fileURI(OS.Path.join(toolkitDir, "sourcemap", "source-map.js"));
     this.loader = new loader.Loader({
       id: "fx-devtools",
       modules: loaderModules,
@@ -458,3 +458,5 @@ DevToolsLoader.prototype = {
 
 // Export the standard instance of DevToolsLoader used by the tools.
 this.devtools = new DevToolsLoader();
+
+this.require = this.devtools.require.bind(this.devtools);

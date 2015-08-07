@@ -10,8 +10,6 @@ var gDebuggee;
 var gClient;
 var gThreadClient;
 
-Components.utils.import("resource:///modules/devtools/SourceMap.jsm");
-
 function run_test()
 {
   initTestDebuggerServer();

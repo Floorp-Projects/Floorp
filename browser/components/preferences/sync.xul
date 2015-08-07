@@ -95,9 +95,6 @@
                       label="&manageAccount.label;"
                       accesskey="&manageAccount.accesskey;">
                 <menupopup>
-                  <menuitem label="&viewQuota.label;"
-                            oncommand="gSyncPane.openQuotaDialog();"/>
-                  <menuseparator/>
                   <menuitem label="&changePassword2.label;"
                             oncommand="gSyncUtils.changePassword();"/>
                   <menuitem label="&myRecoveryKey.label;"

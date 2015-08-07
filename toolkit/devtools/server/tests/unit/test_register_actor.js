@@ -84,7 +84,7 @@ function test_lazy_api() {
     do_check_false(isActorInstanciated);
     do_check_true("lazyActor" in aResponse);
 
-    let {LazyFront} = devtools.require("xpcshell-test/registertestactors-03");
+    let {LazyFront} = require("xpcshell-test/registertestactors-03");
     let front = LazyFront(client, aResponse);
     front.hello().then(onRequest);
   }

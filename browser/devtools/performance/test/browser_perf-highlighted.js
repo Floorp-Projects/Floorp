@@ -6,7 +6,7 @@
  * whether already loaded, or via console.profile with an unloaded performance tools.
  */
 
-let { getPerformanceFront } = devtools.require("devtools/performance/front");
+let { getPerformanceFront } = require("devtools/performance/front");
 
 function* spawnTest() {
   let profilerConnected = waitForProfilerConnection();

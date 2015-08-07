@@ -3295,7 +3295,6 @@ public class BrowserApp extends GeckoApp
         share.setVisible(shareVisible);
         final boolean shareEnabled = StringUtils.isShareableUrl(url) && shareVisible;
         share.setEnabled(shareEnabled);
-        MenuUtils.safeSetEnabled(aMenu, R.id.addons, RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_INSTALL_EXTENSION));
         MenuUtils.safeSetEnabled(aMenu, R.id.downloads, RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_DOWNLOADS));
 
         // NOTE: Use MenuUtils.safeSetEnabled because some actions might
@@ -3360,10 +3359,6 @@ public class BrowserApp extends GeckoApp
             }
         }
 
-        // Hide tools menu if restriction is active
-        final boolean toolsVisible = RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_TOOLS_MENU);
-        MenuUtils.safeSetVisible(aMenu, R.id.tools, toolsVisible);
-
         final boolean privateTabVisible = RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_PRIVATE_BROWSING);
         MenuUtils.safeSetVisible(aMenu, R.id.new_private_tab, privateTabVisible);
 
@@ -3381,6 +3376,14 @@ public class BrowserApp extends GeckoApp
             exitGuestMode.setVisible(true);
         } else {
             enterGuestMode.setVisible(true);
+        }
+
+        if (!RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_GUEST_BROWSING)) {
+            MenuUtils.safeSetVisible(aMenu, R.id.new_guest_session, false);
+        }
+
+        if (!RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_INSTALL_EXTENSION)) {
+            MenuUtils.safeSetVisible(aMenu, R.id.addons, false);
         }
 
         return true;

@@ -12,7 +12,7 @@ const TEST_URI = "data:text/xml;charset=UTF-8,<?xml version='1.0'?>" +
   " title='Table Widget' width='600' height='500'><box flex='1'/></window>";
 const TEST_OPT = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
 
-const {TableWidget} = devtools.require("devtools/shared/widgets/TableWidget");
+const {TableWidget} = require("devtools/shared/widgets/TableWidget");
 
 let doc, table;
 

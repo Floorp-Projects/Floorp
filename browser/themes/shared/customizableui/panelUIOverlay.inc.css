@@ -101,13 +101,33 @@
   border-image-source: linear-gradient(transparent, rgba(100%,100%,100%,.2) 20%, rgba(100%,100%,100%,.2) 80%, transparent);
 }
 
-#PanelUI-menu-button[update-status="succeeded"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
+#PanelUI-menu-button[badge-status] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
   display: -moz-box;
-  background-image: url(chrome://browser/skin/update-badge.svg);
-  background-color: #74BF43;
   height: 10px;
   width: 10px;
+  background-size: contain;
   border: none;
+}
+
+#PanelUI-menu-button[badge-status="update-succeeded"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
+  background-image: url(chrome://browser/skin/update-badge.svg);
+  background-color: #74BF43;
+}
+
+#PanelUI-menu-button[badge-status="update-failed"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
+  background-image: url(chrome://browser/skin/update-badge-failed.svg);
+  background-color: #D90000;
+}
+
+#PanelUI-menu-button[badge-status="fxa-needs-authentication"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
+  background-color: transparent;
+  background-image: url(chrome://browser/skin/warning.svg);
+  box-shadow: none;
+  filter: drop-shadow(0 1px 0 hsla(206, 50%, 10%, .15));
+}
+
+#PanelUI-menu-button[badge-status="fxa-needs-authentication"] > .toolbarbutton-badge-stack > .toolbarbutton-badge:-moz-window-inactive {
+  filter: none;
 }
 
 .panel-subviews {
@@ -511,6 +531,27 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   text-align: center;
   position: relative;
   top: 25%;
+}
+
+#PanelUI-update-status[update-status]::after {
+  content: "";
+  width: 14px;
+  height: 14px;
+  margin-right: 16.5px;
+  box-shadow: 0px 1px 0px rgba(255, 255, 255, 0.2) inset, 0px -1px 0px rgba(0, 0, 0, 0.1) inset, 0px 1px 0px rgba(12, 27, 38, 0.2);
+  border-radius: 2px;
+  background-size: contain;
+  display: -moz-box;
+}
+
+#PanelUI-update-status[update-status="succeeded"]::after {
+  background-image: url(chrome://browser/skin/update-badge.svg);
+  background-color: #74BF43;
+}
+
+#PanelUI-update-status[update-status="failed"]::after {
+  background-image: url(chrome://browser/skin/update-badge-failed.svg);
+  background-color: #D90000;
 }
 
 #PanelUI-fxa-status {

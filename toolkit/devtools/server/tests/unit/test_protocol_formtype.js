@@ -1,4 +1,4 @@
-let protocol = devtools.require("devtools/server/protocol");
+let protocol = require("devtools/server/protocol");
 let {method, Arg, Option, RetVal} = protocol;
 
 protocol.types.addActorType("child");

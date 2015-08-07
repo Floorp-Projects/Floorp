@@ -22,8 +22,7 @@ Bug 907206 - data store for local apps
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
-        const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-        const {require} = devtools;
+        const { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 
         const { AppProjects } = require("devtools/app-manager/app-projects");
 

@@ -10,7 +10,7 @@ var gClient;
 var gThreadClient;
 var gTabClient;
 
-Components.utils.import("resource:///modules/devtools/SourceMap.jsm");
+const {SourceNode} = require("source-map");
 
 function run_test()
 {

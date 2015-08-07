@@ -15,13 +15,34 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.OperationApplicationException;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.RemoteException;
-import android.provider.Browser;
+import android.provider.BaseColumns;
 import android.util.Log;
 
 import java.util.ArrayList;
 
 class AndroidImport implements Runnable {
+    /**
+     * The Android M SDK removed several fields and methods from android.provider.Browser. This class is used as a
+     * replacement to support building with the new SDK but at the same time still use these fields on lower Android
+     * versions.
+     */
+    private static class LegacyBrowserProvider {
+        public static final Uri BOOKMARKS_URI = Uri.parse("content://browser/bookmarks");
+
+        // Incomplete: This are just the fields we currently use in our code base
+        public static class BookmarkColumns implements BaseColumns {
+            public static final String URL = "url";
+            public static final String VISITS = "visits";
+            public static final String DATE = "date";
+            public static final String BOOKMARK = "bookmark";
+            public static final String TITLE = "title";
+            public static final String CREATED = "created";
+            public static final String FAVICON = "favicon";
+        }
+    }
+
     private static final String LOGTAG = "AndroidImport";
     private final Context mContext;
     private final Runnable mOnDoneRunnable;
@@ -45,18 +66,18 @@ class AndroidImport implements Runnable {
     public void mergeBookmarks() {
         Cursor cursor = null;
         try {
-            cursor = mCr.query(Browser.BOOKMARKS_URI,
+            cursor = mCr.query(LegacyBrowserProvider.BOOKMARKS_URI,
                                null,
-                               Browser.BookmarkColumns.BOOKMARK + " = 1",
+                               LegacyBrowserProvider.BookmarkColumns.BOOKMARK + " = 1",
                                null,
                                null);
 
             if (cursor != null) {
-                final int faviconCol = cursor.getColumnIndexOrThrow(Browser.BookmarkColumns.FAVICON);
-                final int titleCol = cursor.getColumnIndexOrThrow(Browser.BookmarkColumns.TITLE);
-                final int urlCol = cursor.getColumnIndexOrThrow(Browser.BookmarkColumns.URL);
+                final int faviconCol = cursor.getColumnIndexOrThrow(LegacyBrowserProvider.BookmarkColumns.FAVICON);
+                final int titleCol = cursor.getColumnIndexOrThrow(LegacyBrowserProvider.BookmarkColumns.TITLE);
+                final int urlCol = cursor.getColumnIndexOrThrow(LegacyBrowserProvider.BookmarkColumns.URL);
                 // http://code.google.com/p/android/issues/detail?id=17969
-                final int createCol = cursor.getColumnIndex(Browser.BookmarkColumns.CREATED);
+                final int createCol = cursor.getColumnIndex(LegacyBrowserProvider.BookmarkColumns.CREATED);
 
                 cursor.moveToFirst();
                 while (!cursor.isAfterLast()) {
@@ -93,19 +114,19 @@ class AndroidImport implements Runnable {
     public void mergeHistory() {
         Cursor cursor = null;
         try {
-            cursor = mCr.query(Browser.BOOKMARKS_URI,
+            cursor = mCr.query(LegacyBrowserProvider.BOOKMARKS_URI,
                                null,
-                               Browser.BookmarkColumns.BOOKMARK + " = 0 AND " +
-                               Browser.BookmarkColumns.VISITS + " > 0",
+                               LegacyBrowserProvider.BookmarkColumns.BOOKMARK + " = 0 AND " +
+                               LegacyBrowserProvider.BookmarkColumns.VISITS + " > 0",
                                null,
                                null);
 
             if (cursor != null) {
-                final int dateCol = cursor.getColumnIndexOrThrow(Browser.BookmarkColumns.DATE);
-                final int faviconCol = cursor.getColumnIndexOrThrow(Browser.BookmarkColumns.FAVICON);
-                final int titleCol = cursor.getColumnIndexOrThrow(Browser.BookmarkColumns.TITLE);
-                final int urlCol = cursor.getColumnIndexOrThrow(Browser.BookmarkColumns.URL);
-                final int visitsCol = cursor.getColumnIndexOrThrow(Browser.BookmarkColumns.VISITS);
+                final int dateCol = cursor.getColumnIndexOrThrow(LegacyBrowserProvider.BookmarkColumns.DATE);
+                final int faviconCol = cursor.getColumnIndexOrThrow(LegacyBrowserProvider.BookmarkColumns.FAVICON);
+                final int titleCol = cursor.getColumnIndexOrThrow(LegacyBrowserProvider.BookmarkColumns.TITLE);
+                final int urlCol = cursor.getColumnIndexOrThrow(LegacyBrowserProvider.BookmarkColumns.URL);
+                final int visitsCol = cursor.getColumnIndexOrThrow(LegacyBrowserProvider.BookmarkColumns.VISITS);
 
                 cursor.moveToFirst();
                 while (!cursor.isAfterLast()) {

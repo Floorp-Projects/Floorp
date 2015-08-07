@@ -4,12 +4,10 @@
 // Test support methods on Target, such as `hasActor`, `getActorDescription`,
 // `actorHasMethod` and `getTrait`.
 
-let { devtools } =
-  Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let { Task } =
   Cu.import("resource://gre/modules/Task.jsm", {});
 let { WebAudioFront } =
-  devtools.require("devtools/server/actors/webaudio");
+  require("devtools/server/actors/webaudio");
 
 function* testTarget (client, target) {
   yield target.makeRemote();
@@ -63,7 +61,7 @@ function test() {
       chrome: true
     };
 
-    devtools.TargetFactory.forRemoteTab(options).then(Task.async(testTarget).bind(null, client));
+    TargetFactory.forRemoteTab(options).then(Task.async(testTarget).bind(null, client));
   });
 }
 
