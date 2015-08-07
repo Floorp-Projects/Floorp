@@ -73,53 +73,6 @@ TaskQueue::DispatchLocked(already_AddRefed<nsIRunnable> aRunnable,
   return NS_OK;
 }
 
-class TaskQueueSyncRunnable : public nsRunnable {
-public:
-  explicit TaskQueueSyncRunnable(already_AddRefed<nsIRunnable> aRunnable)
-    : mRunnable(aRunnable)
-    , mMonitor("TaskQueueSyncRunnable")
-    , mDone(false)
-  {
-  }
-
-  NS_IMETHOD Run() {
-    nsresult rv = mRunnable->Run();
-    {
-      MonitorAutoLock mon(mMonitor);
-      mDone = true;
-      mon.NotifyAll();
-    }
-    return rv;
-  }
-
-  void WaitUntilDone() {
-    MonitorAutoLock mon(mMonitor);
-    while (!mDone) {
-      mon.Wait();
-    }
-  }
-private:
-  RefPtr<nsIRunnable> mRunnable;
-  Monitor mMonitor;
-  bool mDone;
-};
-
-void
-TaskQueue::SyncDispatch(already_AddRefed<nsIRunnable> aRunnable) {
-  NS_WARNING("TaskQueue::SyncDispatch is dangerous and deprecated. Stop using this!");
-  nsRefPtr<TaskQueueSyncRunnable> task(new TaskQueueSyncRunnable(Move(aRunnable)));
-
-  // Tail dispatchers don't interact nicely with sync dispatch. We require that
-  // nothing is already in the tail dispatcher, and then sidestep it for this
-  // task.
-  MOZ_ASSERT_IF(AbstractThread::GetCurrent(),
-                !AbstractThread::GetCurrent()->TailDispatcher().HasTasksFor(this));
-  nsRefPtr<TaskQueueSyncRunnable> taskRef = task;
-  Dispatch(taskRef.forget(), AssertDispatchSuccess, TailDispatch);
-
-  task->WaitUntilDone();
-}
-
 void
 TaskQueue::AwaitIdle()
 {

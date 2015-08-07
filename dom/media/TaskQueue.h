@@ -49,10 +49,6 @@ public:
     unused << rv;
   }
 
-  // DEPRECATED! Do not us, if a flush happens at the same time, this function
-  // can hang and block forever!
-  void SyncDispatch(already_AddRefed<nsIRunnable> aRunnable);
-
   // Puts the queue in a shutdown state and returns immediately. The queue will
   // remain alive at least until all the events are drained, because the Runners
   // hold a strong reference to the task queue, and one of them is always held
