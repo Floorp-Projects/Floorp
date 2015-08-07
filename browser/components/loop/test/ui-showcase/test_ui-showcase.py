@@ -6,10 +6,10 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
 from frontend_tester import BaseTestFrontendUnits
 
 
-class TestDesktopUnits(BaseTestFrontendUnits):
+class TestUiShowcaseUnits(BaseTestFrontendUnits):
 
     def setUp(self):
-        super(TestDesktopUnits, self).setUp()
+        super(TestUiShowcaseUnits, self).setUp()
         self.set_server_prefix("../../ui/")
 
     def test_units(self):
