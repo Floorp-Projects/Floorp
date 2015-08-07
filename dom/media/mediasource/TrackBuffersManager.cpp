@@ -315,12 +315,17 @@ TrackBuffersManager::Detach()
   MOZ_ASSERT(NS_IsMainThread());
   MSE_DEBUG("");
 
+  // Abort pending operations if any.
+  AbortAppendData();
+
   nsRefPtr<TrackBuffersManager> self = this;
   nsCOMPtr<nsIRunnable> task =
     NS_NewRunnableFunction([self] () {
       // Clear our sourcebuffer
       self->CodedFrameRemoval(TimeInterval(TimeUnit::FromSeconds(0),
                                            TimeUnit::FromInfinity()));
+      self->mProcessingPromise.RejectIfExists(NS_ERROR_ABORT, __func__);
+      self->mAppendPromise.RejectIfExists(NS_ERROR_ABORT, __func__);
       self->mMediaSourceDuration.DisconnectIfConnected();
     });
   GetTaskQueue()->Dispatch(task.forget());
