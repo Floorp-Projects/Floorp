@@ -85,9 +85,11 @@
   );
 
   var mockSDK = _.extend({
-    sendTextChatMessage: function(message) {
+    sendTextChatMessage: function(actionData) {
       dispatcher.dispatch(new loop.shared.actions.ReceivedTextChatMessage({
-        message: message.message
+        contentType: loop.store.CHAT_CONTENT_TYPES.TEXT,
+        message: actionData.message,
+        receivedTimestamp: actionData.sentTimestamp
       }));
     }
   }, Backbone.Events);
@@ -347,7 +349,7 @@
   }));
   dispatcher.dispatch(new sharedActions.SendTextChatMessage({
     contentType: loop.store.CHAT_CONTENT_TYPES.TEXT,
-    message: "Cool",
+    message: "8:00",
     sentTimestamp: "2015-06-23T22:27:45.590Z"
   }));
 

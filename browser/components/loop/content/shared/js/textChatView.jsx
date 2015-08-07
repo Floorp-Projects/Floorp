@@ -54,9 +54,15 @@ loop.shared.views.chat = (function(mozL10n) {
         "room-name": this.props.contentType === CHAT_CONTENT_TYPES.ROOM_NAME
       });
 
+      var optionalProps = {};
+      if (navigator.mozLoop) {
+        optionalProps.linkClickHandler = navigator.mozLoop.openURL;
+      }
+
       return (
         <div className={classes}>
-          <p>{this.props.message}</p>
+          <sharedViews.LinkifiedTextView {...optionalProps}
+            rawText={this.props.message} />
           <span className="text-chat-arrow" />
           {this.props.showTimestamp ? this._renderTimestamp() : null}
         </div>

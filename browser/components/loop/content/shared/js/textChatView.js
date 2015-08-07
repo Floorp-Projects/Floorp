@@ -54,9 +54,15 @@ loop.shared.views.chat = (function(mozL10n) {
         "room-name": this.props.contentType === CHAT_CONTENT_TYPES.ROOM_NAME
       });
 
+      var optionalProps = {};
+      if (navigator.mozLoop) {
+        optionalProps.linkClickHandler = navigator.mozLoop.openURL;
+      }
+
       return (
         React.createElement("div", {className: classes}, 
-          React.createElement("p", null, this.props.message), 
+          React.createElement(sharedViews.LinkifiedTextView, React.__spread({},  optionalProps, 
+            {rawText: this.props.message})), 
           React.createElement("span", {className: "text-chat-arrow"}), 
           this.props.showTimestamp ? this._renderTimestamp() : null
         )
