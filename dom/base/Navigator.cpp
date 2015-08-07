@@ -41,6 +41,7 @@
 #include "mozilla/dom/InputPortManager.h"
 #include "mozilla/dom/MobileMessageManager.h"
 #include "mozilla/dom/Permissions.h"
+#include "mozilla/dom/Presentation.h"
 #include "mozilla/dom/ServiceWorkerContainer.h"
 #include "mozilla/dom/Telephony.h"
 #include "mozilla/dom/Voicemail.h"
@@ -215,6 +216,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMediaKeySystemAccessManager)
 #endif
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDeviceStorageAreaListener)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPresentation)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -332,6 +334,10 @@ Navigator::Invalidate()
 
   if (mTimeManager) {
     mTimeManager = nullptr;
+  }
+
+  if (mPresentation) {
+    mPresentation = nullptr;
   }
 
   mServiceWorkerContainer = nullptr;
@@ -2762,6 +2768,20 @@ Navigator::RequestMediaKeySystemAccess(const nsAString& aKeySystem,
 }
 
 #endif
+
+Presentation*
+Navigator::GetPresentation(ErrorResult& aRv)
+{
+  if (!mPresentation) {
+    if (!mWindow) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
+    mPresentation = Presentation::Create(mWindow);
+  }
+
+  return mPresentation;
+}
 
 } // namespace dom
 } // namespace mozilla

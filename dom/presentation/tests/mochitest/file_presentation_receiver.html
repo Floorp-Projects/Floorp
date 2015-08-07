@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for B2G Presentation Session API at receiver side</title>
+</head>
+<body>
+<div id="content"></div>
+<script type="application/javascript;version=1.7">
+
+"use strict";
+
+function is(a, b, msg) {
+  window.parent.postMessage((a === b ? 'OK ' : 'KO ') + msg, '*');
+}
+
+function ok(a, msg) {
+  window.parent.postMessage((a ? 'OK ' : 'KO ') + msg, '*');
+}
+
+function info(msg) {
+  window.parent.postMessage('INFO ' + msg, '*');
+}
+
+function command(msg) {
+  window.parent.postMessage('COMMAND ' + JSON.stringify(msg), '*');
+}
+
+function finish() {
+  window.parent.postMessage('DONE', '*');
+}
+
+var session;
+
+function testSessionAvailable() {
+  return new Promise(function(aResolve, aReject) {
+    ok(navigator.presentation, "navigator.presentation should be available.");
+
+    session = navigator.presentation.session;
+    ok(session.id, "Session ID should be set: " + session.id);
+    is(session.state, "disconnected", "Session state at receiver side should be disconnected by default.");
+    aResolve();
+  });
+}
+
+function testSessionReady() {
+  return new Promise(function(aResolve, aReject) {
+    session.onstatechange = function() {
+      session.onstatechange = null;
+      is(session.state, "connected", "Session state should become connected.");
+      aResolve();
+    };
+
+    command({ name: 'trigger-incoming-offer' });
+  });
+}
+
+function testCloseSession() {
+  return new Promise(function(aResolve, aReject) {
+    session.onstatechange = function() {
+      session.onstatechange = null;
+      is(session.state, "terminated", "Session should be terminated.");
+      aResolve();
+    };
+
+    session.close();
+  });
+}
+
+testSessionAvailable().
+then(testSessionReady).
+then(testCloseSession).
+then(finish);
+
+</script>
+</body>
+</html>
