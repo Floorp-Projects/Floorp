@@ -41,52 +41,6 @@ CodeGeneratorARM::CodeGeneratorARM(MIRGenerator* gen, LIRGraph* graph, MacroAsse
 {
 }
 
-bool
-CodeGeneratorARM::generatePrologue()
-{
-    MOZ_ASSERT(masm.framePushed() == 0);
-    MOZ_ASSERT(!gen->compilingAsmJS());
-#ifdef JS_USE_LINK_REGISTER
-    masm.pushReturnAddress();
-#endif
-
-    // If profiling, save the current frame pointer to a per-thread global field.
-    if (isProfilerInstrumentationEnabled())
-        masm.profilerEnterFrame(StackPointer, CallTempReg0);
-
-    // Ensure that the Ion frames is properly aligned.
-    masm.assertStackAlignment(JitStackAlignment, 0);
-
-    // Note that this automatically sets MacroAssembler::framePushed().
-    masm.reserveStack(frameSize());
-    masm.checkStackAlignment();
-
-    emitTracelogIonStart();
-
-    return true;
-}
-
-bool
-CodeGeneratorARM::generateEpilogue()
-{
-    MOZ_ASSERT(!gen->compilingAsmJS());
-    masm.bind(&returnLabel_);
-
-    emitTracelogIonStop();
-
-    masm.freeStack(frameSize());
-    MOZ_ASSERT(masm.framePushed() == 0);
-
-    // If profiling, reset the per-thread global lastJitFrame to point to
-    // the previous frame.
-    if (isProfilerInstrumentationEnabled())
-        masm.profilerExitFrame();
-
-    masm.pop(pc);
-    masm.flushBuffer();
-    return true;
-}
-
 void
 CodeGeneratorARM::emitBranch(Assembler::Condition cond, MBasicBlock* mirTrue, MBasicBlock* mirFalse)
 {

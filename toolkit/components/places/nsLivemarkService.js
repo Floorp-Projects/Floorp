@@ -529,7 +529,7 @@ Livemark.prototype = {
       let channel = NetUtil.newChannel({
         uri: this.feedURI.spec,
         loadingPrincipal: Services.scriptSecurityManager.getNoAppCodebasePrincipal(this.feedURI),
-        contentPolicyType: Ci.nsIContentPolicy.TYPE_DATAREQUEST
+        contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_XMLHTTPREQUEST
       }).QueryInterface(Ci.nsIHttpChannel);
       channel.loadGroup = loadgroup;
       channel.loadFlags |= Ci.nsIRequest.LOAD_BACKGROUND |

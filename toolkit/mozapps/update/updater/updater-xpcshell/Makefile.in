@@ -38,5 +38,3 @@ else
 	cp $(PROGRAM) $(XPCSHELLTESTROOT)/data/updater$(BIN_SUFFIX)
 	cp $(PROGRAM) $(MOCHITESTROOT)/data/updater$(BIN_SUFFIX)
 endif
-
-CXXFLAGS += $(MOZ_BZ2_CFLAGS)

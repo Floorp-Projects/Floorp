@@ -20,7 +20,7 @@ interface nsIPrincipal;
  * by launching a dialog to prompt the user for something).
  */
 
-[scriptable,uuid(b545899e-42bd-434c-8fec-a0af3448ea15)]
+[scriptable,uuid(3663021e-5670-496f-887b-b408d6526b5b)]
 interface nsIContentPolicy : nsIContentPolicyBase
 {
   /**

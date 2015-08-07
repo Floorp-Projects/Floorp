@@ -4,15 +4,6 @@
 if (typeof version != 'undefined')
   version(185);
 
-function classesEnabled() {
-    try {
-        new Function("class Foo { constructor() { } }");
-        return true;
-    } catch (e if e instanceof SyntaxError) {
-        return false;
-    }
-}
-
 function assertThrownErrorContains(thunk, substr) {
     try {
         thunk();

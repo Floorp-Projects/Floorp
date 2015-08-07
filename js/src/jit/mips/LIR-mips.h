@@ -10,27 +10,6 @@
 namespace js {
 namespace jit {
 
-class LBox : public LInstructionHelper<2, 1, 0>
-{
-    MIRType type_;
-
-  public:
-    LIR_HEADER(Box);
-
-    LBox(const LAllocation& in_payload, MIRType type)
-      : type_(type)
-    {
-        setOperand(0, in_payload);
-    }
-
-    MIRType type() const {
-        return type_;
-    }
-    const char* extraName() const {
-        return StringFromMIRType(type_);
-    }
-};
-
 class LBoxFloatingPoint : public LInstructionHelper<2, 1, 1>
 {
     MIRType type_;
@@ -230,22 +209,6 @@ class LModMaskI : public LInstructionHelper<1, 1, 2>
 
     MMod* mir() const {
         return mir_->toMod();
-    }
-};
-
-class LPowHalfD : public LInstructionHelper<1, 1, 0>
-{
-  public:
-    LIR_HEADER(PowHalfD);
-    LPowHalfD(const LAllocation& input) {
-        setOperand(0, input);
-    }
-
-    const LAllocation* input() {
-        return getOperand(0);
-    }
-    const LDefinition* output() {
-        return getDef(0);
     }
 };
 

@@ -6204,9 +6204,9 @@ nsWindow::EndRemoteDrawingInRegion(DrawTarget* aDrawTarget, nsIntRegion& aInvali
 {
 #ifdef MOZ_X11
 #  ifdef MOZ_HAVE_SHMIMAGE
-  if (!mGdkWindow || mIsFullyObscured || !mHasMappedToplevel || mIsDestroyed ||
-      !mShmImage)
+  if (!mGdkWindow || !mShmImage) {
     return;
+  }
 
   if (mThebesSurface) {
     aInvalidRegion.AndWith(nsIntRect(nsIntPoint(0, 0), mThebesSurface->GetSize()));

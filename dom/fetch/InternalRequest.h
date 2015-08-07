@@ -60,12 +60,12 @@ namespace dom {
  * track             | TYPE_INTERNAL_TRACK
  * video             | TYPE_INTERNAL_VIDEO
  * worker            | TYPE_INTERNAL_WORKER
- * xmlhttprequest    | TYPE_XMLHTTPREQUEST
+ * xmlhttprequest    | TYPE_INTERNAL_XMLHTTPREQUEST
+ * eventsource       | TYPE_INTERNAL_EVENTSOURCE
  * xslt              | TYPE_XSLT
  *
  * TODO: Figure out if TYPE_REFRESH maps to anything useful
  * TODO: Figure out if TYPE_DTD maps to anything useful
- * TODO: Split TYPE_XMLHTTPREQUEST and TYPE_DATAREQUEST for EventSource
  * TODO: Figure out if TYPE_WEBSOCKET maps to anything useful
  * TODO: Add a content type for prefetch
  * TODO: Use the content type for manifest when it becomes available

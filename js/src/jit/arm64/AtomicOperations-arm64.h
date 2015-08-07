@@ -15,90 +15,112 @@
 inline bool
 js::jit::AtomicOperations::isLockfree8()
 {
-    MOZ_CRASH("isLockfree8()");
+    MOZ_ASSERT(__atomic_always_lock_free(sizeof(int8_t), 0));
+    MOZ_ASSERT(__atomic_always_lock_free(sizeof(int16_t), 0));
+    MOZ_ASSERT(__atomic_always_lock_free(sizeof(int32_t), 0));
+    return true;
 }
 
 inline void
 js::jit::AtomicOperations::fenceSeqCst()
 {
-    MOZ_CRASH("fenceSeqCst()");
+    __atomic_thread_fence(__ATOMIC_SEQ_CST);
 }
 
 template<typename T>
 inline T
 js::jit::AtomicOperations::loadSeqCst(T* addr)
 {
-    MOZ_CRASH("loadSeqCst()");
+    MOZ_ASSERT(sizeof(T) < 8 || isLockfree8());
+    T v;
+    __atomic_load(addr, &v, __ATOMIC_SEQ_CST);
+    return v;
 }
 
 template<typename T>
 inline void
 js::jit::AtomicOperations::storeSeqCst(T* addr, T val)
 {
-    MOZ_CRASH("storeSeqCst()");
+    MOZ_ASSERT(sizeof(T) < 8 || isLockfree8());
+    __atomic_store(addr, &val, __ATOMIC_SEQ_CST);
 }
 
 template<typename T>
 inline T
 js::jit::AtomicOperations::exchangeSeqCst(T* addr, T val)
 {
-    MOZ_CRASH("exchangeSeqCst()");
+    MOZ_ASSERT(sizeof(T) < 8 || isLockfree8());
+    T v;
+    __atomic_exchange(addr, &val, &v, __ATOMIC_SEQ_CST);
+    return v;
 }
 
 template<typename T>
 inline T
 js::jit::AtomicOperations::compareExchangeSeqCst(T* addr, T oldval, T newval)
 {
-    MOZ_CRASH("compareExchangeSeqCst()");
+    MOZ_ASSERT(sizeof(T) < 8 || isLockfree8());
+    __atomic_compare_exchange(addr, &oldval, &newval, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
+    return oldval;
 }
 
 template<typename T>
 inline T
 js::jit::AtomicOperations::fetchAddSeqCst(T* addr, T val)
 {
-    MOZ_CRASH("fetchAddSeqCst()");
+    static_assert(sizeof(T) <= 4, "not available for 8-byte values yet");
+    return __atomic_fetch_add(addr, val, __ATOMIC_SEQ_CST);
 }
 
 template<typename T>
 inline T
 js::jit::AtomicOperations::fetchSubSeqCst(T* addr, T val)
 {
-    MOZ_CRASH("fetchSubSeqCst()");
+    static_assert(sizeof(T) <= 4, "not available for 8-byte values yet");
+    return __atomic_fetch_sub(addr, val, __ATOMIC_SEQ_CST);
 }
 
 template<typename T>
 inline T
 js::jit::AtomicOperations::fetchAndSeqCst(T* addr, T val)
 {
-    MOZ_CRASH("fetchAndSeqCst()");
+    static_assert(sizeof(T) <= 4, "not available for 8-byte values yet");
+    return __atomic_fetch_and(addr, val, __ATOMIC_SEQ_CST);
 }
 
 template<typename T>
 inline T
 js::jit::AtomicOperations::fetchOrSeqCst(T* addr, T val)
 {
-    MOZ_CRASH("fetchOrSeqCst()");
+    static_assert(sizeof(T) <= 4, "not available for 8-byte values yet");
+    return __atomic_fetch_or(addr, val, __ATOMIC_SEQ_CST);
 }
 
 template<typename T>
 inline T
 js::jit::AtomicOperations::fetchXorSeqCst(T* addr, T val)
 {
-    MOZ_CRASH("fetchXorSeqCst()");
+    static_assert(sizeof(T) <= 4, "not available for 8-byte values yet");
+    return __atomic_fetch_xor(addr, val, __ATOMIC_SEQ_CST);
 }
 
 template<size_t nbytes>
 inline void
 js::jit::RegionLock::acquire(void* addr)
 {
-    MOZ_CRASH("acquire()");
+    uint32_t zero = 0;
+    uint32_t one = 1;
+    while (!__atomic_compare_exchange(&spinlock, &zero, &one, false, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
+        continue;
 }
 
 template<size_t nbytes>
 inline void
 js::jit::RegionLock::release(void* addr)
 {
-    MOZ_CRASH("release()");
+    MOZ_ASSERT(AtomicOperations::loadSeqCst(&spinlock) == 1, "releasing unlocked region lock");
+    uint32_t zero = 0;
+    __atomic_store(&spinlock, &zero, __ATOMIC_SEQ_CST);
 }
 
 #endif // jit_arm64_AtomicOperations_arm64_h

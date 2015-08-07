@@ -26,9 +26,8 @@ struct JSContext;
 class nsCSSPropertySet;
 
 namespace mozilla {
-namespace css {
+
 class AnimValuesStyleRule;
-} // namespace css
 
 /**
  * Input timing parameters.
@@ -197,7 +196,6 @@ public:
     : AnimationEffectReadOnly(aDocument)
     , mTarget(aTarget)
     , mTiming(aTiming)
-    , mIsFinishedTransition(false)
     , mPseudoType(aPseudoType)
   {
     MOZ_ASSERT(aTarget, "null animation target is not yet supported");
@@ -283,20 +281,6 @@ public:
   static StickyTimeDuration
   ActiveDuration(const AnimationTiming& aTiming);
 
-  // After transitions finish they need to be retained in order to
-  // address the issue described in
-  // https://lists.w3.org/Archives/Public/www-style/2015Jan/0444.html .
-  // However, finished transitions are ignored for many purposes.
-  bool IsFinishedTransition() const {
-    return mIsFinishedTransition;
-  }
-
-  void SetIsFinishedTransition(bool aIsFinished) {
-    MOZ_ASSERT(AsTransition(),
-               "Calling SetIsFinishedTransition but it's not a transition");
-    mIsFinishedTransition = aIsFinished;
-  }
-
   bool IsInPlay(const Animation& aAnimation) const;
   bool IsCurrent(const Animation& aAnimation) const;
   bool IsInEffect() const;
@@ -319,7 +303,7 @@ public:
   // Animation for the current time except any properties already contained
   // in |aSetProperties|.
   // Any updated properties are added to |aSetProperties|.
-  void ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
+  void ComposeStyle(nsRefPtr<AnimValuesStyleRule>& aStyleRule,
                     nsCSSPropertySet& aSetProperties);
 
 protected:
@@ -329,9 +313,6 @@ protected:
   Nullable<TimeDuration> mParentTime;
 
   AnimationTiming mTiming;
-  // A flag to mark transitions that have finished and are due to
-  // be removed on the next throttle-able cycle.
-  bool mIsFinishedTransition;
   nsCSSPseudoElements::Type mPseudoType;
 
   InfallibleTArray<AnimationProperty> mProperties;

@@ -72,7 +72,8 @@ class TestMetadata(object):
         for path in sorted(self._tests_by_flavor.get(flavor, [])):
             yield self._tests_by_path[path]
 
-    def resolve_tests(self, paths=None, flavor=None, subsuite=None, under_path=None):
+    def resolve_tests(self, paths=None, flavor=None, subsuite=None, under_path=None,
+                      tags=None):
         """Resolve tests from an identifier.
 
         This is a generator of dicts describing each test.
@@ -94,7 +95,13 @@ class TestMetadata(object):
 
         If ``subsuite`` is a string, it will be used to filter returned tests
         to only be in the subsuite specified.
+
+        If ``tags`` are specified, they will be used to filter returned tests
+        to only those with a matching tag.
         """
+        if tags:
+            tags = set(tags)
+
         def fltr(tests):
             for test in tests:
                 if flavor:
@@ -103,6 +110,9 @@ class TestMetadata(object):
                     continue
 
                 if subsuite and test.get('subsuite') != subsuite:
+                    continue
+
+                if tags and not (tags & set(test.get('tags', '').split())):
                     continue
 
                 if under_path \

@@ -7923,6 +7923,10 @@ nsContentUtils::InternalContentPolicyTypeToExternal(nsContentPolicyType aType)
   case nsIContentPolicy::TYPE_INTERNAL_TRACK:
     return nsIContentPolicy::TYPE_MEDIA;
 
+  case nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST:
+  case nsIContentPolicy::TYPE_INTERNAL_EVENTSOURCE:
+    return nsIContentPolicy::TYPE_XMLHTTPREQUEST;
+
   default:
     return aType;
   }

@@ -173,7 +173,8 @@ function verifyConnectionStatus(test) {
 /**
  * Generates a setInterval wrapper command link for use in pc.js command chains
  *
- * The link will repeatedly call the given callback function every interval ms
+ * This function returns a promise that will resolve once the link repeatedly
+ * calls the given callback function every interval ms
  * until duration ms have passed, then it will continue the test.
  *
  * @param {function} callback
@@ -182,38 +183,35 @@ function verifyConnectionStatus(test) {
  *        Frequency in milliseconds with which callback will be called
  * @param {number} [duration=3 hours]
  *        Length of time in milliseconds for which callback will be called
- * @param {string} [name='INTERVAL_COMMAND']
- *        Name of the generated command link
+
+
  */
-function generateIntervalCommand(callback, interval, duration, name) {
+function generateIntervalCommand(callback, interval, duration) {
   interval = interval || 1000;
   duration = duration || 1000 * 3600 * 3;
-  name = name || 'INTERVAL_COMMAND';
 
-  return [
-    name,
-    function (test) {
-      var startTime = Date.now();
-      var intervalId = setInterval(function () {
-        if (callback) {
-          callback(test);
-        }
-
-        var failed = false;
-        Object.keys(_errorCount).forEach(function (label) {
-          if (_errorCount[label] > MAX_ERROR_CYCLES) {
-            ok(false, "Encountered more then " + MAX_ERROR_CYCLES + " cycles" +
-              " with errors on " + label);
-            failed = true;
+  return function INTERVAL_COMMAND(test) {
+      return new Promise (resolve=>{
+        var startTime = Date.now();
+        var intervalId = setInterval(function () {
+          if (callback) {
+            callback(test);
           }
-        });
+
+          var failed = false;
+          Object.keys(_errorCount).forEach(function (label) {
+            if (_errorCount[label] > MAX_ERROR_CYCLES) {
+              ok(false, "Encountered more then " + MAX_ERROR_CYCLES + " cycles" +
+              " with errors on " + label);
+              failed = true;
+            }
+          });
         var timeElapsed = Date.now() - startTime;
         if ((timeElapsed >= duration) || failed) {
           clearInterval(intervalId);
-          test.next();
+          resolve();
         }
       }, interval);
-    }
-  ]
+    });
+  };
 }
-
