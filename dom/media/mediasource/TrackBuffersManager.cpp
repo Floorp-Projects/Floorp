@@ -666,10 +666,9 @@ TrackBuffersManager::SegmentParserLoop()
         SetAppendState(AppendState::PARSING_MEDIA_SEGMENT);
         continue;
       }
-      // We have neither an init segment nor a media segment, this is invalid
-      // data. We can ignore it.
-      MSE_DEBUG("Found invalid data, ignoring.");
-      mInputBuffer = nullptr;
+      // We have neither an init segment nor a media segment, this is either
+      // invalid data or not enough data to detect a segment type.
+      MSE_DEBUG("Found invalid or incomplete data.");
       NeedMoreData();
       return;
     }
