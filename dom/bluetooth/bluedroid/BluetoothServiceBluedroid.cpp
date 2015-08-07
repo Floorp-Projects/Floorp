@@ -87,10 +87,7 @@ using namespace mozilla::ipc;
 USING_BLUETOOTH_NAMESPACE
 
 static BluetoothInterface* sBtInterface;
-
 static nsTArray<nsRefPtr<BluetoothProfileController> > sControllerArray;
-static InfallibleTArray<BluetoothNamedValue> sRemoteDevicesPack;
-static nsTArray<int> sRequestedDeviceCountArray;
 
 /*
  *  Static methods
@@ -816,44 +813,56 @@ BluetoothServiceBluedroid::GetDefaultAdapterPathInternal(
 }
 #endif
 
+class BluetoothServiceBluedroid::GetDeviceRequest final
+{
+public:
+  GetDeviceRequest(int aDeviceCount, BluetoothReplyRunnable* aRunnable)
+  : mDeviceCount(aDeviceCount)
+  , mRunnable(aRunnable)
+  { }
+
+  int mDeviceCount;
+  InfallibleTArray<BluetoothNamedValue> mDevicesPack;
+  nsRefPtr<BluetoothReplyRunnable> mRunnable;
+};
+
 class BluetoothServiceBluedroid::GetRemoteDevicePropertiesResultHandler
   final
   : public BluetoothResultHandler
 {
 public:
   GetRemoteDevicePropertiesResultHandler(
-    nsTArray<nsRefPtr<BluetoothReplyRunnable>>& aRunnableArray,
+    nsTArray<GetDeviceRequest>& aRequests,
     const nsAString& aDeviceAddress)
-  : mRunnableArray(aRunnableArray)
+  : mRequests(aRequests)
   , mDeviceAddress(aDeviceAddress)
   { }
 
   void OnError(BluetoothStatus aStatus) override
   {
     MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(!mRequests.IsEmpty());
 
     BT_WARNING("GetRemoteDeviceProperties(%s) failed: %d",
                NS_ConvertUTF16toUTF8(mDeviceAddress).get(), aStatus);
 
-    /* dispatch result after final pending operation */
-    if (--sRequestedDeviceCountArray[0] == 0) {
-      if (!mRunnableArray.IsEmpty()) {
+    /* Dispatch result after the final pending operation */
+    if (--mRequests[0].mDeviceCount == 0) {
+      if (mRequests[0].mRunnable) {
 #ifndef MOZ_B2G_BT_API_V1
-        DispatchReplyError(mRunnableArray[0],
+        DispatchReplyError(mRequests[0].mRunnable,
           NS_LITERAL_STRING("GetRemoteDeviceProperties failed"));
 #else
-        DispatchReplySuccess(mRunnableArray[0], sRemoteDevicesPack);
+        DispatchReplySuccess(mRequests[0].mRunnable,
+                             mRequests[0].mDevicesPack);
 #endif
-        mRunnableArray.RemoveElementAt(0);
       }
-
-      sRequestedDeviceCountArray.RemoveElementAt(0);
-      sRemoteDevicesPack.Clear();
+      mRequests.RemoveElementAt(0);
     }
   }
 
 private:
-  nsTArray<nsRefPtr<BluetoothReplyRunnable>> mRunnableArray;
+  nsTArray<GetDeviceRequest> mRequests;
   nsString mDeviceAddress;
 };
 
@@ -872,29 +881,22 @@ BluetoothServiceBluedroid::GetConnectedDevicePropertiesInternal(
     return NS_OK;
   }
 
-  nsTArray<nsString> deviceAddresses;
-  if (profile->IsConnected()) {
-    nsString address;
-    profile->GetAddress(address);
-    deviceAddresses.AppendElement(address);
-  }
-
-  int requestedDeviceCount = deviceAddresses.Length();
-  if (requestedDeviceCount == 0) {
-    InfallibleTArray<BluetoothNamedValue> emptyArr;
-    DispatchReplySuccess(aRunnable, emptyArr);
+  // Reply success if no device of this profile is connected
+  if (!profile->IsConnected()) {
+    DispatchReplySuccess(aRunnable, InfallibleTArray<BluetoothNamedValue>());
     return NS_OK;
   }
 
-  sRequestedDeviceCountArray.AppendElement(requestedDeviceCount);
-  mGetDeviceRunnables.AppendElement(aRunnable);
+  // Get address of the connected device
+  nsString address;
+  profile->GetAddress(address);
 
-  for (int i = 0; i < requestedDeviceCount; i++) {
-    // Retrieve all properties of devices
-    sBtInterface->GetRemoteDeviceProperties(deviceAddresses[i],
-      new GetRemoteDevicePropertiesResultHandler(mGetDeviceRunnables,
-                                                 deviceAddresses[i]));
-  }
+  // Append request of the connected device
+  GetDeviceRequest request(1, aRunnable);
+  mGetDeviceRequests.AppendElement(request);
+
+  sBtInterface->GetRemoteDeviceProperties(address,
+    new GetRemoteDevicePropertiesResultHandler(mGetDeviceRequests, address));
 
   return NS_OK;
 }
@@ -907,27 +909,23 @@ BluetoothServiceBluedroid::GetPairedDevicePropertiesInternal(
 
   ENSURE_BLUETOOTH_IS_READY(aRunnable, NS_OK);
 
-  int requestedDeviceCount = aDeviceAddress.Length();
-
+  if (aDeviceAddress.IsEmpty()) {
 #ifndef MOZ_B2G_BT_API_V1
-  if (requestedDeviceCount == 0) {
     DispatchReplySuccess(aRunnable);
-    return NS_OK;
-  }
 #else
-  if (requestedDeviceCount == 0) {
     DispatchReplySuccess(aRunnable, InfallibleTArray<BluetoothNamedValue>());
+#endif
     return NS_OK;
   }
 
-  sRequestedDeviceCountArray.AppendElement(requestedDeviceCount);
-  mGetDeviceRunnables.AppendElement(aRunnable);
-#endif
+  // Append request of all paired devices
+  GetDeviceRequest request(aDeviceAddress.Length(), aRunnable);
+  mGetDeviceRequests.AppendElement(request);
 
-  for (int i = 0; i < requestedDeviceCount; i++) {
+  for (uint8_t i = 0; i < aDeviceAddress.Length(); i++) {
     // Retrieve all properties of devices
     sBtInterface->GetRemoteDeviceProperties(aDeviceAddress[i],
-      new GetRemoteDevicePropertiesResultHandler(mGetDeviceRunnables,
+      new GetRemoteDevicePropertiesResultHandler(mGetDeviceRequests,
                                                  aDeviceAddress[i]));
   }
 
@@ -1890,9 +1888,9 @@ BluetoothServiceBluedroid::AdapterStateChangedNotification(bool aState)
 
     // Bluetooth just enabled, clear profile controllers and runnable arrays.
     sControllerArray.Clear();
+    mGetDeviceRequests.Clear();
     mChangeDiscoveryRunnables.Clear();
     mSetAdapterPropertyRunnables.Clear();
-    mGetDeviceRunnables.Clear();
     mFetchUuidsRunnables.Clear();
     mCreateBondRunnables.Clear();
     mRemoveBondRunnables.Clear();
@@ -2220,7 +2218,7 @@ BluetoothServiceBluedroid::RemoteDevicePropertiesNotification(
 
   // Update to registered BluetoothDevice objects
   BluetoothSignal signal(NS_LITERAL_STRING("PropertyChanged"),
-                         nsString(aBdAddr), propertiesArray);
+                         bdAddr, propertiesArray);
 
   // FetchUuids task
   if (!mFetchUuidsRunnables.IsEmpty()) {
@@ -2233,25 +2231,22 @@ BluetoothServiceBluedroid::RemoteDevicePropertiesNotification(
   }
 
   // GetDevices task
-  if (sRequestedDeviceCountArray.IsEmpty()) {
-    // This is possible because the callback would be called after turning
-    // Bluetooth on.
+  if (mGetDeviceRequests.IsEmpty()) {
+    // Callback is called after Bluetooth is turned on
     DistributeSignal(signal);
     return;
   }
 
   // Use address as the index
-  sRemoteDevicesPack.AppendElement(
-    BluetoothNamedValue(nsString(aBdAddr), propertiesArray));
+  mGetDeviceRequests[0].mDevicesPack.AppendElement(
+    BluetoothNamedValue(bdAddr, propertiesArray));
 
-  if (--sRequestedDeviceCountArray[0] == 0) {
-    if (!mGetDeviceRunnables.IsEmpty()) {
-      DispatchReplySuccess(mGetDeviceRunnables[0], sRemoteDevicesPack);
-      mGetDeviceRunnables.RemoveElementAt(0);
+  if (--mGetDeviceRequests[0].mDeviceCount == 0) {
+    if (mGetDeviceRequests[0].mRunnable) {
+      DispatchReplySuccess(mGetDeviceRequests[0].mRunnable,
+                           mGetDeviceRequests[0].mDevicesPack);
     }
-
-    sRequestedDeviceCountArray.RemoveElementAt(0);
-    sRemoteDevicesPack.Clear();
+    mGetDeviceRequests.RemoveElementAt(0);
   }
 
   DistributeSignal(signal);
@@ -2327,7 +2322,7 @@ BluetoothServiceBluedroid::RemoteDevicePropertiesNotification(
   // connection state and append to properties array
   BT_APPEND_NAMED_VALUE(props, "Connected", IsConnected(aBdAddr));
 
-  if (sRequestedDeviceCountArray.IsEmpty()) {
+  if (mGetDeviceRequests.IsEmpty()) {
     /**
      * This is possible when
      *
@@ -2346,17 +2341,15 @@ BluetoothServiceBluedroid::RemoteDevicePropertiesNotification(
   }
 
   // Use address as the index
-  sRemoteDevicesPack.AppendElement(
-    BluetoothNamedValue(nsString(aBdAddr), props));
+  mGetDeviceRequests[0].mDevicesPack.AppendElement(
+    BluetoothNamedValue(nsString(aBdAddr), propertiesArray));
 
-  if (--sRequestedDeviceCountArray[0] == 0) {
-    if (!mGetDeviceRunnables.IsEmpty()) {
-      DispatchReplySuccess(mGetDeviceRunnables[0], sRemoteDevicesPack);
-      mGetDeviceRunnables.RemoveElementAt(0);
+  if (--mGetDeviceRequests[0].mDeviceCount == 0) {
+    if (mGetDeviceRequests[0].mRunnable) {
+      DispatchReplySuccess(mGetDeviceRequests[0].mRunnable,
+                           mGetDeviceRequests[0].mDevicesPack);
     }
-
-    sRequestedDeviceCountArray.RemoveElementAt(0);
-    sRemoteDevicesPack.Clear();
+    mGetDeviceRequests.RemoveElementAt(0);
   }
 
   // Update to registered BluetoothDevice objects
