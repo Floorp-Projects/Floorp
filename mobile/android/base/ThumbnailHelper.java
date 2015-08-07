@@ -5,9 +5,9 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.mozglue.DirectBufferAllocator;
-import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
 
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -153,7 +153,7 @@ public final class ThumbnailHelper {
     }
 
     /* This method is invoked by JNI once the thumbnail data is ready. */
-    @WrapElementForJNI(stubName = "SendThumbnail")
+    @WrapForJNI(stubName = "SendThumbnail")
     public static void notifyThumbnail(ByteBuffer data, int tabId, boolean success, boolean shouldStore) {
         Tab tab = Tabs.getInstance().getTab(tabId);
         ThumbnailHelper helper = ThumbnailHelper.getInstance();
