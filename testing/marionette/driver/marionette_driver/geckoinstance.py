@@ -27,6 +27,7 @@ class GeckoInstance(object):
                       "browser.startup.page": 0,
                       "browser.tabs.remote.autostart.1": False,
                       "browser.tabs.remote.autostart.2": False,
+                      "browser.urlbar.userMadeSearchSuggestionsChoice": True,
                       "browser.warnOnQuit": False,
                       "dom.ipc.reportProcessHangs": False,
                       "focusmanager.testmode": True,
