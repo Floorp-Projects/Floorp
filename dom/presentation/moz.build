@@ -9,13 +9,31 @@ DIRS += ['interfaces', 'provider']
 XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
 MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']
 
-EXPORTS.mozilla.dom.presentation += [
+EXPORTS.mozilla.dom += [
+    'ipc/PresentationChild.h',
+    'ipc/PresentationIPCService.h',
+    'ipc/PresentationParent.h',
+    'Presentation.h',
+    'PresentationCallbacks.h',
     'PresentationDeviceManager.h',
+    'PresentationService.h',
+    'PresentationSession.h',
+    'PresentationSessionInfo.h',
+    'PresentationSessionTransport.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
+    'ipc/PresentationChild.cpp',
+    'ipc/PresentationIPCService.cpp',
+    'ipc/PresentationParent.cpp',
+    'Presentation.cpp',
+    'PresentationCallbacks.cpp',
     'PresentationDeviceManager.cpp',
+    'PresentationService.cpp',
+    'PresentationSession.cpp',
+    'PresentationSessionInfo.cpp',
     'PresentationSessionRequest.cpp',
+    'PresentationSessionTransport.cpp',
 ]
 
 EXTRA_COMPONENTS += [
@@ -25,6 +43,11 @@ EXTRA_COMPONENTS += [
 
 EXTRA_JS_MODULES += [
     'PresentationDeviceInfoManager.jsm',
+]
+
+IPDL_SOURCES += [
+    'ipc/PPresentation.ipdl',
+    'ipc/PPresentationRequest.ipdl'
 ]
 
 FAIL_ON_WARNINGS = True
