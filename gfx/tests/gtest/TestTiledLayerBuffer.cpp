@@ -11,8 +11,6 @@ namespace mozilla {
 namespace layers {
 
 TEST(TiledLayerBuffer, TileStart) {
-  gfxPlatform::GetPlatform()->ComputeTileSize();
-
   ASSERT_EQ(RoundDownToTileEdge(10, 256), 0);
   ASSERT_EQ(RoundDownToTileEdge(-10, 256), -256);
 }
