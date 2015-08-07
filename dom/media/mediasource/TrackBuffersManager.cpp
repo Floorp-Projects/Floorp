@@ -1651,6 +1651,7 @@ TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
   }
 
   // Update our buffered range to exclude the range just removed.
+  removedIntervals.SetFuzz(TimeUnit::FromMicroseconds(maxSampleDuration/2));
   aTrackData.mBufferedRanges -= removedIntervals;
 
   data.RemoveElementsAt(firstRemovedIndex.ref(),
