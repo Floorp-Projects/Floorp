@@ -578,7 +578,7 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY doorhanger_tracking_state_enabled "Enabled">
 <!ENTITY doorhanger_tracking_state_disabled "Disabled">
 <!ENTITY doorhanger_tracking_message_enabled1 "Attempts to track your online behavior have been blocked.">
-<!ENTITY doorhanger_tracking_message_disabled1 "This site includes content that tracks your browsing.">
+<!ENTITY doorhanger_tracking_message_disabled2 "This page includes elements that may track your browsing.">
 
 <!-- Common mixed and tracking content strings in site identity popup -->
 <!ENTITY learn_more "Learn More">
