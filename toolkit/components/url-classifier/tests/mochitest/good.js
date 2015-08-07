@@ -1,0 +1,1 @@
+scriptItem = "loaded whitelisted javascript!";
