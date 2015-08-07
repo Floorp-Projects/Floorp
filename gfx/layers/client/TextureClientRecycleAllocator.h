@@ -38,7 +38,7 @@ public:
   already_AddRefed<TextureClient>
   CreateOrRecycleForDrawing(gfx::SurfaceFormat aFormat,
                             gfx::IntSize aSize,
-                            gfx::BackendType aMoz2dBackend,
+                            BackendSelector aSelector,
                             TextureFlags aTextureFlags,
                             TextureAllocationFlags flags = ALLOC_DEFAULT);
 

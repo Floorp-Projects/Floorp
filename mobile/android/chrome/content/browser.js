@@ -442,7 +442,12 @@ var BrowserApp = {
 
     this.deck = document.getElementById("browsers");
 
-    BrowserEventHandler.init();
+    // This check and BrowserEventHandler should be removed once we have
+    // switched over to the C++ APZ code
+    if (!AppConstants.MOZ_ANDROID_APZ) {
+      BrowserEventHandler.init();
+    }
+
     ViewportHandler.init();
 
     Services.androidBridge.browserApp = this;

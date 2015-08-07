@@ -951,7 +951,7 @@ addAsyncAnimTest(function *() {
                  RunningOn.Compositor,
                  "animation-iteration-count test 3 at 24s");
   advance_clock(200);
-  omta_is("opacity", 1, RunningOn.Compositor,
+  omta_is("opacity", 1, RunningOn.Either,
           "animation-iteration-count test 2 at 25s");
   omta_is_approx("transform", { ty: 100 * gTF.ease_out(0.8) }, 0.01,
                  RunningOn.Compositor,
@@ -2342,6 +2342,39 @@ addAsyncAnimTest(function *() {
   advance_clock(500);
   omta_is("transform", { tx: 0 }, RunningOn.Compositor,
           "transformnone animation at 500ms, interpolating none values");
+  done_div();
+});
+
+addAsyncAnimTest(function *() {
+  new_div("transform: translate(100px); transition: transform 10s 5s linear");
+  yield waitForPaintsFlushed();
+  gDiv.style.transform = "translate(200px)";
+  yield waitForPaintsFlushed();
+  omta_is("transform", { tx: 100 }, RunningOn.MainThread,
+          "transition runs on main thread during delay");
+  // At the *very* start of the transition the start value of the transition
+  // will match the underlying transform value. Various optimizations in
+  // RestyleManager may recognize this a "no change" and filter out the
+  // transition meaning that the animation doesn't get added to the compositor
+  // thread until the first time the value changes. As a result, we fast-forward
+  // a little past the beginning and then wait for the animation to be sent
+  // to the compositor.
+  advance_clock(5100);
+  yield waitForPaints();
+  omta_is("transform", { tx: 101 }, RunningOn.Compositor,
+          "transition runs on compositor at start of active interval");
+  advance_clock(4900);
+  omta_is("transform", { tx: 150 }, RunningOn.Compositor,
+          "transition runs on compositor at during active interval");
+  advance_clock(5000);
+  // Currently the compositor will apply a forwards fill until it gets told by
+  // the main thread to clear the animation. As a result we should wait for
+  // paints before checking that the animated value does *not* appear on the
+  // compositor thread.
+  yield waitForPaints();
+  omta_is("transform", { tx: 200 }, RunningOn.MainThread,
+          "transition runs on main thread at end of active interval");
+
   done_div();
 });
 

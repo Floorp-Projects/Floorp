@@ -30,16 +30,6 @@ var bound = f.bind(null, "carrot");
 assertDeepEq(Reflect.construct(bound, []), new bound);
 
 // Classes:
-function classesEnabled(testCode = "class Foo { constructor() {} }") {
-    try {
-        new Function(testCode);
-        return true;
-    } catch (e) {
-        if (!(e instanceof SyntaxError))
-            throw e;
-        return false;
-    }
-}
 if (classesEnabled()) {
     eval(`{
         class Base {

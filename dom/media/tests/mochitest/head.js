@@ -259,13 +259,13 @@ function setupEnvironment() {
 // This is called by steeplechase; which provides the test configuration options
 // directly to the test through this function.  If we're not on steeplechase,
 // the test is configured directly and immediately.
-function run_test(is_initiator) {
+function run_test(is_initiator,timeout) {
   var options = { is_local: is_initiator,
                   is_remote: !is_initiator };
 
   setTimeout(() => {
-    unexpectedEventArrived(new Error("PeerConnectionTest timed out after 30s"));
-  }, 30000);
+    unexpectedEventArrived(new Error("PeerConnectionTest timed out after "+timeout+"s"));
+  }, timeout);
 
   // Also load the steeplechase test code.
   var s = document.createElement("script");
