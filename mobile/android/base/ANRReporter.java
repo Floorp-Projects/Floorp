@@ -20,8 +20,8 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 
 import org.json.JSONObject;
+import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.AppConstants.Versions;
-import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.BroadcastReceiver;
@@ -54,11 +54,11 @@ public final class ANRReporter extends BroadcastReceiver
     private Handler mHandler;
     private volatile boolean mPendingANR;
 
-    @WrapElementForJNI
+    @WrapForJNI
     private static native boolean requestNativeStack(boolean unwind);
-    @WrapElementForJNI
+    @WrapForJNI
     private static native String getNativeStack();
-    @WrapElementForJNI
+    @WrapForJNI
     private static native void releaseNativeStack();
 
     public static void register(Context context) {

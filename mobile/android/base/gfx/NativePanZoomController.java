@@ -5,9 +5,9 @@
 
 package org.mozilla.gecko.gfx;
 
+import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoThread;
-import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.util.GeckoEventListener;
 
@@ -97,7 +97,7 @@ class NativePanZoomController implements PanZoomController, GeckoEventListener {
     @Override
     public native int getOverScrollMode();
 
-    @WrapElementForJNI(allowMultithread = true, stubName = "RequestContentRepaintWrapper")
+    @WrapForJNI(allowMultithread = true, stubName = "RequestContentRepaintWrapper")
     private void requestContentRepaint(float x, float y, float width, float height, float resolution) {
         mTarget.forceRedraw(new DisplayPortMetrics(x, y, x + width, y + height, resolution));
     }

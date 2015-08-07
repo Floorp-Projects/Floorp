@@ -5,7 +5,7 @@
 
 package org.mozilla.gecko.util;
 
-import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
+import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.JNITarget;
 
 /**
@@ -16,8 +16,7 @@ import org.mozilla.gecko.mozglue.JNITarget;
  * thread, call {@link #clone()} to make a copy, and use the copy on the other thread.
  * When a copy is first used, it becomes attached to the thread using it.
  */
-@JNITarget
-@WrapElementForJNI
+@WrapForJNI
 public final class NativeJSContainer extends NativeJSObject
 {
     private NativeJSContainer() {
