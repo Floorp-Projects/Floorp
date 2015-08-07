@@ -1078,25 +1078,17 @@ extends="chrome://global/content/bindings/popup.xml#popup">
       <method name="_invalidate">
         <body>
           <![CDATA[
-          // To get a fixed height for the popup, instead of the default
-          // behavior that grows and shrinks it on result change, a consumer
-          // can set the height attribute. In such a case, instead of adjusting
-          // the richlistbox height, we just need to collapse unused items.
-          if (!this.hasAttribute("height")) {
-            // collapsed if no matches
-            this.richlistbox.collapsed = (this._matchCount == 0);
+          // collapsed if no matches
+          this.richlistbox.collapsed = (this._matchCount == 0);
 
-            // Update the richlistbox height.
-            if (this._adjustHeightTimeout) {
-              clearTimeout(this._adjustHeightTimeout);
-            }
-            if (this._shrinkTimeout) {
-              clearTimeout(this._shrinkTimeout);
-            }
-            this._adjustHeightTimeout = setTimeout(() => this.adjustHeight(), 0);
-          } else {
-            this._collapseUnusedItems();
+          // Update the richlistbox height.
+          if (this._adjustHeightTimeout) {
+            clearTimeout(this._adjustHeightTimeout);
           }
+          if (this._shrinkTimeout) {
+            clearTimeout(this._shrinkTimeout);
+          }
+          this._adjustHeightTimeout = setTimeout(() => this.adjustHeight(), 0);
 
           this._currentIndex = 0;
           if (this._appendResultTimeout) {
@@ -1143,13 +1135,18 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           let rows = this.richlistbox.childNodes;
           let numRows = Math.min(this._matchCount, this.maxRows, rows.length);
 
+          this.removeAttribute("height");
+
           // Default the height to 0 if we have no rows to show
           let height = 0;
           if (numRows) {
             if (!this._rowHeight) {
               let firstRowRect = rows[0].getBoundingClientRect();
               this._rowHeight = firstRowRect.height;
-              this._rlbAnimated = !!window.getComputedStyle(this.richlistbox).transitionProperty;
+
+              let transition =
+                window.getComputedStyle(this.richlistbox).transitionProperty;
+              this._rlbAnimated = transition && transition != "none";
 
               // Set a fixed max-height to avoid flicker when growing the panel.
               this.richlistbox.style.maxHeight = (this._rowHeight * this.maxRows) + "px";
@@ -1159,22 +1156,28 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             height = this._rowHeight * numRows;
           }
 
+          let animate = this._rlbAnimated &&
+                        this.getAttribute("dontanimate") != "true";
           let currentHeight = this.richlistbox.getBoundingClientRect().height;
           if (height > currentHeight) {
             // Grow immediately.
-            this.richlistbox.style.height = height + "px";
+            if (animate) {
+              this.richlistbox.removeAttribute("height");
+              this.richlistbox.style.height = height + "px";
+            } else {
+              this.richlistbox.style.removeProperty("height");
+              this.richlistbox.height = height;
+            }
           } else {
             // Delay shrinking to avoid flicker.
             this._shrinkTimeout = setTimeout(() => {
-              this.richlistbox.style.height = height + "px";
-              if (this._rlbAnimated) {
-                let onTransitionEnd = () => {
-                  this.removeEventListener("transitionend", onTransitionEnd, true);
-                  this._collapseUnusedItems();
-                };
-                this.addEventListener("transitionend", onTransitionEnd, true);
+              this._collapseUnusedItems();
+              if (animate) {
+                this.richlistbox.removeAttribute("height");
+                this.richlistbox.style.height = height + "px";
               } else {
-                this._collapseUnusedItems();
+                this.richlistbox.style.removeProperty("height");
+                this.richlistbox.height = height;
               }
             }, this.mInput.shrinkDelay);
           }
