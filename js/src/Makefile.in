@@ -118,7 +118,7 @@ check-jit-test::
 	        --no-slow --no-progress --format=automation --jitflags=all \
 			$(JITTEST_VALGRIND_FLAG) \
 			$(JITTEST_EXTRA_ARGS) \
-	        $(DIST)/bin/$(JS_SHELL_NAME)$(BIN_SUFFIX)
+	        $(DIST)/bin/$(JS_SHELL_NAME)$(BIN_SUFFIX) $(JITTEST_TEST_ARGS)
 
 check:: check-style check-masm
 
