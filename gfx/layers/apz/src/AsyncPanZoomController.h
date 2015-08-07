@@ -841,9 +841,6 @@ private:
    */
 
 private:
-  UniquePtr<InputBlockState> mPanGestureState;
-
-
   /* ===================================================================
    * The functions and members in this section are used to manage
    * fling animations, smooth scroll animations, and overscroll
