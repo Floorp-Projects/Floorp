@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 
+#include "FlushableTaskQueue.h"
 #include "MediaDecoderReader.h"
 #include "PlatformDecoderModule.h"
 #include "nsAutoRef.h"
