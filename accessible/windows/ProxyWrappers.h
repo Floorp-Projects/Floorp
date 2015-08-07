@@ -42,6 +42,13 @@ public:
   virtual void Shutdown() override { mBits.proxy = nullptr; }
 };
 
+class DocProxyAccessibleWrap : public HyperTextProxyAccessibleWrap
+{
+public:
+  DocProxyAccessibleWrap(ProxyAccessible* aProxy) :
+    HyperTextProxyAccessibleWrap(aProxy) {}
+};
+
 template<typename T>
 inline ProxyAccessible*
 HyperTextProxyFor(T* aWrapper)
