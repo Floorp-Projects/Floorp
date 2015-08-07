@@ -41,5 +41,6 @@ CPOWTimer::~CPOWTimer()
         return;
     }
 
-    js::AddCPOWPerformanceDelta(runtime, endInterval - startInterval_);
+    js::PerformanceData* performance = js::GetPerformanceData(runtime);
+    performance->totalCPOWTime += endInterval - startInterval_;
 }
