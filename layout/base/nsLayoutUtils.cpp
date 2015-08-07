@@ -381,20 +381,20 @@ nsLayoutUtils::HasAnimationsForCompositor(const nsIFrame* aFrame,
 }
 
 bool
-nsLayoutUtils::HasAnimations(const nsIFrame* aFrame,
-                             nsCSSProperty aProperty)
+nsLayoutUtils::HasCurrentAnimationOfProperty(const nsIFrame* aFrame,
+                                             nsCSSProperty aProperty)
 {
   nsPresContext* presContext = aFrame->PresContext();
   AnimationCollection* collection =
     presContext->AnimationManager()->GetAnimationCollection(aFrame);
   if (collection &&
-      collection->HasAnimationOfProperty(aProperty)) {
+      collection->HasCurrentAnimationOfProperty(aProperty)) {
     return true;
   }
   collection =
     presContext->TransitionManager()->GetAnimationCollection(aFrame);
   if (collection &&
-      collection->HasAnimationOfProperty(aProperty)) {
+      collection->HasCurrentAnimationOfProperty(aProperty)) {
     return true;
   }
   return false;

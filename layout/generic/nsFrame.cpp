@@ -1946,7 +1946,8 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   if (disp->mOpacity == 0.0 && aBuilder->IsForPainting() &&
       !aBuilder->WillComputePluginGeometry() &&
       !(disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_OPACITY) &&
-      !nsLayoutUtils::HasAnimations(this, eCSSProperty_opacity) &&
+      !nsLayoutUtils::HasCurrentAnimationOfProperty(this,
+                                                    eCSSProperty_opacity) &&
       !needEventRegions) {
     return;
   }
