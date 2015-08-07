@@ -74,10 +74,8 @@ public:
 
   void SetResampleNeeded()
   {
-    if (!mRunningSample) {
-      if (!mResampleNeeded) {
-        FlagDocumentNeedsFlush();
-      }
+    if (!mRunningSample && !mResampleNeeded) {
+      FlagDocumentNeedsFlush();
       mResampleNeeded = true;
     }
   }
@@ -104,10 +102,16 @@ public:
   void NotifyRefreshDriverDestroying(nsRefreshDriver* aRefreshDriver);
 
   // Helper to check if we have any animation elements at all
-  bool HasRegisteredAnimations()
-  { return mAnimationElementTable.Count() != 0; }
+  bool HasRegisteredAnimations() const
+  {
+    return mAnimationElementTable.Count() != 0;
+  }
 
   void AddStyleUpdatesTo(mozilla::RestyleTracker& aTracker);
+  bool MightHavePendingStyleUpdates() const
+  {
+    return mMightHavePendingStyleUpdates;
+  }
 
 protected:
   ~nsSMILAnimationController();
@@ -224,6 +228,9 @@ protected:
 
   // Are we registered with our document's refresh driver?
   bool                       mRegisteredWithRefreshDriver;
+
+  // Have we updated animated values without adding them to the restyle tracker?
+  bool                       mMightHavePendingStyleUpdates;
 
   // Store raw ptr to mDocument.  It owns the controller, so controller
   // shouldn't outlive it
