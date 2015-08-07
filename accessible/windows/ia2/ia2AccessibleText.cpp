@@ -17,7 +17,7 @@
 
 using namespace mozilla::a11y;
 
-StaticRefPtr<Accessible> ia2AccessibleText::sLastTextChangeAcc;
+StaticRefPtr<HyperTextAccessibleWrap> ia2AccessibleText::sLastTextChangeAcc;
 StaticAutoPtr<nsString> ia2AccessibleText::sLastTextChangeString;
 uint32_t ia2AccessibleText::sLastTextChangeStart = 0;
 uint32_t ia2AccessibleText::sLastTextChangeEnd = 0;
@@ -579,21 +579,22 @@ ia2AccessibleText::GetModifiedText(bool aGetInsertedText,
   if (!aText)
     return E_INVALIDARG;
 
-  uint32_t startOffset = 0, endOffset = 0;
-  nsAutoString text;
+  if (!sLastTextChangeAcc)
+    return S_OK;
 
-  nsresult rv = GetModifiedText(aGetInsertedText, text,
-                                &startOffset, &endOffset);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
+  if (aGetInsertedText != sLastTextChangeWasInsert)
+    return S_OK;
 
-  aText->start = startOffset;
-  aText->end = endOffset;
+  if (sLastTextChangeAcc != this)
+    return S_OK;
 
-  if (text.IsEmpty())
+  aText->start = sLastTextChangeStart;
+  aText->end = sLastTextChangeEnd;
+
+  if (sLastTextChangeString->IsEmpty())
     return S_FALSE;
 
-  aText->text = ::SysAllocStringLen(text.get(), text.Length());
+  aText->text = ::SysAllocStringLen(sLastTextChangeString->get(), sLastTextChangeString->Length());
   return aText->text ? S_OK : E_OUTOFMEMORY;
 }
 
