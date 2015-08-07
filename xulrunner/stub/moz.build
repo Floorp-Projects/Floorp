@@ -29,6 +29,8 @@ LOCAL_INCLUDES += [
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     LOCAL_INCLUDES += ['/toolkit/xre']
+    # this is an awful workaround - glandium
+    USE_LIBS += ['mfbt_staticruntime']
 
 if CONFIG['_MSC_VER']:
     WIN32_EXE_LDFLAGS += ['-ENTRY:wmainCRTStartup']

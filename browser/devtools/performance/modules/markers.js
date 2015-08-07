@@ -101,10 +101,7 @@ const TIMELINE_BLUEPRINT = {
     group: 1,
     colorName: "graphs-red",
     label: Formatters.GCLabel,
-    fields: [
-      { property: "causeName", label: L10N.getStr("marker.field.causeName") },
-      { property: "nonincrementalReason", label: L10N.getStr("marker.field.nonIncrementalCause") }
-    ],
+    fields: Formatters.GCFields,
   },
   "nsCycleCollector::Collect": {
     group: 1,

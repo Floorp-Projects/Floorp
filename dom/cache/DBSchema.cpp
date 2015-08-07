@@ -141,7 +141,9 @@ static_assert(nsIContentPolicy::TYPE_INVALID == 0 &&
               nsIContentPolicy::TYPE_INTERNAL_IFRAME == 29 &&
               nsIContentPolicy::TYPE_INTERNAL_AUDIO == 30 &&
               nsIContentPolicy::TYPE_INTERNAL_VIDEO == 31 &&
-              nsIContentPolicy::TYPE_INTERNAL_TRACK == 32,
+              nsIContentPolicy::TYPE_INTERNAL_TRACK == 32 &&
+              nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST == 33 &&
+              nsIContentPolicy::TYPE_INTERNAL_EVENTSOURCE == 34,
               "nsContentPolicytType values are as expected");
 
 namespace {

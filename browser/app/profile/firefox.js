@@ -310,7 +310,8 @@ pref("browser.urlbar.match.url", "@");
 pref("browser.urlbar.suggest.history",              true);
 pref("browser.urlbar.suggest.bookmark",             true);
 pref("browser.urlbar.suggest.openpage",             true);
-pref("browser.urlbar.suggest.searches",             true);
+pref("browser.urlbar.suggest.searches",             false);
+pref("browser.urlbar.userMadeSearchSuggestionsChoice", false);
 
 // Limit the number of characters sent to the current search engine to fetch
 // suggestions.
@@ -1943,8 +1944,9 @@ pref("browser.pocket.enabledLocales", "cs de en-GB en-US en-ZA es-ES es-MX fr hu
 
 pref("view_source.tab", true);
 
-// Enable Service Workers for desktop on non-release builds
-#ifndef RELEASE_BUILD
+// Enable ServiceWorkers for Push API consumers.
+// Interception is still disabled.
 pref("dom.serviceWorkers.enabled", true);
-pref("dom.serviceWorkers.interception.enabled", true);
-#endif
+
+// Enable Push API.
+pref("dom.push.enabled", true);

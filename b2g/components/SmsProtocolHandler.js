@@ -66,7 +66,7 @@ SmsProtocolHandler.prototype = {
   },
 
   newChannel: function Proto_newChannel(aURI) {
-    return newChannel2(aURI, null);
+    return this.newChannel2(aURI, null);
   },
 
   classID: Components.ID("{81ca20cb-0dad-4e32-8566-979c8998bd73}"),

@@ -429,6 +429,11 @@ let View = {
   updateCategory: function(subset, id, nature, deltaT, currentMode) {
     subset = subset.slice().sort(Delta.revCompare);
 
+    let watcherAlerts = null;
+    if (nature == "addons") {
+      watcherAlerts = AddonWatcher.alerts;
+    }
+
     // Grab everything from the DOM before cleaning up
     let eltContainer = this._setupStructure(id);
 
@@ -441,6 +446,16 @@ let View = {
       cachedElements.eltName.textContent = `Full name: ${delta.fullName}.`;
       cachedElements.eltLoaded.textContent = `Measure start: ${Math.round(delta.age/1000)} seconds ago.`
       cachedElements.eltProcess.textContent = `Process: ${delta.processId} (${delta.isChildProcess?"child":"parent"}).`;
+      let jankSuffix = "";
+      let cpowSuffix = "";
+      if (watcherAlerts) {
+        let deltaAlerts = watcherAlerts.get(delta.addonId);
+        if (deltaAlerts) {
+          jankSuffix = ` (${deltaAlerts.alerts.longestDuration} alerts)`;
+          cpowSuffix = ` (${deltaAlerts.alerts.totalCPOWTime} alerts)`;
+        }
+      }
+
       let eltImpact = cachedElements.eltImpact;
       if (currentMode == MODE_RECENT) {
         cachedElements.eltRoot.setAttribute("impact", delta.jank.longestDuration + 1);
@@ -451,10 +466,10 @@ let View = {
         } else {
           eltImpact.textContent = ` is currently considerably slowing down ${BRAND_NAME}.`;
         }
-        cachedElements.eltFPS.textContent = `Impact on framerate: ${delta.jank.longestDuration + 1}/${delta.jank.durations.length}.`;
+        cachedElements.eltFPS.textContent = `Impact on framerate: ${delta.jank.longestDuration + 1}/${delta.jank.durations.length}${jankSuffix}.`;
         cachedElements.eltCPU.textContent = `CPU usage: ${Math.min(100, Math.ceil(delta.jank.totalUserTime/deltaT))}%.`;
         cachedElements.eltSystem.textContent = `System usage: ${Math.min(100, Math.ceil(delta.jank.totalSystemTime/deltaT))}%.`;
-        cachedElements.eltCPOW.textContent = `Blocking process calls: ${Math.ceil(delta.cpow.totalCPOWTime/deltaT)}%.`;
+        cachedElements.eltCPOW.textContent = `Blocking process calls: ${Math.ceil(delta.cpow.totalCPOWTime/deltaT)}%${cpowSuffix}.`;
       } else {
         if (delta.alerts.length == 0) {
           eltImpact.textContent = " has performed well so far.";
@@ -484,11 +499,11 @@ let View = {
             }
 
             eltImpact.textContent = ` ${describeFrequency} ${describeImpact}`;
-            cachedElements.eltFPS.textContent = `Impact on framerate: ${delta.alerts[1]} high-impacts, ${delta.alerts[0]} medium-impact.`;
+            cachedElements.eltFPS.textContent = `Impact on framerate: ${delta.alerts[1]} high-impacts, ${delta.alerts[0]} medium-impact${jankSuffix}.`;
           }
           cachedElements.eltCPU.textContent = `CPU usage: ${Math.min(100, Math.ceil(delta.jank.totalUserTime/delta.age))}% (total ${delta.jank.totalUserTime}ms).`;
           cachedElements.eltSystem.textContent = `System usage: ${Math.min(100, Math.ceil(delta.jank.totalSystemTime/delta.age))}% (total ${delta.jank.totalSystemTime}ms).`;
-          cachedElements.eltCPOW.textContent = `Blocking process calls: ${Math.ceil(delta.cpow.totalCPOWTime/delta.age)}% (total ${delta.cpow.totalCPOWTime}ms).`;
+          cachedElements.eltCPOW.textContent = `Blocking process calls: ${Math.ceil(delta.cpow.totalCPOWTime/delta.age)}% (total ${delta.cpow.totalCPOWTime}ms)${cpowSuffix}.`;
         }
       }
     }
@@ -681,7 +696,7 @@ let View = {
         ["eltSystem", "system"],
         ["eltCPOW", "cpow"],
         ["eltLoaded", "loaded"],
-        ["eltProcess", "process"]
+        ["eltProcess", "process"],
       ]) {
         let elt = document.createElement("li");
         elt.classList.add(className);

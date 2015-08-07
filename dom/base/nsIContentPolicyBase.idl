@@ -24,7 +24,7 @@ typedef unsigned long nsContentPolicyType;
  * by launching a dialog to prompt the user for something).
  */
 
-[scriptable,uuid(11b8d725-7c2b-429e-b51f-8b5b542d5009)]
+[scriptable,uuid(20f7b9bf-d7d5-4987-ade8-b7dc0398d44a)]
 interface nsIContentPolicyBase : nsISupports
 {
   /**
@@ -256,6 +256,20 @@ interface nsIContentPolicyBase : nsISupports
    * This will be mapped to TYPE_MEDIA.
    */
   const nsContentPolicyType TYPE_INTERNAL_TRACK = 32;
+
+  /**
+   * Indicates an internal constant for an XMLHttpRequest.
+   *
+   * This will be mapped to TYPE_XMLHTTPREQUEST.
+   */
+  const nsContentPolicyType TYPE_INTERNAL_XMLHTTPREQUEST = 33;
+
+  /**
+   * Indicates an internal constant for EventSource.
+   *
+   * This will be mapped to TYPE_DATAREQUEST.
+   */
+  const nsContentPolicyType TYPE_INTERNAL_EVENTSOURCE = 34;
 
   /* When adding new content types, please update nsContentBlocker,
    * NS_CP_ContentTypeName, nsCSPContext, all nsIContentPolicy

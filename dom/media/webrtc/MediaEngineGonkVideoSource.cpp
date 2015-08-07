@@ -752,7 +752,7 @@ MediaEngineGonkVideoSource::RotateImage(layers::Image* aImage, uint32_t aWidth, 
   RefPtr<layers::TextureClient> textureClient
     = mTextureClientAllocator->CreateOrRecycleForDrawing(gfx::SurfaceFormat::YUV,
                                                          gfx::IntSize(dstWidth, dstHeight),
-                                                         gfx::BackendType::NONE,
+                                                         layers::BackendSelector::Content,
                                                          layers::TextureFlags::DEFAULT,
                                                          layers::ALLOC_DISALLOW_BUFFERTEXTURECLIENT);
   if (textureClient) {

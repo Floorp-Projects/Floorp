@@ -57,7 +57,7 @@ interface nsITimerCallback : nsISupports
  * target thread, or races may occur with bad results like timers firing after
  * they've been canceled, and/or not firing after re-initiatization.
  */
-[scriptable, uuid(193fc37a-8aa4-4d29-aa57-1acd87c26b66)]
+[scriptable, uuid(c569e813-333f-4b78-8691-13ca5839e10a)]
 interface nsITimer : nsISupports
 {
   /* Timer types */
@@ -65,7 +65,7 @@ interface nsITimer : nsISupports
   /**
    * Type of a timer that fires once only.
    */
-  const short TYPE_ONE_SHOT           = 0;
+  const short TYPE_ONE_SHOT = 0;
 
   /**
    * After firing, a TYPE_REPEATING_SLACK timer is stopped and not restarted
@@ -75,28 +75,15 @@ interface nsITimer : nsISupports
    *
    * This is the preferable repeating type for most situations.
    */
-  const short TYPE_REPEATING_SLACK    = 1;
-  
+  const short TYPE_REPEATING_SLACK = 1;
+
   /**
-   * An TYPE_REPEATING_PRECISE repeating timer aims to have constant period
-   * between firings.  The processing time for each timer callback should not
-   * influence the timer period.  However, if the processing for the last
-   * timer firing could not be completed until just before the next firing
-   * occurs, then you could have two timer notification routines being
-   * executed in quick succession.  Furthermore, if your callback processing
-   * time is longer than the timer period, then the timer will post more
-   * notifications while your callback is running.  For example, if a
-   * REPEATING_PRECISE timer has a 10ms period and a callback takes 50ms,
-   * then by the time the callback is done there will be 5 events to run the
-   * timer callback in the event queue.  Furthermore, the next scheduled time
-   * will always advance by exactly the delay every time the timer fires.
-   * This means that if the clock increments without the timer thread running
-   * (e.g. the computer is asleep) when the timer thread gets to run again it
-   * will post all the events that it "missed" while it wasn't running.  Use
-   * this timer type with extreme caution.  Chances are, this is not what you
-   * want.
+   * TYPE_REPEATING_PRECISE is just a synonym for
+   * TYPE_REPEATING_PRECISE_CAN_SKIP. They used to be distinct, but the old
+   * TYPE_REPEATING_PRECISE kind was similar to TYPE_REPEATING_PRECISE_CAN_SKIP
+   * while also being less useful. So the distinction was removed.
    */
-  const short TYPE_REPEATING_PRECISE  = 2;
+  const short TYPE_REPEATING_PRECISE = 2;
 
   /**
    * A TYPE_REPEATING_PRECISE_CAN_SKIP repeating timer aims to have constant
@@ -105,10 +92,9 @@ interface nsITimer : nsISupports
    * guarantees that it will not queue up new events to fire the callback
    * until the previous callback event finishes firing.  If the callback
    * takes a long time, then the next callback will be scheduled immediately
-   * afterward, but only once, unlike TYPE_REPEATING_PRECISE.  If you want a
-   * non-slack timer, you probably want this one.
+   * afterward, but only once.  This is the only non-slack timer available.
    */
-  const short TYPE_REPEATING_PRECISE_CAN_SKIP  = 3;
+  const short TYPE_REPEATING_PRECISE_CAN_SKIP = 3;
 
   /**
    * Initialize a timer that will fire after the said delay.
