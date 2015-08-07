@@ -1214,16 +1214,6 @@ void ViewTransform::Y(float a0) const
     return mozilla::jni::Field<Y_t>::Set(this, nullptr, a0);
 }
 
-constexpr char NativeZip::name[];
-
-constexpr char NativeZip::CreateInputStream_t::name[];
-constexpr char NativeZip::CreateInputStream_t::signature[];
-
-mozilla::jni::Object::LocalRef NativeZip::CreateInputStream(mozilla::jni::Object::Param a0, int32_t a1) const
-{
-    return mozilla::jni::Method<CreateInputStream_t>::Call(this, nullptr, a0, a1);
-}
-
 constexpr char MatrixBlobCursor::name[];
 
 constexpr char MatrixBlobCursor::New_t::name[];
