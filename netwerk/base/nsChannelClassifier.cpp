@@ -512,11 +512,82 @@ nsChannelClassifier::SetBlockedTrackingContent(nsIChannel *channel)
   return NS_OK;
 }
 
+nsresult
+nsChannelClassifier::IsTrackerWhitelisted()
+{
+  nsresult rv;
+  nsCOMPtr<nsIURIClassifier> uriClassifier =
+    do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoCString tables;
+  Preferences::GetCString("urlclassifier.trackingWhitelistTable", &tables);
+
+  if (tables.IsEmpty()) {
+    LOG(("nsChannelClassifier[%p]:IsTrackerWhitelisted whitelist disabled",
+         this));
+    return NS_ERROR_TRACKING_URI;
+  }
+
+  nsCOMPtr<nsIHttpChannelInternal> chan = do_QueryInterface(mChannel, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIURI> topWinURI;
+  rv = chan->GetTopWindowURI(getter_AddRefs(topWinURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!topWinURI) {
+    LOG(("nsChannelClassifier[%p]: No window URI", this));
+    return NS_ERROR_TRACKING_URI;
+  }
+
+  nsCOMPtr<nsIScriptSecurityManager> securityManager =
+    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIPrincipal> chanPrincipal;
+  rv = securityManager->GetChannelURIPrincipal(mChannel,
+                                               getter_AddRefs(chanPrincipal));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Craft a whitelist URL like "toplevel.page/?resource=third.party.domain"
+  nsAutoCString pageHostname, resourceDomain;
+  rv = topWinURI->GetHost(pageHostname);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = chanPrincipal->GetBaseDomain(resourceDomain);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsAutoCString whitelistEntry = NS_LITERAL_CSTRING("http://") +
+    pageHostname + NS_LITERAL_CSTRING("/?resource=") + resourceDomain;
+  LOG(("nsChannelClassifier[%p]: Looking for %s in the whitelist",
+       this, whitelistEntry.get()));
+
+  nsCOMPtr<nsIURI> whitelistURI;
+  rv = NS_NewURI(getter_AddRefs(whitelistURI), whitelistEntry);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Check whether or not the tracker is in the entity whitelist
+  nsAutoCString results;
+  rv = uriClassifier->ClassifyLocalWithTables(whitelistURI, tables, results);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!results.IsEmpty()) {
+    return NS_OK; // found it on the whitelist, must not be blocked
+  }
+
+  LOG(("nsChannelClassifier[%p]: %s is not in the whitelist",
+       this, whitelistEntry.get()));
+  return NS_ERROR_TRACKING_URI;
+}
+
 NS_IMETHODIMP
 nsChannelClassifier::OnClassifyComplete(nsresult aErrorCode)
 {
     // Should only be called in the parent process.
     MOZ_ASSERT(XRE_IsParentProcess());
+
+    if (aErrorCode == NS_ERROR_TRACKING_URI &&
+        NS_SUCCEEDED(IsTrackerWhitelisted())) {
+      LOG(("nsChannelClassifier[%p]:OnClassifyComplete tracker found "
+           "in whitelist so we won't block it)", this));
+      aErrorCode = NS_OK;
+    }
 
     LOG(("nsChannelClassifier[%p]:OnClassifyComplete %d", this, aErrorCode));
     if (mSuspendedChannel) {

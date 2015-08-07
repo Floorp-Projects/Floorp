@@ -4,27 +4,54 @@ this.EXPORTED_SYMBOLS = ["UrlClassifierTestUtils"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
+const TRACKING_TABLE_NAME = "mochitest-track-simple";
+const TRACKING_TABLE_PREF = "urlclassifier.trackingTable";
+const WHITELIST_TABLE_NAME = "mochitest-trackwhite-simple";
+const WHITELIST_TABLE_PREF = "urlclassifier.trackingWhitelistTable";
+
 Cu.import("resource://gre/modules/Services.jsm");
 
 this.UrlClassifierTestUtils = {
 
   addTestTrackers() {
-    const TABLE_PREF = "urlclassifier.trackingTable";
-    const TABLE_NAME = "test-track-simple";
+    // Add some URLs to the tracking databases
+    let trackingURL1 = "tracking.example.com/";
+    let trackingURL2 = "itisatracker.org/";
+    let trackingURL3 = "trackertest.org/";
+    let whitelistedURL = "itisatrap.org/?resource=itisatracker.org";
 
-    // Add some URLs to the tracking database (to be blocked)
-    let testData = "tracking.example.com/";
-    let testUpdate =
-          "n:1000\ni:test-track-simple\nad:1\n" +
-          "a:524:32:" + testData.length + "\n" +
-          testData;
+    let trackingUpdate =
+          "n:1000\ni:" + TRACKING_TABLE_NAME + "\nad:3\n" +
+          "a:1:32:" + trackingURL1.length + "\n" +
+          trackingURL1 + "\n" +
+          "a:2:32:" + trackingURL2.length + "\n" +
+          trackingURL2 + "\n" +
+          "a:3:32:" + trackingURL3.length + "\n" +
+          trackingURL3 + "\n";
+    let whitelistUpdate =
+          "n:1000\ni:" + WHITELIST_TABLE_NAME + "\nad:1\n" +
+          "a:1:32:" + whitelistedURL.length + "\n" +
+          whitelistedURL + "\n";
 
-    return this.useTestDatabase(TABLE_PREF, TABLE_NAME, testUpdate);
+    var tables = [
+      {
+        pref: TRACKING_TABLE_PREF,
+        name: TRACKING_TABLE_NAME,
+        update: trackingUpdate
+      },
+      {
+        pref: WHITELIST_TABLE_PREF,
+        name: WHITELIST_TABLE_NAME,
+        update: whitelistUpdate
+      }
+    ];
+
+    return this.useTestDatabase(tables);
   },
 
   cleanupTestTrackers() {
-    const TABLE_PREF = "urlclassifier.trackingTable";
-    Services.prefs.clearUserPref(TABLE_PREF);
+    Services.prefs.clearUserPref(TRACKING_TABLE_PREF);
+    Services.prefs.clearUserPref(WHITELIST_TABLE_PREF);
   },
 
   /**
@@ -33,8 +60,10 @@ this.UrlClassifierTestUtils = {
    *
    * @return {Promise}
    */
-  useTestDatabase(tablePref, tableName, update) {
-    Services.prefs.setCharPref(tablePref, tableName);
+  useTestDatabase(tables) {
+    for (var table of tables) {
+      Services.prefs.setCharPref(table.pref, table.name);
+    }
 
     return new Promise((resolve, reject) => {
       let dbService = Cc["@mozilla.org/url-classifier/dbservice;1"].
@@ -57,11 +86,13 @@ this.UrlClassifierTestUtils = {
         }
       };
 
-      dbService.beginUpdate(listener, tableName, "");
-      dbService.beginStream("", "");
-      dbService.updateStream(update);
-      dbService.finishStream();
-      dbService.finishUpdate();
+      for (var table of tables) {
+        dbService.beginUpdate(listener, table.name, "");
+        dbService.beginStream("", "");
+        dbService.updateStream(table.update);
+        dbService.finishStream();
+        dbService.finishUpdate();
+      }
     });
   },
 };
