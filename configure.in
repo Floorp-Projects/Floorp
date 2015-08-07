@@ -2730,14 +2730,6 @@ if test "x$enable_dtrace" = "xyes"; then
 fi
 AC_SUBST(HAVE_DTRACE)
 
-case $target in
-*-aix4.3*|*-aix5*)
-    ;;
-*)
-    MOZ_CHECK_HEADERS(sys/cdefs.h)
-    ;;
-esac
-
 MOZ_LINUX_PERF_EVENT
 
 dnl Checks for libraries.
