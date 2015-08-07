@@ -517,34 +517,44 @@ Animation::HasLowerCompositeOrderThan(const Animation& aOther) const
 bool
 Animation::CanThrottle() const
 {
-  if (!mEffect ||
-      mEffect->IsFinishedTransition() ||
-      mEffect->Properties().IsEmpty()) {
+  // This method answers the question, "Can we get away with NOT updating
+  // style on the main thread for this animation on this tick?"
+
+  // Ignore animations that were never going to have any effect anyway.
+  if (!mEffect || mEffect->Properties().IsEmpty()) {
     return true;
   }
 
-  if (!mIsRunningOnCompositor) {
-    return false;
+  // Finished animations can be throttled unless this is the first
+  // sample since finishing. In that case we need an unthrottled sample
+  // so we can apply the correct end-of-animation behavior on the main
+  // thread (either removing the animation style or applying the fill mode).
+  if (PlayState() == AnimationPlayState::Finished) {
+    return mFinishedAtLastComposeStyle;
   }
 
-  if (PlayState() != AnimationPlayState::Finished) {
-    // Unfinished animations can be throttled.
+  // We should also ignore animations which are not "in effect"--i.e. not
+  // producing an output. This includes animations that are idle or in their
+  // delay phase but with no backwards fill.
+  //
+  // Note that unlike newly-finished animations, we don't need to worry about
+  // special handling for newly-idle animations or animations that are newly
+  // yet-to-start since any operation that would cause that change (e.g. a call
+  // to cancel() on the animation, or seeking its current time) will trigger an
+  // unthrottled sample.
+  if (!IsInEffect()) {
     return true;
   }
 
-  // The animation has finished but, if this is the first sample since
-  // finishing, we need an unthrottled sample so we can apply the correct
-  // end-of-animation behavior on the main thread (either removing the
-  // animation style or applying the fill mode).
-  return mFinishedAtLastComposeStyle;
+  return mIsRunningOnCompositor;
 }
 
 void
-Animation::ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
+Animation::ComposeStyle(nsRefPtr<AnimValuesStyleRule>& aStyleRule,
                         nsCSSPropertySet& aSetProperties,
                         bool& aNeedsRefreshes)
 {
-  if (!mEffect || mEffect->IsFinishedTransition()) {
+  if (!mEffect) {
     return;
   }
 
@@ -552,6 +562,10 @@ Animation::ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
   if (playState == AnimationPlayState::Running ||
       playState == AnimationPlayState::Pending) {
     aNeedsRefreshes = true;
+  }
+
+  if (!IsInEffect()) {
+    return;
   }
 
   // In order to prevent flicker, there are a few cases where we want to use
@@ -898,9 +912,6 @@ Animation::UpdateFinishedState(SeekFlag aSeekFlag,
     DoFinishNotification(aSyncNotifyFlag);
   } else if (!currentFinishedState && mFinishedIsResolved) {
     ResetFinishedPromise();
-    if (mEffect->AsTransition()) {
-      mEffect->SetIsFinishedTransition(false);
-    }
   }
   // We must recalculate the current time to take account of any mHoldTime
   // changes the code above made.
@@ -1056,7 +1067,7 @@ Animation::GetPresContext() const
 AnimationCollection*
 Animation::GetCollection() const
 {
-  css::CommonAnimationManager* manager = GetAnimationManager();
+  CommonAnimationManager* manager = GetAnimationManager();
   if (!manager) {
     return nullptr;
   }

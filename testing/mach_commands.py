@@ -387,9 +387,9 @@ class JsapiTestsCommand(MachCommandBase):
 @CommandProvider
 class PushToTry(MachCommandBase):
 
-    def validate_args(self, paths, tests, builds, platforms):
-        if not len(paths) and not tests:
-            print("Paths or tests must be specified as an argument to autotry.")
+    def validate_args(self, paths, tests, tags, builds, platforms):
+        if not any([len(paths), tests, tags]):
+            print("Paths, tests, or tags must be specified.")
             sys.exit(1)
 
         if platforms is None:
@@ -431,7 +431,7 @@ class PushToTry(MachCommandBase):
                           'syntax and selection info).')
     def autotry(self, builds=None, platforms=None, paths=None, verbose=None,
                 extra_tests=None, push=None, tags=None, tests=None):
-        """Autotry is in beta, please file bugs blocking 1149670.
+        """mach try is under development, please file bugs blocking 1149670.
 
         Pushes the specified tests to try. The simplest way to specify tests is
         by using the -u argument, which will behave as usual for try syntax.
@@ -445,7 +445,9 @@ class PushToTry(MachCommandBase):
         is taken from the AUTOTRY_PLATFORM_HINT environment variable if set).
 
         Tests may be further filtered by passing one or more --tag to the
-        command.
+        command. If one or more --tag is specified with out paths or -u,
+        tests with the given tags will be run in a single chunk of
+        applicable suites.
 
         To run suites in addition to those determined from the tree, they
         can be passed to the --extra arguent.
@@ -462,7 +464,7 @@ class PushToTry(MachCommandBase):
 
         print("mach try is under development, please file bugs blocking 1149670.")
 
-        builds, platforms = self.validate_args(paths, tests, builds, platforms)
+        builds, platforms = self.validate_args(paths, tests, tags, builds, platforms)
         resolver = self._spawn(TestResolver)
 
         at = AutoTry(self.topsrcdir, resolver, self._mach_context)
@@ -473,7 +475,7 @@ class PushToTry(MachCommandBase):
         driver = self._spawn(BuildDriver)
         driver.install_tests(remove=False)
 
-        manifests_by_flavor = at.manifests_by_flavor(paths)
+        manifests_by_flavor = at.resolve_manifests(paths=paths, tags=tags)
 
         if not manifests_by_flavor and not tests:
             print("No tests were found when attempting to resolve paths:\n\n\t%s" %

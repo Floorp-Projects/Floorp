@@ -1176,11 +1176,8 @@ ComputeCornerSkirtSize(Float aAlpha1, Float aAlpha2,
 // Draws a border radius with possibly different sides.
 // A skirt is drawn underneath the corner intersection to hide possible
 // seams when anti-aliased drawing is used.
-// As an optimization, this tries to combine the drawing of the side itself
-// with the drawing of the border radius where possible.
 static void
 DrawBorderRadius(DrawTarget* aDrawTarget,
-                 const Point& aSideStart, Float aSideWidth,
                  mozilla::css::Corner c,
                  const Point& aOuterCorner, const Point& aInnerCorner,
                  const twoFloats& aCornerMultPrev, const twoFloats& aCornerMultNext,
@@ -1221,14 +1218,7 @@ DrawBorderRadius(DrawTarget* aDrawTarget,
 
   if (aFirstColor.a > 0) {
     builder = aDrawTarget->CreatePathBuilder();
-    // Combine stroke with corner if color matches.
-    if (aSideWidth > 0) {
-      builder->MoveTo(aSideStart + aCornerMultNext * aSideWidth);
-      builder->LineTo(aSideStart);
-      builder->LineTo(outerCornerStart);
-    } else {
-      builder->MoveTo(outerCornerStart);
-    }
+    builder->MoveTo(outerCornerStart);
   }
 
   if (aFirstColor != aSecondColor) {
@@ -1308,11 +1298,8 @@ DrawBorderRadius(DrawTarget* aDrawTarget,
 // Draw a corner with possibly different sides.
 // A skirt is drawn underneath the corner intersection to hide possible
 // seams when anti-aliased drawing is used.
-// As an optimization, this tries to combine the drawing of the side itself
-// with the drawing of the corner where possible.
 static void
 DrawCorner(DrawTarget* aDrawTarget,
-           const Point& aSideStart, Float aSideWidth,
            mozilla::css::Corner c,
            const Point& aOuterCorner, const Point& aInnerCorner,
            const twoFloats& aCornerMultPrev, const twoFloats& aCornerMultNext,
@@ -1330,13 +1317,7 @@ DrawCorner(DrawTarget* aDrawTarget,
 
   if (aFirstColor.a > 0) {
     builder = aDrawTarget->CreatePathBuilder();
-    // Combine stroke with corner if color matches.
-    if (aSideWidth > 0) {
-      builder->MoveTo(aSideStart + aCornerMultNext * aSideWidth);
-      builder->LineTo(aSideStart);
-    } else {
-      builder->MoveTo(cornerStart);
-    }
+    builder->MoveTo(cornerStart);
   }
 
   if (aFirstColor != aSecondColor) {
@@ -1398,8 +1379,8 @@ nsCSSBorderRenderer::DrawNoCompositeColorSolidBorder()
   NS_FOR_CSS_SIDES(i) {
     // We now draw the current side and the CW corner following it.
     // The CCW corner of this side was already drawn in the previous iteration.
-    // The side will either be drawn as an explicit stroke or combined
-    // with the drawing of the CW corner.
+    // The side will be drawn as an explicit stroke, and the CW corner will be
+    // filled separately.
     // If the next side does not have a matching color, then we split the
     // corner into two halves, one of each side's color and draw both.
     // Thus, the CCW corner of the next side will end up drawn here.
@@ -1443,9 +1424,13 @@ nsCSSBorderRenderer::DrawNoCompositeColorSolidBorder()
       mOuterRect.AtCorner(prevCorner) +
         cornerMults[i2] * mBorderCornerDimensions[prevCorner];
     Point sideEnd = outerCorner + cornerMults[i] * mBorderCornerDimensions[c];
-    // if the side is inverted, don't draw it
-    if (-(sideEnd - sideStart).DotProduct(cornerMults[i]) <= 0) {
-      sideWidth = 0.0f;
+    // check if the side is visible and not inverted
+    if (sideWidth > 0 && firstColor.a > 0 &&
+        -(sideEnd - sideStart).DotProduct(cornerMults[i]) > 0) {
+      mDrawTarget->StrokeLine(sideStart + centerAdjusts[i] * sideWidth,
+                              sideEnd + centerAdjusts[i] * sideWidth,
+                              ColorPattern(firstColor),
+                              StrokeOptions(sideWidth));
     }
 
     Float skirtSize = 0.0f, skirtSlope = 0.0f;
@@ -1462,7 +1447,6 @@ nsCSSBorderRenderer::DrawNoCompositeColorSolidBorder()
     if (!mBorderRadii[c].IsEmpty()) {
       // the corner has a border radius
       DrawBorderRadius(mDrawTarget,
-                       sideStart, sideWidth,
                        c, outerCorner, innerCorner,
                        cornerMults[i], cornerMults[i3],
                        mBorderCornerDimensions[c],
@@ -1471,17 +1455,10 @@ nsCSSBorderRenderer::DrawNoCompositeColorSolidBorder()
     } else if (!mBorderCornerDimensions[c].IsEmpty()) {
       // a corner with no border radius
       DrawCorner(mDrawTarget,
-                 sideStart, sideWidth,
                  c, outerCorner, innerCorner,
                  cornerMults[i], cornerMults[i3],
                  mBorderCornerDimensions[c],
                  firstColor, secondColor, skirtSize, skirtSlope);
-    } else if (sideWidth > 0 && firstColor.a > 0) {
-      // if there is no corner, then stroke the border side separately
-      mDrawTarget->StrokeLine(sideStart + centerAdjusts[i] * sideWidth,
-                              sideEnd + centerAdjusts[i] * sideWidth,
-                              ColorPattern(firstColor),
-                              StrokeOptions(sideWidth));
     }
   }
 }

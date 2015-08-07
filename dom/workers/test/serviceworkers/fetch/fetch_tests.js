@@ -96,6 +96,11 @@ fetchXHR('nonresponse2.txt', null, function(xhr) {
   finish();
 });
 
+fetchXHR('nonpromise.txt', null, function(xhr) {
+  my_ok(xhr.status == 0, "load should not complete");
+  finish();
+});
+
 fetchXHR('headers.txt', function(xhr) {
   my_ok(xhr.status == 200, "load should be successful");
   my_ok(xhr.responseText == "1", "request header checks should have passed");
