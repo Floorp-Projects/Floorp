@@ -25,7 +25,7 @@
                                 transparent 85%);
   border-image-slice: 1;
   font-size: .9em;
-  padding: 2px 5px;
+  padding: 3px 5px;
   margin-inline-end: 4px;
   overflow: hidden;
 }
