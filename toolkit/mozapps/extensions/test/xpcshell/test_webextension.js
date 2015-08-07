@@ -10,8 +10,30 @@ profileDir.append("extensions");
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 startupManager();
 
+const { GlobalManager, Management } = Components.utils.import("resource://gre/modules/Extension.jsm", {});
+
+function promiseAddonStartup() {
+  return new Promise(resolve => {
+    let listener = (extension) => {
+      Management.off("startup", listener);
+      resolve(extension);
+    }
+
+    Management.on("startup", listener);
+  });
+}
+
 add_task(function*() {
-  yield promiseInstallAllFiles([do_get_addon("webextension_1")], true);
+  do_check_eq(GlobalManager.count, 0);
+  do_check_false(GlobalManager.extensionMap.has(ID));
+
+  yield Promise.all([
+    promiseInstallAllFiles([do_get_addon("webextension_1")], true),
+    promiseAddonStartup()
+  ]);
+
+  do_check_eq(GlobalManager.count, 1);
+  do_check_true(GlobalManager.extensionMap.has(ID));
 
   let addon = yield promiseAddonByID(ID);
   do_check_neq(addon, null);
@@ -24,7 +46,16 @@ add_task(function*() {
   do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
 
   // Should persist through a restart
-  yield promiseRestartManager();
+  yield promiseShutdownManager();
+
+  do_check_eq(GlobalManager.count, 0);
+  do_check_false(GlobalManager.extensionMap.has(ID));
+
+  startupManager();
+  yield promiseAddonStartup();
+
+  do_check_eq(GlobalManager.count, 1);
+  do_check_true(GlobalManager.extensionMap.has(ID));
 
   addon = yield promiseAddonByID(ID);
   do_check_neq(addon, null);
@@ -39,7 +70,21 @@ add_task(function*() {
   let file = getFileForAddon(profileDir, ID);
   do_check_true(file.exists());
 
+  addon.userDisabled = true;
+
+  do_check_eq(GlobalManager.count, 0);
+  do_check_false(GlobalManager.extensionMap.has(ID));
+
+  addon.userDisabled = false;
+  yield promiseAddonStartup();
+
+  do_check_eq(GlobalManager.count, 1);
+  do_check_true(GlobalManager.extensionMap.has(ID));
+
   addon.uninstall();
+
+  do_check_eq(GlobalManager.count, 0);
+  do_check_false(GlobalManager.extensionMap.has(ID));
 
   yield promiseShutdownManager();
 });
