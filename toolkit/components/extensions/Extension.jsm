@@ -141,6 +141,10 @@ let Management = {
     this.lazyInit();
     this.emitter.emit(hook, ...args);
   },
+
+  off(hook, callback) {
+    this.emitter.off(hook, callback);
+  }
 };
 
 // A MessageBroker that's used to send and receive messages for
@@ -529,12 +533,12 @@ Extension.prototype = {
   },
 
   startup() {
-    GlobalManager.init(this);
-
     return Promise.all([this.readManifest(), this.readLocaleMessages()]).then(([manifest, messages]) => {
       if (this.hasShutdown) {
         return;
       }
+
+      GlobalManager.init(this);
 
       this.manifest = manifest;
       this.localeMessages = messages;
