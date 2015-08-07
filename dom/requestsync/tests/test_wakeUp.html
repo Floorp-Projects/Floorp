@@ -20,6 +20,20 @@
     }
   }
 
+  function registerPage() {
+    var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('system_message_chrome_script.js'));
+    gScript.addMessageListener("page-registered", function pageRegisteredHandler() {
+      gScript.removeMessageListener("page-registered", pageRegisteredHandler);
+      gScript.destroy();
+      runTests();
+    });
+
+    gScript.sendAsyncMessage("trigger-register-page",
+                             { type: "request-sync",
+                               manifestURL: window.location.origin + "/manifest.webapp",
+                               pageURL: window.location.href });
+  }
+
   function setMessageHandler() {
     navigator.mozSetMessageHandler('request-sync', function(e) {
       ok(true, "One event has been received!");
@@ -146,6 +160,7 @@
       runTests();
     },
 
+    registerPage,
     setMessageHandler,
 
     test_register_oneShot,
