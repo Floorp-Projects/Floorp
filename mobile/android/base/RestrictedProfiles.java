@@ -5,9 +5,9 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.mozglue.RobocopTarget;
-import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
 import org.mozilla.gecko.restrictions.DefaultConfiguration;
 import org.mozilla.gecko.restrictions.GuestProfileConfiguration;
 import org.mozilla.gecko.restrictions.RestrictedProfileConfiguration;
@@ -90,7 +90,7 @@ public class RestrictedProfiles {
         return getConfiguration(context).canLoadUrl(url);
     }
 
-    @WrapElementForJNI
+    @WrapForJNI
     public static boolean isUserRestricted() {
         return isUserRestricted(GeckoAppShell.getContext());
     }
@@ -103,7 +103,7 @@ public class RestrictedProfiles {
         return getConfiguration(context).isAllowed(restriction);
     }
 
-    @WrapElementForJNI
+    @WrapForJNI
     public static boolean isAllowed(int action, String url) {
         final Restriction restriction;
         try {

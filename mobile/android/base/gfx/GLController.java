@@ -5,11 +5,11 @@
 
 package org.mozilla.gecko.gfx;
 
+import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoThread;
-import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.util.Log;
@@ -250,7 +250,7 @@ public class GLController {
         return mEGLSurfaceForCompositor != null;
     }
 
-    @WrapElementForJNI(allowMultithread = true, stubName = "CreateEGLSurfaceForCompositorWrapper")
+    @WrapForJNI(allowMultithread = true, stubName = "CreateEGLSurfaceForCompositorWrapper")
     private synchronized EGLSurface createEGLSurfaceForCompositor() {
         AttemptPreallocateEGLSurfaceForCompositor();
         EGLSurface result = mEGLSurfaceForCompositor;

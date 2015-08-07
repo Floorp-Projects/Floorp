@@ -5,9 +5,9 @@
 
 package org.mozilla.gecko.sqlite;
 
-import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
+import org.mozilla.gecko.annotation.WrapForJNI;
 
-@WrapElementForJNI
+@WrapForJNI
 public class SQLiteBridgeException extends RuntimeException {
     static final long serialVersionUID = 1L;
 
