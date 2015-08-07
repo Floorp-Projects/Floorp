@@ -81,7 +81,7 @@ function createLoginsFragment(url, content, elementQuery) {
   return {
     document,
     fragment: LoginManagerContextMenu.addLoginsToMenu(inputElement, browser, URI),
-  }
+  };
 }
 
 /**
