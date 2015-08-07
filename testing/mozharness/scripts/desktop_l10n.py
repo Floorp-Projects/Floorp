@@ -206,10 +206,8 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         self.l10n_dir = None
         self.package_urls = {}
         self.pushdate = None
-        # Each locale adds its list of files to upload_files - some will be
-        # duplicates (like the mar binaries), so we use a set to prune those
-        # when uploading to taskcluster.
-        self.upload_files = set()
+        # upload_files is a dictionary of files to upload, keyed by locale.
+        self.upload_files = {}
 
         if 'mock_target' in self.config:
             self.enable_mock()
@@ -749,9 +747,9 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
             self.error('failed to get upload file list for locale %s' % (locale))
             return FAILURE
 
-        for f in files:
-            abs_file = os.path.abspath(os.path.join(cwd, f))
-            self.upload_files.update([abs_file])
+        self.upload_files[locale] = [
+            os.path.abspath(os.path.join(cwd, f)) for f in files
+        ]
         return SUCCESS
 
     def make_installers(self, locale):
@@ -1018,31 +1016,48 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         branch = self.config['branch']
         platform = self.config['platform']
         revision = self._query_revision()
-        tc = Taskcluster(self.config['branch'],
-                         self.query_pushdate(),
-                         client_id,
-                         access_token,
-                         self.log_obj,
-                         )
 
-        index = self.config.get('taskcluster_index', 'index.garbage.staging')
-        # TODO: Bug 1165980 - these should be in tree. Note the '.l10n' suffix.
-        routes = [
-            "%s.buildbot.branches.%s.%s.l10n" % (index, branch, platform),
-            "%s.buildbot.revisions.%s.%s.%s.l10n" % (index, revision, branch, platform),
-        ]
+        routes_json = os.path.join(self.query_abs_dirs()['abs_mozilla_dir'],
+                                   'testing/taskcluster/routes.json')
+        with open(routes_json) as f:
+            contents = json.load(f)
+            templates = contents['l10n']
 
-        task = tc.create_task(routes)
-        tc.claim_task(task)
+        for locale, files in self.upload_files.iteritems():
+            self.info("Uploading files to S3 for locale '%s': %s" % (locale, files))
+            routes = []
+            for template in templates:
+                fmt = {
+                    # TODO: Bug 1133074
+                    #index = self.config.get('taskcluster_index', 'index.garbage.staging')
+                    'index': 'index.garbage.staging.mshal-testing',
+                    'project': branch,
+                    'head_rev': revision,
+                    'build_product': self.config['stage_product'],
+                    'build_name': self.query_build_name(),
+                    'build_type': self.query_build_type(),
+                    'locale': locale,
+                }
+                fmt.update(self.buildid_to_dict(self._query_buildid()))
+                routes.append(template.format(**fmt))
+                self.info('Using routes: %s' % routes)
 
-        self.info("Uploading files to S3: %s" % self.upload_files)
-        for upload_file in self.upload_files:
-            # Create an S3 artifact for each file that gets uploaded. We also
-            # check the uploaded file against the property conditions so that we
-            # can set the buildbot config with the correct URLs for package
-            # locations.
-            tc.create_artifact(task, upload_file)
-        tc.report_completed(task)
+            tc = Taskcluster(branch,
+                             self.query_pushdate(),
+                             client_id,
+                             access_token,
+                             self.log_obj,
+                             )
+            task = tc.create_task(routes)
+            tc.claim_task(task)
+
+            for upload_file in files:
+                # Create an S3 artifact for each file that gets uploaded. We also
+                # check the uploaded file against the property conditions so that we
+                # can set the buildbot config with the correct URLs for package
+                # locations.
+                tc.create_artifact(task, upload_file)
+            tc.report_completed(task)
 
     def query_pushdate(self):
         if self.pushdate:

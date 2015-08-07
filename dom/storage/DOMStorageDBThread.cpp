@@ -187,16 +187,16 @@ DOMStorageDBThread::InsertDBOp(DOMStorageDBThread::DBOperation* aOperation)
   // Sentinel to don't forget to delete the operation when we exit early.
   nsAutoPtr<DOMStorageDBThread::DBOperation> opScope(aOperation);
 
-  if (mStopIOThread) {
-    // Thread use after shutdown demanded.
-    MOZ_ASSERT(false);
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
   if (NS_FAILED(mStatus)) {
     MonitorAutoUnlock unlock(mThreadObserver->GetMonitor());
     aOperation->Finalize(mStatus);
     return mStatus;
+  }
+
+  if (mStopIOThread) {
+    // Thread use after shutdown demanded.
+    MOZ_ASSERT(false);
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   switch (aOperation->Type()) {
