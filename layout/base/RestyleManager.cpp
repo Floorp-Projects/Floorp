@@ -1770,18 +1770,13 @@ RestyleManager::UpdateOnlyAnimationStyles()
   bool doCSS = mLastUpdateForThrottledAnimations != now;
   mLastUpdateForThrottledAnimations = now;
 
-  bool doSMIL = false;
   nsIDocument* document = mPresContext->Document();
-  nsSMILAnimationController* animationController = nullptr;
-  if (document->HasAnimationController()) {
-    animationController = document->GetAnimationController();
-    // FIXME:  Ideally, we only want to do this if animation timelines
-    // have advanced.  However, different SMIL animations could be
-    // getting their time from different outermost SVG elements, so
-    // finding all of them might be a pain.  So this could be optimized
-    // to set doSMIL to true in fewer cases.
-    doSMIL = true;
-  }
+  nsSMILAnimationController* animationController =
+    document->HasAnimationController() ?
+    document->GetAnimationController() :
+    nullptr;
+  bool doSMIL = animationController &&
+                animationController->MightHavePendingStyleUpdates();
 
   if (!doCSS && !doSMIL) {
     return;
