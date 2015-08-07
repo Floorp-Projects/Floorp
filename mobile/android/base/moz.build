@@ -14,6 +14,7 @@ thirdparty_source_dir = TOPSRCDIR + '/mobile/android/thirdparty/'
 constants_jar = add_java_jar('constants')
 constants_jar.sources = [
     'adjust/AdjustHelperInterface.java',
+    'annotation/WrapForJNI.java',
     'SysInfo.java',
 ]
 constants_jar.generated_sources = [
@@ -54,7 +55,6 @@ mgjar.sources += [
     'mozglue/ContextUtils.java',
     'mozglue/DirectBufferAllocator.java',
     'mozglue/GeckoLoader.java',
-    'mozglue/generatorannotations/WrapElementForJNI.java',
     'mozglue/JNIObject.java',
     'mozglue/JNITarget.java',
     'mozglue/NativeReference.java',
@@ -133,6 +133,7 @@ if CONFIG['MOZ_WEBRTC']:
         audio_root + 'WebRtcAudioTrack.java',
     ]
     wrjar.extra_jars = [
+        'constants.jar',
         'gecko-R.jar',
         'gecko-browser.jar',
         'gecko-util.jar',
