@@ -740,7 +740,10 @@ nsSliderFrame::CurrentPositionChanged()
   thumbFrame->SetRect(newThumbRect);
 
   // Request a repaint of the scrollbar
-  SchedulePaint();
+  nsIScrollableFrame* scrollableFrame = do_QueryFrame(GetScrollbar()->GetParent());
+  if (!scrollableFrame || scrollableFrame->LastScrollOrigin() != nsGkAtoms::apz) {
+    SchedulePaint();
+  }
 
   mCurPos = curPos;
 
