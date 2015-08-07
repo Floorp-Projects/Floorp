@@ -41,9 +41,6 @@
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/unused.h"
-#ifndef MOZ_B2G_BT_API_V1
-#include "nsDataHashtable.h"
-#endif
 
 #define ENSURE_BLUETOOTH_IS_READY(runnable, result)                    \
   do {                                                                 \
@@ -102,9 +99,6 @@ static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sBondingRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sUnbondingRunnableArray;
 
 #ifndef MOZ_B2G_BT_API_V1
-// Static hash table to map device name from address
-static nsDataHashtable<nsStringHashKey, nsString> sDeviceNameMap;
-
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sChangeAdapterStateRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sChangeDiscoveryRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sFetchUuidsRunnableArray;
@@ -1879,7 +1873,7 @@ BluetoothServiceBluedroid::AdapterStateChangedNotification(bool aState)
     sFetchUuidsRunnableArray.Clear();
     sBondingRunnableArray.Clear();
     sUnbondingRunnableArray.Clear();
-    sDeviceNameMap.Clear();
+    mDeviceNameMap.Clear();
 
     // Bluetooth scan mode is SCAN_MODE_CONNECTABLE by default, i.e., it should
     // be connectable and non-discoverable.
@@ -2159,8 +2153,8 @@ BluetoothServiceBluedroid::RemoteDevicePropertiesNotification(
       BT_APPEND_NAMED_VALUE(propertiesArray, "Name", p.mString);
 
       // Update <address, name> mapping
-      sDeviceNameMap.Remove(bdAddr);
-      sDeviceNameMap.Put(bdAddr, p.mString);
+      mDeviceNameMap.Remove(bdAddr);
+      mDeviceNameMap.Put(bdAddr, p.mString);
     } else if (p.mType == PROPERTY_CLASS_OF_DEVICE) {
       uint32_t cod = p.mUint32;
       BT_APPEND_NAMED_VALUE(propertiesArray, "Cod", cod);
@@ -2398,8 +2392,8 @@ BluetoothServiceBluedroid::DeviceFoundNotification(
   }
 
   // Update <address, name> mapping
-  sDeviceNameMap.Remove(bdAddr);
-  sDeviceNameMap.Put(bdAddr, bdName);
+  mDeviceNameMap.Remove(bdAddr);
+  mDeviceNameMap.Put(bdAddr, bdName);
 
   DistributeSignal(NS_LITERAL_STRING("DeviceFound"),
                    NS_LITERAL_STRING(KEY_ADAPTER),
@@ -2492,15 +2486,15 @@ BluetoothServiceBluedroid::PinRequestNotification(const nsAString& aRemoteBdAddr
 
   InfallibleTArray<BluetoothNamedValue> propertiesArray;
 
-  // If |aBdName| is empty, get device name from |sDeviceNameMap|;
+  // If |aBdName| is empty, get device name from |mDeviceNameMap|;
   // Otherwise update <address, name> mapping with |aBdName|
   nsString bdAddr(aRemoteBdAddr);
   nsString bdName(aBdName);
   if (bdName.IsEmpty()) {
-    sDeviceNameMap.Get(bdAddr, &bdName);
+    mDeviceNameMap.Get(bdAddr, &bdName);
   } else {
-    sDeviceNameMap.Remove(bdAddr);
-    sDeviceNameMap.Put(bdAddr, bdName);
+    mDeviceNameMap.Remove(bdAddr);
+    mDeviceNameMap.Put(bdAddr, bdName);
   }
 
   BT_APPEND_NAMED_VALUE(propertiesArray, "address", bdAddr);
@@ -2538,15 +2532,15 @@ BluetoothServiceBluedroid::SspRequestNotification(
 #ifndef MOZ_B2G_BT_API_V1
   InfallibleTArray<BluetoothNamedValue> propertiesArray;
 
-  // If |aBdName| is empty, get device name from |sDeviceNameMap|;
+  // If |aBdName| is empty, get device name from |mDeviceNameMap|;
   // Otherwise update <address, name> mapping with |aBdName|
   nsString bdAddr(aRemoteBdAddr);
   nsString bdName(aBdName);
   if (bdName.IsEmpty()) {
-    sDeviceNameMap.Get(bdAddr, &bdName);
+    mDeviceNameMap.Get(bdAddr, &bdName);
   } else {
-    sDeviceNameMap.Remove(bdAddr);
-    sDeviceNameMap.Put(bdAddr, bdName);
+    mDeviceNameMap.Remove(bdAddr);
+    mDeviceNameMap.Put(bdAddr, bdName);
   }
 
   /**
@@ -2640,7 +2634,7 @@ BluetoothServiceBluedroid::BondStateChangedNotification(
   // Query pairing device name from hash table
   nsString remoteBdAddr(aRemoteBdAddr);
   nsString remotebdName;
-  sDeviceNameMap.Get(remoteBdAddr, &remotebdName);
+  mDeviceNameMap.Get(remoteBdAddr, &remotebdName);
 
   // Update bonded address array and append pairing device name
   InfallibleTArray<BluetoothNamedValue> propertiesArray;
