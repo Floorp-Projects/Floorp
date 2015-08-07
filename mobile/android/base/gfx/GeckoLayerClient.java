@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.gfx;
 
+import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.gfx.LayerView.DrawListener;
@@ -12,7 +13,6 @@ import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.ZoomConstraints;
 import org.mozilla.gecko.mozglue.RobocopTarget;
-import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.AppConstants;
@@ -436,7 +436,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         return mDisplayPort;
     }
 
-    @WrapElementForJNI
+    @WrapForJNI
     DisplayPortMetrics getDisplayPort(boolean pageSizeUpdate, boolean isBrowserContentDisplayed, int tabId, ImmutableViewportMetrics metrics) {
         Tabs tabs = Tabs.getInstance();
         if (isBrowserContentDisplayed && tabs.isSelectedTabId(tabId)) {
@@ -453,12 +453,12 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         }
     }
 
-    @WrapElementForJNI
+    @WrapForJNI
     void contentDocumentChanged() {
         mContentDocumentIsDisplayed = false;
     }
 
-    @WrapElementForJNI
+    @WrapForJNI
     boolean isContentDocumentDisplayed() {
         return mContentDocumentIsDisplayed;
     }
@@ -468,7 +468,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     // to abort the current update and continue with any subsequent ones. This
     // is useful for slow-to-render pages when the display-port starts lagging
     // behind enough that continuing to draw it is wasted effort.
-    @WrapElementForJNI(allowMultithread = true)
+    @WrapForJNI(allowMultithread = true)
     public ProgressiveUpdateData progressiveUpdateCallback(boolean aHasPendingNewThebesContent,
                                                            float x, float y, float width, float height,
                                                            float resolution, boolean lowPrecision) {
@@ -582,7 +582,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
       * viewport information provided. setPageRect will never be invoked on the same frame that
       * this function is invoked on; and this function will always be called prior to syncViewportInfo.
       */
-    @WrapElementForJNI(allowMultithread = true)
+    @WrapForJNI(allowMultithread = true)
     public void setFirstPaintViewport(float offsetX, float offsetY, float zoom,
             float cssPageLeft, float cssPageTop, float cssPageRight, float cssPageBottom) {
         synchronized (getLock()) {
@@ -642,7 +642,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
       * is invoked on a frame, then this function will not be. For any given frame, this
       * function will be invoked before syncViewportInfo.
       */
-    @WrapElementForJNI(allowMultithread = true)
+    @WrapForJNI(allowMultithread = true)
     public void setPageRect(float cssPageLeft, float cssPageTop, float cssPageRight, float cssPageBottom) {
         synchronized (getLock()) {
             RectF cssPageRect = new RectF(cssPageLeft, cssPageTop, cssPageRight, cssPageBottom);
@@ -663,7 +663,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
       * every time we're called. NOTE: we might be able to return a ImmutableViewportMetrics
       * which would avoid the copy into mCurrentViewTransform.
       */
-    @WrapElementForJNI(allowMultithread = true)
+    @WrapForJNI(allowMultithread = true)
     public ViewTransform syncViewportInfo(int x, int y, int width, int height, float resolution, boolean layersUpdated) {
         // getViewportMetrics is thread safe so we don't need to synchronize.
         // We save the viewport metrics here, so we later use it later in
@@ -720,7 +720,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         return mCurrentViewTransform;
     }
 
-    @WrapElementForJNI(allowMultithread = true)
+    @WrapForJNI(allowMultithread = true)
     public ViewTransform syncFrameMetrics(float offsetX, float offsetY, float zoom,
                 float cssPageLeft, float cssPageTop, float cssPageRight, float cssPageBottom,
                 boolean layersUpdated, int x, int y, int width, int height, float resolution,
@@ -734,7 +734,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         return syncViewportInfo(x, y, width, height, resolution, layersUpdated);
     }
 
-    @WrapElementForJNI(allowMultithread = true)
+    @WrapForJNI(allowMultithread = true)
     public LayerRenderer.Frame createFrame() {
         // Create the shaders and textures if necessary.
         if (!mLayerRendererInitialized) {
@@ -754,12 +754,12 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         }
     }
 
-    @WrapElementForJNI(allowMultithread = true)
+    @WrapForJNI(allowMultithread = true)
     public void activateProgram() {
         mLayerRenderer.activateDefaultProgram();
     }
 
-    @WrapElementForJNI(allowMultithread = true)
+    @WrapForJNI(allowMultithread = true)
     public void deactivateProgramAndRestoreState(boolean enableScissor,
             int scissorX, int scissorY, int scissorW, int scissorH)
     {
