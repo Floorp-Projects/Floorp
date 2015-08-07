@@ -596,12 +596,13 @@ class DispatchWrapper
     T storage;
 
   public:
-    // Mimic a pointer type, so that we can drop into Rooted.
-    MOZ_IMPLICIT DispatchWrapper(const T& initial) : tracer(&T::trace), storage(initial) {}
-    MOZ_IMPLICIT DispatchWrapper(T&& initial)
+    template <typename U>
+    MOZ_IMPLICIT DispatchWrapper(U&& initial)
       : tracer(&T::trace),
-        storage(mozilla::Forward<T>(initial))
+        storage(mozilla::Forward<U>(initial))
     { }
+
+    // Mimic a pointer type, so that we can drop into Rooted.
     T* operator &() { return &storage; }
     const T* operator &() const { return &storage; }
     operator T&() { return storage; }
