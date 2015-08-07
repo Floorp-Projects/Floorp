@@ -29,6 +29,8 @@ this.webrtcUI = {
 
     let mm = Cc["@mozilla.org/globalmessagemanager;1"]
                .getService(Ci.nsIMessageListenerManager);
+    mm.addMessageListener("rtcpeer:Request", this);
+    mm.addMessageListener("rtcpeer:CancelRequest", this);
     mm.addMessageListener("webrtc:Request", this);
     mm.addMessageListener("webrtc:CancelRequest", this);
     mm.addMessageListener("webrtc:UpdateBrowserIndicators", this);
@@ -44,6 +46,8 @@ this.webrtcUI = {
 
     let mm = Cc["@mozilla.org/globalmessagemanager;1"]
                .getService(Ci.nsIMessageListenerManager);
+    mm.removeMessageListener("rtcpeer:Request", this);
+    mm.removeMessageListener("rtcpeer:CancelRequest", this);
     mm.removeMessageListener("webrtc:Request", this);
     mm.removeMessageListener("webrtc:CancelRequest", this);
     mm.removeMessageListener("webrtc:UpdateBrowserIndicators", this);
@@ -124,6 +128,43 @@ this.webrtcUI = {
 
   receiveMessage: function(aMessage) {
     switch (aMessage.name) {
+
+      // Add-ons can override stock permission behavior by doing:
+      //
+      //   var stockReceiveMessage = webrtcUI.receiveMessage;
+      //
+      //   webrtcUI.receiveMessage = function(aMessage) {
+      //     switch (aMessage.name) {
+      //      case "rtcpeer:Request": {
+      //        // new code.
+      //        break;
+      //      ...
+      //      default:
+      //        return stockReceiveMessage.call(this, aMessage);
+      //
+      // Intercepting gUM and peerConnection requests should let an add-on
+      // limit PeerConnection activity with automatic rules and/or prompts
+      // in a sensible manner that avoids double-prompting in typical
+      // gUM+PeerConnection scenarios. For example:
+      //
+      //   State                                    Sample Action
+      //   --------------------------------------------------------------
+      //   No IP leaked yet + No gUM granted        Warn user
+      //   No IP leaked yet + gUM granted           Avoid extra dialog
+      //   No IP leaked yet + gUM request pending.  Delay until gUM grant
+      //   IP already leaked                        Too late to warn
+
+      case "rtcpeer:Request": {
+        // Always allow. This code-point exists for add-ons to override.
+        let request = aMessage.data;
+        let mm = aMessage.target.messageManager;
+        mm.sendAsyncMessage("rtcpeer:Allow", { callID: request.callID,
+                                               windowID: request.windowID });
+        break;
+      }
+      case "rtcpeer:CancelRequest":
+        // No data to release. This code-point exists for add-ons to override.
+        break;
       case "webrtc:Request":
         prompt(aMessage.target, aMessage.data);
         break;
@@ -441,7 +482,7 @@ function prompt(aBrowser, aRequest) {
           return;
         }
 
-        let mm = notification.browser.messageManager
+        let mm = notification.browser.messageManager;
         mm.sendAsyncMessage("webrtc:Allow", {callID: aRequest.callID,
                                              windowID: aRequest.windowID,
                                              devices: allowedDevices});

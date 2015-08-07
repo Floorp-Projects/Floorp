@@ -22,7 +22,8 @@ this.ContentWebRTC = {
       return;
 
     this._initialized = true;
-    Services.obs.addObserver(handleRequest, "getUserMedia:request", false);
+    Services.obs.addObserver(handleGUMRequest, "getUserMedia:request", false);
+    Services.obs.addObserver(handlePCRequest, "PeerConnection:request", false);
     Services.obs.addObserver(updateIndicators, "recording-device-events", false);
     Services.obs.addObserver(removeBrowserSpecificIndicator, "recording-window-ended", false);
   },
@@ -31,17 +32,31 @@ this.ContentWebRTC = {
   handleEvent: function(aEvent) {
     let contentWindow = aEvent.target.defaultView;
     let mm = getMessageManagerForWindow(contentWindow);
-    for (let key of contentWindow.pendingGetUserMediaRequests.keys())
+    for (let key of contentWindow.pendingGetUserMediaRequests.keys()) {
       mm.sendAsyncMessage("webrtc:CancelRequest", key);
+    }
+    for (let key of contentWindow.pendingPeerConnectionRequests.keys()) {
+      mm.sendAsyncMessage("rtcpeer:CancelRequest", key);
+    }
   },
 
   receiveMessage: function(aMessage) {
     switch (aMessage.name) {
-      case "webrtc:Allow":
+      case "rtcpeer:Allow":
+      case "rtcpeer:Deny": {
+        let callID = aMessage.data.callID;
+        let contentWindow = Services.wm.getOuterWindowWithId(aMessage.data.windowID);
+        forgetPCRequest(contentWindow, callID);
+        let topic = (aMessage.name == "rtcpeer:Allow") ? "PeerConnection:response:allow" :
+                                                         "PeerConnection:response:deny";
+        Services.obs.notifyObservers(null, topic, callID);
+        break;
+      }
+      case "webrtc:Allow": {
         let callID = aMessage.data.callID;
         let contentWindow = Services.wm.getOuterWindowWithId(aMessage.data.windowID);
         let devices = contentWindow.pendingGetUserMediaRequests.get(callID);
-        forgetRequest(contentWindow, callID);
+        forgetGUMRequest(contentWindow, callID);
 
         let allowedDevices = Cc["@mozilla.org/supports-array;1"]
                                .createInstance(Ci.nsISupportsArray);
@@ -50,8 +65,9 @@ this.ContentWebRTC = {
 
         Services.obs.notifyObservers(allowedDevices, "getUserMedia:response:allow", callID);
         break;
+      }
       case "webrtc:Deny":
-        denyRequest(aMessage.data);
+        denyGUMRequest(aMessage.data);
         break;
       case "webrtc:StopSharing":
         Services.obs.notifyObservers(null, "getUserMedia:revoke", aMessage.data);
@@ -60,7 +76,30 @@ this.ContentWebRTC = {
   }
 };
 
-function handleRequest(aSubject, aTopic, aData) {
+function handlePCRequest(aSubject, aTopic, aData) {
+  // Need to access JS object behind XPCOM wrapper added by observer API (using a
+  // WebIDL interface didn't work here as object comes from JSImplemented code).
+  aSubject = aSubject.wrappedJSObject;
+  let { windowID, callID, isSecure } = aSubject;
+  let contentWindow = Services.wm.getOuterWindowWithId(windowID);
+
+  if (!contentWindow.pendingPeerConnectionRequests) {
+    setupPendingListsInitially(contentWindow);
+  }
+  contentWindow.pendingPeerConnectionRequests.add(callID);
+
+  let request = {
+    callID: callID,
+    windowID: windowID,
+    documentURI: contentWindow.document.documentURI,
+    secure: isSecure,
+  };
+
+  let mm = getMessageManagerForWindow(contentWindow);
+  mm.sendAsyncMessage("rtcpeer:Request", request);
+}
+
+function handleGUMRequest(aSubject, aTopic, aData) {
   let constraints = aSubject.getConstraints();
   let secure = aSubject.isSecure;
   let contentWindow = Services.wm.getOuterWindowWithId(aSubject.windowID);
@@ -74,7 +113,7 @@ function handleRequest(aSubject, aTopic, aData) {
     function (error) {
       // bug 827146 -- In the future, the UI should catch NotFoundError
       // and allow the user to plug in a device, instead of immediately failing.
-      denyRequest({callID: aSubject.callID}, error);
+      denyGUMRequest({callID: aSubject.callID}, error);
     },
     aSubject.innerWindowID);
 }
@@ -123,13 +162,12 @@ function prompt(aContentWindow, aWindowID, aCallID, aConstraints, aDevices, aSec
     requestTypes.push(sharingAudio ? "AudioCapture" : "Microphone");
 
   if (!requestTypes.length) {
-    denyRequest({callID: aCallID}, "NotFoundError");
+    denyGUMRequest({callID: aCallID}, "NotFoundError");
     return;
   }
 
   if (!aContentWindow.pendingGetUserMediaRequests) {
-    aContentWindow.pendingGetUserMediaRequests = new Map();
-    aContentWindow.addEventListener("unload", ContentWebRTC);
+    setupPendingListsInitially(aContentWindow);
   }
   aContentWindow.pendingGetUserMediaRequests.set(aCallID, devices);
 
@@ -149,7 +187,7 @@ function prompt(aContentWindow, aWindowID, aCallID, aConstraints, aDevices, aSec
   mm.sendAsyncMessage("webrtc:Request", request);
 }
 
-function denyRequest(aData, aError) {
+function denyGUMRequest(aData, aError) {
   let msg = null;
   if (aError) {
     msg = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
@@ -161,16 +199,36 @@ function denyRequest(aData, aError) {
     return;
   let contentWindow = Services.wm.getOuterWindowWithId(aData.windowID);
   if (contentWindow.pendingGetUserMediaRequests)
-    forgetRequest(contentWindow, aData.callID);
+    forgetGUMRequest(contentWindow, aData.callID);
 }
 
-function forgetRequest(aContentWindow, aCallID) {
+function forgetGUMRequest(aContentWindow, aCallID) {
   aContentWindow.pendingGetUserMediaRequests.delete(aCallID);
-  if (aContentWindow.pendingGetUserMediaRequests.size)
-    return;
+  forgetPendingListsEventually(aContentWindow);
+}
 
-  aContentWindow.removeEventListener("unload", ContentWebRTC);
+function forgetPCRequest(aContentWindow, aCallID) {
+  aContentWindow.pendingPeerConnectionRequests.delete(aCallID);
+  forgetPendingListsEventually(aContentWindow);
+}
+
+function setupPendingListsInitially(aContentWindow) {
+  if (aContentWindow.pendingGetUserMediaRequests) {
+    return;
+  }
+  aContentWindow.pendingGetUserMediaRequests = new Map();
+  aContentWindow.pendingPeerConnectionRequests = new Set();
+  aContentWindow.addEventListener("unload", ContentWebRTC);
+}
+
+function forgetPendingListsEventually(aContentWindow) {
+  if (aContentWindow.pendingGetUserMediaRequests.size ||
+      aContentWindow.pendingPeerConnectionRequests.size) {
+    return;
+  }
   aContentWindow.pendingGetUserMediaRequests = null;
+  aContentWindow.pendingPeerConnectionRequests = null;
+  aContentWindow.removeEventListener("unload", ContentWebRTC);
 }
 
 function updateIndicators() {
