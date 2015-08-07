@@ -747,7 +747,84 @@ function getRDFProperty(aDs, aResource, aProperty) {
  *         be read
  */
 function loadManifestFromWebManifest(aStream) {
-  throw new Error("Web Extensions aren't supported yet.")
+  let decoder = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
+  let manifest = decoder.decodeFromStream(aStream, aStream.available());
+
+  function findProp(obj, current, properties) {
+    if (properties.length == 0)
+      return obj;
+
+    let field = properties[0];
+    current += "." + field;
+    if (!obj || !(field in obj)) {
+      throw new Error("Manifest file was missing required property " + current.substring(1));
+    }
+
+    return findProp(obj[field], current, properties.slice(1));
+  }
+
+  function getProp(path) {
+    return findProp(manifest, "", path.split("."));
+  }
+
+  function getOptionalProp(path, defValue = null) {
+    try {
+      return findProp(manifest, "", path.split("."));
+    }
+    catch (e) {
+      return defValue;
+    }
+  }
+
+  let mVersion = getProp("manifest_version");
+  if (mVersion != 2) {
+    throw new Error("Expected manifest_version to be 2 but was " + mVersion);
+  }
+
+  let addon = new AddonInternal();
+  addon.id = getProp("applications.gecko.id");
+  if (!gIDTest.test(addon.id))
+    throw new Error("Illegal add-on ID " + addon.id);
+  addon.version = getProp("version");
+  addon.type = "webextension";
+  addon.unpack = false;
+  addon.strictCompatibility = true;
+  addon.bootstrap = true;
+  addon.hasBinaryComponents = false;
+  addon.multiprocessCompatible = true;
+  addon.internalName = null;
+  addon.updateURL = null;
+  addon.updateKey = null;
+  addon.optionsURL = null;
+  addon.optionsType = null;
+  addon.aboutURL = null;
+  addon.iconURL = null;
+  addon.icon64URL = null;
+  addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DEFAULT;
+
+  addon.defaultLocale = {
+    name: getProp("name"),
+    description: getOptionalProp("description"),
+    creator: null,
+    homepageURL: null,
+
+    developers: null,
+    translators: null,
+    contributors: null,
+  }
+
+  addon.targetApplications = [{
+    id: TOOLKIT_ID,
+    minVersion: "42a1",
+    maxVersion: "*",
+  }];
+
+  addon.locales = [];
+  addon.targetPlatforms = [];
+  addon.userDisabled = false;
+  addon.softDisabled = addon.blocklistState == Blocklist.STATE_SOFTBLOCKED;
+
+  return addon;
 }
 
 /**
