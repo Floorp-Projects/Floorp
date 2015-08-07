@@ -33,6 +33,9 @@ runWithMSE(function (ms, v) {
       is(v.readyState, v.HAVE_METADATA, "readyState is HAVE_METADATA");
       fetchWithXHR("bipbop/bipbop2s.mp4", function (arrayBuffer) {
         // 25819 is the offset of the first media segment's end
+        sb.addEventListener("updateend", function () {
+          ms.endOfStream();
+        });
         sb.appendBuffer(new Uint8Array(arrayBuffer, 25819));
       });
     });
