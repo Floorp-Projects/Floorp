@@ -740,15 +740,15 @@ nsTransitionManager::PruneCompletedTransitions(mozilla::dom::Element* aElement,
   do {
     --i;
     Animation* anim = animations[i];
-    dom::KeyframeEffectReadOnly* effect = anim->GetEffect();
 
-    if (!effect->IsFinishedTransition()) {
+    if (anim->HasCurrentEffect()) {
       continue;
     }
 
-    MOZ_ASSERT(effect && effect->Properties().Length() == 1,
+    dom::KeyframeEffectReadOnly* effect = anim->GetEffect();
+    MOZ_ASSERT(effect->Properties().Length() == 1,
                "Should have one animation property for a transition");
-    MOZ_ASSERT(effect && effect->Properties()[0].mSegments.Length() == 1,
+    MOZ_ASSERT(effect->Properties()[0].mSegments.Length() == 1,
                "Animation property should have one segment for a transition");
     const AnimationProperty& prop = effect->Properties()[0];
     const AnimationPropertySegment& segment = prop.mSegments[0];
