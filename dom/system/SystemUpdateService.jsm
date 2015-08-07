@@ -27,7 +27,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
 
 function ActiveProvider(aProvider) {
   this.id = aProvider.id;
-  this._instance = Cc[aProvider.contractId].getService(Ci.nsISystemUpdateProvider);
+  this._instance = Components.classesByID[aProvider.id].getService(Ci.nsISystemUpdateProvider);
   this._instance.setListener(this);
 }
 

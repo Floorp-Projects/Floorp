@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+createHTML({
+  bug: "1187775",
+  title: "peer connection ICE fails on relay-only without TURN"
+});
+
+function PC_LOCAL_NO_CANDIDATES(test) {
+  var isnt = can => is(can, null, "No candidates: " + JSON.stringify(can));
+  test.pcLocal._pc.addEventListener("icecandidate", e => isnt(e.candidate));
+}
+
+function PC_BOTH_WAIT_FOR_ICE_FAILED(test) {
+  var isFail = (f, reason, msg) =>
+    f().then(() => { throw new Error(msg + " must fail"); },
+             e => is(e.message, reason, msg + " must fail with: " + e.message));
+
+  return Promise.all([
+    isFail(() => waitForIceConnected(test, test.pcLocal), "ICE failed", "Local ICE"),
+    isFail(() => waitForIceConnected(test, test.pcRemote), "ICE failed", "Remote ICE")
+  ])
+  .then(() => ok(true, "ICE on both sides must fail."));
+}
+
+var pushPrefs = (...p) => new Promise(r => SpecialPowers.pushPrefEnv({set: p}, r));
+var test;
+
+runNetworkTest(options =>
+    pushPrefs(['media.peerconnection.ice.stun_client_maximum_transmits', 3],
+              ['media.peerconnection.ice.trickle_grace_period', 5000]).then(() => {
+  options = options || {};
+  options.config_local = options.config_local || {};
+  var servers = options.config_local.iceServers || [];
+  // remove any turn servers
+  options.config_local.iceServers = servers.filter(server =>
+      server.urls.every(u => !u.toLowerCase().startsWith('turn')));
+
+  // Here's the setting we're testing. Comment out and this test should fail:
+  options.config_local.iceTransportPolicy = "relay";
+
+  test = new PeerConnectionTest(options);
+  test.setMediaConstraints([{audio: true}, {video: true}],
+                           [{audio: true}, {video: true}]);
+  test.chain.remove("PC_LOCAL_SETUP_ICE_LOGGER");  // Needed to suppress failing
+  test.chain.remove("PC_REMOTE_SETUP_ICE_LOGGER"); // on ICE-failure.
+  test.chain.insertAfter("PC_LOCAL_SETUP_ICE_HANDLER", PC_LOCAL_NO_CANDIDATES);
+  test.chain.replace("PC_LOCAL_WAIT_FOR_ICE_CONNECTED", PC_BOTH_WAIT_FOR_ICE_FAILED);
+  test.chain.removeAfter("PC_BOTH_WAIT_FOR_ICE_FAILED");
+  test.run();
+}));
+
+</script>
+</pre>
+</body>
+</html>

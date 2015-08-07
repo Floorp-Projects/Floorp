@@ -148,9 +148,6 @@ private:
   // previous frame's timestamp.  In NS.
   int64_t mLastVideoFrameTime;
 
-  // Picture region, as relative to the initial frame size.
-  nsIntRect mPicture;
-
   // Codec ID of audio track
   int mAudioCodec;
   // Codec ID of video track

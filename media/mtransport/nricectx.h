@@ -208,12 +208,18 @@ class NrIceCtx {
                      ICE_CONTROLLED
   };
 
+  enum Policy { ICE_POLICY_NONE,
+                ICE_POLICY_RELAY,
+                ICE_POLICY_ALL
+  };
+
   static RefPtr<NrIceCtx> Create(const std::string& name,
                                  bool offerer,
                                  bool set_interface_priorities = true,
                                  bool allow_loopback = false,
                                  bool tcp_enabled = true,
-                                 bool allow_link_local = false);
+                                 bool allow_link_local = false,
+                                 Policy policy = ICE_POLICY_ALL);
 
   // Deinitialize all ICE global state. Used only for testing.
   static void internal_DeinitializeGlobal();
@@ -272,6 +278,14 @@ class NrIceCtx {
 
   Controlling GetControlling();
 
+  // Set whether we're allowed to produce none, relay or all candidates.
+  // TODO(jib@mozilla.com): Work out what change means mid-connection (1181768)
+  nsresult SetPolicy(Policy policy);
+
+  Policy policy() const {
+    return policy_;
+  }
+
   // Set the STUN servers. Must be called before StartGathering
   // (if at all).
   nsresult SetStunServers(const std::vector<NrIceStunServer>& stun_servers);
@@ -315,7 +329,8 @@ class NrIceCtx {
 
  private:
   NrIceCtx(const std::string& name,
-           bool offerer)
+           bool offerer,
+           Policy policy)
   : connection_state_(ICE_CTX_INIT),
     gathering_state_(ICE_CTX_GATHER_INIT),
     name_(name),
@@ -325,7 +340,8 @@ class NrIceCtx {
     peer_(nullptr),
     ice_handler_vtbl_(nullptr),
     ice_handler_(nullptr),
-    trickle_(true) {
+    trickle_(true),
+    policy_(policy) {
     // XXX: offerer_ will be used eventually;  placate clang in the meantime.
     (void)offerer_;
   }
@@ -371,6 +387,7 @@ class NrIceCtx {
   nr_ice_handler* ice_handler_;  // Must be pointer
   bool trickle_;
   nsCOMPtr<nsIEventTarget> sts_target_; // The thread to run on
+  Policy policy_;
 };
 
 

@@ -742,11 +742,9 @@ SystemMessageInternal.prototype = {
     if (!page) {
       debug("Message " + aType + " is not registered for " +
             aPageURL + " @ " + aManifestURL);
-      // FIXME bug 1140275 should only send message to page registered in manifest
-      // return MSG_SENT_FAILURE_PERM_DENIED;
+      return MSG_SENT_FAILURE_PERM_DENIED;
     }
-    if (page)
-      this._queueMessage(page, aMessage, aMessageID);
+    this._queueMessage(page, aMessage, aMessageID);
 
     let appPageIsRunning = false;
     let pageKey = this._createKeyForPage({ type: aType,
@@ -801,8 +799,7 @@ SystemMessageInternal.prototype = {
       result = MSG_SENT_FAILURE_APP_NOT_RUNNING;
       this._acquireCpuWakeLock(pageKey);
     }
-    if (page)
-      this._openAppPage(page, aMessage, aExtra, result);
+    this._openAppPage(page, aMessage, aExtra, result);
     return result;
   },
 
