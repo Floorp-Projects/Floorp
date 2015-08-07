@@ -960,6 +960,7 @@ bin/libfreebl_32int64_3.so
 @RESPATH@/components/SystemMessageGlue.js
 @RESPATH@/components/B2GAppMigrator.js
 @RESPATH@/components/B2GPresentationDevicePrompt.js
+@RESPATH@/components/PresentationRequestUIGlue.js
 
 #ifndef MOZ_WIDGET_GONK
 @RESPATH@/components/SimulatorScreen.js
