@@ -1,0 +1,68 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et ft=cpp : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PContent;
+include protocol PPresentationRequest;
+
+include InputStreamParams;
+
+namespace mozilla {
+namespace dom {
+
+struct StartSessionRequest
+{
+  nsString url;
+  nsString sessionId;
+  nsString origin;
+};
+
+struct SendSessionMessageRequest
+{
+  nsString sessionId;
+  InputStreamParams data;
+};
+
+struct TerminateRequest
+{
+  nsString sessionId;
+};
+
+union PresentationRequest
+{
+  StartSessionRequest;
+  SendSessionMessageRequest;
+  TerminateRequest;
+};
+
+sync protocol PPresentation
+{
+  manager PContent;
+  manages PPresentationRequest;
+
+child:
+  NotifyAvailableChange(bool aAvailable);
+  NotifySessionStateChange(nsString aSessionId, uint16_t aState);
+  NotifyMessage(nsString aSessionId, nsCString aData);
+
+parent:
+  __delete__();
+
+  RegisterHandler();
+  UnregisterHandler();
+
+  RegisterSessionHandler(nsString aSessionId);
+  UnregisterSessionHandler(nsString aSessionId);
+
+  PPresentationRequest(PresentationRequest aRequest);
+
+  sync GetExistentSessionIdAtLaunch()
+    returns (nsString aSessionId);
+
+  NotifyReceiverReady(nsString aSessionId);
+};
+
+} // namespace dom
+} // namespace mozilla
