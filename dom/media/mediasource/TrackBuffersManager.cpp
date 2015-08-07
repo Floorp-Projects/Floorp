@@ -1644,6 +1644,7 @@ TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
     if (aTrackData.mNextInsertionIndex.ref() > firstRemovedIndex.ref() &&
         aTrackData.mNextInsertionIndex.ref() <= lastRemovedIndex + 1) {
       aTrackData.ResetAppendState();
+      MSE_DEBUG("NextInsertionIndex got reset.");
     } else if (aTrackData.mNextInsertionIndex.ref() > lastRemovedIndex + 1) {
       aTrackData.mNextInsertionIndex.ref() -=
         lastRemovedIndex - firstRemovedIndex.ref() + 1;
