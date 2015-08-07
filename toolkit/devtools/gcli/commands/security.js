@@ -18,8 +18,6 @@ const GOOD_IMG_SRC = "chrome://browser/content/gcli_sec_good.svg";
 const MOD_IMG_SRC = "chrome://browser/content/gcli_sec_moderate.svg";
 const BAD_IMG_SRC = "chrome://browser/content/gcli_sec_bad.svg";
 
-const CONTENT_SECURITY_POLICY = "Content-Security-Policy";
-const CONTENT_SECURITY_POLICY_REPORT_ONLY = "Content-Security-Policy-Report-Only";
 
 // special handling within policy
 const POLICY_REPORT_ONLY = "report-only"
@@ -33,7 +31,9 @@ const SRC_UNSAFE_EVAL = "'unsafe-eval'";
 
 const WILDCARD_MSG = l10n.lookup("securityCSPRemWildCard");
 const XSS_WARNING_MSG = l10n.lookup("securityCSPPotentialXSS");
-
+const NO_CSP_ON_PAGE_MSG = l10n.lookup("securityCSPNoCSPOnPage");
+const CONTENT_SECURITY_POLICY_MSG = l10n.lookup("securityCSPHeaderOnPage");
+const CONTENT_SECURITY_POLICY_REPORT_ONLY_MSG = l10n.lookup("securityCSPROHeaderOnPage");
 
 exports.items = [
   {
@@ -65,7 +65,7 @@ exports.items = [
 
         // loop over all the directive-values within that policy
         var outDirectives = [];
-        var outHeader = CONTENT_SECURITY_POLICY;
+        var outHeader = CONTENT_SECURITY_POLICY_MSG;
         for (var dir in curPolicy) {
           var curDir = curPolicy[dir];
 
@@ -73,8 +73,8 @@ exports.items = [
           // encounter the 'report-only' flag, which is not a csp directive.
           if (dir === POLICY_REPORT_ONLY) {
             outHeader = curPolicy[POLICY_REPORT_ONLY] === true ?
-                          CONTENT_SECURITY_POLICY_REPORT_ONLY :
-                          CONTENT_SECURITY_POLICY;
+                          CONTENT_SECURITY_POLICY_REPORT_ONLY_MSG :
+                          CONTENT_SECURITY_POLICY_MSG;
             continue;
           }
 
@@ -140,7 +140,7 @@ exports.items = [
             "<table class='gcli-csp-detail' cellspacing='10' valign='top'>" +
             "  <tr>" +
             "    <td> <img src='chrome://browser/content/gcli_sec_bad.svg' width='20px' /> </td> " +
-            "    <td> Could not find any 'Content-Security-Policy' for <b>" + uri + "</b></td>" +
+            "    <td>" + NO_CSP_ON_PAGE_MSG + " <b>" + uri + "</b></td>" +
             "  </tr>" +
             "</table>"});
       }
@@ -150,7 +150,7 @@ exports.items = [
           "<table class='gcli-csp-detail' cellspacing='10' valign='top'>" +
           // iterate all policies
           "  <tr foreach='csp in ${cspinfo}' >" +
-          "    <td> ${csp.header} for: <b>" + uri + "</b><br/><br/>" +
+          "    <td> ${csp.header} <b>" + uri + "</b><br/><br/>" +
           "      <table class='gcli-csp-dir-detail' valign='top'>" +
           // >> iterate all directives
           "        <tr foreach='dir in ${csp.directives}' >" +

@@ -55,7 +55,9 @@ static const char *kTypeString[] = {
                                     "", // TYPE_INTERNAL_IFRAME
                                     "", // TYPE_INTERNAL_AUDIO
                                     "", // TYPE_INTERNAL_VIDEO
-                                    ""  // TYPE_INTERNAL_TRACK
+                                    "", // TYPE_INTERNAL_TRACK
+                                    "", // TYPE_INTERNAL_XMLHTTPREQUEST
+                                    ""  // TYPE_INTERNAL_EVENTSOURCE
 };
 
 #define NUMBER_OF_TYPES MOZ_ARRAY_LENGTH(kTypeString)

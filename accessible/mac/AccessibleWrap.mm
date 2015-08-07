@@ -94,6 +94,10 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
   nsresult rv = Accessible::HandleAccEvent(aEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (IPCAccessibilityActive()) {
+    return NS_OK;
+  }
+
   uint32_t eventType = aEvent->GetEventType();
 
   // ignore everything but focus-changed, value-changed, caret and selection

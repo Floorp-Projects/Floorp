@@ -520,6 +520,10 @@ addEventListener("DOMWebNotificationClicked", function(event) {
   sendAsyncMessage("DOMWebNotificationClicked", {});
 }, false);
 
+addEventListener("DOMServiceWorkerFocusClient", function(event) {
+  sendAsyncMessage("DOMServiceWorkerFocusClient", {});
+}, false);
+
 ContentWebRTC.init();
 addMessageListener("webrtc:Allow", ContentWebRTC);
 addMessageListener("webrtc:Deny", ContentWebRTC);

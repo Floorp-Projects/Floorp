@@ -111,7 +111,7 @@ TextureClientPool::GetTextureClient()
       TextureFlags::IMMEDIATE_UPLOAD, ALLOC_DEFAULT);
   } else {
     textureClient = TextureClient::CreateForDrawing(mSurfaceAllocator,
-      mFormat, mSize, gfx::BackendType::NONE, TextureFlags::IMMEDIATE_UPLOAD);
+      mFormat, mSize, BackendSelector::Content, TextureFlags::IMMEDIATE_UPLOAD);
   }
 
   mOutstandingClients++;
