@@ -564,6 +564,8 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 
 <!-- Mixed content notifications in site identity popup -->
 <!ENTITY mixed_content_blocked_all "&brandShortName; has blocked insecure elements on this page.">
+<!ENTITY mixed_content_blocked_some "&brandShortName; has blocked some insecure elements on this page.">
+<!ENTITY mixed_content_display_loaded "This page has some insecure elements.">
 <!ENTITY mixed_content_protection_disabled "You have disabled protection from insecure elements.">
 
 <!ENTITY loaded_mixed_content_message "This page is displaying content that isn\'t secure.">

@@ -360,6 +360,20 @@ const Formatters = {
     }
   },
 
+  GCFields: function (marker) {
+    let fields = Object.create(null);
+    let cause = marker.cause;
+    let label = L10N.getStr(`marker.gcreason.label.${cause}`) || cause;
+
+    fields[L10N.getStr("marker.field.causeName")] = label;
+
+    if ("nonincrementalReason" in marker) {
+      fields[L10N.getStr("marker.field.nonIncrementalCause")] = marker.nonincrementalReason;
+    }
+
+    return fields;
+  },
+
   DOMEventFields: function (marker) {
     let fields = Object.create(null);
     if ("type" in marker) {
