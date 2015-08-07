@@ -28,13 +28,12 @@ public abstract class DoorHanger extends LinearLayout {
             case LOGIN:
                 return new LoginDoorHanger(context, config);
             case TRACKING:
-            case MIXED_CONTENT:
                 return new ContentSecurityDoorHanger(context, config, type);
         }
         return new DefaultDoorHanger(context, config, type);
     }
 
-    public static enum Type { DEFAULT, LOGIN, TRACKING, MIXED_CONTENT, GEOLOCATION }
+    public static enum Type { DEFAULT, LOGIN, TRACKING, GEOLOCATION }
 
     public interface OnButtonClickListener {
         public void onButtonClick(JSONObject response, DoorHanger doorhanger);
