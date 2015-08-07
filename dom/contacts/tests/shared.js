@@ -13,7 +13,7 @@ var defaultOptions = {
 };
 
 // Make sure we only touch |navigator.mozContacts| after we have the necessary
-// permissions, or we'll race when checking the listen permission needed for the 
+// permissions, or we'll race when checking the listen permission needed for the
 // oncontactchange event. This is only needed for tests because at first we have
 // the permission set to UNKNOWN_ACTION. That should never happen for real apps,
 // see dom/apps/PermissionsTable.jsm.
