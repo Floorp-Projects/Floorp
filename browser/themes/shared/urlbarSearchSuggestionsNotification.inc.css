@@ -1,0 +1,55 @@
+#PopupAutoCompleteRichResult > hbox[anonid="search-suggestions-notification"] {
+  border-bottom: 1px solid hsla(210, 4%, 10%, 0.14);
+  background-color: hsla(210, 4%, 10%, 0.07);
+  padding: 6px 0;
+  -moz-padding-start: 44px;
+  -moz-padding-end: 6px;
+  background-image: url("chrome://browser/skin/info.svg");
+  background-clip: padding-box;
+  background-position: 20px center;
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+}
+
+#PopupAutoCompleteRichResult > hbox[anonid="search-suggestions-notification"]:-moz-locale-dir(rtl) {
+  background-position: right 20px center;
+}
+
+#PopupAutoCompleteRichResult > hbox[anonid="search-suggestions-notification"] > description {
+  margin: 0;
+  padding: 0;
+}
+
+#PopupAutoCompleteRichResult > hbox[anonid="search-suggestions-notification"] > description > label.text-link {
+  -moz-margin-start: 0;
+}
+
+#PopupAutoCompleteRichResult > hbox[anonid="search-suggestions-notification"] > button {
+  -moz-appearance: none;
+  -moz-user-focus: ignore;
+  min-width: 80px;
+  border-radius: 3px;
+  padding: 4px 16px;
+  margin: 0;
+  -moz-margin-start: 10px;
+}
+
+#PopupAutoCompleteRichResult > hbox[anonid="search-suggestions-notification"] > button[anonid="search-suggestions-notification-disable"] {
+  color: hsl(210, 0%, 38%);
+  background-color: hsl(210, 0%, 88%);
+  border: 1px solid hsl(210, 0%, 82%);
+}
+
+#PopupAutoCompleteRichResult > hbox[anonid="search-suggestions-notification"] > button[anonid="search-suggestions-notification-disable"]:hover {
+  background-color: hsl(210, 0%, 84%);
+}
+
+#PopupAutoCompleteRichResult > hbox[anonid="search-suggestions-notification"] > button[anonid="search-suggestions-notification-enable"] {
+  color: white;
+  background-color: hsl(93, 82%, 44%);
+  border: 1px solid hsl(93, 82%, 44%);
+}
+
+#PopupAutoCompleteRichResult > hbox[anonid="search-suggestions-notification"] > button[anonid="search-suggestions-notification-enable"]:hover {
+  background-color: hsl(93, 82%, 40%);
+}

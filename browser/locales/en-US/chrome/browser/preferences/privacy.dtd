@@ -28,6 +28,9 @@
 <!ENTITY  locbar.searches.label         "Related searches from the default search engine">
 <!ENTITY  locbar.searches.accesskey     "d">
 
+<!ENTITY  suggestionSettings.label      "Change preferences for search engine suggestions…">
+<!ENTITY  suggestionSettings.accesskey  "g">
+
 <!ENTITY  acceptCookies.label           "Accept cookies from sites">
 <!ENTITY  acceptCookies.accesskey       "A">
 

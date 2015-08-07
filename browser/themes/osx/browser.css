@@ -1792,13 +1792,11 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   color: GrayText;
 }
 
-#PopupAutoCompleteRichResult > richlistbox {
-  transition: height 100ms;
-}
-
 #PopupAutoCompleteRichResult {
   margin-top: 2px;
 }
+
+%include ../shared/urlbarSearchSuggestionsNotification.inc.css
 
 /* ----- AUTOCOMPLETE ----- */
 
@@ -1845,8 +1843,8 @@ richlistitem[selected="true"][current="true"] > .ac-title-box > .ac-result-type-
 
 .ac-url-text,
 .ac-action-text {
-  color: -moz-nativehyperlinktext;
   font: message-box;
+  color: -moz-nativehyperlinktext;
 }
 
 richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-icon {

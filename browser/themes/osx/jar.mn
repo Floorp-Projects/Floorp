@@ -127,6 +127,7 @@ browser.jar:
   skin/classic/browser/search-history-icon.svg                 (../shared/search/history-icon.svg)
   skin/classic/browser/search-indicator-magnifying-glass.svg   (../shared/search/search-indicator-magnifying-glass.svg)
   skin/classic/browser/search-arrow-go.svg                     (../shared/search/search-arrow-go.svg)
+  skin/classic/browser/info.svg                                (../shared/info.svg)
   skin/classic/browser/slowStartup-16.png
   skin/classic/browser/theme-switcher-icon.png                 (../shared/theme-switcher-icon.png)
   skin/classic/browser/theme-switcher-icon@2x.png              (../shared/theme-switcher-icon@2x.png)
