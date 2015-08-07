@@ -162,7 +162,9 @@ if (AppConstants.NIGHTLY_BUILD) {
 }
 if (AppConstants.MOZ_WEBRTC) {
   lazilyLoadedObserverScripts.push(
-    ["WebrtcUI", ["getUserMedia:request", "recording-device-events"], "chrome://browser/content/WebrtcUI.js"])
+    ["WebrtcUI", ["getUserMedia:request",
+                  "PeerConnection:request",
+                  "recording-device-events"], "chrome://browser/content/WebrtcUI.js"])
 }
 
 lazilyLoadedObserverScripts.forEach(function (aScript) {
