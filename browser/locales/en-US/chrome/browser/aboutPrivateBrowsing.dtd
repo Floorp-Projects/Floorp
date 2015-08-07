@@ -13,19 +13,21 @@
      -->
 <!ENTITY aboutPrivateBrowsing.width            "25em">
 <!ENTITY aboutPrivateBrowsing.title            "You're browsing privately">
-<!ENTITY aboutPrivateBrowsing.subtitle         "&brandShortName; won't remember any history for this window.">
+<!ENTITY aboutPrivateBrowsing.subtitle         "In this window, &brandShortName; will not remember any history.">
 
+<!ENTITY aboutPrivateBrowsing.forgotten        "In this window, &brandShortName; will not remember:">
 <!ENTITY aboutPrivateBrowsing.info.forgotten   "Forgotten">
 <!ENTITY aboutPrivateBrowsing.info.history     "History">
-<!ENTITY aboutPrivateBrowsing.info.search      "Search">
+<!ENTITY aboutPrivateBrowsing.info.search      "Searches">
 <!ENTITY aboutPrivateBrowsing.info.cookies     "Cookies">
 <!ENTITY aboutPrivateBrowsing.info.temporaryFiles "Temporary Files">
 
+<!ENTITY aboutPrivateBrowsing.kept             "&brandShortName; will keep:">
 <!ENTITY aboutPrivateBrowsing.info.kept        "Kept">
 <!ENTITY aboutPrivateBrowsing.info.downloads   "Downloads">
 <!ENTITY aboutPrivateBrowsing.info.bookmarks   "Bookmarks">
 
-<!ENTITY aboutPrivateBrowsing.note             "Your employer or Internet service provider can still track the pages you visit.">
+<!ENTITY aboutPrivateBrowsing.note             "Please note that your employer or Internet service provider can still track the pages you visit.">
 <!ENTITY aboutPrivateBrowsing.learnMore        "Learn More.">
 
 <!-- LOCALIZATION NOTE (trackingProtection.width):
@@ -42,8 +44,7 @@
 <!ENTITY trackingProtection.state.enabled      "ON">
 <!ENTITY trackingProtection.state.disabled     "OFF">
 
-<!ENTITY trackingProtection.description.enabled "Private Windows now block content that tracks your browsing activity.">
-<!ENTITY trackingProtection.description.disabled "Private Windows will not block content that tracks your browsing activity.">
+<!ENTITY trackingProtection.description        "Private Windows now block parts of the page that may track your browsing activity.">
 
 <!ENTITY trackingProtection.disable            "Turn Tracking Protection Off">
 <!ENTITY trackingProtection.enable             "Turn Tracking Protection On">
