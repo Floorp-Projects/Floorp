@@ -140,7 +140,7 @@ public:
   already_AddRefed<TextureClient>
   CreateTextureClientForDrawing(gfx::SurfaceFormat aFormat,
                                 gfx::IntSize aSize,
-                                gfx::BackendType aMoz2DBackend,
+                                BackendSelector aSelector,
                                 TextureFlags aTextureFlags,
                                 TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT);
 
