@@ -21,20 +21,27 @@ let gBookmarksObserver = {
   },
 
   // nsINavBookmarkObserver
-  onBeginUpdateBatch: function onBeginUpdateBatch()
-    this.validate(arguments.callee.name, arguments),
-  onEndUpdateBatch: function onEndUpdateBatch()
-    this.validate(arguments.callee.name, arguments),
-  onItemAdded: function onItemAdded()
-    this.validate(arguments.callee.name, arguments),
-  onItemRemoved: function onItemRemoved()
-    this.validate(arguments.callee.name, arguments),
-  onItemChanged: function onItemChanged()
-    this.validate(arguments.callee.name, arguments),
-  onItemVisited: function onItemVisited()
-    this.validate(arguments.callee.name, arguments),
-  onItemMoved: function onItemMoved()
-    this.validate(arguments.callee.name, arguments),
+  onBeginUpdateBatch() {
+    return this.validate("onBeginUpdateBatch", arguments);
+  },
+  onEndUpdateBatch() {
+    return this.validate("onEndUpdateBatch", arguments);
+  },
+  onItemAdded() {
+    return this.validate("onItemAdded", arguments);
+  },
+  onItemRemoved() {
+    return this.validate("onItemRemoved", arguments);
+  },
+  onItemChanged() {
+    return this.validate("onItemChanged", arguments);
+  },
+  onItemVisited() {
+    return this.validate("onItemVisited", arguments);
+  },
+  onItemMoved() {
+    return this.validate("onItemMoved", arguments);
+  },
 
   // nsISupports
   QueryInterface: XPCOMUtils.generateQI([Ci.nsINavBookmarkObserver]),
@@ -132,6 +139,7 @@ add_test(function onItemChanged_title_bookmark() {
         { name: "parentId", check: function (v) v === PlacesUtils.unfiledBookmarksFolderId },
         { name: "guid", check: function (v) typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "parentGuid", check: function (v) typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
+        { name: "oldValue", check: function (v) typeof(v) == "string" },
       ] },
   ];
   PlacesUtils.bookmarks.setItemTitle(id, TITLE);
@@ -178,6 +186,7 @@ add_test(function onItemChanged_tags_bookmark() {
         { name: "parentId", check: function (v) v === PlacesUtils.unfiledBookmarksFolderId },
         { name: "guid", check: function (v) typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "parentGuid", check: function (v) typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
+        { name: "oldValue", check: function (v) typeof(v) == "string" },
       ] },
     { name: "onItemRemoved", // This is the tag.
       args: [
@@ -210,6 +219,7 @@ add_test(function onItemChanged_tags_bookmark() {
         { name: "parentId", check: function (v) v === PlacesUtils.unfiledBookmarksFolderId },
         { name: "guid", check: function (v) typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "parentGuid", check: function (v) typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
+        { name: "oldValue", check: function (v) typeof(v) == "string" },
       ] },
   ];
   PlacesUtils.tagging.tagURI(uri, [TAG]);
@@ -283,6 +293,7 @@ add_test(function onItemRemoved_bookmark() {
         { name: "parentId", check: function (v) v === PlacesUtils.unfiledBookmarksFolderId },
         { name: "guid", check: function (v) typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "parentGuid", check: function (v) typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
+        { name: "oldValue", check: function (v) typeof(v) == "string" },
       ] },
     { name: "onItemRemoved",
       args: [
@@ -312,6 +323,7 @@ add_test(function onItemRemoved_separator() {
         { name: "parentId", check: function (v) typeof(v) == "number" && v > 0 },
         { name: "guid", check: function (v) typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "parentGuid", check: function (v) typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
+        { name: "oldValue", check: function (v) typeof(v) == "string" },
       ] },
     { name: "onItemRemoved",
       args: [
@@ -342,6 +354,7 @@ add_test(function onItemRemoved_folder() {
         { name: "parentId", check: function (v) typeof(v) == "number" && v > 0 },
         { name: "guid", check: function (v) typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "parentGuid", check: function (v) typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
+        { name: "oldValue", check: function (v) typeof(v) == "string" },
       ] },
     { name: "onItemRemoved",
       args: [

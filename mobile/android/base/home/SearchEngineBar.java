@@ -17,11 +17,12 @@ import android.view.View;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.mozglue.RobocopTarget;
+import org.mozilla.gecko.widget.RecyclerViewClickSupport;
 
 import java.util.List;
 
 public class SearchEngineBar extends RecyclerView
-        implements RecyclerViewItemClickListener.OnClickListener {
+        implements RecyclerViewClickSupport.OnItemClickListener {
     private static final String LOGTAG = SearchEngineBar.class.getSimpleName();
 
     private static final float ICON_CONTAINER_MIN_WIDTH_DP = 72;
@@ -66,7 +67,9 @@ public class SearchEngineBar extends RecyclerView
 
         setAdapter(mAdapter);
         setLayoutManager(mLayoutManager);
-        addOnItemTouchListener(new RecyclerViewItemClickListener(context, this, this));
+
+        RecyclerViewClickSupport.addTo(this)
+            .setOnItemClickListener(this);
     }
 
     public void setSearchEngines(List<SearchEngine> searchEngines) {
@@ -114,7 +117,7 @@ public class SearchEngineBar extends RecyclerView
     }
 
     @Override
-    public void onClick(View view, int position) {
+    public void onItemClicked(RecyclerView recyclerView, int position, View v) {
         if (mOnSearchBarClickListener == null) {
             throw new IllegalStateException(
                     OnSearchBarClickListener.class.getSimpleName() + " is not initializer."
@@ -127,11 +130,6 @@ public class SearchEngineBar extends RecyclerView
 
         final SearchEngine searchEngine = mAdapter.getItem(position);
         mOnSearchBarClickListener.onSearchBarClickListener(searchEngine);
-    }
-
-    @Override
-    public void onLongClick(View view, int position) {
-        // do nothing
     }
 
     /**
