@@ -1124,8 +1124,34 @@ void PluginInstanceChild::DeleteWindow()
 #endif
 
 bool
-PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow,
-                                         NPRemoteWindow* aChildWindowToBeAdopted)
+PluginInstanceChild::AnswerCreateChildPluginWindow(const NPRemoteWindow& aWindow,
+                                                   NPRemoteWindow* aCreatedChild)
+{
+#if defined(XP_WIN)
+    MOZ_ASSERT(aWindow.type == NPWindowTypeWindow);
+    MOZ_ASSERT(!mPluginWindowHWND);
+
+    if ((GetQuirks() & PluginModuleChild::QUIRK_QUICKTIME_AVOID_SETWINDOW) &&
+        aWindow.width == 0 && aWindow.height == 0) {
+
+        // Skip CreateChildPluginWindow call for hidden QuickTime plugins.
+        return true;
+    }
+
+    if (!CreatePluginWindow()) {
+        return false;
+    }
+
+    aCreatedChild->window = reinterpret_cast<uint64_t>(mPluginWindowHWND);
+    return true;
+#else
+    NS_NOTREACHED("PluginInstanceChild::CreateChildPluginWindow not implemented!");
+    return false;
+#endif
+}
+
+bool
+PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
 {
     PLUGIN_LOG_DEBUG(("%s (aWindow=<window: 0x%lx, x: %d, y: %d, width: %d, height: %d>)",
                       FULLFUNCTION,
@@ -1213,34 +1239,16 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow,
             return true;
           }
 
-          if (!CreatePluginWindow())
-              return false;
+          MOZ_ASSERT(mPluginWindowHWND,
+                     "Child plugin window must exist before call to SetWindow");
+
+          HWND parentHWND =  reinterpret_cast<HWND>(aWindow.window);
+          if (mPluginWindowHWND != parentHWND) {
+              mPluginParentHWND = parentHWND;
+              ShowWindow(mPluginWindowHWND, SW_SHOWNA);
+          }
 
           SizePluginWindow(aWindow.width, aWindow.height);
-
-          // If the window is not our parent set the return child window so that
-          // it can be re-parented in the chrome process. Re-parenting now
-          // happens there as we might not have sufficient permission.
-          // Also, this needs to be after SizePluginWindow because SetWindowPos
-          // relies on things that it sets.
-          HWND parentWindow = reinterpret_cast<HWND>(aWindow.window);
-          if (mPluginParentHWND != parentWindow  && IsWindow(parentWindow)) {
-              mPluginParentHWND = parentWindow;
-              aChildWindowToBeAdopted->window =
-                  reinterpret_cast<uint64_t>(mPluginWindowHWND);
-          } else {
-              // Now we know that the window has the correct parent we can show
-              // it. The actual visibility is controlled by its parent.
-              // First time round, these calls are made by our caller after the
-              // parent is set.
-              ShowWindow(mPluginWindowHWND, SW_SHOWNA);
-
-              // This used to be called in SizePluginWindow, but we need to make
-              // sure that mPluginWindowHWND has had it's parent set correctly,
-              // otherwise it can cause a focus issue.
-              SetWindowPos(mPluginWindowHWND, nullptr, 0, 0, aWindow.width,
-                           aWindow.height, SWP_NOZORDER | SWP_NOREPOSITION);
-          }
 
           mWindow.window = (void*)mPluginWindowHWND;
           mWindow.x = aWindow.x;
@@ -1436,6 +1444,8 @@ PluginInstanceChild::SizePluginWindow(int width,
     if (mPluginWindowHWND) {
         mPluginSize.x = width;
         mPluginSize.y = height;
+        SetWindowPos(mPluginWindowHWND, nullptr, 0, 0, width, height,
+                     SWP_NOZORDER | SWP_NOREPOSITION);
     }
 }
 

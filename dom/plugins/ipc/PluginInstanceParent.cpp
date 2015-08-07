@@ -117,6 +117,8 @@ PluginInstanceParent::PluginInstanceParent(PluginModuleParent* parent,
     , mDrawingModel(kDefaultDrawingModel)
 #if defined(OS_WIN)
     , mPluginHWND(nullptr)
+    , mChildPluginHWND(nullptr)
+    , mChildPluginsParentHWND(nullptr)
     , mPluginWndProc(nullptr)
     , mNestedEventState(false)
 #endif // defined(XP_WIN)
@@ -1027,30 +1029,36 @@ PluginInstanceParent::NPP_SetWindow(const NPWindow* aWindow)
     window.colormap = ws_info->colormap;
 #endif
 
-    NPRemoteWindow childWindow;
-    if (!CallNPP_SetWindow(window, &childWindow)) {
-        return NPERR_GENERIC_ERROR;
+#if defined(XP_WIN)
+    // On Windows we need to create and set the parent before we set the window
+    // on the plugin, or certain things like keyboard interaction will not work.
+    if (!mChildPluginHWND && mWindowType == NPWindowTypeWindow) {
+        NPRemoteWindow childWindow;
+        if (!CallCreateChildPluginWindow(window, &childWindow)) {
+            return NPERR_GENERIC_ERROR;
+        }
+
+        mChildPluginHWND = reinterpret_cast<HWND>(childWindow.window);
     }
 
-#if defined(XP_WIN)
-    // If a child window is returned it means that we need to re-parent it.
-    if (childWindow.window) {
+    // It's not clear if the parent window would ever change, but when this was
+    // done in the NPAPI child it used to allow for this.
+    if (mChildPluginHWND && mPluginHWND != mChildPluginsParentHWND) {
         nsCOMPtr<nsIWidget> widget;
         static_cast<const nsPluginNativeWindow*>(aWindow)->
             GetPluginWidget(getter_AddRefs(widget));
         if (widget) {
             widget->SetNativeData(NS_NATIVE_CHILD_WINDOW,
-                                  static_cast<uintptr_t>(childWindow.window));
+                                  reinterpret_cast<uintptr_t>(mChildPluginHWND));
         }
 
-        // Now it has got the correct parent, make sure it is visible.
-        // In subsequent calls to SetWindow these calls happen in the Child.
-        HWND childHWND = reinterpret_cast<HWND>(childWindow.window);
-        ShowWindow(childHWND, SW_SHOWNA);
-        SetWindowPos(childHWND, nullptr, 0, 0, window.width, window.height,
-                     SWP_NOZORDER | SWP_NOREPOSITION);
+        mChildPluginsParentHWND = mPluginHWND;
     }
 #endif
+
+    if (!CallNPP_SetWindow(window)) {
+        return NPERR_GENERIC_ERROR;
+    }
 
     return NPERR_NO_ERROR;
 }
