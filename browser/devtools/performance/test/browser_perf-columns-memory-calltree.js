@@ -12,7 +12,7 @@ function* spawnTest() {
   Services.prefs.setBoolPref(MEMORY_PREF, true);
 
   yield startRecording(panel);
-  yield busyWait(1000);
+  yield busyWait(100);
 
   let rendered = once(MemoryCallTreeView, EVENTS.MEMORY_CALL_TREE_RENDERED);
   yield stopRecording(panel);
@@ -23,10 +23,10 @@ function* spawnTest() {
   testCells($, $$, {
     "duration": false,
     "percentage": false,
-    "allocations": true,
+    "count": true,
     "self-duration": false,
     "self-percentage": false,
-    "self-allocations": true,
+    "self-count": true,
     "samples": false,
     "function": true
   });
