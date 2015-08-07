@@ -905,14 +905,19 @@ class XPCShellTests(object):
             else:
                 self.env["LD_LIBRARY_PATH"] = ":".join([self.xrePath, self.env["LD_LIBRARY_PATH"]])
 
-        if "asan" in self.mozInfo and self.mozInfo["asan"]:
-            # ASan symbolizer support
+        usingASan = "asan" in self.mozInfo and self.mozInfo["asan"]
+        usingTSan = "tsan" in self.mozInfo and self.mozInfo["tsan"]
+        if usingASan or usingTSan:
+            # symbolizer support
             llvmsym = os.path.join(self.xrePath, "llvm-symbolizer")
             if os.path.isfile(llvmsym):
-                self.env["ASAN_SYMBOLIZER_PATH"] = llvmsym
-                self.log.info("runxpcshelltests.py | ASan using symbolizer at %s" % llvmsym)
+                if usingASan:
+                    self.env["ASAN_SYMBOLIZER_PATH"] = llvmsym
+                else:
+                    self.env["TSAN_OPTIONS"] = "external_symbolizer_path=%s" % llvmsym
+                self.log.info("runxpcshelltests.py | using symbolizer at %s" % llvmsym)
             else:
-                self.log.error("TEST-UNEXPECTED-FAIL | runxpcshelltests.py | Failed to find ASan symbolizer at %s" % llvmsym)
+                self.log.error("TEST-UNEXPECTED-FAIL | runxpcshelltests.py | Failed to find symbolizer at %s" % llvmsym)
 
         return self.env
 
