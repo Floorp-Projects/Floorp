@@ -4,7 +4,7 @@
 
 const Cu = Components.utils;
 const {Services} = Cu.import("resource://gre/modules/Services.jsm");
-const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
+const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const {GetAvailableAddons, ForgetAddonsList} = require("devtools/webide/addons");
 const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/webide.properties");
 

@@ -2,7 +2,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { LongStringActor } = devtools.require("devtools/server/actors/object");
+const { LongStringActor } = require("devtools/server/actors/object");
 
 function run_test()
 {

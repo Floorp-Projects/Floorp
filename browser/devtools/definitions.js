@@ -94,7 +94,7 @@ Tools.inspector = {
   },
   inMenu: true,
   commands: [
-    "devtools/resize-commands",
+    "devtools/responsivedesign/resize-commands",
     "devtools/inspector/inspector-commands",
     "devtools/eyedropper/commands.js"
   ],

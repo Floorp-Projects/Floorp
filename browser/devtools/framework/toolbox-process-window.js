@@ -6,7 +6,9 @@
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 let { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-let { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+let { TargetFactory } = require("devtools/framework/target");
+let { Toolbox } = require("devtools/framework/toolbox");
 let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 let { DebuggerClient } =
   Cu.import("resource://gre/modules/devtools/dbg-client.jsm", {});
@@ -80,7 +82,7 @@ function openToolbox({ form, chrome, isTabActor }) {
     chrome: chrome,
     isTabActor: isTabActor
   };
-  devtools.TargetFactory.forRemoteTab(options).then(target => {
+  TargetFactory.forRemoteTab(options).then(target => {
     let frame = document.getElementById("toolbox-iframe");
     let selectedTool = "jsdebugger";
 
@@ -97,7 +99,7 @@ function openToolbox({ form, chrome, isTabActor }) {
     let options = { customIframe: frame };
     gDevTools.showToolbox(target,
                           selectedTool,
-                          devtools.Toolbox.HostType.CUSTOM,
+                          Toolbox.HostType.CUSTOM,
                           options)
              .then(onNewToolbox);
   });

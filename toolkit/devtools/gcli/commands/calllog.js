@@ -5,7 +5,7 @@
 "use strict";
 
 const { Cc, Ci, Cu } = require("chrome");
-const TargetFactory = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.TargetFactory;
+const {TargetFactory} = require("devtools/framework/target");
 const l10n = require("gcli/l10n");
 const gcli = require("gcli/index");
 

@@ -10,6 +10,7 @@
 // Finally test that the minimize button doesn't exist in other host types.
 
 const URL = "data:text/html;charset=utf8,test page";
+const {Toolbox} = require("devtools/framework/toolbox");
 
 add_task(function*() {
   info("Create a test tab and open the toolbox");
@@ -61,7 +62,7 @@ add_task(function*() {
   yield onMaximized;
 
   info("Switch to a different host");
-  yield toolbox.switchHost(devtools.Toolbox.HostType.SIDE);
+  yield toolbox.switchHost(Toolbox.HostType.SIDE);
   button = toolbox.doc.querySelector("#toolbox-dock-bottom-minimize");
   ok(!button, "The minimize button doesn't exist in the side host");
 

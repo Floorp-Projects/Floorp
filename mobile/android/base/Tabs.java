@@ -965,6 +965,9 @@ public class Tabs implements GeckoEventListener {
      * Use this for tabs opened by the browser chrome, so users can press the
      * "Back" button to return to the previous tab.
      *
+     * This method will open a new private tab if the currently selected tab
+     * is also private.
+     *
      * @param url URL of page to load
      */
     public void loadUrlInTab(String url) {
@@ -980,12 +983,17 @@ public class Tabs implements GeckoEventListener {
         // (i.e., we're restoring a session after a crash). In these cases,
         // don't mark any tabs as a parent.
         int parentId = -1;
-        Tab selectedTab = getSelectedTab();
+        int flags = LOADURL_NEW_TAB;
+
+        final Tab selectedTab = getSelectedTab();
         if (selectedTab != null) {
             parentId = selectedTab.getId();
+            if (selectedTab.isPrivate()) {
+                flags = flags | LOADURL_PRIVATE;
+            }
         }
 
-        loadUrl(url, null, parentId, LOADURL_NEW_TAB);
+        loadUrl(url, null, parentId, flags);
     }
 
     /**

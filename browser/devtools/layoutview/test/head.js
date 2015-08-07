@@ -6,11 +6,11 @@
 
 const Cu = Components.utils;
 let {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-let TargetFactory = devtools.TargetFactory;
+let {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+let {TargetFactory} = require("devtools/framework/target");
 let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 let {console} = Components.utils.import("resource://gre/modules/devtools/Console.jsm", {});
-let DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils");
+let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 
 // All test are asynchronous
 waitForExplicitFinish();

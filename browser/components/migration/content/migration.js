@@ -286,8 +286,14 @@ var MigrationWizard = {
       case "safari":
         source = "sourceNameSafari";
         break;
+      case "canary":
+        source = "sourceNameCanary";
+        break;
       case "chrome":
         source = "sourceNameChrome";
+        break;
+      case "chromium":
+        source = "sourceNameChromium";
         break;
       case "firefox":
         source = "sourceNameFirefox";

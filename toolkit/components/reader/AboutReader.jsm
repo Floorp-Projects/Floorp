@@ -23,7 +23,10 @@ let gStrings = Services.strings.createBundle("chrome://global/locale/aboutReader
 let AboutReader = function(mm, win, articlePromise) {
   let url = this._getOriginalUrl(win);
   if (!(url.startsWith("http://") || url.startsWith("https://"))) {
-    Cu.reportError("Only http:// and https:// URLs can be loaded in about:reader");
+    let errorMsg = "Only http:// and https:// URLs can be loaded in about:reader.";
+    if (Services.prefs.getBoolPref("reader.errors.includeURLs"))
+      errorMsg += " Tried to load: " + url + ".";
+    Cu.reportError(errorMsg);
     win.location.href = "about:blank";
     return;
   }

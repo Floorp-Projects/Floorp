@@ -12,7 +12,7 @@ function run_test() {
 }
 
 add_task(function test() {
-  let { JITOptimizations } = devtools.require("devtools/performance/jit");
+  let { JITOptimizations } = require("devtools/performance/jit");
 
   let rawSites = [];
   rawSites.push(gRawSite2);

@@ -4,8 +4,8 @@
 // Tests that text metrics and data conversion from profiler samples
 // widget work properly in the flame graph.
 
-let {FlameGraphUtils} = devtools.require("devtools/shared/widgets/FlameGraph");
-let {PALLETTE_SIZE} = devtools.require("devtools/shared/widgets/FlameGraph");
+let {FlameGraphUtils} = require("devtools/shared/widgets/FlameGraph");
+let {PALLETTE_SIZE} = require("devtools/shared/widgets/FlameGraph");
 
 add_task(function*() {
   yield promiseTab("about:blank");

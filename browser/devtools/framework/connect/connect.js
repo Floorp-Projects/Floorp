@@ -12,7 +12,9 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
 let {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+let {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+let {TargetFactory} = require("devtools/framework/target");
+let {Toolbox} = require("devtools/framework/toolbox")
 let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 let gClient;
@@ -236,8 +238,8 @@ function openToolbox(form, chrome=false, tool="webconsole", isTabActor) {
     chrome: chrome,
     isTabActor: isTabActor
   };
-  devtools.TargetFactory.forRemoteTab(options).then((target) => {
-    let hostType = devtools.Toolbox.HostType.WINDOW;
+  TargetFactory.forRemoteTab(options).then((target) => {
+    let hostType = Toolbox.HostType.WINDOW;
     gDevTools.showToolbox(target, tool, hostType).then((toolbox) => {
       toolbox.once("destroyed", function() {
         gClient.close();

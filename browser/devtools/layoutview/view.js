@@ -10,11 +10,10 @@
 const {utils: Cu, interfaces: Ci, classes: Cc} = Components;
 
 Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://gre/modules/devtools/Loader.jsm");
+const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 Cu.import("resource://gre/modules/devtools/Console.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 
-const {require} = devtools;
 const {InplaceEditor, editableItem} = require("devtools/shared/inplace-editor");
 const {ReflowFront} = require("devtools/server/actors/layout");
 

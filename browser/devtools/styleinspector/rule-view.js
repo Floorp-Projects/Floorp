@@ -933,39 +933,34 @@ Rule.prototype = {
   },
 
   /**
-   * Jump between editable properties in the UI.  Will begin editing the next
-   * name, if possible.  If this is the last element in the set, then begin
-   * editing the previous value.  If this is the *only* element in the set,
-   * then settle for focusing the new property editor.
+   * Jump between editable properties in the UI. If the focus direction is
+   * forward, begin editing the next property name if available or focus the
+   * new property editor otherwise. If the focus direction is backward,
+   * begin editing the previous property value or focus the selector editor if
+   * this is the first element in the property list.
    *
-   * @param {TextProperty} aTextProperty
+   * @param {TextProperty} textProperty
    *        The text property that will be left to focus on a sibling.
-   *
+   * @param {number} direction
+   *        The move focus direction number.
    */
-  editClosestTextProperty: function(aTextProperty) {
-    let index = this.textProps.indexOf(aTextProperty);
-    let previous = false;
+  editClosestTextProperty: function(textProperty, direction) {
+    let index = this.textProps.indexOf(textProperty);
 
-    // If this is the last element, move to the previous instead of next
-    if (index === this.textProps.length - 1) {
-      index = index - 1;
-      previous = true;
-    } else {
-      index = index + 1;
-    }
-
-    let nextProp = this.textProps[index];
-
-    // If possible, begin editing the next name or previous value.
-    // Otherwise, settle for focusing the new property element.
-    if (nextProp) {
-      if (previous) {
-        nextProp.editor.valueSpan.click();
+    if (direction === Ci.nsIFocusManager.MOVEFOCUS_FORWARD) {
+      if (index === this.textProps.length - 1) {
+        textProperty.rule.editor.closeBrace.click();
       } else {
+        let nextProp = this.textProps[index + 1];
         nextProp.editor.nameSpan.click();
       }
-    } else {
-      aTextProperty.rule.editor.closeBrace.focus();
+    } else if (direction === Ci.nsIFocusManager.MOVEFOCUS_BACKWARD) {
+      if (index === 0) {
+        textProperty.editor.ruleEditor.selectorText.click();
+      } else {
+        let prevProp = this.textProps[index - 1];
+        prevProp.editor.valueSpan.click();
+      }
     }
   },
 
@@ -2558,8 +2553,8 @@ RuleEditor.prototype = {
               selectorClass = "ruleview-selector";
               break;
             case SELECTOR_PSEUDO_CLASS:
-              selectorClass =
-                [":active", ":focus", ":hover"].includes(selectorText.value) ?
+              selectorClass = [":active", ":focus", ":hover"].some(
+                  pseudo => selectorText.value === pseudo) ?
                 "ruleview-selector-pseudo-class-lock" :
                 "ruleview-selector-pseudo-class";
               break;
@@ -2842,7 +2837,6 @@ function TextPropertyEditor(aRuleEditor, aProperty) {
   this.prop = aProperty;
   this.prop.editor = this;
   this.browserWindow = this.doc.defaultView.top;
-  this.removeOnRevert = this.prop.value === "";
 
   this._onEnableClicked = this._onEnableClicked.bind(this);
   this._onExpandClicked = this._onExpandClicked.bind(this);
@@ -3312,32 +3306,37 @@ TextPropertyEditor.prototype = {
    * Ignores the change if the user pressed escape, otherwise
    * commits it.
    *
-   * @param {string} aValue
+   * @param {string} value
    *        The value contained in the editor.
-   * @param {boolean} aCommit
+   * @param {boolean} commit
    *        True if the change should be applied.
+   * @param {number} direction
+   *        The move focus direction number.
    */
-  _onNameDone: function(aValue, aCommit) {
-    if ((!aCommit && this.ruleEditor.isEditing) ||
-        this.committed.name == aValue) {
-      // Disable the property if the property was originally disabled.
-      if (!this.prop.enabled) {
-        this.rule.setPropertyEnabled(this.prop, this.prop.enabled);
-      }
-
+  _onNameDone: function(value, commit, direction) {
+    let isNameUnchanged = (!commit && !this.ruleEditor.isEditing) ||
+                          this.committed.name == value;
+    if (this.prop.value && isNameUnchanged) {
       return;
     }
 
-    // Unlike the value editor, if a name is empty the entire property
-    // should always be removed.
-    if (aValue.trim() === "") {
-      this.remove();
+    // Remove a property if the name is empty
+    if (!value.trim()) {
+      this.remove(direction);
+      return;
+    }
+
+    // Remove a property if the property value is empty and the property
+    // value is not about to be focused
+    if (!this.prop.value &&
+        direction !== Ci.nsIFocusManager.MOVEFOCUS_FORWARD) {
+      this.remove(direction);
       return;
     }
 
     // Adding multiple rules inside of name field overwrites the current
     // property with the first, then adds any more onto the property list.
-    let properties = parseDeclarations(aValue);
+    let properties = parseDeclarations(value);
 
     if (properties.length) {
       this.prop.setName(properties[0].name);
@@ -3356,9 +3355,13 @@ TextPropertyEditor.prototype = {
 
   /**
    * Remove property from style and the editors from DOM.
-   * Begin editing next available property.
+   * Begin editing next or previous available property given the focus
+   * direction.
+   *
+   * @param {number} direction
+   *        The move focus direction number.
    */
-  remove: function() {
+  remove: function(direction) {
     if (this._colorSwatchSpans && this._colorSwatchSpans.length) {
       for (let span of this._colorSwatchSpans) {
         this.ruleView.tooltips.colorPicker.removeSwatch(span);
@@ -3366,7 +3369,7 @@ TextPropertyEditor.prototype = {
     }
 
     this.element.parentNode.removeChild(this.element);
-    this.ruleEditor.rule.editClosestTextProperty(this.prop);
+    this.ruleEditor.rule.editClosestTextProperty(this.prop, direction);
     this.nameSpan.textProperty = null;
     this.valueSpan.textProperty = null;
     this.prop.remove();
@@ -3376,27 +3379,24 @@ TextPropertyEditor.prototype = {
    * Called when a value editor closes.  If the user pressed escape,
    * revert to the value this property had before editing.
    *
-   * @param {string} aValue
+   * @param {string} value
    *        The value contained in the editor.
-   * @param {bool} aCommit
+   * @param {bool} commit
    *        True if the change should be applied.
+   * @param {number} direction
+   *        The move focus direction number.
    */
-  _onValueDone: function(aValue="", aCommit) {
-    let parsedProperties = this._getValueAndExtraProperties(aValue);
+  _onValueDone: function(value="", commit, direction) {
+    let parsedProperties = this._getValueAndExtraProperties(value);
     let val = parseSingleValue(parsedProperties.firstValue);
-    let isValueUnchanged =
-      !parsedProperties.propertiesToAdd.length &&
-      this.committed.value == val.value &&
-      this.committed.priority == val.priority;
-
-    if ((!aCommit && !this.ruleEditor.isEditing) || isValueUnchanged) {
-      // A new property should be removed when escape is pressed.
-      if (this.removeOnRevert) {
-        this.remove();
-      } else {
-        // Disable the property if the property was originally disabled.
-        this.rule.setPropertyEnabled(this.prop, this.prop.enabled);
-      }
+    let isValueUnchanged = (!commit && !this.ruleEditor.isEditing) ||
+                           !parsedProperties.propertiesToAdd.length &&
+                           this.committed.value === val.value &&
+                           this.committed.priority === val.priority;
+    // If the value is not empty and unchanged, revert the property back to
+    // its original enabled or disabled state
+    if (value.trim() && isValueUnchanged) {
+      this.rule.setPropertyEnabled(this.prop, this.prop.enabled);
       return;
     }
 
@@ -3407,22 +3407,21 @@ TextPropertyEditor.prototype = {
       this.prop.setEnabled(true);
     }
 
-    this.removeOnRevert = false;
     this.committed.value = this.prop.value;
     this.committed.priority = this.prop.priority;
 
     // If needed, add any new properties after this.prop.
     this.ruleEditor.addProperties(parsedProperties.propertiesToAdd, this.prop);
 
-    // If the name or value is not actively being edited, and the value is
-    // empty, then remove the whole property.
+    // If the input value is empty and the focus is moving forward to the next
+    // editable field, then remove the whole property.
     // A timeout is used here to accurately check the state, since the inplace
     // editor `done` and `destroy` events fire before the next editor
     // is focused.
-    if (val.value.trim() === "") {
+    if (!value.trim() && direction !== Ci.nsIFocusManager.MOVEFOCUS_BACKWARD) {
       setTimeout(() => {
         if (!this.editing) {
-          this.remove();
+          this.remove(direction);
         }
       }, 0);
     }

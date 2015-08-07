@@ -36,13 +36,18 @@
 #ifdef XP_WIN
       <radio id="ie"        label="&importFromIE.label;"        accesskey="&importFromIE.accesskey;"/>
       <radio id="chrome"    label="&importFromChrome.label;"    accesskey="&importFromChrome.accesskey;"/>
+      <radio id="chromium"  label="&importFromChromium.label;"  accesskey="&importFromChromium.accesskey;"/>
       <radio id="safari"    label="&importFromSafari.label;"    accesskey="&importFromSafari.accesskey;"/>
+      <radio id="canary"    label="&importFromCanary.label;"    accesskey="&importFromCanary.accesskey;"/>
       <radio id="360se"     label="&importFrom360se.label;"     accesskey="&importFrom360se.accesskey;"/>
 #elifdef XP_MACOSX
       <radio id="safari"    label="&importFromSafari.label;"    accesskey="&importFromSafari.accesskey;"/>
       <radio id="chrome"    label="&importFromChrome.label;"    accesskey="&importFromChrome.accesskey;"/>
+      <radio id="chromium"  label="&importFromChromium.label;"  accesskey="&importFromChromium.accesskey;"/>
+      <radio id="canary"    label="&importFromCanary.label;"    accesskey="&importFromCanary.accesskey;"/>
 #elifdef XP_UNIX
       <radio id="chrome"    label="&importFromChrome.label;"    accesskey="&importFromChrome.accesskey;"/>
+      <radio id="chromium"  label="&importFromChromium.label;"  accesskey="&importFromChromium.accesskey;"/>
 #endif
       <radio id="nothing"   label="&importFromNothing.label;"   accesskey="&importFromNothing.accesskey;" hidden="true"/>
     </radiogroup>

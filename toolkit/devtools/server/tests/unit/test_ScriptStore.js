@@ -4,7 +4,7 @@
 
 // Test the functionality of ScriptStore.
 
-const ScriptStore = devtools.require("devtools/server/actors/utils/ScriptStore");
+const ScriptStore = require("devtools/server/actors/utils/ScriptStore");
 
 // Fixtures
 

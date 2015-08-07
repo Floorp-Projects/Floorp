@@ -1,0 +1,206 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef mozilla_dom_PresentationSessionInfo_h
+#define mozilla_dom_PresentationSessionInfo_h
+
+#include "mozilla/dom/Promise.h"
+#include "mozilla/dom/PromiseNativeHandler.h"
+#include "mozilla/nsRefPtr.h"
+#include "nsCOMPtr.h"
+#include "nsIPresentationControlChannel.h"
+#include "nsIPresentationDevice.h"
+#include "nsIPresentationListener.h"
+#include "nsIPresentationService.h"
+#include "nsIPresentationSessionTransport.h"
+#include "nsIServerSocket.h"
+#include "nsITimer.h"
+#include "nsString.h"
+#include "PresentationCallbacks.h"
+
+namespace mozilla {
+namespace dom {
+
+class PresentationSessionInfo : public nsIPresentationSessionTransportCallback
+                              , public nsIPresentationControlChannelListener
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPRESENTATIONSESSIONTRANSPORTCALLBACK
+
+  PresentationSessionInfo(const nsAString& aUrl,
+                          const nsAString& aSessionId,
+                          nsIPresentationServiceCallback* aCallback)
+    : mUrl(aUrl)
+    , mSessionId(aSessionId)
+    , mIsResponderReady(false)
+    , mIsTransportReady(false)
+    , mCallback(aCallback)
+  {
+    MOZ_ASSERT(!mUrl.IsEmpty());
+    MOZ_ASSERT(!mSessionId.IsEmpty());
+  }
+
+  virtual nsresult Init(nsIPresentationControlChannel* aControlChannel);
+
+  const nsAString& GetUrl() const
+  {
+    return mUrl;
+  }
+
+  const nsAString& GetSessionId() const
+  {
+    return mSessionId;
+  }
+
+  void SetCallback(nsIPresentationServiceCallback* aCallback)
+  {
+    mCallback = aCallback;
+  }
+
+  nsresult SetListener(nsIPresentationSessionListener* aListener);
+
+  void SetDevice(nsIPresentationDevice* aDevice)
+  {
+    mDevice = aDevice;
+  }
+
+  already_AddRefed<nsIPresentationDevice> GetDevice() const
+  {
+    nsCOMPtr<nsIPresentationDevice> device = mDevice;
+    return device.forget();
+  }
+
+  void SetControlChannel(nsIPresentationControlChannel* aControlChannel)
+  {
+    if (mControlChannel) {
+      mControlChannel->SetListener(nullptr);
+    }
+
+    mControlChannel = aControlChannel;
+    if (mControlChannel) {
+      mControlChannel->SetListener(this);
+    }
+  }
+
+  nsresult Send(nsIInputStream* aData);
+
+  nsresult Close(nsresult aReason);
+
+  nsresult ReplyError(nsresult aReason);
+
+protected:
+  virtual ~PresentationSessionInfo()
+  {
+    Shutdown(NS_OK);
+  }
+
+  virtual void Shutdown(nsresult aReason);
+
+  nsresult ReplySuccess();
+
+  bool IsSessionReady()
+  {
+    return mIsResponderReady && mIsTransportReady;
+  }
+
+  nsString mUrl;
+  nsString mSessionId;
+  bool mIsResponderReady;
+  bool mIsTransportReady;
+  nsCOMPtr<nsIPresentationServiceCallback> mCallback;
+  nsCOMPtr<nsIPresentationSessionListener> mListener;
+  nsCOMPtr<nsIPresentationDevice> mDevice;
+  nsCOMPtr<nsIPresentationSessionTransport> mTransport;
+  nsCOMPtr<nsIPresentationControlChannel> mControlChannel;
+};
+
+// Session info with sender side behaviors.
+class PresentationRequesterInfo final : public PresentationSessionInfo
+                                      , public nsIServerSocketListener
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIPRESENTATIONCONTROLCHANNELLISTENER
+  NS_DECL_NSISERVERSOCKETLISTENER
+
+  PresentationRequesterInfo(const nsAString& aUrl,
+                            const nsAString& aSessionId,
+                            nsIPresentationServiceCallback* aCallback)
+    : PresentationSessionInfo(aUrl, aSessionId, aCallback)
+  {
+    MOZ_ASSERT(mCallback);
+  }
+
+  nsresult Init(nsIPresentationControlChannel* aControlChannel) override;
+
+private:
+  ~PresentationRequesterInfo()
+  {
+    Shutdown(NS_OK);
+  }
+
+  void Shutdown(nsresult aReason) override;
+
+  nsresult GetAddress(nsACString& aAddress);
+
+  nsCOMPtr<nsIServerSocket> mServerSocket;
+};
+
+// Session info with receiver side behaviors.
+class PresentationResponderInfo final : public PresentationSessionInfo
+                                      , public PromiseNativeHandler
+                                      , public nsITimerCallback
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIPRESENTATIONCONTROLCHANNELLISTENER
+  NS_DECL_NSITIMERCALLBACK
+
+  PresentationResponderInfo(const nsAString& aUrl,
+                            const nsAString& aSessionId,
+                            nsIPresentationDevice* aDevice)
+    : PresentationSessionInfo(aUrl, aSessionId, nullptr)
+  {
+    MOZ_ASSERT(aDevice);
+
+    SetDevice(aDevice);
+  }
+
+  nsresult Init(nsIPresentationControlChannel* aControlChannel) override;
+
+  nsresult NotifyResponderReady();
+
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+
+  void SetPromise(Promise* aPromise)
+  {
+    mPromise = aPromise;
+    mPromise->AppendNativeHandler(this);
+  }
+
+private:
+  ~PresentationResponderInfo()
+  {
+    Shutdown(NS_OK);
+  }
+
+  void Shutdown(nsresult aReason) override;
+
+  nsresult InitTransportAndSendAnswer();
+
+  nsRefPtr<PresentationResponderLoadingCallback> mLoadingCallback;
+  nsCOMPtr<nsITimer> mTimer;
+  nsCOMPtr<nsIPresentationChannelDescription> mRequesterDescription;
+  nsRefPtr<Promise> mPromise;
+};
+
+} // namespace dom
+} // namespace mozilla
+
+#endif // mozilla_dom_PresentationSessionInfo_h

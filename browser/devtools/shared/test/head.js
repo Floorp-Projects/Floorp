@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-let {TargetFactory, require} = devtools;
+let {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+let {TargetFactory} = require("devtools/framework/target");
 let {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 let {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 const {DOMHelpers} = Cu.import("resource:///modules/devtools/DOMHelpers.jsm", {});
@@ -251,7 +251,7 @@ function* openAndCloseToolbox(nbOfTimes, usageTime, toolId) {
  * Synthesize a profile for testing.
  */
 function synthesizeProfileForTest(samples) {
-  const RecordingUtils = devtools.require("devtools/performance/recording-utils");
+  const RecordingUtils = require("devtools/performance/recording-utils");
 
   samples.unshift({
     time: 0,

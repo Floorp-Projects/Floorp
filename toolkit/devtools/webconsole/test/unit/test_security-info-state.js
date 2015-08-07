@@ -6,12 +6,12 @@
 // Tests that security info parser gives correct general security state for
 // different cases.
 
-const { devtools } = Components.utils.import("resource://gre/modules/devtools/Loader.jsm", {});
+const { require } = Components.utils.import("resource://gre/modules/devtools/Loader.jsm", {});
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Object.defineProperty(this, "NetworkHelper", {
   get: function() {
-    return devtools.require("devtools/toolkit/webconsole/network-helper");
+    return require("devtools/toolkit/webconsole/network-helper");
   },
   configurable: true,
   writeable: false,

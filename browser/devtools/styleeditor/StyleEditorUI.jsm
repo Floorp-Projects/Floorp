@@ -26,7 +26,7 @@ const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {})
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
 
-const require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
+const { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const { PrefObserver, PREF_ORIG_SOURCES } = require("devtools/styleeditor/utils");
 const csscoverage = require("devtools/server/actors/csscoverage");
 const console = require("resource://gre/modules/devtools/Console.jsm").console;

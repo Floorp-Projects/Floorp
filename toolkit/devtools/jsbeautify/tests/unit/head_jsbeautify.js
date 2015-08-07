@@ -9,8 +9,7 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
 
-const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-const { require } = devtools;
+const { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 
 var beautify = require("devtools/jsbeautify");
 var SanityTest = require('devtools/toolkit/jsbeautify/sanitytest');

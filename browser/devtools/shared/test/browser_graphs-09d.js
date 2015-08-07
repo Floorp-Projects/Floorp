@@ -5,8 +5,8 @@
 // the 'min' and 'max' tooltip is too small.
 
 const TEST_DATA = [{ delta: 100, value: 60 }, { delta: 200, value: 59.9 }];
-let LineGraphWidget = devtools.require("devtools/shared/widgets/LineGraphWidget");
-let {Promise} = devtools.require("resource://gre/modules/Promise.jsm");
+let LineGraphWidget = require("devtools/shared/widgets/LineGraphWidget");
+let {Promise} = require("resource://gre/modules/Promise.jsm");
 
 add_task(function*() {
   yield promiseTab("about:blank");

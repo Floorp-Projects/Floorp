@@ -4,6 +4,12 @@
 "use strict";
 
 add_task(function*() {
+  let button = document.getElementById("urlbar-search-settings");
+  if (!button) {
+    ok("Skipping test");
+    return;
+  }
+
   yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, function* () {
     let popupopened = BrowserTestUtils.waitForEvent(gURLBar.popup, "popupshown");
 
@@ -14,7 +20,7 @@ add_task(function*() {
     // Since the current tab is blank the preferences pane will load there
     let loaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
     let popupclosed = BrowserTestUtils.waitForEvent(gURLBar.popup, "popuphidden");
-    EventUtils.synthesizeMouseAtCenter(document.getElementById("urlbar-search-settings"), {});
+    EventUtils.synthesizeMouseAtCenter(button, {});
     yield loaded;
     yield popupclosed;
 

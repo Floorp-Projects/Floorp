@@ -3,15 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const Cu = Components.utils;
-let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-let TargetFactory = devtools.TargetFactory;
+let {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+let {TargetFactory} = require("devtools/framework/target");
 let {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
-let promise = devtools.require("resource://gre/modules/Promise.jsm").Promise;
-let {getInplaceEditorForSpan: inplaceEditor} = devtools.require("devtools/shared/inplace-editor");
-let clipboard = devtools.require("sdk/clipboard");
-let {setTimeout, clearTimeout} = devtools.require("sdk/timers");
-let {promiseInvoke} = devtools.require("devtools/async-utils");
-let DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils");
+let promise = require("resource://gre/modules/Promise.jsm").Promise;
+let {getInplaceEditorForSpan: inplaceEditor} = require("devtools/shared/inplace-editor");
+let clipboard = require("sdk/clipboard");
+let {setTimeout, clearTimeout} = require("sdk/timers");
+let {promiseInvoke} = require("devtools/async-utils");
+let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 
 // All test are asynchronous
 waitForExplicitFinish();

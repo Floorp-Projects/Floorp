@@ -9,7 +9,7 @@
 
 function run_test()
 {
-  let EventEmitter = devtools.require("devtools/toolkit/event-emitter");
+  let EventEmitter = require("devtools/toolkit/event-emitter");
 
   function MonitorClient(client, form) {
     this.client = client;

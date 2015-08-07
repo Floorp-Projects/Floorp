@@ -8,9 +8,9 @@
 
 "use strict";
 
-const { PromisesFront } = devtools.require("devtools/server/actors/promises");
+const { PromisesFront } = require("devtools/server/actors/promises");
 
-let events = devtools.require("sdk/event/core");
+let events = require("sdk/event/core");
 
 add_task(function*() {
   let client = yield startTestDebuggerServer("promises-actor-test");

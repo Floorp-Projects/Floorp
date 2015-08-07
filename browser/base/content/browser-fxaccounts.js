@@ -277,6 +277,7 @@ let gFxAccounts = {
       this.panelUIFooter.removeAttribute("fxastatus");
       this.panelUIFooter.removeAttribute("fxaprofileimage");
       this.panelUIAvatar.style.removeProperty("list-style-image");
+      let showErrorBadge = false;
 
       if (!this._inCustomizationMode && userData) {
         // At this point we consider the user as logged-in (but still can be in an error state)
@@ -285,6 +286,7 @@ let gFxAccounts = {
           this.panelUIFooter.setAttribute("fxastatus", "error");
           this.panelUILabel.setAttribute("label", errorLabel);
           this.panelUIStatus.setAttribute("tooltiptext", tooltipDescription);
+          showErrorBadge = true;
         } else {
           this.panelUIFooter.setAttribute("fxastatus", "signedin");
           this.panelUILabel.setAttribute("label", userData.email);
@@ -293,6 +295,11 @@ let gFxAccounts = {
         if (profileInfoEnabled) {
           this.panelUIFooter.setAttribute("fxaprofileimage", "enabled");
         }
+      }
+      if (showErrorBadge) {
+        gMenuButtonBadgeManager.addBadge(gMenuButtonBadgeManager.BADGEID_FXA, "fxa-needs-authentication");
+      } else {
+        gMenuButtonBadgeManager.removeBadge(gMenuButtonBadgeManager.BADGEID_FXA);
       }
     }
 

@@ -4,10 +4,10 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-let { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-let { console } = devtools.require("resource://gre/modules/devtools/Console.jsm");
-const RecordingUtils = devtools.require("devtools/performance/recording-utils");
+let { console } = require("resource://gre/modules/devtools/Console.jsm");
+const RecordingUtils = require("devtools/performance/recording-utils");
 
 const PLATFORM_DATA_PREF = "devtools.performance.ui.show-platform-data";
 
