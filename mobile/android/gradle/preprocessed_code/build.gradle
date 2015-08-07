@@ -21,6 +21,8 @@ android {
     sourceSets {
         main {
             java {
+                srcDir "${project.buildDir}/generated/source/java"
+
                 srcDir 'src/adjust/java'
                 if (mozconfig.substs.MOZ_INSTALL_TRACKING) {
                     exclude 'org/mozilla/gecko/adjust/StubAdjustHelper.java'
@@ -30,6 +32,18 @@ android {
             }
         }
     }
+}
+
+task syncGeneratedSources(type: Sync) {
+    into("${project.buildDir}/generated/source/java")
+    from("${topobjdir}/mobile/android/base/generated/preprocessed")
+}
+
+android.libraryVariants.all { variant ->
+    // variant does not expose its generate sources task.
+    def name = variant.buildType.name
+    def generateSourcesTask = tasks.findByName("generate${name.capitalize()}Sources")
+    generateSourcesTask.dependsOn syncGeneratedSources
 }
 
 dependencies {
