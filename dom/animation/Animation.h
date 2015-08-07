@@ -36,11 +36,10 @@ class nsIDocument;
 class nsPresContext;
 
 namespace mozilla {
+
 struct AnimationCollection;
-namespace css {
 class AnimValuesStyleRule;
 class CommonAnimationManager;
-} // namespace css
 
 namespace dom {
 
@@ -141,7 +140,7 @@ public:
 
   virtual void CancelFromStyle() { DoCancel(); }
 
-  void Tick();
+  virtual void Tick();
 
   /**
    * Set the time to use for starting or pausing a pending animation.
@@ -295,7 +294,7 @@ public:
    * the style rule on the next refresh driver tick as well (because it
    * is running and has an effect to sample).
    */
-  void ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
+  void ComposeStyle(nsRefPtr<AnimValuesStyleRule>& aStyleRule,
                     nsCSSPropertySet& aSetProperties,
                     bool& aNeedsRefreshes);
 protected:
@@ -356,7 +355,7 @@ protected:
 
   nsIDocument* GetRenderedDocument() const;
   nsPresContext* GetPresContext() const;
-  virtual css::CommonAnimationManager* GetAnimationManager() const = 0;
+  virtual CommonAnimationManager* GetAnimationManager() const = 0;
   AnimationCollection* GetCollection() const;
 
   nsRefPtr<AnimationTimeline> mTimeline;

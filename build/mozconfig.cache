@@ -12,7 +12,7 @@ $(python2.7 -c 'import json; p = json.loads(open("'"$topsrcdir"'/../buildprops.j
 EOF
 
 bucket=
-if test -z "$SCCACHE_DISABLE" -a -z "$no_sccache"; then
+if test -z "$SCCACHE_DISABLE" -a -z "$no_sccache" -a -z "$MOZ_PGO_IS_SET"; then
     case "${branch}" in
     try)
         case "${master}" in
@@ -30,14 +30,10 @@ if test -z "$SCCACHE_DISABLE" -a -z "$no_sccache"; then
     b2g-inbound|mozilla-inbound|fx-team)
         case "${master}" in
         *use1.mozilla.com*)
-            if test -z "$MOZ_PGO"; then
-                bucket=mozilla-releng-s3-cache-us-east-1-prod
-            fi
+            bucket=mozilla-releng-s3-cache-us-east-1-prod
             ;;
         *usw2.mozilla.com*)
-            if test -z "$MOZ_PGO"; then
-                bucket=mozilla-releng-s3-cache-us-west-2-prod
-            fi
+            bucket=mozilla-releng-s3-cache-us-west-2-prod
             ;;
         esac
         ;;

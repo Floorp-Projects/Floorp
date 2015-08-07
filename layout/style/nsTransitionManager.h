@@ -9,10 +9,12 @@
 #define nsTransitionManager_h_
 
 #include "mozilla/Attributes.h"
+#include "mozilla/ContentEvents.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/KeyframeEffect.h"
 #include "AnimationCommon.h"
+#include "nsCSSProps.h"
 #include "nsCSSPseudoElements.h"
 
 class nsIGlobalObject;
@@ -82,6 +84,7 @@ class CSSTransition final : public Animation
 public:
  explicit CSSTransition(nsIGlobalObject* aGlobal)
     : dom::Animation(aGlobal)
+    , mWasFinishedOnLastTick(false)
   {
   }
 
@@ -114,6 +117,8 @@ public:
     Animation::CancelFromStyle();
     MOZ_ASSERT(mSequenceNum == kUnsequenced);
   }
+
+  void Tick() override;
 
   nsCSSProperty TransitionProperty() const;
 
@@ -162,25 +167,60 @@ protected:
                                         "before a CSS transition is destroyed");
   }
 
-  virtual css::CommonAnimationManager* GetAnimationManager() const override;
+  virtual CommonAnimationManager* GetAnimationManager() const override;
+
+  void QueueEvents();
 
   // The (pseudo-)element whose computed transition-property refers to this
   // transition (if any).
   OwningElementRef mOwningElement;
+
+  bool mWasFinishedOnLastTick;
 };
 
 } // namespace dom
+
+struct TransitionEventInfo {
+  nsCOMPtr<nsIContent> mElement;
+  InternalTransitionEvent mEvent;
+
+  TransitionEventInfo(nsIContent *aElement, nsCSSProperty aProperty,
+                      TimeDuration aDuration,
+                      nsCSSPseudoElements::Type aPseudoType)
+    : mElement(aElement)
+    , mEvent(true, NS_TRANSITION_END)
+  {
+    // XXX Looks like nobody initialize WidgetEvent::time
+    mEvent.propertyName =
+      NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(aProperty));
+    mEvent.elapsedTime = aDuration.ToSeconds();
+    mEvent.pseudoElement = AnimationCollection::PseudoTypeAsString(aPseudoType);
+  }
+
+  // InternalTransitionEvent doesn't support copy-construction, so we need
+  // to ourselves in order to work with nsTArray
+  TransitionEventInfo(const TransitionEventInfo &aOther)
+    : mElement(aOther.mElement)
+    , mEvent(true, NS_TRANSITION_END)
+  {
+    mEvent.AssignTransitionEventData(aOther.mEvent, false);
+  }
+};
+
 } // namespace mozilla
 
 class nsTransitionManager final
-  : public mozilla::css::CommonAnimationManager
+  : public mozilla::CommonAnimationManager
 {
 public:
   explicit nsTransitionManager(nsPresContext *aPresContext)
-    : mozilla::css::CommonAnimationManager(aPresContext)
+    : mozilla::CommonAnimationManager(aPresContext)
     , mInAnimationOnlyStyleUpdate(false)
   {
   }
+
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsTransitionManager)
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   typedef mozilla::AnimationCollection AnimationCollection;
 
@@ -239,7 +279,18 @@ public:
 
   void FlushTransitions(FlushFlags aFlags);
 
+  void QueueEvent(mozilla::TransitionEventInfo&& aEventInfo)
+  {
+    mEventDispatcher.QueueEvent(
+      mozilla::Forward<mozilla::TransitionEventInfo>(aEventInfo));
+  }
+
+  void DispatchEvents()  { mEventDispatcher.DispatchEvents(mPresContext); }
+  void ClearEventQueue() { mEventDispatcher.ClearEventQueue(); }
+
 protected:
+  virtual ~nsTransitionManager() {}
+
   virtual nsIAtom* GetAnimationsAtom() override {
     return nsGkAtoms::transitionsProperty;
   }
@@ -262,6 +313,9 @@ private:
                              nsCSSPropertySet* aWhichStarted);
 
   bool mInAnimationOnlyStyleUpdate;
+
+  mozilla::DelayedEventDispatcher<mozilla::TransitionEventInfo>
+      mEventDispatcher;
 };
 
 #endif /* !defined(nsTransitionManager_h_) */
