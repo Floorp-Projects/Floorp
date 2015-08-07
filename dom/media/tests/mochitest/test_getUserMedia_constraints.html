@@ -90,10 +90,10 @@ runTest(function() {
   var dict = navigator.mediaDevices.getSupportedConstraints();
   var supported = Object.keys(dict);
 
-  mustSupport.forEach(key => ok(supported.includes(key) && dict[key],
+  mustSupport.forEach(key => ok(supported.indexOf(key) != -1 && dict[key],
                                 "Supports " + key));
 
-  var unexpected = supported.filter(key => !mustSupport.includes(key));
+  var unexpected = supported.filter(key => mustSupport.indexOf(key) == -1);
   is(unexpected.length, 0,
      "Unanticipated support (please update test): " + unexpected);
 

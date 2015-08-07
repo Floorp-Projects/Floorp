@@ -12,8 +12,7 @@ const {ActorClass, Actor, FrontClass, Front, method} =
   require("devtools/server/protocol");
 
 const {Cu} = require("chrome");
-const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-const {NodeActor} = devtools.require("devtools/server/actors/inspector");
+const {NodeActor} = require("devtools/server/actors/inspector");
 
 const EventsFormActor = ActorClass({
   typeName: "eventsFormActor",

@@ -4,14 +4,9 @@
 
 "use strict";
 
-let tempScope = {};
-Cu.import("resource://gre/modules/devtools/Loader.jsm", tempScope);
-Cu.import("resource://gre/modules/devtools/Console.jsm", tempScope);
-const console = tempScope.console;
-const devtools = tempScope.devtools;
-tempScope = null;
-const require = devtools.require;
-const TargetFactory = devtools.TargetFactory;
+let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+let { TargetFactory } = require("devtools/framework/target");
+let { console } = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 
 const SPLIT_CONSOLE_PREF = "devtools.toolbox.splitconsoleEnabled";
 const STORAGE_PREF = "devtools.storage.enabled";

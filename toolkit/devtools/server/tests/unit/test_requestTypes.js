@@ -3,7 +3,7 @@
 
 "use strict";
 
-const { RootActor } = devtools.require("devtools/server/actors/root");
+const { RootActor } = require("devtools/server/actors/root");
 
 function test_requestTypes_request(aClient, anActor)
 {

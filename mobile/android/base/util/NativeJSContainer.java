@@ -5,7 +5,7 @@
 
 package org.mozilla.gecko.util;
 
-import org.mozilla.gecko.mozglue.generatorannotations.WrapEntireClassForJNI;
+import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
 import org.mozilla.gecko.mozglue.JNITarget;
 
 /**
@@ -17,7 +17,7 @@ import org.mozilla.gecko.mozglue.JNITarget;
  * When a copy is first used, it becomes attached to the thread using it.
  */
 @JNITarget
-@WrapEntireClassForJNI
+@WrapElementForJNI
 public final class NativeJSContainer extends NativeJSObject
 {
     private NativeJSContainer() {

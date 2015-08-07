@@ -8,21 +8,21 @@ const Cu = Components.utils;
 const Cr = Components.results;
 const CC = Components.Constructor;
 
-const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const { worker } = Cu.import("resource://gre/modules/devtools/worker-loader.js", {})
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
-const { promiseInvoke } = devtools.require("devtools/async-utils");
+const { promiseInvoke } = require("devtools/async-utils");
 
-const Services = devtools.require("Services");
+const Services = require("Services");
 // Always log packets when running tests. runxpcshelltests.py will throw
 // the output away anyway, unless you give it the --verbose flag.
 Services.prefs.setBoolPref("devtools.debugger.log", true);
 // Enable remote debugging for the relevant tests.
 Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 
-const DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils.js");
-const { DebuggerServer } = devtools.require("devtools/server/main");
+const DevToolsUtils = require("devtools/toolkit/DevToolsUtils.js");
+const { DebuggerServer } = require("devtools/server/main");
 const { DebuggerServer: WorkerDebuggerServer } = worker.require("devtools/server/main");
 
 let loadSubScript = Cc[

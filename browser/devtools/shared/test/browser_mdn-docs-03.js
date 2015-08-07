@@ -24,7 +24,7 @@
 
 "use strict";
 
-const {appendSyntaxHighlightedCSS} = devtools.require("devtools/shared/widgets/MdnDocsWidget");
+const {appendSyntaxHighlightedCSS} = require("devtools/shared/widgets/MdnDocsWidget");
 
 /**
  * An array containing the actual test cases.

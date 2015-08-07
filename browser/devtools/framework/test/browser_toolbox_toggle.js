@@ -8,6 +8,8 @@
 
 const URL = "data:text/html;charset=utf-8,Toggling devtools using shortcuts";
 
+let {Toolbox} = require("devtools/framework/toolbox");
+
 add_task(function*() {
   // Test with ACCEL+SHIFT+I / ACCEL+ALT+I (MacOSX) ; modifiers should match :
   // - toolbox-key-toggle in browser/devtools/framework/toolbox-window.xul
@@ -37,7 +39,7 @@ function* testToggle(key, modifiers) {
 function* testToggleDockedToolbox (tab, key, modifiers) {
   let toolbox = getToolboxForTab(tab);
 
-  isnot(toolbox.hostType, devtools.Toolbox.HostType.WINDOW,
+  isnot(toolbox.hostType, Toolbox.HostType.WINDOW,
     "Toolbox is docked in the main window");
 
   info("verify docked toolbox is destroyed when using toggle key");
@@ -58,8 +60,8 @@ function* testToggleDetachedToolbox (tab, key, modifiers) {
 
   info("change the toolbox hostType to WINDOW");
 
-  yield toolbox.switchHost(devtools.Toolbox.HostType.WINDOW);
-  is(toolbox.hostType, devtools.Toolbox.HostType.WINDOW,
+  yield toolbox.switchHost(Toolbox.HostType.WINDOW);
+  is(toolbox.hostType, Toolbox.HostType.WINDOW,
     "Toolbox opened on separate window");
 
   info("Wait for focus on the toolbox window");
@@ -95,6 +97,6 @@ function getToolboxForTab(tab) {
 
 function* cleanup() {
   Services.prefs.setCharPref("devtools.toolbox.host",
-    devtools.Toolbox.HostType.BOTTOM);
+    Toolbox.HostType.BOTTOM);
   gBrowser.removeCurrentTab();
 }

@@ -3,14 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const Cu = Components.utils;
-const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-const TargetFactory = devtools.TargetFactory;
+const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const {TargetFactory} = require("devtools/framework/target");
 const {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
-const promise = devtools.require("sdk/core/promise");
+const promise = require("sdk/core/promise");
 const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm", {});
 const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm", {});
-const ProjectEditor = devtools.require("projecteditor/projecteditor");
-const DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils");
+const ProjectEditor = require("projecteditor/projecteditor");
+const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 
 const TEST_URL_ROOT = "http://mochi.test:8888/browser/browser/devtools/projecteditor/test/";
 const SAMPLE_WEBAPP_URL = TEST_URL_ROOT + "/helper_homepage.html";

@@ -23,6 +23,7 @@ EXTRA_COMPONENTS += [
     'OMAContentHandler.js',
     'PaymentGlue.js',
     'PaymentProviderStrategy.js',
+    'PresentationRequestUIGlue.js',
     'ProcessGlobal.js',
     'SmsProtocolHandler.js',
     'SystemMessageGlue.js',

@@ -3,10 +3,13 @@ Cu.import("resource://gre/modules/osfile.jsm");
 const {Services} = Cu.import("resource://gre/modules/Services.jsm");
 const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm");
 const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm");
-const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
-const DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils.js");
+const DevToolsUtils = require("devtools/toolkit/DevToolsUtils.js");
 const EventEmitter = require("devtools/toolkit/event-emitter");
+
+// Bug 1188401: When loaded from xpcshell tests, we do not have browser/ files
+// and can't load target.js. Should be fixed by bug 912121.
+loader.lazyRequireGetter(this, "TargetFactory", "devtools/framework/target", true);
 
 // XXX: bug 912476 make this module a real protocol.js front
 // by converting webapps actor to protocol.js
@@ -317,7 +320,7 @@ function getTargetForApp(client, webappsActor, manifestURL) {
         chrome: false
       };
 
-      devtools.TargetFactory.forRemoteTab(options).then((target) => {
+      TargetFactory.forRemoteTab(options).then((target) => {
         target.isApp = true;
         appTargets.set(manifestURL, target);
         target.on("close", () => {
@@ -380,7 +383,7 @@ function getTarget(client, form) {
     chrome: false
   };
 
-  devtools.TargetFactory.forRemoteTab(options).then((target) => {
+  TargetFactory.forRemoteTab(options).then((target) => {
     target.isApp = true;
     deferred.resolve(target)
   }, (error) => {

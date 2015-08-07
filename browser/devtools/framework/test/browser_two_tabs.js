@@ -9,8 +9,6 @@ let { DebuggerServer } =
   Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
 let { DebuggerClient } =
   Cu.import("resource://gre/modules/devtools/dbg-client.jsm", {});
-let { devtools } =
-  Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 
 const TAB_URL_1 = "data:text/html;charset=utf-8,foo";
 const TAB_URL_2 = "data:text/html;charset=utf-8,bar";

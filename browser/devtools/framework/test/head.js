@@ -127,7 +127,7 @@ function synthesizeKeyElement(el) {
  * expected values
  * @param {Toolbox}
  * @param {HostType} hostType
- *        One of {SIDE, BOTTOM, WINDOW} from devtools.Toolbox.HostType
+ *        One of {SIDE, BOTTOM, WINDOW} from Toolbox.HostType
  * @param {HostType} Optional previousHostType
  *        The host that will be switched to when calling switchToPreviousHost
  */

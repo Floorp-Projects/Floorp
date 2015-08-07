@@ -102,9 +102,10 @@ Cu.import("resource:///modules/devtools/SideMenuWidget.jsm");
 Cu.import("resource:///modules/devtools/VariablesView.jsm");
 Cu.import("resource:///modules/devtools/VariablesViewController.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
-const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 
-const require = devtools.require;
+const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const {TargetFactory} = require("devtools/framework/target");
+const {Toolbox} = require("devtools/framework/toolbox")
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 const promise = require("devtools/toolkit/deprecated-sync-thenables");
 const Editor = require("devtools/sourceeditor/editor");
@@ -126,7 +127,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
 
 Object.defineProperty(this, "NetworkHelper", {
   get: function() {
-    return devtools.require("devtools/toolkit/webconsole/network-helper");
+    return require("devtools/toolkit/webconsole/network-helper");
   },
   configurable: true,
   enumerable: true
@@ -491,9 +492,9 @@ Workers.prototype = {
 
   _onWorkerSelect: function (workerActor) {
     let workerClient = this._workerClients.get(workerActor);
-    gDevTools.showToolbox(devtools.TargetFactory.forWorker(workerClient),
+    gDevTools.showToolbox(TargetFactory.forWorker(workerClient),
                           "jsdebugger",
-                          devtools.Toolbox.HostType.WINDOW);
+                          Toolbox.HostType.WINDOW);
   }
 };
 

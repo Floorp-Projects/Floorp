@@ -1,0 +1,66 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIInputStream;
+interface nsINetAddr;
+interface nsIPresentationChannelDescription;
+interface nsISocketTransport;
+
+%{C++
+#define PRESENTATION_SESSION_TRANSPORT_CONTRACTID \
+  "@mozilla.org/presentation/presentationsessiontransport;1"
+%}
+
+/*
+ * The callback for session transport events.
+ */
+[scriptable, uuid(9f158786-41a6-4a10-b29b-9497f25d4b67)]
+interface nsIPresentationSessionTransportCallback : nsISupports
+{
+  void notifyTransportReady();
+  void notifyTransportClosed(in nsresult reason);
+  void notifyData(in ACString data);
+};
+
+/*
+ * App-to-App transport channel for the presentation session.
+ */
+[scriptable, uuid(5a9fb9e9-b846-4c49-ad57-20ed88457295)]
+interface nsIPresentationSessionTransport : nsISupports
+{
+  attribute nsIPresentationSessionTransportCallback callback;
+  readonly attribute nsINetAddr selfAddress;
+
+  /*
+   * Initialize the transport channel with an existent socket transport. (This
+   * is primarily used at the sender side.)
+   * @param transport The socket transport.
+   * @param callback The callback for followup notifications.
+   */
+  void initWithSocketTransport(in nsISocketTransport transport,
+                               in nsIPresentationSessionTransportCallback callback);
+
+  /*
+   * Initialize the transport channel with the channel description. (This is
+   * primarily used at the receiver side.)
+   * @param description The channel description.
+   * @param callback The callback for followup notifications.
+   */
+  void initWithChannelDescription(in nsIPresentationChannelDescription description,
+                                  in nsIPresentationSessionTransportCallback callback);
+
+  /*
+   * Send message to the remote endpoint.
+   * @param data The message to send.
+   */
+  void send(in nsIInputStream data);
+
+  /*
+   * Close this session transport.
+   * @param reason The reason for closing this session transport.
+   */
+  void close(in nsresult reason);
+};

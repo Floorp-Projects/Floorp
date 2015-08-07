@@ -7,13 +7,15 @@
 
 const URL = "data:text/html;charset=utf8,test page";
 
+let {Toolbox} = require("devtools/framework/toolbox");
+
 add_task(function*() {
   info("Create a test tab and open the toolbox");
   let tab = yield addTab(URL);
   let target = TargetFactory.forTab(tab);
   let toolbox = yield gDevTools.showToolbox(target, "webconsole");
 
-  let {SIDE, BOTTOM} = devtools.Toolbox.HostType;
+  let {SIDE, BOTTOM} = Toolbox.HostType;
   for (let type of [SIDE, BOTTOM, SIDE]) {
     info("Switch to host type " + type);
     yield toolbox.switchHost(type);

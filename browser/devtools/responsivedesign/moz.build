@@ -3,9 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXTRA_JS_MODULES.devtools += [
-    'resize-commands.js',
     'responsivedesign-child.js',
     'responsivedesign.jsm'
 ]
+EXTRA_JS_MODULES.devtools.responsivedesign += [
+    'resize-commands.js'
+]
+
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']

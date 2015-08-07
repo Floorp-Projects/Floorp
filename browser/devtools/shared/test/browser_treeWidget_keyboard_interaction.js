@@ -8,8 +8,8 @@ const TEST_URI = "data:text/html;charset=utf-8,<head><link rel='stylesheet' " +
   "type='text/css' href='chrome://browser/skin/devtools/common.css'><link " +
   "rel='stylesheet' type='text/css' href='chrome://browser/skin/devtools/widg" +
   "ets.css'></head><body><div></div><span></span></body>";
-const {TreeWidget} = devtools.require("devtools/shared/widgets/TreeWidget");
-const {Promise} = devtools.require("resource://gre/modules/Promise.jsm");
+const {TreeWidget} = require("devtools/shared/widgets/TreeWidget");
+const {Promise} = require("resource://gre/modules/Promise.jsm");
 
 add_task(function*() {
   yield promiseTab("about:blank");
