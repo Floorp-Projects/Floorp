@@ -10,6 +10,7 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 
 import org.mozilla.gecko.AndroidGamepadManager;
+import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAccessibility;
@@ -20,7 +21,6 @@ import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.ZoomConstraints;
 import org.mozilla.gecko.mozglue.RobocopTarget;
-import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -515,7 +515,7 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
         return mTextureView.getSurfaceTexture();
     }
 
-    @WrapElementForJNI(allowMultithread = true, stubName = "RegisterCompositorWrapper")
+    @WrapForJNI(allowMultithread = true, stubName = "RegisterCompositorWrapper")
     public static GLController registerCxxCompositor() {
         try {
             LayerView layerView = GeckoAppShell.getLayerView();
@@ -529,7 +529,7 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
     }
 
     //This method is called on the Gecko main thread.
-    @WrapElementForJNI(allowMultithread = true, stubName = "updateZoomedView")
+    @WrapForJNI(allowMultithread = true, stubName = "updateZoomedView")
     public static void updateZoomedView(ByteBuffer data) {
         LayerView layerView = GeckoAppShell.getLayerView();
         if (layerView != null) {

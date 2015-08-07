@@ -1370,6 +1370,7 @@ or run without that action (ie: --no-{action})"
         self.generated_build_props = True
 
     def upload_files(self):
+        dirs = self.query_abs_dirs()
         auth = os.path.join(os.getcwd(), self.config['taskcluster_credentials_file'])
         credentials = {}
         execfile(auth, credentials)
@@ -1391,6 +1392,34 @@ or run without that action (ie: --no-{action})"
         # messages while we are testing uploads.
         logging.getLogger('taskcluster').setLevel(logging.DEBUG)
 
+        routes_json = os.path.join(dirs['abs_src_dir'],
+                                   'testing/taskcluster/routes.json')
+        with open(routes_json) as f:
+            contents = json.load(f)
+            if self.query_is_nightly():
+                templates = contents['nightly']
+
+                # Nightly builds with l10n counterparts also publish to the
+                # 'en-US' locale.
+                if self.config.get('publish_nightly_en_US_routes'):
+                    templates.extend(contents['l10n'])
+            else:
+                templates = contents['routes']
+        routes = []
+        for template in templates:
+            fmt = {
+                'index': 'index.garbage.staging.mshal-testing', # TODO
+                'project': self.buildbot_config['properties']['branch'],
+                'head_rev': self.query_revision(),
+                'build_product': self.config['stage_product'],
+                'build_name': self.query_build_name(),
+                'build_type': self.query_build_type(),
+                'locale': 'en-US',
+            }
+            fmt.update(self.buildid_to_dict(self.query_buildid()))
+            routes.append(template.format(**fmt))
+        self.info("Using routes: %s" % routes)
+
         tc = Taskcluster(self.branch,
                          self.query_pushdate(), # Use pushdate as the rank
                          client_id,
@@ -1400,10 +1429,10 @@ or run without that action (ie: --no-{action})"
 
         index = self.config.get('taskcluster_index', 'index.garbage.staging')
         # TODO: Bug 1165980 - these should be in tree
-        routes = [
+        routes.extend([
             "%s.buildbot.branches.%s.%s" % (index, self.branch, self.stage_platform),
             "%s.buildbot.revisions.%s.%s.%s" % (index, self.query_revision(), self.branch, self.stage_platform),
-        ]
+        ])
         task = tc.create_task(routes)
         tc.claim_task(task)
 
@@ -1473,7 +1502,6 @@ or run without that action (ie: --no-{action})"
         files.extend([os.path.join(self.log_obj.abs_log_dir, x) for x in self.log_obj.log_files.values()])
 
         # Also upload our buildprops.json file.
-        dirs = self.query_abs_dirs()
         files.extend([os.path.join(dirs['base_work_dir'], 'buildprops.json')])
 
         for upload_file in files:

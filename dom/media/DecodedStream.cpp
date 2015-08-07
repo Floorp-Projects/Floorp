@@ -234,6 +234,7 @@ DecodedStream::DecodedStream(MediaQueue<MediaData>& aAudioQueue,
                              MediaQueue<MediaData>& aVideoQueue)
   : mMonitor("DecodedStream::mMonitor")
   , mPlaying(false)
+  , mVolume(1.0)
   , mAudioQueue(aAudioQueue)
   , mVideoQueue(aVideoQueue)
 {
@@ -416,6 +417,13 @@ DecodedStream::SetPlaying(bool aPlaying)
   if (mData) {
     mData->SetPlaying(aPlaying);
   }
+}
+
+void
+DecodedStream::SetVolume(double aVolume)
+{
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  mVolume = aVolume;
 }
 
 void
@@ -666,13 +674,13 @@ DecodedStream::AdvanceTracks()
 }
 
 bool
-DecodedStream::SendData(double aVolume, bool aIsSameOrigin)
+DecodedStream::SendData(bool aIsSameOrigin)
 {
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   MOZ_ASSERT(mStartTime.isSome(), "Must be called after StartPlayback()");
 
   InitTracks();
-  SendAudio(aVolume, aIsSameOrigin);
+  SendAudio(mVolume, aIsSameOrigin);
   SendVideo(aIsSameOrigin);
   AdvanceTracks();
 
