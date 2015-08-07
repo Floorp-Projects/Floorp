@@ -554,7 +554,7 @@ Animation::ComposeStyle(nsRefPtr<AnimValuesStyleRule>& aStyleRule,
                         nsCSSPropertySet& aSetProperties,
                         bool& aNeedsRefreshes)
 {
-  if (!mEffect || mEffect->IsFinishedTransition()) {
+  if (!mEffect) {
     return;
   }
 
@@ -562,6 +562,10 @@ Animation::ComposeStyle(nsRefPtr<AnimValuesStyleRule>& aStyleRule,
   if (playState == AnimationPlayState::Running ||
       playState == AnimationPlayState::Pending) {
     aNeedsRefreshes = true;
+  }
+
+  if (!IsInEffect()) {
+    return;
   }
 
   // In order to prevent flicker, there are a few cases where we want to use
