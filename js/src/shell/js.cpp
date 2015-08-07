@@ -91,6 +91,7 @@ using namespace js::cli;
 using namespace js::shell;
 
 using mozilla::ArrayLength;
+using mozilla::Atomic;
 using mozilla::MakeUnique;
 using mozilla::Maybe;
 using mozilla::NumberEqualsInt32;
@@ -123,7 +124,7 @@ static size_t gMaxStackSize = 128 * sizeof(size_t) * 1024;
  */
 static double MAX_TIMEOUT_INTERVAL = 1800.0;
 static double gTimeoutInterval = -1.0;
-static volatile bool gServiceInterrupt = false;
+static Atomic<bool> gServiceInterrupt;
 static JS::PersistentRootedValue gInterruptFunc;
 
 static bool gLastWarningEnabled = false;
