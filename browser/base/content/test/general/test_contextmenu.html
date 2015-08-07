@@ -80,6 +80,16 @@ function runTest(testNum) {
                     "context-inspect", true];
   }
 
+  var passwordFillItems = [
+    "---", null,
+    "fill-login", null,
+      [
+        "fill-login-no-logins", false,
+        "---", null,
+        "fill-login-saved-passwords", true
+      ], null,
+  ];
+
   var tests = [
     function () {
         // Invoke context menu for next test.
@@ -665,7 +675,8 @@ function runTest(testNum) {
                               ["spell-check-dictionary-en-US", true,
                                "---",                          null,
                                "spell-add-dictionaries",       true], null
-                         ].concat(inspectItems));
+                         ].concat(passwordFillItems)
+                          .concat(inspectItems));
         closeContextMenu();
         subwindow.getSelection().removeAllRanges();
         openContextMenuFor(plugin);
