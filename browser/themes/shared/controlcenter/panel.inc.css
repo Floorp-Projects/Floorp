@@ -1,33 +1,39 @@
-/* Show the organization name only for EV certs. */
-#identity-popup-securityView:not(.verifiedIdentity) > #identity-popup-content-owner,
-#identity-popup-securityView:not(.verifiedIdentity) > #identity-popup-securityView-connection,
-/* Show the "Verified by" label only for DV and EV certs. */
-#identity-popup-securityView:not(.verifiedIdentity):not(.verifiedDomain) > #identity-popup-content-verifier,
-/* Show a longer explanation for non-secure sites, mixed content, and weak
-   connection security. Show the organization address for EV certs. */
-#identity-popup-securityView:not(.unknownIdentity):not(.verifiedIdentity):not(.mixedContent):not(.weakCipher) > #identity-popup-content-supplemental,
-/* Show the "Connection is secure" labels only for EV and DV certs. */
-#identity-popup-security-content:not(.verifiedIdentity):not(.verifiedDomain) > .identity-popup-connection-secure,
-#identity-popup-securityView:not(.verifiedIdentity):not(.verifiedDomain) > #identity-popup-securityView-header > .identity-popup-connection-secure,
-/* Show the "Connection is not secure" labels only for non-secure sites. */
-#identity-popup-security-content:not(.unknownIdentity) > .identity-popup-connection-not-secure,
-#identity-popup-securityView:not(.unknownIdentity) > #identity-popup-securityView-header > .identity-popup-connection-not-secure,
-/* Show "This page is stored on your computer" only for file URLs. */
-#identity-popup-security-content:not(.fileURI) > .identity-popup-connection-file-uri,
-#identity-popup-securityView:not(.fileURI) > #identity-popup-securityView-header > .identity-popup-connection-file-uri,
-/* Show "This is a secure internal page" only for whitelisted pages. */
-#identity-popup-securityView:not(.chromeUI) > #identity-popup-securityView-header > .identity-popup-connection-internal,
-#identity-popup-security-content:not(.chromeUI) > .identity-popup-connection-internal,
-/* Hide the subsection arrow for whitelisted chromeUI pages. */
-#identity-popup-security-content.chromeUI + .identity-popup-expander,
-/* Hide the subsection arrow for whitelisted file URI pages. */
-#identity-popup-security-content.fileURI + .identity-popup-expander,
-/* Hide the tracking protection section for whitelisted chromeUI pages. */
-#identity-popup-mainView.chromeUI > #tracking-protection-container {
+%if 0
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+%endif
+
+/* Hide all conditional elements by default. */
+:-moz-any([when-connection],[when-mixedcontent],[when-ciphers]) {
   display: none;
 }
 
-/* PANEL */
+/* Show the right elements for the right connection states. */
+#identity-popup[connection=not-secure] [when-connection~=not-secure],
+#identity-popup[connection=secure-ev] [when-connection~=secure-ev],
+#identity-popup[connection=secure] [when-connection~=secure],
+#identity-popup[connection=chrome] [when-connection~=chrome],
+#identity-popup[connection=file] [when-connection~=file],
+/* Show weak cipher messages when needed. */
+#identity-popup[ciphers=weak]:not([mixedcontent]) [when-ciphers~=weak],
+/* Show mixed content warnings when needed */
+#identity-popup[mixedcontent~=active-loaded] [when-mixedcontent=active-loaded],
+#identity-popup[mixedcontent~=passive-loaded]:not([mixedcontent~=active-loaded]) [when-mixedcontent=passive-loaded],
+#identity-popup[mixedcontent~=active-blocked]:not([mixedcontent~=passive-loaded]) [when-mixedcontent=active-blocked],
+/* Show the right elements when there is mixed passive content loaded and active blocked. */
+#identity-popup[mixedcontent~=active-blocked][mixedcontent~=passive-loaded] [when-mixedcontent~=active-blocked][when-mixedcontent~=passive-loaded],
+/* Show 'disable MCB' button always when there is mixed active content blocked. */
+#identity-popup-securityView-body[mixedcontent~=active-blocked] > button[when-mixedcontent=active-blocked] {
+  display: inherit;
+}
+
+/* Hide 'not secure' message in subview when weak cipher or mixed content messages are shown. */
+#identity-popup-securityView-body:-moz-any([mixedcontent],[ciphers]) > description[when-connection=not-secure],
+/* Hide 'passive-loaded (only)' message when there is mixed passive content loaded and active blocked. */
+#identity-popup-securityView-body[mixedcontent~=passive-loaded][mixedcontent~=active-blocked] > description[when-mixedcontent=passive-loaded] {
+  display: none;
+}
 
 #identity-popup,
 #identity-popup:not([panelopen]) .panel-viewstack[viewtype="main"]:not([transitioning]) #identity-popup-mainView {
@@ -143,7 +149,11 @@
 
 /* CONTENT */
 
-.identity-popup-text {
+#identity-popup-security-content > description,
+#identity-popup-security-descriptions > description,
+#identity-popup-securityView-header > description,
+#identity-popup-securityView-body > description,
+#tracking-protection-content > label {
   white-space: pre-wrap;
   font-size: 110%;
   margin: 0;
@@ -154,11 +164,17 @@
   font-size: 150%;
 }
 
-/* SECURITY */
-
-#identity-popup-securityView > .identity-popup-text:not(#identity-popup-content-owner) {
-  margin: 2px 0 4px;
+.identity-popup-warning-gray {
+  -moz-padding-start: 24px;
+  background: url(chrome://browser/skin/controlcenter/warning-gray.svg) no-repeat 0 50%;
 }
+
+.identity-popup-warning-yellow {
+  -moz-padding-start: 24px;
+  background: url(chrome://browser/skin/controlcenter/warning-yellow.svg) no-repeat 0 50%;
+}
+
+/* SECURITY */
 
 .identity-popup-connection-secure {
   color: #418220;
@@ -167,12 +183,6 @@
 .identity-popup-connection-not-secure {
   color: #d74345;
 }
-
-#identity-popup-security-content.chromeUI {
-  background-image: url(chrome://branding/content/icon48.png);
-}
-
-/* SECURITY SUBVIEW */
 
 #identity-popup-securityView {
   padding-bottom: 2em;
@@ -184,44 +194,57 @@
   background-image: url(chrome://browser/skin/controlcenter/conn-not-secure.svg);
 }
 
-#identity-popup-securityView.verifiedDomain,
-#identity-popup-securityView.verifiedIdentity,
-#identity-popup-security-content.verifiedDomain,
-#identity-popup-security-content.verifiedIdentity {
+#identity-popup[connection=chrome] #identity-popup-securityView,
+#identity-popup[connection=chrome] #identity-popup-security-content {
+  background-image: url(chrome://branding/content/icon48.png);
+}
+
+#identity-popup[connection^=secure] #identity-popup-securityView,
+#identity-popup[connection^=secure] #identity-popup-security-content {
   background-image: url(chrome://browser/skin/controlcenter/conn-secure.svg);
 }
 
-#identity-popup-securityView.weakCipher,
-#identity-popup-securityView.mixedDisplayContent,
-#identity-popup-securityView.mixedDisplayContentLoadedActiveBlocked,
-#identity-popup-security-content.weakCipher,
-#identity-popup-security-content.mixedDisplayContent,
-#identity-popup-security-content.mixedDisplayContentLoadedActiveBlocked {
+#identity-popup[ciphers=weak] #identity-popup-securityView,
+#identity-popup[ciphers=weak] #identity-popup-security-content,
+#identity-popup[mixedcontent~=passive-loaded] #identity-popup-securityView,
+#identity-popup[mixedcontent~=passive-loaded] #identity-popup-security-content {
   background-image: url(chrome://browser/skin/controlcenter/conn-degraded.svg);
 }
 
-#identity-popup-securityView.mixedActiveContent,
-#identity-popup-security-content.mixedActiveContent {
+#identity-popup[mixedcontent~=active-loaded] #identity-popup-securityView,
+#identity-popup[mixedcontent~=active-loaded] #identity-popup-security-content {
   background-image: url(chrome://browser/skin/controlcenter/mcb-disabled.svg);
+}
+
+#identity-popup-security-descriptions > description {
+  margin-top: 6px;
+  color: Graytext;
 }
 
 #identity-popup-securityView-header {
   border-bottom: 1px solid var(--panel-separator-color);
   padding-bottom: 1em;
-  margin-bottom: 1em;
 }
 
-#identity-popup-content-owner {
-  font-weight: 700;
+#identity-popup-securityView-body {
+  -moz-padding-end: 1em;
 }
 
-#identity-popup-content-verifier {
+#identity-popup-content-verifier ~ description {
+  margin-top: 1em;
   color: Graytext;
 }
 
-#identity-popup-content-owner,
-#identity-popup-securityView > #identity-popup-securityView-connection.identity-popup-text {
+description#identity-popup-content-verified-by,
+description#identity-popup-content-owner,
+description#identity-popup-content-verifier,
+#identity-popup-securityView-body > button {
   margin-top: 1em;
+}
+
+#identity-popup-securityView-body > button {
+  margin-inline-start: 0;
+  margin-inline-end: 0;
 }
 
 /* TRACKING PROTECTION */
