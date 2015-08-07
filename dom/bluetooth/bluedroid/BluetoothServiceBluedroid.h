@@ -411,7 +411,17 @@ protected:
   bool mIsRestart;
   bool mIsFirstTimeToggleOffBt;
 
+  // Runnable arrays
+  nsTArray<nsRefPtr<BluetoothReplyRunnable>> mSetAdapterPropertyRunnables;
+  nsTArray<nsRefPtr<BluetoothReplyRunnable>> mGetDeviceRunnables;
+  nsTArray<nsRefPtr<BluetoothReplyRunnable>> mCreateBondRunnables;
+  nsTArray<nsRefPtr<BluetoothReplyRunnable>> mRemoveBondRunnables;
+
 #ifndef MOZ_B2G_BT_API_V1
+  nsTArray<nsRefPtr<BluetoothReplyRunnable>> mChangeAdapterStateRunnables;
+  nsTArray<nsRefPtr<BluetoothReplyRunnable>> mChangeDiscoveryRunnables;
+  nsTArray<nsRefPtr<BluetoothReplyRunnable>> mFetchUuidsRunnables;
+
   // <address, name> mapping table for remote devices
   nsDataHashtable<nsStringHashKey, nsString> mDeviceNameMap;
 #endif
