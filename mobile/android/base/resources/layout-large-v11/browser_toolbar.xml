@@ -75,8 +75,7 @@
                         android:layout_marginTop="18dp"
                         android:layout_marginBottom="18dp"
                         android:layout_marginLeft="16dp"
-                        android:layout_marginRight="16dp"
-                        android:layout="@layout/new_tablet_tabs_counter"/>
+                        android:layout_marginRight="16dp"/>
 
     <org.mozilla.gecko.widget.ThemedImageButton
             android:id="@+id/menu"
