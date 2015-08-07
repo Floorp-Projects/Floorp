@@ -430,6 +430,11 @@ partial interface Navigator {
   readonly attribute InputPortManager inputPortManager;
 };
 
+partial interface Navigator {
+  [Throws, Pref="dom.presentation.enabled", CheckAnyPermissions="presentation", AvailableIn="PrivilegedApps"]
+  readonly attribute Presentation? presentation;
+};
+
 #ifdef MOZ_EME
 partial interface Navigator {
   [Pref="media.eme.apiVisible", NewObject]
