@@ -16,7 +16,7 @@
 
 "use strict";
 
-const {setBaseCssDocsUrl} = devtools.require("devtools/shared/widgets/MdnDocsWidget");
+const {setBaseCssDocsUrl} = require("devtools/shared/widgets/MdnDocsWidget");
 
 /**
  * The test document tries to confuse the context menu

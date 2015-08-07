@@ -50,7 +50,7 @@ public class GeneratableElementIterator implements Iterator<AnnotatableEntity> {
         // Check for "Wrap ALL the things" flag.
         for (Annotation annotation : aClass.getDeclaredAnnotations()) {
             final String annotationTypeName = annotation.annotationType().getName();
-            if (annotationTypeName.equals("org.mozilla.gecko.mozglue.generatorannotations.WrapEntireClassForJNI")) {
+            if (annotationTypeName.equals("org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI")) {
                 mIterateEveryEntry = true;
                 break;
             }

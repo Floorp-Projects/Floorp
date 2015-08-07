@@ -454,16 +454,6 @@ let gSyncPane = {
     });
   },
 
-  openQuotaDialog: function () {
-    let win = Services.wm.getMostRecentWindow("Sync:ViewQuota");
-    if (win) {
-      win.focus();
-    } else {
-      window.openDialog("chrome://browser/content/sync/quota.xul", "",
-                        "centerscreen,chrome,dialog,modal");
-    }
-  },
-
   openAddDevice: function () {
     if (!Weave.Utils.ensureMPUnlocked()) {
       return;

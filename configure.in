@@ -7498,6 +7498,17 @@ if test -n "$STDCXX_COMPAT"; then
 fi
 
 dnl ========================================================
+dnl = frontend JS debug mode
+dnl ========================================================
+
+MOZ_ARG_ENABLE_BOOL(debug-js-modules,
+[  --enable-debug-js-modules  Enable debug mode for frontend JS libraries],
+   DEBUG_JS_MODULES=1,
+   DEBUG_JS_MODULES=)
+
+AC_SUBST(DEBUG_JS_MODULES)
+
+dnl ========================================================
 dnl =
 dnl = Profiling and Instrumenting
 dnl =

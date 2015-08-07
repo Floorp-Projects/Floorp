@@ -6,7 +6,7 @@ const {Cu} = require("chrome");
 
 let { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 
-const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const {TargetFactory} = require("devtools/framework/target");
 const {Services} = Cu.import("resource://gre/modules/Services.jsm");
 const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm");
 const EventEmitter = require("devtools/toolkit/event-emitter");
@@ -294,7 +294,7 @@ let AppManager = exports.AppManager = {
       if (this.connection.client.mainRoot.traits.allowChromeProcess) {
         return this.connection.client.getProcess()
                    .then(aResponse => {
-                     return devtools.TargetFactory.forRemoteTab({
+                     return TargetFactory.forRemoteTab({
                        form: aResponse.form,
                        client: this.connection.client,
                        chrome: true
@@ -302,7 +302,7 @@ let AppManager = exports.AppManager = {
                    });
       } else {
         // Fx <39 exposes tab actors on the root actor
-        return devtools.TargetFactory.forRemoteTab({
+        return TargetFactory.forRemoteTab({
           form: this._listTabsResponse,
           client: this.connection.client,
           chrome: true,

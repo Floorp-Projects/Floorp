@@ -47,6 +47,15 @@ EXTRA_JS_MODULES.devtools.shared += [
     'undo.js'
 ]
 
+EXTRA_JS_MODULES.devtools.shared.content += [
+    'content/react.js'
+]
+
+if CONFIG['DEBUG_JS_MODULES']:
+    EXTRA_JS_MODULES.devtools.shared.content += [
+        'content/react-dev.js'
+    ]
+
 EXTRA_JS_MODULES.devtools.shared.widgets += [
     'widgets/BarGraphWidget.js',
     'widgets/CubicBezierPresets.js',

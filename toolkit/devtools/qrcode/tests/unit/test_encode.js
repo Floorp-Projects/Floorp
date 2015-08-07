@@ -7,8 +7,7 @@
  */
 
 const { utils: Cu } = Components;
-const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-const { require } = devtools;
+const { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 
 const QR = require("devtools/toolkit/qrcode/index");
 

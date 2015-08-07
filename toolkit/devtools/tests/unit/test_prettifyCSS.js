@@ -5,8 +5,6 @@
 
 "use strict";
 
-const loader = new DevToolsLoader();
-const require = loader.require;
 const {CssLogic} = require("devtools/styleinspector/css-logic");
 
 

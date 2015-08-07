@@ -1,8 +1,7 @@
 const Cu = Components.utils;
-const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm", {});
 const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm", {});
-const require = devtools.require;
 const promise = require("projecteditor/helpers/promise");
 const ProjectEditor = require("projecteditor/projecteditor");
 

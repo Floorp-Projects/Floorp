@@ -10,9 +10,9 @@ function run_test() {
 }
 
 add_task(function test() {
-  let FrameUtils = devtools.require("devtools/performance/frame-utils");
-  let { FrameNode } = devtools.require("devtools/performance/tree-model");
-  let { CATEGORY_OTHER } = devtools.require("devtools/performance/global");
+  let FrameUtils = require("devtools/performance/frame-utils");
+  let { FrameNode } = require("devtools/performance/tree-model");
+  let { CATEGORY_OTHER } = require("devtools/performance/global");
   let compute = frame => {
     FrameUtils.computeIsContentAndCategory(frame);
     return frame;

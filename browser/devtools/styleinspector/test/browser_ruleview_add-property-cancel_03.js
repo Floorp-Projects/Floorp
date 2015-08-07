@@ -4,59 +4,49 @@
 
 "use strict";
 
-// Test cancelling the addition of a new property in the rule-view
+// Tests adding a new property and escapes the property name editor with a value
 
-const TEST_URI = [
-  "<style>",
-  "#testid {background-color: blue;}",
-  ".testclass, .unmatched {background-color: green;}",
+let TEST_URI = [
+  "<style type='text/css'>",
+  "  #testid {",
+  "    background-color: blue;",
+  "  }",
+  "  .testclass {",
+  "    background-color: green;",
+  "  }",
   "</style>",
-  "<div id='testid' class='testclass'>Styled Node</div>",
-  "<div id='testid2'>Styled Node</div>"
-].join("");
+  "<div id='testid' class='testclass'>Styled Node</div>"
+].join("\n");
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {toolbox, inspector, view} = yield openRuleView();
-  yield testCancelNew(inspector, view);
+  let {inspector, view} = yield openRuleView();
+  yield selectNode("#testid", inspector);
   yield testCancelNewOnEscape(inspector, view);
 });
 
-function* testCancelNew(inspector, ruleView) {
-  // Start at the beginning: start to add a rule to the element's style
-  // declaration, but leave it empty.
-
-  let elementRuleEditor = getRuleViewRuleEditor(ruleView, 0);
-  let editor = yield focusEditableField(ruleView, elementRuleEditor.closeBrace);
-
-  is(inplaceEditor(elementRuleEditor.newPropSpan), editor,
-    "Property editor is focused");
-
-  let onBlur = once(editor.input, "blur");
-  editor.input.blur();
-  yield onBlur;
-
-  ok(!elementRuleEditor.rule._applyingModifications, "Shouldn't have an outstanding modification request after a cancel.");
-  is(elementRuleEditor.rule.textProps.length, 0, "Should have canceled creating a new text property.");
-  ok(!elementRuleEditor.propertyList.hasChildNodes(), "Should not have any properties.");
-}
-
-function* testCancelNewOnEscape(inspector, ruleView) {
+function* testCancelNewOnEscape(inspector, view) {
   // Start at the beginning: start to add a rule to the element's style
   // declaration, add some text, then press escape.
 
-  let elementRuleEditor = getRuleViewRuleEditor(ruleView, 0);
-  let editor = yield focusEditableField(ruleView, elementRuleEditor.closeBrace);
+  let elementRuleEditor = getRuleViewRuleEditor(view, 0);
+  let editor = yield focusEditableField(view, elementRuleEditor.closeBrace);
 
-  is(inplaceEditor(elementRuleEditor.newPropSpan), editor, "Next focused editor should be the new property editor.");
+  is(inplaceEditor(elementRuleEditor.newPropSpan), editor,
+    "Next focused editor should be the new property editor.");
 
-  EventUtils.sendString("background", ruleView.styleWindow)
+  EventUtils.sendString("background", view.styleWindow);
 
   let onBlur = once(editor.input, "blur");
   EventUtils.synthesizeKey("VK_ESCAPE", {});
   yield onBlur;
 
-  ok(!elementRuleEditor.rule._applyingModifications, "Shouldn't have an outstanding modification request after a cancel.");
-  is(elementRuleEditor.rule.textProps.length, 0, "Should have canceled creating a new text property.");
-  ok(!elementRuleEditor.propertyList.hasChildNodes(), "Should not have any properties.");
+  ok(!elementRuleEditor.rule._applyingModifications,
+    "Shouldn't have an outstanding modification request after a cancel.");
+  is(elementRuleEditor.rule.textProps.length, 0,
+    "Should have canceled creating a new text property.");
+  ok(!elementRuleEditor.propertyList.hasChildNodes(),
+    "Should not have any properties.");
+  is(view.styleDocument.body, view.styleDocument.activeElement,
+    "Correct element has focus");
 }

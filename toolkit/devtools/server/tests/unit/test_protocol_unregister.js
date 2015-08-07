@@ -1,4 +1,4 @@
-const {types} = devtools.require("devtools/server/protocol");
+const {types} = require("devtools/server/protocol");
 
 
 function run_test()

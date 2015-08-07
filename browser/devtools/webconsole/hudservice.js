@@ -10,12 +10,13 @@ const {Cc, Ci, Cu} = require("chrome");
 
 let WebConsoleUtils = require("devtools/toolkit/webconsole/utils").Utils;
 let Heritage = require("sdk/core/heritage");
+let {TargetFactory} = require("devtools/framework/target");
+let {Tools} = require("definitions");
 
 loader.lazyGetter(this, "Telemetry", () => require("devtools/shared/telemetry"));
 loader.lazyGetter(this, "WebConsoleFrame", () => require("devtools/webconsole/webconsole").WebConsoleFrame);
 loader.lazyImporter(this, "promise", "resource://gre/modules/Promise.jsm", "Promise");
 loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/gDevTools.jsm");
-loader.lazyImporter(this, "devtools", "resource://gre/modules/devtools/Loader.jsm");
 loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
 loader.lazyImporter(this, "DebuggerServer", "resource://gre/modules/devtools/dbg-server.jsm");
 loader.lazyImporter(this, "DebuggerClient", "resource://gre/modules/devtools/dbg-client.jsm");
@@ -155,10 +156,10 @@ HUD_SERVICE.prototype =
   getOpenWebConsole: function HS_getOpenWebConsole()
   {
     let tab = this.currentContext().gBrowser.selectedTab;
-    if (!tab || !devtools.TargetFactory.isKnownTab(tab)) {
+    if (!tab || !TargetFactory.isKnownTab(tab)) {
       return null;
     }
-    let target = devtools.TargetFactory.forTab(tab);
+    let target = TargetFactory.forTab(tab);
     let toolbox = gDevTools.getToolbox(target);
     let panel = toolbox ? toolbox.getPanel("webconsole") : null;
     return panel ? panel.hud : null;
@@ -205,7 +206,7 @@ HUD_SERVICE.prototype =
     let target;
     function getTarget(aConnection)
     {
-      return devtools.TargetFactory.forRemoteTab(aConnection);
+      return TargetFactory.forRemoteTab(aConnection);
     }
 
     function openWindow(aTarget)
@@ -214,7 +215,7 @@ HUD_SERVICE.prototype =
 
       let deferred = promise.defer();
 
-      let win = Services.ww.openWindow(null, devtools.Tools.webConsole.url, "_blank",
+      let win = Services.ww.openWindow(null, Tools.webConsole.url, "_blank",
                                        BROWSER_CONSOLE_WINDOW_FEATURES, null);
       win.addEventListener("DOMContentLoaded", function onLoad() {
         win.removeEventListener("DOMContentLoaded", onLoad);

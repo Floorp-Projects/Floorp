@@ -9,8 +9,7 @@
 
 const Cu = Components.utils;
 const Ci = Components.interfaces;
-let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-let require = devtools.require;
+let {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let {_advanceValidate} = require("devtools/styleinspector/rule-view");
 
 //                            1         2         3

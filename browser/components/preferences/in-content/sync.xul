@@ -97,8 +97,6 @@
                 label="&manageAccount.label;"
                 accesskey="&manageAccount.accesskey;">
           <menupopup>
-            <menuitem id="syncViewQuota" label="&viewQuota.label;"/>
-            <menuseparator/>
             <menuitem id="syncChangePassword" label="&changePassword2.label;"/>
             <menuitem id="syncResetPassphrase" label="&myRecoveryKey.label;"/>
             <menuseparator/>

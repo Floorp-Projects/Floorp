@@ -20,7 +20,7 @@ const {
   VIEW_NODE_PROPERTY_TYPE,
   VIEW_NODE_VALUE_TYPE,
   VIEW_NODE_IMAGE_URL_TYPE
-} = devtools.require("devtools/styleinspector/style-inspector-overlays");
+} = require("devtools/styleinspector/style-inspector-overlays");
 
 const PAGE_CONTENT = [
   '<style type="text/css">',

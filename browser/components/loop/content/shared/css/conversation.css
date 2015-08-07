@@ -1468,7 +1468,7 @@ html[dir="rtl"] .room-context-btn-close {
   flex-direction: row;
   margin-right: .2em;
   margin-bottom: .5em;
-  text-align: end;
+  text-align: start;
   flex-wrap: nowrap;
   justify-content: flex-start;
   align-content: stretch;
