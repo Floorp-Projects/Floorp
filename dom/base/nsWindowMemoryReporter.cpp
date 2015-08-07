@@ -169,7 +169,7 @@ AppendWindowURI(nsGlobalWindow *aWindow, nsACString& aStr, bool aAnonymize)
 
   if (uri) {
     if (aAnonymize && !aWindow->IsChromeWindow()) {
-      aStr.AppendPrintf("<anonymized-%d>", aWindow->WindowID());
+      aStr.AppendPrintf("<anonymized-%llu>", aWindow->WindowID());
     } else {
       nsCString spec;
       uri->GetSpec(spec);
@@ -278,9 +278,7 @@ CollectWindowReports(nsGlobalWindow *aWindow,
   if (top) {
     windowPath += NS_LITERAL_CSTRING("top(");
     AppendWindowURI(top, windowPath, aAnonymize);
-    windowPath += NS_LITERAL_CSTRING(", id=");
-    windowPath.AppendInt(top->WindowID());
-    windowPath += NS_LITERAL_CSTRING(")");
+    windowPath.AppendPrintf(", id=%llu)", top->WindowID());
 
     aTopWindowPaths->Put(aWindow->WindowID(), windowPath);
 
