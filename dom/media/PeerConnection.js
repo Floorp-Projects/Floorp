@@ -13,6 +13,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PeerConnectionIdp",
   "resource://gre/modules/media/PeerConnectionIdp.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "convertToRTCStatsReport",
   "resource://gre/modules/media/RTCStatsReport.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
+  "resource://gre/modules/AppConstants.jsm");
 
 const PC_CONTRACT = "@mozilla.org/dom/peerconnection;1";
 const PC_OBS_CONTRACT = "@mozilla.org/dom/peerconnectionobserver;1";
@@ -40,11 +42,14 @@ function GlobalPCList() {
   this._list = {};
   this._networkdown = false; // XXX Need to query current state somehow
   this._lifecycleobservers = {};
+  this._nextId = 1;
   Services.obs.addObserver(this, "inner-window-destroyed", true);
   Services.obs.addObserver(this, "profile-change-net-teardown", true);
   Services.obs.addObserver(this, "network:offline-about-to-go-offline", true);
   Services.obs.addObserver(this, "network:offline-status-changed", true);
   Services.obs.addObserver(this, "gmp-plugin-crash", true);
+  Services.obs.addObserver(this, "PeerConnection:response:allow", true);
+  Services.obs.addObserver(this, "PeerConnection:response:deny", true);
   if (Cc["@mozilla.org/childprocessmessagemanager;1"]) {
     let mm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
     mm.addMessageListener("gmp-plugin-crash", this);
@@ -78,7 +83,21 @@ GlobalPCList.prototype = {
     } else {
       this._list[winID] = [Cu.getWeakReference(pc)];
     }
+    pc._globalPCListId = this._nextId++;
     this.removeNullRefs(winID);
+  },
+
+  findPC: function(globalPCListId) {
+    for (let winId in this._list) {
+      if (this._list.hasOwnProperty(winId)) {
+        for (let pcref of this._list[winId]) {
+          let pc = pcref.get();
+          if (pc && pc._globalPCListId == globalPCListId) {
+            return pc;
+          }
+        }
+      }
+    }
   },
 
   removeNullRefs: function(winID) {
@@ -186,6 +205,18 @@ GlobalPCList.prototype = {
         let pluginName = subject.getPropertyAsAString("pluginName");
         let data = { pluginID, pluginName };
         this.handleGMPCrash(data);
+      }
+    } else if (topic == "PeerConnection:response:allow" ||
+               topic == "PeerConnection:response:deny") {
+      var pc = this.findPC(data);
+      if (pc) {
+        if (topic == "PeerConnection:response:allow") {
+          pc._settlePermission.allow();
+        } else {
+          let err = new pc._win.DOMException("The operation is insecure.",
+                                             "SecurityError");
+          pc._settlePermission.deny(err);
+        }
       }
     }
   },
@@ -355,6 +386,7 @@ RTCPeerConnection.prototype = {
     }
     // Save the appId
     this._appId = Cu.getWebIDLCallerPrincipal().appId;
+    this._https = this._win.document.documentURIObject.schemeIs("https");
 
     // Get the offline status for this appId
     let appOffline = false;
@@ -690,13 +722,12 @@ RTCPeerConnection.prototype = {
 
       let origin = Cu.getWebIDLCallerPrincipal().origin;
       return this._chain(() => {
-        let p = this._certificateReady.then(
-          () => new this._win.Promise((resolve, reject) => {
+        let p = Promise.all([this.getPermission(), this._certificateReady])
+          .then(() => new this._win.Promise((resolve, reject) => {
             this._onCreateOfferSuccess = resolve;
             this._onCreateOfferFailure = reject;
             this._impl.createOffer(options);
-          })
-        );
+          }));
         p = this._addIdentityAssertion(p, origin);
         return p.then(
           sdp => new this._win.mozRTCSessionDescription({ type: "offer", sdp: sdp }));
@@ -715,8 +746,8 @@ RTCPeerConnection.prototype = {
     return this._legacyCatch(onSuccess, onError, () => {
       let origin = Cu.getWebIDLCallerPrincipal().origin;
       return this._chain(() => {
-        let p = this._certificateReady.then(
-          () => new this._win.Promise((resolve, reject) => {
+        let p = Promise.all([this.getPermission(), this._certificateReady])
+          .then(() => new this._win.Promise((resolve, reject) => {
             // We give up line-numbers in errors by doing this here, but do all
             // state-checks inside the chain, to support the legacy feature that
             // callers don't have to wait for setRemoteDescription to finish.
@@ -731,13 +762,33 @@ RTCPeerConnection.prototype = {
             this._onCreateAnswerSuccess = resolve;
             this._onCreateAnswerFailure = reject;
             this._impl.createAnswer();
-          })
-        );
+          }));
         p = this._addIdentityAssertion(p, origin);
         return p.then(sdp => {
           return new this._win.mozRTCSessionDescription({ type: "answer", sdp: sdp });
         });
       });
+    });
+  },
+
+  getPermission: function() {
+    if (this._havePermission) {
+      return this._havePermission;
+    }
+    if (AppConstants.MOZ_B2G ||
+        Services.prefs.getBoolPref("media.navigator.permission.disabled")) {
+      return this._havePermission = Promise.resolve();
+    }
+    return this._havePermission = new Promise((resolve, reject) => {
+      this._settlePermission = { allow: resolve, deny: reject };
+      let outerId = this._win.QueryInterface(Ci.nsIInterfaceRequestor).
+          getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
+      let request = { windowID: outerId,
+                      innerWindowId: this._winID,
+                      callID: this._globalPCListId,
+                      isSecure: this._https };
+      request.wrappedJSObject = request;
+      Services.obs.notifyObservers(request, "PeerConnection:request", null);
     });
   },
 
@@ -771,11 +822,12 @@ RTCPeerConnection.prototype = {
             "InvalidParameterError");
       }
 
-      return this._chain(() => new this._win.Promise((resolve, reject) => {
+      return this._chain(() => this.getPermission()
+          .then(() => new this._win.Promise((resolve, reject) => {
         this._onSetLocalDescriptionSuccess = resolve;
         this._onSetLocalDescriptionFailure = reject;
         this._impl.setLocalDescription(type, desc.sdp);
-      }));
+      })));
     });
   },
 
@@ -858,11 +910,12 @@ RTCPeerConnection.prototype = {
       let origin = Cu.getWebIDLCallerPrincipal().origin;
 
       return this._chain(() => {
-        let setRem = new this._win.Promise((resolve, reject) => {
-          this._onSetRemoteDescriptionSuccess = resolve;
-          this._onSetRemoteDescriptionFailure = reject;
-          this._impl.setRemoteDescription(type, desc.sdp);
-        });
+        let setRem = this.getPermission()
+          .then(() => new this._win.Promise((resolve, reject) => {
+            this._onSetRemoteDescriptionSuccess = resolve;
+            this._onSetRemoteDescriptionFailure = reject;
+            this._impl.setRemoteDescription(type, desc.sdp);
+          }));
 
         if (desc.type === "rollback") {
           return setRem;
