@@ -754,6 +754,8 @@ protected:
     PANNING_LOCKED_X,         /* touch-start followed by move (i.e. panning with axis lock) X axis */
     PANNING_LOCKED_Y,         /* as above for Y axis */
 
+    PAN_MOMENTUM,             /* like PANNING, but controlled by momentum PanGestureInput events */
+
     CROSS_SLIDING_X,          /* Panning disabled while user does a horizontal gesture
                                  on a vertically-scrollable view. This used for the
                                  Windows Metro "cross-slide" gesture. */
