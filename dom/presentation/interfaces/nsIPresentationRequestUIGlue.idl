@@ -1,0 +1,25 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+#define PRESENTATION_REQUEST_UI_GLUE_CONTRACTID \
+  "@mozilla.org/presentation/requestuiglue;1"
+%}
+
+[scriptable, uuid(faa45119-6fb5-496c-aa4c-f740177a38b5)]
+interface nsIPresentationRequestUIGlue : nsISupports
+{
+  /*
+   * This method is called to open the responding app/page when a presentation
+   * request comes in at receiver side.
+   *
+   * @param url       The url of the request.
+   * @param sessionId The session ID of the request.
+   *
+   * @return A promise that resolves to the opening frame.
+   */
+  nsISupports sendRequest(in DOMString url, in DOMString sessionId);
+};

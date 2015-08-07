@@ -171,6 +171,8 @@
 #include "mozilla/dom/FileSystemTaskBase.h"
 #include "mozilla/dom/bluetooth/PBluetoothChild.h"
 #include "mozilla/dom/PFMRadioChild.h"
+#include "mozilla/dom/PPresentationChild.h"
+#include "mozilla/dom/PresentationIPCService.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 
 #ifdef MOZ_WEBSPEECH
@@ -1380,6 +1382,37 @@ ContentChild::SendPBlobConstructor(PBlobChild* aActor,
                                    const BlobConstructorParams& aParams)
 {
     return PContentChild::SendPBlobConstructor(aActor, aParams);
+}
+
+PPresentationChild*
+ContentChild::AllocPPresentationChild()
+{
+    NS_NOTREACHED("We should never be manually allocating PPresentationChild actors");
+    return nullptr;
+}
+
+bool
+ContentChild::DeallocPPresentationChild(PPresentationChild* aActor)
+{
+    delete aActor;
+    return true;
+}
+
+bool
+ContentChild::RecvNotifyPresentationReceiverLaunched(PBrowserChild* aIframe,
+                                                     const nsString& aSessionId)
+{
+    nsCOMPtr<nsIDocShell> docShell =
+        do_GetInterface(static_cast<TabChild*>(aIframe)->WebNavigation());
+    NS_WARN_IF(!docShell);
+
+    nsCOMPtr<nsIPresentationService> service =
+        do_GetService(PRESENTATION_SERVICE_CONTRACTID);
+    NS_WARN_IF(!service);
+
+    NS_WARN_IF(NS_FAILED(static_cast<PresentationIPCService*>(service.get())->MonitorResponderLoading(aSessionId, docShell)));
+
+    return true;
 }
 
 PCrashReporterChild*
