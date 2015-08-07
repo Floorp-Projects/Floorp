@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="e862ab9177af664f00b4522e2350f4cb13866d73">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="59ce66c60e71b434061aeaf11e945814b234c355"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="68d369c2a2b0cd16db028f0c2e660107c52ce113"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="4d9fbc08e87731447c19e96e13d8c7444baafcca"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
@@ -128,7 +128,7 @@
   <!-- Stock Android things -->
   <project name="platform/external/icu4c" path="external/icu4c" revision="2bb01561780583cc37bc667f0ea79f48a122d8a2"/>
   <!-- dolphin specific things -->
-  <project name="device/sprd" path="device/sprd" revision="09b87b777f1e03c81459d8cba55ba7fb95da3bab"/>
+  <project name="device/sprd" path="device/sprd" revision="f4aae37239c177f90044d28444a2cb518e34b11a"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="39a5b5bcadad745df3e6882316fce426f98b1669"/>
   <project name="platform/frameworks/av" path="frameworks/av" revision="8bb69db127112fc66da75f8ca7a1158614b919f6"/>
   <project name="platform/hardware/akm" path="hardware/akm" revision="6d3be412647b0eab0adff8a2768736cf4eb68039"/>

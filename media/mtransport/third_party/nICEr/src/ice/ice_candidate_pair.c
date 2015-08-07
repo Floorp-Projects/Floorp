@@ -260,7 +260,12 @@ static void nr_ice_candidate_pair_stun_cb(NR_SOCKET s, int how, void *cb_arg)
           }
 
           /* OK, nothing found, must be peer reflexive */
-          if(!cand){
+          if(!cand) {
+            if (pair->pctx->ctx->flags & NR_ICE_CTX_FLAGS_RELAY_ONLY) {
+              /* Any STUN response with a reflexive address in it is unwanted
+                 when we'll send on relay only. Bail since cand is used below. */
+              goto done;
+            }
             if(r=nr_ice_candidate_create(pair->pctx->ctx,
               pair->local->component,pair->local->isock,pair->local->osock,
               PEER_REFLEXIVE,pair->local->tcp_type,0,pair->local->component->component_id,&cand))

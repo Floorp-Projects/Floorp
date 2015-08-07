@@ -376,7 +376,7 @@ void MediaDecoderStateMachine::SendStreamData()
   AssertCurrentThreadInMonitor();
   MOZ_ASSERT(!mAudioSink, "Should've been stopped in RunStateMachine()");
 
-  bool finished = mDecodedStream->SendData(mVolume, mSameOriginMedia);
+  bool finished = mDecodedStream->SendData(mSameOriginMedia);
 
   const auto clockTime = GetClock();
   while (true) {
@@ -1169,6 +1169,7 @@ void MediaDecoderStateMachine::VolumeChanged()
   if (mAudioSink) {
     mAudioSink->SetVolume(mVolume);
   }
+  mDecodedStream->SetVolume(mVolume);
 }
 
 void MediaDecoderStateMachine::RecomputeDuration()
