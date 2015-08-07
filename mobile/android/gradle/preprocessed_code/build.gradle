@@ -21,11 +21,11 @@ android {
     sourceSets {
         main {
             java {
-                srcDir "${topsrcdir}/mobile/android/base/adjust"
+                srcDir 'src/adjust/java'
                 if (mozconfig.substs.MOZ_INSTALL_TRACKING) {
-                    exclude 'StubAdjustHelper.java'
+                    exclude 'org/mozilla/gecko/adjust/StubAdjustHelper.java'
                 } else {
-                    exclude 'AdjustHelper.java'
+                    exclude 'org/mozilla/gecko/adjust/AdjustHelper.java'
                 }
             }
         }
