@@ -158,6 +158,21 @@ describe("loop.shared.views.TextChatView", function () {
 
       expect(node.querySelector(".text-chat-entry-timestamp")).to.not.eql(null);
     });
+
+    // note that this is really an integration test to be sure that we don't
+    // inadvertently regress using LinkifiedTextView.
+    it("should linkify a URL starting with http", function (){
+      view = mountTestComponent({
+        showTimestamp: true,
+        timestamp: "2015-06-23T22:48:39.738Z",
+        type: CHAT_MESSAGE_TYPES.RECEIVED,
+        contentType: CHAT_CONTENT_TYPES.TEXT,
+        message: "Check out http://example.com and see what you think..."
+      });
+      var node = view.getDOMNode();
+
+      expect(node.querySelector("a")).to.not.eql(null);
+    });
   });
 
   describe("TextChatEntriesView", function() {
