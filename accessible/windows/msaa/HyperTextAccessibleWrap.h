@@ -38,10 +38,6 @@ public:
 
 protected:
   ~HyperTextAccessibleWrap() {}
-
-  virtual nsresult GetModifiedText(bool aGetInsertedText, nsAString& aText,
-                                   uint32_t *aStartOffset,
-                                   uint32_t *aEndOffset);
 };
 
 } // namespace a11y
