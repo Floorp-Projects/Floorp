@@ -525,7 +525,7 @@ NS_IMETHODIMP nsCocoaWindow::Destroy()
     if (mInNativeFullScreenMode) {
       DestroyNativeWindow();
     } else if (mWindow) {
-      nsCocoaUtils::HideOSChromeOnScreen(false, [mWindow screen]);
+      nsCocoaUtils::HideOSChromeOnScreen(false);
     }
   }
 
@@ -1343,7 +1343,7 @@ NS_METHOD nsCocoaWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScre
     // The order here matters. When we exit full screen mode, we need to show the
     // Dock first, otherwise the newly-created window won't have its minimize
     // button enabled. See bug 526282.
-    nsCocoaUtils::HideOSChromeOnScreen(aFullScreen, [mWindow screen]);
+    nsCocoaUtils::HideOSChromeOnScreen(aFullScreen);
     nsresult rv = nsBaseWidget::MakeFullScreen(aFullScreen);
     NSEnableScreenUpdates();
     NS_ENSURE_SUCCESS(rv, rv);
