@@ -101,6 +101,14 @@ this.AppConstants = Object.freeze({
   false,
 #endif
 
+# MOZ_B2G covers both device and desktop b2g
+  MOZ_B2G:
+#ifdef MOZ_B2G
+  true,
+#else
+  false,
+#endif
+
 # NOTE! XP_LINUX has to go after MOZ_WIDGET_ANDROID otherwise Android
 # builds will be misidentified as linux.
   platform:
