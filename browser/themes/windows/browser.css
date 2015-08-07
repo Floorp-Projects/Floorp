@@ -2589,7 +2589,6 @@ notification[value="loop-sharing-notification"] .messageImage {
 %include ../shared/devtools/responsivedesign.inc.css
 %include ../shared/devtools/commandline.inc.css
 %include ../shared/plugin-doorhanger.inc.css
-%include ../shared/badcontent-doorhanger.inc.css
 %include ../shared/login-doorhanger.inc.css
 
 %include downloads/indicator.css
