@@ -1706,6 +1706,10 @@ CssRuleView.prototype = {
       return promise.resolve(undefined);
     }
 
+    if (this.popup.isOpen) {
+      this.popup.hidePopup();
+    }
+
     this.clear();
     this.clearPseudoClassPanel();
 
