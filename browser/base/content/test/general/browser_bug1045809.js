@@ -35,42 +35,27 @@ add_task(function* () {
 });
 
 function* test1(gTestBrowser) {
-  var notification =
-    PopupNotifications.getNotification("bad-content", gTestBrowser);
-  isnot(notification, null, "Mixed Content Doorhanger did appear in Test1");
-  yield promiseNotificationShown(notification);
-  isnot(PopupNotifications.panel.firstChild.isMixedContentBlocked, 0,
-    "Mixed Content is being blocked in Test1");
+  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
 
   var x = content.document.getElementsByTagName('iframe')[0].contentDocument.getElementById('mixedContentContainer');
   is(x, null, "Mixed Content is NOT to be found in Test1");
 
   // Disable Mixed Content Protection for the page (and reload)
-  PopupNotifications.panel.firstChild.disableMixedContentProtection();
+  gIdentityHandler.disableMixedContentProtection();
 }
 
 function* test2(gTestBrowser) {
-  var notification =
-    PopupNotifications.getNotification("bad-content", gTestBrowser);
-  isnot(notification, null, "Mixed Content Doorhanger did appear in Test2");
-  yield promiseNotificationShown(notification);
-  is(PopupNotifications.panel.firstChild.isMixedContentBlocked, 0,
-    "Mixed Content is NOT being blocked in Test2");
+  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: true, activeBlocked: false, passiveLoaded: false});
 
   var x = content.document.getElementsByTagName('iframe')[0].contentDocument.getElementById('mixedContentContainer');
   isnot(x, null, "Mixed Content is to be found in Test2");
 
   // Re-enable Mixed Content Protection for the page (and reload)
-  PopupNotifications.panel.firstChild.enableMixedContentProtection();
+  gIdentityHandler.enableMixedContentProtection();
 }
 
 function* test3(gTestBrowser) {
-  var notification =
-    PopupNotifications.getNotification("bad-content", gTestBrowser);
-  isnot(notification, null, "Mixed Content Doorhanger did appear in Test3");
-  yield promiseNotificationShown(notification);
-  isnot(PopupNotifications.panel.firstChild.isMixedContentBlocked, 0,
-    "Mixed Content is being blocked in Test3");
+  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
 
   var x = content.document.getElementsByTagName('iframe')[0].contentDocument.getElementById('mixedContentContainer');
   is(x, null, "Mixed Content is NOT to be found in Test3");

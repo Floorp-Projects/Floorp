@@ -50,11 +50,11 @@ function test() {
 function MixedTest1A() {
   gTestBrowser.removeEventListener("load", MixedTest1A, true);
   gTestBrowser.addEventListener("load", MixedTest1B, true);
-  var notification = PopupNotifications.getNotification("bad-content", gTestBrowser);
-  ok(notification, "Mixed Content Doorhanger did appear");
-  notification.reshow();
-  ok(PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is being blocked");
-  PopupNotifications.panel.firstChild.disableMixedContentProtection();
+
+  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
+
+  let {gIdentityHandler} = gTestBrowser.ownerGlobal;
+  gIdentityHandler.disableMixedContentProtection();
 }
 function MixedTest1B() {
   waitForCondition(function() content.document.getElementById('p1').innerHTML == "hello", MixedTest1C, "Waited too long for mixed script to run in Test 1");
@@ -73,8 +73,7 @@ function MixedTest2() {
 }
 
 function MixedTest2A() {
-  var notification = PopupNotifications.getNotification("bad-content", gTestBrowser);
-  ok(!notification, "Mixed Content Doorhanger did not appear for mixed display content!");
+  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: false, passiveLoaded: false});
   MixedTest3();
 }
 
@@ -88,11 +87,11 @@ function MixedTest3() {
 function MixedTest3A() {
   gTestBrowser.removeEventListener("load", MixedTest3A, true);
   gTestBrowser.addEventListener("load", MixedTest3B, true);
-  var notification = PopupNotifications.getNotification("bad-content", gTestBrowser);
-  ok(notification, "Mixed Content Doorhanger did appear for test 3");
-  notification.reshow();
-  ok(PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is being blocked in test 3");
-  PopupNotifications.panel.firstChild.disableMixedContentProtection();
+
+  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
+
+  let {gIdentityHandler} = gTestBrowser.ownerGlobal;
+  gIdentityHandler.disableMixedContentProtection();
 }
 function MixedTest3B() {
   waitForCondition(function() content.document.getElementById('p1').innerHTML == "hello", MixedTest3C, "Waited too long for mixed script to run in Test 3");
@@ -103,6 +102,7 @@ function MixedTest3C() {
 function MixedTest3D() {
   ok(content.document.getElementById('p1').innerHTML == "hello","Mixed script didn't load in Test 3");
   ok(content.document.getElementById('p2').innerHTML == "bye","Mixed image didn't load in Test 3");
+  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: true, activeBlocked: false, passiveLoaded: true});
   MixedTest4();
 }
 
@@ -116,22 +116,21 @@ function MixedTest4() {
 function MixedTest4A() {
   gTestBrowser.removeEventListener("load", MixedTest4A, true);
   gTestBrowser.addEventListener("load", MixedTest4B, true);
-  var notification = PopupNotifications.getNotification("bad-content", gTestBrowser);
-  ok(notification, "Mixed Content Doorhanger did appear for Test 4");
-  notification.reshow();
-  ok(PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is being blocked in Test 4");
-  PopupNotifications.panel.firstChild.disableMixedContentProtection();
+
+  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
+
+  let {gIdentityHandler} = gTestBrowser.ownerGlobal;
+  gIdentityHandler.disableMixedContentProtection();
 }
 function MixedTest4B() {
   waitForCondition(function() content.document.location == gHttpTestRoot + "file_bug822367_4B.html", MixedTest4C, "Waited too long for mixed script to run in Test 4");
 }
 function MixedTest4C() {
   ok(content.document.location == gHttpTestRoot + "file_bug822367_4B.html", "Location didn't change in test 4");
-  var notification = PopupNotifications.getNotification("bad-content", gTestBrowser);
-  ok(notification, "Mixed Content Doorhanger did appear after location change in Test 4");
-  notification.reshow();
-  ok(PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is being blocked in test 4");
-  notification.remove();
+
+  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
+
+  let {gIdentityHandler} = gTestBrowser.ownerGlobal;
   waitForCondition(function() content.document.getElementById('p1').innerHTML == "", MixedTest4D, "Mixed script loaded in test 4 after location change!");
 }
 function MixedTest4D() {
@@ -149,11 +148,11 @@ function MixedTest5() {
 function MixedTest5A() {
   gTestBrowser.removeEventListener("load", MixedTest5A, true);
   gTestBrowser.addEventListener("load", MixedTest5B, true);
-  var notification = PopupNotifications.getNotification("bad-content", gTestBrowser);
-  ok(notification, "Mixed Content Doorhanger did appear for Test 5");
-  notification.reshow();
-  ok(PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is being blocked in Test 5");
-  PopupNotifications.panel.firstChild.disableMixedContentProtection();
+
+  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
+
+  let {gIdentityHandler} = gTestBrowser.ownerGlobal;
+  gIdentityHandler.disableMixedContentProtection();
 }
 function MixedTest5B() {
   waitForCondition(function() content.document.getElementById('p1').innerHTML == "hello", MixedTest5C, "Waited too long for mixed script to run in Test 5");
@@ -172,16 +171,17 @@ function MixedTest6() {
 }
 function MixedTest6A() {
   gTestBrowser.removeEventListener("load", MixedTest6A, true);
-  waitForCondition(function() PopupNotifications.getNotification("bad-content", gTestBrowser), MixedTest6B, "waited too long for doorhanger");
+  let {gIdentityHandler} = gTestBrowser.ownerGlobal;
+  waitForCondition(() => gIdentityHandler._identityBox.classList.contains("mixedActiveBlocked"), MixedTest6B, "Waited too long for control center to get mixed active blocked state");
 }
 
 function MixedTest6B() {
-  var notification = PopupNotifications.getNotification("bad-content", gTestBrowser);
-  ok(notification, "Mixed Content Doorhanger did appear for Test 6");
   gTestBrowser.addEventListener("load", MixedTest6C, true);
-  notification.reshow();
-  ok(PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is being blocked in Test 6");
-  PopupNotifications.panel.firstChild.disableMixedContentProtection();
+
+  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
+
+  let {gIdentityHandler} = gTestBrowser.ownerGlobal;
+  gIdentityHandler.disableMixedContentProtection();
 }
 
 function MixedTest6C() {
@@ -196,5 +196,6 @@ function MixedTest6C() {
 }
 function MixedTest6D() {
   ok(content.document.getElementById('f1').contentDocument.getElementById('p1').innerHTML == "hello","Mixed script didn't load in Test 6");
+  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: true, activeBlocked: false, passiveLoaded: false});
   MixedTestsCompleted();
 }
