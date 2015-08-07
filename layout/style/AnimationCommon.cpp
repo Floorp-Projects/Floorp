@@ -173,7 +173,7 @@ CommonAnimationManager::GetAnimationsForCompositor(const nsIFrame* aFrame,
 {
   AnimationCollection* collection = GetAnimationCollection(aFrame);
   if (!collection ||
-      !collection->HasAnimationOfProperty(aProperty) ||
+      !collection->HasCurrentAnimationOfProperty(aProperty) ||
       !collection->CanPerformOnCompositorThread(
         AnimationCollection::CanAnimate_AllowPartial)) {
     return nullptr;
@@ -708,12 +708,12 @@ AnimationCollection::PostUpdateLayerAnimations()
 }
 
 bool
-AnimationCollection::HasAnimationOfProperty(nsCSSProperty aProperty) const
+AnimationCollection::HasCurrentAnimationOfProperty(nsCSSProperty
+                                                     aProperty) const
 {
-  for (size_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-    const KeyframeEffectReadOnly* effect = mAnimations[animIdx]->GetEffect();
-    if (effect && effect->HasAnimationOfProperty(aProperty) &&
-        !effect->IsFinishedTransition()) {
+  for (Animation* animation : mAnimations) {
+    if (animation->HasCurrentEffect() &&
+        animation->GetEffect()->HasAnimationOfProperty(aProperty)) {
       return true;
     }
   }
@@ -934,11 +934,18 @@ AnimationCollection::CanThrottleAnimation(TimeStamp aTime)
     return false;
   }
 
-
   const auto& info = CommonAnimationManager::sLayerAnimationInfo;
   for (size_t i = 0; i < ArrayLength(info); i++) {
     auto record = info[i];
-    if (!HasAnimationOfProperty(record.mProperty)) {
+    // We only need to worry about *current* animations here.
+    // - If we have a newly-finished animation, Animation::CanThrottle will
+    //   detect that and force an unthrottled sample.
+    // - If we have a newly-idle animation, then whatever caused the animation
+    //   to be idle will update the animation generation so we'll return false
+    //   from the layer generation check below for any other running compositor
+    //   animations (and if no other compositor animations exist we won't get
+    //   this far).
+    if (!HasCurrentAnimationOfProperty(record.mProperty)) {
       continue;
     }
 
