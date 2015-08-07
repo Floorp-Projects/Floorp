@@ -107,6 +107,7 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["devtools.debugger.remote-enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
   ["dom.ipc.plugins.asyncInit", TelemetryEnvironment.RECORD_PREF_VALUE],
   ["dom.ipc.plugins.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["dom.ipc.processCount", TelemetryEnviroment.RECORD_PREF_VALUE],
   ["experiments.manifest.uri", TelemetryEnvironment.RECORD_PREF_VALUE],
   ["extensions.blocklist.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
   ["extensions.blocklist.url", TelemetryEnvironment.RECORD_PREF_VALUE],
