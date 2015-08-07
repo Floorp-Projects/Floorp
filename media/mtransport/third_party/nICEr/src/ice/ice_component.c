@@ -226,53 +226,59 @@ static int nr_ice_component_initialize_udp(struct nr_ice_ctx_ *ctx,nr_ice_compon
 
       if(r=nr_ice_socket_create(ctx,component,sock,NR_ICE_SOCKET_TYPE_DGRAM,&isock))
         ABORT(r);
-      /* Create one host candidate */
-      if(r=nr_ice_candidate_create(ctx,component,isock,sock,HOST,0,0,
-        component->component_id,&cand))
-        ABORT(r);
 
-      TAILQ_INSERT_TAIL(&component->candidates,cand,entry_comp);
-      component->candidate_ct++;
-      cand=0;
-
-      /* And a srvrflx candidate for each STUN server */
-      for(j=0;j<ctx->stun_server_ct;j++){
-        /* Skip non-UDP */
-        if(ctx->stun_servers[j].transport!=IPPROTO_UDP)
-          continue;
-
-        if(r=nr_ice_candidate_create(ctx,component,
-          isock,sock,SERVER_REFLEXIVE,0,
-          &ctx->stun_servers[j],component->component_id,&cand))
+      if (!(ctx->flags & NR_ICE_CTX_FLAGS_RELAY_ONLY)) {
+        /* Create one host candidate */
+        if(r=nr_ice_candidate_create(ctx,component,isock,sock,HOST,0,0,
+          component->component_id,&cand))
           ABORT(r);
+
         TAILQ_INSERT_TAIL(&component->candidates,cand,entry_comp);
         component->candidate_ct++;
         cand=0;
+
+        /* And a srvrflx candidate for each STUN server */
+        for(j=0;j<ctx->stun_server_ct;j++){
+          /* Skip non-UDP */
+          if(ctx->stun_servers[j].transport!=IPPROTO_UDP)
+            continue;
+
+          if(r=nr_ice_candidate_create(ctx,component,
+            isock,sock,SERVER_REFLEXIVE,0,
+            &ctx->stun_servers[j],component->component_id,&cand))
+            ABORT(r);
+          TAILQ_INSERT_TAIL(&component->candidates,cand,entry_comp);
+          component->candidate_ct++;
+          cand=0;
+        }
       }
 
 #ifdef USE_TURN
-      /* And both a srvrflx and relayed candidate for each TURN server */
+      /* And both a srvrflx and relayed candidate for each TURN server (unless
+         we're in relay-only mode, in which case just the relayed one) */
       for(j=0;j<ctx->turn_server_ct;j++){
         nr_socket *turn_sock;
-        nr_ice_candidate *srvflx_cand;
+        nr_ice_candidate *srvflx_cand=0;
 
         /* Skip non-UDP */
         if (ctx->turn_servers[j].turn_server.transport != IPPROTO_UDP)
           continue;
 
-        /* srvrflx */
-        if(r=nr_ice_candidate_create(ctx,component,
-          isock,sock,SERVER_REFLEXIVE,0,
-          &ctx->turn_servers[j].turn_server,component->component_id,&cand))
-          ABORT(r);
-        cand->state=NR_ICE_CAND_STATE_INITIALIZING; /* Don't start */
-        cand->done_cb=nr_ice_gather_finished_cb;
-        cand->cb_arg=cand;
+        if (!(ctx->flags & NR_ICE_CTX_FLAGS_RELAY_ONLY)) {
+          /* srvrflx */
+          if(r=nr_ice_candidate_create(ctx,component,
+            isock,sock,SERVER_REFLEXIVE,0,
+            &ctx->turn_servers[j].turn_server,component->component_id,&cand))
+            ABORT(r);
+          cand->state=NR_ICE_CAND_STATE_INITIALIZING; /* Don't start */
+          cand->done_cb=nr_ice_gather_finished_cb;
+          cand->cb_arg=cand;
 
-        TAILQ_INSERT_TAIL(&component->candidates,cand,entry_comp);
-        component->candidate_ct++;
-        srvflx_cand=cand;
-
+          TAILQ_INSERT_TAIL(&component->candidates,cand,entry_comp);
+          component->candidate_ct++;
+          srvflx_cand=cand;
+          cand=0;
+        }
         /* relayed*/
         if(r=nr_socket_turn_create(sock, &turn_sock))
           ABORT(r);
@@ -407,6 +413,9 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
     if ((r=NR_reg_get_char(NR_ICE_REG_ICE_TCP_DISABLE, &ice_tcp_disabled))) {
       if (r != R_NOT_FOUND)
         ABORT(r);
+    }
+    if (ctx->flags & NR_ICE_CTX_FLAGS_RELAY_ONLY) {
+      ice_tcp_disabled = 1;
     }
 
     for(i=0;i<addr_ct;i++){
