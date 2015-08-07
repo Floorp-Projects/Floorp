@@ -25,7 +25,8 @@ var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
                     .rootTreeItem
                     .QueryInterface(Ci.nsIInterfaceRequestor)
                     .getInterface(Ci.nsIDOMWindow);
-var contentPage = "http://www.itisatrap.org/tests/toolkit/components/url-classifier/tests/mochitest/classifiedAnnotatedPBFrame.html";
+var contentPage1 = "http://www.itisatrap.org/tests/toolkit/components/url-classifier/tests/mochitest/whitelistFrame.html";
+var contentPage2 = "http://example.com/tests/toolkit/components/url-classifier/tests/mochitest/whitelistFrame.html";
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
@@ -39,8 +40,8 @@ function whenDelayedStartupFinished(aWindow, aCallback) {
   }, "browser-delayed-startup-finished", false);
 }
 
-function testOnWindow(aPrivate, aCallback) {
-  var win = mainWindow.OpenBrowserWindow({private: aPrivate});
+function testOnWindow(contentPage, aCallback) {
+  var win = mainWindow.OpenBrowserWindow();
   win.addEventListener("load", function onLoad() {
     win.removeEventListener("load", onLoad, false);
     whenDelayedStartupFinished(win, function() {
@@ -61,23 +62,20 @@ function testOnWindow(aPrivate, aCallback) {
   }, true);
 }
 
-var badids = [
+var alwaysbadids = [
   "badscript",
-  "badimage",
-  "badcss"
 ];
 
-function checkLoads(aWindow, aBlocked) {
+function checkLoads(aWindow, aWhitelisted) {
   var win = aWindow.content;
-  is(win.document.getElementById("badscript").dataset.touched, aBlocked ? "no" : "yes", "Should not load tracking javascript");
-  is(win.document.getElementById("badimage").dataset.touched, aBlocked ? "no" : "yes", "Should not load tracking images");
-  is(win.document.getElementById("goodscript").dataset.touched, "yes", "Should load whitelisted tracking javascript");
+  is(win.document.getElementById("badscript").dataset.touched, "no", "Should not load tracking javascript");
+  is(win.document.getElementById("goodscript").dataset.touched, aWhitelisted ? "yes" : "no", "Should load whitelisted tracking javascript");
 
-  var elt = win.document.getElementById("styleCheck");
-  var style = win.document.defaultView.getComputedStyle(elt, "");
-  isnot(style.visibility, aBlocked ? "hidden" : "", "Should not load tracking css");
-
-  is(win.document.blockedTrackingNodeCount, aBlocked ? badids.length : 0, "Should identify all tracking elements");
+  var badids = alwaysbadids.slice();
+  if (!aWhitelisted) {
+    badids.push("goodscript");
+  }
+  is(win.document.blockedTrackingNodeCount, badids.length, "Should identify all tracking elements");
 
   var blockedTrackingNodes = win.document.blockedTrackingNodes;
 
@@ -109,33 +107,31 @@ function checkLoads(aWindow, aBlocked) {
 
     allNodeMatch = allNodeMatch && nodeMatch;
   }
-  is(allNodeMatch, aBlocked, "All tracking nodes are expected to be annotated as such");
+  is(allNodeMatch, true, "All tracking nodes are expected to be annotated as such");
 }
 
 SpecialPowers.pushPrefEnv(
-  {"set" : [["urlclassifier.trackingTable", "test-track-simple"],
-            ["privacy.trackingprotection.enabled", false],
-            ["privacy.trackingprotection.pbmode.enabled", true],
+  {"set" : [["privacy.trackingprotection.enabled", true],
             ["channelclassifier.allowlist_example", true]]},
   test);
 
 function test() {
   SimpleTest.registerCleanupFunction(UrlClassifierTestUtils.cleanupTestTrackers);
   UrlClassifierTestUtils.addTestTrackers().then(() => {
-    // Normal mode, with the pref (trackers should be loaded)
-    testOnWindow(false, function(aWindow) {
-      checkLoads(aWindow, false);
+    // Load the test from a URL on the whitelist
+    testOnWindow(contentPage1, function(aWindow) {
+      checkLoads(aWindow, true);
       aWindow.close();
 
-      // Private Browsing, with the pref (trackers should be blocked)
-      testOnWindow(true, function(aWindow) {
-        checkLoads(aWindow, true);
+      // Load the test from a URL that's NOT on the whitelist
+      testOnWindow(contentPage2, function(aWindow) {
+        checkLoads(aWindow, false);
         aWindow.close();
 
-        // Private Browsing, without the pref (trackers should be loaded)
-        SpecialPowers.setBoolPref("privacy.trackingprotection.pbmode.enabled", false);
-        testOnWindow(true, function(aWindow) {
-          checkLoads(aWindow, false);
+        // Load the test from a URL on the whitelist but without the whitelist
+        SpecialPowers.setCharPref("urlclassifier.trackingWhitelistTable", "");
+        testOnWindow(contentPage1, function(aWindow) {
+        checkLoads(aWindow, false);
           aWindow.close();
           SimpleTest.finish();
         });
