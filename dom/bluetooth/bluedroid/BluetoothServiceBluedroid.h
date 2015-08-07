@@ -40,6 +40,8 @@ class BluetoothServiceBluedroid : public BluetoothService
   class SspReplyResultHandler;
   class StartDiscoveryResultHandler;
 
+  class GetDeviceRequest;
+
 public:
   BluetoothServiceBluedroid();
   ~BluetoothServiceBluedroid();
@@ -411,9 +413,14 @@ protected:
   bool mIsRestart;
   bool mIsFirstTimeToggleOffBt;
 
+  // Array of get device requests. Each request remembers
+  // 1) remaining device count to receive properties,
+  // 2) received remote device properties, and
+  // 3) runnable to reply success/error
+  nsTArray<GetDeviceRequest> mGetDeviceRequests;
+
   // Runnable arrays
   nsTArray<nsRefPtr<BluetoothReplyRunnable>> mSetAdapterPropertyRunnables;
-  nsTArray<nsRefPtr<BluetoothReplyRunnable>> mGetDeviceRunnables;
   nsTArray<nsRefPtr<BluetoothReplyRunnable>> mCreateBondRunnables;
   nsTArray<nsRefPtr<BluetoothReplyRunnable>> mRemoveBondRunnables;
 
