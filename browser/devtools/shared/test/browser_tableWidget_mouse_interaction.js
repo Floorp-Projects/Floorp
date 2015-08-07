@@ -12,9 +12,9 @@ const TEST_URI = "data:text/xml;charset=UTF-8,<?xml version='1.0'?>" +
   " title='Table Widget' width='600' height='500'><box flex='1'/></window>";
 const TEST_OPT = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
 
-const {TableWidget} = devtools.require("devtools/shared/widgets/TableWidget");
-let {Task} = devtools.require("resource://gre/modules/Task.jsm");
-let {Promise} = devtools.require("resource://gre/modules/Promise.jsm");
+const {TableWidget} = require("devtools/shared/widgets/TableWidget");
+let {Task} = require("resource://gre/modules/Task.jsm");
+let {Promise} = require("resource://gre/modules/Promise.jsm");
 
 let doc, table;
 

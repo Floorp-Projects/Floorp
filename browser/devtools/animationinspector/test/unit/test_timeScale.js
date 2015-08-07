@@ -6,9 +6,7 @@
 "use strict";
 
 const Cu = Components.utils;
-const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-const {require} = devtools;
-
+const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const {TimeScale} = require("devtools/animationinspector/components");
 
 const TEST_ANIMATIONS = [{

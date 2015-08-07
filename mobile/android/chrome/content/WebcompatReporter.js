@@ -21,7 +21,7 @@ var WebcompatReporter = {
     let visible = true;
     if ("@mozilla.org/parental-controls-service;1" in Cc) {
       let pc = Cc["@mozilla.org/parental-controls-service;1"].createInstance(Ci.nsIParentalControlsService);
-      visible = pc.isAllowed(Ci.nsIParentalControlsService.REPORT_SITE_ISSUE);
+      visible = !pc.parentalControlsEnabled;
     }
 
     this.addMenuItem(visible);

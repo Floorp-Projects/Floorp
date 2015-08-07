@@ -3,7 +3,7 @@
 
 /* Exercise prefix-based forwarding of packets to other transports. */
 
-const { RootActor } = devtools.require("devtools/server/actors/root");
+const { RootActor } = require("devtools/server/actors/root");
 
 var gMainConnection, gMainTransport;
 var gSubconnection1, gSubconnection2;

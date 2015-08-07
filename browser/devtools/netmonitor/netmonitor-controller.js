@@ -117,7 +117,7 @@ Cu.import("resource:///modules/devtools/VariablesView.jsm");
 Cu.import("resource:///modules/devtools/VariablesViewController.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 
-const require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
+const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const Editor = require("devtools/sourceeditor/editor");

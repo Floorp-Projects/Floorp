@@ -8,9 +8,8 @@ const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 const {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 const {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 const {ScratchpadManager} = Cu.import("resource:///modules/devtools/scratchpad-manager.jsm", {});
-const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-const {require} = devtools;
-const {TargetFactory} = devtools;
+const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const {TargetFactory} = require("devtools/framework/target");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 const promise = require("promise");
 

@@ -13,15 +13,15 @@ Services.prefs.setBoolPref("devtools.debugger.log", false);
 let { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 let { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 let { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-let { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let { DebuggerServer } = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
 let { DebuggerClient } = Cu.import("resource://gre/modules/devtools/dbg-client.jsm", {});
 
-let { WebGLFront } = devtools.require("devtools/server/actors/webgl");
-let DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils");
-let TiltGL = devtools.require("devtools/tilt/tilt-gl");
-let TargetFactory = devtools.TargetFactory;
-let Toolbox = devtools.Toolbox;
+let { WebGLFront } = require("devtools/server/actors/webgl");
+let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+let TiltGL = require("devtools/tilt/tilt-gl");
+let {TargetFactory} = require("devtools/framework/target");
+let {Toolbox} = require("devtools/framework/toolbox");
 let mm = null;
 
 const FRAME_SCRIPT_UTILS_URL = "chrome://browser/content/devtools/frame-script-utils.js"

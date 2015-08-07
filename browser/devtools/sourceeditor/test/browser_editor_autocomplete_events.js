@@ -5,6 +5,7 @@
 "use strict";
 
 const {InspectorFront} = require("devtools/server/actors/inspector");
+const {TargetFactory} = require("devtools/framework/target");
 const AUTOCOMPLETION_PREF = "devtools.editor.autocomplete";
 const TEST_URI = "data:text/html;charset=UTF-8,<html><body><bar></bar><div id='baz'></div><body></html>";
 
@@ -16,7 +17,7 @@ add_task(function*() {
 });
 
 function* runTests() {
-  let target = devtools.TargetFactory.forTab(gBrowser.selectedTab);
+  let target = TargetFactory.forTab(gBrowser.selectedTab);
   yield target.makeRemote();
   let inspector = InspectorFront(target.client, target.form);
   let walker = yield inspector.getWalker();

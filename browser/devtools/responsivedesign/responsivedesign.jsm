@@ -16,7 +16,7 @@ let { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 XPCOMUtils.defineLazyModuleGetter(this, "SystemAppProxy",
                                   "resource://gre/modules/SystemAppProxy.jsm");
 
-var require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
+let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let Telemetry = require("devtools/shared/telemetry");
 let { showDoorhanger } = require("devtools/shared/doorhanger");
 let { TouchEventSimulator } = require("devtools/toolkit/touch/simulator");

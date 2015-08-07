@@ -19,8 +19,8 @@ function test() {
   waitForExplicitFinish();
 
   createTab(function() {
-    let { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-    let target = devtools.TargetFactory.forTab(gBrowser.selectedTab);
+    let {TargetFactory} = require("devtools/framework/target");
+    let target = TargetFactory.forTab(gBrowser.selectedTab);
 
     gDevTools.showToolbox(target, "inspector").then(function(toolbox) {
       let contentDocument = toolbox.target.tab.linkedBrowser.contentDocument;

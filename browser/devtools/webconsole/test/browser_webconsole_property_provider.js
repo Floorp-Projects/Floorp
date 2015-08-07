@@ -16,8 +16,6 @@ function test() {
 
 function testPropertyProvider({browser}) {
   browser.removeEventListener("load", testPropertyProvider, true);
-  let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-  let {require} = devtools;
   let {JSPropertyProvider} = require("devtools/toolkit/webconsole/utils");
 
   let tmp = Cu.import("resource://gre/modules/jsdebugger.jsm", {});

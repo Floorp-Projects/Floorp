@@ -546,14 +546,10 @@
   <!-- Restrictions -->
   <string name="restriction_disallow_tools_menu_title">&restriction_disallow_tools_menu_title;</string>
   <string name="restriction_disallow_tools_menu_description">&restriction_disallow_tools_menu_description;</string>
-  <string name="restriction_disallow_report_site_issue_title">&restriction_disallow_report_site_issue_title;</string>
-  <string name="restriction_disallow_report_site_issue_description">&restriction_disallow_report_site_issue_description;</string>
   <string name="restriction_disallow_import_settings_title">&restriction_disallow_import_settings_title;</string>
   <string name="restriction_disallow_import_settings_description">&restriction_disallow_import_settings_description;</string>
   <string name="restriction_disallow_addons_title">&restriction_disallow_addons_title;</string>
   <string name="restriction_disallow_addons_description">&restriction_disallow_addons_description;</string>
-  <string name="restriction_disallow_apps_title">&restriction_disallow_apps_title;</string>
-  <string name="restriction_disallow_apps_description">&restriction_disallow_apps_description;</string>
   <string name="restriction_disallow_devtools_title">&restriction_disallow_devtools_title;</string>
   <string name="restriction_disallow_devtools_description">&restriction_disallow_devtools_description;</string>
   <string name="restriction_disallow_customize_home_title">&restriction_disallow_customize_home_title;</string>
@@ -568,6 +564,8 @@
   <string name="restriction_disallow_clear_history_description">&restriction_disallow_clear_history_description;</string>
   <string name="restriction_disallow_master_password_title">&restriction_disallow_master_password_title;</string>
   <string name="restriction_disallow_master_password_description">&restriction_disallow_master_password_description;</string>
+  <string name="restriction_disallow_guest_browsing_title">&restriction_disallow_guest_browsing_title;</string>
+  <string name="restriction_disallow_guest_browsing_description">&restriction_disallow_guest_browsing_description;</string>
 
   <!-- Miscellaneous -->
   <string name="ellipsis">&ellipsis;</string>

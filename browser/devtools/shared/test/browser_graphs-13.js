@@ -3,8 +3,8 @@
 
 // Tests that graph widgets may have a fixed width or height.
 
-let LineGraphWidget = devtools.require("devtools/shared/widgets/LineGraphWidget");
-let {Promise} = devtools.require("resource://gre/modules/Promise.jsm");
+let LineGraphWidget = require("devtools/shared/widgets/LineGraphWidget");
+let {Promise} = require("resource://gre/modules/Promise.jsm");
 
 add_task(function*() {
   yield promiseTab("about:blank");

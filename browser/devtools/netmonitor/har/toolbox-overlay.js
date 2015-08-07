@@ -4,7 +4,6 @@
 "use strict";
 
 const { Cu, Ci } = require("chrome");
-const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 
 loader.lazyRequireGetter(this, "HarAutomation", "devtools/netmonitor/har/har-automation", true);
 

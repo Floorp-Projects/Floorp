@@ -8,8 +8,8 @@ let TEST_BOUNDS = { startTime: 0, endTime: 150 };
 let TEST_WIDTH = 200;
 let TEST_HEIGHT = 100;
 
-let {FlameGraph} = devtools.require("devtools/shared/widgets/FlameGraph");
-let {Promise} = devtools.require("resource://gre/modules/Promise.jsm");
+let {FlameGraph} = require("devtools/shared/widgets/FlameGraph");
+let {Promise} = require("resource://gre/modules/Promise.jsm");
 
 add_task(function*() {
   yield promiseTab("about:blank");

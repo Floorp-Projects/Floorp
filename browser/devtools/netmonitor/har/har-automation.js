@@ -5,7 +5,6 @@
 
 const { Cu, Ci, Cc } = require("chrome");
 const { Class } = require("sdk/core/heritage");
-const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const { defer, resolve } = require("sdk/core/promise");
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 

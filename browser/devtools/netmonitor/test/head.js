@@ -8,12 +8,12 @@ let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 let { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 let { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 let { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-let { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let { CurlUtils } = Cu.import("resource:///modules/devtools/Curl.jsm", {});
-let NetworkHelper = devtools.require("devtools/toolkit/webconsole/network-helper");
-let DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils");
-let TargetFactory = devtools.TargetFactory;
-let Toolbox = devtools.Toolbox;
+let NetworkHelper = require("devtools/toolkit/webconsole/network-helper");
+let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+let { TargetFactory } = require("devtools/framework/target");
+let { Toolbox } = require("devtools/framework/toolbox");
 
 const EXAMPLE_URL = "http://example.com/browser/browser/devtools/netmonitor/test/";
 

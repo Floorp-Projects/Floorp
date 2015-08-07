@@ -104,8 +104,8 @@
 
   Cu.import("resource://gre/modules/Services.jsm");
   Cu.import("resource:///modules/devtools/gDevTools.jsm");
-  const {devtools} = Components.utils.import("resource://gre/modules/devtools/Loader.jsm", {});
-  const StylesheetUtils = devtools.require("sdk/stylesheet/utils");
+  const {require} = Components.utils.import("resource://gre/modules/devtools/Loader.jsm", {});
+  const StylesheetUtils = require("sdk/stylesheet/utils");
 
   if (documentElement.hasAttribute("force-theme")) {
     switchTheme(documentElement.getAttribute("force-theme"));

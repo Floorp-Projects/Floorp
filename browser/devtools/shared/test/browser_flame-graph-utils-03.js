@@ -3,9 +3,9 @@
 
 // Tests if platform frames are removed from the flame graph data.
 
-let {FlameGraphUtils} = devtools.require("devtools/shared/widgets/FlameGraph");
-let {PALLETTE_SIZE} = devtools.require("devtools/shared/widgets/FlameGraph");
-let {FrameNode} = devtools.require("devtools/performance/tree-model");
+let {FlameGraphUtils} = require("devtools/shared/widgets/FlameGraph");
+let {PALLETTE_SIZE} = require("devtools/shared/widgets/FlameGraph");
+let {FrameNode} = require("devtools/performance/tree-model");
 
 add_task(function*() {
   yield promiseTab("about:blank");

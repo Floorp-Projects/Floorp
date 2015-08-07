@@ -1391,6 +1391,8 @@ var gBrowserInit = {
     // Add Devtools menuitems and listeners
     gDevToolsBrowser.registerBrowserWindow(window);
 
+    gMenuButtonBadgeManager.init();
+
     gMenuButtonUpdateBadge.init();
 
     window.addEventListener("mousemove", MousePosTracker, false);
@@ -1545,6 +1547,8 @@ var gBrowserInit = {
     TrackingProtection.uninit();
 
     gMenuButtonUpdateBadge.uninit();
+
+    gMenuButtonBadgeManager.uninit();
 
     SidebarUI.uninit();
 
@@ -2569,6 +2573,67 @@ function PageProxyClickHandler(aEvent)
     middleMousePaste(aEvent);
 }
 
+let gMenuButtonBadgeManager = {
+  BADGEID_APPUPDATE: "update",
+  BADGEID_FXA: "fxa",
+
+  fxaBadge: null,
+  appUpdateBadge: null,
+
+  init: function () {
+    PanelUI.panel.addEventListener("popupshowing", this, true);
+  },
+
+  uninit: function () {
+    PanelUI.panel.removeEventListener("popupshowing", this, true);
+  },
+
+  handleEvent: function (e) {
+    if (e.type === "popupshowing") {
+      this.clearBadges();
+    }
+  },
+
+  _showBadge: function () {
+    let badgeToShow = this.appUpdateBadge || this.fxaBadge;
+
+    if (badgeToShow) {
+      PanelUI.menuButton.setAttribute("badge-status", badgeToShow);
+    } else {
+      PanelUI.menuButton.removeAttribute("badge-status");
+    }
+  },
+
+  _changeBadge: function (badgeId, badgeStatus = null) {
+    if (badgeId == this.BADGEID_APPUPDATE) {
+      this.appUpdateBadge = badgeStatus;
+    } else if (badgeId == this.BADGEID_FXA) {
+      this.fxaBadge = badgeStatus;
+    } else {
+      Cu.reportError("This badge ID is unknown!");
+    }
+    this._showBadge();
+  },
+
+  addBadge: function (badgeId, badgeStatus) {
+    if (!badgeStatus) {
+      Cu.reportError("badgeStatus must be defined");
+      return;
+    }
+    this._changeBadge(badgeId, badgeStatus);
+  },
+
+  removeBadge: function (badgeId) {
+    this._changeBadge(badgeId);
+  },
+
+  clearBadges: function () {
+    this.appUpdateBadge = null;
+    this.fxaBadge = null;
+    this._showBadge();
+  }
+};
+
 // Setup the hamburger button badges for updates, if enabled.
 let gMenuButtonUpdateBadge = {
   enabled: false,
@@ -2585,7 +2650,6 @@ let gMenuButtonUpdateBadge = {
       } catch (e) {
         this.badgeWaitTime = 345600; // 4 days
       }
-      PanelUI.menuButton.classList.add("badged-button");
       Services.obs.addObserver(this, "update-staged", false);
       Services.obs.addObserver(this, "update-downloaded", false);
     }
@@ -2597,7 +2661,6 @@ let gMenuButtonUpdateBadge = {
     if (this.enabled) {
       Services.obs.removeObserver(this, "update-staged");
       Services.obs.removeObserver(this, "update-downloaded");
-      PanelUI.panel.removeEventListener("popupshowing", this, true);
       this.enabled = false;
     }
   },
@@ -2645,10 +2708,8 @@ let gMenuButtonUpdateBadge = {
 
   displayBadge: function (succeeded) {
     let status = succeeded ? "succeeded" : "failed";
-    PanelUI.menuButton.setAttribute("update-status", status);
-    if (!succeeded) {
-      PanelUI.menuButton.setAttribute("badge", "!");
-    }
+    let badgeStatus = "update-" + status;
+    gMenuButtonBadgeManager.addBadge(gMenuButtonBadgeManager.BADGEID_APPUPDATE, badgeStatus);
 
     let stringId;
     let updateButtonText;
@@ -2667,15 +2728,6 @@ let gMenuButtonUpdateBadge = {
     updateButton.setAttribute("label", updateButtonText);
     updateButton.setAttribute("update-status", status);
     updateButton.hidden = false;
-
-    PanelUI.panel.addEventListener("popupshowing", this, true);
-  },
-
-  handleEvent: function(e) {
-    if (e.type === "popupshowing") {
-      PanelUI.menuButton.removeAttribute("badge");
-      PanelUI.panel.removeEventListener("popupshowing", this, true);
-    }
   }
 };
 
@@ -7147,9 +7199,11 @@ var gIdentityHandler = {
     let position = elem.compareDocumentPosition(this._identityPopup);
 
     if (!(position & (Node.DOCUMENT_POSITION_CONTAINS |
-                      Node.DOCUMENT_POSITION_CONTAINED_BY))) {
+                      Node.DOCUMENT_POSITION_CONTAINED_BY)) &&
+        !this._identityPopup.hasAttribute("noautohide")) {
       // Hide the panel when focusing an element that is
-      // neither an ancestor nor descendant.
+      // neither an ancestor nor descendant unless the panel has
+      // @noautohide (e.g. for a tour).
       this._identityPopup.hidePopup();
     }
   },

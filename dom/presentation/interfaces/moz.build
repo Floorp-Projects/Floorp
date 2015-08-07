@@ -10,7 +10,11 @@ XPIDL_SOURCES += [
     'nsIPresentationDeviceManager.idl',
     'nsIPresentationDevicePrompt.idl',
     'nsIPresentationDeviceProvider.idl',
+    'nsIPresentationListener.idl',
+    'nsIPresentationRequestUIGlue.idl',
+    'nsIPresentationService.idl',
     'nsIPresentationSessionRequest.idl',
+    'nsIPresentationSessionTransport.idl',
     'nsITCPPresentationServer.idl',
 ]
 

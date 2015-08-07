@@ -6,7 +6,7 @@
 
 // Check that inherited properties appear as such in the rule-view
 
-let {ELEMENT_STYLE} = devtools.require("devtools/server/actors/styles");
+let {ELEMENT_STYLE} = require("devtools/server/actors/styles");
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8,browser_inspector_changes.js");

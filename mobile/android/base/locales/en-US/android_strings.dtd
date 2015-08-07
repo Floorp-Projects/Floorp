@@ -692,14 +692,10 @@ just addresses the organization to follow, e.g. "This site is run by " -->
      a restricted profile (e.g. child). Used inside the Android settings UI. -->
 <!ENTITY restriction_disallow_tools_menu_title "Disallow Tools menu">
 <!ENTITY restriction_disallow_tools_menu_description "Hide Tools menu from UI.">
-<!ENTITY restriction_disallow_report_site_issue_title "Disallow \'Report site issue\'">
-<!ENTITY restriction_disallow_report_site_issue_description "Hide \'Report site issue\' menu item.">
 <!ENTITY restriction_disallow_import_settings_title "Disallow importing settings">
 <!ENTITY restriction_disallow_import_settings_description "Do not allow to import settings from other system browsers.">
 <!ENTITY restriction_disallow_addons_title "Disallow add-ons">
 <!ENTITY restriction_disallow_addons_description "Disallow installation of add-ons.">
-<!ENTITY restriction_disallow_apps_title "Disallow apps">
-<!ENTITY restriction_disallow_apps_description "Disallow installing apps from Firefox Marketplace.">
 <!ENTITY restriction_disallow_devtools_title "Disallow developer tools">
 <!ENTITY restriction_disallow_devtools_description "Disallow usage of developer tools.">
 <!ENTITY restriction_disallow_customize_home_title "Disallow customizing home">
@@ -714,3 +710,6 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY restriction_disallow_clear_history_description "Disallow clearing of browser history.">
 <!ENTITY restriction_disallow_master_password_title "Disallow master password">
 <!ENTITY restriction_disallow_master_password_description "Disallow setting a master password for logins.">
+<!ENTITY restriction_disallow_guest_browsing_title "Disallow guest browsing">
+<!ENTITY restriction_disallow_guest_browsing_description "Disallow guest browsing mode.">
+

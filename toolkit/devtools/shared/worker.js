@@ -10,12 +10,12 @@
     factory.call(this, require, exports, module, { Cc, Ci, Cu }, ChromeWorker, dumpn);
   } else { // Cu.import
     const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-    const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+    const { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
     this.isWorker = false;
     this.Promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
     this.console = Cu.import("resource://gre/modules/devtools/Console.jsm", {}).console;
     factory.call(
-      this, devtools.require, this, { exports: this },
+      this, require, this, { exports: this },
       { Cc, Ci, Cu }, ChromeWorker, null
     );
     this.EXPORTED_SYMBOLS = ["DevToolsWorker"];
