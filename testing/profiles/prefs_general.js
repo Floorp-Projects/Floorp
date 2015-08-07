@@ -335,4 +335,8 @@ user_pref("media.webspeech.synth.test", true);
 // connections.
 user_pref("browser.urlbar.suggest.searches", false);
 
+// Turn off the location bar search suggestions opt-in.  It interferes with
+// tests that don't expect it to be there.
+user_pref("browser.urlbar.userMadeSearchSuggestionsChoice", true);
+
 user_pref("dom.audiochannel.mutedByDefault", false);
