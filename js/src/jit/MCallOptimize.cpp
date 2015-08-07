@@ -864,10 +864,9 @@ IonBuilder::inlineArrayConcat(CallInfo& callInfo)
     if (!thisTypes || !argTypes)
         return InliningStatus_NotInlined;
 
-    const Class* thisClasp = thisTypes->getKnownClass(constraints());
-    if (thisClasp != &ArrayObject::class_ && thisClasp != &UnboxedArrayObject::class_)
+    const Class* clasp = thisTypes->getKnownClass(constraints());
+    if (clasp != &ArrayObject::class_ && clasp != &UnboxedArrayObject::class_)
         return InliningStatus_NotInlined;
-    bool unboxedThis = (thisClasp == &UnboxedArrayObject::class_);
     if (thisTypes->hasObjectFlags(constraints(), OBJECT_FLAG_SPARSE_INDEXES |
                                   OBJECT_FLAG_LENGTH_OVERFLOW))
     {
@@ -875,15 +874,22 @@ IonBuilder::inlineArrayConcat(CallInfo& callInfo)
         return InliningStatus_NotInlined;
     }
 
-    const Class* argClasp = argTypes->getKnownClass(constraints());
-    if (argClasp != &ArrayObject::class_ && argClasp != &UnboxedArrayObject::class_)
+    if (argTypes->getKnownClass(constraints()) != clasp)
         return InliningStatus_NotInlined;
-    bool unboxedArg = (argClasp == &UnboxedArrayObject::class_);
     if (argTypes->hasObjectFlags(constraints(), OBJECT_FLAG_SPARSE_INDEXES |
                                  OBJECT_FLAG_LENGTH_OVERFLOW))
     {
         trackOptimizationOutcome(TrackedOutcome::ArrayBadFlags);
         return InliningStatus_NotInlined;
+    }
+
+    JSValueType unboxedType = JSVAL_TYPE_MAGIC;
+    if (clasp == &UnboxedArrayObject::class_) {
+        unboxedType = UnboxedArrayElementType(constraints(), thisArg, nullptr);
+        if (unboxedType == JSVAL_TYPE_MAGIC)
+            return InliningStatus_NotInlined;
+        if (unboxedType != UnboxedArrayElementType(constraints(), objArg, nullptr))
+            return InliningStatus_NotInlined;
     }
 
     // Watch out for indexed properties on the prototype.
@@ -945,7 +951,7 @@ IonBuilder::inlineArrayConcat(CallInfo& callInfo)
     MArrayConcat* ins = MArrayConcat::New(alloc(), constraints(), thisArg, objArg,
                                           templateObj,
                                           templateObj->group()->initialHeap(constraints()),
-                                          unboxedThis, unboxedArg);
+                                          unboxedType);
     current->add(ins);
     current->push(ins);
 
