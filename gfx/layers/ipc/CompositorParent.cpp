@@ -682,6 +682,8 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
     mCompositorScheduler = new CompositorSoftwareTimerScheduler(this);
   }
 
+  gfxPlatform::GetPlatform()->ComputeTileSize();
+
   LayerScope::SetPixelScale(mWidget->GetDefaultScale().scale);
 }
 
@@ -1733,6 +1735,7 @@ public:
     , mNotifyAfterRemotePaint(false)
   {
     MOZ_ASSERT(NS_IsMainThread());
+    gfxPlatform::GetPlatform()->ComputeTileSize();
   }
 
   // IToplevelProtocol::CloneToplevel()
