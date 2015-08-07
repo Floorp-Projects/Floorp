@@ -166,7 +166,7 @@ user_pref("layout.spammy_warnings.enabled", false);
 
 // Enable Media Source Extensions for testing
 user_pref("media.mediasource.mp4.enabled", true);
-user_pref("media.mediasource.webm.enabled", true);
+user_pref("media.mediasource.webm.enabled", false);
 
 // Enable mozContacts
 user_pref("dom.mozContacts.enabled", true);
