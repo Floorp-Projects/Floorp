@@ -570,7 +570,7 @@ nsTransitionManager::ConsiderStartingTransition(
   }
 
   if (!shouldAnimate) {
-    if (haveCurrentTransition && !oldPT->IsFinishedTransition()) {
+    if (haveCurrentTransition) {
       // We're in the middle of a transition, and just got a non-transition
       // style change to something that we can't animate.  This might happen
       // because we got a non-transition style change changing to the current
@@ -607,7 +607,7 @@ nsTransitionManager::ConsiderStartingTransition(
   // If the new transition reverses an existing one, we'll need to
   // handle the timing differently.
   if (haveCurrentTransition &&
-      !oldPT->IsFinishedTransition() &&
+      aElementTransitions->mAnimations[currentIndex]->HasCurrentEffect() &&
       oldPT->mStartForReversingTest == endValue) {
     // Compute the appropriate negative transition-delay such that right
     // now we'd end up at the current position.
