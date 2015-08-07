@@ -2826,41 +2826,6 @@ public:
 
 };
 
-class NativeZip : public mozilla::jni::Class<NativeZip>
-{
-public:
-    typedef mozilla::jni::Ref<NativeZip> Ref;
-    typedef mozilla::jni::LocalRef<NativeZip> LocalRef;
-    typedef mozilla::jni::GlobalRef<NativeZip> GlobalRef;
-    typedef const mozilla::jni::Param<NativeZip>& Param;
-
-    static constexpr char name[] =
-            "org/mozilla/gecko/mozglue/NativeZip";
-
-protected:
-    NativeZip(jobject instance) : Class(instance) {}
-
-public:
-    struct CreateInputStream_t {
-        typedef NativeZip Owner;
-        typedef mozilla::jni::Object::LocalRef ReturnType;
-        typedef mozilla::jni::Object::Param SetterType;
-        typedef mozilla::jni::Args<
-                mozilla::jni::Object::Param,
-                int32_t> Args;
-        static constexpr char name[] = "createInputStream";
-        static constexpr char signature[] =
-                "(Ljava/nio/ByteBuffer;I)Ljava/io/InputStream;";
-        static const bool isStatic = false;
-        static const bool isMultithreaded = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    mozilla::jni::Object::LocalRef CreateInputStream(mozilla::jni::Object::Param, int32_t) const;
-
-};
-
 class MatrixBlobCursor : public mozilla::jni::Class<MatrixBlobCursor>
 {
 public:

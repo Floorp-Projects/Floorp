@@ -265,7 +265,7 @@ const GcliActor = ActorClass({
         },
 
         get document() {
-          return tabActor.window.document;
+          return tabActor.window && tabActor.window.document;
         }
       };
 

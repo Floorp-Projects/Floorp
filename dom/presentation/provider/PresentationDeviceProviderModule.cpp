@@ -28,7 +28,8 @@ static const mozilla::Module::ContractIDEntry kPresentationDeviceProviderContrac
 };
 
 static const mozilla::Module::CategoryEntry kPresentationDeviceProviderCategories[] = {
-#if defined(MOZ_WIDGET_ANDROID) || (defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 16)
+#if (defined(MOZ_WIDGET_ANDROID) && ANDROID_VERSION >= 21) || \
+    (defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 16)
   { PRESENTATION_DEVICE_PROVIDER_CATEGORY, "MulticastDNSDeviceProvider", MULTICAST_DNS_PROVIDER_CONTRACT_ID },
 #endif
   { nullptr }
