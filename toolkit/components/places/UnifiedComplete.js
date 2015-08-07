@@ -847,52 +847,12 @@ Search.prototype = {
     }
     queries.push(this._searchQuery);
 
-    // When actions are enabled, we run a series of heuristics to determine what
-    // the first result should be - which is always a special result.
-    // |hasFirstResult| is used to keep track of whether we've obtained such a
-    // result yet, so we can skip further heuristics and not add any additional
-    // special results.
-    let hasFirstResult = false;
-
-    if (this._searchTokens.length > 0) {
-      // This may be a Places keyword.
-      hasFirstResult = yield this._matchPlacesKeyword();
-    }
-
-    if (this.pending && this._enableActions && !hasFirstResult) {
-      // If it's not a Places keyword, then it may be a search engine
-      // with an alias - which works like a keyword.
-      hasFirstResult = yield this._matchSearchEngineAlias();
-    }
-
-    let shouldAutofill = this._shouldAutofill;
-    if (this.pending && !hasFirstResult && shouldAutofill) {
-      // It may also look like a URL we know from the database.
-      hasFirstResult = yield this._matchKnownUrl(conn);
-    }
-
-    if (this.pending && !hasFirstResult && shouldAutofill) {
-      // Or it may look like a URL we know about from search engines.
-      hasFirstResult = yield this._matchSearchEngineUrl();
-    }
-
-    if (this.pending && this._enableActions && !hasFirstResult) {
-      // If we don't have a result that matches what we know about, then
-      // we use a fallback for things we don't know about.
-
-      // We may not have auto-filled, but this may still look like a URL.
-      // However, even if the input is a valid URL, we may not want to use
-      // it as such. This can happen if the host would require whitelisting,
-      // but isn't in the whitelist.
-      hasFirstResult = yield this._matchUnknownUrl();
-    }
-
-    if (this.pending && this._enableActions && !hasFirstResult) {
-      // When all else fails, we search using the current search engine.
-      hasFirstResult = yield this._matchCurrentSearchEngine();
-    }
-
-    // IMPORTANT: No other first result heuristics should run after this point.
+    // Add the first heuristic result, if any.  Set _addingHeuristicFirstMatch
+    // to true so that when the result is added, "heuristic" can be included in
+    // its style.
+    this._addingHeuristicFirstMatch = true;
+    yield this._matchFirstHeuristicResult(conn);
+    this._addingHeuristicFirstMatch = false;
 
     yield this._sleep(Prefs.delay);
     if (!this.pending)
@@ -925,6 +885,68 @@ Search.prototype = {
     // Ensure to fill any remaining space.
     yield Promise.all(this._remoteMatchesPromises);
   }),
+
+  *_matchFirstHeuristicResult(conn) {
+    // We always try to make the first result a special "heuristic" result.  The
+    // heuristics below determine what type of result it will be, if any.
+
+    if (this._searchTokens.length > 0) {
+      // This may be a Places keyword.
+      let matched = yield this._matchPlacesKeyword();
+      if (matched) {
+        return;
+      }
+    }
+
+    if (this.pending && this._enableActions) {
+      // If it's not a Places keyword, then it may be a search engine
+      // with an alias - which works like a keyword.
+      let matched = yield this._matchSearchEngineAlias();
+      if (matched) {
+        return;
+      }
+    }
+
+    let shouldAutofill = this._shouldAutofill;
+    if (this.pending && shouldAutofill) {
+      // It may also look like a URL we know from the database.
+      let matched = yield this._matchKnownUrl(conn);
+      if (matched) {
+        return;
+      }
+    }
+
+    if (this.pending && shouldAutofill) {
+      // Or it may look like a URL we know about from search engines.
+      let matched = yield this._matchSearchEngineUrl();
+      if (matched) {
+        return;
+      }
+    }
+
+    if (this.pending && this._enableActions) {
+      // If we don't have a result that matches what we know about, then
+      // we use a fallback for things we don't know about.
+
+      // We may not have auto-filled, but this may still look like a URL.
+      // However, even if the input is a valid URL, we may not want to use
+      // it as such. This can happen if the host would require whitelisting,
+      // but isn't in the whitelist.
+      let matched = yield this._matchUnknownUrl();
+      if (matched) {
+        return;
+      }
+    }
+
+    if (this.pending && this._enableActions && this._originalSearchString) {
+      // When all else fails, and the search string is non-empty, we search
+      // using the current search engine.
+      let matched = yield this._matchCurrentSearchEngine();
+      if (matched) {
+        return;
+      }
+    }
+  },
 
   *_matchSearchSuggestions() {
     // Limit the string sent for search suggestions to a maximum length.
@@ -1298,6 +1320,10 @@ Search.prototype = {
       this._maybeRestyleSearchMatch(match);
     }
 
+    if (this._addingHeuristicFirstMatch) {
+      match.style += " heuristic";
+    }
+
     match.icon = match.icon || PlacesUtils.favicons.defaultFavicon.spec;
     match.finalCompleteValue = match.finalCompleteValue || "";
 
@@ -1576,7 +1602,7 @@ Search.prototype = {
     if (!Prefs.autofill)
       return false;
 
-    if (!this._searchTokens.length == 1)
+    if (this._searchTokens.length != 1)
       return false;
 
     // autoFill can only cope with history or bookmarks entries.
