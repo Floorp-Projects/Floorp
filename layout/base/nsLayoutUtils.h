@@ -2160,10 +2160,11 @@ public:
                                          nsCSSProperty aProperty);
 
   /**
-   * Returns true if the frame has animations or transitions for the
-   * property.
+   * Returns true if the frame has current (i.e. running or scheduled-to-run)
+   * animations or transitions for the property.
    */
-  static bool HasAnimations(const nsIFrame* aFrame, nsCSSProperty aProperty);
+  static bool HasCurrentAnimationOfProperty(const nsIFrame* aFrame,
+                                            nsCSSProperty aProperty);
 
   /**
    * Returns true if the frame has any current animations.
