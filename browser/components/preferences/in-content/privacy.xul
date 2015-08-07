@@ -103,8 +103,8 @@
     <hbox align="center">
       <checkbox id="trackingProtection"
                 preference="privacy.trackingprotection.enabled"
-                accesskey="&trackingProtection4.accesskey;"
-                label="&trackingProtection4.label;" />
+                accesskey="&trackingProtection5.accesskey;"
+                label="&trackingProtection5.label;" />
       <label id="trackingProtectionLearnMore"
              class="text-link"
              value="&trackingProtectionLearnMore.label;"/>
@@ -114,8 +114,8 @@
     <hbox align="center">
       <checkbox id="trackingProtectionPBM"
                 preference="privacy.trackingprotection.pbmode.enabled"
-                accesskey="&trackingProtectionPBM4.accesskey;"
-                label="&trackingProtectionPBM4.label;" />
+                accesskey="&trackingProtectionPBM5.accesskey;"
+                label="&trackingProtectionPBM5.label;" />
       <label id="trackingProtectionPBMLearnMore"
              class="text-link"
              value="&trackingProtectionPBMLearnMore.label;"/>
