@@ -1230,7 +1230,7 @@ nsDisplayListBuilder::IsInWillChangeBudget(nsIFrame* aFrame,
                                            const nsSize& aSize) {
   bool onBudget = AddToWillChangeBudget(aFrame, aSize);
 
-  if (onBudget) {
+  if (!onBudget) {
     nsString usageStr;
     usageStr.AppendInt(GetWillChangeCost(aFrame, aSize));
 
@@ -1243,9 +1243,9 @@ nsDisplayListBuilder::IsInWillChangeBudget(nsIFrame* aFrame,
       nsPresContext::AppUnitsToIntCSSPixels(area.height);
     limitStr.AppendInt(budgetLimit);
 
-    const char16_t* params[] = { usageStr.get(), multiplierStr.get(), limitStr.get() };
+    const char16_t* params[] = { multiplierStr.get(), limitStr.get() };
     aFrame->PresContext()->Document()->WarnOnceAbout(
-      nsIDocument::eWillChangeOverBudgetIgnored, false,
+      nsIDocument::eIgnoringWillChangeOverBudget, false,
       params, ArrayLength(params));
   }
   return onBudget;
