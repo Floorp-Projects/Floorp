@@ -6,7 +6,6 @@
 const { Cu, Ci, Cc } = require("chrome");
 const { defer, all, resolve } = require("sdk/core/promise");
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 
 loader.lazyImporter(this, "ViewHelpers", "resource:///modules/devtools/ViewHelpers.jsm");
 loader.lazyRequireGetter(this, "NetworkHelper", "devtools/toolkit/webconsole/network-helper");
@@ -167,7 +166,7 @@ HarBuilder.prototype = {
 
     request.method = file.method;
     request.url = file.url;
-    request.httpVersion = file.httpVersion;
+    request.httpVersion = file.httpVersion || "";
 
     request.headers = this.buildHeaders(file.requestHeaders);
     request.cookies = this.buildCookies(file.requestCookies);
@@ -285,15 +284,20 @@ HarBuilder.prototype = {
       response.status = parseInt(file.status);
     }
 
+    let responseHeaders = file.responseHeaders;
+
     response.statusText = file.statusText || "";
-    response.httpVersion = file.httpVersion;
+    response.httpVersion = file.httpVersion || "";
 
-    response.headers = this.buildHeaders(file.responseHeaders);
+    response.headers = this.buildHeaders(responseHeaders);
     response.cookies = this.buildCookies(file.responseCookies);
-
     response.content = this.buildContent(file);
-    response.redirectURL = findValue(file.responseHeaders.headers, "Location");
-    response.headersSize = file.responseHeaders.headersSize;
+
+    let headers = responseHeaders ? responseHeaders.headers : null;
+    let headersSize = responseHeaders ? responseHeaders.headersSize : -1;
+
+    response.redirectURL = findValue(headers, "Location");
+    response.headersSize = headersSize;
     response.bodySize = file.transferredSize || -1;
 
     return response;
@@ -305,18 +309,24 @@ HarBuilder.prototype = {
       size: -1
     };
 
-    if (file.responseContent && file.responseContent.content) {
-      content.size = file.responseContent.content.size;
+    let responseContent = file.responseContent;
+    if (responseContent && responseContent.content) {
+      content.size = responseContent.content.size;
     }
 
-    if (!this._options.includeResponseBodies ||
-        file.responseContent.contentDiscarded) {
+    let includeBodies = this._options.includeResponseBodies;
+    let contentDiscarded = responseContent ?
+      responseContent.contentDiscarded : false;
+
+    // The comment is appended only if the response content
+    // is explicitly discarded.
+    if (!includeBodies || contentDiscarded) {
       content.comment = L10N.getStr("har.responseBodyNotIncluded");
       return content;
     }
 
-    if (file.responseContent) {
-      let text = file.responseContent.content.text;
+    if (responseContent) {
+      let text = responseContent.content.text;
       let promise = this.fetchData(text).then(value => {
         content.text = value;
       });
@@ -415,6 +425,10 @@ function isURLEncodedFile(file, text) {
  * (used for headers, cookies and cache entries)
  */
 function findValue(arr, name) {
+  if (!arr) {
+    return "";
+  }
+
   name = name.toLowerCase();
   let result = arr.find(entry => entry.name.toLowerCase() == name);
   return result ? result.value : "";

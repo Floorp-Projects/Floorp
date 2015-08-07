@@ -8,6 +8,8 @@
 
 const URL = "data:text/html;charset=utf8,test page for toolbox switching";
 
+let {Toolbox} = require("devtools/framework/toolbox");
+
 add_task(function*() {
   info("Create a test tab and open the toolbox");
   let tab = yield addTab(URL);
@@ -16,7 +18,7 @@ add_task(function*() {
 
   let keyElement = toolbox.doc.getElementById("toolbox-toggle-host-key");
 
-  let {SIDE, BOTTOM, WINDOW} = devtools.Toolbox.HostType;
+  let {SIDE, BOTTOM, WINDOW} = Toolbox.HostType;
   checkHostType(toolbox, BOTTOM, SIDE);
 
   info ("Switching from bottom to side");

@@ -6,14 +6,14 @@
 
 const Cu = Components.utils;
 let {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-let TargetFactory = devtools.TargetFactory;
-let {CssComputedView} = devtools.require("devtools/styleinspector/computed-view");
-let {CssRuleView, _ElementStyle} = devtools.require("devtools/styleinspector/rule-view");
-let {CssLogic, CssSelector} = devtools.require("devtools/styleinspector/css-logic");
-let DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils");
+let {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+let {TargetFactory} = require("devtools/framework/target");
+let {CssComputedView} = require("devtools/styleinspector/computed-view");
+let {CssRuleView, _ElementStyle} = require("devtools/styleinspector/rule-view");
+let {CssLogic, CssSelector} = require("devtools/styleinspector/css-logic");
+let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
-let {editableField, getInplaceEditorForSpan: inplaceEditor} = devtools.require("devtools/shared/inplace-editor");
+let {editableField, getInplaceEditorForSpan: inplaceEditor} = require("devtools/shared/inplace-editor");
 let {console} = Components.utils.import("resource://gre/modules/devtools/Console.jsm", {});
 
 // All tests are asynchronous

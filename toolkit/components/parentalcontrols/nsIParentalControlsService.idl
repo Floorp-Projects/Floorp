@@ -11,7 +11,7 @@ interface nsIFile;
 interface nsIInterfaceRequestor;
 interface nsIArray;
 
-[scriptable, uuid(30ff7af7-ae52-4bd6-88c0-4a8ce4f37bdc)]
+[scriptable, uuid(ed14d186-e902-4d41-86cb-8949fd7b53d7)]
 interface nsIParentalControlsService : nsISupports
 {
   /**
@@ -28,13 +28,14 @@ interface nsIParentalControlsService : nsISupports
   const short MODIFY_ACCOUNTS = 9; // Modifying system accounts
   const short REMOTE_DEBUGGING = 10; // Remote debugging
   const short IMPORT_SETTINGS = 11; // Importing settings from other apps
-  const short TOOLS_MENU = 12; // Hide tools menu entry
-  const short REPORT_SITE_ISSUE = 13; // Hide "Report Site Issue" menu entry
-  const short PRIVATE_BROWSING = 16; // Disallow usage of private browsing
-  const short LOCATION_SERVICE = 17; // Sharing of location data to location service
-  const short DISPLAY_SETTINGS = 18; // Website display settings
-  const short CLEAR_HISTORY = 19; // Clear browsing history
-  const short MASTER_PASSWORD = 20; // Setting master password for logins
+  const short DEVELOPER_TOOLS = 12; // Web developer tools
+  const short CUSTOMIZE_HOME = 13; // Customizing home panels
+  const short PRIVATE_BROWSING = 14; // Disallow usage of private browsing
+  const short LOCATION_SERVICE = 15; // Sharing of location data to location service
+  const short DISPLAY_SETTINGS = 16; // Website display settings
+  const short CLEAR_HISTORY = 17; // Clear browsing history
+  const short MASTER_PASSWORD = 18; // Setting master password for logins
+  const short GUEST_BROWSING = 19; // Disallow usage of guest browsing
 
   /**
    * @returns true if the current user account has parental controls

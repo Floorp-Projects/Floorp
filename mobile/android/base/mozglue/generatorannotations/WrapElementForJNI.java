@@ -22,7 +22,7 @@ import java.lang.annotation.Target;
  * Java method to be invoked from the C side from multiple threads. Often, this isn't what is wanted
  * and may lead to subtle bugs.
  */
-@Target({ElementType.FIELD, ElementType.METHOD, ElementType.CONSTRUCTOR})
+@Target({ElementType.TYPE, ElementType.FIELD, ElementType.METHOD, ElementType.CONSTRUCTOR})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface WrapElementForJNI {
     // Optional parameter specifying the name of the generated method stub. If omitted, the name

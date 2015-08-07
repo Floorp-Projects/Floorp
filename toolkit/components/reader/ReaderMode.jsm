@@ -209,7 +209,21 @@ this.ReaderMode = {
             let urlIndex = content.toUpperCase().indexOf("URL=");
             if (urlIndex > -1) {
               let url = content.substring(urlIndex + 4);
-              this._downloadDocument(url).then((doc) => resolve(doc));
+              let ssm = Services.scriptSecurityManager;
+              let flags = ssm.LOAD_IS_AUTOMATIC_DOCUMENT_REPLACEMENT |
+                          ssm.DISALLOW_INHERIT_PRINCIPAL;
+              try {
+                ssm.checkLoadURIStrWithPrincipal(doc.nodePrincipal, url, flags);
+              } catch (ex) {
+                let errorMsg = "Reader mode disallowed meta refresh (reason: " + ex + ").";
+
+                if (Services.prefs.getBoolPref("reader.errors.includeURLs"))
+                  errorMsg += " Refresh target URI: '" + url + "'.";
+                reject(errorMsg);
+                return;
+              }
+              // Otherwise, pass an object indicating our new URL:
+              reject({newURL: url});
               return;
             }
           }

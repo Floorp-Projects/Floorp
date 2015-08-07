@@ -2,14 +2,14 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-let {devtools} = Components.utils.import("resource://gre/modules/devtools/Loader.jsm", {});
-let TiltManager = devtools.require("devtools/tilt/tilt").TiltManager;
-let TiltGL = devtools.require("devtools/tilt/tilt-gl");
-let {EPSILON, TiltMath, vec3, mat3, mat4, quat4} = devtools.require("devtools/tilt/tilt-math");
-let TiltUtils = devtools.require("devtools/tilt/tilt-utils");
-let {TiltVisualizer} = devtools.require("devtools/tilt/tilt-visualizer");
-let DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils");
-let LayoutHelpers = devtools.require("devtools/toolkit/layout-helpers");
+let {require} = Components.utils.import("resource://gre/modules/devtools/Loader.jsm", {});
+let TiltManager = require("devtools/tilt/tilt").TiltManager;
+let TiltGL = require("devtools/tilt/tilt-gl");
+let {EPSILON, TiltMath, vec3, mat3, mat4, quat4} = require("devtools/tilt/tilt-math");
+let TiltUtils = require("devtools/tilt/tilt-utils");
+let {TiltVisualizer} = require("devtools/tilt/tilt-visualizer");
+let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+let LayoutHelpers = require("devtools/toolkit/layout-helpers");
 
 
 const DEFAULT_HTML = "data:text/html," +

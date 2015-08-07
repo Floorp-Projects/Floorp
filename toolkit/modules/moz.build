@@ -105,7 +105,8 @@ for var in ('ANDROID_PACKAGE_NAME',
             'MOZ_APP_VERSION_DISPLAY',
             'MOZ_WIDGET_TOOLKIT',
             'DLL_PREFIX',
-            'DLL_SUFFIX'):
+            'DLL_SUFFIX',
+            'DEBUG_JS_MODULES'):
             DEFINES[var] = CONFIG[var]
 
 for var in ('MOZILLA_OFFICIAL',

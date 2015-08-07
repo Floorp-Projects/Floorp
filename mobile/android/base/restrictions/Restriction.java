@@ -25,9 +25,7 @@ public enum Restriction {
 
     // UserManager.DISALLOW_INSTALL_APPS
     DISALLOW_INSTALL_APPS(
-            3, "no_install_apps",
-            R.string.restriction_disallow_apps_title,
-            R.string.restriction_disallow_apps_description),
+            3, "no_install_apps", 0, 0),
 
     DISALLOW_BROWSE_FILES(
             4, "no_browse_files", 0, 0),
@@ -52,61 +50,58 @@ public enum Restriction {
             10, "no_remote_debugging", 0, 0),
 
     DISALLOW_IMPORT_SETTINGS(
-            11, "no_report_site_issue",
+            11, "no_import_settings",
             R.string.restriction_disallow_import_settings_title,
             R.string.restriction_disallow_import_settings_description),
 
-    DISALLOW_TOOLS_MENU(
-            12, "no_tools_menu",
-            R.string.restriction_disallow_tools_menu_title,
-            R.string.restriction_disallow_tools_menu_description),
-
-    DISALLOW_REPORT_SITE_ISSUE(
-            13, "no_report_site_issue",
-            R.string.restriction_disallow_report_site_issue_title,
-            R.string.restriction_disallow_report_site_issue_description),
-
     DISALLOW_DEVELOPER_TOOLS(
-            14, "no_developer_tools",
+            12, "no_developer_tools",
             R.string.restriction_disallow_devtools_title,
             R.string.restriction_disallow_devtools_description
     ),
 
     DISALLOW_CUSTOMIZE_HOME(
-            15, "no_customize_home",
+            13, "no_customize_home",
             R.string.restriction_disallow_customize_home_title,
             R.string.restriction_disallow_customize_home_description
     ),
 
     DISALLOW_PRIVATE_BROWSING(
-            16, "no_private_browsing",
+            14, "no_private_browsing",
             R.string.restriction_disallow_private_browsing_title,
             R.string.restriction_disallow_private_browsing_description
     ),
 
     DISALLOW_LOCATION_SERVICE(
-            17, "no_location_service",
+            15, "no_location_service",
             R.string.restriction_disallow_location_services_title,
             R.string.restriction_disallow_location_services_description
     ),
 
     DISALLOW_DISPLAY_SETTINGS(
-            18, "no_display_settings",
+            16, "no_display_settings",
             R.string.restriction_disallow_display_settings_title,
             R.string.restriction_disallow_display_settings_description
     ),
 
     DISALLOW_CLEAR_HISTORY(
-            19, "no_clear_history",
+            17, "no_clear_history",
             R.string.restriction_disallow_clear_history_title,
             R.string.restriction_disallow_clear_history_description
     ),
 
     DISALLOW_MASTER_PASSWORD(
-            20, "no_master_password",
+            18, "no_master_password",
             R.string.restriction_disallow_master_password_title,
             R.string.restriction_disallow_master_password_description
+    ),
+
+    DISALLOW_GUEST_BROWSING(
+            19, "no_guest_browsing",
+            R.string.restriction_disallow_guest_browsing_title,
+            R.string.restriction_disallow_guest_browsing_description
     );
+
 
     public final int id;
     public final String name;

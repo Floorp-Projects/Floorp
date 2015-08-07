@@ -71,7 +71,8 @@ var gPrivacyPane = {
 #endif
     this._initAutocomplete();
 
-    document.getElementById("searchesSuggestion").hidden = !AppConstants.NIGHTLY_BUILD;
+    document.getElementById("searchesSuggestion").hidden =
+      !Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete");
   },
 
   // HISTORY MODE

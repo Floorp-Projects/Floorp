@@ -6,7 +6,7 @@
 let {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 let {Loader} = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js",
                          {});
-let {OutputParser} = devtools.require("devtools/output-parser");
+let {OutputParser} = require("devtools/output-parser");
 
 add_task(function*() {
   yield promiseTab("about:blank");

@@ -4,12 +4,11 @@
 
 const { Cu } = require("chrome");
 
+const { TargetFactory } = require("devtools/framework/target");
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const { Connection } = require("devtools/client/connection-manager");
 const promise = require("promise");
 const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
-const { devtools } =
-  Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 
 const _knownTabStores = new WeakMap();
 
@@ -162,7 +161,7 @@ TabStore.prototype = {
       // if you try to connect to the same tab again.  To work around this
       // issue, we force a "listTabs" request before connecting to a tab.
       yield store.listTabs();
-      return devtools.TargetFactory.forRemoteTab({
+      return TargetFactory.forRemoteTab({
         form: store._selectedTab,
         client: store._connection.client,
         chrome: false

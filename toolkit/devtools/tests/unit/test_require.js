@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Test devtools.require
+// Test require
 
 // Ensure that DevtoolsLoader.require doesn't spawn multiple
 // loader/modules when early cached

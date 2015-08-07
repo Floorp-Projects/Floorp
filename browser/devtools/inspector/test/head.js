@@ -24,7 +24,8 @@ const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {})
 // All test are asynchronous
 waitForExplicitFinish();
 
-let {TargetFactory, require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
+let {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+let {TargetFactory} = require("devtools/framework/target");
 let {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 

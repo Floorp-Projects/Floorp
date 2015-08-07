@@ -5,7 +5,7 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.mozglue.generatorannotations.WrapEntireClassForJNI;
+import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
 
 /**
  * This is the data structure that's returned by the progressive tile update
@@ -13,7 +13,7 @@ import org.mozilla.gecko.mozglue.generatorannotations.WrapEntireClassForJNI;
  * representing whether the front-end is interested in the current progressive
  * update continuing.
  */
-@WrapEntireClassForJNI
+@WrapElementForJNI
 public class ProgressiveUpdateData {
     public float x;
     public float y;

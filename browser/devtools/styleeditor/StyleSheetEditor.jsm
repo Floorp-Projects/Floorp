@@ -11,7 +11,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-const require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
+const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const Editor  = require("devtools/sourceeditor/editor");
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const {CssLogic} = require("devtools/styleinspector/css-logic");

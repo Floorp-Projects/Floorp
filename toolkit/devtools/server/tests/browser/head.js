@@ -8,7 +8,7 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 const {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
-const {devtools: {require}} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const {DebuggerClient} = Cu.import("resource://gre/modules/devtools/dbg-client.jsm", {});
 const {DebuggerServer} = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
 
