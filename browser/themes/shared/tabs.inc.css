@@ -94,6 +94,7 @@
   margin-top: -12px;
   -moz-margin-start: -16px;
   display: none;
+  position: relative;
 }
 
 .tab-icon-overlay[crashed] {
