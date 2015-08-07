@@ -154,10 +154,6 @@ MediaFormatReader::Shutdown()
 void
 MediaFormatReader::InitLayersBackendType()
 {
-  if (!IsVideoContentType(mDecoder->GetResource()->GetContentType())) {
-    // Not playing video, we don't care about the layers backend type.
-    return;
-  }
   // Extract the layer manager backend type so that platform decoders
   // can determine whether it's worthwhile using hardware accelerated
   // video decoding.
@@ -418,8 +414,12 @@ MediaFormatReader::EnsureDecodersSetup()
       {
         ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
         proxy = mDecoder->GetCDMProxy();
+        MOZ_ASSERT(proxy);
+
+        CDMCaps::AutoLock caps(proxy->Capabilites());
+        mInfo.mVideo.mIsRenderedExternally = caps.CanRenderVideo();
+        mInfo.mAudio.mIsRenderedExternally = caps.CanRenderAudio();
       }
-      MOZ_ASSERT(proxy);
 
       mPlatform = PlatformDecoderModule::CreateCDMWrapper(proxy);
       NS_ENSURE_TRUE(mPlatform, false);

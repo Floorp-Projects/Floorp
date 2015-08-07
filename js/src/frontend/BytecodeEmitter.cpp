@@ -5767,13 +5767,13 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
                 funbox->setMightAliasLocals();      // inherit mightAliasLocals from parent
             MOZ_ASSERT_IF(outersc->strict(), funbox->strictScript);
 
-            // Inherit most things (principals, version, etc) from the parent.
+            // Inherit most things (principals, version, etc) from the
+            // parent.  Use default values for the rest.
             Rooted<JSScript*> parent(cx, script);
-            CompileOptions options(cx, parser->options());
-            options.setMutedErrors(parent->mutedErrors())
-                   .setNoScriptRval(false)
-                   .setForEval(false)
-                   .setVersion(parent->getVersion());
+            MOZ_ASSERT(parent->getVersion() == parser->options().version);
+            MOZ_ASSERT(parent->mutedErrors() == parser->options().mutedErrors());
+            const TransitiveCompileOptions& transitiveOptions = parser->options();
+            CompileOptions options(cx, transitiveOptions);
 
             Rooted<JSObject*> enclosingScope(cx, enclosingStaticScope());
             Rooted<JSObject*> sourceObject(cx, script->sourceObject());

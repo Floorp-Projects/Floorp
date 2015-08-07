@@ -54,6 +54,7 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph, Mac
 #endif
     lastOsiPointOffset_(0),
     safepoints_(graph->totalSlotCount(), (gen->info().nargs() + 1) * sizeof(Value)),
+    returnLabel_(),
     nativeToBytecodeMap_(nullptr),
     nativeToBytecodeMapSize_(0),
     nativeToBytecodeTableOffset_(0),
@@ -107,6 +108,54 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph, Mac
     } else {
         frameClass_ = FrameSizeClass::FromDepth(frameDepth_);
     }
+}
+
+bool
+CodeGeneratorShared::generatePrologue()
+{
+    MOZ_ASSERT(masm.framePushed() == 0);
+    MOZ_ASSERT(!gen->compilingAsmJS());
+
+#ifdef JS_USE_LINK_REGISTER
+    masm.pushReturnAddress();
+#endif
+
+    // If profiling, save the current frame pointer to a per-thread global field.
+    if (isProfilerInstrumentationEnabled())
+        masm.profilerEnterFrame(masm.getStackPointer(), CallTempReg0);
+
+    // Ensure that the Ion frame is properly aligned.
+    masm.assertStackAlignment(JitStackAlignment, 0);
+
+    // Note that this automatically sets MacroAssembler::framePushed().
+    masm.reserveStack(frameSize());
+    masm.checkStackAlignment();
+
+    emitTracelogIonStart();
+    return true;
+}
+
+bool
+CodeGeneratorShared::generateEpilogue()
+{
+    MOZ_ASSERT(!gen->compilingAsmJS());
+    masm.bind(&returnLabel_);
+
+    emitTracelogIonStop();
+
+    masm.freeStack(frameSize());
+    MOZ_ASSERT(masm.framePushed() == 0);
+
+    // If profiling, reset the per-thread global lastJitFrame to point to
+    // the previous frame.
+    if (isProfilerInstrumentationEnabled())
+        masm.profilerExitFrame();
+
+    masm.ret();
+
+    // On systems that use a constant pool, this is a good time to emit.
+    masm.flushBuffer();
+    return true;
 }
 
 bool

@@ -51,8 +51,6 @@ IsGeometricProperty(nsCSSProperty aProperty)
   }
 }
 
-namespace css {
-
 CommonAnimationManager::CommonAnimationManager(nsPresContext *aPresContext)
   : mPresContext(aPresContext)
   , mIsObservingRefreshDriver(false)
@@ -175,7 +173,7 @@ CommonAnimationManager::GetAnimationsForCompositor(const nsIFrame* aFrame,
 {
   AnimationCollection* collection = GetAnimationCollection(aFrame);
   if (!collection ||
-      !collection->HasAnimationOfProperty(aProperty) ||
+      !collection->HasCurrentAnimationOfProperty(aProperty) ||
       !collection->CanPerformOnCompositorThread(
         AnimationCollection::CanAnimate_AllowPartial)) {
     return nullptr;
@@ -184,12 +182,6 @@ CommonAnimationManager::GetAnimationsForCompositor(const nsIFrame* aFrame,
   // This animation can be done on the compositor.
   return collection;
 }
-
-/*
- * nsISupports implementation
- */
-
-NS_IMPL_ISUPPORTS(CommonAnimationManager, nsIStyleRuleProcessor)
 
 nsRestyleHint
 CommonAnimationManager::HasStateDependentStyle(StateRuleProcessorData* aData)
@@ -448,7 +440,7 @@ CommonAnimationManager::LayerAnimationRecordFor(nsCSSProperty aProperty)
 /* static */ void
 CommonAnimationManager::Initialize()
 {
-  const auto& info = css::CommonAnimationManager::sLayerAnimationInfo;
+  const auto& info = CommonAnimationManager::sLayerAnimationInfo;
   for (size_t i = 0; i < ArrayLength(info); i++) {
     auto record = info[i];
     MOZ_ASSERT(nsCSSProps::PropHasFlags(record.mProperty,
@@ -541,8 +533,6 @@ AnimValuesStyleRule::List(FILE* out, int32_t aIndent) const
   fprintf_stderr(out, "%s", str.get());
 }
 #endif
-
-} // namespace css
 
 bool
 AnimationCollection::CanAnimatePropertyOnCompositor(
@@ -705,7 +695,7 @@ AnimationCollection::PostUpdateLayerAnimations()
                                    CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR) &&
           !propsHandled.HasProperty(prop)) {
         propsHandled.AddProperty(prop);
-        nsChangeHint changeHint = css::CommonAnimationManager::
+        nsChangeHint changeHint = CommonAnimationManager::
           LayerAnimationRecordFor(prop)->mChangeHint;
         dom::Element* element = GetElementToRestyle();
         if (element) {
@@ -718,16 +708,31 @@ AnimationCollection::PostUpdateLayerAnimations()
 }
 
 bool
-AnimationCollection::HasAnimationOfProperty(nsCSSProperty aProperty) const
+AnimationCollection::HasCurrentAnimationOfProperty(nsCSSProperty
+                                                     aProperty) const
 {
-  for (size_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-    const KeyframeEffectReadOnly* effect = mAnimations[animIdx]->GetEffect();
-    if (effect && effect->HasAnimationOfProperty(aProperty) &&
-        !effect->IsFinishedTransition()) {
+  for (Animation* animation : mAnimations) {
+    if (animation->HasCurrentEffect() &&
+        animation->GetEffect()->HasAnimationOfProperty(aProperty)) {
       return true;
     }
   }
   return false;
+}
+
+/*static*/ nsString
+AnimationCollection::PseudoTypeAsString(nsCSSPseudoElements::Type aPseudoType)
+{
+  switch (aPseudoType) {
+    case nsCSSPseudoElements::ePseudo_before:
+      return NS_LITERAL_STRING("::before");
+    case nsCSSPseudoElements::ePseudo_after:
+      return NS_LITERAL_STRING("::after");
+    default:
+      MOZ_ASSERT(aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement,
+                 "Unexpected pseudo type");
+      return EmptyString();
+  }
 }
 
 mozilla::dom::Element*
@@ -929,11 +934,18 @@ AnimationCollection::CanThrottleAnimation(TimeStamp aTime)
     return false;
   }
 
-
-  const auto& info = css::CommonAnimationManager::sLayerAnimationInfo;
+  const auto& info = CommonAnimationManager::sLayerAnimationInfo;
   for (size_t i = 0; i < ArrayLength(info); i++) {
     auto record = info[i];
-    if (!HasAnimationOfProperty(record.mProperty)) {
+    // We only need to worry about *current* animations here.
+    // - If we have a newly-finished animation, Animation::CanThrottle will
+    //   detect that and force an unthrottled sample.
+    // - If we have a newly-idle animation, then whatever caused the animation
+    //   to be idle will update the animation generation so we'll return false
+    //   from the layer generation check below for any other running compositor
+    //   animations (and if no other compositor animations exist we won't get
+    //   this far).
+    if (!HasCurrentAnimationOfProperty(record.mProperty)) {
       continue;
     }
 
@@ -995,6 +1007,26 @@ AnimationCollection::HasCurrentAnimationsForProperties(
   }
 
   return false;
+}
+
+nsPresContext*
+OwningElementRef::GetRenderedPresContext() const
+{
+  if (!mElement) {
+    return nullptr;
+  }
+
+  nsIDocument* doc = mElement->GetComposedDoc();
+  if (!doc) {
+    return nullptr;
+  }
+
+  nsIPresShell* shell = doc->GetShell();
+  if (!shell) {
+    return nullptr;
+  }
+
+  return shell->GetPresContext();
 }
 
 } // namespace mozilla

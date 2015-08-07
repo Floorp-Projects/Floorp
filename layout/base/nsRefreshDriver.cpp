@@ -64,6 +64,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/unused.h"
 #include "mozilla/TimelineConsumers.h"
+#include "nsAnimationManager.h"
 
 #ifdef MOZ_NUWA_PROCESS
 #include "ipc/Nuwa.h"
@@ -1489,6 +1490,70 @@ nsRefreshDriver::DispatchPendingEvents()
   }
 }
 
+namespace {
+  enum class AnimationEventType {
+    CSSAnimations,
+    CSSTransitions
+  };
+
+  struct DispatchAnimationEventParams {
+    AnimationEventType mEventType;
+    nsRefreshDriver* mRefreshDriver;
+  };
+}
+
+static bool
+DispatchAnimationEventsOnSubDocuments(nsIDocument* aDocument,
+                                      void* aParams)
+{
+  MOZ_ASSERT(aParams, "Animation event parameters should be set");
+  auto params = static_cast<DispatchAnimationEventParams*>(aParams);
+
+  nsIPresShell* shell = aDocument->GetShell();
+  if (!shell) {
+    return true;
+  }
+
+  nsPresContext* context = shell->GetPresContext();
+  if (!context || context->RefreshDriver() != params->mRefreshDriver) {
+    return true;
+  }
+
+  nsCOMPtr<nsIDocument> kungFuDeathGrip(aDocument);
+
+  if (params->mEventType == AnimationEventType::CSSAnimations) {
+    context->AnimationManager()->DispatchEvents();
+  } else {
+    context->TransitionManager()->DispatchEvents();
+  }
+  aDocument->EnumerateSubDocuments(DispatchAnimationEventsOnSubDocuments,
+                                   aParams);
+
+  return true;
+}
+
+void
+nsRefreshDriver::DispatchAnimationEvents()
+{
+  if (!mPresContext) {
+    return;
+  }
+
+  nsIDocument* doc = mPresContext->Document();
+
+  // Dispatch transition events first since transitions conceptually sit
+  // below animations in terms of compositing order.
+  DispatchAnimationEventParams params { AnimationEventType::CSSTransitions,
+                                        this };
+  DispatchAnimationEventsOnSubDocuments(doc, &params);
+  if (!mPresContext) {
+    return;
+  }
+
+  params.mEventType = AnimationEventType::CSSAnimations;
+  DispatchAnimationEventsOnSubDocuments(doc, &params);
+}
+
 void
 nsRefreshDriver::RunFrameRequestCallbacks(TimeStamp aNowTime)
 {
@@ -1664,6 +1729,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
     if (i == 0) {
       // This is the Flush_Style case.
 
+      DispatchAnimationEvents();
       DispatchPendingEvents();
       RunFrameRequestCallbacks(aNowTime);
 

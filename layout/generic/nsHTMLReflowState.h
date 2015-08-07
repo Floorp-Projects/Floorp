@@ -909,13 +909,18 @@ protected:
 
   // Returns the nearest containing block or block frame (whether or not
   // it is a containing block) for the specified frame.  Also returns
-  // the inline-start edge and inline size of the containing block's
+  // the inline-start edge and logical size of the containing block's
   // content area.
   // These are returned in the coordinate space of the containing block.
   nsIFrame* GetHypotheticalBoxContainer(nsIFrame* aFrame,
                                         nscoord& aCBIStartEdge,
-                                        nscoord& aCBISize);
+                                        mozilla::LogicalSize& aCBSize);
 
+  // Calculate a "hypothetical box" position where the placeholder frame
+  // (for a position:fixed/absolute element) would have been placed if it were
+  // positioned statically. The hypothetical box will have a writing mode with
+  // the same block direction as the absolute containing block (cbrs->frame),
+  // though it may differ in inline-bidi direction.
   void CalculateHypotheticalBox(nsPresContext*    aPresContext,
                                 nsIFrame*         aPlaceholderFrame,
                                 const nsHTMLReflowState* cbrs,
@@ -932,9 +937,13 @@ protected:
   // data members
   void ComputeMinMaxValues(const mozilla::LogicalSize& aContainingBlockSize);
 
-  void CalculateInlineBorderPaddingMargin(nscoord aContainingBlockISize,
-                                          nscoord* aInsideBoxSizing,
-                                          nscoord* aOutsideBoxSizing);
+  // aInsideBoxSizing returns the part of the padding, border, and margin
+  // in the aAxis dimension that goes inside the edge given by box-sizing;
+  // aOutsideBoxSizing returns the rest.
+  void CalculateBorderPaddingMargin(mozilla::LogicalAxis aAxis,
+                                    nscoord aContainingBlockSize,
+                                    nscoord* aInsideBoxSizing,
+                                    nscoord* aOutsideBoxSizing);
 
   void CalculateBlockSideMargins(nsIAtom* aFrameType);
 };

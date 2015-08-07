@@ -15,8 +15,6 @@ namespace jit {
 class CodeGeneratorNone : public CodeGeneratorShared
 {
   public:
-    NonAssertingLabel returnLabel_;
-
     CodeGeneratorNone(MIRGenerator* gen, LIRGraph* graph, MacroAssembler* masm)
       : CodeGeneratorShared(gen, graph, masm)
     {
@@ -35,8 +33,6 @@ class CodeGeneratorNone : public CodeGeneratorShared
     void bailoutFrom(Label*, LSnapshot*) { MOZ_CRASH(); }
     void bailout(LSnapshot*) { MOZ_CRASH(); }
     void bailoutIf(Assembler::Condition, LSnapshot*) { MOZ_CRASH(); }
-    bool generatePrologue() { MOZ_CRASH(); }
-    bool generateEpilogue() { MOZ_CRASH(); }
     bool generateOutOfLineCode() { MOZ_CRASH(); }
     void testNullEmitBranch(Assembler::Condition, ValueOperand, MBasicBlock*, MBasicBlock*) {
         MOZ_CRASH();

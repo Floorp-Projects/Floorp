@@ -293,7 +293,7 @@ ContentClientRemoteBuffer::CreateBackBuffer(const IntRect& aBufferRect)
 {
   // gfx::BackendType::NONE means fallback to the content backend
   mTextureClient = CreateTextureClientForDrawing(
-    mSurfaceFormat, mSize, gfx::BackendType::NONE,
+    mSurfaceFormat, mSize, BackendSelector::Content,
     mTextureFlags | ExtraTextureFlags(),
     TextureAllocationFlags::ALLOC_CLEAR_BUFFER
   );

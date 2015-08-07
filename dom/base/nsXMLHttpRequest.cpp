@@ -1711,7 +1711,7 @@ nsXMLHttpRequest::Open(const nsACString& inMethod, const nsACString& url,
   rv = CheckInnerWindowCorrectness();
   NS_ENSURE_SUCCESS(rv, rv);
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_XMLHTTPREQUEST,
+  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST,
                                  uri,
                                  mPrincipal,
                                  doc,
@@ -1765,7 +1765,7 @@ nsXMLHttpRequest::Open(const nsACString& inMethod, const nsACString& url,
                        uri,
                        doc,
                        secFlags,
-                       nsIContentPolicy::TYPE_XMLHTTPREQUEST,
+                       nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST,
                        loadGroup,
                        nullptr,   // aCallbacks
                        nsIRequest::LOAD_BACKGROUND);
@@ -1775,7 +1775,7 @@ nsXMLHttpRequest::Open(const nsACString& inMethod, const nsACString& url,
                        uri,
                        mPrincipal,
                        secFlags,
-                       nsIContentPolicy::TYPE_XMLHTTPREQUEST,
+                       nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST,
                        loadGroup,
                        nullptr,   // aCallbacks
                        nsIRequest::LOAD_BACKGROUND);

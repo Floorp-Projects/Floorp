@@ -123,7 +123,7 @@ void nsNotifyAddrListener::checkLink(void)
         family = ifa->ifa_addr->sa_family;
 
         if ((family == AF_INET || family == AF_INET6) &&
-            (ifa->ifa_flags & IFF_UP) &&
+            (ifa->ifa_flags & IFF_RUNNING) &&
             !(ifa->ifa_flags & IFF_LOOPBACK)) {
             // An interface that is UP and not loopback
             link = true;
@@ -314,7 +314,7 @@ nsNotifyAddrListener::Init(void)
     Preferences::AddBoolVarCache(&mAllowChangedEvent,
                                  NETWORK_NOTIFY_CHANGED_PREF, true);
 
-    rv = NS_NewNamedThread("Link Monitor", getter_AddRefs(mThread));
+    rv = NS_NewNamedThread("Link Monitor", getter_AddRefs(mThread), this);
     NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef MOZ_NUWA_PROCESS

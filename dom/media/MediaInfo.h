@@ -46,6 +46,7 @@ public:
     , mTrackId(aTrackId)
     , mDuration(0)
     , mMediaTime(0)
+    , mIsRenderedExternally(false)
     , mType(aType)
   {
     MOZ_COUNT_CTOR(TrackInfo);
@@ -82,6 +83,10 @@ public:
   int64_t mDuration;
   int64_t mMediaTime;
   CryptoTrack mCrypto;
+
+  // True if the track is gonna be (decrypted)/decoded and
+  // rendered directly by non-gecko components.
+  bool mIsRenderedExternally;
 
   virtual AudioInfo* GetAsAudioInfo()
   {
@@ -147,6 +152,7 @@ protected:
     mDuration = aOther.mDuration;
     mMediaTime = aOther.mMediaTime;
     mCrypto = aOther.mCrypto;
+    mIsRenderedExternally = aOther.mIsRenderedExternally;
     mType = aOther.mType;
     MOZ_COUNT_CTOR(TrackInfo);
   }

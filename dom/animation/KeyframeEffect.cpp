@@ -236,8 +236,7 @@ KeyframeEffectReadOnly::ActiveDuration(const AnimationTiming& aTiming)
 bool
 KeyframeEffectReadOnly::IsInPlay(const Animation& aAnimation) const
 {
-  if (IsFinishedTransition() ||
-      aAnimation.PlayState() == AnimationPlayState::Finished) {
+  if (aAnimation.PlayState() == AnimationPlayState::Finished) {
     return false;
   }
 
@@ -248,8 +247,7 @@ KeyframeEffectReadOnly::IsInPlay(const Animation& aAnimation) const
 bool
 KeyframeEffectReadOnly::IsCurrent(const Animation& aAnimation) const
 {
-  if (IsFinishedTransition() ||
-      aAnimation.PlayState() == AnimationPlayState::Finished) {
+  if (aAnimation.PlayState() == AnimationPlayState::Finished) {
     return false;
   }
 
@@ -261,10 +259,6 @@ KeyframeEffectReadOnly::IsCurrent(const Animation& aAnimation) const
 bool
 KeyframeEffectReadOnly::IsInEffect() const
 {
-  if (IsFinishedTransition()) {
-    return false;
-  }
-
   ComputedTiming computedTiming = GetComputedTiming();
   return computedTiming.mProgress != ComputedTiming::kNullProgress;
 }
@@ -299,9 +293,8 @@ KeyframeEffectReadOnly::HasAnimationOfProperties(
 }
 
 void
-KeyframeEffectReadOnly::ComposeStyle(
-                          nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
-                          nsCSSPropertySet& aSetProperties)
+KeyframeEffectReadOnly::ComposeStyle(nsRefPtr<AnimValuesStyleRule>& aStyleRule,
+                                     nsCSSPropertySet& aSetProperties)
 {
   ComputedTiming computedTiming = GetComputedTiming();
 
@@ -370,7 +363,7 @@ KeyframeEffectReadOnly::ComposeStyle(
 
     if (!aStyleRule) {
       // Allocate the style rule now that we know we have animation data.
-      aStyleRule = new css::AnimValuesStyleRule();
+      aStyleRule = new AnimValuesStyleRule();
     }
 
     double positionInSegment =

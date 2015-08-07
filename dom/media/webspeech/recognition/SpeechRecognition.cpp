@@ -129,9 +129,9 @@ SpeechRecognition::SpeechRecognition(nsPIDOMWindow* aOwnerWindow)
   }
 
   mEndpointer.set_speech_input_complete_silence_length(
-      Preferences::GetInt(PREFERENCE_ENDPOINTER_SILENCE_LENGTH, 500000));
+      Preferences::GetInt(PREFERENCE_ENDPOINTER_SILENCE_LENGTH, 1250000));
   mEndpointer.set_long_speech_input_complete_silence_length(
-      Preferences::GetInt(PREFERENCE_ENDPOINTER_LONG_SILENCE_LENGTH, 1000000));
+      Preferences::GetInt(PREFERENCE_ENDPOINTER_LONG_SILENCE_LENGTH, 2500000));
   mEndpointer.set_long_speech_length(
       Preferences::GetInt(PREFERENCE_ENDPOINTER_SILENCE_LENGTH, 3 * 1000000));
   Reset();

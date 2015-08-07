@@ -28,7 +28,7 @@ let CustomChromeProtocol = {
   },
 
   newChannel: function CCP_newChannel(aURI) {
-    return newChannel2(aURI, null);
+    return this.newChannel2(aURI, null);
   },
 
   allowPort: function CCP_allowPort(aPort, aScheme) {
