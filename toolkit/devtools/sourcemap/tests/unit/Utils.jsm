@@ -466,7 +466,7 @@ define('lib/source-map/util', ['require', 'exports', 'module' , ], function(requ
       }
       path = url.path;
     }
-    var isAbsolute = (path.charAt(0) === '/');
+    var isAbsolute = exports.isAbsolute(path);
 
     var parts = path.split(/\/+/);
     for (var part, up = 0, i = parts.length - 1; i >= 0; i--) {
@@ -560,6 +560,10 @@ define('lib/source-map/util', ['require', 'exports', 'module' , ], function(requ
     return joined;
   }
   exports.join = join;
+
+  exports.isAbsolute = function (aPath) {
+    return aPath.charAt(0) === '/' || !!aPath.match(urlRegexp);
+  };
 
   /**
    * Make a path relative to a URL or another path.
