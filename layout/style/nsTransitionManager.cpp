@@ -937,38 +937,13 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
                  "Element::UnbindFromTree should have "
                  "destroyed the element transitions object");
 
-      size_t i = collection->mAnimations.Length();
-      MOZ_ASSERT(i != 0, "empty transitions list?");
-      bool transitionStartedOrEnded = false;
-      do {
-        --i;
-        Animation* anim = collection->mAnimations[i];
-        if (!anim->GetEffect()->IsFinishedTransition()) {
-          MOZ_ASSERT(anim->GetEffect(), "Transitions should have an effect");
-          ComputedTiming computedTiming =
-            anim->GetEffect()->GetComputedTiming();
-          if (computedTiming.mPhase == ComputedTiming::AnimationPhase_After) {
-            // Leave this transition in the list for one more refresh
-            // cycle, since we haven't yet processed its style change, and
-            // if we also have (already, or will have from processing
-            // transitionend events or other refresh driver notifications)
-            // a non-animation style change that would affect it, we need
-            // to know not to start a new transition for the transition
-            // from the almost-completed value to the final value.
-            anim->GetEffect()->SetIsFinishedTransition(true);
-            collection->UpdateAnimationGeneration(mPresContext);
-            transitionStartedOrEnded = true;
-          } else if ((computedTiming.mPhase ==
-                      ComputedTiming::AnimationPhase_Active) &&
-                     canThrottleTick &&
-                     !anim->IsRunningOnCompositor()) {
-            // Start a transition with a delay where we should start the
-            // transition proper.
-            collection->UpdateAnimationGeneration(mPresContext);
-            transitionStartedOrEnded = true;
-          }
-        }
-      } while (i != 0);
+      // Look for any transitions that can't be throttled because they
+      // may be starting or stopping
+      for (auto iter = collection->mAnimations.cbegin();
+           canThrottleTick && iter != collection->mAnimations.cend();
+           ++iter) {
+        canThrottleTick &= (*iter)->CanThrottle();
+      }
 
       // We need to restyle even if the transition rule no longer
       // applies (in which case we just made it not apply).
@@ -979,7 +954,7 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
                  collection->mElementProperty ==
                    nsGkAtoms::transitionsOfAfterProperty,
                  "Unexpected element property; might restyle too much");
-      if (!canThrottleTick || transitionStartedOrEnded) {
+      if (!canThrottleTick) {
         collection->PostRestyleForAnimation(mPresContext);
       } else {
         didThrottle = true;
