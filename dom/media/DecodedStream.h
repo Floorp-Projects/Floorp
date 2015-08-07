@@ -61,14 +61,17 @@ public:
   void RecreateData();
   void Connect(ProcessedMediaStream* aStream, bool aFinishWhenEnded);
   void Remove(MediaStream* aStream);
+
   void SetPlaying(bool aPlaying);
+  void SetVolume(double aVolume);
+
   int64_t AudioEndTime() const;
   int64_t GetPosition() const;
   bool IsFinished() const;
   bool HasConsumers() const;
 
   // Return true if stream is finished.
-  bool SendData(double aVolume, bool aIsSameOrigin);
+  bool SendData(bool aIsSameOrigin);
 
 protected:
   virtual ~DecodedStream();
@@ -97,6 +100,8 @@ private:
   mutable ReentrantMonitor mMonitor;
 
   bool mPlaying;
+  double mVolume;
+
   Maybe<int64_t> mStartTime;
   MediaInfo mInfo;
 
