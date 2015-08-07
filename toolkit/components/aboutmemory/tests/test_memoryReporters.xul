@@ -24,10 +24,6 @@
   <script type="application/javascript">
   <![CDATA[
 
-  // Nb: this test is all JS and so should be done with an xpcshell test,
-  // but bug 671753 is preventing the memory-reporter-manager from being
-  // accessed from xpcshell.
-
   "use strict";
 
   const Cc = Components.classes;

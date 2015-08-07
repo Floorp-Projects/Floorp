@@ -17,7 +17,26 @@
 namespace js {
 namespace jit {
 
-class Range;
+class LBox : public LInstructionHelper<BOX_PIECES, 1, 0>
+{
+    MIRType type_;
+
+  public:
+    LIR_HEADER(Box);
+
+    LBox(const LAllocation& payload, MIRType type)
+      : type_(type)
+    {
+        setOperand(0, payload);
+    }
+
+    MIRType type() const {
+        return type_;
+    }
+    const char* extraName() const {
+        return StringFromMIRType(type_);
+    }
+};
 
 template <size_t Temps, size_t ExtraUses = 0>
 class LBinaryMath : public LInstructionHelper<1, 2 + ExtraUses, Temps>
@@ -3721,6 +3740,26 @@ class LFloat32x4ToInt32x4 : public LInstructionHelper<1, 1, 1>
     }
     const MSimdConvert* mir() const {
         return mir_->toSimdConvert();
+    }
+};
+
+// Double raised to a half power.
+class LPowHalfD : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(PowHalfD);
+    explicit LPowHalfD(const LAllocation& input) {
+        setOperand(0, input);
+    }
+
+    const LAllocation* input() {
+        return getOperand(0);
+    }
+    const LDefinition* output() {
+        return getDef(0);
+    }
+    MPowHalf* mir() const {
+        return mir_->toPowHalf();
     }
 };
 

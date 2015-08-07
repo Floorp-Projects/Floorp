@@ -3902,19 +3902,19 @@
             event.preventDefault();
             return;
           }
-          var stringID, label;
+          var label;
           if (tab.mOverCloseButton) {
-            stringID = "tabs.closeTab.tooltip";
+            label = this.mStringBundle.getString("tabs.closeTab.tooltip");
           } else if (tab._overPlayingIcon) {
-            stringID = tab.linkedBrowser.audioMuted ?
-              "tabs.mutedAudio.tooltip" :
-              "tabs.playingAudio.tooltip";
+            var stringID = tab.linkedBrowser.audioMuted ?
+              "tabs.unmuteAudio.tooltip" :
+              "tabs.muteAudio.tooltip";
+            var key = document.getElementById("key_toggleMute");
+            var shortcut = ShortcutUtils.prettifyShortcut(key);
+            label = this.mStringBundle.getFormattedString(stringID, [shortcut]);
           } else {
             label = tab.getAttribute("label") +
                       (this.AppConstants.E10S_TESTING_ONLY && tab.linkedBrowser && tab.linkedBrowser.isRemoteBrowser ? " - e10s" : "");
-          }
-          if (stringID && !label) {
-            label = this.mStringBundle.getString(stringID);
           }
           event.target.setAttribute("label", label);
         ]]></body>
@@ -4000,6 +4000,7 @@
               popup.openPopupAtScreen(event.screenX, event.screenY, true);
               break;
             }
+            case "DOMServiceWorkerFocusClient":
             case "DOMWebNotificationClicked": {
               let tab = this.getTabForBrowser(browser);
               if (!tab)
@@ -4096,6 +4097,7 @@
                                               this.mCurrentBrowser);
           }
           messageManager.addMessageListener("DOMWebNotificationClicked", this);
+          messageManager.addMessageListener("DOMServiceWorkerFocusClient", this);
           messageManager.addMessageListener("Findbar:Keypress", this);
         ]]>
       </constructor>
@@ -5901,7 +5903,7 @@
         ]]></body>
       </method>
 
-      <method name="_toggleMuteAudio">
+      <method name="toggleMuteAudio">
         <body>
         <![CDATA[
           let tabContainer = this.parentNode;
@@ -5973,7 +5975,8 @@
                           this.hasAttribute("muted");
         if ((anonid == "soundplaying-icon") ||
             ((anonid == "overlay-icon") && iconVisible)) {
-          this._toggleMuteAudio();
+          this.toggleMuteAudio();
+          this._overPlayingIcon = false;
         }
       ]]>
       </handler>
@@ -6082,6 +6085,13 @@
             aMenuitem.setAttribute("selected", "true");
           else
             aMenuitem.removeAttribute("selected");
+
+          if (aTab.hasAttribute("muted"))
+            aMenuitem.setAttribute("endimage", "chrome://browser/skin/tabbrowser/tab-audio.svg#tab-audio-muted");
+          else if (aTab.hasAttribute("soundplaying"))
+            aMenuitem.setAttribute("endimage", "chrome://browser/skin/tabbrowser/tab-audio.svg#tab-audio");
+          else
+            aMenuitem.removeAttribute("endimage");
         ]]></body>
       </method>
     </implementation>

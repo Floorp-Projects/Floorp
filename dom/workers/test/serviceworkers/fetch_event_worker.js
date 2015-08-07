@@ -76,6 +76,17 @@ onfetch = function(ev) {
     ev.respondWith(Promise.resolve({}));
   }
 
+  else if (ev.request.url.includes("nonpromise.txt")) {
+    try {
+      // This should coerce to Promise(5) instead of throwing
+      ev.respondWith(5);
+    } catch (e) {
+      // test is expecting failure, so return a success if we get a thrown
+      // exception
+      ev.respondWith(new Response('respondWith(5) threw ' + e));
+    }
+  }
+
   else if (ev.request.url.includes("headers.txt")) {
     var ok = true;
     ok &= ev.request.headers.get("X-Test1") == "header1";

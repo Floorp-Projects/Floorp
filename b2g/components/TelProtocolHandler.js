@@ -52,7 +52,7 @@ TelProtocolHandler.prototype = {
   },
 
   newChannel: function Proto_newChannel(aURI) {
-    return newChannel2(aURI, null);
+    return this.newChannel2(aURI, null);
   },
 
   classID: Components.ID("{782775dd-7351-45ea-aff1-0ffa872cfdd2}"),

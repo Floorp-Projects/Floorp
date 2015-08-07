@@ -38,18 +38,6 @@ CodeGeneratorARM64::CodeGeneratorARM64(MIRGenerator* gen, LIRGraph* graph, Macro
 }
 
 bool
-CodeGeneratorARM64::generatePrologue()
-{
-    MOZ_CRASH("generatePrologue");
-}
-
-bool
-CodeGeneratorARM64::generateEpilogue()
-{
-    MOZ_CRASH("generateEpilogue");
-}
-
-bool
 CodeGeneratorARM64::generateOutOfLineCode()
 {
     MOZ_CRASH("generateOutOfLineCode");

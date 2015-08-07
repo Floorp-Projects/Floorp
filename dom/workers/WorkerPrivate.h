@@ -1575,6 +1575,30 @@ public:
   }
 };
 
+class TimerThreadEventTarget final : public nsIEventTarget
+{
+  ~TimerThreadEventTarget();
+
+  WorkerPrivate* mWorkerPrivate;
+  nsRefPtr<WorkerRunnable> mWorkerRunnable;
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+
+  TimerThreadEventTarget(WorkerPrivate* aWorkerPrivate,
+                         WorkerRunnable* aWorkerRunnable);
+
+protected:
+  NS_IMETHOD
+  DispatchFromScript(nsIRunnable* aRunnable, uint32_t aFlags) override;
+
+
+  NS_IMETHOD
+  Dispatch(already_AddRefed<nsIRunnable>&& aRunnable, uint32_t aFlags) override;
+
+  NS_IMETHOD
+  IsOnCurrentThread(bool* aIsOnCurrentThread) override;
+};
+
 END_WORKERS_NAMESPACE
 
 #endif /* mozilla_dom_workers_workerprivate_h__ */

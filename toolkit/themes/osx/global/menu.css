@@ -63,6 +63,7 @@ menucaption > .menu-iconic-text {
 .menuitem-iconic,
 .menu-iconic,
 menuitem[image],
+menuitem[endimage],
 menuitem[src] {
   /* 2px higher than those without icons */
   padding-top: 1px;
@@ -74,6 +75,12 @@ menuitem[src] {
 menuitem[image] > .menu-iconic-left > .menu-iconic-icon,
 menuitem[src] > .menu-iconic-left > .menu-iconic-icon {
   -moz-margin-start: 0;
+  width: 16px;
+}
+
+menuitem[endimage] > .menu-iconic-right > .menu-iconic-icon {
+  -moz-margin-start: 2px;
+  -moz-margin-end: 0;
   width: 16px;
 }
 
@@ -161,7 +168,8 @@ menulist[editable="true"] > menupopup > menucaption {
   -moz-appearance: none;
 }
 
-menulist[editable="true"] > menupopup > :-moz-any(menuitem, menucaption) > .menu-iconic-left {
+menulist[editable="true"] > menupopup > :-moz-any(menuitem, menucaption) > .menu-iconic-left,
+menulist[editable="true"] > menupopup > :-moz-any(menuitem, menucaption) > .menu-iconic-right {
   display: none;
 }
 
