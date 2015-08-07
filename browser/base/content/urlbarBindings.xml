@@ -768,8 +768,14 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
           // Trim popup selected values, but never trim results coming from
           // autofill.
+          let styles = new Set(
+            this.popup.selectedIndex == -1 ? [] :
+            this.mController.getStyleAt(this.popup.selectedIndex).split(/\s+/)
+          );
           if (this.popup.selectedIndex == -1 ||
-              this.mController.getStyleAt(this.popup.selectedIndex) == "autofill") {
+              this.mController
+                  .getStyleAt(this.popup.selectedIndex)
+                  .split(/\s+/).indexOf("autofill") >= 0) {
             this._disableTrim = true;
           }
           this.value = val;
@@ -1586,7 +1592,13 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // ie, hitting page-down will only cause is to wrap if we're already
           // at one end of the list.
 
-          if (!Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete")) {
+          // Do not allow the selection to be removed if UnifiedComplete is
+          // enabled and the popup's first result is a heuristic result.
+          if (!Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete") ||
+              (this.input.mController.matchCount > 0 &&
+               this.input.mController
+                         .getStyleAt(0)
+                         .split(/\s+/).indexOf("heuristic") == -1)) {
             if (reverse && index == -1 || newIndex > maxRow && index != maxRow)
               newIndex = maxRow;
             else if (!reverse && index == -1 || newIndex < 0 && index != 0)
@@ -1792,18 +1804,16 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       <method name="createResultLabel">
         <parameter name="aTitle"/>
         <parameter name="aUrl"/>
-        <parameter name="aType"/>
+        <parameter name="aTypes"/>
         <body>
           <![CDATA[
             let label = aTitle + " " + aUrl;
-            // convert aType (ex: "ac-result-type-<aType>") to text to be spoke aloud
-            // by screen readers.  convert "tag" and "bookmark" to the localized versions,
-            // but don't do anything for "favicon" (the default)
+            let type = aTypes.find(v => v != "action" && v != "heuristic");
             try {
-              label += " " + this._bundle.GetStringFromName(aType + "ResultLabel");
-            } catch (e) {
-              // Undefined result label, do nothing.
-            }
+              // Some types intentionally do not map to strings, which is not
+              // an error.
+              label += " " + this._bundle.GetStringFromName(type + "ResultLabel");
+            } catch (e) {}
 
             return label;
           ]]>
@@ -1816,11 +1826,16 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             if (!Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete"))
               return;
 
+            // If nothing is selected yet, select the first result if it is a
+            // pre-selected "heuristic" result.  (See UnifiedComplete.js.)
             if (this._matchCount > 0 && this.selectedIndex == -1) {
-              // Don't handle this as a user-initiated action.
-              this._ignoreNextSelect = true;
-              this.selectedIndex = 0;
-              this._ignoreNextSelect = false;
+              let styles = this.input.mController.getStyleAt(0).split(/\s+/);
+              if (styles.indexOf("heuristic") >= 0) {
+                // Don't handle this as a user-initiated action.
+                this._ignoreNextSelect = true;
+                this.selectedIndex = 0;
+                this._ignoreNextSelect = false;
+              }
             }
 
             this.input.gotResultForCurrentQuery = true;
