@@ -117,7 +117,8 @@ const DIR_TRASH                       = "trash";
 
 const FILE_DATABASE                   = "extensions.json";
 const FILE_OLD_CACHE                  = "extensions.cache";
-const FILE_INSTALL_MANIFEST           = "install.rdf";
+const FILE_RDF_MANIFEST               = "install.rdf";
+const FILE_WEB_MANIFEST               = "manifest.json";
 const FILE_XPI_ADDONS_LIST            = "extensions.ini";
 
 const KEY_PROFILEDIR                  = "ProfD";
@@ -658,6 +659,25 @@ function getExternalType(aType) {
   return aType;
 }
 
+function getManifestFileForDir(aDir) {
+  let file = aDir.clone();
+  file.append(FILE_WEB_MANIFEST);
+  if (file.exists() && file.isFile())
+    return file;
+  file.leafName = FILE_RDF_MANIFEST;
+  if (file.exists() && file.isFile())
+    return file;
+  return null;
+}
+
+function getManifestEntryForZipReader(aZipReader) {
+  if (aZipReader.hasEntry(FILE_WEB_MANIFEST))
+    return FILE_WEB_MANIFEST;
+  if (aZipReader.hasEntry(FILE_RDF_MANIFEST))
+    return FILE_RDF_MANIFEST;
+  return null;
+}
+
 /**
  * Converts a list of API types to a list of API types and any aliases for those
  * types.
@@ -715,6 +735,19 @@ function getRDFValue(aLiteral) {
  */
 function getRDFProperty(aDs, aResource, aProperty) {
   return getRDFValue(aDs.GetTarget(aResource, EM_R(aProperty), true));
+}
+
+/**
+ * Reads an AddonInternal object from a manifest stream.
+ *
+ * @param  aStream
+ *         An open stream to read the manifest from
+ * @return an AddonInternal object
+ * @throws if the install manifest in the stream is corrupt or could not
+ *         be read
+ */
+function loadManifestFromWebManifest(aStream) {
+  throw new Error("Web Extensions aren't supported yet.")
 }
 
 /**
@@ -978,14 +1011,17 @@ function loadManifestFromRDF(aUri, aStream) {
     addon.targetPlatforms = [];
   }
 
+  return addon;
+}
+
+function defineSyncGUID(aAddon) {
   // Load the storage service before NSS (nsIRandomGenerator),
   // to avoid a SQLite initialization error (bug 717904).
   let storage = Services.storage;
 
   // Define .syncGUID as a lazy property which is also settable
-  Object.defineProperty(addon, "syncGUID", {
+  Object.defineProperty(aAddon, "syncGUID", {
     get: () => {
-
       // Generate random GUID used for Sync.
       // This was lifted from util.js:makeGUID() from services-sync.
       let rng = Cc["@mozilla.org/security/random-generator;1"].
@@ -997,19 +1033,17 @@ function loadManifestFromRDF(aUri, aStream) {
       let guid = btoa(byte_string).replace(/\+/g, '-')
         .replace(/\//g, '_');
 
-      delete addon.syncGUID;
-      addon.syncGUID = guid;
+      delete aAddon.syncGUID;
+      aAddon.syncGUID = guid;
       return guid;
     },
     set: (val) => {
-      delete addon.syncGUID;
-      addon.syncGUID = val;
+      delete aAddon.syncGUID;
+      aAddon.syncGUID = val;
     },
     configurable: true,
     enumerable: true,
   });
-
-  return addon;
 }
 
 /**
@@ -1037,11 +1071,22 @@ let loadManifestFromDir = Task.async(function* loadManifestFromDir(aDir) {
     return size;
   }
 
-  let file = aDir.clone();
-  file.append(FILE_INSTALL_MANIFEST);
-  if (!file.exists() || !file.isFile())
+  function loadFromRDF(aFile, aStream) {
+    let addon = loadManifestFromRDF(Services.io.newFileURI(aFile), aStream);
+
+    let file = aDir.clone();
+    file.append("chrome.manifest");
+    let chromeManifest = ChromeManifestParser.parseSync(Services.io.newFileURI(file));
+    addon.hasBinaryComponents = ChromeManifestParser.hasType(chromeManifest,
+                                                             "binary-component");
+    return addon;
+  }
+
+  let file = getManifestFileForDir(aDir);
+  if (!file) {
     throw new Error("Directory " + aDir.path + " does not contain a valid " +
                     "install manifest");
+  }
 
   let fis = Cc["@mozilla.org/network/file-input-stream;1"].
             createInstance(Ci.nsIFileInputStream);
@@ -1051,19 +1096,17 @@ let loadManifestFromDir = Task.async(function* loadManifestFromDir(aDir) {
   bis.init(fis, 4096);
 
   try {
-    let addon = loadManifestFromRDF(Services.io.newFileURI(file), bis);
+    let addon = file.leafName == FILE_WEB_MANIFEST ?
+                loadManifestFromWebManifest(bis) :
+                loadFromRDF(file, bis);
+
     addon._sourceBundle = aDir.clone();
     addon.size = getFileSize(aDir);
-
-    file = aDir.clone();
-    file.append("chrome.manifest");
-    let chromeManifest = ChromeManifestParser.parseSync(Services.io.newFileURI(file));
-    addon.hasBinaryComponents = ChromeManifestParser.hasType(chromeManifest,
-                                                             "binary-component");
-
     addon.signedState = yield verifyDirSignedState(aDir, addon);
-
     addon.appDisabled = !isUsableAddon(addon);
+
+    defineSyncGUID(addon);
+
     return addon;
   }
   finally {
@@ -1081,20 +1124,9 @@ let loadManifestFromDir = Task.async(function* loadManifestFromDir(aDir) {
  * @throws if the XPI file does not contain a valid install manifest
  */
 let loadManifestFromZipReader = Task.async(function* loadManifestFromZipReader(aZipReader) {
-  let zis = aZipReader.getInputStream(FILE_INSTALL_MANIFEST);
-  let bis = Cc["@mozilla.org/network/buffered-input-stream;1"].
-            createInstance(Ci.nsIBufferedInputStream);
-  bis.init(zis, 4096);
-
-  try {
-    let uri = buildJarURI(aZipReader.file, FILE_INSTALL_MANIFEST);
-    let addon = loadManifestFromRDF(uri, bis);
-    addon._sourceBundle = aZipReader.file;
-
-    addon.size = 0;
-    let entries = aZipReader.findEntries(null);
-    while (entries.hasMore())
-      addon.size += aZipReader.getEntry(entries.getNext()).realSize;
+  function loadFromRDF(aStream) {
+    let uri = buildJarURI(aZipReader.file, FILE_RDF_MANIFEST);
+    let addon = loadManifestFromRDF(uri, aStream);
 
     // Binary components can only be loaded from unpacked addons.
     if (addon.unpack) {
@@ -1106,9 +1138,37 @@ let loadManifestFromZipReader = Task.async(function* loadManifestFromZipReader(a
       addon.hasBinaryComponents = false;
     }
 
-    addon.signedState = yield verifyZipSignedState(aZipReader.file, addon);
+    return addon;
+  }
 
+  let entry = getManifestEntryForZipReader(aZipReader);
+  if (!entry) {
+    throw new Error("File " + aZipReader.file.path + " does not contain a valid " +
+                    "install manifest");
+  }
+
+  let zis = aZipReader.getInputStream(entry);
+  let bis = Cc["@mozilla.org/network/buffered-input-stream;1"].
+            createInstance(Ci.nsIBufferedInputStream);
+  bis.init(zis, 4096);
+
+  try {
+    let addon = entry == FILE_WEB_MANIFEST ?
+                loadManifestFromWebManifest(bis) :
+                loadFromRDF(bis);
+
+    addon._sourceBundle = aZipReader.file;
+
+    addon.size = 0;
+    let entries = aZipReader.findEntries(null);
+    while (entries.hasMore())
+      addon.size += aZipReader.getEntry(entries.getNext()).realSize;
+
+    addon.signedState = yield verifyZipSignedState(aZipReader.file, addon);
     addon.appDisabled = !isUsableAddon(addon);
+
+    defineSyncGUID(addon);
+
     return addon;
   }
   finally {
@@ -1684,15 +1744,12 @@ XPIState.prototype = {
         changed = true;
       }
     }
-    // if the add-on is disabled, modified time is the install.rdf time, if any.
-    // If {path}/install.rdf doesn't exist, we assume this is a packed .xpi and use
+    // if the add-on is disabled, modified time is the install manifest time, if
+    // any. If no manifest exists, we assume this is a packed .xpi and use
     // the time stamp of {path}
     try {
-      // Get the install.rdf update time, if any.
-      // XXX This will eventually also need to check for package.json or whatever
-      // the new manifest is named.
-      let maniFile = aFile.clone();
-      maniFile.append(FILE_INSTALL_MANIFEST);
+      // Get the install manifest update time, if any.
+      let maniFile = getManifestFileForDir(aFile);
       if (!(aId in XPIProvider._mostRecentlyModifiedFile)) {
         XPIProvider._mostRecentlyModifiedFile[aId] = maniFile.leafName;
       }
@@ -2704,12 +2761,11 @@ this.XPIProvider = {
 
         if (isDir) {
           // Check if the directory contains an install manifest.
-          let manifest = stageDirEntry.clone();
-          manifest.append(FILE_INSTALL_MANIFEST);
+          let manifest = getManifestFileForDir(stageDirEntry);
 
           // If the install manifest doesn't exist uninstall this add-on in this
           // install location.
-          if (!manifest.exists()) {
+          if (!manifest) {
             logger.debug("Processing uninstall of " + id + " in " + aLocation.name);
             try {
               aLocation.uninstallAddon(id);
