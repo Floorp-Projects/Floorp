@@ -96,7 +96,7 @@ already_AddRefed<TextureClient>
 ClientSingleTiledLayerBuffer::GetTextureClient()
 {
   return mCompositableClient->CreateTextureClientForDrawing(
-    gfx::ImageFormatToSurfaceFormat(mFormat), mSize, gfx::BackendType::NONE,
+    gfx::ImageFormatToSurfaceFormat(mFormat), mSize, BackendSelector::Content,
     TextureFlags::IMMEDIATE_UPLOAD);
 }
 
