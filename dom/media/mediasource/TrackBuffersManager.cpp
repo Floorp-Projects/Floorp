@@ -1034,24 +1034,31 @@ TrackBuffersManager::CodedFrameProcessing()
 {
   MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(mProcessingPromise.IsEmpty());
-  nsRefPtr<CodedFrameProcessingPromise> p = mProcessingPromise.Ensure(__func__);
 
   MediaByteRange mediaRange = mParser->MediaSegmentRange();
   if (mediaRange.IsNull()) {
     AppendDataToCurrentInputBuffer(mInputBuffer);
     mInputBuffer = nullptr;
   } else {
+    MOZ_ASSERT(mProcessedInput >= mInputBuffer->Length());
+    if (int64_t(mProcessedInput - mInputBuffer->Length()) > mediaRange.mEnd) {
+      // Something is not quite right with the data appended. Refuse it.
+      // This would typically happen if the previous media segment was partial
+      // yet a new complete media segment was added.
+      return CodedFrameProcessingPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+    }
     // The mediaRange is offset by the init segment position previously added.
     uint32_t length =
       mediaRange.mEnd - (mProcessedInput - mInputBuffer->Length());
     nsRefPtr<MediaByteBuffer> segment = new MediaByteBuffer;
-    MOZ_ASSERT(mInputBuffer->Length() >= length);
     if (!segment->AppendElements(mInputBuffer->Elements(), length, fallible)) {
       return CodedFrameProcessingPromise::CreateAndReject(NS_ERROR_OUT_OF_MEMORY, __func__);
     }
     AppendDataToCurrentInputBuffer(segment);
     mInputBuffer->RemoveElementsAt(0, length);
   }
+
+  nsRefPtr<CodedFrameProcessingPromise> p = mProcessingPromise.Ensure(__func__);
 
   DoDemuxVideo();
 
