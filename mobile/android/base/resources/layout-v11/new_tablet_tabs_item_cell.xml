@@ -27,7 +27,7 @@
                android:layout_weight="1.0"
                style="@style/TabLayoutItemTextAppearance"
                android:textSize="14sp"
-               android:textColor="@color/new_tablet_tab_item_title"
+               android:textColor="@color/tab_item_title"
                android:singleLine="true"
                android:duplicateParentState="true"
                gecko:fadeWidth="15dp"
