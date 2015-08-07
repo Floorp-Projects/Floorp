@@ -7,6 +7,7 @@
 #if !defined(PlatformDecoderModule_h_)
 #define PlatformDecoderModule_h_
 
+#include "FlushableTaskQueue.h"
 #include "MediaDecoderReader.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/layers/LayersTypes.h"

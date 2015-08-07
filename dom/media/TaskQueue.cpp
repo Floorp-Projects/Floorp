@@ -174,46 +174,6 @@ TaskQueue::BeginShutdown()
   return p;
 }
 
-void
-FlushableTaskQueue::Flush()
-{
-  MonitorAutoLock mon(mQueueMonitor);
-  AutoSetFlushing autoFlush(this);
-  FlushLocked();
-  AwaitIdleLocked();
-}
-
-nsresult
-FlushableTaskQueue::FlushAndDispatch(already_AddRefed<nsIRunnable> aRunnable)
-{
-  MonitorAutoLock mon(mQueueMonitor);
-  AutoSetFlushing autoFlush(this);
-  FlushLocked();
-  nsCOMPtr<nsIRunnable> r = dont_AddRef(aRunnable.take());
-  nsresult rv = DispatchLocked(r.forget(), IgnoreFlushing, AssertDispatchSuccess);
-  NS_ENSURE_SUCCESS(rv, rv);
-  AwaitIdleLocked();
-  return NS_OK;
-}
-
-void
-FlushableTaskQueue::FlushLocked()
-{
-  // Make sure there are no tasks for this queue waiting in the caller's tail
-  // dispatcher.
-  MOZ_ASSERT_IF(AbstractThread::GetCurrent(),
-                !AbstractThread::GetCurrent()->TailDispatcher().HasTasksFor(this));
-
-  mQueueMonitor.AssertCurrentThreadOwns();
-  MOZ_ASSERT(mIsFlushing);
-
-  // Clear the tasks. If this strikes you as awful, stop using a
-  // FlushableTaskQueue.
-  while (!mTasks.empty()) {
-    mTasks.pop();
-  }
-}
-
 bool
 TaskQueue::IsEmpty()
 {

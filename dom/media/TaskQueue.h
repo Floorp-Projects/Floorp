@@ -175,39 +175,6 @@ protected:
   };
 };
 
-class FlushableTaskQueue : public TaskQueue
-{
-public:
-  explicit FlushableTaskQueue(already_AddRefed<SharedThreadPool> aPool) : TaskQueue(Move(aPool)) {}
-  nsresult FlushAndDispatch(already_AddRefed<nsIRunnable> aRunnable);
-  void Flush();
-
-  bool IsDispatchReliable() override { return false; }
-
-private:
-
-  class MOZ_STACK_CLASS AutoSetFlushing
-  {
-  public:
-    explicit AutoSetFlushing(FlushableTaskQueue* aTaskQueue) : mTaskQueue(aTaskQueue)
-    {
-      mTaskQueue->mQueueMonitor.AssertCurrentThreadOwns();
-      mTaskQueue->mIsFlushing = true;
-    }
-    ~AutoSetFlushing()
-    {
-      mTaskQueue->mQueueMonitor.AssertCurrentThreadOwns();
-      mTaskQueue->mIsFlushing = false;
-    }
-
-  private:
-    FlushableTaskQueue* mTaskQueue;
-  };
-
-  void FlushLocked();
-
-};
-
 } // namespace mozilla
 
 #endif // TaskQueue_h_
