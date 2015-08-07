@@ -229,6 +229,7 @@ gbjar.sources += [
     'firstrun/FirstrunPagerConfig.java',
     'firstrun/FirstrunPane.java',
     'firstrun/FirstrunPanel.java',
+    'firstrun/RestrictedWelcomePanel.java',
     'firstrun/WelcomePanel.java',
     'FormAssistPopup.java',
     'GeckoAccessibility.java',
