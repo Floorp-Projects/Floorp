@@ -912,9 +912,6 @@ Animation::UpdateFinishedState(SeekFlag aSeekFlag,
     DoFinishNotification(aSyncNotifyFlag);
   } else if (!currentFinishedState && mFinishedIsResolved) {
     ResetFinishedPromise();
-    if (mEffect->AsTransition()) {
-      mEffect->SetIsFinishedTransition(false);
-    }
   }
   // We must recalculate the current time to take account of any mHoldTime
   // changes the code above made.
