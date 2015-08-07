@@ -143,11 +143,7 @@
 
 /* CONTENT */
 
-#identity-popup-security-content > description,
-#identity-popup-security-descriptions > description,
-#identity-popup-securityView-header > description,
-#identity-popup-securityView-body > description,
-#tracking-protection-content > label {
+.identity-popup-text {
   white-space: pre-wrap;
   font-size: 110%;
   margin: 0;
@@ -158,17 +154,11 @@
   font-size: 150%;
 }
 
-.identity-popup-warning-gray {
-  -moz-padding-start: 24px;
-  background: url(chrome://browser/skin/controlcenter/warning-gray.svg) no-repeat 0 50%;
-}
-
-.identity-popup-warning-yellow {
-  -moz-padding-start: 24px;
-  background: url(chrome://browser/skin/controlcenter/warning-yellow.svg) no-repeat 0 50%;
-}
-
 /* SECURITY */
+
+#identity-popup-securityView > .identity-popup-text:not(#identity-popup-content-owner) {
+  margin: 2px 0 4px;
+}
 
 .identity-popup-connection-secure {
   color: #418220;
@@ -177,6 +167,12 @@
 .identity-popup-connection-not-secure {
   color: #d74345;
 }
+
+#identity-popup-security-content.chromeUI {
+  background-image: url(chrome://branding/content/icon48.png);
+}
+
+/* SECURITY SUBVIEW */
 
 #identity-popup-securityView {
   padding-bottom: 2em;
@@ -188,57 +184,44 @@
   background-image: url(chrome://browser/skin/controlcenter/conn-not-secure.svg);
 }
 
-#identity-popup[connection=chrome] #identity-popup-securityView,
-#identity-popup[connection=chrome] #identity-popup-security-content {
-  background-image: url(chrome://branding/content/icon48.png);
-}
-
-#identity-popup[connection^=secure] #identity-popup-securityView,
-#identity-popup[connection^=secure] #identity-popup-security-content {
+#identity-popup-securityView.verifiedDomain,
+#identity-popup-securityView.verifiedIdentity,
+#identity-popup-security-content.verifiedDomain,
+#identity-popup-security-content.verifiedIdentity {
   background-image: url(chrome://browser/skin/controlcenter/conn-secure.svg);
 }
 
-#identity-popup[ciphers=weak] #identity-popup-securityView,
-#identity-popup[ciphers=weak] #identity-popup-security-content,
-#identity-popup[mixedcontent~=passive-loaded] #identity-popup-securityView,
-#identity-popup[mixedcontent~=passive-loaded] #identity-popup-security-content {
+#identity-popup-securityView.weakCipher,
+#identity-popup-securityView.mixedDisplayContent,
+#identity-popup-securityView.mixedDisplayContentLoadedActiveBlocked,
+#identity-popup-security-content.weakCipher,
+#identity-popup-security-content.mixedDisplayContent,
+#identity-popup-security-content.mixedDisplayContentLoadedActiveBlocked {
   background-image: url(chrome://browser/skin/controlcenter/conn-degraded.svg);
 }
 
-#identity-popup[mixedcontent~=active-loaded] #identity-popup-securityView,
-#identity-popup[mixedcontent~=active-loaded] #identity-popup-security-content {
+#identity-popup-securityView.mixedActiveContent,
+#identity-popup-security-content.mixedActiveContent {
   background-image: url(chrome://browser/skin/controlcenter/mcb-disabled.svg);
-}
-
-#identity-popup-security-descriptions > description {
-  margin-top: 6px;
-  color: Graytext;
 }
 
 #identity-popup-securityView-header {
   border-bottom: 1px solid var(--panel-separator-color);
   padding-bottom: 1em;
+  margin-bottom: 1em;
 }
 
-#identity-popup-securityView-body {
-  -moz-padding-end: 1em;
+#identity-popup-content-owner {
+  font-weight: 700;
 }
 
-#identity-popup-content-verifier ~ description {
-  margin-top: 1em;
+#identity-popup-content-verifier {
   color: Graytext;
 }
 
-description#identity-popup-content-verified-by,
-description#identity-popup-content-owner,
-description#identity-popup-content-verifier,
-#identity-popup-securityView-body > button {
+#identity-popup-content-owner,
+#identity-popup-securityView > #identity-popup-securityView-connection.identity-popup-text {
   margin-top: 1em;
-}
-
-#identity-popup-securityView-body > button {
-  margin-inline-start: 0;
-  margin-inline-end: 0;
 }
 
 /* TRACKING PROTECTION */
