@@ -293,7 +293,7 @@
               </deck>
         </groupbox>
         <groupbox id="syncOptions">
-          <caption><label>&signedIn.engines.caption;</label></caption>
+          <caption><label>&signedIn.engines.label;</label></caption>
           <hbox id="fxaSyncEngines">
             <vbox align="start">
               <checkbox label="&engine.tabs.label;"
@@ -360,7 +360,7 @@
       <label>&mobilePromo.end;</label>
     </hbox>
     <spacer flex="1"/>
-    <vbox id="tosPP-small">
+    <vbox id="tosPP-small" align="start">
       <label id="tosPP-small-ToS" class="text-link">
         &prefs.tosLink.label;
       </label>

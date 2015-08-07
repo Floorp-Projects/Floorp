@@ -4,11 +4,11 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
+import org.mozilla.gecko.annotation.WrapForJNI;
 
 import java.nio.ByteBuffer;
 
-@WrapElementForJNI
+@WrapForJNI
 public class SurfaceBits {
     public int width;
     public int height;
