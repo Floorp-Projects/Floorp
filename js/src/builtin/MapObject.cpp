@@ -267,10 +267,9 @@ InitClass(JSContext* cx, Handle<GlobalObject*> global, const Class* clasp, JSPro
           const JSPropertySpec* properties, const JSFunctionSpec* methods,
           const JSPropertySpec* staticProperties)
 {
-    RootedNativeObject proto(cx, global->createBlankPrototype(cx, clasp));
+    RootedPlainObject proto(cx, NewBuiltinClassInstance<PlainObject>(cx));
     if (!proto)
         return nullptr;
-    proto->setPrivate(nullptr);
 
     Rooted<JSFunction*> ctor(cx, global->createConstructor(cx, construct, ClassName(key, cx), 0));
     if (!ctor ||
