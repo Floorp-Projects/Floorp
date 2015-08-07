@@ -9,20 +9,48 @@ import argparse
 import os
 import re
 
+from mozharness.base.transfer import TransferMixin
 
-class TryToolsMixin(object):
+
+class TryToolsMixin(TransferMixin):
     """Utility functions for an interface between try syntax and out test harnesses.
     Requires log and script mixins."""
 
     harness_extra_args = None
     try_test_paths = []
 
-    def parse_extra_try_arguments(self, msg, known_try_arguments):
-        """Given a commit message, parse to extract additional arguments to pass
-        on to the test harness command line.
+    def _extract_try_message(self):
+        msg = self.buildbot_config['sourcestamp']['changes'][-1]['comments']
+        if len(msg) == 1024:
+            # This commit message was potentially truncated, get the full message
+            # from hg.
+            props = self.buildbot_config['properties']
+            rev = props['revision']
+            repo = props['repo_path']
+            url = 'https://hg.mozilla.org/%s/json-pushes?changeset=%s&full=1' % (repo, rev)
+
+            pushinfo = self.load_json_from_url(url)
+            for k, v in pushinfo.items():
+                if isinstance(v, dict) and 'changesets' in v:
+                    msg = v['changesets'][-1]['desc']
+
+        if not msg and 'try_syntax' in self.buildbot_config['properties']:
+            # If we don't find try syntax in the usual place, check for it in an
+            # alternate property available to tools using self-serve.
+            msg = self.buildbot_config['properties']['try_syntax']
+
+        return msg
+
+    def set_extra_try_arguments(self, known_try_arguments):
+        """Finds a commit message and parses it for extra arguments to pass to the test
+        harness command line and test paths used to filter manifests.
 
         Extracting arguments from a commit message taken directly from the try_parser.
         """
+        msg = self._extract_try_message()
+        if not msg:
+            return
+
         all_try_args = None
         for line in msg.splitlines():
             if 'try: ' in line:
