@@ -230,7 +230,8 @@ PeerConnectionMedia::PeerConnectionMedia(PeerConnectionImpl *parent)
 }
 
 nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_servers,
-                                   const std::vector<NrIceTurnServer>& turn_servers)
+                                   const std::vector<NrIceTurnServer>& turn_servers,
+                                   NrIceCtx::Policy policy)
 {
   nsresult rv;
 #if defined(MOZILLA_XPCOMRT_API)
@@ -314,7 +315,8 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
                              true, // Explicitly set priorities
                              mParent->GetAllowIceLoopback(),
                              ice_tcp,
-                             mParent->GetAllowIceLinkLocal());
+                             mParent->GetAllowIceLinkLocal(),
+                             policy);
   if(!mIceCtx) {
     CSFLogError(logTag, "%s: Failed to create Ice Context", __FUNCTION__);
     return NS_ERROR_FAILURE;
