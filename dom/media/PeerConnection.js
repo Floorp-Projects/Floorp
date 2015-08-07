@@ -624,13 +624,16 @@ RTCPeerConnection.prototype = {
                           });
   },
 
-  _addIdentityAssertion: function(p, origin) {
-    if (this._localIdp.enabled) {
-      return this._localIdp.getIdentityAssertion(this._impl.fingerprint, origin)
-        .then(() => p)
-        .then(sdp => this._localIdp.addIdentityAttribute(sdp));
+  _addIdentityAssertion: function(sdpPromise, origin) {
+    if (!this._localIdp.enabled) {
+      return sdpPromise;
     }
-    return p;
+    return Promise.all([
+      this._certificateReady
+        .then(() => this._localIdp.getIdentityAssertion(this._impl.fingerprint,
+                                                        origin)),
+      sdpPromise
+    ]).then(([,sdp]) => this._localIdp.addIdentityAttribute(sdp));
   },
 
   createOffer: function(optionsOrOnSuccess, onError, options) {
