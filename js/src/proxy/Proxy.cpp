@@ -265,8 +265,18 @@ Proxy::hasOwn(JSContext* cx, HandleObject proxy, HandleId id, bool* bp)
     return handler->hasOwn(cx, proxy, id, bp);
 }
 
+static Value
+OuterizeValue(JSContext* cx, HandleValue v)
+{
+    if (v.isObject()) {
+        RootedObject obj(cx, &v.toObject());
+        return ObjectValue(*GetOuterObject(cx, obj));
+    }
+    return v;
+}
+
 bool
-Proxy::get(JSContext* cx, HandleObject proxy, HandleObject receiver, HandleId id,
+Proxy::get(JSContext* cx, HandleObject proxy, HandleObject receiver_, HandleId id,
            MutableHandleValue vp)
 {
     JS_CHECK_RECURSION(cx, return false);
@@ -275,10 +285,20 @@ Proxy::get(JSContext* cx, HandleObject proxy, HandleObject receiver, HandleId id
     AutoEnterPolicy policy(cx, handler, proxy, id, BaseProxyHandler::GET, true);
     if (!policy.allowed())
         return policy.returnValue();
+<<<<<<< local
     bool own;
     if (!handler->hasPrototype()) {
         own = true;
     } else {
+=======
+
+    // Outerize the receiver. Proxy handlers shouldn't have to know about
+    // the Window/WindowProxy distinction.
+    RootedObject receiver(cx, GetOuterObject(cx, receiver_));
+
+    if (handler->hasPrototype()) {
+        bool own;
+>>>>>>> other
         if (!handler->hasOwn(cx, proxy, id, &own))
             return false;
     }
@@ -307,7 +327,7 @@ Proxy::callProp(JSContext* cx, HandleObject proxy, HandleObject receiver, Handle
 }
 
 bool
-Proxy::set(JSContext* cx, HandleObject proxy, HandleId id, HandleValue v, HandleValue receiver,
+Proxy::set(JSContext* cx, HandleObject proxy, HandleId id, HandleValue v, HandleValue receiver_,
            ObjectOpResult& result)
 {
     JS_CHECK_RECURSION(cx, return false);
@@ -318,6 +338,10 @@ Proxy::set(JSContext* cx, HandleObject proxy, HandleId id, HandleValue v, Handle
             return false;
         return result.succeed();
     }
+
+    // Outerize the receiver. Proxy handlers shouldn't have to know about
+    // the Window/WindowProxy distinction.
+    RootedValue receiver(cx, OuterizeValue(cx, receiver_));
 
     // Special case. See the comment on BaseProxyHandler::mHasPrototype.
     if (handler->hasPrototype())
