@@ -68,10 +68,12 @@ intr protocol PPluginInstance
 child:
   intr __delete__();
 
-  // Return value is only used on Windows and only when the window needs its
-  // parent set to the chrome widget native window.
-  intr NPP_SetWindow(NPRemoteWindow window)
-    returns (NPRemoteWindow childWindowToBeAdopted);
+  // This is only used on Windows and, for windowed plugins, must be called
+  // before the first call to NPP_SetWindow.
+  intr CreateChildPluginWindow(NPRemoteWindow window)
+    returns (NPRemoteWindow createdChild);
+
+  intr NPP_SetWindow(NPRemoteWindow window);
 
   intr NPP_GetValue_NPPVpluginWantsAllNetworkStreams()
     returns (bool value, NPError result);
