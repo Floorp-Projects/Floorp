@@ -390,6 +390,19 @@ protected:
 
   static bool IsConnected(const nsAString& aRemoteBdAddr);
 #endif
+
+  // Adapter properties
+  nsString mBdAddress;
+  nsString mBdName;
+  bool mEnabled;
+  bool mDiscoverable;
+  bool mDiscovering;
+  nsTArray<nsString> mBondedAddresses;
+#ifndef MOZ_B2G_BT_API_V1
+  // Missing in Bluetooth v2
+#else
+  uint32_t mDiscoverableTimeout;
+#endif
 };
 
 END_BLUETOOTH_NAMESPACE
