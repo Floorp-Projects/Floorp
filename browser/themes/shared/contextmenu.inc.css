@@ -95,3 +95,13 @@
 #context-media-eme-learnmore {
   list-style-image: url("chrome://browser/skin/drm-icon.svg#chains");
 }
+
+#fill-login {
+  list-style-image: url("chrome://mozapps/skin/passwordmgr/key-16.png");
+}
+
+@media (min-resolution: 1.1dppx) {
+  #fill-login {
+    list-style-image: url("chrome://mozapps/skin/passwordmgr/key-16@2x.png");
+  }
+}

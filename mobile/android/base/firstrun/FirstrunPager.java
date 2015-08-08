@@ -15,6 +15,8 @@ import com.nineoldandroids.animation.Animator;
 import com.nineoldandroids.animation.AnimatorSet;
 import com.nineoldandroids.animation.ObjectAnimator;
 import com.nineoldandroids.view.ViewHelper;
+
+import org.mozilla.gecko.RestrictedProfiles;
 import org.mozilla.gecko.animation.TransitionsTracker;
 
 import java.util.List;
@@ -33,7 +35,15 @@ public class FirstrunPager extends ViewPager {
     }
 
     public void load(FragmentManager fm, FirstrunPane.OnFinishListener listener) {
-        setAdapter(new ViewPagerAdapter(fm, FirstrunPagerConfig.getDefault()));
+        final List<FirstrunPagerConfig.FirstrunPanel> panels;
+
+        if (RestrictedProfiles.isUserRestricted(context)) {
+            panels = FirstrunPagerConfig.getRestricted();
+        } else {
+            panels = FirstrunPagerConfig.getDefault();
+        }
+
+        setAdapter(new ViewPagerAdapter(fm, panels));
         this.listener = listener;
 
         animateLoad();

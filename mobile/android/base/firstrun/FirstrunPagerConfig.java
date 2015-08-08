@@ -15,6 +15,12 @@ public class FirstrunPagerConfig {
         return panels;
     }
 
+    public static List<FirstrunPanel> getRestricted() {
+        final List<FirstrunPanel> panels = new LinkedList<>();
+        panels.add(new FirstrunPanel(RestrictedWelcomePanel.class.getName(), RestrictedWelcomePanel.TITLE_RES));
+        return panels;
+    }
+
     public static class FirstrunPanel {
         private String classname;
         private int titleRes;
