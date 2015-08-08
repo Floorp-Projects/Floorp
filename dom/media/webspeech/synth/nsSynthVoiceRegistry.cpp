@@ -97,6 +97,41 @@ public:
   bool mIsQueued;
 };
 
+// GlobalQueueItem
+
+class GlobalQueueItem final
+{
+private:
+  // Private destructor, to discourage deletion outside of Release():
+  ~GlobalQueueItem() {}
+
+public:
+  GlobalQueueItem(VoiceData* aVoice, nsSpeechTask* aTask, const nsAString& aText,
+                  const float& aVolume, const float& aRate, const float& aPitch)
+    : mVoice(aVoice)
+    , mTask(aTask)
+    , mText(aText)
+    , mVolume(aVolume)
+    , mRate(aRate)
+    , mPitch(aPitch) {}
+
+  NS_INLINE_DECL_REFCOUNTING(GlobalQueueItem)
+
+  nsRefPtr<VoiceData> mVoice;
+
+  nsRefPtr<nsSpeechTask> mTask;
+
+  nsString mText;
+
+  float mVolume;
+
+  float mRate;
+
+  float mPitch;
+
+  bool mIsLocal;
+};
+
 // nsSynthVoiceRegistry
 
 static StaticRefPtr<nsSynthVoiceRegistry> gSynthVoiceRegistry;
@@ -107,6 +142,7 @@ NS_IMPL_ISUPPORTS(nsSynthVoiceRegistry, nsISynthVoiceRegistry)
 nsSynthVoiceRegistry::nsSynthVoiceRegistry()
   : mSpeechSynthChild(nullptr)
   , mUseGlobalQueue(false)
+  , mIsSpeaking(false)
 {
   if (XRE_IsContentProcess()) {
 
@@ -115,8 +151,9 @@ nsSynthVoiceRegistry::nsSynthVoiceRegistry()
 
     InfallibleTArray<RemoteVoice> voices;
     InfallibleTArray<nsString> defaults;
+    bool isSpeaking;
 
-    mSpeechSynthChild->SendReadVoiceList(&voices, &defaults);
+    mSpeechSynthChild->SendReadVoicesAndState(&voices, &defaults, &isSpeaking);
 
     for (uint32_t i = 0; i < voices.Length(); ++i) {
       RemoteVoice voice = voices[i];
@@ -128,6 +165,8 @@ nsSynthVoiceRegistry::nsSynthVoiceRegistry()
     for (uint32_t i = 0; i < defaults.Length(); ++i) {
       SetDefaultVoice(defaults[i], true);
     }
+
+    mIsSpeaking = isSpeaking;
   }
 }
 
@@ -140,10 +179,10 @@ nsSynthVoiceRegistry::~nsSynthVoiceRegistry()
 
   if (mStream) {
     if (!mStream->IsDestroyed()) {
-     mStream->Destroy();
-   }
+      mStream->Destroy();
+    }
 
-   mStream = nullptr;
+    mStream = nullptr;
   }
 
   mUriVoiceMap.Clear();
@@ -175,13 +214,14 @@ void
 nsSynthVoiceRegistry::Shutdown()
 {
   LOG(LogLevel::Debug, ("[%s] nsSynthVoiceRegistry::Shutdown()",
-                     (XRE_IsContentProcess()) ? "Content" : "Default"));
+                        (XRE_IsContentProcess()) ? "Content" : "Default"));
   gSynthVoiceRegistry = nullptr;
 }
 
 void
-nsSynthVoiceRegistry::SendVoices(InfallibleTArray<RemoteVoice>* aVoices,
-                                 InfallibleTArray<nsString>* aDefaults)
+nsSynthVoiceRegistry::SendVoicesAndState(InfallibleTArray<RemoteVoice>* aVoices,
+                                         InfallibleTArray<nsString>* aDefaults,
+                                         bool* aIsSpeaking)
 {
   for (uint32_t i=0; i < mVoices.Length(); ++i) {
     nsRefPtr<VoiceData> voice = mVoices[i];
@@ -193,6 +233,8 @@ nsSynthVoiceRegistry::SendVoices(InfallibleTArray<RemoteVoice>* aVoices,
   for (uint32_t i=0; i < mDefaultVoices.Length(); ++i) {
     aDefaults->AppendElement(mDefaultVoices[i]->mUri);
   }
+
+  *aIsSpeaking = IsSpeaking();
 }
 
 void
@@ -231,6 +273,18 @@ nsSynthVoiceRegistry::RecvSetDefaultVoice(const nsAString& aUri, bool aIsDefault
   }
 
   gSynthVoiceRegistry->SetDefaultVoice(aUri, aIsDefault);
+}
+
+void
+nsSynthVoiceRegistry::RecvIsSpeakingChanged(bool aIsSpeaking)
+{
+  // If we dont have a local instance of the registry yet, we will get the
+  // speaking state on construction.
+  if(!gSynthVoiceRegistry) {
+    return;
+  }
+
+  gSynthVoiceRegistry->mIsSpeaking = aIsSpeaking;
 }
 
 NS_IMETHODIMP
@@ -603,10 +657,7 @@ nsSynthVoiceRegistry::Speak(const nsAString& aText,
                             const float& aPitch,
                             nsSpeechTask* aTask)
 {
-  LOG(LogLevel::Debug,
-      ("nsSynthVoiceRegistry::Speak text='%s' lang='%s' uri='%s' rate=%f pitch=%f",
-       NS_ConvertUTF16toUTF8(aText).get(), NS_ConvertUTF16toUTF8(aLang).get(),
-       NS_ConvertUTF16toUTF8(aUri).get(), aRate, aPitch));
+  MOZ_ASSERT(XRE_IsParentProcess());
 
   VoiceData* voice = FindBestMatch(aUri, aLang);
 
@@ -618,24 +669,132 @@ nsSynthVoiceRegistry::Speak(const nsAString& aText,
 
   aTask->SetChosenVoiceURI(voice->mUri);
 
-  LOG(LogLevel::Debug, ("nsSynthVoiceRegistry::Speak - Using voice URI: %s",
-                     NS_ConvertUTF16toUTF8(voice->mUri).get()));
+  if (mUseGlobalQueue || sForceGlobalQueue) {
+    LOG(LogLevel::Debug,
+        ("nsSynthVoiceRegistry::Speak queueing text='%s' lang='%s' uri='%s' rate=%f pitch=%f",
+         NS_ConvertUTF16toUTF8(aText).get(), NS_ConvertUTF16toUTF8(aLang).get(),
+         NS_ConvertUTF16toUTF8(aUri).get(), aRate, aPitch));
+    nsRefPtr<GlobalQueueItem> item = new GlobalQueueItem(voice, aTask, aText,
+                                                         aVolume, aRate, aPitch);
+    mGlobalQueue.AppendElement(item);
+
+    if (mGlobalQueue.Length() == 1) {
+      SpeakImpl(item->mVoice, item->mTask, item->mText, item->mVolume, item->mRate,
+                item->mPitch);
+    }
+  } else {
+    SpeakImpl(voice, aTask, aText, aVolume, aRate, aPitch);
+  }
+}
+
+void
+nsSynthVoiceRegistry::SpeakNext()
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  LOG(LogLevel::Debug,
+      ("nsSynthVoiceRegistry::SpeakNext %d", mGlobalQueue.IsEmpty()));
+
+  SetIsSpeaking(false);
+
+  if (mGlobalQueue.IsEmpty()) {
+    return;
+  }
+
+  mGlobalQueue.RemoveElementAt(0);
+
+  while (!mGlobalQueue.IsEmpty()) {
+    nsRefPtr<GlobalQueueItem> item = mGlobalQueue.ElementAt(0);
+    if (item->mTask->IsPreCanceled()) {
+      mGlobalQueue.RemoveElementAt(0);
+      continue;
+    }
+    if (!item->mTask->IsPrePaused()) {
+      SpeakImpl(item->mVoice, item->mTask, item->mText, item->mVolume,
+                item->mRate, item->mPitch);
+    }
+    break;
+  }
+}
+
+void
+nsSynthVoiceRegistry::ResumeQueue()
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+  LOG(LogLevel::Debug,
+      ("nsSynthVoiceRegistry::ResumeQueue %d", mGlobalQueue.IsEmpty()));
+
+  if (mGlobalQueue.IsEmpty()) {
+    return;
+  }
+
+  nsRefPtr<GlobalQueueItem> item = mGlobalQueue.ElementAt(0);
+  if (!item->mTask->IsPrePaused()) {
+    SpeakImpl(item->mVoice, item->mTask, item->mText, item->mVolume,
+              item->mRate, item->mPitch);
+  }
+}
+
+bool
+nsSynthVoiceRegistry::IsSpeaking()
+{
+  return mIsSpeaking;
+}
+
+void
+nsSynthVoiceRegistry::SetIsSpeaking(bool aIsSpeaking)
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  // Only set to 'true' if global queue is enabled.
+  mIsSpeaking = aIsSpeaking && (mUseGlobalQueue || sForceGlobalQueue);
+
+  nsTArray<SpeechSynthesisParent*> ssplist;
+  GetAllSpeechSynthActors(ssplist);
+  for (uint32_t i = 0; i < ssplist.Length(); ++i) {
+    unused << ssplist[i]->SendIsSpeakingChanged(aIsSpeaking);
+  }
+}
+
+void
+nsSynthVoiceRegistry::DropGlobalQueue()
+{
+  if (XRE_IsParentProcess()) {
+    mGlobalQueue.Clear();
+    SetIsSpeaking(false);
+  } else {
+    mSpeechSynthChild->SendDropGlobalQueue();
+  }
+}
+
+void
+nsSynthVoiceRegistry::SpeakImpl(VoiceData* aVoice,
+                                nsSpeechTask* aTask,
+                                const nsAString& aText,
+                                const float& aVolume,
+                                const float& aRate,
+                                const float& aPitch)
+{
+  LOG(LogLevel::Debug,
+      ("nsSynthVoiceRegistry::SpeakImpl queueing text='%s' uri='%s' rate=%f pitch=%f",
+       NS_ConvertUTF16toUTF8(aText).get(), NS_ConvertUTF16toUTF8(aVoice->mUri).get(),
+       aRate, aPitch));
 
   SpeechServiceType serviceType;
 
-  DebugOnly<nsresult> rv = voice->mService->GetServiceType(&serviceType);
+  DebugOnly<nsresult> rv = aVoice->mService->GetServiceType(&serviceType);
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to get speech service type");
 
   if (serviceType == nsISpeechService::SERVICETYPE_INDIRECT_AUDIO) {
-    aTask->SetIndirectAudio(true);
+    aTask->Init(nullptr);
   } else {
     if (!mStream) {
       mStream = MediaStreamGraph::GetInstance()->CreateTrackUnionStream(nullptr);
     }
-    aTask->BindStream(mStream);
+    aTask->Init(mStream);
   }
 
-  voice->mService->Speak(aText, voice->mUri, aVolume, aRate, aPitch, aTask);
+  aVoice->mService->Speak(aText, aVoice->mUri, aVolume, aRate, aPitch, aTask);
 }
 
 } // namespace dom
