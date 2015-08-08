@@ -81,7 +81,11 @@ nsHTMLEditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
   // Contenteditable should disregard mousedowns outside it.
   // IsAcceptableInputEvent() checks it for a mouse event.
   if (!htmlEditor->IsAcceptableInputEvent(aMouseEvent)) {
-    return NS_OK;
+    // If it's not acceptable mousedown event (including when mousedown event
+    // is fired outside of the active editing host), we need to commit
+    // composition because it will be change the selection to the clicked
+    // point.  Then, we won't be able to commit the composition.
+    return nsEditorEventListener::MouseDown(aMouseEvent);
   }
 
   // Detect only "context menu" click
