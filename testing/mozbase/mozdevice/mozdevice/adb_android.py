@@ -18,12 +18,13 @@ class ADBAndroidMixin(object):
     def get_battery_percentage(self, timeout=None):
         """Returns the battery charge as a percentage.
 
-        :param timeout: optional integer specifying the maximum time in
+        :param timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
+        :type timeout: integer or None
         :returns: battery charge as a percentage.
         :raises: * ADBTimeoutError
                  * ADBError
@@ -57,12 +58,13 @@ class ADBAndroidMixin(object):
         This method uses the android only package manager to check for
         readiness.
 
-        :param timeout: optional integer specifying the maximum time
+        :param timeout: The maximum time
             in seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
+        :type timeout: integer or None
         :raises: * ADBTimeoutError
                  * ADBError
 
@@ -109,12 +111,13 @@ class ADBAndroidMixin(object):
     def power_on(self, timeout=None):
         """Sets the device's power stayon value.
 
-        :param timeout: optional integer specifying the maximum time in
+        :param timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
+        :type timeout: integer or None
         :raises: * ADBTimeoutError
                  * ADBError
 
@@ -134,12 +137,13 @@ class ADBAndroidMixin(object):
         This method uses the Android only package manager to determine
         if the device is ready after the reboot.
 
-        :param timeout: optional integer specifying the maximum time in
+        :param timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
+        :type timeout: integer or None
         :raises: * ADBTimeoutError
                  * ADBError
 
@@ -157,14 +161,14 @@ class ADBAndroidMixin(object):
     def install_app(self, apk_path, timeout=None):
         """Installs an app on the device.
 
-        :param apk_path: string containing the apk file name to be
-            installed.
-        :param timeout: optional integer specifying the maximum time in
+        :param str apk_path: The apk file name to be installed.
+        :param timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
+        :type timeout: integer or None
         :raises: * ADBTimeoutError
                  * ADBError
 
@@ -177,14 +181,14 @@ class ADBAndroidMixin(object):
     def is_app_installed(self, app_name, timeout=None):
         """Returns True if an app is installed on the device.
 
-        :param app_name: string containing the name of the app to be
-            checked.
-        :param timeout: optional integer specifying the maximum time in
+        :param str app_name: The name of the app to be checked.
+        :param timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
+        :type timeout: integer or None
         :raises: * ADBTimeoutError
                  * ADBError
 
@@ -202,21 +206,24 @@ class ADBAndroidMixin(object):
                           timeout=None):
         """Launches an Android application
 
-        :param app_name: Name of application (e.g. `com.android.chrome`)
-        :param activity_name: Name of activity to launch (e.g. `.Main`)
-        :param intent: Intent to launch application with
+        :param str app_name: Name of application (e.g. `com.android.chrome`)
+        :param str activity_name: Name of activity to launch (e.g. `.Main`)
+        :param str intent: Intent to launch application with
         :param url: URL to open
-        :param extras: Dictionary of extra arguments for application.
-        :param wait: If True, wait for application to start before
+        :type url: str or None
+        :param extras: Extra arguments for application.
+        :type extras: dict or None
+        :param bool wait: If True, wait for application to start before
             returning.
-        :param fail_if_running: Raise an exception if instance of
+        :param bool fail_if_running: Raise an exception if instance of
             application is already running.
-        :param timeout: optional integer specifying the maximum time in
+        :param timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
+        :type timeout: integer or None
         :raises: * ADBTimeoutError
                  * ADBError
 
@@ -257,23 +264,27 @@ class ADBAndroidMixin(object):
         """Convenience method to launch Fennec on Android with various
         debugging arguments
 
-        :param app_name: Name of fennec application (e.g.
+        :param str app_name: Name of fennec application (e.g.
             `org.mozilla.fennec`)
-        :param intent: Intent to launch application.
+        :param str intent: Intent to launch application.
         :param moz_env: Mozilla specific environment to pass into
             application.
+        :type moz_env: str or None
         :param extra_args: Extra arguments to be parsed by fennec.
+        :type extra_args: str or None
         :param url: URL to open
-        :param wait: If True, wait for application to start before
-            returning
-        :param fail_if_running: Raise an exception if instance of
-            application is already running
-        :param timeout: optional integer specifying the maximum time in
+        :type url: str or None
+        :param bool wait: If True, wait for application to start before
+            returning.
+        :param bool fail_if_running: Raise an exception if instance of
+            application is already running.
+        :param timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
+        :type timeout: integer or None
         :raises: * ADBTimeoutError
                  * ADBError
 
@@ -304,13 +315,16 @@ class ADBAndroidMixin(object):
         by the app repeatedly until none is around any more. This is
         less reliable and does require root.
 
-        :param app_name: Name of application (e.g. `com.android.chrome`)
-        :param timeout: optional integer specifying the maximum time in
+        :param str app_name: Name of application (e.g. `com.android.chrome`)
+        :param timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
+        :type timeout: integer or None
+        :param bool root: Flag specifying if the command should be
+            executed as root.
         :raises: * ADBTimeoutError
                  * ADBError
 
@@ -339,17 +353,18 @@ class ADBAndroidMixin(object):
     def uninstall_app(self, app_name, reboot=False, timeout=None):
         """Uninstalls an app on the device.
 
-        :param app_name: string containing the name of the app to be
+        :param str app_name: The name of the app to be
             uninstalled.
-        :param reboot: boolean flag indicating that the device should
+        :param bool reboot: Flag indicating that the device should
             be rebooted after the app is uninstalled. No reboot occurs
             if the app is not installed.
-        :param timeout: optional integer specifying the maximum time in
+        :param timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
+        :type timeout: integer or None
         :raises: * ADBTimeoutError
                  * ADBError
 
@@ -365,14 +380,15 @@ class ADBAndroidMixin(object):
     def update_app(self, apk_path, timeout=None):
         """Updates an app on the device and reboots.
 
-        :param apk_path: string containing the apk file name to be
+        :param str apk_path: The apk file name to be
             updated.
-        :param timeout: optional integer specifying the maximum time in
+        :param timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
+        :type timeout: integer or None
         :raises: * ADBTimeoutError
                  * ADBError
 
