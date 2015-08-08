@@ -145,7 +145,7 @@ function convertLegacyData (legacyData) {
     frames: [],
     memory: [],
     ticks: ticksData,
-    allocations: { sites: [], timestamps: [], frames: [], counts: [] },
+    allocations: { sites: [], timestamps: [], frames: [] },
     profile: profilerData.profile,
     // Fake a configuration object here if there's tick data,
     // so that it can be rendered

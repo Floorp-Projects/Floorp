@@ -454,3 +454,8 @@ function escapeKeyHandler() {
   }
   window.close();
 }
+
+function OpenMigrator() {
+  const { MigrationUtils } = Cu.import("resource:///modules/MigrationUtils.jsm", {});
+  MigrationUtils.showMigrationWizard(window);
+}

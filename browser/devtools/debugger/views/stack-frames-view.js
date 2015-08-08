@@ -243,8 +243,7 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   _mirror: null,
-  _prevBlackBoxedUrl: null,
-  _popupset: null
+  _prevBlackBoxedUrl: null
 });
 
 DebuggerView.StackFrames = new StackFramesView(DebuggerController, DebuggerView);

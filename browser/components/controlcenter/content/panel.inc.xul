@@ -59,11 +59,11 @@
                        value="&trackingProtection.title;" />
 
           <label id="tracking-blocked"
-                 crop="end">&trackingProtection.detectedBlocked2;</label>
+                 crop="end">&trackingProtection.detectedBlocked3;</label>
           <label id="tracking-loaded"
-                 crop="end">&trackingProtection.detectedNotBlocked2;</label>
+                 crop="end">&trackingProtection.detectedNotBlocked3;</label>
           <label id="tracking-not-detected"
-                 crop="end">&trackingProtection.notDetected2;</label>
+                 crop="end">&trackingProtection.notDetected3;</label>
 
           <button id="tracking-action-unblock"
                   label="&trackingProtection.unblock.label;"

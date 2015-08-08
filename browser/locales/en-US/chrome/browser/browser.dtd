@@ -806,9 +806,9 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY mixedContentBlocked2.disabled.message "Protection is disabled">
 
 <!ENTITY trackingProtection.title "Tracking Protection">
-<!ENTITY trackingProtection.detectedBlocked2 "&brandShortName; is blocking attempts to track your browsing.">
-<!ENTITY trackingProtection.detectedNotBlocked2 "This site includes content that tracks your browsing. You have disabled protection.">
-<!ENTITY trackingProtection.notDetected2 "This site doesn’t include any content that tracks your browsing.">
+<!ENTITY trackingProtection.detectedBlocked3 "&brandShortName; is blocking parts of the page that may track your browsing.">
+<!ENTITY trackingProtection.detectedNotBlocked3 "This site includes elements that may track your browsing. You have disabled protection.">
+<!ENTITY trackingProtection.notDetected3 "No tracking elements detected on this page.">
 <!-- LOCALIZATION NOTE (trackingProtection.unblock.label, trackingProtection.unblock.accesskey):
      The associated button with this label and accesskey is only shown when opening the control
      center while looking at a site with trackers in NON-private browsing mode. -->

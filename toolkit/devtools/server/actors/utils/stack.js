@@ -17,7 +17,6 @@ let StackFrameCache = Class({
    * Initialize this object.
    */
   initialize: function() {
-    this._framesToCounts = null;
     this._framesToIndices = null;
     this._framesToForms = null;
     this._lastEventSize = 0;
@@ -27,12 +26,11 @@ let StackFrameCache = Class({
    * Prepare to accept frames.
    */
   initFrames: function() {
-    if (this._framesToCounts) {
+    if (this._framesToIndices) {
       // The maps are already initialized.
       return;
     }
 
-    this._framesToCounts = new Map();
     this._framesToIndices = new Map();
     this._framesToForms = new Map();
     this._lastEventSize = 0;
@@ -42,8 +40,6 @@ let StackFrameCache = Class({
    * Forget all stored frames and reset to the initialized state.
    */
   clearFrames: function() {
-    this._framesToCounts.clear();
-    this._framesToCounts = null;
     this._framesToIndices.clear();
     this._framesToIndices = null;
     this._framesToForms.clear();
@@ -58,16 +54,14 @@ let StackFrameCache = Class({
   addFrame: function(frame) {
     this._assignFrameIndices(frame);
     this._createFrameForms(frame);
-    this._countFrame(frame);
     return this._framesToIndices.get(frame);
   },
 
   /**
    * A helper method for the memory actor.  This populates the packet
-   * object with "frames" and "counts" properties.  Each of these
+   * object with "frames" property. Each of these
    * properties will be an array indexed by frame ID.  "frames" will
-   * contain frame objects (see makeEvent) and "counts" will hold
-   * allocation counts for each frame.
+   * contain frame objects (see makeEvent).
    *
    * @param packet
    *        The packet to update.
@@ -80,12 +74,10 @@ let StackFrameCache = Class({
     // create dense arrays even though we populate them out of order.
     const size = this._framesToForms.size;
     packet.frames = Array(size).fill(null);
-    packet.counts = Array(size).fill(0);
 
-    // Populate the "frames" and "counts" properties.
+    // Populate the "frames" properties.
     for (let [stack, index] of this._framesToIndices) {
       packet.frames[index] = this._framesToForms.get(stack);
-      packet.counts[index] = this._framesToCounts.get(stack) || 0;
     }
 
     return packet;
@@ -188,21 +180,6 @@ let StackFrameCache = Class({
 
     this._framesToForms.set(frame, form);
   },
-
-  /**
-   * Increment the allocation count for the provided frame.
-   *
-   * @param SavedFrame frame
-   *        The frame whose allocation count should be incremented.
-   */
-  _countFrame: function(frame) {
-    if (!this._framesToCounts.has(frame)) {
-      this._framesToCounts.set(frame, 1);
-    } else {
-      let count = this._framesToCounts.get(frame);
-      this._framesToCounts.set(frame, count + 1);
-    }
-  }
 });
 
 exports.StackFrameCache = StackFrameCache;

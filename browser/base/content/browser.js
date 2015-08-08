@@ -7916,9 +7916,10 @@ let AboutPrivateBrowsingListener = {
         OpenBrowserWindow({private: true});
     });
     window.messageManager.addMessageListener(
-      "AboutPrivateBrowsing:EnableTrackingProtection",
+      "AboutPrivateBrowsing:ToggleTrackingProtection",
       msg => {
-        Services.prefs.setBoolPref("privacy.trackingprotection.pbmode.enabled", true);
+        const PREF = "privacy.trackingprotection.pbmode.enabled";
+        Services.prefs.setBoolPref(PREF, !Services.prefs.getBoolPref(PREF));
     });
   }
 };

@@ -2635,10 +2635,6 @@ public class BrowserApp extends GeckoApp
     }
 
     private void showFirstrunPager() {
-        // Do not show first run if we're in an Android Restricted Profile
-        if (RestrictedProfiles.isUserRestricted(this)) {
-            return;
-        }
         if (mFirstrunPane == null) {
             final ViewStub firstrunPagerStub = (ViewStub) findViewById(R.id.firstrun_pager_stub);
             mFirstrunPane = (FirstrunPane) firstrunPagerStub.inflate();
@@ -2854,8 +2850,10 @@ public class BrowserApp extends GeckoApp
 
         @Override
         public boolean onInterceptTouchEvent(View view, MotionEvent event) {
-            // Only try to hide the button toast if it's already inflated.
-            if (mToast != null) {
+            // Only try to hide the button toast if it's already inflated and if we are starting a tap action.
+            // By only hiding a toast at the start of a tap action, a button toast opened in response to a tap
+            // action is not immediately hidden as the tap action continues.
+            if (event.getActionMasked() == MotionEvent.ACTION_DOWN && mToast != null) {
                 mToast.hide(false, ButtonToast.ReasonHidden.TOUCH_OUTSIDE);
             }
 

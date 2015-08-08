@@ -30,6 +30,11 @@
 
   <color name="url_bar_shadow_private">#7878A5</color>
 
+  <!-- Restricted profiles palette -->
+
+  <color name="restricted_profile_background_gold">#ffffcb51</color>
+  <color name="restricted_profile_background_green">#1aaa86</color>
+
   <!-- Non-palette colors -->
 
   <!-- Synced w/ toolbar_grey -->
