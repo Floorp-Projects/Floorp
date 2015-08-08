@@ -29,6 +29,7 @@ const malwareLists = getLists("urlclassifier.malwareTable");
 const downloadBlockLists = getLists("urlclassifier.downloadBlockTable");
 const downloadAllowLists = getLists("urlclassifier.downloadAllowTable");
 const trackingProtectionLists = getLists("urlclassifier.trackingTable");
+const trackingProtectionWhitelists = getLists("urlclassifier.trackingWhitelistTable");
 
 var debug = false;
 function log(...stuff) {
@@ -70,6 +71,11 @@ this.SafeBrowsing = {
     }
     for (let i = 0; i < trackingProtectionLists.length; ++i) {
       listManager.registerTable(trackingProtectionLists[i],
+                                this.trackingUpdateURL,
+                                this.trackingGethashURL);
+    }
+    for (let i = 0; i < trackingProtectionWhitelists.length; ++i) {
+      listManager.registerTable(trackingProtectionWhitelists[i],
                                 this.trackingUpdateURL,
                                 this.trackingGethashURL);
     }
@@ -200,8 +206,10 @@ this.SafeBrowsing = {
     for (let i = 0; i < trackingProtectionLists.length; ++i) {
       if (this.trackingEnabled) {
         listManager.enableUpdate(trackingProtectionLists[i]);
+        listManager.enableUpdate(trackingProtectionWhitelists[i]);
       } else {
         listManager.disableUpdate(trackingProtectionLists[i]);
+        listManager.disableUpdate(trackingProtectionWhitelists[i]);
       }
     }
     listManager.maybeToggleUpdateChecking();
@@ -214,25 +222,30 @@ this.SafeBrowsing = {
     const phishURL    = "itisatrap.org/firefox/its-a-trap.html";
     const malwareURL  = "itisatrap.org/firefox/its-an-attack.html";
     const unwantedURL = "itisatrap.org/firefox/unwanted.html";
-    const trackerURLs  = [
+    const trackerURLs = [
       "trackertest.org/",
       "itisatracker.org/",
     ];
+    const whitelistURL = "itisatrap.org/?resource=itisatracker.org";
 
     let update = "n:1000\ni:test-malware-simple\nad:1\n" +
                  "a:1:32:" + malwareURL.length + "\n" +
-                 malwareURL;
+                 malwareURL + "\n";
     update += "n:1000\ni:test-phish-simple\nad:1\n" +
               "a:1:32:" + phishURL.length + "\n" +
-              phishURL;
+              phishURL  + "\n";
     update += "n:1000\ni:test-unwanted-simple\nad:1\n" +
               "a:1:32:" + unwantedURL.length + "\n" +
-              unwantedURL;
+              unwantedURL + "\n";
+    update += "n:1000\ni:test-track-simple\n" +
+              "ad:" + trackerURLs.length + "\n";
     trackerURLs.forEach((trackerURL, i) => {
-      update += "n:1000\ni:test-track-simple\nad:1\n" +
-                "a:" + (i + 1) + ":32:" + trackerURL.length + "\n" +
-                trackerURL;
+      update += "a:" + (i + 1) + ":32:" + trackerURL.length + "\n" +
+                trackerURL + "\n";
     });
+    update += "n:1000\ni:test-trackwhite-simple\nad:1\n" +
+              "a:1:32:" + whitelistURL.length + "\n" +
+              whitelistURL;
     log("addMozEntries:", update);
 
     let db = Cc["@mozilla.org/url-classifier/dbservice;1"].
@@ -247,7 +260,7 @@ this.SafeBrowsing = {
     };
 
     try {
-      let tables = "test-malware-simple,test-phish-simple,test-unwanted-simple,test-track-simple";
+      let tables = "test-malware-simple,test-phish-simple,test-unwanted-simple,test-track-simple,test-trackwhite-simple";
       db.beginUpdate(dummyListener, tables, "");
       db.beginStream("", "");
       db.updateStream(update);
