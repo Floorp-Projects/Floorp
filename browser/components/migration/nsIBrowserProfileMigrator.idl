@@ -8,7 +8,7 @@
 interface nsIArray;
 interface nsIProfileStartup;
 
-[scriptable, uuid(30e5a7ec-f71e-4f41-9dbd-7429c02132ec)]
+[scriptable, uuid(22b56ffc-3149-43c5-b5a9-b3a6b678de93)]
 interface nsIBrowserProfileMigrator : nsISupports
 {
   /**
@@ -43,16 +43,16 @@ interface nsIBrowserProfileMigrator : nsISupports
    */
   unsigned short getMigrateData(in jsval aProfile, in boolean aDoingStartup);
 
-  /** 
-   * Whether or not there is any data that can be imported from this 
+  /**
+   * Whether or not there is any data that can be imported from this
    * browser (i.e. whether or not it is installed, and there exists
    * a user profile)
    */
   readonly attribute boolean          sourceExists;
 
 
-  /** 
-   * An enumeration of available profiles. If the import source does 
+  /**
+   * An enumeration of available profiles. If the import source does
    * not support profiles, this attribute is null.
    */
   readonly attribute jsval            sourceProfiles;
@@ -61,4 +61,11 @@ interface nsIBrowserProfileMigrator : nsISupports
    * The import source homepage.  Returns null if not present/available
    */
   readonly attribute AUTF8String      sourceHomePageURL;
+
+
+  /**
+   * Whether the source browser data is locked/in-use meaning migration likely
+   * won't succeed and the user should be warned.
+   */
+  readonly attribute boolean          sourceLocked;
 };

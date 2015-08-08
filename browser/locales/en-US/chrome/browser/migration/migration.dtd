@@ -43,3 +43,4 @@
 <!ENTITY done.title                     "Import Complete">
 <!ENTITY done.label                     "The following items were successfully imported:">
 
+<!ENTITY closeSourceBrowser.label       "Please ensure the selected browser is closed before continuing.">
