@@ -79,10 +79,12 @@
 .equ CONFIG_COEFFICIENT_RANGE_CHECKING ,  0
 .equ CONFIG_VP9_HIGHBITDEPTH ,  0
 .equ CONFIG_EXPERIMENTAL ,  0
-.equ CONFIG_SIZE_LIMIT ,  0
+.equ CONFIG_SIZE_LIMIT ,  1
 .equ CONFIG_SPATIAL_SVC ,  0
 .equ CONFIG_FP_MB_STATS ,  0
 .equ CONFIG_EMULATE_HARDWARE ,  0
+.equ DECODE_WIDTH_LIMIT ,  4000
+.equ DECODE_HEIGHT_LIMIT ,  3000
 	.section	.note.GNU-stack,"",%progbits
 @ This file was created from a .asm file
 @  using the ads2gas.pl script.
