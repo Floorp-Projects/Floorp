@@ -90,6 +90,8 @@ public:
 
   virtual void Cancel() override;
 
+  virtual void ForceEnd() override;
+
 private:
   SpeechSynthesisRequestChild* mActor;
 };

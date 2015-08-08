@@ -25,5 +25,6 @@ interface SpeechSynthesis {
   sequence<SpeechSynthesisVoice> getVoices();
 
   [ChromeOnly]
-  void dropGlobalQueue();
+  // Force an utterance to end. Circumvents bad speech service implementations.
+  void forceEnd();
 };
