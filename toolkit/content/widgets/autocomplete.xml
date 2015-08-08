@@ -1386,18 +1386,20 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             // This property is a string that is read aloud by screen readers,
             // so it must not contain anything that should not be user-facing.
 
-            var title = this.getAttribute("title");
-            var url = this.getAttribute("url");
-            var panel = this.parentNode.parentNode;
+            let parts = [
+              this.getAttribute("title"),
+              this.getAttribute("url"),
+            ];
+            let label = parts.filter(str => str).join(" ")
 
             // allow consumers that have extended popups to override
             // the label values for the richlistitems
+            let panel = this.parentNode.parentNode;
             if (panel.createResultLabel) {
-              let types = this.getAttribute("type").split(/\s+/);
-              return panel.createResultLabel(title, url, types);
+              return panel.createResultLabel(this, label);
             }
 
-            return title + " " + url;
+            return label;
           ]]>
         </getter>
       </property>

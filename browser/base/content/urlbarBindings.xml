@@ -1793,20 +1793,39 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       </method>
 
       <method name="createResultLabel">
-        <parameter name="aTitle"/>
-        <parameter name="aUrl"/>
-        <parameter name="aTypes"/>
+        <parameter name="item"/>
+        <parameter name="proposedLabel"/>
         <body>
           <![CDATA[
-            let label = aTitle + " " + aUrl;
-            let type = aTypes.find(v => v != "action" && v != "heuristic");
+            let parts = [proposedLabel];
+
+            let action = this.mInput._parseActionUrl(item.getAttribute("url"));
+            if (action) {
+              switch (action.type) {
+              case "searchengine":
+                parts = [
+                  action.params.searchSuggestion || action.params.searchQuery,
+                  action.params.engineName,
+                ];
+                break;
+              case "switchtab":
+                parts = [
+                  item.getAttribute("title"),
+                  action.params.url,
+                ];
+                break;
+              }
+            }
+
+            let types = item.getAttribute("type").split(/\s+/);
+            let type = types.find(type => type != "action" && type != "heuristic");
             try {
               // Some types intentionally do not map to strings, which is not
               // an error.
-              label += " " + this._bundle.GetStringFromName(type + "ResultLabel");
+              parts.push(this._bundle.GetStringFromName(type + "ResultLabel"));
             } catch (e) {}
 
-            return label;
+            return parts.filter(str => str).join(" ");
           ]]>
         </body>
       </method>
