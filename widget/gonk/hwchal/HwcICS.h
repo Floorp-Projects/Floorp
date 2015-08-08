@@ -31,8 +31,6 @@ public:
 
     virtual bool HasHwc() const override { return static_cast<bool>(mHwc); }
 
-    virtual const hwc_rect_t GetHwcRect() const override { return {0}; }
-
     virtual void SetEGLInfo(hwc_display_t aEGLDisplay,
                             hwc_surface_t aEGLSurface) override;
 
@@ -45,6 +43,7 @@ public:
 
     virtual int Prepare(HwcList *aList,
                         uint32_t aDisp,
+                        hwc_rect_t aDispRect,
                         buffer_handle_t aHandle,
                         int aFenceFd) override;
 
