@@ -96,11 +96,20 @@ this.UITour = {
   targets: new Map([
     ["accountStatus", {
       query: (aDocument) => {
+        // If the user is logged in, use the avatar element.
+        let fxAFooter = aDocument.getElementById("PanelUI-footer-fxa");
+        if (fxAFooter.getAttribute("fxastatus")) {
+          return aDocument.getElementById("PanelUI-fxa-avatar");
+        }
+
+        // Otherwise use the sync setup icon.
         let statusButton = aDocument.getElementById("PanelUI-fxa-label");
         return aDocument.getAnonymousElementByAttribute(statusButton,
                                                         "class",
                                                         "toolbarbutton-icon");
       },
+      // This is a fake widgetName starting with the "PanelUI-" prefix so we know
+      // to automatically open the appMenu when annotating this target.
       widgetName: "PanelUI-fxa-label",
     }],
     ["addons",      {query: "#add-ons-button"}],
