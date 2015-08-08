@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title> Web packaged app </title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.7">
+
+var Cc = SpecialPowers.Cc;
+var Ci = SpecialPowers.Ci;
+var Cu = SpecialPowers.Cu;
+var Cr = SpecialPowers.Cr;
+var LoadContextInfo = Cu.import("resource://gre/modules/LoadContextInfo.jsm", {}).LoadContextInfo;
+var CommonUtils = Cu.import("resource://services-common/utils.js", {}).CommonUtils;
+
+function CacheCallback(expect) {
+  this.expect = expect || true;
+}
+
+CacheCallback.prototype = {
+  QueryInterface: function(iid) {
+    if (!iid.equals(Ci.nsISupports) &&
+        !iid.equals(Ci.nsICacheEntryOpenCallback)) {
+      throw Cr.NS_ERROR_NO_INTERFACE;
+    }
+    return this;
+  },
+  onCacheEntryCheck: function() { return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED; },
+  onCacheEntryAvailable: function(entry, isnew, applicationCache, status) {
+    is(status, this.expect ? Cr.NS_OK : Cr.NS_ERROR_CACHE_KEY_NOT_FOUND, "check status");
+    is(!!entry, this.expect, "check if entry exists");
+    SpecialPowers.executeSoon(continueTest);
+  }
+};
+
+function checkCacheEntry(url, exists, appId) {
+  var loadContext = appId ? LoadContextInfo.custom(false, false, appId, false) : LoadContextInfo.default;
+  var cacheService = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
+                     .getService(Ci.nsICacheStorageService);
+  var cache = cacheService.diskCacheStorage(loadContext, false);
+  cache.asyncOpenURI(CommonUtils.makeURI(url), "", 0, new CacheCallback(exists));
+}
+
+var gGenerator = runTest();
+
+addLoadEvent(go);
+function go() {
+  SpecialPowers.pushPermissions(
+    [
+     { "type": "webapps-manage", "allow": 1, "context": document },
+     { "type": "embed-apps", "allow": 1, "context": document },
+     { "type": "browser", "allow": 1, "context": document }
+    ],
+    function() {
+      SpecialPowers.pushPrefEnv({"set": [['network.http.enable-packaged-apps', true],
+        ["dom.mozBrowserFramesEnabled", true]]},
+        function() { gGenerator.next(); } );
+    });
+}
+
+function continueTest() {
+  try {
+    gGenerator.next();
+  } catch (e if e instanceof StopIteration) {
+    finish();
+  }
+}
+
+function finish() {
+  SimpleTest.finish();
+}
+
+function cbError(aEvent) {
+  ok(false, "Error callback invoked " +
+            aEvent.target.error.name + " " + aEvent.target.error.message);
+  finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+function runTest() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  // Install the app
+  SpecialPowers.setAllAppsLaunchable(true);
+  var manifestURL = "http://test/tests/dom/apps/tests/file_app.sjs?apptype=hosted&getmanifest=true";
+
+  SpecialPowers.autoConfirmAppInstall(continueTest);
+  yield undefined;
+
+  SpecialPowers.autoConfirmAppUninstall(continueTest);
+  yield undefined;
+
+  var request = navigator.mozApps.install(manifestURL, { });
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+
+  var app = request.result;
+  ok(app, "App is non-null");
+  is(app.manifestURL, manifestURL, "App manifest url is correct.");
+
+  // Get the AppID
+  let appsService = Cc["@mozilla.org/AppsService;1"].getService(Ci.nsIAppsService);
+  let appId = appsService.getAppLocalIdByManifestURL(manifestURL);
+
+  checkCacheEntry("http://mochi.test:8888/tests/netwerk/test/mochitests/web_packaged_app.sjs", false, appId);
+  yield undefined;
+
+  // Check that the entry does not exist
+  checkCacheEntry("http://mochi.test:8888/tests/netwerk/test/mochitests/web_packaged_app.sjs!//index.html", false, appId);
+  yield undefined;
+
+  // Run the app and load a resource from the package
+  runApp(app, continueTest);
+  yield undefined;
+
+  // Check that the cache entry exists after being loaded in the app
+  checkCacheEntry("http://mochi.test:8888/tests/netwerk/test/mochitests/web_packaged_app.sjs!//index.html", true, appId);
+  yield undefined;
+
+  checkCacheEntry("http://mochi.test:8888/tests/netwerk/test/mochitests/web_packaged_app.sjs", true, appId);
+  yield undefined;
+
+  request = navigator.mozApps.mgmt.uninstall(app);
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+  is(request.result, manifestURL, "App uninstalled.");
+
+  // Check that the cache entry went away after uninstalling the app
+  checkCacheEntry("http://mochi.test:8888/tests/netwerk/test/mochitests/web_packaged_app.sjs!//index.html", false, appId);
+  yield undefined;
+
+  checkCacheEntry("http://mochi.test:8888/tests/netwerk/test/mochitests/web_packaged_app.sjs", false);
+  yield undefined;
+
+  // Check that the entry does not exist
+  checkCacheEntry("http://mochi.test:8888/tests/netwerk/test/mochitests/web_packaged_app.sjs!//scripts/app.js", false);
+  yield undefined;
+
+  // Test that we can load a file in an iframe, with default permissions
+  var iframe = document.createElement("iframe");
+  iframe.addEventListener("load", continueTest, false);
+  document.body.appendChild(iframe);
+  iframe.src = "http://mochi.test:8888/tests/netwerk/test/mochitests/web_packaged_app.sjs!//scripts/app.js";
+  yield undefined;
+  ok(iframe.contentWindow.document.body.innerHTML.includes("..."), "This is the right file");
+  document.body.removeChild(iframe);
+
+  checkCacheEntry("http://mochi.test:8888/tests/netwerk/test/mochitests/web_packaged_app.sjs", true);
+  yield undefined;
+
+  // Check that the entry now exists
+  checkCacheEntry("http://mochi.test:8888/tests/netwerk/test/mochitests/web_packaged_app.sjs!//scripts/app.js", true);
+  yield undefined;
+
+  // Test that a fetch works
+  fetch('http://mochi.test:8888/tests/netwerk/test/mochitests/web_packaged_app.sjs!//index.html')
+  .then(function(res) {
+    ok(res.ok, "completed fetch");
+    res.text().then(function(body) {
+      ok(body.includes("Web Packaged App Index"), "correct content");
+      continueTest();
+    }); }
+  , function(e) {
+    ok(false, "error in fetch");
+  });
+  yield undefined;
+
+}
+
+function runApp(aApp, aCallback) {
+  var ifr = document.createElement('iframe');
+  ifr.setAttribute('mozbrowser', 'true');
+  ifr.setAttribute('mozapp', aApp.manifestURL);
+  ifr.src = "web_packaged_app.sjs!//index.html";
+
+  ifr.addEventListener('mozbrowsershowmodalprompt', function onAlert(e) {
+    var message = e.detail.message;
+    info("Got message " + message);
+
+    if (message.startsWith("OK:")) {
+      ok(true, message.substring(3, message.length));
+    } else if (message.startsWith("ERROR:")) {
+      ok(false, message.substring(6, message.length));
+    } else if (message == "DONE") {
+      ok(true, "Done test");
+      ifr.removeEventListener('mozbrowsershowmodalprompt', onAlert, false);
+      document.body.removeChild(ifr);
+      continueTest();
+    }
+  }, false);
+
+  document.body.appendChild(ifr);
+}
+
+</script>
+</pre>
+</body>
+</html>
