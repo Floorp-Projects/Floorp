@@ -133,6 +133,12 @@ function showInfoPromise(...args) {
   return promisePanelElementShown(window, popup);
 }
 
+function showHighlightPromise(...args) {
+  let popup = document.getElementById("UITourHighlightContainer");
+  gContentAPI.showHighlight.apply(gContentAPI, args);
+  return promisePanelElementShown(window, popup);
+}
+
 function showMenuPromise(name) {
   return new Promise(resolve => {
     gContentAPI.showMenu(name, () => resolve());
