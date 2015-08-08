@@ -99,7 +99,6 @@ class MachCommands(MachCommandBase):
 
         srcdir('preprocessed_resources/build.gradle', 'mobile/android/gradle/preprocessed_resources/build.gradle')
         srcdir('preprocessed_resources/src/main/AndroidManifest.xml', 'mobile/android/gradle/preprocessed_resources/AndroidManifest.xml')
-        objdir('preprocessed_resources/src/main/res', 'mobile/android/base/res')
 
         srcdir('thirdparty/build.gradle', 'mobile/android/gradle/thirdparty/build.gradle')
         srcdir('thirdparty/src/main/AndroidManifest.xml', 'mobile/android/gradle/thirdparty/AndroidManifest.xml')
