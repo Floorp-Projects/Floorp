@@ -123,6 +123,48 @@ testEquality()
   MOZ_RELEASE_ASSERT(v6 == v6);
 }
 
+struct Describer
+{
+  static const char* little;
+  static const char* medium;
+  static const char* big;
+
+  using ReturnType = const char*;
+
+  const char* match(const uint8_t&) { return little; }
+  const char* match(const uint32_t&) { return medium; }
+  const char* match(const uint64_t&) { return big; }
+};
+
+const char* Describer::little = "little";
+const char* Describer::medium = "medium";
+const char* Describer::big = "big";
+
+static void
+testMatching()
+{
+  printf("testMatching\n");
+  using V = Variant<uint8_t, uint32_t, uint64_t>;
+
+  Describer desc;
+
+  V v1(uint8_t(1));
+  V v2(uint32_t(2));
+  V v3(uint64_t(3));
+
+  MOZ_RELEASE_ASSERT(v1.match(desc) == Describer::little);
+  MOZ_RELEASE_ASSERT(v2.match(desc) == Describer::medium);
+  MOZ_RELEASE_ASSERT(v3.match(desc) == Describer::big);
+
+  const V& constRef1 = v1;
+  const V& constRef2 = v2;
+  const V& constRef3 = v3;
+
+  MOZ_RELEASE_ASSERT(constRef1.match(desc) == Describer::little);
+  MOZ_RELEASE_ASSERT(constRef2.match(desc) == Describer::medium);
+  MOZ_RELEASE_ASSERT(constRef3.match(desc) == Describer::big);
+}
+
 int
 main()
 {
@@ -131,6 +173,7 @@ main()
   testMove();
   testDestructor();
   testEquality();
+  testMatching();
 
   printf("TestVariant OK!\n");
   return 0;

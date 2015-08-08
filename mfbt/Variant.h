@@ -117,9 +117,14 @@ struct VariantImplementation<N, T> {
 
   template<typename Variant>
   static bool
-  equal(const Variant& aLhs, const Variant& aRhs)
-  {
+  equal(const Variant& aLhs, const Variant& aRhs) {
       return aLhs.template as<T>() == aRhs.template as<T>();
+  }
+
+  template<typename Matcher, typename ConcreteVariant>
+  static typename Matcher::ReturnType
+  match(Matcher& aMatcher, ConcreteVariant& aV) {
+    return aMatcher.match(aV.template as<T>());
   }
 };
 
@@ -169,6 +174,27 @@ struct VariantImplementation<N, T, Ts...>
       return aLhs.template as<T>() == aRhs.template as<T>();
     } else {
       return Next::equal(aLhs, aRhs);
+    }
+  }
+
+  template<typename Matcher, typename ConcreteVariant>
+  static typename Matcher::ReturnType
+  match(Matcher& aMatcher, ConcreteVariant& aV)
+  {
+    if (aV.template is<T>()) {
+      return aMatcher.match(aV.template as<T>());
+    } else {
+      // If you're seeing compilation errors here like "no matching
+      // function for call to 'match'" then that means that the
+      // Matcher doesn't exhaust all variant types. There must exist a
+      // Matcher::match(T&) for every variant type T.
+      //
+      // If you're seeing compilation errors here like "cannot
+      // initialize return object of type <...> with an rvalue of type
+      // <...>" then that means that the Matcher::match(T&) overloads
+      // are returning different types. They must all return the same
+      // Matcher::ReturnType type.
+      return Next::match(aMatcher, aV);
     }
   }
 };
@@ -228,6 +254,36 @@ struct VariantImplementation<N, T, Ts...>
  *
  *     Variant<UniquePtr<A>, B, C> v(MakeUnique<A>());
  *     auto ptr = v.extract<UniquePtr<A>>();
+ *
+ * Finally, you can exhaustively match on the contained variant and branch into
+ * different code paths depending which type is contained. This is preferred to
+ * manually checking every variant type T with is<T>() because it provides
+ * compile-time checking that you handled every type, rather than runtime
+ * assertion failures.
+ *
+ *     // Bad!
+ *     char* foo(Variant<A, B, C, D>& v) {
+ *       if (v.is<A>()) {
+ *         return ...;
+ *       } else if (v.is<B>()) {
+ *         return ...;
+ *       } else {
+ *         return doSomething(v.as<C>()); // Forgot about case D!
+ *       }
+ *     }
+ *
+ *     // Good!
+ *     struct FooMatcher
+ *     {
+ *       using ReturnType = char*;
+ *       ReturnType match(A& a) { ... }
+ *       ReturnType match(B& b) { ... }
+ *       ReturnType match(C& c) { ... }
+ *       ReturnType match(D& d) { ... } // Compile-time error to forget D!
+ *     }
+ *     char* foo(Variant<A, B, C, D>& v) {
+ *       return v.match(FooMatcher());
+ *     }
  *
  * ## Examples
  *
@@ -380,6 +436,22 @@ public:
                   "provided a type not found in this Variant's type list");
     MOZ_ASSERT(is<T>());
     return T(Move(as<T>()));
+  }
+
+  // Exhaustive matching of all variant types no the contained value.
+
+  /** Match on an immutable const reference. */
+  template<typename Matcher>
+  typename Matcher::ReturnType
+  match(Matcher& aMatcher) const {
+    return Impl::match(aMatcher, *this);
+  }
+
+  /**  Match on a mutable non-const reference. */
+  template<typename Matcher>
+  typename Matcher::ReturnType
+  match(Matcher& aMatcher) {
+    return Impl::match(aMatcher, *this);
   }
 };
 
