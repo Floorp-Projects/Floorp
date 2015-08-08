@@ -127,6 +127,16 @@
                 label="&debuggerUI.autoPrettyPrint;"
                 accesskey="&debuggerUI.autoPrettyPrint.accesskey;"
                 command="toggleAutoPrettyPrint"/>
+      <menuitem id="pause-on-exceptions"
+                type="checkbox"
+                label="&debuggerUI.pauseExceptions;"
+                accesskey="&debuggerUI.pauseExceptions.accesskey;"
+                command="togglePauseOnExceptions"/>
+      <menuitem id="ignore-caught-exceptions"
+                type="checkbox"
+                label="&debuggerUI.ignoreCaughtExceptions;"
+                accesskey="&debuggerUI.ignoreCaughtExceptions.accesskey;"
+                command="toggleIgnoreCaughtExceptions"/>
       <menuitem id="show-panes-on-startup"
                 type="checkbox"
                 label="&debuggerUI.showPanesOnInit;"
@@ -338,9 +348,6 @@
                                class="devtools-toolbarbutton"
                                tooltiptext="&debuggerUI.sources.toggleBreakpoints;"
                                command="toggleBreakpointsCommand"/>
-                <toolbarbutton id="toggle-pause-exceptions"
-                               class="devtools-toolbarbutton"
-                               command="togglePauseOnExceptionsCommand"/>
                 <toolbarbutton id="toggle-promise-debugger"
                                class="devtools-toolbarbutton"
                                tooltiptext="&debuggerUI.sources.togglePromiseDebugger;"
