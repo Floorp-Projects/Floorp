@@ -12,6 +12,7 @@
   --tab-separator-image: url(chrome://browser/skin/tabbrowser/tab-separator.png);
   --tab-separator-size: 3px 100%;
   --tab-separator-opacity: 1;
+  --tab-stroke-background-size: auto 100%;
 }
 
 %define tabCurveWidth 30px
@@ -251,7 +252,7 @@
                     @fgTabTexture@,
                     none;
   background-repeat: repeat-x;
-  background-size: auto 100%;
+  background-size: var(--tab-stroke-background-size), auto 100%;
   /* The padding-top combined with background-clip: content-box (the bottom-most) ensure the
      background-color doesn't extend above the top border. */
   padding-top: 2px;
@@ -265,7 +266,7 @@
                     @fgTabTextureLWT@;/*,
                     lwtHeader;*/
   /* Don't stretch the LWT header images */
-  background-size: auto 100%, auto 100%, auto auto;
+  background-size: var(--tab-stroke-background-size), auto 100%, auto auto;
 }
 
 /* These LWT styles are normally overridden by browser-lightweightTheme.css */
