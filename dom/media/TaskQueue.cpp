@@ -62,7 +62,7 @@ TaskQueue::DispatchLocked(already_AddRefed<nsIRunnable> aRunnable,
   if (mIsRunning) {
     return NS_OK;
   }
-  RefPtr<nsIRunnable> runner(new Runner(this));
+  nsRefPtr<nsIRunnable> runner(new Runner(this));
   nsresult rv = mPool->Dispatch(runner, NS_DISPATCH_NORMAL);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to dispatch runnable to run TaskQueue");
@@ -145,7 +145,7 @@ TaskQueue::IsCurrentThreadIn()
 nsresult
 TaskQueue::Runner::Run()
 {
-  RefPtr<nsIRunnable> event;
+  nsRefPtr<nsIRunnable> event;
   {
     MonitorAutoLock mon(mQueue->mQueueMonitor);
     MOZ_ASSERT(mQueue->mIsRunning);
