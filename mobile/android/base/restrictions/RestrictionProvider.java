@@ -65,7 +65,6 @@ public class RestrictionProvider extends BroadcastReceiver {
         RestrictionEntry entry = new RestrictionEntry(restriction.name, defaultValue);
 
         entry.setTitle(restriction.getTitle(context));
-        entry.setDescription(restriction.getDescription(context));
 
         return entry;
     }

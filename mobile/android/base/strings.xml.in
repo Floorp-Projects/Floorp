@@ -43,6 +43,7 @@
   <string name="firstrun_welcome_button_account">&onboard_start_button_account;</string>
   <string name="firstrun_welcome_button_browser">&onboard_start_button_browser;</string>
   <string name="firstrun_empty_contentDescription"></string>
+  <string name="firstrun_welcome_restricted">&onboard_start_restricted;</string>
 
   <string name="bookmarks_title">&bookmarks_title;</string>
   <string name="history_title">&history_title;</string>
@@ -477,7 +478,7 @@
   <string name="doorhanger_tracking_state_enabled">&doorhanger_tracking_state_enabled;</string>
   <string name="doorhanger_tracking_state_disabled">&doorhanger_tracking_state_disabled;</string>
   <string name="doorhanger_tracking_message_enabled">&doorhanger_tracking_message_enabled1;</string>
-  <string name="doorhanger_tracking_message_disabled">&doorhanger_tracking_message_disabled1;</string>
+  <string name="doorhanger_tracking_message_disabled">&doorhanger_tracking_message_disabled2;</string>
 
   <string name="learn_more">&learn_more;</string>
   <string name="enable_protection">&enable_protection;</string>
@@ -546,28 +547,16 @@
   <string name="voicesearch_prompt">&voicesearch_prompt;</string>
 
   <!-- Restrictions -->
-  <string name="restriction_disallow_tools_menu_title">&restriction_disallow_tools_menu_title;</string>
-  <string name="restriction_disallow_tools_menu_description">&restriction_disallow_tools_menu_description;</string>
-  <string name="restriction_disallow_import_settings_title">&restriction_disallow_import_settings_title;</string>
-  <string name="restriction_disallow_import_settings_description">&restriction_disallow_import_settings_description;</string>
-  <string name="restriction_disallow_addons_title">&restriction_disallow_addons_title;</string>
-  <string name="restriction_disallow_addons_description">&restriction_disallow_addons_description;</string>
-  <string name="restriction_disallow_devtools_title">&restriction_disallow_devtools_title;</string>
-  <string name="restriction_disallow_devtools_description">&restriction_disallow_devtools_description;</string>
-  <string name="restriction_disallow_customize_home_title">&restriction_disallow_customize_home_title;</string>
-  <string name="restriction_disallow_customize_home_description">&restriction_disallow_customize_home_description;</string>
-  <string name="restriction_disallow_private_browsing_title">&restriction_disallow_private_browsing_title;</string>
-  <string name="restriction_disallow_private_browsing_description">&restriction_disallow_private_browsing_description;</string>
-  <string name="restriction_disallow_location_services_title">&restriction_disallow_location_services_title;</string>
-  <string name="restriction_disallow_location_services_description">&restriction_disallow_location_services_description;</string>
-  <string name="restriction_disallow_display_settings_title">&restriction_disallow_display_settings_title;</string>
-  <string name="restriction_disallow_display_settings_description">&restriction_disallow_display_settings_description;</string>
-  <string name="restriction_disallow_clear_history_title">&restriction_disallow_clear_history_title;</string>
-  <string name="restriction_disallow_clear_history_description">&restriction_disallow_clear_history_description;</string>
-  <string name="restriction_disallow_master_password_title">&restriction_disallow_master_password_title;</string>
-  <string name="restriction_disallow_master_password_description">&restriction_disallow_master_password_description;</string>
-  <string name="restriction_disallow_guest_browsing_title">&restriction_disallow_guest_browsing_title;</string>
-  <string name="restriction_disallow_guest_browsing_description">&restriction_disallow_guest_browsing_description;</string>
+  <string name="restriction_disallow_import_settings_title">&restriction_disallow_import_settings_title2;</string>
+  <string name="restriction_disallow_addons_title">&restriction_disallow_addons_title2;</string>
+  <string name="restriction_disallow_devtools_title">&restriction_disallow_devtools_title2;</string>
+  <string name="restriction_disallow_customize_home_title">&restriction_disallow_customize_home_title2;</string>
+  <string name="restriction_disallow_private_browsing_title">&restriction_disallow_private_browsing_title2;</string>
+  <string name="restriction_disallow_location_services_title">&restriction_disallow_location_services_title2;</string>
+  <string name="restriction_disallow_display_settings_title">&restriction_disallow_display_settings_title2;</string>
+  <string name="restriction_disallow_clear_history_title">&restriction_disallow_clear_history_title2;</string>
+  <string name="restriction_disallow_master_password_title">&restriction_disallow_master_password_title2;</string>
+  <string name="restriction_disallow_guest_browsing_title">&restriction_disallow_guest_browsing_title2;</string>
 
   <!-- Miscellaneous -->
   <string name="ellipsis">&ellipsis;</string>

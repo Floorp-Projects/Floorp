@@ -7,11 +7,11 @@
 <!ENTITY dntTrackingNotOkay4.label     "Request that sites not track you">
 <!ENTITY dntTrackingNotOkay4.accesskey "n">
 <!ENTITY doNotTrackInfo.label          "Learn More">
-<!ENTITY trackingProtection4.label     "Stop sites from tracking you">
-<!ENTITY trackingProtection4.accesskey "m">
+<!ENTITY trackingProtection5.label     "Use Tracking Protection">
+<!ENTITY trackingProtection5.accesskey "m">
 <!ENTITY trackingProtectionLearnMore.label "Learn more">
-<!ENTITY trackingProtectionPBM4.label         "Stop sites from tracking you in Private Windows">
-<!ENTITY trackingProtectionPBM4.accesskey     "y">
+<!ENTITY trackingProtectionPBM5.label         "Use Tracking Protection in Private Windows">
+<!ENTITY trackingProtectionPBM5.accesskey     "y">
 <!ENTITY trackingProtectionPBMLearnMore.label "Learn more">
 
 <!ENTITY  history.label                 "History">
