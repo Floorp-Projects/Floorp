@@ -32,8 +32,6 @@ HwcHAL::HwcHAL()
         printf_stderr("HwcHAL Error: Cannot load hwcomposer");
         return;
     }
-
-    GetHwcAttributes();
 }
 
 HwcHAL::~HwcHAL()
@@ -79,6 +77,7 @@ HwcHAL::ResetHwc()
 int
 HwcHAL::Prepare(HwcList *aList,
                 uint32_t aDisp,
+                hwc_rect_t aDispRect,
                 buffer_handle_t aHandle,
                 int aFenceFd)
 {
@@ -103,8 +102,8 @@ HwcHAL::Prepare(HwcList *aList,
     aList->hwLayers[idx].handle = aHandle;
     aList->hwLayers[idx].blending = HWC_BLENDING_PREMULT;
     aList->hwLayers[idx].compositionType = HWC_FRAMEBUFFER_TARGET;
-    SetCrop(aList->hwLayers[idx], mHwcRect);
-    aList->hwLayers[idx].displayFrame = mHwcRect;
+    SetCrop(aList->hwLayers[idx], aDispRect);
+    aList->hwLayers[idx].displayFrame = aDispRect;
     aList->hwLayers[idx].visibleRegionScreen.numRects = 1;
     aList->hwLayers[idx].visibleRegionScreen.rects = &aList->hwLayers[idx].displayFrame;
     aList->hwLayers[idx].acquireFenceFd = aFenceFd;
@@ -193,20 +192,6 @@ HwcHAL::RegisterHwcEventCallback(const HwcHALProcs_t &aProcs)
 #else
     return false;
 #endif
-}
-
-void
-HwcHAL::GetHwcAttributes()
-{
-    int32_t values[2];
-    const uint32_t attrs[] = {
-        HWC_DISPLAY_WIDTH,
-        HWC_DISPLAY_HEIGHT,
-        HWC_DISPLAY_NO_ATTRIBUTE
-    };
-
-    mHwc->getDisplayAttributes(mHwc, 0, 0, attrs, values);
-    mHwcRect = {0, 0, values[0], values[1]};
 }
 
 uint32_t
