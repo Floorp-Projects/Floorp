@@ -12,6 +12,8 @@
 
 <script id="badscript" data-touched="not sure" src="http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js" onload="this.dataset.touched = 'yes';" onerror="this.dataset.touched = 'no';"></script>
 
+<script id="goodscript" data-touched="not sure" src="http://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/good.js" onload="this.dataset.touched = 'yes';" onerror="this.dataset.touched = 'no';"></script>
+
 <!-- The image cache can cache JS handlers, so make sure we use a different URL for raptor.jpg each time -->
 <img id="badimage" data-touched="not sure" src="http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/raptor.jpg?pbmode=test" onload="this.dataset.touched = 'yes';" onerror="this.dataset.touched = 'no';"/>
 
