@@ -10,6 +10,7 @@
 <!ENTITY  onboard_start_subtext3 "Make your mobile Web browsing experience truly your own.">
 <!ENTITY  onboard_start_button_account "Sign in to &brandShortName;">
 <!ENTITY  onboard_start_button_browser "Start Browsing">
+<!ENTITY  onboard_start_restricted "Stay safe and in control with this simplified version of Firefox.">
 
 <!-- Localization note: These are used as the titles of different pages on the home screen.
      They are automatically converted to all caps by the Android platform. -->
@@ -577,7 +578,7 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY doorhanger_tracking_state_enabled "Enabled">
 <!ENTITY doorhanger_tracking_state_disabled "Disabled">
 <!ENTITY doorhanger_tracking_message_enabled1 "Attempts to track your online behavior have been blocked.">
-<!ENTITY doorhanger_tracking_message_disabled1 "This site includes content that tracks your browsing.">
+<!ENTITY doorhanger_tracking_message_disabled2 "This page includes elements that may track your browsing.">
 
 <!-- Common mixed and tracking content strings in site identity popup -->
 <!ENTITY learn_more "Learn More">
@@ -692,26 +693,14 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!-- Restrictions -->
 <!-- Localization note: These are restrictions the device owner (e.g. parent) can enable for
      a restricted profile (e.g. child). Used inside the Android settings UI. -->
-<!ENTITY restriction_disallow_tools_menu_title "Disallow Tools menu">
-<!ENTITY restriction_disallow_tools_menu_description "Hide Tools menu from UI.">
-<!ENTITY restriction_disallow_import_settings_title "Disallow importing settings">
-<!ENTITY restriction_disallow_import_settings_description "Do not allow to import settings from other system browsers.">
-<!ENTITY restriction_disallow_addons_title "Disallow add-ons">
-<!ENTITY restriction_disallow_addons_description "Disallow installation of add-ons.">
-<!ENTITY restriction_disallow_devtools_title "Disallow developer tools">
-<!ENTITY restriction_disallow_devtools_description "Disallow usage of developer tools.">
-<!ENTITY restriction_disallow_customize_home_title "Disallow customizing home">
-<!ENTITY restriction_disallow_customize_home_description "Disallow customizing home panels.">
-<!ENTITY restriction_disallow_private_browsing_title "Disallow private browsing">
-<!ENTITY restriction_disallow_private_browsing_description "Disallow private browsing mode.">
-<!ENTITY restriction_disallow_location_services_title "Disallow location services">
-<!ENTITY restriction_disallow_location_services_description "Disallow sharing of location data to improve geolocation service.">
-<!ENTITY restriction_disallow_display_settings_title "Disallow display settings">
-<!ENTITY restriction_disallow_display_settings_description "Disallow changing of advanced display settings.">
-<!ENTITY restriction_disallow_clear_history_title "Disallow clearing history">
-<!ENTITY restriction_disallow_clear_history_description "Disallow clearing of browser history.">
-<!ENTITY restriction_disallow_master_password_title "Disallow master password">
-<!ENTITY restriction_disallow_master_password_description "Disallow setting a master password for logins.">
-<!ENTITY restriction_disallow_guest_browsing_title "Disallow guest browsing">
-<!ENTITY restriction_disallow_guest_browsing_description "Disallow guest browsing mode.">
+<!ENTITY restriction_disallow_import_settings_title2 "Disable \'Import from Android\'">
+<!ENTITY restriction_disallow_addons_title2 "Disable add-on installation">
+<!ENTITY restriction_disallow_devtools_title2 "Disable developer tools">
+<!ENTITY restriction_disallow_customize_home_title2 "Disable Home customization">
+<!ENTITY restriction_disallow_private_browsing_title2 "Disable Private Browsing">
+<!ENTITY restriction_disallow_location_services_title2 "Disable Location Services">
+<!ENTITY restriction_disallow_display_settings_title2 "Disable Display settings">
+<!ENTITY restriction_disallow_clear_history_title2 "Disable \'Clear browsing history\'">
+<!ENTITY restriction_disallow_master_password_title2 "Disable master password">
+<!ENTITY restriction_disallow_guest_browsing_title2 "Disable Guest Browsing">
 

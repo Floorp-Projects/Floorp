@@ -1,0 +1,57 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<!-- Password only form -->
+<form id='form-1'>
+    <input id='test-password-1' type='password' name='pname' value=''>
+    <input type='submit'>Submit</input>
+</form>
+
+<!-- Simple username and password blank form -->
+<form id='form-2'>
+    <input id='test-username-2' type='text'     name='uname' value=''>
+    <input id='test-password-2' type='password' name='pname' value=''>
+    <button type='submit'>Submit</button>
+</form>
+
+<!-- Simple username and password form, prefilled username -->
+<form id='form-3'>
+    <input id='test-username-3' type='text'     name='uname' value='testuser'>
+    <input id='test-password-3' type='password' name='pname' value=''>
+    <button type='submit'>Submit</button>
+</form>
+
+<!-- Simple username and password form, prefilled username and password -->
+<form id='form-4'>
+    <input id='test-username-4' type='text'     name='uname' value='testuser'>
+    <input id='test-password-4' type='password' name='pname' value='testpass'>
+    <button type='submit'>Submit</button>
+</form>
+
+<!-- One username and two passwords empty form -->
+<form id='form-5'>
+    <input id='test-username-5'  type='text'     name='uname'>
+    <input id='test-password-5'  type='password' name='pname'>
+    <input id='test-password2-5' type='password' name='pname2'>
+    <button type='submit'>Submit</button>
+</form>
+
+<!-- One username and two passwords form, fields prefiled -->
+<form id='form-6'>
+    <input id='test-username-6'  type='text'     name='uname' value="testuser">
+    <input id='test-password-6'  type='password' name='pname' value="testpass">
+    <input id='test-password2-6' type='password' name='pname2' value="testpass">
+    <button type='submit'>Submit</button>
+</form>
+
+<!-- Password field with no form -->
+<div id='form-7'>
+    <input id='test-password-7' type='password' name='pname' value="testpass">
+</div>
+
+<!-- Form in an iframe -->
+<iframe src="https://example.org/browser/toolkit/components/passwordmgr/test/browser/form_basic.html" id="test-iframe"></iframe>
+
+</body>
+</html>

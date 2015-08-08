@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <!--
-Bug 1067491 - Test aggregating allocation counts.
+Bug 1132764 - Test controlling the maximum allocations log length over the RDP.
 -->
 <head>
   <meta charset="utf-8">
@@ -20,40 +20,52 @@ window.onload = function() {
     var { memory, client } = yield startServerAndGetSelectedTabMemory();
     yield memory.attach();
 
-    yield memory.startRecordingAllocations();
-    ok(true, "Can start recording allocations");
-
-    // Allocate some objects.
-
     var allocs = [];
-    (function allocator() {
-      for (var i = 0; i < 10; i++) {
-        allocs.push({});
-      }
-    }());
-
-    var response = yield memory.getAllocations();
-
-    yield memory.stopRecordingAllocations();
-    ok(true, "Can stop recording allocations");
-
-    // Assert that we have the 10 allocations in the `allocator` frame.
-
-    var index = 0;
-    var found = false;
-
-    for (var count of response.counts) {
-      if (count >= 10
-          && response.frames[index]
-          && response.frames[index].functionDisplayName == "allocator") {
-        found = true;
-        break;
-      }
-      index++;
+    var eventsFired = 0;
+    var intervalId = null;
+    function onAlloc () {
+      eventsFired++;
+    }
+    function startAllocating () {
+      intervalId = setInterval(() => {
+        for (var i = 100000; --i;) {
+          allocs.push(new Object());
+        }
+      }, 1);
+    }
+    function stopAllocating () {
+      clearInterval(intervalId);
     }
 
-    ok(found, "Should find the 10 allocations in the allocator frame.");
+    memory.on("allocations", onAlloc);
 
+    yield memory.startRecordingAllocations({
+      drainAllocationsTimeout: 10
+    });
+
+    yield waitUntil(() => eventsFired > 5);
+    ok(eventsFired > 5, "Some allocation events fired without allocating much via auto drain");
+    yield memory.stopRecordingAllocations();
+
+    // Set a really high auto drain timer so we can test if
+    // it fires on GC
+    eventsFired = 0;
+    var startTime = performance.now();
+    var drainTimer = 1000000;
+    yield memory.startRecordingAllocations({
+      drainAllocationsTimeout: drainTimer
+    });
+
+    startAllocating();
+    yield waitUntil(() => {
+      Cu.forceGC();
+      return eventsFired > 1;
+    });
+    stopAllocating();
+    ok(performance.now() - drainTimer < startTime, "Allocation events fired on GC before timer");
+    yield memory.stopRecordingAllocations();
+
+    memory.off("allocations", onAlloc);
     yield memory.detach();
     destroyServerAndFinish(client);
   });

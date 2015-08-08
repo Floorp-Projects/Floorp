@@ -371,12 +371,7 @@ MemoryFrontFacade.prototype = {
     let memoryData = yield this.getAllocations();
     // Match the signature of the TimelineFront events, with "timeline-data"
     // being the event name, and the second argument describing the type.
-    this.emit("timeline-data", "allocations", {
-      sites: memoryData.allocations,
-      timestamps: memoryData.allocationsTimestamps,
-      frames: memoryData.frames,
-      counts: memoryData.counts
-    });
+    this.emit("timeline-data", "allocations", memoryData);
 
     deferred.resolve();
   }),

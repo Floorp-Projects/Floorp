@@ -131,20 +131,8 @@ this.UITour = {
       widgetName: "urlbar-container",
     }],
     ["bookmarks",   {query: "#bookmarks-menu-button"}],
-    ["controlCenter-trackingUnblock", {
-      infoPanelPosition: "rightcenter topleft",
-      query(aDocument) {
-        let popup = aDocument.defaultView.gIdentityHandler._identityPopup;
-        if (popup.state != "open") {
-          return null;
-        }
-        let buttonId =
-            PrivateBrowsingUtils.isWindowPrivate(aDocument.defaultView) ?
-            "tracking-action-unblock-private" : "tracking-action-unblock";
-        let element = aDocument.getElementById(buttonId);
-        return UITour.isElementVisible(element) ? element : null;
-      },
-    }],
+    ["controlCenter-trackingUnblock", controlCenterTrackingToggleTarget(true)],
+    ["controlCenter-trackingBlock", controlCenterTrackingToggleTarget(false)],
     ["customize",   {
       query: (aDocument) => {
         let customizeButton = aDocument.getElementById("PanelUI-customize");
@@ -2080,6 +2068,30 @@ this.UITour = {
     }
   },
 };
+
+function controlCenterTrackingToggleTarget(aUnblock) {
+  return {
+    infoPanelPosition: "rightcenter topleft",
+    query(aDocument) {
+      let popup = aDocument.defaultView.gIdentityHandler._identityPopup;
+      if (popup.state != "open") {
+        return null;
+      }
+      let buttonId = null;
+      if (aUnblock) {
+        if (PrivateBrowsingUtils.isWindowPrivate(aDocument.defaultView)) {
+          buttonId = "tracking-action-unblock-private";
+        } else {
+          buttonId = "tracking-action-unblock";
+        }
+      } else {
+        buttonId = "tracking-action-block";
+      }
+      let element = aDocument.getElementById(buttonId);
+      return UITour.isElementVisible(element) ? element : null;
+    },
+  };
+}
 
 this.UITour.init();
 

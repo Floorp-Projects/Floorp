@@ -70,9 +70,6 @@ browser.jar:
   skin/classic/browser/notification-64@2x.png
   skin/classic/browser/magnifier.png                        (../shared/magnifier.png)
   skin/classic/browser/magnifier@2x.png                     (../shared/magnifier@2x.png)
-  skin/classic/browser/mask.png                             (../shared/mask.png)
-  skin/classic/browser/mask@2x.png                          (../shared/mask@2x.png)
-  skin/classic/browser/mask-and-shield.svg                  (../shared/mask-and-shield.svg)
   skin/classic/browser/menuPanel.png
   skin/classic/browser/menuPanel@2x.png
   skin/classic/browser/menuPanel-customize.png
@@ -315,6 +312,13 @@ browser.jar:
   skin/classic/browser/preferences/search.css               (preferences/search.css)
   skin/classic/browser/preferences/checkbox.png             (preferences/checkbox.png)
   skin/classic/browser/preferences/checkbox@2x.png          (preferences/checkbox@2x.png)
+  skin/classic/browser/privatebrowsing/attention.png        (../shared/privatebrowsing/attention.png)
+  skin/classic/browser/privatebrowsing/attention@2x.png     (../shared/privatebrowsing/attention@2x.png)
+  skin/classic/browser/privatebrowsing/check.png            (../shared/privatebrowsing/check.png)
+  skin/classic/browser/privatebrowsing/check@2x.png         (../shared/privatebrowsing/check@2x.png)
+  skin/classic/browser/privatebrowsing/mask.svg             (../shared/privatebrowsing/mask.svg)
+  skin/classic/browser/privatebrowsing/shield-page.png      (../shared/privatebrowsing/shield-page.png)
+  skin/classic/browser/privatebrowsing/shield-page@2x.png   (../shared/privatebrowsing/shield-page@2x.png)
   skin/classic/browser/yosemite/preferences/checkbox.png    (preferences/checkbox-yosemite.png)
   skin/classic/browser/yosemite/preferences/checkbox@2x.png (preferences/checkbox-yosemite@2x.png)
   skin/classic/browser/social/services-16.png               (social/services-16.png)
@@ -493,12 +497,6 @@ browser.jar:
   skin/classic/browser/devtools/debugger-blackbox@2x.png    (../shared/devtools/images/debugger-blackbox@2x.png)
   skin/classic/browser/devtools/debugger-prettyprint.png    (../shared/devtools/images/debugger-prettyprint.png)
   skin/classic/browser/devtools/debugger-prettyprint@2x.png (../shared/devtools/images/debugger-prettyprint@2x.png)
-  skin/classic/browser/devtools/debugger-no-pause-exceptions.png  (../shared/devtools/images/debugger-no-pause-exceptions.png)
-  skin/classic/browser/devtools/debugger-no-pause-exceptions@2x.png (../shared/devtools/images/debugger-no-pause-exceptions@2x.png)
-  skin/classic/browser/devtools/debugger-pause-all-exceptions.png  (../shared/devtools/images/debugger-pause-all-exceptions.png)
-  skin/classic/browser/devtools/debugger-pause-all-exceptions@2x.png (../shared/devtools/images/debugger-pause-all-exceptions@2x.png)
-  skin/classic/browser/devtools/debugger-pause-uncaught-exceptions.png  (../shared/devtools/images/debugger-pause-uncaught-exceptions.png)
-  skin/classic/browser/devtools/debugger-pause-uncaught-exceptions@2x.png (../shared/devtools/images/debugger-pause-uncaught-exceptions@2x.png)
   skin/classic/browser/devtools/debugger-toggleBreakpoints.png (../shared/devtools/images/debugger-toggleBreakpoints.png)
   skin/classic/browser/devtools/debugger-toggleBreakpoints@2x.png (../shared/devtools/images/debugger-toggleBreakpoints@2x.png)
   skin/classic/browser/devtools/tracer-icon.png             (../shared/devtools/images/tracer-icon.png)

@@ -4,6 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+if CONFIG['MOZ_BUILD_APP'] == 'browser':
+    DEFINES['MOZ_BUILD_APP_IS_BROWSER'] = True
+
 MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
@@ -56,7 +59,6 @@ else:
         'storage-json.js',
     ]
     EXTRA_JS_MODULES += [
-        'LoginDoorhangers.jsm',
         'LoginImport.jsm',
         'LoginStore.jsm',
     ]
@@ -64,6 +66,12 @@ else:
 if CONFIG['OS_TARGET'] == 'WINNT':
     EXTRA_JS_MODULES += [
         'OSCrypto_win.js',
+    ]
+
+if CONFIG['MOZ_BUILD_APP'] == 'browser':
+    EXTRA_JS_MODULES += [
+        'LoginDoorhangers.jsm',
+        'LoginManagerContextMenu.jsm',
     ]
 
 JAR_MANIFESTS += ['jar.mn']
