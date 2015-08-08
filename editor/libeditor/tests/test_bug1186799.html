@@ -1,0 +1,81 @@
+<!DOCTYPE>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1186799
+-->
+<head>
+  <title>Test for Bug 1186799</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div id="content">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1186799">Mozilla Bug 1186799</a>
+<p id="display"></p>
+<div id="content">
+  <span id="span">span</span>
+  <div id="editor" contenteditable></div>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 1186799 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  var span = document.getElementById("span");
+  var editor = document.getElementById("editor");
+  editor.focus();
+
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "\u3042",
+        "clauses":
+        [
+          { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  ok(isThereIMESelection(), "There should be IME selection");
+
+  var compositionEnd = false;
+  editor.addEventListener("compositionend", function () { compositionEnd = true; }, true);
+
+  synthesizeMouseAtCenter(span, {});
+
+  ok(compositionEnd, "composition end should be fired at clicking outside of the editor");
+  ok(!isThereIMESelection(), "There should be no IME selection");
+
+  SimpleTest.finish();
+});
+
+function isThereIMESelection()
+{
+  var selCon = SpecialPowers.wrap(window).
+        QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
+        getInterface(SpecialPowers.Ci.nsIWebNavigation).
+        QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
+        getInterface(SpecialPowers.Ci.nsIEditingSession).
+        getEditorForWindow(window).
+        selectionController;
+  const kIMESelections = [
+    SpecialPowers.Ci.nsISelectionController.SELECTION_IME_RAWINPUT,
+    SpecialPowers.Ci.nsISelectionController.SELECTION_IME_SELECTEDRAWTEXT,
+    SpecialPowers.Ci.nsISelectionController.SELECTION_IME_CONVERTEDTEXT,
+    SpecialPowers.Ci.nsISelectionController.SELECTION_IME_SELECTEDCONVERTEDTEXT
+  ];
+  for (var i = 0; i < kIMESelections.length; i++) {
+    var sel = selCon.getSelection(kIMESelections[i]);
+    if (sel && sel.rangeCount) {
+      return true;
+    }
+  }
+  return false;
+}
+
+</script>
+</pre>
+</body>
+</html>
