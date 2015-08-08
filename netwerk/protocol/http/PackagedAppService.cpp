@@ -605,30 +605,23 @@ PackagedAppService::GetPackageURI(nsIURI *aURI, nsIURI **aPackageURI)
 }
 
 NS_IMETHODIMP
-PackagedAppService::GetResource(nsIPrincipal *aPrincipal,
-                                uint32_t aLoadFlags,
-                                nsILoadContextInfo *aInfo,
-                                nsICacheEntryOpenCallback *aCallback)
+PackagedAppService::RequestURI(nsIURI *aURI,
+                               nsILoadContextInfo *aInfo,
+                               nsICacheEntryOpenCallback *aCallback)
 {
   // Check arguments are not null
-  if (!aPrincipal || !aCallback || !aInfo) {
+  if (!aURI || !aCallback || !aInfo) {
     return NS_ERROR_INVALID_ARG;
   }
 
+
   nsresult rv;
-
-  nsCOMPtr<nsIURI> uri;
-  rv = aPrincipal->GetURI(getter_AddRefs(uri));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  LogURI("PackagedAppService::GetResource", this, uri, aInfo);
+  LogURI("PackagedAppService::RequestURI", this, aURI, aInfo);
 
   MOZ_RELEASE_ASSERT(NS_IsMainThread(), "mDownloadingPackages hashtable is not thread safe");
 
   nsCOMPtr<nsIURI> packageURI;
-  rv = GetPackageURI(uri, getter_AddRefs(packageURI));
+  rv = GetPackageURI(aURI, getter_AddRefs(packageURI));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -650,15 +643,22 @@ PackagedAppService::GetResource(nsIPrincipal *aPrincipal,
     // downloaded, we will add the callback to the package's queue, and it will
     // be called once the file is processed and saved in the cache.
 
-    downloader->AddCallback(uri, aCallback);
+    downloader->AddCallback(aURI, aCallback);
     return NS_OK;
+  }
+
+  // We need to set this flag, because the package metadata
+  // needs to have a separate entry for anonymous channels.
+  uint32_t extra_flags = 0;
+  if (aInfo->IsAnonymous()) {
+    extra_flags = nsIRequest::LOAD_ANONYMOUS;
   }
 
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannel(
-    getter_AddRefs(channel), packageURI, aPrincipal,
+    getter_AddRefs(channel), packageURI, nsContentUtils::GetSystemPrincipal(),
     nsILoadInfo::SEC_NORMAL, nsIContentPolicy::TYPE_OTHER, nullptr, nullptr,
-    aLoadFlags);
+    nsIRequest::LOAD_NORMAL | extra_flags);
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -678,7 +678,7 @@ PackagedAppService::GetResource(nsIPrincipal *aPrincipal,
     return rv;
   }
 
-  downloader->AddCallback(uri, aCallback);
+  downloader->AddCallback(aURI, aCallback);
 
   nsCOMPtr<nsIStreamConverterService> streamconv =
     do_GetService("@mozilla.org/streamConverters;1", &rv);
