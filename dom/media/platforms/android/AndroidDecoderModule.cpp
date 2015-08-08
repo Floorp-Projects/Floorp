@@ -258,11 +258,18 @@ bool AndroidDecoderModule::SupportsMimeType(const nsACString& aMimeType)
   if (!AndroidBridge::Bridge() || (AndroidBridge::Bridge()->GetAPIVersion() < 16)) {
     return false;
   }
+
   if (aMimeType.EqualsLiteral("video/mp4") ||
       aMimeType.EqualsLiteral("video/avc")) {
     return true;
   }
-  return static_cast<bool>(mozilla::CreateDecoder(aMimeType));
+
+  MediaCodec::LocalRef ref = mozilla::CreateDecoder(aMimeType);
+  if (!ref) {
+    return false;
+  }
+  ref->Release();
+  return true;
 }
 
 already_AddRefed<MediaDataDecoder>
