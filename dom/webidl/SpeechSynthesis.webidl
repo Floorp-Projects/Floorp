@@ -23,4 +23,7 @@ interface SpeechSynthesis {
   [UnsafeInPrerendering]
   void resume();
   sequence<SpeechSynthesisVoice> getVoices();
+
+  [ChromeOnly]
+  void dropGlobalQueue();
 };
