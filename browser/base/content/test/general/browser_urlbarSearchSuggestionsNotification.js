@@ -5,7 +5,7 @@ const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
 // Must run first.
 add_task(function* prepare() {
-  let engine = yield promiseNewEngine(TEST_ENGINE_BASENAME);
+  let engine = yield promiseNewSearchEngine(TEST_ENGINE_BASENAME);
   let oldCurrentEngine = Services.search.currentEngine;
   Services.search.currentEngine = engine;
   registerCleanupFunction(function () {
@@ -148,25 +148,6 @@ function assertVisible(visible) {
   let style =
     window.getComputedStyle(gURLBar.popup.searchSuggestionsNotification);
   Assert.equal(style.visibility, visible ? "visible" : "collapse");
-}
-
-function promiseNewEngine(basename) {
-  return new Promise((resolve, reject) => {
-    info("Waiting for engine to be added: " + basename);
-    let url = getRootDirectory(gTestPath) + basename;
-    Services.search.addEngine(url, Ci.nsISearchEngine.TYPE_MOZSEARCH, "",
-                              false, {
-      onSuccess: function (engine) {
-        info("Search engine added: " + basename);
-        registerCleanupFunction(() => Services.search.removeEngine(engine));
-        resolve(engine);
-      },
-      onError: function (errCode) {
-        Assert.ok(false, "addEngine failed with error code " + errCode);
-        reject();
-      },
-    });
-  });
 }
 
 function promiseTransition() {
