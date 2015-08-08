@@ -19,12 +19,12 @@
 #include "jsweakmap.h"
 #include "jswrapper.h"
 
+#include "ds/TraceableFifo.h"
 #include "gc/Barrier.h"
 #include "js/Debug.h"
 #include "js/HashTable.h"
 #include "vm/GlobalObject.h"
 #include "vm/SavedStacks.h"
-#include "js/TraceableFifo.h"
 
 enum JSTrapStatus {
     JSTRAP_ERROR,
