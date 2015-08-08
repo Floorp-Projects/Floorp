@@ -486,7 +486,9 @@ static int nr_socket_multi_tcp_recvfrom(void *obj,void * restrict buf,
 
       if (r!=R_WOULDBLOCK) {
         NR_SOCKET fd;
-
+        r_log(LOG_ICE,LOG_DEBUG,
+              "%s:%d function %s(to:%s) failed with error %d",__FILE__,
+              __LINE__,__FUNCTION__,tcpsock->remote_addr.as_string,r);
         if (!nr_socket_getfd(tcpsock->inner, &fd)) {
           NR_ASYNC_CANCEL(fd, NR_ASYNC_WAIT_READ);
           NR_ASYNC_CANCEL(fd, NR_ASYNC_WAIT_WRITE);
@@ -494,7 +496,6 @@ static int nr_socket_multi_tcp_recvfrom(void *obj,void * restrict buf,
 
         TAILQ_REMOVE(&sock->sockets, tcpsock, entry);
         nr_tcp_socket_ctx_destroy(&tcpsock);
-        r_log(LOG_ICE,LOG_DEBUG,"%s:%d function %s(from:%s) failed with error %d",__FILE__,__LINE__,__FUNCTION__,from->as_string,r);
         ABORT(r);
       }
     }
