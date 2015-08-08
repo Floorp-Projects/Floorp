@@ -1403,14 +1403,19 @@ nsHostResolver::ThreadFunc(void *arg)
         bool getTtl = false;
 #endif
 
-        nsresult status = GetAddrInfo(rec->host, rec->af, rec->flags, rec->netInterface,
+        // We need to remove IPv4 records manually
+        // because PR_GetAddrInfoByName doesn't support PR_AF_INET6.
+        bool disableIPv4 = rec->af == PR_AF_INET6;
+        uint16_t af = disableIPv4 ? PR_AF_UNSPEC : rec->af;
+        nsresult status = GetAddrInfo(rec->host, af, rec->flags, rec->netInterface,
                                       &ai, getTtl);
 #if defined(RES_RETRY_ON_FAILURE)
         if (NS_FAILED(status) && rs.Reset()) {
-            status = GetAddrInfo(rec->host, rec->af, rec->flags, rec->netInterface, &ai,
+            status = GetAddrInfo(rec->host, af, rec->flags, rec->netInterface, &ai,
                                  getTtl);
         }
 #endif
+
         TimeDuration elapsed = TimeStamp::Now() - startTime;
         uint32_t millis = static_cast<uint32_t>(elapsed.ToMilliseconds());
 
