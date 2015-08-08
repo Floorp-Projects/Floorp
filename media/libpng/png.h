@@ -247,6 +247,10 @@
  *
  * If you modify libpng you may insert additional notices immediately following
  * this sentence.
+ * 
+ * pnglibconf.h and moz.build are distributed under the Mozilla Public License,
+ * v. 2.0. If a copy of the MPL was not distributed with this file, You can
+ * obtain one at http://mozilla.org/MPL/2.0/.
  *
  * This modified version of libpng code adds animated PNG support. This code is
  * released under the libpng license described below. The modifications are
