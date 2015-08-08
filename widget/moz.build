@@ -129,6 +129,7 @@ EXPORTS.mozilla += [
 ]
 
 EXPORTS.mozilla.widget += [
+    'IMEData.h',
     'PuppetBidiKeyboard.h',
     'WidgetMessageUtils.h',
 ]
