@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1188099
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1188099: Calling cancel() should work correctly with global queue</title>
+  <script type="application/javascript">
+    window.SimpleTest = parent.SimpleTest;
+    window.info = parent.info;
+    window.is = parent.is;
+    window.isnot = parent.isnot;
+    window.ok = parent.ok;
+    window.todo = parent.todo;
+  </script>
+  <script type="application/javascript" src="common.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1188099">Mozilla Bug 1188099</a>
+<iframe id="frame1"></iframe>
+<iframe id="frame2"></iframe>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+  Promise.all([loadFrame('frame1'), loadFrame('frame2')]).then(function ([frame1, frame2]) {
+    var win1 = frame1.contentWindow;
+    var win2 = frame2.contentWindow;
+
+    var utterance1 = new win1.SpeechSynthesisUtterance(
+      "u1: Donec ac nunc feugiat, posuere");
+    utterance1.lang = 'it-IT-noend';
+    var utterance2 = new win1.SpeechSynthesisUtterance("u2: hello, losers too");
+    utterance2.lang = 'it-IT-noend';
+    var utterance3 = new win1.SpeechSynthesisUtterance("u3: hello, losers three");
+
+    var utterance4 = new win2.SpeechSynthesisUtterance("u4: hello, losers same!");
+    utterance4.lang = 'it-IT-noend';
+    var utterance5 = new win2.SpeechSynthesisUtterance("u5: hello, losers too");
+    utterance5.lang = 'it-IT-noend';
+
+    var eventOrder = ['start1', 'end1', 'start2', 'end2'];
+    utterance1.addEventListener('start', function(e) {
+      is(eventOrder.shift(), 'start1', 'start1');
+      testSynthState(win1, { speaking: true, pending: true });
+      testSynthState(win2, { speaking: true, pending: true });
+      win2.speechSynthesis.cancel();
+      SpecialPowers.wrap(win1.speechSynthesis).forceEnd();
+
+    });
+    utterance1.addEventListener('end', function(e) {
+      is(eventOrder.shift(), 'end1', 'end1');
+      testSynthState(win1, { pending: true });
+      testSynthState(win2, { pending: false });
+    });
+    utterance2.addEventListener('start', function(e) {
+      is(eventOrder.shift(), 'start2', 'start2');
+      testSynthState(win1, { speaking: true, pending: true });
+      testSynthState(win2, { speaking: true, pending: false });
+      win1.speechSynthesis.cancel();
+    });
+    utterance2.addEventListener('end', function(e) {
+      is(eventOrder.shift(), 'end2', 'end2');
+      testSynthState(win1, { speaking: false, pending: false });
+      testSynthState(win2, { speaking: false, pending: false });
+      SimpleTest.finish();
+    });
+
+    function wrongUtterance(e) {
+      ok(false, 'This shall not be uttered: "' + e.target.text + '"');
+    }
+
+    utterance3.addEventListener('start', wrongUtterance);
+    utterance4.addEventListener('start', wrongUtterance);
+    utterance5.addEventListener('start', wrongUtterance);
+
+    win1.speechSynthesis.speak(utterance1);
+    win1.speechSynthesis.speak(utterance2);
+    win1.speechSynthesis.speak(utterance3);
+    win2.speechSynthesis.speak(utterance4);
+    win2.speechSynthesis.speak(utterance5);
+  });
+</script>
+</pre>
+</body>
+</html>

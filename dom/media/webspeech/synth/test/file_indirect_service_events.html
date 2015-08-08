@@ -26,66 +26,75 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1155034
 
 /** Test for Bug 1155034 **/
 
-function test_with_events() {
-  info('test_with_events');
-  var utterance = new SpeechSynthesisUtterance("never end, callback events");
-  utterance.lang = 'it-IT-noend';
+function testFunc(done_cb) {
+  function test_with_events() {
+    info('test_with_events');
+    var utterance = new SpeechSynthesisUtterance("never end, callback events");
+    utterance.lang = 'it-IT-noend';
 
-  utterance.addEventListener('start', function(e) {
-    speechSynthesis.pause();
-  // Wait to see if we get some bad events we didn't expect.
-  });
-
-  utterance.addEventListener('pause', function(e) {
-    is(e.charIndex, 1, 'pause event charIndex matches service arguments');
-    is(e.elapsedTime, 1.5, 'pause event elapsedTime matches service arguments');
-    speechSynthesis.resume();
-  });
-
-  utterance.addEventListener('resume', function(e) {
-    is(e.charIndex, 1, 'resume event charIndex matches service arguments');
-    is(e.elapsedTime, 1.5, 'resume event elapsedTime matches service arguments');
-    speechSynthesis.cancel();
-  });
-
-  utterance.addEventListener('end', function(e) {
-    ok(e.charIndex, 1, 'resume event charIndex matches service arguments');
-    ok(e.elapsedTime, 1.5, 'end event elapsedTime matches service arguments');
-    test_no_events();
-  });
-
-  speechSynthesis.speak(utterance);
-}
-
-function test_no_events() {
-  var utterance = new SpeechSynthesisUtterance("never end");
-  utterance.lang = "it-IT-noevents-noend";
-  utterance.addEventListener('start', function(e) {
-    speechSynthesis.pause();
+    utterance.addEventListener('start', function(e) {
+      info('start test_with_events');
+      speechSynthesis.pause();
     // Wait to see if we get some bad events we didn't expect.
-    setTimeout(function() {
-      SimpleTest.finish();
-    }, 1000);
-  });
+    });
 
-  utterance.addEventListener('pause', function(e) {
-    ok(false, 'no pause event was explicitly dispatched from the service')
-    speechSynthesis.resume();
-  });
+    utterance.addEventListener('pause', function(e) {
+      is(e.charIndex, 1, 'pause event charIndex matches service arguments');
+      is(e.elapsedTime, 1.5, 'pause event elapsedTime matches service arguments');
+      speechSynthesis.resume();
+    });
 
-  utterance.addEventListener('resume', function(e) {
-    ok(false, 'no resume event was explicitly dispatched from the service')
-    speechSynthesis.cancel();
-  });
+    utterance.addEventListener('resume', function(e) {
+      is(e.charIndex, 1, 'resume event charIndex matches service arguments');
+      is(e.elapsedTime, 1.5, 'resume event elapsedTime matches service arguments');
+      speechSynthesis.cancel();
+    });
 
-  utterance.addEventListener('end', function(e) {
-    ok(false, 'no end event was explicitly dispatched from the service')
-  });
+    utterance.addEventListener('end', function(e) {
+      ok(e.charIndex, 1, 'resume event charIndex matches service arguments');
+      ok(e.elapsedTime, 1.5, 'end event elapsedTime matches service arguments');
+      test_no_events();
+    });
 
-  speechSynthesis.speak(utterance);
+    info('start speak');
+    speechSynthesis.speak(utterance);
+  }
+
+  function forbiddenEvent(e) {
+    ok(false, 'no "' + e.type + '" event was explicitly dispatched from the service')
+  }
+
+  function test_no_events() {
+    info('test_no_events');
+    var utterance = new SpeechSynthesisUtterance("never end");
+    utterance.lang = "it-IT-noevents-noend";
+    utterance.addEventListener('start', function(e) {
+      speechSynthesis.pause();
+      // Wait to see if we get some bad events we didn't expect.
+      setTimeout(function() {
+        ok(true, 'didn\'t get any unwanted events');
+        utterance.removeEventListener('end', forbiddenEvent);
+        SpecialPowers.wrap(speechSynthesis).forceEnd();
+        done_cb();
+      }, 1000);
+    });
+
+    utterance.addEventListener('pause', forbiddenEvent);
+    utterance.addEventListener('end', forbiddenEvent);
+
+    speechSynthesis.speak(utterance);
+  }
+
+  test_with_events();
 }
 
-test_with_events();
+// Run test with no global queue, and then run it with a global queue.
+testFunc(function() {
+  SpecialPowers.pushPrefEnv(
+    { set: [['media.webspeech.synth.force_global_queue', true]] }, function() {
+      testFunc(SimpleTest.finish)
+    });
+});
 
 </script>
 </pre>

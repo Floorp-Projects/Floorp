@@ -1,21 +1,21 @@
 <!DOCTYPE HTML>
-<html lang="en-US">
+<html>
 <!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=525444
+https://bugzilla.mozilla.org/show_bug.cgi?id=1188099
 -->
 <head>
   <meta charset="utf-8">
-  <title>Test for Bug 525444: Web Speech API, check speech synth queue</title>
+  <title>Test for Bug 1188099: Calling pause() should work correctly with global queue</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=525444">Mozilla Bug 525444</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1188099">Mozilla Bug 1188099</a>
 <p id="display"></p>
 <iframe id="testFrame"></iframe>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -24,10 +24,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=525444
 
 SimpleTest.waitForExplicitFinish();
 
-SpecialPowers.pushPrefEnv(
-  { set: [['media.webspeech.synth.enabled', true],
-          ['media.webspeech.synth.force_global_queue', false]] },
-  function() { document.getElementById("testFrame").src = "file_speech_queue.html"; });
+SpecialPowers.pushPrefEnv({ set: [['media.webspeech.synth.enabled', true],
+                                  ['media.webspeech.synth.force_global_queue', true]] },
+                          function() { document.getElementById("testFrame").src = "file_global_queue_pause.html"; });
 
 </script>
 </pre>
