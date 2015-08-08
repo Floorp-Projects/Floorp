@@ -129,11 +129,11 @@ const MockDocument = {
   /**
    * Create a document for the given URL containing the given HTML with the ownerDocument of all <form>s having a mocked location.
    */
-  createTestDocument(aDocumentURL, aHTML = "<form>") {
+  createTestDocument(aDocumentURL, aContent = "<form>", aType = "text/html") {
     let parser = Cc["@mozilla.org/xmlextras/domparser;1"].
                  createInstance(Ci.nsIDOMParser);
     parser.init();
-    let parsedDoc = parser.parseFromString(aHTML, "text/html");
+    let parsedDoc = parser.parseFromString(aContent, aType);
 
     for (let element of parsedDoc.forms) {
       this.mockOwnerDocumentProperty(element, parsedDoc, aDocumentURL);

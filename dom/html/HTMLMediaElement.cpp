@@ -103,6 +103,7 @@ static PRLogModuleInfo* gMediaElementEventsLog;
 
 #include "nsIPermissionManager.h"
 #include "nsContentTypeParser.h"
+#include "nsDocShell.h"
 
 #include "mozilla/EventStateManager.h"
 
@@ -4013,7 +4014,14 @@ void HTMLMediaElement::NotifyOwnerDocumentActivityChanged()
   if (pauseElement && mAudioChannelAgent) {
     // If the element is being paused since we are navigating away from the
     // document, notify the audio channel agent.
-    NotifyAudioChannelAgent(false);
+    // Be careful to ignore this event during a docshell frame swap.
+    auto docShell = static_cast<nsDocShell*>(OwnerDoc()->GetDocShell());
+    if (!docShell) {
+      return;
+    }
+    if (!docShell->InFrameSwap()) {
+      NotifyAudioChannelAgent(false);
+    }
   }
 }
 

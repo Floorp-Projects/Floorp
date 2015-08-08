@@ -235,7 +235,7 @@ var LoginManagerParent = {
    * Trigger a login form fill and send relevant data (e.g. logins and recipes)
    * to the child process (LoginManagerContent).
    */
-  fillForm: Task.async(function* ({ browser, loginFormOrigin, login }) {
+  fillForm: Task.async(function* ({ browser, loginFormOrigin, login, inputElement }) {
     let recipes = [];
     if (loginFormOrigin) {
       let formHost;
@@ -251,11 +251,13 @@ var LoginManagerParent = {
     // Convert the array of nsILoginInfo to vanilla JS objects since nsILoginInfo
     // doesn't support structured cloning.
     let jsLogins = JSON.parse(JSON.stringify([login]));
+
+    let objects = inputElement ? {inputElement} : null;
     browser.messageManager.sendAsyncMessage("RemoteLogins:fillForm", {
       loginFormOrigin,
       logins: jsLogins,
       recipes,
-    });
+    }, objects);
   }),
 
   /**

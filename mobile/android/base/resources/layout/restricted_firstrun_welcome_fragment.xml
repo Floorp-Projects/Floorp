@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:fillViewport="true"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/restricted_profile_background_gold"
+        android:minHeight="@dimen/firstrun_min_height"
+        android:orientation="vertical"
+        android:weightSum="50">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="21"
+            android:padding="30dp">
+
+            <TextView
+                android:layout_width="320dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:background="@color/restricted_profile_background_green"
+                android:gravity="center"
+                android:paddingBottom="40dp"
+                android:paddingLeft="30dp"
+                android:paddingRight="30dp"
+                android:paddingTop="40dp"
+                android:text="@string/firstrun_welcome_restricted"
+                android:textColor="#ffffff"
+                android:textSize="22sp" />
+
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="29"
+            android:background="@color/android:white"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:padding="40dp">
+
+            <Button
+                android:id="@+id/welcome_browse"
+                style="@style/Widget.Firstrun.Button"
+                android:layout_gravity="center"
+                android:layout_marginBottom="20dp"
+                android:background="@drawable/button_background_action_blue_round"
+                android:text="@string/firstrun_welcome_button_browser" />
+
+            <TextView
+                android:id="@+id/learn_more_link"
+                android:layout_width="@dimen/firstrun_content_width"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:padding="20dp"
+                android:text="@string/pref_learn_more"
+                android:textAppearance="@style/TextAppearance.FirstrunRegular.Link" />
+
+        </LinearLayout>
+    </LinearLayout>
+
+</ScrollView>

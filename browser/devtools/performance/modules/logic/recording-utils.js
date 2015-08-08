@@ -134,7 +134,7 @@ function getProfileThreadFromAllocations(allocations) {
     return cached;
   }
 
-  let { sites, timestamps, frames, counts } = allocations;
+  let { sites, timestamps, frames } = allocations;
   let uniqueStrings = new UniqueStrings();
 
   // Convert allocation frames to the the stack and frame tables expected by
@@ -220,15 +220,25 @@ function getProfileThreadFromAllocations(allocations) {
 
   let thread = {
     name: "allocations",
-    samples: samplesWithSchema(samples),
+    samples: allocationsWithSchema(samples),
     stackTable: stackTableWithSchema(stackTable),
     frameTable: frameTableWithSchema(frameTable),
-    stringTable: uniqueStrings.stringTable,
-    allocationsTable: counts
+    stringTable: uniqueStrings.stringTable
   };
 
   gProfileThreadFromAllocationCache.set(allocations, thread);
   return thread;
+}
+
+function allocationsWithSchema (data) {
+  let slot = 0;
+  return {
+    schema: {
+      stack: slot++,
+      time: slot++,
+    },
+    data: data
+  };
 }
 
 /**

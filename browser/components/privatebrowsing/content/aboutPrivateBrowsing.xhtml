@@ -19,50 +19,70 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <link id="favicon" rel="icon" type="image/png"/>
     <link rel="stylesheet" href="chrome://browser/content/aboutPrivateBrowsing.css" type="text/css" media="all"/>
     <script type="application/javascript;version=1.7" src="chrome://browser/content/aboutPrivateBrowsing.js"></script>
   </head>
 
   <body dir="&locale.dir;" class="private">
-    <div id="pageContainer">
-      <h1 class="titleText showPrivate">&aboutPrivateBrowsing.title;</h1>
-      <h1 class="titleText showNormal">&aboutPrivateBrowsing.title.normal;</h1>
-
-      <p class="subtitleText showPrivate">&aboutPrivateBrowsing.subtitle;</p>
-      <p class="subtitleText showNormal">&aboutPrivateBrowsing.subtitle.normal;</p>
-
-      <p class="descriptionText">&aboutPrivateBrowsing.description;</p>
-
-      <p class="notPrivateText showNormal">&aboutPrivateBrowsing.notPrivate;</p>
-
-      <button xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-              id="startPrivateBrowsing"
-              class="openPrivate showNormal"
-              label="&privatebrowsingpage.openPrivateWindow.label;"
-              accesskey="&privatebrowsingpage.openPrivateWindow.accesskey;"/>
-      <div class="showPrivate">
-        <p class="moreInfoText">&aboutPrivateBrowsing.moreInfo;</p>
-        <p><a id="learnMore" target="_blank">&aboutPrivateBrowsing.learnMore;</a></p>
+    <p class="showNormal">&aboutPrivateBrowsing.notPrivate;</p>
+    <button xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+            id="startPrivateBrowsing"
+            class="showNormal"
+            label="&privatebrowsingpage.openPrivateWindow.label;"
+            accesskey="&privatebrowsingpage.openPrivateWindow.accesskey;"/>
+    <div id="bar" class="showPrivate">&privateBrowsing.title;</div>
+    <div id="main" class="showPrivate">
+      <div id="privateBrowsingSection"
+           style="width: &aboutPrivateBrowsing.width;">
+        <div class="sectionHeader">&aboutPrivateBrowsing.title;</div>
+        <p>&aboutPrivateBrowsing.subtitle;</p>
+        <div id="list-area">
+          <div>
+            <div class="list-header">&aboutPrivateBrowsing.info.forgotten;</div>
+            <ul id="forgotten">
+              <li>&aboutPrivateBrowsing.info.history;</li>
+              <li>&aboutPrivateBrowsing.info.search;</li>
+              <li>&aboutPrivateBrowsing.info.cookies;</li>
+              <li>&aboutPrivateBrowsing.info.temporaryFiles;</li>
+            </ul>
+          </div>
+          <div>
+            <div class="list-header">&aboutPrivateBrowsing.info.kept;</div>
+            <ul id="kept">
+              <li>&aboutPrivateBrowsing.info.downloads;</li>
+              <li>&aboutPrivateBrowsing.info.bookmarks;</li>
+            </ul>
+          </div>
+        </div>
+        <p>&aboutPrivateBrowsing.note;</p>
+        <a id="learnMore" target="_blank">&aboutPrivateBrowsing.learnMore;</a>
+      </div>
+      <div id="trackingProtectionSection"
+           style="width: &trackingProtection.width;">
+        <div class="sectionHeader">&trackingProtection.title;
+          <span id="tpEnabled"
+                style="width: &trackingProtection.state.width;"
+                class="showTpEnabled">&trackingProtection.state.enabled;</span>
+          <span id="tpDisabled"
+                style="width: &trackingProtection.state.width;"
+                class="showTpDisabled">&trackingProtection.state.disabled;</span>
+        </div>
+        <p id="tpDiagram"/>
+        <p class="showTpEnabled">&trackingProtection.description.enabled;</p>
+        <p class="showTpDisabled">&trackingProtection.description.disabled;</p>
+        <!-- Use text links to implement plain styled buttons without an href. -->
+        <label xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+               id="disableTrackingProtection"
+               class="text-link showTpEnabled"
+               value="&trackingProtection.disable;"/>
+        <label xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+               id="enableTrackingProtection"
+               class="text-link showTpDisabled"
+               value="&trackingProtection.enable;"/>
+        <p id="tpStartTour"
+           class="showTpEnabled"><a id="startTour">&trackingProtection.startTour;</a></p>
       </div>
     </div>
-    <div id="tourTop" class="showTour">
-      <p id="tourTitle">&aboutPrivateBrowsing.title;</p>
-      <p id="tourSubtitle">&trackingProtection.subtitle;</p>
-    </div>
-    <div id="tourBottom" class="showTour">
-      <p id="tourDescription">&trackingProtection.description;</p>
-      <p class="showTpEnabled"><a id="startTour">&trackingProtection.startTour;</a></p>
-      <p class="showTpEnabled"><a id="showPreferences" href="about:preferences#privacy"
-        target="_blank">&trackingProtection.showPreferences;</a></p>
-      <button xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-              id="enableTrackingProtection"
-              class="primary showTpDisabled"
-              label="&trackingProtection.enable.label;"
-              accesskey="&trackingProtection.enable.accesskey;"/>
-    </div>
-    <p id="tourFooter" class="showTour">
-      <span id="tourFooterText">&aboutPrivateBrowsing.shortdescription;</span>
-      <a id="tourLearnMore" target="_blank">&aboutPrivateBrowsing.learnMore;</a>
-    </p>
   </body>
 </html>

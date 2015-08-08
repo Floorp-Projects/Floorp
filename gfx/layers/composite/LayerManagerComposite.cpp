@@ -453,6 +453,9 @@ LayerManagerComposite::RenderDebugOverlay(const Rect& aBounds)
       mUnusedApzTransformWarning = false;
       SetDebugOverlayWantsNextFrame(true);
     }
+
+    // Each frame is invalidate by the previous frame for simplicity
+    AddInvalidRegion(nsIntRect(0, 0, 256, 256));
   } else {
     mFPS = nullptr;
   }
@@ -467,6 +470,9 @@ LayerManagerComposite::RenderDebugOverlay(const Rect& aBounds)
                           effects,
                           1.0,
                           gfx::Matrix4x4());
+
+    // Each frame is invalidate by the previous frame for simplicity
+    AddInvalidRegion(nsIntRect(0, 0, sideRect.width, sideRect.height));
   }
 
 #ifdef MOZ_PROFILING
@@ -509,6 +515,9 @@ LayerManagerComposite::RenderDebugOverlay(const Rect& aBounds)
         }
       }
     }
+
+    // Each frame is invalidate by the previous frame for simplicity
+    AddInvalidRegion(nsIntRect(0, 0, 256, 256));
   }
 #endif
 

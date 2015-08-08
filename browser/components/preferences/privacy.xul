@@ -96,8 +96,8 @@
         <hbox align="center">
           <checkbox id="trackingProtection"
                     preference="privacy.trackingprotection.enabled"
-                    accesskey="&trackingProtection4.accesskey;"
-                    label="&trackingProtection4.label;" />
+                    accesskey="&trackingProtection5.accesskey;"
+                    label="&trackingProtection5.label;" />
           <image id="trackingProtectionImage"
                  src="chrome://browser/skin/bad-content-blocked-16.png"/>
         </hbox>
