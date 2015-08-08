@@ -41,8 +41,6 @@ parent:
 
     sync ReadVoicesAndState() returns (RemoteVoice[] aVoices,
                                        nsString[] aDefaults, bool aIsSpeaking);
-
-    DropGlobalQueue();
 };
 
 } // namespace dom

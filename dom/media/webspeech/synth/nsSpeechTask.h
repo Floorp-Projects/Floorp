@@ -37,6 +37,8 @@ public:
 
   virtual void Cancel();
 
+  virtual void ForceEnd();
+
   float GetCurrentTime();
 
   uint32_t GetCurrentCharOffset();
