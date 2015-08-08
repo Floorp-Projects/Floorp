@@ -171,6 +171,8 @@ http://malware.example.com:80
 http://tracking.example.com:80
 http://not-tracking.example.com:80
 http://tracking.example.org:80
+http://itisatracker.org:80
+http://trackertest.org:80
 
 https://malware.example.com:443
 https://tracking.example.com:443
