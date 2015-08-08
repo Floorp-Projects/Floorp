@@ -54,7 +54,7 @@ public:
 
   void GetVoices(nsTArray< nsRefPtr<SpeechSynthesisVoice> >& aResult);
 
-  void DropGlobalQueue();
+  void ForceEnd();
 
 private:
   virtual ~SpeechSynthesis();
