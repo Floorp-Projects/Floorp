@@ -23,14 +23,14 @@ function start_ocsp_responder(expectedCertNames, expectedPaths,
 }
 
 function check_cert_err(cert_name, expected_error) {
-  let cert = constructCertFromFile("test_ocsp_fetch_method/" + cert_name + ".der");
+  let cert = constructCertFromFile("test_ocsp_fetch_method/" + cert_name + ".pem");
   return checkCertErrorGeneric(certdb, cert, expected_error,
                                certificateUsageSSLServer);
 }
 
 function run_test() {
-  addCertFromFile(certdb, "test_ocsp_fetch_method/ca.der", 'CTu,CTu,CTu');
-  addCertFromFile(certdb, "test_ocsp_fetch_method/int.der", ',,');
+  addCertFromFile(certdb, "test_ocsp_fetch_method/ca.pem", 'CTu,CTu,CTu');
+  addCertFromFile(certdb, "test_ocsp_fetch_method/int.pem", ',,');
 
   // Enabled so that we can force ocsp failure responses.
   Services.prefs.setBoolPref("security.OCSP.require", true);
@@ -53,17 +53,6 @@ function run_test() {
     let ocspResponder = start_ocsp_responder(["a"], [], ["GET"]);
     check_cert_err("a", PRErrorCodeSuccess);
     ocspResponder.stop(run_next_test);
-  });
-
-  // GET does fallback on bad entry
-  add_test(function() {
-    clearOCSPCache();
-    Services.prefs.setBoolPref("security.OCSP.GET.enabled", true);
-    // Bug 1016681 mozilla::pkix does not support fallback yet.
-    // let ocspResponder = start_ocsp_responder(["b", "a"], [], ["GET", "POST"]);
-    // check_cert_err("a", PRErrorCodeSuccess);
-    // ocspResponder.stop(run_next_test);
-    run_next_test();
   });
 
   run_next_test();

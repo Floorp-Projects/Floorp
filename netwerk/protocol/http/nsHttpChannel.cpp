@@ -5160,23 +5160,24 @@ nsHttpChannel::BeginConnect()
     nsRefPtr<nsChannelClassifier> channelClassifier = new nsChannelClassifier();
     if (mLoadFlags & LOAD_CLASSIFY_URI) {
         nsCOMPtr<nsIURIClassifier> classifier = do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID);
-        if (classifier) {
-            bool tpEnabled = false;
-            channelClassifier->ShouldEnableTrackingProtection(this, &tpEnabled);
+        bool tpEnabled = false;
+        channelClassifier->ShouldEnableTrackingProtection(this, &tpEnabled);
+        if (classifier && tpEnabled) {
             // We skip speculative connections by setting mLocalBlocklist only
             // when tracking protection is enabled. Though we could do this for
             // both phishing and malware, it is not necessary for correctness,
             // since no network events will be received while the
             // nsChannelClassifier is in progress. See bug 1122691.
-            if (tpEnabled) {
-                nsCOMPtr<nsIPrincipal> principal = GetURIPrincipal();
+            nsCOMPtr<nsIURI> uri;
+            rv = GetURI(getter_AddRefs(uri));
+            if (NS_SUCCEEDED(rv) && uri) {
                 nsAutoCString tables;
                 Preferences::GetCString("urlclassifier.trackingTable", &tables);
                 nsAutoCString results;
-                rv = classifier->ClassifyLocalWithTables(principal, tables, results);
+                rv = classifier->ClassifyLocalWithTables(uri, tables, results);
                 if (NS_SUCCEEDED(rv) && !results.IsEmpty()) {
                     LOG(("nsHttpChannel::ClassifyLocalWithTables found "
-                         "principal on local tracking blocklist [this=%p]",
+                         "uri on local tracking blocklist [this=%p]",
                          this));
                     mLocalBlocklist = true;
                 } else {

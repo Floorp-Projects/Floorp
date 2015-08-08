@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+<title></title>
+</head>
+<body>
+
+<script id="badscript" data-touched="not sure" src="http://trackertest.org/tests/toolkit/components/url-classifier/tests/mochitest/evil.js" onload="this.dataset.touched = 'yes';" onerror="this.dataset.touched = 'no';"></script>
+
+<script id="goodscript" data-touched="not sure" src="http://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/good.js" onload="this.dataset.touched = 'yes';" onerror="this.dataset.touched = 'no';"></script>
+
+</body>
+</html>
