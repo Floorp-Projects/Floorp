@@ -4,8 +4,9 @@
 
 #include "nsISupports.idl"
 
-interface nsIPrincipal;
 interface nsIChannel;
+interface nsIPrincipal;
+interface nsIURI;
 
 /**
  * Callback function for nsIURIClassifier lookups.
@@ -30,7 +31,7 @@ interface nsIURIClassifierCallback : nsISupports
  * The URI classifier service checks a URI against lists of phishing
  * and malware sites.
  */
-[scriptable, uuid(9168a330-7fba-40e8-9c47-4ce8f15a57fd)]
+[scriptable, uuid(596620cc-76e3-4133-9d90-360e59a794cf)]
 interface nsIURIClassifier : nsISupports
 {
   /**
@@ -56,10 +57,9 @@ interface nsIURIClassifier : nsISupports
                    in nsIURIClassifierCallback aCallback);
 
   /**
-   * Synchronously classify a Principal locally using its URI with a
-   * comma-separated string containing the given tables. This does not make
-   * network requests. The result is a comma-separated string of tables that match.
+   * Synchronously classify a URI with a comma-separated string
+   * containing the given tables. This does not make network requests.
+   * The result is a comma-separated string of tables that match.
    */
-  ACString classifyLocalWithTables(in nsIPrincipal aPrincipal,
-                                   in ACString aTables);
+  ACString classifyLocalWithTables(in nsIURI aURI, in ACString aTables);
 };

@@ -2226,7 +2226,7 @@ void ScrollFrameHelper::MarkRecentlyScrolled()
   }
 }
 
-void ScrollFrameHelper::ScrollVisual(nsPoint aOldScrolledFramePos)
+void ScrollFrameHelper::ScrollVisual()
 {
   // Mark this frame as having been scrolled. If this is the root
   // scroll frame of a content document, then IsAlwaysActive()
@@ -2245,7 +2245,6 @@ void ScrollFrameHelper::ScrollVisual(nsPoint aOldScrolledFramePos)
     MarkRecentlyScrolled();
   }
 
-  mOuter->SchedulePaint();
 }
 
 /**
@@ -2419,15 +2418,35 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsIAtom* aOri
     mListeners[i]->ScrollPositionWillChange(pt.x, pt.y);
   }
 
-  nsPoint oldScrollFramePos = mScrolledFrame->GetPosition();
+  nsRect oldDisplayPort;
+  nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &oldDisplayPort);
+  oldDisplayPort.MoveBy(-mScrolledFrame->GetPosition());
+
   // Update frame position for scrolling
   mScrolledFrame->SetPosition(mScrollPort.TopLeft() - pt);
   mLastScrollOrigin = aOrigin;
   mLastSmoothScrollOrigin = nullptr;
   mScrollGeneration = ++sScrollGenerationCounter;
 
-  // We pass in the amount to move visually
-  ScrollVisual(oldScrollFramePos);
+  ScrollVisual();
+
+  if (LastScrollOrigin() == nsGkAtoms::apz) {
+    // If this was an apz scroll and the displayport (relative to the
+    // scrolled frame) hasn't changed, then this won't trigger
+    // any painting, so no need to schedule one.
+    nsRect displayPort;
+    DebugOnly<bool> usingDisplayPort =
+      nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &displayPort);
+    NS_ASSERTION(usingDisplayPort, "Must have a displayport for apz scrolls!");
+
+    displayPort.MoveBy(-mScrolledFrame->GetPosition());
+
+    if (!displayPort.IsEqualEdges(oldDisplayPort)) {
+      mOuter->SchedulePaint();
+    }
+  } else {
+    mOuter->SchedulePaint();
+  }
 
   if (mOuter->ChildrenHavePerspective()) {
     // The overflow areas of descendants may depend on the scroll position,

@@ -78,6 +78,7 @@ PRLogModuleInfo *gUrlClassifierDbServiceLog = nullptr;
 #define MALWARE_TABLE_PREF      "urlclassifier.malwareTable"
 #define PHISH_TABLE_PREF        "urlclassifier.phishTable"
 #define TRACKING_TABLE_PREF     "urlclassifier.trackingTable"
+#define TRACKING_WHITELIST_TABLE_PREF "urlclassifier.trackingWhitelistTable"
 #define DOWNLOAD_BLOCK_TABLE_PREF "urlclassifier.downloadBlockTable"
 #define DOWNLOAD_ALLOW_TABLE_PREF "urlclassifier.downloadAllowTable"
 #define DISALLOW_COMPLETION_TABLE_PREF "urlclassifier.disallow_completions"
@@ -1068,6 +1069,12 @@ nsUrlClassifierDBService::ReadTablesFromPrefs()
     allTables.Append(tables);
   }
 
+  Preferences::GetCString(TRACKING_WHITELIST_TABLE_PREF, &tables);
+  if (!tables.IsEmpty()) {
+    allTables.Append(',');
+    allTables.Append(tables);
+  }
+
   Classifier::SplitTables(allTables, mGethashTables);
 
   Preferences::GetCString(DISALLOW_COMPLETION_TABLE_PREF, &tables);
@@ -1115,6 +1122,7 @@ nsUrlClassifierDBService::Init()
   Preferences::AddStrongObserver(this, PHISH_TABLE_PREF);
   Preferences::AddStrongObserver(this, MALWARE_TABLE_PREF);
   Preferences::AddStrongObserver(this, TRACKING_TABLE_PREF);
+  Preferences::AddStrongObserver(this, TRACKING_WHITELIST_TABLE_PREF);
   Preferences::AddStrongObserver(this, DOWNLOAD_BLOCK_TABLE_PREF);
   Preferences::AddStrongObserver(this, DOWNLOAD_ALLOW_TABLE_PREF);
   Preferences::AddStrongObserver(this, DISALLOW_COMPLETION_TABLE_PREF);
@@ -1186,11 +1194,22 @@ nsUrlClassifierDBService::BuildTables(bool aTrackingProtectionEnabled,
     tables.Append(',');
     tables.Append(phishing);
   }
-  nsAutoCString tracking;
-  Preferences::GetCString(TRACKING_TABLE_PREF, &tracking);
-  if (aTrackingProtectionEnabled && !tracking.IsEmpty()) {
-    tables.Append(',');
-    tables.Append(tracking);
+  if (aTrackingProtectionEnabled) {
+    nsAutoCString tracking, trackingWhitelist;
+    Preferences::GetCString(TRACKING_TABLE_PREF, &tracking);
+    if (!tracking.IsEmpty()) {
+      tables.Append(',');
+      tables.Append(tracking);
+    }
+    Preferences::GetCString(TRACKING_WHITELIST_TABLE_PREF, &trackingWhitelist);
+    if (!trackingWhitelist.IsEmpty()) {
+      tables.Append(',');
+      tables.Append(trackingWhitelist);
+    }
+  }
+
+  if (StringBeginsWith(tables, NS_LITERAL_CSTRING(","))) {
+    tables.Cut(0, 1);
   }
 }
 
@@ -1229,25 +1248,20 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
 }
 
 NS_IMETHODIMP
-nsUrlClassifierDBService::ClassifyLocalWithTables(nsIPrincipal *aPrincipal,
+nsUrlClassifierDBService::ClassifyLocalWithTables(nsIURI *aURI,
                                                   const nsACString & aTables,
                                                   nsACString & aTableResults)
 {
   MOZ_ASSERT(NS_IsMainThread(), "ClassifyLocalWithTables must be on main thread");
 
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
-
-  uri = NS_GetInnermostURI(uri);
+  nsCOMPtr<nsIURI> uri = NS_GetInnermostURI(aURI);
   NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
 
   nsAutoCString key;
   // Canonicalize the url
   nsCOMPtr<nsIUrlClassifierUtils> utilsService =
     do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID);
-  rv = utilsService->GetKeyForURI(uri, key);
+  nsresult rv = utilsService->GetKeyForURI(uri, key);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoPtr<LookupResultArray> results(new LookupResultArray());
@@ -1513,6 +1527,7 @@ nsUrlClassifierDBService::Observe(nsISupports *aSubject, const char *aTopic,
       NS_LITERAL_STRING(PHISH_TABLE_PREF).Equals(aData) ||
       NS_LITERAL_STRING(MALWARE_TABLE_PREF).Equals(aData) ||
       NS_LITERAL_STRING(TRACKING_TABLE_PREF).Equals(aData) ||
+      NS_LITERAL_STRING(TRACKING_WHITELIST_TABLE_PREF).Equals(aData) ||
       NS_LITERAL_STRING(DOWNLOAD_BLOCK_TABLE_PREF).Equals(aData) ||
       NS_LITERAL_STRING(DOWNLOAD_ALLOW_TABLE_PREF).Equals(aData) ||
       NS_LITERAL_STRING(DISALLOW_COMPLETION_TABLE_PREF).Equals(aData)) {
@@ -1552,6 +1567,7 @@ nsUrlClassifierDBService::Shutdown()
     prefs->RemoveObserver(PHISH_TABLE_PREF, this);
     prefs->RemoveObserver(MALWARE_TABLE_PREF, this);
     prefs->RemoveObserver(TRACKING_TABLE_PREF, this);
+    prefs->RemoveObserver(TRACKING_WHITELIST_TABLE_PREF, this);
     prefs->RemoveObserver(DOWNLOAD_BLOCK_TABLE_PREF, this);
     prefs->RemoveObserver(DOWNLOAD_ALLOW_TABLE_PREF, this);
     prefs->RemoveObserver(DISALLOW_COMPLETION_TABLE_PREF, this);
