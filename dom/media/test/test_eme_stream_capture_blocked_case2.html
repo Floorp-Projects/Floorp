@@ -36,7 +36,7 @@ function startTest(test, token)
   });
   manager.started(case2token);
   LoadTestWithManagedLoadToken(test, v2, manager, case2token,
-                               { onlyLoadFirstFragments:2, noEndOfStream:true });
+                               { onlyLoadFirstFragments:2, noEndOfStream:false });
 }
 
 function beginTest() {
