@@ -6,7 +6,7 @@
 "use strict";
 
 // Don't modify this, instead set dom.push.debug.
-let gDebuggingEnabled = true;
+let gDebuggingEnabled = false;
 
 function debug(s) {
   if (gDebuggingEnabled) {
