@@ -278,7 +278,7 @@ GLBlitHelper::InitTexQuadProgram(BlitType target)
     */
     const char kTexYUVPlanarBlit_FragShaderSource[] = "\
         #ifdef GL_ES                                                        \n\
-        precision mediump float                                             \n\
+        precision mediump float;                                            \n\
         #endif                                                              \n\
         varying vec2 vTexCoord;                                             \n\
         uniform sampler2D uYTexture;                                        \n\
@@ -288,9 +288,9 @@ GLBlitHelper::InitTexQuadProgram(BlitType target)
         uniform vec2 uCbCrTexScale;                                         \n\
         void main()                                                         \n\
         {                                                                   \n\
-            float y = texture2D(uYTexture, vTexCoord * uYTexScale).r;       \n\
-            float cb = texture2D(uCbTexture, vTexCoord * uCbCrTexScale).r;  \n\
-            float cr = texture2D(uCrTexture, vTexCoord * uCbCrTexScale).r;  \n\
+            float y = texture2D(uYTexture, vTexCoord * uYTexScale).a;       \n\
+            float cb = texture2D(uCbTexture, vTexCoord * uCbCrTexScale).a;  \n\
+            float cr = texture2D(uCrTexture, vTexCoord * uCbCrTexScale).a;  \n\
             y = (y - 0.06275) * 1.16438;                                    \n\
             cb = cb - 0.50196;                                              \n\
             cr = cr - 0.50196;                                              \n\
@@ -641,7 +641,7 @@ GLBlitHelper::BindAndUploadYUVTexture(Channel which,
     GLuint& tex = *srcTexArr[which];
     if (!tex) {
         MOZ_ASSERT(needsAllocation);
-        tex = CreateTexture(mGL, LOCAL_GL_LUMINANCE, LOCAL_GL_LUMINANCE, LOCAL_GL_UNSIGNED_BYTE,
+        tex = CreateTexture(mGL, LOCAL_GL_ALPHA, LOCAL_GL_ALPHA, LOCAL_GL_UNSIGNED_BYTE,
                             gfx::IntSize(width, height), false);
     }
     mGL->fActiveTexture(LOCAL_GL_TEXTURE0 + which);
@@ -654,17 +654,17 @@ GLBlitHelper::BindAndUploadYUVTexture(Channel which,
                             0,
                             width,
                             height,
-                            LOCAL_GL_LUMINANCE,
+                            LOCAL_GL_ALPHA,
                             LOCAL_GL_UNSIGNED_BYTE,
                             data);
     } else {
         mGL->fTexImage2D(LOCAL_GL_TEXTURE_2D,
                          0,
-                         LOCAL_GL_LUMINANCE,
+                         LOCAL_GL_ALPHA,
                          width,
                          height,
                          0,
-                         LOCAL_GL_LUMINANCE,
+                         LOCAL_GL_ALPHA,
                          LOCAL_GL_UNSIGNED_BYTE,
                          data);
     }
