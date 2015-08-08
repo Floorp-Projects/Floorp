@@ -751,6 +751,9 @@ HwcComposer2D::Render(nsIWidget* aWidget)
         mList->hwLayers[mList->numHwLayers - 1].handle = dispSurface->lastHandle;
         mList->hwLayers[mList->numHwLayers - 1].acquireFenceFd = dispSurface->GetPrevDispAcquireFd();
     } else {
+        // Update screen rect to handle a case that TryRenderWithHwc() is not called.
+        mScreenRect = screen->GetNaturalBounds();
+
         mList->flags = HWC_GEOMETRY_CHANGED;
         mList->numHwLayers = 2;
         mList->hwLayers[0].hints = 0;
@@ -773,7 +776,8 @@ HwcComposer2D::Prepare(buffer_handle_t dispHandle, int fence, nsScreenGonk* scre
     if (mPrepared) {
         LOGE("Multiple hwc prepare calls!");
     }
-    mHal->Prepare(mList, screen->GetDisplayType(), dispHandle, fence);
+    hwc_rect_t dispRect = {0, 0, mScreenRect.width, mScreenRect.height};
+    mHal->Prepare(mList, screen->GetDisplayType(), dispRect, dispHandle, fence);
     mPrepared = true;
 }
 

@@ -996,6 +996,9 @@ pref("gfx.canvas.max-size-for-skia-gl", -1);
 // enable fence with readpixels for SurfaceStream
 pref("gfx.gralloc.fence-with-readpixels", true);
 
+// enable screen mirroring to external display
+pref("gfx.screen-mirroring.enabled", true);
+
 // The url of the page used to display network error details.
 pref("b2g.neterror.url", "net_error.html");
 
