@@ -2770,8 +2770,8 @@ nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTriggerSwipe
       PanGestureInput panInput = aEvent.AsPanGestureInput();
       event = panInput.ToWidgetWheelEvent(this);
       if (aCanTriggerSwipe) {
-        DispatchEvent(&event, status);
         SwipeInfo swipeInfo = SendMayStartSwipe(panInput);
+        DispatchEvent(&event, status);
         if (swipeInfo.wantsSwipe &&
             IsPotentialSwipeStartEventOverscrollingViewport(event)) {
           TrackScrollEventAsSwipe(panInput, swipeInfo.allowedDirections);
