@@ -111,7 +111,7 @@ nsPrincipal::GetOriginForURI(nsIURI* aURI, nsACString& aOrigin)
     return NS_ERROR_FAILURE;
   }
 
-  nsAutoCString hostPort;
+  nsAutoCString host;
 
   // chrome: URLs don't have a meaningful origin, so make
   // sure we just get the full spec for them.
@@ -120,10 +120,10 @@ nsPrincipal::GetOriginForURI(nsIURI* aURI, nsACString& aOrigin)
   bool isChrome;
   nsresult rv = origin->SchemeIs("chrome", &isChrome);
   if (NS_SUCCEEDED(rv) && !isChrome) {
-    rv = origin->GetAsciiHost(hostPort);
+    rv = origin->GetAsciiHost(host);
     // Some implementations return an empty string, treat it as no support
     // for asciiHost by that implementation.
-    if (hostPort.IsEmpty()) {
+    if (host.IsEmpty()) {
       rv = NS_ERROR_FAILURE;
     }
   }
@@ -159,6 +159,15 @@ nsPrincipal::GetOriginForURI(nsIURI* aURI, nsACString& aOrigin)
   }
 
   if (NS_SUCCEEDED(rv) && !isChrome) {
+    nsAutoCString hostPort;
+    if (host.FindChar(':') != -1) {
+      hostPort.Assign("[");
+      hostPort.Append(host);
+      hostPort.Append("]");
+    } else {
+      hostPort.Assign(host);
+    }
+
     if (port != -1) {
       hostPort.Append(':');
       hostPort.AppendInt(port, 10);
