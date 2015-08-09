@@ -8,6 +8,10 @@ Components.utils.import("resource://gre/modules/Extension.jsm");
 
 let extension;
 
+function install(data, reason)
+{
+}
+
 function startup(data, reason)
 {
   extension = new Extension(data);
@@ -17,4 +21,8 @@ function startup(data, reason)
 function shutdown(data, reason)
 {
   extension.shutdown();
+}
+
+function uninstall(data, reason)
+{
 }

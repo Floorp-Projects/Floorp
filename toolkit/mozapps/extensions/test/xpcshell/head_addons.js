@@ -770,6 +770,62 @@ function writeInstallRDFForExtension(aData, aDir, aId, aExtraFile) {
 }
 
 /**
+ * Writes a manifest.json manifest into an extension using the properties passed
+ * in a JS object.
+ *
+ * @param   aManifest
+ *          The data to write
+ * @param   aDir
+ *          The install directory to add the extension to
+ * @param   aId
+ *          An optional string to override the default installation aId
+ * @return  A file pointing to where the extension was installed
+ */
+function writeWebManifestForExtension(aData, aDir, aId = undefined) {
+  if (!aId)
+    aId = aData.applications.gecko.id;
+
+  if (TEST_UNPACKED) {
+    let dir = aDir.clone();
+    dir.append(aId);
+    if (!dir.exists())
+      dir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+
+    let file = dir.clone();
+    file.append("manifest.json");
+    if (file.exists())
+      file.remove(true);
+
+    let data = JSON.stringify(aData);
+    let fos = AM_Cc["@mozilla.org/network/file-output-stream;1"].
+              createInstance(AM_Ci.nsIFileOutputStream);
+    fos.init(file,
+             FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_TRUNCATE,
+             FileUtils.PERMS_FILE, 0);
+    fos.write(data, data.length);
+    fos.close();
+
+    return dir;
+  }
+  else {
+    let file = aDir.clone();
+    file.append(aId + ".xpi");
+
+    let stream = AM_Cc["@mozilla.org/io/string-input-stream;1"].
+                 createInstance(AM_Ci.nsIStringInputStream);
+    stream.setData(JSON.stringify(aData), -1);
+    let zipW = AM_Cc["@mozilla.org/zipwriter;1"].
+               createInstance(AM_Ci.nsIZipWriter);
+    zipW.open(file, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_TRUNCATE);
+    zipW.addEntryStream("manifest.json", 0, AM_Ci.nsIZipWriter.COMPRESSION_NONE,
+                        stream, false);
+    zipW.close();
+
+    return file;
+  }
+}
+
+/**
  * Writes an install.rdf manifest into a packed extension using the properties passed
  * in a JS object. The objects should contain a property for each property to
  * appear in the RDF. The object may contain an array of objects with id,

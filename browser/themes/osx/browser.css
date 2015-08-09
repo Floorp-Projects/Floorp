@@ -207,7 +207,7 @@ toolbarseparator {
 #TabsToolbar:not([collapsed="true"]) + #nav-bar:-moz-lwtheme {
   border-top: 1px solid hsla(0,0%,0%,.3);
   background-clip: padding-box;
-  margin-top: calc(-1 * var(--tab-toolbar-navbar-overlap));
+  margin-top: calc(-1 * var(--navbar-tab-toolbar-highlight-overlap));
   /* Position the toolbar above the bottom of background tabs */
   position: relative;
   z-index: 1;
@@ -219,7 +219,7 @@ toolbarseparator {
   #main-window[tabsintitlebar] #TabsToolbar:not([collapsed="true"]) + #nav-bar:not(:-moz-lwtheme) {
     border-top: 1px solid hsla(0,0%,0%,.2);
     background-clip: padding-box;
-    margin-top: calc(-1 * var(--tab-toolbar-navbar-overlap));
+    margin-top: calc(-1 * var(--navbar-tab-toolbar-highlight-overlap));
     /* Position the toolbar above the bottom of background tabs */
     position: relative;
     z-index: 1;
@@ -2847,7 +2847,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 #TabsToolbar .toolbarbutton-1 {
-  margin-bottom: var(--tab-toolbar-navbar-overlap);
+  margin-bottom: var(--navbar-tab-toolbar-highlight-overlap);
 }
 
 #TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {

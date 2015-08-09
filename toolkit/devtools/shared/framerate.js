@@ -92,6 +92,7 @@ let Framerate = exports.Framerate = Class({
    */
   _onGlobalCreated: function (win) {
     if (this._recording) {
+      this._contentWin.cancelAnimationFrame(this._rafID);
       this._rafID = this._contentWin.requestAnimationFrame(this._onRefreshDriverTick);
     }
   }

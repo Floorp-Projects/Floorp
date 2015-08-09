@@ -3969,6 +3969,9 @@ public class BrowserApp extends GeckoApp
         if (inGuestMode) {
             return StartupAction.GUEST;
         }
+        if (RestrictedProfiles.isRestrictedProfile(this)) {
+            return StartupAction.RESTRICTED;
+        }
         return (passedURL == null ? StartupAction.NORMAL : StartupAction.URL);
     }
 }
