@@ -68,6 +68,7 @@ let manifest2 = { // used for testing install
 
 function test() {
   waitForExplicitFinish();
+  requestLongerTimeout(2);
   runSocialTests(tests, undefined, postTestCleanup);
 }
 
