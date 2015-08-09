@@ -37,10 +37,10 @@ const DEFAULT_AUTO_EXPAND_DEPTH = 3; // depth
 const DEFAULT_VISIBLE_CELLS = {
   duration: true,
   percentage: true,
-  allocations: false,
+  count: false,
   selfDuration: true,
   selfPercentage: true,
-  selfAllocations: false,
+  selfCount: false,
   samples: true,
   function: true
 };
@@ -134,30 +134,31 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
    */
   _displaySelf: function(document, arrowNode) {
     let frameInfo = this.getDisplayedData();
+    let cells = [];
 
     if (this.visibleCells.duration) {
-      var durationCell = this._createTimeCell(document, frameInfo.totalDuration);
-    }
-    if (this.visibleCells.selfDuration) {
-      var selfDurationCell = this._createTimeCell(document, frameInfo.selfDuration, true);
+      cells.push(this._createTimeCell(document, frameInfo.totalDuration));
     }
     if (this.visibleCells.percentage) {
-      var percentageCell = this._createExecutionCell(document, frameInfo.totalPercentage);
+      cells.push(this._createExecutionCell(document, frameInfo.totalPercentage));
+    }
+    if (this.visibleCells.count) {
+      cells.push(this._createCountCell(document, frameInfo.totalCount));
+    }
+    if (this.visibleCells.selfDuration) {
+      cells.push(this._createTimeCell(document, frameInfo.selfDuration, true));
     }
     if (this.visibleCells.selfPercentage) {
-      var selfPercentageCell = this._createExecutionCell(document, frameInfo.selfPercentage, true);
+      cells.push(this._createExecutionCell(document, frameInfo.selfPercentage, true));
     }
-    if (this.visibleCells.allocations) {
-      var allocationsCell = this._createAllocationsCell(document, frameInfo.totalAllocations);
-    }
-    if (this.visibleCells.selfAllocations) {
-      var selfAllocationsCell = this._createAllocationsCell(document, frameInfo.selfAllocations, true);
+    if (this.visibleCells.selfCount) {
+      cells.push(this._createCountCell(document, frameInfo.selfCount, true));
     }
     if (this.visibleCells.samples) {
-      var samplesCell = this._createSamplesCell(document, frameInfo.samples);
+      cells.push(this._createSamplesCell(document, frameInfo.samples));
     }
     if (this.visibleCells.function) {
-      var functionCell = this._createFunctionCell(document, arrowNode, frameInfo.name, frameInfo, this.level);
+      cells.push(this._createFunctionCell(document, arrowNode, frameInfo.name, frameInfo, this.level));
     }
 
     let targetNode = document.createElement("hbox");
@@ -169,29 +170,9 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
     if (this.hidden) {
       targetNode.style.display = "none";
     }
-    if (this.visibleCells.duration) {
-      targetNode.appendChild(durationCell);
-    }
-    if (this.visibleCells.percentage) {
-      targetNode.appendChild(percentageCell);
-    }
-    if (this.visibleCells.allocations) {
-      targetNode.appendChild(allocationsCell);
-    }
-    if (this.visibleCells.selfDuration) {
-      targetNode.appendChild(selfDurationCell);
-    }
-    if (this.visibleCells.selfPercentage) {
-      targetNode.appendChild(selfPercentageCell);
-    }
-    if (this.visibleCells.selfAllocations) {
-      targetNode.appendChild(selfAllocationsCell);
-    }
-    if (this.visibleCells.samples) {
-      targetNode.appendChild(samplesCell);
-    }
-    if (this.visibleCells.function) {
-      targetNode.appendChild(functionCell);
+
+    for (let i = 0; i < cells.length; i++) {
+      targetNode.appendChild(cells[i]);
     }
 
     return targetNode;
@@ -239,10 +220,10 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
     cell.setAttribute("value", L10N.numberWithDecimals(percentage, 2) + PERCENTAGE_UNITS);
     return cell;
   },
-  _createAllocationsCell: function(doc, count, isSelf = false) {
+  _createCountCell: function(doc, count, isSelf = false) {
     let cell = doc.createElement("description");
     cell.className = "plain call-tree-cell";
-    cell.setAttribute("type", isSelf ? "self-allocations" : "allocations");
+    cell.setAttribute("type", isSelf ? "self-count" : "count");
     cell.setAttribute("crop", "end");
     cell.setAttribute("value", count || 0);
     return cell;
@@ -356,7 +337,7 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
 
     return this._cachedDisplayedData = this.frame.getInfo({
       root: this.root.frame,
-      allocations: (this.visibleCells.allocations || this.visibleCells.selfAllocations)
+      allocations: (this.visibleCells.count || this.visibleCells.selfCount)
     });
 
     /**

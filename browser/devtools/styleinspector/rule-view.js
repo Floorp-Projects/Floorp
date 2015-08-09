@@ -1706,6 +1706,10 @@ CssRuleView.prototype = {
       return promise.resolve(undefined);
     }
 
+    if (this.popup.isOpen) {
+      this.popup.hidePopup();
+    }
+
     this.clear();
     this.clearPseudoClassPanel();
 
@@ -2208,6 +2212,7 @@ CssRuleView.prototype = {
     let isComputedHighlighted = false;
 
     // Highlight search matches in the computed list of properties
+    editor._populateComputed();
     for (let computed of editor.prop.computed) {
       if (computed.element) {
         // Get the actual property value displayed in the computed list
@@ -2837,6 +2842,7 @@ function TextPropertyEditor(aRuleEditor, aProperty) {
   this.prop = aProperty;
   this.prop.editor = this;
   this.browserWindow = this.doc.defaultView.top;
+  this._populatedComputed = false;
 
   this._onEnableClicked = this._onEnableClicked.bind(this);
   this._onExpandClicked = this._onExpandClicked.bind(this);
@@ -3179,23 +3185,36 @@ TextPropertyEditor.prototype = {
   },
 
   /**
-   * Populate the list of computed styles.
+   * Update the indicator for computed styles. The computed styles themselves
+   * are populated on demand, when they become visible.
    */
   _updateComputed: function() {
-    // Clear out existing viewers.
-    while (this.computed.hasChildNodes()) {
-      this.computed.removeChild(this.computed.lastChild);
-    }
+    this.computed.innerHTML = "";
 
-    let showExpander = false;
+    let showExpander = this.prop.computed.some(c => c.name !== this.prop.name);
+    this.expander.style.visibility = showExpander ? "visible" : "hidden";
+
+    this._populatedComputed = false;
+    if (this.expander.hasAttribute("open")) {
+      this._populateComputed();
+    }
+  },
+
+  /**
+   * Populate the list of computed styles.
+   */
+  _populateComputed: function() {
+    if (this._populatedComputed) {
+      return;
+    }
+    this._populatedComputed = true;
+
     for (let computed of this.prop.computed) {
       // Don't bother to duplicate information already
       // shown in the text property.
       if (computed.name === this.prop.name) {
         continue;
       }
-
-      showExpander = true;
 
       let li = createChild(this.computed, "li", {
         class: "ruleview-computed"
@@ -3234,13 +3253,6 @@ TextPropertyEditor.prototype = {
       // styles
       computed.element = li;
     }
-
-    // Show or hide the expander as needed.
-    if (showExpander) {
-      this.expander.style.visibility = "visible";
-    } else {
-      this.expander.style.visibility = "hidden";
-    }
   },
 
   /**
@@ -3273,6 +3285,7 @@ TextPropertyEditor.prototype = {
     } else {
       this.expander.setAttribute("open", "true");
       this.computed.setAttribute("user-open", "");
+      this._populateComputed();
     }
 
     aEvent.stopPropagation();
@@ -3287,6 +3300,7 @@ TextPropertyEditor.prototype = {
     if (!this.computed.hasAttribute("user-open")) {
       this.expander.setAttribute("open", "true");
       this.computed.setAttribute("filter-open", "");
+      this._populateComputed();
     }
   },
 

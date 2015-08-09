@@ -81,11 +81,6 @@ browser.jar:
         skin/classic/browser/menuPanel-small@2x.png
         skin/classic/browser/menuPanel-small-aero.png
         skin/classic/browser/menuPanel-small-aero@2x.png
-        skin/classic/browser/bad-content-blocked-16.png             (../shared/bad-content-blocked-16.png)
-        skin/classic/browser/bad-content-blocked-16@2x.png          (../shared/bad-content-blocked-16@2x.png)
-        skin/classic/browser/bad-content-blocked-64.png             (../shared/bad-content-blocked-64.png)
-        skin/classic/browser/bad-content-unblocked-16.png           (../shared/bad-content-unblocked-16.png)
-        skin/classic/browser/bad-content-unblocked-64.png           (../shared/bad-content-unblocked-64.png)
         skin/classic/browser/monitor.png
         skin/classic/browser/monitor_16-10.png
         skin/classic/browser/notification-16.png
@@ -224,6 +219,18 @@ browser.jar:
         skin/classic/browser/customizableui/subView-arrow-back-inverted.png  (../shared/customizableui/subView-arrow-back-inverted.png)
         skin/classic/browser/customizableui/subView-arrow-back-inverted@2x.png  (../shared/customizableui/subView-arrow-back-inverted@2x.png)
         skin/classic/browser/customizableui/subView-arrow-back-inverted-rtl.png  (../shared/customizableui/subView-arrow-back-inverted-rtl.png)
+        skin/classic/browser/customizableui/thumburger-XP.png             (customizableui/thumburger-XP.png)
+        skin/classic/browser/customizableui/thumburger-XP@2x.png          (customizableui/thumburger-XP@2x.png)
+        skin/classic/browser/customizableui/thumburger-aero.png           (customizableui/thumburger-aero.png)
+        skin/classic/browser/customizableui/thumburger-aero@2x.png        (customizableui/thumburger-aero@2x.png)
+        skin/classic/browser/customizableui/thumburger-inverted.png       (customizableui/thumburger-inverted.png)
+        skin/classic/browser/customizableui/thumburger-inverted@2x.png    (customizableui/thumburger-inverted@2x.png)
+        skin/classic/browser/customizableui/thumburger-lunaSilver.png     (customizableui/thumburger-lunaSilver.png)
+        skin/classic/browser/customizableui/thumburger-lunaSilver@2x.png  (customizableui/thumburger-lunaSilver@2x.png)
+        skin/classic/browser/customizableui/thumburger-win8.png           (customizableui/thumburger-win8.png)
+        skin/classic/browser/customizableui/thumburger-win8@2x.png        (customizableui/thumburger-win8@2x.png)
+        skin/classic/browser/customizableui/thumburger.png                (customizableui/thumburger.png)
+        skin/classic/browser/customizableui/thumburger@2x.png             (customizableui/thumburger@2x.png)
         skin/classic/browser/customizableui/whimsy.png  (../shared/customizableui/whimsy.png)
         skin/classic/browser/customizableui/whimsy@2x.png  (../shared/customizableui/whimsy@2x.png)
         skin/classic/browser/customizableui/whimsy-bw.png  (../shared/customizableui/whimsy-bw.png)
@@ -702,6 +709,16 @@ browser.jar:
 % override chrome://browser/skin/Toolbar.png                          chrome://browser/skin/Toolbar-aero.png                            os=WINNT osversion=6.1
 % override chrome://browser/skin/Toolbar.png                          chrome://browser/skin/Toolbar-win8.png                            os=WINNT osversion=6.2
 % override chrome://browser/skin/Toolbar.png                          chrome://browser/skin/Toolbar-win8.png                            os=WINNT osversion=6.3
+% override chrome://browser/skin/customizableui/thumburger.png        chrome://browser/skin/customizableui/thumburger-XP.png            os=WINNT osversion<6
+% override chrome://browser/skin/customizableui/thumburger.png        chrome://browser/skin/customizableui/thumburger-aero.png          os=WINNT osversion=6
+% override chrome://browser/skin/customizableui/thumburger.png        chrome://browser/skin/customizableui/thumburger-aero.png          os=WINNT osversion=6.1
+% override chrome://browser/skin/customizableui/thumburger.png        chrome://browser/skin/customizableui/thumburger-win8.png          os=WINNT osversion=6.2
+% override chrome://browser/skin/customizableui/thumburger.png        chrome://browser/skin/customizableui/thumburger-win8.png          os=WINNT osversion=6.3
+% override chrome://browser/skin/customizableui/thumburger@2x.png     chrome://browser/skin/customizableui/thumburger-XP@2x.png         os=WINNT osversion<6
+% override chrome://browser/skin/customizableui/thumburger@2x.png     chrome://browser/skin/customizableui/thumburger-aero@2x.png       os=WINNT osversion=6
+% override chrome://browser/skin/customizableui/thumburger@2x.png     chrome://browser/skin/customizableui/thumburger-aero@2x.png       os=WINNT osversion=6.1
+% override chrome://browser/skin/customizableui/thumburger@2x.png     chrome://browser/skin/customizableui/thumburger-win8@2x.png       os=WINNT osversion=6.2
+% override chrome://browser/skin/customizableui/thumburger@2x.png     chrome://browser/skin/customizableui/thumburger-win8@2x.png       os=WINNT osversion=6.3
 % override chrome://browser/skin/loop/toolbar.png                     chrome://browser/skin/loop/toolbar-XP.png                         os=WINNT osversion<6
 % override chrome://browser/skin/loop/toolbar.png                     chrome://browser/skin/loop/toolbar-aero.png                       os=WINNT osversion=6
 % override chrome://browser/skin/loop/toolbar.png                     chrome://browser/skin/loop/toolbar-aero.png                       os=WINNT osversion=6.1

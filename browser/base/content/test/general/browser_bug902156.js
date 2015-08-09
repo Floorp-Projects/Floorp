@@ -4,19 +4,19 @@
  *
  * 1. Navigate to the same domain via document.location
  *    - Load a html page which has mixed content
- *    - Doorhanger to disable protection appears - we disable it
+ *    - Control Center button to disable protection appears - we disable it
  *    - Load a new page from the same origin using document.location
- *    - Doorhanger should not appear anymore!
+ *    - Control Center button should not appear anymore!
  *
  * 2. Navigate to the same domain via simulateclick for a link on the page
  *    - Load a html page which has mixed content
- *    - Doorhanger to disable protection appears - we disable it
+ *    - Control Center button to disable protection appears - we disable it
  *    - Load a new page from the same origin simulating a click
- *    - Doorhanger should not appear anymore!
+ *    - Control Center button should not appear anymore!
  *
  * 3. Navigate to a differnet domain and show the content is still blocked
  *    - Load a different html page which has mixed content
- *    - Doorhanger to disable protection should appear again because
+ *    - Control Center button to disable protection should appear again because
  *      we navigated away from html page where we disabled the protection.
  *
  * Note, for all tests we set gHttpTestRoot to use 'https'.
@@ -50,14 +50,11 @@ function test1A() {
   gTestBrowser.removeEventListener("load", test1A, true);
   gTestBrowser.addEventListener("load", test1B, true);
 
-  var notification = PopupNotifications.getNotification("bad-content", gTestBrowser);
-  ok(notification, "OK: Mixed Content Doorhanger did appear in Test1A!");
-  notification.reshow();
-  ok(PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is being blocked in Test1A!");
+  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
 
   // Disable Mixed Content Protection for the page (and reload)
-  PopupNotifications.panel.firstChild.disableMixedContentProtection();
-  notification.remove();
+  let {gIdentityHandler} = gTestBrowser.ownerGlobal;
+  gIdentityHandler.disableMixedContentProtection();
 }
 
 function test1B() {
@@ -83,13 +80,9 @@ function test1C() {
 function test1D() {
   gTestBrowser.removeEventListener("load", test1D, true);
 
-  // The Doorhanger should appear but isMixedContentBlocked should be NOT true,
+  // The Control Center button should appear but isMixedContentBlocked should be NOT true,
   // because our decision of disabling the mixed content blocker is persistent.
-  var notification = PopupNotifications.getNotification("bad-content", gTestBrowser);
-  ok(notification, "OK: Mixed Content Doorhanger did appear in Test1D!");
-  notification.reshow();
-  ok(!PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is NOT being blocked in Test1D!");
-  notification.remove();
+  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: true, activeBlocked: false, passiveLoaded: false});
 
   var actual = content.document.getElementById('mctestdiv').innerHTML;
   is(actual, "Mixed Content Blocker disabled", "OK: Executed mixed script in Test 1D");
@@ -112,14 +105,11 @@ function test2A() {
   gTestBrowser.removeEventListener("load", test2A, true);
   gTestBrowser.addEventListener("load", test2B, true);
 
-  var notification = PopupNotifications.getNotification("bad-content", gTestBrowser);
-  ok(notification, "OK: Mixed Content Doorhanger did appear in Test 2A!");
-  notification.reshow();
-  ok(PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is being blocked in Test 2A!");
+  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
 
   // Disable Mixed Content Protection for the page (and reload)
-  PopupNotifications.panel.firstChild.disableMixedContentProtection();
-  notification.remove();
+  let {gIdentityHandler} = gTestBrowser.ownerGlobal;
+  gIdentityHandler.disableMixedContentProtection();
 }
 
 function test2B() {
@@ -146,13 +136,9 @@ function test2C() {
 function test2D() {
   gTestBrowser.removeEventListener("load", test2D, true);
 
-  // The Doorhanger should appear but isMixedContentBlocked should be NOT true,
+  // The Control Center button should appear but isMixedContentBlocked should be NOT true,
   // because our decision of disabling the mixed content blocker is persistent.
-  var notification = PopupNotifications.getNotification("bad-content", gTestBrowser);
-  ok(notification, "OK: Mixed Content Doorhanger did appear in Test2D!");
-  notification.reshow();
-  ok(!PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is NOT being blocked");
-  notification.remove();
+  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: true, activeBlocked: false, passiveLoaded: false});
 
   var actual = content.document.getElementById('mctestdiv').innerHTML;
   is(actual, "Mixed Content Blocker disabled", "OK: Executed mixed script in Test 2D");
@@ -174,11 +160,7 @@ function test3A() {
   // one once the page is loaded with mixed content blocker disabled
   gTestBrowser.removeEventListener("load", test3A, true);
 
-  var notification = PopupNotifications.getNotification("bad-content", gTestBrowser);
-  ok(notification, "OK: Mixed Content Doorhanger did appear in Test 3A!");
-  notification.reshow();
-  ok(PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is being blocked in Test 3A");
-  notification.remove();
+  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
 
   // We are done with tests, clean up
   cleanUpAfterTests();

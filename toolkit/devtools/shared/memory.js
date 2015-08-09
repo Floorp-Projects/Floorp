@@ -226,6 +226,11 @@ let Memory = exports.Memory = Class({
    *                <timestamp for allocations[1]>,
    *                ...
    *              ],
+   *              allocationSizes: [
+   *                <bytesize for allocations[0]>,
+   *                <bytesize for allocations[1]>,
+   *                ...
+   *              ],
    *              frames: [
    *                {
    *                  line: <line number for this frame>,
@@ -275,8 +280,9 @@ let Memory = exports.Memory = Class({
     const packet = {
       allocations: [],
       allocationsTimestamps: [],
+      allocationSizes: [],
     };
-    for (let { frame: stack, timestamp } of allocations) {
+    for (let { frame: stack, timestamp, size } of allocations) {
       if (stack && Cu.isDeadWrapper(stack)) {
         continue;
       }
@@ -284,7 +290,7 @@ let Memory = exports.Memory = Class({
       // Safe because SavedFrames are frozen/immutable.
       let waived = Cu.waiveXrays(stack);
 
-      // Ensure that we have a form, count, and index for new allocations
+      // Ensure that we have a form, size, and index for new allocations
       // because we potentially haven't seen some or all of them yet. After this
       // loop, we can rely on the fact that every frame we deal with already has
       // its metadata stored.
@@ -292,6 +298,7 @@ let Memory = exports.Memory = Class({
 
       packet.allocations.push(index);
       packet.allocationsTimestamps.push(timestamp);
+      packet.allocationSizes.push(size);
     }
 
     return this._frameCache.updateFramePacket(packet);

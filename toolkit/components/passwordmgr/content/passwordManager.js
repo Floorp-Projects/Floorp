@@ -411,16 +411,44 @@ function CopyUsername() {
   Services.telemetry.getHistogramById("PWMGR_MANAGE_COPIED_USERNAME").add(1);
 }
 
-function UpdateCopyPassword() {
-  var singleSelection = (signonsTreeView.selection.count == 1);
-  var passwordMenuitem = document.getElementById("context-copypassword");
-  var usernameMenuitem = document.getElementById("context-copyusername");
-  if (singleSelection) {
-    usernameMenuitem.removeAttribute("disabled");
-    passwordMenuitem.removeAttribute("disabled");
+function EditCellInSelectedRow(columnName) {
+  let row = signonsTree.currentIndex;
+  let columnElement = getColumnByName(columnName);
+  signonsTree.startEditing(row, signonsTree.columns.getColumnFor(columnElement));
+}
+
+function UpdateContextMenu() {
+  let singleSelection = (signonsTreeView.selection.count == 1);
+  let menuItems = new Map();
+  let menupopup = document.getElementById("signonsTreeContextMenu");
+  for (let menuItem of menupopup.querySelectorAll("menuitem")) {
+    menuItems.set(menuItem.id, menuItem);
+  }
+
+  if (!singleSelection) {
+    for (let menuItem of menuItems.values()) {
+      menuItem.setAttribute("disabled", "true");
+    }
+    return;
+  }
+
+  let selectedRow = signonsTree.currentIndex;
+
+  // Disable "Copy Username" if the username is empty.
+  if (signonsTreeView.getCellText(selectedRow, { id: "userCol" }) != "") {
+    menuItems.get("context-copyusername").removeAttribute("disabled");
   } else {
-    usernameMenuitem.setAttribute("disabled", "true");
-    passwordMenuitem.setAttribute("disabled", "true");
+    menuItems.get("context-copyusername").setAttribute("disabled", "true");
+  }
+
+  menuItems.get("context-editusername").removeAttribute("disabled");
+  menuItems.get("context-copypassword").removeAttribute("disabled");
+
+  // Disable "Edit Password" if the password column isn't showing.
+  if (!document.getElementById("passwordCol").hidden) {
+    menuItems.get("context-editpassword").removeAttribute("disabled");
+  } else {
+    menuItems.get("context-editpassword").setAttribute("disabled", "true");
   }
 }
 

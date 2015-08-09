@@ -10,6 +10,7 @@
   --tab-toolbar-navbar-overlap: 0px;
   --space-above-tabbar: 0px;
   --toolbarbutton-text-shadow: none;
+  --backbutton-urlbar-overlap: 0px;
 }
 
 :root[devtoolstheme="dark"] {

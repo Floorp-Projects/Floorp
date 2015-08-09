@@ -242,12 +242,11 @@ function getInflatedFrameCache(frameTable) {
  * @param number index
  * @param object frameTable
  * @param object stringTable
- * @param object allocationsTable
  */
-function getOrAddInflatedFrame(cache, index, frameTable, stringTable, allocationsTable) {
+function getOrAddInflatedFrame(cache, index, frameTable, stringTable) {
   let inflatedFrame = cache[index];
   if (inflatedFrame === null) {
-    inflatedFrame = cache[index] = new InflatedFrame(index, frameTable, stringTable, allocationsTable);
+    inflatedFrame = cache[index] = new InflatedFrame(index, frameTable, stringTable);
   }
   return inflatedFrame;
 };
@@ -258,9 +257,8 @@ function getOrAddInflatedFrame(cache, index, frameTable, stringTable, allocation
  * @param number index
  * @param object frameTable
  * @param object stringTable
- * @param object allocationsTable
  */
-function InflatedFrame(index, frameTable, stringTable, allocationsTable) {
+function InflatedFrame(index, frameTable, stringTable) {
   const LOCATION_SLOT = frameTable.schema.location;
   const IMPLEMENTATION_SLOT = frameTable.schema.implementation;
   const OPTIMIZATIONS_SLOT = frameTable.schema.optimizations;
@@ -274,7 +272,6 @@ function InflatedFrame(index, frameTable, stringTable, allocationsTable) {
   this.optimizations = frame[OPTIMIZATIONS_SLOT];
   this.line = frame[LINE_SLOT];
   this.column = undefined;
-  this.allocations = allocationsTable ? allocationsTable[index] : 0;
   this.category = category;
   this.isContent = false;
 
@@ -505,10 +502,10 @@ function getFrameInfo (node, options) {
     data.COSTS_CALCULATED = true;
   }
 
-  if (options && options.allocations && !data.ALLOCATIONS_CALCULATED) {
-    data.totalAllocations = node.allocations + node.calls.reduce((acc, node) => acc + node.allocations, 0);
-    data.selfAllocations = node.allocations;
-    data.ALLOCATIONS_CALCULATED = true;
+  if (options && options.allocations && !data.ALLOCATION_DATA_CALCULATED) {
+    data.selfCount = node.youngestFrameSamples;
+    data.totalCount = node.samples;
+    data.ALLOCATION_DATA_CALCULATED = true;
   }
 
   return data;
