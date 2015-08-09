@@ -15,9 +15,9 @@
   <project name="platform_build" path="build" remote="b2g" revision="e862ab9177af664f00b4522e2350f4cb13866d73">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="0afa6429bf6a772289801600a84438cd7aa27b11"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="3e5271663e7ef26290c29a45d2e42c0d3c20fe04"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="4d9fbc08e87731447c19e96e13d8c7444baafcca"/>
+  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="62cfa11ae7d77f6330de019a5aa79607e35be7d1"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="657894b4a1dc0a926117f4812e0940229f9f676f"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
@@ -125,7 +125,7 @@
   <!-- Flame specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="1bb28abbc215f45220620af5cd60a8ac1be93722"/>
   <project name="device/qcom/common" path="device/qcom/common" revision="2501e5940ba69ece7654ff85611c76ae5bda299c"/>
-  <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="41d3e221039d1c4486fc13ff26793a7a39226423"/>
+  <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="c4779d6da0f85894b1f78f0351b43f2949e8decd"/>
   <project name="codeaurora_kernel_msm" path="kernel" remote="b2g" revision="47aac20dbffea5874cbbbdc6556558855c38dce4"/>
   <project name="kernel_lk" path="bootable/bootloader/lk" remote="b2g" revision="fda40423ffa573dc6cafd3780515010cb2a086be"/>
   <project name="platform_bootable_recovery" path="bootable/recovery" remote="b2g" revision="d5e53ed6f22fa06052351dc03510af9473af01ea"/>
