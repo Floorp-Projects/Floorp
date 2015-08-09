@@ -66,6 +66,9 @@ header h1
   margin-bottom: 23px;
   color: rgb(138, 155, 168);
   font-size: 19px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .description {

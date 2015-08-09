@@ -17,7 +17,7 @@ add_task(function* test_dupe_urls() {
     completed:  "mozilla.org/",
     matches: [ { uri: NetUtil.newURI("http://mozilla.org/"),
                  title: "mozilla.org",
-                 style: [ "autofill" ] } ]
+                 style: [ "autofill", "heuristic" ] } ]
   });
   yield cleanup();
 });

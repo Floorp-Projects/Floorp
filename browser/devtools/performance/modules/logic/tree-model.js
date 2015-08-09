@@ -37,14 +37,14 @@ function ThreadNode(thread, options = {}) {
   this.duration = options.endTime - options.startTime;
   this.nodeType = "Thread";
 
-  let { samples, stackTable, frameTable, stringTable, allocationsTable } = thread;
+  let { samples, stackTable, frameTable, stringTable } = thread;
 
   // Nothing to do if there are no samples.
   if (samples.data.length === 0) {
     return;
   }
 
-  this._buildInverted(samples, stackTable, frameTable, stringTable, allocationsTable, options);
+  this._buildInverted(samples, stackTable, frameTable, stringTable, options);
   if (!options.invertTree) {
     this._uninvert();
   }
@@ -67,9 +67,6 @@ ThreadNode.prototype = {
    *        The table of deduplicated frames from the backend.
    * @param object stringTable
    *        The table of deduplicated strings from the backend.
-   * @param object allocationsTable
-   *        The table of allocation counts from the backend. Indexed by frame
-   *        index.
    * @param object options
    *        Additional supported options
    *          - number startTime
@@ -77,7 +74,7 @@ ThreadNode.prototype = {
    *          - boolean contentOnly [optional]
    *          - boolean invertTree [optional]
    */
-  _buildInverted: function buildInverted(samples, stackTable, frameTable, stringTable, allocationsTable, options) {
+  _buildInverted: function buildInverted(samples, stackTable, frameTable, stringTable, options) {
     function getOrAddFrameNode(calls, isLeaf, frameKey, inflatedFrame, isMetaCategory, leafTable) {
       // Insert the inflated frame into the call tree at the current level.
       let frameNode;
@@ -203,7 +200,7 @@ ThreadNode.prototype = {
 
         // Inflate the frame.
         let inflatedFrame = getOrAddInflatedFrame(inflatedFrameCache, frameIndex, frameTable,
-                                                  stringTable, allocationsTable);
+                                                  stringTable);
 
         // Compute the frame key.
         mutableFrameKeyOptions.isRoot = stackIndex === null;
@@ -382,11 +379,10 @@ ThreadNode.prototype = {
  *        Whether or not this is a platform node that should appear as a
  *        generalized meta category or not.
  */
-function FrameNode(frameKey, { location, line, category, allocations, isContent }, isMetaCategory) {
+function FrameNode(frameKey, { location, line, category, isContent }, isMetaCategory) {
   this.key = frameKey;
   this.location = location;
   this.line = line;
-  this.allocations = allocations;
   this.youngestFrameSamples = 0;
   this.samples = 0;
   this.calls = [];

@@ -6917,47 +6917,6 @@ var gIdentityHandler = {
     // we receive a new security state. If the user opened the popup and looks
     // at the provided information we don't want to suddenly change the panel
     // contents.
-
-    // Show the doorhanger when:
-    // - mixed active content is blocked
-    // - mixed active content is loaded (detected but not blocked)
-    // - tracking content is blocked
-    // - tracking content is not blocked
-    if (state &
-        (nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT |
-         nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT  |
-         nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT     |
-         nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT)) {
-      this.showBadContentDoorhanger(state);
-    }
-  },
-
-  showBadContentDoorhanger : function(state) {
-    var currentNotification =
-      PopupNotifications.getNotification("bad-content",
-        gBrowser.selectedBrowser);
-
-    // Avoid showing the same notification (same state) repeatedly.
-    if (currentNotification && currentNotification.options.state == state)
-      return;
-
-    let options = {
-      /* keep doorhanger collapsed */
-      dismissed: true,
-      state: state
-    };
-
-    // default
-    let iconState = "bad-content-blocked-notification-icon";
-
-    if (state &
-        (Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT |
-         Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT)) {
-      iconState = "bad-content-unblocked-notification-icon";
-    }
-
-    PopupNotifications.show(gBrowser.selectedBrowser, "bad-content",
-                            "", iconState, null, null, options);
   },
 
   /**

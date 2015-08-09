@@ -23,6 +23,7 @@ SQLITE_WRAPPER_INT(sqlite3_open)
 SQLITE_WRAPPER_INT(sqlite3_errmsg)
 SQLITE_WRAPPER_INT(sqlite3_prepare_v2)
 SQLITE_WRAPPER_INT(sqlite3_bind_parameter_count)
+SQLITE_WRAPPER_INT(sqlite3_bind_null)
 SQLITE_WRAPPER_INT(sqlite3_bind_text)
 SQLITE_WRAPPER_INT(sqlite3_step)
 SQLITE_WRAPPER_INT(sqlite3_column_count)
@@ -43,6 +44,7 @@ void setup_sqlite_functions(void *sqlite_handle)
   GETFUNC(sqlite3_errmsg);
   GETFUNC(sqlite3_prepare_v2);
   GETFUNC(sqlite3_bind_parameter_count);
+  GETFUNC(sqlite3_bind_null);
   GETFUNC(sqlite3_bind_text);
   GETFUNC(sqlite3_step);
   GETFUNC(sqlite3_column_count);
@@ -263,11 +265,17 @@ sqliteInternalCall(JNIEnv* jenv,
                         "Parameter is not of String type");
                     return nullptr;
                 }
-                jstring jStringParam = (jstring)jObjectParam;
-                const char* paramStr = jenv->GetStringUTFChars(jStringParam, nullptr);
+
                 // SQLite parameters index from 1.
-                rc = f_sqlite3_bind_text(ppStmt, i + 1, paramStr, -1, SQLITE_TRANSIENT);
-                jenv->ReleaseStringUTFChars(jStringParam, paramStr);
+                if (jObjectParam == nullptr) {
+                  rc = f_sqlite3_bind_null(ppStmt, i + 1);
+                } else {
+                  jstring jStringParam = (jstring) jObjectParam;
+                  const char* paramStr = jenv->GetStringUTFChars(jStringParam, nullptr);
+                  rc = f_sqlite3_bind_text(ppStmt, i + 1, paramStr, -1, SQLITE_TRANSIENT);
+                  jenv->ReleaseStringUTFChars(jStringParam, paramStr);
+                }
+
                 if (rc != SQLITE_OK) {
                     throwSqliteException(jenv, "Error binding query parameter");
                     return nullptr;

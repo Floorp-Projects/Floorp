@@ -184,6 +184,13 @@ Object.defineProperty(ChromeProfileMigrator.prototype, "sourceHomePageURL", {
   }
 });
 
+Object.defineProperty(ChromeProfileMigrator.prototype, "sourceLocked", {
+  get: function Chrome_sourceLocked() {
+    // There is an exclusive lock on some SQLite databases. Assume they are locked for now.
+    return true;
+  },
+});
+
 function GetBookmarksResource(aProfileFolder) {
   let bookmarksFile = aProfileFolder.clone();
   bookmarksFile.append("Bookmarks");

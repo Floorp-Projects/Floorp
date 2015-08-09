@@ -51,8 +51,9 @@ function MixedTest1B() {
   topTarget.click();
 
   // The link click should have caused a load and should not invoke the Mixed Content Blocker
-  var notification = PopupNotifications.getNotification("bad-content", gTestBrowser);
-  ok(!notification, "Mixed Content Doorhanger did not appear when trying to navigate top");
+  let {gIdentityHandler} = gTestBrowser.ownerGlobal;
+  ok (!gIdentityHandler._identityBox.classList.contains("mixedActiveBlocked"),
+      "Mixed Content Doorhanger did not appear when trying to navigate top");
 }
 
 function MixedTest1C() {

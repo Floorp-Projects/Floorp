@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <style>
+    text { white-space: pre }
+    text::first-letter { color: red; }
+    tspan { display: none }
+  </style>
+  <text textLength="64">
+<tspan>a</tspan>b</text>
+</svg>
