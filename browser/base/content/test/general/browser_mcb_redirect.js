@@ -100,16 +100,15 @@ function waitForCondition(condition, nextTest, errorMsg, okMsg) {
 //------------------------ Test 1 ------------------------------
 
 function test1() {
-  gTestBrowser.addEventListener("load", checkPopUpNotificationsForTest1, true);
+  gTestBrowser.addEventListener("load", checkUIForTest1, true);
   var url = gHttpsTestRoot + "test_mcb_redirect.html"
   gTestBrowser.contentWindow.location = url;
 }
 
-function checkPopUpNotificationsForTest1() {
-  gTestBrowser.removeEventListener("load", checkPopUpNotificationsForTest1, true);
+function checkUIForTest1() {
+  gTestBrowser.removeEventListener("load", checkUIForTest1, true);
 
-  var notification = PopupNotifications.getNotification("bad-content", gTestBrowser.selectedBrowser);
-  ok(notification, "OK: Mixed Content Doorhanger appeared in Test1!");
+  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
 
   var expected = "script blocked";
   waitForCondition(
@@ -121,16 +120,15 @@ function checkPopUpNotificationsForTest1() {
 //------------------------ Test 2 ------------------------------
 
 function test2() {
-  gTestBrowser.addEventListener("load", checkPopUpNotificationsForTest2, true);
+  gTestBrowser.addEventListener("load", checkUIForTest2, true);
   var url = gHttpTestRoot + "test_mcb_redirect.html"
   gTestBrowser.contentWindow.location = url;
 }
 
-function checkPopUpNotificationsForTest2() {
-  gTestBrowser.removeEventListener("load", checkPopUpNotificationsForTest2, true);
+function checkUIForTest2() {
+  gTestBrowser.removeEventListener("load", checkUIForTest2, true);
 
-  var notification = PopupNotifications.getNotification("bad-content", gTestBrowser.selectedBrowser);
-  ok(!notification, "OK: Mixed Content Doorhanger did not appear in 2!");
+  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: false, passiveLoaded: false});
 
   var expected = "script executed";
   waitForCondition(

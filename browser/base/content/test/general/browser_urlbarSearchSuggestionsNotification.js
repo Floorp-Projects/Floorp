@@ -5,7 +5,7 @@ const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
 // Must run first.
 add_task(function* prepare() {
-  let engine = yield promiseNewEngine(TEST_ENGINE_BASENAME);
+  let engine = yield promiseNewSearchEngine(TEST_ENGINE_BASENAME);
   let oldCurrentEngine = Services.search.currentEngine;
   Services.search.currentEngine = engine;
   registerCleanupFunction(function () {
@@ -23,29 +23,14 @@ add_task(function* prepare() {
   });
 });
 
-add_task(function* focus_allSuggestionsDisabled() {
-  Services.prefs.setBoolPref(SUGGEST_ALL_PREF, false);
-  Services.prefs.setBoolPref(CHOICE_PREF, false);
-  gURLBar.blur();
-  gURLBar.focus();
-  Assert.ok(!gURLBar.popup.popupOpen, "popup should be closed");
-  yield promiseAutocompleteResultPopup("foo");
-  Assert.ok(gURLBar.popup.popupOpen, "popup should be open");
-  assertVisible(false);
-});
-
-add_task(function* focus_noChoiceMade() {
+add_task(function* focus() {
+  // Focusing the urlbar used to open the popup in order to show the
+  // notification, but it doesn't anymore.  Make sure it does not.
   Services.prefs.setBoolPref(SUGGEST_ALL_PREF, true);
   Services.prefs.setBoolPref(CHOICE_PREF, false);
   gURLBar.blur();
   gURLBar.focus();
-  Assert.ok(gURLBar.popup.popupOpen, "popup should be open");
-  assertVisible(true);
-  gURLBar.blur();
-  Assert.ok(!gURLBar.popup.popupOpen, "popup should be closed");
-  gURLBar.focus();
-  Assert.ok(gURLBar.popup.popupOpen, "popup should be open again");
-  assertVisible(true);
+  Assert.ok(!gURLBar.popup.popupOpen, "popup should remain closed");
 });
 
 add_task(function* dismissWithoutResults() {
@@ -53,6 +38,9 @@ add_task(function* dismissWithoutResults() {
   Services.prefs.setBoolPref(CHOICE_PREF, false);
   gURLBar.blur();
   gURLBar.focus();
+  let popupPromise = promisePopupShown(gURLBar.popup);
+  gURLBar.openPopup();
+  yield popupPromise;
   Assert.ok(gURLBar.popup.popupOpen, "popup should be open");
   assertVisible(true);
   Assert.equal(gURLBar.popup._matchCount, 0, "popup should have no results");
@@ -76,9 +64,9 @@ add_task(function* dismissWithResults() {
   Services.prefs.setBoolPref(CHOICE_PREF, false);
   gURLBar.blur();
   gURLBar.focus();
+  yield promiseAutocompleteResultPopup("foo");
   Assert.ok(gURLBar.popup.popupOpen, "popup should be open");
   assertVisible(true);
-  yield promiseAutocompleteResultPopup("foo");
   Assert.ok(gURLBar.popup._matchCount > 0, "popup should have results");
   let disableButton = document.getAnonymousElementByAttribute(
     gURLBar.popup, "anonid", "search-suggestions-notification-disable"
@@ -100,6 +88,7 @@ add_task(function* disable() {
   Services.prefs.setBoolPref(CHOICE_PREF, false);
   gURLBar.blur();
   gURLBar.focus();
+  yield promiseAutocompleteResultPopup("foo");
   Assert.ok(gURLBar.popup.popupOpen, "popup should be open");
   assertVisible(true);
   let disableButton = document.getAnonymousElementByAttribute(
@@ -159,25 +148,6 @@ function assertVisible(visible) {
   let style =
     window.getComputedStyle(gURLBar.popup.searchSuggestionsNotification);
   Assert.equal(style.visibility, visible ? "visible" : "collapse");
-}
-
-function promiseNewEngine(basename) {
-  return new Promise((resolve, reject) => {
-    info("Waiting for engine to be added: " + basename);
-    let url = getRootDirectory(gTestPath) + basename;
-    Services.search.addEngine(url, Ci.nsISearchEngine.TYPE_MOZSEARCH, "",
-                              false, {
-      onSuccess: function (engine) {
-        info("Search engine added: " + basename);
-        registerCleanupFunction(() => Services.search.removeEngine(engine));
-        resolve(engine);
-      },
-      onError: function (errCode) {
-        Assert.ok(false, "addEngine failed with error code " + errCode);
-        reject();
-      },
-    });
-  });
 }
 
 function promiseTransition() {

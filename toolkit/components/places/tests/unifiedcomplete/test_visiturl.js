@@ -7,21 +7,21 @@ add_task(function*() {
   yield check_autocomplete({
     search: "mozilla.org",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("visiturl", {url: "http://mozilla.org/", input: "mozilla.org"}), title: "http://mozilla.org/", style: [ "action", "visiturl" ] } ]
+    matches: [ { uri: makeActionURI("visiturl", {url: "http://mozilla.org/", input: "mozilla.org"}), title: "http://mozilla.org/", style: [ "action", "visiturl", "heuristic" ] } ]
   });
 
   do_print("visit url, with protocol");
   yield check_autocomplete({
     search: "https://mozilla.org",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("visiturl", {url: "https://mozilla.org/", input: "https://mozilla.org"}), title: "https://mozilla.org/", style: [ "action", "visiturl" ] } ]
+    matches: [ { uri: makeActionURI("visiturl", {url: "https://mozilla.org/", input: "https://mozilla.org"}), title: "https://mozilla.org/", style: [ "action", "visiturl", "heuristic" ] } ]
   });
 
   do_print("visit url, about: protocol (no host)");
   yield check_autocomplete({
     search: "about:config",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("visiturl", {url: "about:config", input: "about:config"}), title: "about:config", style: [ "action", "visiturl" ] } ]
+    matches: [ { uri: makeActionURI("visiturl", {url: "about:config", input: "about:config"}), title: "about:config", style: [ "action", "visiturl", "heuristic" ] } ]
   });
 
   // This is distinct because of how we predict being able to url autofill via
@@ -33,7 +33,7 @@ add_task(function*() {
   yield check_autocomplete({
     search: "mozilla.org/rum",
     searchParam: "enable-actions",
-    matches: [ makeVisitMatch("mozilla.org/rum", "http://mozilla.org/rum") ]
+    matches: [ makeVisitMatch("mozilla.org/rum", "http://mozilla.org/rum", { heuristic: true }) ]
   });
 
   // And hosts with no dot in them are special, due to requiring whitelisting.
@@ -44,7 +44,7 @@ add_task(function*() {
   yield check_autocomplete({
     search: "mozilla/rum",
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch("mozilla/rum") ]
+    matches: [ makeSearchMatch("mozilla/rum", { heuristic: true }) ]
   });
 
   // ipv4 and ipv6 literal addresses should offer to visit.
@@ -52,14 +52,14 @@ add_task(function*() {
   yield check_autocomplete({
     search: "127.0.0.1",
     searchParam: "enable-actions",
-    matches: [ makeVisitMatch("127.0.0.1", "http://127.0.0.1/") ]
+    matches: [ makeVisitMatch("127.0.0.1", "http://127.0.0.1/", { heuristic: true }) ]
   });
 
   do_print("visit url, ipv6 literal");
   yield check_autocomplete({
     search: "[2001:db8::1]",
     searchParam: "enable-actions",
-    matches: [ makeVisitMatch("[2001:db8::1]", "http://[2001:db8::1]/") ]
+    matches: [ makeVisitMatch("[2001:db8::1]", "http://[2001:db8::1]/", { heuristic: true }) ]
   });
 
   // Setting keyword.enabled to false should always try to visit.
@@ -71,6 +71,6 @@ add_task(function*() {
   yield check_autocomplete({
     search: "bacon",
     searchParam: "enable-actions",
-    matches: [ makeVisitMatch("bacon", "http://bacon/") ]
+    matches: [ makeVisitMatch("bacon", "http://bacon/", { heuristic: true }) ]
   });
 });

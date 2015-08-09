@@ -63,34 +63,12 @@ function pushPrefEnv() {
   return deferred.promise;
 }
 
-function waitForNotificationShown(notification, callback) {
-  if (PopupNotifications.panel.state == "open") {
-    executeSoon(callback);
-    return;
-  }
-  PopupNotifications.panel.addEventListener("popupshown", function onShown() {
-    PopupNotifications.panel.removeEventListener("popupshown", onShown);
-    callback();
-  }, false);
-  notification.reshow();
-}
-
 function mixedContentOverrideTest2(hud, browser) {
-  let notification = PopupNotifications.getNotification("bad-content", browser);
-  ok(notification, "Mixed Content Doorhanger did appear");
   let deferred = promise.defer();
-  waitForNotificationShown(notification, () => {
-    afterNotificationShown(hud, notification, deferred);
-  });
-  return deferred.promise;
-}
-
-function afterNotificationShown(hud, notification, deferred) {
-  ok(PopupNotifications.panel.firstChild.isMixedContentBlocked,
-     "OK: Mixed Content is being blocked");
-  // Click on the doorhanger.
-  PopupNotifications.panel.firstChild.disableMixedContentProtection();
-  notification.remove();
+  let {gIdentityHandler} = browser.ownerGlobal;
+  ok(gIdentityHandler._identityBox.classList.contains("mixedActiveBlocked"),
+    "Mixed Active Content state appeared on identity box");
+  gIdentityHandler.disableMixedContentProtection();
 
   waitForMessages({
     webconsole: hud,
@@ -114,6 +92,8 @@ function afterNotificationShown(hud, notification, deferred) {
       },
     ],
   }).then(msgs => deferred.resolve(msgs), Cu.reportError);
+
+  return deferred.promise;
 }
 
 function testClickOpenNewTab(hud, match) {

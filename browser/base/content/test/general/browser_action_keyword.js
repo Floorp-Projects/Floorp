@@ -38,7 +38,9 @@ add_task(function*() {
   let result = yield promise_first_result("keyword something");
   isnot(result, null, "Expect a keyword result");
 
-  is(result.getAttribute("type"), "action keyword", "Expect correct  `type` attribute");
+  let types = new Set(result.getAttribute("type").split(/\s+/));
+  Assert.ok(types.has("action"));
+  Assert.ok(types.has("keyword"));
   is(result.getAttribute("actiontype"), "keyword", "Expect correct `actiontype` attribute");
   is(result.getAttribute("title"), "example.com", "Expect correct title");
 

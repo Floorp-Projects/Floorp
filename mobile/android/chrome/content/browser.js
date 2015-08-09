@@ -1755,16 +1755,7 @@ var BrowserApp = {
         // Check to see if this is a message to enable/disable mixed content blocking.
         if (aData) {
           let data = JSON.parse(aData);
-          if (data.contentType === "mixed") {
-            if (data.allowContent) {
-              // Set a flag to disable mixed content blocking.
-              flags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_MIXED_CONTENT;
-            } else {
-              // Set mixedContentChannel to null to re-enable mixed content blocking.
-              let docShell = browser.webNavigation.QueryInterface(Ci.nsIDocShell);
-              docShell.mixedContentChannel = null;
-            }
-          } else if (data.contentType === "tracking") {
+          if (data.contentType === "tracking") {
             // Convert document URI into the format used by
             // nsChannelClassifier::ShouldEnableTrackingProtection
             // (any scheme turned into https is correct)
