@@ -1568,6 +1568,8 @@ gfxHarfBuzzShaper::ShapeText(gfxContext      *aContext,
                         reinterpret_cast<const uint16_t*>(aText),
                         length, 0, length);
 
+    hb_buffer_set_cluster_level(buffer, HB_BUFFER_CLUSTER_LEVEL_MONOTONE_CHARACTERS);
+
     hb_shape(mHBFont, buffer, features.Elements(), features.Length());
 
     if (isRightToLeft) {
