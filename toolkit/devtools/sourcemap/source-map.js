@@ -848,7 +848,7 @@ define('source-map/util', ['require', 'exports', 'module' , ], function(require,
       }
       path = url.path;
     }
-    var isAbsolute = (path.charAt(0) === '/');
+    var isAbsolute = exports.isAbsolute(path);
 
     var parts = path.split(/\/+/);
     for (var part, up = 0, i = parts.length - 1; i >= 0; i--) {
@@ -942,6 +942,10 @@ define('source-map/util', ['require', 'exports', 'module' , ], function(require,
     return joined;
   }
   exports.join = join;
+
+  exports.isAbsolute = function (aPath) {
+    return aPath.charAt(0) === '/' || !!aPath.match(urlRegexp);
+  };
 
   /**
    * Make a path relative to a URL or another path.
@@ -1617,10 +1621,20 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
       throw new Error('Unsupported version: ' + version);
     }
 
-    // Some source maps produce relative source paths like "./foo.js" instead of
-    // "foo.js".  Normalize these first so that future comparisons will succeed.
-    // See bugzil.la/1090768.
-    sources = sources.map(util.normalize);
+    sources = sources
+      // Some source maps produce relative source paths like "./foo.js" instead of
+      // "foo.js".  Normalize these first so that future comparisons will succeed.
+      // See bugzil.la/1090768.
+      .map(util.normalize)
+      // Always ensure that absolute sources are internally stored relative to
+      // the source root, if the source root is absolute. Not doing this would
+      // be particularly problematic when the source root is a prefix of the
+      // source (valid, but why??). See github issue #199 and bugzil.la/1188982.
+      .map(function (source) {
+        return sourceRoot && util.isAbsolute(sourceRoot) && util.isAbsolute(source)
+          ? util.relative(sourceRoot, source)
+          : source;
+      });
 
     // Pass `true` below to allow duplicate names and sources. While source maps
     // are intended to be compressed and deduplicated, the TypeScript compiler

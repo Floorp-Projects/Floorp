@@ -52,6 +52,8 @@
       <radio id="nothing"   label="&importFromNothing.label;"   accesskey="&importFromNothing.accesskey;" hidden="true"/>
     </radiogroup>
     <label id="noSources" hidden="true">&noMigrationSources.label;</label>
+    <spacer flex="1"/>
+    <description class="header" id="closeSourceBrowser" style="visibility:hidden">&closeSourceBrowser.label;</description>
   </wizardpage>
 
   <wizardpage id="selectProfile" pageid="selectProfile" label="&selectProfile.title;"

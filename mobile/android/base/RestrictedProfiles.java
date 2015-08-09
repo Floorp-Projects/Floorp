@@ -55,7 +55,7 @@ public class RestrictedProfiles {
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private static boolean isRestrictedProfile(Context context) {
+    public static boolean isRestrictedProfile(Context context) {
         if (Versions.preJBMR2) {
             // Early versions don't support restrictions at all
             return false;

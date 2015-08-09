@@ -792,19 +792,6 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY getUserMedia.audioCapture.label "Audio from the tab will be shared.">
 <!ENTITY getUserMedia.allWindowsShared.message "All visible windows on your screen will be shared.">
 
-<!-- Bad Content Blocker Doorhanger Notification -->
-<!ENTITY badContentBlocked.moreinfo "Most websites will work properly even if content is blocked.">
-
-<!ENTITY mixedContentBlocked2.message "Insecure content">
-<!ENTITY mixedContentBlocked2.moreinfo "Some unencrypted elements on this website have been blocked.">
-<!ENTITY mixedContentBlocked2.learnMore "Learn More">
-<!ENTITY mixedContentBlocked2.options "Options">
-<!ENTITY mixedContentBlocked2.unblock.label "Disable protection for now">
-<!ENTITY mixedContentBlocked2.unblock.accesskey "D">
-<!ENTITY mixedContentBlocked2.block.label "Enable protection">
-<!ENTITY mixedContentBlocked2.block.accesskey "E">
-<!ENTITY mixedContentBlocked2.disabled.message "Protection is disabled">
-
 <!ENTITY trackingProtection.title "Tracking Protection">
 <!ENTITY trackingProtection.detectedBlocked3 "&brandShortName; is blocking parts of the page that may track your browsing.">
 <!ENTITY trackingProtection.detectedNotBlocked3 "This site includes elements that may track your browsing. You have disabled protection.">
