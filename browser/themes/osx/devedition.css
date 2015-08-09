@@ -97,6 +97,8 @@
 #identity-box {
   margin-top: -1px !important;
   margin-bottom: -1px !important;
+  padding-top: 3px !important;
+  padding-bottom: 3px !important;
 }
 
 /* Tab styling - make sure to use an inverted icon for the selected tab

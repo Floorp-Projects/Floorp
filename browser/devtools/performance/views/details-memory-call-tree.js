@@ -96,8 +96,8 @@ let MemoryCallTreeView = Heritage.extend(DetailsSubview, {
       // Some cells like the time duration and cost percentage don't make sense
       // for a memory allocations call tree.
       visibleCells: {
-        allocations: true,
-        selfAllocations: true,
+        selfCount: true,
+        count: true,
         function: true
       }
     });

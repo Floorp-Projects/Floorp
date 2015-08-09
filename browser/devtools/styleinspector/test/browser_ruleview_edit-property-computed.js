@@ -64,4 +64,12 @@ function* editAndCheck(view) {
     is(computed[i].name, propName, "Computed property #" + i + " has name " + propName);
     is(computed[i].value, newPaddingValue, "Computed value of " + propName + " is as expected");
   });
+
+  propEditor.expander.click();
+  let computedDom = propEditor.computed;
+  is(computedDom.children.length, propNames.length, "There should be 4 nodes in the DOM");
+  propNames.forEach((propName, i) => {
+    is(computedDom.getElementsByClassName("ruleview-propertyvalue")[i].textContent,
+        newPaddingValue, "Computed value of " + propName + " in DOM is as expected");
+  });
 }

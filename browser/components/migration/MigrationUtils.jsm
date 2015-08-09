@@ -168,6 +168,12 @@ this.MigratorPrototype = {
   get sourceHomePageURL() "",
 
   /**
+   * Override if the data to migrate is locked/in-use and the user should
+   * probably shutdown the source browser.
+   */
+  get sourceLocked() false,
+
+  /**
    * DO NOT OVERRIDE - After deCOMing migration, the UI will just call
    * getResources.
    *
