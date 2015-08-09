@@ -496,6 +496,8 @@ public:
   virtual void UpdateWindowDraggingRegion(const nsIntRegion& aRegion) override;
   const nsIntRegion& GetDraggableRegion() { return mDraggableRegion; }
 
+  virtual void ReportSwipeStarted(uint64_t aInputBlockId, bool aStartSwipe) override;
+
   void              ResetParent();
 
   static bool DoHasPendingInputEvent();
