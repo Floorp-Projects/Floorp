@@ -308,7 +308,8 @@
 }
 
 #TabsToolbar:not([collapsed="true"]) + #nav-bar {
-  margin-top: -1px; /* Move up into the TabsToolbar for the inner highlight at the top of the nav-bar */
+  /* Move up into the TabsToolbar for the inner highlight at the top of the nav-bar */
+  margin-top: calc(-1 * var(--navbar-tab-toolbar-highlight-overlap));
   /* Position the toolbar above the bottom of background tabs */
   position: relative;
   z-index: 1;
@@ -928,7 +929,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 }
 
 #TabsToolbar .toolbarbutton-1 {
-  margin-bottom: var(--tab-toolbar-navbar-overlap);
+  margin-bottom: var(--navbar-tab-toolbar-highlight-overlap);
 }
 
 #TabsToolbar .toolbarbutton-1:not([disabled=true]):hover,
