@@ -6572,20 +6572,8 @@ TryAttachMagicArgumentsGetPropStub(JSContext* cx, JSScript* script, ICGetProp_Fa
         // Unlike ICGetProp_ArgumentsLength, only magic argument stubs are
         // supported at the moment.
         ICStub* monitorStub = stub->fallbackMonitorStub()->firstMonitorStub();
-
-        // XXXshu the compiler really should be stack allocated, but stack
-        // allocating it causes the test_temporary_storage indexedDB test to
-        // fail on GCC 4.7-compiled ARMv6 optimized builds on Android 2.3 and
-        // below with a NotFoundError, despite that test never exercising this
-        // code.
-        //
-        // Instead of tracking down the GCC bug, I've opted to heap allocate
-        // instead.
-        ScopedJSDeletePtr<ICGetProp_ArgumentsCallee::Compiler> compiler;
-        compiler = js_new<ICGetProp_ArgumentsCallee::Compiler>(cx, monitorStub);
-        if (!compiler)
-            return false;
-        ICStub* newStub = compiler->getStub(compiler->getStubSpace(script));
+        ICGetProp_ArgumentsCallee::Compiler compiler(cx, monitorStub);
+        ICStub* newStub = compiler.getStub(compiler.getStubSpace(script));
         if (!newStub)
             return false;
         stub->addNewStub(newStub);

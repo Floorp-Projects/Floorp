@@ -1276,6 +1276,118 @@ FoldExponentiation(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandle
     return true;
 }
 
+static bool
+FoldList(ExclusiveContext* cx, ParseNode* list, Parser<FullParseHandler>& parser,
+         bool inGenexpLambda)
+{
+    MOZ_ASSERT(list->isArity(PN_LIST));
+
+    ParseNode** elem = &list->pn_head;
+    for (; *elem; elem = &(*elem)->pn_next) {
+        if (!Fold(cx, elem, parser, inGenexpLambda, SyntacticContext::Other))
+            return false;
+    }
+
+    // Repoint the list's tail pointer if the final element was replaced.
+    list->pn_tail = elem;
+
+    list->checkListConsistency();
+
+    return true;
+}
+
+static bool
+FoldReturn(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+           bool inGenexpLambda)
+{
+    MOZ_ASSERT(node->isKind(PNK_RETURN));
+    MOZ_ASSERT(node->isArity(PN_BINARY));
+
+    if (ParseNode*& expr = node->pn_left) {
+        if (!Fold(cx, &expr, parser, inGenexpLambda, SyntacticContext::Other))
+            return false;
+    }
+
+#ifdef DEBUG
+    if (ParseNode* generatorSpecific = node->pn_right) {
+        MOZ_ASSERT(generatorSpecific->isKind(PNK_NAME));
+        MOZ_ASSERT(generatorSpecific->pn_atom->equals(".genrval"));
+        MOZ_ASSERT(generatorSpecific->isAssigned());
+    }
+#endif
+
+    return true;
+}
+
+static bool
+FoldTry(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+        bool inGenexpLambda)
+{
+    MOZ_ASSERT(node->isKind(PNK_TRY));
+    MOZ_ASSERT(node->isArity(PN_TERNARY));
+
+    ParseNode*& statements = node->pn_kid1;
+    if (!Fold(cx, &statements, parser, inGenexpLambda, SyntacticContext::Other))
+        return false;
+
+    if (ParseNode*& catchList = node->pn_kid2) {
+        if (!Fold(cx, &catchList, parser, inGenexpLambda, SyntacticContext::Other))
+            return false;
+    }
+
+    if (ParseNode*& finally = node->pn_kid3) {
+        if (!Fold(cx, &finally, parser, inGenexpLambda, SyntacticContext::Other))
+            return false;
+    }
+
+    return true;
+}
+
+static bool
+FoldCatch(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+          bool inGenexpLambda)
+{
+    MOZ_ASSERT(node->isKind(PNK_CATCH));
+    MOZ_ASSERT(node->isArity(PN_TERNARY));
+
+    ParseNode*& declPattern = node->pn_kid1;
+    if (!Fold(cx, &declPattern, parser, inGenexpLambda, SyntacticContext::Other))
+        return false;
+
+    if (ParseNode*& cond = node->pn_kid2) {
+        if (!Fold(cx, &cond, parser, inGenexpLambda, SyntacticContext::Condition))
+            return false;
+    }
+
+    if (ParseNode*& statements = node->pn_kid3) {
+        if (!Fold(cx, &statements, parser, inGenexpLambda, SyntacticContext::Other))
+            return false;
+    }
+
+    return true;
+}
+
+static bool
+FoldClass(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+          bool inGenexpLambda)
+{
+    MOZ_ASSERT(node->isKind(PNK_CLASS));
+    MOZ_ASSERT(node->isArity(PN_TERNARY));
+
+    if (ParseNode*& classNames = node->pn_kid1) {
+        if (!Fold(cx, &classNames, parser, inGenexpLambda, SyntacticContext::Other))
+            return false;
+    }
+
+    if (ParseNode*& heritage = node->pn_kid2) {
+        if (!Fold(cx, &heritage, parser, inGenexpLambda, SyntacticContext::Other))
+            return false;
+    }
+
+    ParseNode*& body = node->pn_kid3;
+    return Fold(cx, &body, parser, inGenexpLambda, SyntacticContext::Other);
+}
+
 bool
 Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bool inGenexpLambda,
      SyntacticContext sc)
@@ -1392,6 +1504,67 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_POW:
         return FoldExponentiation(cx, pn, parser, inGenexpLambda);
 
+      // Various list nodes not requiring care to minimally fold.  Some of
+      // these could be further folded/optimized, but we don't make the effort.
+      case PNK_BITOR:
+      case PNK_BITXOR:
+      case PNK_BITAND:
+      case PNK_STRICTEQ:
+      case PNK_EQ:
+      case PNK_STRICTNE:
+      case PNK_NE:
+      case PNK_LT:
+      case PNK_LE:
+      case PNK_GT:
+      case PNK_GE:
+      case PNK_INSTANCEOF:
+      case PNK_IN:
+      case PNK_COMMA:
+      case PNK_ARRAY:
+      case PNK_OBJECT:
+      case PNK_ARRAYCOMP:
+      case PNK_STATEMENTLIST:
+      case PNK_CLASSMETHODLIST:
+      case PNK_CATCHLIST:
+      case PNK_TEMPLATE_STRING_LIST:
+      case PNK_VAR:
+      case PNK_CONST:
+      case PNK_GLOBALCONST:
+      case PNK_LET:
+      case PNK_ARGSBODY:
+      case PNK_CALLSITEOBJ:
+      case PNK_EXPORT_SPEC_LIST:
+      case PNK_IMPORT_SPEC_LIST:
+        return FoldList(cx, pn, parser, inGenexpLambda);
+
+      case PNK_YIELD_STAR:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        MOZ_ASSERT(pn->pn_right->isKind(PNK_NAME));
+        MOZ_ASSERT(!pn->pn_right->isAssigned());
+        return Fold(cx, &pn->pn_left, parser, inGenexpLambda, SyntacticContext::Other);
+
+      case PNK_YIELD:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        MOZ_ASSERT((pn->pn_right->isKind(PNK_NAME) && !pn->pn_right->isAssigned()) ||
+                   (pn->pn_right->isKind(PNK_ASSIGN) &&
+                    pn->pn_right->pn_left->isKind(PNK_NAME) &&
+                    pn->pn_right->pn_right->isKind(PNK_GENERATOR)));
+        if (!pn->pn_left)
+            return true;
+        return Fold(cx, &pn->pn_left, parser, inGenexpLambda, SyntacticContext::Other);
+
+      case PNK_RETURN:
+        return FoldReturn(cx, pn, parser, inGenexpLambda);
+
+      case PNK_TRY:
+        return FoldTry(cx, pn, parser, inGenexpLambda);
+
+      case PNK_CATCH:
+        return FoldCatch(cx, pn, parser, inGenexpLambda);
+
+      case PNK_CLASS:
+        return FoldClass(cx, pn, parser, inGenexpLambda);
+
       case PNK_EXPORT:
       case PNK_ASSIGN:
       case PNK_ADDASSIGN:
@@ -1419,58 +1592,23 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_WITH:
       case PNK_CLASSNAMES:
       case PNK_DEFAULT:
-      case PNK_YIELD_STAR:
-      case PNK_YIELD:
-      case PNK_RETURN:
       case PNK_IMPORT:
       case PNK_EXPORT_FROM:
       case PNK_EXPORT_DEFAULT:
       case PNK_FORIN:
       case PNK_FOROF:
       case PNK_FORHEAD:
-      case PNK_CLASS:
-      case PNK_TRY:
-      case PNK_BITOR:
-      case PNK_BITXOR:
-      case PNK_BITAND:
-      case PNK_STRICTEQ:
-      case PNK_EQ:
-      case PNK_STRICTNE:
-      case PNK_NE:
-      case PNK_LT:
-      case PNK_LE:
-      case PNK_GT:
-      case PNK_GE:
-      case PNK_INSTANCEOF:
-      case PNK_IN:
       case PNK_ADD:
-      case PNK_COMMA:
       case PNK_NEW:
       case PNK_CALL:
       case PNK_GENEXP:
-      case PNK_ARRAY:
-      case PNK_STATEMENTLIST:
-      case PNK_ARGSBODY:
-      case PNK_ARRAYCOMP:
-      case PNK_VAR:
-      case PNK_CONST:
-      case PNK_LET:
-      case PNK_GLOBALCONST:
-      case PNK_OBJECT:
-      case PNK_CLASSMETHODLIST:
-      case PNK_TEMPLATE_STRING_LIST:
       case PNK_TAGGED_TEMPLATE:
-      case PNK_EXPORT_SPEC_LIST:
-      case PNK_IMPORT_SPEC_LIST:
-      case PNK_CATCHLIST:
       case PNK_LABEL:
       case PNK_DOT:
       case PNK_LEXICALSCOPE:
       case PNK_NAME:
-      case PNK_CATCH:
       case PNK_EXPORT_SPEC:
       case PNK_IMPORT_SPEC:
-      case PNK_CALLSITEOBJ:
         MOZ_ASSERT(!pn->isArity(PN_CODE), "only functions are code nodes");
         break; // for now
 
