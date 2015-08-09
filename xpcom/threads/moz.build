@@ -28,15 +28,18 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
+    'AbstractThread.h',
     'BackgroundHangMonitor.h',
     'HangAnnotations.h',
     'HangMonitor.h',
     'LazyIdleThread.h',
     'SharedThreadPool.h',
     'SyncRunnable.h',
+    'TaskDispatcher.h',
 ]
 
 UNIFIED_SOURCES += [
+    'AbstractThread.cpp',
     'BackgroundHangMonitor.cpp',
     'HangAnnotations.cpp',
     'HangMonitor.cpp',
