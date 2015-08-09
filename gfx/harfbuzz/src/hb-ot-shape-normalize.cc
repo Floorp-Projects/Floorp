@@ -323,7 +323,7 @@ _hb_ot_shape_normalize (const hb_ot_shape_plan_t *plan,
   {
     unsigned int end;
     for (end = buffer->idx + 1; end < count; end++)
-      if (buffer->cur().cluster != buffer->info[end].cluster)
+      if (likely (!HB_UNICODE_GENERAL_CATEGORY_IS_MARK (_hb_glyph_info_get_general_category (&buffer->info[end]))))
         break;
 
     decompose_cluster (&c, end, might_short_circuit, always_short_circuit);
