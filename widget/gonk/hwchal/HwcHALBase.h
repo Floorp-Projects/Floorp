@@ -85,9 +85,6 @@ public:
     // Check if mHwc exists
     virtual bool HasHwc() const = 0;
 
-    // Get HwcRect
-    virtual const hwc_rect_t GetHwcRect() const = 0;
-
     // Set EGL info (only ICS need this info)
     virtual void SetEGLInfo(hwc_display_t aEGLDisplay,
                             hwc_surface_t aEGLSurface) = 0;
@@ -105,6 +102,7 @@ public:
     // HwcDevice prepare
     virtual int Prepare(HwcList *aList,
                         uint32_t aDisp,
+                        hwc_rect_t aDispRect,
                         buffer_handle_t aHandle,
                         int aFenceFd) = 0;
 

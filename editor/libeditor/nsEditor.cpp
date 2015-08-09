@@ -627,7 +627,9 @@ nsEditor::GetSelectionController(nsISelectionController **aSel)
     nsCOMPtr<nsIPresShell> presShell = GetPresShell();
     selCon = do_QueryInterface(presShell);
   }
-  NS_ENSURE_TRUE(selCon, NS_ERROR_NOT_INITIALIZED);
+  if (!selCon) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
   NS_ADDREF(*aSel = selCon);
   return NS_OK;
 }

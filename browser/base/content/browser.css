@@ -576,7 +576,7 @@ toolbarbutton.bookmark-item {
 
 /* Apply crisp rendering for favicons at exactly 2dppx resolution */
 @media (resolution: 2dppx) {
-  .alltabs-popup > .menuitem-iconic > .menu-iconic-left > .menu-iconic-icon,
+  #alltabs-popup > .menuitem-iconic > .menu-iconic-left > .menu-iconic-icon,
   .menuitem-with-favicon > .menu-iconic-left > .menu-iconic-icon {
     image-rendering: -moz-crisp-edges;
   }

@@ -40,6 +40,13 @@ SpeechSynthesisChild::RecvSetDefaultVoice(const nsString& aUri,
   return true;
 }
 
+bool
+SpeechSynthesisChild::RecvIsSpeakingChanged(const bool& aIsSpeaking)
+{
+  nsSynthVoiceRegistry::RecvIsSpeakingChanged(aIsSpeaking);
+  return true;
+}
+
 PSpeechSynthesisRequestChild*
 SpeechSynthesisChild::AllocPSpeechSynthesisRequestChild(const nsString& aText,
                                                         const nsString& aLang,
@@ -175,6 +182,13 @@ SpeechTaskChild::Cancel()
 {
   MOZ_ASSERT(mActor);
   mActor->SendCancel();
+}
+
+void
+SpeechTaskChild::ForceEnd()
+{
+  MOZ_ASSERT(mActor);
+  mActor->SendForceEnd();
 }
 
 } // namespace dom

@@ -54,6 +54,10 @@ XPCOMUtils.defineLazyServiceGetter(this,
                                    "ResProtocolHandler",
                                    "@mozilla.org/network/protocol;1?name=resource",
                                    "nsIResProtocolHandler");
+XPCOMUtils.defineLazyServiceGetter(this,
+                                   "AddonPolicyService",
+                                   "@mozilla.org/addons/policy-service;1",
+                                   "nsIAddonPolicyService");
 
 XPCOMUtils.defineLazyGetter(this, "CertUtils", function certUtilsLazyGetter() {
   let certUtils = {};
@@ -117,7 +121,8 @@ const DIR_TRASH                       = "trash";
 
 const FILE_DATABASE                   = "extensions.json";
 const FILE_OLD_CACHE                  = "extensions.cache";
-const FILE_INSTALL_MANIFEST           = "install.rdf";
+const FILE_RDF_MANIFEST               = "install.rdf";
+const FILE_WEB_MANIFEST               = "manifest.json";
 const FILE_XPI_ADDONS_LIST            = "extensions.ini";
 
 const KEY_PROFILEDIR                  = "ProfD";
@@ -198,13 +203,21 @@ const TYPES = {
   experiment: 128,
 };
 
+// Some add-on types that we track internally are presented as other types
+// externally
+const TYPE_ALIASES = {
+  "webextension": "extension",
+};
+
 const RESTARTLESS_TYPES = new Set([
+  "webextension",
   "dictionary",
   "experiment",
   "locale",
 ]);
 
 const SIGNED_TYPES = new Set([
+  "webextension",
   "extension",
   "experiment",
 ]);
@@ -638,6 +651,65 @@ function createAddonDetails(id, aAddon) {
 }
 
 /**
+ * Converts an internal add-on type to the type presented through the API.
+ *
+ * @param  aType
+ *         The internal add-on type
+ * @return an external add-on type
+ */
+function getExternalType(aType) {
+  if (aType in TYPE_ALIASES)
+    return TYPE_ALIASES[aType];
+  return aType;
+}
+
+function getManifestFileForDir(aDir) {
+  let file = aDir.clone();
+  file.append(FILE_WEB_MANIFEST);
+  if (file.exists() && file.isFile())
+    return file;
+  file.leafName = FILE_RDF_MANIFEST;
+  if (file.exists() && file.isFile())
+    return file;
+  return null;
+}
+
+function getManifestEntryForZipReader(aZipReader) {
+  if (aZipReader.hasEntry(FILE_WEB_MANIFEST))
+    return FILE_WEB_MANIFEST;
+  if (aZipReader.hasEntry(FILE_RDF_MANIFEST))
+    return FILE_RDF_MANIFEST;
+  return null;
+}
+
+/**
+ * Converts a list of API types to a list of API types and any aliases for those
+ * types.
+ *
+ * @param  aTypes
+ *         An array of types or null for all types
+ * @return an array of types or null for all types
+ */
+function getAllAliasesForTypes(aTypes) {
+  if (!aTypes)
+    return null;
+
+  // Build a set of all requested types and their aliases
+  let typeset = new Set(aTypes);
+
+  for (let alias of Object.keys(TYPE_ALIASES)) {
+    // Ignore any requested internal types
+    typeset.delete(alias);
+
+    // Add any alias for the internal type
+    if (typeset.has(TYPE_ALIASES[alias]))
+      typeset.add(alias);
+  }
+
+  return [...typeset];
+}
+
+/**
  * Converts an RDF literal, resource or integer into a string.
  *
  * @param  aLiteral
@@ -667,6 +739,96 @@ function getRDFValue(aLiteral) {
  */
 function getRDFProperty(aDs, aResource, aProperty) {
   return getRDFValue(aDs.GetTarget(aResource, EM_R(aProperty), true));
+}
+
+/**
+ * Reads an AddonInternal object from a manifest stream.
+ *
+ * @param  aStream
+ *         An open stream to read the manifest from
+ * @return an AddonInternal object
+ * @throws if the install manifest in the stream is corrupt or could not
+ *         be read
+ */
+function loadManifestFromWebManifest(aStream) {
+  let decoder = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
+  let manifest = decoder.decodeFromStream(aStream, aStream.available());
+
+  function findProp(obj, current, properties) {
+    if (properties.length == 0)
+      return obj;
+
+    let field = properties[0];
+    current += "." + field;
+    if (!obj || !(field in obj)) {
+      throw new Error("Manifest file was missing required property " + current.substring(1));
+    }
+
+    return findProp(obj[field], current, properties.slice(1));
+  }
+
+  function getProp(path) {
+    return findProp(manifest, "", path.split("."));
+  }
+
+  function getOptionalProp(path, defValue = null) {
+    try {
+      return findProp(manifest, "", path.split("."));
+    }
+    catch (e) {
+      return defValue;
+    }
+  }
+
+  let mVersion = getProp("manifest_version");
+  if (mVersion != 2) {
+    throw new Error("Expected manifest_version to be 2 but was " + mVersion);
+  }
+
+  let addon = new AddonInternal();
+  addon.id = getProp("applications.gecko.id");
+  if (!gIDTest.test(addon.id))
+    throw new Error("Illegal add-on ID " + addon.id);
+  addon.version = getProp("version");
+  addon.type = "webextension";
+  addon.unpack = false;
+  addon.strictCompatibility = true;
+  addon.bootstrap = true;
+  addon.hasBinaryComponents = false;
+  addon.multiprocessCompatible = true;
+  addon.internalName = null;
+  addon.updateURL = null;
+  addon.updateKey = null;
+  addon.optionsURL = null;
+  addon.optionsType = null;
+  addon.aboutURL = null;
+  addon.iconURL = null;
+  addon.icon64URL = null;
+  addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DEFAULT;
+
+  addon.defaultLocale = {
+    name: getProp("name"),
+    description: getOptionalProp("description"),
+    creator: null,
+    homepageURL: null,
+
+    developers: null,
+    translators: null,
+    contributors: null,
+  }
+
+  addon.targetApplications = [{
+    id: TOOLKIT_ID,
+    minVersion: "42a1",
+    maxVersion: "*",
+  }];
+
+  addon.locales = [];
+  addon.targetPlatforms = [];
+  addon.userDisabled = false;
+  addon.softDisabled = addon.blocklistState == Blocklist.STATE_SOFTBLOCKED;
+
+  return addon;
 }
 
 /**
@@ -930,14 +1092,17 @@ function loadManifestFromRDF(aUri, aStream) {
     addon.targetPlatforms = [];
   }
 
+  return addon;
+}
+
+function defineSyncGUID(aAddon) {
   // Load the storage service before NSS (nsIRandomGenerator),
   // to avoid a SQLite initialization error (bug 717904).
   let storage = Services.storage;
 
   // Define .syncGUID as a lazy property which is also settable
-  Object.defineProperty(addon, "syncGUID", {
+  Object.defineProperty(aAddon, "syncGUID", {
     get: () => {
-
       // Generate random GUID used for Sync.
       // This was lifted from util.js:makeGUID() from services-sync.
       let rng = Cc["@mozilla.org/security/random-generator;1"].
@@ -949,19 +1114,17 @@ function loadManifestFromRDF(aUri, aStream) {
       let guid = btoa(byte_string).replace(/\+/g, '-')
         .replace(/\//g, '_');
 
-      delete addon.syncGUID;
-      addon.syncGUID = guid;
+      delete aAddon.syncGUID;
+      aAddon.syncGUID = guid;
       return guid;
     },
     set: (val) => {
-      delete addon.syncGUID;
-      addon.syncGUID = val;
+      delete aAddon.syncGUID;
+      aAddon.syncGUID = val;
     },
     configurable: true,
     enumerable: true,
   });
-
-  return addon;
 }
 
 /**
@@ -989,11 +1152,22 @@ let loadManifestFromDir = Task.async(function* loadManifestFromDir(aDir) {
     return size;
   }
 
-  let file = aDir.clone();
-  file.append(FILE_INSTALL_MANIFEST);
-  if (!file.exists() || !file.isFile())
+  function loadFromRDF(aFile, aStream) {
+    let addon = loadManifestFromRDF(Services.io.newFileURI(aFile), aStream);
+
+    let file = aDir.clone();
+    file.append("chrome.manifest");
+    let chromeManifest = ChromeManifestParser.parseSync(Services.io.newFileURI(file));
+    addon.hasBinaryComponents = ChromeManifestParser.hasType(chromeManifest,
+                                                             "binary-component");
+    return addon;
+  }
+
+  let file = getManifestFileForDir(aDir);
+  if (!file) {
     throw new Error("Directory " + aDir.path + " does not contain a valid " +
                     "install manifest");
+  }
 
   let fis = Cc["@mozilla.org/network/file-input-stream;1"].
             createInstance(Ci.nsIFileInputStream);
@@ -1003,19 +1177,17 @@ let loadManifestFromDir = Task.async(function* loadManifestFromDir(aDir) {
   bis.init(fis, 4096);
 
   try {
-    let addon = loadManifestFromRDF(Services.io.newFileURI(file), bis);
+    let addon = file.leafName == FILE_WEB_MANIFEST ?
+                loadManifestFromWebManifest(bis) :
+                loadFromRDF(file, bis);
+
     addon._sourceBundle = aDir.clone();
     addon.size = getFileSize(aDir);
-
-    file = aDir.clone();
-    file.append("chrome.manifest");
-    let chromeManifest = ChromeManifestParser.parseSync(Services.io.newFileURI(file));
-    addon.hasBinaryComponents = ChromeManifestParser.hasType(chromeManifest,
-                                                             "binary-component");
-
     addon.signedState = yield verifyDirSignedState(aDir, addon);
-
     addon.appDisabled = !isUsableAddon(addon);
+
+    defineSyncGUID(addon);
+
     return addon;
   }
   finally {
@@ -1033,20 +1205,9 @@ let loadManifestFromDir = Task.async(function* loadManifestFromDir(aDir) {
  * @throws if the XPI file does not contain a valid install manifest
  */
 let loadManifestFromZipReader = Task.async(function* loadManifestFromZipReader(aZipReader) {
-  let zis = aZipReader.getInputStream(FILE_INSTALL_MANIFEST);
-  let bis = Cc["@mozilla.org/network/buffered-input-stream;1"].
-            createInstance(Ci.nsIBufferedInputStream);
-  bis.init(zis, 4096);
-
-  try {
-    let uri = buildJarURI(aZipReader.file, FILE_INSTALL_MANIFEST);
-    let addon = loadManifestFromRDF(uri, bis);
-    addon._sourceBundle = aZipReader.file;
-
-    addon.size = 0;
-    let entries = aZipReader.findEntries(null);
-    while (entries.hasMore())
-      addon.size += aZipReader.getEntry(entries.getNext()).realSize;
+  function loadFromRDF(aStream) {
+    let uri = buildJarURI(aZipReader.file, FILE_RDF_MANIFEST);
+    let addon = loadManifestFromRDF(uri, aStream);
 
     // Binary components can only be loaded from unpacked addons.
     if (addon.unpack) {
@@ -1058,9 +1219,37 @@ let loadManifestFromZipReader = Task.async(function* loadManifestFromZipReader(a
       addon.hasBinaryComponents = false;
     }
 
-    addon.signedState = yield verifyZipSignedState(aZipReader.file, addon);
+    return addon;
+  }
 
+  let entry = getManifestEntryForZipReader(aZipReader);
+  if (!entry) {
+    throw new Error("File " + aZipReader.file.path + " does not contain a valid " +
+                    "install manifest");
+  }
+
+  let zis = aZipReader.getInputStream(entry);
+  let bis = Cc["@mozilla.org/network/buffered-input-stream;1"].
+            createInstance(Ci.nsIBufferedInputStream);
+  bis.init(zis, 4096);
+
+  try {
+    let addon = entry == FILE_WEB_MANIFEST ?
+                loadManifestFromWebManifest(bis) :
+                loadFromRDF(bis);
+
+    addon._sourceBundle = aZipReader.file;
+
+    addon.size = 0;
+    let entries = aZipReader.findEntries(null);
+    while (entries.hasMore())
+      addon.size += aZipReader.getEntry(entries.getNext()).realSize;
+
+    addon.signedState = yield verifyZipSignedState(aZipReader.file, addon);
     addon.appDisabled = !isUsableAddon(addon);
+
+    defineSyncGUID(addon);
+
     return addon;
   }
   finally {
@@ -1636,15 +1825,12 @@ XPIState.prototype = {
         changed = true;
       }
     }
-    // if the add-on is disabled, modified time is the install.rdf time, if any.
-    // If {path}/install.rdf doesn't exist, we assume this is a packed .xpi and use
+    // if the add-on is disabled, modified time is the install manifest time, if
+    // any. If no manifest exists, we assume this is a packed .xpi and use
     // the time stamp of {path}
     try {
-      // Get the install.rdf update time, if any.
-      // XXX This will eventually also need to check for package.json or whatever
-      // the new manifest is named.
-      let maniFile = aFile.clone();
-      maniFile.append(FILE_INSTALL_MANIFEST);
+      // Get the install manifest update time, if any.
+      let maniFile = getManifestFileForDir(aFile);
       if (!(aId in XPIProvider._mostRecentlyModifiedFile)) {
         XPIProvider._mostRecentlyModifiedFile[aId] = maniFile.leafName;
       }
@@ -2656,12 +2842,11 @@ this.XPIProvider = {
 
         if (isDir) {
           // Check if the directory contains an install manifest.
-          let manifest = stageDirEntry.clone();
-          manifest.append(FILE_INSTALL_MANIFEST);
+          let manifest = getManifestFileForDir(stageDirEntry);
 
           // If the install manifest doesn't exist uninstall this add-on in this
           // install location.
-          if (!manifest.exists()) {
+          if (!manifest) {
             logger.debug("Processing uninstall of " + id + " in " + aLocation.name);
             try {
               aLocation.uninstallAddon(id);
@@ -3955,7 +4140,9 @@ this.XPIProvider = {
    *         A callback to pass an array of Addons to
    */
   getAddonsByTypes: function XPI_getAddonsByTypes(aTypes, aCallback) {
-    XPIDatabase.getVisibleAddons(aTypes, function getAddonsByTypes_getVisibleAddons(aAddons) {
+    let typesToGet = getAllAliasesForTypes(aTypes);
+
+    XPIDatabase.getVisibleAddons(typesToGet, function getAddonsByTypes_getVisibleAddons(aAddons) {
       aCallback([createWrapper(a) for each (a in aAddons)]);
     });
   },
@@ -3984,7 +4171,9 @@ this.XPIProvider = {
    */
   getAddonsWithOperationsByTypes:
   function XPI_getAddonsWithOperationsByTypes(aTypes, aCallback) {
-    XPIDatabase.getVisibleAddonsWithPendingOperations(aTypes,
+    let typesToGet = getAllAliasesForTypes(aTypes);
+
+    XPIDatabase.getVisibleAddonsWithPendingOperations(typesToGet,
       function getAddonsWithOpsByTypes_getVisibleAddonsWithPendingOps(aAddons) {
       let results = [createWrapper(a) for each (a in aAddons)];
       XPIProvider.installs.forEach(function(aInstall) {
@@ -4008,7 +4197,7 @@ this.XPIProvider = {
   getInstallsByTypes: function XPI_getInstallsByTypes(aTypes, aCallback) {
     let results = [];
     this.installs.forEach(function(aInstall) {
-      if (!aTypes || aTypes.indexOf(aInstall.type) >= 0)
+      if (!aTypes || aTypes.indexOf(getExternalType(aInstall.type)) >= 0)
         results.push(aInstall.wrapper);
     });
     aCallback(results);
@@ -4028,6 +4217,10 @@ this.XPIProvider = {
    * @see    amIAddonManager.mapURIToAddonID
    */
   mapURIToAddonID: function XPI_mapURIToAddonID(aURI) {
+    if (aURI.scheme == "moz-extension") {
+      return AddonPolicyService.extensionURIToAddonId(aURI);
+    }
+
     let resolved = this._resolveURIToFile(aURI);
     if (!resolved || !(resolved instanceof Ci.nsIFileURL))
       return null;
@@ -4443,6 +4636,8 @@ this.XPIProvider = {
     let uri = getURIForResourceInFile(aFile, "bootstrap.js").spec;
     if (aType == "dictionary")
       uri = "resource://gre/modules/addons/SpellCheckDictionaryBootstrap.js"
+    else if (aType == "webextension")
+      uri = "resource://gre/modules/addons/WebExtensionBootstrap.js"
 
     this.bootstrapScopes[aId] =
       new Cu.Sandbox(principal, { sandboxName: uri,
@@ -6147,10 +6342,12 @@ function AddonInstallWrapper(aInstall) {
   });
 #endif
 
-  ["name", "type", "version", "icons", "releaseNotesURI", "file", "state", "error",
+  ["name", "version", "icons", "releaseNotesURI", "file", "state", "error",
    "progress", "maxProgress", "certificate", "certName"].forEach(function(aProp) {
     this.__defineGetter__(aProp, function AIW_propertyGetter() aInstall[aProp]);
   }, this);
+
+  this.__defineGetter__("type", () => getExternalType(aInstall.type));
 
   this.__defineGetter__("iconURL", function AIW_iconURL() aInstall.icons[32]);
 
@@ -6734,13 +6931,15 @@ function AddonWrapper(aAddon) {
     return [objValue, false];
   }
 
-  ["id", "syncGUID", "version", "type", "isCompatible", "isPlatformCompatible",
+  ["id", "syncGUID", "version", "isCompatible", "isPlatformCompatible",
    "providesUpdatesSecurely", "blocklistState", "blocklistURL", "appDisabled",
    "softDisabled", "skinnable", "size", "foreignInstall", "hasBinaryComponents",
    "strictCompatibility", "compatibilityOverrides", "updateURL",
    "getDataDirectory", "multiprocessCompatible", "signedState"].forEach(function(aProp) {
      this.__defineGetter__(aProp, function AddonWrapper_propertyGetter() aAddon[aProp]);
   }, this);
+
+  this.__defineGetter__("type", () => getExternalType(aAddon.type));
 
   ["fullDescription", "developerComments", "eula", "supportURL",
    "contributionURL", "contributionAmount", "averageRating", "reviewCount",

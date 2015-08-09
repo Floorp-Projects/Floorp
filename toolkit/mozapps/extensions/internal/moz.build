@@ -13,6 +13,7 @@ EXTRA_JS_MODULES.addons += [
     'GMPProvider.jsm',
     'LightweightThemeImageOptimizer.jsm',
     'SpellCheckDictionaryBootstrap.js',
+    'WebExtensionBootstrap.js',
 ]
 
 # Don't ship unused providers on Android
