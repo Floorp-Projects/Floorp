@@ -357,15 +357,15 @@ Debugger::Debugger(JSContext* cx, NativeObject* dbg)
   : object(dbg),
     uncaughtExceptionHook(nullptr),
     enabled(true),
-    allowUnobservedAsmJS(false),
     observedGCs(cx),
-    tenurePromotionsLog(cx),
     trackingTenurePromotions(false),
+    tenurePromotionsLogLength(0),
     maxTenurePromotionsLogLength(DEFAULT_MAX_LOG_LENGTH),
     tenurePromotionsLogOverflowed(false),
-    allocationsLog(cx),
+    allowUnobservedAsmJS(false),
     trackingAllocationSites(false),
     allocationSamplingProbability(1.0),
+    allocationsLogLength(0),
     maxAllocationsLogLength(DEFAULT_MAX_LOG_LENGTH),
     allocationsLogOverflowed(false),
     frames(cx->runtime()),
@@ -390,8 +390,8 @@ Debugger::Debugger(JSContext* cx, NativeObject* dbg)
 Debugger::~Debugger()
 {
     MOZ_ASSERT_IF(debuggees.initialized(), debuggees.empty());
-    allocationsLog.clear();
-    tenurePromotionsLog.clear();
+    emptyAllocationsLog();
+    emptyTenurePromotionsLog();
 
     /*
      * Since the inactive state for this link is a singleton cycle, it's always
@@ -1701,7 +1701,7 @@ Debugger::isDebuggee(const JSCompartment* compartment) const
     return compartment->isDebuggee() && debuggees.has(compartment->maybeGlobal());
 }
 
-Debugger::TenurePromotionsLogEntry::TenurePromotionsLogEntry(JSRuntime* rt, JSObject& obj, double when)
+Debugger::TenurePromotionsEntry::TenurePromotionsEntry(JSRuntime* rt, JSObject& obj, double when)
   : className(obj.getClass()->name),
     when(when),
     frame(getObjectAllocationSite(obj)),
@@ -1712,16 +1712,42 @@ Debugger::TenurePromotionsLogEntry::TenurePromotionsLogEntry(JSRuntime* rt, JSOb
 void
 Debugger::logTenurePromotion(JSRuntime* rt, JSObject& obj, double when)
 {
-    if (!tenurePromotionsLog.emplaceBack(rt, obj, when))
+    auto* entry = js_new<TenurePromotionsEntry>(rt, obj, when);
+    if (!entry)
         CrashAtUnhandlableOOM("Debugger::logTenurePromotion");
 
-    if (tenurePromotionsLog.length() > maxTenurePromotionsLogLength) {
-        if (!tenurePromotionsLog.popFront())
-            CrashAtUnhandlableOOM("Debugger::logTenurePromotion");
-        MOZ_ASSERT(tenurePromotionsLog.length() == maxTenurePromotionsLogLength);
+    tenurePromotionsLog.insertBack(entry);
+    if (tenurePromotionsLogLength >= maxTenurePromotionsLogLength) {
+        js_delete(tenurePromotionsLog.popFirst());
         tenurePromotionsLogOverflowed = true;
+    } else {
+        tenurePromotionsLogLength++;
     }
 }
+
+/* static */ Debugger::AllocationSite*
+Debugger::AllocationSite::create(JSContext* cx, HandleObject frame, double when, HandleObject obj)
+{
+    assertSameCompartment(cx, frame);
+
+    RootedAtom ctorName(cx);
+    {
+        AutoCompartment ac(cx, obj);
+        if (!obj->constructorDisplayAtom(cx, &ctorName))
+            return nullptr;
+    }
+
+    AllocationSite* allocSite = cx->new_<AllocationSite>(frame, when);
+    if (!allocSite)
+        return nullptr;
+
+    allocSite->className = obj->getClass()->name;
+    allocSite->ctorName = ctorName.get();
+    allocSite->size = JS::ubi::Node(obj.get()).size(cx->runtime()->debuggerMallocSizeOf);
+
+    return allocSite;
+}
+
 
 bool
 Debugger::appendAllocationSite(JSContext* cx, HandleObject obj, HandleSavedFrame frame,
@@ -1734,31 +1760,36 @@ Debugger::appendAllocationSite(JSContext* cx, HandleObject obj, HandleSavedFrame
     if (!cx->compartment()->wrap(cx, &wrappedFrame))
         return false;
 
-    RootedAtom ctorName(cx);
-    {
-        AutoCompartment ac(cx, obj);
-        if (!obj->constructorDisplayAtom(cx, &ctorName))
-            return false;
-    }
-
-    auto className = obj->getClass()->name;
-    auto size = JS::ubi::Node(obj.get()).size(cx->runtime()->debuggerMallocSizeOf);
-
-    if (!allocationsLog.emplaceBack(wrappedFrame, when, className, ctorName, size)) {
-        ReportOutOfMemory(cx);
+    AllocationSite* allocSite = AllocationSite::create(cx, wrappedFrame, when, obj);
+    if (!allocSite)
         return false;
-    }
 
-    if (allocationsLog.length() > maxAllocationsLogLength) {
-        if (!allocationsLog.popFront()) {
-            ReportOutOfMemory(cx);
-            return false;
-        }
-        MOZ_ASSERT(allocationsLog.length() == maxAllocationsLogLength);
+    allocationsLog.insertBack(allocSite);
+
+    if (allocationsLogLength >= maxAllocationsLogLength) {
+        js_delete(allocationsLog.popFirst());
         allocationsLogOverflowed = true;
+    } else {
+        allocationsLogLength++;
     }
 
     return true;
+}
+
+void
+Debugger::emptyAllocationsLog()
+{
+    while (!allocationsLog.isEmpty())
+        js_delete(allocationsLog.popFirst());
+    allocationsLogLength = 0;
+}
+
+void
+Debugger::emptyTenurePromotionsLog()
+{
+    while (!tenurePromotionsLog.isEmpty())
+        js_delete(tenurePromotionsLog.popFirst());
+    tenurePromotionsLogLength = 0;
 }
 
 JSTrapStatus
@@ -2301,7 +2332,7 @@ Debugger::removeAllocationsTrackingForAllDebuggees()
     for (WeakGlobalObjectSet::Range r = debuggees.all(); !r.empty(); r.popFront()) {
         Debugger::removeAllocationsTracking(*r.front().get());
     }
-    allocationsLog.clear();
+    emptyAllocationsLog();
 }
 
 
@@ -2320,7 +2351,19 @@ Debugger::markCrossCompartmentEdges(JSTracer* trc)
     // `Debugger::logTenurePromotion`, we can't hold onto CCWs inside the log,
     // and instead have unwrapped cross-compartment edges. We need to be sure to
     // mark those here.
-    TenurePromotionsLog::trace(&tenurePromotionsLog, trc);
+    traceTenurePromotionsLog(trc);
+}
+
+/*
+ * Trace every entry in the promoted to tenured heap log.
+ */
+void
+Debugger::traceTenurePromotionsLog(JSTracer* trc)
+{
+    for (TenurePromotionsEntry* e = tenurePromotionsLog.getFirst(); e; e = e->getNext()) {
+        if (e->frame)
+            TraceEdge(trc, &e->frame, "Debugger::tenurePromotionsLog SavedFrame");
+    }
 }
 
 /*
@@ -2501,8 +2544,17 @@ Debugger::trace(JSTracer* trc)
         TraceEdge(trc, &frameobj, "live Debugger.Frame");
     }
 
-    AllocationsLog::trace(&allocationsLog, trc);
-    TenurePromotionsLog::trace(&tenurePromotionsLog, trc);
+    /*
+     * Mark every allocation site in our allocation log.
+     */
+    for (AllocationSite* s = allocationsLog.getFirst(); s; s = s->getNext()) {
+        if (s->frame)
+            TraceEdge(trc, &s->frame, "allocation log SavedFrame");
+        if (s->ctorName)
+            TraceEdge(trc, &s->ctorName, "allocation log constructor name");
+    }
+
+    traceTenurePromotionsLog(trc);
 
     /* Trace the weak map from JSScript instances to Debugger.Script objects. */
     scripts.trace(trc);
