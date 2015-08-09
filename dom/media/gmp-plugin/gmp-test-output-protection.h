@@ -35,13 +35,6 @@ static BOOL CALLBACK EnumDisplayMonitorsCallback(HMONITOR hMonitor, HDC hdc,
     failureMsgs->push_back("FAIL GetMonitorInfoA call failed");
   }
 
-  DISPLAY_DEVICEA dd;
-  ZeroMemory(&dd, sizeof(dd));
-  dd.cb = sizeof(dd);
-  if (!EnumDisplayDevicesA(miex.szDevice, 0, &dd, 1)) {
-    failureMsgs->push_back("FAIL EnumDisplayDevicesA call failed");
-  }
-
   ULONG numVideoOutputs = 0;
   IOPMVideoOutput** opmVideoOutputArray = nullptr;
   HRESULT hr = sOPMGetVideoOutputsFromHMONITORProc(hMonitor,
@@ -55,6 +48,13 @@ static BOOL CALLBACK EnumDisplayMonitorsCallback(HMONITOR hMonitor, HDC hdc,
       failureMsgs->push_back(msg);
     }
     return true;
+  }
+
+  DISPLAY_DEVICEA dd;
+  ZeroMemory(&dd, sizeof(dd));
+  dd.cb = sizeof(dd);
+  if (!EnumDisplayDevicesA(miex.szDevice, 0, &dd, 1)) {
+    failureMsgs->push_back("FAIL EnumDisplayDevicesA call failed");
   }
 
   for (ULONG i = 0; i < numVideoOutputs; ++i) {
