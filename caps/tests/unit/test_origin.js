@@ -47,6 +47,12 @@ function run_test() {
   var nullPrin = Cu.getObjectPrincipal(new Cu.Sandbox(null));
   do_check_true(/^moz-nullprincipal:\{([0-9]|[a-z]|\-){36}\}$/.test(nullPrin.origin));
   checkOriginAttributes(nullPrin);
+  var ipv6Prin = ssm.createCodebasePrincipal(makeURI('https://[2001:db8::ff00:42:8329]:123'), {});
+  do_check_eq(ipv6Prin.origin, 'https://[2001:db8::ff00:42:8329]:123');
+  checkOriginAttributes(ipv6Prin);
+  var ipv6NPPrin = ssm.createCodebasePrincipal(makeURI('https://[2001:db8::ff00:42:8329]'), {});
+  do_check_eq(ipv6NPPrin.origin, 'https://[2001:db8::ff00:42:8329]');
+  checkOriginAttributes(ipv6NPPrin);
   var ep = ssm.createExpandedPrincipal([exampleCom, nullPrin, exampleOrg]);
   checkOriginAttributes(ep);
   checkCrossOrigin(exampleCom, exampleOrg);
