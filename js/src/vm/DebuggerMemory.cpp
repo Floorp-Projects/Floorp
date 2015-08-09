@@ -185,7 +185,7 @@ DebuggerMemory::drainAllocationsLog(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    size_t length = dbg->allocationsLog.length();
+    size_t length = dbg->allocationsLogLength;
 
     RootedArrayObject result(cx, NewDenseFullyAllocatedArray(cx, length));
     if (!result)
@@ -197,21 +197,21 @@ DebuggerMemory::drainAllocationsLog(JSContext* cx, unsigned argc, Value* vp)
         if (!obj)
             return false;
 
-        // Don't pop the AllocationsLogEntry yet. The queue's links are followed
-        // by the GC to find the AllocationsLogEntry, but are not barriered, so
-        // we must edit them with great care. Use the queue entry in place, and
-        // then pop and delete together.
-        Debugger::AllocationsLogEntry& entry = dbg->allocationsLog.front();
+        // Don't pop the AllocationSite yet. The queue's links are followed by
+        // the GC to find the AllocationSite, but are not barriered, so we must
+        // edit them with great care. Use the queue entry in place, and then
+        // pop and delete together.
+        Debugger::AllocationSite* allocSite = dbg->allocationsLog.getFirst();
 
-        RootedValue frame(cx, ObjectOrNullValue(entry.frame));
+        RootedValue frame(cx, ObjectOrNullValue(allocSite->frame));
         if (!DefineProperty(cx, obj, cx->names().frame, frame))
             return false;
 
-        RootedValue timestampValue(cx, NumberValue(entry.when));
+        RootedValue timestampValue(cx, NumberValue(allocSite->when));
         if (!DefineProperty(cx, obj, cx->names().timestamp, timestampValue))
             return false;
 
-        RootedString className(cx, Atomize(cx, entry.className, strlen(entry.className)));
+        RootedString className(cx, Atomize(cx, allocSite->className, strlen(allocSite->className)));
         if (!className)
             return false;
         RootedValue classNameValue(cx, StringValue(className));
@@ -219,27 +219,26 @@ DebuggerMemory::drainAllocationsLog(JSContext* cx, unsigned argc, Value* vp)
             return false;
 
         RootedValue ctorName(cx, NullValue());
-        if (entry.ctorName)
-            ctorName.setString(entry.ctorName);
+        if (allocSite->ctorName)
+            ctorName.setString(allocSite->ctorName);
         if (!DefineProperty(cx, obj, cx->names().constructor, ctorName))
             return false;
 
-        RootedValue size(cx, NumberValue(entry.size));
+        RootedValue size(cx, NumberValue(allocSite->size));
         if (!DefineProperty(cx, obj, cx->names().size, size))
             return false;
 
         result->setDenseElement(i, ObjectValue(*obj));
 
-        // Pop the front queue entry, and delete it immediately, so that the GC
-        // sees the AllocationsLogEntry's RelocatablePtr barriers run atomically
-        // with the change to the graph (the queeue link).
-        if (!dbg->allocationsLog.popFront()) {
-            ReportOutOfMemory(cx);
-            return false;
-        }
+        // Pop the front queue entry, and delete it immediately, so that
+        // the GC sees the AllocationSite's RelocatablePtr barriers run
+        // atomically with the change to the graph (the queue link).
+        MOZ_ALWAYS_TRUE(dbg->allocationsLog.popFirst() == allocSite);
+        js_delete(allocSite);
     }
 
     dbg->allocationsLogOverflowed = false;
+    dbg->allocationsLogLength = 0;
     args.rval().setObject(*result);
     return true;
 }
@@ -273,11 +272,9 @@ DebuggerMemory::setMaxAllocationsLogLength(JSContext* cx, unsigned argc, Value* 
     Debugger* dbg = memory->getDebugger();
     dbg->maxAllocationsLogLength = max;
 
-    while (dbg->allocationsLog.length() > dbg->maxAllocationsLogLength) {
-        if (!dbg->allocationsLog.popFront()) {
-            ReportOutOfMemory(cx);
-            return false;
-        }
+    while (dbg->allocationsLogLength > dbg->maxAllocationsLogLength) {
+        js_delete(dbg->allocationsLog.getFirst());
+        dbg->allocationsLogLength--;
     }
 
     args.rval().setUndefined();
@@ -355,7 +352,7 @@ DebuggerMemory::drainTenurePromotionsLog(JSContext* cx, unsigned argc, Value* vp
         return false;
     }
 
-    size_t length = dbg->tenurePromotionsLog.length();
+    size_t length = dbg->tenurePromotionsLogLength;
 
     RootedArrayObject result(cx, NewDenseFullyAllocatedArray(cx, length));
     if (!result)
@@ -371,42 +368,41 @@ DebuggerMemory::drainTenurePromotionsLog(JSContext* cx, unsigned argc, Value* vp
         // followed by the GC to find the TenurePromotionsEntry, but are not
         // barriered, so we must edit them with great care. Use the queue entry
         // in place, and then pop and delete together.
-        auto& entry = dbg->tenurePromotionsLog.front();
+        auto* entry = dbg->tenurePromotionsLog.getFirst();
 
-        RootedValue frame(cx, ObjectOrNullValue(entry.frame));
+        RootedValue frame(cx, ObjectOrNullValue(entry->frame));
         if (!cx->compartment()->wrap(cx, &frame) ||
             !DefineProperty(cx, obj, cx->names().frame, frame))
         {
             return false;
         }
 
-        RootedValue timestampValue(cx, NumberValue(entry.when));
+        RootedValue timestampValue(cx, NumberValue(entry->when));
         if (!DefineProperty(cx, obj, cx->names().timestamp, timestampValue))
             return false;
 
-        RootedString className(cx, Atomize(cx, entry.className, strlen(entry.className)));
+        RootedString className(cx, Atomize(cx, entry->className, strlen(entry->className)));
         if (!className)
             return false;
         RootedValue classNameValue(cx, StringValue(className));
         if (!DefineProperty(cx, obj, cx->names().class_, classNameValue))
             return false;
 
-        RootedValue sizeValue(cx, NumberValue(entry.size));
+        RootedValue sizeValue(cx, NumberValue(entry->size));
         if (!DefineProperty(cx, obj, cx->names().size, sizeValue))
             return false;
 
         result->setDenseElement(i, ObjectValue(*obj));
 
-        // Pop the front queue entry, and delete it immediately, so that the GC
-        // sees the TenurePromotionsEntry's RelocatablePtr barriers run
+        // Pop the front queue entry, and delete it immediately, so that
+        // the GC sees the TenurePromotionsEntry's RelocatablePtr barriers run
         // atomically with the change to the graph (the queue link).
-        if (!dbg->tenurePromotionsLog.popFront()) {
-            ReportOutOfMemory(cx);
-            return false;
-        }
+        MOZ_ALWAYS_TRUE(dbg->tenurePromotionsLog.popFirst() == entry);
+        js_delete(entry);
     }
 
     dbg->tenurePromotionsLogOverflowed = false;
+    dbg->tenurePromotionsLogLength = 0;
     args.rval().setObject(*result);
     return true;
 }
@@ -440,11 +436,9 @@ DebuggerMemory::setMaxTenurePromotionsLogLength(JSContext* cx, unsigned argc, Va
     Debugger* dbg = memory->getDebugger();
     dbg->maxTenurePromotionsLogLength = max;
 
-    while (dbg->tenurePromotionsLog.length() > dbg->maxAllocationsLogLength) {
-        if (!dbg->tenurePromotionsLog.popFront()) {
-            ReportOutOfMemory(cx);
-            return false;
-        }
+    while (dbg->tenurePromotionsLogLength > dbg->maxAllocationsLogLength) {
+        js_delete(dbg->tenurePromotionsLog.getFirst());
+        dbg->tenurePromotionsLogLength--;
     }
 
     args.rval().setUndefined();
