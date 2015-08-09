@@ -24,7 +24,7 @@ add_task(function* test_tab_matches() {
   yield check_autocomplete({
     search: "abc.com",
     searchParam: "enable-actions",
-    matches: [ makeVisitMatch("abc.com", "http://abc.com/"),
+    matches: [ makeVisitMatch("abc.com", "http://abc.com/", { heuristic: true }),
                makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }) ]
   });
 
@@ -32,7 +32,7 @@ add_task(function* test_tab_matches() {
   yield check_autocomplete({
     search: "abc",
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch("abc"),
+    matches: [ makeSearchMatch("abc", { heuristic: true }),
                makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
                { uri: uri2, title: "xyz.net - we're better than ABC", style: [ "favicon" ] } ]
   });
@@ -42,7 +42,7 @@ add_task(function* test_tab_matches() {
   yield check_autocomplete({
     search: "abc",
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch("abc"),
+    matches: [ makeSearchMatch("abc", { heuristic: true }),
                makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
                makeSwitchToTabMatch("http://xyz.net/", { title: "xyz.net - we're better than ABC" }) ]
   });
@@ -52,7 +52,7 @@ add_task(function* test_tab_matches() {
   yield check_autocomplete({
     search: "abc",
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch("abc"),
+    matches: [ makeSearchMatch("abc", { heuristic: true }),
                makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
                makeSwitchToTabMatch("http://xyz.net/", { title: "xyz.net - we're better than ABC" }) ]
   });
@@ -61,7 +61,7 @@ add_task(function* test_tab_matches() {
   yield check_autocomplete({
     search: "abc",
     searchParam: "enable-actions disable-private-actions",
-    matches: [ makeSearchMatch("abc"),
+    matches: [ makeSearchMatch("abc", { heuristic: true }),
                { uri: uri1, title: "ABC rocks", style: [ "favicon" ] },
                { uri: uri2, title: "xyz.net - we're better than ABC", style: [ "favicon" ] } ]
   });
@@ -80,7 +80,7 @@ add_task(function* test_tab_matches() {
   yield check_autocomplete({
     search: "abc",
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch("abc"),
+    matches: [ makeSearchMatch("abc", { heuristic: true }),
                { uri: uri1, title: "ABC rocks", style: [ "favicon" ] },
                { uri: uri2, title: "xyz.net - we're better than ABC", style: [ "favicon" ] } ]
   });
@@ -90,7 +90,7 @@ add_task(function* test_tab_matches() {
   yield check_autocomplete({
     search: gTabRestrictChar + " abc",
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch(gTabRestrictChar + " abc"),
+    matches: [ makeSearchMatch(gTabRestrictChar + " abc", { heuristic: true }),
                makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }) ]
   });
 
@@ -98,7 +98,7 @@ add_task(function* test_tab_matches() {
   yield check_autocomplete({
     search: "mozilla",
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch("mozilla"),
+    matches: [ makeSearchMatch("mozilla", { heuristic: true }),
                makeSwitchToTabMatch("about:mozilla") ]
   });
 
@@ -106,7 +106,7 @@ add_task(function* test_tab_matches() {
   yield check_autocomplete({
     search: gTabRestrictChar + " mozilla",
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch(gTabRestrictChar + " mozilla"),
+    matches: [ makeSearchMatch(gTabRestrictChar + " mozilla", { heuristic: true }),
                makeSwitchToTabMatch("about:mozilla") ]
   });
 
@@ -114,7 +114,7 @@ add_task(function* test_tab_matches() {
   yield check_autocomplete({
     search: gTabRestrictChar,
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch(gTabRestrictChar),
+    matches: [ makeSearchMatch(gTabRestrictChar, { heuristic: true }),
                makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
                makeSwitchToTabMatch("about:mozilla"),
                makeSwitchToTabMatch("data:text/html,test") ]

@@ -10,7 +10,7 @@
 <!ENTITY  onboard_start_subtext3 "Make your mobile Web browsing experience truly your own.">
 <!ENTITY  onboard_start_button_account "Sign in to &brandShortName;">
 <!ENTITY  onboard_start_button_browser "Start Browsing">
-<!ENTITY  onboard_start_restricted "Stay safe and in control with this simplified version of Firefox.">
+<!ENTITY  onboard_start_restricted1 "Stay safe and in control with this simplified version of &brandShortName;.">
 
 <!-- Localization note: These are used as the titles of different pages on the home screen.
      They are automatically converted to all caps by the Android platform. -->
@@ -198,7 +198,7 @@
 <!ENTITY pref_cookies_disabled "Disabled">
 
 <!ENTITY pref_tracking_protection_title "Tracking protection">
-<!ENTITY pref_tracking_protection_summary2 "Actively block tracking elements in Private Browsing">
+<!ENTITY pref_tracking_protection_summary3 "Enabled in Private Browsing">
 <!ENTITY pref_donottrack_title "Do not track">
 <!ENTITY pref_donottrack_summary "&brandShortName; will tell sites that you do not want to be tracked">
 

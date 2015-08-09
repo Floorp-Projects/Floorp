@@ -101,7 +101,6 @@ let FramesListView = {
         }
         this._selectedItem = target;
         target.classList.add("selected");
-        console.log("Emitting select on", this, frame);
         this.emit("select", frame);
         break;
       }

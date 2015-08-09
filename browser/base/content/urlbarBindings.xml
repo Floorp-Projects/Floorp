@@ -768,8 +768,14 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
           // Trim popup selected values, but never trim results coming from
           // autofill.
+          let styles = new Set(
+            this.popup.selectedIndex == -1 ? [] :
+            this.mController.getStyleAt(this.popup.selectedIndex).split(/\s+/)
+          );
           if (this.popup.selectedIndex == -1 ||
-              this.mController.getStyleAt(this.popup.selectedIndex) == "autofill") {
+              this.mController
+                  .getStyleAt(this.popup.selectedIndex)
+                  .split(/\s+/).indexOf("autofill") >= 0) {
             this._disableTrim = true;
           }
           this.value = val;
@@ -923,20 +929,16 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         false
       ]]></field>
 
-      <method name="_maybeShowSearchSuggestionsNotification">
-        <body><![CDATA[
-          let showNotification =
-            !this._userMadeSearchSuggestionsChoice &&
-            // When _urlbarFocused is true, tabbrowser would close the popup if
-            // it's opened here, so don't show the notification.
-            !gBrowser.selectedBrowser._urlbarFocused &&
-            Services.prefs.getBoolPref("browser.search.suggest.enabled") &&
-            this._prefs.getBoolPref("unifiedcomplete");
-          if (showNotification) {
-            this.popup.showSearchSuggestionsNotification(this, this);
-          }
-        ]]></body>
-      </method>
+      <property name="shouldShowSearchSuggestionsNotification" readonly="true">
+        <getter><![CDATA[
+          return !this._userMadeSearchSuggestionsChoice &&
+                 // When _urlbarFocused is true, tabbrowser would close the
+                 // popup if it's opened here, so don't show the notification.
+                 !gBrowser.selectedBrowser._urlbarFocused &&
+                 Services.prefs.getBoolPref("browser.search.suggest.enabled") &&
+                 this._prefs.getBoolPref("unifiedcomplete");
+        ]]></getter>
+      </property>
 
     </implementation>
 
@@ -968,7 +970,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         if (event.originalTarget == this.inputField) {
           this._hideURLTooltip();
           this.formatValue();
-          this._maybeShowSearchSuggestionsNotification();
         }
       ]]></handler>
 
@@ -1586,7 +1587,13 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // ie, hitting page-down will only cause is to wrap if we're already
           // at one end of the list.
 
-          if (!Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete")) {
+          // Do not allow the selection to be removed if UnifiedComplete is
+          // enabled and the popup's first result is a heuristic result.
+          if (!Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete") ||
+              (this.input.mController.matchCount > 0 &&
+               this.input.mController
+                         .getStyleAt(0)
+                         .split(/\s+/).indexOf("heuristic") == -1)) {
             if (reverse && index == -1 || newIndex > maxRow && index != maxRow)
               newIndex = maxRow;
             else if (!reverse && index == -1 || newIndex < 0 && index != 0)
@@ -1631,11 +1638,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // to avoid impacting startup / new window performance
           aInput.popup.hidden = false;
 
-          // The popup may already be open if it's showing the search
-          // suggestions notification.  In that case, its footer visibility
-          // needs to be updated.
-          if (this.popupOpen) {
-            this._updateFooterVisibility();
+          if (aInput.shouldShowSearchSuggestionsNotification) {
+            this._showSearchSuggestionsNotification();
           }
 
           this._openAutocompletePopup(aInput, aElement);
@@ -1651,7 +1655,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         </body>
       </method>
 
-      <method name="showSearchSuggestionsNotification">
+      <method name="_showSearchSuggestionsNotification">
         <parameter name="aInput"/>
         <parameter name="aElement"/>
         <body>
@@ -1679,7 +1683,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
           this.classList.add("showSearchSuggestionsNotification");
           this._updateFooterVisibility();
-          this.openAutocompletePopup(aInput, aElement);
           ]]>
         </body>
       </method>
@@ -1790,22 +1793,39 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       </method>
 
       <method name="createResultLabel">
-        <parameter name="aTitle"/>
-        <parameter name="aUrl"/>
-        <parameter name="aType"/>
+        <parameter name="item"/>
+        <parameter name="proposedLabel"/>
         <body>
           <![CDATA[
-            let label = aTitle + " " + aUrl;
-            // convert aType (ex: "ac-result-type-<aType>") to text to be spoke aloud
-            // by screen readers.  convert "tag" and "bookmark" to the localized versions,
-            // but don't do anything for "favicon" (the default)
-            try {
-              label += " " + this._bundle.GetStringFromName(aType + "ResultLabel");
-            } catch (e) {
-              // Undefined result label, do nothing.
+            let parts = [proposedLabel];
+
+            let action = this.mInput._parseActionUrl(item.getAttribute("url"));
+            if (action) {
+              switch (action.type) {
+              case "searchengine":
+                parts = [
+                  action.params.searchSuggestion || action.params.searchQuery,
+                  action.params.engineName,
+                ];
+                break;
+              case "switchtab":
+                parts = [
+                  item.getAttribute("title"),
+                  action.params.url,
+                ];
+                break;
+              }
             }
 
-            return label;
+            let types = item.getAttribute("type").split(/\s+/);
+            let type = types.find(type => type != "action" && type != "heuristic");
+            try {
+              // Some types intentionally do not map to strings, which is not
+              // an error.
+              parts.push(this._bundle.GetStringFromName(type + "ResultLabel"));
+            } catch (e) {}
+
+            return parts.filter(str => str).join(" ");
           ]]>
         </body>
       </method>
@@ -1816,11 +1836,16 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             if (!Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete"))
               return;
 
+            // If nothing is selected yet, select the first result if it is a
+            // pre-selected "heuristic" result.  (See UnifiedComplete.js.)
             if (this._matchCount > 0 && this.selectedIndex == -1) {
-              // Don't handle this as a user-initiated action.
-              this._ignoreNextSelect = true;
-              this.selectedIndex = 0;
-              this._ignoreNextSelect = false;
+              let styles = this.input.mController.getStyleAt(0).split(/\s+/);
+              if (styles.indexOf("heuristic") >= 0) {
+                // Don't handle this as a user-initiated action.
+                this._ignoreNextSelect = true;
+                this.selectedIndex = 0;
+                this._ignoreNextSelect = false;
+              }
             }
 
             this.input.gotResultForCurrentQuery = true;
@@ -2384,259 +2409,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                     "center-item-menulist").value = val;
         </setter>
       </property>
-    </implementation>
-  </binding>
-
-  <binding id="bad-content-notification" extends="chrome://global/content/bindings/notification.xml#popup-notification">
-    <content>
-      <xul:hbox align="start">
-        <xul:image class="popup-notification-icon" xbl:inherits="popupid,mixedblockdisabled,trackingblockdisabled"/>
-        <xul:vbox>
-          <!-- header -->
-          <xul:vbox>
-            <xul:description anonid="badContentBlocked.title"
-              class="popup-notification-item-title" xbl:inherits="popupid">
-            </xul:description>
-            <xul:description class="popup-notification-item-message"
-              xbl:inherits="popupid">
-              &badContentBlocked.moreinfo;
-            </xul:description>
-          </xul:vbox>
-          <!-- mixed content -->
-          <xul:vbox anonid="mixedContent" hidden="true">
-            <xul:separator class="groove"/>
-            <xul:hbox align="start">
-              <xul:vbox>
-                <xul:description class="popup-notification-item-title"
-                  xbl:inherits="popupid">
-                  &mixedContentBlocked2.message;
-                </xul:description>
-                <xul:description class="popup-notification-item-message"
-                  xbl:inherits="popupid,mixedblockdisabled">
-                  &mixedContentBlocked2.moreinfo;
-                </xul:description>
-                <xul:label anonid="mixedContent.helplink"
-                  class="text-link" href=""
-                  value="&mixedContentBlocked2.learnMore;"/>
-              </xul:vbox>
-              <xul:button
-                type="menu" label="&mixedContentBlocked2.options;"
-                sizetopopup="none">
-                <xul:menupopup>
-                  <xul:menuitem anonid="mixedContentAction.unblock"
-                    hidden="true" label="&mixedContentBlocked2.unblock.label;"
-                    accesskey="&mixedContentBlocked2.unblock.accesskey;"
-                    oncommand="document.getBindingParent(this).disableMixedContentProtection();"/>
-                  <xul:menuitem anonid="mixedContentAction.block"
-                    hidden="true" label="&mixedContentBlocked2.block.label;"
-                    accesskey="&mixedContentBlocked2.block.accesskey;"
-                    oncommand="document.getBindingParent(this).enableMixedContentProtection();"/>
-                </xul:menupopup>
-              </xul:button>
-            </xul:hbox>
-            <xul:hbox class="popup-notification-footer" xbl:inherits="popupid,mixedblockdisabled">
-              <xul:description class="popup-notification-item-message popup-notification-item-message-critical" xbl:inherits="popupid">
-                  &mixedContentBlocked2.disabled.message;
-              </xul:description>
-            </xul:hbox>
-          </xul:vbox>
-          <!-- tracking content -->
-          <xul:vbox anonid="trackingContent" hidden="true">
-            <xul:separator class="groove"/>
-            <xul:hbox align="start">
-              <xul:vbox>
-                <xul:description class="popup-notification-item-title"
-                  xbl:inherits="popupid">
-                  &trackingContentBlocked.message;
-                </xul:description>
-                <xul:description class="popup-notification-item-message"
-                  xbl:inherits="popupid,trackingblockdisabled">
-                  &trackingContentBlocked.moreinfo;
-                </xul:description>
-                <xul:label anonid="trackingContent.helplink"
-                  class="text-link" href=""
-                  value="&trackingContentBlocked.learnMore;"/>
-              </xul:vbox>
-              <xul:button
-                type="menu" label="&trackingContentBlocked.options;"
-                sizetopopup="none">
-                <xul:menupopup>
-                  <xul:menuitem anonid="trackingContentAction.unblock"
-                    hidden="true" label="&trackingContentBlocked.unblock2.label;"
-                    accesskey="&trackingContentBlocked.unblock2.accesskey;"
-                    oncommand="document.getBindingParent(this).disableTrackingContentProtection();"/>
-                  <xul:menuitem anonid="trackingContentAction.block"
-                    hidden="true" label="&trackingContentBlocked.block.label;"
-                    accesskey="&trackingContentBlocked.block.accesskey;"
-                    oncommand="document.getBindingParent(this).enableTrackingContentProtection();"/>
-                </xul:menupopup>
-              </xul:button>
-            </xul:hbox>
-            <xul:hbox class="popup-notification-footer" xbl:inherits="popupid,trackingblockdisabled">
-              <xul:description class="popup-notification-item-message popup-notification-item-message-critical" xbl:inherits="popupid">
-                &trackingContentBlocked.disabled.message;
-                </xul:description>
-            </xul:hbox>
-          </xul:vbox>
-        </xul:vbox>
-        <xul:vbox pack="start">
-          <xul:toolbarbutton anonid="closebutton"
-                             class="messageCloseButton popup-notification-closebutton tabbable close-icon"
-                             xbl:inherits="oncommand=closebuttoncommand"
-                             tooltiptext="&closeNotification.tooltip;"/>
-        </xul:vbox>
-      </xul:hbox>
-    </content>
-    <resources>
-      <stylesheet src="chrome://global/skin/notification.css"/>
-    </resources>
-    <implementation>
-      <field name="_brandShortName">
-        document.getElementById("bundle_brand").getString("brandShortName")
-      </field>
-      <field name="_doorhangerTitle">
-        document.getAnonymousElementByAttribute(this, "anonid",
-          "badContentBlocked.title")
-      </field>
-      <field name="_mixedContent">
-        document.getAnonymousElementByAttribute(this, "anonid",
-            "mixedContent")
-      </field>
-      <field name="_mixedContentUnblock">
-        document.getAnonymousElementByAttribute(this, "anonid",
-          "mixedContentAction.unblock")
-      </field>
-      <field name="_mixedContentBlock">
-        document.getAnonymousElementByAttribute(this, "anonid",
-          "mixedContentAction.block");
-      </field>
-      <field name="_mixedContentHelpLink">
-        document.getAnonymousElementByAttribute(this, "anonid",
-          "mixedContent.helplink")
-      </field>
-      <property name="isMixedContentBlocked" readonly="true">
-        <getter><![CDATA[
-          return this.notification.options.state &
-            Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT;
-        ]]></getter>
-      </property>
-      <field name="_trackingContent">
-        document.getAnonymousElementByAttribute(this, "anonid",
-          "trackingContent")
-      </field>
-      <field name="_trackingContentUnblock">
-        document.getAnonymousElementByAttribute(this, "anonid",
-          "trackingContentAction.unblock")
-      </field>
-      <field name="_trackingContentBlock">
-        document.getAnonymousElementByAttribute(this, "anonid",
-          "trackingContentAction.block");
-      </field>
-      <field name="_trackingContentHelpLink">
-        document.getAnonymousElementByAttribute(this, "anonid",
-          "trackingContent.helplink")
-      </field>
-      <property name="isTrackingContentBlocked" readonly="true">
-        <getter><![CDATA[
-          return !!(this.notification.options.state &
-            Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT);
-        ]]></getter>
-      </property>
-      <constructor><![CDATA[
-        // default title
-        _doorhangerTitle.value =
-          gNavigatorBundle.getFormattedString(
-            "badContentBlocked.notblocked.message", [this._brandShortName]);
-        if (this.notification.options.state &
-            Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT) {
-          _doorhangerTitle.value =
-            gNavigatorBundle.getFormattedString(
-              "badContentBlocked.blocked.message", [this._brandShortName]);
-          _mixedContent.hidden = false;
-          _mixedContentUnblock.hidden = false;
-          _mixedContentHelpLink.href =
-            Services.urlFormatter.formatURLPref("app.support.baseURL")
-              + "mixed-content";
-        }
-        if (this.notification.options.state &
-            Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT) {
-          this.setAttribute("mixedblockdisabled", true);
-          _mixedContent.hidden = false;
-          _mixedContentBlock.hidden = false;
-          _mixedContentHelpLink.href =
-            Services.urlFormatter.formatURLPref("app.support.baseURL")
-              + "mixed-content";
-        }
-        if (this.notification.options.state &
-            Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT) {
-          _doorhangerTitle.value =
-            gNavigatorBundle.getFormattedString(
-              "badContentBlocked.blocked.message", [this._brandShortName]);
-          _trackingContent.hidden = false;
-          _trackingContentUnblock.hidden = false;
-          _trackingContentHelpLink.href =
-            Services.urlFormatter.formatURLPref("app.support.baseURL")
-              + "tracking-protection";
-        }
-        if (this.notification.options.state &
-            Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT) {
-          this.setAttribute("trackingblockdisabled", true);
-          _trackingContent.hidden = false;
-          _trackingContentBlock.hidden = false;
-          _trackingContentHelpLink.href =
-            Services.urlFormatter.formatURLPref("app.support.baseURL")
-              + "tracking-protection";
-        }
-      ]]></constructor>
-      <method name="disableMixedContentProtection">
-        <body><![CDATA[
-          // Use telemetry to measure how often unblocking happens
-          const kMIXED_CONTENT_UNBLOCK_EVENT = 2;
-          let histogram =
-            Services.telemetry.getHistogramById(
-              "MIXED_CONTENT_UNBLOCK_COUNTER");
-          histogram.add(kMIXED_CONTENT_UNBLOCK_EVENT);
-          // Reload the page with the content unblocked
-          BrowserReloadWithFlags(
-            nsIWebNavigation.LOAD_FLAGS_ALLOW_MIXED_CONTENT);
-        ]]></body>
-      </method>
-      <method name="enableMixedContentProtection">
-        <body><![CDATA[
-          gBrowser.selectedBrowser.messageManager.sendAsyncMessage(
-            "MixedContent:ReenableProtection", {});
-          BrowserReload();
-        ]]></body>
-      </method>
-      <method name="disableTrackingContentProtection">
-        <body><![CDATA[
-          // convert document URI into the format used by
-          // nsChannelClassifier::ShouldEnableTrackingProtection
-          // (any scheme turned into https is correct)
-          let normalizedUrl = Services.io.newURI(
-            "https://" + gBrowser.selectedBrowser.currentURI.hostPort,
-            null, null);
-          // Add the current host/port combination in the 'trackingprotection' consumer of
-          // the permission manager using a normalized URI. This effectively
-          // places this host/port combination on the tracking protection allowlist.
-          Services.perms.add(normalizedUrl,
-            "trackingprotection", Services.perms.ALLOW_ACTION);
-          BrowserReload();
-        ]]></body>
-      </method>
-      <method name="enableTrackingContentProtection">
-        <body><![CDATA[
-          // Remove the current host/port combination from the 'trackingprotection' consumer
-          // of the permission manager. This effectively removes this host/port combination
-          // from the tracking protection allowlist.
-          let normalizedUrl = Services.io.newURI(
-            "https://" + gBrowser.selectedBrowser.currentURI.hostPort,
-            null, null);
-          Services.perms.remove(normalizedUrl,
-            "trackingprotection");
-          BrowserReload();
-        ]]></body>
-      </method>
     </implementation>
   </binding>
 

@@ -1383,24 +1383,23 @@ extends="chrome://global/content/bindings/popup.xml#popup">
       <property name="label" readonly="true">
         <getter>
           <![CDATA[
-            var title = this.getAttribute("title");
-            var url = this.getAttribute("url");
-            var panel = this.parentNode.parentNode;
+            // This property is a string that is read aloud by screen readers,
+            // so it must not contain anything that should not be user-facing.
+
+            let parts = [
+              this.getAttribute("title"),
+              this.getAttribute("url"),
+            ];
+            let label = parts.filter(str => str).join(" ")
 
             // allow consumers that have extended popups to override
             // the label values for the richlistitems
+            let panel = this.parentNode.parentNode;
             if (panel.createResultLabel) {
-              let types = this.getAttribute("type").split(/\s+/);
-              // We only want one type for createResultLabel, so get the first
-              // that isn't "action".
-              let type = types.find(v => v != "action");
-
-              return panel.createResultLabel(title, url, type);
+              return panel.createResultLabel(this, label);
             }
 
-            // aType (ex: "ac-result-type-<aType>") is related to the class of the image,
-            // and is not "visible" text so don't use it for the label (for accessibility).
-            return title + " " + url;
+            return label;
           ]]>
         </getter>
       </property>
@@ -1691,10 +1690,18 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           this._titleOverflowEllipsis.hidden = false;
 
           let types = new Set(type.split(/\s+/));
+
+          // Remove types that should ultimately not be in the `type` string.
           let initialTypes = new Set(types);
+          types.delete("action");
+          types.delete("autofill");
+          types.delete("heuristic");
+          types.delete("search");
+
+          type = [...types][0] || "";
 
           // If the type includes an action, set up the item appropriately.
-          if (types.has("action")) {
+          if (initialTypes.has("action")) {
             let action = this._parseActionUrl(url);
             this.setAttribute("actiontype", action.type);
 
@@ -1764,13 +1771,10 @@ extends="chrome://global/content/bindings/popup.xml#popup">
                                                   ]);
             }
 
-            // Remove the "action" substring so that the correct style, if any,
-            // is applied below.
-            types.delete("action");
           }
 
           // Check if we have a search engine name
-          if (types.has("search")) {
+          if (initialTypes.has("search")) {
             emphasiseUrl = false;
 
             const TITLE_SEARCH_ENGINE_SEPARATOR = " \u00B7\u2013\u00B7 ";
@@ -1778,25 +1782,17 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             let searchEngine = "";
             [title, searchEngine] = title.split(TITLE_SEARCH_ENGINE_SEPARATOR);
             displayUrl = this._stringBundle.formatStringFromName("searchWithEngine", [searchEngine], 1);
-
-            // Remove the "search" substring so that the correct style, if any,
-            // is applied below.
-            types.delete("search");
           }
 
           // Check if we have an auto-fill URL
-          if (types.has("autofill")) {
+          if (initialTypes.has("autofill")) {
             emphasiseUrl = false;
 
             let sourceStr = this._stringBundle.GetStringFromName("visitURL");
             title = this._generateEmphasisPairs(sourceStr, [
                                                  [displayUrl, "match"],
                                                 ]);
-
-            types.delete("autofill");
           }
-
-          type = [...types].join(" ");
 
           // If we have a tag match, show the tags and icon
           if (type == "tag" || type == "bookmark-tag") {

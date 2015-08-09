@@ -24,43 +24,43 @@ add_task(function* test_keyword_searc() {
   do_print("Plain keyword query");
   yield check_autocomplete({
     search: "key term",
-    matches: [ { uri: NetUtil.newURI("http://abc/?search=term"), title: "abc", style: ["keyword"] } ]
+    matches: [ { uri: NetUtil.newURI("http://abc/?search=term"), title: "abc", style: ["keyword", "heuristic"] } ]
   });
 
   do_print("Multi-word keyword query");
   yield check_autocomplete({
     search: "key multi word",
-    matches: [ { uri: NetUtil.newURI("http://abc/?search=multi+word"), title: "abc", style: ["keyword"] } ]
+    matches: [ { uri: NetUtil.newURI("http://abc/?search=multi+word"), title: "abc", style: ["keyword", "heuristic"] } ]
   });
 
   do_print("Keyword query with +");
   yield check_autocomplete({
     search: "key blocking+",
-    matches: [ { uri: NetUtil.newURI("http://abc/?search=blocking%2B"), title: "abc", style: ["keyword"] } ]
+    matches: [ { uri: NetUtil.newURI("http://abc/?search=blocking%2B"), title: "abc", style: ["keyword", "heuristic"] } ]
   });
 
   do_print("Unescaped term in query");
   yield check_autocomplete({
     search: "key ユニコード",
-    matches: [ { uri: NetUtil.newURI("http://abc/?search=ユニコード"), title: "abc", style: ["keyword"] } ]
+    matches: [ { uri: NetUtil.newURI("http://abc/?search=ユニコード"), title: "abc", style: ["keyword", "heuristic"] } ]
   });
 
   do_print("Keyword that happens to match a page");
   yield check_autocomplete({
     search: "key ThisPageIsInHistory",
-    matches: [ { uri: NetUtil.newURI("http://abc/?search=ThisPageIsInHistory"), title: "abc", style: ["keyword"] } ]
+    matches: [ { uri: NetUtil.newURI("http://abc/?search=ThisPageIsInHistory"), title: "abc", style: ["keyword", "heuristic"] } ]
   });
 
   do_print("Keyword without query (without space)");
   yield check_autocomplete({
     search: "key",
-    matches: [ { uri: NetUtil.newURI("http://abc/?search="), title: "abc", style: ["keyword"] } ]
+    matches: [ { uri: NetUtil.newURI("http://abc/?search="), title: "abc", style: ["keyword", "heuristic"] } ]
   });
 
   do_print("Keyword without query (with space)");
   yield check_autocomplete({
     search: "key ",
-    matches: [ { uri: NetUtil.newURI("http://abc/?search="), title: "abc", style: ["keyword"] } ]
+    matches: [ { uri: NetUtil.newURI("http://abc/?search="), title: "abc", style: ["keyword", "heuristic"] } ]
   });
 
   yield cleanup();
