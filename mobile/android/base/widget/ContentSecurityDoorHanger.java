@@ -100,10 +100,6 @@ public class ContentSecurityDoorHanger extends DoorHanger {
                 final JSONObject response = new JSONObject();
                 try {
                     switch (mType) {
-                        case MIXED_CONTENT:
-                            response.put("allowContent", (id == SiteIdentityPopup.ButtonType.DISABLE.ordinal()));
-                            response.put("contentType", ("mixed"));
-                            break;
                         case TRACKING:
                             response.put("allowContent", (id == SiteIdentityPopup.ButtonType.DISABLE.ordinal()));
                             response.put("contentType", ("tracking"));

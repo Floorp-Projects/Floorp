@@ -624,13 +624,16 @@ RTCPeerConnection.prototype = {
                           });
   },
 
-  _addIdentityAssertion: function(p, origin) {
-    if (this._localIdp.enabled) {
-      return this._localIdp.getIdentityAssertion(this._impl.fingerprint, origin)
-        .then(() => p)
-        .then(sdp => this._localIdp.addIdentityAttribute(sdp));
+  _addIdentityAssertion: function(sdpPromise, origin) {
+    if (!this._localIdp.enabled) {
+      return sdpPromise;
     }
-    return p;
+    return Promise.all([
+      this._certificateReady
+        .then(() => this._localIdp.getIdentityAssertion(this._impl.fingerprint,
+                                                        origin)),
+      sdpPromise
+    ]).then(([,sdp]) => this._localIdp.addIdentityAttribute(sdp));
   },
 
   createOffer: function(optionsOrOnSuccess, onError, options) {
@@ -761,6 +764,13 @@ RTCPeerConnection.prototype = {
               "Invalid type " + desc.type + " provided to setLocalDescription",
               "InvalidParameterError");
       }
+
+      if (desc.type !== "rollback" && !desc.sdp) {
+        throw new this._win.DOMException(
+            "Empty or null SDP provided to setLocalDescription",
+            "InvalidParameterError");
+      }
+
       return this._chain(() => new this._win.Promise((resolve, reject) => {
         this._onSetLocalDescriptionSuccess = resolve;
         this._onSetLocalDescriptionFailure = reject;
@@ -835,21 +845,34 @@ RTCPeerConnection.prototype = {
         default:
           throw new this._win.DOMException(
               "Invalid type " + desc.type + " provided to setRemoteDescription",
+              "InvalidParameterError");
+      }
+
+      if (!desc.sdp && desc.type !== "rollback") {
+        throw new this._win.DOMException(
+            "Empty or null SDP provided to setRemoteDescription",
             "InvalidParameterError");
       }
 
       // Get caller's origin before hitting the promise chain
       let origin = Cu.getWebIDLCallerPrincipal().origin;
 
-      // Do setRemoteDescription and identity validation in parallel
-      return this._chain(() => this._win.Promise.all([
-        new this._win.Promise((resolve, reject) => {
+      return this._chain(() => {
+        let setRem = new this._win.Promise((resolve, reject) => {
           this._onSetRemoteDescriptionSuccess = resolve;
           this._onSetRemoteDescriptionFailure = reject;
           this._impl.setRemoteDescription(type, desc.sdp);
-        }),
-        this._validateIdentity(desc.sdp, origin)
-      ])).then(() => {}); // must return undefined
+        });
+
+        if (desc.type === "rollback") {
+          return setRem;
+        }
+
+        // Do setRemoteDescription and identity validation in parallel
+        let validId = this._validateIdentity(desc.sdp, origin);
+        return this._win.Promise.all([setRem, validId])
+          .then(() => {}); // must return undefined
+      });
     });
   },
 

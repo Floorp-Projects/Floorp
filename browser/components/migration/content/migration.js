@@ -64,6 +64,15 @@ var MigrationWizard = {
   // 1 - Import Source
   onImportSourcePageShow: function ()
   {
+    // Show warning message to close the selected browser when needed
+    function toggleCloseBrowserWarning() {
+      let visibility = "hidden";
+      if (group.selectedItem.id != "nothing") {
+        let migrator = MigrationUtils.getMigrator(group.selectedItem.id);
+        visibility = migrator.sourceLocked ? "visible" : "hidden";
+      }
+      document.getElementById("closeSourceBrowser").style.visibility = visibility;
+    }
     this._wiz.canRewind = false;
 
     var selectedMigrator = null;
@@ -86,9 +95,12 @@ var MigrationWizard = {
       }
     }
 
-    if (selectedMigrator)
+    group.addEventListener("command", toggleCloseBrowserWarning);
+
+    if (selectedMigrator) {
       group.selectedItem = selectedMigrator;
-    else {
+      toggleCloseBrowserWarning();
+    } else {
       // We didn't find a migrator, notify the user
       document.getElementById("noSources").hidden = false;
 

@@ -2059,11 +2059,9 @@ public class BrowserApp extends GeckoApp
     @Override
     public void addPrivateTab() {
         Tabs.getInstance().addPrivateTab();
-
-        showTrackingProtectionPromptIfApplicable();
     }
 
-    private void showTrackingProtectionPromptIfApplicable() {
+    public void showTrackingProtectionPromptIfApplicable() {
         final SharedPreferences prefs = getSharedPreferences();
 
         final boolean hasTrackingProtectionPromptBeShownBefore = prefs.getBoolean(GeckoPreferences.PREFS_TRACKING_PROTECTION_PROMPT_SHOWN, false);

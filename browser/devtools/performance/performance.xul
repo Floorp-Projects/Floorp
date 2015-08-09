@@ -305,12 +305,12 @@
               <vbox id="memory-calltree-view" flex="1">
                 <hbox class="call-tree-headers-container">
                   <label class="plain call-tree-header"
-                         type="allocations"
+                         type="count"
                          crop="end"
                          value="&performanceUI.table.totalAlloc;"
                          tooltiptext="&performanceUI.table.totalAlloc.tooltip;"/>
                   <label class="plain call-tree-header"
-                         type="self-allocations"
+                         type="self-count"
                          crop="end"
                          value="&performanceUI.table.selfAlloc;"
                          tooltiptext="&performanceUI.table.selfAlloc.tooltip;"/>
