@@ -37,17 +37,27 @@ public:
 
   virtual void Cancel();
 
+  virtual void ForceEnd();
+
   float GetCurrentTime();
 
   uint32_t GetCurrentCharOffset();
 
   void SetSpeechSynthesis(SpeechSynthesis* aSpeechSynthesis);
 
-  void SetIndirectAudio(bool aIndirectAudio) { mIndirectAudio = aIndirectAudio; }
-
-  void BindStream(ProcessedMediaStream* aStream);
+  void Init(ProcessedMediaStream* aStream);
 
   void SetChosenVoiceURI(const nsAString& aUri);
+
+  bool IsPreCanceled()
+  {
+    return mPreCanceled;
+  };
+
+  bool IsPrePaused()
+  {
+    return mPrePaused;
+  }
 
 protected:
   virtual ~nsSpeechTask();
@@ -77,10 +87,20 @@ protected:
 
   nsString mText;
 
+  bool mInited;
+
+  bool mPrePaused;
+
+  bool mPreCanceled;
+
 private:
   void End();
 
   void SendAudioImpl(nsRefPtr<mozilla::SharedBuffer>& aSamples, uint32_t aDataLen);
+
+  nsresult DispatchStartInner();
+
+  nsresult DispatchEndInner(float aElapsedTime, uint32_t aCharIndex);
 
   nsRefPtr<SourceMediaStream> mStream;
 

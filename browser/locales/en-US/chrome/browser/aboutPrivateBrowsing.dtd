@@ -12,13 +12,19 @@
      Width of the Private Browsing section.
      -->
 <!ENTITY aboutPrivateBrowsing.width            "25em">
+
+<!-- LOCALIZATION NOTE (aboutPrivateBrowsing.subtitle,
+     aboutPrivateBrowsing.info.forgotten, aboutPrivateBrowsing.info.kept):
+     These strings will be replaced by aboutPrivateBrowsing.forgotten and
+     aboutPrivateBrowsing.kept when the new visual design lands (bug 1192625).
+     -->
 <!ENTITY aboutPrivateBrowsing.title            "You're browsing privately">
 <!ENTITY aboutPrivateBrowsing.subtitle         "In this window, &brandShortName; will not remember any history.">
 
 <!ENTITY aboutPrivateBrowsing.forgotten        "In this window, &brandShortName; will not remember:">
 <!ENTITY aboutPrivateBrowsing.info.forgotten   "Forgotten">
 <!ENTITY aboutPrivateBrowsing.info.history     "History">
-<!ENTITY aboutPrivateBrowsing.info.search      "Searches">
+<!ENTITY aboutPrivateBrowsing.info.searches    "Searches">
 <!ENTITY aboutPrivateBrowsing.info.cookies     "Cookies">
 <!ENTITY aboutPrivateBrowsing.info.temporaryFiles "Temporary Files">
 
@@ -27,7 +33,7 @@
 <!ENTITY aboutPrivateBrowsing.info.downloads   "Downloads">
 <!ENTITY aboutPrivateBrowsing.info.bookmarks   "Bookmarks">
 
-<!ENTITY aboutPrivateBrowsing.note             "Please note that your employer or Internet service provider can still track the pages you visit.">
+<!ENTITY aboutPrivateBrowsing.note1            "Please note that your employer or Internet service provider can still track the pages you visit.">
 <!ENTITY aboutPrivateBrowsing.learnMore        "Learn More.">
 
 <!-- LOCALIZATION NOTE (trackingProtection.width):
@@ -44,8 +50,8 @@
 <!ENTITY trackingProtection.state.enabled      "ON">
 <!ENTITY trackingProtection.state.disabled     "OFF">
 
-<!ENTITY trackingProtection.description        "Private Windows now block parts of the page that may track your browsing activity.">
+<!ENTITY trackingProtection.description1       "Private Windows now block parts of the page that may track your browsing activity.">
 
 <!ENTITY trackingProtection.disable            "Turn Tracking Protection Off">
 <!ENTITY trackingProtection.enable             "Turn Tracking Protection On">
-<!ENTITY trackingProtection.startTour          "See how this works">
+<!ENTITY trackingProtection.startTour1         "See how this works">

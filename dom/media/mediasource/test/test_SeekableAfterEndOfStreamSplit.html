@@ -17,12 +17,14 @@ runWithMSE(function (ms, v) {
     var sb = ms.addSourceBuffer("video/webm");
 
     fetchWithXHR("seek.webm", function (arrayBuffer) {
-      sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 25223));
+      // 25523 is the offset of the first media segment's end
+      sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 25523));
       var updateCount = 0;
       sb.addEventListener("updateend", function () {
         updateCount++;
         if (updateCount == 1) {
-          sb.appendBuffer(new Uint8Array(arrayBuffer, 25223));
+          // 25523 is the offset of the first media segment's end
+          sb.appendBuffer(new Uint8Array(arrayBuffer, 25523));
         }
         else if (updateCount == 2) {
           ms.endOfStream();

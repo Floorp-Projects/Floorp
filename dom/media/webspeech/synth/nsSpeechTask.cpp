@@ -7,6 +7,7 @@
 #include "AudioSegment.h"
 #include "nsSpeechTask.h"
 #include "SpeechSynthesis.h"
+#include "nsSynthVoiceRegistry.h"
 
 // GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
 // GetTickCount() and conflicts with nsSpeechTask::GetCurrentTime().
@@ -33,15 +34,15 @@ public:
   void DoNotifyStarted()
   {
     if (mSpeechTask) {
-      mSpeechTask->DispatchStartImpl();
+      mSpeechTask->DispatchStartInner();
     }
   }
 
   void DoNotifyFinished()
   {
     if (mSpeechTask) {
-      mSpeechTask->DispatchEndImpl(mSpeechTask->GetCurrentTime(),
-                                   mSpeechTask->GetCurrentCharOffset());
+      mSpeechTask->DispatchEndInner(mSpeechTask->GetCurrentTime(),
+                                    mSpeechTask->GetCurrentCharOffset());
     }
   }
 
@@ -96,6 +97,9 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSpeechTask)
 
 nsSpeechTask::nsSpeechTask(SpeechSynthesisUtterance* aUtterance)
   : mUtterance(aUtterance)
+  , mInited(false)
+  , mPrePaused(false)
+  , mPreCanceled(false)
   , mCallback(nullptr)
   , mIndirectAudio(false)
 {
@@ -107,6 +111,9 @@ nsSpeechTask::nsSpeechTask(float aVolume, const nsAString& aText)
   : mUtterance(nullptr)
   , mVolume(aVolume)
   , mText(aText)
+  , mInited(false)
+  , mPrePaused(false)
+  , mPreCanceled(false)
   , mCallback(nullptr)
   , mIndirectAudio(false)
 {
@@ -130,10 +137,16 @@ nsSpeechTask::~nsSpeechTask()
 }
 
 void
-nsSpeechTask::BindStream(ProcessedMediaStream* aStream)
+nsSpeechTask::Init(ProcessedMediaStream* aStream)
 {
-  mStream = MediaStreamGraph::GetInstance()->CreateSourceStream(nullptr);
-  mPort = aStream->AllocateInputPort(mStream, 0);
+  if (aStream) {
+    mStream = MediaStreamGraph::GetInstance()->CreateSourceStream(nullptr);
+    mPort = aStream->AllocateInputPort(mStream, 0);
+    mIndirectAudio = false;
+  } else {
+    mIndirectAudio = true;
+  }
+  mInited = true;
 }
 
 void
@@ -153,13 +166,14 @@ nsSpeechTask::Setup(nsISpeechTaskCallback* aCallback,
   mCallback = aCallback;
 
   if (mIndirectAudio) {
+    MOZ_ASSERT(!mStream);
     if (argc > 0) {
       NS_WARNING("Audio info arguments in Setup() are ignored for indirect audio services.");
     }
     return NS_OK;
   }
 
-  // mStream is set up in BindStream() that should be called before this.
+  // mStream is set up in Init() that should be called before this.
   MOZ_ASSERT(mStream);
 
   mStream->AddListener(new SynthStreamListener(this));
@@ -294,6 +308,13 @@ nsSpeechTask::DispatchStart()
     return NS_ERROR_FAILURE;
   }
 
+  return DispatchStartInner();
+}
+
+nsresult
+nsSpeechTask::DispatchStartInner()
+{
+  nsSynthVoiceRegistry::GetInstance()->SetIsSpeaking(true);
   return DispatchStartImpl();
 }
 
@@ -327,6 +348,16 @@ nsSpeechTask::DispatchEnd(float aElapsedTime, uint32_t aCharIndex)
   if (!mIndirectAudio) {
     NS_WARNING("Can't call DispatchEnd() from a direct audio speech service");
     return NS_ERROR_FAILURE;
+  }
+
+  return DispatchEndInner(aElapsedTime, aCharIndex);
+}
+
+nsresult
+nsSpeechTask::DispatchEndInner(float aElapsedTime, uint32_t aCharIndex)
+{
+  if (!mPreCanceled) {
+    nsSynthVoiceRegistry::GetInstance()->SpeakNext();
   }
 
   return DispatchEndImpl(aElapsedTime, aCharIndex);
@@ -389,9 +420,11 @@ nsSpeechTask::DispatchPauseImpl(float aElapsedTime, uint32_t aCharIndex)
   }
 
   mUtterance->mPaused = true;
-  mUtterance->DispatchSpeechSynthesisEvent(NS_LITERAL_STRING("pause"),
-                                           aCharIndex, aElapsedTime,
-                                           EmptyString());
+  if (mUtterance->mState == SpeechSynthesisUtterance::STATE_SPEAKING) {
+    mUtterance->DispatchSpeechSynthesisEvent(NS_LITERAL_STRING("pause"),
+                                             aCharIndex, aElapsedTime,
+                                             EmptyString());
+  }
   return NS_OK;
 }
 
@@ -419,9 +452,12 @@ nsSpeechTask::DispatchResumeImpl(float aElapsedTime, uint32_t aCharIndex)
   }
 
   mUtterance->mPaused = false;
-  mUtterance->DispatchSpeechSynthesisEvent(NS_LITERAL_STRING("resume"),
-                                           aCharIndex, aElapsedTime,
-                                           EmptyString());
+  if (mUtterance->mState == SpeechSynthesisUtterance::STATE_SPEAKING) {
+    mUtterance->DispatchSpeechSynthesisEvent(NS_LITERAL_STRING("resume"),
+                                             aCharIndex, aElapsedTime,
+                                             EmptyString());
+  }
+
   return NS_OK;
 }
 
@@ -517,6 +553,13 @@ nsSpeechTask::Pause()
 
   if (mStream) {
     mStream->ChangeExplicitBlockerCount(1);
+  }
+
+  if (!mInited) {
+    mPrePaused = true;
+  }
+
+  if (!mIndirectAudio) {
     DispatchPauseImpl(GetCurrentTime(), GetCurrentCharOffset());
   }
 }
@@ -533,6 +576,14 @@ nsSpeechTask::Resume()
 
   if (mStream) {
     mStream->ChangeExplicitBlockerCount(-1);
+  }
+
+  if (mPrePaused) {
+    mPrePaused = false;
+    nsSynthVoiceRegistry::GetInstance()->ResumeQueue();
+  }
+
+  if (!mIndirectAudio) {
     DispatchResumeImpl(GetCurrentTime(), GetCurrentCharOffset());
   }
 }
@@ -551,8 +602,29 @@ nsSpeechTask::Cancel()
 
   if (mStream) {
     mStream->ChangeExplicitBlockerCount(1);
-    DispatchEndImpl(GetCurrentTime(), GetCurrentCharOffset());
   }
+
+  if (!mInited) {
+    mPreCanceled = true;
+  }
+
+  if (!mIndirectAudio) {
+    DispatchEndInner(GetCurrentTime(), GetCurrentCharOffset());
+  }
+}
+
+void
+nsSpeechTask::ForceEnd()
+{
+  if (mStream) {
+    mStream->ChangeExplicitBlockerCount(1);
+  }
+
+  if (!mInited) {
+    mPreCanceled = true;
+  }
+
+  DispatchEndInner(GetCurrentTime(), GetCurrentCharOffset());
 }
 
 float

@@ -86,6 +86,7 @@ HwcICS::ResetHwc()
 int
 HwcICS::Prepare(HwcList *aList,
                 uint32_t aDisp,
+                hwc_rect_t aDispRect,
                 buffer_handle_t aHandle,
                 int aFenceFd)
 {
