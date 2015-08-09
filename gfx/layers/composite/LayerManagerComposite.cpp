@@ -55,10 +55,16 @@
 #ifdef MOZ_WIDGET_ANDROID
 #include <android/log.h>
 #include "AndroidBridge.h"
+#endif
+#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
 #include "opengl/CompositorOGL.h"
 #include "GLContextEGL.h"
 #include "GLContextProvider.h"
 #include "ScopedGLHelpers.h"
+#endif
+#ifdef MOZ_WIDGET_GONK
+#include "nsScreenManagerGonk.h"
+#include "nsWindow.h"
 #endif
 #include "GeckoProfiler.h"
 #include "TextRenderer.h"               // for TextRenderer
@@ -302,7 +308,7 @@ LayerManagerComposite::EndTransaction(const TimeStamp& aTimeStamp,
     ApplyOcclusionCulling(mRoot, opaque);
 
     Render();
-#ifdef MOZ_WIDGET_ANDROID
+#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
     RenderToPresentationSurface();
 #endif
     mGeometryChanged = false;
@@ -780,7 +786,7 @@ LayerManagerComposite::Render()
   RecordFrame();
 }
 
-#ifdef MOZ_WIDGET_ANDROID
+#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
 class ScopedCompositorProjMatrix {
 public:
   ScopedCompositorProjMatrix(CompositorOGL* aCompositor, const Matrix4x4& aProjMatrix):
@@ -854,6 +860,7 @@ private:
 void
 LayerManagerComposite::RenderToPresentationSurface()
 {
+#ifdef MOZ_WIDGET_ANDROID
   if (!AndroidBridge::Bridge()) {
     return;
   }
@@ -886,17 +893,60 @@ LayerManagerComposite::RenderToPresentationSurface()
 
   const IntSize windowSize = AndroidBridge::Bridge()->GetNativeWindowSize(window);
 
+#elif defined(MOZ_WIDGET_GONK)
+  CompositorOGL* compositor = static_cast<CompositorOGL*>(mCompositor.get());
+  nsScreenGonk* screen = static_cast<nsWindow*>(mCompositor->GetWidget())->GetScreen();
+  if (!screen->IsPrimaryScreen()) {
+    // Only primary screen support mirroring
+    return;
+  }
+
+  nsWindow* mirrorScreenWidget = screen->GetMirroringWidget();
+  if (!mirrorScreenWidget) {
+    // No mirroring
+    return;
+  }
+
+  nsScreenGonk* mirrorScreen = mirrorScreenWidget->GetScreen();
+  if (!mirrorScreen->GetTopWindows().IsEmpty()) {
+    return;
+  }
+
+  EGLSurface surface = mirrorScreen->GetEGLSurface();
+  if (surface == LOCAL_EGL_NO_SURFACE) {
+    // Create GLContext
+    nsRefPtr<GLContext> gl = gl::GLContextProvider::CreateForWindow(mirrorScreenWidget);
+    mirrorScreenWidget->SetNativeData(NS_NATIVE_OPENGL_CONTEXT,
+                                      reinterpret_cast<uintptr_t>(gl.get()));
+    surface = mirrorScreen->GetEGLSurface();
+    if (surface == LOCAL_EGL_NO_SURFACE) {
+      // Failed to create EGLSurface
+      return;
+    }
+  }
+  GLContext* gl = compositor->gl();
+  GLContextEGL* egl = GLContextEGL::Cast(gl);
+  const IntSize windowSize = mirrorScreen->GetNaturalBounds().Size();
+#endif
+
   if ((windowSize.width <= 0) || (windowSize.height <= 0)) {
     return;
   }
+
+  ScreenRotation rotation = compositor->GetScreenRotation();
 
   const int actualWidth = windowSize.width;
   const int actualHeight = windowSize.height;
 
   const gfx::IntSize originalSize = compositor->GetDestinationSurfaceSize();
+  const nsIntRect originalRect = nsIntRect(0, 0, originalSize.width, originalSize.height);
 
-  const int pageWidth = originalSize.width;
-  const int pageHeight = originalSize.height;
+  int pageWidth = originalSize.width;
+  int pageHeight = originalSize.height;
+  if (rotation == ROTATION_90 || rotation == ROTATION_270) {
+    pageWidth = originalSize.height;
+    pageHeight = originalSize.width;
+  }
 
   float scale = 1.0;
 
@@ -910,8 +960,18 @@ LayerManagerComposite::RenderToPresentationSurface()
   ScopedCompostitorSurfaceSize overrideSurfaceSize(compositor, actualSize);
 
   const ScreenPoint offset((actualWidth - (int)(scale * pageWidth)) / 2, 0);
-  ScopedCompositorRenderOffset overrideRenderOffset(compositor, offset);
   ScopedContextSurfaceOverride overrideSurface(egl, surface);
+
+  Matrix viewMatrix = ComputeTransformForRotation(originalRect,
+                                                  rotation);
+  viewMatrix.Invert(); // unrotate
+  viewMatrix.PostScale(scale, scale);
+  viewMatrix.PostTranslate(offset.x, offset.y);
+  Matrix4x4 matrix = Matrix4x4::From2D(viewMatrix);
+
+  mRoot->ComputeEffectiveTransforms(matrix);
+  nsIntRegion opaque;
+  ApplyOcclusionCulling(mRoot, opaque);
 
   nsIntRegion invalid;
   Rect bounds(0.0f, 0.0f, scale * pageWidth, (float)actualHeight);
@@ -919,33 +979,28 @@ LayerManagerComposite::RenderToPresentationSurface()
 
   mCompositor->BeginFrame(invalid, nullptr, bounds, &rect, &actualBounds);
 
-  // Override the projection matrix since the presentation frame buffer
-  // is probably not the same size as the device frame buffer. The override
-  // projection matrix also scales the content to fit into the presentation
-  // frame buffer.
-  Matrix viewMatrix;
-  viewMatrix.PreTranslate(-1.0, 1.0);
-  viewMatrix.PreScale((2.0f * scale) / (float)actualWidth, (2.0f * scale) / (float)actualHeight);
-  viewMatrix.PreScale(1.0f, -1.0f);
-  viewMatrix.PreTranslate((int)((float)offset.x / scale), offset.y);
-
-  Matrix4x4 projMatrix = Matrix4x4::From2D(viewMatrix);
-
-  ScopedCompositorProjMatrix overrideProjMatrix(compositor, projMatrix);
-
   // The Java side of Fennec sets a scissor rect that accounts for
   // chrome such as the URL bar. Override that so that the entire frame buffer
   // is cleared.
-  ScopedScissorRect screen(egl, 0, 0, actualWidth, actualHeight);
+  ScopedScissorRect scissorRect(egl, 0, 0, actualWidth, actualHeight);
   egl->fClearColor(0.0, 0.0, 0.0, 0.0);
   egl->fClear(LOCAL_GL_COLOR_BUFFER_BIT);
 
-  const IntRect clipRect = IntRect(0, 0, (int)(scale * pageWidth), actualHeight);
+  const IntRect clipRect = IntRect(0, 0, actualWidth, actualHeight);
+
   RootLayer()->Prepare(RenderTargetPixel::FromUntyped(clipRect));
   RootLayer()->RenderLayer(clipRect);
 
   mCompositor->EndFrame();
-  mCompositor->SetDispAcquireFence(mRoot);
+  mCompositor->SetDispAcquireFence(mRoot); // Call after EndFrame()
+
+#ifdef MOZ_WIDGET_GONK
+  nsRefPtr<Composer2D> composer2D;
+  composer2D = mCompositor->GetWidget()->GetComposer2D();
+  if (composer2D) {
+    composer2D->Render(mirrorScreenWidget);
+  }
+#endif
 }
 #endif
 

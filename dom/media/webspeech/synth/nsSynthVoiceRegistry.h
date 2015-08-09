@@ -23,6 +23,7 @@ class SpeechSynthesisUtterance;
 class SpeechSynthesisChild;
 class nsSpeechTask;
 class VoiceData;
+class GlobalQueueItem;
 
 class nsSynthVoiceRegistry final : public nsISynthVoiceRegistry
 {
@@ -39,8 +40,17 @@ public:
              const nsAString& aUri, const float& aVolume,  const float& aRate,
              const float& aPitch, nsSpeechTask* aTask);
 
-  void SendVoices(InfallibleTArray<RemoteVoice>* aVoices,
-                  InfallibleTArray<nsString>* aDefaults);
+  void SendVoicesAndState(InfallibleTArray<RemoteVoice>* aVoices,
+                          InfallibleTArray<nsString>* aDefaults,
+                          bool* aIsSpeaking);
+
+  void SpeakNext();
+
+  void ResumeQueue();
+
+  bool IsSpeaking();
+
+  void SetIsSpeaking(bool aIsSpeaking);
 
   static nsSynthVoiceRegistry* GetInstance();
 
@@ -51,6 +61,8 @@ public:
   static void RecvAddVoice(const RemoteVoice& aVoice);
 
   static void RecvSetDefaultVoice(const nsAString& aUri, bool aIsDefault);
+
+  static void RecvIsSpeakingChanged(bool aIsSpeaking);
 
   static void Shutdown();
 
@@ -65,17 +77,31 @@ private:
                         const nsAString& aUri,
                         const nsAString& aName,
                         const nsAString& aLang,
-                        bool aLocalService);
+                        bool aLocalService,
+                        bool aQueuesUtterances);
 
-  nsTArray<nsRefPtr<VoiceData> > mVoices;
+  void SpeakImpl(VoiceData* aVoice,
+                 nsSpeechTask* aTask,
+                 const nsAString& aText,
+                 const float& aVolume,
+                 const float& aRate,
+                 const float& aPitch);
 
-  nsTArray<nsRefPtr<VoiceData> > mDefaultVoices;
+  nsTArray<nsRefPtr<VoiceData>> mVoices;
+
+  nsTArray<nsRefPtr<VoiceData>> mDefaultVoices;
 
   nsRefPtrHashtable<nsStringHashKey, VoiceData> mUriVoiceMap;
 
   SpeechSynthesisChild* mSpeechSynthChild;
 
   nsRefPtr<ProcessedMediaStream> mStream;
+
+  bool mUseGlobalQueue;
+
+  nsTArray<nsRefPtr<GlobalQueueItem>> mGlobalQueue;
+
+  bool mIsSpeaking;
 };
 
 } // namespace dom

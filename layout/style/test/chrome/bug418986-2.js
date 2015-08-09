@@ -59,7 +59,9 @@ let windows_versions = [
   "windows-xp",
   "windows-vista",
   "windows-win7",
-  "windows-win8"];
+  "windows-win8",
+  "windows-win10",
+];
 
 // Possible values for '-moz-windows-theme'
 let windows_themes = [

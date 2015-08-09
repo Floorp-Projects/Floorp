@@ -287,7 +287,9 @@ AddVoices(nsISpeechService* aService, const VoiceDetails* aVoices, uint32_t aLen
     NS_ConvertUTF8toUTF16 name(aVoices[i].name);
     NS_ConvertUTF8toUTF16 uri(aVoices[i].uri);
     NS_ConvertUTF8toUTF16 lang(aVoices[i].lang);
-    registry->AddVoice(aService, uri, name, lang, true);
+    // These services can handle more than one utterance at a time and have
+    // several speaking simultaniously. So, aQueuesUtterances == false
+    registry->AddVoice(aService, uri, name, lang, true, false);
     if (aVoices[i].defaultVoice) {
       registry->SetDefaultVoice(uri, true);
     }

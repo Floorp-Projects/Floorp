@@ -23,4 +23,8 @@ interface SpeechSynthesis {
   [UnsafeInPrerendering]
   void resume();
   sequence<SpeechSynthesisVoice> getVoices();
+
+  [ChromeOnly]
+  // Force an utterance to end. Circumvents bad speech service implementations.
+  void forceEnd();
 };

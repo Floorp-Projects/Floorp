@@ -31,8 +31,6 @@ public:
 
     virtual bool HasHwc() const override { return static_cast<bool>(mHwc); }
 
-    virtual const hwc_rect_t GetHwcRect() const override { return mHwcRect; }
-
     virtual void SetEGLInfo(hwc_display_t aDpy,
                             hwc_surface_t aSur) override { }
 
@@ -45,6 +43,7 @@ public:
 
     virtual int Prepare(HwcList *aList,
                         uint32_t aDisp,
+                        hwc_rect_t aDispRect,
                         buffer_handle_t aHandle,
                         int aFenceFd) override;
 
@@ -60,13 +59,10 @@ public:
     virtual bool RegisterHwcEventCallback(const HwcHALProcs_t &aProcs) override;
 
 private:
-    void GetHwcAttributes();
-
     uint32_t GetAPIVersion() const;
 
 private:
     HwcDevice  *mHwc = nullptr;
-    hwc_rect_t  mHwcRect = {0};
 };
 
 } // namespace mozilla

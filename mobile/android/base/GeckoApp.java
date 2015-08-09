@@ -137,7 +137,8 @@ public abstract class GeckoApp
         URL,        /* launched with a passed URL */
         PREFETCH,   /* launched with a passed URL that we prefetch */
         WEBAPP,     /* launched as a webapp runtime */
-        GUEST       /* launched in guest browsing */
+        GUEST,      /* launched in guest browsing */
+        RESTRICTED  /* launched with restricted profile */
     }
 
     public static final String ACTION_ALERT_CALLBACK       = "org.mozilla.gecko.ACTION_ALERT_CALLBACK";
