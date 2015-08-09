@@ -8,7 +8,7 @@ let ContentAreaDownloadsView = {
   init() {
     let view = new DownloadsPlacesView(document.getElementById("downloadsRichListBox"));
     // Do not display the Places downloads in private windows
-    if (!PrivateBrowsingUtils.isWindowPrivate(window)) {
+    if (!PrivateBrowsingUtils.isContentWindowPrivate(window)) {
       view.place = "place:transition=7&sort=4";
     }
   },
