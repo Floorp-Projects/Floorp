@@ -1086,6 +1086,47 @@ define("test/source-map/test-source-map-consumer", ["require", "exports", "modul
                     "SourceMapConsumer from it should not throw");
   };
 
+  exports['test sources where their prefix is the source root: issue #199'] = function (assert, util) {
+    var testSourceMap = {
+      "version": 3,
+      "sources": ["/source/app/app/app.js"],
+      "names": ["System"],
+      "mappings": "AAAAA",
+      "file": "app/app.js",
+      "sourcesContent": ["'use strict';"],
+      "sourceRoot":"/source/"
+    };
+
+    var consumer = new SourceMapConsumer(testSourceMap);
+
+    function consumerHasSource(s) {
+      assert.ok(consumer.sourceContentFor(s));
+    }
+
+    consumer.sources.forEach(consumerHasSource);
+    testSourceMap.sources.forEach(consumerHasSource);
+  };
+
+  exports['test sources where their prefix is the source root and the source root is a url: issue #199'] = function (assert, util) {
+    var testSourceMap = {
+      "version": 3,
+      "sources": ["http://example.com/source/app/app/app.js"],
+      "names": ["System"],
+      "mappings": "AAAAA",
+      "sourcesContent": ["'use strict';"],
+      "sourceRoot":"http://example.com/source/"
+    };
+
+    var consumer = new SourceMapConsumer(testSourceMap);
+
+    function consumerHasSource(s) {
+      assert.ok(consumer.sourceContentFor(s));
+    }
+
+    consumer.sources.forEach(consumerHasSource);
+    testSourceMap.sources.forEach(consumerHasSource);
+  };
+
 });
 function run_test() {
   runSourceMapTests('test/source-map/test-source-map-consumer', do_throw);

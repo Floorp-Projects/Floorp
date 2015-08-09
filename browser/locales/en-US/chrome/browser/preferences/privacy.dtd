@@ -8,10 +8,10 @@
 <!ENTITY dntTrackingNotOkay4.accesskey "n">
 <!ENTITY doNotTrackInfo.label          "Learn More">
 <!ENTITY trackingProtection5.label     "Use Tracking Protection">
-<!ENTITY trackingProtection5.accesskey "m">
+<!ENTITY trackingProtection5.accesskey "i">
 <!ENTITY trackingProtectionLearnMore.label "Learn more">
 <!ENTITY trackingProtectionPBM5.label         "Use Tracking Protection in Private Windows">
-<!ENTITY trackingProtectionPBM5.accesskey     "y">
+<!ENTITY trackingProtectionPBM5.accesskey     "v">
 <!ENTITY trackingProtectionPBMLearnMore.label "Learn more">
 
 <!ENTITY  history.label                 "History">

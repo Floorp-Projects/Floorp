@@ -12,21 +12,21 @@ add_task(function*() {
   yield check_autocomplete({
     search: "mozilla",
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch("mozilla") ]
+    matches: [ makeSearchMatch("mozilla", { heuristic: true }) ]
   });
 
   do_print("search engine, uri-like input");
   yield check_autocomplete({
     search: "http:///",
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch("http:///") ]
+    matches: [ makeSearchMatch("http:///", { heuristic: true }) ]
   });
 
   do_print("search engine, multiple words");
   yield check_autocomplete({
     search: "mozzarella cheese",
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch("mozzarella cheese") ]
+    matches: [ makeSearchMatch("mozzarella cheese", { heuristic: true }) ]
   });
 
   do_print("search engine, after current engine has changed");
@@ -38,7 +38,7 @@ add_task(function*() {
   yield check_autocomplete({
     search: "mozilla",
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch("mozilla", { engineName: "MozSearch2" }) ]
+    matches: [ makeSearchMatch("mozilla", { engineName: "MozSearch2", heuristic: true }) ]
   });
 
   yield cleanup();

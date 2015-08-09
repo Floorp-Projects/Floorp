@@ -5,9 +5,7 @@
 function test() {
     waitForExplicitFinish();
 
-    let pwmgr = Cc["@mozilla.org/login-manager;1"].
-                getService(Ci.nsILoginManager);
-    pwmgr.removeAllLogins();
+    Services.logins.removeAllLogins();
 
     // Add some initial logins
     let urls = [
@@ -20,13 +18,13 @@ function test() {
     let nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
                                                  Ci.nsILoginInfo, "init");
     let logins = [
-        new nsLoginInfo(urls[0], urls[0], null, "o", "hai", "u1", "p1"),
+        new nsLoginInfo(urls[0], urls[0], null, "", "o hai", "u1", "p1"),
         new nsLoginInfo(urls[1], urls[1], null, "ehsan", "coded", "u2", "p2"),
         new nsLoginInfo(urls[2], urls[2], null, "this", "awesome", "u3", "p3"),
         new nsLoginInfo(urls[3], urls[3], null, "array of", "logins", "u4", "p4"),
         new nsLoginInfo(urls[4], urls[4], null, "then", "i wrote the test", "u5", "p5")
     ];
-    logins.forEach(function (login) pwmgr.addLogin(login));
+    logins.forEach(function (login) Services.logins.addLogin(login));
 
     // Open the password manager dialog
     const PWMGR_DLG = "chrome://passwordmgr/content/passwordManager.xul";
@@ -40,40 +38,62 @@ function test() {
         let menuitem = doc.getElementById("context-copyusername");
 
         function copyField() {
+            info("Select all");
             selection.selectAll();
-            is(isMenuitemEnabled(), false, "Copy should be disabled");
+            assertMenuitemEnabled("copyusername", false);
+            assertMenuitemEnabled("editusername", false);
+            assertMenuitemEnabled("copypassword", false);
+            assertMenuitemEnabled("editpassword", false);
 
+            info("Select the first row (with an empty username)");
             selection.select(0);
-            is(isMenuitemEnabled(), true, "Copy should be enabled");
+            assertMenuitemEnabled("copyusername", false, "empty username");
+            assertMenuitemEnabled("editusername", true);
+            assertMenuitemEnabled("copypassword", true);
+            assertMenuitemEnabled("editpassword", false, "password column hidden");
 
+            info("Clear the selection");
             selection.clearSelection();
-            is(isMenuitemEnabled(), false, "Copy should be disabled");
+            assertMenuitemEnabled("copyusername", false);
+            assertMenuitemEnabled("editusername", false);
+            assertMenuitemEnabled("copypassword", false);
+            assertMenuitemEnabled("editpassword", false);
 
+            info("Select the third row and making the password column visible");
             selection.select(2);
-            is(isMenuitemEnabled(), true, "Copy should be enabled");
+            doc.getElementById("passwordCol").hidden = false;
+            assertMenuitemEnabled("copyusername", true);
+            assertMenuitemEnabled("editusername", true);
+            assertMenuitemEnabled("copypassword", true);
+            assertMenuitemEnabled("editpassword", true, "password column visible");
             menuitem.doCommand();
         }
 
-        function isMenuitemEnabled() {
-            doc.defaultView.UpdateCopyPassword();
-            return !menuitem.getAttribute("disabled");
+        function assertMenuitemEnabled(idSuffix, expected, reason = "") {
+            doc.defaultView.UpdateContextMenu();
+            let actual = !doc.getElementById("context-" + idSuffix).getAttribute("disabled");
+            is(actual, expected, idSuffix + " should be " + (expected ? "enabled" : "disabled") +
+               (reason ? ": " + reason : ""));
         }
 
         function cleanUp() {
             Services.ww.registerNotification(function (aSubject, aTopic, aData) {
                 Services.ww.unregisterNotification(arguments.callee);
-                pwmgr.removeAllLogins();
+                Services.logins.removeAllLogins();
+                doc.getElementById("passwordCol").hidden = true;
                 finish();
             });
             pwmgrdlg.close();
         }
-        
+
         function testPassword() {
-            menuitem = doc.getElementById("context-copypassword");
             info("Testing Copy Password");
-            waitForClipboard("coded", copyField, cleanUp, cleanUp);
+            waitForClipboard("coded", function copyPassword() {
+                menuitem = doc.getElementById("context-copypassword");
+                menuitem.doCommand();
+            }, cleanUp, cleanUp);
         }
-        
+
         info("Testing Copy Username");
         waitForClipboard("ehsan", copyField, testPassword, testPassword);
     }

@@ -40,6 +40,7 @@ import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.RestrictedProfiles;
 import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.util.RawResource;
@@ -90,6 +91,7 @@ public class SuggestedSites {
     private static final String JSON_KEY_TITLE = "title";
     private static final String JSON_KEY_IMAGE_URL = "imageurl";
     private static final String JSON_KEY_BG_COLOR = "bgcolor";
+    private static final String JSON_KEY_RESTRICTED = "restricted";
 
     private static class Site {
         public final String url;
@@ -97,9 +99,11 @@ public class SuggestedSites {
         public final String imageUrl;
         public final String bgColor;
         public final int trackingId;
+        public final boolean restricted;
 
         public Site(JSONObject json) throws JSONException {
             this.trackingId = json.isNull(JSON_KEY_TRACKING_ID) ? TRACKING_ID_NONE : json.getInt(JSON_KEY_TRACKING_ID);
+            this.restricted =  !json.isNull(JSON_KEY_RESTRICTED);
             this.url = json.getString(JSON_KEY_URL);
             this.title = json.getString(JSON_KEY_TITLE);
             this.imageUrl = json.getString(JSON_KEY_IMAGE_URL);
@@ -114,6 +118,7 @@ public class SuggestedSites {
             this.title = title;
             this.imageUrl = imageUrl;
             this.bgColor = bgColor;
+            this.restricted = false;
 
             validate();
         }
@@ -133,6 +138,7 @@ public class SuggestedSites {
         public String toString() {
             return "{ trackingId = " + trackingId + "\n" +
                      "url = " + url + "\n" +
+                     "restricted = " + restricted + "\n" +
                      "title = " + title + "\n" +
                      "imageUrl = " + imageUrl + "\n" +
                      "bgColor = " + bgColor + " }";
@@ -143,6 +149,10 @@ public class SuggestedSites {
 
             if (trackingId >= 0) {
                 json.put(JSON_KEY_TRACKING_ID, trackingId);
+            }
+
+            if (restricted) {
+                json.put(JSON_KEY_RESTRICTED, true);
             }
 
             json.put(JSON_KEY_URL, url);
@@ -502,10 +512,14 @@ public class SuggestedSites {
                 continue;
             }
 
-            final RowBuilder row = cursor.newRow();
-            row.add(-1);
-            row.add(site.url);
-            row.add(site.title);
+            final boolean restrictedProfile =  RestrictedProfiles.isRestrictedProfile(context);
+
+            if (restrictedProfile == site.restricted) {
+                final RowBuilder row = cursor.newRow();
+                row.add(-1);
+                row.add(site.url);
+                row.add(site.title);
+            }
         }
 
         cursor.setNotificationUri(context.getContentResolver(),

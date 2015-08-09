@@ -66,11 +66,6 @@ browser.jar:
   skin/classic/browser/menuPanel-help@2x.png
   skin/classic/browser/menuPanel-small.png
   skin/classic/browser/menuPanel-small@2x.png
-  skin/classic/browser/bad-content-blocked-16.png           (../shared/bad-content-blocked-16.png)
-  skin/classic/browser/bad-content-blocked-16@2x.png        (../shared/bad-content-blocked-16@2x.png)
-  skin/classic/browser/bad-content-blocked-64.png           (../shared/bad-content-blocked-64.png)
-  skin/classic/browser/bad-content-unblocked-16.png         (../shared/bad-content-unblocked-16.png)
-  skin/classic/browser/bad-content-unblocked-64.png         (../shared/bad-content-unblocked-64.png)
   skin/classic/browser/monitor.png
   skin/classic/browser/monitor_16-10.png
   skin/classic/browser/notification-16.png
@@ -164,6 +159,8 @@ browser.jar:
 * skin/classic/browser/customizableui/panelUIOverlay.css (customizableui/panelUIOverlay.css)
   skin/classic/browser/customizableui/subView-arrow-back-inverted.png  (../shared/customizableui/subView-arrow-back-inverted.png)
   skin/classic/browser/customizableui/subView-arrow-back-inverted-rtl.png  (../shared/customizableui/subView-arrow-back-inverted-rtl.png)
+  skin/classic/browser/customizableui/thumburger.png  (customizableui/thumburger.png)
+  skin/classic/browser/customizableui/thumburger-inverted.png  (customizableui/thumburger-inverted.png)
   skin/classic/browser/customizableui/whimsy.png  (../shared/customizableui/whimsy.png)
   skin/classic/browser/customizableui/whimsy@2x.png  (../shared/customizableui/whimsy@2x.png)
   skin/classic/browser/customizableui/whimsy-bw.png  (../shared/customizableui/whimsy-bw.png)

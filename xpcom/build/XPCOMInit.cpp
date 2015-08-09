@@ -6,6 +6,7 @@
 
 #include "base/basictypes.h"
 
+#include "mozilla/AbstractThread.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Poison.h"
 #include "mozilla/SharedThreadPool.h"
@@ -717,6 +718,9 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
 
   // Init SharedThreadPool (which needs the service manager).
   SharedThreadPool::InitStatics();
+
+  // Init AbstractThread.
+  AbstractThread::InitStatics();
 
   // Force layout to spin up so that nsContentUtils is available for cx stack
   // munging.
