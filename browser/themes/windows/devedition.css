@@ -55,6 +55,12 @@
   #forward-button {
     list-style-image: url("chrome://browser/skin/Toolbar.png");
   }
+
+  toolbar[brighttext] #back-button,
+  toolbar[brighttext] #forward-button {
+    list-style-image: url("chrome://browser/skin/Toolbar-inverted.png");
+  }
+
   /* The back button region is already set in devedition.inc.css */
   #forward-button {
     -moz-image-region: rect(0px, 72px, 18px, 54px);

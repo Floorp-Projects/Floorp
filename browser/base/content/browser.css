@@ -767,10 +767,6 @@ window[chromehidden~="toolbar"] toolbar:not(#nav-bar):not(#TabsToolbar):not(#pri
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#identity-request-notification");
 }
 
-#bad-content-notification {
-  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#bad-content-notification");
-}
-
 #click-to-play-plugins-notification {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#click-to-play-plugins-notification");
 }
@@ -1331,16 +1327,6 @@ toolbarpaletteitem[place="palette"][hidden] {
 #context-navigation > .menuitem-iconic > .menu-iconic-text,
 #context-navigation > .menuitem-iconic > .menu-accel-container {
   display: none;
-}
-
-/* Tracking protection doorhanger */
-.popup-notification-footer[popupid="bad-content"] {
-  display: none;
-}
-
-.popup-notification-footer[popupid="bad-content"][mixedblockdisabled],
-.popup-notification-footer[popupid="bad-content"][trackingblockdisabled] {
-  display: block;
 }
 
 #login-fill-doorhanger:not([inDetailView]) > #login-fill-clickcapturer {
