@@ -8,6 +8,7 @@
 
 :root {
   --tab-toolbar-navbar-overlap: 0px;
+  --navbar-tab-toolbar-highlight-overlap: 0px;
   --space-above-tabbar: 0px;
   --toolbarbutton-text-shadow: none;
   --backbutton-urlbar-overlap: 0px;
@@ -308,11 +309,6 @@ searchbar:not([oneoffui]) .search-go-button {
 .tabbrowser-arrowscrollbox > .scrollbutton-up {
   background-color: var(--tab-background-color);
   border-color: transparent;
-}
-
-.tabbrowser-arrowscrollbox > .arrowscrollbox-overflow-start-indicator:not([collapsed]),
-.tabbrowser-arrowscrollbox > .arrowscrollbox-overflow-end-indicator:not([collapsed]) {
-  margin-bottom: 0;
 }
 
 .tabbrowser-tab {

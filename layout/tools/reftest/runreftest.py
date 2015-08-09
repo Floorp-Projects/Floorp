@@ -213,6 +213,9 @@ class RefTest(object):
         # Likewise for safebrowsing.
         prefs['browser.safebrowsing.enabled'] = False
         prefs['browser.safebrowsing.malware.enabled'] = False
+        # Likewise for tracking protection.
+        prefs['privacy.trackingprotection.enabled'] = False
+        prefs['privacy.trackingprotection.pbmode.enabled'] = False
         # And for snippets.
         prefs['browser.snippets.enabled'] = False
         prefs['browser.snippets.syncPromo.enabled'] = False

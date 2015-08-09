@@ -337,14 +337,10 @@ let TelemetryReportingPolicyImpl = {
       return false;
     }
 
-    // Make sure the user is notified of the current policy. If he isn't, don't try
-    // to upload anything.
-    if (!this._ensureUserNotified()) {
-      return false;
-    }
-
-    // Submission is enabled and user is notified: upload is allowed.
-    return true;
+    // Submission is enabled. We enable upload if user is notified or we need to bypass
+    // the policy.
+    const bypassNotification = Preferences.get(PREF_BYPASS_NOTIFICATION, false);
+    return this.isUserNotifiedOfCurrentPolicy || bypassNotification;
   },
 
   /**
@@ -358,26 +354,30 @@ let TelemetryReportingPolicyImpl = {
   },
 
   /**
-   * Make sure the user is notified about the policy before allowing upload.
-   * @return {Boolean} True if the user was notified, false otherwise.
+   * Show the data choices infobar if the user wasn't already notified and data submission
+   * is enabled.
    */
-  _ensureUserNotified: function() {
-    const BYPASS_NOTIFICATION = Preferences.get(PREF_BYPASS_NOTIFICATION, false);
-    if (this.isUserNotifiedOfCurrentPolicy || BYPASS_NOTIFICATION) {
-      return true;
+  _showInfobar: function() {
+    if (!this.dataSubmissionEnabled) {
+      this._log.trace("_showInfobar - Data submission disabled by the policy.");
+      return;
     }
 
-    this._log.trace("ensureUserNotified - User not notified, notifying now.");
+    const bypassNotification = Preferences.get(PREF_BYPASS_NOTIFICATION, false);
+    if (this.isUserNotifiedOfCurrentPolicy || bypassNotification) {
+      this._log.trace("_showInfobar - User already notified or bypassing the policy.");
+      return;
+    }
+
     if (this._notificationInProgress) {
-      this._log.trace("ensureUserNotified - User not notified, notification in progress.");
-      return false;
+      this._log.trace("_showInfobar - User not notified, notification already in progress.");
+      return;
     }
 
+    this._log.trace("_showInfobar - User not notified, notifying now.");
     this._notificationInProgress = true;
     let request = new NotifyPolicyRequest(this._log);
     Observers.notify("datareporting:notify-data-policy:request", request);
-
-    return false;
   },
 
   /**
@@ -412,7 +412,7 @@ let TelemetryReportingPolicyImpl = {
 
     this._startupNotificationTimerId = Policy.setShowInfobarTimeout(
         // Calling |canUpload| eventually shows the infobar, if needed.
-        () => this.canUpload(), delay);
+        () => this._showInfobar(), delay);
     // We performed at least a run, flip the firstRun preference.
     Preferences.set(PREF_FIRST_RUN, false);
   },

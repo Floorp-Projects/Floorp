@@ -87,7 +87,8 @@
 #TabsToolbar:not([collapsed="true"]) + #nav-bar {
   border-top: 1px solid hsla(0,0%,0%,.3) !important;
   background-clip: padding-box;
-  margin-top: -1px; /* Move up into the TabsToolbar for the inner highlight at the top of the nav-bar */
+  /* Move up into the TabsToolbar for the inner highlight at the top of the nav-bar */
+  margin-top: calc(-1 * var(--navbar-tab-toolbar-highlight-overlap));
   /* Position the toolbar above the bottom of background tabs */
   position: relative;
   z-index: 1;
@@ -1568,7 +1569,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 #TabsToolbar .toolbarbutton-1 {
-  margin-bottom: var(--tab-toolbar-navbar-overlap);
+  margin-bottom: var(--navbar-tab-toolbar-highlight-overlap);
 }
 
 #alltabs-button {

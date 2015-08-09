@@ -60,18 +60,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Update state that depends on preferences.
   prefObserver.observe();
-
-  // This check can be removed when Tracking Protection is always available.
-  let tpUIEnabled = false;
-  try {
-    tpUIEnabled = Services.prefs.getBoolPref("privacy.trackingprotection.ui.enabled");
-  } catch (ex) {
-    // The preference is not available.
-  }
-  if (!tpUIEnabled) {
-    document.getElementById("trackingProtectionSection")
-            .setAttribute("hidden", "true");
-  }
 }, false);
 
 function openPrivateWindow() {
