@@ -161,7 +161,7 @@ this.BrowserTestUtils = {
    * @param {tabbrowser} tabbrowser
    *        The tabbrowser to look for the next new tab in.
    * @param {string} url
-   *        A string URL to look for in the new tab.
+   *        A string URL to look for in the new tab. If null, allows any non-blank URL.
    *
    * @return {Promise}
    * @resolves With the {xul:tab} when a tab is opened and its location changes to the given URL.
@@ -174,7 +174,8 @@ this.BrowserTestUtils = {
         let progressListener = {
           onLocationChange(aBrowser) {
             if (aBrowser != openEvent.target.linkedBrowser ||
-                aBrowser.currentURI.spec != url) {
+                (url && aBrowser.currentURI.spec != url) ||
+                (!url && aBrowser.currentURI.spec == "about:blank")) {
               return;
             }
 

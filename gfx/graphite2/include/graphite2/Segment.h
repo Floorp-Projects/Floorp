@@ -120,13 +120,45 @@ enum gr_attrCode {
     /// Justification weight for this glyph (not implemented)
     gr_slatJWeight,         
     /// Amount this slot mush shrink or stretch in design units
-    gr_slatJWidth,          
+    gr_slatJWidth = 29,
     /// SubSegment split point
     gr_slatSegSplit = gr_slatJStretch + 29,
     /// User defined attribute, see subattr for user attr number
     gr_slatUserDefn,
     /// Bidi level
-    gr_slatBidiLevel,
+    gr_slatBidiLevel = 56,
+    /// Collision flags
+    gr_slatColFlags,
+    /// Collision constraint rectangle left (bl.x)
+    gr_slatColLimitblx,
+    /// Collision constraint rectangle lower (bl.y)
+    gr_slatColLimitbly,
+    /// Collision constraint rectangle right (tr.x)
+    gr_slatColLimittrx,
+    /// Collision constraint rectangle upper (tr.y)
+    gr_slatColLimittry,
+    /// Collision shift x
+    gr_slatColShiftx,
+    /// Collision shift y
+    gr_slatColShifty,
+    /// Collision margin
+    gr_slatColMargin,
+    /// Margin cost weight
+    gr_slatColMarginWt,
+    // Additional glyph that excludes movement near this one:
+    gr_slatColExclGlyph,
+    gr_slatColExclOffx,
+    gr_slatColExclOffy,
+    // Collision sequence enforcing attributes:
+    gr_slatSeqClass,
+    gr_slatSeqProxClass,
+    gr_slatSeqOrder,
+    gr_slatSeqAboveXoff,
+    gr_slatSeqAboveWt,
+    gr_slatSeqBelowXlim,
+    gr_slatSeqBelowWt,
+    gr_slatSeqValignHt,
+    gr_slatSeqValignWt,
                             
     /// not implemented
     gr_slatMax,             

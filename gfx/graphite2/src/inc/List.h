@@ -70,6 +70,7 @@ public:
     size_t              capacity() const{ return m_end - m_first; }
     
     void                reserve(size_t n);
+    void                resize(size_t n, const T & v = T());
     
     reference           front()         { assert(size() > 0); return *begin(); }
     const_reference     front() const   { assert(size() > 0); return *begin(); }
@@ -82,7 +83,7 @@ public:
     
     void                assign(size_t n, const T& u)    { clear(); insert(begin(), n, u); }
     void                assign(const_iterator first, const_iterator last)      { clear(); insert(begin(), first, last); }
-    iterator            insert(iterator p, const T & x) { p = _insert_default(p, 1); *p = x; return p; }
+    iterator            insert(iterator p, const T & x) { p = _insert_default(p, 1); new (p) T(x); return p; }
     void                insert(iterator p, size_t n, const T & x);
     void                insert(iterator p, const_iterator first, const_iterator last);
     void                pop_back()              { assert(size() > 0); --m_last; }
@@ -109,13 +110,21 @@ void Vector<T>::reserve(size_t n)
     }
 }
 
+template <typename T>
+inline
+void Vector<T>::resize(size_t n, const T & v) {
+    const ptrdiff_t d = n-size();
+    if (d < 0)      erase(end()+d, end());
+    else if (d > 0) insert(end(), d, v);
+}
+
 template<typename T> 
 inline 
 typename Vector<T>::iterator Vector<T>::_insert_default(iterator p, size_t n)
 {
     assert(begin() <= p && p <= end());
     const ptrdiff_t i = p - begin();
-    reserve((size() + n + 7) >> 3 << 3);
+    reserve(((size() + n + 7) >> 3) << 3);
     p = begin() + i;
     // Move tail if there is one
     if (p != end()) memmove(p + n, p, distance(p,end())*sizeof(T));

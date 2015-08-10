@@ -93,6 +93,10 @@ bool Silf::readGraphite(const byte * const silf_start, size_t lSilf, Face& face,
                * const silf_end = p + lSilf;
     Error e;
 
+    if (e.test(version >= 0x00060000, E_BADSILFVERSION))
+    {
+        releaseBuffers(); return face.error(e);
+    }
     if (version >= 0x00030000)
     {
         if (e.test(lSilf < 28, E_BADSIZE)) { releaseBuffers(); return face.error(e); }
@@ -140,7 +144,9 @@ bool Silf::readGraphite(const byte * const silf_start, size_t lSilf, Face& face,
     m_aLig      = be::read<uint16>(p);
     m_aUser     = be::read<uint8>(p);
     m_iMaxComp  = be::read<uint8>(p);
-    be::skip<byte>(p,5);                        // direction and 4 reserved bytes
+    be::skip<byte>(p);                          // direction
+    m_aCollision = be::read<uint8>(p);
+    be::skip<byte>(p,3);
     be::skip<uint16>(p, be::read<uint8>(p));    // don't need critical features yet
     be::skip<byte>(p);                          // reserved
     if (e.test(p >= silf_end, E_BADCRITFEATURES))   { releaseBuffers(); return face.error(e); }
@@ -155,6 +161,7 @@ bool Silf::readGraphite(const byte * const silf_start, size_t lSilf, Face& face,
         || e.test(m_aBreak >= num_attrs, E_BADABREAK)
         || e.test(m_aBidi  >= num_attrs, E_BADABIDI)
         || e.test(m_aMirror>= num_attrs, E_BADAMIRROR)
+        || e.test(m_aCollision && m_aCollision >= num_attrs - 5, E_BADACOLLISION)
         || e.test(m_numPasses > 128, E_BADNUMPASSES) || e.test(passes_start >= silf_end, E_BADPASSESSTART)
         || e.test(m_pPass < m_sPass, E_BADPASSBOUND) || e.test(m_pPass > m_numPasses, E_BADPPASS) || e.test(m_sPass > m_numPasses, E_BADSPASS)
         || e.test(m_jPass < m_pPass, E_BADJPASSBOUND) || e.test(m_jPass > m_numPasses, E_BADJPASS)
@@ -168,11 +175,12 @@ bool Silf::readGraphite(const byte * const silf_start, size_t lSilf, Face& face,
     if (e.test(p + sizeof(uint16) >= passes_start, E_BADPASSESSTART)) { releaseBuffers(); return face.error(e); }
     m_numPseudo = be::read<uint16>(p);
     be::skip<uint16>(p, 3); // searchPseudo, pseudoSelector, pseudoShift
-    if (e.test(p + m_numPseudo*(sizeof(uint32) + sizeof(uint16)) >= passes_start, E_BADNUMPSEUDO))
+    m_pseudos = new Pseudo[m_numPseudo];
+    if (e.test(p + m_numPseudo*(sizeof(uint32) + sizeof(uint16)) >= passes_start, E_BADNUMPSEUDO)
+        || e.test(!m_pseudos, E_OUTOFMEM))
     {
         releaseBuffers(); return face.error(e);
     }
-    m_pseudos = new Pseudo[m_numPseudo];
     for (int i = 0; i < m_numPseudo; i++)
     {
         m_pseudos[i].uid = be::read<uint32>(p);
@@ -180,9 +188,11 @@ bool Silf::readGraphite(const byte * const silf_start, size_t lSilf, Face& face,
     }
 
     const size_t clen = readClassMap(p, passes_start - p, version, e);
-    if (e || e.test(p + clen > passes_start, E_BADPASSESSTART)) { releaseBuffers(); return face.error(e); }
-
     m_passes = new Pass[m_numPasses];
+    if (e || e.test(p + clen > passes_start, E_BADPASSESSTART)
+          || e.test(!m_passes, E_OUTOFMEM))
+    { releaseBuffers(); return face.error(e); }
+
     for (size_t i = 0; i < m_numPasses; ++i)
     {
         const byte * const pass_start = silf_start + be::read<uint32>(o_passes),
@@ -192,8 +202,15 @@ bool Silf::readGraphite(const byte * const silf_start, size_t lSilf, Face& face,
             releaseBuffers(); return face.error(e);
         }
 
+        enum passtype pt = PASS_TYPE_UNKNOWN;
+        if (i >= m_jPass) pt = PASS_TYPE_JUSTIFICATION;
+        else if (i >= m_pPass) pt = PASS_TYPE_POSITIONING;
+        else if (i >= m_sPass) pt = PASS_TYPE_SUBSTITUTE;
+        else pt = PASS_TYPE_LINEBREAK;
+
         m_passes[i].init(this);
-        if (!m_passes[i].readPass(pass_start, pass_end - pass_start, pass_start - silf_start, face, e))
+        if (!m_passes[i].readPass(pass_start, pass_end - pass_start, pass_start - silf_start, face, pt,
+            version, e))
         {
             releaseBuffers();
             return false;
@@ -373,7 +390,7 @@ bool Silf::runGraphite(Segment *seg, uint8 firstPass, uint8 lastPass, int dobidi
 
             if (!(seg->dir() & 2))
                 seg->bidiPass(m_aBidi, seg->dir() & 1, m_aMirror);
-            else if (m_aMirror)
+            else if (m_aMirror && (seg->dir() & 1))
             {
                 Slot * s;
                 for (s = seg->first(); s; s = s->next())
@@ -403,8 +420,9 @@ bool Silf::runGraphite(Segment *seg, uint8 firstPass, uint8 lastPass, int dobidi
 #endif
 
         // test whether to reorder, prepare for positioning
-        if (i >= 32 || (seg->passBits() & (1 << i)) == 0)
-            m_passes[i].runGraphite(m, fsm);
+        if ((i >= 32 || (seg->passBits() & (1 << i)) == 0 || (m_passes[i].flags() & 7))
+                && !m_passes[i].runGraphite(m, fsm))
+            return false;
         // only subsitution passes can change segment length, cached subsegments are short for their text
         if (m.status() != vm::Machine::finished
             || (i < m_pPass && (seg->slotCount() > initSize * MAX_SEG_GROWTH_FACTOR

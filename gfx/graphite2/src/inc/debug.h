@@ -54,6 +54,7 @@ struct objectid
 
 
 json & operator << (json & j, const Position &) throw();
+json & operator << (json & j, const Rect &) throw();
 json & operator << (json & j, const CharInfo &) throw();
 json & operator << (json & j, const dslot &) throw();
 json & operator << (json & j, const objectid &) throw();
@@ -65,6 +66,13 @@ inline
 json & operator << (json & j, const Position & p) throw()
 {
     return j << json::flat << json::array << p.x << p.y << json::close;
+}
+
+
+inline
+json & operator << (json & j, const Rect & p) throw()
+{
+    return j << json::flat << json::array << p.bl.x << p.bl.y << p.tr.x << p.tr.y << json::close;
 }
 
 

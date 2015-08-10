@@ -170,10 +170,13 @@ class Face::Table
     const Face *            _f;
     mutable const byte *    _p;
     uint32                  _sz;
+    bool                    _compressed;
+
+    Error decompress();
 
 public:
     Table() throw();
-    Table(const Face & face, const Tag n) throw();
+    Table(const Face & face, const Tag n, uint32 version=0xffffffff) throw();
     Table(const Table & rhs) throw();
     ~Table() throw();
 
@@ -185,13 +188,13 @@ public:
 
 inline
 Face::Table::Table() throw()
-: _f(0), _p(0), _sz(0)
+: _f(0), _p(0), _sz(0), _compressed(false)
 {
 }
 
 inline
 Face::Table::Table(const Table & rhs) throw()
-: _f(rhs._f), _p(rhs._p), _sz(rhs._sz)
+: _f(rhs._f), _p(rhs._p), _sz(rhs._sz), _compressed(rhs._compressed)
 {
     rhs._p = 0;
 }
@@ -199,7 +202,9 @@ Face::Table::Table(const Table & rhs) throw()
 inline
 Face::Table::~Table() throw()
 {
-    if (_p && _f->m_ops.release_table)
+    if (_compressed)
+        free(const_cast<byte *>(_p));
+    else if (_p && _f->m_ops.release_table)
         (*_f->m_ops.release_table)(_f->m_appFaceHandle, _p);
 }
 

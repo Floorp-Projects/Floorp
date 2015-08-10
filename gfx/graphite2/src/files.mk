@@ -51,15 +51,19 @@ $(_NS)_SOURCES = \
     $($(_NS)_BASE)/src/CachedFace.cpp \
     $($(_NS)_BASE)/src/CmapCache.cpp \
     $($(_NS)_BASE)/src/Code.cpp \
+    $($(_NS)_BASE)/src/Collider.cpp \
+    $($(_NS)_BASE)/src/Decompressor.cpp \
     $($(_NS)_BASE)/src/Face.cpp \
     $($(_NS)_BASE)/src/FeatureMap.cpp \
     $($(_NS)_BASE)/src/FileFace.cpp \
     $($(_NS)_BASE)/src/Font.cpp \
     $($(_NS)_BASE)/src/GlyphCache.cpp \
     $($(_NS)_BASE)/src/GlyphFace.cpp \
+    $($(_NS)_BASE)/src/Intervals.cpp \
     $($(_NS)_BASE)/src/Justifier.cpp \
     $($(_NS)_BASE)/src/NameTable.cpp \
     $($(_NS)_BASE)/src/Pass.cpp \
+    $($(_NS)_BASE)/src/Position.cpp \
     $($(_NS)_BASE)/src/SegCache.cpp \
     $($(_NS)_BASE)/src/SegCacheEntry.cpp \
     $($(_NS)_BASE)/src/SegCacheStore.cpp \
@@ -74,10 +78,14 @@ $(_NS)_PRIVATE_HEADERS = \
     $($(_NS)_BASE)/src/inc/bits.h \
     $($(_NS)_BASE)/src/inc/debug.h \
     $($(_NS)_BASE)/src/inc/json.h \
+    $($(_NS)_BASE)/src/inc/locale2lcid.h \
+    $($(_NS)_BASE)/src/inc/Bidi.h \
     $($(_NS)_BASE)/src/inc/CachedFace.h \
     $($(_NS)_BASE)/src/inc/CharInfo.h \
     $($(_NS)_BASE)/src/inc/CmapCache.h \
     $($(_NS)_BASE)/src/inc/Code.h \
+    $($(_NS)_BASE)/src/inc/Collider.h \
+    $($(_NS)_BASE)/src/inc/Decompressor.h \
     $($(_NS)_BASE)/src/inc/Endian.h \
     $($(_NS)_BASE)/src/inc/Error.h \
     $($(_NS)_BASE)/src/inc/Face.h \
@@ -87,6 +95,7 @@ $(_NS)_PRIVATE_HEADERS = \
     $($(_NS)_BASE)/src/inc/Font.h \
     $($(_NS)_BASE)/src/inc/GlyphCache.h \
     $($(_NS)_BASE)/src/inc/GlyphFace.h \
+    $($(_NS)_BASE)/src/inc/Intervals.h \
     $($(_NS)_BASE)/src/inc/List.h \
     $($(_NS)_BASE)/src/inc/locale2lcid.h \
     $($(_NS)_BASE)/src/inc/Machine.h \
@@ -101,6 +110,7 @@ $(_NS)_PRIVATE_HEADERS = \
     $($(_NS)_BASE)/src/inc/SegCacheEntry.h \
     $($(_NS)_BASE)/src/inc/SegCacheStore.h \
     $($(_NS)_BASE)/src/inc/Segment.h \
+    $($(_NS)_BASE)/src/inc/Shrinker.h \
     $($(_NS)_BASE)/src/inc/Silf.h \
     $($(_NS)_BASE)/src/inc/Slot.h \
     $($(_NS)_BASE)/src/inc/Sparse.h \

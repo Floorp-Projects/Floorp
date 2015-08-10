@@ -23,10 +23,7 @@ class nsHttpResponseHead;
 // or downloads the package.
 // The package format is defined at:
 //     https://w3ctag.github.io/packaging-on-the-web/#streamable-package-format
-// Downloading the package is triggered by calling requestURI(aURI, aInfo, aCallback)
-//     aURI is the subresource uri - http://domain.com/path/package!//resource.html
-//     aInfo is a nsILoadContextInfo used to pick the cache jar the resource goes into
-//     aCallback is the target of the async call to requestURI
+// Downloading the package is triggered by calling getResource()
 class PackagedAppService final
   : public nsIPackagedAppService
 {

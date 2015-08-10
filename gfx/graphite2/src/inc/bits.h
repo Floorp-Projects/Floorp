@@ -29,14 +29,62 @@ of the License or (at your option) any later version.
 namespace graphite2
 {
 
+
+#if defined GRAPHITE2_BUILTINS && (defined __GNUC__ || defined __clang__)
+
 template<typename T>
 inline unsigned int bit_set_count(T v)
 {
-    v = v - ((v >> 1) & T(~T(0)/3));                           // temp
-    v = (v & T(~T(0)/15*3)) + ((v >> 2) & T(~T(0)/15*3));      // temp
-    v = (v + (v >> 4)) & T(~T(0)/255*15);                      // temp
-    return (T)(v * T(~T(0)/255)) >> (sizeof(T)-1)*8;           // count
+    return __builtin_popcount(v);
 }
+
+template<>
+inline unsigned int bit_set_count(int16 v)
+{
+    return __builtin_popcount(static_cast<uint16>(v));
+}
+
+template<>
+inline unsigned int bit_set_count(int8 v)
+{
+    return __builtin_popcount(static_cast<uint8>(v));
+}
+
+template<>
+inline unsigned int bit_set_count(unsigned long v)
+{
+    return __builtin_popcountl(v);
+}
+
+template<>
+inline unsigned int bit_set_count(signed long v)
+{
+    return __builtin_popcountl(v);
+}
+
+template<>
+inline unsigned int bit_set_count(unsigned long long v)
+{
+    return __builtin_popcountll(v);
+}
+
+template<>
+inline unsigned int bit_set_count(signed long long v)
+{
+    return __builtin_popcountll(v);
+}
+#else
+
+template<typename T>
+inline unsigned int bit_set_count(T v)
+{
+    v = v - ((v >> 1) & T(~(0UL)/3));                           // temp
+    v = (v & T(~(0UL)/15*3)) + ((v >> 2) & T(~(0UL)/15*3));     // temp
+    v = (v + (v >> 4)) & T(~(0UL)/255*15);                      // temp
+    return (T)(v * T(~(0UL)/255)) >> (sizeof(T)-1)*8;           // count
+}
+
+#endif
 
 
 template<int S>
@@ -86,5 +134,13 @@ inline T zero_bytes(const T x, unsigned char n)
     const T t = T(~T(0)/255*n);
     return T((has_zero(x^t) >> 7)*n);
 }
+
+#if 0
+inline float float_round(float x, uint32 m)
+{
+    *reinterpret_cast<unsigned int *>(&x) &= m;
+    return *reinterpret_cast<float *>(&x);
+}
+#endif
 
 }

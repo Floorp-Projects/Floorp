@@ -110,7 +110,7 @@ function buildOptionListForChildren(node) {
       }
 
       let info = {
-        tagName: child.tagName,
+        tagName: tagName,
         textContent: textContent,
         disabled: child.disabled,
         // We need to do this for every option element as each one can have
