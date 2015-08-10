@@ -546,12 +546,10 @@ WriteBlobOrFile(JSStructuredCloneWriter* aWriter,
 //    - else:
 //      - string value
 bool
-WriteFormData(JSContext* aCx,
-              JSStructuredCloneWriter* aWriter,
+WriteFormData(JSStructuredCloneWriter* aWriter,
               nsFormData* aFormData,
               WorkerStructuredCloneClosure& aClosure)
 {
-  MOZ_ASSERT(aCx);
   MOZ_ASSERT(aWriter);
   MOZ_ASSERT(aFormData);
 
@@ -561,14 +559,13 @@ WriteFormData(JSContext* aCx,
 
   class MOZ_STACK_CLASS Closure final
   {
-    JSContext* mCx;
     JSStructuredCloneWriter* mWriter;
     WorkerStructuredCloneClosure& mClones;
 
   public:
-    Closure(JSContext* aCx, JSStructuredCloneWriter* aWriter,
+    Closure(JSStructuredCloneWriter* aWriter,
             WorkerStructuredCloneClosure& aClones)
-      : mCx(aCx), mWriter(aWriter), mClones(aClones)
+      : mWriter(aWriter), mClones(aClones)
     { }
 
     static bool
@@ -599,7 +596,7 @@ WriteFormData(JSContext* aCx,
     }
   };
 
-  Closure closure(aCx, aWriter, aClosure);
+  Closure closure(aWriter, aClosure);
   return aFormData->ForEach(Closure::Write, &closure);
 }
 
@@ -681,7 +678,7 @@ struct WorkerStructuredCloneCallbacks
     {
       nsFormData* formData = nullptr;
       if (NS_SUCCEEDED(UNWRAP_OBJECT(FormData, aObj, formData))) {
-        if (WriteFormData(aCx, aWriter, formData, *closure)) {
+        if (WriteFormData(aWriter, formData, *closure)) {
           return true;
         }
       }
