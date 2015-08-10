@@ -129,7 +129,7 @@ class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
         constructorCode_.init(nullptr);
     }
 
-    bool isArray() {
+    bool isArray() const {
         return elementType_ != JSVAL_TYPE_MAGIC;
     }
 
