@@ -6,15 +6,15 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyGetter(this, "DebuggerServer", function() {
-  Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
-  return DebuggerServer;
-});
-
 XPCOMUtils.defineLazyGetter(this, "devtools", function() {
   const { devtools } =
     Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
   return devtools;
+});
+
+XPCOMUtils.defineLazyGetter(this, "DebuggerServer", function() {
+  const { DebuggerServer } = devtools.require("devtools/server/main");
+  return DebuggerServer;
 });
 
 XPCOMUtils.defineLazyGetter(this, "B2GTabList", function() {
