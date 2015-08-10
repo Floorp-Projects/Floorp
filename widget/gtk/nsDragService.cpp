@@ -302,7 +302,9 @@ NS_IMETHODIMP
 nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
                                  nsISupportsArray * aArrayTransferables,
                                  nsIScriptableRegion * aRegion,
-                                 uint32_t aActionType)
+                                 uint32_t aActionType,
+                                 nsContentPolicyType aContentPolicyType =
+                                   nsIContentPolicy::TYPE_OTHER)
 {
     MOZ_LOG(sDragLm, LogLevel::Debug, ("nsDragService::InvokeDragSession"));
 
@@ -314,7 +316,8 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
         return NS_ERROR_NOT_AVAILABLE;
 
     return nsBaseDragService::InvokeDragSession(aDOMNode, aArrayTransferables,
-                                                aRegion, aActionType);
+                                                aRegion, aActionType,
+                                                aContentPolicyType);
 }
 
 // nsBaseDragService
