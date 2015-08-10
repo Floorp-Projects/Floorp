@@ -8,6 +8,7 @@ this.EXPORTED_SYMBOLS = ["ContentRestore"];
 
 const Cu = Components.utils;
 const Ci = Components.interfaces;
+const Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
@@ -182,8 +183,19 @@ ContentRestoreInternal.prototype = {
     let webNavigation = this.docShell.QueryInterface(Ci.nsIWebNavigation);
     let history = webNavigation.sessionHistory;
 
-    // Listen for the tab to finish loading.
-    this.restoreTabContentStarted(finishCallback);
+    // Wait for the tab load to complete or fail
+    this.restoreTabContentStarted((status) => {
+      // If loadArgument is not null then we're attempting to load a new url
+      // that required us to switch process. If that load is cancelled (for
+      // example by a content handler) we want to restore the current history
+      // entry.
+      if (loadArguments && (status == Cr.NS_BINDING_ABORTED)) {
+        this._tabData = tabData;
+        this.restoreTabContent(null, finishCallback);
+      } else {
+        finishCallback();
+      }
+    });
 
     // Reset the current URI to about:blank. We changed it above for
     // switch-to-tab, but now it must go back to the correct value before the
@@ -248,22 +260,26 @@ ContentRestoreInternal.prototype = {
    */
   restoreTabContentStarted(finishCallback) {
     // The reload listener is no longer needed.
-    this._historyListener.uninstall();
-    this._historyListener = null;
+    if (this._historyListener) {
+      this._historyListener.uninstall();
+      this._historyListener = null;
+    }
 
     // Remove the old progress listener.
-    this._progressListener.uninstall();
+    if (this._progressListener) {
+      this._progressListener.uninstall();
+    }
 
     // We're about to start a load. This listener will be called when the load
     // has finished getting everything from the network.
     this._progressListener = new ProgressListener(this.docShell, {
-      onStopRequest: () => {
+      onStopRequest: (status) => {
         // Call resetRestore() to reset the state back to normal. The data
         // needed for restoreDocument() (which hasn't happened yet) will
         // remain in _restoringDocument.
         this.resetRestore();
 
-        finishCallback();
+        finishCallback(status);
       }
     });
   },
@@ -415,7 +431,7 @@ ProgressListener.prototype = {
     }
 
     if (stateFlags & STATE_STOP && this.callbacks.onStopRequest) {
-      this.callbacks.onStopRequest();
+      this.callbacks.onStopRequest(status);
     }
   },
 
