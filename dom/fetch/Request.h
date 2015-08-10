@@ -105,6 +105,9 @@ public:
   void
   GetBody(nsIInputStream** aStream) { return mRequest->GetBody(aStream); }
 
+  void
+  SetBody(nsIInputStream* aStream) { return mRequest->SetBody(aStream); }
+
   static already_AddRefed<Request>
   Constructor(const GlobalObject& aGlobal, const RequestOrUSVString& aInput,
               const RequestInit& aInit, ErrorResult& rv);
