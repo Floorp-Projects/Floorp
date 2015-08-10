@@ -9,7 +9,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.mozilla.gecko.mozglue.RobocopTarget;
+import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.util.INIParser;
 import org.mozilla.gecko.util.INISection;
 

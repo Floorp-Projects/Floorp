@@ -15,8 +15,8 @@ import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.View;
 
+import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.widget.RecyclerViewClickSupport;
 
 import java.util.List;
