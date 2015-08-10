@@ -660,9 +660,6 @@ MediaDecoderStateMachine::Push(VideoData* aSample)
   VideoQueue().Push(aSample);
   UpdateNextFrameStatus();
   DispatchDecodeTasksIfNeeded();
-
-  // XXXbholley - Is this still necessary?
-  mDecoder->GetReentrantMonitor().NotifyAll();
 }
 
 void
@@ -694,9 +691,6 @@ MediaDecoderStateMachine::OnVideoPopped(const MediaData* aSample)
   mDecoder->UpdatePlaybackOffset(aSample->mOffset);
   UpdateNextFrameStatus();
   DispatchVideoDecodeTaskIfNeeded();
-  // Notify the decode thread that the video queue's buffers may have
-  // free'd up space for more frames.
-  mDecoder->GetReentrantMonitor().NotifyAll();
 }
 
 void
@@ -778,7 +772,6 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
         return;
       }
       CheckIfDecodeComplete();
-      mDecoder->GetReentrantMonitor().NotifyAll();
       // Schedule the state machine to notify track ended as soon as possible.
       if (mAudioCaptured) {
         ScheduleStateMachine();
@@ -1093,7 +1086,6 @@ void MediaDecoderStateMachine::MaybeStartPlayback()
     mDecodedStream->StartPlayback(GetMediaTime(), mInfo);
   }
 
-  mDecoder->GetReentrantMonitor().NotifyAll();
   DispatchDecodeTasksIfNeeded();
 }
 
@@ -1260,13 +1252,11 @@ void MediaDecoderStateMachine::SetDormant(bool aDormant)
     // it here as well.
     nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(mReader, &MediaDecoderReader::ReleaseMediaResources);
     DecodeTaskQueue()->Dispatch(r.forget());
-    mDecoder->GetReentrantMonitor().NotifyAll();
   } else if ((aDormant != true) && (mState == DECODER_STATE_DORMANT)) {
     mDecodingFrozenAtStateDecoding = true;
     ScheduleStateMachine();
     mDecodingFirstFrame = true;
     SetState(DECODER_STATE_DECODING_NONE);
-    mDecoder->GetReentrantMonitor().NotifyAll();
   }
 }
 
@@ -1909,10 +1899,6 @@ MediaDecoderStateMachine::DecodeError()
   ScheduleStateMachine();
   DECODER_WARN("Decode error, changed state to ERROR");
 
-  // XXXbholley - Is anybody actually waiting on this monitor, or is it just
-  // a leftover from when we used to do sync dispatch for the below?
-  mDecoder->GetReentrantMonitor().NotifyAll();
-
   // MediaDecoder::DecodeError notifies the owner, and then shuts down the state
   // machine.
   nsCOMPtr<nsIRunnable> event =
@@ -2356,8 +2342,6 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
       DECODER_LOG("Buffered for %.3lfs", (now - mBufferingStart).ToSeconds());
       StartDecoding();
 
-      // Notify to allow blocked decoder thread to continue
-      mDecoder->GetReentrantMonitor().NotifyAll();
       NS_ASSERTION(IsStateMachineScheduled(), "Must have timer scheduled");
       return NS_OK;
     }
@@ -3076,9 +3060,6 @@ void MediaDecoderStateMachine::OnAudioSinkComplete()
   mAudioSinkPromise.Complete();
   ResyncAudioClock();
   mAudioCompleted = true;
-
-  // Kick the decode thread; it may be sleeping waiting for this to finish.
-  mDecoder->GetReentrantMonitor().NotifyAll();
 }
 
 void MediaDecoderStateMachine::OnAudioSinkError()
