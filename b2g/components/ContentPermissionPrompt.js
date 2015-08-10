@@ -413,7 +413,10 @@ ContentPermissionPrompt.prototype = {
       type: type,
       permissions: permissions,
       id: requestId,
-      origin: principal.origin,
+      // This system app uses the origin from permission events to
+      // compare against the mozApp.origin of app windows, so we
+      // are not concerned with origin suffixes here (appId, etc).
+      origin: principal.originNoSuffix,
       isApp: isApp,
       remember: remember,
       isGranted: isGranted,
