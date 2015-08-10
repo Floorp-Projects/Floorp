@@ -26,19 +26,8 @@ const DevToolsUtils = require("devtools/toolkit/DevToolsUtils.js");
 // Enable remote debugging for the relevant tests.
 Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 
-function tryImport(url) {
-  try {
-    Cu.import(url);
-  } catch (e) {
-    dump("Error importing " + url + "\n");
-    dump(DevToolsUtils.safeErrorString(e) + "\n");
-    throw e;
-  }
-}
-
-tryImport("resource://gre/modules/devtools/dbg-server.jsm");
-tryImport("resource://gre/modules/devtools/dbg-client.jsm");
-tryImport("resource://gre/modules/devtools/Loader.jsm");
+const { DebuggerServer } = require("devtools/server/main");
+Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
 
 function testExceptionHook(ex) {
   try {
