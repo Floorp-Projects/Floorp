@@ -18,6 +18,7 @@ Notes to self:
 #include "nsReadableUtils.h"
 #include "nsTArray.h"
 #include "nsIFormatConverter.h"
+#include "nsIContentPolicy.h"
 #include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
 #include "nsXPCOM.h"
@@ -218,6 +219,7 @@ DataStruct::ReadCache(nsISupports** aData, uint32_t* aDataLen)
 //-------------------------------------------------------------------------
 nsTransferable::nsTransferable()
   : mPrivateData(false)
+  , mContentPolicyType(nsIContentPolicy::TYPE_OTHER)
 #ifdef DEBUG
   , mInitialized(false)
 #endif
@@ -641,5 +643,20 @@ NS_IMETHODIMP
 nsTransferable::SetRequestingNode(nsIDOMNode* aRequestingNode)
 {
   mRequestingNode = do_GetWeakReference(aRequestingNode);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTransferable::GetContentPolicyType(nsContentPolicyType* outContentPolicyType)
+{
+  NS_ENSURE_ARG_POINTER(outContentPolicyType);
+  *outContentPolicyType = mContentPolicyType;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTransferable::SetContentPolicyType(nsContentPolicyType aContentPolicyType)
+{
+  mContentPolicyType = aContentPolicyType;
   return NS_OK;
 }

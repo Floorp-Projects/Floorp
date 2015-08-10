@@ -156,6 +156,8 @@ protected:
   nsCOMPtr<nsIDOMNode> mSourceNode;
   nsCOMPtr<nsIDOMDocument> mSourceDocument;       // the document at the drag source. will be null
                                                   //  if it came from outside the app.
+  nsContentPolicyType mContentPolicyType;         // the contentpolicy type passed to the channel
+                                                  // when initiating the drag session
   nsCOMPtr<nsIDOMDataTransfer> mDataTransfer;
 
   // used to determine the image to appear on the cursor while dragging
