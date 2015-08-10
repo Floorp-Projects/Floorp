@@ -15072,9 +15072,9 @@ class CGMaplikeOrSetlikeMethodGenerator(CGThing):
         assert self.maplikeOrSetlike.isMaplike()
         r = self.appendKeyArgConversion()
         code = [CGGeneric(dedent(
-             """
-             JS::Rooted<JS::Value> result(cx);
-             """))]
+            """
+            JS::Rooted<JS::Value> result(cx);
+            """))]
         arguments = ["&result"]
         return self.mergeTuples(r, (code, arguments, []))
 
@@ -16110,20 +16110,24 @@ class CGEventRoot(CGThing):
         parent = descriptor.interface.parent.identifier.name
 
         # Throw in our #includes
-        self.root = CGHeaders([descriptor], [], [], [],
-                              [
-                                  config.getDescriptor(parent, False).headerFile,
-                                  "mozilla/Attributes.h",
-                                  "mozilla/ErrorResult.h",
-                                  "mozilla/dom/%sBinding.h" % interfaceName,
-                                  'mozilla/dom/BindingUtils.h',
-                              ],
-                              [
-                                  "%s.h" % interfaceName,
-                                  "js/GCAPI.h",
-                                  'mozilla/dom/Nullable.h',
-                              ],
-                              "", self.root, config)
+        self.root = CGHeaders(
+            [descriptor],
+            [],
+            [],
+            [],
+            [
+                config.getDescriptor(parent, False).headerFile,
+                "mozilla/Attributes.h",
+                "mozilla/ErrorResult.h",
+                "mozilla/dom/%sBinding.h" % interfaceName,
+                'mozilla/dom/BindingUtils.h',
+                ],
+            [
+                "%s.h" % interfaceName,
+                "js/GCAPI.h",
+                'mozilla/dom/Nullable.h',
+            ],
+            "", self.root, config)
 
         # And now some include guards
         self.root = CGIncludeGuard(interfaceName, self.root)
