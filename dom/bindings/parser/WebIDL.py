@@ -13,6 +13,7 @@ from collections import defaultdict
 
 # Machinery
 
+
 def parseInt(literal):
     string = literal
     sign = 0
@@ -37,6 +38,7 @@ def parseInt(literal):
     value = int(string, base)
     return value * sign
 
+
 # Magic for creating enums
 def M_add_class_attribs(attribs, start):
     def foo(name, bases, dict_):
@@ -47,6 +49,7 @@ def M_add_class_attribs(attribs, start):
         return type(name, bases, dict_)
     return foo
 
+
 def enum(*names, **kw):
     if len(kw) == 1:
         base = kw['base'].__class__
@@ -55,11 +58,14 @@ def enum(*names, **kw):
         assert len(kw) == 0
         base = object
         start = 0
+
     class Foo(base):
         __metaclass__ = M_add_class_attribs(names, start)
+
         def __setattr__(self, name, value):  # this makes it read-only
             raise NotImplementedError
     return Foo()
+
 
 class WebIDLError(Exception):
     def __init__(self, message, locations, warning=False):
@@ -72,6 +78,7 @@ class WebIDLError(Exception):
                                self.message,
                                ", " if len(self.locations) != 0 else "",
                                "\n".join(self.locations))
+
 
 class Location(object):
     def __init__(self, lexer, lineno, lexpos, filename):
@@ -115,6 +122,7 @@ class Location(object):
         return "%s line %s:%s\n%s\n%s" % (self._file, self._lineno, self._colno,
                                           self._line, self._pointerline())
 
+
 class BuiltinLocation(object):
     def __init__(self, text):
         self.msg = text + "\n"
@@ -137,6 +145,7 @@ class BuiltinLocation(object):
 
 
 # Data Model
+
 
 class IDLObject(object):
     def __init__(self, location):
@@ -210,6 +219,7 @@ class IDLObject(object):
             deps.update(d.getDeps(visited))
 
         return deps
+
 
 class IDLScope(IDLObject):
     def __init__(self, location, parentScope, identifier):
@@ -313,6 +323,7 @@ class IDLScope(IDLObject):
         assert identifier.scope == self
         return self._lookupIdentifier(identifier)
 
+
 class IDLIdentifier(IDLObject):
     def __init__(self, location, scope, name):
         IDLObject.__init__(self, location)
@@ -335,6 +346,7 @@ class IDLIdentifier(IDLObject):
 
     def object(self):
         return self.scope.lookupIdentifier(self)
+
 
 class IDLUnresolvedIdentifier(IDLObject):
     def __init__(self, location, name, allowDoubleUnderscore=False,
@@ -380,6 +392,7 @@ class IDLUnresolvedIdentifier(IDLObject):
 
     def finish(self):
         assert False  # Should replace with a resolved identifier first.
+
 
 class IDLObjectWithIdentifier(IDLObject):
     def __init__(self, location, parentScope, identifier):
@@ -434,12 +447,14 @@ class IDLObjectWithIdentifier(IDLObject):
 
         return unhandledAttrs
 
+
 class IDLObjectWithScope(IDLObjectWithIdentifier, IDLScope):
     def __init__(self, location, parentScope, identifier):
         assert isinstance(identifier, IDLUnresolvedIdentifier)
 
         IDLObjectWithIdentifier.__init__(self, location, parentScope, identifier)
         IDLScope.__init__(self, location, parentScope, self.identifier)
+
 
 class IDLIdentifierPlaceholder(IDLObjectWithIdentifier):
     def __init__(self, location, identifier):
@@ -455,6 +470,7 @@ class IDLIdentifierPlaceholder(IDLObjectWithIdentifier):
 
         obj = self.identifier.resolve(scope, None)
         return scope.lookupIdentifier(obj)
+
 
 class IDLExposureMixins():
     def __init__(self, location):
@@ -551,6 +567,7 @@ class IDLExternalInterface(IDLObjectWithIdentifier, IDLExposureMixins):
     def _getDependentObjects(self):
         return set()
 
+
 class IDLPartialInterface(IDLObject):
     def __init__(self, location, name, members, nonPartialInterface):
         assert isinstance(name, IDLUnresolvedIdentifier)
@@ -605,9 +622,11 @@ def convertExposedAttrToGlobalNameSet(exposedAttr, targetSet):
         assert exposedAttr.hasArgs()
         targetSet.update(exposedAttr.args())
 
+
 def globalNameSetToExposureSet(globalScope, nameSet, exposureSet):
     for name in nameSet:
         exposureSet.update(globalScope.globalNameMapping[name])
+
 
 class IDLInterface(IDLObjectWithScope, IDLExposureMixins):
     def __init__(self, location, parentScope, name, parent, members,
@@ -1522,6 +1541,7 @@ class IDLInterface(IDLObjectWithScope, IDLExposureMixins):
                 self.getExtendedAttribute("CheckAnyPermissions") or
                 self.getExtendedAttribute("CheckAllPermissions"))
 
+
 class IDLDictionary(IDLObjectWithScope):
     def __init__(self, location, parentScope, name, parent, members):
         assert isinstance(parentScope, IDLScope)
@@ -1669,6 +1689,7 @@ class IDLDictionary(IDLObjectWithScope):
             deps.add(self.parent)
         return deps
 
+
 class IDLEnum(IDLObjectWithIdentifier):
     def __init__(self, location, parentScope, name, values):
         assert isinstance(parentScope, IDLScope)
@@ -1698,6 +1719,7 @@ class IDLEnum(IDLObjectWithIdentifier):
 
     def _getDependentObjects(self):
         return set()
+
 
 class IDLType(IDLObject):
     Tags = enum(
@@ -1892,6 +1914,7 @@ class IDLType(IDLObject):
     def isExposedInAllOf(self, exposureSet):
         return True
 
+
 class IDLUnresolvedType(IDLType):
     """
         Unresolved types are interface types
@@ -1935,6 +1958,7 @@ class IDLUnresolvedType(IDLType):
     def isDistinguishableFrom(self, other):
         raise TypeError("Can't tell whether an unresolved type is or is not "
                         "distinguishable from other things")
+
 
 class IDLNullableType(IDLType):
     def __init__(self, location, innerType):
@@ -2085,6 +2109,7 @@ class IDLNullableType(IDLType):
     def _getDependentObjects(self):
         return self.inner._getDependentObjects()
 
+
 class IDLSequenceType(IDLType):
     def __init__(self, location, parameterType):
         assert not parameterType.isVoid()
@@ -2177,6 +2202,7 @@ class IDLSequenceType(IDLType):
     def _getDependentObjects(self):
         return self.inner._getDependentObjects()
 
+
 class IDLMozMapType(IDLType):
     # XXXbz This is pretty similar to IDLSequenceType in various ways.
     # And maybe to IDLNullableType.  Should we have a superclass for
@@ -2239,6 +2265,7 @@ class IDLMozMapType(IDLType):
 
     def _getDependentObjects(self):
         return self.inner._getDependentObjects()
+
 
 class IDLUnionType(IDLType):
     def __init__(self, location, memberTypes):
@@ -2365,6 +2392,7 @@ class IDLUnionType(IDLType):
     def _getDependentObjects(self):
         return set(self.memberTypes)
 
+
 class IDLArrayType(IDLType):
     def __init__(self, location, parameterType):
         assert not parameterType.isVoid()
@@ -2463,6 +2491,7 @@ class IDLArrayType(IDLType):
 
     def _getDependentObjects(self):
         return self.inner._getDependentObjects()
+
 
 class IDLTypedefType(IDLType):
     def __init__(self, location, innerType, name):
@@ -2565,6 +2594,7 @@ class IDLTypedefType(IDLType):
     def _getDependentObjects(self):
         return self.inner._getDependentObjects()
 
+
 class IDLTypedef(IDLObjectWithIdentifier):
     def __init__(self, location, parentScope, innerType, name):
         identifier = IDLUnresolvedIdentifier(location, name)
@@ -2589,6 +2619,7 @@ class IDLTypedef(IDLObjectWithIdentifier):
 
     def _getDependentObjects(self):
         return self.innerType._getDependentObjects()
+
 
 class IDLWrapperType(IDLType):
     def __init__(self, location, inner, promiseInnerType=None):
@@ -2767,6 +2798,7 @@ class IDLWrapperType(IDLType):
         if self.isDictionary():
             return set([self.inner])
         return set()
+
 
 class IDLBuiltinType(IDLType):
 
@@ -3157,6 +3189,7 @@ integerTypeSizes = {
     IDLBuiltinType.Types.unsigned_long_long: (0, 18446744073709551615)
 }
 
+
 def matchIntegerValueToType(value):
     for type, extremes in integerTypeSizes.items():
         (min, max) = extremes
@@ -3164,6 +3197,7 @@ def matchIntegerValueToType(value):
             return BuiltinTypes[type]
 
     return None
+
 
 class IDLValue(IDLObject):
     def __init__(self, location, type, value):
@@ -3247,6 +3281,7 @@ class IDLValue(IDLObject):
     def _getDependentObjects(self):
         return set()
 
+
 class IDLNullValue(IDLObject):
     def __init__(self, location):
         IDLObject.__init__(self, location)
@@ -3276,6 +3311,7 @@ class IDLNullValue(IDLObject):
     def _getDependentObjects(self):
         return set()
 
+
 class IDLEmptySequenceValue(IDLObject):
     def __init__(self, location):
         IDLObject.__init__(self, location)
@@ -3304,6 +3340,7 @@ class IDLEmptySequenceValue(IDLObject):
     def _getDependentObjects(self):
         return set()
 
+
 class IDLUndefinedValue(IDLObject):
     def __init__(self, location):
         IDLObject.__init__(self, location)
@@ -3321,6 +3358,7 @@ class IDLUndefinedValue(IDLObject):
 
     def _getDependentObjects(self):
         return set()
+
 
 class IDLInterfaceMember(IDLObjectWithIdentifier, IDLExposureMixins):
 
@@ -3642,7 +3680,6 @@ class IDLMaplikeOrSetlike(IDLInterfaceMember):
                                IDLUnresolvedIdentifier(self.location, "value"),
                                self.valueType)
 
-
         if not self.readonly:
             addMethod("set", True, BuiltinTypes[IDLBuiltinType.Types.object],
                       [getKeyArg(), getValueArg()])
@@ -3679,6 +3716,7 @@ class IDLMaplikeOrSetlike(IDLInterfaceMember):
 
     def _getDependentObjects(self):
         return set([self.keyType, self.valueType])
+
 
 class IDLConst(IDLInterfaceMember):
     def __init__(self, location, identifier, type, value):
@@ -3741,6 +3779,7 @@ class IDLConst(IDLInterfaceMember):
 
     def _getDependentObjects(self):
         return set([self.type, self.value])
+
 
 class IDLAttribute(IDLInterfaceMember):
     def __init__(self, location, identifier, type, readonly, inherit=False,
@@ -4034,6 +4073,7 @@ class IDLAttribute(IDLInterfaceMember):
     def _getDependentObjects(self):
         return set([self.type])
 
+
 class IDLArgument(IDLObjectWithIdentifier):
     def __init__(self, location, identifier, type, optional=False, defaultValue=None, variadic=False, dictionaryMember=False):
         IDLObjectWithIdentifier.__init__(self, location, None, identifier)
@@ -4134,6 +4174,7 @@ class IDLArgument(IDLObjectWithIdentifier):
     def canHaveMissingValue(self):
         return self.optional and not self.defaultValue
 
+
 class IDLCallback(IDLObjectWithScope):
     def __init__(self, location, parentScope, identifier, returnType, arguments):
         assert isinstance(returnType, IDLType)
@@ -4198,6 +4239,7 @@ class IDLCallback(IDLObjectWithScope):
     def _getDependentObjects(self):
         return set([self._returnType] + self._arguments)
 
+
 class IDLCallbackType(IDLType):
     def __init__(self, location, callback):
         IDLType.__init__(self, location, callback.identifier.name)
@@ -4222,6 +4264,7 @@ class IDLCallbackType(IDLType):
     def _getDependentObjects(self):
         return self.callback._getDependentObjects()
 
+
 class IDLMethodOverload:
     """
     A class that represents a single overload of a WebIDL method.  This is not
@@ -4241,6 +4284,7 @@ class IDLMethodOverload:
         deps = set(self.arguments)
         deps.add(self.returnType)
         return deps
+
 
 class IDLMethod(IDLInterfaceMember, IDLScope):
 
@@ -4700,6 +4744,7 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
             deps.update(overload._getDependentObjects())
         return deps
 
+
 class IDLImplementsStatement(IDLObject):
     def __init__(self, location, implementor, implementee):
         IDLObject.__init__(self, location)
@@ -4743,6 +4788,7 @@ class IDLImplementsStatement(IDLObject):
     def addExtendedAttributes(self, attrs):
         assert len(attrs) == 0
 
+
 class IDLExtendedAttribute(IDLObject):
     """
     A class to represent IDL extended attributes so we can give them locations
@@ -4780,6 +4826,7 @@ class IDLExtendedAttribute(IDLObject):
         return list(self._tuple)[1:]
 
 # Parser
+
 
 class Tokenizer(object):
     tokens = [
@@ -4920,6 +4967,7 @@ class Tokenizer(object):
                                  lextab='webidllex',
                                  reflags=re.DOTALL)
 
+
 class SqueakyCleanLogger(object):
     errorWhitelist = [
         # Web IDL defines the WHITESPACE token, but doesn't actually
@@ -4937,11 +4985,14 @@ class SqueakyCleanLogger(object):
         # Which means the Other symbol is unreachable.
         "Symbol 'Other' is unreachable",
         ]
+
     def __init__(self):
         self.errors = []
+
     def debug(self, msg, *args, **kwargs):
         pass
     info = debug
+
     def warning(self, msg, *args, **kwargs):
         if msg == "%s:%d: Rule '%s' defined, but not used":
             # Munge things so we don't have to hardcode filenames and
@@ -4958,6 +5009,7 @@ class SqueakyCleanLogger(object):
     def reportGrammarErrors(self):
         if self.errors:
             raise WebIDLError("\n".join(self.errors), [])
+
 
 class Parser(Tokenizer):
     def getLocation(self, p, i):
@@ -6441,6 +6493,7 @@ class Parser(Tokenizer):
         typedef (ArrayBufferView or ArrayBuffer) BufferSource;
         typedef (SharedArrayBufferView or SharedArrayBuffer) SharedBufferSource;
     """
+
 
 def main():
     # Parse arguments.
