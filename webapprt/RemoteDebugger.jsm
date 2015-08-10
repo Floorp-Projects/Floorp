@@ -12,7 +12,8 @@ let Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import('resource://gre/modules/devtools/dbg-server.jsm');
+let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+let { DebuggerServer } = require("devtools/server/main");
 
 this.RemoteDebugger = {
   init: function(port) {

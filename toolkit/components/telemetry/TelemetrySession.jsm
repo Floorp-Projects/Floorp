@@ -870,12 +870,6 @@ let Impl = {
     for (let ioCounter in this._startupIO)
       ret[ioCounter] = this._startupIO[ioCounter];
 
-    let hasPingBeenSent = false;
-    try {
-      hasPingBeenSent = Telemetry.getHistogramById("TELEMETRY_SUCCESS").snapshot().sum > 0;
-    } catch(e) {
-    }
-
     ret.savedPings = TelemetryStorage.pendingPingCount;
 
     ret.activeTicks = -1;
