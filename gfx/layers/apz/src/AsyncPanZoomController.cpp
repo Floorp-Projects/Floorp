@@ -986,10 +986,10 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent,
       case PanGestureInput::PANGESTURE_MAYSTART: rv = OnPanMayBegin(panGestureInput); break;
       case PanGestureInput::PANGESTURE_CANCELLED: rv = OnPanCancelled(panGestureInput); break;
       case PanGestureInput::PANGESTURE_START: rv = OnPanBegin(panGestureInput); break;
-      case PanGestureInput::PANGESTURE_PAN: rv = OnPan(panGestureInput, ScrollSource::Touch, true); break;
+      case PanGestureInput::PANGESTURE_PAN: rv = OnPan(panGestureInput, true); break;
       case PanGestureInput::PANGESTURE_END: rv = OnPanEnd(panGestureInput); break;
       case PanGestureInput::PANGESTURE_MOMENTUMSTART: rv = OnPanMomentumStart(panGestureInput); break;
-      case PanGestureInput::PANGESTURE_MOMENTUMPAN: rv = OnPan(panGestureInput, ScrollSource::Touch, false); break;
+      case PanGestureInput::PANGESTURE_MOMENTUMPAN: rv = OnPan(panGestureInput, false); break;
       case PanGestureInput::PANGESTURE_MOMENTUMEND: rv = OnPanMomentumEnd(panGestureInput); break;
       default: NS_WARNING("Unhandled pan gesture"); break;
     }
@@ -1676,7 +1676,7 @@ nsEventStatus AsyncPanZoomController::OnPanBegin(const PanGestureInput& aEvent) 
   return nsEventStatus_eConsumeNoDefault;
 }
 
-nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent, ScrollSource aSource, bool aFingersOnTouchpad) {
+nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent, bool aFingersOnTouchpad) {
   APZC_LOG("%p got a pan-pan in state %d\n", this, mState);
 
   if (mState == SMOOTH_SCROLL) {
@@ -1706,7 +1706,7 @@ nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent, Scrol
   OverscrollHandoffState handoffState(
       *CurrentPanGestureBlock()->GetOverscrollHandoffChain(),
       panDistance,
-      aSource);
+      ScrollSource::Wheel);
   CallDispatchScroll(aEvent.mLocalPanStartPoint,
                      aEvent.mLocalPanStartPoint + aEvent.mLocalPanDisplacement,
                      handoffState);
