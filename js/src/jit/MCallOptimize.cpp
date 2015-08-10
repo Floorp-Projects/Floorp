@@ -926,6 +926,13 @@ IonBuilder::inlineArrayConcat(CallInfo& callInfo)
         HeapTypeSetKey elemTypes = key->property(JSID_VOID);
         if (!elemTypes.knownSubset(constraints(), thisElemTypes))
             return InliningStatus_NotInlined;
+
+        if (thisGroup->clasp() == &UnboxedArrayObject::class_ &&
+            !CanStoreUnboxedType(alloc(), thisGroup->unboxedLayout().elementType(),
+                                 MIRType_Value, elemTypes.maybeTypes()))
+        {
+            return InliningStatus_NotInlined;
+        }
     }
 
     // Inline the call.

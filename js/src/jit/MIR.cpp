@@ -1838,6 +1838,40 @@ jit::EqualTypes(MIRType type1, TemporaryTypeSet* typeset1,
     return typeset1->equals(typeset2);
 }
 
+// Tests whether input/inputTypes can always be stored to an unboxed
+// object/array property with the given unboxed type.
+bool
+jit::CanStoreUnboxedType(TempAllocator& alloc,
+                         JSValueType unboxedType, MIRType input, TypeSet* inputTypes)
+{
+    TemporaryTypeSet types;
+
+    switch (unboxedType) {
+      case JSVAL_TYPE_BOOLEAN:
+      case JSVAL_TYPE_INT32:
+      case JSVAL_TYPE_DOUBLE:
+      case JSVAL_TYPE_STRING:
+        types.addType(TypeSet::PrimitiveType(unboxedType), alloc.lifoAlloc());
+        break;
+
+      case JSVAL_TYPE_OBJECT:
+        types.addType(TypeSet::AnyObjectType(), alloc.lifoAlloc());
+        types.addType(TypeSet::NullType(), alloc.lifoAlloc());
+        break;
+
+      default:
+        MOZ_CRASH("Bad unboxed type");
+    }
+
+    return TypeSetIncludes(&types, input, inputTypes);
+}
+
+static bool
+CanStoreUnboxedType(TempAllocator& alloc, JSValueType unboxedType, MDefinition* value)
+{
+    return CanStoreUnboxedType(alloc, unboxedType, value->type(), value->resultTypeSet());
+}
+
 bool
 MPhi::specializeType()
 {
@@ -5353,6 +5387,20 @@ jit::PropertyWriteNeedsTypeBarrier(TempAllocator& alloc, CompilerConstraintList*
             success = TryAddTypeBarrierForWrite(alloc, constraints, current, types, name, pvalue,
                                                 implicitType);
             break;
+        }
+
+        // Perform additional filtering to make sure that any unboxed property
+        // being written can accommodate the value.
+        if (key->isGroup() && key->group()->maybeUnboxedLayout()) {
+            const UnboxedLayout& layout = key->group()->unboxedLayout();
+            if (name) {
+                const UnboxedLayout::Property* property = layout.lookup(name);
+                if (property && !CanStoreUnboxedType(alloc, property->type, *pvalue))
+                    return true;
+            } else {
+                if (layout.isArray() && !CanStoreUnboxedType(alloc, layout.elementType(), *pvalue))
+                    return true;
+            }
         }
     }
 
