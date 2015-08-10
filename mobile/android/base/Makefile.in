@@ -21,8 +21,6 @@ DEFINES += \
   $(NULL)
 
 GARBAGE += \
-  AndroidManifest.xml  \
-  WebappManifestFragment.xml.frag \
   classes.dex  \
   gecko.ap_  \
   res/values/strings.xml \
@@ -223,7 +221,6 @@ GeneratedJNIWrappers.cpp: $(ALL_JARS)
 
 manifest := \
   AndroidManifest.xml.in \
-  WebappManifestFragment.xml.frag.in \
   fennec_ids.txt.in \
   $(NULL)
 
@@ -317,7 +314,6 @@ res/raw/suggestedsites.json: .locales.deps ;
 
 all_resources = \
   $(CURDIR)/AndroidManifest.xml \
-  $(CURDIR)/WebappManifestFragment.xml.frag \
   $(android_res_files) \
   $(ANDROID_GENERATED_RESFILES) \
   $(NULL)
