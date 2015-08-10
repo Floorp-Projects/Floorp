@@ -69,9 +69,9 @@ class WebIDLError(Exception):
 
     def __str__(self):
         return "%s: %s%s%s" % (self.warning and 'warning' or 'error',
-                                 self.message,
-                                 ", " if len(self.locations) != 0 else "",
-                                 "\n".join(self.locations))
+                               self.message,
+                               ", " if len(self.locations) != 0 else "",
+                               "\n".join(self.locations))
 
 class Location(object):
     def __init__(self, lexer, lineno, lexpos, filename):
@@ -296,8 +296,10 @@ class IDLScope(IDLObject):
             return originalObject.addOverload(newObject)
 
         # Default to throwing, derived classes can override.
-        conflictdesc = "\n\t%s at %s\n\t%s at %s" % \
-          (originalObject, originalObject.location, newObject, newObject.location)
+        conflictdesc = "\n\t%s at %s\n\t%s at %s" % (originalObject,
+                                                     originalObject.location,
+                                                     newObject,
+                                                     newObject.location)
 
         raise WebIDLError(
             "Multiple unresolvable definitions of identifier '%s' in scope '%s%s"
@@ -1022,9 +1024,9 @@ class IDLInterface(IDLObjectWithScope, IDLExposureMixins):
 
             if memberType in specialMembersSeen:
                 raise WebIDLError("Multiple " + memberType + " on %s" % (self),
-                                   [self.location,
-                                    specialMembersSeen[memberType].location,
-                                    member.location])
+                                  [self.location,
+                                   specialMembersSeen[memberType].location,
+                                   member.location])
 
             specialMembersSeen[memberType] = member
 
@@ -3016,130 +3018,130 @@ class IDLBuiltinType(IDLType):
 BuiltinTypes = {
     IDLBuiltinType.Types.byte:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "Byte",
-                        IDLBuiltinType.Types.byte),
+                       IDLBuiltinType.Types.byte),
     IDLBuiltinType.Types.octet:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "Octet",
-                        IDLBuiltinType.Types.octet),
+                       IDLBuiltinType.Types.octet),
     IDLBuiltinType.Types.short:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "Short",
-                        IDLBuiltinType.Types.short),
+                       IDLBuiltinType.Types.short),
     IDLBuiltinType.Types.unsigned_short:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "UnsignedShort",
-                        IDLBuiltinType.Types.unsigned_short),
+                       IDLBuiltinType.Types.unsigned_short),
     IDLBuiltinType.Types.long:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "Long",
-                        IDLBuiltinType.Types.long),
+                       IDLBuiltinType.Types.long),
     IDLBuiltinType.Types.unsigned_long:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "UnsignedLong",
-                        IDLBuiltinType.Types.unsigned_long),
+                       IDLBuiltinType.Types.unsigned_long),
     IDLBuiltinType.Types.long_long:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "LongLong",
-                        IDLBuiltinType.Types.long_long),
+                       IDLBuiltinType.Types.long_long),
     IDLBuiltinType.Types.unsigned_long_long:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "UnsignedLongLong",
-                        IDLBuiltinType.Types.unsigned_long_long),
+                       IDLBuiltinType.Types.unsigned_long_long),
     IDLBuiltinType.Types.boolean:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "Boolean",
-                        IDLBuiltinType.Types.boolean),
+                       IDLBuiltinType.Types.boolean),
     IDLBuiltinType.Types.float:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "Float",
-                        IDLBuiltinType.Types.float),
+                       IDLBuiltinType.Types.float),
     IDLBuiltinType.Types.unrestricted_float:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "UnrestrictedFloat",
-                        IDLBuiltinType.Types.unrestricted_float),
+                       IDLBuiltinType.Types.unrestricted_float),
     IDLBuiltinType.Types.double:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "Double",
-                        IDLBuiltinType.Types.double),
+                       IDLBuiltinType.Types.double),
     IDLBuiltinType.Types.unrestricted_double:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "UnrestrictedDouble",
-                        IDLBuiltinType.Types.unrestricted_double),
+                       IDLBuiltinType.Types.unrestricted_double),
     IDLBuiltinType.Types.any:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "Any",
-                        IDLBuiltinType.Types.any),
+                       IDLBuiltinType.Types.any),
     IDLBuiltinType.Types.domstring:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "String",
-                        IDLBuiltinType.Types.domstring),
+                       IDLBuiltinType.Types.domstring),
     IDLBuiltinType.Types.bytestring:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "ByteString",
-                        IDLBuiltinType.Types.bytestring),
+                       IDLBuiltinType.Types.bytestring),
     IDLBuiltinType.Types.usvstring:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "USVString",
-                        IDLBuiltinType.Types.usvstring),
+                       IDLBuiltinType.Types.usvstring),
     IDLBuiltinType.Types.object:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "Object",
-                        IDLBuiltinType.Types.object),
+                       IDLBuiltinType.Types.object),
     IDLBuiltinType.Types.date:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "Date",
-                        IDLBuiltinType.Types.date),
+                       IDLBuiltinType.Types.date),
     IDLBuiltinType.Types.void:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "Void",
-                        IDLBuiltinType.Types.void),
+                       IDLBuiltinType.Types.void),
     IDLBuiltinType.Types.ArrayBuffer:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "ArrayBuffer",
-                        IDLBuiltinType.Types.ArrayBuffer),
+                       IDLBuiltinType.Types.ArrayBuffer),
     IDLBuiltinType.Types.ArrayBufferView:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "ArrayBufferView",
-                        IDLBuiltinType.Types.ArrayBufferView),
+                       IDLBuiltinType.Types.ArrayBufferView),
     IDLBuiltinType.Types.SharedArrayBuffer:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "SharedArrayBuffer",
-                        IDLBuiltinType.Types.SharedArrayBuffer),
+                       IDLBuiltinType.Types.SharedArrayBuffer),
     IDLBuiltinType.Types.SharedArrayBufferView:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "SharedArrayBufferView",
-                        IDLBuiltinType.Types.SharedArrayBufferView),
+                       IDLBuiltinType.Types.SharedArrayBufferView),
     IDLBuiltinType.Types.Int8Array:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "Int8Array",
-                        IDLBuiltinType.Types.Int8Array),
+                       IDLBuiltinType.Types.Int8Array),
     IDLBuiltinType.Types.Uint8Array:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "Uint8Array",
-                        IDLBuiltinType.Types.Uint8Array),
+                       IDLBuiltinType.Types.Uint8Array),
     IDLBuiltinType.Types.Uint8ClampedArray:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "Uint8ClampedArray",
-                        IDLBuiltinType.Types.Uint8ClampedArray),
+                       IDLBuiltinType.Types.Uint8ClampedArray),
     IDLBuiltinType.Types.Int16Array:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "Int16Array",
-                        IDLBuiltinType.Types.Int16Array),
+                       IDLBuiltinType.Types.Int16Array),
     IDLBuiltinType.Types.Uint16Array:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "Uint16Array",
-                        IDLBuiltinType.Types.Uint16Array),
+                       IDLBuiltinType.Types.Uint16Array),
     IDLBuiltinType.Types.Int32Array:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "Int32Array",
-                        IDLBuiltinType.Types.Int32Array),
+                       IDLBuiltinType.Types.Int32Array),
     IDLBuiltinType.Types.Uint32Array:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "Uint32Array",
-                        IDLBuiltinType.Types.Uint32Array),
+                       IDLBuiltinType.Types.Uint32Array),
     IDLBuiltinType.Types.Float32Array:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "Float32Array",
-                        IDLBuiltinType.Types.Float32Array),
+                       IDLBuiltinType.Types.Float32Array),
     IDLBuiltinType.Types.Float64Array:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "Float64Array",
-                        IDLBuiltinType.Types.Float64Array),
+                       IDLBuiltinType.Types.Float64Array),
     IDLBuiltinType.Types.SharedInt8Array:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "SharedInt8Array",
-                        IDLBuiltinType.Types.SharedInt8Array),
+                       IDLBuiltinType.Types.SharedInt8Array),
     IDLBuiltinType.Types.SharedUint8Array:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "SharedUint8Array",
-                        IDLBuiltinType.Types.SharedUint8Array),
+                       IDLBuiltinType.Types.SharedUint8Array),
     IDLBuiltinType.Types.SharedUint8ClampedArray:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "SharedUint8ClampedArray",
-                        IDLBuiltinType.Types.SharedUint8ClampedArray),
+                       IDLBuiltinType.Types.SharedUint8ClampedArray),
     IDLBuiltinType.Types.SharedInt16Array:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "SharedInt16Array",
-                        IDLBuiltinType.Types.SharedInt16Array),
+                       IDLBuiltinType.Types.SharedInt16Array),
     IDLBuiltinType.Types.SharedUint16Array:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "SharedUint16Array",
-                        IDLBuiltinType.Types.SharedUint16Array),
+                       IDLBuiltinType.Types.SharedUint16Array),
     IDLBuiltinType.Types.SharedInt32Array:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "SharedInt32Array",
-                        IDLBuiltinType.Types.SharedInt32Array),
+                       IDLBuiltinType.Types.SharedInt32Array),
     IDLBuiltinType.Types.SharedUint32Array:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "SharedUint32Array",
-                        IDLBuiltinType.Types.SharedUint32Array),
+                       IDLBuiltinType.Types.SharedUint32Array),
     IDLBuiltinType.Types.SharedFloat32Array:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "SharedFloat32Array",
-                        IDLBuiltinType.Types.SharedFloat32Array),
+                       IDLBuiltinType.Types.SharedFloat32Array),
     IDLBuiltinType.Types.SharedFloat64Array:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "SharedFloat64Array",
-                        IDLBuiltinType.Types.SharedFloat64Array)
+                       IDLBuiltinType.Types.SharedFloat64Array)
 }
 
 
@@ -3150,8 +3152,7 @@ integerTypeSizes = {
     IDLBuiltinType.Types.unsigned_short: (0, 65535),
     IDLBuiltinType.Types.long: (-2147483648, 2147483647),
     IDLBuiltinType.Types.unsigned_long: (0, 4294967295),
-    IDLBuiltinType.Types.long_long: (-9223372036854775808,
-                                         9223372036854775807),
+    IDLBuiltinType.Types.long_long: (-9223372036854775808, 9223372036854775807),
     IDLBuiltinType.Types.unsigned_long_long: (0, 18446744073709551615)
 }
 
@@ -3570,14 +3571,14 @@ class IDLMaplikeOrSetlike(IDLInterfaceMember):
 
         # void forEach(callback(valueType, keyType), thisVal)
         foreachArguments = [IDLArgument(self.location,
-                                         IDLUnresolvedIdentifier(BuiltinLocation("<auto-generated-identifier>"),
-                                                                 "callback"),
-                                         BuiltinTypes[IDLBuiltinType.Types.object]),
-                             IDLArgument(self.location,
-                                         IDLUnresolvedIdentifier(BuiltinLocation("<auto-generated-identifier>"),
-                                                                 "thisArg"),
-                                         BuiltinTypes[IDLBuiltinType.Types.any],
-                                         optional=True)]
+                                        IDLUnresolvedIdentifier(BuiltinLocation("<auto-generated-identifier>"),
+                                                                "callback"),
+                                        BuiltinTypes[IDLBuiltinType.Types.object]),
+                            IDLArgument(self.location,
+                                        IDLUnresolvedIdentifier(BuiltinLocation("<auto-generated-identifier>"),
+                                                                "thisArg"),
+                                        BuiltinTypes[IDLBuiltinType.Types.any],
+                                        optional=True)]
         addMethod("forEach", False, BuiltinTypes[IDLBuiltinType.Types.void],
                   foreachArguments)
 
@@ -5487,7 +5488,7 @@ class Parser(Tokenizer):
                 raise WebIDLError("%s cannot have %s argument" %
                                   ("getter" if getter else "deleter",
                                    "optional" if arguments[0].optional else "variadic"),
-                                   [arguments[0].location])
+                                  [arguments[0].location])
         if getter:
             if returnType.isVoid():
                 raise WebIDLError("getter cannot have void return type",
