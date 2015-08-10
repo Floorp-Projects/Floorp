@@ -84,7 +84,7 @@ WebappsRegistry.prototype = {
         break;
       case "Webapps:CheckInstalled:Return:OK":
         this.removeMessageListeners(aMessage.name);
-        Services.DOMRequest.fireSuccess(req, msg.app);
+        Services.DOMRequest.fireSuccess(req, createContentApplicationObject(this._window, msg.app));
         break;
       case "Webapps:GetInstalled:Return:OK":
         this.removeMessageListeners(aMessage.name);
