@@ -12,6 +12,7 @@
 #include "TaskQueue.h"
 #include "mozilla/ArrayUtils.h"
 #include "MockMediaResource.h"
+#include "VideoUtils.h"
 
 using namespace mozilla;
 using namespace mp4_demuxer;
