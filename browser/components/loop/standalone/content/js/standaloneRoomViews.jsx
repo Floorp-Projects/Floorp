@@ -90,6 +90,29 @@ loop.standaloneRoomViews = (function(mozL10n) {
       roomUsed: React.PropTypes.bool.isRequired
     },
 
+    componentDidMount: function() {
+      // Watch for messages from the waiting-tile iframe
+      window.addEventListener("message", this.recordTileClick);
+    },
+
+    componentWillUnmount: function() {
+      window.removeEventListener("message", this.recordTileClick);
+    },
+
+    recordTileClick: function(event) {
+      if (event.data === "tile-click") {
+        this.props.dispatcher.dispatch(new sharedActions.RecordClick({
+          linkInfo: "Tiles iframe click"
+        }));
+      }
+    },
+
+    recordTilesSupport: function() {
+      this.props.dispatcher.dispatch(new sharedActions.RecordClick({
+        linkInfo: "Tiles support link click"
+      }));
+    },
+
     _renderCallToActionLink: function() {
       if (this.props.isFirefox) {
         return (
@@ -155,7 +178,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
               <p className="room-waiting-area">
                 {mozL10n.get("rooms_read_while_wait_offer")}
                 <a href={loop.config.tilesSupportUrl}
-                  onClick={this.recordClick}
+                  onClick={this.recordTilesSupport}
                   rel="noreferrer"
                   target="_blank">
                   <i className="room-waiting-help"></i>
@@ -521,6 +544,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
   return {
     StandaloneRoomFooter: StandaloneRoomFooter,
     StandaloneRoomHeader: StandaloneRoomHeader,
+    StandaloneRoomInfoArea: StandaloneRoomInfoArea,
     StandaloneRoomView: StandaloneRoomView
   };
 })(navigator.mozL10n);
