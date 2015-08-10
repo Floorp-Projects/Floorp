@@ -29,7 +29,7 @@
         SimpleTest.waitForExplicitFinish();
 
         Task.spawn(function* () {
-          Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
+          const { DebuggerServer } = require("devtools/server/main");
           win = yield openWebIDE();
           win.AppManager.update("runtime-list");
 
@@ -60,7 +60,6 @@
 
           yield closeWebIDE(win);
 
-          const { DebuggerServer } = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
           DebuggerServer.destroy();
 
           SimpleTest.finish();

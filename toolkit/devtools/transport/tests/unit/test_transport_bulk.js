@@ -1,11 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let { DebuggerServer } =
-  Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
 let { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm", {});
 let { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
-let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 function run_test() {
   initTestDebuggerServer();

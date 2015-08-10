@@ -6,8 +6,6 @@
  * packets are scheduled simultaneously.
  */
 
-let { DebuggerServer } =
-  Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
 let { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm", {});
 let { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 
