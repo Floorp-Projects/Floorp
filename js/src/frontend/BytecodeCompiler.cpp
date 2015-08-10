@@ -57,7 +57,7 @@ class MOZ_STACK_CLASS BytecodeCompiler
     void setSourceArgumentsNotIncluded();
 
     JSScript* compileScript(HandleObject scopeChain, HandleScript evalCaller);
-    bool compileFunctionBody(MutableHandleFunction fun, const AutoNameVector& formals,
+    bool compileFunctionBody(MutableHandleFunction fun, Handle<PropertyNameVector> formals,
                              GeneratorKind generatorKind);
 
   private:
@@ -644,7 +644,8 @@ BytecodeCompiler::compileScript(HandleObject scopeChain, HandleScript evalCaller
 }
 
 bool
-BytecodeCompiler::compileFunctionBody(MutableHandleFunction fun, const AutoNameVector& formals,
+BytecodeCompiler::compileFunctionBody(MutableHandleFunction fun,
+                                      Handle<PropertyNameVector> formals,
                                       GeneratorKind generatorKind)
 {
     MOZ_ASSERT(fun);
@@ -824,7 +825,7 @@ frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const cha
 // handler attribute in an HTML <INPUT> tag, or in a Function() constructor.
 static bool
 CompileFunctionBody(JSContext* cx, MutableHandleFunction fun, const ReadOnlyCompileOptions& options,
-                    const AutoNameVector& formals, SourceBufferHolder& srcBuf,
+                    Handle<PropertyNameVector> formals, SourceBufferHolder& srcBuf,
                     Handle<ScopeObject*> enclosingStaticScope, GeneratorKind generatorKind)
 {
     MOZ_ASSERT(!options.isRunOnce);
@@ -841,7 +842,7 @@ CompileFunctionBody(JSContext* cx, MutableHandleFunction fun, const ReadOnlyComp
 bool
 frontend::CompileFunctionBody(JSContext* cx, MutableHandleFunction fun,
                               const ReadOnlyCompileOptions& options,
-                              const AutoNameVector& formals, JS::SourceBufferHolder& srcBuf,
+                              Handle<PropertyNameVector> formals, JS::SourceBufferHolder& srcBuf,
                               Handle<ScopeObject*> enclosingStaticScope)
 {
     return CompileFunctionBody(cx, fun, options, formals, srcBuf,
@@ -850,7 +851,8 @@ frontend::CompileFunctionBody(JSContext* cx, MutableHandleFunction fun,
 
 bool
 frontend::CompileStarGeneratorBody(JSContext* cx, MutableHandleFunction fun,
-                                   const ReadOnlyCompileOptions& options, const AutoNameVector& formals,
+                                   const ReadOnlyCompileOptions& options,
+                                   Handle<PropertyNameVector> formals,
                                    JS::SourceBufferHolder& srcBuf)
 {
     return CompileFunctionBody(cx, fun, options, formals, srcBuf, nullptr, StarGenerator);
