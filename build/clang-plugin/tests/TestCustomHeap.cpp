@@ -23,6 +23,6 @@ T *customAlloc() MOZ_HEAP_ALLOCATOR {
 
 template <typename T>
 void misuseX(T q) {
-  X *foo = customAlloc<X>(); // expected-error {{variable of type 'X' is not valid on the heap}}
-  X *foo2 = new (100) X(); // expected-error {{variable of type 'X' is not valid on the heap}}
+  X *foo = customAlloc<X>(); // expected-error {{variable of type 'X' is not valid on the heap}} expected-note {{value incorrectly allocated on the heap}}
+  X *foo2 = new (100) X(); // expected-error {{variable of type 'X' is not valid on the heap}} expected-note {{value incorrectly allocated on the heap}}
 }
