@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id={1191516}
+-->
+<head>
+  <title>Test for Bug {1191516}</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id={1191516}">Mozilla Bug {1191516}</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.7">
+
+var gManifestURL = "http://mochi.test:8888/tests/dom/apps/tests/file_app.sjs?apptype=hosted&getmanifest=true";
+var gGenerator = runTest();
+
+function debug(aMsg) {
+  //dump("== Tests debug == " + aMsg + "\n");
+}
+
+function go() {
+  SpecialPowers.pushPermissions(
+    [{ "type": "webapps-manage", "allow": 1, "context": document }],
+    function() { gGenerator.next() });
+}
+
+function continueTest() {
+  try {
+    gGenerator.next();
+  } catch (e if e instanceof StopIteration) {
+    finish();
+  }
+}
+
+function finish() {
+  SimpleTest.finish();
+}
+
+function cbError(aError) {
+  ok(false, "Error callback invoked " + aError.target.error.name);
+  finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+function runTest() {
+  SpecialPowers.setAllAppsLaunchable(true);
+
+  SpecialPowers.autoConfirmAppInstall(continueTest);
+  yield undefined;
+
+  SpecialPowers.autoConfirmAppUninstall(continueTest);
+  yield undefined;
+
+  var request = navigator.mozApps.install(gManifestURL);
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+
+  var installedApp = request.result;
+  ok(installedApp, "installedApp is non-null");
+  ok(installedApp.manifestURL === gManifestURL, "installedApp's manifestURL is correct");
+
+  var app;
+  request = navigator.mozApps.checkInstalled(gManifestURL);
+  request.onsuccess = function() {
+    app = request.result;
+    continueTest();
+  };
+  request.onerror = cbError;
+  yield undefined;
+
+  ok(app, "app is non-null");
+  ok(app.manifestURL === gManifestURL, "app's manifestURL is correct");
+
+  request = app.launch();
+  request.onsuccess = continueTest;
+  request.onerror = cbError;
+  yield undefined;
+
+  request = navigator.mozApps.mgmt.uninstall(app);
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+}
+
+addLoadEvent(go);
+
+</script>
+</pre>
+</body>
+</html>

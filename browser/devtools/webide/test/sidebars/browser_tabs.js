@@ -9,8 +9,7 @@ function test() {
   requestCompleteLog();
 
   Task.spawn(function*() {
-    const { DebuggerServer } =
-      Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
+    const { DebuggerServer } = require("devtools/server/main");
 
     Services.prefs.setBoolPref("devtools.webide.sidebars", true);
 

@@ -15,7 +15,7 @@ let chromeGlobal = this;
   let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
   const DevToolsUtils = require("devtools/toolkit/DevToolsUtils.js");
   const { dumpn } = DevToolsUtils;
-  const { DebuggerServer, ActorPool } = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
+  const { DebuggerServer, ActorPool } = require("devtools/server/main");
 
   // Note that this frame script may be evaluated in non-e10s build
   // In such case, DebuggerServer is already going to be initialized.

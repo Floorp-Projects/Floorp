@@ -62,6 +62,24 @@ ConvertErrorCodeToErrorString(int32_t aError)
     case nsIMobileMessageCallback::SIM_NOT_MATCHED_ERROR:
       errorStr = NS_LITERAL_STRING("SimNotMatchedError");
       break;
+    case nsIMobileMessageCallback::NETWORK_PROBLEMS_ERROR:
+      errorStr = NS_LITERAL_STRING("NetworkProblemsError");
+      break;
+    case nsIMobileMessageCallback::GENERAL_PROBLEMS_ERROR:
+      errorStr = NS_LITERAL_STRING("GeneralProblemsError");
+      break;
+    case nsIMobileMessageCallback::SERVICE_NOT_AVAILABLE_ERROR:
+      errorStr = NS_LITERAL_STRING("ServiceNotAvailableError");
+      break;
+    case nsIMobileMessageCallback::MESSAGE_TOO_LONG_FOR_NETWORK_ERROR:
+      errorStr = NS_LITERAL_STRING("MessageTooLongForNetworkError");
+      break;
+    case nsIMobileMessageCallback::SERVICE_NOT_SUPPORTED_ERROR:
+      errorStr = NS_LITERAL_STRING("ServiceNotSupportedError");
+      break;
+    case nsIMobileMessageCallback::RETRY_REQUIRED_ERROR:
+      errorStr = NS_LITERAL_STRING("RetryRequiredError");
+      break;
     default: // SUCCESS_NO_ERROR is handled above.
       MOZ_CRASH("Should never get here!");
   }

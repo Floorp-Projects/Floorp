@@ -5,8 +5,7 @@
  * Check regression when opening two tabs
  */
 
-let { DebuggerServer } =
-  Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
+let { DebuggerServer } = require("devtools/server/main");
 let { DebuggerClient } =
   Cu.import("resource://gre/modules/devtools/dbg-client.jsm", {});
 

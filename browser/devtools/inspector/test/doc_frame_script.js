@@ -39,7 +39,8 @@ addEventListener("DOMWindowCreated", () => {
  * @param {String} connPrefix
  */
 function getHighlighterActor(actorID, connPrefix) {
-  let {DebuggerServer} = Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
+  let {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm");
+  let {DebuggerServer} = require("devtools/server/main");
   if (!DebuggerServer.initialized) {
     return;
   }

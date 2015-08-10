@@ -19,7 +19,7 @@
         SimpleTest.waitForExplicitFinish();
 
         Task.spawn(function*() {
-          Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
+          const { DebuggerServer } = require("devtools/server/main");
           Services.prefs.setBoolPref("devtools.webide.sidebars", true);
 
           if (!DebuggerServer.initialized) {

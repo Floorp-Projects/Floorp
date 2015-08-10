@@ -31,13 +31,12 @@ function testThrowOutput()
     });
   });
 
-  let server = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {})
-               .DebuggerServer;
+  let { DebuggerServer } = require("devtools/server/main");
 
-  let longLength = server.LONG_STRING_LENGTH + 1;
+  let longLength = DebuggerServer.LONG_STRING_LENGTH + 1;
   let longString = new Array(longLength).join("a");
-  let shortedString = longString.substring(0, server.LONG_STRING_INITIAL_LENGTH) +
-                      "\u2026";
+  let shortedString = longString.substring(0,
+    DebuggerServer.LONG_STRING_INITIAL_LENGTH) + "\u2026";
 
   tests.push({
     method: "display",

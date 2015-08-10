@@ -4,13 +4,13 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(609692b0-1fc7-404a-91c4-eb2ec4d16c20)]
+[scriptable, uuid(19b24f93-7c02-4acf-addd-2f53bbb4e3fd)]
 interface nsIMobileMessageCallback : nsISupports
 {
   /**
    * All SMS related errors.
    * Make sure to keep this list in sync with the list in:
-   * embedding/android/GeckoSmsManager.java
+   * mobile/android/base/GeckoSmsManager.java
    */
   const unsigned short SUCCESS_NO_ERROR          = 0;
   const unsigned short NO_SIGNAL_ERROR           = 1;
@@ -24,6 +24,12 @@ interface nsIMobileMessageCallback : nsISupports
   const unsigned short NON_ACTIVE_SIM_CARD_ERROR = 9;
   const unsigned short STORAGE_FULL_ERROR        = 10;
   const unsigned short SIM_NOT_MATCHED_ERROR     = 11;
+  const unsigned short NETWORK_PROBLEMS_ERROR    = 12;
+  const unsigned short GENERAL_PROBLEMS_ERROR    = 13;
+  const unsigned short SERVICE_NOT_AVAILABLE_ERROR          = 14;
+  const unsigned short MESSAGE_TOO_LONG_FOR_NETWORK_ERROR   = 15;
+  const unsigned short SERVICE_NOT_SUPPORTED_ERROR          = 16;
+  const unsigned short RETRY_REQUIRED_ERROR      = 17;
 
   /**
    * |message| can be nsIDOMMoz{Mms,Sms}Message.

@@ -1,14 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let { DebuggerServer } =
-  Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
-let { DebuggerClient } =
-  Cu.import("resource://gre/modules/devtools/dbg-client.jsm", {});
 let { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm", {});
 let { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 let Pipe = CC("@mozilla.org/pipe;1", "nsIPipe", "init");
-let { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 function run_test() {
   initTestDebuggerServer();
