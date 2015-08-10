@@ -6348,7 +6348,7 @@ class Parser(Tokenizer):
                                 # We're not pickling for now, until it
                                 # becomes a speedup again.
                                 # , picklefile='WebIDLGrammar.pkl'
-                            )
+                                )
         logger.reportGrammarErrors()
 
         self._globalScope = IDLScope(BuiltinLocation("<Global Scope>"), None, None)
