@@ -262,6 +262,7 @@ add_task(function*() {
   });
 });
 
+requestLongerTimeout(2);
 add_task(function* test_page() {
   yield BrowserTestUtils.withNewTab({
     gBrowser,
