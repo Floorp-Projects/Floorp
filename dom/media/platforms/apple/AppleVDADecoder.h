@@ -8,6 +8,7 @@
 #define mozilla_AppleVDADecoder_h
 
 #include "PlatformDecoderModule.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "MP4Decoder.h"
 #include "nsIThread.h"
@@ -80,10 +81,24 @@ public:
     return true;
   }
 
-  nsresult OutputFrame(CVPixelBufferRef aImage,
-                       nsAutoPtr<AppleFrameRef> aFrameRef);
+  void DispatchOutputTask(already_AddRefed<nsIRunnable> aTask)
+  {
+    nsCOMPtr<nsIRunnable> task = aTask;
+    if (mIsShutDown || mIsFlushing) {
+      return;
+    }
+    mTaskQueue->Dispatch(task.forget());
+  }
 
- protected:
+  nsresult OutputFrame(CFRefPtr<CVPixelBufferRef> aImage,
+                       AppleFrameRef aFrameRef);
+
+protected:
+  // Flush and Drain operation, always run
+  virtual void ProcessFlush();
+  virtual void ProcessDrain();
+  virtual void ProcessShutdown();
+
   AppleFrameRef* CreateAppleFrameRef(const MediaRawData* aSample);
   void DrainReorderedFrames();
   void ClearReorderedFrames();
@@ -99,8 +114,20 @@ public:
   uint32_t mDisplayWidth;
   uint32_t mDisplayHeight;
   uint32_t mMaxRefFrames;
+  // Increased when Input is called, and decreased when ProcessFrame runs.
+  // Reaching 0 indicates that there's no pending Input.
+  Atomic<uint32_t> mInputIncoming;
+  Atomic<bool> mIsShutDown;
+
   bool mUseSoftwareImages;
   bool mIs106;
+
+  // For wait on mIsFlushing during Shutdown() process.
+  Monitor mMonitor;
+  // Set on reader/decode thread calling Flush() to indicate that output is
+  // not required and so input samples on mTaskQueue need not be processed.
+  // Cleared on mTaskQueue in ProcessDrain().
+  Atomic<bool> mIsFlushing;
 
 private:
   VDADecoder mDecoder;
