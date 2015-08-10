@@ -135,7 +135,7 @@ private:
 
     JS::Rooted<JS::Value> messageData(aCx);
     if (!mBuffer.read(aCx, &messageData,
-                      WorkerStructuredCloneCallbacks(true), &closure)) {
+                      WorkerStructuredCloneCallbacks(), &closure)) {
       xpc::Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
       return NS_ERROR_FAILURE;
     }
@@ -195,7 +195,7 @@ ServiceWorkerClient::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
     transferable.setObject(*array);
   }
 
-  const JSStructuredCloneCallbacks* callbacks = WorkerStructuredCloneCallbacks(false);
+  const JSStructuredCloneCallbacks* callbacks = WorkerStructuredCloneCallbacks();
 
   WorkerStructuredCloneClosure closure;
 
