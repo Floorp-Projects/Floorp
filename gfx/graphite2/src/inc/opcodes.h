@@ -241,20 +241,24 @@ ENDOP
 STARTOP(put_copy)
     declare_params(1);
     const int  slot_ref = int8(*param);
-    if (is && (slot_ref ||is != *map))
+    if (is)
     {
-        int16 *tempUserAttrs = is->userAttrs();
         slotref ref = slotat(slot_ref);
-        if (ref)
+        if (ref && ref != is)
         {
-            memcpy(tempUserAttrs, ref->userAttrs(), seg.numAttrs() * sizeof(uint16));
+            int16 *tempUserAttrs = is->userAttrs();
+            if (is->attachedTo() || is->firstChild()) DIE
             Slot *prev = is->prev();
             Slot *next = is->next();
-            memcpy(is, slotat(slot_ref), sizeof(Slot));
+            memcpy(tempUserAttrs, ref->userAttrs(), seg.numAttrs() * sizeof(uint16));
+            memcpy(is, ref, sizeof(Slot));
+            is->firstChild(NULL);
+            is->nextSibling(NULL);
             is->userAttrs(tempUserAttrs);
             is->next(next);
             is->prev(prev);
-            is->sibling(NULL);
+            if (is->attachedTo())
+                is->attachedTo()->child(is);
         }
         is->markCopied(false);
         is->markDeleted(false);
@@ -316,7 +320,7 @@ STARTOP(insert)
 ENDOP
 
 STARTOP(delete_)
-    if (!is) DIE
+    if (!is || is->isDeleted()) DIE
     is->markDeleted(true);
     if (is->prev())
         is->prev()->next(is->next());
@@ -644,3 +648,37 @@ STARTOP(temp_copy)
     newSlot->markCopied(true);
     *map = newSlot;
 ENDOP
+
+STARTOP(band)
+    binop(&);
+ENDOP
+
+STARTOP(bor)
+    binop(|);
+ENDOP
+
+STARTOP(bnot)
+    *sp = ~*sp;
+ENDOP
+
+STARTOP(setbits)
+    declare_params(4);
+    const uint16 m  = uint16(param[0]) << 8
+                    | uint8(param[1]);
+    const uint16 v  = uint16(param[2]) << 8
+                    | uint8(param[3]);
+    *sp = ((*sp) & ~m) | v;
+ENDOP
+
+STARTOP(set_feat)
+    declare_params(2);
+    const unsigned int  feat        = uint8(param[0]);
+    const int           slot_ref    = int8(param[1]);
+    slotref slot = slotat(slot_ref);
+    if (slot)
+    {
+        uint8 fid = seg.charinfo(slot->original())->fid();
+        seg.setFeature(fid, feat, pop());
+    }
+ENDOP
+

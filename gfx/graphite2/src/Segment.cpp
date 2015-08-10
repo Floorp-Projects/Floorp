@@ -37,6 +37,7 @@ of the License or (at your option) any later version.
 #include "inc/Main.h"
 #include "inc/CmapCache.h"
 #include "inc/Bidi.h"
+#include "inc/Collider.h"
 #include "graphite2/Segment.h"
 
 
@@ -46,6 +47,7 @@ Segment::Segment(unsigned int numchars, const Face* face, uint32 script, int tex
 : m_freeSlots(NULL),
   m_freeJustifies(NULL),
   m_charinfo(new CharInfo[numchars]),
+  m_collisions(NULL),
   m_face(face),
   m_silf(face->chooseSilf(script)),
   m_first(NULL),
@@ -55,7 +57,8 @@ Segment::Segment(unsigned int numchars, const Face* face, uint32 script, int tex
   m_numCharinfo(numchars),
   m_passBits(m_silf->aPassBits() ? -1 : 0),
   m_defaultOriginal(0),
-  m_dir(textDir)
+  m_dir(textDir),
+  m_flags(0)
 {
     freeSlot(newSlot());
     m_bufSize = log_binary(numchars)+1;
@@ -335,7 +338,7 @@ void Segment::linkClusters(Slot *s, Slot * end)
     }
 }
 
-Position Segment::positionSlots(const Font *font, Slot * iStart, Slot * iEnd)
+Position Segment::positionSlots(const Font *font, Slot * iStart, Slot * iEnd, bool isFinal)
 {
     Position currpos(0., 0.);
     float clusterMin = 0.;
@@ -349,7 +352,7 @@ Position Segment::positionSlots(const Font *font, Slot * iStart, Slot * iEnd)
         for (Slot * s = iEnd, * const end = iStart->prev(); s && s != end; s = s->prev())
         {
             if (s->isBase())
-                currpos = s->finalise(this, font, currpos, bbox, 0, clusterMin = currpos.x);
+                currpos = s->finalise(this, font, currpos, bbox, 0, clusterMin = currpos.x, isFinal);
         }
     }
     else
@@ -357,7 +360,7 @@ Position Segment::positionSlots(const Font *font, Slot * iStart, Slot * iEnd)
         for (Slot * s = iStart, * const end = iEnd->next(); s && s != end; s = s->next())
         {
             if (s->isBase())
-                currpos = s->finalise(this, font, currpos, bbox, 0, clusterMin = currpos.x);
+                currpos = s->finalise(this, font, currpos, bbox, 0, clusterMin = currpos.x, isFinal);
         }
     }
     return currpos;
@@ -434,11 +437,6 @@ bool Segment::read_text(const Face *face, const Features* pFeats/*must not be NU
     return true;
 }
 
-void Segment::prepare_pos(const Font * /*font*/)
-{
-    // copy key changeable metrics into slot (if any);
-}
-
 Slot *process_bidi(Slot *start, int level, int prelevel, int &nextLevel, int dirover, int isol, int &cisol, int &isolerr, int &embederr, int init, Segment *seg, uint8 aMirror, BracketPairStack &stack);
 void resolveImplicit(Slot *s, Segment *seg, uint8 aMirror);
 void resolveWhitespace(int baseLevel, Slot *s);
@@ -462,7 +460,7 @@ void Segment::bidiPass(uint8 aBidi, int paradir, uint8 aMirror)
         }
         bmask |= (1 << s->getBidiClass());
         s->setBidiLevel(baseLevel);
-        if (glyphAttr(s->gid(), aMirror) && s->getBidiClass() == 21)
+        if (s->getBidiClass() == 21)
             ++ssize;
     }
 
@@ -492,3 +490,16 @@ void Segment::bidiPass(uint8 aBidi, int paradir, uint8 aMirror)
     }
 }
 
+bool Segment::initCollisions()
+{
+    if (m_collisions) free(m_collisions);
+    Slot *p = m_first;
+    m_collisions = gralloc<SlotCollision>(slotCount());
+    if (!m_collisions) return false;
+    for (unsigned short i = 0; i < slotCount(); ++i)
+    {
+        ::new (m_collisions + p->index()) SlotCollision(this, p);
+        p = p->next();
+    }
+    return true;
+}
