@@ -1744,8 +1744,7 @@ Debugger::appendAllocationSite(JSContext* cx, HandleObject obj, HandleSavedFrame
     auto className = obj->getClass()->name;
     auto size = JS::ubi::Node(obj.get()).size(cx->runtime()->debuggerMallocSizeOf);
 
-    if (!allocationsLog.emplaceBack(wrappedFrame, when, className, ctorName, size))
-    {
+    if (!allocationsLog.emplaceBack(wrappedFrame, when, className, ctorName, size)) {
         ReportOutOfMemory(cx);
         return false;
     }

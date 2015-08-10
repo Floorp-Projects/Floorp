@@ -7,8 +7,8 @@
 #ifndef js_TraceableFifo_h
 #define js_TraceableFifo_h
 
+#include "ds/Fifo.h"
 #include "js/RootingAPI.h"
-#include "js/Fifo.h"
 
 namespace js {
 
