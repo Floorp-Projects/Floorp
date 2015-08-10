@@ -8,7 +8,7 @@
 #include "nsISupportsArray.idl"
 #include "nsIDragSession.idl"
 #include "nsIScriptableRegion.idl"
-
+#include "nsIContentPolicyBase.idl"
 
 interface nsIDOMNode;
 interface nsIDOMDragEvent;
@@ -44,9 +44,15 @@ interface nsIDragService : nsISupports
     * @param  aRegion - a region containing rectangles for cursor feedback, 
     *            in window coordinates.
     * @param  aActionType - specified which of copy/move/link are allowed
+    * @param  aContentPolicyType - the contentPolicyType that will be
+    *           passed to the loadInfo when creating a new channel
+    *           (defaults to TYPE_OTHER)
     */
-  void invokeDragSession ( in nsIDOMNode aDOMNode, in nsISupportsArray aTransferables, 
-                             in nsIScriptableRegion aRegion, in unsigned long aActionType );
+  void invokeDragSession (in nsIDOMNode aDOMNode,
+                          in nsISupportsArray aTransferables, 
+                          in nsIScriptableRegion aRegion,
+                          in unsigned long aActionType,
+                          [optional] in nsContentPolicyType aContentPolicyType);
 
   /**
    * Starts a modal drag session using an image. The first four arguments are
