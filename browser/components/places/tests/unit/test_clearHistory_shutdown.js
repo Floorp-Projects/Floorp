@@ -71,13 +71,11 @@ add_task(function* test_execute() {
   }
   do_print("Add cache.");
   yield storeCache(FTP_URL, "testData");
-});
 
-add_task(function* run_test_continue() {
   do_print("Simulate and wait shutdown.");
   yield shutdownPlaces();
 
-  let stmt = DBConn().createStatement(
+  let stmt = DBConn(true).createStatement(
     "SELECT id FROM moz_places WHERE url = :page_url "
   );
 
@@ -93,13 +91,7 @@ add_task(function* run_test_continue() {
 
   do_print("Check cache");
   // Check cache.
-  let promiseCacheChecked = checkCache(FTP_URL);
-
-  do_print("Shutdown the download manager");
-  // Shutdown the download manager.
-  Services.obs.notifyObservers(null, "quit-application", null);
-
-  yield promiseCacheChecked;
+  yield checkCache(FTP_URL);
 });
 
 function storeCache(aURL, aContent) {
