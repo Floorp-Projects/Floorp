@@ -130,8 +130,20 @@ DoContentSecurityChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
     case nsIContentPolicy::TYPE_IMAGE:
     case nsIContentPolicy::TYPE_STYLESHEET:
     case nsIContentPolicy::TYPE_OBJECT:
-    case nsIContentPolicy::TYPE_DOCUMENT:
-    case nsIContentPolicy::TYPE_SUBDOCUMENT:
+    case nsIContentPolicy::TYPE_DOCUMENT: {
+      MOZ_ASSERT(false, "contentPolicyType not supported yet");
+      break;
+    }
+
+    case nsIContentPolicy::TYPE_SUBDOCUMENT: {
+      mimeTypeGuess = NS_LITERAL_CSTRING("text/html");
+      requestingContext = aLoadInfo->LoadingNode();
+      MOZ_ASSERT(!requestingContext ||
+                 requestingContext->NodeType() == nsIDOMNode::DOCUMENT_NODE,
+                 "type_subdocument requires requestingContext of type Document");
+      break;
+    }
+
     case nsIContentPolicy::TYPE_REFRESH:
     case nsIContentPolicy::TYPE_XBL:
     case nsIContentPolicy::TYPE_PING: {
