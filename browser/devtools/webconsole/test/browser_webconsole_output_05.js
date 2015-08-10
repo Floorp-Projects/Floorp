@@ -11,7 +11,14 @@ const TEST_URI = "data:text/html;charset=utf8,test for console output - 05";
 const ELLIPSIS = Services.prefs.getComplexValue("intl.ellipsis",
   Ci.nsIPrefLocalizedString).data;
 
-let dateNow = Date.now();
+// March, 1960: The first implementation of Lisp. From Wikipedia:
+//
+// > Lisp was first implemented by Steve Russell on an IBM 704 computer. Russell
+// > had read McCarthy's paper, and realized (to McCarthy's surprise) that the
+// > Lisp eval function could be implemented in machine code. The result was a
+// > working Lisp interpreter which could be used to run Lisp programs, or more
+// > properly, 'evaluate Lisp expressions.'
+let testDate = -310435200000;
 
 let inputTests = [
   // 0
@@ -49,9 +56,9 @@ let inputTests = [
 
   // 5
   {
-    input: "new Date(" + dateNow + ")",
-    output: "Date " + (new Date(dateNow)).toISOString(),
-    printOutput: (new Date(dateNow)).toString(),
+    input: "new Date(" + testDate + ")",
+    output: "Date " + (new Date(testDate)).toISOString(),
+    printOutput: (new Date(testDate)).toString(),
     inspectable: true,
   },
 
@@ -132,6 +139,6 @@ function test() {
 }
 
 function finishUp() {
-  inputTests = dateNow = null;
+  inputTests = testDate = null;
   finishTest();
 }
