@@ -9,6 +9,7 @@
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
 #include "mozilla/ReentrantMonitor.h"
+#include "MediaResource.h"
 
 namespace mozilla {
 

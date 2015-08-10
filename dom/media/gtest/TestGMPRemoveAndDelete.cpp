@@ -12,6 +12,10 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsIObserverService.h"
 #include "GMPVideoDecoderProxy.h"
+#include "GMPServiceParent.h"
+#include "GMPService.h"
+#include "GMPUtils.h"
+#include "mozilla/StaticPtr.h"
 
 #define GMP_DIR_NAME NS_LITERAL_STRING("gmp-fakeopenh264")
 #define GMP_OLD_VERSION NS_LITERAL_STRING("1.0")
@@ -20,6 +24,9 @@
 #define GMP_DELETED_TOPIC "gmp-directory-deleted"
 
 #define EXPECT_OK(X) EXPECT_TRUE(NS_SUCCEEDED(X))
+
+using namespace mozilla;
+using namespace mozilla::gmp;
 
 class GMPRemoveTest : public nsIObserver
                     , public GMPVideoDecoderCallbackProxy
