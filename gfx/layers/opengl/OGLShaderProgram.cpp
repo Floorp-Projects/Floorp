@@ -47,6 +47,7 @@ AddUniforms(ProgramProfileOGL& aProfile)
         "uMaskTexture",
         "uRenderColor",
         "uTexCoordMultiplier",
+        "uCbCrTexCoordMultiplier",
         "uTexturePass2",
         "uColorMatrix",
         "uColorMatrixVector",
@@ -108,6 +109,14 @@ void
 ShaderConfigOGL::SetYCbCr(bool aEnabled)
 {
   SetFeature(ENABLE_TEXTURE_YCBCR, aEnabled);
+  MOZ_ASSERT(!(mFeatures & ENABLE_TEXTURE_NV12));
+}
+
+void
+ShaderConfigOGL::SetNV12(bool aEnabled)
+{
+  SetFeature(ENABLE_TEXTURE_NV12, aEnabled);
+  MOZ_ASSERT(!(mFeatures & ENABLE_TEXTURE_YCBCR));
 }
 
 void
@@ -301,6 +310,10 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
 
   if (aConfig.mFeatures & ENABLE_TEXTURE_RECT) {
     fs << "uniform vec2 uTexCoordMultiplier;" << endl;
+    if (aConfig.mFeatures & ENABLE_TEXTURE_YCBCR ||
+        aConfig.mFeatures & ENABLE_TEXTURE_NV12) {
+      fs << "uniform vec2 uCbCrTexCoordMultiplier;" << endl;
+    }
     sampler2D = "sampler2DRect";
     texture2D = "texture2DRect";
   }
@@ -313,6 +326,9 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
     fs << "uniform sampler2D uYTexture;" << endl;
     fs << "uniform sampler2D uCbTexture;" << endl;
     fs << "uniform sampler2D uCrTexture;" << endl;
+  } else if (aConfig.mFeatures & ENABLE_TEXTURE_NV12) {
+    fs << "uniform " << sampler2D << " uYTexture;" << endl;
+    fs << "uniform " << sampler2D << " uCbTexture;" << endl;
   } else if (aConfig.mFeatures & ENABLE_TEXTURE_COMPONENT_ALPHA) {
     fs << "uniform sampler2D uBlackTexture;" << endl;
     fs << "uniform sampler2D uWhiteTexture;" << endl;
@@ -334,10 +350,29 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
   if (!(aConfig.mFeatures & ENABLE_RENDER_COLOR)) {
     fs << "vec4 sample(vec2 coord) {" << endl;
     fs << "  vec4 color;" << endl;
-    if (aConfig.mFeatures & ENABLE_TEXTURE_YCBCR) {
-      fs << "  COLOR_PRECISION float y = texture2D(uYTexture, coord).r;" << endl;
-      fs << "  COLOR_PRECISION float cb = texture2D(uCbTexture, coord).r;" << endl;
-      fs << "  COLOR_PRECISION float cr = texture2D(uCrTexture, coord).r;" << endl;
+    if (aConfig.mFeatures & ENABLE_TEXTURE_YCBCR ||
+        aConfig.mFeatures & ENABLE_TEXTURE_NV12) {
+      if (aConfig.mFeatures & ENABLE_TEXTURE_YCBCR) {
+        if (aConfig.mFeatures & ENABLE_TEXTURE_RECT) {
+          fs << "  COLOR_PRECISION float y = texture2D(uYTexture, coord * uTexCoordMultiplier).r;" << endl;
+          fs << "  COLOR_PRECISION float cb = texture2D(uCbTexture, coord * uCbCrTexCoordMultiplier).r;" << endl;
+          fs << "  COLOR_PRECISION float cr = texture2D(uCrTexture, coord * uCbCrTexCoordMultiplier).r;" << endl;
+        } else {
+          fs << "  COLOR_PRECISION float y = texture2D(uYTexture, coord).r;" << endl;
+          fs << "  COLOR_PRECISION float cb = texture2D(uCbTexture, coord).r;" << endl;
+          fs << "  COLOR_PRECISION float cr = texture2D(uCrTexture, coord).r;" << endl;
+        }
+      } else {
+        if (aConfig.mFeatures & ENABLE_TEXTURE_RECT) {
+          fs << "  COLOR_PRECISION float y = " << texture2D << "(uYTexture, coord * uTexCoordMultiplier).r;" << endl;
+          fs << "  COLOR_PRECISION float cb = " << texture2D << "(uCbTexture, coord * uCbCrTexCoordMultiplier).r;" << endl;
+          fs << "  COLOR_PRECISION float cr = " << texture2D << "(uCbTexture, coord * uCbCrTexCoordMultiplier).a;" << endl;
+        } else {
+          fs << "  COLOR_PRECISION float y = " << texture2D << "(uYTexture, coord).r;" << endl;
+          fs << "  COLOR_PRECISION float cb = " << texture2D << "(uCbTexture, coord).r;" << endl;
+          fs << "  COLOR_PRECISION float cr = " << texture2D << "(uCbTexture, coord).a;" << endl;
+        }
+      }
 
       /* From Rec601:
 [R]   [1.1643835616438356,  0.0,                 1.5960267857142858]      [ Y -  16]
@@ -365,7 +400,11 @@ For [0,1] instead of [0,255], and to 5 places:
       fs << "  else" << endl;
       fs << "    color = alphas;" << endl;
     } else {
-      fs << "  color = " << texture2D << "(uTexture, coord);" << endl;
+      if (aConfig.mFeatures & ENABLE_TEXTURE_RECT) {
+        fs << "  color = " << texture2D << "(uTexture, coord * uTexCoordMultiplier);" << endl;
+      } else {
+        fs << "  color = " << texture2D << "(uTexture, coord);" << endl;
+      }
     }
     if (aConfig.mFeatures & ENABLE_TEXTURE_RB_SWAP) {
       fs << "  color = color.bgra;" << endl;
@@ -404,11 +443,7 @@ For [0,1] instead of [0,255], and to 5 places:
   if (aConfig.mFeatures & ENABLE_RENDER_COLOR) {
     fs << "  vec4 color = uRenderColor;" << endl;
   } else {
-    if (aConfig.mFeatures & ENABLE_TEXTURE_RECT) {
-      fs << "  vec4 color = sample(vTexCoord * uTexCoordMultiplier);" << endl;
-    } else {
-      fs << "  vec4 color = sample(vTexCoord);" << endl;
-    }
+    fs << "  vec4 color = sample(vTexCoord);" << endl;
     if (aConfig.mFeatures & ENABLE_BLUR) {
       fs << "  color = blur(color, vTexCoord);" << endl;
     }
@@ -455,6 +490,8 @@ For [0,1] instead of [0,255], and to 5 places:
   } else {
     if (aConfig.mFeatures & ENABLE_TEXTURE_YCBCR) {
       result.mTextureCount = 3;
+    } else if (aConfig.mFeatures & ENABLE_TEXTURE_NV12) {
+      result.mTextureCount = 2;
     } else if (aConfig.mFeatures & ENABLE_TEXTURE_COMPONENT_ALPHA) {
       result.mTextureCount = 2;
     } else {

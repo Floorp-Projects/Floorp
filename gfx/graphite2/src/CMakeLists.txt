@@ -78,15 +78,18 @@ add_library(graphite2 SHARED
     CachedFace.cpp
     CmapCache.cpp
     Code.cpp
+    Collider.cpp
+    Decompressor.cpp
     Face.cpp
     FeatureMap.cpp
     Font.cpp
     GlyphFace.cpp
     GlyphCache.cpp
+    Intervals.cpp
     Justifier.cpp
     NameTable.cpp
     Pass.cpp
-    Rule.cpp
+    Position.cpp
     Segment.cpp
     Silf.cpp
     Slot.cpp
@@ -112,7 +115,7 @@ endif (${CMAKE_BUILD_TYPE} STREQUAL "ClangASN")
 
 if  (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     set_target_properties(graphite2 PROPERTIES 
-        COMPILE_FLAGS   "-Wall -Wextra -Wno-unknown-pragmas -Wendif-labels -Wshadow -Wctor-dtor-privacy -Wnon-virtual-dtor -fno-rtti -fno-exceptions -fvisibility=hidden -fvisibility-inlines-hidden -fno-stack-protector"
+        COMPILE_FLAGS   "-Wall -Wextra -Wno-unknown-pragmas -Wendif-labels -Wshadow -Wctor-dtor-privacy -Wnon-virtual-dtor -fno-rtti -fno-exceptions -fvisibility=hidden -fvisibility-inlines-hidden -fno-stack-protector -Wdouble-promotion"
         LINK_FLAGS      "-nodefaultlibs ${GRAPHITE_LINK_FLAGS}" 
         LINKER_LANGUAGE C)
     if (${CMAKE_CXX_COMPILER} MATCHES  ".*mingw.*")

@@ -5197,6 +5197,10 @@ nsHttpChannel::BeginConnect()
         // If this is a packaged app resource, the content will be fetched
         // by the packaged app service into the cache, and the cache entry will
         // be passed to OnCacheEntryAvailable.
+
+        // Pass the original load flags to the packaged app request.
+        uint32_t loadFlags = mLoadFlags;
+
         mLoadFlags |= LOAD_ONLY_FROM_CACHE;
         mLoadFlags |= LOAD_FROM_CACHE;
         mLoadFlags &= ~VALIDATE_ALWAYS;
@@ -5207,7 +5211,9 @@ nsHttpChannel::BeginConnect()
             return rv;
         }
 
-        rv = pas->RequestURI(mURI, GetLoadContextInfo(this), this);
+        nsCOMPtr<nsIPrincipal> principal = GetURIPrincipal();
+        nsCOMPtr<nsILoadContextInfo> loadInfo = GetLoadContextInfo(this);
+        rv = pas->GetResource(principal, loadFlags, loadInfo, this);
         if (NS_FAILED(rv)) {
             AsyncAbort(rv);
         }

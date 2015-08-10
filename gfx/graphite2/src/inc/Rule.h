@@ -53,8 +53,6 @@ private:
 
 inline Rule::~Rule()
 {
-  delete constraint;
-  delete action;
 }
 
 

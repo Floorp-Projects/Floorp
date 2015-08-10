@@ -43,7 +43,7 @@ of the License or (at your option) any later version.
 //      level - any byte
 static const opcode_t opcode_table[] = 
 {
-    {{do2(nop)},                                    0,  "NOP"},
+    {{do2(nop)},                                    0, "NOP"},
 
     {{do2(push_byte)},                              1, "PUSH_BYTE"},                // number
     {{do2(push_byte_u)},                            1, "PUSH_BYTE_U"},              // number
@@ -114,6 +114,11 @@ static const opcode_t opcode_table[] =
     {{do_(put_glyph), NILOP},                       2, "PUT_GLYPH"},                // output_class output_class
     {{do2(push_glyph_attr)},                        3, "PUSH_GLYPH_ATTR"},          // gattrnum gattrnum slot
     {{do2(push_att_to_glyph_attr)},                 3, "PUSH_ATT_TO_GLYPH_ATTR"},   // gattrnum gattrnum slot
+    {{do2(bor)},                                    0, "BITOR"},
+    {{do2(band)},                                   0, "BITAND"},
+    {{do2(bnot)},                                   0, "BITNOT"},   // 0x40
+    {{do2(setbits)},                                4, "BITSET"},
+    {{do2(set_feat)},                               2, "SET_FEAT"},
     // private opcodes for internal use only, comes after all other on disk opcodes.
     {{do_(temp_copy), NILOP},                       0, "TEMP_COPY"}
 };
