@@ -96,7 +96,6 @@ let gSyncPane = {
                   "weave:service:setup-complete",
                   "weave:service:logout:finish",
                   FxAccountsCommon.ONVERIFIED_NOTIFICATION,
-                  FxAccountsCommon.ONLOGIN_NOTIFICATION,
                   FxAccountsCommon.ON_PROFILE_CHANGE_NOTIFICATION,
                   ];
     let migrateTopic = "fxa-migration:state-changed";
