@@ -4,24 +4,22 @@
 
 "use strict";
 
-// Test that after a color change, the image preview tooltip in the same
+// Tests that after a color change, the image preview tooltip in the same
 // property is displayed and positioned correctly.
 // See bug 979292
 
-const PAGE_CONTENT = [
-  '<style type="text/css">',
-  '  body {',
-  '    background: url("chrome://global/skin/icons/warning-64.png"), linear-gradient(white, #F06 400px);',
-  '  }',
-  '</style>',
-  'Testing the color picker tooltip!'
-].join("\n");
+const TEST_URI = `
+  <style type="text/css">
+    body {
+      background: url("chrome://global/skin/icons/warning-64.png"), linear-gradient(white, #F06 400px);
+    }
+  </style>
+  Testing the color picker tooltip!
+`;
 
 add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8,rule view color picker tooltip test");
-  content.document.body.innerHTML = PAGE_CONTENT;
-  let {toolbox, inspector, view} = yield openRuleView();
-
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {view} = yield openRuleView();
   let value = getRuleViewProperty(view, "body", "background").valueSpan;
   let swatch = value.querySelectorAll(".ruleview-colorswatch")[1];
   let url = value.querySelector(".theme-link");
@@ -30,7 +28,8 @@ add_task(function*() {
 
 function* testImageTooltipAfterColorChange(swatch, url, ruleView) {
   info("First, verify that the image preview tooltip works");
-  let anchor = yield isHoverTooltipTarget(ruleView.tooltips.previewTooltip, url);
+  let anchor = yield isHoverTooltipTarget(ruleView.tooltips.previewTooltip,
+                                          url);
   ok(anchor, "The image preview tooltip is shown on the url span");
   is(anchor, url, "The anchor returned by the showOnHover callback is correct");
 
@@ -53,7 +52,8 @@ function* testImageTooltipAfterColorChange(swatch, url, ruleView) {
   info("Verify again that the image preview tooltip works");
   // After a color change, the property is re-populated, we need to get the new
   // dom node
-  url = getRuleViewProperty(ruleView, "body", "background").valueSpan.querySelector(".theme-link");
+  url = getRuleViewProperty(ruleView, "body", "background").valueSpan
+    .querySelector(".theme-link");
   anchor = yield isHoverTooltipTarget(ruleView.tooltips.previewTooltip, url);
   ok(anchor, "The image preview tooltip is shown on the url span");
   is(anchor, url, "The anchor returned by the showOnHover callback is correct");

@@ -6,19 +6,18 @@
 
 // Tests that the no results placeholder works properly.
 
+const TEST_URI = `
+  <style type="text/css">
+    .matches {
+      color: #F00;
+    }
+  </style>
+  <span id="matches" class="matches">Some styled text</span>
+`;
+
 add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8,no results placeholder test");
-
-  info("Creating the test document");
-  content.document.body.innerHTML = '<style type="text/css"> ' +
-    '.matches {color: #F00;}</style>' +
-    '<span id="matches" class="matches">Some styled text</span>';
-  content.document.title = "Tests that the no results placeholder works properly";
-
-  info("Opening the computed view");
-  let {toolbox, inspector, view} = yield openComputedView();
-
-  info("Selecting the test node");
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openComputedView();
   yield selectNode("#matches", inspector);
 
   yield enterInvalidFilter(inspector, view);
@@ -36,7 +35,7 @@ function* enterInvalidFilter(inspector, computedView) {
 
   let onRefreshed = inspector.once("computed-view-refreshed");
   searchbar.focus();
-  synthesizeKeys(searchTerm, computedView.styleWindow)
+  synthesizeKeys(searchTerm, computedView.styleWindow);
   yield onRefreshed;
 }
 

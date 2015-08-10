@@ -20,9 +20,8 @@ const {
   CssDocsTooltip,
   SwatchFilterTooltip
 } = require("devtools/shared/widgets/Tooltip");
-const {CssLogic} = require("devtools/styleinspector/css-logic");
 const EventEmitter = require("devtools/toolkit/event-emitter");
-const {Promise:promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
+const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -41,8 +40,9 @@ const VIEW_NODE_LOCATION_TYPE = exports.VIEW_NODE_LOCATION_TYPE = 5;
 
 /**
  * Manages all highlighters in the style-inspector.
- * @param {CssRuleView|CssComputedView} view Either the rule-view or computed-view
- * panel
+ *
+ * @param {CssRuleView|CssComputedView} view
+ *        Either the rule-view or computed-view panel
  */
 function HighlightersOverlay(view) {
   this.view = view;
@@ -60,7 +60,8 @@ function HighlightersOverlay(view) {
 
   // Only initialize the overlay if at least one of the highlighter types is
   // supported
-  this.supportsHighlighters = this.highlighterUtils.supportsCustomHighlighters();
+  this.supportsHighlighters =
+    this.highlighterUtils.supportsCustomHighlighters();
 
   EventEmitter.decorate(this);
 }
@@ -138,13 +139,14 @@ HighlightersOverlay.prototype = {
     }
   },
 
-  _onMouseLeave: function(event) {
+  _onMouseLeave: function() {
     this._lastHovered = null;
     this._hideCurrent();
   },
 
   /**
    * Is the current hovered node a css transform property value in the rule-view
+   *
    * @param {Object} nodeInfo
    * @return {Boolean}
    */
@@ -160,6 +162,7 @@ HighlightersOverlay.prototype = {
   /**
    * Is the current hovered node a css transform property value in the
    * computed-view
+   *
    * @param {Object} nodeInfo
    * @return {Boolean}
    */
@@ -231,8 +234,9 @@ HighlightersOverlay.prototype = {
 
 /**
  * Manages all tooltips in the style-inspector.
- * @param {CssRuleView|CssComputedView} view Either the rule-view or computed-view
- * panel
+ *
+ * @param {CssRuleView|CssComputedView} view
+ *        Either the rule-view or computed-view panel
  */
 function TooltipsOverlay(view) {
   this.view = view;
@@ -263,21 +267,23 @@ TooltipsOverlay.prototype = {
       return;
     }
 
+    let panelDoc = this.view.inspector.panelDoc;
+
     // Image, fonts, ... preview tooltip
-    this.previewTooltip = new Tooltip(this.view.inspector.panelDoc);
+    this.previewTooltip = new Tooltip(panelDoc);
     this.previewTooltip.startTogglingOnHover(this.view.element,
       this._onPreviewTooltipTargetHover.bind(this));
 
     // MDN CSS help tooltip
-    this.cssDocs = new CssDocsTooltip(this.view.inspector.panelDoc);
+    this.cssDocs = new CssDocsTooltip(panelDoc);
 
     if (this.isRuleView) {
       // Color picker tooltip
-      this.colorPicker = new SwatchColorPickerTooltip(this.view.inspector.panelDoc);
+      this.colorPicker = new SwatchColorPickerTooltip(panelDoc);
       // Cubic bezier tooltip
-      this.cubicBezier = new SwatchCubicBezierTooltip(this.view.inspector.panelDoc);
+      this.cubicBezier = new SwatchCubicBezierTooltip(panelDoc);
       // Filter editor tooltip
-      this.filterEditor = new SwatchFilterTooltip(this.view.inspector.panelDoc);
+      this.filterEditor = new SwatchFilterTooltip(panelDoc);
     }
 
     this._isStarted = true;
@@ -317,15 +323,17 @@ TooltipsOverlay.prototype = {
   /**
    * Given a hovered node info, find out which type of tooltip should be shown,
    * if any
+   *
    * @param {Object} nodeInfo
    * @return {String} The tooltip type to be shown, or null
    */
-  _getTooltipType: function({type, value:prop}) {
+  _getTooltipType: function({type, value: prop}) {
     let tooltipType = null;
     let inspector = this.view.inspector;
 
     // Image preview tooltip
-    if (type === VIEW_NODE_IMAGE_URL_TYPE && inspector.hasUrlToImageDataResolver) {
+    if (type === VIEW_NODE_IMAGE_URL_TYPE &&
+        inspector.hasUrlToImageDataResolver) {
       tooltipType = TOOLTIP_IMAGE_TYPE;
     }
 
@@ -341,10 +349,11 @@ TooltipsOverlay.prototype = {
   },
 
   /**
-   * Executed by the tooltip when the pointer hovers over an element of the view.
-   * Used to decide whether the tooltip should be shown or not and to actually
-   * put content in it.
+   * Executed by the tooltip when the pointer hovers over an element of the
+   * view. Used to decide whether the tooltip should be shown or not and to
+   * actually put content in it.
    * Checks if the hovered target is a css value we support tooltips for.
+   *
    * @param {DOMNode} target The currently hovered node
    */
   _onPreviewTooltipTargetHover: function(target) {

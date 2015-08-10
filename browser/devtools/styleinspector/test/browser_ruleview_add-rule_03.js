@@ -5,33 +5,25 @@
 "use strict";
 
 // Tests the behaviour of adding a new rule to the rule view, adding a new
-// property and editing the selector
+// property and editing the selector.
 
-let PAGE_CONTENT = [
-  '<style type="text/css">',
-  '  #testid {',
-  '    text-align: center;',
-  '  }',
-  '</style>',
-  '<div id="testid">Styled Node</div>',
-  '<span>This is a span</span>'
-].join("\n");
+const TEST_URI = `
+  <style type="text/css">
+    #testid {
+      text-align: center;
+    }
+  </style>
+  <div id="testid">Styled Node</div>
+  <span>This is a span</span>
+`;
 
 add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(PAGE_CONTENT));
-
-  info("Opening the rule-view");
-  let {toolbox, inspector, view} = yield openRuleView();
-
-  info("Selecting the test element");
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
 
-  info("Waiting for rule view to change");
   let onRuleViewChanged = once(view, "ruleview-changed");
-
-  info("Adding the new rule");
   view.addRuleButton.click();
-
   yield onRuleViewChanged;
 
   info("Adding new properties to the new rule");
@@ -59,7 +51,7 @@ function* testNewRule(view, expected, index) {
   is(idRuleEditor.selectorText.textContent, expected,
       "Selector text value is as expected: " + expected);
 
-  info("Adding new properties to new rule: " + expected)
+  info("Adding new properties to new rule: " + expected);
   idRuleEditor.addProperty("font-weight", "bold", "");
   let textProps = idRuleEditor.rule.textProps;
   let lastRule = textProps[textProps.length - 1];

@@ -8,18 +8,18 @@
 
 const SEARCH = "color";
 
-let TEST_URI = [
-  '<style type="text/css">',
-  '  #testid {',
-  '    width: 100%;',
-  '  }',
-  '</style>',
-  '<div id="testid" style="background-color:aliceblue">Styled Node</div>'
-].join("\n");
+const TEST_URI = `
+  <style type="text/css">
+    #testid {
+      width: 100%;
+    }
+  </style>
+  <div id="testid" style="background-color:aliceblue">Styled Node</div>
+`;
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {toolbox, inspector, view} = yield openRuleView();
+  let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
   yield testAddTextInFilter(inspector, view);
 });
@@ -41,6 +41,7 @@ function* testAddTextInFilter(inspector, ruleView) {
   let rule = getRuleViewRuleEditor(ruleView, 0).rule;
 
   is(rule.selectorText, "element", "First rule is inline element.");
-  ok(rule.textProps[0].editor.container.classList.contains("ruleview-highlight"),
+  ok(rule.textProps[0].editor.container.classList
+    .contains("ruleview-highlight"),
     "background-color text property is correctly highlighted.");
 }

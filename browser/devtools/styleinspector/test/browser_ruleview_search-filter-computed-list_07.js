@@ -7,20 +7,20 @@
 // Tests that the rule view search filter works properly in the computed list
 // for color values.
 
-const SEARCH = "background-color: #F3F3F3"
+const SEARCH = "background-color: #F3F3F3";
 
-let TEST_URI = [
-  '<style type="text/css">',
-  '  .testclass {',
-  '    background: #F3F3F3 none repeat scroll 0% 0%;',
-  '  }',
-  '</style>',
-  '<div class="testclass">Styled Node</h1>'
-].join("\n");
+const TEST_URI = `
+  <style type="text/css">
+    .testclass {
+      background: #F3F3F3 none repeat scroll 0% 0%;
+    }
+  </style>
+  <div class="testclass">Styled Node</h1>
+`;
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {toolbox, inspector, view} = yield openRuleView();
+  let {inspector, view} = yield openRuleView();
   yield selectNode(".testclass", inspector);
   yield testAddTextInFilter(inspector, view);
 });
