@@ -379,19 +379,42 @@ private:
 
       NS_IMETHOD Run() override
       {
-        nsRefPtr<ScriptProcessorNode> node = static_cast<ScriptProcessorNode*>
-          (mStream->Engine()->NodeMainThread());
-        if (!node) {
-          return NS_OK;
+        nsRefPtr<ThreadSharedFloatArrayBufferList> output;
+
+        auto engine =
+          static_cast<ScriptProcessorNodeEngine*>(mStream->Engine());
+        {
+          auto node = static_cast<ScriptProcessorNode*>
+            (engine->NodeMainThread());
+          if (!node) {
+            return NS_OK;
+          }
+
+          if (node->HasListenersFor(nsGkAtoms::onaudioprocess)) {
+            output = DispatchAudioProcessEvent(node);
+          }
+          // The node may have been destroyed during event dispatch.
         }
-        AudioContext* context = node->Context();
+
+        // Append it to our output buffer queue
+        engine->GetSharedBuffers()->
+          FinishProducingOutputBuffer(output, engine->mBufferSize);
+
+        return NS_OK;
+      }
+
+      // Returns the output buffers if set in event handlers.
+      ThreadSharedFloatArrayBufferList*
+        DispatchAudioProcessEvent(ScriptProcessorNode* aNode)
+      {
+        AudioContext* context = aNode->Context();
         if (!context) {
-          return NS_OK;
+          return nullptr;
         }
 
         AutoJSAPI jsapi;
-        if (NS_WARN_IF(!jsapi.Init(node->GetOwner()))) {
-          return NS_OK;
+        if (NS_WARN_IF(!jsapi.Init(aNode->GetOwner()))) {
+          return nullptr;
         }
         JSContext* cx = jsapi.cx();
 
@@ -401,10 +424,10 @@ private:
           ErrorResult rv;
           inputBuffer =
             AudioBuffer::Create(context, mInputChannels.Length(),
-                                node->BufferSize(),
+                                aNode->BufferSize(),
                                 context->SampleRate(), cx, rv);
           if (rv.Failed()) {
-            return NS_OK;
+            return nullptr;
           }
           // Put the channel data inside it
           for (uint32_t i = 0; i < mInputChannels.Length(); ++i) {
@@ -417,33 +440,27 @@ private:
         // avoid creating the input buffer as well.  The AudioProcessingEvent class
         // knows how to lazily create them if needed once the script tries to access
         // them.  Otherwise, we may be able to get away without creating them!
-        nsRefPtr<AudioProcessingEvent> event = new AudioProcessingEvent(node, nullptr, nullptr);
+        nsRefPtr<AudioProcessingEvent> event =
+          new AudioProcessingEvent(aNode, nullptr, nullptr);
         event->InitEvent(inputBuffer,
                          mInputChannels.Length(),
                          context->StreamTimeToDOMTime(mPlaybackTime));
-        node->DispatchTrustedEvent(event);
+        aNode->DispatchTrustedEvent(event);
 
         // Steal the output buffers if they have been set.
         // Don't create a buffer if it hasn't been used to return output;
         // FinishProducingOutputBuffer() will optimize output = null.
         // GetThreadSharedChannelsForRate() may also return null after OOM.
-        nsRefPtr<ThreadSharedFloatArrayBufferList> output;
         if (event->HasOutputBuffer()) {
           ErrorResult rv;
           AudioBuffer* buffer = event->GetOutputBuffer(rv);
           // HasOutputBuffer() returning true means that GetOutputBuffer()
           // will not fail.
           MOZ_ASSERT(!rv.Failed());
-          output = buffer->GetThreadSharedChannelsForRate(cx);
+          return buffer->GetThreadSharedChannelsForRate(cx);
         }
 
-        // Append it to our output buffer queue
-        auto engine =
-          static_cast<ScriptProcessorNodeEngine*>(mStream->Engine());
-        engine->GetSharedBuffers()->
-          FinishProducingOutputBuffer(output, node->BufferSize());
-
-        return NS_OK;
+        return nullptr;
       }
     private:
       nsRefPtr<AudioNodeStream> mStream;
