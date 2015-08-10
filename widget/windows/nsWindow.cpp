@@ -2991,6 +2991,13 @@ NS_IMPL_ISUPPORTS0(FullscreenTransitionData)
 /* virtual */ bool
 nsWindow::PrepareForFullscreenTransition(nsISupports** aData)
 {
+  // We don't support fullscreen transition when composition is not
+  // enabled, which could make the transition broken and annoying.
+  // See bug 1184201.
+  if (!nsUXThemeData::CheckForCompositor()) {
+    return false;
+  }
+
   FullscreenTransitionInitData initData;
   nsCOMPtr<nsIScreen> screen = GetWidgetScreen();
   int32_t x, y, width, height;
