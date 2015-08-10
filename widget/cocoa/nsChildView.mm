@@ -1127,7 +1127,7 @@ nsresult nsChildView::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
   NSEvent* event = [NSEvent mouseEventWithType:(NSEventType)aNativeMessage
                                       location:windowPoint
                                  modifierFlags:aModifierFlags
-                                     timestamp:[NSDate timeIntervalSinceReferenceDate]
+                                     timestamp:[[NSProcessInfo processInfo] systemUptime]
                                   windowNumber:[[mView window] windowNumber]
                                        context:nil
                                    eventNumber:0
