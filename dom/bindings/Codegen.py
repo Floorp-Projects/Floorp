@@ -1020,7 +1020,7 @@ class CGHeaders(CGWrapper):
         implementationIncludes |= set(self.getDeclarationFilename(i) for i in
                                       interfacesImplementingSelf)
 
-         # Grab the includes for the things that involve XPCOM interfaces
+        # Grab the includes for the things that involve XPCOM interfaces
         hasInstanceIncludes = set("nsIDOM" + d.interface.identifier.name + ".h" for d
                                   in descriptors if
                                   d.interface.hasInterfaceObject() and
@@ -2028,8 +2028,8 @@ class PropertyDefiner:
         # pref control is added to members while still allowing us to define all
         # the members in the smallest number of JSAPI calls.
         assert len(array) != 0
-        lastCondition = getCondition(array[0], self.descriptor)  # So we won't put a specTerminator
-                                                                 # at the very front of the list.
+        # So we won't put a specTerminator at the very front of the list:
+        lastCondition = getCondition(array[0], self.descriptor)
         specs = []
         prefableSpecs = []
 
@@ -3190,11 +3190,11 @@ class CGConstructorEnabled(CGAbstractMethod):
 
         conditionsWrapper = ""
         if len(conditions):
-          conditionsWrapper = CGWrapper(CGList((CGGeneric(cond) for cond in conditions),
+            conditionsWrapper = CGWrapper(CGList((CGGeneric(cond) for cond in conditions),
                                                " &&\n"),
                                         pre="return ", post=";\n", reindent=True)
         else:
-          conditionsWrapper = CGGeneric("return true;\n")
+            conditionsWrapper = CGGeneric("return true;\n")
 
         body.append(conditionsWrapper)
         return body.define()
