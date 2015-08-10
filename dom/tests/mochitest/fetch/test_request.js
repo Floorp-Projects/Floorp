@@ -456,6 +456,17 @@ function testBug1154268() {
   });
 }
 
+function testRequestConsumedByFailedConstructor(){
+  var r1 = new Request('http://example.com', { method: 'POST', body: 'hello world' });
+  try{
+    var r2 = new Request(r1, { method: 'GET' });
+    ok(false, 'GET Request copied from POST Request with body should fail.');
+  } catch(e) {
+    ok(true, 'GET Request copied from POST Request with body should fail.');
+  }
+  ok(!r1.bodyUsed, 'Initial request should not be consumed by failed Request constructor');
+}
+
 function runTest() {
   testDefaultCtor();
   testSimpleUrlParse();
@@ -465,6 +476,7 @@ function runTest() {
   testHeaderGuard();
   testModeCorsPreflightEnumValue();
   testBug1154268();
+  testRequestConsumedByFailedConstructor();
 
   return Promise.resolve()
     .then(testBodyCreation)
