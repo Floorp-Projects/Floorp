@@ -4471,7 +4471,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         assert not isEnforceRange and not isClamp
         if failureCode is None:
             notMozMap = ('ThrowErrorMessage(cx, MSG_NOT_OBJECT, "%s");\n'
-                           "%s" % (firstCap(sourceDescription), exceptionCode))
+                         "%s" % (firstCap(sourceDescription), exceptionCode))
         else:
             notMozMap = failureCode
 
@@ -15608,11 +15608,14 @@ class GlobalGenRoots():
                 things.update(d.featureDetectibleThings)
         things = CGList((CGGeneric(declare='"%s",' % t) for t in sorted(things)), joiner="\n")
         things.append(CGGeneric(declare="nullptr"))
-        things = CGWrapper(CGIndenter(things), pre="static const char* const FeatureList[] = {\n",
-                                               post="\n};\n")
+        things = CGWrapper(CGIndenter(things),
+                           pre="static const char* const FeatureList[] = {\n",
+                           post="\n};\n")
 
-        helper = CGWrapper(CGIndenter(things), pre="bool IsFeatureDetectible(const nsAString& aFeature) {\n",
-                                               post=dedent("""
+        helper_pre = "bool IsFeatureDetectible(const nsAString& aFeature) {\n"
+        helper = CGWrapper(CGIndenter(things),
+                           pre=helper_pre,
+                           post=dedent("""
               const char* const* feature = FeatureList;
               while (*feature) {
                 if (aFeature.EqualsASCII(*feature)) {
