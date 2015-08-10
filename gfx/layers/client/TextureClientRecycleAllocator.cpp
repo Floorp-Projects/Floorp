@@ -16,11 +16,13 @@
 namespace mozilla {
 namespace layers {
 
-class TextureClientRecycleAllocatorImp : public ISurfaceAllocator
+class TextureClientRecycleAllocatorImp
 {
   ~TextureClientRecycleAllocatorImp();
 
 public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TextureClientRecycleAllocatorImp)
+
   explicit TextureClientRecycleAllocatorImp(ISurfaceAllocator* aAllocator);
 
   void SetMaxPoolSize(uint32_t aMax)
@@ -43,48 +45,6 @@ public:
   void RecycleCallbackImp(TextureClient* aClient);
 
   static void RecycleCallback(TextureClient* aClient, void* aClosure);
-
-  // ISurfaceAllocator
-  virtual LayersBackend GetCompositorBackendType() const override
-  {
-    return mSurfaceAllocator->GetCompositorBackendType();
-  }
-
-  virtual bool AllocShmem(size_t aSize,
-                          mozilla::ipc::SharedMemory::SharedMemoryType aType,
-                          mozilla::ipc::Shmem* aShmem) override
-  {
-    return mSurfaceAllocator->AllocShmem(aSize, aType, aShmem);
-  }
-
-  virtual bool AllocUnsafeShmem(size_t aSize,
-                                mozilla::ipc::SharedMemory::SharedMemoryType aType,
-                                mozilla::ipc::Shmem* aShmem) override
-  {
-    return mSurfaceAllocator->AllocUnsafeShmem(aSize, aType, aShmem);
-  }
-
-  virtual void DeallocShmem(mozilla::ipc::Shmem& aShmem) override
-  {
-    mSurfaceAllocator->DeallocShmem(aShmem);
-  }
-
-  virtual bool IsSameProcess() const override
-  {
-    return mSurfaceAllocator->IsSameProcess();
-  }
-
-  virtual MessageLoop * GetMessageLoop() const override
-  {
-    return mSurfaceAllocator->GetMessageLoop();
-  }
-
-protected:
-  // ISurfaceAllocator
-  virtual bool IsOnCompositorSide() const override
-  {
-    return false;
-  }
 
 private:
   static const uint32_t kMaxPooledSized = 2;
@@ -179,7 +139,7 @@ TextureClientRecycleAllocatorImp::CreateOrRecycleForDrawing(
   if (!textureHolder) {
     // Allocate new TextureClient
     RefPtr<TextureClient> texture;
-    texture = TextureClient::CreateForDrawing(this, aFormat, aSize, aSelector,
+    texture = TextureClient::CreateForDrawing(mSurfaceAllocator, aFormat, aSize, aSelector,
                                               aTextureFlags, aAllocFlags);
     if (!texture) {
       return nullptr;
