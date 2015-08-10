@@ -2841,6 +2841,10 @@ bool
 EqualTypes(MIRType type1, TemporaryTypeSet* typeset1,
            MIRType type2, TemporaryTypeSet* typeset2);
 
+bool
+CanStoreUnboxedType(TempAllocator& alloc,
+                    JSValueType unboxedType, MIRType input, TypeSet* inputTypes);
+
 #ifdef DEBUG
 bool
 IonCompilationCanUseNurseryPointers();
