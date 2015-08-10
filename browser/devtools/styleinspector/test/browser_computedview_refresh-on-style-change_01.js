@@ -4,17 +4,14 @@
 
 "use strict";
 
-// Test that the computed view refreshes when the current node has its style
-// changed
+// Tests that the computed view refreshes when the current node has its style
+// changed.
 
-const TESTCASE_URI = 'data:text/html;charset=utf-8,' +
-                     '<div id="testdiv" style="font-size:10px;">Test div!</div>';
+const TEST_URI = "<div id='testdiv' style='font-size:10px;'>Test div!</div>";
 
 add_task(function*() {
-  yield addTab(TESTCASE_URI);
-
-  info("Opening the computed view and selecting the test node");
-  let {toolbox, inspector, view} = yield openComputedView();
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openComputedView();
   yield selectNode("#testdiv", inspector);
 
   let fontSize = getComputedViewPropertyValue(view, "font-size");

@@ -7,21 +7,21 @@
 // Test selector value is correctly displayed when committing the inplace editor
 // with ENTER, ESC, SHIFT+TAB and TAB
 
-let TEST_URI = [
-  "<style type='text/css'>",
-  "  #testid1 {",
-  "    text-align: center;",
-  "  }",
-  "  #testid2 {",
-  "    text-align: center;",
-  "  }",
-  "  #testid3 {",
-  "  }",
-  "</style>",
-  "<div id='testid1'>Styled Node</div>",
-  "<div id='testid2'>Styled Node</div>",
-  "<div id='testid3'>Styled Node</div>",
-].join("\n");
+const TEST_URI = `
+  <style type='text/css'>
+    #testid1 {
+      text-align: center;
+    }
+    #testid2 {
+      text-align: center;
+    }
+    #testid3 {
+    }
+  </style>
+  <div id='testid1'>Styled Node</div>
+  <div id='testid2'>Styled Node</div>
+  <div id='testid3'>Styled Node</div>
+`;
 
 const TEST_DATA = [
   {
@@ -59,7 +59,6 @@ add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let { inspector, view } = yield openRuleView();
 
-  info("Iterating over the test data");
   for (let data of TEST_DATA) {
     yield runTestData(inspector, view, data);
   }

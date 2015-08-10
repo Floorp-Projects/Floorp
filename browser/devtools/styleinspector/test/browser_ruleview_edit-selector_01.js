@@ -6,18 +6,18 @@
 
 // Testing selector inplace-editor behaviors in the rule-view
 
-let PAGE_CONTENT = [
-  '<style type="text/css">',
-  '  .testclass {',
-  '    text-align: center;',
-  '  }',
-  '</style>',
-  '<div id="testid" class="testclass">Styled Node</div>',
-  '<span>This is a span</span>',
-].join("\n");
+const TEST_URI = `
+  <style type="text/css">
+    .testclass {
+      text-align: center;
+    }
+  </style>
+  <div id="testid" class="testclass">Styled Node</div>
+  <span>This is a span</span>
+`;
 
 add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(PAGE_CONTENT));
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openRuleView();
 
   info("Selecting the test element");

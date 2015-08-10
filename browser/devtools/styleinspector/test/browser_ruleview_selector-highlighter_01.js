@@ -7,20 +7,21 @@
 // Test that the selector highlighter is created when clicking on a selector
 // icon in the rule view.
 
-const PAGE_CONTENT = [
-  '<style type="text/css">',
-  '  body, p, td {',
-  '    background: red;',
-  '  }',
-  '</style>',
-  'Test the selector highlighter'
-].join("\n");
+const TEST_URI = `
+  <style type="text/css">
+    body, p, td {
+      background: red;
+    }
+  </style>
+  Test the selector highlighter
+`;
 
 add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8," + PAGE_CONTENT);
-
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {view} = yield openRuleView();
-  ok(!view.selectorHighlighter, "No selectorhighlighter exist in the rule-view");
+
+  ok(!view.selectorHighlighter,
+    "No selectorhighlighter exist in the rule-view");
 
   info("Clicking on a selector icon");
   let icon = getRuleViewSelectorHighlighterIcon(view, "body, p, td");
