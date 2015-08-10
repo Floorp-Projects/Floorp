@@ -9,8 +9,7 @@
 
 const TEST_URI = "data:text/html;charset=utf8,test for console and promises";
 
-let {DebuggerServer} =
-  Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
+let {DebuggerServer} = require("devtools/server/main");
 
 let LONG_STRING_LENGTH = DebuggerServer.LONG_STRING_LENGTH;
 let LONG_STRING_INITIAL_LENGTH = DebuggerServer.LONG_STRING_INITIAL_LENGTH;

@@ -17,6 +17,7 @@ const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 const Services = require("Services");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils.js");
 const xpcInspector = require("xpcInspector");
+const { DebuggerServer } = require("devtools/server/main");
 
 // We do not want to log packets by default, because in some tests,
 // we can be sending large amounts of data. The test harness has
@@ -39,7 +40,6 @@ function tryImport(url) {
   }
 }
 
-tryImport("resource://gre/modules/devtools/dbg-server.jsm");
 tryImport("resource://gre/modules/devtools/dbg-client.jsm");
 
 // Convert an nsIScriptError 'aFlags' value into an appropriate string.

@@ -2639,7 +2639,8 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 #TabsToolbar {
   -moz-appearance: none;
-  margin-bottom: -1px; /* Overlap the inner highlight at the top of the nav-bar */
+  /* overlap the nav-bar's top border */
+  margin-bottom: calc(-1 * var(--tab-toolbar-navbar-overlap));
 }
 
 #main-window:not([customizing]) #navigator-toolbox[inFullscreen] > #TabsToolbar:not(:-moz-lwtheme),

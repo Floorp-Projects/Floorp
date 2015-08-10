@@ -11,10 +11,10 @@ SimpleTest.registerCleanupFunction(function() {
 });
 
 Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
-Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
 
 Cu.import("resource://gre/modules/Task.jsm");
 let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+let { DebuggerServer } = require("devtools/server/main");
 
 let { MemoryFront } = require("devtools/server/actors/memory");
 

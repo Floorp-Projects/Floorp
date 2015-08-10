@@ -1,5 +1,6 @@
 Cu.import("resource://gre/modules/Services.jsm");
-let { DebuggerServer } = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
+let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+let { DebuggerServer } = require("devtools/server/main");
 let { DebuggerClient } = Cu.import("resource://gre/modules/devtools/dbg-client.jsm", {});
 let { RemoteDebugger } = Cu.import("resource://webapprt/modules/RemoteDebugger.jsm", {});
 

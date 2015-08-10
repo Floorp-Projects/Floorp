@@ -45,24 +45,24 @@ public class TabsPanel extends LinearLayout
                                   IconTabWidget.OnTabChangedListener {
     private static final String LOGTAG = "Gecko" + TabsPanel.class.getSimpleName();
 
-    public static enum Panel {
+    public enum Panel {
         NORMAL_TABS,
         PRIVATE_TABS,
     }
 
-    public static interface PanelView {
-        public void setTabsPanel(TabsPanel panel);
-        public void show();
-        public void hide();
-        public boolean shouldExpand();
+    public interface PanelView {
+        void setTabsPanel(TabsPanel panel);
+        void show();
+        void hide();
+        boolean shouldExpand();
     }
 
-    public static interface CloseAllPanelView extends PanelView {
-        public void closeAll();
+    public interface CloseAllPanelView extends PanelView {
+        void closeAll();
     }
 
-    public static interface TabsLayout extends CloseAllPanelView {
-        public void setEmptyView(View view);
+    public interface TabsLayout extends CloseAllPanelView {
+        void setEmptyView(View view);
     }
 
     public static View createTabsLayout(final Context context, final AttributeSet attrs) {
@@ -73,8 +73,8 @@ public class TabsPanel extends LinearLayout
         }
     }
 
-    public static interface TabsLayoutChangeListener {
-        public void onTabsLayoutChange(int width, int height);
+    public interface TabsLayoutChangeListener {
+        void onTabsLayoutChange(int width, int height);
     }
 
     private final Context mContext;
