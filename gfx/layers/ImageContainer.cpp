@@ -621,10 +621,10 @@ CairoImage::GetTextureClient(CompositableClient *aClient)
     aClient->GetTextureClientRecycler();
   if (recycler) {
     textureClient =
-      recycler->CreateOrRecycleForDrawing(surface->GetFormat(),
-                                          surface->GetSize(),
-                                          BackendSelector::Content,
-                                          aClient->GetTextureFlags());
+      recycler->CreateOrRecycle(surface->GetFormat(),
+                                surface->GetSize(),
+                                BackendSelector::Content,
+                                aClient->GetTextureFlags());
   }
 #endif
 

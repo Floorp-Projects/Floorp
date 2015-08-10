@@ -32,8 +32,8 @@ protected:
 };
 
 TextureClientRecycleAllocator::TextureClientRecycleAllocator(ISurfaceAllocator *aAllocator)
-  : mMaxPooledSize(kMaxPooledSized)
-  , mSurfaceAllocator(aAllocator)
+  : mSurfaceAllocator(aAllocator)
+  , mMaxPooledSize(kMaxPooledSized)
   , mLock("TextureClientRecycleAllocatorImp.mLock")
 {
 }
@@ -54,12 +54,11 @@ TextureClientRecycleAllocator::SetMaxPoolSize(uint32_t aMax)
 }
 
 already_AddRefed<TextureClient>
-TextureClientRecycleAllocator::CreateOrRecycleForDrawing(
-                                          gfx::SurfaceFormat aFormat,
-                                          gfx::IntSize aSize,
-                                          BackendSelector aSelector,
-                                          TextureFlags aTextureFlags,
-                                          TextureAllocationFlags aAllocFlags)
+TextureClientRecycleAllocator::CreateOrRecycle(gfx::SurfaceFormat aFormat,
+                                               gfx::IntSize aSize,
+                                               BackendSelector aSelector,
+                                               TextureFlags aTextureFlags,
+                                               TextureAllocationFlags aAllocFlags)
 {
   // TextureAllocationFlags is actually used only by ContentClient.
   // This class does not handle ConteClient's TextureClient allocation.
@@ -77,8 +76,7 @@ TextureClientRecycleAllocator::CreateOrRecycleForDrawing(
       mPooledClients.pop();
       // If a pooled TextureClient is not compatible, release it.
       if (textureHolder->GetTextureClient()->GetFormat() != aFormat ||
-          textureHolder->GetTextureClient()->GetSize() != aSize)
-      {
+          textureHolder->GetTextureClient()->GetSize() != aSize) {
         TextureClientReleaseTask* task = new TextureClientReleaseTask(textureHolder->GetTextureClient());
         textureHolder->ClearTextureClient();
         textureHolder = nullptr;
@@ -92,9 +90,7 @@ TextureClientRecycleAllocator::CreateOrRecycleForDrawing(
 
   if (!textureHolder) {
     // Allocate new TextureClient
-    RefPtr<TextureClient> texture;
-    texture = TextureClient::CreateForDrawing(mSurfaceAllocator, aFormat, aSize, aSelector,
-                                              aTextureFlags, aAllocFlags);
+    RefPtr<TextureClient> texture = Allocate(aFormat, aSize, aSelector, aTextureFlags, aAllocFlags);
     if (!texture) {
       return nullptr;
     }
@@ -110,6 +106,17 @@ TextureClientRecycleAllocator::CreateOrRecycleForDrawing(
   textureHolder->GetTextureClient()->SetRecycleCallback(TextureClientRecycleAllocator::RecycleCallback, this);
   RefPtr<TextureClient> client(textureHolder->GetTextureClient());
   return client.forget();
+}
+
+already_AddRefed<TextureClient>
+TextureClientRecycleAllocator::Allocate(gfx::SurfaceFormat aFormat,
+                                        gfx::IntSize aSize,
+                                        BackendSelector aSelector,
+                                        TextureFlags aTextureFlags,
+                                        TextureAllocationFlags aAllocFlags)
+{
+  return TextureClient::CreateForDrawing(mSurfaceAllocator, aFormat, aSize, aSelector,
+                                         aTextureFlags, aAllocFlags);
 }
 
 void

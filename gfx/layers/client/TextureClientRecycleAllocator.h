@@ -25,10 +25,14 @@ class TextureClientHolder;
  * recycling capabilities. It expects allocations of same sizes and
  * attributres. If a recycled TextureClient is different from
  * requested one, the recycled one is dropped and new TextureClient is allocated.
+ *
+ * By default this uses TextureClient::CreateForDrawing to allocate new texture
+ * clients.
  */
 class TextureClientRecycleAllocator
 {
-  ~TextureClientRecycleAllocator();
+protected:
+  virtual ~TextureClientRecycleAllocator();
 
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TextureClientRecycleAllocator)
@@ -39,11 +43,21 @@ public:
 
   // Creates and allocates a TextureClient.
   already_AddRefed<TextureClient>
-  CreateOrRecycleForDrawing(gfx::SurfaceFormat aFormat,
-                            gfx::IntSize aSize,
-                            BackendSelector aSelector,
-                            TextureFlags aTextureFlags,
-                            TextureAllocationFlags flags = ALLOC_DEFAULT);
+  CreateOrRecycle(gfx::SurfaceFormat aFormat,
+                  gfx::IntSize aSize,
+                  BackendSelector aSelector,
+                  TextureFlags aTextureFlags,
+                  TextureAllocationFlags flags = ALLOC_DEFAULT);
+
+protected:
+  virtual already_AddRefed<TextureClient>
+  Allocate(gfx::SurfaceFormat aFormat,
+           gfx::IntSize aSize,
+           BackendSelector aSelector,
+           TextureFlags aTextureFlags,
+           TextureAllocationFlags aAllocFlags);
+
+  RefPtr<ISurfaceAllocator> mSurfaceAllocator;
 
 private:
   void RecycleCallbackImp(TextureClient* aClient);
@@ -51,9 +65,8 @@ private:
   static void RecycleCallback(TextureClient* aClient, void* aClosure);
 
   static const uint32_t kMaxPooledSized = 2;
-
   uint32_t mMaxPooledSize;
-  RefPtr<ISurfaceAllocator> mSurfaceAllocator;
+
   std::map<TextureClient*, RefPtr<TextureClientHolder> > mInUseClients;
 
   // On b2g gonk, std::queue might be a better choice.
