@@ -281,7 +281,7 @@ public class GeckoSmsManager
 
   /*
    * Make sure that the following error codes are in sync with |ErrorType| in:
-   * dom/mobilemessage/Types.h
+   * dom/mobilemessage/interfaces/nsIMobileMessageCallback.idl
    * The error code are owned by the DOM.
    */
   public final static int kNoError               = 0;
