@@ -16,7 +16,7 @@ endif #} JAVAFILES
 
 
 ifdef ANDROID_APK_NAME #{
-android_res_dirs := $(addprefix $(srcdir)/,$(or $(ANDROID_RES_DIRS),res))
+android_res_dirs := $(or $(ANDROID_RES_DIRS),$(srcdir)/res)
 _ANDROID_RES_FLAG := $(addprefix -S ,$(android_res_dirs))
 _ANDROID_ASSETS_FLAG := $(addprefix -A ,$(ANDROID_ASSETS_DIR))
 android_manifest := $(or $(ANDROID_MANIFEST_FILE),AndroidManifest.xml)
