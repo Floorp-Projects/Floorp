@@ -296,6 +296,12 @@ public class GeckoSmsManager
   public final static int kNonActiveSimCardError = 9;
   public final static int kStorageFullError      = 10;
   public final static int kSimNotMatchedError    = 11;
+  public final static int kNetworkProblemsError = 12;
+  public final static int kGeneralProblemsError = 13;
+  public final static int kServiceNotAvailableError      = 14;
+  public final static int kMessageTooLongForNetworkError = 15;
+  public final static int kServiceNotSupportedError      = 16;
+  public final static int kRetryRequiredError   = 17;
 
   private final static int kMaxMessageSize    = 160;
 
