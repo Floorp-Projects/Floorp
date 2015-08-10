@@ -373,7 +373,7 @@ struct BytecodeEmitter
 
     // Emit two bytecodes, an opcode (op) with a byte of immediate operand
     // (op1).
-    bool emit2(JSOp op, jsbytecode op1);
+    bool emit2(JSOp op, uint8_t op1);
 
     // Emit three bytecodes, an opcode with two bytes of immediate operands.
     bool emit3(JSOp op, jsbytecode op1, jsbytecode op2);
