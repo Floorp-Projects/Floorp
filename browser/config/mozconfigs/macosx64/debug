@@ -18,6 +18,6 @@ ac_add_options --enable-warnings-as-errors
 # Package js shell.
 export MOZ_PACKAGE_JSSHELL=1
 
-ac_add_options --with-branding=browser/branding/aurora
+ac_add_options --with-branding=browser/branding/nightly
 
 . "$topsrcdir/build/mozconfig.common.override"
