@@ -123,6 +123,7 @@ EXPORTS.js += [
     '../public/RootingAPI.h',
     '../public/SliceBudget.h',
     '../public/StructuredClone.h',
+    '../public/TraceableFifo.h',
     '../public/TraceableHashTable.h',
     '../public/TraceableVector.h',
     '../public/TraceKind.h',
