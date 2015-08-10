@@ -248,7 +248,7 @@ BytecodeEmitter::emit1(JSOp op)
 }
 
 bool
-BytecodeEmitter::emit2(JSOp op, jsbytecode op1)
+BytecodeEmitter::emit2(JSOp op, uint8_t op1)
 {
     MOZ_ASSERT(checkStrictOrSloppy(op));
 
@@ -258,7 +258,7 @@ BytecodeEmitter::emit2(JSOp op, jsbytecode op1)
 
     jsbytecode* code = this->code(offset);
     code[0] = jsbytecode(op);
-    code[1] = op1;
+    code[1] = jsbytecode(op1);
     updateDepth(offset);
     return true;
 }
@@ -2644,7 +2644,7 @@ BytecodeEmitter::emitPropIncDec(ParseNode* pn)
         return false;
 
     if (post) {
-        if (!emit2(JSOP_PICK, (jsbytecode)2))       // N? N+1 OBJ
+        if (!emit2(JSOP_PICK, 2))                   // N? N+1 OBJ
             return false;
         if (!emit1(JSOP_SWAP))                      // N? OBJ N+1
             return false;
@@ -2684,11 +2684,11 @@ BytecodeEmitter::emitSuperPropIncDec(ParseNode* pn)
         return false;
 
     if (post) {
-        if (!emit2(JSOP_PICK, (jsbytecode)3))               // OBJ N N+1 THIS
+        if (!emit2(JSOP_PICK, 3))                           // OBJ N N+1 THIS
             return false;
         if (!emit1(JSOP_SWAP))                              // OBJ N THIS N+1
             return false;
-        if (!emit2(JSOP_PICK, (jsbytecode)3))               // N THIS N+1 OBJ
+        if (!emit2(JSOP_PICK, 3))                           // N THIS N+1 OBJ
             return false;
         if (!emit1(JSOP_SWAP))                              // N THIS OBJ N+1
             return false;
@@ -2726,7 +2726,7 @@ BytecodeEmitter::emitNameIncDec(ParseNode* pn)
         return false;
 
     if (post) {
-        if (!emit2(JSOP_PICK, (jsbytecode)2))  // N? N+1 OBJ
+        if (!emit2(JSOP_PICK, 2))              // N? N+1 OBJ
             return false;
         if (!emit1(JSOP_SWAP))                 // N? OBJ N+1
             return false;
@@ -2756,7 +2756,7 @@ BytecodeEmitter::emitElemOperands(ParseNode* pn, JSOp op)
         return false;
 
     bool isSetElem = op == JSOP_SETELEM || op == JSOP_STRICTSETELEM;
-    if (isSetElem && !emit2(JSOP_PICK, (jsbytecode)2))
+    if (isSetElem && !emit2(JSOP_PICK, 2))
         return false;
     return true;
 }
@@ -2794,7 +2794,7 @@ BytecodeEmitter::emitSuperElemOperands(ParseNode* pn, SuperElemOptions opts)
     if (!emit1(JSOP_SUPERBASE))
         return false;
 
-    if (opts == SuperElem_Set && !emit2(JSOP_PICK, (jsbytecode)3))
+    if (opts == SuperElem_Set && !emit2(JSOP_PICK, 3))
         return false;
 
     return true;
@@ -2868,11 +2868,11 @@ BytecodeEmitter::emitElemIncDec(ParseNode* pn)
         return false;
 
     if (post) {
-        if (!emit2(JSOP_PICK, (jsbytecode)3))       // KEY N N+1 OBJ
+        if (!emit2(JSOP_PICK, 3))                   // KEY N N+1 OBJ
             return false;
-        if (!emit2(JSOP_PICK, (jsbytecode)3))       // N N+1 OBJ KEY
+        if (!emit2(JSOP_PICK, 3))                   // N N+1 OBJ KEY
             return false;
-        if (!emit2(JSOP_PICK, (jsbytecode)2))       // N OBJ KEY N+1
+        if (!emit2(JSOP_PICK, 2))                   // N OBJ KEY N+1
             return false;
     }
 
@@ -2916,13 +2916,13 @@ BytecodeEmitter::emitSuperElemIncDec(ParseNode* pn)
         return false;
 
     if (post) {
-        if (!emit2(JSOP_PICK, (jsbytecode)4))       // THIS OBJ N N+1 KEY
+        if (!emit2(JSOP_PICK, 4))                   // THIS OBJ N N+1 KEY
             return false;
-        if (!emit2(JSOP_PICK, (jsbytecode)4))       // OBJ N N+1 KEY THIS
+        if (!emit2(JSOP_PICK, 4))                   // OBJ N N+1 KEY THIS
             return false;
-        if (!emit2(JSOP_PICK, (jsbytecode)4))       // N N+1 KEY THIS OBJ
+        if (!emit2(JSOP_PICK, 4))                   // N N+1 KEY THIS OBJ
             return false;
-        if (!emit2(JSOP_PICK, (jsbytecode)3))       // N KEY THIS OBJ N+1
+        if (!emit2(JSOP_PICK, 3))                   // N KEY THIS OBJ N+1
             return false;
     }
 
@@ -2944,7 +2944,7 @@ BytecodeEmitter::emitNumberOp(double dval)
         if (ival == 1)
             return emit1(JSOP_ONE);
         if ((int)(int8_t)ival == ival)
-            return emit2(JSOP_INT8, (jsbytecode)(int8_t)ival);
+            return emit2(JSOP_INT8, uint8_t(int8_t(ival)));
 
         uint32_t u = uint32_t(ival);
         if (u < JS_BIT(16)) {
@@ -3937,7 +3937,7 @@ BytecodeEmitter::emitDestructuringOpsArrayHelper(ParseNode* pattern, VarEmitOpti
                     reportError(subpattern, JSMSG_TOO_MANY_LOCALS);
                     return false;
                 }
-                if (!emit2(JSOP_PICK, (jsbytecode)pickDistance))
+                if (!emit2(JSOP_PICK, (uint8_t)pickDistance))
                     return false;
             }
         }
@@ -4061,7 +4061,7 @@ BytecodeEmitter::emitDestructuringOpsObjectHelper(ParseNode* pattern, VarEmitOpt
                 reportError(subpattern, JSMSG_TOO_MANY_LOCALS);
                 return false;
             }
-            if (!emit2(JSOP_PICK, (jsbytecode)pickDistance))
+            if (!emit2(JSOP_PICK, (uint8_t)pickDistance))
                 return false;
         }
     }
@@ -4345,7 +4345,7 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp op, ParseNode* rhs)
      * stack, which impose pervasive runtime "GetValue" costs.
      */
     jsatomid atomIndex = (jsatomid) -1;
-    jsbytecode offset = 1;
+    uint8_t offset = 1;
 
     switch (lhs->getKind()) {
       case PNK_NAME:
@@ -5202,7 +5202,7 @@ BytecodeEmitter::emitRequireObjectCoercible()
     }
     if (!emit1(JSOP_UNDEFINED))            // VAL VAL REQUIREOBJECTCOERCIBLE UNDEFINED
         return false;
-    if (!emit2(JSOP_PICK, jsbytecode(2)))  // VAL REQUIREOBJECTCOERCIBLE UNDEFINED VAL
+    if (!emit2(JSOP_PICK, 2))              // VAL REQUIREOBJECTCOERCIBLE UNDEFINED VAL
         return false;
     if (!emitCall(JSOP_CALL, 1))           // VAL IGNORED
         return false;
@@ -5219,15 +5219,15 @@ bool
 BytecodeEmitter::emitIterator()
 {
     // Convert iterable to iterator.
-    if (!emit1(JSOP_DUP))                                 // OBJ OBJ
+    if (!emit1(JSOP_DUP))                                         // OBJ OBJ
         return false;
-    if (!emit2(JSOP_SYMBOL, jsbytecode(JS::SymbolCode::iterator))) // OBJ OBJ @@ITERATOR
+    if (!emit2(JSOP_SYMBOL, uint8_t(JS::SymbolCode::iterator)))   // OBJ OBJ @@ITERATOR
         return false;
-    if (!emitElemOpBase(JSOP_CALLELEM))                   // OBJ ITERFN
+    if (!emitElemOpBase(JSOP_CALLELEM))                           // OBJ ITERFN
         return false;
-    if (!emit1(JSOP_SWAP))                                // ITERFN OBJ
+    if (!emit1(JSOP_SWAP))                                        // ITERFN OBJ
         return false;
-    if (!emitCall(JSOP_CALL, 0))                          // ITER
+    if (!emitCall(JSOP_CALL, 0))                                  // ITER
         return false;
     checkTypeSet(JSOP_CALL);
     return true;
@@ -5409,7 +5409,7 @@ BytecodeEmitter::emitForOf(StmtType type, ParseNode* pn, ptrdiff_t top)
     }
 
     if (type == StmtType::SPREAD) {
-        if (!emit2(JSOP_PICK, (jsbytecode)3))      // ARR I RESULT ITER
+        if (!emit2(JSOP_PICK, 3))      // ARR I RESULT ITER
             return false;
     }
 
@@ -6254,7 +6254,7 @@ BytecodeEmitter::emitYieldStar(ParseNode* iter, ParseNode* gen)
         return false;
     if (!emit1(JSOP_SWAP))                                       // EXCEPTION ITER THROW ITER
         return false;
-    if (!emit2(JSOP_PICK, (jsbytecode)3))                        // ITER THROW ITER EXCEPTION
+    if (!emit2(JSOP_PICK, 3))                                    // ITER THROW ITER EXCEPTION
         return false;
     if (!emitCall(JSOP_CALL, 1, iter))                           // ITER RESULT
         return false;
@@ -6289,7 +6289,7 @@ BytecodeEmitter::emitYieldStar(ParseNode* iter, ParseNode* gen)
         return false;
     if (!emit1(JSOP_SWAP))                                       // RECEIVED ITER NEXT ITER
         return false;
-    if (!emit2(JSOP_PICK, (jsbytecode)3))                        // ITER NEXT ITER RECEIVED
+    if (!emit2(JSOP_PICK, 3))                                    // ITER NEXT ITER RECEIVED
         return false;
     if (!emitCall(JSOP_CALL, 1, iter))                           // ITER RESULT
         return false;
@@ -7244,9 +7244,9 @@ BytecodeEmitter::emitArray(ParseNode* pn, uint32_t count, JSOp op)
         if (pn2->isKind(PNK_SPREAD)) {
             if (!emitIterator())                                         // ARRAY INDEX ITER
                 return false;
-            if (!emit2(JSOP_PICK, (jsbytecode)2))                        // INDEX ITER ARRAY
+            if (!emit2(JSOP_PICK, 2))                                    // INDEX ITER ARRAY
                 return false;
-            if (!emit2(JSOP_PICK, (jsbytecode)2))                        // ITER ARRAY INDEX
+            if (!emit2(JSOP_PICK, 2))                                    // ITER ARRAY INDEX
                 return false;
             if (!emitSpread())                                           // ARRAY INDEX
                 return false;
