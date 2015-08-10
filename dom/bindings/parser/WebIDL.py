@@ -174,13 +174,13 @@ class IDLObject(object):
         self.userData[key] = value
 
     def addExtendedAttributes(self, attrs):
-        assert False # Override me!
+        assert False  # Override me!
 
     def handleExtendedAttribute(self, attr):
-        assert False # Override me!
+        assert False  # Override me!
 
     def _getDependentObjects(self):
-        assert False # Override me!
+        assert False  # Override me!
 
     def getDeps(self, visited=None):
         """ Return a set of files that this object depends on.  If any of
@@ -337,8 +337,8 @@ class IDLIdentifier(IDLObject):
         return self.scope.lookupIdentifier(self)
 
 class IDLUnresolvedIdentifier(IDLObject):
-    def __init__(self, location, name, allowDoubleUnderscore = False,
-                 allowForbidden = False):
+    def __init__(self, location, name, allowDoubleUnderscore=False,
+                 allowForbidden=False):
         IDLObject.__init__(self, location)
 
         assert len(name) > 0
@@ -379,7 +379,7 @@ class IDLUnresolvedIdentifier(IDLObject):
         return identifier
 
     def finish(self):
-        assert False # Should replace with a resolved identifier first.
+        assert False  # Should replace with a resolved identifier first.
 
 class IDLObjectWithIdentifier(IDLObject):
     def __init__(self, location, parentScope, identifier):
@@ -955,13 +955,13 @@ class IDLInterface(IDLObjectWithScope, IDLExposureMixins):
             for unforgeableMember in (member for member in self.parent.members if
                                       (member.isAttr() or member.isMethod()) and
                                       member.isUnforgeable()):
-                shadows = [ m for m in self.members if
-                            (m.isAttr() or m.isMethod()) and
-                            not m.isStatic() and
-                            m.identifier.name == unforgeableMember.identifier.name ]
+                shadows = [m for m in self.members if
+                           (m.isAttr() or m.isMethod()) and
+                           not m.isStatic() and
+                           m.identifier.name == unforgeableMember.identifier.name]
                 if len(shadows) != 0:
-                    locs = [unforgeableMember.location] + [ s.location for s
-                                                            in shadows ]
+                    locs = [unforgeableMember.location] + [s.location for s
+                                                           in shadows]
                     raise WebIDLError("Interface %s shadows [Unforgeable] "
                                       "members of %s" %
                                       (self.identifier.name,
@@ -1065,7 +1065,7 @@ class IDLInterface(IDLObjectWithScope, IDLExposureMixins):
                 self.identifier.name,
                 [self.location] +
                 list(i.location for i in
-                     (self.interfacesBasedOnSelf - { self }) ))
+                     (self.interfacesBasedOnSelf - {self})))
 
         # We also don't support inheriting from unforgeable interfaces.
         if self.getExtendedAttribute("Unforgeable") and self.hasChildInterfaces():
@@ -1348,11 +1348,11 @@ class IDLInterface(IDLObjectWithScope, IDLExposureMixins):
                                       [attr.location, self.location])
             elif identifier == "Global":
                 if attr.hasValue():
-                    self.globalNames = [ attr.value() ]
+                    self.globalNames = [attr.value()]
                 elif attr.hasArgs():
                     self.globalNames = attr.args()
                 else:
-                    self.globalNames = [ self.identifier.name ]
+                    self.globalNames = [self.identifier.name]
                 self.parentScope.globalNames.update(self.globalNames)
                 for globalName in self.globalNames:
                     self.parentScope.globalNameMapping[globalName].add(self.identifier.name)
@@ -1866,7 +1866,7 @@ class IDLType(IDLObject):
         return False
 
     def tag(self):
-        assert False # Override me!
+        assert False  # Override me!
 
     def treatNonCallableAsNull(self):
         assert self.tag() == IDLType.Tags.callback
@@ -3175,7 +3175,7 @@ class IDLValue(IDLObject):
 
     def coerceToType(self, type, location):
         if type == self.type:
-            return self # Nothing to do
+            return self  # Nothing to do
 
         # We first check for unions to ensure that even if the union is nullable
         # we end up with the right flat member type, not the union's type.
@@ -4318,7 +4318,7 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
         if self._getter or self._deleter:
             assert len(self._overloads) == 1
             overload = self._overloads[0]
-            arguments =  overload.arguments
+            arguments = overload.arguments
             assert len(arguments) == 1
             assert (arguments[0].type == BuiltinTypes[IDLBuiltinType.Types.domstring] or
                     arguments[0].type == BuiltinTypes[IDLBuiltinType.Types.unsigned_long])
@@ -4469,8 +4469,8 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
         # Now compute various information that will be used by the
         # WebIDL overload resolution algorithm.
         self.maxArgCount = max(len(s[1]) for s in self.signatures())
-        self.allowedArgCounts = [ i for i in range(self.maxArgCount+1)
-                                  if len(self.signaturesForArgCount(i)) != 0 ]
+        self.allowedArgCounts = [i for i in range(self.maxArgCount+1)
+                                 if len(self.signaturesForArgCount(i)) != 0]
 
     def validate(self):
         IDLInterfaceMember.validate(self)
@@ -4998,7 +4998,7 @@ class Parser(Tokenizer):
                        | ImplementsStatement
         """
         p[0] = p[1]
-        assert p[1] # We might not have implemented something ...
+        assert p[1]  # We might not have implemented something ...
 
     def p_CallbackOrInterfaceCallback(self, p):
         """
@@ -5200,7 +5200,7 @@ class Parser(Tokenizer):
         if len(p) == 2:
             p[0] = p[1]
         else:
-            assert len(p) == 3 # Must be []
+            assert len(p) == 3  # Must be []
             p[0] = IDLEmptySequenceValue(self.getLocation(p, 1))
 
     def p_Exception(self, p):
@@ -6262,7 +6262,7 @@ class Parser(Tokenizer):
         """
             RelativeScopedName : IDENTIFIER ScopedNameParts
         """
-        assert not p[2] # Not implemented!
+        assert not p[2]  # Not implemented!
 
         p[0] = IDLUnresolvedIdentifier(self.getLocation(p, 1), p[1])
 
@@ -6372,7 +6372,7 @@ class Parser(Tokenizer):
         self.lexer.input(Parser._builtins)
         self._filename = None
 
-        self.parser.parse(lexer=self.lexer,tracking=True)
+        self.parser.parse(lexer=self.lexer, tracking=True)
 
     def _installBuiltins(self, scope):
         assert isinstance(scope, IDLScope)
@@ -6399,21 +6399,21 @@ class Parser(Tokenizer):
     def parse(self, t, filename=None):
         self.lexer.input(t)
 
-        #for tok in iter(self.lexer.token, None):
+        # for tok in iter(self.lexer.token, None):
         #    print tok
 
         self._filename = filename
-        self._productions.extend(self.parser.parse(lexer=self.lexer,tracking=True))
+        self._productions.extend(self.parser.parse(lexer=self.lexer, tracking=True))
         self._filename = None
 
     def finish(self):
         # First, finish all the IDLImplementsStatements.  In particular, we
         # have to make sure we do those before we do the IDLInterfaces.
         # XXX khuey hates this bit and wants to nuke it from orbit.
-        implementsStatements = [ p for p in self._productions if
-                                 isinstance(p, IDLImplementsStatement)]
-        otherStatements = [ p for p in self._productions if
-                            not isinstance(p, IDLImplementsStatement)]
+        implementsStatements = [p for p in self._productions if
+                                isinstance(p, IDLImplementsStatement)]
+        otherStatements = [p for p in self._productions if
+                           not isinstance(p, IDLImplementsStatement)]
         for production in implementsStatements:
             production.finish(self.globalScope())
         for production in otherStatements:
