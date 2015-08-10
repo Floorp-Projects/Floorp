@@ -27,6 +27,9 @@ bool GetEMEVoucherPath(nsIFile** aPath);
 
 bool EMEVoucherFileExists();
 
+nsTArray<nsCString>
+SplitAt(const char* aDelims, const nsACString& aInput);
+
 } // namespace mozilla
 
 #endif
