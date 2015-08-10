@@ -113,6 +113,7 @@ def memoize(fn):
     grows without bound.
     """
     cache = {}
+
     @functools.wraps(fn)
     def wrapper(arg):
         retval = cache.get(arg)
@@ -120,6 +121,7 @@ def memoize(fn):
             retval = cache[arg] = fn(arg)
         return retval
     return wrapper
+
 
 @memoize
 def dedent(s):
@@ -595,6 +597,7 @@ def InterfacePrototypeObjectProtoGetter(descriptor):
 
     return (protoGetter, protoHandleGetter)
 
+
 class CGPrototypeJSClass(CGThing):
     def __init__(self, descriptor, properties):
         CGThing.__init__(self)
@@ -656,6 +659,7 @@ def NeedsGeneratedHasInstance(descriptor):
     assert descriptor.interface.hasInterfaceObject()
     return descriptor.hasXPConnectImpls or descriptor.interface.isConsequential()
 
+
 def InterfaceObjectProtoGetter(descriptor):
     """
     Returns a tuple with two elements:
@@ -678,6 +682,7 @@ def InterfaceObjectProtoGetter(descriptor):
         protoGetter = "JS_GetFunctionPrototype"
         protoHandleGetter = None
     return (protoGetter, protoHandleGetter)
+
 
 class CGInterfaceObjectJSClass(CGThing):
     def __init__(self, descriptor, properties):
@@ -1214,6 +1219,7 @@ def SortedDictValues(d):
     """
     return [v for k, v in sorted(d.items())]
 
+
 def UnionsForFile(config, webIDLFile):
     """
     Returns a list of tuples each containing two elements (type and descriptor)
@@ -1222,6 +1228,7 @@ def UnionsForFile(config, webIDLFile):
     than one WebIDL file.
     """
     return config.unionsPerFilename.get(webIDLFile, [])
+
 
 def UnionTypes(unionTypes, config):
     """
@@ -1322,6 +1329,7 @@ def UnionTypes(unionTypes, config):
             SortedDictValues(traverseMethods), SortedDictValues(unlinkMethods),
             SortedDictValues(unionStructs))
 
+
 def UnionConversions(unionTypes, config):
     """
     The unionTypes argument should be a list of tuples, each containing two
@@ -1339,6 +1347,7 @@ def UnionConversions(unionTypes, config):
         if name not in unionConversions:
             providers = getRelevantProviders(descriptor, config)
             unionConversions[name] = CGUnionConversionStruct(t, providers[0])
+
             def addHeadersForType(f, providers):
                 f = f.unroll()
                 if f.isInterface():
@@ -2107,6 +2116,7 @@ def isMaybeExposedIn(member, descriptor):
     # and member is not exposed in any worker, then it's not exposed.
     return not descriptor.workers or member.isExposedInAnyWorker()
 
+
 def clearableCachedAttrs(descriptor):
     return (m for m in descriptor.interface.members if
             m.isAttr() and
@@ -2114,11 +2124,14 @@ def clearableCachedAttrs(descriptor):
             m.dependsOn != "Nothing" and
             m.slotIndex is not None)
 
+
 def MakeClearCachedValueNativeName(member):
     return "ClearCached%sValue" % MakeNativeName(member.identifier.name)
 
+
 def MakeJSImplClearCachedValueNativeName(member):
     return "_" + MakeClearCachedValueNativeName(member)
+
 
 def IDLToCIdentifier(name):
     return name.replace("-", "_")
@@ -2606,6 +2619,7 @@ class CGNativeProperties(CGList):
     def define(self):
         return CGList.define(self)
 
+
 class CGJsonifyAttributesMethod(CGAbstractMethod):
     """
     Generate the JsonifyAttributes method for an interface descriptor
@@ -2637,6 +2651,7 @@ class CGJsonifyAttributesMethod(CGAbstractMethod):
                     name=IDLToCIdentifier(m.identifier.name))
         ret += 'return true;\n'
         return ret
+
 
 class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
     """
@@ -3000,6 +3015,7 @@ class CGGetProtoObjectMethod(CGAbstractMethod):
     def definition_body(self):
         return "return GetProtoObjectHandle(aCx, aGlobal);\n"
 
+
 class CGGetConstructorObjectHandleMethod(CGGetPerInterfaceObject):
     """
     A method for getting the interface constructor object.
@@ -3017,6 +3033,7 @@ class CGGetConstructorObjectHandleMethod(CGGetPerInterfaceObject):
 
             """) + CGGetPerInterfaceObject.definition_body(self)
 
+
 class CGGetConstructorObjectMethod(CGAbstractMethod):
     """
     A method for getting the interface constructor object.
@@ -3029,6 +3046,7 @@ class CGGetConstructorObjectMethod(CGAbstractMethod):
 
     def definition_body(self):
         return "return GetConstructorObjectHandle(aCx, aGlobal);\n"
+
 
 class CGGetNamedPropertiesObjectMethod(CGAbstractStaticMethod):
     def __init__(self, descriptor):
@@ -3293,6 +3311,7 @@ def InitUnforgeablePropertiesOnHolder(descriptor, properties, failureCode):
             failureCode=failureCode)))
 
     return CGWrapper(CGList(unforgeables), pre="\n")
+
 
 def CopyUnforgeablePropertiesToInstance(descriptor, wrapperCache):
     """
@@ -6656,6 +6675,7 @@ class MethodNotNewObjectError(Exception):
 sequenceWrapLevel = 0
 mapWrapLevel = 0
 
+
 def wrapTypeIntoCurrentCompartment(type, value, isMember=True):
     """
     Take the thing named by "value" and if it contains "any",
@@ -7619,6 +7639,7 @@ class FakeIdentifier():
     def __init__(self, name):
         self.name = name
 
+
 class FakeArgument():
     """
     A class that quacks like an IDLArgument.  This is used to make
@@ -7816,6 +7837,7 @@ class CGGenericMethod(CGAbstractBindingMethod):
             return ok;
             """))
 
+
 class CGGenericPromiseReturningMethod(CGAbstractBindingMethod):
     """
     A class for generating the C++ code for an IDL method that returns a Promise.
@@ -7858,7 +7880,6 @@ class CGGenericPromiseReturningMethod(CGAbstractBindingMethod):
             return ConvertExceptionToPromise(cx, xpc::XrayAwareCalleeGlobal(callee),
                                              args.rval());
             """))
-
 
 
 class CGSpecializedMethod(CGAbstractStaticMethod):
@@ -9503,6 +9524,7 @@ class CGUnionConversionStruct(CGThing):
 
     def define(self):
         return ""
+
     def deps(self):
         return set()
 
@@ -11298,7 +11320,6 @@ class CGDOMJSProxyHandler(CGClass):
                 explicit=True)
         ]
 
-
         if descriptor.supportsIndexedProperties():
             methods.append(CGDOMJSProxyHandler_getElements(descriptor))
         if (descriptor.operations['IndexedSetter'] is not None or
@@ -11349,6 +11370,7 @@ def stripTrailingWhitespace(text):
     lines = text.splitlines()
     return '\n'.join(line.rstrip() for line in lines) + tail
 
+
 class MemberProperties:
     def __init__(self):
         self.isGenericMethod = False
@@ -11361,6 +11383,7 @@ class MemberProperties:
         self.isLenientSetter = False
         self.isCrossOriginSetter = False
         self.isJsonifier = False
+
 
 def memberProperties(m, descriptor):
     props = MemberProperties()
@@ -11403,6 +11426,7 @@ def memberProperties(m, descriptor):
                 props.isGenericSetter = True
 
     return props
+
 
 class CGDescriptor(CGThing):
     def __init__(self, descriptor):
@@ -11749,6 +11773,7 @@ class CGNamespacedEnum(CGThing):
     def define(self):
         return ""
 
+
 def initIdsClassMethod(identifiers, atomCacheName):
     idinit = ['!atomsCache->%s.init(cx, "%s")' %
               (CGDictionary.makeIdName(id),
@@ -11771,6 +11796,7 @@ def initIdsClassMethod(identifiers, atomCacheName):
         Argument("JSContext*", "cx"),
         Argument("%s*" % atomCacheName, "atomsCache")
     ], static=True, body=body, visibility="private")
+
 
 class CGDictionary(CGThing):
     def __init__(self, dictionary, descriptorProvider):
@@ -15241,7 +15267,6 @@ class CGMaplikeOrSetlikeHelperFunctionGenerator(CallbackMember):
             return " false"
         return ""
 
-
     def getCall(self):
         return CGMaplikeOrSetlikeMethodGenerator(self.descriptorProvider,
                                                  self.maplikeOrSetlike,
@@ -15318,6 +15343,7 @@ class GlobalGenRoots():
             binaryMemberName = binaryNameFor(m.identifier.name)
             return ClassMember(CGDictionary.makeIdName(binaryMemberName),
                                "PinnedStringId", visibility="public")
+
         def buildAtomCacheStructure(idlobj, binaryNameFor, members):
             classMembers = [memberToAtomCacheMember(binaryNameFor, m)
                             for m in members]
@@ -15648,6 +15674,7 @@ class GlobalGenRoots():
 
         return curr
 
+
 # Code generator for simple events
 class CGEventGetter(CGNativeMember):
     def __init__(self, descriptor, attr):
@@ -15749,7 +15776,6 @@ class CGEventMethod(CGNativeMember):
 
         if not allowed:
             raise TypeError("Event code generator does not support methods!")
-
 
     def getArgs(self, returnType, argList):
         args = [self.getArg(arg) for arg in argList]
