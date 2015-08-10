@@ -3,107 +3,63 @@
 * License, v. 2.0. If a copy of the MPL was not distributed with this
 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <map>
-#include <stack>
-
 #include "gfxPlatform.h"
-#include "mozilla/layers/GrallocTextureClient.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
-#include "mozilla/Mutex.h"
-
 #include "TextureClientRecycleAllocator.h"
 
 namespace mozilla {
 namespace layers {
 
-class TextureClientRecycleAllocatorImp
+// Used to keep TextureClient's reference count stable as not to disrupt recycling.
+class TextureClientHolder
 {
-  ~TextureClientRecycleAllocatorImp();
-
+  ~TextureClientHolder() {}
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TextureClientRecycleAllocatorImp)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TextureClientHolder)
 
-  explicit TextureClientRecycleAllocatorImp(ISurfaceAllocator* aAllocator);
+  explicit TextureClientHolder(TextureClient* aClient)
+    : mTextureClient(aClient)
+  {}
 
-  void SetMaxPoolSize(uint32_t aMax)
+  TextureClient* GetTextureClient()
   {
-    if (aMax > 0) {
-      mMaxPooledSize = aMax;
-    }
+    return mTextureClient;
   }
 
-  // Creates and allocates a TextureClient.
-  already_AddRefed<TextureClient>
-  CreateOrRecycleForDrawing(gfx::SurfaceFormat aFormat,
-                            gfx::IntSize aSize,
-                            BackendSelector aSelector,
-                            TextureFlags aTextureFlags,
-                            TextureAllocationFlags flags);
-
-  void Destroy();
-
-  void RecycleCallbackImp(TextureClient* aClient);
-
-  static void RecycleCallback(TextureClient* aClient, void* aClosure);
-
-private:
-  static const uint32_t kMaxPooledSized = 2;
-
-  // Used to keep TextureClient's reference count stable as not to disrupt recycling.
-  class TextureClientHolder
-  {
-    ~TextureClientHolder() {}
-  public:
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TextureClientHolder)
-
-    explicit TextureClientHolder(TextureClient* aClient)
-      : mTextureClient(aClient)
-    {}
-
-    TextureClient* GetTextureClient()
-    {
-      return mTextureClient;
-    }
-    void ClearTextureClient() { mTextureClient = nullptr; }
-  protected:
-    RefPtr<TextureClient> mTextureClient;
-  };
-
-  bool mDestroyed;
-  uint32_t mMaxPooledSize;
-  RefPtr<ISurfaceAllocator> mSurfaceAllocator;
-  std::map<TextureClient*, RefPtr<TextureClientHolder> > mInUseClients;
-
-  // On b2g gonk, std::queue might be a better choice.
-  // On ICS, fence wait happens implicitly before drawing.
-  // Since JB, fence wait happens explicitly when fetching a client from the pool.
-  // stack is good from Graphics cache usage point of view.
-  std::stack<RefPtr<TextureClientHolder> > mPooledClients;
-  Mutex mLock;
+  void ClearTextureClient() { mTextureClient = nullptr; }
+protected:
+  RefPtr<TextureClient> mTextureClient;
 };
 
-TextureClientRecycleAllocatorImp::TextureClientRecycleAllocatorImp(ISurfaceAllocator *aAllocator)
-  : mDestroyed(false)
-  , mMaxPooledSize(kMaxPooledSized)
+TextureClientRecycleAllocator::TextureClientRecycleAllocator(ISurfaceAllocator *aAllocator)
+  : mMaxPooledSize(kMaxPooledSized)
   , mSurfaceAllocator(aAllocator)
   , mLock("TextureClientRecycleAllocatorImp.mLock")
 {
 }
 
-TextureClientRecycleAllocatorImp::~TextureClientRecycleAllocatorImp()
+TextureClientRecycleAllocator::~TextureClientRecycleAllocator()
 {
-  MOZ_ASSERT(mDestroyed);
-  MOZ_ASSERT(mPooledClients.empty());
+  MutexAutoLock lock(mLock);
+  while (!mPooledClients.empty()) {
+    mPooledClients.pop();
+  }
   MOZ_ASSERT(mInUseClients.empty());
 }
 
+void
+TextureClientRecycleAllocator::SetMaxPoolSize(uint32_t aMax)
+{
+  mMaxPooledSize = aMax;
+}
+
 already_AddRefed<TextureClient>
-TextureClientRecycleAllocatorImp::CreateOrRecycleForDrawing(
-                                             gfx::SurfaceFormat aFormat,
-                                             gfx::IntSize aSize,
-                                             BackendSelector aSelector,
-                                             TextureFlags aTextureFlags,
-                                             TextureAllocationFlags aAllocFlags)
+TextureClientRecycleAllocator::CreateOrRecycleForDrawing(
+                                          gfx::SurfaceFormat aFormat,
+                                          gfx::IntSize aSize,
+                                          BackendSelector aSelector,
+                                          TextureFlags aTextureFlags,
+                                          TextureAllocationFlags aAllocFlags)
 {
   // TextureAllocationFlags is actually used only by ContentClient.
   // This class does not handle ConteClient's TextureClient allocation.
@@ -116,9 +72,7 @@ TextureClientRecycleAllocatorImp::CreateOrRecycleForDrawing(
 
   {
     MutexAutoLock lock(mLock);
-    if (mDestroyed) {
-      return nullptr;
-    } else if (!mPooledClients.empty()) {
+    if (!mPooledClients.empty()) {
       textureHolder = mPooledClients.top();
       mPooledClients.pop();
       // If a pooled TextureClient is not compatible, release it.
@@ -153,26 +107,13 @@ TextureClientRecycleAllocatorImp::CreateOrRecycleForDrawing(
     // Register TextureClient
     mInUseClients[textureHolder->GetTextureClient()] = textureHolder;
   }
-  textureHolder->GetTextureClient()->SetRecycleCallback(TextureClientRecycleAllocatorImp::RecycleCallback, this);
+  textureHolder->GetTextureClient()->SetRecycleCallback(TextureClientRecycleAllocator::RecycleCallback, this);
   RefPtr<TextureClient> client(textureHolder->GetTextureClient());
   return client.forget();
 }
 
 void
-TextureClientRecycleAllocatorImp::Destroy()
-{
-  MutexAutoLock lock(mLock);
-  if (mDestroyed) {
-    return;
-  }
-  mDestroyed = true;
-  while (!mPooledClients.empty()) {
-    mPooledClients.pop();
-  }
-}
-
-void
-TextureClientRecycleAllocatorImp::RecycleCallbackImp(TextureClient* aClient)
+TextureClientRecycleAllocator::RecycleCallbackImp(TextureClient* aClient)
 {
   RefPtr<TextureClientHolder> textureHolder;
   aClient->ClearRecycleCallback();
@@ -180,7 +121,7 @@ TextureClientRecycleAllocatorImp::RecycleCallbackImp(TextureClient* aClient)
     MutexAutoLock lock(mLock);
     if (mInUseClients.find(aClient) != mInUseClients.end()) {
       textureHolder = mInUseClients[aClient]; // Keep reference count of TextureClientHolder within lock.
-      if (!mDestroyed && mPooledClients.size() < mMaxPooledSize) {
+      if (mPooledClients.size() < mMaxPooledSize) {
         mPooledClients.push(textureHolder);
       }
       mInUseClients.erase(aClient);
@@ -189,43 +130,11 @@ TextureClientRecycleAllocatorImp::RecycleCallbackImp(TextureClient* aClient)
 }
 
 /* static */ void
-TextureClientRecycleAllocatorImp::RecycleCallback(TextureClient* aClient, void* aClosure)
+TextureClientRecycleAllocator::RecycleCallback(TextureClient* aClient, void* aClosure)
 {
   MOZ_ASSERT(aClient && !aClient->IsDead());
-  TextureClientRecycleAllocatorImp* recycleAllocator = static_cast<TextureClientRecycleAllocatorImp*>(aClosure);
+  TextureClientRecycleAllocator* recycleAllocator = static_cast<TextureClientRecycleAllocator*>(aClosure);
   recycleAllocator->RecycleCallbackImp(aClient);
-}
-
-TextureClientRecycleAllocator::TextureClientRecycleAllocator(ISurfaceAllocator *aAllocator)
-{
-  mAllocator = new TextureClientRecycleAllocatorImp(aAllocator);
-}
-
-TextureClientRecycleAllocator::~TextureClientRecycleAllocator()
-{
-  mAllocator->Destroy();
-  mAllocator = nullptr;
-}
-
-void
-TextureClientRecycleAllocator::SetMaxPoolSize(uint32_t aMax)
-{
-  mAllocator->SetMaxPoolSize(aMax);
-}
-
-already_AddRefed<TextureClient>
-TextureClientRecycleAllocator::CreateOrRecycleForDrawing(
-                                            gfx::SurfaceFormat aFormat,
-                                            gfx::IntSize aSize,
-                                            BackendSelector aSelector,
-                                            TextureFlags aTextureFlags,
-                                            TextureAllocationFlags aAllocFlags)
-{
-  return mAllocator->CreateOrRecycleForDrawing(aFormat,
-                                               aSize,
-                                               aSelector,
-                                               aTextureFlags,
-                                               aAllocFlags);
 }
 
 } // namespace layers
