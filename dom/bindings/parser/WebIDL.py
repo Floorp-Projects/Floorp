@@ -168,7 +168,7 @@ class IDLObject(object):
         return False
 
     def isDictionary(self):
-        return False;
+        return False
 
     def isUnion(self):
         return False
@@ -203,7 +203,7 @@ class IDLObject(object):
         # NB: We can't use visited=set() above because the default value is
         # evaluated when the def statement is evaluated, not when the function
         # is executed, so there would be one set for all invocations.
-        if visited == None:
+        if visited is None:
             visited = set()
 
         if self in visited:
@@ -892,7 +892,7 @@ class IDLInterface(IDLObjectWithScope, IDLExposureMixins):
                                    iface.identifier.name),
                                   [self.maplikeOrSetlike.location,
                                    iface.maplikeOrSetlike.location])
-            additionalMembers = iface.originalMembers;
+            additionalMembers = iface.originalMembers
             for additionalMember in additionalMembers:
                 for member in self.members:
                     if additionalMember.identifier.name == member.identifier.name:
@@ -1346,7 +1346,7 @@ class IDLInterface(IDLObjectWithScope, IDLExposureMixins):
                     newMethod = self.parentScope.lookupIdentifier(method.identifier)
                     if newMethod == method:
                         self.namedConstructors.append(method)
-                    elif not newMethod in self.namedConstructors:
+                    elif newMethod not in self.namedConstructors:
                         raise WebIDLError("NamedConstructor conflicts with a NamedConstructor of a different interface",
                                           [method.location, newMethod.location])
             elif (identifier == "ArrayClass"):
@@ -1558,7 +1558,7 @@ class IDLDictionary(IDLObjectWithScope):
         return "Dictionary '%s'" % self.identifier.name
 
     def isDictionary(self):
-        return True;
+        return True
 
     def canBeEmpty(self):
         """
@@ -2132,10 +2132,10 @@ class IDLSequenceType(IDLType):
         return False
 
     def isPrimitive(self):
-        return False;
+        return False
 
     def isString(self):
-        return False;
+        return False
 
     def isByteString(self):
         return False
@@ -3266,7 +3266,7 @@ class IDLValue(IDLObject):
                 (self.value == float("inf") or self.value == float("-inf") or
                  math.isnan(self.value))):
                 raise WebIDLError("Trying to convert unrestricted value %s to non-unrestricted"
-                                  % self.value, [location]);
+                                  % self.value, [location])
             return self
         elif self.type.isString() and type.isUSVString():
             # Allow USVStrings to use default value just like
@@ -4106,7 +4106,7 @@ class IDLArgument(IDLObjectWithIdentifier):
                                       [attribute.location])
                 if self.enforceRange:
                     raise WebIDLError("[EnforceRange] and [Clamp] are mutually exclusive",
-                                      [self.location]);
+                                      [self.location])
                 self.clamp = True
             elif identifier == "EnforceRange":
                 if not attribute.noArguments():
@@ -4114,7 +4114,7 @@ class IDLArgument(IDLObjectWithIdentifier):
                                       [attribute.location])
                 if self.clamp:
                     raise WebIDLError("[EnforceRange] and [Clamp] are mutually exclusive",
-                                      [self.location]);
+                                      [self.location])
                 self.enforceRange = True
             elif identifier == "TreatNonCallableAsNull":
                 self._allowTreatNonCallableAsNull = True
@@ -4665,10 +4665,10 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
             self._unforgeable = True
         elif identifier == "SameObject":
             raise WebIDLError("Methods must not be flagged as [SameObject]",
-                              [attr.location, self.location]);
+                              [attr.location, self.location])
         elif identifier == "Constant":
             raise WebIDLError("Methods must not be flagged as [Constant]",
-                              [attr.location, self.location]);
+                              [attr.location, self.location])
         elif identifier == "PutForwards":
             raise WebIDLError("Only attributes support [PutForwards]",
                               [attr.location, self.location])
@@ -4748,7 +4748,7 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
 class IDLImplementsStatement(IDLObject):
     def __init__(self, location, implementor, implementee):
         IDLObject.__init__(self, location)
-        self.implementor = implementor;
+        self.implementor = implementor
         self.implementee = implementee
         self._finished = False
 
@@ -5364,7 +5364,7 @@ class Parser(Tokenizer):
         # We don't know ahead of time what type the integer literal is.
         # Determine the smallest type it could possibly fit in and use that.
         integerType = matchIntegerValueToType(p[1])
-        if integerType == None:
+        if integerType is None:
             raise WebIDLError("Integer literal out of range", [location])
 
         p[0] = IDLValue(location, integerType, p[1])

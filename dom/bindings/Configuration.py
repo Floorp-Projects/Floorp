@@ -27,8 +27,8 @@ class Configuration:
         self.descriptors = []
         self.interfaces = {}
         self.optimizedOutDescriptorNames = set()
-        self.generatedEvents = generatedEvents;
-        self.maxProtoChainLength = 0;
+        self.generatedEvents = generatedEvents
+        self.maxProtoChainLength = 0
         for thing in parseData:
             if isinstance(thing, IDLImplementsStatement):
                 # Our build system doesn't support dep build involving
@@ -50,7 +50,7 @@ class Configuration:
                         "%s" %
                         (thing.location, thing.implementor.location))
 
-            assert not thing.isType();
+            assert not thing.isType()
 
             if not thing.isInterface():
                 continue
@@ -111,7 +111,7 @@ class Configuration:
             mainTypes |= set(getFlatTypes(getTypesFromDescriptor(descriptor)))
         (mainCallbacks, mainDictionaries) = findCallbacksAndDictionaries(mainTypes)
 
-        workerTypes = set();
+        workerTypes = set()
         for descriptor in ([self.getDescriptor("DummyInterfaceWorkers", workers=True)] +
                            self.getDescriptors(workers=True, isExternal=False, skipGen=False)):
             workerTypes |= set(getFlatTypes(getTypesFromDescriptor(descriptor)))
@@ -213,7 +213,7 @@ class Configuration:
             elif key == 'isJSImplemented':
                 getter = lambda x: x.interface.isJSImplemented()
             elif key == 'isNavigatorProperty':
-                getter = lambda x: x.interface.getNavigatorProperty() != None
+                getter = lambda x: x.interface.getNavigatorProperty() is not None
             elif key == 'isExposedInAnyWorker':
                 getter = lambda x: x.interface.isExposedInAnyWorker()
             elif key == 'isExposedInSystemGlobals':
@@ -276,7 +276,7 @@ class Configuration:
                 "and a consequential interface) without an explicit "
                 "Bindings.conf annotation." % interfaceName)
 
-        raise NoSuchDescriptorError("For " + interfaceName + " found no matches");
+        raise NoSuchDescriptorError("For " + interfaceName + " found no matches")
 
     def getDescriptorProvider(self, workers):
         """
@@ -453,7 +453,7 @@ class Descriptor(DescriptorProvider):
                 if m.isMethod() and m.isLegacycaller():
                     if not m.isIdentifierLess():
                         raise TypeError("We don't support legacycaller with "
-                                        "identifier.\n%s" % m.location);
+                                        "identifier.\n%s" % m.location)
                     if len(m.signatures()) != 1:
                         raise TypeError("We don't support overloaded "
                                         "legacycaller.\n%s" % m.location)
@@ -511,7 +511,7 @@ class Descriptor(DescriptorProvider):
                     iface.setUserData('hasProxyDescendant', True)
                     iface = iface.parent
 
-        if desc.get('wantsQI', None) != None:
+        if desc.get('wantsQI', None) is not None:
             self._wantsQI = desc.get('wantsQI', None)
         self.wrapperCache = (not self.interface.isCallback() and
                              desc.get('wrapperCache', True))
