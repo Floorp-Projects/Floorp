@@ -14,6 +14,9 @@ thirdparty_source_dir = TOPSRCDIR + '/mobile/android/thirdparty/'
 constants_jar = add_java_jar('constants')
 constants_jar.sources = [
     'adjust/AdjustHelperInterface.java',
+    'annotation/JNITarget.java',
+    'annotation/RobocopTarget.java',
+    'annotation/WebRTCJNITarget.java',
     'annotation/WrapForJNI.java',
     'SysInfo.java',
 ]
@@ -56,11 +59,8 @@ mgjar.sources += [
     'mozglue/DirectBufferAllocator.java',
     'mozglue/GeckoLoader.java',
     'mozglue/JNIObject.java',
-    'mozglue/JNITarget.java',
     'mozglue/NativeReference.java',
     'mozglue/NativeZip.java',
-    'mozglue/RobocopTarget.java',
-    'mozglue/WebRTCJNITarget.java',
 ]
 mgjar.generated_sources = [] # Keep it this way.
 mgjar.extra_jars += [
