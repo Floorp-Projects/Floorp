@@ -12,7 +12,7 @@ function AssertError(gl, expected, info) {
   while (gl.getError()) {}
 
   ok(actual == expected,
-     'For ' + info + ', expected 0x' + expected.toString(16) + ', got 0x'
+     'For ' + info + ', expected GL error 0x' + expected.toString(16) + ', got 0x'
       + actual.toString(16));
 }
 
@@ -23,17 +23,20 @@ var VENDOR_OVERRIDE = 'overridden vendor';
 
 function TestExt() {
   var ext = gl.getExtension('WEBGL_debug_renderer_info');
-  ok(ext, 'Should have access to \'WEBGL_debug_renderer_info\'.');
+  ok(ext, 'When pref enabled: Should have access to \'WEBGL_debug_renderer_info\'.');
   AssertError(gl, 0, 'start of test');
 
   var renderer = gl.getParameter(ext.UNMASKED_RENDERER_WEBGL);
   AssertError(gl, 0, 'UNMASKED_RENDERER_WEBGL');
   ok(renderer,
-     'UNMASKED_RENDERER_WEBGL value should not be empty, was \'' + renderer + '\'');
+     'When pref enabled: UNMASKED_RENDERER_WEBGL value should not be empty, was \''
+     + renderer + '\'');
 
   var vendor = gl.getParameter(ext.UNMASKED_VENDOR_WEBGL);
   AssertError(gl, 0, 'UNMASKED_VENDOR_WEBGL');
-  ok(vendor, 'UNMASKED_VENDOR_WEBGL value should not be empty, was \'' + vendor + '\'');
+  ok(vendor,
+     'When pref enabled: UNMASKED_VENDOR_WEBGL value should not be empty, was \''
+     + vendor + '\'');
 
   var prefArrArr = [
     ['webgl.renderer-string-override', RENDERER_OVERRIDE],
@@ -45,23 +48,23 @@ function TestExt() {
 
 function TestOverrides() {
   var ext = gl.getExtension('WEBGL_debug_renderer_info');
-  ok(ext, 'Should have access to \'WEBGL_debug_renderer_info\'.');
+  ok(ext, 'When overrides set: Should have access to \'WEBGL_debug_renderer_info\'.');
   AssertError(gl, 0, 'start of test');
 
   var renderer = gl.getParameter(ext.UNMASKED_RENDERER_WEBGL);
   AssertError(gl, 0, 'UNMASKED_RENDERER_WEBGL');
   ok(renderer == RENDERER_OVERRIDE,
-     'UNMASKED_RENDERER_WEBGL value should be \'' + RENDERER_OVERRIDE + '\', was \''
-     + renderer + '\'');
+     'When overrides set: UNMASKED_RENDERER_WEBGL value should be \'' + RENDERER_OVERRIDE
+     + '\', was \'' + renderer + '\'');
 
   var vendor = gl.getParameter(ext.UNMASKED_VENDOR_WEBGL);
   AssertError(gl, 0, 'UNMASKED_VENDOR_WEBGL');
   ok(vendor == VENDOR_OVERRIDE,
-     'UNMASKED_VENDOR_WEBGL value should be \'' + VENDOR_OVERRIDE + '\', was \'' + vendor
-     + '\'');
+     'When overrides set: UNMASKED_VENDOR_WEBGL value should be \'' + VENDOR_OVERRIDE
+     + '\', was \'' + vendor + '\'');
 
   var prefArrArr = [
-    ['webgl.disable-debug-renderer-info', true],
+    ['webgl.enable-debug-renderer-info', false],
   ];
   var prefEnv = {'set': prefArrArr};
   SpecialPowers.pushPrefEnv(prefEnv, TestDisable);
@@ -69,7 +72,8 @@ function TestOverrides() {
 
 function TestDisable() {
   var ext = gl.getExtension('WEBGL_debug_renderer_info');
-  ok(!ext, 'Should not have access to \'WEBGL_debug_renderer_info\'.');
+  ok(!ext,
+     'When pref disabled: Should not have access to \'WEBGL_debug_renderer_info\'.');
 
   ok(true, 'Test complete.');
   SimpleTest.finish();
@@ -87,7 +91,7 @@ function TestDisable() {
   SimpleTest.waitForExplicitFinish();
 
   var prefArrArr = [
-    ['webgl.disable-debug-renderer-info', false],
+    ['webgl.enable-debug-renderer-info', true],
   ];
   var prefEnv = {'set': prefArrArr};
   SpecialPowers.pushPrefEnv(prefEnv, TestExt);
