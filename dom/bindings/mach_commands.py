@@ -45,7 +45,7 @@ class WebIDLProvider(MachCommandBase):
         # objdir.  But we're going to try loading it as a python
         # module, so we need to make sure the objdir is in our search
         # path.
-        sys.path.insert(0, self.topobjdir);
+        sys.path.insert(0, self.topobjdir)
 
         from runtests import run_tests
         return run_tests(None, verbose=verbose)
