@@ -332,41 +332,7 @@ XMLDocument::Load(const nsAString& aUrl, ErrorResult& aRv)
     return false;
   }
 
-  // Check to see whether the current document is allowed to load this URI.
-  // It's important to use the current document's principal for this check so
-  // that we don't end up in a case where code with elevated privileges is
-  // calling us and changing the principal of this document.
-
-  // Enforce same-origin even for chrome loaders to avoid someone accidentally
-  // using a document that content has a reference to and turn that into a
-  // chrome document.
-  if (!nsContentUtils::IsSystemPrincipal(principal)) {
-    rv = principal->CheckMayLoad(uri, false, false);
-    if (NS_FAILED(rv)) {
-      aRv.Throw(rv);
-      return false;
-    }
-
-    int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-    rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST,
-                                   uri,
-                                   principal,
-                                   callingDoc ? callingDoc.get() :
-                                     static_cast<nsIDocument*>(this),
-                                   NS_LITERAL_CSTRING("application/xml"),
-                                   nullptr,
-                                   &shouldLoad,
-                                   nsContentUtils::GetContentPolicy(),
-                                   nsContentUtils::GetSecurityManager());
-    if (NS_FAILED(rv)) {
-      aRv.Throw(rv);
-      return false;
-    }
-    if (NS_CP_REJECTED(shouldLoad)) {
-      aRv.Throw(NS_ERROR_CONTENT_BLOCKED);
-      return false;
-    }
-  } else {
+  if (nsContentUtils::IsSystemPrincipal(principal)) {
     // We're called from chrome, check to make sure the URI we're
     // about to load is also chrome.
 
@@ -444,7 +410,7 @@ XMLDocument::Load(const nsAString& aUrl, ErrorResult& aRv)
                      uri,
                      callingDoc ? callingDoc.get() :
                                   static_cast<nsIDocument*>(this),
-                     nsILoadInfo::SEC_NORMAL,
+                     nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
                      nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST,
                      loadGroup,
                      req,
@@ -478,7 +444,7 @@ XMLDocument::Load(const nsAString& aUrl, ErrorResult& aRv)
   // mChannelIsPending.
 
   // Start an asynchronous read of the XML document
-  rv = channel->AsyncOpen(listener, nullptr);
+  rv = channel->AsyncOpen2(listener);
   if (NS_FAILED(rv)) {
     mChannelIsPending = false;
     aRv.Throw(rv);
