@@ -40,8 +40,12 @@ AppleVDADecoder::AppleVDADecoder(const VideoInfo& aConfig,
   , mPictureHeight(aConfig.mImage.height)
   , mDisplayWidth(aConfig.mDisplay.width)
   , mDisplayHeight(aConfig.mDisplay.height)
+  , mInputIncoming(0)
+  , mIsShutDown(false)
   , mUseSoftwareImages(true)
   , mIs106(!nsCocoaFeatures::OnLionOrLater())
+  , mMonitor("AppleVideoDecoder")
+  , mIsFlushing(false)
   , mDecoder(nullptr)
 {
   MOZ_COUNT_CTOR(AppleVDADecoder);
@@ -91,23 +95,41 @@ AppleVDADecoder::Init()
 nsresult
 AppleVDADecoder::Shutdown()
 {
+  MOZ_DIAGNOSTIC_ASSERT(!mIsShutDown);
+  mIsShutDown = true;
+  if (mTaskQueue) {
+    nsCOMPtr<nsIRunnable> runnable =
+      NS_NewRunnableMethod(this, &AppleVDADecoder::ProcessShutdown);
+    mTaskQueue->Dispatch(runnable.forget());
+  } else {
+    ProcessShutdown();
+  }
+  return NS_OK;
+}
+
+void
+AppleVDADecoder::ProcessShutdown()
+{
   if (mDecoder) {
     LOG("%s: cleaning up decoder %p", __func__, mDecoder);
     VDADecoderDestroy(mDecoder);
     mDecoder = nullptr;
   }
-  return NS_OK;
 }
 
 nsresult
 AppleVDADecoder::Input(MediaRawData* aSample)
 {
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
+
   LOG("mp4 input sample %p pts %lld duration %lld us%s %d bytes",
       aSample,
       aSample->mTime,
       aSample->mDuration,
       aSample->mKeyframe ? " keyframe" : "",
       aSample->Size());
+
+  mInputIncoming++;
 
   nsCOMPtr<nsIRunnable> runnable =
       NS_NewRunnableMethodWithArg<nsRefPtr<MediaRawData>>(
@@ -121,21 +143,51 @@ AppleVDADecoder::Input(MediaRawData* aSample)
 nsresult
 AppleVDADecoder::Flush()
 {
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
+  mIsFlushing = true;
   mTaskQueue->Flush();
-  OSStatus rv = VDADecoderFlush(mDecoder, 0 /*dont emit*/);
-  if (rv != noErr) {
-    LOG("AppleVDADecoder::Flush failed waiting for platform decoder "
-        "with error:%d.", rv);
+  nsCOMPtr<nsIRunnable> runnable =
+    NS_NewRunnableMethod(this, &AppleVDADecoder::ProcessFlush);
+  MonitorAutoLock mon(mMonitor);
+  mTaskQueue->Dispatch(runnable.forget());
+  while (mIsFlushing) {
+    mon.Wait();
   }
-  ClearReorderedFrames();
-
+  mInputIncoming = 0;
   return NS_OK;
 }
 
 nsresult
 AppleVDADecoder::Drain()
 {
-  mTaskQueue->AwaitIdle();
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
+  nsCOMPtr<nsIRunnable> runnable =
+    NS_NewRunnableMethod(this, &AppleVDADecoder::ProcessDrain);
+  mTaskQueue->Dispatch(runnable.forget());
+  return NS_OK;
+}
+
+void
+AppleVDADecoder::ProcessFlush()
+{
+  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+
+  OSStatus rv = VDADecoderFlush(mDecoder, 0 /*dont emit*/);
+  if (rv != noErr) {
+    LOG("AppleVDADecoder::Flush failed waiting for platform decoder "
+        "with error:%d.", rv);
+  }
+  ClearReorderedFrames();
+  MonitorAutoLock mon(mMonitor);
+  mIsFlushing = false;
+  mon.NotifyAll();
+}
+
+void
+AppleVDADecoder::ProcessDrain()
+{
+  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+
   OSStatus rv = VDADecoderFlush(mDecoder, kVDADecoderFlush_EmitFrames);
   if (rv != noErr) {
     LOG("AppleVDADecoder::Drain failed waiting for platform decoder "
@@ -143,7 +195,6 @@ AppleVDADecoder::Drain()
   }
   DrainReorderedFrames();
   mCallback->DrainComplete();
-  return NS_OK;
 }
 
 //
@@ -208,17 +259,19 @@ PlatformCallback(void* decompressionOutputRefCon,
   CFNumberGetValue(boref, kCFNumberSInt64Type, &byte_offset);
   CFNumberGetValue(kfref, kCFNumberSInt8Type, &is_sync_point);
 
-  nsAutoPtr<AppleVDADecoder::AppleFrameRef> frameRef(
-    new AppleVDADecoder::AppleFrameRef(
+  AppleVDADecoder::AppleFrameRef frameRef(
       media::TimeUnit::FromMicroseconds(dts),
       media::TimeUnit::FromMicroseconds(pts),
       media::TimeUnit::FromMicroseconds(duration),
       byte_offset,
-      is_sync_point == 1));
+      is_sync_point == 1);
 
   // Forward the data back to an object method which can access
-  // the correct MP4Reader callback.
-  decoder->OutputFrame(image, frameRef);
+  // the correct reader's callback.
+  nsCOMPtr<nsIRunnable> task =
+    NS_NewRunnableMethodWithArgs<CFRefPtr<CVPixelBufferRef>, AppleVDADecoder::AppleFrameRef>(
+      decoder, &AppleVDADecoder::OutputFrame, image, frameRef);
+  decoder->DispatchOutputTask(task.forget());
 }
 
 AppleVDADecoder::AppleFrameRef*
@@ -246,15 +299,22 @@ AppleVDADecoder::ClearReorderedFrames()
 
 // Copy and return a decoded frame.
 nsresult
-AppleVDADecoder::OutputFrame(CVPixelBufferRef aImage,
-                             nsAutoPtr<AppleVDADecoder::AppleFrameRef> aFrameRef)
+AppleVDADecoder::OutputFrame(CFRefPtr<CVPixelBufferRef> aImage,
+                             AppleVDADecoder::AppleFrameRef aFrameRef)
 {
+  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+
+  if (mIsFlushing) {
+    // We are in the process of flushing; ignore frame.
+    return NS_OK;
+  }
+
   LOG("mp4 output frame %lld dts %lld pts %lld duration %lld us%s",
-      aFrameRef->byte_offset,
-      aFrameRef->decode_timestamp.ToMicroseconds(),
-      aFrameRef->composition_timestamp.ToMicroseconds(),
-      aFrameRef->duration.ToMicroseconds(),
-      aFrameRef->is_sync_point ? " keyframe" : ""
+      aFrameRef.byte_offset,
+      aFrameRef.decode_timestamp.ToMicroseconds(),
+      aFrameRef.composition_timestamp.ToMicroseconds(),
+      aFrameRef.duration.ToMicroseconds(),
+      aFrameRef.is_sync_point ? " keyframe" : ""
   );
 
   // Where our resulting image will end up.
@@ -312,12 +372,12 @@ AppleVDADecoder::OutputFrame(CVPixelBufferRef aImage,
       VideoData::Create(info,
                         mImageContainer,
                         nullptr,
-                        aFrameRef->byte_offset,
-                        aFrameRef->composition_timestamp.ToMicroseconds(),
-                        aFrameRef->duration.ToMicroseconds(),
+                        aFrameRef.byte_offset,
+                        aFrameRef.composition_timestamp.ToMicroseconds(),
+                        aFrameRef.duration.ToMicroseconds(),
                         buffer,
-                        aFrameRef->is_sync_point,
-                        aFrameRef->decode_timestamp.ToMicroseconds(),
+                        aFrameRef.is_sync_point,
+                        aFrameRef.decode_timestamp.ToMicroseconds(),
                         visible);
     // Unlock the returned image data.
     CVPixelBufferUnlockBaseAddress(aImage, kCVPixelBufferLock_ReadOnly);
@@ -336,12 +396,12 @@ AppleVDADecoder::OutputFrame(CVPixelBufferRef aImage,
     data =
       VideoData::CreateFromImage(info,
                                  mImageContainer,
-                                 aFrameRef->byte_offset,
-                                 aFrameRef->composition_timestamp.ToMicroseconds(),
-                                 aFrameRef->duration.ToMicroseconds(),
+                                 aFrameRef.byte_offset,
+                                 aFrameRef.composition_timestamp.ToMicroseconds(),
+                                 aFrameRef.duration.ToMicroseconds(),
                                  image.forget(),
-                                 aFrameRef->is_sync_point,
-                                 aFrameRef->decode_timestamp.ToMicroseconds(),
+                                 aFrameRef.is_sync_point,
+                                 aFrameRef.decode_timestamp.ToMicroseconds(),
                                  visible);
   }
 
@@ -366,6 +426,10 @@ AppleVDADecoder::OutputFrame(CVPixelBufferRef aImage,
 nsresult
 AppleVDADecoder::SubmitFrame(MediaRawData* aSample)
 {
+  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+
+  mInputIncoming--;
+
   AutoCFRelease<CFDataRef> block =
     CFDataCreate(kCFAllocatorDefault, aSample->Data(), aSample->Size());
   if (!block) {
@@ -439,7 +503,7 @@ AppleVDADecoder::SubmitFrame(MediaRawData* aSample)
   }
 
   // Ask for more data.
-  if (mTaskQueue->IsEmpty()) {
+  if (!mInputIncoming) {
     LOG("AppleVDADecoder task queue empty; requesting more data");
     mCallback->InputExhausted();
   }
