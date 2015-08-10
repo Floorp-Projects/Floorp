@@ -66,10 +66,14 @@ private:
    */
   void UpdateFromBatteryInfo(const hal::BatteryInformation& aBatteryInfo);
 
+  /**
+   * Represents the battery level, ranging from 0.0 (dead or removed?)
+   * to 1.0 (fully charged)
+   */
   double mLevel;
   bool   mCharging;
   /**
-   * Represents the discharging time or the charging time, dpending on the
+   * Represents the discharging time or the charging time, depending on the
    * current battery status (charging or not).
    */
   double mRemainingTime;
