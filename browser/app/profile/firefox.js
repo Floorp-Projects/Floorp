@@ -1894,6 +1894,8 @@ pref("browser.translation.engine", "bing");
 // Telemetry settings.
 // Determines if Telemetry pings can be archived locally.
 pref("toolkit.telemetry.archive.enabled", true);
+// Whether Telemetry is opt-in even with unified Telemetry enabled, requires a restart.
+pref("toolkit.telemetry.unifiedIsOptIn", true);
 
 // Telemetry experiments settings.
 pref("experiments.enabled", true);
