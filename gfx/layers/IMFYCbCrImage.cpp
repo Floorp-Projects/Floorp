@@ -89,8 +89,8 @@ InitTextures(IDirect3DDevice9* aDevice,
   }
 
   tmpTexture->GetSurfaceLevel(0, byRef(aSurface));
-  aSurface->LockRect(&aLockedRect, nullptr, 0);
-  if (!aLockedRect.pBits) {
+  if (FAILED(aSurface->LockRect(&aLockedRect, nullptr, 0)) ||
+      !aLockedRect.pBits) {
     NS_WARNING("Could not lock surface");
     return nullptr;
   }
