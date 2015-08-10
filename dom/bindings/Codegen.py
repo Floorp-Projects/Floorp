@@ -4395,14 +4395,14 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             arrayRef = "${declName}"
 
         elementConversion = string.Template(elementInfo.template).substitute({
-                "val": "temp" + str(nestingLevel),
-                "declName": "slot" + str(nestingLevel),
-                # We only need holderName here to handle isExternal()
-                # interfaces, which use an internal holder for the
-                # conversion even when forceOwningType ends up true.
-                "holderName": "tempHolder" + str(nestingLevel),
-                "passedToJSImpl": "${passedToJSImpl}"
-            })
+            "val": "temp" + str(nestingLevel),
+            "declName": "slot" + str(nestingLevel),
+            # We only need holderName here to handle isExternal()
+            # interfaces, which use an internal holder for the
+            # conversion even when forceOwningType ends up true.
+            "holderName": "tempHolder" + str(nestingLevel),
+            "passedToJSImpl": "${passedToJSImpl}"
+        })
 
         # NOTE: Keep this in sync with variadic conversions as needed
         templateBody = fill(
@@ -4502,14 +4502,14 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             mozMapRef = "${declName}"
 
         valueConversion = string.Template(valueInfo.template).substitute({
-                "val": "temp",
-                "declName": "slot",
-                # We only need holderName here to handle isExternal()
-                # interfaces, which use an internal holder for the
-                # conversion even when forceOwningType ends up true.
-                "holderName": "tempHolder",
-                "passedToJSImpl": "${passedToJSImpl}"
-            })
+            "val": "temp",
+            "declName": "slot",
+            # We only need holderName here to handle isExternal()
+            # interfaces, which use an internal holder for the
+            # conversion even when forceOwningType ends up true.
+            "holderName": "tempHolder",
+            "passedToJSImpl": "${passedToJSImpl}"
+        })
 
         templateBody = fill(
             """
