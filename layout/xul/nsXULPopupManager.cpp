@@ -263,7 +263,10 @@ nsXULPopupManager::Rollup(uint32_t aCount, bool aFlush,
       // position, but the only thing that would happen is that the mouse
       // event will get consumed, so here only a quick coordinates check is
       // done rather than a slower complete check of what is at that location.
-      if (anchorRect.Contains(*pos)) {
+      nsPresContext* presContext = item->Frame()->PresContext();
+      nsIntPoint posCSSPixels(presContext->DevPixelsToIntCSSPixels(pos->x),
+                              presContext->DevPixelsToIntCSSPixels(pos->y));
+      if (anchorRect.Contains(posCSSPixels)) {
         if (consumeResult == ConsumeOutsideClicks_ParentOnly) {
           consume = true;
         }
