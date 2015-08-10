@@ -2292,8 +2292,8 @@ class MethodDefiner(PropertyDefiner):
                     "nativeName": "UnforgeableValueOf",
                     "methodInfo": False,
                     "length": 0,
-                    "flags": "JSPROP_ENUMERATE", # readonly/permanent added
-                                                 # automatically.
+                    "flags": "JSPROP_ENUMERATE",  # readonly/permanent added
+                                                  # automatically.
                     "condition": MemberCondition(None, None)
                 })
 
@@ -4286,7 +4286,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                 failureBody=onFailureNotAnObject(failureCode).define())
 
             if isinstance(defaultValue, IDLNullValue):
-                assert type.nullable() # Parser should enforce this
+                assert type.nullable()  # Parser should enforce this
                 templateBody = handleDefault(templateBody, codeToSetNull)
             elif isinstance(defaultValue, IDLEmptySequenceValue):
                 # Our caller will handle it
@@ -5082,7 +5082,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
 
     if type.isSpiderMonkeyInterface():
         assert not isEnforceRange and not isClamp
-        name = type.unroll().name # unroll() because it may be nullable
+        name = type.unroll().name  # unroll() because it may be nullable
         arrayType = CGGeneric(name)
         declType = arrayType
         if type.nullable():
@@ -6086,7 +6086,7 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
             if not descriptor.hasXPConnectImpls:
                 # Can only fail to wrap as a new-binding object
                 # if they already threw an exception.
-                #XXX Assertion disabled for now, see bug 991271.
+                # XXX Assertion disabled for now, see bug 991271.
                 failed = ("MOZ_ASSERT(true || JS_IsExceptionPending(cx));\n" +
                           exceptionCode)
             else:
@@ -7504,7 +7504,7 @@ class CGMethodCall(CGThing):
                 if (distinguishingType(s).isArray() or
                     distinguishingType(s).isDictionary() or
                     distinguishingType(s).isMozMap() or
-                    distinguishingType(s).isCallbackInterface()) ]
+                    distinguishingType(s).isCallbackInterface())]
             assert len(genericObjectSigs) <= 1
             objectSigs.extend(genericObjectSigs)
 
@@ -7932,7 +7932,7 @@ class CGJsonifierMethod(CGSpecializedMethod):
             }
             """)
 
-        jsonDescriptors = [ self.descriptor ]
+        jsonDescriptors = [self.descriptor]
         interface = self.descriptor.interface.parent
         while interface:
             descriptor = self.descriptor.getDescriptor(interface.identifier.name)
@@ -8454,7 +8454,7 @@ class CGMemberJITInfo(CGThing):
         assert(not movable or aliasSet != "AliasEverything")  # Can't move write-aliasing things
         assert(not alwaysInSlot or movable)  # Things always in slots had better be movable
         assert(not eliminatable or aliasSet != "AliasEverything")  # Can't eliminate write-aliasing things
-        assert(not alwaysInSlot or eliminatable) # Things always in slots had better be eliminatable
+        assert(not alwaysInSlot or eliminatable)  # Things always in slots had better be eliminatable
 
         def jitInfoInitializer(isTypedMethod):
             initializer = fill(
@@ -12826,8 +12826,8 @@ class CGBindingRoot(CGThing):
 
         bindingHeaders["WrapperFactory.h"] = descriptors
         bindingHeaders["mozilla/dom/DOMJSClass.h"] = descriptors
-        bindingHeaders["mozilla/dom/ScriptSettings.h"] = dictionaries # AutoJSAPI
-        bindingHeaders["xpcpublic.h"] = dictionaries ## xpc::UnprivilegedJunkScope
+        bindingHeaders["mozilla/dom/ScriptSettings.h"] = dictionaries  # AutoJSAPI
+        bindingHeaders["xpcpublic.h"] = dictionaries  # xpc::UnprivilegedJunkScope
 
         cgthings.extend(traverseMethods)
         cgthings.extend(unlinkMethods)
@@ -13530,7 +13530,7 @@ class CGBindingImplClass(CGClass):
                      [FakeArgument(BuiltinTypes[IDLBuiltinType.Types.domstring],
                                    FakeMember(),
                                    name="aName")]),
-                    { "infallible": True }))
+                    {"infallible": True}))
 
         wrapArgs = [Argument('JSContext*', 'aCx'),
                     Argument('JS::Handle<JSObject*>', 'aGivenProto')]
@@ -13585,7 +13585,7 @@ class CGExampleClass(CGBindingImplClass):
                 self.parentIface.identifier.name)
             bases = [ClassBase(self.nativeLeafName(self.parentDesc))]
         else:
-            bases = [ ClassBase("nsISupports /* or NonRefcountedDOMObject if this is a non-refcounted object */") ]
+            bases = [ClassBase("nsISupports /* or NonRefcountedDOMObject if this is a non-refcounted object */")]
             if descriptor.wrapperCache:
                 bases.append(ClassBase("nsWrapperCache /* Change wrapperCache in the binding configuration if you don't want this */"))
 
@@ -15538,9 +15538,9 @@ class GlobalGenRoots():
                                                             register=True,
                                                             isExposedInSystemGlobals=True,
                                                             skipGen=False)]
-        defineIncludes.append("nsThreadUtils.h") # For NS_IsMainThread
-        defineIncludes.append("js/Id.h") # For jsid
-        defineIncludes.append("mozilla/dom/BindingUtils.h") # AtomizeAndPinJSString
+        defineIncludes.append("nsThreadUtils.h")  # For NS_IsMainThread
+        defineIncludes.append("js/Id.h")  # For jsid
+        defineIncludes.append("mozilla/dom/BindingUtils.h")  # AtomizeAndPinJSString
 
         curr = CGHeaders([], [], [], [], [], defineIncludes,
                          'ResolveSystemBinding', curr)
@@ -15786,7 +15786,7 @@ class CGEventMethod(CGNativeMember):
         iface = self.descriptorProvider.interface
         members = ""
         while iface.identifier.name != "Event":
-            i = 3 # Skip the boilerplate args: type, bubble,s cancelable.
+            i = 3  # Skip the boilerplate args: type, bubble,s cancelable.
             for m in iface.members:
                 if m.isAttr():
                     # We need to initialize all the member variables that do
@@ -15808,10 +15808,10 @@ class CGEventMethod(CGNativeMember):
             }
             ${members}
             """,
-            typeArg = self.args[0].name,
-            bubblesArg = self.args[1].name,
-            cancelableArg = self.args[2].name,
-            members = members)
+            typeArg=self.args[0].name,
+            bubblesArg=self.args[1].name,
+            cancelableArg=self.args[2].name,
+            members=members)
 
         self.args.append(Argument('ErrorResult&', 'aRv'))
 
