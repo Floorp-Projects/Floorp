@@ -16,8 +16,9 @@ let { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 let { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 let { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-let { DebuggerServer } = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
 let { DebuggerClient } = Cu.import("resource://gre/modules/devtools/dbg-client.jsm", {});
+
+let { DebuggerServer } = require("devtools/server/main");
 let { CallWatcherFront } = require("devtools/server/actors/call-watcher");
 let { CanvasFront } = require("devtools/server/actors/canvas");
 let { setTimeout } = require("sdk/timers");

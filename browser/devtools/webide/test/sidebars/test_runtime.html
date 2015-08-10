@@ -41,7 +41,7 @@
             return !win.document.querySelector("#cmd_stop").hasAttribute("disabled");
           }
 
-          Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
+          const { DebuggerServer } = require("devtools/server/main");
 
           if (!DebuggerServer.initialized) {
             DebuggerServer.init();

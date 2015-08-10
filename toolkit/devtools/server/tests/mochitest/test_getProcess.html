@@ -17,8 +17,9 @@ let Cu = Components.utils;
 let Cc = Components.classes;
 let Ci = Components.interfaces;
 
+let {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
-Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
+let {DebuggerServer} = require("devtools/server/main");
 
 window.onload = function() {
   SimpleTest.waitForExplicitFinish();
