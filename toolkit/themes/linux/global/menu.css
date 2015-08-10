@@ -160,10 +160,7 @@ menucaption > .menu-iconic-text {
 
 menulist > menupopup > menuitem > .menu-iconic-left,
 menulist > menupopup > menucaption > .menu-iconic-left,
-menulist > menupopup > menu > .menu-iconic-left,
-menulist > menupopup > menuitem > .menu-iconic-right,
-menulist > menupopup > menucaption > .menu-iconic-right,
-menulist > menupopup > menu > .menu-iconic-right {
+menulist > menupopup > menu > .menu-iconic-left {
   display: none;
 }
 
