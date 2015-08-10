@@ -2418,7 +2418,7 @@ def IsCrossOriginWritable(attr, descriptor):
     crossOriginWritable = attr.getExtendedAttribute("CrossOriginWritable")
     if not crossOriginWritable:
         return False
-    if crossOriginWritable == True:
+    if crossOriginWritable is True:
         return True
     assert (isinstance(crossOriginWritable, list) and
             len(crossOriginWritable) == 1)
@@ -2598,7 +2598,7 @@ class CGNativeProperties(CGList):
                 if item.get("hasIteratorAlias"):
                     iteratorAliasIndex = index
                     break
-            nativeProps.append(CGGeneric(str(iteratorAliasIndex)));
+            nativeProps.append(CGGeneric(str(iteratorAliasIndex)))
             return CGWrapper(CGIndenter(CGList(nativeProps, ",\n")),
                              pre="static const NativeProperties %s = {\n" % name,
                              post="\n};\n")
@@ -12213,7 +12213,7 @@ class CGDictionary(CGThing):
                                            "%s");
                 }
                 """ % self.getMemberSourceDescription(member))
-            conversionReplacements["convert"] = indent(conversionReplacements["convert"]).rstrip();
+            conversionReplacements["convert"] = indent(conversionReplacements["convert"]).rstrip()
         else:
             conversion += (
                 "if (!isNull && !temp->isUndefined()) {\n"
@@ -12362,7 +12362,7 @@ class CGDictionary(CGThing):
             # dictionaries.  Either we're being constructed-but-not-initialized
             # ourselves (and then we don't want to init them) or we're about to
             # init ourselves and then we'll init them anyway.
-            return CGDictionary.getNonInitializingCtorArg();
+            return CGDictionary.getNonInitializingCtorArg()
         return None
 
     def getMemberSourceDescription(self, member):
@@ -15409,7 +15409,7 @@ class GlobalGenRoots():
 
     @staticmethod
     def GeneratedEventList(config):
-        eventList = CGList([]);
+        eventList = CGList([])
         for generatedEvent in config.generatedEvents:
             eventList.append(CGGeneric(declare=("GENERATED_EVENT(%s)\n" % generatedEvent)))
         return eventList
@@ -15872,7 +15872,7 @@ class CGEventMethod(CGNativeMember):
                         # use AppendElements, which is actually a template on
                         # the incoming type on nsTArray and does the right thing
                         # for this case.
-                        target = name;
+                        target = name
                         source = "%s.%s" % (self.args[1].name, name)
                         sequenceCopy = "e->%s.AppendElements(%s);\n"
                         if m.type.nullable():
