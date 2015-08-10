@@ -22,13 +22,15 @@ public:
   virtual ~AppleVTDecoder();
   virtual nsresult Init() override;
   virtual nsresult Input(MediaRawData* aSample) override;
-  virtual nsresult Flush() override;
-  virtual nsresult Drain() override;
-  virtual nsresult Shutdown() override;
   virtual bool IsHardwareAccelerated() const override
   {
     return mIsHardwareAccelerated;
   }
+
+protected:
+  void ProcessFlush() override;
+  void ProcessDrain() override;
+  void ProcessShutdown() override;
 
 private:
   CMVideoFormatDescriptionRef mFormat;
