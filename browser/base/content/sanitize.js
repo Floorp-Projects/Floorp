@@ -65,7 +65,13 @@ Sanitizer.prototype = {
       var itemsToClear = [...aItemsToClear];
     } else {
       let branch = Services.prefs.getBranch(this.prefDomain);
-      itemsToClear = Object.keys(this.items).filter(itemName => branch.getBoolPref(itemName));
+      itemsToClear = Object.keys(this.items).filter(itemName => {
+        try {
+          return branch.getBoolPref(itemName);
+        } catch (ex) {
+          return false;
+        }
+      });
     }
 
     // Ensure open windows get cleared first, if they're in our list, so that they don't stick
