@@ -337,6 +337,7 @@ AppendToString(std::stringstream& aStream, mozilla::gfx::SurfaceFormat format,
   case SurfaceFormat::R5G6B5:    aStream << "SurfaceFormat::R5G6B5"; break;
   case SurfaceFormat::A8:        aStream << "SurfaceFormat::A8"; break;
   case SurfaceFormat::YUV:       aStream << "SurfaceFormat::YUV"; break;
+  case SurfaceFormat::NV12:      aStream << "SurfaceFormat::NV12"; break;
   case SurfaceFormat::UNKNOWN:   aStream << "SurfaceFormat::UNKNOWN"; break;
   default:
     NS_ERROR("unknown surface format");

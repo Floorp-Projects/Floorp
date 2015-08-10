@@ -75,6 +75,7 @@ public:
     unsigned short gid() const { return m_glyphid; }
     Position origin() const { return m_position; }
     float advance() const { return m_advance.x; }
+    void advance(Position &val) { m_advance = val; }
     Position advancePos() const { return m_advance; }
     int before() const { return m_before; }
     int after() const { return m_after; }
@@ -98,7 +99,7 @@ public:
     void after(int ind) { m_after = ind; }
     bool isBase() const { return (!m_parent); }
     void update(int numSlots, int numCharInfo, Position &relpos);
-    Position finalise(const Segment* seg, const Font* font, Position & base, Rect & bbox, uint8 attrLevel, float & clusterMin);
+    Position finalise(const Segment* seg, const Font* font, Position & base, Rect & bbox, uint8 attrLevel, float & clusterMin, bool isFinal);
     bool isDeleted() const { return (m_flags & DELETED) ? true : false; }
     void markDeleted(bool state) { if (state) m_flags |= DELETED; else m_flags &= ~DELETED; }
     bool isCopied() const { return (m_flags & COPIED) ? true : false; }
@@ -122,8 +123,10 @@ public:
     Slot *attachedTo() const { return m_parent; }
     Position attachOffset() const { return m_attach - m_with; }
     Slot* firstChild() const { return m_child; }
+    void firstChild(Slot *ap) { m_child = ap; }
     bool child(Slot *ap);
     Slot* nextSibling() const { return m_sibling; }
+    void nextSibling(Slot *ap) { m_sibling = ap; }
     bool sibling(Slot *ap);
     bool removeChild(Slot *ap);
     bool removeSibling(Slot *ap);
@@ -132,6 +135,8 @@ public:
     void floodShift(Position adj);
     float just() const { return m_just; }
     void just(float j) { m_just = j; }
+    Slot *nextInCluster(const Slot *s) const;
+    bool isChildOf(const Slot *base) const;
 
     CLASS_NEW_DELETE
 

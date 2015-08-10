@@ -60,7 +60,7 @@ void JustifyTotal::accumulate(Slot *s, Segment *seg, int level)
     m_tWeight += s->getJustify(seg, level, 3);
 }
 
-float Segment::justify(Slot *pSlot, const Font *font, float width, GR_MAYBE_UNUSED justFlags flags, Slot *pFirst, Slot *pLast)
+float Segment::justify(Slot *pSlot, const Font *font, float width, GR_MAYBE_UNUSED justFlags jflags, Slot *pFirst, Slot *pLast)
 {
     Slot *s, *end;
     float currWidth = 0.0;
@@ -76,11 +76,11 @@ float Segment::justify(Slot *pSlot, const Font *font, float width, GR_MAYBE_UNUS
     while (!pLast->isBase()) pLast = pLast->attachedTo();
     const float base = pFirst->origin().x / scale;
     width = width / scale;
-    if ((flags & gr_justEndInline) == 0)
+    if ((jflags & gr_justEndInline) == 0)
     {
         do {
             Rect bbox = theGlyphBBoxTemporary(pLast->glyph());
-            if (bbox.bl.x != 0. || bbox.bl.y != 0. || bbox.tr.x != 0. || bbox.tr.y == 0.)
+            if (bbox.bl.x != 0.f || bbox.bl.y != 0.f || bbox.tr.x != 0.f || bbox.tr.y == 0.f)
                 break;
             pLast = pLast->prev();
         } while (pLast != pFirst);
@@ -116,8 +116,7 @@ float Segment::justify(Slot *pSlot, const Font *font, float width, GR_MAYBE_UNUS
         ++numLevels;
     }
 
-    JustifyTotal *stats = new JustifyTotal[numLevels];
-    if (!stats) return -1.0;
+    Vector<JustifyTotal> stats(numLevels);
     for (s = pFirst; s != end; s = s->nextSibling())
     {
         float w = s->origin().x / scale + s->advance() - base;
@@ -127,7 +126,7 @@ float Segment::justify(Slot *pSlot, const Font *font, float width, GR_MAYBE_UNUS
         s->just(0);
     }
 
-    for (int i = (width < 0.0) ? -1 : numLevels - 1; i >= 0; --i)
+    for (int i = (width < 0.0f) ? -1 : numLevels - 1; i >= 0; --i)
     {
         float diff;
         float error = 0.;
@@ -197,7 +196,7 @@ float Segment::justify(Slot *pSlot, const Font *font, float width, GR_MAYBE_UNUS
                     << "passes"     << json::array;
 #endif
 
-    if (m_silf->justificationPass() != m_silf->positionPass() && (width >= 0. || (silf()->flags() & 1)))
+    if (m_silf->justificationPass() != m_silf->positionPass() && (width >= 0.f || (silf()->flags() & 1)))
         m_silf->runGraphite(this, m_silf->justificationPass(), m_silf->positionPass());
 
 #if !defined GRAPHITE2_NTRACING
