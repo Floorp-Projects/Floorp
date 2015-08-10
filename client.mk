@@ -193,7 +193,7 @@ ifdef WANT_MOZCONFIG_MK
 # For now, only output "export" lines and lines containing UPLOAD_EXTRA_FILES
 # from mach environment --format=client.mk output.
 MOZCONFIG_MK_LINES := $(filter export||% UPLOAD_EXTRA_FILES% %UPLOAD_EXTRA_FILES%,$(MOZCONFIG_OUT_LINES))
-$(OBJDIR)/.mozconfig.mk: client.mk $(FOUND_MOZCONFIG) $(call mkdir_deps,$(OBJDIR)) $(OBJDIR)/CLOBBER
+$(OBJDIR)/.mozconfig.mk: $(TOPSRCDIR)/client.mk $(FOUND_MOZCONFIG) $(call mkdir_deps,$(OBJDIR)) $(OBJDIR)/CLOBBER
 	$(if $(MOZCONFIG_MK_LINES),( $(foreach line,$(MOZCONFIG_MK_LINES), echo '$(subst ||, ,$(line))';) )) > $@
 
 # Include that makefile so that it is created. This should not actually change
