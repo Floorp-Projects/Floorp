@@ -19,7 +19,7 @@
 #include "gmp-video-encode.h"
 #include "GMPPlatform.h"
 #include "mozilla/dom/CrashReporterChild.h"
-#include "GMPUtils.h"
+#include "mozilla/Tokenizer.h"
 #include "prio.h"
 
 using mozilla::dom::CrashReporterChild;
@@ -341,6 +341,24 @@ ReadIntoString(nsIFile* aFile,
   return rv;
 }
 
+static nsTArray<nsCString>
+SplitAt(Tokenizer::Token aDelim, const nsACString& aInput)
+{
+  nsTArray<nsCString> tokens;
+  Tokenizer tokenizer(aInput);
+
+  while (!tokenizer.HasFailed()) {
+    tokenizer.Record();
+    Tokenizer::Token token;
+    while (tokenizer.Next(token) && !token.Equals(aDelim))
+      ; // Skip up to next delimeter, or EOF.
+    nsAutoCString value;
+    tokenizer.Claim(value);
+    tokens.AppendElement(value);
+  }
+  return tokens;
+}
+
 // Pre-load DLLs that need to be used by the EME plugin but that can't be
 // loaded after the sandbox has started
 bool
@@ -369,9 +387,7 @@ GMPChild::PreLoadLibraries(const nsAString& aPluginPath)
     return false;
   }
 
-  // Note: we pass "\r\n" to SplitAt so that we'll split lines delimited
-  // by \n (Unix), \r\n (Windows) and \r (old MacOSX).
-  nsTArray<nsCString> lines = SplitAt("\r\n", info);
+  nsTArray<nsCString> lines = SplitAt(Tokenizer::Token::NewLine(), info);
   for (nsCString line : lines) {
     // Make lowercase.
     std::transform(line.BeginWriting(),
@@ -385,8 +401,8 @@ GMPChild::PreLoadLibraries(const nsAString& aPluginPath)
       continue;
     }
     // Line starts with "libraries:".
-    nsTArray<nsCString> libs =
-      SplitAt(",", Substring(line, offset + strlen(libraries)));
+    nsTArray<nsCString> libs = SplitAt(Tokenizer::Token::Char(','),
+                                       Substring(line, offset + strlen(libraries)));
     for (nsCString lib : libs) {
       lib.Trim(" ");
       for (const char* whiteListedLib : whitelist) {
