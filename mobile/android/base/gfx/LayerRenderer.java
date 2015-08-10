@@ -28,7 +28,7 @@ import android.opengl.GLES20;
 import android.os.SystemClock;
 import android.util.Log;
 
-import org.mozilla.gecko.mozglue.JNITarget;
+import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import java.nio.ByteBuffer;

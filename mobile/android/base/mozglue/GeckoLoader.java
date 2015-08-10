@@ -21,6 +21,8 @@ import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
 
+import org.mozilla.gecko.annotation.JNITarget;
+import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.mozglue.ContextUtils.SafeIntent;
 

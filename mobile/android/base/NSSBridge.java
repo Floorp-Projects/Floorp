@@ -7,7 +7,7 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 
 import android.content.Context;
-import org.mozilla.gecko.mozglue.RobocopTarget;
+import org.mozilla.gecko.annotation.RobocopTarget;
 
 public class NSSBridge {
     private static final String LOGTAG = "NSSBridge";
