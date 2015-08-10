@@ -10,6 +10,7 @@ describe("loop.shared.views.TextChatView", function () {
   var TestUtils = React.addons.TestUtils;
   var CHAT_MESSAGE_TYPES = loop.store.CHAT_MESSAGE_TYPES;
   var CHAT_CONTENT_TYPES = loop.store.CHAT_CONTENT_TYPES;
+  var fixtures = document.querySelector("#fixtures");
 
   var dispatcher, fakeSdkDriver, sandbox, store, fakeClock;
 
@@ -35,6 +36,7 @@ describe("loop.shared.views.TextChatView", function () {
 
   afterEach(function() {
     sandbox.restore();
+    React.unmountComponentAtNode(fixtures);
   });
 
   describe("TextChatEntriesView", function() {
@@ -222,20 +224,10 @@ describe("loop.shared.views.TextChatView", function () {
     });
 
     describe("Scrolling", function() {
-      var fixtures;
-
       beforeEach(function() {
         sandbox.stub(window, "requestAnimationFrame", function(callback) {
           callback();
         });
-
-        fixtures = document.querySelector("#fixtures");
-        // If we're running code coverage in Karma, we might not have
-        // a fixtures element already.
-        if (!fixtures) {
-          fixtures = document.body.appendChild(document.createElement("div"));
-          fixtures.id = "fixtures";
-        }
 
         // We're using scrolling, so we need to mount as a real one.
         view = mountAsRealComponent({}, fixtures);
@@ -244,10 +236,6 @@ describe("loop.shared.views.TextChatView", function () {
         // We need some basic styling to ensure scrolling.
         view.getDOMNode().style.overflow = "scroll";
         view.getDOMNode().style["max-height"] = "4ch";
-      });
-
-      afterEach(function() {
-        React.unmountComponentAtNode(fixtures);
       });
 
       it("should scroll when a text message is added", function() {
