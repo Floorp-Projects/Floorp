@@ -14,6 +14,7 @@ describe("loop.standaloneRoomViews", function() {
   var ROOM_INFO_FAILURES = loop.shared.utils.ROOM_INFO_FAILURES;
   var sharedActions = loop.shared.actions;
   var sharedUtils = loop.shared.utils;
+  var fixtures = document.querySelector("#fixtures");
 
   var sandbox, dispatcher, activeRoomStore, dispatch;
   var fakeWindow;
@@ -60,6 +61,7 @@ describe("loop.standaloneRoomViews", function() {
   afterEach(function() {
     loop.shared.mixins.setRootObject(window);
     sandbox.restore();
+    React.unmountComponentAtNode(fixtures);
   });
 
   describe("StandaloneRoomHeader", function() {
@@ -81,6 +83,39 @@ describe("loop.standaloneRoomViews", function() {
         new sharedActions.RecordClick({
           linkInfo: "Support link click"
         }));
+    });
+  });
+
+  describe("StandaloneRoomInfoArea in fixture", function() {
+    it("should dispatch a RecordClick action when the tile is clicked", function(done) {
+      // Point the iframe to a page that will auto-"click"
+      loop.config.tilesIframeUrl = "data:text/html,<script>parent.postMessage('tile-click', '*');</script>";
+
+      // Render the iframe into the fixture to cause it to load
+      React.render(
+        React.createElement(
+          loop.standaloneRoomViews.StandaloneRoomInfoArea, {
+            activeRoomStore: activeRoomStore,
+            dispatcher: dispatcher,
+            isFirefox: true,
+            joinRoom: sandbox.stub(),
+            roomState: ROOM_STATES.JOINED,
+            roomUsed: false
+          }), fixtures);
+
+      // Wait for the iframe to load and trigger a message that should also
+      // cause the RecordClick action
+      window.addEventListener("message", function onMessage() {
+        window.removeEventListener("message", onMessage);
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.RecordClick({
+            linkInfo: "Tiles iframe click"
+          }));
+
+        done();
+      });
     });
   });
 
@@ -181,20 +216,6 @@ describe("loop.standaloneRoomViews", function() {
               .not.eql(null);
           });
 
-        it("should display a waiting room message and tile iframe on JOINED",
-          function() {
-            var DUMMY_TILE_URL = "http://tile/";
-            loop.config.tilesIframeUrl = DUMMY_TILE_URL;
-            activeRoomStore.setStoreState({roomState: ROOM_STATES.JOINED});
-
-            expect(view.getDOMNode().querySelector(".room-waiting-area"))
-              .not.eql(null);
-
-            var tile = view.getDOMNode().querySelector(".room-waiting-tile");
-            expect(tile).not.eql(null);
-            expect(tile.src).eql(DUMMY_TILE_URL);
-          });
-
         it("should display an empty room message on SESSION_CONNECTED",
           function() {
             activeRoomStore.setStoreState({roomState: ROOM_STATES.SESSION_CONNECTED});
@@ -210,6 +231,33 @@ describe("loop.standaloneRoomViews", function() {
             expect(view.getDOMNode().querySelector(".empty-room-message"))
               .eql(null);
           });
+      });
+
+      describe("Empty room tile offer", function() {
+        it("should display a waiting room message and tile iframe on JOINED", function() {
+          var DUMMY_TILE_URL = "http://tile/";
+          loop.config.tilesIframeUrl = DUMMY_TILE_URL;
+          activeRoomStore.setStoreState({roomState: ROOM_STATES.JOINED});
+
+          expect(view.getDOMNode().querySelector(".room-waiting-area")).not.eql(null);
+
+          var tile = view.getDOMNode().querySelector(".room-waiting-tile");
+          expect(tile).not.eql(null);
+          expect(tile.src).eql(DUMMY_TILE_URL);
+        });
+
+        it("should dispatch a RecordClick action when the tile support link is clicked", function() {
+          activeRoomStore.setStoreState({roomState: ROOM_STATES.JOINED});
+
+          TestUtils.Simulate.click(view.getDOMNode().querySelector(".room-waiting-area a"));
+
+          sinon.assert.calledOnce(dispatcher.dispatch);
+          sinon.assert.calledWithExactly(dispatcher.dispatch,
+            new sharedActions.RecordClick({
+              linkInfo: "Tiles support link click"
+            }));
+        });
+
       });
 
       describe("Prompt media message", function() {
