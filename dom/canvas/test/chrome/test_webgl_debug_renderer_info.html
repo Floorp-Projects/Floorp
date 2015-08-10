@@ -17,6 +17,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=666446
 const UNMASKED_VENDOR_WEBGL = 0x9245;
 const UNMASKED_RENDERER_WEBGL = 0x9246;
 
+
+var Cu = parent.Components.utils;
+Cu.import("resource://gre/modules/AppConstants.jsm");
+// This gives us `AppConstants` in the global scope.
+// We need this because we only expose debug_renderer_info #ifndef MOZ_RELEASE_BUILD.
+// This should match AppConstants.RELEASE_BUILD.
+
+const canBeUnprivileged = !AppConstants.RELEASE_BUILD;
+
+
 function isNonEmptyString(s)
 {
   return s && (typeof s) == "string";
@@ -67,7 +77,7 @@ function main()
   // Now run the non-chrome code to verify the security of this WebGL chrome-only extension.
 
   var iframe = document.createElement("iframe");
-  iframe.src = "chrome://mochitests/content/chrome/dom/canvas/test/chrome/nonchrome_webgl_debug_renderer_info.html";
+  iframe.src = "http://mochi.test:8888/chrome/dom/canvas/test/chrome/nonchrome_webgl_debug_renderer_info.html";
 
   iframe.onload = function () {
 
@@ -77,7 +87,9 @@ function main()
     checkChromeCase(iframe.contentDocument.createElement("canvas"));
 
     iframe.contentWindow.addEventListener("message", messageListener, false);
-    iframe.contentWindow.postMessage("run", "*");
+    iframe.contentWindow.postMessage({run: true,
+                                      canBeUnprivileged: canBeUnprivileged},
+                                     "*");
   };
 
   document.body.appendChild(iframe);
