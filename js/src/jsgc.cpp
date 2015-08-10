@@ -6133,7 +6133,7 @@ GCRuntime::scanZonesBeforeGC()
 }
 
 void
-GCRuntime::collect(bool incremental, SliceBudget budget, JS::gcreason::Reason reason)
+GCRuntime::checkCanCallAPI()
 {
     JS_AbortIfWrongThread(rt);
 
@@ -6144,17 +6144,33 @@ GCRuntime::collect(bool incremental, SliceBudget budget, JS::gcreason::Reason re
     MOZ_ASSERT(!rt->currentThreadHasExclusiveAccess());
 
     MOZ_ASSERT(isAllocAllowed());
+}
 
+bool
+GCRuntime::checkIfGCAllowedInCurrentState(JS::gcreason::Reason reason)
+{
     if (rt->mainThread.suppressGC)
-        return;
-
-    TraceLoggerThread* logger = TraceLoggerForMainThread(rt);
-    AutoTraceLog logGC(logger, TraceLogger_GC);
+        return false;
 
 #ifdef JS_GC_ZEAL
     if (deterministicOnly && !IsDeterministicGCReason(reason))
-        return;
+        return false;
 #endif
+
+    return true;
+}
+
+void
+GCRuntime::collect(bool incremental, SliceBudget budget, JS::gcreason::Reason reason)
+{
+    // Checks run for each request, even if we do not actually GC.
+    checkCanCallAPI();
+
+    // Check if we are allowed to GC at this time before proceeding.
+    if (!checkIfGCAllowedInCurrentState(reason))
+        return;
+
+    AutoTraceLog logGC(TraceLoggerForMainThread(rt), TraceLogger_GC);
 
     AutoStopVerifyingBarriers av(rt, reason == JS::gcreason::SHUTDOWN_CC ||
                                      reason == JS::gcreason::DESTROY_RUNTIME);
@@ -6276,10 +6292,7 @@ GCRuntime::finishGC(JS::gcreason::Reason reason)
 void
 GCRuntime::abortGC()
 {
-    JS_AbortIfWrongThread(rt);
-
-    MOZ_RELEASE_ASSERT(!rt->isHeapBusy());
-    MOZ_ASSERT(!rt->currentThreadHasExclusiveAccess());
+    checkCanCallAPI();
     MOZ_ASSERT(!rt->mainThread.suppressGC);
 
     AutoStopVerifyingBarriers av(rt, false);
