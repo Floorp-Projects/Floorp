@@ -50,19 +50,6 @@ public:
 private:
   class ScopeChecker : public MatchFinder::MatchCallback {
   public:
-    enum Scope {
-      eLocal,
-      eGlobal
-    };
-    ScopeChecker(Scope scope_) :
-      scope(scope_) {}
-    virtual void run(const MatchFinder::MatchResult &Result);
-  private:
-    Scope scope;
-  };
-
-  class NonHeapClassChecker : public MatchFinder::MatchCallback {
-  public:
     virtual void run(const MatchFinder::MatchResult &Result);
   };
 
@@ -116,9 +103,7 @@ private:
     virtual void run(const MatchFinder::MatchResult &Result);
   };
 
-  ScopeChecker stackClassChecker;
-  ScopeChecker globalClassChecker;
-  NonHeapClassChecker nonheapClassChecker;
+  ScopeChecker scopeChecker;
   ArithmeticArgChecker arithmeticArgChecker;
   TrivialCtorDtorChecker trivialCtorDtorChecker;
   NaNExprChecker nanExprChecker;
@@ -277,6 +262,8 @@ static CustomTypeAnnotation GlobalClass =
   CustomTypeAnnotation("moz_global_class", "global");
 static CustomTypeAnnotation NonHeapClass =
   CustomTypeAnnotation("moz_nonheap_class", "non-heap");
+static CustomTypeAnnotation HeapClass =
+  CustomTypeAnnotation("moz_heap_class", "heap");
 static CustomTypeAnnotation MustUse =
   CustomTypeAnnotation("moz_must_use", "must-use");
 
@@ -614,24 +601,6 @@ bool typeHasVTable(QualType T) {
 namespace clang {
 namespace ast_matchers {
 
-/// This matcher will match any class with the stack class assertion or an
-/// array of such classes.
-AST_MATCHER(QualType, stackClassAggregate) {
-  return StackClass.hasEffectiveAnnotation(Node);
-}
-
-/// This matcher will match any class with the global class assertion or an
-/// array of such classes.
-AST_MATCHER(QualType, globalClassAggregate) {
-  return GlobalClass.hasEffectiveAnnotation(Node);
-}
-
-/// This matcher will match any class with the stack class assertion or an
-/// array of such classes.
-AST_MATCHER(QualType, nonheapClassAggregate) {
-  return NonHeapClass.hasEffectiveAnnotation(Node);
-}
-
 /// This matcher will match any function declaration that is declared as a heap
 /// allocator.
 AST_MATCHER(FunctionDecl, heapAllocator) {
@@ -946,54 +915,23 @@ CustomTypeAnnotation::AnnotationReason CustomTypeAnnotation::directAnnotationRea
   return Reason;
 }
 
-bool isPlacementNew(const CXXNewExpr *expr) {
+bool isPlacementNew(const CXXNewExpr *Expr) {
   // Regular new expressions aren't placement new
-  if (expr->getNumPlacementArgs() == 0)
+  if (Expr->getNumPlacementArgs() == 0)
     return false;
-  if (MozChecker::hasCustomAnnotation(expr->getOperatorNew(),
-      "moz_heap_allocator"))
+  const FunctionDecl *Decl = Expr->getOperatorNew();
+  if (Decl && MozChecker::hasCustomAnnotation(Decl, "moz_heap_allocator")) {
     return false;
+  }
   return true;
 }
 
-DiagnosticsMatcher::DiagnosticsMatcher()
-  : stackClassChecker(ScopeChecker::eLocal),
-    globalClassChecker(ScopeChecker::eGlobal)
-{
-  // Stack class assertion: non-local variables of a stack class are forbidden
-  // (non-localness checked in the callback)
-  astMatcher.addMatcher(varDecl(hasType(stackClassAggregate())).bind("node"),
-    &stackClassChecker);
-  // Stack class assertion: new stack class is forbidden (unless placement new)
-  astMatcher.addMatcher(newExpr(hasType(pointerType(
-      pointee(stackClassAggregate())
-    ))).bind("node"), &stackClassChecker);
-  // Global class assertion: non-global variables of a global class are forbidden
-  // (globalness checked in the callback)
-  astMatcher.addMatcher(varDecl(hasType(globalClassAggregate())).bind("node"),
-    &globalClassChecker);
-  // Global class assertion: new global class is forbidden
-  astMatcher.addMatcher(newExpr(hasType(pointerType(
-      pointee(globalClassAggregate())
-    ))).bind("node"), &globalClassChecker);
-  // Non-heap class assertion: new non-heap class is forbidden (unless placement
-  // new)
-  astMatcher.addMatcher(newExpr(hasType(pointerType(
-      pointee(nonheapClassAggregate())
-    ))).bind("node"), &nonheapClassChecker);
-
-  // Any heap allocation function that returns a non-heap or a stack class or
-  // a global class is definitely doing something wrong
-  astMatcher.addMatcher(callExpr(callee(functionDecl(allOf(heapAllocator(),
-      returns(pointerType(pointee(nonheapClassAggregate()))))))).bind("node"),
-    &nonheapClassChecker);
-  astMatcher.addMatcher(callExpr(callee(functionDecl(allOf(heapAllocator(),
-      returns(pointerType(pointee(stackClassAggregate()))))))).bind("node"),
-    &stackClassChecker);
-
-  astMatcher.addMatcher(callExpr(callee(functionDecl(allOf(heapAllocator(),
-      returns(pointerType(pointee(globalClassAggregate()))))))).bind("node"),
-    &globalClassChecker);
+DiagnosticsMatcher::DiagnosticsMatcher() {
+  astMatcher.addMatcher(varDecl().bind("node"), &scopeChecker);
+  astMatcher.addMatcher(newExpr().bind("node"), &scopeChecker);
+  astMatcher.addMatcher(materializeTemporaryExpr().bind("node"), &scopeChecker);
+  astMatcher.addMatcher(callExpr(callee(functionDecl(heapAllocator()))).bind("node"),
+                        &scopeChecker);
 
   astMatcher.addMatcher(callExpr(allOf(hasDeclaration(noArithmeticExprInArgs()),
           anyOf(
@@ -1087,76 +1025,137 @@ DiagnosticsMatcher::DiagnosticsMatcher()
       &explicitImplicitChecker);
 }
 
+// These enum variants determine whether an allocation has occured in the code.
+enum AllocationVariety {
+  AV_None,
+  AV_Global,
+  AV_Automatic,
+  AV_Temporary,
+  AV_Heap,
+};
+
 void DiagnosticsMatcher::ScopeChecker::run(
     const MatchFinder::MatchResult &Result) {
   DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
-  unsigned stackID = Diag.getDiagnosticIDs()->getCustomDiagID(
-    DiagnosticIDs::Error, "variable of type %0 only valid on the stack");
-  unsigned globalID = Diag.getDiagnosticIDs()->getCustomDiagID(
-    DiagnosticIDs::Error, "variable of type %0 only valid as global");
 
+  // There are a variety of different reasons why something could be allocated
+  AllocationVariety Variety = AV_None;
   SourceLocation Loc;
   QualType T;
-  if (const VarDecl *d = Result.Nodes.getNodeAs<VarDecl>("node")) {
-    if (scope == eLocal) {
-      // Ignore the match if it's a local variable.
-      if (d->hasLocalStorage())
-        return;
-    } else if (scope == eGlobal) {
-      // Ignore the match if it's a global variable or a static member of a
-      // class.  The latter is technically not in the global scope, but for the
-      // use case of classes that intend to avoid introducing static
-      // initializers that is fine.
-      if (d->hasGlobalStorage() && !d->isStaticLocal())
-        return;
+
+  // Determine the type of allocation which we detected
+  if (const VarDecl *D = Result.Nodes.getNodeAs<VarDecl>("node")) {
+    if (D->hasGlobalStorage()) {
+      Variety = AV_Global;
+    } else {
+      Variety = AV_Automatic;
     }
-
-    Loc = d->getLocation();
-    T = d->getType();
-  } else if (const CXXNewExpr *expr =
-      Result.Nodes.getNodeAs<CXXNewExpr>("node")) {
-    // If it's placement new, then this match doesn't count.
-    if (scope == eLocal && isPlacementNew(expr))
-      return;
-
-    Loc = expr->getStartLoc();
-    T = expr->getAllocatedType();
-  } else if (const CallExpr *expr =
-      Result.Nodes.getNodeAs<CallExpr>("node")) {
-    Loc = expr->getLocStart();
-    T = GetCallReturnType(expr)->getPointeeType();
+    T = D->getType();
+    Loc = D->getLocStart();
+  } else if (const CXXNewExpr *E = Result.Nodes.getNodeAs<CXXNewExpr>("node")) {
+    // New allocates things on the heap.
+    // We don't consider placement new to do anything, as it doesn't actually
+    // allocate the storage, and thus gives us no useful information.
+    if (!isPlacementNew(E)) {
+      Variety = AV_Heap;
+      T = E->getAllocatedType();
+      Loc = E->getLocStart();
+    }
+  } else if (const Expr *E = Result.Nodes.getNodeAs<MaterializeTemporaryExpr>("node")) {
+    Variety = AV_Temporary;
+    T = E->getType().getUnqualifiedType();
+    Loc = E->getLocStart();
+  } else if (const CallExpr *E = Result.Nodes.getNodeAs<CallExpr>("node")) {
+    T = E->getType()->getPointeeType();
+    if (!T.isNull()) {
+      // This will always allocate on the heap, as the heapAllocator() check
+      // was made in the matcher
+      Variety = AV_Heap;
+      Loc = E->getLocStart();
+    }
   }
 
-  if (scope == eLocal) {
-    Diag.Report(Loc, stackID) << T;
-    StackClass.dumpAnnotationReason(Diag, T, Loc);
-  } else if (scope == eGlobal) {
-    Diag.Report(Loc, globalID) << T;
-    GlobalClass.dumpAnnotationReason(Diag, T, Loc);
+  // Error messages for incorrect allocations.
+  unsigned StackID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Error, "variable of type %0 only valid on the stack");
+  unsigned GlobalID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Error, "variable of type %0 only valid as global");
+  unsigned HeapID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Error, "variable of type %0 only valid on the heap");
+  unsigned NonHeapID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Error, "variable of type %0 is not valid on the heap");
+
+  unsigned StackNoteID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Note, "value incorrectly allocated in an automatic variable");
+  unsigned GlobalNoteID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Note, "value incorrectly allocated in a global variable");
+  unsigned HeapNoteID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Note, "value incorrectly allocated on the heap");
+  unsigned TemporaryNoteID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Note, "value incorrectly allocated in a temporary");
+
+  // Report errors depending on the annotations on the input types.
+  switch (Variety) {
+  case AV_None:
+    return;
+
+  case AV_Global:
+    if (StackClass.hasEffectiveAnnotation(T)) {
+      Diag.Report(Loc, StackID) << T;
+      Diag.Report(Loc, GlobalNoteID);
+      StackClass.dumpAnnotationReason(Diag, T, Loc);
+    }
+    if (HeapClass.hasEffectiveAnnotation(T)) {
+      Diag.Report(Loc, HeapID) << T;
+      Diag.Report(Loc, GlobalNoteID);
+      HeapClass.dumpAnnotationReason(Diag, T, Loc);
+    }
+    break;
+
+  case AV_Automatic:
+    if (GlobalClass.hasEffectiveAnnotation(T)) {
+      Diag.Report(Loc, GlobalID) << T;
+      Diag.Report(Loc, StackNoteID);
+      GlobalClass.dumpAnnotationReason(Diag, T, Loc);
+    }
+    if (HeapClass.hasEffectiveAnnotation(T)) {
+      Diag.Report(Loc, HeapID) << T;
+      Diag.Report(Loc, StackNoteID);
+      HeapClass.dumpAnnotationReason(Diag, T, Loc);
+    }
+    break;
+
+  case AV_Temporary:
+    if (GlobalClass.hasEffectiveAnnotation(T)) {
+      Diag.Report(Loc, GlobalID) << T;
+      Diag.Report(Loc, TemporaryNoteID);
+      GlobalClass.dumpAnnotationReason(Diag, T, Loc);
+    }
+    if (HeapClass.hasEffectiveAnnotation(T)) {
+      Diag.Report(Loc, HeapID) << T;
+      Diag.Report(Loc, TemporaryNoteID);
+      HeapClass.dumpAnnotationReason(Diag, T, Loc);
+    }
+    break;
+
+  case AV_Heap:
+    if (GlobalClass.hasEffectiveAnnotation(T)) {
+      Diag.Report(Loc, GlobalID) << T;
+      Diag.Report(Loc, HeapNoteID);
+      GlobalClass.dumpAnnotationReason(Diag, T, Loc);
+    }
+    if (StackClass.hasEffectiveAnnotation(T)) {
+      Diag.Report(Loc, StackID) << T;
+      Diag.Report(Loc, HeapNoteID);
+      StackClass.dumpAnnotationReason(Diag, T, Loc);
+    }
+    if (NonHeapClass.hasEffectiveAnnotation(T)) {
+      Diag.Report(Loc, NonHeapID) << T;
+      Diag.Report(Loc, HeapNoteID);
+      NonHeapClass.dumpAnnotationReason(Diag, T, Loc);
+    }
+    break;
   }
-}
-
-void DiagnosticsMatcher::NonHeapClassChecker::run(
-    const MatchFinder::MatchResult &Result) {
-  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
-  unsigned stackID = Diag.getDiagnosticIDs()->getCustomDiagID(
-    DiagnosticIDs::Error, "variable of type %0 is not valid on the heap");
-
-  SourceLocation Loc;
-  QualType T;
-  if (const CXXNewExpr *expr = Result.Nodes.getNodeAs<CXXNewExpr>("node")) {
-    // If it's placement new, then this match doesn't count.
-    if (isPlacementNew(expr))
-      return;
-    Loc = expr->getLocStart();
-    T = expr->getAllocatedType();
-  } else if (const CallExpr *expr = Result.Nodes.getNodeAs<CallExpr>("node")) {
-    Loc = expr->getLocStart();
-    T = GetCallReturnType(expr)->getPointeeType();
-  }
-
-  Diag.Report(Loc, stackID) << T;
-  NonHeapClass.dumpAnnotationReason(Diag, T, Loc);
 }
 
 void DiagnosticsMatcher::ArithmeticArgChecker::run(
