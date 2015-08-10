@@ -7,14 +7,14 @@
 // ----------------------------------------------------------------------------
 //
 // test_bad_args
-//     - checks that calls to nsIPackagedAppService::requestURI do not accept a null argument
+//     - checks that calls to nsIPackagedAppService::GetResource do not accept a null argument
 // test_callback_gets_called
 //     - checks the regular use case -> requesting a resource should asynchronously return an entry
 // test_same_content
 //     - makes another request for the same file, and checks that the same content is returned
 // test_request_number
 //     - this test does not make a request, but checks that the package has only
-//       been requested once. The entry returned by the call to requestURI in
+//       been requested once. The entry returned by the call to getResource in
 //       test_same_content should be returned from the cache.
 //
 // test_package_does_not_exist
@@ -59,6 +59,13 @@ function packagedAppContentHandler(metadata, response)
   response.bodyOutputStream.write(body, body.length);
 }
 
+function getPrincipal(url) {
+  let uri = createURI(url);
+  return Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+         .getService(Ci.nsIScriptSecurityManager)
+         .getNoAppCodebasePrincipal(uri);
+}
+
 // The package content
 // getData formats it as described at http://www.w3.org/TR/web-packaging/#streamable-package-format
 var testData = {
@@ -92,7 +99,7 @@ XPCOMUtils.defineLazyGetter(this, "uri", function() {
 var httpserver = null;
 // The packaged app service initialized in run_test
 var paservice = null;
-// This variable is set before requestURI is called. The listener uses this variable
+// This variable is set before getResource is called. The listener uses this variable
 // to check the correct resource path for the returned entry
 var packagePath = null;
 
@@ -170,10 +177,10 @@ var cacheListener = new packagedResourceListener(testData.content[0].data);
 
 // These calls should fail, since one of the arguments is invalid or null
 function test_bad_args() {
-  Assert.throws(() => { paservice.requestURI(createURI("http://test.com"), LoadContextInfo.default, cacheListener); }, "url's with no !// aren't allowed");
-  Assert.throws(() => { paservice.requestURI(createURI("http://test.com/package!//test"), LoadContextInfo.default, null); }, "should have a callback");
-  Assert.throws(() => { paservice.requestURI(null, LoadContextInfo.default, cacheListener); }, "should have a URI");
-  Assert.throws(() => { paservice.requestURI(createURI("http://test.com/package!//test"), null, cacheListener); }, "should have a LoadContextInfo");
+  Assert.throws(() => { paservice.getResource(getPrincipal("http://test.com"), 0, LoadContextInfo.default, cacheListener); }, "url's with no !// aren't allowed");
+  Assert.throws(() => { paservice.getResource(getPrincipal("http://test.com/package!//test"), 0, LoadContextInfo.default, null); }, "should have a callback");
+  Assert.throws(() => { paservice.getResource(null, 0, LoadContextInfo.default, cacheListener); }, "should have a URI");
+  Assert.throws(() => { paservice.getResource(getPrincipal("http://test.com/package!//test"), null, cacheListener); }, "should have a LoadContextInfo");
   run_next_test();
 }
 
@@ -182,13 +189,13 @@ function test_bad_args() {
 // This tests that the callback gets called, and the cacheListener gets the proper content.
 function test_callback_gets_called() {
   packagePath = "/package";
-  paservice.requestURI(createURI(uri + packagePath + "!//index.html"), LoadContextInfo.default, cacheListener);
+  paservice.getResource(getPrincipal(uri + packagePath + "!//index.html"), 0, LoadContextInfo.default, cacheListener);
 }
 
 // Tests that requesting the same resource returns the same content
 function test_same_content() {
   packagePath = "/package";
-  paservice.requestURI(createURI(uri + packagePath + "!//index.html"), LoadContextInfo.default, cacheListener);
+  paservice.getResource(getPrincipal(uri + packagePath + "!//index.html"), 0, LoadContextInfo.default, cacheListener);
 }
 
 // Check the content handler has been called the expected number of times.
@@ -200,7 +207,7 @@ function test_request_number() {
 // This tests that new content is returned if the package has been updated
 function test_updated_package() {
   packagePath = "/package";
-  paservice.requestURI(createURI(uri + packagePath + "!//index.html"), LoadContextInfo.default,
+  paservice.getResource(getPrincipal(uri + packagePath + "!//index.html"), 0, LoadContextInfo.default,
       new packagedResourceListener(testData.content[0].data.replace(/\.\.\./g, 'xxx')));
 }
 
@@ -224,13 +231,13 @@ var listener404 = {
 // Tests that an error is returned for a non existing package
 function test_package_does_not_exist() {
   packagePath = "/package_non_existent";
-  paservice.requestURI(createURI(uri + packagePath + "!//index.html"), LoadContextInfo.default, listener404);
+  paservice.getResource(getPrincipal(uri + packagePath + "!//index.html"), 0, LoadContextInfo.default, listener404);
 }
 
 // Tests that an error is returned for a non existing resource in a package
 function test_file_does_not_exist() {
   packagePath = "/package"; // This package exists
-  paservice.requestURI(createURI(uri + packagePath + "!//file_non_existent.html"), LoadContextInfo.default, listener404);
+  paservice.getResource(getPrincipal(uri + packagePath + "!//file_non_existent.html"), 0, LoadContextInfo.default, listener404);
 }
 
 // ----------------------------------------------------------------------------
@@ -271,13 +278,13 @@ function packagedAppBadContentHandler(metadata, response)
 // Checks that the resource with the proper headers inside the bad package is still returned
 function test_bad_package() {
   packagePath = "/badPackage";
-  paservice.requestURI(createURI(uri + packagePath + "!//index.html"), LoadContextInfo.default, cacheListener);
+  paservice.getResource(getPrincipal(uri + packagePath + "!//index.html"), 0, LoadContextInfo.default, cacheListener);
 }
 
 // Checks that the request for a non-existent resource doesn't hang for a bad package
 function test_bad_package_404() {
   packagePath = "/badPackage";
-  paservice.requestURI(createURI(uri + packagePath + "!//file_non_existent.html"), LoadContextInfo.default, listener404);
+  paservice.getResource(getPrincipal(uri + packagePath + "!//file_non_existent.html"), 0, LoadContextInfo.default, listener404);
 }
 
 // ----------------------------------------------------------------------------

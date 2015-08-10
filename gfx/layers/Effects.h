@@ -197,6 +197,15 @@ struct EffectYCbCr : public TexturedEffect
   virtual const char* Name() { return "EffectYCbCr"; }
 };
 
+struct EffectNV12 : public TexturedEffect
+{
+  EffectNV12(TextureSource *aSource, gfx::Filter aFilter)
+    : TexturedEffect(EffectTypes::NV12, aSource, false, aFilter)
+  {}
+
+  virtual const char* Name() { return "EffectNV12"; }
+};
+
 struct EffectComponentAlpha : public TexturedEffect
 {
   EffectComponentAlpha(TextureSource *aOnBlack,
@@ -264,6 +273,9 @@ CreateTexturedEffect(gfx::SurfaceFormat aFormat,
     break;
   case gfx::SurfaceFormat::YUV:
     result = new EffectYCbCr(aSource, aFilter);
+    break;
+  case gfx::SurfaceFormat::NV12:
+    result = new EffectNV12(aSource, aFilter);
     break;
   default:
     NS_WARNING("unhandled program type");

@@ -95,33 +95,42 @@ var gViewSourceUtils = {
    * <browser>.  This allows for non-window display methods, such as a tab from
    * Firefox.
    *
-   * @param aSelection
-   *        A Selection object for the content of interest.
    * @param aViewSourceInBrowser
-   *        The browser to display the view source in.
+   *        The browser containing the page to view the source of.
+   * @param aTarget
+   *        Set to the target node for MathML. Null for other types of elements.
+   * @param aGetBrowserFn
+   *        If set, a function that will return a browser to open the source in.
+   *        If null, or this function returns null, opens the source in a new window.
    */
-  viewSourceFromSelectionInBrowser: function(aSelection, aViewSourceInBrowser) {
-    let viewSourceBrowser = new ViewSourceBrowser(aViewSourceInBrowser);
-    viewSourceBrowser.loadViewSourceFromSelection(aSelection);
-  },
+  viewPartialSourceInBrowser: function(aViewSourceInBrowser, aTarget, aGetBrowserFn) {
+    let mm = aViewSourceInBrowser.messageManager;
+    mm.addMessageListener("ViewSource:GetSelectionDone", function gotSelection(message) {
+      mm.removeMessageListener("ViewSource:GetSelectionDone", gotSelection);
 
-  /**
-   * Displays view source for a MathML fragment from some document in the
-   * provided <browser>.  This allows for non-window display methods,  such as a
-   * tab from Firefox.
-   *
-   * @param aNode
-   *        Some element within the fragment of interest.
-   * @param aContext
-   *        A string denoting the type of fragment.  Currently, "mathml" is the
-   *        only accepted value.
-   * @param aViewSourceInBrowser
-   *        The browser to display the view source in.
-   */
-  viewSourceFromFragmentInBrowser: function(aNode, aContext,
-                                            aViewSourceInBrowser) {
-    let viewSourceBrowser = new ViewSourceBrowser(aViewSourceInBrowser);
-    viewSourceBrowser.loadViewSourceFromFragment(aNode, aContext);
+      if (!message.data)
+        return;
+
+      let browserToOpenIn = aGetBrowserFn ? aGetBrowserFn() : null;
+      if (browserToOpenIn) {
+        let viewSourceBrowser = new ViewSourceBrowser(browserToOpenIn);
+        viewSourceBrowser.loadViewSourceFromSelection(message.data.uri, message.data.drawSelection,
+                                                      message.data.baseURI);
+      }
+      else {
+        let docUrl = null;
+        window.openDialog("chrome://global/content/viewPartialSource.xul",
+                          "_blank", "scrollbars,resizable,chrome,dialog=no",
+                          {
+                            URI: message.data.uri,
+                            drawSelection: message.data.drawSelection,
+                            baseURI: message.data.baseURI,
+                            partial: true,
+                          });
+      }
+    });
+
+    mm.sendAsyncMessage("ViewSource:GetSelection", { }, { target: aTarget });
   },
 
   // Opens the interval view source viewer

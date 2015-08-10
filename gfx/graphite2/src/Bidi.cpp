@@ -62,8 +62,8 @@ enum DirCode {  // Hungarian: dirc
 };
 
 enum DirMask {
-        WSflag = (1 << 7),     // keep track of WS for eos handling
-        WSMask = ~(1 << 7)
+        WSflag = int8(1 << 7),     // keep track of WS for eos handling
+        WSMask = int8(~(1 << 7))
 };
 
 inline uint8    BaseClass(Slot *s)   { return s->getBidiClass() & WSMask; }
@@ -540,7 +540,7 @@ void processParens(Slot *s, Segment *seg, uint8 aMirror, int level, BracketPairS
     BracketPair *p;
     for ( ; s; s = s->prev())       // walk the sequence
     {
-        uint16 ogid = seg->glyphAttr(s->gid(), aMirror);
+        uint16 ogid = seg->glyphAttr(s->gid(), aMirror) || s->gid();
         int cls = BaseClass(s);
         
         switch(cls)
@@ -571,35 +571,38 @@ void processParens(Slot *s, Segment *seg, uint8 aMirror, int level, BracketPairS
             mask |= 2;
         }
     }
-    for (p = stack.start(); p; p =p->next())      // walk the stack
+    if (stack.size())
     {
-        if (p->close() && p->mask())
+        for (p = stack.start(); p; p =p->next())      // walk the stack
         {
-            int dir = (level & 1) + 1;
-            if (p->mask() & dir)
-            { }
-            else if (p->mask() & (1 << (~level & 1)))  // if inside has strong other embedding
+            if (p->close() && p->mask())
             {
-                int ldir = p->before();
-                if ((p->before() == OPP || p->before() == CPP) && p->prev())
+                int dir = (level & 1) + 1;
+                if (p->mask() & dir)
+                { }
+                else if (p->mask() & (1 << (~level & 1)))  // if inside has strong other embedding
                 {
-                    for (BracketPair *q = p->prev(); q; q = q->prev())
+                    int ldir = p->before();
+                    if ((p->before() == OPP || p->before() == CPP) && p->prev())
                     {
-                        ldir = q->open()->getBidiClass();
-                        if (ldir < 3) break;
-                        ldir = q->before();
-                        if (ldir < 3) break;
+                        for (BracketPair *q = p->prev(); q; q = q->prev())
+                        {
+                            ldir = q->open()->getBidiClass();
+                            if (ldir < 3) break;
+                            ldir = q->before();
+                            if (ldir < 3) break;
+                        }
+                        if (ldir > 2) ldir = 0;
                     }
-                    if (ldir > 2) ldir = 0;
+                    if (ldir > 0 && (ldir - 1) != (level & 1))     // is dir given opp. to level dir (ldir == R or L)
+                        dir = (~level & 1) + 1;
                 }
-                if (ldir > 0 && (ldir - 1) != (level & 1))     // is dir given opp. to level dir (ldir == R or L)
-                    dir = (~level & 1) + 1;
+                p->open()->setBidiClass(dir);
+                p->close()->setBidiClass(dir);
             }
-            p->open()->setBidiClass(dir);
-            p->close()->setBidiClass(dir);
         }
+        stack.clear();
     }
-    stack.clear();
 }
 
 int GetDeferredNeutrals(int action, int level)

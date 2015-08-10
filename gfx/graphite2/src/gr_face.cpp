@@ -46,7 +46,7 @@ namespace
 #ifdef GRAPHITE2_TELEMETRY
         telemetry::category _misc_cat(face.tele.misc);
 #endif
-        Face::Table silf(face, Tag::Silf);
+        Face::Table silf(face, Tag::Silf, 0x00050000);
         if (silf)   options &= ~gr_face_dumbRendering;
         else if (!(options &  gr_face_dumbRendering))
             return false;

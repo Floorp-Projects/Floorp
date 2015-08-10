@@ -6,21 +6,22 @@
 // to implement the dropdown list.
 
 const PAGECONTENT =
-  "<html><body onload='gChangeEvents = 0; document.body.firstChild.focus()'><select onchange='gChangeEvents++'>" +
+  "<html xmlns='http://www.w3.org/1999/xhtml'>" + 
+  "<body onload='gChangeEvents = 0; document.body.firstChild.focus()'><select onchange='gChangeEvents++'>" +
   "  <optgroup label='First Group'>" +
-  "    <option value=One>One" +
-  "    <option value=Two>Two" +
+  "    <option value='One'>One</option>" +
+  "    <option value='Two'>Two</option>" +
   "  </optgroup>" +
-  "  <option value=Three>Three" +
+  "  <option value='Three'>Three</option>" +
   "  <optgroup label='Second Group' disabled='true'>" +
-  "    <option value=Four>Four" +
-  "    <option value=Five>Five" +
+  "    <option value='Four'>Four</option>" +
+  "    <option value='Five'>Five</option>" +
   "  </optgroup>" +
-  "  <option value=Six disabled='true'>Six" +
+  "  <option value='Six' disabled='true'>Six</option>" +
   "  <optgroup label='Third Group'>" +
-  "    <option value=Seven>Seven" +
-  "    <option value=Eight>Eight" +
-  "  </optgroup></select><input>" +
+  "    <option value='Seven'>Seven</option>" +
+  "    <option value='Eight'>Eight</option>" +
+  "  </optgroup></select><input />" +
   "</body></html>";
 
 function openSelectPopup(selectPopup, withMouse)
@@ -57,10 +58,11 @@ function getChangeEvents()
   });
 }
 
-add_task(function*() {
+function doSelectTests(contentType)
+{
   let tab = gBrowser.selectedTab = gBrowser.addTab();
   let browser = gBrowser.getBrowserForTab(tab);
-  yield promiseTabLoadEvent(tab, "data:text/html," + escape(PAGECONTENT));
+  yield promiseTabLoadEvent(tab, "data:" + contentType + "," + escape(PAGECONTENT));
 
   yield SimpleTest.promiseFocus(browser.contentWindow);
 
@@ -126,5 +128,14 @@ add_task(function*() {
   is((yield getChangeEvents()), isWindows ? 2 : 1, "Tab away from select with change - number of change events");
 
   gBrowser.removeCurrentTab();
+}
+
+add_task(function*() {
+  yield doSelectTests("text/html");
 });
+
+add_task(function*() {
+  yield doSelectTests("application/xhtml+xml");
+});
+
 

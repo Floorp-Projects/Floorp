@@ -17,13 +17,11 @@ const TEST_DATA = [
             "82028183" + // Device identities
             "AC052143658709", // DTMF string
    expect: {commandQualifier: 0x00}},
-  {command: "D013" + // Length
+  {command: "D011" + // Length
             "8103011400" + // Command details
             "82028183" + // Device identities
-            "8500" + // Alpha identifier
             "AC06C1CCCCCCCC2C", // DTMF string
-   expect: {commandQualifier: 0x00,
-            text: ""}},
+   expect: {commandQualifier: 0x00}},
   {command: "D01D" + // Length
             "8103011400" + // Command details
             "82028183" + // Device identities
@@ -66,7 +64,14 @@ const TEST_DATA = [
             text: "你好"}},
 ];
 
-function testSendDTMF(aCommand, aExpect) {
+const TEST_CMD_NULL_ALPHA_ID =
+        "D013" + // Length
+        "8103011400" + // Command details
+        "82028183" + // Device identities
+        "8500" + // Alpha identifier
+        "AC06C1CCCCCCCC2C";
+
+function verifySendDTMF(aCommand, aExpect) {
   is(aCommand.commandNumber, 0x01, "commandNumber");
   is(aCommand.typeOfCommand, MozIccManager.STK_CMD_SEND_DTMF, "typeOfCommand");
   is(aCommand.commandQualifier, aExpect.commandQualifier, "commandQualifier");
@@ -84,8 +89,7 @@ function testSendDTMF(aCommand, aExpect) {
   }
 }
 
-// Start tests
-startTestCommon(function() {
+function testSendDTMF() {
   let icc = getMozIcc();
   let promise = Promise.resolve();
   for (let i = 0; i < TEST_DATA.length; i++) {
@@ -96,12 +100,12 @@ startTestCommon(function() {
       let promises = [];
       // Wait onstkcommand event.
       promises.push(waitForTargetEvent(icc, "stkcommand")
-        .then((aEvent) => testSendDTMF(aEvent.command, data.expect)));
+        .then((aEvent) => verifySendDTMF(aEvent.command, data.expect)));
       // Wait icc-stkcommand system message.
       promises.push(waitForSystemMessage("icc-stkcommand")
         .then((aMessage) => {
           is(aMessage.iccId, icc.iccInfo.iccid, "iccId");
-          testSendDTMF(aMessage.command, data.expect);
+          verifySendDTMF(aMessage.command, data.expect);
         }));
       // Send emulator command to generate stk unsolicited event.
       promises.push(sendEmulatorStkPdu(data.command));
@@ -110,4 +114,32 @@ startTestCommon(function() {
     });
   }
   return promise;
+}
+
+function testSendDTMFNullAlphaId() {
+  let icc = getMozIcc();
+
+  // No "stkcommand" event should occur.
+  icc.addEventListener("stkcommand",
+    (event) => ok(false, event + " should not occur."));
+
+  // No "icc-stkcommand" system message should be sent.
+  workingFrame.contentWindow.navigator.mozSetMessageHandler("icc-stkcommand",
+    (msg) => ok(false, msg + " should not be sent."));
+
+  // If nothing happens within 3 seconds after the emulator command sent,
+  // treat as success.
+  log("send_dtmf_cmd: " + TEST_CMD_NULL_ALPHA_ID);
+  return sendEmulatorStkPdu(TEST_CMD_NULL_ALPHA_ID)
+    .then(() => new Promise(function(resolve, reject) {
+      setTimeout(() => resolve(), 3000);
+    }));
+}
+
+
+// Start tests
+startTestCommon(function() {
+  return Promise.resolve()
+    .then(() => testSendDTMF())
+    .then(() => testSendDTMFNullAlphaId());
 });
