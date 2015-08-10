@@ -5,15 +5,13 @@
 "use strict";
 
 // Test that verifies the content of the keyframes rule and property changes
-// to keyframe rules
+// to keyframe rules.
 
 const TEST_URI = TEST_URL_ROOT + "doc_keyframeanimation.html";
 
 add_task(function*() {
   yield addTab(TEST_URI);
-
-  let {toolbox, inspector, view} = yield openRuleView();
-
+  let {inspector, view} = yield openRuleView();
   yield testPacman(inspector, view);
   yield testBoxy(inspector, view);
 });
@@ -21,17 +19,11 @@ add_task(function*() {
 function* testPacman(inspector, view) {
   info("Test content in the keyframes rule of #pacman");
 
-  let {
-    rules,
-    element,
-    elementStyle
-  } = yield getKeyframeRules("#pacman", inspector, view);
+  let {rules} = yield getKeyframeRules("#pacman", inspector, view);
 
   info("Test text properties for Keyframes #pacman");
 
-  is
-  (
-    convertTextPropsToString(rules.keyframeRules[0].textProps),
+  is(convertTextPropsToString(rules.keyframeRules[0].textProps),
     "left: 750px",
     "Keyframe pacman (100%) property is correct"
   );
@@ -61,31 +53,21 @@ function* testPacman(inspector, view) {
 function* testBoxy(inspector, view) {
   info("Test content in the keyframes rule of #boxy");
 
-  let {
-    rules,
-    element,
-    elementStyle
-  } = yield getKeyframeRules("#boxy", inspector, view);
+  let {rules} = yield getKeyframeRules("#boxy", inspector, view);
 
   info("Test text properties for Keyframes #boxy");
 
-  is
-  (
-    convertTextPropsToString(rules.keyframeRules[0].textProps),
+  is(convertTextPropsToString(rules.keyframeRules[0].textProps),
     "background-color: blue",
     "Keyframe boxy (10%) property is correct"
   );
 
-  is
-  (
-    convertTextPropsToString(rules.keyframeRules[1].textProps),
+  is(convertTextPropsToString(rules.keyframeRules[1].textProps),
     "background-color: green",
     "Keyframe boxy (20%) property is correct"
   );
 
-  is
-  (
-    convertTextPropsToString(rules.keyframeRules[2].textProps),
+  is(convertTextPropsToString(rules.keyframeRules[2].textProps),
     "opacity: 0",
     "Keyframe boxy (100%) property is correct"
   );

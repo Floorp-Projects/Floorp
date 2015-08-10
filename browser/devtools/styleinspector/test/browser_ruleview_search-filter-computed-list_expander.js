@@ -7,23 +7,23 @@
 // Tests that the expanded computed list for a property remains open after
 // clearing the rule view search filter.
 
-const SEARCH = "0px"
+const SEARCH = "0px";
 
-let TEST_URI = [
-  '<style type="text/css">',
-  '  #testid {',
-  '    margin: 4px 0px;',
-  '  }',
-  '  .testclass {',
-  '    background-color: red;',
-  '  }',
-  '</style>',
-  '<h1 id="testid" class="testclass">Styled Node</h1>'
-].join("\n");
+const TEST_URI = `
+  <style type="text/css">
+    #testid {
+      margin: 4px 0px;
+    }
+    .testclass {
+      background-color: red;
+    }
+  </style>
+  <h1 id="testid" class="testclass">Styled Node</h1>
+`;
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {toolbox, inspector, view} = yield openRuleView();
+  let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
   yield testOpenExpanderAndAddTextInFilter(inspector, view);
   yield testClearSearchFilter(inspector, view);
@@ -36,7 +36,7 @@ function* testOpenExpanderAndAddTextInFilter(inspector, ruleView) {
   let ruleEditor = rule.textProps[0].editor;
   let computed = ruleEditor.computed;
 
-  info("Opening the computed list of margin property")
+  info("Opening the computed list of margin property");
   ruleEditor.expander.click();
 
   info("Setting filter text to \"" + SEARCH + "\"");
@@ -75,7 +75,8 @@ function* testClearSearchFilter(inspector, ruleView) {
   let searchClearButton = ruleView.searchClearButton;
   let onRuleViewFiltered = inspector.once("ruleview-filtered");
 
-  EventUtils.synthesizeMouseAtCenter(searchClearButton, {}, ruleView.styleWindow);
+  EventUtils.synthesizeMouseAtCenter(searchClearButton, {},
+    ruleView.styleWindow);
 
   yield onRuleViewFiltered;
 

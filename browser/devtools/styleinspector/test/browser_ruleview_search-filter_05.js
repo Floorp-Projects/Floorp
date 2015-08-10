@@ -4,25 +4,26 @@
 
 "use strict";
 
-// Tests that the rule view search filter works properly for multiple rule selectors.
+// Tests that the rule view search filter works properly for multiple rule
+// selectors.
 
 const SEARCH = "body";
 
-let TEST_URI = [
-  '<style type="text/css">',
-  '  html, body, div {',
-  '    background-color: #00F;',
-  '  }',
-  '  .testclass {',
-  '    width: 100%;',
-  '  }',
-  '</style>',
-  '<div id="testid" class="testclass">Styled Node</div>'
-].join("\n");
+const TEST_URI = `
+  <style type="text/css">
+    html, body, div {
+      background-color: #00F;
+    }
+    .testclass {
+      width: 100%;
+    }
+  </style>
+  <div id="testid" class="testclass">Styled Node</div>
+`;
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {toolbox, inspector, view} = yield openRuleView();
+  let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
   yield testAddTextInFilter(inspector, view);
 });
@@ -47,6 +48,6 @@ function* testAddTextInFilter(inspector, ruleView) {
 
   is(ruleEditor.rule.selectorText, "html, body, div",
     "Second rule is html, body, div.");
-  ok(ruleEditor.selectorText.children[2].classList.contains("ruleview-highlight"),
-    "body selector is highlighted.")
+  ok(ruleEditor.selectorText.children[2].classList
+    .contains("ruleview-highlight"), "body selector is highlighted.");
 }
