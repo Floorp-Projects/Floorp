@@ -46,8 +46,9 @@ for [name, prop, id, flags, pref] in propList:
         extendedAttrs.append('BinaryName="%s"' % prop)
         # Throw in a '_' before the attribute name, because some of these
         # property names collide with IDL reserved words.
-        props += "  [%s] attribute DOMString _%s;\n" % (", ".join(extendedAttrs),
-                                                       name)
+        props += "  [%s] attribute DOMString _%s;\n" % (
+            ", ".join(extendedAttrs),
+            name)
 
 idlFile = open(sys.argv[1], "r");
 idlTemplate = idlFile.read();
