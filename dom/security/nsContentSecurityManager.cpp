@@ -116,6 +116,8 @@ DoContentSecurityChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
   nsContentPolicyType contentPolicyType = aLoadInfo->GetContentPolicyType();
   nsCString mimeTypeGuess;
   nsCOMPtr<nsINode> requestingContext = nullptr;
+  nsContentPolicyType internalContentPolicyType =
+    aLoadInfo->InternalContentPolicyType();
 
   switch(contentPolicyType) {
     case nsIContentPolicy::TYPE_OTHER: {
@@ -139,11 +141,23 @@ DoContentSecurityChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
 
     case nsIContentPolicy::TYPE_XMLHTTPREQUEST: {
       // alias nsIContentPolicy::TYPE_DATAREQUEST:
-      mimeTypeGuess = NS_LITERAL_CSTRING(TEXT_EVENT_STREAM);
       requestingContext = aLoadInfo->LoadingNode();
+      MOZ_ASSERT(!requestingContext ||
+                 requestingContext->NodeType() == nsIDOMNode::DOCUMENT_NODE,
+                 "type_xml requires requestingContext of type Document");
+
+      if (internalContentPolicyType ==
+            nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST) {
+        mimeTypeGuess = NS_LITERAL_CSTRING("application/xml");
+      }
+      else {
+        MOZ_ASSERT(internalContentPolicyType ==
+                   nsIContentPolicy::TYPE_INTERNAL_EVENTSOURCE,
+                   "can not set mime type guess for unexpected internal type");
+        mimeTypeGuess = NS_LITERAL_CSTRING(TEXT_EVENT_STREAM);
+      }
       break;
     }
-
 
     case nsIContentPolicy::TYPE_OBJECT_SUBREQUEST: {
       mimeTypeGuess = EmptyCString();
@@ -161,9 +175,6 @@ DoContentSecurityChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
     }
 
     case nsIContentPolicy::TYPE_MEDIA: {
-      nsContentPolicyType internalContentPolicyType =
-        aLoadInfo->InternalContentPolicyType();
-
       if (internalContentPolicyType == nsIContentPolicy::TYPE_INTERNAL_TRACK) {
         mimeTypeGuess = NS_LITERAL_CSTRING("text/vtt");
       }
