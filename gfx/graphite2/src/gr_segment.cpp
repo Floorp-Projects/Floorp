@@ -48,10 +48,6 @@ namespace
         delete pRes;
         return NULL;
       }
-      // run the line break passes
-      // run the substitution passes
-      pRes->prepare_pos(font);
-      // run the positioning passes
       pRes->finalise(font);
 
       return static_cast<gr_segment*>(pRes);
