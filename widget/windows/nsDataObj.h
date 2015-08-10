@@ -249,7 +249,9 @@ protected:
 
     public:
       CStream();
-      nsresult Init(nsIURI *pSourceURI, nsINode* aRequestingNode);
+      nsresult Init(nsIURI *pSourceURI,
+                    uint32_t aContentPolicyType,
+                    nsINode* aRequestingNode);
 
       NS_DECL_ISUPPORTS
       NS_DECL_NSIREQUESTOBSERVER
