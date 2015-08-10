@@ -774,14 +774,13 @@ IonBuilder::inlineArrayPush(CallInfo& callInfo)
         trackOptimizationOutcome(TrackedOutcome::NeedsTypeBarrier);
         return InliningStatus_NotInlined;
     }
-    MOZ_ASSERT(obj == callInfo.thisArg() && value == callInfo.getArg(0));
 
     if (getInlineReturnType() != MIRType_Int32)
         return InliningStatus_NotInlined;
-    if (callInfo.thisArg()->type() != MIRType_Object)
+    if (obj->type() != MIRType_Object)
         return InliningStatus_NotInlined;
 
-    TemporaryTypeSet* thisTypes = callInfo.thisArg()->resultTypeSet();
+    TemporaryTypeSet* thisTypes = obj->resultTypeSet();
     if (!thisTypes)
         return InliningStatus_NotInlined;
     const Class* clasp = thisTypes->getKnownClass(constraints());
@@ -808,13 +807,12 @@ IonBuilder::inlineArrayPush(CallInfo& callInfo)
 
     JSValueType unboxedType = JSVAL_TYPE_MAGIC;
     if (clasp == &UnboxedArrayObject::class_) {
-        unboxedType = UnboxedArrayElementType(constraints(), callInfo.thisArg(), nullptr);
+        unboxedType = UnboxedArrayElementType(constraints(), obj, nullptr);
         if (unboxedType == JSVAL_TYPE_MAGIC)
             return InliningStatus_NotInlined;
     }
 
     callInfo.setImplicitlyUsedUnchecked();
-    value = callInfo.getArg(0);
 
     if (conversion == TemporaryTypeSet::AlwaysConvertToDoubles ||
         conversion == TemporaryTypeSet::MaybeConvertToDoubles)
@@ -939,6 +937,13 @@ IonBuilder::inlineArrayConcat(CallInfo& callInfo)
         HeapTypeSetKey elemTypes = key->property(JSID_VOID);
         if (!elemTypes.knownSubset(constraints(), thisElemTypes))
             return InliningStatus_NotInlined;
+
+        if (thisGroup->clasp() == &UnboxedArrayObject::class_ &&
+            !CanStoreUnboxedType(alloc(), thisGroup->unboxedLayout().elementType(),
+                                 MIRType_Value, elemTypes.maybeTypes()))
+        {
+            return InliningStatus_NotInlined;
+        }
     }
 
     // Inline the call.

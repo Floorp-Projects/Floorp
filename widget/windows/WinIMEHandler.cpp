@@ -705,7 +705,7 @@ IMEHandler::ShowOnScreenKeyboard()
       L"{054AAE20-4BEA-4347-8A35-64A533254A9D}\\LocalServer32";
     if (!WinUtils::GetRegistryKey(HKEY_LOCAL_MACHINE,
                                   kRegKeyName,
-                                  0,
+                                  nullptr,
                                   path,
                                   sizeof path)) {
       return;
@@ -745,7 +745,8 @@ IMEHandler::ShowOnScreenKeyboard()
         if (FAILED(hres) || !path) {
           return;
         }
-        commonProgramFilesPath = nsDependentString(path).get();
+        commonProgramFilesPath =
+          static_cast<const wchar_t*>(nsDependentString(path).get());
         ::CoTaskMemFree(path);
       }
       wstrpath.replace(commonProgramFilesOffset,
@@ -757,14 +758,14 @@ IMEHandler::ShowOnScreenKeyboard()
     Preferences::SetString(kOskPathPrefName, cachedPath);
   }
 
-  LPCWSTR cachedPathPtr;
+  const char16_t *cachedPathPtr;
   cachedPath.GetData(&cachedPathPtr);
-  HINSTANCE ret = ::ShellExecuteW(nullptr,
-                                  L"",
-                                  cachedPathPtr,
-                                  nullptr,
-                                  nullptr,
-                                  SW_SHOW);
+  ShellExecuteW(nullptr,
+                L"",
+                char16ptr_t(cachedPathPtr),
+                nullptr,
+                nullptr,
+                SW_SHOW);
   sShowingOnScreenKeyboard = true;
 }
 
