@@ -5759,14 +5759,18 @@ GCRuntime::pushZealSelectedObjects()
 }
 
 static bool
+IsShutdownGC(JS::gcreason::Reason reason)
+{
+    return reason == JS::gcreason::SHUTDOWN_CC || reason == JS::gcreason::DESTROY_RUNTIME;
+}
+
+static bool
 ShouldCleanUpEverything(JS::gcreason::Reason reason, JSGCInvocationKind gckind)
 {
     // During shutdown, we must clean everything up, for the sake of leak
     // detection. When a runtime has no contexts, or we're doing a GC before a
     // shutdown CC, those are strong indications that we're shutting down.
-    return reason == JS::gcreason::DESTROY_RUNTIME ||
-           reason == JS::gcreason::SHUTDOWN_CC ||
-           gckind == GC_SHRINK;
+    return IsShutdownGC(reason) || gckind == GC_SHRINK;
 }
 
 void
@@ -6172,8 +6176,7 @@ GCRuntime::collect(bool incremental, SliceBudget budget, JS::gcreason::Reason re
 
     AutoTraceLog logGC(TraceLoggerForMainThread(rt), TraceLogger_GC);
 
-    AutoStopVerifyingBarriers av(rt, reason == JS::gcreason::SHUTDOWN_CC ||
-                                     reason == JS::gcreason::DESTROY_RUNTIME);
+    AutoStopVerifyingBarriers av(rt, IsShutdownGC(reason));
 
     gcstats::AutoGCSlice agc(stats, scanZonesBeforeGC(), invocationKind, budget, reason);
 
