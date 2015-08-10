@@ -58,12 +58,15 @@ enum gr_encform {
     #endif
   #endif
   #define GR2_LOCAL
-#else
-  #if __GNUC__ >= 4
-    #define GR2_API      __attribute__ ((visibility("default")))
-    #define GR2_LOCAL       __attribute__ ((visibility("hidden")))
+#elif __GNUC__ >= 4
+  #if defined GRAPHITE2_STATIC
+    #define GR2_API      __attribute__ ((visibility("hidden")))
   #else
-    #define GR2_API
-    #define GR2_LOCAL
+    #define GR2_API      __attribute__ ((visibility("default")))
   #endif
+  #define GR2_LOCAL      __attribute__ ((visibility("hidden")))
+#else
+  #define GR2_API
+  #define GR2_LOCAL
 #endif
+

@@ -165,16 +165,16 @@ bool FeatureMap::readFeats(const Face & face)
                                        label, uiName, flags,
                                        uiSet, num_settings);
     }
-    m_defaultFeatures = new Features(bits/(sizeof(uint32)*8) + 1, *this);
+    new (&m_defaultFeatures) Features(bits/(sizeof(uint32)*8) + 1, *this);
     m_pNamedFeats = new NameAndFeatureRef[m_numFeats];
-    if (!m_defaultFeatures || !m_pNamedFeats)
+    if (!m_pNamedFeats)
     {
         free(defVals);
         return false;
     }
     for (int i = 0; i < m_numFeats; ++i)
     {
-        m_feats[i].applyValToFeature(defVals[i], *m_defaultFeatures);
+        m_feats[i].applyValToFeature(defVals[i], m_defaultFeatures);
         m_pNamedFeats[i] = m_feats+i;
     }
     
@@ -214,7 +214,7 @@ bool SillMap::readSill(const Face & face)
         uint16 numSettings = be::read<uint16>(p);
         uint16 offset = be::read<uint16>(p);
         if (offset + 8U * numSettings > sill.size() && numSettings > 0) return false;
-        Features* feats = new Features(*m_FeatureMap.m_defaultFeatures);
+        Features* feats = new Features(m_FeatureMap.m_defaultFeatures);
         if (!feats) return false;
         const byte *pLSet = sill + offset;
 
@@ -250,7 +250,7 @@ Features* SillMap::cloneFeatures(uint32 langname/*0 means default*/) const
                 return new Features(*m_langFeats[i].m_pFeatures);
         }
     }
-    return new Features (*m_FeatureMap.m_defaultFeatures);
+    return new Features (m_FeatureMap.m_defaultFeatures);
 }
 
 
