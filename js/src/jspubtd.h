@@ -221,7 +221,6 @@ class JS_PUBLIC_API(AutoGCRooter)
         IDVECTOR =    -11, /* js::AutoIdVector */
         OBJVECTOR =   -14, /* js::AutoObjectVector */
         SCRIPTVECTOR =-16, /* js::AutoScriptVector */
-        NAMEVECTOR =  -17, /* js::AutoNameVector */
         IONMASM =     -19, /* js::jit::MacroAssembler */
         WRAPVECTOR =  -20, /* js::AutoWrapperVector */
         WRAPPER =     -21, /* js::AutoWrapperRooter */
