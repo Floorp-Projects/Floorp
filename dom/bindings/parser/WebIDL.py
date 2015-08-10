@@ -82,8 +82,8 @@ class Location(object):
         self._file = filename if filename else "<unknown>"
 
     def __eq__(self, other):
-        return self._lexpos == other._lexpos and \
-               self._file == other._file
+        return (self._lexpos == other._lexpos and
+                self._file == other._file)
 
     def filename(self):
         return self._file
@@ -120,8 +120,8 @@ class BuiltinLocation(object):
         self.msg = text + "\n"
 
     def __eq__(self, other):
-        return isinstance(other, BuiltinLocation) and \
-               self.msg == other.msg
+        return (isinstance(other, BuiltinLocation) and
+                self.msg == other.msg)
 
     def filename(self):
         return '<builtin>'
@@ -266,9 +266,9 @@ class IDLScope(IDLObject):
         self._dict[identifier.name] = object
 
     def resolveIdentifierConflict(self, scope, identifier, originalObject, newObject):
-        if isinstance(originalObject, IDLExternalInterface) and \
-           isinstance(newObject, IDLExternalInterface) and \
-           originalObject.identifier.name == newObject.identifier.name:
+        if (isinstance(originalObject, IDLExternalInterface) and
+            isinstance(newObject, IDLExternalInterface) and
+            originalObject.identifier.name == newObject.identifier.name):
             return originalObject
 
         if (isinstance(originalObject, IDLExternalInterface) or
@@ -291,8 +291,8 @@ class IDLScope(IDLObject):
         # because we need to merge overloads of NamedConstructors and we need to
         # detect conflicts in those across interfaces. See also the comment in
         # IDLInterface.addExtendedAttributes for "NamedConstructor".
-        if originalObject.tag == IDLInterfaceMember.Tags.Method and \
-           newObject.tag == IDLInterfaceMember.Tags.Method:
+        if (originalObject.tag == IDLInterfaceMember.Tags.Method and
+           newObject.tag == IDLInterfaceMember.Tags.Method):
             return originalObject.addOverload(newObject)
 
         # Default to throwing, derived classes can override.
@@ -1114,8 +1114,8 @@ class IDLInterface(IDLObjectWithScope, IDLExposureMixins):
                     if fowardAttr is None:
                         raise WebIDLError("Attribute %s on %s forwards to "
                                           "missing attribute %s" %
-                              (attr.identifier.name, iface, putForwards),
-                              [attr.location])
+                                          (attr.identifier.name, iface, putForwards),
+                                          [attr.location])
 
                     iface = forwardIface
                     attr = fowardAttr
@@ -2597,9 +2597,9 @@ class IDLWrapperType(IDLType):
         self._promiseInnerType = promiseInnerType
 
     def __eq__(self, other):
-        return isinstance(other, IDLWrapperType) and \
-               self._identifier == other._identifier and \
-               self.builtin == other.builtin
+        return (isinstance(other, IDLWrapperType) and
+                self._identifier == other._identifier and
+                self.builtin == other.builtin)
 
     def __str__(self):
         return str(self.name) + " (Wrapper)"
@@ -2635,8 +2635,8 @@ class IDLWrapperType(IDLType):
         return isinstance(self.inner, IDLDictionary)
 
     def isInterface(self):
-        return isinstance(self.inner, IDLInterface) or \
-               isinstance(self.inner, IDLExternalInterface)
+        return (isinstance(self.inner, IDLInterface) or
+                isinstance(self.inner, IDLExternalInterface))
 
     def isCallbackInterface(self):
         return self.isInterface() and self.inner.isCallback()
@@ -2648,8 +2648,8 @@ class IDLWrapperType(IDLType):
         return isinstance(self.inner, IDLEnum)
 
     def isPromise(self):
-        return isinstance(self.inner, IDLInterface) and \
-               self.inner.identifier.name == "Promise"
+        return (isinstance(self.inner, IDLInterface) and
+                self.inner.identifier.name == "Promise")
 
     def promiseInnerType(self):
         assert self.isPromise()
@@ -2877,9 +2877,9 @@ class IDLBuiltinType(IDLType):
         return self.isPrimitive() and not self.isBoolean()
 
     def isString(self):
-        return self._typeTag == IDLBuiltinType.Types.domstring or \
-               self._typeTag == IDLBuiltinType.Types.bytestring or \
-               self._typeTag == IDLBuiltinType.Types.usvstring
+        return (self._typeTag == IDLBuiltinType.Types.domstring or
+                self._typeTag == IDLBuiltinType.Types.bytestring or
+                self._typeTag == IDLBuiltinType.Types.usvstring)
 
     def isByteString(self):
         return self._typeTag == IDLBuiltinType.Types.bytestring
@@ -2906,38 +2906,38 @@ class IDLBuiltinType(IDLType):
         return self._typeTag == IDLBuiltinType.Types.SharedArrayBufferView
 
     def isTypedArray(self):
-        return self._typeTag >= IDLBuiltinType.Types.Int8Array and \
-               self._typeTag <= IDLBuiltinType.Types.Float64Array
+        return (self._typeTag >= IDLBuiltinType.Types.Int8Array and
+                self._typeTag <= IDLBuiltinType.Types.Float64Array)
 
     def isSharedTypedArray(self):
-        return self._typeTag >= IDLBuiltinType.Types.SharedInt8Array and \
-               self._typeTag <= IDLBuiltinType.Types.SharedFloat64Array
+        return (self._typeTag >= IDLBuiltinType.Types.SharedInt8Array and
+                self._typeTag <= IDLBuiltinType.Types.SharedFloat64Array)
 
     def isInterface(self):
         # TypedArray things are interface types per the TypedArray spec,
         # but we handle them as builtins because SpiderMonkey implements
         # all of it internally.
-        return self.isArrayBuffer() or \
-               self.isArrayBufferView() or \
-               self.isSharedArrayBuffer() or \
-               self.isSharedArrayBufferView() or \
-               self.isTypedArray() or \
-               self.isSharedTypedArray()
+        return (self.isArrayBuffer() or
+                self.isArrayBufferView() or
+                self.isSharedArrayBuffer() or
+                self.isSharedArrayBufferView() or
+                self.isTypedArray() or
+                self.isSharedTypedArray())
 
     def isNonCallbackInterface(self):
         # All the interfaces we can be are non-callback
         return self.isInterface()
 
     def isFloat(self):
-        return self._typeTag == IDLBuiltinType.Types.float or \
-               self._typeTag == IDLBuiltinType.Types.double or \
-               self._typeTag == IDLBuiltinType.Types.unrestricted_float or \
-               self._typeTag == IDLBuiltinType.Types.unrestricted_double
+        return (self._typeTag == IDLBuiltinType.Types.float or
+                self._typeTag == IDLBuiltinType.Types.double or
+                self._typeTag == IDLBuiltinType.Types.unrestricted_float or
+                self._typeTag == IDLBuiltinType.Types.unrestricted_double)
 
     def isUnrestricted(self):
         assert self.isFloat()
-        return self._typeTag == IDLBuiltinType.Types.unrestricted_float or \
-               self._typeTag == IDLBuiltinType.Types.unrestricted_double
+        return (self._typeTag == IDLBuiltinType.Types.unrestricted_float or
+                self._typeTag == IDLBuiltinType.Types.unrestricted_double)
 
     def isSerializable(self):
         return self.isPrimitive() or self.isString() or self.isDate()
@@ -4318,8 +4318,8 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
             overload = self._overloads[0]
             arguments =  overload.arguments
             assert len(arguments) == 1
-            assert arguments[0].type == BuiltinTypes[IDLBuiltinType.Types.domstring] or \
-                   arguments[0].type == BuiltinTypes[IDLBuiltinType.Types.unsigned_long]
+            assert (arguments[0].type == BuiltinTypes[IDLBuiltinType.Types.domstring] or
+                    arguments[0].type == BuiltinTypes[IDLBuiltinType.Types.unsigned_long])
             assert not arguments[0].optional and not arguments[0].variadic
             assert not self._getter or not overload.returnType.isVoid()
 
@@ -4327,8 +4327,8 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
             assert len(self._overloads) == 1
             arguments = self._overloads[0].arguments
             assert len(arguments) == 2
-            assert arguments[0].type == BuiltinTypes[IDLBuiltinType.Types.domstring] or \
-                   arguments[0].type == BuiltinTypes[IDLBuiltinType.Types.unsigned_long]
+            assert (arguments[0].type == BuiltinTypes[IDLBuiltinType.Types.domstring] or
+                    arguments[0].type == BuiltinTypes[IDLBuiltinType.Types.unsigned_long])
             assert not arguments[0].optional and not arguments[0].variadic
             assert not arguments[1].optional and not arguments[1].variadic
 
@@ -4360,13 +4360,13 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
         return self._deleter
 
     def isNamed(self):
-        assert self._specialType == IDLMethod.NamedOrIndexed.Named or \
-               self._specialType == IDLMethod.NamedOrIndexed.Indexed
+        assert (self._specialType == IDLMethod.NamedOrIndexed.Named or
+               self._specialType == IDLMethod.NamedOrIndexed.Indexed)
         return self._specialType == IDLMethod.NamedOrIndexed.Named
 
     def isIndexed(self):
-        assert self._specialType == IDLMethod.NamedOrIndexed.Named or \
-               self._specialType == IDLMethod.NamedOrIndexed.Indexed
+        assert (self._specialType == IDLMethod.NamedOrIndexed.Named or
+                self._specialType == IDLMethod.NamedOrIndexed.Indexed)
         return self._specialType == IDLMethod.NamedOrIndexed.Indexed
 
     def isLegacycaller(self):
@@ -5527,8 +5527,8 @@ class Parser(Tokenizer):
 
         # identifier might be None.  This is only permitted for special methods.
         if not identifier:
-            if not getter and not setter and not creator and \
-               not deleter and not legacycaller and not stringifier:
+            if (not getter and not setter and not creator and
+                not deleter and not legacycaller and not stringifier):
                 raise WebIDLError("Identifier required for non-special methods",
                                   [self.getLocation(p, 2)])
 
@@ -6381,8 +6381,8 @@ class Parser(Tokenizer):
     @ staticmethod
     def handleModifiers(type, modifiers):
         for (modifier, modifierLocation) in modifiers:
-            assert modifier == IDLMethod.TypeSuffixModifier.QMark or \
-                   modifier == IDLMethod.TypeSuffixModifier.Brackets
+            assert (modifier == IDLMethod.TypeSuffixModifier.QMark or
+                    modifier == IDLMethod.TypeSuffixModifier.Brackets)
 
             if modifier == IDLMethod.TypeSuffixModifier.QMark:
                 type = IDLNullableType(modifierLocation, type)
