@@ -10,7 +10,7 @@
 <!ENTITY privatebrowsingpage.title.private "+ Tracking Protection">
 <!ENTITY privatebrowsingpage.title.normal1 "You are not in Private Browsing">
 
-<!ENTITY privatebrowsingpage.description.private3 "Firefox will prevent you from being tracked and won't remember any history, but downloaded files and new bookmarks will still be saved to your device.">
+<!ENTITY privatebrowsingpage.description.private4 "&brandShortName; will prevent you from being tracked and won't remember any history, but downloaded files and new bookmarks will still be saved to your device.">
 <!ENTITY privatebrowsingpage.description.normal2 "In Private Browsing, we won't keep any of your browsing history or cookies. Bookmarks you add and files you download will still be saved on your device.">
 
 <!ENTITY privatebrowsingpage.link.private "Want to learn more?">

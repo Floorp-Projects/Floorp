@@ -16,7 +16,7 @@ let { Promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 let { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let { TargetFactory } = require("devtools/framework/target");
-let { DebuggerServer } = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
+let { DebuggerServer } = require("devtools/server/main");
 let { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
 
 let { WebAudioFront } = require("devtools/server/actors/webaudio");
