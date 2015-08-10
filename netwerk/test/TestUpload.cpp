@@ -140,7 +140,7 @@ main(int argc, char* argv[])
         rv = NS_NewChannel(getter_AddRefs(channel),
                            uri,
                            systemPrincipal,
-                           nsILoadInfo::SEC_NORMAL,
+                           nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS,
                            nsIContentPolicy::TYPE_OTHER);
         if (NS_FAILED(rv)) return -1;
 	
@@ -158,7 +158,7 @@ main(int argc, char* argv[])
         }
         NS_ADDREF(listener);
 
-        channel->AsyncOpen(listener, nullptr);
+        channel->AsyncOpen2(listener);
 
         PumpEvents();
     } // this scopes the nsCOMPtrs
