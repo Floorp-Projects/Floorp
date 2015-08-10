@@ -111,16 +111,23 @@ enum errors {
     E_BADRULEMAPPING = 50,  // The structure of the rule mapping is bad
     E_BADRANGE = 51,        // Bad column range structure including a glyph in more than one column
     E_BADRULENUM = 52,      // A reference to a rule is out of range (too high)
+    E_BADACOLLISION = 53,   // Bad Silf table collision attribute number (too high)
+    E_BADEMPTYPASS = 54,    // Can't have empty passes (no rules) except for collision passes
+    E_BADSILFVERSION = 55,  // The Silf table has a bad version (probably too high)
+    E_BADCOLLISIONPASS = 56,    // Collision flags set on a non positioning pass
 // Code errors
     E_CODEFAILURE = 60,     // Base code error. The following subcodes must align with Machine::Code::status_t in Code.h
-        E_CODEALLOC = 61,       // Out of memory
-        E_INVALIDOPCODE = 62,   // Invalid op code
-        E_UNIMPOPCODE = 63,     // Unimplemented op code encountered
-        E_OUTOFRANGECODE = 64,  // Code argument out of range
-        E_BADJUMPCODE = 65,     // Code jumps past end of op codes
-        E_CODEBADARGS = 66,     // Code arguments exhausted
-        E_CODENORETURN = 67,    // Missing return type op code at end of code
-        E_CODENESTEDCTXT = 68   // Nested context encountered in code
+    E_CODEALLOC = 61,       // Out of memory
+    E_INVALIDOPCODE = 62,   // Invalid op code
+    E_UNIMPOPCODE = 63,     // Unimplemented op code encountered
+    E_OUTOFRANGECODE = 64,  // Code argument out of range
+    E_BADJUMPCODE = 65,     // Code jumps past end of op codes
+    E_CODEBADARGS = 66,     // Code arguments exhausted
+    E_CODENORETURN = 67,    // Missing return type op code at end of code
+    E_CODENESTEDCTXT = 68,   // Nested context encountered in code
+// Compression errors
+    E_BADSCHEME = 69,
+    E_SHRINKERFAILED = 70,
 };
 
 }
