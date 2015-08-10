@@ -2891,18 +2891,20 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
                     # XXX If we ever create non-enumerate properties that can be
                     #     aliased, we should consider making the aliases match
                     #     the enumerability of the property being aliased.
-                    CGGeneric(fill("""
-                    if (!${defineFn}(aCx, proto, ${prop}, aliasedVal, JSPROP_ENUMERATE)) {
-                      return;
-                    }
-                    """,
-                    defineFn=defineFn,
-                    prop=prop))
+                    CGGeneric(fill(
+                        """
+                        if (!${defineFn}(aCx, proto, ${prop}, aliasedVal, JSPROP_ENUMERATE)) {
+                          return;
+                        }
+                        """,
+                        defineFn=defineFn,
+                        prop=prop))
                 ], "\n")
 
             def defineAliasesFor(m):
                 return CGList([
-                    CGGeneric(fill("""
+                    CGGeneric(fill(
+                        """
                         if (!JS_GetProperty(aCx, proto, \"${prop}\", &aliasedVal)) {
                           return;
                         }
@@ -2991,8 +2993,9 @@ class CGGetProtoObjectMethod(CGAbstractMethod):
     """
     def __init__(self, descriptor):
         CGAbstractMethod.__init__(
-            self, descriptor, "GetProtoObject", "JSObject*", [Argument('JSContext*', 'aCx'),
-                Argument('JS::Handle<JSObject*>', 'aGlobal')])
+            self, descriptor, "GetProtoObject", "JSObject*",
+            [Argument('JSContext*', 'aCx'),
+             Argument('JS::Handle<JSObject*>', 'aGlobal')])
 
     def definition_body(self):
         return "return GetProtoObjectHandle(aCx, aGlobal);\n"
@@ -3020,8 +3023,9 @@ class CGGetConstructorObjectMethod(CGAbstractMethod):
     """
     def __init__(self, descriptor):
         CGAbstractMethod.__init__(
-            self, descriptor, "GetConstructorObject", "JSObject*", [Argument('JSContext*', 'aCx'),
-                Argument('JS::Handle<JSObject*>', 'aGlobal')])
+            self, descriptor, "GetConstructorObject", "JSObject*",
+            [Argument('JSContext*', 'aCx'),
+             Argument('JS::Handle<JSObject*>', 'aGlobal')])
 
     def definition_body(self):
         return "return GetConstructorObjectHandle(aCx, aGlobal);\n"
@@ -3191,8 +3195,10 @@ class CGConstructorEnabled(CGAbstractMethod):
         conditionsWrapper = ""
         if len(conditions):
             conditionsWrapper = CGWrapper(CGList((CGGeneric(cond) for cond in conditions),
-                                               " &&\n"),
-                                        pre="return ", post=";\n", reindent=True)
+                                                 " &&\n"),
+                                          pre="return ",
+                                          post=";\n",
+                                          reindent=True)
         else:
             conditionsWrapper = CGGeneric("return true;\n")
 
@@ -4311,14 +4317,15 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         # For JS-implemented APIs, we refuse to allow passing objects that the
         # API consumer does not subsume.
         if not isinstance(descriptorProvider, Descriptor) or descriptorProvider.interface.isJSImplemented():
-            templateBody = fill("""
-                            if ($${passedToJSImpl} && !CallerSubsumes($${val})) {
-                              ThrowErrorMessage(cx, MSG_PERMISSION_DENIED_TO_PASS_ARG, "${sourceDescription}");
-                              $*{exceptionCode}
-                            }
-                            """,
-                            sourceDescription=sourceDescription,
-                            exceptionCode=exceptionCode) + templateBody
+            templateBody = fill(
+                """
+                if ($${passedToJSImpl} && !CallerSubsumes($${val})) {
+                  ThrowErrorMessage(cx, MSG_PERMISSION_DENIED_TO_PASS_ARG, "${sourceDescription}");
+                  $*{exceptionCode}
+                }
+                """,
+                sourceDescription=sourceDescription,
+                exceptionCode=exceptionCode) + templateBody
 
         setToNullCode = "${declName} = nullptr;\n"
         template = wrapObjectTemplate(templateBody, type, setToNullCode,
@@ -5347,14 +5354,15 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         # For JS-implemented APIs, we refuse to allow passing objects that the
         # API consumer does not subsume.
         if not isinstance(descriptorProvider, Descriptor) or descriptorProvider.interface.isJSImplemented():
-            templateBody = fill("""
-                            if ($${passedToJSImpl} && !CallerSubsumes($${val})) {
-                              ThrowErrorMessage(cx, MSG_PERMISSION_DENIED_TO_PASS_ARG, "${sourceDescription}");
-                              $*{exceptionCode}
-                            }
-                            """,
-                            sourceDescription=sourceDescription,
-                            exceptionCode=exceptionCode) + templateBody
+            templateBody = fill(
+                """
+                if ($${passedToJSImpl} && !CallerSubsumes($${val})) {
+                  ThrowErrorMessage(cx, MSG_PERMISSION_DENIED_TO_PASS_ARG, "${sourceDescription}");
+                  $*{exceptionCode}
+                }
+                """,
+                sourceDescription=sourceDescription,
+                exceptionCode=exceptionCode) + templateBody
 
         # We may not have a default value if we're being converted for
         # a setter, say.
@@ -7819,7 +7827,7 @@ class CGGenericPromiseReturningMethod(CGAbstractBindingMethod):
             ThrowInvalidThis(cx, args, GetInvalidThisErrorForMethod(%%(securityError)s), "%s");\n
             return ConvertExceptionToPromise(cx, xpc::XrayAwareCalleeGlobal(callee),
                                              args.rval());\n""" %
-            descriptor.interface.identifier.name)
+                                   descriptor.interface.identifier.name)
 
         name = "genericPromiseReturningMethod"
         customCallArgs = dedent("""
@@ -10567,7 +10575,8 @@ class CGDOMJSProxyHandler_getOwnPropDescriptor(ClassMethod):
                 callNamedGetter = !hasOnProto;
                 """)
             if self.descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
-                computeCondition = fill("""
+                computeCondition = fill(
+                    """
                     if (!isXray) {
                       callNamedGetter = true;
                     } else {
@@ -10580,6 +10589,8 @@ class CGDOMJSProxyHandler_getOwnPropDescriptor(ClassMethod):
             if self.descriptor.supportsIndexedProperties():
                 outerCondition = "!IsArrayIndex(index) && " + outerCondition
 
+            namedGetCode = CGProxyNamedGetter(self.descriptor,
+                                              templateValues).define()
             namedGet = fill("""
                 bool callNamedGetter = false;
                 if (${outerCondition}) {
@@ -10589,9 +10600,9 @@ class CGDOMJSProxyHandler_getOwnPropDescriptor(ClassMethod):
                   $*{namedGetCode}
                 }
                 """,
-                outerCondition=outerCondition,
-                computeCondition=computeCondition,
-                namedGetCode=CGProxyNamedGetter(self.descriptor, templateValues).define())
+                            outerCondition=outerCondition,
+                            computeCondition=computeCondition,
+                            namedGetCode=namedGetCode)
             namedGet += "\n"
         else:
             namedGet = ""
@@ -10815,7 +10826,8 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
                 """,
                 namedBody=namedBody)
             if not self.descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
-                delete = fill("""
+                delete = fill(
+                    """
                     bool hasOnProto;
                     if (!HasPropertyOnPrototype(cx, proxy, id, &hasOnProto)) {
                       return false;
@@ -10936,7 +10948,8 @@ class CGDOMJSProxyHandler_hasOwn(ClassMethod):
                 """,
                 presenceChecker=CGProxyNamedPresenceChecker(self.descriptor, foundVar="found").define())
             if not self.descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
-                named = fill("""
+                named = fill(
+                    """
                     bool hasOnProto;
                     if (!HasPropertyOnPrototype(cx, proxy, id, &hasOnProto)) {
                       return false;
@@ -11251,8 +11264,9 @@ class CGDOMJSProxyHandler_call(ClassMethod):
 
 class CGDOMJSProxyHandler_isCallable(ClassMethod):
     def __init__(self):
-        ClassMethod.__init__(self, "isCallable", "bool", [Argument('JSObject*', 'obj')],
-                           virtual=True, override=True, const=True)
+        ClassMethod.__init__(self, "isCallable", "bool",
+                             [Argument('JSObject*', 'obj')],
+                             virtual=True, override=True, const=True)
 
     def getBody(self):
         return dedent("""
