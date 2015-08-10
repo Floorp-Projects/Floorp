@@ -713,10 +713,9 @@ class Descriptor(DescriptorProvider):
 
         """
         return (self.interface.isExternal() or self.concrete or
-            self.interface.hasInterfacePrototypeObject() or
-            any((m.isAttr() or m.isMethod()) and m.isStatic() for m
-                in self.interface.members) or
-            self.interface.parent)
+                self.interface.hasInterfacePrototypeObject() or
+                any((m.isAttr() or m.isMethod()) and m.isStatic() for m in self.interface.members) or
+                self.interface.parent)
 
     def hasThreadChecks(self):
         return ((self.isExposedConditionally() and
