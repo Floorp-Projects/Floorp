@@ -19,6 +19,7 @@ import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.lwt.LightweightTheme;
 import org.mozilla.gecko.lwt.LightweightThemeDrawable;
 import org.mozilla.gecko.restrictions.Restriction;
+import org.mozilla.gecko.util.ColorUtils;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.widget.GeckoPopupMenu;
 import org.mozilla.gecko.widget.IconTabWidget;
@@ -284,7 +285,7 @@ public class TabsPanel extends LinearLayout
     @Override
     @SuppressWarnings("deprecation") // setBackgroundDrawable deprecated by API level 16
     public void onLightweightThemeChanged() {
-        final int background = getResources().getColor(R.color.text_and_tabs_tray_grey);
+        final int background = ColorUtils.getColor(getContext(), R.color.text_and_tabs_tray_grey);
         final LightweightThemeDrawable drawable = mTheme.getColorDrawable(this, background, true);
         if (drawable == null)
             return;
@@ -295,7 +296,7 @@ public class TabsPanel extends LinearLayout
 
     @Override
     public void onLightweightThemeReset() {
-        setBackgroundColor(getContext().getResources().getColor(R.color.text_and_tabs_tray_grey));
+        setBackgroundColor(ColorUtils.getColor(getContext(), R.color.text_and_tabs_tray_grey));
     }
 
     @Override
@@ -355,7 +356,7 @@ public class TabsPanel extends LinearLayout
         @Override
         @SuppressWarnings("deprecation") // setBackgroundDrawable deprecated by API level 16
         public void onLightweightThemeChanged() {
-            final int background = getResources().getColor(R.color.text_and_tabs_tray_grey);
+            final int background = ColorUtils.getColor(getContext(), R.color.text_and_tabs_tray_grey);
             final LightweightThemeDrawable drawable = mTheme.getColorDrawable(this, background);
             if (drawable == null)
                 return;
@@ -366,7 +367,7 @@ public class TabsPanel extends LinearLayout
 
         @Override
         public void onLightweightThemeReset() {
-            setBackgroundColor(getContext().getResources().getColor(R.color.text_and_tabs_tray_grey));
+            setBackgroundColor(ColorUtils.getColor(getContext(), R.color.text_and_tabs_tray_grey));
         }
 
         @Override
