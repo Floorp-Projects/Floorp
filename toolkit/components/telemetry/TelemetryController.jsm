@@ -678,7 +678,7 @@ let Impl = {
     // id from disk.
     // We try to cache it in prefs to avoid this, even though this may
     // lead to some stale client ids.
-    this._clientID = Preferences.get(PREF_CACHED_CLIENTID, null);
+    this._clientID = ClientID.getCachedClientID();
 
     // Delay full telemetry initialization to give the browser time to
     // run various late initializers. Otherwise our gathered memory
@@ -691,9 +691,8 @@ let Impl = {
 
         yield TelemetrySend.setup(this._testMode);
 
-        // Load the ClientID and update the cache.
+        // Load the ClientID.
         this._clientID = yield ClientID.getClientID();
-        Preferences.set(PREF_CACHED_CLIENTID, this._clientID);
 
         // Purge the pings archive by removing outdated pings. We don't wait for this
         // task to complete, but TelemetryStorage blocks on it during shutdown.
