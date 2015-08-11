@@ -67,6 +67,10 @@ class nsPluginNativeWindowGtk;
 class nsShmImage;
 #endif
 
+namespace mozilla {
+class TimeStamp;
+}
+
 class nsWindow : public nsBaseWidget
 {
 public:
@@ -263,6 +267,7 @@ public:
     // otherwise, FALSE.
     bool               DispatchKeyDownEvent(GdkEventKey *aEvent,
                                             bool *aIsCancelled);
+    mozilla::TimeStamp GetEventTimeStamp(guint32 aEventTime);
 
     NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
                                       const InputContextAction& aAction) override;
