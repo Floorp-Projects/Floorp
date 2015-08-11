@@ -30,6 +30,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TelephonyCallGroup,
                                            DOMEventTargetHelper)
 
+  friend class Telephony;
+
   nsPIDOMWindow*
   GetParentObject() const
   {
@@ -107,6 +109,12 @@ public:
 private:
   explicit TelephonyCallGroup(nsPIDOMWindow* aOwner);
   ~TelephonyCallGroup();
+
+  nsresult
+  Hold(nsITelephonyCallback* aCallback);
+
+  nsresult
+  Resume(nsITelephonyCallback* aCallback);
 
   nsresult
   NotifyCallsChanged(TelephonyCall* aCall);

@@ -4,6 +4,8 @@
 
 #include "nsHtml5Speculation.h"
 
+using namespace mozilla;
+
 nsHtml5Speculation::nsHtml5Speculation(nsHtml5OwningUTF16Buffer* aBuffer,
                                        int32_t aStart, 
                                        int32_t aStartLineNumber, 
@@ -24,11 +26,7 @@ nsHtml5Speculation::~nsHtml5Speculation()
 void
 nsHtml5Speculation::MoveOpsFrom(nsTArray<nsHtml5TreeOperation>& aOpQueue)
 {
-  if (mOpQueue.IsEmpty()) {
-    mOpQueue.SwapElements(aOpQueue);
-    return;
-  }
-  mOpQueue.MoveElementsFrom(aOpQueue);
+  mOpQueue.AppendElements(Move(aOpQueue));
 }
 
 void

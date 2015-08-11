@@ -362,15 +362,13 @@ DOMStorageDBThread::ThreadObserver::OnDispatchedEvent(nsIThreadInternal *thread)
 
 NS_IMETHODIMP
 DOMStorageDBThread::ThreadObserver::OnProcessNextEvent(nsIThreadInternal *thread,
-                                       bool mayWait,
-                                       uint32_t recursionDepth)
+                                       bool mayWait)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
 DOMStorageDBThread::ThreadObserver::AfterProcessNextEvent(nsIThreadInternal *thread,
-                                          uint32_t recursionDepth,
                                           bool eventWasProcessed)
 {
   return NS_OK;

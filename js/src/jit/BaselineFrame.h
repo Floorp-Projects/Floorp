@@ -408,9 +408,7 @@ class BaselineFrame
     bool isNonStrictEvalFrame() const {
         return isEvalFrame() && !script()->strict();
     }
-    bool isDirectEvalFrame() const {
-        return isEvalFrame() && script()->staticLevel() > 0;
-    }
+    bool isDirectEvalFrame() const;
     bool isNonStrictDirectEvalFrame() const {
         return isNonStrictEvalFrame() && isDirectEvalFrame();
     }
