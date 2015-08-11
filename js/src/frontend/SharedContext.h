@@ -305,8 +305,8 @@ class FunctionBox : public ObjectBox, public SharedContext
 
     ObjectBox* toObjectBox() override { return this; }
     JSFunction* function() const { return &object->as<JSFunction>(); }
-
     JSObject* staticScope() const override { return staticScope_; }
+    void switchStaticScopeToFunction();
 
     GeneratorKind generatorKind() const { return GeneratorKindFromBits(generatorKindBits_); }
     bool isGenerator() const { return generatorKind() != NotGenerator; }
