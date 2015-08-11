@@ -55,7 +55,7 @@ VPXDecoder::Shutdown()
   return NS_OK;
 }
 
-nsresult
+nsRefPtr<MediaDataDecoder::InitPromise>
 VPXDecoder::Init()
 {
   vpx_codec_iface_t* dx = nullptr;
@@ -65,9 +65,9 @@ VPXDecoder::Init()
     dx = vpx_codec_vp9_dx();
   }
   if (!dx || vpx_codec_dec_init(&mVPX, dx, nullptr, 0)) {
-    return NS_ERROR_FAILURE;
+    return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
   }
-  return NS_OK;
+  return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
 }
 
 nsresult
