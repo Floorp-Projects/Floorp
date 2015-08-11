@@ -206,23 +206,6 @@ StartUpdateProcess(int argc,
     si.wShowWindow = SW_HIDE;
   }
 
-  // We move the updater.ini file out of the way because we will handle
-  // executing PostUpdate through the service.  We handle PostUpdate from
-  // the service because there are some per user things that happen that
-  // can't run in session 0 which we run updater.exe in.
-  // Once we are done running updater.exe we rename updater.ini back so
-  // that if there were any errors the next updater.exe will run correctly.
-  WCHAR updaterINI[MAX_PATH + 1];
-  WCHAR updaterINITemp[MAX_PATH + 1];
-  BOOL selfHandlePostUpdate = FALSE;
-  // We use the updater.ini from the same directory as the updater.exe
-  // because of background updates.
-  if (PathGetSiblingFilePath(updaterINI, argv[0], L"updater.ini") &&
-      PathGetSiblingFilePath(updaterINITemp, argv[0], L"updater.tmp")) {
-    selfHandlePostUpdate = MoveFileExW(updaterINI, updaterINITemp,
-                                       MOVEFILE_REPLACE_EXISTING);
-  }
-
   // Add an env var for MOZ_USING_SERVICE so the updater.exe can
   // do anything special that it needs to do for service updates.
   // Search in updater.cpp for more info on MOZ_USING_SERVICE.
@@ -297,37 +280,6 @@ StartUpdateProcess(int argc,
               argv[0], cmdLine, lastError));
   }
 
-  // Now that we're done with the update, restore back the updater.ini file
-  // We use it ourselves, and also we want it back in case we had any type
-  // of error so that the normal update process can use it.
-  if (selfHandlePostUpdate) {
-    MoveFileExW(updaterINITemp, updaterINI, MOVEFILE_REPLACE_EXISTING);
-
-    // Only run the PostUpdate if the update was successful
-    if (updateWasSuccessful && argc > index) {
-      LPCWSTR updateInfoDir = argv[1];
-      bool stagingUpdate = IsUpdateBeingStaged(argc, argv);
-
-      // Launch the PostProcess with admin access in session 0.  This is
-      // actually launching the post update process but it takes in the
-      // callback app path to figure out where to apply to.
-      // The PostUpdate process with user only access will be done inside
-      // the unelevated updater.exe after the update process is complete
-      // from the service.  We don't know here which session to start
-      // the user PostUpdate process from.
-      // Note that we don't need to do this if we're just staging the
-      // update in the background, as the PostUpdate step runs when
-      // performing the replacing in that case.
-      if (!stagingUpdate) {
-        LOG(("Launching post update process as the service in session 0."));
-        if (!LaunchWinPostProcess(installDir, updateInfoDir, true, nullptr)) {
-          LOG_WARN(("The post update process could not be launched."
-                    " installDir: %ls, updateInfoDir: %ls",
-                    installDir, updateInfoDir));
-        }
-      }
-    }
-  }
   // Empty value on putenv is how you remove an env variable in Windows
   putenv(const_cast<char*>("MOZ_USING_SERVICE="));
 
