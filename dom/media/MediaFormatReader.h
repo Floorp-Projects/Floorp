@@ -410,6 +410,7 @@ private:
     OnSeekFailed(TrackType::kAudioTrack, aFailure);
   }
   // Temporary seek information while we wait for the data
+  Maybe<media::TimeUnit> mOriginalSeekTime;
   Maybe<media::TimeUnit> mPendingSeekTime;
   MozPromiseHolder<SeekPromise> mSeekPromise;
 
