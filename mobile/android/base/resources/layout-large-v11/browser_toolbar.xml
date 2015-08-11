@@ -48,7 +48,7 @@
             android:layout_marginBottom="11.5dp"
             android:layout_gravity="center_vertical"
             android:layout_centerVertical="true"
-            android:src="@drawable/new_tablet_ic_menu_forward"
+            android:src="@drawable/ic_menu_forward"
             android:background="@drawable/new_tablet_url_bar_nav_button"
             android:alpha="0"
             android:layout_width="@dimen/new_tablet_nav_button_width_plus_half"
