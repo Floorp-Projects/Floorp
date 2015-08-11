@@ -34,13 +34,6 @@ private:
     assign_assuming_AddRef(aRawPtr);
   }
 
-  void**
-  begin_assignment()
-  {
-    assign_assuming_AddRef(0);
-    return reinterpret_cast<void**>(&mRawPtr);
-  }
-
   void
   assign_assuming_AddRef(T* aNewPtr)
   {
