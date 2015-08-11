@@ -69,6 +69,7 @@ class nsShmImage;
 
 namespace mozilla {
 class TimeStamp;
+class CurrentX11TimeGetter;
 }
 
 class nsWindow : public nsBaseWidget
@@ -268,6 +269,7 @@ public:
     bool               DispatchKeyDownEvent(GdkEventKey *aEvent,
                                             bool *aIsCancelled);
     mozilla::TimeStamp GetEventTimeStamp(guint32 aEventTime);
+    mozilla::CurrentX11TimeGetter* GetCurrentTimeGetter();
 
     NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
                                       const InputContextAction& aAction) override;
@@ -498,6 +500,8 @@ private:
      * however, IME doesn't work at that time.
      */
     nsRefPtr<mozilla::widget::IMContextWrapper> mIMContext;
+
+    nsAutoPtr<mozilla::CurrentX11TimeGetter> mCurrentTimeGetter;
 
     // HiDPI scale conversion
     gint GdkScaleFactor();
