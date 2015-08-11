@@ -221,7 +221,7 @@
     </style>
 
     <style name="Widget.HomeListView" parent="Widget.ListView">
-        <item name="android:divider">#E7ECF0</item>
+        <item name="android:divider">@color/divider_light</item>
     </style>
 
     <style name="Widget.TopSitesListView" parent="Widget.BookmarksListView"/>
@@ -559,7 +559,7 @@
     </style>
 
     <style name="Widget.RemoteTabsListView" parent="Widget.HomeListView">
-        <item name="android:childDivider">#E7ECF0</item>
+        <item name="android:childDivider">@color/divider_light</item>
         <item name="android:drawSelectorOnTop">true</item>
     </style>
 
