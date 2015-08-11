@@ -1152,50 +1152,112 @@ Parser<FullParseHandler>::makeDefIntoUse(Definition* dn, ParseNode* pn, JSAtom* 
 }
 
 /*
- * Parameter block types for the several Binder functions.  We use a common
- * helper function signature in order to share code among destructuring and
- * simple variable declaration parsers.  In the destructuring case, the binder
- * function is called indirectly from the variable declaration parser by way
- * of checkDestructuringPattern and its friends.
+ * Helper class for creating bindings.
+ *
+ * The same instance can be used more than once by repeatedly calling
+ * setNameNode() followed by bind().
+ *
+ * In the destructuring case, bind() is called indirectly from the variable
+ * declaration parser by way of checkDestructuringPattern and its friends.
  */
-
 template <typename ParseHandler>
 struct BindData
 {
-    explicit BindData(ExclusiveContext* cx) : let(cx) {}
-
-    typedef bool
-    (*Binder)(BindData* data, HandlePropertyName name, Parser<ParseHandler>* parser);
-
-    /* name node for definition processing and error source coordinates */
-    typename ParseHandler::Node pn;
-
-    JSOp            op;         /* prologue bytecode or nop */
-    Binder          binder;     /* binder, discriminates u */
-    bool            isConst;    /* const binding? */
-
     struct LetData {
         explicit LetData(ExclusiveContext* cx) : blockObj(cx) {}
         VarContext varContext;
         RootedStaticBlockObject blockObj;
-        unsigned   overflow;
-    } let;
+        unsigned overflow;
+    };
+
+    explicit BindData(ExclusiveContext* cx)
+      : kind_(Uninitialized), nameNode_(ParseHandler::null()), letData_(cx)
+    {}
 
     void initLexical(VarContext varContext, StaticBlockObject* blockObj, unsigned overflow,
-                     bool isConst = false) {
-        this->pn = ParseHandler::null();
-        this->op = JSOP_INITLEXICAL;
-        this->isConst = isConst;
-        this->binder = Parser<ParseHandler>::bindLexical;
-        this->let.varContext = varContext;
-        this->let.blockObj = blockObj;
-        this->let.overflow = overflow;
+                     bool isConst = false)
+    {
+        init(LexicalBinding, JSOP_INITLEXICAL, isConst);
+        letData_.varContext = varContext;
+        letData_.blockObj = blockObj;
+        letData_.overflow = overflow;
     }
 
     void initVarOrGlobalConst(JSOp op) {
-        this->op = op;
-        this->isConst = op == JSOP_DEFCONST;
-        this->binder = Parser<ParseHandler>::bindVarOrGlobalConst;
+        init(VarBinding, op, op == JSOP_DEFCONST);
+    }
+
+    void initDestructuring(JSOp op) {
+        init(DestructuringBinding, op, false);
+    }
+
+    void setNameNode(typename ParseHandler::Node pn) {
+        MOZ_ASSERT(isInitialized());
+        nameNode_ = pn;
+    }
+
+    typename ParseHandler::Node nameNode() {
+        MOZ_ASSERT(isInitialized());
+        return nameNode_;
+    }
+
+    JSOp op() {
+        MOZ_ASSERT(isInitialized());
+        return op_;
+    }
+
+    bool isConst() {
+        MOZ_ASSERT(isInitialized());
+        return isConst_;
+    }
+
+    const LetData& letData() {
+        MOZ_ASSERT(kind_ == LexicalBinding);
+        return letData_;
+    }
+
+    bool bind(HandlePropertyName name, Parser<ParseHandler>* parser) {
+        MOZ_ASSERT(isInitialized());
+        MOZ_ASSERT(nameNode_ != ParseHandler::null());
+        switch (kind_) {
+          case LexicalBinding:
+            return Parser<ParseHandler>::bindLexical(this, name, parser);
+          case VarBinding:
+            return Parser<ParseHandler>::bindVarOrGlobalConst(this, name, parser);
+          case DestructuringBinding:
+            return Parser<ParseHandler>::bindDestructuringArg(this, name, parser);
+          default:
+            MOZ_CRASH();
+        }
+        nameNode_ = ParseHandler::null();
+    }
+
+  private:
+    enum BindingKind {
+        Uninitialized,
+        LexicalBinding,
+        VarBinding,
+        DestructuringBinding
+    };
+
+    BindingKind kind_;
+
+    // Name node for definition processing and error source coordinates.
+    typename ParseHandler::Node nameNode_;
+
+    JSOp op_;         // Prologue bytecode or nop.
+    bool isConst_;    // Whether this is a const binding.
+    LetData letData_;
+
+    bool isInitialized() {
+        return kind_ != Uninitialized;
+    }
+
+    void init(BindingKind kind, JSOp op, bool isConst) {
+        MOZ_ASSERT(!isInitialized());
+        kind_ = kind;
+        op_ = op;
+        isConst_ = isConst;
     }
 };
 
@@ -1598,10 +1660,10 @@ Parser<ParseHandler>::bindDestructuringArg(BindData<ParseHandler>* data,
         return false;
     }
 
-    if (!parser->checkStrictBinding(name, data->pn))
+    if (!parser->checkStrictBinding(name, data->nameNode()))
         return false;
 
-    return pc->define(parser->tokenStream, name, data->pn, Definition::VAR);
+    return pc->define(parser->tokenStream, name, data->nameNode(), Definition::VAR);
 }
 
 template <typename ParseHandler>
@@ -1691,9 +1753,7 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
                  * binder and its data.
                  */
                 BindData<ParseHandler> data(context);
-                data.pn = ParseHandler::null();
-                data.op = JSOP_DEFVAR;
-                data.binder = bindDestructuringArg;
+                data.initDestructuring(JSOP_DEFVAR);
                 Node destruct = destructuringExprWithoutYield(yieldHandling, &data, tt,
                                                               JSMSG_YIELD_IN_DEFAULT);
                 if (!destruct)
@@ -3013,18 +3073,18 @@ Parser<FullParseHandler>::bindLexical(BindData<FullParseHandler>* data,
                                       HandlePropertyName name, Parser<FullParseHandler>* parser)
 {
     ParseContext<FullParseHandler>* pc = parser->pc;
-    ParseNode* pn = data->pn;
+    ParseNode* pn = data->nameNode();
     if (!parser->checkStrictBinding(name, pn))
         return false;
 
     ExclusiveContext* cx = parser->context;
-    Rooted<StaticBlockObject*> blockObj(cx, data->let.blockObj);
+    Rooted<StaticBlockObject*> blockObj(cx, data->letData().blockObj);
 
     unsigned index;
     if (blockObj) {
         index = blockObj->numVariables();
         if (index >= StaticBlockObject::LOCAL_INDEX_LIMIT) {
-            parser->report(ParseError, false, pn, data->let.overflow);
+            parser->report(ParseError, false, pn, data->letData().overflow);
             return false;
         }
     } else {
@@ -3048,13 +3108,13 @@ Parser<FullParseHandler>::bindLexical(BindData<FullParseHandler>* data,
         return false;
 
     Definition* dn = pc->decls().lookupFirst(name);
-    Definition::Kind bindingKind = data->isConst ? Definition::CONST : Definition::LET;
+    Definition::Kind bindingKind = data->isConst() ? Definition::CONST : Definition::LET;
 
     /*
      * For bindings that are hoisted to the beginning of the block/function,
      * define() right now. Otherwise, delay define until pushLetScope.
      */
-    if (data->let.varContext == HoistVars) {
+    if (data->letData().varContext == HoistVars) {
         if (dn && dn->pn_blockid == pc->blockid())
             return parser->reportRedeclaration(pn, dn->kind(), name);
         if (!pc->define(parser->tokenStream, name, pn, bindingKind))
@@ -3065,7 +3125,7 @@ Parser<FullParseHandler>::bindLexical(BindData<FullParseHandler>* data,
         bool redeclared;
         RootedId id(cx, NameToId(name));
         RootedShape shape(cx, StaticBlockObject::addVar(cx, blockObj, id,
-                                                        data->isConst, index, &redeclared));
+                                                        data->isConst(), index, &redeclared));
         if (!shape) {
             if (redeclared) {
                 // The only way to be redeclared without a previous definition is if we're in a
@@ -3083,7 +3143,7 @@ Parser<FullParseHandler>::bindLexical(BindData<FullParseHandler>* data,
     } else {
         // Body-level lets are hoisted and need to have been defined via
         // pc->define above.
-        MOZ_ASSERT(data->let.varContext == HoistVars);
+        MOZ_ASSERT(data->letData().varContext == HoistVars);
         MOZ_ASSERT(pc->decls().lookupFirst(name));
     }
 
@@ -3095,7 +3155,7 @@ template <>
 Parser<SyntaxParseHandler>::bindLexical(BindData<SyntaxParseHandler>* data,
                                         HandlePropertyName name, Parser<SyntaxParseHandler>* parser)
 {
-    if (!parser->checkStrictBinding(name, data->pn))
+    if (!parser->checkStrictBinding(name, data->nameNode()))
         return false;
 
     return true;
@@ -3246,8 +3306,8 @@ Parser<ParseHandler>::bindVarOrGlobalConst(BindData<ParseHandler>* data,
 {
     ExclusiveContext* cx = parser->context;
     ParseContext<ParseHandler>* pc = parser->pc;
-    Node pn = data->pn;
-    bool isConstDecl = data->op == JSOP_DEFCONST;
+    Node pn = data->nameNode();
+    bool isConstDecl = data->op() == JSOP_DEFCONST;
 
     /* Default best op for pn is JSOP_GETNAME; we'll try to improve below. */
     parser->handler.setOp(pn, JSOP_GETNAME);
@@ -3314,7 +3374,7 @@ Parser<ParseHandler>::bindVarOrGlobalConst(BindData<ParseHandler>* data,
                        (!inCatchBody || OuterLet(pc, stmt, name))));
 
         if (parser->options().extraWarningsOption
-            ? data->op != JSOP_DEFVAR || dn_kind != Definition::VAR
+            ? data->op() != JSOP_DEFVAR || dn_kind != Definition::VAR
             : error)
         {
             JSAutoByteString bytes;
@@ -3413,24 +3473,24 @@ Parser<FullParseHandler>::bindInitialized(BindData<FullParseHandler>* data, Pars
 
     RootedPropertyName name(context, pn->pn_atom->asPropertyName());
 
-    data->pn = pn;
-    if (!data->binder(data, name, this))
+    data->setNameNode(pn);
+    if (!data->bind(name, this))
         return false;
 
     /*
      * Select the appropriate name-setting opcode, respecting eager selection
-     * done by the data->binder function.
+     * done by the data->bind function.
      */
-    if (data->op == JSOP_INITLEXICAL)
+    if (data->op() == JSOP_INITLEXICAL)
         pn->setOp(JSOP_INITLEXICAL);
     else if (pn->pn_dflags & PND_BOUND)
         pn->setOp(JSOP_SETLOCAL);
-    else if (data->op == JSOP_DEFCONST)
+    else if (data->op() == JSOP_DEFCONST)
         pn->setOp(JSOP_SETCONST);
     else
         pn->setOp(JSOP_SETNAME);
 
-    if (data->op == JSOP_DEFCONST)
+    if (data->op() == JSOP_DEFCONST)
         pn->pn_dflags |= PND_CONST;
 
     pn->markAsAssigned();
@@ -3970,9 +4030,9 @@ Parser<ParseHandler>::variables(YieldHandling yieldHandling,
             pn2 = newBindingNode(name, kind == PNK_VAR || kind == PNK_GLOBALCONST, varContext);
             if (!pn2)
                 return null();
-            if (data.isConst)
+            if (data.isConst())
                 handler.setFlag(pn2, PND_CONST);
-            data.pn = pn2;
+            data.setNameNode(pn2);
 
             handler.addList(pn, pn2);
 
@@ -3992,7 +4052,7 @@ Parser<ParseHandler>::variables(YieldHandling yieldHandling,
                 // now. Otherwise we must wait until after parsing the initializing
                 // assignment.
                 bool bindBeforeInitializer = kind != PNK_LET && kind != PNK_CONST;
-                if (bindBeforeInitializer && !data.binder(&data, name, this))
+                if (bindBeforeInitializer && !data.bind(name, this))
                     return null();
 
                 Node init = assignExpr(location == InForInit ? InProhibited : InAllowed,
@@ -4022,19 +4082,19 @@ Parser<ParseHandler>::variables(YieldHandling yieldHandling,
                 }
 
                 if (performAssignment) {
-                    if (!bindBeforeInitializer && !data.binder(&data, name, this))
+                    if (!bindBeforeInitializer && !data.bind(name, this))
                         return null();
 
-                    if (!handler.finishInitializerAssignment(pn2, init, data.op))
+                    if (!handler.finishInitializerAssignment(pn2, init, data.op()))
                         return null();
                 }
             } else {
-                if (data.isConst && location == NotInForInit) {
+                if (data.isConst() && location == NotInForInit) {
                     report(ParseError, false, null(), JSMSG_BAD_CONST_DECL);
                     return null();
                 }
 
-                if (!data.binder(&data, name, this))
+                if (!data.bind(name, this))
                     return null();
             }
 
@@ -5877,7 +5937,7 @@ Parser<ParseHandler>::tryStatement(YieldHandling yieldHandling)
             data.initLexical(HoistVars,
                              &stmtInfo->staticScope->template as<StaticBlockObject>(),
                              JSMSG_TOO_MANY_CATCH_VARS);
-            MOZ_ASSERT(data.let.blockObj);
+            MOZ_ASSERT(data.letData().blockObj);
 
             if (!tokenStream.getToken(&tt))
                 return null();
@@ -5907,8 +5967,8 @@ Parser<ParseHandler>::tryStatement(YieldHandling yieldHandling)
                 catchName = newBindingNode(label, false);
                 if (!catchName)
                     return null();
-                data.pn = catchName;
-                if (!data.binder(&data, label, this))
+                data.setNameNode(catchName);
+                if (!data.bind(label, this))
                     return null();
                 break;
               }
@@ -7348,8 +7408,8 @@ Parser<FullParseHandler>::legacyComprehensionTail(ParseNode* bodyExpr, unsigned 
             break;
 
           case TOK_NAME:
-            data.pn = pn3;
-            if (!data.binder(&data, name, this))
+            data.setNameNode(pn3);
+            if (!data.bind(name, this))
                 return null();
             break;
 
@@ -7682,8 +7742,8 @@ Parser<ParseHandler>::comprehensionFor(GeneratorKind comprehensionKind)
     Node decls = handler.newList(PNK_LET, lhs);
     if (!decls)
         return null();
-    data.pn = lhs;
-    if (!data.binder(&data, name, this))
+    data.setNameNode(lhs);
+    if (!data.bind(name, this))
         return null();
     Node letScope = pushLetScope(blockObj, stmtInfo);
     if (!letScope)
