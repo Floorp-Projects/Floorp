@@ -21,6 +21,7 @@
 
 extern "C" {
 #include "pocketsphinx/pocketsphinx.h"
+#include "sphinxbase/logmath.h"
 #include "sphinxbase/sphinx_config.h"
 #include "sphinxbase/jsgf.h"
 }
@@ -33,8 +34,10 @@ class DecodeResultTask : public nsRunnable
 {
 public:
   DecodeResultTask(const nsString& hypstring,
+                   float64 confidence,
                    WeakPtr<dom::SpeechRecognition> recognition)
       : mResult(hypstring),
+        mConfidence(confidence),
         mRecognition(recognition),
         mWorkerThread(do_GetCurrentThread())
   {
@@ -59,7 +62,7 @@ public:
         new SpeechRecognitionAlternative(mRecognition);
 
       alternative->mTranscript = mResult;
-      alternative->mConfidence = 100;
+      alternative->mConfidence = mConfidence;
 
       result->mItems.AppendElement(alternative);
     }
@@ -77,6 +80,7 @@ public:
 
 private:
   nsString mResult;
+  float64 mConfidence;
   WeakPtr<dom::SpeechRecognition> mRecognition;
   nsCOMPtr<nsIThread> mWorkerThread;
 };
@@ -95,7 +99,9 @@ public:
   {
     char const* hyp;
     int rv;
-    int32 score;
+    int32 final;
+    int32 logprob;
+    float64 confidence;
     nsAutoCString hypoValue;
 
     rv = ps_start_utt(mPs);
@@ -103,15 +109,18 @@ public:
                         FALSE);
 
     rv = ps_end_utt(mPs);
+    confidence = 0;
     if (rv >= 0) {
-      hyp = ps_get_hyp(mPs, &score);
-      if (hyp) {
+      hyp = ps_get_hyp_final(mPs, &final);
+      if (hyp && final) {
+        logprob = ps_get_prob(mPs);
+        confidence = logmath_exp(ps_get_logmath(mPs), logprob);
         hypoValue.Assign(hyp);
       }
     }
 
     nsCOMPtr<nsIRunnable> resultrunnable =
-      new DecodeResultTask(NS_ConvertUTF8toUTF16(hypoValue), mRecognition);
+      new DecodeResultTask(NS_ConvertUTF8toUTF16(hypoValue), confidence, mRecognition);
     return NS_DispatchToMainThread(resultrunnable);
   }
 
@@ -154,7 +163,7 @@ PocketSphinxSpeechRecognitionService::PocketSphinxSpeechRecognitionService()
 
   // FOR B2G PATHS HARDCODED (APPEND /DATA ON THE BEGINING, FOR DESKTOP, ONLY
   // MODELS/ RELATIVE TO ROOT
-  mPSConfig = cmd_ln_init(nullptr, ps_args(), TRUE, "-hmm",
+  mPSConfig = cmd_ln_init(nullptr, ps_args(), TRUE, "-bestpath", "yes", "-hmm",
                           ToNewUTF8String(aStringAMPath), // acoustic model
                           "-dict", ToNewUTF8String(aStringDictPath), nullptr);
   if (mPSConfig == nullptr) {
