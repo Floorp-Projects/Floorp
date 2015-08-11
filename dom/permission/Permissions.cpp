@@ -43,10 +43,34 @@ Permissions::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 namespace {
 
 nsresult
-CreatePushPermissionStatus(JSContext* aCx,
-                           JS::Handle<JSObject*> aPermission,
-                           nsPIDOMWindow* aWindow,
-                           PermissionStatus** aResult)
+CheckPermission(PermissionName aName,
+                nsPIDOMWindow* aWindow,
+                PermissionState& aResult)
+{
+  MOZ_ASSERT(aWindow);
+
+  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
+  if (NS_WARN_IF(!permMgr)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  uint32_t action = nsIPermissionManager::DENY_ACTION;
+  nsresult rv = permMgr->TestPermissionFromWindow(aWindow,
+                                                  PermissionNameToType(aName),
+                                                  &action);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  aResult = ActionToPermissionState(action);
+  return NS_OK;
+}
+
+nsresult
+CheckPushPermission(JSContext* aCx,
+                    JS::Handle<JSObject*> aPermission,
+                    nsPIDOMWindow* aWindow,
+                    PermissionState& aResult)
 {
   PushPermissionDescriptor permission;
   JS::Rooted<JS::Value> value(aCx, JS::ObjectOrNullValue(aPermission));
@@ -58,14 +82,14 @@ CreatePushPermissionStatus(JSContext* aCx,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  return PermissionStatus::Create(aWindow, permission.mName, aResult);
+  return CheckPermission(permission.mName, aWindow, aResult);
 }
 
 nsresult
-CreatePermissionStatus(JSContext* aCx,
-                       JS::Handle<JSObject*> aPermission,
-                       nsPIDOMWindow* aWindow,
-                       PermissionStatus** aResult)
+CheckPermission(JSContext* aCx,
+                JS::Handle<JSObject*> aPermission,
+                nsPIDOMWindow* aWindow,
+                PermissionState& aResult)
 {
   PermissionDescriptor permission;
   JS::Rooted<JS::Value> value(aCx, JS::ObjectOrNullValue(aPermission));
@@ -76,10 +100,10 @@ CreatePermissionStatus(JSContext* aCx,
   switch (permission.mName) {
     case PermissionName::Geolocation:
     case PermissionName::Notifications:
-      return PermissionStatus::Create(aWindow, permission.mName, aResult);
+      return CheckPermission(permission.mName, aWindow, aResult);
 
     case PermissionName::Push:
-      return CreatePushPermissionStatus(aCx, aPermission, aWindow, aResult);
+      return CheckPushPermission(aCx, aPermission, aWindow, aResult);
 
     case PermissionName::Midi:
     default:
@@ -105,14 +129,12 @@ Permissions::Query(JSContext* aCx,
     return nullptr;
   }
 
-  PermissionStatus* status = nullptr;
-  nsresult rv = CreatePermissionStatus(aCx, aPermission, mWindow, &status);
+  PermissionState state = PermissionState::Denied;
+  nsresult rv = CheckPermission(aCx, aPermission, mWindow, state);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    MOZ_ASSERT(!status);
     promise->MaybeReject(rv);
   } else {
-    MOZ_ASSERT(status);
-    promise->MaybeResolve(status);
+    promise->MaybeResolve(new PermissionStatus(mWindow, state));
   }
   return promise.forget();
 }
