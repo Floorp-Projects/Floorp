@@ -1708,25 +1708,35 @@ bool CouldD3D11DeviceWork()
   return true;
 }
 
+static bool
+GetDxgiDesc(ID3D11Device* device, DXGI_ADAPTER_DESC* out)
+{
+  nsRefPtr<IDXGIDevice> dxgiDevice;
+  HRESULT hr = device->QueryInterface(__uuidof(IDXGIDevice), getter_AddRefs(dxgiDevice));
+  if (FAILED(hr)) {
+    return false;
+  }
+
+  nsRefPtr<IDXGIAdapter> dxgiAdapter;
+  if (FAILED(dxgiDevice->GetAdapter(getter_AddRefs(dxgiAdapter)))) {
+    return false;
+  }
+
+  return SUCCEEDED(dxgiAdapter->GetDesc(out));
+}
+
 static void
 CheckForAdapterMismatch(ID3D11Device *device)
 {
-  nsRefPtr<IDXGIDevice> dxgiDevice;
-  if (FAILED(device->QueryInterface(__uuidof(IDXGIDevice),
-                                    getter_AddRefs(dxgiDevice)))) {
-      return;
-  }
-  nsRefPtr<IDXGIAdapter> dxgiAdapter;
-  if (FAILED(dxgiDevice->GetAdapter(getter_AddRefs(dxgiAdapter)))) {
-      return;
-  }
+  DXGI_ADAPTER_DESC desc;
+  PodZero(&desc);
+  GetDxgiDesc(device, &desc);
+
   nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
   nsString vendorID;
   gfxInfo->GetAdapterVendorID(vendorID);
   nsresult ec;
   int32_t vendor = vendorID.ToInteger(&ec, 16);
-  DXGI_ADAPTER_DESC desc;
-  dxgiAdapter->GetDesc(&desc);
   if (vendor != desc.VendorId) {
       gfxCriticalNote << "VendorIDMismatch " << hexa(vendor) << " " << hexa(desc.VendorId);
   }
@@ -2057,6 +2067,29 @@ gfxWindowsPlatform::AttemptWARPDeviceCreation()
 }
 
 bool
+gfxWindowsPlatform::ContentAdapterIsParentAdapter(ID3D11Device* device)
+{
+  DXGI_ADAPTER_DESC desc;
+  if (!GetDxgiDesc(device, &desc)) {
+    gfxCriticalNote << "Could not query device DXGI adapter info";
+    return false;
+  }
+
+  const DxgiDesc& parent = GetParentDevicePrefs().dxgiDesc();
+  if (desc.VendorId != parent.vendorID() ||
+      desc.DeviceId != parent.deviceID() ||
+      desc.SubSysId != parent.subSysID() ||
+      desc.AdapterLuid.HighPart != parent.luid().HighPart() ||
+      desc.AdapterLuid.LowPart != parent.luid().LowPart())
+  {
+    gfxCriticalNote << "VendorIDMismatch " << hexa(parent.vendorID()) << " " << hexa(desc.VendorId);
+    return false;
+  }
+
+  return true;
+}
+
+bool
 gfxWindowsPlatform::AttemptD3D11ContentDeviceCreation()
 {
   RefPtr<IDXGIAdapter1> adapter;
@@ -2090,9 +2123,13 @@ gfxWindowsPlatform::AttemptD3D11ContentDeviceCreation()
   // binding the parent and child processes to different GPUs. As a safety net,
   // we re-check texture sharing against the newly created D3D11 content device.
   // If it fails, we won't use Direct2D.
-  if (XRE_IsContentProcess() && !DoesD3D11TextureSharingWork(mD3D11ContentDevice)) {
-    mD3D11ContentDevice = nullptr;
-    return false;
+  if (XRE_IsContentProcess()) {
+    if (!DoesD3D11TextureSharingWork(mD3D11ContentDevice) ||
+        !ContentAdapterIsParentAdapter(mD3D11ContentDevice))
+    {
+      mD3D11ContentDevice = nullptr;
+      return false;
+    }
   }
 
   mD3D11ContentDevice->SetExceptionMode(0);
@@ -2124,7 +2161,9 @@ gfxWindowsPlatform::AttemptD3D11ImageBridgeDeviceCreation()
   }
 
   mD3D11ImageBridgeDevice->SetExceptionMode(0);
-  if (!DoesD3D11AlphaTextureSharingWork(mD3D11ImageBridgeDevice)) {
+  if (!DoesD3D11AlphaTextureSharingWork(mD3D11ImageBridgeDevice) ||
+      (XRE_IsContentProcess() && !ContentAdapterIsParentAdapter(mD3D11ImageBridgeDevice)))
+  {
     mD3D11ImageBridgeDevice = nullptr;
     return;
   }
@@ -2771,4 +2810,17 @@ gfxWindowsPlatform::GetDeviceInitData(DeviceInitData* aOut)
   aOut->useD3D11WARP() = mIsWARP;
   aOut->useD2D() = (GetD2DStatus() == FeatureStatus::Available);
   aOut->useD2D1() = (GetD2D1Status() == FeatureStatus::Available);
+
+  if (mD3D11Device) {
+    DXGI_ADAPTER_DESC desc;
+    if (!GetDxgiDesc(mD3D11Device, &desc)) {
+      return;
+    }
+
+    aOut->dxgiDesc().vendorID() = desc.VendorId;
+    aOut->dxgiDesc().deviceID() = desc.DeviceId;
+    aOut->dxgiDesc().subSysID() = desc.SubSysId;
+    aOut->dxgiDesc().luid().LowPart() = desc.AdapterLuid.LowPart;
+    aOut->dxgiDesc().luid().HighPart() = desc.AdapterLuid.HighPart;
+  }
 }
