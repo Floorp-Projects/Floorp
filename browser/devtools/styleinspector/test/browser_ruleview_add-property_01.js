@@ -8,31 +8,22 @@
 // FIXME: To be split in several test files, and some of the inplace-editor
 // focus/blur/commit/revert stuff should be factored out in head.js
 
-let TEST_URL = 'url("' + TEST_URL_ROOT + 'doc_test_image.png")';
-let PAGE_CONTENT = [
-  '<style type="text/css">',
-  '  #testid {',
-  '    background-color: blue;',
-  '  }',
-  '  .testclass {',
-  '    background-color: green;',
-  '  }',
-  '</style>',
-  '<div id="testid" class="testclass">Styled Node</div>'
-].join("\n");
+const TEST_URI = `
+  <style type='text/css'>
+    #testid {
+      background-color: blue;
+    }
+    .testclass {
+      background-color: green;
+    }
+  </style>
+  <div id='testid' class='testclass'>Styled Node</div>
+`;
 
 add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8,test rule view user changes");
-
-  info("Creating the test document");
-  content.document.body.innerHTML = PAGE_CONTENT;
-
-  info("Opening the rule-view");
-  let {toolbox, inspector, view} = yield openRuleView();
-
-  info("Selecting the test element");
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
-
   yield testCreateNew(view);
 });
 
@@ -44,7 +35,8 @@ function* testCreateNew(view) {
   info("Focusing a new property name in the rule-view");
   let editor = yield focusEditableField(view, elementRuleEditor.closeBrace);
 
-  is(inplaceEditor(elementRuleEditor.newPropSpan), editor, "The new property editor got focused");
+  is(inplaceEditor(elementRuleEditor.newPropSpan), editor,
+    "The new property editor got focused");
   let input = editor.input;
 
   info("Entering background-color in the property name editor");
@@ -61,9 +53,12 @@ function* testCreateNew(view) {
   editor = inplaceEditor(view.styleDocument.activeElement);
   let textProp = elementRuleEditor.rule.textProps[0];
 
-  is(elementRuleEditor.rule.textProps.length,  1, "Created a new text property.");
-  is(elementRuleEditor.propertyList.children.length, 1, "Created a property editor.");
-  is(editor, inplaceEditor(textProp.editor.valueSpan), "Editing the value span now.");
+  is(elementRuleEditor.rule.textProps.length, 1,
+    "Created a new text property.");
+  is(elementRuleEditor.propertyList.children.length, 1,
+    "Created a property editor.");
+  is(editor, inplaceEditor(textProp.editor.valueSpan),
+    "Editing the value span now.");
 
   info("Entering a value and bluring the field to expect a rule change");
   editor.input.value = "#XYZ";

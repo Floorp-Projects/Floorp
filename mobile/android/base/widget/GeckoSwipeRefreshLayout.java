@@ -17,6 +17,7 @@
 package org.mozilla.gecko.widget;
 
 import org.mozilla.gecko.AppConstants.Versions;
+import org.mozilla.gecko.util.ColorUtils;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -273,11 +274,11 @@ public class GeckoSwipeRefreshLayout extends ViewGroup {
      */
     public void setColorScheme(int colorRes1, int colorRes2, int colorRes3, int colorRes4) {
         ensureTarget();
-        final Resources res = getResources();
-        final int color1 = res.getColor(colorRes1);
-        final int color2 = res.getColor(colorRes2);
-        final int color3 = res.getColor(colorRes3);
-        final int color4 = res.getColor(colorRes4);
+        final Context context = getContext();
+        final int color1 = ColorUtils.getColor(context, colorRes1);
+        final int color2 = ColorUtils.getColor(context, colorRes2);
+        final int color3 = ColorUtils.getColor(context, colorRes3);
+        final int color4 = ColorUtils.getColor(context, colorRes4);
         mProgressBar.setColorScheme(color1, color2, color3,color4);
     }
 

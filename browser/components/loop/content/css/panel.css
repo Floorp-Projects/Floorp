@@ -15,6 +15,8 @@ body {
 .panel {
   /* hide the extra margin space that the panel resizer now wants to show */
   overflow: hidden;
+  font: menu;
+  background-color: #fbfbfb;
 }
 
 /* Notifications displayed over tabs */
@@ -83,8 +85,6 @@ body {
 
 .tab-view > li {
   display: inline-block;
-  vertical-align: middle;
-  line-height: 1.2rem;
   text-align: center;
   padding: 0;
   cursor: pointer;
@@ -252,20 +252,26 @@ html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
   display: block;
   width: 100%;
   outline: none;
-  border-radius: 2px;
-  margin: 5px 0;
-  border: 1px solid #ccc;
-  height: 24px;
-  padding: 0 10px;
-}
-
-.content-area input:invalid {
+  border-radius: 4px;
+  margin: 10px 0;
+  border: 1px solid #c3c3c3;
+  height: 2.6rem;
+  padding: 0 6px;
+  font-size: 1.1rem;
+  color: #4a4a4a;
   box-shadow: none;
 }
 
+.content-area input::-moz-placeholder {
+  color: #999;
+}
+
 .content-area input:not(.pristine):invalid {
-  border-color: #d74345;
-  box-shadow: 0 0 4px #c43c3e;
+  border: 0.1rem solid #d13f1a;
+}
+
+.content-area input:focus {
+  border: 0.1rem solid #5cccee;
 }
 
 /* Rooms */
@@ -475,11 +481,17 @@ html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
   display: flex;
   flex-direction: row;
   width: 100%;
+  padding-top: 6px;
 }
 
 .button-group > .button {
   flex: 1;
-  margin: 0 7px;
+  margin: 0 5px;
+  min-height: 3rem;
+  font-size: 1.2rem;
+  line-height: 1rem;
+  font-weight: 300;
+  border-radius: 4px;
 }
 
 .button-group > .button:first-child {
@@ -494,11 +506,11 @@ html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
   padding: 2px 5px;
   background-color: #fbfbfb;
   color: #333;
-  border: 1px solid #c1c1c1;
   border-radius: 2px;
   min-height: 26px;
   font-size: 1.2rem;
   line-height: 1.2rem;
+  border: none;
 }
 
 .button:hover {
@@ -507,25 +519,37 @@ html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
 
 .button:hover:active {
   background-color: #ccc;
-  color: #111;
+  color: #fff;
 }
 
 .button.button-accept {
-  background-color: #5bc0a4;
-  border-color: #5bc0a4;
+  background-color: #00a9dc;
   color: #fff;
 }
 
-.button.button-accept:hover {
-  background-color: #47b396;
-  border-color: #47b396;
-  color: #fff;
-}
-
+.button.button-accept:hover,
 .button.button-accept:hover:active {
-  background-color: #3aa689;
-  border-color: #3aa689;
+  background-color: #5cccee;
   color: #fff;
+}
+
+.button.button-cancel {
+  background-color: #ebebeb;
+  border: 0;
+  color: #000;
+  width: 105px; /* based on fixed width of Cancel button from mockup */
+  flex: 0 0 auto;
+}
+
+.button.button-cancel:hover,
+.button.button-cancel:hover:active {
+  background-color: #dcd6d6;
+  color: #000;
+}
+
+.button.button-cancel:disabled {
+  background-color: #ebebeb;
+  color: #c3c3c3;
 }
 
 .button-close {

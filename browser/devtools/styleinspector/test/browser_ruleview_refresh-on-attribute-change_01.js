@@ -6,30 +6,32 @@
 
 // Test that changing the current element's attributes refreshes the rule-view
 
+const TEST_URI = `
+  <style type="text/css">
+    #testid {
+      background-color: blue;
+    }
+    .testclass {
+      background-color: green;
+    }
+  </style>
+  <div id="testid" class="testclass" style="margin-top: 1px; padding-top: 5px;">
+    Styled Node
+  </div>
+`;
+
 add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8,browser_ruleview_refresh-on-attribute-change.js");
-
-  info("Preparing the test document and node");
-  let style = '' +
-    '#testid {' +
-    '  background-color: blue;' +
-    '} ' +
-    '.testclass {' +
-    '  background-color: green;' +
-    '}';
-  let styleNode = addStyle(content.document, style);
-  content.document.body.innerHTML = '<div id="testid" class="testclass">Styled Node</div>';
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
   let testElement = getNode("#testid");
-  let elementStyle = 'margin-top: 1px; padding-top: 5px;'
-  testElement.setAttribute("style", elementStyle);
-
-  let {toolbox, inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
 
-  info("Checking that the rule-view has the element, #testid and .testclass selectors");
+  info("Checking that the rule-view has the element, #testid and " +
+    ".testclass selectors");
   checkRuleViewContent(view, ["element", "#testid", ".testclass"]);
 
-  info("Changing the node's ID attribute and waiting for the rule-view refresh");
+  info("Changing the node's ID attribute and waiting for the " +
+    "rule-view refresh");
   let ruleViewRefreshed = inspector.once("rule-view-refreshed");
   testElement.setAttribute("id", "differentid");
   yield ruleViewRefreshed;
@@ -47,12 +49,13 @@ add_task(function*() {
 });
 
 function checkRuleViewContent(view, expectedSelectors) {
-  let selectors = view.styleDocument.querySelectorAll(".ruleview-selectorcontainer");
+  let selectors = view.styleDocument
+    .querySelectorAll(".ruleview-selectorcontainer");
 
   is(selectors.length, expectedSelectors.length,
     expectedSelectors.length + " selectors are displayed");
 
-  for (let i = 0; i < expectedSelectors.length; i ++) {
+  for (let i = 0; i < expectedSelectors.length; i++) {
     is(selectors[i].textContent.indexOf(expectedSelectors[i]), 0,
       "Selector " + (i + 1) + " is " + expectedSelectors[i]);
   }

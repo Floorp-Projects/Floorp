@@ -4,9 +4,9 @@
 
 "use strict";
 
-// Tests adding a rule with pseudo class locks on
+// Tests adding a rule with pseudo class locks on.
 
-let PAGE_CONTENT = "<p id='element'>Test element</p>";
+const TEST_URI = "<p id='element'>Test element</p>";
 
 const EXPECTED_SELECTOR = "#element";
 const TEST_DATA = [
@@ -20,15 +20,10 @@ const TEST_DATA = [
 ];
 
 add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(PAGE_CONTENT));
-
-  info("Opening the rule-view");
-  let {toolbox, inspector, view} = yield openRuleView();
-
-  info("Selecting the test element");
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
   yield selectNode("#element", inspector);
 
-  info("Iterating over the test data");
   for (let data of TEST_DATA) {
     yield runTestData(inspector, view, data);
   }
@@ -68,7 +63,8 @@ function* setPseudoLocks(inspector, view, pseudoClasses) {
   if (pseudoClasses.length == 0) {
     return;
   }
-  for (var pseudoClass of pseudoClasses) {
+
+  for (let pseudoClass of pseudoClasses) {
     switch (pseudoClass) {
       case ":hover":
         view.hoverCheckbox.click();

@@ -6,17 +6,17 @@
 
 // Tests that adding a new property of an unmatched rule works properly.
 
-let TEST_URI = [
-  '<style type="text/css">',
-  '  #testid {',
-  '  }',
-  '  .testclass {',
-  '    background-color: white;',
-  '  }',
-  '</style>',
-  '<div id="testid">Styled Node</div>',
-  '<span class="testclass">This is a span</span>'
-].join("\n");
+const TEST_URI = `
+  <style type="text/css">
+    #testid {
+    }
+    .testclass {
+      background-color: white;
+    }
+  </style>
+  <div id="testid">Styled Node</div>
+  <span class="testclass">This is a span</span>
+`;
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
@@ -90,7 +90,7 @@ function* testAddProperty(view) {
   editor = inplaceEditor(view.styleDocument.activeElement);
   let textProp = ruleEditor.rule.textProps[0];
 
-  is(ruleEditor.rule.textProps.length,  1, "Created a new text property.");
+  is(ruleEditor.rule.textProps.length, 1, "Created a new text property.");
   is(ruleEditor.propertyList.children.length, 1, "Created a property editor.");
   is(editor, inplaceEditor(textProp.editor.valueSpan),
     "Editing the value span now.");

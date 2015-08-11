@@ -4,25 +4,25 @@
 
 "use strict";
 
-// Test that color swatches are displayed next to colors in the rule-view
+// Tests that color swatches are displayed next to colors in the rule-view.
 
-const PAGE_CONTENT = [
-  '<style type="text/css">',
-  '  body {',
-  '    color: red;',
-  '    background-color: #ededed;',
-  '    background-image: url(chrome://global/skin/icons/warning-64.png);',
-  '    border: 2em solid rgba(120, 120, 120, .5);',
-  '  }',
-  '  * {',
-  '    color: blue;',
-  '    box-shadow: inset 0 0 2px 20px red, inset 0 0 2px 40px blue;',
-  '  }',
-  '</style>',
-  'Testing the color picker tooltip!'
-].join("\n");
+const TEST_URI = `
+  <style type="text/css">
+    body {
+      color: red;
+      background-color: #ededed;
+      background-image: url(chrome://global/skin/icons/warning-64.png);
+      border: 2em solid rgba(120, 120, 120, .5);
+    }
+    * {
+      color: blue;
+      box-shadow: inset 0 0 2px 20px red, inset 0 0 2px 40px blue;
+    }
+  </style>
+  Testing the color picker tooltip!
+`;
 
-// Tests that properties in the rule-view contain color swatches
+// Tests that properties in the rule-view contain color swatches.
 // Each entry in the test array should contain:
 // {
 //   selector: the rule-view selector to look for the property in
@@ -38,9 +38,8 @@ const TESTS = [
 ];
 
 add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8,rule view color picker tooltip test");
-  content.document.body.innerHTML = PAGE_CONTENT;
-  let {toolbox, inspector, view} = yield openRuleView();
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {view} = yield openRuleView();
 
   for (let {selector, propertyName, nb} of TESTS) {
     info("Looking for color swatches in property " + propertyName +
