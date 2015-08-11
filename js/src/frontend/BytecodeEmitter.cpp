@@ -761,7 +761,7 @@ BytecodeEmitter::enclosingStaticScope()
 
         // Top-level eval scripts have a placeholder static scope so that
         // StaticScopeIter may iterate through evals.
-        return sc->asGlobalSharedContext()->topStaticScope();
+        return sc->staticScope();
     }
 
     return sc->asFunctionBox()->function();
@@ -929,7 +929,7 @@ BytecodeEmitter::enterNestedScope(StmtInfoBCE* stmt, ObjectBox* objbox, StmtType
         return false;
 
     pushStatement(stmt, stmtType, offset());
-    scopeObj->initEnclosingNestedScope(enclosingStaticScope());
+    scopeObj->initEnclosingScope(enclosingStaticScope());
     stmtStack.linkAsInnermostScopeStmt(stmt, *scopeObj);
     MOZ_ASSERT(stmt->linksScope());
     stmt->isBlockScope = (stmtType == StmtType::BLOCK);
@@ -2338,9 +2338,11 @@ BytecodeEmitter::checkRunOnceContext()
 bool
 BytecodeEmitter::needsImplicitThis()
 {
+    // Short-circuit if there is an enclosing 'with' static scope.
     if (sc->inWith())
         return true;
 
+    // Otherwise walk the statement stack.
     for (StmtInfoBCE* stmt = innermostStmt(); stmt; stmt = stmt->enclosing) {
         if (stmt->type == StmtType::WITH)
             return true;
@@ -5707,19 +5709,6 @@ BytecodeEmitter::emitFor(ParseNode* pn, ptrdiff_t top)
     return emitNormalFor(pn, top);
 }
 
-bool
-BytecodeEmitter::arrowNeedsNewTarget()
-{
-    for (BytecodeEmitter* bce = this; bce; bce = bce->parent) {
-        SharedContext *sc = bce->sc;
-        if (sc->isFunctionBox() && sc->asFunctionBox()->function()->isArrow())
-            continue;
-
-        return sc->allowSyntax(SharedContext::AllowedSyntax::NewTarget);
-    }
-    MOZ_CRASH("impossible parent chain");
-}
-
 MOZ_NEVER_INLINE bool
 BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
 {
@@ -5815,7 +5804,7 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
             if (!emit1(JSOP_THIS))
                 return false;
 
-            if (arrowNeedsNewTarget()) {
+            if (sc->allowNewTarget()) {
                 if (!emit1(JSOP_NEWTARGET))
                     return false;
             } else {

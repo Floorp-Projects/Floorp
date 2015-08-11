@@ -369,7 +369,7 @@ js::XDRStaticWithObject(XDRState<mode>* xdr, HandleObject enclosingScope,
         Rooted<StaticWithObject*> obj(cx, StaticWithObject::create(cx));
         if (!obj)
             return false;
-        obj->initEnclosingNestedScope(enclosingScope);
+        obj->initEnclosingScope(enclosingScope);
         objp.set(obj);
     }
     // For encoding, there is nothing to do.  The only information that is
@@ -398,7 +398,7 @@ CloneStaticWithObject(JSContext* cx, HandleObject enclosingScope, Handle<StaticW
     if (!clone)
         return nullptr;
 
-    clone->initEnclosingNestedScope(enclosingScope);
+    clone->initEnclosingScope(enclosingScope);
 
     return clone;
 }
@@ -593,6 +593,25 @@ const Class NonSyntacticVariablesObject::class_ = {
     JSCLASS_IS_ANONYMOUS
 };
 
+/* static */ StaticFunctionBoxScopeObject*
+StaticFunctionBoxScopeObject::create(ExclusiveContext* cx, HandleObject enclosing)
+{
+    StaticFunctionBoxScopeObject* obj =
+        NewObjectWithNullTaggedProto<StaticFunctionBoxScopeObject>(cx, GenericObject,
+                                                                   BaseShape::DELEGATE);
+    if (!obj)
+        return nullptr;
+
+    obj->setReservedSlot(SCOPE_CHAIN_SLOT, ObjectOrNullValue(enclosing));
+    return obj;
+}
+
+const Class StaticFunctionBoxScopeObject::class_ = {
+    "StaticFunctionBoxScopeObject",
+    JSCLASS_HAS_RESERVED_SLOTS(StaticFunctionBoxScopeObject::RESERVED_SLOTS) |
+    JSCLASS_IS_ANONYMOUS
+};
+
 /*****************************************************************************/
 
 /* static */ ClonedBlockObject*
@@ -749,7 +768,7 @@ js::XDRStaticBlockObject(XDRState<mode>* xdr, HandleObject enclosingScope,
         obj = StaticBlockObject::create(cx);
         if (!obj)
             return false;
-        obj->initEnclosingNestedScope(enclosingScope);
+        obj->initEnclosingScope(enclosingScope);
         objp.set(obj);
     }
 
@@ -840,7 +859,7 @@ CloneStaticBlockObject(JSContext* cx, HandleObject enclosingScope, Handle<Static
     if (!clone)
         return nullptr;
 
-    clone->initEnclosingNestedScope(enclosingScope);
+    clone->initEnclosingScope(enclosingScope);
     clone->setLocalOffset(srcBlock->localOffset());
 
     /* Shape::Range is reverse order, so build a list in forward order. */
@@ -2523,7 +2542,7 @@ js::CreateScopeObjectsForScopeChain(JSContext* cx, AutoObjectVector& scopeChain,
         staticWith = StaticWithObject::create(cx);
         if (!staticWith)
             return false;
-        staticWith->initEnclosingNestedScope(staticEnclosingScope);
+        staticWith->initEnclosingScope(staticEnclosingScope);
         staticEnclosingScope = staticWith;
 
         dynamicWith = DynamicWithObject::create(cx, scopeChain[--i], dynamicEnclosingScope,
