@@ -255,7 +255,7 @@ PanGestureInput::ToWidgetWheelEvent(nsIWidget* aWidget) const
   wheelEvent.lineOrPageDeltaY = mLineOrPageDeltaY;
   wheelEvent.deltaX = mPanDisplacement.x;
   wheelEvent.deltaY = mPanDisplacement.y;
-  wheelEvent.mFlags.mHandledByAPZ = true;
+  wheelEvent.mFlags.mHandledByAPZ = mHandledByAPZ;
   return wheelEvent;
 }
 
@@ -327,7 +327,7 @@ ScrollWheelInput::ToWidgetWheelEvent(nsIWidget* aWidget) const
   wheelEvent.deltaY = mDeltaY;
   wheelEvent.lineOrPageDeltaX = mLineOrPageDeltaX;
   wheelEvent.lineOrPageDeltaY = mLineOrPageDeltaY;
-  wheelEvent.mFlags.mHandledByAPZ = true;
+  wheelEvent.mFlags.mHandledByAPZ = mHandledByAPZ;
   return wheelEvent;
 }
 
