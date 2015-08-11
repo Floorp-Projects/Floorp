@@ -1240,19 +1240,7 @@ public:
    * Create a stream that will mix all its audio input.
    */
   ProcessedMediaStream* CreateAudioCaptureStream(DOMMediaStream* aWrapper);
-  // Internal AudioNodeStreams can only pass their output to another
-  // AudioNode, whereas external AudioNodeStreams can pass their output
-  // to an nsAudioStream for playback.
-  enum AudioNodeStreamKind { SOURCE_STREAM, INTERNAL_STREAM, EXTERNAL_STREAM };
-  /**
-   * Create a stream that will process audio for an AudioNode.
-   * Takes ownership of aEngine.
-   */
-  AudioNodeStream* CreateAudioNodeStream(AudioNodeEngine* aEngine,
-                                         AudioNodeStreamKind aKind);
 
-  AudioNodeExternalInputStream*
-  CreateAudioNodeExternalInputStream(AudioNodeEngine* aEngine);
   /**
    * Add a new stream to the graph.  Main thread.
    */

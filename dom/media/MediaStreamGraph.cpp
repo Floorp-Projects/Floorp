@@ -20,7 +20,6 @@
 #include "ImageContainer.h"
 #include "AudioCaptureStream.h"
 #include "AudioChannelService.h"
-#include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"
 #include "AudioNodeExternalInputStream.h"
 #include "mozilla/dom/AudioContextBinding.h"
@@ -3116,41 +3115,6 @@ ProcessedMediaStream*
 MediaStreamGraph::CreateAudioCaptureStream(DOMMediaStream* aWrapper)
 {
   AudioCaptureStream* stream = new AudioCaptureStream(aWrapper);
-  AddStream(stream);
-  return stream;
-}
-
-AudioNodeExternalInputStream*
-MediaStreamGraph::CreateAudioNodeExternalInputStream(AudioNodeEngine* aEngine)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(GraphRate() == aEngine->NodeMainThread()->Context()->SampleRate());
-
-  AudioNodeExternalInputStream* stream = new AudioNodeExternalInputStream(
-    aEngine, GraphRate(), aEngine->NodeMainThread()->Context()->Id());
-  AddStream(stream);
-  return stream;
-}
-
-AudioNodeStream*
-MediaStreamGraph::CreateAudioNodeStream(AudioNodeEngine* aEngine,
-                                        AudioNodeStreamKind aKind)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  // MediaRecorders use an AudioNodeStream, but no AudioNode
-  AudioNode* node = aEngine->NodeMainThread();
-  MOZ_ASSERT(!node || GraphRate() == node->Context()->SampleRate());
-
-  dom::AudioContext::AudioContextId contextIdForStream = node ? node->Context()->Id() :
-                                                                NO_AUDIO_CONTEXT;
-  AudioNodeStream* stream = new AudioNodeStream(aEngine, aKind, GraphRate(),
-                                                contextIdForStream);
-  if (aEngine->HasNode()) {
-    stream->SetChannelMixingParametersImpl(aEngine->NodeMainThread()->ChannelCount(),
-                                           aEngine->NodeMainThread()->ChannelCountModeValue(),
-                                           aEngine->NodeMainThread()->ChannelInterpretationValue());
-  }
   AddStream(stream);
   return stream;
 }
