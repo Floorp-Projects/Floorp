@@ -16,6 +16,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/Services.h"
 #include "mozilla/gfx/Logging.h"
+#include "mozilla/dom/ContentChild.h"
 
 namespace mozilla {
 namespace gfx {
@@ -25,17 +26,17 @@ static const char* sCrashGuardNames[NUM_CRASH_GUARD_TYPES] = {
   "d3d11layers",
 };
 
-DriverCrashGuard::DriverCrashGuard(CrashGuardType aType)
+DriverCrashGuard::DriverCrashGuard(CrashGuardType aType, dom::ContentParent* aContentParent)
  : mType(aType)
+ , mMode(aContentParent ? Mode::Proxy : Mode::Normal)
  , mInitialized(false)
+ , mGuardActivated(false)
+ , mCrashDetected(false)
 {
   MOZ_ASSERT(mType < CrashGuardType::NUM_TYPES);
 
-  mStatusPref.Assign("gfx.driver-init.status.");
+  mStatusPref.Assign("gfx.crash-guard.status.");
   mStatusPref.Append(sCrashGuardNames[size_t(mType)]);
-
-  mGuardFilename.Assign(sCrashGuardNames[size_t(mType)]);
-  mGuardFilename.Append(".guard");
 }
 
 void
@@ -52,120 +53,184 @@ DriverCrashGuard::InitializeIfNeeded()
 void
 DriverCrashGuard::Initialize()
 {
-  if (!InitLockFilePath()) {
-    gfxCriticalError(CriticalLog::DefaultOptions(false)) << "Failed to create the graphics startup lockfile.";
+  if (XRE_IsContentProcess()) {
+    // Ask the parent whether or not activating the guard is okay. The parent
+    // won't bother if it detected a crash.
+    dom::ContentChild* cc = dom::ContentChild::GetSingleton();
+    cc->SendBeginDriverCrashGuard(uint32_t(mType), &mCrashDetected);
+    if (mCrashDetected) {
+      LogFeatureDisabled();
+      return;
+    }
+
+    ActivateGuard();
     return;
   }
 
-  if (RecoverFromDriverInitCrash()) {
+  // Always check whether or not the lock file exists. For example, we could
+  // have crashed creating a D3D9 device in the parent process, and on restart
+  // are now requesting one in the child process. We catch everything here.
+  if (RecoverFromCrash()) {
+    mCrashDetected = true;
     return;
   }
 
-  if (PrepareToGuard()) {
-    // Something in the environment changed, *or* a previous instance of this
-    // class already updated the environment in this session. Enable the
-    // guard.
-    AllowDriverInitAttempt();
+  // If the environment has changed, we always activate the guard. In the
+  // parent process this performs main-thread disk I/O. Child process guards
+  // only incur an IPC cost, so if we're proxying for a child process, we
+  // play it safe and activate the guard as long as we don't expect it to
+  // crash.
+  if (CheckOrRefreshEnvironment() ||
+      (mMode == Mode::Proxy && GetStatus() != DriverInitStatus::Crashed))
+  {
+    ActivateGuard();
+    return;
+  }
+
+  // If we got here and our status is "crashed", then the environment has not
+  // updated and we do not want to attempt to use the driver again.
+  if (GetStatus() == DriverInitStatus::Crashed) {
+    mCrashDetected = true;
+    LogFeatureDisabled();
   }
 }
 
 DriverCrashGuard::~DriverCrashGuard()
 {
-  if (mGuardFile) {
-    mGuardFile->Remove(false);
+  if (!mGuardActivated) {
+    return;
   }
 
-  if (GetStatus() == DriverInitStatus::Attempting) {
-    // If we attempted to initialize the driver, and got this far without
-    // crashing, assume everything is okay.
-    SetStatus(DriverInitStatus::Okay);
+  if (XRE_IsParentProcess()) {
+    if (mGuardFile) {
+      mGuardFile->Remove(false);
+    }
+
+    // If during our initialization, no other process encountered a crash, we
+    // proceed to mark the status as okay.
+    if (GetStatus() != DriverInitStatus::Crashed) {
+      SetStatus(DriverInitStatus::Okay);
+    }
+  } else {
+    dom::ContentChild::GetSingleton()->SendEndDriverCrashGuard(uint32_t(mType));
+  }
 
 #ifdef MOZ_CRASHREPORTER
-    // Remove the crash report annotation.
-    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("GraphicsStartupTest"),
-                                       NS_LITERAL_CSTRING(""));
+  // Remove the crash report annotation.
+  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("GraphicsStartupTest"),
+                                     NS_LITERAL_CSTRING(""));
 #endif
-  }
 }
 
 bool
 DriverCrashGuard::Crashed()
 {
   InitializeIfNeeded();
-  return gfxPrefs::DriverInitStatus() == int32_t(DriverInitStatus::Recovered);
+
+  // Note, we read mCrashDetected instead of GetStatus(), since in child
+  // processes we're not guaranteed that the prefs have been synced in
+  // time.
+  return mCrashDetected;
 }
 
-bool
-DriverCrashGuard::InitLockFilePath()
+nsCOMPtr<nsIFile>
+DriverCrashGuard::GetGuardFile()
 {
-  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_LOCAL_50_DIR, getter_AddRefs(mGuardFile));
-  if (!mGuardFile) {
-    return false;
-  }
+  nsCString filename;
+  filename.Assign(sCrashGuardNames[size_t(mType)]);
+  filename.Append(".guard");
 
-  if (!NS_SUCCEEDED(mGuardFile->AppendNative(mGuardFilename))) {
-    return false;
+  nsCOMPtr<nsIFile> file;
+  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_LOCAL_50_DIR, getter_AddRefs(file));
+  if (!file) {
+    return nullptr;
   }
-  return true;
+  if (!NS_SUCCEEDED(file->AppendNative(filename))) {
+    return nullptr;
+  }
+  return file;
 }
 
 void
-DriverCrashGuard::AllowDriverInitAttempt()
+DriverCrashGuard::ActivateGuard()
 {
-  // Create a temporary tombstone/lockfile.
-  FILE* fp;
-  if (!NS_SUCCEEDED(mGuardFile->OpenANSIFileDesc("w", &fp))) {
+  mGuardActivated = true;
+
+#ifdef MOZ_CRASHREPORTER
+  // Anotate crash reports only if we're a real guard. Otherwise, we could
+  // attribute a random parent process crash to a graphics problem in a child
+  // process.
+  if (mMode != Mode::Proxy) {
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("GraphicsStartupTest"),
+                                       NS_LITERAL_CSTRING("1"));
+  }
+#endif
+
+  // If we're in the content process, the rest of the guarding is handled
+  // in the parent.
+  if (XRE_IsContentProcess()) {
     return;
   }
-  fclose(fp);
 
   SetStatus(DriverInitStatus::Attempting);
 
-  // Flush preferences, so if we crash, we don't think the environment has changed again.
-  FlushPreferences();
+  if (mMode != Mode::Proxy) {
+    // In parent process guards, we use two tombstones to detect crashes: a
+    // preferences and a zero-byte file on the filesystem.
+    FlushPreferences();
 
-#ifdef MOZ_CRASHREPORTER
-  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("GraphicsStartupTest"),
-                                     NS_LITERAL_CSTRING("1"));
-#endif
+    // Create a temporary tombstone/lockfile.
+    FILE* fp = nullptr;
+    mGuardFile = GetGuardFile();
+    if (!mGuardFile || !NS_SUCCEEDED(mGuardFile->OpenANSIFileDesc("w", &fp))) {
+      return;
+    }
+    fclose(fp);
+  }
+}
+
+void
+DriverCrashGuard::NotifyCrashed()
+{
+  CheckOrRefreshEnvironment();
+  SetStatus(DriverInitStatus::Crashed);
+  FlushPreferences();
+  LogCrashRecovery();
 }
 
 bool
-DriverCrashGuard::RecoverFromDriverInitCrash()
+DriverCrashGuard::RecoverFromCrash()
 {
+  nsCOMPtr<nsIFile> file = GetGuardFile();
   bool exists;
-  if (mGuardFile &&
-      NS_SUCCEEDED(mGuardFile->Exists(&exists)) &&
-      exists)
+  if ((file &&
+       NS_SUCCEEDED(file->Exists(&exists)) &&
+       exists) ||
+      (GetStatus() == DriverInitStatus::Attempting))
   {
     // If we get here, we've just recovered from a crash. Disable acceleration
-    // until the environment changes. Since we may have crashed before
-    // preferences we're flushed, we cache the environment again, then flush
-    // preferences so child processes can start right away.
-    SetStatus(DriverInitStatus::Recovered);
-    UpdateBaseEnvironment();
-    UpdateEnvironment();
-    FlushPreferences();
-    LogCrashRecovery();
-    return true;
-  }
-  if (GetStatus() == DriverInitStatus::Recovered) {
-    // If we get here, we crashed in a previous session.
-    LogFeatureDisabled();
+    // until the environment changes.
+    if (file) {
+      file->Remove(false);
+    }
+    NotifyCrashed();
     return true;
   }
   return false;
 }
 
 // Return true if the caller should proceed to guard for crashes. False if
-// the environment has not changed.
+// the environment has not changed. We persist the "changed" status across
+// calls, so that after an environment changes, all guards for the new
+// session are activated rather than just the first.
 bool
-DriverCrashGuard::PrepareToGuard()
+DriverCrashGuard::CheckOrRefreshEnvironment()
 {
   static bool sBaseInfoChanged = false;
   static bool sBaseInfoChecked = false;
 
   if (!sBaseInfoChecked) {
+    // None of the prefs we care about, so we cache the result statically.
     sBaseInfoChecked = true;
     sBaseInfoChanged = UpdateBaseEnvironment();
   }
@@ -173,7 +238,7 @@ DriverCrashGuard::PrepareToGuard()
   // Always update the full environment, even if the base info didn't change.
   return UpdateEnvironment() ||
          sBaseInfoChanged ||
-         gfxPrefs::DriverInitStatus() == int32_t(DriverInitStatus::None);
+         GetStatus() == DriverInitStatus::Unknown;
 }
 
 bool
@@ -185,16 +250,13 @@ DriverCrashGuard::UpdateBaseEnvironment()
 
     // Driver properties.
     mGfxInfo->GetAdapterDriverVersion(value);
-    changed |= CheckAndUpdatePref("gfx.driver-init.driverVersion", value);
+    changed |= CheckAndUpdatePref("driverVersion", value);
     mGfxInfo->GetAdapterDeviceID(value);
-    changed |= CheckAndUpdatePref("gfx.driver-init.deviceID", value);
+    changed |= CheckAndUpdatePref("deviceID", value);
   }
 
   // Firefox properties.
-  changed |= CheckAndUpdatePref("gfx.driver-init.appVersion", NS_LITERAL_STRING(MOZ_APP_VERSION));
-
-  // Finally, mark as changed if the status has been reset by the user.
-  changed |= (GetStatus() == DriverInitStatus::None);
+  changed |= CheckAndUpdatePref("appVersion", NS_LITERAL_STRING(MOZ_APP_VERSION));
 
   return changed;
 }
@@ -212,25 +274,38 @@ DriverCrashGuard::FeatureEnabled(int aFeature)
 bool
 DriverCrashGuard::CheckAndUpdateBoolPref(const char* aPrefName, bool aCurrentValue)
 {
+  std::string pref = GetFullPrefName(aPrefName);
+
   bool oldValue;
-  if (NS_SUCCEEDED(Preferences::GetBool(aPrefName, &oldValue)) &&
+  if (NS_SUCCEEDED(Preferences::GetBool(pref.c_str(), &oldValue)) &&
       oldValue == aCurrentValue)
   {
     return false;
   }
-  Preferences::SetBool(aPrefName, aCurrentValue);
+  Preferences::SetBool(pref.c_str(), aCurrentValue);
   return true;
 }
 
 bool
 DriverCrashGuard::CheckAndUpdatePref(const char* aPrefName, const nsAString& aCurrentValue)
 {
-  nsAdoptingString oldValue = Preferences::GetString(aPrefName);
+  std::string pref = GetFullPrefName(aPrefName);
+
+  nsAdoptingString oldValue = Preferences::GetString(pref.c_str());
   if (oldValue == aCurrentValue) {
     return false;
   }
-  Preferences::SetString(aPrefName, aCurrentValue);
+  Preferences::SetString(pref.c_str(), aCurrentValue);
   return true;
+}
+
+std::string
+DriverCrashGuard::GetFullPrefName(const char* aPref)
+{
+  return std::string("gfx.crash-guard.") +
+         std::string(sCrashGuardNames[uint32_t(mType)]) +
+         std::string(".") +
+         std::string(aPref);
 }
 
 DriverInitStatus
@@ -242,19 +317,23 @@ DriverCrashGuard::GetStatus() const
 void
 DriverCrashGuard::SetStatus(DriverInitStatus aStatus)
 {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
   Preferences::SetInt(mStatusPref.get(), int32_t(aStatus));
 }
 
 void
 DriverCrashGuard::FlushPreferences()
 {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
   if (nsIPrefService* prefService = Preferences::GetService()) {
     prefService->SavePrefFile(nullptr);
   }
 }
 
-D3D11LayersCrashGuard::D3D11LayersCrashGuard()
- : DriverCrashGuard(CrashGuardType::D3D11Layers)
+D3D11LayersCrashGuard::D3D11LayersCrashGuard(dom::ContentParent* aContentParent)
+ : DriverCrashGuard(CrashGuardType::D3D11Layers, aContentParent)
 {
 }
 
@@ -277,6 +356,7 @@ D3D11LayersCrashGuard::Initialize()
 bool
 D3D11LayersCrashGuard::UpdateEnvironment()
 {
+  // None of the prefs we care about, so we cache the result statically.
   static bool checked = false;
   static bool changed = false;
 
@@ -291,13 +371,13 @@ D3D11LayersCrashGuard::UpdateEnvironment()
 #if defined(XP_WIN)
     bool d2dEnabled = gfxPrefs::Direct2DForceEnabled() ||
                       (!gfxPrefs::Direct2DDisabled() && FeatureEnabled(nsIGfxInfo::FEATURE_DIRECT2D));
-    changed |= CheckAndUpdateBoolPref("gfx.driver-init.feature-d2d", d2dEnabled);
+    changed |= CheckAndUpdateBoolPref("feature-d2d", d2dEnabled);
 
     bool d3d11Enabled = !gfxPrefs::LayersPreferD3D9();
     if (!FeatureEnabled(nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS)) {
       d3d11Enabled = false;
     }
-    changed |= CheckAndUpdateBoolPref("gfx.driver-init.feature-d3d11", d3d11Enabled);
+    changed |= CheckAndUpdateBoolPref("feature-d3d11", d3d11Enabled);
 #endif
   }
 
