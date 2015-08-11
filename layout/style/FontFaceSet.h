@@ -215,7 +215,7 @@ private:
   void CheckLoadingFinishedAfterDelay();
 
   /**
-   * Dispatches a CSSFontFaceLoadEvent to this object.
+   * Dispatches a FontFaceSetLoadEvent to this object.
    */
   void DispatchLoadingFinishedEvent(
                                 const nsAString& aType,
