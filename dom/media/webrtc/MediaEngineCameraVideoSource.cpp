@@ -219,7 +219,7 @@ MediaEngineCameraVideoSource::ChooseCapability(
         }
       }
       if (!candidateSet.Length()) {
-        candidateSet.MoveElementsFrom(Move(rejects));
+        candidateSet.AppendElements(Move(rejects));
       }
     }
   }

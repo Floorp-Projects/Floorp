@@ -22,7 +22,7 @@ nsHtml5TreeOpStage::MoveOpsFrom(nsTArray<nsHtml5TreeOperation>& aOpQueue)
   if (mOpQueue.IsEmpty()) {
     mOpQueue.SwapElements(aOpQueue);
   } else {
-    mOpQueue.MoveElementsFrom(Move(aOpQueue));
+    mOpQueue.AppendElements(Move(aOpQueue));
   }
 }
     
@@ -34,12 +34,12 @@ nsHtml5TreeOpStage::MoveOpsAndSpeculativeLoadsTo(nsTArray<nsHtml5TreeOperation>&
   if (aOpQueue.IsEmpty()) {
     mOpQueue.SwapElements(aOpQueue);
   } else {
-    aOpQueue.MoveElementsFrom(Move(mOpQueue));
+    aOpQueue.AppendElements(Move(mOpQueue));
   }
   if (aSpeculativeLoadQueue.IsEmpty()) {
     mSpeculativeLoadQueue.SwapElements(aSpeculativeLoadQueue);
   } else {
-    aSpeculativeLoadQueue.MoveElementsFrom(Move(mSpeculativeLoadQueue));
+    aSpeculativeLoadQueue.AppendElements(Move(mSpeculativeLoadQueue));
   }
 }
 
@@ -50,7 +50,7 @@ nsHtml5TreeOpStage::MoveSpeculativeLoadsFrom(nsTArray<nsHtml5SpeculativeLoad>& a
   if (mSpeculativeLoadQueue.IsEmpty()) {
     mSpeculativeLoadQueue.SwapElements(aSpeculativeLoadQueue);
   } else {
-    mSpeculativeLoadQueue.MoveElementsFrom(Move(aSpeculativeLoadQueue));
+    mSpeculativeLoadQueue.AppendElements(Move(aSpeculativeLoadQueue));
   }
 }
 
@@ -61,7 +61,7 @@ nsHtml5TreeOpStage::MoveSpeculativeLoadsTo(nsTArray<nsHtml5SpeculativeLoad>& aSp
   if (aSpeculativeLoadQueue.IsEmpty()) {
     mSpeculativeLoadQueue.SwapElements(aSpeculativeLoadQueue);
   } else {
-    aSpeculativeLoadQueue.MoveElementsFrom(Move(mSpeculativeLoadQueue));
+    aSpeculativeLoadQueue.AppendElements(Move(mSpeculativeLoadQueue));
   }
 }
 

@@ -275,7 +275,7 @@ public:
   }
   void ExtractImageCompositeNotifications(nsTArray<ImageCompositeNotification>* aNotifications)
   {
-    aNotifications->MoveElementsFrom(Move(mImageCompositeNotifications));
+    aNotifications->AppendElements(Move(mImageCompositeNotifications));
   }
 
 private:

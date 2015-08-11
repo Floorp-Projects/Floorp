@@ -1811,7 +1811,7 @@ void FlushFramesArray(nsTArray<FramesWithDepth>& aSource, nsTArray<nsIFrame*>* a
   aSource.Sort();
   uint32_t length = aSource.Length();
   for (uint32_t i = 0; i < length; i++) {
-    aDest->MoveElementsFrom(Move(aSource[i].mFrames));
+    aDest->AppendElements(Move(aSource[i].mFrames));
   }
   aSource.Clear();
 }

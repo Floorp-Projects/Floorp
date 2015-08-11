@@ -30,7 +30,7 @@ nsHtml5Speculation::MoveOpsFrom(nsTArray<nsHtml5TreeOperation>& aOpQueue)
     mOpQueue.SwapElements(aOpQueue);
     return;
   }
-  mOpQueue.MoveElementsFrom(Move(aOpQueue));
+  mOpQueue.AppendElements(Move(aOpQueue));
 }
 
 void
