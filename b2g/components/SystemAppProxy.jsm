@@ -99,9 +99,41 @@ let SystemAppProxy = {
   },
 
   dispatchKeyboardEvent: function systemApp_dispatchKeyboardEvent(type, details) {
-    let content = this._frame ? this._frame.contentWindow : null;
-    let e = new content.KeyboardEvent(type, details);
-    content.dispatchEvent(e);
+    try {
+      let content = this._frame ? this._frame.contentWindow : null;
+      if (!content) {
+        throw new Error("no content window");
+      }
+
+      // If we don't already have a TextInputProcessor, create one now
+      if (!this.TIP) {
+        this.TIP = Cc["@mozilla.org/text-input-processor;1"]
+          .createInstance(Ci.nsITextInputProcessor);
+        if (!this.TIP) {
+          throw new Error("failed to create textInputProcessor");
+        }
+      }
+
+      if (!this.TIP.beginInputTransactionForTests(content)) {
+        this.TIP = null;
+        throw new Error("beginInputTransaction failed");
+      }
+
+      let e = new content.KeyboardEvent("", { key: details.key, });
+
+      if (type === 'keydown') {
+        this.TIP.keydown(e);
+      }
+      else if (type === 'keyup') {
+        this.TIP.keyup(e);
+      }
+      else {
+        throw new Error("unexpected event type: " + type);
+      }
+    }
+    catch(e) {
+      dump("dispatchKeyboardEvent: " + e + "\n");
+    }
   },
 
   // Listen for dom events on the system app
