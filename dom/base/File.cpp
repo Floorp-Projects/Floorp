@@ -526,7 +526,7 @@ File::GetLastModifiedDate(ErrorResult& aRv)
     return Date();
   }
 
-  return Date(value);
+  return Date(JS::TimeClip(value));
 }
 
 int64_t

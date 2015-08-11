@@ -740,31 +740,40 @@ loop.contacts = (function(_, mozL10n) {
     render: function() {
       let cx = React.addons.classSet;
       let phoneOrEmailRequired = !this.state.email && !this.state.tel;
+      let contactFormMode = "contact-form-mode-" + this.props.mode;
+      let contentAreaClassesLiteral = {
+        "content-area": true,
+        "contact-form": true
+      };
+      contentAreaClassesLiteral[contactFormMode] = true;
+      let contentAreaClasses = cx(contentAreaClassesLiteral);
 
       return (
-        <div className="content-area contact-form">
+        <div className={contentAreaClasses}>
           <header>{this.props.mode == "add"
-                   ? mozL10n.get("add_contact_button")
+                   ? mozL10n.get("add_contact_title")
                    : mozL10n.get("edit_contact_title")}</header>
-          <label>{mozL10n.get("edit_contact_name_label")}</label>
-          <input className={cx({pristine: this.state.pristine})}
-                 pattern="\s*\S.*"
-                 ref="name"
-                 required
-                 type="text"
-                 valueLink={this.linkState("name")} />
-          <label>{mozL10n.get("edit_contact_email_label")}</label>
-          <input className={cx({pristine: this.state.pristine})}
-                 ref="email"
-                 required={phoneOrEmailRequired}
-                 type="email"
-                 valueLink={this.linkState("email")} />
-          <label>{mozL10n.get("new_contact_fxos_phone_placeholder")}</label>
-          <input className={cx({pristine: this.state.pristine})}
-                 ref="tel"
-                 required={phoneOrEmailRequired}
-                 type="tel"
-                 valueLink={this.linkState("tel")} />
+          <div className={cx({"form-content-container": true})}>
+            <input className={cx({pristine: this.state.pristine})}
+                   pattern="\s*\S.*"
+                   placeholder={mozL10n.get("contact_form_name_placeholder")}
+                   ref="name"
+                   required
+                   type="text"
+                   valueLink={this.linkState("name")} />
+            <input className={cx({pristine: this.state.pristine})}
+                   placeholder={mozL10n.get("contact_form_email_placeholder")}
+                   ref="email"
+                   required={phoneOrEmailRequired}
+                   type="email"
+                   valueLink={this.linkState("email")} />
+            <input className={cx({pristine: this.state.pristine})}
+                   placeholder={mozL10n.get("contact_form_fxos_phone_placeholder")}
+                   ref="tel"
+                   required={phoneOrEmailRequired}
+                   type="tel"
+                   valueLink={this.linkState("tel")} />
+          </div>
           <ButtonGroup>
             <Button additionalClass="button-cancel"
                     caption={mozL10n.get("cancel_button")}

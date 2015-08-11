@@ -18,6 +18,7 @@ import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.tabs.TabsPanel.TabsLayout;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.widget.ThemedRelativeLayout;
 import org.mozilla.gecko.widget.TwoWayView;
 
 import android.content.Context;
@@ -108,6 +109,7 @@ class TabsListLayout extends TwoWayView
             TabsLayoutItemView item = super.newView(position, parent);
 
             item.setCloseOnClickListener(mCloseOnClickListener);
+            ((ThemedRelativeLayout) item.findViewById(R.id.wrapper)).setPrivateMode(mIsPrivate);
 
             return item;
         }

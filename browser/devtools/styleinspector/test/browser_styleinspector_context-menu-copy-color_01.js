@@ -5,35 +5,27 @@
 
 // Test "Copy color" item of the context menu #1: Test _isColorPopup.
 
-const TEST_COLOR = "#123ABC";
-const COLOR_SELECTOR = "span[data-color]";
+const TEST_URI = `
+  <div style="color: #123ABC; margin: 0px; background: span[data-color];">
+    Test "Copy color" context menu option
+  </div>
+`;
+
+const TEST_CASES = [
+  {
+    viewName: "RuleView",
+    initializer: openRuleView
+  },
+  {
+    viewName: "ComputedView",
+    initializer: openComputedView
+  }
+];
 
 add_task(function* () {
   // Test is slow on Linux EC2 instances - Bug 1137765
   requestLongerTimeout(2);
-
-  const TEST_DOC = '<html>                                              \
-                      <body>                                            \
-                        <div style="color: ' + TEST_COLOR + ';          \
-                                    margin: 0px;                        \
-                                    background: ' + TEST_COLOR + ';">   \
-                          Test "Copy color" context menu option         \
-                        </div>                                          \
-                      </body>                                           \
-                    </html>';
-
-  const TEST_CASES = [
-    {
-      viewName: "RuleView",
-      initializer: openRuleView
-    },
-    {
-      viewName: "ComputedView",
-      initializer: openComputedView
-    }
-  ];
-
-  yield addTab("data:text/html;charset=utf8," + encodeURIComponent(TEST_DOC));
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
   for (let test of TEST_CASES) {
     yield testView(test);
@@ -58,7 +50,7 @@ function* testView({viewName, initializer}) {
 function testIsColorValueNode(view) {
   info("Testing that child nodes of color nodes are detected.");
   let root = rootElement(view);
-  let colorNode = root.querySelector(COLOR_SELECTOR);
+  let colorNode = root.querySelector("span[data-color]");
 
   ok(colorNode, "Color node found");
   for (let node of iterateNodes(colorNode)) {
@@ -93,7 +85,7 @@ function testIsColorPopupOnNode(view, node) {
   let correct = isColorValueNode(node);
 
   is(result, correct, "_isColorPopup returned the expected value " + correct);
-  is(view._contextmenu._colorToCopy, (correct) ? TEST_COLOR : "",
+  is(view._contextmenu._colorToCopy, (correct) ? "#123ABC" : "",
      "_colorToCopy was set to the expected value");
 }
 

@@ -4,7 +4,16 @@
 
 "use strict";
 
-// Test that changes are previewed when editing a property value
+// Test that changes are previewed when editing a property value.
+
+const TEST_URI = `
+  <style type="text/css">
+    #testid {
+      display:block;
+    }
+  </style>
+  <div id="testid">Styled Node</div><span>inline element</span>
+`;
 
 // Format
 // {
@@ -23,13 +32,8 @@ const TEST_DATA = [
 ];
 
 add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8,test rule view live preview on user changes");
-
-  let style = '#testid {display:block;}';
-  let styleNode = addStyle(content.document, style);
-  content.document.body.innerHTML = '<div id="testid">Styled Node</div><span>inline element</span>';
-
-  let {toolbox, inspector, view} = yield openRuleView();
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
 
   for (let data of TEST_DATA) {
@@ -38,15 +42,15 @@ add_task(function*() {
 });
 
 function* testLivePreviewData(data, ruleView, selector) {
-  let testElement = getNode(selector);
-  let idRuleEditor = getRuleViewRuleEditor(ruleView, 1);
-  let propEditor = idRuleEditor.rule.textProps[0].editor;
+  let ruleEditor = getRuleViewRuleEditor(ruleView, 1);
+  let propEditor = ruleEditor.rule.textProps[0].editor;
 
   info("Focusing the property value inplace-editor");
   let editor = yield focusEditableField(ruleView, propEditor.valueSpan);
-  is(inplaceEditor(propEditor.valueSpan), editor, "The focused editor is the value");
+  is(inplaceEditor(propEditor.valueSpan), editor,
+    "The focused editor is the value");
 
-  info("Enter a value in the editor")
+  info("Enter a value in the editor");
   EventUtils.sendString(data.value, ruleView.styleWindow);
   if (data.escape) {
     EventUtils.synthesizeKey("VK_ESCAPE", {});
@@ -62,7 +66,8 @@ function* testLivePreviewData(data, ruleView, selector) {
     }
   }
 
-  // While the editor is still focused in, the display should have changed already
+  // While the editor is still focused in, the display should have
+  // changed already
   is((yield getComputedStyleProperty(selector, null, "display")),
     data.expected,
     "Element should be previewed as " + data.expected);

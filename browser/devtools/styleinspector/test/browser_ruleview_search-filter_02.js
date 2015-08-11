@@ -8,22 +8,22 @@
 
 const SEARCH = "color";
 
-let TEST_URI = [
-  '<style type="text/css">',
-  '  #testid {',
-  '    font-family: arial;',
-  '    background-color: #00F;',
-  '  }',
-  '  .testclass {',
-  '    width: 100%;',
-  '  }',
-  '</style>',
-  '<div id="testid" class="testclass">Styled Node</div>'
-].join("\n");
+const TEST_URI = `
+  <style type="text/css">
+    #testid {
+      font-family: arial;
+      background-color: #00F;
+    }
+    .testclass {
+      width: 100%;
+    }
+  </style>
+  <h1 id="testid" class="testclass">Styled Node</h1>
+`;
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {toolbox, inspector, view} = yield openRuleView();
+  let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
   yield testAddTextInFilter(inspector, view);
 });
@@ -47,6 +47,7 @@ function* testAddTextInFilter(inspector, ruleView) {
   let rule = getRuleViewRuleEditor(ruleView, 1).rule;
 
   is(rule.selectorText, "#testid", "Second rule is #testid.");
-  ok(rule.textProps[1].editor.container.classList.contains("ruleview-highlight"),
+  ok(rule.textProps[1].editor.container.classList
+    .contains("ruleview-highlight"),
     "background-color text property is correctly highlighted.");
 }

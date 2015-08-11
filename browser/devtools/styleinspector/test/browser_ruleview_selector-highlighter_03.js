@@ -9,19 +9,18 @@
 // Note that in this test, we mock the highlighter front, merely testing the
 // behavior of the style-inspector UI for now
 
-const PAGE_CONTENT = [
-  '<style type="text/css">',
-  '  div {text-decoration: underline;}',
-  '  .node-1 {color: red;}',
-  '  .node-2 {color: green;}',
-  '</style>',
-  '<div class="node-1">Node 1</div>',
-  '<div class="node-2">Node 2</div>'
-].join("\n");
+const TEST_URI = `
+  <style type="text/css">
+    div {text-decoration: underline;}
+    .node-1 {color: red;}
+    .node-2 {color: green;}
+  </style>
+  <div class="node-1">Node 1</div>
+  <div class="node-2">Node 2</div>
+`;
 
 add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8," + PAGE_CONTENT);
-
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openRuleView();
 
   // Mock the highlighter front.
@@ -61,7 +60,8 @@ add_task(function*() {
 
   info("Selecting .node-2");
   yield selectNode(".node-2", inspector);
-  ok(HighlighterFront.isShown, "The highlighter is still shown after selection");
+  ok(HighlighterFront.isShown,
+    "The highlighter is still shown after selection");
 
   info("With .node-2 selected, click on the div selector icon");
   icon = getRuleViewSelectorHighlighterIcon(view, "div");

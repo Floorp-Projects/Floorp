@@ -206,9 +206,8 @@ function runTest()
     function testOnNormalContext(callback) {
       function testOutput(nodeToInspect, expectedBuffers, callback) {
         testLength = 0;
-        var sp = context.createScriptProcessor(expectedBuffers[0].length, gTest.numberOfChannels);
+        var sp = context.createScriptProcessor(expectedBuffers[0].length, gTest.numberOfChannels, 0);
         nodeToInspect.connect(sp);
-        sp.connect(context.destination);
         sp.onaudioprocess = function(e) {
           var expectedBuffer = expectedBuffers.shift();
           testLength += expectedBuffer.length;

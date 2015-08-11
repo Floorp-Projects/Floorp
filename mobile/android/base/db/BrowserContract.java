@@ -8,7 +8,7 @@ package org.mozilla.gecko.db;
 import org.mozilla.gecko.AppConstants;
 
 import android.net.Uri;
-import org.mozilla.gecko.mozglue.RobocopTarget;
+import org.mozilla.gecko.annotation.RobocopTarget;
 
 @RobocopTarget
 public class BrowserContract {

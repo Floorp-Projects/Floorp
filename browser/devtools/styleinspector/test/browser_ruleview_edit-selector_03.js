@@ -7,14 +7,14 @@
 // Testing selector inplace-editor behaviors in the rule-view with invalid
 // selectors
 
-let TEST_URI = [
-  '<style type="text/css">',
-  '  .testclass {',
-  '    text-align: center;',
-  '  }',
-  '</style>',
-  '<div class="testclass">Styled Node</div>',
-].join("\n");
+const TEST_URI = `
+  <style type="text/css">
+    .testclass {
+      text-align: center;
+    }
+  </style>
+  <div class="testclass">Styled Node</div>
+`;
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));

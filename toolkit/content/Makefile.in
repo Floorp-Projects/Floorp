@@ -11,7 +11,7 @@ DEFINES += \
   -DCPPFLAGS='$(CPPFLAGS)' \
   $(NULL)
 
-MOZ_SOURCE_STAMP ?= $(shell hg -R $(topsrcdir) parent --template='{node|short}\n' 2>/dev/null)
+MOZ_SOURCE_STAMP ?= $(shell hg -R $(topsrcdir) parent --template='{node}\n' 2>/dev/null)
 ifdef MOZ_SOURCE_STAMP
 DEFINES += -DSOURCE_CHANGESET='$(MOZ_SOURCE_STAMP)'
 endif

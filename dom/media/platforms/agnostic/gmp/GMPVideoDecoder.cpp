@@ -211,7 +211,7 @@ GMPVideoDecoder::GMPInitDone(GMPVideoDecoderProxy* aGMP, GMPVideoHost* aHost)
   }
 }
 
-nsresult
+nsRefPtr<MediaDataDecoder::InitPromise>
 GMPVideoDecoder::Init()
 {
   MOZ_ASSERT(IsOnGMPThread());
@@ -232,7 +232,8 @@ GMPVideoDecoder::Init()
     NS_ProcessNextEvent(gmpThread, true);
   }
 
-  return mGMP ? NS_OK : NS_ERROR_FAILURE;
+  return mGMP ? InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__)
+              : InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
 }
 
 nsresult

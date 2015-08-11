@@ -656,7 +656,9 @@ nsEditor::GetSelection(int16_t aSelectionType, nsISelection** aSelection)
   *aSelection = nullptr;
   nsCOMPtr<nsISelectionController> selcon;
   GetSelectionController(getter_AddRefs(selcon));
-  NS_ENSURE_TRUE(selcon, NS_ERROR_NOT_INITIALIZED);
+  if (!selcon) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
   return selcon->GetSelection(aSelectionType, aSelection);  // does an addref
 }
 
@@ -665,7 +667,9 @@ nsEditor::GetSelection(int16_t aSelectionType)
 {
   nsCOMPtr<nsISelection> sel;
   nsresult res = GetSelection(aSelectionType, getter_AddRefs(sel));
-  NS_ENSURE_SUCCESS(res, nullptr);
+  if (NS_FAILED(res)) {
+    return nullptr;
+  }
 
   return static_cast<Selection*>(sel.get());
 }

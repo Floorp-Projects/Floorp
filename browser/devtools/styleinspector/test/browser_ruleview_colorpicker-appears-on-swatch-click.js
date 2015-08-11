@@ -4,24 +4,23 @@
 
 "use strict";
 
-// Test that color pickers appear when clicking on color swatches
+// Tests that color pickers appear when clicking on color swatches.
 
-const PAGE_CONTENT = [
-  '<style type="text/css">',
-  '  body {',
-  '    color: red;',
-  '    background-color: #ededed;',
-  '    background-image: url(chrome://global/skin/icons/warning-64.png);',
-  '    border: 2em solid rgba(120, 120, 120, .5);',
-  '  }',
-  '</style>',
-  'Testing the color picker tooltip!'
-].join("\n");
+const TEST_URI = `
+  <style type="text/css">
+    body {
+      color: red;
+      background-color: #ededed;
+      background-image: url(chrome://global/skin/icons/warning-64.png);
+      border: 2em solid rgba(120, 120, 120, .5);
+    }
+  </style>
+  Testing the color picker tooltip!
+`;
 
 add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8,rule view color picker tooltip test");
-  content.document.body.innerHTML = PAGE_CONTENT;
-  let {toolbox, inspector, view} = yield openRuleView();
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {view} = yield openRuleView();
 
   let cSwatch = getRuleViewProperty(view, "body", "color").valueSpan
     .querySelector(".ruleview-colorswatch");

@@ -4,20 +4,15 @@
 
 "use strict";
 
-// Tests editing SVG styles using the rules view
+// Tests editing SVG styles using the rules view.
 
 let TEST_URL = "chrome://global/skin/icons/warning.svg";
 let TEST_SELECTOR = "path";
 
 add_task(function*() {
   yield addTab(TEST_URL);
-
-  info("Opening the rule-view");
-  let {toolbox, inspector, view} = yield openRuleView();
-
-  info("Selecting the test element");
+  let {inspector, view} = yield openRuleView();
   yield selectNode(TEST_SELECTOR, inspector);
-
   yield testCreateNew(view);
 });
 
@@ -45,10 +40,13 @@ function* testCreateNew(ruleView) {
 
   editor = inplaceEditor(ruleView.styleDocument.activeElement);
 
-  is(elementRuleEditor.rule.textProps.length,  1, "Should have created a new text property.");
-  is(elementRuleEditor.propertyList.children.length, 1, "Should have created a property editor.");
+  is(elementRuleEditor.rule.textProps.length, 1,
+    "Should have created a new text property.");
+  is(elementRuleEditor.propertyList.children.length, 1,
+    "Should have created a property editor.");
   let textProp = elementRuleEditor.rule.textProps[0];
-  is(editor, inplaceEditor(textProp.editor.valueSpan), "Should be editing the value span now.");
+  is(editor, inplaceEditor(textProp.editor.valueSpan),
+    "Should be editing the value span now.");
 
   editor.input.value = "red";
   let onBlur = once(editor.input, "blur");
@@ -58,5 +56,6 @@ function* testCreateNew(ruleView) {
 
   is(textProp.value, "red", "Text prop should have been changed.");
 
-  is((yield getComputedStyleProperty(TEST_SELECTOR, null, "fill")), "rgb(255, 0, 0)", "The fill was changed to red");
+  is((yield getComputedStyleProperty(TEST_SELECTOR, null, "fill")),
+    "rgb(255, 0, 0)", "The fill was changed to red");
 }

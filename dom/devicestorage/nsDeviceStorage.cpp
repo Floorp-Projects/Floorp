@@ -4319,7 +4319,7 @@ nsDOMDeviceStorage::EnumerateInternal(const nsAString& aPath,
 
   PRTime since = 0;
   if (aOptions.mSince.WasPassed() && !aOptions.mSince.Value().IsUndefined()) {
-    since = PRTime(aOptions.mSince.Value().TimeStamp());
+    since = PRTime(aOptions.mSince.Value().TimeStamp().toDouble());
   }
 
   nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(mStorageType,

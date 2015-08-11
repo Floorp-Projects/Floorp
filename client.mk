@@ -190,9 +190,10 @@ WANT_MOZCONFIG_MK = 1
 endif
 
 ifdef WANT_MOZCONFIG_MK
-# For now, only output "export" lines from mach environment --format=client.mk output.
-MOZCONFIG_MK_LINES := $(filter export||%,$(MOZCONFIG_OUT_LINES))
-$(OBJDIR)/.mozconfig.mk: $(FOUND_MOZCONFIG) $(call mkdir_deps,$(OBJDIR)) $(OBJDIR)/CLOBBER
+# For now, only output "export" lines and lines containing UPLOAD_EXTRA_FILES
+# from mach environment --format=client.mk output.
+MOZCONFIG_MK_LINES := $(filter export||% UPLOAD_EXTRA_FILES% %UPLOAD_EXTRA_FILES%,$(MOZCONFIG_OUT_LINES))
+$(OBJDIR)/.mozconfig.mk: $(TOPSRCDIR)/client.mk $(FOUND_MOZCONFIG) $(call mkdir_deps,$(OBJDIR)) $(OBJDIR)/CLOBBER
 	$(if $(MOZCONFIG_MK_LINES),( $(foreach line,$(MOZCONFIG_MK_LINES), echo '$(subst ||, ,$(line))';) )) > $@
 
 # Include that makefile so that it is created. This should not actually change
@@ -200,12 +201,6 @@ $(OBJDIR)/.mozconfig.mk: $(FOUND_MOZCONFIG) $(call mkdir_deps,$(OBJDIR)) $(OBJDI
 # from, has already been eval'ed.
 include $(OBJDIR)/.mozconfig.mk
 endif
-
-# UPLOAD_EXTRA_FILES is appended to and exported from mozconfig, which makes
-# submakes as well as configure add even more to that, so just unexport it
-# for submakes to pick it from .mozconfig.mk and for configure to pick it
-# from mach environment.
-unexport UPLOAD_EXTRA_FILES
 
 # Print out any options loaded from mozconfig.
 all realbuild clean distclean export libs install realclean::

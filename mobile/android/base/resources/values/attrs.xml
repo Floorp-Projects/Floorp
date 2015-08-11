@@ -196,5 +196,11 @@
         <attr name="disabledText" format="string" />
     </declare-styleable>
 
+    <declare-styleable name="MenuItemActionBar">
+        <!-- We reimplement tint list XML attrs here because it is
+             only available in Android 21+. -->
+        <attr name="drawableTintList" format="color" />
+    </declare-styleable>
+
 </resources>
 

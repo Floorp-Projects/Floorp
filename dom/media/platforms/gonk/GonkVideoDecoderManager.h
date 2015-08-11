@@ -55,6 +55,8 @@ public:
 
   virtual bool HasQueuedSample() override;
 
+  virtual TrackType GetTrackType() override { return TrackType::kVideoTrack; }
+
   static void RecycleCallback(TextureClient* aClient, void* aClosure);
 
 private:

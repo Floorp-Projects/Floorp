@@ -23,6 +23,7 @@ import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.toolbar.BrowserToolbarTabletBase.ForwardButtonAnimation;
+import org.mozilla.gecko.util.ColorUtils;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.widget.ThemedLinearLayout;
@@ -153,10 +154,10 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
 
         final Resources res = getResources();
 
-        mUrlColor = new ForegroundColorSpan(res.getColor(R.color.url_bar_urltext));
-        mBlockedColor = new ForegroundColorSpan(res.getColor(R.color.url_bar_blockedtext));
-        mDomainColor = new ForegroundColorSpan(res.getColor(R.color.url_bar_domaintext));
-        mPrivateDomainColor = new ForegroundColorSpan(res.getColor(R.color.url_bar_domaintext_private));
+        mUrlColor = new ForegroundColorSpan(ColorUtils.getColor(context, R.color.url_bar_urltext));
+        mBlockedColor = new ForegroundColorSpan(ColorUtils.getColor(context, R.color.url_bar_blockedtext));
+        mDomainColor = new ForegroundColorSpan(ColorUtils.getColor(context, R.color.url_bar_domaintext));
+        mPrivateDomainColor = new ForegroundColorSpan(ColorUtils.getColor(context, R.color.url_bar_domaintext_private));
 
         mFavicon = (ImageButton) findViewById(R.id.favicon);
         mSiteSecurity = (ImageButton) findViewById(R.id.site_security);

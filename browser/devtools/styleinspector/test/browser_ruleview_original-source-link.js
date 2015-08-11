@@ -5,7 +5,7 @@
 "use strict";
 
 // Test that the stylesheet links in the rule view are correct when source maps
-// are involved
+// are involved.
 
 const TESTCASE_URI = TEST_URL_ROOT + "doc_sourcemaps.html";
 const PREF = "devtools.styleeditor.source-maps-enabled";
@@ -13,10 +13,9 @@ const SCSS_LOC = "doc_sourcemaps.scss:4";
 const CSS_LOC = "doc_sourcemaps.css:1";
 
 add_task(function*() {
-  info("Setting the " + PREF +  " pref to true");
+  info("Setting the " + PREF + " pref to true");
   Services.prefs.setBoolPref(PREF, true);
 
-  info("Opening the test page and opening the inspector");
   yield addTab(TESTCASE_URI);
   let {toolbox, inspector, view} = yield openRuleView();
 
@@ -59,7 +58,8 @@ function checkDisplayedStylesheet(toolbox) {
     // selecting the desired sheet.
     if (editor.styleSheet.href.endsWith("scss")) {
       info("Original source editor selected");
-      editor.getSourceEditor().then(editorSelected).then(def.resolve, def.reject);
+      editor.getSourceEditor().then(editorSelected)
+        .then(def.resolve, def.reject);
     }
   });
 
@@ -68,9 +68,10 @@ function checkDisplayedStylesheet(toolbox) {
 
 function editorSelected(editor) {
   let href = editor.styleSheet.href;
-  ok(href.endsWith("doc_sourcemaps.scss"), "selected stylesheet is correct one");
+  ok(href.endsWith("doc_sourcemaps.scss"),
+    "selected stylesheet is correct one");
 
-  let {line, col} = editor.sourceEditor.getCursor();
+  let {line} = editor.sourceEditor.getCursor();
   is(line, 3, "cursor is at correct line number in original source");
 }
 

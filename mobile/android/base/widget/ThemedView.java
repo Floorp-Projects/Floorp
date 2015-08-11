@@ -9,6 +9,7 @@ package org.mozilla.gecko.widget;
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.lwt.LightweightTheme;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.util.ColorUtils;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -111,6 +112,7 @@ public class ThemedView extends android.view.View
         if (mIsPrivate != isPrivate) {
             mIsPrivate = isPrivate;
             refreshDrawableState();
+            invalidate();
         }
     }
 
@@ -127,6 +129,7 @@ public class ThemedView extends android.view.View
             }
 
             refreshDrawableState();
+            invalidate();
         }
     }
 
@@ -135,6 +138,7 @@ public class ThemedView extends android.view.View
             mIsLight = false;
             mIsDark = false;
             refreshDrawableState();
+            invalidate();
         }
     }
 
@@ -154,7 +158,7 @@ public class ThemedView extends android.view.View
     }
 
     public ColorDrawable getColorDrawable(int id) {
-        return new ColorDrawable(getResources().getColor(id));
+        return new ColorDrawable(ColorUtils.getColor(getContext(), id));
     }
 
     protected LightweightTheme getTheme() {

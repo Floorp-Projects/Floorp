@@ -740,31 +740,40 @@ loop.contacts = (function(_, mozL10n) {
     render: function() {
       let cx = React.addons.classSet;
       let phoneOrEmailRequired = !this.state.email && !this.state.tel;
+      let contactFormMode = "contact-form-mode-" + this.props.mode;
+      let contentAreaClassesLiteral = {
+        "content-area": true,
+        "contact-form": true
+      };
+      contentAreaClassesLiteral[contactFormMode] = true;
+      let contentAreaClasses = cx(contentAreaClassesLiteral);
 
       return (
-        React.createElement("div", {className: "content-area contact-form"}, 
+        React.createElement("div", {className: contentAreaClasses}, 
           React.createElement("header", null, this.props.mode == "add"
-                   ? mozL10n.get("add_contact_button")
+                   ? mozL10n.get("add_contact_title")
                    : mozL10n.get("edit_contact_title")), 
-          React.createElement("label", null, mozL10n.get("edit_contact_name_label")), 
-          React.createElement("input", {className: cx({pristine: this.state.pristine}), 
-                 pattern: "\\s*\\S.*", 
-                 ref: "name", 
-                 required: true, 
-                 type: "text", 
-                 valueLink: this.linkState("name")}), 
-          React.createElement("label", null, mozL10n.get("edit_contact_email_label")), 
-          React.createElement("input", {className: cx({pristine: this.state.pristine}), 
-                 ref: "email", 
-                 required: phoneOrEmailRequired, 
-                 type: "email", 
-                 valueLink: this.linkState("email")}), 
-          React.createElement("label", null, mozL10n.get("new_contact_fxos_phone_placeholder")), 
-          React.createElement("input", {className: cx({pristine: this.state.pristine}), 
-                 ref: "tel", 
-                 required: phoneOrEmailRequired, 
-                 type: "tel", 
-                 valueLink: this.linkState("tel")}), 
+          React.createElement("div", {className: cx({"form-content-container": true})}, 
+            React.createElement("input", {className: cx({pristine: this.state.pristine}), 
+                   pattern: "\\s*\\S.*", 
+                   placeholder: mozL10n.get("contact_form_name_placeholder"), 
+                   ref: "name", 
+                   required: true, 
+                   type: "text", 
+                   valueLink: this.linkState("name")}), 
+            React.createElement("input", {className: cx({pristine: this.state.pristine}), 
+                   placeholder: mozL10n.get("contact_form_email_placeholder"), 
+                   ref: "email", 
+                   required: phoneOrEmailRequired, 
+                   type: "email", 
+                   valueLink: this.linkState("email")}), 
+            React.createElement("input", {className: cx({pristine: this.state.pristine}), 
+                   placeholder: mozL10n.get("contact_form_fxos_phone_placeholder"), 
+                   ref: "tel", 
+                   required: phoneOrEmailRequired, 
+                   type: "tel", 
+                   valueLink: this.linkState("tel")})
+          ), 
           React.createElement(ButtonGroup, null, 
             React.createElement(Button, {additionalClass: "button-cancel", 
                     caption: mozL10n.get("cancel_button"), 
