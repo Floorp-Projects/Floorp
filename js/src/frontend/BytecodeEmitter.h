@@ -222,8 +222,14 @@ struct BytecodeEmitter
     StmtInfoBCE* innermostStmt() const { return stmtStack.innermost(); }
     StmtInfoBCE* innermostScopeStmt() const { return stmtStack.innermostScopeStmt(); }
     JSObject* innermostStaticScope() const;
+    JSObject* blockScopeOfDef(ParseNode* pn) const {
+        MOZ_ASSERT(pn->resolve());
+        return parser->blockScopes[pn->resolve()->pn_blockid];
+    }
 
-    bool isAliasedName(ParseNode* pn);
+    uint32_t computeHops(ParseNode* pn, BytecodeEmitter** bceOfDefOut);
+    bool isAliasedName(BytecodeEmitter* bceOfDef, ParseNode* pn);
+    bool computeDefinitionIsAliased(BytecodeEmitter* bceOfDef, Definition* dn, JSOp* op);
 
     MOZ_ALWAYS_INLINE
     bool makeAtomIndex(JSAtom* atom, jsatomid* indexp) {
@@ -335,10 +341,6 @@ struct BytecodeEmitter
     void pushStatementInner(StmtInfoBCE* stmt, StmtType type, ptrdiff_t top);
     void pushLoopStatement(LoopStmtInfo* stmt, StmtType type, ptrdiff_t top);
 
-    // Compute the number of nested scope objects that will actually be on the
-    // scope chain at runtime, given the current staticScope.
-    unsigned dynamicNestedScopeDepth();
-
     bool enterNestedScope(StmtInfoBCE* stmt, ObjectBox* objbox, StmtType stmtType);
     bool leaveNestedScope(StmtInfoBCE* stmt);
 
@@ -350,10 +352,6 @@ struct BytecodeEmitter
     bool lookupAliasedName(HandleScript script, PropertyName* name, uint32_t* pslot,
                            ParseNode* pn = nullptr);
     bool lookupAliasedNameSlot(PropertyName* name, ScopeCoordinate* sc);
-
-    // Use this function instead of assigning directly to 'hops' to guard for
-    // uint8_t overflows.
-    bool assignHops(ParseNode* pn, unsigned src, ScopeCoordinate* dst);
 
     // In a function, block-scoped locals go after the vars, and form part of the
     // fixed part of a stack frame.  Outside a function, there are no fixed vars,

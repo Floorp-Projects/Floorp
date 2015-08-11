@@ -16,10 +16,15 @@ namespace frontend {
 
 template <typename ParseHandler>
 bool
-ParseContext<ParseHandler>::init(TokenStream& ts)
+ParseContext<ParseHandler>::init(Parser<ParseHandler>& parser)
 {
-    if (!frontend::GenerateBlockId(ts, this, this->bodyid))
+    if (!parser.generateBlockId(sc->isFunctionBox()
+                                ? sc->asFunctionBox()->function()
+                                : sc->staticScope(),
+                                &this->bodyid))
+    {
         return false;
+    }
 
     if (!decls_.init() || !lexdeps.ensureMap(sc->context)) {
         ReportOutOfMemory(sc->context);

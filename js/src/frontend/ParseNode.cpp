@@ -682,15 +682,17 @@ Parser<FullParseHandler>::cloneParseTree(ParseNode* opn)
     switch (pn->getArity()) {
 #define NULLCHECK(e)    JS_BEGIN_MACRO if (!(e)) return nullptr; JS_END_MACRO
 
-      case PN_CODE:
-        NULLCHECK(pn->pn_funbox = newFunctionBox(pn, opn->pn_funbox->function(), pc,
+      case PN_CODE: {
+        RootedFunction fun(context, opn->pn_funbox->function());
+        NULLCHECK(pn->pn_funbox = newFunctionBox(pn, fun, pc,
                                                  Directives(/* strict = */ opn->pn_funbox->strict()),
                                                  opn->pn_funbox->generatorKind()));
         NULLCHECK(pn->pn_body = cloneParseTree(opn->pn_body));
-        pn->pn_cookie = opn->pn_cookie;
+        pn->pn_scopecoord = opn->pn_scopecoord;
         pn->pn_dflags = opn->pn_dflags;
         pn->pn_blockid = opn->pn_blockid;
         break;
+      }
 
       case PN_LIST:
         pn->makeEmpty();
@@ -877,7 +879,7 @@ Parser<FullParseHandler>::cloneLeftHandSide(ParseNode* opn)
         pn->pn_expr = nullptr;
         if (opn->isDefn()) {
             /* We copied some definition-specific state into pn. Clear it out. */
-            pn->pn_cookie.makeFree();
+            pn->pn_scopecoord.makeFree();
             pn->pn_dflags &= ~(PND_LEXICAL | PND_BOUND);
             pn->setDefn(false);
 

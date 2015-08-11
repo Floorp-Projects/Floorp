@@ -123,6 +123,8 @@ class StaticScopeIter
     bool done() const;
     void operator++(int);
 
+    JSObject* staticScope() const { MOZ_ASSERT(!done()); return obj; }
+
     // Return whether this static scope will have a syntactic scope (i.e. a
     // ScopeObject that isn't a non-syntactic With or
     // NonSyntacticVariablesObject) on the dynamic scope chain.
@@ -660,14 +662,20 @@ class StaticBlockObject : public BlockObject
         return getReservedSlot(LOCAL_OFFSET_SLOT).toPrivateUint32() + index;
     }
 
+    // Return the slot corresponding to block index 'index', where 'index' is
+    // in the range [0, numVariables()).  The result is in the range
+    // [RESERVED_SLOTS, RESERVED_SLOTS + numVariables()).
+    uint32_t blockIndexToSlot(uint32_t index) {
+        MOZ_ASSERT(index < numVariables());
+        return RESERVED_SLOTS + index;
+    }
+
     // Return the slot corresponding to local variable 'local', where 'local' is
     // in the range [localOffset(), localOffset() + numVariables()).  The result is
     // in the range [RESERVED_SLOTS, RESERVED_SLOTS + numVariables()).
     uint32_t localIndexToSlot(uint32_t local) {
         MOZ_ASSERT(local >= localOffset());
-        local -= localOffset();
-        MOZ_ASSERT(local < numVariables());
-        return RESERVED_SLOTS + local;
+        return blockIndexToSlot(local - localOffset());
     }
 
     /*
@@ -1229,6 +1237,7 @@ bool HasNonSyntacticStaticScopeChain(JSObject* staticScope);
 
 #ifdef DEBUG
 void DumpStaticScopeChain(JSScript* script);
+void DumpStaticScopeChain(JSObject* staticScope);
 bool
 AnalyzeEntrainedVariables(JSContext* cx, HandleScript script);
 #endif
