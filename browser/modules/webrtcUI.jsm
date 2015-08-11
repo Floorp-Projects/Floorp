@@ -156,10 +156,14 @@ this.webrtcUI = {
 
       case "rtcpeer:Request": {
         // Always allow. This code-point exists for add-ons to override.
-        let request = aMessage.data;
+        let { callID, windowID } = aMessage.data;
+        // Also available: isSecure, innerWindowID. For contentWindow:
+        //
+        //   let contentWindow = Services.wm.getOuterWindowWithId(windowID);
+
         let mm = aMessage.target.messageManager;
-        mm.sendAsyncMessage("rtcpeer:Allow", { callID: request.callID,
-                                               windowID: request.windowID });
+        mm.sendAsyncMessage("rtcpeer:Allow",
+                            { callID: callID, windowID: windowID });
         break;
       }
       case "rtcpeer:CancelRequest":
