@@ -86,12 +86,15 @@ def get_dependencies(directory):
 
     # read the dependencies
     requires = os.path.join(directory, egg_info, 'requires.txt')
+    dependencies = []
     if os.path.exists(requires):
-        dependencies = [line.strip()
-                        for line in file(requires).readlines()
-                        if line.strip()]
-    else:
-        dependencies = []
+        for line in file(requires):
+            line = line.strip()
+            # in requires.txt file, a dependency is a non empty line
+            # Also lines like [device] are sections to mark optional
+            # dependencies, we don't want those sections.
+            if line and not (line.startswith('[') and line.endswith(']')):
+                dependencies.append(line)
 
     # return the information
     return info_dict['Name'], dependencies
