@@ -221,6 +221,7 @@ struct BytecodeEmitter
 
     StmtInfoBCE* innermostStmt() const { return stmtStack.innermost(); }
     StmtInfoBCE* innermostScopeStmt() const { return stmtStack.innermostScopeStmt(); }
+    JSObject* innermostStaticScope() const;
 
     bool isAliasedName(ParseNode* pn);
 
@@ -333,10 +334,6 @@ struct BytecodeEmitter
     void pushStatement(StmtInfoBCE* stmt, StmtType type, ptrdiff_t top);
     void pushStatementInner(StmtInfoBCE* stmt, StmtType type, ptrdiff_t top);
     void pushLoopStatement(LoopStmtInfo* stmt, StmtType type, ptrdiff_t top);
-
-    // Return the enclosing lexical scope, which is the innermost enclosing static
-    // block object or compiler created function.
-    JSObject* enclosingStaticScope();
 
     // Compute the number of nested scope objects that will actually be on the
     // scope chain at runtime, given the current staticScope.

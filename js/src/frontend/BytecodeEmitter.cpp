@@ -107,6 +107,16 @@ struct frontend::LoopStmtInfo : public StmtInfoBCE
     }
 };
 
+void
+FunctionBox::switchStaticScopeToFunction()
+{
+    if (staticScope_->is<StaticFunctionBoxScopeObject>()) {
+        MOZ_ASSERT(staticScope_->as<StaticFunctionBoxScopeObject>().functionBox() == this);
+        staticScope_ = function();
+    }
+    MOZ_ASSERT(staticScope_ == function());
+}
+
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
                                  Parser<FullParseHandler>* parser, SharedContext* sc,
                                  HandleScript script, Handle<LazyScript*> lazyScript,
@@ -145,6 +155,11 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
 {
     MOZ_ASSERT_IF(evalCaller, insideEval);
     MOZ_ASSERT_IF(emitterMode == LazyFunction, lazyScript);
+
+    // Switch the static scope over to the JSFunction now that we have a
+    // JSScript.
+    if (sc->isFunctionBox())
+        sc->asFunctionBox()->switchStaticScopeToFunction();
 }
 
 bool
@@ -751,20 +766,11 @@ BytecodeEmitter::pushLoopStatement(LoopStmtInfo* stmt, StmtType type, ptrdiff_t 
 }
 
 JSObject*
-BytecodeEmitter::enclosingStaticScope()
+BytecodeEmitter::innermostStaticScope() const
 {
     if (StmtInfoBCE* stmt = innermostScopeStmt())
         return stmt->staticScope;
-
-    if (!sc->isFunctionBox()) {
-        MOZ_ASSERT(!parent);
-
-        // Top-level eval scripts have a placeholder static scope so that
-        // StaticScopeIter may iterate through evals.
-        return sc->staticScope();
-    }
-
-    return sc->asFunctionBox()->function();
+    return sc->staticScope();
 }
 
 #ifdef DEBUG
@@ -929,7 +935,7 @@ BytecodeEmitter::enterNestedScope(StmtInfoBCE* stmt, ObjectBox* objbox, StmtType
         return false;
 
     pushStatement(stmt, stmtType, offset());
-    scopeObj->initEnclosingScope(enclosingStaticScope());
+    scopeObj->initEnclosingScope(innermostStaticScope());
     stmtStack.linkAsInnermostScopeStmt(stmt, *scopeObj);
     MOZ_ASSERT(stmt->linksScope());
     stmt->isBlockScope = (stmtType == StmtType::BLOCK);
@@ -5743,7 +5749,7 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
 
         if (fun->isInterpretedLazy()) {
             if (!fun->lazyScript()->sourceObject()) {
-                JSObject* scope = enclosingStaticScope();
+                JSObject* scope = innermostStaticScope();
                 JSObject* source = script->sourceObject();
                 fun->lazyScript()->setParent(scope, &source->as<ScriptSourceObject>());
             }
@@ -5764,7 +5770,7 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
                    .setForEval(false)
                    .setVersion(parent->getVersion());
 
-            Rooted<JSObject*> enclosingScope(cx, enclosingStaticScope());
+            Rooted<JSObject*> enclosingScope(cx, innermostStaticScope());
             Rooted<JSObject*> sourceObject(cx, script->sourceObject());
             Rooted<JSScript*> script(cx, JSScript::Create(cx, enclosingScope, false, options,
                                                           parent->staticLevel() + 1,
