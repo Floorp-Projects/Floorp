@@ -14,13 +14,9 @@
 namespace mozilla {
 namespace dom {
 
-class PermissionObserver;
-
 class PermissionStatus final
   : public DOMEventTargetHelper
 {
-  friend class PermissionObserver;
-
 public:
   ~PermissionStatus();
 
@@ -38,18 +34,10 @@ public:
 private:
   PermissionStatus(nsPIDOMWindow* aWindow, PermissionName aName);
 
-  nsresult Init();
-
   nsresult UpdateState();
-
-  nsIPrincipal* GetPrincipal() const;
-
-  void PermissionChanged() {}
 
   PermissionName mName;
   PermissionState mState;
-
-  nsRefPtr<PermissionObserver> mObserver;
 };
 
 } // namespace dom
