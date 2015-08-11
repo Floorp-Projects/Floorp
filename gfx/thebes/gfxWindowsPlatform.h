@@ -323,6 +323,7 @@ private:
     void AttemptD3D11ImageBridgeDeviceCreation();
     bool AttemptD3D11ContentDeviceCreation();
     bool CanUseD3D11ImageBridge();
+    bool ContentAdapterIsParentAdapter(ID3D11Device* device);
 
     IDXGIAdapter1 *GetDXGIAdapter();
     bool IsDeviceReset(HRESULT hr, DeviceResetReason* aReason);
