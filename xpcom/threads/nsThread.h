@@ -18,6 +18,10 @@
 #include "nsAutoPtr.h"
 #include "mozilla/AlreadyAddRefed.h"
 
+namespace mozilla {
+class CycleCollectedJSRuntime;
+}
+
 // A native thread
 class nsThread
   : public nsIThreadInternal
@@ -67,12 +71,13 @@ public:
     mEventObservers.Clear();
   }
 
-  static nsresult
-  SetMainThreadObserver(nsIThreadObserver* aObserver);
+  void
+  SetScriptObserver(mozilla::CycleCollectedJSRuntime* aScriptObserver);
+
+  uint32_t
+  RecursionDepth() const;
 
 protected:
-  static nsIThreadObserver* sMainThreadObserver;
-
   class nsChainedEventQueue;
 
   class nsNestedEventTarget;
@@ -175,6 +180,7 @@ protected:
   mozilla::Mutex mLock;
 
   nsCOMPtr<nsIThreadObserver> mObserver;
+  mozilla::CycleCollectedJSRuntime* mScriptObserver;
 
   // Only accessed on the target thread.
   nsAutoTObserverArray<nsCOMPtr<nsIThreadObserver>, 2> mEventObservers;

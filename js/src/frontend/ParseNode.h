@@ -21,48 +21,63 @@ class FullParseHandler;
 class FunctionBox;
 class ObjectBox;
 
-/*
- * Indicates a location in the stack that an upvar value can be retrieved from
- * as a two tuple of (level, slot).
- *
- * Some existing client code uses the level value as a delta, or level "skip"
- * quantity. We could probably document that through use of more types at some
- * point in the future.
- */
-class UpvarCookie
+// A packed ScopeCoordinate for use in the frontend during bytecode
+// compilation.
+//
+// Definitions start out !isFree() && isHopsUnknown().
+// Uses start out isFree().
+//
+// The BCE computes the correct number of hops based on the static scope
+// chain. This is ncessary because due to hoisting, the Parser does not know
+// the final static scope chain.
+//
+// The BCE also computes the correct slot number depending on whether the
+// binding is aliased. If it is aliased, the slot number is the slot on the
+// dynamic scope object. Otherwise, the slot number is the frame slot.
+class PackedScopeCoordinate
 {
-    uint32_t level_ : SCOPECOORD_HOPS_BITS;
+    uint32_t hops_ : SCOPECOORD_HOPS_BITS;
     uint32_t slot_ : SCOPECOORD_SLOT_BITS;
 
     void checkInvariants() {
-        static_assert(sizeof(UpvarCookie) == sizeof(uint32_t),
+        static_assert(sizeof(PackedScopeCoordinate) == sizeof(uint32_t),
                       "Not necessary for correctness, but good for ParseNode memory use");
     }
 
   public:
-    // Steal one value to represent the sentinel value for UpvarCookie.
-    static const uint32_t FREE_LEVEL = SCOPECOORD_HOPS_LIMIT - 1;
-    bool isFree() const { return level_ == FREE_LEVEL; }
+    // Steal one value to represent the sentinel value signaling that the
+    // binding is free, and one value to represent the sentinel value
+    // signaling that the number of hop count need to be computed by the
+    // BytecodeEmitter.
+    static const uint32_t UNKNOWN_HOPS = SCOPECOORD_HOPS_LIMIT - 1;
+    static const uint32_t UNKNOWN_SLOT = SCOPECOORD_SLOT_LIMIT - 1;
+    bool isHopsUnknown() const { return hops_ == UNKNOWN_HOPS; }
+    bool isFree() const { return slot_ == UNKNOWN_SLOT; }
 
-    uint32_t level() const { MOZ_ASSERT(!isFree()); return level_; }
-    uint32_t slot()  const { MOZ_ASSERT(!isFree()); return slot_; }
+    uint32_t hops() const { MOZ_ASSERT(!isFree()); return hops_; }
+    uint32_t slot() const { MOZ_ASSERT(!isFree()); return slot_; }
 
-    // This fails and issues an error message if newLevel or newSlot are too large.
-    bool set(TokenStream& ts, unsigned newLevel, uint32_t newSlot) {
-        if (newLevel >= FREE_LEVEL)
-            return ts.reportError(JSMSG_TOO_DEEP, js_function_str);
-
-        if (newSlot >= SCOPECOORD_SLOT_LIMIT)
+    bool setSlot(TokenStream& ts, uint32_t newSlot) {
+        if (newSlot >= UNKNOWN_SLOT)
             return ts.reportError(JSMSG_TOO_MANY_LOCALS);
-
-        level_ = newLevel;
         slot_ = newSlot;
         return true;
     }
 
+    bool setHops(TokenStream& ts, uint32_t newHops) {
+        if (newHops >= UNKNOWN_HOPS)
+            return ts.reportError(JSMSG_TOO_DEEP, js_function_str);
+        hops_ = newHops;
+        return true;
+    }
+
+    bool set(TokenStream& ts, uint32_t newHops, uint32_t newSlot) {
+        return setHops(ts, newHops) && setSlot(ts, newSlot);
+    }
+
     void makeFree() {
-        level_ = FREE_LEVEL;
-        slot_ = 0;      // value doesn't matter, won't be used
+        hops_ = UNKNOWN_HOPS;
+        slot_ = UNKNOWN_SLOT;
         MOZ_ASSERT(isFree());
     }
 };
@@ -253,7 +268,7 @@ IsDeleteKind(ParseNodeKind kind)
  *                            time to specialize arg and var bytecodes early.
  *                          pn_body: PNK_ARGSBODY, ordinarily;
  *                            PNK_LEXICALSCOPE for implicit function in genexpr
- *                          pn_cookie: static level and var index for function
+ *                          pn_scopecoord: hops and var index for function
  *                          pn_dflags: PND_* definition/use flags (see below)
  *                          pn_blockid: block id number
  * PNK_ARGSBODY list        list of formal parameters with
@@ -446,9 +461,8 @@ IsDeleteKind(ParseNodeKind kind)
  * PNK_NAME,    name        pn_atom: name, string, or object atom
  * PNK_STRING               pn_op: JSOP_GETNAME, JSOP_STRING, or JSOP_OBJECT
  *                          If JSOP_GETNAME, pn_op may be JSOP_*ARG or JSOP_*VAR
- *                          with pn_cookie telling (staticLevel, slot) (see
- *                          jsscript.h's UPVAR macros) and pn_dflags telling
- *                          const-ness and static analysis results
+ *                          with pn_scoppecord telling (hops, slot) and pn_dflags
+ *                          telling const-ness and static analysis results
  * PNK_TEMPLATE_STRING_LIST pn_head: list of alternating expr and template strings
  *              list
  * PNK_TEMPLATE_STRING      pn_atom: template string atom
@@ -632,9 +646,7 @@ class ParseNode
                                            base object of PNK_DOT */
                 Definition* lexdef;    /* lexical definition for this use */
             };
-            UpvarCookie cookie;         /* upvar cookie with absolute frame
-                                           level (not relative skip), possibly
-                                           in current frame */
+            PackedScopeCoordinate scopeCoord;
             uint32_t    dflags:NumDefinitionFlagBits, /* see PND_* below */
                         blockid:NumBlockIdBits;  /* block number, for subset dominance
                                                     computation */
@@ -652,7 +664,7 @@ class ParseNode
 #define pn_modulebox    pn_u.name.modulebox
 #define pn_funbox       pn_u.name.funbox
 #define pn_body         pn_u.name.expr
-#define pn_cookie       pn_u.name.cookie
+#define pn_scopecoord   pn_u.name.scopeCoord
 #define pn_dflags       pn_u.name.dflags
 #define pn_blockid      pn_u.name.blockid
 #define pn_head         pn_u.list.head
@@ -732,7 +744,8 @@ class ParseNode
                                            still valid, but this use no longer
                                            optimizable via an upvar opcode */
 #define PND_CLOSED              0x40    /* variable is closed over */
-// 0x80 is available
+#define PND_KNOWNALIASED        0x80    /* definition known to be aliased and
+                                           already has a translated pnk_scopecoord */
 #define PND_IMPLICITARGUMENTS  0x100    /* the definition is a placeholder for
                                            'arguments' that has been converted
                                            into a definition after the function
@@ -757,14 +770,9 @@ class ParseNode
 
     static_assert(PNX_NONCONST < (1 << NumListFlagBits), "Not enough bits");
 
-    unsigned frameLevel() const {
-        MOZ_ASSERT(pn_arity == PN_CODE || pn_arity == PN_NAME);
-        return pn_cookie.level();
-    }
-
     uint32_t frameSlot() const {
         MOZ_ASSERT(pn_arity == PN_CODE || pn_arity == PN_NAME);
-        return pn_cookie.slot();
+        return pn_scopecoord.slot();
     }
 
     bool functionIsHoisted() const {
@@ -812,6 +820,7 @@ class ParseNode
     bool isBound() const        { return test(PND_BOUND); }
     bool isImplicitArguments() const { return test(PND_IMPLICITARGUMENTS); }
     bool isHoistedLexicalUse() const { return test(PND_LEXICAL) && isUsed(); }
+    bool isKnownAliased() const { return test(PND_KNOWNALIASED); }
 
     /* True if pn is a parsenode representing a literal constant. */
     bool isLiteral() const {
@@ -1068,7 +1077,7 @@ struct CodeNode : public ParseNode
         MOZ_ASSERT(!pn_body);
         MOZ_ASSERT(!pn_funbox);
         MOZ_ASSERT(pn_dflags == 0);
-        pn_cookie.makeFree();
+        pn_scopecoord.makeFree();
     }
 
 #ifdef DEBUG
@@ -1084,7 +1093,7 @@ struct NameNode : public ParseNode
     {
         pn_atom = atom;
         pn_expr = nullptr;
-        pn_cookie.makeFree();
+        pn_scopecoord.makeFree();
         pn_dflags = 0;
         pn_blockid = blockid;
         MOZ_ASSERT(pn_blockid == blockid);  // check for bitfield overflow
@@ -1104,7 +1113,7 @@ struct LexicalScopeNode : public ParseNode
         MOZ_ASSERT(pn_dflags == 0);
         MOZ_ASSERT(pn_blockid == 0);
         pn_objbox = blockBox;
-        pn_cookie.makeFree();
+        pn_scopecoord.makeFree();
     }
 
     LexicalScopeNode(ObjectBox* blockBox, ParseNode* blockNode)
@@ -1568,7 +1577,7 @@ struct Definition : public ParseNode
 {
     bool isFreeVar() const {
         MOZ_ASSERT(isDefn());
-        return pn_cookie.isFree();
+        return pn_scopecoord.isFree();
     }
 
     enum Kind { MISSING = 0, VAR, GLOBALCONST, CONST, LET, ARG, NAMED_LAMBDA, PLACEHOLDER };

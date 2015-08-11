@@ -56,6 +56,7 @@ public:
   virtual const SdpFmtpAttributeList& GetFmtp() const = 0;
   virtual const SdpGroupAttributeList& GetGroup() const = 0;
   virtual const SdpImageattrAttributeList& GetImageattr() const = 0;
+  virtual const SdpSimulcastAttribute& GetSimulcast() const = 0;
   virtual const SdpMsidAttributeList& GetMsid() const = 0;
   virtual const SdpRtcpFbAttributeList& GetRtcpFb() const = 0;
   virtual const SdpRtpmapAttributeList& GetRtpmap() const = 0;

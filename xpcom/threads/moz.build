@@ -36,6 +36,7 @@ EXPORTS.mozilla += [
     'SharedThreadPool.h',
     'SyncRunnable.h',
     'TaskDispatcher.h',
+    'TaskQueue.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -53,6 +54,7 @@ UNIFIED_SOURCES += [
     'nsThreadPool.cpp',
     'nsTimerImpl.cpp',
     'SharedThreadPool.cpp',
+    'TaskQueue.cpp',
     'ThreadStackHelper.cpp',
     'TimerThread.cpp',
 ]

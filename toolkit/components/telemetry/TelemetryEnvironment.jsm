@@ -19,6 +19,7 @@ Cu.import("resource://gre/modules/PromiseUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
 Cu.import("resource://gre/modules/ObjectUtils.jsm");
+Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 
 const Utils = TelemetryUtils;
 
@@ -107,6 +108,7 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["devtools.debugger.remote-enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
   ["dom.ipc.plugins.asyncInit", TelemetryEnvironment.RECORD_PREF_VALUE],
   ["dom.ipc.plugins.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["dom.ipc.processCount", TelemetryEnvironment.RECORD_PREF_VALUE],
   ["experiments.manifest.uri", TelemetryEnvironment.RECORD_PREF_VALUE],
   ["extensions.blocklist.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
   ["extensions.blocklist.url", TelemetryEnvironment.RECORD_PREF_VALUE],
@@ -1001,6 +1003,7 @@ EnvironmentCache.prototype = {
 #endif
       e10sEnabled: Services.appinfo.browserTabsRemoteAutostart,
       telemetryEnabled: Preferences.get(PREF_TELEMETRY_ENABLED, false),
+      isInOptoutSample: TelemetryController.isInOptoutSample,
       locale: getBrowserLocale(),
       update: {
         channel: updateChannel,
