@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.toolbar;
 
+import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.CustomEditText;
 import org.mozilla.gecko.InputMethods;
@@ -12,11 +13,13 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.toolbar.BrowserToolbar.OnCommitListener;
 import org.mozilla.gecko.toolbar.BrowserToolbar.OnDismissListener;
 import org.mozilla.gecko.toolbar.BrowserToolbar.OnFilterListener;
+import org.mozilla.gecko.util.DrawableUtil;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.HardwareUtils;
 
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.graphics.Rect;
 import android.text.Editable;
 import android.text.NoCopySpan;
@@ -122,7 +125,17 @@ public class ToolbarEditText extends CustomEditText
 
     @Override
     public void setText(final CharSequence text, final TextView.BufferType type) {
-        super.setText(text, type);
+        final String textString = (text == null) ? "" : text.toString();
+
+        // If we're on the home or private browsing page, we don't set the "about" url.
+        final CharSequence finalText;
+        if (AboutPages.isAboutHome(textString) || AboutPages.isAboutPrivateBrowsing(textString)) {
+            finalText = "";
+        } else {
+            finalText = text;
+        }
+
+        super.setText(finalText, type);
 
         // Any autocomplete text would have been overwritten, so reset our autocomplete states.
         resetAutocompleteState();
@@ -160,11 +173,18 @@ public class ToolbarEditText extends CustomEditText
         }
 
         // When on tablet show a magnifying glass in editing mode
-        if (isActive) {
-            setCompoundDrawablesWithIntrinsicBounds(R.drawable.search_icon_active, 0, 0, 0);
+        final int searchDrawableId = R.drawable.search_icon_active;
+        final Drawable searchDrawable;
+        if (!isActive) {
+            searchDrawable = DrawableUtil.tintDrawable(getContext(), searchDrawableId, R.color.placeholder_grey);
         } else {
-            setCompoundDrawablesWithIntrinsicBounds(R.drawable.search_icon_inactive, 0, 0, 0);
+            if (isPrivateMode()) {
+                searchDrawable = DrawableUtil.tintDrawable(getContext(), searchDrawableId, R.color.tabs_tray_icon_grey);
+            } else {
+                searchDrawable = getResources().getDrawable(searchDrawableId);
+            }
         }
+        setCompoundDrawablesWithIntrinsicBounds(searchDrawable, null, null, null);
     }
 
     /**

@@ -19,8 +19,8 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
+import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.Telemetry;
-import org.mozilla.gecko.mozglue.RobocopTarget;
 
 import java.util.Map;
 

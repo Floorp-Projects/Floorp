@@ -4,26 +4,21 @@
 
 "use strict";
 
-// Test that changing a color in a gradient css declaration using the tooltip
-// color picker works
+// Tests that changing a color in a gradient css declaration using the tooltip
+// color picker works.
 
-const PAGE_CONTENT = [
-  '<style type="text/css">',
-  '  body {',
-  '    background-image: linear-gradient(to left, #f06 25%, #333 95%, #000 100%);',
-  '  }',
-  '</style>',
-  'Updating a gradient declaration with the color picker tooltip'
-].join("\n");
+const TEST_URI = `
+  <style type="text/css">
+    body {
+      background-image: linear-gradient(to left, #f06 25%, #333 95%, #000 100%);
+    }
+  </style>
+  Updating a gradient declaration with the color picker tooltip
+`;
 
 add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8,rule view color picker tooltip test");
-
-  info("Creating the test document");
-  content.document.body.innerHTML = PAGE_CONTENT;
-
-  info("Opening the rule-view")
-  let {toolbox, inspector, view} = yield openRuleView();
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {view} = yield openRuleView();
 
   info("Testing that the colors in gradient properties are parsed correctly");
   testColorParsing(view);
@@ -45,7 +40,7 @@ function testColorParsing(view) {
   is(colorEls.length, 3, "There are 3 color values");
 
   let colors = ["#F06", "#333", "#000"];
-  for (let i = 0; i < colors.length; i ++) {
+  for (let i = 0; i < colors.length; i++) {
     is(colorEls[i].textContent, colors[i], "The right color value was found");
   }
 }
@@ -73,7 +68,8 @@ function* testPickingNewColor(view) {
     "The color swatch's background was updated");
   is(colorEl.textContent, "#010101", "The color text was updated");
   is(content.getComputedStyle(content.document.body).backgroundImage,
-    "linear-gradient(to left, rgb(1, 1, 1) 25%, rgb(51, 51, 51) 95%, rgb(0, 0, 0) 100%)",
+    "linear-gradient(to left, rgb(1, 1, 1) 25%, rgb(51, 51, 51) 95%, " +
+      "rgb(0, 0, 0) 100%)",
     "The gradient has been updated correctly");
 
   cPicker.hide();

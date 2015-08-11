@@ -21,7 +21,7 @@ XPCOMUtils.defineLazyGetter(this, "cookieMgr", function() {
  */
 function sanitizeHost(host) {
   if (host == null || host == "") {
-    throw new Error(gcli.lookup("cookieListOutNonePage"));
+    throw new Error(l10n.lookup("cookieListOutNonePage"));
   }
   return host.split(':')[0];
 }

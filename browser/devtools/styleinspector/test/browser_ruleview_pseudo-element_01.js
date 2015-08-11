@@ -27,12 +27,14 @@ add_task(function*() {
 
 function* testTopLeft(inspector, view) {
   let selector = "#topleft";
-  let {rules} = yield assertPseudoElementRulesNumbers(selector, inspector, view, {
-    elementRulesNb: 4,
-    firstLineRulesNb: 2,
-    firstLetterRulesNb: 1,
-    selectionRulesNb: 0
-  });
+  let {rules} = yield assertPseudoElementRulesNumbers(selector,
+    inspector, view, {
+      elementRulesNb: 4,
+      firstLineRulesNb: 2,
+      firstLetterRulesNb: 1,
+      selectionRulesNb: 0
+    }
+  );
 
   let gutters = assertGutters(view);
 
@@ -68,8 +70,10 @@ function* testTopLeft(inspector, view) {
      "color: orange",
      "TopLeft firstLine properties are correct");
 
-  let firstProp = elementFirstLineRuleView.addProperty("background-color", "rgb(0, 255, 0)", "");
-  let secondProp = elementFirstLineRuleView.addProperty("font-style", "italic", "");
+  let firstProp = elementFirstLineRuleView.addProperty("background-color",
+    "rgb(0, 255, 0)", "");
+  let secondProp = elementFirstLineRuleView.addProperty("font-style",
+    "italic", "");
 
   is(firstProp,
      elementFirstLineRule.textProps[elementFirstLineRule.textProps.length - 2],
@@ -199,9 +203,12 @@ function* assertPseudoElementRulesNumbers(selector, inspector, view, ruleNbs) {
 
   let rules = {
     elementRules: elementStyle.rules.filter(rule => !rule.pseudoElement),
-    firstLineRules: elementStyle.rules.filter(rule => rule.pseudoElement === ":first-line"),
-    firstLetterRules: elementStyle.rules.filter(rule => rule.pseudoElement === ":first-letter"),
-    selectionRules: elementStyle.rules.filter(rule => rule.pseudoElement === ":-moz-selection")
+    firstLineRules: elementStyle.rules.filter(rule =>
+      rule.pseudoElement === ":first-line"),
+    firstLetterRules: elementStyle.rules.filter(rule =>
+      rule.pseudoElement === ":first-letter"),
+    selectionRules: elementStyle.rules.filter(rule =>
+      rule.pseudoElement === ":-moz-selection")
   };
 
   is(rules.elementRules.length, ruleNbs.elementRulesNb,

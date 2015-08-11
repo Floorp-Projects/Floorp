@@ -7,22 +7,23 @@
 // Tests that the selector highlighter is removed when modifying a selector and
 // the selector highlighter works for the newly added unmatched rule.
 
-const TEST_URI = [
-  '<style type="text/css">',
-  '  p {',
-  '    background: red;',
-  '  }',
-  '</style>',
-  '<p>Test the selector highlighter</p>'
-].join("\n");
+const TEST_URI = `
+  <style type="text/css">
+    p {
+      background: red;
+    }
+  </style>
+  <p>Test the selector highlighter</p>
+`;
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openRuleView();
-
-  ok(!view.selectorHighlighter, "No selectorhighlighter exist in the rule-view");
-
   yield selectNode("p", inspector);
+
+  ok(!view.selectorHighlighter,
+    "No selectorhighlighter exist in the rule-view");
+
   yield testSelectorHighlight(view, "p");
   yield testEditSelector(view, "body");
   yield testSelectorHighlight(view, "body");

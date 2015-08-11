@@ -4,14 +4,15 @@
 
 "use strict";
 
-// Tests that the rule view search filter works properly for keyframe rule selectors.
+// Tests that the rule view search filter works properly for keyframe rule
+// selectors.
 
-const SEARCH = "20%"
+const SEARCH = "20%";
 const TEST_URI = TEST_URL_ROOT + "doc_keyframeanimation.html";
 
 add_task(function*() {
   yield addTab(TEST_URI);
-  let {toolbox, inspector, view} = yield openRuleView();
+  let {inspector, view} = yield openRuleView();
   yield selectNode("#boxy", inspector);
   yield testAddTextInFilter(inspector, view);
 });
@@ -35,5 +36,5 @@ function* testAddTextInFilter(inspector, ruleView) {
 
   is(ruleEditor.rule.domRule.keyText, "20%", "Second rule is 20%.");
   ok(ruleEditor.selectorText.classList.contains("ruleview-highlight"),
-    "20% selector is highlighted.")
+    "20% selector is highlighted.");
 }

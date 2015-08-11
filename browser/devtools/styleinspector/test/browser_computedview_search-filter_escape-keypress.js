@@ -6,18 +6,18 @@
 
 // Tests that search filter escape keypress will clear the search field.
 
-let TEST_URI = [
-  '<style type="text/css">',
-  '  .matches {',
-  '    color: #F00;',
-  '  }',
-  '</style>',
-  '<span id="matches" class="matches">Some styled text</span>'
-].join("\n");
+const TEST_URI = `
+  <style type="text/css">
+    .matches {
+      color: #F00;
+    }
+  </style>
+  <span id="matches" class="matches">Some styled text</span>
+`;
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {toolbox, inspector, view} = yield openComputedView();
+  let {inspector, view} = yield openComputedView();
   yield selectNode("#matches", inspector);
   yield testAddTextInFilter(inspector, view);
   yield testEscapeKeypress(inspector, view);

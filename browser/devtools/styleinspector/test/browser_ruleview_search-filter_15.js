@@ -9,15 +9,15 @@
 
 const SEARCH = "e";
 
-let TEST_URI = [
-  "<style type='text/css'>",
-  "  #testid {",
-  "    width: 100%;",
-  "    height: 50%;",
-  "  }",
-  "</style>",
-  "<h1 id='testid'>Styled Node</h1>"
-].join("\n");
+const TEST_URI = `
+  <style type='text/css'>
+    #testid {
+      width: 100%;
+      height: 50%;
+    }
+  </style>
+  <h1 id='testid'>Styled Node</h1>
+`;
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
@@ -46,7 +46,8 @@ function* testModifyPropertyNameFilter(inspector, view) {
   is(rule.selectorText, "#testid", "Second rule is #testid.");
   ok(!propEditor.container.classList.contains("ruleview-highlight"),
     "width text property is not highlighted.");
-  ok(rule.textProps[1].editor.container.classList.contains("ruleview-highlight"),
+  ok(rule.textProps[1].editor.container.classList
+    .contains("ruleview-highlight"),
     "height text property is correctly highlighted.");
 
   let onBlur = once(editor.input, "blur");
@@ -59,4 +60,3 @@ function* testModifyPropertyNameFilter(inspector, view) {
   ok(propEditor.container.classList.contains("ruleview-highlight"),
     "margin-left text property is correctly highlighted.");
 }
-

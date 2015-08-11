@@ -6,8 +6,8 @@ package org.mozilla.gecko.background.nativecode;
 
 import java.security.GeneralSecurityException;
 
+import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.mozglue.RobocopTarget;
 
 import android.util.Log;
 

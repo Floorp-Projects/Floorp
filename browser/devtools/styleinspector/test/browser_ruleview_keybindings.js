@@ -9,9 +9,7 @@
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8,<h1>Some header text</h1>");
-  let {toolbox, inspector, view} = yield openRuleView();
-
-  info("Selecting the test node");
+  let {inspector, view} = yield openRuleView();
   yield selectNode("h1", inspector);
 
   info("Getting the ruleclose brace element");
@@ -30,7 +28,8 @@ add_task(function*() {
   onFocus = once(brace.parentNode, "focus", true);
   // The rule view changes twice, once for the first field to loose focus
   // and a second time for the second field to gain focus
-  let onRuleViewChanged = view.once("ruleview-changed").then(() => view.once("ruleview-changed"));
+  let onRuleViewChanged = view.once("ruleview-changed").then(
+    () => view.once("ruleview-changed"));
   EventUtils.sendKey("return");
   yield onFocus;
   yield onRuleViewChanged;

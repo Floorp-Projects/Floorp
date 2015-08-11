@@ -57,17 +57,15 @@ const DOCUMENT_URL = "data:text/html;charset=utf-8,"+encodeURIComponent(
 add_task(function*() {
   yield addTab(DOCUMENT_URL);
   let {toolbox, inspector, view} = yield openRuleView();
-
-  info("Select the test node");
   yield selectNode("div", inspector);
 
-  yield testInlineStyle(view, inspector);
+  yield testInlineStyle(view);
   yield testFirstInlineStyleSheet(view, toolbox);
   yield testSecondInlineStyleSheet(view, toolbox);
   yield testExternalStyleSheet(view, toolbox);
 });
 
-function* testInlineStyle(view, inspector) {
+function* testInlineStyle(view) {
   info("Testing inline style");
 
   let onTab = waitForTab();
@@ -112,7 +110,8 @@ function* testSecondInlineStyleSheet(view, toolbox) {
   clickLinkByIndex(view, 3);
   let editor = yield onSelected;
 
-  is(toolbox.currentToolId, "styleeditor", "The style editor is selected again");
+  is(toolbox.currentToolId, "styleeditor",
+    "The style editor is selected again");
   validateStyleEditorSheet(editor, 1);
 }
 
@@ -131,7 +130,8 @@ function* testExternalStyleSheet(view, toolbox) {
   clickLinkByIndex(view, 1);
   let editor = yield onSelected;
 
-  is(toolbox.currentToolId, "styleeditor", "The style editor is selected again");
+  is(toolbox.currentToolId, "styleeditor",
+    "The style editor is selected again");
   validateStyleEditorSheet(editor, 2);
 }
 
@@ -141,7 +141,8 @@ function validateStyleEditorSheet(editor, expectedSheetIndex) {
      "loaded stylesheet index matches document stylesheet");
 
   let sheet = content.document.styleSheets[expectedSheetIndex];
-  is(editor.styleSheet.href, sheet.href, "loaded stylesheet href matches document stylesheet");
+  is(editor.styleSheet.href, sheet.href,
+    "loaded stylesheet href matches document stylesheet");
 }
 
 function testRuleViewLinkLabel(view) {
