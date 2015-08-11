@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Mozilla Foundation
+ * Copyright 2015 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,32 @@
  */
 
 Components.utils.import('resource://gre/modules/Services.jsm');
+Components.utils.import('resource://gre/modules/Promise.jsm');
+
 Components.utils.import('chrome://shumway/content/ShumwayCom.jsm');
+
+var messageManager, viewerReady;
+// Checking if we loading content.js in the OOP/mozbrowser or jsplugins.
+// TODO remove mozbrowser logic when we switch to jsplugins only support
+if (typeof document === 'undefined') { // mozbrowser OOP frame script
+  messageManager = this;
+  viewerReady = Promise.resolve(content);
+  messageManager.sendAsyncMessage('Shumway:constructed', null);
+} else { // jsplugins instance
+  messageManager = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                .getInterface(Components.interfaces.nsIDocShell)
+                .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                .getInterface(Components.interfaces.nsIContentFrameMessageManager);
+
+  var viewer = document.getElementById('viewer');
+  viewerReady = new Promise(function (resolve) {
+    viewer.addEventListener('load', function () {
+      messageManager.sendAsyncMessage('Shumway:constructed', null);
+      resolve(viewer.contentWindow);
+    });
+  });
+}
+
 
 var externalInterfaceWrapper = {
   callback: function (call) {
@@ -32,35 +57,37 @@ var shumwayComAdapterHooks = {};
 function sendMessage(action, data, sync) {
   var detail = {action: action, data: data, sync: sync};
   if (!sync) {
-    sendAsyncMessage('Shumway:message', detail);
+    messageManager.sendAsyncMessage('Shumway:message', detail);
     return;
   }
-  var result = String(sendSyncMessage('Shumway:message', detail));
+  var result = String(messageManager.sendSyncMessage('Shumway:message', detail));
   result = result == 'undefined' ? undefined : JSON.parse(result);
   return Components.utils.cloneInto(result, content);
 }
 
 function enableDebug() {
-  sendAsyncMessage('Shumway:enableDebug', null);
+  messageManager.sendAsyncMessage('Shumway:enableDebug', null);
 }
 
-addMessageListener('Shumway:init', function (message) {
+messageManager.addMessageListener('Shumway:init', function (message) {
   var environment = message.data;
 
-  sendAsyncMessage('Shumway:running', {}, {
+  messageManager.sendAsyncMessage('Shumway:running', {}, {
     externalInterface: externalInterfaceWrapper
   });
 
-  ShumwayCom.createAdapter(content.wrappedJSObject, {
-    sendMessage: sendMessage,
-    enableDebug: enableDebug,
-    getEnvironment: function () { return environment; }
-  }, shumwayComAdapterHooks);
+  viewerReady.then(function (viewerWindow) {
+    ShumwayCom.createAdapter(viewerWindow.wrappedJSObject, {
+      sendMessage: sendMessage,
+      enableDebug: enableDebug,
+      getEnvironment: function () { return environment; }
+    }, shumwayComAdapterHooks);
 
-  content.wrappedJSObject.runViewer();
+    viewerWindow.wrappedJSObject.runViewer();
+  });
 });
 
-addMessageListener('Shumway:loadFile', function (message) {
+messageManager.addMessageListener('Shumway:loadFile', function (message) {
   if (!shumwayComAdapterHooks.onLoadFileCallback) {
     return;
   }
