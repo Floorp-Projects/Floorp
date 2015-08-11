@@ -9,7 +9,6 @@
 #include "mozilla/Services.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIPermissionManager.h"
-#include "PermissionObserver.h"
 #include "PermissionUtils.h"
 
 namespace mozilla {
@@ -24,7 +23,7 @@ PermissionStatus::Create(nsPIDOMWindow* aWindow,
   *aStatus = nullptr;
 
   UniquePtr<PermissionStatus> status(new PermissionStatus(aWindow, aName));
-  nsresult rv = status->Init();
+  nsresult rv = status->UpdateState();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -41,29 +40,8 @@ PermissionStatus::PermissionStatus(nsPIDOMWindow* aWindow,
 {
 }
 
-nsresult
-PermissionStatus::Init()
-{
-  mObserver = PermissionObserver::GetInstance();
-  if (NS_WARN_IF(!mObserver)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  mObserver->AddSink(this);
-
-  nsresult rv = UpdateState();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
 PermissionStatus::~PermissionStatus()
 {
-  if (mObserver) {
-    mObserver->RemoveSink(this);
-  }
 }
 
 JSObject*
@@ -95,22 +73,6 @@ PermissionStatus::UpdateState()
 
   mState = ActionToPermissionState(action);
   return NS_OK;
-}
-
-nsIPrincipal*
-PermissionStatus::GetPrincipal() const
-{
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(GetOwner());
-  if (NS_WARN_IF(!window)) {
-    return nullptr;
-  }
-
-  nsIDocument* doc = window->GetExtantDoc();
-  if (NS_WARN_IF(!doc)) {
-    return nullptr;
-  }
-
-  return doc->NodePrincipal();
 }
 
 } // namespace dom
