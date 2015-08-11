@@ -34,9 +34,7 @@ public:
   DriverInitCrashDetection();
   ~DriverInitCrashDetection();
 
-  bool DisableAcceleration() const {
-    return sDisableAcceleration;
-  }
+  bool DisableAcceleration() const;
 
   // These are the values reported to Telemetry (GRAPHICS_DRIVER_STARTUP_TEST).
   // Values should not change; add new values to the end.
@@ -60,7 +58,6 @@ private:
   void RecordTelemetry(TelemetryState aState);
 
 private:
-  static bool sDisableAcceleration;
   static bool sEnvironmentHasBeenUpdated;
 
 private:
