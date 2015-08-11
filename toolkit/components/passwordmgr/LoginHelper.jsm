@@ -316,4 +316,30 @@ this.LoginHelper = {
                         {filterString : filterString});
     }
   },
+
+  /**
+   * Checks if a field type is username compatible.
+   *
+   * @param {Element} element
+   *                  the field we want to check.
+   *
+   * @returns {Boolean} true if the field type is one
+   *                    of the username types.
+   */
+  isUsernameFieldType(element) {
+    if (!(element instanceof Ci.nsIDOMHTMLInputElement))
+      return false;
+
+    let fieldType = (element.hasAttribute("type") ?
+                     element.getAttribute("type").toLowerCase() :
+                     element.type);
+    if (fieldType == "text"  ||
+        fieldType == "email" ||
+        fieldType == "url"   ||
+        fieldType == "tel"   ||
+        fieldType == "number") {
+      return true;
+    }
+    return false;
+  },
 };
