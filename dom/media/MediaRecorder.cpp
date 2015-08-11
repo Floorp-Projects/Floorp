@@ -776,8 +776,8 @@ MediaRecorder::MediaRecorder(AudioNode& aSrcAudioNode,
   if (aSrcAudioNode.NumberOfOutputs() > 0) {
     AudioContext* ctx = aSrcAudioNode.Context();
     AudioNodeEngine* engine = new AudioNodeEngine(nullptr);
-    mPipeStream = ctx->Graph()->CreateAudioNodeStream(engine,
-                                                      MediaStreamGraph::EXTERNAL_STREAM);
+    mPipeStream = AudioNodeStream::Create(ctx->Graph(), engine,
+                                          AudioNodeStream::EXTERNAL_STREAM);
     AudioNodeStream* ns = aSrcAudioNode.GetStream();
     if (ns) {
       mInputPort = mPipeStream->AllocateInputPort(aSrcAudioNode.GetStream(),

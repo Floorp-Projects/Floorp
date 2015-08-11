@@ -100,8 +100,8 @@ AudioParam::Stream()
 
   AudioNodeEngine* engine = new AudioNodeEngine(nullptr);
   nsRefPtr<AudioNodeStream> stream =
-    mNode->Context()->Graph()->CreateAudioNodeStream(engine,
-                                                     MediaStreamGraph::INTERNAL_STREAM);
+    AudioNodeStream::Create(mNode->Context()->Graph(), engine,
+                            AudioNodeStream::INTERNAL_STREAM);
 
   // Force the input to have only one channel, and make it down-mix using
   // the speaker rules if needed.
