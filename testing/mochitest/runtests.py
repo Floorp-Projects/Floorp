@@ -2081,9 +2081,7 @@ class Mochitest(MochitestUtilsMixin):
         self.killNamedOrphans('xpcshell')
 
         # Until we have all green, this only runs on bc*/dt*/mochitest-chrome
-        # jobs, not webapprt*, jetpack*, or plain
-        if options.browserChrome:
-            options.runByDir = True
+        # jobs, not webapprt*, jetpack*, a11yr (for perf reasons), or plain
 
         testsToRun = self.getTestsToRun(options)
         if not options.runByDir:
@@ -2586,6 +2584,18 @@ def run_test_harness(options):
     logger_options = {
         key: value for key, value in vars(options).iteritems() if key.startswith('log')}
     runner = Mochitest(logger_options)
+
+    options.runByDir = False
+
+    if runner.getTestFlavor(options) == 'browser-chrome':
+        options.runByDir = True
+
+    if runner.getTestFlavor(options) == 'mochitest' and (not mozinfo.info['debug']) and (not mozinfo.info['asan']):
+        options.runByDir = True
+
+    if mozinfo.info.get('buildapp') == 'mulet':
+        options.runByDir = False
+
     result = runner.runTests(options)
 
     # don't dump failures if running from automation as treeherder already displays them
