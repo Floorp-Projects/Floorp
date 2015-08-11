@@ -3130,14 +3130,13 @@ MediaStreamGraph::CreateAudioCaptureStream(DOMMediaStream* aWrapper)
 }
 
 AudioNodeExternalInputStream*
-MediaStreamGraph::CreateAudioNodeExternalInputStream(AudioNodeEngine* aEngine, TrackRate aSampleRate)
+MediaStreamGraph::CreateAudioNodeExternalInputStream(AudioNodeEngine* aEngine)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (!aSampleRate) {
-    aSampleRate = aEngine->NodeMainThread()->Context()->SampleRate();
-  }
+  MOZ_ASSERT(GraphRate() == aEngine->NodeMainThread()->Context()->SampleRate());
+
   AudioNodeExternalInputStream* stream = new AudioNodeExternalInputStream(
-      aEngine, aSampleRate, aEngine->NodeMainThread()->Context()->Id());
+    aEngine, GraphRate(), aEngine->NodeMainThread()->Context()->Id());
   NS_ADDREF(stream);
   MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(this);
   stream->SetGraphImpl(graph);
@@ -3147,18 +3146,17 @@ MediaStreamGraph::CreateAudioNodeExternalInputStream(AudioNodeEngine* aEngine, T
 
 AudioNodeStream*
 MediaStreamGraph::CreateAudioNodeStream(AudioNodeEngine* aEngine,
-                                        AudioNodeStreamKind aKind,
-                                        TrackRate aSampleRate)
+                                        AudioNodeStreamKind aKind)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (!aSampleRate) {
-    aSampleRate = aEngine->NodeMainThread()->Context()->SampleRate();
-  }
+
   // MediaRecorders use an AudioNodeStream, but no AudioNode
   AudioNode* node = aEngine->NodeMainThread();
+  MOZ_ASSERT(!node || GraphRate() == node->Context()->SampleRate());
+
   dom::AudioContext::AudioContextId contextIdForStream = node ? node->Context()->Id() :
                                                                 NO_AUDIO_CONTEXT;
-  AudioNodeStream* stream = new AudioNodeStream(aEngine, aKind, aSampleRate,
+  AudioNodeStream* stream = new AudioNodeStream(aEngine, aKind, GraphRate(),
                                                 contextIdForStream);
   NS_ADDREF(stream);
   MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(this);
