@@ -7,18 +7,6 @@
 #ifndef mozilla_nsRefPtr_h
 #define mozilla_nsRefPtr_h
 
-#if defined(_MSC_VER) && _MSC_VER >= 1900
-#  define MOZ_HAVE_REF_QUALIFIERS
-#elif defined(__clang__)
-// All supported Clang versions
-#  define MOZ_HAVE_REF_QUALIFIERS
-#elif defined(__GNUC__)
-#  include "mozilla/Compiler.h"
-#  if MOZ_GCC_VERSION_AT_LEAST(4, 8, 1)
-#    define MOZ_HAVE_REF_QUALIFIERS
-#  endif
-#endif
-
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -31,6 +19,7 @@ class nsCOMPtr_helper;
 
 namespace mozilla {
 template<class T> class OwningNonNull;
+template<class T> class RefPtr;
 } // namespace mozilla
 
 template <class T>
@@ -139,6 +128,10 @@ public:
   template<class U>
   MOZ_IMPLICIT nsRefPtr(const mozilla::OwningNonNull<U>& aOther);
 
+  // Defined in RefPtr.h
+  template<class U>
+  MOZ_IMPLICIT nsRefPtr(mozilla::RefPtr<U>&& aOther);
+
   // Assignment operators
 
   nsRefPtr<T>&
@@ -198,6 +191,11 @@ public:
   template<class U>
   nsRefPtr<T>&
   operator=(const mozilla::OwningNonNull<U>& aOther);
+
+  // Defined in RefPtr.h
+  template<class U>
+  nsRefPtr<T>&
+  operator=(mozilla::RefPtr<U>&& aOther);
 
   // Other pointer operators
 
@@ -598,9 +596,5 @@ do_AddRef(T*&& aObj)
   nsRefPtr<T> ref(aObj);
   return ref.forget();
 }
-
-#ifdef MOZ_HAVE_REF_QUALIFIERS
-#undef MOZ_HAVE_REF_QUALIFIERS
-#endif
 
 #endif /* mozilla_nsRefPtr_h */
