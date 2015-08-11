@@ -9,7 +9,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
-import org.mozilla.gecko.mozglue.RobocopTarget;
+import org.mozilla.gecko.annotation.RobocopTarget;
 
 import android.content.Context;
 import android.content.SharedPreferences;

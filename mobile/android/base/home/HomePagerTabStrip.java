@@ -9,6 +9,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.animation.BounceAnimatorBuilder;
 import org.mozilla.gecko.animation.BounceAnimatorBuilder.Attributes;
 import org.mozilla.gecko.animation.TransitionsTracker;
+import org.mozilla.gecko.util.ColorUtils;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -60,7 +61,7 @@ class HomePagerTabStrip extends PagerTabStrip {
         shadowSize = res.getDimensionPixelSize(R.dimen.tabs_strip_shadow_size);
 
         shadowPaint = new Paint();
-        shadowPaint.setColor(res.getColor(R.color.url_bar_shadow));
+        shadowPaint.setColor(ColorUtils.getColor(context, R.color.url_bar_shadow));
         shadowPaint.setStrokeWidth(0.0f);
 
         getViewTreeObserver().addOnPreDrawListener(new PreDrawListener());

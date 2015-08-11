@@ -7,23 +7,23 @@
 // Tests that the rule view search filter clear button works properly and clears
 // the highlighted rules in the computed list.
 
-const SEARCH = "0px"
+const SEARCH = "0px";
 
-let TEST_URI = [
-  '<style type="text/css">',
-  '  #testid {',
-  '    margin: 4px 0px;',
-  '  }',
-  '  .testclass {',
-  '    background-color: red;',
-  '  }',
-  '</style>',
-  '<h1 id="testid" class="testclass">Styled Node</h1>'
-].join("\n");
+const TEST_URI = `
+  <style type="text/css">
+    #testid {
+      margin: 4px 0px;
+    }
+    .testclass {
+      background-color: red;
+    }
+  </style>
+  <h1 id="testid" class="testclass">Styled Node</h1>
+`;
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {toolbox, inspector, view} = yield openRuleView();
+  let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
   yield testAddTextInFilter(inspector, view);
   yield testClearSearchFilter(inspector, view);
@@ -71,7 +71,8 @@ function* testClearSearchFilter(inspector, ruleView) {
   let searchClearButton = ruleView.searchClearButton;
   let onRuleViewFiltered = inspector.once("ruleview-filtered");
 
-  EventUtils.synthesizeMouseAtCenter(searchClearButton, {}, ruleView.styleWindow);
+  EventUtils.synthesizeMouseAtCenter(searchClearButton, {},
+    ruleView.styleWindow);
 
   yield onRuleViewFiltered;
 

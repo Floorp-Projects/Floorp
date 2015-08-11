@@ -14,12 +14,8 @@ let {CssLogic} = require("devtools/styleinspector/css-logic");
 
 add_task(function*() {
   yield addTab(TEST_URI);
-  let {toolbox, inspector, view} = yield openComputedView();
-
-  info("Selecting the test element");
+  let {inspector, view} = yield openComputedView();
   yield selectNode("div", inspector);
-
-  info("Checking property view");
   yield checkPropertyView(view);
 });
 

@@ -7,14 +7,14 @@
 // Tests that a disabled property is re-enabled if the property name or value is
 // modified
 
-let TEST_URI = [
-  "<style type='text/css'>",
-  "#testid {",
-  "  background-color: blue;",
-  "}",
-  "</style>",
-  "<div id='testid'>Styled Node</div>",
-].join("\n");
+const TEST_URI = `
+  <style type='text/css'>
+  #testid {
+    background-color: blue;
+  }
+  </style>
+  <div id='testid'>Styled Node</div>
+`;
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));

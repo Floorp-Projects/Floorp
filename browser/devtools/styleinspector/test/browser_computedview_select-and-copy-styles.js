@@ -4,40 +4,42 @@
 
 "use strict";
 
-// Tests that properties can be selected and copied from the computed view
+// Tests that properties can be selected and copied from the computed view.
 
 XPCOMUtils.defineLazyGetter(this, "osString", function() {
   return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
 });
 
+const TEST_URI = `
+  <style type="text/css">
+    span {
+      font-variant-caps: small-caps;
+      color: #000000;
+    }
+    .nomatches {
+      color: #ff0000;
+    }
+  </style>
+  <div id="first" style="margin: 10em;
+    font-size: 14pt; font-family: helvetica, sans-serif; color: #AAA">
+    <h1>Some header text</h1>
+    <p id="salutation" style="font-size: 12pt">hi.</p>
+    <p id="body" style="font-size: 12pt">I am a test-case. This text exists
+    solely to provide some things to <span style="color: yellow">
+    highlight</span> and <span style="font-weight: bold">count</span>
+    style list-items in the box at right. If you are reading this,
+    you should go do something else instead. Maybe read a book. Or better
+    yet, write some test-cases for another bit of code.
+    <span style="font-style: italic">some text</span></p>
+    <p id="closing">more text</p>
+    <p>even more text</p>
+  </div>
+`;
+
 add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8,computed view copy test");
-
-  info("Creating the test document");
-  content.document.body.innerHTML = '<style type="text/css"> ' +
-    'span { font-variant-caps: small-caps; color: #000000; } ' +
-    '.nomatches {color: #ff0000;}</style> <div id="first" style="margin: 10em; ' +
-    'font-size: 14pt; font-family: helvetica, sans-serif; color: #AAA">\n' +
-    '<h1>Some header text</h1>\n' +
-    '<p id="salutation" style="font-size: 12pt">hi.</p>\n' +
-    '<p id="body" style="font-size: 12pt">I am a test-case. This text exists ' +
-    'solely to provide some things to <span style="color: yellow">' +
-    'highlight</span> and <span style="font-weight: bold">count</span> ' +
-    'style list-items in the box at right. If you are reading this, ' +
-    'you should go do something else instead. Maybe read a book. Or better ' +
-    'yet, write some test-cases for another bit of code. ' +
-    '<span style="font-style: italic">some text</span></p>\n' +
-    '<p id="closing">more text</p>\n' +
-    '<p>even more text</p>' +
-    '</div>';
-  content.document.title = "Computed view context menu test";
-
-  info("Opening the computed view");
-  let {toolbox, inspector, view} = yield openComputedView();
-
-  info("Selecting the test node");
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openComputedView();
   yield selectNode("span", inspector);
-
   yield checkCopySelection(view);
   yield checkSelectAll(view);
 });
@@ -54,7 +56,8 @@ function checkCopySelection(view) {
   range.setEnd(props[3], 3);
   contentDocument.defaultView.getSelection().addRange(range);
 
-  info("Checking that cssHtmlTree.siBoundCopy() returns the correct clipboard value");
+  info("Checking that cssHtmlTree.siBoundCopy() returns the correct " +
+    "clipboard value");
 
   let expectedPattern = "font-family: helvetica,sans-serif;[\\r\\n]+" +
                         "font-size: 16px;[\\r\\n]+" +
@@ -75,7 +78,8 @@ function checkSelectAll(view) {
   let contentDoc = view.styleDocument;
   let prop = contentDoc.querySelector(".property-view");
 
-  info("Checking that _onSelectAll() then copy returns the correct clipboard value");
+  info("Checking that _onSelectAll() then copy returns the correct " +
+    "clipboard value");
   view._contextmenu._onSelectAll();
   let expectedPattern = "color: #FF0;[\\r\\n]+" +
                         "font-family: helvetica,sans-serif;[\\r\\n]+" +

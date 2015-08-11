@@ -6,14 +6,14 @@
 
 /**
  * Tests the behaviour of the copy styles context menu items in the rule
- * view
+ * view.
  */
 
 XPCOMUtils.defineLazyGetter(this, "osString", function() {
   return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
 });
 
-let TEST_URI = TEST_URL_ROOT + "doc_copystyles.html";
+const TEST_URI = TEST_URL_ROOT + "doc_copystyles.html";
 
 add_task(function*() {
   yield addTab(TEST_URI);

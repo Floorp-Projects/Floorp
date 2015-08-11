@@ -13,6 +13,7 @@ import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.tabs.TabsPanel.TabsLayout;
+import org.mozilla.gecko.widget.ThemedRelativeLayout;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -435,6 +436,7 @@ class TabsGridLayout extends GridView
             final TabsLayoutItemView item = super.newView(position, parent);
 
             item.setCloseOnClickListener(mCloseClickListener);
+            ((ThemedRelativeLayout) item.findViewById(R.id.wrapper)).setPrivateMode(mIsPrivate);
 
             return item;
         }

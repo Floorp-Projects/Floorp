@@ -7,7 +7,14 @@
 // Test original value is correctly displayed when ESCaping out of the
 // inplace editor in the style inspector.
 
-const originalValue = "#00F";
+const TEST_URI = `
+  <style type='text/css'>
+  #testid {
+    color: #00F;
+  }
+  </style>
+  <div id='testid'>Styled Node</div>
+`;
 
 // Test data format
 // {
@@ -17,43 +24,40 @@ const originalValue = "#00F";
 //  expected: what value is expected as a result
 // }
 const testData = [
-  {value: "red", commitKey: "VK_ESCAPE", modifiers: {}, expected: originalValue},
-  {value: "red", commitKey: "VK_RETURN", modifiers: {}, expected: "red"},
-  {value: "invalid", commitKey: "VK_RETURN", modifiers: {}, expected: "invalid"},
-  {value: "blue", commitKey: "VK_TAB", modifiers: {shiftKey: true}, expected: "blue"}
+  {
+    value: "red",
+    commitKey: "VK_ESCAPE",
+    modifiers: {},
+    expected: "#00F"
+  },
+  {
+    value: "red",
+    commitKey: "VK_RETURN",
+    modifiers: {},
+    expected: "red"
+  },
+  {
+    value: "invalid",
+    commitKey: "VK_RETURN",
+    modifiers: {},
+    expected: "invalid"
+  },
+  {
+    value: "blue",
+    commitKey: "VK_TAB", modifiers: {shiftKey: true},
+    expected: "blue"
+  }
 ];
 
 add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8,test escaping property change reverts back to original value");
-
-  info("Creating the test document");
-  createDocument();
-
-  info("Opening the rule view");
-  let {toolbox, inspector, view} = yield openRuleView();
-
-  info("Selecting the test node");
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
 
-  info("Iterating over the test data");
   for (let data of testData) {
     yield runTestData(view, data);
   }
 });
-
-function createDocument() {
-  let style = '' +
-    '#testid {' +
-    '  color: ' + originalValue + ';' +
-    '}';
-
-  let node = content.document.createElement('style');
-  node.setAttribute("type", "text/css");
-  node.textContent = style;
-  content.document.getElementsByTagName("head")[0].appendChild(node);
-
-  content.document.body.innerHTML = '<div id="testid">Styled Node</div>';
-}
 
 function* runTestData(view, {value, commitKey, modifiers, expected}) {
   let idRuleEditor = getRuleViewRuleEditor(view, 1);
@@ -62,7 +66,8 @@ function* runTestData(view, {value, commitKey, modifiers, expected}) {
   info("Focusing the inplace editor field");
 
   let editor = yield focusEditableField(view, propEditor.valueSpan);
-  is(inplaceEditor(propEditor.valueSpan), editor, "Focused editor should be the value span.");
+  is(inplaceEditor(propEditor.valueSpan), editor,
+    "Focused editor should be the value span.");
 
   info("Entering test data " + value);
   let onRuleViewChanged = view.once("ruleview-changed");
@@ -79,8 +84,10 @@ function* runTestData(view, {value, commitKey, modifiers, expected}) {
   yield onRuleViewChanged;
 
   if (commitKey === "VK_ESCAPE") {
-    is(propEditor.valueSpan.textContent, expected, "Value is as expected: " + expected);
+    is(propEditor.valueSpan.textContent, expected,
+      "Value is as expected: " + expected);
   } else {
-    is(propEditor.valueSpan.textContent, expected, "Value is as expected: " + expected);
+    is(propEditor.valueSpan.textContent, expected,
+      "Value is as expected: " + expected);
   }
 }
