@@ -2541,7 +2541,7 @@ void MediaDecoderStateMachine::RenderVideoFrames(int32_t aMaxFrames,
     img->mFrameID = frame->mFrameID;
     img->mProducerID = mProducerID;
 
-    VERBOSE_LOG("playing video frame %lld (id=%d) (queued=%i, state-machine=%i, decoder-queued=%i)",
+    VERBOSE_LOG("playing video frame %lld (id=%x) (queued=%i, state-machine=%i, decoder-queued=%i)",
                 frame->mTime, frame->mFrameID,
                 VideoQueue().GetSize() + mReader->SizeOfVideoQueueInFrames(),
                 VideoQueue().GetSize(), mReader->SizeOfVideoQueueInFrames());
