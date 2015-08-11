@@ -29,7 +29,7 @@ public:
                 MediaDataDecoderCallback* aCallback);
   virtual ~H264Converter();
 
-  virtual nsresult Init() override;
+  virtual nsRefPtr<InitPromise> Init() override;
   virtual nsresult Input(MediaRawData* aSample) override;
   virtual nsresult Flush() override;
   virtual nsresult Drain() override;
@@ -48,14 +48,20 @@ private:
   nsresult CheckForSPSChange(MediaRawData* aSample);
   void UpdateConfigFromExtraData(MediaByteBuffer* aExtraData);
 
+  void OnDecoderInitDone(const TrackType aTrackType);
+  void OnDecoderInitFailed(MediaDataDecoder::DecoderFailureReason aReason);
+
   nsRefPtr<PlatformDecoderModule> mPDM;
   VideoInfo mCurrentConfig;
   layers::LayersBackend mLayersBackend;
   nsRefPtr<layers::ImageContainer> mImageContainer;
   nsRefPtr<FlushableTaskQueue> mVideoTaskQueue;
+  nsTArray<nsRefPtr<MediaRawData>> mMediaRawSamples;
   MediaDataDecoderCallback* mCallback;
   nsRefPtr<MediaDataDecoder> mDecoder;
+  MozPromiseRequestHolder<InitPromise> mInitPromiseRequest;
   bool mNeedAVCC;
+  bool mDecoderInitializing;
   nsresult mLastError;
 };
 

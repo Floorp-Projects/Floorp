@@ -21,16 +21,21 @@ MediaDataDecoderCallbackProxy::FlushComplete()
   mProxyDecoder->FlushComplete();
 }
 
-nsresult
+nsRefPtr<MediaDataDecoder::InitPromise>
+MediaDataDecoderProxy::InternalInit()
+{
+  MOZ_ASSERT(!mIsShutdown);
+
+  return mProxyDecoder->Init();
+}
+
+nsRefPtr<MediaDataDecoder::InitPromise>
 MediaDataDecoderProxy::Init()
 {
   MOZ_ASSERT(!mIsShutdown);
-  nsRefPtr<InitTask> task(new InitTask(mProxyDecoder));
-  nsresult rv = mProxyThread->Dispatch(task, NS_DISPATCH_SYNC);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_SUCCESS(task->Result(), task->Result());
 
-  return NS_OK;
+  return ProxyMediaCall(mProxyThreadWrapper, this, __func__,
+                        &MediaDataDecoderProxy::InternalInit);
 }
 
 nsresult

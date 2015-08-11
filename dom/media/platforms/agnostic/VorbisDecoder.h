@@ -24,7 +24,7 @@ public:
                 MediaDataDecoderCallback* aCallback);
   ~VorbisDataDecoder();
 
-  nsresult Init() override;
+  nsRefPtr<InitPromise> Init() override;
   nsresult Input(MediaRawData* aSample) override;
   nsresult Flush() override;
   nsresult Drain() override;
