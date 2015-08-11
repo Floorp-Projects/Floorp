@@ -913,7 +913,7 @@ var BrowserApp = {
         UITelemetry.addEvent("action.1", "contextmenu", null, "web_mute");
         aTarget.muted = true;
       });
-  
+
     NativeWindow.contextmenus.add(stringGetter("contextmenu.unmute"),
       NativeWindow.contextmenus.mediaContext("media-muted"),
       function(aTarget) {
@@ -1605,6 +1605,7 @@ var BrowserApp = {
 
   sanitize: function (aItems, callback) {
     let success = true;
+    var promises = [];
 
     for (let key in aItems) {
       if (!aItems[key])
@@ -1612,7 +1613,6 @@ var BrowserApp = {
 
       key = key.replace("private.data.", "");
 
-      var promises = [];
       switch (key) {
         case "cookies_sessions":
           promises.push(Sanitizer.clearItem("cookies"));
@@ -2328,7 +2328,7 @@ var NativeWindow = {
         return;
 
       Messaging.sendRequest({
-        type: "Menu:Update", 
+        type: "Menu:Update",
         id: aId,
         options: aOptions
       });
@@ -3732,7 +3732,7 @@ Tab.prototype = {
                                 viewportWidth - 15);
   },
 
-  /** 
+  /**
    * Reloads the tab with the desktop mode setting.
    */
   reloadWithMode: function (aDesktopMode) {
@@ -7236,7 +7236,7 @@ var IdentityHandler = {
                                .QueryInterface(Components.interfaces.nsISSLStatusProvider)
                                .SSLStatus;
 
-    // Don't pass in the actual location object, since it can cause us to 
+    // Don't pass in the actual location object, since it can cause us to
     // hold on to the window object too long.  Just pass in the fields we
     // care about. (bug 424829)
     let locationObj = {};
