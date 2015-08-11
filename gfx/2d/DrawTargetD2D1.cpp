@@ -1116,9 +1116,7 @@ DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp, const Pattern &aPattern)
     HRESULT hr = mDC->CreateBitmap(D2DIntSize(mSize), D2D1::BitmapProperties(D2DPixelFormat(mFormat)), byRef(tmpBitmap));
     if (FAILED(hr)) {
       gfxCriticalError(CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(mSize))) << "[D2D1.1] 5CreateBitmap failure " << mSize << " Code: " << hexa(hr) << " format " << (int)mFormat;
-      // For now, crash in this scenario; this should happen because tmpBitmap is
-      // null and CopyFromBitmap call below dereferences it.
-      // return;
+      return;
     }
 
     // This flush is important since the copy method will not know about the context drawing to the surface.
