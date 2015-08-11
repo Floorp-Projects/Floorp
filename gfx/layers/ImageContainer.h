@@ -288,8 +288,8 @@ public:
 
   explicit ImageContainer(ImageContainer::Mode flag = SYNCHRONOUS);
 
-  typedef int32_t FrameID;
-  typedef int32_t ProducerID;
+  typedef uint32_t FrameID;
+  typedef uint32_t ProducerID;
 
 
   /**
