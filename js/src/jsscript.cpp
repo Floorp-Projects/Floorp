@@ -2436,7 +2436,7 @@ JSScript::initCompartment(ExclusiveContext* cx)
     compartment_ = cx->compartment_;
 }
 
-JSScript*
+/* static */ JSScript*
 JSScript::Create(ExclusiveContext* cx, HandleObject enclosingScope, bool savedCallerFun,
                  const ReadOnlyCompileOptions& options, unsigned staticLevel,
                  HandleObject sourceObject, uint32_t bufStart, uint32_t bufEnd)
@@ -2623,6 +2623,45 @@ JSScript::fullyInitTrivial(ExclusiveContext* cx, Handle<JSScript*> script)
     return SaveSharedScriptData(cx, script, ssd, 1);
 }
 
+/* static */ void
+JSScript::linkToFunctionFromEmitter(js::ExclusiveContext* cx, JS::Handle<JSScript*> script,
+                                    js::frontend::FunctionBox* funbox)
+{
+    script->funHasExtensibleScope_ = funbox->hasExtensibleScope();
+    script->funNeedsDeclEnvObject_ = funbox->needsDeclEnvObject();
+    script->needsHomeObject_       = funbox->needsHomeObject();
+    script->isDerivedClassConstructor_ = funbox->isDerivedClassConstructor();
+
+    if (funbox->argumentsHasLocalBinding()) {
+        script->setArgumentsHasVarBinding();
+        if (funbox->definitelyNeedsArgsObj())
+            script->setNeedsArgsObj(true);
+    } else {
+        MOZ_ASSERT(!funbox->definitelyNeedsArgsObj());
+    }
+
+    script->funLength_ = funbox->length;
+
+    script->isGeneratorExp_ = funbox->inGenexpLambda;
+    script->setGeneratorKind(funbox->generatorKind());
+
+    // Link the function and the script to each other, so that StaticScopeIter
+    // may walk the scope chain of currently compiling scripts.
+    RootedFunction fun(cx, funbox->function());
+    MOZ_ASSERT(fun->isInterpreted());
+
+    script->setFunction(fun);
+
+    if (fun->isInterpretedLazy())
+        fun->setUnlazifiedScript(script);
+    else
+        fun->setScript(script);
+
+    // Switch the static scope over to the JSFunction now that we have a
+    // JSScript.
+    funbox->switchStaticScopeToFunction();
+}
+
 /* static */ bool
 JSScript::fullyInitFromEmitter(ExclusiveContext* cx, HandleScript script, BytecodeEmitter* bce)
 {
@@ -2665,7 +2704,30 @@ JSScript::fullyInitFromEmitter(ExclusiveContext* cx, HandleScript script, Byteco
     if (!SaveSharedScriptData(cx, script, ssd, nsrcnotes))
         return false;
 
+#ifdef DEBUG
     FunctionBox* funbox = bce->sc->isFunctionBox() ? bce->sc->asFunctionBox() : nullptr;
+
+    // Assert that the properties set by linkToFunctionFromEmitter are
+    // correct.
+    if (funbox) {
+        MOZ_ASSERT(script->funHasExtensibleScope_ == funbox->hasExtensibleScope());
+        MOZ_ASSERT(script->funNeedsDeclEnvObject_ == funbox->needsDeclEnvObject());
+        MOZ_ASSERT(script->needsHomeObject_ == funbox->needsHomeObject());
+        MOZ_ASSERT(script->isDerivedClassConstructor_ == funbox->isDerivedClassConstructor());
+        MOZ_ASSERT(script->argumentsHasVarBinding() == funbox->argumentsHasLocalBinding());
+        MOZ_ASSERT(script->functionNonDelazifying() == funbox->function());
+        MOZ_ASSERT(script->isGeneratorExp_ == funbox->inGenexpLambda);
+        MOZ_ASSERT(script->generatorKind() == funbox->generatorKind());
+    } else {
+        MOZ_ASSERT(!script->funHasExtensibleScope_);
+        MOZ_ASSERT(!script->funNeedsDeclEnvObject_);
+        MOZ_ASSERT(!script->needsHomeObject_);
+        MOZ_ASSERT(!script->isDerivedClassConstructor_);
+        MOZ_ASSERT(!script->argumentsHasVarBinding());
+        MOZ_ASSERT(!script->isGeneratorExp_);
+        MOZ_ASSERT(script->generatorKind() == NotGenerator);
+    }
+#endif
 
     if (bce->constList.length() != 0)
         bce->constList.finish(script->consts());
@@ -2680,37 +2742,10 @@ JSScript::fullyInitFromEmitter(ExclusiveContext* cx, HandleScript script, Byteco
     script->strict_ = bce->sc->strict();
     script->explicitUseStrict_ = bce->sc->hasExplicitUseStrict();
     script->bindingsAccessedDynamically_ = bce->sc->bindingsAccessedDynamically();
-    script->funHasExtensibleScope_ = funbox ? funbox->hasExtensibleScope() : false;
-    script->funNeedsDeclEnvObject_ = funbox ? funbox->needsDeclEnvObject() : false;
-    script->needsHomeObject_       = funbox ? funbox->needsHomeObject() : false;
-    script->isDerivedClassConstructor_ = funbox ? funbox->isDerivedClassConstructor() : false;
     script->hasSingletons_ = bce->hasSingletons;
 
-    if (funbox) {
-        if (funbox->argumentsHasLocalBinding()) {
-            // This must precede the script->bindings.transfer() call below
-            script->setArgumentsHasVarBinding();
-            if (funbox->definitelyNeedsArgsObj())
-                script->setNeedsArgsObj(true);
-        } else {
-            MOZ_ASSERT(!funbox->definitelyNeedsArgsObj());
-        }
-
-        script->funLength_ = funbox->length;
-    }
-
-    RootedFunction fun(cx, nullptr);
-    if (funbox) {
-        // The function should have already been earlier to enable
-        // StaticScopeIter to walk the static scope chain of
-        // currently compiling scripts.
-        MOZ_ASSERT(script->functionNonDelazifying() == funbox->function());
-        MOZ_ASSERT(!bce->script->noScriptRval());
-        script->isGeneratorExp_ = funbox->inGenexpLambda;
-        script->setGeneratorKind(funbox->generatorKind());
-        if (bce->yieldOffsetList.length() != 0)
-            bce->yieldOffsetList.finish(script->yieldOffsets(), prologueLength);
-    }
+    if (bce->yieldOffsetList.length() != 0)
+        bce->yieldOffsetList.finish(script->yieldOffsets(), prologueLength);
 
     // The call to nfixed() depends on the above setFunction() call.
     if (UINT32_MAX - script->nfixed() < bce->maxStackDepth) {
@@ -3828,9 +3863,9 @@ JSScript::formalIsAliased(unsigned argSlot)
 }
 
 bool
-JSScript::cookieIsAliased(const frontend::UpvarCookie& cookie)
+JSScript::localIsAliased(unsigned localSlot)
 {
-    return bindings.bindingIsAliased(bindings.numArgs() + cookie.slot());
+    return bindings.bindingIsAliased(bindings.numArgs() + localSlot);
 }
 
 bool

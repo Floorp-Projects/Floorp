@@ -2575,26 +2575,34 @@ js::HasNonSyntacticStaticScopeChain(JSObject* staticScope)
 void
 js::DumpStaticScopeChain(JSScript* script)
 {
-    JSObject* enclosingScope = script->enclosingStaticScope();
-    for (StaticScopeIter<NoGC> ssi(enclosingScope); !ssi.done(); ssi++) {
+    DumpStaticScopeChain(script->enclosingStaticScope());
+}
+
+void
+js::DumpStaticScopeChain(JSObject* staticScope)
+{
+    for (StaticScopeIter<NoGC> ssi(staticScope); !ssi.done(); ssi++) {
         switch (ssi.type()) {
           case StaticScopeIter<NoGC>::Function:
-            fprintf(stdout, "function");
+            if (ssi.maybeFunctionBox())
+                fprintf(stdout, "funbox [%p fun=%p]", ssi.maybeFunctionBox(), &ssi.fun());
+            else
+                fprintf(stdout, "function [%p]", &ssi.fun());
             break;
           case StaticScopeIter<NoGC>::Block:
-            fprintf(stdout, "block");
+            fprintf(stdout, "block [%p]", &ssi.block());
             break;
           case StaticScopeIter<NoGC>::With:
-            fprintf(stdout, "with");
+            fprintf(stdout, "with [%p]", &ssi.staticWith());
             break;
           case StaticScopeIter<NoGC>::NamedLambda:
             fprintf(stdout, "named lambda");
             break;
           case StaticScopeIter<NoGC>::Eval:
-            fprintf(stdout, "eval");
+            fprintf(stdout, "eval [%p]", &ssi.eval());
             break;
           case StaticScopeIter<NoGC>::NonSyntactic:
-            fprintf(stdout, "non-syntactic");
+            fprintf(stdout, "non-syntactic [%p]", &ssi.nonSyntactic());
             break;
         }
         fprintf(stdout, " -> ");
