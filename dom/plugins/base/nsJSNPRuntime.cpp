@@ -176,7 +176,8 @@ static bool
 NPObjWrapper_GetProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp);
 
 static bool
-NPObjWrapper_Enumerate(JSContext *cx, JS::Handle<JSObject*> obj, JS::AutoIdVector &properties);
+NPObjWrapper_Enumerate(JSContext *cx, JS::Handle<JSObject*> obj, JS::AutoIdVector &properties,
+                       bool enumerableOnly);
 
 static bool
 NPObjWrapper_Resolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
@@ -1615,7 +1616,7 @@ CallNPMethod(JSContext *cx, unsigned argc, JS::Value *vp)
 
 static bool
 NPObjWrapper_Enumerate(JSContext *cx, JS::Handle<JSObject*> obj,
-                       JS::AutoIdVector &properties)
+                       JS::AutoIdVector &properties, bool enumerableOnly)
 {
   NPObject *npobj = GetNPObject(cx, obj);
   if (!npobj || !npobj->_class) {

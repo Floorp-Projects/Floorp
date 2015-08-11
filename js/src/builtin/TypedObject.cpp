@@ -2059,7 +2059,8 @@ TypedObject::obj_deleteProperty(JSContext* cx, HandleObject obj, HandleId id, Ob
 }
 
 bool
-TypedObject::obj_enumerate(JSContext* cx, HandleObject obj, AutoIdVector& properties)
+TypedObject::obj_enumerate(JSContext* cx, HandleObject obj, AutoIdVector& properties,
+                           bool enumerableOnly)
 {
     MOZ_ASSERT(obj->is<TypedObject>());
     Rooted<TypedObject*> typedObj(cx, &obj->as<TypedObject>());
