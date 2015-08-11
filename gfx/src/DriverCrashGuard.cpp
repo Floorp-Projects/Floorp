@@ -24,6 +24,7 @@ namespace gfx {
 static const size_t NUM_CRASH_GUARD_TYPES = size_t(CrashGuardType::NUM_TYPES);
 static const char* sCrashGuardNames[NUM_CRASH_GUARD_TYPES] = {
   "d3d11layers",
+  "d3d9video",
 };
 
 DriverCrashGuard::DriverCrashGuard(CrashGuardType aType, dom::ContentParent* aContentParent)
@@ -420,6 +421,30 @@ D3D11LayersCrashGuard::RecordTelemetry(TelemetryState aState)
 
   Telemetry::Accumulate(Telemetry::GRAPHICS_DRIVER_STARTUP_TEST, int32_t(aState));
   sTelemetryStateRecorded = true;
+}
+
+D3D9VideoCrashGuard::D3D9VideoCrashGuard(dom::ContentParent* aContentParent)
+ : DriverCrashGuard(CrashGuardType::D3D9Video, aContentParent)
+{
+}
+
+bool
+D3D9VideoCrashGuard::UpdateEnvironment()
+{
+  // We don't care about any extra preferences here.
+  return false;
+}
+
+void
+D3D9VideoCrashGuard::LogCrashRecovery()
+{
+  gfxCriticalError(CriticalLog::DefaultOptions(false)) << "DXVA2D3D9 just crashed; hardware video will be disabled.";
+}
+
+void
+D3D9VideoCrashGuard::LogFeatureDisabled()
+{
+  gfxCriticalError(CriticalLog::DefaultOptions(false)) << "DXVA2D3D9 video decoding is disabled due to a previous crash.";
 }
 
 } // namespace gfx
