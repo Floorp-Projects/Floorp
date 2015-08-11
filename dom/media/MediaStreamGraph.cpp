@@ -3100,10 +3100,7 @@ SourceMediaStream*
 MediaStreamGraph::CreateSourceStream(DOMMediaStream* aWrapper)
 {
   SourceMediaStream* stream = new SourceMediaStream(aWrapper);
-  NS_ADDREF(stream);
-  MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(this);
-  stream->SetGraphImpl(graph);
-  graph->AppendMessage(new CreateMessage(stream));
+  AddStream(stream);
   return stream;
 }
 
@@ -3111,10 +3108,7 @@ ProcessedMediaStream*
 MediaStreamGraph::CreateTrackUnionStream(DOMMediaStream* aWrapper)
 {
   TrackUnionStream* stream = new TrackUnionStream(aWrapper);
-  NS_ADDREF(stream);
-  MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(this);
-  stream->SetGraphImpl(graph);
-  graph->AppendMessage(new CreateMessage(stream));
+  AddStream(stream);
   return stream;
 }
 
@@ -3122,10 +3116,7 @@ ProcessedMediaStream*
 MediaStreamGraph::CreateAudioCaptureStream(DOMMediaStream* aWrapper)
 {
   AudioCaptureStream* stream = new AudioCaptureStream(aWrapper);
-  NS_ADDREF(stream);
-  MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(this);
-  stream->SetGraphImpl(graph);
-  graph->AppendMessage(new CreateMessage(stream));
+  AddStream(stream);
   return stream;
 }
 
@@ -3137,10 +3128,7 @@ MediaStreamGraph::CreateAudioNodeExternalInputStream(AudioNodeEngine* aEngine)
 
   AudioNodeExternalInputStream* stream = new AudioNodeExternalInputStream(
     aEngine, GraphRate(), aEngine->NodeMainThread()->Context()->Id());
-  NS_ADDREF(stream);
-  MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(this);
-  stream->SetGraphImpl(graph);
-  graph->AppendMessage(new CreateMessage(stream));
+  AddStream(stream);
   return stream;
 }
 
@@ -3158,16 +3146,22 @@ MediaStreamGraph::CreateAudioNodeStream(AudioNodeEngine* aEngine,
                                                                 NO_AUDIO_CONTEXT;
   AudioNodeStream* stream = new AudioNodeStream(aEngine, aKind, GraphRate(),
                                                 contextIdForStream);
-  NS_ADDREF(stream);
-  MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(this);
-  stream->SetGraphImpl(graph);
   if (aEngine->HasNode()) {
     stream->SetChannelMixingParametersImpl(aEngine->NodeMainThread()->ChannelCount(),
                                            aEngine->NodeMainThread()->ChannelCountModeValue(),
                                            aEngine->NodeMainThread()->ChannelInterpretationValue());
   }
-  graph->AppendMessage(new CreateMessage(stream));
+  AddStream(stream);
   return stream;
+}
+
+void
+MediaStreamGraph::AddStream(MediaStream* aStream)
+{
+  NS_ADDREF(aStream);
+  MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(this);
+  aStream->SetGraphImpl(graph);
+  graph->AppendMessage(new CreateMessage(aStream));
 }
 
 class GraphStartedRunnable final : public nsRunnable
