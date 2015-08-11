@@ -43,15 +43,27 @@ public:
 
   typedef nsAutoTArray<AudioChunk, 1> OutputChunks;
 
+  // Internal AudioNodeStreams can only pass their output to another
+  // AudioNode, whereas external AudioNodeStreams can pass their output
+  // to an nsAudioStream for playback.
+  enum AudioNodeStreamKind { SOURCE_STREAM, INTERNAL_STREAM, EXTERNAL_STREAM };
+  /**
+   * Create a stream that will process audio for an AudioNode.
+   * Takes ownership of aEngine.
+   */
+  static already_AddRefed<AudioNodeStream>
+  Create(MediaStreamGraph* aGraph, AudioNodeEngine* aEngine,
+         AudioNodeStreamKind aKind);
+
+protected:
   /**
    * Transfers ownership of aEngine to the new AudioNodeStream.
    */
   AudioNodeStream(AudioNodeEngine* aEngine,
-                  MediaStreamGraph::AudioNodeStreamKind aKind,
+                  AudioNodeStreamKind aKind,
                   TrackRate aSampleRate,
                   AudioContext::AudioContextId aContextId);
 
-protected:
   ~AudioNodeStream();
 
 public:
@@ -112,8 +124,8 @@ public:
   virtual bool MainThreadNeedsUpdates() const override
   {
     // Only source and external streams need updates on the main thread.
-    return (mKind == MediaStreamGraph::SOURCE_STREAM && mFinished) ||
-           mKind == MediaStreamGraph::EXTERNAL_STREAM;
+    return (mKind == SOURCE_STREAM && mFinished) ||
+           mKind == EXTERNAL_STREAM;
   }
   virtual bool IsIntrinsicallyConsumed() const override
   {
@@ -174,7 +186,7 @@ protected:
   // AudioContext. It is set on the main thread, in the constructor.
   const AudioContext::AudioContextId mAudioContextId;
   // Whether this is an internal or external stream
-  const MediaStreamGraph::AudioNodeStreamKind mKind;
+  const AudioNodeStreamKind mKind;
   // The number of input channels that this stream requires. 0 means don't care.
   uint32_t mNumberOfInputChannels;
   // The mixing modes

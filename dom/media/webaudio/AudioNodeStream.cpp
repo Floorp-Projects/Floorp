@@ -26,7 +26,7 @@ namespace mozilla {
  */
 
 AudioNodeStream::AudioNodeStream(AudioNodeEngine* aEngine,
-                                 MediaStreamGraph::AudioNodeStreamKind aKind,
+                                 AudioNodeStreamKind aKind,
                                  TrackRate aSampleRate,
                                  AudioContext::AudioContextId aContextId)
   : ProcessedMediaStream(nullptr),
@@ -51,6 +51,30 @@ AudioNodeStream::AudioNodeStream(AudioNodeEngine* aEngine,
 AudioNodeStream::~AudioNodeStream()
 {
   MOZ_COUNT_DTOR(AudioNodeStream);
+}
+
+/* static */ already_AddRefed<AudioNodeStream>
+AudioNodeStream::Create(MediaStreamGraph* aGraph, AudioNodeEngine* aEngine,
+                        AudioNodeStreamKind aKind)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // MediaRecorders use an AudioNodeStream, but no AudioNode
+  AudioNode* node = aEngine->NodeMainThread();
+  MOZ_ASSERT(!node || aGraph->GraphRate() == node->Context()->SampleRate());
+
+  dom::AudioContext::AudioContextId contextIdForStream = node ? node->Context()->Id() :
+                                                                NO_AUDIO_CONTEXT;
+  nsRefPtr<AudioNodeStream> stream =
+    new AudioNodeStream(aEngine, aKind, aGraph->GraphRate(),
+                        contextIdForStream);
+  if (aEngine->HasNode()) {
+    stream->SetChannelMixingParametersImpl(aEngine->NodeMainThread()->ChannelCount(),
+                                           aEngine->NodeMainThread()->ChannelCountModeValue(),
+                                           aEngine->NodeMainThread()->ChannelInterpretationValue());
+  }
+  aGraph->AddStream(stream);
+  return stream.forget();
 }
 
 size_t
@@ -571,7 +595,7 @@ AudioNodeStream::AdvanceOutputSegment()
   StreamBuffer::Track* track = EnsureTrack(AUDIO_TRACK);
   AudioSegment* segment = track->Get<AudioSegment>();
 
-  if (mKind == MediaStreamGraph::EXTERNAL_STREAM) {
+  if (mKind == EXTERNAL_STREAM) {
     segment->AppendAndConsumeChunk(&mLastChunks[0]);
   } else {
     segment->AppendNullData(mLastChunks[0].GetDuration());
