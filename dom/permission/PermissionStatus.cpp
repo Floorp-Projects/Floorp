@@ -6,7 +6,6 @@
 
 #include "mozilla/dom/PermissionStatus.h"
 
-#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Services.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIPermissionManager.h"
@@ -112,18 +111,6 @@ PermissionStatus::GetPrincipal() const
   }
 
   return doc->NodePrincipal();
-}
-
-void
-PermissionStatus::PermissionChanged()
-{
-  auto oldState = mState;
-  UpdateState();
-  if (mState != oldState) {
-    nsRefPtr<AsyncEventDispatcher> eventDispatcher =
-      new AsyncEventDispatcher(this, NS_LITERAL_STRING("change"), false);
-    eventDispatcher->PostDOMEvent();
-  }
 }
 
 } // namespace dom
