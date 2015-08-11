@@ -1544,6 +1544,11 @@ public:
   elem_type* AppendElements(nsTArray_Impl<Item, Allocator>&& aArray)
   {
     MOZ_ASSERT(&aArray != this, "argument must be different aArray");
+    if (Length() == 0) {
+      SwapElements(aArray);
+      return Elements();
+    }
+
     index_type len = Length();
     index_type otherLen = aArray.Length();
     if (!Alloc::Successful(this->template EnsureCapacity<Alloc>(
