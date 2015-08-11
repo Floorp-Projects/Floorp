@@ -110,7 +110,7 @@ public:
 
   void TakeFrom(nsInvalidateRequestList* aList)
   {
-    mRequests.MoveElementsFrom(aList->mRequests);
+    mRequests.MoveElementsFrom(mozilla::Move(aList->mRequests));
   }
   bool IsEmpty() { return mRequests.IsEmpty(); }
 

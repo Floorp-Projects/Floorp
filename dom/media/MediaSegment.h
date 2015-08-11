@@ -325,7 +325,7 @@ protected:
       mChunks[mChunks.Length() - 1].mDuration += aSource->mChunks[0].mDuration;
       aSource->mChunks.RemoveElementAt(0);
     }
-    mChunks.MoveElementsFrom(aSource->mChunks);
+    mChunks.MoveElementsFrom(Move(aSource->mChunks));
   }
 
   void AppendSliceInternal(const MediaSegmentBase<C, Chunk>& aSource,
