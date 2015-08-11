@@ -1610,7 +1610,7 @@ public:
   // calling copy constructors or destructors.
   // @return A pointer to the newly appended elements, or null on OOM.
   template<class Item, class Allocator>
-  elem_type* MoveElementsFrom(nsTArray_Impl<Item, Allocator>& aArray)
+  elem_type* MoveElementsFrom(nsTArray_Impl<Item, Allocator>&& aArray)
   {
     MOZ_ASSERT(&aArray != this, "argument must be different aArray");
     index_type len = Length();
@@ -1625,11 +1625,6 @@ public:
     aArray.template ShiftData<Alloc>(0, otherLen, 0, sizeof(elem_type),
                                      MOZ_ALIGNOF(elem_type));
     return Elements() + len;
-  }
-  template<class Item, class Allocator>
-  elem_type* MoveElementsFrom(nsTArray_Impl<Item, Allocator>&& aArray)
-  {
-    return MoveElementsFrom<Item, Allocator>(aArray);
   }
 
   // This method removes a range of elements from this array.
