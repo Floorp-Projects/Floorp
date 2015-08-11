@@ -32,6 +32,7 @@
 ******************************************************************************/
 /* AG feature masks */
 #define BTIF_HF_FEATURES   ( BTA_AG_FEAT_3WAY | \
+                             BTA_AG_FEAT_ECNR | \
                              BTA_AG_FEAT_REJECT | \
                              BTA_AG_FEAT_ECS    | \
                              BTA_AG_FEAT_EXTERR)
