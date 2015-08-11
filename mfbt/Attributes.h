@@ -532,6 +532,22 @@
 #  define MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS /* nothing */
 #endif /* MOZ_CLANG_PLUGIN */
 
+/*
+ * MOZ_HAVE_REF_QUALIFIERS is defined for compilers that support C++11's rvalue
+ * qualifier, "&&".
+ */
+#if defined(_MSC_VER) && _MSC_VER >= 1900
+#  define MOZ_HAVE_REF_QUALIFIERS
+#elif defined(__clang__)
+// All supported Clang versions
+#  define MOZ_HAVE_REF_QUALIFIERS
+#elif defined(__GNUC__)
+#  include "mozilla/Compiler.h"
+#  if MOZ_GCC_VERSION_AT_LEAST(4, 8, 1)
+#    define MOZ_HAVE_REF_QUALIFIERS
+#  endif
+#endif
+
 #endif /* __cplusplus */
 
 #endif /* mozilla_Attributes_h */
