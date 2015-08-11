@@ -8671,5 +8671,203 @@
     "expires_in_version": "44",
     "kind": "boolean",
     "description": "Was there an error while performing the v7 permissions DB migration?"
+  },
+  "LOOP_ICE_FINAL_CONNECTION_STATE": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 7,
+    "description": "The ICE connection state when the PC was closed"
+  },
+  "LOOP_ICE_SUCCESS_TIME": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "20",
+    "description": "The length of time (in milliseconds) it took for ICE to complete, given that ICE succeeded."
+  },
+  "LOOP_ICE_FAILURE_TIME": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "20",
+    "description": "The length of time (in milliseconds) it took for ICE to complete, given that it failed."
+  },
+  "LOOP_ICE_SUCCESS_RATE": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "The number of failed ICE Connections (0) vs. number of successful ICE connections (1)."
+  },
+  "LOOP_CANDIDATE_TYPES_GIVEN_SUCCESS": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 128,
+    "description": "A bitpattern indicating what types of candidates were present. Bit 0: Remote server reflexive. Bit 1: Remote relayed. Bit 2: Local server reflexive. Bits 3-6: Local UDP, TCP, TLS, and HTTPS relay respectively."
+  },
+  "LOOP_CANDIDATE_TYPES_GIVEN_FAILURE": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 128,
+    "description": "Identical to LOOP_CANDIDATE_TYPES_GIVEN_SUCCEESS, except recorded only when ICE fails on the stream in question."
+  },
+  "LOOP_VIDEO_QUALITY_INBOUND_BANDWIDTH_KBITS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000000,
+    "n_buckets": 1000,
+    "description": "Locally measured data rate of inbound video (kbit/s). Computed every second of a call."
+  },
+  "LOOP_AUDIO_QUALITY_INBOUND_BANDWIDTH_KBITS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000000,
+    "n_buckets": 1000,
+    "description": "Locally measured data rate on inbound audio (kbit/s). Computed every second of a call."
+  },
+  "LOOP_VIDEO_QUALITY_OUTBOUND_BANDWIDTH_KBITS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000000,
+    "n_buckets": 1000,
+    "description": "Data rate deduced from RTCP from remote recipient of outbound video (kbit/s). Computed every second of a call (for easy comparison)."
+  },
+  "LOOP_AUDIO_QUALITY_OUTBOUND_BANDWIDTH_KBITS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000000,
+    "n_buckets": 1000,
+    "description": "Data rate deduced from RTCP from remote recipient of outbound audio (kbit/s). Computed every second of a call (for easy comparison)."
+  },
+  "LOOP_VIDEO_ERROR_RECOVERY_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 500,
+    "description": "Time to recover from a video error in ms"
+  },
+  "LOOP_VIDEO_RECOVERY_BEFORE_ERROR_PER_MIN": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 200,
+    "description": "Number of losses recovered before error per min"
+  },
+  "LOOP_VIDEO_RECOVERY_AFTER_ERROR_PER_MIN": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 200,
+    "description": "Number of losses recovered after error per min"
+  },
+  "LOOP_VIDEO_DECODE_ERROR_TIME_PERMILLE": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 100,
+    "description": "Percentage*10 (permille) of call decoding with errors or frozen due to errors"
+  },
+  "LOOP_VIDEO_QUALITY_OUTBOUND_RTT": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 1000,
+    "description": "Roundtrip time of outbound video (ms). Sampled every second of a call."
+  },
+  "LOOP_AUDIO_QUALITY_OUTBOUND_RTT": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 1000,
+    "description": "Roundtrip time of outbound audio (ms). Sampled every second of a call."
+  },
+  "LOOP_VIDEO_ENCODER_BITRATE_AVG_PER_CALL_KBPS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 100,
+    "description": "Video encoder's average bitrate (in kbits/s) over an entire call"
+  },
+  "LOOP_VIDEO_ENCODER_BITRATE_STD_DEV_PER_CALL_KBPS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 100,
+    "description": "Standard deviation from video encoder's average bitrate (in kbits/s) over an entire call"
+  },
+  "LOOP_VIDEO_ENCODER_FRAMERATE_AVG_PER_CALL": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 200,
+    "n_buckets": 50,
+    "description": "Video encoder's average framerate (in fps) over an entire call"
+  },
+  "LOOP_VIDEO_ENCODER_FRAMERATE_10X_STD_DEV_PER_CALL": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 200,
+    "n_buckets": 50,
+    "description": "Standard deviation from video encoder's average framerate (in 1/10 fps) over an entire call"
+  },
+  "LOOP_VIDEO_ENCODER_DROPPED_FRAMES_PER_CALL_FPM": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "description": "Video encoder's number of frames dropped (in frames/min) over an entire call"
+  },
+  "LOOP_VIDEO_DECODER_BITRATE_AVG_PER_CALL_KBPS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 100,
+    "description": "Video decoder's average bitrate (in kbits/s) over an entire call"
+  },
+  "LOOP_VIDEO_DECODER_BITRATE_STD_DEV_PER_CALL_KBPS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 100,
+    "description": "Standard deviation from video decoder's average bitrate (in kbits/s) over an entire call"
+  },
+  "LOOP_VIDEO_DECODER_FRAMERATE_AVG_PER_CALL": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "200",
+    "n_buckets": "50",
+    "description": "Video decoder's average framerate (in fps) over an entire call"
+  },
+  "LOOP_VIDEO_DECODER_FRAMERATE_10X_STD_DEV_PER_CALL": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "200",
+    "n_buckets": "50",
+    "description": "Standard deviation from video decoder's average framerate (in 1/10 fps) over an entire call"
+  },
+  "LOOP_VIDEO_DECODER_DISCARDED_PACKETS_PER_CALL_PPM": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "description": "Video decoder's number of discarded packets (in packets/min) over an entire call"
+  },
+  "LOOP_CALL_DURATION": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The length of time (in seconds) that a call lasted."
+  },
+  "LOOP_ICE_ADD_CANDIDATE_ERRORS_GIVEN_SUCCESS": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "30",
+    "n_buckets": "29",
+    "description": "The number of times AddIceCandidate failed on a given PeerConnection, given that ICE succeeded."
+  },
+  "LOOP_ICE_ADD_CANDIDATE_ERRORS_GIVEN_FAILURE": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "30",
+    "n_buckets": "29",
+    "description": "The number of times AddIceCandidate failed on a given PeerConnection, given that ICE failed."
   }
 }
