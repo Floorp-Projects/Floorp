@@ -813,18 +813,25 @@ loop.shared.views = (function(_, mozL10n) {
           "shared/img/icons-16x16.svg#globe";
       }
 
+      var wrapperClasses = React.addons.classSet({
+        "context-wrapper": true,
+        "clicks-allowed": this.props.allowClick
+      });
+
       return (
         React.createElement("div", {className: "context-content"}, 
           this.renderContextTitle(), 
-          React.createElement("div", {className: "context-wrapper"}, 
+          React.createElement("a", {className: wrapperClasses, 
+             href: this.props.allowClick ? this.props.url : null, 
+             onClick: this.handleLinkClick, 
+             rel: "noreferrer", 
+             target: "_blank"}, 
             React.createElement("img", {className: "context-preview", src: thumbnail}), 
-            React.createElement("span", {className: "context-description"}, 
+            React.createElement("span", {className: "context-info"}, 
               this.props.description, 
-              React.createElement("a", {className: "context-url", 
-                 href: this.props.allowClick ? this.props.url : null, 
-                 onClick: this.handleLinkClick, 
-                 rel: "noreferrer", 
-                 target: "_blank"}, hostname)
+              React.createElement("span", {className: "context-url"}, 
+                hostname
+              )
             )
           )
         )

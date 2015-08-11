@@ -813,20 +813,27 @@ loop.shared.views = (function(_, mozL10n) {
           "shared/img/icons-16x16.svg#globe";
       }
 
+      var wrapperClasses = React.addons.classSet({
+        "context-wrapper": true,
+        "clicks-allowed": this.props.allowClick
+      });
+
       return (
         <div className="context-content">
           {this.renderContextTitle()}
-          <div className="context-wrapper">
+          <a className={wrapperClasses}
+             href={this.props.allowClick ? this.props.url : null}
+             onClick={this.handleLinkClick}
+             rel="noreferrer"
+             target="_blank">
             <img className="context-preview" src={thumbnail} />
-            <span className="context-description">
+            <span className="context-info">
               {this.props.description}
-              <a className="context-url"
-                 href={this.props.allowClick ? this.props.url : null}
-                 onClick={this.handleLinkClick}
-                 rel="noreferrer"
-                 target="_blank">{hostname}</a>
+              <span className="context-url">
+                {hostname}
+              </span>
             </span>
-          </div>
+          </a>
         </div>
       );
     }
