@@ -1235,7 +1235,7 @@ enum ccType
 // Top level structure for the cycle collector.
 ////////////////////////////////////////////////////////////////////////
 
-typedef js::SliceBudget SliceBudget;
+using js::SliceBudget;
 
 class JSPurpleBuffer;
 
@@ -3542,7 +3542,7 @@ nsCycleCollector::ShutdownCollect()
 {
   FinishAnyIncrementalGCInProgress();
 
-  SliceBudget unlimitedBudget;
+  SliceBudget unlimitedBudget = SliceBudget::unlimited();
   uint32_t i;
   for (i = 0; i < DEFAULT_SHUTDOWN_COLLECTIONS; ++i) {
     if (!Collect(ShutdownCC, unlimitedBudget, nullptr)) {
@@ -3687,7 +3687,7 @@ nsCycleCollector::FinishAnyCurrentCollection()
     return;
   }
 
-  SliceBudget unlimitedBudget;
+  SliceBudget unlimitedBudget = SliceBudget::unlimited();
   PrintPhase("FinishAnyCurrentCollection");
   // Use SliceCC because we only want to finish the CC in progress.
   Collect(SliceCC, unlimitedBudget, nullptr);
@@ -4102,7 +4102,7 @@ nsCycleCollector_collect(nsICycleCollectorListener* aManualListener)
   PROFILER_LABEL("nsCycleCollector", "collect",
                  js::ProfileEntry::Category::CC);
 
-  SliceBudget unlimitedBudget;
+  SliceBudget unlimitedBudget = SliceBudget::unlimited();
   data->mCollector->Collect(ManualCC, unlimitedBudget, aManualListener);
 }
 
