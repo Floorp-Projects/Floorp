@@ -3,6 +3,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 const Cu = Components.utils;
 const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const {parseSingleValue} = require("devtools/styleinspector/css-parsing-utils");
@@ -16,10 +18,16 @@ const TEST_DATA = [
   {input: "blue !important", expected: {value: "blue", priority: "important"}},
   {input: "blue!important", expected: {value: "blue", priority: "important"}},
   {input: "blue ! important", expected: {value: "blue", priority: "important"}},
-  {input: "blue !  important", expected: {value: "blue", priority: "important"}},
+  {
+    input: "blue !  important",
+    expected: {value: "blue", priority: "important"}
+  },
   {input: "blue !", expected: {value: "blue", priority: ""}},
   {input: "blue !mportant", expected: {value: "blue !mportant", priority: ""}},
-  {input: "  blue   !important ", expected: {value: "blue", priority: "important"}},
+  {
+    input: "  blue   !important ",
+    expected: {value: "blue", priority: "important"}
+  },
   {
     input: "url(\"http://url.com/whyWouldYouDoThat!important.png\") !important",
     expected: {
@@ -64,7 +72,8 @@ function run_test() {
       let output = parseSingleValue(test.input);
       assertOutput(output, test.expected);
     } catch (e) {
-      do_print("parseSingleValue threw an exception with the given input value");
+      do_print("parseSingleValue threw an exception with the given input " +
+        "value");
       if (test.throws) {
         do_print("Exception expected");
         do_check_true(true);

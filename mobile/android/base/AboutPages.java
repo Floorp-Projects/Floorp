@@ -5,9 +5,9 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.home.HomeConfig;
 import org.mozilla.gecko.home.HomeConfig.PanelType;
-import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.util.StringUtils;
 
 public class AboutPages {

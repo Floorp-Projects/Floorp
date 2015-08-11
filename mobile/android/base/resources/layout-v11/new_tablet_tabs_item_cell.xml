@@ -57,6 +57,7 @@
 
     </LinearLayout>
 
+    <!-- We set state_private on this View dynamically in TabsGridLayout. -->
     <org.mozilla.gecko.widget.TabThumbnailWrapper
             android:id="@+id/wrapper"
             android:layout_width="wrap_content"

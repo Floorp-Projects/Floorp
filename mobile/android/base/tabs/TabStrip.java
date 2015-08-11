@@ -19,6 +19,7 @@ import org.mozilla.gecko.BrowserApp.Refreshable;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.util.ColorUtils;
 import org.mozilla.gecko.widget.ThemedImageButton;
 import org.mozilla.gecko.widget.ThemedLinearLayout;
 
@@ -152,7 +153,7 @@ public class TabStrip extends ThemedLinearLayout
 
     @Override
     public void onLightweightThemeReset() {
-        final int defaultBackgroundColor = getResources().getColor(R.color.text_and_tabs_tray_grey);
+        final int defaultBackgroundColor = ColorUtils.getColor(getContext(), R.color.text_and_tabs_tray_grey);
         setBackgroundColor(defaultBackgroundColor);
     }
 }

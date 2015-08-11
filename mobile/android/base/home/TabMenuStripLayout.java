@@ -6,6 +6,7 @@
 package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.util.ColorUtils;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -79,7 +80,7 @@ class TabMenuStripLayout extends LinearLayout
         }
 
         selectedView = (TextView) getChildAt(position);
-        selectedView.setTextColor(getResources().getColor(R.color.placeholder_grey));
+        selectedView.setTextColor(ColorUtils.getColor(getContext(), R.color.placeholder_grey));
 
         // Callback to measure and draw the strip after the view is visible.
         ViewTreeObserver vto = selectedView.getViewTreeObserver();

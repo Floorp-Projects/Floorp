@@ -13,7 +13,7 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 
 import org.json.JSONArray;
-import org.mozilla.gecko.mozglue.RobocopTarget;
+import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.util.HardwareUtils;
 
 import android.content.Context;

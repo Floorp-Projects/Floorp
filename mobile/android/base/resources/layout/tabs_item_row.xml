@@ -14,7 +14,8 @@
                                            android:paddingBottom="6dip"
                                            android:background="@drawable/tab_row">
 
-    <org.mozilla.gecko.widget.TabThumbnailWrapper 
+    <!-- We set state_private on this View dynamically in TabsListLayout. -->
+    <org.mozilla.gecko.widget.TabThumbnailWrapper
                   android:id="@+id/wrapper"
 	          android:layout_width="wrap_content"
                   android:layout_height="wrap_content"

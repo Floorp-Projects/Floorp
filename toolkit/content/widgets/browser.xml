@@ -871,7 +871,10 @@
       </destructor>
 
       <!-- This is necessary because the destructor doesn't always get called when
-           we are removed from a tabbrowser. This will be explicitly called by tabbrowser -->
+           we are removed from a tabbrowser. This will be explicitly called by tabbrowser.
+
+           Note: this function is overriden in remote-browser.xml, so any clean-up that
+           also applies to browser.isRemoteBrowser = true must be duplicated there. -->
       <method name="destroy">
         <body>
           <![CDATA[
@@ -969,23 +972,18 @@
         <parameter name="aState"/>
         <body>
           <![CDATA[
-            if (aTopic != "browser:purge-session-history" || !this.sessionHistory)
+            if (aTopic != "browser:purge-session-history")
               return;
 
-            // place the entry at current index at the end of the history list, so it won't get removed
-            if (this.sessionHistory.index < this.sessionHistory.count - 1) {
-              var indexEntry = this.sessionHistory.getEntryAtIndex(this.sessionHistory.index, false);
-              this.sessionHistory.QueryInterface(Components.interfaces.nsISHistoryInternal);
-              indexEntry.QueryInterface(Components.interfaces.nsISHEntry);
-              this.sessionHistory.addEntry(indexEntry, true);
-            }
+            this.purgeSessionHistory();
+          ]]>
+        </body>
+      </method>
 
-            var purge = this.sessionHistory.count;
-            if (this.currentURI != "about:blank")
-              --purge; // Don't remove the page the user's staring at from shistory
-
-            if (purge > 0)
-              this.sessionHistory.PurgeHistory(purge);
+      <method name="purgeSessionHistory">
+        <body>
+          <![CDATA[
+            this.messageManager.sendAsyncMessage("Browser:PurgeSessionHistory");
           ]]>
         </body>
       </method>

@@ -5,7 +5,7 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.mozglue.RobocopTarget;
+import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.TelemetryContract.Event;
 import org.mozilla.gecko.TelemetryContract.Method;
 import org.mozilla.gecko.TelemetryContract.Reason;

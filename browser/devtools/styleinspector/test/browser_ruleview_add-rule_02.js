@@ -5,33 +5,25 @@
 "use strict";
 
 // Tests the behaviour of adding a new rule to the rule view and editing
-// its selector
+// its selector.
 
-let PAGE_CONTENT = [
-  '<style type="text/css">',
-  '  #testid {',
-  '    text-align: center;',
-  '  }',
-  '</style>',
-  '<div id="testid">Styled Node</div>',
-  '<span>This is a span</span>'
-].join("\n");
+const TEST_URI = `
+  <style type="text/css">
+    #testid {
+      text-align: center;
+    }
+  </style>
+  <div id="testid">Styled Node</div>
+  <span>This is a span</span>
+`;
 
 add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(PAGE_CONTENT));
-
-  info("Opening the rule-view");
-  let {toolbox, inspector, view} = yield openRuleView();
-
-  info("Selecting the test element");
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
 
-  info("Waiting for rule view to update");
   let onRuleViewChanged = once(view, "ruleview-changed");
-
-  info("Adding the new rule");
   view.addRuleButton.click();
-
   yield onRuleViewChanged;
 
   yield testEditSelector(view, "span");

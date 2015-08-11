@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.io.FilenameFilter;
 import java.util.Scanner;
 
-import org.mozilla.gecko.mozglue.RobocopTarget;
+import org.mozilla.gecko.annotation.RobocopTarget;
 
 public class FileUtils {
     private static final String LOGTAG= "GeckoFileUtils";
