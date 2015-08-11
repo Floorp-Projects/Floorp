@@ -9,6 +9,8 @@ const TEST_URI = "data:text/html;charset=utf-8,Web Console HPKP invalid " +
                  "header test";
 const SJS_URL = "https://example.com/browser/browser/devtools/webconsole/" +
                 "test/test_hpkp-invalid-headers.sjs";
+const LEARN_MORE_URI = "https://developer.mozilla.org/docs/Web/Security/" +
+                       "Public_Key_Pinning";
 const NON_BUILTIN_ROOT_PREF = "security.cert_pinning.process_headers_from_" +
                               "non_builtin_roots";
 
@@ -86,7 +88,7 @@ function* checkForMessage(curTest, hud) {
 
   content.location = curTest.url;
 
-  yield waitForMessages({
+  let results = yield waitForMessages({
     webconsole: hud,
     messages: [
       {
@@ -94,7 +96,17 @@ function* checkForMessage(curTest, hud) {
         text: curTest.text,
         category: CATEGORY_SECURITY,
         severity: SEVERITY_WARNING,
+        objects: true,
       },
     ],
   });
+
+  yield testClickOpenNewTab(hud, results);
+}
+
+function testClickOpenNewTab(hud, results) {
+  let warningNode = results[0].clickableElements[0];
+  ok(warningNode, "link element");
+  ok(warningNode.classList.contains("learn-more-link"), "link class name");
+  return simulateMessageLinkClick(warningNode, LEARN_MORE_URI);
 }
