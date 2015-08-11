@@ -41,6 +41,7 @@ const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 const PREF_SESSIONS_BRANCH = "datareporting.sessions.";
 const PREF_UNIFIED = PREF_BRANCH + "unified";
 const PREF_UNIFIED_OPTIN = PREF_BRANCH + "unifiedIsOptIn";
+const PREF_OPTOUT_SAMPLE = PREF_BRANCH + "optoutSample";
 
 // Whether the FHR/Telemetry unification features are enabled.
 // Changing this pref requires a restart.
@@ -90,6 +91,29 @@ XPCOMUtils.defineLazyModuleGetter(this, "TelemetrySend",
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryReportingPolicy",
                                   "resource://gre/modules/TelemetryReportingPolicy.jsm");
 
+XPCOMUtils.defineLazyGetter(this, "gCrcTable", function() {
+  let c;
+  let table = [];
+  for (let n = 0; n < 256; n++) {
+      c = n;
+      for (let k =0; k < 8; k++) {
+          c = ((c&1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
+      }
+      table[n] = c;
+  }
+  return table;
+});
+
+function crc32(str) {
+    let crc = 0 ^ (-1);
+
+    for (let i = 0; i < str.length; i++ ) {
+        crc = (crc >>> 8) ^ gCrcTable[(crc ^ str.charCodeAt(i)) & 0xFF];
+    }
+
+    return (crc ^ (-1)) >>> 0;
+}
+
 /**
  * Setup Telemetry logging. This function also gets called when loggin related
  * preferences change.
@@ -129,6 +153,8 @@ function configureLogging() {
 let Policy = {
   now: () => new Date(),
   generatePingId: () => Utils.generateUUID(),
+  getCachedClientID: () => ClientID.getCachedClientID(),
+  isUnifiedOptin: () => IS_UNIFIED_OPTIN,
 }
 
 this.EXPORTED_SYMBOLS = ["TelemetryController"];
@@ -302,6 +328,15 @@ this.TelemetryController = Object.freeze({
    */
   get clientID() {
     return Impl.clientID;
+  },
+
+  /**
+   * Whether this client is part of a sample that gets opt-out Telemetry.
+   *
+   * @return {Boolean} Whether the client is part of the opt-out sample.
+   */
+  get isInOptoutSample() {
+    return Impl.isInOptoutSample;
   },
 
   /**
@@ -588,6 +623,34 @@ let Impl = {
   },
 
   /**
+   *
+   */
+  _isInOptoutSample: function() {
+    if (!Preferences.get(PREF_OPTOUT_SAMPLE, false)) {
+      this._log.config("_sampleForOptoutTelemetry - optout sampling is disabled");
+      return false;
+    }
+
+    const clientId = Policy.getCachedClientID();
+    if (!clientId) {
+      this._log.config("_sampleForOptoutTelemetry - no cached client id available")
+      return false;
+    }
+
+    // This mimics the server-side 1% sampling, so that we can get matching populations.
+    // The server samples on ((crc32(clientId) % 100) == 42), we match 42+X here to get
+    // a bigger sample.
+    const sample = crc32(clientId) % 100;
+    const offset = 42;
+    const range = 5; // sampling from 5%
+
+    const optout = (sample >= offset && sample < (offset + range));
+    this._log.config("_sampleForOptoutTelemetry - sampling for optout Telemetry - " +
+                     "offset: " + offset + ", range: " + range + ", sample: " + sample);
+    return optout;
+  },
+
+  /**
    * Perform telemetry initialization for either chrome or content process.
    * @return {Boolean} True if Telemetry is allowed to record at least base (FHR) data,
    *                   false otherwise.
@@ -605,9 +668,11 @@ let Impl = {
 
     // Configure base Telemetry recording.
     // Unified Telemetry makes it opt-out unless the unifedOptin pref is set.
+    // Additionally, we make Telemetry opt-out for a 5% sample.
     // If extended Telemetry is enabled, base recording is always on as well.
     const enabled = Preferences.get(PREF_ENABLED, false);
-    Telemetry.canRecordBase = enabled || (IS_UNIFIED_TELEMETRY && !IS_UNIFIED_OPTIN);
+    const isOptout = IS_UNIFIED_TELEMETRY && (!Policy.isUnifiedOptin() || this._isInOptoutSample());
+    Telemetry.canRecordBase = enabled || isOptout;
 
 #ifdef MOZILLA_OFFICIAL
     // Enable extended telemetry if:
@@ -813,6 +878,10 @@ let Impl = {
 
   get clientID() {
     return this._clientID;
+  },
+
+  get isInOptoutSample() {
+    return this._isInOptoutSample();
   },
 
   /**
