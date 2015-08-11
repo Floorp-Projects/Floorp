@@ -93,7 +93,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
 
     render: function() {
       if (this.props.isFirefox) {
-        return <div />;
+        return null;
       }
       return (
         <div className="promote-firefox">
@@ -649,8 +649,8 @@ loop.webapp = (function($, _, OT, mozL10n) {
         React.PropTypes.instanceOf(FxOSConversationModel)
       ]).isRequired,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      notifications: React.PropTypes.instanceOf(sharedModels.NotificationCollection)
-                          .isRequired,
+      isFirefox: React.PropTypes.bool.isRequired,
+      notifications: React.PropTypes.instanceOf(sharedModels.NotificationCollection).isRequired,
       sdk: React.PropTypes.object.isRequired
     },
 
@@ -738,7 +738,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
         }
         case "expired": {
           return (
-            <CallUrlExpiredView />
+            <CallUrlExpiredView isFirefox={this.props.isFirefox}/>
           );
         }
         default: {
@@ -986,6 +986,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
                client={this.props.client}
                conversation={this.props.conversation}
                dispatcher={this.props.dispatcher}
+               isFirefox={this.state.isFirefox}
                notifications={this.props.notifications}
                sdk={this.props.sdk} />
           );
