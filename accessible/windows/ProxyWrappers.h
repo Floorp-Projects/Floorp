@@ -46,7 +46,8 @@ class DocProxyAccessibleWrap : public HyperTextProxyAccessibleWrap
 {
 public:
   DocProxyAccessibleWrap(ProxyAccessible* aProxy) :
-    HyperTextProxyAccessibleWrap(aProxy) {}
+    HyperTextProxyAccessibleWrap(aProxy)
+  { mGenericTypes |= eDocument; }
 };
 
 template<typename T>
