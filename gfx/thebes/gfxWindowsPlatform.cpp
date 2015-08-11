@@ -2183,7 +2183,7 @@ gfxWindowsPlatform::InitializeDevices()
   // If we previously crashed initializing devices, bail out now. This is
   // effectively a parent-process only check, since the content process
   // cannot create a lock file.
-  DriverCrashGuard detectCrashes;
+  D3D11LayersCrashGuard detectCrashes;
   if (detectCrashes.Crashed()) {
     mAcceleration = FeatureStatus::Blocked;
     return;
