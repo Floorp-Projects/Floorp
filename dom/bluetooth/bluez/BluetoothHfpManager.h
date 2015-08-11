@@ -103,6 +103,7 @@ public:
    */
   bool ConnectSco(BluetoothReplyRunnable* aRunnable = nullptr);
   bool DisconnectSco();
+  bool IsNrecEnabled();
   bool ListenSco();
 
 #ifdef MOZ_B2G_RIL

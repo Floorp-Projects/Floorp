@@ -6,7 +6,7 @@ $inherits:
 
 task:
   scopes:
-      - 'docker-worker:cache:workspace-b2g-desktop-objects-debug'
+    - 'docker-worker:cache:workspace-{{project}}-b2g-desktop-objects-debug'
   workerType: b2g-desktop-debug
   extra:
     treeherder:
@@ -15,6 +15,6 @@ task:
 
   payload:
     cache:
-      workspace-b2g-desktop-objects-debug: '/home/worker/workspace'
+      workspace-{{project}}-b2g-desktop-objects-debug: '/home/worker/workspace'
     env:
       MOZCONFIG: 'b2g/config/mozconfigs/linux64_gecko/debug'
