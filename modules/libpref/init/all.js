@@ -4464,9 +4464,7 @@ pref("dom.mozAlarms.enabled", false);
 
 pref("dom.push.enabled", false);
 
-#if !defined(RELEASE_BUILD)
-pref("dom.push.debug", true);
-#endif
+pref("dom.push.debug", false);
 
 pref("dom.push.serverURL", "wss://push.services.mozilla.com/");
 pref("dom.push.userAgentID", "");
