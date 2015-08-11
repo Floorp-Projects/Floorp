@@ -790,7 +790,7 @@ nsHtml5TreeOpExecutor::MoveOpsFrom(nsTArray<nsHtml5TreeOperation>& aOpQueue)
     mOpQueue.SwapElements(aOpQueue);
     return;
   }
-  mOpQueue.MoveElementsFrom(aOpQueue);
+  mOpQueue.MoveElementsFrom(Move(aOpQueue));
 }
 
 void
