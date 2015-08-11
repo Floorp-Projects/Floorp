@@ -414,6 +414,8 @@ loop.standaloneRoomViews = (function(mozL10n) {
 
         case ROOM_STATES.FAILED:
         case ROOM_STATES.CLOSING:
+        case ROOM_STATES.FULL:
+        case ROOM_STATES.ENDED:
           // the other person has shown up, so we don't want to show an avatar
           return true;
 
