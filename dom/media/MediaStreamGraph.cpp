@@ -86,7 +86,7 @@ MediaStreamGraphImpl::FinishStream(MediaStream* aStream)
 static const GraphTime START_TIME_DELAYED = -1;
 
 void
-MediaStreamGraphImpl::AddStream(MediaStream* aStream)
+MediaStreamGraphImpl::AddStreamGraphThread(MediaStream* aStream)
 {
   // Check if we're adding a stream to a suspended context, in which case, we
   // add it to mSuspendedStreams, and delay setting mBufferStartTime
@@ -113,7 +113,7 @@ MediaStreamGraphImpl::AddStream(MediaStream* aStream)
 }
 
 void
-MediaStreamGraphImpl::RemoveStream(MediaStream* aStream)
+MediaStreamGraphImpl::RemoveStreamGraphThread(MediaStream* aStream)
 {
   // Remove references in mStreamUpdates before we allow aStream to die.
   // Pending updates are not needed (since the main thread has already given
@@ -1641,7 +1641,7 @@ public:
   explicit CreateMessage(MediaStream* aStream) : ControlMessage(aStream) {}
   virtual void Run() override
   {
-    mStream->GraphImpl()->AddStream(mStream);
+    mStream->GraphImpl()->AddStreamGraphThread(mStream);
   }
   virtual void RunDuringShutdown() override
   {
@@ -2055,7 +2055,7 @@ MediaStream::Destroy()
       mStream->RemoveAllListenersImpl();
       auto graph = mStream->GraphImpl();
       mStream->DestroyImpl();
-      graph->RemoveStream(mStream);
+      graph->RemoveStreamGraphThread(mStream);
     }
     virtual void RunDuringShutdown()
     { Run(); }
@@ -2854,7 +2854,7 @@ ProcessedMediaStream::DestroyImpl()
   MediaStream::DestroyImpl();
   // The stream order is only important if there are connections, in which
   // case MediaInputPort::Disconnect() called SetStreamOrderDirty().
-  // MediaStreamGraphImpl::RemoveStream() will also call
+  // MediaStreamGraphImpl::RemoveStreamGraphThread() will also call
   // SetStreamOrderDirty(), for other reasons.
 }
 
