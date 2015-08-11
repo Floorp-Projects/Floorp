@@ -786,10 +786,6 @@ void
 nsHtml5TreeOpExecutor::MoveOpsFrom(nsTArray<nsHtml5TreeOperation>& aOpQueue)
 {
   NS_PRECONDITION(mFlushState == eNotFlushing, "mOpQueue modified during tree op execution.");
-  if (mOpQueue.IsEmpty()) {
-    mOpQueue.SwapElements(aOpQueue);
-    return;
-  }
   mOpQueue.AppendElements(Move(aOpQueue));
 }
 

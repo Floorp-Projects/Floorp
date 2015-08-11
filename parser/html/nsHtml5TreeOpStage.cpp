@@ -19,11 +19,7 @@ void
 nsHtml5TreeOpStage::MoveOpsFrom(nsTArray<nsHtml5TreeOperation>& aOpQueue)
 {
   mozilla::MutexAutoLock autoLock(mMutex);
-  if (mOpQueue.IsEmpty()) {
-    mOpQueue.SwapElements(aOpQueue);
-  } else {
-    mOpQueue.AppendElements(Move(aOpQueue));
-  }
+  mOpQueue.AppendElements(Move(aOpQueue));
 }
     
 void
@@ -31,38 +27,22 @@ nsHtml5TreeOpStage::MoveOpsAndSpeculativeLoadsTo(nsTArray<nsHtml5TreeOperation>&
     nsTArray<nsHtml5SpeculativeLoad>& aSpeculativeLoadQueue)
 {
   mozilla::MutexAutoLock autoLock(mMutex);
-  if (aOpQueue.IsEmpty()) {
-    mOpQueue.SwapElements(aOpQueue);
-  } else {
-    aOpQueue.AppendElements(Move(mOpQueue));
-  }
-  if (aSpeculativeLoadQueue.IsEmpty()) {
-    mSpeculativeLoadQueue.SwapElements(aSpeculativeLoadQueue);
-  } else {
-    aSpeculativeLoadQueue.AppendElements(Move(mSpeculativeLoadQueue));
-  }
+  aOpQueue.AppendElements(Move(mOpQueue));
+  aSpeculativeLoadQueue.AppendElements(Move(mSpeculativeLoadQueue));
 }
 
 void
 nsHtml5TreeOpStage::MoveSpeculativeLoadsFrom(nsTArray<nsHtml5SpeculativeLoad>& aSpeculativeLoadQueue)
 {
   mozilla::MutexAutoLock autoLock(mMutex);
-  if (mSpeculativeLoadQueue.IsEmpty()) {
-    mSpeculativeLoadQueue.SwapElements(aSpeculativeLoadQueue);
-  } else {
-    mSpeculativeLoadQueue.AppendElements(Move(aSpeculativeLoadQueue));
-  }
+  mSpeculativeLoadQueue.AppendElements(Move(aSpeculativeLoadQueue));
 }
 
 void
 nsHtml5TreeOpStage::MoveSpeculativeLoadsTo(nsTArray<nsHtml5SpeculativeLoad>& aSpeculativeLoadQueue)
 {
   mozilla::MutexAutoLock autoLock(mMutex);
-  if (aSpeculativeLoadQueue.IsEmpty()) {
-    mSpeculativeLoadQueue.SwapElements(aSpeculativeLoadQueue);
-  } else {
-    aSpeculativeLoadQueue.AppendElements(Move(mSpeculativeLoadQueue));
-  }
+  aSpeculativeLoadQueue.AppendElements(Move(mSpeculativeLoadQueue));
 }
 
 #ifdef DEBUG

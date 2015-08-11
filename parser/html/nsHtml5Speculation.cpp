@@ -26,10 +26,6 @@ nsHtml5Speculation::~nsHtml5Speculation()
 void
 nsHtml5Speculation::MoveOpsFrom(nsTArray<nsHtml5TreeOperation>& aOpQueue)
 {
-  if (mOpQueue.IsEmpty()) {
-    mOpQueue.SwapElements(aOpQueue);
-    return;
-  }
   mOpQueue.AppendElements(Move(aOpQueue));
 }
 
