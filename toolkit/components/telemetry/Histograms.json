@@ -6194,28 +6194,28 @@
     "n_buckets": 1000,
     "description": "Data rate deduced from RTCP from remote recipient of outbound audio (kbit/s). Computed every second of a call (for easy comparison)."
   },
-  "WEBRTC_VIDEO_QUALITY_INBOUND_PACKETLOSS": {
+  "WEBRTC_VIDEO_QUALITY_INBOUND_PACKETLOSS_RATE": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000,
     "n_buckets": 100,
     "description": "Locally measured packet loss on inbound video (permille). Sampled every second of a call."
   },
-  "WEBRTC_AUDIO_QUALITY_INBOUND_PACKETLOSS": {
+  "WEBRTC_AUDIO_QUALITY_INBOUND_PACKETLOSS_RATE": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000,
     "n_buckets": 100,
     "description": "Locally measured packet loss on inbound audio (permille). Sampled every second of a call."
   },
-  "WEBRTC_VIDEO_QUALITY_OUTBOUND_PACKETLOSS": {
+  "WEBRTC_VIDEO_QUALITY_OUTBOUND_PACKETLOSS_RATE": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000,
     "n_buckets": 100,
     "description": "RTCP-reported packet loss by remote recipient of outbound video (permille). Sampled every second of a call (for easy comparison)."
   },
-  "WEBRTC_AUDIO_QUALITY_OUTBOUND_PACKETLOSS": {
+  "WEBRTC_AUDIO_QUALITY_OUTBOUND_PACKETLOSS_RATE": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000,
