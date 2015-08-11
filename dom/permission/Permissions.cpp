@@ -43,10 +43,11 @@ Permissions::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 namespace {
 
 nsresult
-CheckPermission(PermissionName aName,
+CheckPermission(const char* aName,
                 nsPIDOMWindow* aWindow,
                 PermissionState& aResult)
 {
+  MOZ_ASSERT(aName);
   MOZ_ASSERT(aWindow);
 
   nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
@@ -55,9 +56,7 @@ CheckPermission(PermissionName aName,
   }
 
   uint32_t action = nsIPermissionManager::DENY_ACTION;
-  nsresult rv = permMgr->TestPermissionFromWindow(aWindow,
-                                                  PermissionNameToType(aName),
-                                                  &action);
+  nsresult rv = permMgr->TestPermissionFromWindow(aWindow, aName, &action);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_FAILURE;
   }
@@ -82,7 +81,7 @@ CheckPushPermission(JSContext* aCx,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  return CheckPermission(permission.mName, aWindow, aResult);
+  return CheckPermission("push", aWindow, aResult);
 }
 
 nsresult
@@ -99,8 +98,10 @@ CheckPermission(JSContext* aCx,
 
   switch (permission.mName) {
     case PermissionName::Geolocation:
+      return CheckPermission("geo", aWindow, aResult);
+
     case PermissionName::Notifications:
-      return CheckPermission(permission.mName, aWindow, aResult);
+      return CheckPermission("desktop-notification", aWindow, aResult);
 
     case PermissionName::Push:
       return CheckPushPermission(aCx, aPermission, aWindow, aResult);
