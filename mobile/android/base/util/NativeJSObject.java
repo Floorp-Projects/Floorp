@@ -5,9 +5,9 @@
 
 package org.mozilla.gecko.util;
 
+import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.JNIObject;
-import org.mozilla.gecko.mozglue.JNITarget;
 
 import android.os.Bundle;
 

@@ -5,22 +5,22 @@
 "use strict";
 
 // Tests the behaviour of adding a new rule to the rule view and the
-// various inplace-editor behaviours in the new rule editor
+// various inplace-editor behaviours in the new rule editor.
 
-let PAGE_CONTENT = [
-  '<style type="text/css">',
-  '  .testclass {',
-  '    text-align: center;',
-  '  }',
-  '</style>',
-  '<div id="testid" class="testclass">Styled Node</div>',
-  '<span class="testclass2">This is a span</span>',
-  '<span class="class1 class2">Multiple classes</span>',
-  '<span class="class3      class4">Multiple classes</span>',
-  '<p>Empty<p>',
-  '<h1 class="asd@@@@a!!!!:::@asd">Invalid characters in class</h1>',
-  '<h2 id="asd@@@a!!2a">Invalid characters in id</h2>'
-].join("\n");
+const TEST_URI = `
+  <style type="text/css">
+    .testclass {
+      text-align: center;
+    }
+  </style>
+  <div id="testid" class="testclass">Styled Node</div>
+  <span class="testclass2">This is a span</span>
+  <span class="class1 class2">Multiple classes</span>
+  <span class="class3      class4">Multiple classes</span>
+  <p>Empty<p>
+  <h1 class="asd@@@@a!!!!:::@asd">Invalid characters in class</h1>
+  <h2 id="asd@@@a!!2a">Invalid characters in id</h2>
+`;
 
 const TEST_DATA = [
   { node: "#testid", expected: "#testid" },
@@ -33,12 +33,9 @@ const TEST_DATA = [
 ];
 
 add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(PAGE_CONTENT));
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
 
-  info("Opening the rule-view");
-  let {toolbox, inspector, view} = yield openRuleView();
-
-  info("Iterating over the test data");
   for (let data of TEST_DATA) {
     yield runTestData(inspector, view, data, "context-menu");
     yield runTestData(inspector, view, data, "button");
@@ -47,15 +44,12 @@ add_task(function*() {
 
 function* runTestData(inspector, view, data, method) {
   let {node, expected} = data;
-  info("Selecting the test element");
   yield selectNode(node, inspector);
-
   yield addNewRule(inspector, view, method);
-
   yield testNewRule(view, expected, 1);
 
   info("Resetting page content");
-  content.document.body.innerHTML = PAGE_CONTENT;
+  content.document.body.innerHTML = TEST_URI;
 }
 
 function* addNewRule(inspector, view, method) {
@@ -73,11 +67,11 @@ function* addNewRule(inspector, view, method) {
     info("Adding the new rule");
     view._contextmenu.menuitemAddRule.click();
     view._contextmenu._menupopup.hidePopup();
-  }
-  else {
+  } else {
     info("Adding the new rule using the button");
     view.addRuleButton.click();
   }
+
   info("Waiting for rule view to change");
   yield view.once("ruleview-changed");
 }
@@ -94,7 +88,7 @@ function* testNewRule(view, expected, index) {
   is(idRuleEditor.selectorText.textContent, expected,
       "Selector text value is as expected: " + expected);
 
-  info("Adding new properties to new rule: " + expected)
+  info("Adding new properties to new rule: " + expected);
   let onRuleViewChanged = view.once("ruleview-changed");
   idRuleEditor.addProperty("font-weight", "bold", "");
   yield onRuleViewChanged;

@@ -184,7 +184,7 @@ abstract class BaseTest extends BaseRobocopTest {
 
         // Send the keys for the URL we want to enter
         mSolo.clearEditText(urlEditView);
-        mSolo.enterText(urlEditView, url);
+        mSolo.typeText(urlEditView, url);
 
         // Get the URL text from the URL bar EditText view
         final String urlBarText = urlEditView.getText().toString();

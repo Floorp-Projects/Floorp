@@ -4,15 +4,15 @@
 
 "use strict";
 
-// Test various output of the computed-view's getNodeInfo method.
+// Tests various output of the computed-view's getNodeInfo method.
 // This method is used by the style-inspector-overlay on mouseover to decide
-// which tooltip or highlighter to show when hovering over a value/name/selector
-// if any.
+// which tooltip or highlighter to show when hovering over a
+// value/name/selector if any.
 // For instance, browser_ruleview_selector-highlighter_01.js and
 // browser_ruleview_selector-highlighter_02.js test that the selector
 // highlighter appear when hovering over a selector in the rule-view.
-// Since the code to make this work for the computed-view is 90% the same, there
-// is no need for testing it again here.
+// Since the code to make this work for the computed-view is 90% the same,
+// there is no need for testing it again here.
 // This test however serves as a unit test for getNodeInfo.
 
 const {
@@ -22,23 +22,23 @@ const {
   VIEW_NODE_IMAGE_URL_TYPE
 } = require("devtools/styleinspector/style-inspector-overlays");
 
-const PAGE_CONTENT = [
-  '<style type="text/css">',
-  '  body {',
-  '    background: red;',
-  '    color: white;',
-  '  }',
-  '  div {',
-  '    background: green;',
-  '  }',
-  '  div div {',
-  '    background-color: yellow;',
-  '    background-image: url(chrome://global/skin/icons/warning-64.png);',
-  '    color: red;',
-  '  }',
-  '</style>',
-  '<div><div id="testElement">Test element</div></div>'
-].join("\n");
+const TEST_URI = `
+  <style type="text/css">
+    body {
+      background: red;
+      color: white;
+    }
+    div {
+      background: green;
+    }
+    div div {
+      background-color: yellow;
+      background-image: url(chrome://global/skin/icons/warning-64.png);
+      color: red;
+    }
+  </style>
+  <div><div id="testElement">Test element</div></div>
+`;
 
 // Each item in this array must have the following properties:
 // - desc {String} will be logged for information
@@ -102,7 +102,8 @@ const TEST_DATA = [
       ok("property" in nodeInfo.value);
       ok("value" in nodeInfo.value);
       is(nodeInfo.value.property, "background-image");
-      is(nodeInfo.value.value, "url(\"chrome://global/skin/icons/warning-64.png\")");
+      is(nodeInfo.value.value,
+         "url(\"chrome://global/skin/icons/warning-64.png\")");
       is(nodeInfo.value.url, "chrome://global/skin/icons/warning-64.png");
     }
   },
@@ -164,8 +165,7 @@ const TEST_DATA = [
 ];
 
 add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8," + PAGE_CONTENT);
-
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openComputedView();
   yield selectNode("#testElement", inspector);
 

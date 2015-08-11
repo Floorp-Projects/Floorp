@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.gfx;
 
+import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
@@ -12,7 +13,6 @@ import org.mozilla.gecko.gfx.LayerView.DrawListener;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.ZoomConstraints;
-import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.AppConstants;

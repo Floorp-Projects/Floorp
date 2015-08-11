@@ -29,6 +29,7 @@ import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.OnStopListener;
 import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.OnTitleChangeListener;
 import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.UpdateFlags;
 import org.mozilla.gecko.util.Clipboard;
+import org.mozilla.gecko.util.ColorUtils;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.MenuUtils;
 import org.mozilla.gecko.widget.ThemedImageButton;
@@ -202,8 +203,8 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         shadowSize = res.getDimensionPixelSize(R.dimen.browser_toolbar_shadow_size);
 
         shadowPaint = new Paint();
-        shadowColor = res.getColor(R.color.url_bar_shadow);
-        shadowPrivateColor = res.getColor(R.color.url_bar_shadow_private);
+        shadowColor = ColorUtils.getColor(context, R.color.url_bar_shadow);
+        shadowPrivateColor = ColorUtils.getColor(context, R.color.url_bar_shadow_private);
         shadowPaint.setColor(shadowColor);
         shadowPaint.setStrokeWidth(0.0f);
 
@@ -926,8 +927,8 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
     }
 
     public static LightweightThemeDrawable getLightweightThemeDrawable(final View view,
-            final Resources res, final LightweightTheme theme, final int colorResID) {
-        final int color = res.getColor(colorResID);
+            final LightweightTheme theme, final int colorResID) {
+        final int color = ColorUtils.getColor(view.getContext(), colorResID);
 
         final LightweightThemeDrawable drawable = theme.getColorDrawable(view, color);
         if (drawable != null) {

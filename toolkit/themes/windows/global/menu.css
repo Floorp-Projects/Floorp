@@ -92,8 +92,7 @@ menucaption > .menu-iconic-text {
   -moz-margin-end: 1.35em !important;
 }
 
-.menu-iconic-left,
-.menu-iconic-right {
+.menu-iconic-left {
   min-width: 1.45em;
 }
 
@@ -222,12 +221,8 @@ menulist > menupopup > menu[_moz-menuactive="true"] {
 
 menulist > menupopup > menuitem > .menu-iconic-left,
 menulist > menupopup > menucaption > .menu-iconic-left,
-menulist > menupopup > menu > .menu-iconic-left,
-menulist > menupopup > menuitem > .menu-iconic-right,
-menulist > menupopup > menucaption > .menu-iconic-right,
-menulist > menupopup > menu > .menu-iconic-right {
+menulist > menupopup > menu > .menu-iconic-left {
   display: none;
-  padding-top: 0px;
 }
 
 menulist > menupopup > menuitem > label,
@@ -250,7 +245,7 @@ menulist > menupopup > menuitem[disabled="true"]:not([_moz-menuactive="true"]):-
   text-shadow: none;
 }
 
-menulist > menupopup > :-moz-any(menuitem, menucaption):not(.menuitem-iconic):not([endimage]) > .menu-iconic-text {
+menulist > menupopup > :-moz-any(menuitem, menucaption):not(.menuitem-iconic) > .menu-iconic-text {
   margin: 0 !important;
 }
 

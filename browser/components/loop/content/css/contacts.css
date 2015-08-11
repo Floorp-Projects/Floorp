@@ -2,6 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+html {
+  font-size: 10px;
+  font-family: sans-serif; /* XXX will be changed to a system font in bug 1191398 */
+}
+
 .contact-import-spinner {
   display: none;
 }
@@ -281,8 +286,26 @@ html[dir="rtl"] .contact > .dropdown-menu {
   top: auto;
 }
 
-.contact-form > .button-group {
-  margin-top: 1rem;
+.contact-form {
+  padding: 14px; /* Override based on spacing in Mockup */
+}
+/* This will effect the header displayed at the top of the contact details form
+ */
+.contact-form header {
+  text-align: center;
+  font-size: 1.3rem;
+  font-weight: 500;
+  color: #4a4a4a;
+}
+
+.contact-form .form-content-container {
+  height: 24.1rem; /* This height is needed to keep the panel height at 400px and
+                      the bottom elements at the bottom of the panel
+                      Can likely go away if we switched this pane to flexbox model */
+  padding-top: 4px; /* Based on spacing in Mockup
+                    replaced margin-top
+                    See http://stackoverflow.com/questions/6204670/css-clean-solution-to-the-margin-collapse-issue-when-floating-an-element
+                    */
 }
 
 .contacts-gravatar-promo {

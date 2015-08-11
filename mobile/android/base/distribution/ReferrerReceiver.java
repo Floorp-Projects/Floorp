@@ -6,10 +6,10 @@
 package org.mozilla.gecko.distribution;
 
 import org.mozilla.gecko.AdjustConstants;
+import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
-import org.mozilla.gecko.mozglue.RobocopTarget;
 
 import org.json.JSONException;
 import org.json.JSONObject;

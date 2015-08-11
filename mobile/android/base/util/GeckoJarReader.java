@@ -9,10 +9,10 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.util.Log;
+import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.mozglue.NativeZip;
-import org.mozilla.gecko.mozglue.RobocopTarget;
 
 import java.io.BufferedReader;
 import java.io.File;
