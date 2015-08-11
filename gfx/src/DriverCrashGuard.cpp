@@ -20,8 +20,6 @@
 namespace mozilla {
 namespace gfx {
 
-bool DriverCrashGuard::sEnvironmentHasBeenUpdated = false;
-
 DriverCrashGuard::DriverCrashGuard()
  : mInitialized(false)
  , mIsChromeProcess(XRE_GetProcessType() == GeckoProcessType_Default)
@@ -42,12 +40,6 @@ DriverCrashGuard::InitializeIfNeeded()
 void
 DriverCrashGuard::Initialize()
 {
-  if (!mIsChromeProcess) {
-    // We assume the parent process already performed crash detection for
-    // graphics devices.
-    return;
-  }
-
   if (!InitLockFilePath()) {
     gfxCriticalError(CriticalLog::DefaultOptions(false)) << "Failed to create the graphics startup lockfile.";
     return;
@@ -60,13 +52,11 @@ DriverCrashGuard::Initialize()
     return;
   }
 
-  if (UpdateEnvironment() || sEnvironmentHasBeenUpdated) {
+  if (PrepareToGuard()) {
     // Something in the environment changed, *or* a previous instance of this
-    // class already updated the environment. Allow a fresh attempt at driver
-    // acceleration. This doesn't mean the previous attempt failed, it just
-    // means we want to detect whether the new environment crashes.
+    // class already updated the environment in this session. Enable the
+    // guard.
     AllowDriverInitAttempt();
-    sEnvironmentHasBeenUpdated = true;
     return;
   }
 
@@ -164,13 +154,28 @@ DriverCrashGuard::RecoverFromDriverInitCrash()
   return false;
 }
 
+// Return true if the caller should proceed to guard for crashes. False if
+// the environment has not changed.
 bool
-DriverCrashGuard::UpdateEnvironment()
+DriverCrashGuard::PrepareToGuard()
 {
-  mGfxInfo = services::GetGfxInfo();
+  static bool sBaseInfoChanged = false;
+  static bool sBaseInfoChecked = false;
 
+  if (!sBaseInfoChecked) {
+    sBaseInfoChecked = true;
+    sBaseInfoChanged = UpdateBaseEnvironment();
+  }
+
+  // Always update the full environment, even if the base info didn't change.
+  return UpdateEnvironment() || sBaseInfoChanged;
+}
+
+bool
+DriverCrashGuard::UpdateBaseEnvironment()
+{
   bool changed = false;
-  if (mGfxInfo) {
+  if (mGfxInfo = services::GetGfxInfo()) {
     nsString value;
 
     // Driver properties.
@@ -178,26 +183,10 @@ DriverCrashGuard::UpdateEnvironment()
     changed |= CheckAndUpdatePref("gfx.driver-init.driverVersion", value);
     mGfxInfo->GetAdapterDeviceID(value);
     changed |= CheckAndUpdatePref("gfx.driver-init.deviceID", value);
-
-    // Feature status.
-#if defined(XP_WIN)
-    bool d2dEnabled = gfxPrefs::Direct2DForceEnabled() ||
-                      (!gfxPrefs::Direct2DDisabled() && FeatureEnabled(nsIGfxInfo::FEATURE_DIRECT2D));
-    changed |= CheckAndUpdateBoolPref("gfx.driver-init.feature-d2d", d2dEnabled);
-
-    bool d3d11Enabled = !gfxPrefs::LayersPreferD3D9();
-    if (!FeatureEnabled(nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS)) {
-      d3d11Enabled = false;
-    }
-    changed |= CheckAndUpdateBoolPref("gfx.driver-init.feature-d3d11", d3d11Enabled);
-#endif
   }
 
   // Firefox properties.
   changed |= CheckAndUpdatePref("gfx.driver-init.appVersion", NS_LITERAL_STRING(MOZ_APP_VERSION));
-
-  // Finally, mark as changed if the status has been reset by the user.
-  changed |= (gfxPrefs::DriverInitStatus() == int32_t(DriverInitStatus::None));
 
   return changed;
 }
@@ -246,6 +235,61 @@ DriverCrashGuard::FlushPreferences()
 
 void
 DriverCrashGuard::RecordTelemetry(TelemetryState aState)
+{
+  // No default telemetry handling yet.
+}
+
+D3D11LayersCrashGuard::D3D11LayersCrashGuard()
+{
+}
+
+void
+D3D11LayersCrashGuard::Initialize()
+{
+  if (!mIsChromeProcess) {
+    // We assume the parent process already performed crash detection for
+    // graphics devices.
+    return;
+  }
+
+  DriverCrashGuard::Initialize();
+}
+
+bool
+D3D11LayersCrashGuard::UpdateEnvironment()
+{
+  static bool checked = false;
+  static bool changed = false;
+
+  if (checked) {
+    return changed;
+  }
+
+  checked = true;
+
+  if (mGfxInfo) {
+    // Feature status.
+#if defined(XP_WIN)
+    bool d2dEnabled = gfxPrefs::Direct2DForceEnabled() ||
+                      (!gfxPrefs::Direct2DDisabled() && FeatureEnabled(nsIGfxInfo::FEATURE_DIRECT2D));
+    changed |= CheckAndUpdateBoolPref("gfx.driver-init.feature-d2d", d2dEnabled);
+
+    bool d3d11Enabled = !gfxPrefs::LayersPreferD3D9();
+    if (!FeatureEnabled(nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS)) {
+      d3d11Enabled = false;
+    }
+    changed |= CheckAndUpdateBoolPref("gfx.driver-init.feature-d3d11", d3d11Enabled);
+#endif
+  }
+
+  // Finally, mark as changed if the status has been reset by the user.
+  changed |= (gfxPrefs::DriverInitStatus() == int32_t(DriverInitStatus::None));
+
+  return changed;
+}
+
+void
+D3D11LayersCrashGuard::RecordTelemetry(TelemetryState aState)
 {
   // Since we run this in each child process, we only want the initial results
   // from the chrome process.
