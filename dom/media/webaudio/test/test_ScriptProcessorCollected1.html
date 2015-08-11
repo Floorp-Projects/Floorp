@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test ScriptProcessorNode in cycle with no listener is collected</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+Components.utils.import('resource://gre/modules/Services.jsm');
+SimpleTest.waitForExplicitFinish();
+
+var observer = function(subject, topic, data) {
+  var id = parseInt(data);
+  var index = ids.indexOf(id);
+  if (index != -1) {
+    ok(true, "Collected AudioNode id " + id + " at index " + index);
+    ids.splice(index, 1);
+  }
+}
+
+Services.obs.addObserver(observer, "webaudio-node-demise", false);
+
+SimpleTest.registerCleanupFunction(function() {
+  if (observer) {
+    Services.obs.removeObserver(observer, "webaudio-node-demise");
+  }
+});
+
+var ac = new AudioContext();
+
+var testProcessor = ac.createScriptProcessor(256, 1, 0);
+var delay = ac.createDelay();
+testProcessor.connect(delay);
+delay.connect(testProcessor);
+
+var referenceProcessor = ac.createScriptProcessor(256, 1, 0);
+var gain = ac.createGain();
+gain.connect(referenceProcessor);
+
+var processCount = 0;
+testProcessor.onaudioprocess = function(event) {
+  ++processCount;
+  switch (processCount) {
+  case 1:
+    // Switch to listening to referenceProcessor;
+    referenceProcessor.onaudioprocess = event.target.onaudioprocess;
+    referenceProcessor = null;
+    event.target.onaudioprocess = null;
+  case 2:
+    // There are no references to testProcessor and so GC can begin.
+    SpecialPowers.forceGC();
+    break;
+  case 3:
+    // Another GC should not be required after testProcessor would have
+    // received another audioprocess event.
+    SpecialPowers.forceCC();
+    // Expect that webaudio-demise has been queued.
+    // Queue another event to check.
+    SimpleTest.executeSoon(function() {
+      Services.obs.removeObserver(observer, "webaudio-node-demise");
+      observer = null;
+      event.target.onaudioprocess = null;
+      ok(ids.length == 0, "All expected nodes should be collected");
+      SimpleTest.finish();
+    });
+    break;
+  }
+};
+
+// Nodes with these ids should be collected.
+var ids = [ testProcessor.id, delay.id, gain.id ];
+testProcessor = null;
+delay = null;
+gain = null;
+
+</script>
+</pre>
+</body>
+</html>
