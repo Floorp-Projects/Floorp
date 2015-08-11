@@ -65,6 +65,7 @@ include PBackgroundSharedTypes;
 include PContentPermission;
 include BrowserConfiguration;
 include GraphicsMessages;
+include ProfilerTypes;
 
 // Workaround to prevent error if PContentChild.cpp & PContentBridgeParent.cpp
 // are put into different UnifiedProtocolsXX.cpp files.
@@ -651,8 +652,7 @@ child:
     /**
      * Control the Gecko Profiler in the child process.
      */
-    async StartProfiler(uint32_t aEntries, double aInterval, nsCString[] aFeatures,
-                        nsCString[] aThreadNameFilters);
+    async StartProfiler(ProfilerInitParams params);
     async StopProfiler();
     async PauseProfiler(bool aPause);
 
