@@ -9,39 +9,6 @@
 namespace mozilla {
 namespace dom {
 
-const char* kPermissionTypes[] = {
-  "geo",
-  "desktop-notification",
-  "push",
-  "midi"
-};
-
-// `-1` for the last null entry.
-const size_t kPermissionNameCount =
-  ArrayLength(PermissionNameValues::strings) - 1;
-
-static_assert(ArrayLength(kPermissionTypes) == kPermissionNameCount,
-              "kPermissionTypes and PermissionName count should match");
-
-const char*
-PermissionNameToType(PermissionName aName)
-{
-  MOZ_ASSERT((size_t)aName < ArrayLength(kPermissionTypes));
-  return kPermissionTypes[static_cast<size_t>(aName)];
-}
-
-Maybe<PermissionName>
-TypeToPermissionName(const char* aType)
-{
-  for (size_t i = 0; i < ArrayLength(kPermissionTypes); ++i) {
-    if (!strcmp(aType, kPermissionTypes[i])) {
-      return Some(static_cast<PermissionName>(i));
-    }
-  }
-
-  return Nothing();
-}
-
 PermissionState
 ActionToPermissionState(uint32_t aAction)
 {
