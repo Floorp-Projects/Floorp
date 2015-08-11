@@ -87,21 +87,21 @@ describe("loop.contacts", function() {
     navigator.mozLoop = {
       getStrings: function(entityName) {
         var textContentValue = "fakeText";
-        if (entityName == "add_contact_title") {
+        if (entityName === "add_contact_title") {
           textContentValue = fakeAddContactTitleText;
-        } else if (entityName == "add_contact_button") {
+        } else if (entityName === "add_contact_button") {
           textContentValue = fakeAddContactButtonText;
-        } else if (entityName == "edit_contact_title") {
+        } else if (entityName === "edit_contact_title") {
           textContentValue = fakeEditContactButtonText;
-        } else if (entityName == "edit_contact_done_button") {
+        } else if (entityName === "edit_contact_done_button") {
           textContentValue = fakeDoneButtonText;
         }
         return JSON.stringify({textContent: textContentValue});
       },
       getLoopPref: function(pref) {
-        if (pref == "contacts.gravatars.promo") {
+        if (pref === "contacts.gravatars.promo") {
           return true;
-        } else if (pref == "contacts.gravatars.show") {
+        } else if (pref === "contacts.gravatars.show") {
           return false;
         }
         return "";
@@ -170,9 +170,9 @@ describe("loop.contacts", function() {
 
     it("should not show the gravatars promo box when the 'contacts.gravatars.promo' pref is set", function() {
       sandbox.stub(navigator.mozLoop, "getLoopPref", function(pref) {
-        if (pref == "contacts.gravatars.promo") {
+        if (pref === "contacts.gravatars.promo") {
           return false;
-        } else if (pref == "contacts.gravatars.show") {
+        } else if (pref === "contacts.gravatars.show") {
           return true;
         }
         return "";
