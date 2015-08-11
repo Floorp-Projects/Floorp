@@ -2184,7 +2184,7 @@ gfxWindowsPlatform::InitializeDevices()
   // effectively a parent-process only check, since the content process
   // cannot create a lock file.
   DriverCrashGuard detectCrashes;
-  if (detectCrashes.DisableAcceleration()) {
+  if (detectCrashes.Crashed()) {
     mAcceleration = FeatureStatus::Blocked;
     return;
   }
