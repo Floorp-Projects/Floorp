@@ -776,4 +776,46 @@ TEST(IntervalSet, Substraction)
   EXPECT_EQ(1u, i0.Length());
   EXPECT_EQ(5, i0[0].mStart);
   EXPECT_EQ(8, i0[0].mEnd);
+
+  i0 = IntIntervals();
+  i0 += IntInterval(0, 10);
+  IntIntervals i2;
+  i2 += IntInterval(4, 6);
+  i0 -= i2;
+  EXPECT_EQ(2u, i0.Length());
+  EXPECT_EQ(0, i0[0].mStart);
+  EXPECT_EQ(4, i0[0].mEnd);
+  EXPECT_EQ(6, i0[1].mStart);
+  EXPECT_EQ(10, i0[1].mEnd);
+
+  i0 = IntIntervals();
+  i0 += IntInterval(0, 1);
+  i0 += IntInterval(3, 10);
+  EXPECT_EQ(2u, i0.Length());
+  // This fuzz should collapse i0 into [0,10).
+  i0.SetFuzz(1);
+  EXPECT_EQ(1u, i0.Length());
+  EXPECT_EQ(1, i0[0].mFuzz);
+  i2 = IntInterval(4, 6);
+  i0 -= i2;
+  EXPECT_EQ(2u, i0.Length());
+  EXPECT_EQ(0, i0[0].mStart);
+  EXPECT_EQ(4, i0[0].mEnd);
+  EXPECT_EQ(6, i0[1].mStart);
+  EXPECT_EQ(10, i0[1].mEnd);
+  EXPECT_EQ(1, i0[0].mFuzz);
+  EXPECT_EQ(1, i0[1].mFuzz);
+
+  i0 = IntIntervals();
+  i0 += IntInterval(0, 10);
+  // [4,6) with fuzz 1 used to fail because the complementary interval set
+  // [0,4)+[6,10) would collapse into [0,10).
+  i2 = IntInterval(4, 6);
+  i2.SetFuzz(1);
+  i0 -= i2;
+  EXPECT_EQ(2u, i0.Length());
+  EXPECT_EQ(0, i0[0].mStart);
+  EXPECT_EQ(4, i0[0].mEnd);
+  EXPECT_EQ(6, i0[1].mStart);
+  EXPECT_EQ(10, i0[1].mEnd);
 }

@@ -14,7 +14,6 @@
 #include "mozilla/Preferences.h"
 #include "mfapi.h"
 #include "MFTDecoder.h"
-#include "DriverCrashGuard.h"
 
 const CLSID CLSID_VideoProcessorMFT =
 {
@@ -90,12 +89,6 @@ HRESULT
 D3D9DXVA2Manager::Init()
 {
   MOZ_ASSERT(NS_IsMainThread());
-
-  gfx::D3D9VideoCrashGuard crashGuard;
-  if (crashGuard.Crashed()) {
-    NS_WARNING("DXVA2D3D9 crash detected");
-    return E_FAIL;
-  }
 
   // Create D3D9Ex.
   HMODULE d3d9lib = LoadLibraryW(L"d3d9.dll");
