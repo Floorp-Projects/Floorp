@@ -33,9 +33,9 @@ function* spawnTest () {
   yield removeTab(target.tab);
   finish();
 
-  function handler (name, data) {
+  function handler (_, name, m) {
     if (name === "markers") {
-      markers = markers.concat(data.markers.filter(marker => marker.name === "Styles"));
+      markers = markers.concat(m.filter(marker => marker.name === "Styles"));
     }
   }
 }

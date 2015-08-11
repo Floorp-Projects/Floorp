@@ -6,16 +6,18 @@
  * whether already loaded, or via console.profile with an unloaded performance tools.
  */
 
+let { getPerformanceFront } = require("devtools/performance/front");
+
 function* spawnTest() {
+  let profilerConnected = waitForProfilerConnection();
   let { target, toolbox, console } = yield initConsole(SIMPLE_URL);
-  let front = toolbox.performance;
+  yield profilerConnected;
+  let front = getPerformanceFront(target);
   let tab = toolbox.doc.getElementById("toolbox-tab-performance");
 
   let profileStart = once(front, "recording-started");
   console.profile("rust");
   yield profileStart;
-
-  yield waitUntil(() => tab.hasAttribute("highlighted"));
 
   ok(tab.hasAttribute("highlighted"),
     "performance tab is highlighted during recording from console.profile when unloaded");
