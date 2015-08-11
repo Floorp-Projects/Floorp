@@ -103,6 +103,11 @@ private:
     virtual void run(const MatchFinder::MatchResult &Result);
   };
 
+  class NoAutoTypeChecker : public MatchFinder::MatchCallback {
+  public:
+    virtual void run(const MatchFinder::MatchResult &Result);
+  };
+
   ScopeChecker scopeChecker;
   ArithmeticArgChecker arithmeticArgChecker;
   TrivialCtorDtorChecker trivialCtorDtorChecker;
@@ -114,6 +119,7 @@ private:
   NeedsNoVTableTypeChecker needsNoVTableTypeChecker;
   NonMemMovableChecker nonMemMovableChecker;
   ExplicitImplicitChecker explicitImplicitChecker;
+  NoAutoTypeChecker noAutoTypeChecker;
   MatchFinder astMatcher;
 };
 
@@ -786,6 +792,15 @@ AST_MATCHER(CXXRecordDecl, isConcreteClass) {
   return !Node.isAbstract();
 }
 
+AST_MATCHER(QualType, autoNonAutoableType) {
+  if (const AutoType *T = Node->getContainedAutoType()) {
+    if (const CXXRecordDecl *Rec = T->getAsCXXRecordDecl()) {
+      return MozChecker::hasCustomAnnotation(Rec, "moz_non_autoable");
+    }
+  }
+  return false;
+}
+
 }
 }
 
@@ -1032,6 +1047,9 @@ DiagnosticsMatcher::DiagnosticsMatcher() {
                       ofClass(allOf(isConcreteClass(), decl().bind("class"))),
                       unless(isMarkedImplicit())).bind("ctor"),
       &explicitImplicitChecker);
+
+  astMatcher.addMatcher(varDecl(hasType(autoNonAutoableType())
+                          ).bind("node"), &noAutoTypeChecker);
 }
 
 // These enum variants determine whether an allocation has occured in the code.
@@ -1346,6 +1364,20 @@ void DiagnosticsMatcher::ExplicitImplicitChecker::run(
 
   Diag.Report(Ctor->getLocation(), ErrorID) << Decl->getDeclName();
   Diag.Report(Ctor->getLocation(), NoteID);
+}
+
+void DiagnosticsMatcher::NoAutoTypeChecker::run(
+    const MatchFinder::MatchResult &Result) {
+  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
+  unsigned ErrorID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Error, "Cannot use auto to declare a variable of type %0");
+  unsigned NoteID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Note, "Please write out this type explicitly");
+
+  const VarDecl *D = Result.Nodes.getNodeAs<VarDecl>("node");
+
+  Diag.Report(D->getLocation(), ErrorID) << D->getType();
+  Diag.Report(D->getLocation(), NoteID);
 }
 
 class MozCheckAction : public PluginASTAction {
