@@ -25417,15 +25417,13 @@ DEBUGThreadSlower::OnDispatchedEvent(nsIThreadInternal* /* aThread */)
 
 NS_IMETHODIMP
 DEBUGThreadSlower::OnProcessNextEvent(nsIThreadInternal* /* aThread */,
-                                      bool /* aMayWait */,
-                                      uint32_t /* aRecursionDepth */)
+                                      bool /* aMayWait */)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
 DEBUGThreadSlower::AfterProcessNextEvent(nsIThreadInternal* /* aThread */,
-                                         uint32_t /* aRecursionDepth */,
                                          bool /* aEventWasProcessed */)
 {
   MOZ_ASSERT(kDEBUGThreadSleepMS);
