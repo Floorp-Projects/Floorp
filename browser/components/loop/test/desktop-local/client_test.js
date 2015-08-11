@@ -112,7 +112,7 @@ describe("loop.Client", function() {
 
         sinon.assert.calledOnce(callback);
         sinon.assert.calledWithExactly(callback, sinon.match(function(err) {
-          return err.code == 400 && err.message == "invalid token";
+          return err.code === 400 && err.message === "invalid token";
         }));
       });
 

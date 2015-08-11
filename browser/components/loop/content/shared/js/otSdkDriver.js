@@ -923,9 +923,9 @@ loop.OTSdkDriver = (function() {
      * Handles publishing of property changes to a stream.
      */
     _onStreamPropertyChanged: function(event) {
-      if (event.changedProperty == STREAM_PROPERTIES.VIDEO_DIMENSIONS) {
+      if (event.changedProperty === STREAM_PROPERTIES.VIDEO_DIMENSIONS) {
         this.dispatcher.dispatch(new sharedActions.VideoDimensionsChanged({
-          isLocal: event.stream.connection.id == this.session.connection.id,
+          isLocal: event.stream.connection.id === this.session.connection.id,
           videoType: event.stream.videoType,
           dimensions: event.stream[STREAM_PROPERTIES.VIDEO_DIMENSIONS]
         }));
@@ -1084,8 +1084,8 @@ loop.OTSdkDriver = (function() {
         return;
       }
 
-      if (startTime == this.CONNECTION_START_TIME_ALREADY_NOTED ||
-          startTime == this.CONNECTION_START_TIME_UNINITIALIZED ||
+      if (startTime === this.CONNECTION_START_TIME_ALREADY_NOTED ||
+          startTime === this.CONNECTION_START_TIME_UNINITIALIZED ||
           startTime > endTime) {
         if (this._debugTwoWayMediaTelemetry) {
           console.log("_noteConnectionLengthIfNeeded called with " +

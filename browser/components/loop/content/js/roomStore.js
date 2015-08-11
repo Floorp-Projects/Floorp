@@ -496,7 +496,7 @@ loop.store = loop.store || {};
         var context = room.decryptedContext;
         var oldRoomName = context.roomName;
         var newRoomName = actionData.newRoomName.trim();
-        if (newRoomName && oldRoomName != newRoomName) {
+        if (newRoomName && oldRoomName !== newRoomName) {
           roomData.roomName = newRoomName;
         }
         var oldRoomURLs = context.urls;
