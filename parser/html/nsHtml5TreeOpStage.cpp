@@ -4,6 +4,8 @@
 
 #include "nsHtml5TreeOpStage.h"
 
+using namespace mozilla;
+
 nsHtml5TreeOpStage::nsHtml5TreeOpStage()
  : mMutex("nsHtml5TreeOpStage mutex")
 {
@@ -20,7 +22,7 @@ nsHtml5TreeOpStage::MoveOpsFrom(nsTArray<nsHtml5TreeOperation>& aOpQueue)
   if (mOpQueue.IsEmpty()) {
     mOpQueue.SwapElements(aOpQueue);
   } else {
-    mOpQueue.MoveElementsFrom(aOpQueue);
+    mOpQueue.MoveElementsFrom(Move(aOpQueue));
   }
 }
     
@@ -32,12 +34,12 @@ nsHtml5TreeOpStage::MoveOpsAndSpeculativeLoadsTo(nsTArray<nsHtml5TreeOperation>&
   if (aOpQueue.IsEmpty()) {
     mOpQueue.SwapElements(aOpQueue);
   } else {
-    aOpQueue.MoveElementsFrom(mOpQueue);
+    aOpQueue.MoveElementsFrom(Move(mOpQueue));
   }
   if (aSpeculativeLoadQueue.IsEmpty()) {
     mSpeculativeLoadQueue.SwapElements(aSpeculativeLoadQueue);
   } else {
-    aSpeculativeLoadQueue.MoveElementsFrom(mSpeculativeLoadQueue);
+    aSpeculativeLoadQueue.MoveElementsFrom(Move(mSpeculativeLoadQueue));
   }
 }
 
@@ -48,7 +50,7 @@ nsHtml5TreeOpStage::MoveSpeculativeLoadsFrom(nsTArray<nsHtml5SpeculativeLoad>& a
   if (mSpeculativeLoadQueue.IsEmpty()) {
     mSpeculativeLoadQueue.SwapElements(aSpeculativeLoadQueue);
   } else {
-    mSpeculativeLoadQueue.MoveElementsFrom(aSpeculativeLoadQueue);
+    mSpeculativeLoadQueue.MoveElementsFrom(Move(aSpeculativeLoadQueue));
   }
 }
 
@@ -59,7 +61,7 @@ nsHtml5TreeOpStage::MoveSpeculativeLoadsTo(nsTArray<nsHtml5SpeculativeLoad>& aSp
   if (aSpeculativeLoadQueue.IsEmpty()) {
     mSpeculativeLoadQueue.SwapElements(aSpeculativeLoadQueue);
   } else {
-    aSpeculativeLoadQueue.MoveElementsFrom(mSpeculativeLoadQueue);
+    aSpeculativeLoadQueue.MoveElementsFrom(Move(mSpeculativeLoadQueue));
   }
 }
 

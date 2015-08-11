@@ -26,7 +26,7 @@ NotifyPaintEvent::NotifyPaintEvent(EventTarget* aOwner,
     mEvent->message = aEventType;
   }
   if (aInvalidateRequests) {
-    mInvalidateRequests.MoveElementsFrom(aInvalidateRequests->mRequests);
+    mInvalidateRequests.MoveElementsFrom(Move(aInvalidateRequests->mRequests));
   }
 }
 
