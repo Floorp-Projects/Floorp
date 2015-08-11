@@ -491,6 +491,11 @@ public:
      mShared = true;
    }
 
+  ISurfaceAllocator* GetAllocator()
+  {
+    return mAllocator;
+  }
+
 private:
   /**
    * Called once, just before the destructor.
@@ -518,11 +523,6 @@ protected:
    * leak (see TextureClientD3D9 for example).
    */
   virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aDescriptor) = 0;
-
-  ISurfaceAllocator* GetAllocator()
-  {
-    return mAllocator;
-  }
 
   RefPtr<TextureChild> mActor;
   RefPtr<ISurfaceAllocator> mAllocator;
