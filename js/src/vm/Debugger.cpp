@@ -3869,8 +3869,11 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
             if (p) {
                 /* Is our newly found script deeper than the last one we found? */
                 JSScript* incumbent = p->value();
-                if (script->staticLevel() > incumbent->staticLevel())
+                if (StaticScopeChainLength(script->innermostStaticScope()) >
+                    StaticScopeChainLength(incumbent->innermostStaticScope()))
+                {
                     p->value() = script;
+                }
             } else {
                 /*
                  * This is the first matching script we've encountered for this
@@ -4702,14 +4705,6 @@ DebuggerScript_getSourceLength(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
-DebuggerScript_getStaticLevel(JSContext* cx, unsigned argc, Value* vp)
-{
-    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get staticLevel)", args, obj, script);
-    args.rval().setNumber(uint32_t(script->staticLevel()));
-    return true;
-}
-
-static bool
 DebuggerScript_getGlobal(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get global)", args, obj, script);
@@ -5492,7 +5487,6 @@ static const JSPropertySpec DebuggerScript_properties[] = {
     JS_PSG("source", DebuggerScript_getSource, 0),
     JS_PSG("sourceStart", DebuggerScript_getSourceStart, 0),
     JS_PSG("sourceLength", DebuggerScript_getSourceLength, 0),
-    JS_PSG("staticLevel", DebuggerScript_getStaticLevel, 0),
     JS_PSG("global", DebuggerScript_getGlobal, 0),
     JS_PS_END
 };
@@ -6405,8 +6399,7 @@ EvaluateInEnv(JSContext* cx, Handle<Env*> env, HandleValue thisv, AbstractFrameP
     SourceBufferHolder srcBuf(chars.start().get(), chars.length(), SourceBufferHolder::NoOwnership);
     RootedScript script(cx, frontend::CompileScript(cx, &cx->tempLifoAlloc(), env, staticScope,
                                                     callerScript, options, srcBuf,
-                                                    /* source = */ nullptr,
-                                                    /* staticLevel = */ frame ? 1 : 0));
+                                                    /* source = */ nullptr));
     if (!script)
         return false;
 

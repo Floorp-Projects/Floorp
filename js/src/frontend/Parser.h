@@ -106,8 +106,6 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
 
     Node            maybeFunction;  /* sc->isFunctionBox, the pn where pn->pn_funbox == sc */
 
-    const unsigned  staticLevel;    /* static compilation unit nesting level */
-
     // lastYieldOffset stores the offset of the last yield that was parsed.
     // NoYieldOffset is its initial value.
     static const uint32_t NoYieldOffset = UINT32_MAX;
@@ -251,12 +249,11 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
 
     ParseContext(Parser<ParseHandler>* prs, GenericParseContext* parent,
                  Node maybeFunction, SharedContext* sc, Directives* newDirectives,
-                 unsigned staticLevel, uint32_t blockScopeDepth)
+                 uint32_t blockScopeDepth)
       : GenericParseContext(parent, sc),
         bodyid(0),           // initialized in init()
         stmtStack(prs->context),
         maybeFunction(maybeFunction),
-        staticLevel(staticLevel),
         lastYieldOffset(NoYieldOffset),
         blockScopeDepth(blockScopeDepth),
         blockNode(ParseHandler::null()),
@@ -302,7 +299,7 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
     // True if this is the ParseContext for the body of a function created by
     // the Function constructor.
     bool isFunctionConstructorBody() const {
-        return sc->isFunctionBox() && staticLevel == 0;
+        return sc->isFunctionBox() && !parent && sc->asFunctionBox()->function()->isLambda();
     }
 
     inline bool useAsmOrInsideUseAsm() const {
@@ -554,8 +551,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
 
     // Parse a function, given only its arguments and body. Used for lazily
     // parsed functions.
-    Node standaloneLazyFunction(HandleFunction fun, unsigned staticLevel, bool strict,
-                                GeneratorKind generatorKind);
+    Node standaloneLazyFunction(HandleFunction fun, bool strict, GeneratorKind generatorKind);
 
     /*
      * Parse a function body.  Pass StatementListBody if the body is a list of
