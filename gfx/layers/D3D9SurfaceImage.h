@@ -14,6 +14,8 @@
 namespace mozilla {
 namespace layers {
 
+class SharedTextureClientD3D9;
+
 // Image class that wraps a IDirect3DSurface9. This class copies the image
 // passed into SetData(), so that it can be accessed from other D3D devices.
 // This class also manages the synchronization of the copy, to ensure the
@@ -53,11 +55,8 @@ private:
   void EnsureSynchronized();
 
   gfx::IntSize mSize;
-  RefPtr<IDirect3DTexture9> mTexture;
   RefPtr<IDirect3DQuery9> mQuery;
-  RefPtr<TextureClient> mTextureClient;
-  HANDLE mShareHandle;
-  D3DSURFACE_DESC mDesc;
+  RefPtr<SharedTextureClientD3D9> mTextureClient;
   bool mValid;
 };
 
