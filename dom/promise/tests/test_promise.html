@@ -169,6 +169,26 @@ function promiseAsync_ResolveThenTimeout() {
   ok(!handlerExecuted, "Handlers are not called before 'then' returns.");
 }
 
+function promiseAsync_SyncXHR()
+{
+  var handlerExecuted = false;
+
+  Promise.resolve().then(function() {
+    handlerExecuted = true;
+
+    // Allow other assertions to run so the test could fail before the next one.
+    setTimeout(runTest, 0);
+  });
+
+  ok(!handlerExecuted, "Handlers are not called until the next microtask.");
+
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "testXHR.txt", false);
+  xhr.send(null);
+
+  todo(!handlerExecuted, "Sync XHR should not trigger microtask execution.");
+}
+
 function promiseDoubleThen() {
   var steps = 0;
   var promise = new Promise(function(r1, r2) {
@@ -756,6 +776,7 @@ var tests = [ promiseResolve, promiseReject,
               promiseAsync_TimeoutResolveThen,
               promiseAsync_ResolveTimeoutThen,
               promiseAsync_ResolveThenTimeout,
+              promiseAsync_SyncXHR,
               promiseDoubleThen, promiseThenException,
               promiseThenCatchThen, promiseRejectThenCatchThen,
               promiseRejectThenCatchThen2,

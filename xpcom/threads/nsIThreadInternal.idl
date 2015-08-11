@@ -13,7 +13,7 @@ interface nsIThreadObserver;
  * The XPCOM thread object implements this interface, which allows a consumer
  * to observe dispatch activity on the thread.
  */
-[scriptable, uuid(b24c5af3-43c2-4d17-be14-94d6648a305f)]
+[scriptable, uuid(9cc51754-2eb3-4b46-ae99-38a61881c622)]
 interface nsIThreadInternal : nsIThread
 {
   /**
@@ -24,13 +24,6 @@ interface nsIThreadInternal : nsIThread
    * processed during a call to Shutdown.
    */
   attribute nsIThreadObserver observer;
-
-  /**
-   * The current recursion depth, 0 when no events are running, 1 when a single
-   * event is running, and higher when nested events are running. Must only be
-   * called on the target thread.
-   */
-  readonly attribute unsigned long recursionDepth;
 
   /**
    * Add an observer that will *only* receive onProcessNextEvent,
@@ -81,7 +74,7 @@ interface nsIThreadInternal : nsIThread
  *     onDispatchedEvent(thread) {
  *       NativeQueue.signal();
  *     }
- *     onProcessNextEvent(thread, mayWait, recursionDepth) {
+ *     onProcessNextEvent(thread, mayWait) {
  *       if (NativeQueue.hasNextEvent())
  *         NativeQueue.processNextEvent();
  *       while (mayWait && !thread.hasPendingEvent()) {
@@ -100,7 +93,7 @@ interface nsIThreadInternal : nsIThread
  *       afterProcessNextEvent, then another that inherits the first and adds
  *       onDispatchedEvent.
  */
-[scriptable, uuid(09b424c3-26b0-4128-9039-d66f85b02c63)]
+[uuid(cc8da053-1776-44c2-9199-b5a629d0a19d)]
 interface nsIThreadObserver : nsISupports
 {
   /**
@@ -122,29 +115,21 @@ interface nsIThreadObserver : nsISupports
    * @param mayWait
    *   Indicates whether or not the method is allowed to block the calling
    *   thread.  For example, this parameter is false during thread shutdown.
-   * @param recursionDepth
-   *   Indicates the number of calls to ProcessNextEvent on the call stack in
-   *   addition to the current call.
    */
-  void onProcessNextEvent(in nsIThreadInternal thread, in boolean mayWait,
-                          in unsigned long recursionDepth);
+  void onProcessNextEvent(in nsIThreadInternal thread, in boolean mayWait);
 
   /**
    * This method is called (from nsIThread::ProcessNextEvent) after an event
    * is processed.  It does not guarantee that an event was actually processed
    * (depends on the value of |eventWasProcessed|.  This method is only called
-   * on the target thread.
+   * on the target thread.  DO NOT EVER RUN SCRIPT FROM THIS CALLBACK!!!
    *
    * @param thread
    *   The thread that processed another event.
-   * @param recursionDepth
-   *   Indicates the number of calls to ProcessNextEvent on the call stack in
-   *   addition to the current call.
    * @param eventWasProcessed
    *   Indicates whether an event was actually processed. May be false if the
    *   |mayWait| flag was false when calling nsIThread::ProcessNextEvent().
    */
   void afterProcessNextEvent(in nsIThreadInternal thread,
-                             in unsigned long recursionDepth,
                              in bool eventWasProcessed);
 };

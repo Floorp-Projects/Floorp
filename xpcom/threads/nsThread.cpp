@@ -22,6 +22,7 @@
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "pratom.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/Logging.h"
 #include "nsIObserverService.h"
 #if !defined(MOZILLA_XPCOMRT_API)
@@ -93,8 +94,6 @@ GetThreadLog()
 #define LOG(args) MOZ_LOG(GetThreadLog(), mozilla::LogLevel::Debug, args)
 
 NS_DECL_CI_INTERFACE_GETTER(nsThread)
-
-nsIThreadObserver* nsThread::sMainThreadObserver = nullptr;
 
 //-----------------------------------------------------------------------------
 // Because we do not have our own nsIFactory, we have to implement nsIClassInfo
@@ -440,6 +439,7 @@ int sCanaryOutputFD = -1;
 
 nsThread::nsThread(MainThreadFlag aMainThread, uint32_t aStackSize)
   : mLock("nsThread.mLock")
+  , mScriptObserver(nullptr)
   , mEvents(&mEventsRoot)
   , mPriority(PRIORITY_NORMAL)
   , mThread(nullptr)
@@ -824,22 +824,19 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
   }
 #endif
 
-  bool notifyMainThreadObserver =
-    (MAIN_THREAD == mIsMainThread) && sMainThreadObserver;
-  if (notifyMainThreadObserver) {
-    sMainThreadObserver->OnProcessNextEvent(this, reallyWait,
-                                            mNestedEventLoopDepth);
+  ++mNestedEventLoopDepth;
+
+  bool callScriptObserver = !!mScriptObserver;
+  if (callScriptObserver) {
+    mScriptObserver->BeforeProcessTask(reallyWait);
   }
 
   nsCOMPtr<nsIThreadObserver> obs = mObserver;
   if (obs) {
-    obs->OnProcessNextEvent(this, reallyWait, mNestedEventLoopDepth);
+    obs->OnProcessNextEvent(this, reallyWait);
   }
 
-  NOTIFY_EVENT_OBSERVERS(OnProcessNextEvent,
-                         (this, reallyWait, mNestedEventLoopDepth));
-
-  ++mNestedEventLoopDepth;
+  NOTIFY_EVENT_OBSERVERS(OnProcessNextEvent, (this, reallyWait));
 
 #ifdef MOZ_CANARY
   Canary canary;
@@ -872,19 +869,17 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
     }
   }
 
-  --mNestedEventLoopDepth;
-
-  NOTIFY_EVENT_OBSERVERS(AfterProcessNextEvent,
-                         (this, mNestedEventLoopDepth, *aResult));
+  NOTIFY_EVENT_OBSERVERS(AfterProcessNextEvent, (this, *aResult));
 
   if (obs) {
-    obs->AfterProcessNextEvent(this, mNestedEventLoopDepth, *aResult);
+    obs->AfterProcessNextEvent(this, *aResult);
   }
 
-  if (notifyMainThreadObserver && sMainThreadObserver) {
-    sMainThreadObserver->AfterProcessNextEvent(this, mNestedEventLoopDepth,
-                                               *aResult);
+  if (callScriptObserver && mScriptObserver) {
+    mScriptObserver->AfterProcessTask(mNestedEventLoopDepth);
   }
+
+  --mNestedEventLoopDepth;
 
   return rv;
 }
@@ -962,15 +957,11 @@ nsThread::SetObserver(nsIThreadObserver* aObs)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThread::GetRecursionDepth(uint32_t* aDepth)
+uint32_t
+nsThread::RecursionDepth() const
 {
-  if (NS_WARN_IF(PR_GetCurrentThread() != mThread)) {
-    return NS_ERROR_NOT_SAME_THREAD;
-  }
-
-  *aDepth = mNestedEventLoopDepth;
-  return NS_OK;
+  MOZ_ASSERT(PR_GetCurrentThread() == mThread);
+  return mNestedEventLoopDepth;
 }
 
 NS_IMETHODIMP
@@ -1069,19 +1060,16 @@ nsThread::PopEventQueue(nsIEventTarget* aInnermostTarget)
   return NS_OK;
 }
 
-nsresult
-nsThread::SetMainThreadObserver(nsIThreadObserver* aObserver)
+void
+nsThread::SetScriptObserver(mozilla::CycleCollectedJSRuntime* aScriptObserver)
 {
-  if (aObserver && nsThread::sMainThreadObserver) {
-    return NS_ERROR_NOT_AVAILABLE;
+  if (!aScriptObserver) {
+    mScriptObserver = nullptr;
+    return;
   }
 
-  if (!NS_IsMainThread()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  nsThread::sMainThreadObserver = aObserver;
-  return NS_OK;
+  MOZ_ASSERT(!mScriptObserver);
+  mScriptObserver = aScriptObserver;
 }
 
 //-----------------------------------------------------------------------------

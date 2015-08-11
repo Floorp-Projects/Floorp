@@ -3574,6 +3574,59 @@ XPCJSRuntime::NoteCustomGCThingXPCOMChildren(const js::Class* clasp, JSObject* o
     return true;
 }
 
+void
+XPCJSRuntime::BeforeProcessTask(bool aMightBlock)
+{
+    MOZ_ASSERT(NS_IsMainThread());
+
+    // If ProcessNextEvent was called during a Promise "then" callback, we
+    // must process any pending microtasks before blocking in the event loop,
+    // otherwise we may deadlock until an event enters the queue later.
+    if (aMightBlock) {
+        if (Promise::PerformMicroTaskCheckpoint()) {
+            // If any microtask was processed, we post a dummy event in order to
+            // force the ProcessNextEvent call not to block.  This is required
+            // to support nested event loops implemented using a pattern like
+            // "while (condition) thread.processNextEvent(true)", in case the
+            // condition is triggered here by a Promise "then" callback.
+
+            class DummyRunnable : public nsRunnable {
+            public:
+                NS_IMETHOD Run() { return NS_OK; }
+            };
+
+            NS_DispatchToMainThread(new DummyRunnable());
+        }
+    }
+
+    // Start the slow script timer.
+    mSlowScriptCheckpoint = mozilla::TimeStamp::NowLoRes();
+    mSlowScriptSecondHalf = false;
+    js::ResetStopwatches(Get()->Runtime());
+
+    // Push a null JSContext so that we don't see any script during
+    // event processing.
+    PushNullJSContext();
+
+    CycleCollectedJSRuntime::BeforeProcessTask(aMightBlock);
+}
+
+void
+XPCJSRuntime::AfterProcessTask(uint32_t aNewRecursionDepth)
+{
+    // Now that we're back to the event loop, reset the slow script checkpoint.
+    mSlowScriptCheckpoint = mozilla::TimeStamp();
+    mSlowScriptSecondHalf = false;
+
+    // Call cycle collector occasionally.
+    MOZ_ASSERT(NS_IsMainThread());
+    nsJSContext::MaybePokeCC();
+
+    CycleCollectedJSRuntime::AfterProcessTask(aNewRecursionDepth);
+
+    PopNullJSContext();
+}
+
 /***************************************************************************/
 
 void
