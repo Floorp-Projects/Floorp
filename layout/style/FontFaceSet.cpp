@@ -9,10 +9,10 @@
 #include "gfxFontConstants.h"
 #include "mozilla/css/Declaration.h"
 #include "mozilla/css/Loader.h"
-#include "mozilla/dom/CSSFontFaceLoadEvent.h"
-#include "mozilla/dom/CSSFontFaceLoadEventBinding.h"
 #include "mozilla/dom/FontFaceSetBinding.h"
 #include "mozilla/dom/FontFaceSetIterator.h"
+#include "mozilla/dom/FontFaceSetLoadEvent.h"
+#include "mozilla/dom/FontFaceSetLoadEventBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Logging.h"
@@ -1627,7 +1627,7 @@ FontFaceSet::DispatchLoadingFinishedEvent(
                                  const nsAString& aType,
                                  const nsTArray<FontFace*>& aFontFaces)
 {
-  CSSFontFaceLoadEventInit init;
+  FontFaceSetLoadEventInit init;
   init.mBubbles = false;
   init.mCancelable = false;
   OwningNonNull<FontFace>* elements =
@@ -1636,8 +1636,8 @@ FontFaceSet::DispatchLoadingFinishedEvent(
   for (size_t i = 0; i < aFontFaces.Length(); i++) {
     elements[i] = aFontFaces[i];
   }
-  nsRefPtr<CSSFontFaceLoadEvent> event =
-    CSSFontFaceLoadEvent::Constructor(this, aType, init);
+  nsRefPtr<FontFaceSetLoadEvent> event =
+    FontFaceSetLoadEvent::Constructor(this, aType, init);
   (new AsyncEventDispatcher(this, event))->RunDOMEventWhenSafe();
 }
 
