@@ -12,11 +12,14 @@
 
 namespace mozilla {
 
-// Utility class that takes a time value representing an integral number of
-// milliseconds (e.g. a native event time) that wraps within a fixed range (e.g.
-// unsigned 32-bit range) and converts it to a TimeStamp.
+// Utility class that converts time values represented as an unsigned integral
+// number of milliseconds from one time source (e.g. a native event time) to
+// corresponding mozilla::TimeStamp objects.
 //
-// It does this by using a historical reference time recorded in both time
+// This class handles wrapping of integer values and skew between the time
+// source and mozilla::TimeStamp values.
+//
+// It does this by using an historical reference time recorded in both time
 // scales (i.e. both as a numerical time value and as a TimeStamp).
 //
 // For performance reasons, this class is careful to minimize calls to the
@@ -29,8 +32,10 @@ public:
   SystemTimeConverter()
     : mReferenceTime(Time(0))
     , mReferenceTimeStamp() // Initializes to the null timestamp
+    , mLastBackwardsSkewCheck(Time(0))
     , kTimeRange(std::numeric_limits<Time>::max())
     , kTimeHalfRange(kTimeRange / 2)
+    , kBackwardsSkewCheckInterval(Time(2000))
   {
     static_assert(!IsSigned<Time>::value, "Expected Time to be unsigned");
   }
@@ -46,84 +51,164 @@ public:
     }
     TimeStamp roughlyNow = TimeStamp::NowLoRes();
 
-    // If the time is before the reference time there are two possibilities:
+    // Check for skew between the source of Time values and TimeStamp values.
+    // We do this by comparing two durations (both in ms):
     //
-    //   a) Time has wrapped
-    //   b) The initial times were not delivered strictly in time order
+    // i.  The duration from the reference time to the passed-in time.
+    //     (Calculated below as timeSinceReference)
+    // ii. The duration from the reference timestamp to the current time
+    //     based on TimeStamp::NowLoRes.
+    //     (Calculated below as timeToNowByTimeStamp)
     //
-    // I'm not sure if (b) ever happens but even if it doesn't currently occur,
-    // it could come about if we change the way we fetch events, for example.
+    // If (ii) - (i) is negative (and greater in magnitude than some tolerance
+    // to account for the inaccuracy in NowLoRes), then the source of Time
+    // values is getting "ahead" of TimeStamp. We call this "forwards" skew
+    // below.
     //
-    // We can tell we have (b) if the time is a little bit before the reference
-    // time (i.e. less than half the range) and the timestamp is only a little
-    // bit past the reference timestamp (again less than half the range).
-    // In that case we should adjust the reference time so it is the
-    // earliest time.
+    // For the reverse case, if (ii) - (i) is positive (and greater than some
+    // tolerance factor), then we may have "backwards" skew. This is often
+    // the case when we have a backlog of events and by the time we process
+    // them, the time given by the system is comparatively "old".
+    //
+    // We call (ii) - (i), "deltaFromNow".
+    //
+    // Graphically:
+    //
+    //                    mReferenceTime              aTime
+    // Time scale:      ........+.......................*........
+    //                          |---timeSinceReference--|
+    //
+    //                  mReferenceTimeStamp             roughlyNow
+    // TimeStamp scale: ........+...........................*....
+    //                          |----timeToNowByTimeStamp---|
+    //
+    //                                                  |---|
+    //                                               deltaFromNow
+    //
     Time timeSinceReference = aTime - mReferenceTime;
-    if (timeSinceReference > kTimeHalfRange &&
-        roughlyNow - mReferenceTimeStamp <
-          TimeDuration::FromMilliseconds(kTimeHalfRange)) {
-      UpdateReferenceTime(aTime, aCurrentTimeGetter);
-      timeSinceReference = aTime - mReferenceTime;
+
+    // Cast the result to signed 64-bit integer first since that should be
+    // enough to hold the range of values returned by ToMilliseconds() and
+    // the result of converting from double to an integer-type when the value is
+    // outside the integer range is undefined.
+    // Then we do an implicit cast to Time (typically an unsigned 32-bit
+    // integer) which wraps times outside that range.
+    Time timeToNowByTimeStamp =
+      static_cast<int64_t>((roughlyNow - mReferenceTimeStamp).ToMilliseconds());
+    Time deltaFromNow = timeToNowByTimeStamp - timeSinceReference;
+
+    // TimeStamp::NowLoRes should be accurate to within 15.6ms so we need to
+    // be at least that generous when detecting clock skew.
+    static const Time kTolerance = 30;
+
+    // Check for forwards skew (since deltaFromNow is an unsigned integer, we
+    // detect the minus case by seeing if it has underflowed).
+    if (deltaFromNow > kTimeHalfRange) {
+      // Make aTime correspond to roughlyNow
+      UpdateReferenceTime(aTime, roughlyNow);
+
+      // We didn't have backwards skew so don't bother checking for
+      // backwards skew again for a little while.
+      mLastBackwardsSkewCheck = aTime;
+
+      return roughlyNow;
     }
 
-    TimeStamp timestamp =
-      mReferenceTimeStamp + TimeDuration::FromMilliseconds(timeSinceReference);
-
-    // Time may have wrapped several times since we recorded the reference
-    // time so we extend timestamp as needed.
-    double timesWrapped =
-      (roughlyNow - mReferenceTimeStamp).ToMilliseconds() / kTimeRange;
-    int32_t cyclesToAdd =
-      static_cast<int32_t>(timesWrapped); // Round towards zero
-
-    // There is some imprecision in the above calculation since we are using
-    // TimeStamp::NowLoRes and mReferenceTime and mReferenceTimeStamp may not
-    // be *exactly* the same moment. It is possible we think that time
-    // has *just* wrapped based on comparing timestamps, but actually the
-    // time is *just about* to wrap; or vice versa.
-    // In the following, we detect this situation and adjust cyclesToAdd as
-    // necessary.
-    double intervalFraction = fmod(timesWrapped, 1.0);
-
-    // If our rough calculation of how many times we've wrapped based on
-    // comparing timestamps says we've just wrapped (specifically, less 10% past
-    // the wrap point), but the time is just before the wrap point (again,
-    // within 10%), then we need to reduce the number of wraps by 1.
-    if (intervalFraction < 0.1 && timeSinceReference > kTimeRange * 0.9) {
-      cyclesToAdd--;
-    // Likewise, if our rough calculation says we've just wrapped but actually
-    // the time is just after the wrap point, we need to add an extra wrap.
-    } else if (intervalFraction > 0.9 &&
-               timeSinceReference < kTimeRange * 0.1) {
-      cyclesToAdd++;
+    if (deltaFromNow <= kTolerance) {
+      // If the time between event times and TimeStamp values is within
+      // the tolerance then assume we don't have clock skew so we can
+      // avoid checking for backwards skew for a while.
+      mLastBackwardsSkewCheck = aTime;
+    } else if (aTime - mLastBackwardsSkewCheck > kBackwardsSkewCheckInterval) {
+      aCurrentTimeGetter.GetTimeAsyncForPossibleBackwardsSkew(roughlyNow);
+      mLastBackwardsSkewCheck = aTime;
     }
 
-    if (cyclesToAdd > 0) {
-      timestamp += TimeDuration::FromMilliseconds(kTimeRange * cyclesToAdd);
+    // Finally, calculate the timestamp
+    return roughlyNow - TimeDuration::FromMilliseconds(deltaFromNow);
+  }
+
+  void
+  CompensateForBackwardsSkew(Time aReferenceTime,
+                             const TimeStamp &aLowerBound) {
+    // Check if we actually have backwards skew. Backwards skew looks like
+    // the following:
+    //
+    //        mReferenceTime
+    // Time:      ..+...a...b...c..........................
+    //
+    //     mReferenceTimeStamp
+    // TimeStamp: ..+.....a.....b.....c....................
+    //
+    // Converted
+    // time:      ......a'..b'..c'.........................
+    //
+    // What we need to do is bring mReferenceTime "forwards".
+    //
+    // Suppose when we get (c), we detect possible backwards skew and trigger
+    // an async request for the current time (which is passed in here as
+    // aReferenceTime).
+    //
+    // We end up with something like the following:
+    //
+    //        mReferenceTime     aReferenceTime
+    // Time:      ..+...a...b...c...v......................
+    //
+    //     mReferenceTimeStamp
+    // TimeStamp: ..+.....a.....b.....c..........x.........
+    //                                ^          ^
+    //                          aLowerBound  TimeStamp::Now()
+    //
+    // If the duration (aLowerBound - mReferenceTimeStamp) is greater than
+    // (aReferenceTime - mReferenceTime) then we know we have backwards skew.
+    //
+    // If that's not the case, then we probably just got caught behind
+    // temporarily.
+    MOZ_ASSERT(mReferenceTime - aReferenceTime < kTimeHalfRange,
+               "Expected aReferenceTime to be more recent than mReferenceTime");
+    if (aReferenceTime - mReferenceTime
+        > (aLowerBound - mReferenceTimeStamp).ToMilliseconds()) {
+      return;
     }
 
-    return timestamp;
+    // We have backwards skew; the equivalent TimeStamp for aReferenceTime lies
+    // somewhere between aLowerBound (which was the TimeStamp when we triggered
+    // the async request for the current time) and TimeStamp::Now().
+    //
+    // If aReferenceTime was waiting in the event queue for a long time, the
+    // equivalent TimeStamp might be much closer to aLowerBound than
+    // TimeStamp::Now() so for now we just set it to aLowerBound. That's
+    // guaranteed to be at least somewhat of an improvement.
+    UpdateReferenceTime(aReferenceTime, aLowerBound);
   }
 
 private:
   template <typename CurrentTimeGetter>
   void
-  UpdateReferenceTime(Time aTime,
+  UpdateReferenceTime(Time aReferenceTime,
                       const CurrentTimeGetter& aCurrentTimeGetter) {
-    mReferenceTime = aTime;
     Time currentTime = aCurrentTimeGetter.GetCurrentTime();
     TimeStamp currentTimeStamp = TimeStamp::Now();
-    Time timeSinceReference = currentTime - aTime;
-    mReferenceTimeStamp =
+    Time timeSinceReference = currentTime - aReferenceTime;
+    TimeStamp referenceTimeStamp =
       currentTimeStamp - TimeDuration::FromMilliseconds(timeSinceReference);
+    UpdateReferenceTime(aReferenceTime, referenceTimeStamp);
+  }
+
+  void
+  UpdateReferenceTime(Time aReferenceTime,
+                      const TimeStamp& aReferenceTimeStamp) {
+    mReferenceTime = aReferenceTime;
+    mReferenceTimeStamp = aReferenceTimeStamp;
   }
 
   Time mReferenceTime;
   TimeStamp mReferenceTimeStamp;
+  Time mLastBackwardsSkewCheck;
 
   const Time kTimeRange;
   const Time kTimeHalfRange;
+  const Time kBackwardsSkewCheckInterval;
 };
 
 } // namespace mozilla
