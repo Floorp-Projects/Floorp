@@ -42,6 +42,7 @@ Structure::
         },
         e10sEnabled: <bool>, // whether e10s is on, i.e. browser tabs open by default in a different process
         telemetryEnabled: <bool>, // false on failure
+        isInOptoutSample: <bool>, // whether this client is part of the opt-out sample
         locale: <string>, // e.g. "it", null on failure
         update: {
           channel: <string>, // e.g. "release", null on failure
