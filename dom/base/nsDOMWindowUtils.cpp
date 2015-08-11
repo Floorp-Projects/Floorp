@@ -117,8 +117,6 @@ using namespace mozilla::gfx;
 
 class gfxContext;
 
-static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-
 NS_INTERFACE_MAP_BEGIN(nsDOMWindowUtils)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMWindowUtils)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWindowUtils)
