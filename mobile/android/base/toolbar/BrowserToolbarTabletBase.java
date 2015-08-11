@@ -12,6 +12,7 @@ import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.tabs.TabHistoryController;
 import org.mozilla.gecko.menu.MenuItemActionBar;
+import org.mozilla.gecko.util.ColorUtils;
 import org.mozilla.gecko.widget.ThemedTextView;
 
 import android.content.Context;
@@ -62,7 +63,7 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
         urlDisplayLayout.updateSiteIdentityAnchor(backButton);
 
         privateBrowsingTabletMenuItemColorFilter = new PorterDuffColorFilter(
-                getResources().getColor(R.color.tabs_tray_icon_grey), PorterDuff.Mode.SRC_IN);
+                ColorUtils.getColor(context, R.color.tabs_tray_icon_grey), PorterDuff.Mode.SRC_IN);
     }
 
     private void initButtonListeners() {

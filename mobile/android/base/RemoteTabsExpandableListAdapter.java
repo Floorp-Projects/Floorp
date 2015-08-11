@@ -10,6 +10,7 @@ import android.text.format.DateUtils;
 import org.mozilla.gecko.db.RemoteClient;
 import org.mozilla.gecko.db.RemoteTab;
 import org.mozilla.gecko.home.TwoLinePageRow;
+import org.mozilla.gecko.util.ColorUtils;
 
 import android.content.Context;
 import android.text.TextUtils;
@@ -161,7 +162,7 @@ public class RemoteTabsExpandableListAdapter extends BaseExpandableListAdapter {
 
         // Now update the UI.
         holder.nameView.setText(client.name);
-        holder.nameView.setTextColor(context.getResources().getColor(textColorResId));
+        holder.nameView.setTextColor(ColorUtils.getColor(context, textColorResId));
 
         final long now = System.currentTimeMillis();
 
