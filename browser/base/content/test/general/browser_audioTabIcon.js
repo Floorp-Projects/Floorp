@@ -281,8 +281,6 @@ function* test_on_browser(browser) {
     }, () => test_on_browser(browser));
   } else {
     yield test_browser_swapping(tab, browser);
-
-    yield test_click_on_pinned_tab_after_mute();
   }
 }
 
@@ -302,5 +300,7 @@ add_task(function* test_page() {
     url: PAGE
   }, test_on_browser);
 });
+
+add_task(test_click_on_pinned_tab_after_mute);
 
 add_task(test_cross_process_load);
