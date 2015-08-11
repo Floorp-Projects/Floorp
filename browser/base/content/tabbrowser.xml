@@ -3371,6 +3371,8 @@
               let tab = this.tabbrowser.getTabForBrowser(browser);
               this.setTabState(tab, this.STATE_LOADED);
 
+              this.finishTabSwitch();
+
               if (this.loadingTab === tab) {
                 clearTimeout(this.loadTimer);
                 this.loadTimer = null;
