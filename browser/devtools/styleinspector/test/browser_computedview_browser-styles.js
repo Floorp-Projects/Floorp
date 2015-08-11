@@ -6,20 +6,18 @@
 
 // Tests that the checkbox to include browser styles works properly.
 
+const TEST_URI = `
+  <style type="text/css">
+    .matches {
+      color: #F00;
+    }
+  </style>
+  <span id="matches" class="matches">Some styled text</span>
+`;
+
 add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8,default styles test");
-
-  info("Creating the test document");
-  content.document.body.innerHTML = '<style type="text/css"> ' +
-    '.matches {color: #F00;}</style>' +
-    '<span id="matches" class="matches">Some styled text</span>' +
-    '</div>';
-  content.document.title = "Style Inspector Default Styles Test";
-
-  info("Opening the computed view");
-  let {toolbox, inspector, view} = yield openComputedView();
-
-  info("Selecting the test node");
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openComputedView();
   yield selectNode("#matches", inspector);
 
   info("Checking the default styles");

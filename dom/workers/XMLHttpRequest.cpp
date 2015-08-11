@@ -1229,9 +1229,7 @@ EventRunnable::PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
         if (doClone) {
           // Anything subject to GC must be cloned.
           const JSStructuredCloneCallbacks* callbacks =
-            aWorkerPrivate->IsChromeWorker() ?
-            workers::ChromeWorkerStructuredCloneCallbacks(true) :
-            workers::WorkerStructuredCloneCallbacks(true);
+            workers::WorkerStructuredCloneCallbacks();
 
           WorkerStructuredCloneClosure closure;
 
@@ -1344,9 +1342,7 @@ EventRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
         JSAutoStructuredCloneBuffer responseBuffer(Move(mResponseBuffer));
 
         const JSStructuredCloneCallbacks* callbacks =
-          aWorkerPrivate->IsChromeWorker() ?
-          workers::ChromeWorkerStructuredCloneCallbacks(false) :
-          workers::WorkerStructuredCloneCallbacks(false);
+          workers::WorkerStructuredCloneCallbacks();
 
         WorkerStructuredCloneClosure closure;
         closure.mClonedObjects.SwapElements(mResponseClosure.mClonedObjects);
@@ -1531,9 +1527,7 @@ SendRunnable::MainThreadRun()
     nsresult rv = NS_OK;
 
     const JSStructuredCloneCallbacks* callbacks =
-      mWorkerPrivate->IsChromeWorker() ?
-      workers::ChromeWorkerStructuredCloneCallbacks(true) :
-      workers::WorkerStructuredCloneCallbacks(true);
+      workers::WorkerStructuredCloneCallbacks();
 
     JS::Rooted<JS::Value> body(cx);
     if (mBody.read(cx, &body, callbacks, &mClosure)) {
@@ -2175,9 +2169,7 @@ XMLHttpRequest::Send(JS::Handle<JSObject*> aBody, ErrorResult& aRv)
   }
 
   const JSStructuredCloneCallbacks* callbacks =
-    mWorkerPrivate->IsChromeWorker() ?
-    ChromeWorkerStructuredCloneCallbacks(false) :
-    WorkerStructuredCloneCallbacks(false);
+    WorkerStructuredCloneCallbacks();
 
   WorkerStructuredCloneClosure closure;
 
@@ -2221,9 +2213,7 @@ XMLHttpRequest::Send(Blob& aBody, ErrorResult& aRv)
   }
 
   const JSStructuredCloneCallbacks* callbacks =
-    mWorkerPrivate->IsChromeWorker() ?
-    ChromeWorkerStructuredCloneCallbacks(false) :
-    WorkerStructuredCloneCallbacks(false);
+    WorkerStructuredCloneCallbacks();
 
   WorkerStructuredCloneClosure closure;
 
@@ -2259,9 +2249,7 @@ XMLHttpRequest::Send(nsFormData& aBody, ErrorResult& aRv)
   }
 
   const JSStructuredCloneCallbacks* callbacks =
-    mWorkerPrivate->IsChromeWorker() ?
-    ChromeWorkerStructuredCloneCallbacks(false) :
-    WorkerStructuredCloneCallbacks(false);
+    WorkerStructuredCloneCallbacks();
 
   JSAutoStructuredCloneBuffer buffer;
   WorkerStructuredCloneClosure closure;

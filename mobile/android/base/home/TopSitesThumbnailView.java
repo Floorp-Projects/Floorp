@@ -7,6 +7,7 @@ package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.ThumbnailHelper;
+import org.mozilla.gecko.util.ColorUtils;
 import org.mozilla.gecko.util.HardwareUtils;
 
 import android.content.Context;
@@ -38,7 +39,7 @@ public class TopSitesThumbnailView extends ImageView {
     private Matrix mLayoutNextMatrix = new Matrix();
 
     // Default filter color for "Add a bookmark" views.
-    private final int mDefaultColor = getResources().getColor(R.color.top_site_default);
+    private final int mDefaultColor = ColorUtils.getColor(getContext(), R.color.top_site_default);
 
     // Stroke width for the border.
     private final float mStrokeWidth = getResources().getDisplayMetrics().density * 2;
@@ -68,7 +69,7 @@ public class TopSitesThumbnailView extends ImageView {
         // Initialize the border paint.
         final Resources res = getResources();
         mBorderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        mBorderPaint.setColor(res.getColor(R.color.top_site_border));
+        mBorderPaint.setColor(ColorUtils.getColor(context, R.color.top_site_border));
         mBorderPaint.setStyle(Paint.Style.STROKE);
     }
 

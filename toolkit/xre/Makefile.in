@@ -19,7 +19,7 @@ $(call warnIfEmpty,TOOLKIT_EM_VERSION)
 # Valid if null: {warn,error}IfEmpty
 DEFINES += -DTOOLKIT_EM_VERSION='"$(TOOLKIT_EM_VERSION)"'
 
-MOZ_SOURCE_STAMP ?= $(firstword $(shell hg -R $(topsrcdir) parent --template='{node|short}\n' 2>/dev/null))
+MOZ_SOURCE_STAMP ?= $(firstword $(shell hg -R $(topsrcdir) parent --template='{node}\n' 2>/dev/null))
 ifdef MOZ_SOURCE_STAMP
 
   INIARGS = --sourcestamp=$(MOZ_SOURCE_STAMP)

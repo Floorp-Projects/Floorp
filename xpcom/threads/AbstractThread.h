@@ -92,6 +92,9 @@ protected:
   const bool mSupportsTailDispatch;
 };
 
+already_AddRefed<AbstractThread> CreateXPCOMAbstractThreadWrapper(nsIThread* aThread,
+                                 bool aRequireTailDispatch);
+
 } // namespace mozilla
 
 #endif

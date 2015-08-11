@@ -141,4 +141,11 @@ AbstractThread::DispatchDirectTask(already_AddRefed<nsIRunnable> aRunnable)
   GetCurrent()->TailDispatcher().AddDirectTask(Move(aRunnable));
 }
 
+already_AddRefed<AbstractThread>
+CreateXPCOMAbstractThreadWrapper(nsIThread* aThread, bool aRequireTailDispatch)
+{
+  nsRefPtr<XPCOMThreadWrapper> wrapper = new XPCOMThreadWrapper(aThread, aRequireTailDispatch);
+  return wrapper.forget();
+}
+
 } // namespace mozilla

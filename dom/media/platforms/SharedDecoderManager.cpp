@@ -73,6 +73,7 @@ SharedDecoderManager::SharedDecoderManager()
   : mTaskQueue(new FlushableTaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER)))
   , mActiveProxy(nullptr)
   , mActiveCallback(nullptr)
+  , mInit(false)
   , mWaitForInternalDrain(false)
   , mMonitor("SharedDecoderManager")
   , mDecoderReleasedResources(false)
@@ -111,11 +112,7 @@ SharedDecoderManager::CreateVideoDecoder(
       mPDM = nullptr;
       return nullptr;
     }
-    nsresult rv = mDecoder->Init();
-    if (NS_FAILED(rv)) {
-      mDecoder = nullptr;
-      return nullptr;
-    }
+
     mPDM = aPDM;
   }
 
@@ -143,8 +140,8 @@ SharedDecoderManager::Recreate(const VideoInfo& aConfig)
   if (!mDecoder) {
     return false;
   }
-  nsresult rv = mDecoder->Init();
-  return rv == NS_OK;
+  mInit = false;
+  return true;
 }
 
 void
@@ -181,6 +178,35 @@ SharedDecoderManager::SetIdle(MediaDataDecoder* aProxy)
   }
 }
 
+nsRefPtr<MediaDataDecoder::InitPromise>
+SharedDecoderManager::InitDecoder()
+{
+  if (!mInit && mDecoder) {
+    MOZ_ASSERT(mCallback->OnReaderTaskQueue());
+
+    nsRefPtr<SharedDecoderManager> self = this;
+    nsRefPtr<MediaDataDecoder::InitPromise> p = mDecoderInitPromise.Ensure(__func__);
+
+    // The mTaskQueue is flushable which can't be used in MediaPromise. So we get
+    // the current AbstractThread instead of it. The MOZ_ASSERT above ensures
+    // we are running in AbstractThread so we won't get a nullptr.
+    mDecoderInitPromiseRequest.Begin(
+      mDecoder->Init()->Then(AbstractThread::GetCurrent(), __func__,
+        [self] (TrackInfo::TrackType aType) -> void {
+          self->mDecoderInitPromiseRequest.Complete();
+          self->mInit = true;
+          self->mDecoderInitPromise.ResolveIfExists(aType, __func__);
+        },
+        [self] (MediaDataDecoder::DecoderFailureReason aReason) -> void {
+          self->mDecoderInitPromiseRequest.Complete();
+          self->mDecoderInitPromise.RejectIfExists(aReason, __func__);
+        }));
+    return p;
+  }
+
+  return MediaDataDecoder::InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
+}
+
 void
 SharedDecoderManager::DrainComplete()
 {
@@ -211,6 +237,7 @@ SharedDecoderManager::Shutdown()
     mTaskQueue->AwaitShutdownAndIdle();
     mTaskQueue = nullptr;
   }
+  mDecoderInitPromiseRequest.DisconnectIfExists();
 }
 
 SharedDecoderProxy::SharedDecoderProxy(SharedDecoderManager* aManager,
@@ -225,10 +252,14 @@ SharedDecoderProxy::~SharedDecoderProxy()
   Shutdown();
 }
 
-nsresult
+nsRefPtr<MediaDataDecoder::InitPromise>
 SharedDecoderProxy::Init()
 {
-  return NS_OK;
+  if (mManager->mActiveProxy != this) {
+    mManager->Select(this);
+  }
+
+  return mManager->InitDecoder();
 }
 
 nsresult

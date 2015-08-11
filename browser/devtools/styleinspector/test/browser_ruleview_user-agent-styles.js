@@ -10,29 +10,23 @@
 let PREF_UA_STYLES = "devtools.inspector.showUserAgentStyles";
 const { PrefObserver } = require("devtools/styleeditor/utils");
 
-const TEST_DOC = '<html>                                              \
-                    <head>                                            \
-                      <style>                                         \
-                        pre a {                                       \
-                          color: orange;                              \
-                        }                                             \
-                      </style>                                        \
-                    </head>                                           \
-                    <body>                                            \
-                      <input type=text placeholder=test></input>      \
-                      <input type=color></input>                      \
-                      <input type=range></input>                      \
-                      <input type=number></input>                     \
-                      <progress></progress>                           \
-                      <blockquote type=cite>                          \
-                        <pre _moz_quote=true>                         \
-                          inspect <a href="foo">user agent</a> styles \
-                        </pre>                                        \
-                      </blockquote>                                   \
-                    </body>                                           \
-                  </html>';
-
-const TEST_URI = "data:text/html;charset=utf-8," + encodeURIComponent(TEST_DOC);
+const TEST_URI = `
+  <style type='text/css'>
+  pre a {
+    color: orange;
+  }
+  </style>
+  <input type=text placeholder=test></input>
+  <input type=color></input>
+  <input type=range></input>
+  <input type=number></input>
+  <progress></progress>
+  <blockquote type=cite>
+    <pre _moz_quote=true>
+      inspect <a href="foo">user agent</a> styles
+    </pre>
+  </blockquote>
+`;
 
 const TEST_DATA = [
   {
@@ -78,21 +72,20 @@ const TEST_DATA = [
 ];
 
 add_task(function*() {
-  info ("Starting the test with the pref set to true before toolbox is opened");
+  info("Starting the test with the pref set to true before toolbox is opened");
   yield setUserAgentStylesPref(true);
 
-  info ("Opening the testcase and toolbox")
-  yield addTab(TEST_URI);
-  let {toolbox, inspector, view} = yield openRuleView();
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
 
-  info ("Making sure that UA styles are visible on initial load")
+  info("Making sure that UA styles are visible on initial load");
   yield userAgentStylesVisible(inspector, view);
 
-  info ("Making sure that setting the pref to false hides UA styles");
+  info("Making sure that setting the pref to false hides UA styles");
   yield setUserAgentStylesPref(false);
   yield userAgentStylesNotVisible(inspector, view);
 
-  info ("Making sure that resetting the pref to true shows UA styles again");
+  info("Making sure that resetting the pref to true shows UA styles again");
   yield setUserAgentStylesPref(true);
   yield userAgentStylesVisible(inspector, view);
 
@@ -114,7 +107,7 @@ function* setUserAgentStylesPref(val) {
 }
 
 function* userAgentStylesVisible(inspector, view) {
-  info ("Making sure that user agent styles are currently visible");
+  info("Making sure that user agent styles are currently visible");
 
   let userRules;
   let uaRules;
@@ -125,23 +118,23 @@ function* userAgentStylesVisible(inspector, view) {
 
     userRules = view._elementStyle.rules.filter(rule=>rule.editor.isEditable);
     uaRules = view._elementStyle.rules.filter(rule=>!rule.editor.isEditable);
-    is (userRules.length, data.numUserRules, "Correct number of user rules");
-    ok (uaRules.length > data.numUARules, "Has UA rules");
+    is(userRules.length, data.numUserRules, "Correct number of user rules");
+    ok(uaRules.length > data.numUARules, "Has UA rules");
   }
 
-  ok (userRules.some(rule=> rule.matchedSelectors.length === 1),
+  ok(userRules.some(rule=> rule.matchedSelectors.length === 1),
     "There is an inline style for element in user styles");
 
-  ok (uaRules.some(rule=> rule.matchedSelectors.indexOf(":-moz-any-link")),
+  ok(uaRules.some(rule=> rule.matchedSelectors.indexOf(":-moz-any-link")),
     "There is a rule for :-moz-any-link");
-  ok (uaRules.some(rule=> rule.matchedSelectors.indexOf("*|*:link")),
+  ok(uaRules.some(rule=> rule.matchedSelectors.indexOf("*|*:link")),
     "There is a rule for *|*:link");
-  ok (uaRules.some(rule=> rule.matchedSelectors.length === 1),
+  ok(uaRules.some(rule=> rule.matchedSelectors.length === 1),
     "Inline styles for ua styles");
 }
 
 function* userAgentStylesNotVisible(inspector, view) {
-  info ("Making sure that user agent styles are not currently visible");
+  info("Making sure that user agent styles are not currently visible");
 
   let userRules;
   let uaRules;
@@ -152,22 +145,24 @@ function* userAgentStylesNotVisible(inspector, view) {
 
     userRules = view._elementStyle.rules.filter(rule=>rule.editor.isEditable);
     uaRules = view._elementStyle.rules.filter(rule=>!rule.editor.isEditable);
-    is (userRules.length, data.numUserRules, "Correct number of user rules");
-    is (uaRules.length, data.numUARules, "No UA rules");
+    is(userRules.length, data.numUserRules, "Correct number of user rules");
+    is(uaRules.length, data.numUARules, "No UA rules");
   }
 }
 
 function* compareAppliedStylesWithUI(inspector, view, filter) {
-  info ("Making sure that UI is consistent with pageStyle.getApplied");
+  info("Making sure that UI is consistent with pageStyle.getApplied");
 
-  let entries = yield inspector.pageStyle.getApplied(inspector.selection.nodeFront, {
+  let entries = yield inspector.pageStyle.getApplied(
+    inspector.selection.nodeFront, {
     inherited: true,
     matchedSelectors: true,
     filter: filter
   });
 
   let elementStyle = view._elementStyle;
-  is(elementStyle.rules.length, entries.length, "Should have correct number of rules (" +  entries.length + ")");
+  is(elementStyle.rules.length, entries.length,
+    "Should have correct number of rules (" + entries.length + ")");
 
   entries = entries.sort((a, b) => {
     return (a.pseudoElement || "z") > (b.pseudoElement || "z");
@@ -175,8 +170,11 @@ function* compareAppliedStylesWithUI(inspector, view, filter) {
 
   entries.forEach((entry, i) => {
     let elementStyleRule = elementStyle.rules[i];
-    is (elementStyleRule.inherited, entry.inherited, "Same inherited (" +entry.inherited+ ")" );
-    is (elementStyleRule.isSystem, entry.isSystem, "Same isSystem (" +entry.isSystem+ ")");
-    is (elementStyleRule.editor.isEditable, !entry.isSystem, "Editor isEditable opposite of UA (" +entry.isSystem+ ")");
+    is(elementStyleRule.inherited, entry.inherited,
+      "Same inherited (" + entry.inherited + ")");
+    is(elementStyleRule.isSystem, entry.isSystem,
+      "Same isSystem (" + entry.isSystem + ")");
+    is(elementStyleRule.editor.isEditable, !entry.isSystem,
+      "Editor isEditable opposite of UA (" + entry.isSystem + ")");
   });
 }

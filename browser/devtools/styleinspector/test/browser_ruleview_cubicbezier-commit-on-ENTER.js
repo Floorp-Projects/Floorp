@@ -4,24 +4,23 @@
 
 "use strict";
 
-// Test that a curve change in the cubic-bezier tooltip is committed when ENTER
-// is pressed
+// Tests that a curve change in the cubic-bezier tooltip is committed when ENTER
+// is pressed.
 
-const PAGE_CONTENT = [
-  '<style type="text/css">',
-  '  body {',
-  '    transition: top 2s linear;',
-  '  }',
-  '</style>'
-].join("\n");
+const TEST_URI = `
+  <style type="text/css">
+    body {
+      transition: top 2s linear;
+    }
+  </style>
+`;
 
 add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8,rule view cubic-bezier tooltip test");
-  content.document.body.innerHTML = PAGE_CONTENT;
-  let {toolbox, inspector, view} = yield openRuleView();
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {view} = yield openRuleView();
 
   info("Getting the bezier swatch element");
-  let swatch = getRuleViewProperty(view, "body" , "transition").valueSpan
+  let swatch = getRuleViewProperty(view, "body", "transition").valueSpan
     .querySelector(".ruleview-bezierswatch");
 
   yield testPressingEnterCommitsChanges(swatch, view);
@@ -41,7 +40,8 @@ function* testPressingEnterCommitsChanges(swatch, ruleView) {
   let expected = "cubic-bezier(0.1, 2, 0.9, -1)";
 
   yield waitForSuccess(() => {
-    return content.getComputedStyle(content.document.body).transitionTimingFunction === expected;
+    return content.getComputedStyle(content.document.body)
+      .transitionTimingFunction === expected;
   }, "Waiting for the change to be previewed on the element");
 
   ok(getRuleViewProperty(ruleView, "body", "transition").valueSpan.textContent

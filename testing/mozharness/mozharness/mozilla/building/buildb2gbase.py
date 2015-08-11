@@ -184,7 +184,7 @@ class B2GBuildBaseScript(BuildbotMixin, MockMixin,
             if repo_type == 'hg':
                 hg = self.query_exe('hg', return_type='list')
                 revision = self.get_output_from_command(
-                    hg + ['parent', '--template', '{node|short}'], cwd=repo
+                    hg + ['parent', '--template', '{node}'], cwd=repo
                 )
             elif repo_type == 'git':
                 git = self.query_exe('git', return_type='list')

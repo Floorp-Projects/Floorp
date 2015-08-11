@@ -6,6 +6,7 @@
 package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.util.ColorUtils;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -56,7 +57,7 @@ public class TabMenuStrip extends HorizontalScrollView
         shadowSize = res.getDimensionPixelSize(R.dimen.tabs_strip_shadow_size);
 
         shadowPaint = new Paint();
-        shadowPaint.setColor(res.getColor(R.color.url_bar_shadow));
+        shadowPaint.setColor(ColorUtils.getColor(context, R.color.url_bar_shadow));
         shadowPaint.setStrokeWidth(0.0f);
     }
 

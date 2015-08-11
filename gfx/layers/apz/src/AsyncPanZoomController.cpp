@@ -2827,7 +2827,12 @@ bool AsyncPanZoomController::IsCurrentlyCheckerboarding() const {
   CSSRect painted = mLastContentPaintMetrics.GetDisplayPort() + mLastContentPaintMetrics.GetScrollOffset();
   painted.Inflate(CSSMargin::FromAppUnits(nsMargin(1, 1, 1, 1)));   // fuzz for rounding error
   CSSRect visible = CSSRect(currentScrollOffset, mFrameMetrics.CalculateCompositedSizeInCssPixels());
-  return !painted.Contains(visible);
+  if (painted.Contains(visible)) {
+    return false;
+  }
+  APZC_LOG_FM(mFrameMetrics, "%p is currently checkerboarding (painted %s visble %s)",
+    this, Stringify(painted).c_str(), Stringify(visible).c_str());
+  return true;
 }
 
 void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetrics, bool aIsFirstPaint) {

@@ -51,11 +51,16 @@ AppleVTDecoder::~AppleVTDecoder()
   MOZ_COUNT_DTOR(AppleVTDecoder);
 }
 
-nsresult
+nsRefPtr<MediaDataDecoder::InitPromise>
 AppleVTDecoder::Init()
 {
   nsresult rv = InitializeSession();
-  return rv;
+
+  if (NS_SUCCEEDED(rv)) {
+    return InitPromise::CreateAndResolve(TrackType::kVideoTrack, __func__);
+  }
+
+  return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
 }
 
 nsresult

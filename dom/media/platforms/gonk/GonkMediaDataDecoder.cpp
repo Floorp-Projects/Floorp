@@ -37,7 +37,7 @@ GonkMediaDataDecoder::~GonkMediaDataDecoder()
   MOZ_COUNT_DTOR(GonkMediaDataDecoder);
 }
 
-nsresult
+nsRefPtr<MediaDataDecoder::InitPromise>
 GonkMediaDataDecoder::Init()
 {
   sp<MediaCodecProxy> decoder;
@@ -45,7 +45,7 @@ GonkMediaDataDecoder::Init()
   mDecoder = decoder;
   mDrainComplete = false;
 
-  return NS_OK;
+  return InitPromise::CreateAndResolve(mManager->GetTrackType(), __func__);
 }
 
 nsresult

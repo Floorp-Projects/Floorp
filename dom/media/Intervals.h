@@ -429,8 +429,8 @@ public:
     }
     T firstEnd = std::max(mIntervals[0].mStart, aInterval.mStart);
     T secondStart = std::min(mIntervals.LastElement().mEnd, aInterval.mEnd);
-    ElemType startInterval(mIntervals[0].mStart, firstEnd, aInterval.mFuzz);
-    ElemType endInterval(secondStart, mIntervals.LastElement().mEnd, aInterval.mFuzz);
+    ElemType startInterval(mIntervals[0].mStart, firstEnd);
+    ElemType endInterval(secondStart, mIntervals.LastElement().mEnd);
     SelfType intervals(Move(startInterval));
     intervals += Move(endInterval);
     return Intersection(intervals);

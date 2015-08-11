@@ -180,13 +180,19 @@ class CommandAction(argparse.Action):
             'usage': usage,
         }
 
+        remainder = None
+
         if handler.parser:
             subparser = handler.parser
             subparser.context = self._context
+            for arg in subparser._actions[:]:
+                if arg.nargs == argparse.REMAINDER:
+                    subparser._actions.remove(arg)
+                    remainder = (arg.dest,), {'default': arg.default,
+                                              'nargs': arg.nargs,
+                                              'help': arg.help}
         else:
             subparser = argparse.ArgumentParser(**parser_args)
-
-        remainder = None
 
         for arg in handler.arguments:
             # Remove our group keyword; it's not needed here.

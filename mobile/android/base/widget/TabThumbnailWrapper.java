@@ -2,11 +2,10 @@ package org.mozilla.gecko.widget;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.widget.RelativeLayout;
 import org.mozilla.gecko.R;
 
 
-public class TabThumbnailWrapper extends RelativeLayout {
+public class TabThumbnailWrapper extends ThemedRelativeLayout {
     private boolean mRecording;
     private static final int[] STATE_RECORDING = { R.attr.state_recording };
 
@@ -16,10 +15,6 @@ public class TabThumbnailWrapper extends RelativeLayout {
 
     public TabThumbnailWrapper(Context context, AttributeSet attrs) {
         super(context, attrs);
-    }
-
-    public TabThumbnailWrapper(Context context) {
-        super(context);
     }
 
     @Override

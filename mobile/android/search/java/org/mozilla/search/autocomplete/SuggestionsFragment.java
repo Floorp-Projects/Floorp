@@ -11,6 +11,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.SuggestClient;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.util.ColorUtils;
 import org.mozilla.search.AcceptsSearchQuery;
 import org.mozilla.search.AcceptsSearchQuery.SuggestionAnimation;
 import org.mozilla.search.providers.SearchEngine;
@@ -212,7 +213,7 @@ public class SuggestionsFragment extends Fragment {
             this.suggestions = null;
 
             // Color of search term match in search suggestion
-            suggestionHighlightColor = context.getResources().getColor(R.color.suggestion_highlight);
+            suggestionHighlightColor = ColorUtils.getColor(context, R.color.suggestion_highlight);
         }
 
         @Override
