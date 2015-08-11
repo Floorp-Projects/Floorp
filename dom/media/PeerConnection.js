@@ -25,6 +25,7 @@ const PC_STATS_CONTRACT = "@mozilla.org/dom/rtcstatsreport;1";
 const PC_STATIC_CONTRACT = "@mozilla.org/dom/peerconnectionstatic;1";
 const PC_SENDER_CONTRACT = "@mozilla.org/dom/rtpsender;1";
 const PC_RECEIVER_CONTRACT = "@mozilla.org/dom/rtpreceiver;1";
+const PC_COREQUEST_CONTRACT = "@mozilla.org/dom/createofferrequest;1";
 
 const PC_CID = Components.ID("{bdc2e533-b308-4708-ac8e-a8bfade6d851}");
 const PC_OBS_CID = Components.ID("{d1748d4c-7f6a-4dc5-add6-d55b7678537e}");
@@ -35,6 +36,7 @@ const PC_STATS_CID = Components.ID("{7fe6e18b-0da3-4056-bf3b-440ef3809e06}");
 const PC_STATIC_CID = Components.ID("{0fb47c47-a205-4583-a9fc-cbadf8c95880}");
 const PC_SENDER_CID = Components.ID("{4fff5d46-d827-4cd4-a970-8fd53977440e}");
 const PC_RECEIVER_CID = Components.ID("{d974b814-8fde-411c-8c45-b86791b81030}");
+const PC_COREQUEST_CID = Components.ID("{74b2122d-65a8-4824-aa9e-3d664cb75dc2}");
 
 // Global list of PeerConnection objects, so they can be cleaned up when
 // a page is torn down. (Maps inner window ID to an array of PC objects).
@@ -783,11 +785,10 @@ RTCPeerConnection.prototype = {
       this._settlePermission = { allow: resolve, deny: reject };
       let outerId = this._win.QueryInterface(Ci.nsIInterfaceRequestor).
           getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
-      let request = { windowID: outerId,
-                      innerWindowId: this._winID,
-                      callID: this._globalPCListId,
-                      isSecure: this._https };
-      request.wrappedJSObject = request;
+
+      let chrome = new CreateOfferRequest(outerId, this._winID,
+                                                 this._globalPCListId, false);
+      let request = this._win.CreateOfferRequest._create(this._win, chrome);
       Services.obs.notifyObservers(request, "PeerConnection:request", null);
     });
   },
@@ -1489,6 +1490,19 @@ RTCRtpReceiver.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]),
 };
 
+function CreateOfferRequest(windowID, innerWindowID, callID, isSecure) {
+  this.windowID = windowID;
+  this.innerWindowID = innerWindowID;
+  this.callID = callID;
+  this.isSecure = isSecure;
+}
+CreateOfferRequest.prototype = {
+  classDescription: "CreateOfferRequest",
+  classID: PC_COREQUEST_CID,
+  contractID: PC_COREQUEST_CONTRACT,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]),
+};
+
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(
   [GlobalPCList,
    RTCIceCandidate,
@@ -1498,5 +1512,6 @@ this.NSGetFactory = XPCOMUtils.generateNSGetFactory(
    RTCRtpReceiver,
    RTCRtpSender,
    RTCStatsReport,
-   PeerConnectionObserver]
+   PeerConnectionObserver,
+   CreateOfferRequest]
 );
