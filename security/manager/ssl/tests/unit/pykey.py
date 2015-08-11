@@ -12,7 +12,7 @@ public key info for use with pyasn1.
 
 The key specification format is as follows:
 
-<empty string>: a 2048-bit RSA key
+default: a 2048-bit RSA key
 alternate: a different 2048-bit RSA key
 ev: a 2048-bit RSA key that, when combined with the right pycert
     specification, results in a certificate that is enabled for
@@ -357,8 +357,8 @@ class RSAKey:
       'caea2c0d06443f8367a6be154b125e390ee0d90f746f08801dd3f5367f59'
       'fba2e5a67c05f375', 16)
 
-    def __init__(self, specification = None):
-        if not specification:
+    def __init__(self, specification):
+        if specification == 'default':
             self.RSA_N = self.sharedRSA_N
             self.RSA_E = self.sharedRSA_E
             self.RSA_D = self.sharedRSA_D

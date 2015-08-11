@@ -141,44 +141,61 @@ class MutableTraceableVectorOperations
     void erase(T* aBegin, T* aEnd) { vec().erase(aBegin, aEnd); }
 };
 
-template <typename A, size_t B, typename C, typename D>
-class RootedBase<TraceableVector<A,B,C,D>>
-  : public MutableTraceableVectorOperations<JS::Rooted<TraceableVector<A,B,C,D>>, A,B,C,D>
+template <typename T, size_t N, typename AP, typename TP>
+class RootedBase<TraceableVector<T,N,AP,TP>>
+  : public MutableTraceableVectorOperations<JS::Rooted<TraceableVector<T,N,AP,TP>>, T,N,AP,TP>
 {
-    using Vec = TraceableVector<A,B,C,D>;
+    using Vec = TraceableVector<T,N,AP,TP>;
 
-    friend class TraceableVectorOperations<JS::Rooted<Vec>, A,B,C,D>;
+    friend class TraceableVectorOperations<JS::Rooted<Vec>, T,N,AP,TP>;
     const Vec& extract() const { return *static_cast<const JS::Rooted<Vec>*>(this)->address(); }
 
-    friend class MutableTraceableVectorOperations<JS::Rooted<Vec>, A,B,C,D>;
+    friend class MutableTraceableVectorOperations<JS::Rooted<Vec>, T,N,AP,TP>;
     Vec& extract() { return *static_cast<JS::Rooted<Vec>*>(this)->address(); }
 };
 
-template <typename A, size_t B, typename C, typename D>
-class MutableHandleBase<TraceableVector<A,B,C,D>>
-  : public MutableTraceableVectorOperations<JS::MutableHandle<TraceableVector<A,B,C,D>>, A,B,C,D>
+template <typename T, size_t N, typename AP, typename TP>
+class MutableHandleBase<TraceableVector<T,N,AP,TP>>
+  : public MutableTraceableVectorOperations<JS::MutableHandle<TraceableVector<T,N,AP,TP>>,
+                                            T,N,AP,TP>
 {
-    using Vec = TraceableVector<A,B,C,D>;
+    using Vec = TraceableVector<T,N,AP,TP>;
 
-    friend class TraceableVectorOperations<JS::MutableHandle<Vec>, A,B,C,D>;
+    friend class TraceableVectorOperations<JS::MutableHandle<Vec>, T,N,AP,TP>;
     const Vec& extract() const {
         return *static_cast<const JS::MutableHandle<Vec>*>(this)->address();
     }
 
-    friend class MutableTraceableVectorOperations<JS::MutableHandle<Vec>, A,B,C,D>;
+    friend class MutableTraceableVectorOperations<JS::MutableHandle<Vec>, T,N,AP,TP>;
     Vec& extract() { return *static_cast<JS::MutableHandle<Vec>*>(this)->address(); }
 };
 
-template <typename A, size_t B, typename C, typename D>
-class HandleBase<TraceableVector<A,B,C,D>>
-  : public TraceableVectorOperations<JS::Handle<TraceableVector<A,B,C,D>>, A,B,C,D>
+template <typename T, size_t N, typename AP, typename TP>
+class HandleBase<TraceableVector<T,N,AP,TP>>
+  : public TraceableVectorOperations<JS::Handle<TraceableVector<T,N,AP,TP>>, T,N,AP,TP>
 {
-    using Vec = TraceableVector<A,B,C,D>;
+    using Vec = TraceableVector<T,N,AP,TP>;
 
-    friend class TraceableVectorOperations<JS::Handle<Vec>, A,B,C,D>;
+    friend class TraceableVectorOperations<JS::Handle<Vec>, T,N,AP,TP>;
     const Vec& extract() const {
         return *static_cast<const JS::Handle<Vec>*>(this)->address();
     }
+};
+
+template <typename T, size_t N, typename AP, typename TP>
+class PersistentRootedBase<TraceableVector<T,N,AP,TP>>
+  : public MutableTraceableVectorOperations<JS::PersistentRooted<TraceableVector<T,N,AP,TP>>,
+                                            T,N,AP,TP>
+{
+    using Vec = TraceableVector<T,N,AP,TP>;
+
+    friend class TraceableVectorOperations<JS::PersistentRooted<Vec>, T,N,AP,TP>;
+    const Vec& extract() const {
+        return *static_cast<const JS::PersistentRooted<Vec>*>(this)->address();
+    }
+
+    friend class MutableTraceableVectorOperations<JS::PersistentRooted<Vec>, T,N,AP,TP>;
+    Vec& extract() { return *static_cast<JS::PersistentRooted<Vec>*>(this)->address(); }
 };
 
 } // namespace js

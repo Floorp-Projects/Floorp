@@ -6,11 +6,11 @@ package org.mozilla.gecko;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.ReadingListAccessor;
 import org.mozilla.gecko.favicons.Favicons;
-import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;

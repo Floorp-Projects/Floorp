@@ -34,7 +34,7 @@ TimeManager::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 void
 TimeManager::Set(Date& aDate)
 {
-  Set(aDate.TimeStamp());
+  Set(aDate.ToDouble());
 }
 
 void

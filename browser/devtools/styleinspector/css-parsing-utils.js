@@ -17,11 +17,11 @@ const SELECTOR_PSEUDO_CLASS = exports.SELECTOR_PSEUDO_CLASS = 3;
  * For example, parseDeclarations("width: 1px; height: 1px") would return
  * [{name:"width", value: "1px"}, {name: "height", "value": "1px"}]
  *
- * The input string is assumed to only contain declarations so { and } characters
- * will be treated as part of either the property or value, depending where it's
- * found.
+ * The input string is assumed to only contain declarations so { and }
+ * characters will be treated as part of either the property or value,
+ * depending where it's found.
  *
- * @param {string} inputString
+ * @param {String} inputString
  *        An input string of CSS
  * @return {Array} an array of objects with the following signature:
  *         [{"name": string, "value": string, "priority": string}, ...]
@@ -106,7 +106,7 @@ function parseDeclarations(inputString) {
  * (2) SELECTOR_ELEMENT
  * (3) SELECTOR_PSEUDO_CLASS
  *
- * @param {string} value
+ * @param {String} value
  *        The CSS selector text.
  * @return {Array} an array of objects with the following signature:
  *         [{ "value": string, "type": integer }, ...]
@@ -201,8 +201,9 @@ function parsePseudoClassesAndAttributes(value) {
  * Expects a single CSS value to be passed as the input and parses the value
  * and priority.
  *
- * @param {string} value The value from the text editor.
- * @return {object} an object with 'value' and 'priority' properties.
+ * @param {String} value
+ *        The value from the text editor.
+ * @return {Object} an object with 'value' and 'priority' properties.
  */
 function parseSingleValue(value) {
   let declaration = parseDeclarations("a: " + value + ";")[0];

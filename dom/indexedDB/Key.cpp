@@ -8,6 +8,7 @@
 #include "Key.h"
 
 #include <algorithm>
+#include "js/Date.h"
 #include "js/Value.h"
 #include "jsfriendapi.h"
 #include "mozilla/Endian.h"
@@ -237,7 +238,11 @@ Key::DecodeJSValInternal(const unsigned char*& aPos, const unsigned char* aEnd,
   }
   else if (*aPos - aTypeOffset == eDate) {
     double msec = static_cast<double>(DecodeNumber(aPos, aEnd));
-    JSObject* date = JS_NewDateObjectMsec(aCx, msec);
+    JS::ClippedTime time = JS::TimeClip(msec);
+    MOZ_ASSERT(msec == time.toDouble(),
+               "encoding from a Date object not containing an invalid date "
+               "means we should always have clipped values");
+    JSObject* date = JS::NewDateObject(aCx, time);
     if (!date) {
       IDB_WARNING("Failed to make date!");
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;

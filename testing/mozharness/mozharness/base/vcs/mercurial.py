@@ -99,7 +99,7 @@ class MercurialVCS(ScriptMixin, LogMixin, object):
     def get_revision_from_path(self, path):
         """Returns which revision directory `path` currently has checked out."""
         return self.get_output_from_command(
-            self.hg + ['parent', '--template', '{node|short}'], cwd=path
+            self.hg + ['parent', '--template', '{node}'], cwd=path
         )
 
     def get_branch_from_path(self, path):

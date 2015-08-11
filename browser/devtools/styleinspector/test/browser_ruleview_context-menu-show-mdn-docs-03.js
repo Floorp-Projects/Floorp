@@ -15,17 +15,19 @@
 "use strict";
 
 const { PrefObserver } = require("devtools/styleeditor/utils");
-const PREF_ENABLE_MDN_DOCS_TOOLTIP = "devtools.inspector.mdnDocsTooltip.enabled";
+const PREF_ENABLE_MDN_DOCS_TOOLTIP =
+  "devtools.inspector.mdnDocsTooltip.enabled";
 const PROPERTY_NAME_CLASS = "ruleview-propertyname";
 
 const TEST_DOC = `
-<html>
-  <body>
-    <div style="color: red">
-      Test the pref to enable/disable the "Show MDN Docs" context menu option
-    </div>
-  </body>
-</html>`;
+  <html>
+    <body>
+      <div style="color: red">
+        Test the pref to enable/disable the "Show MDN Docs" context menu option
+      </div>
+    </body>
+  </html>
+`;
 
 add_task(function* () {
   info("Ensure the pref is true to begin with");
@@ -95,7 +97,7 @@ function* setBooleanPref(pref, state) {
  * menu item to be visible or not.
  */
 function* testMdnContextMenuItemVisibility(view, shouldBeVisible) {
-  let message = shouldBeVisible? "shown": "hidden";
+  let message = shouldBeVisible ? "shown" : "hidden";
   info("Test that MDN context menu item is " + message);
 
   info("Set a CSS property name as popupNode");

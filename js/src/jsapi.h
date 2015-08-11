@@ -4761,9 +4761,6 @@ SetForEach(JSContext *cx, HandleObject obj, HandleValue callbackFn, HandleValue 
 extern JS_PUBLIC_API(JSObject*)
 JS_NewDateObject(JSContext* cx, int year, int mon, int mday, int hour, int min, int sec);
 
-extern JS_PUBLIC_API(JSObject*)
-JS_NewDateObjectMsec(JSContext* cx, double msec);
-
 /*
  * Infallible predicate to test whether obj is a date object.
  */

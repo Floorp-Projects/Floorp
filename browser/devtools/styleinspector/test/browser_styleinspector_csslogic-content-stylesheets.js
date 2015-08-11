@@ -7,7 +7,8 @@
 // Check stylesheets on HMTL and XUL document
 
 // FIXME: this test opens the devtools for nothing, it should be changed into a
-// toolkit/devtools/server/tests/mochitest/test_css-logic-...something...html test
+// toolkit/devtools/server/tests/mochitest/test_css-logic-...something...html
+// test
 
 const TEST_URI_HTML = TEST_URL_ROOT + "doc_content_stylesheet.html";
 const TEST_URI_XUL = TEST_URL_ROOT + "doc_content_stylesheet.xul";
@@ -23,7 +24,7 @@ add_task(function*() {
   yield addTab(TEST_URI_HTML);
   let target = getNode("#target");
 
-  let {toolbox, inspector, view} = yield openRuleView();
+  let {inspector} = yield openRuleView();
   yield selectNode("#target", inspector);
 
   info("Checking stylesheets");
@@ -34,7 +35,7 @@ add_task(function*() {
   allowXUL();
   yield addTab(TEST_URI_XUL);
 
-  ({toolbox, inspector, view} = yield openRuleView());
+  ({inspector} = yield openRuleView());
   target = getNode("#target");
   yield selectNode("#target", inspector);
 
@@ -45,23 +46,28 @@ add_task(function*() {
 
 function allowXUL() {
   Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager)
-    .addFromPrincipal(XUL_PRINCIPAL, 'allowXULXBL', Ci.nsIPermissionManager.ALLOW_ACTION);
+    .addFromPrincipal(XUL_PRINCIPAL, "allowXULXBL",
+      Ci.nsIPermissionManager.ALLOW_ACTION);
 }
 
 function disallowXUL() {
   Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager)
-    .addFromPrincipal(XUL_PRINCIPAL, 'allowXULXBL', Ci.nsIPermissionManager.DENY_ACTION);
+    .addFromPrincipal(XUL_PRINCIPAL, "allowXULXBL",
+      Ci.nsIPermissionManager.DENY_ACTION);
 }
 
 function* checkSheets(target) {
-  let sheets = yield executeInContent("Test:GetStyleSheetsInfoForNode", {}, {target});
+  let sheets = yield executeInContent("Test:GetStyleSheetsInfoForNode", {},
+    {target});
 
   for (let sheet of sheets) {
     if (!sheet.href ||
         /doc_content_stylesheet_/.test(sheet.href)) {
-      ok(sheet.isContentSheet, sheet.href + " identified as content stylesheet");
+      ok(sheet.isContentSheet,
+        sheet.href + " identified as content stylesheet");
     } else {
-      ok(!sheet.isContentSheet, sheet.href + " identified as non-content stylesheet");
+      ok(!sheet.isContentSheet,
+        sheet.href + " identified as non-content stylesheet");
     }
   }
 }

@@ -28,9 +28,12 @@ const {
   SELECTOR_PSEUDO_CLASS
 } = require("devtools/styleinspector/css-parsing-utils");
 
-loader.lazyRequireGetter(this, "overlays", "devtools/styleinspector/style-inspector-overlays");
-loader.lazyRequireGetter(this, "EventEmitter", "devtools/toolkit/event-emitter");
-loader.lazyRequireGetter(this, "StyleInspectorMenu", "devtools/styleinspector/style-inspector-menu");
+loader.lazyRequireGetter(this, "overlays",
+  "devtools/styleinspector/style-inspector-overlays");
+loader.lazyRequireGetter(this, "EventEmitter",
+  "devtools/toolkit/event-emitter");
+loader.lazyRequireGetter(this, "StyleInspectorMenu",
+  "devtools/styleinspector/style-inspector-menu");
 loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -114,25 +117,23 @@ function createDummyDocument() {
 /**
  * ElementStyle maintains a list of Rule objects for a given element.
  *
- * @param {Element} aElement
+ * @param {Element} element
  *        The element whose style we are viewing.
- * @param {object} aStore
+ * @param {Object} store
  *        The ElementStyle can use this object to store metadata
  *        that might outlast the rule view, particularly the current
  *        set of disabled properties.
- * @param {PageStyleFront} aPageStyle
+ * @param {PageStyleFront} pageStyle
  *        Front for the page style actor that will be providing
  *        the style information.
- * @param {bool} aShowUserAgentStyles
+ * @param {Boolean} showUserAgentStyles
  *        Should user agent styles be inspected?
- *
- * @constructor
  */
-function ElementStyle(aElement, aStore, aPageStyle, aShowUserAgentStyles) {
-  this.element = aElement;
-  this.store = aStore || {};
-  this.pageStyle = aPageStyle;
-  this.showUserAgentStyles = aShowUserAgentStyles;
+function ElementStyle(element, store, pageStyle, showUserAgentStyles) {
+  this.element = element;
+  this.store = store || {};
+  this.pageStyle = pageStyle;
+  this.showUserAgentStyles = showUserAgentStyles;
   this.rules = [];
 
   // We don't want to overwrite this.store.userProperties so we only create it
@@ -215,7 +216,7 @@ ElementStyle.prototype = {
 
       // Make sure the dummy element has been created before continuing...
       return this.dummyElementPromise.then(() => {
-        if (this.populated != populated) {
+        if (this.populated !== populated) {
           // Don't care anymore.
           return;
         }
@@ -263,20 +264,19 @@ ElementStyle.prototype = {
    * Add a rule if it's one we care about.  Filters out duplicates and
    * inherited styles with no inherited properties.
    *
-   * @param {object} aOptions
+   * @param {Object} options
    *        Options for creating the Rule, see the Rule constructor.
-   *
-   * @return {bool} true if we added the rule.
+   * @return {Boolean} true if we added the rule.
    */
-  _maybeAddRule: function(aOptions) {
+  _maybeAddRule: function(options) {
     // If we've already included this domRule (for example, when a
     // common selector is inherited), ignore it.
-    if (aOptions.rule &&
-        this.rules.some(rule => rule.domRule === aOptions.rule)) {
+    if (options.rule &&
+        this.rules.some(rule => rule.domRule === options.rule)) {
       return false;
     }
 
-    if (aOptions.system) {
+    if (options.system) {
       return false;
     }
 
@@ -286,9 +286,9 @@ ElementStyle.prototype = {
     // Rule object.
     if (this._refreshRules) {
       for (let r of this._refreshRules) {
-        if (r.matches(aOptions)) {
+        if (r.matches(options)) {
           rule = r;
-          rule.refresh(aOptions);
+          rule.refresh(options);
           break;
         }
       }
@@ -296,11 +296,11 @@ ElementStyle.prototype = {
 
     // If this is a new rule, create its Rule object.
     if (!rule) {
-      rule = new Rule(this, aOptions);
+      rule = new Rule(this, options);
     }
 
     // Ignore inherited rules with no properties.
-    if (aOptions.inherited && rule.textProps.length == 0) {
+    if (options.inherited && rule.textProps.length === 0) {
       return false;
     }
 
@@ -321,7 +321,8 @@ ElementStyle.prototype = {
   /**
    * Mark the properties listed in this.rules for a given pseudo element
    * with an overridden flag if an earlier property overrides it.
-   * @param {string} pseudo
+   *
+   * @param {String} pseudo
    *        Which pseudo element to flag as overridden.
    *        Empty string or undefined will default to no pseudo element.
    */
@@ -333,7 +334,7 @@ ElementStyle.prototype = {
     // determine if the property is overridden.
     let textProps = [];
     for (let rule of this.rules) {
-      if (rule.pseudoElement == pseudo && !rule.keyframes) {
+      if (rule.pseudoElement === pseudo && !rule.keyframes) {
         for (let textProp of rule.textProps.slice(0).reverse()) {
           if (textProp.enabled) {
             textProps.push(textProp);
@@ -381,7 +382,8 @@ ElementStyle.prototype = {
         overridden = !!earlier;
       }
 
-      computedProp._overriddenDirty = (!!computedProp.overridden != overridden);
+      computedProp._overriddenDirty =
+        (!!computedProp.overridden !== overridden);
       computedProp.overridden = overridden;
       if (!computedProp.overridden && computedProp.textProp.enabled) {
         taken[computedProp.name] = computedProp;
@@ -406,16 +408,15 @@ ElementStyle.prototype = {
    * state of its computed properties.  Clears the _overriddenDirty state
    * on all computed properties.
    *
-   * @param {TextProperty} aProp
+   * @param {TextProperty} prop
    *        The text property to update.
-   *
-   * @return {bool} true if the TextProperty's overridden state (or any of its
-   *         computed properties overridden state) changed.
+   * @return {Boolean} true if the TextProperty's overridden state (or any of
+   *         its computed properties overridden state) changed.
    */
-  _updatePropertyOverridden: function(aProp) {
+  _updatePropertyOverridden: function(prop) {
     let overridden = true;
     let dirty = false;
-    for (let computedProp of aProp.computed) {
+    for (let computedProp of prop.computed) {
       if (!computedProp.overridden) {
         overridden = false;
       }
@@ -423,8 +424,8 @@ ElementStyle.prototype = {
       delete computedProp._overriddenDirty;
     }
 
-    dirty = (!!aProp.overridden != overridden) || dirty;
-    aProp.overridden = overridden;
+    dirty = (!!prop.overridden !== overridden) || dirty;
+    prop.overridden = overridden;
     return dirty;
   }
 };
@@ -432,26 +433,25 @@ ElementStyle.prototype = {
 /**
  * A single style rule or declaration.
  *
- * @param {ElementStyle} aElementStyle
+ * @param {ElementStyle} elementStyle
  *        The ElementStyle to which this rule belongs.
- * @param {object} aOptions
+ * @param {Object} options
  *        The information used to construct this rule.  Properties include:
  *          rule: A StyleRuleActor
  *          inherited: An element this rule was inherited from.  If omitted,
  *            the rule applies directly to the current element.
  *          isSystem: Is this a user agent style?
- * @constructor
  */
-function Rule(aElementStyle, aOptions) {
-  this.elementStyle = aElementStyle;
-  this.domRule = aOptions.rule || null;
-  this.style = aOptions.rule;
-  this.matchedSelectors = aOptions.matchedSelectors || [];
-  this.pseudoElement = aOptions.pseudoElement || "";
+function Rule(elementStyle, options) {
+  this.elementStyle = elementStyle;
+  this.domRule = options.rule || null;
+  this.style = options.rule;
+  this.matchedSelectors = options.matchedSelectors || [];
+  this.pseudoElement = options.pseudoElement || "";
 
-  this.isSystem = aOptions.isSystem;
-  this.inherited = aOptions.inherited || null;
-  this.keyframes = aOptions.keyframes || null;
+  this.isSystem = options.isSystem;
+  this.inherited = options.inherited || null;
+  this.keyframes = options.keyframes || null;
   this._modificationDepth = 0;
 
   if (this.domRule && this.domRule.mediaText) {
@@ -549,6 +549,7 @@ Rule.prototype = {
     if (this._originalSourceStrings) {
       return promise.resolve(this._originalSourceStrings);
     }
+
     return this.domRule.getOriginalLocation().then(({href, line, mediaText}) => {
       let mediaString = mediaText ? " @" + mediaText : "";
 
@@ -567,30 +568,30 @@ Rule.prototype = {
    * Returns true if the rule matches the creation options
    * specified.
    *
-   * @param {object} aOptions
-   *        Creation options.  See the Rule constructor for documentation.
+   * @param {Object} options
+   *        Creation options. See the Rule constructor for documentation.
    */
-  matches: function(aOptions) {
-    return this.style === aOptions.rule;
+  matches: function(options) {
+    return this.style === options.rule;
   },
 
   /**
    * Create a new TextProperty to include in the rule.
    *
-   * @param {string} aName
+   * @param {String} name
    *        The text property name (such as "background" or "border-top").
-   * @param {string} aValue
+   * @param {String} value
    *        The property's value (not including priority).
-   * @param {string} aPriority
+   * @param {String} priority
    *        The property's priority (either "important" or an empty string).
-   * @param {TextProperty} aSiblingProp
+   * @param {TextProperty} siblingProp
    *        Optional, property next to which the new property will be added.
    */
-  createProperty: function(aName, aValue, aPriority, aSiblingProp) {
-    let prop = new TextProperty(this, aName, aValue, aPriority);
+  createProperty: function(name, value, priority, siblingProp) {
+    let prop = new TextProperty(this, name, value, priority);
 
-    if (aSiblingProp) {
-      let ind = this.textProps.indexOf(aSiblingProp);
+    if (siblingProp) {
+      let ind = this.textProps.indexOf(siblingProp);
       this.textProps.splice(ind + 1, 0, prop);
     } else {
       this.textProps.push(prop);
@@ -605,11 +606,11 @@ Rule.prototype = {
    * computed styles. Store disabled properties in the element
    * style's store. Will re-mark overridden properties.
    */
-  applyProperties: function(aModifications) {
+  applyProperties: function(modifications) {
     this.elementStyle.markOverriddenAll();
 
-    if (!aModifications) {
-      aModifications = this.style.startModifyingProperties();
+    if (!modifications) {
+      modifications = this.style.startModifyingProperties();
     }
     let disabledProps = [];
 
@@ -626,7 +627,7 @@ Rule.prototype = {
         continue;
       }
 
-      aModifications.setProperty(prop.name, prop.value, prop.priority);
+      modifications.setProperty(prop.name, prop.value, prop.priority);
 
       prop.updateComputed();
     }
@@ -639,7 +640,7 @@ Rule.prototype = {
       disabled.delete(this.style);
     }
 
-    let modificationsPromise = aModifications.apply().then(() => {
+    let modificationsPromise = modifications.apply().then(() => {
       let cssProps = {};
       for (let cssProp of parseDeclarations(this.style.cssText)) {
         cssProps[cssProp.name] = cssProp;
@@ -678,55 +679,55 @@ Rule.prototype = {
   /**
    * Renames a property.
    *
-   * @param {TextProperty} aProperty
+   * @param {TextProperty} property
    *        The property to rename.
-   * @param {string} aName
+   * @param {String} name
    *        The new property name (such as "background" or "border-top").
    */
-  setPropertyName: function(aProperty, aName) {
-    if (aName === aProperty.name) {
+  setPropertyName: function(property, name) {
+    if (name === property.name) {
       return;
     }
     let modifications = this.style.startModifyingProperties();
-    modifications.removeProperty(aProperty.name);
-    aProperty.name = aName;
-    this.applyProperties(modifications, aName);
+    modifications.removeProperty(property.name);
+    property.name = name;
+    this.applyProperties(modifications, name);
   },
 
   /**
    * Sets the value and priority of a property, then reapply all properties.
    *
-   * @param {TextProperty} aProperty
+   * @param {TextProperty} property
    *        The property to manipulate.
-   * @param {string} aValue
+   * @param {String} value
    *        The property's value (not including priority).
-   * @param {string} aPriority
+   * @param {String} priority
    *        The property's priority (either "important" or an empty string).
    */
-  setPropertyValue: function(aProperty, aValue, aPriority) {
-    if (aValue === aProperty.value && aPriority === aProperty.priority) {
+  setPropertyValue: function(property, value, priority) {
+    if (value === property.value && priority === property.priority) {
       return;
     }
 
-    aProperty.value = aValue;
-    aProperty.priority = aPriority;
-    this.applyProperties(null, aProperty.name);
+    property.value = value;
+    property.priority = priority;
+    this.applyProperties(null, property.name);
   },
 
   /**
    * Just sets the value and priority of a property, in order to preview its
    * effect on the content document.
    *
-   * @param {TextProperty} aProperty
+   * @param {TextProperty} property
    *        The property which value will be previewed
-   * @param {String} aValue
+   * @param {String} value
    *        The value to be used for the preview
-   * @param {String} aPriority
+   * @param {String} priority
    *        The property's priority (either "important" or an empty string).
    */
-  previewPropertyValue: function(aProperty, aValue, aPriority) {
+  previewPropertyValue: function(property, value, priority) {
     let modifications = this.style.startModifyingProperties();
-    modifications.setProperty(aProperty.name, aValue, aPriority);
+    modifications.setProperty(property.name, value, priority);
     modifications.apply().then(() => {
       // Ensure dispatching a ruleview-changed event
       // also for previews
@@ -737,15 +738,15 @@ Rule.prototype = {
   /**
    * Disables or enables given TextProperty.
    *
-   * @param {TextProperty} aProperty
+   * @param {TextProperty} property
    *        The property to enable/disable
-   * @param {Boolean} aValue
+   * @param {Boolean} value
    */
-  setPropertyEnabled: function(aProperty, aValue) {
-    aProperty.enabled = !!aValue;
+  setPropertyEnabled: function(property, value) {
+    property.enabled = !!value;
     let modifications = this.style.startModifyingProperties();
-    if (!aProperty.enabled) {
-      modifications.removeProperty(aProperty.name);
+    if (!property.enabled) {
+      modifications.removeProperty(property.name);
     }
     this.applyProperties(modifications);
   },
@@ -754,20 +755,20 @@ Rule.prototype = {
    * Remove a given TextProperty from the rule and update the rule
    * accordingly.
    *
-   * @param {TextProperty} aProperty
+   * @param {TextProperty} property
    *        The property to be removed
    */
-  removeProperty: function(aProperty) {
-    this.textProps = this.textProps.filter(prop => prop != aProperty);
+  removeProperty: function(property) {
+    this.textProps = this.textProps.filter(prop => prop !== property);
     let modifications = this.style.startModifyingProperties();
-    modifications.removeProperty(aProperty.name);
+    modifications.removeProperty(property.name);
     // Need to re-apply properties in case removing this TextProperty
     // exposes another one.
     this.applyProperties(modifications);
   },
 
   /**
-   * Get the list of TextProperties from the style.  Needs
+   * Get the list of TextProperties from the style. Needs
    * to parse the style's cssText.
    */
   _getTextProperties: function() {
@@ -817,8 +818,8 @@ Rule.prototype = {
    * Reread the current state of the rules and rebuild text
    * properties as needed.
    */
-  refresh: function(aOptions) {
-    this.matchedSelectors = aOptions.matchedSelectors || [];
+  refresh: function(options) {
+    this.matchedSelectors = options.matchedSelectors || [];
     let newTextProps = this._getTextProperties();
 
     // Update current properties for each property present on the style.
@@ -872,18 +873,17 @@ Rule.prototype = {
    *
    * If no existing properties match the property, nothing happens.
    *
-   * @param {TextProperty} aNewProp
+   * @param {TextProperty} newProp
    *        The current version of the property, as parsed from the
    *        cssText in Rule._getTextProperties().
-   *
-   * @return {bool} true if a property was updated, false if no properties
+   * @return {Boolean} true if a property was updated, false if no properties
    *         were updated.
    */
-  _updateTextProperty: function(aNewProp) {
+  _updateTextProperty: function(newProp) {
     let match = { rank: 0, prop: null };
 
     for (let prop of this.textProps) {
-      if (prop.name != aNewProp.name) {
+      if (prop.name !== newProp.name) {
         continue;
       }
 
@@ -896,9 +896,9 @@ Rule.prototype = {
       // Value and Priority matches add 2 to the rank.
       // Being enabled adds 1.  This ranks better matches higher,
       // with priority breaking ties.
-      if (prop.value === aNewProp.value) {
+      if (prop.value === newProp.value) {
         rank += 2;
-        if (prop.priority === aNewProp.priority) {
+        if (prop.priority === newProp.priority) {
           rank += 2;
         }
       }
@@ -925,7 +925,7 @@ Rule.prototype = {
     // If we found a match, update its value with the new text property
     // value.
     if (match.prop) {
-      match.prop.set(aNewProp);
+      match.prop.set(newProp);
       return true;
     }
 
@@ -941,7 +941,7 @@ Rule.prototype = {
    *
    * @param {TextProperty} textProperty
    *        The text property that will be left to focus on a sibling.
-   * @param {number} direction
+   * @param {Number} direction
    *        The move focus direction number.
    */
   editClosestTextProperty: function(textProperty, direction) {
@@ -970,7 +970,7 @@ Rule.prototype = {
   stringifyRule: function() {
     let selectorText = this.selectorText;
     let cssText = "";
-    let terminator = osString == "WINNT" ? "\r\n" : "\n";
+    let terminator = osString === "WINNT" ? "\r\n" : "\n";
 
     for (let textProp of this.textProps) {
       cssText += "\t" + textProp.stringifyProperty() + terminator;
@@ -983,21 +983,20 @@ Rule.prototype = {
 /**
  * A single property in a rule's cssText.
  *
- * @param {Rule} aRule
+ * @param {Rule} rule
  *        The rule this TextProperty came from.
- * @param {string} aName
+ * @param {String} name
  *        The text property name (such as "background" or "border-top").
- * @param {string} aValue
+ * @param {String} value
  *        The property's value (not including priority).
- * @param {string} aPriority
+ * @param {String} priority
  *        The property's priority (either "important" or an empty string).
- *
  */
-function TextProperty(aRule, aName, aValue, aPriority) {
-  this.rule = aRule;
-  this.name = aName;
-  this.value = aValue;
-  this.priority = aPriority;
+function TextProperty(rule, name, value, priority) {
+  this.rule = rule;
+  this.name = name;
+  this.value = value;
+  this.priority = priority;
   this.enabled = true;
   this.updateComputed();
 }
@@ -1034,7 +1033,7 @@ TextProperty.prototype = {
     try {
       // Manually get all the properties that are set when setting a value on
       // this.name and check the computed style on dummyElement for each one.
-      // If we just read dummyStyle, it would skip properties when value == "".
+      // If we just read dummyStyle, it would skip properties when value === "".
       let subProps = domUtils.getSubpropertiesForCSSProperty(this.name);
 
       for (let prop of subProps) {
@@ -1055,14 +1054,14 @@ TextProperty.prototype = {
    * Set all the values from another TextProperty instance into
    * this TextProperty instance.
    *
-   * @param {TextProperty} aOther
+   * @param {TextProperty} prop
    *        The other TextProperty instance.
    */
-  set: function(aOther) {
+  set: function(prop) {
     let changed = false;
     for (let item of ["name", "value", "priority", "enabled"]) {
-      if (this[item] != aOther[item]) {
-        this[item] = aOther[item];
+      if (this[item] !== prop[item]) {
+        this[item] = prop[item];
         changed = true;
       }
     }
@@ -1072,31 +1071,31 @@ TextProperty.prototype = {
     }
   },
 
-  setValue: function(aValue, aPriority, force=false) {
+  setValue: function(value, priority, force=false) {
     let store = this.rule.elementStyle.store;
 
-    if (this.editor && aValue !== this.editor.committed.value || force) {
-      store.userProperties.setProperty(this.rule.style, this.name, aValue);
+    if (this.editor && value !== this.editor.committed.value || force) {
+      store.userProperties.setProperty(this.rule.style, this.name, value);
     }
 
-    this.rule.setPropertyValue(this, aValue, aPriority);
+    this.rule.setPropertyValue(this, value, priority);
     this.updateEditor();
   },
 
-  setName: function(aName) {
+  setName: function(name) {
     let store = this.rule.elementStyle.store;
 
-    if (aName !== this.name) {
-      store.userProperties.setProperty(this.rule.style, aName,
+    if (name !== this.name) {
+      store.userProperties.setProperty(this.rule.style, name,
                                        this.editor.committed.value);
     }
 
-    this.rule.setPropertyName(this, aName);
+    this.rule.setPropertyName(this, name);
     this.updateEditor();
   },
 
-  setEnabled: function(aValue) {
-    this.rule.setPropertyEnabled(this, aValue);
+  setEnabled: function(value) {
+    this.rule.setPropertyEnabled(this, value);
     this.updateEditor();
   },
 
@@ -1143,22 +1142,23 @@ TextProperty.prototype = {
  * apply to a given element.  After construction, the 'element'
  * property will be available with the user interface.
  *
- * @param {Inspector} inspector toolbox panel
- * @param {Document} document The document that will contain the rule view.
- * @param {object} aStore
+ * @param {Inspector} inspector
+ *        Inspector toolbox panel
+ * @param {Document} document
+ *        The document that will contain the rule view.
+ * @param {Object} store
  *        The CSS rule view can use this object to store metadata
  *        that might outlast the rule view, particularly the current
  *        set of disabled properties.
- * @param {PageStyleFront} aPageStyle
+ * @param {PageStyleFront} pageStyle
  *        The PageStyleFront for communicating with the remote server.
- * @constructor
  */
-function CssRuleView(inspector, document, aStore, aPageStyle) {
+function CssRuleView(inspector, document, store, pageStyle) {
   this.inspector = inspector;
   this.styleDocument = document;
   this.styleWindow = this.styleDocument.defaultView;
-  this.store = aStore || {};
-  this.pageStyle = aPageStyle;
+  this.store = store || {};
+  this.pageStyle = pageStyle;
 
   this._outputParser = new OutputParser(document);
 
@@ -1169,7 +1169,8 @@ function CssRuleView(inspector, document, aStore, aPageStyle) {
   this._onFilterStyles = this._onFilterStyles.bind(this);
   this._onFilterKeyPress = this._onFilterKeyPress.bind(this);
   this._onClearSearch = this._onClearSearch.bind(this);
-  this._onFilterTextboxContextMenu = this._onFilterTextboxContextMenu.bind(this);
+  this._onFilterTextboxContextMenu =
+    this._onFilterTextboxContextMenu.bind(this);
   this._onTogglePseudoClassPanel = this._onTogglePseudoClassPanel.bind(this);
   this._onTogglePseudoClass = this._onTogglePseudoClass.bind(this);
 
@@ -1251,6 +1252,7 @@ CssRuleView.prototype = {
    * Get an instance of SelectorHighlighter (used to highlight nodes that match
    * selectors in the rule-view). A new instance is only created the first time
    * this function is called. The same instance will then be returned.
+   *
    * @return {Promise} Resolves to the instance of the highlighter.
    */
   getSelectorHighlighter: Task.async(function*() {
@@ -1283,9 +1285,12 @@ CssRuleView.prototype = {
    * Calling the method a second time with the same selector will just
    * unhighlight the highlighted nodes.
    *
-   * @param {DOMNode} The icon that was clicked to toggle the selector. The
-   * class 'highlighted' will be added when the selector is highlighted.
-   * @param {String} The selector used to find nodes in the page.
+   * @param {DOMNode} selectorIcon
+   *        The icon that was clicked to toggle the selector. The
+   *        class 'highlighted' will be added when the selector is
+   *        highlighted.
+   * @param {String} selector
+   *        The selector used to find nodes in the page.
    */
   toggleSelectorHighlighter: function(selectorIcon, selector) {
     if (this.lastSelectorIcon) {
@@ -1334,7 +1339,9 @@ CssRuleView.prototype = {
 
   /**
    * Get the type of a given node in the rule-view
-   * @param {DOMNode} node The node which we want information about
+   *
+   * @param {DOMNode} node
+   *        The node which we want information about
    * @return {Object} The type information object contains the following props:
    * - type {String} One of the VIEW_NODE_XXX_TYPE const in
    *   style-inspector-overlays
@@ -1427,7 +1434,9 @@ CssRuleView.prototype = {
 
   /**
    * Callback for copy event. Copy the selected text.
-   * @param {Event} event copy event object.
+   *
+   * @param {Event} event
+   *        copy event object.
    */
   _onCopy: function(event) {
     if (event) {
@@ -1439,13 +1448,15 @@ CssRuleView.prototype = {
   /**
    * Copy the current selection. The current target is necessary
    * if the selection is inside an input or a textarea
-   * @param {DOMNode} target DOMNode target of the copy action
+   *
+   * @param {DOMNode} target
+   *        DOMNode target of the copy action
    */
   copySelection: function(target) {
     try {
       let text = "";
 
-      if (target && target.nodeName == "input") {
+      if (target && target.nodeName === "input") {
         let start = Math.min(target.selectionStart, target.selectionEnd);
         let end = Math.max(target.selectionStart, target.selectionEnd);
         let count = end - start;
@@ -1517,16 +1528,18 @@ CssRuleView.prototype = {
     this.addRuleButton.disabled = shouldBeDisabled;
   },
 
-  setPageStyle: function(aPageStyle) {
-    this.pageStyle = aPageStyle;
+  setPageStyle: function(pageStyle) {
+    this.pageStyle = pageStyle;
   },
 
   /**
-   * Return {bool} true if the rule view currently has an input editor visible.
+   * Return {Boolean} true if the rule view currently has an input
+   * editor visible.
    */
   get isEditing() {
-    return this.element.querySelectorAll(".styleinspector-propertyeditor").length > 0
-      || this.tooltips.isEditing;
+    return this.tooltips.isEditing ||
+      this.element.querySelectorAll(".styleinspector-propertyeditor")
+        .length > 0;
   },
 
   _handlePrefChange: function(pref) {
@@ -1698,11 +1711,11 @@ CssRuleView.prototype = {
   /**
    * Update the view with a new selected element.
    *
-   * @param {NodeActor} aElement
+   * @param {NodeActor} element
    *        The node whose style rules we'll inspect.
    */
-  selectElement: function(aElement) {
-    if (this._viewedElement === aElement) {
+  selectElement: function(element) {
+    if (this._viewedElement === element) {
       return promise.resolve(undefined);
     }
 
@@ -1713,7 +1726,7 @@ CssRuleView.prototype = {
     this.clear();
     this.clearPseudoClassPanel();
 
-    this._viewedElement = aElement;
+    this._viewedElement = element;
     this.refreshAddRuleButtonState();
 
     if (!this._viewedElement) {
@@ -1722,15 +1735,15 @@ CssRuleView.prototype = {
       return promise.resolve(undefined);
     }
 
-    this._elementStyle = new ElementStyle(aElement, this.store,
+    this._elementStyle = new ElementStyle(element, this.store,
       this.pageStyle, this.showUserAgentStyles);
 
     return this._elementStyle.init().then(() => {
-      if (this._viewedElement === aElement) {
+      if (this._viewedElement === element) {
         return this._populate();
       }
     }).then(() => {
-      if (this._viewedElement === aElement) {
+      if (this._viewedElement === element) {
         this._elementStyle.onChanged = () => {
           this._changed();
         };
@@ -1802,7 +1815,7 @@ CssRuleView.prototype = {
   _populate: function(clearRules = false) {
     let elementStyle = this._elementStyle;
     return this._elementStyle.populate().then(() => {
-      if (this._elementStyle != elementStyle || this.isDestroyed) {
+      if (this._elementStyle !== elementStyle || this.isDestroyed) {
         return;
       }
 
@@ -1896,17 +1909,18 @@ CssRuleView.prototype = {
 
   /**
    * Creates an expandable container in the rule view
-   * @param  {String} aLabel
+   *
+   * @param  {String} label
    *         The label for the container header
    * @param  {Boolean} isPseudo
    *         Whether or not the container will hold pseudo element rules
    * @return {DOMNode} The container element
    */
-  createExpandableContainer: function(aLabel, isPseudo = false) {
+  createExpandableContainer: function(label, isPseudo = false) {
     let header = this.styleDocument.createElementNS(HTML_NS, "div");
     header.className = this._getRuleViewHeaderClassName(true);
     header.classList.add("show-expandable-container");
-    header.textContent = aLabel;
+    header.textContent = label;
 
     let twisty = this.styleDocument.createElementNS(HTML_NS, "span");
     twisty.className = "ruleview-expander theme-twisty";
@@ -1939,6 +1953,7 @@ CssRuleView.prototype = {
 
   /**
    * Toggle the visibility of an expandable container
+   *
    * @param  {DOMNode}  twisty
    *         clickable toggle DOM Node
    * @param  {DOMNode}  header
@@ -2024,7 +2039,7 @@ CssRuleView.prototype = {
       }
 
       let inheritedSource = rule.inheritedSource;
-      if (inheritedSource && inheritedSource != lastInheritedSource) {
+      if (inheritedSource && inheritedSource !== lastInheritedSource) {
         let div = this.styleDocument.createElementNS(HTML_NS, "div");
         div.className = this._getRuleViewHeaderClassName();
         div.textContent = inheritedSource;
@@ -2039,7 +2054,7 @@ CssRuleView.prototype = {
       }
 
       let keyframes = rule.keyframes;
-      if (keyframes && keyframes != lastKeyframes) {
+      if (keyframes && keyframes !== lastKeyframes) {
         lastKeyframes = keyframes;
         container = this.createExpandableContainer(rule.keyframesName);
       }
@@ -2065,7 +2080,7 @@ CssRuleView.prototype = {
    * @param  {Rule} rule
    *         The rule object we're highlighting if its rule selectors or
    *         property values match the search value.
-   * @return {bool} true if the rule was highlighted, false otherwise.
+   * @return {Boolean} true if the rule was highlighted, false otherwise.
    */
   highlightRule: function(rule) {
     let isRuleSelectorHighlighted = this._highlightRuleSelector(rule);
@@ -2088,7 +2103,8 @@ CssRuleView.prototype = {
    *
    * @param  {Rule} rule
    *         The Rule object.
-   * @return {bool} true if the rule selector was highlighted, false otherwise.
+   * @return {Boolean} true if the rule selector was highlighted,
+   *         false otherwise.
    */
   _highlightRuleSelector: function(rule) {
     let isSelectorHighlighted = false;
@@ -2116,7 +2132,7 @@ CssRuleView.prototype = {
    * returns a boolean indicating whether or not the stylesheet source was
    * highlighted.
    *
-   * @return {bool} true if the stylesheet source was highlighted, false
+   * @return {Boolean} true if the stylesheet source was highlighted, false
    *         otherwise.
    */
   _highlightStyleSheet: function(rule) {
@@ -2137,8 +2153,8 @@ CssRuleView.prototype = {
    *
    * @param  {TextPropertyEditor} editor
    *         The rule property TextPropertyEditor object.
-   * @return {bool} true if the property or computed property was highlighted,
-   *         false otherwise.
+   * @return {Boolean} true if the property or computed property was
+   *         highlighted, false otherwise.
    */
   _highlightProperty: function(editor) {
     let isPropertyHighlighted = this._highlightRuleProperty(editor);
@@ -2180,7 +2196,8 @@ CssRuleView.prototype = {
    *
    * @param  {TextPropertyEditor} editor
    *         The rule property TextPropertyEditor object.
-   * @return {bool} true if the rule property was highlighted, false otherwise.
+   * @return {Boolean} true if the rule property was highlighted,
+   *         false otherwise.
    */
   _highlightRuleProperty: function(editor) {
     // Get the actual property value displayed in the rule view
@@ -2205,7 +2222,7 @@ CssRuleView.prototype = {
    *
    * @param  {TextPropertyEditor} editor
    *         The rule property TextPropertyEditor object.
-   * @return {bool} true if the computed property was highlighted, false
+   * @return {Boolean} true if the computed property was highlighted, false
    *         otherwise.
    */
   _highlightComputedProperty: function(editor) {
@@ -2250,7 +2267,7 @@ CssRuleView.prototype = {
    * @param  {Boolean} propertyMatch
    *         Whether or not the search term matches a property line like
    *         `font-family: arial`
-   * @return {bool} true if the given search terms match the property, false
+   * @return {Boolean} true if the given search terms match the property, false
    *         otherwise.
    */
   _highlightMatches: function(element, { searchName, searchValue, propertyName,
@@ -2324,7 +2341,7 @@ CssRuleView.prototype = {
    * Handle the keypress event in the rule view.
    */
   _onKeypress: function(event) {
-    let isOSX = Services.appinfo.OS == "Darwin";
+    let isOSX = Services.appinfo.OS === "Darwin";
 
     if (((isOSX && event.metaKey && !event.ctrlKey && !event.altKey) ||
         (!isOSX && event.ctrlKey && !event.metaKey && !event.altKey)) &&
@@ -2342,7 +2359,6 @@ CssRuleView.prototype = {
  *        The CssRuleView containg the document holding this rule editor.
  * @param {Rule} aRule
  *        The Rule object we're editing.
- * @constructor
  */
 function RuleEditor(aRuleView, aRule) {
   this.ruleView = aRuleView;
@@ -2498,14 +2514,14 @@ RuleEditor.prototype = {
       }
     } else {
       sourceLabel.setAttribute("value", this.rule.title);
-      if (this.rule.ruleLine == -1 && this.rule.domRule.parentStyleSheet) {
+      if (this.rule.ruleLine === -1 && this.rule.domRule.parentStyleSheet) {
         sourceLabel.parentNode.setAttribute("unselectable", "true");
       }
     }
 
     let showOrig = Services.prefs.getBoolPref(PREF_ORIG_SOURCES);
     if (showOrig && !this.rule.isSystem &&
-        this.rule.domRule.type != ELEMENT_STYLE) {
+        this.rule.domRule.type !== ELEMENT_STYLE) {
       this.rule.getOriginalSourceStrings().then((strings) => {
         sourceLabel.setAttribute("value", strings.short);
         sourceLabel.setAttribute("tooltiptext", strings.full);
@@ -2531,7 +2547,7 @@ RuleEditor.prototype = {
       this.selectorText.textContent = this.rule.domRule.keyText;
     } else {
       this.rule.domRule.selectors.forEach((selector, i) => {
-        if (i != 0) {
+        if (i !== 0) {
           createChild(this.selectorText, "span", {
             class: "ruleview-selector-separator",
             textContent: ", "
@@ -2586,25 +2602,25 @@ RuleEditor.prototype = {
   /**
    * Programatically add a new property to the rule.
    *
-   * @param {string} aName
+   * @param {String} name
    *        Property name.
-   * @param {string} aValue
+   * @param {String} value
    *        Property value.
-   * @param {string} aPriority
+   * @param {String} priority
    *        Property priority.
-   * @param {TextProperty} aSiblingProp
+   * @param {TextProperty} siblingProp
    *        Optional, property next to which the new property will be added.
    * @return {TextProperty}
    *        The new property
    */
-  addProperty: function(aName, aValue, aPriority, aSiblingProp) {
-    let prop = this.rule.createProperty(aName, aValue, aPriority, aSiblingProp);
+  addProperty: function(name, value, priority, siblingProp) {
+    let prop = this.rule.createProperty(name, value, priority, siblingProp);
     let index = this.rule.textProps.indexOf(prop);
     let editor = new TextPropertyEditor(this, prop);
 
     // Insert this node before the DOM node that is currently at its new index
     // in the property list.  There is currently one less node in the DOM than
-    // in the property list, so this causes it to appear after aSiblingProp.
+    // in the property list, so this causes it to appear after siblingProp.
     // If there is no node at its index, as is the case where this is the last
     // node being inserted, then this behaves as appendChild.
     this.propertyList.insertBefore(editor.element,
@@ -2690,9 +2706,9 @@ RuleEditor.prototype = {
   /**
    * Called when the new property input has been dismissed.
    *
-   * @param {string} aValue
+   * @param {String} aValue
    *        The value in the editor.
-   * @param {bool} aCommit
+   * @param {Boolean} aCommit
    *        True if the value should be committed.
    */
   _onNewProperty: function(aValue, aCommit) {
@@ -2738,11 +2754,11 @@ RuleEditor.prototype = {
    * Ignores the change if the user pressed escape, otherwise
    * commits it.
    *
-   * @param {string} value
+   * @param {String} value
    *        The value contained in the editor.
-   * @param {boolean} commit
+   * @param {Boolean} commit
    *        True if the change should be applied.
-   * @param {number} direction
+   * @param {Number} direction
    *        The move focus direction number.
    */
   _onSelectorDone: function(value, commit, direction) {
@@ -2790,7 +2806,7 @@ RuleEditor.prototype = {
 
       // Remove highlight for modified selector
       if (ruleView.highlightedSelector &&
-          ruleView.highlightedSelector == this.rule.selectorText) {
+          ruleView.highlightedSelector === this.rule.selectorText) {
         ruleView.toggleSelectorHighlighter(ruleView.lastSelectorIcon,
           ruleView.highlightedSelector);
       }
@@ -2809,11 +2825,11 @@ RuleEditor.prototype = {
    *
    * @param {Rule} rule
    *        The Rule object.
-   * @param {number} direction
+   * @param {Number} direction
    *        The move focus direction number.
    */
   _moveSelectorFocus: function(rule, direction) {
-    if (!direction || direction == Ci.nsIFocusManager.MOVEFOCUS_BACKWARD) {
+    if (!direction || direction === Ci.nsIFocusManager.MOVEFOCUS_BACKWARD) {
       return;
     }
 
@@ -2828,18 +2844,17 @@ RuleEditor.prototype = {
 /**
  * Create a TextPropertyEditor.
  *
- * @param {RuleEditor} aRuleEditor
+ * @param {RuleEditor} ruleEditor
  *        The rule editor that owns this TextPropertyEditor.
- * @param {TextProperty} aProperty
+ * @param {TextProperty} property
  *        The text property to edit.
- * @constructor
  */
-function TextPropertyEditor(aRuleEditor, aProperty) {
-  this.ruleEditor = aRuleEditor;
+function TextPropertyEditor(ruleEditor, property) {
+  this.ruleEditor = ruleEditor;
   this.ruleView = this.ruleEditor.ruleView;
   this.doc = this.ruleEditor.doc;
   this.popup = this.ruleView.popup;
-  this.prop = aProperty;
+  this.prop = property;
   this.prop.editor = this;
   this.browserWindow = this.doc.defaultView.top;
   this._populatedComputed = false;
@@ -2964,10 +2979,10 @@ TextPropertyEditor.prototype = {
     if (this.ruleEditor.isEditable) {
       this.enable.addEventListener("click", this._onEnableClicked, true);
 
-      this.nameContainer.addEventListener("click", (aEvent) => {
+      this.nameContainer.addEventListener("click", (event) => {
         // Clicks within the name shouldn't propagate any further.
-        aEvent.stopPropagation();
-        if (aEvent.target === propertyContainer) {
+        event.stopPropagation();
+        if (event.target === propertyContainer) {
           this.nameSpan.click();
         }
       }, false);
@@ -2986,11 +3001,11 @@ TextPropertyEditor.prototype = {
       this.nameContainer.addEventListener("paste",
         blurOnMultipleProperties, false);
 
-      propertyContainer.addEventListener("click", (aEvent) => {
+      propertyContainer.addEventListener("click", (event) => {
         // Clicks within the value shouldn't propagate any further.
-        aEvent.stopPropagation();
+        event.stopPropagation();
 
-        if (aEvent.target === propertyContainer) {
+        if (event.target === propertyContainer) {
           this.valueSpan.click();
         }
       }, false);
@@ -3022,7 +3037,8 @@ TextPropertyEditor.prototype = {
   /**
    * Get the path from which to resolve requests for this
    * rule's stylesheet.
-   * @return {string} the stylesheet's href.
+   *
+   * @return {String} the stylesheet's href.
    */
   get sheetHref() {
     let domRule = this.rule.domRule;
@@ -3034,6 +3050,7 @@ TextPropertyEditor.prototype = {
   /**
    * Get the URI from which to resolve relative requests for
    * this rule's stylesheet.
+   *
    * @return {nsIURI} A URI based on the the stylesheet's href.
    */
   get sheetURI() {
@@ -3050,8 +3067,10 @@ TextPropertyEditor.prototype = {
 
   /**
    * Resolve a URI based on the rule stylesheet
-   * @param {string} relativePath the path to resolve
-   * @return {string} the resolved path.
+   *
+   * @param {String} relativePath
+   *        the path to resolve
+   * @return {String} the resolved path.
    */
   resolveURI: function(relativePath) {
     if (this.sheetURI) {
@@ -3258,7 +3277,7 @@ TextPropertyEditor.prototype = {
   /**
    * Handles clicks on the disabled property.
    */
-  _onEnableClicked: function(aEvent) {
+  _onEnableClicked: function(event) {
     let checked = this.enable.hasAttribute("checked");
     if (checked) {
       this.enable.removeAttribute("checked");
@@ -3266,7 +3285,7 @@ TextPropertyEditor.prototype = {
       this.enable.setAttribute("checked", "");
     }
     this.prop.setEnabled(!checked);
-    aEvent.stopPropagation();
+    event.stopPropagation();
   },
 
   /**
@@ -3276,7 +3295,7 @@ TextPropertyEditor.prototype = {
    * expand the computed list and tracks whether or not the computed list is
    * expanded by manually by the user.
    */
-  _onExpandClicked: function(aEvent) {
+  _onExpandClicked: function(event) {
     if (this.computed.hasAttribute("filter-open") ||
         this.computed.hasAttribute("user-open")) {
       this.expander.removeAttribute("open");
@@ -3288,7 +3307,7 @@ TextPropertyEditor.prototype = {
       this._populateComputed();
     }
 
-    aEvent.stopPropagation();
+    event.stopPropagation();
   },
 
   /**
@@ -3320,16 +3339,16 @@ TextPropertyEditor.prototype = {
    * Ignores the change if the user pressed escape, otherwise
    * commits it.
    *
-   * @param {string} value
+   * @param {String} value
    *        The value contained in the editor.
-   * @param {boolean} commit
+   * @param {Boolean} commit
    *        True if the change should be applied.
-   * @param {number} direction
+   * @param {Number} direction
    *        The move focus direction number.
    */
   _onNameDone: function(value, commit, direction) {
     let isNameUnchanged = (!commit && !this.ruleEditor.isEditing) ||
-                          this.committed.name == value;
+                          this.committed.name === value;
     if (this.prop.value && isNameUnchanged) {
       return;
     }
@@ -3372,7 +3391,7 @@ TextPropertyEditor.prototype = {
    * Begin editing next or previous available property given the focus
    * direction.
    *
-   * @param {number} direction
+   * @param {Number} direction
    *        The move focus direction number.
    */
   remove: function(direction) {
@@ -3393,11 +3412,11 @@ TextPropertyEditor.prototype = {
    * Called when a value editor closes.  If the user pressed escape,
    * revert to the value this property had before editing.
    *
-   * @param {string} value
+   * @param {String} value
    *        The value contained in the editor.
-   * @param {bool} commit
+   * @param {Boolean} commit
    *        True if the change should be applied.
-   * @param {number} direction
+   * @param {Number} direction
    *        The move focus direction number.
    */
   _onValueDone: function(value="", commit, direction) {
@@ -3472,23 +3491,23 @@ TextPropertyEditor.prototype = {
    * Example: Calling with "red; width: 100px" would return
    * { firstValue: "red", propertiesToAdd: [{ name: "width", value: "100px" }] }
    *
-   * @param {string} aValue
+   * @param {String} value
    *        The string to parse
-   * @return {object} An object with the following properties:
+   * @return {Object} An object with the following properties:
    *        firstValue: A string containing a simple value, like
    *                    "red" or "100px!important"
    *        propertiesToAdd: An array with additional properties, following the
    *                         parseDeclarations format of {name,value,priority}
    */
-  _getValueAndExtraProperties: function(aValue) {
+  _getValueAndExtraProperties: function(value) {
     // The inplace editor will prevent manual typing of multiple properties,
     // but we need to deal with the case during a paste event.
     // Adding multiple properties inside of value editor sets value with the
     // first, then adds any more onto the property list (below this property).
-    let firstValue = aValue;
+    let firstValue = value;
     let propertiesToAdd = [];
 
-    let properties = parseDeclarations(aValue);
+    let properties = parseDeclarations(value);
 
     // Check to see if the input string can be parsed as multiple properties
     if (properties.length) {
@@ -3514,16 +3533,18 @@ TextPropertyEditor.prototype = {
 
   /**
    * Live preview this property, without committing changes.
-   * @param {string} aValue The value to set the current property to.
+   *
+   * @param {String} value
+   *        The value to set the current property to.
    */
-  _previewValue: function(aValue) {
+  _previewValue: function(value) {
     // Since function call is throttled, we need to make sure we are still
     // editing, and any selector modifications have been completed
     if (!this.editing || this.ruleEditor.isEditing) {
       return;
     }
 
-    let val = parseSingleValue(aValue);
+    let val = parseSingleValue(value);
     this.ruleEditor.rule.previewPropertyValue(this.prop, val.value,
                                               val.priority);
   },
@@ -3532,7 +3553,7 @@ TextPropertyEditor.prototype = {
    * Validate this property. Does it make sense for this value to be assigned
    * to this property name? This does not apply the property value
    *
-   * @return {bool} true if the property value is valid, false otherwise.
+   * @return {Boolean} true if the property value is valid, false otherwise.
    */
   isValid: function() {
     return domUtils.cssPropertyIsValid(this.prop.name, this.prop.value);
@@ -3551,45 +3572,45 @@ UserProperties.prototype = {
   /**
    * Get a named property for a given CSSStyleDeclaration.
    *
-   * @param {CSSStyleDeclaration} aStyle
+   * @param {CSSStyleDeclaration} style
    *        The CSSStyleDeclaration against which the property is mapped.
-   * @param {string} aName
+   * @param {String} name
    *        The name of the property to get.
-   * @param {string} aDefault
+   * @param {String} value
    *        Default value.
-   * @return {string}
-   *          The property value if it has previously been set by the user, null
-   *          otherwise.
+   * @return {String}
+   *        The property value if it has previously been set by the user, null
+   *        otherwise.
    */
-  getProperty: function(aStyle, aName, aDefault) {
-    let key = this.getKey(aStyle);
+  getProperty: function(style, name, value) {
+    let key = this.getKey(style);
     let entry = this.map.get(key, null);
 
-    if (entry && aName in entry) {
-      return entry[aName];
+    if (entry && name in entry) {
+      return entry[name];
     }
-    return aDefault;
+    return value;
   },
 
   /**
    * Set a named property for a given CSSStyleDeclaration.
    *
-   * @param {CSSStyleDeclaration} aStyle
+   * @param {CSSStyleDeclaration} style
    *        The CSSStyleDeclaration against which the property is to be mapped.
-   * @param {String} aName
+   * @param {String} bame
    *        The name of the property to set.
-   * @param {String} aUserValue
+   * @param {String} userValue
    *        The value of the property to set.
    */
-  setProperty: function(aStyle, aName, aUserValue) {
-    let key = this.getKey(aStyle, aName);
+  setProperty: function(style, bame, userValue) {
+    let key = this.getKey(style, bame);
     let entry = this.map.get(key, null);
 
     if (entry) {
-      entry[aName] = aUserValue;
+      entry[bame] = userValue;
     } else {
       let props = {};
-      props[aName] = aUserValue;
+      props[bame] = userValue;
       this.map.set(key, props);
     }
   },
@@ -3597,19 +3618,19 @@ UserProperties.prototype = {
   /**
    * Check whether a named property for a given CSSStyleDeclaration is stored.
    *
-   * @param {CSSStyleDeclaration} aStyle
+   * @param {CSSStyleDeclaration} style
    *        The CSSStyleDeclaration against which the property would be mapped.
-   * @param {String} aName
+   * @param {String} name
    *        The name of the property to check.
    */
-  contains: function(aStyle, aName) {
-    let key = this.getKey(aStyle, aName);
+  contains: function(style, name) {
+    let key = this.getKey(style, name);
     let entry = this.map.get(key, null);
-    return !!entry && aName in entry;
+    return !!entry && name in entry;
   },
 
-  getKey: function(aStyle, aName) {
-    return aStyle.actorID + ":" + aName;
+  getKey: function(style, name) {
+    return style.actorID + ":" + name;
   },
 
   clear: function() {
@@ -3624,27 +3645,27 @@ UserProperties.prototype = {
 /**
  * Create a child element with a set of attributes.
  *
- * @param {Element} aParent
+ * @param {Element} parent
  *        The parent node.
- * @param {string} aTag
+ * @param {String} tag
  *        The tag name.
- * @param {object} aAttributes
+ * @param {Object} attributes
  *        A set of attributes to set on the node.
  */
-function createChild(aParent, aTag, aAttributes) {
-  let elt = aParent.ownerDocument.createElementNS(HTML_NS, aTag);
-  for (let attr in aAttributes) {
-    if (aAttributes.hasOwnProperty(attr)) {
+function createChild(parent, tag, attributes) {
+  let elt = parent.ownerDocument.createElementNS(HTML_NS, tag);
+  for (let attr in attributes) {
+    if (attributes.hasOwnProperty(attr)) {
       if (attr === "textContent") {
-        elt.textContent = aAttributes[attr];
+        elt.textContent = attributes[attr];
       } else if (attr === "child") {
-        elt.appendChild(aAttributes[attr]);
+        elt.appendChild(attributes[attr]);
       } else {
-        elt.setAttribute(attr, aAttributes[attr]);
+        elt.setAttribute(attr, attributes[attr]);
       }
     }
   }
-  aParent.appendChild(elt);
+  parent.appendChild(elt);
   return elt;
 }
 
@@ -3696,7 +3717,9 @@ function appendText(aParent, aText) {
  * Walk up the DOM from a given node until a parent property holder is found.
  * For elements inside the computed property list, the non-computed parent
  * property holder will be returned
- * @param {DOMNode} node The node to start from
+ *
+ * @param {DOMNode} node
+ *        The node to start from
  * @return {DOMNode} The parent property holder node, or null if not found
  */
 function getParentTextPropertyHolder(node) {
@@ -3713,7 +3736,8 @@ function getParentTextPropertyHolder(node) {
 
 /**
  * For any given node, find the TextProperty it is in if any
- * @param {DOMNode} node The node to start from
+ * @param {DOMNode} node
+ *        The node to start from
  * @return {TextProperty}
  */
 function getParentTextProperty(node) {
@@ -3735,7 +3759,9 @@ function getParentTextProperty(node) {
  * and return the textContent for the name and value nodes.
  * Stops at the first property found, so if node is inside the computed property
  * list, the computed property will be returned
- * @param {DOMNode} node The node to start from
+ *
+ * @param {DOMNode} node
+ *        The node to start from
  * @return {Object} {name, value}
  */
 function getPropertyNameAndValue(node) {
@@ -3761,15 +3787,18 @@ function getPropertyNameAndValue(node) {
  * typed, and then by lexing the input and seeing whether the ";"
  * would be a terminator at this point.
  *
- * @param {number} aKeyCode Key code to be checked.
- * @param {String} aValue   Current text editor value.
- * @param {number} aInsertionPoint The index of the insertion point.
+ * @param {Number} keyCode
+ *        Key code to be checked.
+ * @param {String} value
+ *        Current text editor value.
+ * @param {Number} insertionPoint
+ *        The index of the insertion point.
  * @return {Boolean} True if the focus should advance; false if
  *        the character should be inserted.
  */
-function advanceValidate(aKeyCode, aValue, aInsertionPoint) {
+function advanceValidate(keyCode, value, insertionPoint) {
   // Only ";" has special handling here.
-  if (aKeyCode !== Ci.nsIDOMKeyEvent.DOM_VK_SEMICOLON) {
+  if (keyCode !== Ci.nsIDOMKeyEvent.DOM_VK_SEMICOLON) {
     return false;
   }
 
@@ -3777,12 +3806,12 @@ function advanceValidate(aKeyCode, aValue, aInsertionPoint) {
   // end up with a ";" symbol token, then the semicolon terminates the
   // value.  Otherwise it's been inserted in some spot where it has a
   // valid meaning, like a comment or string.
-  aValue = aValue.slice(0, aInsertionPoint) + ";" +
-    aValue.slice(aInsertionPoint);
-  let lexer = domUtils.getCSSLexer(aValue);
+  value = value.slice(0, insertionPoint) + ";" +
+    value.slice(insertionPoint);
+  let lexer = domUtils.getCSSLexer(value);
   while (true) {
     let token = lexer.nextToken();
-    if (token.endOffset > aInsertionPoint) {
+    if (token.endOffset > insertionPoint) {
       if (token.tokenType === "symbol" && token.text === ";") {
         // The ";" is a terminator.
         return true;

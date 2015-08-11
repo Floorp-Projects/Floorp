@@ -9,15 +9,15 @@
 
 const SEARCH = "0px";
 
-let TEST_URI = [
-  "<style type='text/css'>",
-  "  #testid {",
-  "    margin: 4px;",
-  "    top: 0px;",
-  "  }",
-  "</style>",
-  "<h1 id='testid'>Styled Node</h1>"
-].join("\n");
+const TEST_URI = `
+  <style type='text/css'>
+    #testid {
+      margin: 4px;
+      top: 0px;
+    }
+  </style>
+  <h1 id='testid'>Styled Node</h1>
+`;
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
@@ -45,7 +45,8 @@ function* testModifyPropertyValueFilter(inspector, view) {
   is(rule.selectorText, "#testid", "Second rule is #testid.");
   ok(!propEditor.container.classList.contains("ruleview-highlight"),
     "margin text property is not highlighted.");
-  ok(rule.textProps[1].editor.container.classList.contains("ruleview-highlight"),
+  ok(rule.textProps[1].editor.container.classList
+    .contains("ruleview-highlight"),
     "top text property is correctly highlighted.");
 
   let onBlur = once(editor.input, "blur");

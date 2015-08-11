@@ -278,8 +278,6 @@ CreateTestH264Decoder(layers::LayersBackend aBackend,
   if (!decoder) {
     return nullptr;
   }
-  nsresult rv = decoder->Init();
-  NS_ENSURE_SUCCESS(rv, nullptr);
 
   return decoder.forget();
 }
@@ -293,7 +291,6 @@ MP4Decoder::IsVideoAccelerated(layers::LayersBackend aBackend)
     return false;
   }
   bool result = decoder->IsHardwareAccelerated();
-  decoder->Shutdown();
   return result;
 }
 
@@ -336,8 +333,6 @@ CreateTestAACDecoder(AudioInfo& aConfig)
   if (!decoder) {
     return nullptr;
   }
-  nsresult rv = decoder->Init();
-  NS_ENSURE_SUCCESS(rv, nullptr);
 
   return decoder.forget();
 }
@@ -376,7 +371,6 @@ MP4Decoder::CanCreateAACDecoder()
                                     MOZ_ARRAY_LENGTH(sTestAACExtraData));
   nsRefPtr<MediaDataDecoder> decoder(CreateTestAACDecoder(config));
   if (decoder) {
-    decoder->Shutdown();
     result = true;
   }
   haveCachedResult = true;

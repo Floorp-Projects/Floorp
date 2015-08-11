@@ -7,23 +7,23 @@
 // Tests that the rule view search filter works properly in the computed list
 // when modifying the existing search filter value
 
-const SEARCH = "margin-"
+const SEARCH = "margin-";
 
-let TEST_URI = [
-  '<style type="text/css">',
-  '  #testid {',
-  '    margin: 4px 0px;',
-  '  }',
-  '  .testclass {',
-  '    background-color: red;',
-  '  }',
-  '</style>',
-  '<h1 id="testid" class="testclass">Styled Node</h1>'
-].join("\n");
+const TEST_URI = `
+  <style type="text/css">
+    #testid {
+      margin: 4px 0px;
+    }
+    .testclass {
+      background-color: red;
+    }
+  </style>
+  <h1 id="testid" class="testclass">Styled Node</h1>
+`;
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {toolbox, inspector, view} = yield openRuleView();
+  let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
   yield testAddTextInFilter(inspector, view);
   yield testRemoveTextInFilter(inspector, view);
@@ -70,7 +70,6 @@ function* testRemoveTextInFilter(inspector, ruleView) {
 
   let win = ruleView.styleWindow;
   let searchField = ruleView.searchField;
-  let onRuleViewFiltered = inspector.once("ruleview-filtered");
 
   searchField.focus();
   EventUtils.synthesizeKey("VK_BACK_SPACE", {}, win);

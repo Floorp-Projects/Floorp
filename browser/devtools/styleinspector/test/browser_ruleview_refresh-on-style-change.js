@@ -7,19 +7,13 @@
 // Test that the rule view refreshes when the current node has its style
 // changed
 
-const TESTCASE_URI = 'data:text/html;charset=utf-8,' +
-                     '<div id="testdiv" style="font-size:10px;">Test div!</div>';
+const TEST_URI = "<div id='testdiv' style='font-size: 10px;''>Test div!</div>";
 
 add_task(function*() {
-  yield addTab(TESTCASE_URI);
-
   Services.prefs.setCharPref("devtools.defaultColorUnit", "name");
 
-  info("Getting the test node");
-  let div = getNode("#testdiv");
-
-  info("Opening the rule view and selecting the test node");
-  let {toolbox, inspector, view} = yield openRuleView();
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
   yield selectNode("#testdiv", inspector);
 
   let fontSize = getRuleViewPropertyValue(view, "element", "font-size");
@@ -27,15 +21,18 @@ add_task(function*() {
 
   info("Changing the node's style and waiting for the update");
   let onUpdated = inspector.once("rule-view-refreshed");
-  div.style.cssText = "font-size: 3em; color: lightgoldenrodyellow; text-align: right; text-transform: uppercase";
+  let div = getNode("#testdiv");
+  div.style.cssText = "font-size: 3em; color: lightgoldenrodyellow; " +
+    "text-align: right; text-transform: uppercase";
   yield onUpdated;
 
   let textAlign = getRuleViewPropertyValue(view, "element", "text-align");
   is(textAlign, "right", "The rule view shows the new text align.");
   let color = getRuleViewPropertyValue(view, "element", "color");
-  is(color, "lightgoldenrodyellow", "The rule view shows the new color.")
+  is(color, "lightgoldenrodyellow", "The rule view shows the new color.");
   fontSize = getRuleViewPropertyValue(view, "element", "font-size");
   is(fontSize, "3em", "The rule view shows the new font size.");
-  let textTransform = getRuleViewPropertyValue(view, "element", "text-transform");
+  let textTransform = getRuleViewPropertyValue(view, "element",
+    "text-transform");
   is(textTransform, "uppercase", "The rule view shows the new text transform.");
 });

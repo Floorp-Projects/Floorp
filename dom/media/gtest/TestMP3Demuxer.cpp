@@ -10,7 +10,8 @@
 #include "mozilla/ArrayUtils.h"
 #include "MockMediaResource.h"
 
-using namespace mp3;
+using namespace mozilla;
+using namespace mozilla::mp3;
 
 // Regular MP3 file mock resource.
 class MockMP3MediaResource : public MockMediaResource {

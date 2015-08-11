@@ -234,6 +234,7 @@ class JS_PUBLIC_API(JSAutoStructuredCloneBuffer) {
 
 #define JS_SCERR_RECURSION 0
 #define JS_SCERR_TRANSFERABLE 1
+#define JS_SCERR_DUP_TRANSFERABLE 2
 
 JS_PUBLIC_API(void)
 JS_SetStructuredCloneCallbacks(JSRuntime* rt, const JSStructuredCloneCallbacks* callbacks);

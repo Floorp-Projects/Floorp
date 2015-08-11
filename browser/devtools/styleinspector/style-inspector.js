@@ -4,22 +4,29 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* globals RuleView, ComputedView, gDevTools */
+
+"use strict";
+
 const {Cc, Cu, Ci} = require("chrome");
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const {Tools} = require("main");
 Cu.import("resource://gre/modules/Services.jsm");
 const {PREF_ORIG_SOURCES} = require("devtools/styleeditor/utils");
 
-loader.lazyGetter(this, "gDevTools", () => Cu.import("resource:///modules/devtools/gDevTools.jsm", {}).gDevTools);
-loader.lazyGetter(this, "RuleView", () => require("devtools/styleinspector/rule-view"));
-loader.lazyGetter(this, "ComputedView", () => require("devtools/styleinspector/computed-view"));
+loader.lazyGetter(this, "gDevTools", () =>
+  Cu.import("resource:///modules/devtools/gDevTools.jsm", {}).gDevTools);
+loader.lazyGetter(this, "RuleView",
+  () => require("devtools/styleinspector/rule-view"));
+loader.lazyGetter(this, "ComputedView",
+  () => require("devtools/styleinspector/computed-view"));
 loader.lazyGetter(this, "_strings", () => Services.strings
   .createBundle("chrome://global/locale/devtools/styleinspector.properties"));
 
 // This module doesn't currently export any symbols directly, it only
 // registers inspector tools.
 
-function RuleViewTool(inspector, window, iframe) {
+function RuleViewTool(inspector, window) {
   this.inspector = inspector;
   this.document = window.document;
 
@@ -47,7 +54,6 @@ function RuleViewTool(inspector, window, iframe) {
   this.onSelected();
 }
 
-
 RuleViewTool.prototype = {
   isSidebarActive: function() {
     if (!this.view) {
@@ -59,12 +65,14 @@ RuleViewTool.prototype = {
   onSelected: function(event) {
     // Ignore the event if the view has been destroyed, or if it's inactive.
     // But only if the current selection isn't null. If it's been set to null,
-    // let the update go through as this is needed to empty the view on navigation.
+    // let the update go through as this is needed to empty the view on
+    // navigation.
     if (!this.view) {
       return;
     }
 
-    let isInactive = !this.isSidebarActive() && this.inspector.selection.nodeFront;
+    let isInactive = !this.isSidebarActive() &&
+                     this.inspector.selection.nodeFront;
     if (isInactive) {
       return;
     }
@@ -79,7 +87,8 @@ RuleViewTool.prototype = {
 
     if (!event || event == "new-node-front") {
       let done = this.inspector.updating("rule-view");
-      this.view.selectElement(this.inspector.selection.nodeFront).then(done, done);
+      this.view.selectElement(this.inspector.selection.nodeFront)
+        .then(done, done);
     }
   },
 
@@ -109,7 +118,6 @@ RuleViewTool.prototype = {
     // Chrome stylesheets are not listed in the style editor, so show
     // these sheets in the view source window instead.
     if (!sheet || sheet.isSystem) {
-      let contentDoc = this.inspector.selection.document;
       let href = rule.nodeHref || rule.href;
       let toolbox = gDevTools.getToolbox(this.inspector.target);
       toolbox.viewSource(href, rule.line);
@@ -129,7 +137,7 @@ RuleViewTool.prototype = {
         });
       }
       return;
-    })
+    });
   },
 
   onPropertyChanged: function() {
@@ -157,11 +165,12 @@ RuleViewTool.prototype = {
   }
 };
 
-function ComputedViewTool(inspector, window, iframe) {
+function ComputedViewTool(inspector, window) {
   this.inspector = inspector;
   this.document = window.document;
 
-  this.view = new ComputedView.CssComputedView(this.inspector, this.document, this.inspector.pageStyle);
+  this.view = new ComputedView.CssComputedView(this.inspector, this.document,
+                                               this.inspector.pageStyle);
 
   this.onSelected = this.onSelected.bind(this);
   this.refresh = this.refresh.bind(this);
@@ -181,7 +190,7 @@ function ComputedViewTool(inspector, window, iframe) {
 ComputedViewTool.prototype = {
   isSidebarActive: function() {
     if (!this.view) {
-      return;
+      return false;
     }
     return this.inspector.sidebar.getCurrentTabID() == "computedview";
   },
@@ -189,12 +198,14 @@ ComputedViewTool.prototype = {
   onSelected: function(event) {
     // Ignore the event if the view has been destroyed, or if it's inactive.
     // But only if the current selection isn't null. If it's been set to null,
-    // let the update go through as this is needed to empty the view on navigation.
+    // let the update go through as this is needed to empty the view on
+    // navigation.
     if (!this.view) {
       return;
     }
 
-    let isInactive = !this.isSidebarActive() && this.inspector.selection.nodeFront;
+    let isInactive = !this.isSidebarActive() &&
+                     this.inspector.selection.nodeFront;
     if (isInactive) {
       return;
     }

@@ -7,23 +7,23 @@
 // Tests that the rule view search filter works properly when modifying the
 // existing search filter value
 
-const SEARCH = "00F"
+const SEARCH = "00F";
 
-let TEST_URI = [
-  '<style type="text/css">',
-  '  #testid {',
-  '    background-color: #00F;',
-  '  }',
-  '  .testclass {',
-  '    width: 100%;',
-  '  }',
-  '</style>',
-  '<div id="testid" class="testclass">Styled Node</div>'
-].join("\n");
+const TEST_URI = `
+  <style type="text/css">
+    #testid {
+      background-color: #00F;
+    }
+    .testclass {
+      width: 100%;
+    }
+  </style>
+  <div id="testid" class="testclass">Styled Node</div>
+`;
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {toolbox, inspector, view} = yield openRuleView();
+  let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
   yield testAddTextInFilter(inspector, view);
   yield testRemoveTextInFilter(inspector, view);
@@ -48,7 +48,8 @@ function* testAddTextInFilter(inspector, ruleView) {
   let rule = getRuleViewRuleEditor(ruleView, 1).rule;
 
   is(rule.selectorText, "#testid", "Second rule is #testid.");
-  ok(rule.textProps[0].editor.container.classList.contains("ruleview-highlight"),
+  ok(rule.textProps[0].editor.container.classList
+    .contains("ruleview-highlight"),
     "background-color text property is correctly highlighted.");
 }
 
@@ -57,7 +58,6 @@ function* testRemoveTextInFilter(inspector, ruleView) {
 
   let win = ruleView.styleWindow;
   let searchField = ruleView.searchField;
-  let onRuleViewFiltered = inspector.once("ruleview-filtered");
 
   searchField.focus();
   EventUtils.synthesizeKey("VK_BACK_SPACE", {}, win);
@@ -71,12 +71,14 @@ function* testRemoveTextInFilter(inspector, ruleView) {
   let rule = getRuleViewRuleEditor(ruleView, 1).rule;
 
   is(rule.selectorText, "#testid", "Second rule is #testid.");
-  ok(rule.textProps[0].editor.container.classList.contains("ruleview-highlight"),
+  ok(rule.textProps[0].editor.container.classList
+    .contains("ruleview-highlight"),
     "background-color text property is correctly highlighted.");
 
   rule = getRuleViewRuleEditor(ruleView, 2).rule;
 
   is(rule.selectorText, ".testclass", "Second rule is .testclass.");
-  ok(rule.textProps[0].editor.container.classList.contains("ruleview-highlight"),
+  ok(rule.textProps[0].editor.container.classList
+    .contains("ruleview-highlight"),
     "width text property is correctly highlighted.");
 }

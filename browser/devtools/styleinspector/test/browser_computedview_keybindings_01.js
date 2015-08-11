@@ -4,20 +4,20 @@
 
 "use strict";
 
-// Test computed view key bindings
+// Tests computed view key bindings.
+
+const TEST_URI = `
+  <style type="text/css">
+    .matches {
+      color: #F00;
+    }
+  </style>
+  <span class="matches">Some styled text</span>
+`;
 
 add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8,default styles test");
-
-  info("Adding content to the test page");
-  content.document.body.innerHTML = '<style type="text/css"> ' +
-    '.matches {color: #F00;}</style>' +
-    '<span class="matches">Some styled text</span>' +
-    '</div>';
-
-  let {toolbox, inspector, view} = yield openComputedView();
-
-  info("Selecting the test node");
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openComputedView();
   yield selectNode(".matches", inspector);
 
   let propView = getFirstVisiblePropertyView(view);
@@ -29,8 +29,10 @@ add_task(function*() {
   EventUtils.synthesizeMouseAtCenter(matchedExpander, {}, view.styleWindow);
   yield onMatchedExpanderFocus;
 
-  yield checkToggleKeyBinding(view.styleWindow, "VK_SPACE", rulesTable, inspector);
-  yield checkToggleKeyBinding(view.styleWindow, "VK_RETURN", rulesTable, inspector);
+  yield checkToggleKeyBinding(view.styleWindow, "VK_SPACE", rulesTable,
+                              inspector);
+  yield checkToggleKeyBinding(view.styleWindow, "VK_RETURN", rulesTable,
+                              inspector);
   yield checkHelpLinkKeybinding(view);
 });
 
@@ -48,7 +50,8 @@ function getFirstVisiblePropertyView(view) {
 }
 
 function* checkToggleKeyBinding(win, key, rulesTable, inspector) {
-  info("Pressing " + key + " key a couple of times to check that the property gets expanded/collapsed");
+  info("Pressing " + key + " key a couple of times to check that the " +
+    "property gets expanded/collapsed");
 
   let onExpand = inspector.once("computed-view-property-expanded");
   let onCollapse = inspector.once("computed-view-property-collapsed");
@@ -69,7 +72,7 @@ function checkHelpLinkKeybinding(view) {
   let def = promise.defer();
 
   let propView = getFirstVisiblePropertyView(view);
-  propView.mdnLinkClick = function(aEvent) {
+  propView.mdnLinkClick = function() {
     ok(true, "Pressing F1 opened the MDN link");
     def.resolve();
   };

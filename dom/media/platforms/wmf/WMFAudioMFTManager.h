@@ -31,6 +31,10 @@ public:
 
   virtual void Shutdown() override;
 
+  virtual TrackInfo::TrackType GetType() override {
+    return TrackInfo::kAudioTrack;
+  }
+
 private:
 
   HRESULT UpdateOutputType();

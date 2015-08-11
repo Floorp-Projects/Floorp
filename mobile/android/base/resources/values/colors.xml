@@ -152,4 +152,6 @@
   <color name="top_site_default">#FFECF0F3</color>
   <color name="top_site_border">#FFCFD9E1</color>
 
+  <color name="private_active_text">#FFFFFF</color>
+
 </resources>

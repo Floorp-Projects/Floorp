@@ -4,19 +4,19 @@
 
 "use strict";
 
-// Tests adding a new property and escapes the new empty property name editor
+// Tests adding a new property and escapes the new empty property name editor.
 
-let TEST_URI = [
-  "<style type='text/css'>",
-  "  #testid {",
-  "    background-color: blue;",
-  "  }",
-  "  .testclass {",
-  "    background-color: green;",
-  "  }",
-  "</style>",
-  "<div id='testid' class='testclass'>Styled Node</div>"
-].join("\n");
+const TEST_URI = `
+  <style type="text/css">
+    #testid {
+      background-color: blue;
+    }
+    .testclass {
+      background-color: green;
+    }
+  </style>
+  <div id='testid' class='testclass'>Styled Node</div>
+`;
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));

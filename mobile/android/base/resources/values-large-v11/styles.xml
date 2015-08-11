@@ -78,6 +78,7 @@
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:background">@drawable/new_tablet_action_bar_button</item>
+        <item name="drawableTintList">@color/action_bar_menu_item_colors</item>
         <item name="android:scaleType">center</item>
 
         <!-- layout_width/height doesn't work here, likely because it's
@@ -90,6 +91,10 @@
         <item name="android:paddingBottom">21dp</item>
         <item name="android:paddingLeft">@dimen/new_tablet_browser_toolbar_menu_item_padding_horizontal</item>
         <item name="android:paddingRight">@dimen/new_tablet_browser_toolbar_menu_item_padding_horizontal</item>
+    </style>
+
+    <style name="Widget.MenuItemSecondaryActionBar" parent="Widget.MenuItemSecondaryActionBarBase">
+        <item name="drawableTintList">@color/action_bar_secondary_menu_item_colors</item>
     </style>
 
     <style name="Widget.BookmarksListView" parent="Widget.HomeListView">

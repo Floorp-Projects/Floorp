@@ -111,7 +111,6 @@ function startTest() {
   var processor1 = ctx.createScriptProcessor(bufferSize, 1, 0);
   delay.connect(processor1);
   processor1.onaudioprocess = onDelayOutput;
-  processor1.connect(ctx.destination); // work around bug 916387
 
   // Signal to trigger initial tail time reference
   oscillator = ctx.createOscillator();
@@ -128,7 +127,6 @@ function startTest() {
   var processor2 = ctx.createScriptProcessor(bufferSize, 1, 0);
   source.connect(processor2);
   processor2.onaudioprocess = onSourceOutput;
-  processor2.connect(ctx.destination); // guard against bug 916387
 };
 
 startTest();

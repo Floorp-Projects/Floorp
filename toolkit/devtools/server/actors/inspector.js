@@ -1298,7 +1298,13 @@ var WalkerActor = protocol.ActorClass({
   form: function() {
     return {
       actor: this.actorID,
-      root: this.rootNode.form()
+      root: this.rootNode.form(),
+      traits: {
+        // FF42+ Inspector starts managing the Walker, while the inspector also
+        // starts cleaning itself up automatically on client disconnection.
+        // So that there is no need to manually release the walker anymore.
+        autoReleased: true
+      }
     }
   },
 
@@ -3108,6 +3114,8 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
     this.actorID = json.actor;
     this.rootNode = types.getType("domnode").read(json.root, this);
     this._rootNodeDeferred.resolve(this.rootNode);
+    // FF42+ the actor starts exposing traits
+    this.traits = json.traits || {};
   },
 
   /**
@@ -3522,6 +3530,7 @@ var InspectorActor = exports.InspectorActor = protocol.ActorClass({
       let tabActor = this.tabActor;
       window.removeEventListener("DOMContentLoaded", domReady, true);
       this.walker = WalkerActor(this.conn, tabActor, options);
+      this.manage(this.walker);
       events.once(this.walker, "destroyed", () => {
         this._walkerPromise = null;
         this._pageStylePromise = null;

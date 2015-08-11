@@ -36,6 +36,10 @@ public:
 
   virtual bool IsHardwareAccelerated() const override;
 
+  virtual TrackInfo::TrackType GetType() override {
+    return TrackInfo::kVideoTrack;
+  }
+
 private:
 
   bool InitializeDXVA(bool aForceD3D9);
