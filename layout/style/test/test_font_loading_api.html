@@ -184,9 +184,9 @@ function runTest() {
     ok(window.FontFace, "FontFace interface object should be present (TEST 1)");
     is(Object.getPrototypeOf(FontFace.prototype), Object.prototype, "FontFace should inherit from Object (TEST 1)");
 
-    // (TEST 2) Some miscellaneous tests for CSSFontFaceLoadEvent.
-    ok(window.CSSFontFaceLoadEvent, "CSSFontFaceLoadEvent interface object should be present (TEST 2)");
-    is(Object.getPrototypeOf(CSSFontFaceLoadEvent.prototype), Event.prototype, "CSSFontFaceLoadEvent should inherit from Event (TEST 2)");
+    // (TEST 2) Some miscellaneous tests for FontFaceSetLoadEvent.
+    ok(window.FontFaceSetLoadEvent, "FontFaceSetLoadEvent interface object should be present (TEST 2)");
+    is(Object.getPrototypeOf(FontFaceSetLoadEvent.prototype), Event.prototype, "FontFaceSetLoadEvent should inherit from Event (TEST 2)");
 
   }).then(function() {
 
@@ -651,15 +651,15 @@ function runTest() {
           }
 
           var doneListener = function(aEvent) {
-            is(Object.getPrototypeOf(aEvent), win.CSSFontFaceLoadEvent.prototype, "loadingdone event should be a CSSFontFaceLoadEvent object (TEST 27) (" + win + ")");
-            is(aEvent.fontfaces.length, 0, "the CSSFontFaceLoadEvent should have an empty fontfaces array (TEST 27) (" + win + ")");
+            is(Object.getPrototypeOf(aEvent), win.FontFaceSetLoadEvent.prototype, "loadingdone event should be a FontFaceSetLoadEvent object (TEST 27) (" + win + ")");
+            is(aEvent.fontfaces.length, 0, "the FontFaceSetLoadEvent should have an empty fontfaces array (TEST 27) (" + win + ")");
             loadingdoneDispatched = true;
             check();
           };
           doc.fonts.addEventListener("loadingdone", doneListener);
           doc.fonts.onloadingdone = function(aEvent) {
-            is(Object.getPrototypeOf(aEvent), win.CSSFontFaceLoadEvent.prototype, "loadingdone event should be a CSSFontFaceLoadEvent object (TEST 27) (" + win + ")");
-            is(aEvent.fontfaces.length, 0, "the CSSFontFaceLoadEvent should have an empty fontfaces array (TEST 27) (" + win + ")");
+            is(Object.getPrototypeOf(aEvent), win.FontFaceSetLoadEvent.prototype, "loadingdone event should be a FontFaceSetLoadEvent object (TEST 27) (" + win + ")");
+            is(aEvent.fontfaces.length, 0, "the FontFaceSetLoadEvent should have an empty fontfaces array (TEST 27) (" + win + ")");
             onloadingdoneTriggered = true;
             check();
           };
@@ -783,14 +783,14 @@ function runTest() {
           };
           doc.fonts.addEventListener("loadingdone", doneListener);
           doc.fonts.onloadingdone = function(aEvent) {
-            is(Object.getPrototypeOf(aEvent), win.CSSFontFaceLoadEvent.prototype, "loadingdone event should be a CSSFontFaceLoadEvent object (TEST 29) (" + win + ")");
-            is(aEvent.fontfaces.length, 0, "the CSSFontFaceLoadEvent should have an empty fontfaces array (TEST 29) (" + win + ")");
+            is(Object.getPrototypeOf(aEvent), win.FontFaceSetLoadEvent.prototype, "loadingdone event should be a FontFaceSetLoadEvent object (TEST 29) (" + win + ")");
+            is(aEvent.fontfaces.length, 0, "the FontFaceSetLoadEvent should have an empty fontfaces array (TEST 29) (" + win + ")");
             onloadingdoneTriggered = true;
             check();
           };
           var errorListener = function(aEvent) {
-            is(Object.getPrototypeOf(aEvent), win.CSSFontFaceLoadEvent.prototype, "loadingerror event should be a CSSFontFaceLoadEvent object (TEST 29) (" + win + ")");
-            is(aEvent.fontfaces[0], face, "the CSSFontFaceLoadEvent should have a fontfaces array with the FontFace in it (TEST 29) (" + win + ")");
+            is(Object.getPrototypeOf(aEvent), win.FontFaceSetLoadEvent.prototype, "loadingerror event should be a FontFaceSetLoadEvent object (TEST 29) (" + win + ")");
+            is(aEvent.fontfaces[0], face, "the FontFaceSetLoadEvent should have a fontfaces array with the FontFace in it (TEST 29) (" + win + ")");
             loadingerrorDispatched = true;
             check();
           }
@@ -848,7 +848,7 @@ function runTest() {
           };
           doc.fonts.addEventListener("loadingdone", doneListener);
           doc.fonts.onloadingdone = function(aEvent) {
-            is(aEvent.fontfaces[0], face, "the CSSFontFaceLoadEvent should have a fontfaces array with the FontFace in it (TEST 30) (" + win + ")");
+            is(aEvent.fontfaces[0], face, "the FontFaceSetLoadEvent should have a fontfaces array with the FontFace in it (TEST 30) (" + win + ")");
             onloadingdoneTriggered = true;
             check();
           };
@@ -899,7 +899,7 @@ function runTest() {
           };
           doc.fonts.addEventListener("loadingdone", doneListener);
           doc.fonts.onloadingdone = function(aEvent) {
-            is(aEvent.fontfaces[0], face, "the CSSFontFaceLoadEvent should have a fontfaces array with the FontFace in it (TEST 31) (" + win + ")");
+            is(aEvent.fontfaces[0], face, "the FontFaceSetLoadEvent should have a fontfaces array with the FontFace in it (TEST 31) (" + win + ")");
             onloadingdoneTriggered = true;
             check();
           };
