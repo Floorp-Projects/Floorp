@@ -5,12 +5,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
   <defs>
     <linearGradient id="gradient1" gradientUnits="userSpaceOnUse" x1="20" y1="4" x2="20" y2="36">
-      <stop offset="0" style="stop-color:#e63b2e"/>
-      <stop offset="1" style="stop-color:#c33931"/>
+      <stop offset="0" style="stop-color: #e63b2e"/>
+      <stop offset="1" style="stop-color: #c33931"/>
     </linearGradient>
     <linearGradient id="gradient2" gradientUnits="userSpaceOnUse" x1="20" y1="0" x2="20" y2="40">
-      <stop offset="0" style="stop-color:#e63b2e"/>
-      <stop offset="1" style="stop-color:#c33931"/>
+      <stop offset="0" style="stop-color: #e63b2e"/>
+      <stop offset="1" style="stop-color: #c33931"/>
     </linearGradient>
   </defs>
   <path fill="url(#gradient1)" d="M13.373,4L4,13.372v13.256L13.373,36h13.255L36,26.628V13.372L26.627,4H13.373z M22.176,8.704 l-0.48,14.304h-3.424L17.76,8.704H22.176z M20,31.296c-1.44,0-2.592-1.184-2.592-2.592c0-1.44,1.152-2.592,2.592-2.592 c1.472,0,2.592,1.152,2.592,2.592C22.592,30.112,21.472,31.296,20,31.296z"/>
