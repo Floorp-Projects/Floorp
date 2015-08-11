@@ -114,39 +114,6 @@ from its prototype:
     scope this script runs. The result refers to the global directly, not
     via a wrapper or a `WindowProxy` ("outer window", in Firefox).
 
-`staticLevel`
-:   The number of function bodies enclosing this script's code.
-
-    Global code is at level zero; bodies of functions defined at the top
-    level in global code are at level one; bodies of functions nested within
-    those are at level two; and so on.
-
-    A script for code passed to direct `eval` is at a static level one
-    greater than that of the script containing the call to `eval`, because
-    direct eval code runs within the caller's scope. However, a script for
-    code passed to an indirect `eval` call is at static level zero, since it
-    is evaluated in the global scope.
-
-    Note that a generator's expressions are considered to be part of the
-    body of a synthetic function, produced by the compiler.
-
-    Scripts' static level be useful in deciding where to set breakpoints.
-    For example, a breakpoint set on line 3 in this code:
-
-    ```language-js
-    function f() {
-      x = function g() {  // line 2
-                          // line 3; no code here
-        ...;
-      }
-    }
-    ```
-
-    should be set in `g`'s script, not in `f`'s, even though neither script
-    contains code at that line. In such a case, the most deeply nested
-    script—the one with the highest static level—should receive the
-    breakpoint.
-
 `strictMode`
 :   This is `true` if this script's code is ECMAScript strict mode code, and
     `false` otherwise.

@@ -1234,6 +1234,7 @@ CreateScopeObjectsForScopeChain(JSContext* cx, AutoObjectVector& scopeChain,
                                 MutableHandleObject dynamicScopeObj);
 
 bool HasNonSyntacticStaticScopeChain(JSObject* staticScope);
+uint32_t StaticScopeChainLength(JSObject* staticScope);
 
 #ifdef DEBUG
 void DumpStaticScopeChain(JSScript* script);
