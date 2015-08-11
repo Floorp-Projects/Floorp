@@ -342,6 +342,8 @@ function init() {
       }
       break;
     }
+  }).catch(err => {
+    error("Failed to get the signed in user: " + err);
   });
 }
 
