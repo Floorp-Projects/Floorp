@@ -322,7 +322,7 @@ public:
   PanGestureType mType;
   ScreenPoint mPanStartPoint;
 
-  // Only non-zero if mType is PANGESTURE_PAN or PANGESTURE_MOMENTUMPAN.
+  // The delta. This can be non-zero on any type of event.
   ScreenPoint mPanDisplacement;
 
   // Versions of |mPanStartPoint| and |mPanDisplacement| in the local
