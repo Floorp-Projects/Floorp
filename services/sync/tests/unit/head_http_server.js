@@ -545,13 +545,13 @@ SyncServer.prototype = {
    * Start the SyncServer's underlying HTTP server.
    *
    * @param port
-   *        The numeric port on which to start. A falsy value implies the
-   *        default, a randomly chosen port.
+   *        The numeric port on which to start. -1 implies the default, a
+   *        randomly chosen port.
    * @param cb
    *        A callback function (of no arguments) which is invoked after
    *        startup.
    */
-  start: function start(port, cb) {
+  start: function start(port = -1, cb) {
     if (this.started) {
       this._log.warn("Warning: server already started on " + this.port);
       return;
