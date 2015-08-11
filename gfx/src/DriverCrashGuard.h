@@ -51,13 +51,14 @@ public:
     Okay = 0,
     EnvironmentChanged = 1,
     RecoveredFromCrash = 2,
-    AccelerationDisabled = 3
+    FeatureDisabled = 3
   };
 
 protected:
-  virtual void RecordTelemetry(TelemetryState aState);
   virtual bool UpdateEnvironment() = 0;
   virtual void Initialize() = 0;
+  virtual void LogCrashRecovery() = 0;
+  virtual void LogFeatureDisabled() = 0;
 
   // Helper functions.
   bool FeatureEnabled(int aFeature);
@@ -90,7 +91,11 @@ class D3D11LayersCrashGuard final : public DriverCrashGuard
  protected:
   void Initialize() override;
   bool UpdateEnvironment() override;
-  void RecordTelemetry(TelemetryState aState) override;
+  void LogCrashRecovery() override;
+  void LogFeatureDisabled() override;
+
+ private:
+  void RecordTelemetry(TelemetryState aState);
 };
 
 } // namespace gfx
