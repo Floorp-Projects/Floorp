@@ -6,11 +6,14 @@
  * also console recordings that have finished before it was opened.
  */
 
+let { getPerformanceFront } = require("devtools/performance/front");
 let WAIT_TIME = 10;
 
 function* spawnTest() {
+  let profilerConnected = waitForProfilerConnection();
   let { target, toolbox, console } = yield initConsole(SIMPLE_URL);
-  let front = toolbox.performance;
+  yield profilerConnected;
+  let front = getPerformanceFront(target);
 
   let profileStart = once(front, "recording-started");
   console.profile("rust");
@@ -28,7 +31,6 @@ function* spawnTest() {
   let panel = toolbox.getCurrentPanel();
   let { panelWin: { PerformanceController, RecordingsView }} = panel;
 
-  yield waitUntil(() => PerformanceController.getRecordings().length === 2);
   let recordings = PerformanceController.getRecordings();
   is(recordings.length, 2, "two recordings found in the performance panel.");
   is(recordings[0].isConsole(), true, "recording came from console.profile (1).");
