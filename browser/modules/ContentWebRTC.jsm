@@ -77,10 +77,7 @@ this.ContentWebRTC = {
 };
 
 function handlePCRequest(aSubject, aTopic, aData) {
-  // Need to access JS object behind XPCOM wrapper added by observer API (using a
-  // WebIDL interface didn't work here as object comes from JSImplemented code).
-  aSubject = aSubject.wrappedJSObject;
-  let { windowID, callID, isSecure } = aSubject;
+  let { windowID, innerWindowID, callID, isSecure } = aSubject;
   let contentWindow = Services.wm.getOuterWindowWithId(windowID);
 
   if (!contentWindow.pendingPeerConnectionRequests) {
@@ -89,8 +86,9 @@ function handlePCRequest(aSubject, aTopic, aData) {
   contentWindow.pendingPeerConnectionRequests.add(callID);
 
   let request = {
-    callID: callID,
     windowID: windowID,
+    innerWindowID: innerWindowID,
+    callID: callID,
     documentURI: contentWindow.document.documentURI,
     secure: isSecure,
   };
