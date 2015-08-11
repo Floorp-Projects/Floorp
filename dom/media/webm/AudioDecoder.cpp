@@ -48,13 +48,13 @@ class VorbisDecoder : public WebMAudioDecoder
 {
 public:
   nsRefPtr<InitPromise> Init() override;
-  void Shutdown();
-  nsresult ResetDecode();
-  nsresult DecodeHeader(const unsigned char* aData, size_t aLength);
-  nsresult FinishInit(AudioInfo& aInfo);
+  void Shutdown() override;
+  nsresult ResetDecode() override;
+  nsresult DecodeHeader(const unsigned char* aData, size_t aLength) override;
+  nsresult FinishInit(AudioInfo& aInfo) override;
   bool Decode(const unsigned char* aData, size_t aLength,
               int64_t aOffset, uint64_t aTstampUsecs,
-              int64_t aDiscardPadding, int32_t* aTotalFrames);
+              int64_t aDiscardPadding, int32_t* aTotalFrames) override;
   explicit VorbisDecoder(WebMReader* aReader);
   ~VorbisDecoder();
 private:
@@ -230,13 +230,13 @@ class OpusDecoder : public WebMAudioDecoder
 {
 public:
   nsRefPtr<InitPromise> Init() override;
-  void Shutdown();
-  nsresult ResetDecode();
-  nsresult DecodeHeader(const unsigned char* aData, size_t aLength);
+  void Shutdown() override;
+  nsresult ResetDecode() override;
+  nsresult DecodeHeader(const unsigned char* aData, size_t aLength) override;
   nsresult FinishInit(AudioInfo& aInfo);
   bool Decode(const unsigned char* aData, size_t aLength,
               int64_t aOffset, uint64_t aTstampUsecs,
-              int64_t aDiscardPadding, int32_t* aTotalFrames);
+              int64_t aDiscardPadding, int32_t* aTotalFrames) override;
   explicit OpusDecoder(WebMReader* aReader);
   ~OpusDecoder();
 private:
