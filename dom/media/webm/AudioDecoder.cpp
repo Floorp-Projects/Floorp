@@ -233,7 +233,7 @@ public:
   void Shutdown() override;
   nsresult ResetDecode() override;
   nsresult DecodeHeader(const unsigned char* aData, size_t aLength) override;
-  nsresult FinishInit(AudioInfo& aInfo);
+  nsresult FinishInit(AudioInfo& aInfo) override;
   bool Decode(const unsigned char* aData, size_t aLength,
               int64_t aOffset, uint64_t aTstampUsecs,
               int64_t aDiscardPadding, int32_t* aTotalFrames) override;
