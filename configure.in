@@ -2643,8 +2643,6 @@ esac
 AC_SUBST(WRAP_SYSTEM_INCLUDES)
 AC_SUBST(VISIBILITY_FLAGS)
 
-MOZ_LLVM_PR8927
-
 dnl Checks for header files.
 dnl ========================================================
 AC_HEADER_DIRENT
@@ -2729,14 +2727,6 @@ if test "x$enable_dtrace" = "xyes"; then
   fi
 fi
 AC_SUBST(HAVE_DTRACE)
-
-case $target in
-*-aix4.3*|*-aix5*)
-    ;;
-*)
-    MOZ_CHECK_HEADERS(sys/cdefs.h)
-    ;;
-esac
 
 MOZ_LINUX_PERF_EVENT
 

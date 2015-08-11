@@ -1598,12 +1598,6 @@ public:
   static void WarnScriptWasIgnored(nsIDocument* aDocument);
 
   /**
-   * Whether to assert that RunInStableState() succeeds, or ignore failure,
-   * which may happen late in shutdown.
-   */
-  enum class DispatchFailureHandling { AssertSuccess, IgnoreFailure };
-
-  /**
    * Add a "synchronous section", in the form of an nsIRunnable run once the
    * event loop has reached a "stable state". |aRunnable| must not cause any
    * queued events to be processed (i.e. must not spin the event loop).
@@ -1614,9 +1608,19 @@ public:
    * finishes. If called multiple times per task/event, all the runnables will
    * be executed, in the order in which RunInStableState() was called.
    */
-  static void RunInStableState(already_AddRefed<nsIRunnable> aRunnable,
-                               DispatchFailureHandling aHandling =
-                                 DispatchFailureHandling::AssertSuccess);
+  static void RunInStableState(already_AddRefed<nsIRunnable> aRunnable);
+
+  /* Add a "synchronous section", in the form of an nsIRunnable run once the
+   * event loop has reached a "metastable state". |aRunnable| must not cause any
+   * queued events to be processed (i.e. must not spin the event loop).
+   * We've reached a metastable state when the currently executing task or
+   * microtask has finished.  This is not specced at this time.
+   * In practice this runs aRunnable once the currently executing task or
+   * microtask finishes.  If called multiple times per microtask, all the
+   * runnables will be executed, in the order in which RunInMetastableState()
+   * was called
+   */
+  static void RunInMetastableState(already_AddRefed<nsIRunnable> aRunnable);
 
   /**
    * Retrieve information about the viewport as a data structure.

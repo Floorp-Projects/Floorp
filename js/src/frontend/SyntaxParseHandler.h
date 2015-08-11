@@ -212,7 +212,7 @@ class SyntaxParseHandler
         return NodeGeneric;
     }
 
-    Node newCallSiteObject(uint32_t begin, unsigned blockidGen) {
+    Node newCallSiteObject(uint32_t begin) {
         return NodeGeneric;
     }
 
@@ -262,10 +262,8 @@ class SyntaxParseHandler
 
     // Expressions
 
-    Node newArrayComprehension(Node body, unsigned blockid, const TokenPos& pos) {
-        return NodeGeneric;
-    }
-    Node newArrayLiteral(uint32_t begin, unsigned blockid) { return NodeUnparenthesizedArray; }
+    Node newArrayComprehension(Node body, const TokenPos& pos) { return NodeGeneric; }
+    Node newArrayLiteral(uint32_t begin) { return NodeUnparenthesizedArray; }
     bool addElision(Node literal, const TokenPos& pos) { return true; }
     bool addSpreadElement(Node literal, uint32_t begin, Node inner) { return true; }
     void addArrayElement(Node literal, Node element) { }

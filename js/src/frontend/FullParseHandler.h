@@ -161,12 +161,12 @@ class FullParseHandler
         return new_<NullaryNode>(PNK_TEMPLATE_STRING, JSOP_NOP, pos, atom);
     }
 
-    ParseNode* newCallSiteObject(uint32_t begin, unsigned blockidGen) {
+    ParseNode* newCallSiteObject(uint32_t begin) {
         ParseNode* callSite = new_<CallSiteNode>(begin);
         if (!callSite)
             return null();
 
-        Node propExpr = newArrayLiteral(getPosition(callSite).begin, blockidGen);
+        Node propExpr = newArrayLiteral(getPosition(callSite).begin);
         if (!propExpr)
             return null();
 
@@ -278,24 +278,21 @@ class FullParseHandler
 
     // Expressions
 
-    ParseNode* newArrayComprehension(ParseNode* body, unsigned blockid, const TokenPos& pos) {
+    ParseNode* newArrayComprehension(ParseNode* body, const TokenPos& pos) {
         MOZ_ASSERT(pos.begin <= body->pn_pos.begin);
         MOZ_ASSERT(body->pn_pos.end <= pos.end);
         ParseNode* pn = new_<ListNode>(PNK_ARRAYCOMP, pos);
         if (!pn)
             return nullptr;
-        pn->pn_blockid = blockid;
         pn->append(body);
         return pn;
     }
 
-    ParseNode* newArrayLiteral(uint32_t begin, unsigned blockid) {
+    ParseNode* newArrayLiteral(uint32_t begin) {
         ParseNode* literal = new_<ListNode>(PNK_ARRAY, TokenPos(begin, begin + 1));
         // Later in this stack: remove dependency on this opcode.
-        if (literal) {
+        if (literal)
             literal->setOp(JSOP_NEWINIT);
-            literal->pn_blockid = blockid;
-        }
         return literal;
     }
 
@@ -878,7 +875,7 @@ class FullParseHandler
                                                   uint16_t firstDominatingLexicalSlot)
     {
         MOZ_ASSERT(pn->isUsed());
-        if (dn->isLexical() && dn->pn_cookie.slot() < firstDominatingLexicalSlot)
+        if (dn->isLexical() && dn->pn_scopecoord.slot() < firstDominatingLexicalSlot)
             pn->pn_dflags |= PND_LEXICAL;
     }
 

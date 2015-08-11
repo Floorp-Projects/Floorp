@@ -21,10 +21,15 @@
 #include "frontend/SyntaxParseHandler.h"
 
 namespace js {
+
+class StaticFunctionBoxScopeObject;
+
 namespace frontend {
 
 struct StmtInfoPC : public StmtInfoBase
 {
+    static const unsigned BlockIdLimit = 1 << ParseNode::NumBlockIdBits;
+
     StmtInfoPC*     enclosing;
     StmtInfoPC*     enclosingScope;
 
@@ -41,6 +46,7 @@ struct StmtInfoPC : public StmtInfoBase
 
     explicit StmtInfoPC(ExclusiveContext* cx)
       : StmtInfoBase(cx),
+        blockid(BlockIdLimit),
         innerBlockScopeDepth(0),
         firstDominatingLexicalInCase(0)
     {}
@@ -68,19 +74,11 @@ struct GenericParseContext
     // Function has 'return;'
     bool funHasReturnVoid:1;
 
-    // The following flags are set when parsing enters a particular region of
-    // source code, and cleared when that region is exited.
-
-    // true while we are within a with-statement in the current ParseContext
-    // chain (which stops at the top-level or an eval()
-    bool parsingWith:1;
-
     GenericParseContext(GenericParseContext* parent, SharedContext* sc)
       : parent(parent),
         sc(sc),
         funHasReturnExpr(false),
-        funHasReturnVoid(false),
-        parsingWith(parent ? parent->parsingWith : false)
+        funHasReturnVoid(false)
     {}
 };
 
@@ -97,19 +95,16 @@ GenerateBlockId(TokenStream& ts, ParseContext<ParseHandler>* pc, uint32_t& block
  * context in which it encountered the definition.
  */
 template <typename ParseHandler>
-struct ParseContext : public GenericParseContext
+struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
 {
     typedef typename ParseHandler::Node Node;
     typedef typename ParseHandler::DefinitionNode DefinitionNode;
 
     uint32_t        bodyid;         /* block number of program/function body */
-    uint32_t        blockidGen;     /* preincremented block number generator */
 
     StmtInfoStack<StmtInfoPC> stmtStack;
 
     Node            maybeFunction;  /* sc->isFunctionBox, the pn where pn->pn_funbox == sc */
-
-    const unsigned  staticLevel;    /* static compilation unit nesting level */
 
     // lastYieldOffset stores the offset of the last yield that was parsed.
     // NoYieldOffset is its initial value.
@@ -253,15 +248,12 @@ struct ParseContext : public GenericParseContext
     bool            inDeclDestructuring:1;
 
     ParseContext(Parser<ParseHandler>* prs, GenericParseContext* parent,
-                 Node maybeFunction, SharedContext* sc,
-                 Directives* newDirectives,
-                 unsigned staticLevel, uint32_t bodyid, uint32_t blockScopeDepth)
+                 Node maybeFunction, SharedContext* sc, Directives* newDirectives,
+                 uint32_t blockScopeDepth)
       : GenericParseContext(parent, sc),
         bodyid(0),           // initialized in init()
-        blockidGen(bodyid),  // used to set |bodyid| and subsequently incremented in init()
         stmtStack(prs->context),
         maybeFunction(maybeFunction),
-        staticLevel(staticLevel),
         lastYieldOffset(NoYieldOffset),
         blockScopeDepth(blockScopeDepth),
         blockNode(ParseHandler::null()),
@@ -282,12 +274,17 @@ struct ParseContext : public GenericParseContext
 
     ~ParseContext();
 
-    bool init(TokenStream& ts);
+    bool init(Parser<ParseHandler>& parser);
 
     unsigned blockid() { return stmtStack.innermost() ? stmtStack.innermost()->blockid : bodyid; }
 
     StmtInfoPC* innermostStmt() const { return stmtStack.innermost(); }
     StmtInfoPC* innermostScopeStmt() const { return stmtStack.innermostScopeStmt(); }
+    JSObject* innermostStaticScope() const {
+        if (StmtInfoPC* stmt = innermostScopeStmt())
+            return stmt->staticScope;
+        return sc->staticScope();
+    }
 
     // True if we are at the topmost level of a entire script or function body.
     // For example, while parsing this code we would encounter f1 and f2 at
@@ -302,7 +299,7 @@ struct ParseContext : public GenericParseContext
     // True if this is the ParseContext for the body of a function created by
     // the Function constructor.
     bool isFunctionConstructorBody() const {
-        return sc->isFunctionBox() && staticLevel == 0;
+        return sc->isFunctionBox() && !parent && sc->asFunctionBox()->function()->isLambda();
     }
 
     inline bool useAsmOrInsideUseAsm() const {
@@ -373,6 +370,9 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
 
     /* innermost parse context (stack-allocated) */
     ParseContext<ParseHandler>* pc;
+
+    // List of all block scopes.
+    AutoObjectVector blockScopes;
 
     /* Compression token for aborting. */
     SourceCompressionTask* sct;
@@ -463,8 +463,32 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
      * cx->tempLifoAlloc.
      */
     ObjectBox* newObjectBox(JSObject* obj);
-    FunctionBox* newFunctionBox(Node fn, JSFunction* fun, ParseContext<ParseHandler>* pc,
-                                Directives directives, GeneratorKind generatorKind);
+    FunctionBox* newFunctionBoxWithScope(Node fn, JSFunction* fun,
+                                         ParseContext<ParseHandler>* outerpc,
+                                         Directives directives, GeneratorKind generatorKind,
+                                         JSObject* staticScope);
+
+  private:
+    FunctionBox* newFunctionBox(Node fn, HandleFunction fun, ParseContext<ParseHandler>* outerpc,
+                                Directives directives, GeneratorKind generatorKind,
+                                HandleObject enclosingStaticScope);
+
+  public:
+    // Use when the funbox is the outermost.
+    FunctionBox* newFunctionBox(Node fn, HandleFunction fun, Directives directives,
+                                GeneratorKind generatorKind, HandleObject enclosingStaticScope)
+    {
+        return newFunctionBox(fn, fun, nullptr, directives, generatorKind,
+                              enclosingStaticScope);
+    }
+
+    // Use when the funbox should be linked to the outerpc's innermost scope.
+    FunctionBox* newFunctionBox(Node fn, HandleFunction fun, ParseContext<ParseHandler>* outerpc,
+                                Directives directives, GeneratorKind generatorKind)
+    {
+        RootedObject enclosing(context, outerpc->innermostStaticScope());
+        return newFunctionBox(fn, fun, outerpc, directives, generatorKind, enclosing);
+    }
 
     /*
      * Create a new function object given a name (which is optional if this is
@@ -472,6 +496,16 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
      */
     JSFunction* newFunction(HandleAtom atom, FunctionSyntaxKind kind, GeneratorKind generatorKind,
                             HandleObject proto);
+
+    bool generateBlockId(JSObject* staticScope, uint32_t* blockIdOut) {
+        if (blockScopes.length() == StmtInfoPC::BlockIdLimit) {
+            tokenStream.reportError(JSMSG_NEED_DIET, "program");
+            return false;
+        }
+        MOZ_ASSERT(blockScopes.length() < StmtInfoPC::BlockIdLimit);
+        *blockIdOut = blockScopes.length();
+        return blockScopes.append(staticScope);
+    }
 
     void trace(JSTracer* trc);
 
@@ -512,12 +546,12 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     // Generator constructors.
     Node standaloneFunctionBody(HandleFunction fun, const AutoNameVector& formals,
                                 GeneratorKind generatorKind,
-                                Directives inheritedDirectives, Directives* newDirectives);
+                                Directives inheritedDirectives, Directives* newDirectives,
+                                HandleObject enclosingStaticScope);
 
     // Parse a function, given only its arguments and body. Used for lazily
     // parsed functions.
-    Node standaloneLazyFunction(HandleFunction fun, unsigned staticLevel, bool strict,
-                                GeneratorKind generatorKind);
+    Node standaloneLazyFunction(HandleFunction fun, bool strict, GeneratorKind generatorKind);
 
     /*
      * Parse a function body.  Pass StatementListBody if the body is a list of
@@ -617,8 +651,6 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node parenExprOrGeneratorComprehension(YieldHandling yieldHandling);
     Node exprInParens(InHandling inHandling, YieldHandling yieldHandling);
 
-    bool checkAllowedNestedSyntax(SharedContext::AllowedSyntax allowed,
-                                  SharedContext** allowingContext = nullptr);
     bool tryNewTarget(Node& newTarget);
     bool checkAndMarkSuperScope();
 

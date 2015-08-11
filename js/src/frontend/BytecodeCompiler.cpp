@@ -49,15 +49,14 @@ class MOZ_STACK_CLASS BytecodeCompiler
                      LifoAlloc* alloc,
                      const ReadOnlyCompileOptions& options,
                      SourceBufferHolder& sourceBuffer,
+                     Handle<ScopeObject*> enclosingStaticScope,
                      TraceLoggerTextId logId);
 
     // Call setters for optional arguments.
     void maybeSetSourceCompressor(SourceCompressionTask* sourceCompressor);
-    void setEnclosingStaticScope(Handle<ScopeObject*> scope);
     void setSourceArgumentsNotIncluded();
 
-    JSScript* compileScript(HandleObject scopeChain, HandleScript evalCaller,
-                            unsigned staticLevel);
+    JSScript* compileScript(HandleObject scopeChain, HandleScript evalCaller);
     bool compileFunctionBody(MutableHandleFunction fun, const AutoNameVector& formals,
                              GeneratorKind generatorKind);
 
@@ -68,18 +67,16 @@ class MOZ_STACK_CLASS BytecodeCompiler
     bool canLazilyParse();
     bool createParser();
     bool createSourceAndParser();
-    bool createScript(bool savedCallerFun = false, unsigned staticLevel = 0);
+    bool createScript(bool savedCallerFun = false);
     bool createEmitter(SharedContext* sharedContext, HandleScript evalCaller = nullptr,
                        bool insideNonGlobalEval = false);
     bool isInsideNonGlobalEval();
     bool createParseContext(Maybe<ParseContext<FullParseHandler>>& parseContext,
-                            GlobalSharedContext& globalsc, unsigned staticLevel = 0,
-                            uint32_t blockScopeDepth = 0);
+                            SharedContext& globalsc, uint32_t blockScopeDepth = 0);
     bool saveCallerFun(HandleScript evalCaller, ParseContext<FullParseHandler>& parseContext);
     bool handleStatementParseFailure(HandleObject scopeChain, HandleScript evalCaller,
-                                     unsigned staticLevel,
                                      Maybe<ParseContext<FullParseHandler>>& parseContext,
-                                     GlobalSharedContext& globalsc);
+                                     SharedContext& globalsc);
     bool handleParseFailure(const Directives& newDirectives);
     bool prepareAndEmitTree(ParseNode** pn);
     bool checkArgumentsWithinEval(JSContext* cx, HandleFunction fun);
@@ -118,7 +115,7 @@ class MOZ_STACK_CLASS BytecodeCompiler
 
     RootedScript script;
     Maybe<BytecodeEmitter> emitter;
-    };
+};
 
 AutoCompilationTraceLogger::AutoCompilationTraceLogger(ExclusiveContext* cx, const TraceLoggerTextId id)
   : logger(cx->isJSContext() ? TraceLoggerForMainThread(cx->asJSContext()->runtime())
@@ -132,6 +129,7 @@ BytecodeCompiler::BytecodeCompiler(ExclusiveContext* cx,
                                    LifoAlloc* alloc,
                                    const ReadOnlyCompileOptions& options,
                                    SourceBufferHolder& sourceBuffer,
+                                   Handle<ScopeObject*> enclosingStaticScope,
                                    TraceLoggerTextId logId)
   : traceLogger(cx, logId),
     keepAtoms(cx->perThreadData),
@@ -139,7 +137,7 @@ BytecodeCompiler::BytecodeCompiler(ExclusiveContext* cx,
     alloc(alloc),
     options(options),
     sourceBuffer(sourceBuffer),
-    enclosingStaticScope(cx),
+    enclosingStaticScope(cx, enclosingStaticScope),
     sourceArgumentsNotIncluded(false),
     sourceObject(cx),
     scriptSource(nullptr),
@@ -154,12 +152,6 @@ void
 BytecodeCompiler::maybeSetSourceCompressor(SourceCompressionTask* sourceCompressor)
 {
     this->sourceCompressor = sourceCompressor;
-}
-
-void
-BytecodeCompiler::setEnclosingStaticScope(Handle<ScopeObject*> scope)
-{
-    enclosingStaticScope = scope;
 }
 
 void
@@ -260,12 +252,10 @@ BytecodeCompiler::createSourceAndParser()
 }
 
 bool
-BytecodeCompiler::createScript(bool savedCallerFun, unsigned staticLevel)
+BytecodeCompiler::createScript(bool savedCallerFun)
 {
-    script = JSScript::Create(cx, enclosingStaticScope, savedCallerFun,
-                              options, staticLevel,
-                              sourceObject, /* sourceStart = */ 0,
-                              sourceBuffer.length());
+    script = JSScript::Create(cx, enclosingStaticScope, savedCallerFun, options,
+                              sourceObject, /* sourceStart = */ 0, sourceBuffer.length());
 
     return script != nullptr;
 }
@@ -290,13 +280,11 @@ bool BytecodeCompiler::isInsideNonGlobalEval()
 
 bool
 BytecodeCompiler::createParseContext(Maybe<ParseContext<FullParseHandler>>& parseContext,
-                                     GlobalSharedContext& globalsc, unsigned staticLevel,
-                                     uint32_t blockScopeDepth)
+                                     SharedContext& globalsc, uint32_t blockScopeDepth)
 {
     parseContext.emplace(parser.ptr(), (GenericParseContext*) nullptr, (ParseNode*) nullptr,
-                         &globalsc, (Directives*) nullptr, staticLevel, /* bodyid = */ 0,
-                         blockScopeDepth);
-    return parseContext->init(parser->tokenStream);
+                         &globalsc, (Directives*) nullptr, blockScopeDepth);
+    return parseContext->init(*parser);
 }
 
 bool
@@ -310,7 +298,7 @@ BytecodeCompiler::saveCallerFun(HandleScript evalCaller,
      *
      * This ends up as script->objects()->vector[0] in the compiled script.
      */
-    JSFunction* fun = evalCaller->functionOrCallerFunction();
+    RootedFunction fun(cx, evalCaller->functionOrCallerFunction());
     MOZ_ASSERT_IF(fun->strict(), options.strictOption);
     Directives directives(/* strict = */ options.strictOption);
     ObjectBox* funbox = parser->newFunctionBox(/* fn = */ nullptr, fun, &parseContext,
@@ -324,9 +312,8 @@ BytecodeCompiler::saveCallerFun(HandleScript evalCaller,
 
 bool
 BytecodeCompiler::handleStatementParseFailure(HandleObject scopeChain, HandleScript evalCaller,
-                                              unsigned staticLevel,
                                               Maybe<ParseContext<FullParseHandler>>& parseContext,
-                                              GlobalSharedContext& globalsc)
+                                              SharedContext& globalsc)
 {
     if (!parser->hadAbortedSyntaxParse())
         return false;
@@ -338,6 +325,7 @@ BytecodeCompiler::handleStatementParseFailure(HandleObject scopeChain, HandleScr
     // be ambiguous.
     parser->clearAbortedSyntaxParse();
     parser->tokenStream.seek(startPosition);
+    parser->blockScopes.clear();
 
     // Destroying the parse context will destroy its free
     // variables, so check if any deoptimization is needed.
@@ -345,7 +333,7 @@ BytecodeCompiler::handleStatementParseFailure(HandleObject scopeChain, HandleScr
         return false;
 
     parseContext.reset();
-    if (!createParseContext(parseContext, globalsc, staticLevel, script->bindings.numBlockScoped()))
+    if (!createParseContext(parseContext, globalsc, script->bindings.numBlockScoped()))
         return false;
 
     MOZ_ASSERT(parser->pc == parseContext.ptr());
@@ -568,17 +556,16 @@ BytecodeCompiler::maybeCompleteCompressSource()
 }
 
 JSScript*
-BytecodeCompiler::compileScript(HandleObject scopeChain, HandleScript evalCaller,
-                                          unsigned staticLevel)
+BytecodeCompiler::compileScript(HandleObject scopeChain, HandleScript evalCaller)
 {
     if (!createSourceAndParser())
         return nullptr;
 
     bool savedCallerFun = evalCaller && evalCaller->functionOrCallerFunction();
-    if (!createScript(savedCallerFun, staticLevel))
+    if (!createScript(savedCallerFun))
         return nullptr;
 
-    GlobalSharedContext globalsc(cx, directives, enclosingStaticScope, options.extraWarningsOption);
+    GlobalSharedContext globalsc(cx, enclosingStaticScope, directives, options.extraWarningsOption);
     if (!createEmitter(&globalsc, evalCaller, isInsideNonGlobalEval()))
         return nullptr;
 
@@ -586,7 +573,7 @@ BytecodeCompiler::compileScript(HandleObject scopeChain, HandleScript evalCaller
     // statements in the script. Use Maybe<> so that the parse context can be
     // reset when this occurs.
     Maybe<ParseContext<FullParseHandler>> pc;
-    if (!createParseContext(pc, globalsc, staticLevel))
+    if (!createParseContext(pc, globalsc))
         return nullptr;
 
     if (savedCallerFun && !saveCallerFun(evalCaller, pc.ref()))
@@ -604,7 +591,7 @@ BytecodeCompiler::compileScript(HandleObject scopeChain, HandleScript evalCaller
 
         ParseNode* pn = parser->statement(YieldIsName, canHaveDirectives);
         if (!pn) {
-            if (!handleStatementParseFailure(scopeChain, evalCaller, staticLevel, pc, globalsc))
+            if (!handleStatementParseFailure(scopeChain, evalCaller, pc, globalsc))
                 return nullptr;
 
             pn = parser->statement(YieldIsName);
@@ -677,7 +664,7 @@ BytecodeCompiler::compileFunctionBody(MutableHandleFunction fun, const AutoNameV
     do {
         Directives newDirectives = directives;
         fn = parser->standaloneFunctionBody(fun, formals, generatorKind, directives,
-                                            &newDirectives);
+                                            &newDirectives, enclosingStaticScope);
         if (!fn && !handleParseFailure(newDirectives))
             return false;
     } while (!fn);
@@ -752,7 +739,6 @@ frontend::CompileScript(ExclusiveContext* cx, LifoAlloc* alloc, HandleObject sco
                         const ReadOnlyCompileOptions& options,
                         SourceBufferHolder& srcBuf,
                         JSString* source_ /* = nullptr */,
-                        unsigned staticLevel /* = 0 */,
                         SourceCompressionTask* extraSct /* = nullptr */)
 {
     MOZ_ASSERT(srcBuf.get());
@@ -764,13 +750,11 @@ frontend::CompileScript(ExclusiveContext* cx, LifoAlloc* alloc, HandleObject sco
     MOZ_ASSERT_IF(evalCaller, options.isRunOnce);
     MOZ_ASSERT_IF(evalCaller, options.forEval);
     MOZ_ASSERT_IF(evalCaller && evalCaller->strict(), options.strictOption);
-    MOZ_ASSERT_IF(staticLevel != 0, evalCaller);
-    MOZ_ASSERT_IF(staticLevel != 0, !options.sourceIsLazy);
 
-    BytecodeCompiler compiler(cx, alloc, options, srcBuf, TraceLogger_ParserCompileScript);
+    BytecodeCompiler compiler(cx, alloc, options, srcBuf, enclosingStaticScope,
+                              TraceLogger_ParserCompileScript);
     compiler.maybeSetSourceCompressor(extraSct);
-    compiler.setEnclosingStaticScope(enclosingStaticScope);
-    return compiler.compileScript(scopeChain, evalCaller, staticLevel);
+    return compiler.compileScript(scopeChain, evalCaller);
 }
 
 bool
@@ -792,12 +776,9 @@ frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const cha
     if (!parser.checkOptions())
         return false;
 
-    uint32_t staticLevel = lazy->staticLevel(cx);
-
     Rooted<JSFunction*> fun(cx, lazy->functionNonDelazifying());
     MOZ_ASSERT(!lazy->isLegacyGenerator());
-    ParseNode* pn = parser.standaloneLazyFunction(fun, staticLevel, lazy->strict(),
-                                                  lazy->generatorKind());
+    ParseNode* pn = parser.standaloneLazyFunction(fun, lazy->strict(), lazy->generatorKind());
     if (!pn)
         return false;
 
@@ -808,8 +789,7 @@ frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const cha
     RootedScriptSource sourceObject(cx, lazy->sourceObject());
     MOZ_ASSERT(sourceObject);
 
-    Rooted<JSScript*> script(cx, JSScript::Create(cx, enclosingScope, false,
-                                                  options, staticLevel,
+    Rooted<JSScript*> script(cx, JSScript::Create(cx, enclosingScope, false, options,
                                                   sourceObject, lazy->begin(), lazy->end()));
     if (!script)
         return false;
@@ -852,9 +832,8 @@ CompileFunctionBody(JSContext* cx, MutableHandleFunction fun, const ReadOnlyComp
     // FIXME: make Function pass in two strings and parse them as arguments and
     // ProgramElements respectively.
 
-    BytecodeCompiler compiler(cx, &cx->tempLifoAlloc(), options, srcBuf,
+    BytecodeCompiler compiler(cx, &cx->tempLifoAlloc(), options, srcBuf, enclosingStaticScope,
                               TraceLogger_ParserCompileFunction);
-    compiler.setEnclosingStaticScope(enclosingStaticScope);
     compiler.setSourceArgumentsNotIncluded();
     return compiler.compileFunctionBody(fun, formals, generatorKind);
 }

@@ -513,8 +513,8 @@ SipccSdpAttributeList::LoadImageattr(sdp_t* sdp,
     std::string error;
     size_t errorPos;
     if (!imageattrs->PushEntry(imageattrRaw, &error, &errorPos)) {
-      std::ostringstream fullError;
-      fullError << error << " at column " << errorPos;
+      std::ostringstream fullError(error + " at column ");
+      fullError << errorPos;
       errorHolder.AddParseError(
         sdp_attr_line_number(sdp, SDP_ATTR_IMAGEATTR, level, 0, i),
         fullError.str());
@@ -525,6 +525,39 @@ SipccSdpAttributeList::LoadImageattr(sdp_t* sdp,
   if (!imageattrs->mImageattrs.empty()) {
     SetAttribute(imageattrs.release());
   }
+  return true;
+}
+
+bool
+SipccSdpAttributeList::LoadSimulcast(sdp_t* sdp,
+                                     uint16_t level,
+                                     SdpErrorHolder& errorHolder)
+{
+  const char* simulcastRaw = sdp_attr_get_simple_string(sdp,
+                                                        SDP_ATTR_SIMULCAST,
+                                                        level,
+                                                        0,
+                                                        1);
+  if (!simulcastRaw) {
+    return true;
+  }
+
+  UniquePtr<SdpSimulcastAttribute> simulcast(
+      new SdpSimulcastAttribute);
+
+  std::istringstream is(simulcastRaw);
+  std::string error;
+  if (!simulcast->Parse(is, &error)) {
+    is.clear();
+    std::ostringstream fullError(error + " at column ");
+    fullError << is.tellg();
+    errorHolder.AddParseError(
+      sdp_attr_line_number(sdp, SDP_ATTR_SIMULCAST, level, 0, 1),
+      fullError.str());
+    return false;
+  }
+
+  SetAttribute(simulcast.release());
   return true;
 }
 
@@ -961,7 +994,12 @@ SipccSdpAttributeList::Load(sdp_t* sdp, uint16_t level,
     LoadRtcpFb(sdp, level, errorHolder);
     LoadRtcp(sdp, level, errorHolder);
     LoadSsrc(sdp, level);
-    LoadImageattr(sdp, level, errorHolder);
+    if (!LoadImageattr(sdp, level, errorHolder)) {
+      return false;
+    }
+    if (!LoadSimulcast(sdp, level, errorHolder)) {
+      return false;
+    }
   }
 
   LoadIceAttributes(sdp, level);
@@ -1124,6 +1162,16 @@ SipccSdpAttributeList::GetImageattr() const
   }
   const SdpAttribute* attr = GetAttribute(SdpAttribute::kImageattrAttribute);
   return *static_cast<const SdpImageattrAttributeList*>(attr);
+}
+
+const SdpSimulcastAttribute&
+SipccSdpAttributeList::GetSimulcast() const
+{
+  if (!HasAttribute(SdpAttribute::kSimulcastAttribute)) {
+    MOZ_CRASH();
+  }
+  const SdpAttribute* attr = GetAttribute(SdpAttribute::kSimulcastAttribute);
+  return *static_cast<const SdpSimulcastAttribute*>(attr);
 }
 
 const std::string&

@@ -21,6 +21,7 @@
 class nsCycleCollectionNoteRootCallback;
 class nsIException;
 class nsIRunnable;
+class nsThread;
 
 namespace js {
 struct Class;
@@ -151,7 +152,6 @@ protected:
   }
 
 private:
-
   void
   DescribeGCThing(bool aIsMarked, JS::GCCellPtr aThing,
                   nsCycleCollectionTraversalCallback& aCb) const;
@@ -207,6 +207,10 @@ private:
 
   virtual void TraceNativeBlackRoots(JSTracer* aTracer) { };
   void TraceNativeGrayRoots(JSTracer* aTracer);
+
+  void AfterProcessMicrotask(uint32_t aRecursionDepth);
+  void ProcessStableStateQueue();
+  void ProcessMetastableStateQueue(uint32_t aRecursionDepth);
 
 public:
   enum DeferredFinalizeType {
@@ -294,6 +298,21 @@ public:
     return mJSRuntime;
   }
 
+  // nsThread entrypoints
+  virtual void BeforeProcessTask(bool aMightBlock) { };
+  virtual void AfterProcessTask(uint32_t aRecursionDepth);
+
+  // microtask processor entry point
+  void AfterProcessMicrotask();
+
+  uint32_t RecursionDepth();
+
+  // Run in stable state (call through nsContentUtils)
+  void RunInStableState(already_AddRefed<nsIRunnable>&& aRunnable);
+  // This isn't in the spec at all yet, but this gets the behavior we want for IDB.
+  // Runs after the current microtask completes.
+  void RunInMetastableState(already_AddRefed<nsIRunnable>&& aRunnable);
+
   // Get the current thread's CycleCollectedJSRuntime.  Returns null if there
   // isn't one.
   static CycleCollectedJSRuntime* Get();
@@ -325,8 +344,20 @@ private:
   nsRefPtr<IncrementalFinalizeRunnable> mFinalizeRunnable;
 
   nsCOMPtr<nsIException> mPendingException;
+  nsThread* mOwningThread; // Manual refcounting to avoid include hell.
 
   std::queue<nsCOMPtr<nsIRunnable>> mPromiseMicroTaskQueue;
+
+  struct RunInMetastableStateData
+  {
+    nsCOMPtr<nsIRunnable> mRunnable;
+    uint32_t mRecursionDepth;
+  };
+
+  nsTArray<nsCOMPtr<nsIRunnable>> mStableStateEvents;
+  nsTArray<RunInMetastableStateData> mMetastableStateEvents;
+  uint32_t mBaseRecursionDepth;
+  bool mDoingStableStates;
 
   OOMState mOutOfMemoryState;
   OOMState mLargeAllocationFailureState;

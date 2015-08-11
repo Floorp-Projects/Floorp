@@ -18,6 +18,8 @@ public:
    * Returns true if Sco is connected.
    */
   virtual bool IsScoConnected() = 0;
+
+  virtual bool IsNrecEnabled() = 0;
 };
 
 #define BT_DECL_HFP_MGR_BASE                  \

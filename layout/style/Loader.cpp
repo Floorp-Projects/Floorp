@@ -431,9 +431,9 @@ SheetLoadData::OnDispatchedEvent(nsIThreadInternal* aThread)
 
 NS_IMETHODIMP
 SheetLoadData::OnProcessNextEvent(nsIThreadInternal* aThread,
-                                  bool aMayWait,
-                                  uint32_t aRecursionDepth)
+                                  bool aMayWait)
 {
+  // XXXkhuey this is insane!
   // We want to fire our load even before or after event processing,
   // whichever comes first.
   FireLoadEvent(aThread);
@@ -442,9 +442,9 @@ SheetLoadData::OnProcessNextEvent(nsIThreadInternal* aThread,
 
 NS_IMETHODIMP
 SheetLoadData::AfterProcessNextEvent(nsIThreadInternal* aThread,
-                                     uint32_t aRecursionDepth,
                                      bool aEventWasProcessed)
 {
+  // XXXkhuey this too!
   // We want to fire our load even before or after event processing,
   // whichever comes first.
   FireLoadEvent(aThread);

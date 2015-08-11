@@ -5,6 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ds/TraceableFifo.h"
 #include "js/RootingAPI.h"
 #include "js/TraceableHashTable.h"
 #include "js/TraceableVector.h"
@@ -275,6 +276,47 @@ receiveMutableHandleToShapeVector(JS::MutableHandle<TraceableVector<Shape*>> han
     return true;
 }
 END_TEST(testGCRootedVector)
+
+BEGIN_TEST(testTraceableFifo)
+{
+    using ShapeFifo = TraceableFifo<Shape*>;
+    JS::Rooted<ShapeFifo> shapes(cx, ShapeFifo(cx));
+    CHECK(shapes.empty());
+
+    for (size_t i = 0; i < 10; ++i) {
+        RootedObject obj(cx, JS_NewObject(cx, nullptr));
+        RootedValue val(cx, UndefinedValue());
+        // Construct a unique property name to ensure that the object creates a
+        // new shape.
+        char buffer[2];
+        buffer[0] = 'a' + i;
+        buffer[1] = '\0';
+        CHECK(JS_SetProperty(cx, obj, buffer, val));
+        CHECK(shapes.pushBack(obj->as<NativeObject>().lastProperty()));
+    }
+
+    CHECK(shapes.length() == 10);
+
+    JS_GC(rt);
+    JS_GC(rt);
+
+    for (size_t i = 0; i < 10; ++i) {
+        // Check the shape to ensure it did not get collected.
+        char buffer[2];
+        buffer[0] = 'a' + i;
+        buffer[1] = '\0';
+        bool match;
+        CHECK(JS_StringEqualsAscii(cx, JSID_TO_STRING(shapes.front()->propid()), buffer, &match));
+        CHECK(match);
+        CHECK(shapes.popFront());
+    }
+
+    CHECK(shapes.empty());
+    return true;
+}
+END_TEST(testTraceableFifo)
+
+using ShapeVec = TraceableVector<Shape*>;
 
 static bool
 FillVector(JSContext* cx, MutableHandle<ShapeVec> shapes)

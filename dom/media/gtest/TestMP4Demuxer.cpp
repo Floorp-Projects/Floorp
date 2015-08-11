@@ -9,7 +9,7 @@
 #include "MozPromise.h"
 #include "MediaDataDemuxer.h"
 #include "mozilla/SharedThreadPool.h"
-#include "TaskQueue.h"
+#include "mozilla/TaskQueue.h"
 #include "mozilla/ArrayUtils.h"
 #include "MockMediaResource.h"
 #include "VideoUtils.h"
