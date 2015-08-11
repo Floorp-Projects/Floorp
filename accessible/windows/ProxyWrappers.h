@@ -48,6 +48,18 @@ public:
   DocProxyAccessibleWrap(ProxyAccessible* aProxy) :
     HyperTextProxyAccessibleWrap(aProxy)
   { mGenericTypes |= eDocument; }
+
+  void AddID(uint32_t aID, AccessibleWrap* aAcc)
+    { mIDToAccessibleMap.Put(aID, aAcc); }
+  void RemoveID(uint32_t aID) { mIDToAccessibleMap.Remove(aID); }
+  AccessibleWrap* GetAccessibleByID(uint32_t aID) const
+    { return mIDToAccessibleMap.Get(aID); }
+
+private:
+  /*
+   * This provides a mapping from 32 bit id to accessible objects.
+   */
+  nsDataHashtable<nsUint32HashKey, AccessibleWrap*> mIDToAccessibleMap;
 };
 
 template<typename T>
