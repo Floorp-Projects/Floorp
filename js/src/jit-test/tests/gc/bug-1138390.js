@@ -8,8 +8,8 @@ if (!("startgc" in this &&
 if (helperThreadCount() == 0)
     quit();
 
-if ("gczeal" in this)
-   gczeal(0);
+gczeal(0);
+gc();
 
 // Start an incremental GC that includes the atoms zone
 startgc(0);

@@ -94,7 +94,6 @@
 #include "nsHostObjectProtocolHandler.h"
 #include "nsHtml5Module.h"
 #include "nsHtml5StringParser.h"
-#include "nsIAppShell.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsICategoryManager.h"
 #include "nsIChannelEventSink.h"
@@ -346,7 +345,6 @@ namespace {
 
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
-static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 static PLDHashTable* sEventListenerManagersHash;
 
@@ -5207,16 +5205,18 @@ nsContentUtils::AddScriptRunner(nsIRunnable* aRunnable)
 
 /* static */
 void
-nsContentUtils::RunInStableState(already_AddRefed<nsIRunnable> aRunnable,
-                                 DispatchFailureHandling aHandling)
+nsContentUtils::RunInStableState(already_AddRefed<nsIRunnable> aRunnable)
 {
-  nsCOMPtr<nsIRunnable> runnable = aRunnable;
-  nsCOMPtr<nsIAppShell> appShell(do_GetService(kAppShellCID));
-  if (!appShell) {
-    MOZ_ASSERT(aHandling == DispatchFailureHandling::IgnoreFailure);
-    return;
-  }
-  appShell->RunInStableState(runnable.forget());
+  MOZ_ASSERT(CycleCollectedJSRuntime::Get(), "Must be on a script thread!");
+  CycleCollectedJSRuntime::Get()->RunInStableState(Move(aRunnable));
+}
+
+/* static */
+void
+nsContentUtils::RunInMetastableState(already_AddRefed<nsIRunnable> aRunnable)
+{
+  MOZ_ASSERT(CycleCollectedJSRuntime::Get(), "Must be on a script thread!");
+  CycleCollectedJSRuntime::Get()->RunInMetastableState(Move(aRunnable));
 }
 
 void

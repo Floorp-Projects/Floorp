@@ -87,6 +87,13 @@ BaselineFrame::trace(JSTracer* trc, JitFrameIterator& frameIterator)
 }
 
 bool
+BaselineFrame::isDirectEvalFrame() const
+{
+    return isEvalFrame() &&
+           script()->enclosingStaticScope()->as<StaticEvalObject>().isDirect();
+}
+
+bool
 BaselineFrame::copyRawFrameSlots(AutoValueVector* vec) const
 {
     unsigned nfixed = script()->nfixed();

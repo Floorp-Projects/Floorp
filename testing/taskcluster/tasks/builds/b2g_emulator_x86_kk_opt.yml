@@ -4,7 +4,7 @@ $inherits:
     build_name: 'emulator-x86-kk'
     build_type: 'opt'
 task:
-  workerType: emualtor-x86-kk
+  workerType: emulator-x86-kk
   scopes:
     - 'docker-worker:cache:workspace-emulator-kk-x86-opt'
   metadata:
@@ -15,8 +15,9 @@ task:
       - staging
     treeherder:
       # Disable "TC" prefix...
+      groupSymbol: "?"
       machine:
-        platform: b2g-emu-kk
+        platform: b2g-emu-x86-kk
 
   payload:
     cache:

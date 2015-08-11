@@ -1229,6 +1229,13 @@ CheckGCThingAfterMovingGC(T* t)
     }
 }
 
+template <typename T>
+inline void
+CheckGCThingAfterMovingGC(const ReadBarriered<T*>& t)
+{
+    CheckGCThingAfterMovingGC(t.get());
+}
+
 struct CheckValueAfterMovingGCFunctor : public VoidDefaultAdaptor<Value> {
     template <typename T> void operator()(T* t) { CheckGCThingAfterMovingGC(t); }
 };

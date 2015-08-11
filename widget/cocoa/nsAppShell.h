@@ -35,10 +35,8 @@ public:
 
   NS_IMETHOD Run(void);
   NS_IMETHOD Exit(void);
-  NS_IMETHOD OnProcessNextEvent(nsIThreadInternal *aThread, bool aMayWait,
-                                uint32_t aRecursionDepth);
+  NS_IMETHOD OnProcessNextEvent(nsIThreadInternal *aThread, bool aMayWait);
   NS_IMETHOD AfterProcessNextEvent(nsIThreadInternal *aThread,
-                                   uint32_t aRecursionDepth,
                                    bool aEventWasProcessed);
 
   // public only to be visible to Objective-C code that must call it
