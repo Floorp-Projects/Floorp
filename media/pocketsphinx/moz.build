@@ -46,7 +46,12 @@ SOURCES += [
 
 # Suppress warnings in third-party code.
 if CONFIG['GNU_CC']:
-    CFLAGS += ['-Wno-sign-compare']
+    CFLAGS += [
+        '-Wno-declaration-after-statement',
+        '-Wno-sign-compare',
+    ]
+    if CONFIG['CLANG_CXX']:
+        CFLAGS += ['-Wno-incompatible-pointer-types-discards-qualifiers']
 
 if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
     NO_VISIBILITY_FLAGS = True,
