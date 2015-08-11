@@ -380,6 +380,7 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
   , mIdentity(nullptr)
 #endif
   , mPrivacyRequested(false)
+  , mIsLoop(false)
   , mSTSThread(nullptr)
   , mAllowIceLoopback(false)
   , mAllowIceLinkLocal(false)
@@ -693,6 +694,12 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
     location->Release();
 
     CopyUTF16toUTF8(locationAStr, locationCStr);
+#define HELLO_CLICKER_URL_START "https://hello.firefox.com/"
+#define HELLO_INITIATOR_URL_START "about:loop"
+    mIsLoop = (strncmp(HELLO_CLICKER_URL_START, locationCStr.get(),
+                       strlen(HELLO_CLICKER_URL_START)) == 0) ||
+              (strncmp(HELLO_INITIATOR_URL_START, locationCStr.get(),
+                       strlen(HELLO_INITIATOR_URL_START)) == 0);
   }
 
   PR_snprintf(
@@ -2482,7 +2489,9 @@ PeerConnectionImpl::ShutdownMedia()
   // End of call to be recorded in Telemetry
   if (!mStartTime.IsNull()){
     TimeDuration timeDelta = TimeStamp::Now() - mStartTime;
-    Telemetry::Accumulate(Telemetry::WEBRTC_CALL_DURATION, timeDelta.ToSeconds());
+    Telemetry::Accumulate(mIsLoop ? Telemetry::LOOP_CALL_DURATION :
+                                    Telemetry::WEBRTC_CALL_DURATION,
+                          timeDelta.ToSeconds());
   }
 #endif
 
@@ -2764,10 +2773,12 @@ void PeerConnectionImpl::IceConnectionStateChange(
     if (!mIceStartTime.IsNull()){
       TimeDuration timeDelta = TimeStamp::Now() - mIceStartTime;
       if (isSucceeded(domState)) {
-        Telemetry::Accumulate(Telemetry::WEBRTC_ICE_SUCCESS_TIME,
+        Telemetry::Accumulate(mIsLoop ? Telemetry::LOOP_ICE_SUCCESS_TIME :
+                                        Telemetry::WEBRTC_ICE_SUCCESS_TIME,
                               timeDelta.ToMilliseconds());
       } else if (isFailed(domState)) {
-        Telemetry::Accumulate(Telemetry::WEBRTC_ICE_FAILURE_TIME,
+        Telemetry::Accumulate(mIsLoop ? Telemetry::LOOP_ICE_FAILURE_TIME :
+                                        Telemetry::WEBRTC_ICE_FAILURE_TIME,
                               timeDelta.ToMilliseconds());
       }
     }
@@ -2927,6 +2938,7 @@ PeerConnectionImpl::BuildStatsQuery_m(
 
   query->iceStartTime = mIceStartTime;
   query->failed = isFailed(mIceConnectionState);
+  query->isHello = mIsLoop;
 
   // Populate SDP on main
   if (query->internalStats) {
@@ -3385,8 +3397,11 @@ PeerConnectionImpl::startCallTelem() {
   mStartTime = TimeStamp::Now();
 
   // Increment session call counter
+  // If we want to track Loop calls independently here, we need two mConnectionCounters
   int &cnt = PeerConnectionCtx::GetInstance()->mConnectionCounter;
-  Telemetry::GetHistogramById(Telemetry::WEBRTC_CALL_COUNT)->Subtract(cnt);
+  if (cnt > 0) {
+    Telemetry::GetHistogramById(Telemetry::WEBRTC_CALL_COUNT)->Subtract(cnt);
+  }
   cnt++;
   Telemetry::GetHistogramById(Telemetry::WEBRTC_CALL_COUNT)->Add(cnt);
 }
