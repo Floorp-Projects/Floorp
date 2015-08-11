@@ -147,6 +147,10 @@ public final class IntentHelper implements GeckoEventListener,
      * and we can bring the user directly to the application page in an app market. If a package is
      * not specified and there is a fallback url in the intent extras, we open that url. If neither
      * is present, we alert the user that we were unable to open the link.
+     *
+     * @param msg A message with the uri with no handlers as the value for the "uri" key
+     * @param callback A callback that will be called with success & no params if Java loads a page, or with error and
+     *                 the uri to load if Java does not load a page
      */
     private void openNoHandler(final NativeJSObject msg, final EventCallback callback) {
         final String uri = msg.getString("uri");
