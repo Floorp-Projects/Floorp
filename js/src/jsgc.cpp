@@ -1144,7 +1144,7 @@ GCRuntime::GCRuntime(JSRuntime* rt) :
     markingValidator(nullptr),
 #endif
     interFrameGC(false),
-    sliceBudget(SliceBudget::Unlimited),
+    defaultTimeBudget_(SliceBudget::UnlimitedTimeBudget),
     incrementalAllowed(true),
     generationalDisabled(0),
     compactingEnabled(true),
@@ -1397,7 +1397,7 @@ GCRuntime::setParameter(JSGCParamKey key, uint32_t value)
             zone->setGCMaxMallocBytes(maxMallocBytesAllocated() * 0.9);
         break;
       case JSGC_SLICE_TIME_BUDGET:
-        sliceBudget = value ? value : SliceBudget::Unlimited;
+        defaultTimeBudget_ = value ? value : SliceBudget::UnlimitedTimeBudget;
         break;
       case JSGC_MARK_STACK_LIMIT:
         setMarkStackLimit(value);
@@ -1503,7 +1503,13 @@ GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock)
                         availableChunks(lock).count() +
                         emptyChunks(lock).count());
       case JSGC_SLICE_TIME_BUDGET:
-        return uint32_t(sliceBudget > 0 ? sliceBudget : 0);
+        if (defaultTimeBudget_ == SliceBudget::UnlimitedTimeBudget) {
+            return 0;
+        } else {
+            MOZ_RELEASE_ASSERT(defaultTimeBudget_ >= 0);
+            MOZ_RELEASE_ASSERT(defaultTimeBudget_ < UINT32_MAX);
+            return uint32_t(defaultTimeBudget_);
+        }
       case JSGC_MARK_STACK_LIMIT:
         return marker.maxCapacity();
       case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
@@ -2990,13 +2996,13 @@ GCRuntime::refillFreeListInGC(Zone* zone, AllocKind thingKind)
 }
 
 SliceBudget::SliceBudget()
-  : timeBudget(Unlimited), workBudget(Unlimited)
+  : timeBudget(UnlimitedTimeBudget), workBudget(UnlimitedWorkBudget)
 {
     makeUnlimited();
 }
 
 SliceBudget::SliceBudget(TimeBudget time)
-  : timeBudget(time), workBudget(Unlimited)
+  : timeBudget(time), workBudget(UnlimitedWorkBudget)
 {
     if (time.budget < 0) {
         makeUnlimited();
@@ -3008,7 +3014,7 @@ SliceBudget::SliceBudget(TimeBudget time)
 }
 
 SliceBudget::SliceBudget(WorkBudget work)
-  : timeBudget(Unlimited), workBudget(work)
+  : timeBudget(UnlimitedTimeBudget), workBudget(work)
 {
     if (work.budget < 0) {
         makeUnlimited();
@@ -6240,11 +6246,11 @@ GCRuntime::defaultBudget(JS::gcreason::Reason reason, int64_t millis)
 {
     if (millis == 0) {
         if (reason == JS::gcreason::ALLOC_TRIGGER)
-            millis = sliceBudget;
+            millis = defaultSliceBudget();
         else if (schedulingState.inHighFrequencyGCMode() && tunables.isDynamicMarkSliceEnabled())
-            millis = sliceBudget * IGC_MARK_SLICE_MULTIPLIER;
+            millis = defaultSliceBudget() * IGC_MARK_SLICE_MULTIPLIER;
         else
-            millis = sliceBudget;
+            millis = defaultSliceBudget();
     }
 
     return SliceBudget(TimeBudget(millis));
