@@ -170,6 +170,15 @@ void profiler_get_profile_jsobject_async(double aSinceTime = 0,
 {
   mozilla_sampler_get_profile_data_async(aSinceTime, aPromise);
 }
+
+static inline
+void profiler_get_start_params(int* aEntrySize,
+                               double* aInterval,
+                               mozilla::Vector<const char*>* aFilters,
+                               mozilla::Vector<const char*>* aFeatures)
+{
+  mozilla_sampler_get_profiler_start_params(aEntrySize, aInterval, aFilters, aFeatures);
+}
 #endif
 
 static inline

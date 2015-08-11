@@ -11,6 +11,7 @@
 #endif
 #include "js/ProfilingStack.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Vector.h"
 #include <stdint.h>
 
 namespace mozilla {
@@ -68,6 +69,10 @@ mozilla::UniquePtr<char[]> mozilla_sampler_get_profile(double aSinceTime);
 JSObject *mozilla_sampler_get_profile_data(JSContext* aCx, double aSinceTime);
 void mozilla_sampler_get_profile_data_async(double aSinceTime,
                                             mozilla::dom::Promise* aPromise);
+void mozilla_sampler_get_profiler_start_params(int* aEntrySize,
+                                               double* aInterval,
+                                               mozilla::Vector<const char*>* aFilters,
+                                               mozilla::Vector<const char*>* aFeatures);
 #endif
 
 // Make this function easily callable from a debugger in a build without

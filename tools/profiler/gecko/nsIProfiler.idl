@@ -12,7 +12,22 @@ class nsCString;
 
 [ref] native StringArrayRef(const nsTArray<nsCString>);
 
-[scriptable, uuid(ff398a14-df1c-4966-9ab2-772ea6a6da6c)]
+/**
+ * Start-up parameters for subprocesses are passed through nsIObserverService,
+ * which, unfortunately, means we need to implement nsISupports in order to
+ * go through it.
+ */
+[uuid(0a175ba7-8fcf-4ce9-9c4b-ccc6272f4425)]
+interface nsIProfilerStartParams : nsISupports
+{
+  attribute uint32_t entries;
+  attribute double interval;
+
+  [noscript, notxpcom, nostdcall] StringArrayRef getFeatures();
+  [noscript, notxpcom, nostdcall] StringArrayRef getThreadFilterNames();
+};
+
+[scriptable, uuid(b373b360-c997-448a-b60d-4985b70dc810)]
 interface nsIProfiler : nsISupports
 {
   boolean CanProfile();
@@ -45,6 +60,12 @@ interface nsIProfiler : nsISupports
   boolean IsActive();
   void GetFeatures(out uint32_t aCount, [retval, array, size_is(aCount)] out string aFeatures);
 
+  /**
+   * The starting parameters that were sent to the profiler for sampling.
+   * If the profiler is not currently sampling, this will return null.
+   */
+  readonly attribute nsIProfilerStartParams startParams;
+
   void GetBufferInfo(out uint32_t aCurrentPosition, out uint32_t aTotalSize,
                      out uint32_t aGeneration);
 
@@ -71,19 +92,4 @@ interface nsIProfiler : nsISupports
    * Dump the collected profile to a file.
    */
   void dumpProfileToFile(in string aFilename);
-};
-
-/**
- * Start-up parameters for subprocesses are passed through nsIObserverService,
- * which, unfortunately, means we need to implement nsISupports in order to
- * go through it.
- */
-[uuid(0a175ba7-8fcf-4ce9-9c4b-ccc6272f4425)]
-interface nsIProfilerStartParams : nsISupports
-{
-  attribute uint32_t entries;
-  attribute double interval;
-
-  [noscript, notxpcom, nostdcall] StringArrayRef getFeatures();
-  [noscript, notxpcom, nostdcall] StringArrayRef getThreadFilterNames();
 };
