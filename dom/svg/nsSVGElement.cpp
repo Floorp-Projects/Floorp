@@ -1189,10 +1189,19 @@ MappedAttrParser::ParseMappedAttrValue(nsIAtom* aMappedAttrName,
     if (changed) {
       // The normal reporting of use counters by the nsCSSParser won't happen
       // since it doesn't have a sheet.
-      MOZ_ASSERT(!nsCSSProps::IsShorthand(propertyID));
-      UseCounter useCounter = nsCSSProps::UseCounterFor(propertyID);
-      if (useCounter != eUseCounter_UNKNOWN) {
-        mElement->OwnerDoc()->SetDocumentAndPageUseCounter(useCounter);
+      if (nsCSSProps::IsShorthand(propertyID)) {
+        CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subprop, propertyID,
+                                             nsCSSProps::eEnabledForAllContent) {
+          UseCounter useCounter = nsCSSProps::UseCounterFor(*subprop);
+          if (useCounter != eUseCounter_UNKNOWN) {
+            mElement->OwnerDoc()->SetDocumentAndPageUseCounter(useCounter);
+          }
+        }
+      } else {
+        UseCounter useCounter = nsCSSProps::UseCounterFor(propertyID);
+        if (useCounter != eUseCounter_UNKNOWN) {
+          mElement->OwnerDoc()->SetDocumentAndPageUseCounter(useCounter);
+        }
       }
     }
     return;
