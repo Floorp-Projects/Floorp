@@ -20,10 +20,22 @@
 namespace mozilla {
 namespace gfx {
 
-DriverCrashGuard::DriverCrashGuard()
- : mInitialized(false)
- , mIsChromeProcess(XRE_GetProcessType() == GeckoProcessType_Default)
+static const size_t NUM_CRASH_GUARD_TYPES = size_t(CrashGuardType::NUM_TYPES);
+static const char* sCrashGuardNames[NUM_CRASH_GUARD_TYPES] = {
+  "d3d11layers",
+};
+
+DriverCrashGuard::DriverCrashGuard(CrashGuardType aType)
+ : mType(aType)
+ , mInitialized(false)
 {
+  MOZ_ASSERT(mType < CrashGuardType::NUM_TYPES);
+
+  mStatusPref.Assign("gfx.driver-init.status.");
+  mStatusPref.Append(sCrashGuardNames[size_t(mType)]);
+
+  mGuardFilename.Assign(sCrashGuardNames[size_t(mType)]);
+  mGuardFilename.Append(".guard");
 }
 
 void
@@ -59,14 +71,14 @@ DriverCrashGuard::Initialize()
 
 DriverCrashGuard::~DriverCrashGuard()
 {
-  if (mLockFile) {
-    mLockFile->Remove(false);
+  if (mGuardFile) {
+    mGuardFile->Remove(false);
   }
 
-  if (gfxPrefs::DriverInitStatus() == int32_t(DriverInitStatus::Attempting)) {
+  if (GetStatus() == DriverInitStatus::Attempting) {
     // If we attempted to initialize the driver, and got this far without
     // crashing, assume everything is okay.
-    gfxPrefs::SetDriverInitStatus(int32_t(DriverInitStatus::Okay));
+    SetStatus(DriverInitStatus::Okay);
 
 #ifdef MOZ_CRASHREPORTER
     // Remove the crash report annotation.
@@ -86,11 +98,12 @@ DriverCrashGuard::Crashed()
 bool
 DriverCrashGuard::InitLockFilePath()
 {
-  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_LOCAL_50_DIR, getter_AddRefs(mLockFile));
-  if (!mLockFile) {
+  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_LOCAL_50_DIR, getter_AddRefs(mGuardFile));
+  if (!mGuardFile) {
     return false;
   }
-  if (!NS_SUCCEEDED(mLockFile->AppendNative(NS_LITERAL_CSTRING("gfxinit.lock")))) {
+
+  if (!NS_SUCCEEDED(mGuardFile->AppendNative(mGuardFilename))) {
     return false;
   }
   return true;
@@ -101,12 +114,12 @@ DriverCrashGuard::AllowDriverInitAttempt()
 {
   // Create a temporary tombstone/lockfile.
   FILE* fp;
-  if (!NS_SUCCEEDED(mLockFile->OpenANSIFileDesc("w", &fp))) {
+  if (!NS_SUCCEEDED(mGuardFile->OpenANSIFileDesc("w", &fp))) {
     return;
   }
   fclose(fp);
 
-  gfxPrefs::SetDriverInitStatus(int32_t(DriverInitStatus::Attempting));
+  SetStatus(DriverInitStatus::Attempting);
 
   // Flush preferences, so if we crash, we don't think the environment has changed again.
   FlushPreferences();
@@ -121,21 +134,22 @@ bool
 DriverCrashGuard::RecoverFromDriverInitCrash()
 {
   bool exists;
-  if (mLockFile &&
-      NS_SUCCEEDED(mLockFile->Exists(&exists)) &&
+  if (mGuardFile &&
+      NS_SUCCEEDED(mGuardFile->Exists(&exists)) &&
       exists)
   {
     // If we get here, we've just recovered from a crash. Disable acceleration
     // until the environment changes. Since we may have crashed before
     // preferences we're flushed, we cache the environment again, then flush
     // preferences so child processes can start right away.
-    gfxPrefs::SetDriverInitStatus(int32_t(DriverInitStatus::Recovered));
+    SetStatus(DriverInitStatus::Recovered);
+    UpdateBaseEnvironment();
     UpdateEnvironment();
     FlushPreferences();
     LogCrashRecovery();
     return true;
   }
-  if (gfxPrefs::DriverInitStatus() == int32_t(DriverInitStatus::Recovered)) {
+  if (GetStatus() == DriverInitStatus::Recovered) {
     // If we get here, we crashed in a previous session.
     LogFeatureDisabled();
     return true;
@@ -179,6 +193,9 @@ DriverCrashGuard::UpdateBaseEnvironment()
   // Firefox properties.
   changed |= CheckAndUpdatePref("gfx.driver-init.appVersion", NS_LITERAL_STRING(MOZ_APP_VERSION));
 
+  // Finally, mark as changed if the status has been reset by the user.
+  changed |= (GetStatus() == DriverInitStatus::None);
+
   return changed;
 }
 
@@ -216,6 +233,18 @@ DriverCrashGuard::CheckAndUpdatePref(const char* aPrefName, const nsAString& aCu
   return true;
 }
 
+DriverInitStatus
+DriverCrashGuard::GetStatus() const
+{
+  return (DriverInitStatus)Preferences::GetInt(mStatusPref.get(), 0);
+}
+
+void
+DriverCrashGuard::SetStatus(DriverInitStatus aStatus)
+{
+  Preferences::SetInt(mStatusPref.get(), int32_t(aStatus));
+}
+
 void
 DriverCrashGuard::FlushPreferences()
 {
@@ -225,13 +254,14 @@ DriverCrashGuard::FlushPreferences()
 }
 
 D3D11LayersCrashGuard::D3D11LayersCrashGuard()
+ : DriverCrashGuard(CrashGuardType::D3D11Layers)
 {
 }
 
 void
 D3D11LayersCrashGuard::Initialize()
 {
-  if (!mIsChromeProcess) {
+  if (!XRE_IsParentProcess()) {
     // We assume the parent process already performed crash detection for
     // graphics devices.
     return;
