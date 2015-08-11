@@ -102,6 +102,10 @@ public:
    * Remove all input blocks from the input queue.
    */
   void Clear();
+  /**
+   * Whether the current pending block allows scroll handoff.
+   */
+  bool AllowScrollHandoff() const;
 
 private:
   ~InputQueue();

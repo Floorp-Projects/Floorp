@@ -1534,10 +1534,9 @@ AsyncPanZoomController::CanScroll(Layer::ScrollDirection aDirection) const
 }
 
 bool
-AsyncPanZoomController::AllowScrollHandoffInWheelTransaction() const
+AsyncPanZoomController::AllowScrollHandoffInCurrentBlock() const
 {
-  WheelBlockState* block = mInputQueue->CurrentWheelBlock();
-  return block->AllowScrollHandoff();
+  return mInputQueue->AllowScrollHandoff();
 }
 
 nsEventStatus AsyncPanZoomController::OnScrollWheel(const ScrollWheelInput& aEvent)
@@ -2093,22 +2092,17 @@ bool AsyncPanZoomController::AttemptScroll(const ParentLayerPoint& aStartPoint,
     return true;
   }
 
-  // If in a wheel transaction that has not ended, we drop overscroll.
-  if (aOverscrollHandoffState.mScrollSource == ScrollSource::Wheel &&
-      !AllowScrollHandoffInWheelTransaction())
-  {
-    return true;
-  }
-
-  // If there is overscroll, first try to hand it off to an APZC later
-  // in the handoff chain to consume (either as a normal scroll or as
-  // overscroll).
-  // Note: "+ overscroll" rather than "- overscroll" because "overscroll"
-  // is what's left of "displacement", and "displacement" is "start - end".
-  ++aOverscrollHandoffState.mChainIndex;
-  if (CallDispatchScroll(aEndPoint + overscroll, aEndPoint,
-                         aOverscrollHandoffState)) {
-    return true;
+  if (AllowScrollHandoffInCurrentBlock()) {
+    // If there is overscroll, first try to hand it off to an APZC later
+    // in the handoff chain to consume (either as a normal scroll or as
+    // overscroll).
+    // Note: "+ overscroll" rather than "- overscroll" because "overscroll"
+    // is what's left of "displacement", and "displacement" is "start - end".
+    ++aOverscrollHandoffState.mChainIndex;
+    if (CallDispatchScroll(aEndPoint + overscroll, aEndPoint,
+                           aOverscrollHandoffState)) {
+      return true;
+    }
   }
 
   // If there is no APZC later in the handoff chain that accepted the

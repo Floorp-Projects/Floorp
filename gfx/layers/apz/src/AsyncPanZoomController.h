@@ -894,8 +894,8 @@ private:
 
   void StartSmoothScroll(ScrollSource aSource);
 
-  // Returns whether overscroll is allowed during a wheel event.
-  bool AllowScrollHandoffInWheelTransaction() const;
+  // Returns whether overscroll is allowed during an event.
+  bool AllowScrollHandoffInCurrentBlock() const;
 
   /* ===================================================================
    * The functions and members in this section are used to make ancestor chains
