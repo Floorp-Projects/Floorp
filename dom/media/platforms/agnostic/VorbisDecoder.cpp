@@ -63,7 +63,7 @@ VorbisDataDecoder::Shutdown()
   return NS_OK;
 }
 
-nsresult
+nsRefPtr<MediaDataDecoder::InitPromise>
 VorbisDataDecoder::Init()
 {
   vorbis_info_init(&mVorbisInfo);
@@ -75,17 +75,17 @@ VorbisDataDecoder::Init()
   uint8_t *p = mInfo.mCodecSpecificConfig->Elements();
   for(int i = 0; i < 3; i++) {
     if (available < 2) {
-      return NS_ERROR_FAILURE;
+      return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
     }
     available -= 2;
     size_t length = BigEndian::readUint16(p);
     p += 2;
     if (available < length) {
-      return NS_ERROR_FAILURE;
+      return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
     }
     available -= length;
     if (NS_FAILED(DecodeHeader((const unsigned char*)p, length))) {
-        return NS_ERROR_FAILURE;
+      return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
     }
     p += length;
   }
@@ -94,12 +94,12 @@ VorbisDataDecoder::Init()
 
   int r = vorbis_synthesis_init(&mVorbisDsp, &mVorbisInfo);
   if (r) {
-    return NS_ERROR_FAILURE;
+    return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
   }
 
   r = vorbis_block_init(&mVorbisDsp, &mVorbisBlock);
   if (r) {
-    return NS_ERROR_FAILURE;
+    return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
   }
 
   if (mInfo.mRate != (uint32_t)mVorbisDsp.vi->rate) {
@@ -111,7 +111,7 @@ VorbisDataDecoder::Init()
         ("Invalid Vorbis header: container and codec channels do not match!"));
   }
 
-  return NS_OK;
+  return InitPromise::CreateAndResolve(TrackInfo::kAudioTrack, __func__);
 }
 
 nsresult

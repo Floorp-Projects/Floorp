@@ -73,19 +73,10 @@ AppleVDADecoder::~AppleVDADecoder()
   MOZ_COUNT_DTOR(AppleVDADecoder);
 }
 
-nsresult
+nsRefPtr<MediaDataDecoder::InitPromise>
 AppleVDADecoder::Init()
 {
-  if (!gfxPlatform::GetPlatform()->CanUseHardwareVideoDecoding()) {
-    // This GPU is blacklisted for hardware decoding.
-    return NS_ERROR_FAILURE;
-  }
-
-  if (mDecoder) {
-    return NS_OK;
-  }
-  nsresult rv = InitializeSession();
-  return rv;
+  return InitPromise::CreateAndResolve(TrackType::kVideoTrack, __func__);
 }
 
 nsresult
@@ -580,11 +571,18 @@ AppleVDADecoder::CreateVDADecoder(
   MediaDataDecoderCallback* aCallback,
   layers::ImageContainer* aImageContainer)
 {
-  nsRefPtr<AppleVDADecoder> decoder =
-    new AppleVDADecoder(aConfig, aVideoTaskQueue, aCallback, aImageContainer);
-  if (NS_FAILED(decoder->Init())) {
+  if (!gfxPlatform::GetPlatform()->CanUseHardwareVideoDecoding()) {
+    // This GPU is blacklisted for hardware decoding.
     return nullptr;
   }
+
+  nsRefPtr<AppleVDADecoder> decoder =
+    new AppleVDADecoder(aConfig, aVideoTaskQueue, aCallback, aImageContainer);
+
+  if (NS_FAILED(decoder->InitializeSession())) {
+    return nullptr;
+  }
+
   return decoder.forget();
 }
 

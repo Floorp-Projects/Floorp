@@ -276,8 +276,22 @@ void WebMReader::Cleanup()
   }
 }
 
-nsresult WebMReader::ReadMetadata(MediaInfo* aInfo,
-                                  MetadataTags** aTags)
+nsRefPtr<MediaDecoderReader::MetadataPromise>
+WebMReader::AsyncReadMetadata()
+{
+  nsRefPtr<MetadataHolder> metadata = new MetadataHolder();
+
+  if (NS_FAILED(RetrieveWebMMetadata(&metadata->mInfo)) ||
+      !metadata->mInfo.HasValidMedia()) {
+    return MetadataPromise::CreateAndReject(ReadMetadataFailureReason::METADATA_ERROR,
+                                            __func__);
+  }
+
+  return MetadataPromise::CreateAndResolve(metadata, __func__);
+}
+
+nsresult
+WebMReader::RetrieveWebMMetadata(MediaInfo* aInfo)
 {
   // We can't use OnTaskQueue() here because of the wacky initialization task
   // queue that TrackBuffer uses. We should be able to fix this when we do
@@ -330,20 +344,17 @@ nsresult WebMReader::ReadMetadata(MediaInfo* aInfo,
 #if defined(MOZ_PDM_VPX)
       if (sIsIntelDecoderEnabled) {
         mVideoDecoder = IntelWebMVideoDecoder::Create(this);
-        if (mVideoDecoder &&
-            NS_FAILED(mVideoDecoder->Init(params.display_width, params.display_height))) {
-          mVideoDecoder = nullptr;
-        }
       }
 #endif
 
       // If there's no decoder yet (e.g. HW decoder not available), use the software decoder.
       if (!mVideoDecoder) {
         mVideoDecoder = SoftwareWebMVideoDecoder::Create(this);
-        if (mVideoDecoder &&
-            NS_FAILED(mVideoDecoder->Init(params.display_width, params.display_height))) {
-          mVideoDecoder = nullptr;
-        }
+      }
+
+      if (mVideoDecoder) {
+        mInitPromises.AppendElement(mVideoDecoder->Init(params.display_width,
+                                                        params.display_height));
       }
 
       if (!mVideoDecoder) {
@@ -426,7 +437,10 @@ nsresult WebMReader::ReadMetadata(MediaInfo* aInfo,
         Cleanup();
         return NS_ERROR_FAILURE;
       }
-      if (NS_FAILED(mAudioDecoder->Init())) {
+
+      if (mAudioDecoder) {
+        mInitPromises.AppendElement(mAudioDecoder->Init());
+      } else {
         Cleanup();
         return NS_ERROR_FAILURE;
       }
@@ -459,8 +473,6 @@ nsresult WebMReader::ReadMetadata(MediaInfo* aInfo,
   }
 
   *aInfo = mInfo;
-
-  *aTags = nullptr;
 
   return NS_OK;
 }
