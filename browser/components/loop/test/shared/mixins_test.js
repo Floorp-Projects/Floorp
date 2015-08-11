@@ -192,233 +192,30 @@ describe("loop.shared.mixins", function() {
   });
 
   describe("loop.shared.mixins.MediaSetupMixin", function() {
-    var view, TestComp, rootObject;
-    var localElement, remoteElement, screenShareElement;
+    var view;
 
     beforeEach(function() {
-      TestComp = React.createClass({
+      var TestComp = React.createClass({
         mixins: [loop.shared.mixins.MediaSetupMixin],
         render: function() {
           return React.DOM.div();
         }
       });
 
-      sandbox.useFakeTimers();
-
-      rootObject = {
-        events: {},
-        setTimeout: function(func, timeout) {
-          return setTimeout(func, timeout);
-        },
-        clearTimeout: function(timer) {
-          return clearTimeout(timer);
-        },
-        addEventListener: function(eventName, listener) {
-          this.events[eventName] = listener;
-        },
-        removeEventListener: function(eventName) {
-          delete this.events[eventName];
-        }
-      };
-
-      sharedMixins.setRootObject(rootObject);
-
       view = TestUtils.renderIntoDocument(React.createElement(TestComp));
-
-      sandbox.stub(view, "getDOMNode").returns({
-        querySelector: function(classSelector) {
-          if (classSelector.indexOf("local") > -1) {
-            return localElement;
-          } else if (classSelector.indexOf("screen") > -1) {
-            return screenShareElement;
-          }
-          return remoteElement;
-        }
-      });
-    });
-
-    afterEach(function() {
-      localElement = null;
-      remoteElement = null;
-      screenShareElement = null;
     });
 
     describe("#getDefaultPublisherConfig", function() {
-      it("should provide a default publisher configuration", function() {
-        var defaultConfig = view.getDefaultPublisherConfig({publishVideo: true});
-
-        expect(defaultConfig.publishVideo).eql(true);
-      });
-    });
-
-    describe("#getRemoteVideoDimensions", function() {
-      var localVideoDimensions, remoteVideoDimensions;
-
-      beforeEach(function() {
-        localVideoDimensions = {
-          camera: {
-            width: 640,
-            height: 480
-          }
-        };
+      it("should throw if publishVideo is not given", function() {
+        expect(function() {
+          view.getDefaultPublisherConfig();
+        }).to.throw(/missing/);
       });
 
-      it("should fetch the correct stream sizes for leading axis width and full",
-        function() {
-          remoteVideoDimensions = {
-            screen: {
-              width: 240,
-              height: 320
-            }
-          };
-          screenShareElement = {
-            offsetWidth: 480,
-            offsetHeight: 700
-          };
-
-          view.updateVideoDimensions(localVideoDimensions, remoteVideoDimensions);
-          var result = view.getRemoteVideoDimensions("screen");
-
-          expect(result.width).eql(screenShareElement.offsetWidth);
-          expect(result.height).eql(screenShareElement.offsetHeight);
-          expect(result.streamWidth).eql(screenShareElement.offsetWidth);
-          // The real height of the stream accounting for the aspect ratio.
-          expect(result.streamHeight).eql(640);
-          expect(result.offsetX).eql(0);
-          // The remote element height (700) minus the stream height (640) split in 2.
-          expect(result.offsetY).eql(30);
-        });
-
-      it("should fetch the correct stream sizes for leading axis width and not full",
-        function() {
-          remoteVideoDimensions = {
-            camera: {
-              width: 240,
-              height: 320
-            }
-          };
-          remoteElement = {
-            offsetWidth: 640,
-            offsetHeight: 480
-          };
-
-          view.updateVideoDimensions(localVideoDimensions, remoteVideoDimensions);
-          var result = view.getRemoteVideoDimensions("camera");
-
-          expect(result.width).eql(remoteElement.offsetWidth);
-          expect(result.height).eql(remoteElement.offsetHeight);
-          // Aspect ratio modified from the height.
-          expect(result.streamWidth).eql(360);
-          expect(result.streamHeight).eql(remoteElement.offsetHeight);
-          // The remote element width (640) minus the stream width (360) split in 2.
-          expect(result.offsetX).eql(140);
-          expect(result.offsetY).eql(0);
-        });
-
-      it("should fetch the correct stream sizes for leading axis height and full",
-        function() {
-          remoteVideoDimensions = {
-            screen: {
-              width: 320,
-              height: 240
-            }
-          };
-          screenShareElement = {
-            offsetWidth: 700,
-            offsetHeight: 480
-          };
-
-          view.updateVideoDimensions(localVideoDimensions, remoteVideoDimensions);
-          var result = view.getRemoteVideoDimensions("screen");
-
-          expect(result.width).eql(screenShareElement.offsetWidth);
-          expect(result.height).eql(screenShareElement.offsetHeight);
-          // The real width of the stream accounting for the aspect ratio.
-          expect(result.streamWidth).eql(640);
-          expect(result.streamHeight).eql(screenShareElement.offsetHeight);
-          // The remote element width (700) minus the stream width (640) split in 2.
-          expect(result.offsetX).eql(30);
-          expect(result.offsetY).eql(0);
-        });
-
-      it("should fetch the correct stream sizes for leading axis height and not full",
-        function() {
-          remoteVideoDimensions = {
-            camera: {
-              width: 320,
-              height: 240
-            }
-          };
-          remoteElement = {
-            offsetWidth: 480,
-            offsetHeight: 640
-          };
-
-          view.updateVideoDimensions(localVideoDimensions, remoteVideoDimensions);
-          var result = view.getRemoteVideoDimensions("camera");
-
-          expect(result.width).eql(remoteElement.offsetWidth);
-          expect(result.height).eql(remoteElement.offsetHeight);
-          expect(result.streamWidth).eql(remoteElement.offsetWidth);
-          // Aspect ratio modified from the width.
-          expect(result.streamHeight).eql(360);
-          expect(result.offsetX).eql(0);
-          // The remote element width (640) minus the stream width (360) split in 2.
-          expect(result.offsetY).eql(140);
-        });
-    });
-
-    describe("Events", function() {
-
-      describe("Video stream dimensions", function() {
-        var localVideoDimensions = {
-          camera: {
-            width: 640,
-            height: 480
-          }
-        };
-        var remoteVideoDimensions = {
-          camera: {
-            width: 420,
-            height: 138
-          }
-        };
-
-        it("should register video dimension updates correctly", function() {
-          view.updateVideoDimensions(localVideoDimensions, remoteVideoDimensions);
-
-          expect(view._videoDimensionsCache.local.camera.width)
-            .eql(localVideoDimensions.camera.width);
-          expect(view._videoDimensionsCache.local.camera.height)
-            .eql(localVideoDimensions.camera.height);
-          expect(view._videoDimensionsCache.local.camera.aspectRatio.width).eql(1);
-          expect(view._videoDimensionsCache.local.camera.aspectRatio.height).eql(0.75);
-          expect(view._videoDimensionsCache.remote.camera.width)
-            .eql(remoteVideoDimensions.camera.width);
-          expect(view._videoDimensionsCache.remote.camera.height)
-            .eql(remoteVideoDimensions.camera.height);
-          expect(view._videoDimensionsCache.remote.camera.aspectRatio.width).eql(1);
-          expect(view._videoDimensionsCache.remote.camera.aspectRatio.height)
-            .eql(0.32857142857142857);
-        });
-
-        it("should unregister video dimension updates correctly", function() {
-          view.updateVideoDimensions(localVideoDimensions, {});
-
-          expect("camera" in view._videoDimensionsCache.local).eql(true);
-          expect("camera" in view._videoDimensionsCache.remote).eql(false);
-        });
-
-        it("should not populate the cache on another component instance", function() {
-            view.updateVideoDimensions(localVideoDimensions, remoteVideoDimensions);
-
-            var view2 =
-              TestUtils.renderIntoDocument(React.createElement(TestComp));
-
-            expect(view2._videoDimensionsCache.local).to.be.empty;
-            expect(view2._videoDimensionsCache.remote).to.be.empty;
-        });
-
+      it("should return a set of defaults based on the options", function() {
+        expect(view.getDefaultPublisherConfig({
+          publishVideo: true
+        }).publishVideo).eql(true);
       });
     });
   });
