@@ -1,7 +1,7 @@
 <!doctype html>
 <meta charset=utf-8>
-<link rel=stylesheet href=../css/reset.css>
-<title>HTML editing conformance tests</title>
+<link rel=stylesheet href=../../css/reset.css>
+<title>fontsize - HTML editing conformance tests</title>
 <p>See the <a href=editing.html#tests>Tests</a> section of the specification
 for documentation.
 
@@ -11,32 +11,33 @@ for documentation.
 
 <div id=test-container></div>
 
-<script src=../implementation.js></script>
+<script src=../../implementation.js></script>
 <script>var testsJsLibraryOnly = true</script>
-<script src=../tests.js></script>
-<script src=data.js></script>
+<script src=../../tests.js></script>
+<script src=../data/fontsize.js></script>
 <script src=/resources/testharness.js></script>
 <script src=/resources/testharnessreport.js></script>
 <script>
 "use strict";
 
-if (W3CTest.runner) {
-	W3CTest.runner.requestLongerTimeout(2);
-}
-
-runTests();
-
-function runTests() {
+(function() {
 	var startTime = Date.now();
 
 	// Make document.body.innerHTML more tidy by removing unnecessary things.
-	// We can't remove the testharness.js script, because at the time of this
-	// writing, for some reason that stops it from adding appropriate CSS.
 	[].forEach.call(document.querySelectorAll("script"), function(node) {
-		if (!/testharness\.js$/.test(node.src)) {
-			node.parentNode.removeChild(node);
-		}
+		node.parentNode.removeChild(node);
 	});
+
+	if (true) {
+		// Silly hack: the CSS styling flag should be true, not false, to match
+		// expected results.  This is because every group of tests except the
+		// last (multitest) sets styleWithCSS automatically, and it sets it
+		// first to false and then to true.  Thus it's left at true at the end
+		// of each group of tests, so in gentest.html it will be true when
+		// starting each group of tests other than the first.  But browsers are
+		// supposed to default it to false when the page loads, so flip it.
+		try { document.execCommand("styleWithCSS", false, "true") } catch(e) {}
+	}
 
 	browserTests.forEach(runConformanceTest);
 
@@ -48,5 +49,5 @@ function runTests() {
 		"Time elapsed: " + Math.floor(elapsed/60) + ":"
 		+ ((elapsed % 60) < 10 ? "0" : "")
 		+ (elapsed % 60).toFixed(3) + " min.";
-}
+})();
 </script>
