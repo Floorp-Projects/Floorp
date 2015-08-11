@@ -251,6 +251,15 @@ public:
   }
   void dumpAnnotationReason(DiagnosticsEngine &Diag, QualType T, SourceLocation Loc);
 
+  void reportErrorIfAbsent(DiagnosticsEngine &Diag, QualType T, SourceLocation Loc,
+                           unsigned ErrorID, unsigned NoteID) {
+    if (hasEffectiveAnnotation(T)) {
+      Diag.Report(Loc, ErrorID) << T;
+      Diag.Report(Loc, NoteID);
+      dumpAnnotationReason(Diag, T, Loc);
+    }
+  }
+
 private:
   bool hasLiteralAnnotation(QualType T) const;
   AnnotationReason directAnnotationReason(QualType T);
@@ -1100,60 +1109,24 @@ void DiagnosticsMatcher::ScopeChecker::run(
     return;
 
   case AV_Global:
-    if (StackClass.hasEffectiveAnnotation(T)) {
-      Diag.Report(Loc, StackID) << T;
-      Diag.Report(Loc, GlobalNoteID);
-      StackClass.dumpAnnotationReason(Diag, T, Loc);
-    }
-    if (HeapClass.hasEffectiveAnnotation(T)) {
-      Diag.Report(Loc, HeapID) << T;
-      Diag.Report(Loc, GlobalNoteID);
-      HeapClass.dumpAnnotationReason(Diag, T, Loc);
-    }
+    StackClass.reportErrorIfAbsent(Diag, T, Loc, StackID, GlobalNoteID);
+    HeapClass.reportErrorIfAbsent(Diag, T, Loc, HeapID, GlobalNoteID);
     break;
 
   case AV_Automatic:
-    if (GlobalClass.hasEffectiveAnnotation(T)) {
-      Diag.Report(Loc, GlobalID) << T;
-      Diag.Report(Loc, StackNoteID);
-      GlobalClass.dumpAnnotationReason(Diag, T, Loc);
-    }
-    if (HeapClass.hasEffectiveAnnotation(T)) {
-      Diag.Report(Loc, HeapID) << T;
-      Diag.Report(Loc, StackNoteID);
-      HeapClass.dumpAnnotationReason(Diag, T, Loc);
-    }
+    GlobalClass.reportErrorIfAbsent(Diag, T, Loc, GlobalID, StackNoteID);
+    HeapClass.reportErrorIfAbsent(Diag, T, Loc, HeapID, StackNoteID);
     break;
 
   case AV_Temporary:
-    if (GlobalClass.hasEffectiveAnnotation(T)) {
-      Diag.Report(Loc, GlobalID) << T;
-      Diag.Report(Loc, TemporaryNoteID);
-      GlobalClass.dumpAnnotationReason(Diag, T, Loc);
-    }
-    if (HeapClass.hasEffectiveAnnotation(T)) {
-      Diag.Report(Loc, HeapID) << T;
-      Diag.Report(Loc, TemporaryNoteID);
-      HeapClass.dumpAnnotationReason(Diag, T, Loc);
-    }
+    GlobalClass.reportErrorIfAbsent(Diag, T, Loc, GlobalID, TemporaryNoteID);
+    HeapClass.reportErrorIfAbsent(Diag, T, Loc, HeapID, TemporaryNoteID);
     break;
 
   case AV_Heap:
-    if (GlobalClass.hasEffectiveAnnotation(T)) {
-      Diag.Report(Loc, GlobalID) << T;
-      Diag.Report(Loc, HeapNoteID);
-      GlobalClass.dumpAnnotationReason(Diag, T, Loc);
-    }
-    if (StackClass.hasEffectiveAnnotation(T)) {
-      Diag.Report(Loc, StackID) << T;
-      Diag.Report(Loc, HeapNoteID);
-      StackClass.dumpAnnotationReason(Diag, T, Loc);
-    }
-    if (NonHeapClass.hasEffectiveAnnotation(T)) {
-      Diag.Report(Loc, NonHeapID) << T;
-      Diag.Report(Loc, HeapNoteID);
-      NonHeapClass.dumpAnnotationReason(Diag, T, Loc);
-    }
+    GlobalClass.reportErrorIfAbsent(Diag, T, Loc, GlobalID, HeapNoteID);
+    StackClass.reportErrorIfAbsent(Diag, T, Loc, StackID, HeapNoteID);
+    NonHeapClass.reportErrorIfAbsent(Diag, T, Loc, NonHeapID, HeapNoteID);
     break;
   }
 }
