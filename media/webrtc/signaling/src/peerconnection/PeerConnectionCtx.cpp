@@ -220,21 +220,31 @@ EverySecondTelemetryCallback_s(nsAutoPtr<RTCStatsQueries> aQueryList) {
       for (decltype(array.Length()) i = 0; i < array.Length(); i++) {
         auto& s = array[i];
         bool isAudio = (s.mId.Value().Find("audio") != -1);
-        if (s.mPacketsLost.WasPassed()) {
-          Accumulate(s.mIsRemote?
-                     (isAudio? WEBRTC_AUDIO_QUALITY_OUTBOUND_PACKETLOSS :
-                               WEBRTC_VIDEO_QUALITY_OUTBOUND_PACKETLOSS) :
-                     (isAudio? WEBRTC_AUDIO_QUALITY_INBOUND_PACKETLOSS :
-                               WEBRTC_VIDEO_QUALITY_INBOUND_PACKETLOSS),
-                      s.mPacketsLost.Value());
+        if (s.mPacketsLost.WasPassed() && s.mPacketsReceived.WasPassed() &&
+            (s.mPacketsLost.Value() + s.mPacketsReceived.Value()) != 0) {
+          ID id;
+          if (s.mIsRemote) {
+            id = isAudio ? WEBRTC_AUDIO_QUALITY_OUTBOUND_PACKETLOSS_RATE :
+                           WEBRTC_VIDEO_QUALITY_OUTBOUND_PACKETLOSS_RATE;
+          } else {
+            id = isAudio ? WEBRTC_AUDIO_QUALITY_INBOUND_PACKETLOSS_RATE :
+                           WEBRTC_VIDEO_QUALITY_INBOUND_PACKETLOSS_RATE;
+          }
+          // *1000 so we can read in 10's of a percent (permille)
+          Accumulate(id,
+                     (s.mPacketsLost.Value() * 1000) /
+                     (s.mPacketsLost.Value() + s.mPacketsReceived.Value()));
         }
         if (s.mJitter.WasPassed()) {
-          Accumulate(s.mIsRemote?
-                     (isAudio? WEBRTC_AUDIO_QUALITY_OUTBOUND_JITTER :
-                               WEBRTC_VIDEO_QUALITY_OUTBOUND_JITTER) :
-                     (isAudio? WEBRTC_AUDIO_QUALITY_INBOUND_JITTER :
-                               WEBRTC_VIDEO_QUALITY_INBOUND_JITTER),
-                      s.mJitter.Value());
+          ID id;
+          if (s.mIsRemote) {
+            id = isAudio ? WEBRTC_AUDIO_QUALITY_OUTBOUND_JITTER :
+                           WEBRTC_VIDEO_QUALITY_OUTBOUND_JITTER;
+          } else {
+            id = isAudio ? WEBRTC_AUDIO_QUALITY_INBOUND_JITTER :
+                           WEBRTC_VIDEO_QUALITY_INBOUND_JITTER;
+          }
+          Accumulate(id, s.mJitter.Value());
         }
         if (s.mMozRtt.WasPassed()) {
           MOZ_ASSERT(s.mIsRemote);
