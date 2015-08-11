@@ -62,7 +62,7 @@
                                           android:layout_centerVertical="true"
                                           android:layout_marginLeft="12dp"
                                           android:layout_alignParentLeft="true"
-                                          android:src="@drawable/new_tablet_ic_menu_back"
+                                          android:src="@drawable/ic_menu_back"
                                           android:contentDescription="@string/back"
                                           android:background="@drawable/new_tablet_url_bar_nav_button"/>
 
