@@ -214,7 +214,10 @@ int VoEExternalMediaImpl::ExternalRecordingInsertData(
     }
 
     uint16_t blockSize = samplingFreqHz / 100;
-    uint32_t nBlocks = lengthSamples / blockSize;
+    // We know the number of samples for 10ms of audio, so we can derive the
+    // number of channels here:
+    uint32_t channels = lengthSamples * 100 / samplingFreqHz;
+    uint32_t nBlocks = lengthSamples / blockSize / channels;
     int16_t totalDelayMS = 0;
     uint16_t playoutDelayMS = 0;
 
@@ -242,7 +245,7 @@ int VoEExternalMediaImpl::ExternalRecordingInsertData(
         shared_->transmit_mixer()->PrepareDemux(
             (const int8_t*)(&speechData10ms[i*blockSize]),
             blockSize,
-            1,
+            channels,
             samplingFreqHz,
             totalDelayMS,
             0,
