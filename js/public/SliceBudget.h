@@ -44,7 +44,8 @@ struct JS_PUBLIC_API(SliceBudget)
 
     static const intptr_t CounterReset = 1000;
 
-    static const int64_t Unlimited = -1;
+    static const int64_t UnlimitedTimeBudget = -1;
+    static const int64_t UnlimitedWorkBudget = -1;
 
     /* Use to create an unlimited budget. */
     SliceBudget();

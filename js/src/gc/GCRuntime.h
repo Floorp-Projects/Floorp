@@ -775,7 +775,7 @@ class GCRuntime
     uint64_t majorGCCount() const { return majorGCNumber; }
     void incMajorGcNumber() { ++majorGCNumber; }
 
-    int64_t defaultSliceBudget() const { return sliceBudget; }
+    int64_t defaultSliceBudget() const { return defaultTimeBudget_; }
 
     bool isIncrementalGc() const { return isIncremental; }
     bool isFullGc() const { return isFull; }
@@ -1172,7 +1172,7 @@ class GCRuntime
     bool interFrameGC;
 
     /* Default budget for incremental GC slice. See js/SliceBudget.h. */
-    int64_t sliceBudget;
+    int64_t defaultTimeBudget_;
 
     /*
      * We disable incremental GC if we encounter a js::Class with a trace hook
