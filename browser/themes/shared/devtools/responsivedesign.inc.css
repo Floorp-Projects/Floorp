@@ -264,12 +264,14 @@
 }
 
 .devtools-responsiveui-home-button {
+  -moz-user-focus: ignore;
   width: 40px;
   height: 30px;
   list-style-image: url("chrome://browser/skin/devtools/responsiveui-home.png");
 }
 
 .devtools-responsiveui-sleep-button {
+  -moz-user-focus: ignore;
   -moz-appearance: none;
   /* compensate browserStack top padding */
   margin-top: -67px;
@@ -297,6 +299,7 @@
 
 .devtools-responsiveui-volume-up-button,
 .devtools-responsiveui-volume-down-button {
+  -moz-user-focus: ignore;
   -moz-appearance: none;
   border: 1px solid red;
   min-width: 8px;
