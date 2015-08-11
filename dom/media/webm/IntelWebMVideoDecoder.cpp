@@ -106,12 +106,12 @@ IntelWebMVideoDecoder::IsSupportedVideoMimeType(const nsACString& aMimeType)
          mPlatform->SupportsMimeType(aMimeType);
 }
 
-nsresult
+nsRefPtr<InitPromise>
 IntelWebMVideoDecoder::Init(unsigned int aWidth, unsigned int aHeight)
 {
   mPlatform = PlatformDecoderModule::Create();
   if (!mPlatform) {
-    return NS_ERROR_FAILURE;
+    return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
   }
 
   mDecoderConfig = new VideoInfo();
@@ -127,12 +127,12 @@ IntelWebMVideoDecoder::Init(unsigned int aWidth, unsigned int aHeight)
     mDecoderConfig->mMimeType = "video/webm; codecs=vp9";
     break;
   default:
-    return NS_ERROR_FAILURE;
+    return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
   }
 
   const VideoInfo& video = *mDecoderConfig;
   if (!IsSupportedVideoMimeType(video.mMimeType)) {
-    return NS_ERROR_FAILURE;
+    return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
   }
   mMediaDataDecoder =
     mPlatform->CreateDecoder(video,
@@ -141,11 +141,10 @@ IntelWebMVideoDecoder::Init(unsigned int aWidth, unsigned int aHeight)
                              mReader->GetLayersBackendType(),
                              mReader->GetDecoder()->GetImageContainer());
   if (!mMediaDataDecoder) {
-    return NS_ERROR_FAILURE;
+    return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
   }
-  nsresult rv = mMediaDataDecoder->Init();
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
+
+  return mMediaDataDecoder->Init();
 }
 
 bool

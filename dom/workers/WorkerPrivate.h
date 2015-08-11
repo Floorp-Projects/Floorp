@@ -1528,10 +1528,7 @@ enum WorkerStructuredDataType
 };
 
 const JSStructuredCloneCallbacks*
-WorkerStructuredCloneCallbacks(bool aMainRuntime);
-
-const JSStructuredCloneCallbacks*
-ChromeWorkerStructuredCloneCallbacks(bool aMainRuntime);
+WorkerStructuredCloneCallbacks();
 
 class AutoSyncLoopHolder
 {

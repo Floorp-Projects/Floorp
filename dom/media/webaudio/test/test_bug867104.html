@@ -15,7 +15,7 @@ addLoadEvent(function() {
   var source = ctx.createBufferSource();
   var b0 = ctx.createBuffer(32,798,22050);
   var b1 = ctx.createBuffer(32,28,22050);
-  var sp = ctx.createScriptProcessor();
+  var sp = ctx.createScriptProcessor(0, 2, 0);
   source.buffer = b0;
   source.connect(sp);
   source.start(0);
@@ -25,7 +25,6 @@ addLoadEvent(function() {
     sp.onaudioprocess = null;
     SimpleTest.finish();
   };
-  sp.connect(ctx.destination); // work around bug 916387
 });
 
 

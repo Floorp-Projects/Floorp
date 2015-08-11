@@ -105,7 +105,10 @@ private:
   void NotifyDemuxer(uint32_t aLength, int64_t aOffset);
   void ReturnOutput(MediaData* aData, TrackType aTrack);
 
-  bool EnsureDecodersSetup();
+  bool EnsureDecodersCreated();
+  // It returns true when all decoders are initialized. False when there is pending
+  // initialization.
+  bool EnsureDecodersInitialized();
 
   // Enqueues a task to call Update(aTrack) on the decoder task queue.
   // Lock for corresponding track must be held.
@@ -194,6 +197,7 @@ private:
       , mWaitingForData(false)
       , mReceivedNewData(false)
       , mDiscontinuity(true)
+      , mDecoderInitialized(false)
       , mOutputRequested(false)
       , mInputExhausted(false)
       , mError(false)
@@ -242,6 +246,8 @@ private:
     }
 
     // MediaDataDecoder handler's variables.
+    // False when decoder is created. True when decoder Init() promise is resolved.
+    bool mDecoderInitialized;
     bool mOutputRequested;
     bool mInputExhausted;
     bool mError;
@@ -337,6 +343,9 @@ private:
 
   DecoderData& GetDecoderData(TrackType aTrack);
 
+  void OnDecoderInitDone(const nsTArray<TrackType>& aTrackTypes);
+  void OnDecoderInitFailed(MediaDataDecoder::DecoderFailureReason aReason);
+
   // Demuxer objects.
   void OnDemuxerInitDone(nsresult);
   void OnDemuxerInitFailed(DemuxerFailureReason aFailure);
@@ -408,8 +417,12 @@ private:
     OnSeekFailed(TrackType::kAudioTrack, aFailure);
   }
   // Temporary seek information while we wait for the data
+  Maybe<media::TimeUnit> mOriginalSeekTime;
   Maybe<media::TimeUnit> mPendingSeekTime;
   MozPromiseHolder<SeekPromise> mSeekPromise;
+
+  // Pending decoders initialization.
+  MozPromiseRequestHolder<MediaDataDecoder::InitPromise::AllPromiseType> mDecodersInitRequest;
 
 #ifdef MOZ_EME
   nsRefPtr<CDMProxy> mCDMProxy;

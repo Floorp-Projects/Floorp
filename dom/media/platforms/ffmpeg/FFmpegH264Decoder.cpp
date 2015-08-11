@@ -39,16 +39,17 @@ FFmpegH264Decoder<LIBAV_VER>::FFmpegH264Decoder(
   mExtraData->AppendElements(*aConfig.mExtraData);
 }
 
-nsresult
+nsRefPtr<MediaDataDecoder::InitPromise>
 FFmpegH264Decoder<LIBAV_VER>::Init()
 {
-  nsresult rv = FFmpegDataDecoder::Init();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(InitDecoder())) {
+    return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
+  }
 
   mCodecContext->get_buffer = AllocateBufferCb;
   mCodecContext->release_buffer = ReleaseBufferCb;
 
-  return NS_OK;
+  return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
 }
 
 int64_t

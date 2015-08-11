@@ -58,7 +58,7 @@ ChoosePixelFormat(AVCodecContext* aCodecContext, const PixelFormat* aFormats)
 }
 
 nsresult
-FFmpegDataDecoder<LIBAV_VER>::Init()
+FFmpegDataDecoder<LIBAV_VER>::InitDecoder()
 {
   StaticMutexAutoLock mon(sMonitor);
 
