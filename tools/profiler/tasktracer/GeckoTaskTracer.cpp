@@ -204,7 +204,7 @@ void
 TraceInfo::MoveLogsInto(TraceInfoLogsType& aResult)
 {
   MutexAutoLock lock(mLogsMutex);
-  aResult.MoveElementsFrom(Move(mLogs));
+  aResult.AppendElements(Move(mLogs));
 }
 
 void
