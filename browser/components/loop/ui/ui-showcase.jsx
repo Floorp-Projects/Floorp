@@ -1541,7 +1541,7 @@
 
       // This simulates the mocha layout for errors which means we can run
       // this alongside our other unit tests but use the same harness.
-      var expectedWarningsCount = 18;
+      var expectedWarningsCount = 16;
       var warningsMismatch = caughtWarnings.length !== expectedWarningsCount;
       if (uncaughtError || warningsMismatch) {
         $("#results").append("<div class='failures'><em>" +
