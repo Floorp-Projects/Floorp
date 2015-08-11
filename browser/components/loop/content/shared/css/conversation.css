@@ -899,9 +899,9 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
 }
 
 .context-url-view-wrapper {
-  padding-left: 1em;
-  padding-right: 1em;
-  padding-bottom: 0.5em;
+  /* 18px for indent of .text-chat-arrow, 1px for border of .text-chat-entry > p,
+     0.5rem for padding of .text-chat-entry > p */
+  padding: calc(18px - 1px - 0.5rem);
   margin-bottom: 0.5em;
   background-color: #E8F6FE;
 }
@@ -1401,28 +1401,6 @@ html[dir="rtl"] .room-context-btn-close {
   max-width: 400px;
 }
 
-.standalone-context-url {
-  color: #fff;
-  /* Try and keep clear of local video */
-  height: 40%;
-}
-
-.standalone-context-url.screen-share-active {
-  /* Try and keep clear of remote video when screensharing */
-  height: 15%;
-}
-
-.standalone-context-url > img {
-  margin: 1em auto;
-  width: 16px;
-  height: 16px;
-}
-
-.standalone-context-url-description-wrapper {
-  /* So that we can use max-height for the image */
-  height: 20%;
-}
-
 .standalone .room-conversation .media {
   background: #000;
 }
@@ -1480,12 +1458,14 @@ html[dir="rtl"] .text-chat-entry {
   margin-left: .2em;
 }
 
+/* If you change this entry, check it doesn't affect the "special" text
+   chat entries as well (.speical, .room-name, .context-url-view-wrapper */
 .text-chat-entry > p {
   position: relative;
   z-index: 10;
   /* Drop the default margins from the 'p' element. */
   margin: 0;
-  padding: .7em;
+  padding: .5rem;
   /* leave some room for the chat bubble arrow */
   max-width: 80%;
   border-width: 1px;
@@ -1647,12 +1627,17 @@ html[dir="rtl"] .text-chat-entry.received .text-chat-arrow {
   font-weight: bold;
   text-align: start;
   background-color: #E8F6FE;
-  padding-bottom: 0;
   margin-bottom: 0;
+  margin-right: 0;
 }
 
 .text-chat-entry.special.room-name p {
   background: #E8F6FE;
+  max-width: 100%;
+  /* 18px for indent of .text-chat-arrow, 1px for border of .text-chat-entry > p,
+   0.5rem for padding of .text-chat-entry > p */
+  padding: calc(18px - 1px - 0.5rem);
+  padding-bottom: 0px;
 }
 
 .text-chat-entry.special > p {
@@ -1666,7 +1651,7 @@ html[dir="rtl"] .text-chat-entry.received .text-chat-arrow {
 .text-chat-box > form > input {
   width: 100%;
   height: 40px;
-  padding: 0 .5em .5em;
+  padding: 0 .4rem .4rem;
   font-size: 1.1em;
   border: 0;
   border-top: 1px solid #d8d8d8;
@@ -1703,12 +1688,6 @@ html[dir="rtl"] .text-chat-entry.received .text-chat-arrow {
 }
 
 @media screen and (max-width:640px) {
-  .standalone-context-url {
-    /* XXX We haven't got UX for standalone yet, so temporarily not displaying
-       on narrow window widths. See bug 1153827. */
-    display: none;
-  }
-
   /* Rooms specific responsive styling */
   .standalone .room-conversation {
     background: #000;
@@ -1749,7 +1728,6 @@ html[dir="rtl"] .text-chat-entry.received .text-chat-arrow {
 /* e.g. very narrow widths similar to conversation window */
 @media screen and (max-width:300px) {
   .text-chat-view {
-    flex: 0 0 auto;
     display: flex;
     flex-flow: column nowrap;
     /* 120px max-height of .text-chat-entries plus 40px of .text-chat-box */
@@ -1758,8 +1736,11 @@ html[dir="rtl"] .text-chat-entry.received .text-chat-arrow {
     min-height: 100px;
     /* The !important is to override the values defined above which have more
        specificity when we fix bug 1184559, we should be able to remove it,
-       but this should be tests first. */
+       but this should be tested first. */
     height: auto !important;
+    /* Let the view be the minimum size it needs to be - don't flex to take up
+       more. */
+    flex: 0 0 auto !important;
   }
 
   .text-chat-entries {
@@ -1769,6 +1750,12 @@ html[dir="rtl"] .text-chat-entry.received .text-chat-arrow {
     flex: 1 1 auto !important;
     max-height: 120px;
     min-height: 60px;
+  }
+
+  .text-chat-view.text-chat-disabled {
+    /* When we don't have text chat enabled, limit the view to the same height
+       as the entries, to avoid unnecessary whitespace */
+    max-height: 120px;
   }
 
   .text-chat-entries-empty.text-chat-disabled {
