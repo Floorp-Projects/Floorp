@@ -53,6 +53,7 @@ class NestedScopeObject;
 namespace frontend {
     struct BytecodeEmitter;
     class UpvarCookie;
+    class FunctionBox;
 } // namespace frontend
 
 namespace detail {
@@ -1176,6 +1177,8 @@ class JSScript : public js::gc::TenuredCell
                               uint32_t nTypeSets);
     static bool fullyInitFromEmitter(js::ExclusiveContext* cx, JS::Handle<JSScript*> script,
                                      js::frontend::BytecodeEmitter* bce);
+    static void linkToFunctionFromEmitter(js::ExclusiveContext* cx, JS::Handle<JSScript*> script,
+                                          js::frontend::FunctionBox* funbox);
     // Initialize a no-op script.
     static bool fullyInitTrivial(js::ExclusiveContext* cx, JS::Handle<JSScript*> script);
 
@@ -1795,9 +1798,7 @@ class JSScript : public js::gc::TenuredCell
     bool bindingIsAliased(const js::BindingIter& bi);
     bool formalIsAliased(unsigned argSlot);
     bool formalLivesInArgumentsObject(unsigned argSlot);
-
-    // Frontend-only.
-    bool cookieIsAliased(const js::frontend::UpvarCookie& cookie);
+    bool localIsAliased(unsigned localSlot);
 
   private:
     /* Change this->stepMode to |newValue|. */

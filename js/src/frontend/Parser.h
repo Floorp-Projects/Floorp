@@ -28,6 +28,8 @@ namespace frontend {
 
 struct StmtInfoPC : public StmtInfoBase
 {
+    static const unsigned BlockIdLimit = 1 << ParseNode::NumBlockIdBits;
+
     StmtInfoPC*     enclosing;
     StmtInfoPC*     enclosingScope;
 
@@ -44,6 +46,7 @@ struct StmtInfoPC : public StmtInfoBase
 
     explicit StmtInfoPC(ExclusiveContext* cx)
       : StmtInfoBase(cx),
+        blockid(BlockIdLimit),
         innerBlockScopeDepth(0),
         firstDominatingLexicalInCase(0)
     {}
@@ -98,7 +101,6 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
     typedef typename ParseHandler::DefinitionNode DefinitionNode;
 
     uint32_t        bodyid;         /* block number of program/function body */
-    uint32_t        blockidGen;     /* preincremented block number generator */
 
     StmtInfoStack<StmtInfoPC> stmtStack;
 
@@ -249,10 +251,9 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
 
     ParseContext(Parser<ParseHandler>* prs, GenericParseContext* parent,
                  Node maybeFunction, SharedContext* sc, Directives* newDirectives,
-                 unsigned staticLevel, uint32_t bodyid, uint32_t blockScopeDepth)
+                 unsigned staticLevel, uint32_t blockScopeDepth)
       : GenericParseContext(parent, sc),
         bodyid(0),           // initialized in init()
-        blockidGen(bodyid),  // used to set |bodyid| and subsequently incremented in init()
         stmtStack(prs->context),
         maybeFunction(maybeFunction),
         staticLevel(staticLevel),
@@ -276,7 +277,7 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
 
     ~ParseContext();
 
-    bool init(TokenStream& ts);
+    bool init(Parser<ParseHandler>& parser);
 
     unsigned blockid() { return stmtStack.innermost() ? stmtStack.innermost()->blockid : bodyid; }
 
@@ -373,6 +374,9 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     /* innermost parse context (stack-allocated) */
     ParseContext<ParseHandler>* pc;
 
+    // List of all block scopes.
+    AutoObjectVector blockScopes;
+
     /* Compression token for aborting. */
     SourceCompressionTask* sct;
 
@@ -468,26 +472,25 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
                                          JSObject* staticScope);
 
   private:
-    FunctionBox* newFunctionBox(Node fn, JSFunction* fun, ParseContext<ParseHandler>* outerpc,
+    FunctionBox* newFunctionBox(Node fn, HandleFunction fun, ParseContext<ParseHandler>* outerpc,
                                 Directives directives, GeneratorKind generatorKind,
-                                JSObject* enclosingStaticScope);
+                                HandleObject enclosingStaticScope);
 
   public:
     // Use when the funbox is the outermost.
-    FunctionBox* newFunctionBox(Node fn, JSFunction* fun,
-                                Directives directives, GeneratorKind generatorKind,
-                                JSObject* enclosingStaticScope)
+    FunctionBox* newFunctionBox(Node fn, HandleFunction fun, Directives directives,
+                                GeneratorKind generatorKind, HandleObject enclosingStaticScope)
     {
         return newFunctionBox(fn, fun, nullptr, directives, generatorKind,
                               enclosingStaticScope);
     }
 
     // Use when the funbox should be linked to the outerpc's innermost scope.
-    FunctionBox* newFunctionBox(Node fn, JSFunction* fun, ParseContext<ParseHandler>* outerpc,
+    FunctionBox* newFunctionBox(Node fn, HandleFunction fun, ParseContext<ParseHandler>* outerpc,
                                 Directives directives, GeneratorKind generatorKind)
     {
-        return newFunctionBox(fn, fun, outerpc, directives, generatorKind,
-                              outerpc->innermostStaticScope());
+        RootedObject enclosing(context, outerpc->innermostStaticScope());
+        return newFunctionBox(fn, fun, outerpc, directives, generatorKind, enclosing);
     }
 
     /*
@@ -496,6 +499,16 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
      */
     JSFunction* newFunction(HandleAtom atom, FunctionSyntaxKind kind, GeneratorKind generatorKind,
                             HandleObject proto);
+
+    bool generateBlockId(JSObject* staticScope, uint32_t* blockIdOut) {
+        if (blockScopes.length() == StmtInfoPC::BlockIdLimit) {
+            tokenStream.reportError(JSMSG_NEED_DIET, "program");
+            return false;
+        }
+        MOZ_ASSERT(blockScopes.length() < StmtInfoPC::BlockIdLimit);
+        *blockIdOut = blockScopes.length();
+        return blockScopes.append(staticScope);
+    }
 
     void trace(JSTracer* trc);
 

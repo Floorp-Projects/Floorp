@@ -9815,9 +9815,8 @@ ParseFunction(ModuleCompiler& m, ParseNode** fnOut)
 
     Directives newDirectives = directives;
     AsmJSParseContext funpc(&m.parser(), outerpc, fn, funbox, &newDirectives,
-                            outerpc->staticLevel + 1, outerpc->blockidGen,
-                            /* blockScopeDepth = */ 0);
-    if (!funpc.init(tokenStream))
+                            outerpc->staticLevel + 1, /* blockScopeDepth = */ 0);
+    if (!funpc.init(m.parser()))
         return false;
 
     if (!m.parser().functionArgsAndBodyGeneric(InAllowed, YieldIsName, fn, fun, Statement)) {
@@ -9830,7 +9829,6 @@ ParseFunction(ModuleCompiler& m, ParseNode** fnOut)
     MOZ_ASSERT(!tokenStream.hadError());
     MOZ_ASSERT(directives == newDirectives);
 
-    outerpc->blockidGen = funpc.blockidGen;
     fn->pn_blockid = outerpc->blockid();
 
     *fnOut = fn;
