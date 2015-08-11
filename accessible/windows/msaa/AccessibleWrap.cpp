@@ -1305,7 +1305,7 @@ AccessibleWrap::GetChildIDFor(Accessible* aAccessible)
   // the event occurred on.
 
 #ifdef _WIN64
-  if (!aAccessible || !aAccessible->Document())
+  if (!aAccessible || (!aAccessible->Document() && !aAccessible->IsProxy()))
     return 0;
 
   uint32_t* id = & static_cast<AccessibleWrap*>(aAccessible)->mID;
@@ -1313,13 +1313,27 @@ AccessibleWrap::GetChildIDFor(Accessible* aAccessible)
     return *id;
 
   *id = sIDGen.GetID();
-  DocAccessibleWrap* doc =
-    static_cast<DocAccessibleWrap*>(aAccessible->Document());
-  doc->AddID(*id, static_cast<AccessibleWrap*>(aAccessible));
+
+  if (aAccessible->IsProxy()) {
+    DocProxyAccessibleWrap* doc =
+      static_cast<AccessibleWrap*>(aAccessible)->DocProxyWrapper();
+    doc->AddID(*id, static_cast<AccessibleWrap*>(aAccessible));
+  } else {
+    DocAccessibleWrap* doc =
+      static_cast<DocAccessibleWrap*>(aAccessible->Document());
+    doc->AddID(*id, static_cast<AccessibleWrap*>(aAccessible));
+  }
 
   return *id;
 #else
-  return - reinterpret_cast<intptr_t>(aAccessible);
+  int32_t id = - reinterpret_cast<intptr_t>(aAccessible);
+  if (aAccessible->IsProxy()) {
+    DocProxyAccessibleWrap* doc =
+      static_cast<AccessibleWrap*>(aAccessible)->DocProxyWrapper();
+    doc->AddID(id, static_cast<AccessibleWrap*>(aAccessible));
+  }
+
+  return id;
 #endif
 }
 
