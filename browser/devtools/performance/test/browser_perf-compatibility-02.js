@@ -3,38 +3,39 @@
 
 /**
  * Tests that the recording model is populated correctly when using timeline
- * and memory actor mocks, and that the correct button/overview displays are shown.
+ * and memory actor mocks, and the correct views are shown.
  */
 
 const WAIT_TIME = 1000;
 
 let test = Task.async(function*() {
   let { target, panel, toolbox } = yield initPerformance(SIMPLE_URL, "performance", {
-    TEST_PERFORMANCE_LEGACY_FRONT: true
+    TEST_MOCK_MEMORY_ACTOR: true,
+    TEST_MOCK_TIMELINE_ACTOR: true
   });
   Services.prefs.setBoolPref(MEMORY_PREF, true);
-  let { EVENTS, $, gFront: front, PerformanceController, PerformanceView, DetailsView, WaterfallView } = panel.panelWin;
+  let { EVENTS, $, gFront, PerformanceController, PerformanceView, DetailsView, JsCallTreeView } = panel.panelWin;
 
-  ok(front.LEGACY_FRONT, true, "Using legacy front");
-  is(front.traits.features.withMarkers, true, "traits.features.withMarkers is true.");
-  is(front.traits.features.withTicks, true, "traits.features.withTicks is true.");
-  is(front.traits.features.withMemory, false, "traits.features.withMemory is false.");
-  is(front.traits.features.withAllocations, false, "traits.features.withAllocations is false.");
+  let { memory: memorySupport, timeline: timelineSupport } = gFront.getActorSupport();
+  ok(!memorySupport, "memory should be mocked.");
+  ok(!timelineSupport, "timeline should be mocked.");
 
-  yield startRecording(panel);
-  yield busyWait(100);
-  yield waitUntil(() => PerformanceController.getCurrentRecording().getTicks().length);
-  yield waitUntil(() => PerformanceController.getCurrentRecording().getMarkers().length);
-  yield stopRecording(panel);
+  yield startRecording(panel, { waitForOverview: false });
+  busyWait(WAIT_TIME); // allow the profiler module to sample some cpu activity
+  yield stopRecording(panel, { waitForOverview: false });
 
   let {
-    label, duration, allocations, profile
+    label, duration, markers, frames, memory, ticks, allocations, profile
   } = PerformanceController.getCurrentRecording().getAllData();
 
   is(label, "", "Empty label for mock.");
   is(typeof duration, "number", "duration is a number");
   ok(duration > 0, "duration is not 0");
 
+  isEmptyArray(markers, "markers");
+  isEmptyArray(frames, "frames");
+  isEmptyArray(memory, "memory");
+  isEmptyArray(ticks, "ticks");
   isEmptyArray(allocations.sites, "allocations.sites");
   isEmptyArray(allocations.timestamps, "allocations.timestamps");
   isEmptyArray(allocations.frames, "allocations.frames");
@@ -57,22 +58,22 @@ let test = Task.async(function*() {
   ok(sampleCount > 0,
     "At least some samples have been iterated over, checking for root nodes.");
 
-  is($("#overview-pane").hidden, false,
-    "overview pane not hidden when only memory mocked.");
+  is($("#overview-pane").hidden, true,
+    "overview pane hidden when timeline mocked.");
 
-  is($("#select-waterfall-view").hidden, false,
-    "waterfall view button not hidden when memory mocked");
+  is($("#select-waterfall-view").hidden, true,
+    "waterfall view button hidden when timeline mocked");
   is($("#select-js-calltree-view").hidden, false,
-    "jscalltree view button not hidden when memory mocked");
+    "jscalltree view button not hidden when timeline/memory mocked");
   is($("#select-js-flamegraph-view").hidden, false,
-    "jsflamegraph view button not hidden when memory mocked");
+    "jsflamegraph view button not hidden when timeline mocked");
   is($("#select-memory-calltree-view").hidden, true,
     "memorycalltree view button hidden when memory mocked");
   is($("#select-memory-flamegraph-view").hidden, true,
     "memoryflamegraph view button hidden when memory mocked");
 
-  ok(DetailsView.isViewSelected(WaterfallView),
-    "Waterfall view selected by default when memory mocked.");
+  ok(DetailsView.isViewSelected(JsCallTreeView),
+    "JS Call Tree view selected by default when timeline/memory mocked.");
 
   yield teardown(panel);
   finish();

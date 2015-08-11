@@ -18,19 +18,18 @@ let test = Task.async(function*() {
 // Test mock memory
 function *testMockMemory () {
   let { target, panel, toolbox } = yield initPerformance(SIMPLE_URL, "performance", {
-    TEST_PERFORMANCE_LEGACY_FRONT: true,
+    TEST_MOCK_MEMORY_ACTOR: true,
   });
   Services.prefs.setBoolPref(MEMORY_PREF, true);
   Services.prefs.setBoolPref(FRAMERATE_PREF, true);
   Services.prefs.setBoolPref(ALLOCATIONS_PREF, true);
   let { EVENTS, $, gFront, PerformanceController, PerformanceView, DetailsView, WaterfallView } = panel.panelWin;
 
+  let { memory: memorySupport, timeline: timelineSupport } = gFront.getActorSupport();
   yield startRecording(panel, { waitForOverview: false });
   yield waitUntil(() => PerformanceController.getCurrentRecording().getTicks().length);
   yield waitUntil(() => PerformanceController.getCurrentRecording().getMarkers().length);
   yield stopRecording(panel, { waitForOverview: false });
-
-  ok(gFront.LEGACY_FRONT, "using legacy front");
 
   let config = PerformanceController.getCurrentRecording().getConfiguration();
   let {
@@ -76,7 +75,7 @@ function *testMockMemory () {
 // Test mock memory and timeline actor
 function *testMockMemoryAndTimeline() {
   let { target, panel, toolbox } = yield initPerformance(SIMPLE_URL, "performance", {
-    TEST_PERFORMANCE_LEGACY_FRONT: true,
+    TEST_MOCK_MEMORY_ACTOR: true,
     TEST_MOCK_TIMELINE_ACTOR: true,
   });
   Services.prefs.setBoolPref(MEMORY_PREF, true);
@@ -84,6 +83,7 @@ function *testMockMemoryAndTimeline() {
   Services.prefs.setBoolPref(ALLOCATIONS_PREF, true);
   let { EVENTS, $, gFront, PerformanceController, PerformanceView, DetailsView, WaterfallView } = panel.panelWin;
 
+  let { memory: memorySupport, timeline: timelineSupport } = gFront.getActorSupport();
   yield startRecording(panel, { waitForOverview: false });
   yield busyWait(WAIT_TIME);
   yield stopRecording(panel, { waitForOverview: false });

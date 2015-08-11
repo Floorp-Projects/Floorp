@@ -31,12 +31,12 @@ function* spawnTest () {
   yield removeTab(target.tab);
   finish();
 
-  function handler (name, data) {
+  function handler (_, name, _markers) {
     if (name !== "markers") {
       return;
     }
 
-    data.markers.forEach(marker => {
+    _markers.forEach(marker => {
       info(marker.name);
       if (marker.name === "Parse HTML") {
         markers.push(marker);

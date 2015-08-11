@@ -6,6 +6,9 @@
  * for meta nodes when viewing "content only".
  */
 
+const { CATEGORY_MASK } = require("devtools/performance/global");
+const RecordingUtils = require("devtools/performance/recording-utils");
+
 Services.prefs.setBoolPref(INVERT_PREF, false);
 Services.prefs.setBoolPref(PLATFORM_DATA_PREF, false);
 

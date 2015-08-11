@@ -3,66 +3,87 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Cu } = require("chrome");
+const { Cc, Ci, Cu, Cr } = require("chrome");
 const { Task } = require("resource://gre/modules/Task.jsm");
 
 loader.lazyRequireGetter(this, "Services");
 loader.lazyRequireGetter(this, "promise");
+loader.lazyRequireGetter(this, "EventEmitter",
+  "devtools/toolkit/event-emitter");
 loader.lazyRequireGetter(this, "extend",
   "sdk/util/object", true);
 
 loader.lazyRequireGetter(this, "Actors",
-  "devtools/toolkit/performance/legacy/actors");
-loader.lazyRequireGetter(this, "LegacyPerformanceRecording",
-  "devtools/toolkit/performance/legacy/recording", true);
-loader.lazyRequireGetter(this, "importRecording",
-  "devtools/toolkit/performance/legacy/recording", true);
+  "devtools/performance/actors");
+loader.lazyRequireGetter(this, "RecordingModel",
+  "devtools/performance/recording-model", true);
 loader.lazyRequireGetter(this, "normalizePerformanceFeatures",
-  "devtools/toolkit/performance/utils", true);
+  "devtools/performance/recording-utils", true);
 loader.lazyRequireGetter(this, "DevToolsUtils",
   "devtools/toolkit/DevToolsUtils");
-loader.lazyRequireGetter(this, "events",
-  "sdk/event/core");
-loader.lazyRequireGetter(this, "EventTarget",
-  "sdk/event/target", true);
-loader.lazyRequireGetter(this, "Class",
-  "sdk/core/heritage", true);
+
+loader.lazyImporter(this, "gDevTools",
+  "resource:///modules/devtools/gDevTools.jsm");
 
 /**
- * A connection to underlying actors (profiler, framerate, etc.)
- * shared by all tools in a target.
+ * A cache of all PerformanceFront instances.
+ * The keys are Target objects.
  */
-const LegacyPerformanceFront = Class({
-  extends: EventTarget,
+let PerformanceFronts = new WeakMap();
 
-  LEGACY_FRONT: true,
+/**
+ * Instantiates a shared PerformanceFront for the specified target.
+ * Consumers must yield on `open` to make sure the connection is established.
+ *
+ * @param Target target
+ *        The target owning this connection.
+ * @return PerformanceFront
+ *         The pseudofront for all the underlying actors.
+ */
+PerformanceFronts.forTarget = function(target) {
+  if (this.has(target)) {
+    return this.get(target);
+  }
 
-  traits: {
-    features: {
-      withMarkers: true,
-      withTicks: true,
-      withMemory: false,
-      withAllocations: false,
-      withJITOptimizations: false,
-    },
-  },
+  let instance = new PerformanceFront(target);
+  this.set(target, instance);
+  return instance;
+};
 
-  initialize: function (target) {
-    let { form, client } = target;
-    this._target = target;
-    this._form = form;
-    this._client = client;
-    this._pendingConsoleRecordings = [];
-    this._sitesPullTimeout = 0;
-    this._recordings = [];
+/**
+ * A connection to underlying actors (profiler, memory, framerate, etc.)
+ * shared by all tools in a target.
+ *
+ * Use `PerformanceFronts.forTarget` to make sure you get the same
+ * instance every time, and the `PerformanceFront` to start/stop recordings.
+ *
+ * @param Target target
+ *        The target owning this connection.
+ */
+function PerformanceFront (target) {
+  EventEmitter.decorate(this);
 
-    this._pipeToFront = this._pipeToFront.bind(this);
-    this._onTimelineData = this._onTimelineData.bind(this);
-    this._onConsoleProfileStart = this._onConsoleProfileStart.bind(this);
-    this._onConsoleProfileStop = this._onConsoleProfileStop.bind(this);
-    this._onProfilerStatus = this._onProfilerStatus.bind(this);
-    this._onProfilerUnexpectedlyStopped = this._onProfilerUnexpectedlyStopped.bind(this);
-  },
+  this._target = target;
+  this._client = this._target.client;
+  this._pendingConsoleRecordings = [];
+  this._sitesPullTimeout = 0;
+  this._recordings = [];
+
+  this._pipeToFront = this._pipeToFront.bind(this);
+  this._onTimelineData = this._onTimelineData.bind(this);
+  this._onConsoleProfileStart = this._onConsoleProfileStart.bind(this);
+  this._onConsoleProfileEnd = this._onConsoleProfileEnd.bind(this);
+  this._onProfilerStatus = this._onProfilerStatus.bind(this);
+  this._onProfilerUnexpectedlyStopped = this._onProfilerUnexpectedlyStopped.bind(this);
+
+  Services.obs.notifyObservers(null, "performance-tools-connection-created", null);
+}
+
+PerformanceFront.prototype = {
+
+  // Properties set based off of server actor support
+  _memorySupported: true,
+  _timelineSupported: true,
 
   /**
    * Initializes a connection to the profiler and other miscellaneous actors.
@@ -71,7 +92,7 @@ const LegacyPerformanceFront = Class({
    * @return object
    *         A promise that is resolved once the connection is established.
    */
-  connect: Task.async(function*() {
+  open: Task.async(function*() {
     if (this._connecting) {
       return this._connecting.promise;
     }
@@ -80,14 +101,18 @@ const LegacyPerformanceFront = Class({
     // other attempts to open the connection use the same resolution promise
     this._connecting = promise.defer();
 
-    // Sets `this._profiler`, `this._timeline`.
-    // Only initialize the timeline fronts if the respective actors
+    // Local debugging needs to make the target remote.
+    yield this._target.makeRemote();
+
+    // Sets `this._profiler`, `this._timeline` and `this._memory`.
+    // Only initialize the timeline and memory fronts if the respective actors
     // are available. Older Gecko versions don't have existing implementations,
     // in which case all the methods we need can be easily mocked.
     yield this._connectActors();
     yield this._registerListeners();
 
     this._connecting.resolve();
+    Services.obs.notifyObservers(null, "performance-tools-connection-opened", null);
   }),
 
   /**
@@ -106,9 +131,9 @@ const LegacyPerformanceFront = Class({
     this._connecting = null;
     this._profiler = null;
     this._timeline = null;
+    this._memory = null;
+    this._target = null;
     this._client = null;
-    this._form = null;
-    this._target = this._target;
   }),
 
   /**
@@ -116,17 +141,20 @@ const LegacyPerformanceFront = Class({
    * found in ./actors.js.
    */
   _connectActors: Task.async(function*() {
-    this._profiler = new Actors.LegacyProfilerFront(this._target);
-    this._timeline = new Actors.LegacyTimelineFront(this._target);
+    this._profiler = new Actors.ProfilerFront(this._target);
+    this._memory = new Actors.MemoryFront(this._target);
+    this._timeline = new Actors.TimelineFront(this._target);
 
     yield promise.all([
       this._profiler.connect(),
+      this._memory.connect(),
       this._timeline.connect()
     ]);
 
-    // If mocked timeline, update the traits
-    this.traits.features.withMarkers = !this._timeline.IS_MOCK;
-    this.traits.features.withTicks = !this._timeline.IS_MOCK;
+    // Expose server support status of underlying actors
+    // after connecting.
+    this._memorySupported = !this._memory.IS_MOCK;
+    this._timelineSupported = !this._timeline.IS_MOCK;
   }),
 
   /**
@@ -135,9 +163,12 @@ const LegacyPerformanceFront = Class({
    */
   _registerListeners: function () {
     this._timeline.on("timeline-data", this._onTimelineData);
+    this._memory.on("timeline-data", this._onTimelineData);
     this._profiler.on("console-profile-start", this._onConsoleProfileStart);
-    this._profiler.on("console-profile-stop", this._onConsoleProfileStop);
+    this._profiler.on("console-profile-end", this._onConsoleProfileEnd);
     this._profiler.on("profiler-stopped", this._onProfilerUnexpectedlyStopped);
+    this._profiler.on("profiler-already-active", this._pipeToFront);
+    this._profiler.on("profiler-activated", this._pipeToFront);
     this._profiler.on("profiler-status", this._onProfilerStatus);
   },
 
@@ -146,9 +177,12 @@ const LegacyPerformanceFront = Class({
    */
   _unregisterListeners: function () {
     this._timeline.off("timeline-data", this._onTimelineData);
+    this._memory.off("timeline-data", this._onTimelineData);
     this._profiler.off("console-profile-start", this._onConsoleProfileStart);
-    this._profiler.off("console-profile-stop", this._onConsoleProfileStop);
+    this._profiler.off("console-profile-end", this._onConsoleProfileEnd);
     this._profiler.off("profiler-stopped", this._onProfilerUnexpectedlyStopped);
+    this._profiler.off("profiler-already-active", this._pipeToFront);
+    this._profiler.off("profiler-activated", this._pipeToFront);
     this._profiler.off("profiler-status", this._onProfilerStatus);
   },
 
@@ -159,6 +193,7 @@ const LegacyPerformanceFront = Class({
     yield promise.all([
       this._profiler.destroy(),
       this._timeline.destroy(),
+      this._memory.destroy()
     ]);
   }),
 
@@ -179,9 +214,13 @@ const LegacyPerformanceFront = Class({
       return;
     }
 
-    events.emit(this, "console-profile-start");
+    // Ensure the performance front is set up and ready.
+    // Slight performance overhead for this, should research some more.
+    // This is to ensure that there is a front to receive the events for
+    // the console profiles.
+    yield gDevTools.getToolbox(this._target).loadTool("performance");
 
-    yield this.startRecording(extend({}, getLegacyPerformanceRecordingPrefs(), {
+    let model = yield this.startRecording(extend(getRecordingModelPrefs(), {
       console: true,
       label: profileLabel
     }));
@@ -196,7 +235,7 @@ const LegacyPerformanceFront = Class({
    *        The time (in milliseconds) when the call was made, relative to when
    *        the nsIProfiler module was started.
    */
-  _onConsoleProfileStop: Task.async(function *(_, data) {
+  _onConsoleProfileEnd: Task.async(function *(_, data) {
     // If no data, abort; can occur if profiler isn't running and we get a surprise
     // call to console.profileEnd()
     if (!data) {
@@ -241,13 +280,15 @@ const LegacyPerformanceFront = Class({
    * Called whenever there is timeline data of any of the following types:
    * - markers
    * - frames
+   * - memory
    * - ticks
+   * - allocations
    *
    * Populate our internal store of recordings for all currently recording sessions.
    */
   _onTimelineData: function (_, ...data) {
     this._recordings.forEach(e => e._addTimelineData.apply(e, data));
-    events.emit(this, "timeline-data", ...data);
+    this.emit("timeline-data", ...data);
   },
 
   /**
@@ -256,12 +297,15 @@ const LegacyPerformanceFront = Class({
   _onProfilerStatus: function (_, data) {
     // If no data emitted (whether from an older actor being destroyed
     // from a previous test, or the server does not support it), just ignore.
-    if (!data || data.position === void 0) {
+    if (!data) {
       return;
     }
-
-    this._currentBufferStatus = data;
-    events.emit(this, "profiler-status", data);
+    // Check for a value of buffer status (`position`) to see if the server
+    // supports buffer status -- apply to the recording models if so.
+    if (data.position !== void 0) {
+      this._recordings.forEach(e => e._addBufferStatusData.call(e, data));
+    }
+    this.emit("profiler-status", data);
   },
 
   /**
@@ -274,20 +318,24 @@ const LegacyPerformanceFront = Class({
    *         A promise that is resolved once recording has started.
    */
   startRecording: Task.async(function*(options = {}) {
-    let model = new LegacyPerformanceRecording(normalizePerformanceFeatures(options, this.traits.features));
+    let model = new RecordingModel(normalizePerformanceFeatures(options, this.getActorSupport()));
+
+    this.emit("recording-starting", model);
 
     // All actors are started asynchronously over the remote debugging protocol.
     // Get the corresponding start times from each one of them.
-    // The timeline actors are target-dependent, so start those as well,
+    // The timeline and memory actors are target-dependent, so start those as well,
     // even though these are mocked in older Geckos (FF < 35)
     let profilerStart = this._profiler.start(options);
     let timelineStart = this._timeline.start(options);
+    let memoryStart = this._memory.start(options);
 
     let { startTime, position, generation, totalSize } = yield profilerStart;
     let timelineStartTime = yield timelineStart;
+    let memoryStartTime = yield memoryStart;
 
     let data = {
-      profilerStartTime: startTime, timelineStartTime,
+      profilerStartTime: startTime, timelineStartTime, memoryStartTime,
       generation, position, totalSize
     };
 
@@ -296,20 +344,20 @@ const LegacyPerformanceFront = Class({
     model._populate(data);
     this._recordings.push(model);
 
-    events.emit(this, "recording-started", model);
+    this.emit("recording-started", model);
     return model;
   }),
 
   /**
-   * Manually ends the recording session for the corresponding LegacyPerformanceRecording.
+   * Manually ends the recording session for the corresponding RecordingModel.
    *
-   * @param LegacyPerformanceRecording model
-   *        The corresponding LegacyPerformanceRecording that belongs to the recording session wished to stop.
-   * @return LegacyPerformanceRecording
+   * @param RecordingModel model
+   *        The corresponding RecordingModel that belongs to the recording session wished to stop.
+   * @return RecordingModel
    *         Returns the same model, populated with the profiling data.
    */
   stopRecording: Task.async(function*(model) {
-    // If model isn't in the LegacyPerformanceFront internal store,
+    // If model isn't in the PerformanceFront internal store,
     // then do nothing.
     if (this._recordings.indexOf(model) === -1) {
       return;
@@ -320,12 +368,12 @@ const LegacyPerformanceFront = Class({
     // the recording can be considered "completed".
     let endTime = Date.now();
     model._onStoppingRecording(endTime);
-    events.emit(this, "recording-stopping", model);
+    this.emit("recording-stopping", model);
 
     // Currently there are two ways profiles stop recording. Either manually in the
     // performance tool, or via console.profileEnd. Once a recording is done,
     // we want to deliver the model to the performance tool (either as a return
-    // from the LegacyPerformanceFront or via `console-profile-stop` event) and then
+    // from the PerformanceFront or via `console-profile-end` event) and then
     // remove it from the internal store.
     //
     // In the case where a console.profile is generated via the console (so the tools are
@@ -335,42 +383,46 @@ const LegacyPerformanceFront = Class({
     let config = model.getConfiguration();
     let startTime = model.getProfilerStartTime();
     let profilerData = yield this._profiler.getProfile({ startTime });
+    let memoryEndTime = Date.now();
     let timelineEndTime = Date.now();
 
     // Only if there are no more sessions recording do we stop
-    // the underlying timeline actors. If we're still recording,
-    // juse use Date.now() for the timeline end times, as those
+    // the underlying memory and timeline actors. If we're still recording,
+    // juse use Date.now() for the memory and timeline end times, as those
     // are only used in tests.
     if (!this.isRecording()) {
       // This doesn't stop the profiler, just turns off polling for
-      // events, and also turns off events on timeline actors.
+      // events, and also turns off events on memory/timeline actors.
       yield this._profiler.stop();
+      memoryEndTime = yield this._memory.stop(config);
       timelineEndTime = yield this._timeline.stop(config);
     }
 
-    // Set the results on the LegacyPerformanceRecording itself.
+    // Set the results on the RecordingModel itself.
     model._onStopRecording({
       // Data available only at the end of a recording.
       profile: profilerData.profile,
 
       // End times for all the actors.
       profilerEndTime: profilerData.currentTime,
-      timelineEndTime: timelineEndTime
+      timelineEndTime: timelineEndTime,
+      memoryEndTime: memoryEndTime
     });
 
-    events.emit(this, "recording-stopped", model);
+    this.emit("recording-stopped", model);
     return model;
   }),
 
   /**
-   * Creates a recording object when given a nsILocalFile.
-   *
-   * @param {nsILocalFile} file
-   *        The file to import the data from.
-   * @return {Promise<LegacyPerformanceRecording>}
+   * Returns an object indicating what server actors are available and
+   * initialized. A falsy value indicates that the server does not support
+   * that feature, or that mock actors were explicitly requested (tests).
    */
-  importRecording: function (file) {
-    return importRecording(file);
+  getActorSupport: function () {
+    return {
+      memory: this._memorySupported,
+      timeline: this._timelineSupported
+    };
   },
 
   /**
@@ -384,42 +436,11 @@ const LegacyPerformanceFront = Class({
   },
 
   /**
-   * Pass in a PerformanceRecording and get a normalized value from 0 to 1 of how much
-   * of this recording's lifetime remains without being overwritten.
-   *
-   * @param {PerformanceRecording} recording
-   * @return {number?}
-   */
-  getBufferUsageForRecording: function (recording) {
-    if (!recording.isRecording() || !this._currentBufferStatus) {
-      return null;
-    }
-    let { position: currentPosition, totalSize, generation: currentGeneration } = this._currentBufferStatus;
-    let { position: origPosition, generation: origGeneration } = recording.getStartingBufferStatus();
-
-    let normalizedCurrent = (totalSize * (currentGeneration - origGeneration)) + currentPosition;
-    let percent = (normalizedCurrent - origPosition) / totalSize;
-    return percent > 1 ? 1 : percent;
-  },
-
-  /**
-   * Returns the configurations set on underlying components, used in tests.
-   * Returns an object with `probability`, `maxLogLength` for allocations, and
-   * `entries` and `interval` for profiler.
-   *
-   * @return {object}
-   */
-  getConfiguration: Task.async(function *() {
-    let profilerConfig = yield this._request("profiler", "getStartOptions");
-    return profilerConfig;
-  }),
-
-  /**
    * An event from an underlying actor that we just want
    * to pipe to the front itself.
    */
   _pipeToFront: function (eventName, ...args) {
-    events.emit(this, eventName, ...args);
+    this.emit(eventName, ...args);
   },
 
   /**
@@ -428,30 +449,19 @@ const LegacyPerformanceFront = Class({
    */
   _request: function (actorName, method, ...args) {
     if (!DevToolsUtils.testing) {
-      throw new Error("LegacyPerformanceFront._request may only be used in tests.");
+      throw new Error("PerformanceFront._request may only be used in tests.");
     }
     let actor = this[`_${actorName}`];
     return actor[method].apply(actor, args);
   },
 
-  /**
-   * Sets how often the "profiler-status" event should be emitted.
-   * Used in tests.
-   */
-  setProfilerStatusInterval: function (n) {
-    if (this._profiler._poller) {
-      this._profiler._poller._wait = n;
-    }
-    this._profiler._PROFILER_CHECK_TIMER = n;
-  },
-
-  toString: () => "[object LegacyPerformanceFront]"
-});
+  toString: () => "[object PerformanceFront]"
+};
 
 /**
- * Creates an object of configurations based off of preferences for a LegacyPerformanceRecording.
+ * Creates an object of configurations based off of preferences for a RecordingModel.
  */
-function getLegacyPerformanceRecordingPrefs () {
+function getRecordingModelPrefs () {
   return {
     withMarkers: true,
     withMemory: Services.prefs.getBoolPref("devtools.performance.ui.enable-memory"),
@@ -463,4 +473,5 @@ function getLegacyPerformanceRecordingPrefs () {
   };
 }
 
-exports.LegacyPerformanceFront = LegacyPerformanceFront;
+exports.getPerformanceFront = t => PerformanceFronts.forTarget(t);
+exports.PerformanceFront = PerformanceFront;

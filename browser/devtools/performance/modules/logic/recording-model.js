@@ -7,16 +7,16 @@ const { Cc, Ci, Cu, Cr } = require("chrome");
 const { Task } = require("resource://gre/modules/Task.jsm");
 
 loader.lazyRequireGetter(this, "PerformanceIO",
-  "devtools/toolkit/performance/io");
+  "devtools/performance/io", true);
 loader.lazyRequireGetter(this, "RecordingUtils",
-  "devtools/toolkit/performance/utils");
+  "devtools/performance/recording-utils");
 
 /**
  * Model for a wholistic profile, containing the duration, profiling data,
  * frames data, timeline (marker, tick, memory) data, and methods to mark
  * a recording as 'in progress' or 'finished'.
  */
-const LegacyPerformanceRecording = function (options={}) {
+const RecordingModel = function (options={}) {
   this._label = options.label || "";
   this._console = options.console || false;
 
@@ -33,7 +33,7 @@ const LegacyPerformanceRecording = function (options={}) {
   };
 };
 
-LegacyPerformanceRecording.prototype = {
+RecordingModel.prototype = {
   // Private fields, only needed when a recording is started or stopped.
   _console: false,
   _imported: false,
@@ -43,7 +43,7 @@ LegacyPerformanceRecording.prototype = {
   _timelineStartTime: 0,
   _memoryStartTime: 0,
   _configuration: {},
-  _startingBufferStatus: null,
+  _originalBufferStatus: null,
   _bufferPercent: null,
 
   // Serializable fields, necessary and sufficient for import and export.
@@ -102,7 +102,7 @@ LegacyPerformanceRecording.prototype = {
     this._profilerStartTime = info.profilerStartTime;
     this._timelineStartTime = info.timelineStartTime;
     this._memoryStartTime = info.memoryStartTime;
-    this._startingBufferStatus = {
+    this._originalBufferStatus = {
       position: info.position,
       totalSize: info.totalSize,
       generation: info.generation
@@ -293,19 +293,29 @@ LegacyPerformanceRecording.prototype = {
   },
 
   /**
-   * Returns a boolean indicating if this recording is no longer recording, but
-   * not yet completed.
+   * Returns the percent (value between 0 and 1) of buffer used in this
+   * recording. Returns `null` for recordings that are no longer recording.
    */
-  isFinalizing: function () {
-    return !this.isRecording() && !this.isCompleted();
+  getBufferUsage: function () {
+    return this.isRecording() ? this._bufferPercent : null;
   },
 
   /**
-   * Returns the position, generation and totalSize of the profiler
-   * when this recording was started.
+   * Fired whenever the PerformanceFront has new buffer data.
    */
-  getStartingBufferStatus: function () {
-    return this._startingBufferStatus;
+  _addBufferStatusData: function (bufferStatus) {
+    // If this model isn't currently recording, or if the server does not
+    // support buffer status (or if this fires after actors are being destroyed),
+    // ignore this information.
+    if (!bufferStatus || !this.isRecording()) {
+      return;
+    }
+    let { position: currentPosition, totalSize, generation: currentGeneration } = bufferStatus;
+    let { position: origPosition, generation: origGeneration } = this._originalBufferStatus;
+
+    let normalizedCurrent = (totalSize * (currentGeneration - origGeneration)) + currentPosition;
+    let percent = (normalizedCurrent - origPosition) / totalSize;
+    this._bufferPercent = percent > 1 ? 1 : percent;
   },
 
   /**
@@ -327,14 +337,25 @@ LegacyPerformanceRecording.prototype = {
         if (!config.withMarkers) { break; }
         let [markers] = data;
         RecordingUtils.offsetMarkerTimes(markers, this._timelineStartTime);
-        RecordingUtils.pushAll(this._markers, markers);
+        pushAll(this._markers, markers);
         break;
       }
       // Accumulate stack frames into an array.
       case "frames": {
         if (!config.withMarkers) { break; }
         let [, frames] = data;
-        RecordingUtils.pushAll(this._frames, frames);
+        pushAll(this._frames, frames);
+        break;
+      }
+      // Accumulate memory measurements into an array. Furthermore, the timestamp
+      // does not have a zero epoch, so offset it by the actor's start time.
+      case "memory": {
+        if (!config.withMemory) { break; }
+        let [currentTime, measurement] = data;
+        this._memory.push({
+          delta: currentTime - this._timelineStartTime,
+          value: measurement.total / 1024 / 1024
+        });
         break;
       }
       // Save the accumulated refresh driver ticks.
@@ -344,10 +365,47 @@ LegacyPerformanceRecording.prototype = {
         this._ticks = timestamps;
         break;
       }
+      // Accumulate allocation sites into an array. Furthermore, the timestamps
+      // do not have a zero epoch, and are microseconds instead of milliseconds,
+      // so offset all of them by the start time, also converting from µs to ms.
+      case "allocations": {
+        if (!config.withAllocations) { break; }
+        let [{
+          allocations: sites,
+          allocationsTimestamps: timestamps,
+          frames,
+        }] = data;
+
+        let timeOffset = this._memoryStartTime;
+        RecordingUtils.offsetAndScaleTimestamps(timestamps, timeOffset);
+        pushAll(this._allocations.sites, sites);
+        pushAll(this._allocations.timestamps, timestamps);
+        pushAll(this._allocations.frames, frames);
+        break;
+      }
     }
   },
 
-  toString: () => "[object LegacyPerformanceRecording]"
+  toString: () => "[object RecordingModel]"
 };
 
-exports.LegacyPerformanceRecording = LegacyPerformanceRecording;
+/**
+ * Push all elements of src array into dest array. Marker data will come in small chunks
+ * and add up over time, whereas allocation arrays can be > 500000 elements (and
+ * Function.prototype.apply throws if applying more than 500000 elements, which
+ * is what spawned this separate function), so iterate one element at a time.
+ * @see bug 1166823
+ * @see http://jsperf.com/concat-large-arrays
+ * @see http://jsperf.com/concat-large-arrays/2
+ *
+ * @param {Array} dest
+ * @param {Array} src
+ */
+function pushAll (dest, src) {
+  let length = src.length;
+  for (let i = 0; i < length; i++) {
+    dest.push(src[i]);
+  }
+}
+
+exports.RecordingModel = RecordingModel;

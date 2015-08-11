@@ -11,6 +11,8 @@ const { Task } = require("resource://gre/modules/Task.jsm");
 loader.lazyRequireGetter(this, "promise");
 loader.lazyRequireGetter(this, "EventEmitter",
   "devtools/toolkit/event-emitter");
+loader.lazyRequireGetter(this, "PerformanceFront",
+  "devtools/performance/front", true);
 
 function PerformancePanel(iframeWindow, toolbox) {
   this.panelWin = iframeWindow;
@@ -30,15 +32,9 @@ PerformancePanel.prototype = {
    *         completes opening.
    */
   open: Task.async(function*() {
-    if (this._opening) {
-      return this._opening;
-    }
-    let deferred = promise.defer();
-    this._opening = deferred.promise;
-
     this.panelWin.gToolbox = this._toolbox;
     this.panelWin.gTarget = this.target;
-    this._checkRecordingStatus = this._checkRecordingStatus.bind(this);
+    this._onRecordingStartOrStop = this._onRecordingStartOrStop.bind(this);
 
     // Actor is already created in the toolbox; reuse
     // the same front, and the toolbox will also initialize the front,
@@ -54,21 +50,14 @@ PerformancePanel.prototype = {
     }
 
     this.panelWin.gFront = front;
-    let { PerformanceController, EVENTS } = this.panelWin;
-    PerformanceController.on(EVENTS.NEW_RECORDING, this._checkRecordingStatus);
-    PerformanceController.on(EVENTS.RECORDING_STATE_CHANGE, this._checkRecordingStatus);
-    yield this.panelWin.startupPerformance();
+    this.panelWin.gFront.on("recording-started", this._onRecordingStartOrStop);
+    this.panelWin.gFront.on("recording-stopped", this._onRecordingStartOrStop);
 
-    // Fire this once incase we have an in-progress recording (console profile)
-    // that caused this start up, and no state change yet, so we can highlight the
-    // tab if we need.
-    this._checkRecordingStatus();
+    yield this.panelWin.startupPerformance();
 
     this.isReady = true;
     this.emit("ready");
-
-    deferred.resolve(this);
-    return this._opening;
+    return this;
   }),
 
   // DevToolPanel API
@@ -83,16 +72,16 @@ PerformancePanel.prototype = {
       return;
     }
 
-    let { PerformanceController, EVENTS } = this.panelWin;
-    PerformanceController.off(EVENTS.NEW_RECORDING, this._checkRecordingStatus);
-    PerformanceController.off(EVENTS.RECORDING_STATE_CHANGE, this._checkRecordingStatus);
+    this.panelWin.gFront.off("recording-started", this._onRecordingStartOrStop);
+    this.panelWin.gFront.off("recording-stopped", this._onRecordingStartOrStop);
     yield this.panelWin.shutdownPerformance();
     this.emit("destroyed");
     this._destroyed = true;
   }),
 
-  _checkRecordingStatus: function () {
-    if (this.panelWin.PerformanceController.isRecording()) {
+  _onRecordingStartOrStop: function () {
+    let front = this.panelWin.gFront;
+    if (front.isRecording()) {
       this._toolbox.highlightTool("performance");
     } else {
       this._toolbox.unhighlightTool("performance");

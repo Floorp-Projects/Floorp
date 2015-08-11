@@ -5,6 +5,7 @@
  * Tests that the call tree up/down events work for js calltree and memory calltree.
  */
 const { ThreadNode } = require("devtools/performance/tree-model");
+const RecordingUtils = require("devtools/performance/recording-utils")
 
 function* spawnTest() {
   let focus = 0;
