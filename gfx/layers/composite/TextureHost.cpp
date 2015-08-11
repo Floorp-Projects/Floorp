@@ -131,7 +131,10 @@ TextureHost::SendDeleteIPDLActor(PTextureParent* actor)
 TextureHost*
 TextureHost::AsTextureHost(PTextureParent* actor)
 {
-  return actor? static_cast<TextureParent*>(actor)->mTextureHost : nullptr;
+  if (!actor) {
+    return nullptr;
+  }
+  return static_cast<TextureParent*>(actor)->mTextureHost;
 }
 
 PTextureParent*
