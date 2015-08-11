@@ -9,38 +9,6 @@
         <item name="android:layout_width">@dimen/new_tablet_browser_toolbar_menu_item_width</item>
     </style>
 
-    <!-- Note: this style is for the visible and expanded forward button.  We translate/hide
-         the forward button in code - see BrowserToolbarNewTablet.animateForwardButton. -->
-    <style name="UrlBar.ImageButton.Forward">
-        <item name="android:contentDescription">@string/forward</item>
-        <item name="android:layout_height">match_parent</item>
-        <item name="android:paddingTop">0dp</item>
-        <item name="android:paddingBottom">0dp</item>
-        <item name="android:layout_marginTop">11.5dp</item>
-        <item name="android:layout_marginBottom">11.5dp</item>
-        <item name="android:layout_gravity">center_vertical</item>
-        <item name="android:layout_centerVertical">true</item>
-        <item name="android:src">@drawable/new_tablet_ic_menu_forward</item>
-        <item name="android:background">@drawable/new_tablet_url_bar_nav_button</item>
-
-        <!-- Start with the button hidden -->
-        <item name="android:alpha">0</item>
-
-        <!-- The visible area of the forward button is a nav_button_width and the
-             non-visible area slides halfway under the back button. This non-visible
-             area is used to ensure the forward button background fully
-             covers the space to the right of the back button. -->
-        <item name="android:layout_width">@dimen/new_tablet_nav_button_width_plus_half</item>
-
-        <!-- (See note above) We left align with back,
-             but only need to hide halfway underneath. -->
-        <item name="android:layout_marginLeft">@dimen/new_tablet_nav_button_width_half</item>
-
-        <!-- We use left padding to center the arrow in the
-             visible area as opposed to the true width. -->
-        <item name="android:paddingLeft">18dp</item>
-    </style>
-
     <style name="UrlBar.ImageButton.TabCount.NewTablet">
         <item name="android:background">@drawable/tabs_count</item>
 
