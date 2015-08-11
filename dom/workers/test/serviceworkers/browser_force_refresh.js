@@ -15,6 +15,7 @@ function forceRefresh() {
 function test() {
   waitForExplicitFinish();
   SpecialPowers.pushPrefEnv({'set': [['dom.serviceWorkers.enabled', true],
+                                     ['dom.serviceWorkers.interception.enabled', true],
                                      ['dom.serviceWorkers.exemptFromPerDomainMax', true],
                                      ['dom.serviceWorkers.testing.enabled', true],
                                      ['dom.caches.enabled', true]]},
