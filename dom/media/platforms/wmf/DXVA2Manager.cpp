@@ -11,6 +11,7 @@
 #include "gfxWindowsPlatform.h"
 #include "D3D9SurfaceImage.h"
 #include "mozilla/layers/D3D11ShareHandleImage.h"
+#include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/Preferences.h"
 #include "mfapi.h"
 #include "MFTDecoder.h"
@@ -40,6 +41,7 @@ namespace mozilla {
 using layers::Image;
 using layers::ImageContainer;
 using layers::D3D9SurfaceImage;
+using layers::D3D9RecycleAllocator;
 using layers::D3D11ShareHandleImage;
 
 class D3D9DXVA2Manager : public DXVA2Manager
@@ -63,6 +65,7 @@ private:
   nsRefPtr<IDirect3D9Ex> mD3D9;
   nsRefPtr<IDirect3DDevice9Ex> mDevice;
   nsRefPtr<IDirect3DDeviceManager9> mDeviceManager;
+  RefPtr<D3D9RecycleAllocator> mTextureClientAllocator;
   UINT32 mResetToken;
 };
 
@@ -164,6 +167,10 @@ D3D9DXVA2Manager::Init()
   mDevice = device;
   mDeviceManager = deviceManager;
 
+  mTextureClientAllocator = new D3D9RecycleAllocator(layers::ImageBridgeChild::GetSingleton(),
+                                                     mDevice);
+  mTextureClientAllocator->SetMaxPoolSize(5);
+
   return S_OK;
 }
 
@@ -190,7 +197,7 @@ D3D9DXVA2Manager::CopyToImage(IMFSample* aSample,
                "Wrong format?");
 
   D3D9SurfaceImage* videoImage = static_cast<D3D9SurfaceImage*>(image.get());
-  hr = videoImage->SetData(D3D9SurfaceImage::Data(surface, aRegion));
+  hr = videoImage->SetData(D3D9SurfaceImage::Data(surface, aRegion, mTextureClientAllocator));
 
   image.forget(aOutImage);
 
