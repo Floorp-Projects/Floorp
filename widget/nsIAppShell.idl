@@ -15,7 +15,7 @@ template <class T> struct already_AddRefed;
  * Interface for the native event system layer.  This interface is designed
  * to be used on the main application thread only.
  */
-[uuid(3d09973e-3975-4fd4-b103-276300cc8437)]
+[uuid(7cd5c71d-223b-4afe-931d-5eedb1f2b01f)]
 interface nsIAppShell : nsISupports
 {
   /**
@@ -73,26 +73,4 @@ interface nsIAppShell : nsISupports
    * The current event loop nesting level.
    */
   readonly attribute unsigned long eventloopNestingLevel;
-  
-%{ C++
-  /**
-   * Add a "synchronous section", in the form of an nsIRunnable run once the
-   * event loop has reached a "stable state". |runnable| must not cause any
-   * queued events to be processed (i.e. must not spin the event loop). We've
-   * reached a stable state when the currently executing task/event has
-   * finished, see:
-   * http://www.whatwg.org/specs/web-apps/current-work/multipage/webappapis.html#synchronous-section
-   * In practice this runs aRunnable once the currently executing event
-   * finishes. If called multiple times per task/event, all the runnables will
-   * be executed, in the order in which runInStableState() was called.
-   */
-  virtual void RunInStableState(already_AddRefed<nsIRunnable> runnable) = 0;
-%}
-
-  /**
-   * Run the given runnable before the next iteration of the event loop (this
-   * includes native events too). If a nested loop is spawned within the current
-   * event then the runnable will not be run until that loop has terminated.
-   */
-  void runBeforeNextEvent(in nsIRunnable runnable);
 };

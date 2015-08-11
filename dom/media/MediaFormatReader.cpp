@@ -994,7 +994,7 @@ MediaFormatReader::DecodeDemuxedSamples(TrackType aTrack,
       decoder.mDecoder->Shutdown();
       decoder.mDecoder = nullptr;
       if (sample->mKeyframe) {
-        decoder.mQueuedSamples.MoveElementsFrom(samples);
+        decoder.mQueuedSamples.AppendElements(Move(samples));
         ScheduleUpdate(aTrack);
       } else {
         MOZ_ASSERT(decoder.mTimeThreshold.isNothing());

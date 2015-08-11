@@ -25,7 +25,6 @@ class nsBaseAppShell : public nsIAppShell, public nsIThreadObserver,
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIAPPSHELL
-  void RunInStableState(already_AddRefed<nsIRunnable> runnable) override;
 
   NS_DECL_NSITHREADOBSERVER
   NS_DECL_NSIOBSERVER
@@ -77,44 +76,12 @@ protected:
   uint32_t mEventloopNestingLevel;
 
 private:
-  bool DoProcessNextNativeEvent(bool mayWait, uint32_t recursionDepth);
+  bool DoProcessNextNativeEvent(bool mayWait);
 
   bool DispatchDummyEvent(nsIThread* target);
 
   void IncrementEventloopNestingLevel();
   void DecrementEventloopNestingLevel();
-
-  /**
-   * Runs all synchronous sections which are queued up in mSyncSections.
-   */
-  void RunSyncSectionsInternal(bool stable, uint32_t threadRecursionLevel);
-
-  void RunSyncSections(bool stable, uint32_t threadRecursionLevel)
-  {
-    if (!mSyncSections.IsEmpty()) {
-      RunSyncSectionsInternal(stable, threadRecursionLevel);
-    }
-  }
-
-  void ScheduleSyncSection(already_AddRefed<nsIRunnable> runnable, bool stable);
-
-  struct SyncSection {
-    SyncSection()
-    : mStable(false), mEventloopNestingLevel(0), mThreadRecursionLevel(0)
-    { }
-
-    void Forget(SyncSection* other) {
-      other->mStable = mStable;
-      other->mEventloopNestingLevel = mEventloopNestingLevel;
-      other->mThreadRecursionLevel = mThreadRecursionLevel;
-      other->mRunnable = mRunnable.forget();
-    }
-
-    bool mStable;
-    uint32_t mEventloopNestingLevel;
-    uint32_t mThreadRecursionLevel;
-    nsCOMPtr<nsIRunnable> mRunnable;
-  };
 
   nsCOMPtr<nsIRunnable> mDummyEvent;
   /**
@@ -135,8 +102,6 @@ private:
     eEventloopOther  // innermost native event loop is a native library/plugin etc
   };
   EventloopNestingState mEventloopNestingState;
-  nsTArray<SyncSection> mSyncSections;
-  bool mRunningSyncSections;
   bool mRunning;
   bool mExiting;
   /**

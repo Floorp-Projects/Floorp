@@ -9,7 +9,7 @@
 
 #include "mozilla/Monitor.h"
 #include "mozilla/MozPromise.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/TaskDispatcher.h"
 #include "mozilla/unused.h"
 
@@ -48,10 +48,6 @@ public:
     MOZ_DIAGNOSTIC_ASSERT(aFailureHandling == DontAssertDispatchSuccess || NS_SUCCEEDED(rv));
     unused << rv;
   }
-
-  // DEPRECATED! Do not us, if a flush happens at the same time, this function
-  // can hang and block forever!
-  void SyncDispatch(already_AddRefed<nsIRunnable> aRunnable);
 
   // Puts the queue in a shutdown state and returns immediately. The queue will
   // remain alive at least until all the events are drained, because the Runners
@@ -98,7 +94,7 @@ protected:
     }
   }
 
-  RefPtr<SharedThreadPool> mPool;
+  nsRefPtr<SharedThreadPool> mPool;
 
   // Monitor that protects the queue and mIsRunning;
   Monitor mQueueMonitor;
@@ -171,41 +167,8 @@ protected:
     }
     NS_METHOD Run() override;
   private:
-    RefPtr<TaskQueue> mQueue;
+    nsRefPtr<TaskQueue> mQueue;
   };
-};
-
-class FlushableTaskQueue : public TaskQueue
-{
-public:
-  explicit FlushableTaskQueue(already_AddRefed<SharedThreadPool> aPool) : TaskQueue(Move(aPool)) {}
-  nsresult FlushAndDispatch(already_AddRefed<nsIRunnable> aRunnable);
-  void Flush();
-
-  bool IsDispatchReliable() override { return false; }
-
-private:
-
-  class MOZ_STACK_CLASS AutoSetFlushing
-  {
-  public:
-    explicit AutoSetFlushing(FlushableTaskQueue* aTaskQueue) : mTaskQueue(aTaskQueue)
-    {
-      mTaskQueue->mQueueMonitor.AssertCurrentThreadOwns();
-      mTaskQueue->mIsFlushing = true;
-    }
-    ~AutoSetFlushing()
-    {
-      mTaskQueue->mQueueMonitor.AssertCurrentThreadOwns();
-      mTaskQueue->mIsFlushing = false;
-    }
-
-  private:
-    FlushableTaskQueue* mTaskQueue;
-  };
-
-  void FlushLocked();
-
 };
 
 } // namespace mozilla

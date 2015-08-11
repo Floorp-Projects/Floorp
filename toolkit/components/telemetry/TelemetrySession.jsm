@@ -724,14 +724,6 @@ this.TelemetrySession = Object.freeze({
   observe: function (aSubject, aTopic, aData) {
     return Impl.observe(aSubject, aTopic, aData);
   },
-  /**
-   * The client id send with the telemetry ping.
-   *
-   * @return The client id as string, or null.
-   */
-   get clientID() {
-    return Impl.clientID;
-   },
 });
 
 let Impl = {

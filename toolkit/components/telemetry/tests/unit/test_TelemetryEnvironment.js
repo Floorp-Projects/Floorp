@@ -255,6 +255,7 @@ function checkSettingsSection(data) {
     blocklistEnabled: "boolean",
     e10sEnabled: "boolean",
     telemetryEnabled: "boolean",
+    isInOptoutSample: "boolean",
     locale: "string",
     update: "object",
     userPrefs: "object",

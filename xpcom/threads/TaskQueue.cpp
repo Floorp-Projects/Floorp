@@ -62,7 +62,7 @@ TaskQueue::DispatchLocked(already_AddRefed<nsIRunnable> aRunnable,
   if (mIsRunning) {
     return NS_OK;
   }
-  RefPtr<nsIRunnable> runner(new Runner(this));
+  nsRefPtr<nsIRunnable> runner(new Runner(this));
   nsresult rv = mPool->Dispatch(runner, NS_DISPATCH_NORMAL);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to dispatch runnable to run TaskQueue");
@@ -71,53 +71,6 @@ TaskQueue::DispatchLocked(already_AddRefed<nsIRunnable> aRunnable,
   mIsRunning = true;
 
   return NS_OK;
-}
-
-class TaskQueueSyncRunnable : public nsRunnable {
-public:
-  explicit TaskQueueSyncRunnable(already_AddRefed<nsIRunnable> aRunnable)
-    : mRunnable(aRunnable)
-    , mMonitor("TaskQueueSyncRunnable")
-    , mDone(false)
-  {
-  }
-
-  NS_IMETHOD Run() {
-    nsresult rv = mRunnable->Run();
-    {
-      MonitorAutoLock mon(mMonitor);
-      mDone = true;
-      mon.NotifyAll();
-    }
-    return rv;
-  }
-
-  void WaitUntilDone() {
-    MonitorAutoLock mon(mMonitor);
-    while (!mDone) {
-      mon.Wait();
-    }
-  }
-private:
-  RefPtr<nsIRunnable> mRunnable;
-  Monitor mMonitor;
-  bool mDone;
-};
-
-void
-TaskQueue::SyncDispatch(already_AddRefed<nsIRunnable> aRunnable) {
-  NS_WARNING("TaskQueue::SyncDispatch is dangerous and deprecated. Stop using this!");
-  nsRefPtr<TaskQueueSyncRunnable> task(new TaskQueueSyncRunnable(Move(aRunnable)));
-
-  // Tail dispatchers don't interact nicely with sync dispatch. We require that
-  // nothing is already in the tail dispatcher, and then sidestep it for this
-  // task.
-  MOZ_ASSERT_IF(AbstractThread::GetCurrent(),
-                !AbstractThread::GetCurrent()->TailDispatcher().HasTasksFor(this));
-  nsRefPtr<TaskQueueSyncRunnable> taskRef = task;
-  Dispatch(taskRef.forget(), AssertDispatchSuccess, TailDispatch);
-
-  task->WaitUntilDone();
 }
 
 void
@@ -174,46 +127,6 @@ TaskQueue::BeginShutdown()
   return p;
 }
 
-void
-FlushableTaskQueue::Flush()
-{
-  MonitorAutoLock mon(mQueueMonitor);
-  AutoSetFlushing autoFlush(this);
-  FlushLocked();
-  AwaitIdleLocked();
-}
-
-nsresult
-FlushableTaskQueue::FlushAndDispatch(already_AddRefed<nsIRunnable> aRunnable)
-{
-  MonitorAutoLock mon(mQueueMonitor);
-  AutoSetFlushing autoFlush(this);
-  FlushLocked();
-  nsCOMPtr<nsIRunnable> r = dont_AddRef(aRunnable.take());
-  nsresult rv = DispatchLocked(r.forget(), IgnoreFlushing, AssertDispatchSuccess);
-  NS_ENSURE_SUCCESS(rv, rv);
-  AwaitIdleLocked();
-  return NS_OK;
-}
-
-void
-FlushableTaskQueue::FlushLocked()
-{
-  // Make sure there are no tasks for this queue waiting in the caller's tail
-  // dispatcher.
-  MOZ_ASSERT_IF(AbstractThread::GetCurrent(),
-                !AbstractThread::GetCurrent()->TailDispatcher().HasTasksFor(this));
-
-  mQueueMonitor.AssertCurrentThreadOwns();
-  MOZ_ASSERT(mIsFlushing);
-
-  // Clear the tasks. If this strikes you as awful, stop using a
-  // FlushableTaskQueue.
-  while (!mTasks.empty()) {
-    mTasks.pop();
-  }
-}
-
 bool
 TaskQueue::IsEmpty()
 {
@@ -232,7 +145,7 @@ TaskQueue::IsCurrentThreadIn()
 nsresult
 TaskQueue::Runner::Run()
 {
-  RefPtr<nsIRunnable> event;
+  nsRefPtr<nsIRunnable> event;
   {
     MonitorAutoLock mon(mQueue->mQueueMonitor);
     MOZ_ASSERT(mQueue->mIsRunning);
