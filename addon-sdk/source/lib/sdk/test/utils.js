@@ -13,14 +13,14 @@ const { getTabs, closeTab } = require("../tabs/utils");
 const { windows: getWindows } = require("../window/utils");
 const { close: closeWindow } = require("../window/helpers");
 const { isGenerator } = require("../lang/type");
-const { env } = require("../system/environment");
+
 const { Task } = require("resource://gre/modules/Task.jsm");
 
-const getTestNames = (exports) =>
-  Object.keys(exports).filter(name => /^test/.test(name));
+function getTestNames (exports)
+  Object.keys(exports).filter(name => /^test/.test(name))
 
-const isTestAsync = ({length}) => length > 1;
-const isHelperAsync = ({length}) => length > 2;
+function isTestAsync (fn) fn.length > 1
+function isHelperAsync (fn) fn.length > 2
 
 /*
  * Takes an `exports` object of a test file and a function `beforeFn`
@@ -195,5 +195,3 @@ let cleanUI = function cleanUI() {
   return promise;
 }
 exports.cleanUI = cleanUI;
-
-exports.isTravisCI = ("TRAVIS" in env && "CI" in env);
