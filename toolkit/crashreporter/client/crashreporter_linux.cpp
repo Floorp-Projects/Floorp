@@ -14,6 +14,8 @@
 #include "crashreporter.h"
 #include "crashreporter_gtk_common.h"
 
+#define LABEL_MAX_CHAR_WIDTH 48
+
 using std::string;
 using std::vector;
 
@@ -183,9 +185,12 @@ static void ViewReportClicked(GtkButton* button,
   GtkWidget* scrolled = gtk_scrolled_window_new(0, 0);
   gtk_container_add(GTK_CONTAINER(gtk_dialog_get_content_area(dialog)), scrolled);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled),
-                                 GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
+                                 GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
   gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled),
                                       GTK_SHADOW_IN);
+#if (MOZ_WIDGET_GTK >= 3)
+  gtk_widget_set_vexpand(scrolled, TRUE);
+#endif
 
   GtkWidget* viewReportTextView = gtk_text_view_new();
   gtk_container_add(GTK_CONTAINER(scrolled), viewReportTextView);
@@ -412,7 +417,11 @@ bool UIShowCrashUI(const StringTable& files,
     gtk_label_new(gStrings[ST_CRASHREPORTERDESCRIPTION].c_str());
   gtk_box_pack_start(GTK_BOX(vbox), descriptionLabel, TRUE, TRUE, 0);
   // force the label to line wrap
+#if (MOZ_WIDGET_GTK == 2)
   gtk_widget_set_size_request(descriptionLabel, 400, -1);
+#else
+  gtk_label_set_max_width_chars(GTK_LABEL(descriptionLabel), LABEL_MAX_CHAR_WIDTH);
+#endif
   gtk_label_set_line_wrap(GTK_LABEL(descriptionLabel), TRUE);
   gtk_label_set_selectable(GTK_LABEL(descriptionLabel), TRUE);
   gtk_misc_set_alignment(GTK_MISC(descriptionLabel), 0, 0.5);
@@ -456,6 +465,9 @@ bool UIShowCrashUI(const StringTable& files,
                                  GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
   gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled),
                                       GTK_SHADOW_IN);
+#if (MOZ_WIDGET_GTK >= 3)
+  gtk_scrolled_window_set_min_content_height(GTK_SCROLLED_WINDOW(scrolled), 100);
+#endif
 
   gCommentTextLabel = gtk_label_new(gStrings[ST_COMMENTGRAYTEXT].c_str());
   gCommentText = gtk_text_view_new();
@@ -514,7 +526,11 @@ bool UIShowCrashUI(const StringTable& files,
     gtk_label_new(gStrings[ST_REPORTPRESUBMIT].c_str());
   gtk_box_pack_start(GTK_BOX(progressBox), gProgressLabel, TRUE, TRUE, 0);
   // force the label to line wrap
+#if (MOZ_WIDGET_GTK == 2)
   gtk_widget_set_size_request(gProgressLabel, 400, -1);
+#else
+  gtk_label_set_max_width_chars(GTK_LABEL(gProgressLabel), LABEL_MAX_CHAR_WIDTH);
+#endif
   gtk_label_set_line_wrap(GTK_LABEL(gProgressLabel), TRUE);
 
   GtkWidget* buttonBox = gtk_hbutton_box_new();
