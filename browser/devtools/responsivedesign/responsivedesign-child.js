@@ -113,7 +113,10 @@ function screenshot() {
 }
 
 let WebProgressListener = {
-  onLocationChange: function onLocationChange(aWebProgress) {
+  onLocationChange(webProgress, request, URI, flags) {
+    if (flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) {
+      return;
+    }
     makeScrollbarsFloating();
   },
   QueryInterface: function QueryInterface(aIID) {
