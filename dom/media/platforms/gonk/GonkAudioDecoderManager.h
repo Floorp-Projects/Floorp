@@ -37,6 +37,8 @@ public:
 
   virtual bool HasQueuedSample() override;
 
+  virtual TrackType GetTrackType() override { return TrackType::kAudioTrack; }
+
 private:
   nsresult CreateAudioData(int64_t aStreamOffset,
                               AudioData** aOutData);

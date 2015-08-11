@@ -28,7 +28,7 @@ public:
 
   static bool Link();
 
-  virtual nsresult Init() override;
+  virtual nsRefPtr<InitPromise> Init() override = 0;
   virtual nsresult Input(MediaRawData* aSample) override = 0;
   virtual nsresult Flush() override;
   virtual nsresult Drain() override = 0;
@@ -36,6 +36,7 @@ public:
 
 protected:
   AVFrame*        PrepareFrame();
+  nsresult        InitDecoder();
 
   FlushableTaskQueue* mTaskQueue;
   AVCodecContext* mCodecContext;

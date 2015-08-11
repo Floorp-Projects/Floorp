@@ -167,7 +167,7 @@ GMPAudioDecoder::GMPInitDone(GMPAudioDecoderProxy* aGMP)
   }
 }
 
-nsresult
+nsRefPtr<MediaDataDecoder::InitPromise>
 GMPAudioDecoder::Init()
 {
   MOZ_ASSERT(IsOnGMPThread());
@@ -188,7 +188,8 @@ GMPAudioDecoder::Init()
     NS_ProcessNextEvent(gmpThread, true);
   }
 
-  return mGMP ? NS_OK : NS_ERROR_FAILURE;
+  return mGMP ? InitPromise::CreateAndResolve(TrackInfo::kAudioTrack, __func__)
+              : InitPromise::CreateAndReject(MediaDataDecoder::DecoderFailureReason::INIT_ERROR, __func__);
 }
 
 nsresult

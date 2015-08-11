@@ -231,8 +231,6 @@ StructuredCloneHelper::Write(JSContext* aCx,
   if (!StructuredCloneHelperInternal::Write(aCx, aValue, aTransfer)) {
     aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
   }
-
-  mTransferringPort.Clear();
 }
 
 void
@@ -492,11 +490,6 @@ StructuredCloneHelper::WriteTransferCallback(JSContext* aCx,
     MessagePortBase* port = nullptr;
     nsresult rv = UNWRAP_OBJECT(MessagePort, aObj, port);
     if (NS_SUCCEEDED(rv)) {
-      if (mTransferringPort.Contains(port)) {
-        // No duplicates.
-        return false;
-      }
-
       // We use aExtraData to store the index of this new port identifier.
       *aExtraData = mPortIdentifiers.Length();
       MessagePortIdentifier* identifier = mPortIdentifiers.AppendElement();
@@ -504,8 +497,6 @@ StructuredCloneHelper::WriteTransferCallback(JSContext* aCx,
       if (!port->CloneAndDisentangle(*identifier)) {
         return false;
       }
-
-      mTransferringPort.AppendElement(port);
 
       *aTag = SCTAG_DOM_MAP_MESSAGEPORT;
       *aOwnership = JS::SCTAG_TMO_CUSTOM;

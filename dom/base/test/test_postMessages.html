@@ -142,6 +142,24 @@ function runTests(obj) {
     });
   })
 
+  // no dup transfering
+  .then(function() {
+    if (!obj.transferableObjects) {
+      return;
+    }
+
+    // MessagePort
+    return new Promise(function(r, rr) {
+      var mc = new MessageChannel();
+      obj.send(42, [mc.port1, mc.port1]).then(function(received) {
+        ok(false, "Duplicate ports should throw!");
+      }, function() {
+        ok(true, "Duplicate ports should throw!");
+      })
+      .then(r);
+    });
+  })
+
   // non transfering tests
   .then(function() {
     if (obj.transferableObjects) {

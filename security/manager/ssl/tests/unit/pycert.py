@@ -14,8 +14,8 @@ issuer:<string to use as the issuer common name>
 subject:<string to use as the subject common name>
 [version:<{1,2,3,4}>]
 [validity:<YYYYMMDD-YYYYMMDD|duration in days>]
-[issuerKey:alternate]
-[subjectKey:alternate]
+[issuerKey:<key specification>]
+[subjectKey:<key specification>]
 [extension:<extension name:<extension-specific data>>]
 [...]
 
@@ -42,12 +42,12 @@ specified, it must have exactly one value from the set {1,2,3,4}.
 
 In the future it will be possible to specify other properties of the
 generated certificate (for example, the signature algorithm). For now,
-those fields have reasonable default values. Currently one shared RSA
+those fields have reasonable default values. By default one shared RSA
 key is used for all signatures and subject public key information
-fields. Specifying "issuerKey:alternate" or "subjectKey:alternate"
-causes a different RSA key be used for signing or as the subject public
-key information field, respectively. Other keys are also available -
-see pykey.py.
+fields. Using "issuerKey:<key specification>" or
+"subjectKey:<key specification>" causes a different RSA key be used for
+signing or as the subject public key information field, respectively.
+See pykey.py for the list of available specifications.
 
 The validity period may be specified as either concrete notBefore and
 notAfter values or as a validity period centered around 'now'. For the
@@ -199,8 +199,8 @@ class Certificate:
         self.subject = 'Default Subject'
         self.signatureAlgorithm = 'sha256WithRSAEncryption'
         self.extensions = None
-        self.subjectKey = pykey.RSAKey()
-        self.issuerKey = pykey.RSAKey()
+        self.subjectKey = pykey.RSAKey('default')
+        self.issuerKey = pykey.RSAKey('default')
         self.decodeParams(paramStream)
         self.serialNumber = self.generateSerialNumber()
 

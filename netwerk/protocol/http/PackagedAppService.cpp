@@ -15,6 +15,7 @@
 #include "nsStreamUtils.h"
 #include "mozilla/Logging.h"
 #include "mozilla/DebugOnly.h"
+#include "nsIHttpHeaderVisitor.h"
 
 namespace mozilla {
 namespace net {
@@ -89,9 +90,89 @@ PackagedAppService::CacheEntryWriter::CopySecurityInfo(nsIChannel *aChannel)
   return NS_OK;
 }
 
+namespace { // anon
+
+class HeaderCopier final : public nsIHttpHeaderVisitor
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIHTTPHEADERVISITOR
+
+  explicit HeaderCopier(nsHttpResponseHead* aHead)
+    : mHead(aHead)
+  {
+  }
+
+private:
+  ~HeaderCopier() {}
+  bool ShouldCopy(const nsACString& aHeader) const;
+
+  nsHttpResponseHead* mHead;
+};
+
+NS_IMPL_ISUPPORTS(HeaderCopier, nsIHttpHeaderVisitor)
+
+NS_IMETHODIMP
+HeaderCopier::VisitHeader(const nsACString& aHeader, const nsACString& aValue)
+{
+  if (!ShouldCopy(aHeader)) {
+    return NS_OK;
+  }
+
+  return mHead->SetHeader(nsHttp::ResolveAtom(aHeader), aValue);
+}
+
+bool
+HeaderCopier::ShouldCopy(const nsACString &aHeader) const
+{
+  nsHttpAtom header = nsHttp::ResolveAtom(aHeader);
+
+  // Don't overwrite the existing headers.
+  if (mHead->PeekHeader(header)) {
+    return false;
+  }
+
+  // A black list of headers we shouldn't copy.
+  static const nsHttpAtom kHeadersCopyBlacklist[] = {
+    nsHttp::Authentication,
+    nsHttp::Cache_Control,
+    nsHttp::Connection,
+    nsHttp::Content_Disposition,
+    nsHttp::Content_Encoding,
+    nsHttp::Content_Language,
+    nsHttp::Content_Length,
+    nsHttp::Content_Location,
+    nsHttp::Content_MD5,
+    nsHttp::Content_Range,
+    nsHttp::Content_Type,
+    nsHttp::ETag,
+    nsHttp::Last_Modified,
+    nsHttp::Proxy_Authenticate,
+    nsHttp::Proxy_Connection,
+    nsHttp::Set_Cookie,
+    nsHttp::Set_Cookie2,
+    nsHttp::TE,
+    nsHttp::Trailer,
+    nsHttp::Transfer_Encoding,
+    nsHttp::Vary,
+    nsHttp::WWW_Authenticate,
+  };
+
+  // Loop through the black list to check if we should copy this header.
+  for (uint32_t i = 0; i < mozilla::ArrayLength(kHeadersCopyBlacklist); i++) {
+    if (header == kHeadersCopyBlacklist[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+} // anon
+
 /* static */ nsresult
 PackagedAppService::CacheEntryWriter::CopyHeadersFromChannel(nsIChannel *aChannel,
-                                                  nsHttpResponseHead *aHead)
+                                                             nsHttpResponseHead *aHead)
 {
   if (!aChannel || !aHead) {
     return NS_ERROR_INVALID_ARG;
@@ -102,11 +183,8 @@ PackagedAppService::CacheEntryWriter::CopyHeadersFromChannel(nsIChannel *aChanne
     return NS_ERROR_FAILURE;
   }
 
-  nsAutoCString value;
-  httpChan->GetResponseHeader(NS_LITERAL_CSTRING("Content-Security-Policy"), value);
-  aHead->SetHeader(nsHttp::ResolveAtom("Content-Security-Policy"), value);
-
-  return NS_OK;
+  nsRefPtr<HeaderCopier> headerCopier = new HeaderCopier(aHead);
+  return httpChan->VisitResponseHeaders(headerCopier);
 }
 
 NS_METHOD
