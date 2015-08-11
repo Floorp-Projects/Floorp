@@ -10,7 +10,7 @@
       tools:ignore="AlwaysShowAction">
 
     <item android:id="@+id/reload"
-          android:icon="@drawable/new_tablet_ic_menu_reload"
+          android:icon="@drawable/ic_menu_reload"
           android:title="@string/reload"
           android:showAsAction="always"/>
 
