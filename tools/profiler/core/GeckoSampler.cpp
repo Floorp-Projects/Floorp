@@ -220,6 +220,12 @@ GeckoSampler::GeckoSampler(double aInterval, int aEntrySize,
     mThreadNameFilters[i] = aThreadNameFilters[i];
   }
 
+  // Deep copy aFeatures
+  MOZ_ALWAYS_TRUE(mFeatures.resize(aFeatureCount));
+  for (uint32_t i = 0; i < aFeatureCount; ++i) {
+    mFeatures[i] = aFeatures[i];
+  }
+
   bool ignore;
   sStartTime = mozilla::TimeStamp::ProcessCreation(ignore);
 
