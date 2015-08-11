@@ -10,7 +10,7 @@
                                          android:paddingLeft="4dip"
                                          android:background="@drawable/new_tablet_tabs_count_foreground"
                                          android:textAppearance="@style/TextAppearance.Micro"
-                                         android:textColor="@color/toolbar_grey"
+                                         android:textColor="@color/tabs_counter_text_color"
                                          android:textStyle="bold"
                                          android:duplicateParentState="true"
                                          android:gravity="center"/>

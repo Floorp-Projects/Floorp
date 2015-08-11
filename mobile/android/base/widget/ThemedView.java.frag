@@ -114,6 +114,7 @@ public class Themed@VIEW_NAME_SUFFIX@ extends @BASE_TYPE@
         if (mIsPrivate != isPrivate) {
             mIsPrivate = isPrivate;
             refreshDrawableState();
+            invalidate();
         }
     }
 
@@ -130,6 +131,7 @@ public class Themed@VIEW_NAME_SUFFIX@ extends @BASE_TYPE@
             }
 
             refreshDrawableState();
+            invalidate();
         }
     }
 
@@ -138,6 +140,7 @@ public class Themed@VIEW_NAME_SUFFIX@ extends @BASE_TYPE@
             mIsLight = false;
             mIsDark = false;
             refreshDrawableState();
+            invalidate();
         }
     }
 

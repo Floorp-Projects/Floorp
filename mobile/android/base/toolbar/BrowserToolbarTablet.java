@@ -206,7 +206,6 @@ class BrowserToolbarTablet extends BrowserToolbarTabletBase {
 
     @Override
     protected Drawable getLWTDefaultStateSetDrawable() {
-        return BrowserToolbar.getLightweightThemeDrawable(this, getResources(), getTheme(),
-                R.color.toolbar_grey);
+        return BrowserToolbar.getLightweightThemeDrawable(this, getTheme(), R.color.toolbar_grey);
     }
 }

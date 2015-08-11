@@ -5,24 +5,21 @@
 "use strict";
 
 // Tests if the `Add rule` button disables itself properly for non-element nodes
-// and anonymous element
+// and anonymous element.
 
-let PAGE_CONTENT = `
+const TEST_URI = `
   <style type="text/css">
     #pseudo::before {
       content: "before";
     }
   </style>
   <div id="pseudo"></div>
-  <div id="testid">Test Node</div>`;
+  <div id="testid">Test Node</div>
+`;
 
 add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(PAGE_CONTENT));
-
-  info("Opening the rule-view");
-  let {toolbox, inspector, view} = yield openRuleView();
-
-  info("Running test");
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
   yield testDisabledButton(inspector, view);
 });
 

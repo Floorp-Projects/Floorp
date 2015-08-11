@@ -4,15 +4,14 @@
 
 "use strict";
 
-// Test that keyframe rules and gutters are displayed correctly in the rule view
+// Test that keyframe rules and gutters are displayed correctly in the
+// rule view.
 
 const TEST_URI = TEST_URL_ROOT + "doc_keyframeanimation.html";
 
 add_task(function*() {
   yield addTab(TEST_URI);
-
-  let {toolbox, inspector, view} = yield openRuleView();
-
+  let {inspector, view} = yield openRuleView();
   yield testPacman(inspector, view);
   yield testBoxy(inspector, view);
   yield testMoxy(inspector, view);
@@ -21,18 +20,14 @@ add_task(function*() {
 function* testPacman(inspector, view) {
   info("Test content and gutter in the keyframes rule of #pacman");
 
-  let {
-    rules,
-    element,
-    elementStyle
-  } = yield assertKeyframeRules("#pacman", inspector, view, {
+  yield assertKeyframeRules("#pacman", inspector, view, {
     elementRulesNb: 2,
     keyframeRulesNb: 2,
     keyframesRules: ["pacman", "pacman"],
     keyframeRules: ["100%", "100%"]
   });
 
-  let gutters = assertGutters(view, {
+  assertGutters(view, {
     guttersNbs: 2,
     gutterHeading: ["Keyframes pacman", "Keyframes pacman"]
   });
@@ -41,18 +36,14 @@ function* testPacman(inspector, view) {
 function* testBoxy(inspector, view) {
   info("Test content and gutter in the keyframes rule of #boxy");
 
-  let {
-    rules,
-    element,
-    elementStyle
-  } = yield assertKeyframeRules("#boxy", inspector, view, {
+  yield assertKeyframeRules("#boxy", inspector, view, {
     elementRulesNb: 3,
     keyframeRulesNb: 3,
     keyframesRules: ["boxy", "boxy", "boxy"],
     keyframeRules: ["10%", "20%", "100%"]
   });
 
-  let gutters = assertGutters(view, {
+  assertGutters(view, {
     guttersNbs: 1,
     gutterHeading: ["Keyframes boxy"]
   });
@@ -61,18 +52,14 @@ function* testBoxy(inspector, view) {
 function* testMoxy(inspector, view) {
   info("Test content and gutter in the keyframes rule of #moxy");
 
-  let {
-    rules,
-    element,
-    elementStyle
-  } = yield assertKeyframeRules("#moxy", inspector, view, {
+  yield assertKeyframeRules("#moxy", inspector, view, {
     elementRulesNb: 3,
     keyframeRulesNb: 4,
     keyframesRules: ["boxy", "boxy", "boxy", "moxy"],
     keyframeRules: ["10%", "20%", "100%", "100%"]
   });
 
-  let gutters = assertGutters(view, {
+  assertGutters(view, {
     guttersNbs: 2,
     gutterHeading: ["Keyframes boxy", "Keyframes moxy"]
   });

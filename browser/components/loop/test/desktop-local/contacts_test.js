@@ -8,7 +8,8 @@ describe("loop.contacts", function() {
   var expect = chai.expect;
   var TestUtils = React.addons.TestUtils;
 
-  var fakeAddContactButtonText = "Fake Add Contact";
+  var fakeAddContactButtonText = "Fake Add Contact Button";
+  var fakeAddContactTitleText = "Fake Add Contact Title";
   var fakeEditContactButtonText = "Fake Edit Contact";
   var fakeDoneButtonText = "Fake Done";
   // The fake contacts array is copied each time mozLoop.contacts.getAll() is called.
@@ -86,7 +87,9 @@ describe("loop.contacts", function() {
     navigator.mozLoop = {
       getStrings: function(entityName) {
         var textContentValue = "fakeText";
-        if (entityName == "add_contact_button") {
+        if (entityName == "add_contact_title") {
+          textContentValue = fakeAddContactTitleText;
+        } else if (entityName == "add_contact_button") {
           textContentValue = fakeAddContactButtonText;
         } else if (entityName == "edit_contact_title") {
           textContentValue = fakeEditContactButtonText;
@@ -400,7 +403,7 @@ describe("loop.contacts", function() {
 
           var header = view.getDOMNode().querySelector("header");
           expect(header).to.not.equal(null);
-          expect(header.textContent).to.eql(fakeAddContactButtonText);
+          expect(header.textContent).to.eql(fakeAddContactTitleText);
         });
 
         it("should render name input", function() {

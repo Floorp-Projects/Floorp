@@ -5,9 +5,9 @@
 
 package org.mozilla.gecko.updater;
 
+import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.PrefsHelper;
-import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.util.GeckoJarReader;
 
 import android.content.Context;

@@ -12,7 +12,6 @@ const TEST_URI = TEST_URL_ROOT + "doc_media_queries.html";
 add_task(function*() {
   yield addTab(TEST_URI);
   let {inspector, view} = yield openRuleView();
-
   yield selectNode("div", inspector);
 
   let elementStyle = view._elementStyle;

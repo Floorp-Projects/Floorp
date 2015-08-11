@@ -15,8 +15,9 @@ import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.View;
 
+import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.mozglue.RobocopTarget;
+import org.mozilla.gecko.util.ColorUtils;
 import org.mozilla.gecko.widget.RecyclerViewClickSupport;
 
 import java.util.List;
@@ -47,7 +48,7 @@ public class SearchEngineBar extends RecyclerView
         super(context, attrs);
 
         mDividerPaint = new Paint();
-        mDividerPaint.setColor(getResources().getColor(R.color.divider_light));
+        mDividerPaint.setColor(ColorUtils.getColor(context, R.color.divider_light));
         mDividerPaint.setStyle(Paint.Style.FILL_AND_STROKE);
 
         final DisplayMetrics displayMetrics = getResources().getDisplayMetrics();

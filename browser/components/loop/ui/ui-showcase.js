@@ -18,6 +18,7 @@
   var AvailabilityDropdown = loop.panel.AvailabilityDropdown;
   var PanelView = loop.panel.PanelView;
   var SignInRequestView = loop.panel.SignInRequestView;
+  var ContactDetailsForm = loop.contacts.ContactDetailsForm;
   var ContactDropdown = loop.contacts.ContactDropdown;
   var ContactDetail = loop.contacts.ContactDetail;
   // 1.2. Conversation Window
@@ -787,6 +788,18 @@
                          notifications: new loop.shared.models.NotificationCollection([{level: "error", message: "Import error"}]), 
                          roomStore: roomStore, 
                          selectedTab: "contacts"})
+            ), 
+            React.createElement(FramedExample, {cssClass: "fx-embedded-panel", dashed: true, height: 400, 
+                           summary: "Contact Form - Add", width: 332}, 
+              React.createElement("div", {className: "panel"}, 
+                React.createElement(PanelView, {client: mockClient, 
+                           dispatcher: dispatcher, 
+                           mozLoop: mockMozLoopLoggedIn, 
+                           notifications: notifications, 
+                           roomStore: roomStore, 
+                           selectedTab: "contacts_add", 
+                           userProfile: {email: "test@example.com"}})
+              )
             )
           ), 
 
