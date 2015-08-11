@@ -25,6 +25,7 @@
 #include "nsIDOMGeoPositionCallback.h"
 #include "nsIDOMGeoPositionErrorCallback.h"
 #include "PermissionMessageUtils.h"
+#include "DriverCrashGuard.h"
 
 #define CHILD_PROCESS_SHUTDOWN_MESSAGE NS_LITERAL_STRING("child-process-shutdown")
 
@@ -814,6 +815,8 @@ private:
     virtual bool RecvGetGraphicsFeatureStatus(const int32_t& aFeature,
                                               int32_t* aStatus,
                                               bool* aSuccess) override;
+    virtual bool RecvBeginDriverCrashGuard(const uint32_t& aGuardType, bool* aOutCrashed) override;
+    virtual bool RecvEndDriverCrashGuard(const uint32_t& aGuardType) override;
 
     virtual bool RecvAddIdleObserver(const uint64_t& observerId,
                                      const uint32_t& aIdleTimeInS) override;
@@ -954,6 +957,8 @@ private:
     nsRefPtr<mozilla::ProfileGatherer> mGatherer;
 #endif
     nsCString mProfile;
+
+    UniquePtr<gfx::DriverCrashGuard> mDriverCrashGuard;
 };
 
 } // namespace dom
