@@ -21,6 +21,9 @@
 #include "frontend/SyntaxParseHandler.h"
 
 namespace js {
+
+class StaticFunctionBoxScopeObject;
+
 namespace frontend {
 
 struct StmtInfoPC : public StmtInfoBase
@@ -68,19 +71,11 @@ struct GenericParseContext
     // Function has 'return;'
     bool funHasReturnVoid:1;
 
-    // The following flags are set when parsing enters a particular region of
-    // source code, and cleared when that region is exited.
-
-    // true while we are within a with-statement in the current ParseContext
-    // chain (which stops at the top-level or an eval()
-    bool parsingWith:1;
-
     GenericParseContext(GenericParseContext* parent, SharedContext* sc)
       : parent(parent),
         sc(sc),
         funHasReturnExpr(false),
-        funHasReturnVoid(false),
-        parsingWith(parent ? parent->parsingWith : false)
+        funHasReturnVoid(false)
     {}
 };
 
@@ -97,7 +92,7 @@ GenerateBlockId(TokenStream& ts, ParseContext<ParseHandler>* pc, uint32_t& block
  * context in which it encountered the definition.
  */
 template <typename ParseHandler>
-struct ParseContext : public GenericParseContext
+struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
 {
     typedef typename ParseHandler::Node Node;
     typedef typename ParseHandler::DefinitionNode DefinitionNode;
@@ -253,8 +248,7 @@ struct ParseContext : public GenericParseContext
     bool            inDeclDestructuring:1;
 
     ParseContext(Parser<ParseHandler>* prs, GenericParseContext* parent,
-                 Node maybeFunction, SharedContext* sc,
-                 Directives* newDirectives,
+                 Node maybeFunction, SharedContext* sc, Directives* newDirectives,
                  unsigned staticLevel, uint32_t bodyid, uint32_t blockScopeDepth)
       : GenericParseContext(parent, sc),
         bodyid(0),           // initialized in init()
@@ -288,6 +282,11 @@ struct ParseContext : public GenericParseContext
 
     StmtInfoPC* innermostStmt() const { return stmtStack.innermost(); }
     StmtInfoPC* innermostScopeStmt() const { return stmtStack.innermostScopeStmt(); }
+    JSObject* innermostStaticScope() const {
+        if (StmtInfoPC* stmt = innermostScopeStmt())
+            return stmt->staticScope;
+        return sc->staticScope();
+    }
 
     // True if we are at the topmost level of a entire script or function body.
     // For example, while parsing this code we would encounter f1 and f2 at
@@ -463,8 +462,33 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
      * cx->tempLifoAlloc.
      */
     ObjectBox* newObjectBox(JSObject* obj);
-    FunctionBox* newFunctionBox(Node fn, JSFunction* fun, ParseContext<ParseHandler>* pc,
-                                Directives directives, GeneratorKind generatorKind);
+    FunctionBox* newFunctionBoxWithScope(Node fn, JSFunction* fun,
+                                         ParseContext<ParseHandler>* outerpc,
+                                         Directives directives, GeneratorKind generatorKind,
+                                         JSObject* staticScope);
+
+  private:
+    FunctionBox* newFunctionBox(Node fn, JSFunction* fun, ParseContext<ParseHandler>* outerpc,
+                                Directives directives, GeneratorKind generatorKind,
+                                JSObject* enclosingStaticScope);
+
+  public:
+    // Use when the funbox is the outermost.
+    FunctionBox* newFunctionBox(Node fn, JSFunction* fun,
+                                Directives directives, GeneratorKind generatorKind,
+                                JSObject* enclosingStaticScope)
+    {
+        return newFunctionBox(fn, fun, nullptr, directives, generatorKind,
+                              enclosingStaticScope);
+    }
+
+    // Use when the funbox should be linked to the outerpc's innermost scope.
+    FunctionBox* newFunctionBox(Node fn, JSFunction* fun, ParseContext<ParseHandler>* outerpc,
+                                Directives directives, GeneratorKind generatorKind)
+    {
+        return newFunctionBox(fn, fun, outerpc, directives, generatorKind,
+                              outerpc->innermostStaticScope());
+    }
 
     /*
      * Create a new function object given a name (which is optional if this is
@@ -512,7 +536,8 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     // Generator constructors.
     Node standaloneFunctionBody(HandleFunction fun, const AutoNameVector& formals,
                                 GeneratorKind generatorKind,
-                                Directives inheritedDirectives, Directives* newDirectives);
+                                Directives inheritedDirectives, Directives* newDirectives,
+                                HandleObject enclosingStaticScope);
 
     // Parse a function, given only its arguments and body. Used for lazily
     // parsed functions.
@@ -617,8 +642,6 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node parenExprOrGeneratorComprehension(YieldHandling yieldHandling);
     Node exprInParens(InHandling inHandling, YieldHandling yieldHandling);
 
-    bool checkAllowedNestedSyntax(SharedContext::AllowedSyntax allowed,
-                                  SharedContext** allowingContext = nullptr);
     bool tryNewTarget(Node& newTarget);
     bool checkAndMarkSuperScope();
 
