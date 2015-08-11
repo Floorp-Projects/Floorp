@@ -482,11 +482,13 @@ this.MigrationUtils = Object.freeze({
         migrator = Cc["@mozilla.org/profile/migrator;1?app=browser&type=" +
                       aKey].createInstance(Ci.nsIBrowserProfileMigrator);
       }
-      catch(ex) { }
+      catch(ex) { Cu.reportError(ex) }
       this._migrators.set(aKey, migrator);
     }
 
-    return migrator && migrator.sourceExists ? migrator : null;
+    try {
+      return migrator && migrator.sourceExists ? migrator : null;
+    } catch (ex) { Cu.reportError(ex); return null }
   },
 
   // Iterates the available migrators, in the most suitable
@@ -494,7 +496,7 @@ this.MigrationUtils = Object.freeze({
   get migrators() {
     let migratorKeysOrdered = [
 #ifdef XP_WIN
-      "firefox", "ie", "chrome", "chromium", "safari", "360se", "canary"
+      "firefox", "edge", "ie", "chrome", "chromium", "safari", "360se", "canary"
 #elifdef XP_MACOSX
       "firefox", "safari", "chrome", "chromium", "canary"
 #elifdef XP_UNIX
