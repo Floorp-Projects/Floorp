@@ -88,8 +88,7 @@
 #include "nsViewportInfo.h"
 #include "nsIFormControl.h"
 #include "nsIScriptError.h"
-#include "nsIAppShell.h"
-#include "nsWidgetsCID.h"
+//#include "nsWidgetsCID.h"
 #include "FrameLayerBuilder.h"
 #include "nsDisplayList.h"
 #include "nsROCSSPrimitiveValue.h"
@@ -3526,30 +3525,6 @@ nsDOMWindowUtils::DispatchEventToChromeOnly(nsIDOMEventTarget* aTarget,
   aEvent->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
   aTarget->DispatchEvent(aEvent, aRetVal);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMWindowUtils::RunInStableState(nsIRunnable *aRunnable)
-{
-  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
-
-  nsCOMPtr<nsIRunnable> runnable = aRunnable;
-  nsContentUtils::RunInStableState(runnable.forget());
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMWindowUtils::RunBeforeNextEvent(nsIRunnable *runnable)
-{
-  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
-
-  nsCOMPtr<nsIAppShell> appShell(do_GetService(kAppShellCID));
-  if (!appShell) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  return appShell->RunBeforeNextEvent(runnable);
 }
 
 NS_IMETHODIMP

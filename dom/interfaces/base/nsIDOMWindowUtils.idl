@@ -49,7 +49,7 @@ interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 interface nsIObserver;
 
-[scriptable, uuid(7a37e173-ea6e-495e-8702-013f8063352a)]
+[scriptable, uuid(6064615a-a782-4d08-86db-26ef3851208a)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1721,32 +1721,6 @@ interface nsIDOMWindowUtils : nsISupports {
    * Setting paintFlashing to true will flash newly painted area.
    */
   attribute boolean paintFlashing;
-
-  /**
-   * Add a "synchronous section", in the form of an nsIRunnable run once the
-   * event loop has reached a "stable state". |runnable| must not cause any
-   * queued events to be processed (i.e. must not spin the event loop).
-   * We've reached a stable state when the currently executing task/event has
-   * finished, see:
-   * http://www.whatwg.org/specs/web-apps/current-work/multipage/webappapis.html#synchronous-section
-   * In practice this runs aRunnable once the currently executing event
-   * finishes. If called multiple times per task/event, all the runnables will
-   * be executed, in the order in which runInStableState() was called.
-   *
-   * XXX - This can wreak havoc if you're not using this for very simple
-   * purposes, eg testing or setting a flag.
-   */
-  void runInStableState(in nsIRunnable runnable);
-
-  /**
-   * Run the given runnable before the next iteration of the event loop (this
-   * includes native events too). If a nested loop is spawned within the current
-   * event then the runnable will not be run until that loop has terminated.
-   *
-   * XXX - This can wreak havoc if you're not using this for very simple
-   * purposes, eg testing or setting a flag.
-   */
-  void runBeforeNextEvent(in nsIRunnable runnable);
 
   /*
    * Returns the value of a given property animated on the compositor thread.

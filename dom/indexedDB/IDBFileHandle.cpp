@@ -12,19 +12,12 @@
 #include "mozilla/dom/IDBFileHandleBinding.h"
 #include "mozilla/dom/MetadataHelper.h"
 #include "mozilla/EventDispatcher.h"
-#include "nsIAppShell.h"
 #include "nsServiceManagerUtils.h"
 #include "nsWidgetsCID.h"
 
 namespace mozilla {
 namespace dom {
 namespace indexedDB {
-
-namespace {
-
-NS_DEFINE_CID(kAppShellCID2, NS_APPSHELL_CID);
-
-} // namespace
 
 IDBFileHandle::IDBFileHandle(FileMode aMode,
                              RequestMode aRequestMode,
@@ -51,15 +44,8 @@ IDBFileHandle::Create(FileMode aMode,
 
   fileHandle->BindToOwner(aMutableFile);
 
-  nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID2);
-  if (NS_WARN_IF(!appShell)) {
-    return nullptr;
-  }
-
-  nsresult rv = appShell->RunBeforeNextEvent(fileHandle);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
+  nsCOMPtr<nsIRunnable> runnable = do_QueryObject(fileHandle);
+  nsContentUtils::RunInMetastableState(runnable.forget());
 
   fileHandle->SetCreating();
 
@@ -68,7 +54,7 @@ IDBFileHandle::Create(FileMode aMode,
     return nullptr;
   }
 
-  rv = service->Enqueue(fileHandle, nullptr);
+  nsresult rv = service->Enqueue(fileHandle, nullptr);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }

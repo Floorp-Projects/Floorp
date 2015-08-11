@@ -31,7 +31,6 @@ nsBaseAppShell::nsBaseAppShell()
   , mSwitchTime(0)
   , mLastNativeEventTime(0)
   , mEventloopNestingState(eEventloopNone)
-  , mRunningSyncSections(false)
   , mRunning(false)
   , mExiting(false)
   , mBlockNativeEvent(false)
@@ -40,7 +39,6 @@ nsBaseAppShell::nsBaseAppShell()
 
 nsBaseAppShell::~nsBaseAppShell()
 {
-  NS_ASSERTION(mSyncSections.IsEmpty(), "Must have run all sync sections");
 }
 
 nsresult
@@ -120,7 +118,7 @@ nsBaseAppShell::DoProcessMoreGeckoEvents()
 
 // Main thread via OnProcessNextEvent below
 bool
-nsBaseAppShell::DoProcessNextNativeEvent(bool mayWait, uint32_t recursionDepth)
+nsBaseAppShell::DoProcessNextNativeEvent(bool mayWait)
 {
   // The next native event to be processed may trigger our NativeEventCallback,
   // in which case we do not want it to process any thread events since we'll
@@ -137,14 +135,7 @@ nsBaseAppShell::DoProcessNextNativeEvent(bool mayWait, uint32_t recursionDepth)
   mEventloopNestingState = eEventloopXPCOM;
 
   IncrementEventloopNestingLevel();
-
   bool result = ProcessNextNativeEvent(mayWait);
-
-  // Make sure that any sync sections registered during this most recent event
-  // are run now. This is not considered a stable state because we're not back
-  // to the event loop yet.
-  RunSyncSections(false, recursionDepth);
-
   DecrementEventloopNestingLevel();
 
   mEventloopNestingState = prevVal;
@@ -239,8 +230,7 @@ nsBaseAppShell::OnDispatchedEvent(nsIThreadInternal *thr)
 
 // Called from the main thread
 NS_IMETHODIMP
-nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal *thr, bool mayWait,
-                                   uint32_t recursionDepth)
+nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal *thr, bool mayWait)
 {
   if (mBlockNativeEvent) {
     if (!mayWait)
@@ -278,13 +268,13 @@ nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal *thr, bool mayWait,
     bool keepGoing;
     do {
       mLastNativeEventTime = now;
-      keepGoing = DoProcessNextNativeEvent(false, recursionDepth);
+      keepGoing = DoProcessNextNativeEvent(false);
     } while (keepGoing && ((now = PR_IntervalNow()) - start) < limit);
   } else {
     // Avoid starving native events completely when in performance mode
     if (start - mLastNativeEventTime > limit) {
       mLastNativeEventTime = start;
-      DoProcessNextNativeEvent(false, recursionDepth);
+      DoProcessNextNativeEvent(false);
     }
   }
 
@@ -296,7 +286,7 @@ nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal *thr, bool mayWait,
       mayWait = false;
 
     mLastNativeEventTime = PR_IntervalNow();
-    if (!DoProcessNextNativeEvent(mayWait, recursionDepth) || !mayWait)
+    if (!DoProcessNextNativeEvent(mayWait) || !mayWait)
       break;
   }
 
@@ -308,9 +298,6 @@ nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal *thr, bool mayWait,
   if (needEvent && !mExiting && !NS_HasPendingEvents(thr)) {
     DispatchDummyEvent(thr);
   }
-
-  // We're about to run an event, so we're in a stable state.
-  RunSyncSections(true, recursionDepth);
 
   return NS_OK;
 }
@@ -344,95 +331,11 @@ nsBaseAppShell::DecrementEventloopNestingLevel()
 #endif
 }
 
-void
-nsBaseAppShell::RunSyncSectionsInternal(bool aStable,
-                                        uint32_t aThreadRecursionLevel)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(!mSyncSections.IsEmpty(), "Nothing to do!");
-
-  // We don't support re-entering sync sections. This effectively means that
-  // sync sections may not spin the event loop.
-  MOZ_RELEASE_ASSERT(!mRunningSyncSections);
-  mRunningSyncSections = true;
-
-  // We've got synchronous sections. Run all of them that are are awaiting a
-  // stable state if aStable is true (i.e. we really are in a stable state).
-  // Also run the synchronous sections that are simply waiting for the right
-  // combination of event loop nesting level and thread recursion level.
-  // Note that a synchronous section could add another synchronous section, so
-  // we don't remove elements from mSyncSections until all sections have been
-  // run, or else we'll screw up our iteration. Any sync sections that are not
-  // ready to be run are saved for later.
-
-  nsTArray<SyncSection> pendingSyncSections;
-
-  for (uint32_t i = 0; i < mSyncSections.Length(); i++) {
-    SyncSection& section = mSyncSections[i];
-    if ((aStable && section.mStable) ||
-        (!section.mStable &&
-         section.mEventloopNestingLevel == mEventloopNestingLevel &&
-         section.mThreadRecursionLevel == aThreadRecursionLevel)) {
-      section.mRunnable->Run();
-    }
-    else {
-      // Add to pending list.
-      SyncSection* pending = pendingSyncSections.AppendElement();
-      section.Forget(pending);
-    }
-  }
-
-  mSyncSections.SwapElements(pendingSyncSections);
-  mRunningSyncSections = false;
-}
-
-void
-nsBaseAppShell::ScheduleSyncSection(already_AddRefed<nsIRunnable> aRunnable,
-                                    bool aStable)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-
-  nsIThread* thread = NS_GetCurrentThread();
-
-  // Add this runnable to our list of synchronous sections.
-  SyncSection* section = mSyncSections.AppendElement();
-  section->mStable = aStable;
-  section->mRunnable = aRunnable;
-
-  // If aStable is false then this synchronous section is supposed to run before
-  // the next event at the current nesting level. Record the event loop nesting
-  // level and the thread recursion level so that the synchronous section will
-  // run at the proper time.
-  if (!aStable) {
-    section->mEventloopNestingLevel = mEventloopNestingLevel;
-
-    nsCOMPtr<nsIThreadInternal> threadInternal = do_QueryInterface(thread);
-    NS_ASSERTION(threadInternal, "This should never fail!");
-
-    uint32_t recursionLevel;
-    if (NS_FAILED(threadInternal->GetRecursionDepth(&recursionLevel))) {
-      NS_ERROR("This should never fail!");
-    }
-
-    // Due to the weird way that the thread recursion counter is implemented we
-    // subtract one from the recursion level if we have one.
-    section->mThreadRecursionLevel = recursionLevel ? recursionLevel - 1 : 0;
-  }
-
-  // Ensure we've got a pending event, else the callbacks will never run.
-  if (!NS_HasPendingEvents(thread) && !DispatchDummyEvent(thread)) {
-    RunSyncSections(true, 0);
-  }
-}
-
 // Called from the main thread
 NS_IMETHODIMP
 nsBaseAppShell::AfterProcessNextEvent(nsIThreadInternal *thr,
-                                      uint32_t recursionDepth,
                                       bool eventWasProcessed)
 {
-  // We've just finished running an event, so we're in a stable state.
-  RunSyncSections(true, recursionDepth);
   return NS_OK;
 }
 
@@ -442,19 +345,5 @@ nsBaseAppShell::Observe(nsISupports *subject, const char *topic,
 {
   NS_ASSERTION(!strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID), "oops");
   Exit();
-  return NS_OK;
-}
-
-void
-nsBaseAppShell::RunInStableState(already_AddRefed<nsIRunnable> aRunnable)
-{
-  ScheduleSyncSection(mozilla::Move(aRunnable), true);
-}
-
-NS_IMETHODIMP
-nsBaseAppShell::RunBeforeNextEvent(nsIRunnable* aRunnable)
-{
-  nsCOMPtr<nsIRunnable> runnable = aRunnable;
-  ScheduleSyncSection(runnable.forget(), false);
   return NS_OK;
 }
