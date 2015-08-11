@@ -9,12 +9,14 @@
 
 #include "Compatibility.h"
 #include "DocAccessible-inl.h"
+#include "mozilla/a11y/DocAccessibleParent.h"
 #include "EnumVariant.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
 #include "nsIAccessibleEvent.h"
 #include "nsWinUtils.h"
 #include "mozilla/a11y/ProxyAccessible.h"
+#include "ProxyWrappers.h"
 #include "ServiceProvider.h"
 #include "Relation.h"
 #include "Role.h"
@@ -1272,6 +1274,22 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
   }
 
   return NS_OK;
+}
+
+DocProxyAccessibleWrap*
+AccessibleWrap::DocProxyWrapper() const
+{
+  MOZ_ASSERT(IsProxy());
+
+  ProxyAccessible* proxy = Proxy();
+  if (!proxy) {
+    return nullptr;
+  }
+
+  AccessibleWrap* acc = WrapperFor(proxy->Document());
+  MOZ_ASSERT(acc->IsDoc());
+
+ return static_cast<DocProxyAccessibleWrap*>(acc);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
