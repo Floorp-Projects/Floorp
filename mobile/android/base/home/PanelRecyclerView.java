@@ -143,11 +143,26 @@ public class PanelRecyclerView extends RecyclerView
 
     @Override
     public boolean onItemLongClicked(RecyclerView recyclerView, int position, View v) {
+        if (viewConfig.hasHeaderConfig()) {
+            if (position == 0) {
+                final HomeConfig.HeaderConfig headerConfig = viewConfig.getHeaderConfig();
+
+                final HomeContextMenuInfo info = new HomeContextMenuInfo(v, position, -1);
+                info.url = headerConfig.getUrl();
+                info.title = headerConfig.getUrl();
+
+                contextMenuInfo = info;
+                return showContextMenuForChild(this);
+            }
+
+            position--;
+        }
+
         Cursor cursor = adapter.getCursor();
         cursor.moveToPosition(position);
 
         contextMenuInfo = contextMenuInfoFactory.makeInfoForCursor(recyclerView, position, -1, cursor);
-        return showContextMenuForChild(PanelRecyclerView.this);
+        return showContextMenuForChild(this);
     }
 
     private class PanelSpanSizeLookup extends GridLayoutManager.SpanSizeLookup {
