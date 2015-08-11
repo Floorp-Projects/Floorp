@@ -45,6 +45,8 @@ public:
 
   virtual bool IsHardwareAccelerated() const { return false; }
 
+  virtual TrackInfo::TrackType GetType() = 0;
+
 };
 
 // Decodes audio and video using Windows Media Foundation. Samples are decoded
@@ -55,11 +57,12 @@ public:
 class WMFMediaDataDecoder : public MediaDataDecoder {
 public:
   WMFMediaDataDecoder(MFTManager* aOutputSource,
+                      MFTDecoder* aDecoder,
                       FlushableTaskQueue* aAudioTaskQueue,
                       MediaDataDecoderCallback* aCallback);
   ~WMFMediaDataDecoder();
 
-  virtual nsresult Init() override;
+  virtual nsRefPtr<MediaDataDecoder::InitPromise> Init() override;
 
   virtual nsresult Input(MediaRawData* aSample);
 

@@ -1772,13 +1772,19 @@ nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
         gRollupListener = aListener;
         // real grab is only done when there is no dragging
         if (!nsWindow::DragInProgress()) {
-            // This widget grab ensures that a Gecko GtkWidget receives mouse
-            // events even when embedded in non-Gecko-owned GtkWidgets.
-            // The grab is placed on the toplevel GtkWindow instead of the
-            // MozContainer to avoid double dispatch of keyboard events
-            // (bug 707623).
-            gtk_grab_add(mShell);
-            GrabPointer(GetLastUserInputTime());
+            // Maybe the dnd flag is not yet set at this point, but dnd has already started
+            // so let's be extra careful and skip this operation for dnd popup panels always
+            // (panels with type="drag").
+            GdkWindowTypeHint gdkTypeHint = gtk_window_get_type_hint(GTK_WINDOW(mShell));
+            if (gdkTypeHint != GDK_WINDOW_TYPE_HINT_DND) {
+              // This widget grab ensures that a Gecko GtkWidget receives mouse
+              // events even when embedded in non-Gecko-owned GtkWidgets.
+              // The grab is placed on the toplevel GtkWindow instead of the
+              // MozContainer to avoid double dispatch of keyboard events
+              // (bug 707623).
+              gtk_grab_add(mShell);
+              GrabPointer(GetLastUserInputTime());
+            }
         }
     }
     else {

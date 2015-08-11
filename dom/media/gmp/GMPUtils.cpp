@@ -9,6 +9,7 @@
 #include "nsIFile.h"
 #include "nsCOMPtr.h"
 #include "nsLiteralString.h"
+#include "nsCRTGlue.h"
 
 namespace mozilla {
 
@@ -34,6 +35,19 @@ EMEVoucherFileExists()
   return GetEMEVoucherPath(getter_AddRefs(path)) &&
          NS_SUCCEEDED(path->Exists(&exists)) &&
          exists;
+}
+
+void
+SplitAt(const char* aDelims,
+        const nsACString& aInput,
+        nsTArray<nsCString>& aOutTokens)
+{
+  nsAutoCString str(aInput);
+  char* end = str.BeginWriting();
+  const char* start = nullptr;
+  while (!!(start = NS_strtok(aDelims, &end))) {
+    aOutTokens.AppendElement(nsCString(start));
+  }
 }
 
 } // namespace mozilla

@@ -11,7 +11,8 @@ if CONFIG['OS_TARGET'] in ('WINNT', 'Darwin', 'Android'):
 else:
     Library('mozglue')
 
-SDK_LIBRARY = True
+if not CONFIG['MOZ_CRT']:
+    SDK_LIBRARY = True
 
 if CONFIG['OS_TARGET'] == 'Android':
     SOURCES += [

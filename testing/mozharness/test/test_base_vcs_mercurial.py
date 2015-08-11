@@ -14,7 +14,7 @@ baz'''
 HG = ['hg'] + mercurial.HG_OPTIONS
 
 # Known default .hgrc
-os.environ['HGRCPATH'] = os.path.join(os.path.dirname(__file__), 'helper_files', '.hgrc')
+os.environ['HGRCPATH'] = os.path.abspath(os.path.join(os.path.dirname(__file__), 'helper_files', '.hgrc'))
 
 
 def cleanup():
@@ -39,7 +39,7 @@ def get_mercurial_vcs_obj():
 def get_revisions(dest):
     m = get_mercurial_vcs_obj()
     retval = []
-    for rev in m.get_output_from_command(HG + ['log', '-R', dest, '--template', '{node|short}\n']).split('\n'):
+    for rev in m.get_output_from_command(HG + ['log', '-R', dest, '--template', '{node}\n']).split('\n'):
         rev = rev.strip()
         if not rev:
             continue

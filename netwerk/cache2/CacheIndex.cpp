@@ -629,7 +629,7 @@ CacheIndex::EnsureEntryExists(const SHA1Sum::Hash *aHash)
         } else if (index->mState == READY ||
                    (entryRemoved && !entry->IsFresh())) {
           // Removed non-fresh entries can be present as a result of
-          // ProcessJournalEntry()
+          // MergeJournal()
           LOG(("CacheIndex::EnsureEntryExists() - Didn't find entry that should"
                " exist, update is needed"));
           index->mIndexNeedsUpdate = true;
@@ -848,7 +848,7 @@ CacheIndex::RemoveEntry(const SHA1Sum::Hash *aHash)
         } else if (index->mState == READY ||
                    (entryRemoved && !entry->IsFresh())) {
           // Removed non-fresh entries can be present as a result of
-          // ProcessJournalEntry()
+          // MergeJournal()
           LOG(("CacheIndex::RemoveEntry() - Didn't find entry that should exist"
                ", update is needed"));
           index->mIndexNeedsUpdate = true;
@@ -1604,21 +1604,6 @@ CacheIndex::WriteIndexToDisk()
   mSkipEntries = 0;
 }
 
-namespace {
-
-struct WriteRecordsHelper
-{
-  char    *mBuf;
-  uint32_t mSkip;
-  uint32_t mProcessMax;
-  uint32_t mProcessed;
-#ifdef DEBUG
-  bool     mHasMore;
-#endif
-};
-
-} // namespace
-
 void
 CacheIndex::WriteRecords()
 {
@@ -1641,27 +1626,49 @@ CacheIndex::WriteRecords()
   }
   uint32_t hashOffset = mRWBufPos;
 
-  WriteRecordsHelper data;
-  data.mBuf = mRWBuf + mRWBufPos;
-  data.mSkip = mSkipEntries;
-  data.mProcessMax = (mRWBufSize - mRWBufPos) / sizeof(CacheIndexRecord);
-  MOZ_ASSERT(data.mProcessMax != 0 || mProcessEntries == 0); // TODO make sure we can write an empty index
-  data.mProcessed = 0;
+  char* buf = mRWBuf + mRWBufPos;
+  uint32_t skip = mSkipEntries;
+  uint32_t processMax = (mRWBufSize - mRWBufPos) / sizeof(CacheIndexRecord);
+  MOZ_ASSERT(processMax != 0 || mProcessEntries == 0); // TODO make sure we can write an empty index
+  uint32_t processed = 0;
 #ifdef DEBUG
-  data.mHasMore = false;
+  bool hasMore = false;
 #endif
+  for (auto iter = mIndex.Iter(); !iter.Done(); iter.Next()) {
+    CacheIndexEntry* entry = iter.Get();
+    if (entry->IsRemoved() ||
+        !entry->IsInitialized() ||
+        entry->IsFileEmpty()) {
+      continue;
+    }
 
-  mIndex.EnumerateEntries(&CacheIndex::CopyRecordsToRWBuf, &data);
-  MOZ_ASSERT(mRWBufPos != static_cast<uint32_t>(data.mBuf - mRWBuf) ||
+    if (skip) {
+      skip--;
+      continue;
+    }
+
+    if (processed == processMax) {
+  #ifdef DEBUG
+      hasMore = true;
+  #endif
+      break;
+    }
+
+    entry->WriteToBuf(buf);
+    buf += sizeof(CacheIndexRecord);
+    processed++;
+  }
+
+  MOZ_ASSERT(mRWBufPos != static_cast<uint32_t>(buf - mRWBuf) ||
              mProcessEntries == 0);
-  mRWBufPos = data.mBuf - mRWBuf;
-  mSkipEntries += data.mProcessed;
+  mRWBufPos = buf - mRWBuf;
+  mSkipEntries += processed;
   MOZ_ASSERT(mSkipEntries <= mProcessEntries);
 
   mRWHash->Update(mRWBuf + hashOffset, mRWBufPos - hashOffset);
 
   if (mSkipEntries == mProcessEntries) {
-    MOZ_ASSERT(!data.mHasMore);
+    MOZ_ASSERT(!hasMore);
 
     // We've processed all records
     if (mRWBufPos + sizeof(CacheHash::Hash32_t) > mRWBufSize) {
@@ -1673,7 +1680,7 @@ CacheIndex::WriteRecords()
     NetworkEndian::writeUint32(mRWBuf + mRWBufPos, mRWHash->GetHash());
     mRWBufPos += sizeof(CacheHash::Hash32_t);
   } else {
-    MOZ_ASSERT(data.mHasMore);
+    MOZ_ASSERT(hasMore);
   }
 
   rv = CacheFileIOManager::Write(mIndexHandle, fileOffset, mRWBuf, mRWBufPos,
@@ -1741,42 +1748,6 @@ CacheIndex::FinishWrite(bool aSucceeded)
     ChangeState(READY);
     mLastDumpTime = TimeStamp::NowLoRes();
   }
-}
-
-// static
-PLDHashOperator
-CacheIndex::CopyRecordsToRWBuf(CacheIndexEntry *aEntry, void* aClosure)
-{
-  if (aEntry->IsRemoved()) {
-    return PL_DHASH_NEXT;
-  }
-
-  if (!aEntry->IsInitialized()) {
-    return PL_DHASH_NEXT;
-  }
-
-  if (aEntry->IsFileEmpty()) {
-    return PL_DHASH_NEXT;
-  }
-
-  WriteRecordsHelper *data = static_cast<WriteRecordsHelper *>(aClosure);
-  if (data->mSkip) {
-    data->mSkip--;
-    return PL_DHASH_NEXT;
-  }
-
-  if (data->mProcessed == data->mProcessMax) {
-#ifdef DEBUG
-    data->mHasMore = true;
-#endif
-    return PL_DHASH_STOP;
-  }
-
-  aEntry->WriteToBuf(data->mBuf);
-  data->mBuf += sizeof(CacheIndexRecord);
-  data->mProcessed++;
-
-  return PL_DHASH_NEXT;
 }
 
 nsresult
@@ -2338,39 +2309,33 @@ CacheIndex::MergeJournal()
 
   AssertOwnsLock();
 
-  mTmpJournal.EnumerateEntries(&CacheIndex::ProcessJournalEntry, this);
+  for (auto iter = mTmpJournal.Iter(); !iter.Done(); iter.Next()) {
+    CacheIndexEntry* entry = iter.Get();
 
-  MOZ_ASSERT(mTmpJournal.Count() == 0);
-}
+    LOG(("CacheIndex::MergeJournal() [hash=%08x%08x%08x%08x%08x]",
+         LOGSHA1(entry->Hash())));
 
-// static
-PLDHashOperator
-CacheIndex::ProcessJournalEntry(CacheIndexEntry *aEntry, void* aClosure)
-{
-  CacheIndex *index = static_cast<CacheIndex *>(aClosure);
+    CacheIndexEntry* entry2 = mIndex.GetEntry(*entry->Hash());
+    {
+      CacheIndexEntryAutoManage emng(entry->Hash(), this);
+      if (entry->IsRemoved()) {
+        if (entry2) {
+          entry2->MarkRemoved();
+          entry2->MarkDirty();
+        }
+      } else {
+        if (!entry2) {
+          entry2 = mIndex.PutEntry(*entry->Hash());
+        }
 
-  LOG(("CacheIndex::ProcessJournalEntry() [hash=%08x%08x%08x%08x%08x]",
-       LOGSHA1(aEntry->Hash())));
-
-  CacheIndexEntry *entry = index->mIndex.GetEntry(*aEntry->Hash());
-
-  CacheIndexEntryAutoManage emng(aEntry->Hash(), index);
-
-  if (aEntry->IsRemoved()) {
-    if (entry) {
-      entry->MarkRemoved();
-      entry->MarkDirty();
+        *entry2 = *entry;
+        entry2->MarkDirty();
+      }
     }
-  } else {
-    if (!entry) {
-      entry = index->mIndex.PutEntry(*aEntry->Hash());
-    }
-
-    *entry = *aEntry;
-    entry->MarkDirty();
+    iter.Remove();
   }
 
-  return PL_DHASH_REMOVE;
+  MOZ_ASSERT(mTmpJournal.Count() == 0);
 }
 
 void

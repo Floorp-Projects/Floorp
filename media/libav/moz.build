@@ -17,16 +17,23 @@ EXPORTS.libavutil += [
     'libavutil/mem.h'
 ]
 
+# These sources can't be unified because of macro name conflicts or needing to
+# compile asm files separately.
 SOURCES += [
     'libavcodec/avfft.c',
     'libavcodec/fft_fixed.c',
+    'libavcodec/x86/fft.asm',
+    'libavutil/dict.c',
+    'libavutil/opt.c',
+    'libavutil/x86/cpuid.asm',
+]
+
+UNIFIED_SOURCES += [
     'libavcodec/fft_float.c',
     'libavcodec/rdft.c',
-    'libavcodec/x86/fft.asm',
     'libavcodec/x86/fft_init.c',
     'libavutil/avstring.c',
     'libavutil/cpu.c',
-    'libavutil/dict.c',
     'libavutil/error.c',
     'libavutil/eval.c',
     'libavutil/file.c',
@@ -36,17 +43,15 @@ SOURCES += [
     'libavutil/log2_tab.c',
     'libavutil/mathematics.c',
     'libavutil/mem.c',
-    'libavutil/opt.c',
     'libavutil/parseutils.c',
     'libavutil/random_seed.c',
     'libavutil/rational.c',
     'libavutil/sha.c',
-    'libavutil/x86/cpuid.asm'
 ]
 
 # Dummy functions are required for windows NoOpt/PGO builds.
 if CONFIG['_MSC_VER']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'avfft_dummy_funcs.c'
     ]
 

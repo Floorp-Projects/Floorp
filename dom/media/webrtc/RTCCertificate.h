@@ -21,6 +21,7 @@
 #include "mozilla/dom/Date.h"
 #include "mozilla/dom/CryptoKey.h"
 #include "mtransport/dtlsidentity.h"
+#include "js/Date.h"
 #include "js/StructuredClone.h"
 #include "js/TypeDecls.h"
 
@@ -54,7 +55,10 @@ public:
 
   // WebIDL expires attribute.  Note: JS dates are milliseconds since epoch;
   // NSPR PRTime is in microseconds since the same epoch.
-  int64_t Expires() const { return mExpires / PR_USEC_PER_MSEC; }
+  JS::ClippedTime Expires() const
+  {
+    return JS::TimeClip(mExpires / PR_USEC_PER_MSEC);
+  }
 
   // Accessors for use by PeerConnectionImpl.
   RefPtr<DtlsIdentity> CreateDtlsIdentity() const;

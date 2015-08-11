@@ -158,8 +158,9 @@ CreateRecord(const char* aRecordName,
              GMPRecord** aOutRecord,
              GMPRecordClient* aClient)
 {
-  if (aRecordNameSize > GMP_MAX_RECORD_NAME_SIZE) {
-    NS_WARNING("GMP tried to CreateRecord with too long record name");
+  if (aRecordNameSize > GMP_MAX_RECORD_NAME_SIZE ||
+      aRecordNameSize == 0) {
+    NS_WARNING("GMP tried to CreateRecord with too long or 0 record name");
     return GMPGenericErr;
   }
   GMPStorageChild* storage = sChild->GetGMPStorage();

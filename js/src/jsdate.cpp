@@ -353,7 +353,7 @@ MakeDate(double day, double time)
 JS_PUBLIC_API(double)
 JS::MakeDate(double year, unsigned month, unsigned day)
 {
-    return TimeClip(::MakeDate(MakeDay(year, month, day), 0)).value();
+    return ::MakeDate(MakeDay(year, month, day), 0);
 }
 
 JS_PUBLIC_API(double)
@@ -640,7 +640,7 @@ date_UTC(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 16.
     ClippedTime time = TimeClip(MakeDate(MakeDay(yr, m, dt), MakeTime(h, min, s, milli)));
-    args.rval().setDouble(time.value());
+    args.rval().set(TimeValue(time));
     return true;
 }
 
@@ -878,7 +878,7 @@ ParseISODate(const CharT* s, size_t length, ClippedTime* result, DateTimeInfo* d
         msec -= tzMul * (tzHour * msPerHour + tzMin * msPerMinute);
 
     *result = TimeClip(msec);
-    return NumbersAreIdentical(msec, result->value());
+    return NumbersAreIdentical(msec, result->toDouble());
 
 #undef PEEK
 #undef NEED
@@ -1193,21 +1193,21 @@ date_parse(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
 
-    args.rval().setDouble(result.value());
+    args.rval().set(TimeValue(result));
     return true;
 }
 
 static ClippedTime
 NowAsMillis()
 {
-    return ClippedTime(static_cast<double>(PRMJ_Now()) / PRMJ_USEC_PER_MSEC);
+    return TimeClip(static_cast<double>(PRMJ_Now()) / PRMJ_USEC_PER_MSEC);
 }
 
 bool
 js::date_now(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setDouble(NowAsMillis().value());
+    args.rval().set(TimeValue(NowAsMillis()));
     return true;
 }
 
@@ -1217,14 +1217,14 @@ DateObject::setUTCTime(ClippedTime t)
     for (size_t ind = COMPONENTS_START_SLOT; ind < RESERVED_SLOTS; ind++)
         setReservedSlot(ind, UndefinedValue());
 
-    setFixedSlot(UTC_TIME_SLOT, DoubleValue(t.value()));
+    setFixedSlot(UTC_TIME_SLOT, TimeValue(t));
 }
 
 void
 DateObject::setUTCTime(ClippedTime t, MutableHandleValue vp)
 {
     setUTCTime(t);
-    vp.setDouble(t.value());
+    vp.set(TimeValue(t));
 }
 
 void
@@ -1687,7 +1687,7 @@ date_setTime_impl(JSContext* cx, CallArgs args)
 {
     Rooted<DateObject*> dateObj(cx, &args.thisv().toObject().as<DateObject>());
     if (args.length() == 0) {
-        dateObj->setUTCTime(ClippedTime::NaN(), args.rval());
+        dateObj->setUTCTime(ClippedTime::invalid(), args.rval());
         return true;
     }
 
@@ -2322,7 +2322,7 @@ date_setYear_impl(JSContext* cx, CallArgs args)
 
     /* Step 3. */
     if (IsNaN(y)) {
-        dateObj->setUTCTime(ClippedTime::NaN(), args.rval());
+        dateObj->setUTCTime(ClippedTime::invalid(), args.rval());
         return true;
     }
 
@@ -2366,7 +2366,7 @@ static const char * const months[] =
 static void
 print_gmt_string(char* buf, size_t size, double utctime)
 {
-    MOZ_ASSERT(NumbersAreIdentical(TimeClip(utctime).value(), utctime));
+    MOZ_ASSERT(NumbersAreIdentical(TimeClip(utctime).toDouble(), utctime));
     JS_snprintf(buf, size, "%s, %.2d %s %.4d %.2d:%.2d:%.2d GMT",
                 days[int(WeekDay(utctime))],
                 int(DateFromTime(utctime)),
@@ -2380,7 +2380,7 @@ print_gmt_string(char* buf, size_t size, double utctime)
 static void
 print_iso_string(char* buf, size_t size, double utctime)
 {
-    MOZ_ASSERT(NumbersAreIdentical(TimeClip(utctime).value(), utctime));
+    MOZ_ASSERT(NumbersAreIdentical(TimeClip(utctime).toDouble(), utctime));
     JS_snprintf(buf, size, "%.4d-%.2d-%.2dT%.2d:%.2d:%.2d.%.3dZ",
                 int(YearFromTime(utctime)),
                 int(MonthFromTime(utctime)) + 1,
@@ -2394,7 +2394,7 @@ print_iso_string(char* buf, size_t size, double utctime)
 static void
 print_iso_extended_string(char* buf, size_t size, double utctime)
 {
-    MOZ_ASSERT(NumbersAreIdentical(TimeClip(utctime).value(), utctime));
+    MOZ_ASSERT(NumbersAreIdentical(TimeClip(utctime).toDouble(), utctime));
     JS_snprintf(buf, size, "%+.6d-%.2d-%.2dT%.2d:%.2d:%.2d.%.3dZ",
                 int(YearFromTime(utctime)),
                 int(MonthFromTime(utctime)) + 1,
@@ -2550,7 +2550,7 @@ date_format(JSContext* cx, double date, formatspec format, MutableHandleValue rv
     if (!IsFinite(date)) {
         JS_snprintf(buf, sizeof buf, js_NaN_date_str);
     } else {
-        MOZ_ASSERT(NumbersAreIdentical(TimeClip(date).value(), date));
+        MOZ_ASSERT(NumbersAreIdentical(TimeClip(date).toDouble(), date));
 
         double local = LocalTime(date, &cx->runtime()->dateTimeInfo);
 
@@ -2990,7 +2990,7 @@ NewDateObject(JSContext* cx, const CallArgs& args, ClippedTime t)
 static bool
 ToDateString(JSContext* cx, const CallArgs& args, ClippedTime t)
 {
-    return date_format(cx, t.value(), FORMATSPEC_FULL, args.rval());
+    return date_format(cx, t.toDouble(), FORMATSPEC_FULL, args.rval());
 }
 
 static bool
@@ -3023,7 +3023,7 @@ DateOneArgument(JSContext* cx, const CallArgs& args)
                 return false;
 
             if (!ParseDate(linearStr, &t, &cx->runtime()->dateTimeInfo))
-                t = ClippedTime::NaN();
+                t = ClippedTime::invalid();
         } else {
             double d;
             if (!ToNumber(cx, args[0], &d))

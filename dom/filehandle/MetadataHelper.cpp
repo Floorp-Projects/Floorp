@@ -10,6 +10,7 @@
 #include "js/Value.h"
 #include "js/RootingAPI.h"
 #include "jsapi.h"
+#include "js/Date.h"
 #include "mozilla/dom/FileModeBinding.h"
 #include "nsDebug.h"
 #include "nsIFileStreams.h"
@@ -49,7 +50,7 @@ MetadataHelper::GetSuccessResult(JSContext* aCx,
 
   if (mParams->LastModifiedRequested()) {
     double msec = mParams->LastModified();
-    JSObject *date = JS_NewDateObjectMsec(aCx, msec);
+    JSObject *date = JS::NewDateObject(aCx, JS::TimeClip(msec));
     NS_ENSURE_TRUE(date, NS_ERROR_OUT_OF_MEMORY);
 
     JS::Rooted<JS::Value> dateRoot(aCx, JS::ObjectValue(*date));

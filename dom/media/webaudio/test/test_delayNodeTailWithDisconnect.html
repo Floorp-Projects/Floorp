@@ -63,8 +63,6 @@ function startTest() {
 
   var delayProcessor = ctx.createScriptProcessor(bufferSize, 1, 0);
   delayProcessor.onaudioprocess = onDelayOutput;
-  // Work around bug 916387.
-  delayProcessor.connect(ctx.destination);
 
   var delayDuration = delayLength / ctx.sampleRate;
   for (var i = 0; i < sourceCount; ++i) {

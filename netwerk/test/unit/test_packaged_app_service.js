@@ -136,8 +136,10 @@ function run_test()
 // This checks the proper metadata is on the entry
 var metadataListener = {
   onMetaDataElement: function(key, value) {
-    if (key == 'response-head')
-      equal(value, "HTTP/1.1 200 \r\nContent-Location: /index.html\r\nContent-Type: text/html\r\n");
+    if (key == 'response-head') {
+      var kExpectedResponseHead = "HTTP/1.1 200 \r\nContent-Location: /index.html\r\nContent-Type: text/html\r\n";
+      ok(0 === value.indexOf(kExpectedResponseHead), 'The cached response header not matched');
+    }
     else if (key == 'request-method')
       equal(value, "GET");
     else

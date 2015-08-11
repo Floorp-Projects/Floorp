@@ -25,15 +25,17 @@ public:
 
   BlankMediaDataDecoder(BlankMediaDataCreator* aCreator,
                         FlushableTaskQueue* aTaskQueue,
-                        MediaDataDecoderCallback* aCallback)
+                        MediaDataDecoderCallback* aCallback,
+                        TrackInfo::TrackType aType)
     : mCreator(aCreator)
     , mTaskQueue(aTaskQueue)
     , mCallback(aCallback)
+    , mType(aType)
   {
   }
 
-  virtual nsresult Init() override {
-    return NS_OK;
+  virtual nsRefPtr<InitPromise> Init() override {
+    return InitPromise::CreateAndResolve(mType, __func__);
   }
 
   virtual nsresult Shutdown() override {
@@ -89,6 +91,7 @@ private:
   nsAutoPtr<BlankMediaDataCreator> mCreator;
   RefPtr<FlushableTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
+  TrackInfo::TrackType mType;
 };
 
 class BlankVideoDataCreator {
@@ -221,7 +224,8 @@ public:
     nsRefPtr<MediaDataDecoder> decoder =
       new BlankMediaDataDecoder<BlankVideoDataCreator>(creator,
                                                        aVideoTaskQueue,
-                                                       aCallback);
+                                                       aCallback,
+                                                       TrackInfo::kVideoTrack);
     return decoder.forget();
   }
 
@@ -236,7 +240,8 @@ public:
     nsRefPtr<MediaDataDecoder> decoder =
       new BlankMediaDataDecoder<BlankAudioDataCreator>(creator,
                                                        aAudioTaskQueue,
-                                                       aCallback);
+                                                       aCallback,
+                                                       TrackInfo::kAudioTrack);
     return decoder.forget();
   }
 
