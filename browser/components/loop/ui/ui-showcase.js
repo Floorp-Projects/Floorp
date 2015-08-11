@@ -387,7 +387,7 @@
     roomOwner: "fake",
     roomUrl: "http://showcase",
     urls: [{
-      description: "A wonderful page!",
+      description: "1171925 - Clicking the title or favicon for context (in the conversation/standalone windows) should appear to be part of the link and open the webpage",
       location: "http://wonderful.invalid"
       // use the fallback thumbnail
     }]

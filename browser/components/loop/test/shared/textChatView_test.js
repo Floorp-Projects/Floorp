@@ -52,6 +52,18 @@ describe("loop.shared.views.TextChatView", function () {
           _.extend(basicProps, extraProps)));
     }
 
+    function mountAsRealComponent(extraProps, container) {
+      var basicProps = {
+        dispatcher: dispatcher,
+        messageList: [],
+        useDesktopPaths: false
+      };
+
+      return React.render(
+        React.createElement(loop.shared.views.chat.TextChatEntriesView,
+          _.extend(basicProps, extraProps)), container);
+    }
+
     beforeEach(function() {
       store.setStoreState({ textChatEnabled: true });
     });
@@ -208,6 +220,129 @@ describe("loop.shared.views.TextChatView", function () {
       expect(node.querySelectorAll(".text-chat-entry-timestamp").length)
           .to.eql(1);
     });
+
+    describe("Scrolling", function() {
+      var fixtures;
+
+      beforeEach(function() {
+        sandbox.stub(window, "requestAnimationFrame", function(callback) {
+          callback();
+        });
+
+        fixtures = document.querySelector("#fixtures");
+        // If we're running code coverage in Karma, we might not have
+        // a fixtures element already.
+        if (!fixtures) {
+          fixtures = document.body.appendChild(document.createElement("div"));
+          fixtures.id = "fixtures";
+        }
+
+        // We're using scrolling, so we need to mount as a real one.
+        view = mountAsRealComponent({}, fixtures);
+        sandbox.stub(view, "play");
+
+        // We need some basic styling to ensure scrolling.
+        view.getDOMNode().style.overflow = "scroll";
+        view.getDOMNode().style["max-height"] = "4ch";
+      });
+
+      afterEach(function() {
+        React.unmountComponentAtNode(fixtures);
+      });
+
+      it("should scroll when a text message is added", function() {
+        var messageList = [{
+          type: CHAT_MESSAGE_TYPES.RECEIVED,
+          contentType: CHAT_CONTENT_TYPES.TEXT,
+          message: "Hello!",
+          receivedTimestamp: "2015-06-25T17:53:55.357Z"
+        }];
+
+        view.setProps({ messageList: messageList });
+
+        node = view.getDOMNode();
+
+        expect(node.scrollTop).eql(node.scrollHeight - node.clientHeight);
+      });
+
+      it("should not scroll when a context tile is added", function() {
+        var messageList = [{
+          type: CHAT_MESSAGE_TYPES.SPECIAL,
+          contentType: CHAT_CONTENT_TYPES.CONTEXT,
+          message: "Awesome!",
+          extraData: {
+            location: "http://invalid.com"
+          }
+        }];
+
+        view.setProps({ messageList: messageList });
+
+        node = view.getDOMNode();
+
+        expect(node.scrollTop).eql(0);
+      });
+
+      it("should scroll when a message is received after a context tile", function() {
+        // The context tile.
+        var messageList = [{
+          type: CHAT_MESSAGE_TYPES.SPECIAL,
+          contentType: CHAT_CONTENT_TYPES.CONTEXT,
+          message: "Awesome!",
+          extraData: {
+            location: "http://invalid.com"
+          }
+        }];
+
+        view.setProps({ messageList: messageList });
+
+        // Now add a message. Don't use the same list as this is a shared object,
+        // that messes with React.
+        var messageList1 = [
+          messageList[0], {
+            type: CHAT_MESSAGE_TYPES.RECEIVED,
+            contentType: CHAT_CONTENT_TYPES.TEXT,
+            message: "Hello!",
+            receivedTimestamp: "2015-06-25T17:53:55.357Z"
+          }
+        ];
+
+        view.setProps({ messageList: messageList1 });
+
+        node = view.getDOMNode();
+
+        expect(node.scrollTop).eql(node.scrollHeight - node.clientHeight);
+
+      });
+
+      it("should not scroll when receiving a message and the scroll is not at the bottom", function() {
+        node = view.getDOMNode();
+
+        var messageList = [{
+          type: CHAT_MESSAGE_TYPES.RECEIVED,
+          contentType: CHAT_CONTENT_TYPES.TEXT,
+          message: "Hello!",
+          receivedTimestamp: "2015-06-25T17:53:55.357Z"
+        }];
+
+        view.setProps({ messageList: messageList });
+
+        node.scrollTop = 0;
+
+        // Don't use the same list as this is a shared object, that messes with React.
+        var messageList1 = [
+          messageList[0], {
+            type: CHAT_MESSAGE_TYPES.RECEIVED,
+            contentType: CHAT_CONTENT_TYPES.TEXT,
+            message: "Hello!",
+            receivedTimestamp: "2015-06-25T17:53:55.357Z"
+          }
+        ];
+
+        view.setProps({ messageList: messageList1 });
+
+        expect(node.scrollTop).eql(0);
+      });
+    });
   });
 
   describe("TextChatEntry", function() {
@@ -285,6 +420,10 @@ describe("loop.shared.views.TextChatView", function () {
       // Fake server to catch all XHR requests.
       fakeServer = sinon.fakeServer.create();
       store.setStoreState({ textChatEnabled: true });
+
+      sandbox.stub(navigator.mozL10n, "get", function(string) {
+        return string;
+      });
     });
 
     afterEach(function() {
@@ -481,6 +620,35 @@ describe("loop.shared.views.TextChatView", function () {
       });
 
       sinon.assert.notCalled(dispatcher.dispatch);
+    });
+
+    it("should show a placeholder when no messages have been sent", function() {
+      view = mountTestComponent();
+
+      store.receivedTextChatMessage({
+        contentType: CHAT_CONTENT_TYPES.TEXT,
+        message: "Foo",
+        sentTimestamp: "1970-01-01T00:03:00.000Z",
+        receivedTimestamp: "1970-01-01T00:03:00.000Z"
+      });
+
+      var textBox = view.getDOMNode().querySelector(".text-chat-box input");
+
+      expect(textBox.placeholder).contain("placeholder");
+    });
+
+    it("should not show a placeholder when messages have been sent", function() {
+      view = mountTestComponent();
+
+      store.sendTextChatMessage({
+        contentType: CHAT_CONTENT_TYPES.TEXT,
+        message: "Foo",
+        sentTimestamp: "2015-06-25T17:53:55.357Z"
+      });
+
+      var textBox = view.getDOMNode().querySelector(".text-chat-box input");
+
+      expect(textBox.placeholder).not.contain("placeholder");
     });
   });
 });
