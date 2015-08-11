@@ -31,8 +31,16 @@ struct JS_PUBLIC_API(WorkBudget)
  * to run for unlimited time, and others are bounded. To reduce the number of
  * gettimeofday calls, we only check the time every 1000 operations.
  */
-struct JS_PUBLIC_API(SliceBudget)
+class JS_PUBLIC_API(SliceBudget)
 {
+    static const int64_t unlimitedDeadline = INT64_MAX;
+    static const intptr_t unlimitedStartCounter = INTPTR_MAX;
+
+    bool checkOverBudget();
+
+    SliceBudget();
+
+  public:
     // Memory of the originally requested budget. If isUnlimited, neither of
     // these are in use. If deadline==0, then workBudget is valid. Otherwise
     // timeBudget is valid.
@@ -44,10 +52,11 @@ struct JS_PUBLIC_API(SliceBudget)
 
     static const intptr_t CounterReset = 1000;
 
-    static const int64_t Unlimited = -1;
+    static const int64_t UnlimitedTimeBudget = -1;
+    static const int64_t UnlimitedWorkBudget = -1;
 
     /* Use to create an unlimited budget. */
-    SliceBudget();
+    static SliceBudget unlimited() { return SliceBudget(); }
 
     /* Instantiate as SliceBudget(TimeBudget(n)). */
     explicit SliceBudget(TimeBudget time);
@@ -75,12 +84,6 @@ struct JS_PUBLIC_API(SliceBudget)
     bool isUnlimited() const { return deadline == unlimitedDeadline; }
 
     int describe(char* buffer, size_t maxlen) const;
-
-  private:
-    bool checkOverBudget();
-
-    static const int64_t unlimitedDeadline = INT64_MAX;
-    static const intptr_t unlimitedStartCounter = INTPTR_MAX;
 };
 
 } // namespace js

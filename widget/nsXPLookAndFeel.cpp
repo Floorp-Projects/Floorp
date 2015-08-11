@@ -117,6 +117,12 @@ nsLookAndFeelIntPref nsXPLookAndFeel::sIntPrefs[] =
   { "ui.physicalHomeButton",
     eIntID_PhysicalHomeButton,
     false, 0 },
+  { "ui.contextMenuOffsetVertical",
+    eIntID_ContextMenuOffsetVertical,
+    false, 0 },
+  { "ui.contextMenuOffsetHorizontal",
+    eIntID_ContextMenuOffsetHorizontal,
+    false, 0 }
 };
 
 nsLookAndFeelFloatPref nsXPLookAndFeel::sFloatPrefs[] =

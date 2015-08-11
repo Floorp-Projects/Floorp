@@ -510,6 +510,7 @@ Promise::PerformMicroTaskCheckpoint()
     if (cx.isSome()) {
       JS_CheckForInterrupt(cx.ref());
     }
+    runtime->AfterProcessMicrotask();
   } while (!microtaskQueue.empty());
 
   return true;

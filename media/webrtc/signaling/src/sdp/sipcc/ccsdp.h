@@ -185,6 +185,7 @@ typedef enum {
     SDP_ATTR_ICE_OPTIONS,
     SDP_ATTR_SSRC,
     SDP_ATTR_IMAGEATTR,
+    SDP_ATTR_SIMULCAST,
     SDP_MAX_ATTR_TYPES,
     SDP_ATTR_INVALID
 } sdp_attr_e;

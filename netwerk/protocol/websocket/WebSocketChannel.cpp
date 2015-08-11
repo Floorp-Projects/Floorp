@@ -2704,10 +2704,15 @@ WebSocketChannel::ApplyForAdmission()
 
   MOZ_ASSERT(!mCancelable);
 
-  return pps->AsyncResolve(mHttpChannel,
-                           nsIProtocolProxyService::RESOLVE_PREFER_HTTPS_PROXY |
-                           nsIProtocolProxyService::RESOLVE_ALWAYS_TUNNEL,
-                           this, getter_AddRefs(mCancelable));
+  nsresult rv;
+  rv = pps->AsyncResolve(mHttpChannel,
+                         nsIProtocolProxyService::RESOLVE_PREFER_HTTPS_PROXY |
+                         nsIProtocolProxyService::RESOLVE_ALWAYS_TUNNEL,
+                         this, getter_AddRefs(mCancelable));
+  NS_ASSERTION(NS_FAILED(rv) || mCancelable,
+               "nsIProtocolProxyService::AsyncResolve succeeded but didn't "
+               "return a cancelable object!");
+  return rv;
 }
 
 // Called after both OnStartRequest and OnTransportAvailable have
@@ -2855,7 +2860,7 @@ WebSocketChannel::OnProxyAvailable(nsICancelable *aRequest, nsIChannel *aChannel
     return NS_OK;
   }
 
-  MOZ_ASSERT(aRequest == mCancelable);
+  MOZ_ASSERT(!mCancelable || (aRequest == mCancelable));
   mCancelable = nullptr;
 
   nsAutoCString type;

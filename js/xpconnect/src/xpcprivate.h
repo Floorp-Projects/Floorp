@@ -153,7 +153,6 @@
 #include "nsJSPrincipals.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "xpcObjectHelper.h"
-#include "nsIThreadInternal.h"
 
 #include "SandboxPrivate.h"
 #include "BackstagePass.h"
@@ -240,14 +239,12 @@ static inline bool IS_WN_REFLECTOR(JSObject* obj)
 // returned as function call result values they are not addref'd. Exceptions
 // to this rule are noted explicitly.
 
-class nsXPConnect final : public nsIXPConnect,
-                          public nsIThreadObserver
+class nsXPConnect final : public nsIXPConnect
 {
 public:
     // all the interface method declarations...
     NS_DECL_ISUPPORTS
     NS_DECL_NSIXPCONNECT
-    NS_DECL_NSITHREADOBSERVER
 
     // non-interface implementation
 public:
@@ -323,13 +320,6 @@ private:
 
     XPCJSRuntime*                   mRuntime;
     bool                            mShuttingDown;
-
-    // nsIThreadInternal doesn't remember which observers it called
-    // OnProcessNextEvent on when it gets around to calling AfterProcessNextEvent.
-    // So if XPConnect gets initialized mid-event (which can happen), we'll get
-    // an 'after' notification without getting an 'on' notification. If we don't
-    // watch out for this, we'll do an unmatched |pop| on the context stack.
-    uint16_t                 mEventDepth;
 
     static uint32_t gReportAllJSExceptions;
 
@@ -489,6 +479,9 @@ public:
     NoteCustomGCThingXPCOMChildren(const js::Class* aClasp, JSObject* aObj,
                                    nsCycleCollectionTraversalCallback& aCb) const override;
 
+    virtual void BeforeProcessTask(bool aMightBlock) override;
+    virtual void AfterProcessTask(uint32_t aNewRecursionDepth) override;
+
     /**
      * Infrastructure for classes that need to defer part of the finalization
      * until after the GC has run, for example for objects that we don't want to
@@ -614,16 +607,6 @@ public:
     void DeleteSingletonScopes();
 
     PRTime GetWatchdogTimestamp(WatchdogTimestampCategory aCategory);
-
-    void OnProcessNextEvent() {
-        mSlowScriptCheckpoint = mozilla::TimeStamp::NowLoRes();
-        mSlowScriptSecondHalf = false;
-        js::ResetStopwatches(Get()->Runtime());
-    }
-    void OnAfterProcessNextEvent() {
-        mSlowScriptCheckpoint = mozilla::TimeStamp();
-        mSlowScriptSecondHalf = false;
-    }
 
     nsTArray<nsXPCWrappedJS*>& WrappedJSToReleaseArray() { return mWrappedJSToReleaseArray; }
 

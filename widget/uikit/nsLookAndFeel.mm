@@ -345,6 +345,10 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
     case eIntID_SpellCheckerUnderlineStyle:
       aResult = NS_STYLE_TEXT_DECORATION_STYLE_DOTTED;
       break;
+    case eIntID_ContextMenuOffsetVertical:
+    case eIntID_ContextMenuOffsetHorizontal:
+      aResult = 2;
+      break;
     default:
       aResult = 0;
       res = NS_ERROR_FAILURE;

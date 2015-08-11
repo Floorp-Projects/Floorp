@@ -3,6 +3,9 @@
 if (!("gcstate" in this && "gczeal" in this && "abortgc" in this))
     quit();
 
+gczeal(0);
+gc();
+
 function testAbort(zoneCount, objectCount, sliceCount, abortState)
 {
     // Allocate objectCount objects in zoneCount zones and run a incremental

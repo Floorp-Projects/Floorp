@@ -63,6 +63,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/DebuggerOnGCRunnable.h"
 #include "mozilla/dom/DOMJSClass.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "jsprf.h"
 #include "js/Debug.h"
@@ -77,6 +78,7 @@
 #endif
 
 #include "nsIException.h"
+#include "nsThread.h"
 #include "nsThreadUtils.h"
 #include "xpcpublic.h"
 
@@ -402,9 +404,18 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime(JSRuntime* aParentRuntime,
   , mJSRuntime(nullptr)
   , mPrevGCSliceCallback(nullptr)
   , mJSHolders(256)
+  , mDoingStableStates(false)
   , mOutOfMemoryState(OOMState::OK)
   , mLargeAllocationFailureState(OOMState::OK)
 {
+  nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
+  mOwningThread = thread.forget().downcast<nsThread>().take();
+  MOZ_RELEASE_ASSERT(mOwningThread);
+
+  mOwningThread->SetScriptObserver(this);
+  // The main thread has a base recursion depth of 0, workers of 1.
+  mBaseRecursionDepth = RecursionDepth();
+
   mozilla::dom::InitScriptSettings();
 
   mJSRuntime = JS_NewRuntime(aMaxBytes, aMaxNurseryBytes, aParentRuntime);
@@ -440,6 +451,13 @@ CycleCollectedJSRuntime::~CycleCollectedJSRuntime()
   MOZ_ASSERT(mJSRuntime);
   MOZ_ASSERT(!mDeferredFinalizerTable.Count());
 
+  // Last chance to process any events.
+  ProcessMetastableStateQueue(mBaseRecursionDepth);
+  MOZ_ASSERT(mMetastableStateEvents.IsEmpty());
+
+  ProcessStableStateQueue();
+  MOZ_ASSERT(mStableStateEvents.IsEmpty());
+
   // Clear mPendingException first, since it might be cycle collected.
   mPendingException = nullptr;
 
@@ -448,6 +466,9 @@ CycleCollectedJSRuntime::~CycleCollectedJSRuntime()
   nsCycleCollector_forgetJSRuntime();
 
   mozilla::dom::DestroyScriptSettings();
+
+  mOwningThread->SetScriptObserver(nullptr);
+  NS_RELEASE(mOwningThread);
 }
 
 size_t
@@ -1015,6 +1036,112 @@ CycleCollectedJSRuntime::DumpJSHeap(FILE* aFile)
   js::DumpHeap(Runtime(), aFile, js::CollectNurseryBeforeDump);
 }
 
+void
+CycleCollectedJSRuntime::ProcessStableStateQueue()
+{
+  MOZ_RELEASE_ASSERT(!mDoingStableStates);
+  mDoingStableStates = true;
+
+  for (uint32_t i = 0; i < mStableStateEvents.Length(); ++i) {
+    nsCOMPtr<nsIRunnable> event = mStableStateEvents[i].forget();
+    event->Run();
+  }
+
+  mStableStateEvents.Clear();
+  mDoingStableStates = false;
+}
+
+void
+CycleCollectedJSRuntime::ProcessMetastableStateQueue(uint32_t aRecursionDepth)
+{
+  MOZ_RELEASE_ASSERT(!mDoingStableStates);
+  mDoingStableStates = true;
+
+  nsTArray<RunInMetastableStateData> localQueue = Move(mMetastableStateEvents);
+
+  for (uint32_t i = 0; i < localQueue.Length(); ++i)
+  {
+    RunInMetastableStateData& data = localQueue[i];
+    if (data.mRecursionDepth != aRecursionDepth) {
+      continue;
+    }
+
+    {
+      nsCOMPtr<nsIRunnable> runnable = data.mRunnable.forget();
+      runnable->Run();
+    }
+
+    localQueue.RemoveElementAt(i--);
+  }
+
+  // If the queue has events in it now, they were added from something we called,
+  // so they belong at the end of the queue.
+  localQueue.AppendElements(mMetastableStateEvents);
+  localQueue.SwapElements(mMetastableStateEvents);
+  mDoingStableStates = false;
+}
+
+void
+CycleCollectedJSRuntime::AfterProcessTask(uint32_t aRecursionDepth)
+{
+  // See HTML 6.1.4.2 Processing model
+
+  // Execute any events that were waiting for a microtask to complete.
+  // This is not (yet) in the spec.
+  ProcessMetastableStateQueue(aRecursionDepth);
+
+  // Step 4.1: Execute microtasks.
+  if (NS_IsMainThread()) {
+    nsContentUtils::PerformMainThreadMicroTaskCheckpoint();
+  }
+
+  Promise::PerformMicroTaskCheckpoint();
+
+  // Step 4.2 Execute any events that were waiting for a stable state.
+  ProcessStableStateQueue();
+}
+
+void
+CycleCollectedJSRuntime::AfterProcessMicrotask()
+{
+  AfterProcessMicrotask(RecursionDepth());
+}
+
+void
+CycleCollectedJSRuntime::AfterProcessMicrotask(uint32_t aRecursionDepth)
+{
+  // Between microtasks, execute any events that were waiting for a microtask
+  // to complete.
+  ProcessMetastableStateQueue(aRecursionDepth);
+}
+
+uint32_t
+CycleCollectedJSRuntime::RecursionDepth()
+{
+  return mOwningThread->RecursionDepth();
+}
+
+void
+CycleCollectedJSRuntime::RunInStableState(already_AddRefed<nsIRunnable>&& aRunnable)
+{
+  MOZ_ASSERT(mJSRuntime);
+  mStableStateEvents.AppendElement(Move(aRunnable));
+}
+
+void
+CycleCollectedJSRuntime::RunInMetastableState(already_AddRefed<nsIRunnable>&& aRunnable)
+{
+  RunInMetastableStateData data;
+  data.mRunnable = aRunnable;
+
+  MOZ_ASSERT(mOwningThread);
+  data.mRecursionDepth = RecursionDepth();
+
+  // There must be an event running to get here.
+  MOZ_ASSERT(data.mRecursionDepth > mBaseRecursionDepth);
+
+  mMetastableStateEvents.AppendElement(Move(data));
+}
 
 IncrementalFinalizeRunnable::IncrementalFinalizeRunnable(CycleCollectedJSRuntime* aRt,
                                                          DeferredFinalizerTable& aFinalizers)

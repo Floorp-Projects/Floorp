@@ -775,7 +775,7 @@ class GCRuntime
     uint64_t majorGCCount() const { return majorGCNumber; }
     void incMajorGcNumber() { ++majorGCNumber; }
 
-    int64_t defaultSliceBudget() const { return sliceBudget; }
+    int64_t defaultSliceBudget() const { return defaultTimeBudget_; }
 
     bool isIncrementalGc() const { return isIncremental; }
     bool isFullGc() const { return isFull; }
@@ -887,12 +887,22 @@ class GCRuntime
 
     void requestMajorGC(JS::gcreason::Reason reason);
     SliceBudget defaultBudget(JS::gcreason::Reason reason, int64_t millis);
-    void collect(bool incremental, SliceBudget budget, JS::gcreason::Reason reason);
-    bool gcCycle(bool incremental, SliceBudget& budget, JS::gcreason::Reason reason);
-    gcstats::ZoneGCStats scanZonesBeforeGC();
     void budgetIncrementalGC(SliceBudget& budget);
     void resetIncrementalGC(const char* reason);
+
+    // Assert if the system state is such that we should never
+    // receive a request to do GC work.
+    void checkCanCallAPI();
+
+    // Check if the system state is such that GC has been supressed
+    // or otherwise delayed.
+    bool checkIfGCAllowedInCurrentState(JS::gcreason::Reason reason);
+
+    gcstats::ZoneGCStats scanZonesBeforeGC();
+    void collect(bool incremental, SliceBudget budget, JS::gcreason::Reason reason);
+    bool gcCycle(bool incremental, SliceBudget& budget, JS::gcreason::Reason reason);
     void incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason reason);
+
     void pushZealSelectedObjects();
     void purgeRuntime();
     bool beginMarkPhase(JS::gcreason::Reason reason);
@@ -1162,7 +1172,7 @@ class GCRuntime
     bool interFrameGC;
 
     /* Default budget for incremental GC slice. See js/SliceBudget.h. */
-    int64_t sliceBudget;
+    int64_t defaultTimeBudget_;
 
     /*
      * We disable incremental GC if we encounter a js::Class with a trace hook

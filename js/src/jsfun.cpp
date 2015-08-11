@@ -772,7 +772,6 @@ CreateFunctionPrototype(JSContext* cx, JSProtoKey key)
                                              /* enclosingScope = */ nullptr,
                                              /* savedCallerFun = */ false,
                                              options,
-                                             /* staticLevel = */ 0,
                                              sourceObject,
                                              0,
                                              ss->length()));

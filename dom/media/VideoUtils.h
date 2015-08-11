@@ -7,6 +7,7 @@
 #ifndef VideoUtils_h
 #define VideoUtils_h
 
+#include "FlushableTaskQueue.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/MozPromise.h"
@@ -260,9 +261,6 @@ GenerateRandomName(nsCString& aOutSalt, uint32_t aLength);
 // path. This is based on code from nsExternalAppHandler::SetUpTempFile.
 nsresult
 GenerateRandomPathName(nsCString& aOutSalt, uint32_t aLength);
-
-class TaskQueue;
-class FlushableTaskQueue;
 
 already_AddRefed<TaskQueue>
 CreateMediaDecodeTaskQueue();

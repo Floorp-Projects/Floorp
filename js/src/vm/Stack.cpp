@@ -108,6 +108,13 @@ InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script, AbstractF
 }
 
 bool
+InterpreterFrame::isDirectEvalFrame() const
+{
+    return isEvalFrame() &&
+           script()->enclosingStaticScope()->as<StaticEvalObject>().isDirect();
+}
+
+bool
 InterpreterFrame::copyRawFrameSlots(AutoValueVector* vec)
 {
     if (!vec->resize(numFormalArgs() + script()->nfixed()))

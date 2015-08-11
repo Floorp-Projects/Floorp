@@ -924,7 +924,8 @@ XPC_WN_Helper_Enumerate(JSContext* cx, HandleObject obj)
 /***************************************************************************/
 
 static bool
-XPC_WN_JSOp_Enumerate(JSContext* cx, HandleObject obj, AutoIdVector& properties)
+XPC_WN_JSOp_Enumerate(JSContext* cx, HandleObject obj, AutoIdVector& properties,
+                      bool enumerableOnly)
 {
     XPCCallContext ccx(JS_CALLER, cx, obj);
     XPCWrappedNative* wrapper = ccx.GetWrapper();
