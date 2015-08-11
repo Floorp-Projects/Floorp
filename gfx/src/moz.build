@@ -14,7 +14,7 @@ XPIDL_MODULE = 'gfx'
 DEFINES['MOZ_APP_VERSION'] = '"%s"' % CONFIG['MOZ_APP_VERSION']
 
 EXPORTS += [
-    'DriverInitCrashDetection.h',
+    'DriverCrashGuard.h',
     'FilterSupport.h',
     'gfxCore.h',
     'gfxCrashReporterUtils.h',
@@ -54,7 +54,7 @@ if CONFIG['MOZ_X11']:
     ]
 
 UNIFIED_SOURCES += [
-    'DriverInitCrashDetection.cpp',
+    'DriverCrashGuard.cpp',
     'FilterSupport.cpp',
     'gfxCrashReporterUtils.cpp',
     'gfxTelemetry.cpp',
