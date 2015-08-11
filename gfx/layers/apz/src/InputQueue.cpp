@@ -405,6 +405,19 @@ InputQueue::HasReadyTouchBlock() const
          mInputBlockQueue[0]->IsReadyForHandling();
 }
 
+bool
+InputQueue::AllowScrollHandoff() const
+{
+  MOZ_ASSERT(CurrentBlock());
+  if (CurrentBlock()->AsWheelBlock()) {
+    return CurrentBlock()->AsWheelBlock()->AllowScrollHandoff();
+  }
+  if (CurrentBlock()->AsPanGestureBlock()) {
+    return CurrentBlock()->AsPanGestureBlock()->AllowScrollHandoff();
+  }
+  return true;
+}
+
 void
 InputQueue::ScheduleMainThreadTimeout(const nsRefPtr<AsyncPanZoomController>& aTarget, uint64_t aInputBlockId) {
   INPQ_LOG("scheduling main thread timeout for target %p\n", aTarget.get());
