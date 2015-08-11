@@ -255,19 +255,20 @@ typedef bool
 (* JSDeletePropertyOp)(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
                        JS::ObjectOpResult& result);
 
-// The type of ObjectOps::enumerate. This callback overrides a portion of SpiderMonkey's default
-// [[Enumerate]] internal method. When an ordinary object is enumerated, that object and each object
-// on its prototype chain is tested for an enumerate op, and those ops are called in order.
-// The properties each op adds to the 'properties' vector are added to the set of values the
-// for-in loop will iterate over. All of this is nonstandard.
+// The type of ObjectOps::enumerate. This callback overrides a portion of
+// SpiderMonkey's default [[Enumerate]] internal method. When an ordinary object
+// is enumerated, that object and each object on its prototype chain is tested
+// for an enumerate op, and those ops are called in order. The properties each
+// op adds to the 'properties' vector are added to the set of values the for-in
+// loop will iterate over. All of this is nonstandard.
 //
-// An object is "enumerated" when it's the target of a for-in loop or JS_Enumerate().
-// All other property inspection, including Object.keys(obj), goes through [[OwnKeys]].
-//
-// The callback's job is to populate 'properties' with all property keys that the for-in loop
-// should visit.
+// An object is "enumerated" when it's the target of a for-in loop or
+// JS_Enumerate(). The callback's job is to populate 'properties' with the
+// object's property keys. If `enumerableOnly` is true, the callback should only
+// add enumerable properties.
 typedef bool
-(* JSNewEnumerateOp)(JSContext* cx, JS::HandleObject obj, JS::AutoIdVector& properties);
+(* JSNewEnumerateOp)(JSContext* cx, JS::HandleObject obj, JS::AutoIdVector& properties,
+                     bool enumerableOnly);
 
 // The old-style JSClass.enumerate op should define all lazy properties not
 // yet reflected in obj.
