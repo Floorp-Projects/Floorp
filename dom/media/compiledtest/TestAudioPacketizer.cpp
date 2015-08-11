@@ -5,6 +5,8 @@
 
 #include <stdint.h>
 #include <assert.h>
+#define _USE_MATH_DEFINES
+#include <math.h>
 #include "../AudioPacketizer.h"
 
 using namespace mozilla;
@@ -13,7 +15,7 @@ template<typename T>
 class AutoBuffer
 {
 public:
-  AutoBuffer(size_t aLength)
+  explicit AutoBuffer(size_t aLength)
   {
     mStorage = new T[aLength];
   }
