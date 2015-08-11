@@ -63,7 +63,16 @@ ContentDispatchChooser.prototype =
         uri: aURI.spec,
       };
 
-      Messaging.sendRequest(msg);
+      Messaging.sendRequestForResult(msg).then(() => {
+        // Java opens an app on success: take no action.
+      }, (uri) => {
+        // Java didn't load a page so load the page that Java wants us to load.
+        //
+        // Note: when we load the page here (rather than into the selected tab in
+        // java), we load it in the same context where the uri was specified (e.g.
+        // if it's in an iframe, we load the page in an iframe).
+        window.location.href = uri;
+      });
     }
   },
 };
