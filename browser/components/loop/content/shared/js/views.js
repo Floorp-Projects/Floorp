@@ -988,7 +988,7 @@ loop.shared.views = (function(_, mozL10n) {
 
     componentWillReceiveProps: function(nextProps) {
       // This is all for the ui-showcase's benefit.
-      if (this.props.matchMedia != nextProps.matchMedia) {
+      if (this.props.matchMedia !== nextProps.matchMedia) {
         this.updateLocalMediaState(null, nextProps.matchMedia);
       }
     },
@@ -1003,7 +1003,7 @@ loop.shared.views = (function(_, mozL10n) {
 
     updateLocalMediaState: function(event, matchMedia) {
       var newState = this.isLocalMediaAbsolutelyPositioned(matchMedia);
-      if (this.state.localMediaAboslutelyPositioned != newState) {
+      if (this.state.localMediaAboslutelyPositioned !== newState) {
         this.setState({
           localMediaAboslutelyPositioned: newState
         });
