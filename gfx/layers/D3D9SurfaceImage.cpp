@@ -55,11 +55,8 @@ D3D9SurfaceImage::SetData(const Data& aData)
   // device.
   const gfx::IntRect& region = aData.mRegion;
   RefPtr<SharedTextureClientD3D9> textureClient =
-    SharedTextureClientD3D9::Create(layers::ImageBridgeChild::GetSingleton(),
-                                    gfx::SurfaceFormat::B8G8R8X8,
-                                    TextureFlags::DEFAULT,
-                                    device,
-                                    region.Size());
+    aData.mAllocator->CreateOrRecycleClient(gfx::SurfaceFormat::B8G8R8X8,
+                                            region.Size());
   if (!textureClient) {
     return E_FAIL;
   }
@@ -202,6 +199,37 @@ D3D9SurfaceImage::GetAsSourceSurface()
   surface->Unmap();
 
   return surface.forget();
+}
+
+already_AddRefed<TextureClient>
+D3D9RecycleAllocator::Allocate(gfx::SurfaceFormat aFormat,
+                               gfx::IntSize aSize,
+                               BackendSelector aSelector,
+                               TextureFlags aTextureFlags,
+                               TextureAllocationFlags aAllocFlags)
+{
+  return SharedTextureClientD3D9::Create(mSurfaceAllocator,
+                                         aFormat,
+                                         aTextureFlags,
+                                         mDevice,
+                                         aSize);
+}
+
+already_AddRefed<SharedTextureClientD3D9>
+D3D9RecycleAllocator::CreateOrRecycleClient(gfx::SurfaceFormat aFormat,
+                                            const gfx::IntSize& aSize)
+{
+  RefPtr<TextureClient> textureClient =
+    CreateOrRecycle(aFormat,
+                    aSize,
+                    BackendSelector::Content,
+                    layers::TextureFlags::DEFAULT);
+  if (!textureClient) {
+    return nullptr;
+  }
+
+  RefPtr<SharedTextureClientD3D9> textureD3D9 = static_cast<SharedTextureClientD3D9*>(textureClient.get());
+  return textureD3D9.forget();
 }
 
 } // namespace layers
