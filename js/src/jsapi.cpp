@@ -1765,25 +1765,6 @@ JS_SetNativeStackQuota(JSRuntime* rt, size_t systemCodeStackSize, size_t trusted
 
 /************************************************************************/
 
-JS_PUBLIC_API(int)
-JS_IdArrayLength(JSContext* cx, JSIdArray* ida)
-{
-    return ida->length;
-}
-
-JS_PUBLIC_API(jsid)
-JS_IdArrayGet(JSContext* cx, JSIdArray* ida, unsigned index)
-{
-    MOZ_ASSERT(index < unsigned(ida->length));
-    return ida->vector[index];
-}
-
-JS_PUBLIC_API(void)
-JS_DestroyIdArray(JSContext* cx, JSIdArray* ida)
-{
-    cx->runtime()->defaultFreeOp()->free_(ida);
-}
-
 JS_PUBLIC_API(bool)
 JS_ValueToId(JSContext* cx, HandleValue value, MutableHandleId idp)
 {
@@ -3166,18 +3147,19 @@ JS_SetAllNonReservedSlotsToUndefined(JSContext* cx, JSObject* objArg)
         obj->as<NativeObject>().setSlot(i, UndefinedValue());
 }
 
-JS_PUBLIC_API(JSIdArray*)
-JS_Enumerate(JSContext* cx, HandleObject obj)
+JS_PUBLIC_API(bool)
+JS_Enumerate(JSContext* cx, HandleObject obj, JS::MutableHandle<IdVector> props)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
+    MOZ_ASSERT(props.empty());
 
-    AutoIdVector props(cx);
-    JSIdArray* ida;
-    if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY, &props) || !VectorToIdArray(cx, props, &ida))
-        return nullptr;
-    return ida;
+    AutoIdVector ids(cx);
+    if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY, &ids))
+        return false;
+
+    return props.append(ids.begin(), ids.end());
 }
 
 JS_PUBLIC_API(Value)
@@ -4252,7 +4234,7 @@ CompileFunction(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
             return false;
     }
 
-    AutoNameVector formals(cx);
+    Rooted<PropertyNameVector> formals(cx, PropertyNameVector(cx));
     for (unsigned i = 0; i < nargs; i++) {
         RootedAtom argAtom(cx, Atomize(cx, argnames[i], strlen(argnames[i])));
         if (!argAtom || !formals.append(argAtom->asPropertyName()))

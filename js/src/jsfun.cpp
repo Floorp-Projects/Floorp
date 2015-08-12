@@ -1704,7 +1704,7 @@ FunctionConstructor(JSContext* cx, unsigned argc, Value* vp, GeneratorKind gener
     }
 
     AutoKeepAtoms keepAtoms(cx->perThreadData);
-    AutoNameVector formals(cx);
+    Rooted<PropertyNameVector> formals(cx, PropertyNameVector(cx));
 
     bool hasRest = false;
 

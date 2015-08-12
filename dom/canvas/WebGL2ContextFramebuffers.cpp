@@ -330,16 +330,92 @@ WebGL2Context::BlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY
                          mask, filter);
 }
 
-void
-WebGL2Context::FramebufferTextureLayer(GLenum target, GLenum attachment, GLuint texture, GLint level, GLint layer)
+static bool
+ValidateTextureLayerAttachment(GLenum attachment)
 {
-    GenerateWarning("framebufferTextureLayer: Not Implemented.");
+    if (LOCAL_GL_COLOR_ATTACHMENT0 < attachment &&
+        attachment <= LOCAL_GL_COLOR_ATTACHMENT15)
+    {
+        return true;
+    }
+
+    switch (attachment) {
+    case LOCAL_GL_DEPTH_ATTACHMENT:
+    case LOCAL_GL_DEPTH_STENCIL_ATTACHMENT:
+    case LOCAL_GL_STENCIL_ATTACHMENT:
+        return true;
+    }
+
+    return false;
 }
 
 void
-WebGL2Context::GetInternalformatParameter(JSContext*, GLenum target, GLenum internalformat, GLenum pname, JS::MutableHandleValue retval)
+WebGL2Context::FramebufferTextureLayer(GLenum target, GLenum attachment,
+                                       WebGLTexture* texture, GLint level, GLint layer)
 {
-    GenerateWarning("getInternalformatParameter: Not Implemented.");
+    if (IsContextLost())
+        return;
+
+    if (!ValidateFramebufferTarget(target, "framebufferTextureLayer"))
+        return;
+
+    if (!ValidateTextureLayerAttachment(attachment))
+        return ErrorInvalidEnumInfo("framebufferTextureLayer: attachment:", attachment);
+
+    if (texture) {
+        if (texture->IsDeleted()) {
+            return ErrorInvalidValue("framebufferTextureLayer: texture must be a valid "
+                                     "texture object.");
+        }
+
+        if (level < 0)
+            return ErrorInvalidValue("framebufferTextureLayer: layer must be >= 0.");
+
+        switch (texture->Target()) {
+        case LOCAL_GL_TEXTURE_3D:
+            if ((GLuint) layer >= mGLMax3DTextureSize) {
+                return ErrorInvalidValue("framebufferTextureLayer: layer must be < "
+                                         "MAX_3D_TEXTURE_SIZE");
+            }
+            break;
+
+        case LOCAL_GL_TEXTURE_2D_ARRAY:
+            if ((GLuint) layer >= mGLMaxArrayTextureLayers) {
+                return ErrorInvalidValue("framebufferTextureLayer: layer must be < "
+                                         "MAX_ARRAY_TEXTURE_LAYERS");
+            }
+            break;
+
+        default:
+            return ErrorInvalidOperation("framebufferTextureLayer: texture must be an "
+                                         "existing 3D texture, or a 2D texture array.");
+        }
+    } else {
+        return ErrorInvalidOperation("framebufferTextureLayer: texture must be an "
+                                     "existing 3D texture, or a 2D texture array.");
+    }
+
+    WebGLFramebuffer* fb;
+    switch (target) {
+    case LOCAL_GL_FRAMEBUFFER:
+    case LOCAL_GL_DRAW_FRAMEBUFFER:
+        fb = mBoundDrawFramebuffer;
+        break;
+
+    case LOCAL_GL_READ_FRAMEBUFFER:
+        fb = mBoundReadFramebuffer;
+        break;
+
+    default:
+        MOZ_CRASH("Bad target.");
+    }
+
+    if (!fb) {
+        return ErrorInvalidOperation("framebufferTextureLayer: cannot modify"
+                                     " framebuffer 0.");
+    }
+
+    fb->FramebufferTextureLayer(attachment, texture, level, layer);
 }
 
 // Map attachments intended for the default buffer, to attachments for a non-
@@ -534,15 +610,6 @@ WebGL2Context::ReadBuffer(GLenum mode)
     }
 
     gl->Screen()->SetReadBuffer(mode);
-}
-
-void
-WebGL2Context::RenderbufferStorageMultisample(GLenum target, GLsizei samples,
-                                              GLenum internalFormat,
-                                              GLsizei width, GLsizei height)
-{
-    RenderbufferStorage_base("renderbufferStorageMultisample", target, samples,
-                              internalFormat, width, height);
 }
 
 } // namespace mozilla

@@ -93,6 +93,8 @@
 #ifdef USE_SKIA
 #include "skia/include/core/SkGraphics.h"
 # ifdef USE_SKIA_GPU
+#  include "skia/include/gpu/GrContext.h"
+#  include "skia/include/gpu/gl/GrGLInterface.h"
 #  include "SkiaGLGlue.h"
 # endif
 #endif

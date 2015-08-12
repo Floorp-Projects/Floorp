@@ -329,6 +329,8 @@ struct GLContextSymbols
     PFNGLFRAMEBUFFERRENDERBUFFER fFramebufferRenderbuffer;
     typedef void (GLAPIENTRY * PFNGLFRAMEBUFFERTEXTURE2D) (GLenum target, GLenum attachmentPoint, GLenum textureTarget, GLuint texture, GLint level);
     PFNGLFRAMEBUFFERTEXTURE2D fFramebufferTexture2D;
+    typedef void (GLAPIENTRY * PFNGLFRAMEBUFFERTEXTURELAYERPROC) (GLenum target, GLenum attachment, GLuint texture, GLint level, GLint layer);
+    PFNGLFRAMEBUFFERTEXTURELAYERPROC fFramebufferTextureLayer;
     typedef void (GLAPIENTRY * PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIV) (GLenum target, GLenum attachment, GLenum pname, GLint* value);
     PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIV fGetFramebufferAttachmentParameteriv;
     typedef void (GLAPIENTRY * PFNGLGETRENDERBUFFERPARAMETERIV) (GLenum target, GLenum pname, GLint* value);
@@ -486,6 +488,10 @@ struct GLContextSymbols
     // ARB_instanced_array
     typedef void (GLAPIENTRY * PFNGLVERTEXATTRIBDIVISOR) (GLuint index, GLuint divisor);
     PFNGLVERTEXATTRIBDIVISOR fVertexAttribDivisor;
+
+    // ARB_internalformat_query
+    typedef void (GLAPIENTRY * PFNGLGETINTERNALFORMATIVPROC) (GLenum target, GLenum internalformat, GLenum pname, GLsizei bufSize, GLint* params);
+    PFNGLGETINTERNALFORMATIVPROC fGetInternalformativ;
 
     // ARB_transform_feedback2 / OpenGL 4.0 / OpenGL ES 3.0
     typedef void (GLAPIENTRY * PFNGLBINDBUFFERBASE) (GLenum target, GLuint index, GLuint buffer);

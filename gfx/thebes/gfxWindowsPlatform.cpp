@@ -73,7 +73,7 @@
 #include "gfxPrefs.h"
 
 #include "VsyncSource.h"
-#include "DriverInitCrashDetection.h"
+#include "DriverCrashGuard.h"
 #include "mozilla/dom/ContentParent.h"
 
 using namespace mozilla;
@@ -2183,8 +2183,8 @@ gfxWindowsPlatform::InitializeDevices()
   // If we previously crashed initializing devices, bail out now. This is
   // effectively a parent-process only check, since the content process
   // cannot create a lock file.
-  DriverInitCrashDetection detectCrashes;
-  if (detectCrashes.DisableAcceleration()) {
+  D3D11LayersCrashGuard detectCrashes;
+  if (detectCrashes.Crashed()) {
     mAcceleration = FeatureStatus::Blocked;
     return;
   }

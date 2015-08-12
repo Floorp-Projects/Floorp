@@ -10,12 +10,12 @@
  * liability, trademark and document use rules apply.
  */
 
-dictionary CSSFontFaceLoadEventInit : EventInit {
+dictionary FontFaceSetLoadEventInit : EventInit {
   sequence<FontFace> fontfaces = [];
 };
 
-[Constructor(DOMString type, optional CSSFontFaceLoadEventInit eventInitDict),
+[Constructor(DOMString type, optional FontFaceSetLoadEventInit eventInitDict),
  Pref="layout.css.font-loading-api.enabled"]
-interface CSSFontFaceLoadEvent : Event {
+interface FontFaceSetLoadEvent : Event {
   [Cached, Constant] readonly attribute sequence<FontFace> fontfaces;
 };

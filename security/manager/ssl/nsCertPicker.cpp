@@ -163,21 +163,13 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx,
          ++i, node = CERT_LIST_NEXT(node)) {
 
       if (i == selectedIndex) {
-        nsNSSCertificate *cert = nsNSSCertificate::Create(node->cert);
+        nsRefPtr<nsNSSCertificate> cert = nsNSSCertificate::Create(node->cert);
         if (!cert) {
           rv = NS_ERROR_OUT_OF_MEMORY;
           break;
         }
 
-        nsIX509Cert *x509 = 0;
-        nsresult rv = cert->QueryInterface(NS_GET_IID(nsIX509Cert), (void**)&x509);
-        if (NS_FAILED(rv)) {
-          break;
-        }
-
-        NS_ADDREF(x509);
-        *_retval = x509;
-        NS_RELEASE(cert);
+        cert.forget(_retval);
         break;
       }
     }

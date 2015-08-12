@@ -232,9 +232,6 @@ private:
   DECL_GFX_PREF(Once, "gfx.direct2d.force-enabled",            Direct2DForceEnabled, bool, false);
   DECL_GFX_PREF(Live, "gfx.direct2d.use1_1",                   Direct2DUse1_1, bool, false);
   DECL_GFX_PREF(Live, "gfx.draw-color-bars",                   CompositorDrawColorBars, bool, false);
-  // This should be set to values in the DriverInitStatus enumeration found in
-  // DriverInitCrashDetection.h.
-  DECL_GFX_PREF(Live, "gfx.driver-init.status",                DriverInitStatus, int32_t, 0);
   DECL_GFX_PREF(Once, "gfx.font_rendering.directwrite.enabled", DirectWriteFontRenderingEnabled, bool, false);
   DECL_GFX_PREF(Live, "gfx.gralloc.fence-with-readpixels",     GrallocFenceWithReadPixels, bool, false);
   DECL_GFX_PREF(Live, "gfx.layerscope.enabled",                LayerScopeEnabled, bool, false);

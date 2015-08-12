@@ -735,7 +735,7 @@ class Shape : public gc::TenuredCell
     Shape(const Shape& other) = delete;
 
     /* Allocate a new shape based on the given StackShape. */
-    static inline Shape* new_(ExclusiveContext* cx, StackShape& unrootedOther, uint32_t nfixed);
+    static inline Shape* new_(ExclusiveContext* cx, Handle<StackShape> other, uint32_t nfixed);
 
     /*
      * Whether this shape has a valid slot value. This may be true even if
@@ -1098,7 +1098,7 @@ struct InitialShapeEntry
 
 typedef HashSet<InitialShapeEntry, InitialShapeEntry, SystemAllocPolicy> InitialShapeSet;
 
-struct StackShape
+struct StackShape : public JS::Traceable
 {
     /* For performance, StackShape only roots when absolutely necessary. */
     UnownedBaseShape* base;
@@ -1177,9 +1177,50 @@ struct StackShape
         return hash;
     }
 
-    // For RootedGeneric<StackShape*>
+    // Traceable implementation.
+    static void trace(StackShape* stackShape, JSTracer* trc) { stackShape->trace(trc); }
     void trace(JSTracer* trc);
 };
+
+template <typename Outer>
+class StackShapeOperations {
+    const StackShape& ss() const { return static_cast<const Outer*>(this)->get(); }
+
+  public:
+    bool hasSlot() const { return ss().hasSlot(); }
+    bool hasMissingSlot() const { return ss().hasMissingSlot(); }
+    uint32_t slot() const { return ss().slot(); }
+    uint32_t maybeSlot() const { return ss().maybeSlot(); }
+    uint32_t slotSpan() const { return ss().slotSpan(); }
+    bool isAccessorShape() const { return ss().isAccessorShape(); }
+    uint8_t attrs() const { return ss().attrs; }
+};
+
+template <typename Outer>
+class MutableStackShapeOperations : public StackShapeOperations<Outer> {
+    StackShape& ss() { return static_cast<Outer*>(this)->get(); }
+
+  public:
+    void updateGetterSetter(GetterOp rawGetter, SetterOp rawSetter) {
+        ss().updateGetterSetter(rawGetter, rawSetter);
+    }
+    void setSlot(uint32_t slot) { ss().setSlot(slot); }
+    void setBase(UnownedBaseShape* base) { ss().base = base; }
+    void setAttrs(uint8_t attrs) { ss().attrs = attrs; }
+};
+
+template <>
+class RootedBase<StackShape> : public MutableStackShapeOperations<JS::Rooted<StackShape>>
+{};
+
+template <>
+class HandleBase<StackShape> : public StackShapeOperations<JS::Handle<StackShape>>
+{};
+
+template <>
+class MutableHandleBase<StackShape>
+  : public MutableStackShapeOperations<JS::MutableHandle<StackShape>>
+{};
 
 inline
 Shape::Shape(const StackShape& other, uint32_t nfixed)

@@ -357,8 +357,8 @@ nsXPCWrappedJSClass::BuildPropertyEnumerator(XPCCallContext& ccx,
     if (!scriptEval.StartEvaluating(aJSObj))
         return NS_ERROR_FAILURE;
 
-    AutoIdArray idArray(cx, JS_Enumerate(cx, aJSObj));
-    if (!idArray)
+    Rooted<IdVector> idArray(cx, IdVector(cx));
+    if (!JS_Enumerate(cx, aJSObj, &idArray))
         return NS_ERROR_FAILURE;
 
     nsCOMArray<nsIProperty> propertyArray(idArray.length());

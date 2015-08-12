@@ -682,6 +682,11 @@
                   // If the browser is loading it must not be crashed anymore
                   this.mTab.removeAttribute("crashed");
 
+                  // If the browser was playing audio, we should remove the playing state.
+                  if (this.mTab.hasAttribute("soundplaying")) {
+                    this.mTab.removeAttribute("soundplaying");
+                    this.mTabBrowser._tabAttrModified(this.mTab, ["soundplaying"]);
+                  }
                   // If the browser was previously muted, we should restore the muted state.
                   if (this.mTab.hasAttribute("muted")) {
                     this.mTab.linkedBrowser.mute();
@@ -3365,6 +3370,8 @@
 
               let tab = this.tabbrowser.getTabForBrowser(browser);
               this.setTabState(tab, this.STATE_LOADED);
+
+              this.finishTabSwitch();
 
               if (this.loadingTab === tab) {
                 clearTimeout(this.loadTimer);
