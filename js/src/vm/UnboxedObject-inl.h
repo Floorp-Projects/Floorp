@@ -584,6 +584,8 @@ CopyBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* dst, JSObject* src,
 /////////////////////////////////////////////////////////////////////
 
 // Goop to fix MSVC. See DispatchTraceKindTyped in TraceKind.h.
+// The clang-cl front end defines _MSC_VER, but still requires the explicit
+// template declaration, so we must test for __clang__ here as well.
 #if defined(_MSC_VER) && !defined(__clang__)
 # define DEPENDENT_TEMPLATE_HINT
 #else
