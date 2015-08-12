@@ -28,13 +28,22 @@ enum class DriverInitStatus
   Recovered
 };
 
+// DriverCrashGuard is used to detect crashes at graphics driver callsites.
+// 
+// If the graphics environment is unrecognized or has changed since the last
+// session, the crash guard will activate and will detect any crashes within
+// the scope of the guard object.
+//
+// If a callsite has a previously encountered crash, and the environment has
+// not changed since the last session, then the guard will set a status flag
+// indicating that the driver should not be used.
 class DriverCrashGuard
 {
 public:
   DriverCrashGuard();
   ~DriverCrashGuard();
 
-  bool DisableAcceleration() const;
+  bool Crashed();
 
   // These are the values reported to Telemetry (GRAPHICS_DRIVER_STARTUP_TEST).
   // Values should not change; add new values to the end.
@@ -46,6 +55,8 @@ public:
   };
 
 private:
+  void InitializeIfNeeded();
+  void Initialize();
   bool InitLockFilePath();
   bool UpdateEnvironment();
   bool CheckAndUpdatePref(const char* aPrefName, const nsAString& aCurrentValue);
@@ -61,6 +72,7 @@ private:
   static bool sEnvironmentHasBeenUpdated;
 
 private:
+  bool mInitialized;
   bool mIsChromeProcess;
   nsCOMPtr<nsIGfxInfo> mGfxInfo;
   nsCOMPtr<nsIFile> mLockFile;
