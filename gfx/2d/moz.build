@@ -81,6 +81,7 @@ if CONFIG['MOZ_ENABLE_SKIA']:
     ]
     EXPORTS.mozilla.gfx += [
         'HelpersSkia.h',
+        'RefPtrSkia.h',
     ]
 
 # Are we targeting x86 or x64?  If so, build SSE2 files.

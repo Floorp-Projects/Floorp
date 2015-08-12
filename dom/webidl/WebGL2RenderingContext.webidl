@@ -323,8 +323,7 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     /* Framebuffer objects */
     void blitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0,
                          GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);
-    void framebufferTextureLayer(GLenum target, GLenum attachment, GLuint texture, GLint level, GLint layer);
-    any getInternalformatParameter(GLenum target, GLenum internalformat, GLenum pname);
+    void framebufferTextureLayer(GLenum target, GLenum attachment, WebGLTexture? texture, GLint level, GLint layer);
 
     [Throws]
     void invalidateFramebuffer(GLenum target, sequence<GLenum> attachments);
@@ -336,6 +335,8 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     void readBuffer(GLenum src);
 
     /* Renderbuffer objects */
+    [Throws]
+    any getInternalformatParameter(GLenum target, GLenum internalformat, GLenum pname);
     void renderbufferStorageMultisample(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height);
 
     /* Texture objects */

@@ -272,6 +272,8 @@ WebGLContext::WebGLContext()
     mGLMaxDrawBuffers = 1;
     mGLMaxTransformFeedbackSeparateAttribs = 0;
     mGLMaxUniformBufferBindings = 0;
+    mGLMax3DTextureSize = 0;
+    mGLMaxArrayTextureLayers = 0;
 
     // See OpenGL ES 2.0.25 spec, 6.2 State Tables, table 6.13
     mPixelStorePackAlignment = 4;

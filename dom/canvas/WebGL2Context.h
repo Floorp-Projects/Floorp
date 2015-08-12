@@ -8,6 +8,12 @@
 
 #include "WebGLContext.h"
 
+/*
+ * Minimum value constants define in 6.2 State Tables of OpenGL ES - 3.0.4
+ */
+#define MINVALUE_GL_MAX_3D_TEXTURE_SIZE             256
+#define MINVALUE_GL_MAX_ARRAY_TEXTURE_LAYERS        256
+
 namespace mozilla {
 
 class ErrorResult;
@@ -55,13 +61,20 @@ public:
     void BlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
                          GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
                          GLbitfield mask, GLenum filter);
-    void FramebufferTextureLayer(GLenum target, GLenum attachment, GLuint texture, GLint level, GLint layer);
-    void GetInternalformatParameter(JSContext*, GLenum target, GLenum internalformat, GLenum pname, JS::MutableHandleValue retval);
+    void FramebufferTextureLayer(GLenum target, GLenum attachment, WebGLTexture* texture, GLint level, GLint layer);
     void InvalidateFramebuffer(GLenum target, const dom::Sequence<GLenum>& attachments,
                                ErrorResult& rv);
     void InvalidateSubFramebuffer (GLenum target, const dom::Sequence<GLenum>& attachments, GLint x, GLint y,
                                    GLsizei width, GLsizei height, ErrorResult& rv);
     void ReadBuffer(GLenum mode);
+
+
+    // -------------------------------------------------------------------------
+    // Renderbuffer objects - WebGL2ContextRenderbuffers.cpp
+
+    void GetInternalformatParameter(JSContext*, GLenum target, GLenum internalformat,
+                                    GLenum pname, JS::MutableHandleValue retval,
+                                    ErrorResult& rv);
     void RenderbufferStorageMultisample(GLenum target, GLsizei samples, GLenum internalformat,
                                         GLsizei width, GLsizei height);
 

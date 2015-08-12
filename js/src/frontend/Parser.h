@@ -227,7 +227,7 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
                                        the same name. */
 
     // All inner functions in this context. Only filled in when parsing syntax.
-    AutoFunctionVector innerFunctions;
+    Rooted<TraceableVector<JSFunction*>> innerFunctions;
 
     // In a function context, points to a Directive struct that can be updated
     // to reflect new directives encountered in the Directive Prologue that
@@ -265,7 +265,7 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
         oldpc(prs->pc),
         lexdeps(prs->context),
         funcStmts(nullptr),
-        innerFunctions(prs->context),
+        innerFunctions(prs->context, TraceableVector<JSFunction*>(prs->context)),
         newDirectives(newDirectives),
         inDeclDestructuring(false)
     {
@@ -544,7 +544,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
 
     // Parse a function, given only its body. Used for the Function and
     // Generator constructors.
-    Node standaloneFunctionBody(HandleFunction fun, const AutoNameVector& formals,
+    Node standaloneFunctionBody(HandleFunction fun, Handle<PropertyNameVector> formals,
                                 GeneratorKind generatorKind,
                                 Directives inheritedDirectives, Directives* newDirectives,
                                 HandleObject enclosingStaticScope);

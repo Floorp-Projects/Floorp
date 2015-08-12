@@ -825,7 +825,8 @@ struct StreamResult {
 
 static void StoreLongTermICEStatisticsImpl_m(
     nsresult result,
-    nsAutoPtr<RTCStatsQuery> query) {
+    nsAutoPtr<RTCStatsQuery> query,
+    bool aIsLoop) {
 
   using namespace Telemetry;
 
@@ -925,10 +926,12 @@ static void StoreLongTermICEStatisticsImpl_m(
 
   for (auto i = streamResults.begin(); i != streamResults.end(); ++i) {
     if (i->second.streamSucceeded) {
-      Telemetry::Accumulate(Telemetry::WEBRTC_CANDIDATE_TYPES_GIVEN_SUCCESS,
+      Telemetry::Accumulate(aIsLoop ? Telemetry::LOOP_CANDIDATE_TYPES_GIVEN_SUCCESS :
+                                      Telemetry::WEBRTC_CANDIDATE_TYPES_GIVEN_SUCCESS,
                             i->second.candidateTypeBitpattern);
     } else {
-      Telemetry::Accumulate(Telemetry::WEBRTC_CANDIDATE_TYPES_GIVEN_FAILURE,
+      Telemetry::Accumulate(aIsLoop ? Telemetry::LOOP_CANDIDATE_TYPES_GIVEN_FAILURE :
+                                      Telemetry::WEBRTC_CANDIDATE_TYPES_GIVEN_FAILURE,
                             i->second.candidateTypeBitpattern);
     }
   }
@@ -944,25 +947,30 @@ static void StoreLongTermICEStatisticsImpl_m(
         continue;
       }
       if (s.mBitrateMean.WasPassed()) {
-        Accumulate(WEBRTC_VIDEO_ENCODER_BITRATE_AVG_PER_CALL_KBPS,
+        Accumulate(aIsLoop ? LOOP_VIDEO_ENCODER_BITRATE_AVG_PER_CALL_KBPS :
+                             WEBRTC_VIDEO_ENCODER_BITRATE_AVG_PER_CALL_KBPS,
                    uint32_t(s.mBitrateMean.Value() / 1000));
       }
       if (s.mBitrateStdDev.WasPassed()) {
-        Accumulate(WEBRTC_VIDEO_ENCODER_BITRATE_STD_DEV_PER_CALL_KBPS,
+        Accumulate(aIsLoop? LOOP_VIDEO_ENCODER_BITRATE_STD_DEV_PER_CALL_KBPS :
+                            WEBRTC_VIDEO_ENCODER_BITRATE_STD_DEV_PER_CALL_KBPS,
                    uint32_t(s.mBitrateStdDev.Value() / 1000));
       }
       if (s.mFramerateMean.WasPassed()) {
-        Accumulate(WEBRTC_VIDEO_ENCODER_FRAMERATE_AVG_PER_CALL,
+        Accumulate(aIsLoop ? LOOP_VIDEO_ENCODER_FRAMERATE_AVG_PER_CALL :
+                             WEBRTC_VIDEO_ENCODER_FRAMERATE_AVG_PER_CALL,
                    uint32_t(s.mFramerateMean.Value()));
       }
       if (s.mFramerateStdDev.WasPassed()) {
-        Accumulate(WEBRTC_VIDEO_ENCODER_FRAMERATE_10X_STD_DEV_PER_CALL,
+        Accumulate(aIsLoop ? LOOP_VIDEO_ENCODER_FRAMERATE_10X_STD_DEV_PER_CALL :
+                             WEBRTC_VIDEO_ENCODER_FRAMERATE_10X_STD_DEV_PER_CALL,
                    uint32_t(s.mFramerateStdDev.Value() * 10));
       }
       if (s.mDroppedFrames.WasPassed() && !query->iceStartTime.IsNull()) {
         double mins = (TimeStamp::Now() - query->iceStartTime).ToSeconds() / 60;
         if (mins > 0) {
-          Accumulate(WEBRTC_VIDEO_ENCODER_DROPPED_FRAMES_PER_CALL_FPM,
+          Accumulate(aIsLoop ? LOOP_VIDEO_ENCODER_DROPPED_FRAMES_PER_CALL_FPM :
+                               WEBRTC_VIDEO_ENCODER_DROPPED_FRAMES_PER_CALL_FPM,
                      uint32_t(double(s.mDroppedFrames.Value()) / mins));
         }
       }
@@ -978,25 +986,30 @@ static void StoreLongTermICEStatisticsImpl_m(
         continue;
       }
       if (s.mBitrateMean.WasPassed()) {
-        Accumulate(WEBRTC_VIDEO_DECODER_BITRATE_AVG_PER_CALL_KBPS,
+        Accumulate(aIsLoop ? LOOP_VIDEO_DECODER_BITRATE_AVG_PER_CALL_KBPS :
+                             WEBRTC_VIDEO_DECODER_BITRATE_AVG_PER_CALL_KBPS,
                    uint32_t(s.mBitrateMean.Value() / 1000));
       }
       if (s.mBitrateStdDev.WasPassed()) {
-        Accumulate(WEBRTC_VIDEO_DECODER_BITRATE_STD_DEV_PER_CALL_KBPS,
+        Accumulate(aIsLoop ? LOOP_VIDEO_DECODER_BITRATE_STD_DEV_PER_CALL_KBPS :
+                             WEBRTC_VIDEO_DECODER_BITRATE_STD_DEV_PER_CALL_KBPS,
                    uint32_t(s.mBitrateStdDev.Value() / 1000));
       }
       if (s.mFramerateMean.WasPassed()) {
-        Accumulate(WEBRTC_VIDEO_DECODER_FRAMERATE_AVG_PER_CALL,
+        Accumulate(aIsLoop ? LOOP_VIDEO_DECODER_FRAMERATE_AVG_PER_CALL :
+                             WEBRTC_VIDEO_DECODER_FRAMERATE_AVG_PER_CALL,
                    uint32_t(s.mFramerateMean.Value()));
       }
       if (s.mFramerateStdDev.WasPassed()) {
-        Accumulate(WEBRTC_VIDEO_DECODER_FRAMERATE_10X_STD_DEV_PER_CALL,
+        Accumulate(aIsLoop ? LOOP_VIDEO_DECODER_FRAMERATE_10X_STD_DEV_PER_CALL :
+                             WEBRTC_VIDEO_DECODER_FRAMERATE_10X_STD_DEV_PER_CALL,
                    uint32_t(s.mFramerateStdDev.Value() * 10));
       }
       if (s.mDiscardedPackets.WasPassed() && !query->iceStartTime.IsNull()) {
         double mins = (TimeStamp::Now() - query->iceStartTime).ToSeconds() / 60;
         if (mins > 0) {
-          Accumulate(WEBRTC_VIDEO_DECODER_DISCARDED_PACKETS_PER_CALL_PPM,
+          Accumulate(aIsLoop ? LOOP_VIDEO_DECODER_DISCARDED_PACKETS_PER_CALL_PPM :
+                               WEBRTC_VIDEO_DECODER_DISCARDED_PACKETS_PER_CALL_PPM,
                      uint32_t(double(s.mDiscardedPackets.Value()) / mins));
         }
       }
@@ -1012,7 +1025,8 @@ static void StoreLongTermICEStatisticsImpl_m(
 }
 
 static void GetStatsForLongTermStorage_s(
-    nsAutoPtr<RTCStatsQuery> query) {
+    nsAutoPtr<RTCStatsQuery> query,
+    bool aIsLoop) {
 
   MOZ_ASSERT(query);
 
@@ -1048,13 +1062,15 @@ static void GetStatsForLongTermStorage_s(
       WrapRunnableNM(
           &StoreLongTermICEStatisticsImpl_m,
           rv,
-          query),
+          query,
+          aIsLoop),
       NS_DISPATCH_NORMAL);
 }
 
 void WebrtcGlobalInformation::StoreLongTermICEStatistics(
     PeerConnectionImpl& aPc) {
-  Telemetry::Accumulate(Telemetry::WEBRTC_ICE_FINAL_CONNECTION_STATE,
+  Telemetry::Accumulate(aPc.IsLoop() ? Telemetry::LOOP_ICE_FINAL_CONNECTION_STATE :
+                                       Telemetry::WEBRTC_ICE_FINAL_CONNECTION_STATE,
                         static_cast<uint32_t>(aPc.IceConnectionState()));
 
   if (aPc.IceConnectionState() == PCImplIceConnectionState::New) {
@@ -1071,7 +1087,7 @@ void WebrtcGlobalInformation::StoreLongTermICEStatistics(
 
   RUN_ON_THREAD(aPc.GetSTSThread(),
                 WrapRunnableNM(&GetStatsForLongTermStorage_s,
-                               query),
+                               query, aPc.IsLoop()),
                 NS_DISPATCH_NORMAL);
 }
 

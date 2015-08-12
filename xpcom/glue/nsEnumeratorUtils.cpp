@@ -12,6 +12,7 @@
 #include "nsIStringEnumerator.h"
 
 #include "nsCOMPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 class EmptyEnumeratorImpl
   : public nsISimpleEnumerator
@@ -163,12 +164,8 @@ nsresult
 NS_NewSingletonEnumerator(nsISimpleEnumerator** aResult,
                           nsISupports* aSingleton)
 {
-  nsSingletonEnumerator* enumer = new nsSingletonEnumerator(aSingleton);
-  if (!enumer) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aResult = enumer;
-  NS_ADDREF(*aResult);
+  nsRefPtr<nsSingletonEnumerator> enumer = new nsSingletonEnumerator(aSingleton);
+  enumer.forget(aResult);
   return NS_OK;
 }
 

@@ -29,6 +29,7 @@
 #include "js/Id.h"
 #include "js/Principals.h"
 #include "js/RootingAPI.h"
+#include "js/TraceableVector.h"
 #include "js/TracingAPI.h"
 #include "js/Utility.h"
 #include "js/Value.h"
@@ -215,8 +216,11 @@ class MOZ_STACK_CLASS AutoVectorRooter : public AutoVectorRooterBase<T>
 typedef AutoVectorRooter<Value> AutoValueVector;
 typedef AutoVectorRooter<jsid> AutoIdVector;
 typedef AutoVectorRooter<JSObject*> AutoObjectVector;
-typedef AutoVectorRooter<JSFunction*> AutoFunctionVector;
 typedef AutoVectorRooter<JSScript*> AutoScriptVector;
+
+using ValueVector = js::TraceableVector<JS::Value>;
+using IdVector = js::TraceableVector<jsid>;
+using ScriptVector = js::TraceableVector<JSScript*>;
 
 template<class Key, class Value>
 class AutoHashMapRooter : protected AutoGCRooter
@@ -471,43 +475,6 @@ class JS_PUBLIC_API(CustomAutoRooter) : private AutoGCRooter
     virtual void trace(JSTracer* trc) = 0;
 
   private:
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
-/*
- * RootedGeneric<T> allows a class to instantiate its own Rooted type by
- * including the method:
- *
- *    void trace(JSTracer* trc);
- *
- * The trace() method must trace all of the class's fields.
- */
-template <class T>
-class RootedGeneric : private CustomAutoRooter
-{
-  public:
-    template <typename CX>
-    explicit RootedGeneric(CX* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : CustomAutoRooter(cx)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    template <typename CX>
-    explicit RootedGeneric(CX* cx, const T& initial MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : CustomAutoRooter(cx), value(initial)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    operator const T&() const { return value; }
-    T operator->() const { return value; }
-
-  private:
-    virtual void trace(JSTracer* trc) { value->trace(trc); }
-
-    T value;
-
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
@@ -1900,64 +1867,6 @@ JS_SetNativeStackQuota(JSRuntime* cx, size_t systemCodeStackSize,
 
 /************************************************************************/
 
-extern JS_PUBLIC_API(int)
-JS_IdArrayLength(JSContext* cx, JSIdArray* ida);
-
-extern JS_PUBLIC_API(jsid)
-JS_IdArrayGet(JSContext* cx, JSIdArray* ida, unsigned index);
-
-extern JS_PUBLIC_API(void)
-JS_DestroyIdArray(JSContext* cx, JSIdArray* ida);
-
-namespace JS {
-
-class AutoIdArray : private AutoGCRooter
-{
-  public:
-    AutoIdArray(JSContext* cx, JSIdArray* ida
-                MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, IDARRAY), context(cx), idArray(ida)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-    ~AutoIdArray() {
-        if (idArray)
-            JS_DestroyIdArray(context, idArray);
-    }
-    bool operator!() const {
-        return !idArray;
-    }
-    jsid operator[](size_t i) const {
-        MOZ_ASSERT(idArray);
-        return JS_IdArrayGet(context, idArray, unsigned(i));
-    }
-    size_t length() const {
-        return JS_IdArrayLength(context, idArray);
-    }
-
-    friend void AutoGCRooter::trace(JSTracer* trc);
-
-    JSIdArray* steal() {
-        JSIdArray* copy = idArray;
-        idArray = nullptr;
-        return copy;
-    }
-
-  protected:
-    inline void trace(JSTracer* trc);
-
-  private:
-    JSContext* context;
-    JSIdArray* idArray;
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-
-    /* No copy or assignment semantics. */
-    AutoIdArray(AutoIdArray& ida) = delete;
-    void operator=(AutoIdArray& ida) = delete;
-};
-
-} /* namespace JS */
-
 extern JS_PUBLIC_API(bool)
 JS_ValueToId(JSContext* cx, JS::HandleValue v, JS::MutableHandleId idp);
 
@@ -3184,8 +3093,8 @@ JS_CreateMappedArrayBufferContents(int fd, size_t offset, size_t length);
 extern JS_PUBLIC_API(void)
 JS_ReleaseMappedArrayBufferContents(void* contents, size_t length);
 
-extern JS_PUBLIC_API(JSIdArray*)
-JS_Enumerate(JSContext* cx, JS::HandleObject obj);
+extern JS_PUBLIC_API(bool)
+JS_Enumerate(JSContext* cx, JS::HandleObject obj, JS::MutableHandle<JS::IdVector> props);
 
 extern JS_PUBLIC_API(JS::Value)
 JS_GetReservedSlot(JSObject* obj, uint32_t index);

@@ -10,4 +10,4 @@
  * designed to be used as input to the C preprocessor *only*.
  */
 
-DOCUMENT_WARNING(WillChangeOverBudgetIgnored)
+DOCUMENT_WARNING(IgnoringWillChangeOverBudget)

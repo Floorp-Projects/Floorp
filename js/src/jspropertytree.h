@@ -96,7 +96,7 @@ class PropertyTree
 
     JSCompartment* compartment() { return compartment_; }
 
-    Shape* getChild(ExclusiveContext* cx, Shape* parent, StackShape& child);
+    Shape* getChild(ExclusiveContext* cx, Shape* parent, Handle<StackShape> child);
 };
 
 } /* namespace js */

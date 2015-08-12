@@ -210,34 +210,53 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
+        // Check for just the blit framebuffer blit part of
+        // ARB_framebuffer_object
         "framebuffer_blit",
         GLVersion::GL3,
         GLESVersion::ES3,
-        GLContext::Extension_None,
+        GLContext::ARB_framebuffer_object,
         {
-            GLContext::EXT_framebuffer_blit,
             GLContext::ANGLE_framebuffer_blit,
+            GLContext::EXT_framebuffer_blit,
+            GLContext::NV_framebuffer_blit,
             GLContext::Extensions_End
         }
     },
     {
+        // Check for just the multisample renderbuffer part of
+        // ARB_framebuffer_object
         "framebuffer_multisample",
         GLVersion::GL3,
         GLESVersion::ES3,
-        GLContext::Extension_None,
+        GLContext::ARB_framebuffer_object,
         {
-            GLContext::EXT_framebuffer_multisample,
             GLContext::ANGLE_framebuffer_multisample,
+            GLContext::APPLE_framebuffer_multisample,
+            GLContext::EXT_framebuffer_multisample,
+            GLContext::EXT_multisampled_render_to_texture,
             GLContext::Extensions_End
         }
     },
     {
+        // ARB_framebuffer_object support
         "framebuffer_object",
         GLVersion::GL3,
-        GLESVersion::ES2,
+        GLESVersion::ES3,
         GLContext::ARB_framebuffer_object,
         {
+            GLContext::Extensions_End
+        }
+    },
+    {
+        // EXT_framebuffer_object/OES_framebuffer_object support
+        "framebuffer_object_EXT_OES",
+        GLVersion::GL3,
+        GLESVersion::ES2,
+        GLContext::Extension_None,
+        {
             GLContext::EXT_framebuffer_object,
+            GLContext::OES_framebuffer_object,
             GLContext::Extensions_End
         }
     },
@@ -331,6 +350,15 @@ static const FeatureInfo sFeatureInfoArr[] = {
          * ANGLE_instanced_arrays and NV_instanced_arrays forbid this, but GLES3
          * has no such restriction.
          */
+    },
+    {
+        "internalformat_query",
+        GLVersion::GL4_2,
+        GLESVersion::ES3,
+        GLContext::ARB_internalformat_query,
+        {
+            GLContext::Extensions_End
+        }
     },
     {
         "invalidate_framebuffer",

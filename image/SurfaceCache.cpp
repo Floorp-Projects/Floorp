@@ -19,6 +19,7 @@
 #include "mozilla/Pair.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/Tuple.h"
 #include "nsIMemoryReporter.h"
 #include "gfx2DGlue.h"
 #include "gfxPattern.h"  // Workaround for flaw in bug 921753 part 2.
@@ -661,11 +662,8 @@ public:
     DrawableFrameRef ref;
     MatchType matchType = MatchType::NOT_FOUND;
     while (true) {
-      // XXX(seth): This code is begging for std::tie. See bug 1184385.
-      Pair<already_AddRefed<CachedSurface>, MatchType> lookupResult =
+      Tie(surface, matchType) =
         cache->LookupBestMatch(aSurfaceKey, aAlternateFlags);
-      surface = lookupResult.first();
-      matchType = lookupResult.second();
 
       if (!surface) {
         return LookupResult(matchType);  // Lookup in the per-image cache missed.

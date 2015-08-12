@@ -9,11 +9,12 @@
 
 #include "NamespaceImports.h"
 
+#include "vm/String.h"
+
 class JSLinearString;
 
 namespace js {
 
-class AutoNameVector;
 class LazyScript;
 class LifoAlloc;
 class ScriptSourceObject;
@@ -39,12 +40,12 @@ CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const char16_t* cha
 bool
 CompileFunctionBody(JSContext* cx, MutableHandleFunction fun,
                     const ReadOnlyCompileOptions& options,
-                    const AutoNameVector& formals, JS::SourceBufferHolder& srcBuf,
+                    Handle<PropertyNameVector> formals, JS::SourceBufferHolder& srcBuf,
                     Handle<ScopeObject*> enclosingStaticScope);
 bool
 CompileStarGeneratorBody(JSContext* cx, MutableHandleFunction fun,
                          const ReadOnlyCompileOptions& options,
-                         const AutoNameVector& formals, JS::SourceBufferHolder& srcBuf);
+                         Handle<PropertyNameVector> formals, JS::SourceBufferHolder& srcBuf);
 
 ScriptSourceObject*
 CreateScriptSourceObject(ExclusiveContext* cx, const ReadOnlyCompileOptions& options);

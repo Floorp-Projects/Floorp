@@ -139,6 +139,9 @@ add_task(function test() {
     insertHost("bar.ca", "B", 1, 0, 0, 0, 0, false),
     insertHost("bar.ca", "B", 1, 0, 0, 0, 1000, false),
     insertHost("bar.ca", "A", 1, 0, 0, 0, 1000, true),
+    insertHost("localhost", "A", 1, 0, 0, 0, 0, false),
+    insertHost("127.0.0.1", "A", 1, 0, 0, 0, 0, false),
+    insertHost("192.0.2.235", "A", 1, 0, 0, 0, 0, false),
     insertHost("file:///some/path/to/file.html", "A", 1, 0, 0, 0, 0, false),
     insertHost("file:///another/file.html", "A", 1, 0, 0, 0, 0, false),
     insertHost("moz-nullprincipal:{8695105a-adbe-4e4e-8083-851faa5ca2d7}", "A", 1, 0, 0, 0, 0, false),
@@ -193,6 +196,14 @@ add_task(function test() {
     // following entries
     ["ftp://sub.foo.com:8000", "B", 1, 0, 0],
     ["ftp://subber.sub.foo.com:8000", "B", 1, 0, 0],
+
+    // Make sure that we also support localhost, and IP addresses
+    ["http://localhost", "A", 1, 0, 0],
+    ["https://localhost", "A", 1, 0, 0],
+    ["http://127.0.0.1", "A", 1, 0, 0],
+    ["https://127.0.0.1", "A", 1, 0, 0],
+    ["http://192.0.2.235", "A", 1, 0, 0],
+    ["https://192.0.2.235", "A", 1, 0, 0],
   ];
 
   let found = expected.map((it) => 0);

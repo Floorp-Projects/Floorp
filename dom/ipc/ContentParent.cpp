@@ -2081,6 +2081,10 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
                               SEND_SHUTDOWN_MESSAGE));
     }
     cpm->RemoveContentProcess(this->ChildID());
+
+    if (mDriverCrashGuard) {
+      mDriverCrashGuard->NotifyCrashed();
+    }
 }
 
 void
@@ -5175,6 +5179,42 @@ bool
 ContentParent::RecvGetGraphicsDeviceInitData(DeviceInitData* aOut)
 {
   gfxPlatform::GetPlatform()->GetDeviceInitData(aOut);
+  return true;
+}
+
+bool
+ContentParent::RecvBeginDriverCrashGuard(const uint32_t& aGuardType, bool* aOutCrashed)
+{
+  // Only one driver crash guard should be active at a time, per-process.
+  MOZ_ASSERT(!mDriverCrashGuard);
+
+  UniquePtr<gfx::DriverCrashGuard> guard;
+  switch (gfx::CrashGuardType(aGuardType)) {
+    case gfx::CrashGuardType::D3D11Layers:
+      guard = MakeUnique<gfx::D3D11LayersCrashGuard>(this);
+      break;
+    case gfx::CrashGuardType::D3D9Video:
+      guard = MakeUnique<gfx::D3D9VideoCrashGuard>(this);
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("unknown crash guard type");
+      return false;
+  }
+
+  if (guard->Crashed()) {
+    *aOutCrashed = true;
+    return true;
+  }
+
+  *aOutCrashed = false;
+  mDriverCrashGuard = Move(guard);
+  return true;
+}
+
+bool
+ContentParent::RecvEndDriverCrashGuard(const uint32_t& aGuardType)
+{
+  mDriverCrashGuard = nullptr;
   return true;
 }
 

@@ -75,7 +75,7 @@ class Promise : public nsISupports,
                 public SupportsWeakPtr<Promise>
 {
   friend class NativePromiseCallback;
-  friend class PromiseCallbackTask;
+  friend class PromiseReactionJob;
   friend class PromiseResolverTask;
   friend class PromiseTask;
 #if defined(DOM_PROMISE_DEPRECATED_REPORTING)
@@ -85,8 +85,8 @@ class Promise : public nsISupports,
   friend class PromiseWorkerProxyRunnable;
   friend class RejectPromiseCallback;
   friend class ResolvePromiseCallback;
-  friend class ThenableResolverTask;
-  friend class FastThenableResolverTask;
+  friend class PromiseResolveThenableJob;
+  friend class FastPromiseResolveThenableJob;
   friend class WrapperPromiseCallback;
 
 public:
@@ -274,8 +274,8 @@ private:
   // This method enqueues promise's resolve/reject callbacks with promise's
   // result. It's executed when the resolver.resolve() or resolver.reject() is
   // called or when the promise already has a result and new callbacks are
-  // appended by then(), catch() or done().
-  void EnqueueCallbackTasks();
+  // appended by then() or catch().
+  void TriggerPromiseReactions();
 
   void Settle(JS::Handle<JS::Value> aValue, Promise::PromiseState aState);
   void MaybeSettle(JS::Handle<JS::Value> aValue, Promise::PromiseState aState);

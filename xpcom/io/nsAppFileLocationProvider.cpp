@@ -348,8 +348,7 @@ nsAppFileLocationProvider::GetProductDirectory(nsIFile** aLocalFile,
     return rv;
   }
 
-  *aLocalFile = localDir;
-  NS_ADDREF(*aLocalFile);
+  localDir.forget(aLocalFile);
 
   return rv;
 }
@@ -395,8 +394,7 @@ nsAppFileLocationProvider::GetDefaultUserProfileRoot(nsIFile** aLocalFile,
   }
 #endif
 
-  *aLocalFile = localDir;
-  NS_ADDREF(*aLocalFile);
+  localDir.forget(aLocalFile);
 
   return rv;
 }
