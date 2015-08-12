@@ -123,7 +123,7 @@
             style="@style/UrlBar.ImageButton.NewTablet"
             android:layout_alignLeft="@id/menu"
             android:layout_alignRight="@id/menu"
-            android:src="@drawable/new_tablet_menu"
+            android:src="@drawable/tablet_menu"
             android:visibility="gone"/>
 
     <!-- We draw after the menu items so when they are hidden, the cancel button,
