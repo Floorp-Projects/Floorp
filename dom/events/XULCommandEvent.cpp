@@ -129,14 +129,12 @@ XULCommandEvent::InitCommandEvent(const nsAString& aType,
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsresult
-NS_NewDOMXULCommandEvent(nsIDOMEvent** aInstancePtrResult,
-                         EventTarget* aOwner,
+already_AddRefed<XULCommandEvent>
+NS_NewDOMXULCommandEvent(EventTarget* aOwner,
                          nsPresContext* aPresContext,
                          WidgetInputEvent* aEvent) 
 {
-  XULCommandEvent* it = new XULCommandEvent(aOwner, aPresContext, aEvent);
-  NS_ADDREF(it);
-  *aInstancePtrResult = static_cast<Event*>(it);
-  return NS_OK;
+  nsRefPtr<XULCommandEvent> it =
+    new XULCommandEvent(aOwner, aPresContext, aEvent);
+  return it.forget();
 }

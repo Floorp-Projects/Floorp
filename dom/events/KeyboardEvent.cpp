@@ -309,14 +309,11 @@ KeyboardEvent::InitKeyEvent(const nsAString& aType,
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsresult
-NS_NewDOMKeyboardEvent(nsIDOMEvent** aInstancePtrResult,
-                       EventTarget* aOwner,
+already_AddRefed<KeyboardEvent>
+NS_NewDOMKeyboardEvent(EventTarget* aOwner,
                        nsPresContext* aPresContext,
                        WidgetKeyboardEvent* aEvent)
 {
-  KeyboardEvent* it = new KeyboardEvent(aOwner, aPresContext, aEvent);
-  NS_ADDREF(it);
-  *aInstancePtrResult = static_cast<Event*>(it);
-  return NS_OK;
+  nsRefPtr<KeyboardEvent> it = new KeyboardEvent(aOwner, aPresContext, aEvent);
+  return it.forget();
 }

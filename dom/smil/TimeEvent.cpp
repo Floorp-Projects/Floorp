@@ -80,14 +80,11 @@ TimeEvent::InitTimeEvent(const nsAString& aTypeArg,
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsresult
-NS_NewDOMTimeEvent(nsIDOMEvent** aInstancePtrResult,
-                   EventTarget* aOwner,
+already_AddRefed<TimeEvent>
+NS_NewDOMTimeEvent(EventTarget* aOwner,
                    nsPresContext* aPresContext,
                    InternalSMILTimeEvent* aEvent)
 {
-  TimeEvent* it = new TimeEvent(aOwner, aPresContext, aEvent);
-  NS_ADDREF(it);
-  *aInstancePtrResult = static_cast<Event*>(it);
-  return NS_OK;
+  nsRefPtr<TimeEvent> it = new TimeEvent(aOwner, aPresContext, aEvent);
+  return it.forget();
 }

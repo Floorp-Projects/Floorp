@@ -1077,8 +1077,7 @@ bool
 Notification::DispatchClickEvent()
 {
   AssertIsOnTargetThread();
-  nsCOMPtr<nsIDOMEvent> event;
-  NS_NewDOMEvent(getter_AddRefs(event), this, nullptr, nullptr);
+  nsRefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
   nsresult rv = event->InitEvent(NS_LITERAL_STRING("click"), false, true);
   NS_ENSURE_SUCCESS(rv, false);
   event->SetTrusted(true);

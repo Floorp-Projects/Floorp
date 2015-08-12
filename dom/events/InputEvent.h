@@ -46,4 +46,9 @@ protected:
 } // namespace dom
 } // namespace mozilla
 
+already_AddRefed<mozilla::dom::InputEvent>
+NS_NewDOMInputEvent(mozilla::dom::EventTarget* aOwner,
+                    nsPresContext* aPresContext,
+                    mozilla::InternalEditorInputEvent* aEvent);
+
 #endif // mozilla_dom_InputEvent_h_

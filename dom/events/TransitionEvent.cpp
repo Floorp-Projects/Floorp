@@ -88,14 +88,12 @@ TransitionEvent::GetPseudoElement(nsAString& aPseudoElement)
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsresult
-NS_NewDOMTransitionEvent(nsIDOMEvent** aInstancePtrResult,
-                         EventTarget* aOwner,
+already_AddRefed<TransitionEvent>
+NS_NewDOMTransitionEvent(EventTarget* aOwner,
                          nsPresContext* aPresContext,
                          InternalTransitionEvent* aEvent)
 {
-  TransitionEvent *it = new TransitionEvent(aOwner, aPresContext, aEvent);
-  NS_ADDREF(it);
-  *aInstancePtrResult = static_cast<Event*>(it);
-  return NS_OK;
+  nsRefPtr<TransitionEvent> it =
+    new TransitionEvent(aOwner, aPresContext, aEvent);
+  return it.forget();
 }

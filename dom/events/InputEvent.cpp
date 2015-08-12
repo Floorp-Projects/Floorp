@@ -63,14 +63,11 @@ InputEvent::Constructor(const GlobalObject& aGlobal,
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsresult
-NS_NewDOMInputEvent(nsIDOMEvent** aInstancePtrResult,
-                    EventTarget* aOwner,
+already_AddRefed<InputEvent>
+NS_NewDOMInputEvent(EventTarget* aOwner,
                     nsPresContext* aPresContext,
                     InternalEditorInputEvent* aEvent)
 {
-  InputEvent* it = new InputEvent(aOwner, aPresContext, aEvent);
-  NS_ADDREF(it);
-  *aInstancePtrResult = static_cast<Event*>(it);
-  return NS_OK;
+  nsRefPtr<InputEvent> it = new InputEvent(aOwner, aPresContext, aEvent);
+  return it.forget();
 }

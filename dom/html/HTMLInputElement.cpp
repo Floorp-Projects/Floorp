@@ -5403,17 +5403,13 @@ FireEventForAccessibility(nsIDOMHTMLInputElement* aTarget,
                           nsPresContext* aPresContext,
                           const nsAString& aEventType)
 {
-  nsCOMPtr<nsIDOMEvent> event;
   nsCOMPtr<mozilla::dom::Element> element = do_QueryInterface(aTarget);
-  if (NS_SUCCEEDED(EventDispatcher::CreateEvent(element, aPresContext, nullptr,
-                                                NS_LITERAL_STRING("Events"),
-                                                getter_AddRefs(event)))) {
-    event->InitEvent(aEventType, true, true);
-    event->SetTrusted(true);
+  nsRefPtr<Event> event = NS_NewDOMEvent(element, aPresContext, nullptr);
+  event->InitEvent(aEventType, true, true);
+  event->SetTrusted(true);
 
-    EventDispatcher::DispatchDOMEvent(aTarget, nullptr, event, aPresContext,
-                                      nullptr);
-  }
+  EventDispatcher::DispatchDOMEvent(aTarget, nullptr, event, aPresContext,
+                                    nullptr);
 
   return NS_OK;
 }

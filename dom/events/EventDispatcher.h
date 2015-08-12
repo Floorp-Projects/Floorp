@@ -23,6 +23,7 @@ template<class E> class nsCOMArray;
 
 namespace mozilla {
 namespace dom {
+class Event;
 class EventTarget;
 } // namespace dom
 
@@ -272,13 +273,12 @@ public:
                                    nsEventStatus* aEventStatus);
 
   /**
-   * Creates a DOM Event.
+   * Creates a DOM Event.  Returns null if the event type is unsupported.
    */
-  static nsresult CreateEvent(dom::EventTarget* aOwner,
-                              nsPresContext* aPresContext,
-                              WidgetEvent* aEvent,
-                              const nsAString& aEventType,
-                              nsIDOMEvent** aDOMEvent);
+  static already_AddRefed<dom::Event> CreateEvent(dom::EventTarget* aOwner,
+                                                  nsPresContext* aPresContext,
+                                                  WidgetEvent* aEvent,
+                                                  const nsAString& aEventType);
 
   /**
    * Called at shutting down.

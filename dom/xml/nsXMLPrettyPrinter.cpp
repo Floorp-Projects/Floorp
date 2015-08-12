@@ -23,7 +23,7 @@
 #include "mozilla/Preferences.h"
 #include "nsIDocument.h"
 #include "nsVariant.h"
-#include "nsIDOMCustomEvent.h"
+#include "mozilla/dom/CustomEvent.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -156,22 +156,19 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument,
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Fire an event at the bound element to pass it |resultFragment|.
-    nsCOMPtr<nsIDOMEvent> domEvent;
-    rv = NS_NewDOMCustomEvent(getter_AddRefs(domEvent), rootCont,
-                              nullptr, nullptr);
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<nsIDOMCustomEvent> customEvent = do_QueryInterface(domEvent);
-    MOZ_ASSERT(customEvent);
+    nsRefPtr<CustomEvent> event =
+      NS_NewDOMCustomEvent(rootCont, nullptr, nullptr);
+    MOZ_ASSERT(event);
     nsCOMPtr<nsIWritableVariant> resultFragmentVariant = new nsVariant();
     rv = resultFragmentVariant->SetAsISupports(resultFragment);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
-    rv = customEvent->InitCustomEvent(NS_LITERAL_STRING("prettyprint-dom-created"),
-                                      /* bubbles = */ false, /* cancelable = */ false,
-                                      /* detail = */ resultFragmentVariant);
+    rv = event->InitCustomEvent(NS_LITERAL_STRING("prettyprint-dom-created"),
+                                /* bubbles = */ false, /* cancelable = */ false,
+                                /* detail = */ resultFragmentVariant);
     NS_ENSURE_SUCCESS(rv, rv);
-    customEvent->SetTrusted(true);
+    event->SetTrusted(true);
     bool dummy;
-    rv = rootCont->DispatchEvent(domEvent, &dummy);
+    rv = rootCont->DispatchEvent(static_cast<Event*>(event), &dummy);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Observe the document so we know when to switch to "normal" view

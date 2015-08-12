@@ -13,6 +13,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/net/WebSocketChannel.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/MessageEvent.h"
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -30,7 +31,6 @@
 #include "nsIURL.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsThreadUtils.h"
-#include "nsIDOMMessageEvent.h"
 #include "nsIPromptFactory.h"
 #include "nsIWindowWatcher.h"
 #include "nsIPrompt.h"
@@ -1737,9 +1737,7 @@ WebSocket::CreateAndDispatchSimpleEvent(const nsAString& aName)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMEvent> event;
-  rv = NS_NewDOMEvent(getter_AddRefs(event), this, nullptr, nullptr);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
 
   // it doesn't bubble, and it isn't cancelable
   rv = event->InitEvent(aName, false, false);
@@ -1817,21 +1815,17 @@ WebSocket::CreateAndDispatchMessageEvent(JSContext* aCx,
   // create an event that uses the MessageEvent interface,
   // which does not bubble, is not cancelable, and has no default action
 
-  nsCOMPtr<nsIDOMEvent> event;
-  rv = NS_NewDOMMessageEvent(getter_AddRefs(event), this, nullptr, nullptr);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<MessageEvent> event = NS_NewDOMMessageEvent(this, nullptr, nullptr);
 
-  nsCOMPtr<nsIDOMMessageEvent> messageEvent = do_QueryInterface(event);
-  rv = messageEvent->InitMessageEvent(NS_LITERAL_STRING("message"),
-                                      false, false,
-                                      jsData,
-                                      mImpl->mUTF16Origin,
-                                      EmptyString(), nullptr);
+  rv = event->InitMessageEvent(NS_LITERAL_STRING("message"), false, false,
+                               jsData, mImpl->mUTF16Origin, EmptyString(),
+                               nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   event->SetTrusted(true);
 
-  return DispatchDOMEvent(nullptr, event, nullptr, nullptr);
+  return DispatchDOMEvent(nullptr, static_cast<Event*>(event), nullptr,
+                          nullptr);
 }
 
 nsresult
