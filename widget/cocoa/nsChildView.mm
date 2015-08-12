@@ -3140,7 +3140,7 @@ GLPresenter::EndFrame()
 // in our native NSView (it is set in |draggingEntered:|). It is unset when the
 // drag session ends for this view, either with the mouse exiting or when a drop
 // occurs in this view.
-NSPasteboard* globalDragPboard = nil;
+NSPasteboardWrapper* globalDragPboard = nil;
 
 // gLastDragView and gLastDragMouseDownEvent are used to communicate information
 // to the drag service during drag invocation (starting a drag in from the view).
@@ -5838,7 +5838,8 @@ PanGestureTypeForEvent(NSEvent* aEvent)
   // Set the global drag pasteboard that will be used for this drag session.
   // This will be set back to nil when the drag session ends (mouse exits
   // the view or a drop happens within the view).
-  globalDragPboard = [[sender draggingPasteboard] retain];
+  globalDragPboard =
+    [[NSPasteboardWrapper alloc] initWithPasteboard:[sender draggingPasteboard]];
 
   return [self doDragAction:NS_DRAGDROP_ENTER sender:sender];
 
