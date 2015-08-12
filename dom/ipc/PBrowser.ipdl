@@ -145,6 +145,12 @@ parent:
     sync GetWidgetNativeData() returns (WindowsHandle value);
 
     /**
+     * Sends an NS_NATIVE_CHILD_OF_SHAREABLE_WINDOW to be adopted by the
+     * widget's shareable window on the chrome side. Only used on Windows.
+     */
+    async SetNativeChildOfShareableWindow(uintptr_t childWindow);
+
+    /**
      * When content moves focus from a native plugin window that's a child
      * of the native browser window we need to move native focus to the
      * browser. Otherwise the plugin window will never relinquish focus.
