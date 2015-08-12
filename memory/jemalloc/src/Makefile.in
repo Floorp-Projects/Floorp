@@ -48,8 +48,10 @@ cfgoutputs_in := $(addprefix $(srcroot),@cfgoutputs_in@)
 cfgoutputs_out := @cfgoutputs_out@
 enable_autogen := @enable_autogen@
 enable_code_coverage := @enable_code_coverage@
+enable_prof := @enable_prof@
 enable_valgrind := @enable_valgrind@
 enable_zone_allocator := @enable_zone_allocator@
+MALLOC_CONF := @JEMALLOC_CPREFIX@MALLOC_CONF
 DSO_LDFLAGS = @DSO_LDFLAGS@
 SOREV = @SOREV@
 PIC_CFLAGS = @PIC_CFLAGS@
@@ -73,16 +75,17 @@ endif
 LIBJEMALLOC := $(LIBPREFIX)jemalloc$(install_suffix)
 
 # Lists of files.
-BINS := $(srcroot)bin/pprof $(objroot)bin/jemalloc.sh
+BINS := $(objroot)bin/jemalloc-config $(objroot)bin/jemalloc.sh $(objroot)bin/jeprof
 C_HDRS := $(objroot)include/jemalloc/jemalloc$(install_suffix).h
 C_SRCS := $(srcroot)src/jemalloc.c $(srcroot)src/arena.c \
 	$(srcroot)src/atomic.c $(srcroot)src/base.c $(srcroot)src/bitmap.c \
 	$(srcroot)src/chunk.c $(srcroot)src/chunk_dss.c \
 	$(srcroot)src/chunk_mmap.c $(srcroot)src/ckh.c $(srcroot)src/ctl.c \
 	$(srcroot)src/extent.c $(srcroot)src/hash.c $(srcroot)src/huge.c \
-	$(srcroot)src/mb.c $(srcroot)src/mutex.c $(srcroot)src/prof.c \
-	$(srcroot)src/quarantine.c $(srcroot)src/rtree.c $(srcroot)src/stats.c \
-	$(srcroot)src/tcache.c $(srcroot)src/util.c $(srcroot)src/tsd.c
+	$(srcroot)src/mb.c $(srcroot)src/mutex.c $(srcroot)src/pages.c \
+	$(srcroot)src/prof.c $(srcroot)src/quarantine.c $(srcroot)src/rtree.c \
+	$(srcroot)src/stats.c $(srcroot)src/tcache.c $(srcroot)src/util.c \
+	$(srcroot)src/tsd.c
 ifeq ($(enable_valgrind), 1)
 C_SRCS += $(srcroot)src/valgrind.c
 endif
@@ -104,14 +107,14 @@ endif
 PC := $(objroot)jemalloc.pc
 MAN3 := $(objroot)doc/jemalloc$(install_suffix).3
 DOCS_XML := $(objroot)doc/jemalloc$(install_suffix).xml
-DOCS_HTML := $(DOCS_XML:$(objroot)%.xml=$(srcroot)%.html)
-DOCS_MAN3 := $(DOCS_XML:$(objroot)%.xml=$(srcroot)%.3)
+DOCS_HTML := $(DOCS_XML:$(objroot)%.xml=$(objroot)%.html)
+DOCS_MAN3 := $(DOCS_XML:$(objroot)%.xml=$(objroot)%.3)
 DOCS := $(DOCS_HTML) $(DOCS_MAN3)
 C_TESTLIB_SRCS := $(srcroot)test/src/btalloc.c $(srcroot)test/src/btalloc_0.c \
 	$(srcroot)test/src/btalloc_1.c $(srcroot)test/src/math.c \
-	$(srcroot)test/src/mtx.c $(srcroot)test/src/SFMT.c \
-	$(srcroot)test/src/test.c $(srcroot)test/src/thd.c \
-	$(srcroot)test/src/timer.c
+	$(srcroot)test/src/mtx.c $(srcroot)test/src/mq.c \
+	$(srcroot)test/src/SFMT.c $(srcroot)test/src/test.c \
+	$(srcroot)test/src/thd.c $(srcroot)test/src/timer.c
 C_UTIL_INTEGRATION_SRCS := $(srcroot)src/util.c
 TESTS_UNIT := $(srcroot)test/unit/atomic.c \
 	$(srcroot)test/unit/bitmap.c \
@@ -137,6 +140,7 @@ TESTS_UNIT := $(srcroot)test/unit/atomic.c \
 	$(srcroot)test/unit/rb.c \
 	$(srcroot)test/unit/rtree.c \
 	$(srcroot)test/unit/SFMT.c \
+	$(srcroot)test/unit/size_classes.c \
 	$(srcroot)test/unit/stats.c \
 	$(srcroot)test/unit/tsd.c \
 	$(srcroot)test/unit/util.c \
@@ -146,6 +150,7 @@ TESTS_INTEGRATION := $(srcroot)test/integration/aligned_alloc.c \
 	$(srcroot)test/integration/sdallocx.c \
 	$(srcroot)test/integration/mallocx.c \
 	$(srcroot)test/integration/MALLOCX_ARENA.c \
+	$(srcroot)test/integration/overflow.c \
 	$(srcroot)test/integration/posix_memalign.c \
 	$(srcroot)test/integration/rallocx.c \
 	$(srcroot)test/integration/thread_arena.c \
@@ -181,10 +186,10 @@ all: build_lib
 
 dist: build_doc
 
-$(srcroot)doc/%.html : $(objroot)doc/%.xml $(srcroot)doc/stylesheet.xsl $(objroot)doc/html.xsl
+$(objroot)doc/%.html : $(objroot)doc/%.xml $(srcroot)doc/stylesheet.xsl $(objroot)doc/html.xsl
 	$(XSLTPROC) -o $@ $(objroot)doc/html.xsl $<
 
-$(srcroot)doc/%.3 : $(objroot)doc/%.xml $(srcroot)doc/stylesheet.xsl $(objroot)doc/manpages.xsl
+$(objroot)doc/%.3 : $(objroot)doc/%.xml $(srcroot)doc/stylesheet.xsl $(objroot)doc/manpages.xsl
 	$(XSLTPROC) -o $@ $(objroot)doc/manpages.xsl $<
 
 build_doc_html: $(DOCS_HTML)
@@ -344,11 +349,15 @@ check_dir: check_unit_dir check_integration_dir check_stress_dir
 
 check_unit: tests_unit check_unit_dir
 	$(SHELL) $(objroot)test/test.sh $(TESTS_UNIT:$(srcroot)%.c=$(objroot)%)
+check_integration_prof: tests_integration check_integration_dir
+ifeq ($(enable_prof), 1)
+	$(MALLOC_CONF)="prof:true" $(SHELL) $(objroot)test/test.sh $(TESTS_INTEGRATION:$(srcroot)%.c=$(objroot)%)
+endif
 check_integration: tests_integration check_integration_dir
 	$(SHELL) $(objroot)test/test.sh $(TESTS_INTEGRATION:$(srcroot)%.c=$(objroot)%)
 check_stress: tests_stress check_stress_dir
 	$(SHELL) $(objroot)test/test.sh $(TESTS_STRESS:$(srcroot)%.c=$(objroot)%)
-check: tests check_dir
+check: tests check_dir check_integration_prof
 	$(SHELL) $(objroot)test/test.sh $(TESTS:$(srcroot)%.c=$(objroot)%)
 
 ifeq ($(enable_code_coverage), 1)
@@ -408,7 +417,9 @@ clean:
 	rm -f $(objroot)*.gcov.*
 
 distclean: clean
+	rm -f $(objroot)bin/jemalloc-config
 	rm -f $(objroot)bin/jemalloc.sh
+	rm -f $(objroot)bin/jeprof
 	rm -f $(objroot)config.log
 	rm -f $(objroot)config.status
 	rm -f $(objroot)config.stamp
@@ -417,7 +428,7 @@ distclean: clean
 
 relclean: distclean
 	rm -f $(objroot)configure
-	rm -f $(srcroot)VERSION
+	rm -f $(objroot)VERSION
 	rm -f $(DOCS_HTML)
 	rm -f $(DOCS_MAN3)
 

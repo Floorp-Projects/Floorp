@@ -15,13 +15,6 @@ git describe --long --abbrev=40 > VERSION
 rm -rf .git .gitignore .gitattributes autom4te.cache .autom4te.cfg
 
 patch -p1 < ../0001-Dont-overwrite-VERSION-on-a-git-repository.patch
-patch -p1 < ../0002-Move-variable-declaration-to-the-top-its-block-for-M.patch
-patch -p1 < ../0003-Add-a-isblank-definition-for-MSVC-2013.patch
-patch -p1 < ../0004-Implement-stats.bookkeeping.patch
-patch -p1 < ../0005-Bug-1121314-Avoid-needing-the-arena-in-chunk_alloc_d.patch
-patch -p1 < ../0006-Make-opt.lg_dirty_mult-work-as-documented.patch
-patch -p1 < ../0007-Preserve-LastError-when-calling-TlsGetValue.patch
-patch -p1 < ../0008-Make-without-export-actually-work.patch
 
 cd ..
 hg addremove -q src

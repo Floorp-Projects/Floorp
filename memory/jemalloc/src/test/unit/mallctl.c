@@ -126,6 +126,7 @@ TEST_BEGIN(test_mallctl_config)
 	assert_zu_eq(sz, sizeof(oldval), "Unexpected output size");	\
 } while (0)
 
+	TEST_MALLCTL_CONFIG(cache_oblivious);
 	TEST_MALLCTL_CONFIG(debug);
 	TEST_MALLCTL_CONFIG(fill);
 	TEST_MALLCTL_CONFIG(lazy_lock);
@@ -211,6 +212,126 @@ TEST_BEGIN(test_manpage_example)
 }
 TEST_END
 
+TEST_BEGIN(test_tcache_none)
+{
+	void *p0, *q, *p1;
+
+	test_skip_if(!config_tcache);
+
+	/* Allocate p and q. */
+	p0 = mallocx(42, 0);
+	assert_ptr_not_null(p0, "Unexpected mallocx() failure");
+	q = mallocx(42, 0);
+	assert_ptr_not_null(q, "Unexpected mallocx() failure");
+
+	/* Deallocate p and q, but bypass the tcache for q. */
+	dallocx(p0, 0);
+	dallocx(q, MALLOCX_TCACHE_NONE);
+
+	/* Make sure that tcache-based allocation returns p, not q. */
+	p1 = mallocx(42, 0);
+	assert_ptr_not_null(p1, "Unexpected mallocx() failure");
+	assert_ptr_eq(p0, p1, "Expected tcache to allocate cached region");
+
+	/* Clean up. */
+	dallocx(p1, MALLOCX_TCACHE_NONE);
+}
+TEST_END
+
+TEST_BEGIN(test_tcache)
+{
+#define	NTCACHES	10
+	unsigned tis[NTCACHES];
+	void *ps[NTCACHES];
+	void *qs[NTCACHES];
+	unsigned i;
+	size_t sz, psz, qsz;
+
+	test_skip_if(!config_tcache);
+
+	psz = 42;
+	qsz = nallocx(psz, 0) + 1;
+
+	/* Create tcaches. */
+	for (i = 0; i < NTCACHES; i++) {
+		sz = sizeof(unsigned);
+		assert_d_eq(mallctl("tcache.create", &tis[i], &sz, NULL, 0), 0,
+		    "Unexpected mallctl() failure, i=%u", i);
+	}
+
+	/* Exercise tcache ID recycling. */
+	for (i = 0; i < NTCACHES; i++) {
+		assert_d_eq(mallctl("tcache.destroy", NULL, NULL, &tis[i],
+		    sizeof(unsigned)), 0, "Unexpected mallctl() failure, i=%u",
+		    i);
+	}
+	for (i = 0; i < NTCACHES; i++) {
+		sz = sizeof(unsigned);
+		assert_d_eq(mallctl("tcache.create", &tis[i], &sz, NULL, 0), 0,
+		    "Unexpected mallctl() failure, i=%u", i);
+	}
+
+	/* Flush empty tcaches. */
+	for (i = 0; i < NTCACHES; i++) {
+		assert_d_eq(mallctl("tcache.flush", NULL, NULL, &tis[i],
+		    sizeof(unsigned)), 0, "Unexpected mallctl() failure, i=%u",
+		    i);
+	}
+
+	/* Cache some allocations. */
+	for (i = 0; i < NTCACHES; i++) {
+		ps[i] = mallocx(psz, MALLOCX_TCACHE(tis[i]));
+		assert_ptr_not_null(ps[i], "Unexpected mallocx() failure, i=%u",
+		    i);
+		dallocx(ps[i], MALLOCX_TCACHE(tis[i]));
+
+		qs[i] = mallocx(qsz, MALLOCX_TCACHE(tis[i]));
+		assert_ptr_not_null(qs[i], "Unexpected mallocx() failure, i=%u",
+		    i);
+		dallocx(qs[i], MALLOCX_TCACHE(tis[i]));
+	}
+
+	/* Verify that tcaches allocate cached regions. */
+	for (i = 0; i < NTCACHES; i++) {
+		void *p0 = ps[i];
+		ps[i] = mallocx(psz, MALLOCX_TCACHE(tis[i]));
+		assert_ptr_not_null(ps[i], "Unexpected mallocx() failure, i=%u",
+		    i);
+		assert_ptr_eq(ps[i], p0,
+		    "Expected mallocx() to allocate cached region, i=%u", i);
+	}
+
+	/* Verify that reallocation uses cached regions. */
+	for (i = 0; i < NTCACHES; i++) {
+		void *q0 = qs[i];
+		qs[i] = rallocx(ps[i], qsz, MALLOCX_TCACHE(tis[i]));
+		assert_ptr_not_null(qs[i], "Unexpected rallocx() failure, i=%u",
+		    i);
+		assert_ptr_eq(qs[i], q0,
+		    "Expected rallocx() to allocate cached region, i=%u", i);
+		/* Avoid undefined behavior in case of test failure. */
+		if (qs[i] == NULL)
+			qs[i] = ps[i];
+	}
+	for (i = 0; i < NTCACHES; i++)
+		dallocx(qs[i], MALLOCX_TCACHE(tis[i]));
+
+	/* Flush some non-empty tcaches. */
+	for (i = 0; i < NTCACHES/2; i++) {
+		assert_d_eq(mallctl("tcache.flush", NULL, NULL, &tis[i],
+		    sizeof(unsigned)), 0, "Unexpected mallctl() failure, i=%u",
+		    i);
+	}
+
+	/* Destroy tcaches. */
+	for (i = 0; i < NTCACHES; i++) {
+		assert_d_eq(mallctl("tcache.destroy", NULL, NULL, &tis[i],
+		    sizeof(unsigned)), 0, "Unexpected mallctl() failure, i=%u",
+		    i);
+	}
+}
+TEST_END
+
 TEST_BEGIN(test_thread_arena)
 {
 	unsigned arena_old, arena_new, narenas;
@@ -225,6 +346,38 @@ TEST_BEGIN(test_thread_arena)
 	arena_new = 0;
 	assert_d_eq(mallctl("thread.arena", &arena_old, &sz, &arena_new,
 	    sizeof(unsigned)), 0, "Unexpected mallctl() failure");
+}
+TEST_END
+
+TEST_BEGIN(test_arena_i_lg_dirty_mult)
+{
+	ssize_t lg_dirty_mult, orig_lg_dirty_mult, prev_lg_dirty_mult;
+	size_t sz = sizeof(ssize_t);
+
+	assert_d_eq(mallctl("arena.0.lg_dirty_mult", &orig_lg_dirty_mult, &sz,
+	    NULL, 0), 0, "Unexpected mallctl() failure");
+
+	lg_dirty_mult = -2;
+	assert_d_eq(mallctl("arena.0.lg_dirty_mult", NULL, NULL,
+	    &lg_dirty_mult, sizeof(ssize_t)), EFAULT,
+	    "Unexpected mallctl() success");
+
+	lg_dirty_mult = (sizeof(size_t) << 3);
+	assert_d_eq(mallctl("arena.0.lg_dirty_mult", NULL, NULL,
+	    &lg_dirty_mult, sizeof(ssize_t)), EFAULT,
+	    "Unexpected mallctl() success");
+
+	for (prev_lg_dirty_mult = orig_lg_dirty_mult, lg_dirty_mult = -1;
+	    lg_dirty_mult < (ssize_t)(sizeof(size_t) << 3); prev_lg_dirty_mult
+	    = lg_dirty_mult, lg_dirty_mult++) {
+		ssize_t old_lg_dirty_mult;
+
+		assert_d_eq(mallctl("arena.0.lg_dirty_mult", &old_lg_dirty_mult,
+		    &sz, &lg_dirty_mult, sizeof(ssize_t)), 0,
+		    "Unexpected mallctl() failure");
+		assert_zd_eq(old_lg_dirty_mult, prev_lg_dirty_mult,
+		    "Unexpected old arena.0.lg_dirty_mult");
+	}
 }
 TEST_END
 
@@ -303,6 +456,38 @@ TEST_BEGIN(test_arenas_initialized)
 		sz = narenas * sizeof(bool);
 		assert_d_eq(mallctl("arenas.initialized", initialized, &sz,
 		    NULL, 0), 0, "Unexpected mallctl() failure");
+	}
+}
+TEST_END
+
+TEST_BEGIN(test_arenas_lg_dirty_mult)
+{
+	ssize_t lg_dirty_mult, orig_lg_dirty_mult, prev_lg_dirty_mult;
+	size_t sz = sizeof(ssize_t);
+
+	assert_d_eq(mallctl("arenas.lg_dirty_mult", &orig_lg_dirty_mult, &sz,
+	    NULL, 0), 0, "Unexpected mallctl() failure");
+
+	lg_dirty_mult = -2;
+	assert_d_eq(mallctl("arenas.lg_dirty_mult", NULL, NULL,
+	    &lg_dirty_mult, sizeof(ssize_t)), EFAULT,
+	    "Unexpected mallctl() success");
+
+	lg_dirty_mult = (sizeof(size_t) << 3);
+	assert_d_eq(mallctl("arenas.lg_dirty_mult", NULL, NULL,
+	    &lg_dirty_mult, sizeof(ssize_t)), EFAULT,
+	    "Unexpected mallctl() success");
+
+	for (prev_lg_dirty_mult = orig_lg_dirty_mult, lg_dirty_mult = -1;
+	    lg_dirty_mult < (ssize_t)(sizeof(size_t) << 3); prev_lg_dirty_mult =
+	    lg_dirty_mult, lg_dirty_mult++) {
+		ssize_t old_lg_dirty_mult;
+
+		assert_d_eq(mallctl("arenas.lg_dirty_mult", &old_lg_dirty_mult,
+		    &sz, &lg_dirty_mult, sizeof(ssize_t)), 0,
+		    "Unexpected mallctl() failure");
+		assert_zd_eq(old_lg_dirty_mult, prev_lg_dirty_mult,
+		    "Unexpected old arenas.lg_dirty_mult");
 	}
 }
 TEST_END
@@ -431,10 +616,14 @@ main(void)
 	    test_mallctl_config,
 	    test_mallctl_opt,
 	    test_manpage_example,
+	    test_tcache_none,
+	    test_tcache,
 	    test_thread_arena,
+	    test_arena_i_lg_dirty_mult,
 	    test_arena_i_purge,
 	    test_arena_i_dss,
 	    test_arenas_initialized,
+	    test_arenas_lg_dirty_mult,
 	    test_arenas_constants,
 	    test_arenas_bin_constants,
 	    test_arenas_lrun_constants,
