@@ -179,6 +179,13 @@ void profiler_get_start_params(int* aEntrySize,
 {
   mozilla_sampler_get_profiler_start_params(aEntrySize, aInterval, aFilters, aFeatures);
 }
+
+static inline
+void profiler_get_gatherer(nsISupports** aRetVal)
+{
+  mozilla_sampler_get_gatherer(aRetVal);
+}
+
 #endif
 
 static inline
