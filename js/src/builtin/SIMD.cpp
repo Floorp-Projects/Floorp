@@ -483,31 +483,26 @@ SIMDObject::initClass(JSContext* cx, Handle<GlobalObject*> global)
     i8x16 = CreateAndBindSimdClass<Int8x16Defn>(cx, global, SIMD, cx->names().int8x16);
     if (!i8x16)
         return nullptr;
-    global->setInt8x16TypeDescr(*i8x16);
 
     RootedObject i16x8(cx);
     i16x8 = CreateAndBindSimdClass<Int16x8Defn>(cx, global, SIMD, cx->names().int16x8);
     if (!i16x8)
         return nullptr;
-    global->setInt16x8TypeDescr(*i16x8);
 
     RootedObject f32x4(cx);
     f32x4 = CreateAndBindSimdClass<Float32x4Defn>(cx, global, SIMD, cx->names().float32x4);
     if (!f32x4)
         return nullptr;
-    global->setFloat32x4TypeDescr(*f32x4);
 
     RootedObject i32x4(cx);
     i32x4 = CreateAndBindSimdClass<Int32x4Defn>(cx, global, SIMD, cx->names().int32x4);
     if (!i32x4)
         return nullptr;
-    global->setInt32x4TypeDescr(*i32x4);
 
     RootedObject f64x2(cx);
     f64x2 = CreateAndBindSimdClass<Float64x2Defn>(cx, global, SIMD, cx->names().float64x2);
     if (!f64x2)
         return nullptr;
-    global->setFloat64x2TypeDescr(*f64x2);
 
     // Everything is set up, install SIMD on the global object.
     RootedValue SIMDValue(cx, ObjectValue(*SIMD));
@@ -517,6 +512,11 @@ SIMDObject::initClass(JSContext* cx, Handle<GlobalObject*> global)
         return nullptr;
     }
 
+    global->setInt8x16TypeDescr(*i8x16);
+    global->setInt16x8TypeDescr(*i16x8);
+    global->setFloat32x4TypeDescr(*f32x4);
+    global->setInt32x4TypeDescr(*i32x4);
+    global->setFloat64x2TypeDescr(*f64x2);
     global->setConstructor(JSProto_SIMD, SIMDValue);
     return SIMD;
 }
