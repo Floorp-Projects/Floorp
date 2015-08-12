@@ -54,28 +54,43 @@ public:
     AccelerationDisabled = 3
   };
 
-private:
-  void InitializeIfNeeded();
-  void Initialize();
-  bool InitLockFilePath();
-  bool UpdateEnvironment();
+protected:
+  virtual void RecordTelemetry(TelemetryState aState);
+  virtual bool UpdateEnvironment() = 0;
+  virtual void Initialize() = 0;
+
+  // Helper functions.
+  bool FeatureEnabled(int aFeature);
   bool CheckAndUpdatePref(const char* aPrefName, const nsAString& aCurrentValue);
   bool CheckAndUpdateBoolPref(const char* aPrefName, bool aCurrentValue);
-  bool FeatureEnabled(int aFeature);
+
+private:
+  void InitializeIfNeeded();
+  bool InitLockFilePath();
   void AllowDriverInitAttempt();
   bool RecoverFromDriverInitCrash();
   void FlushPreferences();
-
-  void RecordTelemetry(TelemetryState aState);
-
-private:
-  static bool sEnvironmentHasBeenUpdated;
+  bool PrepareToGuard();
+  bool UpdateBaseEnvironment();
 
 private:
   bool mInitialized;
+  nsCOMPtr<nsIFile> mLockFile;
+
+protected:
   bool mIsChromeProcess;
   nsCOMPtr<nsIGfxInfo> mGfxInfo;
-  nsCOMPtr<nsIFile> mLockFile;
+};
+
+class D3D11LayersCrashGuard final : public DriverCrashGuard
+{
+ public:
+  D3D11LayersCrashGuard();
+
+ protected:
+  void Initialize() override;
+  bool UpdateEnvironment() override;
+  void RecordTelemetry(TelemetryState aState) override;
 };
 
 } // namespace gfx
