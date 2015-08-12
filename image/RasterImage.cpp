@@ -41,6 +41,7 @@
 #include <stdint.h>
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Tuple.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/gfx/Scale.h"
 
@@ -744,17 +745,20 @@ RasterImage::GetCurrentImage(ImageContainer* aContainer, uint32_t aFlags)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aContainer);
 
-  auto result = GetFrameInternal(FRAME_CURRENT, aFlags | FLAG_ASYNC_NOTIFY);
-  if (!result.second()) {
+  DrawResult drawResult;
+  RefPtr<SourceSurface> surface;
+  Tie(drawResult, surface) =
+    GetFrameInternal(FRAME_CURRENT, aFlags | FLAG_ASYNC_NOTIFY);
+  if (!surface) {
     // The OS threw out some or all of our buffer. We'll need to wait for the
     // redecode (which was automatically triggered by GetFrame) to complete.
-    return MakePair(result.first(), nsRefPtr<layers::Image>());
+    return MakePair(drawResult, nsRefPtr<layers::Image>());
   }
 
   CairoImage::Data cairoData;
   GetWidth(&cairoData.mSize.width);
   GetHeight(&cairoData.mSize.height);
-  cairoData.mSourceSurface = result.second();
+  cairoData.mSourceSurface = surface;
 
   nsRefPtr<layers::Image> image =
     aContainer->CreateImage(ImageFormat::CAIRO_SURFACE);
@@ -762,7 +766,7 @@ RasterImage::GetCurrentImage(ImageContainer* aContainer, uint32_t aFlags)
 
   static_cast<CairoImage*>(image.get())->SetData(cairoData);
 
-  return MakePair(result.first(), Move(image));
+  return MakePair(drawResult, Move(image));
 }
 
 NS_IMETHODIMP_(bool)
@@ -814,18 +818,19 @@ RasterImage::GetImageContainer(LayerManager* aManager, uint32_t aFlags)
   // We need a new ImageContainer, so create one.
   container = LayerManager::CreateImageContainer();
 
-  auto result = GetCurrentImage(container, aFlags);
-  if (!result.second()) {
-    // We couldn't get an Image.
+  DrawResult drawResult;
+  nsRefPtr<layers::Image> image;
+  Tie(drawResult, image) = GetCurrentImage(container, aFlags);
+  if (!image) {
     return nullptr;
   }
 
-  // |result.second()| holds a reference to a SourceSurface which in turn holds
-  // a lock on the current frame's VolatileBuffer, ensuring that it doesn't get
-  // freed as long as the layer system keeps this ImageContainer alive.
-  container->SetCurrentImageInTransaction(result.second());
+  // |image| holds a reference to a SourceSurface which in turn holds a lock on
+  // the current frame's VolatileBuffer, ensuring that it doesn't get freed as
+  // long as the layer system keeps this ImageContainer alive.
+  container->SetCurrentImageInTransaction(image);
 
-  mLastImageContainerDrawResult = result.first();
+  mLastImageContainerDrawResult = drawResult;
   mImageContainer = container;
 
   return container.forget();
@@ -841,16 +846,16 @@ RasterImage::UpdateImageContainer()
     return;
   }
 
-  auto result = GetCurrentImage(container, FLAG_NONE);
-  if (!result.second()) {
-    // We couldn't get an Image.
+  DrawResult drawResult;
+  nsRefPtr<layers::Image> image;
+  Tie(drawResult, image) = GetCurrentImage(container, FLAG_NONE);
+  if (!image) {
     return;
   }
 
-  mLastImageContainerDrawResult = result.first();
-  nsAutoTArray<ImageContainer::NonOwningImage,1> imageList;
-  imageList.AppendElement(
-      ImageContainer::NonOwningImage(result.second()));
+  mLastImageContainerDrawResult = drawResult;
+  nsAutoTArray<ImageContainer::NonOwningImage, 1> imageList;
+  imageList.AppendElement(ImageContainer::NonOwningImage(image));
   container->SetCurrentImages(imageList);
 }
 
