@@ -838,12 +838,10 @@ GetDateBoundary(nsIX509Cert* ix509,
   if (NS_FAILED(rv))
     return;
 
-  dateTimeFormat->FormatPRTime(nullptr, kDateFormatShort, 
-                               kTimeFormatNoSeconds, timeToUse, 
-                               formattedDate);
-  dateTimeFormat->FormatPRTime(nullptr, kDateFormatShort,
-                               kTimeFormatNoSeconds, now,
-                               nowDate);
+  dateTimeFormat->FormatPRTime(nullptr, kDateFormatLong, kTimeFormatNoSeconds,
+                               timeToUse, formattedDate);
+  dateTimeFormat->FormatPRTime(nullptr, kDateFormatLong, kTimeFormatNoSeconds,
+                               now, nowDate);
 }
 
 static void
