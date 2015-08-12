@@ -16,6 +16,7 @@
 #include "mozilla/dom/BluetoothDiscoveryStateChangedEvent.h"
 #include "mozilla/dom/BluetoothStatusChangedEvent.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/LazyIdleThread.h"
@@ -361,11 +362,9 @@ BluetoothAdapter::Notify(const BluetoothSignal& aData)
       BluetoothStatusChangedEvent::Constructor(this, aData.name(), init);
     DispatchTrustedEvent(event);
   } else if (aData.name().EqualsLiteral(REQUEST_MEDIA_PLAYSTATUS_ID)) {
-    nsCOMPtr<nsIDOMEvent> event;
-    nsresult rv = NS_NewDOMEvent(getter_AddRefs(event), this, nullptr, nullptr);
-    NS_ENSURE_SUCCESS_VOID(rv);
+    nsRefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
 
-    rv = event->InitEvent(aData.name(), false, false);
+    nsresult rv = event->InitEvent(aData.name(), false, false);
     NS_ENSURE_SUCCESS_VOID(rv);
 
     DispatchTrustedEvent(event);

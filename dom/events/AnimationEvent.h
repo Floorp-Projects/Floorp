@@ -52,4 +52,9 @@ protected:
 } // namespace dom
 } // namespace mozilla
 
+already_AddRefed<mozilla::dom::AnimationEvent>
+NS_NewDOMAnimationEvent(mozilla::dom::EventTarget* aOwner,
+                        nsPresContext* aPresContext,
+                        mozilla::InternalAnimationEvent* aEvent);
+
 #endif // mozilla_dom_AnimationEvent_h_

@@ -12,6 +12,7 @@
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/dom/BluetoothGattBinding.h"
 #include "mozilla/dom/BluetoothGattCharacteristicEvent.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/Promise.h"
 #include "nsServiceManagerUtils.h"
 
@@ -240,13 +241,12 @@ BluetoothGatt::UpdateConnectionState(BluetoothConnectionState aState)
   mConnectionState = aState;
 
   // Dispatch connectionstatechanged event to application
-  nsCOMPtr<nsIDOMEvent> event;
-  nsresult rv = NS_NewDOMEvent(getter_AddRefs(event), this, nullptr, nullptr);
-  NS_ENSURE_SUCCESS_VOID(rv);
+  nsRefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
 
-  rv = event->InitEvent(NS_LITERAL_STRING(GATT_CONNECTION_STATE_CHANGED_ID),
-                        false,
-                        false);
+  nsresult rv =
+    event->InitEvent(NS_LITERAL_STRING(GATT_CONNECTION_STATE_CHANGED_ID),
+                     false,
+                     false);
   NS_ENSURE_SUCCESS_VOID(rv);
 
   DispatchTrustedEvent(event);

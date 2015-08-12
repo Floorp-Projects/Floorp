@@ -2374,14 +2374,10 @@ public:
 
     WorkerGlobalScope* globalScope = aWorkerPrivate->GlobalScope();
 
-    nsCOMPtr<nsIDOMEvent> event;
-    nsresult rv =
-      NS_NewDOMEvent(getter_AddRefs(event), globalScope, nullptr, nullptr);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return false;
-    }
+    nsRefPtr<Event> event = NS_NewDOMEvent(globalScope, nullptr, nullptr);
 
-    rv = event->InitEvent(NS_LITERAL_STRING("pushsubscriptionchange"), false, false);
+    nsresult rv = event->InitEvent(NS_LITERAL_STRING("pushsubscriptionchange"),
+                                   false, false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return false;
     }

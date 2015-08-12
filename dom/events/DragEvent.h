@@ -61,4 +61,9 @@ protected:
 } // namespace dom
 } // namespace mozilla
 
+already_AddRefed<mozilla::dom::DragEvent>
+NS_NewDOMDragEvent(mozilla::dom::EventTarget* aOwner,
+                   nsPresContext* aPresContext,
+                   mozilla::WidgetDragEvent* aEvent);
+
 #endif // mozilla_dom_DragEvent_h_

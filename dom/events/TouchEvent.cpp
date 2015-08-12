@@ -238,14 +238,11 @@ TouchEvent::ShiftKey()
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsresult
-NS_NewDOMTouchEvent(nsIDOMEvent** aInstancePtrResult,
-                    EventTarget* aOwner,
+already_AddRefed<TouchEvent>
+NS_NewDOMTouchEvent(EventTarget* aOwner,
                     nsPresContext* aPresContext,
                     WidgetTouchEvent* aEvent)
 {
-  TouchEvent* it = new TouchEvent(aOwner, aPresContext, aEvent);
-  NS_ADDREF(it);
-  *aInstancePtrResult = static_cast<Event*>(it);
-  return NS_OK;
+  nsRefPtr<TouchEvent> it = new TouchEvent(aOwner, aPresContext, aEvent);
+  return it.forget();
 }

@@ -102,16 +102,10 @@ DispatchCustomDOMEvent(Element* aFrameElement, const nsAString& aEventName,
     presContext = shell->GetPresContext();
   }
 
-  nsCOMPtr<nsIDOMEvent> domEvent;
-  EventDispatcher::CreateEvent(aFrameElement, presContext, nullptr,
-                               NS_LITERAL_STRING("customevent"),
-                               getter_AddRefs(domEvent));
-  NS_ENSURE_TRUE(domEvent, false);
+  nsRefPtr<CustomEvent> event =
+    NS_NewDOMCustomEvent(aFrameElement, presContext, nullptr);
 
-  nsCOMPtr<nsIDOMCustomEvent> customEvent = do_QueryInterface(domEvent);
-  NS_ENSURE_TRUE(customEvent, false);
   ErrorResult res;
-  CustomEvent* event = static_cast<CustomEvent*>(customEvent.get());
   event->InitCustomEvent(cx,
                          aEventName,
                          /* bubbles = */ true,
@@ -121,12 +115,13 @@ DispatchCustomDOMEvent(Element* aFrameElement, const nsAString& aEventName,
   if (res.Failed()) {
     return false;
   }
-  customEvent->SetTrusted(true);
+  event->SetTrusted(true);
   // Dispatch the event.
   *aStatus = nsEventStatus_eConsumeNoDefault;
   nsresult rv =
     EventDispatcher::DispatchDOMEvent(aFrameElement, nullptr,
-                                      domEvent, presContext, aStatus);
+                                      static_cast<Event*>(event),
+                                      presContext, aStatus);
   return NS_SUCCEEDED(rv);
 }
 

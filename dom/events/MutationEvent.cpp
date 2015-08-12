@@ -119,14 +119,11 @@ MutationEvent::InitMutationEvent(const nsAString& aTypeArg,
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsresult
-NS_NewDOMMutationEvent(nsIDOMEvent** aInstancePtrResult,
-                       EventTarget* aOwner,
+already_AddRefed<MutationEvent>
+NS_NewDOMMutationEvent(EventTarget* aOwner,
                        nsPresContext* aPresContext,
                        InternalMutationEvent* aEvent) 
 {
-  MutationEvent* it = new MutationEvent(aOwner, aPresContext, aEvent);
-  NS_ADDREF(it);
-  *aInstancePtrResult = static_cast<Event*>(it);
-  return NS_OK;
+  nsRefPtr<MutationEvent> it = new MutationEvent(aOwner, aPresContext, aEvent);
+  return it.forget();
 }

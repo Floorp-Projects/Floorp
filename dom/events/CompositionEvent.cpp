@@ -80,12 +80,12 @@ CompositionEvent::InitCompositionEvent(const nsAString& aType,
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsresult
-NS_NewDOMCompositionEvent(nsIDOMEvent** aInstancePtrResult,
-                          EventTarget* aOwner,
+already_AddRefed<CompositionEvent>
+NS_NewDOMCompositionEvent(EventTarget* aOwner,
                           nsPresContext* aPresContext,
                           WidgetCompositionEvent* aEvent)
 {
-  CompositionEvent* event = new CompositionEvent(aOwner, aPresContext, aEvent);
-  return CallQueryInterface(event, aInstancePtrResult);
+  nsRefPtr<CompositionEvent> event =
+    new CompositionEvent(aOwner, aPresContext, aEvent);
+  return event.forget();
 }
