@@ -1104,10 +1104,10 @@ MediaFormatReader::Update(TrackType aTrack)
 
   needInput = true;
 
-  LOGV("Update(%s) ni=%d no=%d ie=%d, in:%d out:%d qs=%d sid:%d",
+  LOGV("Update(%s) ni=%d no=%d ie=%d, in:%llu out:%llu qs=%u sid:%u",
        TrackTypeToStr(aTrack), needInput, needOutput, decoder.mInputExhausted,
        decoder.mNumSamplesInput, decoder.mNumSamplesOutput,
-       size_t(decoder.mSizeOfQueue), decoder.mLastStreamSourceID);
+       uint32_t(size_t(decoder.mSizeOfQueue)), decoder.mLastStreamSourceID);
 
   // Demux samples if we don't have some.
   RequestDemuxSamples(aTrack);
