@@ -136,7 +136,6 @@ using namespace mozilla::system;
 #include "TouchManager.h"
 #include "MediaDecoder.h"
 #include "mozilla/layers/CompositorLRU.h"
-#include "mozilla/dom/devicestorage/DeviceStorageStatics.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -319,8 +318,6 @@ nsLayoutStatics::Initialize()
   PromiseDebugging::Init();
 
   layers::CompositorLRU::Init();
-
-  mozilla::dom::devicestorage::DeviceStorageStatics::Initialize();
 
   return NS_OK;
 }

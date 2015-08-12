@@ -206,6 +206,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCameraManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMediaDevices)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMessagesManager)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDeviceStorageStores)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTimeManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mServiceWorkerContainer)
 
@@ -327,10 +328,7 @@ Navigator::Invalidate()
 
   uint32_t len = mDeviceStorageStores.Length();
   for (uint32_t i = 0; i < len; ++i) {
-    nsRefPtr<nsDOMDeviceStorage> ds = do_QueryReferent(mDeviceStorageStores[i]);
-    if (ds) {
-      ds->Shutdown();
-    }
+    mDeviceStorageStores[i]->Shutdown();
   }
   mDeviceStorageStores.Clear();
 
@@ -963,26 +961,7 @@ Navigator::GetDeviceStorageAreaListener(ErrorResult& aRv)
   return mDeviceStorageAreaListener;
 }
 
-already_AddRefed<nsDOMDeviceStorage>
-Navigator::FindDeviceStorage(const nsAString& aName, const nsAString& aType)
-{
-  auto i = mDeviceStorageStores.Length();
-  while (i > 0) {
-    --i;
-    nsRefPtr<nsDOMDeviceStorage> storage =
-      do_QueryReferent(mDeviceStorageStores[i]);
-    if (storage) {
-      if (storage->Equals(mWindow, aName, aType)) {
-        return storage.forget();
-      }
-    } else {
-      mDeviceStorageStores.RemoveElementAt(i);
-    }
-  }
-  return nullptr;
-}
-
-already_AddRefed<nsDOMDeviceStorage>
+nsDOMDeviceStorage*
 Navigator::GetDeviceStorage(const nsAString& aType, ErrorResult& aRv)
 {
   if (!mWindow || !mWindow->GetOuterWindow() || !mWindow->GetDocShell()) {
@@ -990,13 +969,7 @@ Navigator::GetDeviceStorage(const nsAString& aType, ErrorResult& aRv)
     return nullptr;
   }
 
-  nsString name;
-  nsDOMDeviceStorage::GetDefaultStorageName(aType, name);
-  nsRefPtr<nsDOMDeviceStorage> storage = FindDeviceStorage(name, aType);
-  if (storage) {
-    return storage.forget();
-  }
-
+  nsRefPtr<nsDOMDeviceStorage> storage;
   nsDOMDeviceStorage::CreateDeviceStorageFor(mWindow, aType,
                                              getter_AddRefs(storage));
 
@@ -1004,9 +977,8 @@ Navigator::GetDeviceStorage(const nsAString& aType, ErrorResult& aRv)
     return nullptr;
   }
 
-  mDeviceStorageStores.AppendElement(
-    do_GetWeakReference(static_cast<DOMEventTargetHelper*>(storage)));
-  return storage.forget();
+  mDeviceStorageStores.AppendElement(storage);
+  return storage;
 }
 
 void
@@ -1019,31 +991,12 @@ Navigator::GetDeviceStorages(const nsAString& aType,
     return;
   }
 
-  nsDOMDeviceStorage::VolumeNameArray volumes;
-  nsDOMDeviceStorage::GetOrderedVolumeNames(aType, volumes);
-  if (volumes.IsEmpty()) {
-    nsRefPtr<nsDOMDeviceStorage> storage = GetDeviceStorage(aType, aRv);
-    if (storage) {
-      aStores.AppendElement(storage.forget());
-    }
-  } else {
-    uint32_t len = volumes.Length();
-    aStores.SetCapacity(len);
-    for (uint32_t i = 0; i < len; ++i) {
-      nsRefPtr<nsDOMDeviceStorage> storage =
-        GetDeviceStorageByNameAndType(volumes[i], aType, aRv);
-      if (aRv.Failed()) {
-        break;
-      }
+  nsDOMDeviceStorage::CreateDeviceStoragesFor(mWindow, aType, aStores);
 
-      if (storage) {
-        aStores.AppendElement(storage.forget());
-      }
-    }
-  }
+  mDeviceStorageStores.AppendElements(aStores);
 }
 
-already_AddRefed<nsDOMDeviceStorage>
+nsDOMDeviceStorage*
 Navigator::GetDeviceStorageByNameAndType(const nsAString& aName,
                                          const nsAString& aType,
                                          ErrorResult& aRv)
@@ -1053,10 +1006,7 @@ Navigator::GetDeviceStorageByNameAndType(const nsAString& aName,
     return nullptr;
   }
 
-  nsRefPtr<nsDOMDeviceStorage> storage = FindDeviceStorage(aName, aType);
-  if (storage) {
-    return storage.forget();
-  }
+  nsRefPtr<nsDOMDeviceStorage> storage;
   nsDOMDeviceStorage::CreateDeviceStorageByNameAndType(mWindow, aName, aType,
                                                        getter_AddRefs(storage));
 
@@ -1064,9 +1014,8 @@ Navigator::GetDeviceStorageByNameAndType(const nsAString& aName,
     return nullptr;
   }
 
-  mDeviceStorageStores.AppendElement(
-    do_GetWeakReference(static_cast<DOMEventTargetHelper*>(storage)));
-  return storage.forget();
+  mDeviceStorageStores.AppendElement(storage);
+  return storage;
 }
 
 Geolocation*
