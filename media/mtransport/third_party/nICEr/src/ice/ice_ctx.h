@@ -150,6 +150,8 @@ struct nr_ice_ctx_ {
 
   nr_ice_trickle_candidate_cb trickle_cb;
   void *trickle_cb_arg;
+
+  char force_net_interface[MAXIFNAME];
 };
 
 int nr_ice_ctx_create(char *label, UINT4 flags, nr_ice_ctx **ctxp);
