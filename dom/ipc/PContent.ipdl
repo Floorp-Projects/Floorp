@@ -933,6 +933,10 @@ parent:
 
     sync GetGraphicsFeatureStatus(int32_t aFeature) returns (int32_t aStatus, bool aSuccess);
 
+    // Driver crash guards. aGuardType must be a member of CrashGuardType.
+    sync BeginDriverCrashGuard(uint32_t aGuardType) returns (bool crashDetected);
+    sync EndDriverCrashGuard(uint32_t aGuardType);
+
     AddIdleObserver(uint64_t observerId, uint32_t idleTimeInS);
     RemoveIdleObserver(uint64_t observerId, uint32_t idleTimeInS);
 
