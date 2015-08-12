@@ -20,7 +20,7 @@
 #elif defined(JS_CODEGEN_ARM64)
 # include "jit/arm64/Lowering-arm64.h"
 #elif defined(JS_CODEGEN_MIPS)
-# include "jit/mips/Lowering-mips.h"
+# include "jit/mips32/Lowering-mips32.h"
 #elif defined(JS_CODEGEN_NONE)
 # include "jit/none/Lowering-none.h"
 #else

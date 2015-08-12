@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jit/mips/BaselineCompiler-mips.h"
+#include "jit/mips32/BaselineCompiler-mips32.h"
 
 using namespace js;
 using namespace js::jit;

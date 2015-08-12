@@ -12,7 +12,7 @@
 #include "jit/AtomicOp.h"
 #include "jit/IonCaches.h"
 #include "jit/JitFrames.h"
-#include "jit/mips/Assembler-mips.h"
+#include "jit/mips32/Assembler-mips32.h"
 #include "jit/MoveResolver.h"
 
 namespace js {

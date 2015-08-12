@@ -15,7 +15,7 @@
 #include "jit/IonCode.h"
 #include "jit/JitCompartment.h"
 #include "jit/JitSpewer.h"
-#include "jit/mips/Architecture-mips.h"
+#include "jit/mips32/Architecture-mips32.h"
 #include "jit/shared/Assembler-shared.h"
 #include "jit/shared/IonAssemblerBuffer.h"
 

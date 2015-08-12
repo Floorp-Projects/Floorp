@@ -21,7 +21,7 @@
 #elif defined(JS_CODEGEN_ARM64)
 # include "jit/arm64/CodeGenerator-arm64.h"
 #elif defined(JS_CODEGEN_MIPS)
-# include "jit/mips/CodeGenerator-mips.h"
+# include "jit/mips32/CodeGenerator-mips32.h"
 #elif defined(JS_CODEGEN_NONE)
 # include "jit/none/CodeGenerator-none.h"
 #else

@@ -16,7 +16,7 @@
 #elif defined(JS_CODEGEN_ARM64)
 # include "jit/arm64/SharedICRegisters-arm64.h"
 #elif defined(JS_CODEGEN_MIPS)
-# include "jit/mips/SharedICRegisters-mips.h"
+# include "jit/mips32/SharedICRegisters-mips32.h"
 #elif defined(JS_CODEGEN_NONE)
 # include "jit/none/SharedICRegisters-none.h"
 #else

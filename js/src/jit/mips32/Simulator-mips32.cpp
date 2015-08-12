@@ -26,7 +26,7 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "jit/mips/Simulator-mips.h"
+#include "jit/mips32/Simulator-mips32.h"
 
 #include "mozilla/Casting.h"
 #include "mozilla/FloatingPoint.h"
@@ -36,7 +36,7 @@
 #include <float.h>
 
 #include "asmjs/AsmJSValidate.h"
-#include "jit/mips/Assembler-mips.h"
+#include "jit/mips32/Assembler-mips32.h"
 #include "vm/Runtime.h"
 
 namespace js {

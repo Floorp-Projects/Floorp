@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jit/mips/MacroAssembler-mips.h"
+#include "jit/mips32/MacroAssembler-mips32.h"
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
@@ -13,7 +13,7 @@
 #include "jit/BaselineFrame.h"
 #include "jit/JitFrames.h"
 #include "jit/MacroAssembler.h"
-#include "jit/mips/Simulator-mips.h"
+#include "jit/mips32/Simulator-mips32.h"
 #include "jit/MoveEmitter.h"
 #include "jit/SharedICRegisters.h"
 
