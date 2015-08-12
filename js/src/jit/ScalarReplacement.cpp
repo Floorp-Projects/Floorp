@@ -78,6 +78,8 @@ EmulateStateOf<MemoryView>::run(MemoryView& view)
                 ins->toDefinition()->accept(&view);
             else
                 view.visitResumePoint(ins->toResumePoint());
+            if (view.oom())
+                return false;
         }
 
         // For each successor, merge the current state into the state of the
@@ -273,6 +275,8 @@ class ObjectMemoryView : public MDefinitionVisitorDefaultNoop
     // Used to improve the memory usage by sharing common modification.
     const MResumePoint* lastResumePoint_;
 
+    bool oom_;
+
   public:
     ObjectMemoryView(TempAllocator& alloc, MInstruction* obj);
 
@@ -287,6 +291,8 @@ class ObjectMemoryView : public MDefinitionVisitorDefaultNoop
 #else
     void assertSuccess() {}
 #endif
+
+    bool oom() const { return oom_; }
 
   public:
     void visitResumePoint(MResumePoint* rp);
@@ -318,7 +324,8 @@ ObjectMemoryView::ObjectMemoryView(TempAllocator& alloc, MInstruction* obj)
     obj_(obj),
     startBlock_(obj->block()),
     state_(nullptr),
-    lastResumePoint_(nullptr)
+    lastResumePoint_(nullptr),
+    oom_(false)
 {
     // Annotate snapshots RValue such that we recover the store first.
     obj_->setIncompleteObject();
@@ -343,6 +350,9 @@ ObjectMemoryView::initStartingState(BlockState** pState)
 
     // Create a new block state and insert at it at the location of the new object.
     BlockState* state = BlockState::New(alloc_, obj_, undefinedVal_);
+    if (!state)
+        return false;
+
     startBlock_->insertAfter(obj_, state);
 
     // Hold out of resume point until it is visited.
@@ -390,6 +400,9 @@ ObjectMemoryView::mergeIntoSuccessorState(MBasicBlock* curr, MBasicBlock* succ,
         // nodes.  These would later be removed by the removal of redundant phi
         // nodes.
         succState = BlockState::Copy(alloc_, state_);
+        if (!succState)
+            return false;
+
         size_t numPreds = succ->numPredecessors();
         for (size_t slot = 0; slot < state_->numSlots(); slot++) {
             MPhi* phi = MPhi::New(alloc_);
@@ -490,6 +503,11 @@ ObjectMemoryView::visitStoreFixedSlot(MStoreFixedSlot* ins)
     // Clone the state and update the slot value.
     if (state_->hasFixedSlot(ins->slot())) {
         state_ = BlockState::Copy(alloc_, state_);
+        if (!state_) {
+            oom_ = true;
+            return;
+        }
+
         state_->setFixedSlot(ins->slot(), ins->value());
         ins->block()->insertBefore(ins->toInstruction(), state_);
     } else {
@@ -550,6 +568,11 @@ ObjectMemoryView::visitStoreSlot(MStoreSlot* ins)
     // Clone the state and update the slot value.
     if (state_->hasDynamicSlot(ins->slot())) {
         state_ = BlockState::Copy(alloc_, state_);
+        if (!state_) {
+            oom_ = true;
+            return;
+        }
+
         state_->setDynamicSlot(ins->slot(), ins->value());
         ins->block()->insertBefore(ins->toInstruction(), state_);
     } else {
@@ -650,6 +673,11 @@ ObjectMemoryView::storeOffset(MInstruction* ins, size_t offset, MDefinition* val
     // Clone the state and update the slot value.
     MOZ_ASSERT(state_->hasOffset(offset));
     state_ = BlockState::Copy(alloc_, state_);
+    if (!state_) {
+        oom_ = true;
+        return;
+    }
+
     state_->setOffset(offset, value);
     ins->block()->insertBefore(ins, state_);
 
@@ -953,6 +981,8 @@ class ArrayMemoryView : public MDefinitionVisitorDefaultNoop
     // Used to improve the memory usage by sharing common modification.
     const MResumePoint* lastResumePoint_;
 
+    bool oom_;
+
   public:
     ArrayMemoryView(TempAllocator& alloc, MInstruction* arr);
 
@@ -967,6 +997,8 @@ class ArrayMemoryView : public MDefinitionVisitorDefaultNoop
 #else
     void assertSuccess() {}
 #endif
+
+    bool oom() const { return oom_; }
 
   private:
     bool isArrayStateElements(MDefinition* elements);
@@ -991,7 +1023,8 @@ ArrayMemoryView::ArrayMemoryView(TempAllocator& alloc, MInstruction* arr)
     arr_(arr),
     startBlock_(arr->block()),
     state_(nullptr),
-    lastResumePoint_(nullptr)
+    lastResumePoint_(nullptr),
+    oom_(false)
 {
     // Annotate snapshots RValue such that we recover the store first.
     arr_->setIncompleteObject();
@@ -1018,6 +1051,9 @@ ArrayMemoryView::initStartingState(BlockState** pState)
 
     // Create a new block state and insert at it at the location of the new array.
     BlockState* state = BlockState::New(alloc_, arr_, undefinedVal_, initLength);
+    if (!state)
+        return false;
+
     startBlock_->insertAfter(arr_, state);
 
     // Hold out of resume point until it is visited.
@@ -1065,6 +1101,9 @@ ArrayMemoryView::mergeIntoSuccessorState(MBasicBlock* curr, MBasicBlock* succ,
         // nodes.  These would later be removed by the removal of redundant phi
         // nodes.
         succState = BlockState::Copy(alloc_, state_);
+        if (!succState)
+            return false;
+
         size_t numPreds = succ->numPredecessors();
         for (size_t index = 0; index < state_->numElements(); index++) {
             MPhi* phi = MPhi::New(alloc_);
@@ -1168,6 +1207,11 @@ ArrayMemoryView::visitStoreElement(MStoreElement* ins)
     int32_t index;
     MOZ_ALWAYS_TRUE(IndexOf(ins, &index));
     state_ = BlockState::Copy(alloc_, state_);
+    if (!state_) {
+        oom_ = true;
+        return;
+    }
+
     state_->setElement(index, ins->value());
     ins->block()->insertBefore(ins, state_);
 
@@ -1205,6 +1249,11 @@ ArrayMemoryView::visitSetInitializedLength(MSetInitializedLength* ins)
     // To obtain the length, we need to add 1 to it, and thus we need to create
     // a new constant that we register in the ArrayState.
     state_ = BlockState::Copy(alloc_, state_);
+    if (!state_) {
+        oom_ = true;
+        return;
+    }
+
     int32_t initLengthValue = ins->index()->constantValue().toInt32() + 1;
     MConstant* initLength = MConstant::New(alloc_, Int32Value(initLengthValue));
     ins->block()->insertBefore(ins, initLength);
