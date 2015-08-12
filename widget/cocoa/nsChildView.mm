@@ -4872,6 +4872,7 @@ PanGestureTypeForEvent(NSEvent* aEvent)
     panEvent.mLineOrPageDeltaY = lineOrPageDeltaY;
 
     bool canTriggerSwipe = [self shouldConsiderStartingSwipeFromEvent:theEvent];
+    panEvent.mRequiresContentResponse = canTriggerSwipe;
     mGeckoChild->DispatchAPZWheelInputEvent(panEvent, canTriggerSwipe);
   } else if (usePreciseDeltas) {
     // This is on 10.6 or old touchpads that don't have any phase information.
