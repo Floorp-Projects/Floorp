@@ -54,5 +54,16 @@ add_task(function* test_purpose() {
   check_submission("&channel=sb", "", null,        "searchbar");
   check_submission("&channel=sb", "", "text/html", "searchbar");
 
+  // verify that the 'system' purpose falls back to the 'searchbar' purpose.
+  base = "http://www.google.com/search?q=foo";
+  check_submission("&channel=sb", "foo", "text/html", "system");
+  check_submission("&channel=sb", "foo", "text/html", "searchbar");
+  // Add an engine that actually defines the 'system' purpose...
+  [engine] = yield addTestEngines([
+    { name: "engine-system-purpose", xmlFileName: "engine-system-purpose.xml" }
+  ]);
+  // ... and check that the system purpose is used correctly.
+  check_submission("&channel=sys", "foo", "text/html", "system");
+
   do_test_finished();
 });

@@ -25,5 +25,6 @@
   <MozParam name="hsimp" condition="purpose" purpose="homepage"    value="yhs-003"/>
   <MozParam name="hsimp" condition="purpose" purpose="newtab"      value="yhs-004"/>
   <MozParam name="hsimp" condition="purpose" purpose="contextmenu" value="yhs-005"/>
+  <MozParam name="hsimp" condition="purpose" purpose="system"      value="yhs-007"/>
 </Url>
 </SearchPlugin>
