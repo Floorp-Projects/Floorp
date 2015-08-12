@@ -5897,7 +5897,7 @@ CheckThisFrame(JSContext* cx, const CallArgs& args, const char* fnname, bool che
     THIS_FRAME_THISOBJ(cx, argc, vp, fnname, args, thisobj);                   \
     AbstractFramePtr frame = AbstractFramePtr::FromRaw(thisobj->getPrivate()); \
     if (frame.isScriptFrameIterData()) {                                       \
-        ScriptFrameIter iter(*(ScriptFrameIter::Data*)(frame.raw()));          \
+        ScriptFrameIter iter(cx, *(ScriptFrameIter::Data*)(frame.raw()));      \
         frame = iter.abstractFramePtr();                                       \
     }
 
@@ -5907,7 +5907,7 @@ CheckThisFrame(JSContext* cx, const CallArgs& args, const char* fnname, bool che
     {                                                                          \
         AbstractFramePtr f = AbstractFramePtr::FromRaw(thisobj->getPrivate()); \
         if (f.isScriptFrameIterData()) {                                       \
-            maybeIter.emplace(*(ScriptFrameIter::Data*)(f.raw()));             \
+            maybeIter.emplace(cx, *(ScriptFrameIter::Data*)(f.raw()));         \
         } else {                                                               \
             maybeIter.emplace(cx, ScriptFrameIter::ALL_CONTEXTS,               \
                               ScriptFrameIter::GO_THROUGH_SAVED,               \
