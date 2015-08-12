@@ -470,6 +470,7 @@ INNER_MAKE_PACKAGE	= \
   ( cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && \
     unzip -o $(_ABS_DIST)/gecko.ap_ && \
     rm $(_ABS_DIST)/gecko.ap_ && \
+    $(ZIP) -r9D $(_ABS_DIST)/gecko.ap_ assets && \
     $(ZIP) $(if $(ALREADY_SZIPPED),-0 ,$(if $(MOZ_ENABLE_SZIP),-0 ))$(_ABS_DIST)/gecko.ap_ $(ASSET_SO_LIBRARIES) && \
     $(ZIP) -r9D $(_ABS_DIST)/gecko.ap_ $(DIST_FILES) -x $(NON_DIST_FILES) $(SZIP_LIBRARIES) && \
     $(if $(filter-out ./,$(OMNIJAR_DIR)), \

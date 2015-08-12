@@ -24,6 +24,7 @@ import reftest
 import mozinfo
 
 from .data import (
+    AndroidAssetsDirs,
     AndroidResDirs,
     BrandingFiles,
     ConfigFileSubstitution,
@@ -700,14 +701,18 @@ class TreeMetadataEmitter(LoggingMixin):
         for name, data in context.get('ANDROID_ECLIPSE_PROJECT_TARGETS', {}).items():
             yield ContextWrapped(context, data)
 
-        paths = context.get('ANDROID_RES_DIRS')
-        if paths:
+        for (symbol, cls) in [
+                ('ANDROID_RES_DIRS', AndroidResDirs),
+                ('ANDROID_ASSETS_DIRS', AndroidAssetsDirs)]:
+            paths = context.get(symbol)
+            if not paths:
+                continue
             for p in paths:
                 if isinstance(p, SourcePath) and not os.path.isdir(p.full_path):
                     raise SandboxValidationError('Directory listed in '
-                        'ANDROID_RES_DIRS is not a directory: \'%s\'' %
-                            p.full_path, context)
-            yield AndroidResDirs(context, paths)
+                        '%s is not a directory: \'%s\'' %
+                            (symbol, p.full_path), context)
+            yield cls(context, paths)
 
         if passthru.variables:
             yield passthru
