@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_mips_LOpcodes_mips_h__
-#define jit_mips_LOpcodes_mips_h__
+#ifndef jit_mips32_LOpcodes_mips32_h__
+#define jit_mips32_LOpcodes_mips32_h__
 
 #include "jit/shared/LOpcodes-shared.h"
 
@@ -14,4 +14,4 @@
     _(ModMaskI)                 \
     _(UDivOrMod)
 
-#endif // jit_mips_LOpcodes_mips_h__
+#endif // jit_mips32_LOpcodes_mips32_h__

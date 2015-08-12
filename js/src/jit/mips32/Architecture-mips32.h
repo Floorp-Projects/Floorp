@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_mips_Architecture_mips_h
-#define jit_mips_Architecture_mips_h
+#ifndef jit_mips32_Architecture_mips32_h
+#define jit_mips32_Architecture_mips32_h
 
 #include "mozilla/MathAlgorithms.h"
 
@@ -17,7 +17,7 @@
 // gcc appears to use _mips_hard_float to denote
 // that the target is a hard-float target.
 #ifdef _mips_hard_float
-#define JS_CODEGEN_MIPS_HARDFP
+#define JS_CODEGEN_MIPS32_HARDFP
 #endif
 
 #if _MIPS_SIM == _ABIO32
@@ -543,4 +543,4 @@ static const size_t AsmJSImmediateRange = 0;
 } // namespace jit
 } // namespace js
 
-#endif /* jit_mips_Architecture_mips_h */
+#endif /* jit_mips32_Architecture_mips32_h */

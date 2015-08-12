@@ -26,10 +26,10 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef jit_mips_Simulator_mips_h
-#define jit_mips_Simulator_mips_h
+#ifndef jit_mips32_Simulator_mips32_h
+#define jit_mips32_Simulator_mips32_h
 
-#ifdef JS_SIMULATOR_MIPS
+#ifdef JS_SIMULATOR_MIPS32
 
 #include "jslock.h"
 
@@ -419,6 +419,6 @@ class Simulator {
 } // namespace jit
 } // namespace js
 
-#endif /* JS_SIMULATOR_MIPS */
+#endif /* JS_SIMULATOR_MIPS32 */
 
-#endif /* jit_mips_Simulator_mips_h */
+#endif /* jit_mips32_Simulator_mips32_h */

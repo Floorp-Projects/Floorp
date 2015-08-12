@@ -3383,7 +3383,7 @@ MacroAssemblerMIPSCompat::callWithABIPost(uint32_t stackAdjust, MoveOp::Type res
     inCall_ = false;
 }
 
-#if defined(DEBUG) && defined(JS_SIMULATOR_MIPS)
+#if defined(DEBUG) && defined(JS_SIMULATOR_MIPS32)
 static void
 AssertValidABIFunctionType(uint32_t passedArgTypes)
 {
@@ -3418,7 +3418,7 @@ AssertValidABIFunctionType(uint32_t passedArgTypes)
 void
 MacroAssemblerMIPSCompat::callWithABI(void* fun, MoveOp::Type result)
 {
-#ifdef JS_SIMULATOR_MIPS
+#ifdef JS_SIMULATOR_MIPS32
     MOZ_ASSERT(passedArgs_ <= 15);
     passedArgTypes_ <<= ArgType_Shift;
     switch (result) {
