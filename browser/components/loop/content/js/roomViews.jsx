@@ -94,7 +94,7 @@ loop.roomViews = (function(mozL10n) {
       var origin = event.currentTarget.dataset.provider;
       var provider = this.props.socialShareProviders
                          .filter(function(socialProvider) {
-                           return socialProvider.origin == origin;
+                           return socialProvider.origin === origin;
                          })[0];
 
       this.props.dispatcher.dispatch(new sharedActions.ShareRoomUrl({

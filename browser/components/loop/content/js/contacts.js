@@ -271,7 +271,7 @@ loop.contacts = (function(_, mozL10n) {
     canEdit: function() {
       // We cannot modify imported contacts.  For the moment, the check for
       // determining whether the contact is imported is based on its category.
-      return this.props.contact.category[0] != "google";
+      return this.props.contact.category[0] !== "google";
     },
 
     render: function() {
@@ -417,7 +417,7 @@ loop.contacts = (function(_, mozL10n) {
       let profile = this.props.mozLoop.userProfile;
       let currUid = this._userProfile ? this._userProfile.uid : null;
       let newUid = profile ? profile.uid : null;
-      if (currUid != newUid) {
+      if (currUid !== newUid) {
         // On profile change (login, logout), reload all contacts.
         this._userProfile = profile;
         // The following will do a forceUpdate() for us.
@@ -750,7 +750,7 @@ loop.contacts = (function(_, mozL10n) {
 
       return (
         React.createElement("div", {className: contentAreaClasses}, 
-          React.createElement("header", null, this.props.mode == "add"
+          React.createElement("header", null, this.props.mode === "add"
                    ? mozL10n.get("add_contact_title")
                    : mozL10n.get("edit_contact_title")), 
           React.createElement("div", {className: cx({"form-content-container": true})}, 
@@ -779,7 +779,7 @@ loop.contacts = (function(_, mozL10n) {
                     caption: mozL10n.get("cancel_button"), 
                     onClick: this.handleCancelButtonClick}), 
             React.createElement(Button, {additionalClass: "button-accept", 
-                    caption: this.props.mode == "add"
+                    caption: this.props.mode === "add"
                              ? mozL10n.get("add_contact_button")
                              : mozL10n.get("edit_contact_done_button"), 
                     onClick: this.handleAcceptButtonClick})

@@ -65,7 +65,7 @@ const SEARCH_DELAY = 200;
 // The number of lines that are displayed in the console output by default, for
 // each category. The user can change this number by adjusting the hidden
 // "devtools.hud.loglimit.{network,cssparser,exception,console}" preferences.
-const DEFAULT_LOG_LIMIT = 200;
+const DEFAULT_LOG_LIMIT = 1000;
 
 // The various categories of messages. We start numbering at zero so we can
 // use these as indexes into the MESSAGE_PREFERENCE_KEYS matrix below.
