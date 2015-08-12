@@ -18,6 +18,12 @@ const TESTCASES = [
     skipEmptyFields: undefined,
   },
   {
+    description: "1 text field outside of a <form> without a password field",
+    document: `<input id="un1">`,
+    returnedFieldIDs: [null, null, null],
+    skipEmptyFields: undefined,
+  },
+  {
     description: "1 username & password field outside of a <form>",
     document: `<input id="un1">
       <input id="pw1" type=password>`,
@@ -70,6 +76,18 @@ const TESTCASES = [
     skipEmptyFields: undefined,
   },
   {
+    description: "1 password field in a form, 1 text field outside (not processed)",
+    document: `<form><input id="pw1" type=password></form><input>`,
+    returnedFieldIDs: [null, "pw1", null],
+    skipEmptyFields: undefined,
+  },
+  {
+    description: "1 text field in a form, 1 password field outside (not processed)",
+    document: `<form><input></form><input id="pw1" type=password>`,
+    returnedFieldIDs: [null, null, null],
+    skipEmptyFields: undefined,
+  },
+  {
     description: "2 password fields outside of a <form> with 1 linked via @form",
     document: `<input id="pw1" type=password><input id="pw2" type=password form='form1'>
       <form id="form1"></form>`,
@@ -102,10 +120,10 @@ for (let tc of TESTCASES) {
       let document = MockDocument.createTestDocument("http://localhost:8080/test/",
                                                       testcase.document);
 
-      let input = document.querySelector("input[type='password']");
+      let input = document.querySelector("input");
       MockDocument.mockOwnerDocumentProperty(input, document, "http://localhost:8080/test/");
 
-      let formLike = FormLikeFactory.createFromPasswordField(input);
+      let formLike = FormLikeFactory.createFromField(input);
 
       let actual = LoginManagerContent._getFormFields(formLike,
                                                       testcase.skipEmptyFields,

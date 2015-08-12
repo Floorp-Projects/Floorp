@@ -295,7 +295,7 @@ describe("loop.roomViews", function () {
     beforeEach(function() {
       sandbox.stub(dispatcher, "dispatch");
       fakeMozLoop.getLoopPref = function(prefName) {
-        if (prefName == "contextInConversations.enabled") {
+        if (prefName === "contextInConversations.enabled") {
           return true;
         }
         return "test";

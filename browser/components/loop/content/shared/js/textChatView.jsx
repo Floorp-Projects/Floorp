@@ -116,13 +116,21 @@ loop.shared.views.chat = (function(mozL10n) {
       };
     },
 
+    _hasChatMessages: function() {
+      return this.props.messageList.some(function(message) {
+        return message.contentType === CHAT_CONTENT_TYPES.TEXT;
+      });
+    },
+
     componentWillUpdate: function() {
       var node = this.getDOMNode();
       if (!node) {
         return;
       }
-      // Scroll only if we're right at the bottom of the display.
-      this.shouldScroll = node.scrollHeight === node.scrollTop + node.clientHeight;
+      // Scroll only if we're right at the bottom of the display, or if we've
+      // not had any chat messages so far.
+      this.shouldScroll = !this._hasChatMessages() ||
+        node.scrollHeight === node.scrollTop + node.clientHeight;
     },
 
     componentWillReceiveProps: function(nextProps) {
@@ -138,7 +146,9 @@ loop.shared.views.chat = (function(mozL10n) {
     },
 
     componentDidUpdate: function() {
-      if (this.shouldScroll) {
+      // Don't scroll if we haven't got any chat messages yet - e.g. for context
+      // display, we want to display starting at the top.
+      if (this.shouldScroll && this._hasChatMessages()) {
         // This ensures the paint is complete.
         window.requestAnimationFrame(function() {
           try {
@@ -370,20 +380,20 @@ loop.shared.views.chat = (function(mozL10n) {
 
     render: function() {
       var messageList;
-      var hasNonSpecialMessages;
 
       if (this.props.showRoomName) {
         messageList = this.state.messageList;
-        hasNonSpecialMessages = messageList.some(function(item) {
-          return item.type !== CHAT_MESSAGE_TYPES.SPECIAL;
-        });
       } else {
         messageList = this.state.messageList.filter(function(item) {
           return item.type !== CHAT_MESSAGE_TYPES.SPECIAL ||
             item.contentType !== CHAT_CONTENT_TYPES.ROOM_NAME;
         });
-        hasNonSpecialMessages = !!messageList.length;
       }
+
+      // Only show the placeholder if we've sent messages.
+      var hasSentMessages = messageList.some(function(item) {
+        return item.type === CHAT_MESSAGE_TYPES.SENT;
+      });
 
       var textChatViewClasses = React.addons.classSet({
         "text-chat-view": true,
@@ -399,7 +409,7 @@ loop.shared.views.chat = (function(mozL10n) {
             useDesktopPaths={this.props.useDesktopPaths} />
           <TextChatInputView
             dispatcher={this.props.dispatcher}
-            showPlaceholder={!hasNonSpecialMessages}
+            showPlaceholder={!hasSentMessages}
             textChatEnabled={this.state.textChatEnabled} />
         </div>
       );

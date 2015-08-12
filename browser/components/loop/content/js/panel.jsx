@@ -79,7 +79,7 @@ loop.panel = (function(_, mozL10n) {
         if (this.props.buttonsHidden.indexOf(tabName) > -1) {
           return;
         }
-        var isSelected = (this.state.selectedTab == tabName);
+        var isSelected = (this.state.selectedTab === tabName);
         if (!tab.props.hidden) {
           var label = mozL10n.get(tabName + "_tab_button");
           tabButtons.push(
@@ -861,7 +861,7 @@ loop.panel = (function(_, mozL10n) {
       var profile = this.props.mozLoop.userProfile;
       var currUid = this.state.userProfile ? this.state.userProfile.uid : null;
       var newUid = profile ? profile.uid : null;
-      if (currUid == newUid) {
+      if (currUid === newUid) {
         // Update the state of hasEncryptionKey as this might have changed now.
         this.setState({hasEncryptionKey: this.props.mozLoop.hasEncryptionKey});
       } else {

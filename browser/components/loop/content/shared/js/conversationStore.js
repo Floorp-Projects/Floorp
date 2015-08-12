@@ -533,7 +533,7 @@ loop.store = loop.store || {};
           if (err) {
             console.error("Failed to get outgoing call data", err);
             var failureReason = "setup";
-            if (err.errno == REST_ERRNOS.USER_UNAVAILABLE) {
+            if (err.errno === REST_ERRNOS.USER_UNAVAILABLE) {
               failureReason = REST_ERRNOS.USER_UNAVAILABLE;
             }
             this.dispatcher.dispatch(

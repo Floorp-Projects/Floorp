@@ -294,7 +294,7 @@ var LoginManagerContent = {
       return;
     }
 
-    let formLike = FormLikeFactory.createFromPasswordField(pwField);
+    let formLike = FormLikeFactory.createFromField(pwField);
     log("onDOMInputPasswordAdded:", pwField, formLike);
 
     let deferredTask = this._deferredPasswordAddedTasksByRootElement.get(formLike.rootElement);
@@ -475,7 +475,7 @@ var LoginManagerContent = {
 
     // If we have a target input, fills it's form.
     if (inputElement) {
-      form = FormLikeFactory.createFromPasswordField(inputElement);
+      form = FormLikeFactory.createFromField(inputElement);
       clobberUsername = false;
     }
     this._fillForm(form, true, clobberUsername, true, true, loginsFound, recipes, options);
@@ -506,7 +506,7 @@ var LoginManagerContent = {
     if (!(acInputField.ownerDocument instanceof Ci.nsIDOMHTMLDocument))
       return;
 
-    if (!this._isUsernameFieldType(acInputField))
+    if (!LoginHelper.isUsernameFieldType(acInputField))
       return;
 
     var acForm = acInputField.form; // XXX: Bug 1173583 - This doesn't work outside of <form>.
@@ -577,24 +577,6 @@ var LoginManagerContent = {
     return pwFields;
   },
 
-  _isUsernameFieldType: function(element) {
-    if (!(element instanceof Ci.nsIDOMHTMLInputElement))
-      return false;
-
-    let fieldType = (element.hasAttribute("type") ?
-                     element.getAttribute("type").toLowerCase() :
-                     element.type);
-    if (fieldType == "text"  ||
-        fieldType == "email" ||
-        fieldType == "url"   ||
-        fieldType == "tel"   ||
-        fieldType == "number") {
-      return true;
-    }
-    return false;
-  },
-
-
   /**
    * Returns the username and password fields found in the form.
    * Can handle complex forms by trying to figure out what the
@@ -611,6 +593,10 @@ var LoginManagerContent = {
    * "theLoginField". If not null, the form is apparently a
    * change-password field, with oldPasswordField containing the password
    * that is being changed.
+   *
+   * Note that even though we can create a FormLike from a text field,
+   * this method will only return a non-null usernameField if the
+   * FormLike has a password field.
    */
   _getFormFields : function (form, isSubmission, recipes) {
     var usernameField = null;
@@ -623,7 +609,7 @@ var LoginManagerContent = {
       );
       if (pwOverrideField) {
         // The field from the password override may be in a different FormLike.
-        let formLike = FormLikeFactory.createFromPasswordField(pwOverrideField);
+        let formLike = FormLikeFactory.createFromField(pwOverrideField);
         pwFields = [{
           index   : [...formLike.elements].indexOf(pwOverrideField),
           element : pwOverrideField,
@@ -656,7 +642,7 @@ var LoginManagerContent = {
       // already logged in to the site.
       for (var i = pwFields[0].index - 1; i >= 0; i--) {
         var element = form.elements[i];
-        if (this._isUsernameFieldType(element)) {
+        if (LoginHelper.isUsernameFieldType(element)) {
           usernameField = element;
           break;
         }
@@ -1086,7 +1072,6 @@ var LoginUtils = {
 
     return this._getPasswordOrigin(uriString, true);
   },
-
 };
 
 // nsIAutoCompleteResult implementation
@@ -1216,30 +1201,30 @@ let FormLikeFactory = {
   },
 
   /**
-   * Create a FormLike object from an <input type=password>.
+   * Create a FormLike object from a password or username field.
    *
-   * If the <input> is in a <form>, construct the FormLike from the form.
+   * If the field is in a <form>, construct the FormLike from the form.
    * Otherwise, create a FormLike with a rootElement (wrapper) according to
    * heuristics. Currently all <input> not in a <form> are one FormLike but this
    * shouldn't be relied upon as the heuristics may change to detect multiple
    * "forms" (e.g. registration and login) on one page with a <form>.
    *
-   * @param {HTMLInputElement} aPasswordField - a password field in a document
+   * @param {HTMLInputElement} aField - a password or username field in a document
    * @return {FormLike}
-   * @throws Error if aPasswordField isn't a password input in a document
+   * @throws Error if aField isn't a password or username field in a document
    */
-  createFromPasswordField(aPasswordField) {
-    if (!(aPasswordField instanceof Ci.nsIDOMHTMLInputElement) ||
-        aPasswordField.type != "password" ||
-        !aPasswordField.ownerDocument) {
-      throw new Error("createFromPasswordField requires a password field in a document");
+  createFromField(aField) {
+    if (!(aField instanceof Ci.nsIDOMHTMLInputElement) ||
+        (aField.type != "password" && !LoginHelper.isUsernameFieldType(aField)) ||
+        !aField.ownerDocument) {
+      throw new Error("createFromField requires a password or username field in a document");
     }
 
-    if (aPasswordField.form) {
-      return this.createFromForm(aPasswordField.form);
+    if (aField.form) {
+      return this.createFromForm(aField.form);
     }
 
-    let doc = aPasswordField.ownerDocument;
+    let doc = aField.ownerDocument;
     log("Created non-form FormLike for rootElement:", doc.documentElement);
     let formLike = {
       action: LoginUtils._getPasswordOrigin(doc.baseURI),
