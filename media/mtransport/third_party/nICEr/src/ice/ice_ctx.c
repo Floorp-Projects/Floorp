@@ -315,7 +315,7 @@ int nr_ice_fetch_turn_servers(int ct, nr_ice_turn_server **out)
   }
 #endif /* USE_TURN */
 
-#define MAXADDRS 100 // Ridiculously high
+#define MAXADDRS 100 /* Ridiculously high */
 int nr_ice_ctx_create(char *label, UINT4 flags, nr_ice_ctx **ctxp)
   {
     nr_ice_ctx *ctx=0;
@@ -398,6 +398,14 @@ int nr_ice_ctx_create(char *label, UINT4 flags, nr_ice_ctx **ctxp)
 
     if (r=nr_socket_factory_create_int(NULL, &default_socket_factory_vtbl, &ctx->socket_factory))
       ABORT(r);
+
+    if ((r=NR_reg_get_string((char *)NR_ICE_REG_PREF_FORCE_INTERFACE_NAME, ctx->force_net_interface, sizeof(ctx->force_net_interface)))) {
+      if (r == R_NOT_FOUND) {
+        ctx->force_net_interface[0] = 0;
+      } else {
+        ABORT(r);
+      }
+    }
 
     STAILQ_INIT(&ctx->streams);
     STAILQ_INIT(&ctx->sockets);
@@ -491,7 +499,7 @@ void nr_ice_gather_finished_cb(NR_SOCKET s, int h, void *cb_arg)
 
     ctx->uninitialized_candidates--;
 
-    // Avoid the need for yet another initialization function
+    /* Avoid the need for yet another initialization function */
     if (cand->state == NR_ICE_CAND_STATE_INITIALIZING && cand->type == HOST)
       cand->state = NR_ICE_CAND_STATE_INITIALIZED;
 
@@ -563,6 +571,23 @@ int nr_ice_gather(nr_ice_ctx *ctx, NR_async_cb done_cb, void *cb_arg)
       if(r=nr_stun_find_local_addresses(addrs,MAXADDRS,&addr_ct)) {
         r_log(LOG_ICE,LOG_ERR,"ICE(%s): unable to find local addresses",ctx->label);
         ABORT(r);
+      }
+
+      if (ctx->force_net_interface[0]) {
+        /* Limit us to only addresses on a single interface */
+        int force_addr_ct = 0;
+        for(i=0;i<addr_ct;i++){
+          if (!strcmp(addrs[i].addr.ifname, ctx->force_net_interface)) {
+            // copy it down in the array, if needed
+            if (i != force_addr_ct) {
+              if (r=nr_local_addr_copy(&addrs[force_addr_ct], &addrs[i])) {
+                ABORT(r);
+              }
+            }
+            force_addr_ct++;
+          }
+        }
+        addr_ct = force_addr_ct;
       }
 
       /* Sort interfaces by preference */
@@ -695,8 +720,6 @@ static int nr_ice_random_string(char *str, int len)
     needed=len/2;
 
     if(needed>sizeof(bytes)) ABORT(R_BAD_ARGS);
-
-    //memset(bytes,0,needed);
 
     if(r=nr_crypto_random_bytes(bytes,needed))
       ABORT(r);
