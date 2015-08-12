@@ -129,9 +129,6 @@ nsScriptableInputStream::Create(nsISupports* aOuter, REFNSIID aIID,
     return NS_ERROR_NO_AGGREGATION;
   }
 
-  nsScriptableInputStream* sis = new nsScriptableInputStream();
-  NS_ADDREF(sis);
-  nsresult rv = sis->QueryInterface(aIID, aResult);
-  NS_RELEASE(sis);
-  return rv;
+  nsRefPtr<nsScriptableInputStream> sis = new nsScriptableInputStream();
+  return sis->QueryInterface(aIID, aResult);
 }

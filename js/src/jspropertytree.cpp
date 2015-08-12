@@ -126,7 +126,7 @@ Shape::removeChild(Shape* child)
 }
 
 Shape*
-PropertyTree::getChild(ExclusiveContext* cx, Shape* parentArg, StackShape& unrootedChild)
+PropertyTree::getChild(ExclusiveContext* cx, Shape* parentArg, Handle<StackShape> child)
 {
     RootedShape parent(cx, parentArg);
     MOZ_ASSERT(parent);
@@ -144,10 +144,10 @@ PropertyTree::getChild(ExclusiveContext* cx, Shape* parentArg, StackShape& unroo
     KidsPointer* kidp = &parent->kids;
     if (kidp->isShape()) {
         Shape* kid = kidp->toShape();
-        if (kid->matches(unrootedChild))
+        if (kid->matches(child))
             existingShape = kid;
     } else if (kidp->isHash()) {
-        if (KidsHash::Ptr p = kidp->toHash()->lookup(unrootedChild))
+        if (KidsHash::Ptr p = kidp->toHash()->lookup(child))
             existingShape = *p;
     } else {
         /* If kidp->isNull(), we always insert. */
@@ -181,7 +181,7 @@ PropertyTree::getChild(ExclusiveContext* cx, Shape* parentArg, StackShape& unroo
     if (existingShape)
         return existingShape;
 
-    Shape* shape = Shape::new_(cx, unrootedChild, parent->numFixedSlots());
+    Shape* shape = Shape::new_(cx, child, parent->numFixedSlots());
     if (!shape)
         return nullptr;
 

@@ -97,6 +97,7 @@ enum class GLFeature {
     framebuffer_blit,
     framebuffer_multisample,
     framebuffer_object,
+    framebuffer_object_EXT_OES,
     get_integer_indexed,
     get_integer64_indexed,
     get_query_object_i64v,
@@ -105,6 +106,7 @@ enum class GLFeature {
     gpu_shader4,
     instanced_arrays,
     instanced_non_arrays,
+    internalformat_query,
     invalidate_framebuffer,
     map_buffer_range,
     occlusion_query,
@@ -385,6 +387,7 @@ public:
         ANGLE_texture_compression_dxt5,
         ANGLE_timer_query,
         APPLE_client_storage,
+        APPLE_framebuffer_multisample,
         APPLE_texture_range,
         APPLE_vertex_array_object,
         ARB_ES2_compatibility,
@@ -396,8 +399,10 @@ public:
         ARB_draw_instanced,
         ARB_framebuffer_object,
         ARB_framebuffer_sRGB,
+        ARB_geometry_shader4,
         ARB_half_float_pixel,
         ARB_instanced_arrays,
+        ARB_internalformat_query,
         ARB_invalidate_subdata,
         ARB_map_buffer_range,
         ARB_occlusion_query2,
@@ -431,6 +436,7 @@ public:
         EXT_framebuffer_object,
         EXT_framebuffer_sRGB,
         EXT_gpu_shader4,
+        EXT_multisampled_render_to_texture,
         EXT_occlusion_query_boolean,
         EXT_packed_depth_stencil,
         EXT_read_format_bgra,
@@ -454,6 +460,8 @@ public:
         KHR_debug,
         NV_draw_instanced,
         NV_fence,
+        NV_framebuffer_blit,
+        NV_geometry_program4,
         NV_half_float,
         NV_instanced_arrays,
         NV_transform_feedback,
@@ -466,6 +474,7 @@ public:
         OES_depth32,
         OES_depth_texture,
         OES_element_index_uint,
+        OES_framebuffer_object,
         OES_packed_depth_stencil,
         OES_rgb8_rgba8,
         OES_standard_derivatives,
@@ -1944,6 +1953,13 @@ public:
         AFTER_GL_CALL;
     }
 
+    void fFramebufferTextureLayer(GLenum target, GLenum attachment, GLuint texture, GLint level, GLint layer) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fFramebufferTextureLayer);
+        mSymbols.fFramebufferTextureLayer(target, attachment, texture, level, layer);
+        AFTER_GL_CALL;
+    }
+
     void fGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLenum pname, GLint* value) {
         BEFORE_GL_CALL;
         mSymbols.fGetFramebufferAttachmentParameteriv(target, attachment, pname, value);
@@ -2517,6 +2533,17 @@ public:
         mSymbols.fVertexAttribDivisor(index, divisor);
         AFTER_GL_CALL;
     }
+
+// -----------------------------------------------------------------------------
+// Feature internalformat_query
+public:
+    void fGetInternalformativ(GLenum target, GLenum internalformat, GLenum pname, GLsizei bufSize, GLint* params) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGetInternalformativ);
+        mSymbols.fGetInternalformativ(target, internalformat, pname, bufSize, params);
+        AFTER_GL_CALL;
+    }
+
 
 // -----------------------------------------------------------------------------
 // Package XXX_query_counter

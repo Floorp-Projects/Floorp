@@ -57,9 +57,11 @@ unsigned GLContext::sCurrentGLContextTLS = -1;
 
 uint32_t GLContext::sDebugMode = 0;
 
-
-#define MAX_SYMBOL_LENGTH 128
-#define MAX_SYMBOL_NAMES 5
+// If adding defines, don't forget to undefine symbols. See #undef block below.
+#define CORE_SYMBOL(x) { (PRFuncPtr*) &mSymbols.f##x, { #x, nullptr } }
+#define CORE_EXT_SYMBOL2(x,y,z) { (PRFuncPtr*) &mSymbols.f##x, { #x, #x #y, #x #z, nullptr } }
+#define EXT_SYMBOL2(x,y,z) { (PRFuncPtr*) &mSymbols.f##x, { #x #y, #x #z, nullptr } }
+#define EXT_SYMBOL3(x,y,z,w) { (PRFuncPtr*) &mSymbols.f##x, { #x #y, #x #z, #x #w, nullptr } }
 #define END_SYMBOLS { nullptr, { nullptr } }
 
 // should match the order of GLExtensions, and be null-terminated.
@@ -74,6 +76,7 @@ static const char *sExtensionNames[] = {
     "GL_ANGLE_texture_compression_dxt5",
     "GL_ANGLE_timer_query",
     "GL_APPLE_client_storage",
+    "GL_APPLE_framebuffer_multisample",
     "GL_APPLE_texture_range",
     "GL_APPLE_vertex_array_object",
     "GL_ARB_ES2_compatibility",
@@ -85,8 +88,10 @@ static const char *sExtensionNames[] = {
     "GL_ARB_draw_instanced",
     "GL_ARB_framebuffer_object",
     "GL_ARB_framebuffer_sRGB",
+    "GL_ARB_geometry_shader4",
     "GL_ARB_half_float_pixel",
     "GL_ARB_instanced_arrays",
+    "GL_ARB_internalformat_query",
     "GL_ARB_invalidate_subdata",
     "GL_ARB_map_buffer_range",
     "GL_ARB_occlusion_query2",
@@ -120,6 +125,7 @@ static const char *sExtensionNames[] = {
     "GL_EXT_framebuffer_object",
     "GL_EXT_framebuffer_sRGB",
     "GL_EXT_gpu_shader4",
+    "GL_EXT_multisampled_render_to_texture",
     "GL_EXT_occlusion_query_boolean",
     "GL_EXT_packed_depth_stencil",
     "GL_EXT_read_format_bgra",
@@ -143,6 +149,8 @@ static const char *sExtensionNames[] = {
     "GL_KHR_debug",
     "GL_NV_draw_instanced",
     "GL_NV_fence",
+    "GL_NV_framebuffer_blit",
+    "GL_NV_geometry_program4",
     "GL_NV_half_float",
     "GL_NV_instanced_arrays",
     "GL_NV_transform_feedback",
@@ -155,6 +163,7 @@ static const char *sExtensionNames[] = {
     "GL_OES_depth32",
     "GL_OES_depth_texture",
     "GL_OES_element_index_uint",
+    "GL_OES_framebuffer_object",
     "GL_OES_packed_depth_stencil",
     "GL_OES_rgb8_rgba8",
     "GL_OES_standard_derivatives",
@@ -476,31 +485,16 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         { (PRFuncPtr*) &mSymbols.fGetShaderSource, { "GetShaderSource", nullptr } },
         { (PRFuncPtr*) &mSymbols.fShaderSource, { "ShaderSource", nullptr } },
         { (PRFuncPtr*) &mSymbols.fVertexAttribPointer, { "VertexAttribPointer", nullptr } },
-        { (PRFuncPtr*) &mSymbols.fBindFramebuffer, { "BindFramebuffer", "BindFramebufferEXT", nullptr } },
-        { (PRFuncPtr*) &mSymbols.fBindRenderbuffer, { "BindRenderbuffer", "BindRenderbufferEXT", nullptr } },
-        { (PRFuncPtr*) &mSymbols.fCheckFramebufferStatus, { "CheckFramebufferStatus", "CheckFramebufferStatusEXT", nullptr } },
-        { (PRFuncPtr*) &mSymbols.fFramebufferRenderbuffer, { "FramebufferRenderbuffer", "FramebufferRenderbufferEXT", nullptr } },
-        { (PRFuncPtr*) &mSymbols.fFramebufferTexture2D, { "FramebufferTexture2D", "FramebufferTexture2DEXT", nullptr } },
-        { (PRFuncPtr*) &mSymbols.fGenerateMipmap, { "GenerateMipmap", "GenerateMipmapEXT", nullptr } },
-        { (PRFuncPtr*) &mSymbols.fGetFramebufferAttachmentParameteriv, { "GetFramebufferAttachmentParameteriv", "GetFramebufferAttachmentParameterivEXT", nullptr } },
-        { (PRFuncPtr*) &mSymbols.fGetRenderbufferParameteriv, { "GetRenderbufferParameteriv", "GetRenderbufferParameterivEXT", nullptr } },
-        { (PRFuncPtr*) &mSymbols.fIsFramebuffer, { "IsFramebuffer", "IsFramebufferEXT", nullptr } },
-        { (PRFuncPtr*) &mSymbols.fIsRenderbuffer, { "IsRenderbuffer", "IsRenderbufferEXT", nullptr } },
-        { (PRFuncPtr*) &mSymbols.fRenderbufferStorage, { "RenderbufferStorage", "RenderbufferStorageEXT", nullptr } },
 
         { (PRFuncPtr*) &mSymbols.fGenBuffers, { "GenBuffers", "GenBuffersARB", nullptr } },
         { (PRFuncPtr*) &mSymbols.fGenTextures, { "GenTextures", nullptr } },
         { (PRFuncPtr*) &mSymbols.fCreateProgram, { "CreateProgram", "CreateProgramARB", nullptr } },
         { (PRFuncPtr*) &mSymbols.fCreateShader, { "CreateShader", "CreateShaderARB", nullptr } },
-        { (PRFuncPtr*) &mSymbols.fGenFramebuffers, { "GenFramebuffers", "GenFramebuffersEXT", nullptr } },
-        { (PRFuncPtr*) &mSymbols.fGenRenderbuffers, { "GenRenderbuffers", "GenRenderbuffersEXT", nullptr } },
 
         { (PRFuncPtr*) &mSymbols.fDeleteBuffers, { "DeleteBuffers", "DeleteBuffersARB", nullptr } },
         { (PRFuncPtr*) &mSymbols.fDeleteTextures, { "DeleteTextures", "DeleteTexturesARB", nullptr } },
         { (PRFuncPtr*) &mSymbols.fDeleteProgram, { "DeleteProgram", "DeleteProgramARB", nullptr } },
         { (PRFuncPtr*) &mSymbols.fDeleteShader, { "DeleteShader", "DeleteShaderARB", nullptr } },
-        { (PRFuncPtr*) &mSymbols.fDeleteFramebuffers, { "DeleteFramebuffers", "DeleteFramebuffersEXT", nullptr } },
-        { (PRFuncPtr*) &mSymbols.fDeleteRenderbuffers, { "DeleteRenderbuffers", "DeleteRenderbuffersEXT", nullptr } },
 
         END_SYMBOLS
 
@@ -751,48 +745,107 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
             }
         }
 
-        // Check for aux symbols based on extensions
-        if (IsSupported(GLFeature::framebuffer_blit))
-        {
+        // Check for ARB_framebuffer_objects
+        if (IsSupported(GLFeature::framebuffer_object)) {
+            // https://www.opengl.org/registry/specs/ARB/framebuffer_object.txt
             SymLoadStruct coreSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fBlitFramebuffer, { "BlitFramebuffer", nullptr } },
+                CORE_SYMBOL(IsRenderbuffer),
+                CORE_SYMBOL(BindRenderbuffer),
+                CORE_SYMBOL(DeleteRenderbuffers),
+                CORE_SYMBOL(GenRenderbuffers),
+                CORE_SYMBOL(RenderbufferStorage),
+                CORE_SYMBOL(RenderbufferStorageMultisample),
+                CORE_SYMBOL(GetRenderbufferParameteriv),
+                CORE_SYMBOL(IsFramebuffer),
+                CORE_SYMBOL(BindFramebuffer),
+                CORE_SYMBOL(DeleteFramebuffers),
+                CORE_SYMBOL(GenFramebuffers),
+                CORE_SYMBOL(CheckFramebufferStatus),
+                CORE_SYMBOL(FramebufferTexture2D),
+                CORE_SYMBOL(FramebufferTextureLayer),
+                CORE_SYMBOL(FramebufferRenderbuffer),
+                CORE_SYMBOL(GetFramebufferAttachmentParameteriv),
+                CORE_SYMBOL(BlitFramebuffer),
+                CORE_SYMBOL(GenerateMipmap),
                 END_SYMBOLS
             };
 
-            SymLoadStruct extSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fBlitFramebuffer, { "BlitFramebufferEXT", "BlitFramebufferANGLE", nullptr } },
-                END_SYMBOLS
-            };
-
-            bool useCore = IsFeatureProvidedByCoreSymbols(GLFeature::framebuffer_blit);
-
-            if (!LoadSymbols(useCore ? coreSymbols : extSymbols, trygl, prefix)) {
-                NS_ERROR("GL supports framebuffer_blit without supplying glBlitFramebuffer");
-
-                MarkUnsupported(GLFeature::framebuffer_blit);
-                ClearSymbols(coreSymbols);
+            if (!LoadSymbols(coreSymbols, trygl, prefix)) {
+                NS_ERROR("GL supports framebuffer_object without supplying its functions.");
+                MarkUnsupported(GLFeature::framebuffer_object);
             }
         }
 
-        if (IsSupported(GLFeature::framebuffer_multisample))
-        {
-            SymLoadStruct coreSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fRenderbufferStorageMultisample, { "RenderbufferStorageMultisample", nullptr } },
-                END_SYMBOLS
-            };
+        if (!IsSupported(GLFeature::framebuffer_object)) {
 
-            SymLoadStruct extSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fRenderbufferStorageMultisample, { "RenderbufferStorageMultisampleEXT", "RenderbufferStorageMultisampleANGLE", nullptr } },
-                END_SYMBOLS
-            };
+            // Check for aux symbols based on extensions
+            if (IsSupported(GLFeature::framebuffer_object_EXT_OES))
+            {
+                SymLoadStruct extSymbols[] = {
+                    CORE_EXT_SYMBOL2(IsRenderbuffer, EXT, OES),
+                    CORE_EXT_SYMBOL2(BindRenderbuffer, EXT, OES),
+                    CORE_EXT_SYMBOL2(DeleteRenderbuffers, EXT, OES),
+                    CORE_EXT_SYMBOL2(GenRenderbuffers, EXT, OES),
+                    CORE_EXT_SYMBOL2(RenderbufferStorage, EXT, OES),
+                    CORE_EXT_SYMBOL2(GetRenderbufferParameteriv, EXT, OES),
+                    CORE_EXT_SYMBOL2(IsFramebuffer, EXT, OES),
+                    CORE_EXT_SYMBOL2(BindFramebuffer, EXT, OES),
+                    CORE_EXT_SYMBOL2(DeleteFramebuffers, EXT, OES),
+                    CORE_EXT_SYMBOL2(GenFramebuffers, EXT, OES),
+                    CORE_EXT_SYMBOL2(CheckFramebufferStatus, EXT, OES),
+                    CORE_EXT_SYMBOL2(FramebufferTexture2D, EXT, OES),
+                    CORE_EXT_SYMBOL2(FramebufferRenderbuffer, EXT, OES),
+                    CORE_EXT_SYMBOL2(GetFramebufferAttachmentParameteriv, EXT, OES),
+                    CORE_EXT_SYMBOL2(GenerateMipmap, EXT, OES),
+                    END_SYMBOLS
+                };
 
-            bool useCore = IsFeatureProvidedByCoreSymbols(GLFeature::framebuffer_multisample);
+                if (!LoadSymbols(extSymbols, trygl, prefix)) {
+                    NS_ERROR("GL supports framebuffer_object without supplying its functions.");
+                }
+            }
 
-            if (!LoadSymbols(useCore ? coreSymbols : extSymbols, trygl, prefix)) {
-                NS_ERROR("GL supports framebuffer_multisample without supplying glRenderbufferStorageMultisample");
+            if (IsExtensionSupported(GLContext::ANGLE_framebuffer_blit) ||
+                IsExtensionSupported(GLContext::EXT_framebuffer_blit) ||
+                IsExtensionSupported(GLContext::NV_framebuffer_blit))
 
-                MarkUnsupported(GLFeature::framebuffer_multisample);
-                ClearSymbols(coreSymbols);
+            {
+                SymLoadStruct extSymbols[] = {
+                    EXT_SYMBOL3(BlitFramebuffer, ANGLE, EXT, NV),
+                    END_SYMBOLS
+                };
+
+                if (!LoadSymbols(extSymbols, trygl, prefix)) {
+                    NS_ERROR("GL supports framebuffer_blit without supplying its functions.");
+                }
+            }
+
+            if (IsExtensionSupported(GLContext::ANGLE_framebuffer_multisample) ||
+                IsExtensionSupported(GLContext::APPLE_framebuffer_multisample) ||
+                IsExtensionSupported(GLContext::EXT_framebuffer_multisample) ||
+                IsExtensionSupported(GLContext::EXT_multisampled_render_to_texture))
+            {
+                SymLoadStruct extSymbols[] = {
+                    EXT_SYMBOL3(RenderbufferStorageMultisample, ANGLE, APPLE, EXT),
+                    END_SYMBOLS
+                };
+
+                if (!LoadSymbols(extSymbols, trygl, prefix)) {
+                    NS_ERROR("GL supports framebuffer_multisample without supplying its functions.");
+                }
+            }
+
+            if (IsExtensionSupported(GLContext::ARB_geometry_shader4) ||
+                IsExtensionSupported(GLContext::NV_geometry_program4))
+            {
+                SymLoadStruct extSymbols[] = {
+                    EXT_SYMBOL2(FramebufferTextureLayer, ARB, EXT),
+                    END_SYMBOLS
+                };
+
+                if (!LoadSymbols(extSymbols, trygl, prefix)) {
+                    NS_ERROR("GL supports geometry_shader4 withot supplying its functions.");
+                }
             }
         }
 
@@ -1410,6 +1463,20 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
             }
         }
 
+        if (IsSupported(GLFeature::internalformat_query)) {
+            SymLoadStruct coreSymbols[] = {
+                CORE_SYMBOL(GetInternalformativ),
+                END_SYMBOLS
+            };
+
+            if (!LoadSymbols(&coreSymbols[0], trygl, prefix)) {
+                NS_ERROR("GL supports internalformat query without supplying its functions.");
+
+                MarkUnsupported(GLFeature::internalformat_query);
+                ClearSymbols(coreSymbols);
+            }
+        }
+
         if (IsSupported(GLFeature::invalidate_framebuffer)) {
             SymLoadStruct invSymbols[] = {
                 { (PRFuncPtr *) &mSymbols.fInvalidateFramebuffer,    { "InvalidateFramebuffer", nullptr } },
@@ -1580,6 +1647,12 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 
     return mInitialized;
 }
+
+#undef CORE_SYMBOL
+#undef CORE_EXT_SYMBOL2
+#undef EXT_SYMBOL2
+#undef EXT_SYMBOL3
+#undef END_SYMBOLS
 
 void
 GLContext::DebugCallback(GLenum source,

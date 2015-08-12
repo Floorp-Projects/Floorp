@@ -373,17 +373,9 @@ struct BytecodeEmitter
     // Emit three bytecodes, an opcode with two bytes of immediate operands.
     bool emit3(JSOp op, jsbytecode op1, jsbytecode op2);
 
-    // Dup the var in operand stack slot "slot". The first item on the operand
-    // stack is one slot past the last fixed slot. The last (most recent) item is
-    // slot bce->stackDepth - 1.
-    //
-    // The instruction that is written (JSOP_DUPAT) switches the depth around so
-    // that it is addressed from the sp instead of from the fp. This is useful when
-    // you don't know the size of the fixed stack segment (nfixed), as is the case
-    // when compiling scripts (because each statement is parsed and compiled
-    // separately, but they all together form one script with one fixed stack
-    // frame).
-    bool emitDupAt(unsigned slot);
+    // Helper to emit JSOP_DUPAT. The argument is the value's depth on the
+    // JS stack, as measured from the top.
+    bool emitDupAt(unsigned slotFromTop);
 
     // Emit a bytecode followed by an uint16 immediate operand stored in
     // big-endian order.

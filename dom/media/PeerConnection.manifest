@@ -7,6 +7,7 @@ component {7fe6e18b-0da3-4056-bf3b-440ef3809e06} PeerConnection.js
 component {0fb47c47-a205-4583-a9fc-cbadf8c95880} PeerConnection.js
 component {4fff5d46-d827-4cd4-a970-8fd53977440e} PeerConnection.js
 component {d974b814-8fde-411c-8c45-b86791b81030} PeerConnection.js
+component {74b2122d-65a8-4824-aa9e-3d664cb75dc2} PeerConnection.js
 
 contract @mozilla.org/dom/peerconnection;1 {bdc2e533-b308-4708-ac8e-a8bfade6d851}
 contract @mozilla.org/dom/peerconnectionobserver;1 {d1748d4c-7f6a-4dc5-add6-d55b7678537e}
@@ -17,3 +18,4 @@ contract @mozilla.org/dom/rtcstatsreport;1 {7fe6e18b-0da3-4056-bf3b-440ef3809e06
 contract @mozilla.org/dom/peerconnectionstatic;1 {0fb47c47-a205-4583-a9fc-cbadf8c95880}
 contract @mozilla.org/dom/rtpsender;1 {4fff5d46-d827-4cd4-a970-8fd53977440e}
 contract @mozilla.org/dom/rtpreceiver;1 {d974b814-8fde-411c-8c45-b86791b81030}
+contract @mozilla.org/dom/createofferrequest;1 {74b2122d-65a8-4824-aa9e-3d664cb75dc2}

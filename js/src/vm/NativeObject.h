@@ -660,9 +660,9 @@ class NativeObject : public JSObject
 
   private:
     static Shape* getChildPropertyOnDictionary(ExclusiveContext* cx, HandleNativeObject obj,
-                                               HandleShape parent, StackShape& child);
+                                               HandleShape parent, MutableHandle<StackShape> child);
     static Shape* getChildProperty(ExclusiveContext* cx, HandleNativeObject obj,
-                                   HandleShape parent, StackShape& child);
+                                   HandleShape parent, MutableHandle<StackShape> child);
 
   public:
     /* Add a property whose id is not yet in this scope. */

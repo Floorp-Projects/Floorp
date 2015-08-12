@@ -227,6 +227,39 @@ function* test_click_on_pinned_tab_after_mute() {
   }, test_on_browser);
 }
 
+// This test only does something useful in e10s!
+function* test_cross_process_load() {
+  function* test_on_browser(browser) {
+    let tab = gBrowser.getTabForBrowser(browser);
+
+    // Start playback.
+    yield ContentTask.spawn(browser, {}, function* () {
+      let audio = content.document.querySelector("audio");
+      audio.play();
+    });
+
+    // Wait for playback to start.
+    yield wait_for_tab_playing_event(tab, true);
+
+    let soundPlayingStoppedPromise = BrowserTestUtils.waitForEvent(tab, "TabAttrModified", false,
+      event => event.detail.changed.indexOf("soundplaying") >= 0
+    );
+
+    // Go to a different process.
+    browser.loadURI("about:");
+    yield BrowserTestUtils.browserLoaded(browser);
+
+    yield soundPlayingStoppedPromise;
+
+    ok(!tab.hasAttribute("soundplaying"), "Tab should not be playing sound any more");
+  }
+
+  yield BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: PAGE
+  }, test_on_browser);
+}
+
 function* test_on_browser(browser) {
   let tab = gBrowser.getTabForBrowser(browser);
 
@@ -248,8 +281,6 @@ function* test_on_browser(browser) {
     }, () => test_on_browser(browser));
   } else {
     yield test_browser_swapping(tab, browser);
-
-    yield test_click_on_pinned_tab_after_mute();
   }
 }
 
@@ -269,3 +300,7 @@ add_task(function* test_page() {
     url: PAGE
   }, test_on_browser);
 });
+
+add_task(test_click_on_pinned_tab_after_mute);
+
+add_task(test_cross_process_load);

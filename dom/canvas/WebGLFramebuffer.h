@@ -34,6 +34,7 @@ private:
     WebGLRefPtr<WebGLRenderbuffer> mRenderbufferPtr;
     FBAttachment mAttachmentPoint;
     TexImageTarget mTexImageTarget;
+    GLint mTexImageLayer;
     GLint mTexImageLevel;
 
 public:
@@ -58,8 +59,10 @@ public:
     }
 
     void SetTexImage(WebGLTexture* tex, TexImageTarget target, GLint level);
+    void SetTexImageLayer(WebGLTexture* tex, TexImageTarget target, GLint level,
+                          GLint layer);
     void SetRenderbuffer(WebGLRenderbuffer* rb);
-
+    
     const WebGLTexture* Texture() const {
         return mTexturePtr;
     }
@@ -74,6 +77,9 @@ public:
     }
     TexImageTarget ImageTarget() const {
         return mTexImageTarget;
+    }
+    GLint Layer() const {
+        return mTexImageLayer;
     }
     GLint MipLevel() const {
         return mTexImageLevel;
@@ -145,6 +151,9 @@ public:
     void FramebufferTexture2D(FBAttachment attachment,
                               TexImageTarget texImageTarget, WebGLTexture* tex,
                               GLint level);
+
+    void FramebufferTextureLayer(FBAttachment attachment, WebGLTexture* tex, GLint level,
+                                 GLint layer);
 
     bool HasDefinedAttachments() const;
     bool HasIncompleteAttachments() const;

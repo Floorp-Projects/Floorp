@@ -4516,8 +4516,8 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             ${mozMapType} &mozMap = ${mozMapRef};
 
             JS::Rooted<JSObject*> mozMapObj(cx, &$${val}.toObject());
-            JS::AutoIdArray ids(cx, JS_Enumerate(cx, mozMapObj));
-            if (!ids) {
+            JS::Rooted<JS::IdVector> ids(cx, JS::IdVector(cx));
+            if (!JS_Enumerate(cx, mozMapObj, &ids)) {
               $*{exceptionCode}
             }
             JS::Rooted<JS::Value> propNameValue(cx);

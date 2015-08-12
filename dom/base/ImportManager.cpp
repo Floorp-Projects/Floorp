@@ -463,51 +463,22 @@ void
 ImportLoader::Open()
 {
   AutoError ae(this, false);
-  // Imports should obey to the master documents CSP.
-  nsCOMPtr<nsIDocument> master = mImportParent->MasterDocument();
-  nsIPrincipal* principal = Principal();
 
-  int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-  nsresult rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_SUBDOCUMENT,
-                                          mURI,
-                                          principal,
-                                          mImportParent,
-                                          NS_LITERAL_CSTRING("text/html"),
-                                          /* extra = */ nullptr,
-                                          &shouldLoad,
-                                          nsContentUtils::GetContentPolicy(),
-                                          nsContentUtils::GetSecurityManager());
-  if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
-    NS_WARN_IF_FALSE(NS_CP_ACCEPTED(shouldLoad), "ImportLoader rejected by CSP");
-    return;
-  }
+  nsCOMPtr<nsILoadGroup> loadGroup =
+    mImportParent->MasterDocument()->GetDocumentLoadGroup();
 
-  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
-  rv = secMan->CheckLoadURIWithPrincipal(principal, mURI,
-                                         nsIScriptSecurityManager::STANDARD);
-  NS_ENSURE_SUCCESS_VOID(rv);
-
-  nsCOMPtr<nsILoadGroup> loadGroup = master->GetDocumentLoadGroup();
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannel(getter_AddRefs(channel),
-                     mURI,
-                     mImportParent,
-                     nsILoadInfo::SEC_NORMAL,
-                     nsIContentPolicy::TYPE_SUBDOCUMENT,
-                     loadGroup,
-                     nullptr,  // aCallbacks
-                     nsIRequest::LOAD_BACKGROUND);
+  nsresult rv = NS_NewChannel(getter_AddRefs(channel),
+                              mURI,
+                              mImportParent,
+                              nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS,
+                              nsIContentPolicy::TYPE_SUBDOCUMENT,
+                              loadGroup,
+                              nullptr,  // aCallbacks
+                              nsIRequest::LOAD_BACKGROUND);
 
   NS_ENSURE_SUCCESS_VOID(rv);
-
-  // Init CORSListenerProxy and omit credentials.
-  nsRefPtr<nsCORSListenerProxy> corsListener =
-    new nsCORSListenerProxy(this, principal,
-                            /* aWithCredentials */ false);
-  rv = corsListener->Init(channel, DataURIHandling::Allow);
-  NS_ENSURE_SUCCESS_VOID(rv);
-
-  rv = channel->AsyncOpen(corsListener, nullptr);
+  rv = channel->AsyncOpen2(this);
   NS_ENSURE_SUCCESS_VOID(rv);
 
   BlockScripts();

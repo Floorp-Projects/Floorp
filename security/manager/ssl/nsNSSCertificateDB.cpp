@@ -1385,12 +1385,11 @@ nsNSSCertificateDB::FindCertByEmailAddress(nsISupports *aToken, const char *aEma
   }
 
   // node now contains the first valid certificate with correct usage 
-  nsNSSCertificate *nssCert = nsNSSCertificate::Create(node->cert);
+  nsRefPtr<nsNSSCertificate> nssCert = nsNSSCertificate::Create(node->cert);
   if (!nssCert)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  NS_ADDREF(nssCert);
-  *_retval = static_cast<nsIX509Cert*>(nssCert);
+  nssCert.forget(_retval);
   return NS_OK;
 }
 
@@ -1695,8 +1694,7 @@ nsNSSCertificateDB::GetCerts(nsIX509CertList **_retval)
   // (returns an empty list) 
   nssCertList = new nsNSSCertList(certList, locker);
 
-  *_retval = nssCertList;
-  NS_ADDREF(*_retval);
+  nssCertList.forget(_retval);
   return NS_OK;
 }
 

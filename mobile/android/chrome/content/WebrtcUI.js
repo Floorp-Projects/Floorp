@@ -3,14 +3,33 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+this.EXPORTED_SYMBOLS = ["WebrtcUI"];
+
 XPCOMUtils.defineLazyModuleGetter(this, "Notifications", "resource://gre/modules/Notifications.jsm");
 
 var WebrtcUI = {
   _notificationId: null,
 
+  // Add-ons can override stock permission behavior by doing:
+  //
+  //   var stockObserve = WebrtcUI.observe;
+  //
+  //   webrtcUI.observe = function(aSubject, aTopic, aData) {
+  //     switch (aTopic) {
+  //      case "PeerConnection:request": {
+  //        // new code.
+  //        break;
+  //      ...
+  //      default:
+  //        return stockObserve.call(this, aSubject, aTopic, aData);
+  //
+  // See browser/modules/webrtcUI.jsm for details.
+
   observe: function(aSubject, aTopic, aData) {
     if (aTopic === "getUserMedia:request") {
-      this.handleRequest(aSubject, aTopic, aData);
+      this.handleGumRequest(aSubject, aTopic, aData);
+    } else if (aTopic === "PeerConnection:request") {
+      this.handlePCRequest(aSubject, aTopic, aData);
     } else if (aTopic === "recording-device-events") {
       switch (aData) {
         case "shutdown":
@@ -72,7 +91,17 @@ var WebrtcUI = {
     }
   },
 
-  handleRequest: function handleRequest(aSubject, aTopic, aData) {
+  handlePCRequest: function handlePCRequest(aSubject, aTopic, aData) {
+    aSubject = aSubject.wrappedJSObject;
+    let { callID } = aSubject;
+    // Also available: windowID, isSecure, innerWindowID. For contentWindow do:
+    //
+    //   let contentWindow = Services.wm.getOuterWindowWithId(windowID);
+
+    Services.obs.notifyObservers(null, "PeerConnection:response:allow", callID);
+  },
+
+  handleGumRequest: function handleGumRequest(aSubject, aTopic, aData) {
     let constraints = aSubject.getConstraints();
     let contentWindow = Services.wm.getOuterWindowWithId(aSubject.windowID);
 

@@ -528,14 +528,13 @@ js::SetIntegrityLevel(JSContext* cx, HandleObject obj, IntegrityLevel level)
         Reverse(shapes.begin(), shapes.end());
 
         for (Shape* shape : shapes) {
-            StackShape unrootedChild(shape);
-            RootedGeneric<StackShape*> child(cx, &unrootedChild);
-            child->attrs |= GetSealedOrFrozenAttributes(child->attrs, level);
+            Rooted<StackShape> child(cx, StackShape(shape));
+            child.setAttrs(child.attrs() | GetSealedOrFrozenAttributes(child.attrs(), level));
 
-            if (!JSID_IS_EMPTY(child->propid) && level == IntegrityLevel::Frozen)
-                MarkTypePropertyNonWritable(cx, nobj, child->propid);
+            if (!JSID_IS_EMPTY(child.get().propid) && level == IntegrityLevel::Frozen)
+                MarkTypePropertyNonWritable(cx, nobj, child.get().propid);
 
-            last = cx->compartment()->propertyTree.getChild(cx, last, *child);
+            last = cx->compartment()->propertyTree.getChild(cx, last, child);
             if (!last)
                 return false;
         }
@@ -1360,9 +1359,8 @@ InitializePropertiesFromCompatibleNativeObject(JSContext* cx,
         Reverse(shapes.begin(), shapes.end());
 
         for (Shape* shape : shapes) {
-            StackShape unrootedChild(shape);
-            RootedGeneric<StackShape*> child(cx, &unrootedChild);
-            shape = cx->compartment()->propertyTree.getChild(cx, shape, *child);
+            Rooted<StackShape> child(cx, StackShape(shape));
+            shape = cx->compartment()->propertyTree.getChild(cx, shape, child);
             if (!shape)
                 return false;
         }

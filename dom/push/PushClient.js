@@ -5,7 +5,7 @@
 "use strict";
 
 // Don't modify this, instead set dom.push.debug.
-let gDebuggingEnabled = true;
+let gDebuggingEnabled = false;
 
 function debug(s) {
   if (gDebuggingEnabled)
@@ -19,6 +19,8 @@ const Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+
+gDebuggingEnabled = Services.prefs.getBoolPref("dom.push.debug");
 
 const kMessages = [
   "PushService:Register:OK",
