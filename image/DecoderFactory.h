@@ -101,10 +101,36 @@ public:
                         int aSampleSize,
                         const gfx::IntSize& aResolution);
 
+  /**
+   * Creates and initializes an anonymous decoder (one which isn't associated
+   * with an Image object). Only the first frame of the image will be decoded.
+   *
+   * @param aType Which type of decoder to create - JPEG, PNG, etc.
+   * @param aSourceBuffer The SourceBuffer which the decoder will read its data
+   *                      from.
+   * @param aFlags Flags specifying what type of output the decoder should
+   *               produce; see GetDecodeFlags() in RasterImage.h.
+   */
   static already_AddRefed<Decoder>
   CreateAnonymousDecoder(DecoderType aType,
                          SourceBuffer* aSourceBuffer,
                          uint32_t aFlags);
+
+  /**
+   * Creates and initializes an anonymous metadata decoder (one which isn't
+   * associated with an Image object). This decoder will only decode the image's
+   * header, extracting metadata like the size of the image. No actual image
+   * data will be decoded and no surfaces will be allocated.
+   *
+   * @param aType Which type of decoder to create - JPEG, PNG, etc.
+   * @param aSourceBuffer The SourceBuffer which the decoder will read its data
+   *                      from.
+   * @param aFlags Flags specifying what type of output the decoder should
+   *               produce; see GetDecodeFlags() in RasterImage.h.
+   */
+  static already_AddRefed<Decoder>
+  CreateAnonymousMetadataDecoder(DecoderType aType,
+                                 SourceBuffer* aSourceBuffer);
 
 private:
   virtual ~DecoderFactory() = 0;
