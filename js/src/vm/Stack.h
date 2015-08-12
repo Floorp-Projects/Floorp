@@ -1604,6 +1604,10 @@ class JitActivation : public Activation
     // bounds of what has been rematerialized, nullptr is returned.
     RematerializedFrame* lookupRematerializedFrame(uint8_t* top, size_t inlineDepth = 0);
 
+    // Remove all rematerialized frames associated with the fp top from the
+    // Debugger.
+    void removeRematerializedFramesFromDebugger(JSContext* cx, uint8_t* top);
+
     bool hasRematerializedFrame(uint8_t* top, size_t inlineDepth = 0) {
         return !!lookupRematerializedFrame(top, inlineDepth);
     }
