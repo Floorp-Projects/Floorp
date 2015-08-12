@@ -8,9 +8,9 @@
 #if defined(JS_SIMULATOR_MIPS)
 #include "jit/Linker.h"
 #include "jit/MacroAssembler.h"
-#include "jit/mips/Assembler-mips.h"
-#include "jit/mips/MoveEmitter-mips.h"
-#include "jit/mips/Simulator-mips.h"
+#include "jit/mips32/Assembler-mips32.h"
+#include "jit/mips32/MoveEmitter-mips32.h"
+#include "jit/mips32/Simulator-mips32.h"
 #include "jit/MoveResolver.h"
 
 #include "jsapi-tests/tests.h"

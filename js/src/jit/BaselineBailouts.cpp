@@ -13,7 +13,7 @@
 #include "jit/BaselineJIT.h"
 #include "jit/CompileInfo.h"
 #include "jit/JitSpewer.h"
-#include "jit/mips/Simulator-mips.h"
+#include "jit/mips32/Simulator-mips32.h"
 #include "jit/Recover.h"
 #include "jit/RematerializedFrame.h"
 

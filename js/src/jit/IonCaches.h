@@ -12,7 +12,7 @@
 #elif defined(JS_CODEGEN_ARM64)
 # include "jit/arm64/Assembler-arm64.h"
 #elif defined(JS_CODEGEN_MIPS)
-# include "jit/mips/Assembler-mips.h"
+# include "jit/mips32/Assembler-mips32.h"
 #endif
 #include "jit/JitCompartment.h"
 #include "jit/Registers.h"
