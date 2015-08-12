@@ -239,6 +239,10 @@ function ignoreGCFunction(mangled)
     if (fun.indexOf("void nsCOMPtr<T>::Assert_NoQueryNeeded()") >= 0)
         return true;
 
+    // These call through an 'op' function pointer.
+    if (fun.indexOf("js::WeakMap<Key, Value, HashPolicy>::getDelegate(") >= 0)
+        return true;
+
     // XXX modify refillFreeList<NoGC> to not need data flow analysis to understand it cannot GC.
     if (/refillFreeList/.test(fun) && /\(js::AllowGC\)0u/.test(fun))
         return true;

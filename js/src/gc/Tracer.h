@@ -23,11 +23,11 @@ namespace js {
 // purposes as well.
 //
 // One commonly misunderstood subtlety of the tracing architecture is the role
-// of graph verticies versus graph edges. Graph verticies are the heap
+// of graph vertices versus graph edges. Graph vertices are the heap
 // allocations -- GC things -- that are returned by Allocate. Graph edges are
 // pointers -- including tagged pointers like Value and jsid -- that link the
 // allocations into a complex heap. The tracing API deals *only* with edges.
-// Any action taken on the target of a graph edge is independent to the tracing
+// Any action taken on the target of a graph edge is independent of the tracing
 // itself.
 //
 // Another common misunderstanding relates to the role of the JSTracer. The
