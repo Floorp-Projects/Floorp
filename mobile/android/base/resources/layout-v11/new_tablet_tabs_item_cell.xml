@@ -52,7 +52,7 @@
                      android:baselineAlignBottom="true"
                      android:background="@android:color/transparent"
                      android:contentDescription="@string/close_tab"
-                     android:src="@drawable/new_tablet_tab_item_close_button"
+                     android:src="@drawable/tab_item_close_button"
                      android:duplicateParentState="true"/>
 
     </LinearLayout>
