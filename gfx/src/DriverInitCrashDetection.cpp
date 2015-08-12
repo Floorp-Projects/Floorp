@@ -20,21 +20,14 @@
 namespace mozilla {
 namespace gfx {
 
-bool DriverInitCrashDetection::sDisableAcceleration = false;
 bool DriverInitCrashDetection::sEnvironmentHasBeenUpdated = false;
 
 DriverInitCrashDetection::DriverInitCrashDetection()
  : mIsChromeProcess(XRE_GetProcessType() == GeckoProcessType_Default)
 {
-  if (sDisableAcceleration) {
-    // We already disabled acceleration earlier.
-    return;
-  }
-
   if (!mIsChromeProcess) {
-    // In child processes we only need to check the pref state set by the
-    // parent process.
-    sDisableAcceleration = (gfxPrefs::DriverInitStatus() == int32_t(DriverInitStatus::Recovered));
+    // We assume the parent process already performed crash detection for
+    // graphics devices.
     return;
   }
 
@@ -47,7 +40,6 @@ DriverInitCrashDetection::DriverInitCrashDetection()
     // This is the first time we're checking for a crash recovery, so print
     // a message and disable acceleration for anyone who asks for it.
     gfxCriticalError(CriticalLog::DefaultOptions(false)) << "Recovered from graphics driver startup crash; acceleration disabled.";
-    sDisableAcceleration = true;
     return;
   }
 
@@ -81,6 +73,12 @@ DriverInitCrashDetection::~DriverInitCrashDetection()
                                        NS_LITERAL_CSTRING(""));
 #endif
   }
+}
+
+bool
+DriverInitCrashDetection::DisableAcceleration() const
+{
+  return gfxPrefs::DriverInitStatus() == int32_t(DriverInitStatus::Recovered);
 }
 
 bool
@@ -183,7 +181,6 @@ DriverInitCrashDetection::UpdateEnvironment()
   // Finally, mark as changed if the status has been reset by the user.
   changed |= (gfxPrefs::DriverInitStatus() == int32_t(DriverInitStatus::None));
 
-  mGfxInfo = nullptr;
   return changed;
 }
 
