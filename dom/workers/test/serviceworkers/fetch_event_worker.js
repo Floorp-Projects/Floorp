@@ -97,12 +97,20 @@ onfetch = function(ev) {
   }
 
   else if (ev.request.url.includes("nonexistent_image.gif")) {
+    var imageAsBinaryString = atob("R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs");
+    var imageLength = imageAsBinaryString.length;
+
+    // If we just pass |imageAsBinaryString| to the Response constructor, an
+    // encoding conversion occurs that corrupts the image. Instead, we need to
+    // convert it to a typed array.
+    // typed array.
+    var imageAsArray = new Uint8Array(imageLength);
+    for (var i = 0; i < imageLength; ++i) {
+      imageAsArray[i] = imageAsBinaryString.charCodeAt(i);
+    }
+
     ev.respondWith(Promise.resolve(
-      new Response(atob("R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs"), {
-        headers: {
-          "Content-Type": "image/gif"
-        }
-      })
+      new Response(imageAsArray, { headers: { "Content-Type": "image/gif" } })
     ));
   }
 
