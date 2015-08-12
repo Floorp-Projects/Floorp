@@ -118,6 +118,33 @@
   });
 
   gExpected++;
+  var xmlDoc = document.implementation.createDocument(null, null, null);
+  xmlDoc.load('load_cross_origin_xml_document_synthetic.xml');
+  xmlDoc.onload = function(evt) {
+    var content = new XMLSerializer().serializeToString(evt.target);
+    my_ok(!content.includes('parsererror'), "Load synthetic cross origin XML Document should be allowed");
+    finish();
+  };
+
+  gExpected++;
+  var xmlDoc = document.implementation.createDocument(null, null, null);
+  xmlDoc.load('load_cross_origin_xml_document_cors.xml');
+  xmlDoc.onload = function(evt) {
+    var content = new XMLSerializer().serializeToString(evt.target);
+    my_ok(!content.includes('parsererror'), "Load CORS cross origin XML Document should be allowed");
+    finish();
+  };
+
+  gExpected++;
+  var xmlDoc = document.implementation.createDocument(null, null, null);
+  xmlDoc.load('load_cross_origin_xml_document_opaque.xml');
+  xmlDoc.onload = function(evt) {
+    var content = new XMLSerializer().serializeToString(evt.target);
+    my_ok(content.includes('parsererror'), "Load opaque cross origin XML Document should not be allowed");
+    finish();
+  };
+
+  gExpected++;
   var worker = new Worker('nonexistent_worker_script.js');
   worker.onmessage = function(e) {
     my_ok(e.data == "worker-intercept-success", "worker load intercepted");
