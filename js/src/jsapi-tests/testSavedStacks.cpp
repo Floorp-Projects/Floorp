@@ -16,7 +16,7 @@
 BEGIN_TEST(testSavedStacks_withNoStack)
 {
     JSCompartment* compartment = js::GetContextCompartment(cx);
-    compartment->setAllocationMetadataBuilder(js::SavedStacksMetadataBuilder);
+    compartment->setAllocationMetadataBuilder(&js::SavedStacks::metadataBuilder);
     JS::RootedObject obj(cx, js::NewDenseEmptyArray(cx));
     compartment->setAllocationMetadataBuilder(nullptr);
     return true;
