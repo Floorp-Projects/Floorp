@@ -21,6 +21,6 @@
         android:src="@drawable/new_tablet_tab_strip_add_tab"
         android:contentDescription="@string/new_tab"
         android:layout_marginRight="9dp"
-        android:background="@drawable/new_tablet_tab_strip_button"/>
+        android:background="@drawable/tab_strip_button"/>
 
 </merge>
