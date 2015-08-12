@@ -454,7 +454,7 @@ elif CONFIG['JS_CODEGEN_ARM64']:
             'jit/arm64/vixl/MozSimulator-vixl.cpp',
             'jit/arm64/vixl/Simulator-vixl.cpp'
         ]
-elif CONFIG['JS_CODEGEN_MIPS']:
+elif CONFIG['JS_CODEGEN_MIPS32']:
     UNIFIED_SOURCES += [
         'jit/mips32/Architecture-mips32.cpp',
         'jit/mips32/Assembler-mips32.cpp',
@@ -467,7 +467,7 @@ elif CONFIG['JS_CODEGEN_MIPS']:
         'jit/mips32/MoveEmitter-mips32.cpp',
         'jit/mips32/Trampoline-mips32.cpp',
     ]
-    if CONFIG['JS_SIMULATOR_MIPS']:
+    if CONFIG['JS_SIMULATOR_MIPS32']:
         UNIFIED_SOURCES += [
             'jit/mips32/Simulator-mips32.cpp'
         ]

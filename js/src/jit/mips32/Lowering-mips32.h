@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_mips_Lowering_mips_h
-#define jit_mips_Lowering_mips_h
+#ifndef jit_mips32_Lowering_mips32_h
+#define jit_mips32_Lowering_mips32_h
 
 #include "jit/shared/Lowering-shared.h"
 
@@ -112,4 +112,4 @@ typedef LIRGeneratorMIPS LIRGeneratorSpecific;
 } // namespace jit
 } // namespace js
 
-#endif /* jit_mips_Lowering_mips_h */
+#endif /* jit_mips32_Lowering_mips32_h */

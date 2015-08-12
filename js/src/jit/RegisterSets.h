@@ -1264,7 +1264,7 @@ SavedNonVolatileRegisters(AllocatableGeneralRegisterSet unused)
     result.add(Register::FromCode(Registers::lr));
 #elif defined(JS_CODEGEN_ARM64)
     result.add(Register::FromCode(Registers::lr));
-#elif defined(JS_CODEGEN_MIPS)
+#elif defined(JS_CODEGEN_MIPS32)
     result.add(Register::FromCode(Registers::ra));
 #endif
 
