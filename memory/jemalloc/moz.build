@@ -4,7 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-UNIFIED_SOURCES += [
+# When built with --enable-debug, jemalloc3 makes headers define functions that
+# are normally inlined, and that prevents unified sources from working.
+if CONFIG['MOZ_DEBUG']:
+    maybe_unified_sources = SOURCES
+else:
+    maybe_unified_sources = UNIFIED_SOURCES
+
+maybe_unified_sources += [
     'src/src/arena.c',
     'src/src/atomic.c',
     'src/src/base.c',
@@ -39,7 +46,7 @@ SOURCES += [
 # Only OSX needs the zone allocation implementation,
 # but only if replace-malloc is not enabled.
 if CONFIG['OS_TARGET'] == 'Darwin' and not CONFIG['MOZ_REPLACE_MALLOC']:
-    UNIFIED_SOURCES += [
+    maybe_unified_sources += [
         'src/src/zone.c',
     ]
 
