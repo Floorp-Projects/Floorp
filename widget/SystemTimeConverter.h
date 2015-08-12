@@ -55,55 +55,46 @@ public:
     // We do this by comparing two durations (both in ms):
     //
     // i.  The duration from the reference time to the passed-in time.
-    //     (Calculated below as timeSinceReference)
+    //     (timeDelta in the diagram below)
     // ii. The duration from the reference timestamp to the current time
     //     based on TimeStamp::NowLoRes.
-    //     (Calculated below as timeToNowByTimeStamp)
+    //     (timeStampDelta in the diagram below)
     //
-    // If (ii) - (i) is negative (and greater in magnitude than some tolerance
-    // to account for the inaccuracy in NowLoRes), then the source of Time
-    // values is getting "ahead" of TimeStamp. We call this "forwards" skew
-    // below.
+    // Normally, we'd expect (ii) to be slightly larger than (i) to account
+    // for the time taken between generating the event and processing it.
+    //
+    // If (ii) - (i) is negative then the source of Time values is getting
+    // "ahead" of TimeStamp. We call this "forwards" skew below.
     //
     // For the reverse case, if (ii) - (i) is positive (and greater than some
     // tolerance factor), then we may have "backwards" skew. This is often
     // the case when we have a backlog of events and by the time we process
     // them, the time given by the system is comparatively "old".
     //
-    // We call (ii) - (i), "deltaFromNow".
+    // We call the absolute difference between (i) and (ii), "deltaFromNow".
     //
     // Graphically:
     //
     //                    mReferenceTime              aTime
     // Time scale:      ........+.......................*........
-    //                          |---timeSinceReference--|
+    //                          |--------timeDelta------|
     //
     //                  mReferenceTimeStamp             roughlyNow
     // TimeStamp scale: ........+...........................*....
-    //                          |----timeToNowByTimeStamp---|
+    //                          |------timeStampDelta-------|
     //
     //                                                  |---|
     //                                               deltaFromNow
     //
-    Time timeSinceReference = aTime - mReferenceTime;
-
-    // Cast the result to signed 64-bit integer first since that should be
-    // enough to hold the range of values returned by ToMilliseconds() and
-    // the result of converting from double to an integer-type when the value is
-    // outside the integer range is undefined.
-    // Then we do an implicit cast to Time (typically an unsigned 32-bit
-    // integer) which wraps times outside that range.
-    Time timeToNowByTimeStamp =
-      static_cast<int64_t>((roughlyNow - mReferenceTimeStamp).ToMilliseconds());
-    Time deltaFromNow = timeToNowByTimeStamp - timeSinceReference;
+    Time deltaFromNow;
+    bool newer = IsTimeNewerThanTimestamp(aTime, roughlyNow, &deltaFromNow);
 
     // TimeStamp::NowLoRes should be accurate to within 15.6ms so we need to
     // be at least that generous when detecting clock skew.
     static const Time kTolerance = 30;
 
-    // Check for forwards skew (since deltaFromNow is an unsigned integer, we
-    // detect the minus case by seeing if it has underflowed).
-    if (deltaFromNow > kTimeHalfRange) {
+    // Check for forwards skew
+    if (newer) {
       // Make aTime correspond to roughlyNow
       UpdateReferenceTime(aTime, roughlyNow);
 
@@ -164,10 +155,8 @@ public:
     //
     // If that's not the case, then we probably just got caught behind
     // temporarily.
-    MOZ_ASSERT(mReferenceTime - aReferenceTime < kTimeHalfRange,
-               "Expected aReferenceTime to be more recent than mReferenceTime");
-    if (aReferenceTime - mReferenceTime
-        > (aLowerBound - mReferenceTimeStamp).ToMilliseconds()) {
+    Time delta;
+    if (IsTimeNewerThanTimestamp(aReferenceTime, aLowerBound, &delta)) {
       return;
     }
 
@@ -200,6 +189,36 @@ private:
                       const TimeStamp& aReferenceTimeStamp) {
     mReferenceTime = aReferenceTime;
     mReferenceTimeStamp = aReferenceTimeStamp;
+  }
+
+  bool
+  IsTimeNewerThanTimestamp(Time aTime, TimeStamp aTimeStamp, Time* aDelta)
+  {
+    Time timeDelta = aTime - mReferenceTime;
+
+    // Cast the result to signed 64-bit integer first since that should be
+    // enough to hold the range of values returned by ToMilliseconds() and
+    // the result of converting from double to an integer-type when the value
+    // is outside the integer range is undefined.
+    // Then we do an implicit cast to Time (typically an unsigned 32-bit
+    // integer) which wraps times outside that range.
+    MOZ_ASSERT(mReferenceTimeStamp <= aTimeStamp,
+               "Got a negative timestamp delta");
+    Time timeStampDelta =
+      static_cast<int64_t>((aTimeStamp - mReferenceTimeStamp).ToMilliseconds());
+
+    Time timeToTimeStamp = timeStampDelta - timeDelta;
+    bool isNewer = false;
+    if (timeToTimeStamp == 0) {
+      *aDelta = 0;
+    } else if (timeToTimeStamp < kTimeHalfRange) {
+      *aDelta = timeToTimeStamp;
+    } else {
+      isNewer = true;
+      *aDelta = timeDelta - timeStampDelta;
+    }
+
+    return isNewer;
   }
 
   Time mReferenceTime;
