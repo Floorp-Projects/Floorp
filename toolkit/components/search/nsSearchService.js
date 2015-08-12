@@ -1323,6 +1323,10 @@ EngineURL.prototype = {
     // (purpose="") work consistently rather than having to define "null" and "" purposes.
     var purpose = aPurpose || "";
 
+    // If the 'system' purpose isn't defined in the plugin, fallback to 'searchbar'.
+    if (purpose == "system" && !this.params.some(p => p.purpose == "system"))
+      purpose = "searchbar";
+
     // Create an application/x-www-form-urlencoded representation of our params
     // (name=value&name=value&name=value)
     var dataString = "";
