@@ -38,6 +38,7 @@ enum class DriverInitStatus
 enum class CrashGuardType : uint32_t
 {
   D3D11Layers,
+  D3D9Video,
   NUM_TYPES
 };
 
@@ -128,6 +129,17 @@ class D3D11LayersCrashGuard final : public DriverCrashGuard
 
  private:
   void RecordTelemetry(TelemetryState aState);
+};
+
+class D3D9VideoCrashGuard final : public DriverCrashGuard
+{
+ public:
+  explicit D3D9VideoCrashGuard(dom::ContentParent* aContentParent = nullptr);
+
+ protected:
+  bool UpdateEnvironment() override;
+  void LogCrashRecovery() override;
+  void LogFeatureDisabled() override;
 };
 
 } // namespace gfx
