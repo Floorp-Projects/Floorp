@@ -11,7 +11,7 @@
             android:fillViewport="true">
 
     <LinearLayout android:layout_width="match_parent"
-                  android:layout_height="match_parent"
+                  android:layout_height="wrap_content"
                   android:minHeight="@dimen/firstrun_min_height"
                   android:orientation="vertical">
 
@@ -59,6 +59,7 @@
             <TextView android:id="@+id/welcome_browse"
                       android:layout_width="@dimen/firstrun_content_width"
                       android:layout_height="wrap_content"
+                      android:minHeight="92dp"
                       android:padding="20dp"
                       android:gravity="center"
                       android:textAppearance="@style/TextAppearance.FirstrunRegular.Link"
