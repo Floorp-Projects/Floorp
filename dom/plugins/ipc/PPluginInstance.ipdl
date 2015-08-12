@@ -70,8 +70,11 @@ child:
 
   // This is only used on Windows and, for windowed plugins, must be called
   // before the first call to NPP_SetWindow.
-  intr CreateChildPluginWindow(NPRemoteWindow window)
-    returns (NPRemoteWindow createdChild);
+  intr CreateChildPluginWindow()
+    returns (NativeWindowHandle childPluginWindow);
+
+  // This is only used on Windows and, for windowless plugins.
+  async CreateChildPopupSurrogate(NativeWindowHandle netscapeWindow);
 
   intr NPP_SetWindow(NPRemoteWindow window);
 
@@ -214,6 +217,10 @@ parent:
 
   // Notifies the parent of its NPP_New result code.
   async AsyncNPP_NewResult(NPError aResult);
+
+  // Sends a native window to be adopted by the native window that would be
+  // returned by NPN_GetValue_NPNVnetscapeWindow. Only used on Windows.
+  async SetNetscapeWindowAsParent(NativeWindowHandle childWindow);
 
 both:
   async PPluginScriptableObject();

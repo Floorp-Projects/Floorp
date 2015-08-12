@@ -1124,25 +1124,31 @@ void PluginInstanceChild::DeleteWindow()
 #endif
 
 bool
-PluginInstanceChild::AnswerCreateChildPluginWindow(const NPRemoteWindow& aWindow,
-                                                   NPRemoteWindow* aCreatedChild)
+PluginInstanceChild::AnswerCreateChildPluginWindow(NativeWindowHandle* aChildPluginWindow)
 {
 #if defined(XP_WIN)
-    MOZ_ASSERT(aWindow.type == NPWindowTypeWindow);
     MOZ_ASSERT(!mPluginWindowHWND);
-
-    if ((GetQuirks() & PluginModuleChild::QUIRK_QUICKTIME_AVOID_SETWINDOW) &&
-        aWindow.width == 0 && aWindow.height == 0) {
-
-        // Skip CreateChildPluginWindow call for hidden QuickTime plugins.
-        return true;
-    }
 
     if (!CreatePluginWindow()) {
         return false;
     }
 
-    aCreatedChild->window = reinterpret_cast<uint64_t>(mPluginWindowHWND);
+    MOZ_ASSERT(mPluginWindowHWND);
+
+    *aChildPluginWindow = mPluginWindowHWND;
+    return true;
+#else
+    NS_NOTREACHED("PluginInstanceChild::CreateChildPluginWindow not implemented!");
+    return false;
+#endif
+}
+
+bool
+PluginInstanceChild::RecvCreateChildPopupSurrogate(const NativeWindowHandle& aNetscapeWindow)
+{
+#if defined(XP_WIN)
+    mCachedWinlessPluginHWND = aNetscapeWindow;
+    CreateWinlessPopupSurrogate();
     return true;
 #else
     NS_NOTREACHED("PluginInstanceChild::CreateChildPluginWindow not implemented!");
@@ -1232,12 +1238,10 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
     switch (aWindow.type) {
       case NPWindowTypeWindow:
       {
-          if ((GetQuirks() & QUIRK_QUICKTIME_AVOID_SETWINDOW) &&
-              aWindow.width == 0 &&
-              aWindow.height == 0) {
-            // Skip SetWindow call for hidden QuickTime plugins
-            return true;
-          }
+          // This check is now done in PluginInstanceParent before this call, so
+          // we should never see it here.
+          MOZ_ASSERT(!(GetQuirks() & QUIRK_QUICKTIME_AVOID_SETWINDOW) ||
+                     aWindow.width != 0 || aWindow.height != 0);
 
           MOZ_ASSERT(mPluginWindowHWND,
                      "Child plugin window must exist before call to SetWindow");
@@ -1276,8 +1280,6 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
 
       case NPWindowTypeDrawable:
           mWindow.type = aWindow.type;
-          if (GetQuirks() & QUIRK_WINLESS_TRACKPOPUP_HOOK)
-              CreateWinlessPopupSurrogate();
           if (GetQuirks() & QUIRK_FLASH_THROTTLE_WMUSER_EVENTS)
               SetupFlashMsgThrottle();
           return SharedSurfaceSetWindow(aWindow);
@@ -1946,21 +1948,15 @@ PluginInstanceChild::CreateWinlessPopupSurrogate()
     if (mWinlessPopupSurrogateHWND)
         return;
 
-    HWND hwnd = nullptr;
-    NPError result;
-    if (!CallNPN_GetValue_NPNVnetscapeWindow(&hwnd, &result)) {
-        NS_ERROR("CallNPN_GetValue_NPNVnetscapeWindow failed.");
-        return;
-    }
-
     mWinlessPopupSurrogateHWND =
-        CreateWindowEx(WS_EX_NOPARENTNOTIFY, L"Static", nullptr, WS_CHILD,
-                       0, 0, 0, 0, hwnd, 0, GetModuleHandle(nullptr), 0);
+        CreateWindowEx(WS_EX_NOPARENTNOTIFY, L"Static", nullptr, WS_POPUP,
+                       0, 0, 0, 0, nullptr, 0, GetModuleHandle(nullptr), 0);
     if (!mWinlessPopupSurrogateHWND) {
         NS_ERROR("CreateWindowEx failed for winless placeholder!");
         return;
     }
-    return;
+
+    SendSetNetscapeWindowAsParent(mWinlessPopupSurrogateHWND);
 }
 
 void
@@ -2811,8 +2807,6 @@ PluginInstanceChild::DoAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
     UpdateWindowAttributes(true);
 
 #ifdef XP_WIN
-    if (GetQuirks() & QUIRK_WINLESS_TRACKPOPUP_HOOK)
-        CreateWinlessPopupSurrogate();
     if (GetQuirks() & QUIRK_FLASH_THROTTLE_WMUSER_EVENTS)
         SetupFlashMsgThrottle();
 #endif
