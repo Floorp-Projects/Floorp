@@ -410,6 +410,14 @@ JSObject* GeckoSampler::ToJSObject(JSContext *aCx, double aSinceTime)
   }
   return &val.toObject();
 }
+
+void GeckoSampler::GetGatherer(nsISupports** aRetVal)
+{
+  if (!aRetVal || NS_WARN_IF(!mGatherer)) {
+    return;
+  }
+  NS_ADDREF(*aRetVal = mGatherer);
+}
 #endif
 
 UniquePtr<char[]> GeckoSampler::ToJSON(double aSinceTime)

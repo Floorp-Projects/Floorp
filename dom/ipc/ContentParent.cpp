@@ -1569,6 +1569,11 @@ ContentParent::Init()
         rv = profiler->GetStartParams(getter_AddRefs(currentProfilerParams));
         MOZ_ASSERT(NS_SUCCEEDED(rv));
 
+        nsCOMPtr<nsISupports> gatherer;
+        rv = profiler->GetProfileGatherer(getter_AddRefs(gatherer));
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
+        mGatherer = static_cast<ProfileGatherer*>(gatherer.get());
+
         StartProfiler(currentProfilerParams);
     }
 #endif
@@ -3293,6 +3298,7 @@ ContentParent::Observe(nsISupports* aSubject,
         StartProfiler(params);
     }
     else if (!strcmp(aTopic, "profiler-stopped")) {
+        mGatherer = nullptr;
         Unused << SendStopProfiler();
     }
     else if (!strcmp(aTopic, "profiler-paused")) {
@@ -3302,9 +3308,10 @@ ContentParent::Observe(nsISupports* aSubject,
         Unused << SendPauseProfiler(false);
     }
     else if (!strcmp(aTopic, "profiler-subprocess-gather")) {
-        mGatherer = static_cast<ProfileGatherer*>(aSubject);
-        mGatherer->WillGatherOOPProfile();
-        Unused << SendGatherProfile();
+        if (mGatherer) {
+            mGatherer->WillGatherOOPProfile();
+            Unused << SendGatherProfile();
+        }
     }
     else if (!strcmp(aTopic, "profiler-subprocess")) {
         nsCOMPtr<nsIProfileSaveEvent> pse = do_QueryInterface(aSubject);
@@ -5656,7 +5663,6 @@ ContentParent::RecvProfile(const nsCString& aProfile)
     }
     mProfile = aProfile;
     mGatherer->GatheredOOPProfile();
-    mGatherer = nullptr;
 #endif
     return true;
 }
@@ -5747,6 +5753,14 @@ ContentParent::StartProfiler(nsIProfilerStartParams* aParams)
     ipcParams.threadFilters() = aParams->GetThreadFilterNames();
 
     Unused << SendStartProfiler(ipcParams);
+
+    nsCOMPtr<nsIProfiler> profiler(do_GetService("@mozilla.org/tools/profiler;1"));
+    if (NS_WARN_IF(!profiler)) {
+        return;
+    }
+    nsCOMPtr<nsISupports> gatherer;
+    profiler->GetProfileGatherer(getter_AddRefs(gatherer));
+    mGatherer = static_cast<ProfileGatherer*>(gatherer.get());
 #endif
 }
 

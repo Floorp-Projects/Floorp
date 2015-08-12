@@ -627,6 +627,25 @@ PluginModuleChromeParent::OnProcessLaunched(const bool aSucceeded)
         }
 #endif
     }
+
+#ifdef MOZ_ENABLE_PROFILER_SPS
+    nsCOMPtr<nsIProfiler> profiler(do_GetService("@mozilla.org/tools/profiler;1"));
+    bool profilerActive = false;
+    DebugOnly<nsresult> rv = profiler->IsActive(&profilerActive);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    if (profilerActive) {
+        nsCOMPtr<nsIProfilerStartParams> currentProfilerParams;
+        rv = profiler->GetStartParams(getter_AddRefs(currentProfilerParams));
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+        nsCOMPtr<nsISupports> gatherer;
+        rv = profiler->GetProfileGatherer(getter_AddRefs(gatherer));
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
+        mGatherer = static_cast<ProfileGatherer*>(gatherer.get());
+
+        StartProfiler(currentProfilerParams);
+    }
+#endif
 }
 
 bool
@@ -3162,23 +3181,9 @@ PluginProfilerObserver::Observe(nsISupports *aSubject,
 {
     if (!strcmp(aTopic, "profiler-started")) {
         nsCOMPtr<nsIProfilerStartParams> params(do_QueryInterface(aSubject));
-        uint32_t entries;
-        double interval;
-        params->GetEntries(&entries);
-        params->GetInterval(&interval);
-        const nsTArray<nsCString>& features = params->GetFeatures();
-        const nsTArray<nsCString>& threadFilterNames = params->GetThreadFilterNames();
-
-        ProfilerInitParams ipcParams;
-        ipcParams.enabled() = true;
-        ipcParams.entries() = entries;
-        ipcParams.interval() = interval;
-        ipcParams.features() = features;
-        ipcParams.threadFilters() = threadFilterNames;
-
-        Unused << mPmp->SendStartProfiler(ipcParams);
+        mPmp->StartProfiler(params);
     } else if (!strcmp(aTopic, "profiler-stopped")) {
-        Unused << mPmp->SendStopProfiler();
+        mPmp->StopProfiler();
     } else if (!strcmp(aTopic, "profiler-subprocess-gather")) {
         RefPtr<ProfileGatherer> gatherer = static_cast<ProfileGatherer*>(aSubject);
         mPmp->GatherAsyncProfile(gatherer);
@@ -3215,9 +3220,44 @@ PluginModuleChromeParent::ShutdownPluginProfiling()
 }
 
 void
-PluginModuleChromeParent::GatherAsyncProfile(ProfileGatherer* aGatherer)
+PluginModuleChromeParent::StartProfiler(nsIProfilerStartParams* aParams)
 {
-    mGatherer = aGatherer;
+    if (NS_WARN_IF(!aParams)) {
+        return;
+    }
+
+    ProfilerInitParams ipcParams;
+
+    ipcParams.enabled() = true;
+    aParams->GetEntries(&ipcParams.entries());
+    aParams->GetInterval(&ipcParams.interval());
+    ipcParams.features() = aParams->GetFeatures();
+    ipcParams.threadFilters() = aParams->GetThreadFilterNames();
+
+    Unused << SendStartProfiler(ipcParams);
+
+    nsCOMPtr<nsIProfiler> profiler(do_GetService("@mozilla.org/tools/profiler;1"));
+    if (NS_WARN_IF(!profiler)) {
+        return;
+    }
+    nsCOMPtr<nsISupports> gatherer;
+    profiler->GetProfileGatherer(getter_AddRefs(gatherer));
+    mGatherer = static_cast<ProfileGatherer*>(gatherer.get());
+}
+
+void
+PluginModuleChromeParent::StopProfiler()
+{
+    mGatherer = nullptr;
+    Unused << SendStopProfiler();
+}
+
+void
+PluginModuleChromeParent::GatherAsyncProfile()
+{
+    if (NS_WARN_IF(!mGatherer)) {
+        return;
+    }
     mGatherer->WillGatherOOPProfile();
     Unused << SendGatherProfile();
 }
@@ -3242,7 +3282,6 @@ PluginModuleChromeParent::RecvProfile(const nsCString& aProfile)
 
     mProfile = aProfile;
     mGatherer->GatheredOOPProfile();
-    mGatherer = nullptr;
 #endif
     return true;
 }
