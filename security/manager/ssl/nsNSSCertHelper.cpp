@@ -1658,15 +1658,14 @@ ProcessSECAlgorithmID(SECAlgorithmID *algID,
 }
 
 static nsresult
-ProcessTime(PRTime dispTime, const char16_t* displayName,
-            nsIASN1Sequence* parentSequence)
+ProcessTime(PRTime dispTime, const char16_t *displayName, 
+            nsIASN1Sequence *parentSequence)
 {
   nsresult rv;
   nsCOMPtr<nsIDateTimeFormat> dateFormatter =
      do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
+  if (NS_FAILED(rv)) 
     return rv;
-  }
 
   nsString text;
   nsString tempString;
@@ -1674,9 +1673,8 @@ ProcessTime(PRTime dispTime, const char16_t* displayName,
   PRExplodedTime explodedTime;
   PR_ExplodeTime(dispTime, PR_LocalTimeParameters, &explodedTime);
 
-  dateFormatter->FormatPRExplodedTime(nullptr, kDateFormatLong,
-                                      kTimeFormatSecondsForce24Hour,
-                                      &explodedTime, tempString);
+  dateFormatter->FormatPRExplodedTime(nullptr, kDateFormatShort, kTimeFormatSecondsForce24Hour,
+                              &explodedTime, tempString);
 
   text.Append(tempString);
   text.AppendLiteral("\n(");
@@ -1684,9 +1682,8 @@ ProcessTime(PRTime dispTime, const char16_t* displayName,
   PRExplodedTime explodedTimeGMT;
   PR_ExplodeTime(dispTime, PR_GMTParameters, &explodedTimeGMT);
 
-  dateFormatter->FormatPRExplodedTime(nullptr, kDateFormatLong,
-                                      kTimeFormatSecondsForce24Hour,
-                                      &explodedTimeGMT, tempString);
+  dateFormatter->FormatPRExplodedTime(nullptr, kDateFormatShort, kTimeFormatSecondsForce24Hour,
+                              &explodedTimeGMT, tempString);
 
   text.Append(tempString);
   text.AppendLiteral(" GMT)");
