@@ -64,10 +64,10 @@ TEST_BEGIN(test_count_insert_search_remove)
 
 		ks = (i & 1) ? strs[i] : (const char *)NULL;
 		vs = (i & 2) ? strs[i] : (const char *)NULL;
-		assert_ptr_eq((void *)ks, (void *)k.s,
-		    "Key mismatch, i=%zu", i);
-		assert_ptr_eq((void *)vs, (void *)v.s,
-		    "Value mismatch, i=%zu", i);
+		assert_ptr_eq((void *)ks, (void *)k.s, "Key mismatch, i=%zu",
+		    i);
+		assert_ptr_eq((void *)vs, (void *)v.s, "Value mismatch, i=%zu",
+		    i);
 	}
 	assert_true(ckh_search(&ckh, missing, NULL, NULL),
 	    "Unexpected ckh_search() success");
@@ -90,14 +90,14 @@ TEST_BEGIN(test_count_insert_search_remove)
 
 		ks = (i & 1) ? strs[i] : (const char *)NULL;
 		vs = (i & 2) ? strs[i] : (const char *)NULL;
-		assert_ptr_eq((void *)ks, (void *)k.s,
-		    "Key mismatch, i=%zu", i);
-		assert_ptr_eq((void *)vs, (void *)v.s,
-		    "Value mismatch, i=%zu", i);
+		assert_ptr_eq((void *)ks, (void *)k.s, "Key mismatch, i=%zu",
+		    i);
+		assert_ptr_eq((void *)vs, (void *)v.s, "Value mismatch, i=%zu",
+		    i);
 		assert_zu_eq(ckh_count(&ckh),
 		    sizeof(strs)/sizeof(const char *) - i - 1,
 		    "ckh_count() should return %zu, but it returned %zu",
-		    sizeof(strs)/sizeof(const char *) - i - 1,
+		        sizeof(strs)/sizeof(const char *) - i - 1,
 		    ckh_count(&ckh));
 	}
 
@@ -196,8 +196,8 @@ TEST_BEGIN(test_insert_iter_remove)
 	}
 
 	assert_zu_eq(ckh_count(&ckh), 0,
-	    "ckh_count() should return %zu, but it returned %zu", ZU(0),
-	    ckh_count(&ckh));
+	    "ckh_count() should return %zu, but it returned %zu",
+	    ZU(0), ckh_count(&ckh));
 	ckh_delete(tsd, &ckh);
 #undef NITEMS
 }

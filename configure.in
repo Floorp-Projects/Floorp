@@ -9133,6 +9133,11 @@ if test -z "$MOZ_NATIVE_JEMALLOC" -a "$MOZ_MEMORY" && test -n "$MOZ_JEMALLOC3" -
   if test -n "$MOZ_REPLACE_MALLOC"; then
     # When using replace_malloc, we always want valloc exported from jemalloc.
     ac_configure_args="$ac_configure_args ac_cv_func_valloc=yes"
+    if test "${OS_ARCH}" = Darwin; then
+      # We also need to enable pointer validation on Mac because jemalloc's
+      # zone allocator is not used.
+      ac_configure_args="$ac_configure_args --enable-ivsalloc"
+    fi
   fi
   if test -n "$MOZ_JEMALLOC3"; then
     case "${OS_ARCH}" in
@@ -9142,6 +9147,11 @@ if test -z "$MOZ_NATIVE_JEMALLOC" -a "$MOZ_MEMORY" && test -n "$MOZ_JEMALLOC3" -
         ac_configure_args="$ac_configure_args --without-export"
         ;;
     esac
+    if test "${OS_ARCH}" = WINNT; then
+      # Lazy lock initialization doesn't play well with lazy linking of
+      # mozglue.dll on Windows XP (leads to startup crash), so disable it.
+      ac_configure_args="$ac_configure_args --disable-lazy-lock"
+    fi
   elif test "${OS_ARCH}" = Darwin; then
     # When building as a replace-malloc lib, disabling the zone allocator
     # forces to use pthread_atfork.
@@ -9178,14 +9188,15 @@ if test -z "$MOZ_NATIVE_JEMALLOC" -a "$MOZ_MEMORY" && test -n "$MOZ_JEMALLOC3" -
   for var in AS CC CXX CPP LD AR RANLIB STRIP CPPFLAGS EXTRA_CFLAGS LDFLAGS; do
     ac_configure_args="$ac_configure_args $var='`eval echo \\${${var}}`'"
   done
-  if test "$CROSS_COMPILE"; then
-    ac_configure_args="$ac_configure_args je_cv_static_page_shift=12"
-  fi
   # Force disable DSS support in jemalloc.
   ac_configure_args="$ac_configure_args ac_cv_func_sbrk=false"
 
   # Make Linux builds munmap freed chunks instead of recycling them.
   ac_configure_args="$ac_configure_args --enable-munmap"
+
+  # Disable cache oblivious behavior that appears to have a performance
+  # impact on Firefox.
+  ac_configure_args="$ac_configure_args --disable-cache-oblivious"
 
   if ! test -e memory/jemalloc; then
     mkdir -p memory/jemalloc

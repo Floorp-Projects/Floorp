@@ -3,7 +3,7 @@
 TEST_BEGIN(test_stats_summary)
 {
 	size_t *cactive;
-	size_t sz, allocated, active, mapped, bookkeeping;
+	size_t sz, allocated, active, resident, mapped;
 	int expected = config_stats ? 0 : ENOENT;
 
 	sz = sizeof(cactive);
@@ -15,44 +15,20 @@ TEST_BEGIN(test_stats_summary)
 	    expected, "Unexpected mallctl() result");
 	assert_d_eq(mallctl("stats.active", &active, &sz, NULL, 0), expected,
 	    "Unexpected mallctl() result");
+	assert_d_eq(mallctl("stats.resident", &resident, &sz, NULL, 0),
+	    expected, "Unexpected mallctl() result");
 	assert_d_eq(mallctl("stats.mapped", &mapped, &sz, NULL, 0), expected,
 	    "Unexpected mallctl() result");
-	assert_d_eq(mallctl("stats.bookkeeping", &bookkeeping, &sz, NULL, 0),
-	    expected, "Unexpected mallctl() result");
 
 	if (config_stats) {
 		assert_zu_le(active, *cactive,
 		    "active should be no larger than cactive");
 		assert_zu_le(allocated, active,
 		    "allocated should be no larger than active");
-		assert_zu_le(active, mapped,
-		    "active should be no larger than mapped");
-	}
-}
-TEST_END
-
-TEST_BEGIN(test_stats_chunks)
-{
-	size_t current, high;
-	uint64_t total;
-	size_t sz;
-	int expected = config_stats ? 0 : ENOENT;
-
-	sz = sizeof(size_t);
-	assert_d_eq(mallctl("stats.chunks.current", &current, &sz, NULL, 0),
-	    expected, "Unexpected mallctl() result");
-	sz = sizeof(uint64_t);
-	assert_d_eq(mallctl("stats.chunks.total", &total, &sz, NULL, 0),
-	    expected, "Unexpected mallctl() result");
-	sz = sizeof(size_t);
-	assert_d_eq(mallctl("stats.chunks.high", &high, &sz, NULL, 0), expected,
-	    "Unexpected mallctl() result");
-
-	if (config_stats) {
-		assert_zu_le(current, high,
-		    "current should be no larger than high");
-		assert_u64_le((uint64_t)high, total,
-		    "high should be no larger than total");
+		assert_zu_lt(active, resident,
+		    "active should be less than resident");
+		assert_zu_lt(active, mapped,
+		    "active should be less than mapped");
 	}
 }
 TEST_END
@@ -460,7 +436,6 @@ main(void)
 
 	return (test(
 	    test_stats_summary,
-	    test_stats_chunks,
 	    test_stats_huge,
 	    test_stats_arenas_summary,
 	    test_stats_arenas_small,
