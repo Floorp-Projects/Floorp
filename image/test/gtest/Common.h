@@ -94,6 +94,14 @@ ImageTestCase GreenFirstFrameAnimatedPNGTestCase();
 
 ImageTestCase CorruptTestCase();
 
+ImageTestCase TransparentPNGTestCase();
+ImageTestCase TransparentGIFTestCase();
+ImageTestCase FirstFramePaddingGIFTestCase();
+
+ImageTestCase TransparentBMPWhenBMPAlphaEnabledTestCase();
+ImageTestCase RLE4BMPTestCase();
+ImageTestCase RLE8BMPTestCase();
+
 } // namespace mozilla
 
 #endif // mozilla_image_test_gtest_Common_h
