@@ -16,6 +16,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "MediaCache.h"
 #include "MediaData.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/TimeStamp.h"
 #include "nsThreadUtils.h"
@@ -778,7 +779,7 @@ protected:
   // A data received event for the decoder that has been dispatched but has
   // not yet been processed.
   nsRevocableEventPtr<nsRunnableMethod<ChannelMediaResource, void, false> > mDataReceivedEvent;
-  uint32_t           mSuspendCount;
+  Atomic<uint32_t>   mSuspendCount;
   // When this flag is set, if we get a network error we should silently
   // reopen the stream.
   bool               mReopenOnError;
