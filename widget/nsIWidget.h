@@ -102,6 +102,8 @@ typedef void* nsNativeWidget;
 // HWND on Windows and XID on X11
 #define NS_NATIVE_SHAREABLE_WINDOW 11
 #define NS_NATIVE_OPENGL_CONTEXT   12
+// See RegisterPluginWindowForRemoteUpdates
+#define NS_NATIVE_PLUGIN_ID            13
 #ifdef XP_MACOSX
 #define NS_NATIVE_PLUGIN_PORT_QD    100
 #define NS_NATIVE_PLUGIN_PORT_CG    101
@@ -112,13 +114,12 @@ typedef void* nsNativeWidget;
 #define NS_NATIVE_TSF_DISPLAY_ATTR_MGR 102
 #define NS_NATIVE_ICOREWINDOW          103 // winrt specific
 #define NS_NATIVE_CHILD_WINDOW         104
+#define NS_NATIVE_CHILD_OF_SHAREABLE_WINDOW 105
 #endif
 #if defined(MOZ_WIDGET_GTK)
 // set/get nsPluginNativeWindowGtk, e10s specific
 #define NS_NATIVE_PLUGIN_OBJECT_PTR    104
 #endif
-// See RegisterPluginWindowForRemoteUpdates
-#define NS_NATIVE_PLUGIN_ID            105
 
 #define NS_IWIDGET_IID \
 { 0x483BF75C, 0xF909, 0x45C3, \
