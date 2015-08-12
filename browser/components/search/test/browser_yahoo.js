@@ -103,6 +103,11 @@ function test() {
               value: "yhs-005",
               purpose: "contextmenu",
             },
+            {
+              name: "hsimp",
+              value: "yhs-007",
+              purpose: "system",
+            },
           ],
           mozparams: {},
         },
