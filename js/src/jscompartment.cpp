@@ -873,13 +873,13 @@ JSCompartment::clearTables()
 }
 
 void
-JSCompartment::setAllocationMetadataBuilder(js::AllocationMetadataBuilder callback)
+JSCompartment::setAllocationMetadataBuilder(const js::AllocationMetadataBuilder *builder)
 {
     // Clear any jitcode in the runtime, which behaves differently depending on
     // whether there is a creation callback.
     ReleaseAllJITCode(runtime_->defaultFreeOp());
 
-    allocationMetadataBuilder = callback;
+    allocationMetadataBuilder = builder;
 }
 
 void
@@ -894,7 +894,7 @@ JSCompartment::setNewObjectMetadata(JSContext* cx, HandleObject obj)
 {
     assertSameCompartment(cx, this, obj);
 
-    if (JSObject* metadata = allocationMetadataBuilder(cx, obj)) {
+    if (JSObject* metadata = allocationMetadataBuilder->build(cx, obj)) {
         AutoEnterOOMUnsafeRegion oomUnsafe;
         assertSameCompartment(cx, metadata);
         if (!objectMetadataTable) {

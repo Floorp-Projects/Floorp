@@ -367,7 +367,7 @@ struct JSCompartment
     void*                        data;
 
   private:
-    js::AllocationMetadataBuilder     allocationMetadataBuilder;
+    const js::AllocationMetadataBuilder *allocationMetadataBuilder;
 
     js::SavedStacks              savedStacks_;
 
@@ -606,8 +606,10 @@ struct JSCompartment
     void fixupGlobal();
 
     bool hasAllocationMetadataBuilder() const { return allocationMetadataBuilder; }
-    js::AllocationMetadataBuilder getAllocationMetadataBuilder() const { return allocationMetadataBuilder; }
-    void setAllocationMetadataBuilder(js::AllocationMetadataBuilder builder);
+    const js::AllocationMetadataBuilder* getAllocationMetadataBuilder() const {
+        return allocationMetadataBuilder;
+    }
+    void setAllocationMetadataBuilder(const js::AllocationMetadataBuilder* builder);
     void forgetAllocationMetadataBuilder() {
         allocationMetadataBuilder = nullptr;
     }
