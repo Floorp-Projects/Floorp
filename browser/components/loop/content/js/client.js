@@ -53,7 +53,7 @@ loop.Client = (function() {
         }
       });
 
-      if (properties.length == 1) {
+      if (properties.length === 1) {
         return data[properties[0]];
       }
 

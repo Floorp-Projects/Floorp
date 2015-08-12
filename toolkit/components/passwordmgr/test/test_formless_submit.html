@@ -56,6 +56,16 @@ const TESTCASES = [
   {
     document: `<input value="user1">
       <input type=password value="pass1">`,
+    inputIndexForFormLike: 0,
+    hostname: DEFAULT_ORIGIN,
+    formSubmitURL: DEFAULT_ORIGIN,
+    usernameFieldValue: "user1",
+    newPasswordFieldValue: "pass1",
+    oldPasswordFieldValue: null,
+  },
+  {
+    document: `<input value="user1">
+      <input type=password value="pass1">`,
     inputIndexForFormLike: 1,
     hostname: DEFAULT_ORIGIN,
     formSubmitURL: DEFAULT_ORIGIN,
@@ -136,7 +146,7 @@ let runTest = Task.async(function*() {
     frameDoc.documentElement.innerHTML = tc.document;
     let inputForFormLike = frameDoc.querySelectorAll("input")[tc.inputIndexForFormLike];
 
-    let formLike = FormLikeFactory.createFromPasswordField(inputForFormLike);
+    let formLike = FormLikeFactory.createFromField(inputForFormLike);
 
     info("Calling _onFormSubmit with FormLike");
     let processedPromise = getSubmitMessage();
