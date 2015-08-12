@@ -56,7 +56,7 @@
             android:paddingLeft="18dp"/>
 
     <org.mozilla.gecko.toolbar.BackButton android:id="@id/back"
-                                          style="@style/UrlBar.ImageButton.NewTablet"
+                                          style="@style/UrlBar.ImageButton"
                                           android:layout_width="@dimen/new_tablet_nav_button_width"
                                           android:layout_height="@dimen/new_tablet_nav_button_width"
                                           android:layout_centerVertical="true"
@@ -92,7 +92,7 @@
 
     <org.mozilla.gecko.widget.ThemedImageButton
             android:id="@+id/tabs"
-            style="@style/UrlBar.ImageButton.NewTablet"
+            style="@style/UrlBar.ImageButton"
             android:layout_toLeftOf="@id/menu"
             android:layout_alignWithParentIfMissing="true"
             android:background="@drawable/browser_toolbar_action_bar_button"/>
@@ -111,7 +111,7 @@
 
     <org.mozilla.gecko.widget.ThemedImageButton
             android:id="@+id/menu"
-            style="@style/UrlBar.ImageButton.NewTablet"
+            style="@style/UrlBar.ImageButton"
             android:layout_alignParentRight="true"
             android:layout_marginRight="6dp"
             android:contentDescription="@string/menu"
@@ -120,7 +120,7 @@
 
     <org.mozilla.gecko.widget.ThemedImageView
             android:id="@+id/menu_icon"
-            style="@style/UrlBar.ImageButton.NewTablet"
+            style="@style/UrlBar.ImageButton"
             android:layout_alignLeft="@id/menu"
             android:layout_alignRight="@id/menu"
             android:src="@drawable/tablet_menu"
