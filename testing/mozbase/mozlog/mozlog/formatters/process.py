@@ -48,7 +48,7 @@ def strstatus(status):
         # Windows error codes are easier to look up if printed in hexadecimal
         if status < 0:
             status += 2**32
-        return "exit status %x" % status
+        return "exit %x" % status
     elif status >= 0:
         return "exit %d" % status
     else:
