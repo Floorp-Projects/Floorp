@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             android:background="@color/about_page_header_grey"
+             android:layout_width="match_parent"
+             android:layout_height="@dimen/page_row_height">
+
+    <TextView android:id="@+id/range_title"
+              style="@style/Widget.TwoLinePageRow.Title"
+              android:paddingLeft="15dp"
+              android:paddingRight="15dp"
+              android:layout_gravity="center_vertical"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"/>
+</FrameLayout>
