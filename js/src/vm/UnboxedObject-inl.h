@@ -583,8 +583,8 @@ CopyBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* dst, JSObject* src,
 // Dispatch to specialized methods based on the type of an object.
 /////////////////////////////////////////////////////////////////////
 
-// Goop to fix MSVC. See CallTyped in jsgc.h.
-#ifdef _MSC_VER
+// Goop to fix MSVC. See DispatchTraceKindTyped in TraceKind.h.
+#if defined(_MSC_VER) && !defined(__clang__)
 # define DEPENDENT_TEMPLATE_HINT
 #else
 # define DEPENDENT_TEMPLATE_HINT template
