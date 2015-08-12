@@ -137,6 +137,8 @@ public:
         mHadLocalInstance = true;
     }
 
+    int GetQuirks() { return mQuirks; }
+
 protected:
     virtual mozilla::ipc::RacyInterruptPolicy
     MediateInterruptRace(const Message& parent, const Message& child) override
@@ -274,6 +276,11 @@ protected:
 #endif
 
     void InitAsyncSurrogates();
+
+private:
+    nsCString mPluginFilename;
+    int mQuirks;
+    void InitQuirksModes(const nsCString& aMimeType);
 
 protected:
     void NotifyFlashHang();
