@@ -126,7 +126,7 @@ ImageTestCase GreenGIFTestCase()
 ImageTestCase GreenJPGTestCase()
 {
   return ImageTestCase("green.jpg", "image/jpeg", IntSize(100, 100),
-                       /* aFuzzy = */ true);
+                       TEST_CASE_IS_FUZZY);
 }
 
 ImageTestCase GreenBMPTestCase()
