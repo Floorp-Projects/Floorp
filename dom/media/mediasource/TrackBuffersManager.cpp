@@ -1620,8 +1620,6 @@ TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
     aTrackData.mSizeBuffer -= sample->ComputedSizeOfIncludingThis();
   }
 
-  removedIntervals.SetFuzz(TimeUnit::FromMicroseconds(maxSampleDuration));
-
   MSE_DEBUG("Removing frames from:%u (frames:%u) ([%f, %f))",
             firstRemovedIndex.ref(),
             lastRemovedIndex - firstRemovedIndex.ref() + 1,
