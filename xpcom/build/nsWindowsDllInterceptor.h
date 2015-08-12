@@ -427,13 +427,13 @@ protected:
 
     while (nBytes < 13) {
 
-      // if found JMP 32bit offset, next bytes must be NOP
+      // if found JMP 32bit offset, next bytes must be NOP or INT3
       if (pJmp32 >= 0) {
-        if (origBytes[nBytes++] != 0x90) {
-          return;
+        if (origBytes[nBytes] == 0x90 || origBytes[nBytes] == 0xcc) {
+          nBytes++;
+          continue;
         }
-
-        continue;
+        return;
       }
       if (origBytes[nBytes] == 0x0f) {
         nBytes++;
