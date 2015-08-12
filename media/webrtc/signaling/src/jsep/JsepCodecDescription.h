@@ -33,7 +33,8 @@ struct JsepCodecDescription {
         mClock(clock),
         mChannels(channels),
         mEnabled(enabled),
-        mStronglyPreferred(false)
+        mStronglyPreferred(false),
+        mNegotiated(false)
   {
   }
   virtual ~JsepCodecDescription() {}
@@ -76,6 +77,7 @@ struct JsepCodecDescription {
   virtual bool
   Negotiate(const SdpMediaSection& remoteMsection)
   {
+    mNegotiated = true;
     return true;
   }
 
@@ -153,6 +155,7 @@ struct JsepCodecDescription {
   uint32_t mChannels;
   bool mEnabled;
   bool mStronglyPreferred;
+  bool mNegotiated;
 };
 
 struct JsepAudioCodecDescription : public JsepCodecDescription {
