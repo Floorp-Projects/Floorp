@@ -70,6 +70,8 @@ extern "C" {
 #define NR_ICE_REG_KEEPALIVE_TIMER          "ice.keepalive_timer"
 
 #define NR_ICE_REG_TRICKLE_GRACE_PERIOD     "ice.trickle_grace_period"
+#define NR_ICE_REG_PREF_FORCE_INTERFACE_NAME "ice.forced_interface_name"
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
