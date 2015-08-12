@@ -1,4 +1,4 @@
-setObjectMetadataCallback(true);
+enableShellObjectMetadataCallback();
 var g = newGlobal()
 g.eval("function f(a) { return h(); }");
 g.h = function () {

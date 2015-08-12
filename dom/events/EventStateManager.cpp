@@ -16,6 +16,7 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/DragEvent.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/UIEvent.h"
@@ -54,7 +55,6 @@
 #include "nsIObserverService.h"
 #include "nsIDocShell.h"
 #include "nsIDOMWheelEvent.h"
-#include "nsIDOMDragEvent.h"
 #include "nsIDOMUIEvent.h"
 #include "nsIMozBrowserFrame.h"
 
@@ -1881,13 +1881,8 @@ EventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
   // XXXndeakin don't really want to create a new drag DOM event
   // here, but we need something to pass to the InvokeDragSession
   // methods.
-  nsCOMPtr<nsIDOMEvent> domEvent;
-  NS_NewDOMDragEvent(getter_AddRefs(domEvent), dragTarget,
-                     aPresContext, aDragEvent);
-
-  nsCOMPtr<nsIDOMDragEvent> domDragEvent = do_QueryInterface(domEvent);
-  // if creating a drag event failed, starting a drag session will
-  // just fail.
+  nsRefPtr<DragEvent> event =
+    NS_NewDOMDragEvent(dragTarget, aPresContext, aDragEvent);
 
   // Use InvokeDragSessionWithSelection if a selection is being dragged,
   // such that the image can be generated from the selected text. However,
@@ -1895,8 +1890,7 @@ EventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
   // other than a selection is being dragged.
   if (!dragImage && aSelection) {
     dragService->InvokeDragSessionWithSelection(aSelection, transArray,
-                                                action, domDragEvent,
-                                                aDataTransfer);
+                                                action, event, aDataTransfer);
   }
   else {
     // if dragging within a XUL tree and no custom drag image was
@@ -1922,8 +1916,7 @@ EventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
                                             region, action,
                                             dragImage ? dragImage->AsDOMNode() :
                                                         nullptr,
-                                            imageX,
-                                            imageY, domDragEvent,
+                                            imageX, imageY, event,
                                             aDataTransfer);
   }
 

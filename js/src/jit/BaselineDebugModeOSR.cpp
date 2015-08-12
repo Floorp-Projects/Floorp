@@ -800,8 +800,10 @@ InvalidateScriptsInZone(JSContext* cx, Zone* zone, const Vector<DebugModeOSREntr
             continue;
 
         if (script->hasIonScript()) {
-            if (!invalid.append(script->ionScript()->recompileInfo()))
+            if (!invalid.append(script->ionScript()->recompileInfo())) {
+                ReportOutOfMemory(cx);
                 return false;
+            }
         }
 
         // Cancel off-thread Ion compile for anything that has a

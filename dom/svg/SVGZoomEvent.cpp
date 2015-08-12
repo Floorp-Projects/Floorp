@@ -90,13 +90,14 @@ SVGZoomEvent::~SVGZoomEvent()
 ////////////////////////////////////////////////////////////////////////
 // Exported creation functions:
 
-nsresult
-NS_NewDOMSVGZoomEvent(nsIDOMEvent** aInstancePtrResult,
-                      mozilla::dom::EventTarget* aOwner,
+using namespace mozilla;
+using namespace mozilla::dom;
+
+already_AddRefed<SVGZoomEvent>
+NS_NewDOMSVGZoomEvent(EventTarget* aOwner,
                       nsPresContext* aPresContext,
                       mozilla::InternalSVGZoomEvent* aEvent)
 {
-  mozilla::dom::SVGZoomEvent* it =
-    new mozilla::dom::SVGZoomEvent(aOwner, aPresContext, aEvent);
-  return CallQueryInterface(it, aInstancePtrResult);
+  nsRefPtr<SVGZoomEvent> it = new SVGZoomEvent(aOwner, aPresContext, aEvent);
+  return it.forget();
 }

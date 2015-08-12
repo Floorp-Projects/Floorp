@@ -164,14 +164,11 @@ PointerEvent::IsPrimary()
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsresult
-NS_NewDOMPointerEvent(nsIDOMEvent** aInstancePtrResult,
-                      EventTarget* aOwner,
+already_AddRefed<PointerEvent>
+NS_NewDOMPointerEvent(EventTarget* aOwner,
                       nsPresContext* aPresContext,
                       WidgetPointerEvent *aEvent)
 {
-  PointerEvent *it = new PointerEvent(aOwner, aPresContext, aEvent);
-  NS_ADDREF(it);
-  *aInstancePtrResult = static_cast<Event*>(it);
-  return NS_OK;
+  nsRefPtr<PointerEvent> it = new PointerEvent(aOwner, aPresContext, aEvent);
+  return it.forget();
 }

@@ -289,7 +289,7 @@ AsmJSModule::finish(ExclusiveContext* cx, TokenStream& tokenStream, MacroAssembl
 
     uint32_t endBeforeCurly = tokenStream.currentToken().pos.end;
     TokenPos pos;
-    if (!tokenStream.peekTokenPos(&pos))
+    if (!tokenStream.peekTokenPos(&pos, TokenStream::Operand))
         return false;
     uint32_t endAfterCurly = pos.end;
     MOZ_ASSERT(endBeforeCurly >= srcBodyStart_);
@@ -405,7 +405,7 @@ AsmJSModule::finish(ExclusiveContext* cx, TokenStream& tokenStream, MacroAssembl
     }
 #endif
 
-#if defined(JS_CODEGEN_MIPS)
+#if defined(JS_CODEGEN_MIPS32)
     // On MIPS we need to update all the long jumps because they contain an
     // absolute adress.
     for (size_t i = 0; i < masm.numLongJumps(); i++) {
@@ -872,7 +872,7 @@ AsmJSModule::initHeap(Handle<ArrayBufferObjectMaybeShared*> heap, JSContext* cx)
         if (access.hasLengthCheck())
             X86Encoding::AddInt32(access.patchLengthAt(code_), heapLength);
     }
-#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
+#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32)
     uint32_t heapLength = heap->byteLength();
     for (unsigned i = 0; i < heapAccesses_.length(); i++) {
         jit::Assembler::UpdateBoundsCheck(heapLength,
@@ -1803,7 +1803,7 @@ AsmJSModule::setProfilingEnabled(bool enabled, JSContext* cx)
 #elif defined(JS_CODEGEN_ARM64)
         MOZ_CRASH();
         void* callee = nullptr;
-#elif defined(JS_CODEGEN_MIPS)
+#elif defined(JS_CODEGEN_MIPS32)
         Instruction* instr = (Instruction*)(callerRetAddr - 4 * sizeof(uint32_t));
         void* callee = (void*)Assembler::ExtractLuiOriValue(instr, instr->next());
 #elif defined(JS_CODEGEN_NONE)
@@ -1829,7 +1829,7 @@ AsmJSModule::setProfilingEnabled(bool enabled, JSContext* cx)
         new (caller) InstBLImm(BOffImm(newCallee - caller), Assembler::Always);
 #elif defined(JS_CODEGEN_ARM64)
         MOZ_CRASH();
-#elif defined(JS_CODEGEN_MIPS)
+#elif defined(JS_CODEGEN_MIPS32)
         Assembler::WriteLuiOriInstructions(instr, instr->next(),
                                            ScratchRegister, (uint32_t)newCallee);
         instr[2] = InstReg(op_special, ScratchRegister, zero, ra, ff_jalr);
@@ -1894,7 +1894,7 @@ AsmJSModule::setProfilingEnabled(bool enabled, JSContext* cx)
         }
 #elif defined(JS_CODEGEN_ARM64)
         MOZ_CRASH();
-#elif defined(JS_CODEGEN_MIPS)
+#elif defined(JS_CODEGEN_MIPS32)
         Instruction* instr = (Instruction*)jump;
         if (enabled) {
             Assembler::WriteLuiOriInstructions(instr, instr->next(),
@@ -1960,7 +1960,7 @@ GetCPUID(uint32_t* cpuId)
     MOZ_ASSERT(GetARMFlags() <= (UINT32_MAX >> ARCH_BITS));
     *cpuId = ARM | (GetARMFlags() << ARCH_BITS);
     return true;
-#elif defined(JS_CODEGEN_MIPS)
+#elif defined(JS_CODEGEN_MIPS32)
     MOZ_ASSERT(GetMIPSFlags() <= (UINT32_MAX >> ARCH_BITS));
     *cpuId = MIPS | (GetMIPSFlags() << ARCH_BITS);
     return true;
@@ -2046,7 +2046,7 @@ class ModuleChars
 
     static uint32_t endOffset(AsmJSParser& parser) {
         TokenPos pos(0, 0);  // initialize to silence GCC warning
-        MOZ_ALWAYS_TRUE(parser.tokenStream.peekTokenPos(&pos));
+        MOZ_ALWAYS_TRUE(parser.tokenStream.peekTokenPos(&pos, TokenStream::Operand));
         return pos.end;
     }
 };

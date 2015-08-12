@@ -292,24 +292,24 @@ def format_flags(flags):
 
 def print_opcode(opcode):
     names_template = '{name} [-{nuses}, +{ndefs}]{flags}'
+    opcodes = sorted([opcode] + opcode.group,
+                     key=lambda opcode: opcode.name)
     names = map(lambda code: names_template.format(name=escape(code.name),
                                                    nuses=override(code.nuses,
                                                                   opcode.nuses_override),
                                                    ndefs=override(code.ndefs,
                                                                   opcode.ndefs_override),
                                                    flags=format_flags(code.flags)),
-                sorted([opcode] + opcode.group,
-                       key=lambda opcode: opcode.name))
-    if len(opcode.group) == 0:
+                opcodes)
+    if len(opcodes) == 1:
         values = ['{value} (0x{value:02x})'.format(value=opcode.value)]
     else:
         values_template = '{name}: {value} (0x{value:02x})'
         values = map(lambda code: values_template.format(name=escape(code.name),
                                                          value=code.value),
-                    sorted([opcode] + opcode.group,
-                           key=lambda opcode: opcode.name))
+                    opcodes)
 
-    print("""<dt>{names}</dt>
+    print("""<dt id="{id}">{names}</dt>
 <dd>
 <table class="standard-table">
 <tbody>
@@ -323,7 +323,8 @@ def print_opcode(opcode):
 
 {desc}
 </dd>
-""".format(names='<br>'.join(names),
+""".format(id=opcodes[0].name,
+           names='<br>'.join(names),
            values='<br>'.join(values),
            operands=escape(opcode.operands) or "&nbsp;",
            length=escape(override(opcode.length,

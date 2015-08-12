@@ -13,6 +13,9 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 BRANDING_FILES := \
 	app.icns \
+	background.png \
+	disk.icns \
+	dsstore \
 	$(NULL)
 endif
 

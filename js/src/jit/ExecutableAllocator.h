@@ -34,7 +34,7 @@
 #include "jsalloc.h"
 
 #include "jit/arm/Simulator-arm.h"
-#include "jit/mips/Simulator-mips.h"
+#include "jit/mips32/Simulator-mips32.h"
 #include "js/GCAPI.h"
 #include "js/HashTable.h"
 #include "js/Vector.h"
@@ -55,7 +55,7 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
 #endif
 #endif
 
-#if defined(JS_CODEGEN_MIPS) && defined(__linux__) && !defined(JS_SIMULATOR_MIPS)
+#if defined(JS_CODEGEN_MIPS32) && defined(__linux__) && !defined(JS_SIMULATOR_MIPS32)
 #include <sys/cachectl.h>
 #endif
 
@@ -379,12 +379,12 @@ class ExecutableAllocator
     static void cacheFlush(void*, size_t)
     {
     }
-#elif defined(JS_SIMULATOR_ARM) || defined(JS_SIMULATOR_MIPS)
+#elif defined(JS_SIMULATOR_ARM) || defined(JS_SIMULATOR_MIPS32)
     static void cacheFlush(void* code, size_t size)
     {
         js::jit::Simulator::FlushICache(code, size);
     }
-#elif defined(JS_CODEGEN_MIPS)
+#elif defined(JS_CODEGEN_MIPS32)
     static void cacheFlush(void* code, size_t size)
     {
 #if defined(__GNUC__)

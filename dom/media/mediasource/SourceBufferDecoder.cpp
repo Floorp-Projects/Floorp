@@ -100,7 +100,7 @@ SourceBufferDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
 }
 
 void
-SourceBufferDecoder::QueueMetadata(int64_t aTime,
+SourceBufferDecoder::QueueMetadata(const media::TimeUnit& aTime,
                                    nsAutoPtr<MediaInfo> aInfo,
                                    nsAutoPtr<MetadataTags> aTags)
 {

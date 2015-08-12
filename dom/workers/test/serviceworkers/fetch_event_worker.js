@@ -235,4 +235,37 @@ onfetch = function(ev) {
     // fetch was initiated from a SW.
     ev.respondWith(fetch('redirect_serviceworker.sjs'));
   }
+
+  else if (ev.request.url.includes('load_cross_origin_xml_document_synthetic.xml')) {
+    if (ev.request.mode != 'same-origin') {
+      ev.respondWith(Promise.reject());
+      return;
+    }
+
+    ev.respondWith(Promise.resolve(
+      new Response("<response>body</response>", { headers: {'Content-Type': 'text/xtml'}})
+    ));
+  }
+
+  else if (ev.request.url.includes('load_cross_origin_xml_document_cors.xml')) {
+    if (ev.request.mode != 'same-origin') {
+      ev.respondWith(Promise.reject());
+      return;
+    }
+
+    var url = 'http://example.com/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs?status=200&allowOrigin=*';
+    ev.respondWith(fetch(url, { mode: 'cors' }));
+  }
+
+  else if (ev.request.url.includes('load_cross_origin_xml_document_opaque.xml')) {
+    if (ev.request.mode != 'same-origin') {
+      Promise.resolve(
+        new Response("<error>Invalid Request mode</error>", { headers: {'Content-Type': 'text/xtml'}})
+      );
+      return;
+    }
+
+    var url = 'http://example.com/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs?status=200';
+    ev.respondWith(fetch(url, { mode: 'no-cors' }));
+  }
 };

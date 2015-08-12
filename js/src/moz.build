@@ -454,22 +454,22 @@ elif CONFIG['JS_CODEGEN_ARM64']:
             'jit/arm64/vixl/MozSimulator-vixl.cpp',
             'jit/arm64/vixl/Simulator-vixl.cpp'
         ]
-elif CONFIG['JS_CODEGEN_MIPS']:
+elif CONFIG['JS_CODEGEN_MIPS32']:
     UNIFIED_SOURCES += [
-        'jit/mips/Architecture-mips.cpp',
-        'jit/mips/Assembler-mips.cpp',
-        'jit/mips/Bailouts-mips.cpp',
-        'jit/mips/BaselineCompiler-mips.cpp',
-        'jit/mips/BaselineIC-mips.cpp',
-        'jit/mips/CodeGenerator-mips.cpp',
-        'jit/mips/Lowering-mips.cpp',
-        'jit/mips/MacroAssembler-mips.cpp',
-        'jit/mips/MoveEmitter-mips.cpp',
-        'jit/mips/Trampoline-mips.cpp',
+        'jit/mips32/Architecture-mips32.cpp',
+        'jit/mips32/Assembler-mips32.cpp',
+        'jit/mips32/Bailouts-mips32.cpp',
+        'jit/mips32/BaselineCompiler-mips32.cpp',
+        'jit/mips32/BaselineIC-mips32.cpp',
+        'jit/mips32/CodeGenerator-mips32.cpp',
+        'jit/mips32/Lowering-mips32.cpp',
+        'jit/mips32/MacroAssembler-mips32.cpp',
+        'jit/mips32/MoveEmitter-mips32.cpp',
+        'jit/mips32/Trampoline-mips32.cpp',
     ]
-    if CONFIG['JS_SIMULATOR_MIPS']:
+    if CONFIG['JS_SIMULATOR_MIPS32']:
         UNIFIED_SOURCES += [
-            'jit/mips/Simulator-mips.cpp'
+            'jit/mips32/Simulator-mips32.cpp'
         ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':

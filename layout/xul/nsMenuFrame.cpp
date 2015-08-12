@@ -44,6 +44,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/Event.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -94,17 +95,13 @@ public:
       domEventToFire.AssignLiteral("DOMMenuItemInactive");
     }
 
-    nsCOMPtr<nsIDOMEvent> event;
-    if (NS_SUCCEEDED(EventDispatcher::CreateEvent(mMenu, mPresContext, nullptr,
-                                                  NS_LITERAL_STRING("Events"),
-                                                  getter_AddRefs(event)))) {
-      event->InitEvent(domEventToFire, true, true);
+    nsRefPtr<Event> event = NS_NewDOMEvent(mMenu, mPresContext, nullptr);
+    event->InitEvent(domEventToFire, true, true);
 
-      event->SetTrusted(true);
+    event->SetTrusted(true);
 
-      EventDispatcher::DispatchDOMEvent(mMenu, nullptr, event,
-                                        mPresContext, nullptr);
-    }
+    EventDispatcher::DispatchDOMEvent(mMenu, nullptr, event,
+        mPresContext, nullptr);
 
     return NS_OK;
   }

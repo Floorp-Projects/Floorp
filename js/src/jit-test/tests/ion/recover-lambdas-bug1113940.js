@@ -4,7 +4,11 @@ gczeal(14);
 // The object metadata callback can iterate over the stack. Thus during the
 // allocation of the lambda we might inspect the stack which is still incomplete
 // because the lambda is not yet reconstructed.
-setObjectMetadataCallback(function() {});
+//
+// enableShellObjectMetadataCallback ignores its argument, because we don't
+// permit metadata callbacks to run JS any more, so this test may be
+// unnecessary. We'll preserve its structure just in case.
+enableShellObjectMetadataCallback(function() {});
 function f() {
     (function() {
         '' ^ Object
@@ -17,7 +21,8 @@ for (var j = 0; j < 99; ++j) {
 
 try {
   x = true;
-  setObjectMetadataCallback(function([x, y, z], ... Debugger) {});
+  // Same comment as above.
+  enableShellObjectMetadataCallback(function([x, y, z], ... Debugger) {});
   for (var i = 0; i < 10; ++i) {
     var f = function() {
       function g() {

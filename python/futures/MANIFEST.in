@@ -1,0 +1,5 @@
+recursive-include docs *
+include *.py
+include tox.ini
+include CHANGES
+include LICENSE

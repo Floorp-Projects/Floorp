@@ -7,7 +7,7 @@ this.__defineGetter__("x",
   }
 );
 function callback(obj) {}
-setObjectMetadataCallback(callback);
+enableShellObjectMetadataCallback();
 evaluate("\
 var { ArrayType, StructType, uint32 } = TypedObject;\
   var L = 1024;\

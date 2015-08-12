@@ -13,8 +13,8 @@
 #include "jit/arm/Simulator-arm.h"
 #elif defined(JS_SIMULATOR_ARM64)
 # include "jit/arm64/vixl/Simulator-vixl.h"
-#elif defined(JS_SIMULATOR_MIPS)
-#include "jit/mips/Simulator-mips.h"
+#elif defined(JS_SIMULATOR_MIPS32)
+#include "jit/mips32/Simulator-mips32.h"
 #endif
 
 #ifdef JS_SIMULATOR
