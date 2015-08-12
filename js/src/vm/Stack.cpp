@@ -1553,8 +1553,7 @@ jit::JitActivation::getRematerializedFrame(JSContext* cx, const JitFrameIterator
             return nullptr;
         }
 
-        // All frames younger than the rematerialized frame need to have their
-        // prevUpToDate flag cleared.
+        // See comment in unsetPrevUpToDateUntil.
         DebugScopes::unsetPrevUpToDateUntil(cx, p->value()[inlineDepth]);
     }
 
