@@ -748,7 +748,6 @@ MediaFormatReader::NotifyError(TrackType aTrack)
   LOGV("%s Decoding error", TrackTypeToStr(aTrack));
   auto& decoder = GetDecoderData(aTrack);
   decoder.mError = true;
-  decoder.mNeedDraining = true;
   ScheduleUpdate(aTrack);
 }
 
@@ -1082,7 +1081,7 @@ MediaFormatReader::Update(TrackType aTrack)
       } else if (decoder.mDemuxEOS) {
         decoder.RejectPromise(END_OF_STREAM, __func__);
       }
-    } else if (decoder.mError && !decoder.mDecoder) {
+    } else if (decoder.mError) {
       decoder.RejectPromise(DECODE_ERROR, __func__);
       return;
     } else if (decoder.mWaitingForData) {
