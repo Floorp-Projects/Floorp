@@ -34,7 +34,7 @@
 #include "jsalloc.h"
 
 #include "jit/arm/Simulator-arm.h"
-#include "jit/mips/Simulator-mips.h"
+#include "jit/mips32/Simulator-mips32.h"
 #include "js/GCAPI.h"
 #include "js/HashTable.h"
 #include "js/Vector.h"

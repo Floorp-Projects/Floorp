@@ -8,7 +8,7 @@
 
 
 #include "jit/Lowering.h"
-#include "jit/mips/Assembler-mips.h"
+#include "jit/mips32/Assembler-mips32.h"
 #include "jit/MIR.h"
 
 #include "jit/shared/Lowering-shared-inl.h"

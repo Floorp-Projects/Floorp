@@ -12,7 +12,7 @@
 #include "jit/BaselineIC.h"
 #include "jit/JitCompartment.h"
 #include "jit/JitFrames.h"
-#include "jit/mips/Simulator-mips.h"
+#include "jit/mips32/Simulator-mips32.h"
 #include "vm/ArrayObject.h"
 #include "vm/Debugger.h"
 #include "vm/Interpreter.h"

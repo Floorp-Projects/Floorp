@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jit/mips/MoveEmitter-mips.h"
+#include "jit/mips32/MoveEmitter-mips32.h"
 
 #include "jit/MacroAssembler-inl.h"
 

@@ -7,7 +7,7 @@
 #ifndef jit_mips_CodeGenerator_mips_h
 #define jit_mips_CodeGenerator_mips_h
 
-#include "jit/mips/Assembler-mips.h"
+#include "jit/mips32/Assembler-mips32.h"
 #include "jit/shared/CodeGenerator-shared.h"
 
 namespace js {

@@ -14,7 +14,7 @@
 #elif defined(JS_SIMULATOR_ARM64)
 # include "jit/arm64/vixl/Simulator-vixl.h"
 #elif defined(JS_SIMULATOR_MIPS)
-#include "jit/mips/Simulator-mips.h"
+#include "jit/mips32/Simulator-mips32.h"
 #endif
 
 #ifdef JS_SIMULATOR
