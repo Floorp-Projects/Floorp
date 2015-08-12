@@ -9,6 +9,7 @@
 #include "nsCOMPtr.h"
 #include "nsIGfxInfo.h"
 #include "nsIFile.h"
+#include "nsString.h"
 
 namespace mozilla {
 namespace gfx {
@@ -28,6 +29,13 @@ enum class DriverInitStatus
   Recovered
 };
 
+enum class CrashGuardType : uint32_t
+{
+  D3D11Layers,
+
+  NUM_TYPES
+};
+
 // DriverCrashGuard is used to detect crashes at graphics driver callsites.
 // 
 // If the graphics environment is unrecognized or has changed since the last
@@ -40,7 +48,7 @@ enum class DriverInitStatus
 class DriverCrashGuard
 {
 public:
-  DriverCrashGuard();
+  DriverCrashGuard(CrashGuardType aType);
   ~DriverCrashGuard();
 
   bool Crashed();
@@ -55,8 +63,8 @@ public:
   };
 
 protected:
+  virtual void Initialize();
   virtual bool UpdateEnvironment() = 0;
-  virtual void Initialize() = 0;
   virtual void LogCrashRecovery() = 0;
   virtual void LogFeatureDisabled() = 0;
 
@@ -73,13 +81,17 @@ private:
   void FlushPreferences();
   bool PrepareToGuard();
   bool UpdateBaseEnvironment();
+  DriverInitStatus GetStatus() const;
+  void SetStatus(DriverInitStatus aStatus);
 
 private:
+  CrashGuardType mType;
   bool mInitialized;
-  nsCOMPtr<nsIFile> mLockFile;
+  nsCOMPtr<nsIFile> mGuardFile;
 
 protected:
-  bool mIsChromeProcess;
+  nsCString mStatusPref;
+  nsCString mGuardFilename;
   nsCOMPtr<nsIGfxInfo> mGfxInfo;
 };
 
