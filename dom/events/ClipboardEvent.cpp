@@ -123,14 +123,12 @@ ClipboardEvent::GetClipboardData()
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsresult
-NS_NewDOMClipboardEvent(nsIDOMEvent** aInstancePtrResult,
-                        EventTarget* aOwner,
+already_AddRefed<ClipboardEvent>
+NS_NewDOMClipboardEvent(EventTarget* aOwner,
                         nsPresContext* aPresContext,
                         InternalClipboardEvent* aEvent)
 {
-  ClipboardEvent* it = new ClipboardEvent(aOwner, aPresContext, aEvent);
-  NS_ADDREF(it);
-  *aInstancePtrResult = static_cast<Event*>(it);
-  return NS_OK;
+  nsRefPtr<ClipboardEvent> it =
+    new ClipboardEvent(aOwner, aPresContext, aEvent);
+  return it.forget();
 }

@@ -52,4 +52,9 @@ protected:
 } // namespace dom
 } // namespace mozilla
 
+already_AddRefed<mozilla::dom::TransitionEvent>
+NS_NewDOMTransitionEvent(mozilla::dom::EventTarget* aOwner,
+                         nsPresContext* aPresContext,
+                         mozilla::InternalTransitionEvent* aEvent);
+
 #endif // mozilla_dom_TransitionEvent_h_

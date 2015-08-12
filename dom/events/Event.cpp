@@ -1257,14 +1257,11 @@ Event::GetShadowRelatedTarget(nsIContent* aCurrentTarget,
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsresult
-NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult,
-               EventTarget* aOwner,
+already_AddRefed<Event>
+NS_NewDOMEvent(EventTarget* aOwner,
                nsPresContext* aPresContext,
                WidgetEvent* aEvent) 
 {
-  Event* it = new Event(aOwner, aPresContext, aEvent);
-  NS_ADDREF(it);
-  *aInstancePtrResult = static_cast<Event*>(it);
-  return NS_OK;
+  nsRefPtr<Event> it = new Event(aOwner, aPresContext, aEvent);
+  return it.forget();
 }

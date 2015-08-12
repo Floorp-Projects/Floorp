@@ -1,4 +1,4 @@
 gczeal(7,1);
-setObjectMetadataCallback(setObjectMetadataCallback);
+enableShellObjectMetadataCallback();
 gczeal(false);
 var statusitems = [];

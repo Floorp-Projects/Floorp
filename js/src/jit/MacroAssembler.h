@@ -20,8 +20,8 @@
 # include "jit/arm/MacroAssembler-arm.h"
 #elif defined(JS_CODEGEN_ARM64)
 # include "jit/arm64/MacroAssembler-arm64.h"
-#elif defined(JS_CODEGEN_MIPS)
-# include "jit/mips/MacroAssembler-mips.h"
+#elif defined(JS_CODEGEN_MIPS32)
+# include "jit/mips32/MacroAssembler-mips32.h"
 #elif defined(JS_CODEGEN_NONE)
 # include "jit/none/MacroAssembler-none.h"
 #else
@@ -62,8 +62,8 @@
 // architectures on each method declaration, such as PER_ARCH and
 // PER_SHARED_ARCH.
 
-# define ALL_ARCH mips, arm, arm64, x86, x64
-# define ALL_SHARED_ARCH mips, arm, arm64, x86_shared
+# define ALL_ARCH mips32, arm, arm64, x86, x64
+# define ALL_SHARED_ARCH mips32, arm, arm64, x86_shared
 
 // * How this macro works:
 //
@@ -106,7 +106,7 @@
 # define DEFINED_ON_x86_shared
 # define DEFINED_ON_arm
 # define DEFINED_ON_arm64
-# define DEFINED_ON_mips
+# define DEFINED_ON_mips32
 # define DEFINED_ON_none
 
 // Specialize for each architecture.
@@ -126,9 +126,9 @@
 #elif defined(JS_CODEGEN_ARM64)
 # undef DEFINED_ON_arm64
 # define DEFINED_ON_arm64 define
-#elif defined(JS_CODEGEN_MIPS)
-# undef DEFINED_ON_mips
-# define DEFINED_ON_mips define
+#elif defined(JS_CODEGEN_MIPS32)
+# undef DEFINED_ON_mips32
+# define DEFINED_ON_mips32 define
 #elif defined(JS_CODEGEN_NONE)
 # undef DEFINED_ON_none
 # define DEFINED_ON_none crash

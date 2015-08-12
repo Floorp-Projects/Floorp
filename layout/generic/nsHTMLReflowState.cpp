@@ -1016,11 +1016,10 @@ nsHTMLReflowState::GetHypotheticalBoxContainer(nsIFrame*    aFrame,
     state = nullptr;
   }
 
-  WritingMode wm = aFrame->GetWritingMode();
   if (state) {
-    WritingMode stateWM = state->GetWritingMode();
-    aCBIStartEdge =
-      state->ComputedLogicalBorderPadding().ConvertTo(wm, stateWM).IStart(wm);
+    WritingMode wm = state->GetWritingMode();
+    NS_ASSERTION(wm == aFrame->GetWritingMode(), "unexpected writing mode");
+    aCBIStartEdge = state->ComputedLogicalBorderPadding().IStart(wm);
     aCBSize = state->ComputedSize(wm);
   } else {
     /* Didn't find a reflow state for aFrame.  Just compute the information we
@@ -1028,6 +1027,7 @@ nsHTMLReflowState::GetHypotheticalBoxContainer(nsIFrame*    aFrame,
        ought to be true by now. */
     NS_ASSERTION(!(aFrame->GetStateBits() & NS_FRAME_IN_REFLOW),
                  "aFrame shouldn't be in reflow; we'll lie if it is");
+    WritingMode wm = aFrame->GetWritingMode();
     LogicalMargin borderPadding = aFrame->GetLogicalUsedBorderAndPadding(wm);
     aCBIStartEdge = borderPadding.IStart(wm);
     aCBSize = aFrame->GetLogicalSize(wm) - borderPadding.Size(wm);
@@ -1036,27 +1036,12 @@ nsHTMLReflowState::GetHypotheticalBoxContainer(nsIFrame*    aFrame,
   return aFrame;
 }
 
-// When determining the hypothetical box that would have been if the element
-// had been in the flow we may not be able to exactly determine both the IStart
-// and IEnd edges. For example, if the element is a non-replaced inline-level
-// element we would have to reflow it in order to determine its desired ISize.
-// In that case depending on the progression direction either the IStart or
-// IEnd edge would be marked as not being exact.
-struct nsHypotheticalBox {
-  // offsets from inline-start edge of containing block (which is a padding edge)
-  nscoord       mIStart, mIEnd;
+struct nsHypotheticalPosition {
+  // offset from inline-start edge of containing block (which is a padding edge)
+  nscoord       mIStart;
   // offset from block-start edge of containing block (which is a padding edge)
   nscoord       mBStart;
   WritingMode   mWritingMode;
-#ifdef DEBUG
-  bool          mIStartIsExact, mIEndIsExact;
-#endif
-
-  nsHypotheticalBox() {
-#ifdef DEBUG
-    mIStartIsExact = mIEndIsExact = false;
-#endif
-  }
 };
 
 static bool
@@ -1186,20 +1171,22 @@ static bool AreAllEarlierInFlowFramesEmpty(nsIFrame* aFrame,
   return true;
 }
 
-// Calculate the hypothetical box that the element would have if it were in
-// the flow. The values returned are relative to the padding edge of the
-// absolute containing block. The writing-mode of the hypothetical box will
+// Calculate the position of the hypothetical box that the element would have
+// if it were in the flow.
+// The values returned are relative to the padding edge of the absolute
+// containing block. The writing-mode of the hypothetical box position will
 // have the same block direction as the absolute containing block, but may
 // differ in inline-bidi direction.
 // In the code below, |cbrs->frame| is the absolute containing block, while
 // |containingBlock| is the nearest block container of the placeholder frame,
 // which may be different from the absolute containing block.
 void
-nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
-                                            nsIFrame*         aPlaceholderFrame,
-                                            const nsHTMLReflowState* cbrs,
-                                            nsHypotheticalBox& aHypotheticalBox,
-                                            nsIAtom*          aFrameType)
+nsHTMLReflowState::CalculateHypotheticalPosition
+                     (nsPresContext*           aPresContext,
+                      nsIFrame*                aPlaceholderFrame,
+                      const nsHTMLReflowState* cbrs,
+                      nsHypotheticalPosition&  aHypotheticalPos,
+                      nsIAtom*                 aFrameType)
 {
   NS_ASSERTION(mStyleDisplay->mOriginalDisplay != NS_STYLE_DISPLAY_NONE,
                "mOriginalDisplay has not been properly initialized");
@@ -1306,7 +1293,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
     if (!isValid) {
       // Give up.  We're probably dealing with somebody using
       // position:absolute inside native-anonymous content anyway.
-      aHypotheticalBox.mBStart = placeholderOffset.B(wm);
+      aHypotheticalPos.mBStart = placeholderOffset.B(wm);
     } else {
       NS_ASSERTION(iter.GetContainer() == blockFrame,
                    "Found placeholder in wrong block!");
@@ -1320,7 +1307,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
       if (mStyleDisplay->IsOriginalDisplayInlineOutsideStyle()) {
         // Use the block-start of the inline box which the placeholder lives in
         // as the hypothetical box's block-start.
-        aHypotheticalBox.mBStart = lineBounds.BStart(wm) + blockOffset.B(wm);
+        aHypotheticalPos.mBStart = lineBounds.BStart(wm) + blockOffset.B(wm);
       } else {
         // The element would have been block-level which means it would
         // be below the line containing the placeholder frame, unless
@@ -1345,15 +1332,17 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
             // The top of the hypothetical box is the top of the line
             // containing the placeholder, since there is nothing in the
             // line before our placeholder except empty frames.
-            aHypotheticalBox.mBStart = lineBounds.BStart(wm) + blockOffset.B(wm);
+            aHypotheticalPos.mBStart =
+              lineBounds.BStart(wm) + blockOffset.B(wm);
           } else {
             // The top of the hypothetical box is just below the line
             // containing the placeholder.
-            aHypotheticalBox.mBStart = lineBounds.BEnd(wm) + blockOffset.B(wm);
+            aHypotheticalPos.mBStart =
+              lineBounds.BEnd(wm) + blockOffset.B(wm);
           }
         } else {
           // Just use the placeholder's block-offset wrt the containing block
-          aHypotheticalBox.mBStart = placeholderOffset.B(wm);
+          aHypotheticalPos.mBStart = placeholderOffset.B(wm);
         }
       }
     }
@@ -1361,36 +1350,17 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
     // The containing block is not a block, so it's probably something
     // like a XUL box, etc.
     // Just use the placeholder's block-offset
-    aHypotheticalBox.mBStart = placeholderOffset.B(wm);
+    aHypotheticalPos.mBStart = placeholderOffset.B(wm);
   }
 
-  // Second, determine the hypothetical box's mIStart & mIEnd.
+  // Second, determine the hypothetical box's mIStart.
   // How we determine the hypothetical box depends on whether the element
   // would have been inline-level or block-level
   if (mStyleDisplay->IsOriginalDisplayInlineOutsideStyle()) {
     // The placeholder represents the left edge of the hypothetical box
-    aHypotheticalBox.mIStart = placeholderOffset.I(wm);
+    aHypotheticalPos.mIStart = placeholderOffset.I(wm);
   } else {
-    aHypotheticalBox.mIStart = blockIStartContentEdge;
-  }
-#ifdef DEBUG
-  aHypotheticalBox.mIStartIsExact = true;
-#endif
-
-  if (knowBoxISize) {
-    aHypotheticalBox.mIEnd = aHypotheticalBox.mIStart + boxISize;
-#ifdef DEBUG
-    aHypotheticalBox.mIEndIsExact = true;
-#endif
-  } else {
-    // We can't compute the inline-end edge because we don't know the desired
-    // inline-size. So instead use the end content edge of the block parent,
-    // but remember it's not exact
-    aHypotheticalBox.mIEnd =
-      blockIStartContentEdge + blockContentSize.ISize(wm);
-#ifdef DEBUG
-    aHypotheticalBox.mIEndIsExact = false;
-#endif
+    aHypotheticalPos.mIStart = blockIStartContentEdge;
   }
 
   // The current coordinate space is that of the nearest block to the placeholder.
@@ -1432,9 +1402,8 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
   }
   nsSize cbrsSize = cbrs->ComputedSizeAsContainerIfConstrained();
   LogicalPoint logCBOffs(wm, cbOffset, cbrsSize - containerSize);
-  aHypotheticalBox.mIStart += logCBOffs.I(wm);
-  aHypotheticalBox.mIEnd += logCBOffs.I(wm);
-  aHypotheticalBox.mBStart += logCBOffs.B(wm);
+  aHypotheticalPos.mIStart += logCBOffs.I(wm);
+  aHypotheticalPos.mBStart += logCBOffs.B(wm);
 
   // The specified offsets are relative to the absolute containing block's
   // padding edge and our current values are relative to the border edge, so
@@ -1442,20 +1411,19 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
   LogicalMargin border =
     cbrs->ComputedLogicalBorderPadding() - cbrs->ComputedLogicalPadding();
   border = border.ConvertTo(wm, cbrs->GetWritingMode());
-  aHypotheticalBox.mIStart -= border.IStart(wm);
-  aHypotheticalBox.mIEnd -= border.IStart(wm);
-  aHypotheticalBox.mBStart -= border.BStart(wm);
+  aHypotheticalPos.mIStart -= border.IStart(wm);
+  aHypotheticalPos.mBStart -= border.BStart(wm);
 
-  // At this point, we have computed aHypotheticalBox using the writing mode
+  // At this point, we have computed aHypotheticalPos using the writing mode
   // of the placeholder's containing block.
 
   if (cbwm.GetBlockDir() != wm.GetBlockDir()) {
-    // If the block direction we used in calculating aHypotheticalBox does not
+    // If the block direction we used in calculating aHypotheticalPos does not
     // match the absolute containing block's, we need to convert here so that
-    // aHypotheticalBox is usable in relation to the absolute containing block.
+    // aHypotheticalPos is usable in relation to the absolute containing block.
     // This requires computing or measuring the abspos frame's block-size,
-    // which is not otherwise required/used here (as aHypotheticalBox records
-    // only the block-start coordinate).
+    // which is not otherwise required/used here (as aHypotheticalPos
+    // records only the block-start coordinate).
 
     // This is similar to the inline-size calculation for a replaced
     // inline-level element or a block-level element (above), except that
@@ -1497,21 +1465,16 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
 
     LogicalSize boxSize(wm, knowBoxISize ? boxISize : 0, boxBSize);
 
-    LogicalPoint origin(wm, aHypotheticalBox.mIStart,
-                        aHypotheticalBox.mBStart);
+    LogicalPoint origin(wm, aHypotheticalPos.mIStart,
+                        aHypotheticalPos.mBStart);
     origin = origin.ConvertTo(cbwm, wm, cbrsSize -
                               boxSize.GetPhysicalSize(wm));
 
-    aHypotheticalBox.mIStart = origin.I(cbwm);
-    aHypotheticalBox.mIEnd = aHypotheticalBox.mIStart +
-                             boxSize.ConvertTo(cbwm, wm).ISize(cbwm);
-#ifdef DEBUG
-    aHypotheticalBox.mIEndIsExact = false; // it may be fake
-#endif
-    aHypotheticalBox.mBStart = origin.B(cbwm);
-    aHypotheticalBox.mWritingMode = cbwm;
+    aHypotheticalPos.mIStart = origin.I(cbwm);
+    aHypotheticalPos.mBStart = origin.B(cbwm);
+    aHypotheticalPos.mWritingMode = cbwm;
   } else {
-    aHypotheticalBox.mWritingMode = wm;
+    aHypotheticalPos.mWritingMode = wm;
   }
 }
 
@@ -1538,15 +1501,15 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
   NS_ASSERTION(nullptr != placeholderFrame, "no placeholder frame");
 
   // If both 'left' and 'right' are 'auto' or both 'top' and 'bottom' are
-  // 'auto', then compute the hypothetical box of where the element would
+  // 'auto', then compute the hypothetical box position where the element would
   // have been if it had been in the flow
-  nsHypotheticalBox hypotheticalBox;
+  nsHypotheticalPosition hypotheticalPos;
   if (((eStyleUnit_Auto == mStylePosition->mOffset.GetLeftUnit()) &&
        (eStyleUnit_Auto == mStylePosition->mOffset.GetRightUnit())) ||
       ((eStyleUnit_Auto == mStylePosition->mOffset.GetTopUnit()) &&
        (eStyleUnit_Auto == mStylePosition->mOffset.GetBottomUnit()))) {
-    CalculateHypotheticalBox(aPresContext, placeholderFrame, cbrs,
-                             hypotheticalBox, aFrameType);
+    CalculateHypotheticalPosition(aPresContext, placeholderFrame, cbrs,
+                                  hypotheticalPos, aFrameType);
   }
 
   // Initialize the 'left' and 'right' computed offsets
@@ -1578,13 +1541,11 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
   }
 
   if (iStartIsAuto && iEndIsAuto) {
-    NS_ASSERTION(hypotheticalBox.mIStartIsExact, "should always have "
-                 "exact value on containing block's start side");
-    if (cbwm.IsBidiLTR() != hypotheticalBox.mWritingMode.IsBidiLTR()) {
-      offsets.IEnd(cbwm) = hypotheticalBox.mIStart;
+    if (cbwm.IsBidiLTR() != hypotheticalPos.mWritingMode.IsBidiLTR()) {
+      offsets.IEnd(cbwm) = hypotheticalPos.mIStart;
       iEndIsAuto = false;
     } else {
-      offsets.IStart(cbwm) = hypotheticalBox.mIStart;
+      offsets.IStart(cbwm) = hypotheticalPos.mIStart;
       iStartIsAuto = false;
     }
   }
@@ -1608,7 +1569,7 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
 
   if (bStartIsAuto && bEndIsAuto) {
     // Treat 'top' like 'static-position'
-    offsets.BStart(cbwm) = hypotheticalBox.mBStart;
+    offsets.BStart(cbwm) = hypotheticalPos.mBStart;
     bStartIsAuto = false;
   }
 

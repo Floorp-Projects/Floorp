@@ -194,4 +194,9 @@ protected:
     return UIEvent::Deserialize(aMsg, aIter);               \
   }
 
+already_AddRefed<mozilla::dom::UIEvent>
+NS_NewDOMUIEvent(mozilla::dom::EventTarget* aOwner,
+                 nsPresContext* aPresContext,
+                 mozilla::WidgetGUIEvent* aEvent);
+
 #endif // mozilla_dom_UIEvent_h_

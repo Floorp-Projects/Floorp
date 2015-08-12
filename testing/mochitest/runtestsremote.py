@@ -283,6 +283,8 @@ def run_test_harness(options):
     if options is None:
         raise ValueError("Invalid options specified, use --help for a list of valid options")
 
+    options.runByDir = False
+
     dm = options.dm
     auto.setDeviceManager(dm)
     mochitest = MochiRemote(auto, dm, options)

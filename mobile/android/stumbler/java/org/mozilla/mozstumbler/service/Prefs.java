@@ -33,7 +33,7 @@ public  final class Prefs {
     static private Prefs sInstance;
 
     private Prefs(Context context) {
-        mSharedPrefs = context.getSharedPreferences(PREFS_FILE, Context.MODE_MULTI_PROCESS | Context.MODE_PRIVATE);
+        mSharedPrefs = context.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE);
         if (getPrefs().getInt(VALUES_VERSION_PREF, -1) != AppGlobals.appVersionCode) {
             Log.i(LOG_TAG, "Version of the application has changed. Updating default values.");
             // Remove old keys

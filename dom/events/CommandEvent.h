@@ -51,4 +51,9 @@ protected:
 } // namespace dom
 } // namespace mozilla
 
+already_AddRefed<mozilla::dom::CommandEvent>
+NS_NewDOMCommandEvent(mozilla::dom::EventTarget* aOwner,
+                      nsPresContext* aPresContext,
+                      mozilla::WidgetCommandEvent* aEvent);
+
 #endif // mozilla_dom_CommandEvent_h_

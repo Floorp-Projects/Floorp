@@ -71,4 +71,9 @@ protected:
 } // namespace dom
 } // namespace mozilla
 
+already_AddRefed<mozilla::dom::XULCommandEvent>
+NS_NewDOMXULCommandEvent(mozilla::dom::EventTarget* aOwner,
+                         nsPresContext* aPresContext,
+                         mozilla::WidgetInputEvent* aEvent);
+
 #endif // mozilla_dom_XULCommandEvent_h_
