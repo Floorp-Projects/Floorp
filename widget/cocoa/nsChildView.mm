@@ -373,6 +373,21 @@ protected:
 
 } // unnamed namespace
 
+namespace mozilla {
+
+struct SwipeEventQueue {
+  SwipeEventQueue(uint32_t aAllowedDirections, uint64_t aInputBlockId)
+    : allowedDirections(aAllowedDirections)
+    , inputBlockId(aInputBlockId)
+  {}
+
+  nsTArray<PanGestureInput> queuedEvents;
+  uint32_t allowedDirections;
+  uint64_t inputBlockId;
+};
+
+} // namespace mozilla
+
 #pragma mark -
 
 nsChildView::nsChildView() : nsBaseWidget()
@@ -2744,6 +2759,14 @@ nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTriggerSwipe
         if (aCanTriggerSwipe) {
           SwipeInfo swipeInfo = SendMayStartSwipe(panInput);
           event.mCanTriggerSwipe = swipeInfo.wantsSwipe;
+          if (swipeInfo.wantsSwipe) {
+            mSwipeEventQueue = MakeUnique<SwipeEventQueue>(swipeInfo.allowedDirections,
+                                                           inputBlockId);
+          }
+        }
+
+        if (mSwipeEventQueue && mSwipeEventQueue->inputBlockId == inputBlockId) {
+          mSwipeEventQueue->queuedEvents.AppendElement(panInput);
         }
         break;
       }
