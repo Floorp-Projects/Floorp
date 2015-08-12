@@ -762,8 +762,8 @@ void
 MediaFormatReader::NotifyNewOutput(TrackType aTrack, MediaData* aSample)
 {
   MOZ_ASSERT(OnTaskQueue());
-  LOGV("Received new sample time:%lld duration:%lld",
-       aSample->mTime, aSample->mDuration);
+  LOGV("Received new %s sample time:%lld duration:%lld",
+       TrackTypeToStr(aTrack), aSample->mTime, aSample->mDuration);
   auto& decoder = GetDecoderData(aTrack);
   if (!decoder.mOutputRequested) {
     LOG("MediaFormatReader produced output while flushing, discarding.");
@@ -815,7 +815,6 @@ MediaFormatReader::NotifyWaitingForData(TrackType aTrack)
   MOZ_ASSERT(OnTaskQueue());
   auto& decoder = GetDecoderData(aTrack);
   decoder.mWaitingForData = true;
-  decoder.mNeedDraining = true;
   ScheduleUpdate(aTrack);
 }
 
@@ -979,7 +978,7 @@ MediaFormatReader::DecodeDemuxedSamples(TrackType aTrack,
             info->GetID());
         decoder.mNeedDraining = true;
         decoder.mNextStreamSourceID = Some(info->GetID());
-        DrainDecoder(aTrack);
+        ScheduleUpdate(aTrack);
         return;
       }
 
@@ -1094,6 +1093,12 @@ MediaFormatReader::Update(TrackType aTrack)
     return;
   }
 
+  if (!decoder.HasPromise() && decoder.mWaitingForData) {
+    // Nothing more we can do at present.
+    LOGV("Still waiting for data.");
+    return;
+  }
+
   // Record number of frames decoded and parsed. Automatically update the
   // stats counters using the AutoNotifyDecoded stack-based class.
   AbstractMediaDecoder::AutoNotifyDecoded a(mDecoder);
@@ -1138,17 +1143,18 @@ MediaFormatReader::Update(TrackType aTrack)
         return;
       } else if (decoder.mDemuxEOS) {
         decoder.RejectPromise(END_OF_STREAM, __func__);
-      } else if (decoder.mWaitingForData) {
-        LOG("Waiting For Data");
-        decoder.RejectPromise(WAITING_FOR_DATA, __func__);
       }
     } else if (decoder.mError && !decoder.mDecoder) {
       decoder.RejectPromise(DECODE_ERROR, __func__);
       return;
+    } else if (decoder.mWaitingForData) {
+      LOG("Waiting For Data");
+      decoder.RejectPromise(WAITING_FOR_DATA, __func__);
+      return;
     }
   }
 
-  if (decoder.mError || decoder.mDemuxEOS || decoder.mWaitingForData) {
+  if (decoder.mNeedDraining) {
     DrainDecoder(aTrack);
     return;
   }
