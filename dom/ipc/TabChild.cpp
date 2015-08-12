@@ -1880,7 +1880,7 @@ TabChild::RecvMouseWheelEvent(const WidgetWheelEvent& aEvent,
   event.widget = mPuppetWidget;
   APZCCallbackHelper::DispatchWidgetEvent(event);
 
-  if (AsyncPanZoomEnabled()) {
+  if (aEvent.mFlags.mHandledByAPZ) {
     mAPZEventState->ProcessWheelEvent(event, aGuid, aInputBlockId);
   }
   return true;
