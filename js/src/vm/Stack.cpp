@@ -594,7 +594,7 @@ FrameIter::Data::Data(JSContext* cx, SavedOption savedOption,
 }
 
 FrameIter::Data::Data(const FrameIter::Data& other)
-  : cx_(other.cx_),
+  : cx_(nullptr),
     savedOption_(other.savedOption_),
     contextOption_(other.contextOption_),
     debuggerEvalOption_(other.debuggerEvalOption_),
@@ -644,11 +644,12 @@ FrameIter::FrameIter(const FrameIter& other)
 {
 }
 
-FrameIter::FrameIter(const Data& data)
+FrameIter::FrameIter(JSContext* cx, const Data& data)
   : data_(data),
-    ionInlineFrames_(data.cx_, data_.jitFrames_.isIonScripted() ? &data_.jitFrames_ : nullptr)
+    ionInlineFrames_(cx, data_.jitFrames_.isIonScripted() ? &data_.jitFrames_ : nullptr)
 {
-    MOZ_ASSERT(data.cx_);
+    MOZ_ASSERT(!data.cx_);
+    data_.cx_ = cx;
 
     if (data_.jitFrames_.isIonScripted()) {
         while (ionInlineFrames_.frameNo() != data.ionInlineFrameNo_)

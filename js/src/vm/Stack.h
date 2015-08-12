@@ -1851,7 +1851,7 @@ class FrameIter
               DebuggerEvalOption = FOLLOW_DEBUGGER_EVAL_PREV_LINK);
     FrameIter(JSContext* cx, ContextOption, SavedOption, DebuggerEvalOption, JSPrincipals*);
     FrameIter(const FrameIter& iter);
-    MOZ_IMPLICIT FrameIter(const Data& data);
+    FrameIter(JSContext* cx, const Data& data);
     MOZ_IMPLICIT FrameIter(AbstractFramePtr frame);
 
     bool done() const { return data_.state_ == DONE; }
@@ -1963,6 +1963,11 @@ class FrameIter
     // -----------------------------------------------------------
 
     AbstractFramePtr abstractFramePtr() const;
+
+    // N.B. Copying the internal data nulls out the saved cx_, as the
+    // JSContext's lifetime is not tied to the Data lifetime. When
+    // re-instantiating a new FrameIter with a saved data, a new cx must be
+    // provided.
     AbstractFramePtr copyDataAsAbstractFramePtr() const;
     Data* copyData() const;
 
@@ -2018,7 +2023,7 @@ class ScriptFrameIter : public FrameIter
     }
 
     ScriptFrameIter(const ScriptFrameIter& iter) : FrameIter(iter) { settle(); }
-    explicit ScriptFrameIter(const FrameIter::Data& data) : FrameIter(data) { settle(); }
+    ScriptFrameIter(JSContext* cx, const FrameIter::Data& data) : FrameIter(cx, data) { settle(); }
     explicit ScriptFrameIter(AbstractFramePtr frame) : FrameIter(frame) { settle(); }
 
     ScriptFrameIter& operator++() {
@@ -2078,8 +2083,8 @@ class NonBuiltinFrameIter : public FrameIter
         settle();
     }
 
-    explicit NonBuiltinFrameIter(const FrameIter::Data& data)
-      : FrameIter(data)
+    explicit NonBuiltinFrameIter(JSContext* cx, const FrameIter::Data& data)
+      : FrameIter(cx, data)
     {}
 
     NonBuiltinFrameIter& operator++() {
@@ -2123,8 +2128,8 @@ class NonBuiltinScriptFrameIter : public ScriptFrameIter
         settle();
     }
 
-    explicit NonBuiltinScriptFrameIter(const ScriptFrameIter::Data& data)
-      : ScriptFrameIter(data)
+    explicit NonBuiltinScriptFrameIter(JSContext* cx, const ScriptFrameIter::Data& data)
+      : ScriptFrameIter(cx, data)
     {}
 
     NonBuiltinScriptFrameIter& operator++() {
