@@ -149,4 +149,9 @@ protected:
 } // namespace dom
 } // namespace mozilla
 
+already_AddRefed<mozilla::dom::DeviceMotionEvent>
+NS_NewDOMDeviceMotionEvent(mozilla::dom::EventTarget* aOwner,
+                           nsPresContext* aPresContext,
+                           mozilla::WidgetEvent* aEvent);
+
 #endif // mozilla_dom_DeviceMotionEvent_h_

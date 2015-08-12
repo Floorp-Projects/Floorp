@@ -517,7 +517,7 @@ def run_desktop_mochitests(options):
         raise Exception("must specify --profile when specifying --desktop")
 
     options.browserArgs += ['-marionette']
-
+    options.runByDir = False
     retVal = mochitest.runTests(options, onLaunch=mochitest.startTests)
     mochitest.message_logger.finish()
 

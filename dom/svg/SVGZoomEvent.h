@@ -71,4 +71,9 @@ private:
 } // namespace dom
 } // namespace mozilla
 
+already_AddRefed<mozilla::dom::SVGZoomEvent>
+NS_NewDOMSVGZoomEvent(mozilla::dom::EventTarget* aOwner,
+                      nsPresContext* aPresContext,
+                      mozilla::InternalSVGZoomEvent* aEvent);
+
 #endif // mozilla_dom_SVGZoomEvent_h

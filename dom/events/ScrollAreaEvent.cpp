@@ -100,12 +100,12 @@ ScrollAreaEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsresult
-NS_NewDOMScrollAreaEvent(nsIDOMEvent** aInstancePtrResult,
-                         EventTarget* aOwner,
+already_AddRefed<ScrollAreaEvent>
+NS_NewDOMScrollAreaEvent(EventTarget* aOwner,
                          nsPresContext* aPresContext,
                          InternalScrollAreaEvent* aEvent)
 {
-  ScrollAreaEvent* ev = new ScrollAreaEvent(aOwner, aPresContext, aEvent);
-  return CallQueryInterface(ev, aInstancePtrResult);
+  nsRefPtr<ScrollAreaEvent> ev =
+    new ScrollAreaEvent(aOwner, aPresContext, aEvent);
+  return ev.forget();
 }

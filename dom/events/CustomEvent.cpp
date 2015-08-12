@@ -111,14 +111,12 @@ CustomEvent::GetDetail(JSContext* aCx,
   VariantToJsval(aCx, mDetail, aRetval);
 }
 
-nsresult
-NS_NewDOMCustomEvent(nsIDOMEvent** aInstancePtrResult,
-                     mozilla::dom::EventTarget* aOwner,
+already_AddRefed<CustomEvent>
+NS_NewDOMCustomEvent(EventTarget* aOwner,
                      nsPresContext* aPresContext,
                      mozilla::WidgetEvent* aEvent)
 {
-  CustomEvent* it = new CustomEvent(aOwner, aPresContext, aEvent);
-  NS_ADDREF(it);
-  *aInstancePtrResult = static_cast<Event*>(it);
-  return NS_OK;
+  nsRefPtr<CustomEvent> it =
+    new CustomEvent(aOwner, aPresContext, aEvent);
+  return it.forget();
 }

@@ -57,4 +57,9 @@ private:
 } // namespace dom
 } // namespace mozilla
 
+already_AddRefed<mozilla::dom::DataContainerEvent>
+NS_NewDOMDataContainerEvent(mozilla::dom::EventTarget* aOwner,
+                            nsPresContext* aPresContext,
+                            mozilla::WidgetEvent* aEvent);
+
 #endif // mozilla_dom_DataContainerEvent_h_

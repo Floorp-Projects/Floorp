@@ -54,4 +54,9 @@ protected:
 } // namespace dom
 } // namespace mozilla
 
+already_AddRefed<mozilla::dom::CompositionEvent>
+NS_NewDOMCompositionEvent(mozilla::dom::EventTarget* aOwner,
+                          nsPresContext* aPresContext,
+                          mozilla::WidgetCompositionEvent* aEvent);
+
 #endif // mozilla_dom_CompositionEvent_h_

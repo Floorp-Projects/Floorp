@@ -19,7 +19,7 @@ class nsRenderingContext;
 class nsFloatManager;
 class nsLineLayout;
 class nsIPercentBSizeObserver;
-struct nsHypotheticalBox;
+struct nsHypotheticalPosition;
 
 /**
  * @return aValue clamped to [aMinValue, aMaxValue].
@@ -918,14 +918,14 @@ protected:
 
   // Calculate a "hypothetical box" position where the placeholder frame
   // (for a position:fixed/absolute element) would have been placed if it were
-  // positioned statically. The hypothetical box will have a writing mode with
-  // the same block direction as the absolute containing block (cbrs->frame),
-  // though it may differ in inline-bidi direction.
-  void CalculateHypotheticalBox(nsPresContext*    aPresContext,
-                                nsIFrame*         aPlaceholderFrame,
-                                const nsHTMLReflowState* cbrs,
-                                nsHypotheticalBox& aHypotheticalBox,
-                                nsIAtom*          aFrameType);
+  // positioned statically. The hypothetical box position will have a writing
+  // mode with the same block direction as the absolute containing block
+  // (cbrs->frame), though it may differ in inline direction.
+  void CalculateHypotheticalPosition(nsPresContext* aPresContext,
+                                     nsIFrame* aPlaceholderFrame,
+                                     const nsHTMLReflowState* cbrs,
+                                     nsHypotheticalPosition& aHypotheticalPos,
+                                     nsIAtom* aFrameType);
 
   void InitAbsoluteConstraints(nsPresContext* aPresContext,
                                const nsHTMLReflowState* cbrs,

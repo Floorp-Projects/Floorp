@@ -4,8 +4,6 @@ load(libdir + "asserts.js");
 
 let dbg1, dbg2, root1, root2;
 
-function FakeMetadata() {}
-
 function isTrackingAllocations(global, dbgObj) {
   const site = dbgObj.makeDebuggeeValue(global.eval("({})")).allocationSite;
   if (site) {
@@ -65,7 +63,7 @@ test("Setting trackingAllocationSites to true should throw if the debugger " +
        let d1r2 = dbg1.addDebuggee(root2);
 
        // Can't install allocation hooks for root2 with this set.
-       root2.setObjectMetadataCallback(function () { return new FakeMetadata; });
+       root2.enableShellObjectMetadataCallback();
 
        assertThrowsInstanceOf(() => dbg1.memory.trackingAllocationSites = true,
                               Error);
@@ -96,7 +94,7 @@ test("Re-enabling throws an error if we can't reinstall allocations tracking " +
        let d1r2 = dbg1.addDebuggee(root2);
 
        // Can't install allocation hooks for root2 with this set.
-       root2.setObjectMetadataCallback(function () { return new FakeMetadata; });
+       root2.enableShellObjectMetadataCallback();
 
        assertThrowsInstanceOf(() => dbg1.enabled = true,
                               Error);

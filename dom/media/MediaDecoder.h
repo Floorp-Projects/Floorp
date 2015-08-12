@@ -582,7 +582,7 @@ public:
   // Send a new set of metadata to the state machine, to be dispatched to the
   // main thread to be presented when the |currentTime| of the media is greater
   // or equal to aPublishTime.
-  void QueueMetadata(int64_t aPublishTime,
+  void QueueMetadata(const media::TimeUnit& aPublishTime,
                      nsAutoPtr<MediaInfo> aInfo,
                      nsAutoPtr<MetadataTags> aTags) override;
 
