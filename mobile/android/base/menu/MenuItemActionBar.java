@@ -52,8 +52,9 @@ public class MenuItemActionBar extends ThemedImageButton
             setVisibility(GONE);
         } else {
             setVisibility(VISIBLE);
-            DrawableUtil.tintDrawableWithStateList(icon, drawableColors);
-            setImageDrawable(icon);
+            final Drawable tintedIcon =
+                    DrawableUtil.tintDrawableWithStateList(icon, drawableColors);
+            setImageDrawable(tintedIcon);
         }
     }
 
