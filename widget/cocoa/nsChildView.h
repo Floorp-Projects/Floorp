@@ -45,6 +45,7 @@ namespace mozilla {
 class InputData;
 class PanGestureInput;
 class SwipeTracker;
+struct SwipeEventQueue;
 class VibrancyManager;
 namespace layers {
 class GLManager;
@@ -672,6 +673,7 @@ protected:
 
   mozilla::UniquePtr<mozilla::VibrancyManager> mVibrancyManager;
   nsRefPtr<mozilla::SwipeTracker> mSwipeTracker;
+  mozilla::UniquePtr<mozilla::SwipeEventQueue> mSwipeEventQueue;
 
   static uint32_t sLastInputEventCount;
 
