@@ -307,162 +307,162 @@ config = {
         },
         "reftest-17": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=17",
+            "extra_args": ["--total-chunks=48", "--this-chunk=17",
             "tests/layout/reftests/reftest.list"]
         },
        "reftest-18": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=18",
+            "extra_args": ["--total-chunks=48", "--this-chunk=18",
             "tests/layout/reftests/reftest.list"]
         },
         "reftest-19": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=19",
+            "extra_args": ["--total-chunks=48", "--this-chunk=19",
             "tests/layout/reftests/reftest.list"]
         },
         "reftest-20": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=20",
+            "extra_args": ["--total-chunks=48", "--this-chunk=20",
             "tests/layout/reftests/reftest.list"]
         },
         "reftest-21": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=21",
+            "extra_args": ["--total-chunks=48", "--this-chunk=21",
             "tests/layout/reftests/reftest.list"]
         },
         "reftest-22": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=22",
+            "extra_args": ["--total-chunks=48", "--this-chunk=22",
             "tests/layout/reftests/reftest.list"]
         },
         "reftest-23": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=23",
+            "extra_args": ["--total-chunks=48", "--this-chunk=23",
             "tests/layout/reftests/reftest.list"]
         },
         "reftest-24": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=24",
+            "extra_args": ["--total-chunks=48", "--this-chunk=24",
             "tests/layout/reftests/reftest.list"]
         },
         "reftest-25": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=25",
+            "extra_args": ["--total-chunks=48", "--this-chunk=25",
             "tests/layout/reftests/reftest.list"]
         },
         "reftest-26": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=26",
+            "extra_args": ["--total-chunks=48", "--this-chunk=26",
             "tests/layout/reftests/reftest.list"]
         },
         "reftest-27": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=27",
+            "extra_args": ["--total-chunks=48", "--this-chunk=27",
             "tests/layout/reftests/reftest.list"]
         },
         "reftest-28": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=28",
+            "extra_args": ["--total-chunks=48", "--this-chunk=28",
             "tests/layout/reftests/reftest.list"]
         },
         "reftest-29": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=29",
+            "extra_args": ["--total-chunks=48", "--this-chunk=29",
             "tests/layout/reftests/reftest.list"]
         },
         "reftest-30": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=30",
+            "extra_args": ["--total-chunks=48", "--this-chunk=30",
             "tests/layout/reftests/reftest.list"]
         },
         "reftest-31": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=31",
+            "extra_args": ["--total-chunks=48", "--this-chunk=31",
             "tests/layout/reftests/reftest.list"]
         },
         "reftest-32": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=32",
+            "extra_args": ["--total-chunks=48", "--this-chunk=32",
             "tests/layout/reftests/reftest.list"]
         },
         "reftest-33": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=33",
+            "extra_args": ["--total-chunks=48", "--this-chunk=33",
             "tests/layout/reftests/reftest.list"]
         },
         "reftest-34": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=34",
+            "extra_args": ["--total-chunks=48", "--this-chunk=34",
             "tests/layout/reftests/reftest.list"]
         },
         "reftest-35": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=35",
+            "extra_args": ["--total-chunks=48", "--this-chunk=35",
             "tests/layout/reftests/reftest.list"]
         },
         "reftest-36": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=36",
+            "extra_args": ["--total-chunks=48", "--this-chunk=36",
             "tests/layout/reftests/reftest.list"]
         },
         "reftest-37": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=37",
+            "extra_args": ["--total-chunks=48", "--this-chunk=37",
             "tests/layout/reftests/reftest.list"]
         },
         "reftest-38": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=38",
+            "extra_args": ["--total-chunks=48", "--this-chunk=38",
             "tests/layout/reftests/reftest.list"]
         },
         "reftest-39": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=39",
+            "extra_args": ["--total-chunks=48", "--this-chunk=39",
             "tests/layout/reftests/reftest.list"]
         },
         "reftest-40": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=40",
+            "extra_args": ["--total-chunks=48", "--this-chunk=40",
             "tests/layout/reftests/reftest.list"]
         },
         "reftest-41": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=41",
+            "extra_args": ["--total-chunks=48", "--this-chunk=41",
             "tests/layout/reftests/reftest.list"]
         },
         "reftest-42": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=42",
+            "extra_args": ["--total-chunks=48", "--this-chunk=42",
             "tests/layout/reftests/reftest.list"]
         },
         "reftest-43": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=43",
+            "extra_args": ["--total-chunks=48", "--this-chunk=43",
             "tests/layout/reftests/reftest.list"]
         },
         "reftest-44": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=44",
+            "extra_args": ["--total-chunks=48", "--this-chunk=44",
             "tests/layout/reftests/reftest.list"]
         },
         "reftest-45": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=45",
+            "extra_args": ["--total-chunks=48", "--this-chunk=45",
             "tests/layout/reftests/reftest.list"]
         },
         "reftest-46": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=46",
+            "extra_args": ["--total-chunks=48", "--this-chunk=46",
             "tests/layout/reftests/reftest.list"]
         },
         "reftest-47": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=47",
+            "extra_args": ["--total-chunks=48", "--this-chunk=47",
             "tests/layout/reftests/reftest.list"]
         },
         "reftest-48": {
             "category": "reftest",
-            "extra args": ["--total-chunks=48", "--this-chunk=48",
+            "extra_args": ["--total-chunks=48", "--this-chunk=48",
             "tests/layout/reftests/reftest.list"]
         },
         "crashtest-1": {
