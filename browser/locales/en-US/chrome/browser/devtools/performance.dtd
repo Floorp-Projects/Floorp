@@ -88,16 +88,12 @@
 <!ENTITY performanceUI.table.selfAlloc                "Self Sampled Allocations">
 <!ENTITY performanceUI.table.selfAlloc.tooltip        "The number of Object allocations sampled at this location.">
 
-<!-- LOCALIZATION NOTE (performanceUI.newtab.tooltiptext): The tooltiptext shown
-  -  on the "+" (new tab) button for a profile when a selection is available. -->
-<!ENTITY performanceUI.newtab.tooltiptext "Add new tab from selection">
-
-<!-- LOCALIZATION NOTE (performanceUI.toolbar.filter.tooltiptext): This string
+<!-- LOCALIZATION NOTE (performanceUI.options.filter.tooltiptext): This string
   -  is displayed next to the filter button-->
 <!ENTITY performanceUI.options.filter.tooltiptext "Select what data to display in the timeline">
 
-<!-- LOCALIZATION NOTE (performanceUI.options.tooltiptext): This is the tooltip
-  -  for the options button. -->
+<!-- LOCALIZATION NOTE (performanceUI.options.gear.tooltiptext): This is the
+  -  tooltip for the options button. -->
 <!ENTITY performanceUI.options.gear.tooltiptext "Configure performance preferences.">
 
 <!-- LOCALIZATION NOTE (performanceUI.invertTree): This is the label shown next to
