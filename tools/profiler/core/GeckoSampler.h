@@ -104,6 +104,7 @@ class GeckoSampler: public Sampler {
   void ToStreamAsJSON(std::ostream& stream, double aSinceTime = 0);
 #ifndef SPS_STANDALONE
   virtual JSObject *ToJSObject(JSContext *aCx, double aSinceTime = 0);
+  void GetGatherer(nsISupports** aRetVal);
 #endif
   mozilla::UniquePtr<char[]> ToJSON(double aSinceTime = 0);
   virtual void ToJSObjectAsync(double aSinceTime = 0, mozilla::dom::Promise* aPromise = 0);
