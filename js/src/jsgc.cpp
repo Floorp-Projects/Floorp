@@ -4023,11 +4023,19 @@ GCRuntime::markWeakReferences(gcstats::Phase phase)
 
     gcstats::AutoPhase ap1(stats, phase);
 
+    marker.enterWeakMarkingMode();
+
+    // TODO bug 1167452: Make weak marking incremental
+    SliceBudget budget = SliceBudget::unlimited();
+    marker.drainMarkStack(budget);
+
     for (;;) {
         bool markedAny = false;
         for (CompartmentIterT c(rt); !c.done(); c.next()) {
-            markedAny |= WatchpointMap::markCompartmentIteratively(c, &marker);
-            markedAny |= WeakMapBase::markCompartmentIteratively(c, &marker);
+            if (c->watchpointMap)
+                markedAny |= c->watchpointMap->markIteratively(&marker);
+            if (marker.weakMapAction() != ExpandWeakMaps)
+                markedAny |= WeakMapBase::markCompartmentIteratively(c, &marker);
         }
         markedAny |= Debugger::markAllIteratively(&marker);
         markedAny |= jit::JitRuntime::MarkJitcodeGlobalTableIteratively(&marker);
@@ -4039,6 +4047,8 @@ GCRuntime::markWeakReferences(gcstats::Phase phase)
         marker.drainMarkStack(unlimited);
     }
     MOZ_ASSERT(marker.isDrained());
+
+    marker.leaveWeakMarkingMode();
 }
 
 void
@@ -4181,11 +4191,22 @@ js::gc::MarkingValidator::nonIncrementalMark()
             return;
     }
 
+    gc::WeakKeyTable savedWeakKeys;
+    if (!savedWeakKeys.init())
+        return;
+
+    for (gc::WeakKeyTable::Range r = gc->marker.weakKeys.all(); !r.empty(); r.popFront()) {
+        if (!savedWeakKeys.put(Move(r.front().key), Move(r.front().value)))
+            CrashAtUnhandlableOOM("saving weak keys table for validator");
+    }
+
     /*
      * After this point, the function should run to completion, so we shouldn't
      * do anything fallible.
      */
     initialized = true;
+
+    gc->marker.weakKeys.clear();
 
     /* Re-do all the marking, but non-incrementally. */
     js::gc::State state = gc->incrementalState;
@@ -4249,7 +4270,13 @@ js::gc::MarkingValidator::nonIncrementalMark()
 
     for (GCCompartmentsIter c(runtime); !c.done(); c.next())
         WeakMapBase::unmarkCompartment(c);
-    WeakMapBase::restoreCompartmentMarkedWeakMaps(markedWeakMaps);
+    WeakMapBase::restoreMarkedWeakMaps(markedWeakMaps);
+
+    gc->marker.weakKeys.clear();
+    for (gc::WeakKeyTable::Range r = savedWeakKeys.all(); !r.empty(); r.popFront()) {
+        if (!gc->marker.weakKeys.put(Move(r.front().key), Move(r.front().value)))
+            CrashAtUnhandlableOOM("restoring weak keys table for validator");
+    }
 
     gc->incrementalState = state;
 }
@@ -4754,7 +4781,6 @@ GCRuntime::endMarkingZoneGroup()
      * black by the action of UnmarkGray.
      */
     MarkIncomingCrossCompartmentPointers(rt, BLACK);
-
     markWeakReferencesInCurrentGroup(gcstats::PHASE_SWEEP_MARK_WEAK);
 
     /*
@@ -4914,6 +4940,17 @@ GCRuntime::beginSweepingZoneGroup()
     }
 
     validateIncrementalMarking();
+
+    /* Clear out this zone group's keys from the weakKeys table, to prevent later accesses. */
+    for (WeakKeyTable::Range r = marker.weakKeys.all(); !r.empty(); ) {
+        auto key(r.front().key);
+        r.popFront();
+        if (gc::TenuredCell::fromPointer(key.asCell())->zone()->isGCSweeping()) {
+            bool found;
+            marker.weakKeys.remove(key, &found);
+            MOZ_ASSERT(found);
+        }
+    }
 
     FreeOp fop(rt);
     SweepAtomsTask sweepAtomsTask(rt);
