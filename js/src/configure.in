@@ -974,7 +974,7 @@ arm*)
     ;;
 
 mips|mipsel)
-    CPU_ARCH="mips"
+    CPU_ARCH="mips32"
     ;;
 
 aarch64*)
@@ -3058,16 +3058,16 @@ dnl ========================================================
 MOZ_ARG_ENABLE_STRING(simulator,
 [  --enable-simulator=ARCH
                           Enable a JIT code simulator for the specified arch.
-                          (arm, arm64, mips).],
+                          (arm, arm64, mips32).],
     JS_SIMULATOR="$enableval")
 
 if test -n "$JS_SIMULATOR"; then
     case "$JS_SIMULATOR" in
-        arm|arm64|mips) ;;
+        arm|arm64|mips32) ;;
         no)
             JS_SIMULATOR=
             ;;
-        *) AC_MSG_ERROR([Invalid simulator. Valid simulators are: arm, arm64, mips.]) ;;
+        *) AC_MSG_ERROR([Invalid simulator. Valid simulators are: arm, arm64, mips32.]) ;;
     esac
 fi
 
@@ -3092,15 +3092,15 @@ elif test "$JS_SIMULATOR" = arm64; then
     AC_DEFINE(JS_CODEGEN_ARM64)
     JS_SIMULATOR_ARM64=1
     JS_CODEGEN_ARM64=1
-elif test "$JS_SIMULATOR" = mips; then
+elif test "$JS_SIMULATOR" = mips32; then
     if test "$CPU_ARCH" != "x86"; then
-        AC_MSG_ERROR([The MIPS simulator only works on x86.])
+        AC_MSG_ERROR([The MIPS32 simulator only works on x86.])
     fi
     AC_DEFINE(JS_SIMULATOR)
-    AC_DEFINE(JS_SIMULATOR_MIPS)
-    AC_DEFINE(JS_CODEGEN_MIPS)
-    JS_SIMULATOR_MIPS=1
-    JS_CODEGEN_MIPS=1
+    AC_DEFINE(JS_SIMULATOR_MIPS32)
+    AC_DEFINE(JS_CODEGEN_MIPS32)
+    JS_SIMULATOR_MIPS32=1
+    JS_CODEGEN_MIPS32=1
 elif test "$CPU_ARCH" = "x86"; then
     AC_DEFINE(JS_CODEGEN_X86)
     JS_CODEGEN_X86=1
@@ -3115,18 +3115,18 @@ elif test "$CPU_ARCH" = "x86_64"; then
 elif test "$CPU_ARCH" = "arm"; then
     AC_DEFINE(JS_CODEGEN_ARM)
     JS_CODEGEN_ARM=1
-elif test "$CPU_ARCH" = "mips"; then
-    AC_DEFINE(JS_CODEGEN_MIPS)
-    JS_CODEGEN_MIPS=1
+elif test "$CPU_ARCH" = "mips32"; then
+    AC_DEFINE(JS_CODEGEN_MIPS32)
+    JS_CODEGEN_MIPS32=1
 fi
 
 AC_SUBST(JS_SIMULATOR)
 AC_SUBST(JS_SIMULATOR_ARM)
 AC_SUBST(JS_SIMULATOR_ARM64)
-AC_SUBST(JS_SIMULATOR_MIPS)
+AC_SUBST(JS_SIMULATOR_MIPS32)
 AC_SUBST(JS_CODEGEN_ARM)
 AC_SUBST(JS_CODEGEN_ARM64)
-AC_SUBST(JS_CODEGEN_MIPS)
+AC_SUBST(JS_CODEGEN_MIPS32)
 AC_SUBST(JS_CODEGEN_X86)
 AC_SUBST(JS_CODEGEN_X64)
 AC_SUBST(JS_CODEGEN_NONE)

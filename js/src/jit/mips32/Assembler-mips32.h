@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_mips_Assembler_mips_h
-#define jit_mips_Assembler_mips_h
+#ifndef jit_mips32_Assembler_mips32_h
+#define jit_mips32_Assembler_mips32_h
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
@@ -1038,7 +1038,7 @@ class Assembler : public AssemblerShared
     static void TraceDataRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader);
 
     static bool SupportsFloatingPoint() {
-#if (defined(__mips_hard_float) && !defined(__mips_single_float)) || defined(JS_SIMULATOR_MIPS)
+#if (defined(__mips_hard_float) && !defined(__mips_single_float)) || defined(JS_SIMULATOR_MIPS32)
         return true;
 #else
         return false;
@@ -1369,4 +1369,4 @@ GetArgStackDisp(uint32_t usedArgSlots)
 } // namespace jit
 } // namespace js
 
-#endif /* jit_mips_Assembler_mips_h */
+#endif /* jit_mips32_Assembler_mips32_h */
