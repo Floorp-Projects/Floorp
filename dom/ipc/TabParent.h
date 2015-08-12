@@ -218,6 +218,7 @@ public:
     virtual bool RecvGetDefaultScale(double* aValue) override;
     virtual bool RecvGetMaxTouchPoints(uint32_t* aTouchPoints) override;
     virtual bool RecvGetWidgetNativeData(WindowsHandle* aValue) override;
+    virtual bool RecvSetNativeChildOfShareableWindow(const uintptr_t& childWindow) override;
     virtual bool RecvZoomToRect(const uint32_t& aPresShellId,
                                 const ViewID& aViewId,
                                 const CSSRect& aRect) override;

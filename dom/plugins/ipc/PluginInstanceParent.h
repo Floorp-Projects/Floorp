@@ -219,6 +219,9 @@ public:
     virtual bool
     RecvAsyncNPP_NewResult(const NPError& aResult) override;
 
+    virtual bool
+    RecvSetNetscapeWindowAsParent(const NativeWindowHandle& childWindow) override;
+
     NPError NPP_SetWindow(const NPWindow* aWindow);
 
     NPError NPP_GetValue(NPPVariable variable, void* retval);
@@ -360,11 +363,16 @@ private:
     void SubclassPluginWindow(HWND aWnd);
     void UnsubclassPluginWindow();
 
+    bool MaybeCreateAndParentChildPluginWindow();
+    void MaybeCreateChildPopupSurrogate();
+
 private:
     gfx::SharedDIBWin  mSharedSurfaceDib;
     nsIntRect          mPluginPort;
     nsIntRect          mSharedSize;
     HWND               mPluginHWND;
+    // This is used for the normal child plugin HWND for windowed plugins and,
+    // if needed, also the child popup surrogate HWND for windowless plugins.
     HWND               mChildPluginHWND;
     HWND               mChildPluginsParentHWND;
     WNDPROC            mPluginWndProc;

@@ -111,6 +111,11 @@ public:
   void ReleasePluginPort(void* pluginPort);
 
   nsEventStatus ProcessEvent(const mozilla::WidgetGUIEvent& anEvent);
+
+#if defined(XP_WIN)
+  void SetWidgetWindowAsParent(HWND aWindowToAdopt);
+  nsresult SetNetscapeWindowAsParent(HWND aWindowToAdopt);
+#endif
   
 #ifdef XP_MACOSX
   enum { ePluginPaintEnable, ePluginPaintDisable };
@@ -272,6 +277,10 @@ private:
   bool mFullScreen;
   void* mJavaView;
 #endif 
+
+#if defined(XP_WIN)
+  nsIWidget* GetContainingWidgetIfOffset();
+#endif
  
   nsPluginNativeWindow       *mPluginWindow;
   nsRefPtr<nsNPAPIPluginInstance> mInstance;
