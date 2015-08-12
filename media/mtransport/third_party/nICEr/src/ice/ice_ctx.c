@@ -1,3 +1,4 @@
+
 /*
 Copyright (c) 2007, Adobe Systems, Incorporated
 All rights reserved.
@@ -513,7 +514,8 @@ void nr_ice_gather_finished_cb(NR_SOCKET s, int h, void *cb_arg)
 
       /* If we are initialized, the candidate wasn't pruned,
          and we have a trickle ICE callback fire the callback */
-      if (ctx->trickle_cb && !was_pruned) {
+      if (ctx->trickle_cb && !was_pruned &&
+          !nr_ice_ctx_hide_candidate(ctx, cand)) {
         ctx->trickle_cb(ctx->trickle_cb_arg, ctx, cand->stream, cand->component_id, cand);
 
         if (nr_ice_ctx_pair_new_trickle_candidates(ctx, cand)) {
@@ -558,17 +560,90 @@ static int nr_ice_ctx_pair_new_trickle_candidates(nr_ice_ctx *ctx, nr_ice_candid
     return(_status);
   }
 
+/* Get the default address by doing a connect to a known public IP address,
+   in this case Google public DNS:
 
-int nr_ice_gather(nr_ice_ctx *ctx, NR_async_cb done_cb, void *cb_arg)
+   IPv4: 8.8.8.8
+   IPv6: 2001:4860:4860::8888
+
+   Then we can do getsockname to get the address. No packets get sent
+   since this is UDP. It's just a way to get the address.
+*/
+static int nr_ice_get_default_address(nr_ice_ctx *ctx, int ip_version, nr_transport_addr* addrp)
   {
     int r,_status;
-    nr_ice_media_stream *stream;
-    nr_local_addr addrs[MAXADDRS];
+    nr_transport_addr addr;
+    nr_transport_addr remote_addr;
+    nr_socket *sock=0;
+
+    switch(ip_version) {
+      case NR_IPV4:
+        if ((r=nr_str_port_to_transport_addr("0.0.0.0", 0, IPPROTO_UDP, &addr)))
+          ABORT(r);
+        if ((r=nr_str_port_to_transport_addr("8.8.8.8", 53, IPPROTO_UDP, &remote_addr)))
+          ABORT(r);
+        break;
+      case NR_IPV6:
+        if ((r=nr_str_port_to_transport_addr("::0", 0, IPPROTO_UDP, &addr)))
+          ABORT(r);
+        if ((r=nr_str_port_to_transport_addr("2001:4860:4860::8888", 53, IPPROTO_UDP, &remote_addr)))
+          ABORT(r);
+        break;
+      default:
+        assert(0);
+        ABORT(R_INTERNAL);
+    }
+
+    if ((r=nr_socket_factory_create_socket(ctx->socket_factory, &addr, &sock)))
+      ABORT(r);
+    if ((r=nr_socket_connect(sock, &remote_addr)))
+      ABORT(r);
+    if ((r=nr_socket_getaddr(sock, addrp)))
+      ABORT(r);
+
+    _status=0;
+  abort:
+    nr_socket_destroy(&sock);
+    return(_status);
+  }
+
+static int nr_ice_get_default_local_address(nr_ice_ctx *ctx, int ip_version, nr_local_addr* addrs, int addr_ct, nr_local_addr *addrp)
+  {
+    int r,_status;
+    nr_transport_addr default_addr;
+    int i;
+
+    if ((r=nr_ice_get_default_address(ctx, ip_version, &default_addr)))
+        ABORT(r);
+
+    for(i=0; i<addr_ct; ++i) {
+      if (!nr_transport_addr_cmp(&default_addr, &addrs[i].addr,
+                                 NR_TRANSPORT_ADDR_CMP_MODE_ADDR)) {
+        if ((r=nr_local_addr_copy(addrp, &addrs[i])))
+          ABORT(r);
+        break;
+      }
+    }
+    if (i==addr_ct)
+      ABORT(R_NOT_FOUND);
+
+    _status=0;
+  abort:
+    return(_status);
+  }
+
+static int nr_ice_get_local_addresses(nr_ice_ctx *ctx)
+  {
+    int r,_status;
+    nr_local_addr local_addrs[MAXADDRS];
+    nr_local_addr *addrs = 0;
     int i,addr_ct;
+    nr_local_addr default_addrs[2];
+    int default_addr_ct = 0;
 
     if (!ctx->local_addrs) {
       /* First, gather all the local addresses we have */
-      if(r=nr_stun_find_local_addresses(addrs,MAXADDRS,&addr_ct)) {
+      if((r=nr_stun_find_local_addresses(local_addrs,MAXADDRS,&addr_ct))) {
         r_log(LOG_ICE,LOG_ERR,"ICE(%s): unable to find local addresses",ctx->label);
         ABORT(r);
       }
@@ -625,6 +700,19 @@ int nr_ice_gather(nr_ice_ctx *ctx, NR_async_cb done_cb, void *cb_arg)
         ABORT(r);
       }
     }
+
+    _status=0;
+  abort:
+    return(_status);
+  }
+
+int nr_ice_gather(nr_ice_ctx *ctx, NR_async_cb done_cb, void *cb_arg)
+  {
+    int r,_status;
+    nr_ice_media_stream *stream;
+
+    if ((r=nr_ice_get_local_addresses(ctx)))
+      ABORT(r);
 
     if(STAILQ_EMPTY(&ctx->streams)) {
       r_log(LOG_ICE,LOG_ERR,"ICE(%s): Missing streams to initialize",ctx->label);

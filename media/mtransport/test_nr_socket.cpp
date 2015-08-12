@@ -380,7 +380,11 @@ int TestNrSocket::connect(nr_transport_addr *addr) {
     return R_INTERNAL;
   }
 
-  if (!nat_->enabled_ || nat_->is_an_internal_tuple(*addr)) {
+  if (!nat_->enabled_
+      || addr->protocol==IPPROTO_UDP  // Horrible hack to allow default address
+                                      // discovery to work. Only works because
+                                      // we don't normally connect on UDP.
+      || nat_->is_an_internal_tuple(*addr)) {
     // This will set connect_invoked_
     return NrSocket::connect(addr);
   }
