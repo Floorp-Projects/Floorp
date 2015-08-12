@@ -7,6 +7,9 @@
 DEFINES['ANDROID_PACKAGE_NAME'] = CONFIG['ANDROID_PACKAGE_NAME']
 
 base = '/mobile/android/tests/browser/robocop/'
+
+ANDROID_ASSETS_DIRS += [base + 'assets']
+
 TEST_HARNESS_FILES.testing.mochitest += [
     base + 'robocop.ini',
     base + 'robocop_autophone.ini',
