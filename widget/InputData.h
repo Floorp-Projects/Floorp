@@ -310,7 +310,8 @@ public:
       mPanDisplacement(aPanDisplacement),
       mLineOrPageDeltaX(0),
       mLineOrPageDeltaY(0),
-      mHandledByAPZ(false)
+      mHandledByAPZ(false),
+      mRequiresContentResponse(false)
   {
   }
 
@@ -336,6 +337,12 @@ public:
   int32_t mLineOrPageDeltaY;
 
   bool mHandledByAPZ;
+
+  // If this is true, the input block started by this event needs to be put
+  // on hold until a content response has arrived, even if the block has a
+  // confirmed target. This is used by events that can result in a swipe
+  // instead of a scroll.
+  bool mRequiresContentResponse;
 };
 
 /**
