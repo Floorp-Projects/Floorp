@@ -1330,18 +1330,18 @@ NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) {
   while (source_->TicksToTimeRoundDown(track_rate_, played_ticks_) <
          desired_time) {
     // TODO(ekr@rtfm.com): Is there a way to avoid mallocating here?  Or reduce the size?
-    // Max size given mono is 480*2*1 = 960 (48KHz)
-#define AUDIO_SAMPLE_BUFFER_MAX 1000
-    MOZ_ASSERT((track_rate_/100)*sizeof(uint16_t) <= AUDIO_SAMPLE_BUFFER_MAX);
+    // Max size given stereo is 480*2*2 = 1920 (48KHz)
+    const size_t AUDIO_SAMPLE_BUFFER_MAX = 1920;
+    MOZ_ASSERT((track_rate_/100)*sizeof(uint16_t) * 2 <= AUDIO_SAMPLE_BUFFER_MAX);
 
-    nsRefPtr<SharedBuffer> samples = SharedBuffer::Create(AUDIO_SAMPLE_BUFFER_MAX);
-    int16_t *samples_data = static_cast<int16_t *>(samples->Data());
+    int16_t scratch_buffer[AUDIO_SAMPLE_BUFFER_MAX];
+
     int samples_length;
 
-    // This fetches 10ms of data
+    // This fetches 10ms of data, either mono or stereo
     MediaConduitErrorCode err =
         static_cast<AudioSessionConduit*>(conduit_.get())->GetAudioFrame(
-            samples_data,
+            scratch_buffer,
             track_rate_,
             0,  // TODO(ekr@rtfm.com): better estimate of "capture" (really playout) delay
             samples_length);
@@ -1353,7 +1353,7 @@ NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) {
                 << " (desired " << desired_time << " -> "
                 << source_->StreamTimeToSeconds(desired_time) << ")");
       samples_length = track_rate_/100; // if this is not enough we'll loop and provide more
-      memset(samples_data, '\0', samples_length * sizeof(uint16_t));
+      PodArrayZero(scratch_buffer);
     }
 
     MOZ_ASSERT(samples_length * sizeof(uint16_t) < AUDIO_SAMPLE_BUFFER_MAX);
@@ -1361,14 +1361,37 @@ NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) {
     MOZ_MTLOG(ML_DEBUG, "Audio conduit returned buffer of length "
               << samples_length);
 
+    nsRefPtr<SharedBuffer> samples = SharedBuffer::Create(samples_length * sizeof(uint16_t));
+    int16_t *samples_data = static_cast<int16_t *>(samples->Data());
     AudioSegment segment;
-    nsAutoTArray<const int16_t*,1> channels;
-    channels.AppendElement(samples_data);
-    segment.AppendFrames(samples.forget(), channels, samples_length);
+    // We derive the number of channels of the stream from the number of samples
+    // the AudioConduit gives us, considering it gives us packets of 10ms and we
+    // know the rate.
+    uint32_t channelCount = samples_length / (track_rate_ / 100);
+    nsAutoTArray<int16_t*,2> channels;
+    nsAutoTArray<const int16_t*,2> outputChannels;
+    size_t frames = samples_length / channelCount;
+
+    channels.SetLength(channelCount);
+
+    size_t offset = 0;
+    for (size_t i = 0; i < channelCount; i++) {
+      channels[i] = samples_data + offset;
+      offset += frames;
+    }
+
+    DeinterleaveAndConvertBuffer(scratch_buffer,
+                                 frames,
+                                 channelCount,
+                                 channels.Elements());
+
+    outputChannels.AppendElements(channels);
+
+    segment.AppendFrames(samples.forget(), outputChannels, frames);
 
     // Handle track not actually added yet or removed/finished
     if (source_->AppendToTrack(track_id_, &segment)) {
-      played_ticks_ += track_rate_/100; // 10ms in TrackTicks
+      played_ticks_ += frames;
     } else {
       MOZ_MTLOG(ML_ERROR, "AppendToTrack failed");
       // we can't un-read the data, but that's ok since we don't want to
