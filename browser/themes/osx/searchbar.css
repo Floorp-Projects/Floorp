@@ -162,11 +162,11 @@ searchbar[oneoffui] .search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon
 
 .search-panel-header > label {
   margin-top: 2px !important;
-  margin-bottom: 1px !important;
+  margin-bottom: 2px !important;
 }
 
 .search-panel-current-input > label {
-  margin: 2px 0 1px !important;
+  margin: 2px 0 !important;
 }
 
 .search-panel-input-value {
