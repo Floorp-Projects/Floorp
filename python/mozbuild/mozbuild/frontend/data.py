@@ -975,3 +975,14 @@ class AndroidResDirs(ContextDerived):
     def __init__(self, context, paths):
         ContextDerived.__init__(self, context)
         self.paths = paths
+
+class AndroidAssetsDirs(ContextDerived):
+    """Represents Android assets directories."""
+
+    __slots__ = (
+        'paths',
+    )
+
+    def __init__(self, context, paths):
+        ContextDerived.__init__(self, context)
+        self.paths = paths

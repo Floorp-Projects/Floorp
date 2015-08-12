@@ -420,6 +420,7 @@ $(1): $$(call mkdir_deps,$(filter-out ./,$(dir $(3) $(4) $(5)))) $(2)
 		$(if $(MOZ_ANDROID_MAX_SDK_VERSION),--max-res-version $(MOZ_ANDROID_MAX_SDK_VERSION),) \
 		--auto-add-overlay \
 		$$(addprefix -S ,$$(ANDROID_RES_DIRS)) \
+		$$(addprefix -A ,$$(ANDROID_ASSETS_DIRS)) \
 		$(if $(extra_res_dirs),$$(addprefix -S ,$$(extra_res_dirs)),) \
 		$(if $(extra_packages),--extra-packages $$(extra_packages),) \
 		--custom-package org.mozilla.gecko \

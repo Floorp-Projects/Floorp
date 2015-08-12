@@ -142,6 +142,7 @@ class MachCommands(MachCommandBase):
         srcdir('base/src/webrtc_video_capture/java', 'media/webrtc/trunk/webrtc/modules/video_capture/android/java/src')
         srcdir('base/src/webrtc_video_render/java', 'media/webrtc/trunk/webrtc/modules/video_render/android/java/src')
         srcdir('base/src/main/res', 'mobile/android/base/resources')
+        srcdir('base/src/main/assets', 'mobile/android/app/assets')
         srcdir('base/src/crashreporter/res', 'mobile/android/base/crashreporter/res')
 
         manifest_path = os.path.join(self.topobjdir, 'mobile', 'android', 'gradle.manifest')
