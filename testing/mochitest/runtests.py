@@ -66,6 +66,13 @@ from mozrunner.utils import get_stack_fixer_function, test_environment
 from mozscreenshot import dump_screen
 import mozleak
 
+HAVE_PSUTIL = False
+try:
+    import psutil
+    HAVE_PSUTIL = True
+except ImportError:
+    pass
+
 here = os.path.abspath(os.path.dirname(__file__))
 
 
@@ -1765,7 +1772,7 @@ class MochitestDesktop(MochitestBase):
         Also attempts to obtain a screenshot before killing the process
         if specified.
         """
-
+        self.log.info("Killing process: %s" % processPID)
         if dump_screen:
             self.dumpScreen(utilityPath)
 
@@ -1782,6 +1789,26 @@ class MochitestDesktop(MochitestBase):
         self.log.info("Can't trigger Breakpad, just killing process")
         killPid(processPID, self.log)
 
+    def extract_child_pids(self, process_log, parent_pid=None):
+        """Parses the given log file for the pids of any processes launched by
+        the main process and returns them as a list.
+        If parent_pid is provided, and psutil is available, returns children of
+        parent_pid according to psutil.
+        """
+        if parent_pid and HAVE_PSUTIL:
+            self.log.info("Determining child pids from psutil")
+            return [p.pid for p in psutil.Process(parent_pid).children()]
+
+        rv = []
+        pid_re = re.compile(r'==> process \d+ launched child process (\d+)')
+        with open(process_log) as fd:
+            for line in fd:
+                self.log.info(line.rstrip())
+                m = pid_re.search(line)
+                if m:
+                    rv.append(int(m.group(1)))
+        return rv
+
     def checkForZombies(self, processLog, utilityPath, debuggerInfo):
         """Look for hung processes"""
 
@@ -1795,15 +1822,7 @@ class MochitestDesktop(MochitestBase):
 
         # scan processLog for zombies
         self.log.info('zombiecheck | Reading PID log: %s' % processLog)
-        processList = []
-        pidRE = re.compile(r'launched child process (\d+)$')
-        with open(processLog) as processLogFD:
-            for line in processLogFD:
-                self.log.info(line.rstrip())
-                m = pidRE.search(line)
-                if m:
-                    processList.append(int(m.group(1)))
-
+        processList = self.extract_child_pids(processLog)
         # kill zombies
         foundZombie = False
         for processPID in processList:
@@ -1938,7 +1957,8 @@ class MochitestDesktop(MochitestBase):
                     proc,
                     utilityPath,
                     debuggerInfo,
-                    browserProcessId)
+                    browserProcessId,
+                    processLog)
             kp_kwargs = {'kill_on_timeout': False,
                          'cwd': SCRIPT_DIR,
                          'onTimeout': [timeoutHandler]}
@@ -2394,29 +2414,44 @@ class MochitestDesktop(MochitestBase):
 
         return status
 
-    def handleTimeout(
-            self,
-            timeout,
-            proc,
-            utilityPath,
-            debuggerInfo,
-            browserProcessId):
+    def handleTimeout(self, timeout, proc, utilityPath, debuggerInfo,
+                      browser_pid, processLog):
         """handle process output timeout"""
         # TODO: bug 913975 : _processOutput should call self.processOutputLine
         # one more time one timeout (I think)
         error_message = "TEST-UNEXPECTED-TIMEOUT | %s | application timed out after %d seconds with no output" % (
             self.lastTestSeen, int(timeout))
-
         self.message_logger.dump_buffered()
         self.message_logger.buffering = False
         self.log.info(error_message)
 
-        browserProcessId = browserProcessId or proc.pid
-        self.killAndGetStack(
-            browserProcessId,
-            utilityPath,
-            debuggerInfo,
-            dump_screen=not debuggerInfo)
+        browser_pid = browser_pid or proc.pid
+        child_pids = self.extract_child_pids(processLog, browser_pid)
+        self.log.info('Found child pids: %s' % child_pids)
+
+        if HAVE_PSUTIL:
+            child_procs = [psutil.Process(pid) for pid in child_pids]
+            for pid in child_pids:
+                self.killAndGetStack(pid, utilityPath, debuggerInfo,
+                                     dump_screen=not debuggerInfo)
+            gone, alive = psutil.wait_procs(child_procs, timeout=30)
+            for p in gone:
+                self.log.info('psutil found pid %s dead' % p.pid)
+            for p in alive:
+                self.log.warning('failed to kill pid %d after 30s' %
+                                 p.pid)
+        else:
+            self.log.error("psutil not available! Will wait 30s before "
+                           "attempting to kill parent process. This should "
+                           "not occur in mozilla automation. See bug 1143547.")
+            for pid in child_pids:
+                self.killAndGetStack(pid, utilityPath, debuggerInfo,
+                                     dump_screen=not debuggerInfo)
+            if child_pids:
+                time.sleep(30)
+
+        self.killAndGetStack(browser_pid, utilityPath, debuggerInfo,
+                             dump_screen=not debuggerInfo)
 
     class OutputHandler(object):
 
