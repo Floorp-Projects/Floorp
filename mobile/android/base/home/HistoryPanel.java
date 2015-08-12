@@ -18,6 +18,7 @@ import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.GeckoScreenOrientation;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.RestrictedProfiles;
 import org.mozilla.gecko.Telemetry;
@@ -27,11 +28,14 @@ import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.home.HomeContextMenuInfo.RemoveItemType;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.restrictions.Restriction;
+import org.mozilla.gecko.util.ColorUtils;
+import org.mozilla.gecko.util.HardwareUtils;
 
 import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -50,6 +54,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -79,8 +84,12 @@ public class HistoryPanel extends HomeFragment {
     // Adapter for the list of recent history entries.
     private CursorAdapter mAdapter;
 
+    // Adapter for the timeline of history entries.
+    private ArrayAdapter<MostRecentSection> mRangeAdapter;
+
     // The view shown by the fragment.
     private HomeListView mList;
+    private HomeListView mRangeList;
 
     // The button view for clearing browsing history.
     private View mClearHistoryButton;
@@ -111,13 +120,37 @@ public class HistoryPanel extends HomeFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.home_history_panel, container, false);
+        if (HardwareUtils.isTablet() && GeckoScreenOrientation.getInstance().getAndroidOrientation() == Configuration.ORIENTATION_LANDSCAPE) {
+            return inflater.inflate(R.layout.home_history_split_pane_panel, container, false);
+        } else {
+            return inflater.inflate(R.layout.home_history_panel, container, false);
+        }
     }
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        mRangeList = (HomeListView) view.findViewById(R.id.range_list);
         mList = (HomeListView) view.findViewById(R.id.list);
         mList.setTag(HomePager.LIST_TAG_HISTORY);
+
+        if (mRangeList != null) {
+            mRangeList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> adapter, View view, int position, long id) {
+                    final MostRecentSection rangeItem = (MostRecentSection) adapter.getItemAtPosition(position);
+                    if (rangeItem != null) {
+                        // Notify data has changed for both range and item adapter.
+                        // This will update selected rangeItem item background and the tabs list.
+                        // This will also update the selected range along with cursor start and end.
+                        selected = rangeItem;
+                        mRangeAdapter.notifyDataSetChanged();
+                        getLoaderManager().getLoader(LOADER_ID_HISTORY).forceLoad();
+                    }
+                }
+            });
+        }
 
         mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -204,6 +237,7 @@ public class HistoryPanel extends HomeFragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        mRangeList = null;
         mList = null;
         mEmptyView = null;
         mClearHistoryButton = null;
@@ -214,15 +248,37 @@ public class HistoryPanel extends HomeFragment {
         super.onActivityCreated(savedInstanceState);
 
         // Reset selection.
-        selected = MostRecentSection.THIS_MONTH;
+        selected = mRangeList == null ? MostRecentSection.THIS_MONTH : MostRecentSection.TODAY;
 
         // Initialize adapter
-        mAdapter = new HistoryHeaderListCursorAdapter(getActivity());
-        mList.setAdapter(mAdapter);
+        if (mRangeList != null) {
+            mAdapter = new HistoryItemAdapter(getActivity(), null, R.layout.home_item_row);
+            mRangeAdapter = new HistoryRangeAdapter(getActivity(), R.layout.home_history_range_item);
+
+            mRangeList.setAdapter(mRangeAdapter);
+            mList.setAdapter(mAdapter);
+        } else {
+            mAdapter = new HistoryHeaderListCursorAdapter(getActivity());
+            mList.setAdapter(mAdapter);
+        }
 
         // Create callbacks before the initial loader is started
         mCursorLoaderCallbacks = new CursorLoaderCallbacks();
+
+        // Update the section string with current time as reference.
+        updateRecentSectionOffset(getActivity());
         loadIfVisible();
+    }
+
+    @Override
+    protected void loadIfVisible() {
+        // Force reload fragment only in tablets.
+        if (canLoad() && HardwareUtils.isTablet()) {
+            load();
+            return;
+        }
+
+         super.loadIfVisible();
     }
 
     @Override
@@ -401,6 +457,35 @@ public class HistoryPanel extends HomeFragment {
             this.start = start;
             this.end = end;
             this.displayName = displayName;
+        }
+    }
+
+    private static class HistoryRangeAdapter extends ArrayAdapter<MostRecentSection> {
+        private final Context context;
+        private final int resource;
+
+        public HistoryRangeAdapter(Context context, int resource) {
+            super(context, resource, MostRecentSection.values());
+            this.context = context;
+            this.resource = resource;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            final View view;
+            if (convertView != null) {
+                view = convertView;
+            } else {
+                final LayoutInflater inflater = LayoutInflater.from(context);
+                view = inflater.inflate(resource, parent, false);
+                view.setTag(view.findViewById(R.id.range_title));
+            }
+            final MostRecentSection current = getItem(position);
+            final TextView textView = (TextView) view.getTag();
+            textView.setText(getMostRecentSectionTitle(current));
+            textView.setTextColor(ColorUtils.getColor(context, current == selected ? R.color.text_and_tabs_tray_grey : R.color.disabled_grey));
+            textView.setCompoundDrawablesWithIntrinsicBounds(0, 0, current == selected ? R.drawable.home_group_collapsed : 0, 0);
+            return view;
         }
     }
 
