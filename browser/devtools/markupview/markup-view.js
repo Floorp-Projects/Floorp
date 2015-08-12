@@ -2703,11 +2703,10 @@ ElementEditor.prototype = {
     // Create links in the attribute value, and collapse long attributes if
     // needed.
     let collapse = value => {
-      if (value.match(COLLAPSE_DATA_URL_REGEX)) {
+      if (value && value.match(COLLAPSE_DATA_URL_REGEX)) {
         return truncateString(value, COLLAPSE_DATA_URL_LENGTH);
-      } else {
-        return truncateString(value, COLLAPSE_ATTRIBUTE_LENGTH);
       }
+      return truncateString(value, COLLAPSE_ATTRIBUTE_LENGTH);
     };
 
     val.innerHTML = "";
@@ -2885,7 +2884,7 @@ function nodeDocument(node) {
 }
 
 function truncateString(str, maxLength) {
-  if (str.length <= maxLength) {
+  if (!str || str.length <= maxLength) {
     return str;
   }
 
