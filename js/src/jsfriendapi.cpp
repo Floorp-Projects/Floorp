@@ -1234,7 +1234,7 @@ js::AutoCTypesActivityCallback::AutoCTypesActivityCallback(JSContext* cx,
 }
 
 JS_FRIEND_API(void)
-js::SetAllocationMetadataBuilder(JSContext* cx, AllocationMetadataBuilder callback)
+js::SetAllocationMetadataBuilder(JSContext* cx, const AllocationMetadataBuilder *callback)
 {
     cx->compartment()->setAllocationMetadataBuilder(callback);
 }

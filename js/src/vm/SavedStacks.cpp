@@ -1475,7 +1475,7 @@ SavedStacks::chooseSamplingProbability(JSCompartment* compartment)
 }
 
 JSObject*
-SavedStacksMetadataBuilder(JSContext* cx, HandleObject target)
+SavedStacks::MetadataBuilder::build(JSContext* cx, HandleObject target) const
 {
     RootedObject obj(cx, target);
 
@@ -1494,6 +1494,8 @@ SavedStacksMetadataBuilder(JSContext* cx, HandleObject target)
     MOZ_ASSERT_IF(frame, !frame->is<WrapperObject>());
     return frame;
 }
+
+const SavedStacks::MetadataBuilder SavedStacks::metadataBuilder;
 
 #ifdef JS_CRASH_DIAGNOSTICS
 void
