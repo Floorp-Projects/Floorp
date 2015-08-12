@@ -19,8 +19,20 @@
 }
 
 .tab-close-button[pinned],
-.tabbrowser-tabs[closebuttons="activetab"] > * > * > * > .tab-close-button:not([visuallyselected="true"]) {
+.tabbrowser-tabs[closebuttons="activetab"] > * > * > * > .tab-close-button:not([visuallyselected="true"]),
+.tab-icon-image:not([src]):not([pinned]):not([crashed]),
+.tab-icon-image[busy],
+.tab-throbber:not([busy]),
+.tab-icon-sound:not([soundplaying]):not([muted]),
+.tab-icon-sound[pinned],
+.tab-icon-overlay {
   display: none;
+}
+
+.tab-icon-overlay[soundplaying][pinned],
+.tab-icon-overlay[muted][pinned],
+.tab-icon-overlay[crashed] {
+  display: -moz-box;
 }
 
 .tab-label[pinned] {
@@ -49,13 +61,6 @@ tabpanels {
   .tab-icon-image {
     image-rendering: -moz-crisp-edges;
   }
-}
-
-.tab-icon-image:not([src]):not([pinned]):not([crashed]),
-.tab-throbber:not([busy]),
-.tab-icon-image[busy],
-.tab-icon-overlay[busy] {
-  display: none;
 }
 
 .closing-tabs-spacer {

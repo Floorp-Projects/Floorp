@@ -95,7 +95,6 @@
   height: 16px;
   margin-top: -12px;
   -moz-margin-start: -16px;
-  display: none;
   position: relative;
 }
 
@@ -103,35 +102,29 @@
   list-style-image: url("chrome://browser/skin/tabbrowser/crashed.svg");
 }
 
-.tab-icon-overlay[crashed],
-.tab-icon-overlay[soundplaying][pinned],
-.tab-icon-overlay[muted][pinned]:not([crashed]) {
-  display: -moz-box;
-}
-
-.tab-icon-overlay[soundplaying][pinned],
-.tab-icon-overlay[muted][pinned]:not([crashed]) {
+.tab-icon-overlay[soundplaying],
+.tab-icon-overlay[muted]:not([crashed]) {
   border-radius: 8px;
 }
 
-.tab-icon-overlay[soundplaying][pinned]:hover,
-.tab-icon-overlay[muted][pinned]:not([crashed]):hover {
+.tab-icon-overlay[soundplaying]:hover,
+.tab-icon-overlay[muted]:not([crashed]):hover {
   background-color: white;
 }
 
-.tab-icon-overlay[soundplaying][pinned] {
+.tab-icon-overlay[soundplaying] {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio-small.svg#tab-audio");
 }
 
-.tab-icon-overlay[muted][pinned]:not([crashed]) {
+.tab-icon-overlay[muted]:not([crashed]) {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio-small.svg#tab-audio-muted");
 }
 
-#TabsToolbar[brighttext] .tab-icon-overlay[soundplaying][pinned]:not(:hover) {
+#TabsToolbar[brighttext] .tab-icon-overlay[soundplaying]:not(:hover) {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio-small.svg#tab-audio-white");
 }
 
-#TabsToolbar[brighttext] .tab-icon-overlay[muted][pinned]:not([crashed]):not(:hover) {
+#TabsToolbar[brighttext] .tab-icon-overlay[muted]:not([crashed]):not(:hover) {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio-small.svg#tab-audio-white-muted");
 }
 
@@ -159,11 +152,6 @@
   width: 16px;
   height: 16px;
   padding: 0;
-}
-
-.tab-icon-sound:not([soundplaying]):not([muted]),
-.tab-icon-sound[pinned] {
-  display: none;
 }
 
 .tab-icon-sound[soundplaying] {
