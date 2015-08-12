@@ -195,5 +195,22 @@ describe("loop.store.StandaloneMetricsStore", function() {
         "send", "event", METRICS_GA_CATEGORY.general, METRICS_GA_ACTIONS.audioMute,
         "mute");
     });
+
+    describe("Event listeners", function() {
+      it("should call windowUnload when action is dispatched", function() {
+        sandbox.stub(store, "windowUnload");
+
+        dispatcher.dispatch(new sharedActions.WindowUnload());
+        sinon.assert.calledOnce(store.windowUnload);
+      });
+
+      it("should stop listening to activeRoomStore", function() {
+        var stopListeningStub = sandbox.stub(store, "stopListening");
+        store.windowUnload();
+
+        sinon.assert.calledOnce(stopListeningStub);
+        sinon.assert.calledWithExactly(stopListeningStub, store.activeRoomStore);
+      });
+    });
   });
 });

@@ -26,7 +26,7 @@ describe("loop.conversation", function() {
       },
       setLoopPref: setLoopPrefStub,
       getLoopPref: function(prefName) {
-        if (prefName == "debug.sdk") {
+        if (prefName === "debug.sdk") {
           return false;
         }
 

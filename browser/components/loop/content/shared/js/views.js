@@ -813,18 +813,25 @@ loop.shared.views = (function(_, mozL10n) {
           "shared/img/icons-16x16.svg#globe";
       }
 
+      var wrapperClasses = React.addons.classSet({
+        "context-wrapper": true,
+        "clicks-allowed": this.props.allowClick
+      });
+
       return (
         React.createElement("div", {className: "context-content"}, 
           this.renderContextTitle(), 
-          React.createElement("div", {className: "context-wrapper"}, 
+          React.createElement("a", {className: wrapperClasses, 
+             href: this.props.allowClick ? this.props.url : null, 
+             onClick: this.handleLinkClick, 
+             rel: "noreferrer", 
+             target: "_blank"}, 
             React.createElement("img", {className: "context-preview", src: thumbnail}), 
-            React.createElement("span", {className: "context-description"}, 
+            React.createElement("span", {className: "context-info"}, 
               this.props.description, 
-              React.createElement("a", {className: "context-url", 
-                 href: this.props.allowClick ? this.props.url : null, 
-                 onClick: this.handleLinkClick, 
-                 rel: "noreferrer", 
-                 target: "_blank"}, hostname)
+              React.createElement("span", {className: "context-url"}, 
+                hostname
+              )
             )
           )
         )
@@ -988,7 +995,7 @@ loop.shared.views = (function(_, mozL10n) {
 
     componentWillReceiveProps: function(nextProps) {
       // This is all for the ui-showcase's benefit.
-      if (this.props.matchMedia != nextProps.matchMedia) {
+      if (this.props.matchMedia !== nextProps.matchMedia) {
         this.updateLocalMediaState(null, nextProps.matchMedia);
       }
     },
@@ -1003,7 +1010,7 @@ loop.shared.views = (function(_, mozL10n) {
 
     updateLocalMediaState: function(event, matchMedia) {
       var newState = this.isLocalMediaAbsolutelyPositioned(matchMedia);
-      if (this.state.localMediaAboslutelyPositioned != newState) {
+      if (this.state.localMediaAboslutelyPositioned !== newState) {
         this.setState({
           localMediaAboslutelyPositioned: newState
         });
