@@ -99,7 +99,7 @@
 
     <!-- In a 56x60dp space, centering 24dp image will leave 16x18dp. -->
     <org.mozilla.gecko.toolbar.TabCounter android:id="@+id/tabs_counter"
-                        style="@style/UrlBar.ImageButton.TabCount.NewTablet"
+                        style="@style/UrlBar.ImageButton.TabCount"
                         android:layout_alignLeft="@id/tabs"
                         android:layout_alignRight="@id/tabs"
                         android:layout_alignTop="@id/tabs"
