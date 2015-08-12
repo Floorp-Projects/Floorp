@@ -44,7 +44,7 @@
     "curly": [2, "all"],
     "dot-location": [2, "property"],
     "eol-last": 2,
-    "eqeqeq": 0,                  // TBD. Might need to be separate for content & chrome
+    "eqeqeq": [2, "smart"],
     "key-spacing": [2, {"beforeColon": false, "afterColon": true }],
     "linebreak-style": [2, "unix"],
     "new-cap": 0,                 // TODO: set to 2

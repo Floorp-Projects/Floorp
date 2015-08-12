@@ -387,7 +387,7 @@
     roomOwner: "fake",
     roomUrl: "http://showcase",
     urls: [{
-      description: "A wonderful page!",
+      description: "1171925 - Clicking the title or favicon for context (in the conversation/standalone windows) should appear to be part of the link and open the webpage",
       location: "http://wonderful.invalid"
       // use the fallback thumbnail
     }]
@@ -1541,7 +1541,7 @@
 
       // This simulates the mocha layout for errors which means we can run
       // this alongside our other unit tests but use the same harness.
-      var expectedWarningsCount = 18;
+      var expectedWarningsCount = 16;
       var warningsMismatch = caughtWarnings.length !== expectedWarningsCount;
       if (uncaughtError || warningsMismatch) {
         $("#results").append("<div class='failures'><em>" +

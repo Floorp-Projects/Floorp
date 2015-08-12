@@ -687,7 +687,7 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
     var prop;
     for (var i = 0, lA = propsA.length; i < lA; ++i) {
       prop = propsA[i];
-      if (propsB.indexOf(prop) == -1) {
+      if (propsB.indexOf(prop) === -1) {
         diff.removed.push(prop);
       } else if (a[prop] !== b[prop]) {
         diff.updated.push(prop);
@@ -696,7 +696,7 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
 
     for (var j = 0, lB = propsB.length; j < lB; ++j) {
       prop = propsB[j];
-      if (propsA.indexOf(prop) == -1) {
+      if (propsA.indexOf(prop) === -1) {
         diff.added.push(prop);
       }
     }

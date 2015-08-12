@@ -299,8 +299,9 @@ public class testSettingsMenuItems extends PixelTest {
                 }
             }
 
-            // Navigate back if on a phone. Tablets shouldn't do this because they use headers and fragments.
-            if (mDevice.type.equals("phone")) {
+            // Navigate back if on a phone or small tablets. Large tablets
+            // shouldn't do this because they use headers and fragments.
+            if (mDevice.type.equals("phone") || HardwareUtils.isSmallTablet()) {
                 int menuDepth = menuPath.length;
                 while (menuDepth > 0) {
                     mSolo.goBack();
