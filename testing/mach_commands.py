@@ -299,9 +299,10 @@ class MachCommands(MachCommandBase):
 
         if len(params['test_files']) == 0:
             testdir = os.path.join(self.distdir, 'cppunittests')
-            tests = cppunittests.extract_unittests_from_args([testdir], mozinfo.info)
+            manifest = os.path.join(self.topsrcdir, 'testing', 'cppunittest.ini')
+            tests = cppunittests.extract_unittests_from_args([testdir], mozinfo.info, manifest)
         else:
-            tests = cppunittests.extract_unittests_from_args(params['test_files'], mozinfo.info)
+            tests = cppunittests.extract_unittests_from_args(params['test_files'], mozinfo.info, None)
 
         # See if we have crash symbols
         symbols_path = os.path.join(self.distdir, 'crashreporter-symbols')
