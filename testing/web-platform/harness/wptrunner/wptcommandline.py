@@ -159,6 +159,11 @@ def create_parser(product_choices=None):
     b2g_group.add_argument("--b2g-no-backup", action="store_true", default=False,
                            help="Don't backup device before testrun with --product=b2g")
 
+    servo_group = parser.add_argument_group("Servo-specific")
+    servo_group.add_argument("--user-stylesheet",
+                             default=[], action="append", dest="user_stylesheets",
+                             help="Inject a user CSS stylesheet into every test.")
+
     parser.add_argument("test_list", nargs="*",
                         help="List of URLs for tests to run, or paths including tests to run. "
                              "(equivalent to --include)")
@@ -285,7 +290,7 @@ def check_args(kwargs):
             kwargs["debugger"] = mozdebug.get_default_debugger_name()
         debug_info = mozdebug.get_debugger_info(kwargs["debugger"],
                                                 kwargs["debugger_args"])
-        if debug_info.interactive:
+        if debug_info and debug_info.interactive:
             if kwargs["processes"] != 1:
                 kwargs["processes"] = 1
             kwargs["no_capture_stdio"] = True
