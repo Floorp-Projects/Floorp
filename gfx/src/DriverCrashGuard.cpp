@@ -23,7 +23,24 @@ namespace gfx {
 bool DriverCrashGuard::sEnvironmentHasBeenUpdated = false;
 
 DriverCrashGuard::DriverCrashGuard()
- : mIsChromeProcess(XRE_GetProcessType() == GeckoProcessType_Default)
+ : mInitialized(false)
+ , mIsChromeProcess(XRE_GetProcessType() == GeckoProcessType_Default)
+{
+}
+
+void
+DriverCrashGuard::InitializeIfNeeded()
+{
+  if (mInitialized) {
+    return;
+  }
+
+  mInitialized = true;
+  Initialize();
+}
+
+void
+DriverCrashGuard::Initialize()
 {
   if (!mIsChromeProcess) {
     // We assume the parent process already performed crash detection for
@@ -76,8 +93,9 @@ DriverCrashGuard::~DriverCrashGuard()
 }
 
 bool
-DriverCrashGuard::DisableAcceleration() const
+DriverCrashGuard::Crashed()
 {
+  InitializeIfNeeded();
   return gfxPrefs::DriverInitStatus() == int32_t(DriverInitStatus::Recovered);
 }
 
