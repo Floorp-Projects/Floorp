@@ -578,7 +578,7 @@ gbjar.extra_jars += [
 ]
 if CONFIG['MOZ_CRASHREPORTER']:
     gbjar.sources += [ 'CrashReporter.java' ]
-    ANDROID_RES_DIRS += [ SRCDIR + '/crashreporter/res' ]
+    ANDROID_RES_DIRS += [ 'crashreporter/res' ]
 
 if CONFIG['MOZ_ANDROID_SHARE_OVERLAY']:
     gbjar.sources += [
@@ -753,9 +753,9 @@ if CONFIG['MOZ_INSTALL_TRACKING']:
 
 # Putting branding earlier allows branders to override default resources.
 ANDROID_RES_DIRS += [
-    TOPSRCDIR + '/' + CONFIG['MOZ_BRANDING_DIRECTORY'] + '/res',
-    SRCDIR + '/resources',
-    OBJDIR + '/res',
+    '/' + CONFIG['MOZ_BRANDING_DIRECTORY'] + '/res',
+    'resources',
+    '!res',
 ]
 
 ANDROID_GENERATED_RESFILES += [

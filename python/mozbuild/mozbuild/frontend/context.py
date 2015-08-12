@@ -330,8 +330,13 @@ class PathMeta(type):
             assert isinstance(context, Context)
             if isinstance(value, Path):
                 context = value.context
-        if not issubclass(cls, (SourcePath, ObjDirPath)):
-            cls = ObjDirPath if value.startswith('!') else SourcePath
+        if not issubclass(cls, (SourcePath, ObjDirPath, AbsolutePath)):
+            if value.startswith('!'):
+                cls = ObjDirPath
+            elif value.startswith('%'):
+                cls = AbsolutePath
+            else:
+                cls = SourcePath
         return super(PathMeta, cls).__call__(context, value)
 
 class Path(ContextDerivedValue, unicode):
@@ -343,6 +348,7 @@ class Path(ContextDerivedValue, unicode):
       - 'srcdir/relative/paths'
       - '!/topobjdir/relative/paths'
       - '!objdir/relative/paths'
+      - '%/filesystem/absolute/paths'
     """
     __metaclass__ = PathMeta
 
@@ -398,6 +404,8 @@ class SourcePath(Path):
     def __init__(self, context, value):
         if value.startswith('!'):
             raise ValueError('Object directory paths are not allowed')
+        if value.startswith('%'):
+            raise ValueError('Filesystem absolute paths are not allowed')
         super(SourcePath, self).__init__(context, value)
 
         if value.startswith('/'):
@@ -429,7 +437,7 @@ class ObjDirPath(Path):
     """Like Path, but limited to paths in the object directory."""
     def __init__(self, context, value=None):
         if not value.startswith('!'):
-            raise ValueError('Source paths are not allowed')
+            raise ValueError('Object directory paths must start with ! prefix')
         super(ObjDirPath, self).__init__(context, value)
 
         if value.startswith('!/'):
@@ -437,6 +445,18 @@ class ObjDirPath(Path):
         else:
             path = mozpath.join(context.objdir, value[1:])
         self.full_path = mozpath.normpath(path)
+
+
+class AbsolutePath(Path):
+    """Like Path, but allows arbitrary paths outside the source and object directories."""
+    def __init__(self, context, value=None):
+        if not value.startswith('%'):
+            raise ValueError('Absolute paths must start with % prefix')
+        if not os.path.isabs(value[1:]):
+            raise ValueError('Path \'%s\' is not absolute' % value[1:])
+        super(AbsolutePath, self).__init__(context, value)
+
+        self.full_path = mozpath.normpath(value[1:])
 
 
 @memoize
@@ -671,12 +691,12 @@ VARIABLES = {
         file.
         """, 'export'),
 
-    'ANDROID_RES_DIRS': (List, list,
+    'ANDROID_RES_DIRS': (ContextDerivedTypedListWithItems(Path, List), list,
         """Android resource directories.
 
-        This variable contains a list of directories, each relative to
-        the srcdir, containing static files to package into a 'res'
-        directory and merge into an APK file.
+        This variable contains a list of directories containing static
+        files to package into a 'res' directory and merge into an APK
+        file.
         """, 'export'),
 
     'ANDROID_ECLIPSE_PROJECT_TARGETS': (dict, dict,

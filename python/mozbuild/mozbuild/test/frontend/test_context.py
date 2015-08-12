@@ -8,6 +8,7 @@ import unittest
 from mozunit import main
 
 from mozbuild.frontend.context import (
+    AbsolutePath,
     Context,
     ContextDerivedTypedList,
     ContextDerivedTypedListWithItems,
@@ -453,6 +454,18 @@ class TestPaths(unittest.TestCase):
 
         path = Path(path)
         self.assertIsInstance(path, ObjDirPath)
+
+    def test_absolute_path(self):
+        config = self.config
+        ctxt = Context(config=config)
+        ctxt.push_source(mozpath.join(config.topsrcdir, 'foo', 'moz.build'))
+
+        path = AbsolutePath(ctxt, '%/qux')
+        self.assertEqual(path, '%/qux')
+        self.assertEqual(path.full_path, '/qux')
+
+        with self.assertRaises(ValueError):
+            path = AbsolutePath(ctxt, '%qux')
 
     def test_path_with_mixed_contexts(self):
         config = self.config

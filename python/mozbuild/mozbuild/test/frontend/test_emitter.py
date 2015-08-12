@@ -10,6 +10,7 @@ import unittest
 from mozunit import main
 
 from mozbuild.frontend.data import (
+    AndroidResDirs,
     BrandingFiles,
     ConfigFileSubstitution,
     Defines,
@@ -873,6 +874,22 @@ class TestEmitterBasic(unittest.TestCase):
             'DIST_FILES does not exist'):
             reader = self.reader('dist-files-missing')
             self.read_topsrcdir(reader)
+
+    def test_android_res_dirs(self):
+        """Test that ANDROID_RES_DIRS works properly."""
+        reader = self.reader('android-res-dirs')
+        objs = self.read_topsrcdir(reader)
+
+        self.assertEqual(len(objs), 1)
+        self.assertIsInstance(objs[0], AndroidResDirs)
+
+        # Android resource directories are ordered.
+        expected = [
+            mozpath.join(reader.config.topsrcdir, 'dir1'),
+            mozpath.join(reader.config.topobjdir, 'dir2'),
+            '/dir3',
+        ]
+        self.assertEquals([p.full_path for p in objs[0].paths], expected)
 
 if __name__ == '__main__':
     main()
