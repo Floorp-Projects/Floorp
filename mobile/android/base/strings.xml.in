@@ -87,8 +87,9 @@
 
   <string name="history_today_section">&history_today_section;</string>
   <string name="history_yesterday_section">&history_yesterday_section;</string>
-  <string name="history_week_section">&history_week_section2;</string>
-  <string name="history_older_section">&history_older_section2;</string>
+  <string name="history_week_section">&history_week_section3;</string>
+  <string name="history_this_month_section">&history_this_month_section;</string>
+  <string name="history_older_section">&history_older_section3;</string>
 
   <string name="share">&share;</string>
   <string name="share_title">&share_title;</string>
