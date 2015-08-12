@@ -597,7 +597,14 @@ protected:
   virtual nsresult NotifyIMEInternal(
                      const IMENotification& aIMENotification) override;
 
-  void MaybeTrackScrollEventAsSwipe(const mozilla::PanGestureInput& aSwipeStartEvent);
+  struct SwipeInfo {
+    bool wantsSwipe;
+    uint32_t allowedDirections;
+  };
+
+  SwipeInfo SendMayStartSwipe(const mozilla::PanGestureInput& aSwipeStartEvent);
+  void TrackScrollEventAsSwipe(const mozilla::PanGestureInput& aSwipeStartEvent,
+                               uint32_t aAllowedDirections);
 
 protected:
 
