@@ -55,8 +55,9 @@
 
 <!ENTITY history_today_section "Today">
 <!ENTITY history_yesterday_section "Yesterday">
-<!ENTITY history_week_section2 "Last Week">
-<!ENTITY history_older_section2 "Last Month">
+<!ENTITY history_week_section3 "Last 7 days">
+<!ENTITY history_this_month_section "This month">
+<!ENTITY history_older_section3 "Older than 6 months">
 
 <!ENTITY go "Go">
 <!ENTITY search "Search">
