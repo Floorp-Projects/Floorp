@@ -4,7 +4,7 @@ use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
 use std::net::SocketAddr;
 
-use hyper::header::ContentLength;
+use hyper::header::{ContentLength, ContentType};
 use hyper::method::Method;
 use hyper::server::{Server, Handler, Request, Response};
 use hyper::uri::RequestUri::AbsolutePath;
@@ -217,6 +217,7 @@ impl Handler for HttpHandler {
                     *resp_status = status;
                 }
                 res.headers_mut().set(ContentLength(resp_body.len() as u64));
+                res.headers_mut().set(ContentType::json());
                 let mut stream = res.start().unwrap();
                 stream.write_all(&resp_body.as_bytes()).unwrap();
                 stream.end().unwrap();
