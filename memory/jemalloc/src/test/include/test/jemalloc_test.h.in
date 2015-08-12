@@ -1,14 +1,21 @@
+#include <limits.h>
+#ifndef SIZE_T_MAX
+#  define SIZE_T_MAX	SIZE_MAX
+#endif
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <errno.h>
-#include <inttypes.h>
 #include <math.h>
 #include <string.h>
+#ifdef _WIN32
+#  include "msvc_compat/strings.h"
+#endif
 #include <sys/time.h>
 
 #ifdef _WIN32
 #  include <windows.h>
+#  include "msvc_compat/windows_extra.h"
 #else
 #  include <pthread.h>
 #endif

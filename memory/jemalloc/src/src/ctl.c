@@ -73,6 +73,7 @@ CTL_PROTO(thread_allocated)
 CTL_PROTO(thread_allocatedp)
 CTL_PROTO(thread_deallocated)
 CTL_PROTO(thread_deallocatedp)
+CTL_PROTO(config_cache_oblivious)
 CTL_PROTO(config_debug)
 CTL_PROTO(config_fill)
 CTL_PROTO(config_lazy_lock)
@@ -110,11 +111,14 @@ CTL_PROTO(opt_prof_gdump)
 CTL_PROTO(opt_prof_final)
 CTL_PROTO(opt_prof_leak)
 CTL_PROTO(opt_prof_accum)
+CTL_PROTO(tcache_create)
+CTL_PROTO(tcache_flush)
+CTL_PROTO(tcache_destroy)
 CTL_PROTO(arena_i_purge)
 static void	arena_purge(unsigned arena_ind);
 CTL_PROTO(arena_i_dss)
-CTL_PROTO(arena_i_chunk_alloc)
-CTL_PROTO(arena_i_chunk_dalloc)
+CTL_PROTO(arena_i_lg_dirty_mult)
+CTL_PROTO(arena_i_chunk_hooks)
 INDEX_PROTO(arena_i)
 CTL_PROTO(arenas_bin_i_size)
 CTL_PROTO(arenas_bin_i_nregs)
@@ -126,6 +130,7 @@ CTL_PROTO(arenas_hchunk_i_size)
 INDEX_PROTO(arenas_hchunk_i)
 CTL_PROTO(arenas_narenas)
 CTL_PROTO(arenas_initialized)
+CTL_PROTO(arenas_lg_dirty_mult)
 CTL_PROTO(arenas_quantum)
 CTL_PROTO(arenas_page)
 CTL_PROTO(arenas_tcache_max)
@@ -137,12 +142,10 @@ CTL_PROTO(arenas_extend)
 CTL_PROTO(prof_thread_active_init)
 CTL_PROTO(prof_active)
 CTL_PROTO(prof_dump)
+CTL_PROTO(prof_gdump)
 CTL_PROTO(prof_reset)
 CTL_PROTO(prof_interval)
 CTL_PROTO(lg_prof_sample)
-CTL_PROTO(stats_chunks_current)
-CTL_PROTO(stats_chunks_total)
-CTL_PROTO(stats_chunks_high)
 CTL_PROTO(stats_arenas_i_small_allocated)
 CTL_PROTO(stats_arenas_i_small_nmalloc)
 CTL_PROTO(stats_arenas_i_small_ndalloc)
@@ -177,17 +180,21 @@ CTL_PROTO(stats_arenas_i_hchunks_j_curhchunks)
 INDEX_PROTO(stats_arenas_i_hchunks_j)
 CTL_PROTO(stats_arenas_i_nthreads)
 CTL_PROTO(stats_arenas_i_dss)
+CTL_PROTO(stats_arenas_i_lg_dirty_mult)
 CTL_PROTO(stats_arenas_i_pactive)
 CTL_PROTO(stats_arenas_i_pdirty)
 CTL_PROTO(stats_arenas_i_mapped)
 CTL_PROTO(stats_arenas_i_npurge)
 CTL_PROTO(stats_arenas_i_nmadvise)
 CTL_PROTO(stats_arenas_i_purged)
+CTL_PROTO(stats_arenas_i_metadata_mapped)
+CTL_PROTO(stats_arenas_i_metadata_allocated)
 INDEX_PROTO(stats_arenas_i)
 CTL_PROTO(stats_cactive)
 CTL_PROTO(stats_allocated)
 CTL_PROTO(stats_active)
-CTL_PROTO(stats_bookkeeping)
+CTL_PROTO(stats_metadata)
+CTL_PROTO(stats_resident)
 CTL_PROTO(stats_mapped)
 
 /******************************************************************************/
@@ -230,6 +237,7 @@ static const ctl_named_node_t	thread_node[] = {
 };
 
 static const ctl_named_node_t	config_node[] = {
+	{NAME("cache_oblivious"), CTL(config_cache_oblivious)},
 	{NAME("debug"),		CTL(config_debug)},
 	{NAME("fill"),		CTL(config_fill)},
 	{NAME("lazy_lock"),	CTL(config_lazy_lock)},
@@ -272,15 +280,17 @@ static const ctl_named_node_t opt_node[] = {
 	{NAME("prof_accum"),	CTL(opt_prof_accum)}
 };
 
-static const ctl_named_node_t chunk_node[] = {
-	{NAME("alloc"),		CTL(arena_i_chunk_alloc)},
-	{NAME("dalloc"),	CTL(arena_i_chunk_dalloc)}
+static const ctl_named_node_t	tcache_node[] = {
+	{NAME("create"),	CTL(tcache_create)},
+	{NAME("flush"),		CTL(tcache_flush)},
+	{NAME("destroy"),	CTL(tcache_destroy)}
 };
 
 static const ctl_named_node_t arena_i_node[] = {
 	{NAME("purge"),		CTL(arena_i_purge)},
 	{NAME("dss"),		CTL(arena_i_dss)},
-	{NAME("chunk"),		CHILD(named, chunk)},
+	{NAME("lg_dirty_mult"),	CTL(arena_i_lg_dirty_mult)},
+	{NAME("chunk_hooks"),	CTL(arena_i_chunk_hooks)}
 };
 static const ctl_named_node_t super_arena_i_node[] = {
 	{NAME(""),		CHILD(named, arena_i)}
@@ -328,6 +338,7 @@ static const ctl_indexed_node_t arenas_hchunk_node[] = {
 static const ctl_named_node_t arenas_node[] = {
 	{NAME("narenas"),	CTL(arenas_narenas)},
 	{NAME("initialized"),	CTL(arenas_initialized)},
+	{NAME("lg_dirty_mult"),	CTL(arenas_lg_dirty_mult)},
 	{NAME("quantum"),	CTL(arenas_quantum)},
 	{NAME("page"),		CTL(arenas_page)},
 	{NAME("tcache_max"),	CTL(arenas_tcache_max)},
@@ -345,15 +356,15 @@ static const ctl_named_node_t	prof_node[] = {
 	{NAME("thread_active_init"), CTL(prof_thread_active_init)},
 	{NAME("active"),	CTL(prof_active)},
 	{NAME("dump"),		CTL(prof_dump)},
+	{NAME("gdump"),		CTL(prof_gdump)},
 	{NAME("reset"),		CTL(prof_reset)},
 	{NAME("interval"),	CTL(prof_interval)},
 	{NAME("lg_sample"),	CTL(lg_prof_sample)}
 };
 
-static const ctl_named_node_t stats_chunks_node[] = {
-	{NAME("current"),	CTL(stats_chunks_current)},
-	{NAME("total"),		CTL(stats_chunks_total)},
-	{NAME("high"),		CTL(stats_chunks_high)}
+static const ctl_named_node_t stats_arenas_i_metadata_node[] = {
+	{NAME("mapped"),	CTL(stats_arenas_i_metadata_mapped)},
+	{NAME("allocated"),	CTL(stats_arenas_i_metadata_allocated)}
 };
 
 static const ctl_named_node_t stats_arenas_i_small_node[] = {
@@ -427,12 +438,14 @@ static const ctl_indexed_node_t stats_arenas_i_hchunks_node[] = {
 static const ctl_named_node_t stats_arenas_i_node[] = {
 	{NAME("nthreads"),	CTL(stats_arenas_i_nthreads)},
 	{NAME("dss"),		CTL(stats_arenas_i_dss)},
+	{NAME("lg_dirty_mult"),	CTL(stats_arenas_i_lg_dirty_mult)},
 	{NAME("pactive"),	CTL(stats_arenas_i_pactive)},
 	{NAME("pdirty"),	CTL(stats_arenas_i_pdirty)},
 	{NAME("mapped"),	CTL(stats_arenas_i_mapped)},
 	{NAME("npurge"),	CTL(stats_arenas_i_npurge)},
 	{NAME("nmadvise"),	CTL(stats_arenas_i_nmadvise)},
 	{NAME("purged"),	CTL(stats_arenas_i_purged)},
+	{NAME("metadata"),	CHILD(named, stats_arenas_i_metadata)},
 	{NAME("small"),		CHILD(named, stats_arenas_i_small)},
 	{NAME("large"),		CHILD(named, stats_arenas_i_large)},
 	{NAME("huge"),		CHILD(named, stats_arenas_i_huge)},
@@ -449,13 +462,13 @@ static const ctl_indexed_node_t stats_arenas_node[] = {
 };
 
 static const ctl_named_node_t stats_node[] = {
-	{NAME("cactive"),		CTL(stats_cactive)},
-	{NAME("allocated"),		CTL(stats_allocated)},
-	{NAME("active"),		CTL(stats_active)},
-	{NAME("bookkeeping"),	CTL(stats_bookkeeping)},
-	{NAME("mapped"),		CTL(stats_mapped)},
-	{NAME("chunks"),		CHILD(named, stats_chunks)},
-	{NAME("arenas"),		CHILD(indexed, stats_arenas)}
+	{NAME("cactive"),	CTL(stats_cactive)},
+	{NAME("allocated"),	CTL(stats_allocated)},
+	{NAME("active"),	CTL(stats_active)},
+	{NAME("metadata"),	CTL(stats_metadata)},
+	{NAME("resident"),	CTL(stats_resident)},
+	{NAME("mapped"),	CTL(stats_mapped)},
+	{NAME("arenas"),	CHILD(indexed, stats_arenas)}
 };
 
 static const ctl_named_node_t	root_node[] = {
@@ -464,6 +477,7 @@ static const ctl_named_node_t	root_node[] = {
 	{NAME("thread"),	CHILD(named, thread)},
 	{NAME("config"),	CHILD(named, config)},
 	{NAME("opt"),		CHILD(named, opt)},
+	{NAME("tcache"),	CHILD(named, tcache)},
 	{NAME("arena"),		CHILD(indexed, arena)},
 	{NAME("arenas"),	CHILD(named, arenas)},
 	{NAME("prof"),		CHILD(named, prof)},
@@ -506,6 +520,7 @@ ctl_arena_clear(ctl_arena_stats_t *astats)
 {
 
 	astats->dss = dss_prec_names[dss_prec_limit];
+	astats->lg_dirty_mult = -1;
 	astats->pactive = 0;
 	astats->pdirty = 0;
 	if (config_stats) {
@@ -527,9 +542,9 @@ ctl_arena_stats_amerge(ctl_arena_stats_t *cstats, arena_t *arena)
 {
 	unsigned i;
 
-	arena_stats_merge(arena, &cstats->dss, &cstats->pactive,
-	    &cstats->pdirty, &cstats->astats, cstats->bstats, cstats->lstats,
-	    cstats->hstats);
+	arena_stats_merge(arena, &cstats->dss, &cstats->lg_dirty_mult,
+	    &cstats->pactive, &cstats->pdirty, &cstats->astats, cstats->bstats,
+	    cstats->lstats, cstats->hstats);
 
 	for (i = 0; i < NBINS; i++) {
 		cstats->allocated_small += cstats->bstats[i].curregs *
@@ -552,6 +567,9 @@ ctl_arena_stats_smerge(ctl_arena_stats_t *sstats, ctl_arena_stats_t *astats)
 	sstats->astats.npurge += astats->astats.npurge;
 	sstats->astats.nmadvise += astats->astats.nmadvise;
 	sstats->astats.purged += astats->astats.purged;
+
+	sstats->astats.metadata_mapped += astats->astats.metadata_mapped;
+	sstats->astats.metadata_allocated += astats->astats.metadata_allocated;
 
 	sstats->allocated_small += astats->allocated_small;
 	sstats->nmalloc_small += astats->nmalloc_small;
@@ -638,7 +656,7 @@ ctl_grow(void)
 	    sizeof(ctl_arena_stats_t));
 	memset(&astats[ctl_stats.narenas + 1], 0, sizeof(ctl_arena_stats_t));
 	if (ctl_arena_init(&astats[ctl_stats.narenas + 1])) {
-		a0free(astats);
+		a0dalloc(astats);
 		return (true);
 	}
 	/* Swap merged stats to their new location. */
@@ -651,7 +669,7 @@ ctl_grow(void)
 		memcpy(&astats[ctl_stats.narenas + 1], &tstats,
 		    sizeof(ctl_arena_stats_t));
 	}
-	a0free(ctl_stats.arenas);
+	a0dalloc(ctl_stats.arenas);
 	ctl_stats.arenas = astats;
 	ctl_stats.narenas++;
 
@@ -663,15 +681,8 @@ ctl_refresh(void)
 {
 	tsd_t *tsd;
 	unsigned i;
+	bool refreshed;
 	VARIABLE_ARRAY(arena_t *, tarenas, ctl_stats.narenas);
-
-	if (config_stats) {
-		malloc_mutex_lock(&chunks_mtx);
-		ctl_stats.chunks.current = stats_chunks.curchunks;
-		ctl_stats.chunks.total = stats_chunks.nchunks;
-		ctl_stats.chunks.high = stats_chunks.highchunks;
-		malloc_mutex_unlock(&chunks_mtx);
-	}
 
 	/*
 	 * Clear sum stats, since they will be merged into by
@@ -681,8 +692,13 @@ ctl_refresh(void)
 	ctl_arena_clear(&ctl_stats.arenas[ctl_stats.narenas]);
 
 	tsd = tsd_fetch();
-	for (i = 0; i < ctl_stats.narenas; i++)
-		tarenas[i] = arena_get(tsd, i, false, (i == 0));
+	for (i = 0, refreshed = false; i < ctl_stats.narenas; i++) {
+		tarenas[i] = arena_get(tsd, i, false, false);
+		if (tarenas[i] == NULL && !refreshed) {
+			tarenas[i] = arena_get(tsd, i, false, true);
+			refreshed = true;
+		}
+	}
 
 	for (i = 0; i < ctl_stats.narenas; i++) {
 		if (tarenas[i] != NULL)
@@ -700,19 +716,24 @@ ctl_refresh(void)
 	}
 
 	if (config_stats) {
+		size_t base_allocated, base_resident, base_mapped;
+		base_stats_get(&base_allocated, &base_resident, &base_mapped);
 		ctl_stats.allocated =
-		    ctl_stats.arenas[ctl_stats.narenas].allocated_small
-		    + ctl_stats.arenas[ctl_stats.narenas].astats.allocated_large
-		    + ctl_stats.arenas[ctl_stats.narenas].astats.allocated_huge;
+		    ctl_stats.arenas[ctl_stats.narenas].allocated_small +
+		    ctl_stats.arenas[ctl_stats.narenas].astats.allocated_large +
+		    ctl_stats.arenas[ctl_stats.narenas].astats.allocated_huge;
 		ctl_stats.active =
 		    (ctl_stats.arenas[ctl_stats.narenas].pactive << LG_PAGE);
-		ctl_stats.mapped = (ctl_stats.chunks.current << opt_lg_chunk);
-
-		/* add chunk headers to bookkeeping */
-		ctl_stats.bookkeeping = ctl_stats.chunks.current * (map_bias << LG_PAGE);
-		malloc_mutex_lock(&base_mtx);
-		ctl_stats.bookkeeping += base_allocated;
-		malloc_mutex_unlock(&base_mtx);
+		ctl_stats.metadata = base_allocated +
+		    ctl_stats.arenas[ctl_stats.narenas].astats.metadata_mapped +
+		    ctl_stats.arenas[ctl_stats.narenas].astats
+		    .metadata_allocated;
+		ctl_stats.resident = base_resident +
+		    ctl_stats.arenas[ctl_stats.narenas].astats.metadata_mapped +
+		    ((ctl_stats.arenas[ctl_stats.narenas].pactive +
+		    ctl_stats.arenas[ctl_stats.narenas].pdirty) << LG_PAGE);
+		ctl_stats.mapped = base_mapped +
+		    ctl_stats.arenas[ctl_stats.narenas].astats.mapped;
 	}
 
 	ctl_epoch++;
@@ -750,12 +771,12 @@ ctl_init(void)
 				if (ctl_arena_init(&ctl_stats.arenas[i])) {
 					unsigned j;
 					for (j = 0; j < i; j++) {
-						a0free(
+						a0dalloc(
 						    ctl_stats.arenas[j].lstats);
-						a0free(
+						a0dalloc(
 						    ctl_stats.arenas[j].hstats);
 					}
-					a0free(ctl_stats.arenas);
+					a0dalloc(ctl_stats.arenas);
 					ctl_stats.arenas = NULL;
 					ret = true;
 					goto label_return;
@@ -1035,8 +1056,8 @@ ctl_postfork_child(void)
 			memcpy(oldp, (void *)&(v), copylen);		\
 			ret = EINVAL;					\
 			goto label_return;				\
-		} else							\
-			*(t *)oldp = (v);				\
+		}							\
+		*(t *)oldp = (v);					\
 	}								\
 } while (0)
 
@@ -1220,6 +1241,7 @@ label_return:
 
 /******************************************************************************/
 
+CTL_RO_BOOL_CONFIG_GEN(config_cache_oblivious)
 CTL_RO_BOOL_CONFIG_GEN(config_debug)
 CTL_RO_BOOL_CONFIG_GEN(config_fill)
 CTL_RO_BOOL_CONFIG_GEN(config_lazy_lock)
@@ -1270,19 +1292,21 @@ thread_arena_ctl(const size_t *mib, size_t miblen, void *oldp, size_t *oldlenp,
 {
 	int ret;
 	tsd_t *tsd;
-	arena_t *arena;
+	arena_t *oldarena;
 	unsigned newind, oldind;
 
 	tsd = tsd_fetch();
-	arena = arena_choose(tsd, NULL);
-	if (arena == NULL)
+	oldarena = arena_choose(tsd, NULL);
+	if (oldarena == NULL)
 		return (EAGAIN);
 
 	malloc_mutex_lock(&ctl_mtx);
-	newind = oldind = arena->ind;
+	newind = oldind = oldarena->ind;
 	WRITE(newind, unsigned);
 	READ(oldind, unsigned);
 	if (newind != oldind) {
+		arena_t *newarena;
+
 		if (newind >= ctl_stats.narenas) {
 			/* New arena index is out of range. */
 			ret = EFAULT;
@@ -1290,8 +1314,8 @@ thread_arena_ctl(const size_t *mib, size_t miblen, void *oldp, size_t *oldlenp,
 		}
 
 		/* Initialize arena if necessary. */
-		arena = arena_get(tsd, newind, true, true);
-		if (arena == NULL) {
+		newarena = arena_get(tsd, newind, true, true);
+		if (newarena == NULL) {
 			ret = EAGAIN;
 			goto label_return;
 		}
@@ -1299,8 +1323,10 @@ thread_arena_ctl(const size_t *mib, size_t miblen, void *oldp, size_t *oldlenp,
 		arena_migrate(tsd, oldind, newind);
 		if (config_tcache) {
 			tcache_t *tcache = tsd_tcache_get(tsd);
-			if (tcache != NULL)
-				tcache_arena_reassociate(tcache, arena);
+			if (tcache != NULL) {
+				tcache_arena_reassociate(tcache, oldarena,
+				    newarena);
+			}
 		}
 	}
 
@@ -1427,17 +1453,106 @@ label_return:
 
 /******************************************************************************/
 
+static int
+tcache_create_ctl(const size_t *mib, size_t miblen, void *oldp, size_t *oldlenp,
+    void *newp, size_t newlen)
+{
+	int ret;
+	tsd_t *tsd;
+	unsigned tcache_ind;
+
+	if (!config_tcache)
+		return (ENOENT);
+
+	tsd = tsd_fetch();
+
+	malloc_mutex_lock(&ctl_mtx);
+	READONLY();
+	if (tcaches_create(tsd, &tcache_ind)) {
+		ret = EFAULT;
+		goto label_return;
+	}
+	READ(tcache_ind, unsigned);
+
+	ret = 0;
+label_return:
+	malloc_mutex_unlock(&ctl_mtx);
+	return (ret);
+}
+
+static int
+tcache_flush_ctl(const size_t *mib, size_t miblen, void *oldp, size_t *oldlenp,
+    void *newp, size_t newlen)
+{
+	int ret;
+	tsd_t *tsd;
+	unsigned tcache_ind;
+
+	if (!config_tcache)
+		return (ENOENT);
+
+	tsd = tsd_fetch();
+
+	WRITEONLY();
+	tcache_ind = UINT_MAX;
+	WRITE(tcache_ind, unsigned);
+	if (tcache_ind == UINT_MAX) {
+		ret = EFAULT;
+		goto label_return;
+	}
+	tcaches_flush(tsd, tcache_ind);
+
+	ret = 0;
+label_return:
+	return (ret);
+}
+
+static int
+tcache_destroy_ctl(const size_t *mib, size_t miblen, void *oldp,
+    size_t *oldlenp, void *newp, size_t newlen)
+{
+	int ret;
+	tsd_t *tsd;
+	unsigned tcache_ind;
+
+	if (!config_tcache)
+		return (ENOENT);
+
+	tsd = tsd_fetch();
+
+	WRITEONLY();
+	tcache_ind = UINT_MAX;
+	WRITE(tcache_ind, unsigned);
+	if (tcache_ind == UINT_MAX) {
+		ret = EFAULT;
+		goto label_return;
+	}
+	tcaches_destroy(tsd, tcache_ind);
+
+	ret = 0;
+label_return:
+	return (ret);
+}
+
+/******************************************************************************/
+
 /* ctl_mutex must be held during execution of this function. */
 static void
 arena_purge(unsigned arena_ind)
 {
 	tsd_t *tsd;
 	unsigned i;
+	bool refreshed;
 	VARIABLE_ARRAY(arena_t *, tarenas, ctl_stats.narenas);
 
 	tsd = tsd_fetch();
-	for (i = 0; i < ctl_stats.narenas; i++)
-		tarenas[i] = arena_get(tsd, i, false, (i == 0));
+	for (i = 0, refreshed = false; i < ctl_stats.narenas; i++) {
+		tarenas[i] = arena_get(tsd, i, false, false);
+		if (tarenas[i] == NULL && !refreshed) {
+			tarenas[i] = arena_get(tsd, i, false, true);
+			refreshed = true;
+		}
+	}
 
 	if (arena_ind == ctl_stats.narenas) {
 		unsigned i;
@@ -1526,54 +1641,66 @@ label_return:
 }
 
 static int
-arena_i_chunk_alloc_ctl(const size_t *mib, size_t miblen, void *oldp,
+arena_i_lg_dirty_mult_ctl(const size_t *mib, size_t miblen, void *oldp,
     size_t *oldlenp, void *newp, size_t newlen)
 {
 	int ret;
 	unsigned arena_ind = mib[1];
 	arena_t *arena;
 
-	malloc_mutex_lock(&ctl_mtx);
-	if (arena_ind < narenas_total_get() && (arena = arena_get(tsd_fetch(),
-	    arena_ind, false, true)) != NULL) {
-		malloc_mutex_lock(&arena->lock);
-		READ(arena->chunk_alloc, chunk_alloc_t *);
-		WRITE(arena->chunk_alloc, chunk_alloc_t *);
-	} else {
+	arena = arena_get(tsd_fetch(), arena_ind, false, true);
+	if (arena == NULL) {
 		ret = EFAULT;
-		goto label_outer_return;
+		goto label_return;
 	}
+
+	if (oldp != NULL && oldlenp != NULL) {
+		size_t oldval = arena_lg_dirty_mult_get(arena);
+		READ(oldval, ssize_t);
+	}
+	if (newp != NULL) {
+		if (newlen != sizeof(ssize_t)) {
+			ret = EINVAL;
+			goto label_return;
+		}
+		if (arena_lg_dirty_mult_set(arena, *(ssize_t *)newp)) {
+			ret = EFAULT;
+			goto label_return;
+		}
+	}
+
 	ret = 0;
 label_return:
-	malloc_mutex_unlock(&arena->lock);
-label_outer_return:
-	malloc_mutex_unlock(&ctl_mtx);
 	return (ret);
 }
 
 static int
-arena_i_chunk_dalloc_ctl(const size_t *mib, size_t miblen, void *oldp,
+arena_i_chunk_hooks_ctl(const size_t *mib, size_t miblen, void *oldp,
     size_t *oldlenp, void *newp, size_t newlen)
 {
-
 	int ret;
 	unsigned arena_ind = mib[1];
 	arena_t *arena;
 
 	malloc_mutex_lock(&ctl_mtx);
-	if (arena_ind < narenas_total_get() && (arena = arena_get(tsd_fetch(),
-	    arena_ind, false, true)) != NULL) {
-		malloc_mutex_lock(&arena->lock);
-		READ(arena->chunk_dalloc, chunk_dalloc_t *);
-		WRITE(arena->chunk_dalloc, chunk_dalloc_t *);
+	if (arena_ind < narenas_total_get() && (arena =
+	    arena_get(tsd_fetch(), arena_ind, false, true)) != NULL) {
+		if (newp != NULL) {
+			chunk_hooks_t old_chunk_hooks, new_chunk_hooks;
+			WRITE(new_chunk_hooks, chunk_hooks_t);
+			old_chunk_hooks = chunk_hooks_set(arena,
+			    &new_chunk_hooks);
+			READ(old_chunk_hooks, chunk_hooks_t);
+		} else {
+			chunk_hooks_t old_chunk_hooks = chunk_hooks_get(arena);
+			READ(old_chunk_hooks, chunk_hooks_t);
+		}
 	} else {
 		ret = EFAULT;
-		goto label_outer_return;
+		goto label_return;
 	}
 	ret = 0;
 label_return:
-	malloc_mutex_unlock(&arena->lock);
-label_outer_return:
 	malloc_mutex_unlock(&ctl_mtx);
 	return (ret);
 }
@@ -1642,6 +1769,32 @@ arenas_initialized_ctl(const size_t *mib, size_t miblen, void *oldp,
 
 label_return:
 	malloc_mutex_unlock(&ctl_mtx);
+	return (ret);
+}
+
+static int
+arenas_lg_dirty_mult_ctl(const size_t *mib, size_t miblen, void *oldp,
+    size_t *oldlenp, void *newp, size_t newlen)
+{
+	int ret;
+
+	if (oldp != NULL && oldlenp != NULL) {
+		size_t oldval = arena_lg_dirty_mult_default_get();
+		READ(oldval, ssize_t);
+	}
+	if (newp != NULL) {
+		if (newlen != sizeof(ssize_t)) {
+			ret = EINVAL;
+			goto label_return;
+		}
+		if (arena_lg_dirty_mult_default_set(*(ssize_t *)newp)) {
+			ret = EFAULT;
+			goto label_return;
+		}
+	}
+
+	ret = 0;
+label_return:
 	return (ret);
 }
 
@@ -1782,6 +1935,31 @@ label_return:
 }
 
 static int
+prof_gdump_ctl(const size_t *mib, size_t miblen, void *oldp, size_t *oldlenp,
+    void *newp, size_t newlen)
+{
+	int ret;
+	bool oldval;
+
+	if (!config_prof)
+		return (ENOENT);
+
+	if (newp != NULL) {
+		if (newlen != sizeof(bool)) {
+			ret = EINVAL;
+			goto label_return;
+		}
+		oldval = prof_gdump_set(*(bool *)newp);
+	} else
+		oldval = prof_gdump_get();
+	READ(oldval, bool);
+
+	ret = 0;
+label_return:
+	return (ret);
+}
+
+static int
 prof_reset_ctl(const size_t *mib, size_t miblen, void *oldp, size_t *oldlenp,
     void *newp, size_t newlen)
 {
@@ -1814,15 +1992,13 @@ CTL_RO_NL_CGEN(config_prof, lg_prof_sample, lg_prof_sample, size_t)
 CTL_RO_CGEN(config_stats, stats_cactive, &stats_cactive, size_t *)
 CTL_RO_CGEN(config_stats, stats_allocated, ctl_stats.allocated, size_t)
 CTL_RO_CGEN(config_stats, stats_active, ctl_stats.active, size_t)
-CTL_RO_CGEN(config_stats, stats_bookkeeping, ctl_stats.bookkeeping, size_t)
+CTL_RO_CGEN(config_stats, stats_metadata, ctl_stats.metadata, size_t)
+CTL_RO_CGEN(config_stats, stats_resident, ctl_stats.resident, size_t)
 CTL_RO_CGEN(config_stats, stats_mapped, ctl_stats.mapped, size_t)
 
-CTL_RO_CGEN(config_stats, stats_chunks_current, ctl_stats.chunks.current,
-    size_t)
-CTL_RO_CGEN(config_stats, stats_chunks_total, ctl_stats.chunks.total, uint64_t)
-CTL_RO_CGEN(config_stats, stats_chunks_high, ctl_stats.chunks.high, size_t)
-
 CTL_RO_GEN(stats_arenas_i_dss, ctl_stats.arenas[mib[2]].dss, const char *)
+CTL_RO_GEN(stats_arenas_i_lg_dirty_mult, ctl_stats.arenas[mib[2]].lg_dirty_mult,
+    ssize_t)
 CTL_RO_GEN(stats_arenas_i_nthreads, ctl_stats.arenas[mib[2]].nthreads, unsigned)
 CTL_RO_GEN(stats_arenas_i_pactive, ctl_stats.arenas[mib[2]].pactive, size_t)
 CTL_RO_GEN(stats_arenas_i_pdirty, ctl_stats.arenas[mib[2]].pdirty, size_t)
@@ -1834,6 +2010,10 @@ CTL_RO_CGEN(config_stats, stats_arenas_i_nmadvise,
     ctl_stats.arenas[mib[2]].astats.nmadvise, uint64_t)
 CTL_RO_CGEN(config_stats, stats_arenas_i_purged,
     ctl_stats.arenas[mib[2]].astats.purged, uint64_t)
+CTL_RO_CGEN(config_stats, stats_arenas_i_metadata_mapped,
+    ctl_stats.arenas[mib[2]].astats.metadata_mapped, size_t)
+CTL_RO_CGEN(config_stats, stats_arenas_i_metadata_allocated,
+    ctl_stats.arenas[mib[2]].astats.metadata_allocated, size_t)
 
 CTL_RO_CGEN(config_stats, stats_arenas_i_small_allocated,
     ctl_stats.arenas[mib[2]].allocated_small, size_t)

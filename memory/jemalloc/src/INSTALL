@@ -107,14 +107,14 @@ any of the following arguments (not a definitive list) to 'configure':
     there are interactions between the various coverage targets, so it is
     usually advisable to run 'make clean' between repeated code coverage runs.
 
---enable-ivsalloc
-    Enable validation code, which verifies that pointers reside within
-    jemalloc-owned chunks before dereferencing them.  This incurs a substantial
-    performance hit.
-
 --disable-stats
     Disable statistics gathering functionality.  See the "opt.stats_print"
     option documentation for usage details.
+
+--enable-ivsalloc
+    Enable validation code, which verifies that pointers reside within
+    jemalloc-owned chunks before dereferencing them.  This incurs a minor
+    performance hit.
 
 --enable-prof
     Enable heap profiling and leak detection functionality.  See the "opt.prof"
@@ -184,6 +184,15 @@ any of the following arguments (not a definitive list) to 'configure':
     Disable thread-local storage (TLS), which allows for fast access to
     thread-local variables via the __thread keyword.  If TLS is available,
     jemalloc uses it for several purposes.
+
+--disable-cache-oblivious
+    Disable cache-oblivious large allocation alignment for large allocation
+    requests with no alignment constraints.  If this feature is disabled, all
+    large allocations are page-aligned as an implementation artifact, which can
+    severely harm CPU cache utilization.  However, the cache-oblivious layout
+    comes at the cost of one extra page per large allocation, which in the
+    most extreme case increases physical memory usage for the 16 KiB size class
+    to 20 KiB.
 
 --with-xslroot=<path>
     Specify where to find DocBook XSL stylesheets when building the
