@@ -9,7 +9,7 @@
         <item name="android:layout_width">@dimen/new_tablet_browser_toolbar_menu_item_width</item>
     </style>
 
-    <style name="UrlBar.ImageButton.TabCount.NewTablet">
+    <style name="UrlBar.ImageButton.TabCount">
         <item name="android:background">@drawable/tabs_count</item>
     </style>
 
