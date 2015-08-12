@@ -963,3 +963,15 @@ class AndroidEclipseProjectData(object):
         cpe.ignore_warnings = ignore_warnings
         self._classpathentries.append(cpe)
         return cpe
+
+
+class AndroidResDirs(ContextDerived):
+    """Represents Android resource directories."""
+
+    __slots__ = (
+        'paths',
+    )
+
+    def __init__(self, context, paths):
+        ContextDerived.__init__(self, context)
+        self.paths = paths
