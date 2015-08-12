@@ -435,6 +435,7 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
     int32_t ice_trickle_grace_period = 5000;
     int32_t ice_tcp_so_sock_count = 3;
     int32_t ice_tcp_listen_backlog = 10;
+    nsAutoCString force_net_interface;
 #ifndef MOZILLA_XPCOMRT_API
     nsresult res;
     nsCOMPtr<nsIPrefService> prefs =
@@ -455,6 +456,9 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
         branch->GetIntPref(
             "media.peerconnection.ice.tcp_listen_backlog",
             &ice_tcp_listen_backlog);
+        branch->GetCharPref(
+            "media.peerconnection.ice.force_interface",
+            getter_Copies(force_net_interface));
       }
     }
 #endif
@@ -477,6 +481,11 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
 
     if (allow_link_local) {
       NR_reg_set_char((char *)NR_STUN_REG_PREF_ALLOW_LINK_LOCAL_ADDRS, 1);
+    }
+    if (force_net_interface.Length() > 0) {
+      // Stupid cast.... but needed
+      const nsCString& flat = PromiseFlatCString(static_cast<nsACString&>(force_net_interface));
+      NR_reg_set_string((char *)NR_ICE_REG_PREF_FORCE_INTERFACE_NAME, const_cast<char*>(flat.get()));
     }
   }
 
