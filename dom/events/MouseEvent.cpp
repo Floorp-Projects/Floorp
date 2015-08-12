@@ -504,14 +504,11 @@ MouseEvent::GetMozInputSource(uint16_t* aInputSource)
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsresult
-NS_NewDOMMouseEvent(nsIDOMEvent** aInstancePtrResult,
-                    EventTarget* aOwner,
+already_AddRefed<MouseEvent>
+NS_NewDOMMouseEvent(EventTarget* aOwner,
                     nsPresContext* aPresContext,
                     WidgetMouseEvent* aEvent)
 {
-  MouseEvent* it = new MouseEvent(aOwner, aPresContext, aEvent);
-  NS_ADDREF(it);
-  *aInstancePtrResult = static_cast<Event*>(it);
-  return NS_OK;
+  nsRefPtr<MouseEvent> it = new MouseEvent(aOwner, aPresContext, aEvent);
+  return it.forget();
 }

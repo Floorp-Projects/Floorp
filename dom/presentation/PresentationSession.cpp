@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/dom/MessageEvent.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIDOMMessageEvent.h"
 #include "nsIPresentationService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStringStream.h"
@@ -260,13 +260,9 @@ PresentationSession::DispatchMessageEvent(JS::Handle<JS::Value> aData)
     return rv;
   }
 
-  nsCOMPtr<nsIDOMEvent> event;
-  rv = NS_NewDOMMessageEvent(getter_AddRefs(event), this, nullptr, nullptr);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  nsRefPtr<MessageEvent> messageEvent =
+    NS_NewDOMMessageEvent(this, nullptr, nullptr);
 
-  nsCOMPtr<nsIDOMMessageEvent> messageEvent = do_QueryInterface(event);
   rv = messageEvent->InitMessageEvent(NS_LITERAL_STRING("message"),
                                       false, false,
                                       aData,
@@ -276,9 +272,9 @@ PresentationSession::DispatchMessageEvent(JS::Handle<JS::Value> aData)
     return rv;
   }
 
-  event->SetTrusted(true);
+  messageEvent->SetTrusted(true);
 
   nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
-    new AsyncEventDispatcher(this, event);
+    new AsyncEventDispatcher(this, static_cast<Event*>(messageEvent));
   return asyncDispatcher->PostDOMEvent();
 }

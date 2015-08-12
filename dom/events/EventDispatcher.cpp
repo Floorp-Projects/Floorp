@@ -15,13 +15,28 @@
 #include "GeckoProfiler.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/dom/CloseEvent.h"
+#include "mozilla/dom/CustomEvent.h"
 #include "mozilla/dom/DeviceOrientationEvent.h"
 #include "mozilla/dom/EventTarget.h"
+#include "mozilla/dom/FocusEvent.h"
 #include "mozilla/dom/HashChangeEvent.h"
+#include "mozilla/dom/InputEvent.h"
+#include "mozilla/dom/MessageEvent.h"
+#include "mozilla/dom/MouseScrollEvent.h"
+#include "mozilla/dom/MutationEvent.h"
+#include "mozilla/dom/NotifyPaintEvent.h"
 #include "mozilla/dom/PageTransitionEvent.h"
+#include "mozilla/dom/PointerEvent.h"
 #include "mozilla/dom/PopStateEvent.h"
+#include "mozilla/dom/ScrollAreaEvent.h"
+#include "mozilla/dom/SimpleGestureEvent.h"
 #include "mozilla/dom/StorageEvent.h"
+#include "mozilla/dom/SVGZoomEvent.h"
+#include "mozilla/dom/TimeEvent.h"
 #include "mozilla/dom/TouchEvent.h"
+#include "mozilla/dom/TransitionEvent.h"
+#include "mozilla/dom/WheelEvent.h"
+#include "mozilla/dom/XULCommandEvent.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/InternalMutationEvent.h"
@@ -705,85 +720,76 @@ EventDispatcher::DispatchDOMEvent(nsISupports* aTarget,
   return NS_ERROR_ILLEGAL_VALUE;
 }
 
-/* static */ nsresult
+/* static */ already_AddRefed<dom::Event>
 EventDispatcher::CreateEvent(EventTarget* aOwner,
                              nsPresContext* aPresContext,
                              WidgetEvent* aEvent,
-                             const nsAString& aEventType,
-                             nsIDOMEvent** aDOMEvent)
+                             const nsAString& aEventType)
 {
-  *aDOMEvent = nullptr;
-
   if (aEvent) {
     switch(aEvent->mClass) {
     case eMutationEventClass:
-      return NS_NewDOMMutationEvent(aDOMEvent, aOwner, aPresContext,
+      return NS_NewDOMMutationEvent(aOwner, aPresContext,
                                     aEvent->AsMutationEvent());
     case eGUIEventClass:
     case eScrollPortEventClass:
     case eUIEventClass:
-      return NS_NewDOMUIEvent(aDOMEvent, aOwner, aPresContext,
-                              aEvent->AsGUIEvent());
+      return NS_NewDOMUIEvent(aOwner, aPresContext, aEvent->AsGUIEvent());
     case eScrollAreaEventClass:
-      return NS_NewDOMScrollAreaEvent(aDOMEvent, aOwner, aPresContext,
+      return NS_NewDOMScrollAreaEvent(aOwner, aPresContext,
                                       aEvent->AsScrollAreaEvent());
     case eKeyboardEventClass:
-      return NS_NewDOMKeyboardEvent(aDOMEvent, aOwner, aPresContext,
+      return NS_NewDOMKeyboardEvent(aOwner, aPresContext,
                                     aEvent->AsKeyboardEvent());
     case eBeforeAfterKeyboardEventClass:
-      return NS_NewDOMBeforeAfterKeyboardEvent(aDOMEvent, aOwner, aPresContext,
+      return NS_NewDOMBeforeAfterKeyboardEvent(aOwner, aPresContext,
                                                aEvent->AsBeforeAfterKeyboardEvent());
     case eCompositionEventClass:
-      return NS_NewDOMCompositionEvent(aDOMEvent, aOwner, aPresContext,
+      return NS_NewDOMCompositionEvent(aOwner, aPresContext,
                                        aEvent->AsCompositionEvent());
     case eMouseEventClass:
-      return NS_NewDOMMouseEvent(aDOMEvent, aOwner, aPresContext,
-                                 aEvent->AsMouseEvent());
+      return NS_NewDOMMouseEvent(aOwner, aPresContext, aEvent->AsMouseEvent());
     case eFocusEventClass:
-      return NS_NewDOMFocusEvent(aDOMEvent, aOwner, aPresContext,
-                                 aEvent->AsFocusEvent());
+      return NS_NewDOMFocusEvent(aOwner, aPresContext, aEvent->AsFocusEvent());
     case eMouseScrollEventClass:
-      return NS_NewDOMMouseScrollEvent(aDOMEvent, aOwner, aPresContext,
+      return NS_NewDOMMouseScrollEvent(aOwner, aPresContext,
                                        aEvent->AsMouseScrollEvent());
     case eWheelEventClass:
-      return NS_NewDOMWheelEvent(aDOMEvent, aOwner, aPresContext,
-                                 aEvent->AsWheelEvent());
+      return NS_NewDOMWheelEvent(aOwner, aPresContext, aEvent->AsWheelEvent());
     case eEditorInputEventClass:
-      return NS_NewDOMInputEvent(aDOMEvent, aOwner, aPresContext,
+      return NS_NewDOMInputEvent(aOwner, aPresContext,
                                  aEvent->AsEditorInputEvent());
     case eDragEventClass:
-      return NS_NewDOMDragEvent(aDOMEvent, aOwner, aPresContext,
-                                aEvent->AsDragEvent());
+      return NS_NewDOMDragEvent(aOwner, aPresContext, aEvent->AsDragEvent());
     case eClipboardEventClass:
-      return NS_NewDOMClipboardEvent(aDOMEvent, aOwner, aPresContext,
+      return NS_NewDOMClipboardEvent(aOwner, aPresContext,
                                      aEvent->AsClipboardEvent());
     case eSVGZoomEventClass:
-      return NS_NewDOMSVGZoomEvent(aDOMEvent, aOwner, aPresContext,
+      return NS_NewDOMSVGZoomEvent(aOwner, aPresContext,
                                    aEvent->AsSVGZoomEvent());
     case eSMILTimeEventClass:
-      return NS_NewDOMTimeEvent(aDOMEvent, aOwner, aPresContext,
+      return NS_NewDOMTimeEvent(aOwner, aPresContext,
                                 aEvent->AsSMILTimeEvent());
     case eCommandEventClass:
-      return NS_NewDOMCommandEvent(aDOMEvent, aOwner, aPresContext,
+      return NS_NewDOMCommandEvent(aOwner, aPresContext,
                                    aEvent->AsCommandEvent());
     case eSimpleGestureEventClass:
-      return NS_NewDOMSimpleGestureEvent(aDOMEvent, aOwner, aPresContext,
+      return NS_NewDOMSimpleGestureEvent(aOwner, aPresContext,
                                          aEvent->AsSimpleGestureEvent());
     case ePointerEventClass:
-      return NS_NewDOMPointerEvent(aDOMEvent, aOwner, aPresContext,
+      return NS_NewDOMPointerEvent(aOwner, aPresContext,
                                    aEvent->AsPointerEvent());
     case eTouchEventClass:
-      return NS_NewDOMTouchEvent(aDOMEvent, aOwner, aPresContext,
-                                 aEvent->AsTouchEvent());
+      return NS_NewDOMTouchEvent(aOwner, aPresContext, aEvent->AsTouchEvent());
     case eTransitionEventClass:
-      return NS_NewDOMTransitionEvent(aDOMEvent, aOwner, aPresContext,
+      return NS_NewDOMTransitionEvent(aOwner, aPresContext,
                                       aEvent->AsTransitionEvent());
     case eAnimationEventClass:
-      return NS_NewDOMAnimationEvent(aDOMEvent, aOwner, aPresContext,
+      return NS_NewDOMAnimationEvent(aOwner, aPresContext,
                                      aEvent->AsAnimationEvent());
     default:
       // For all other types of events, create a vanilla event object.
-      return NS_NewDOMEvent(aDOMEvent, aOwner, aPresContext, aEvent);
+      return NS_NewDOMEvent(aOwner, aPresContext, aEvent);
     }
   }
 
@@ -792,106 +798,94 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
   if (aEventType.LowerCaseEqualsLiteral("mouseevent") ||
       aEventType.LowerCaseEqualsLiteral("mouseevents") ||
       aEventType.LowerCaseEqualsLiteral("popupevents"))
-    return NS_NewDOMMouseEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+    return NS_NewDOMMouseEvent(aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("mousescrollevents"))
-    return NS_NewDOMMouseScrollEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+    return NS_NewDOMMouseScrollEvent(aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("dragevent") ||
       aEventType.LowerCaseEqualsLiteral("dragevents"))
-    return NS_NewDOMDragEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+    return NS_NewDOMDragEvent(aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("keyboardevent") ||
       aEventType.LowerCaseEqualsLiteral("keyevents"))
-    return NS_NewDOMKeyboardEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+    return NS_NewDOMKeyboardEvent(aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("compositionevent") ||
       aEventType.LowerCaseEqualsLiteral("textevent") ||
       aEventType.LowerCaseEqualsLiteral("textevents")) {
-    return NS_NewDOMCompositionEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+    return NS_NewDOMCompositionEvent(aOwner, aPresContext, nullptr);
   }
   if (aEventType.LowerCaseEqualsLiteral("mutationevent") ||
         aEventType.LowerCaseEqualsLiteral("mutationevents"))
-    return NS_NewDOMMutationEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+    return NS_NewDOMMutationEvent(aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("deviceorientationevent")) {
     DeviceOrientationEventInit init;
-    nsRefPtr<DeviceOrientationEvent> event =
-      DeviceOrientationEvent::Constructor(aOwner, EmptyString(), init);
-    event.forget(aDOMEvent);
-    return NS_OK;
+    return DeviceOrientationEvent::Constructor(aOwner, EmptyString(), init);
   }
   if (aEventType.LowerCaseEqualsLiteral("devicemotionevent"))
-    return NS_NewDOMDeviceMotionEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+    return NS_NewDOMDeviceMotionEvent(aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("uievent") ||
       aEventType.LowerCaseEqualsLiteral("uievents"))
-    return NS_NewDOMUIEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+    return NS_NewDOMUIEvent(aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("event") ||
       aEventType.LowerCaseEqualsLiteral("events") ||
       aEventType.LowerCaseEqualsLiteral("htmlevents") ||
       aEventType.LowerCaseEqualsLiteral("svgevent") ||
       aEventType.LowerCaseEqualsLiteral("svgevents"))
-    return NS_NewDOMEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+    return NS_NewDOMEvent(aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("svgzoomevent") ||
       aEventType.LowerCaseEqualsLiteral("svgzoomevents"))
-    return NS_NewDOMSVGZoomEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+    return NS_NewDOMSVGZoomEvent(aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("timeevent") ||
       aEventType.LowerCaseEqualsLiteral("timeevents"))
-    return NS_NewDOMTimeEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+    return NS_NewDOMTimeEvent(aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("xulcommandevent") ||
       aEventType.LowerCaseEqualsLiteral("xulcommandevents"))
-    return NS_NewDOMXULCommandEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+    return NS_NewDOMXULCommandEvent(aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("commandevent") ||
       aEventType.LowerCaseEqualsLiteral("commandevents"))
-    return NS_NewDOMCommandEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+    return NS_NewDOMCommandEvent(aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("datacontainerevent") ||
       aEventType.LowerCaseEqualsLiteral("datacontainerevents"))
-    return NS_NewDOMDataContainerEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+    return NS_NewDOMDataContainerEvent(aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("messageevent"))
-    return NS_NewDOMMessageEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+    return NS_NewDOMMessageEvent(aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("notifypaintevent"))
-    return NS_NewDOMNotifyPaintEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+    return NS_NewDOMNotifyPaintEvent(aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("simplegestureevent"))
-    return NS_NewDOMSimpleGestureEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+    return NS_NewDOMSimpleGestureEvent(aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("beforeunloadevent"))
-    return NS_NewDOMBeforeUnloadEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+    return NS_NewDOMBeforeUnloadEvent(aOwner, aPresContext, nullptr);
   // XXXkhuey this is broken
   if (aEventType.LowerCaseEqualsLiteral("pagetransition")) {
     PageTransitionEventInit init;
-    nsRefPtr<PageTransitionEvent> event =
-      PageTransitionEvent::Constructor(aOwner, EmptyString(), init);
-    event.forget(aDOMEvent);
-    return NS_OK;
+    return PageTransitionEvent::Constructor(aOwner, EmptyString(), init);
   }
   if (aEventType.LowerCaseEqualsLiteral("scrollareaevent"))
-    return NS_NewDOMScrollAreaEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+    return NS_NewDOMScrollAreaEvent(aOwner, aPresContext, nullptr);
   // XXXkhuey Chrome supports popstateevent here, even though it provides no
   // initPopStateEvent method.  This is nuts ... but copying it is unlikely to
   // break the web.
   if (aEventType.LowerCaseEqualsLiteral("popstateevent")) {
     AutoJSContext cx;
     RootedDictionary<PopStateEventInit> init(cx);
-    nsRefPtr<PopStateEvent> event =
-      PopStateEvent::Constructor(aOwner, EmptyString(), init);
-    event.forget(aDOMEvent);
-    return NS_OK;
+    return PopStateEvent::Constructor(aOwner, EmptyString(), init);
   }
   if (aEventType.LowerCaseEqualsLiteral("touchevent") &&
       TouchEvent::PrefEnabled())
-    return NS_NewDOMTouchEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+    return NS_NewDOMTouchEvent(aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("hashchangeevent")) {
     HashChangeEventInit init;
-    nsRefPtr<HashChangeEvent> event =
-      HashChangeEvent::Constructor(aOwner, EmptyString(), init);
-    event.forget(aDOMEvent);
-    return NS_OK;
+    return HashChangeEvent::Constructor(aOwner, EmptyString(), init);
   }
   if (aEventType.LowerCaseEqualsLiteral("customevent"))
-    return NS_NewDOMCustomEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+    return NS_NewDOMCustomEvent(aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("storageevent")) {
-    return NS_NewDOMStorageEvent(aDOMEvent, aOwner);
+    return NS_NewDOMStorageEvent(aOwner);
   }
 
 
   // NEW EVENT TYPES SHOULD NOT BE ADDED HERE; THEY SHOULD USE ONLY EVENT
   // CONSTRUCTORS
 
-  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  return nullptr;
 }
 
 } // namespace mozilla

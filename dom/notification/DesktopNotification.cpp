@@ -173,16 +173,14 @@ DesktopNotification::DispatchNotificationEvent(const nsString& aName)
     return;
   }
 
-  nsCOMPtr<nsIDOMEvent> event;
-  nsresult rv = NS_NewDOMEvent(getter_AddRefs(event), this, nullptr, nullptr);
-  if (NS_SUCCEEDED(rv)) {
-    // it doesn't bubble, and it isn't cancelable
-    rv = event->InitEvent(aName, false, false);
-    if (NS_SUCCEEDED(rv)) {
-      event->SetTrusted(true);
-      DispatchDOMEvent(nullptr, event, nullptr, nullptr);
-    }
+  nsRefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
+  // it doesn't bubble, and it isn't cancelable
+  nsresult rv = event->InitEvent(aName, false, false);
+  if (NS_FAILED(rv)) {
+    return;
   }
+  event->SetTrusted(true);
+  DispatchDOMEvent(nullptr, event, nullptr, nullptr);
 }
 
 nsresult

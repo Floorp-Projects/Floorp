@@ -88,14 +88,12 @@ AnimationEvent::GetPseudoElement(nsAString& aPseudoElement)
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsresult
-NS_NewDOMAnimationEvent(nsIDOMEvent** aInstancePtrResult,
-                        EventTarget* aOwner,
+already_AddRefed<AnimationEvent>
+NS_NewDOMAnimationEvent(EventTarget* aOwner,
                         nsPresContext* aPresContext,
                         InternalAnimationEvent* aEvent)
 {
-  AnimationEvent* it = new AnimationEvent(aOwner, aPresContext, aEvent);
-  NS_ADDREF(it);
-  *aInstancePtrResult = static_cast<Event*>(it);
-  return NS_OK;
+  nsRefPtr<AnimationEvent> it =
+    new AnimationEvent(aOwner, aPresContext, aEvent);
+  return it.forget();
 }
