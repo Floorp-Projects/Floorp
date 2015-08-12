@@ -4635,12 +4635,14 @@ FullscreenTransitionWindow::FullscreenTransitionWindow(GtkWidget* aWidget)
     gtk_window_set_transient_for(gtkWin, GTK_WINDOW(aWidget));
     gtk_window_set_decorated(gtkWin, false);
 
+    GdkWindow* gdkWin = gtk_widget_get_window(aWidget);
     GdkScreen* screen = gtk_widget_get_screen(aWidget);
-    gint width = gdk_screen_get_width(screen);
-    gint height = gdk_screen_get_height(screen);
+    gint monitorNum = gdk_screen_get_monitor_at_window(screen, gdkWin);
+    GdkRectangle monitorRect;
+    gdk_screen_get_monitor_geometry(screen, monitorNum, &monitorRect);
     gtk_window_set_screen(gtkWin, screen);
-    gtk_window_move(gtkWin, 0, 0);
-    gtk_window_resize(gtkWin, width, height);
+    gtk_window_move(gtkWin, monitorRect.x, monitorRect.y);
+    gtk_window_resize(gtkWin, monitorRect.width, monitorRect.height);
 
     GdkColor bgColor;
     bgColor.red = bgColor.green = bgColor.blue = 0;
