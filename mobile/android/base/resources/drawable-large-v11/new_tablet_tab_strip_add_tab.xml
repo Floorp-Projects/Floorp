@@ -10,7 +10,7 @@
           android:drawable="@drawable/tab_new_pb"/>
 
     <item gecko:state_light="true"
-          android:drawable="@drawable/new_tablet_tab_new_dark"/>
+          android:drawable="@drawable/tab_new_dark"/>
 
     <item android:drawable="@drawable/tab_new"/>
 
