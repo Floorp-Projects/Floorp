@@ -22,7 +22,7 @@
 #include "nsIDOMDocumentType.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
-#include "nsIHttpChannel.h"
+#include "nsIHttpChannelInternal.h"
 #include "nsIURI.h"
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
@@ -419,6 +419,14 @@ XMLDocument::Load(const nsAString& aUrl, ErrorResult& aRv)
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return false;
+  }
+
+  // TODO Bug 1189945: Remove nsIChannel CorsMode flag and set Request.mode
+  // based on nsILoadInfo securityFlags instead. This block will be removed
+  // when Request.mode set correctly.
+  nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(channel);
+  if (httpChannel) {
+    httpChannel->SetCorsMode(nsIHttpChannelInternal::CORS_MODE_SAME_ORIGIN);
   }
 
   // StartDocumentLoad asserts that readyState is uninitialized, so
