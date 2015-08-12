@@ -114,7 +114,8 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
 
         return env
 
-    def run_one_test(self, prog, env, symbols_path=None, interactive=False):
+    def run_one_test(self, prog, env, symbols_path=None, interactive=False,
+                     timeout_factor=1):
         """
         Run a single C++ unit test program remotely.
 
@@ -123,6 +124,7 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
         * env: The environment to use for running the program.
         * symbols_path: A path to a directory containing Breakpad-formatted
                         symbol files for producing stack traces on crash.
+        * timeout_factor: An optional test-specific timeout multiplier.
 
         Return True if the program exits with a zero status, False otherwise.
         """
@@ -130,8 +132,9 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
         remote_bin = posixpath.join(self.remote_bin_dir, basename)
         self.log.test_start(basename)
         buf = StringIO.StringIO()
+        test_timeout = cppunittests.CPPUnitTests.TEST_PROC_TIMEOUT * timeout_factor
         returncode = self.device.shell([remote_bin], buf, env=env, cwd=self.remote_home_dir,
-                                       timeout=cppunittests.CPPUnitTests.TEST_PROC_TIMEOUT)
+                                       timeout=test_timeout)
         self.log.process_output(basename, "\n%s" % buf.getvalue(),
                                 command=[remote_bin])
         with mozfile.TemporaryDirectory() as tempdir:
@@ -254,8 +257,10 @@ def main():
 
     options.xre_path = os.path.abspath(options.xre_path)
     cppunittests.update_mozinfo()
-    progs = cppunittests.extract_unittests_from_args(args, mozinfo.info)
-    tester = RemoteCPPUnitTests(dm, options, progs)
+    progs = cppunittests.extract_unittests_from_args(args,
+                                                     mozinfo.info,
+                                                     options.manifest_path)
+    tester = RemoteCPPUnitTests(dm, options, [item[0] for item in progs])
     try:
         result = tester.run_tests(progs, options.xre_path, options.symbols_path)
     except Exception, e:
