@@ -50,6 +50,8 @@ mailing address.
 #include <algorithm>
 #include "mozilla/Telemetry.h"
 
+using namespace mozilla::gfx;
+
 namespace mozilla {
 namespace image {
 
@@ -161,6 +163,27 @@ nsGIFDecoder2::BeginGIF()
   PostSize(mGIFStruct.screen_width, mGIFStruct.screen_height);
 }
 
+void
+nsGIFDecoder2::CheckForTransparency(IntRect aFrameRect)
+{
+  // Check if the image has a transparent color in its palette.
+  if (mGIFStruct.is_transparent) {
+    PostHasTransparency();
+    return;
+  }
+
+  if (mGIFStruct.images_decoded > 0) {
+    return;  // We only care about first frame padding below.
+  }
+
+  // If we need padding on the first frame, that means we don't draw into part
+  // of the image at all. Report that as transparency.
+  IntRect imageRect(0, 0, mGIFStruct.screen_width, mGIFStruct.screen_height);
+  if (!imageRect.IsEqualEdges(aFrameRect)) {
+    PostHasTransparency();
+  }
+}
+
 //******************************************************************************
 nsresult
 nsGIFDecoder2::BeginImageFrame(uint16_t aDepth)
@@ -170,13 +193,14 @@ nsGIFDecoder2::BeginImageFrame(uint16_t aDepth)
   gfx::SurfaceFormat format;
   if (mGIFStruct.is_transparent) {
     format = gfx::SurfaceFormat::B8G8R8A8;
-    PostHasTransparency();
   } else {
     format = gfx::SurfaceFormat::B8G8R8X8;
   }
 
-  nsIntRect frameRect(mGIFStruct.x_offset, mGIFStruct.y_offset,
-                      mGIFStruct.width, mGIFStruct.height);
+  IntRect frameRect(mGIFStruct.x_offset, mGIFStruct.y_offset,
+                    mGIFStruct.width, mGIFStruct.height);
+
+  CheckForTransparency(frameRect);
 
   // Use correct format, RGB for first frame, PAL for following frames
   // and include transparency to allow for optimization of opaque images
@@ -186,12 +210,6 @@ nsGIFDecoder2::BeginImageFrame(uint16_t aDepth)
     rv = AllocateFrame(mGIFStruct.images_decoded, GetSize(),
                        frameRect, format, aDepth);
   } else {
-    if (!nsIntRect(nsIntPoint(), GetSize()).IsEqualEdges(frameRect)) {
-      // We need padding on the first frame, which means that we don't draw into
-      // part of the image at all. Report that as transparency.
-      PostHasTransparency();
-    }
-
     // Regardless of depth of input, the first frame is decoded into 24bit RGB.
     rv = AllocateFrame(mGIFStruct.images_decoded, GetSize(),
                        frameRect, format);
@@ -689,12 +707,6 @@ nsGIFDecoder2::WriteInternal(const char* aBuffer, uint32_t aCount)
       mGIFStruct.screen_height = GETINT16(q + 2);
       mGIFStruct.global_colormap_depth = (q[4]&0x07) + 1;
 
-      if (IsMetadataDecode()) {
-        MOZ_ASSERT(!mGIFOpen, "Gif should not be open at this point");
-        PostSize(mGIFStruct.screen_width, mGIFStruct.screen_height);
-        return;
-      }
-
       // screen_bgcolor is not used
       //mGIFStruct.screen_bgcolor = q[5];
       // q[6] = Pixel Aspect Ratio
@@ -731,6 +743,9 @@ nsGIFDecoder2::WriteInternal(const char* aBuffer, uint32_t aCount)
     case gif_image_start:
       switch (*q) {
         case GIF_TRAILER:
+          if (IsMetadataDecode()) {
+            return;
+          }
           mGIFStruct.state = gif_done;
           break;
 
@@ -943,6 +958,9 @@ nsGIFDecoder2::WriteInternal(const char* aBuffer, uint32_t aCount)
 
         // If we were doing a metadata decode, we're done.
         if (IsMetadataDecode()) {
+          IntRect frameRect(mGIFStruct.x_offset, mGIFStruct.y_offset,
+                            mGIFStruct.width, mGIFStruct.height);
+          CheckForTransparency(frameRect);
           return;
         }
       }
