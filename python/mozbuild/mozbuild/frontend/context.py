@@ -699,6 +699,14 @@ VARIABLES = {
         file.
         """, 'export'),
 
+    'ANDROID_ASSETS_DIRS': (ContextDerivedTypedListWithItems(Path, List), list,
+        """Android assets directories.
+
+        This variable contains a list of directories containing static
+        files to package into an 'assets' directory and merge into an
+        APK file.
+        """, 'export'),
+
     'ANDROID_ECLIPSE_PROJECT_TARGETS': (dict, dict,
         """Defines Android Eclipse project targets.
 
