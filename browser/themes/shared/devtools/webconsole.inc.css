@@ -360,7 +360,7 @@ a {
   background-size: 16px 16px;
 }
 
-@media (min-resolution: 1.25dppx) {
+@media (min-resolution: 1.1dppx) {
   .jsterm-input-node {
     background-image: -moz-image-rect(url('chrome://browser/skin/devtools/commandline-icon@2x.png'), 0, 64, 32, 32);
   }

@@ -850,6 +850,28 @@ describe("loop.shared.views", function() {
         React.createElement(sharedViews.ContextUrlView, props));
     }
 
+    it("should set a clicks-allowed class if clicks are allowed", function() {
+      view = mountTestComponent({
+        allowClick: true,
+        url: "http://wonderful.invalid"
+      });
+
+      var wrapper = view.getDOMNode().querySelector(".context-wrapper");
+
+      expect(wrapper.classList.contains("clicks-allowed")).eql(true);
+    });
+
+    it("should not set a clicks-allowed class if clicks are not allowed", function() {
+      view = mountTestComponent({
+        allowClick: false,
+        url: "http://wonderful.invalid"
+      });
+
+      var wrapper = view.getDOMNode().querySelector(".context-wrapper");
+
+      expect(wrapper.classList.contains("clicks-allowed")).eql(false);
+    });
+
     it("should display nothing if the url is invalid", function() {
       view = mountTestComponent({
         url: "fjrTykyw"
@@ -900,7 +922,7 @@ describe("loop.shared.views", function() {
         url: "http://wonderful.invalid"
       });
 
-      expect(view.getDOMNode().querySelector(".context-url").href)
+      expect(view.getDOMNode().querySelector(".context-wrapper").href)
         .eql("http://wonderful.invalid/");
     });
 
@@ -910,7 +932,7 @@ describe("loop.shared.views", function() {
         url: "http://wonderful.invalid"
       });
 
-      var linkNode = view.getDOMNode().querySelector(".context-url");
+      var linkNode = view.getDOMNode().querySelector(".context-wrapper");
 
       TestUtils.Simulate.click(linkNode);
 
@@ -919,6 +941,19 @@ describe("loop.shared.views", function() {
         new sharedActions.RecordClick({
           linkInfo: "Shared URL"
         }));
+    });
+
+    it("should not dispatch an action if clicks are not allowed", function() {
+      view = mountTestComponent({
+        allowClick: false,
+        url: "http://wonderful.invalid"
+      });
+
+      var linkNode = view.getDOMNode().querySelector(".context-wrapper");
+
+      TestUtils.Simulate.click(linkNode);
+
+      sinon.assert.notCalled(dispatcher.dispatch);
     });
   });
 

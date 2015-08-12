@@ -9,7 +9,7 @@
 #include <wintrust.h>
 
 #include "certificatecheck.h"
-#include "servicebase.h"
+#include "updatelogging.h"
 
 #pragma comment(lib, "wintrust.lib")
 #pragma comment(lib, "crypt32.lib")
@@ -123,7 +123,7 @@ DoCertificateAttributesMatch(PCCERT_CONTEXT certContext,
                              CertificateCheckInfo &infoToMatch)
 {
   DWORD dwData;
-  LPTSTR szName = nullptr;
+  LPWSTR szName = nullptr;
 
   if (infoToMatch.issuer) {
     // Pass in nullptr to get the needed size of the issuer buffer.
@@ -138,7 +138,7 @@ DoCertificateAttributesMatch(PCCERT_CONTEXT certContext,
     }
 
     // Allocate memory for Issuer name buffer.
-    LPTSTR szName = (LPTSTR)LocalAlloc(LPTR, dwData * sizeof(WCHAR));
+    szName = (LPWSTR)LocalAlloc(LPTR, dwData * sizeof(WCHAR));
     if (!szName) {
       LOG_WARN(("Unable to allocate memory for issuer name.  (%d)",
                 GetLastError()));
@@ -146,7 +146,7 @@ DoCertificateAttributesMatch(PCCERT_CONTEXT certContext,
     }
 
     // Get Issuer name.
-    if (!CertGetNameString(certContext, CERT_NAME_SIMPLE_DISPLAY_TYPE,
+    if (!CertGetNameStringW(certContext, CERT_NAME_SIMPLE_DISPLAY_TYPE,
                            CERT_NAME_ISSUER_FLAG, nullptr, szName, dwData)) {
       LOG_WARN(("CertGetNameString failed.  (%d)", GetLastError()));
       LocalFree(szName);
@@ -174,7 +174,7 @@ DoCertificateAttributesMatch(PCCERT_CONTEXT certContext,
     }
 
     // Allocate memory for the name buffer.
-    szName = (LPTSTR)LocalAlloc(LPTR, dwData * sizeof(WCHAR));
+    szName = (LPWSTR)LocalAlloc(LPTR, dwData * sizeof(WCHAR));
     if (!szName) {
       LOG_WARN(("Unable to allocate memory for subject name.  (%d)",
                 GetLastError()));
@@ -182,7 +182,7 @@ DoCertificateAttributesMatch(PCCERT_CONTEXT certContext,
     }
 
     // Obtain the name.
-    if (!(CertGetNameString(certContext, CERT_NAME_SIMPLE_DISPLAY_TYPE, 0,
+    if (!(CertGetNameStringW(certContext, CERT_NAME_SIMPLE_DISPLAY_TYPE, 0,
                             nullptr, szName, dwData))) {
       LOG_WARN(("CertGetNameString failed.  (%d)", GetLastError()));
       LocalFree(szName);
@@ -202,23 +202,6 @@ DoCertificateAttributesMatch(PCCERT_CONTEXT certContext,
 
   // If there were any errors we would have aborted by now.
   return TRUE;
-}
-
-/**
- * Duplicates the specified string
- *
- * @param  inputString The string to duplicate
- * @return The duplicated string which should be freed by the caller.
- */
-LPWSTR 
-AllocateAndCopyWideString(LPCWSTR inputString)
-{
-  LPWSTR outputString = 
-    (LPWSTR)LocalAlloc(LPTR, (wcslen(inputString) + 1) * sizeof(WCHAR));
-  if (outputString) {
-    lstrcpyW(outputString, inputString);
-  }
-  return outputString;
 }
 
 /**

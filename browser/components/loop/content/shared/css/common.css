@@ -550,10 +550,8 @@ html[dir="rtl"] .context-content {
   display: flex;
   flex-flow: row nowrap;
   line-height: 1.1em;
-}
-
-.context-wrapper:hover {
-  background-color: #dbf7ff;
+  /* No underline for the text in the context view. */
+  text-decoration: none;
 }
 
 .context-wrapper > .context-preview {
@@ -571,7 +569,7 @@ html[dir="rtl"] .context-wrapper > .context-preview {
   margin-right: 0;
 }
 
-.context-wrapper > .context-description {
+.context-wrapper > .context-info {
   flex: 0 1 auto;
   display: block;
   color: black;
@@ -580,9 +578,18 @@ html[dir="rtl"] .context-wrapper > .context-preview {
   word-wrap: break-word;
 }
 
-.context-wrapper > .context-description > .context-url {
+.context-wrapper > .context-info > .context-url {
   display: block;
   color: #00a9dc;
   font-weight: 700;
   clear: both;
+}
+
+.clicks-allowed.context-wrapper:hover {
+  background-color: #dbf7ff;
+}
+
+/* Only underline the url, not the associated text */
+.clicks-allowed.context-wrapper:hover > .context-info > .context-url {
+  text-decoration: underline;
 }

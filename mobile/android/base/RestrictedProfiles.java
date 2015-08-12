@@ -41,7 +41,7 @@ public class RestrictedProfiles {
             return configuration;
         }
 
-        if (isGuestProfile()) {
+        if (isGuestProfile(context)) {
             return new GuestProfileConfiguration();
         } else if(isRestrictedProfile(context)) {
             return new RestrictedProfileConfiguration(context);
@@ -50,8 +50,13 @@ public class RestrictedProfiles {
         }
     }
 
-    private static boolean isGuestProfile() {
-        return GeckoAppShell.getGeckoInterface().getProfile().inGuestMode();
+    private static boolean isGuestProfile(Context context) {
+        GeckoAppShell.GeckoInterface geckoInterface = GeckoAppShell.getGeckoInterface();
+        if (geckoInterface != null) {
+            return geckoInterface.getProfile().inGuestMode();
+        }
+
+        return GeckoProfile.get(context).inGuestMode();
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
