@@ -140,6 +140,7 @@ int nr_ice_media_stream_initialize(nr_ice_ctx *ctx, nr_ice_media_stream *stream)
     return(_status);
   }
 
+
 int nr_ice_media_stream_get_attributes(nr_ice_media_stream *stream, char ***attrsp, int *attrctp)
   {
     int attrct=0;
@@ -157,7 +158,7 @@ int nr_ice_media_stream_get_attributes(nr_ice_media_stream *stream, char ***attr
       if (comp->state != NR_ICE_COMPONENT_DISABLED) {
         cand = TAILQ_FIRST(&comp->candidates);
         while(cand){
-          if (cand->state == NR_ICE_CAND_STATE_INITIALIZED) {
+          if (!nr_ice_ctx_hide_candidate(stream->ctx, cand)) {
             ++attrct;
           }
 
@@ -189,7 +190,7 @@ int nr_ice_media_stream_get_attributes(nr_ice_media_stream *stream, char ***attr
 
         cand=TAILQ_FIRST(&comp->candidates);
         while(cand){
-          if (cand->state == NR_ICE_CAND_STATE_INITIALIZED) {
+          if (!nr_ice_ctx_hide_candidate(stream->ctx, cand)) {
             assert(index < attrct);
 
             if (index >= attrct)

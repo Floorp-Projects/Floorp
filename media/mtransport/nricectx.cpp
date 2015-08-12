@@ -382,9 +382,9 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
                                   bool allow_loopback,
                                   bool tcp_enabled,
                                   bool allow_link_local,
+                                  bool hide_non_default,
                                   Policy policy) {
-
-  RefPtr<NrIceCtx> ctx = new NrIceCtx(name, offerer, policy);
+   RefPtr<NrIceCtx> ctx = new NrIceCtx(name, offerer, policy);
 
   // Initialize the crypto callbacks and logging stuff
   if (!initialized) {
@@ -498,6 +498,9 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
   if (policy == ICE_POLICY_RELAY) {
     flags |= NR_ICE_CTX_FLAGS_RELAY_ONLY;
   }
+
+  if (hide_non_default)
+    flags |= NR_ICE_CTX_FLAGS_ONLY_DEFAULT_ADDRS;
 
   r = nr_ice_ctx_create(const_cast<char *>(name.c_str()), flags,
                         &ctx->ctx_);
