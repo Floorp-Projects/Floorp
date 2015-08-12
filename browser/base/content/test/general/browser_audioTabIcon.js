@@ -44,14 +44,18 @@ function* test_tooltip(icon, expectedTooltip) {
   leave_icon(icon);
 }
 
-function* test_mute_tab(tab, icon, expectMuted) {
-  let mutedPromise = BrowserTestUtils.waitForEvent(tab, "TabAttrModified", false, (event) => {
+function get_wait_for_mute_promise(tab, expectMuted) {
+  return BrowserTestUtils.waitForEvent(tab, "TabAttrModified", false, event => {
     if (event.detail.changed.indexOf("muted") >= 0) {
       is(tab.hasAttribute("muted"), expectMuted, "The tab should " + (expectMuted ? "" : "not ") + "be muted");
       return true;
     }
     return false;
   });
+}
+
+function* test_mute_tab(tab, icon, expectMuted) {
+  let mutedPromise = test_mute_keybinding(tab, expectMuted);
 
   let activeTab = gBrowser.selectedTab;
 
@@ -227,6 +231,66 @@ function* test_click_on_pinned_tab_after_mute() {
   }, test_on_browser);
 }
 
+function* test_mute_keybinding() {
+  function* test_muting_using_keyboard(tab) {
+    let mutedPromise = get_wait_for_mute_promise(tab, true);
+    EventUtils.synthesizeKey("m", {ctrlKey: true});
+    yield mutedPromise;
+    mutedPromise = get_wait_for_mute_promise(tab, false);
+    EventUtils.synthesizeKey("m", {ctrlKey: true});
+    yield mutedPromise;
+  }
+  function* test_on_browser(browser) {
+    let tab = gBrowser.getTabForBrowser(browser);
+
+    // Make sure it's possible to mute before the tab is playing.
+    yield test_muting_using_keyboard(tab);
+
+    // Start playback.
+    yield ContentTask.spawn(browser, {}, function* () {
+      let audio = content.document.querySelector("audio");
+      audio.play();
+    });
+
+    // Wait for playback to start.
+    yield wait_for_tab_playing_event(tab, true);
+
+    // Make sure it's possible to mute after the tab is playing.
+    yield test_muting_using_keyboard(tab);
+
+    // Start playback.
+    yield ContentTask.spawn(browser, {}, function* () {
+      let audio = content.document.querySelector("audio");
+      audio.pause();
+    });
+
+    // Make sure things work if the tab is pinned.
+    gBrowser.pinTab(tab);
+
+    // Make sure it's possible to mute before the tab is playing.
+    yield test_muting_using_keyboard(tab);
+
+    // Start playback.
+    yield ContentTask.spawn(browser, {}, function* () {
+      let audio = content.document.querySelector("audio");
+      audio.play();
+    });
+
+    // Wait for playback to start.
+    yield wait_for_tab_playing_event(tab, true);
+
+    // Make sure it's possible to mute after the tab is playing.
+    yield test_muting_using_keyboard(tab);
+
+    gBrowser.unpinTab(tab);
+  }
+
+  yield BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: PAGE
+  }, test_on_browser);
+}
+
 function* test_on_browser(browser) {
   let tab = gBrowser.getTabForBrowser(browser);
 
@@ -268,3 +332,5 @@ add_task(function* test_page() {
 });
 
 add_task(test_click_on_pinned_tab_after_mute);
+
+add_task(test_mute_keybinding);
