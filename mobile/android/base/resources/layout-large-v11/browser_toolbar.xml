@@ -49,7 +49,7 @@
             android:layout_gravity="center_vertical"
             android:layout_centerVertical="true"
             android:src="@drawable/ic_menu_forward"
-            android:background="@drawable/new_tablet_url_bar_nav_button"
+            android:background="@drawable/url_bar_nav_button"
             android:alpha="0"
             android:layout_width="@dimen/new_tablet_nav_button_width_plus_half"
             android:layout_marginLeft="@dimen/new_tablet_nav_button_width_half"
@@ -64,7 +64,7 @@
                                           android:layout_alignParentLeft="true"
                                           android:src="@drawable/ic_menu_back"
                                           android:contentDescription="@string/back"
-                                          android:background="@drawable/new_tablet_url_bar_nav_button"/>
+                                          android:background="@drawable/url_bar_nav_button"/>
 
     <org.mozilla.gecko.toolbar.ToolbarEditLayout android:id="@+id/edit_layout"
                   style="@style/UrlBar.Button"
