@@ -9,7 +9,6 @@
 
 #include "mozilla/dom/FileSystemBase.h"
 #include "nsString.h"
-#include "nsWeakPtr.h"
 
 class nsDOMDeviceStorage;
 
@@ -49,7 +48,7 @@ private:
   nsString mStorageType;
   nsString mStorageName;
 
-  nsWeakPtr mDeviceStorage;
+  nsDOMDeviceStorage* mDeviceStorage;
 };
 
 } // namespace dom

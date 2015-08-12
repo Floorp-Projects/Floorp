@@ -76,8 +76,7 @@ DeviceStorageFileSystem::Init(nsDOMDeviceStorage* aDeviceStorage)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   MOZ_ASSERT(aDeviceStorage);
-  mDeviceStorage = do_GetWeakReference(
-    static_cast<DOMEventTargetHelper*>(aDeviceStorage));
+  mDeviceStorage = aDeviceStorage;
 }
 
 void
@@ -92,11 +91,10 @@ nsPIDOMWindow*
 DeviceStorageFileSystem::GetWindow() const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
-  nsRefPtr<nsDOMDeviceStorage> ds = do_QueryReferent(mDeviceStorage);
-  if (!ds) {
+  if (!mDeviceStorage) {
     return nullptr;
   }
-  return ds->GetOwner();
+  return mDeviceStorage->GetOwner();
 }
 
 void
