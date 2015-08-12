@@ -2,7 +2,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#include "DriverInitCrashDetection.h"
+#include "DriverCrashGuard.h"
 #include "gfxPrefs.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
@@ -20,9 +20,9 @@
 namespace mozilla {
 namespace gfx {
 
-bool DriverInitCrashDetection::sEnvironmentHasBeenUpdated = false;
+bool DriverCrashGuard::sEnvironmentHasBeenUpdated = false;
 
-DriverInitCrashDetection::DriverInitCrashDetection()
+DriverCrashGuard::DriverCrashGuard()
  : mIsChromeProcess(XRE_GetProcessType() == GeckoProcessType_Default)
 {
   if (!mIsChromeProcess) {
@@ -56,7 +56,7 @@ DriverInitCrashDetection::DriverInitCrashDetection()
   RecordTelemetry(TelemetryState::Okay);
 }
 
-DriverInitCrashDetection::~DriverInitCrashDetection()
+DriverCrashGuard::~DriverCrashGuard()
 {
   if (mLockFile) {
     mLockFile->Remove(false);
@@ -76,13 +76,13 @@ DriverInitCrashDetection::~DriverInitCrashDetection()
 }
 
 bool
-DriverInitCrashDetection::DisableAcceleration() const
+DriverCrashGuard::DisableAcceleration() const
 {
   return gfxPrefs::DriverInitStatus() == int32_t(DriverInitStatus::Recovered);
 }
 
 bool
-DriverInitCrashDetection::InitLockFilePath()
+DriverCrashGuard::InitLockFilePath()
 {
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_LOCAL_50_DIR, getter_AddRefs(mLockFile));
   if (!mLockFile) {
@@ -95,7 +95,7 @@ DriverInitCrashDetection::InitLockFilePath()
 }
 
 void
-DriverInitCrashDetection::AllowDriverInitAttempt()
+DriverCrashGuard::AllowDriverInitAttempt()
 {
   // Create a temporary tombstone/lockfile.
   FILE* fp;
@@ -120,7 +120,7 @@ DriverInitCrashDetection::AllowDriverInitAttempt()
 }
 
 bool
-DriverInitCrashDetection::RecoverFromDriverInitCrash()
+DriverCrashGuard::RecoverFromDriverInitCrash()
 {
   bool exists;
   if (mLockFile &&
@@ -147,7 +147,7 @@ DriverInitCrashDetection::RecoverFromDriverInitCrash()
 }
 
 bool
-DriverInitCrashDetection::UpdateEnvironment()
+DriverCrashGuard::UpdateEnvironment()
 {
   mGfxInfo = services::GetGfxInfo();
 
@@ -185,7 +185,7 @@ DriverInitCrashDetection::UpdateEnvironment()
 }
 
 bool
-DriverInitCrashDetection::FeatureEnabled(int aFeature)
+DriverCrashGuard::FeatureEnabled(int aFeature)
 {
   int32_t status;
   if (!NS_SUCCEEDED(mGfxInfo->GetFeatureStatus(aFeature, &status))) {
@@ -195,7 +195,7 @@ DriverInitCrashDetection::FeatureEnabled(int aFeature)
 }
 
 bool
-DriverInitCrashDetection::CheckAndUpdateBoolPref(const char* aPrefName, bool aCurrentValue)
+DriverCrashGuard::CheckAndUpdateBoolPref(const char* aPrefName, bool aCurrentValue)
 {
   bool oldValue;
   if (NS_SUCCEEDED(Preferences::GetBool(aPrefName, &oldValue)) &&
@@ -208,7 +208,7 @@ DriverInitCrashDetection::CheckAndUpdateBoolPref(const char* aPrefName, bool aCu
 }
 
 bool
-DriverInitCrashDetection::CheckAndUpdatePref(const char* aPrefName, const nsAString& aCurrentValue)
+DriverCrashGuard::CheckAndUpdatePref(const char* aPrefName, const nsAString& aCurrentValue)
 {
   nsAdoptingString oldValue = Preferences::GetString(aPrefName);
   if (oldValue == aCurrentValue) {
@@ -219,7 +219,7 @@ DriverInitCrashDetection::CheckAndUpdatePref(const char* aPrefName, const nsAStr
 }
 
 void
-DriverInitCrashDetection::FlushPreferences()
+DriverCrashGuard::FlushPreferences()
 {
   if (nsIPrefService* prefService = Preferences::GetService()) {
     prefService->SavePrefFile(nullptr);
@@ -227,7 +227,7 @@ DriverInitCrashDetection::FlushPreferences()
 }
 
 void
-DriverInitCrashDetection::RecordTelemetry(TelemetryState aState)
+DriverCrashGuard::RecordTelemetry(TelemetryState aState)
 {
   // Since we run this in each child process, we only want the initial results
   // from the chrome process.
