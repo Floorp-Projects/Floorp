@@ -52,7 +52,6 @@ public:
   // Called from any thread, must call init first
   static int GetNumDecoderThreads();
 private:
-  bool ShouldUseDXVA(const VideoInfo& aConfig) const;
   bool mWMFInitialized;
 };
 
