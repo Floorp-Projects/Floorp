@@ -562,6 +562,12 @@ public:
    */
   uint32_t mFirstCycleBreaker;
   /**
+   * Blocking decisions and all stream contents have been computed up to this
+   * time. The next batch of updates from the main thread will be processed
+   * at this time.
+   */
+  GraphTime mStateComputedTime = 0;
+  /**
    * Date of the last time we updated the main thread with the graph state.
    */
   TimeStamp mLastMainThreadUpdate;
