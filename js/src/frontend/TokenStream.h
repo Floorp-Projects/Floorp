@@ -489,16 +489,6 @@ class MOZ_STACK_CLASS TokenStream
 #endif
     }
 
-    bool hasLookahead() { return lookahead > 0; }
-
-    Modifier getLookaheadModifier() {
-#ifdef DEBUG
-        return nextToken().modifier;
-#else
-        return None;
-#endif
-    }
-
     void
     verifyConsistentModifier(Modifier modifier, Token lookaheadToken) {
 #ifdef DEBUG
@@ -990,6 +980,8 @@ class MOZ_STACK_CLASS TokenStream
         MOZ_ASSERT(hasLookahead());
         return tokens[(cursor + 1) & ntokensMask];
     }
+
+    bool hasLookahead() { return lookahead > 0; }
 
     // Options used for parsing/tokenizing.
     const ReadOnlyCompileOptions& options_;
