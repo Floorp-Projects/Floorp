@@ -5845,7 +5845,19 @@
       </property>
 
       <field name="mOverCloseButton">false</field>
-      <field name="_overPlayingIcon">false</field>
+      <property name="_overPlayingIcon" readonly="true">
+        <getter><![CDATA[
+          let iconVisible = this.hasAttribute("soundplaying") ||
+                            this.hasAttribute("muted");
+          let soundPlayingIcon =
+            document.getAnonymousElementByAttribute(this, "anonid", "soundplaying-icon");
+          let overlayIcon =
+            document.getAnonymousElementByAttribute(this, "anonid", "overlay-icon");
+
+          return soundPlayingIcon && soundPlayingIcon.mozMatchesSelector(":hover") ||
+                 (overlayIcon && overlayIcon.mozMatchesSelector(":hover") && iconVisible);
+        ]]></getter>
+      </property>
       <field name="mCorrespondingMenuitem">null</field>
 
       <!--
@@ -5924,25 +5936,15 @@
     <handlers>
       <handler event="mouseover"><![CDATA[
         let anonid = event.originalTarget.getAttribute("anonid");
-        let iconVisible = this.hasAttribute("soundplaying") ||
-                          this.hasAttribute("muted");
         if (anonid == "close-button")
           this.mOverCloseButton = true;
-        else if ((anonid == "soundplaying-icon") ||
-                 ((anonid == "overlay-icon") && iconVisible))
-          this._overPlayingIcon = true;
 
         this._mouseenter();
       ]]></handler>
       <handler event="mouseout"><![CDATA[
         let anonid = event.originalTarget.getAttribute("anonid");
-        let iconVisible = this.hasAttribute("soundplaying") ||
-                          this.hasAttribute("muted");
         if (anonid == "close-button")
           this.mOverCloseButton = false;
-        else if ((anonid == "soundplaying-icon") ||
-                 ((anonid == "overlay-icon") && iconVisible))
-          this._overPlayingIcon = false;
 
         this._mouseleave();
       ]]></handler>
@@ -5970,13 +5972,8 @@
           return;
         }
 
-        let anonid = event.originalTarget.getAttribute("anonid");
-        let iconVisible = this.hasAttribute("soundplaying") ||
-                          this.hasAttribute("muted");
-        if ((anonid == "soundplaying-icon") ||
-            ((anonid == "overlay-icon") && iconVisible)) {
+        if (this._overPlayingIcon) {
           this.toggleMuteAudio();
-          this._overPlayingIcon = false;
         }
       ]]>
       </handler>
