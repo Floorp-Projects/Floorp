@@ -370,7 +370,7 @@ public:
    */
   virtual void EndFrame() = 0;
 
-  virtual void SetDispAcquireFence(Layer* aLayer) {}
+  virtual void SetDispAcquireFence(Layer* aLayer, nsIWidget* aWidget) {}
 
   virtual FenceHandle GetReleaseFence()
   {
