@@ -108,9 +108,15 @@ class TlsSkipTest
   }
 };
 
-TEST_P(TlsSkipTest, SkipCertificate) {
+TEST_P(TlsSkipTest, SkipCertificateRsa) {
+  DisableDheCiphers();
   ServerSkipTest(new TlsHandshakeSkipFilter(kTlsHandshakeCertificate));
   client_->CheckErrorCode(SSL_ERROR_RX_UNEXPECTED_HELLO_DONE);
+}
+
+TEST_P(TlsSkipTest, SkipCertificateDhe) {
+  ServerSkipTest(new TlsHandshakeSkipFilter(kTlsHandshakeCertificate));
+  client_->CheckErrorCode(SSL_ERROR_RX_UNEXPECTED_SERVER_KEY_EXCH);
 }
 
 TEST_P(TlsSkipTest, SkipCertificateEcdhe) {

@@ -55,6 +55,7 @@ class TlsConnectTestBase : public ::testing::Test {
   void ConnectExpectFail();
 
   void EnableSomeEcdheCiphers();
+  void DisableDheCiphers();
   void ConfigureSessionCache(SessionResumptionMode client,
                              SessionResumptionMode server);
   void CheckResumption(SessionResumptionMode expected);

@@ -89,13 +89,12 @@ static char sccsid[] = "@(#)hash_page.c	8.7 (Berkeley) 8/16/94";
 
 extern int mkstempflags(char *path, int extraFlags);
 
-static uint32	*fetch_bitmap __P((HTAB *, uint32));
-static uint32	 first_free __P((uint32));
-static int	 open_temp __P((HTAB *));
-static uint16	 overflow_page __P((HTAB *));
-static void	 squeeze_key __P((uint16 *, const DBT *, const DBT *));
-static int	 ugly_split
-		    __P((HTAB *, uint32, BUFHEAD *, BUFHEAD *, int, int));
+static uint32	*fetch_bitmap(HTAB *, uint32);
+static uint32	 first_free(uint32);
+static int	 open_temp(HTAB *);
+static uint16	 overflow_page(HTAB *);
+static void	 squeeze_key(uint16 *, const DBT *, const DBT *);
+static int	 ugly_split(HTAB *, uint32, BUFHEAD *, BUFHEAD *, int, int);
 
 #define	PAGE_INIT(P) { \
 	((uint16 *)(P))[0] = 0; \

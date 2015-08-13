@@ -122,6 +122,11 @@ struct OwningSerializedStructuredCloneBuffer : public SerializedStructuredCloneB
 namespace IPC {
 
 /**
+ * Maximum size, in bytes, of a single IPC message.
+ */
+static const uint32_t MAX_MESSAGE_SIZE = 65536;
+
+/**
  * Generic enum serializer.
  *
  * Consider using the specializations below, such as ContiguousEnumSerializer.

@@ -472,7 +472,7 @@ public:
       return GetFrom(docShell);
     }
 
-    virtual bool RecvUIResolutionChanged() override;
+    virtual bool RecvUIResolutionChanged(const float& aDpi, const double& aScale) override;
 
     virtual bool RecvThemeChanged(nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache) override;
 
