@@ -16,7 +16,7 @@ let DetailsSubview = {
     this._onDetailsViewSelected = this._onDetailsViewSelected.bind(this);
     this._onPrefChanged = this._onPrefChanged.bind(this);
 
-    PerformanceController.on(EVENTS.RECORDING_STOPPED, this._onRecordingStoppedOrSelected);
+    PerformanceController.on(EVENTS.RECORDING_STATE_CHANGE, this._onRecordingStoppedOrSelected);
     PerformanceController.on(EVENTS.RECORDING_SELECTED, this._onRecordingStoppedOrSelected);
     PerformanceController.on(EVENTS.PREF_CHANGED, this._onPrefChanged);
     OverviewView.on(EVENTS.OVERVIEW_RANGE_SELECTED, this._onOverviewRangeChange);
@@ -29,7 +29,7 @@ let DetailsSubview = {
   destroy: function () {
     clearNamedTimeout("range-change-debounce");
 
-    PerformanceController.off(EVENTS.RECORDING_STOPPED, this._onRecordingStoppedOrSelected);
+    PerformanceController.off(EVENTS.RECORDING_STATE_CHANGE, this._onRecordingStoppedOrSelected);
     PerformanceController.off(EVENTS.RECORDING_SELECTED, this._onRecordingStoppedOrSelected);
     PerformanceController.off(EVENTS.PREF_CHANGED, this._onPrefChanged);
     OverviewView.off(EVENTS.OVERVIEW_RANGE_SELECTED, this._onOverviewRangeChange);
@@ -85,7 +85,14 @@ let DetailsSubview = {
   /**
    * Called when recording stops or is selected.
    */
-  _onRecordingStoppedOrSelected: function(_, recording) {
+  _onRecordingStoppedOrSelected: function(_, state, recording) {
+    if (typeof state !== "string") {
+      recording = state;
+    }
+    if (arguments.length === 3 && state !== "recording-stopped") {
+      return;
+    }
+
     if (!recording || !recording.isCompleted()) {
       return;
     }

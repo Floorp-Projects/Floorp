@@ -6,13 +6,22 @@
  */
 
 let BUFFER_SIZE = 20000;
+let config = { bufferSize: BUFFER_SIZE };
 
-function* spawnTest() {
-  let { target, front } = yield initBackend(SIMPLE_URL, { TEST_MOCK_PROFILER_CHECK_TIMER: 10 });
-  let config = { bufferSize: BUFFER_SIZE };
+const { PerformanceFront } = require("devtools/server/actors/performance");
 
+add_task(function*() {
+  let doc = yield addTab(MAIN_DOMAIN + "doc_perf.html");
+
+  initDebuggerServer();
+  let client = new DebuggerClient(DebuggerServer.connectPipe());
+  let form = yield connectDebuggerClient(client);
+  let front = PerformanceFront(client, form);
+  yield front.connect();
+
+  yield front.setProfilerStatusInterval(10);
   let model = yield front.startRecording(config);
-  let [_, stats] = yield onceSpread(front, "profiler-status");
+  let stats = yield once(front, "profiler-status");
   is(stats.totalSize, BUFFER_SIZE, `profiler-status event has totalSize: ${stats.totalSize}`);
   ok(stats.position < BUFFER_SIZE, `profiler-status event has position: ${stats.position}`);
   ok(stats.generation >= 0, `profiler-status event has generation: ${stats.generation}`);
@@ -25,7 +34,7 @@ function* spawnTest() {
   let lastBufferStatus = 0;
   let checkCount = 0;
   while (lastBufferStatus < 1) {
-    let currentBufferStatus = model.getBufferUsage();
+    let currentBufferStatus = front.getBufferUsageForRecording(model);
     ok(currentBufferStatus > lastBufferStatus, `buffer is more filled than before: ${currentBufferStatus} > ${lastBufferStatus}`);
     lastBufferStatus = currentBufferStatus;
     checkCount++;
@@ -36,11 +45,8 @@ function* spawnTest() {
   is(lastBufferStatus, 1, "buffer usage cannot surpass 100%");
   yield front.stopRecording(model);
 
-  is(model.getBufferUsage(), null, "getBufferUsage() should be null when no longer recording.");
+  is(front.getBufferUsageForRecording(model), null, "buffer usage should be null when no longer recording.");
 
-  // Destroy the front before removing tab to ensure no
-  // lingering requests
-  yield front.destroy();
-  yield removeTab(target.tab);
-  finish();
-}
+  yield closeDebuggerClient(client);
+  gBrowser.removeCurrentTab();
+});

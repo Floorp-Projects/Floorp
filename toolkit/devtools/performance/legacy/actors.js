@@ -12,26 +12,16 @@ loader.lazyRequireGetter(this, "Poller",
   "devtools/shared/poller", true);
 
 loader.lazyRequireGetter(this, "CompatUtils",
-  "devtools/performance/compatibility");
+  "devtools/toolkit/performance/legacy/compatibility");
 loader.lazyRequireGetter(this, "RecordingUtils",
-  "devtools/performance/recording-utils");
+  "devtools/toolkit/performance/utils");
 loader.lazyRequireGetter(this, "TimelineFront",
   "devtools/server/actors/timeline", true);
-loader.lazyRequireGetter(this, "MemoryFront",
-  "devtools/server/actors/memory", true);
 loader.lazyRequireGetter(this, "ProfilerFront",
   "devtools/server/actors/profiler", true);
 
-// how often do we pull allocation sites from the memory actor
-const ALLOCATION_SITE_POLL_TIMER = 200; // ms
-
 // how often do we check the status of the profiler's circular buffer
 const PROFILER_CHECK_TIMER = 5000; // ms
-
-const MEMORY_ACTOR_METHODS = [
-  "attach", "detach", "getState", "getAllocationsSettings",
-  "getAllocations", "startRecordingAllocations", "stopRecordingAllocations"
-];
 
 const TIMELINE_ACTOR_METHODS = [
   "start", "stop",
@@ -45,7 +35,7 @@ const PROFILER_ACTOR_METHODS = [
 /**
  * Constructor for a facade around an underlying ProfilerFront.
  */
-function ProfilerFrontFacade (target) {
+function LegacyProfilerFront (target) {
   this._target = target;
   this._onProfilerEvent = this._onProfilerEvent.bind(this);
   this._checkProfilerStatus = this._checkProfilerStatus.bind(this);
@@ -54,7 +44,7 @@ function ProfilerFrontFacade (target) {
   EventEmitter.decorate(this);
 }
 
-ProfilerFrontFacade.prototype = {
+LegacyProfilerFront.prototype = {
   EVENTS: ["console-api-profiler", "profiler-stopped"],
 
   // Connects to the targets underlying real ProfilerFront.
@@ -70,7 +60,7 @@ ProfilerFrontFacade.prototype = {
     // Directly register to event notifications when connected
     // to hook into `console.profile|profileEnd` calls.
     yield this.registerEventNotifications({ events: this.EVENTS });
-    this.EVENTS.forEach(e => this._front.on(e, this._onProfilerEvent));
+    target.client.addListener("eventNotification", this._onProfilerEvent);
   }),
 
   /**
@@ -80,10 +70,8 @@ ProfilerFrontFacade.prototype = {
     if (this._poller) {
       yield this._poller.destroy();
     }
-
-    this.EVENTS.forEach(e => this._front.off(e, this._onProfilerEvent));
     yield this.unregisterEventNotifications({ events: this.EVENTS });
-    yield this._front.destroy();
+    this._target.client.removeListener("eventNotification", this._onProfilerEvent);
   }),
 
   /**
@@ -107,17 +95,9 @@ ProfilerFrontFacade.prototype = {
     // nsIPerformance module will be kept recording, because it's the same instance
     // for all targets and interacts with the whole platform, so we don't want
     // to affect other clients by stopping (or restarting) it.
-    let status = yield this.getStatus();
-
-    // This should only occur during teardown
-    if (!status) {
-      return;
-    }
-
-    let { isActive, currentTime, position, generation, totalSize } = status;
+    let { isActive, currentTime, position, generation, totalSize } = yield this.getStatus();
 
     if (isActive) {
-      this.emit("profiler-already-active");
       return { startTime: currentTime, position, generation, totalSize };
     }
 
@@ -130,11 +110,10 @@ ProfilerFrontFacade.prototype = {
 
     let startInfo = yield this.startProfiler(profilerOptions);
     let startTime = 0;
-    if ("currentTime" in startInfo) {
+    if ('currentTime' in startInfo) {
       startTime = startInfo.currentTime;
     }
 
-    this.emit("profiler-activated");
     return { startTime, position, generation, totalSize };
   }),
 
@@ -151,7 +130,7 @@ ProfilerFrontFacade.prototype = {
    * Wrapper around `profiler.isActive()` to take profiler status data and emit.
    */
   getStatus: Task.async(function *() {
-    let data = yield CompatUtils.callFrontMethod("isActive").call(this);
+    let data = yield (CompatUtils.callFrontMethod("isActive").call(this));
     // If no data, the last poll for `isActive()` was wrapping up, and the target.client
     // is now null, so we no longer have data, so just abort here.
     if (!data) {
@@ -178,7 +157,7 @@ ProfilerFrontFacade.prototype = {
    * Returns profile data from now since `startTime`.
    */
   getProfile: Task.async(function *(options) {
-    let profilerData = yield CompatUtils.callFrontMethod("getProfile").call(this, options);
+    let profilerData = yield (CompatUtils.callFrontMethod("getProfile").call(this, options));
     // If the backend is not deduped, dedupe it ourselves, as rest of the code
     // expects a deduped profile.
     if (profilerData.profile.meta.version === 2) {
@@ -200,14 +179,12 @@ ProfilerFrontFacade.prototype = {
    * @param object response
    *        The data received from the backend.
    */
-  _onProfilerEvent: function (data) {
-    let { subject, topic, details } = data;
-
+  _onProfilerEvent: function (_, { topic, subject, details }) {
     if (topic === "console-api-profiler") {
       if (subject.action === "profile") {
         this.emit("console-profile-start", details);
       } else if (subject.action === "profileEnd") {
-        this.emit("console-profile-end", details);
+        this.emit("console-profile-stop", details);
       }
     } else if (topic === "profiler-stopped") {
       this.emit("profiler-stopped");
@@ -219,19 +196,19 @@ ProfilerFrontFacade.prototype = {
     yield this.getStatus();
   }),
 
-  toString: () => "[object ProfilerFrontFacade]"
+  toString: () => "[object LegacyProfilerFront]"
 };
 
 /**
  * Constructor for a facade around an underlying TimelineFront.
  */
-function TimelineFrontFacade (target) {
+function LegacyTimelineFront (target) {
   this._target = target;
   EventEmitter.decorate(this);
 }
 
-TimelineFrontFacade.prototype = {
-  EVENTS: ["markers", "frames", "memory", "ticks"],
+LegacyTimelineFront.prototype = {
+  EVENTS: ["markers", "frames", "ticks"],
 
   connect: Task.async(function*() {
     let supported = yield CompatUtils.timelineActorSupported(this._target);
@@ -259,131 +236,19 @@ TimelineFrontFacade.prototype = {
   }),
 
   /**
-   * An aggregate of all events (markers, frames, memory, ticks) and exposes
-   * to PerformanceFront as a single event.
+   * An aggregate of all events (markers, frames, ticks) and exposes
+   * to PerformanceActorsConnection as a single event.
    */
   _onTimelineData: function (type, ...data) {
     this.emit("timeline-data", type, ...data);
   },
 
-  toString: () => "[object TimelineFrontFacade]"
-};
-
-/**
- * Constructor for a facade around an underlying ProfilerFront.
- */
-function MemoryFrontFacade (target) {
-  this._target = target;
-  this._pullAllocationSites = this._pullAllocationSites.bind(this);
-
-  EventEmitter.decorate(this);
-}
-
-MemoryFrontFacade.prototype = {
-  connect: Task.async(function*() {
-    let supported = yield CompatUtils.memoryActorSupported(this._target);
-    this._front = supported ?
-                  new MemoryFront(this._target.client, this._target.form) :
-                  new CompatUtils.MockMemoryFront();
-
-    this.IS_MOCK = !supported;
-  }),
-
-  /**
-   * Disables polling and destroys actor.
-   */
-  destroy: Task.async(function *() {
-    if (this._poller) {
-      yield this._poller.destroy();
-    }
-    yield this._front.destroy();
-  }),
-
-  /**
-   * Starts polling for allocation information.
-   */
-  start: Task.async(function *(options) {
-    if (!options.withAllocations) {
-      return 0;
-    }
-
-    yield this.attach();
-
-    // Reconstruct our options because the server actor fails when being passed
-    // undefined values in objects.
-    let allocationOptions = {};
-    if (options.allocationsSampleProbability !== void 0) {
-      allocationOptions.probability = options.allocationsSampleProbability;
-    }
-    if (options.allocationsMaxLogLength !== void 0) {
-      allocationOptions.maxLogLength = options.allocationsMaxLogLength;
-    }
-
-    let startTime = yield this.startRecordingAllocations(allocationOptions);
-
-    if (!this._poller) {
-      this._poller = new Poller(this._pullAllocationSites, ALLOCATION_SITE_POLL_TIMER, false);
-    }
-    if (!this._poller.isPolling()) {
-      this._poller.on();
-    }
-
-    return startTime;
-  }),
-
-  /**
-   * Stops polling for allocation information.
-   */
-  stop: Task.async(function *(options) {
-    if (!options.withAllocations) {
-      return 0;
-    }
-
-    // Since `_pullAllocationSites` is usually running inside a timeout, and
-    // it's performing asynchronous requests to the server, a recording may
-    // be stopped before that method finishes executing. Therefore, we need to
-    // wait for the last request to `getAllocations` to finish before actually
-    // stopping recording allocations.
-    yield this._poller.off();
-    yield this._lastPullAllocationSitesFinished;
-
-    let endTime = yield this.stopRecordingAllocations();
-    yield this.detach();
-
-    return endTime;
-  }),
-
-  /**
-   * At regular intervals, pull allocations from the memory actor, and
-   * forward them on this Front facade as "timeline-data" events. This
-   * gives the illusion that the MemoryActor supports an EventEmitter-style
-   * event stream.
-   */
-  _pullAllocationSites: Task.async(function *() {
-    let deferred = promise.defer();
-    this._lastPullAllocationSitesFinished = deferred.promise;
-
-    if ((yield this.getState()) !== "attached") {
-      deferred.resolve();
-      return;
-    }
-
-    let memoryData = yield this.getAllocations();
-    // Match the signature of the TimelineFront events, with "timeline-data"
-    // being the event name, and the second argument describing the type.
-    this.emit("timeline-data", "allocations", memoryData);
-
-    deferred.resolve();
-  }),
-
-  toString: () => "[object MemoryFrontFacade]"
+  toString: () => "[object LegacyTimelineFront]"
 };
 
 // Bind all the methods that directly proxy to the actor
-PROFILER_ACTOR_METHODS.forEach(m => ProfilerFrontFacade.prototype[m] = CompatUtils.callFrontMethod(m));
-TIMELINE_ACTOR_METHODS.forEach(m => TimelineFrontFacade.prototype[m] = CompatUtils.callFrontMethod(m));
-MEMORY_ACTOR_METHODS.forEach(m => MemoryFrontFacade.prototype[m] = CompatUtils.callFrontMethod(m));
+PROFILER_ACTOR_METHODS.forEach(m => LegacyProfilerFront.prototype[m] = CompatUtils.callFrontMethod(m));
+TIMELINE_ACTOR_METHODS.forEach(m => LegacyTimelineFront.prototype[m] = CompatUtils.callFrontMethod(m));
 
-exports.ProfilerFront = ProfilerFrontFacade;
-exports.TimelineFront = TimelineFrontFacade;
-exports.MemoryFront = MemoryFrontFacade;
+exports.LegacyProfilerFront = LegacyProfilerFront;
+exports.LegacyTimelineFront = LegacyTimelineFront;
