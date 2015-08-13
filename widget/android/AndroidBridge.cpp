@@ -1720,7 +1720,7 @@ AndroidBridge::PumpMessageLoop()
         return false;
     }
 
-    return GeckoAppShell::PumpMessageLoop(msg);
+    return GeckoThread::PumpMessageLoop(msg);
 }
 
 NS_IMETHODIMP nsAndroidBridge::GetBrowserApp(nsIAndroidBrowserApp * *aBrowserApp)

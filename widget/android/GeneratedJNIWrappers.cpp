@@ -561,14 +561,6 @@ void GeckoAppShell::PerformHapticFeedback(bool a0)
     return mozilla::jni::Method<PerformHapticFeedback_t>::Call(nullptr, nullptr, a0);
 }
 
-constexpr char GeckoAppShell::PumpMessageLoop_t::name[];
-constexpr char GeckoAppShell::PumpMessageLoop_t::signature[];
-
-bool GeckoAppShell::PumpMessageLoop(mozilla::jni::Object::Param a0)
-{
-    return mozilla::jni::Method<PumpMessageLoop_t>::Call(nullptr, nullptr, a0);
-}
-
 constexpr char GeckoAppShell::RegisterSurfaceTextureFrameListener_t::name[];
 constexpr char GeckoAppShell::RegisterSurfaceTextureFrameListener_t::signature[];
 
@@ -761,6 +753,16 @@ constexpr char GeckoJavaSampler::UnpauseJavaProfiling_t::signature[];
 void GeckoJavaSampler::UnpauseJavaProfiling()
 {
     return mozilla::jni::Method<UnpauseJavaProfiling_t>::Call(nullptr, nullptr);
+}
+
+constexpr char GeckoThread::name[];
+
+constexpr char GeckoThread::PumpMessageLoop_t::name[];
+constexpr char GeckoThread::PumpMessageLoop_t::signature[];
+
+bool GeckoThread::PumpMessageLoop(mozilla::jni::Object::Param a0)
+{
+    return mozilla::jni::Method<PumpMessageLoop_t>::Call(nullptr, nullptr, a0);
 }
 
 constexpr char RestrictedProfiles::name[];

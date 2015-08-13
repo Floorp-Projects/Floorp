@@ -96,7 +96,6 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.Message;
 import android.os.MessageQueue;
 import android.os.SystemClock;
 import android.os.Vibrator;
@@ -2449,24 +2448,6 @@ public class GeckoAppShell
     @WrapForJNI
     public static void unlockScreenOrientation() {
         GeckoScreenOrientation.getInstance().unlock();
-    }
-
-    @WrapForJNI
-    public static boolean pumpMessageLoop(final Message msg) {
-        final Handler geckoHandler = ThreadUtils.sGeckoHandler;
-
-        if (msg.obj == geckoHandler && msg.getTarget() == geckoHandler) {
-            // Our "queue is empty" message; see runGecko()
-            return false;
-        }
-
-        if (msg.getTarget() == null) {
-            Looper.myLooper().quit();
-        } else {
-            msg.getTarget().dispatchMessage(msg);
-        }
-
-        return true;
     }
 
     @WrapForJNI
