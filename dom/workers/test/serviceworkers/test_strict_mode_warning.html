@@ -5,7 +5,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Bug 1170550 - test registration of service worker scripts with a strict mode error</title>
+  <title>Bug 1170550 - test registration of service worker scripts with a strict mode warning</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -18,9 +18,9 @@
 
   function runTest() {
     navigator.serviceWorker
-      .register("strict_mode_error.js", {scope: "strict_mode_error"})
-      .catch(() => {
-        ok(true, "Registration failed as expected");
+      .register("strict_mode_warning.js", {scope: "strict_mode_warning"})
+      .then(() => {
+        ok(true, "Registration should not fail for warnings");
         SimpleTest.finish();
       });
   }
