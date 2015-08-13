@@ -57,6 +57,10 @@ exports['test join'] = function (assert) {
     'resource://my/path/yeah/whoa');
   assert.equal(join('resource://my/path/yeah/yuh', './whoa'),
     'resource://my/path/yeah/yuh/whoa');
+  assert.equal(join('resource:///my/path/yeah/yuh', '../whoa'),
+    'resource:///my/path/yeah/whoa');
+  assert.equal(join('resource:///my/path/yeah/yuh', './whoa'),
+    'resource:///my/path/yeah/yuh/whoa');
   assert.equal(join('file:///my/path/yeah/yuh', '../whoa'),
     'file:///my/path/yeah/whoa');
   assert.equal(join('file:///my/path/yeah/yuh', './whoa'),
