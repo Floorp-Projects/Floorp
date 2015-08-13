@@ -248,26 +248,10 @@ public class TabsPanel extends LinearLayout
         Resources resources = tabsContainer.getContext().getResources();
 
         int screenHeight = resources.getDisplayMetrics().heightPixels;
+
         int actionBarHeight = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height);
 
-        if (HardwareUtils.isTablet()) {
-            return screenHeight - actionBarHeight;
-        }
-
-        PanelView panelView = tabsContainer.getCurrentPanelView();
-        if (panelView != null && !panelView.shouldExpand()) {
-            return resources.getDimensionPixelSize(R.dimen.tabs_layout_horizontal_height);
-        }
-
-        Rect windowRect = new Rect();
-        tabsContainer.getWindowVisibleDisplayFrame(windowRect);
-        int windowHeight = windowRect.bottom - windowRect.top;
-
-        // The web content area should have at least 1.5x the height of the action bar.
-        // The tabs panel shouldn't take less than 50% of the screen height and can take
-        // up to 80% of the window height.
-        return (int) Math.max(screenHeight * 0.5f,
-                              Math.min(windowHeight - 2.5f * actionBarHeight, windowHeight * 0.8f) - actionBarHeight);
+        return screenHeight - actionBarHeight;
     }
 
     @Override
@@ -308,20 +292,6 @@ public class TabsPanel extends LinearLayout
     static class TabsLayoutContainer extends FrameLayout {
         public TabsLayoutContainer(Context context, AttributeSet attrs) {
             super(context, attrs);
-        }
-
-        public PanelView getCurrentPanelView() {
-            final int childCount = getChildCount();
-            for (int i = 0; i < childCount; i++) {
-                View child = getChildAt(i);
-                if (!(child instanceof PanelView))
-                    continue;
-
-                if (child.getVisibility() == View.VISIBLE)
-                    return (PanelView) child;
-            }
-
-            return null;
         }
 
         @Override

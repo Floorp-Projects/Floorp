@@ -120,10 +120,30 @@ public:
   }
 };
 
+
+template<>
+class nsAutoRefTraits<DEVMODEW*>
+{
+public:
+  typedef DEVMODEW* RawRef;
+  static RawRef Void()
+  {
+    return nullptr;
+  }
+
+  static void Release(RawRef aDevMode)
+  {
+    if (aDevMode != Void()) {
+      ::HeapFree(::GetProcessHeap(), 0, aDevMode);
+    }
+  }
+};
+
 typedef nsAutoRef<HKEY> nsAutoRegKey;
 typedef nsAutoRef<SC_HANDLE> nsAutoServiceHandle;
 typedef nsAutoRef<HANDLE> nsAutoHandle;
 typedef nsAutoRef<HMODULE> nsModuleHandle;
+typedef nsAutoRef<DEVMODEW*> nsAutoDevMode;
 
 namespace {
 

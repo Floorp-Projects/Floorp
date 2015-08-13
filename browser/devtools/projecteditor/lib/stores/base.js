@@ -8,7 +8,7 @@ const { Cc, Ci, Cu } = require("chrome");
 const { Class } = require("sdk/core/heritage");
 const { EventTarget } = require("sdk/event/target");
 const { emit } = require("sdk/event/core");
-const promise = require("projecteditor/helpers/promise");
+const promise = require("promise");
 
 /**
  * A Store object maintains a collection of Resource objects stored in a tree.

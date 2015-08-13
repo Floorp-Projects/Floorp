@@ -27,7 +27,6 @@ function test() {
 
 // var assert = require('../testharness/assert');
 var util = require('gcli/util/util');
-var Promise = require('gcli/util/promise').Promise;
 
 function forEachType(options, templateTypeSpec, callback) {
   var types = options.requisition.system.types;

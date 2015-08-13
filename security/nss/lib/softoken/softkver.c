@@ -13,12 +13,6 @@
 #endif
 
 /*
- * Version information for the 'ident' and 'what commands
- *
- * NOTE: the first component of the concatenated rcsid string
- * must not end in a '$' to prevent rcs keyword substitution.
+ * Version information
  */
-const char __nss_softokn_rcsid[] = "$Header: NSS " SOFTOKEN_VERSION _DEBUG_STRING
-        "  " __DATE__ " " __TIME__ " $";
-const char __nss_softokn_sccsid[] = "@(#)NSS " SOFTOKEN_VERSION _DEBUG_STRING
-        "  " __DATE__ " " __TIME__;
+const char __nss_softokn_version[] = "Version: NSS " SOFTOKEN_VERSION _DEBUG_STRING;

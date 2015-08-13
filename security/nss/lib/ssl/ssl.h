@@ -185,11 +185,16 @@ SSL_IMPORT PRFileDesc *DTLS_ImportFD(PRFileDesc *model, PRFileDesc *fd);
 /* SSL_REUSE_SERVER_ECDHE_KEY controls whether the ECDHE server key is
  * reused for multiple handshakes or generated each time.
  * SSL_REUSE_SERVER_ECDHE_KEY is currently enabled by default.
+ * This socket option is for ECDHE, only. It is unrelated to DHE.
  */
 #define SSL_REUSE_SERVER_ECDHE_KEY 27
 
 #define SSL_ENABLE_FALLBACK_SCSV       28 /* Send fallback SCSV in
                                            * handshakes. */
+
+/* SSL_ENABLE_SERVER_DHE controls whether DHE is enabled for the server socket.
+ */
+#define SSL_ENABLE_SERVER_DHE 29
 
 #ifdef SSL_DEPRECATED_FUNCTION 
 /* Old deprecated function names */
@@ -291,6 +296,46 @@ SSL_IMPORT SECStatus SSL_CipherPrefSetDefault(PRInt32 cipher, PRBool enabled);
 SSL_IMPORT SECStatus SSL_CipherPrefGetDefault(PRInt32 cipher, PRBool *enabled);
 SSL_IMPORT SECStatus SSL_CipherPolicySet(PRInt32 cipher, PRInt32 policy);
 SSL_IMPORT SECStatus SSL_CipherPolicyGet(PRInt32 cipher, PRInt32 *policy);
+
+/* SSL_DHEGroupPrefSet is used to configure the set of allowed/enabled DHE group
+** parameters that can be used by NSS for the given server socket.
+** The first item in the array is used as the default group, if no other
+** selection criteria can be used by NSS.
+** The set is provided as an array of identifiers as defined by SSLDHEGroupType.
+** If more than one group identifier is provided, NSS will select the one to use.
+** For example, a TLS extension sent by the client might indicate a preference.
+*/
+SSL_IMPORT SECStatus SSL_DHEGroupPrefSet(PRFileDesc *fd,
+                                         SSLDHEGroupType *groups,
+                                         PRUint16 num_groups);
+
+/* Enable the use of a DHE group that's smaller than the library default,
+** for backwards compatibility reasons. The DH parameters will be created
+** at the time this function is called, which might take a very long time.
+** The function will block until generation is completed.
+** The intention is to enforce that fresh and safe parameters are generated
+** each time a process is started.
+** At the time this API was initially implemented, the API will enable the
+** use of 1024 bit DHE parameters. This value might get increased in future
+** versions of NSS.
+**
+** It is allowed to call this API will a NULL value for parameter fd,
+** which will prepare the global parameters that NSS will reuse for the remainder
+** of the process lifetime. This can be used early after startup of a process,
+** to avoid a delay when handling incoming client connections.
+** This preparation with a NULL for parameter fd will NOT enable the weak group
+** on sockets. The function needs to be called again for every socket that
+** should use the weak group.
+**
+** It is allowed to use this API in combination with the SSL_DHEGroupPrefSet API.
+** If both APIs have been called, the weakest group will be used,
+** unless it is certain that the client supports larger group parameters.
+** The weak group will be used as the default group, overriding the preference
+** for the first group potentially set with a call to SSL_DHEGroupPrefSet
+** (The first group set using SSL_DHEGroupPrefSet will still be enabled, but
+** it's no longer the default group.)
+*/
+SSL_IMPORT SECStatus SSL_EnableWeakDHEPrimeGroup(PRFileDesc *fd, PRBool enabled);
 
 /* SSL Version Range API
 **

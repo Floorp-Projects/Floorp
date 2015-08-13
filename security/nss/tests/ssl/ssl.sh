@@ -88,8 +88,8 @@ ssl_init()
       ECC_STRING=""
   fi
 
-  CSHORT="-c ABCDEF:003B:003C:003D:0041:0084:009Ccdefgijklmnvyz"
-  CLONG="-c ABCDEF:C001:C002:C003:C004:C005:C006:C007:C008:C009:C00A:C00B:C00C:C00D:C00E:C00F:C010:C011:C012:C013:C014:C023:C027:C02B:C02F:003B:003C:003D:0041:0084:009Ccdefgijklmnvyz"
+  CSHORT="-c ABCDEF:0016:0032:0033:0038:0039:003B:003C:003D:0040:0041:0067:006A:006B:0084:009C:009E:00A2cdefgijklmnvyz"
+  CLONG="-c ABCDEF:C001:C002:C003:C004:C005:C006:C007:C008:C009:C00A:C00B:C00C:C00D:C00E:C00F:C010:C011:C012:C013:C014:C023:C027:C02B:C02F:0016:0032:0033:0038:0039:003B:003C:003D:0040:0041:0067:006A:006B:0084:009C:009E:00A2cdefgijklmnvyz"
 
   if [ "${OS_ARCH}" != "WINNT" ]; then
       ulimit -n 1000 # make sure we have enough file descriptors
@@ -213,15 +213,16 @@ start_selfserv()
   fi
   echo "selfserv starting at `date`"
   echo "selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} -n ${HOSTADDR} ${SERVER_OPTIONS} \\"
-  echo "         ${ECC_OPTIONS} -w nss ${sparam} -i ${R_SERVERPID} $verbose &"
+  echo "         ${ECC_OPTIONS} -S ${HOSTADDR}-dsa -w nss ${sparam} -i ${R_SERVERPID}\\"
+  echo "         $verbose -H 1 &"
   if [ ${fileout} -eq 1 ]; then
       ${PROFTOOL} ${BINDIR}/selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} -n ${HOSTADDR} ${SERVER_OPTIONS} \
-               ${ECC_OPTIONS} -w nss ${sparam} -i ${R_SERVERPID} $verbose \
+               ${ECC_OPTIONS} -S ${HOSTADDR}-dsa -w nss ${sparam} -i ${R_SERVERPID} $verbose -H 1 \
                > ${SERVEROUTFILE} 2>&1 &
       RET=$?
   else
       ${PROFTOOL} ${BINDIR}/selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} -n ${HOSTADDR} ${SERVER_OPTIONS} \
-               ${ECC_OPTIONS} -w nss ${sparam} -i ${R_SERVERPID} $verbose &
+               ${ECC_OPTIONS} -S ${HOSTADDR}-dsa -w nss ${sparam} -i ${R_SERVERPID} $verbose -H 1 &
       RET=$?
   fi
 

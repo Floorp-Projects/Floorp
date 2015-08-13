@@ -10,8 +10,7 @@ let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let { TargetFactory } = require("devtools/framework/target");
 let { Toolbox } = require("devtools/framework/toolbox");
 let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-let { DebuggerClient } =
-  Cu.import("resource://gre/modules/devtools/dbg-client.jsm", {});
+let { DebuggerClient } = require("devtools/toolkit/client/main");
 let { ViewHelpers } =
   Cu.import("resource:///modules/devtools/ViewHelpers.jsm", {});
 let { Task } = Cu.import("resource://gre/modules/Task.jsm", {});

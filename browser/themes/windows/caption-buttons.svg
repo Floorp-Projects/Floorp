@@ -3,29 +3,32 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg width="12" height="12" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
   <style>
+    g:not(:target) {
+      display: none;
+    }
+    use:target > g {
+      display: initial;
+    }
+
     g {
       stroke: ButtonText;
       stroke-width: 0.9px;
       fill: none;
     }
-
     g:not([id|="close"]) {
       shape-rendering: crispEdges;
     }
 
-    g:not(:target) {
-      display: none;
-    }
-
-    use:target > g {
-      display: initial;
-    }
-
-    g.highlight {
+    .highcontrast {
       stroke-width: 1.9px;
     }
-
-    g.themes {
+    .highcontrast-hover > g {
+      stroke: HighlightText;
+    }
+    .white > g {
+      stroke: #fff;
+    }
+    .themes {
       stroke: #fff;
       stroke-width: 1.9px;
     }
@@ -35,19 +38,9 @@
       stroke-width: 3.6;
       opacity: .75;
     }
-
     .restore-background-window {
       stroke-width: .9;
     }
-
-    [id$="-highcontrast-hover"] > g {
-      stroke: HighlightText;
-    }
-
-    [id$="-white"] > g {
-      stroke: #fff;
-    }
-
   </style>
   <g id="close">
     <path d="M1,1 l 10,10 M1,11 l 10,-10"/>
@@ -63,29 +56,29 @@
     <polyline points="3.5,3.5 3.5,1.5 10.5,1.5 10.5,8.5 8.5,8.5"/>
   </g>
 
-  <use id="close-white" xlink:href="#close"/>
-  <use id="maximize-white" xlink:href="#maximize"/>
-  <use id="minimize-white" xlink:href="#minimize"/>
-  <use id="restore-white" xlink:href="#restore"/>
+  <use id="close-white" class="white" xlink:href="#close"/>
+  <use id="maximize-white" class="white" xlink:href="#maximize"/>
+  <use id="minimize-white" class="white" xlink:href="#minimize"/>
+  <use id="restore-white" class="white" xlink:href="#restore"/>
 
-  <g id="close-highcontrast" class="highlight">
+  <g id="close-highcontrast" class="highcontrast">
     <path d="M1,1 l 10,10 M1,11 l 10,-10"/>
   </g>
-  <g id="maximize-highcontrast" class="highlight">
+  <g id="maximize-highcontrast" class="highcontrast">
     <rect x="2" y="2" width="8" height="8"/>
   </g>
-  <g id="minimize-highcontrast" class="highlight">
+  <g id="minimize-highcontrast" class="highcontrast">
     <line x1="1" y1="6" x2="11" y2="6"/>
   </g>
-  <g id="restore-highcontrast" class="highlight">
+  <g id="restore-highcontrast" class="highcontrast">
     <rect x="2" y="4" width="6" height="6"/>
     <polyline points="3.5,1.5 10.5,1.5 10.5,8.5" class="restore-background-window"/>
   </g>
 
-  <use id="close-highcontrast-hover" xlink:href="#close-highcontrast"/>
-  <use id="maximize-highcontrast-hover" xlink:href="#maximize-highcontrast"/>
-  <use id="minimize-highcontrast-hover" xlink:href="#minimize-highcontrast"/>
-  <use id="restore-highcontrast-hover" xlink:href="#restore-highcontrast"/>
+  <use id="close-highcontrast-hover" class="highcontrast-hover" xlink:href="#close-highcontrast"/>
+  <use id="maximize-highcontrast-hover" class="highcontrast-hover" xlink:href="#maximize-highcontrast"/>
+  <use id="minimize-highcontrast-hover" class="highcontrast-hover" xlink:href="#minimize-highcontrast"/>
+  <use id="restore-highcontrast-hover" class="highcontrast-hover" xlink:href="#restore-highcontrast"/>
 
   <g id="close-themes" class="themes">
     <path d="M1,1 l 10,10 M1,11 l 10,-10" class="outer-stroke" />

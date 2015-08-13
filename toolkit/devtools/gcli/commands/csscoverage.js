@@ -8,8 +8,6 @@ const { Cc, Ci } = require("chrome");
 
 loader.lazyGetter(this, "gDevTools", () => require("resource:///modules/devtools/gDevTools.jsm").gDevTools);
 
-const promise = require("resource://gre/modules/Promise.jsm").Promise;
-
 const domtemplate = require("gcli/util/domtemplate");
 const csscoverage = require("devtools/server/actors/csscoverage");
 const l10n = csscoverage.l10n;

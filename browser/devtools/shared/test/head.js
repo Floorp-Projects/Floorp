@@ -251,7 +251,7 @@ function* openAndCloseToolbox(nbOfTimes, usageTime, toolId) {
  * Synthesize a profile for testing.
  */
 function synthesizeProfileForTest(samples) {
-  const RecordingUtils = require("devtools/performance/recording-utils");
+  const RecordingUtils = require("devtools/toolkit/performance/utils");
 
   samples.unshift({
     time: 0,
