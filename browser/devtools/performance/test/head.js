@@ -222,6 +222,10 @@ function initPerformance(aUrl, tool="performance", targetOps={}) {
     merge(target, targetOps);
 
     let toolbox = yield gDevTools.showToolbox(target, tool);
+
+    // Wait for the performance tool to be spun up
+    yield toolbox.initPerformance();
+
     let panel = toolbox.getCurrentPanel();
     return { target, panel, toolbox };
   });
