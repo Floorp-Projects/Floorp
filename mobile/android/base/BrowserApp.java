@@ -979,7 +979,7 @@ public class BrowserApp extends GeckoApp
 
     @Override
     protected void processTabQueue() {
-        if (AppConstants.NIGHTLY_BUILD && AppConstants.MOZ_ANDROID_TAB_QUEUE && mInitialized) {
+        if (AppConstants.MOZ_ANDROID_TAB_QUEUE && mInitialized) {
             ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
                 public void run() {
@@ -3679,7 +3679,7 @@ public class BrowserApp extends GeckoApp
         }
 
         // If the user has clicked the tab queue notification then load the tabs.
-        if(AppConstants.NIGHTLY_BUILD  && AppConstants.MOZ_ANDROID_TAB_QUEUE && mInitialized && isTabQueueAction) {
+        if (AppConstants.MOZ_ANDROID_TAB_QUEUE && mInitialized && isTabQueueAction) {
             Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.NOTIFICATION, "tabqueue");
             ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
@@ -3721,10 +3721,9 @@ public class BrowserApp extends GeckoApp
             @Override
             public void run() {
                 // We only want to show the prompt if the browser has been opened from an external url
-                if (AppConstants.NIGHTLY_BUILD && AppConstants.MOZ_ANDROID_TAB_QUEUE
-                                               && mInitialized
-                                               && Intent.ACTION_VIEW.equals(intent.getAction())
-                                               && TabQueueHelper.shouldShowTabQueuePrompt(BrowserApp.this)) {
+                if (AppConstants.MOZ_ANDROID_TAB_QUEUE && mInitialized
+                                                       && Intent.ACTION_VIEW.equals(intent.getAction())
+                                                       && TabQueueHelper.shouldShowTabQueuePrompt(BrowserApp.this)) {
                     Intent promptIntent = new Intent(BrowserApp.this, TabQueuePrompt.class);
                     startActivityForResult(promptIntent, ACTIVITY_REQUEST_TAB_QUEUE);
                 }
