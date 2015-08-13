@@ -1,7 +1,7 @@
 var Cu = Components.utils;
 
 const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
+const {DebuggerClient} = require("devtools/toolkit/client/main");
 const {DebuggerServer} = require("devtools/server/main");
 Cu.import("resource://gre/modules/Task.jsm");
 
