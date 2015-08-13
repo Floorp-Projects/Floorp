@@ -7,6 +7,18 @@
 #ifndef mozilla_nsRefPtr_h
 #define mozilla_nsRefPtr_h
 
+#if defined(_MSC_VER) && _MSC_VER >= 1900
+#  define MOZ_HAVE_REF_QUALIFIERS
+#elif defined(__clang__)
+// All supported Clang versions
+#  define MOZ_HAVE_REF_QUALIFIERS
+#elif defined(__GNUC__)
+#  include "mozilla/Compiler.h"
+#  if MOZ_GCC_VERSION_AT_LEAST(4, 8, 1)
+#    define MOZ_HAVE_REF_QUALIFIERS
+#  endif
+#endif
+
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -241,6 +253,9 @@ public:
   }
 
   operator T*() const
+#ifdef MOZ_HAVE_REF_QUALIFIERS
+  &
+#endif
   /*
     ...makes an |nsRefPtr| act like its underlying raw pointer type whenever it
     is used in a context where a raw pointer is expected.  It is this operator
@@ -252,6 +267,19 @@ public:
   {
     return get();
   }
+
+#ifdef MOZ_HAVE_REF_QUALIFIERS
+  // Don't allow implicit conversion of temporary nsRefPtr to raw pointer,
+  // because the refcount might be one and the pointer will immediately become
+  // invalid.
+  operator T*() const && = delete;
+
+  // These are needed to avoid the deleted operator above.  XXX Why is operator!
+  // needed separately?  Shouldn't the compiler prefer using the non-deleted
+  // operator bool instead of the deleted operator T*?
+  explicit operator bool() const { return !!mRawPtr; }
+  bool operator!() const { return !mRawPtr; }
+#endif
 
   T*
   operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN
@@ -570,5 +598,9 @@ do_AddRef(T*&& aObj)
   nsRefPtr<T> ref(aObj);
   return ref.forget();
 }
+
+#ifdef MOZ_HAVE_REF_QUALIFIERS
+#undef MOZ_HAVE_REF_QUALIFIERS
+#endif
 
 #endif /* mozilla_nsRefPtr_h */
