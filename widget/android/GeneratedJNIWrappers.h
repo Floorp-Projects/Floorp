@@ -24,7 +24,7 @@ public:
             "org/mozilla/gecko/ANRReporter";
 
 protected:
-    using Class::Class;
+    ANRReporter(jobject instance) : Class(instance) {}
 
 public:
     struct GetNativeStack_t {
@@ -88,7 +88,7 @@ public:
             "org/mozilla/gecko/DownloadsIntegration";
 
 protected:
-    using Class::Class;
+    DownloadsIntegration(jobject instance) : Class(instance) {}
 
 public:
     struct ScanMedia_t {
@@ -123,7 +123,7 @@ public:
             "org/mozilla/gecko/GeckoAppShell";
 
 protected:
-    using Class::Class;
+    GeckoAppShell(jobject instance) : Class(instance) {}
 
 public:
     struct AcknowledgeEvent_t {
@@ -1655,7 +1655,7 @@ public:
             "org/mozilla/gecko/GeckoJavaSampler";
 
 protected:
-    using Class::Class;
+    GeckoJavaSampler(jobject instance) : Class(instance) {}
 
 public:
     struct GetFrameNameJavaProfilingWrapper_t {
@@ -1798,7 +1798,7 @@ public:
             "org/mozilla/gecko/GeckoThread";
 
 protected:
-    using Class::Class;
+    GeckoThread(jobject instance) : Class(instance) {}
 
 public:
     class State;
@@ -1889,7 +1889,7 @@ public:
             "org/mozilla/gecko/GeckoThread$State";
 
 protected:
-    using Class::Class;
+    State(jobject instance) : Class(instance) {}
 
 public:
     struct New_t {
@@ -2168,7 +2168,7 @@ public:
             "org/mozilla/gecko/RestrictedProfiles";
 
 protected:
-    using Class::Class;
+    RestrictedProfiles(jobject instance) : Class(instance) {}
 
 public:
     struct IsAllowed_t {
@@ -2220,7 +2220,7 @@ public:
             "org/mozilla/gecko/SurfaceBits";
 
 protected:
-    using Class::Class;
+    SurfaceBits(jobject instance) : Class(instance) {}
 
 public:
     struct New_t {
@@ -2329,7 +2329,7 @@ public:
             "org/mozilla/gecko/ThumbnailHelper";
 
 protected:
-    using Class::Class;
+    ThumbnailHelper(jobject instance) : Class(instance) {}
 
 public:
     struct SendThumbnail_t {
@@ -2366,7 +2366,7 @@ public:
             "org/mozilla/gecko/gfx/DisplayPortMetrics";
 
 protected:
-    using Class::Class;
+    DisplayPortMetrics(jobject instance) : Class(instance) {}
 
 public:
     struct New_t {
@@ -2438,7 +2438,7 @@ public:
             "org/mozilla/gecko/gfx/GLController";
 
 protected:
-    using Class::Class;
+    GLController(jobject instance) : Class(instance) {}
 
 public:
     struct CreateEGLSurfaceForCompositorWrapper_t {
@@ -2471,7 +2471,7 @@ public:
             "org/mozilla/gecko/gfx/GeckoLayerClient";
 
 protected:
-    using Class::Class;
+    GeckoLayerClient(jobject instance) : Class(instance) {}
 
 public:
     struct ActivateProgram_t {
@@ -2721,7 +2721,7 @@ public:
             "org/mozilla/gecko/gfx/ImmutableViewportMetrics";
 
 protected:
-    using Class::Class;
+    ImmutableViewportMetrics(jobject instance) : Class(instance) {}
 
 public:
     struct New_t {
@@ -2767,7 +2767,7 @@ public:
             "org/mozilla/gecko/gfx/LayerView";
 
 protected:
-    using Class::Class;
+    LayerView(jobject instance) : Class(instance) {}
 
 public:
     struct RegisterCompositorWrapper_t {
@@ -2818,7 +2818,7 @@ public:
             "org/mozilla/gecko/gfx/NativePanZoomController";
 
 protected:
-    using Class::Class;
+    NativePanZoomController(jobject instance) : Class(instance) {}
 
 public:
     struct RequestContentRepaintWrapper_t {
@@ -2856,7 +2856,7 @@ public:
             "org/mozilla/gecko/gfx/ProgressiveUpdateData";
 
 protected:
-    using Class::Class;
+    ProgressiveUpdateData(jobject instance) : Class(instance) {}
 
 public:
     struct New_t {
@@ -2983,7 +2983,7 @@ public:
             "org/mozilla/gecko/gfx/ViewTransform";
 
 protected:
-    using Class::Class;
+    ViewTransform(jobject instance) : Class(instance) {}
 
 public:
     struct New_t {
@@ -3190,7 +3190,7 @@ public:
             "org/mozilla/gecko/sqlite/MatrixBlobCursor";
 
 protected:
-    using Class::Class;
+    MatrixBlobCursor(jobject instance) : Class(instance) {}
 
 public:
     struct New_t {
@@ -3298,7 +3298,7 @@ public:
             "org/mozilla/gecko/sqlite/SQLiteBridgeException";
 
 protected:
-    using Class::Class;
+    SQLiteBridgeException(jobject instance) : Class(instance) {}
 
 public:
     struct New_t {
@@ -3366,7 +3366,7 @@ public:
             "org/mozilla/gecko/util/Clipboard";
 
 protected:
-    using Class::Class;
+    Clipboard(jobject instance) : Class(instance) {}
 
 public:
     struct ClearText_t {
@@ -3451,7 +3451,7 @@ public:
             "org/mozilla/gecko/util/NativeJSContainer";
 
 protected:
-    using Class::Class;
+    NativeJSContainer(jobject instance) : Class(instance) {}
 
 public:
     struct New_t {
@@ -3516,7 +3516,7 @@ public:
             "org/mozilla/gecko/util/NativeJSObject";
 
 protected:
-    using Class::Class;
+    NativeJSObject(jobject instance) : Class(instance) {}
 
 public:
     struct New_t {
