@@ -34,20 +34,21 @@ public class CodeGenerator {
         this.cls = annotatedClass.wrappedClass;
         this.clsName = annotatedClass.generatedName;
 
+        final String unqualifiedName = Utils.getUnqualifiedName(clsName);
         header.append(
-                "class " + clsName + " : public mozilla::jni::Class<" + clsName + ">\n" +
+                "class " + clsName + " : public mozilla::jni::Class<" + unqualifiedName + ">\n" +
                 "{\n" +
                 "public:\n" +
-                "    typedef mozilla::jni::Ref<" + clsName + "> Ref;\n" +
-                "    typedef mozilla::jni::LocalRef<" + clsName + "> LocalRef;\n" +
-                "    typedef mozilla::jni::GlobalRef<" + clsName + "> GlobalRef;\n" +
-                "    typedef const mozilla::jni::Param<" + clsName + ">& Param;\n" +
+                "    typedef mozilla::jni::Ref<" + unqualifiedName + "> Ref;\n" +
+                "    typedef mozilla::jni::LocalRef<" + unqualifiedName + "> LocalRef;\n" +
+                "    typedef mozilla::jni::GlobalRef<" + unqualifiedName + "> GlobalRef;\n" +
+                "    typedef const mozilla::jni::Param<" + unqualifiedName + ">& Param;\n" +
                 "\n" +
                 "    static constexpr char name[] =\n" +
                 "            \"" + cls.getName().replace('.', '/') + "\";\n" +
                 "\n" +
                 "protected:\n" +
-                "    " + clsName + "(jobject instance) : Class(instance) {}\n" +
+                "    using Class::Class;\n" +
                 "\n");
 
         cpp.append(
@@ -57,7 +58,7 @@ public class CodeGenerator {
         natives.append(
                 "template<class Impl>\n" +
                 "class " + clsName + "::Natives : " +
-                        "public mozilla::jni::NativeImpl<" + clsName + ", Impl>\n" +
+                        "public mozilla::jni::NativeImpl<" + unqualifiedName + ", Impl>\n" +
                 "{\n");
     }
 
@@ -67,14 +68,14 @@ public class CodeGenerator {
 
     private String getNativeParameterType(Class<?> type, AnnotationInfo info) {
         if (type == cls) {
-            return clsName + "::Param";
+            return Utils.getUnqualifiedName(clsName) + "::Param";
         }
         return Utils.getNativeParameterType(type, info);
     }
 
     private String getNativeReturnType(Class<?> type, AnnotationInfo info) {
         if (type == cls) {
-            return clsName + "::LocalRef";
+            return Utils.getUnqualifiedName(clsName) + "::LocalRef";
         }
         return Utils.getNativeReturnType(type, info);
     }
@@ -92,7 +93,7 @@ public class CodeGenerator {
         header.append(
                 "public:\n" +
                 "    struct " + getTraitsName(uniqueName, /* includeScope */ false) + " {\n" +
-                "        typedef " + clsName + " Owner;\n" +
+                "        typedef " + Utils.getUnqualifiedName(clsName) + " Owner;\n" +
                 "        typedef " + getNativeReturnType(type, info) + " ReturnType;\n" +
                 "        typedef " + getNativeParameterType(type, info) + " SetterType;\n" +
                 "        typedef mozilla::jni::Args<" + args + "> Args;\n" +
@@ -136,16 +137,13 @@ public class CodeGenerator {
      */
     private String generatePrototype(String name, Class<?>[] argTypes,
                                      Class<?> returnType, AnnotationInfo info,
-                                     boolean includeScope, boolean includeArgName) {
+                                     boolean includeScope, boolean includeArgName,
+                                     boolean isConst) {
 
         final StringBuilder proto = new StringBuilder();
         int argIndex = 0;
 
-        if (info.catchException) {
-            proto.append("nsresult ");
-        } else {
-            proto.append(getNativeReturnType(returnType, info)).append(' ');
-        }
+        proto.append("auto ");
 
         if (includeScope) {
             proto.append(clsName).append("::");
@@ -173,7 +171,18 @@ public class CodeGenerator {
             proto.setLength(proto.length() - 2);
         }
 
-        return proto.append(')').toString();
+        proto.append(')');
+
+        if (isConst) {
+            proto.append(" const");
+        }
+
+        if (info.catchException) {
+            proto.append(" -> nsresult");
+        } else {
+            proto.append(" -> ").append(getNativeReturnType(returnType, info));
+        }
+        return proto.toString();
     }
 
     /**
@@ -186,8 +195,8 @@ public class CodeGenerator {
 
         return (isStatic ? "static " : "") +
             generatePrototype(name, argTypes, returnType, info,
-                              /* includeScope */ false, /* includeArgName */ false) +
-            (isStatic ? ";" : " const;");
+                              /* includeScope */ false, /* includeArgName */ false,
+                              /* isConst */ !isStatic) + ';';
     }
 
     /**
@@ -199,11 +208,8 @@ public class CodeGenerator {
 
         final StringBuilder def = new StringBuilder(
                 generatePrototype(name, argTypes, returnType, info,
-                                  /* includeScope */ true, /* includeArgName */ true));
-
-        if (!isStatic) {
-            def.append(" const");
-        }
+                                  /* includeScope */ true, /* includeArgName */ true,
+                                  /* isConst */ !isStatic));
         def.append("\n{\n");
 
 
