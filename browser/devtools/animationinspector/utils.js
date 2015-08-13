@@ -16,8 +16,10 @@ const TIME_INTERVAL_SCALES = 3;
 const TIME_GRADUATION_MIN_SPACING = 10;
 // RGB color for the time interval background.
 const TIME_INTERVAL_COLOR = [128, 136, 144];
-const TIME_INTERVAL_OPACITY_MIN = 32; // byte
-const TIME_INTERVAL_OPACITY_ADD = 32; // byte
+// byte
+const TIME_INTERVAL_OPACITY_MIN = 32;
+// byte
+const TIME_INTERVAL_OPACITY_ADD = 32;
 
 /**
  * DOM node creation helper function.
