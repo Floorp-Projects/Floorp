@@ -1696,11 +1696,31 @@ MediaResourceIndex::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
   // We purposefuly don't check that we may attempt to read past
   // mResource->GetLength() as the resource's length may change over time.
 
-  nsresult rv = mResource->ReadAt(mOffset, aBuffer, aCount, aBytes);
+  nsresult rv = ReadAt(mOffset, aBuffer, aCount, aBytes);
   if (NS_FAILED(rv)) {
     return rv;
   }
   mOffset += *aBytes;
+  return NS_OK;
+}
+
+nsresult
+MediaResourceIndex::ReadAt(int64_t aOffset, char* aBuffer,
+                           uint32_t aCount, uint32_t* aBytes) const
+{
+  *aBytes = 0;
+  while (aCount > 0) {
+    uint32_t bytesRead = 0;
+    nsresult rv = mResource->ReadAt(aOffset, aBuffer, aCount, &bytesRead);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!bytesRead) {
+      break;
+    }
+    *aBytes += bytesRead;
+    aOffset += bytesRead;
+    aBuffer += bytesRead;
+    aCount -= bytesRead;
+  }
   return NS_OK;
 }
 
