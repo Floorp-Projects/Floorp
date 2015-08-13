@@ -24,6 +24,8 @@ var FullScreen = {
       window.messageManager.addMessageListener(type, this);
     }
 
+    this._WarningBox.init();
+
     if (window.fullScreen)
       this.toggle();
   },
@@ -103,15 +105,11 @@ var FullScreen = {
     switch (event.type) {
       case "activate":
         if (document.mozFullScreen) {
-          this.showWarning(this.fullscreenOrigin);
+          this._WarningBox.show();
         }
         break;
       case "fullscreen":
         this.toggle();
-        break;
-      case "transitionend":
-        if (event.propertyName == "opacity")
-          this.cancelWarning();
         break;
       case "MozDOMFullscreen:Entered": {
         // The event target is the element which requested the DOM
@@ -160,7 +158,7 @@ var FullScreen = {
         break;
       }
       case "DOMFullscreen:NewOrigin": {
-        this.showWarning(aMessage.data.originNoSuffix);
+        this._WarningBox.show(aMessage.data.originNoSuffix);
         break;
       }
       case "DOMFullscreen:Exit": {
@@ -221,7 +219,7 @@ var FullScreen = {
   },
 
   cleanupDomFullscreen: function () {
-    this.cancelWarning();
+    this._WarningBox.close();
     gBrowser.tabContainer.removeEventListener("TabOpen", this.exitDomFullScreen);
     gBrowser.tabContainer.removeEventListener("TabClose", this.exitDomFullScreen);
     gBrowser.tabContainer.removeEventListener("TabSelect", this.exitDomFullScreen);
@@ -317,77 +315,195 @@ var FullScreen = {
     gPrefService.setBoolPref("browser.fullscreen.autohide", !gPrefService.getBoolPref("browser.fullscreen.autohide"));
   },
 
-  cancelWarning: function(event) {
-    if (!this.warningBox)
-      return;
-    this.warningBox.removeEventListener("transitionend", this);
-    if (this.warningFadeOutTimeout) {
-      clearTimeout(this.warningFadeOutTimeout);
-      this.warningFadeOutTimeout = null;
-    }
+  _WarningBox: {
+    _element: null,
+    _origin: null,
 
-    // Ensure focus switches away from the (now hidden) warning box. If the user
-    // clicked buttons in the fullscreen key authorization UI, it would have been
-    // focused, and any key events would be directed at the (now hidden) chrome
-    // document instead of the target document.
-    gBrowser.selectedBrowser.focus();
+    /**
+     * Timeout object for managing timeout request. If it is started when
+     * the previous call hasn't finished, it would automatically cancelled
+     * the previous one.
+     */
+    Timeout: function(func, delay) {
+      this._id = 0;
+      this._func = func;
+      this._delay = delay;
+    },
 
-    this.warningBox.setAttribute("hidden", true);
-    this.warningBox.removeAttribute("fade-warning-out");
-    this.warningBox = null;
-  },
+    init: function() {
+      this.Timeout.prototype = {
+        start: function() {
+          this.cancel();
+          this._id = setTimeout(() => this._handle(), this._delay);
+        },
+        cancel: function() {
+          if (this._id) {
+            clearTimeout(this._id);
+            this._id = 0;
+          }
+        },
+        _handle: function() {
+          this._id = 0;
+          this._func();
+        },
+        get delay() {
+          return this._delay;
+        }
+      };
+    },
 
-  warningBox: null,
-  warningFadeOutTimeout: null,
-
-  // Shows a warning that the site has entered fullscreen for a short duration.
-  showWarning: function(aOrigin) {
-    if (!document.mozFullScreen)
-      return;
-
-    // Set the strings on the fullscreen warning UI.
-    this.fullscreenOrigin = aOrigin;
-    let uri = BrowserUtils.makeURI(aOrigin);
-    let host = null;
-    try {
-      host = uri.host;
-    } catch (e) { }
-    let hostLabel = document.getElementById("full-screen-domain-text");
-    if (host) {
-      // Document's principal's URI has a host. Display a warning including the hostname and
-      // show UI to enable the user to permanently grant this host permission to enter fullscreen.
-      let utils = {};
-      Cu.import("resource://gre/modules/DownloadUtils.jsm", utils);
-      let displayHost = utils.DownloadUtils.getURIHost(uri.spec)[0];
-      let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
-
-      hostLabel.textContent = bundle.formatStringFromName("fullscreen.entered", [displayHost], 1);
-      hostLabel.removeAttribute("hidden");
-    } else {
-      hostLabel.setAttribute("hidden", "true");
-    }
-
-    // Note: the warning box can be non-null if the warning box from the previous request
-    // wasn't hidden before another request was made.
-    if (!this.warningBox) {
-      this.warningBox = document.getElementById("full-screen-warning-container");
-      // Add a listener to clean up state after the warning is hidden.
-      this.warningBox.addEventListener("transitionend", this);
-      this.warningBox.removeAttribute("hidden");
-    } else {
-      if (this.warningFadeOutTimeout) {
-        clearTimeout(this.warningFadeOutTimeout);
-        this.warningFadeOutTimeout = null;
+    // Shows a warning that the site has entered fullscreen for a short duration.
+    show: function(aOrigin) {
+      if (!document.mozFullScreen) {
+        return;
       }
-      this.warningBox.removeAttribute("fade-warning-out");
-    }
 
-    // Set a timeout to fade the warning out after a few moments.
-    this.warningFadeOutTimeout = setTimeout(() => {
-      if (this.warningBox) {
-        this.warningBox.setAttribute("fade-warning-out", "true");
+      if (!this._element) {
+        this._element = document.getElementById("fullscreen-warning");
+        // Setup event listeners
+        this._element.addEventListener("transitionend", this);
+        window.addEventListener("mousemove", this, true);
+        // The timeout to hide the warning box after a while.
+        this._timeoutHide = new this.Timeout(() => {
+          this._state = "hidden";
+        }, gPrefService.getIntPref("full-screen-api.warning.timeout"));
+        // The timeout to show the warning box when the pointer is at the top
+        this._timeoutShow = new this.Timeout(() => {
+          this._state = "ontop";
+          this._timeoutHide.start();
+        }, gPrefService.getIntPref("full-screen-api.warning.delay"));
       }
-    }, 3000);
+
+      // Set the strings on the fullscreen warning UI.
+      if (aOrigin) {
+        this._origin = aOrigin;
+      }
+      let uri = BrowserUtils.makeURI(this._origin);
+      let host = null;
+      try {
+        host = uri.host;
+      } catch (e) { }
+      let textElem = document.getElementById("fullscreen-domain-text");
+      if (!host) {
+        textElem.setAttribute("hidden", true);
+      } else {
+        textElem.removeAttribute("hidden");
+        let hostLabel = document.getElementById("fullscreen-domain");
+        // Document's principal's URI has a host. Display a warning including it.
+        let utils = {};
+        Cu.import("resource://gre/modules/DownloadUtils.jsm", utils);
+        hostLabel.value = utils.DownloadUtils.getURIHost(uri.spec)[0];
+      }
+      this._element.className = gIdentityHandler.getMode();
+
+      // User should be allowed to explicitly disable
+      // the prompt if they really want.
+      if (this._timeoutHide.delay <= 0) {
+        return;
+      }
+
+      // Explicitly set the last state to hidden to avoid the warning
+      // box being hidden immediately because of mousemove.
+      this._state = "onscreen";
+      this._lastState = "hidden";
+      this._timeoutHide.start();
+    },
+
+    close: function() {
+      if (!this._element) {
+        return;
+      }
+      // Cancel any pending timeout
+      this._timeoutHide.cancel();
+      this._timeoutShow.cancel();
+      // Reset state of the warning box
+      this._state = "hidden";
+      this._element.setAttribute("hidden", true);
+      // Remove all event listeners
+      this._element.removeEventListener("transitionend", this);
+      window.removeEventListener("mousemove", this, true);
+      // Clear fields
+      this._element = null;
+      this._timeoutHide = null;
+      this._timeoutShow = null;
+
+      // Ensure focus switches away from the (now hidden) warning box.
+      // If the user clicked buttons in the warning box, it would have
+      // been focused, and any key events would be directed at the (now
+      // hidden) chrome document instead of the target document.
+      gBrowser.selectedBrowser.focus();
+    },
+
+    // State could be one of "onscreen", "ontop", "hiding", and
+    // "hidden". Setting the state to "onscreen" and "ontop" takes
+    // effect immediately, while setting it to "hidden" actually
+    // turns the state to "hiding" before the transition finishes.
+    _lastState: null,
+    _STATES: ["hidden", "ontop", "onscreen"],
+    get _state() {
+      for (let state of this._STATES) {
+        if (this._element.hasAttribute(state)) {
+          return state;
+        }
+      }
+      return "hiding";
+    },
+    set _state(newState) {
+      let currentState = this._state;
+      if (currentState == newState) {
+        return;
+      }
+      if (currentState != "hiding") {
+        this._lastState = currentState;
+        this._element.removeAttribute(currentState);
+      }
+      if (newState != "hidden") {
+        this._element.setAttribute(newState, true);
+      }
+    },
+
+    handleEvent: function(event) {
+      switch (event.type) {
+        case "mousemove": {
+          let state = this._state;
+          if (state == "hidden") {
+            // If the warning box is currently hidden, show it after
+            // a short delay if the pointer is at the top.
+            if (event.clientY != 0) {
+              this._timeoutShow.cancel();
+            } else if (this._timeoutShow.delay >= 0) {
+              this._timeoutShow.start();
+            }
+          } else {
+            let elemRect = this._element.getBoundingClientRect();
+            if (state == "hiding") {
+              // If we are on the hiding transition, and the pointer
+              // moved near the box, restore to the previous state.
+              if (event.clientY <= elemRect.bottom + 50) {
+                this._state = this._lastState;
+                this._timeoutHide.start();
+              }
+            } else if (state == "ontop" || this._lastState != "hidden") {
+              // State being "ontop" or the previous state not being
+              // "hidden" indicates this current warning box is shown
+              // in response to user's action. Hide it immediately when
+              // the pointer leaves that area.
+              if (event.clientY > elemRect.bottom + 50) {
+                this._state = "hidden";
+                this._timeoutHide.cancel();
+              }
+            }
+          }
+          break;
+        }
+        case "transitionend": {
+          if (this._state == "hiding") {
+            this._element.setAttribute("hidden", true);
+          }
+          break;
+        }
+      }
+    }
   },
 
   showNavToolbox: function(trackMouse = true) {

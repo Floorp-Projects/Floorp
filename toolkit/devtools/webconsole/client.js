@@ -10,8 +10,7 @@ const {Cc, Ci, Cu} = require("chrome");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const promise = require("promise");
-
-loader.lazyImporter(this, "LongStringClient", "resource://gre/modules/devtools/dbg-client.jsm");
+const {LongStringClient} = require("devtools/toolkit/client/main");
 
 /**
  * A WebConsoleClient is used as a front end for the WebConsoleActor that is

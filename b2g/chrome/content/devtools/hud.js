@@ -14,7 +14,7 @@ XPCOMUtils.defineLazyGetter(this, 'devtools', function() {
 });
 
 XPCOMUtils.defineLazyGetter(this, 'DebuggerClient', function() {
-  return Cu.import('resource://gre/modules/devtools/dbg-client.jsm', {}).DebuggerClient;
+  return devtools.require('devtools/toolkit/client/main').DebuggerClient;
 });
 
 XPCOMUtils.defineLazyGetter(this, 'WebConsoleUtils', function() {

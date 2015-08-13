@@ -2,7 +2,7 @@ const Cu = Components.utils;
 const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm", {});
 const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm", {});
-const promise = require("projecteditor/helpers/promise");
+const promise = require("promise");
 const ProjectEditor = require("projecteditor/projecteditor");
 
 const SAMPLE_PATH = buildTempDirectoryStructure();

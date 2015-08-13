@@ -28,8 +28,8 @@ loader.lazyGetter(this, "Messages",
                   () => require("devtools/webconsole/console-output").Messages);
 loader.lazyGetter(this, "asyncStorage",
                   () => require("devtools/toolkit/shared/async-storage"));
-loader.lazyImporter(this, "EnvironmentClient", "resource://gre/modules/devtools/dbg-client.jsm");
-loader.lazyImporter(this, "ObjectClient", "resource://gre/modules/devtools/dbg-client.jsm");
+loader.lazyRequireGetter(this, "EnvironmentClient", "devtools/toolkit/client/main", true);
+loader.lazyRequireGetter(this, "ObjectClient", "devtools/toolkit/client/main", true);
 loader.lazyImporter(this, "VariablesView", "resource:///modules/devtools/VariablesView.jsm");
 loader.lazyImporter(this, "VariablesViewController", "resource:///modules/devtools/VariablesViewController.jsm");
 loader.lazyImporter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");

@@ -19,6 +19,7 @@ let WebConsoleUtils = require("devtools/toolkit/webconsole/utils").Utils;
 let ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
                           .getService(Ci.nsIConsoleAPIStorage);
 let {DebuggerServer} = require("devtools/server/main");
+let {DebuggerClient, ObjectClient} = require("devtools/toolkit/client/main");
 
 let {ConsoleServiceListener, ConsoleAPIListener} =
   require("devtools/toolkit/webconsole/utils");
@@ -26,8 +27,6 @@ let {ConsoleServiceListener, ConsoleAPIListener} =
 function initCommon()
 {
   //Services.prefs.setBoolPref("devtools.debugger.log", true);
-
-  Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
 }
 
 function initDebuggerServer()
@@ -81,17 +80,22 @@ function attachConsole(aListeners, aCallback, aAttachToTab)
           aCallback(aState, aResponse);
           return;
         }
-        let consoleActor = aResponse.tabs[aResponse.selected].consoleActor;
-        aState.actor = consoleActor;
-        aState.dbgClient.attachConsole(consoleActor, aListeners,
-                                       _onAttachConsole.bind(null, aState));
+        let tab = aResponse.tabs[aResponse.selected];
+        let consoleActor = tab.consoleActor;
+        aState.dbgClient.attachTab(tab.actor, function () {
+          aState.actor = consoleActor;
+          aState.dbgClient.attachConsole(consoleActor, aListeners,
+                                         _onAttachConsole.bind(null, aState));
+        });
       });
     } else {
       aState.dbgClient.getProcess().then(response => {
-        let consoleActor = response.form.consoleActor;
-        aState.actor = consoleActor;
-        aState.dbgClient.attachConsole(consoleActor, aListeners,
-                                       _onAttachConsole.bind(null, aState));
+        aState.dbgClient.attachTab(response.form.actor, function () {
+          let consoleActor = response.form.consoleActor;
+          aState.actor = consoleActor;
+          aState.dbgClient.attachConsole(consoleActor, aListeners,
+                                         _onAttachConsole.bind(null, aState));
+        });
       });
     }
   });
