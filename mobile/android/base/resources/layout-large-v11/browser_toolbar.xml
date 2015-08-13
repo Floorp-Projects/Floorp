@@ -19,20 +19,52 @@
                android:focusable="false"
                android:background="@drawable/url_bar_entry"/>
 
-    <org.mozilla.gecko.toolbar.ForwardButton style="@style/UrlBar.ImageButton.Forward"
-                                             android:id="@+id/forward"
-                                             android:layout_alignLeft="@id/back"/>
+    <!-- The attributes statically defined here are for the expanded
+         forward button. We translate/hide the forward button in code -
+         see BrowserToolbarTablet.animateForwardButton.
+
+         (for alpha) We want the button hidden to start so alpha=0.
+
+         (for layout_width) The visible area of the forward button is a
+	     nav_button_width and the non-visible area slides halfway
+	     under the back button. This non-visible area is used to
+	     ensure the forward button background fully covers the space
+	     to the right of the back button.
+
+         (for layout_marginLeft) We left align with back,
+         but only need to hide halfway underneath.
+
+         (for paddingLeft) We use left padding to center the
+         arrow in the visible area as opposed to the true width. -->
+    <org.mozilla.gecko.toolbar.ForwardButton
+            style="@style/UrlBar.ImageButton"
+            android:id="@+id/forward"
+            android:layout_alignLeft="@id/back"
+            android:contentDescription="@string/forward"
+            android:layout_height="match_parent"
+            android:paddingTop="0dp"
+            android:paddingBottom="0dp"
+            android:layout_marginTop="11.5dp"
+            android:layout_marginBottom="11.5dp"
+            android:layout_gravity="center_vertical"
+            android:layout_centerVertical="true"
+            android:src="@drawable/ic_menu_forward"
+            android:background="@drawable/url_bar_nav_button"
+            android:alpha="0"
+            android:layout_width="@dimen/new_tablet_nav_button_width_plus_half"
+            android:layout_marginLeft="@dimen/new_tablet_nav_button_width_half"
+            android:paddingLeft="18dp"/>
 
     <org.mozilla.gecko.toolbar.BackButton android:id="@id/back"
-                                          style="@style/UrlBar.ImageButton.NewTablet"
+                                          style="@style/UrlBar.ImageButton"
                                           android:layout_width="@dimen/new_tablet_nav_button_width"
                                           android:layout_height="@dimen/new_tablet_nav_button_width"
                                           android:layout_centerVertical="true"
                                           android:layout_marginLeft="12dp"
                                           android:layout_alignParentLeft="true"
-                                          android:src="@drawable/new_tablet_ic_menu_back"
+                                          android:src="@drawable/ic_menu_back"
                                           android:contentDescription="@string/back"
-                                          android:background="@drawable/new_tablet_url_bar_nav_button"/>
+                                          android:background="@drawable/url_bar_nav_button"/>
 
     <org.mozilla.gecko.toolbar.ToolbarEditLayout android:id="@+id/edit_layout"
                   style="@style/UrlBar.Button"
@@ -60,14 +92,14 @@
 
     <org.mozilla.gecko.widget.ThemedImageButton
             android:id="@+id/tabs"
-            style="@style/UrlBar.ImageButton.NewTablet"
+            style="@style/UrlBar.ImageButton"
             android:layout_toLeftOf="@id/menu"
             android:layout_alignWithParentIfMissing="true"
-            android:background="@drawable/new_tablet_action_bar_button"/>
+            android:background="@drawable/browser_toolbar_action_bar_button"/>
 
     <!-- In a 56x60dp space, centering 24dp image will leave 16x18dp. -->
     <org.mozilla.gecko.toolbar.TabCounter android:id="@+id/tabs_counter"
-                        style="@style/UrlBar.ImageButton.TabCount.NewTablet"
+                        style="@style/UrlBar.ImageButton.TabCount"
                         android:layout_alignLeft="@id/tabs"
                         android:layout_alignRight="@id/tabs"
                         android:layout_alignTop="@id/tabs"
@@ -75,24 +107,23 @@
                         android:layout_marginTop="18dp"
                         android:layout_marginBottom="18dp"
                         android:layout_marginLeft="16dp"
-                        android:layout_marginRight="16dp"
-                        android:layout="@layout/new_tablet_tabs_counter"/>
+                        android:layout_marginRight="16dp"/>
 
     <org.mozilla.gecko.widget.ThemedImageButton
             android:id="@+id/menu"
-            style="@style/UrlBar.ImageButton.NewTablet"
+            style="@style/UrlBar.ImageButton"
             android:layout_alignParentRight="true"
             android:layout_marginRight="6dp"
             android:contentDescription="@string/menu"
-            android:background="@drawable/new_tablet_action_bar_button"
+            android:background="@drawable/browser_toolbar_action_bar_button"
             android:visibility="gone"/>
 
     <org.mozilla.gecko.widget.ThemedImageView
             android:id="@+id/menu_icon"
-            style="@style/UrlBar.ImageButton.NewTablet"
+            style="@style/UrlBar.ImageButton"
             android:layout_alignLeft="@id/menu"
             android:layout_alignRight="@id/menu"
-            android:src="@drawable/new_tablet_menu"
+            android:src="@drawable/tablet_menu"
             android:visibility="gone"/>
 
     <!-- We draw after the menu items so when they are hidden, the cancel button,

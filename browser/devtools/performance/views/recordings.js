@@ -14,19 +14,15 @@ let RecordingsView = Heritage.extend(WidgetMethods, {
     this.widget = new SideMenuWidget($("#recordings-list"));
 
     this._onSelect = this._onSelect.bind(this);
-    this._onRecordingStarted = this._onRecordingStarted.bind(this);
-    this._onRecordingStopped = this._onRecordingStopped.bind(this);
-    this._onRecordingWillStop = this._onRecordingWillStop.bind(this);
-    this._onRecordingImported = this._onRecordingImported.bind(this);
+    this._onRecordingStateChange = this._onRecordingStateChange.bind(this);
+    this._onNewRecording = this._onNewRecording.bind(this);
     this._onSaveButtonClick = this._onSaveButtonClick.bind(this);
     this._onRecordingsCleared = this._onRecordingsCleared.bind(this);
 
     this.emptyText = L10N.getStr("noRecordingsText");
 
-    PerformanceController.on(EVENTS.RECORDING_STARTED, this._onRecordingStarted);
-    PerformanceController.on(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
-    PerformanceController.on(EVENTS.RECORDING_WILL_STOP, this._onRecordingWillStop);
-    PerformanceController.on(EVENTS.RECORDING_IMPORTED, this._onRecordingImported);
+    PerformanceController.on(EVENTS.RECORDING_STATE_CHANGE, this._onRecordingStateChange);
+    PerformanceController.on(EVENTS.NEW_RECORDING, this._onNewRecording);
     PerformanceController.on(EVENTS.RECORDINGS_CLEARED, this._onRecordingsCleared);
     this.widget.addEventListener("select", this._onSelect, false);
   },
@@ -35,10 +31,8 @@ let RecordingsView = Heritage.extend(WidgetMethods, {
    * Destruction function, called when the tool is closed.
    */
   destroy: function() {
-    PerformanceController.off(EVENTS.RECORDING_STARTED, this._onRecordingStarted);
-    PerformanceController.off(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
-    PerformanceController.off(EVENTS.RECORDING_WILL_STOP, this._onRecordingWillStop);
-    PerformanceController.off(EVENTS.RECORDING_IMPORTED, this._onRecordingImported);
+    PerformanceController.off(EVENTS.RECORDING_STATE_CHANGE, this._onRecordingStateChange);
+    PerformanceController.off(EVENTS.NEW_RECORDING, this._onNewRecording);
     PerformanceController.off(EVENTS.RECORDINGS_CLEARED, this._onRecordingsCleared);
     this.widget.removeEventListener("select", this._onSelect, false);
   },
@@ -92,79 +86,57 @@ let RecordingsView = Heritage.extend(WidgetMethods, {
   },
 
   /**
-   * Signals that a recording session has started.
+   * Called when a new recording is stored in the UI. This handles
+   * when recordings are lazily loaded (like a console.profile occurring
+   * before the tool is loaded) or imported. In normal manual recording cases,
+   * this will also be fired.
+   */
+  _onNewRecording: function (_, recording) {
+    this._onRecordingStateChange(_, null, recording);
+  },
+
+  /**
+   * Signals that a recording has changed state.
    *
+   * @param string state
+   *        Can be "recording-started", "recording-stopped", "recording-stopping"
    * @param RecordingModel recording
    *        Model of the recording that was started.
    */
-  _onRecordingStarted: function (_, recording) {
-    // TODO bug 1144388
-    // If a label is identical to an existing recording item,
-    // logically group them here.
-    // For now, insert a "dummy" recording item, to hint that recording has now started.
-    let recordingItem = this.addEmptyRecording(recording);
+  _onRecordingStateChange: function (_, state, recording) {
+    let recordingItem = this.getItemForPredicate(e => e.attachment === recording);
+    if (!recordingItem) {
+      recordingItem = this.addEmptyRecording(recording);
 
-    // Mark the corresponding item as being a "record in progress".
-    recordingItem.isRecording = true;
+      // If this is a manual recording, immediately select it, or
+      // select a console profile if its the only one
+      if (!recording.isConsole() || this.selectedIndex === -1) {
+        this.selectedItem = recordingItem;
+      }
+    }
 
-    // If this is a manual recording, immediately select it, or
-    // select a console profile if its the only one
-    if (!recording.isConsole() || this.selectedIndex === -1) {
+    recordingItem.isRecording = recording.isRecording();
+
+    // This recording is in the process of stopping.
+    if (!recording.isRecording() && !recording.isCompleted()) {
+      // Mark the corresponding item as loading.
+      let durationNode = $(".recording-item-duration", recordingItem.target);
+      durationNode.setAttribute("value", L10N.getStr("recordingsList.loadingLabel"));
+    }
+
+    // Render the recording item with finalized information (timing, etc)
+    if (recording.isCompleted() && !recordingItem.finalized) {
+      this.finalizeRecording(recordingItem);
+      // Select the recording if it was a manual recording only
+      if (!recording.isConsole()) {
+        this.forceSelect(recordingItem);
+      }
+    }
+
+    // Auto select imported items.
+    if (recording.isImported()) {
       this.selectedItem = recordingItem;
     }
-  },
-
-  /**
-   * Signals that a recording session has ended.
-   *
-   * @param RecordingModel recording
-   *        The model of the recording that just stopped.
-   */
-  _onRecordingStopped: function (_, recording) {
-    let recordingItem = this.getItemForPredicate(e => e.attachment === recording);
-
-    // Mark the corresponding item as being a "finished recording".
-    recordingItem.isRecording = false;
-
-    // Render the recording item with finalized information (timing, etc)
-    this.finalizeRecording(recordingItem);
-
-    // Select the recording if it was a manual recording only
-    if (!recording.isConsole()) {
-      this.forceSelect(recordingItem);
-    }
-  },
-
-  /**
-   * Signals that a recording session is ending, and hasn't finished being
-   * processed yet.
-   *
-   * @param RecordingModel recording
-   *        The model of the recording that is being stopped.
-   */
-  _onRecordingWillStop: function(_, recording) {
-    let recordingItem = this.getItemForPredicate(e => e.attachment === recording);
-
-    // Mark the corresponding item as loading.
-    let durationNode = $(".recording-item-duration", recordingItem.target);
-    durationNode.setAttribute("value", L10N.getStr("recordingsList.loadingLabel"));
-  },
-
-  /**
-   * Signals that a recording has been imported.
-   *
-   * @param RecordingModel model
-   *        The recording model containing data on the recording session.
-   */
-  _onRecordingImported: function (_, model) {
-    let recordingItem = this.addEmptyRecording(model);
-    recordingItem.isRecording = false;
-
-    // Immediately select the imported recording
-    this.selectedItem = recordingItem;
-
-    // Render the recording item with finalized information (timing, etc)
-    this.finalizeRecording(recordingItem);
   },
 
   /**
@@ -182,6 +154,7 @@ let RecordingsView = Heritage.extend(WidgetMethods, {
    */
   finalizeRecording: function (recordingItem) {
     let model = recordingItem.attachment;
+    recordingItem.finalized = true;
 
     let saveNode = $(".recording-item-save", recordingItem.target);
     saveNode.setAttribute("value",

@@ -195,12 +195,8 @@ let gGrid = {
         parseFloat(getComputedStyle(refCell).marginBottom);
       this._cellWidth = refCell.offsetWidth + this._cellMargin;
     }
-
-    let availSpace = document.documentElement.clientHeight - this._cellMargin -
-                     document.querySelector("#newtab-search-container").offsetHeight;
-    let visibleRows = Math.floor(availSpace / this._cellHeight);
     this._node.style.height = this._computeHeight() + "px";
-    this._node.style.maxHeight = this._computeHeight(visibleRows) + "px";
+    this._node.style.maxHeight = this._node.style.height;
     this._node.style.maxWidth = gGridPrefs.gridColumns * this._cellWidth +
                                 GRID_WIDTH_EXTRA + "px";
   }

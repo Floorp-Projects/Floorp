@@ -19,8 +19,7 @@ let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 let { BrowserToolboxProcess } = Cu.import("resource:///modules/devtools/ToolboxProcess.jsm", {});
 let { DebuggerServer } = require("devtools/server/main");
-let { DebuggerClient, ObjectClient } =
-  Cu.import("resource://gre/modules/devtools/dbg-client.jsm", {});
+let { DebuggerClient, ObjectClient } = require("devtools/toolkit/client/main");
 let { AddonManager } = Cu.import("resource://gre/modules/AddonManager.jsm", {});
 let EventEmitter = require("devtools/toolkit/event-emitter");
 const { promiseInvoke } = require("devtools/async-utils");
