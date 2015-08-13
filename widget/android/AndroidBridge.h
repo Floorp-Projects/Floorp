@@ -463,12 +463,12 @@ class AutoJObject {
 public:
     AutoJObject(JNIEnv* aJNIEnv = nullptr) : mObject(nullptr)
     {
-        mJNIEnv = aJNIEnv ? aJNIEnv : AndroidBridge::GetJNIEnv();
+        mJNIEnv = aJNIEnv ? aJNIEnv : jni::GetGeckoThreadEnv();
     }
 
     AutoJObject(JNIEnv* aJNIEnv, jobject aObject)
     {
-        mJNIEnv = aJNIEnv ? aJNIEnv : AndroidBridge::GetJNIEnv();
+        mJNIEnv = aJNIEnv ? aJNIEnv : jni::GetGeckoThreadEnv();
         mObject = aObject;
     }
 
@@ -497,7 +497,7 @@ class AutoLocalJNIFrame {
 public:
     AutoLocalJNIFrame(int nEntries = 15)
         : mEntries(nEntries)
-        , mJNIEnv(AndroidBridge::GetJNIEnv())
+        , mJNIEnv(jni::GetGeckoThreadEnv())
         , mHasFrameBeenPushed(false)
     {
         MOZ_ASSERT(mJNIEnv);
@@ -506,7 +506,7 @@ public:
 
     AutoLocalJNIFrame(JNIEnv* aJNIEnv, int nEntries = 15)
         : mEntries(nEntries)
-        , mJNIEnv(aJNIEnv ? aJNIEnv : AndroidBridge::GetJNIEnv())
+        , mJNIEnv(aJNIEnv ? aJNIEnv : jni::GetGeckoThreadEnv())
         , mHasFrameBeenPushed(false)
     {
         MOZ_ASSERT(mJNIEnv);
