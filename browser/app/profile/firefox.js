@@ -1947,5 +1947,9 @@ pref("view_source.tab", true);
 // Interception is still disabled.
 pref("dom.serviceWorkers.enabled", true);
 
+#ifdef NIGHTLY_BUILD
+pref("dom.serviceWorkers.interception.enabled", true);
+#endif
+
 // Enable Push API.
 pref("dom.push.enabled", true);
