@@ -14,8 +14,6 @@ autoconf
 git describe --long --abbrev=40 > VERSION
 rm -rf .git .gitignore .gitattributes autom4te.cache .autom4te.cfg
 
-patch -p1 < ../0001-Dont-overwrite-VERSION-on-a-git-repository.patch
-
 cd ..
 hg addremove -q src
 
