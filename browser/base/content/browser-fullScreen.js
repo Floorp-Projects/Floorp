@@ -24,6 +24,8 @@ var FullScreen = {
       window.messageManager.addMessageListener(type, this);
     }
 
+    this._WarningBox.init();
+
     if (window.fullScreen)
       this.toggle();
   },
@@ -318,14 +320,44 @@ var FullScreen = {
     _origin: null,
     _fadeOutTimeout: null,
 
+    /**
+     * Timeout object for managing timeout request. If it is started when
+     * the previous call hasn't finished, it would automatically cancelled
+     * the previous one.
+     */
+    Timeout: function(func, delay) {
+      this._id = 0;
+      this._func = func;
+      this._delay = delay;
+    },
+
+    init: function() {
+      this.Timeout.prototype = {
+        start: function() {
+          this.cancel();
+          this._id = setTimeout(() => this._handle(), this._delay);
+        },
+        cancel: function() {
+          if (this._id) {
+            clearTimeout(this._id);
+            this._id = 0;
+          }
+        },
+        _handle: function() {
+          this._id = 0;
+          this._func();
+        },
+        get delay() {
+          return this._delay;
+        }
+      };
+    },
+
     close: function() {
       if (!this._element)
         return;
       this._element.removeEventListener("transitionend", this);
-      if (this._fadeOutTimeout) {
-        clearTimeout(this._fadeOutTimeout);
-        this._fadeOutTimeout = null;
-      }
+      this._fadeOutTimeout.cancel();
 
       // Ensure focus switches away from the (now hidden) warning box. If the user
       // clicked buttons in the fullscreen key authorization UI, it would have been
@@ -335,6 +367,7 @@ var FullScreen = {
 
       this._element.setAttribute("hidden", true);
       this._element.removeAttribute("fade-warning-out");
+      this._fadeOutTimeout = null;
       this._element = null;
     },
 
@@ -374,20 +407,17 @@ var FullScreen = {
         // Add a listener to clean up state after the warning is hidden.
         this._element.addEventListener("transitionend", this);
         this._element.removeAttribute("hidden");
+        this._fadeOutTimeout = new this.Timeout(() => {
+          if (this._element) {
+            this._element.setAttribute("fade-warning-out", "true");
+          }
+        }, 3000);
       } else {
-        if (this._fadeOutTimeout) {
-          clearTimeout(this._fadeOutTimeout);
-          this._fadeOutTimeout = null;
-        }
         this._element.removeAttribute("fade-warning-out");
       }
 
       // Set a timeout to fade the warning out after a few moments.
-      this._fadeOutTimeout = setTimeout(() => {
-        if (this._element) {
-          this._element.setAttribute("fade-warning-out", "true");
-        }
-      }, 3000);
+      this._fadeOutTimeout.start();
     },
 
     handleEvent: function(event) {
