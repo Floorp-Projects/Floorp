@@ -310,11 +310,7 @@ nsXULCommandDispatcher::AddCommandUpdater(nsIDOMElement* aElement,
 #endif
 
   // If we get here, this is a new updater. Append it to the list.
-  updater = new Updater(aElement, aEvents, aTargets);
-  if (! updater)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-  *link = updater;
+  *link = new Updater(aElement, aEvents, aTargets);
   return NS_OK;
 }
 
