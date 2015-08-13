@@ -57,19 +57,11 @@ static int webm_read(void *aBuffer, size_t aLength, void *aUserData)
     reinterpret_cast<MediaResourceIndex*>(aUserData);
 
   nsresult rv = NS_OK;
-  bool eof = false;
+  uint32_t bytes = 0;
 
-  char *p = static_cast<char *>(aBuffer);
-  while (NS_SUCCEEDED(rv) && aLength > 0) {
-    uint32_t bytes = 0;
-    rv = resource->Read(p, aLength, &bytes);
-    if (bytes == 0) {
-      eof = true;
-      break;
-    }
-    aLength -= bytes;
-    p += bytes;
-  }
+  rv = resource->Read(static_cast<char *>(aBuffer), aLength, &bytes);
+
+  bool eof = !bytes;
 
   return NS_FAILED(rv) ? -1 : eof ? 0 : 1;
 }
