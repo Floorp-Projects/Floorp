@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.annotation.RobocopTarget;
+import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -405,6 +406,24 @@ public class GeckoThread extends Thread implements GeckoEventListener {
                 QUEUED_CALLS.add(new QueuedCall(null, e, null));
             }
         }
+    }
+
+    @WrapForJNI
+    private static boolean pumpMessageLoop(final Message msg) {
+        final Handler geckoHandler = ThreadUtils.sGeckoHandler;
+
+        if (msg.obj == geckoHandler && msg.getTarget() == geckoHandler) {
+            // Our "queue is empty" message; see runGecko()
+            return false;
+        }
+
+        if (msg.getTarget() == null) {
+            Looper.myLooper().quit();
+        } else {
+            msg.getTarget().dispatchMessage(msg);
+        }
+
+        return true;
     }
 
     @Override
