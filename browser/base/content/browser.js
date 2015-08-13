@@ -2416,7 +2416,7 @@ function BrowserPageInfo(doc, initialTab, imageElement, frameOuterWindowID) {
               frameOuterWindowID: frameOuterWindowID};
   var windows = Services.wm.getEnumerator("Browser:page-info");
 
-  var documentURL = doc ? doc.location : window.gBrowser.selectedBrowser.contentDocumentAsCPOW.location;
+  var documentURL = doc ? doc.location : window.gBrowser.selectedBrowser.currentURI.spec;
 
   // Check for windows matching the url
   while (windows.hasMoreElements()) {
