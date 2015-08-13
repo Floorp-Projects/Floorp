@@ -372,11 +372,9 @@ description > html|a {
  */
 
 #fxaProfileImage {
-  width: 60px;
-  max-height: 60px;
+  max-width: 60px;
   border-radius: 50%;
-  background-image: url(chrome://browser/skin/fxa/default-avatar.png);
-  background-size: contain;
+  list-style-image: url(chrome://browser/skin/fxa/default-avatar.png);
   margin-inline-end: 15px;
 }
 
@@ -396,13 +394,24 @@ description > html|a {
   /* Overriding the margins from the base preferences.css theme file.
      These overrides can be simplified by fixing bug 1027174 */
   margin: 0;
+  padding-top: 15px;
+}
+
+#fxaContentWrapper {
+  -moz-box-flex: 1;
 }
 
 #noFxaGroup {
   -moz-box-flex: 1;
+  margin: 0;
 }
 
-#noFxaGroup > vbox {
+#fxaContentWrapper {
+  padding-right: 15px;
+}
+
+#noFxaGroup > vbox,
+#fxaGroup {
   -moz-box-align: start;
 }
 
@@ -412,7 +421,7 @@ description > html|a {
 
 #fxaSyncComputerName {
   margin-inline-start: 0px;
-  width: 500px;
+  -moz-box-flex: 1;
 }
 
 #tosPP-small-ToS {
@@ -453,18 +462,27 @@ description > html|a {
 #signedOutAccountBoxTitle {
   margin-inline-start: 6px !important;
   font-weight: bold;
-  margin-bottom: 11px;
 }
 
-.fxaAccountBox button {
+.fxaAccountBoxButtons {
+  margin-bottom: 0 !important;
+  margin-top: 11px;
+}
+
+.fxaAccountBoxButtons > button {
   padding-left: 11px;
   padding-right: 11px;
 }
 
 .fxaSyncIllustration {
   width: 231px;
-  max-height: 200px;
   list-style-image: url(chrome://browser/skin/fxa/sync-illustration.png)
+}
+
+#fxaEmailAddress1,
+#fxaEmailAddress2,
+#fxaEmailAddress3 {
+  word-break: break-all;
 }
 
 .fxaFirefoxLogo {
@@ -473,21 +491,9 @@ description > html|a {
   margin-inline-end: 14px;
 }
 
-#noFxaAccount .fxaMobilePromo {
-  margin-bottom: 55px;
-}
-
-#hasFxaAccount .fxaMobilePromo {
+.fxaMobilePromo {
+  margin-top: 14px;
   margin-bottom: 41px;
-  margin-top: 27.5px;
-}
-
-.fxaMobilePromo > label {
-  margin-inline-start: 0;
-}
-
-#hasFxaAccount .fxaAccountBoxButtons {
-  margin-top: 11px;
 }
 
 #fxaLoginRejectedWarning {
@@ -503,8 +509,14 @@ description > html|a {
 .androidLogo {
   list-style-image: url(chrome://browser/skin/fxa/android.png);
   max-width: 24px;
-  margin-top: -4px;
-  margin-inline-end: 4px;
+  position: relative;
+  top: 8px;
+  margin: 0px;
+  margin-inline-end: 5px;
+}
+
+.androidLink {
+  margin: 0;
 }
 
 #tosPP-small {
@@ -527,6 +539,6 @@ description > html|a {
     list-style-image: url(chrome://browser/skin/fxa/android@2x.png);
   }
   #fxaProfileImage {
-    background-image: url(chrome://browser/skin/fxa/default-avatar@2x.png);
+    list-style-image: url(chrome://browser/skin/fxa/default-avatar@2x.png);
   }
 }
