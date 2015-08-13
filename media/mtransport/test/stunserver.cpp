@@ -539,7 +539,7 @@ int TestStunTcpServer::TryOpenListenSocket(nr_local_addr* addr, uint16_t port) {
     return r;
 
   if (ice_ctx_ == NULL)
-    ice_ctx_ = NrIceCtx::Create("stun", true);
+    ice_ctx_ = NrIceCtx::Create("stun", false, false, false, false, false, false);
 
   //TODO (nils@mozilla.com) can we replace this with a more basic TCP socket
   // alternative which would allow us to remove the framing argument from the

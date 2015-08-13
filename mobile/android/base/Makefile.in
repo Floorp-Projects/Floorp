@@ -209,7 +209,7 @@ ifdef MOZ_WEBSMS_BACKEND
 CLASSES_WITH_JNI += org.mozilla.gecko.GeckoSmsManager
 endif
 
-jni-stubs.inc: gecko-browser.jar gecko-mozglue.jar gecko-util.jar sync-thirdparty.jar
+jni-stubs.inc: gecko-browser.jar constants.jar gecko-mozglue.jar gecko-util.jar sync-thirdparty.jar
 	$(JAVAH) -o javah.out -bootclasspath $(JAVA_BOOTCLASSPATH) -classpath $(subst $(NULL) $(NULL),:,$^) $(CLASSES_WITH_JNI)
 	$(PYTHON) $(topsrcdir)/mobile/android/base/jni-generator.py javah.out $@
 
@@ -219,7 +219,7 @@ ANNOTATION_PROCESSOR_JAR_FILES := $(DEPTH)/build/annotationProcessors/annotation
 # GeneratedJNIWrappers.h and GeneratedJNINatives.h
 GeneratedJNIWrappers.cpp: $(ANNOTATION_PROCESSOR_JAR_FILES)
 GeneratedJNIWrappers.cpp: $(ALL_JARS)
-	$(JAVA) -classpath gecko-mozglue.jar:$(JAVA_BOOTCLASSPATH):$(JAVA_CLASSPATH):$(ANNOTATION_PROCESSOR_JAR_FILES) org.mozilla.gecko.annotationProcessors.AnnotationProcessor $(ALL_JARS)
+	$(JAVA) -classpath constants.jar:$(JAVA_BOOTCLASSPATH):$(JAVA_CLASSPATH):$(ANNOTATION_PROCESSOR_JAR_FILES) org.mozilla.gecko.annotationProcessors.AnnotationProcessor $(ALL_JARS)
 
 manifest := \
   AndroidManifest.xml.in \
@@ -420,6 +420,7 @@ $(1): $$(call mkdir_deps,$(filter-out ./,$(dir $(3) $(4) $(5)))) $(2)
 		$(if $(MOZ_ANDROID_MAX_SDK_VERSION),--max-res-version $(MOZ_ANDROID_MAX_SDK_VERSION),) \
 		--auto-add-overlay \
 		$$(addprefix -S ,$$(ANDROID_RES_DIRS)) \
+		$$(addprefix -A ,$$(ANDROID_ASSETS_DIRS)) \
 		$(if $(extra_res_dirs),$$(addprefix -S ,$$(extra_res_dirs)),) \
 		$(if $(extra_packages),--extra-packages $$(extra_packages),) \
 		--custom-package org.mozilla.gecko \

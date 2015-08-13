@@ -3166,7 +3166,7 @@ public class BrowserApp extends GeckoApp
             frag.dismiss();
         }
 
-        if (!GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
+        if (!GeckoThread.isRunning()) {
             aMenu.findItem(R.id.settings).setEnabled(false);
             aMenu.findItem(R.id.help).setEnabled(false);
         }

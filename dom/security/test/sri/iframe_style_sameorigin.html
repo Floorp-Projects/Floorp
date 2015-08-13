@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+    function check_styles() {
+      var redText = document.getElementById('red-text');
+      var blackText = document.getElementById('black-text');
+      var redTextColor = window.getComputedStyle(redText, null).getPropertyValue('color');
+      var blackTextColor = window.getComputedStyle(blackText, null).getPropertyValue('color');
+      ok(redTextColor == 'rgb(255, 0, 0)', "The first part should be red.");
+      ok(blackTextColor == 'rgb(0, 0, 0)', "The second part should still be black.");
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    window.onload = function() {
+      check_styles();
+      SimpleTest.finish();
+    }
+  </script>
+  <script>
+    function good_correctHashLoaded() {
+      ok(true, "A stylesheet was correctly loaded when integrity matched");
+    }
+    function bad_correctHashBlocked() {
+      ok(false, "We should load stylesheets with hashes that match!");
+    }
+
+    function good_emptyIntegrityLoaded() {
+      ok(true, "A stylesheet was correctly loaded when the integrity attribute was empty");
+    }
+    function bad_emptyIntegrityBlocked() {
+      ok(false, "We should load stylesheets with empty integrity attributes!");
+    }
+
+    function good_incorrectHashBlocked() {
+      ok(true, "A stylesheet was correctly blocked, because the hash digest was wrong");
+    }
+    function bad_incorrectHashLoaded() {
+      ok(false, "We should not load stylesheets with hashes that do not match the content!");
+    }
+  </script>
+
+  <!-- valid sha256 hash. should trigger onload -->
+  <link rel="stylesheet" href="style1.css"
+        integrity="sha256-qs8lnkunWoVldk5d5E+652yth4VTSHohlBKQvvgGwa8="
+        onerror="bad_correctHashBlocked()"
+        onload="good_correctHashLoaded()">
+
+  <!-- empty metadata. should trigger onload -->
+  <link rel="stylesheet" href="style2.css"
+        integrity=""
+        onerror="bad_emptyIntegrityBlocked()"
+        onload="good_emptyIntegrityLoaded()">
+
+  <!-- invalid sha256 hash. should trigger onerror -->
+  <link rel="stylesheet" href="style3.css"
+        integrity="sha256-bogus"
+        onerror="good_incorrectHashBlocked()"
+        onload="bad_incorrectHashLoaded()">
+</head>
+<body>
+<p><span id="red-text">This should be red </span> and
+  <span id="black-text">this should stay black.</p>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

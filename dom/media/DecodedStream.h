@@ -64,6 +64,7 @@ public:
 
   void SetPlaying(bool aPlaying);
   void SetVolume(double aVolume);
+  void SetSameOrigin(bool aSameOrigin);
 
   int64_t AudioEndTime() const;
   int64_t GetPosition() const;
@@ -71,7 +72,7 @@ public:
   bool HasConsumers() const;
 
   // Return true if stream is finished.
-  bool SendData(bool aIsSameOrigin);
+  bool SendData();
 
 protected:
   virtual ~DecodedStream();
@@ -101,6 +102,7 @@ private:
 
   bool mPlaying;
   double mVolume;
+  bool mSameOrigin;
 
   Maybe<int64_t> mStartTime;
   MediaInfo mInfo;

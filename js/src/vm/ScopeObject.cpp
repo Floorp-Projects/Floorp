@@ -2037,8 +2037,6 @@ DebugScopes::addDebugScope(JSContext* cx, const ScopeIter& si, DebugScopeObject&
 {
     MOZ_ASSERT(!si.hasSyntacticScopeObject());
     MOZ_ASSERT(cx->compartment() == debugScope.compartment());
-    MOZ_ASSERT_IF(si.withinInitialFrame() && si.initialFrame().isFunctionFrame(),
-                  !si.initialFrame().callee()->isGenerator());
     // Generators should always reify their scopes.
     MOZ_ASSERT_IF(si.type() == ScopeIter::Call, !si.fun().isGenerator());
 
@@ -2289,13 +2287,14 @@ DebugScopes::hasLiveScope(ScopeObject& scope)
 /* static */ void
 DebugScopes::unsetPrevUpToDateUntil(JSContext* cx, AbstractFramePtr until)
 {
-    // This is the one exception where fp->prevUpToDate() is cleared without
-    // popping the frame. When a frame is rematerialized, all frames younger
-    // than the rematerialized frame have their prevUpToDate set to
-    // false. This is because unrematerialized Ion frames have no usable
-    // AbstractFramePtr, and so are skipped by the updateLiveScopes. If in the
-    // future a frame suddenly gains a usable AbstractFramePtr via
-    // rematerialization, the prevUpToDate invariant will no longer hold.
+    // This are two exceptions where fp->prevUpToDate() is cleared without
+    // popping the frame. When a frame is rematerialized or has its
+    // debuggeeness toggled off->on, all frames younger than the frame must
+    // have their prevUpToDate set to false. This is because unrematerialized
+    // Ion frames and non-debuggee frames are skipped by updateLiveScopes. If
+    // in the future a frame suddenly gains a usable AbstractFramePtr via
+    // rematerialization or becomes a debuggee, the prevUpToDate invariant
+    // will no longer hold for older frames on its stack.
     for (AllFramesIter i(cx); !i.done(); ++i) {
         if (!i.hasUsableAbstractFramePtr())
             continue;
@@ -2419,8 +2418,15 @@ GetDebugScopeForMissing(JSContext* cx, const ScopeIter& si)
         break;
       }
       case ScopeIter::Block: {
-        // Generators should always reify their scopes.
-        MOZ_ASSERT_IF(si.withinInitialFrame() && si.initialFrame().isFunctionFrame(),
+        // Generators should always reify their scopes, except in this one
+        // weird case of deprecated let expressions where we can create a
+        // 0-variable StaticBlockObject inside a generator that does not need
+        // cloning.
+        //
+        // For example, |let ({} = "") { yield evalInFrame("foo"); }|.
+        MOZ_ASSERT_IF(si.staticBlock().numVariables() > 0 &&
+                      si.withinInitialFrame() &&
+                      si.initialFrame().isFunctionFrame(),
                       !si.initialFrame().callee()->isGenerator());
 
         Rooted<StaticBlockObject*> staticBlock(cx, &si.staticBlock());

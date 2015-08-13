@@ -348,7 +348,7 @@ public:
         if (sInited) {
             return;
         }
-        JNIEnv* const env = GetJNIForThread();
+        JNIEnv* const env = GetEnvForThread();
         MOZ_ALWAYS_TRUE(!env->RegisterNatives(
                 Accessor::EnsureClassRef<Cls>(env),
                  Natives::methods,
