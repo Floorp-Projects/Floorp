@@ -316,7 +316,7 @@ nsHttpNegotiateAuth::TestNonFqdn(nsIURI *uri)
         return false;
 
     // return true if host does not contain a dot and is not an ip address
-    return !host.IsEmpty() && host.FindChar('.') == kNotFound &&
+    return !host.IsEmpty() && !host.Contains('.') &&
            PR_StringToNetAddr(host.BeginReading(), &addr) != PR_SUCCESS;
 }
 

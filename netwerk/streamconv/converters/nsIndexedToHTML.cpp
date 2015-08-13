@@ -542,7 +542,7 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
     // trying to play nice and escaping the quotes.  See bug
     // 358128.
 
-    if (baseUri.FindChar('"') == kNotFound)
+    if (!baseUri.Contains('"'))
     {
         // Great, the baseUri does not contain a char that
         // will prematurely close the string.  Go ahead an
