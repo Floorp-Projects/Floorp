@@ -408,7 +408,7 @@ DirectShowReader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset)
     return;
   }
 
-  nsRefPtr<MediaByteBuffer> bytes = mDecoder->GetResource()->SilentReadAt(aOffset, aLength);
+  nsRefPtr<MediaByteBuffer> bytes = mDecoder->GetResource()->MediaReadAt(aOffset, aLength);
   NS_ENSURE_TRUE_VOID(bytes);
   mMP3FrameParser.Parse(bytes->Elements(), aLength, aOffset);
   if (!mMP3FrameParser.IsMP3()) {

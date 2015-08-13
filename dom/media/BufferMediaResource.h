@@ -59,45 +59,15 @@ private:
   // The mode is initially MODE_PLAYBACK.
   virtual void SetReadMode(MediaCacheStream::ReadMode aMode) override {}
   virtual void SetPlaybackRate(uint32_t aBytesPerSecond) override {}
-  virtual nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes) override
-  {
-    *aBytes = std::min(mLength - mOffset, aCount);
-    memcpy(aBuffer, mBuffer + mOffset, *aBytes);
-    mOffset += *aBytes;
-    MOZ_ASSERT(mOffset <= mLength);
-    return NS_OK;
-  }
   virtual nsresult ReadAt(int64_t aOffset, char* aBuffer,
                           uint32_t aCount, uint32_t* aBytes) override
   {
-    nsresult rv = Seek(nsISeekableStream::NS_SEEK_SET, aOffset);
-    if (NS_FAILED(rv)) return rv;
-    return Read(aBuffer, aCount, aBytes);
-  }
-  virtual nsresult Seek(int32_t aWhence, int64_t aOffset) override
-  {
-    MOZ_ASSERT(aOffset <= UINT32_MAX);
-    switch (aWhence) {
-    case nsISeekableStream::NS_SEEK_SET:
-      if (aOffset < 0 || aOffset > mLength) {
-        return NS_ERROR_FAILURE;
-      }
-      mOffset = static_cast<uint32_t> (aOffset);
-      break;
-    case nsISeekableStream::NS_SEEK_CUR:
-      if (aOffset >= mLength - mOffset) {
-        return NS_ERROR_FAILURE;
-      }
-      mOffset += static_cast<uint32_t> (aOffset);
-      break;
-    case nsISeekableStream::NS_SEEK_END:
-      if (aOffset < 0 || aOffset > mLength) {
-        return NS_ERROR_FAILURE;
-      }
-      mOffset = mLength - aOffset;
-      break;
+    if (aOffset < 0 || aOffset > mLength) {
+      return NS_ERROR_FAILURE;
     }
-
+    *aBytes = std::min(mLength - static_cast<uint32_t>(aOffset), aCount);
+    memcpy(aBuffer, mBuffer + aOffset, *aBytes);
+    mOffset = aOffset + *aBytes;
     return NS_OK;
   }
   virtual int64_t Tell() override { return mOffset; }

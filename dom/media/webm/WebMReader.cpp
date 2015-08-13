@@ -6,7 +6,6 @@
 #include "nsError.h"
 #include "MediaDecoderStateMachine.h"
 #include "AbstractMediaDecoder.h"
-#include "MediaResource.h"
 #include "SoftwareWebMVideoDecoder.h"
 #include "WebMReader.h"
 #include "WebMBufferedParser.h"
@@ -54,10 +53,8 @@ PRLogModuleInfo* gNesteggLog;
 static int webm_read(void *aBuffer, size_t aLength, void *aUserData)
 {
   MOZ_ASSERT(aUserData);
-  AbstractMediaDecoder* decoder =
-    reinterpret_cast<AbstractMediaDecoder*>(aUserData);
-  MediaResource* resource = decoder->GetResource();
-  NS_ASSERTION(resource, "Decoder has no media resource");
+  MediaResourceIndex* resource =
+    reinterpret_cast<MediaResourceIndex*>(aUserData);
 
   nsresult rv = NS_OK;
   bool eof = false;
@@ -80,10 +77,8 @@ static int webm_read(void *aBuffer, size_t aLength, void *aUserData)
 static int webm_seek(int64_t aOffset, int aWhence, void *aUserData)
 {
   MOZ_ASSERT(aUserData);
-  AbstractMediaDecoder* decoder =
-    reinterpret_cast<AbstractMediaDecoder*>(aUserData);
-  MediaResource* resource = decoder->GetResource();
-  NS_ASSERTION(resource, "Decoder has no media resource");
+  MediaResourceIndex* resource =
+    reinterpret_cast<MediaResourceIndex*>(aUserData);
   nsresult rv = resource->Seek(aWhence, aOffset);
   return NS_SUCCEEDED(rv) ? 0 : -1;
 }
@@ -91,10 +86,8 @@ static int webm_seek(int64_t aOffset, int aWhence, void *aUserData)
 static int64_t webm_tell(void *aUserData)
 {
   MOZ_ASSERT(aUserData);
-  AbstractMediaDecoder* decoder =
-    reinterpret_cast<AbstractMediaDecoder*>(aUserData);
-  MediaResource* resource = decoder->GetResource();
-  NS_ASSERTION(resource, "Decoder has no media resource");
+  MediaResourceIndex* resource =
+    reinterpret_cast<MediaResourceIndex*>(aUserData);
   return resource->Tell();
 }
 
@@ -158,6 +151,7 @@ WebMReader::WebMReader(AbstractMediaDecoder* aDecoder, MediaTaskQueue* aBorrowed
   , mLayersBackendType(layers::LayersBackend::LAYERS_NONE)
   , mHasVideo(false)
   , mHasAudio(false)
+  , mResource(aDecoder->GetResource())
 {
   MOZ_COUNT_CTOR(WebMReader);
   if (!gNesteggLog) {
@@ -288,7 +282,7 @@ nsresult WebMReader::ReadMetadata(MediaInfo* aInfo,
   io.read = webm_read;
   io.seek = webm_seek;
   io.tell = webm_tell;
-  io.userdata = mDecoder;
+  io.userdata = &mResource;
   int64_t maxOffset = mDecoder->HasInitializationData() ?
     mBufferedState->GetInitEndOffset() : -1;
   int r = nestegg_init(&mContext, io, &webm_log, maxOffset);
@@ -623,7 +617,7 @@ WebMReader::DemuxPacket()
     isKeyframe = si.is_kf;
   }
 
-  int64_t offset = mDecoder->GetResource()->Tell();
+  int64_t offset = mResource.Tell();
   nsRefPtr<NesteggPacketHolder> holder = new NesteggPacketHolder();
   if (!holder->Init(packet, offset, track, isKeyframe)) {
     return nullptr;
@@ -841,7 +835,8 @@ media::TimeIntervals WebMReader::GetBuffered()
 void WebMReader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset)
 {
   MOZ_ASSERT(OnTaskQueue());
-  nsRefPtr<MediaByteBuffer> bytes = mDecoder->GetResource()->SilentReadAt(aOffset, aLength);
+  nsRefPtr<MediaByteBuffer> bytes =
+    mDecoder->GetResource()->MediaReadAt(aOffset, aLength);
   NS_ENSURE_TRUE_VOID(bytes);
   mBufferedState->NotifyDataArrived(bytes->Elements(), aLength, aOffset);
 }
