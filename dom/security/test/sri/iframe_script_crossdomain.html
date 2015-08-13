@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+
+<script type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  window.hasCORSLoaded = false;
+  window.hasNonCORSLoaded = false;
+
+  function good_nonsriLoaded() {
+    ok(true, "Non-eligible non-SRI resource was loaded correctly.");
+  }
+  function bad_nonsriBlocked() {
+    ok(false, "Non-eligible non-SRI resources should be loaded!");
+  }
+
+  function good_nonCORSInvalidLoaded() {
+    ok(true, "A non-CORS resource with invalid metadata was correctly loaded.");
+  }
+  function bad_nonCORSInvalidBlocked() {
+    ok(false, "Non-CORS resources with invalid metadata should be loaded!");
+  }
+
+  window.onerrorCalled = false;
+  window.onloadCalled = false;
+
+  function bad_onloadCalled() {
+    window.onloadCalled = true;
+  }
+
+  function good_onerrorCalled() {
+    window.onerrorCalled = true;
+  }
+
+  window.onload = function() {
+    SimpleTest.finish()
+  }
+</script>
+
+<!-- cors-enabled. should be loaded -->
+<script src="http://example.com/tests/dom/security/test/sri/script_crossdomain1.js"
+        crossorigin=""
+        integrity="sha512-9Tv2DL1fHvmPQa1RviwKleE/jq72jgxj8XGLyWn3H6Xp/qbtfK/jZINoPFAv2mf0Nn1TxhZYMFULAbzJNGkl4Q=="></script>
+
+<!-- not cors-enabled. should be blocked -->
+<script src="http://example.com/tests/dom/security/test/sri/script_crossdomain2.js"
+        crossorigin="anonymous"
+        integrity="sha256-ntgU2U1xv7HfK1XWMTSWz6vJkyVtGzMrIAxQkux1I94="
+        onload="bad_onloadCalled()"
+        onerror="good_onerrorCalled()"></script>
+
+<!-- non-cors but not actually using SRI. should trigger onload -->
+<script src="http://example.com/tests/dom/security/test/sri/script_crossdomain3.js"
+        integrity="    "
+        onload="good_nonsriLoaded()"
+        onerror="bad_nonsriBlocked()"></script>
+
+<!-- non-cors with invalid metadata. should trigger onload -->
+<script src="http://example.com/tests/dom/security/test/sri/script_crossdomain4.js"
+        integrity="sha256-bogus"
+        onload="good_nonCORSInvalidLoaded()"
+        onerror="bad_nonCORSInvalidBlocked()"></script>
+
+<script>
+  ok(window.hasCORSLoaded, "CORS-enabled resource with a correct hash");
+  ok(!window.hasNonCORSLoaded, "Correct hash, but non-CORS, should be blocked");
+  ok(!window.onloadCalled, "Failed loads should not call onload when they're cross-domain");
+  ok(window.onerrorCalled, "Failed loads should call onerror when they're cross-domain");
+</script>
+</body>
+</html>
