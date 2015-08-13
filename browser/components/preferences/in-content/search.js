@@ -29,6 +29,25 @@ var gEngineView = null;
 
 var gSearchPane = {
 
+  /**
+   * Initialize autocomplete to ensure prefs are in sync.
+   */
+  _initAutocomplete: function () {
+    let unifiedCompletePref = false;
+    try {
+      unifiedCompletePref =
+        Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete");
+    } catch (ex) {}
+
+    if (unifiedCompletePref) {
+      Components.classes["@mozilla.org/autocomplete/search;1?name=unifiedcomplete"]
+                .getService(Components.interfaces.mozIPlacesAutoComplete);
+    } else {
+      Components.classes["@mozilla.org/autocomplete/search;1?name=history"]
+                .getService(Components.interfaces.mozIPlacesAutoComplete);
+    }
+  },
+
   init: function ()
   {
     gEngineView = new EngineView(new EngineStore());
@@ -46,6 +65,18 @@ var gSearchPane = {
     window.addEventListener("unload", () => {
       Services.obs.removeObserver(this, "browser-search-engine-modified", false);
     });
+
+    this._initAutocomplete();
+
+    let urlbarSuggests = document.getElementById("urlBarSuggestion");
+    urlbarSuggests.hidden = !Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete");
+
+    let suggestsPref = document.getElementById("browser.search.suggest.enabled")
+    let updateSuggestsCheckbox = () => {
+      urlbarSuggests.disabled = !suggestsPref.value;
+    }
+    suggestsPref.addEventListener("change", updateSuggestsCheckbox);
+    updateSuggestsCheckbox();
   },
 
   buildDefaultEngineDropDown: function() {
