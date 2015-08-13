@@ -165,11 +165,14 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName,
             nsString* type = aAttributes->getValue(nsHtml5AttributeName::ATTR_TYPE);
             nsString* crossOrigin =
               aAttributes->getValue(nsHtml5AttributeName::ATTR_CROSSORIGIN);
+            nsString* integrity =
+              aAttributes->getValue(nsHtml5AttributeName::ATTR_INTEGRITY);
             mSpeculativeLoadQueue.AppendElement()->
               InitScript(*url,
                          (charset) ? *charset : EmptyString(),
                          (type) ? *type : EmptyString(),
                          (crossOrigin) ? *crossOrigin : NullString(),
+                         (integrity) ? *integrity : NullString(),
                          mode == NS_HTML5TREE_BUILDER_IN_HEAD);
             mCurrentHtmlScriptIsAsyncOrDefer =
               aAttributes->contains(nsHtml5AttributeName::ATTR_ASYNC) ||
@@ -186,10 +189,13 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName,
                 nsString* charset = aAttributes->getValue(nsHtml5AttributeName::ATTR_CHARSET);
                 nsString* crossOrigin =
                   aAttributes->getValue(nsHtml5AttributeName::ATTR_CROSSORIGIN);
+                nsString* integrity =
+                  aAttributes->getValue(nsHtml5AttributeName::ATTR_INTEGRITY);
                 mSpeculativeLoadQueue.AppendElement()->
                   InitStyle(*url,
                             (charset) ? *charset : EmptyString(),
-                            (crossOrigin) ? *crossOrigin : NullString());
+                            (crossOrigin) ? *crossOrigin : NullString(),
+                            (integrity) ? *integrity : NullString());
               }
             } else if (rel->LowerCaseEqualsASCII("preconnect")) {
               nsString* url = aAttributes->getValue(nsHtml5AttributeName::ATTR_HREF);
@@ -256,11 +262,14 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName,
             nsString* type = aAttributes->getValue(nsHtml5AttributeName::ATTR_TYPE);
             nsString* crossOrigin =
               aAttributes->getValue(nsHtml5AttributeName::ATTR_CROSSORIGIN);
+            nsString* integrity =
+              aAttributes->getValue(nsHtml5AttributeName::ATTR_INTEGRITY);
             mSpeculativeLoadQueue.AppendElement()->
               InitScript(*url,
                          EmptyString(),
                          (type) ? *type : EmptyString(),
                          (crossOrigin) ? *crossOrigin : NullString(),
+                         (integrity) ? *integrity : NullString(),
                          mode == NS_HTML5TREE_BUILDER_IN_HEAD);
           }
         } else if (nsHtml5Atoms::style == aName) {
@@ -272,9 +281,12 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName,
           if (url) {
             nsString* crossOrigin =
               aAttributes->getValue(nsHtml5AttributeName::ATTR_CROSSORIGIN);
+            nsString* integrity =
+              aAttributes->getValue(nsHtml5AttributeName::ATTR_INTEGRITY);
             mSpeculativeLoadQueue.AppendElement()->
               InitStyle(*url, EmptyString(),
-                        (crossOrigin) ? *crossOrigin : NullString());
+                        (crossOrigin) ? *crossOrigin : NullString(),
+                        (integrity) ? *integrity : NullString());
           }
         }
         break;

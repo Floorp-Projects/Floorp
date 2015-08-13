@@ -64,6 +64,9 @@ class InlineForwardList : protected InlineForwardListNode<T>
     iterator begin() const {
         return iterator(this);
     }
+    iterator begin(Node* item) const {
+        return iterator(this, item);
+    }
     iterator end() const {
         return iterator(nullptr);
     }
@@ -160,6 +163,15 @@ private:
     explicit InlineForwardListIterator<T>(const InlineForwardList<T>* owner)
       : prev(const_cast<Node*>(static_cast<const Node*>(owner))),
         iter(owner ? owner->next : nullptr)
+#ifdef DEBUG
+      , owner_(owner),
+        modifyCount_(owner ? owner->modifyCount_ : 0)
+#endif
+    { }
+
+    InlineForwardListIterator<T>(const InlineForwardList<T>* owner, Node* node)
+      : prev(nullptr),
+        iter(node)
 #ifdef DEBUG
       , owner_(owner),
         modifyCount_(owner ? owner->modifyCount_ : 0)

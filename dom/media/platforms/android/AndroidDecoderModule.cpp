@@ -206,7 +206,7 @@ public:
   AudioDataDecoder(const AudioInfo& aConfig, MediaFormat::Param aFormat, MediaDataDecoderCallback* aCallback)
     : MediaCodecDataDecoder(MediaData::Type::AUDIO_DATA, aConfig.mMimeType, aFormat, aCallback)
   {
-    JNIEnv* env = GetJNIForThread();
+    JNIEnv* const env = jni::GetEnvForThread();
 
     jni::Object::LocalRef buffer(env);
     NS_ENSURE_SUCCESS_VOID(aFormat->GetByteBuffer(NS_LITERAL_STRING("csd-0"), &buffer));
@@ -427,7 +427,7 @@ void MediaCodecDataDecoder::DecoderLoop()
   bool draining = false;
   bool waitingEOF = false;
 
-  AutoLocalJNIFrame frame(GetJNIForThread(), 1);
+  AutoLocalJNIFrame frame(jni::GetEnvForThread(), 1);
   nsRefPtr<MediaRawData> sample;
 
   MediaFormat::LocalRef outputFormat(frame.GetEnv());

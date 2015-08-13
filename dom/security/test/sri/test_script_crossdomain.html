@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Cross-domain script tests for Bug 992096</title>
+  <script>
+    SpecialPowers.setBoolPref("security.sri.enable", true);
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=992096">Mozilla Bug 992096</a>
+<div>
+  <iframe src="iframe_script_crossdomain.html" height="100%" width="90%" frameborder="0"></iframe>
+</div>
+</body>
+</html>

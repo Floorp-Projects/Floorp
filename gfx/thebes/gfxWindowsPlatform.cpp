@@ -1673,7 +1673,7 @@ gfxWindowsPlatform::GetDXGIAdapter()
   return mAdapter;
 }
 
-bool DoesD3D11DeviceWork(ID3D11Device *device)
+bool CouldD3D11DeviceWork()
 {
   static bool checked = false;
   static bool result = false;
@@ -1987,6 +1987,11 @@ decltype(D3D11CreateDevice)* sD3D11CreateDeviceFn = nullptr;
 void
 gfxWindowsPlatform::AttemptD3D11DeviceCreation()
 {
+  if (!CouldD3D11DeviceWork()) {
+    mD3D11Device = nullptr;
+    return;
+  }
+
   RefPtr<IDXGIAdapter1> adapter = GetDXGIAdapter();
   if (!adapter) {
     return;
@@ -2007,7 +2012,7 @@ gfxWindowsPlatform::AttemptD3D11DeviceCreation()
     return;
   }
 
-  if (FAILED(hr) || !DoesD3D11DeviceWork(mD3D11Device)) {
+  if (FAILED(hr)) {
     gfxCriticalError() << "D3D11 device creation failed" << hexa(hr);
     return;
   }
@@ -2434,6 +2439,10 @@ gfxWindowsPlatform::InitializeD2D1()
 already_AddRefed<ID3D11Device>
 gfxWindowsPlatform::CreateD3D11DecoderDevice()
 {
+  if (!CouldD3D11DeviceWork()) {
+    return nullptr;
+  }
+
   nsModuleHandle d3d11Module(LoadLibrarySystem32(L"d3d11.dll"));
   decltype(D3D11CreateDevice)* d3d11CreateDevice = (decltype(D3D11CreateDevice)*)
     GetProcAddress(d3d11Module, "D3D11CreateDevice");
@@ -2471,7 +2480,7 @@ gfxWindowsPlatform::CreateD3D11DecoderDevice()
     return nullptr;
   }
 
-  if (FAILED(hr) || !DoesD3D11DeviceWork(device)) {
+  if (FAILED(hr)) {
     return nullptr;
   }
 

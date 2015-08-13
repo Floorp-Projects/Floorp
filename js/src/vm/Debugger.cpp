@@ -1965,6 +1965,7 @@ Debugger::updateExecutionObservabilityOfFrames(JSContext* cx, const ExecutionObs
         }
     }
 
+    AbstractFramePtr oldestEnabledFrame;
     for (ScriptFrameIter iter(cx, ScriptFrameIter::ALL_CONTEXTS,
                               ScriptFrameIter::GO_THROUGH_SAVED);
          !iter.done();
@@ -1972,7 +1973,10 @@ Debugger::updateExecutionObservabilityOfFrames(JSContext* cx, const ExecutionObs
     {
         if (obs.shouldMarkAsDebuggee(iter)) {
             if (observing) {
-                iter.abstractFramePtr().setIsDebuggee();
+                if (!iter.abstractFramePtr().isDebuggee()) {
+                    oldestEnabledFrame = iter.abstractFramePtr();
+                    oldestEnabledFrame.setIsDebuggee();
+                }
             } else {
 #ifdef DEBUG
                 // Debugger.Frame lifetimes are managed by the debug epilogue,
@@ -1985,6 +1989,13 @@ Debugger::updateExecutionObservabilityOfFrames(JSContext* cx, const ExecutionObs
             }
         }
     }
+
+    // See comment in unsetPrevUpToDateUntil.
+    if (oldestEnabledFrame) {
+        AutoCompartment ac(cx, oldestEnabledFrame.compartment());
+        DebugScopes::unsetPrevUpToDateUntil(cx, oldestEnabledFrame);
+    }
+
     return true;
 }
 
@@ -5897,7 +5908,7 @@ CheckThisFrame(JSContext* cx, const CallArgs& args, const char* fnname, bool che
     THIS_FRAME_THISOBJ(cx, argc, vp, fnname, args, thisobj);                   \
     AbstractFramePtr frame = AbstractFramePtr::FromRaw(thisobj->getPrivate()); \
     if (frame.isScriptFrameIterData()) {                                       \
-        ScriptFrameIter iter(*(ScriptFrameIter::Data*)(frame.raw()));          \
+        ScriptFrameIter iter(cx, *(ScriptFrameIter::Data*)(frame.raw()));      \
         frame = iter.abstractFramePtr();                                       \
     }
 
@@ -5907,7 +5918,7 @@ CheckThisFrame(JSContext* cx, const CallArgs& args, const char* fnname, bool che
     {                                                                          \
         AbstractFramePtr f = AbstractFramePtr::FromRaw(thisobj->getPrivate()); \
         if (f.isScriptFrameIterData()) {                                       \
-            maybeIter.emplace(*(ScriptFrameIter::Data*)(f.raw()));             \
+            maybeIter.emplace(cx, *(ScriptFrameIter::Data*)(f.raw()));         \
         } else {                                                               \
             maybeIter.emplace(cx, ScriptFrameIter::ALL_CONTEXTS,               \
                               ScriptFrameIter::GO_THROUGH_SAVED,               \
