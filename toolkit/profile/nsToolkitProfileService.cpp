@@ -895,7 +895,7 @@ nsToolkitProfileService::CreateProfileInternal(nsIFile* aRootDir,
     rv = CreateTimesInternal(rootDir);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsToolkitProfile* last = aForExternalApp ? nullptr : mFirst;
+    nsToolkitProfile* last = aForExternalApp ? nullptr : mFirst.get();
     if (last) {
         while (last->mNext)
             last = last->mNext;
