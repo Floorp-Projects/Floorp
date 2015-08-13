@@ -32,10 +32,10 @@ class MediaRawDataQueue {
     mQueue.push_front(aItem);
   }
 
-  nsRefPtr<MediaRawData> PopFront() {
+  already_AddRefed<MediaRawData> PopFront() {
     nsRefPtr<MediaRawData> result = mQueue.front();
     mQueue.pop_front();
-    return result;
+    return result.forget();
   }
 
   void Reset() {
