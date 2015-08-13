@@ -141,39 +141,6 @@ public:
         return sBridge;
     }
 
-    static JavaVM *GetVM() {
-        MOZ_ASSERT(sBridge);
-        return sBridge->mJavaVM;
-    }
-
-
-    static JNIEnv *GetJNIEnv() {
-        MOZ_ASSERT(sBridge);
-        if (MOZ_UNLIKELY(!pthread_equal(pthread_self(), sBridge->mThread))) {
-            MOZ_CRASH();
-        }
-        MOZ_ASSERT(sBridge->mJNIEnv);
-        return sBridge->mJNIEnv;
-    }
-
-    static bool HasEnv() {
-        return sBridge && sBridge->mJNIEnv;
-    }
-
-    static bool ThrowException(JNIEnv *aEnv, const char *aClass,
-                               const char *aMessage) {
-
-        return jni::ThrowException(aEnv, aClass, aMessage);
-    }
-
-    static bool ThrowException(JNIEnv *aEnv, const char *aMessage) {
-        return jni::ThrowException(aEnv, aMessage);
-    }
-
-    static void HandleUncaughtException(JNIEnv *aEnv) {
-        jni::HandleUncaughtException(aEnv);
-    }
-
     // The bridge needs to be constructed via ConstructBridge first,
     // and then once the Gecko main thread is spun up (Gecko side),
     // SetMainThread should be called which will create the JNIEnv for
@@ -350,13 +317,6 @@ protected:
     static pthread_t sJavaUiThread;
     static AndroidBridge* sBridge;
     nsTArray<nsCOMPtr<nsIMobileMessageCallback> > mSmsRequests;
-
-    // the global JavaVM
-    JavaVM *mJavaVM;
-
-    // the JNIEnv for the main thread
-    JNIEnv *mJNIEnv;
-    pthread_t mThread;
 
     widget::GeckoLayerClient::GlobalRef mLayerClient;
 
