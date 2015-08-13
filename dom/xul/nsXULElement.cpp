@@ -2350,12 +2350,11 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                 break;
             case eType_Script: {
                 // language version/options obtained during deserialization.
-                nsXULPrototypeScript* script = new nsXULPrototypeScript(0, 0);
-                child = script;
+                nsRefPtr<nsXULPrototypeScript> script = new nsXULPrototypeScript(0, 0);
 
                 rv = aStream->ReadBoolean(&script->mOutOfLine);
                 if (NS_WARN_IF(NS_FAILED(rv))) return rv;
-                if (! script->mOutOfLine) {
+                if (!script->mOutOfLine) {
                     rv = script->Deserialize(aStream, aProtoDoc, aDocumentURI,
                                              aNodeInfos);
                     if (NS_WARN_IF(NS_FAILED(rv))) return rv;
@@ -2368,7 +2367,8 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                     rv = script->DeserializeOutOfLine(aStream, aProtoDoc);
                     if (NS_WARN_IF(NS_FAILED(rv))) return rv;
                 }
-                // If we failed to deserialize, consider deleting 'script'?
+
+                child = script.forget();
                 break;
             }
             default:
