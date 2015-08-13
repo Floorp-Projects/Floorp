@@ -6,6 +6,7 @@ const {DebuggerServer} = require("devtools/server/main");
 Cu.import("resource://gre/modules/Task.jsm");
 
 const Services = require("Services");
+const promise = require("promise");
 const {_documentWalker} = require("devtools/server/actors/inspector");
 
 // Always log packets when running tests.

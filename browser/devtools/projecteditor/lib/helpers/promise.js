@@ -8,4 +8,4 @@
  * This helper is a quick way to require() the Promise object from Promise.jsm.
  */
 const { Cu } = require("chrome");
-module.exports = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
+module.exports = require("promise");
