@@ -665,7 +665,7 @@ nsDefaultURIFixup::ConvertFileToStringURI(const nsACString& aIn,
 
 #if defined(XP_WIN)
   // Check for \ in the url-string or just a drive (PC)
-  if (kNotFound != aIn.FindChar('\\') ||
+  if (aIn.Contains('\\') ||
       (aIn.Length() == 2 && (aIn.Last() == ':' || aIn.Last() == '|'))) {
     attemptFixup = true;
   }
