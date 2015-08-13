@@ -107,6 +107,10 @@ private:
 NS_IMETHODIMP
 RtspChannelChild::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
 {
+  MOZ_ASSERT(!mLoadInfo || mLoadInfo->GetSecurityMode() == 0 ||
+             mLoadInfo->GetInitialSecurityCheckDone(),
+             "security flags in loadInfo but asyncOpen2() not called");
+
   // Precondition checks.
   MOZ_ASSERT(aListener);
   nsCOMPtr<nsIURI> uri = nsBaseChannel::URI();
