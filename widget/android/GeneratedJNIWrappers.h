@@ -24,7 +24,7 @@ public:
             "org/mozilla/gecko/ANRReporter";
 
 protected:
-    ANRReporter(jobject instance) : Class(instance) {}
+    using Class::Class;
 
 public:
     struct GetNativeStack_t {
@@ -88,7 +88,7 @@ public:
             "org/mozilla/gecko/DownloadsIntegration";
 
 protected:
-    DownloadsIntegration(jobject instance) : Class(instance) {}
+    using Class::Class;
 
 public:
     struct ScanMedia_t {
@@ -107,7 +107,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void ScanMedia(mozilla::jni::String::Param, mozilla::jni::String::Param);
+    static auto ScanMedia(mozilla::jni::String::Param, mozilla::jni::String::Param) -> void;
 
 };
 
@@ -123,7 +123,7 @@ public:
             "org/mozilla/gecko/GeckoAppShell";
 
 protected:
-    GeckoAppShell(jobject instance) : Class(instance) {}
+    using Class::Class;
 
 public:
     struct AcknowledgeEvent_t {
@@ -140,7 +140,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void AcknowledgeEvent();
+    static auto AcknowledgeEvent() -> void;
 
 public:
     struct AddPluginViewWrapper_t {
@@ -163,7 +163,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void AddPluginViewWrapper(mozilla::jni::Object::Param, float, float, float, float, bool);
+    static auto AddPluginViewWrapper(mozilla::jni::Object::Param, float, float, float, float, bool) -> void;
 
 public:
     struct AlertsProgressListener_OnProgress_t {
@@ -184,7 +184,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void AlertsProgressListener_OnProgress(mozilla::jni::String::Param, int64_t, int64_t, mozilla::jni::String::Param);
+    static auto AlertsProgressListener_OnProgress(mozilla::jni::String::Param, int64_t, int64_t, mozilla::jni::String::Param) -> void;
 
 public:
     struct CancelVibrate_t {
@@ -201,7 +201,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void CancelVibrate();
+    static auto CancelVibrate() -> void;
 
 public:
     struct CheckURIVisited_t {
@@ -219,7 +219,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void CheckURIVisited(mozilla::jni::String::Param);
+    static auto CheckURIVisited(mozilla::jni::String::Param) -> void;
 
 public:
     struct ClearMessageList_t {
@@ -237,7 +237,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void ClearMessageList(int32_t);
+    static auto ClearMessageList(int32_t) -> void;
 
 public:
     struct CloseCamera_t {
@@ -254,7 +254,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void CloseCamera();
+    static auto CloseCamera() -> void;
 
 public:
     struct CloseNotification_t {
@@ -272,7 +272,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void CloseNotification(mozilla::jni::String::Param);
+    static auto CloseNotification(mozilla::jni::String::Param) -> void;
 
 public:
     struct ConnectionGetMimeType_t {
@@ -290,7 +290,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static mozilla::jni::String::LocalRef ConnectionGetMimeType(mozilla::jni::Object::Param);
+    static auto ConnectionGetMimeType(mozilla::jni::Object::Param) -> mozilla::jni::String::LocalRef;
 
 public:
     struct CreateInputStream_t {
@@ -308,7 +308,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static mozilla::jni::Object::LocalRef CreateInputStream(mozilla::jni::Object::Param);
+    static auto CreateInputStream(mozilla::jni::Object::Param) -> mozilla::jni::Object::LocalRef;
 
 public:
     struct CreateMessageListWrapper_t {
@@ -335,7 +335,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void CreateMessageListWrapper(int64_t, int64_t, mozilla::jni::ObjectArray::Param, int32_t, mozilla::jni::String::Param, bool, bool, int64_t, bool, int32_t);
+    static auto CreateMessageListWrapper(int64_t, int64_t, mozilla::jni::ObjectArray::Param, int32_t, mozilla::jni::String::Param, bool, bool, int64_t, bool, int32_t) -> void;
 
 public:
     struct CreateShortcut_t {
@@ -355,7 +355,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void CreateShortcut(mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param);
+    static auto CreateShortcut(mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param) -> void;
 
 public:
     struct DeleteMessageWrapper_t {
@@ -374,7 +374,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void DeleteMessageWrapper(int32_t, int32_t);
+    static auto DeleteMessageWrapper(int32_t, int32_t) -> void;
 
 public:
     struct DisableBatteryNotifications_t {
@@ -391,7 +391,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void DisableBatteryNotifications();
+    static auto DisableBatteryNotifications() -> void;
 
 public:
     struct DisableNetworkNotifications_t {
@@ -408,7 +408,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void DisableNetworkNotifications();
+    static auto DisableNetworkNotifications() -> void;
 
 public:
     struct DisableScreenOrientationNotifications_t {
@@ -425,7 +425,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void DisableScreenOrientationNotifications();
+    static auto DisableScreenOrientationNotifications() -> void;
 
 public:
     struct DisableSensor_t {
@@ -443,7 +443,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void DisableSensor(int32_t);
+    static auto DisableSensor(int32_t) -> void;
 
 public:
     struct EnableBatteryNotifications_t {
@@ -460,7 +460,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void EnableBatteryNotifications();
+    static auto EnableBatteryNotifications() -> void;
 
 public:
     struct EnableLocation_t {
@@ -478,7 +478,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void EnableLocation(bool);
+    static auto EnableLocation(bool) -> void;
 
 public:
     struct EnableLocationHighAccuracy_t {
@@ -496,7 +496,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void EnableLocationHighAccuracy(bool);
+    static auto EnableLocationHighAccuracy(bool) -> void;
 
 public:
     struct EnableNetworkNotifications_t {
@@ -513,7 +513,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void EnableNetworkNotifications();
+    static auto EnableNetworkNotifications() -> void;
 
 public:
     struct EnableScreenOrientationNotifications_t {
@@ -530,7 +530,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void EnableScreenOrientationNotifications();
+    static auto EnableScreenOrientationNotifications() -> void;
 
 public:
     struct EnableSensor_t {
@@ -548,7 +548,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void EnableSensor(int32_t);
+    static auto EnableSensor(int32_t) -> void;
 
 public:
     struct GamepadAdded_t {
@@ -567,7 +567,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void GamepadAdded(int32_t, int32_t);
+    static auto GamepadAdded(int32_t, int32_t) -> void;
 
 public:
     struct GetConnection_t {
@@ -585,7 +585,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static mozilla::jni::Object::LocalRef GetConnection(mozilla::jni::String::Param);
+    static auto GetConnection(mozilla::jni::String::Param) -> mozilla::jni::Object::LocalRef;
 
 public:
     struct GetContext_t {
@@ -602,7 +602,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static mozilla::jni::Object::LocalRef GetContext();
+    static auto GetContext() -> mozilla::jni::Object::LocalRef;
 
 public:
     struct GetCurrentBatteryInformationWrapper_t {
@@ -619,7 +619,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static mozilla::jni::DoubleArray::LocalRef GetCurrentBatteryInformationWrapper();
+    static auto GetCurrentBatteryInformationWrapper() -> mozilla::jni::DoubleArray::LocalRef;
 
 public:
     struct GetCurrentNetworkInformationWrapper_t {
@@ -636,7 +636,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static mozilla::jni::DoubleArray::LocalRef GetCurrentNetworkInformationWrapper();
+    static auto GetCurrentNetworkInformationWrapper() -> mozilla::jni::DoubleArray::LocalRef;
 
 public:
     struct GetDensity_t {
@@ -653,7 +653,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static float GetDensity();
+    static auto GetDensity() -> float;
 
 public:
     struct GetDpiWrapper_t {
@@ -670,7 +670,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static int32_t GetDpiWrapper();
+    static auto GetDpiWrapper() -> int32_t;
 
 public:
     struct GetExtensionFromMimeTypeWrapper_t {
@@ -688,7 +688,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static mozilla::jni::String::LocalRef GetExtensionFromMimeTypeWrapper(mozilla::jni::String::Param);
+    static auto GetExtensionFromMimeTypeWrapper(mozilla::jni::String::Param) -> mozilla::jni::String::LocalRef;
 
 public:
     struct GetExternalPublicDirectory_t {
@@ -706,7 +706,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static mozilla::jni::String::LocalRef GetExternalPublicDirectory(mozilla::jni::String::Param);
+    static auto GetExternalPublicDirectory(mozilla::jni::String::Param) -> mozilla::jni::String::LocalRef;
 
 public:
     struct GetHWDecoderCapability_t {
@@ -723,7 +723,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static bool GetHWDecoderCapability();
+    static auto GetHWDecoderCapability() -> bool;
 
 public:
     struct GetHWEncoderCapability_t {
@@ -740,7 +740,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static bool GetHWEncoderCapability();
+    static auto GetHWEncoderCapability() -> bool;
 
 public:
     struct GetHandlersForMimeTypeWrapper_t {
@@ -759,7 +759,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static mozilla::jni::ObjectArray::LocalRef GetHandlersForMimeTypeWrapper(mozilla::jni::String::Param, mozilla::jni::String::Param);
+    static auto GetHandlersForMimeTypeWrapper(mozilla::jni::String::Param, mozilla::jni::String::Param) -> mozilla::jni::ObjectArray::LocalRef;
 
 public:
     struct GetHandlersForURLWrapper_t {
@@ -778,7 +778,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static mozilla::jni::ObjectArray::LocalRef GetHandlersForURLWrapper(mozilla::jni::String::Param, mozilla::jni::String::Param);
+    static auto GetHandlersForURLWrapper(mozilla::jni::String::Param, mozilla::jni::String::Param) -> mozilla::jni::ObjectArray::LocalRef;
 
 public:
     struct GetIconForExtensionWrapper_t {
@@ -797,7 +797,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static mozilla::jni::ByteArray::LocalRef GetIconForExtensionWrapper(mozilla::jni::String::Param, int32_t);
+    static auto GetIconForExtensionWrapper(mozilla::jni::String::Param, int32_t) -> mozilla::jni::ByteArray::LocalRef;
 
 public:
     struct GetMaxTouchPoints_t {
@@ -814,7 +814,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static int32_t GetMaxTouchPoints();
+    static auto GetMaxTouchPoints() -> int32_t;
 
 public:
     struct GetMessageWrapper_t {
@@ -833,7 +833,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void GetMessageWrapper(int32_t, int32_t);
+    static auto GetMessageWrapper(int32_t, int32_t) -> void;
 
 public:
     struct GetMimeTypeFromExtensionsWrapper_t {
@@ -851,7 +851,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static mozilla::jni::String::LocalRef GetMimeTypeFromExtensionsWrapper(mozilla::jni::String::Param);
+    static auto GetMimeTypeFromExtensionsWrapper(mozilla::jni::String::Param) -> mozilla::jni::String::LocalRef;
 
 public:
     struct GetNextMessageInListWrapper_t {
@@ -870,7 +870,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void GetNextMessageInListWrapper(int32_t, int32_t);
+    static auto GetNextMessageInListWrapper(int32_t, int32_t) -> void;
 
 public:
     struct GetProxyForURIWrapper_t {
@@ -891,7 +891,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static mozilla::jni::String::LocalRef GetProxyForURIWrapper(mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, int32_t);
+    static auto GetProxyForURIWrapper(mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, int32_t) -> mozilla::jni::String::LocalRef;
 
 public:
     struct GetScreenDepthWrapper_t {
@@ -908,7 +908,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static int32_t GetScreenDepthWrapper();
+    static auto GetScreenDepthWrapper() -> int32_t;
 
 public:
     struct GetScreenOrientationWrapper_t {
@@ -925,7 +925,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static int16_t GetScreenOrientationWrapper();
+    static auto GetScreenOrientationWrapper() -> int16_t;
 
 public:
     struct GetShowPasswordSetting_t {
@@ -942,7 +942,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static bool GetShowPasswordSetting();
+    static auto GetShowPasswordSetting() -> bool;
 
 public:
     struct GetSystemColoursWrapper_t {
@@ -959,7 +959,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static mozilla::jni::IntArray::LocalRef GetSystemColoursWrapper();
+    static auto GetSystemColoursWrapper() -> mozilla::jni::IntArray::LocalRef;
 
 public:
     struct HandleGeckoMessageWrapper_t {
@@ -977,7 +977,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void HandleGeckoMessageWrapper(mozilla::jni::Object::Param);
+    static auto HandleGeckoMessageWrapper(mozilla::jni::Object::Param) -> void;
 
 public:
     struct HandleUncaughtException_t {
@@ -996,7 +996,7 @@ public:
                 mozilla::jni::ExceptionMode::IGNORE;
     };
 
-    static void HandleUncaughtException(mozilla::jni::Object::Param, mozilla::jni::Throwable::Param);
+    static auto HandleUncaughtException(mozilla::jni::Object::Param, mozilla::jni::Throwable::Param) -> void;
 
 public:
     struct HideProgressDialog_t {
@@ -1013,7 +1013,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void HideProgressDialog();
+    static auto HideProgressDialog() -> void;
 
 public:
     struct InitCameraWrapper_t {
@@ -1034,7 +1034,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static mozilla::jni::IntArray::LocalRef InitCameraWrapper(mozilla::jni::String::Param, int32_t, int32_t, int32_t);
+    static auto InitCameraWrapper(mozilla::jni::String::Param, int32_t, int32_t, int32_t) -> mozilla::jni::IntArray::LocalRef;
 
 public:
     struct IsNetworkLinkKnown_t {
@@ -1051,7 +1051,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static bool IsNetworkLinkKnown();
+    static auto IsNetworkLinkKnown() -> bool;
 
 public:
     struct IsNetworkLinkUp_t {
@@ -1068,7 +1068,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static bool IsNetworkLinkUp();
+    static auto IsNetworkLinkUp() -> bool;
 
 public:
     struct IsTablet_t {
@@ -1085,7 +1085,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static bool IsTablet();
+    static auto IsTablet() -> bool;
 
 public:
     struct KillAnyZombies_t {
@@ -1102,7 +1102,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void KillAnyZombies();
+    static auto KillAnyZombies() -> void;
 
 public:
     struct LoadPluginClass_t {
@@ -1121,7 +1121,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static mozilla::jni::ClassObject::LocalRef LoadPluginClass(mozilla::jni::String::Param, mozilla::jni::String::Param);
+    static auto LoadPluginClass(mozilla::jni::String::Param, mozilla::jni::String::Param) -> mozilla::jni::ClassObject::LocalRef;
 
 public:
     struct LockScreenOrientation_t {
@@ -1139,7 +1139,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void LockScreenOrientation(int32_t);
+    static auto LockScreenOrientation(int32_t) -> void;
 
 public:
     struct MarkURIVisited_t {
@@ -1157,7 +1157,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void MarkURIVisited(mozilla::jni::String::Param);
+    static auto MarkURIVisited(mozilla::jni::String::Param) -> void;
 
 public:
     struct MoveTaskToBack_t {
@@ -1174,7 +1174,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void MoveTaskToBack();
+    static auto MoveTaskToBack() -> void;
 
 public:
     struct NetworkLinkType_t {
@@ -1191,7 +1191,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static int32_t NetworkLinkType();
+    static auto NetworkLinkType() -> int32_t;
 
 public:
     struct NotifyDefaultPrevented_t {
@@ -1209,7 +1209,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void NotifyDefaultPrevented(bool);
+    static auto NotifyDefaultPrevented(bool) -> void;
 
 public:
     struct NotifyIME_t {
@@ -1227,7 +1227,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void NotifyIME(int32_t);
+    static auto NotifyIME(int32_t) -> void;
 
 public:
     struct NotifyIMEChange_t {
@@ -1248,7 +1248,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void NotifyIMEChange(mozilla::jni::String::Param, int32_t, int32_t, int32_t);
+    static auto NotifyIMEChange(mozilla::jni::String::Param, int32_t, int32_t, int32_t) -> void;
 
 public:
     struct NotifyIMEContext_t {
@@ -1269,7 +1269,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void NotifyIMEContext(int32_t, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param);
+    static auto NotifyIMEContext(int32_t, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param) -> void;
 
 public:
     struct NotifyWakeLockChanged_t {
@@ -1288,7 +1288,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void NotifyWakeLockChanged(mozilla::jni::String::Param, mozilla::jni::String::Param);
+    static auto NotifyWakeLockChanged(mozilla::jni::String::Param, mozilla::jni::String::Param) -> void;
 
 public:
     struct OpenUriExternal_t {
@@ -1311,7 +1311,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static bool OpenUriExternal(mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param);
+    static auto OpenUriExternal(mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param) -> bool;
 
 public:
     struct PerformHapticFeedback_t {
@@ -1329,7 +1329,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void PerformHapticFeedback(bool);
+    static auto PerformHapticFeedback(bool) -> void;
 
 public:
     struct RegisterSurfaceTextureFrameListener_t {
@@ -1348,7 +1348,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void RegisterSurfaceTextureFrameListener(mozilla::jni::Object::Param, int32_t);
+    static auto RegisterSurfaceTextureFrameListener(mozilla::jni::Object::Param, int32_t) -> void;
 
 public:
     struct RemovePluginView_t {
@@ -1367,7 +1367,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void RemovePluginView(mozilla::jni::Object::Param, bool);
+    static auto RemovePluginView(mozilla::jni::Object::Param, bool) -> void;
 
 public:
     struct RequestUiThreadCallback_t {
@@ -1385,7 +1385,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void RequestUiThreadCallback(int64_t);
+    static auto RequestUiThreadCallback(int64_t) -> void;
 
 public:
     struct ScheduleRestart_t {
@@ -1402,7 +1402,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void ScheduleRestart();
+    static auto ScheduleRestart() -> void;
 
 public:
     struct SendMessageWrapper_t {
@@ -1422,7 +1422,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void SendMessageWrapper(mozilla::jni::String::Param, mozilla::jni::String::Param, int32_t);
+    static auto SendMessageWrapper(mozilla::jni::String::Param, mozilla::jni::String::Param, int32_t) -> void;
 
 public:
     struct SetFullScreen_t {
@@ -1440,7 +1440,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void SetFullScreen(bool);
+    static auto SetFullScreen(bool) -> void;
 
 public:
     struct SetKeepScreenOn_t {
@@ -1458,7 +1458,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void SetKeepScreenOn(bool);
+    static auto SetKeepScreenOn(bool) -> void;
 
 public:
     struct SetURITitle_t {
@@ -1477,7 +1477,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void SetURITitle(mozilla::jni::String::Param, mozilla::jni::String::Param);
+    static auto SetURITitle(mozilla::jni::String::Param, mozilla::jni::String::Param) -> void;
 
 public:
     struct ShowAlertNotificationWrapper_t {
@@ -1499,7 +1499,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void ShowAlertNotificationWrapper(mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param);
+    static auto ShowAlertNotificationWrapper(mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param) -> void;
 
 public:
     struct ShowInputMethodPicker_t {
@@ -1516,7 +1516,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void ShowInputMethodPicker();
+    static auto ShowInputMethodPicker() -> void;
 
 public:
     struct StartMonitoringGamepad_t {
@@ -1533,7 +1533,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void StartMonitoringGamepad();
+    static auto StartMonitoringGamepad() -> void;
 
 public:
     struct StopMonitoringGamepad_t {
@@ -1550,7 +1550,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void StopMonitoringGamepad();
+    static auto StopMonitoringGamepad() -> void;
 
 public:
     struct UnlockProfile_t {
@@ -1567,7 +1567,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static bool UnlockProfile();
+    static auto UnlockProfile() -> bool;
 
 public:
     struct UnlockScreenOrientation_t {
@@ -1584,7 +1584,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void UnlockScreenOrientation();
+    static auto UnlockScreenOrientation() -> void;
 
 public:
     struct UnregisterSurfaceTextureFrameListener_t {
@@ -1602,7 +1602,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void UnregisterSurfaceTextureFrameListener(mozilla::jni::Object::Param);
+    static auto UnregisterSurfaceTextureFrameListener(mozilla::jni::Object::Param) -> void;
 
 public:
     struct Vibrate1_t {
@@ -1620,7 +1620,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void Vibrate1(int64_t);
+    static auto Vibrate1(int64_t) -> void;
 
 public:
     struct VibrateA_t {
@@ -1639,7 +1639,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void VibrateA(mozilla::jni::LongArray::Param, int32_t);
+    static auto VibrateA(mozilla::jni::LongArray::Param, int32_t) -> void;
 
 };
 
@@ -1655,7 +1655,7 @@ public:
             "org/mozilla/gecko/GeckoJavaSampler";
 
 protected:
-    GeckoJavaSampler(jobject instance) : Class(instance) {}
+    using Class::Class;
 
 public:
     struct GetFrameNameJavaProfilingWrapper_t {
@@ -1675,7 +1675,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static mozilla::jni::String::LocalRef GetFrameNameJavaProfilingWrapper(int32_t, int32_t, int32_t);
+    static auto GetFrameNameJavaProfilingWrapper(int32_t, int32_t, int32_t) -> mozilla::jni::String::LocalRef;
 
 public:
     struct GetSampleTimeJavaProfiling_t {
@@ -1694,7 +1694,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static double GetSampleTimeJavaProfiling(int32_t, int32_t);
+    static auto GetSampleTimeJavaProfiling(int32_t, int32_t) -> double;
 
 public:
     struct GetThreadNameJavaProfilingWrapper_t {
@@ -1712,7 +1712,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static mozilla::jni::String::LocalRef GetThreadNameJavaProfilingWrapper(int32_t);
+    static auto GetThreadNameJavaProfilingWrapper(int32_t) -> mozilla::jni::String::LocalRef;
 
 public:
     struct PauseJavaProfiling_t {
@@ -1729,7 +1729,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void PauseJavaProfiling();
+    static auto PauseJavaProfiling() -> void;
 
 public:
     struct StartJavaProfiling_t {
@@ -1748,7 +1748,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void StartJavaProfiling(int32_t, int32_t);
+    static auto StartJavaProfiling(int32_t, int32_t) -> void;
 
 public:
     struct StopJavaProfiling_t {
@@ -1765,7 +1765,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void StopJavaProfiling();
+    static auto StopJavaProfiling() -> void;
 
 public:
     struct UnpauseJavaProfiling_t {
@@ -1782,7 +1782,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void UnpauseJavaProfiling();
+    static auto UnpauseJavaProfiling() -> void;
 
 };
 
@@ -1798,7 +1798,7 @@ public:
             "org/mozilla/gecko/GeckoThread";
 
 protected:
-    GeckoThread(jobject instance) : Class(instance) {}
+    using Class::Class;
 
 public:
     struct PumpMessageLoop_t {
@@ -1816,7 +1816,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static bool PumpMessageLoop(mozilla::jni::Object::Param);
+    static auto PumpMessageLoop(mozilla::jni::Object::Param) -> bool;
 
 };
 
@@ -1832,7 +1832,7 @@ public:
             "org/mozilla/gecko/RestrictedProfiles";
 
 protected:
-    RestrictedProfiles(jobject instance) : Class(instance) {}
+    using Class::Class;
 
 public:
     struct IsAllowed_t {
@@ -1851,7 +1851,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static bool IsAllowed(int32_t, mozilla::jni::String::Param);
+    static auto IsAllowed(int32_t, mozilla::jni::String::Param) -> bool;
 
 public:
     struct IsUserRestricted_t {
@@ -1868,7 +1868,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static bool IsUserRestricted();
+    static auto IsUserRestricted() -> bool;
 
 };
 
@@ -1884,7 +1884,7 @@ public:
             "org/mozilla/gecko/SurfaceBits";
 
 protected:
-    SurfaceBits(jobject instance) : Class(instance) {}
+    using Class::Class;
 
 public:
     struct New_t {
@@ -1901,7 +1901,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static SurfaceBits::LocalRef New();
+    static auto New() -> SurfaceBits::LocalRef;
 
 public:
     struct Buffer_t {
@@ -1918,9 +1918,9 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    mozilla::jni::Object::LocalRef Buffer() const;
+    auto Buffer() const -> mozilla::jni::Object::LocalRef;
 
-    void Buffer(mozilla::jni::Object::Param) const;
+    auto Buffer(mozilla::jni::Object::Param) const -> void;
 
 public:
     struct Format_t {
@@ -1937,9 +1937,9 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    int32_t Format() const;
+    auto Format() const -> int32_t;
 
-    void Format(int32_t) const;
+    auto Format(int32_t) const -> void;
 
 public:
     struct Height_t {
@@ -1956,9 +1956,9 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    int32_t Height() const;
+    auto Height() const -> int32_t;
 
-    void Height(int32_t) const;
+    auto Height(int32_t) const -> void;
 
 public:
     struct Width_t {
@@ -1975,9 +1975,9 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    int32_t Width() const;
+    auto Width() const -> int32_t;
 
-    void Width(int32_t) const;
+    auto Width(int32_t) const -> void;
 
 };
 
@@ -1993,7 +1993,7 @@ public:
             "org/mozilla/gecko/ThumbnailHelper";
 
 protected:
-    ThumbnailHelper(jobject instance) : Class(instance) {}
+    using Class::Class;
 
 public:
     struct SendThumbnail_t {
@@ -2014,7 +2014,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void SendThumbnail(mozilla::jni::Object::Param, int32_t, bool, bool);
+    static auto SendThumbnail(mozilla::jni::Object::Param, int32_t, bool, bool) -> void;
 
 };
 
@@ -2030,7 +2030,7 @@ public:
             "org/mozilla/gecko/gfx/DisplayPortMetrics";
 
 protected:
-    DisplayPortMetrics(jobject instance) : Class(instance) {}
+    using Class::Class;
 
 public:
     struct New_t {
@@ -2052,7 +2052,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static DisplayPortMetrics::LocalRef New(float, float, float, float, float);
+    static auto New(float, float, float, float, float) -> DisplayPortMetrics::LocalRef;
 
 public:
     struct MPosition_t {
@@ -2069,7 +2069,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    mozilla::jni::Object::LocalRef MPosition() const;
+    auto MPosition() const -> mozilla::jni::Object::LocalRef;
 
 public:
     struct Resolution_t {
@@ -2086,7 +2086,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    float Resolution() const;
+    auto Resolution() const -> float;
 
 };
 
@@ -2102,7 +2102,7 @@ public:
             "org/mozilla/gecko/gfx/GLController";
 
 protected:
-    GLController(jobject instance) : Class(instance) {}
+    using Class::Class;
 
 public:
     struct CreateEGLSurfaceForCompositorWrapper_t {
@@ -2119,7 +2119,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    mozilla::jni::Object::LocalRef CreateEGLSurfaceForCompositorWrapper() const;
+    auto CreateEGLSurfaceForCompositorWrapper() const -> mozilla::jni::Object::LocalRef;
 
 };
 
@@ -2135,7 +2135,7 @@ public:
             "org/mozilla/gecko/gfx/GeckoLayerClient";
 
 protected:
-    GeckoLayerClient(jobject instance) : Class(instance) {}
+    using Class::Class;
 
 public:
     struct ActivateProgram_t {
@@ -2152,7 +2152,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    void ActivateProgram() const;
+    auto ActivateProgram() const -> void;
 
 public:
     struct ContentDocumentChanged_t {
@@ -2169,7 +2169,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    void ContentDocumentChanged() const;
+    auto ContentDocumentChanged() const -> void;
 
 public:
     struct CreateFrame_t {
@@ -2186,7 +2186,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    mozilla::jni::Object::LocalRef CreateFrame() const;
+    auto CreateFrame() const -> mozilla::jni::Object::LocalRef;
 
 public:
     struct DeactivateProgramAndRestoreState_t {
@@ -2208,7 +2208,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    void DeactivateProgramAndRestoreState(bool, int32_t, int32_t, int32_t, int32_t) const;
+    auto DeactivateProgramAndRestoreState(bool, int32_t, int32_t, int32_t, int32_t) const -> void;
 
 public:
     struct GetDisplayPort_t {
@@ -2229,7 +2229,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    mozilla::jni::Object::LocalRef GetDisplayPort(bool, bool, int32_t, mozilla::jni::Object::Param) const;
+    auto GetDisplayPort(bool, bool, int32_t, mozilla::jni::Object::Param) const -> mozilla::jni::Object::LocalRef;
 
 public:
     struct IsContentDocumentDisplayed_t {
@@ -2246,7 +2246,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    bool IsContentDocumentDisplayed() const;
+    auto IsContentDocumentDisplayed() const -> bool;
 
 public:
     struct ProgressiveUpdateCallback_t {
@@ -2270,7 +2270,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    mozilla::jni::Object::LocalRef ProgressiveUpdateCallback(bool, float, float, float, float, float, bool) const;
+    auto ProgressiveUpdateCallback(bool, float, float, float, float, float, bool) const -> mozilla::jni::Object::LocalRef;
 
 public:
     struct SetFirstPaintViewport_t {
@@ -2294,7 +2294,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    void SetFirstPaintViewport(float, float, float, float, float, float, float) const;
+    auto SetFirstPaintViewport(float, float, float, float, float, float, float) const -> void;
 
 public:
     struct SetPageRect_t {
@@ -2315,7 +2315,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    void SetPageRect(float, float, float, float) const;
+    auto SetPageRect(float, float, float, float) const -> void;
 
 public:
     struct SyncFrameMetrics_t {
@@ -2346,7 +2346,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    mozilla::jni::Object::LocalRef SyncFrameMetrics(float, float, float, float, float, float, float, bool, int32_t, int32_t, int32_t, int32_t, float, bool) const;
+    auto SyncFrameMetrics(float, float, float, float, float, float, float, bool, int32_t, int32_t, int32_t, int32_t, float, bool) const -> mozilla::jni::Object::LocalRef;
 
 public:
     struct SyncViewportInfo_t {
@@ -2369,7 +2369,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    mozilla::jni::Object::LocalRef SyncViewportInfo(int32_t, int32_t, int32_t, int32_t, float, bool) const;
+    auto SyncViewportInfo(int32_t, int32_t, int32_t, int32_t, float, bool) const -> mozilla::jni::Object::LocalRef;
 
 };
 
@@ -2385,7 +2385,7 @@ public:
             "org/mozilla/gecko/gfx/ImmutableViewportMetrics";
 
 protected:
-    ImmutableViewportMetrics(jobject instance) : Class(instance) {}
+    using Class::Class;
 
 public:
     struct New_t {
@@ -2415,7 +2415,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static ImmutableViewportMetrics::LocalRef New(float, float, float, float, float, float, float, float, float, float, float, float, float);
+    static auto New(float, float, float, float, float, float, float, float, float, float, float, float, float) -> ImmutableViewportMetrics::LocalRef;
 
 };
 
@@ -2431,7 +2431,7 @@ public:
             "org/mozilla/gecko/gfx/LayerView";
 
 protected:
-    LayerView(jobject instance) : Class(instance) {}
+    using Class::Class;
 
 public:
     struct RegisterCompositorWrapper_t {
@@ -2448,7 +2448,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static mozilla::jni::Object::LocalRef RegisterCompositorWrapper();
+    static auto RegisterCompositorWrapper() -> mozilla::jni::Object::LocalRef;
 
 public:
     struct updateZoomedView_t {
@@ -2466,7 +2466,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void updateZoomedView(mozilla::jni::Object::Param);
+    static auto updateZoomedView(mozilla::jni::Object::Param) -> void;
 
 };
 
@@ -2482,7 +2482,7 @@ public:
             "org/mozilla/gecko/gfx/NativePanZoomController";
 
 protected:
-    NativePanZoomController(jobject instance) : Class(instance) {}
+    using Class::Class;
 
 public:
     struct RequestContentRepaintWrapper_t {
@@ -2504,7 +2504,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    void RequestContentRepaintWrapper(float, float, float, float, float) const;
+    auto RequestContentRepaintWrapper(float, float, float, float, float) const -> void;
 
 };
 
@@ -2520,7 +2520,7 @@ public:
             "org/mozilla/gecko/gfx/ProgressiveUpdateData";
 
 protected:
-    ProgressiveUpdateData(jobject instance) : Class(instance) {}
+    using Class::Class;
 
 public:
     struct New_t {
@@ -2537,7 +2537,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static ProgressiveUpdateData::LocalRef New();
+    static auto New() -> ProgressiveUpdateData::LocalRef;
 
 public:
     struct SetViewport_t {
@@ -2555,7 +2555,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    void SetViewport(mozilla::jni::Object::Param) const;
+    auto SetViewport(mozilla::jni::Object::Param) const -> void;
 
 public:
     struct Abort_t {
@@ -2572,9 +2572,9 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    bool Abort() const;
+    auto Abort() const -> bool;
 
-    void Abort(bool) const;
+    auto Abort(bool) const -> void;
 
 public:
     struct Scale_t {
@@ -2591,9 +2591,9 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    float Scale() const;
+    auto Scale() const -> float;
 
-    void Scale(float) const;
+    auto Scale(float) const -> void;
 
 public:
     struct X_t {
@@ -2610,9 +2610,9 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    float X() const;
+    auto X() const -> float;
 
-    void X(float) const;
+    auto X(float) const -> void;
 
 public:
     struct Y_t {
@@ -2629,9 +2629,9 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    float Y() const;
+    auto Y() const -> float;
 
-    void Y(float) const;
+    auto Y(float) const -> void;
 
 };
 
@@ -2647,7 +2647,7 @@ public:
             "org/mozilla/gecko/gfx/ViewTransform";
 
 protected:
-    ViewTransform(jobject instance) : Class(instance) {}
+    using Class::Class;
 
 public:
     struct New_t {
@@ -2667,7 +2667,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static ViewTransform::LocalRef New(float, float, float);
+    static auto New(float, float, float) -> ViewTransform::LocalRef;
 
 public:
     struct FixedLayerMarginBottom_t {
@@ -2684,9 +2684,9 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    float FixedLayerMarginBottom() const;
+    auto FixedLayerMarginBottom() const -> float;
 
-    void FixedLayerMarginBottom(float) const;
+    auto FixedLayerMarginBottom(float) const -> void;
 
 public:
     struct FixedLayerMarginLeft_t {
@@ -2703,9 +2703,9 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    float FixedLayerMarginLeft() const;
+    auto FixedLayerMarginLeft() const -> float;
 
-    void FixedLayerMarginLeft(float) const;
+    auto FixedLayerMarginLeft(float) const -> void;
 
 public:
     struct FixedLayerMarginRight_t {
@@ -2722,9 +2722,9 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    float FixedLayerMarginRight() const;
+    auto FixedLayerMarginRight() const -> float;
 
-    void FixedLayerMarginRight(float) const;
+    auto FixedLayerMarginRight(float) const -> void;
 
 public:
     struct FixedLayerMarginTop_t {
@@ -2741,9 +2741,9 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    float FixedLayerMarginTop() const;
+    auto FixedLayerMarginTop() const -> float;
 
-    void FixedLayerMarginTop(float) const;
+    auto FixedLayerMarginTop(float) const -> void;
 
 public:
     struct OffsetX_t {
@@ -2760,9 +2760,9 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    float OffsetX() const;
+    auto OffsetX() const -> float;
 
-    void OffsetX(float) const;
+    auto OffsetX(float) const -> void;
 
 public:
     struct OffsetY_t {
@@ -2779,9 +2779,9 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    float OffsetY() const;
+    auto OffsetY() const -> float;
 
-    void OffsetY(float) const;
+    auto OffsetY(float) const -> void;
 
 public:
     struct Scale_t {
@@ -2798,9 +2798,9 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    float Scale() const;
+    auto Scale() const -> float;
 
-    void Scale(float) const;
+    auto Scale(float) const -> void;
 
 public:
     struct X_t {
@@ -2817,9 +2817,9 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    float X() const;
+    auto X() const -> float;
 
-    void X(float) const;
+    auto X(float) const -> void;
 
 public:
     struct Y_t {
@@ -2836,9 +2836,9 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    float Y() const;
+    auto Y() const -> float;
 
-    void Y(float) const;
+    auto Y(float) const -> void;
 
 };
 
@@ -2854,7 +2854,7 @@ public:
             "org/mozilla/gecko/sqlite/MatrixBlobCursor";
 
 protected:
-    MatrixBlobCursor(jobject instance) : Class(instance) {}
+    using Class::Class;
 
 public:
     struct New_t {
@@ -2872,7 +2872,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static MatrixBlobCursor::LocalRef New(mozilla::jni::ObjectArray::Param);
+    static auto New(mozilla::jni::ObjectArray::Param) -> MatrixBlobCursor::LocalRef;
 
 public:
     struct New2_t {
@@ -2891,7 +2891,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static MatrixBlobCursor::LocalRef New(mozilla::jni::ObjectArray::Param, int32_t);
+    static auto New(mozilla::jni::ObjectArray::Param, int32_t) -> MatrixBlobCursor::LocalRef;
 
 public:
     struct AddRow_t {
@@ -2909,7 +2909,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    void AddRow(mozilla::jni::Object::Param) const;
+    auto AddRow(mozilla::jni::Object::Param) const -> void;
 
 public:
     struct AddRow2_t {
@@ -2928,7 +2928,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    void AddRow(mozilla::jni::Object::Param, int32_t) const;
+    auto AddRow(mozilla::jni::Object::Param, int32_t) const -> void;
 
 public:
     struct AddRow3_t {
@@ -2946,7 +2946,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    void AddRow(mozilla::jni::ObjectArray::Param) const;
+    auto AddRow(mozilla::jni::ObjectArray::Param) const -> void;
 
 };
 
@@ -2962,7 +2962,7 @@ public:
             "org/mozilla/gecko/sqlite/SQLiteBridgeException";
 
 protected:
-    SQLiteBridgeException(jobject instance) : Class(instance) {}
+    using Class::Class;
 
 public:
     struct New_t {
@@ -2979,7 +2979,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static SQLiteBridgeException::LocalRef New();
+    static auto New() -> SQLiteBridgeException::LocalRef;
 
 public:
     struct New2_t {
@@ -2997,7 +2997,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static SQLiteBridgeException::LocalRef New(mozilla::jni::String::Param);
+    static auto New(mozilla::jni::String::Param) -> SQLiteBridgeException::LocalRef;
 
 public:
     struct SerialVersionUID_t {
@@ -3014,7 +3014,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static int64_t SerialVersionUID();
+    static auto SerialVersionUID() -> int64_t;
 
 };
 
@@ -3030,7 +3030,7 @@ public:
             "org/mozilla/gecko/util/Clipboard";
 
 protected:
-    Clipboard(jobject instance) : Class(instance) {}
+    using Class::Class;
 
 public:
     struct ClearText_t {
@@ -3047,7 +3047,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void ClearText();
+    static auto ClearText() -> void;
 
 public:
     struct GetClipboardTextWrapper_t {
@@ -3064,7 +3064,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static mozilla::jni::String::LocalRef GetClipboardTextWrapper();
+    static auto GetClipboardTextWrapper() -> mozilla::jni::String::LocalRef;
 
 public:
     struct HasText_t {
@@ -3081,7 +3081,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static bool HasText();
+    static auto HasText() -> bool;
 
 public:
     struct SetClipboardText_t {
@@ -3099,7 +3099,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static void SetClipboardText(mozilla::jni::String::Param);
+    static auto SetClipboardText(mozilla::jni::String::Param) -> void;
 
 };
 
@@ -3115,7 +3115,7 @@ public:
             "org/mozilla/gecko/util/NativeJSContainer";
 
 protected:
-    NativeJSContainer(jobject instance) : Class(instance) {}
+    using Class::Class;
 
 public:
     struct New_t {
@@ -3132,7 +3132,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static NativeJSContainer::LocalRef New();
+    static auto New() -> NativeJSContainer::LocalRef;
 
 public:
     struct Clone2_t {
@@ -3180,7 +3180,7 @@ public:
             "org/mozilla/gecko/util/NativeJSObject";
 
 protected:
-    NativeJSObject(jobject instance) : Class(instance) {}
+    using Class::Class;
 
 public:
     struct New_t {
@@ -3197,7 +3197,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static NativeJSObject::LocalRef New();
+    static auto New() -> NativeJSObject::LocalRef;
 
 public:
     struct DisposeNative_t {
@@ -3214,7 +3214,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    void DisposeNative() const;
+    auto DisposeNative() const -> void;
 
 public:
     struct GetBoolean_t {
