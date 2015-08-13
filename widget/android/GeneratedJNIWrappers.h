@@ -1839,6 +1839,42 @@ public:
 
     static auto SetState(mozilla::jni::Object::Param) -> void;
 
+public:
+    struct ClsLoader_t {
+        typedef GeckoThread Owner;
+        typedef mozilla::jni::Object::LocalRef ReturnType;
+        typedef mozilla::jni::Object::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "clsLoader";
+        static constexpr char signature[] =
+                "Ljava/lang/ClassLoader;";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto ClsLoader() -> mozilla::jni::Object::LocalRef;
+
+public:
+    struct MsgQueue_t {
+        typedef GeckoThread Owner;
+        typedef mozilla::jni::Object::LocalRef ReturnType;
+        typedef mozilla::jni::Object::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "msgQueue";
+        static constexpr char signature[] =
+                "Landroid/os/MessageQueue;";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto MsgQueue() -> mozilla::jni::Object::LocalRef;
+
+    static auto MsgQueue(mozilla::jni::Object::Param) -> void;
+
 };
 
 class GeckoThread::State : public mozilla::jni::Class<State>

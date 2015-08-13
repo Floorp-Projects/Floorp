@@ -773,6 +773,27 @@ auto GeckoThread::SetState(mozilla::jni::Object::Param a0) -> void
     return mozilla::jni::Method<SetState_t>::Call(nullptr, nullptr, a0);
 }
 
+constexpr char GeckoThread::ClsLoader_t::name[];
+constexpr char GeckoThread::ClsLoader_t::signature[];
+
+auto GeckoThread::ClsLoader() -> mozilla::jni::Object::LocalRef
+{
+    return mozilla::jni::Field<ClsLoader_t>::Get(nullptr, nullptr);
+}
+
+constexpr char GeckoThread::MsgQueue_t::name[];
+constexpr char GeckoThread::MsgQueue_t::signature[];
+
+auto GeckoThread::MsgQueue() -> mozilla::jni::Object::LocalRef
+{
+    return mozilla::jni::Field<MsgQueue_t>::Get(nullptr, nullptr);
+}
+
+auto GeckoThread::MsgQueue(mozilla::jni::Object::Param a0) -> void
+{
+    return mozilla::jni::Field<MsgQueue_t>::Set(nullptr, nullptr, a0);
+}
+
 constexpr char GeckoThread::State::name[];
 
 constexpr char GeckoThread::State::New_t::name[];
