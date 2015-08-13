@@ -74,41 +74,41 @@ JitOptions::JitOptions()
     // RangeAnalysis results.
     SET_DEFAULT(checkRangeAnalysis, false);
 
-    // Whether to enable extra code to perform dynamic validations.
-    SET_DEFAULT(runExtraChecks, false);
-
-    // Toggle whether eager scalar replacement is globally disabled.
-    SET_DEFAULT(disableScalarReplacement, false);
-
-    // Toggle whether eager simd unboxing is globally disabled.
-    SET_DEFAULT(disableEagerSimdUnbox, false);
-
-    // Toggle whether global value numbering is globally disabled.
-    SET_DEFAULT(disableGvn, false);
-
-    // Toggles whether loop invariant code motion is globally disabled.
-    SET_DEFAULT(disableLicm, false);
-
-    // Toggles whether inlining is globally disabled.
-    SET_DEFAULT(disableInlining, false);
-
-    // Toggles whether Edge Case Analysis is gobally disabled.
-    SET_DEFAULT(disableEdgeCaseAnalysis, false);
-
-    // Toggles whether Range Analysis is globally disabled.
-    SET_DEFAULT(disableRangeAnalysis, false);
-
-    // Toggles whether sink code motion is globally disabled.
-    SET_DEFAULT(disableSink, true);
-
-    // Toggles whether Loop Unrolling is globally disabled.
-    SET_DEFAULT(disableLoopUnrolling, true);
+    // Toggles whether Alignment Mask Analysis is globally disabled.
+    SET_DEFAULT(disableAma, false);
 
     // Toggles whether Effective Address Analysis is globally disabled.
     SET_DEFAULT(disableEaa, false);
 
-    // Toggles whether Alignment Mask Analysis is globally disabled.
-    SET_DEFAULT(disableAma, false);
+    // Toggle whether eager simd unboxing is globally disabled.
+    SET_DEFAULT(disableEagerSimdUnbox, false);
+
+    // Toggles whether Edge Case Analysis is gobally disabled.
+    SET_DEFAULT(disableEdgeCaseAnalysis, false);
+
+    // Toggle whether global value numbering is globally disabled.
+    SET_DEFAULT(disableGvn, false);
+
+    // Toggles whether inlining is globally disabled.
+    SET_DEFAULT(disableInlining, false);
+
+    // Toggles whether loop invariant code motion is globally disabled.
+    SET_DEFAULT(disableLicm, false);
+
+    // Toggles whether Loop Unrolling is globally disabled.
+    SET_DEFAULT(disableLoopUnrolling, true);
+
+    // Toggles whether Range Analysis is globally disabled.
+    SET_DEFAULT(disableRangeAnalysis, false);
+
+    // Toggle whether eager scalar replacement is globally disabled.
+    SET_DEFAULT(disableScalarReplacement, false);
+
+    // Toggles whether shared stubs are used in Ionmonkey.
+    SET_DEFAULT(disableSharedStubs, true);
+
+    // Toggles whether sink code motion is globally disabled.
+    SET_DEFAULT(disableSink, true);
 
     // Whether functions are compiled immediately.
     SET_DEFAULT(eagerCompilation, false);
@@ -116,32 +116,14 @@ JitOptions::JitOptions()
     // Whether IonBuilder should prefer IC generation above specialized MIR.
     SET_DEFAULT(forceInlineCaches, false);
 
-    // Force how many invocation or loop iterations are needed before compiling
-    // a function with the highest ionmonkey optimization level.
-    // (i.e. OptimizationLevel_Normal)
-    const char* forcedDefaultIonWarmUpThresholdEnv = "JIT_OPTION_forcedDefaultIonWarmUpThreshold";
-    if (const char* env = getenv(forcedDefaultIonWarmUpThresholdEnv)) {
-        Maybe<int> value = ParseInt(env);
-        if (value.isSome())
-            forcedDefaultIonWarmUpThreshold.emplace(value.ref());
-        else
-            Warn(forcedDefaultIonWarmUpThresholdEnv, env);
-    }
-
-    // Force the used register allocator instead of letting the optimization
-    // pass decide.
-    const char* forcedRegisterAllocatorEnv = "JIT_OPTION_forcedRegisterAllocator";
-    if (const char* env = getenv(forcedRegisterAllocatorEnv)) {
-        forcedRegisterAllocator = LookupRegisterAllocator(env);
-        if (!forcedRegisterAllocator.isSome())
-            Warn(forcedRegisterAllocatorEnv, env);
-    }
-
     // Toggles whether large scripts are rejected.
     SET_DEFAULT(limitScriptSize, true);
 
     // Toggles whether functions may be entered at loop headers.
     SET_DEFAULT(osr, true);
+
+    // Whether to enable extra code to perform dynamic validations.
+    SET_DEFAULT(runExtraChecks, false);
 
     // How many invocations or loop iterations are needed before functions
     // are compiled with the baseline compiler.
@@ -164,6 +146,27 @@ JitOptions::JitOptions()
 
     // The bytecode length limit for small function.
     SET_DEFAULT(smallFunctionMaxBytecodeLength_, 100);
+
+    // Force how many invocation or loop iterations are needed before compiling
+    // a function with the highest ionmonkey optimization level.
+    // (i.e. OptimizationLevel_Normal)
+    const char* forcedDefaultIonWarmUpThresholdEnv = "JIT_OPTION_forcedDefaultIonWarmUpThreshold";
+    if (const char* env = getenv(forcedDefaultIonWarmUpThresholdEnv)) {
+        Maybe<int> value = ParseInt(env);
+        if (value.isSome())
+            forcedDefaultIonWarmUpThreshold.emplace(value.ref());
+        else
+            Warn(forcedDefaultIonWarmUpThresholdEnv, env);
+    }
+
+    // Force the used register allocator instead of letting the optimization
+    // pass decide.
+    const char* forcedRegisterAllocatorEnv = "JIT_OPTION_forcedRegisterAllocator";
+    if (const char* env = getenv(forcedRegisterAllocatorEnv)) {
+        forcedRegisterAllocator = LookupRegisterAllocator(env);
+        if (!forcedRegisterAllocator.isSome())
+            Warn(forcedRegisterAllocatorEnv, env);
+    }
 
     // Toggles whether unboxed plain objects can be created by the VM.
     SET_DEFAULT(disableUnboxedObjects, false);
