@@ -1166,7 +1166,7 @@ MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
   GraphTime startTime = StreamTimeToGraphTime(aStream,
       start, INCLUDE_TRAILING_BLOCKED_INTERVAL);
   TimeStamp targetTime = CurrentDriver()->GetCurrentTimeStamp() +
-      TimeDuration::FromMilliseconds(double(startTime - IterationEnd()));
+      TimeDuration::FromSeconds(MediaTimeToSeconds(startTime - IterationEnd()));
   for (uint32_t i = 0; i < aStream->mVideoOutputs.Length(); ++i) {
     VideoFrameContainer* output = aStream->mVideoOutputs[i];
 
