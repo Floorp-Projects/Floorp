@@ -693,6 +693,7 @@ NSS_FindCertKEAType(CERTCertificate * cert)
   case SEC_OID_PKCS1_RSA_ENCRYPTION:
     keaType = kt_rsa;
     break;
+  case SEC_OID_ANSIX9_DSA_SIGNATURE: /* hah, signature, not a key? */
   case SEC_OID_X942_DIFFIE_HELMAN_KEY:
     keaType = kt_dh;
     break;
@@ -789,6 +790,11 @@ ssl_ConfigSecureServer(sslSocket *ss, CERTCertificate *cert,
             goto loser;
         }
     }
+    if (kea == ssl_kea_dh || kea == ssl_kea_rsa) {
+        if (ssl3_SelectDHParams(ss) != SECSuccess) {
+            goto loser;
+        }
+     }
     return SECSuccess;
 
 loser:

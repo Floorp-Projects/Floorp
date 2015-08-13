@@ -684,7 +684,7 @@ loser:
     return NULL;
 }
 
-CERTNameConstraint *
+static CERTNameConstraint *
 cert_DecodeNameConstraintSubTree(PLArenaPool   *arena,
 				 SECItem       **subTree,
 				 PRBool        permited)
@@ -701,15 +701,17 @@ cert_DecodeNameConstraintSubTree(PLArenaPool   *arena,
 	if (current == NULL) {
 	    goto loser;
 	}
-	if (last == NULL) {
-	    first = last = current;
+	if (first == NULL) {
+	    first = current;
+	} else {
+	    current->l.prev = &(last->l);
+	    last->l.next = &(current->l);
 	}
-	current->l.prev = &(last->l);
-	current->l.next = last->l.next;
-	last->l.next = &(current->l);
+	last = current;
 	i++;
     }
-    first->l.prev = &(current->l);
+    first->l.prev = &(last->l);
+    last->l.next = &(first->l);
     /* TODO: unmark arena */
     return first;
 loser:
