@@ -194,14 +194,16 @@ function readURI(uri) {
 
 // Combines all arguments into a resolved, normalized path
 function join (...paths) {
-  let resolved = normalize(pathJoin(...paths))
-  // OS.File `normalize` strips out the second slash in
-  // `resource://` or `chrome://`, and third slash in
-  // `file:///`, so we work around this
-  resolved = resolved.replace(/^resource\:\/([^\/])/, 'resource://$1');
-  resolved = resolved.replace(/^file\:\/([^\/])/, 'file:///$1');
-  resolved = resolved.replace(/^chrome\:\/([^\/])/, 'chrome://$1');
-  return resolved;
+  let joined = pathJoin(...paths);
+  let resolved = normalize(joined);
+
+  // OS.File `normalize` strips out any additional slashes breaking URIs like
+  // `resource://`, `resource:///`, `chrome://` or `file:///`, so we work
+  // around this putting back the slashes originally given, for such schemes.
+  let re = /^(resource|file|chrome)(\:\/{1,3})([^\/])/;
+  let matches = joined.match(re);
+
+  return resolved.replace(re, (...args) => args[1] + matches[2] + args[3]);
 }
 Loader.join = join;
 
