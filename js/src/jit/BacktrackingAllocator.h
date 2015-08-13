@@ -463,6 +463,10 @@ class VirtualRegister
     // Whether def_ is a temp or an output.
     bool isTemp_;
 
+    // Whether this vreg is an input for some phi. This use is not reflected in
+    // any range on the vreg.
+    bool usedByPhi_;
+
     // If this register's definition is MUST_REUSE_INPUT, whether a copy must
     // be introduced before the definition that relaxes the policy.
     bool mustCopyInput_;
@@ -505,6 +509,13 @@ class VirtualRegister
         return isTemp_;
     }
 
+    void setUsedByPhi() {
+        usedByPhi_ = true;
+    }
+    bool usedByPhi() {
+        return usedByPhi_;
+    }
+
     void setMustCopyInput() {
         mustCopyInput_ = true;
     }
@@ -514,6 +525,9 @@ class VirtualRegister
 
     LiveRange::RegisterLinkIterator rangesBegin() const {
         return ranges_.begin();
+    }
+    LiveRange::RegisterLinkIterator rangesBegin(LiveRange* range) const {
+        return ranges_.begin(&range->registerLink);
     }
     bool hasRanges() const {
         return !!rangesBegin();
@@ -527,6 +541,10 @@ class VirtualRegister
     LiveRange* rangeFor(CodePosition pos, bool preferRegister = false) const;
     void removeRange(LiveRange* range);
     void addRange(LiveRange* range);
+
+    void removeRangeAndIncrement(LiveRange::RegisterLinkIterator& iter) {
+        ranges_.removeAndIncrement(iter);
+    }
 
     LiveBundle* firstBundle() const {
         return firstRange()->bundle();
@@ -665,6 +683,7 @@ class BacktrackingAllocator : protected RegisterAllocator
     bool reifyAllocations();
     bool populateSafepoints();
     bool annotateMoveGroups();
+    bool deadRange(LiveRange* range);
     size_t findFirstNonCallSafepoint(CodePosition from);
     size_t findFirstSafepoint(CodePosition pos, size_t startFrom);
     void addLiveRegistersForRange(VirtualRegister& reg, LiveRange* range);

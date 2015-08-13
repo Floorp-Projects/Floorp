@@ -139,9 +139,14 @@ if CONFIG['GNU_CXX']:
     CXXFLAGS += [
         '-Wno-overloaded-virtual',
         '-Wno-unused-function',
+        '-Wno-deprecated-declarations',
     ]
     if CONFIG['CLANG_CXX']:
-        CXXFLAGS += ['-Wno-inconsistent-missing-override']
+        CXXFLAGS += [
+            '-Wno-inconsistent-missing-override',
+            '-Wno-macro-redefined',
+            '-Wno-unused-private-field',
+        ]
     else:
         CXXFLAGS += ['-Wno-logical-op']
     if CONFIG['CPU_ARCH'] == 'arm':

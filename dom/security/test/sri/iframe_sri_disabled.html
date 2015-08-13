@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+    SimpleTest.waitForExplicitFinish();
+    window.onload = function() {
+      SimpleTest.finish();
+    }
+  </script>
+  <script>
+    function good_correctHashLoaded() {
+      ok(true, "A script was correctly loaded when integrity matched")
+    }
+    function bad_correctHashBlocked() {
+      ok(false, "We should load scripts with hashes that match!");
+    }
+
+    function good_incorrectHashLoaded() {
+      ok(true, "A script was correctly loaded despite the incorrect hash because SRI is disabled.");
+    }
+    function bad_incorrectHashBlocked() {
+      ok(false, "We should load scripts with hashes that do not match the content when SRI is disabled!");
+    }
+
+    function good_correctStyleHashLoaded() {
+      ok(true, "A stylesheet was correctly loaded when integrity matched")
+    }
+    function bad_correctStyleHashBlocked() {
+      ok(false, "We should load stylesheets with hashes that match!");
+    }
+
+    function good_incorrectStyleHashLoaded() {
+      ok(true, "A stylesheet was correctly loaded despite the incorrect hash because SRI is disabled.");
+    }
+    function bad_incorrectStyleHashBlocked() {
+      ok(false, "We should load stylesheets with hashes that do not match the content when SRI is disabled!");
+    }
+  </script>
+
+  <!-- valid sha256 hash. should trigger onload -->
+  <link rel="stylesheet" href="style1.css?disabled"
+        integrity="sha256-qs8lnkunWoVldk5d5E+652yth4VTSHohlBKQvvgGwa8="
+        onerror="bad_correctStyleHashBlocked()"
+        onload="good_correctStyleHashLoaded()">
+
+  <!-- invalid sha256 hash. should trigger onerror -->
+  <link rel="stylesheet" href="style2.css?disabled"
+        integrity="sha256-bogus"
+        onerror="bad_incorrectStyleHashBlocked()"
+        onload="good_incorrectStyleHashLoaded()">
+</head>
+<body>
+  <!-- valid hash. should trigger onload -->
+  <script src="script.js"
+          integrity="sha256-RkrQYrxD/HCx+ImVLb51nvxJ6ZHfwuEm7bHppTun9oA="
+          onerror="bad_correctHashBlocked()"
+          onload="good_correctHashLoaded()"></script>
+
+  <!-- invalid hash. should trigger onerror -->
+  <script src="script.js"
+          integrity="sha256-rkrQYrxD/HCx+ImVLb51nvxJ6ZHfwuEm7bHppTun9oA="
+          onerror="bad_incorrectHashBlocked()"
+          onload="good_incorrectHashLoaded()"></script>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

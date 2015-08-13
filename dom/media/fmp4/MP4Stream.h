@@ -49,13 +49,13 @@ public:
 
   void Pin()
   {
-    mResource->Pin();
+    mResource.GetResource()->Pin();
     ++mPinCount;
   }
 
   void Unpin()
   {
-    mResource->Unpin();
+    mResource.GetResource()->Unpin();
     MOZ_ASSERT(mPinCount);
     --mPinCount;
     if (mPinCount == 0) {
@@ -64,7 +64,7 @@ public:
   }
 
 private:
-  nsRefPtr<MediaResource> mResource;
+  MediaResourceIndex mResource;
   Maybe<ReadRecord> mFailedRead;
   uint32_t mPinCount;
 

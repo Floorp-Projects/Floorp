@@ -62,6 +62,7 @@
 #include "nsError.h"
 
 #include "nsIContentSecurityPolicy.h"
+#include "mozilla/dom/SRICheck.h"
 
 #include "mozilla/dom/EncodingUtils.h"
 using mozilla::dom::EncodingUtils;
@@ -263,6 +264,16 @@ GetLoaderLog()
   if (!sLog)
     sLog = PR_NewLogModule("nsCSSLoader");
   return sLog;
+}
+
+static PRLogModuleInfo*
+GetSriLog()
+{
+  static PRLogModuleInfo *gSriPRLog;
+  if (!gSriPRLog) {
+    gSriPRLog = PR_NewLogModule("SRI");
+  }
+  return gSriPRLog;
 }
 
 #define LOG_ERROR(args) MOZ_LOG(GetLoaderLog(), mozilla::LogLevel::Error, args)
@@ -928,6 +939,18 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
     }
   }
 
+  SRIMetadata sriMetadata = mSheet->GetIntegrity();
+  if (!sriMetadata.IsEmpty() &&
+      NS_FAILED(SRICheck::VerifyIntegrity(sriMetadata, channelURI,
+                                          mSheet->GetCORSMode(), aBuffer,
+                                          mLoader->mDocument))) {
+    LOG(("  Load was blocked by SRI"));
+    MOZ_LOG(GetSriLog(), mozilla::LogLevel::Debug,
+            ("css::Loader::OnStreamComplete, bad metadata"));
+    mLoader->SheetComplete(this, NS_ERROR_SRI_CORRUPT);
+    return NS_OK;
+  }
+
   // Enough to set the URIs on mSheet, since any sibling datas we have share
   // the same mInner as mSheet and will thus get the same URI.
   mSheet->SetURIs(channelURI, originalURI, channelURI);
@@ -1057,6 +1080,7 @@ Loader::CreateSheet(nsIURI* aURI,
                     nsIPrincipal* aLoaderPrincipal,
                     CORSMode aCORSMode,
                     ReferrerPolicy aReferrerPolicy,
+                    const nsAString& aIntegrity,
                     bool aSyncLoad,
                     bool aHasAlternateRel,
                     const nsAString& aTitle,
@@ -1204,7 +1228,17 @@ Loader::CreateSheet(nsIURI* aURI,
       originalURI = aURI;
     }
 
-    nsRefPtr<CSSStyleSheet> sheet = new CSSStyleSheet(aCORSMode, aReferrerPolicy);
+    SRIMetadata sriMetadata;
+    if (!aIntegrity.IsEmpty()) {
+      MOZ_LOG(GetSriLog(), mozilla::LogLevel::Debug,
+              ("css::Loader::CreateSheet, integrity=%s",
+               NS_ConvertUTF16toUTF8(aIntegrity).get()));
+      SRICheck::IntegrityMetadata(aIntegrity, mDocument, &sriMetadata);
+    }
+
+    nsRefPtr<CSSStyleSheet> sheet = new CSSStyleSheet(aCORSMode,
+                                                      aReferrerPolicy,
+                                                      sriMetadata);
     sheet->SetURIs(sheetURI, originalURI, baseURI);
     sheet.forget(aSheet);
   }
@@ -1415,6 +1449,8 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
     triggeringPrincipal = nsContentUtils::GetSystemPrincipal();
   }
 
+  SRIMetadata sriMetadata = aLoadData->mSheet->GetIntegrity();
+
   if (aLoadData->mSyncLoad) {
     LOG(("  Synchronous load"));
     NS_ASSERTION(!aLoadData->mObserver, "Observer for a sync load?");
@@ -1599,7 +1635,7 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel) {
-    // send a minimal Accept header for text/css
+    // Send a minimal Accept header for text/css
     httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
                                   NS_LITERAL_CSTRING("text/css,*/*;q=0.1"),
                                   false);
@@ -1932,8 +1968,10 @@ Loader::LoadInlineStyle(nsIContent* aElement,
   StyleSheetState state;
   nsRefPtr<CSSStyleSheet> sheet;
   nsresult rv = CreateSheet(nullptr, aElement, nullptr, CORS_NONE,
-                            mDocument->GetReferrerPolicy(), false, false,
-                            aTitle, state, aIsAlternate, getter_AddRefs(sheet));
+                            mDocument->GetReferrerPolicy(),
+                            EmptyString(), // no inline integrity checks
+                            false, false, aTitle, state, aIsAlternate,
+                            getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ASSERTION(state == eSheetNeedsParser,
                "Inline sheets should not be cached");
@@ -1979,6 +2017,7 @@ Loader::LoadStyleLink(nsIContent* aElement,
                       bool aHasAlternateRel,
                       CORSMode aCORSMode,
                       ReferrerPolicy aReferrerPolicy,
+                      const nsAString& aIntegrity,
                       nsICSSLoaderObserver* aObserver,
                       bool* aIsAlternate)
 {
@@ -2013,7 +2052,7 @@ Loader::LoadStyleLink(nsIContent* aElement,
   StyleSheetState state;
   nsRefPtr<CSSStyleSheet> sheet;
   rv = CreateSheet(aURL, aElement, principal, aCORSMode,
-                   aReferrerPolicy, false,
+                   aReferrerPolicy, aIntegrity, false,
                    aHasAlternateRel, aTitle, state, aIsAlternate,
                    getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2177,6 +2216,7 @@ Loader::LoadChildSheet(CSSStyleSheet* aParentSheet,
   // For now, use CORS_NONE for child sheets
   rv = CreateSheet(aURL, nullptr, principal, CORS_NONE,
                    aParentSheet->GetReferrerPolicy(),
+                   EmptyString(), // integrity is only checked on main sheet
                    parentData ? parentData->mSyncLoad : false,
                    false, empty, state, &isAlternate, getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2243,13 +2283,14 @@ Loader::LoadSheet(nsIURI* aURL,
                   const nsCString& aCharset,
                   nsICSSLoaderObserver* aObserver,
                   CORSMode aCORSMode,
-                  ReferrerPolicy aReferrerPolicy)
+                  ReferrerPolicy aReferrerPolicy,
+                  const nsAString& aIntegrity)
 {
   LOG(("css::Loader::LoadSheet(aURL, aObserver) api call"));
   return InternalLoadNonDocumentSheet(aURL, false, false,
                                       aOriginPrincipal, aCharset,
                                       nullptr, aObserver, aCORSMode,
-                                      aReferrerPolicy);
+                                      aReferrerPolicy, aIntegrity);
 }
 
 nsresult
@@ -2261,7 +2302,8 @@ Loader::InternalLoadNonDocumentSheet(nsIURI* aURL,
                                      CSSStyleSheet** aSheet,
                                      nsICSSLoaderObserver* aObserver,
                                      CORSMode aCORSMode,
-                                     ReferrerPolicy aReferrerPolicy)
+                                     ReferrerPolicy aReferrerPolicy,
+                                     const nsAString& aIntegrity)
 {
   NS_PRECONDITION(aURL, "Must have a URI to load");
   NS_PRECONDITION(aSheet || aObserver, "Sheet and observer can't both be null");
@@ -2292,7 +2334,7 @@ Loader::InternalLoadNonDocumentSheet(nsIURI* aURL,
   const nsSubstring& empty = EmptyString();
 
   rv = CreateSheet(aURL, nullptr, aOriginPrincipal, aCORSMode,
-                   aReferrerPolicy, syncLoad, false,
+                   aReferrerPolicy, aIntegrity, syncLoad, false,
                    empty, state, &isAlternate, getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
 

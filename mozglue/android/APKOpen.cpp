@@ -370,7 +370,7 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_loadNSSLibsNative(JNIEnv *jenv, jclas
   jenv->ReleaseStringUTFChars(jApkName, str);
 }
 
-typedef void (*GeckoStart_t)(void *, const nsXREAppData *);
+typedef void (*GeckoStart_t)(JNIEnv*, char*, const nsXREAppData*);
 
 extern "C" NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_mozglue_GeckoLoader_nativeRun(JNIEnv *jenv, jclass jc, jstring jargs)
@@ -387,7 +387,7 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_nativeRun(JNIEnv *jenv, jclass jc, js
   jenv->GetStringUTFRegion(jargs, 0, len, args);
   args[len] = '\0';
   ElfLoader::Singleton.ExpectShutdown(false);
-  GeckoStart(args, &sAppData);
+  GeckoStart(jenv, args, &sAppData);
   ElfLoader::Singleton.ExpectShutdown(true);
   free(args);
 }

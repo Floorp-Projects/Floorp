@@ -6,6 +6,7 @@
 #define __AppleMP3Reader_h__
 
 #include "MediaDecoderReader.h"
+#include "MediaResource.h"
 #include "MP3FrameParser.h"
 #include "VideoUtils.h"
 
@@ -79,6 +80,8 @@ private:
   AudioConverterRef mAudioConverter;
 
   MP3FrameParser mMP3FrameParser;
+
+  MediaResourceIndex mResource;
 };
 
 } // namespace mozilla

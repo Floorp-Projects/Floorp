@@ -12,6 +12,8 @@ EXPORTS.mozilla.dom += [
     'nsCSPService.h',
     'nsCSPUtils.h',
     'nsMixedContentBlocker.h',
+    'SRICheck.h',
+    'SRIMetadata.h',
 ]
 
 EXPORTS += [
@@ -27,6 +29,8 @@ UNIFIED_SOURCES += [
     'nsCSPService.cpp',
     'nsCSPUtils.cpp',
     'nsMixedContentBlocker.cpp',
+    'SRICheck.cpp',
+    'SRIMetadata.cpp',
 ]
 
 FAIL_ON_WARNINGS = True

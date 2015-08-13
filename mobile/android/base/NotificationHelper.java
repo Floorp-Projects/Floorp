@@ -125,7 +125,7 @@ public final class NotificationHelper implements GeckoEventListener {
             mClearableNotifications.remove(id);
             // If Gecko isn't running, we throw away events where the notification was cancelled.
             // i.e. Don't bug the user if they're just closing a bunch of notifications.
-            if (!GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
+            if (!GeckoThread.isRunning()) {
                 return;
             }
         }

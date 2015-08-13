@@ -35,6 +35,9 @@ public:
                        gfx::SurfaceFormat aFormat);
   void EndImageFrame();
 
+  void CheckForTransparency(gfx::SurfaceFormat aFormat,
+                            const gfx::IntRect& aFrameRect);
+
   // Check if PNG is valid ICO (32bpp RGBA)
   // http://blogs.msdn.com/b/oldnewthing/archive/2010/10/22/10079192.aspx
   bool IsValidICO() const

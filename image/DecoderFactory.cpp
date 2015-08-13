@@ -215,5 +215,30 @@ DecoderFactory::CreateAnonymousDecoder(DecoderType aType,
   return decoder.forget();
 }
 
+/* static */ already_AddRefed<Decoder>
+DecoderFactory::CreateAnonymousMetadataDecoder(DecoderType aType,
+                                               SourceBuffer* aSourceBuffer)
+{
+  if (aType == DecoderType::UNKNOWN) {
+    return nullptr;
+  }
+
+  nsRefPtr<Decoder> decoder =
+    GetDecoder(aType, /* aImage = */ nullptr, /* aIsRedecode = */ false);
+  MOZ_ASSERT(decoder, "Should have a decoder now");
+
+  // Initialize the decoder.
+  decoder->SetMetadataDecode(true);
+  decoder->SetIterator(aSourceBuffer->Iterator());
+  decoder->SetIsFirstFrameDecode();
+
+  decoder->Init();
+  if (NS_FAILED(decoder->GetDecoderError())) {
+    return nullptr;
+  }
+
+  return decoder.forget();
+}
+
 } // namespace image
 } // namespace mozilla
