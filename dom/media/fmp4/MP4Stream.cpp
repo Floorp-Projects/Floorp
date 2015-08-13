@@ -32,22 +32,17 @@ MP4Stream::BlockingReadIntoCache(int64_t aOffset, size_t aCount, Monitor* aToUnl
     return false;
   }
 
-  uint32_t sum = 0;
   uint32_t bytesRead = 0;
-  do {
-    uint64_t offset = aOffset + sum;
-    char* buffer = block.Buffer() + sum;
-    uint32_t toRead = aCount - sum;
+  {
     MonitorAutoUnlock unlock(*aToUnlock);
-    nsresult rv = mResource->ReadAt(offset, buffer, toRead, &bytesRead);
+    nsresult rv = mResource.ReadAt(aOffset, block.Buffer(), aCount, &bytesRead);
     if (NS_FAILED(rv)) {
       return false;
     }
-    sum += bytesRead;
-  } while (sum < aCount && bytesRead > 0);
+  }
 
-  MOZ_ASSERT(block.mCount >= sum);
-  block.mCount = sum;
+  MOZ_ASSERT(block.mCount >= bytesRead);
+  block.mCount = bytesRead;
 
   mCache.AppendElement(block);
   return true;
@@ -85,8 +80,9 @@ MP4Stream::CachedReadAt(int64_t aOffset, void* aBuffer, size_t aCount,
     }
   }
 
-  nsresult rv = mResource->ReadFromCache(reinterpret_cast<char*>(aBuffer),
-                                         aOffset, aCount);
+  nsresult rv =
+    mResource.GetResource()->ReadFromCache(reinterpret_cast<char*>(aBuffer),
+                                           aOffset, aCount);
   if (NS_FAILED(rv)) {
     *aBytesRead = 0;
     return false;
@@ -98,9 +94,9 @@ MP4Stream::CachedReadAt(int64_t aOffset, void* aBuffer, size_t aCount,
 bool
 MP4Stream::Length(int64_t* aSize)
 {
-  if (mResource->GetLength() < 0)
+  if (mResource.GetLength() < 0)
     return false;
-  *aSize = mResource->GetLength();
+  *aSize = mResource.GetLength();
   return true;
 }
 }

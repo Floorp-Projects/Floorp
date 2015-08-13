@@ -91,25 +91,15 @@ static void _AudioSampleCallback(void *aThis,
 nsresult
 AppleMP3Reader::Read(uint32_t *aNumBytes, char *aData)
 {
-  // Loop until we have all the data asked for, or we've reached EOS
-  uint32_t totalBytes = 0;
-  uint32_t numBytes;
-  do {
-    uint32_t bytesWanted = *aNumBytes - totalBytes;
-    nsresult rv = mResource.Read(aData + totalBytes, bytesWanted, &numBytes);
-    totalBytes += numBytes;
+  nsresult rv = mResource.Read(aData, *aNumBytes, aNumBytes);
 
-    if (NS_FAILED(rv)) {
-      *aNumBytes = 0;
-      return NS_ERROR_FAILURE;
-    }
-  } while(totalBytes < *aNumBytes && numBytes);
+  if (NS_FAILED(rv)) {
+    *aNumBytes = 0;
+    return NS_ERROR_FAILURE;
+  }
 
-  *aNumBytes = totalBytes;
-
-  // We will have read some data in the last iteration iff we filled the buffer.
   // XXX Maybe return a better value than NS_ERROR_FAILURE?
-  return numBytes ? NS_OK : NS_ERROR_FAILURE;
+  return *aNumBytes ? NS_OK : NS_ERROR_FAILURE;
 }
 
 nsresult
