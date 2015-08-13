@@ -604,10 +604,13 @@ let LoopRoomsInternal = {
    *                            be the room, if it was created successfully.
    */
   create: function(room, callback) {
-    if (!("decryptedContext" in room) || !("roomOwner" in room) ||
-        !("maxSize" in room)) {
+    if (!("decryptedContext" in room) || !("maxSize" in room)) {
       callback(new Error("Missing required property to create a room"));
       return;
+    }
+
+    if (!("roomOwner" in room)) {
+      room.roomOwner = "-";
     }
 
     Task.spawn(function* () {

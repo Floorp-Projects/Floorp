@@ -322,8 +322,6 @@ describe("loop.conversationViews", function () {
         sinon.assert.calledWithMatch(dispatcher.dispatch,
           sinon.match.hasOwn("name", "fetchRoomEmailLink"));
         sinon.assert.calledWithMatch(dispatcher.dispatch,
-          sinon.match.hasOwn("roomOwner", fakeMozLoop.userProfile.email));
-        sinon.assert.calledWithMatch(dispatcher.dispatch,
           sinon.match.hasOwn("roomName", "test@test.tld"));
       });
 

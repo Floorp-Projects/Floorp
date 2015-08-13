@@ -511,7 +511,6 @@ loop.conversationViews = (function(mozL10n) {
       });
 
       this.props.dispatcher.dispatch(new sharedActions.FetchRoomEmailLink({
-        roomOwner: navigator.mozLoop.userProfile.email,
         roomName: _getContactDisplayName(this.props.contact)
       }));
     },

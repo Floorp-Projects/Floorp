@@ -264,7 +264,6 @@ loop.store = loop.store || {};
         decryptedContext: {
           roomName: this._generateNewRoomName(actionData.nameTemplate)
         },
-        roomOwner: actionData.roomOwner,
         maxSize: this.maxRoomCreationSize
       };
 
