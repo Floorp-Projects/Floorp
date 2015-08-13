@@ -39,6 +39,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
 
+const kObserverSoftLimit = 10;
+
 /**
  * In order to make SettingsManager work with Privileged Apps, we need the lock
  * to be OOP. However, the lock state needs to be managed on the child process,
@@ -363,14 +365,26 @@ SettingsManager.prototype = {
 
   addObserver: function addObserver(aName, aCallback) {
     if (VERBOSE) debug("addObserver " + aName);
+
     if (!this._callbacks) {
       this._callbacks = {};
     }
+
     if (!this._callbacks[aName]) {
       this._callbacks[aName] = [aCallback];
     } else {
       this._callbacks[aName].push(aCallback);
     }
+
+    let length = this._callbacks[aName].length;
+    if (length >= kObserverSoftLimit) {
+      debug("WARNING: MORE THAN " + kObserverSoftLimit + " OBSERVERS FOR " +
+            aName + ": " + length + " FROM" + (new Error).stack);
+#ifdef DEBUG
+      throw Components.results.NS_ERROR_ABORT;
+#endif
+    }
+
     this.checkMessageRegistration();
   },
 
@@ -421,7 +435,7 @@ SettingsManager.prototype = {
       }
 
       let path;
-      if (length < 20) {
+      if (length < kObserverSoftLimit) {
         path = "settings-observers";
       } else {
         path = "settings-observers-suspect/referent(topic=" +
