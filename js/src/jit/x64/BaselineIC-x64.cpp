@@ -24,13 +24,14 @@ ICCompare_Int32::Compiler::generateStubCode(MacroAssembler& masm)
     masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
 
     // Directly compare the int32 payload of R0 and R1.
+    ScratchRegisterScope scratch(masm);
     Assembler::Condition cond = JSOpToCondition(op, /* signed = */true);
-    masm.mov(ImmWord(0), ScratchReg);
+    masm.mov(ImmWord(0), scratch);
     masm.cmp32(R0.valueReg(), R1.valueReg());
-    masm.setCC(cond, ScratchReg);
+    masm.setCC(cond, scratch);
 
     // Box the result and return
-    masm.boxValue(JSVAL_TYPE_BOOLEAN, ScratchReg, R0.valueReg());
+    masm.boxValue(JSVAL_TYPE_BOOLEAN, scratch, R0.valueReg());
     EmitReturnFromIC(masm);
 
     // Failure case - jump to next stub
@@ -49,6 +50,9 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler& masm)
     Label failure;
     masm.branchTestInt32(Assembler::NotEqual, R0, &failure);
     masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
+
+    // The scratch register is only used in the case of JSOP_URSH.
+    mozilla::Maybe<ScratchRegisterScope> scratch;
 
     Label revertRegister, maybeNegZero;
     switch(op_) {
@@ -159,8 +163,10 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler& masm)
         masm.boxValue(JSVAL_TYPE_INT32, ExtractTemp0, R0.valueReg());
         break;
       case JSOP_URSH:
-        if (!allowDouble_)
-            masm.movq(R0.valueReg(), ScratchReg);
+        if (!allowDouble_) {
+            scratch.emplace(masm);
+            masm.movq(R0.valueReg(), *scratch);
+        }
 
         masm.unboxInt32(R0, ExtractTemp0);
         masm.unboxInt32(R1, ecx); // This clobbers R0
@@ -176,8 +182,9 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler& masm)
             EmitReturnFromIC(masm);
 
             masm.bind(&toUint);
-            masm.convertUInt32ToDouble(ExtractTemp0, ScratchDoubleReg);
-            masm.boxDouble(ScratchDoubleReg, R0);
+            ScratchDoubleScope scratchDouble(masm);
+            masm.convertUInt32ToDouble(ExtractTemp0, scratchDouble);
+            masm.boxDouble(scratchDouble, R0);
         } else {
             masm.j(Assembler::Signed, &revertRegister);
             masm.boxValue(JSVAL_TYPE_INT32, ExtractTemp0, R0.valueReg());
@@ -194,9 +201,12 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler& masm)
         masm.bind(&maybeNegZero);
 
         // Result is -0 if exactly one of lhs or rhs is negative.
-        masm.movl(R0.valueReg(), ScratchReg);
-        masm.orl(R1.valueReg(), ScratchReg);
-        masm.j(Assembler::Signed, &failure);
+        {
+            ScratchRegisterScope scratch(masm);
+            masm.movl(R0.valueReg(), scratch);
+            masm.orl(R1.valueReg(), scratch);
+            masm.j(Assembler::Signed, &failure);
+        }
 
         // Result is +0.
         masm.moveValue(Int32Value(0), R0);
@@ -205,9 +215,10 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler& masm)
 
     // Revert the content of R0 in the fallible >>> case.
     if (op_ == JSOP_URSH && !allowDouble_) {
+        // Scope continuation from JSOP_URSH case above.
         masm.bind(&revertRegister);
         // Restore tag and payload.
-        masm.movq(ScratchReg, R0.valueReg());
+        masm.movq(*scratch, R0.valueReg());
         // Fall through to failure.
     }
     // Failure case - jump to next stub
