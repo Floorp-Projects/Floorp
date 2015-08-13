@@ -8,7 +8,6 @@ loop.conversationViews = (function(mozL10n) {
   var CALL_STATES = loop.store.CALL_STATES;
   var CALL_TYPES = loop.shared.utils.CALL_TYPES;
   var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
-  var REST_ERRNOS = loop.shared.utils.REST_ERRNOS;
   var WEBSOCKET_REASONS = loop.shared.utils.WEBSOCKET_REASONS;
   var sharedActions = loop.shared.actions;
   var sharedUtils = loop.shared.utils;
@@ -481,7 +480,7 @@ loop.conversationViews = (function(mozL10n) {
       switch (this.getStoreState().callStateReason) {
         case WEBSOCKET_REASONS.REJECT:
         case WEBSOCKET_REASONS.BUSY:
-        case REST_ERRNOS.USER_UNAVAILABLE:
+        case FAILURE_DETAILS.USER_UNAVAILABLE:
           var contactDisplayName = _getContactDisplayName(this.props.contact);
           if (contactDisplayName.length) {
             return mozL10n.get(

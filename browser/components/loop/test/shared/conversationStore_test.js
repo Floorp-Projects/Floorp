@@ -9,6 +9,7 @@ describe("loop.store.ConversationStore", function () {
   var WS_STATES = loop.store.WS_STATES;
   var CALL_TYPES = loop.shared.utils.CALL_TYPES;
   var WEBSOCKET_REASONS = loop.shared.utils.WEBSOCKET_REASONS;
+  var REST_ERRNOS = loop.shared.utils.REST_ERRNOS;
   var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
   var sharedActions = loop.shared.actions;
   var sharedUtils = loop.shared.utils;
@@ -552,7 +553,23 @@ describe("loop.store.ConversationStore", function () {
           sinon.assert.calledWithMatch(dispatcher.dispatch,
             sinon.match.hasOwn("name", "connectionFailure"));
           sinon.assert.calledWithMatch(dispatcher.dispatch,
-            sinon.match.hasOwn("reason", "setup"));
+            sinon.match.hasOwn("reason", FAILURE_DETAILS.UNKNOWN));
+        });
+
+        it("should dispatch a connection failure action on failure with user unavailable", function() {
+          client.setupOutgoingCall.callsArgWith(2, {
+            errno: REST_ERRNOS.USER_UNAVAILABLE
+          });
+
+          store.setupWindowData(
+            new sharedActions.SetupWindowData(fakeSetupWindowData));
+
+          sinon.assert.calledOnce(dispatcher.dispatch);
+          // Can't use instanceof here, as that matches any action
+          sinon.assert.calledWithMatch(dispatcher.dispatch,
+            sinon.match.hasOwn("name", "connectionFailure"));
+          sinon.assert.calledWithMatch(dispatcher.dispatch,
+            sinon.match.hasOwn("reason", FAILURE_DETAILS.USER_UNAVAILABLE));
         });
       });
     });

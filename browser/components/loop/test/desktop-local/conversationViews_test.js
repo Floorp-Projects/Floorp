@@ -452,9 +452,9 @@ describe("loop.conversationViews", function () {
           "generic_failure_title");
       });
 
-    it("should show 'contact unavailable' when the reason is REST_ERRNOS.USER_UNAVAILABLE",
+    it("should show 'contact unavailable' when the reason is FAILURE_DETAILS.USER_UNAVAILABLE",
       function () {
-        conversationStore.setStoreState({callStateReason: REST_ERRNOS.USER_UNAVAILABLE});
+        conversationStore.setStoreState({callStateReason: FAILURE_DETAILS.USER_UNAVAILABLE});
 
         view = mountTestComponent({contact: fakeContact});
 
