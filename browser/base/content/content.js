@@ -856,8 +856,6 @@ let pageInfoListener = {
   },
 
   receiveMessage: function(message) {
-    this.imageViewRows = [];
-    this.frameList = [];
     this.strings = message.data.strings;
 
     let frameOuterWindowID = message.data.frameOuterWindowID;
@@ -877,13 +875,8 @@ let pageInfoListener = {
     sendAsyncMessage("PageInfo:data", pageInfoData);
 
     // Separate step so page info dialog isn't blank while waiting for this to finish.
-    this.getMediaInfo();
+    let pageInfoMediaData = {imageViewRows: this.getMediaInfo(this.document, this.window, this.strings)};
 
-    // Send the message after all the media elements have been walked through.
-    let pageInfoMediaData = {imageViewRows: this.imageViewRows};
-
-    this.imageViewRows = null;
-    this.frameList = null;
     this.strings = null;
     this.window = null;
     this.document = null;
@@ -970,66 +963,58 @@ let pageInfoListener = {
   },
 
   // Only called once to get the media tab's media elements from the content page.
-  // The actual work is done with a TreeWalker that calls doGrab() once for
-  // each element node in the document.
-  getMediaInfo: function()
+  getMediaInfo: function(document, window, strings)
   {
-    this.goThroughFrames(this.document, this.window);
-    this.processFrames();
+    let frameList = this.goThroughFrames(document, window);
+    return this.processFrames(document, frameList, strings);
   },
 
-  goThroughFrames: function(aDocument, aWindow)
+  goThroughFrames: function(document, window)
   {
-    this.frameList.push(aDocument);
-    if (aWindow && aWindow.frames.length > 0) {
-      let num = aWindow.frames.length;
+    let frameList = [document];
+    if (window && window.frames.length > 0) {
+      let num = window.frames.length;
       for (let i = 0; i < num; i++) {
-        this.goThroughFrames(aWindow.frames[i].document, aWindow.frames[i]);  // recurse through the frames
+        // recurse through the frames
+        frameList.concat(this.goThroughFrames(window.frames[i].document,
+                                              window.frames[i]));
       }
     }
+    return frameList;
   },
 
-  processFrames: function()
+  processFrames: function(document, frameList, strings)
   {
-    if (this.frameList.length) {
-      let doc = this.frameList[0];
-      let iterator = doc.createTreeWalker(doc, content.NodeFilter.SHOW_ELEMENT, elem => this.grabAll(elem));
-      this.frameList.shift();
-      this.doGrab(iterator);
-    }
-  },
+    let imageViewRows = [];
+    for (let doc of frameList) {
+      let iterator = doc.createTreeWalker(doc, content.NodeFilter.SHOW_ELEMENT);
 
-  /**
-   * This function's previous purpose in pageInfo.js was to get loop through 500 elements at a time.
-   * The iterator filter will filter for media elements.
-   * #TODO Bug 1175794: refactor pageInfo.js to receive a media element at a time
-   * from messages and continually update UI.
-   */
-  doGrab: function(iterator)
-  {
-    while (true)
-    {
-      if (!iterator.nextNode()) {
-        this.processFrames();
-        return;
+      while (iterator.nextNode()) {
+        let mediaNode = this.getMediaNode(document, strings, iterator.currentNode);
+
+        if (mediaNode) {
+          imageViewRows.push(mediaNode);
+        }
       }
     }
+    return imageViewRows;
   },
 
-  grabAll: function(elem)
+  getMediaNode: function(document, strings, elem)
   {
     // Check for images defined in CSS (e.g. background, borders), any node may have multiple.
     let computedStyle = elem.ownerDocument.defaultView.getComputedStyle(elem, "");
+    let mediaElement = null;
 
     let addImage = (url, type, alt, elem, isBg) => {
-      let element = this.serializeElementInfo(url, type, alt, elem, isBg);
-      this.imageViewRows.push([url, type, alt, element, isBg]);
+      let element = this.serializeElementInfo(document, url, type, alt, elem, isBg);
+      mediaElement = [url, type, alt, element, isBg];
     };
 
     if (computedStyle) {
       let addImgFunc = (label, val) => {
         if (val.primitiveType == content.CSSPrimitiveValue.CSS_URI) {
-          addImage(val.getStringValue(), label, this.strings.notSet, elem, true);
+          addImage(val.getStringValue(), label, strings.notSet, elem, true);
         }
         else if (val.primitiveType == content.CSSPrimitiveValue.CSS_STRING) {
           // This is for -moz-image-rect.
@@ -1037,7 +1022,7 @@ let pageInfoListener = {
           let strVal = val.getStringValue();
           if (strVal.search(/^.*url\(\"?/) > -1) {
             let url = strVal.replace(/^.*url\(\"?/,"").replace(/\"?\).*$/,"");
-            addImage(url, label, this.strings.notSet, elem, true);
+            addImage(url, label, strings.notSet, elem, true);
           }
         }
         else if (val.cssValueType == content.CSSValue.CSS_VALUE_LIST) {
@@ -1048,50 +1033,50 @@ let pageInfoListener = {
         }
       };
 
-      addImgFunc(this.strings.mediaBGImg, computedStyle.getPropertyCSSValue("background-image"));
-      addImgFunc(this.strings.mediaBorderImg, computedStyle.getPropertyCSSValue("border-image-source"));
-      addImgFunc(this.strings.mediaListImg, computedStyle.getPropertyCSSValue("list-style-image"));
-      addImgFunc(this.strings.mediaCursor, computedStyle.getPropertyCSSValue("cursor"));
+      addImgFunc(strings.mediaBGImg, computedStyle.getPropertyCSSValue("background-image"));
+      addImgFunc(strings.mediaBorderImg, computedStyle.getPropertyCSSValue("border-image-source"));
+      addImgFunc(strings.mediaListImg, computedStyle.getPropertyCSSValue("list-style-image"));
+      addImgFunc(strings.mediaCursor, computedStyle.getPropertyCSSValue("cursor"));
     }
 
     // One swi^H^H^Hif-else to rule them all.
     if (elem instanceof content.HTMLImageElement) {
-      addImage(elem.src, this.strings.mediaImg,
-               (elem.hasAttribute("alt")) ? elem.alt : this.strings.notSet, elem, false);
+      addImage(elem.src, strings.mediaImg,
+               (elem.hasAttribute("alt")) ? elem.alt : strings.notSet, elem, false);
     }
     else if (elem instanceof content.SVGImageElement) {
       try {
         // Note: makeURLAbsolute will throw if either the baseURI is not a valid URI
         //       or the URI formed from the baseURI and the URL is not a valid URI.
         let href = makeURLAbsolute(elem.baseURI, elem.href.baseVal);
-        addImage(href, this.strings.mediaImg, "", elem, false);
+        addImage(href, strings.mediaImg, "", elem, false);
       } catch (e) { }
     }
     else if (elem instanceof content.HTMLVideoElement) {
-      addImage(elem.currentSrc, this.strings.mediaVideo, "", elem, false);
+      addImage(elem.currentSrc, strings.mediaVideo, "", elem, false);
     }
     else if (elem instanceof content.HTMLAudioElement) {
-      addImage(elem.currentSrc, this.strings.mediaAudio, "", elem, false);
+      addImage(elem.currentSrc, strings.mediaAudio, "", elem, false);
     }
     else if (elem instanceof content.HTMLLinkElement) {
       if (elem.rel && /\bicon\b/i.test(elem.rel)) {
-        addImage(elem.href, this.strings.mediaLink, "", elem, false);
+        addImage(elem.href, strings.mediaLink, "", elem, false);
       }
     }
     else if (elem instanceof content.HTMLInputElement || elem instanceof content.HTMLButtonElement) {
       if (elem.type.toLowerCase() == "image") {
-        addImage(elem.src, this.strings.mediaInput,
-                 (elem.hasAttribute("alt")) ? elem.alt : this.strings.notSet, elem, false);
+        addImage(elem.src, strings.mediaInput,
+                 (elem.hasAttribute("alt")) ? elem.alt : strings.notSet, elem, false);
       }
     }
     else if (elem instanceof content.HTMLObjectElement) {
-      addImage(elem.data, this.strings.mediaObject, this.getValueText(elem), elem, false);
+      addImage(elem.data, strings.mediaObject, this.getValueText(elem), elem, false);
     }
     else if (elem instanceof content.HTMLEmbedElement) {
-      addImage(elem.src, this.strings.mediaEmbed, "", elem, false);
+      addImage(elem.src, strings.mediaEmbed, "", elem, false);
     }
 
-    return content.NodeFilter.FILTER_ACCEPT;
+    return mediaElement;
   },
 
   /**
@@ -1099,7 +1084,7 @@ let pageInfoListener = {
    * makePreview in pageInfo.js uses to figure out how to display the preview.
    */
 
-  serializeElementInfo: function(url, type, alt, item, isBG)
+  serializeElementInfo: function(document, url, type, alt, item, isBG)
   {
     // Interface for image loading content.
     const nsIImageLoadingContent = Components.interfaces.nsIImageLoadingContent;
@@ -1109,7 +1094,7 @@ let pageInfoListener = {
     let imageText;
     if (!isBG &&
         !(item instanceof content.SVGImageElement) &&
-        !(this.document instanceof content.ImageDocument)) {
+        !(document instanceof content.ImageDocument)) {
       imageText = item.title || item.alt;
 
       if (!imageText && !(item instanceof content.HTMLImageElement)) {
