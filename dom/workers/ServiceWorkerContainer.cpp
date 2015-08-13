@@ -8,6 +8,7 @@
 
 #include "nsIDocument.h"
 #include "nsIServiceWorkerManager.h"
+#include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/Preferences.h"
@@ -100,6 +101,31 @@ ServiceWorkerContainer::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenP
   return ServiceWorkerContainerBinding::Wrap(aCx, this, aGivenProto);
 }
 
+static nsresult
+CheckForSlashEscapedCharsInPath(nsIURI* aURI)
+{
+  MOZ_ASSERT(aURI);
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<nsIURL> url(do_QueryInterface(aURI));
+  if (NS_WARN_IF(!url)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsAutoCString path;
+  nsresult rv = url->GetFilePath(path);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (path.Find("%2f", true /* ignore case */) != kNotFound ||
+      path.Find("%5c", true /* ignore case */) != kNotFound) {
+    return NS_ERROR_DOM_TYPE_ERR;
+  }
+
+  return NS_OK;
+}
+
 already_AddRefed<Promise>
 ServiceWorkerContainer::Register(const nsAString& aScriptURL,
                                  const RegistrationOptions& aOptions,
@@ -122,6 +148,11 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
                  window->GetDocBaseURI());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.ThrowTypeError(MSG_INVALID_URL, &aScriptURL);
+    return nullptr;
+  }
+
+  aRv = CheckForSlashEscapedCharsInPath(scriptURI);
+  if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
@@ -150,6 +181,11 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
         window->GetDocBaseURI()->GetSpec(spec);
       }
       aRv.ThrowTypeError(MSG_INVALID_SCOPE, &aOptions.mScope.Value(), &spec);
+      return nullptr;
+    }
+
+    aRv = CheckForSlashEscapedCharsInPath(scopeURI);
+    if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
   }
