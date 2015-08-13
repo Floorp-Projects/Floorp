@@ -24,6 +24,8 @@ import reftest
 import mozinfo
 
 from .data import (
+    AndroidAssetsDirs,
+    AndroidResDirs,
     BrandingFiles,
     ConfigFileSubstitution,
     ContextWrapped,
@@ -77,7 +79,7 @@ from .reader import SandboxValidationError
 
 from .context import (
     Context,
-    ObjDirPath,
+    AbsolutePath,
     SourcePath,
     ObjDirPath,
     Path,
@@ -555,7 +557,6 @@ class TreeMetadataEmitter(LoggingMixin):
         passthru = VariablePassthru(context)
         varlist = [
             'ANDROID_GENERATED_RESFILES',
-            'ANDROID_RES_DIRS',
             'DISABLE_STL_WRAPPING',
             'EXTRA_COMPONENTS',
             'EXTRA_DSO_LDOPTS',
@@ -699,6 +700,19 @@ class TreeMetadataEmitter(LoggingMixin):
 
         for name, data in context.get('ANDROID_ECLIPSE_PROJECT_TARGETS', {}).items():
             yield ContextWrapped(context, data)
+
+        for (symbol, cls) in [
+                ('ANDROID_RES_DIRS', AndroidResDirs),
+                ('ANDROID_ASSETS_DIRS', AndroidAssetsDirs)]:
+            paths = context.get(symbol)
+            if not paths:
+                continue
+            for p in paths:
+                if isinstance(p, SourcePath) and not os.path.isdir(p.full_path):
+                    raise SandboxValidationError('Directory listed in '
+                        '%s is not a directory: \'%s\'' %
+                            (symbol, p.full_path), context)
+            yield cls(context, paths)
 
         if passthru.variables:
             yield passthru
