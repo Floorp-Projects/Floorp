@@ -29034,7 +29034,17 @@
   },
   "local_changes": {
     "deleted": [],
-    "items": {},
+    "items": {
+      "testharness": {
+        "selection/addRange.html": [
+          {
+            "path": "selection/addRange.html",
+            "timeout": "long",
+            "url": "/selection/addRange.html"
+          }
+        ]
+      }
+    },
     "reftest_nodes": {}
   },
   "reftest_nodes": {
