@@ -19,6 +19,7 @@ let WebConsoleUtils = require("devtools/toolkit/webconsole/utils").Utils;
 let ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
                           .getService(Ci.nsIConsoleAPIStorage);
 let {DebuggerServer} = require("devtools/server/main");
+let {DebuggerClient, ObjectClient} = require("devtools/toolkit/client/main");
 
 let {ConsoleServiceListener, ConsoleAPIListener} =
   require("devtools/toolkit/webconsole/utils");
@@ -26,8 +27,6 @@ let {ConsoleServiceListener, ConsoleAPIListener} =
 function initCommon()
 {
   //Services.prefs.setBoolPref("devtools.debugger.log", true);
-
-  Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
 }
 
 function initDebuggerServer()
