@@ -51,6 +51,7 @@ loop.store.StandaloneMetricsStore = (function() {
       "recordClick",
       "remotePeerConnected",
       "retryAfterRoomFailure",
+      "tileShown",
       "windowUnload"
     ],
 
@@ -199,6 +200,14 @@ loop.store.StandaloneMetricsStore = (function() {
     retryAfterRoomFailure: function() {
       this._storeEvent(METRICS_GA_CATEGORY.general, METRICS_GA_ACTIONS.button,
         "Retry failed room");
+    },
+
+    /**
+     * Handles when a tile was finally shown (potentially after a delay)
+     */
+    tileShown: function() {
+      this._storeEvent(METRICS_GA_CATEGORY.general, METRICS_GA_ACTIONS.pageLoad,
+        "Tile shown");
     },
 
     /**
