@@ -289,7 +289,7 @@ WaveShaperNode::WaveShaperNode(AudioContext* aContext)
 
   WaveShaperNodeEngine* engine = new WaveShaperNodeEngine(this);
   mStream = AudioNodeStream::Create(aContext->Graph(), engine,
-                                    AudioNodeStream::INTERNAL_STREAM);
+                                    AudioNodeStream::NO_STREAM_FLAGS);
 }
 
 WaveShaperNode::~WaveShaperNode()
