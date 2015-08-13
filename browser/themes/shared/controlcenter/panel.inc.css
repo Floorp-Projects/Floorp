@@ -89,7 +89,7 @@
 #identity-popup-security-content,
 #identity-popup-permissions-content,
 #tracking-protection-content {
-  padding: 0.75em 0 1em;
+  padding: 0.5em 0 1em;
   -moz-padding-start: calc(2em + 24px);
   -moz-padding-end: 1em;
   background-repeat: no-repeat;
@@ -166,7 +166,7 @@
 }
 
 .identity-popup-headline {
-  margin: 2px 0 4px;
+  margin: 3px 0 4px;
   font-size: 150%;
 }
 
