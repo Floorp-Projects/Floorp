@@ -7,6 +7,8 @@
 #define WaveReader_h_
 
 #include "MediaDecoderReader.h"
+#include "MediaResource.h"
+
 #include "mozilla/dom/HTMLMediaElement.h"
 
 namespace mozilla {
@@ -98,6 +100,8 @@ private:
   // Start offset of the PCM data in the media stream.  Extends mWaveLength
   // bytes.
   int64_t mWavePCMOffset;
+
+  MediaResourceIndex mResource;
 };
 
 } // namespace mozilla

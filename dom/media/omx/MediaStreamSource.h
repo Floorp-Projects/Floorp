@@ -20,9 +20,10 @@ namespace android {
 // MediaStreamSource is a DataSource that reads from a MPAPI media stream.
 class MediaStreamSource : public DataSource {
   typedef mozilla::MediaResource MediaResource;
+  typedef mozilla::MediaResourceIndex MediaResourceIndex;
 
   Mutex mLock;
-  nsRefPtr<MediaResource> mResource;
+  MediaResourceIndex mResource;
 public:
   MediaStreamSource(MediaResource* aResource);
 
@@ -41,6 +42,8 @@ public:
   virtual uint32_t flags() {
     return kWantsPrefetching;
   }
+
+  int64_t Tell();
 
   virtual ~MediaStreamSource();
 
