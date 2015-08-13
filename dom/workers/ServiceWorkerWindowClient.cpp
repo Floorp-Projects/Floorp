@@ -90,9 +90,14 @@ public:
     UniquePtr<ServiceWorkerClientInfo> clientInfo;
 
     if (window) {
-      nsContentUtils::DispatchChromeEvent(window->GetExtantDoc(), window->GetOuterWindow(), NS_LITERAL_STRING("DOMServiceWorkerFocusClient"), true, true);
-      clientInfo.reset(new ServiceWorkerClientInfo(window->GetDocument(),
-                                                   window->GetOuterWindow()));
+      nsCOMPtr<nsIDocument> doc = window->GetDocument();
+      if (doc) {
+        nsContentUtils::DispatchChromeEvent(doc,
+                                            window->GetOuterWindow(),
+                                            NS_LITERAL_STRING("DOMServiceWorkerFocusClient"),
+                                            true, true);
+        clientInfo.reset(new ServiceWorkerClientInfo(doc));
+      }
     }
 
     DispatchResult(Move(clientInfo));
