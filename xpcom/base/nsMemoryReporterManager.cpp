@@ -48,6 +48,7 @@ using namespace mozilla;
 
 #if defined(XP_LINUX)
 
+#include <malloc.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -174,6 +175,25 @@ public:
   }
 };
 NS_IMPL_ISUPPORTS(ResidentUniqueReporter, nsIMemoryReporter)
+
+#define HAVE_SYSTEM_HEAP_REPORTER 1
+size_t
+SystemHeapSize()
+{
+    struct mallinfo info = mallinfo();
+
+    // The documentation in the glibc man page makes it sound like |uordblks|
+    // would suffice, but that only gets the small allocations that are put in
+    // the brk heap. We need |hblkhd| as well to get the larger allocations
+    // that are mmapped.
+    //
+    // The fields in |struct mallinfo| are all |int|, <sigh>, so it is
+    // unreliable if memory usage gets high. However, the system heap size on
+    // Linux should usually be zero (so long as jemalloc is enabled) so that
+    // shouldn't be a problem. Nonetheless, cast the |int|s to |size_t| before
+    // adding them to provide a small amount of extra overflow protection.
+    return size_t(info.hblkhd) + size_t(info.uordblks);
+}
 
 #elif defined(__DragonFly__) || defined(__FreeBSD__) \
     || defined(__NetBSD__) || defined(__OpenBSD__) \
@@ -803,6 +823,32 @@ NS_IMPL_ISUPPORTS(ResidentReporter, nsIMemoryReporter)
 
 #endif  // HAVE_VSIZE_AND_RESIDENT_REPORTERS
 
+#ifdef HAVE_SYSTEM_HEAP_REPORTER
+
+class SystemHeapReporter final : public nsIMemoryReporter
+{
+  ~SystemHeapReporter() {}
+
+public:
+  NS_DECL_ISUPPORTS
+
+  NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                           nsISupports* aData, bool aAnonymize) override
+  {
+    int64_t amount = SystemHeapSize();
+
+    return MOZ_COLLECT_REPORT(
+      "system-heap-allocated", KIND_OTHER, UNITS_BYTES, amount,
+"Memory used by the system allocator that is currently allocated to the "
+"application. This is distinct from the jemalloc heap that Firefox uses for "
+"most or all of its heap allocations. Ideally this number is zero, but "
+"on some platforms we cannot force every heap allocation through jemalloc.");
+  }
+};
+NS_IMPL_ISUPPORTS(SystemHeapReporter, nsIMemoryReporter)
+
+#endif // HAVE_SYSTEM_HEAP_REPORTER
+
 #ifdef XP_UNIX
 
 #include <sys/resource.h>
@@ -1219,6 +1265,10 @@ nsMemoryReporterManager::Init()
 
 #ifdef HAVE_PRIVATE_REPORTER
   RegisterStrongReporter(new PrivateReporter());
+#endif
+
+#ifdef HAVE_SYSTEM_HEAP_REPORTER
+  RegisterStrongReporter(new SystemHeapReporter());
 #endif
 
   RegisterStrongReporter(new AtomTablesReporter());
