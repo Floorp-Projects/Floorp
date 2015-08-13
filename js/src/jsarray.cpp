@@ -1148,43 +1148,6 @@ ArrayJoin(JSContext* cx, CallArgs& args)
     return true;
 }
 
-/* ES5 15.4.4.2. NB: The algorithm here differs from the one in ES3. */
-static bool
-array_toString(JSContext* cx, unsigned argc, Value* vp)
-{
-    JS_CHECK_RECURSION(cx, return false);
-
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject obj(cx, ToObject(cx, args.thisv()));
-    if (!obj)
-        return false;
-
-    RootedValue join(cx, args.calleev());
-    if (!GetProperty(cx, obj, obj, cx->names().join, &join))
-        return false;
-
-    if (!IsCallable(join)) {
-        JSString* str = JS_BasicObjectToString(cx, obj);
-        if (!str)
-            return false;
-        args.rval().setString(str);
-        return true;
-    }
-
-    InvokeArgs args2(cx);
-    if (!args2.init(0))
-        return false;
-
-    args2.setCallee(join);
-    args2.setThis(ObjectValue(*obj));
-
-    /* Do the call. */
-    if (!Invoke(cx, args2))
-        return false;
-    args.rval().set(args2.rval());
-    return true;
-}
-
 /* ES5 15.4.4.3 */
 static bool
 array_toLocaleString(JSContext* cx, unsigned argc, Value* vp)
@@ -3129,8 +3092,8 @@ static const JSFunctionSpec array_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,      array_toSource,     0,0),
 #endif
-    JS_FN(js_toString_str,      array_toString,     0,0),
-    JS_FN(js_toLocaleString_str,array_toLocaleString,0,0),
+    JS_SELF_HOSTED_FN(js_toString_str, "ArrayToString",      0,0),
+    JS_FN(js_toLocaleString_str,       array_toLocaleString, 0,0),
 
     /* Perl-ish methods. */
     JS_FN("join",               array_join,         1,JSFUN_GENERIC_NATIVE),
