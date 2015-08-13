@@ -60,9 +60,8 @@ protected:
   RefPtr<ISurfaceAllocator> mSurfaceAllocator;
 
 private:
-  void RecycleCallbackImp(TextureClient* aClient);
-
-  static void RecycleCallback(TextureClient* aClient, void* aClosure);
+  friend class TextureClient;
+  void RecycleTextureClient(TextureClient* aClient);
 
   static const uint32_t kMaxPooledSized = 2;
   uint32_t mMaxPooledSize;

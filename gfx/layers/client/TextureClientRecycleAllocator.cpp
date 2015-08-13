@@ -103,8 +103,11 @@ TextureClientRecycleAllocator::CreateOrRecycle(gfx::SurfaceFormat aFormat,
     // Register TextureClient
     mInUseClients[textureHolder->GetTextureClient()] = textureHolder;
   }
-  textureHolder->GetTextureClient()->SetRecycleCallback(TextureClientRecycleAllocator::RecycleCallback, this);
   RefPtr<TextureClient> client(textureHolder->GetTextureClient());
+
+  // Make sure the texture holds a reference to us, and ask it to call RecycleTextureClient when its
+  // ref count drops to 1.
+  client->SetRecycleAllocator(this);
   return client.forget();
 }
 
@@ -120,10 +123,14 @@ TextureClientRecycleAllocator::Allocate(gfx::SurfaceFormat aFormat,
 }
 
 void
-TextureClientRecycleAllocator::RecycleCallbackImp(TextureClient* aClient)
+TextureClientRecycleAllocator::RecycleTextureClient(TextureClient* aClient)
 {
+  // Clearing the recycle allocator drops a reference, so make sure we stay alive
+  // for the duration of this function.
+  RefPtr<TextureClientRecycleAllocator> kungFuDeathGrip(this);
+  aClient->SetRecycleAllocator(nullptr);
+
   RefPtr<TextureClientHolder> textureHolder;
-  aClient->ClearRecycleCallback();
   {
     MutexAutoLock lock(mLock);
     if (mInUseClients.find(aClient) != mInUseClients.end()) {
@@ -134,14 +141,6 @@ TextureClientRecycleAllocator::RecycleCallbackImp(TextureClient* aClient)
       mInUseClients.erase(aClient);
     }
   }
-}
-
-/* static */ void
-TextureClientRecycleAllocator::RecycleCallback(TextureClient* aClient, void* aClosure)
-{
-  MOZ_ASSERT(aClient && !aClient->IsDead());
-  TextureClientRecycleAllocator* recycleAllocator = static_cast<TextureClientRecycleAllocator*>(aClosure);
-  recycleAllocator->RecycleCallbackImp(aClient);
 }
 
 } // namespace layers
