@@ -3135,8 +3135,7 @@ CK_RV NSC_Finalize (CK_VOID_PTR pReserved)
     return crv;
 }
 
-extern const char __nss_softokn_rcsid[];
-extern const char __nss_softokn_sccsid[];
+extern const char __nss_softokn_version[];
 
 /* NSC_GetInfo returns general information about Cryptoki. */
 CK_RV  NSC_GetInfo(CK_INFO_PTR pInfo)
@@ -3145,7 +3144,7 @@ CK_RV  NSC_GetInfo(CK_INFO_PTR pInfo)
 
     CHECK_FORK();
     
-    c = __nss_softokn_rcsid[0] + __nss_softokn_sccsid[0]; 
+    c = __nss_softokn_version[0];
     pInfo->cryptokiVersion.major = 2;
     pInfo->cryptokiVersion.minor = 20;
     PORT_Memcpy(pInfo->manufacturerID,manufacturerID,32);

@@ -241,7 +241,7 @@ void
 SECU_PrintAsHex(FILE *out, const SECItem *data, const char *m, int level)
 {
     unsigned i;
-    int column;
+    int column = 0;
     PRBool isString     = PR_TRUE;
     PRBool isWhiteSpace = PR_TRUE;
     PRBool printedHex   = PR_FALSE;

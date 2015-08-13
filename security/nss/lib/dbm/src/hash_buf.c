@@ -70,7 +70,7 @@ static char sccsid[] = "@(#)hash_buf.c	8.5 (Berkeley) 7/15/94";
 #include "page.h"
 /* #include "extern.h" */
 
-static BUFHEAD *newbuf __P((HTAB *, uint32, BUFHEAD *));
+static BUFHEAD *newbuf(HTAB *, uint32, BUFHEAD *);
 
 /* Unlink B from its place in the lru */
 #define BUF_REMOVE(B) { \
