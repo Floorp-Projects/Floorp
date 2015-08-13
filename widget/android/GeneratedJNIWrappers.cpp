@@ -876,6 +876,14 @@ auto GeckoThread::State::INITIAL() -> State::LocalRef
     return mozilla::jni::Field<INITIAL_t>::Get(nullptr, nullptr);
 }
 
+constexpr char GeckoThread::State::JNI_READY_t::name[];
+constexpr char GeckoThread::State::JNI_READY_t::signature[];
+
+auto GeckoThread::State::JNI_READY() -> State::LocalRef
+{
+    return mozilla::jni::Field<JNI_READY_t>::Get(nullptr, nullptr);
+}
+
 constexpr char GeckoThread::State::LAUNCHED_t::name[];
 constexpr char GeckoThread::State::LAUNCHED_t::signature[];
 
