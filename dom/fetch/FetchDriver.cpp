@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/dom/FetchDriver.h"
 
 #include "nsIDocument.h"
@@ -580,7 +581,8 @@ FetchDriver::BeginAndGetFilteredResponse(InternalResponse* aResponse, nsIURI* aF
   } else {
     mRequest->GetURL(reqURL);
   }
-  aResponse->SetUrl(reqURL);
+  DebugOnly<nsresult> rv = aResponse->StripFragmentAndSetUrl(reqURL);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   // FIXME(nsm): Handle mixed content check, step 7 of fetch.
 

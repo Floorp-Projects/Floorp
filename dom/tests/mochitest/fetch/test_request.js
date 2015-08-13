@@ -216,7 +216,7 @@ function testMethod() {
 
 function testUrlFragment() {
   var req = new Request("./request#withfragment");
-  ok(req.url, (new URL("./request", self.location.href)).href, "request.url should be serialized with exclude fragment flag set");
+  is(req.url, (new URL("./request", self.location.href)).href, "request.url should be serialized with exclude fragment flag set");
 }
 
 function testBodyUsed() {
