@@ -234,7 +234,7 @@ public:
                         const gfx::Rect& aVisibleRect) override;
 
   virtual void EndFrame() override;
-  virtual void SetDispAcquireFence(Layer* aLayer) override;
+  virtual void SetDispAcquireFence(Layer* aLayer, nsIWidget* aWidget) override;
   virtual FenceHandle GetReleaseFence() override;
   virtual void EndFrameForExternalComposition(const gfx::Matrix& aTransform) override;
 
