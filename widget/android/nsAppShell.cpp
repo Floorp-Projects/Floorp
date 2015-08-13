@@ -56,6 +56,8 @@
 #include "mozilla/Logging.h"
 #endif
 
+#include "ANRReporter.h"
+
 #ifdef DEBUG_ANDROID_EVENTS
 #define EVLOG(args...)  ALOG(args)
 #else
@@ -146,6 +148,15 @@ nsAppShell::nsAppShell()
         NS_WARNING("Failed to retrieve PowerManagerService, wakelocks will be broken!");
     }
 
+    // Initialize JNI and Set the corresponding state in GeckoThread.
+
+    if (!jni::IsAvailable()) {
+        return;
+    }
+    AndroidBridge::ConstructBridge();
+    mozilla::ANRReporter::Init();
+
+    widget::GeckoThread::SetState(widget::GeckoThread::State::JNI_READY());
 }
 
 nsAppShell::~nsAppShell()
@@ -158,6 +169,8 @@ nsAppShell::~nsAppShell()
         sPowerManagerService = nullptr;
         sWakeLockListener = nullptr;
     }
+
+    AndroidBridge::DeconstructBridge();
 }
 
 void

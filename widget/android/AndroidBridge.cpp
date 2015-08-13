@@ -47,8 +47,6 @@
 #include "SurfaceTexture.h"
 #include "GLContextProvider.h"
 
-#include "ANRReporter.h"
-
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::jni;
@@ -260,7 +258,6 @@ AndroidBridge::AndroidBridge()
     jAvailable = inputStream.getMethod("available", "()I");
 
     InitAndroidJavaWrappers(jEnv);
-    ANRReporter::Init();
 }
 
 // Raw JNIEnv variants.
