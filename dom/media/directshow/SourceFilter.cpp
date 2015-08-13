@@ -76,7 +76,7 @@ public:
   {}
 
   int64_t GetLength() {
-    int64_t len = mResource->GetLength();
+    int64_t len = mResource.GetLength();
     if (len == -1) {
       return len;
     }
@@ -85,19 +85,20 @@ public:
   nsresult ReadAt(int64_t aOffset, char* aBuffer,
                   uint32_t aCount, uint32_t* aBytes)
   {
-    return mResource->ReadAt(aOffset + mDataOffset,
-                             aBuffer,
-                             aCount,
-                             aBytes);
+    return mResource.ReadAt(aOffset + mDataOffset,
+                            aBuffer,
+                            aCount,
+                            aBytes);
   }
   int64_t GetCachedDataEnd() {
-    int64_t tell = mResource->Tell();
-    int64_t dataEnd = mResource->GetCachedDataEnd(tell) - mDataOffset;
+    int64_t tell = mResource.GetResource()->Tell();
+    int64_t dataEnd =
+      mResource.GetResource()->GetCachedDataEnd(tell) - mDataOffset;
     return dataEnd;
   }
 private:
   // MediaResource from which we read data.
-  RefPtr<MediaResource> mResource;
+  MediaResourceIndex mResource;
   int64_t mDataOffset;
 };
 
@@ -559,23 +560,13 @@ OutputPin::SyncRead(LONGLONG aPosition,
     }
   }
 
-  // Read in a loop to ensure we fill the buffer, when possible.
-  LONG totalBytesRead = 0;
-  while (totalBytesRead < aLength) {
-    BYTE* readBuffer = aBuffer + totalBytesRead;
-    uint32_t bytesRead = 0;
-    LONG length = aLength - totalBytesRead;
-    nsresult rv = mResource.ReadAt(aPosition + totalBytesRead,
-                                   reinterpret_cast<char*>(readBuffer),
-                                   length,
-                                   &bytesRead);
-    if (NS_FAILED(rv)) {
-      return E_FAIL;
-    }
-    totalBytesRead += bytesRead;
-    if (bytesRead == 0) {
-      break;
-    }
+  uint32_t totalBytesRead = 0;
+  nsresult rv = mResource.ReadAt(aPosition,
+                                 reinterpret_cast<char*>(aBuffer),
+                                 aLength,
+                                 &totalBytesRead);
+  if (NS_FAILED(rv)) {
+    return E_FAIL;
   }
   if (totalBytesRead > 0) {
     CriticalSectionAutoEnter lock(*mLock);
