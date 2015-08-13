@@ -24,6 +24,7 @@ from mozharness.mozilla.buildbot import TBPL_SUCCESS, TBPL_WARNING, EXIT_STATUS_
 
 INSTALLER_SUFFIXES = ('.tar.bz2', '.zip', '.dmg', '.exe', '.apk', '.tar.gz')
 
+
 class FirefoxUIUpdates(FirefoxUITests):
     # This will be a list containing one item per release based on configs
     # from tools/release/updates/*cfg
@@ -54,7 +55,6 @@ class FirefoxUIUpdates(FirefoxUITests):
                     'symbols, or the url of a zip file containing symbols.',
         }],
     ]
-
 
     def __init__(self):
         config_options = [
@@ -99,6 +99,10 @@ class FirefoxUIUpdates(FirefoxUITests):
                 'dest': 'installer_path',
                 'help': 'Point to an installer to test against.',
             }],
+            [['--limit-locales'], {
+                'dest': 'limit_locales',
+                'help': 'Limit the number of locales to run.',
+            }],
         ] + copy.deepcopy(self.harness_extra_args)
 
         super(FirefoxUIUpdates, self).__init__(
@@ -114,6 +118,8 @@ class FirefoxUIUpdates(FirefoxUITests):
         )
 
         dirs = self.query_abs_dirs()
+
+        self.limit_locales = int(self.config.get('limit_locales'))
 
         if self.config.get('tools_tag') is None:
             # We want to make sure that anyone trying to reproduce a job will
@@ -143,7 +149,6 @@ class FirefoxUIUpdates(FirefoxUITests):
 
         assert 'update_verify_config' in self.config or self.installer_url or self.installer_path, \
             'Either specify --update-verify-config, --installer-url or --installer-path.'
-
 
     def query_abs_dirs(self):
         if self.abs_dirs:
@@ -175,7 +180,6 @@ class FirefoxUIUpdates(FirefoxUITests):
             revision=self.tools_tag,
             vcs='hgtool'
         )
-
 
     def determine_testing_configuration(self):
         '''
@@ -219,8 +223,8 @@ class FirefoxUIUpdates(FirefoxUITests):
         self.channel = uvc.channel
 
         # Filter out any releases that are less than Gecko 38
-        uvc.releases = [r for r in uvc.releases \
-                if int(r["release"].split('.')[0]) >= 38]
+        uvc.releases = [r for r in uvc.releases
+                        if int(r["release"].split('.')[0]) >= 38]
 
         temp_releases = []
         for rel_info in uvc.releases:
@@ -241,7 +245,6 @@ class FirefoxUIUpdates(FirefoxUITests):
 
         self.releases = chunked_config.releases
 
-
     def _modify_url(self, rel_info):
         # This is a temporary hack to find crash symbols. It should be replaced
         # with something that doesn't make wild guesses about where symbol
@@ -257,7 +260,6 @@ class FirefoxUIUpdates(FirefoxUITests):
         self.info('Installer url under stage/candidates dir %s' % temp_url)
 
         return temp_url
-
 
     def _query_symbols_url(self, installer_url):
         for suffix in INSTALLER_SUFFIXES:
@@ -281,12 +283,10 @@ class FirefoxUIUpdates(FirefoxUITests):
         else:
             self.fatal("Can't figure out symbols_url from installer_url %s!" % installer_url)
 
-
     @PreScriptAction('run-tests')
     def _pre_run_tests(self, action):
         if self.releases is None and not (self.installer_url or self.installer_path):
             self.fatal('You need to call --determine-testing-configuration as well.')
-
 
     def _run_test(self, installer_path, symbols_url=None, update_channel=None, cleanup=True,
                   marionette_port=2828):
@@ -297,7 +297,7 @@ class FirefoxUIUpdates(FirefoxUITests):
         env = self.query_env(avoid_host_env=True)
         bin_dir = os.path.dirname(self.query_python_path())
         fx_ui_tests_bin = os.path.join(bin_dir, 'firefox-ui-update')
-        gecko_log=os.path.join(dirs['abs_work_dir'], 'gecko.log')
+        gecko_log = os.path.join(dirs['abs_work_dir'], 'gecko.log')
 
         # Build the command
         cmd = [
@@ -348,7 +348,6 @@ class FirefoxUIUpdates(FirefoxUITests):
 
         return return_code
 
-
     def run_tests(self):
         dirs = self.query_abs_dirs()
 
@@ -370,6 +369,7 @@ class FirefoxUIUpdates(FirefoxUITests):
         else:
             results = {}
 
+            locales_counter = 0
             for rel_info in sorted(self.releases, key=lambda release: release['build_id']):
                 build_id = rel_info['build_id']
                 results[build_id] = {}
@@ -380,14 +380,19 @@ class FirefoxUIUpdates(FirefoxUITests):
                     len(rel_info['locales'])
                 ))
 
-                if self.config['dry_run']:
-                    continue
-
                 # Each locale gets a fresh port to avoid address in use errors in case of
                 # tests that time out unexpectedly.
                 marionette_port = 2827
                 for locale in rel_info['locales']:
+                    locales_counter += 1
                     self.info("Running %s %s" % (build_id, locale))
+
+                    if locales_counter > self.limit_locales:
+                        self.info("We have reached the limit of locales we were intending to run")
+                        break
+
+                    if self.config['dry_run']:
+                        continue
 
                     # Safe temp hack to determine symbols URL from en-US build1 in the candidates dir
                     ftp_candidates_installer_url = self._modify_url(rel_info)
@@ -412,7 +417,7 @@ class FirefoxUIUpdates(FirefoxUITests):
                         marionette_port=marionette_port)
 
                     if retcode != 0:
-                        self.warning('FAIL: firefox-ui-update has failed.' )
+                        self.warning('FAIL: firefox-ui-update has failed.')
 
                         base_cmd = 'python scripts/firefox_ui_updates.py'
                         for c in self.config['config_files']:
@@ -432,6 +437,11 @@ class FirefoxUIUpdates(FirefoxUITests):
                         self.info('%s --cfg developer_config.py' % base_cmd)
 
                     results[build_id][locale] = retcode
+
+                    self.info("Completed %s %s with return code: %s" % (build_id, locale, retcode))
+
+                if locales_counter > self.limit_locales:
+                    break
 
             # Determine which locales have failed and set scripts exit code
             exit_status = TBPL_SUCCESS
