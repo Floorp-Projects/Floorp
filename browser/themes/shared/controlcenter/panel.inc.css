@@ -35,6 +35,12 @@
   display: none;
 }
 
+/* Make sure hidden elements don't accidentally become visible from one of the
+   above selectors (see Bug 1194258) */
+#identity-popup [hidden] {
+  display: none !important;
+}
+
 #identity-popup,
 #identity-popup:not([panelopen]) .panel-viewstack[viewtype="main"]:not([transitioning]) #identity-popup-mainView {
   /* Tiny hack to ensure the panel shrinks back to its original
