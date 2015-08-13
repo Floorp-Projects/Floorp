@@ -155,11 +155,12 @@ InstImm::extractImm16(BOffImm16* dest)
 
 // Used to patch jumps created by MacroAssemblerMIPSCompat::jumpWithPatch.
 void
-jit::PatchJump(CodeLocationJump& jump_, CodeLocationLabel label)
+jit::PatchJump(CodeLocationJump& jump_, CodeLocationLabel label, ReprotectCode reprotect)
 {
     Instruction* inst1 = (Instruction*)jump_.raw();
     Instruction* inst2 = inst1->next();
 
+    MaybeAutoWritableJitCode awjc(inst1, 8, reprotect);
     Assembler::UpdateLuiOriValue(inst1, inst2, (uint32_t)label.raw());
 
     AutoFlushICache::flush(uintptr_t(inst1), 8);
