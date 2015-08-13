@@ -3669,8 +3669,7 @@ loser:
 */
 
 #include "nss.h"
-extern const char __nss_ssl_rcsid[];
-extern const char __nss_ssl_sccsid[];
+extern const char __nss_ssl_version[];
 
 PRBool
 NSSSSL_VersionCheck(const char *importedVersion)
@@ -3686,7 +3685,7 @@ NSSSSL_VersionCheck(const char *importedVersion)
      */
     volatile char c; /* force a reference that won't get optimized away */
 
-    c = __nss_ssl_rcsid[0] + __nss_ssl_sccsid[0]; 
+    c = __nss_ssl_version[0];
     return NSS_VersionCheck(importedVersion);
 }
 

@@ -234,6 +234,11 @@ if CONFIG['GNU_CC']:
             '-Wno-error=uninitialized',
         ]
 
+# See bug 386897.
+if CONFIG['GNU_CC'] and CONFIG['OS_TARGET'] == 'Android' and CONFIG['MOZ_OPTIMIZE']:
+    CFLAGS += ['-O2']
+    CXXFLAGS += ['-O2']
+
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
     CFLAGS += CONFIG['MOZ_QT_CFLAGS']
     CXXFLAGS += CONFIG['MOZ_QT_CFLAGS']

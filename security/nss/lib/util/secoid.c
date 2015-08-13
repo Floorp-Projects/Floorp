@@ -20,15 +20,9 @@
 #endif
 
 /*
- * Version information for the 'ident' and 'what commands
- *
- * NOTE: the first component of the concatenated rcsid string
- * must not end in a '$' to prevent rcs keyword substitution.
+ * Version information
  */
-const char __nss_util_rcsid[] = "$Header: NSS " NSSUTIL_VERSION _DEBUG_STRING
-        "  " __DATE__ " " __TIME__ " $";
-const char __nss_util_sccsid[] = "@(#)NSS " NSSUTIL_VERSION _DEBUG_STRING
-        "  " __DATE__ " " __TIME__;
+const char __nss_util_version[] = "Version: NSS " NSSUTIL_VERSION _DEBUG_STRING;
 
 /* MISSI Mosaic Object ID space */
 /* USGov algorithm OID space: { 2 16 840 1 101 } */
@@ -1921,7 +1915,7 @@ SECOID_Init(void)
     char * envVal;
     volatile char c; /* force a reference that won't get optimized away */
 
-    c = __nss_util_rcsid[0] + __nss_util_sccsid[0];
+    c = __nss_util_version[0];
 
     if (oidhash) {
 	return SECSuccess; /* already initialized */

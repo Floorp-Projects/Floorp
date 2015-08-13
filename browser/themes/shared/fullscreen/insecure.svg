@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="24" height="24" viewBox="0 0 24 24">
+  <style>
+    .icon-default {
+      fill: #fafafa;
+    }
+  </style>
+
+  <defs>
+    <rect id="shape-lock-clasp-outer" x="5" y="1" width="14" height="20" rx="7" ry="7" />
+    <rect id="shape-lock-clasp-inner" x="8" y="4" width="8" height="14" rx="4" ry="4" />
+    <rect id="shape-lock-base" x="3" y="10" width="18" height="13" rx="1.5" ry="1.5" />
+
+    <mask id="mask-clasp-cutout">
+      <rect width="24" height="24" fill="#000" />
+      <use xlink:href="#shape-lock-clasp-outer" fill="#fff" />
+      <use xlink:href="#shape-lock-clasp-inner" fill="#000" />
+      <line x1="3" y1="21" x2="21.5" y2="0.5" stroke="#000" stroke-width="3" />
+      <line x1="3" y1="25" x2="21.5" y2="4.5" stroke="#000" stroke-width="3" />
+      <rect x="3" y="10" width="18" height="13" rx="1.5" ry="1.5" />
+    </mask>
+
+    <mask id="mask-base-cutout">
+      <rect width="24" height="24" fill="#000" />
+      <use xlink:href="#shape-lock-base" fill="#fff" />
+      <line x1="2.25" y1="24.75" x2="21.5" y2="4.5" stroke="#000" stroke-width="3" />
+    </mask>
+  </defs>
+
+  <use xlink:href="#shape-lock-clasp-outer" mask="url(#mask-clasp-cutout)" class="icon-default" />
+  <use xlink:href="#shape-lock-base" mask="url(#mask-base-cutout)" class="icon-default" />
+
+  <line x1="2.25" y1="22.75" x2="21.5" y2="2.5" stroke="#d92d21" stroke-width="3" />
+</svg>

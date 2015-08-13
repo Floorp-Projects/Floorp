@@ -65,11 +65,10 @@ builtins_mdInstance_GetLibraryVersion
   NSSCKFWInstance *fwInstance
 )
 {
-  extern const char __nss_builtins_rcsid[];
-  extern const char __nss_builtins_sccsid[];
+  extern const char __nss_builtins_version[];
   volatile char c; /* force a reference that won't get optimized away */
 
-  c = __nss_builtins_rcsid[0] + __nss_builtins_sccsid[0];
+  c = __nss_builtins_version[0];
   return nss_builtins_LibraryVersion;
 }
 

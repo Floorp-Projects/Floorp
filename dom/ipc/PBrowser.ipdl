@@ -723,8 +723,13 @@ child:
     /**
      * Tell the child that the UI resolution changed for the containing
      * window.
+     * To avoid some sync messages from child to parent, we also send the dpi
+     * and default scale with the notification.
+     * If we don't know the dpi and default scale, we just pass in a negative
+     * value (-1) but in the majority of the cases this saves us from two
+     * sync requests from the child to the parent.
      */
-    UIResolutionChanged();
+    UIResolutionChanged(float dpi, double scale);
 
     /**
      * Tell the child that the system theme has changed, and that a repaint

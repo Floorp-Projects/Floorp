@@ -45,14 +45,14 @@ static char sccsid[] = "@(#)hash_func.c	8.2 (Berkeley) 2/21/94";
 /* #include "extern.h" */
 
 #if 0
-static uint32 hash1 __P((const void *, size_t));
-static uint32 hash2 __P((const void *, size_t));
-static uint32 hash3 __P((const void *, size_t));
+static uint32 hash1(const void *, size_t);
+static uint32 hash2(const void *, size_t);
+static uint32 hash3(const void *, size_t);
 #endif
-static uint32 hash4 __P((const void *, size_t));
+static uint32 hash4(const void *, size_t);
 
 /* Global default hash function */
-uint32 (*__default_hash) __P((const void *, size_t)) = hash4;
+uint32 (*__default_hash)(const void *, size_t) = hash4;
 
 /*
  * HASH FUNCTIONS

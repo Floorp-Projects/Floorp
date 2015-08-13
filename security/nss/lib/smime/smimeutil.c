@@ -754,8 +754,7 @@ loser:
     return cert;
 }
 
-extern const char __nss_smime_rcsid[];
-extern const char __nss_smime_sccsid[];
+extern const char __nss_smime_version[];
 
 PRBool
 NSSSMIME_VersionCheck(const char *importedVersion)
@@ -771,7 +770,7 @@ NSSSMIME_VersionCheck(const char *importedVersion)
      */
     volatile char c; /* force a reference that won't get optimized away */
 
-    c = __nss_smime_rcsid[0] + __nss_smime_sccsid[0]; 
+    c = __nss_smime_version[0];
 
     return NSS_VersionCheck(importedVersion);
 }

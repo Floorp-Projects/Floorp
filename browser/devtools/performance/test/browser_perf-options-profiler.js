@@ -14,7 +14,7 @@ function* spawnTest() {
 
   yield startRecording(panel);
 
-  let { entries, interval } = yield gFront._request("profiler", "getStartOptions");
+  let { entries, interval } = yield gFront.getConfiguration();
 
   yield stopRecording(panel);
 
