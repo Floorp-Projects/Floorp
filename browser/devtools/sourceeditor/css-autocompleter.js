@@ -5,7 +5,6 @@
 const { Cc, Ci, Cu } = require('chrome');
 const {cssTokenizer, cssTokenizerWithLineColumn}  =
       require("devtools/sourceeditor/css-tokenizer");
-const promise = Cu.import("resource://gre/modules/Promise.jsm");
 
 /**
  * Here is what this file (+ ./css-tokenizer.js) do.
