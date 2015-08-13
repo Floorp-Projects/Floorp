@@ -116,9 +116,6 @@ var gPrivacyPane = {
                      gPrivacyPane.showCookies);
     setEventListener("clearDataSettings", "command",
                      gPrivacyPane.showClearPrivateDataSettings);
-
-    document.getElementById("searchesSuggestion").hidden = 
-      !Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete");
   },
 
   // HISTORY MODE
