@@ -18,7 +18,7 @@ function* spawnTest() {
 
   yield startRecording(panel);
 
-  let { probability, maxLogLength } = yield gFront._request("memory", "getAllocationsSettings");
+  let { probability, maxLogLength } = yield gFront.getConfiguration();
 
   yield stopRecording(panel);
 

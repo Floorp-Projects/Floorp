@@ -19,7 +19,7 @@
               android:background="@color/text_and_tabs_tray_grey">
 
             <ViewStub android:id="@+id/nav_back_stub"
-                      android:layout="@layout/new_tablet_tabs_panel_back_button"
+                      android:layout="@layout/tabs_panel_back_button"
                       android:layout_width="wrap_content"
                       android:layout_height="match_parent"/>
 

@@ -243,8 +243,7 @@ describe("loop.store.RoomStore", function () {
         sandbox.stub(dispatcher, "dispatch");
         store.setStoreState({pendingCreation: false, rooms: []});
         fakeRoomCreationData = {
-          nameTemplate: fakeNameTemplate,
-          roomOwner: fakeOwner
+          nameTemplate: fakeNameTemplate
         };
       });
 
@@ -285,7 +284,6 @@ describe("loop.store.RoomStore", function () {
           decryptedContext: {
             roomName: "Conversation 1"
           },
-          roomOwner: fakeOwner,
           maxSize: store.maxRoomCreationSize
         });
       });
@@ -310,7 +308,6 @@ describe("loop.store.RoomStore", function () {
               thumbnail: "fakeimage.png"
             }]
           },
-          roomOwner: fakeOwner,
           maxSize: store.maxRoomCreationSize
         });
       });

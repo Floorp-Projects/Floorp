@@ -31,7 +31,6 @@ function getAddonManager() {
 const { Cc, Ci, Cu } = require("chrome");
 const { AddonManager, addonManagerActive } = getAddonManager();
 const l10n = require("gcli/l10n");
-const { Promise: promise } = require("resource://gre/modules/Promise.jsm");
 
 const BRAND_SHORT_NAME = Cc["@mozilla.org/intl/stringbundle;1"]
                            .getService(Ci.nsIStringBundleService)

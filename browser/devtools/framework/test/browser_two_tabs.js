@@ -6,8 +6,7 @@
  */
 
 let { DebuggerServer } = require("devtools/server/main");
-let { DebuggerClient } =
-  Cu.import("resource://gre/modules/devtools/dbg-client.jsm", {});
+let { DebuggerClient } = require("devtools/toolkit/client/main");
 
 const TAB_URL_1 = "data:text/html;charset=utf-8,foo";
 const TAB_URL_2 = "data:text/html;charset=utf-8,bar";
