@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Testing Selection Events</title>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+    <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  </head>
+
+  <body>
+    <iframe width="500"></iframe>
+    <script>
+      add_task(function* () {
+        // Push the correct preferences for the test
+        yield new Promise((done) => {
+          SpecialPowers.pushPrefEnv({'set': [['dom.select_events.enabled', true]]}, done);
+        });
+
+        // Start the actual test
+        yield new Promise((done) => {
+          var iframe = document.querySelector('iframe');
+          iframe.addEventListener('load', done);
+          iframe.setAttribute('src', 'frameSelectEvents.html');
+        });
+
+        // The child iframe will call add_task before we reach this point,
+        // and will handle the rest of the test.
+      });
+    </script>
+  </body>
+</html>
