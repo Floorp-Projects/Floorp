@@ -41,7 +41,7 @@ PluginScriptableObjectChild::IdentifierTable PluginScriptableObjectChild::sIdent
 /* static */ PluginScriptableObjectChild::StoredIdentifier*
 PluginScriptableObjectChild::HashIdentifier(const nsCString& aIdentifier)
 {
-  StoredIdentifier* stored = sIdentifiers.Get(aIdentifier);
+  StoredIdentifier* stored = sIdentifiers.Get(aIdentifier).get();
   if (stored) {
     return stored;
   }
