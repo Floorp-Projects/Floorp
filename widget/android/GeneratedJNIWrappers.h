@@ -1332,24 +1332,6 @@ public:
     static void PerformHapticFeedback(bool);
 
 public:
-    struct PumpMessageLoop_t {
-        typedef GeckoAppShell Owner;
-        typedef bool ReturnType;
-        typedef bool SetterType;
-        typedef mozilla::jni::Args<
-                mozilla::jni::Object::Param> Args;
-        static constexpr char name[] = "pumpMessageLoop";
-        static constexpr char signature[] =
-                "(Landroid/os/Message;)Z";
-        static const bool isStatic = true;
-        static const bool isMultithreaded = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    static bool PumpMessageLoop(mozilla::jni::Object::Param);
-
-public:
     struct RegisterSurfaceTextureFrameListener_t {
         typedef GeckoAppShell Owner;
         typedef void ReturnType;
@@ -1801,6 +1783,40 @@ public:
     };
 
     static void UnpauseJavaProfiling();
+
+};
+
+class GeckoThread : public mozilla::jni::Class<GeckoThread>
+{
+public:
+    typedef mozilla::jni::Ref<GeckoThread> Ref;
+    typedef mozilla::jni::LocalRef<GeckoThread> LocalRef;
+    typedef mozilla::jni::GlobalRef<GeckoThread> GlobalRef;
+    typedef const mozilla::jni::Param<GeckoThread>& Param;
+
+    static constexpr char name[] =
+            "org/mozilla/gecko/GeckoThread";
+
+protected:
+    GeckoThread(jobject instance) : Class(instance) {}
+
+public:
+    struct PumpMessageLoop_t {
+        typedef GeckoThread Owner;
+        typedef bool ReturnType;
+        typedef bool SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::Object::Param> Args;
+        static constexpr char name[] = "pumpMessageLoop";
+        static constexpr char signature[] =
+                "(Landroid/os/Message;)Z";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static bool PumpMessageLoop(mozilla::jni::Object::Param);
 
 };
 
