@@ -1650,7 +1650,7 @@ TokenStream::getTokenInternal(TokenKind* ttp, Modifier modifier)
     // occurs and then the token is re-gotten (or peeked, etc.), we can assert
     // that both gets have used the same modifiers.
     tp->modifier = modifier;
-    tp->modifierExceptions = NoException;
+    tp->modifierException = NoException;
 #endif
     MOZ_ASSERT(IsTokenSane(tp));
     *ttp = tp->type;
