@@ -151,7 +151,7 @@ jfieldID AndroidBridge::GetStaticFieldID(JNIEnv* env, jclass jClass,
 }
 
 void
-AndroidBridge::ConstructBridge(JNIEnv *jEnv, Object::Param clsLoader, Object::Param msgQueue)
+AndroidBridge::ConstructBridge()
 {
     /* NSS hack -- bionic doesn't handle recursive unloads correctly,
      * because library finalizer functions are called with the dynamic
@@ -162,31 +162,49 @@ AndroidBridge::ConstructBridge(JNIEnv *jEnv, Object::Param clsLoader, Object::Pa
     putenv("NSS_DISABLE_UNLOAD=1");
 
     MOZ_ASSERT(!sBridge);
-    sBridge = new AndroidBridge;
-    sBridge->Init(jEnv, clsLoader); // Success or crash
+    sBridge = new AndroidBridge();
 
-    auto msgQueueClass = ClassObject::LocalRef::Adopt(
-            jEnv, jEnv->GetObjectClass(msgQueue.Get()));
-    sBridge->mMessageQueue = msgQueue;
-    // mMessageQueueNext must not be null
-    sBridge->mMessageQueueNext = GetMethodID(
-            jEnv, msgQueueClass.Get(), "next", "()Landroid/os/Message;");
-    // mMessageQueueMessages may be null (e.g. due to proguard optimization)
-    sBridge->mMessageQueueMessages = jEnv->GetFieldID(
-            msgQueueClass.Get(), "mMessages", "Landroid/os/Message;");
 }
 
 void
-AndroidBridge::Init(JNIEnv *jEnv, Object::Param clsLoader)
+AndroidBridge::DeconstructBridge()
+{
+    if (sBridge) {
+        delete sBridge;
+        // AndroidBridge destruction requires sBridge to still be valid,
+        // so we set sBridge to nullptr after deleting it.
+        sBridge = nullptr;
+    }
+}
+
+AndroidBridge::~AndroidBridge()
+{
+}
+
+AndroidBridge::AndroidBridge()
+  : mLayerClient(nullptr),
+    mPresentationWindow(nullptr),
+    mPresentationSurface(nullptr)
 {
     ALOG_BRIDGE("AndroidBridge::Init");
 
+    JNIEnv* const jEnv = jni::GetGeckoThreadEnv();
     AutoLocalJNIFrame jniFrame(jEnv);
 
-    mClassLoader = Object::GlobalRef(jEnv, clsLoader);
+    mClassLoader = Object::GlobalRef(jEnv, widget::GeckoThread::ClsLoader());
     mClassLoaderLoadClass = GetMethodID(
-            jEnv, jEnv->GetObjectClass(clsLoader.Get()),
+            jEnv, jEnv->GetObjectClass(mClassLoader.Get()),
             "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+
+    mMessageQueue = widget::GeckoThread::MsgQueue();
+    auto msgQueueClass = ClassObject::LocalRef::Adopt(
+            jEnv, jEnv->GetObjectClass(mMessageQueue.Get()));
+    // mMessageQueueNext must not be null
+    mMessageQueueNext = GetMethodID(
+            jEnv, msgQueueClass.Get(), "next", "()Landroid/os/Message;");
+    // mMessageQueueMessages may be null (e.g. due to proguard optimization)
+    mMessageQueueMessages = jEnv->GetFieldID(
+            msgQueueClass.Get(), "mMessages", "Landroid/os/Message;");
 
     mGLControllerObj = nullptr;
     mOpenedGraphicsLibraries = false;
@@ -243,30 +261,6 @@ AndroidBridge::Init(JNIEnv *jEnv, Object::Param clsLoader)
 
     InitAndroidJavaWrappers(jEnv);
     ANRReporter::Init();
-
-    // jEnv should NOT be cached here by anything -- the jEnv here
-    // is not valid for the real gecko main thread, which is set
-    // at SetMainThread time.
-}
-
-bool
-AndroidBridge::SetMainThread(pthread_t thr)
-{
-    ALOG_BRIDGE("AndroidBridge::SetMainThread");
-
-    if (thr) {
-        return true;
-    }
-
-    // SetMainThread(0) is called on Gecko shutdown,
-    // so we should clean up the bridge here.
-    if (sBridge) {
-        delete sBridge;
-        // AndroidBridge destruction requires sBridge to still be valid,
-        // so we set sBridge to nullptr after deleting it.
-        sBridge = nullptr;
-    }
-    return true;
 }
 
 // Raw JNIEnv variants.
@@ -782,13 +776,6 @@ AndroidBridge::GetStaticStringField(const char *className, const char *fieldName
 
     result.Assign(nsJNIString(jstr, jEnv));
     return true;
-}
-
-// Available for places elsewhere in the code to link to.
-bool
-mozilla_AndroidBridge_SetMainThread(pthread_t thr)
-{
-    return AndroidBridge::Bridge()->SetMainThread(thr);
 }
 
 void*
@@ -1524,17 +1511,6 @@ void AndroidBridge::SyncFrameMetrics(const ParentLayerPoint& aScrollOffset, floa
 
     aOffset.x = viewTransform->OffsetX();
     aOffset.y = viewTransform->OffsetY();
-}
-
-AndroidBridge::AndroidBridge()
-  : mLayerClient(nullptr),
-    mPresentationWindow(nullptr),
-    mPresentationSurface(nullptr)
-{
-}
-
-AndroidBridge::~AndroidBridge()
-{
 }
 
 /* Implementation file */
