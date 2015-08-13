@@ -26,6 +26,7 @@ this.webrtcUI = {
                  .getService(Ci.nsIMessageBroadcaster);
     ppmm.addMessageListener("webrtc:UpdatingIndicators", this);
     ppmm.addMessageListener("webrtc:UpdateGlobalIndicators", this);
+    ppmm.addMessageListener("child-process-shutdown", this);
 
     let mm = Cc["@mozilla.org/globalmessagemanager;1"]
                .getService(Ci.nsIMessageListenerManager);
@@ -53,10 +54,47 @@ this.webrtcUI = {
     mm.removeMessageListener("webrtc:UpdateBrowserIndicators", this);
   },
 
-  showGlobalIndicator: false,
-  showCameraIndicator: false,
-  showMicrophoneIndicator: false,
-  showScreenSharingIndicator: "", // either "Application", "Screen", "Window" or "Browser"
+  processIndicators: new Map(),
+
+  get showGlobalIndicator() {
+    for (let [, indicators] of this.processIndicators) {
+      if (indicators.showGlobalIndicator)
+        return true;
+    }
+    return false;
+  },
+
+  get showCameraIndicator() {
+    for (let [, indicators] of this.processIndicators) {
+      if (indicators.showCameraIndicator)
+        return true;
+    }
+    return false;
+  },
+
+  get showMicrophoneIndicator() {
+    for (let [, indicators] of this.processIndicators) {
+      if (indicators.showMicrophoneIndicator)
+        return true;
+    }
+    return false;
+  },
+
+  get showScreenSharingIndicator() {
+    let list = [""];
+    for (let [, indicators] of this.processIndicators) {
+      if (indicators.showScreenSharingIndicator)
+        list.push(indicators.showScreenSharingIndicator);
+    }
+
+    let precedence =
+      ["Screen", "Window", "Application", "Browser", ""];
+
+    list.sort((a, b) => { return precedence.indexOf(a) -
+                                 precedence.indexOf(b); });
+
+    return list[0];
+  },
 
   _streams: [],
   // The boolean parameters indicate which streams should be included in the result.
@@ -179,11 +217,15 @@ this.webrtcUI = {
         webrtcUI._streams = [];
         break;
       case "webrtc:UpdateGlobalIndicators":
-        updateIndicators(aMessage.data)
+        updateIndicators(aMessage.data, aMessage.target);
         break;
       case "webrtc:UpdateBrowserIndicators":
         webrtcUI._streams.push({browser: aMessage.target, state: aMessage.data});
         updateBrowserSpecificIndicator(aMessage.target, aMessage.data);
+        break;
+      case "child-process-shutdown":
+        webrtcUI.processIndicators.delete(aMessage.target);
+        updateIndicators(null, null);
         break;
     }
   }
@@ -741,11 +783,22 @@ function maybeAddMenuIndicator(window) {
 
 var gIndicatorWindow = null;
 
-function updateIndicators(data) {
-  webrtcUI.showGlobalIndicator = data.showGlobalIndicator;
-  webrtcUI.showCameraIndicator = data.showCameraIndicator;
-  webrtcUI.showMicrophoneIndicator = data.showMicrophoneIndicator;
-  webrtcUI.showScreenSharingIndicator = data.showScreenSharingIndicator;
+function updateIndicators(data, target) {
+  if (data) {
+    // the global indicators specific to this process
+    let indicators;
+    if (webrtcUI.processIndicators.has(target)) {
+      indicators = webrtcUI.processIndicators.get(target);
+    } else {
+      indicators = {};
+      webrtcUI.processIndicators.set(target, indicators);
+    }
+
+    indicators.showGlobalIndicator = data.showGlobalIndicator;
+    indicators.showCameraIndicator = data.showCameraIndicator;
+    indicators.showMicrophoneIndicator = data.showMicrophoneIndicator;
+    indicators.showScreenSharingIndicator = data.showScreenSharingIndicator;
+  }
 
   let browserWindowEnum = Services.wm.getEnumerator("navigator:browser");
   while (browserWindowEnum.hasMoreElements()) {
