@@ -32,7 +32,7 @@
 
   <popupset id="performance-options-popupset">
     <menupopup id="performance-filter-menupopup"/>
-    <menupopup id="performance-options-menupopup">
+    <menupopup id="performance-options-menupopup" position="before_end">
       <menuitem id="option-show-platform-data"
                 type="checkbox"
                 data-pref="show-platform-data"
