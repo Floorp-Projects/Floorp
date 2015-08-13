@@ -18,9 +18,9 @@
 #include "WinUtils.h"
 
 #include "shellapi.h"
-#include "Shlobj.h"
-#include "PowrProf.h"
-#include "Setupapi.h"
+#include "shlobj.h"
+#include "powrprof.h"
+#include "setupapi.h"
 #include "cfgmgr32.h"
 
 const char* kOskPathPrefName = "ui.osk.on_screen_keyboard_path";
