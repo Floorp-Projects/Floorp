@@ -362,7 +362,7 @@ let gSyncPane = {
         document.getElementById("fxaChangeDeviceName").disabled = !syncReady;
 
         // Clear the profile image (if any) of the previously logged in account.
-        document.getElementById("fxaProfileImage").style.removeProperty("background-image");
+        document.getElementById("fxaProfileImage").style.removeProperty("list-style-image");
 
         // If the account is verified the next promise in the chain will
         // fetch profile data.
@@ -385,7 +385,7 @@ let gSyncPane = {
             let img = new Image();
             img.onload = () => {
               let bgImage = "url('" + data.avatar + "')";
-              document.getElementById("fxaProfileImage").style.backgroundImage = bgImage;
+              document.getElementById("fxaProfileImage").style.listStyleImage = bgImage;
             };
             img.src = data.avatar;
           }

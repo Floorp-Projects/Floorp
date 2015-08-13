@@ -200,102 +200,111 @@
   <!-- These panels are for the Firefox Accounts identity provider -->
   <vbox id="noFxaAccount">
     <hbox>
-      <groupbox id="noFxaGroup">
-        <vbox>
-          <label id="noFxaCaption">&signedOut.caption;</label>
-          <description id="noFxaDescription" flex="1">&signedOut.description;</description>
-          <hbox class="fxaAccountBox">
-            <image class="fxaFirefoxLogo"/>
-            <vbox>
-              <label id="signedOutAccountBoxTitle">&signedOut.accountBox.title;</label>
-              <hbox>
-                <button id="noFxaSignUp" label="&signedOut.accountBox.create;"/>
-                <button id="noFxaSignIn" label="&signedOut.accountBox.signin;"/>
-              </hbox>
-            </vbox>
-          </hbox>
-        </vbox>
-      </groupbox>
-      <image class="fxaSyncIllustration"/>
+      <vbox id="fxaContentWrapper">
+        <groupbox id="noFxaGroup">
+          <vbox>
+            <label id="noFxaCaption">&signedOut.caption;</label>
+            <description id="noFxaDescription" flex="1">&signedOut.description;</description>
+            <hbox class="fxaAccountBox">
+              <vbox>
+                <image class="fxaFirefoxLogo"/>
+              </vbox>
+              <vbox flex="1">
+                <label id="signedOutAccountBoxTitle">&signedOut.accountBox.title;</label>
+                <description class="fxaAccountBoxButtons">
+                  <button id="noFxaSignUp">&signedOut.accountBox.create;</button>
+                  <button id="noFxaSignIn">&signedOut.accountBox.signin;</button>
+                </description>
+              </vbox>
+            </hbox>
+          </vbox>
+        </groupbox>
+      </vbox>
+      <vbox>
+        <image class="fxaSyncIllustration"/>
+      </vbox>
     </hbox>
-    <hbox class="fxaMobilePromo">
-      <label>&mobilePromo.start;</label>
-      <image class="androidLogo"/>
-      <label class="text-link"
-             href="https://www.mozilla.org/firefox/android/">
-        &mobilePromo.androidLink;
-      </label>
-      <label>&mobilePromo.end;</label>
-    </hbox>
+    <label class="fxaMobilePromo">
+        &mobilePromo.start;<!-- We put these comments to avoid inserting white spaces
+        --><image class="androidLogo"/><!--
+        --><label class="androidLink text-link" href="https://www.mozilla.org/firefox/android/"><!--
+        -->&mobilePromo.androidLink;</label><!--
+        -->&mobilePromo.end;
+    </label>
     <label class="androidAttribution">&androidAttribution;</label>
   </vbox>
 
   <vbox id="hasFxaAccount">
     <hbox>
-      <vbox>
+      <vbox id="fxaContentWrapper">
         <groupbox id="fxaGroup">
           <caption><label>&syncBrand.fxAccount.label;</label></caption>
+          <deck id="fxaLoginStatus">
 
-              <deck id="fxaLoginStatus">
+            <!-- logged in and verified and all is good -->
+            <hbox id="fxaLoginVerified" class="fxaAccountBox">
+              <vbox>
+                <image id="fxaProfileImage"
+                    onclick="gSyncPane.openChangeProfileImage();" hidden="true"
+                    tooltiptext="&profilePicture.tooltip;" class="actionable"/>
+              </vbox>
+              <vbox flex="1">
+                <label id="fxaEmailAddress1"/>
+                <label id="fxaDisplayName" hidden="true"/>
+                <description class="fxaAccountBoxButtons">
+                  <button id="verifiedManage">&manage.label;</button>
+                  <button id="fxaUnlinkButton">&disconnect.label;</button>
+                </description>
+              </vbox>
+            </hbox>
 
-                <!-- logged in and verified and all is good -->
-                <hbox id="fxaLoginVerified" class="fxaAccountBox">
-                  <image id="fxaProfileImage"
-                      onclick="gSyncPane.openChangeProfileImage();" hidden="true"
-                      tooltiptext="&profilePicture.tooltip;" class="actionable"/>
-                  <vbox>
-                    <label id="fxaEmailAddress1"/>
-                    <label id="fxaDisplayName" hidden="true"/>
-                    <hbox class="fxaAccountBoxButtons">
-                      <button id="verifiedManage" label="&manage.label;"/>
-                      <button id="fxaUnlinkButton" label="&disconnect.label;"/>
-                    </hbox>
-                  </vbox>
+            <!-- logged in to an unverified account -->
+            <hbox id="fxaLoginUnverified" class="fxaAccountBox">
+              <vbox>
+                <image id="fxaProfileImage"/>
+              </vbox>
+              <vbox flex="1">
+                <hbox>
+                  <vbox><image id="fxaLoginRejectedWarning"/></vbox>
+                  <description flex="1">
+                    &signedInUnverified.beforename.label;
+                    <label id="fxaEmailAddress2"/>
+                    &signedInUnverified.aftername.label;
+                  </description>
                 </hbox>
+                <description class="fxaAccountBoxButtons">
+                  <button id="verifyFxaAccount">&verify.label;</button>
+                  <button id="unverifiedUnlinkFxaAccount">&forget.label;</button>
+                </description>
+              </vbox>
+            </hbox>
 
-                <!-- logged in to an unverified account -->
-                <hbox id="fxaLoginUnverified" class="fxaAccountBox">
-                  <image id="fxaProfileImage"/>
-                  <vbox>
-                    <hbox>
-                      <vbox><image id="fxaLoginRejectedWarning"/></vbox>
-                      <description>
-                        &signedInUnverified.beforename.label;
-                        <label id="fxaEmailAddress2"/>
-                        &signedInUnverified.aftername.label;
-                      </description>
-                    </hbox>
-                    <hbox class="fxaAccountBoxButtons">
-                      <button id="verifyFxaAccount" label="&verify.label;"/>
-                      <button id="unverifiedUnlinkFxaAccount" label="&forget.label;"/>
-                    </hbox>
-                  </vbox>
+            <!-- logged in locally but server rejected credentials -->
+            <hbox id="fxaLoginRejected" class="fxaAccountBox">
+              <vbox>
+                <image id="fxaProfileImage"/>
+              </vbox>
+              <vbox flex="1">
+                <hbox>
+                  <vbox><image id="fxaLoginRejectedWarning"/></vbox>
+                  <description flex="1">
+                    &signedInLoginFailure.beforename.label;
+                    <label id="fxaEmailAddress3"/>
+                    &signedInLoginFailure.aftername.label;
+                  </description>
                 </hbox>
-
-                <!-- logged in locally but server rejected credentials -->
-                <hbox id="fxaLoginRejected" class="fxaAccountBox">
-                  <image id="fxaProfileImage"/>
-                  <vbox>
-                    <hbox>
-                      <vbox><image id="fxaLoginRejectedWarning"/></vbox>
-                      <description>
-                        &signedInLoginFailure.beforename.label;
-                        <label id="fxaEmailAddress3"/>
-                        &signedInLoginFailure.aftername.label;
-                      </description>
-                    </hbox>
-                    <hbox class="fxaAccountBoxButtons">
-                      <button id="rejectReSignIn" label="&signIn.label;"/>
-                      <button id="rejectUnlinkFxaAccount" label="&forget.label;"/>
-                    </hbox>
-                  </vbox>
-                </hbox>
-              </deck>
+                <description class="fxaAccountBoxButtons">
+                  <button id="rejectReSignIn">&signIn.label;</button>
+                  <button id="rejectUnlinkFxaAccount">&forget.label;</button>
+                </description>
+              </vbox>
+            </hbox>
+          </deck>
         </groupbox>
         <groupbox id="syncOptions">
           <caption><label>&signedIn.engines.label;</label></caption>
           <hbox id="fxaSyncEngines">
-            <vbox align="start">
+            <vbox align="start" flex="1">
               <checkbox label="&engine.tabs.label;"
                         accesskey="&engine.tabs.accesskey;"
                         preference="engine.tabs"/>
@@ -306,7 +315,7 @@
                         accesskey="&engine.passwords.accesskey;"
                         preference="engine.passwords"/>
             </vbox>
-            <vbox align="start">
+            <vbox align="start" flex="1">
               <checkbox label="&engine.history.label;"
                         accesskey="&engine.history.accesskey;"
                         preference="engine.history"/>
@@ -321,8 +330,9 @@
           </hbox>
         </groupbox>
       </vbox>
-      <spacer flex="1"/>
-      <image class="fxaSyncIllustration"/>
+      <vbox>
+        <image class="fxaSyncIllustration"/>
+      </vbox>
     </hbox>
     <spacer class="separator"/>
     <groupbox>
@@ -333,10 +343,7 @@
         </label>
       </caption>
       <hbox id="fxaDeviceName">
-        <hbox>
-          <textbox id="fxaSyncComputerName" disabled="true" flex="1"/>
-        </hbox>
-        <spacer flex="1"/>
+        <textbox id="fxaSyncComputerName" disabled="true"/>
         <hbox>
           <button id="fxaChangeDeviceName"
                   label="&changeSyncDeviceName.label;"/>
@@ -350,15 +357,13 @@
       </hbox>
     </groupbox>
     <spacer class="separator"/>
-    <hbox class="fxaMobilePromo">
-      <label>&mobilePromo.start;</label>
-      <image class="androidLogo"/>
-      <label class="text-link"
-             href="https://www.mozilla.org/firefox/android/">
-        &mobilePromo.androidLink;
-      </label>
-      <label>&mobilePromo.end;</label>
-    </hbox>
+    <label class="fxaMobilePromo">
+        &mobilePromo.start;<!-- We put these comments to avoid inserting white spaces
+        --><image class="androidLogo"/><!--
+        --><label class="androidLink text-link" href="https://www.mozilla.org/firefox/android/"><!--
+        -->&mobilePromo.androidLink;</label><!--
+        -->&mobilePromo.end;
+    </label>
     <spacer flex="1"/>
     <vbox id="tosPP-small" align="start">
       <label id="tosPP-small-ToS" class="text-link">
