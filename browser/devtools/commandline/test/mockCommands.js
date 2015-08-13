@@ -19,8 +19,6 @@
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
 // PLEASE TALK TO SOMEONE IN DEVELOPER TOOLS BEFORE EDITING IT
 
-var Promise = require('gcli/util/promise').Promise;
-
 var mockCommands;
 if (typeof exports !== 'undefined') {
   // If we're being loaded via require();

@@ -16,7 +16,6 @@
 
 'use strict';
 
-var Promise = require('../util/promise').Promise;
 var ArrayConversion = require('./types').ArrayConversion;
 var ArrayArgument = require('./types').ArrayArgument;
 

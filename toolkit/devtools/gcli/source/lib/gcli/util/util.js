@@ -254,8 +254,6 @@ exports.createEvent = function(name) {
 
 //------------------------------------------------------------------------------
 
-var Promise = require('../util/promise').Promise;
-
 /**
  * promiseEach is roughly like Array.forEach except that the action is taken to
  * be something that completes asynchronously, returning a promise, so we wait
