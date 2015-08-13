@@ -482,3 +482,31 @@ add_task(function* prohibit_suggestions() {
 
   yield cleanUpSuggestions();
 });
+
+add_task(function* avoid_url_suggestions() {
+  Services.prefs.setBoolPref(SUGGEST_PREF, true);
+
+  setSuggestionsFn(searchStr => {
+    let suffixes = [".com", "/test", ":1]", "@test", ". com"];
+    return suffixes.map(s => searchStr + s);
+  });
+
+  yield check_autocomplete({
+    search: "test",
+    matches: [
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "test. com",
+          searchQuery: "test",
+          searchSuggestion: "test. com",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+    ],
+  });
+
+  yield cleanUpSuggestions();
+});
