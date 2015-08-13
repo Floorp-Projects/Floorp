@@ -521,10 +521,16 @@ var LoginManagerContent = {
 
     log("onUsernameInput from", event.type);
 
+    let doc = acForm.ownerDocument;
+    let messageManager = messageManagerFromWindow(doc.defaultView);
+    let recipes = messageManager.sendSyncMessage("RemoteLogins:findRecipes", {
+      formOrigin: LoginUtils._getPasswordOrigin(doc.documentURI),
+    })[0];
+
     // Make sure the username field fillForm will use is the
     // same field as the autocomplete was activated on.
     var [usernameField, passwordField, ignored] =
-        this._getFormFields(acForm, false);
+        this._getFormFields(acForm, false, recipes);
     if (usernameField == acInputField && passwordField) {
       this._getLoginDataFromParent(acForm, { showMasterPassword: false })
           .then(({ form, loginsFound, recipes }) => {
@@ -765,10 +771,9 @@ var LoginManagerContent = {
     let formSubmitURL = LoginUtils._getActionOrigin(form);
     let messageManager = messageManagerFromWindow(win);
 
-    let recipesArray = messageManager.sendSyncMessage("RemoteLogins:findRecipes", {
+    let recipes = messageManager.sendSyncMessage("RemoteLogins:findRecipes", {
       formOrigin: hostname,
     })[0];
-    let recipes = new Set(recipesArray);
 
     // Get the appropriate fields from the form.
     var [usernameField, newPasswordField, oldPasswordField] =
