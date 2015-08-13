@@ -85,6 +85,9 @@ public:
     static void AcknowledgeScrollUpdate(const FrameMetrics::ViewID& aScrollId,
                                         const uint32_t& aScrollGeneration);
 
+    /* Get the pres shell associated with the root content document enclosing |aContent|. */
+    static nsIPresShell* GetRootContentDocumentPresShellForContent(nsIContent* aContent);
+
     /* Apply an "input transform" to the given |aInput| and return the transformed value.
        The input transform applied is the one for the content element corresponding to
        |aGuid|; this is populated in a previous call to UpdateCallbackTransform. See that
