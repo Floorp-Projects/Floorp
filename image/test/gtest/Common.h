@@ -17,22 +17,30 @@ namespace mozilla {
 // Types
 ///////////////////////////////////////////////////////////////////////////////
 
+enum TestCaseFlags
+{
+  TEST_CASE_DEFAULT_FLAGS   = 0,
+  TEST_CASE_IS_FUZZY        = 1 << 0,
+  TEST_CASE_IS_TRANSPARENT  = 1 << 1,
+  TEST_CASE_HAS_ERROR       = 1 << 2
+};
+
 struct ImageTestCase
 {
   ImageTestCase(const char* aPath,
                 const char* aMimeType,
                 gfx::IntSize aSize,
-                bool aFuzzy = false)
+                uint32_t aFlags = TEST_CASE_DEFAULT_FLAGS)
     : mPath(aPath)
     , mMimeType(aMimeType)
     , mSize(aSize)
-    , mFuzzy(aFuzzy)
+    , mFlags(aFlags)
   { }
 
   const char* mPath;
   const char* mMimeType;
   gfx::IntSize mSize;
-  bool mFuzzy;
+  uint32_t mFlags;
 };
 
 struct BGRAColor
@@ -85,6 +93,14 @@ ImageTestCase GreenFirstFrameAnimatedGIFTestCase();
 ImageTestCase GreenFirstFrameAnimatedPNGTestCase();
 
 ImageTestCase CorruptTestCase();
+
+ImageTestCase TransparentPNGTestCase();
+ImageTestCase TransparentGIFTestCase();
+ImageTestCase FirstFramePaddingGIFTestCase();
+
+ImageTestCase TransparentBMPWhenBMPAlphaEnabledTestCase();
+ImageTestCase RLE4BMPTestCase();
+ImageTestCase RLE8BMPTestCase();
 
 } // namespace mozilla
 

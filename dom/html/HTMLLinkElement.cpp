@@ -214,6 +214,11 @@ HTMLLinkElement::ParseAttribute(int32_t aNamespaceID,
       aResult.ParseAtomArray(aValue);
       return true;
     }
+
+    if (aAttribute == nsGkAtoms::integrity) {
+      aResult.ParseStringOrAtom(aValue);
+      return true;
+    }
   }
 
   return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,

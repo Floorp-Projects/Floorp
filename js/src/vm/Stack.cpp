@@ -17,6 +17,7 @@
 #include "jit/JitcodeMap.h"
 #include "jit/JitCompartment.h"
 #include "js/GCAPI.h"
+#include "vm/Debugger.h"
 #include "vm/Opcodes.h"
 
 #include "jit/JitFrameIterator-inl.h"
@@ -593,7 +594,7 @@ FrameIter::Data::Data(JSContext* cx, SavedOption savedOption,
 }
 
 FrameIter::Data::Data(const FrameIter::Data& other)
-  : cx_(other.cx_),
+  : cx_(nullptr),
     savedOption_(other.savedOption_),
     contextOption_(other.contextOption_),
     debuggerEvalOption_(other.debuggerEvalOption_),
@@ -643,11 +644,12 @@ FrameIter::FrameIter(const FrameIter& other)
 {
 }
 
-FrameIter::FrameIter(const Data& data)
+FrameIter::FrameIter(JSContext* cx, const Data& data)
   : data_(data),
-    ionInlineFrames_(data.cx_, data_.jitFrames_.isIonScripted() ? &data_.jitFrames_ : nullptr)
+    ionInlineFrames_(cx, data_.jitFrames_.isIonScripted() ? &data_.jitFrames_ : nullptr)
 {
-    MOZ_ASSERT(data.cx_);
+    MOZ_ASSERT(!data.cx_);
+    data_.cx_ = cx;
 
     if (data_.jitFrames_.isIonScripted()) {
         while (ionInlineFrames_.frameNo() != data.ionInlineFrameNo_)
@@ -1551,8 +1553,7 @@ jit::JitActivation::getRematerializedFrame(JSContext* cx, const JitFrameIterator
             return nullptr;
         }
 
-        // All frames younger than the rematerialized frame need to have their
-        // prevUpToDate flag cleared.
+        // See comment in unsetPrevUpToDateUntil.
         DebugScopes::unsetPrevUpToDateUntil(cx, p->value()[inlineDepth]);
     }
 
@@ -1567,6 +1568,20 @@ jit::JitActivation::lookupRematerializedFrame(uint8_t* top, size_t inlineDepth)
     if (RematerializedFrameTable::Ptr p = rematerializedFrames_->lookup(top))
         return inlineDepth < p->value().length() ? p->value()[inlineDepth] : nullptr;
     return nullptr;
+}
+
+void
+jit::JitActivation::removeRematerializedFramesFromDebugger(JSContext* cx, uint8_t* top)
+{
+    // Ion bailout can fail due to overrecursion and OOM. In such cases we
+    // cannot honor any further Debugger hooks on the frame, and need to
+    // ensure that its Debugger.Frame entry is cleaned up.
+    if (!cx->compartment()->isDebuggee() || !rematerializedFrames_)
+        return;
+    if (RematerializedFrameTable::Ptr p = rematerializedFrames_->lookup(top)) {
+        for (uint32_t i = 0; i < p->value().length(); i++)
+            Debugger::handleUnrecoverableIonBailoutError(cx, p->value()[i]);
+    }
 }
 
 void
