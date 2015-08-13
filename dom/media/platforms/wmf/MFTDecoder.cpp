@@ -180,10 +180,6 @@ MFTDecoder::CreateOutputSample(RefPtr<IMFSample>* aOutSample)
   hr = wmf::MFCreateAlignedMemoryBuffer(bufferSize, alignment, byRef(buffer));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  DWORD maxLength = 0;
-  DWORD currentLength = 0;
-  BYTE* dst = nullptr;
-
   hr = sample->AddBuffer(buffer);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
