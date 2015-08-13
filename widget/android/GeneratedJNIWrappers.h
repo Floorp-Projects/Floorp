@@ -1801,6 +1801,9 @@ protected:
     using Class::Class;
 
 public:
+    class State;
+
+public:
     struct PumpMessageLoop_t {
         typedef GeckoThread Owner;
         typedef bool ReturnType;
@@ -1817,6 +1820,286 @@ public:
     };
 
     static auto PumpMessageLoop(mozilla::jni::Object::Param) -> bool;
+
+public:
+    struct SetState_t {
+        typedef GeckoThread Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::Object::Param> Args;
+        static constexpr char name[] = "setState";
+        static constexpr char signature[] =
+                "(Lorg/mozilla/gecko/GeckoThread$State;)V";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto SetState(mozilla::jni::Object::Param) -> void;
+
+};
+
+class GeckoThread::State : public mozilla::jni::Class<State>
+{
+public:
+    typedef mozilla::jni::Ref<State> Ref;
+    typedef mozilla::jni::LocalRef<State> LocalRef;
+    typedef mozilla::jni::GlobalRef<State> GlobalRef;
+    typedef const mozilla::jni::Param<State>& Param;
+
+    static constexpr char name[] =
+            "org/mozilla/gecko/GeckoThread$State";
+
+protected:
+    using Class::Class;
+
+public:
+    struct New_t {
+        typedef State Owner;
+        typedef State::LocalRef ReturnType;
+        typedef State::Param SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param,
+                int32_t> Args;
+        static constexpr char name[] = "<init>";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;I)V";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto New(mozilla::jni::String::Param, int32_t) -> State::LocalRef;
+
+public:
+    struct Is_t {
+        typedef State Owner;
+        typedef bool ReturnType;
+        typedef bool SetterType;
+        typedef mozilla::jni::Args<
+                State::Param> Args;
+        static constexpr char name[] = "is";
+        static constexpr char signature[] =
+                "(Lorg/mozilla/gecko/GeckoThread$State;)Z";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    auto Is(State::Param) const -> bool;
+
+public:
+    struct IsAtLeast_t {
+        typedef State Owner;
+        typedef bool ReturnType;
+        typedef bool SetterType;
+        typedef mozilla::jni::Args<
+                State::Param> Args;
+        static constexpr char name[] = "isAtLeast";
+        static constexpr char signature[] =
+                "(Lorg/mozilla/gecko/GeckoThread$State;)Z";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    auto IsAtLeast(State::Param) const -> bool;
+
+public:
+    struct IsAtMost_t {
+        typedef State Owner;
+        typedef bool ReturnType;
+        typedef bool SetterType;
+        typedef mozilla::jni::Args<
+                State::Param> Args;
+        static constexpr char name[] = "isAtMost";
+        static constexpr char signature[] =
+                "(Lorg/mozilla/gecko/GeckoThread$State;)Z";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    auto IsAtMost(State::Param) const -> bool;
+
+public:
+    struct IsBetween_t {
+        typedef State Owner;
+        typedef bool ReturnType;
+        typedef bool SetterType;
+        typedef mozilla::jni::Args<
+                State::Param,
+                State::Param> Args;
+        static constexpr char name[] = "isBetween";
+        static constexpr char signature[] =
+                "(Lorg/mozilla/gecko/GeckoThread$State;Lorg/mozilla/gecko/GeckoThread$State;)Z";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    auto IsBetween(State::Param, State::Param) const -> bool;
+
+public:
+    struct ValueOf_t {
+        typedef State Owner;
+        typedef State::LocalRef ReturnType;
+        typedef State::Param SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "valueOf";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;)Lorg/mozilla/gecko/GeckoThread$State;";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto ValueOf(mozilla::jni::String::Param) -> State::LocalRef;
+
+public:
+    struct Values_t {
+        typedef State Owner;
+        typedef mozilla::jni::ObjectArray::LocalRef ReturnType;
+        typedef mozilla::jni::ObjectArray::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "values";
+        static constexpr char signature[] =
+                "()[Lorg/mozilla/gecko/GeckoThread$State;";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto Values() -> mozilla::jni::ObjectArray::LocalRef;
+
+public:
+    struct EXITED_t {
+        typedef State Owner;
+        typedef State::LocalRef ReturnType;
+        typedef State::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "EXITED";
+        static constexpr char signature[] =
+                "Lorg/mozilla/gecko/GeckoThread$State;";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto EXITED() -> State::LocalRef;
+
+public:
+    struct EXITING_t {
+        typedef State Owner;
+        typedef State::LocalRef ReturnType;
+        typedef State::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "EXITING";
+        static constexpr char signature[] =
+                "Lorg/mozilla/gecko/GeckoThread$State;";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto EXITING() -> State::LocalRef;
+
+public:
+    struct INITIAL_t {
+        typedef State Owner;
+        typedef State::LocalRef ReturnType;
+        typedef State::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "INITIAL";
+        static constexpr char signature[] =
+                "Lorg/mozilla/gecko/GeckoThread$State;";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto INITIAL() -> State::LocalRef;
+
+public:
+    struct LAUNCHED_t {
+        typedef State Owner;
+        typedef State::LocalRef ReturnType;
+        typedef State::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "LAUNCHED";
+        static constexpr char signature[] =
+                "Lorg/mozilla/gecko/GeckoThread$State;";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto LAUNCHED() -> State::LocalRef;
+
+public:
+    struct LIBS_READY_t {
+        typedef State Owner;
+        typedef State::LocalRef ReturnType;
+        typedef State::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "LIBS_READY";
+        static constexpr char signature[] =
+                "Lorg/mozilla/gecko/GeckoThread$State;";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto LIBS_READY() -> State::LocalRef;
+
+public:
+    struct MOZGLUE_READY_t {
+        typedef State Owner;
+        typedef State::LocalRef ReturnType;
+        typedef State::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "MOZGLUE_READY";
+        static constexpr char signature[] =
+                "Lorg/mozilla/gecko/GeckoThread$State;";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto MOZGLUE_READY() -> State::LocalRef;
+
+public:
+    struct RUNNING_t {
+        typedef State Owner;
+        typedef State::LocalRef ReturnType;
+        typedef State::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "RUNNING";
+        static constexpr char signature[] =
+                "Lorg/mozilla/gecko/GeckoThread$State;";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto RUNNING() -> State::LocalRef;
 
 };
 

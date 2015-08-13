@@ -765,6 +765,128 @@ auto GeckoThread::PumpMessageLoop(mozilla::jni::Object::Param a0) -> bool
     return mozilla::jni::Method<PumpMessageLoop_t>::Call(nullptr, nullptr, a0);
 }
 
+constexpr char GeckoThread::SetState_t::name[];
+constexpr char GeckoThread::SetState_t::signature[];
+
+auto GeckoThread::SetState(mozilla::jni::Object::Param a0) -> void
+{
+    return mozilla::jni::Method<SetState_t>::Call(nullptr, nullptr, a0);
+}
+
+constexpr char GeckoThread::State::name[];
+
+constexpr char GeckoThread::State::New_t::name[];
+constexpr char GeckoThread::State::New_t::signature[];
+
+auto GeckoThread::State::New(mozilla::jni::String::Param a0, int32_t a1) -> State::LocalRef
+{
+    return mozilla::jni::Constructor<New_t>::Call(nullptr, nullptr, a0, a1);
+}
+
+constexpr char GeckoThread::State::Is_t::name[];
+constexpr char GeckoThread::State::Is_t::signature[];
+
+auto GeckoThread::State::Is(State::Param a0) const -> bool
+{
+    return mozilla::jni::Method<Is_t>::Call(this, nullptr, a0);
+}
+
+constexpr char GeckoThread::State::IsAtLeast_t::name[];
+constexpr char GeckoThread::State::IsAtLeast_t::signature[];
+
+auto GeckoThread::State::IsAtLeast(State::Param a0) const -> bool
+{
+    return mozilla::jni::Method<IsAtLeast_t>::Call(this, nullptr, a0);
+}
+
+constexpr char GeckoThread::State::IsAtMost_t::name[];
+constexpr char GeckoThread::State::IsAtMost_t::signature[];
+
+auto GeckoThread::State::IsAtMost(State::Param a0) const -> bool
+{
+    return mozilla::jni::Method<IsAtMost_t>::Call(this, nullptr, a0);
+}
+
+constexpr char GeckoThread::State::IsBetween_t::name[];
+constexpr char GeckoThread::State::IsBetween_t::signature[];
+
+auto GeckoThread::State::IsBetween(State::Param a0, State::Param a1) const -> bool
+{
+    return mozilla::jni::Method<IsBetween_t>::Call(this, nullptr, a0, a1);
+}
+
+constexpr char GeckoThread::State::ValueOf_t::name[];
+constexpr char GeckoThread::State::ValueOf_t::signature[];
+
+auto GeckoThread::State::ValueOf(mozilla::jni::String::Param a0) -> State::LocalRef
+{
+    return mozilla::jni::Method<ValueOf_t>::Call(nullptr, nullptr, a0);
+}
+
+constexpr char GeckoThread::State::Values_t::name[];
+constexpr char GeckoThread::State::Values_t::signature[];
+
+auto GeckoThread::State::Values() -> mozilla::jni::ObjectArray::LocalRef
+{
+    return mozilla::jni::Method<Values_t>::Call(nullptr, nullptr);
+}
+
+constexpr char GeckoThread::State::EXITED_t::name[];
+constexpr char GeckoThread::State::EXITED_t::signature[];
+
+auto GeckoThread::State::EXITED() -> State::LocalRef
+{
+    return mozilla::jni::Field<EXITED_t>::Get(nullptr, nullptr);
+}
+
+constexpr char GeckoThread::State::EXITING_t::name[];
+constexpr char GeckoThread::State::EXITING_t::signature[];
+
+auto GeckoThread::State::EXITING() -> State::LocalRef
+{
+    return mozilla::jni::Field<EXITING_t>::Get(nullptr, nullptr);
+}
+
+constexpr char GeckoThread::State::INITIAL_t::name[];
+constexpr char GeckoThread::State::INITIAL_t::signature[];
+
+auto GeckoThread::State::INITIAL() -> State::LocalRef
+{
+    return mozilla::jni::Field<INITIAL_t>::Get(nullptr, nullptr);
+}
+
+constexpr char GeckoThread::State::LAUNCHED_t::name[];
+constexpr char GeckoThread::State::LAUNCHED_t::signature[];
+
+auto GeckoThread::State::LAUNCHED() -> State::LocalRef
+{
+    return mozilla::jni::Field<LAUNCHED_t>::Get(nullptr, nullptr);
+}
+
+constexpr char GeckoThread::State::LIBS_READY_t::name[];
+constexpr char GeckoThread::State::LIBS_READY_t::signature[];
+
+auto GeckoThread::State::LIBS_READY() -> State::LocalRef
+{
+    return mozilla::jni::Field<LIBS_READY_t>::Get(nullptr, nullptr);
+}
+
+constexpr char GeckoThread::State::MOZGLUE_READY_t::name[];
+constexpr char GeckoThread::State::MOZGLUE_READY_t::signature[];
+
+auto GeckoThread::State::MOZGLUE_READY() -> State::LocalRef
+{
+    return mozilla::jni::Field<MOZGLUE_READY_t>::Get(nullptr, nullptr);
+}
+
+constexpr char GeckoThread::State::RUNNING_t::name[];
+constexpr char GeckoThread::State::RUNNING_t::signature[];
+
+auto GeckoThread::State::RUNNING() -> State::LocalRef
+{
+    return mozilla::jni::Field<RUNNING_t>::Get(nullptr, nullptr);
+}
+
 constexpr char RestrictedProfiles::name[];
 
 constexpr char RestrictedProfiles::IsAllowed_t::name[];

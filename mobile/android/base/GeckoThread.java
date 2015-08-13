@@ -37,6 +37,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class GeckoThread extends Thread implements GeckoEventListener {
     private static final String LOGTAG = "GeckoThread";
 
+    @WrapForJNI
     public enum State {
         // After being loaded by class loader.
         INITIAL,
@@ -478,6 +479,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         return sState.get().isBetween(minState, maxState);
     }
 
+    @WrapForJNI
     private static void setState(final State newState) {
         ThreadUtils.assertOnGeckoThread();
         sState.set(newState);
