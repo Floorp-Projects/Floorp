@@ -689,7 +689,10 @@ TextComposition*
 TextCompositionArray::GetCompositionFor(nsIWidget* aWidget)
 {
   index_type i = IndexOf(aWidget);
-  return i != NoIndex ? ElementAt(i) : nullptr;
+  if (i == NoIndex) {
+    return nullptr;
+  }
+  return ElementAt(i);
 }
 
 TextComposition*
@@ -697,7 +700,10 @@ TextCompositionArray::GetCompositionFor(nsPresContext* aPresContext,
                                            nsINode* aNode)
 {
   index_type i = IndexOf(aPresContext, aNode);
-  return i != NoIndex ? ElementAt(i) : nullptr;
+  if (i == NoIndex) {
+    return nullptr;
+  }
+  return ElementAt(i);
 }
 
 TextComposition*

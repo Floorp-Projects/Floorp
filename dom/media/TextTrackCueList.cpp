@@ -50,7 +50,10 @@ TextTrackCue*
 TextTrackCueList::IndexedGetter(uint32_t aIndex, bool& aFound)
 {
   aFound = aIndex < mList.Length();
-  return aFound ? mList[aIndex] : nullptr;
+  if (!aFound) {
+    return nullptr;
+  }
+  return mList[aIndex];
 }
 
 TextTrackCue*

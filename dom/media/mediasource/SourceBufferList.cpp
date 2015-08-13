@@ -38,7 +38,11 @@ SourceBufferList::IndexedGetter(uint32_t aIndex, bool& aFound)
 {
   MOZ_ASSERT(NS_IsMainThread());
   aFound = aIndex < mSourceBuffers.Length();
-  return aFound ? mSourceBuffers[aIndex] : nullptr;
+
+  if (!aFound) {
+    return nullptr;
+  }
+  return mSourceBuffers[aIndex];
 }
 
 uint32_t
