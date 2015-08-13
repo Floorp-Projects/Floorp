@@ -78,6 +78,7 @@ public:
     aURL.Assign(mURL);
   }
 
+  // SetUrl should only be called when the fragment has alredy been stripped
   void
   SetUrl(const nsACString& aURL)
   {
@@ -178,6 +179,9 @@ public:
   // Takes ownership of the principal info.
   void
   SetPrincipalInfo(UniquePtr<mozilla::ipc::PrincipalInfo> aPrincipalInfo);
+
+  nsresult
+  StripFragmentAndSetUrl(const nsACString& aUrl);
 
 private:
   ~InternalResponse();
