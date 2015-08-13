@@ -45,12 +45,12 @@ inline bool ThrowException(JNIEnv *aEnv, const char *aMessage)
 
 inline bool ThrowException(const char *aClass, const char *aMessage)
 {
-    return ThrowException(GetJNIForThread(), aClass, aMessage);
+    return ThrowException(GetEnvForThread(), aClass, aMessage);
 }
 
 inline bool ThrowException(const char *aMessage)
 {
-    return ThrowException(GetJNIForThread(), aMessage);
+    return ThrowException(GetEnvForThread(), aMessage);
 }
 
 void HandleUncaughtException(JNIEnv *aEnv);
