@@ -123,19 +123,13 @@ RawReader::IsMediaSeekable()
 // or returns false
 bool RawReader::ReadFromResource(uint8_t* aBuf, uint32_t aLength)
 {
-  while (aLength > 0) {
-    uint32_t bytesRead = 0;
-    nsresult rv;
+  uint32_t bytesRead = 0;
+  nsresult rv;
 
-    rv = mResource.Read(reinterpret_cast<char*>(aBuf), aLength, &bytesRead);
-    NS_ENSURE_SUCCESS(rv, false);
-
-    if (bytesRead == 0) {
-      return false;
-    }
-
-    aLength -= bytesRead;
-    aBuf += bytesRead;
+  rv = mResource.Read(reinterpret_cast<char*>(aBuf), aLength, &bytesRead);
+  NS_ENSURE_SUCCESS(rv, false);
+  if (bytesRead == 0) {
+    return false;
   }
 
   return true;
