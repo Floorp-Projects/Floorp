@@ -532,9 +532,9 @@ loop.store = loop.store || {};
         function(err, result) {
           if (err) {
             console.error("Failed to get outgoing call data", err);
-            var failureReason = "setup";
+            var failureReason = FAILURE_DETAILS.UNKNOWN;
             if (err.errno == REST_ERRNOS.USER_UNAVAILABLE) {
-              failureReason = REST_ERRNOS.USER_UNAVAILABLE;
+              failureReason = FAILURE_DETAILS.USER_UNAVAILABLE;
             }
             this.dispatcher.dispatch(
               new sharedActions.ConnectionFailure({reason: failureReason}));
