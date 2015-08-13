@@ -372,9 +372,6 @@ public class GeckoThread extends Thread implements GeckoEventListener {
 
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - runGecko");
 
-        // Initialize AndroidBridge.
-        GeckoAppShell.nativeInit(GeckoThread.class.getClassLoader(), Looper.myQueue());
-
         if (!AppConstants.MOZILLA_OFFICIAL) {
             Log.i(LOGTAG, "RunGecko - args = " + args);
         }
