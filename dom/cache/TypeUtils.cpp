@@ -414,23 +414,13 @@ TypeUtils::ProcessURL(nsACString& aUrl, bool* aSchemeValidOut,
 
   uint32_t queryPos;
   int32_t queryLen;
-  uint32_t refPos;
-  int32_t refLen;
 
   aRv = urlParser->ParsePath(url + pathPos, flatURL.Length() - pathPos,
                              nullptr, nullptr,               // ignore filepath
                              &queryPos, &queryLen,
-                             &refPos, &refLen);
+                             nullptr, nullptr);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
-  }
-
-  // TODO: Remove this once Request/Response properly strip the fragment (bug 1110476)
-  if (refLen >= 0) {
-    // ParsePath gives us ref position relative to the start of the path
-    refPos += pathPos;
-
-    aUrl = Substring(aUrl, 0, refPos - 1);
   }
 
   if (!aUrlWithoutQueryOut) {
