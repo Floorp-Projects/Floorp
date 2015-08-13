@@ -27,7 +27,7 @@ const DevToolsUtils = require("devtools/toolkit/DevToolsUtils.js");
 Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 
 const { DebuggerServer } = require("devtools/server/main");
-Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
+const { DebuggerClient } = require("devtools/toolkit/client/main");
 
 function testExceptionHook(ex) {
   try {

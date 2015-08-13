@@ -15,8 +15,10 @@ const ToolDefinitions = require("main").Tools;
 const {CssLogic} = require("devtools/styleinspector/css-logic");
 const {ELEMENT_STYLE} = require("devtools/server/actors/styles");
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
+const {setTimeout, clearTimeout} = Cu.import("resource://gre/modules/Timer.jsm", {});
 const {OutputParser} = require("devtools/output-parser");
 const {PrefObserver, PREF_ORIG_SOURCES} = require("devtools/styleeditor/utils");
+const {createChild} = require("devtools/styleinspector/utils");
 const {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 
 loader.lazyRequireGetter(this, "overlays",
@@ -70,7 +72,7 @@ UpdateProcess.prototype = {
     if (this.canceled) {
       return;
     }
-    this._timeout = this.win.setTimeout(this._timeoutHandler.bind(this), 0);
+    this._timeout = setTimeout(this._timeoutHandler.bind(this), 0);
   },
 
   /**
@@ -79,7 +81,7 @@ UpdateProcess.prototype = {
    */
   cancel: function() {
     if (this._timeout) {
-      this.win.clearTimeout(this._timeout);
+      clearTimeout(this._timeout);
       this._timeout = 0;
     }
     this.canceled = true;
@@ -515,17 +517,15 @@ CssComputedView.prototype = {
    * Called when the user enters a search term in the filter style search box.
    */
   _onFilterStyles: function() {
-    let win = this.styleWindow;
-
     if (this._filterChangedTimeout) {
-      win.clearTimeout(this._filterChangedTimeout);
+      clearTimeout(this._filterChangedTimeout);
     }
 
     let filterTimeout = (this.searchField.value.length > 0)
       ? FILTER_CHANGED_TIMEOUT : 0;
     this.searchClearButton.hidden = this.searchField.value.length === 0;
 
-    this._filterChangedTimeout = win.setTimeout(() => {
+    this._filterChangedTimeout = setTimeout(() => {
       if (this.searchField.value.length > 0) {
         this.searchField.setAttribute("filled", true);
       } else {
@@ -1396,33 +1396,6 @@ SelectorView.prototype = {
     });
   }
 };
-
-/**
- * Create a child element with a set of attributes.
- *
- * @param {Element} parent
- *        The parent node.
- * @param {String} tag
- *        The tag name.
- * @param {Object} attributes
- *        A set of attributes to set on the node.
- */
-function createChild(parent, tag, attributes={}) {
-  let elt = parent.ownerDocument.createElementNS(HTML_NS, tag);
-  for (let attr in attributes) {
-    if (attributes.hasOwnProperty(attr)) {
-      if (attr === "textContent") {
-        elt.textContent = attributes[attr];
-      } else if (attr === "child") {
-        elt.appendChild(attributes[attr]);
-      } else {
-        elt.setAttribute(attr, attributes[attr]);
-      }
-    }
-  }
-  parent.appendChild(elt);
-  return elt;
-}
 
 exports.CssComputedView = CssComputedView;
 exports.PropertyView = PropertyView;

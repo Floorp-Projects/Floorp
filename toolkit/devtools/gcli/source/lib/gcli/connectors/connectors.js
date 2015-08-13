@@ -16,8 +16,6 @@
 
 'use strict';
 
-var Promise = require('../util/promise').Promise;
-
 /**
  * This is how to implement a connector
  *  var baseConnector = {

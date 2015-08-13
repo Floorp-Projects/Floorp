@@ -421,8 +421,9 @@ loop.store = loop.store || {};
      */
     fetchRoomEmailLink: function(actionData) {
       this.mozLoop.rooms.create({
-        roomName: actionData.roomName,
-        roomOwner: actionData.roomOwner,
+        decryptedContext: {
+          roomName: actionData.roomName
+        },
         maxSize: loop.store.MAX_ROOM_CREATION_SIZE,
         expiresIn: loop.store.DEFAULT_EXPIRES_IN
       }, function(err, createdRoomData) {
@@ -532,9 +533,9 @@ loop.store = loop.store || {};
         function(err, result) {
           if (err) {
             console.error("Failed to get outgoing call data", err);
-            var failureReason = "setup";
+            var failureReason = FAILURE_DETAILS.UNKNOWN;
             if (err.errno === REST_ERRNOS.USER_UNAVAILABLE) {
-              failureReason = REST_ERRNOS.USER_UNAVAILABLE;
+              failureReason = FAILURE_DETAILS.USER_UNAVAILABLE;
             }
             this.dispatcher.dispatch(
               new sharedActions.ConnectionFailure({reason: failureReason}));

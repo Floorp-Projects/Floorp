@@ -57,6 +57,10 @@ exports['test join'] = function (assert) {
     'resource://my/path/yeah/whoa');
   assert.equal(join('resource://my/path/yeah/yuh', './whoa'),
     'resource://my/path/yeah/yuh/whoa');
+  assert.equal(join('resource:///my/path/yeah/yuh', '../whoa'),
+    'resource:///my/path/yeah/whoa');
+  assert.equal(join('resource:///my/path/yeah/yuh', './whoa'),
+    'resource:///my/path/yeah/yuh/whoa');
   assert.equal(join('file:///my/path/yeah/yuh', '../whoa'),
     'file:///my/path/yeah/whoa');
   assert.equal(join('file:///my/path/yeah/yuh', './whoa'),
@@ -551,5 +555,61 @@ exports['test user global'] = function(assert) {
   assert.equal(userModule.getCom(), com,
                "user module returns expected `com` global");
 };
+
+exports['test custom require caching'] = function(assert) {
+  const loader = Loader({
+    paths: { '': root + "/" },
+    require: (id, require) => {
+      // Just load it normally
+      return require(id);
+    }
+  });
+  const require = Require(loader, module);
+
+  let data = require('fixtures/loader/json/mutation.json');
+  assert.equal(data.value, 1, 'has initial value');
+  data.value = 2;
+  let newdata = require('fixtures/loader/json/mutation.json');
+  assert.equal(
+    newdata.value,
+    2,
+    'JSON objects returned should be cached and the same instance'
+  );
+};
+
+exports['test caching when proxying a loader'] = function(assert) {
+  const parentRequire = require;
+  const loader = Loader({
+    paths: { '': root + "/" },
+    require: (id, childRequire) => {
+      if(id === 'gimmejson') {
+        return childRequire('fixtures/loader/json/mutation.json')
+      }
+      // Load it with the original (global) require
+      return parentRequire(id);
+    }
+  });
+  const childRequire = Require(loader, module);
+
+  let data = childRequire('./fixtures/loader/json/mutation.json');
+  assert.equal(data.value, 1, 'data has initial value');
+  data.value = 2;
+
+  let newdata = childRequire('./fixtures/loader/json/mutation.json');
+  assert.equal(newdata.value, 2, 'data has changed');
+
+  let childData = childRequire('gimmejson');
+  assert.equal(childData.value, 1, 'data from child loader has initial value');
+  childData.value = 3;
+  let newChildData = childRequire('gimmejson');
+  assert.equal(newChildData.value, 3, 'data from child loader has changed');
+
+  data = childRequire('./fixtures/loader/json/mutation.json');
+  assert.equal(data.value, 2, 'data from parent loader has not changed');
+
+  // Set it back to the original value just in case (this instance
+  // will be shared across tests)
+  data.value = 1;
+}
 
 require('sdk/test').run(exports);

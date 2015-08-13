@@ -6938,6 +6938,13 @@ var gIdentityHandler = {
   },
 
   /**
+   * Return the current mode, which should be one of IDENTITY_MODE_*.
+   */
+  getMode: function() {
+    return this._mode;
+  },
+
+  /**
    * Set up the messages for the primary identity UI based on the specified mode,
    * and the details of the SSL cert, where applicable
    *

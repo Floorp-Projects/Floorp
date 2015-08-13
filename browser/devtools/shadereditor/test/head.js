@@ -14,8 +14,8 @@ let { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 let { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 let { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-let { DebuggerClient } = Cu.import("resource://gre/modules/devtools/dbg-client.jsm", {});
 
+let { DebuggerClient } = require("devtools/toolkit/client/main");
 let { DebuggerServer } = require("devtools/server/main");
 let { WebGLFront } = require("devtools/server/actors/webgl");
 let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");

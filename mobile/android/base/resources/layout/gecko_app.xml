@@ -100,7 +100,7 @@
 
             <ViewStub android:id="@+id/new_tablet_tab_strip"
                       android:inflatedId="@id/new_tablet_tab_strip"
-                      android:layout="@layout/new_tablet_tab_strip"
+                      android:layout="@layout/tab_strip"
                       android:layout_width="match_parent"
                       android:layout_height="@dimen/new_tablet_tab_strip_height"
                       android:visibility="gone"/>

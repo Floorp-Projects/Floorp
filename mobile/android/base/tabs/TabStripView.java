@@ -66,7 +66,7 @@ public class TabStripView extends TwoWayView {
 
         final Resources resources = getResources();
 
-        divider = resources.getDrawable(R.drawable.new_tablet_tab_strip_divider);
+        divider = resources.getDrawable(R.drawable.tab_strip_divider);
         divider.getPadding(dividerPadding);
 
         final int itemMargin =

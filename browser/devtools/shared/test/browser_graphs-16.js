@@ -4,7 +4,6 @@
 // Tests that mounta graphs work as expected.
 
 let MountainGraphWidget = require("devtools/shared/widgets/MountainGraphWidget");
-let {Promise} = require("resource://gre/modules/Promise.jsm");
 
 const TEST_DATA = [
   { delta: 0, values: [0.1, 0.5, 0.3] },

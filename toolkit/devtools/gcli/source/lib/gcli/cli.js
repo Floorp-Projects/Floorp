@@ -16,7 +16,6 @@
 
 'use strict';
 
-var Promise = require('./util/promise').Promise;
 var util = require('./util/util');
 var host = require('./util/host');
 var l10n = require('./util/l10n');
@@ -38,6 +37,21 @@ var MergedArgument = require('./types/types').MergedArgument;
 var ScriptArgument = require('./types/types').ScriptArgument;
 
 var RESOLVED = Promise.resolve(undefined);
+
+// Helper to produce a `deferred` object
+// using DOM Promise
+function defer() {
+  let resolve, reject;
+  let p = new Promise((a, b) => {
+    resolve = a;
+    reject = b;
+  });
+  return {
+    promise: p,
+    resolve: resolve,
+    reject: reject
+  };
+}
 
 /**
  * This is a list of the known command line components to enable certain
@@ -539,9 +553,7 @@ Object.defineProperty(Requisition.prototype, 'executionContext', {
   get: function() {
     if (this._executionContext == null) {
       this._executionContext = {
-        defer: function() {
-          return Promise.defer();
-        },
+        defer: defer,
         typedData: function(type, data) {
           return {
             isTypedData: true,
@@ -601,9 +613,7 @@ Object.defineProperty(Requisition.prototype, 'conversionContext', {
   get: function() {
     if (this._conversionContext == null) {
       this._conversionContext = {
-        defer: function() {
-          return Promise.defer();
-        },
+        defer: defer,
 
         createView: view.createView,
         exec: this.exec.bind(this),

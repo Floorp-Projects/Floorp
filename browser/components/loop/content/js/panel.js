@@ -751,8 +751,7 @@ loop.panel = (function(_, mozL10n) {
 
     handleCreateButtonClick: function() {
       var createRoomAction = new sharedActions.CreateRoom({
-        nameTemplate: mozL10n.get("rooms_default_room_name_template"),
-        roomOwner: this.props.userDisplayName
+        nameTemplate: mozL10n.get("rooms_default_room_name_template")
       });
 
       if (this.state.checked) {

@@ -73,7 +73,7 @@ public class TabStripItemView extends ThemedLinearLayout
         final Resources res = context.getResources();
 
         final ColorStateList tabColors =
-                res.getColorStateList(R.color.new_tablet_tab_strip_item_bg);
+                res.getColorStateList(R.color.tab_strip_item_bg);
         backgroundDrawable = new ResizablePathDrawable(new TabCurveShape(), tabColors);
         setBackgroundDrawable(backgroundDrawable);
 
