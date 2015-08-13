@@ -35,6 +35,10 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         INITIAL,
         // After launching Gecko thread
         LAUNCHED,
+        // After loading the mozglue library.
+        MOZGLUE_READY,
+        // After loading the libxul library.
+        LIBS_READY,
         // After initializing frontend JS (corresponding to "Gecko:Ready" event)
         RUNNING,
         // After leaving Gecko event loop
@@ -121,6 +125,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
 
         final Context context = GeckoAppShell.getContext();
         GeckoLoader.loadMozGlue(context);
+        setState(State.MOZGLUE_READY);
 
         final Resources res = context.getResources();
         if (locale.toString().equalsIgnoreCase("zh_hk")) {
@@ -145,7 +150,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         GeckoLoader.loadSQLiteLibs(context, resourcePath);
         GeckoLoader.loadNSSLibs(context, resourcePath);
         GeckoLoader.loadGeckoLibs(context, resourcePath);
-        GeckoJavaSampler.setLibsLoaded();
+        setState(State.LIBS_READY);
 
         return resourcePath;
     }
