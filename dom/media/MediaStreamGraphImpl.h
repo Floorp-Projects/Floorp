@@ -448,7 +448,8 @@ public:
 
   double MediaTimeToSeconds(GraphTime aTime) const
   {
-    NS_ASSERTION(0 <= aTime && aTime <= STREAM_TIME_MAX, "Bad time");
+    NS_ASSERTION(aTime > -STREAM_TIME_MAX && aTime <= STREAM_TIME_MAX,
+                 "Bad time");
     return static_cast<double>(aTime)/GraphRate();
   }
 
