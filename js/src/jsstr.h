@@ -337,9 +337,9 @@ extern bool
 str_charCodeAt(JSContext* cx, unsigned argc, Value* vp);
 /*
  * Convert one UCS-4 char and write it into a UTF-8 buffer, which must be at
- * least 6 bytes long.  Return the number of UTF-8 bytes of data written.
+ * least 4 bytes long.  Return the number of UTF-8 bytes of data written.
  */
-extern int
+extern uint32_t
 OneUcs4ToUtf8Char(uint8_t* utf8Buffer, uint32_t ucs4Char);
 
 extern size_t
