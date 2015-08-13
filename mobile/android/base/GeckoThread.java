@@ -95,6 +95,11 @@ public class GeckoThread extends Thread implements GeckoEventListener {
 
     private static GeckoThread sGeckoThread;
 
+    @WrapForJNI
+    private static final ClassLoader clsLoader = GeckoThread.class.getClassLoader();
+    @WrapForJNI
+    private static MessageQueue msgQueue;
+
     private final String mArgs;
     private final String mAction;
     private final String mUri;
@@ -336,6 +341,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
     @Override
     public void run() {
         Looper.prepare();
+        GeckoThread.msgQueue = Looper.myQueue();
         ThreadUtils.sGeckoThread = this;
         ThreadUtils.sGeckoHandler = new Handler();
 
