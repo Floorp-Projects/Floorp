@@ -61,7 +61,7 @@ struct nsGlyphCode {
   bool IsGlyphID() const { return font == -1; }
 
   int32_t Length() const {
-    return (IsGlyphID() || code[1] == PRUnichar('\0') ? 1 : 2);
+    return (IsGlyphID() || code[1] == char16_t('\0') ? 1 : 2);
   }
   bool Exists() const
   {
