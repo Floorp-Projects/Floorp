@@ -706,7 +706,7 @@ ImportManager::AddLoaderWithNewURI(ImportLoader* aLoader, nsIURI* aNewURI)
   mImports.Put(aNewURI, aLoader);
 }
 
-nsRefPtr<ImportLoader> ImportManager::GetNearestPredecessor(nsINode* aNode)
+ImportLoader* ImportManager::GetNearestPredecessor(nsINode* aNode)
 {
   // Return the previous link if there is any in the same document.
   nsIDocument* doc = aNode->OwnerDoc();
