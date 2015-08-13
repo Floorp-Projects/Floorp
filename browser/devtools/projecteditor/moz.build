@@ -18,7 +18,6 @@ EXTRA_JS_MODULES.devtools.projecteditor.helpers += [
     'lib/helpers/event.js',
     'lib/helpers/file-picker.js',
     'lib/helpers/l10n.js',
-    'lib/helpers/promise.js',
     'lib/helpers/prompts.js',
     'lib/helpers/readdir.js',
 ]
