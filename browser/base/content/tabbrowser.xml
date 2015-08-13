@@ -3081,6 +3081,9 @@
             STATE_LOADED: 2,
             STATE_UNLOADING: 3,
 
+            // re-entrancy guard:
+            _processing: false,
+
             getTabState: function(tab) {
               let state = this.tabState.get(tab);
               if (state === undefined) {
@@ -3223,7 +3226,6 @@
               }
 
               this.lastVisibleTab = this.visibleTab;
-
             },
 
             assert: function(cond) {
@@ -3434,7 +3436,17 @@
               this.postActions();
             },
 
-            handleEvent: function(event) {
+            handleEvent: function(event, delayed = false) {
+              if (this._processing) {
+                setTimeout(() => this.handleEvent(event, true), 0);
+                return;
+              }
+              if (delayed && this.tabbrowser._switcher != this) {
+                // if we delayed processing this event, we might be out of date, in which
+                // case we drop the delayed events
+                return;
+              }
+              this._processing = true;
               this.preActions();
 
               if (event.type == "MozLayerTreeReady") {
@@ -3448,6 +3460,7 @@
               }
 
               this.postActions();
+              this._processing = false;
             },
 
             /*
