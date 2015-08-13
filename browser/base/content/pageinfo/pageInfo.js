@@ -364,7 +364,7 @@ function loadPageInfo(frameOuterWindowID)
   mm.sendAsyncMessage("PageInfo:getData", {strings: gStrings,
                       frameOuterWindowID: frameOuterWindowID});
 
-  let pageInfoData = null;
+  let pageInfoData;
 
   // Get initial pageInfoData needed to display the general, feeds, permission and security tabs.
   mm.addMessageListener("PageInfo:data", function onmessage(message) {
@@ -389,12 +389,22 @@ function loadPageInfo(frameOuterWindowID)
   });
 
   // Get the media elements from content script to setup the media tab.
-  mm.addMessageListener("PageInfo:mediaData", function onmessage(message){
-    mm.removeMessageListener("PageInfo:mediaData", onmessage);
-    makeMediaTab(message.data.imageViewRows);
+  mm.addMessageListener("PageInfo:mediaData", function onmessage(message) {
+    // Page info window was closed.
+    if (window.closed) {
+      mm.removeMessageListener("PageInfo:mediaData", onmessage);
+      return;
+    }
 
-    // Loop through onFinished and execute the functions on it.
-    onFinished.forEach(function(func) { func(pageInfoData); });
+    // The page info media fetching has been completed.
+    if (message.data.isComplete) {
+      mm.removeMessageListener("PageInfo:mediaData", onmessage);
+      onFinished.forEach(function(func) { func(pageInfoData); });
+      return;
+    }
+
+    addImage(message.data.imageViewRow);
+    selectImage();
   });
 
   /* Call registered overlay init functions */
@@ -580,18 +590,10 @@ function makeGeneralTab(metaViewRows, docInfo)
   });
 }
 
-function makeMediaTab(imageViewRows)
+function addImage(imageViewRow)
 {
-  // Call addImage passing in the image rows to add to the view on the Media Tab.
-  for (let image of imageViewRows) {
-    let [url, type, alt, elem, isBg] = image;
-    addImage(url, type, alt, elem, isBg);
-  }
-  selectImage();
-}
+  let [url, type, alt, elem, isBg] = imageViewRow;
 
-function addImage(url, type, alt, elem, isBg)
-{
   if (!url)
     return;
 
