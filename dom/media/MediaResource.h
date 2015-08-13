@@ -822,20 +822,22 @@ public:
   // Return the underlying MediaResource.
   MediaResource* GetResource() const { return mResource; }
 
+  // Read up to aCount bytes from the stream. The read starts at
+  // aOffset in the stream, seeking to that location initially if
+  // it is not the current stream offset.
+  // Unlike MediaResource::ReadAt, ReadAt only returns fewer bytes than
+  // requested if end of stream or an error is encountered. There is no need to
+  // call it again to get more data.
+  // *aBytes will contain the number of bytes copied, even if an error occurred.
+  // ReadAt doesn't have an impact on the offset returned by Tell().
+  nsresult ReadAt(int64_t aOffset, char* aBuffer,
+                  uint32_t aCount, uint32_t* aBytes) const;
+
   // Convenience methods, directly calling the MediaResource method of the same
   // name.
   // Those functions do not update the MediaResource offset as returned
   // by Tell().
 
-  // Read up to aCount bytes from the stream. The read starts at
-  // aOffset in the stream, seeking to that location initially if
-  // it is not the current stream offset. The remaining arguments,
-  // results and requirements are the same as per the Read method.
-  nsresult ReadAt(int64_t aOffset, char* aBuffer,
-                  uint32_t aCount, uint32_t* aBytes) const
-  {
-    return mResource->ReadAt(aOffset, aBuffer, aCount, aBytes);
-  }
   // This method returns nullptr if anything fails.
   // Otherwise, it returns an owned buffer.
   // MediaReadAt may return fewer bytes than requested if end of stream is
