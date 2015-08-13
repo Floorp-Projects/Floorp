@@ -7,7 +7,6 @@ const promise = require("devtools/toolkit/deprecated-sync-thenables");
 const {Connection} = require("devtools/client/connection-manager");
 
 const {Cu} = require("chrome");
-const dbgClient = Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
 const _knownWebappsStores = new WeakMap();
 
 let WebappsStore;
