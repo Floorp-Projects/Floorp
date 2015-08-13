@@ -44,6 +44,7 @@ AppleMP3Reader::AppleMP3Reader(AbstractMediaDecoder *aDecoder)
   , mAudioFileStream(nullptr)
   , mAudioConverter(nullptr)
   , mMP3FrameParser(mDecoder->GetResource()->GetLength())
+  , mResource(mDecoder->GetResource())
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread");
 }
@@ -90,14 +91,12 @@ static void _AudioSampleCallback(void *aThis,
 nsresult
 AppleMP3Reader::Read(uint32_t *aNumBytes, char *aData)
 {
-  MediaResource *resource = mDecoder->GetResource();
-
   // Loop until we have all the data asked for, or we've reached EOS
   uint32_t totalBytes = 0;
   uint32_t numBytes;
   do {
     uint32_t bytesWanted = *aNumBytes - totalBytes;
-    nsresult rv = resource->Read(aData + totalBytes, bytesWanted, &numBytes);
+    nsresult rv = mResource.Read(aData + totalBytes, bytesWanted, &numBytes);
     totalBytes += numBytes;
 
     if (NS_FAILED(rv)) {
@@ -257,7 +256,7 @@ AppleMP3Reader::AudioSampleCallback(UInt32 aNumBytes,
     LOGD("pushed audio at time %lfs; duration %lfs\n",
          (double)time / USECS_PER_S, (double)duration / USECS_PER_S);
 
-    AudioData *audio = new AudioData(mDecoder->GetResource()->Tell(),
+    AudioData *audio = new AudioData(mResource.Tell(),
                                      time, duration, numFrames,
                                      reinterpret_cast<AudioDataValue *>(decoded.forget()),
                                      mAudioChannels, mAudioSampleRate);
@@ -517,7 +516,7 @@ AppleMP3Reader::Seek(int64_t aTime, int64_t aEndTime)
        byteOffset,
        (flags & kAudioFileStreamSeekFlag_OffsetIsEstimated) ? "YES" : "NO");
 
-  mDecoder->GetResource()->Seek(nsISeekableStream::NS_SEEK_SET, byteOffset);
+  mResource.Seek(nsISeekableStream::NS_SEEK_SET, byteOffset);
 
   ResetDecode();
 
@@ -532,7 +531,8 @@ AppleMP3Reader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset)
     return;
   }
 
-  nsRefPtr<MediaByteBuffer> bytes = mDecoder->GetResource()->SilentReadAt(aOffset, aLength);
+  nsRefPtr<MediaByteBuffer> bytes =
+    mDecoder->GetResource()->MediaReadAt(aOffset, aLength);
   NS_ENSURE_TRUE_VOID(bytes);
   mMP3FrameParser.Parse(bytes->Elements(), aLength, aOffset);
   if (!mMP3FrameParser.IsMP3()) {

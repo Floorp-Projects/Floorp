@@ -724,20 +724,6 @@ nsresult ChannelMediaResource::ReadFromCache(char* aBuffer,
   return mCacheStream.ReadFromCache(aBuffer, aOffset, aCount);
 }
 
-nsresult ChannelMediaResource::Read(char* aBuffer,
-                                    uint32_t aCount,
-                                    uint32_t* aBytes)
-{
-  NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
-
-  int64_t offset = mCacheStream.Tell();
-  nsresult rv = mCacheStream.Read(aBuffer, aCount, aBytes);
-  if (NS_SUCCEEDED(rv)) {
-    DispatchBytesConsumed(*aBytes, offset);
-  }
-  return rv;
-}
-
 nsresult ChannelMediaResource::ReadAt(int64_t aOffset,
                                       char* aBuffer,
                                       uint32_t aCount,
@@ -775,15 +761,6 @@ ChannelMediaResource::MediaReadAt(int64_t aOffset, uint32_t aCount)
   }
   bytes->SetLength(curr - start);
   return bytes.forget();
-}
-
-nsresult ChannelMediaResource::Seek(int32_t aWhence, int64_t aOffset)
-{
-  NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
-
-  CMLOG("Seek requested for aOffset [%lld] for decoder [%p]",
-        aOffset, mDecoder);
-  return mCacheStream.Seek(aWhence, aOffset);
 }
 
 int64_t ChannelMediaResource::Tell()
@@ -1210,12 +1187,9 @@ public:
   // Other thread
   virtual void     SetReadMode(MediaCacheStream::ReadMode aMode) override {}
   virtual void     SetPlaybackRate(uint32_t aBytesPerSecond) override {}
-  virtual nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes) override;
   virtual nsresult ReadAt(int64_t aOffset, char* aBuffer,
                           uint32_t aCount, uint32_t* aBytes) override;
   virtual already_AddRefed<MediaByteBuffer> MediaReadAt(int64_t aOffset, uint32_t aCount) override;
-  virtual already_AddRefed<MediaByteBuffer> SilentReadAt(int64_t aOffset, uint32_t aCount) override;
-  virtual nsresult Seek(int32_t aWhence, int64_t aOffset) override;
   virtual int64_t  Tell() override;
 
   // Any thread
@@ -1501,21 +1475,6 @@ nsresult FileMediaResource::ReadFromCache(char* aBuffer, int64_t aOffset, uint32
   return seekres;
 }
 
-nsresult FileMediaResource::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
-{
-  nsresult rv;
-  int64_t offset = 0;
-  {
-    MutexAutoLock lock(mLock);
-    mSeekable->Tell(&offset);
-    rv = UnsafeRead(aBuffer, aCount, aBytes);
-  }
-  if (NS_SUCCEEDED(rv)) {
-    DispatchBytesConsumed(*aBytes, offset);
-  }
-  return rv;
-}
-
 nsresult FileMediaResource::UnsafeRead(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
 {
   EnsureSizeInitialized();
@@ -1571,30 +1530,6 @@ FileMediaResource::UnsafeMediaReadAt(int64_t aOffset, uint32_t aCount)
   }
   bytes->SetLength(curr - start);
   return bytes.forget();
-}
-
-already_AddRefed<MediaByteBuffer>
-FileMediaResource::SilentReadAt(int64_t aOffset, uint32_t aCount)
-{
-  NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
-
-  MutexAutoLock lock(mLock);
-  int64_t pos = 0;
-  NS_ENSURE_TRUE(mSeekable, nullptr);
-  nsresult rv = mSeekable->Tell(&pos);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-  nsRefPtr<MediaByteBuffer> bytes = UnsafeMediaReadAt(aOffset, aCount);
-  UnsafeSeek(nsISeekableStream::NS_SEEK_SET, pos);
-  NS_ENSURE_TRUE(bytes && bytes->Length() == aCount, nullptr);
-  return bytes.forget();
-}
-
-nsresult FileMediaResource::Seek(int32_t aWhence, int64_t aOffset)
-{
-  NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
-
-  MutexAutoLock lock(mLock);
-  return UnsafeSeek(aWhence, aOffset);
 }
 
 nsresult FileMediaResource::UnsafeSeek(int32_t aWhence, int64_t aOffset)
@@ -1751,6 +1686,49 @@ void BaseMediaResource::DispatchBytesConsumed(int64_t aNumBytes, int64_t aOffset
   }
   RefPtr<nsIRunnable> event(new DispatchBytesConsumedEvent(mDecoder, aNumBytes, aOffset));
   NS_DispatchToMainThread(event);
+}
+
+nsresult
+MediaResourceIndex::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
+{
+  NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
+
+  // We purposefuly don't check that we may attempt to read past
+  // mResource->GetLength() as the resource's length may change over time.
+
+  nsresult rv = mResource->ReadAt(mOffset, aBuffer, aCount, aBytes);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  mOffset += *aBytes;
+  return NS_OK;
+}
+
+nsresult
+MediaResourceIndex::Seek(int32_t aWhence, int64_t aOffset)
+{
+  switch (aWhence) {
+    case SEEK_SET:
+      break;
+    case SEEK_CUR:
+      aOffset += mOffset;
+      break;
+    case SEEK_END:
+    {
+      int64_t length = mResource->GetLength();
+      if (length == -1 || length - aOffset < 0) {
+        return NS_ERROR_FAILURE;
+      }
+      aOffset = mResource->GetLength() - aOffset;
+    }
+      break;
+    default:
+      return NS_ERROR_FAILURE;
+  }
+
+  mOffset = aOffset;
+
+  return NS_OK;
 }
 
 } // namespace mozilla
