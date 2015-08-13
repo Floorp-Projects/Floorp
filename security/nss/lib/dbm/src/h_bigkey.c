@@ -72,8 +72,8 @@ static char sccsid[] = "@(#)hash_bigkey.c	8.3 (Berkeley) 5/31/94";
 #include "page.h"
 /* #include "extern.h" */
 
-static int collect_key __P((HTAB *, BUFHEAD *, int, DBT *, int));
-static int collect_data __P((HTAB *, BUFHEAD *, int, int));
+static int collect_key(HTAB *, BUFHEAD *, int, DBT *, int);
+static int collect_data(HTAB *, BUFHEAD *, int, int);
 
 /*
  * Big_insert

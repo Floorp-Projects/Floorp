@@ -93,6 +93,24 @@ void TlsAgent::EnableSomeEcdheCiphers() {
   }
 }
 
+
+void TlsAgent::DisableDheCiphers() {
+  EXPECT_TRUE(EnsureTlsSetup());
+
+  for (size_t i=0; i < SSL_NumImplementedCiphers; ++i) {
+    SSLCipherSuiteInfo csinfo;
+
+    SECStatus rv = SSL_GetCipherSuiteInfo(SSL_ImplementedCiphers[i],
+                                          &csinfo, sizeof(csinfo));
+    ASSERT_EQ(SECSuccess, rv);
+
+    if (csinfo.keaType == ssl_kea_dh) {
+      rv = SSL_CipherPrefSet(ssl_fd_, SSL_ImplementedCiphers[i], PR_FALSE);
+      EXPECT_EQ(SECSuccess, rv);
+    }
+  }
+}
+
 void TlsAgent::SetSessionTicketsEnabled(bool en) {
   EXPECT_TRUE(EnsureTlsSetup());
 

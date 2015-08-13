@@ -179,6 +179,7 @@ typedef struct ssl3CertNodeStr          ssl3CertNode;
 typedef struct ssl3BulkCipherDefStr     ssl3BulkCipherDef;
 typedef struct ssl3MACDefStr            ssl3MACDef;
 typedef struct ssl3KeyPairStr		ssl3KeyPair;
+typedef struct ssl3DHParamsStr          ssl3DHParams;
 
 struct ssl3CertNodeStr {
     struct ssl3CertNodeStr *next;
@@ -298,9 +299,9 @@ typedef struct {
 } ssl3CipherSuiteCfg;
 
 #ifndef NSS_DISABLE_ECC
-#define ssl_V3_SUITES_IMPLEMENTED 61
+#define ssl_V3_SUITES_IMPLEMENTED 64
 #else
-#define ssl_V3_SUITES_IMPLEMENTED 37
+#define ssl_V3_SUITES_IMPLEMENTED 40
 #endif /* NSS_DISABLE_ECC */
 
 #define MAX_DTLS_SRTP_CIPHER_SUITES 4
@@ -337,6 +338,7 @@ typedef struct sslOptionsStr {
     unsigned int enableALPN             : 1;  /* 27 */
     unsigned int reuseServerECDHEKey    : 1;  /* 28 */
     unsigned int enableFallbackSCSV     : 1;  /* 29 */
+    unsigned int enableServerDhe        : 1;  /* 30 */
 } sslOptions;
 
 typedef enum { sslHandshakingUndetermined = 0,
@@ -740,8 +742,8 @@ typedef struct {
     PRBool                   is_limited;
     int                      key_size_limit;
     PRBool                   tls_keygen;
-    /* True if the key exchange for the suite can be ephemeral.  Or to be more
-     * precise: true if the ServerKeyExchange message is required. */
+    /* True if the key exchange for the suite is ephemeral.  Or to be more
+     * precise: true if the ServerKeyExchange message is always required. */
     PRBool                   ephemeral;
 } ssl3KEADef;
 
@@ -997,6 +999,9 @@ struct ssl3StateStr {
     PRUint16             dtlsSRTPCipherCount;
     PRUint16             dtlsSRTPCipherSuite;	/* 0 if not selected */
     PRBool               fatalAlertSent;
+    PRUint16             numDHEGroups;        /* used by server */
+    SSLDHEGroupType *    dheGroups;           /* used by server */
+    PRBool               dheWeakGroupEnabled; /* used by server */
 };
 
 #define DTLS_MAX_MTU  1500      /* Ethernet MTU but without subtracting the
@@ -1014,6 +1019,11 @@ struct ssl3KeyPairStr {
     SECKEYPrivateKey *    privKey;
     SECKEYPublicKey *     pubKey;
     PRInt32               refCount;	/* use PR_Atomic calls for this. */
+};
+
+struct ssl3DHParamsStr {
+    SECItem prime; /* p */
+    SECItem base; /* g */
 };
 
 typedef struct SSLWrappedSymWrappingKeyStr {
@@ -1223,6 +1233,9 @@ struct sslSocketStr {
 const unsigned char *  preferredCipher;
 
     ssl3KeyPair *         stepDownKeyPair;	/* RSA step down keys */
+
+    const ssl3DHParams *dheParams;          /* DHE param */
+    ssl3KeyPair *       dheKeyPair;         /* DHE keys */
 
     /* Callbacks */
     SSLAuthCertificate        authCertificate;
@@ -1615,6 +1628,8 @@ int ssl3_GatherCompleteHandshake(sslSocket *ss, int flags);
  * Generate that key pair and keep it around.
  */
 extern SECStatus ssl3_CreateRSAStepDownKeys(sslSocket *ss);
+
+extern SECStatus ssl3_SelectDHParams(sslSocket *ss);
 
 #ifndef NSS_DISABLE_ECC
 extern void      ssl3_FilterECCipherSuitesByServerCerts(sslSocket *ss);
