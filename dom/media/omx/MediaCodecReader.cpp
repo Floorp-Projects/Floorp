@@ -415,8 +415,9 @@ MediaCodecReader::DecodeAudioDataSync()
     AudioQueue().Finish();
   } else if (bufferInfo.mBuffer != nullptr && bufferInfo.mSize > 0 &&
              bufferInfo.mBuffer->data() != nullptr) {
+    MOZ_ASSERT(mStreamSource);
     // This is the approximate byte position in the stream.
-    int64_t pos = mDecoder->GetResource()->Tell();
+    int64_t pos = mStreamSource->Tell();
 
     uint32_t frames = bufferInfo.mSize /
                       (mInfo.mAudio.mChannels * sizeof(AudioDataValue));
@@ -525,7 +526,8 @@ void
 MediaCodecReader::NotifyDataArrivedInternal(uint32_t aLength,
                                             int64_t aOffset)
 {
-  nsRefPtr<MediaByteBuffer> bytes = mDecoder->GetResource()->SilentReadAt(aOffset, aLength);
+  nsRefPtr<MediaByteBuffer> bytes =
+    mDecoder->GetResource()->MediaReadAt(aOffset, aLength);
   NS_ENSURE_TRUE_VOID(bytes);
 
   MonitorAutoLock monLock(mParserMonitor);
@@ -938,8 +940,9 @@ MediaCodecReader::DecodeVideoFrameSync(int64_t aTimeThreshold)
   RefPtr<TextureClient> textureClient;
   sp<GraphicBuffer> graphicBuffer;
   if (bufferInfo.mBuffer != nullptr) {
+    MOZ_ASSERT(mStreamSource);
     // This is the approximate byte position in the stream.
-    int64_t pos = mDecoder->GetResource()->Tell();
+    int64_t pos = mStreamSource->Tell();
 
     if (mVideoTrack.mNativeWindow != nullptr &&
         mVideoTrack.mCodec->getOutputGraphicBufferFromIndex(bufferInfo.mIndex, &graphicBuffer) == OK &&
@@ -1205,7 +1208,7 @@ MediaCodecReader::CreateExtractor()
     if (dataSource->initCheck() != OK) {
       return false;
     }
-
+    mStreamSource = static_cast<MediaStreamSource*>(dataSource.get());
     mExtractor = MediaExtractor::Create(dataSource);
   }
 
