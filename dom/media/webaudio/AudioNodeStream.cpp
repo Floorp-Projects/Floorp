@@ -26,14 +26,14 @@ namespace mozilla {
  */
 
 AudioNodeStream::AudioNodeStream(AudioNodeEngine* aEngine,
-                                 AudioNodeStreamKind aKind,
+                                 Flags aFlags,
                                  TrackRate aSampleRate,
                                  AudioContext::AudioContextId aContextId)
   : ProcessedMediaStream(nullptr),
     mEngine(aEngine),
     mSampleRate(aSampleRate),
     mAudioContextId(aContextId),
-    mKind(aKind),
+    mFlags(aFlags),
     mNumberOfInputChannels(2),
     mMarkAsFinishedAfterThisBlock(false),
     mAudioParamStream(false),
@@ -55,7 +55,7 @@ AudioNodeStream::~AudioNodeStream()
 
 /* static */ already_AddRefed<AudioNodeStream>
 AudioNodeStream::Create(MediaStreamGraph* aGraph, AudioNodeEngine* aEngine,
-                        AudioNodeStreamKind aKind)
+                        Flags aFlags)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -66,7 +66,7 @@ AudioNodeStream::Create(MediaStreamGraph* aGraph, AudioNodeEngine* aEngine,
   dom::AudioContext::AudioContextId contextIdForStream = node ? node->Context()->Id() :
                                                                 NO_AUDIO_CONTEXT;
   nsRefPtr<AudioNodeStream> stream =
-    new AudioNodeStream(aEngine, aKind, aGraph->GraphRate(),
+    new AudioNodeStream(aEngine, aFlags, aGraph->GraphRate(),
                         contextIdForStream);
   if (aEngine->HasNode()) {
     stream->SetChannelMixingParametersImpl(aEngine->NodeMainThread()->ChannelCount(),
@@ -595,7 +595,7 @@ AudioNodeStream::AdvanceOutputSegment()
   StreamBuffer::Track* track = EnsureTrack(AUDIO_TRACK);
   AudioSegment* segment = track->Get<AudioSegment>();
 
-  if (mKind == EXTERNAL_STREAM) {
+  if (mFlags & EXTERNAL_OUTPUT) {
     segment->AppendAndConsumeChunk(&mLastChunks[0]);
   } else {
     segment->AppendNullData(mLastChunks[0].GetDuration());

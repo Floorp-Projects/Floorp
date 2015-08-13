@@ -242,7 +242,7 @@ PannerNode::PannerNode(AudioContext* aContext)
 {
   mStream = AudioNodeStream::Create(aContext->Graph(),
                                     new PannerNodeEngine(this),
-                                    AudioNodeStream::INTERNAL_STREAM);
+                                    AudioNodeStream::NO_STREAM_FLAGS);
   // We should register once we have set up our stream and engine.
   Context()->Listener()->RegisterPannerNode(this);
 }
