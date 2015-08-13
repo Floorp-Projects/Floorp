@@ -22,6 +22,9 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -69,6 +72,21 @@ public class GeckoThread extends Thread implements GeckoEventListener {
     public static final State MAX_STATE = State.EXITED;
 
     private static final AtomicReference<State> sState = new AtomicReference<>(State.INITIAL);
+
+    private static class QueuedCall {
+        public Method method;
+        public Object target;
+        public Object[] args;
+
+        public QueuedCall(final Method method, final Object target, final Object[] args) {
+            this.method = method;
+            this.target = target;
+            this.args = args;
+        }
+    }
+
+    private static final int QUEUED_CALLS_COUNT = 16;
+    private static final ArrayList<QueuedCall> QUEUED_CALLS = new ArrayList<>(QUEUED_CALLS_COUNT);
 
     private static final Queue<GeckoEvent> PENDING_EVENTS = new ConcurrentLinkedQueue<GeckoEvent>();
 
@@ -118,6 +136,89 @@ public class GeckoThread extends Thread implements GeckoEventListener {
     @RobocopTarget
     public static boolean isRunning() {
         return isState(State.RUNNING);
+    }
+
+    // Invoke the given Method and handle checked Exceptions.
+    private static void invokeMethod(final Method method, final Object obj, final Object[] args) {
+        try {
+            method.invoke(obj, args);
+        } catch (final IllegalAccessException e) {
+            throw new IllegalStateException("Unexpected exception", e);
+        } catch (final InvocationTargetException e) {
+            throw new UnsupportedOperationException("Cannot make call", e.getCause());
+        }
+    }
+
+    // Queue a call to the given method.
+    private static void queueNativeCallLocked(final Class<?> cls, final String methodName,
+                                              final Object obj, final Object[] args) {
+        final Class<?>[] argTypes = new Class<?>[args.length];
+        for (int i = 0; i < args.length; i++) {
+            Class<?> argType = args[i].getClass();
+            if (argType == Boolean.class) argType = Boolean.TYPE;
+            else if (argType == Byte.class) argType = Byte.TYPE;
+            else if (argType == Character.class) argType = Character.TYPE;
+            else if (argType == Double.class) argType = Double.TYPE;
+            else if (argType == Float.class) argType = Float.TYPE;
+            else if (argType == Integer.class) argType = Integer.TYPE;
+            else if (argType == Long.class) argType = Long.TYPE;
+            else if (argType == Short.class) argType = Short.TYPE;
+            argTypes[i] = argType;
+        }
+        final Method method;
+        try {
+            method = cls.getDeclaredMethod(methodName, argTypes);
+        } catch (final NoSuchMethodException e) {
+            throw new UnsupportedOperationException("Cannot find method", e);
+        }
+
+        if (QUEUED_CALLS.size() == 0 && isRunning()) {
+            invokeMethod(method, obj, args);
+            return;
+        }
+        QUEUED_CALLS.add(new QueuedCall(method, obj, args));
+    }
+
+    /**
+     * Queue a call to the given static method until Gecko is in RUNNING state.
+     *
+     * @param cls Class that declares the static method.
+     * @param methodName Name of the static method.
+     * @param args Args to call the static method with.
+     */
+    public static void queueNativeCall(final Class<?> cls, final String methodName,
+                                       final Object... args) {
+        synchronized (QUEUED_CALLS) {
+            queueNativeCallLocked(cls, methodName, null, args);
+        }
+    }
+
+    /**
+     * Queue a call to the given instance method until Gecko is in RUNNING state.
+     *
+     * @param obj Object that declares the instance method.
+     * @param methodName Name of the instance method.
+     * @param args Args to call the instance method with.
+     */
+    public static void queueNativeCall(final Object obj, final String methodName,
+                                       final Object... args) {
+        synchronized (QUEUED_CALLS) {
+            queueNativeCallLocked(obj.getClass(), methodName, obj, args);
+        }
+    }
+
+    // Run all queued methods
+    private static void flushQueuedNativeCalls(final State state) {
+        if (!state.is(State.RUNNING)) {
+            return;
+        }
+        synchronized (QUEUED_CALLS) {
+            for (QueuedCall call : QUEUED_CALLS) {
+                invokeMethod(call.method, call.target, call.args);
+            }
+            QUEUED_CALLS.clear();
+            QUEUED_CALLS.trimToSize();
+        }
     }
 
     private String initGeckoEnvironment() {
@@ -312,12 +413,14 @@ public class GeckoThread extends Thread implements GeckoEventListener {
     private static void setState(final State newState) {
         ThreadUtils.assertOnGeckoThread();
         sState.set(newState);
+        flushQueuedNativeCalls(newState);
     }
 
     private static boolean checkAndSetState(final State currentState, final State newState) {
         if (!sState.compareAndSet(currentState, newState)) {
             return false;
         }
+        flushQueuedNativeCalls(newState);
         return true;
     }
 }
