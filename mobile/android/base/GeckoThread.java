@@ -88,8 +88,6 @@ public class GeckoThread extends Thread implements GeckoEventListener {
     private static final int QUEUED_CALLS_COUNT = 16;
     private static final ArrayList<QueuedCall> QUEUED_CALLS = new ArrayList<>(QUEUED_CALLS_COUNT);
 
-    private static final Queue<GeckoEvent> PENDING_EVENTS = new ConcurrentLinkedQueue<GeckoEvent>();
-
     private static GeckoThread sGeckoThread;
 
     private final String mArgs;
@@ -214,6 +212,12 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         }
         synchronized (QUEUED_CALLS) {
             for (QueuedCall call : QUEUED_CALLS) {
+                if (call.method == null) {
+                    final GeckoEvent e = (GeckoEvent) call.target;
+                    GeckoAppShell.notifyGeckoOfEvent(e);
+                    e.recycle();
+                    continue;
+                }
                 invokeMethod(call.method, call.target, call.args);
             }
             QUEUED_CALLS.clear();
@@ -336,14 +340,13 @@ public class GeckoThread extends Thread implements GeckoEventListener {
     }
 
     public static void addPendingEvent(final GeckoEvent e) {
-        synchronized (PENDING_EVENTS) {
-            if (isState(State.RUNNING)) {
+        synchronized (QUEUED_CALLS) {
+            if (QUEUED_CALLS.size() == 0 && isRunning()) {
                 // We may just have switched to running state.
                 GeckoAppShell.notifyGeckoOfEvent(e);
                 e.recycle();
             } else {
-                // Throws if unable to add the event due to capacity restrictions.
-                PENDING_EVENTS.add(e);
+                QUEUED_CALLS.add(new QueuedCall(null, e, null));
             }
         }
     }
@@ -352,17 +355,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
     public void handleMessage(String event, JSONObject message) {
         if ("Gecko:Ready".equals(event)) {
             EventDispatcher.getInstance().unregisterGeckoThreadListener(this, event);
-
-            // Synchronize with addPendingEvent, so that all pending events are sent,
-            // in order, before we switch to running state.
-            synchronized (PENDING_EVENTS) {
-                GeckoEvent e;
-                while ((e = PENDING_EVENTS.poll()) != null) {
-                    GeckoAppShell.notifyGeckoOfEvent(e);
-                    e.recycle();
-                }
-                setState(State.RUNNING);
-            }
+            setState(State.RUNNING);
         }
     }
 
