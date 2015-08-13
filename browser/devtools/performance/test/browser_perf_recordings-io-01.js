@@ -61,24 +61,24 @@ let test = Task.async(function*() {
 
   let importedData = PerformanceController.getCurrentRecording().getAllData();
 
-  is(importedData.label, "tmpprofile",
-    "The label is identical to the filename without its extension.");
-  is(importedData.duration, originalData.duration,
+  is(importedData.label, originalData.label,
     "The imported data is identical to the original data (1).");
-  is(importedData.markers.toSource(), originalData.markers.toSource(),
+  is(importedData.duration, originalData.duration,
     "The imported data is identical to the original data (2).");
-  is(importedData.memory.toSource(), originalData.memory.toSource(),
+  is(importedData.markers.toSource(), originalData.markers.toSource(),
     "The imported data is identical to the original data (3).");
-  is(importedData.ticks.toSource(), originalData.ticks.toSource(),
+  is(importedData.memory.toSource(), originalData.memory.toSource(),
     "The imported data is identical to the original data (4).");
-  is(importedData.allocations.toSource(), originalData.allocations.toSource(),
+  is(importedData.ticks.toSource(), originalData.ticks.toSource(),
     "The imported data is identical to the original data (5).");
-  is(importedData.profile.toSource(), originalData.profile.toSource(),
+  is(importedData.allocations.toSource(), originalData.allocations.toSource(),
     "The imported data is identical to the original data (6).");
-  is(importedData.configuration.withTicks, originalData.configuration.withTicks,
+  is(importedData.profile.toSource(), originalData.profile.toSource(),
     "The imported data is identical to the original data (7).");
-  is(importedData.configuration.withMemory, originalData.configuration.withMemory,
+  is(importedData.configuration.withTicks, originalData.configuration.withTicks,
     "The imported data is identical to the original data (8).");
+  is(importedData.configuration.withMemory, originalData.configuration.withMemory,
+    "The imported data is identical to the original data (9).");
 
   yield teardown(panel);
   finish();
