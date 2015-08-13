@@ -3234,6 +3234,9 @@ pref("ui.osk.enabled", true);
 pref("ui.osk.detect_physical_keyboard", true);
 // Path to TabTip.exe on local machine. Cached for performance reasons.
 pref("ui.osk.on_screen_keyboard_path", "");
+// Only show the on-screen keyboard when Windows is in Tablet mode. Setting
+// this pref to false will allow the OSK to show in regular non-tablet mode.
+pref("ui.osk.require_tablet_mode", true);
 
 # XP_WIN
 #endif
