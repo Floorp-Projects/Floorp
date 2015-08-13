@@ -48,7 +48,7 @@ WMFMediaDataDecoder::Init()
 // A single telemetry sample is reported for each MediaDataDecoder object
 // that has detected error or produced output successfully.
 static void
-SendTelemetry(HRESULT hr)
+SendTelemetry(unsigned long hr)
 {
   // Collapse the error codes into a range of 0-0xff that can be viewed in
   // telemetry histograms.  For most MF_E_* errors, unique samples are used,

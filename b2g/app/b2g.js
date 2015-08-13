@@ -1147,9 +1147,6 @@ pref("dom.mozSettings.allowForceReadOnly", false);
 // RequestSync API is enabled by default on B2G.
 pref("dom.requestSync.enabled", true);
 
-// Resample touch events on b2g
-pref("gfx.touch.resample", true);
-
 // Comma separated list of activity names that can only be provided by
 // the system app in dev mode.
 pref("dom.activities.developer_mode_only", "import-app");
