@@ -462,6 +462,17 @@ class MacroAssembler : public MacroAssemblerSpecific
     // Warning: This method does not update the framePushed() counter.
     void freeStack(Register amount);
 
+  private:
+    // ===============================================================
+    // Register allocation fields.
+#ifdef DEBUG
+    friend AutoRegisterScope;
+    friend AutoFloatRegisterScope;
+    // Used to track register scopes for debug builds.
+    // Manipulated by the AutoGenericRegisterScope class.
+    AllocatableRegisterSet debugTrackedRegisters_;
+#endif // DEBUG
+
   public:
     // ===============================================================
     // Simple call functions.
