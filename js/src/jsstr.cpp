@@ -5006,29 +5006,32 @@ str_encodeURI_Component(JSContext* cx, unsigned argc, Value* vp)
  * Convert one UCS-4 char and write it into a UTF-8 buffer, which must be at
  * least 4 bytes long.  Return the number of UTF-8 bytes of data written.
  */
-int
+uint32_t
 js::OneUcs4ToUtf8Char(uint8_t* utf8Buffer, uint32_t ucs4Char)
 {
-    int utf8Length = 1;
-
     MOZ_ASSERT(ucs4Char <= 0x10FFFF);
+
     if (ucs4Char < 0x80) {
-        *utf8Buffer = (uint8_t)ucs4Char;
-    } else {
-        int i;
-        uint32_t a = ucs4Char >> 11;
-        utf8Length = 2;
-        while (a) {
-            a >>= 5;
-            utf8Length++;
-        }
-        i = utf8Length;
-        while (--i) {
-            utf8Buffer[i] = (uint8_t)((ucs4Char & 0x3F) | 0x80);
-            ucs4Char >>= 6;
-        }
-        *utf8Buffer = (uint8_t)(0x100 - (1 << (8-utf8Length)) + ucs4Char);
+        utf8Buffer[0] = uint8_t(ucs4Char);
+        return 1;
     }
+
+    uint32_t a = ucs4Char >> 11;
+    uint32_t utf8Length = 2;
+    while (a) {
+        a >>= 5;
+        utf8Length++;
+    }
+
+    MOZ_ASSERT(utf8Length <= 4);
+
+    uint32_t i = utf8Length;
+    while (--i) {
+        utf8Buffer[i] = uint8_t((ucs4Char & 0x3F) | 0x80);
+        ucs4Char >>= 6;
+    }
+
+    utf8Buffer[0] = uint8_t(0x100 - (1 << (8 - utf8Length)) + ucs4Char);
     return utf8Length;
 }
 
