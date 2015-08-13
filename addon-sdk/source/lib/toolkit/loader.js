@@ -568,7 +568,8 @@ Loader.resolveURI = resolveURI;
 const Require = iced(function Require(loader, requirer) {
   let {
     modules, mapping, resolve: loaderResolve, load,
-    manifest, rootURI, isNative, requireMap
+    manifest, rootURI, isNative, requireMap,
+    overrideRequire
   } = loader;
 
   function require(id) {
@@ -576,6 +577,14 @@ const Require = iced(function Require(loader, requirer) {
       throw Error('You must provide a module name when calling require() from '
                   + requirer.id, requirer.uri);
 
+    if (overrideRequire) {
+      return overrideRequire(id, _require);
+    }
+
+    return _require(id);
+  }
+
+  function _require(id) {
     let { uri, requirement } = getRequirements(id);
     let module = null;
     // If module is already cached by loader then just use it.
@@ -715,7 +724,7 @@ const Require = iced(function Require(loader, requirer) {
   }
 
   // Expose the `resolve` function for this `Require` instance
-  require.resolve = function resolve(id) {
+  require.resolve = _require.resolve = function resolve(id) {
     let { uri } = getRequirements(id);
     return uri;
   }
@@ -901,6 +910,7 @@ function Loader(options) {
                            value: options.invisibleToDebugger || false },
     load: { enumerable: false, value: options.load || load },
     checkCompatibility: { enumerable: false, value: checkCompatibility },
+    overrideRequire: { enumerable: false, value: options.require },
     // Main (entry point) module, it can be set only once, since loader
     // instance can have only one main module.
     main: new function() {
