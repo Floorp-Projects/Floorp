@@ -248,10 +248,12 @@ class nsHtml5TreeOpExecutor final : public nsHtml5DocumentBuilder,
                        const nsAString& aCharset,
                        const nsAString& aType,
                        const nsAString& aCrossOrigin,
+                       const nsAString& aIntegrity,
                        bool aScriptFromHead);
 
     void PreloadStyle(const nsAString& aURL, const nsAString& aCharset,
-                      const nsAString& aCrossOrigin);
+                      const nsAString& aCrossOrigin,
+                      const nsAString& aIntegrity);
 
     void PreloadImage(const nsAString& aURL,
                       const nsAString& aCrossOrigin,

@@ -53,8 +53,20 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/unused.h"
+#include "mozilla/dom/SRICheck.h"
+#include "nsIScriptError.h"
 
 static PRLogModuleInfo* gCspPRLog;
+
+static PRLogModuleInfo*
+GetSriLog()
+{
+  static PRLogModuleInfo *gSriPRLog;
+  if (!gSriPRLog) {
+    gSriPRLog = PR_NewLogModule("SRI");
+  }
+  return gSriPRLog;
+}
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -606,7 +618,22 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
 
     if (!request) {
       // no usable preload
-      request = new nsScriptLoadRequest(aElement, version, ourCORSMode);
+
+      SRIMetadata sriMetadata;
+      {
+        nsAutoString integrity;
+        scriptContent->GetAttr(kNameSpaceID_None, nsGkAtoms::integrity,
+                               integrity);
+        if (!integrity.IsEmpty()) {
+          MOZ_LOG(GetSriLog(), mozilla::LogLevel::Debug,
+                 ("nsScriptLoader::ProcessScriptElement, integrity=%s",
+                  NS_ConvertUTF16toUTF8(integrity).get()));
+          SRICheck::IntegrityMetadata(integrity, mDocument, &sriMetadata);
+        }
+      }
+
+      request = new nsScriptLoadRequest(aElement, version, ourCORSMode,
+                                        sriMetadata);
       request->mURI = scriptURI;
       request->mIsInline = false;
       request->mLoading = true;
@@ -720,7 +747,8 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
   }
 
   // Inline scripts ignore ther CORS mode and are always CORS_NONE
-  request = new nsScriptLoadRequest(aElement, version, CORS_NONE);
+  request = new nsScriptLoadRequest(aElement, version, CORS_NONE,
+                                    SRIMetadata()); // SRI doesn't apply
   request->mJSVersion = version;
   request->mLoading = false;
   request->mIsInline = true;
@@ -1408,8 +1436,15 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
   NS_ASSERTION(request, "null request in stream complete handler");
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
-  nsresult rv = PrepareLoadedRequest(request, aLoader, aStatus, aStringLen,
-                                     aString);
+  nsresult rv = NS_ERROR_SRI_CORRUPT;
+  if (request->mIntegrity.IsEmpty() ||
+      NS_SUCCEEDED(SRICheck::VerifyIntegrity(request->mIntegrity,
+                                             request->mURI,
+                                             request->mCORSMode, aStringLen,
+                                             aString, mDocument))) {
+    rv = PrepareLoadedRequest(request, aLoader, aStatus, aStringLen, aString);
+  }
+
   if (NS_FAILED(rv)) {
     /*
      * Handle script not loading error because source was a tracking URL.
@@ -1603,6 +1638,7 @@ void
 nsScriptLoader::PreloadURI(nsIURI *aURI, const nsAString &aCharset,
                            const nsAString &aType,
                            const nsAString &aCrossOrigin,
+                           const nsAString& aIntegrity,
                            bool aScriptFromHead,
                            const mozilla::net::ReferrerPolicy aReferrerPolicy)
 {
@@ -1611,9 +1647,18 @@ nsScriptLoader::PreloadURI(nsIURI *aURI, const nsAString &aCharset,
     return;
   }
 
+  SRIMetadata sriMetadata;
+  if (!aIntegrity.IsEmpty()) {
+    MOZ_LOG(GetSriLog(), mozilla::LogLevel::Debug,
+           ("nsScriptLoader::PreloadURI, integrity=%s",
+            NS_ConvertUTF16toUTF8(aIntegrity).get()));
+    SRICheck::IntegrityMetadata(aIntegrity, mDocument, &sriMetadata);
+  }
+
   nsRefPtr<nsScriptLoadRequest> request =
     new nsScriptLoadRequest(nullptr, 0,
-                            Element::StringToCORSMode(aCrossOrigin));
+                            Element::StringToCORSMode(aCrossOrigin),
+                            sriMetadata);
   request->mURI = aURI;
   request->mIsInline = false;
   request->mLoading = true;
