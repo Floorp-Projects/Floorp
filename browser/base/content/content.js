@@ -38,8 +38,8 @@ XPCOMUtils.defineLazyGetter(this, "PageMenuChild", function() {
   Cu.import("resource://gre/modules/PageMenu.jsm", tmp);
   return new tmp.PageMenuChild();
 });
-
-XPCOMUtils.defineLazyModuleGetter(this, "Feeds", "resource:///modules/Feeds.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Feeds",
+  "resource:///modules/Feeds.jsm");
 
 // TabChildGlobal
 var global = this;
@@ -849,10 +849,10 @@ addMessageListener("ContextMenu:SetAsDesktopBackground", (message) => {
     sendAsyncMessage("ContextMenu:SetAsDesktopBackground:Result", { disable });
 });
 
-let pageInfoListener = {
+let PageInfoListener = {
 
-  init: function(chromeGlobal) {
-    chromeGlobal.addMessageListener("PageInfo:getData", this, false, true);
+  init: function() {
+    addMessageListener("PageInfo:getData", this);
   },
 
   receiveMessage: function(message) {
@@ -974,7 +974,7 @@ let pageInfoListener = {
     if (window && window.frames.length > 0) {
       let num = window.frames.length;
       for (let i = 0; i < num; i++) {
-        // recurse through the frames
+        // Recurse through the frames.
         frameList.concat(this.goThroughFrames(window.frames[i].document,
                                               window.frames[i]));
       }
@@ -1124,7 +1124,7 @@ let pageInfoListener = {
       }
     }
 
-    // if we have a data url, get the MIME type from the url
+    // If we have a data url, get the MIME type from the url.
     if (!result.mimeType && url.startsWith("data:")) {
       let dataMimeType = /^data:(image\/[^;,]+)/i.exec(url);
       if (dataMimeType)
@@ -1224,4 +1224,4 @@ let pageInfoListener = {
     return text.replace(endRE, "");
   }
 };
-pageInfoListener.init(this);
+PageInfoListener.init();

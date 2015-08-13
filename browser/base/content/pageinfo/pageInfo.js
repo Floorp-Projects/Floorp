@@ -376,8 +376,8 @@ function loadPageInfo(frameOuterWindowID)
                       docInfo.documentURIObject.originCharset);
     gDocInfo = docInfo;
 
-    var titleFormat = windowInfo.isTopWindow ? "pageInfo.frame.title"
-                                             : "pageInfo.page.title";
+    var titleFormat = windowInfo.isTopWindow ? "pageInfo.page.title"
+                                             : "pageInfo.frame.title";
     document.title = gBundle.getFormattedString(titleFormat, [docInfo.location]);
 
     document.getElementById("main-window").setAttribute("relatedUrl", docInfo.location);
