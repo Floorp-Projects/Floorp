@@ -2318,7 +2318,9 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
     uint32_t numChildren = int32_t(number);
 
     if (numChildren > 0) {
-        mChildren.SetCapacity(numChildren);
+        if (!mChildren.SetCapacity(numChildren, fallible)) {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
 
         for (uint32_t i = 0; i < numChildren; i++) {
             rv = aStream->Read32(&number);
