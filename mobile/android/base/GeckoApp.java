@@ -1637,8 +1637,7 @@ public abstract class GeckoApp
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                if (AppConstants.NIGHTLY_BUILD && AppConstants.MOZ_ANDROID_TAB_QUEUE
-                                               && TabQueueHelper.shouldOpenTabQueueUrls(GeckoApp.this)) {
+                if (AppConstants.MOZ_ANDROID_TAB_QUEUE && TabQueueHelper.shouldOpenTabQueueUrls(GeckoApp.this)) {
 
                     EventDispatcher.getInstance().registerGeckoThreadListener(new NativeEventListener() {
                         @Override
