@@ -346,8 +346,11 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
                                                              aLength, aSampleRate) :
                             static_cast<AudioNodeEngine*>(new DestinationNodeEngine(this));
 
-  mStream = AudioNodeStream::Create(graph, engine,
-                                    AudioNodeStream::EXTERNAL_STREAM);
+  AudioNodeStream::Flags flags =
+    AudioNodeStream::NEED_MAIN_THREAD_CURRENT_TIME |
+    AudioNodeStream::NEED_MAIN_THREAD_FINISHED |
+    AudioNodeStream::EXTERNAL_OUTPUT;
+  mStream = AudioNodeStream::Create(graph, engine, flags);
   mStream->AddMainThreadListener(this);
   mStream->AddAudioOutput(&gWebAudioOutputKey);
 

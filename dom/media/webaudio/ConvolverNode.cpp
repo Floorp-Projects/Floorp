@@ -192,7 +192,7 @@ ConvolverNode::ConvolverNode(AudioContext* aContext)
 {
   ConvolverNodeEngine* engine = new ConvolverNodeEngine(this, mNormalize);
   mStream = AudioNodeStream::Create(aContext->Graph(), engine,
-                                    AudioNodeStream::INTERNAL_STREAM);
+                                    AudioNodeStream::NO_STREAM_FLAGS);
 }
 
 ConvolverNode::~ConvolverNode()

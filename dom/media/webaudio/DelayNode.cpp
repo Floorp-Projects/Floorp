@@ -199,7 +199,7 @@ DelayNode::DelayNode(AudioContext* aContext, double aMaxDelay)
     new DelayNodeEngine(this, aContext->Destination(),
                         aContext->SampleRate() * aMaxDelay);
   mStream = AudioNodeStream::Create(aContext->Graph(), engine,
-                                    AudioNodeStream::INTERNAL_STREAM);
+                                    AudioNodeStream::NO_STREAM_FLAGS);
   engine->SetSourceStream(mStream);
 }
 

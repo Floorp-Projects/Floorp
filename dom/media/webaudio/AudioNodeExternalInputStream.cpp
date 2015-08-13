@@ -13,7 +13,7 @@ using namespace mozilla::dom;
 namespace mozilla {
 
 AudioNodeExternalInputStream::AudioNodeExternalInputStream(AudioNodeEngine* aEngine, TrackRate aSampleRate, uint32_t aContextId)
-  : AudioNodeStream(aEngine, INTERNAL_STREAM, aSampleRate, aContextId)
+  : AudioNodeStream(aEngine, NO_STREAM_FLAGS, aSampleRate, aContextId)
 {
   MOZ_COUNT_CTOR(AudioNodeExternalInputStream);
 }

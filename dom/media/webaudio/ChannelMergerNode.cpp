@@ -75,7 +75,7 @@ ChannelMergerNode::ChannelMergerNode(AudioContext* aContext,
 {
   mStream = AudioNodeStream::Create(aContext->Graph(),
                                     new ChannelMergerNodeEngine(this),
-                                    AudioNodeStream::INTERNAL_STREAM);
+                                    AudioNodeStream::NO_STREAM_FLAGS);
 }
 
 ChannelMergerNode::~ChannelMergerNode()
