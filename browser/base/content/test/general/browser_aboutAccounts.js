@@ -38,6 +38,8 @@ let gTests = [
 {
   desc: "Test the remote commands",
   teardown: function* () {
+    // We remove 2 tabs because when the user is logged-in the sync pref page opens.
+    gBrowser.removeCurrentTab();
     gBrowser.removeCurrentTab();
     yield fxAccounts.signOut();
   },
