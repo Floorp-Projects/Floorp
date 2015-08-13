@@ -111,7 +111,6 @@ EXTRA_JS_MODULES.devtools.gcli.util += [
     'source/lib/gcli/util/l10n.js',
     'source/lib/gcli/util/legacy.js',
     'source/lib/gcli/util/prism.js',
-    'source/lib/gcli/util/promise.js',
     'source/lib/gcli/util/spell.js',
     'source/lib/gcli/util/util.js',
 ]
