@@ -30,6 +30,11 @@ JS_STATIC_ASSERT(1 << defaultShift == sizeof(JS::Value));
 // Assembler-arm.{h,cpp}
 class MacroAssemblerARM : public Assembler
 {
+  private:
+    // Perform a downcast. Should be removed by Bug 996602.
+    MacroAssembler& asMasm();
+    const MacroAssembler& asMasm() const;
+
   protected:
     // On ARM, some instructions require a second scratch register. This
     // register defaults to lr, since it's non-allocatable (as it can be

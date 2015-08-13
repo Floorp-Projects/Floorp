@@ -4752,6 +4752,18 @@ MacroAssemblerARMCompat::callAndPushReturnAddress(Label* label)
 }
 
 MacroAssembler&
+MacroAssemblerARM::asMasm()
+{
+    return *static_cast<MacroAssembler*>(this);
+}
+
+const MacroAssembler&
+MacroAssemblerARM::asMasm() const
+{
+    return *static_cast<const MacroAssembler*>(this);
+}
+
+MacroAssembler&
 MacroAssemblerARMCompat::asMasm()
 {
     return *static_cast<MacroAssembler*>(this);
