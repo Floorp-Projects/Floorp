@@ -39,8 +39,6 @@
 class nsIObserver;
 class Task;
 
-extern bool mozilla_AndroidBridge_SetMainThread(pthread_t);
-
 namespace base {
 class Thread;
 } // end namespace base
@@ -133,20 +131,12 @@ public:
         return pthread_equal(pthread_self(), sJavaUiThread);
     }
 
-    static void ConstructBridge(JNIEnv *jEnv,
-                                jni::Object::Param clsLoader,
-                                jni::Object::Param msgQueue);
+    static void ConstructBridge();
+    static void DeconstructBridge();
 
     static AndroidBridge *Bridge() {
         return sBridge;
     }
-
-    // The bridge needs to be constructed via ConstructBridge first,
-    // and then once the Gecko main thread is spun up (Gecko side),
-    // SetMainThread should be called which will create the JNIEnv for
-    // us to use.  toolkit/xre/nsAndroidStartup.cpp calls
-    // SetMainThread.
-    bool SetMainThread(pthread_t thr);
 
     /* These are all implemented in Java */
     bool GetThreadNameJavaProfiling(uint32_t aThreadId, nsCString & aResult);
@@ -325,9 +315,6 @@ protected:
 
     AndroidBridge();
     ~AndroidBridge();
-
-    void InitStubs(JNIEnv *jEnv);
-    void Init(JNIEnv *jEnv, jni::Object::Param clsLoader);
 
     bool mOpenedGraphicsLibraries;
     void OpenGraphicsLibraries();
