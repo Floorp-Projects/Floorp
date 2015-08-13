@@ -47,13 +47,14 @@ public:
   virtual bool IsMediaSeekable() override;
 
 private:
-  bool ReadFromResource(MediaResource *aResource, uint8_t *aBuf, uint32_t aLength);
+  bool ReadFromResource(uint8_t *aBuf, uint32_t aLength);
 
   RawVideoHeader mMetadata;
   uint32_t mCurrentFrame;
   double mFrameRate;
   uint32_t mFrameSize;
   nsIntRect mPicture;
+  MediaResourceIndex mResource;
 };
 
 } // namespace mozilla
