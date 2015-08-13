@@ -211,10 +211,10 @@ extern bool gBluetoothDebugFlag;
 #define SYS_MSG_BT_PAIRING_REQ                "bluetooth-pairing-request"
 
 /**
- * The app origin of bluetooth app, which is responsible for listening pairing
- * requests.
+ * The preference name of bluetooth app origin of bluetooth app. The default
+ * value is defined in b2g/app/b2g.js.
  */
-#define BLUETOOTH_APP_ORIGIN                  "app://bluetooth.gaiamobile.org"
+#define PREF_BLUETOOTH_APP_ORIGIN             "dom.bluetooth.app-origin"
 
 /**
  * When a remote device gets paired / unpaired with local bluetooth adapter or
