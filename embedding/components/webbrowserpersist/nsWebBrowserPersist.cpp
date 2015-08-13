@@ -1663,6 +1663,10 @@ nsWebBrowserPersist::OnWalk::VisitDocument(nsIWebBrowserPersistDocument* aDoc,
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mParent->StoreURI(uriSpec.get(), false, &data);
     NS_ENSURE_SUCCESS(rv, rv);
+    if (!data) {
+        // If the URI scheme isn't persistable, then don't persist.
+        return NS_OK;
+    }
     data->mIsSubFrame = true;
     return mParent->SaveSubframeContent(aSubDoc, uriSpec, data);
 }
