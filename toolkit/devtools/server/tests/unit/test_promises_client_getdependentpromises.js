@@ -14,8 +14,9 @@ let events = require("sdk/event/core");
 add_task(function*() {
   let client = yield startTestDebuggerServer("test-promises-dependentpromises");
   let chromeActors = yield getChromeActors(client);
+  yield attachTab(client, chromeActors);
 
-  ok(Promise.toString().contains("native code"), "Expect native DOM Promise.");
+  ok(Promise.toString().includes("native code"), "Expect native DOM Promise.");
 
   yield testGetDependentPromises(client, chromeActors, () => {
     let p = new Promise(() => {});
@@ -31,6 +32,7 @@ add_task(function*() {
   let response = yield listTabs(client);
   let targetTab = findTab(response.tabs, "test-promises-dependentpromises");
   ok(targetTab, "Found our target tab.");
+  yield attachTab(client, targetTab);
 
   yield testGetDependentPromises(client, targetTab, () => {
     const debuggee =
