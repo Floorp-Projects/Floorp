@@ -16,7 +16,6 @@
 
 'use strict';
 
-var Promise = require('../util/promise').Promise;
 var l10n = require('../util/l10n');
 var cli = require('../cli');
 

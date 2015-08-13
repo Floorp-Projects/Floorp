@@ -10,10 +10,9 @@ SimpleTest.registerCleanupFunction(function() {
   Services.prefs.clearUserPref("devtools.debugger.log");
 });
 
-Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
-
 Cu.import("resource://gre/modules/Task.jsm");
 let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+let { DebuggerClient } = require("devtools/toolkit/client/main");
 let { DebuggerServer } = require("devtools/server/main");
 
 let { MemoryFront } = require("devtools/server/actors/memory");

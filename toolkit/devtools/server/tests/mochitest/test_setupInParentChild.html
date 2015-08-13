@@ -19,7 +19,7 @@ let Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/Services.jsm");
 let {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
+let {DebuggerClient} = require("devtools/toolkit/client/main");
 let {DebuggerServer} = require("devtools/server/main");
 
 window.onload = function() {

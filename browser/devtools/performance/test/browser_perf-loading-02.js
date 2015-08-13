@@ -25,20 +25,17 @@ let test = Task.async(function*() {
     "The recording-notice is shown while recording");
 
   info("Stop the recording and wait for the WILL_STOP and STOPPED events");
-  let clicked = PerformanceView.once(EVENTS.UI_STOP_RECORDING);
   let willStop = PerformanceController.once(EVENTS.RECORDING_WILL_STOP);
   let hasStopped = PerformanceController.once(EVENTS.RECORDING_STOPPED);
+  let stoppingRecording = PerformanceController.stopRecording();
 
-  click(panel.panelWin, $("#main-record-button"));
-  yield clicked;
   yield willStop;
 
   is(detailsContainer.selectedPanel, loadingNotice,
     "The loading-notice is shown while the record is stopping");
 
-  let stateChanged = once(PerformanceView, EVENTS.UI_STATE_CHANGED);
   yield hasStopped;
-  yield stateChanged;
+  yield stoppingRecording;
 
   is(detailsContainer.selectedPanel, detailsPane,
     "The details panel is shown after the record has stopped");
@@ -52,21 +49,18 @@ let test = Task.async(function*() {
   yield select;
 
   info("Stop the 2nd recording and wait for the WILL_STOP and STOPPED events");
-  clicked = PerformanceView.once(EVENTS.UI_STOP_RECORDING);
   willStop = PerformanceController.once(EVENTS.RECORDING_WILL_STOP);
   hasStopped = PerformanceController.once(EVENTS.RECORDING_STOPPED);
+  stoppingRecording = PerformanceController.stopRecording();
 
-  click(panel.panelWin, $("#main-record-button"));
-  yield clicked;
   yield willStop;
 
   is(detailsContainer.selectedPanel, detailsPane,
     "The details panel is still shown while the 2nd record is being stopped");
   is(RecordingsView.selectedIndex, 0, "The first record is still selected");
 
-  stateChanged = once(PerformanceView, EVENTS.UI_STATE_CHANGED);
   yield hasStopped;
-  yield stateChanged;
+  yield stoppingRecording;
 
   is(detailsContainer.selectedPanel, detailsPane,
     "The details panel is still shown after the 2nd record has stopped");

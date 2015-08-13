@@ -10,7 +10,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 Cu.import("resource:///modules/devtools/gDevTools.jsm");
 
-const { devtools: loader, require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const { loader, require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 
 let { console } = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 let { EventTarget } = require("sdk/event/target");

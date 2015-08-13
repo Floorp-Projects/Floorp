@@ -24,6 +24,7 @@ Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils.js");
 const { DebuggerServer } = require("devtools/server/main");
 const { DebuggerServer: WorkerDebuggerServer } = worker.require("devtools/server/main");
+const { DebuggerClient, ObjectClient } = require("devtools/toolkit/client/main");
 
 let loadSubScript = Cc[
   '@mozilla.org/moz/jssubscript-loader;1'
@@ -131,7 +132,6 @@ function tryImport(url) {
   }
 }
 
-tryImport("resource://gre/modules/devtools/dbg-client.jsm");
 tryImport("resource://gre/modules/devtools/Loader.jsm");
 tryImport("resource://gre/modules/devtools/Console.jsm");
 

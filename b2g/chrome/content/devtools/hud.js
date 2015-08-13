@@ -14,7 +14,7 @@ XPCOMUtils.defineLazyGetter(this, 'devtools', function() {
 });
 
 XPCOMUtils.defineLazyGetter(this, 'DebuggerClient', function() {
-  return Cu.import('resource://gre/modules/devtools/dbg-client.jsm', {}).DebuggerClient;
+  return devtools.require('devtools/toolkit/client/main').DebuggerClient;
 });
 
 XPCOMUtils.defineLazyGetter(this, 'WebConsoleUtils', function() {
@@ -647,6 +647,13 @@ let performanceEntriesWatcher = {
             // Events based on performance marks are for telemetry only, they are
             // not displayed in the HUD front end.
             target._sendTelemetryEvent({name: eventName, value: time});
+
+            memoryWatcher.front(target).residentUnique().then(value => {
+              eventName = 'app-memory-' + name;
+              target._sendTelemetryEvent({name: eventName, value: value});
+            }, err => {
+              console.error(err);
+            });
           }
         }
       }
@@ -716,11 +723,10 @@ let memoryWatcher = {
 
   measure(target) {
     let watch = this._watching;
-    let front = this._fronts.get(target);
     let format = this.formatMemory;
 
     if (watch.uss) {
-      front.residentUnique().then(value => {
+      this.front(target).residentUnique().then(value => {
         target.update({name: 'uss', value: value}, 'USS: ' + format(value));
       }, err => {
         console.error(err);
@@ -787,6 +793,10 @@ let memoryWatcher = {
       this._fronts.delete(target);
       this._timers.delete(target);
     }
+  },
+
+  front(target) {
+    return this._fronts.get(target);
   }
 };
 developerHUD.registerWatcher(memoryWatcher);

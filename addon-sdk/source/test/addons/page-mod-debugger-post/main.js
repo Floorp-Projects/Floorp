@@ -14,7 +14,7 @@ const { set } = require('sdk/preferences/service');
 
 const { require: devtoolsRequire } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const { DebuggerServer } = devtoolsRequire("devtools/server/main");
-const { DebuggerClient } = Cu.import('resource://gre/modules/devtools/dbg-client.jsm', {});
+const { DebuggerClient } = devtoolsRequire("devtools/toolkit/client/main");
 
 let gClient;
 let ok;

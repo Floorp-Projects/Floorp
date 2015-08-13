@@ -20,7 +20,7 @@ function toggleAllTools(state) {
 function getChromeActors(callback)
 {
   let { DebuggerServer } = require("devtools/server/main");
-  let { DebuggerClient } = Cu.import("resource://gre/modules/devtools/dbg-client.jsm", {});
+  let { DebuggerClient } = require("devtools/toolkit/client/main");
 
   if (!DebuggerServer.initialized) {
     DebuggerServer.init();

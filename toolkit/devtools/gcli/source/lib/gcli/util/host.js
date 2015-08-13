@@ -22,7 +22,6 @@ var URL = require('sdk/url').URL;
 
 var Task = require('resource://gre/modules/Task.jsm').Task;
 
-var Promise = require('../util/promise').Promise;
 var util = require('./util');
 
 function Highlighter(document) {

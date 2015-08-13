@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1192654
+-->
+<head>
+  <title>Test for Bug 1192654 (nsWebBrowser vs. nonpersistable subdocuments)</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1192654">Mozilla Bug 1192654</a>
+<p id="display"></p>
+<pre id="results"></pre>
+<div id="content">
+  <!-- The outer iframe uses a data URI for simplicity; this would
+       also work if it were loaded from a support file by relative
+       URI.  The inner iframe (the one nsWebBrowserPersist traverses)
+       uses a data URI because data: is a non-persistable scheme and
+       thus triggers the bug.
+    -->
+  <iframe src="data:text/html,<iframe%20src=%22data:text/plain,Example%22>"
+	  id="iframe"></iframe>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript;version=1.7">
+const nameStem="test_bug1192654_" + Date.now();
+const { Ci, Cc, Cu, Cr } = SpecialPowers;
+let iframe = document.getElementById("iframe");
+
+SimpleTest.waitForExplicitFinish();
+
+iframe.onload = function iframe_onload1() {
+  let doc = iframe.contentDocument;
+  ok(doc, "iframe content document exists");
+
+  let wbp = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
+            .createInstance(Ci.nsIWebBrowserPersist);
+  let tmp = Cc["@mozilla.org/file/directory_service;1"]
+            .getService(Ci.nsIProperties)
+            .get("TmpD", Ci.nsIFile);
+  let tmpFile = tmp.clone();
+  tmpFile.append(nameStem + "_iframe.xml");
+  let tmpDir = tmp.clone();
+  tmpDir.append(nameStem + "_files");
+
+  wbp.progressListener = {
+    onProgressChange: function(){},
+    onLocationChange: function(){},
+    onStatusChange: function(){},
+    onSecurityChange: function(){},
+    onStateChange: wbp_stateChange,
+  };
+  SimpleTest.registerCleanupFunction(cleanUp);
+
+  wbp.saveDocument(doc, tmpFile, tmpDir, null, 0, 0);
+
+  function wbp_stateChange(_wbp, _req, state, status) {
+    if ((state & Ci.nsIWebProgressListener.STATE_STOP) == 0) {
+      return;
+    }
+    is(status, Cr.NS_OK, "nsWebBrowserPersist status");
+    SimpleTest.finish();
+  }
+
+  function cleanUp() {
+    if (tmpFile.exists()) {
+      tmpFile.remove(/* recursive: */ false);
+    }
+    if (tmpDir.exists()) {
+      tmpDir.remove(/* recursive: */ true);
+    }
+  }
+};
+</script>
+</pre>
+</body>
+</html>

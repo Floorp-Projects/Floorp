@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const { on, off } = require("sdk/event/core");
-const { DebuggerClient } = Cu.import("resource://gre/modules/devtools/dbg-client.jsm", {});
+const { DebuggerClient } = require("devtools/toolkit/client/main");
 
 function test() {
   gDevTools.on("toolbox-created", onToolboxCreated);

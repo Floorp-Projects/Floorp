@@ -693,7 +693,7 @@ OnSharedPreferenceChangeListener
                 } else if (pref instanceof PanelsPreferenceCategory) {
                     mPanelsPreferenceCategory = (PanelsPreferenceCategory) pref;
                 }
-                if((AppConstants.MOZ_ANDROID_TAB_QUEUE && AppConstants.NIGHTLY_BUILD) && (PREFS_CUSTOMIZE_SCREEN.equals(key))) {
+                if(AppConstants.MOZ_ANDROID_TAB_QUEUE && PREFS_CUSTOMIZE_SCREEN.equals(key)) {
                     // Only change the customize pref screen summary on nightly builds with the tab queue build flag.
                     pref.setSummary(getString(R.string.pref_category_customize_alt_summary));
                 }
@@ -849,7 +849,7 @@ OnSharedPreferenceChangeListener
                     }
                 } else if (PREFS_TAB_QUEUE.equals(key)) {
                     // Only show tab queue pref on nightly builds with the tab queue build flag.
-                    if (!(AppConstants.MOZ_ANDROID_TAB_QUEUE && AppConstants.NIGHTLY_BUILD)) {
+                    if (!AppConstants.MOZ_ANDROID_TAB_QUEUE) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
