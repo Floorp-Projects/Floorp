@@ -302,6 +302,21 @@ let LoopRoomsInternal = {
   }),
 
   /**
+   * Updates a roomUrl to add a new key onto the end of the url.
+   *
+   * @param  {String} roomUrl The existing url that may or may not have a key
+   *                          on the end.
+   * @param  {String} roomKey The new key to put on the url.
+   * @return {String}         The revised url.
+   */
+  refreshRoomUrlWithNewKey: function(roomUrl, roomKey) {
+    // Strip any existing key from the url.
+    roomUrl = roomUrl.split("#")[0];
+    // Now add the key to the url.
+    return roomUrl + "#" + roomKey;
+  },
+
+  /**
    * Encrypts room data in a format appropriate to sending to the loop
    * server.
    *
@@ -404,10 +419,7 @@ let LoopRoomsInternal = {
     roomData.roomKey = key;
     roomData.decryptedContext = JSON.parse(decryptedData);
 
-    // Strip any existing key from the url.
-    roomData.roomUrl = roomData.roomUrl.split("#")[0];
-    // Now add the key to the url.
-    roomData.roomUrl = roomData.roomUrl + "#" + roomData.roomKey;
+    roomData.roomUrl = this.refreshRoomUrlWithNewKey(roomData.roomUrl, roomData.roomKey);
 
     return roomData;
   }),
@@ -610,6 +622,8 @@ let LoopRoomsInternal = {
       extend(room, JSON.parse(response.body));
       // Do not keep this value - it is a request to the server.
       delete room.expiresIn;
+      // Make sure the url has the key on it.
+      room.roomUrl = this.refreshRoomUrlWithNewKey(room.roomUrl, room.roomKey);
       this.rooms.set(room.roomToken, room);
 
       if (this.sessionType == LOOP_SESSION_TYPE.GUEST) {
