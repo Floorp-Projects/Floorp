@@ -20,6 +20,7 @@ class Image;
 class PlanarYCbCrImage;
 class GrallocImage;
 class SurfaceTextureImage;
+class MacIOSurfaceImage;
 class EGLImageImage;
 } // namespace layers
 
@@ -100,7 +101,8 @@ class GLBlitHelper final
         ConvertGralloc,
         ConvertPlanarYCbCr,
         ConvertSurfaceTexture,
-        ConvertEGLImage
+        ConvertEGLImage,
+        ConvertMacIOSurfaceImage
     };
     // The GLContext is the sole owner of the GLBlitHelper.
     GLContext* mGL;
@@ -119,8 +121,10 @@ class GLBlitHelper final
     // Data for image blit path
     GLuint mTexExternalBlit_FragShader;
     GLuint mTexYUVPlanarBlit_FragShader;
+    GLuint mTexNV12PlanarBlit_FragShader;
     GLuint mTexExternalBlit_Program;
     GLuint mTexYUVPlanarBlit_Program;
+    GLuint mTexNV12PlanarBlit_Program;
     GLuint mFBO;
     GLuint mSrcTexY;
     GLuint mSrcTexCb;
@@ -152,6 +156,9 @@ class GLBlitHelper final
     // Blit onto the current FB.
     bool BlitSurfaceTextureImage(layers::SurfaceTextureImage* stImage);
     bool BlitEGLImageImage(layers::EGLImageImage* eglImage);
+#endif
+#ifdef XP_MACOSX
+    bool BlitMacIOSurfaceImage(layers::MacIOSurfaceImage* ioImage);
 #endif
 
     explicit GLBlitHelper(GLContext* gl);
