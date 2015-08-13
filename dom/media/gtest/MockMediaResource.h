@@ -32,17 +32,8 @@ public:
   }
   virtual void SetReadMode(MediaCacheStream::ReadMode aMode) override {}
   virtual void SetPlaybackRate(uint32_t aBytesPerSecond) override {}
-  virtual nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
-    override
-  {
-    return NS_OK;
-  }
   virtual nsresult ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount,
                           uint32_t* aBytes) override;
-  virtual nsresult Seek(int32_t aWhence, int64_t aOffset) override
-  {
-    return NS_OK;
-  }
   virtual int64_t Tell() override { return 0; }
   virtual void Pin() override {}
   virtual void Unpin() override {}

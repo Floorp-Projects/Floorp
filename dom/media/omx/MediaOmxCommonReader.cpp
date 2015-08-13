@@ -27,6 +27,7 @@ extern PRLogModuleInfo* gMediaDecoderLog;
 
 MediaOmxCommonReader::MediaOmxCommonReader(AbstractMediaDecoder *aDecoder)
   : MediaDecoderReader(aDecoder)
+  , mStreamSource(nullptr)
 {
   if (!gMediaDecoderLog) {
     gMediaDecoderLog = PR_NewLogModule("MediaDecoder");

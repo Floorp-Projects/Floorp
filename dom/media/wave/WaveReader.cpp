@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "nsError.h"
 #include "AbstractMediaDecoder.h"
-#include "MediaResource.h"
 #include "WaveReader.h"
 #include "MediaDecoderStateMachine.h"
 #include "VideoUtils.h"
@@ -107,6 +106,7 @@ namespace {
 
 WaveReader::WaveReader(AbstractMediaDecoder* aDecoder)
   : MediaDecoderReader(aDecoder)
+  , mResource(aDecoder->GetResource())
 {
   MOZ_COUNT_CTOR(WaveReader);
 }
@@ -265,7 +265,7 @@ WaveReader::Seek(int64_t aTarget, int64_t aEndTime)
   int64_t position = RoundDownToFrame(static_cast<int64_t>(TimeToBytes(seekTime)));
   NS_ASSERTION(INT64_MAX - mWavePCMOffset > position, "Integer overflow during wave seek");
   position += mWavePCMOffset;
-  nsresult res = mDecoder->GetResource()->Seek(nsISeekableStream::NS_SEEK_SET, position);
+  nsresult res = mResource.Seek(nsISeekableStream::NS_SEEK_SET, position);
   if (NS_FAILED(res)) {
     return SeekPromise::CreateAndReject(res, __func__);
   } else {
@@ -308,7 +308,7 @@ WaveReader::ReadAll(char* aBuf, int64_t aSize, int64_t* aBytesRead)
   }
   do {
     uint32_t read = 0;
-    if (NS_FAILED(mDecoder->GetResource()->Read(aBuf + got, uint32_t(aSize - got), &read))) {
+    if (NS_FAILED(mResource.Read(aBuf + got, uint32_t(aSize - got), &read))) {
       NS_WARNING("Resource read failed");
       return false;
     }
@@ -329,7 +329,7 @@ WaveReader::LoadRIFFChunk()
   char riffHeader[RIFF_INITIAL_SIZE];
   const char* p = riffHeader;
 
-  MOZ_ASSERT(mDecoder->GetResource()->Tell() == 0,
+  MOZ_ASSERT(mResource.Tell() == 0,
              "LoadRIFFChunk called when resource in invalid state");
 
   if (!ReadAll(riffHeader, sizeof(riffHeader))) {
@@ -362,7 +362,7 @@ WaveReader::LoadFormatChunk(uint32_t aChunkSize)
   const char* p = waveFormat;
 
   // RIFF chunks are always word (two byte) aligned.
-  MOZ_ASSERT(mDecoder->GetResource()->Tell() % 2 == 0,
+  MOZ_ASSERT(mResource.Tell() % 2 == 0,
              "LoadFormatChunk called with unaligned resource");
 
   if (!ReadAll(waveFormat, sizeof(waveFormat))) {
@@ -424,7 +424,7 @@ WaveReader::LoadFormatChunk(uint32_t aChunkSize)
   }
 
   // RIFF chunks are always word (two byte) aligned.
-  MOZ_ASSERT(mDecoder->GetResource()->Tell() % 2 == 0,
+  MOZ_ASSERT(mResource.Tell() % 2 == 0,
              "LoadFormatChunk left resource unaligned");
 
   // Make sure metadata is fairly sane.  The rate check is fairly arbitrary,
@@ -458,10 +458,10 @@ bool
 WaveReader::FindDataOffset(uint32_t aChunkSize)
 {
   // RIFF chunks are always word (two byte) aligned.
-  MOZ_ASSERT(mDecoder->GetResource()->Tell() % 2 == 0,
+  MOZ_ASSERT(mResource.Tell() % 2 == 0,
              "FindDataOffset called with unaligned resource");
 
-  int64_t offset = mDecoder->GetResource()->Tell();
+  int64_t offset = mResource.Tell();
   if (offset <= 0 || offset > UINT32_MAX) {
     NS_WARNING("PCM data offset out of range");
     return false;
@@ -512,7 +512,7 @@ WaveReader::GetDataLength()
 int64_t
 WaveReader::GetPosition()
 {
-  return mDecoder->GetResource()->Tell();
+  return mResource.Tell();
 }
 
 bool
@@ -520,7 +520,7 @@ WaveReader::GetNextChunk(uint32_t* aChunk, uint32_t* aChunkSize)
 {
   MOZ_ASSERT(aChunk, "Must have aChunk");
   MOZ_ASSERT(aChunkSize, "Must have aChunkSize");
-  MOZ_ASSERT(mDecoder->GetResource()->Tell() % 2 == 0,
+  MOZ_ASSERT(mResource.Tell() % 2 == 0,
              "GetNextChunk called with unaligned resource");
 
   char chunkHeader[CHUNK_HEADER_SIZE];
@@ -543,7 +543,7 @@ WaveReader::LoadListChunk(uint32_t aChunkSize,
                           nsAutoPtr<dom::HTMLMediaElement::MetadataTags> &aTags)
 {
   // List chunks are always word (two byte) aligned.
-  MOZ_ASSERT(mDecoder->GetResource()->Tell() % 2 == 0,
+  MOZ_ASSERT(mResource.Tell() % 2 == 0,
              "LoadListChunk called with unaligned resource");
 
   static const unsigned int MAX_CHUNK_SIZE = 1 << 16;
@@ -619,7 +619,7 @@ bool
 WaveReader::LoadAllChunks(nsAutoPtr<dom::HTMLMediaElement::MetadataTags> &aTags)
 {
   // Chunks are always word (two byte) aligned.
-  MOZ_ASSERT(mDecoder->GetResource()->Tell() % 2 == 0,
+  MOZ_ASSERT(mResource.Tell() % 2 == 0,
              "LoadAllChunks called with unaligned resource");
 
   bool loadFormatChunk = false;
