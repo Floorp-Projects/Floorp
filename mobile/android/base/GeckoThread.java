@@ -18,7 +18,10 @@ import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Message;
+import android.os.MessageQueue;
 import android.os.SystemClock;
+import android.util.DisplayMetrics;
 import android.util.Log;
 
 import java.io.IOException;
@@ -225,13 +228,12 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         }
     }
 
-    private String initGeckoEnvironment() {
-        final Locale locale = Locale.getDefault();
-
+    private static String initGeckoEnvironment() {
         final Context context = GeckoAppShell.getContext();
         GeckoLoader.loadMozGlue(context);
         setState(State.MOZGLUE_READY);
 
+        final Locale locale = Locale.getDefault();
         final Resources res = context.getResources();
         if (locale.toString().equalsIgnoreCase("zh_hk")) {
             final Locale mappedLocale = Locale.TRADITIONAL_CHINESE;
@@ -241,7 +243,6 @@ public class GeckoThread extends Thread implements GeckoEventListener {
             res.updateConfiguration(config, null);
         }
 
-        String resourcePath = "";
         String[] pluginDirs = null;
         try {
             pluginDirs = GeckoAppShell.getPluginDirectories();
@@ -249,7 +250,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
             Log.w(LOGTAG, "Caught exception getting plugin dirs.", e);
         }
 
-        resourcePath = context.getPackageResourcePath();
+        final String resourcePath = context.getPackageResourcePath();
         GeckoLoader.setupGeckoEnvironment(context, pluginDirs, context.getFilesDir().getPath());
 
         GeckoLoader.loadSQLiteLibs(context, resourcePath);
@@ -260,14 +261,14 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         return resourcePath;
     }
 
-    private String getTypeFromAction(String action) {
+    private static String getTypeFromAction(String action) {
         if (GeckoApp.ACTION_HOMESCREEN_SHORTCUT.equals(action)) {
             return "-bookmark";
         }
         return null;
     }
 
-    private String addCustomProfileArg(String args) {
+    private static String addCustomProfileArg(String args) {
         String profileArg = "";
         String guestArg = "";
         if (GeckoAppShell.getGeckoInterface() != null) {
@@ -293,11 +294,62 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         return (args != null ? args : "") + profileArg + guestArg;
     }
 
+    private String getGeckoArgs(final String apkPath) {
+        // First argument is the .apk path
+        final StringBuilder args = new StringBuilder(apkPath);
+        args.append(" -greomni ").append(apkPath);
+
+        final String userArgs = addCustomProfileArg(mArgs);
+        if (userArgs != null) {
+            args.append(' ').append(userArgs);
+        }
+
+        if (mUri != null) {
+            args.append(" -url ").append(mUri);
+        }
+
+        final String type = getTypeFromAction(mAction);
+        if (type != null) {
+            args.append(" ").append(type);
+        }
+
+        // In un-official builds, we want to load Javascript resources fresh
+        // with each build.  In official builds, the startup cache is purged by
+        // the buildid mechanism, but most un-official builds don't bump the
+        // buildid, so we purge here instead.
+        if (!AppConstants.MOZILLA_OFFICIAL) {
+            Log.w(LOGTAG, "STARTUP PERFORMANCE WARNING: un-official build: purging the " +
+                          "startup (JavaScript) caches.");
+            args.append(" -purgecaches");
+        }
+
+        final DisplayMetrics metrics
+                = GeckoAppShell.getContext().getResources().getDisplayMetrics();
+        args.append(" -width ").append(metrics.widthPixels)
+            .append(" -height ").append(metrics.heightPixels);
+
+        return args.toString();
+    }
+
     @Override
     public void run() {
         Looper.prepare();
         ThreadUtils.sGeckoThread = this;
         ThreadUtils.sGeckoHandler = new Handler();
+
+        // Preparation for pumpMessageLoop()
+        final MessageQueue.IdleHandler idleHandler = new MessageQueue.IdleHandler() {
+            @Override public boolean queueIdle() {
+                final Handler geckoHandler = ThreadUtils.sGeckoHandler;
+                Message idleMsg = Message.obtain(geckoHandler);
+                // Use |Message.obj == GeckoHandler| to identify our "queue is empty" message
+                idleMsg.obj = geckoHandler;
+                geckoHandler.sendMessageAtFrontOfQueue(idleMsg);
+                // Keep this IdleHandler
+                return true;
+            }
+        };
+        Looper.myQueue().addIdleHandler(idleHandler);
 
         if (mDebugging) {
             try {
@@ -306,7 +358,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
             }
         }
 
-        String path = initGeckoEnvironment();
+        final String args = getGeckoArgs(initGeckoEnvironment());
 
         // This can only happen after the call to initGeckoEnvironment
         // above, because otherwise the JNI code hasn't been loaded yet.
@@ -318,14 +370,15 @@ public class GeckoThread extends Thread implements GeckoEventListener {
 
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - runGecko");
 
-        String args = addCustomProfileArg(mArgs);
-        String type = getTypeFromAction(mAction);
+        // Initialize AndroidBridge.
+        GeckoAppShell.nativeInit(GeckoThread.class.getClassLoader(), Looper.myQueue());
 
         if (!AppConstants.MOZILLA_OFFICIAL) {
             Log.i(LOGTAG, "RunGecko - args = " + args);
         }
-        // and then fire us up
-        GeckoAppShell.runGecko(path, args, mUri, type);
+
+        // And go.
+        GeckoLoader.nativeRun(args);
 
         // And... we're done.
         setState(State.EXITED);
@@ -337,6 +390,9 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         } catch (final JSONException e) {
             Log.e(LOGTAG, "unable to dispatch event", e);
         }
+
+        // Remove pumpMessageLoop() idle handler
+        Looper.myQueue().removeIdleHandler(idleHandler);
     }
 
     public static void addPendingEvent(final GeckoEvent e) {
