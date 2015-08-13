@@ -737,7 +737,7 @@ nsProtocolProxyService::CanUseProxy(nsIURI *aURI, int32_t defaultPort)
     }
 
     // Don't use proxy for local hosts (plain hostname, no dots)
-    if (!is_ipaddr && mFilterLocalHosts && (kNotFound == host.FindChar('.'))) {
+    if (!is_ipaddr && mFilterLocalHosts && !host.Contains('.')) {
         LOG(("Not using proxy for this local host [%s]!\n", host.get()));
         return false; // don't allow proxying
     }

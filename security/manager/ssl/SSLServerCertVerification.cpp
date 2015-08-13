@@ -967,7 +967,7 @@ GatherBaselineRequirementsTelemetry(const ScopedCERTCertList& certList)
                 altName.get(), commonName.get()));
         malformedDNSNameOrIPAddressPresent = true;
       }
-      if (altName.FindChar('.') == kNotFound) {
+      if (!altName.Contains('.')) {
         nonFQDNPresent = true;
       }
     } else if (currentName->type == certIPAddress) {
