@@ -127,4 +127,11 @@ extern "C" {
   JNIEnv* jsjni_GetJNIForThread() {
     return GetJNIForThread();
   }
+
+  // For compatibility with JNI.jsm; some addons bundle their own JNI.jsm,
+  // so we cannot just change the function name used in JNI.jsm.
+  __attribute__ ((visibility("default")))
+  JNIEnv* GetJNIForThread() {
+    return mozilla::jni::GetEnvForThread();
+  }
 }
