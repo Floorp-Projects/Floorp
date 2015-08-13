@@ -335,6 +335,9 @@ GLTextureSource::SetCompositor(Compositor* aCompositor)
 {
   MOZ_ASSERT(aCompositor);
   mCompositor = static_cast<CompositorOGL*>(aCompositor);
+  if (mNextSibling) {
+    mNextSibling->SetCompositor(aCompositor);
+  }
 }
 
 bool
