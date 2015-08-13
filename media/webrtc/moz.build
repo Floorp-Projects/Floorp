@@ -52,6 +52,7 @@ if CONFIG['MOZ_WEBRTC_SIGNALING']:
         build_for_standalone=0
     )
     GYP_DIRS['signaling'].sandbox_vars['FINAL_LIBRARY'] = 'xul'
+    GYP_DIRS['signaling'].sandbox_vars['FAIL_ON_WARNINGS'] = True
     # Excluded for various symbol conflicts
     signaling_non_unified_sources = [
         'signaling/src/common/browser_logging/CSFLog.cpp',
@@ -100,6 +101,8 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
             build_for_standalone=0
         )
         GYP_DIRS['signalingtest'].non_unified_sources += signaling_non_unified_sources
+        GYP_DIRS['signalingtest'].sandbox_vars['FAIL_ON_WARNINGS'] = True
+
         GYP_DIRS += ['signalingstandalone']
         GYP_DIRS['signalingstandalone'].input = 'signaling/signaling.gyp'
         GYP_DIRS['signalingstandalone'].variables = gyp_vars.copy()
@@ -108,3 +111,4 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
             build_for_standalone=1
         )
         GYP_DIRS['signalingstandalone'].non_unified_sources += signaling_non_unified_sources
+        GYP_DIRS['signalingstandalone'].sandbox_vars['FAIL_ON_WARNINGS'] = True
