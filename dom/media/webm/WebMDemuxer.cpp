@@ -880,7 +880,8 @@ WebMTrackDemuxer::SetNextKeyFrameTime()
       skipSamplesQueue.PushFront(sample);
     }
     while(skipSamplesQueue.GetSize()) {
-      mSamples.PushFront(skipSamplesQueue.PopFront());
+      nsRefPtr<MediaRawData> data = skipSamplesQueue.PopFront();
+      mSamples.PushFront(data);
     }
     if (frameTime == -1) {
       frameTime = mParent->GetNextKeyframeTime();
