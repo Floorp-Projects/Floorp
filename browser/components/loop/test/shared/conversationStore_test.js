@@ -1042,8 +1042,9 @@ describe("loop.store.ConversationStore", function () {
 
       sinon.assert.calledOnce(fakeMozLoop.rooms.create);
       sinon.assert.calledWithMatch(fakeMozLoop.rooms.create, {
-        roomOwner: "bob@invalid.tld",
-        roomName: "FakeRoomName"
+        decryptedContext: {
+          roomName: "FakeRoomName"
+        }
       });
     });
 

@@ -434,7 +434,9 @@ loop.store = loop.store || {};
      */
     fetchRoomEmailLink: function(actionData) {
       this.mozLoop.rooms.create({
-        roomName: actionData.roomName,
+        decryptedContext: {
+          roomName: actionData.roomName
+        },
         roomOwner: actionData.roomOwner,
         maxSize: loop.store.MAX_ROOM_CREATION_SIZE,
         expiresIn: loop.store.DEFAULT_EXPIRES_IN
