@@ -156,7 +156,7 @@ public class GeckoAppShell
 
         @Override
         public void uncaughtException(final Thread thread, final Throwable exc) {
-            if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoExited)) {
+            if (GeckoThread.isStateAtLeast(GeckoThread.State.EXITING)) {
                 // We've called System.exit. All exceptions after this point are Android
                 // berating us for being nasty to it.
                 return;
@@ -410,7 +410,7 @@ public class GeckoAppShell
             throw new IllegalArgumentException("e cannot be null.");
         }
 
-        if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
+        if (GeckoThread.isRunning()) {
             notifyGeckoOfEvent(e);
             // Gecko will copy the event data into a normal C++ object.
             // We can recycle the event now.
@@ -511,8 +511,7 @@ public class GeckoAppShell
             sendEventToGecko(e);
             sWaitingForEventAck = true;
             while (true) {
-                if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoExiting) ||
-                        GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoExited)) {
+                if (GeckoThread.isStateAtLeast(GeckoThread.State.EXITING)) {
                     // Gecko is quitting; don't do anything.
                     Log.d(LOGTAG, "Skipping Gecko event sync during exit");
                     sWaitingForEventAck = false;
