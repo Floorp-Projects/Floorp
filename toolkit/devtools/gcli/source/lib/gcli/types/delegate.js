@@ -16,7 +16,6 @@
 
 'use strict';
 
-var Promise = require('../util/promise').Promise;
 var Conversion = require('./types').Conversion;
 var Status = require('./types').Status;
 var BlankArgument = require('./types').BlankArgument;

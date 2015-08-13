@@ -16,7 +16,6 @@
 
 'use strict';
 
-var Promise = require('../util/promise').Promise;
 var Highlighter = require('../util/host').Highlighter;
 var l10n = require('../util/l10n');
 var util = require('../util/util');

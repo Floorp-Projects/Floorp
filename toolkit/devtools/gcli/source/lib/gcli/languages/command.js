@@ -17,7 +17,6 @@
 'use strict';
 
 var util = require('../util/util');
-var Promise = require('../util/promise').Promise;
 var domtemplate = require('../util/domtemplate');
 var host = require('../util/host');
 

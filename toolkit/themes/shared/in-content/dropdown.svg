@@ -15,7 +15,7 @@
     }
   </style>
   <defs>
-    <path id="dropdown-shape" fill-rule="evenodd" d="M12,6l-4.016,4L4,6H12z"/>
+    <path id="dropdown-shape" d="M12,6l-4.016,4L4,6H12z"/>
   </defs>
   <use id="dropdown" xlink:href="#dropdown-shape"/>
   <use id="dropdown-disabled" xlink:href="#dropdown-shape"/>

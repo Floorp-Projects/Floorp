@@ -3240,6 +3240,9 @@ pref("ui.osk.enabled", true);
 pref("ui.osk.detect_physical_keyboard", true);
 // Path to TabTip.exe on local machine. Cached for performance reasons.
 pref("ui.osk.on_screen_keyboard_path", "");
+// Only show the on-screen keyboard when Windows is in Tablet mode. Setting
+// this pref to false will allow the OSK to show in regular non-tablet mode.
+pref("ui.osk.require_tablet_mode", true);
 
 # XP_WIN
 #endif
@@ -4414,6 +4417,10 @@ pref("full-screen-api.pointer-lock.enabled", true);
 // transition duration of fade-to-black and fade-from-black, unit: ms
 pref("full-screen-api.transition-duration.enter", "200 200");
 pref("full-screen-api.transition-duration.leave", "200 200");
+// time for the warning box stays on the screen before sliding out, unit: ms
+pref("full-screen-api.warning.timeout", 3000);
+// delay for the warning box to show when pointer stays on the top, unit: ms
+pref("full-screen-api.warning.delay", 500);
 
 // DOM idle observers API
 pref("dom.idle-observers-api.enabled", true);

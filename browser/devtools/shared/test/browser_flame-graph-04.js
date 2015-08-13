@@ -8,7 +8,6 @@ let {ViewHelpers} = Cu.import("resource:///modules/devtools/ViewHelpers.jsm", {}
 let {FlameGraph} = require("devtools/shared/widgets/FlameGraph");
 let {FLAME_GRAPH_BLOCK_TEXT_FONT_SIZE} = require("devtools/shared/widgets/FlameGraph");
 let {FLAME_GRAPH_BLOCK_TEXT_FONT_FAMILY} = require("devtools/shared/widgets/FlameGraph");
-let {Promise} = require("resource://gre/modules/Promise.jsm");
 
 let L10N = new ViewHelpers.L10N();
 

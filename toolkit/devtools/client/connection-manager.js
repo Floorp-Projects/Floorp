@@ -11,9 +11,9 @@ const {setTimeout, clearTimeout} = require('sdk/timers');
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 const { DebuggerServer } = require("devtools/server/main");
+const { DebuggerClient } = require("devtools/toolkit/client/main");
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
 DevToolsUtils.defineLazyModuleGetter(this, "Task",
   "resource://gre/modules/Task.jsm");
 

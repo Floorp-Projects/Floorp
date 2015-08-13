@@ -73,7 +73,7 @@ function normalizeId(id) {
           stack.push("..");
         }
       } else {
-        if (stack[stack.length] == "..") {
+        if (stack[stack.length - 1] == "..") {
           stack.push("..");
         } else {
           stack.pop();

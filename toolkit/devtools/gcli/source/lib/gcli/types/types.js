@@ -17,7 +17,6 @@
 'use strict';
 
 var util = require('../util/util');
-var Promise = require('../util/promise').Promise;
 
 /**
  * We record where in the input string an argument comes so we can report

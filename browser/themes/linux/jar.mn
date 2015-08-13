@@ -38,7 +38,8 @@ browser.jar:
   skin/classic/browser/content-contextmenu.svg
   skin/classic/browser/drm-icon.svg                         (../shared/drm-icon.svg)
 * skin/classic/browser/engineManager.css
-  skin/classic/browser/fullscreen-darknoise.png
+  skin/classic/browser/fullscreen/insecure.svg              (../shared/fullscreen/insecure.svg)
+  skin/classic/browser/fullscreen/secure.svg                (../shared/fullscreen/secure.svg)
   skin/classic/browser/Geolocation-16.png
   skin/classic/browser/Geolocation-64.png
   skin/classic/browser/Push-16.png
@@ -143,8 +144,10 @@ browser.jar:
   skin/classic/browser/controlcenter/conn-degraded.svg  (../shared/controlcenter/conn-degraded.svg)
   skin/classic/browser/controlcenter/mcb-disabled.svg  (../shared/controlcenter/mcb-disabled.svg)
   skin/classic/browser/controlcenter/permissions.svg  (../shared/controlcenter/permissions.svg)
-  skin/classic/browser/controlcenter/tracking-protection.svg                 (../shared/controlcenter/tracking-protection.svg)
-  skin/classic/browser/controlcenter/tracking-protection-disabled.svg        (../shared/controlcenter/tracking-protection-disabled.svg)
+  skin/classic/browser/controlcenter/tracking-protection.svg  (../shared/controlcenter/tracking-protection.svg)
+  skin/classic/browser/controlcenter/tracking-protection-disabled.svg  (../shared/controlcenter/tracking-protection-disabled.svg)
+  skin/classic/browser/controlcenter/warning-gray.svg  (../shared/controlcenter/warning-gray.svg)
+  skin/classic/browser/controlcenter/warning-yellow.svg  (../shared/controlcenter/warning-yellow.svg)
   skin/classic/browser/customizableui/background-noise-toolbar.png  (customizableui/background-noise-toolbar.png)
   skin/classic/browser/customizableui/customize-illustration.png  (../shared/customizableui/customize-illustration.png)
   skin/classic/browser/customizableui/customize-illustration-rtl.png  (../shared/customizableui/customize-illustration-rtl.png)

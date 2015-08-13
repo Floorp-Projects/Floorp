@@ -12,13 +12,13 @@ function waitForMarkerType(front, type) {
   info("Waiting for marker of type = " + type);
   const { promise, resolve } = Promise.defer();
 
-  const handler = (_, name, markers) => {
+  const handler = (name, data) => {
     if (name !== "markers") {
       return;
     }
 
+    let markers = data.markers;
     info("Got markers: " + JSON.stringify(markers, null, 2));
-
     if (markers.some(m => m.name === type)) {
       ok(true, "Found marker of type = " + type);
       front.off("timeline-data", handler);
@@ -36,7 +36,7 @@ function* spawnTest () {
 
   let { target, front } = yield initBackend(TEST_URL);
 
-  yield front.startRecording({ withMarkers: true, withTicks: true });
+  let rec = yield front.startRecording({ withMarkers: true, withTicks: true });
 
   yield Promise.all([
     waitForMarkerType(front, "nsCycleCollector::Collect"),
@@ -44,7 +44,7 @@ function* spawnTest () {
   ]);
   ok(true, "Got expected cycle collection events");
 
-  yield front.stopRecording();
+  yield front.stopRecording(rec);
 
   // Destroy the front before removing tab to ensure no
   // lingering requests

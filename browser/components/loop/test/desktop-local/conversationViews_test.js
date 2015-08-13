@@ -322,8 +322,6 @@ describe("loop.conversationViews", function () {
         sinon.assert.calledWithMatch(dispatcher.dispatch,
           sinon.match.hasOwn("name", "fetchRoomEmailLink"));
         sinon.assert.calledWithMatch(dispatcher.dispatch,
-          sinon.match.hasOwn("roomOwner", fakeMozLoop.userProfile.email));
-        sinon.assert.calledWithMatch(dispatcher.dispatch,
           sinon.match.hasOwn("roomName", "test@test.tld"));
       });
 
@@ -441,9 +439,9 @@ describe("loop.conversationViews", function () {
           "generic_failure_title");
       });
 
-    it("should show 'contact unavailable' when the reason is REST_ERRNOS.USER_UNAVAILABLE",
+    it("should show 'contact unavailable' when the reason is FAILURE_DETAILS.USER_UNAVAILABLE",
       function () {
-        conversationStore.setStoreState({callStateReason: REST_ERRNOS.USER_UNAVAILABLE});
+        conversationStore.setStoreState({callStateReason: FAILURE_DETAILS.USER_UNAVAILABLE});
 
         view = mountTestComponent({contact: fakeContact});
 

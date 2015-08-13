@@ -4,14 +4,14 @@
 
 "use strict";
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-devtools.lazyImporter(this, "promise", "resource://gre/modules/Promise.jsm", "Promise");
-devtools.lazyImporter(this, "Task", "resource://gre/modules/Task.jsm", "Task");
-const loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
-            .getService(Ci.mozIJSSubScriptLoader);
+const { loader } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+loader.lazyImporter(this, "promise", "resource://gre/modules/Promise.jsm", "Promise");
+loader.lazyImporter(this, "Task", "resource://gre/modules/Task.jsm", "Task");
+const subScriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
+                          .getService(Ci.mozIJSSubScriptLoader);
 let EventUtils = {};
-loader.loadSubScript("chrome://marionette/content/EventUtils.js", EventUtils);
-devtools.lazyGetter(this, "nsIProfilerModule", () => {
+subScriptLoader.loadSubScript("chrome://marionette/content/EventUtils.js", EventUtils);
+loader.lazyGetter(this, "nsIProfilerModule", () => {
   return Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
 });
 

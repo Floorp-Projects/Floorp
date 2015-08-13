@@ -81,6 +81,10 @@ var login9 = new nsLoginInfo(
     "http://mochi.test:8888", "http://autocomplete6", null,
     "testuser9", "testpass9", "uname", "pword");
 
+var login10 = new nsLoginInfo(
+    "http://mochi.test:8888", "http://autocomplete7", null,
+    "testuser10", "testpass10", "uname", "pword");
+
 // try/catch in case someone runs the tests manually, twice.
 try {
     pwmgr.addLogin(login0);
@@ -95,6 +99,7 @@ try {
     pwmgr.addLogin(login8A);
     pwmgr.addLogin(login8B);
     pwmgr.addLogin(login9);
+    pwmgr.addLogin(login10);
 } catch (e) {
     ok(false, "addLogin threw: " + e);
 }
@@ -171,6 +176,13 @@ try {
     <input  type="password"   name="pword">
     <button type="submit">Submit</button>
   </form>
+
+  <!-- test for onUsernameInput recipe testing -->
+  <form id="form11" action="https://autocomplete7" onsubmit="return false;">
+    <input  type="text"   name="1">
+    <input  type="text"   name="2">
+    <button type="submit">Submit</button>
+  </form>
 </div>
 
 <pre id="test">
@@ -195,8 +207,8 @@ function restoreForm() {
 // Check for expected username/password in form.
 function checkACForm(expectedUsername, expectedPassword) {
   var formID = uname.parentNode.id;
-  is(uname.value, expectedUsername, "Checking " + formID + " username");
-  is(pword.value, expectedPassword, "Checking " + formID + " password");
+  is(uname.value, expectedUsername, "Checking " + formID + " username is: " + expectedUsername);
+  is(pword.value, expectedPassword, "Checking " + formID + " password is: " + expectedPassword);
 }
 
 
@@ -272,6 +284,12 @@ function* runTest() {
       tester.next();
     });
     SpecialPowers.addObserver(observer, "passwordmgr-processed-form", false);
+  }
+
+  function getLoginRecipes() {
+    getRecipeParent().then(function (recipeParent) {
+      tester.next(recipeParent);
+    });
   }
 
   /* test 1 */
@@ -801,6 +819,44 @@ function* runTest() {
   doKey("return"); // not "enter"!
   yield waitForCompletion();
   checkACForm("testuser9", "testpass9");
+  yield runNextTest();
+
+  // Turn our attention to form11 to test recipes
+  var recipeParent = yield getLoginRecipes();
+  recipeParent.add({
+    "hosts": ["mochi.test:8888"],
+    "usernameSelector": "input[name='1']",
+    "passwordSelector": "input[name='2']"
+  });
+  uname = $_(11, "1");
+  pword = $_(11, "2");
+
+  // First test DOMAutocomplete
+  // Switch the password field to type=password so _fillForm marks the username
+  // field for autocomplete.
+  pword.type = "password";
+  yield waitForCompletion();
+  restoreForm();
+  checkACForm("", "");
+  doKey("down");
+  yield runNextTest("expect popup");
+
+  doKey("down");
+  checkACForm("", ""); // value shouldn't update
+  doKey("return"); // not "enter"!
+  yield waitForCompletion();
+  checkACForm("testuser10", "testpass10");
+
+  // Now test recipes with blur on the username field.
+  restoreForm();
+  checkACForm("", "");
+  uname.value = "testuser10";
+  checkACForm("testuser10", "");
+  doKey("tab");
+  yield waitForCompletion();
+  checkACForm("testuser10", "testpass10");
+
+  recipeParent.reset();
   yield runNextTest();
 
   SimpleTest.finish();

@@ -24,13 +24,11 @@ function* spawnTest () {
 
   info(`Got ${markers.length} markers.`);
 
-  let maxMarkerTime = model._timelineStartTime + model.getDuration() + TIME_CLOSE_TO;
-
   ok(markers.every(({name}) => name === "GarbageCollection"), "All markers found are GC markers");
   ok(markers.length > 0, "found atleast one GC marker");
-  ok(markers.every(({start}) => typeof start === "number" && start > 0 && start < maxMarkerTime),
+  ok(markers.every(({start, end}) => typeof start === "number" && start > 0 && start < end),
     "All markers have a start time between the valid range.");
-  ok(markers.every(({end}) => typeof end === "number" && end > 0 && end < maxMarkerTime),
+  ok(markers.every(({end}) => typeof end === "number"),
     "All markers have an end time between the valid range.");
   ok(markers.every(({causeName}) => typeof causeName === "string"),
     "All markers have a causeName.");
@@ -41,7 +39,8 @@ function* spawnTest () {
   yield removeTab(target.tab);
   finish();
 
-  function handler (_, name, m) {
+  function handler (name, m) {
+    m = m.markers;
     if (name === "markers" && m[0].name === "GarbageCollection") {
       markers = m;
     }
