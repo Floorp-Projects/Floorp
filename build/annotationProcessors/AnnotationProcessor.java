@@ -27,6 +27,10 @@ public class AnnotationProcessor {
             "// will cause your build to fail.\n" +
             "\n";
 
+    private static final StringBuilder headerFile = new StringBuilder(GENERATED_COMMENT);
+    private static final StringBuilder implementationFile = new StringBuilder(GENERATED_COMMENT);
+    private static final StringBuilder nativesFile = new StringBuilder(GENERATED_COMMENT);
+
     public static void main(String[] args) {
         // We expect a list of jars on the commandline. If missing, whinge about it.
         if (args.length <= 1) {
@@ -46,7 +50,6 @@ public class AnnotationProcessor {
         // Get an iterator over the classes in the jar files given...
         Iterator<ClassWithOptions> jarClassIterator = IterableJarLoadingURLClassLoader.getIteratorOverJars(args);
 
-        StringBuilder headerFile = new StringBuilder(GENERATED_COMMENT);
         headerFile.append(
                 "#ifndef " + getHeaderGuardName(HEADER_FILE) + "\n" +
                 "#define " + getHeaderGuardName(HEADER_FILE) + "\n" +
@@ -57,7 +60,6 @@ public class AnnotationProcessor {
                 "namespace widget {\n" +
                 "\n");
 
-        StringBuilder implementationFile = new StringBuilder(GENERATED_COMMENT);
         implementationFile.append(
                 "#include \"GeneratedJNIWrappers.h\"\n" +
                 "#include \"mozilla/jni/Accessors.h\"\n" +
@@ -66,7 +68,6 @@ public class AnnotationProcessor {
                 "namespace widget {\n" +
                 "\n");
 
-        StringBuilder nativesFile = new StringBuilder(GENERATED_COMMENT);
         nativesFile.append(
                 "#ifndef " + getHeaderGuardName(NATIVES_FILE) + "\n" +
                 "#define " + getHeaderGuardName(NATIVES_FILE) + "\n" +
@@ -79,40 +80,7 @@ public class AnnotationProcessor {
                 "\n");
 
         while (jarClassIterator.hasNext()) {
-            ClassWithOptions aClassTuple = jarClassIterator.next();
-
-            CodeGenerator generatorInstance;
-
-            // Get an iterator over the appropriately generated methods of this class
-            Iterator<AnnotatableEntity> methodIterator = new GeneratableElementIterator(aClassTuple.wrappedClass);
-
-            if (!methodIterator.hasNext()) {
-                continue;
-            }
-            generatorInstance = new CodeGenerator(aClassTuple);
-
-            // Iterate all annotated members in this class..
-            while (methodIterator.hasNext()) {
-                AnnotatableEntity aElementTuple = methodIterator.next();
-                switch (aElementTuple.mEntityType) {
-                    case METHOD:
-                        generatorInstance.generateMethod(aElementTuple);
-                        break;
-                    case NATIVE:
-                        generatorInstance.generateNative(aElementTuple);
-                        break;
-                    case FIELD:
-                        generatorInstance.generateField(aElementTuple);
-                        break;
-                    case CONSTRUCTOR:
-                        generatorInstance.generateConstructor(aElementTuple);
-                        break;
-                }
-            }
-
-            headerFile.append(generatorInstance.getHeaderFileContents());
-            implementationFile.append(generatorInstance.getWrapperFileContents());
-            nativesFile.append(generatorInstance.getNativesFileContents());
+            generateClass(jarClassIterator.next());
         }
 
         implementationFile.append(
@@ -132,8 +100,50 @@ public class AnnotationProcessor {
         writeOutputFile(SOURCE_FILE, implementationFile);
         writeOutputFile(HEADER_FILE, headerFile);
         writeOutputFile(NATIVES_FILE, nativesFile);
+
         long e = System.currentTimeMillis();
         System.out.println("Annotation processing complete in " + (e - s) + "ms");
+    }
+
+    private static void generateClass(final ClassWithOptions annotatedClass) {
+        // Get an iterator over the appropriately generated methods of this class
+        final GeneratableElementIterator methodIterator
+                = new GeneratableElementIterator(annotatedClass);
+        final ClassWithOptions[] innerClasses = methodIterator.getInnerClasses();
+
+        if (!methodIterator.hasNext() && innerClasses.length == 0) {
+            return;
+        }
+
+        final CodeGenerator generatorInstance = new CodeGenerator(annotatedClass);
+        generatorInstance.generateClasses(innerClasses);
+
+        // Iterate all annotated members in this class..
+        while (methodIterator.hasNext()) {
+            AnnotatableEntity aElementTuple = methodIterator.next();
+            switch (aElementTuple.mEntityType) {
+                case METHOD:
+                    generatorInstance.generateMethod(aElementTuple);
+                    break;
+                case NATIVE:
+                    generatorInstance.generateNative(aElementTuple);
+                    break;
+                case FIELD:
+                    generatorInstance.generateField(aElementTuple);
+                    break;
+                case CONSTRUCTOR:
+                    generatorInstance.generateConstructor(aElementTuple);
+                    break;
+            }
+        }
+
+        headerFile.append(generatorInstance.getHeaderFileContents());
+        implementationFile.append(generatorInstance.getWrapperFileContents());
+        nativesFile.append(generatorInstance.getNativesFileContents());
+
+        for (ClassWithOptions innerClass : innerClasses) {
+            generateClass(innerClass);
+        }
     }
 
     private static String getHeaderGuardName(final String name) {
