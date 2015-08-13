@@ -76,6 +76,7 @@ struct PrintData {
   bool isFramesetFrameSelected;
   bool isIFrameSelected;
   bool isRangeSelection;
+  uint8_t[] devModeData;
 
   /**
    * GTK-specific things. Some of these might look like dupes of the

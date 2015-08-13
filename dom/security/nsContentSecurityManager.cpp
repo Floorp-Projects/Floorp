@@ -145,9 +145,14 @@ DoContentSecurityChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
     }
 
     case nsIContentPolicy::TYPE_REFRESH:
-    case nsIContentPolicy::TYPE_XBL:
-    case nsIContentPolicy::TYPE_PING: {
+    case nsIContentPolicy::TYPE_XBL: {
       MOZ_ASSERT(false, "contentPolicyType not supported yet");
+      break;
+    }
+
+    case nsIContentPolicy::TYPE_PING: {
+      mimeTypeGuess = EmptyCString();
+      requestingContext = aLoadInfo->LoadingNode();
       break;
     }
 

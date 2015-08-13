@@ -294,13 +294,12 @@ static const struct FREEBLVectorStr vector =
 const FREEBLVector *
 FREEBL_GetVector(void)
 {
-    extern const char __nss_freebl_rcsid[];
-    extern const char __nss_freebl_sccsid[];
+    extern const char __nss_freebl_version[];
 
     /* force a reference that won't get optimized away */
     volatile char c;
 
-    c = __nss_freebl_rcsid[0] + __nss_freebl_sccsid[0];
+    c = __nss_freebl_version[0];
 #ifdef FREEBL_NO_DEPEND
     FREEBL_InitStubs();
 #endif

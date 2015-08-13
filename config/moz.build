@@ -39,3 +39,6 @@ PYTHON_UNIT_TESTS += [
     'tests/unit-nsinstall.py',
     'tests/unit-printprereleasesuffix.py',
 ]
+
+if CONFIG['GNU_CC'] and CONFIG['MOZ_OPTIMIZE']:
+    CFLAGS += ['-O3']

@@ -171,3 +171,13 @@ SSL_SetCanFalseStartCallback;
 ;+    local:
 ;+*;
 ;+};
+;+NSS_3.20 {    # NSS 3.20 release
+;+    global:
+;+# If the 3.20 release includes any additional functions
+;+# besides SSL_DHEGroupPrefSet and SSL_EnableWeakDHEPrimeGroup
+;+# they should be labeled as NSS_3.20a
+SSL_DHEGroupPrefSet;
+SSL_EnableWeakDHEPrimeGroup;
+;+    local:
+;+*;
+;+};
