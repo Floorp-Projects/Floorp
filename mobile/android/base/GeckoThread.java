@@ -30,17 +30,42 @@ import java.util.concurrent.atomic.AtomicReference;
 public class GeckoThread extends Thread implements GeckoEventListener {
     private static final String LOGTAG = "GeckoThread";
 
-    @RobocopTarget
-    public enum LaunchState {
-        Launching,
-        Launched,
-        GeckoRunning,
-        GeckoExiting,
-        GeckoExited
+    public enum State {
+        // After being loaded by class loader.
+        INITIAL,
+        // After launching Gecko thread
+        LAUNCHED,
+        // After initializing frontend JS (corresponding to "Gecko:Ready" event)
+        RUNNING,
+        // After leaving Gecko event loop
+        EXITING,
+        // After exiting GeckoThread (corresponding to "Gecko:Exited" event)
+        EXITED;
+
+        public boolean is(final State other) {
+            return this == other;
+        }
+
+        public boolean isAtLeast(final State other) {
+            return ordinal() >= other.ordinal();
+        }
+
+        public boolean isAtMost(final State other) {
+            return ordinal() <= other.ordinal();
+        }
+
+        // Inclusive
+        public boolean isBetween(final State min, final State max) {
+            final int ord = ordinal();
+            return ord >= min.ordinal() && ord <= max.ordinal();
+        }
     }
 
-    private static final AtomicReference<LaunchState> sLaunchState =
-                                            new AtomicReference<LaunchState>(LaunchState.Launching);
+    public static final State MIN_STATE = State.INITIAL;
+    public static final State MAX_STATE = State.EXITED;
+
+    private static final AtomicReference<State> sState = new AtomicReference<>(State.INITIAL);
+
     private static final Queue<GeckoEvent> PENDING_EVENTS = new ConcurrentLinkedQueue<GeckoEvent>();
 
     private static GeckoThread sGeckoThread;
@@ -66,7 +91,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
 
     public static boolean ensureInit(String args, String action, String uri, boolean debugging) {
         ThreadUtils.assertOnUiThread();
-        if (checkLaunchState(LaunchState.Launching) && sGeckoThread == null) {
+        if (isState(State.INITIAL) && sGeckoThread == null) {
             sGeckoThread = new GeckoThread(args, action, uri, debugging);
             return true;
         }
@@ -75,7 +100,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
 
     public static boolean launch() {
         ThreadUtils.assertOnUiThread();
-        if (checkAndSetLaunchState(LaunchState.Launching, LaunchState.Launched)) {
+        if (checkAndSetState(State.INITIAL, State.LAUNCHED)) {
             sGeckoThread.start();
             return true;
         }
@@ -83,7 +108,12 @@ public class GeckoThread extends Thread implements GeckoEventListener {
     }
 
     public static boolean isLaunched() {
-        return !checkLaunchState(LaunchState.Launching);
+        return !isState(State.INITIAL);
+    }
+
+    @RobocopTarget
+    public static boolean isRunning() {
+        return isState(State.RUNNING);
     }
 
     private String initGeckoEnvironment() {
@@ -188,7 +218,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         GeckoAppShell.runGecko(path, args, mUri, type);
 
         // And... we're done.
-        GeckoThread.setLaunchState(GeckoThread.LaunchState.GeckoExited);
+        setState(State.EXITED);
 
         try {
             final JSONObject msg = new JSONObject();
@@ -201,7 +231,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
 
     public static void addPendingEvent(final GeckoEvent e) {
         synchronized (PENDING_EVENTS) {
-            if (checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
+            if (isState(State.RUNNING)) {
                 // We may just have switched to running state.
                 GeckoAppShell.notifyGeckoOfEvent(e);
                 e.recycle();
@@ -225,25 +255,64 @@ public class GeckoThread extends Thread implements GeckoEventListener {
                     GeckoAppShell.notifyGeckoOfEvent(e);
                     e.recycle();
                 }
-                setLaunchState(LaunchState.GeckoRunning);
+                setState(State.RUNNING);
             }
         }
     }
 
-    @RobocopTarget
-    public static boolean checkLaunchState(LaunchState checkState) {
-        return sLaunchState.get() == checkState;
-    }
-
-    static void setLaunchState(LaunchState setState) {
-        sLaunchState.set(setState);
+    /**
+     * Check that the current Gecko thread state matches the given state.
+     *
+     * @param state State to check
+     * @return True if the current Gecko thread state matches
+     */
+    public static boolean isState(final State state) {
+        return sState.get().is(state);
     }
 
     /**
-     * Set the launch state to <code>setState</code> and return true if the current launch
-     * state is <code>checkState</code>; otherwise do nothing and return false.
+     * Check that the current Gecko thread state is at the given state or further along,
+     * according to the order defined in the State enum.
+     *
+     * @param state State to check
+     * @return True if the current Gecko thread state matches
      */
-    static boolean checkAndSetLaunchState(LaunchState checkState, LaunchState setState) {
-        return sLaunchState.compareAndSet(checkState, setState);
+    public static boolean isStateAtLeast(final State state) {
+        return sState.get().isAtLeast(state);
+    }
+
+    /**
+     * Check that the current Gecko thread state is at the given state or prior,
+     * according to the order defined in the State enum.
+     *
+     * @param state State to check
+     * @return True if the current Gecko thread state matches
+     */
+    public static boolean isStateAtMost(final State state) {
+        return sState.get().isAtMost(state);
+    }
+
+    /**
+     * Check that the current Gecko thread state falls into an inclusive range of states,
+     * according to the order defined in the State enum.
+     *
+     * @param minState Lower range of allowable states
+     * @param maxState Upper range of allowable states
+     * @return True if the current Gecko thread state matches
+     */
+    public static boolean isStateBetween(final State minState, final State maxState) {
+        return sState.get().isBetween(minState, maxState);
+    }
+
+    private static void setState(final State newState) {
+        ThreadUtils.assertOnGeckoThread();
+        sState.set(newState);
+    }
+
+    private static boolean checkAndSetState(final State currentState, final State newState) {
+        if (!sState.compareAndSet(currentState, newState)) {
+            return false;
+        }
+        return true;
     }
 }
