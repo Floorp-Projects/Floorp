@@ -39,16 +39,6 @@ SourceBufferResource::Close()
 }
 
 nsresult
-SourceBufferResource::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
-{
-  SBR_DEBUGV("Read(aBuffer=%p, aCount=%u, aBytes=%p)",
-             aBuffer, aCount, aBytes);
-  ReentrantMonitorAutoEnter mon(mMonitor);
-
-  return ReadInternal(aBuffer, aCount, aBytes, /* aMayBlock = */ true);
-}
-
-nsresult
 SourceBufferResource::ReadInternal(char* aBuffer, uint32_t aCount, uint32_t* aBytes, bool aMayBlock)
 {
   mMonitor.AssertCurrentThreadIn();
@@ -112,33 +102,6 @@ SourceBufferResource::ReadAtInternal(int64_t aOffset, char* aBuffer, uint32_t aC
   }
 
   return ReadInternal(aBuffer, aCount, aBytes, aMayBlock);
-}
-
-nsresult
-SourceBufferResource::Seek(int32_t aWhence, int64_t aOffset)
-{
-  SBR_DEBUG("Seek(aWhence=%d, aOffset=%lld)",
-            aWhence, aOffset);
-  ReentrantMonitorAutoEnter mon(mMonitor);
-
-  int64_t newOffset = mOffset;
-  switch (aWhence) {
-  case nsISeekableStream::NS_SEEK_END:
-    newOffset = GetLength() - aOffset;
-    break;
-  case nsISeekableStream::NS_SEEK_CUR:
-    newOffset += aOffset;
-    break;
-  case nsISeekableStream::NS_SEEK_SET:
-    newOffset = aOffset;
-    break;
-  }
-
-  SBR_DEBUGV("newOffset=%lld GetOffset()=%llu GetLength()=%llu)",
-             newOffset, mInputBuffer.GetOffset(), GetLength());
-  nsresult rv = SeekInternal(newOffset);
-  mon.NotifyAll();
-  return rv;
 }
 
 nsresult

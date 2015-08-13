@@ -276,13 +276,6 @@ public:
   // the media plays continuously. The cache can't guess this itself
   // because it doesn't know when the decoder was paused, buffering, etc.
   virtual void SetPlaybackRate(uint32_t aBytesPerSecond) = 0;
-  // Read up to aCount bytes from the stream. The buffer must have
-  // enough room for at least aCount bytes. Stores the number of
-  // actual bytes read in aBytes (0 on end of file).
-  // May read less than aCount bytes if the number of
-  // available bytes is less than aCount. Always check *aBytes after
-  // read, and call again if necessary.
-  virtual nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes) = 0;
   // Read up to aCount bytes from the stream. The read starts at
   // aOffset in the stream, seeking to that location initially if
   // it is not the current stream offset. The remaining arguments,
@@ -315,50 +308,10 @@ public:
     return bytes.forget();
   }
 
-  // ReadAt without side-effects. Given that our MediaResource infrastructure
-  // is very side-effecty, this accomplishes its job by checking the initial
-  // position and seeking back to it. If the seek were to fail, a side-effect
-  // might be observable.
-  //
-  // This method returns null if anything fails, including the failure to read
-  // aCount bytes. Otherwise, it returns an owned buffer.
-  virtual already_AddRefed<MediaByteBuffer> SilentReadAt(int64_t aOffset, uint32_t aCount)
-  {
-    int64_t pos = Tell();
-    nsRefPtr<MediaByteBuffer> bytes = MediaReadAt(aOffset, aCount);
-    Seek(nsISeekableStream::NS_SEEK_SET, pos);
-    NS_ENSURE_TRUE(bytes && bytes->Length() == aCount, nullptr);
-    return bytes.forget();
-  }
-
-  // Seek to the given bytes offset in the stream. aWhence can be
-  // one of:
-  //   NS_SEEK_SET
-  //   NS_SEEK_CUR
-  //   NS_SEEK_END
-  //
-  // In the Http strategy case the cancel will cause the http
-  // channel's listener to close the pipe, forcing an i/o error on any
-  // blocked read. This will allow the decode thread to complete the
-  // event.
-  //
-  // In the case of a seek in progress, the byte range request creates
-  // a new listener. This is done on the main thread via seek
-  // synchronously dispatching an event. This avoids the issue of us
-  // closing the listener but an outstanding byte range request
-  // creating a new one. They run on the same thread so no explicit
-  // synchronisation is required. The byte range request checks for
-  // the cancel flag and does not create a new channel or listener if
-  // we are cancelling.
-  //
-  // The default strategy does not do any seeking - the only issue is
-  // a blocked read which it handles by causing the listener to close
-  // the pipe, as per the http case.
-  //
-  // The file strategy doesn't block for any great length of time so
-  // is fine for a no-op cancel.
-  virtual nsresult Seek(int32_t aWhence, int64_t aOffset) = 0;
   // Report the current offset in bytes from the start of the stream.
+  // This is used to approximate where we currently are in the playback of a
+  // media.
+  // A call to ReadAt will update this position.
   virtual int64_t Tell() = 0;
   // Moves any existing channel loads into or out of background. Background
   // loads don't block the load event. This also determines whether or not any
@@ -651,12 +604,10 @@ public:
   // Other thread
   virtual void     SetReadMode(MediaCacheStream::ReadMode aMode) override;
   virtual void     SetPlaybackRate(uint32_t aBytesPerSecond) override;
-  virtual nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes) override;
   virtual nsresult ReadAt(int64_t offset, char* aBuffer,
                           uint32_t aCount, uint32_t* aBytes) override;
   virtual already_AddRefed<MediaByteBuffer> MediaReadAt(int64_t aOffset, uint32_t aCount) override;
-  virtual nsresult Seek(int32_t aWhence, int64_t aOffset) override;
-  virtual int64_t  Tell() override;
+  virtual int64_t Tell() override;
 
   // Any thread
   virtual void    Pin() override;
@@ -813,6 +764,97 @@ class MOZ_STACK_CLASS AutoPinned {
 private:
   T* mResource;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+/*
+ * MediaResourceIndex provides a way to access MediaResource objects.
+ * Read, Seek and Tell must only be called on non-main threads.
+ * In the case of the Ogg Decoder they are called on the Decode thread for
+ * example. You must ensure that no threads are calling these methods once
+ * the MediaResource has been Closed.
+ */
+
+class MediaResourceIndex
+{
+public:
+  explicit MediaResourceIndex(MediaResource* aResource)
+    : mResource(aResource)
+    , mOffset(0)
+  {}
+
+  // Read up to aCount bytes from the stream. The buffer must have
+  // enough room for at least aCount bytes. Stores the number of
+  // actual bytes read in aBytes (0 on end of file).
+  // May read less than aCount bytes if the number of
+  // available bytes is less than aCount. Always check *aBytes after
+  // read, and call again if necessary.
+  nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes);
+  // Seek to the given bytes offset in the stream. aWhence can be
+  // one of:
+  //   NS_SEEK_SET
+  //   NS_SEEK_CUR
+  //   NS_SEEK_END
+  //
+  // In the Http strategy case the cancel will cause the http
+  // channel's listener to close the pipe, forcing an i/o error on any
+  // blocked read. This will allow the decode thread to complete the
+  // event.
+  //
+  // In the case of a seek in progress, the byte range request creates
+  // a new listener. This is done on the main thread via seek
+  // synchronously dispatching an event. This avoids the issue of us
+  // closing the listener but an outstanding byte range request
+  // creating a new one. They run on the same thread so no explicit
+  // synchronisation is required. The byte range request checks for
+  // the cancel flag and does not create a new channel or listener if
+  // we are cancelling.
+  //
+  // The default strategy does not do any seeking - the only issue is
+  // a blocked read which it handles by causing the listener to close
+  // the pipe, as per the http case.
+  //
+  // The file strategy doesn't block for any great length of time so
+  // is fine for a no-op cancel.
+  nsresult Seek(int32_t aWhence, int64_t aOffset);
+  // Report the current offset in bytes from the start of the stream.
+  int64_t Tell() const { return mOffset; }
+
+  // Return the underlying MediaResource.
+  MediaResource* GetResource() const { return mResource; }
+
+  // Convenience methods, directly calling the MediaResource method of the same
+  // name.
+  // Those functions do not update the MediaResource offset as returned
+  // by Tell().
+
+  // Read up to aCount bytes from the stream. The read starts at
+  // aOffset in the stream, seeking to that location initially if
+  // it is not the current stream offset. The remaining arguments,
+  // results and requirements are the same as per the Read method.
+  nsresult ReadAt(int64_t aOffset, char* aBuffer,
+                  uint32_t aCount, uint32_t* aBytes) const
+  {
+    return mResource->ReadAt(aOffset, aBuffer, aCount, aBytes);
+  }
+  // This method returns nullptr if anything fails.
+  // Otherwise, it returns an owned buffer.
+  // MediaReadAt may return fewer bytes than requested if end of stream is
+  // encountered. There is no need to call it again to get more data.
+  already_AddRefed<MediaByteBuffer> MediaReadAt(int64_t aOffset, uint32_t aCount) const
+  {
+    return mResource->MediaReadAt(aOffset, aCount);
+  }
+  // Get the length of the stream in bytes. Returns -1 if not known.
+  // This can change over time; after a seek operation, a misbehaving
+  // server may give us a resource of a different length to what it had
+  // reported previously --- or it may just lie in its Content-Length
+  // header and give us more or less data than it reported. We will adjust
+  // the result of GetLength to reflect the data that's actually arriving.
+  int64_t GetLength() const { return mResource->GetLength(); }
+
+private:
+  nsRefPtr<MediaResource> mResource;
+  int64_t mOffset;
 };
 
 } // namespace mozilla
