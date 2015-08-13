@@ -345,7 +345,7 @@ MP3TrackDemuxer::GetEvictionOffset(TimeUnit aTime) {
 
 int64_t
 MP3TrackDemuxer::StreamLength() const {
-  return mSource->GetLength();
+  return mSource.GetLength();
 }
 
 TimeUnit
@@ -525,8 +525,8 @@ MP3TrackDemuxer::Read(uint8_t* aBuffer, int64_t aOffset, int32_t aSize) {
 
   uint32_t read = 0;
   MP3DEMUXER_LOGV("MP3TrackDemuxer::Read        -> ReadAt(%d)", aSize);
-  const nsresult rv = mSource->ReadAt(aOffset, reinterpret_cast<char*>(aBuffer),
-                                      static_cast<uint32_t>(aSize), &read);
+  const nsresult rv = mSource.ReadAt(aOffset, reinterpret_cast<char*>(aBuffer),
+                                     static_cast<uint32_t>(aSize), &read);
   NS_ENSURE_SUCCESS(rv, 0);
   return static_cast<int32_t>(read);
 }
