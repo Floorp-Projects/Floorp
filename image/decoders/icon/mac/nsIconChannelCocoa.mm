@@ -225,10 +225,6 @@ NS_IMETHODIMP
 nsIconChannel::AsyncOpen(nsIStreamListener* aListener,
                                        nsISupports* ctxt)
 {
-  MOZ_ASSERT(!mLoadInfo || mLoadInfo->GetSecurityMode() == 0 ||
-             mLoadInfo->GetInitialSecurityCheckDone(),
-             "security flags in loadInfo but asyncOpen2() not called");
-
   nsCOMPtr<nsIInputStream> inStream;
   nsresult rv = MakeInputStream(getter_AddRefs(inStream), true);
   NS_ENSURE_SUCCESS(rv, rv);
