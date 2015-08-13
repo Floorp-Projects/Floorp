@@ -39,8 +39,6 @@
 class nsIObserver;
 class Task;
 
-extern bool mozilla_AndroidBridge_SetMainThread(pthread_t);
-
 namespace base {
 class Thread;
 } // end namespace base
@@ -133,53 +131,12 @@ public:
         return pthread_equal(pthread_self(), sJavaUiThread);
     }
 
-    static void ConstructBridge(JNIEnv *jEnv,
-                                jni::Object::Param clsLoader,
-                                jni::Object::Param msgQueue);
+    static void ConstructBridge();
+    static void DeconstructBridge();
 
     static AndroidBridge *Bridge() {
         return sBridge;
     }
-
-    static JavaVM *GetVM() {
-        MOZ_ASSERT(sBridge);
-        return sBridge->mJavaVM;
-    }
-
-
-    static JNIEnv *GetJNIEnv() {
-        MOZ_ASSERT(sBridge);
-        if (MOZ_UNLIKELY(!pthread_equal(pthread_self(), sBridge->mThread))) {
-            MOZ_CRASH();
-        }
-        MOZ_ASSERT(sBridge->mJNIEnv);
-        return sBridge->mJNIEnv;
-    }
-
-    static bool HasEnv() {
-        return sBridge && sBridge->mJNIEnv;
-    }
-
-    static bool ThrowException(JNIEnv *aEnv, const char *aClass,
-                               const char *aMessage) {
-
-        return jni::ThrowException(aEnv, aClass, aMessage);
-    }
-
-    static bool ThrowException(JNIEnv *aEnv, const char *aMessage) {
-        return jni::ThrowException(aEnv, aMessage);
-    }
-
-    static void HandleUncaughtException(JNIEnv *aEnv) {
-        jni::HandleUncaughtException(aEnv);
-    }
-
-    // The bridge needs to be constructed via ConstructBridge first,
-    // and then once the Gecko main thread is spun up (Gecko side),
-    // SetMainThread should be called which will create the JNIEnv for
-    // us to use.  toolkit/xre/nsAndroidStartup.cpp calls
-    // SetMainThread.
-    bool SetMainThread(pthread_t thr);
 
     /* These are all implemented in Java */
     bool GetThreadNameJavaProfiling(uint32_t aThreadId, nsCString & aResult);
@@ -351,13 +308,6 @@ protected:
     static AndroidBridge* sBridge;
     nsTArray<nsCOMPtr<nsIMobileMessageCallback> > mSmsRequests;
 
-    // the global JavaVM
-    JavaVM *mJavaVM;
-
-    // the JNIEnv for the main thread
-    JNIEnv *mJNIEnv;
-    pthread_t mThread;
-
     widget::GeckoLayerClient::GlobalRef mLayerClient;
 
     // the android.telephony.SmsMessage class
@@ -365,9 +315,6 @@ protected:
 
     AndroidBridge();
     ~AndroidBridge();
-
-    void InitStubs(JNIEnv *jEnv);
-    void Init(JNIEnv *jEnv, jni::Object::Param clsLoader);
 
     bool mOpenedGraphicsLibraries;
     void OpenGraphicsLibraries();
@@ -503,12 +450,12 @@ class AutoJObject {
 public:
     AutoJObject(JNIEnv* aJNIEnv = nullptr) : mObject(nullptr)
     {
-        mJNIEnv = aJNIEnv ? aJNIEnv : AndroidBridge::GetJNIEnv();
+        mJNIEnv = aJNIEnv ? aJNIEnv : jni::GetGeckoThreadEnv();
     }
 
     AutoJObject(JNIEnv* aJNIEnv, jobject aObject)
     {
-        mJNIEnv = aJNIEnv ? aJNIEnv : AndroidBridge::GetJNIEnv();
+        mJNIEnv = aJNIEnv ? aJNIEnv : jni::GetGeckoThreadEnv();
         mObject = aObject;
     }
 
@@ -537,7 +484,7 @@ class AutoLocalJNIFrame {
 public:
     AutoLocalJNIFrame(int nEntries = 15)
         : mEntries(nEntries)
-        , mJNIEnv(AndroidBridge::GetJNIEnv())
+        , mJNIEnv(jni::GetGeckoThreadEnv())
         , mHasFrameBeenPushed(false)
     {
         MOZ_ASSERT(mJNIEnv);
@@ -546,7 +493,7 @@ public:
 
     AutoLocalJNIFrame(JNIEnv* aJNIEnv, int nEntries = 15)
         : mEntries(nEntries)
-        , mJNIEnv(aJNIEnv ? aJNIEnv : AndroidBridge::GetJNIEnv())
+        , mJNIEnv(aJNIEnv ? aJNIEnv : jni::GetGeckoThreadEnv())
         , mHasFrameBeenPushed(false)
     {
         MOZ_ASSERT(mJNIEnv);

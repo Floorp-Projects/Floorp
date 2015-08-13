@@ -76,7 +76,7 @@ nsAndroidHistory::RegisterVisitedCallback(nsIURI *aURI, Link *aContent)
   }
   list->AppendElement(aContent);
 
-  if (AndroidBridge::HasEnv()) {
+  if (jni::IsAvailable()) {
     widget::GeckoAppShell::CheckURIVisited(uriString);
   }
 
@@ -199,7 +199,7 @@ nsAndroidHistory::SaveVisitURI(nsIURI* aURI) {
   // Add the URI to our cache so we can take a fast path later
   AppendToRecentlyVisitedURIs(aURI);
 
-  if (AndroidBridge::HasEnv()) {
+  if (jni::IsAvailable()) {
     // Save this URI in our history
     nsAutoCString spec;
     (void)aURI->GetSpec(spec);
@@ -283,7 +283,7 @@ nsAndroidHistory::SetURITitle(nsIURI *aURI, const nsAString& aTitle)
     return NS_OK;
   }
 
-  if (AndroidBridge::HasEnv()) {
+  if (jni::IsAvailable()) {
     nsAutoCString uri;
     nsresult rv = aURI->GetSpec(uri);
     if (NS_FAILED(rv)) return rv;

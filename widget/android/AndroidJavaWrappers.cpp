@@ -105,7 +105,7 @@ jmethodID AndroidLayerRendererFrame::jEndDrawingMethod = 0;
 
 RefCountedJavaObject::~RefCountedJavaObject() {
     if (mObject)
-        GetJNIForThread()->DeleteGlobalRef(mObject);
+        GetEnvForThread()->DeleteGlobalRef(mObject);
     mObject = nullptr;
 }
 
@@ -1036,7 +1036,7 @@ nsJNIString::nsJNIString(jstring jstr, JNIEnv *jenv)
     }
     JNIEnv *jni = jenv;
     if (!jni) {
-        jni = AndroidBridge::GetJNIEnv();
+        jni = jni::GetGeckoThreadEnv();
     }
     const jchar* jCharPtr = jni->GetStringChars(jstr, nullptr);
 
@@ -1063,7 +1063,7 @@ nsJNICString::nsJNICString(jstring jstr, JNIEnv *jenv)
     }
     JNIEnv *jni = jenv;
     if (!jni) {
-        jni = AndroidBridge::GetJNIEnv();
+        jni = jni::GetGeckoThreadEnv();
     }
     const char* jCharPtr = jni->GetStringUTFChars(jstr, nullptr);
 
