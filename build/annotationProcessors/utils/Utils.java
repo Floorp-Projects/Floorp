@@ -225,6 +225,10 @@ public class Utils {
         return member.getName();
     }
 
+    public static String getUnqualifiedName(String name) {
+        return name.substring(name.lastIndexOf(':') + 1);
+    }
+
     /**
      * Determine if a member is declared static.
      *

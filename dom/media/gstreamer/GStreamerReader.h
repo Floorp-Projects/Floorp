@@ -21,6 +21,7 @@
 #pragma GCC diagnostic pop
 
 #include "MediaDecoderReader.h"
+#include "MediaResource.h"
 #include "MP3FrameParser.h"
 #include "ImageContainer.h"
 #include "nsRect.h"
@@ -262,6 +263,8 @@ private:
 #endif
   int fpsNum;
   int fpsDen;
+
+  MediaResourceIndex mResource;
 };
 
 } // namespace mozilla

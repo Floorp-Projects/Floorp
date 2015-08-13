@@ -369,6 +369,15 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
         return;
       }
 
+      // We treat BMPs as transparent if they're 32bpp and alpha is enabled, but
+      // also if they use RLE encoding, because the 'delta' mode can skip pixels
+      // and cause implicit transparency.
+      if ((mBIH.compression == BMPINFOHEADER::RLE8) ||
+          (mBIH.compression == BMPINFOHEADER::RLE4) ||
+          (mBIH.bpp == 32 && mUseAlphaData)) {
+        PostHasTransparency();
+      }
+
       // We have the size. If we're doing a metadata decode, we're done.
       if (IsMetadataDecode()) {
         return;
