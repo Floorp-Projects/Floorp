@@ -856,39 +856,38 @@ let pageInfoListener = {
   },
 
   receiveMessage: function(message) {
-    this.strings = message.data.strings;
+    let strings = message.data.strings;
+    let window;
+    let document;
 
     let frameOuterWindowID = message.data.frameOuterWindowID;
 
     // If inside frame then get the frame's window and document.
     if (frameOuterWindowID) {
-      this.window = Services.wm.getOuterWindowWithId(frameOuterWindowID);
-      this.document = this.window.document;
+      window = Services.wm.getOuterWindowWithId(frameOuterWindowID);
+      document = window.document;
     }
     else {
-      this.document = content.document;
-      this.window = content.window;
+      window = content.window;
+      document = content.document;
     }
 
-    let pageInfoData = {metaViewRows: this.getMetaInfo(), docInfo: this.getDocumentInfo(),
-                        feeds: this.getFeedsInfo(), windowInfo: this.getWindowInfo()};
+    let pageInfoData = {metaViewRows: this.getMetaInfo(document),
+                        docInfo: this.getDocumentInfo(document),
+                        feeds: this.getFeedsInfo(document, strings),
+                        windowInfo: this.getWindowInfo(window)};
     sendAsyncMessage("PageInfo:data", pageInfoData);
 
     // Separate step so page info dialog isn't blank while waiting for this to finish.
-    let pageInfoMediaData = {imageViewRows: this.getMediaInfo(this.document, this.window, this.strings)};
-
-    this.strings = null;
-    this.window = null;
-    this.document = null;
-
+    let pageInfoMediaData = {imageViewRows: this.getMediaInfo(document, window, strings)};
     sendAsyncMessage("PageInfo:mediaData", pageInfoMediaData);
   },
 
-  getMetaInfo: function() {
+  getMetaInfo: function(document) {
     let metaViewRows = [];
 
     // Get the meta tags from the page.
-    let metaNodes = this.document.getElementsByTagName("meta");
+    let metaNodes = document.getElementsByTagName("meta");
 
     for (let metaNode of metaNodes) {
       metaViewRows.push([metaNode.name || metaNode.httpEquiv || metaNode.getAttribute("property"),
@@ -898,13 +897,13 @@ let pageInfoListener = {
     return metaViewRows;
   },
 
-  getWindowInfo: function() {
+  getWindowInfo: function(window) {
     let windowInfo = {};
-    windowInfo.isTopWindow = this.window == this.window.top;
+    windowInfo.isTopWindow = window == window.top;
 
     let hostName = null;
     try {
-      hostName = this.window.location.host;
+      hostName = window.location.host;
     }
     catch (exception) { }
 
@@ -912,19 +911,19 @@ let pageInfoListener = {
     return windowInfo;
   },
 
-  getDocumentInfo: function() {
+  getDocumentInfo: function(document) {
     let docInfo = {};
-    docInfo.title = this.document.title;
-    docInfo.location = this.document.location.toString();
-    docInfo.referrer = this.document.referrer;
-    docInfo.compatMode = this.document.compatMode;
-    docInfo.contentType = this.document.contentType;
-    docInfo.characterSet = this.document.characterSet;
-    docInfo.lastModified = this.document.lastModified;
+    docInfo.title = document.title;
+    docInfo.location = document.location.toString();
+    docInfo.referrer = document.referrer;
+    docInfo.compatMode = document.compatMode;
+    docInfo.contentType = document.contentType;
+    docInfo.characterSet = document.characterSet;
+    docInfo.lastModified = document.lastModified;
 
     let documentURIObject = {};
-    documentURIObject.spec = this.document.documentURIObject.spec;
-    documentURIObject.originCharset = this.document.documentURIObject.originCharset;
+    documentURIObject.spec = document.documentURIObject.spec;
+    documentURIObject.originCharset = document.documentURIObject.originCharset;
     docInfo.documentURIObject = documentURIObject;
 
     docInfo.isContentWindowPrivate = PrivateBrowsingUtils.isContentWindowPrivate(content);
@@ -932,10 +931,10 @@ let pageInfoListener = {
     return docInfo;
   },
 
-  getFeedsInfo: function() {
+  getFeedsInfo: function(document, strings) {
     let feeds = [];
     // Get the feeds from the page.
-    let linkNodes = this.document.getElementsByTagName("link");
+    let linkNodes = document.getElementsByTagName("link");
     let length = linkNodes.length;
     for (let i = 0; i < length; i++) {
       let link = linkNodes[i];
@@ -952,9 +951,9 @@ let pageInfoListener = {
       }
 
       if (rels.feed || (link.type && rels.alternate && !rels.stylesheet)) {
-        let type = Feeds.isValidFeed(link, this.document.nodePrincipal, "feed" in rels);
+        let type = Feeds.isValidFeed(link, document.nodePrincipal, "feed" in rels);
         if (type) {
-          type = this.strings[type] || this.strings["application/rss+xml"];
+          type = strings[type] || strings["application/rss+xml"];
           feeds.push([link.title, type, link.href]);
         }
       }
