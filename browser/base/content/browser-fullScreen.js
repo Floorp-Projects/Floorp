@@ -353,28 +353,11 @@ var FullScreen = {
       };
     },
 
-    close: function() {
-      if (!this._element)
-        return;
-      this._element.removeEventListener("transitionend", this);
-      this._fadeOutTimeout.cancel();
-
-      // Ensure focus switches away from the (now hidden) warning box. If the user
-      // clicked buttons in the fullscreen key authorization UI, it would have been
-      // focused, and any key events would be directed at the (now hidden) chrome
-      // document instead of the target document.
-      gBrowser.selectedBrowser.focus();
-
-      this._element.setAttribute("hidden", true);
-      this._element.removeAttribute("fade-warning-out");
-      this._fadeOutTimeout = null;
-      this._element = null;
-    },
-
     // Shows a warning that the site has entered fullscreen for a short duration.
     show: function(aOrigin) {
-      if (!document.mozFullScreen)
+      if (!document.mozFullScreen) {
         return;
+      }
 
       // Set the strings on the fullscreen warning UI.
       if (aOrigin) {
@@ -420,12 +403,32 @@ var FullScreen = {
       this._fadeOutTimeout.start();
     },
 
+    close: function() {
+      if (!this._element) {
+        return;
+      }
+      this._element.removeEventListener("transitionend", this);
+      this._fadeOutTimeout.cancel();
+
+      // Ensure focus switches away from the (now hidden) warning box. If the user
+      // clicked buttons in the fullscreen key authorization UI, it would have been
+      // focused, and any key events would be directed at the (now hidden) chrome
+      // document instead of the target document.
+      gBrowser.selectedBrowser.focus();
+
+      this._element.setAttribute("hidden", true);
+      this._element.removeAttribute("fade-warning-out");
+      this._fadeOutTimeout = null;
+      this._element = null;
+    },
+
     handleEvent: function(event) {
       switch (event.type) {
-        case "transitionend":
+        case "transitionend": {
           if (event.propertyName == "opacity")
             this.close();
           break;
+        }
       }
     }
   },
