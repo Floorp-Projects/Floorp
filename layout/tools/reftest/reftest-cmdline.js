@@ -21,37 +21,6 @@ RefTestCmdLineHandler.prototype =
 
   /* nsICommandLineHandler */
   handle : function handler_handle(cmdLine) {
-    var args = { };
-    args.wrappedJSObject = args;
-    try {
-      var uristr = cmdLine.handleFlagWithParam("reftest", false);
-      if (uristr == null)
-        return;
-      try {
-        args.uri = cmdLine.resolveURI(uristr).spec;
-      }
-      catch (e) {
-        return;
-      }
-    }
-    catch (e) {
-      cmdLine.handleFlag("reftest", true);
-    }
-
-    try {
-      var nocache = cmdLine.handleFlag("reftestnocache", false);
-      args.nocache = nocache;
-    }
-    catch (e) {
-    }
-
-    try {
-      var skipslowtests = cmdLine.handleFlag("reftestskipslowtests", false);
-      args.skipslowtests = skipslowtests;
-    }
-    catch (e) {
-    }
-
     /* Ignore the platform's online/offline status while running reftests. */
     var ios = Components.classes["@mozilla.org/network/io-service;1"]
               .getService(Components.interfaces.nsIIOService2);
@@ -78,7 +47,7 @@ RefTestCmdLineHandler.prototype =
 
     function loadReftests() {
       wwatch.openWindow(null, "chrome://reftest/content/reftest.xul", "_blank",
-                        "chrome,dialog=no,all", args);
+                        "chrome,dialog=no,all", {});
     }
 
     var remote = false;
