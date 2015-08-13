@@ -1147,7 +1147,8 @@ public:
 
   virtual void PreloadStyle(nsIURI* uri, const nsAString& charset,
                             const nsAString& aCrossOriginAttr,
-                            ReferrerPolicy aReferrerPolicy) override;
+                            ReferrerPolicy aReferrerPolicy,
+                            const nsAString& aIntegrity) override;
 
   virtual nsresult LoadChromeSheetSync(nsIURI* uri, bool isAgentSheet,
                                        mozilla::CSSStyleSheet** sheet) override;

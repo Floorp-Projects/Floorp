@@ -6,6 +6,7 @@ package org.mozilla.gecko.annotationProcessors.utils;
 
 import org.mozilla.gecko.annotationProcessors.AnnotationInfo;
 import org.mozilla.gecko.annotationProcessors.classloader.AnnotatableEntity;
+import org.mozilla.gecko.annotationProcessors.classloader.ClassWithOptions;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
@@ -13,6 +14,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Iterator;
 
 /**
@@ -21,13 +23,17 @@ import java.util.Iterator;
  * parameters) and the argument.
  */
 public class GeneratableElementIterator implements Iterator<AnnotatableEntity> {
+    private final ClassWithOptions mClass;
     private final Member[] mObjects;
     private AnnotatableEntity mNextReturnValue;
     private int mElementIndex;
 
     private boolean mIterateEveryEntry;
 
-    public GeneratableElementIterator(Class<?> aClass) {
+    public GeneratableElementIterator(ClassWithOptions annotatedClass) {
+        mClass = annotatedClass;
+
+        final Class<?> aClass = annotatedClass.wrappedClass;
         // Get all the elements of this class as AccessibleObjects.
         Member[] aMethods = aClass.getDeclaredMethods();
         Member[] aFields = aClass.getDeclaredFields();
@@ -57,6 +63,56 @@ public class GeneratableElementIterator implements Iterator<AnnotatableEntity> {
         }
 
         findNextValue();
+    }
+
+    private Class<?>[] getFilteredInnerClasses() {
+        // Go through all inner classes and see which ones we want to generate.
+        final Class<?>[] candidates = mClass.wrappedClass.getDeclaredClasses();
+        int count = 0;
+
+        for (int i = 0; i < candidates.length; ++i) {
+            final GeneratableElementIterator testIterator
+                    = new GeneratableElementIterator(new ClassWithOptions(candidates[i], null));
+            if (testIterator.hasNext()
+                    || testIterator.getFilteredInnerClasses() != null) {
+                count++;
+                continue;
+            }
+            // Clear out ones that don't match.
+            candidates[i] = null;
+        }
+        return count > 0 ? candidates : null;
+    }
+
+    public ClassWithOptions[] getInnerClasses() {
+        final Class<?>[] candidates = getFilteredInnerClasses();
+        if (candidates == null) {
+            return new ClassWithOptions[0];
+        }
+
+        int count = 0;
+        for (Class<?> candidate : candidates) {
+            if (candidate != null) {
+                count++;
+            }
+        }
+
+        final ClassWithOptions[] ret = new ClassWithOptions[count];
+        count = 0;
+        for (Class<?> candidate : candidates) {
+            if (candidate != null) {
+                ret[count++] = new ClassWithOptions(
+                        candidate, mClass.generatedName + "::" + candidate.getSimpleName());
+            }
+        }
+        assert ret.length == count;
+
+        Arrays.sort(ret, new Comparator<ClassWithOptions>() {
+            @Override public int compare(ClassWithOptions lhs, ClassWithOptions rhs) {
+                return lhs.generatedName.compareTo(rhs.generatedName);
+            }
+        });
+        return ret;
     }
 
     /**

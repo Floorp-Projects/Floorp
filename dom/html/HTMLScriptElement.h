@@ -79,6 +79,14 @@ public:
   {
     SetOrRemoveNullableStringAttr(nsGkAtoms::crossorigin, aCrossOrigin, aError);
   }
+  void GetIntegrity(nsAString& aIntegrity)
+  {
+    GetHTMLAttr(nsGkAtoms::integrity, aIntegrity);
+  }
+  void SetIntegrity(const nsAString& aIntegrity, ErrorResult& rv)
+  {
+    SetHTMLAttr(nsGkAtoms::integrity, aIntegrity, rv);
+  }
   bool Async();
   void SetAsync(bool aValue, ErrorResult& rv);
 

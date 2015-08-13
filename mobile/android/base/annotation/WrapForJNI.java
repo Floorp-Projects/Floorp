@@ -31,8 +31,7 @@ public @interface WrapForJNI {
 
     /**
      * If set, the generated method stub will support being called from any thread via the use of
-     * GetJNIForThread. This is rarely useful, at time of writing, as well as possibly risky.
-     * See information in AndroidBridge.cpp regarding GetJNIForThread.
+     * GetEnvForThread. This is rarely useful, at time of writing, as well as possibly risky.
      *
      * Did I mention use of this function is discouraged?
      */

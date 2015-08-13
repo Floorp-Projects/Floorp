@@ -657,6 +657,11 @@
   ERROR(NS_ERROR_CSP_FORM_ACTION_VIOLATION,        FAILURE(98)),
   ERROR(NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION,     FAILURE(99)),
 
+  /* Error code for Sub-Resource Integrity */
+  ERROR(NS_ERROR_SRI_CORRUPT,                      FAILURE(200)),
+  ERROR(NS_ERROR_SRI_DISABLED,                     FAILURE(201)),
+  ERROR(NS_ERROR_SRI_NOT_ELIGIBLE,                 FAILURE(202)),
+
   /* CMS specific nsresult error codes.  Note: the numbers used here correspond
    * to the values in nsICMSMessageErrors.idl. */
   ERROR(NS_ERROR_CMS_VERIFY_NOT_SIGNED,            FAILURE(1024)),

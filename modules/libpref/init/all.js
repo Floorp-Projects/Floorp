@@ -398,12 +398,15 @@ pref("media.peerconnection.default_iceservers", "[]");
 pref("media.peerconnection.ice.loopback", false); // Set only for testing in offline environments.
 pref("media.peerconnection.ice.tcp", false);
 pref("media.peerconnection.ice.link_local", false); // Set only for testing IPV6 in networks that don't assign IPV6 addresses
+pref("media.peerconnection.ice.force_interface", ""); // Limit to only a single interface
 pref("media.peerconnection.ice.relay_only", false); // Limit candidates to TURN
 pref("media.peerconnection.use_document_iceservers", true);
 pref("media.peerconnection.identity.enabled", true);
 pref("media.peerconnection.identity.timeout", 10000);
 pref("media.peerconnection.ice.stun_client_maximum_transmits", 7);
 pref("media.peerconnection.ice.trickle_grace_period", 5000);
+pref("media.peerconnection.ice.default_address_only", false);
+
 // These values (aec, agc, and noice) are from media/webrtc/trunk/webrtc/common_types.h
 // kXxxUnchanged = 0, kXxxDefault = 1, and higher values are specific to each
 // setting (for Xxx = Ec, Agc, or Ns).  Defaults are all set to kXxxDefault here.
@@ -1954,6 +1957,9 @@ pref("security.apps.privileged.CSP.default", "default-src * data: blob:; script-
 // Mixed content blocking
 pref("security.mixed_content.block_active_content", false);
 pref("security.mixed_content.block_display_content", false);
+
+// Sub-resource integrity
+pref("security.sri.enable", false);
 
 // Disable pinning checks by default.
 pref("security.cert_pinning.enforcement_level", 0);

@@ -9,6 +9,8 @@
 #include "BluetoothUtils.h"
 #include "DOMRequest.h"
 #include "nsIDocument.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsIPrincipal.h"
 #include "nsTArrayHelpers.h"
 
@@ -983,13 +985,30 @@ BluetoothAdapter::IsBluetoothCertifiedApp()
   NS_ENSURE_TRUE(doc, false);
 
   uint16_t appStatus = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
-  nsAutoCString appOrigin;
-
   doc->NodePrincipal()->GetAppStatus(&appStatus);
+  if (appStatus != nsIPrincipal::APP_STATUS_CERTIFIED) {
+   return false;
+  }
+
+  // Get the app origin of Bluetooth app from PrefService.
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (!prefs) {
+    BT_WARNING("Failed to get preference service");
+    return false;
+  }
+
+  nsAutoCString prefOrigin;
+  nsresult rv = prefs->GetCharPref(PREF_BLUETOOTH_APP_ORIGIN,
+                                   getter_Copies(prefOrigin));
+  if (NS_FAILED(rv)) {
+    BT_WARNING("Failed to get the pref value '" PREF_BLUETOOTH_APP_ORIGIN "'");
+    return false;
+  }
+
+  nsAutoCString appOrigin;
   doc->NodePrincipal()->GetOriginNoSuffix(appOrigin);
 
-  return appStatus == nsIPrincipal::APP_STATUS_CERTIFIED &&
-         appOrigin.EqualsLiteral(BLUETOOTH_APP_ORIGIN);
+  return appOrigin.Equals(prefOrigin);
 }
 
 void

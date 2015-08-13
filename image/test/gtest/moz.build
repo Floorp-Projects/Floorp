@@ -11,17 +11,24 @@ FAIL_ON_WARNINGS = True
 UNIFIED_SOURCES = [
     'Common.cpp',
     'TestDecodeToSurface.cpp',
+    'TestMetadata.cpp',
 ]
 
 TEST_HARNESS_FILES.gtest += [
     'corrupt.jpg',
     'first-frame-green.gif',
     'first-frame-green.png',
+    'first-frame-padding.gif',
     'green.bmp',
     'green.gif',
     'green.ico',
     'green.jpg',
     'green.png',
+    'rle4.bmp',
+    'rle8.bmp',
+    'transparent.bmp',
+    'transparent.gif',
+    'transparent.png',
 ]
 
 LOCAL_INCLUDES += [

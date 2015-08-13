@@ -5,6 +5,7 @@
 
 #include "mozilla/jni/Refs.h"
 #include "mozilla/jni/Types.h"
+#include "mozilla/jni/Utils.h"
 #include "AndroidBridge.h"
 
 namespace mozilla {
@@ -60,7 +61,7 @@ protected:
     static JNIEnv* BeginAccess()
     {
         JNIEnv* const env = Traits::isMultithreaded
-                ? GetJNIForThread() : AndroidBridge::GetJNIEnv();
+                ? GetEnvForThread() : GetGeckoThreadEnv();
 
         EnsureClassRef<class Traits::Owner>(env);
         return env;
@@ -150,7 +151,7 @@ class Method<Traits, void> : public Method<Traits, bool>
 public:
     template<typename... Args>
     static void Call(const Owner* cls, nsresult* rv,
-                     const Args&... args) override
+                     const Args&... args)
     {
         JNIEnv* const env = Base::BeginAccess();
 
@@ -179,7 +180,7 @@ class Constructor : protected Method<Traits, typename Traits::ReturnType> {
 public:
     template<typename... Args>
     static ReturnType Call(const Owner* cls, nsresult* rv,
-                           const Args&... args) override
+                           const Args&... args)
     {
         JNIEnv* const env = Base::BeginAccess();
 
