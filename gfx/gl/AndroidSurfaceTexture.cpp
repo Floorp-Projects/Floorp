@@ -166,7 +166,7 @@ AndroidSurfaceTexture::Init(GLContext* aContext, GLuint aTexture)
     return false;
   }
 
-  mNativeWindow = AndroidNativeWindow::CreateFromSurface(GetJNIForThread(),
+  mNativeWindow = AndroidNativeWindow::CreateFromSurface(jni::GetEnvForThread(),
                                                          mSurface.Get());
   MOZ_ASSERT(mNativeWindow, "Failed to create native window from surface");
 
@@ -207,7 +207,7 @@ AndroidSurfaceTexture::UpdateTexImage()
 void
 AndroidSurfaceTexture::GetTransformMatrix(gfx::Matrix4x4& aMatrix)
 {
-  JNIEnv* env = GetJNIForThread();
+  JNIEnv* const env = jni::GetEnvForThread();
 
   auto jarray = FloatArray::LocalRef::Adopt(env, env->NewFloatArray(16));
   mSurfaceTexture->GetTransformMatrix(jarray);

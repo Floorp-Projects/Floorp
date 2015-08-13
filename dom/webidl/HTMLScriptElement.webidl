@@ -33,3 +33,8 @@ partial interface HTMLScriptElement {
   attribute DOMString htmlFor;
 };
 
+// https://w3c.github.io/webappsec/specs/subresourceintegrity/#htmlscriptelement-1
+partial interface HTMLScriptElement {
+  [SetterThrows]
+  attribute DOMString integrity;
+};

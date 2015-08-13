@@ -33,9 +33,9 @@ ssize_t MediaStreamSource::readAt(off64_t offset, void *data, size_t size)
   while (todo > 0) {
     Mutex::Autolock autoLock(mLock);
     uint32_t bytesRead;
-    if ((offset != mResource->Tell() &&
-         NS_FAILED(mResource->Seek(nsISeekableStream::NS_SEEK_SET, offset))) ||
-        NS_FAILED(mResource->Read(ptr, todo, &bytesRead))) {
+    if ((offset != mResource.Tell() &&
+         NS_FAILED(mResource.Seek(nsISeekableStream::NS_SEEK_SET, offset))) ||
+        NS_FAILED(mResource.Read(ptr, todo, &bytesRead))) {
       return ERROR_IO;
     }
 
@@ -52,13 +52,20 @@ ssize_t MediaStreamSource::readAt(off64_t offset, void *data, size_t size)
 
 status_t MediaStreamSource::getSize(off64_t *size)
 {
-  uint64_t length = mResource->GetLength();
+  uint64_t length = mResource.GetLength();
   if (length == static_cast<uint64_t>(-1))
     return ERROR_UNSUPPORTED;
 
   *size = length;
 
   return OK;
+}
+
+int64_t
+MediaStreamSource::Tell()
+{
+  Mutex::Autolock autoLock(mLock);
+  return mResource.Tell();
 }
 
 } // namespace android

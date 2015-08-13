@@ -432,6 +432,7 @@ LOCAL_INCLUDES += [
     '/layout/svg',
     '/layout/xul',
     '/netwerk/base',
+    '/security/manager/ssl',
     '/widget',
     '/xpcom/ds',
 ]

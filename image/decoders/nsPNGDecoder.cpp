@@ -19,6 +19,8 @@
 
 #include <algorithm>
 
+using namespace mozilla::gfx;
+
 namespace mozilla {
 namespace image {
 
@@ -136,6 +138,20 @@ nsPNGDecoder::~nsPNGDecoder()
   }
 }
 
+void
+nsPNGDecoder::CheckForTransparency(SurfaceFormat aFormat,
+                                   const IntRect& aFrameRect)
+{
+  // Check if the image has a transparent color in its palette.
+  if (aFormat == SurfaceFormat::B8G8R8A8) {
+    PostHasTransparency();
+  }
+
+  // PNGs shouldn't have first-frame padding.
+  MOZ_ASSERT_IF(mNumFrames == 0,
+                IntRect(IntPoint(), GetSize()).IsEqualEdges(aFrameRect));
+}
+
 // CreateFrame() is used for both simple and animated images
 nsresult
 nsPNGDecoder::CreateFrame(png_uint_32 aXOffset, png_uint_32 aYOffset,
@@ -145,17 +161,8 @@ nsPNGDecoder::CreateFrame(png_uint_32 aXOffset, png_uint_32 aYOffset,
   MOZ_ASSERT(HasSize());
   MOZ_ASSERT(!IsMetadataDecode());
 
-  if (aFormat == gfx::SurfaceFormat::B8G8R8A8) {
-    PostHasTransparency();
-  }
-
-  nsIntRect frameRect(aXOffset, aYOffset, aWidth, aHeight);
-  if (mNumFrames == 0 &&
-      !nsIntRect(nsIntPoint(), GetSize()).IsEqualEdges(frameRect)) {
-    // We need padding on the first frame, which means that we don't draw into
-    // part of the image at all. Report that as transparency.
-    PostHasTransparency();
-  }
+  IntRect frameRect(aXOffset, aYOffset, aWidth, aHeight);
+  CheckForTransparency(aFormat, frameRect);
 
   // XXX(seth): Some tests depend on the first frame of PNGs being B8G8R8A8.
   // This is something we should fix.
@@ -268,7 +275,7 @@ nsPNGDecoder::InitInternal()
 
 #ifdef PNG_HANDLE_AS_UNKNOWN_SUPPORTED
   // Ignore unused chunks
-  if (mCMSMode == eCMSMode_Off) {
+  if (mCMSMode == eCMSMode_Off || IsMetadataDecode()) {
     png_set_keep_unknown_chunks(mPNG, 1, color_chunks, 2);
   }
 
@@ -486,12 +493,6 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
     png_longjmp(decoder->mPNG, 1);
   }
 
-  if (decoder->IsMetadataDecode()) {
-    // We have the size, so we don't need to decode any further.
-    decoder->mSuccessfulEarlyFinish = true;
-    png_longjmp(decoder->mPNG, 1);
-  }
-
   if (color_type == PNG_COLOR_TYPE_PALETTE) {
     png_set_expand(png_ptr);
   }
@@ -592,6 +593,16 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
     decoder->format = gfx::SurfaceFormat::B8G8R8A8;
   } else {
     png_longjmp(decoder->mPNG, 1); // invalid number of channels
+  }
+
+  if (decoder->IsMetadataDecode()) {
+    decoder->CheckForTransparency(decoder->format,
+                                  IntRect(0, 0, width, height));
+
+    // We have the size and transparency information we're looking for, so we
+    // don't need to decode any further.
+    decoder->mSuccessfulEarlyFinish = true;
+    png_longjmp(decoder->mPNG, 1);
   }
 
 #ifdef PNG_APNG_SUPPORTED
