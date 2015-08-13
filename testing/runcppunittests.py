@@ -24,8 +24,7 @@ class CPPUnitTests(object):
     # Time (seconds) in which process will be killed if it produces no output.
     TEST_PROC_NO_OUTPUT_TIMEOUT = 300
 
-    def run_one_test(self, prog, env, symbols_path=None, interactive=False,
-                     timeout_factor=1):
+    def run_one_test(self, prog, env, symbols_path=None, interactive=False):
         """
         Run a single C++ unit test program.
 
@@ -34,7 +33,6 @@ class CPPUnitTests(object):
         * env: The environment to use for running the program.
         * symbols_path: A path to a directory containing Breakpad-formatted
                         symbol files for producing stack traces on crash.
-        * timeout_factor: An optional test-specific timeout multiplier.
 
         Return True if the program exits with a zero status, False otherwise.
         """
@@ -55,8 +53,7 @@ class CPPUnitTests(object):
                                                  processOutputLine=lambda _: None)
             #TODO: After bug 811320 is fixed, don't let .run() kill the process,
             # instead use a timeout in .wait() and then kill to get a stack.
-            test_timeout = CPPUnitTests.TEST_PROC_TIMEOUT * timeout_factor
-            proc.run(timeout=test_timeout,
+            proc.run(timeout=CPPUnitTests.TEST_PROC_TIMEOUT,
                      outputTimeout=CPPUnitTests.TEST_PROC_NO_OUTPUT_TIMEOUT)
             proc.wait()
             if proc.output:
@@ -136,7 +133,7 @@ class CPPUnitTests(object):
         Run a set of C++ unit test programs.
 
         Arguments:
-        * programs: An iterable containing (test path, test timeout factor) tuples
+        * programs: An iterable containing paths to test programs.
         * xre_path: A path to a directory containing a XUL Runtime Environment.
         * symbols_path: A path to a directory containing Breakpad-formatted
                         symbol files for producing stack traces on crash.
@@ -151,10 +148,7 @@ class CPPUnitTests(object):
         pass_count = 0
         fail_count = 0
         for prog in programs:
-            test_path = prog[0]
-            timeout_factor = prog[1]
-            single_result = self.run_one_test(test_path, env, symbols_path,
-                                              interactive, timeout_factor)
+            single_result = self.run_one_test(prog, env, symbols_path, interactive)
             if single_result:
                 pass_count += 1
             else:
@@ -178,41 +172,33 @@ class CPPUnittestOptions(OptionParser):
                         action = "store", type = "string", dest = "symbols_path",
                         default = None,
                         help = "absolute path to directory containing breakpad symbols, or the URL of a zip file containing symbols")
-        self.add_option("--manifest-path",
-                        action = "store", type = "string", dest = "manifest_path",
+        self.add_option("--skip-manifest",
+                        action = "store", type = "string", dest = "manifest_file",
                         default = None,
-                        help = "path to test manifest, if different from the path to test binaries")
+                        help = "absolute path to a manifest file")
 
-def extract_unittests_from_args(args, environ, manifest_path):
+def extract_unittests_from_args(args, environ):
     """Extract unittests from args, expanding directories as needed"""
     mp = manifestparser.TestManifest(strict=True)
     tests = []
-    binary_path = None
-
-    if manifest_path:
-        mp.read(manifest_path)
-        binary_path = os.path.abspath(args[0])
-    else:
-        for p in args:
-            if os.path.isdir(p):
-                try:
-                    mp.read(os.path.join(p, 'cppunittest.ini'))
-                except IOError:
-                    tests.extend([(os.path.abspath(os.path.join(p, x)), 1) for x in os.listdir(p)])
-            else:
-                tests.append((os.path.abspath(p), 1))
+    for p in args:
+        if os.path.isdir(p):
+            try:
+                mp.read(os.path.join(p, 'cppunittest.ini'))
+            except IOError:
+                tests.extend([os.path.abspath(os.path.join(p, x)) for x in os.listdir(p)])
+        else:
+            tests.append(os.path.abspath(p))
 
     # we skip the existence check here because not all tests are built
     # for all platforms (and it will fail on Windows anyway)
-    active_tests = mp.active_tests(exists=False, disabled=False, **environ)
-    suffix = '.exe' if mozinfo.isWin else ''
-    if binary_path:
-        tests.extend([(os.path.join(binary_path, test['relpath'] + suffix), int(test.get('requesttimeoutfactor', 1))) for test in active_tests])
+    if mozinfo.isWin:
+        tests.extend([test['path'] + '.exe' for test in mp.active_tests(exists=False, disabled=False, **environ)])
     else:
-        tests.extend([(test['path'] + suffix, int(test.get('requesttimeoutfactor', 1))) for test in active_tests])
+        tests.extend([test['path'] for test in mp.active_tests(exists=False, disabled=False, **environ)])
 
     # skip non-existing tests
-    tests = [test for test in tests if os.path.isfile(test[0])]
+    tests = [test for test in tests if os.path.isfile(test)]
 
     return tests
 
@@ -237,15 +223,12 @@ def main():
     if not options.xre_path:
         print >>sys.stderr, """Error: --xre-path is required"""
         sys.exit(1)
-    if options.manifest_path and len(args) > 1:
-        print >>sys.stderr, "Error: multiple arguments not supported with --test-manifest"
-        sys.exit(1)
 
     log = mozlog.commandline.setup_logging("cppunittests", options,
                                            {"tbpl": sys.stdout})
 
     update_mozinfo()
-    progs = extract_unittests_from_args(args, mozinfo.info, options.manifest_path)
+    progs = extract_unittests_from_args(args, mozinfo.info)
     options.xre_path = os.path.abspath(options.xre_path)
     if mozinfo.isMac:
         options.xre_path = os.path.join(os.path.dirname(options.xre_path), 'Resources')
