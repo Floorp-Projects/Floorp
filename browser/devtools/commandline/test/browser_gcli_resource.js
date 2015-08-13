@@ -28,7 +28,6 @@ function test() {
 // var helpers = require('./helpers');
 // var assert = require('../testharness/assert');
 
-var Promise = require('gcli/util/promise').Promise;
 var util = require('gcli/util/util');
 var resource = require('gcli/types/resource');
 var Status = require('gcli/types/types').Status;

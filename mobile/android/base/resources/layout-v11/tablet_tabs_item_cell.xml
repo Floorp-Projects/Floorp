@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<org.mozilla.gecko.tabs.TabsLayoutItemView xmlns:android="http://schemas.android.com/apk/res/android"
+                                           xmlns:gecko="http://schemas.android.com/apk/res-auto"
+                                           style="@style/TabsItem"
+                                           android:id="@+id/info"
+                                           android:layout_width="wrap_content"
+                                           android:layout_height="wrap_content"
+                                           android:gravity="center"
+                                           android:orientation="vertical">
+
+    <LinearLayout android:layout_width="fill_parent"
+                  android:layout_height="wrap_content"
+                  android:orientation="horizontal"
+                  android:duplicateParentState="true"
+                  android:paddingLeft="@dimen/new_tablet_tab_highlight_stroke_width"
+                  android:paddingRight="@dimen/new_tablet_tab_highlight_stroke_width"
+                  android:paddingBottom="@dimen/new_tablet_tab_highlight_stroke_width">
+
+       <org.mozilla.gecko.widget.FadedSingleColorTextView
+               android:id="@+id/title"
+               android:layout_width="0dip"
+               android:layout_height="wrap_content"
+               android:layout_weight="1.0"
+               style="@style/TabLayoutItemTextAppearance"
+               android:textSize="14sp"
+               android:textColor="@color/tab_item_title"
+               android:singleLine="true"
+               android:duplicateParentState="true"
+               gecko:fadeWidth="15dp"
+               android:paddingRight="5dp"/>
+
+          <ImageButton android:id="@+id/audio_playing"
+                       android:visibility="gone"
+                       android:layout_width="20dip"
+                       android:layout_height="20dip"
+                       android:background="@drawable/action_bar_button_inverse"
+                       android:scaleType="center"
+                       android:contentDescription="@string/tab_audio_playing"
+                       android:src="@drawable/tab_audio_playing"/>
+
+        <!-- Use of baselineAlignBottom only supported from API 11+ - if this needs to work on lower API versions
+             we'll need to override getBaseLine() and return image height, but we assume this won't happen -->
+        <ImageView android:id="@+id/close"
+                     style="@style/TabsItemClose"
+                     android:layout_width="wrap_content"
+                     android:layout_height="wrap_content"
+                     android:scaleType="center"
+                     android:baselineAlignBottom="true"
+                     android:background="@android:color/transparent"
+                     android:contentDescription="@string/close_tab"
+                     android:src="@drawable/tab_item_close_button"
+                     android:duplicateParentState="true"/>
+
+    </LinearLayout>
+
+    <!-- We set state_private on this View dynamically in TabsGridLayout. -->
+    <org.mozilla.gecko.widget.TabThumbnailWrapper
+            android:id="@+id/wrapper"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/new_tablet_tab_highlight_stroke_width"
+            android:background="@drawable/tab_thumbnail"
+            android:duplicateParentState="true">
+
+        <org.mozilla.gecko.widget.ThumbnailView android:id="@+id/thumbnail"
+                                                android:layout_width="@dimen/new_tablet_tab_thumbnail_width"
+                                                android:layout_height="@dimen/new_tablet_tab_thumbnail_height"
+                                                />
+
+    </org.mozilla.gecko.widget.TabThumbnailWrapper>
+
+</org.mozilla.gecko.tabs.TabsLayoutItemView>

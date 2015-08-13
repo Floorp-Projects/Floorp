@@ -27,7 +27,7 @@ window.onload = function() {
   });
 
   var {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-  Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
+  var {DebuggerClient} = require("devtools/toolkit/client/main");
   var {DebuggerServer} = require("devtools/server/main");
 
   SimpleTest.waitForExplicitFinish();

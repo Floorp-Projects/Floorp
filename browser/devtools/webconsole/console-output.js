@@ -14,10 +14,10 @@ loader.lazyImporter(this, "escapeHTML", "resource:///modules/devtools/VariablesV
 loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/gDevTools.jsm");
 loader.lazyImporter(this, "Task", "resource://gre/modules/Task.jsm");
 loader.lazyImporter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
-loader.lazyImporter(this, "ObjectClient", "resource://gre/modules/devtools/dbg-client.jsm");
 
 loader.lazyRequireGetter(this, "promise");
 loader.lazyRequireGetter(this, "TableWidget", "devtools/shared/widgets/TableWidget", true);
+loader.lazyRequireGetter(this, "ObjectClient", "devtools/toolkit/client/main", true);
 
 const Heritage = require("sdk/core/heritage");
 const URI = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);

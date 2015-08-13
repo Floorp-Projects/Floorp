@@ -80,7 +80,6 @@ loop.shared.actions = (function() {
      * a contact can't be reached.
      */
     FetchRoomEmailLink: Action.define("fetchRoomEmailLink", {
-      roomOwner: String,
       roomName: String
     }),
 
@@ -307,8 +306,7 @@ loop.shared.actions = (function() {
     CreateRoom: Action.define("createRoom", {
       // The localized template to use to name the new room
       // (eg. "Conversation {{conversationLabel}}").
-      nameTemplate: String,
-      roomOwner: String
+      nameTemplate: String
       // See https://wiki.mozilla.org/Loop/Architecture/Context#Format_of_context.value
       // urls: Object - Optional
     }),

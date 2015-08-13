@@ -7,7 +7,6 @@ const {Cc, Ci, Cu, Cr} = require("chrome");
 
 const Services = require("Services");
 
-const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 const events = require("sdk/event/core");
 const { on: systemOn, off: systemOff } = require("sdk/system/events");
 const protocol = require("devtools/server/protocol");

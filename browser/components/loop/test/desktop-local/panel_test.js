@@ -838,8 +838,7 @@ describe("loop.panel", function() {
         TestUtils.Simulate.click(view.getDOMNode().querySelector(".new-room-button"));
 
         sinon.assert.calledWith(dispatch, new sharedActions.CreateRoom({
-          nameTemplate: "Fake title",
-          roomOwner: fakeEmail
+          nameTemplate: "Fake title"
         }));
       });
 
@@ -870,7 +869,6 @@ describe("loop.panel", function() {
 
       sinon.assert.calledWith(dispatch, new sharedActions.CreateRoom({
         nameTemplate: "Fake title",
-        roomOwner: fakeEmail,
         urls: [{
           location: "http://invalid.com",
           description: "fakeSite",

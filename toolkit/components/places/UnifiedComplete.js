@@ -583,6 +583,14 @@ function makeActionURL(action, params) {
   return NetUtil.newURI(url).spec;
 }
 
+/**
+ * Returns whether the passed in string looks like a url.
+ */
+function looksLikeUrl(str) {
+  // Single word not including special chars.
+  return !REGEXP_SPACES.test(str) &&
+         ["/", "@", ":", "."].some(c => str.includes(c));
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -979,9 +987,11 @@ Search.prototype = {
           let [match, suggestion] = this._searchSuggestionController.consume();
           if (!suggestion)
             break;
-          // Don't include the restrict token, if present.
-          let searchString = this._searchTokens.join(" ");
-          this._addSearchEngineMatch(match, searchString, suggestion);
+          if (!looksLikeUrl(suggestion)) {
+            // Don't include the restrict token, if present.
+            let searchString = this._searchTokens.join(" ");
+            this._addSearchEngineMatch(match, searchString, suggestion);
+          }
         }
       });
 
@@ -1011,9 +1021,7 @@ Search.prototype = {
 
     // Disallow fetching search suggestions for strings looking like URLs, to
     // avoid disclosing information about networks or passwords.
-    return tokens.some(token => {
-      return ["/", "@", ":", "."].some(c => token.includes(c));
-    });
+    return tokens.some(looksLikeUrl);
   },
 
   _matchKnownUrl: function* (conn) {

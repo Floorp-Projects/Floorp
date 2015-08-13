@@ -8388,7 +8388,8 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
                                    (GetStateBits() & TEXT_IS_IN_TOKEN_MATHML);
   gfxBreakPriority breakPriority = aLineLayout.LastOptionalBreakPriority();
   gfxTextRun::SuppressBreak suppressBreak = gfxTextRun::eNoSuppressBreak;
-  if (ShouldSuppressLineBreak()) {
+  bool shouldSuppressLineBreak = ShouldSuppressLineBreak();
+  if (shouldSuppressLineBreak) {
     suppressBreak = gfxTextRun::eSuppressAllBreaks;
   } else if (!aLineLayout.LineIsBreakable()) {
     suppressBreak = gfxTextRun::eSuppressInitialBreak;
@@ -8583,35 +8584,37 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     aLineLayout.SetTrimmableISize(NSToCoordFloor(trimmableWidth));
     AddStateBits(TEXT_HAS_NONCOLLAPSED_CHARACTERS);
   }
-  if (charsFit > 0 && charsFit == length &&
-      textStyle->mHyphens != NS_STYLE_HYPHENS_NONE &&
-      HasSoftHyphenBefore(frag, mTextRun, offset, end)) {
-    bool fits =
-      textMetrics.mAdvanceWidth + provider.GetHyphenWidth() <= availWidth;
-    // Record a potential break after final soft hyphen
-    aLineLayout.NotifyOptionalBreakPosition(this, length, fits,
-                                            gfxBreakPriority::eNormalBreak);
-  }
   bool breakAfter = forceBreakAfter;
-  // length == 0 means either the text is empty or it's all collapsed away
-  bool emptyTextAtStartOfLine = atStartOfLine && length == 0;
-  if (!breakAfter && charsFit == length && !emptyTextAtStartOfLine &&
-      transformedOffset + transformedLength == mTextRun->GetLength() &&
-      !ShouldSuppressLineBreak() &&
-      (mTextRun->GetFlags() & nsTextFrameUtils::TEXT_HAS_TRAILING_BREAK)) {
-    // We placed all the text in the textrun and we have a break opportunity at
-    // the end of the textrun. We need to record it because the following
-    // content may not care about nsLineBreaker.
-
-    // Note that because we didn't break, we can be sure that (thanks to the
-    // code up above) textMetrics.mAdvanceWidth includes the width of any
-    // trailing whitespace. So we need to subtract trimmableWidth here
-    // because if we did break at this point, that much width would be trimmed.
-    if (textMetrics.mAdvanceWidth - trimmableWidth > availWidth) {
-      breakAfter = true;
-    } else {
-      aLineLayout.NotifyOptionalBreakPosition(this, length, true,
+  if (!shouldSuppressLineBreak) {
+    if (charsFit > 0 && charsFit == length &&
+        textStyle->mHyphens != NS_STYLE_HYPHENS_NONE &&
+        HasSoftHyphenBefore(frag, mTextRun, offset, end)) {
+      bool fits =
+        textMetrics.mAdvanceWidth + provider.GetHyphenWidth() <= availWidth;
+      // Record a potential break after final soft hyphen
+      aLineLayout.NotifyOptionalBreakPosition(this, length, fits,
                                               gfxBreakPriority::eNormalBreak);
+    }
+    // length == 0 means either the text is empty or it's all collapsed away
+    bool emptyTextAtStartOfLine = atStartOfLine && length == 0;
+    if (!breakAfter && charsFit == length && !emptyTextAtStartOfLine &&
+        transformedOffset + transformedLength == mTextRun->GetLength() &&
+        (mTextRun->GetFlags() & nsTextFrameUtils::TEXT_HAS_TRAILING_BREAK)) {
+      // We placed all the text in the textrun and we have a break opportunity
+      // at the end of the textrun. We need to record it because the following
+      // content may not care about nsLineBreaker.
+
+      // Note that because we didn't break, we can be sure that (thanks to the
+      // code up above) textMetrics.mAdvanceWidth includes the width of any
+      // trailing whitespace. So we need to subtract trimmableWidth here
+      // because if we did break at this point, that much width would be
+      // trimmed.
+      if (textMetrics.mAdvanceWidth - trimmableWidth > availWidth) {
+        breakAfter = true;
+      } else {
+        aLineLayout.NotifyOptionalBreakPosition(this, length, true,
+                                                gfxBreakPriority::eNormalBreak);
+      }
     }
   }
 
@@ -8659,7 +8662,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   if (!textStyle->WhiteSpaceIsSignificant() &&
       (lineContainer->StyleText()->mTextAlign == NS_STYLE_TEXT_ALIGN_JUSTIFY ||
        lineContainer->StyleText()->mTextAlignLast == NS_STYLE_TEXT_ALIGN_JUSTIFY ||
-       ShouldSuppressLineBreak()) &&
+       shouldSuppressLineBreak) &&
       !lineContainer->IsSVGText()) {
     AddStateBits(TEXT_JUSTIFICATION_ENABLED);
     provider.ComputeJustification(offset, charsFit);

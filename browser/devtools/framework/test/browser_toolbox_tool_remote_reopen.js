@@ -9,8 +9,7 @@
 thisTestLeaksUncaughtRejectionsAndShouldBeFixed("Error: Shader Editor is still waiting for a WebGL context to be created.");
 
 const { DebuggerServer } = require("devtools/server/main");
-const { DebuggerClient } =
-  Cu.import("resource://gre/modules/devtools/dbg-client.jsm", {});
+const { DebuggerClient } = require("devtools/toolkit/client/main");
 
 /**
  * Bug 979536: Ensure fronts are destroyed after toolbox close.

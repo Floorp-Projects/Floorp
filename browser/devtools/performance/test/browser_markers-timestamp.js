@@ -29,10 +29,8 @@ function* spawnTest () {
   ok(markers.every(({stack}) => typeof stack === "number"), "All markers have stack references.");
   ok(markers.every(({name}) => name === "TimeStamp"), "All markers found are TimeStamp markers");
   ok(markers.length === 2, "found 2 TimeStamp markers");
-  ok(markers.every(({start}) => typeof start === "number" && start > 0 && start < maxMarkerTime),
-    "All markers have a start time between the valid range.");
-  ok(markers.every(({end}) => typeof end === "number" && end > 0 && end < maxMarkerTime),
-    "All markers have an end time between the valid range.");
+  ok(markers.every(({start, end}) => typeof start === "number" && start === end),
+    "All markers have equal start and end times");
   is(markers[0].causeName, void 0, "Unlabeled timestamps have an empty causeName");
   is(markers[1].causeName, "myLabel", "Labeled timestamps have correct causeName");
 
@@ -42,9 +40,9 @@ function* spawnTest () {
   yield removeTab(target.tab);
   finish();
 
-  function handler (_, name, m) {
+  function handler (name, data) {
     if (name === "markers") {
-      markers = markers.concat(m.filter(marker => marker.name === "TimeStamp"));
+      markers = markers.concat(data.markers.filter(marker => marker.name === "TimeStamp"));
     }
   }
 }

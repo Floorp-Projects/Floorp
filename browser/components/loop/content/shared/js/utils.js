@@ -76,6 +76,7 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
     MEDIA_DENIED: "reason-media-denied",
     NO_MEDIA: "reason-no-media",
     UNABLE_TO_PUBLISH_MEDIA: "unable-to-publish-media",
+    USER_UNAVAILABLE: "reason-user-unavailable",
     COULD_NOT_CONNECT: "reason-could-not-connect",
     NETWORK_DISCONNECTED: "reason-network-disconnected",
     EXPIRED_OR_INVALID: "reason-expired-or-invalid",

@@ -18,6 +18,7 @@ const Services = require("Services");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils.js");
 const xpcInspector = require("xpcInspector");
 const { DebuggerServer } = require("devtools/server/main");
+const { DebuggerClient } = require("devtools/toolkit/client/main");
 
 // We do not want to log packets by default, because in some tests,
 // we can be sending large amounts of data. The test harness has
@@ -29,18 +30,6 @@ const { DebuggerServer } = require("devtools/server/main");
 Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 // Fast timeout for TLS tests
 Services.prefs.setIntPref("devtools.remote.tls-handshake-timeout", 1000);
-
-function tryImport(url) {
-  try {
-    Cu.import(url);
-  } catch (e) {
-    dump("Error importing " + url + "\n");
-    dump(DevToolsUtils.safeErrorString(e) + "\n");
-    throw e;
-  }
-}
-
-tryImport("resource://gre/modules/devtools/dbg-client.jsm");
 
 // Convert an nsIScriptError 'aFlags' value into an appropriate string.
 function scriptErrorFlagsToKind(aFlags) {

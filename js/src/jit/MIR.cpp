@@ -2655,53 +2655,39 @@ MBinaryArithInstruction::infer(TempAllocator& alloc, BaselineInspector* inspecto
 
     // Guess a result type based on the inputs.
     // Don't specialize for neither-integer-nor-double results.
-    if (lhs == MIRType_Int32 && rhs == MIRType_Int32)
+    if (lhs == MIRType_Int32 && rhs == MIRType_Int32) {
         setResultType(MIRType_Int32);
-    // Double operations are prioritary over float32 operations (i.e. if any operand needs
-    // a double as an input, convert all operands to doubles)
-    else if (IsFloatingPointType(lhs) || IsFloatingPointType(rhs))
-        setResultType(MIRType_Double);
-    else
-        return inferFallback(inspector, pc);
 
-    // If the operation has ever overflowed, use a double specialization.
-    if (inspector->hasSeenDoubleResult(pc))
-        setResultType(MIRType_Double);
+        // If the operation will always overflow on its constant operands, use a
+        // double specialization so that it can be constant folded later.
+        if (isMul() || isDiv()) {
+            bool typeChange = false;
+            EvaluateConstantOperands(alloc, this, &typeChange);
+            if (typeChange)
+                setResultType(MIRType_Double);
+        }
 
-    // If the operation will always overflow on its constant operands, use a
-    // double specialization so that it can be constant folded later.
-    if ((isMul() || isDiv()) && lhs == MIRType_Int32 && rhs == MIRType_Int32) {
-        bool typeChange = false;
-        EvaluateConstantOperands(alloc, this, &typeChange);
-        if (typeChange)
+        // If the operation has ever overflowed, use a double specialization.
+        if (inspector->hasSeenDoubleResult(pc))
             setResultType(MIRType_Double);
+
+    } else if (IsFloatingPointType(lhs) || IsFloatingPointType(rhs)) {
+        // Double operations take precedence over float32 operations (i.e. if
+        // any operand needs a double as an input, convert all operands to
+        // doubles)
+        setResultType(MIRType_Double);
+    } else {
+        return inferFallback(inspector, pc);
     }
 
     MOZ_ASSERT(lhs < MIRType_String || lhs == MIRType_Value);
     MOZ_ASSERT(rhs < MIRType_String || rhs == MIRType_Value);
 
-    MIRType rval = this->type();
-
-    // Don't specialize values when result isn't double
-    if (lhs == MIRType_Value || rhs == MIRType_Value) {
-        if (!IsFloatingPointType(rval)) {
-            specialization_ = MIRType_None;
-            return;
-        }
-    }
-
-    // Don't specialize as int32 if one of the operands is undefined,
-    // since ToNumber(undefined) is NaN.
-    if (rval == MIRType_Int32 && (lhs == MIRType_Undefined || rhs == MIRType_Undefined)) {
-        specialization_ = MIRType_None;
-        return;
-    }
-
-    specialization_ = rval;
-
     if (isAdd() || isMul())
         setCommutative();
-    setResultType(rval);
+
+    MOZ_ASSERT(IsNumberType(this->type()));
+    specialization_ = this->type();
 }
 
 void
