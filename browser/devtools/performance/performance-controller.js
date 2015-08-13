@@ -4,7 +4,7 @@
 "use strict";
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-const { devtools: loader, require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const { loader, require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 
 const { Task } = require("resource://gre/modules/Task.jsm");
 const { Heritage, ViewHelpers, WidgetMethods } = require("resource:///modules/devtools/ViewHelpers.jsm");

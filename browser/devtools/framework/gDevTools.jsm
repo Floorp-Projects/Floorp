@@ -10,7 +10,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-const {require, devtools: loader} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const { require, loader } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 // Load target and toolbox lazily as they need gDevTools to be fully initialized
 loader.lazyRequireGetter(this, "TargetFactory", "devtools/framework/target", true);
 loader.lazyRequireGetter(this, "Toolbox", "devtools/framework/toolbox", true);
