@@ -214,39 +214,16 @@ WMFVideoMFTManager::InitInternal(bool aForceD3D9)
       hr = decoder->SendMFTMessage(MFT_MESSAGE_SET_D3D_MANAGER, manager);
       if (SUCCEEDED(hr)) {
         mUseHwAccel = true;
+      } else {
+        mDXVA2Manager = nullptr;
       }
     }
   }
 
-  // Setup the input/output media types.
-  RefPtr<IMFMediaType> inputType;
-  hr = wmf::MFCreateMediaType(byRef(inputType));
-  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
-
-  hr = inputType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
-
-  hr = inputType->SetGUID(MF_MT_SUBTYPE, GetMediaSubtypeGUID());
-  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
-
-  hr = inputType->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_MixedInterlaceOrProgressive);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
-
-  RefPtr<IMFMediaType> outputType;
-  hr = wmf::MFCreateMediaType(byRef(outputType));
-  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
-
-  hr = outputType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
-
-  GUID outputSubType = mUseHwAccel ? MFVideoFormat_NV12 : MFVideoFormat_YV12;
-  hr = outputType->SetGUID(MF_MT_SUBTYPE, outputSubType);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
-
-  hr = decoder->SetMediaTypes(inputType, outputType);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
-
   mDecoder = decoder;
+  hr = SetDecoderMediaTypes();
+  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+
   LOG("Video Decoder initialized, Using DXVA: %s", (mUseHwAccel ? "Yes" : "No"));
 
   // Just in case ConfigureVideoFrameGeometry() does not set these
@@ -260,16 +237,92 @@ WMFVideoMFTManager::InitInternal(bool aForceD3D9)
 }
 
 HRESULT
+WMFVideoMFTManager::SetDecoderMediaTypes()
+{
+  // Setup the input/output media types.
+  RefPtr<IMFMediaType> inputType;
+  HRESULT hr = wmf::MFCreateMediaType(byRef(inputType));
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+  hr = inputType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+  hr = inputType->SetGUID(MF_MT_SUBTYPE, GetMediaSubtypeGUID());
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+  hr = inputType->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_MixedInterlaceOrProgressive);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+  RefPtr<IMFMediaType> outputType;
+  hr = wmf::MFCreateMediaType(byRef(outputType));
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+  hr = outputType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+  GUID outputSubType = mUseHwAccel ? MFVideoFormat_NV12 : MFVideoFormat_YV12;
+  hr = outputType->SetGUID(MF_MT_SUBTYPE, outputSubType);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+  return mDecoder->SetMediaTypes(inputType, outputType);
+}
+
+HRESULT
 WMFVideoMFTManager::Input(MediaRawData* aSample)
 {
   if (!mDecoder) {
     // This can happen during shutdown.
     return E_FAIL;
   }
+
+  HRESULT hr = mDecoder->CreateInputSample(aSample->mData,
+                                           uint32_t(aSample->mSize),
+                                           aSample->mTime,
+                                           &mLastInput);
+  NS_ENSURE_TRUE(SUCCEEDED(hr) && mLastInput != nullptr, hr);
+
   // Forward sample data to the decoder.
-  return mDecoder->Input(aSample->mData,
-                         uint32_t(aSample->mSize),
-                         aSample->mTime);
+  return mDecoder->Input(mLastInput);
+}
+
+// The MFTransform we use for decoding h264 video will silently fall
+// back to software decoding (even if we've negotiated DXVA) if the GPU
+// doesn't support decoding the given resolution. It will then upload
+// the software decoded frames into d3d textures to preserve behaviour.
+//
+// Unfortunately this seems to cause corruption (see bug 1193547) and is
+// slow because the upload is done into a non-shareable texture and requires
+// us to copy it.
+//
+// This code tests if the given resolution can be supported directly on the GPU,
+// and makes sure we only ask the MFT for DXVA if it can be supported properly.
+bool
+WMFVideoMFTManager::MaybeToggleDXVA(IMFMediaType* aType)
+{
+  // SupportsConfig only checks for valid h264 decoders currently.
+  if (!mDXVA2Manager || mStreamType != H264) {
+    return false;
+  }
+
+  if (mDXVA2Manager->SupportsConfig(aType)) {
+    if (!mUseHwAccel) {
+      // DXVA disabled, but supported for this resolution
+      ULONG_PTR manager = ULONG_PTR(mDXVA2Manager->GetDXVADeviceManager());
+      HRESULT hr = mDecoder->SendMFTMessage(MFT_MESSAGE_SET_D3D_MANAGER, manager);
+      if (SUCCEEDED(hr)) {
+        mUseHwAccel = true;
+        return true;
+      }
+    }
+  } else if (mUseHwAccel) {
+    // DXVA enabled, and not supported for this resolution
+    HRESULT hr = mDecoder->SendMFTMessage(MFT_MESSAGE_SET_D3D_MANAGER, 0);
+    MOZ_ASSERT(SUCCEEDED(hr), "Attempting to fall back to software failed?");
+    mUseHwAccel = false;
+    return true;
+  }
+
+  return false;
 }
 
 HRESULT
@@ -278,6 +331,20 @@ WMFVideoMFTManager::ConfigureVideoFrameGeometry()
   RefPtr<IMFMediaType> mediaType;
   HRESULT hr = mDecoder->GetOutputMediaType(mediaType);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+  // If we enabled/disabled DXVA in response to a resolution
+  // change then we need to renegotiate our media types,
+  // and resubmit our previous frame (since the MFT appears
+  // to lose it otherwise).
+  if (MaybeToggleDXVA(mediaType)) {
+    hr = SetDecoderMediaTypes();
+    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+    HRESULT hr = mDecoder->GetOutputMediaType(mediaType);
+    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+    mDecoder->Input(mLastInput);
+  }
 
   // Verify that the video subtype is what we expect it to be.
   // When using hardware acceleration/DXVA2 the video format should
