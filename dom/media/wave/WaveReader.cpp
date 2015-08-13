@@ -302,24 +302,20 @@ media::TimeIntervals WaveReader::GetBuffered()
 bool
 WaveReader::ReadAll(char* aBuf, int64_t aSize, int64_t* aBytesRead)
 {
-  uint32_t got = 0;
   if (aBytesRead) {
     *aBytesRead = 0;
   }
-  do {
-    uint32_t read = 0;
-    if (NS_FAILED(mResource.Read(aBuf + got, uint32_t(aSize - got), &read))) {
-      NS_WARNING("Resource read failed");
-      return false;
-    }
-    if (read == 0) {
-      return false;
-    }
-    got += read;
-    if (aBytesRead) {
-      *aBytesRead = got;
-    }
-  } while (got != aSize);
+  uint32_t read = 0;
+  if (NS_FAILED(mResource.Read(aBuf, uint32_t(aSize), &read))) {
+    NS_WARNING("Resource read failed");
+    return false;
+  }
+  if (!read) {
+    return false;
+  }
+  if (aBytesRead) {
+    *aBytesRead = read;
+  }
   return true;
 }
 
