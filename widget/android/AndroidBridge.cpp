@@ -55,10 +55,8 @@ using namespace mozilla::jni;
 using namespace mozilla::widget;
 
 AndroidBridge* AndroidBridge::sBridge = nullptr;
-pthread_t AndroidBridge::sJavaUiThread = -1;
-static unsigned sJavaEnvThreadIndex = 0;
+pthread_t AndroidBridge::sJavaUiThread;
 static jobject sGlobalContext = nullptr;
-static void JavaThreadDetachFunc(void *arg);
 
 // This is a dummy class that can be used in the template for android::sp
 class AndroidRefable {
@@ -163,8 +161,6 @@ AndroidBridge::ConstructBridge(JNIEnv *jEnv, Object::Param clsLoader, Object::Pa
      */
     putenv("NSS_DISABLE_UNLOAD=1");
 
-    PR_NewThreadPrivateIndex(&sJavaEnvThreadIndex, JavaThreadDetachFunc);
-
     MOZ_ASSERT(!sBridge);
     sBridge = new AndroidBridge;
     sBridge->Init(jEnv, clsLoader); // Success or crash
@@ -184,10 +180,6 @@ void
 AndroidBridge::Init(JNIEnv *jEnv, Object::Param clsLoader)
 {
     ALOG_BRIDGE("AndroidBridge::Init");
-    jEnv->GetJavaVM(&mJavaVM);
-    if (!mJavaVM) {
-        MOZ_CRASH(); // Nothing we can do here
-    }
 
     AutoLocalJNIFrame jniFrame(jEnv);
 
@@ -196,8 +188,6 @@ AndroidBridge::Init(JNIEnv *jEnv, Object::Param clsLoader)
             jEnv, jEnv->GetObjectClass(clsLoader.Get()),
             "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
 
-    mJNIEnv = nullptr;
-    mThread = pthread_t();
     mGLControllerObj = nullptr;
     mOpenedGraphicsLibraries = false;
     mHasNativeBitmapAccess = false;
@@ -263,14 +253,10 @@ bool
 AndroidBridge::SetMainThread(pthread_t thr)
 {
     ALOG_BRIDGE("AndroidBridge::SetMainThread");
-    if (thr) {
-        mThread = thr;
-        mJavaVM->GetEnv((void**) &mJNIEnv, JNI_VERSION_1_2);
-        return (bool) mJNIEnv;
-    }
 
-    mJNIEnv = nullptr;
-    mThread = pthread_t();
+    if (thr) {
+        return true;
+    }
 
     // SetMainThread(0) is called on Gecko shutdown,
     // so we should clean up the bridge here.
@@ -322,29 +308,6 @@ jstring AndroidBridge::NewJavaString(AutoLocalJNIFrame* frame, const char* strin
 
 jstring AndroidBridge::NewJavaString(AutoLocalJNIFrame* frame, const nsACString& string) {
     return NewJavaString(frame, NS_ConvertUTF8toUTF16(string));
-}
-
-extern "C" {
-    __attribute__ ((visibility("default")))
-    JNIEnv * GetJNIForThread()
-    {
-        JNIEnv *jEnv = static_cast<JNIEnv*>(PR_GetThreadPrivate(sJavaEnvThreadIndex));
-        if (jEnv) {
-            return jEnv;
-        }
-        JavaVM *jVm  = mozilla::AndroidBridge::GetVM();
-        if (!jVm->GetEnv(reinterpret_cast<void**>(&jEnv), JNI_VERSION_1_2)) {
-            MOZ_ASSERT(jEnv);
-            return jEnv;
-        }
-        if (!jVm->AttachCurrentThread(&jEnv, nullptr)) {
-            MOZ_ASSERT(jEnv);
-            PR_SetThreadPrivate(sJavaEnvThreadIndex, jEnv);
-            return jEnv;
-        }
-        MOZ_CRASH();
-        return nullptr; // unreachable
-    }
 }
 
 void AutoGlobalWrappedJavaObject::Dispose() {
@@ -1634,27 +1597,6 @@ NS_IMETHODIMP nsAndroidBridge::IsContentDocumentDisplayed(bool *aRet)
 {
     *aRet = AndroidBridge::Bridge()->IsContentDocumentDisplayed();
     return NS_OK;
-}
-
-// DO NOT USE THIS unless you need to access JNI from
-// non-main threads.  This is probably not what you want.
-// Questions, ask blassey or dougt.
-
-static void
-JavaThreadDetachFunc(void *arg)
-{
-    JNIEnv *env = (JNIEnv*) arg;
-    MOZ_ASSERT(env, "No JNIEnv on Gecko thread");
-    if (!env) {
-        return;
-    }
-    JavaVM *vm = nullptr;
-    env->GetJavaVM(&vm);
-    MOZ_ASSERT(vm, "No JavaVM on Gecko thread");
-    if (!vm) {
-        return;
-    }
-    vm->DetachCurrentThread();
 }
 
 uint32_t
