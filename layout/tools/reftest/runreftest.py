@@ -205,6 +205,7 @@ class RefTest(object):
         if options.shuffle:
             prefs['reftest.shuffle'] = True
         prefs['reftest.focusFilterMode'] = options.focusFilterMode
+        prefs['reftest.uri'] = "file://%s" % os.path.abspath(manifest)
 
         # Ensure that telemetry is disabled, so we don't connect to the telemetry
         # server in the middle of the tests.
@@ -610,7 +611,7 @@ class RefTest(object):
         try:
             reftestlist = self.getManifestPath(testPath)
             if cmdlineArgs == None:
-                cmdlineArgs = ['-reftest', reftestlist]
+                cmdlineArgs = []
             profile = self.createReftestProfile(options, reftestlist)
             profileDir = profile.profile  # name makes more sense
 
