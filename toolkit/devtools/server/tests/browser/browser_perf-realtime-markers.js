@@ -2,11 +2,20 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Test basic functionality of PerformanceFront, retrieving timeline data.
+ * Test functionality of real time markers.
  */
 
-function* spawnTest() {
-  let { target, front } = yield initBackend(SIMPLE_URL);
+const { PerformanceFront } = require("devtools/server/actors/performance");
+const { defer } = require("sdk/core/promise");
+
+add_task(function*() {
+  let doc = yield addTab(MAIN_DOMAIN + "doc_perf.html");
+
+  initDebuggerServer();
+  let client = new DebuggerClient(DebuggerServer.connectPipe());
+  let form = yield connectDebuggerClient(client);
+  let front = PerformanceFront(client, form);
+  yield front.connect();
 
   let lastMemoryDelta = 0;
   let lastTickDelta = 0;
@@ -18,41 +27,37 @@ function* spawnTest() {
   };
 
   let deferreds = {
-    markers: Promise.defer(),
-    memory: Promise.defer(),
-    ticks: Promise.defer()
+    markers: defer(),
+    memory: defer(),
+    ticks: defer()
   };
 
   front.on("timeline-data", handler);
 
-  yield front.startRecording({ withMarkers: true, withMemory: true, withTicks: true });
+  let rec = yield front.startRecording({ withMarkers: true, withMemory: true, withTicks: true });
   yield Promise.all(Object.keys(deferreds).map(type => deferreds[type].promise));
-  yield front.stopRecording();
+  yield front.stopRecording(rec);
   front.off("timeline-data", handler);
 
   is(counters.markers.length, 1, "one marker event fired.");
   is(counters.memory.length, 3, "three memory events fired.");
   is(counters.ticks.length, 3, "three ticks events fired.");
 
-  // Destroy the front before removing tab to ensure no
-  // lingering requests
-  yield front.destroy();
-  yield removeTab(target.tab);
-  finish();
+  yield closeDebuggerClient(client);
+  gBrowser.removeCurrentTab();
 
-  function handler (_, name, ...args) {
+  function handler (name, data) {
     if (name === "markers") {
       if (counters.markers.length >= 1) { return; }
-      let [markers] = args;
-      ok(markers[0].start, "received atleast one marker with `start`");
-      ok(markers[0].end, "received atleast one marker with `end`");
-      ok(markers[0].name, "received atleast one marker with `name`");
+      ok(data.markers[0].start, "received atleast one marker with `start`");
+      ok(data.markers[0].end, "received atleast one marker with `end`");
+      ok(data.markers[0].name, "received atleast one marker with `name`");
 
-      counters.markers.push(markers);
+      counters.markers.push(data.markers);
     }
     else if (name === "memory") {
       if (counters.memory.length >= 3) { return; }
-      let [delta, measurement] = args;
+      let { delta, measurement } = data;
       is(typeof delta, "number", "received `delta` in memory event");
       ok(delta > lastMemoryDelta, "received `delta` in memory event");
       ok(measurement.total, "received `total` in memory event");
@@ -62,7 +67,7 @@ function* spawnTest() {
     }
     else if (name === "ticks") {
       if (counters.ticks.length >= 3) { return; }
-      let [delta, timestamps] = args;
+      let { delta, timestamps } = data;
       ok(delta > lastTickDelta, "received `delta` in ticks event");
 
       // Timestamps aren't guaranteed to always contain tick events, since
@@ -84,4 +89,4 @@ function* spawnTest() {
       deferreds[name].resolve();
     }
   };
-}
+});

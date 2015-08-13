@@ -6,8 +6,6 @@
  * and requires deflating, and has an extra thread that's a string. Not sure
  * what causes this.
  */
-let RecordingUtils = require("devtools/performance/recording-utils");
-
 let STRINGED_THREAD = (function () {
   let thread = {};
 

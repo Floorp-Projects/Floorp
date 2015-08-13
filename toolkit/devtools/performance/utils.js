@@ -12,6 +12,31 @@ loader.lazyRequireGetter(this, "extend",
  * such as filtering profile samples or offsetting timestamps.
  */
 
+function mapRecordingOptions (type, options) {
+  if (type === "profiler") {
+    return {
+      entries: options.bufferSize,
+      interval: options.sampleFrequency ? (1000 / (options.sampleFrequency * 1000)) : void 0
+    };
+  }
+
+  if (type === "memory") {
+    return {
+      probability: options.allocationsSampleProbability,
+      maxLogLength: options.allocationsMaxLogLength
+    };
+  }
+
+  if (type === "timeline") {
+    return {
+      withMemory: options.withMemory,
+      withTicks: options.withTicks,
+    };
+  }
+
+  return options;
+}
+
 /**
  * Takes an options object for `startRecording`, and normalizes
  * it based off of server support. For example, if the user
@@ -21,26 +46,15 @@ loader.lazyRequireGetter(this, "extend",
  * what the user initially requested.
  *
  * @param {object} options
- * @param {boolean} support.timeline
- * @param {boolean} support.memory
  * @param {boolean}
  */
-function normalizePerformanceFeatures (options, support) {
-  let supportOptions = Object.create(null);
-
-  // TODO bug 1172180 disable `withAllocations` and `withJITOptimizations` when using the
-  // pseudo front, as we only want to support it directly from the real actor
-  // in Fx42+
-  if (!support.memory) {
-    supportOptions.withMemory = false;
-    supportOptions.withAllocations = false;
-  }
-  if (!support.timeline) {
-    supportOptions.withMarkers = false;
-    supportOptions.withTicks = false;
-  }
-
-  return extend(options, supportOptions);
+function normalizePerformanceFeatures (options, supportedFeatures) {
+  return Object.keys(options).reduce((modifiedOptions, feature) => {
+    if (supportedFeatures[feature] !== false) {
+      modifiedOptions[feature] = options[feature];
+    }
+    return modifiedOptions;
+  }, Object.create(null));
 }
 
 /**
@@ -109,6 +123,25 @@ function offsetAndScaleTimestamps(timestamps, timeOffset, timeScale) {
     if (timeScale) {
       timestamps[i] /= timeScale;
     }
+  }
+}
+
+/**
+ * Push all elements of src array into dest array. Marker data will come in small chunks
+ * and add up over time, whereas allocation arrays can be > 500000 elements (and
+ * Function.prototype.apply throws if applying more than 500000 elements, which
+ * is what spawned this separate function), so iterate one element at a time.
+ * @see bug 1166823
+ * @see http://jsperf.com/concat-large-arrays
+ * @see http://jsperf.com/concat-large-arrays/2
+ *
+ * @param {Array} dest
+ * @param {Array} src
+ */
+function pushAll (dest, src) {
+  let length = src.length;
+  for (let i = 0; i < length; i++) {
+    dest.push(src[i]);
   }
 }
 
@@ -576,6 +609,8 @@ UniqueStacks.prototype.getOrAddStringIndex = function(s) {
   return this._uniqueStrings.getOrAddStringIndex(s);
 };
 
+exports.pushAll = pushAll;
+exports.mapRecordingOptions = mapRecordingOptions;
 exports.normalizePerformanceFeatures = normalizePerformanceFeatures;
 exports.filterSamples = filterSamples;
 exports.offsetSampleTimes = offsetSampleTimes;
