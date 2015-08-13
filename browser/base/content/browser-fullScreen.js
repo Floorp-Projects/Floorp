@@ -103,15 +103,11 @@ var FullScreen = {
     switch (event.type) {
       case "activate":
         if (document.mozFullScreen) {
-          this.showWarning(this.fullscreenOrigin);
+          this._WarningBox.show();
         }
         break;
       case "fullscreen":
         this.toggle();
-        break;
-      case "transitionend":
-        if (event.propertyName == "opacity")
-          this.cancelWarning();
         break;
       case "MozDOMFullscreen:Entered": {
         // The event target is the element which requested the DOM
@@ -160,7 +156,7 @@ var FullScreen = {
         break;
       }
       case "DOMFullscreen:NewOrigin": {
-        this.showWarning(aMessage.data.originNoSuffix);
+        this._WarningBox.show(aMessage.data.originNoSuffix);
         break;
       }
       case "DOMFullscreen:Exit": {
@@ -221,7 +217,7 @@ var FullScreen = {
   },
 
   cleanupDomFullscreen: function () {
-    this.cancelWarning();
+    this._WarningBox.close();
     gBrowser.tabContainer.removeEventListener("TabOpen", this.exitDomFullScreen);
     gBrowser.tabContainer.removeEventListener("TabClose", this.exitDomFullScreen);
     gBrowser.tabContainer.removeEventListener("TabSelect", this.exitDomFullScreen);
@@ -317,77 +313,91 @@ var FullScreen = {
     gPrefService.setBoolPref("browser.fullscreen.autohide", !gPrefService.getBoolPref("browser.fullscreen.autohide"));
   },
 
-  cancelWarning: function(event) {
-    if (!this.warningBox)
-      return;
-    this.warningBox.removeEventListener("transitionend", this);
-    if (this.warningFadeOutTimeout) {
-      clearTimeout(this.warningFadeOutTimeout);
-      this.warningFadeOutTimeout = null;
-    }
+  _WarningBox: {
+    _element: null,
+    _origin: null,
+    _fadeOutTimeout: null,
 
-    // Ensure focus switches away from the (now hidden) warning box. If the user
-    // clicked buttons in the fullscreen key authorization UI, it would have been
-    // focused, and any key events would be directed at the (now hidden) chrome
-    // document instead of the target document.
-    gBrowser.selectedBrowser.focus();
-
-    this.warningBox.setAttribute("hidden", true);
-    this.warningBox.removeAttribute("fade-warning-out");
-    this.warningBox = null;
-  },
-
-  warningBox: null,
-  warningFadeOutTimeout: null,
-
-  // Shows a warning that the site has entered fullscreen for a short duration.
-  showWarning: function(aOrigin) {
-    if (!document.mozFullScreen)
-      return;
-
-    // Set the strings on the fullscreen warning UI.
-    this.fullscreenOrigin = aOrigin;
-    let uri = BrowserUtils.makeURI(aOrigin);
-    let host = null;
-    try {
-      host = uri.host;
-    } catch (e) { }
-    let hostLabel = document.getElementById("full-screen-domain-text");
-    if (host) {
-      // Document's principal's URI has a host. Display a warning including the hostname and
-      // show UI to enable the user to permanently grant this host permission to enter fullscreen.
-      let utils = {};
-      Cu.import("resource://gre/modules/DownloadUtils.jsm", utils);
-      let displayHost = utils.DownloadUtils.getURIHost(uri.spec)[0];
-      let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
-
-      hostLabel.textContent = bundle.formatStringFromName("fullscreen.entered", [displayHost], 1);
-      hostLabel.removeAttribute("hidden");
-    } else {
-      hostLabel.setAttribute("hidden", "true");
-    }
-
-    // Note: the warning box can be non-null if the warning box from the previous request
-    // wasn't hidden before another request was made.
-    if (!this.warningBox) {
-      this.warningBox = document.getElementById("full-screen-warning-container");
-      // Add a listener to clean up state after the warning is hidden.
-      this.warningBox.addEventListener("transitionend", this);
-      this.warningBox.removeAttribute("hidden");
-    } else {
-      if (this.warningFadeOutTimeout) {
-        clearTimeout(this.warningFadeOutTimeout);
-        this.warningFadeOutTimeout = null;
+    close: function() {
+      if (!this._element)
+        return;
+      this._element.removeEventListener("transitionend", this);
+      if (this._fadeOutTimeout) {
+        clearTimeout(this._fadeOutTimeout);
+        this._fadeOutTimeout = null;
       }
-      this.warningBox.removeAttribute("fade-warning-out");
-    }
 
-    // Set a timeout to fade the warning out after a few moments.
-    this.warningFadeOutTimeout = setTimeout(() => {
-      if (this.warningBox) {
-        this.warningBox.setAttribute("fade-warning-out", "true");
+      // Ensure focus switches away from the (now hidden) warning box. If the user
+      // clicked buttons in the fullscreen key authorization UI, it would have been
+      // focused, and any key events would be directed at the (now hidden) chrome
+      // document instead of the target document.
+      gBrowser.selectedBrowser.focus();
+
+      this._element.setAttribute("hidden", true);
+      this._element.removeAttribute("fade-warning-out");
+      this._element = null;
+    },
+
+    // Shows a warning that the site has entered fullscreen for a short duration.
+    show: function(aOrigin) {
+      if (!document.mozFullScreen)
+        return;
+
+      // Set the strings on the fullscreen warning UI.
+      if (aOrigin) {
+        this._origin = aOrigin;
       }
-    }, 3000);
+      let uri = BrowserUtils.makeURI(this._origin);
+      let host = null;
+      try {
+        host = uri.host;
+      } catch (e) { }
+      let hostLabel = document.getElementById("full-screen-domain-text");
+      if (host) {
+        // Document's principal's URI has a host. Display a warning including the hostname and
+        // show UI to enable the user to permanently grant this host permission to enter fullscreen.
+        let utils = {};
+        Cu.import("resource://gre/modules/DownloadUtils.jsm", utils);
+        let displayHost = utils.DownloadUtils.getURIHost(uri.spec)[0];
+        let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
+
+        hostLabel.textContent = bundle.formatStringFromName("fullscreen.entered", [displayHost], 1);
+        hostLabel.removeAttribute("hidden");
+      } else {
+        hostLabel.setAttribute("hidden", "true");
+      }
+
+      // Note: the warning box can be non-null if the warning box from the previous request
+      // wasn't hidden before another request was made.
+      if (!this._element) {
+        this._element = document.getElementById("full-screen-warning-container");
+        // Add a listener to clean up state after the warning is hidden.
+        this._element.addEventListener("transitionend", this);
+        this._element.removeAttribute("hidden");
+      } else {
+        if (this._fadeOutTimeout) {
+          clearTimeout(this._fadeOutTimeout);
+          this._fadeOutTimeout = null;
+        }
+        this._element.removeAttribute("fade-warning-out");
+      }
+
+      // Set a timeout to fade the warning out after a few moments.
+      this._fadeOutTimeout = setTimeout(() => {
+        if (this._element) {
+          this._element.setAttribute("fade-warning-out", "true");
+        }
+      }, 3000);
+    },
+
+    handleEvent: function(event) {
+      switch (event.type) {
+        case "transitionend":
+          if (event.propertyName == "opacity")
+            this.close();
+          break;
+      }
+    }
   },
 
   showNavToolbox: function(trackMouse = true) {
