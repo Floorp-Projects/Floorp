@@ -74,6 +74,10 @@ class StubReadingListAccessor implements ReadingListAccessor {
     }
 
     @Override
+    public void markAsUnread(ContentResolver cr, long itemID) {
+    }
+
+    @Override
     public void updateContent(ContentResolver cr, long itemID, String resolvedTitle, String resolvedURL, String excerpt) {
     }
 
