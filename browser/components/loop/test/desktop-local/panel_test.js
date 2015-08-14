@@ -799,6 +799,20 @@ describe("loop.panel", function() {
 
       sinon.assert.calledOnce(fakeWindow.close);
     });
+
+    it("should render the no rooms view when no rooms available", function() {
+      var view = createTestComponent();
+      var node = view.getDOMNode();
+
+      expect(node.querySelectorAll(".room-list-empty").length).to.eql(1);
+    });
+
+    it("should call mozL10n.get for room empty strings", function() {
+      var view = createTestComponent();
+
+      sinon.assert.calledWithExactly(document.mozL10n.get,
+                                     "no_conversations_message_heading");
+    });
   });
 
   describe("loop.panel.NewRoomView", function() {
