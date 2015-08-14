@@ -89,10 +89,6 @@ const SCHEDULER_TICK_IDLE_INTERVAL_MS = 60 * 60 * 1000;
 // The tolerance we have when checking if it's midnight (15 minutes).
 const SCHEDULER_MIDNIGHT_TOLERANCE_MS = 15 * 60 * 1000;
 
-// Coalesce the daily and aborted-session pings if they are both due within
-// two minutes from each other.
-const SCHEDULER_COALESCE_THRESHOLD_MS = 2 * 60 * 1000;
-
 // Seconds of idle time before pinging.
 // On idle-daily a gather-telemetry notification is fired, during it probes can
 // start asynchronous tasks to gather data.
