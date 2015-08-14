@@ -215,6 +215,13 @@ public:
     }
     return false;
   }
+
+  /**
+   * Returns the count of descendants (inclusive of this node) in
+   * the uncomposed document that are explicitly set as editable.
+   */
+  uint32_t EditableInclusiveDescendantCount();
+
   mozilla::dom::HTMLMenuElement* GetContextMenu() const;
   bool Spellcheck();
   void SetSpellcheck(bool aSpellcheck, mozilla::ErrorResult& aError)
