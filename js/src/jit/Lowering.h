@@ -99,7 +99,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitLoadArrowThis(MLoadArrowThis* ins);
     void visitCall(MCall* call);
     void visitApplyArgs(MApplyArgs* apply);
-    void visitArraySplice(MArraySplice* splice);
     void visitBail(MBail* bail);
     void visitUnreachable(MUnreachable* unreachable);
     void visitEncodeSnapshot(MEncodeSnapshot* ins);

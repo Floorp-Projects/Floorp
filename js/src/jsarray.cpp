@@ -579,7 +579,14 @@ js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
         // that element must prevent any deletions below it.  Bug 586842 should
         // fix this inefficiency by moving indexed storage to be entirely
         // separate from non-indexed storage.
-        if (!arr->isIndexed()) {
+        // A second reason for this optimization to be invalid is an active
+        // for..in iteration over the array. Keys deleted before being reached
+        // during the iteration must not be visited, and suppressing them here
+        // would be too costly.
+        ObjectGroup* arrGroup = arr->getGroup(cx);
+        if (!arr->isIndexed() &&
+            !MOZ_UNLIKELY(!arrGroup || arrGroup->hasAllFlags(OBJECT_FLAG_ITERATED)))
+        {
             if (!arr->maybeCopyElementsForWrite(cx))
                 return false;
 
@@ -2254,277 +2261,6 @@ js::array_unshift(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-/*
- * Returns true if this is a dense or unboxed array whose |count| properties
- * starting from |startingIndex| may be accessed (get, set, delete) directly
- * through its contiguous vector of elements without fear of getters, setters,
- * etc. along the prototype chain, or of enumerators requiring notification of
- * modifications.
- */
-static inline bool
-CanOptimizeForDenseStorage(HandleObject arr, uint32_t startingIndex, uint32_t count, JSContext* cx)
-{
-    /* If the desired properties overflow dense storage, we can't optimize. */
-    if (UINT32_MAX - startingIndex < count)
-        return false;
-
-    /* There's no optimizing possible if it's not an array. */
-    if (!arr->is<ArrayObject>() && !arr->is<UnboxedArrayObject>())
-        return false;
-
-    /*
-     * Don't optimize if the array might be in the midst of iteration.  We
-     * rely on this to be able to safely move dense array elements around with
-     * just a memmove (see NativeObject::moveDenseArrayElements), without worrying
-     * about updating any in-progress enumerators for properties implicitly
-     * deleted if a hole is moved from one location to another location not yet
-     * visited.  See bug 690622.
-     */
-    ObjectGroup* arrGroup = arr->getGroup(cx);
-    if (MOZ_UNLIKELY(!arrGroup || arrGroup->hasAllFlags(OBJECT_FLAG_ITERATED)))
-        return false;
-
-    /*
-     * Another potential wrinkle: what if the enumeration is happening on an
-     * object which merely has |arr| on its prototype chain?
-     */
-    if (arr->isDelegate())
-        return false;
-
-    /*
-     * Now watch out for getters and setters along the prototype chain or in
-     * other indexed properties on the object.  (Note that non-writable length
-     * is subsumed by the initializedLength comparison.)
-     */
-    return !ObjectMayHaveExtraIndexedProperties(arr) &&
-           startingIndex + count <= GetAnyBoxedOrUnboxedInitializedLength(arr);
-}
-
-/* ES5 15.4.4.12. */
-bool
-js::array_splice(JSContext* cx, unsigned argc, Value* vp)
-{
-    return array_splice_impl(cx, argc, vp, true);
-}
-
-bool
-js::array_splice_impl(JSContext* cx, unsigned argc, Value* vp, bool returnValueIsUsed)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    /* Step 1. */
-    RootedObject obj(cx, ToObject(cx, args.thisv()));
-    if (!obj)
-        return false;
-
-    /* Steps 3-4. */
-    uint32_t len;
-    if (!GetLengthProperty(cx, obj, &len))
-        return false;
-
-    /* Step 5. */
-    double relativeStart;
-    if (!ToInteger(cx, args.get(0), &relativeStart))
-        return false;
-
-    /* Step 6. */
-    uint32_t actualStart;
-    if (relativeStart < 0)
-        actualStart = Max(len + relativeStart, 0.0);
-    else
-        actualStart = Min(relativeStart, double(len));
-
-    /* Step 7. */
-    uint32_t actualDeleteCount;
-    if (args.length() != 1) {
-        double deleteCountDouble;
-        RootedValue cnt(cx, args.length() >= 2 ? args[1] : Int32Value(0));
-        if (!ToInteger(cx, cnt, &deleteCountDouble))
-            return false;
-        actualDeleteCount = Min(Max(deleteCountDouble, 0.0), double(len - actualStart));
-    } else {
-        /*
-         * Non-standard: if start was specified but deleteCount was omitted,
-         * delete to the end of the array.  See bug 668024 for discussion.
-         */
-        actualDeleteCount = len - actualStart;
-    }
-
-    MOZ_ASSERT(len - actualStart >= actualDeleteCount);
-
-    /* Steps 2, 8-9. */
-    RootedObject arr(cx);
-    if (CanOptimizeForDenseStorage(obj, actualStart, actualDeleteCount, cx)) {
-        if (returnValueIsUsed) {
-            arr = NewFullyAllocatedArrayTryReuseGroup(cx, obj, actualDeleteCount);
-            if (!arr)
-                return false;
-            DebugOnly<DenseElementResult> result =
-                CopyAnyBoxedOrUnboxedDenseElements(cx, arr, obj, 0, actualStart, actualDeleteCount);
-            MOZ_ASSERT(result.value == DenseElementResult::Success);
-        }
-    } else {
-        arr = NewFullyAllocatedArrayTryReuseGroup(cx, obj, actualDeleteCount);
-        if (!arr)
-            return false;
-
-        RootedValue fromValue(cx);
-        for (uint32_t k = 0; k < actualDeleteCount; k++) {
-            bool hole;
-            if (!CheckForInterrupt(cx) ||
-                !GetElement(cx, obj, actualStart + k, &hole, &fromValue) ||
-                (!hole && !DefineElement(cx, arr, k, fromValue)))
-            {
-                return false;
-            }
-        }
-    }
-
-    /* Step 11. */
-    uint32_t itemCount = (args.length() >= 2) ? (args.length() - 2) : 0;
-
-    if (itemCount < actualDeleteCount) {
-        /* Step 12: the array is being shrunk. */
-        uint32_t sourceIndex = actualStart + actualDeleteCount;
-        uint32_t targetIndex = actualStart + itemCount;
-        uint32_t finalLength = len - actualDeleteCount + itemCount;
-
-        if (CanOptimizeForDenseStorage(obj, 0, len, cx)) {
-            /* Steps 12(a)-(b). */
-            DenseElementResult result =
-                MoveAnyBoxedOrUnboxedDenseElements(cx, obj, targetIndex, sourceIndex,
-                                                   len - sourceIndex);
-            MOZ_ASSERT(result != DenseElementResult::Incomplete);
-            if (result == DenseElementResult::Failure)
-                return false;
-
-            /* Steps 12(c)-(d). */
-            SetAnyBoxedOrUnboxedInitializedLength(cx, obj, finalLength);
-        } else {
-            /*
-             * This is all very slow if the length is very large. We don't yet
-             * have the ability to iterate in sorted order, so we just do the
-             * pessimistic thing and let CheckForInterrupt handle the
-             * fallout.
-             */
-
-            /* Steps 12(a)-(b). */
-            RootedValue fromValue(cx);
-            for (uint32_t from = sourceIndex, to = targetIndex; from < len; from++, to++) {
-                if (!CheckForInterrupt(cx))
-                    return false;
-
-                bool hole;
-                if (!GetElement(cx, obj, from, &hole, &fromValue))
-                    return false;
-                if (hole) {
-                    if (!DeletePropertyOrThrow(cx, obj, to))
-                        return false;
-                } else {
-                    if (!SetArrayElement(cx, obj, to, fromValue))
-                        return false;
-                }
-            }
-
-            /* Steps 12(c)-(d). */
-            for (uint32_t k = len; k > finalLength; k--) {
-                if (!DeletePropertyOrThrow(cx, obj, k - 1))
-                    return false;
-            }
-        }
-    } else if (itemCount > actualDeleteCount) {
-        /* Step 13. */
-
-        /*
-         * Optimize only if the array is already dense and we can extend it to
-         * its new length.  It would be wrong to extend the elements here for a
-         * number of reasons.
-         *
-         * First, this could cause us to fall into the fast-path below.  This
-         * would cause elements to be moved into places past the non-writable
-         * length.  And when the dense initialized length is updated, that'll
-         * cause the |in| operator to think that those elements actually exist,
-         * even though, properly, setting them must fail.
-         *
-         * Second, extending the elements here will trigger assertions inside
-         * ensureDenseElements that the elements aren't being extended past the
-         * length of a non-writable array.  This is because extending elements
-         * will extend capacity -- which might extend them past a non-writable
-         * length, violating the |capacity <= length| invariant for such
-         * arrays.  And that would make the various JITted fast-path method
-         * implementations of [].push, [].unshift, and so on wrong.
-         *
-         * If the array length is non-writable, this method *will* throw.  For
-         * simplicity, have the slow-path code do it.  (Also note that the slow
-         * path may validly *not* throw -- if all the elements being moved are
-         * holes.)
-         */
-        if (obj->is<ArrayObject>()) {
-            Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
-            if (arr->lengthIsWritable()) {
-                DenseElementResult result =
-                    arr->ensureDenseElements(cx, arr->length(), itemCount - actualDeleteCount);
-                if (result == DenseElementResult::Failure)
-                    return false;
-            }
-        }
-
-        if (CanOptimizeForDenseStorage(obj, len, itemCount - actualDeleteCount, cx)) {
-            DenseElementResult result =
-                MoveAnyBoxedOrUnboxedDenseElements(cx, obj, actualStart + itemCount,
-                                                   actualStart + actualDeleteCount,
-                                                   len - (actualStart + actualDeleteCount));
-            MOZ_ASSERT(result != DenseElementResult::Incomplete);
-            if (result == DenseElementResult::Failure)
-                return false;
-
-            /* Steps 12(c)-(d). */
-            SetAnyBoxedOrUnboxedInitializedLength(cx, obj, len + itemCount - actualDeleteCount);
-        } else {
-            RootedValue fromValue(cx);
-            for (double k = len - actualDeleteCount; k > actualStart; k--) {
-                if (!CheckForInterrupt(cx))
-                    return false;
-
-                double from = k + actualDeleteCount - 1;
-                double to = k + itemCount - 1;
-
-                bool hole;
-                if (!GetElement(cx, obj, from, &hole, &fromValue))
-                    return false;
-
-                if (hole) {
-                    if (!DeletePropertyOrThrow(cx, obj, to))
-                        return false;
-                } else {
-                    if (!SetArrayElement(cx, obj, to, fromValue))
-                        return false;
-                }
-            }
-        }
-    }
-
-    /* Step 10. */
-    Value* items = args.array() + 2;
-
-    /* Steps 14-15. */
-    for (uint32_t k = actualStart, i = 0; i < itemCount; i++, k++) {
-        if (!SetArrayElement(cx, obj, k, HandleValue::fromMarkedLocation(&items[i])))
-            return false;
-    }
-
-    /* Step 16. */
-    double finalLength = double(len) - actualDeleteCount + itemCount;
-    if (!SetLengthProperty(cx, obj, finalLength))
-        return false;
-
-    /* Step 17. */
-    if (returnValueIsUsed)
-        args.rval().setObject(*arr);
-
-    return true;
-}
-
 template <JSValueType Type>
 DenseElementResult
 ArrayConcatDenseKernel(JSContext* cx, JSObject* obj1, JSObject* obj2, JSObject* result)
@@ -2931,86 +2667,6 @@ js::array_slice_dense(JSContext* cx, HandleObject obj, int32_t begin, int32_t en
     return &argv[0].toObject();
 }
 
-/* ES5 15.4.4.20. */
-static bool
-array_filter(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    /* Step 1. */
-    RootedObject obj(cx, ToObject(cx, args.thisv()));
-    if (!obj)
-        return false;
-
-    /* Step 2-3. */
-    uint32_t len;
-    if (!GetLengthProperty(cx, obj, &len))
-        return false;
-
-    /* Step 4. */
-    if (args.length() == 0) {
-        ReportMissingArg(cx, args.calleev(), 0);
-        return false;
-    }
-    RootedObject callable(cx, ValueToCallable(cx, args[0], args.length() - 1));
-    if (!callable)
-        return false;
-
-    /* Step 5. */
-    RootedValue thisv(cx, args.length() >= 2 ? args[1] : UndefinedValue());
-
-    /* Step 6. */
-    RootedObject arr(cx, NewFullyAllocatedArrayForCallingAllocationSite(cx, 0));
-    if (!arr)
-        return false;
-
-    /* Step 7. */
-    uint32_t k = 0;
-
-    /* Step 8. */
-    uint32_t to = 0;
-
-    /* Step 9. */
-    FastInvokeGuard fig(cx, ObjectValue(*callable));
-    InvokeArgs& args2 = fig.args();
-    RootedValue kValue(cx);
-    while (k < len) {
-        if (!CheckForInterrupt(cx))
-            return false;
-
-        /* Step a, b, and c.i. */
-        bool kNotPresent;
-        if (!GetElement(cx, obj, k, &kNotPresent, &kValue))
-            return false;
-
-        /* Step c.ii-iii. */
-        if (!kNotPresent) {
-            if (!args2.init(3))
-                return false;
-            args2.setCallee(ObjectValue(*callable));
-            args2.setThis(thisv);
-            args2[0].set(kValue);
-            args2[1].setNumber(k);
-            args2[2].setObject(*obj);
-            if (!fig.invoke(cx))
-                return false;
-
-            if (ToBoolean(args2.rval())) {
-                if (!SetArrayElement(cx, arr, to, kValue))
-                    return false;
-                to++;
-            }
-        }
-
-        /* Step d. */
-        k++;
-    }
-
-    /* Step 10. */
-    args.rval().setObject(*arr);
-    return true;
-}
-
 static bool
 array_isArray(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -3102,7 +2758,7 @@ static const JSFunctionSpec array_methods[] = {
     JS_FN("pop",                array_pop,          0,JSFUN_GENERIC_NATIVE),
     JS_FN("shift",              array_shift,        0,JSFUN_GENERIC_NATIVE),
     JS_FN("unshift",            array_unshift,      1,JSFUN_GENERIC_NATIVE),
-    JS_FN("splice",             array_splice,       2,JSFUN_GENERIC_NATIVE),
+    JS_SELF_HOSTED_FN("splice", "ArraySplice",      2,0),
 
     /* Pythonic sequence methods. */
     JS_FN("concat",             array_concat,       1,JSFUN_GENERIC_NATIVE),
@@ -3112,9 +2768,9 @@ static const JSFunctionSpec array_methods[] = {
     JS_SELF_HOSTED_FN("indexOf",     "ArrayIndexOf",     1,0),
     JS_SELF_HOSTED_FN("forEach",     "ArrayForEach",     1,0),
     JS_SELF_HOSTED_FN("map",         "ArrayMap",         1,0),
+    JS_SELF_HOSTED_FN("filter",      "ArrayFilter",      1,0),
     JS_SELF_HOSTED_FN("reduce",      "ArrayReduce",      1,0),
     JS_SELF_HOSTED_FN("reduceRight", "ArrayReduceRight", 1,0),
-    JS_FN("filter",             array_filter,       1,JSFUN_GENERIC_NATIVE),
     JS_SELF_HOSTED_FN("some",        "ArraySome",        1,0),
     JS_SELF_HOSTED_FN("every",       "ArrayEvery",       1,0),
 
@@ -3143,6 +2799,7 @@ static const JSFunctionSpec array_static_methods[] = {
     JS_SELF_HOSTED_FN("indexOf",     "ArrayStaticIndexOf", 2,0),
     JS_SELF_HOSTED_FN("forEach",     "ArrayStaticForEach", 2,0),
     JS_SELF_HOSTED_FN("map",         "ArrayStaticMap",   2,0),
+    JS_SELF_HOSTED_FN("filter",      "ArrayStaticFilter", 2,0),
     JS_SELF_HOSTED_FN("every",       "ArrayStaticEvery", 2,0),
     JS_SELF_HOSTED_FN("some",        "ArrayStaticSome",  2,0),
     JS_SELF_HOSTED_FN("reduce",      "ArrayStaticReduce", 2,0),

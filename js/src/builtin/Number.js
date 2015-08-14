@@ -70,8 +70,8 @@ function Number_isSafeInteger(number) {
     if (integer !== number)
         return false;
 
-    // Step 5. If abs(integer) <= 2**53 - 1, return true.
-    if (std_Math_abs(integer) <= 9007199254740991)
+    // Step 5.
+    if (std_Math_abs(integer) <= 2 ** 53 - 1)
         return true;
 
     // Step 6.

@@ -1709,13 +1709,18 @@ PeerConnectionWrapper.prototype = {
         rId = stats[name].remoteCandidateId;
       }
     });
-    info("checkStatsIceConnectionType verifying: local=" +
-         JSON.stringify(stats[lId]) + " remote=" + JSON.stringify(stats[rId]));
+    ok(typeof lId !== 'undefined', "Got local candidate ID " +
+       JSON.stringify(lId) + " for selected pair");
+    ok(typeof rId !== 'undefined', "Got remote candidate ID " +
+       JSON.stringify(rId) + " for selected pair");
     if ((typeof stats[lId] === 'undefined') ||
         (typeof stats[rId] === 'undefined')) {
-      info("checkStatsIceConnectionType failed to find candidatepair IDs");
+      ok(false, "failed to find candidatepair IDs or stats for local: " +
+         JSON.stringify(lId) + " remote: " + JSON.stringify(rId));
       return;
     }
+    info("checkStatsIceConnectionType verifying: local=" +
+         JSON.stringify(stats[lId]) + " remote=" + JSON.stringify(stats[rId]));
     var lType = stats[lId].candidateType;
     var rType = stats[rId].candidateType;
     var lIp = stats[lId].ipAddress;
@@ -1754,6 +1759,7 @@ PeerConnectionWrapper.prototype = {
       }
     });
     info("ICE connections according to stats: " + numIceConnections);
+    isnot(numIceConnections, 0, "Number of ICE connections according to stats is not zero");
     if (answer.sdp.includes('a=group:BUNDLE')) {
       is(numIceConnections, 1, "stats reports exactly 1 ICE connection");
     } else {

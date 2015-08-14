@@ -148,8 +148,8 @@ class WebIDLCodegenManager(LoggingMixin):
     }
 
     def __init__(self, config_path, inputs, exported_header_dir,
-        codegen_dir, state_path, cache_dir=None, make_deps_path=None,
-        make_deps_target=None):
+                 codegen_dir, state_path, cache_dir=None, make_deps_path=None,
+                 make_deps_target=None):
         """Create an instance that manages WebIDLs in the build system.
 
         config_path refers to a WebIDL config file (e.g. Bindings.conf).
@@ -176,7 +176,7 @@ class WebIDLCodegenManager(LoggingMixin):
         self._input_paths = set(input_paths)
         self._exported_stems = set(exported_stems)
         self._generated_events_stems = set(generated_events_stems)
-        self._generated_events_stems_as_array = generated_events_stems;
+        self._generated_events_stems_as_array = generated_events_stems
         self._example_interfaces = set(example_interfaces)
         self._exported_header_dir = exported_header_dir
         self._codegen_dir = codegen_dir
@@ -185,10 +185,10 @@ class WebIDLCodegenManager(LoggingMixin):
         self._make_deps_path = make_deps_path
         self._make_deps_target = make_deps_target
 
-        if (make_deps_path and not make_deps_target) or (not make_deps_path and
-            make_deps_target):
+        if ((make_deps_path and not make_deps_target) or
+                (not make_deps_path and make_deps_target)):
             raise Exception('Must define both make_deps_path and make_deps_target '
-                'if one is defined.')
+                            'if one is defined.')
 
         self._parser_results = None
         self._config = None
@@ -200,7 +200,7 @@ class WebIDLCodegenManager(LoggingMixin):
                     self._state = WebIDLCodegenManagerState(fh=fh)
                 except Exception as e:
                     self.log(logging.WARN, 'webidl_bad_state', {'msg': str(e)},
-                        'Bad WebIDL state: {msg}')
+                                           'Bad WebIDL state: {msg}')
 
     @property
     def config(self):
@@ -313,8 +313,8 @@ class WebIDLCodegenManager(LoggingMixin):
         from Configuration import Configuration
 
         self.log(logging.INFO, 'webidl_parse',
-            {'count': len(self._input_paths)},
-            'Parsing {count} WebIDL files.')
+                 {'count': len(self._input_paths)},
+                 'Parsing {count} WebIDL files.')
 
         hashes = {}
         parser = WebIDL.Parser(self._cache_dir)
@@ -372,7 +372,7 @@ class WebIDLCodegenManager(LoggingMixin):
 
         # Now we move on to the input files.
         old_hashes = {v['filename']: v['sha1']
-            for v in self._state['webidls'].values()}
+                      for v in self._state['webidls'].values()}
 
         old_filenames = set(old_hashes.keys())
         new_filenames = self._input_paths
@@ -465,8 +465,8 @@ class WebIDLCodegenManager(LoggingMixin):
         )
 
         self.log(logging.INFO, 'webidl_generate_build_for_input',
-            {'filename': filename},
-            'Generating WebIDL files derived from {filename}')
+                 {'filename': filename},
+                 'Generating WebIDL files derived from {filename}')
 
         stem, binding_stem, is_event, header_dir, files = self._binding_info(filename)
         root = CGBindingRoot(self._config, binding_stem, filename)
@@ -476,7 +476,7 @@ class WebIDLCodegenManager(LoggingMixin):
         if is_event:
             generated_event = CGEventRoot(self._config, stem)
             result = self._maybe_write_codegen(generated_event, files[2],
-                files[3], result)
+                                               files[3], result)
 
         return result, root.deps()
 
@@ -544,7 +544,7 @@ def create_build_system_manager(topsrcdir, topobjdir, dist_dir):
         files = json.load(fh)
 
     inputs = (files['webidls'], files['exported_stems'],
-        files['generated_events_stems'], files['example_interfaces'])
+              files['generated_events_stems'], files['example_interfaces'])
 
     cache_dir = os.path.join(obj_dir, '_cache')
     try:

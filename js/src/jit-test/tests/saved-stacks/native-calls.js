@@ -3,7 +3,7 @@
 // Unlike Array.prototype.map, Array.prototype.filter is not self-hosted.
 const filter = (function iife() {
   try {
-    [3].filter(n => { throw saveStack() });
+    callFunctionFromNativeFrame(n => { throw saveStack() });
   } catch (s) {
     return s;
   }
