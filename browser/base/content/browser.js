@@ -3462,11 +3462,14 @@ var newTabButtonObserver = {
 
   onDrop: function (aEvent)
   {
-    let url = browserDragAndDrop.drop(aEvent, { });
-    getShortcutOrURIAndPostData(url).then(data => {
-      if (data.url) {
-        // allow third-party services to fixup this URL
-        openNewTabWith(data.url, null, data.postData, aEvent, true);
+    let links = browserDragAndDrop.dropLinks(aEvent);
+    Task.spawn(function*() {
+      for (let link of links) {
+        let data = yield getShortcutOrURIAndPostData(link.url);
+        if (data.url) {
+          // allow third-party services to fixup this URL
+          openNewTabWith(data.url, null, data.postData, aEvent, true);
+        }
       }
     });
   }
