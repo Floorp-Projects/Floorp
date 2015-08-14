@@ -74,6 +74,16 @@ function reportTestReason(val) {
   histogram.add(val);
 }
 
+function reportSnapshotContents(canvas) {
+  try {
+    var data = canvas.toDataURL();
+    Cc['@mozilla.org/observer-service;1'].
+        getService(Ci.nsIObserverService).
+        notifyObservers(null, "graphics-sanity-test-failed", data);
+  } catch (e) {
+  }
+}
+
 function annotateCrashReport(value) {
   try {
     // "1" if we're annotating the crash report, "" to remove the annotation.
@@ -167,7 +177,9 @@ let listener = {
 
     // Perform the compositor backbuffer test, which currently we use for
     // actually deciding whether to enable hardware media decoding.
-    testCompositor(this.win, this.ctx);
+    if (!testCompositor(this.win, this.ctx)) {
+      reportSnapshotContents(this.canvas);
+    }
 
     this.endTest();
   },
