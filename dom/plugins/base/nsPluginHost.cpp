@@ -1104,11 +1104,7 @@ NS_IMETHODIMP
 nsPluginHost::IsPluginOOP(const nsACString& aMimeType,
                           bool* aResult)
 {
-  nsPluginTag* tag = FindNativePluginForType(aMimeType, true);
-  if (!tag) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  *aResult = nsNPAPIPlugin::RunPluginOOP(tag);
+  *aResult = true;
   return NS_OK;
 }
 
@@ -1342,35 +1338,11 @@ nsPluginHost::FindNativePluginForExtension(const nsACString & aExtension,
   return preferredPlugin;
 }
 
-static nsresult CreateNPAPIPlugin(nsPluginTag *aPluginTag,
-                                  nsNPAPIPlugin **aOutNPAPIPlugin)
-{
-  // If this is an in-process plugin we'll need to load it here if we haven't already.
-  if (!nsNPAPIPlugin::RunPluginOOP(aPluginTag)) {
-    if (aPluginTag->mFullPath.IsEmpty())
-      return NS_ERROR_FAILURE;
-    nsCOMPtr<nsIFile> file = do_CreateInstance("@mozilla.org/file/local;1");
-    file->InitWithPath(NS_ConvertUTF8toUTF16(aPluginTag->mFullPath));
-    nsPluginFile pluginFile(file);
-    PRLibrary* pluginLibrary = nullptr;
-
-    if (NS_FAILED(pluginFile.LoadPlugin(&pluginLibrary)) || !pluginLibrary)
-      return NS_ERROR_FAILURE;
-
-    aPluginTag->mLibrary = pluginLibrary;
-  }
-
-  nsresult rv;
-  rv = nsNPAPIPlugin::CreatePlugin(aPluginTag, aOutNPAPIPlugin);
-
-  return rv;
-}
-
 nsresult nsPluginHost::EnsurePluginLoaded(nsPluginTag* aPluginTag)
 {
   nsRefPtr<nsNPAPIPlugin> plugin = aPluginTag->mPlugin;
   if (!plugin) {
-    nsresult rv = CreateNPAPIPlugin(aPluginTag, getter_AddRefs(plugin));
+    nsresult rv = nsNPAPIPlugin::CreatePlugin(aPluginTag, getter_AddRefs(plugin));
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -2320,14 +2292,6 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile *pluginsDir,
       *aPluginsChanged = true;
     }
 
-    // Avoid adding different versions of the same plugin if they are running
-    // in-process, otherwise we risk undefined behaviour.
-    if (!nsNPAPIPlugin::RunPluginOOP(pluginTag)) {
-      if (HaveSamePlugin(pluginTag)) {
-        continue;
-      }
-    }
-
     // Don't add the same plugin again if it hasn't changed
     if (nsPluginTag* duplicate = FirstPluginWithPath(pluginTag->mFullPath)) {
       if (pluginTag->mLastModifiedTime == duplicate->mLastModifiedTime) {
@@ -2737,12 +2701,6 @@ nsPluginHost::FindPluginsForContent(uint32_t aPluginEpoch,
     /// FIXME-jsplugins - We need to cleanup the various plugintag classes
     /// to be more sane and avoid this dance
     nsPluginTag *tag = static_cast<nsPluginTag *>(basetag.get());
-
-    if (!nsNPAPIPlugin::RunPluginOOP(tag)) {
-      // Don't expose non-OOP plugins to content processes since we have no way
-      // to bridge them over.
-      continue;
-    }
 
     aPlugins->AppendElement(PluginTag(tag->mId,
                                       tag->Name(),
