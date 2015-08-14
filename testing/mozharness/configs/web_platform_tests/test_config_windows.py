@@ -8,8 +8,15 @@ import os
 import sys
 
 config = {
-    # test harness options are located in the gecko tree
-    "in_tree_config": "config/mozharness/web_platform_tests_config.py",
+    "options": [
+        "--prefs-root=%(test_path)s/prefs",
+        "--processes=1",
+        "--config=%(test_path)s/wptrunner.ini",
+        "--ca-cert-path=%(test_path)s/certs/cacert.pem",
+        "--host-key-path=%(test_path)s/certs/web-platform.test.key",
+        "--host-cert-path=%(test_path)s/certs/web-platform.test.pem",
+        "--certutil-binary=%(test_install_path)s/bin/certutil",
+    ],
 
     "exes": {
         'python': sys.executable,
@@ -18,8 +25,6 @@ config = {
         'mozinstall': ['%s/build/venv/scripts/python' % os.getcwd(),
                        '%s/build/venv/scripts/mozinstall-script.py' % os.getcwd()],
     },
-
-    "options": [],
 
     "default_actions": [
         'clobber',

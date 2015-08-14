@@ -133,7 +133,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin):
             if val:
                 base_cmd.append("--%s=%s" % (opt.replace("_", "-"), val))
 
-        options = list(c.get("options", [])) + list(self.tree_config["options"])
+        options = list(c.get("options", []))
 
         str_format_values = {
             'binary_path': self.binary_path,

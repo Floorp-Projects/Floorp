@@ -99,7 +99,6 @@ class TestingMixin(VirtualenvMixin, BuildbotMixin, ResourceMonitoringMixin, Tool
     test_url = None
     test_packages_url = None
     test_zip_path = None
-    tree_config = ReadOnlyDict({})
     symbols_url = None
     symbols_path = None
     jsshell_url = None
@@ -133,13 +132,6 @@ class TestingMixin(VirtualenvMixin, BuildbotMixin, ResourceMonitoringMixin, Tool
             return super(TestingMixin, self).download_file(*args, **kwargs)
         else:
             return self.download_proxied_file(*args, **kwargs)
-
-    def query_value(self, key):
-        """
-        This function allows us to check for a value
-        in the self.tree_config first and then on self.config
-        """
-        return self.tree_config.get(key, self.config.get(key))
 
     def query_build_dir_url(self, file_name):
         """
@@ -451,47 +443,13 @@ You can set this by:
                          halt_on_failure=True, success_codes=[0, 11],
                          fatal_exit_code=3)
 
-    def _read_tree_config(self):
-        """Reads an in-tree config file"""
-        dirs = self.query_abs_dirs()
-        test_install_dir = dirs.get('abs_test_install_dir',
-                                    os.path.join(dirs['abs_work_dir'], 'tests'))
-
-        if 'in_tree_config' in self.config:
-            rel_tree_config_path = self.config['in_tree_config']
-            tree_config_path = os.path.join(test_install_dir, rel_tree_config_path)
-
-            if not os.path.isfile(tree_config_path):
-                self.fatal("The in-tree configuration file '%s' does not exist!"
-                           "It must be added to '%s'. See bug 1035551 for more details." %
-                           (tree_config_path, os.path.join('gecko', 'testing', rel_tree_config_path)))
-
-            try:
-                self.tree_config.update(parse_config_file(tree_config_path))
-            except:
-                msg = "There was a problem parsing the in-tree configuration file '%s'!" % \
-                      os.path.join('gecko', 'testing', rel_tree_config_path)
-                self.exception(message=msg, level=FATAL)
-
-            self.dump_config(file_path=os.path.join(dirs['abs_log_dir'], 'treeconfig.json'),
-                             config=self.tree_config)
-
-        if (self.buildbot_config and 'properties' in self.buildbot_config and
-            self.buildbot_config['properties'].get('branch') == 'try'):
-            try_config_path = os.path.join(test_install_dir, 'config', 'mozharness',
-                                           'try_arguments.py')
-            known_try_arguments = parse_config_file(try_config_path)
-            self.set_extra_try_arguments(known_try_arguments)
-
-        self.tree_config.lock()
-
     def structured_output(self, suite_category):
         """Defines whether structured logging is in use in this configuration. This
         may need to be replaced with data from a different config at the resolution
         of bug 1070041 and related bugs.
         """
-        return ('structured_suites' in self.tree_config and
-                suite_category in self.tree_config['structured_suites'])
+        return ('structured_suites' in self.config and
+                suite_category in self.config['structured_suites'])
 
     def get_test_output_parser(self, suite_category, strict=False,
                                fallback_parser_class=DesktopUnittestOutputParser,
@@ -572,7 +530,6 @@ You can set this by:
             suite_categories = suite_categories or ['common']
             self._download_test_packages(suite_categories, target_unzip_dirs)
 
-        self._read_tree_config()
         self._download_installer()
         if self.config.get('download_symbols'):
             self._download_and_extract_symbols()
@@ -732,10 +689,6 @@ Did you run with --create-virtualenv? Is mozinstall in virtualenv_modules?""")
 
     def preflight_run_tests(self):
         """preflight commands for all tests"""
-        # If the in tree config hasn't been loaded by a previous step, load it here.
-        if len(self.tree_config) == 0:
-            self._read_tree_config()
-
         c = self.config
         if c.get('run_cmd_checks_enabled'):
             self._run_cmd_checks(c.get('preflight_run_cmd_suites', []))
