@@ -194,6 +194,12 @@ loop.shared.views = (function(_, mozL10n) {
       };
     },
 
+    getInitialState: function() {
+      return {
+        idle: false
+      };
+    },
+
     propTypes: {
       audio: React.PropTypes.object.isRequired,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
@@ -225,13 +231,83 @@ loop.shared.views = (function(_, mozL10n) {
       }
     },
 
+    componentDidMount: function() {
+      this.userActivity = false;
+      this.startIdleCountDown();
+      document.body.addEventListener("mousemove", this._onBodyMouseMove);
+    },
+
+    componentWillUnmount: function() {
+      clearTimeout(this.inactivityTimeout);
+      clearInterval(this.inactivityPollInterval);
+      document.body.removeEventListener("mousemove", this._onBodyMouseMove);
+    },
+
+    /**
+     * If the conversation toolbar is idle, update its state and initialize the countdown
+     * to return of the idle state. If the toolbar is active, only it's updated the userActivity flag.
+     */
+    _onBodyMouseMove: function() {
+      if (this.state.idle) {
+        this.setState({idle: false});
+        this.startIdleCountDown();
+      } else {
+        this.userActivity = true;
+      }
+    },
+
+    /**
+     * Instead of resetting the timeout for every mousemove (this event is called to many times,
+     * when the mouse is moving, we check the flat userActivity every 4 seconds. If the flag is activated,
+     * the user is still active, and we can restart the countdown for the idle state
+     */
+    checkUserActivity: function() {
+      this.inactivityPollInterval = setInterval(function() {
+        if (this.userActivity) {
+          this.userActivity = false;
+          this.restartIdleCountDown();
+        }
+      }.bind(this), 4000);
+    },
+
+    /**
+     * Stop the execution of the current inactivity countdown and it starts a new one.
+     */
+    restartIdleCountDown: function() {
+      clearTimeout(this.inactivityTimeout);
+      this.startIdleCountDown();
+    },
+
+    /**
+     * Launchs the process to check the user activity and the inactivity countdown to change
+     * the toolbar to idle.
+     * When the toolbar changes to idle, we remove the procces to check the user activity,
+     * because the toolbar is going to be updated directly when the user moves the mouse.
+     */
+    startIdleCountDown: function() {
+      this.checkUserActivity();
+      this.inactivityTimeout = setTimeout(function() {
+        this.setState({idle: true});
+        clearInterval(this.inactivityPollInterval);
+      }.bind(this), 6000);
+    },
+
     _getHangupButtonLabel: function() {
       return this.props.hangupButtonLabel || mozL10n.get("hangup_button_caption2");
     },
 
     render: function() {
+      var cx = React.addons.classSet;
+      var conversationToolbarCssClasses = cx({
+        "conversation-toolbar": true,
+        "idle": this.state.idle
+      });
+      var mediaButtonGroupCssClasses = cx({
+        "conversation-toolbar-media-btn-group-box": true,
+        "hide": (!this.props.video.visible && !this.props.audio.visible)
+      });
       return (
-        React.createElement("ul", {className: "conversation-toolbar"}, 
+        React.createElement("ul", {className: conversationToolbarCssClasses}, 
           React.createElement("li", {className: "conversation-toolbar-btn-box btn-hangup-entry"}, 
             React.createElement("button", {className: "btn btn-hangup", 
                     disabled: !this.props.enableHangup, 
@@ -241,16 +317,17 @@ loop.shared.views = (function(_, mozL10n) {
             )
           ), 
           React.createElement("li", {className: "conversation-toolbar-btn-box"}, 
-            React.createElement(MediaControlButton, {action: this.handleToggleVideo, 
-                                enabled: this.props.video.enabled, 
-                                scope: "local", type: "video", 
-                                visible: this.props.video.visible})
-          ), 
-          React.createElement("li", {className: "conversation-toolbar-btn-box"}, 
-            React.createElement(MediaControlButton, {action: this.handleToggleAudio, 
-                                enabled: this.props.audio.enabled, 
-                                scope: "local", type: "audio", 
-                                visible: this.props.audio.visible})
+            React.createElement("div", {className: mediaButtonGroupCssClasses}, 
+                React.createElement(MediaControlButton, {action: this.handleToggleVideo, 
+                                    enabled: this.props.video.enabled, 
+                                    scope: "local", type: "video", 
+                                    visible: this.props.video.visible}), 
+                React.createElement(MediaControlButton, {action: this.handleToggleAudio, 
+                                    enabled: this.props.audio.enabled, 
+                                    scope: "local", type: "audio", 
+                                    visible: this.props.audio.visible})
+
+            )
           ), 
           React.createElement("li", {className: "conversation-toolbar-btn-box"}, 
             React.createElement(ScreenShareControlButton, {dispatcher: this.props.dispatcher, 
@@ -477,16 +554,18 @@ loop.shared.views = (function(_, mozL10n) {
           React.createElement("div", {className: "conversation in-call"}, 
             React.createElement("div", {className: "media nested"}, 
               React.createElement("div", {className: "video_wrapper remote_wrapper"}, 
-                React.createElement("div", {className: "video_inner remote focus-stream"})
+                React.createElement("div", {className: "video_inner remote focus-stream"}, 
+                  React.createElement(ConversationToolbar, {
+                    audio: this.state.audio, 
+                    dispatcher: this.props.dispatcher, 
+                    hangup: this.hangup, 
+                    publishStream: this.publishStream, 
+                    video: this.state.video})
+                )
               ), 
               React.createElement("div", {className: localStreamClasses})
-            ), 
-            React.createElement(ConversationToolbar, {
-              audio: this.state.audio, 
-              dispatcher: this.props.dispatcher, 
-              hangup: this.hangup, 
-              publishStream: this.publishStream, 
-              video: this.state.video})
+
+            )
           )
         )
       );
@@ -1064,6 +1143,7 @@ loop.shared.views = (function(_, mozL10n) {
                this.state.localMediaAboslutelyPositioned ?
                 this.renderLocalVideo() : null, 
                this.props.children
+
             ), 
             React.createElement("div", {className: screenShareStreamClasses}, 
               React.createElement(MediaView, {displayAvatar: false, 
