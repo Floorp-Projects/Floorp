@@ -274,18 +274,61 @@ html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
   border: 0.1rem solid #5cccee;
 }
 
+/* Rooms and contacts shared CSS */
+
+.contact-list-empty,
+.room-list-empty {
+  background-image: url("../shared/img/empty_contacts.svg");
+  background-repeat: no-repeat;
+  background-position: top center;
+  padding-top: 19%;
+  padding-bottom: 3%;
+  text-align: center;
+  color: #4a4a4a;
+  font-weight: lighter;
+}
+
+.contact-list-empty {
+  padding-top: 27%;
+}
+
+.room-list-empty {
+  margin: 5% 15px;
+  background-image: url("../shared/img/empty_conversations.svg");
+}
+
+.panel-text-medium,
+.panel-text-large {
+  margin: 3px 0;
+}
+
+.panel-text-medium {
+  font-size: 1.6rem;
+}
+
+.panel-text-large {
+  font-size: 2.2rem;
+}
+
+
 /* Rooms */
 .rooms {
   min-height: 100px;
-  padding: 0 1rem;
 }
 
 .rooms > h1 {
   font-weight: bold;
-  color: #999;
+  color: #666;
   padding: .5rem 0;
   height: 3rem;
   line-height: 3rem;
+  font-size: 1.1rem;
+  margin: 0 15px;
+}
+
+.new-room-view {
+  display: flex;
+  flex-direction: column;
 }
 
 .new-room-view > .context-checkbox-checked {
@@ -293,11 +336,10 @@ html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
 }
 
 .new-room-view > .context {
-  margin: .5rem 0 .5rem;
+  flex: 1;
   border-radius: 3px 3px 0 0;
-  padding: .5rem 1rem ;
-  margin-left: -1rem;
-  margin-right: -1rem;
+  margin: 1rem 0 .5rem;
+  padding: 1rem 15px;
 }
 
 .new-room-view > .context > .context-enabled {
@@ -330,11 +372,11 @@ html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
 }
 
 .new-room-view > .btn {
+  flex: 1;
   height: 3rem;
   display: block;
   font-size: 1.2rem;
-  margin: 0 auto 1rem;
-  width: 100%;
+  margin: 0 15px 1rem 15px;
   padding: .5rem 1rem;
   border-radius: 4px;
 }
@@ -349,10 +391,6 @@ html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
   max-height: 335px; /* XXX better computation needed */
   min-height: 7px;
   overflow: auto;
-  border-top: 1px solid #ccc;
-  border-bottom: 1px solid #ccc;
-  margin-left: -1rem;
-  margin-right: -1rem;
 }
 
 .room-list:empty {
@@ -360,15 +398,16 @@ html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
 }
 
 .room-list > .room-entry {
-  padding: .2rem 1rem;
+  padding: .2rem 15px;
   /* Always show the default pointer, even over the text part of the entry. */
   cursor: default;
 }
 
 .room-list > .room-entry > h2 {
   display: inline-block;
-  font-size: 1rem;
-  color: #777;
+  font-size: 1.3rem;
+  line-height: 2.4rem;
+  color: #000;
   /* See .room-entry-context-item for the margin/size reductions. */
   width: calc(100% - 1rem - 16px);
 }
@@ -376,19 +415,6 @@ html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
 .room-list > .room-entry.room-active > h2 {
   font-weight: bold;
   color: #000;
-}
-
-.room-list > .room-entry > h2 > .room-notification {
-  display: none;
-  background: #00a0ec;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  -moz-margin-end: .3rem;
-}
-
-.room-list > .room-entry.room-active > h2 > .room-notification {
-  display: inline-block;
 }
 
 .room-list > .room-entry:hover {
@@ -461,6 +487,23 @@ html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
 .room-list > .room-entry > h2 > span {
   vertical-align: middle;
 }
+
+.room-list > .room-entry > h2:before {
+  content: "";
+  display: inline-block;
+  background-image: url("../shared/img/icons-14x14.svg#hello");
+  background-repeat: no-repeat;
+  background-size: cover;
+  width: 13px;
+  height: 13px;
+  -moz-margin-end: 1rem;
+  margin-bottom: -3px;
+}
+
+.room-list > .room-entry.room-active > h2:before {
+  background-image: url("../shared/img/icons-14x14.svg#hello-active");
+}
+
 
 /* Keep ".room-list > .room-entry > h2" in sync with these. */
 .room-entry-context-item {
@@ -744,7 +787,7 @@ html[dir="rtl"] .generate-url-spinner {
   background-repeat: no-repeat;
   background-size: cover;
   -moz-margin-end: .2rem;
-  margin-bottom: -2px;
+  margin-bottom: -3px;
 }
 
 .dropdown-menu-item.status-available:before,

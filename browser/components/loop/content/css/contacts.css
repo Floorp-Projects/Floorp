@@ -165,30 +165,6 @@ html {
   width: 100%;
 }
 
-.contact-list-empty {
-  background-image: url("../shared/img/empty_contacts.svg");
-  background-repeat: no-repeat;
-  background-position: top center;
-  padding-top: 28%;
-  padding-bottom: 5%;
-  text-align: center;
-  color: #4a4a4a;
-  font-weight: lighter;
-}
-
-.panel-text-medium,
-.panel-text-large {
-  margin: 3px;
-}
-
-.panel-text-medium {
-  font-size: 1.6rem;
-}
-
-.panel-text-large {
-  font-size: 2.2rem;
-}
-
 .contact > .details > .username {
   font-size: 1.3rem;
   line-height: 20px;
