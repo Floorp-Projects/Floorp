@@ -4652,11 +4652,8 @@ nsEditor::CreateHTMLContent(nsIAtom* aTag)
     return nullptr;
   }
 
-  nsCOMPtr<nsIContent> ret;
-  nsresult res = doc->CreateElem(nsDependentAtomString(aTag), nullptr,
-                                 kNameSpaceID_XHTML, getter_AddRefs(ret));
-  NS_ENSURE_SUCCESS(res, nullptr);
-  return dont_AddRef(ret.forget().take()->AsElement());
+  return doc->CreateElem(nsDependentAtomString(aTag), nullptr,
+                         kNameSpaceID_XHTML);
 }
 
 nsresult

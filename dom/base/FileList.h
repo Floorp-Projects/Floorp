@@ -84,7 +84,10 @@ public:
   File* IndexedGetter(uint32_t aIndex, bool& aFound)
   {
     aFound = aIndex < mFiles.Length();
-    return aFound ? mFiles.ElementAt(aIndex) : nullptr;
+    if (!aFound) {
+      return nullptr;
+    }
+    return mFiles.ElementAt(aIndex);
   }
 
   uint32_t Length()

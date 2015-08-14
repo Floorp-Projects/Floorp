@@ -32,10 +32,14 @@ this.ContentWebRTC = {
   },
 
   uninit: function() {
-    Services.obs.removeObserver(handleRequest, "getUserMedia:request");
+    Services.obs.removeObserver(handleGUMRequest, "getUserMedia:request");
+    Services.obs.removeObserver(handlePCRequest, "PeerConnection:request");
     Services.obs.removeObserver(updateIndicators, "recording-device-events");
     Services.obs.removeObserver(removeBrowserSpecificIndicator, "recording-window-ended");
-    Services.obs.removeObserver(processShutdown, "content-child-shutdown");
+
+    if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT)
+      Services.obs.removeObserver(processShutdown, "content-child-shutdown");
+
     this._initialized = false;
   },
 

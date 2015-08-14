@@ -245,6 +245,38 @@ function refuseAbs() {
 }
 test(refuseAbs);
 
+function acceptFilterTypeSet() {
+    var res = f32[0];
+    if (!res) {
+    } else {
+        f32[0] = res;
+        assertFloat32(res, true);
+    }
+}
+test(acceptFilterTypeSet);
+
+function acceptFilterTypeSet2() {
+    var res = f32[0];
+    if (!res) {
+    } else {
+        var res1 = Math.abs(res);
+        f32[0] = res1;
+        assertFloat32(res1, true);
+    }
+}
+test(acceptFilterTypeSet2);
+
+function refuseFilterTypeSet() {
+    var res = f32[0];
+    if (!res) {
+    } else {
+        var res1 = Math.abs(res);
+        f64[0] = res1 + 1;
+        assertFloat32(res1, false);
+    }
+}
+test(refuseFilterTypeSet);
+
 function refuseTrigo() {
     var res = Math.cos(f32[0]);
     f32[0] = res;

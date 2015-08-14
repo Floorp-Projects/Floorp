@@ -696,7 +696,10 @@ ShadowRoot *
 nsGenericDOMDataNode::GetContainingShadow() const
 {
   nsDataSlots *slots = GetExistingDataSlots();
-  return slots ? slots->mContainingShadow : nullptr;
+  if (!slots) {
+    return nullptr;
+  }
+  return slots->mContainingShadow;
 }
 
 void

@@ -873,7 +873,10 @@ nsRangeFrame::GetAdditionalStyleContext(int32_t aIndex) const
   // We only implement this so that SetAdditionalStyleContext will be
   // called if style changes that would change the -moz-focus-outer
   // pseudo-element have occurred.
-  return aIndex == 0 ? mOuterFocusStyle : nullptr;
+  if (aIndex != 0) {
+    return nullptr;
+  }
+  return mOuterFocusStyle;
 }
 
 void

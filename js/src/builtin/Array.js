@@ -226,6 +226,15 @@ function ArrayForEach(callbackfn/*, thisArg*/) {
     return void 0;
 }
 
+function ArrayStaticForEach(list, callbackfn/*, thisArg*/) {
+    if (arguments.length < 2)
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.forEach');
+    if (!IsCallable(callbackfn))
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(1, callbackfn));
+    var T = arguments.length > 2 ? arguments[2] : void 0;
+    callFunction(ArrayForEach, list, callbackfn, T);
+}
+
 /* ES5 15.4.4.19. */
 function ArrayMap(callbackfn/*, thisArg*/) {
     /* Step 1. */
@@ -270,13 +279,52 @@ function ArrayStaticMap(list, callbackfn/*, thisArg*/) {
     return callFunction(ArrayMap, list, callbackfn, T);
 }
 
-function ArrayStaticForEach(list, callbackfn/*, thisArg*/) {
+/* ES2015 22.1.3.7 Array.prototype.filter. */
+function ArrayFilter(callbackfn/*, thisArg*/) {
+    /* Steps 1-2. */
+    var O = ToObject(this);
+
+    /* Steps 3-4. */
+    var len = ToInteger(O.length);
+
+    /* Step 5. */
+    if (arguments.length === 0)
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.filter');
+    if (!IsCallable(callbackfn))
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
+
+    /* Step 6. */
+    var T = arguments.length > 1 ? arguments[1] : void 0;
+
+    /* Step 7. */
+    var A = [];
+
+    /* Steps 8-11. */
+    /* Steps 11.a (implicit), and 11.e. */
+    for (var k = 0, to = 0; k < len; k++) {
+        /* Steps 11.b-c. */
+        if (k in O) {
+            /* Steps 11.c.i-ii. */
+            var kValue = O[k];
+            /* Steps 11.c.iii-iv. */
+            var selected = callFunction(callbackfn, T, kValue, k, O);
+            /* Step 11.c.v. */
+            if (selected)
+                _DefineDataProperty(A, to++, kValue);
+        }
+    }
+
+    /* Step 12. */
+    return A;
+}
+
+function ArrayStaticFilter(list, callbackfn/*, thisArg*/) {
     if (arguments.length < 2)
-        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.forEach');
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.filter');
     if (!IsCallable(callbackfn))
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(1, callbackfn));
     var T = arguments.length > 2 ? arguments[2] : void 0;
-    callFunction(ArrayForEach, list, callbackfn, T);
+    return callFunction(ArrayFilter, list, callbackfn, T);
 }
 
 /* ES5 15.4.4.21. */
@@ -792,4 +840,112 @@ function ArrayToString() {
     if (!IsCallable(func))
         return callFunction(std_Object_toString, array);
     return callFunction(func, array);
+}
+
+//ES 2015, 22.1.3.25 Array.prototype.splice.
+function ArraySplice(start, deleteCount /*, ...items */) {
+    // Steps 1-2.
+    var O = ToObject(this);
+
+    // Steps 3-4.
+    // FIXME: Array operations should use ToLength (bug 924058).
+    var len = ToInteger(O.length);
+
+    // Steps 5-6.
+    var relativeStart = ToInteger(start);
+
+    // Step 7.
+    var actualStart = relativeStart < 0
+                      ? std_Math_max(len + relativeStart, 0)
+                      : std_Math_min(relativeStart, len);
+
+    // Steps 8-10.
+    var insertCount = 0;
+    var actualDeleteCount = 0;
+    var numArgs = arguments.length;
+    if (numArgs === 1) {
+        actualDeleteCount = len - actualStart;
+    } else if (numArgs > 1) {
+        // Step 10.a.
+        insertCount = numArgs - 2;
+        // Steps 10.b-c.
+        var dc = ToInteger(deleteCount);
+        // Step 10.d.
+        actualDeleteCount = std_Math_min(std_Math_max(dc, 0), len - actualStart);
+    }
+
+    // Step 11.
+    if (len + insertCount - actualDeleteCount > 2 ** 53 - 1)
+        ThrowTypeError(JSMSG_BAD_ARRAY_LENGTH_SPLICE);
+
+    // Steps 12-13.
+    // FIXME: Use ArraySpeciesCreate here.
+    var A = NewDenseArray(actualDeleteCount);
+
+    // Steps 14-15.
+    for (var k = 0; k < actualDeleteCount; k++) {
+        // Step 15.a.
+        var from = actualStart + k;
+        // Steps 15.b-d.
+        if (from in O)
+            _DefineDataProperty(A, k, O[from]);
+    }
+
+    // Steps 16-17.
+    A.length = actualDeleteCount;
+
+    // Step 18 (implicit).
+    // Step 19.
+    var itemCount = insertCount;
+
+    // Step 20.
+    if (itemCount < actualDeleteCount) {
+        // Steps 20.a-b.
+        for (var k = actualStart, kMax = len - actualDeleteCount; k < kMax; k++) {
+            // Step 20.b.i.
+            var from = k + actualDeleteCount;
+            // Step 20.b.ii.
+            var to = k + itemCount;
+            // Steps 20.b.iii-v.
+            if (from in O) {
+                O[to] = O[from];
+            } else {
+                // Step 20.b.vi.
+                delete O[to];
+            }
+        }
+        // Steps 20.c-d.
+        // For packed arrays we can skip these steps: the fact that we don't
+        // delete the elements one by one isn't visible to content code.
+        if (!IsPackedArray(O)) {
+            for (var k = len, kMin = len - actualDeleteCount + itemCount; k > kMin; k--)
+                delete O[k - 1];
+        }
+    } else if (itemCount > actualDeleteCount) {
+        // Step 21.
+        // Steps 21 a-b.
+        for (var k = len - actualDeleteCount, kMin = actualStart; k > kMin; k--) {
+            // Step 21.b.i.
+            var from = k + actualDeleteCount - 1;
+            // Step 21.b.ii.
+            var to = k + itemCount - 1;
+            // Steps 21.b.iii-v.
+            if (from in O) {
+                O[to] = O[from];
+            } else {
+                // Step 21.b.vi.
+                delete O[to];
+            }
+        }
+    }
+
+    // Steps 22-23.
+    for (var k = actualStart, itemIndex = 2; itemIndex < numArgs; k++, itemIndex++)
+        O[k] = arguments[itemIndex];
+
+    // Steps 24-25.
+    O.length = len - actualDeleteCount + itemCount;
+
+    // Step 26.
+    return A;
 }

@@ -1011,9 +1011,9 @@ public:
 
   virtual nsresult Init();
 
-  virtual nsresult CreateElem(const nsAString& aName, nsIAtom *aPrefix,
-                              int32_t aNamespaceID,
-                              nsIContent **aResult) override;
+  virtual already_AddRefed<Element> CreateElem(const nsAString& aName,
+                                               nsIAtom* aPrefix,
+                                               int32_t aNamespaceID) override;
 
   virtual void Sanitize() override;
 
