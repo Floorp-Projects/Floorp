@@ -70,35 +70,6 @@ function SecStateTest2B() {
   SecStateTestsCompleted();
 }
 
-// Compares the security state of the page with what is expected
-function isSecurityState(expectedState) {
-  let ui = gTestBrowser.securityUI;
-  if (!ui) {
-    ok(false, "No security UI to get the security state");
-    return;
-  }
-
-  const wpl = Components.interfaces.nsIWebProgressListener;
-
-  // determine the security state
-  let isSecure = ui.state & wpl.STATE_IS_SECURE;
-  let isBroken = ui.state & wpl.STATE_IS_BROKEN;
-  let isInsecure = ui.state & wpl.STATE_IS_INSECURE;
-
-  let actualState;
-  if (isSecure && !(isBroken || isInsecure)) {
-    actualState = "secure";
-  } else if (isBroken && !(isSecure || isInsecure)) {
-    actualState = "broken";
-  } else if (isInsecure && !(isSecure || isBroken)) {
-    actualState = "insecure";
-  } else {
-    actualState = "unknown";
-  }
-
-  is(expectedState, actualState, "Expected state " + expectedState + " and the actual state is " + actualState + ".");
-}
-
 function whenLoaded(aElement, aCallback) {
   aElement.addEventListener("load", function onLoad() {
     aElement.removeEventListener("load", onLoad, true);

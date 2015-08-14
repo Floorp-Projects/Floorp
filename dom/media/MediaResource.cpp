@@ -1008,13 +1008,13 @@ ChannelMediaResource::CacheClientSeek(int64_t aOffset, bool aResume)
 
   mOffset = aOffset;
 
+  // Don't report close of the channel because the channel is not closed for
+  // download ended, but for internal changes in the read position.
+  mIgnoreClose = true;
+
+  // Don't create a new channel if we are still suspended. The channel will
+  // be recreated when we are resumed.
   if (mSuspendCount > 0) {
-    // Close the existing channel to force the channel to be recreated at
-    // the correct offset upon resume.
-    if (mChannel) {
-      mIgnoreClose = true;
-      CloseChannel();
-    }
     return NS_OK;
   }
 

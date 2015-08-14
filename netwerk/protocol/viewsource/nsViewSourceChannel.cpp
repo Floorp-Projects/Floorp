@@ -258,6 +258,15 @@ nsViewSourceChannel::Open2(nsIInputStream** aStream)
 NS_IMETHODIMP
 nsViewSourceChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
 {
+#ifdef DEBUG
+    {
+    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
+    MOZ_ASSERT(!loadInfo || loadInfo->GetSecurityMode() == 0 ||
+               loadInfo->GetEnforceSecurity(),
+               "security flags in loadInfo but asyncOpen2() not called");
+    }
+#endif
+
     NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
 
     mListener = aListener;
