@@ -374,6 +374,8 @@ class IonBuilder
     // Creates a MDefinition based on the given def improved with type as TypeSet.
     MDefinition* ensureDefiniteTypeSet(MDefinition* def, TemporaryTypeSet* types);
 
+    void maybeMarkEmpty(MDefinition* ins);
+
     JSObject* getSingletonPrototype(JSFunction* target);
 
     MDefinition* createThisScripted(MDefinition* callee);
@@ -480,6 +482,13 @@ class IonBuilder
     bool setPropTryCache(bool* emitted, MDefinition* obj,
                          PropertyName* name, MDefinition* value,
                          bool barrier, TemporaryTypeSet* objTypes);
+
+    // jsop_binary_arith helpers.
+    MBinaryArithInstruction* binaryArithInstruction(JSOp op, MDefinition* left, MDefinition* right);
+    bool binaryArithTryConcat(bool* emitted, JSOp op, MDefinition* left, MDefinition* right);
+    bool binaryArithTrySpecialized(bool* emitted, JSOp op, MDefinition* left, MDefinition* right);
+    bool binaryArithTrySpecializedOnBaselineInspector(bool* emitted, JSOp op, MDefinition* left,
+                                                      MDefinition* right);
 
     // binary data lookup helpers.
     TypedObjectPrediction typedObjectPrediction(MDefinition* typedObj);
@@ -622,8 +631,8 @@ class IonBuilder
     bool jsop_add(MDefinition* left, MDefinition* right);
     bool jsop_bitnot();
     bool jsop_bitop(JSOp op);
-    bool jsop_binary(JSOp op);
-    bool jsop_binary(JSOp op, MDefinition* left, MDefinition* right);
+    bool jsop_binary_arith(JSOp op);
+    bool jsop_binary_arith(JSOp op, MDefinition* left, MDefinition* right);
     bool jsop_pow();
     bool jsop_pos();
     bool jsop_neg();

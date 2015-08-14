@@ -28,8 +28,12 @@ BEGIN_TEST(testJitDCEinGVN_ins)
     block->add(p);
     MMul* mul0 = MMul::New(func.alloc, p, p, MIRType_Double);
     block->add(mul0);
+    if (!mul0->typePolicy()->adjustInputs(func.alloc, mul0))
+        return false;
     MMul* mul1 = MMul::New(func.alloc, mul0, mul0, MIRType_Double);
     block->add(mul1);
+    if (!mul1->typePolicy()->adjustInputs(func.alloc, mul1))
+        return false;
     MReturn* ret = MReturn::New(func.alloc, p);
     block->end(ret);
 

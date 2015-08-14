@@ -3429,7 +3429,7 @@ IonBuilder::prepareForSimdLoadStore(CallInfo& callInfo, Scalar::Type simdType, M
         MAdd* addedIndex = MAdd::New(alloc(), *index, suppSlots);
         // We're fine even with the add overflows, as long as the generated code
         // for the bounds check uses an unsigned comparison.
-        addedIndex->setInt32();
+        addedIndex->setInt32Specialization();
         current->add(addedIndex);
         indexForBoundsCheck = addedIndex;
     }

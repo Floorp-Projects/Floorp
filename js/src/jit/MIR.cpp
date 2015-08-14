@@ -113,6 +113,8 @@ EvaluateConstantOperands(TempAllocator& alloc, MBinaryInstruction* ins, bool* pt
     MDefinition* left = ins->getOperand(0);
     MDefinition* right = ins->getOperand(1);
 
+    MOZ_ASSERT(IsNumberType(left->type()) && IsNumberType(right->type()));
+
     if (!left->isConstantValue() || !right->isConstantValue())
         return nullptr;
 
@@ -2236,6 +2238,51 @@ NeedNegativeZeroCheck(MDefinition* def)
     return false;
 }
 
+MBinaryArithInstruction*
+MBinaryArithInstruction::New(TempAllocator& alloc, Opcode op,
+                             MDefinition* left, MDefinition* right)
+{
+    switch (op) {
+      case Op_Add:
+        return MAdd::New(alloc, left, right);
+      case Op_Sub:
+        return MSub::New(alloc, left, right);
+      case Op_Mul:
+        return MMul::New(alloc, left, right);
+      case Op_Div:
+        return MDiv::New(alloc, left, right);
+      case Op_Mod:
+        return MMod::New(alloc, left, right);
+      default:
+        MOZ_CRASH("unexpected binary opcode");
+    }
+}
+
+void
+MBinaryArithInstruction::setNumberSpecialization(TempAllocator& alloc, BaselineInspector* inspector,
+                                                 jsbytecode* pc)
+{
+    setSpecialization(MIRType_Double);
+
+    // Try to specialize as int32.
+    if (getOperand(0)->type() == MIRType_Int32 && getOperand(1)->type() == MIRType_Int32) {
+        bool seenDouble = inspector->hasSeenDoubleResult(pc);
+
+        // Use int32 specialization if the operation doesn't overflow on its
+        // constant operands and if the operation has never overflowed.
+        if (!seenDouble && !constantDoubleResult(alloc))
+            setInt32Specialization();
+    }
+}
+
+bool
+MBinaryArithInstruction::constantDoubleResult(TempAllocator& alloc)
+{
+    bool typeChange = false;
+    EvaluateConstantOperands(alloc, this, &typeChange);
+    return typeChange;
+}
+
 MDefinition*
 MBinaryArithInstruction::foldsTo(TempAllocator& alloc)
 {
@@ -2652,81 +2699,6 @@ SimpleArithOperand(MDefinition* op)
         && !op->mightBeType(MIRType_MagicOptimizedArguments)
         && !op->mightBeType(MIRType_MagicHole)
         && !op->mightBeType(MIRType_MagicIsConstructing);
-}
-
-void
-MBinaryArithInstruction::infer(TempAllocator& alloc, BaselineInspector* inspector, jsbytecode* pc)
-{
-    MOZ_ASSERT(this->type() == MIRType_Value);
-
-    specialization_ = MIRType_None;
-
-    // Anything complex - strings, symbols, and objects - are not specialized
-    // unless baseline type hints suggest it might be profitable
-    if (!SimpleArithOperand(getOperand(0)) || !SimpleArithOperand(getOperand(1)))
-        return inferFallback(inspector, pc);
-
-    // Retrieve type information of lhs and rhs.
-    MIRType lhs = getOperand(0)->type();
-    MIRType rhs = getOperand(1)->type();
-
-    // Guess a result type based on the inputs.
-    // Don't specialize for neither-integer-nor-double results.
-    if (lhs == MIRType_Int32 && rhs == MIRType_Int32) {
-        setResultType(MIRType_Int32);
-
-        // If the operation will always overflow on its constant operands, use a
-        // double specialization so that it can be constant folded later.
-        if (isMul() || isDiv()) {
-            bool typeChange = false;
-            EvaluateConstantOperands(alloc, this, &typeChange);
-            if (typeChange)
-                setResultType(MIRType_Double);
-        }
-
-        // If the operation has ever overflowed, use a double specialization.
-        if (inspector->hasSeenDoubleResult(pc))
-            setResultType(MIRType_Double);
-
-    } else if (IsFloatingPointType(lhs) || IsFloatingPointType(rhs)) {
-        // Double operations take precedence over float32 operations (i.e. if
-        // any operand needs a double as an input, convert all operands to
-        // doubles)
-        setResultType(MIRType_Double);
-    } else {
-        return inferFallback(inspector, pc);
-    }
-
-    MOZ_ASSERT(lhs < MIRType_String || lhs == MIRType_Value);
-    MOZ_ASSERT(rhs < MIRType_String || rhs == MIRType_Value);
-
-    if (isAdd() || isMul())
-        setCommutative();
-
-    MOZ_ASSERT(IsNumberType(this->type()));
-    specialization_ = this->type();
-}
-
-void
-MBinaryArithInstruction::inferFallback(BaselineInspector* inspector,
-                                       jsbytecode* pc)
-{
-    // Try to specialize based on what baseline observed in practice.
-    specialization_ = inspector->expectedBinaryArithSpecialization(pc);
-    if (specialization_ != MIRType_None) {
-        setResultType(specialization_);
-        return;
-    }
-
-    // If we can't specialize because we have no type information at all for
-    // the lhs or rhs, mark the binary instruction as having no possible types
-    // either to avoid degrading subsequent analysis.
-    if (getOperand(0)->emptyResultTypeSet() || getOperand(1)->emptyResultTypeSet()) {
-        LifoAlloc* alloc = GetJitContext()->temp->lifoAlloc();
-        TemporaryTypeSet* types = alloc->new_<TemporaryTypeSet>();
-        if (types)
-            setResultTypeSet(types);
-    }
 }
 
 static bool

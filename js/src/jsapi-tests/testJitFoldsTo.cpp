@@ -28,6 +28,9 @@ BEGIN_TEST(testJitFoldsTo_DivReciprocal)
     block->add(c);
     MDiv* div = MDiv::New(func.alloc, p, c, MIRType_Double);
     block->add(div);
+    if (!div->typePolicy()->adjustInputs(func.alloc, div))
+        return false;
+    MDefinition* left = div->getOperand(0);
     MReturn* ret = MReturn::New(func.alloc, div);
     block->end(ret);
 
@@ -37,7 +40,7 @@ BEGIN_TEST(testJitFoldsTo_DivReciprocal)
     // Test that the div got folded to p * 0.25.
     MDefinition* op = ret->getOperand(0);
     CHECK(op->isMul());
-    CHECK(op->getOperand(0) == p);
+    CHECK(op->getOperand(0) == left);
     CHECK(op->getOperand(1)->isConstant());
     CHECK(op->getOperand(1)->toConstant()->value().toNumber() == 0.25);
     return true;
@@ -56,6 +59,10 @@ BEGIN_TEST(testJitFoldsTo_NoDivReciprocal)
     block->add(c);
     MDiv* div = MDiv::New(func.alloc, p, c, MIRType_Double);
     block->add(div);
+    if (!div->typePolicy()->adjustInputs(func.alloc, div))
+        return false;
+    MDefinition* left = div->getOperand(0);
+    MDefinition* right = div->getOperand(1);
     MReturn* ret = MReturn::New(func.alloc, div);
     block->end(ret);
 
@@ -65,8 +72,8 @@ BEGIN_TEST(testJitFoldsTo_NoDivReciprocal)
     // Test that the div didn't get folded.
     MDefinition* op = ret->getOperand(0);
     CHECK(op->isDiv());
-    CHECK(op->getOperand(0) == p);
-    CHECK(op->getOperand(1) == c);
+    CHECK(op->getOperand(0) == left);
+    CHECK(op->getOperand(1) == right);
     return true;
 }
 END_TEST(testJitFoldsTo_NoDivReciprocal)
