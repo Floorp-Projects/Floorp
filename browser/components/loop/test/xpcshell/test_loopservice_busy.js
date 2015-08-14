@@ -115,9 +115,6 @@ function run_test() {
     // Revert fake login state
     MozLoopServiceInternal.fxAOAuthTokenData = null;
 
-    // clear test pref
-    Services.prefs.clearUserPref("loop.seenToS");
-
     LoopCallsInternal.mocks.webSocket = undefined;
   });
 

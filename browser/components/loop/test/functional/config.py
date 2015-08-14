@@ -13,7 +13,6 @@ FIREFOX_PREFERENCES = {
     "devtools.debugger.remote-enabled": True,
     "media.volume_scale": "0",
     "loop.gettingStarted.seen": True,
-    "loop.seenToS": "seen",
 
     # this dialog is fragile, and likely to introduce intermittent failures
     "media.navigator.permission.disabled": True,
