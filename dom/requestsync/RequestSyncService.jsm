@@ -7,7 +7,7 @@
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 function debug(s) {
-  //dump('DEBUG RequestSyncService: ' + s + '\n');
+  dump('DEBUG RequestSyncService: ' + s + '\n');
 }
 
 const RSYNCDB_VERSION = 1;
@@ -46,6 +46,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "systemMessenger",
 XPCOMUtils.defineLazyServiceGetter(this, "secMan",
                                    "@mozilla.org/scriptsecuritymanager;1",
                                    "nsIScriptSecurityManager");
+
+XPCOMUtils.defineLazyModuleGetter(this, "AlarmService",
+                                  "resource://gre/modules/AlarmService.jsm");
 
 this.RequestSyncService = {
   __proto__: IndexedDBHelper.prototype,
@@ -863,17 +866,16 @@ this.RequestSyncService = {
   },
 
   createTimer: function(aObj) {
-    this._timers[aObj.dbKey] = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-
     let interval = aObj.data.minInterval;
     if (aObj.data.overwrittenMinInterval > 0) {
       interval = aObj.data.overwrittenMinInterval;
     }
 
-    let self = this;
-    this._timers[aObj.dbKey].initWithCallback(function() { self.timeout(aObj); },
-                                              interval * 1000,
-                                              Ci.nsITimer.TYPE_ONE_SHOT);
+    AlarmService.add(
+      { date: new Date(Date.now() + interval * 1000),
+        ignoreTimezone: false },
+      () => this.timeout(aObj),
+      aTimerId => this._timers[aObj.dbKey] = aTimerId);
   },
 
   hasTimer: function(aObj) {
@@ -882,7 +884,7 @@ this.RequestSyncService = {
 
   removeTimer: function(aObj) {
     if (aObj.dbKey in this._timers) {
-      this._timers[aObj.dbKey].cancel();
+      AlarmService.remove(this._timers[aObj.dbKey]);
       delete this._timers[aObj.dbKey];
     }
   },
