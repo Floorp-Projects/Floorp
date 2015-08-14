@@ -413,10 +413,6 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         except OSError, err:
             self.warning("Failed to take screenshot: %s" % err.strerror)
 
-    @PostScriptRun
-    def _post_script(self):
-        self._kill_processes(self.config["emulator_process_name"])
-
     def _query_package_name(self):
         if self.app_name is None:
             #find appname from package-name.txt - assumes download-and-extract has completed successfully
@@ -696,6 +692,15 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         '''
         self._verify_emulator()
         self._kill_processes(self.config["emulator_process_name"])
+
+    def upload_blobber_files(self):
+        '''
+        Override BlobUploadMixin.upload_blobber_files to ensure emulator is killed
+        first (if the emulator is still running, logcat may still be running, which
+        may lock the blob upload directory, causing a hang).
+        '''
+        self._kill_processes(self.config["emulator_process_name"])
+        super(AndroidEmulatorTest, self).upload_blobber_files()
 
 if __name__ == '__main__':
     emulatorTest = AndroidEmulatorTest()
