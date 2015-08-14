@@ -857,6 +857,11 @@ nsGIFDecoder2::WriteInternal(const char* aBuffer, uint32_t aCount)
       }
 
       mGIFStruct.delay_time = GETINT16(q + 1) * 10;
+
+      if (mGIFStruct.delay_time > 0) {
+        PostIsAnimated(mGIFStruct.delay_time);
+      }
+
       GETN(1, gif_consume_block);
       break;
 
@@ -921,11 +926,20 @@ nsGIFDecoder2::WriteInternal(const char* aBuffer, uint32_t aCount)
       break;
 
     case gif_image_header: {
-      if (mGIFStruct.images_decoded > 0 && IsFirstFrameDecode()) {
-        // We're about to get a second frame, but we only want the first. Stop
-        // decoding now.
-        mGIFStruct.state = gif_done;
-        break;
+      if (mGIFStruct.images_decoded == 1) {
+        if (!HasAnimation()) {
+          // We should've already called PostIsAnimated(); this must be a
+          // corrupt animated image with a first frame timeout of zero. Signal
+          // that we're animated now, before the first-frame decode early exit
+          // below, so that RasterImage can detect that this happened.
+          PostIsAnimated(/* aFirstFrameTimeout = */ 0);
+        }
+        if (IsFirstFrameDecode()) {
+          // We're about to get a second frame, but we only want the first. Stop
+          // decoding now.
+          mGIFStruct.state = gif_done;
+          break;
+        }
       }
 
       // Get image offsets, with respect to the screen origin

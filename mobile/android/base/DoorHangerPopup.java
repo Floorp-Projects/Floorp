@@ -7,6 +7,7 @@ package org.mozilla.gecko;
 
 import java.util.HashSet;
 
+import android.text.TextUtils;
 import android.widget.PopupWindow;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -308,7 +309,13 @@ public class DoorHangerPopup extends AnchoredPopup
             return;
         }
 
-        firstDoorhanger.showTitle(tab.getFavicon(), tab.getBaseDomain());
+        final String baseDomain = tab.getBaseDomain();
+
+        if (TextUtils.isEmpty(baseDomain)) {
+            firstDoorhanger.hideTitle();
+        } else {
+            firstDoorhanger.showTitle(tab.getFavicon(), baseDomain);
+        }
 
         // Make the popup focusable for accessibility. This gets done here
         // so the node can be accessibility focused, but on pre-ICS devices this

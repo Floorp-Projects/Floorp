@@ -48,7 +48,7 @@ public class CodeGenerator {
                 "            \"" + cls.getName().replace('.', '/') + "\";\n" +
                 "\n" +
                 "protected:\n" +
-                "    using Class::Class;\n" +
+                "    " + unqualifiedName + "(jobject instance) : Class(instance) {}\n" +
                 "\n");
 
         cpp.append(

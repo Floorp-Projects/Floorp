@@ -132,6 +132,7 @@ namespace image {
 
 class Decoder;
 class FrameAnimator;
+class ImageMetadata;
 class SourceBuffer;
 
 /**
@@ -188,18 +189,6 @@ public:
 
   void OnAddedFrame(uint32_t aNewFrameCount, const nsIntRect& aNewRefreshArea);
 
-  /** Sets the size and inherent orientation of the container. This should only
-   * be called by the decoder. This function may be called multiple times, but
-   * will throw an error if subsequent calls do not match the first.
-   */
-  nsresult SetSize(int32_t aWidth, int32_t aHeight, Orientation aOrientation);
-
-  /**
-   * Number of times to loop the image.
-   * @note -1 means forever.
-   */
-  void     SetLoopCount(int32_t aLoopCount);
-
   /**
    * Sends the provided progress notifications to ProgressTracker.
    *
@@ -222,8 +211,7 @@ public:
    */
   void FinalizeDecoder(Decoder* aDecoder);
 
-  // Helper methods for FinalizeDecoder.
-  void MarkAnimationDecoded();
+  // Helper method for FinalizeDecoder.
   void ReportDecoderError(Decoder* aDecoder);
 
 
@@ -338,6 +326,19 @@ private:
    * asynchronously according to @aFlags.
    */
   NS_IMETHOD DecodeMetadata(uint32_t aFlags);
+
+  /**
+   * Sets the size, inherent orientation, animation metadata, and other
+   * information about the image gathered during decoding.
+   *
+   * This function may be called multiple times, but will throw an error if
+   * subsequent calls do not match the first.
+   *
+   * @param aMetadata The metadata to set on this image.
+   * @param aFromMetadataDecode True if this metadata came from a metadata
+   *                            decode; false if it came from a full decode.
+   */
+  nsresult SetMetadata(const ImageMetadata& aMetadata, bool aFromMetadataDecode);
 
   /**
    * In catastrophic circumstances like a GPU driver crash, we may lose our

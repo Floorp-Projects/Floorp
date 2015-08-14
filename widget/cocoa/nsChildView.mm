@@ -2798,6 +2798,7 @@ RectTextureImage::Draw(GLManager* aManager,
   ShaderProgramOGL* program = aManager->GetProgram(LOCAL_GL_TEXTURE_RECTANGLE_ARB,
                                                    gfx::SurfaceFormat::R8G8B8A8);
 
+  aManager->gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
   aManager->gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, mTexture);
 
   aManager->ActivateProgram(program);
