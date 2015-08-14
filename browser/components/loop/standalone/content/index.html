@@ -51,7 +51,12 @@
           insertScript("//www.google-analytics.com/analytics.js");
 
           window.ga("create", "UA-36116321-15", "auto");
-          window.ga("set", "anonymizeIp", true);
+          /* Don't send conversation ids to GA, by specifying our own location. */
+          window.ga("set", {
+            "location": document.location.origin + "/conversation/",
+            "anonymizeIp": true,
+            "title": "Link Clicker"
+          });
           window.ga("send", "pageview");
         }
       })();
