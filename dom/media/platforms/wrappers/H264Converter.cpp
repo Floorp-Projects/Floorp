@@ -46,8 +46,9 @@ H264Converter::Init()
     return mDecoder->Init();
   }
 
-  return MediaDataDecoder::InitPromise::CreateAndReject(
-           MediaDataDecoder::DecoderFailureReason::INIT_ERROR, __func__);
+  // We haven't been able to initialize a decoder due to a missing SPS/PPS.
+  return MediaDataDecoder::InitPromise::CreateAndResolve(
+           TrackType::kVideoTrack, __func__);
 }
 
 nsresult
