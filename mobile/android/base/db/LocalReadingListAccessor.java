@@ -190,6 +190,14 @@ public class LocalReadingListAccessor implements ReadingListAccessor {
     }
 
     @Override
+    public void markAsUnread(ContentResolver cr, long itemID) {
+        final ContentValues values = new ContentValues();
+        values.put(ReadingListItems.IS_UNREAD, 1);
+
+        cr.update(mReadingListUriWithProfile, values, ReadingListItems._ID + " = " + itemID, null);
+    }
+
+    @Override
     public void updateContent(ContentResolver cr, long itemID, String resolvedTitle, String resolvedURL, String excerpt) {
         final ContentValues values = new ContentValues();
         values.put(ReadingListItems.CONTENT_STATUS, ReadingListItems.STATUS_FETCHED_ARTICLE);

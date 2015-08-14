@@ -415,7 +415,7 @@ public class BrowserContract {
 
 
         public static final String DEFAULT_SORT_ORDER = CLIENT_LAST_MODIFIED + " DESC";
-        public static final String[] DEFAULT_PROJECTION = new String[] { _ID, URL, TITLE, EXCERPT, WORD_COUNT };
+        public static final String[] DEFAULT_PROJECTION = new String[] { _ID, URL, TITLE, EXCERPT, WORD_COUNT, IS_UNREAD };
 
         // Minimum fields required to create a reading list item.
         public static final String[] REQUIRED_FIELDS = { ReadingListItems.URL, ReadingListItems.TITLE };
