@@ -26,6 +26,10 @@ if CONFIG['MOZ_ASAN']:
 
 if CONFIG['OS_TARGET'] == 'WINNT':
     DEFFILE = 'mozglue.def'
+    # We'll break the DLL blocklist if we immediately load user32.dll
+    DELAYLOAD_DLLS += [
+        'user32.dll',
+    ]
 
 if not CONFIG['JS_STANDALONE']:
 
