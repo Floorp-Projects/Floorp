@@ -91,4 +91,10 @@ function* testEditProperty(ruleEditor, name, value, isValid) {
   } else {
     isnot(propValue, value, name + " shouldn't have been set.");
   }
+
+  info("Wait for remaining modifications to be applied");
+  yield ruleEditor.rule._applyingModifications;
+
+  is(ruleEditor.rule._applyingModifications, null,
+    "Reference to rule modification promise was removed after completion");
 }
