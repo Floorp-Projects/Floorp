@@ -7,7 +7,7 @@
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 function debug(s) {
-  dump('DEBUG RequestSyncService: ' + s + '\n');
+  //dump('DEBUG RequestSyncService: ' + s + '\n');
 }
 
 const RSYNCDB_VERSION = 1;
