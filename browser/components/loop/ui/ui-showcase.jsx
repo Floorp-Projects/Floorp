@@ -441,6 +441,18 @@
   });
 
   // Local mocks
+  var mockMozLoopNoRooms = _.cloneDeep(navigator.mozLoop);
+  mockMozLoopNoRooms.rooms.getAll = function(version, callback) {
+    callback(null, []);
+  };
+
+  var roomStoreNoRooms = new loop.store.RoomStore(new loop.Dispatcher(), {
+    mozLoop: mockMozLoopNoRooms,
+    activeRoomStore: new loop.store.ActiveRoomStore(new loop.Dispatcher(), {
+      mozLoop: mockMozLoopNoRooms,
+      sdkDriver: mockSDK
+    })
+  });
 
   var mockMozLoopLoggedIn = _.cloneDeep(navigator.mozLoop);
   mockMozLoopLoggedIn.userProfile = {
@@ -708,6 +720,21 @@
                            mozLoop={mockMozLoopLoggedIn}
                            notifications={notifications}
                            roomStore={roomStore}
+                           selectedTab="rooms" />
+              </div>
+            </FramedExample>
+
+            <FramedExample cssClass="fx-embedded-panel"
+                           dashed={true}
+                           height={410}
+                           summary="Room list tab (no rooms)"
+                           width={332}>
+              <div className="panel">
+                <PanelView client={mockClient}
+                           dispatcher={dispatcher}
+                           mozLoop={mockMozLoopNoRooms}
+                           notifications={notifications}
+                           roomStore={roomStoreNoRooms}
                            selectedTab="rooms" />
               </div>
             </FramedExample>
