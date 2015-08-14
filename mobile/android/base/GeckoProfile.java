@@ -909,6 +909,9 @@ public final class GeckoProfile {
                     if (!profileDir.exists()) {
                         return;
                     }
+                    if (RestrictedProfiles.isUserRestricted(context)) {
+                        return;
+                    }
 
                     // We pass the number of added bookmarks to ensure that the
                     // indices of the distribution and default bookmarks are
