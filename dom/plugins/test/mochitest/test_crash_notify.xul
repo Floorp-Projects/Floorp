@@ -88,16 +88,10 @@ function onPluginCrashed(aEvent) {
 }
 
 function runTests() {
-  if (!SimpleTest.testPluginIsOOP()) {
-    ok(true, "Skipping this test when test plugin is not OOP.");
-    SimpleTest.finish();
-    return;
-  }
-
   var os = Components.classes["@mozilla.org/observer-service;1"].
            getService(Components.interfaces.nsIObserverService);
   os.addObserver(testObserver, "plugin-crashed", true);
-  
+
   document.addEventListener("PluginCrashed", onPluginCrashed, false);
 
   var pluginElement = document.getElementById("plugin1");
