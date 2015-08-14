@@ -525,6 +525,14 @@ nsGenericHTMLElement::IntrinsicState() const
   return state;
 }
 
+uint32_t
+nsGenericHTMLElement::EditableInclusiveDescendantCount()
+{
+  bool isEditable = IsInUncomposedDoc() && HasFlag(NODE_IS_EDITABLE) &&
+    GetContentEditableValue() == eTrue;
+  return EditableDescendantCount() + isEditable;
+}
+
 nsresult
 nsGenericHTMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                  nsIContent* aBindingParent,
@@ -548,6 +556,7 @@ nsGenericHTMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
       aDocument->
         AddToNameTable(this, GetParsedAttr(nsGkAtoms::name)->GetAtomValue());
     }
+
     if (HasFlag(NODE_IS_EDITABLE) && GetContentEditableValue() == eTrue) {
       nsCOMPtr<nsIHTMLDocument> htmlDocument = do_QueryInterface(aDocument);
       if (htmlDocument) {
@@ -2916,6 +2925,12 @@ nsGenericHTMLElement::ChangeEditableState(int32_t aChange)
       do_QueryInterface(document);
     if (htmlDocument) {
       htmlDocument->ChangeContentEditableCount(this, aChange);
+    }
+
+    nsIContent* parent = GetParent();
+    while (parent) {
+      parent->ChangeEditableDescendantCount(aChange);
+      parent = parent->GetParent();
     }
   }
 

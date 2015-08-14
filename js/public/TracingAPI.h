@@ -27,9 +27,21 @@ GCTraceKindToAscii(JS::TraceKind kind);
 } // namespace JS
 
 enum WeakMapTraceKind {
-    DoNotTraceWeakMaps = 0,
-    TraceWeakMapValues = 1,
-    TraceWeakMapKeysValues = 2
+    // Do true ephemeron marking with an iterative weak marking phase.
+    DoNotTraceWeakMaps,
+
+    // Do true ephemeron marking with a weak key lookup marking phase. This is
+    // expected to be constant for the lifetime of a JSTracer; it does not
+    // change when switching from "plain" marking to weak marking.
+    ExpandWeakMaps,
+
+    // Trace through to all values, irrespective of whether the keys are live
+    // or not. Used for non-marking tracers.
+    TraceWeakMapValues,
+
+    // Trace through to all keys and values, irrespective of whether the keys
+    // are live or not. Used for non-marking tracers.
+    TraceWeakMapKeysValues
 };
 
 class JS_PUBLIC_API(JSTracer)
@@ -38,16 +50,18 @@ class JS_PUBLIC_API(JSTracer)
     // Return the runtime set on the tracer.
     JSRuntime* runtime() const { return runtime_; }
 
-    // Return the weak map tracing behavior set on this tracer.
-    WeakMapTraceKind eagerlyTraceWeakMaps() const { return eagerlyTraceWeakMaps_; }
+    // Return the weak map tracing behavior currently set on this tracer.
+    WeakMapTraceKind weakMapAction() const { return weakMapAction_; }
 
     // An intermediate state on the road from C to C++ style dispatch.
     enum class TracerKindTag {
         Marking,
+        WeakMarking, // In weak marking phase: looking up every marked obj/script.
         Tenuring,
         Callback
     };
-    bool isMarkingTracer() const { return tag_ == TracerKindTag::Marking; }
+    bool isMarkingTracer() const { return tag_ == TracerKindTag::Marking || tag_ == TracerKindTag::WeakMarking; }
+    bool isWeakMarkingTracer() const { return tag_ == TracerKindTag::WeakMarking; }
     bool isTenuringTracer() const { return tag_ == TracerKindTag::Tenuring; }
     bool isCallbackTracer() const { return tag_ == TracerKindTag::Callback; }
     inline JS::CallbackTracer* asCallbackTracer();
@@ -55,13 +69,15 @@ class JS_PUBLIC_API(JSTracer)
   protected:
     JSTracer(JSRuntime* rt, TracerKindTag tag,
              WeakMapTraceKind weakTraceKind = TraceWeakMapValues)
-      : runtime_(rt), tag_(tag), eagerlyTraceWeakMaps_(weakTraceKind)
+      : runtime_(rt), weakMapAction_(weakTraceKind), tag_(tag)
     {}
 
   private:
     JSRuntime*          runtime_;
+    WeakMapTraceKind    weakMapAction_;
+
+  protected:
     TracerKindTag       tag_;
-    WeakMapTraceKind    eagerlyTraceWeakMaps_;
 };
 
 namespace JS {

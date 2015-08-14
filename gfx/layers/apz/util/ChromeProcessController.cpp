@@ -11,6 +11,8 @@
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/APZEventState.h"
+#include "mozilla/layers/APZCTreeManager.h"
+#include "mozilla/layers/DoubleTapToZoom.h"
 #include "nsIDocument.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPresShell.h"
@@ -22,18 +24,24 @@ using namespace mozilla::layers;
 using namespace mozilla::widget;
 
 ChromeProcessController::ChromeProcessController(nsIWidget* aWidget,
-                                                 APZEventState* aAPZEventState)
+                                                 APZEventState* aAPZEventState,
+                                                 APZCTreeManager* aAPZCTreeManager)
   : mWidget(aWidget)
   , mAPZEventState(aAPZEventState)
+  , mAPZCTreeManager(aAPZCTreeManager)
   , mUILoop(MessageLoop::current())
 {
   // Otherwise we're initializing mUILoop incorrectly.
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aAPZEventState);
+  MOZ_ASSERT(aAPZCTreeManager);
 
   mUILoop->PostTask(
       FROM_HERE,
       NewRunnableMethod(this, &ChromeProcessController::InitializeRoot));
 }
+
+ChromeProcessController::~ChromeProcessController() {}
 
 void
 ChromeProcessController::InitializeRoot()
@@ -98,7 +106,7 @@ ChromeProcessController::GetPresShell() const
 }
 
 nsIDocument*
-ChromeProcessController::GetDocument() const
+ChromeProcessController::GetRootDocument() const
 {
   if (nsIPresShell* presShell = GetPresShell()) {
     return presShell->GetDocument();
@@ -106,14 +114,48 @@ ChromeProcessController::GetDocument() const
   return nullptr;
 }
 
-already_AddRefed<nsIDOMWindowUtils>
-ChromeProcessController::GetDOMWindowUtils() const
+nsIDocument*
+ChromeProcessController::GetRootContentDocument(const FrameMetrics::ViewID& aScrollId) const
 {
-  if (nsIDocument* doc = GetDocument()) {
-    nsCOMPtr<nsIDOMWindowUtils> result = do_GetInterface(doc->GetWindow());
-    return result.forget();
+  nsIContent* content = nsLayoutUtils::FindContentFor(aScrollId);
+  if (!content) {
+    return nullptr;
+  }
+  nsIPresShell* presShell = APZCCallbackHelper::GetRootContentDocumentPresShellForContent(content);
+  if (presShell) {
+    return presShell->GetDocument();
   }
   return nullptr;
+}
+
+void
+ChromeProcessController::HandleDoubleTap(const mozilla::CSSPoint& aPoint,
+                                         Modifiers aModifiers,
+                                         const ScrollableLayerGuid& aGuid)
+{
+  if (MessageLoop::current() != mUILoop) {
+    mUILoop->PostTask(
+        FROM_HERE,
+        NewRunnableMethod(this, &ChromeProcessController::HandleDoubleTap,
+                          aPoint, aModifiers, aGuid));
+    return;
+  }
+
+  nsCOMPtr<nsIDocument> document = GetRootContentDocument(aGuid.mScrollId);
+  if (!document.get()) {
+    return;
+  }
+
+  CSSPoint point = APZCCallbackHelper::ApplyCallbackTransform(aPoint, aGuid);
+  CSSRect zoomToRect = CalculateRectToZoomTo(document, point);
+
+  uint32_t presShellId;
+  FrameMetrics::ViewID viewId;
+  if (APZCCallbackHelper::GetOrCreateScrollIdentifiers(
+      document->GetDocumentElement(), &presShellId, &viewId)) {
+    mAPZCTreeManager->ZoomToRect(
+      ScrollableLayerGuid(aGuid.mLayersId, presShellId, viewId), zoomToRect);
+  }
 }
 
 void
@@ -162,7 +204,7 @@ ChromeProcessController::NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
     return;
   }
 
-  mAPZEventState->ProcessAPZStateChange(GetDocument(), aGuid.mScrollId, aChange, aArg);
+  mAPZEventState->ProcessAPZStateChange(GetRootDocument(), aGuid.mScrollId, aChange, aArg);
 }
 
 void

@@ -9007,7 +9007,7 @@ nsDocument::UnblockOnload(bool aFireSync)
       // done loading, in a way comparable to |window.onload|. We fire this
       // event to indicate that the SVG should be considered fully loaded.
       // Because scripting is disabled on SVG-as-image documents, this event
-      // is not accessible to content authors. (See bug 837135.)
+      // is not accessible to content authors. (See bug 837315.)
       nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
         new AsyncEventDispatcher(this,
                                  NS_LITERAL_STRING("MozSVGAsImageDocumentLoad"),

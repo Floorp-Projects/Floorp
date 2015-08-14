@@ -40,6 +40,11 @@
 #include <dlfcn.h>
 #endif
 
+#ifdef MOZ_DMD
+#include "base/process_util.h"
+#include "nsMemoryInfoDumper.h"
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #define NS_IMPL_REFCNT_LOGGING
@@ -945,6 +950,39 @@ NS_LogTerm()
   mozilla::LogTerm();
 }
 
+#ifdef MOZ_DMD
+// If MOZ_DMD_SHUTDOWN_LOG is set, dump a DMD report to a file.
+// The value of this environment variable is used as the prefix
+// of the file name, so you probably want something like "/tmp/".
+// By default, this is run in all processes, but you can record a
+// log only for a specific process type by setting MOZ_DMD_LOG_PROCESS
+// to the process type you want to log, such as "default" or "tab".
+// This method can't use the higher level XPCOM file utilities
+// because it is run very late in shutdown to avoid recording
+// information about refcount logging entries.
+static void
+LogDMDFile()
+{
+  const char* dmdFilePrefix = PR_GetEnv("MOZ_DMD_SHUTDOWN_LOG");
+  if (!dmdFilePrefix) {
+    return;
+  }
+
+  const char* logProcessEnv = PR_GetEnv("MOZ_DMD_LOG_PROCESS");
+  if (logProcessEnv && !!strcmp(logProcessEnv, XRE_ChildProcessTypeToString(XRE_GetProcessType()))) {
+    return;
+  }
+
+  nsPrintfCString fileName("%sdmd-%d.log.gz", dmdFilePrefix, base::GetCurrentProcId());
+  FILE* logFile = fopen(fileName.get(), "w");
+  if (NS_WARN_IF(!logFile)) {
+    return;
+  }
+
+  nsMemoryInfoDumper::DumpDMDToFile(logFile);
+}
+#endif
+
 namespace mozilla {
 void
 LogTerm()
@@ -977,6 +1015,10 @@ LogTerm()
 #ifdef NS_IMPL_REFCNT_LOGGING
     nsTraceRefcnt::SetActivityIsLegal(false);
     gActivityTLS = BAD_TLS_INDEX;
+#endif
+
+#ifdef MOZ_DMD
+    LogDMDFile();
 #endif
   }
 }

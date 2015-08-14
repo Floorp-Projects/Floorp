@@ -50,22 +50,26 @@ WeakMapBase::trace(JSTracer* tracer)
 {
     MOZ_ASSERT(isInList());
     if (tracer->isMarkingTracer()) {
-        // We don't trace any of the WeakMap entries at this time, just record
-        // record the fact that the WeakMap has been marked. Entries are marked
-        // in the iterative marking phase by markAllIteratively(), which happens
-        // when as many keys as possible have been marked already.
-        MOZ_ASSERT(tracer->eagerlyTraceWeakMaps() == DoNotTraceWeakMaps);
         marked = true;
+        if (tracer->weakMapAction() == DoNotTraceWeakMaps) {
+            // Do not trace any WeakMap entries at this time. Just record the
+            // fact that the WeakMap has been marked. Entries are marked in the
+            // iterative marking phase by markAllIteratively(), after as many
+            // keys as possible have been marked already.
+        } else {
+            MOZ_ASSERT(tracer->weakMapAction() == ExpandWeakMaps);
+            markEphemeronEntries(tracer);
+        }
     } else {
         // If we're not actually doing garbage collection, the keys won't be marked
         // nicely as needed by the true ephemeral marking algorithm --- custom tracers
         // such as the cycle collector must use their own means for cycle detection.
         // So here we do a conservative approximation: pretend all keys are live.
-        if (tracer->eagerlyTraceWeakMaps() == DoNotTraceWeakMaps)
+        if (tracer->weakMapAction() == DoNotTraceWeakMaps)
             return;
 
         nonMarkingTraceValues(tracer);
-        if (tracer->eagerlyTraceWeakMaps() == TraceWeakMapKeysValues)
+        if (tracer->weakMapAction() == TraceWeakMapKeysValues)
             nonMarkingTraceKeys(tracer);
     }
 }
@@ -80,7 +84,7 @@ WeakMapBase::unmarkCompartment(JSCompartment* c)
 void
 WeakMapBase::markAll(JSCompartment* c, JSTracer* tracer)
 {
-    MOZ_ASSERT(tracer->eagerlyTraceWeakMaps() != DoNotTraceWeakMaps);
+    MOZ_ASSERT(tracer->weakMapAction() != DoNotTraceWeakMaps);
     for (WeakMapBase* m = c->gcWeakMapList; m; m = m->next) {
         m->trace(tracer);
         if (m->memberOf)
@@ -158,7 +162,7 @@ WeakMapBase::saveCompartmentMarkedWeakMaps(JSCompartment* c, WeakMapSet& markedW
 }
 
 void
-WeakMapBase::restoreCompartmentMarkedWeakMaps(WeakMapSet& markedWeakMaps)
+WeakMapBase::restoreMarkedWeakMaps(WeakMapSet& markedWeakMaps)
 {
     for (WeakMapSet::Range r = markedWeakMaps.all(); !r.empty(); r.popFront()) {
         WeakMapBase* map = r.front();
@@ -186,7 +190,7 @@ ObjectValueMap::findZoneEdges()
 {
     /*
      * For unmarked weakmap keys with delegates in a different zone, add a zone
-     * edge to ensure that the delegate zone does finish marking after the key
+     * edge to ensure that the delegate zone finishes marking before the key
      * zone.
      */
     JS::AutoSuppressGCAnalysis nogc;

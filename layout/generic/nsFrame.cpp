@@ -2719,23 +2719,35 @@ nsFrame::IsSelectable(bool* aSelectable, uint8_t* aSelectStyle) const
   // are present in the frame hierarchy, aSelectStyle returns the style of the
   // topmost parent that has either 'none' or '-moz-all'.
   //
+  // The -moz-text value acts as a way to override an ancestor's all/-moz-all value.
+  //
   // For instance, if the frame hierarchy is:
-  //    AUTO     -> _MOZ_ALL -> NONE -> TEXT,     the returned value is _MOZ_ALL
-  //    TEXT     -> NONE     -> AUTO -> _MOZ_ALL, the returned value is TEXT
-  //    _MOZ_ALL -> TEXT     -> AUTO -> AUTO,     the returned value is _MOZ_ALL
-  //    AUTO     -> CELL     -> TEXT -> AUTO,     the returned value is TEXT
+  //    AUTO     -> _MOZ_ALL  -> NONE -> TEXT,      the returned value is ALL
+  //    AUTO     -> _MOZ_ALL  -> NONE -> _MOZ_TEXT, the returned value is TEXT.
+  //    TEXT     -> NONE      -> AUTO -> _MOZ_ALL,  the returned value is TEXT
+  //    _MOZ_ALL -> TEXT      -> AUTO -> AUTO,      the returned value is ALL
+  //    _MOZ_ALL -> _MOZ_TEXT -> AUTO -> AUTO,      the returned value is TEXT.
+  //    AUTO     -> CELL      -> TEXT -> AUTO,      the returned value is TEXT
   //
   uint8_t selectStyle  = NS_STYLE_USER_SELECT_AUTO;
   nsIFrame* frame      = const_cast<nsFrame*>(this);
+  bool containsEditable = false;
 
   while (frame) {
     const nsStyleUIReset* userinterface = frame->StyleUIReset();
     switch (userinterface->mUserSelect) {
       case NS_STYLE_USER_SELECT_ALL:
       case NS_STYLE_USER_SELECT_MOZ_ALL:
+      {
         // override the previous values
-        selectStyle = userinterface->mUserSelect;
+        if (selectStyle != NS_STYLE_USER_SELECT_MOZ_TEXT) {
+          selectStyle = userinterface->mUserSelect;
+        }
+        nsIContent* frameContent = frame->GetContent();
+        containsEditable = frameContent &&
+          frameContent->EditableDescendantCount() > 0;
         break;
+      }
       default:
         // otherwise return the first value which is not 'auto'
         if (selectStyle == NS_STYLE_USER_SELECT_AUTO) {
@@ -2747,11 +2759,19 @@ nsFrame::IsSelectable(bool* aSelectable, uint8_t* aSelectStyle) const
   }
 
   // convert internal values to standard values
-  if (selectStyle == NS_STYLE_USER_SELECT_AUTO)
+  if (selectStyle == NS_STYLE_USER_SELECT_AUTO ||
+      selectStyle == NS_STYLE_USER_SELECT_MOZ_TEXT)
     selectStyle = NS_STYLE_USER_SELECT_TEXT;
   else
   if (selectStyle == NS_STYLE_USER_SELECT_MOZ_ALL)
     selectStyle = NS_STYLE_USER_SELECT_ALL;
+
+  // If user tries to select all of a non-editable content,
+  // prevent selection if it contains editable content.
+  bool allowSelection = true;
+  if (selectStyle == NS_STYLE_USER_SELECT_ALL) {
+    allowSelection = !containsEditable;
+  }
 
   // return stuff
   if (aSelectStyle)
@@ -2759,7 +2779,8 @@ nsFrame::IsSelectable(bool* aSelectable, uint8_t* aSelectStyle) const
   if (mState & NS_FRAME_GENERATED_CONTENT)
     *aSelectable = false;
   else
-    *aSelectable = (selectStyle != NS_STYLE_USER_SELECT_NONE);
+    *aSelectable = allowSelection &&
+      (selectStyle != NS_STYLE_USER_SELECT_NONE);
   return NS_OK;
 }
 
@@ -3764,7 +3785,13 @@ static nsIFrame* AdjustFrameForSelectionStyles(nsIFrame* aFrame) {
   {
     // These are the conditions that make all children not able to handle
     // a cursor.
-    if (frame->StyleUIReset()->mUserSelect == NS_STYLE_USER_SELECT_ALL ||
+    uint8_t userSelect = frame->StyleUIReset()->mUserSelect;
+    if (userSelect == NS_STYLE_USER_SELECT_MOZ_TEXT) {
+      // If we see a -moz-text element, we shouldn't look further up the parent
+      // chain!
+      break;
+    }
+    if (userSelect == NS_STYLE_USER_SELECT_ALL ||
         frame->IsGeneratedContentFrame()) {
       adjustedFrame = frame;
     }
