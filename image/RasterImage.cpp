@@ -24,6 +24,7 @@
 #include "nsIConsoleService.h"
 #include "nsIInputStream.h"
 #include "nsIScriptError.h"
+#include "nsISupportsPrimitives.h"
 #include "nsPresContext.h"
 #include "SourceBuffer.h"
 #include "SurfaceCache.h"
@@ -478,7 +479,7 @@ RasterImage::LookupFrame(uint32_t aFrameNum,
     // We don't have a copy of this frame, and there's no decoder working on
     // one. (Or we're sync decoding and the existing decoder hasn't even started
     // yet.) Trigger decoding so it'll be available next time.
-    MOZ_ASSERT(!mAnim, "Animated frames should be locked");
+    MOZ_ASSERT(!mAnim || GetNumFrames() < 1, "Animated frames should be locked");
 
     Decode(requestedSize, aFlags);
 
@@ -529,7 +530,7 @@ RasterImage::GetRequestedFrameIndex(uint32_t aWhichFrame) const
 IntRect
 RasterImage::GetFirstFrameRect()
 {
-  if (mAnim) {
+  if (mAnim && mHasBeenDecoded) {
     return mAnim->GetFirstFrameRefreshArea();
   }
 
@@ -582,7 +583,10 @@ RasterImage::GetAnimated(bool* aAnimated)
   }
 
   // Otherwise, we need to have been decoded to know for sure, since if we were
-  // decoded at least once mAnim would have been created for animated images
+  // decoded at least once mAnim would have been created for animated images.
+  // This is true even though we check for animation during the metadata decode,
+  // because we may still discover animation only during the full decode for
+  // corrupt images.
   if (!mHasBeenDecoded) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -921,21 +925,9 @@ RasterImage::OnAddedFrame(uint32_t aNewFrameCount,
     mFrameCount = aNewFrameCount;
 
     if (aNewFrameCount == 2) {
-      // We're becoming animated, so initialize animation stuff.
-      MOZ_ASSERT(!mAnim, "Already have animation state?");
-      mAnim = MakeUnique<FrameAnimator>(this, mSize, mAnimationMode);
+      MOZ_ASSERT(mAnim, "Should already have animation state");
 
-      // We don't support discarding animated images (See bug 414259).
-      // Lock the image and throw away the key.
-      //
-      // Note that this is inefficient, since we could get rid of the source
-      // data too. However, doing this is actually hard, because we're probably
-      // mid-decode, and thus we're decoding out of the source buffer. Since
-      // we're going to fix this anyway later, and since we didn't kill the
-      // source data in the old world either, locking is acceptable for the
-      // moment.
-      LockImage();
-
+      // We may be able to start animating.
       if (mPendingAnimation && ShouldAnimate()) {
         StartAnimation();
       }
@@ -947,7 +939,8 @@ RasterImage::OnAddedFrame(uint32_t aNewFrameCount,
 }
 
 nsresult
-RasterImage::SetSize(int32_t aWidth, int32_t aHeight, Orientation aOrientation)
+RasterImage::SetMetadata(const ImageMetadata& aMetadata,
+                         bool aFromMetadataDecode)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -955,26 +948,64 @@ RasterImage::SetSize(int32_t aWidth, int32_t aHeight, Orientation aOrientation)
     return NS_ERROR_FAILURE;
   }
 
-  // Ensure that we have positive values
-  // XXX - Why isn't the size unsigned? Should this be changed?
-  if ((aWidth < 0) || (aHeight < 0)) {
-    return NS_ERROR_INVALID_ARG;
+  if (aMetadata.HasSize()) {
+    IntSize size = aMetadata.GetSize();
+    if (size.width < 0 || size.height < 0) {
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    MOZ_ASSERT(aMetadata.HasOrientation());
+    Orientation orientation = aMetadata.GetOrientation();
+
+    // If we already have a size, check the new size against the old one.
+    if (mHasSize && (size != mSize || orientation != mOrientation)) {
+      NS_WARNING("Image changed size or orientation on redecode! "
+                 "This should not happen!");
+      DoError();
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    // Set the size and flag that we have it.
+    mSize = size;
+    mOrientation = orientation;
+    mHasSize = true;
   }
 
-  // if we already have a size, check the new size against the old one
-  if (mHasSize &&
-      ((aWidth != mSize.width) ||
-       (aHeight != mSize.height) ||
-       (aOrientation != mOrientation))) {
-    NS_WARNING("Image changed size on redecode! This should not happen!");
-    DoError();
-    return NS_ERROR_UNEXPECTED;
+  if (mHasSize && aMetadata.HasAnimation() && !mAnim) {
+    // We're becoming animated, so initialize animation stuff.
+    mAnim = MakeUnique<FrameAnimator>(this, mSize, mAnimationMode);
+
+    // We don't support discarding animated images (See bug 414259).
+    // Lock the image and throw away the key.
+    LockImage();
+
+    if (!aFromMetadataDecode) {
+      // The metadata decode reported that this image isn't animated, but we
+      // discovered that it actually was during the full decode. This is a
+      // rare failure that only occurs for corrupt images. To recover, we need
+      // to discard all existing surfaces and redecode.
+      RecoverFromLossOfFrames(mSize, DECODE_FLAGS_DEFAULT);
+    }
   }
 
-  // Set the size and flag that we have it
-  mSize.SizeTo(aWidth, aHeight);
-  mOrientation = aOrientation;
-  mHasSize = true;
+  if (mAnim) {
+    mAnim->SetLoopCount(aMetadata.GetLoopCount());
+    mAnim->SetFirstFrameTimeout(aMetadata.GetFirstFrameTimeout());
+  }
+
+  if (aMetadata.HasHotspot()) {
+    IntPoint hotspot = aMetadata.GetHotspot();
+
+    nsCOMPtr<nsISupportsPRUint32> intwrapx =
+      do_CreateInstance(NS_SUPPORTS_PRUINT32_CONTRACTID);
+    nsCOMPtr<nsISupportsPRUint32> intwrapy =
+      do_CreateInstance(NS_SUPPORTS_PRUINT32_CONTRACTID);
+    intwrapx->SetData(hotspot.x);
+    intwrapy->SetData(hotspot.y);
+
+    Set("hotspotX", intwrapx);
+    Set("hotspotY", intwrapy);
+  }
 
   return NS_OK;
 }
@@ -999,10 +1030,9 @@ RasterImage::StartAnimation()
 
   MOZ_ASSERT(ShouldAnimate(), "Should not animate!");
 
-  // If we don't have mAnim yet, then we're not ready to animate.  Setting
-  // mPendingAnimation will cause us to start animating as soon as we have a
-  // second frame, which causes mAnim to be constructed.
-  mPendingAnimation = !mAnim;
+  // If we're not ready to animate, then set mPendingAnimation, which will cause
+  // us to start animating if and when we do become ready.
+  mPendingAnimation = !mAnim || GetNumFrames() < 2;
   if (mPendingAnimation) {
     return NS_OK;
   }
@@ -1089,19 +1119,6 @@ RasterImage::GetFrameIndex(uint32_t aWhichFrame)
   return (aWhichFrame == FRAME_FIRST || !mAnim)
          ? 0.0f
          : mAnim->GetCurrentAnimationFrameIndex();
-}
-
-void
-RasterImage::SetLoopCount(int32_t aLoopCount)
-{
-  if (mError) {
-    return;
-  }
-
-  // No need to set this if we're not an animation.
-  if (mAnim) {
-    mAnim->SetLoopCount(aLoopCount);
-  }
 }
 
 NS_IMETHODIMP_(IntRect)
@@ -1391,20 +1408,19 @@ RasterImage::Decode(const IntSize& aSize, uint32_t aFlags)
 
   Maybe<IntSize> targetSize = mSize != aSize ? Some(aSize) : Nothing();
 
-  bool imageIsLocked = false;
-  if (!mHasBeenDecoded) {
-    // Lock the image while we're decoding, so that it doesn't get evicted from
-    // the SurfaceCache before we have a chance to realize that it's animated.
-    // The corresponding unlock happens in FinalizeDecoder.
-    LockImage();
-    imageIsLocked = true;
-  }
-
   // Create a decoder.
-  nsRefPtr<Decoder> decoder =
-    DecoderFactory::CreateDecoder(mDecoderType, this, mSourceBuffer, targetSize,
-                                  aFlags, mRequestedSampleSize, mRequestedResolution,
-                                  mHasBeenDecoded, mTransient, imageIsLocked);
+  nsRefPtr<Decoder> decoder;
+  if (mAnim) {
+    decoder = DecoderFactory::CreateAnimationDecoder(mDecoderType, this,
+                                                     mSourceBuffer, aFlags,
+                                                     mRequestedResolution);
+  } else {
+    decoder = DecoderFactory::CreateDecoder(mDecoderType, this, mSourceBuffer,
+                                            targetSize, aFlags,
+                                            mRequestedSampleSize,
+                                            mRequestedResolution,
+                                            mHasBeenDecoded, mTransient);
+  }
 
   // Make sure DecoderFactory was able to create a decoder successfully.
   if (!decoder) {
@@ -1482,6 +1498,11 @@ RasterImage::RecoverFromLossOfFrames(const IntSize& aSize, uint32_t aFlags)
 
   // Discard all existing frames, since they're probably all now invalid.
   SurfaceCache::RemoveImage(ImageKey(this));
+
+  // Relock the image if it's supposed to be locked.
+  if (mLockCount > 0) {
+    SurfaceCache::LockImage(ImageKey(this));
+  }
 
   // Animated images require some special handling, because we normally require
   // that they never be discarded.
@@ -1948,7 +1969,8 @@ RasterImage::FinalizeDecoder(Decoder* aDecoder)
   }
 
   // Record all the metadata the decoder gathered about this image.
-  nsresult rv = aDecoder->GetImageMetadata().SetOnImage(this);
+  nsresult rv = SetMetadata(aDecoder->GetImageMetadata(),
+                            aDecoder->IsMetadataDecode());
   if (NS_FAILED(rv)) {
     aDecoder->PostResizeError();
   }
@@ -1959,17 +1981,8 @@ RasterImage::FinalizeDecoder(Decoder* aDecoder)
   if (aDecoder->GetDecodeTotallyDone() && !mError) {
     // Flag that we've been decoded before.
     mHasBeenDecoded = true;
-
-    if (aDecoder->HasAnimation()) {
-      if (mAnim) {
-        mAnim->SetDoneDecoding(true);
-      } else {
-        // The OnAddedFrame event that will create mAnim is still in the event
-        // queue. Wait for it.
-        nsCOMPtr<nsIRunnable> runnable =
-          NS_NewRunnableMethod(this, &RasterImage::MarkAnimationDecoded);
-        NS_DispatchToMainThread(runnable);
-      }
+    if (mAnim) {
+      mAnim->SetDoneDecoding(true);
     }
   }
 
@@ -2017,27 +2030,11 @@ RasterImage::FinalizeDecoder(Decoder* aDecoder)
     }
   }
 
-  if (aDecoder->ImageIsLocked()) {
-    // Unlock the image, balancing the LockImage call we made in CreateDecoder.
-    UnlockImage();
-  }
-
   // If we were a metadata decode and a full decode was requested, do it.
   if (done && wasMetadata && mWantFullDecode) {
     mWantFullDecode = false;
     RequestDecode();
   }
-}
-
-void
-RasterImage::MarkAnimationDecoded()
-{
-  MOZ_ASSERT(mAnim, "Should have an animation now");
-  if (!mAnim) {
-    return;
-  }
-
-  mAnim->SetDoneDecoding(true);
 }
 
 void

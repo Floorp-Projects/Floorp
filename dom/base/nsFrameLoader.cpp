@@ -2885,18 +2885,31 @@ nsFrameLoader::InitializeBrowserAPI()
 }
 
 NS_IMETHODIMP
-nsFrameLoader::StartPersistence(nsIWebBrowserPersistDocumentReceiver* aRecv)
+nsFrameLoader::StartPersistence(uint64_t aOuterWindowID,
+                                nsIWebBrowserPersistDocumentReceiver* aRecv)
 {
+  if (!aRecv) {
+    return NS_ERROR_INVALID_POINTER;
+  }
+
   if (mRemoteBrowser) {
-    return mRemoteBrowser->StartPersistence(aRecv);
+    return mRemoteBrowser->StartPersistence(aOuterWindowID, aRecv);
   }
-  if (mDocShell) {
-    nsCOMPtr<nsIDocument> doc = do_GetInterface(mDocShell);
-    NS_ENSURE_STATE(doc);
+
+  nsCOMPtr<nsIDocument> rootDoc = do_GetInterface(mDocShell);
+  nsCOMPtr<nsIDocument> foundDoc;
+  if (aOuterWindowID) {
+    foundDoc = nsContentUtils::GetSubdocumentWithOuterWindowId(rootDoc, aOuterWindowID);
+  } else {
+    foundDoc = rootDoc;
+  }
+
+  if (!foundDoc) {
+    aRecv->OnError(NS_ERROR_NO_CONTENT);
+  } else {
     nsCOMPtr<nsIWebBrowserPersistDocument> pdoc =
-      new mozilla::WebBrowserPersistLocalDocument(doc);
+      new mozilla::WebBrowserPersistLocalDocument(foundDoc);
     aRecv->OnDocumentReady(pdoc);
-    return NS_OK;
   }
-  return NS_ERROR_NO_CONTENT;
+  return NS_OK;
 }
