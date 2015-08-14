@@ -31,8 +31,9 @@ MessagePortChild::RecvEntangled(nsTArray<MessagePortMessage>&& aMessages)
 bool
 MessagePortChild::RecvReceiveData(nsTArray<MessagePortMessage>&& aMessages)
 {
-  MOZ_ASSERT(mPort);
-  mPort->MessagesReceived(aMessages);
+  if (mPort) {
+    mPort->MessagesReceived(aMessages);
+  }
   return true;
 }
 
