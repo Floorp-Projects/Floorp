@@ -14,6 +14,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Extension.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "ValueExtractor",
+  "resource://gre/modules/ValueExtractor.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "console",
                                    "@mozilla.org/consoleservice;1",
@@ -62,6 +64,79 @@ this.UserCustomizations = {
       this.extensions.get(aApp.manifestURL).shutdown();
       this.extensions.delete(aApp.manifestURL);
     }
+  },
+
+  // Checks that this is a valid extension manifest.
+  // The format is documented at https://developer.chrome.com/extensions/manifest
+  checkExtensionManifest: function(aManifest) {
+    if (!aManifest) {
+      return false;
+    }
+
+    const extractor = new ValueExtractor(console);
+    const manifestVersionSpec = {
+      objectName: "extension manifest",
+      object: aManifest,
+      property: "manifest_version",
+      expectedType: "number",
+      trim: true
+    }
+
+    const nameSpec = {
+      objectName: "extension manifest",
+      object: aManifest,
+      property: "name",
+      expectedType: "string",
+      trim: true
+    }
+
+    const versionSpec = {
+      objectName: "extension manifest",
+      object: aManifest,
+      property: "version",
+      expectedType: "string",
+      trim: true
+    }
+
+    let res =
+      extractor.extractValue(manifestVersionSpec) !== undefined &&
+      extractor.extractValue(nameSpec)  !== undefined &&
+      extractor.extractValue(versionSpec) !== undefined;
+
+    return res;
+  },
+
+  // Converts a chrome extension manifest into a webapp manifest.
+  convertManifest: function(aManifest) {
+    if (!aManifest) {
+      return null;
+    }
+
+    // Set the type to privileged to ensure we only allow signed addons.
+    let result = {
+      "type": "privileged",
+      "name": aManifest.name,
+      "role": "addon"
+    }
+
+    if (aManifest.description) {
+      result.description = aManifest.description;
+    }
+
+    if (aManifest.icons) {
+      result.icons = aManifest.icons;
+    }
+
+    // chrome extension manifests have a single 'author' property, that we
+    // map to 'developer.name'.
+    // Note that it has to match the one in the mini-manifest.
+    if (aManifest.author) {
+      result.developer = {
+        name: aManifest.author
+      }
+    }
+
+    return result;
   },
 
   init: function() {
