@@ -1,0 +1,85 @@
+<html>
+
+<head>
+  <title>Test hide/show events for HTMLListBulletAccessibles on list restyle</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../name.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    function runTest()
+    {
+      this.containerNode = getNode("outerDiv");
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, getNode("child")),
+        new invokerChecker(EVENT_REORDER, this.containerNode),
+        new invokerChecker(EVENT_HIDE, getNode("childDoc")),
+        new invokerChecker(EVENT_SHOW, "newChildDoc")
+      ];
+
+      this.invoke = function runTest_invoke()
+      {
+        this.containerNode.removeChild(getNode("child"));
+
+        var docContainer = getNode("docContainer");
+        var iframe = document.createElement("iframe");
+        iframe.setAttribute("src", "http://example.com");
+        iframe.setAttribute("id", "newChildDoc");
+
+        docContainer.removeChild(getNode("childDoc"));
+        docContainer.appendChild(iframe);
+      }
+
+      this.getID = function runTest_getID()
+      {
+        return "check show events are not incorrectly coalesced";
+      }
+    }
+
+    gA11yEventDumpToConsole = true;
+    var gQueue = null;
+    function doTest()
+    {
+      gQueue = new eventQueue();
+      gQueue.push(new runTest());
+      gQueue.invoke(); // SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1189277"
+     title="content process crash caused by missing show event">
+    Mozilla Bug 1189277
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="outerDiv">
+    <div id="child">foo</div>
+    <div id="docContainer">
+      <iframe id="childDoc" src="about:blank">
+      </iframe>
+    </div>
+  </div>
+
+</body>
+</html>
