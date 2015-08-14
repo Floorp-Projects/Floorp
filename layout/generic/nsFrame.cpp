@@ -2731,17 +2731,23 @@ nsFrame::IsSelectable(bool* aSelectable, uint8_t* aSelectStyle) const
   //
   uint8_t selectStyle  = NS_STYLE_USER_SELECT_AUTO;
   nsIFrame* frame      = const_cast<nsFrame*>(this);
+  bool containsEditable = false;
 
   while (frame) {
     const nsStyleUIReset* userinterface = frame->StyleUIReset();
     switch (userinterface->mUserSelect) {
       case NS_STYLE_USER_SELECT_ALL:
       case NS_STYLE_USER_SELECT_MOZ_ALL:
+      {
         // override the previous values
         if (selectStyle != NS_STYLE_USER_SELECT_MOZ_TEXT) {
           selectStyle = userinterface->mUserSelect;
         }
+        nsIContent* frameContent = frame->GetContent();
+        containsEditable = frameContent &&
+          frameContent->EditableDescendantCount() > 0;
         break;
+      }
       default:
         // otherwise return the first value which is not 'auto'
         if (selectStyle == NS_STYLE_USER_SELECT_AUTO) {
@@ -2760,13 +2766,21 @@ nsFrame::IsSelectable(bool* aSelectable, uint8_t* aSelectStyle) const
   if (selectStyle == NS_STYLE_USER_SELECT_MOZ_ALL)
     selectStyle = NS_STYLE_USER_SELECT_ALL;
 
+  // If user tries to select all of a non-editable content,
+  // prevent selection if it contains editable content.
+  bool allowSelection = true;
+  if (selectStyle == NS_STYLE_USER_SELECT_ALL) {
+    allowSelection = !containsEditable;
+  }
+
   // return stuff
   if (aSelectStyle)
     *aSelectStyle = selectStyle;
   if (mState & NS_FRAME_GENERATED_CONTENT)
     *aSelectable = false;
   else
-    *aSelectable = (selectStyle != NS_STYLE_USER_SELECT_NONE);
+    *aSelectable = allowSelection &&
+      (selectStyle != NS_STYLE_USER_SELECT_NONE);
   return NS_OK;
 }
 
