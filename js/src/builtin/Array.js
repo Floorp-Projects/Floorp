@@ -226,6 +226,15 @@ function ArrayForEach(callbackfn/*, thisArg*/) {
     return void 0;
 }
 
+function ArrayStaticForEach(list, callbackfn/*, thisArg*/) {
+    if (arguments.length < 2)
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.forEach');
+    if (!IsCallable(callbackfn))
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(1, callbackfn));
+    var T = arguments.length > 2 ? arguments[2] : void 0;
+    callFunction(ArrayForEach, list, callbackfn, T);
+}
+
 /* ES5 15.4.4.19. */
 function ArrayMap(callbackfn/*, thisArg*/) {
     /* Step 1. */
@@ -270,13 +279,52 @@ function ArrayStaticMap(list, callbackfn/*, thisArg*/) {
     return callFunction(ArrayMap, list, callbackfn, T);
 }
 
-function ArrayStaticForEach(list, callbackfn/*, thisArg*/) {
+/* ES2015 22.1.3.7 Array.prototype.filter. */
+function ArrayFilter(callbackfn/*, thisArg*/) {
+    /* Steps 1-2. */
+    var O = ToObject(this);
+
+    /* Steps 3-4. */
+    var len = ToInteger(O.length);
+
+    /* Step 5. */
+    if (arguments.length === 0)
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.filter');
+    if (!IsCallable(callbackfn))
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
+
+    /* Step 6. */
+    var T = arguments.length > 1 ? arguments[1] : void 0;
+
+    /* Step 7. */
+    var A = [];
+
+    /* Steps 8-11. */
+    /* Steps 11.a (implicit), and 11.e. */
+    for (var k = 0, to = 0; k < len; k++) {
+        /* Steps 11.b-c. */
+        if (k in O) {
+            /* Steps 11.c.i-ii. */
+            var kValue = O[k];
+            /* Steps 11.c.iii-iv. */
+            var selected = callFunction(callbackfn, T, kValue, k, O);
+            /* Step 11.c.v. */
+            if (selected)
+                _DefineDataProperty(A, to++, kValue);
+        }
+    }
+
+    /* Step 12. */
+    return A;
+}
+
+function ArrayStaticFilter(list, callbackfn/*, thisArg*/) {
     if (arguments.length < 2)
-        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.forEach');
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.filter');
     if (!IsCallable(callbackfn))
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(1, callbackfn));
     var T = arguments.length > 2 ? arguments[2] : void 0;
-    callFunction(ArrayForEach, list, callbackfn, T);
+    return callFunction(ArrayFilter, list, callbackfn, T);
 }
 
 /* ES5 15.4.4.21. */
