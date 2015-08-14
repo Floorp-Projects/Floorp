@@ -161,6 +161,7 @@ const EXPERIMENTS_CHANGED_TOPIC = "experiments-changed";
 const SEARCH_ENGINE_MODIFIED_TOPIC = "browser-search-engine-modified";
 const SEARCH_SERVICE_TOPIC = "browser-search-service";
 const COMPOSITOR_CREATED_TOPIC = "compositor:created";
+const SANITY_TEST_FAILED_TOPIC = "graphics-sanity-test-failed";
 
 /**
  * Get the current browser.
@@ -814,6 +815,7 @@ EnvironmentCache.prototype = {
     Services.obs.addObserver(this, SEARCH_ENGINE_MODIFIED_TOPIC, false);
     Services.obs.addObserver(this, SEARCH_SERVICE_TOPIC, false);
     Services.obs.addObserver(this, COMPOSITOR_CREATED_TOPIC, false);
+    Services.obs.addObserver(this, SANITY_TEST_FAILED_TOPIC, false);
   },
 
   _removeObservers: function () {
@@ -821,6 +823,7 @@ EnvironmentCache.prototype = {
     Services.obs.removeObserver(this, SEARCH_ENGINE_MODIFIED_TOPIC);
     Services.obs.removeObserver(this, SEARCH_SERVICE_TOPIC);
     Services.obs.removeObserver(this, COMPOSITOR_CREATED_TOPIC);
+    Services.obs.removeObserver(this, SANITY_TEST_FAILED_TOPIC);
   },
 
   observe: function (aSubject, aTopic, aData) {
@@ -845,6 +848,9 @@ EnvironmentCache.prototype = {
         // least one off-main-thread-composited window. Thus we wait for the
         // first compositor to be created and then query nsIGfxInfo again.
         this._onCompositorCreated();
+        break;
+      case SANITY_TEST_FAILED_TOPIC:
+        this._onGraphicsSanityTestFailed(aData);
         break;
     }
   },
@@ -923,6 +929,11 @@ EnvironmentCache.prototype = {
     } catch (e) {
       this._log.error("nsIGfxInfo.getFeatures() caught error", e);
     }
+  },
+
+  _onGraphicsSanityTestFailed: function (aData) {
+    let gfxData = this._currentEnvironment.system.gfx;
+    gfxData.sanityTestSnapshot = aData;
   },
 
   /**
