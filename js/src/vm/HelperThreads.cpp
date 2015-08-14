@@ -181,7 +181,7 @@ js::CancelOffThreadIonCompile(JSCompartment* compartment, JSScript* script)
     while (builder) {
         jit::IonBuilder* next = builder->getNext();
         if (CompiledScriptMatches(compartment, script, builder->script())) {
-            builder->script()->setPendingIonBuilder(nullptr, nullptr);
+            builder->script()->baselineScript()->removePendingIonBuilder(builder->script());
             jit::FinishOffThreadBuilder(nullptr, builder);
         }
         builder = next;
