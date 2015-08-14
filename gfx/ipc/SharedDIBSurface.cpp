@@ -12,8 +12,6 @@ namespace gfx {
 
 static const cairo_user_data_key_t SHAREDDIB_KEY = {0};
 
-static const long kBytesPerPixel = 4;
-
 bool
 SharedDIBSurface::Create(HDC adc, uint32_t aWidth, uint32_t aHeight,
                          bool aTransparent)
@@ -42,7 +40,7 @@ void
 SharedDIBSurface::InitSurface(uint32_t aWidth, uint32_t aHeight,
                               bool aTransparent)
 {
-  long stride = long(aWidth * kBytesPerPixel);
+  long stride = long(aWidth * SharedDIB::kBytesPerPixel);
   unsigned char* data = reinterpret_cast<unsigned char*>(mSharedDIB.GetBits());
 
   gfxImageFormat format = aTransparent ? gfxImageFormat::ARGB32 : gfxImageFormat::RGB24;

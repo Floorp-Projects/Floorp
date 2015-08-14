@@ -17,6 +17,8 @@ class SharedDIB
 public:
   typedef base::SharedMemoryHandle Handle;
 
+  static const uint32_t kBytesPerPixel = 4;
+
 public:
   SharedDIB();
   ~SharedDIB();
