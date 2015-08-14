@@ -1174,4 +1174,3 @@ pref("dom.presentation.device.name", "Firefox OS");
 
 // Enable notification of performance timing
 pref("dom.performance.enable_notify_performance_timing", true);
-
