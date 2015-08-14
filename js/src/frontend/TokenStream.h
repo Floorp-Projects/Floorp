@@ -117,6 +117,29 @@ struct Token
         //                          ^ TemplateTail context
         TemplateTail,
     };
+    enum ModifierException
+    {
+        NoException,
+
+        // If an yield expression operand is omitted and yield expression is
+        // followed by non-EOL, the next token is already gotten with Operand,
+        // but we expect operator (None).
+        NoneIsOperand,
+
+        // If an yield expression operand is omitted and yield expression is
+        // followed by EOL, the next token is already gotten with Operand, and
+        // we expect Operand in next statement, but MatchOrInsertSemicolon
+        // after expression statement expects operator (None).
+        NoneIsOperandYieldEOL,
+
+        // If a semicolon is inserted automatically, the next token is already
+        // gotten with None, but we expect Operand.
+        OperandIsNone,
+
+        // If name of method definition is `get` or `set`, the next token is
+        // already gotten with KeywordIsName, but we expect None.
+        NoneIsKeywordIsName,
+    };
     friend class TokenStream;
 
   public:
@@ -136,7 +159,7 @@ struct Token
     } u;
 #ifdef DEBUG
     Modifier modifier;                  // Modifier used to get this token
-    uint8_t modifierExceptions;         // Bitwise OR of modifier exceptions
+    ModifierException modifierException; // Exception for this modifier
 #endif
 
     // This constructor is necessary only for MSVC 2013 and how it compiles the
@@ -411,37 +434,47 @@ class MOZ_STACK_CLASS TokenStream
     static MOZ_CONSTEXPR_VAR Modifier KeywordIsName = Token::KeywordIsName;
     static MOZ_CONSTEXPR_VAR Modifier TemplateTail = Token::TemplateTail;
 
-    enum ModifierException
-    {
-        NoException = 0x00,
-
-        // If a semicolon is inserted automatically, the next token is already
-        // gotten with None, but we expect Operand.
-        NoneIsOperand = 0x01,
-
-        // If an yield expression operand is omitted, the next token is already
-        // gotten with Operand, but we expect operator (None).
-        OperandIsNone = 0x02,
-
-        // If name of method definition is `get` or `set`, the next token is
-        // already gotten with KeywordIsName, but we expect None.
-        NoneIsKeywordIsName = 0x04,
-    };
+    typedef Token::ModifierException ModifierException;
+    static MOZ_CONSTEXPR_VAR ModifierException NoException = Token::NoException;
+    static MOZ_CONSTEXPR_VAR ModifierException NoneIsOperand = Token::NoneIsOperand;
+    static MOZ_CONSTEXPR_VAR ModifierException NoneIsOperandYieldEOL = Token::NoneIsOperandYieldEOL;
+    static MOZ_CONSTEXPR_VAR ModifierException OperandIsNone = Token::OperandIsNone;
+    static MOZ_CONSTEXPR_VAR ModifierException NoneIsKeywordIsName = Token::NoneIsKeywordIsName;
 
     void addModifierException(ModifierException modifierException) {
 #ifdef DEBUG
         const Token& next = nextToken();
+        if (next.modifierException == NoneIsOperand ||
+            next.modifierException == NoneIsOperandYieldEOL)
+        {
+            // Token after yield expression without operand already has
+            // NoneIsOperand or NoneIsOperandYieldEOL exception.
+            MOZ_ASSERT(modifierException == OperandIsNone);
+            if (next.modifierException == NoneIsOperand)
+                MOZ_ASSERT(next.type != TOK_DIV && next.type != TOK_REGEXP,
+                           "next token requires contextual specifier to be parsed unambiguously");
+            else
+                MOZ_ASSERT(next.type != TOK_DIV,
+                           "next token requires contextual specifier to be parsed unambiguously");
+
+            // Do not update modifierException.
+            return;
+        }
+
+        MOZ_ASSERT(next.modifierException == NoException);
         switch (modifierException) {
           case NoneIsOperand:
             MOZ_ASSERT(next.modifier == Operand);
             MOZ_ASSERT(next.type != TOK_DIV && next.type != TOK_REGEXP,
                        "next token requires contextual specifier to be parsed unambiguously");
             break;
+          case NoneIsOperandYieldEOL:
+            MOZ_ASSERT(next.modifier == Operand);
+            MOZ_ASSERT(next.type != TOK_DIV,
+                       "next token requires contextual specifier to be parsed unambiguously");
+            break;
           case OperandIsNone:
-            // Non-Operand token after yield/continue/break already has
-            // NoneIsOperand exception.
-            MOZ_ASSERT(next.modifier == None ||
-                       ((next.modifierExceptions & NoneIsOperand) && next.modifier == Operand));
+            MOZ_ASSERT(next.modifier == None);
             MOZ_ASSERT(next.type != TOK_DIV && next.type != TOK_REGEXP,
                        "next token requires contextual specifier to be parsed unambiguously");
             break;
@@ -452,7 +485,7 @@ class MOZ_STACK_CLASS TokenStream
           default:
             MOZ_CRASH("unexpected modifier exception");
         }
-        tokens[(cursor + 1) & ntokensMask].modifierExceptions |= modifierException;
+        tokens[(cursor + 1) & ntokensMask].modifierException = modifierException;
 #endif
     }
 
@@ -473,19 +506,21 @@ class MOZ_STACK_CLASS TokenStream
         if (modifier == lookaheadToken.modifier)
             return;
 
-        if (lookaheadToken.modifierExceptions & OperandIsNone) {
+        if (lookaheadToken.modifierException == OperandIsNone) {
             // getToken(Operand) permissibly following getToken().
             if (modifier == Operand && lookaheadToken.modifier == None)
                 return;
         }
 
-        if (lookaheadToken.modifierExceptions & NoneIsOperand) {
+        if (lookaheadToken.modifierException == NoneIsOperand ||
+            lookaheadToken.modifierException == NoneIsOperandYieldEOL)
+        {
             // getToken() permissibly following getToken(Operand).
             if (modifier == None && lookaheadToken.modifier == Operand)
                 return;
         }
 
-        if (lookaheadToken.modifierExceptions & NoneIsKeywordIsName) {
+        if (lookaheadToken.modifierException == NoneIsKeywordIsName) {
             // getToken() permissibly following getToken(KeywordIsName).
             if (modifier == None && lookaheadToken.modifier == KeywordIsName)
                 return;

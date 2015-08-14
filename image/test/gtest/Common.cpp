@@ -15,6 +15,7 @@
 #include "nsIProperties.h"
 #include "nsNetUtil.h"
 #include "mozilla/nsRefPtr.h"
+#include "nsStreamUtils.h"
 #include "nsString.h"
 
 namespace mozilla {
@@ -70,6 +71,15 @@ LoadFile(const char* aRelativePath)
   nsCOMPtr<nsIInputStream> inputStream;
   rv = NS_NewLocalFileInputStream(getter_AddRefs(inputStream), file);
   ASSERT_TRUE_OR_RETURN(NS_SUCCEEDED(rv), nullptr);
+
+  // Ensure the resulting input stream is buffered.
+  if (!NS_InputStreamIsBuffered(inputStream)) {
+    nsCOMPtr<nsIInputStream> bufStream;
+    rv = NS_NewBufferedInputStream(getter_AddRefs(bufStream),
+                                   inputStream, 1024);
+    ASSERT_TRUE_OR_RETURN(NS_SUCCEEDED(rv), nullptr);
+    inputStream = bufStream;
+  }
 
   return inputStream.forget();
 }
@@ -144,13 +154,14 @@ ImageTestCase GreenICOTestCase()
 
 ImageTestCase GreenFirstFrameAnimatedGIFTestCase()
 {
-  return ImageTestCase("first-frame-green.gif", "image/gif", IntSize(100, 100));
+  return ImageTestCase("first-frame-green.gif", "image/gif", IntSize(100, 100),
+                       TEST_CASE_IS_ANIMATED);
 }
 
 ImageTestCase GreenFirstFrameAnimatedPNGTestCase()
 {
   return ImageTestCase("first-frame-green.png", "image/png", IntSize(100, 100),
-                       TEST_CASE_IS_TRANSPARENT);
+                       TEST_CASE_IS_TRANSPARENT | TEST_CASE_IS_ANIMATED);
 }
 
 ImageTestCase CorruptTestCase()
@@ -196,6 +207,15 @@ ImageTestCase RLE8BMPTestCase()
 {
   return ImageTestCase("rle8.bmp", "image/bmp", IntSize(32, 32),
                        TEST_CASE_IS_TRANSPARENT);
+}
+
+ImageTestCase NoFrameDelayGIFTestCase()
+{
+  // This is an invalid (or at least, questionably valid) GIF that's animated
+  // even though it specifies a frame delay of zero. It's animated, but it's not
+  // marked TEST_CASE_IS_ANIMATED because the metadata decoder can't detect that
+  // it's animated.
+  return ImageTestCase("no-frame-delay.gif", "image/gif", IntSize(100, 100));
 }
 
 } // namespace mozilla

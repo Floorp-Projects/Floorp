@@ -136,6 +136,9 @@ void
 MacIOSurfaceTextureSourceOGL::SetCompositor(Compositor* aCompositor)
 {
   mCompositor = static_cast<CompositorOGL*>(aCompositor);
+  if (mNextSibling) {
+    mNextSibling->SetCompositor(aCompositor);
+  }
 }
 
 gl::GLContext*

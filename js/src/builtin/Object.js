@@ -51,6 +51,15 @@ function ObjectIsExtensible(obj) {
     return IsObject(obj) && std_Reflect_isExtensible(obj);
 }
 
+/* ES2015 19.1.3.5 Object.prototype.toLocaleString */
+function Object_toLocaleString() {
+    // Step 1.
+    var O = this;
+
+    // Step 2.
+    return O.toString();
+}
+
 function ObjectDefineSetter(name, setter) {
     var object;
     if (this === null || this === undefined)

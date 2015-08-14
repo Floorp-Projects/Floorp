@@ -451,7 +451,10 @@ DecodePool::Decode(Decoder* aDecoder)
   nsresult rv = aDecoder->Decode();
 
   if (NS_SUCCEEDED(rv) && !aDecoder->GetDecodeDone()) {
-    if (aDecoder->HasProgress()) {
+    // If this isn't a metadata decode, notify for the progress we've made so
+    // far. It's important that metadata decode results are delivered
+    // atomically, so for those decodes we wait until NotifyDecodeComplete.
+    if (aDecoder->HasProgress() && !aDecoder->IsMetadataDecode()) {
       NotifyProgress(aDecoder);
     }
     // The decoder will ensure that a new worker gets enqueued to continue

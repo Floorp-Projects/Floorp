@@ -10,6 +10,7 @@
 #include "decoders/nsBMPDecoder.h"
 #include "imgIContainer.h"
 #include "imgITools.h"
+#include "ImageFactory.h"
 #include "mozilla/gfx/2D.h"
 #include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
@@ -37,26 +38,22 @@ TEST(ImageMetadata, ImageModuleAvailable)
   EXPECT_TRUE(imgTools != nullptr);
 }
 
+enum class BMPAlpha
+{
+  DISABLED,
+  ENABLED
+};
+
 static void
-CheckMetadata(const ImageTestCase& aTestCase, bool aEnableBMPAlpha = false)
+CheckMetadata(const ImageTestCase& aTestCase,
+              BMPAlpha aBMPAlpha = BMPAlpha::DISABLED)
 {
   nsCOMPtr<nsIInputStream> inputStream = LoadFile(aTestCase.mPath);
   ASSERT_TRUE(inputStream != nullptr);
 
-  // Prepare the input stream.
-  nsresult rv;
-  if (!NS_InputStreamIsBuffered(inputStream)) {
-    nsCOMPtr<nsIInputStream> bufStream;
-    rv = NS_NewBufferedInputStream(getter_AddRefs(bufStream),
-                                   inputStream, 1024);
-    if (NS_SUCCEEDED(rv)) {
-      inputStream = bufStream;
-    }
-  }
-
   // Figure out how much data we have.
   uint64_t length;
-  rv = inputStream->Available(&length);
+  nsresult rv = inputStream->Available(&length);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   // Write the data into a SourceBuffer.
@@ -73,7 +70,7 @@ CheckMetadata(const ImageTestCase& aTestCase, bool aEnableBMPAlpha = false)
     DecoderFactory::CreateAnonymousMetadataDecoder(decoderType, sourceBuffer);
   ASSERT_TRUE(decoder != nullptr);
 
-  if (aEnableBMPAlpha) {
+  if (aBMPAlpha == BMPAlpha::ENABLED) {
     static_cast<nsBMPDecoder*>(decoder.get())->SetUseAlphaData(true);
   }
 
@@ -84,7 +81,8 @@ CheckMetadata(const ImageTestCase& aTestCase, bool aEnableBMPAlpha = false)
   // (which would indicate that it decoded past the header of the image).
   Progress metadataProgress = decoder->TakeProgress();
   EXPECT_TRUE(0 == (metadataProgress & ~(FLAG_SIZE_AVAILABLE |
-                                         FLAG_HAS_TRANSPARENCY)));
+                                         FLAG_HAS_TRANSPARENCY |
+                                         FLAG_IS_ANIMATED)));
 
   // If the test case is corrupt, assert what we can and return early.
   if (aTestCase.mFlags & TEST_CASE_HAS_ERROR) {
@@ -102,10 +100,13 @@ CheckMetadata(const ImageTestCase& aTestCase, bool aEnableBMPAlpha = false)
   EXPECT_EQ(aTestCase.mSize.width, metadataSize.width);
   EXPECT_EQ(aTestCase.mSize.height, metadataSize.height);
 
-  bool expectTransparency = aEnableBMPAlpha
+  bool expectTransparency = aBMPAlpha == BMPAlpha::ENABLED
                           ? true
                           : bool(aTestCase.mFlags & TEST_CASE_IS_TRANSPARENT);
   EXPECT_EQ(expectTransparency, bool(metadataProgress & FLAG_HAS_TRANSPARENCY));
+
+  EXPECT_EQ(bool(aTestCase.mFlags & TEST_CASE_IS_ANIMATED),
+            bool(metadataProgress & FLAG_IS_ANIMATED));
 
   // Create a full decoder, so we can compare the result.
   decoder =
@@ -113,7 +114,7 @@ CheckMetadata(const ImageTestCase& aTestCase, bool aEnableBMPAlpha = false)
                                            imgIContainer::DECODE_FLAGS_DEFAULT);
   ASSERT_TRUE(decoder != nullptr);
 
-  if (aEnableBMPAlpha) {
+  if (aBMPAlpha == BMPAlpha::ENABLED) {
     static_cast<nsBMPDecoder*>(decoder.get())->SetUseAlphaData(true);
   }
 
@@ -164,17 +165,90 @@ TEST(ImageMetadata, FirstFramePaddingGIF)
 
 TEST(ImageMetadata, TransparentBMPWithBMPAlphaOff)
 {
-  CheckMetadata(TransparentBMPWhenBMPAlphaEnabledTestCase(),
-                /* aEnableBMPAlpha = */ false);
+  CheckMetadata(TransparentBMPWhenBMPAlphaEnabledTestCase(), BMPAlpha::ENABLED);
 }
 
 TEST(ImageMetadata, TransparentBMPWithBMPAlphaOn)
 {
-  CheckMetadata(TransparentBMPWhenBMPAlphaEnabledTestCase(),
-                /* aEnableBMPAlpha = */ true);
+  CheckMetadata(TransparentBMPWhenBMPAlphaEnabledTestCase(), BMPAlpha::ENABLED);
 }
 
 TEST(ImageMetadata, RLE4BMP) { CheckMetadata(RLE4BMPTestCase()); }
 TEST(ImageMetadata, RLE8BMP) { CheckMetadata(RLE8BMPTestCase()); }
 
 TEST(ImageMetadata, Corrupt) { CheckMetadata(CorruptTestCase()); }
+
+TEST(ImageMetadata, NoFrameDelayGIF)
+{
+  CheckMetadata(NoFrameDelayGIFTestCase());
+}
+
+TEST(ImageMetadata, NoFrameDelayGIFFullDecode)
+{
+  ImageTestCase testCase = NoFrameDelayGIFTestCase();
+
+  // The previous test (NoFrameDelayGIF) verifies that we *don't* detect that
+  // this test case is animated, because it has a zero frame delay for the first
+  // frame. This test verifies that when we do a full decode, we detect the
+  // animation at that point and successfully decode all the frames.
+
+  // Create an image.
+  nsRefPtr<Image> image =
+    ImageFactory::CreateAnonymousImage(nsAutoCString(testCase.mMimeType));
+  ASSERT_TRUE(!image->HasError());
+
+  nsCOMPtr<nsIInputStream> inputStream = LoadFile(testCase.mPath);
+  ASSERT_TRUE(inputStream != nullptr);
+
+  // Figure out how much data we have.
+  uint64_t length;
+  nsresult rv = inputStream->Available(&length);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  // Write the data into the image.
+  rv = image->OnImageDataAvailable(nullptr, nullptr, inputStream, 0,
+                                   static_cast<uint32_t>(length));
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  // Let the image know we've sent all the data.
+  rv = image->OnImageDataComplete(nullptr, nullptr, NS_OK, true);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  nsRefPtr<ProgressTracker> tracker = image->GetProgressTracker();
+  tracker->SyncNotifyProgress(FLAG_LOAD_COMPLETE);
+
+  // Use GetFrame() to force a sync decode of the image.
+  nsRefPtr<SourceSurface> surface =
+    image->GetFrame(imgIContainer::FRAME_CURRENT,
+                    imgIContainer::FLAG_SYNC_DECODE);
+
+  // Ensure that the image's metadata meets our expectations.
+  IntSize imageSize(0, 0);
+  rv = image->GetWidth(&imageSize.width);
+  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  rv = image->GetHeight(&imageSize.height);
+  EXPECT_TRUE(NS_SUCCEEDED(rv));
+
+  EXPECT_EQ(testCase.mSize.width, imageSize.width);
+  EXPECT_EQ(testCase.mSize.height, imageSize.height);
+
+  Progress imageProgress = tracker->GetProgress();
+
+  EXPECT_TRUE(bool(imageProgress & FLAG_HAS_TRANSPARENCY) == false);
+  EXPECT_TRUE(bool(imageProgress & FLAG_IS_ANIMATED) == true);
+
+  // Ensure that we decoded both frames of the image.
+  LookupResult firstFrameLookupResult =
+    SurfaceCache::Lookup(ImageKey(image.get()),
+                         RasterSurfaceKey(imageSize,
+                                          imgIContainer::DECODE_FLAGS_DEFAULT,
+                                          /* aFrameNum = */ 0));
+  EXPECT_EQ(MatchType::EXACT, firstFrameLookupResult.Type());
+                                                             
+  LookupResult secondFrameLookupResult =
+    SurfaceCache::Lookup(ImageKey(image.get()),
+                         RasterSurfaceKey(imageSize,
+                                          imgIContainer::DECODE_FLAGS_DEFAULT,
+                                          /* aFrameNum = */ 1));
+  EXPECT_EQ(MatchType::EXACT, secondFrameLookupResult.Type());
+}
