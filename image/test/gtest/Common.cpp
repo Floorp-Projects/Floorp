@@ -15,6 +15,7 @@
 #include "nsIProperties.h"
 #include "nsNetUtil.h"
 #include "mozilla/nsRefPtr.h"
+#include "nsStreamUtils.h"
 #include "nsString.h"
 
 namespace mozilla {
@@ -70,6 +71,15 @@ LoadFile(const char* aRelativePath)
   nsCOMPtr<nsIInputStream> inputStream;
   rv = NS_NewLocalFileInputStream(getter_AddRefs(inputStream), file);
   ASSERT_TRUE_OR_RETURN(NS_SUCCEEDED(rv), nullptr);
+
+  // Ensure the resulting input stream is buffered.
+  if (!NS_InputStreamIsBuffered(inputStream)) {
+    nsCOMPtr<nsIInputStream> bufStream;
+    rv = NS_NewBufferedInputStream(getter_AddRefs(bufStream),
+                                   inputStream, 1024);
+    ASSERT_TRUE_OR_RETURN(NS_SUCCEEDED(rv), nullptr);
+    inputStream = bufStream;
+  }
 
   return inputStream.forget();
 }
