@@ -353,7 +353,6 @@ MediaStreamGraphImpl::StreamReadyToFinish(MediaStream* aStream)
     NS_WARN_IF_FALSE(aStream->mNotifiedBlocked,
       "Should've notified blocked=true for a fully finished stream");
     aStream->mNotifiedFinished = true;
-    aStream->mLastPlayedVideoFrame.SetNull();
     SetStreamOrderDirty();
     for (uint32_t j = 0; j < aStream->mListeners.Length(); ++j) {
       MediaStreamListener* l = aStream->mListeners[j];
@@ -1128,69 +1127,140 @@ MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
   if (aStream->mVideoOutputs.IsEmpty())
     return;
 
-  // Display the next frame a bit early. This is better than letting the current
-  // frame be displayed for too long. Because depending on the GraphDriver in
-  // use, we can't really estimate the graph interval duration, we clamp it to
-  // the current state computed time.
-  GraphTime framePosition = IterationEnd() + MillisecondsToMediaTime(CurrentDriver()->IterationDuration());
-  if (framePosition > mStateComputedTime) {
-#ifdef DEBUG
-    if (std::abs(framePosition - mStateComputedTime) >= MillisecondsToMediaTime(5)) {
-      STREAM_LOG(LogLevel::Debug, ("Graph thread slowdown?"));
-    }
-#endif
-    framePosition = mStateComputedTime;
-  }
-  MOZ_ASSERT(framePosition >= aStream->mBufferStartTime, "frame position before buffer?");
-  StreamTime frameBufferTime = GraphTimeToStreamTime(aStream, framePosition);
+  TimeStamp currentTimeStamp = CurrentDriver()->GetCurrentTimeStamp();
 
+  // Collect any new frames produced in this iteration.
+  nsAutoTArray<ImageContainer::NonOwningImage,4> newImages;
+  nsRefPtr<Image> blackImage;
+
+  MOZ_ASSERT(mProcessedTime >= aStream->mBufferStartTime, "frame position before buffer?");
+  StreamTime frameBufferTime = GraphTimeToStreamTime(aStream, mProcessedTime);
+  StreamTime bufferEndTime = GraphTimeToStreamTime(aStream, mStateComputedTime);
   StreamTime start;
-  const VideoFrame* frame = nullptr;
-  for (StreamBuffer::TrackIter tracks(aStream->GetStreamBuffer(), MediaSegment::VIDEO);
-       !tracks.IsEnded(); tracks.Next()) {
-    VideoSegment* segment = tracks->Get<VideoSegment>();
-    StreamTime thisStart;
-    const VideoFrame* thisFrame =
-        segment->GetFrameAt(frameBufferTime, &thisStart);
-    if (thisFrame && thisFrame->GetImage()) {
-      start = thisStart;
-      frame = thisFrame;
+  const VideoChunk* chunk;
+  for ( ;
+       frameBufferTime < bufferEndTime;
+       frameBufferTime = start + chunk->GetDuration()) {
+    // Pick the last track that has a video chunk for the time, and
+    // schedule its frame.
+    chunk = nullptr;
+    for (StreamBuffer::TrackIter tracks(aStream->GetStreamBuffer(),
+                                        MediaSegment::VIDEO);
+         !tracks.IsEnded();
+         tracks.Next()) {
+      VideoSegment* segment = tracks->Get<VideoSegment>();
+      StreamTime thisStart;
+      const VideoChunk* thisChunk =
+        segment->FindChunkContaining(frameBufferTime, &thisStart);
+      if (thisChunk && thisChunk->mFrame.GetImage()) {
+        start = thisStart;
+        chunk = thisChunk;
+      }
     }
+    if (!chunk)
+      break;
+
+    const VideoFrame* frame = &chunk->mFrame;
+    if (*frame == aStream->mLastPlayedVideoFrame) {
+      continue;
+    }
+
+    Image* image = frame->GetImage();
+    STREAM_LOG(LogLevel::Verbose,
+               ("MediaStream %p writing video frame %p (%dx%d)",
+                aStream, image, frame->GetIntrinsicSize().width,
+                frame->GetIntrinsicSize().height));
+    // Schedule this frame after the previous frame finishes, instead of at
+    // its start time.  These times only differ in the case of multiple
+    // tracks.
+    GraphTime frameTime =
+      StreamTimeToGraphTime(aStream, frameBufferTime,
+                            INCLUDE_TRAILING_BLOCKED_INTERVAL);
+    TimeStamp targetTime = currentTimeStamp +
+      TimeDuration::FromSeconds(MediaTimeToSeconds(frameTime - IterationEnd()));
+
+    if (frame->GetForceBlack()) {
+      if (!blackImage) {
+        blackImage = aStream->mVideoOutputs[0]->
+          GetImageContainer()->CreateImage(ImageFormat::PLANAR_YCBCR);
+        if (blackImage) {
+          // Sets the image to a single black pixel, which will be scaled to
+          // fill the rendered size.
+          SetImageToBlackPixel(static_cast<PlanarYCbCrImage*>
+                               (blackImage.get()));
+        }
+      }
+      if (blackImage) {
+        image = blackImage;
+      }
+    }
+    newImages.AppendElement(ImageContainer::NonOwningImage(image, targetTime));
+
+    aStream->mLastPlayedVideoFrame = *frame;
   }
-  if (!frame || *frame == aStream->mLastPlayedVideoFrame)
+
+  if (!aStream->mLastPlayedVideoFrame.GetImage())
     return;
 
-  STREAM_LOG(LogLevel::Verbose, ("MediaStream %p writing video frame %p (%dx%d)",
-                              aStream, frame->GetImage(), frame->GetIntrinsicSize().width,
-                              frame->GetIntrinsicSize().height));
-  GraphTime startTime = StreamTimeToGraphTime(aStream,
-      start, INCLUDE_TRAILING_BLOCKED_INTERVAL);
-  TimeStamp targetTime = CurrentDriver()->GetCurrentTimeStamp() +
-      TimeDuration::FromSeconds(MediaTimeToSeconds(startTime - IterationEnd()));
+  nsAutoTArray<ImageContainer::NonOwningImage,4> images;
+  bool haveMultipleImages = false;
+
   for (uint32_t i = 0; i < aStream->mVideoOutputs.Length(); ++i) {
     VideoFrameContainer* output = aStream->mVideoOutputs[i];
 
-    if (frame->GetForceBlack()) {
-      nsRefPtr<Image> image =
-        output->GetImageContainer()->CreateImage(ImageFormat::PLANAR_YCBCR);
-      if (image) {
-        // Sets the image to a single black pixel, which will be scaled to fill
-        // the rendered size.
-        SetImageToBlackPixel(static_cast<PlanarYCbCrImage*>(image.get()));
-      }
-      output->SetCurrentFrame(frame->GetIntrinsicSize(), image,
-                              targetTime);
-    } else {
-      output->SetCurrentFrame(frame->GetIntrinsicSize(), frame->GetImage(),
-                              targetTime);
+    // Find previous frames that may still be valid.
+    nsAutoTArray<ImageContainer::OwningImage,4> previousImages;
+    output->GetImageContainer()->GetCurrentImages(&previousImages);
+    uint32_t j = previousImages.Length();
+    if (j) {
+      // Re-use the most recent frame before currentTimeStamp and subsequent,
+      // always keeping at least one frame.
+      do {
+        --j;
+      } while (j > 0 && previousImages[j].mTimeStamp > currentTimeStamp);
     }
+    if (previousImages.Length() - j + newImages.Length() > 1) {
+      haveMultipleImages = true;
+    }
+
+    // Don't update if there are no changes.
+    if (j == 0 && newImages.IsEmpty())
+      continue;
+
+    for ( ; j < previousImages.Length(); ++j) {
+      const auto& image = previousImages[j];
+      // Cope with potential clock skew with AudioCallbackDriver.
+      if (newImages.Length() && image.mTimeStamp > newImages[0].mTimeStamp) {
+        STREAM_LOG(LogLevel::Warning,
+                   ("Dropping %u video frames due to clock skew",
+                    unsigned(previousImages.Length() - j)));
+        break;
+      }
+
+      images.AppendElement(ImageContainer::
+                           NonOwningImage(image.mImage,
+                                          image.mTimeStamp, image.mFrameID));
+    }
+
+    // Add the frames from this iteration.
+    for (auto& image : newImages) {
+      image.mFrameID = output->NewFrameID();
+      images.AppendElement(image);
+    }
+    output->SetCurrentFrames(aStream->mLastPlayedVideoFrame.GetIntrinsicSize(),
+                             images);
 
     nsCOMPtr<nsIRunnable> event =
       new VideoFrameContainerInvalidateRunnable(output);
     DispatchToMainThreadAfterStreamStateUpdate(event.forget());
+
+    images.ClearAndRetainStorage();
   }
-  if (!aStream->mNotifiedFinished) {
-    aStream->mLastPlayedVideoFrame = *frame;
+
+  // If the stream has finished and the timestamps of all frames have expired
+  // then no more updates are required.
+  if (aStream->mFinished && !haveMultipleImages) {
+    aStream->mLastPlayedVideoFrame.SetNull();
   }
 }
 
