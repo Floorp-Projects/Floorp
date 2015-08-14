@@ -24,6 +24,7 @@ TEST_HARNESS_FILES.gtest += [
     'green.ico',
     'green.jpg',
     'green.png',
+    'no-frame-delay.gif',
     'rle4.bmp',
     'rle8.bmp',
     'transparent.bmp',

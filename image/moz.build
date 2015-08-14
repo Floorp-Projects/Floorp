@@ -59,7 +59,6 @@ UNIFIED_SOURCES += [
     'Image.cpp',
     'ImageCacheKey.cpp',
     'ImageFactory.cpp',
-    'ImageMetadata.cpp',
     'ImageOps.cpp',
     'ImageWrapper.cpp',
     'imgFrame.cpp',
