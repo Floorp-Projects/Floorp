@@ -29,7 +29,6 @@ H264Converter::H264Converter(PlatformDecoderModule* aPDM,
   , mCallback(aCallback)
   , mDecoder(nullptr)
   , mNeedAVCC(aPDM->DecoderNeedsConversion(aConfig) == PlatformDecoderModule::kNeedAVCC)
-  , mDecoderInitializing(false)
   , mLastError(NS_OK)
 {
   CreateDecoder();
@@ -64,7 +63,7 @@ H264Converter::Input(MediaRawData* aSample)
     }
   }
 
-  if (mDecoderInitializing) {
+  if (mInitPromiseRequest.Exists()) {
     mMediaRawSamples.AppendElement(aSample);
     return NS_OK;
   }
@@ -164,7 +163,6 @@ H264Converter::CreateDecoderAndInit(MediaRawData* aSample)
   nsresult rv = CreateDecoder();
 
   if (NS_SUCCEEDED(rv)) {
-    mDecoderInitializing = true;
     // Queue the incoming sample.
     mMediaRawSamples.AppendElement(aSample);
 
@@ -191,7 +189,6 @@ H264Converter::OnDecoderInitDone(const TrackType aTrackType)
     }
   }
   mMediaRawSamples.Clear();
-  mDecoderInitializing = false;
 }
 
 void
