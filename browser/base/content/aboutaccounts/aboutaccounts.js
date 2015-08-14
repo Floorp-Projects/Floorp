@@ -114,6 +114,10 @@ let wrapper = {
 
     let iframe = document.getElementById("remote");
     this.iframe = iframe;
+    this.iframe.QueryInterface(Ci.nsIFrameLoaderOwner);
+    let docShell = this.iframe.frameLoader.docShell;
+    docShell.QueryInterface(Ci.nsIWebProgress);
+    docShell.addProgressListener(this.iframeListener, Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
     iframe.addEventListener("load", this);
 
     // Ideally we'd just merge urlParams with new URL(url).searchParams, but our
@@ -122,7 +126,54 @@ let wrapper = {
     if (urlParamStr) {
       url += (url.includes("?") ? "&" : "?") + urlParamStr;
     }
+    this.url = url;
     iframe.src = url;
+  },
+
+  retry: function () {
+    let webNav = this.iframe.frameLoader.docShell.QueryInterface(Ci.nsIWebNavigation);
+    webNav.loadURI(this.url, null, null, null, null);
+  },
+
+  iframeListener: {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
+                                         Ci.nsISupportsWeakReference,
+                                         Ci.nsISupports]),
+
+    onStateChange: function(aWebProgress, aRequest, aState, aStatus) {
+      let failure = false;
+
+      // Captive portals sometimes redirect users
+      if ((aState & Ci.nsIWebProgressListener.STATE_REDIRECTING)) {
+        failure = true;
+      } else if ((aState & Ci.nsIWebProgressListener.STATE_STOP)) {
+        if (aRequest instanceof Ci.nsIHttpChannel) {
+          try {
+            failure = aRequest.responseStatus != 200;
+          } catch (e) {
+            failure = aStatus != Components.results.NS_OK;
+          }
+        }
+      }
+
+      // Calling cancel() will raise some OnStateChange notifications by itself,
+      // so avoid doing that more than once
+      if (failure && aStatus != Components.results.NS_BINDING_ABORTED) {
+        aRequest.cancel(Components.results.NS_BINDING_ABORTED);
+        setErrorPage();
+      }
+    },
+
+    onLocationChange: function(aWebProgress, aRequest, aLocation, aFlags) {
+      if (aRequest && aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) {
+        aRequest.cancel(Components.results.NS_BINDING_ABORTED);
+        setErrorPage();
+      }
+    },
+
+    onProgressChange: function() {},
+    onStatusChange: function() {},
+    onSecurityChange: function() {},
   },
 
   handleEvent: function (evt) {
@@ -292,6 +343,11 @@ function getStarted() {
   show("remote");
 }
 
+function retry() {
+  show("remote");
+  wrapper.retry();
+}
+
 function openPrefs() {
   window.openPreferences("paneSync");
 }
@@ -361,6 +417,10 @@ function init() {
   }).catch(err => {
     error("Failed to get the signed in user: " + err);
   });
+}
+
+function setErrorPage() {
+  show("stage", "networkError");
 }
 
 // Causes the "top-level" element with |id| to be shown - all other top-level
@@ -448,6 +508,9 @@ document.addEventListener("DOMContentLoaded", function onload() {
   init();
   var buttonGetStarted = document.getElementById('buttonGetStarted');
   buttonGetStarted.addEventListener('click', getStarted);
+
+  var buttonRetry = document.getElementById('buttonRetry');
+  buttonRetry.addEventListener('click', retry);
 
   var oldsync = document.getElementById('oldsync');
   oldsync.addEventListener('click', handleOldSync);

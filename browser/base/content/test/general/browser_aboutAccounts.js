@@ -85,7 +85,8 @@ let gTests = [
       stage: false, // parent of 'manage' and 'intro'
       manage: false,
       intro: false, // this is  "get started"
-      remote: true
+      remote: true,
+      networkError: false
     });
   }
 },
@@ -112,7 +113,48 @@ let gTests = [
       stage: true, // parent of 'manage' and 'intro'
       manage: true,
       intro: false, // this is  "get started"
-      remote: false
+      remote: false,
+      networkError: false
+    });
+  }
+},
+{
+  desc: "Test action=signin - captive portal",
+  teardown: () => gBrowser.removeCurrentTab(),
+  run: function* ()
+  {
+    const signinUrl = "https://redirproxy.example.com/test";
+    setPref("identity.fxaccounts.remote.signin.uri", signinUrl);
+    let [tab, url] = yield promiseNewTabWithIframeLoadEvent("about:accounts?action=signin");
+    yield checkVisibilities(tab, {
+      stage: true, // parent of 'manage' and 'intro'
+      manage: false,
+      intro: false, // this is  "get started"
+      remote: false,
+      networkError: true
+    });
+  }
+},
+{
+  desc: "Test action=signin - offline",
+  teardown: () => {
+    gBrowser.removeCurrentTab();
+    BrowserOffline.toggleOfflineStatus();
+  },
+  run: function* ()
+  {
+    BrowserOffline.toggleOfflineStatus();
+    Services.cache2.clear();
+
+    const signinUrl = "https://unknowndomain.cow";
+    setPref("identity.fxaccounts.remote.signin.uri", signinUrl);
+    let [tab, url] = yield promiseNewTabWithIframeLoadEvent("about:accounts?action=signin");
+    yield checkVisibilities(tab, {
+      stage: true, // parent of 'manage' and 'intro'
+      manage: false,
+      intro: false, // this is  "get started"
+      remote: false,
+      networkError: true
     });
   }
 },
@@ -130,7 +172,8 @@ let gTests = [
       stage: false, // parent of 'manage' and 'intro'
       manage: false,
       intro: false, // this is  "get started"
-      remote: true
+      remote: true,
+      networkError: false
     });
   },
 },
@@ -149,7 +192,8 @@ let gTests = [
       stage: true, // parent of 'manage' and 'intro'
       manage: true,
       intro: false, // this is  "get started"
-      remote: false
+      remote: false,
+      networkError: false
     });
   },
 },
