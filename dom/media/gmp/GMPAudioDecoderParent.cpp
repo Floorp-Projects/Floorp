@@ -19,6 +19,7 @@ namespace mozilla {
 
 extern PRLogModuleInfo* GetGMPLog();
 
+#define LOGV(msg) MOZ_LOG(GetGMPLog(), mozilla::LogLevel::Verbose, msg)
 #define LOGD(msg) MOZ_LOG(GetGMPLog(), mozilla::LogLevel::Debug, msg)
 #define LOG(level, msg) MOZ_LOG(GetGMPLog(), (level), msg)
 
@@ -48,6 +49,8 @@ GMPAudioDecoderParent::InitDecode(GMPAudioCodecType aCodecType,
                                   nsTArray<uint8_t>& aExtraData,
                                   GMPAudioDecoderCallbackProxy* aCallback)
 {
+  LOGD(("GMPAudioDecoderParent[%p]::InitDecode()", this));
+
   if (mIsOpen) {
     NS_WARNING("Trying to re-init an in-use GMP audio decoder!");
     return NS_ERROR_FAILURE;
@@ -78,6 +81,8 @@ GMPAudioDecoderParent::InitDecode(GMPAudioCodecType aCodecType,
 nsresult
 GMPAudioDecoderParent::Decode(GMPAudioSamplesImpl& aEncodedSamples)
 {
+  LOGV(("GMPAudioDecoderParent[%p]::Decode() timestamp=%lld",
+        this, aEncodedSamples.TimeStamp()));
 
   if (!mIsOpen) {
     NS_WARNING("Trying to use a dead GMP Audio decoder!");
@@ -100,6 +105,8 @@ GMPAudioDecoderParent::Decode(GMPAudioSamplesImpl& aEncodedSamples)
 nsresult
 GMPAudioDecoderParent::Reset()
 {
+  LOGD(("GMPAudioDecoderParent[%p]::Reset()", this));
+
   if (!mIsOpen) {
     NS_WARNING("Trying to use a dead GMP Audio decoder!");
     return NS_ERROR_FAILURE;
@@ -120,6 +127,8 @@ GMPAudioDecoderParent::Reset()
 nsresult
 GMPAudioDecoderParent::Drain()
 {
+  LOGD(("GMPAudioDecoderParent[%p]::Drain()", this));
+
   if (!mIsOpen) {
     NS_WARNING("Trying to use a dead GMP Audio decoder!");
     return NS_ERROR_FAILURE;
@@ -141,7 +150,7 @@ GMPAudioDecoderParent::Drain()
 nsresult
 GMPAudioDecoderParent::Close()
 {
-  LOGD(("%s: %p", __FUNCTION__, this));
+  LOGD(("GMPAudioDecoderParent[%p]::Close()", this));
   MOZ_ASSERT(!mPlugin || mPlugin->GMPThread() == NS_GetCurrentThread());
 
   // Ensure if we've received a Close while waiting for a ResetComplete
@@ -166,7 +175,7 @@ GMPAudioDecoderParent::Close()
 nsresult
 GMPAudioDecoderParent::Shutdown()
 {
-  LOGD(("%s: %p", __FUNCTION__, this));
+  LOGD(("GMPAudioDecoderParent[%p]::Shutdown()", this));
   MOZ_ASSERT(!mPlugin || mPlugin->GMPThread() == NS_GetCurrentThread());
 
   if (mShuttingDown) {
@@ -197,6 +206,8 @@ GMPAudioDecoderParent::Shutdown()
 void
 GMPAudioDecoderParent::ActorDestroy(ActorDestroyReason aWhy)
 {
+  LOGD(("GMPAudioDecoderParent[%p]::ActorDestroy(reason=%d)", this, aWhy));
+
   mIsOpen = false;
   mActorDestroyed = true;
 
@@ -220,6 +231,9 @@ GMPAudioDecoderParent::ActorDestroy(ActorDestroyReason aWhy)
 bool
 GMPAudioDecoderParent::RecvDecoded(const GMPAudioDecodedSampleData& aDecoded)
 {
+  LOGV(("GMPAudioDecoderParent[%p]::RecvDecoded() timestamp=%lld",
+        this, aDecoded.mTimeStamp()));
+
   if (!mCallback) {
     return false;
   }
@@ -235,6 +249,8 @@ GMPAudioDecoderParent::RecvDecoded(const GMPAudioDecodedSampleData& aDecoded)
 bool
 GMPAudioDecoderParent::RecvInputDataExhausted()
 {
+  LOGV(("GMPAudioDecoderParent[%p]::RecvInputDataExhausted()", this));
+
   if (!mCallback) {
     return false;
   }
@@ -248,6 +264,8 @@ GMPAudioDecoderParent::RecvInputDataExhausted()
 bool
 GMPAudioDecoderParent::RecvDrainComplete()
 {
+  LOGD(("GMPAudioDecoderParent[%p]::RecvDrainComplete()", this));
+
   if (!mCallback) {
     return false;
   }
@@ -266,6 +284,8 @@ GMPAudioDecoderParent::RecvDrainComplete()
 bool
 GMPAudioDecoderParent::RecvResetComplete()
 {
+  LOGD(("GMPAudioDecoderParent[%p]::RecvResetComplete()", this));
+
   if (!mCallback) {
     return false;
   }
@@ -284,6 +304,8 @@ GMPAudioDecoderParent::RecvResetComplete()
 bool
 GMPAudioDecoderParent::RecvError(const GMPErr& aError)
 {
+  LOGD(("GMPAudioDecoderParent[%p]::RecvError(error=%d)", this, aError));
+
   if (!mCallback) {
     return false;
   }
@@ -302,6 +324,8 @@ GMPAudioDecoderParent::RecvError(const GMPErr& aError)
 bool
 GMPAudioDecoderParent::RecvShutdown()
 {
+  LOGD(("GMPAudioDecoderParent[%p]::RecvShutdown()", this));
+
   Shutdown();
   return true;
 }
@@ -309,6 +333,8 @@ GMPAudioDecoderParent::RecvShutdown()
 bool
 GMPAudioDecoderParent::Recv__delete__()
 {
+  LOGD(("GMPAudioDecoderParent[%p]::Recv__delete__()", this));
+
   if (mPlugin) {
     // Ignore any return code. It is OK for this to fail without killing the process.
     mPlugin->AudioDecoderDestroyed(this);
@@ -321,6 +347,8 @@ GMPAudioDecoderParent::Recv__delete__()
 void
 GMPAudioDecoderParent::UnblockResetAndDrain()
 {
+  LOGD(("GMPAudioDecoderParent[%p]::UnblockResetAndDrain()", this));
+
   if (!mCallback) {
     MOZ_ASSERT(!mIsAwaitingResetComplete);
     MOZ_ASSERT(!mIsAwaitingDrainComplete);
