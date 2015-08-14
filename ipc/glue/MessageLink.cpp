@@ -187,6 +187,7 @@ ProcessLink::SendMessage(Message *msg)
         case mozilla::dom::PNuwa::Msg_Fork__ID:
         case mozilla::dom::PNuwa::Reply_AddNewProcess__ID:
         case mozilla::dom::PContent::Msg_NotifyPhoneStateChange__ID:
+        case mozilla::dom::PContent::Msg_ActivateA11y__ID:
         case mozilla::hal_sandbox::PHal::Msg_NotifyNetworkChange__ID:
         case GOODBYE_MESSAGE_TYPE:
             break;
