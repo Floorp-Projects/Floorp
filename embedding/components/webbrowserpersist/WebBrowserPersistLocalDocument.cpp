@@ -163,24 +163,34 @@ NS_IMETHODIMP
 WebBrowserPersistLocalDocument::GetContentDisposition(nsAString& aCD)
 {
     nsCOMPtr<nsIDOMWindow> window = mDocument->GetDefaultView();
-    NS_ENSURE_STATE(window);
+    if (NS_WARN_IF(!window)) {
+        aCD.SetIsVoid(true);
+        return NS_OK;
+    }
     nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(window);
-    NS_ENSURE_STATE(utils);
-    return utils->GetDocumentMetadata(
+    if (NS_WARN_IF(!utils)) {
+        aCD.SetIsVoid(true);
+        return NS_OK;
+    }
+    nsresult rv = utils->GetDocumentMetadata(
         NS_LITERAL_STRING("content-disposition"), aCD);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        aCD.SetIsVoid(true);
+    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 WebBrowserPersistLocalDocument::GetCacheKey(uint32_t* aKey)
 {
-    nsCOMPtr<nsISHEntry> history;
-    nsresult rv = GetHistory(getter_AddRefs(history));
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_STATE(history);
+    nsCOMPtr<nsISHEntry> history = GetHistory();
+    if (!history) {
+        *aKey = 0;
+        return NS_OK;
+    }
     nsCOMPtr<nsISupports> abstractKey;
-    rv = history->GetCacheKey(getter_AddRefs(abstractKey));
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!abstractKey) {
+    nsresult rv = history->GetCacheKey(getter_AddRefs(abstractKey));
+    if (NS_WARN_IF(NS_FAILED(rv)) || !abstractKey) {
         *aKey = 0;
         return NS_OK;
     }
@@ -195,29 +205,37 @@ WebBrowserPersistLocalDocument::GetCacheKey(uint32_t* aKey)
 NS_IMETHODIMP
 WebBrowserPersistLocalDocument::GetPostData(nsIInputStream** aStream)
 {
-    nsCOMPtr<nsISHEntry> history;
-    nsresult rv = GetHistory(getter_AddRefs(history));
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_STATE(history);
+    nsCOMPtr<nsISHEntry> history = GetHistory();
+    if (!history) {
+        *aStream = nullptr;
+        return NS_OK;
+    }
     return history->GetPostData(aStream);
 }
 
-nsresult
-WebBrowserPersistLocalDocument::GetHistory(nsISHEntry** aHistory)
+already_AddRefed<nsISHEntry>
+WebBrowserPersistLocalDocument::GetHistory()
 {
     nsCOMPtr<nsIDOMWindow> window = mDocument->GetDefaultView();
-    NS_ENSURE_STATE(window);
+    if (NS_WARN_IF(!window)) {
+        return nullptr;
+    }
     nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(window);
-    NS_ENSURE_STATE(webNav);
+    if (NS_WARN_IF(!webNav)) {
+        return nullptr;
+    }
     nsCOMPtr<nsIWebPageDescriptor> desc = do_QueryInterface(webNav);
-    NS_ENSURE_STATE(desc);
+    if (NS_WARN_IF(!desc)) {
+        return nullptr;
+    }
     nsCOMPtr<nsISupports> curDesc;
     nsresult rv = desc->GetCurrentDescriptor(getter_AddRefs(curDesc));
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_STATE(curDesc);
+    // This can fail if, e.g., the document is a Print Preview.
+    if (NS_FAILED(rv) || NS_WARN_IF(!curDesc)) {
+        return nullptr;
+    }
     nsCOMPtr<nsISHEntry> history = do_QueryInterface(curDesc);
-    history.forget(aHistory);
-    return NS_OK;
+    return history.forget();
 }
 
 const nsCString&
@@ -328,7 +346,10 @@ ResourceReader::OnWalkSubframe(nsIDOMNode* aNode)
     NS_ENSURE_STATE(loader);
 
     ++mOutstandingDocuments;
-    nsresult rv = loader->StartPersistence(this);
+    // Pass in 0 as the outer window ID so that we start
+    // persisting the root of this subframe, and not some other
+    // subframe child of this subframe.
+    nsresult rv = loader->StartPersistence(0, this);
     if (NS_FAILED(rv)) {
         if (rv == NS_ERROR_NO_CONTENT) {
             // Just ignore frames with no content document.

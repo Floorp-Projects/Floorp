@@ -140,6 +140,14 @@ nsAppShell::nsAppShell()
         return;
     }
 
+    if (jni::IsAvailable()) {
+        // Initialize JNI and Set the corresponding state in GeckoThread.
+        AndroidBridge::ConstructBridge();
+        mozilla::ANRReporter::Init();
+
+        widget::GeckoThread::SetState(widget::GeckoThread::State::JNI_READY());
+    }
+
     sPowerManagerService = do_GetService(POWERMANAGERSERVICE_CONTRACTID);
 
     if (sPowerManagerService) {
@@ -147,16 +155,6 @@ nsAppShell::nsAppShell()
     } else {
         NS_WARNING("Failed to retrieve PowerManagerService, wakelocks will be broken!");
     }
-
-    // Initialize JNI and Set the corresponding state in GeckoThread.
-
-    if (!jni::IsAvailable()) {
-        return;
-    }
-    AndroidBridge::ConstructBridge();
-    mozilla::ANRReporter::Init();
-
-    widget::GeckoThread::SetState(widget::GeckoThread::State::JNI_READY());
 }
 
 nsAppShell::~nsAppShell()
@@ -170,7 +168,9 @@ nsAppShell::~nsAppShell()
         sWakeLockListener = nullptr;
     }
 
-    AndroidBridge::DeconstructBridge();
+    if (jni::IsAvailable()) {
+        AndroidBridge::DeconstructBridge();
+    }
 }
 
 void

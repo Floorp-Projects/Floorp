@@ -325,6 +325,23 @@ public:
    */
   static uint16_t ReverseDocumentPosition(uint16_t aDocumentPosition);
 
+  /**
+   * Returns a subdocument for aDocument with a particular outer window ID.
+   *
+   * @param aDocument
+   *        The document whose subdocuments will be searched.
+   * @param aOuterWindowID
+   *        The outer window ID for the subdocument to be found. This must
+   *        be a value greater than 0.
+   * @return nsIDocument*
+   *        A pointer to the found nsIDocument. nullptr if the subdocument
+   *        cannot be found, or if either aDocument or aOuterWindowId were
+   *        invalid. If the outer window ID belongs to aDocument itself, this
+   *        will return a pointer to aDocument.
+   */
+  static nsIDocument* GetSubdocumentWithOuterWindowId(nsIDocument *aDocument,
+                                                      uint64_t aOuterWindowId);
+
   static uint32_t CopyNewlineNormalizedUnicodeTo(const nsAString& aSource,
                                                  uint32_t aSrcOffset,
                                                  char16_t* aDest,

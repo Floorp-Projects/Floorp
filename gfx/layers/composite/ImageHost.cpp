@@ -281,6 +281,9 @@ ImageHost::Composite(LayerComposite* aLayer,
   TimedImage* img = &mImages[imageIndex];
   // Make sure the front buffer has a compositor
   img->mFrontBuffer->SetCompositor(GetCompositor());
+  if (img->mTextureSource) {
+    img->mTextureSource->SetCompositor(GetCompositor());
+  }
 
   {
     AutoLockCompositableHost autoLock(this);
