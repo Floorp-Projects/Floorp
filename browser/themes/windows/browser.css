@@ -1252,6 +1252,8 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
       border-color: hsl(0,0%,90%);
       padding: 1px;
       -moz-padding-end: 3px;
+      transition-property: border-color, box-shadow;
+      transition-duration: .1s;
     }
 
     #urlbar:not(:-moz-lwtheme):hover,
@@ -1283,8 +1285,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   .searchbar-textbox {
     font-size: 1.15em;
     min-height: 28px;
-    transition-property: border-color, box-shadow;
-    transition-duration: .1s;
   }
 
   :root {
