@@ -52,6 +52,11 @@ ServiceWorker::ServiceWorker(nsPIDOMWindow* aWindow,
   MOZ_ASSERT(aInfo);
   MOZ_ASSERT(mSharedWorker);
 
+  if (aWindow) {
+    mDocument = aWindow->GetExtantDoc();
+    mWindow = aWindow->GetOuterWindow();
+  }
+
   // This will update our state too.
   mInfo->AppendWorker(this);
 }
@@ -69,7 +74,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ServiceWorker)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorker, DOMEventTargetHelper,
-                                   mSharedWorker)
+                                   mSharedWorker, mDocument, mWindow)
 
 JSObject*
 ServiceWorker::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
@@ -90,22 +95,20 @@ ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                            const Optional<Sequence<JS::Value>>& aTransferable,
                            ErrorResult& aRv)
 {
+  WorkerPrivate* workerPrivate = GetWorkerPrivate();
+  MOZ_ASSERT(workerPrivate);
+
   if (State() == ServiceWorkerState::Redundant) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(GetParentObject());
-  if (!window || !window->GetExtantDoc()) {
-    NS_WARNING("Trying to call post message from an invalid dom object.");
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
+  MOZ_ASSERT(mDocument && mWindow,
+             "Cannot call PostMessage on a ServiceWorker object that doesn't "
+             "have a window");
 
-  WorkerPrivate* workerPrivate = GetWorkerPrivate();
-  MOZ_ASSERT(workerPrivate);
-
-  nsAutoPtr<ServiceWorkerClientInfo> clientInfo(new ServiceWorkerClientInfo(window->GetExtantDoc()));
+  nsAutoPtr<ServiceWorkerClientInfo> clientInfo(
+    new ServiceWorkerClientInfo(mDocument, mWindow));
 
   workerPrivate->PostMessageToServiceWorker(aCx, aMessage, aTransferable,
                                             clientInfo, aRv);
