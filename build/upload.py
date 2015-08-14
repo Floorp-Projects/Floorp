@@ -191,6 +191,8 @@ def UploadFiles(user, host, path, files, verbose=False, port=None, ssh_key=None,
                 print "Running post-upload command: " + post_upload_command
             file_list = '"' + '" "'.join(remote_files) + '"'
             output = DoSSHCommand('%s "%s" %s' % (post_upload_command, path, file_list), user, host, port=port, ssh_key=ssh_key)
+            # We print since mozharness may parse URLs from the output stream.
+            print output
             if properties_file:
                 with open(properties_file, 'w') as outfile:
                     properties = GetUrlProperties(output, package)
