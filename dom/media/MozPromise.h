@@ -9,10 +9,12 @@
 
 #include "mozilla/AbstractThread.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/IndexSequence.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/Tuple.h"
 #include "mozilla/unused.h"
 
 #include "nsTArray.h"
@@ -863,78 +865,50 @@ private:
 
 namespace detail {
 
-template<typename PromiseType>
+template<typename ReturnType, typename ThisType, typename... ArgTypes, size_t... Indices>
+ReturnType
+MethodCallInvokeHelper(ReturnType(ThisType::*aMethod)(ArgTypes...), ThisType* aThisVal,
+                       Tuple<ArgTypes...>& aArgs, IndexSequence<Indices...>)
+{
+  return ((*aThisVal).*aMethod)(Get<Indices>(aArgs)...);
+}
+
+// Non-templated base class to allow us to use MOZ_COUNT_{C,D}TOR, which cause
+// assertions when used on templated types.
 class MethodCallBase
 {
 public:
   MethodCallBase() { MOZ_COUNT_CTOR(MethodCallBase); }
-  virtual nsRefPtr<PromiseType> Invoke() = 0;
-  virtual ~MethodCallBase() { MOZ_COUNT_DTOR(MethodCallBase); };
+  virtual ~MethodCallBase() { MOZ_COUNT_DTOR(MethodCallBase); }
 };
 
-template<typename PromiseType, typename ThisType>
-class MethodCallWithNoArgs : public MethodCallBase<PromiseType>
+template<typename PromiseType, typename ThisType, typename... ArgTypes>
+class MethodCall : public MethodCallBase
 {
 public:
-  typedef nsRefPtr<PromiseType>(ThisType::*Type)();
-  MethodCallWithNoArgs(ThisType* aThisVal, Type aMethod)
-    : mThisVal(aThisVal), mMethod(aMethod) {}
-  nsRefPtr<PromiseType> Invoke() override { return ((*mThisVal).*mMethod)(); }
-protected:
+  typedef nsRefPtr<PromiseType>(ThisType::*MethodType)(ArgTypes...);
+  MethodCall(MethodType aMethod, ThisType* aThisVal, ArgTypes... aArgs)
+    : mMethod(aMethod)
+    , mThisVal(aThisVal)
+    , mArgs(Forward<ArgTypes>(aArgs)...)
+  {}
+
+  nsRefPtr<PromiseType> Invoke()
+  {
+    return MethodCallInvokeHelper(mMethod, mThisVal.get(), mArgs, typename IndexSequenceFor<ArgTypes...>::Type());
+  }
+
+private:
+  MethodType mMethod;
   nsRefPtr<ThisType> mThisVal;
-  Type mMethod;
+  Tuple<ArgTypes...> mArgs;
 };
 
-template<typename PromiseType, typename ThisType, typename Arg1Type>
-class MethodCallWithOneArg : public MethodCallBase<PromiseType>
-{
-public:
-  typedef nsRefPtr<PromiseType>(ThisType::*Type)(Arg1Type);
-  MethodCallWithOneArg(ThisType* aThisVal, Type aMethod, Arg1Type aArg1)
-    : mThisVal(aThisVal), mMethod(aMethod), mArg1(aArg1) {}
-  nsRefPtr<PromiseType> Invoke() override { return ((*mThisVal).*mMethod)(mArg1); }
-protected:
-  nsRefPtr<ThisType> mThisVal;
-  Type mMethod;
-  Arg1Type mArg1;
-};
-
-template<typename PromiseType, typename ThisType, typename Arg1Type, typename Arg2Type>
-class MethodCallWithTwoArgs : public MethodCallBase<PromiseType>
-{
-public:
-  typedef nsRefPtr<PromiseType>(ThisType::*Type)(Arg1Type, Arg2Type);
-  MethodCallWithTwoArgs(ThisType* aThisVal, Type aMethod, Arg1Type aArg1, Arg2Type aArg2)
-    : mThisVal(aThisVal), mMethod(aMethod), mArg1(aArg1), mArg2(aArg2) {}
-  nsRefPtr<PromiseType> Invoke() override { return ((*mThisVal).*mMethod)(mArg1, mArg2); }
-protected:
-  nsRefPtr<ThisType> mThisVal;
-  Type mMethod;
-  Arg1Type mArg1;
-  Arg2Type mArg2;
-};
-
-template<typename PromiseType, typename ThisType, typename Arg1Type, typename Arg2Type, typename Arg3Type>
-class MethodCallWithThreeArgs : public MethodCallBase<PromiseType>
-{
-public:
-  typedef nsRefPtr<PromiseType>(ThisType::*Type)(Arg1Type, Arg2Type, Arg3Type);
-  MethodCallWithThreeArgs(ThisType* aThisVal, Type aMethod, Arg1Type aArg1, Arg2Type aArg2, Arg3Type aArg3)
-    : mThisVal(aThisVal), mMethod(aMethod), mArg1(aArg1), mArg2(aArg2), mArg3(aArg3) {}
-  nsRefPtr<PromiseType> Invoke() override { return ((*mThisVal).*mMethod)(mArg1, mArg2, mArg3); }
-protected:
-  nsRefPtr<ThisType> mThisVal;
-  Type mMethod;
-  Arg1Type mArg1;
-  Arg2Type mArg2;
-  Arg3Type mArg3;
-};
-
-template<typename PromiseType>
+template<typename PromiseType, typename ThisType, typename ...ArgTypes>
 class ProxyRunnable : public nsRunnable
 {
 public:
-  ProxyRunnable(typename PromiseType::Private* aProxyPromise, MethodCallBase<PromiseType>* aMethodCall)
+  ProxyRunnable(typename PromiseType::Private* aProxyPromise, MethodCall<PromiseType, ThisType, ArgTypes...>* aMethodCall)
     : mProxyPromise(aProxyPromise), mMethodCall(aMethodCall) {}
 
   NS_IMETHODIMP Run()
@@ -947,60 +921,25 @@ public:
 
 private:
   nsRefPtr<typename PromiseType::Private> mProxyPromise;
-  nsAutoPtr<MethodCallBase<PromiseType>> mMethodCall;
+  nsAutoPtr<MethodCall<PromiseType, ThisType, ArgTypes...>> mMethodCall;
 };
-
-template<typename PromiseType>
-static nsRefPtr<PromiseType>
-ProxyInternal(AbstractThread* aTarget, MethodCallBase<PromiseType>* aMethodCall, const char* aCallerName)
-{
-  nsRefPtr<typename PromiseType::Private> p = new (typename PromiseType::Private)(aCallerName);
-  nsRefPtr<ProxyRunnable<PromiseType>> r = new ProxyRunnable<PromiseType>(p, aMethodCall);
-  MOZ_ASSERT(aTarget->IsDispatchReliable());
-  aTarget->Dispatch(r.forget());
-  return p.forget();
-}
 
 } // namespace detail
 
-template<typename PromiseType, typename ThisType>
+template<typename PromiseType, typename ThisType, typename ...ArgTypes>
 static nsRefPtr<PromiseType>
 InvokeAsync(AbstractThread* aTarget, ThisType* aThisVal, const char* aCallerName,
-            nsRefPtr<PromiseType>(ThisType::*aMethod)())
+            nsRefPtr<PromiseType>(ThisType::*aMethod)(ArgTypes...), ArgTypes... aArgs)
 {
-  typedef detail::MethodCallWithNoArgs<PromiseType, ThisType> MethodCallType;
-  MethodCallType* methodCall = new MethodCallType(aThisVal, aMethod);
-  return detail::ProxyInternal(aTarget, methodCall, aCallerName);
-}
+  typedef detail::MethodCall<PromiseType, ThisType, ArgTypes...> MethodCallType;
+  typedef detail::ProxyRunnable<PromiseType, ThisType, ArgTypes...> ProxyRunnableType;
 
-template<typename PromiseType, typename ThisType, typename Arg1Type>
-static nsRefPtr<PromiseType>
-InvokeAsync(AbstractThread* aTarget, ThisType* aThisVal, const char* aCallerName,
-            nsRefPtr<PromiseType>(ThisType::*aMethod)(Arg1Type), Arg1Type aArg1)
-{
-  typedef detail::MethodCallWithOneArg<PromiseType, ThisType, Arg1Type> MethodCallType;
-  MethodCallType* methodCall = new MethodCallType(aThisVal, aMethod, aArg1);
-  return detail::ProxyInternal(aTarget, methodCall, aCallerName);
-}
-
-template<typename PromiseType, typename ThisType, typename Arg1Type, typename Arg2Type>
-static nsRefPtr<PromiseType>
-InvokeAsync(AbstractThread* aTarget, ThisType* aThisVal, const char* aCallerName,
-            nsRefPtr<PromiseType>(ThisType::*aMethod)(Arg1Type, Arg2Type), Arg1Type aArg1, Arg2Type aArg2)
-{
-  typedef detail::MethodCallWithTwoArgs<PromiseType, ThisType, Arg1Type, Arg2Type> MethodCallType;
-  MethodCallType* methodCall = new MethodCallType(aThisVal, aMethod, aArg1, aArg2);
-  return detail::ProxyInternal(aTarget, methodCall, aCallerName);
-}
-
-template<typename PromiseType, typename ThisType, typename Arg1Type, typename Arg2Type, typename Arg3Type>
-static nsRefPtr<PromiseType>
-InvokeAsync(AbstractThread* aTarget, ThisType* aThisVal, const char* aCallerName,
-            nsRefPtr<PromiseType>(ThisType::*aMethod)(Arg1Type, Arg2Type, Arg3Type), Arg1Type aArg1, Arg2Type aArg2, Arg3Type aArg3)
-{
-  typedef detail::MethodCallWithThreeArgs<PromiseType, ThisType, Arg1Type, Arg2Type, Arg3Type> MethodCallType;
-  MethodCallType* methodCall = new MethodCallType(aThisVal, aMethod, aArg1, aArg2, aArg3);
-  return detail::ProxyInternal(aTarget, methodCall, aCallerName);
+  MethodCallType* methodCall = new MethodCallType(aMethod, aThisVal, Forward<ArgTypes>(aArgs)...);
+  nsRefPtr<typename PromiseType::Private> p = new (typename PromiseType::Private)(aCallerName);
+  nsRefPtr<ProxyRunnableType> r = new ProxyRunnableType(p, methodCall);
+  MOZ_ASSERT(aTarget->IsDispatchReliable());
+  aTarget->Dispatch(r.forget());
+  return p.forget();
 }
 
 #undef PROMISE_LOG
