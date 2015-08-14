@@ -30,7 +30,6 @@
 #include "TextureGarbageBin.h"
 #include "gfx2DGlue.h"
 #include "gfxPrefs.h"
-#include "DriverCrashGuard.h"
 #include "mozilla/IntegerPrintfMacros.h"
 
 #include "OGLShaderProgram.h" // for ShaderProgramType
@@ -367,11 +366,6 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
     if (mInitialized) {
         reporter.SetSuccessful();
         return true;
-    }
-
-    GLContextCrashGuard crashGuard;
-    if (crashGuard.Crashed()) {
-        return false;
     }
 
     mWorkAroundDriverBugs = gfxPrefs::WorkAroundDriverBugs();
