@@ -110,7 +110,8 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 nsINode::nsSlots::nsSlots()
-  : mWeakReference(nullptr)
+  : mWeakReference(nullptr),
+    mEditableDescendantCount(0)
 {
 }
 
@@ -1343,6 +1344,38 @@ nsINode::GetOwnerGlobal() const
 {
   bool dummy;
   return OwnerDoc()->GetScriptHandlingObject(dummy);
+}
+
+void
+nsINode::ChangeEditableDescendantCount(int32_t aDelta)
+{
+  if (aDelta == 0) {
+    return;
+  }
+
+  nsSlots* s = Slots();
+  MOZ_ASSERT(aDelta > 0 ||
+             s->mEditableDescendantCount >= (uint32_t) (-1 * aDelta));
+  s->mEditableDescendantCount += aDelta;
+}
+
+void
+nsINode::ResetEditableDescendantCount()
+{
+  nsSlots* s = GetExistingSlots();
+  if (s) {
+    s->mEditableDescendantCount = 0;
+  }
+}
+
+uint32_t
+nsINode::EditableDescendantCount()
+{
+  nsSlots* s = GetExistingSlots();
+  if (s) {
+    return s->mEditableDescendantCount;
+  }
+  return 0;
 }
 
 bool
