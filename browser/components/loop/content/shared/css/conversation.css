@@ -1401,24 +1401,6 @@ html[dir="rtl"] .room-context-btn-close {
   max-width: 400px;
 }
 
-.standalone .room-conversation .media {
-  background: #000;
-}
-
-.standalone .room-conversation .video_wrapper.remote_wrapper {
-  background-color: #4e4e4e;
-  width: calc(75% - 10px); /* Take the left margin into account. */
-}
-
-.standalone .room-conversation .conversation-toolbar {
-  background: #000;
-  border: none;
-}
-
-.standalone .room-conversation .conversation-toolbar .btn-hangup-entry {
-  display: block;
-}
-
 .standalone .room-conversation-wrapper .ended-conversation {
   position: relative;
   height: auto;
