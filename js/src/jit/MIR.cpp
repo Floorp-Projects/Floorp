@@ -56,7 +56,7 @@ ConvertDefinitionToDouble(TempAllocator& alloc, MDefinition* def, MInstruction* 
 }
 
 static bool
-CheckUsesAreFloat32Consumers(MInstruction* ins)
+CheckUsesAreFloat32Consumers(const MInstruction* ins)
 {
     bool allConsumerUses = true;
     for (MUseDefIterator use(ins); allConsumerUses && use; use++)
@@ -2274,6 +2274,23 @@ MBinaryArithInstruction::foldsTo(TempAllocator& alloc)
     }
 
     return this;
+}
+
+void
+MFilterTypeSet::trySpecializeFloat32(TempAllocator& alloc)
+{
+    MDefinition* in = input();
+    if (in->type() != MIRType_Float32)
+        return;
+
+    setResultType(MIRType_Float32);
+}
+
+bool
+MFilterTypeSet::canConsumeFloat32(MUse* operand) const
+{
+    MOZ_ASSERT(getUseFor(0) == operand);
+    return CheckUsesAreFloat32Consumers(this);
 }
 
 void
