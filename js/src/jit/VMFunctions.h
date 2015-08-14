@@ -688,8 +688,6 @@ bool InitBaselineFrameForOsr(BaselineFrame* frame, InterpreterFrame* interpFrame
 JSObject* CreateDerivedTypedObj(JSContext* cx, HandleObject descr,
                                 HandleObject owner, int32_t offset);
 
-bool ArraySpliceDense(JSContext* cx, HandleObject obj, uint32_t start, uint32_t deleteCount);
-
 bool Recompile(JSContext* cx);
 bool ForcedRecompile(JSContext* cx);
 JSString* RegExpReplace(JSContext* cx, HandleString string, HandleObject regexp,
