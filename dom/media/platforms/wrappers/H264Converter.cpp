@@ -165,6 +165,9 @@ H264Converter::CreateDecoderAndInit(MediaRawData* aSample)
 
   if (NS_SUCCEEDED(rv)) {
     mDecoderInitializing = true;
+    // Queue the incoming sample.
+    mMediaRawSamples.AppendElement(aSample);
+
     nsRefPtr<H264Converter> self = this;
 
     // The mVideoTaskQueue is flushable which can't be used in MediaPromise. So
