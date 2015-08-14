@@ -541,28 +541,6 @@ private:
 
 };
 
-class ServiceWorkerUpdateFinishCallback
-{
-protected:
-  virtual ~ServiceWorkerUpdateFinishCallback()
-  { }
-
-public:
-  NS_INLINE_DECL_REFCOUNTING(ServiceWorkerUpdateFinishCallback)
-
-  virtual
-  void UpdateSucceeded(ServiceWorkerRegistrationInfo* aInfo)
-  { }
-
-  virtual
-  void UpdateFailed(nsresult aStatus)
-  { }
-
-  virtual
-  void UpdateFailed(const ErrorEventInit& aDesc)
-  { }
-};
-
 class ServiceWorkerResolveWindowPromiseOnUpdateCallback final : public ServiceWorkerUpdateFinishCallback
 {
   nsRefPtr<nsPIDOMWindow> mWindow;
@@ -4174,7 +4152,8 @@ ServiceWorkerManager::InvalidateServiceWorkerRegistrationWorker(ServiceWorkerReg
 
 void
 ServiceWorkerManager::SoftUpdate(nsIPrincipal* aPrincipal,
-                                 const nsACString& aScope)
+                                 const nsACString& aScope,
+                                 ServiceWorkerUpdateFinishCallback* aCallback)
 {
   MOZ_ASSERT(aPrincipal);
 
@@ -4184,21 +4163,23 @@ ServiceWorkerManager::SoftUpdate(nsIPrincipal* aPrincipal,
     return;
   }
 
-  SoftUpdate(scopeKey, aScope);
+  SoftUpdate(scopeKey, aScope, aCallback);
 }
 
 void
 ServiceWorkerManager::SoftUpdate(const OriginAttributes& aOriginAttributes,
-                                 const nsACString& aScope)
+                                 const nsACString& aScope,
+                                 ServiceWorkerUpdateFinishCallback* aCallback)
 {
   nsAutoCString scopeKey;
   aOriginAttributes.CreateSuffix(scopeKey);
-  SoftUpdate(scopeKey, aScope);
+  SoftUpdate(scopeKey, aScope, aCallback);
 }
 
 void
 ServiceWorkerManager::SoftUpdate(const nsACString& aScopeKey,
-                                 const nsACString& aScope)
+                                 const nsACString& aScope,
+                                 ServiceWorkerUpdateFinishCallback* aCallback)
 {
   nsRefPtr<ServiceWorkerRegistrationInfo> registration =
     GetRegistration(aScopeKey, aScope);
@@ -4231,8 +4212,10 @@ ServiceWorkerManager::SoftUpdate(const nsACString& aScopeKey,
     GetOrCreateJobQueue(aScopeKey, aScope);
   MOZ_ASSERT(queue);
 
-  nsRefPtr<ServiceWorkerUpdateFinishCallback> cb =
-    new ServiceWorkerUpdateFinishCallback();
+  nsRefPtr<ServiceWorkerUpdateFinishCallback> cb(aCallback);
+  if (!cb) {
+    cb = new ServiceWorkerUpdateFinishCallback();
+  }
 
   // "Invoke Update algorithm, or its equivalent, with client, registration as
   // its argument."
