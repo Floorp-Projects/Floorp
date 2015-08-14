@@ -2849,8 +2849,8 @@ GetUserMediaCallbackMediaStreamListener::StopTrack(TrackID aID, bool aIsAudio)
     MediaManager::PostTask(FROM_HERE,
       new MediaOperationTask(MEDIA_STOP_TRACK,
                              this, nullptr, nullptr,
-                             aIsAudio  ? mAudioSource : nullptr,
-                             !aIsAudio ? mVideoSource : nullptr,
+                             aIsAudio  ? mAudioSource.get() : nullptr,
+                             !aIsAudio ? mVideoSource.get() : nullptr,
                              mFinished, mWindowID, nullptr));
   } else {
     LOG(("gUM track %d ended, but we don't have type %s",

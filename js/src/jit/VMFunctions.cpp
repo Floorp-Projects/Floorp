@@ -252,18 +252,6 @@ template bool StringsEqual<true>(JSContext* cx, HandleString lhs, HandleString r
 template bool StringsEqual<false>(JSContext* cx, HandleString lhs, HandleString rhs, bool* res);
 
 bool
-ArraySpliceDense(JSContext* cx, HandleObject obj, uint32_t start, uint32_t deleteCount)
-{
-    JS::AutoValueArray<4> argv(cx);
-    argv[0].setUndefined();
-    argv[1].setObject(*obj);
-    argv[2].set(Int32Value(start));
-    argv[3].set(Int32Value(deleteCount));
-
-    return js::array_splice_impl(cx, 2, argv.begin(), false);
-}
-
-bool
 ArrayPopDense(JSContext* cx, HandleObject obj, MutableHandleValue rval)
 {
     MOZ_ASSERT(obj->is<ArrayObject>() || obj->is<UnboxedArrayObject>());

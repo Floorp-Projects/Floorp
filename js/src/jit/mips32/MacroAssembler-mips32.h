@@ -959,6 +959,32 @@ public:
         MOZ_CRASH("NYI");
     }
 
+    template<typename T>
+    void atomicExchange8SignExtend(const T& mem, Register value, Register output)
+    {
+        MOZ_CRASH("NYI");
+    }
+    template<typename T>
+    void atomicExchange8ZeroExtend(const T& mem, Register value, Register output)
+    {
+        MOZ_CRASH("NYI");
+    }
+    template<typename T>
+    void atomicExchange16SignExtend(const T& mem, Register value, Register output)
+    {
+        MOZ_CRASH("NYI");
+    }
+    template<typename T>
+    void atomicExchange16ZeroExtend(const T& mem, Register value, Register output)
+    {
+        MOZ_CRASH("NYI");
+    }
+    template<typename T>
+    void atomicExchange32(const T& mem, Register value, Register output)
+    {
+        MOZ_CRASH("NYI");
+    }
+
     template<typename T, typename S>
     void atomicFetchAdd8SignExtend(const S& value, const T& mem, Register temp, Register output) {
         MOZ_CRASH("NYI");

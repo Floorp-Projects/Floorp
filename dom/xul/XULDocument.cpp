@@ -3719,11 +3719,9 @@ XULDocument::CreateTemplateBuilder(nsIContent* aElement)
                                           getter_AddRefs(bodyContent));
 
         if (! bodyContent) {
-            nsresult rv =
+            bodyContent =
                 document->CreateElem(nsDependentAtomString(nsGkAtoms::treechildren),
-                                     nullptr, kNameSpaceID_XUL,
-                                     getter_AddRefs(bodyContent));
-            NS_ENSURE_SUCCESS(rv, rv);
+                                     nullptr, kNameSpaceID_XUL);
 
             aElement->AppendChildTo(bodyContent, false);
         }

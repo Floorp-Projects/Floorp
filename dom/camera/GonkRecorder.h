@@ -24,6 +24,10 @@
 #include <camera/CameraParameters.h>
 #include <utils/String8.h>
 #include <system/audio.h>
+#if ANDROID_VERSION >= 21
+#include <media/stagefright/foundation/ALooper.h>
+#include <media/stagefright/foundation/AMessage.h>
+#endif
 
 #include "mozilla/RefPtr.h"
 #include "GonkCameraHwMgr.h"
@@ -111,10 +115,10 @@ private:
     MediaProfiles *mEncoderProfiles;
 
     bool mStarted;
-    // Needed when GLFrames are encoded.
-    // An <IGraphicBufferProducer> pointer
-    // will be sent to the client side using which the
-    // frame buffers will be queued and dequeued
+
+#if ANDROID_VERSION >= 21
+    sp<ALooper> mLooper;
+#endif
 
     sp<GonkCameraHardware> mCameraHw;
 
