@@ -81,6 +81,57 @@ config = {
             "sut_port2": 20706
         }
     ],
+    "suite_definitions": {
+        "mochitest": {
+            "run_filename": "runtestsremote.py",
+            "options": ["--dm_trans=sut",
+                        "--app=%(app)s",
+                        "--remote-webserver=%(remote_webserver)s",
+                        "--xre-path=%(xre_path)s",
+                        "--utility-path=%(utility_path)s",
+                        "--deviceIP=%(device_ip)s",
+                        "--devicePort=%(device_port)s",
+                        "--http-port=%(http_port)s",
+                        "--ssl-port=%(ssl_port)s",
+                        "--certificate-path=%(certs_path)s",
+                        "--symbols-path=%(symbols_path)s",
+                        "--quiet",
+                        "--log-raw=%(raw_log_file)s",
+                        "--log-errorsummary=%(error_summary_file)s",
+                        "--screenshot-on-fail",
+                    ],
+        },
+        "reftest": {
+            "run_filename": "remotereftest.py",
+            "options": ["--app=%(app)s",
+                        "--ignore-window-size",
+                        "--bootstrap",
+                        "--remote-webserver=%(remote_webserver)s",
+                        "--xre-path=%(xre_path)s",
+                        "--utility-path=%(utility_path)s",
+                        "--deviceIP=%(device_ip)s",
+                        "--devicePort=%(device_port)s",
+                        "--http-port=%(http_port)s",
+                        "--ssl-port=%(ssl_port)s",
+                        "--httpd-path", "%(modules_dir)s",
+                        "--symbols-path=%(symbols_path)s",
+                    ],
+        },
+        "xpcshell": {
+            "run_filename": "remotexpcshelltests.py",
+            "options": ["--deviceIP=%(device_ip)s",
+                        "--devicePort=%(device_port)s",
+                        "--xre-path=%(xre_path)s",
+                        "--testing-modules-dir=%(modules_dir)s",
+                        "--apk=%(installer_path)s",
+                        "--no-logfiles",
+                        "--symbols-path=%(symbols_path)s",
+                        "--manifest=tests/xpcshell.ini",
+                        "--log-raw=%(raw_log_file)s",
+                        "--log-errorsummary=%(error_summary_file)s",
+                    ],
+        },
+    }, # end suite_definitions
     "test_suite_definitions": {
         "jsreftest": {
             "category": "reftest",
@@ -125,8 +176,6 @@ config = {
             "extra_args": ["--manifest=tests/xpcshell_android.ini"]
         },
     }, # end of "test_definitions"
-    # test harness options are located in the gecko tree
-    "in_tree_config": "config/mozharness/android_x86_config.py",
     "download_minidump_stackwalk": True,
     "default_blob_upload_servers": [
          "https://blobupload.elasticbeanstalk.com",

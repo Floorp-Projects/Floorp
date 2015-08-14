@@ -29,7 +29,29 @@ config = {
     ],
     "pip_index": False,
 
-    "in_tree_config": "config/mozharness/linux_config.py",
+    "suite_definitions": {
+        "luciddream-emulator": {
+            "options": [
+                "--startup-timeout=300",
+                "--log-raw=%(raw_log_file)s",
+                "--log-errorsummary=%(error_summary_file)s",
+                "--browser-path=%(browser_path)s",
+                "--b2gpath=%(emulator_path)s",
+                "%(test_manifest)s"
+            ],
+        },
+        "luciddream-b2gdt": {
+            "options": [
+                "--startup-timeout=300",
+                "--log-raw=%(raw_log_file)s",
+                "--log-errorsummary=%(error_summary_file)s",
+                "--browser-path=%(browser_path)s",
+                "--b2g-desktop-path=%(fxos_desktop_path)s",
+                "--gaia-profile=%(gaia_profile)s",
+                "%(test_manifest)s"
+            ],
+        },
+    },
 
     "buildbot_json_path": "buildprops.json",
 
@@ -37,8 +59,6 @@ config = {
         "https://blobupload.elasticbeanstalk.com",
     ],
     "blob_uploader_auth_file": os.path.join(os.getcwd(), "oauth.txt"),
-    # will handle in-tree config as subsequent patch
-    # "in_tree_config": "config/mozharness/luciddream.py",
     "download_symbols": "ondemand",
     "download_minidump_stackwalk": True,
     "tooltool_cache": "/builds/tooltool_cache",

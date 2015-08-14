@@ -212,21 +212,6 @@ class B2GEmulatorTest(TestingMixin, VCSMixin, BaseScript, BlobUploadMixin):
 
     @PreScriptAction('create-virtualenv')
     def _pre_create_virtualenv(self, action):
-        if self.tree_config.get('use_puppetagain_packages'):
-            requirements = [os.path.join('tests', 'b2g',
-                            'b2g-unittest-requirements.txt')]
-
-            self.register_virtualenv_module(
-                'mozinstall',
-                requirements=requirements
-            )
-            self.register_virtualenv_module(
-                'marionette',
-                url=os.path.join('tests', 'marionette'),
-                requirements=requirements
-            )
-            return
-
         dirs = self.query_abs_dirs()
         requirements = os.path.join(dirs['abs_test_install_dir'],
                                     'config',
@@ -286,22 +271,10 @@ class B2GEmulatorTest(TestingMixin, VCSMixin, BaseScript, BlobUploadMixin):
             'error_summary_file': error_summary_file,
         }
 
-        missing_key = True
-        if "suite_definitions" in self.tree_config: # new structure
-            if suite in self.tree_config["suite_definitions"]:
-                missing_key = False
-            options = self.tree_config["suite_definitions"][suite]["options"]
-        else:
-            suite_options = '%s_options' % suite
-            if suite_options in self.tree_config:
-                missing_key = False
-            options = self.tree_config[suite_options]
+        if suite not in self.config["suite_definitions"]:
+            self.fatal("Key '%s' not defined in the config!" % suite)
 
-        if missing_key:
-            self.fatal("Key '%s' not defined in the in-tree config! Please add it to '%s'." \
-                       "See bug 981030 for more details." % (suite,
-                       os.path.join('gecko', 'testing', self.config['in_tree_config'])))
-
+        options = self.config["suite_definitions"][suite]["options"]
         if options:
             for option in options:
                 option = option % str_format_values
