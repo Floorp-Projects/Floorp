@@ -3086,6 +3086,29 @@
             STATE_LOADED: 2,
             STATE_UNLOADING: 3,
 
+            _suppressor: {
+              _dwu: null,
+              _count: 0,
+              init: function() {
+                this._dwu = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                                  .getInterface(Ci.nsIDOMWindowUtils);
+              },
+              destroy: function() {
+                while (this._count > 0) {
+                  this.unsuppress();
+                }
+                this._dwu = null;
+              },
+              suppress: function() {
+                this._dwu.suppressPaintingGlobally();
+                this._count++;
+              },
+              unsuppress: function() {
+                this._dwu.unsuppressPaintingGlobally();
+                this._count--;
+              }
+            },
+
             getTabState: function(tab) {
               let state = this.tabState.get(tab);
               if (state === undefined) {
@@ -3122,6 +3145,7 @@
               window.addEventListener("MozLayerTreeCleared", this);
               window.addEventListener("TabRemotenessChange", this);
               this.setTabState(this.requestedTab, this.STATE_LOADED);
+              this._suppressor.init();
             },
 
             destroy: function() {
@@ -3132,6 +3156,7 @@
               window.removeEventListener("MozLayerTreeReady", this);
               window.removeEventListener("MozLayerTreeCleared", this);
               window.removeEventListener("TabRemotenessChange", this);
+              this._suppressor.destroy();
 
               this.tabbrowser._switcher = null;
             },
@@ -3244,7 +3269,11 @@
 
               // loadingTab can be non-null here if we timed out loading the current tab.
               // In that case we just overwrite it with a different tab; it's had its chance.
+              if (this.loadingTab == null) {
+                this._suppressor.suppress();
+              }
               this.loadingTab = this.requestedTab;
+
               this.log("Loading tab " + this.tinfo(this.loadingTab));
 
               this.setTabState(this.requestedTab, this.STATE_LOADING);
@@ -3377,6 +3406,7 @@
                 clearTimeout(this.loadTimer);
                 this.loadTimer = null;
                 this.loadingTab = null;
+                this._suppressor.unsuppress();
               }
             },
 
