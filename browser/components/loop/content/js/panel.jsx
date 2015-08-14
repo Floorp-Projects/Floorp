@@ -580,7 +580,6 @@ loop.panel = (function(_, mozL10n) {
         <div className={roomClasses} onClick={this.handleClickEntry}
              onMouseLeave={this.handleMouseLeave}>
           <h2>
-            <span className="room-notification" />
             {this.props.room.decryptedContext.roomName}
             <button className={copyButtonClasses}
               onClick={this.handleCopyButtonClick}
@@ -652,17 +651,35 @@ loop.panel = (function(_, mozL10n) {
       this.setState(this.props.store.getStoreState());
     },
 
-    _getListHeading: function() {
-      var numRooms = this.state.rooms.length;
-      if (numRooms === 0) {
-        return mozL10n.get("rooms_list_no_current_conversations");
-      }
-      return mozL10n.get("rooms_list_current_conversations", {num: numRooms});
-    },
-
     _getUserDisplayName: function() {
       return this.props.userProfile && this.props.userProfile.email ||
         mozL10n.get("display_name_guest");
+    },
+
+    _renderNoRoomsView: function() {
+      return (
+        <div className="room-list">
+          <div className="room-list-empty">
+            <p className="panel-text-large">
+              {mozL10n.get("no_conversations_message_heading")}
+            </p>
+            <p className="panel-text-medium">
+              {mozL10n.get("no_conversations_start_message")}
+            </p>
+          </div>
+          {this._renderNewRoomButton()}
+        </div>
+      );
+    },
+
+    _renderNewRoomButton: function() {
+      return (
+        <NewRoomView dispatcher={this.props.dispatcher}
+          mozLoop={this.props.mozLoop}
+          pendingOperation={this.state.pendingCreation ||
+                            this.state.pendingInitialRetrieval}
+          userDisplayName={this._getUserDisplayName()} />
+      );
     },
 
     render: function() {
@@ -671,9 +688,13 @@ loop.panel = (function(_, mozL10n) {
         console.error("RoomList error", this.state.error);
       }
 
+      if (!this.state.rooms.length) {
+        return this._renderNoRoomsView();
+      }
+
       return (
         <div className="rooms">
-          <h1>{this._getListHeading()}</h1>
+          <h1>{mozL10n.get("rooms_list_recent_conversations")}</h1>
           <div className="room-list">{
             this.state.rooms.map(function(room, i) {
               return (
@@ -685,11 +706,7 @@ loop.panel = (function(_, mozL10n) {
               );
             }, this)
           }</div>
-          <NewRoomView dispatcher={this.props.dispatcher}
-            mozLoop={this.props.mozLoop}
-            pendingOperation={this.state.pendingCreation ||
-              this.state.pendingInitialRetrieval}
-            userDisplayName={this._getUserDisplayName()} />
+          {this._renderNewRoomButton()}
         </div>
       );
     }

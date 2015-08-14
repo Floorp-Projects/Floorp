@@ -71,6 +71,7 @@ body {
 
 .showcase > section > .example {
   margin-bottom: 6em;
+  background: #fbfbfb;
 }
 
 .showcase > section > h2 {
@@ -92,10 +93,6 @@ body {
 .showcase > section .example > h3 a {
   text-decoration: none;
   color: #555;
-}
-
-.showcase .checkbox-wrapper label {
-  font-weight: bold;
 }
 
 .showcase .checkbox.checked {
