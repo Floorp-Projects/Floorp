@@ -439,7 +439,7 @@ this.DOMApplicationRegistry = {
           app.redirects = this.sanitizeRedirects(aResult.redirects);
         }
         app.kind = this.appKind(app, aResult.manifest);
-        UserCustomizations.register(aResult.manifest, app);
+        UserCustomizations.register(app);
         Langpacks.register(app, aResult.manifest);
       });
 
@@ -1164,7 +1164,7 @@ this.DOMApplicationRegistry = {
         this._registerSystemMessages(manifest, app);
         this._registerInterAppConnections(manifest, app);
         appsToRegister.push({ manifest: manifest, app: app });
-        UserCustomizations.register(manifest, app);
+        UserCustomizations.register(app);
         Langpacks.register(app, manifest);
       });
       this._safeToClone.resolve();
@@ -2013,10 +2013,10 @@ this.DOMApplicationRegistry = {
 
     // Update user customizations and langpacks.
     if (aOldManifest) {
-      UserCustomizations.unregister(aOldManifest, aApp);
+      UserCustomizations.unregister(aApp);
       Langpacks.unregister(aApp, aOldManifest);
     }
-    UserCustomizations.register(aNewManifest, aApp);
+    UserCustomizations.register(aApp);
     Langpacks.register(aApp, aNewManifest);
   },
 
@@ -4125,7 +4125,7 @@ this.DOMApplicationRegistry = {
     if (supportSystemMessages()) {
       this._unregisterActivities(aApp.manifest, aApp);
     }
-    UserCustomizations.unregister(aApp.manifest, aApp);
+    UserCustomizations.unregister(aApp);
     Langpacks.unregister(aApp, aApp.manifest);
 
     let dir = this._getAppDir(id);
@@ -4545,10 +4545,11 @@ this.DOMApplicationRegistry = {
     });
 
     // Update customization.
-    this.getManifestFor(app.manifestURL).then((aManifest) => {
-      app.enabled ? UserCustomizations.register(aManifest, app)
-                  : UserCustomizations.unregister(aManifest, app);
-    });
+    if (app.enabled) {
+      UserCustomizations.register(app);
+    } else {
+      UserCustomizations.unregister(app);
+    }
   },
 
   getManifestFor: function(aManifestURL, aEntryPoint) {
