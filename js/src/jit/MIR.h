@@ -852,7 +852,7 @@ class MDefinition : public MNode
 // iteration.
 class MUseDefIterator
 {
-    MDefinition* def_;
+    const MDefinition* def_;
     MUseIterator current_;
 
     MUseIterator search(MUseIterator start) {
@@ -865,7 +865,7 @@ class MUseDefIterator
     }
 
   public:
-    explicit MUseDefIterator(MDefinition* def)
+    explicit MUseDefIterator(const MDefinition* def)
       : def_(def),
         current_(search(def->usesBegin()))
     { }
@@ -3813,42 +3813,6 @@ class MCallDOMNative : public MCall
     virtual void computeMovable() override;
 };
 
-// arr.splice(start, deleteCount) with unused return value.
-class MArraySplice
-  : public MTernaryInstruction,
-    public Mix3Policy<ObjectPolicy<0>, IntPolicy<1>, IntPolicy<2> >::Data
-{
-  private:
-
-    MArraySplice(MDefinition* object, MDefinition* start, MDefinition* deleteCount)
-      : MTernaryInstruction(object, start, deleteCount)
-    { }
-
-  public:
-    INSTRUCTION_HEADER(ArraySplice)
-    static MArraySplice* New(TempAllocator& alloc, MDefinition* object,
-                             MDefinition* start, MDefinition* deleteCount)
-    {
-        return new(alloc) MArraySplice(object, start, deleteCount);
-    }
-
-    MDefinition* object() const {
-        return getOperand(0);
-    }
-
-    MDefinition* start() const {
-        return getOperand(1);
-    }
-
-    MDefinition* deleteCount() const {
-        return getOperand(2);
-    }
-
-    bool possiblyCalls() const override {
-        return true;
-    }
-};
-
 // fun.apply(self, arguments)
 class MApplyArgs
   : public MAryInstruction<3>,
@@ -5594,26 +5558,33 @@ class MBinaryArithInstruction
     // analysis detect a precision loss in the multiplication.
     TruncateKind implicitTruncate_;
 
-    void inferFallback(BaselineInspector* inspector, jsbytecode* pc);
-
   public:
     MBinaryArithInstruction(MDefinition* left, MDefinition* right)
       : MBinaryInstruction(left, right),
         implicitTruncate_(NoTruncate)
     {
+        specialization_ = MIRType_None;
         setMovable();
     }
+
+    static MBinaryArithInstruction* New(TempAllocator& alloc, Opcode op,
+                                        MDefinition* left, MDefinition* right);
+
+    bool constantDoubleResult(TempAllocator& alloc);
 
     MDefinition* foldsTo(TempAllocator& alloc) override;
 
     virtual double getIdentity() = 0;
 
-    void infer(TempAllocator& alloc, BaselineInspector* inspector, jsbytecode* pc);
-
-    void setInt32() {
+    void setSpecialization(MIRType type) {
+        specialization_ = type;
+        setResultType(type);
+    }
+    void setInt32Specialization() {
         specialization_ = MIRType_Int32;
         setResultType(MIRType_Int32);
     }
+    void setNumberSpecialization(TempAllocator& alloc, BaselineInspector* inspector, jsbytecode* pc);
 
     virtual void trySpecializeFloat32(TempAllocator& alloc) override;
 
@@ -12280,6 +12251,11 @@ class MFilterTypeSet
         return resultTypeSet()->empty();
     }
     void computeRange(TempAllocator& alloc) override;
+
+    bool isFloat32Commutative() const override { return true; }
+    bool canProduceFloat32() const override { return input()->canProduceFloat32(); }
+    bool canConsumeFloat32(MUse* operand) const override;
+    void trySpecializeFloat32(TempAllocator& alloc) override;
 };
 
 // Given a value, guard that the value is in a particular TypeSet, then returns

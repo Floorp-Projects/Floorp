@@ -2050,7 +2050,7 @@ nsWindow::NotifyIMEInternal(const IMENotification& aIMENotification)
             ALOGIME("IME: REQUEST_TO_CANCEL_COMPOSITION");
 
             // Cancel composition on Gecko side
-            if (GetIMEComposition()) {
+            if (!!GetIMEComposition()) {
                 nsRefPtr<nsWindow> kungFuDeathGrip(this);
 
                 WidgetCompositionEvent compositionCommitEvent(

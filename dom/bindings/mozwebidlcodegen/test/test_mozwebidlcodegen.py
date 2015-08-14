@@ -42,7 +42,7 @@ class TestWebIDLCodegenManager(unittest.TestCase):
     @property
     def _static_input_paths(self):
         s = {mozpath.join(OUR_DIR, p) for p in os.listdir(OUR_DIR)
-            if p.endswith('.webidl')}
+             if p.endswith('.webidl')}
 
         return s
 
@@ -98,7 +98,7 @@ class TestWebIDLCodegenManager(unittest.TestCase):
         manager = WebIDLCodegenManager(**args)
 
         self.assertEqual(manager._state['version'],
-            WebIDLCodegenManagerState.VERSION)
+                         WebIDLCodegenManagerState.VERSION)
         self.assertNotIn('foobar', manager._state)
 
     def test_generate_build_files(self):

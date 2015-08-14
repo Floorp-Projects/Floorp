@@ -2985,7 +2985,7 @@ gfxFont::InitFakeSmallCapsRun(gfxContext     *aContext,
                                     convertedString,
                                     true,
                                     mStyle.explicitLanguage
-                                      ? mStyle.language : nullptr,
+                                      ? mStyle.language.get() : nullptr,
                                     charsToMergeArray,
                                     deletedCharsArray);
 
