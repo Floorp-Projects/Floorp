@@ -34,6 +34,9 @@ SplitAt(const char* aDelims,
         const nsACString& aInput,
         nsTArray<nsCString>& aOutTokens);
 
+nsCString
+ToBase64(const nsTArray<uint8_t>& aBytes);
+
 } // namespace mozilla
 
 #endif
