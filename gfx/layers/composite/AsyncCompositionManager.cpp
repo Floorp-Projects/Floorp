@@ -279,14 +279,12 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
                                                    const Matrix4x4& aCurrentTransformForRoot,
                                                    const LayerMargin& aFixedLayerMargins)
 {
-  // If aLayer == aTransformedSubtreeRoot, then treat aLayer as fixed relative
-  // to the ancestor scrollable layer rather than relative to itself.
-  bool isRootFixed = aLayer->GetIsFixedPosition() &&
-    aLayer != aTransformedSubtreeRoot &&
+  bool isRootFixedForSubtree = aLayer->GetIsFixedPosition() &&
+    aLayer->GetFixedPositionScrollContainerId() == aTransformScrollId &&
     !aLayer->GetParent()->GetIsFixedPosition();
   bool isStickyForSubtree = aLayer->GetIsStickyPosition() &&
     aLayer->GetStickyScrollContainerId() == aTransformScrollId;
-  bool isFixedOrSticky = (isRootFixed || isStickyForSubtree);
+  bool isFixedOrSticky = (isRootFixedForSubtree || isStickyForSubtree);
 
   // We want to process all the fixed and sticky children of
   // aTransformedSubtreeRoot. Also, once we do encounter such a child, we don't
@@ -296,12 +294,10 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
     // ApplyAsyncContentTransformToTree will call this function again for
     // nested scrollable layers, so we don't need to recurse if the layer is
     // scrollable.
-    if (aLayer == aTransformedSubtreeRoot || !aLayer->HasScrollableFrameMetrics()) {
-      for (Layer* child = aLayer->GetFirstChild(); child; child = child->GetNextSibling()) {
-        AlignFixedAndStickyLayers(child, aTransformedSubtreeRoot, aTransformScrollId,
-                                  aPreviousTransformForRoot,
-                                  aCurrentTransformForRoot, aFixedLayerMargins);
-      }
+    for (Layer* child = aLayer->GetFirstChild(); child; child = child->GetNextSibling()) {
+      AlignFixedAndStickyLayers(child, aTransformedSubtreeRoot, aTransformScrollId,
+                                aPreviousTransformForRoot,
+                                aCurrentTransformForRoot, aFixedLayerMargins);
     }
     return;
   }
