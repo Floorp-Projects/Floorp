@@ -2,13 +2,18 @@
 // job queueing works properly when called from the worker thread. We should
 // test actual update scenarios with a SJS test.
 onmessage = function(e) {
-  self.registration.update();
-  clients.matchAll().then(function(c) {
-    if (c.length == 0) {
-      // We cannot proceed.
-      return;
-    }
+  self.registration.update().then(function(v) {
+    return v === undefined ? 'FINISH' : 'FAIL';
+  }).catch(function(e) {
+    return 'FAIL';
+  }).then(function(result) {
+    clients.matchAll().then(function(c) {
+      if (c.length == 0) {
+        dump("!!!!!!!!!!! WORKER HAS NO CLIENTS TO FINISH TEST !!!!!!!!!!!!\n");
+        return;
+      }
 
-    c[0].postMessage('FINISH');
+      c[0].postMessage(result);
+    });
   });
 }
