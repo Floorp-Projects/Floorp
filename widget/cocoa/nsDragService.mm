@@ -596,8 +596,11 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor, bool *_retval)
     type = (const NSString*)kUTTypeUTF8PlainText;
   } else if (dataFlavor.EqualsLiteral(kHTMLMime)) {
     type = (const NSString*)kUTTypeHTML;
-  } else if (dataFlavor.EqualsLiteral(kURLMime)) {
+  } else if (dataFlavor.EqualsLiteral(kURLMime) ||
+             dataFlavor.EqualsLiteral(kURLDataMime)) {
     type = (const NSString*)kUTTypeURL;
+  } else if (dataFlavor.EqualsLiteral(kURLDescriptionMime)) {
+    type = (const NSString*)kUTTypeURLName;
   }
   NSString* availableType = [globalDragPboard availableTypeFromArray:[NSArray arrayWithObjects:(id)type, nil]];
   if (availableType && IsValidType(availableType, allowFileURL)) {
