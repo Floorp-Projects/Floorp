@@ -49,7 +49,7 @@ interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 interface nsIObserver;
 
-[scriptable, uuid(5c4c391c-e083-4d95-95f0-5820c8308445)]
+[scriptable, uuid(6064615a-a782-4d08-86db-26ef3851208a)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1606,17 +1606,6 @@ interface nsIDOMWindowUtils : nsISupports {
    * otherwise.
    */
   readonly attribute boolean paintingSuppressed;
-
-  /**
-   * Suppress painting by freezing the refresh driver.
-   **/
-  void suppressPaintingGlobally();
-
-  /**
-   * Unsuppress painting by thawing the refresh driver.
-   **/
-  void unsuppressPaintingGlobally();
-
 
   /**
    * Returns an array of plugins on the page for opt-in activation.
