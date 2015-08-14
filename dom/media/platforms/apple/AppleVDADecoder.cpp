@@ -276,7 +276,7 @@ void
 AppleVDADecoder::DrainReorderedFrames()
 {
   while (!mReorderQueue.IsEmpty()) {
-    mCallback->Output(mReorderQueue.Pop());
+    mCallback->Output(mReorderQueue.Pop().get());
   }
 }
 
@@ -406,7 +406,7 @@ AppleVDADecoder::OutputFrame(CFRefPtr<CVPixelBufferRef> aImage,
   // in composition order.
   mReorderQueue.Push(data);
   while (mReorderQueue.Length() > mMaxRefFrames) {
-    mCallback->Output(mReorderQueue.Pop());
+    mCallback->Output(mReorderQueue.Pop().get());
   }
   LOG("%llu decoded frames queued",
       static_cast<unsigned long long>(mReorderQueue.Length()));

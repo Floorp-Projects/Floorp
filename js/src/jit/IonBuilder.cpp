@@ -1656,7 +1656,7 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_MUL:
       case JSOP_DIV:
       case JSOP_MOD:
-        return jsop_binary(op);
+        return jsop_binary_arith(op);
 
       case JSOP_POW:
         return jsop_pow();
@@ -4545,60 +4545,169 @@ IonBuilder::jsop_bitop(JSOp op)
     return true;
 }
 
-bool
-IonBuilder::jsop_binary(JSOp op, MDefinition* left, MDefinition* right)
+MDefinition::Opcode
+JSOpToMDefinition(JSOp op)
 {
-    // Do a string concatenation if adding two inputs that are int or string
-    // and at least one is a string.
-    if (op == JSOP_ADD &&
-        ((left->type() == MIRType_String &&
-          (right->type() == MIRType_String ||
-           right->type() == MIRType_Int32 ||
-           right->type() == MIRType_Double)) ||
-         (left->type() == MIRType_Int32 &&
-          right->type() == MIRType_String) ||
-         (left->type() == MIRType_Double &&
-          right->type() == MIRType_String)))
-    {
-        MConcat* ins = MConcat::New(alloc(), left, right);
-        current->add(ins);
-        current->push(ins);
-        return maybeInsertResume();
-    }
-
-    MBinaryArithInstruction* ins;
     switch (op) {
       case JSOP_ADD:
-        ins = MAdd::New(alloc(), left, right);
-        break;
-
+        return MDefinition::Op_Add;
       case JSOP_SUB:
-        ins = MSub::New(alloc(), left, right);
-        break;
-
+        return MDefinition::Op_Sub;
       case JSOP_MUL:
-        ins = MMul::New(alloc(), left, right);
-        break;
-
+        return MDefinition::Op_Mul;
       case JSOP_DIV:
-        ins = MDiv::New(alloc(), left, right);
-        break;
-
+        return MDefinition::Op_Div;
       case JSOP_MOD:
-        ins = MMod::New(alloc(), left, right);
-        break;
-
+        return MDefinition::Op_Mod;
       default:
         MOZ_CRASH("unexpected binary opcode");
     }
+}
 
+bool
+IonBuilder::binaryArithTryConcat(bool* emitted, JSOp op, MDefinition* left, MDefinition* right)
+{
+    MOZ_ASSERT(*emitted == false);
+
+    // Try to convert an addition into a concat operation if the inputs
+    // indicate this might be a concatenation.
+
+    // Only try to replace this with concat when we have an addition.
+    if (op != JSOP_ADD)
+        return true;
+
+    // Make sure one of the inputs is a string.
+    if (left->type() != MIRType_String && right->type() != MIRType_String)
+        return true;
+
+    // The none-string input (if present) should be atleast a numerical type.
+    // Which we can easily coerce to string.
+    if (right->type() != MIRType_String && !IsNumberType(right->type()))
+        return true;
+    if (left->type() != MIRType_String && !IsNumberType(left->type()))
+        return true;
+
+    MConcat* ins = MConcat::New(alloc(), left, right);
     current->add(ins);
-    ins->infer(alloc(), inspector, pc);
     current->push(ins);
 
-    if (ins->isEffectful())
-        return resumeAfter(ins);
-    return maybeInsertResume();
+    if (!maybeInsertResume())
+        return false;
+
+    *emitted = true;
+    return true;
+}
+
+static inline bool
+SimpleArithOperand(MDefinition* op)
+{
+    return !op->mightBeType(MIRType_Object)
+        && !op->mightBeType(MIRType_String)
+        && !op->mightBeType(MIRType_Symbol)
+        && !op->mightBeType(MIRType_MagicOptimizedArguments)
+        && !op->mightBeType(MIRType_MagicHole)
+        && !op->mightBeType(MIRType_MagicIsConstructing);
+}
+
+bool
+IonBuilder::binaryArithTrySpecialized(bool* emitted, JSOp op, MDefinition* left, MDefinition* right)
+{
+    MOZ_ASSERT(*emitted == false);
+
+    // Try to emit a specialized binary instruction based on the input types
+    // of the operands.
+
+    // Anything complex - strings, symbols, and objects - are not specialized
+    if (!SimpleArithOperand(left) || !SimpleArithOperand(right))
+        return true;
+
+    // One of the inputs need to be a number.
+    if (!IsNumberType(left->type()) && !IsNumberType(right->type()))
+        return true;
+
+    MDefinition::Opcode defOp = JSOpToMDefinition(op);
+    MBinaryArithInstruction* ins = MBinaryArithInstruction::New(alloc(), defOp, left, right);
+    ins->setNumberSpecialization(alloc(), inspector, pc);
+
+    if (op == JSOP_ADD || op == JSOP_MUL)
+        ins->setCommutative();
+
+    current->add(ins);
+    current->push(ins);
+
+    MOZ_ASSERT(!ins->isEffectful());
+    if (!maybeInsertResume())
+        return false;
+
+    *emitted = true;
+    return true;
+}
+
+bool
+IonBuilder::binaryArithTrySpecializedOnBaselineInspector(bool* emitted, JSOp op,
+                                                         MDefinition* left, MDefinition* right)
+{
+    MOZ_ASSERT(*emitted == false);
+
+    // Try to emit a specialized binary instruction speculating the
+    // type using the baseline caches.
+
+    MIRType specialization = inspector->expectedBinaryArithSpecialization(pc);
+    if (specialization == MIRType_None)
+        return true;
+
+    MDefinition::Opcode def_op = JSOpToMDefinition(op);
+    MBinaryArithInstruction* ins = MBinaryArithInstruction::New(alloc(), def_op, left, right);
+    ins->setSpecialization(specialization);
+
+    current->add(ins);
+    current->push(ins);
+
+    MOZ_ASSERT(!ins->isEffectful());
+    if (!maybeInsertResume())
+        return false;
+
+    *emitted = true;
+    return true;
+}
+
+bool
+IonBuilder::jsop_binary_arith(JSOp op, MDefinition* left, MDefinition* right)
+{
+    bool emitted = false;
+
+    if (!forceInlineCaches()) {
+        if (!binaryArithTryConcat(&emitted, op, left, right) || emitted)
+            return emitted;
+
+        if (!binaryArithTrySpecialized(&emitted, op, left, right) || emitted)
+            return emitted;
+
+        if (!binaryArithTrySpecializedOnBaselineInspector(&emitted, op, left, right) || emitted)
+            return emitted;
+    }
+
+    // Not possible to optimize. Do a slow vm call.
+    MDefinition::Opcode def_op = JSOpToMDefinition(op);
+    MBinaryArithInstruction* ins = MBinaryArithInstruction::New(alloc(), def_op, left, right);
+
+    // Decrease type from 'any type' to 'empty type' when one of the operands
+    // is 'empty typed'.
+    maybeMarkEmpty(ins);
+
+    current->add(ins);
+    current->push(ins);
+    MOZ_ASSERT(ins->isEffectful());
+    return resumeAfter(ins);
+}
+
+bool
+IonBuilder::jsop_binary_arith(JSOp op)
+{
+    MDefinition* right = current->pop();
+    MDefinition* left = current->pop();
+
+    return jsop_binary_arith(op, left, right);
 }
 
 bool
@@ -4621,15 +4730,6 @@ IonBuilder::jsop_pow()
 }
 
 bool
-IonBuilder::jsop_binary(JSOp op)
-{
-    MDefinition* right = current->pop();
-    MDefinition* left = current->pop();
-
-    return jsop_binary(op, left, right);
-}
-
-bool
 IonBuilder::jsop_pos()
 {
     if (IsNumberType(current->peek(-1)->type())) {
@@ -4645,7 +4745,7 @@ IonBuilder::jsop_pos()
     MConstant* one = MConstant::New(alloc(), Int32Value(1));
     current->add(one);
 
-    return jsop_binary(JSOP_MUL, value, one);
+    return jsop_binary_arith(JSOP_MUL, value, one);
 }
 
 bool
@@ -4658,7 +4758,7 @@ IonBuilder::jsop_neg()
 
     MDefinition* right = current->pop();
 
-    if (!jsop_binary(JSOP_MUL, negator, right))
+    if (!jsop_binary_arith(JSOP_MUL, negator, right))
         return false;
     return true;
 }
@@ -7164,6 +7264,24 @@ IonBuilder::maybeInsertResume()
     current->add(ins);
 
     return resumeAfter(ins);
+}
+
+void
+IonBuilder::maybeMarkEmpty(MDefinition* ins)
+{
+    MOZ_ASSERT(ins->type() == MIRType_Value);
+
+    // When one of the operands has no type information, mark the output
+    // as having no possible types too. This is to avoid degrading
+    // subsequent analysis.
+    for (size_t i = 0; i < ins->numOperands(); i++) {
+        if (!ins->emptyResultTypeSet())
+            continue;
+
+        TemporaryTypeSet* types = alloc().lifoAlloc()->new_<TemporaryTypeSet>();
+        if (types)
+            ins->setResultTypeSet(types);
+    }
 }
 
 // Return whether property lookups can be performed effectlessly on clasp.

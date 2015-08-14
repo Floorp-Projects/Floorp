@@ -413,10 +413,6 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         except OSError, err:
             self.warning("Failed to take screenshot: %s" % err.strerror)
 
-    @PostScriptRun
-    def _post_script(self):
-        self._kill_processes(self.config["emulator_process_name"])
-
     def _query_package_name(self):
         if self.app_name is None:
             #find appname from package-name.txt - assumes download-and-extract has completed successfully
@@ -645,13 +641,13 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         # Install Fennec
         install_ok = self._retry(3, 30, self._install_fennec_apk, "Install Fennec APK")
         if not install_ok:
-            self.fatal('Failed to install %s on %s' % (self.installer_path, self.emulator["name"]))
+            self.fatal('INFRA-ERROR: Failed to install %s on %s' % (self.installer_path, self.emulator["name"]))
 
         # Install Robocop if required
         if self.test_suite.startswith('robocop'):
             install_ok = self._retry(3, 30, self._install_robocop_apk, "Install Robocop APK")
             if not install_ok:
-                self.fatal('Failed to install %s on %s' % (self.robocop_path, self.emulator["name"]))
+                self.fatal('INFRA-ERROR: Failed to install %s on %s' % (self.robocop_path, self.emulator["name"]))
 
         self.info("Finished installing apps for %s" % self.emulator["name"])
 
@@ -696,6 +692,15 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         '''
         self._verify_emulator()
         self._kill_processes(self.config["emulator_process_name"])
+
+    def upload_blobber_files(self):
+        '''
+        Override BlobUploadMixin.upload_blobber_files to ensure emulator is killed
+        first (if the emulator is still running, logcat may still be running, which
+        may lock the blob upload directory, causing a hang).
+        '''
+        self._kill_processes(self.config["emulator_process_name"])
+        super(AndroidEmulatorTest, self).upload_blobber_files()
 
 if __name__ == '__main__':
     emulatorTest = AndroidEmulatorTest()
