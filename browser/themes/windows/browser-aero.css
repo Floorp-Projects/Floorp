@@ -69,10 +69,6 @@
       background-color: @customToolbarColor@;
     }
 
-    #navigator-toolbox:not(:-moz-lwtheme)::after {
-      background-color: #aabccf;
-    }
-
     #urlbar:not(:-moz-lwtheme):not([focused]):hover,
     .searchbar-textbox:not(:-moz-lwtheme):not([focused]):hover {
       border-color: hsla(210,54%,20%,.35) hsla(210,54%,20%,.37) hsla(210,54%,20%,.4);
