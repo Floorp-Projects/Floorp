@@ -3120,6 +3120,34 @@ nsDOMWindowUtils::GetPaintingSuppressed(bool *aPaintingSuppressed)
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::SuppressPaintingGlobally()
+{
+  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_FAILURE);
+
+  nsPresContext* presContext = GetPresContext();
+  if (!presContext) {
+    return NS_ERROR_FAILURE;
+  }
+
+  presContext->GetRootPresContext()->RefreshDriver()->Freeze();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::UnsuppressPaintingGlobally()
+{
+  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_FAILURE);
+
+  nsPresContext* presContext = GetPresContext();
+  if (!presContext) {
+    return NS_ERROR_FAILURE;
+  }
+
+  presContext->GetRootPresContext()->RefreshDriver()->Thaw();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::GetPlugins(JSContext* cx, JS::MutableHandle<JS::Value> aPlugins)
 {
   MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
