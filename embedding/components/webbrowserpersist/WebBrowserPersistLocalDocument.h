@@ -41,7 +41,7 @@ private:
     nsresult GetDocEncoder(const nsACString& aContentType,
                            uint32_t aEncoderFlags,
                            nsIDocumentEncoder** aEncoder);
-    nsresult GetHistory(nsISHEntry** aHistory);
+    already_AddRefed<nsISHEntry> GetHistory();
 
     virtual ~WebBrowserPersistLocalDocument();
 };
