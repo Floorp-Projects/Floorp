@@ -100,6 +100,22 @@
   background-color: ThreeDShadow;
 }
 
+@media (-moz-windows-default-theme) {
+  @media (-moz-os-version: windows-vista),
+         (-moz-os-version: windows-win7) {
+    #navigator-toolbox:not(:-moz-lwtheme)::after {
+      background-color: #aabccf;
+    }
+  }
+
+  @media (-moz-os-version: windows-win8),
+         (-moz-os-version: windows-win10) {
+    #navigator-toolbox:not(:-moz-lwtheme)::after {
+      background-color: #c2c2c2;
+    }
+  }
+}
+
 #navigator-toolbox > toolbar {
   -moz-appearance: none;
   border-style: none;
