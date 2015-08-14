@@ -9,6 +9,7 @@ import argparse
 import os
 import re
 
+from mozharness.base.script import PostScriptAction
 from mozharness.base.transfer import TransferMixin
 
 
@@ -18,6 +19,13 @@ class TryToolsMixin(TransferMixin):
 
     harness_extra_args = None
     try_test_paths = []
+    known_try_arguments = {
+        '--tag': {
+            'action': 'append',
+            'dest': 'tags',
+            'default': None,
+        },
+    }
 
     def _extract_try_message(self):
         msg = self.buildbot_config['sourcestamp']['changes'][-1]['comments']
@@ -41,12 +49,17 @@ class TryToolsMixin(TransferMixin):
 
         return msg
 
-    def set_extra_try_arguments(self, known_try_arguments):
+    @PostScriptAction('download-and-extract')
+    def _set_extra_try_arguments(self, action, success=None):
         """Finds a commit message and parses it for extra arguments to pass to the test
         harness command line and test paths used to filter manifests.
 
         Extracting arguments from a commit message taken directly from the try_parser.
         """
+        if (not self.buildbot_config or 'properties' not in self.buildbot_config or
+                self.buildbot_config['properties'].get('branch') != 'try'):
+            return
+
         msg = self._extract_try_message()
         if not msg:
             return
@@ -79,7 +92,7 @@ class TryToolsMixin(TransferMixin):
                 return label_dict[val]
             return '--%s' % val.replace('_', '-')
 
-        for label, opts in known_try_arguments.iteritems():
+        for label, opts in self.known_try_arguments.iteritems():
             if 'action' in opts and opts['action'] not in ('append', 'store',
                                                            'store_true', 'store_false'):
                 self.fatal('Try syntax does not support passing custom or store_const '

@@ -432,7 +432,7 @@ class PandaTest(TestingMixin, MercurialScript, BlobUploadMixin, MozpoolMixin, Bu
         c = self.config
         dirs = self.query_abs_dirs()
         options = []
-        run_file = self.tree_config["suite_definitions"][suite_category]["run_filename"]
+        run_file = c["suite_definitions"][suite_category]["run_filename"]
         base_cmd = ['python', '-u']
         base_cmd.append(os.path.join((dirs["abs_%s_dir" % suite_category]), run_file))
         self.device_ip = socket.gethostbyname(self.mozpool_device)
@@ -472,14 +472,9 @@ class PandaTest(TestingMixin, MercurialScript, BlobUploadMixin, MozpoolMixin, Bu
             'raw_log_file': raw_log_file,
             'error_summary_file': error_summary_file,
         }
-        if '%s_options' % suite_category in self.tree_config:
-            for option in self.tree_config['%s_options' % suite_category]:
-                options.append(option % str_format_values)
-            abs_base_cmd = base_cmd + options
-            return abs_base_cmd
-        elif "suite_definitions" in self.tree_config and \
-                suite_category in self.tree_config["suite_definitions"]: # new in-tree format
-            for option in self.tree_config["suite_definitions"][suite_category]["options"]:
+        if "suite_definitions" in c and \
+                suite_category in c["suite_definitions"]: # new in-tree format
+            for option in c["suite_definitions"][suite_category]["options"]:
                 options.append(option % str_format_values)
             abs_base_cmd = base_cmd + options
             return abs_base_cmd
@@ -487,8 +482,7 @@ class PandaTest(TestingMixin, MercurialScript, BlobUploadMixin, MozpoolMixin, Bu
             self.warning("Suite options for %s could not be determined."
                          "\nIf you meant to have options for this suite, "
                          "please make sure they are specified in your "
-                         "tree config under %s_options" %
-                         (suite_category, suite_category))
+                         "config." % suite_category)
 
     ###### helper methods
     def _pre_config_lock(self, rw_config):

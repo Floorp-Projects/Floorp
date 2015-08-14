@@ -123,7 +123,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         dirs = self.query_abs_dirs()
         suite_category = self.test_suite_definitions[self.test_suite]["category"]
         try:
-            test_dir = self.tree_config["suite_definitions"][suite_category]["testsdir"]
+            test_dir = self.config["suite_definitions"][suite_category]["testsdir"]
         except:
             test_dir = suite_category
         return os.path.join(dirs['abs_test_install_dir'], test_dir)
@@ -434,16 +434,15 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         dirs = self.query_abs_dirs()
         suite_category = self.test_suite_definitions[self.test_suite]["category"]
 
-        if suite_category not in self.tree_config["suite_definitions"]:
-            self.fatal("Key '%s' not defined in the in-tree config! Please add it to '%s'. "
-                       "See bug 981030 for more details." % (suite_category,
-                       os.path.join('gecko', 'testing', self.config['in_tree_config'])))
+        if suite_category not in self.config["suite_definitions"]:
+            self.fatal("Key '%s' not defined in the config!" % suite_category)
+
         cmd = [
             self.query_python_path('python'),
             '-u',
             os.path.join(
                 self._query_tests_dir(),
-                self.tree_config["suite_definitions"][suite_category]["run_filename"]
+                self.config["suite_definitions"][suite_category]["run_filename"]
             ),
         ]
 
@@ -474,7 +473,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
                 'device_ip': c['device_ip'],
                 'device_port': str(self.emulator['sut_port1']),
             })
-        for option in self.tree_config["suite_definitions"][suite_category]["options"]:
+        for option in self.config["suite_definitions"][suite_category]["options"]:
             cmd.extend([option % str_format_values])
 
         for arg in self.test_suite_definitions[self.test_suite]["extra_args"]:
