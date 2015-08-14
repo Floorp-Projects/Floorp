@@ -2719,11 +2719,15 @@ nsFrame::IsSelectable(bool* aSelectable, uint8_t* aSelectStyle) const
   // are present in the frame hierarchy, aSelectStyle returns the style of the
   // topmost parent that has either 'none' or '-moz-all'.
   //
+  // The -moz-text value acts as a way to override an ancestor's all/-moz-all value.
+  //
   // For instance, if the frame hierarchy is:
-  //    AUTO     -> _MOZ_ALL -> NONE -> TEXT,     the returned value is _MOZ_ALL
-  //    TEXT     -> NONE     -> AUTO -> _MOZ_ALL, the returned value is TEXT
-  //    _MOZ_ALL -> TEXT     -> AUTO -> AUTO,     the returned value is _MOZ_ALL
-  //    AUTO     -> CELL     -> TEXT -> AUTO,     the returned value is TEXT
+  //    AUTO     -> _MOZ_ALL  -> NONE -> TEXT,      the returned value is ALL
+  //    AUTO     -> _MOZ_ALL  -> NONE -> _MOZ_TEXT, the returned value is TEXT.
+  //    TEXT     -> NONE      -> AUTO -> _MOZ_ALL,  the returned value is TEXT
+  //    _MOZ_ALL -> TEXT      -> AUTO -> AUTO,      the returned value is ALL
+  //    _MOZ_ALL -> _MOZ_TEXT -> AUTO -> AUTO,      the returned value is TEXT.
+  //    AUTO     -> CELL      -> TEXT -> AUTO,      the returned value is TEXT
   //
   uint8_t selectStyle  = NS_STYLE_USER_SELECT_AUTO;
   nsIFrame* frame      = const_cast<nsFrame*>(this);
@@ -2734,7 +2738,9 @@ nsFrame::IsSelectable(bool* aSelectable, uint8_t* aSelectStyle) const
       case NS_STYLE_USER_SELECT_ALL:
       case NS_STYLE_USER_SELECT_MOZ_ALL:
         // override the previous values
-        selectStyle = userinterface->mUserSelect;
+        if (selectStyle != NS_STYLE_USER_SELECT_MOZ_TEXT) {
+          selectStyle = userinterface->mUserSelect;
+        }
         break;
       default:
         // otherwise return the first value which is not 'auto'
@@ -2747,7 +2753,8 @@ nsFrame::IsSelectable(bool* aSelectable, uint8_t* aSelectStyle) const
   }
 
   // convert internal values to standard values
-  if (selectStyle == NS_STYLE_USER_SELECT_AUTO)
+  if (selectStyle == NS_STYLE_USER_SELECT_AUTO ||
+      selectStyle == NS_STYLE_USER_SELECT_MOZ_TEXT)
     selectStyle = NS_STYLE_USER_SELECT_TEXT;
   else
   if (selectStyle == NS_STYLE_USER_SELECT_MOZ_ALL)
@@ -3764,7 +3771,13 @@ static nsIFrame* AdjustFrameForSelectionStyles(nsIFrame* aFrame) {
   {
     // These are the conditions that make all children not able to handle
     // a cursor.
-    if (frame->StyleUIReset()->mUserSelect == NS_STYLE_USER_SELECT_ALL ||
+    uint8_t userSelect = frame->StyleUIReset()->mUserSelect;
+    if (userSelect == NS_STYLE_USER_SELECT_MOZ_TEXT) {
+      // If we see a -moz-text element, we shouldn't look further up the parent
+      // chain!
+      break;
+    }
+    if (userSelect == NS_STYLE_USER_SELECT_ALL ||
         frame->IsGeneratedContentFrame()) {
       adjustedFrame = frame;
     }
