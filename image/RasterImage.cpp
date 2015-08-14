@@ -1483,6 +1483,11 @@ RasterImage::RecoverFromLossOfFrames(const IntSize& aSize, uint32_t aFlags)
   // Discard all existing frames, since they're probably all now invalid.
   SurfaceCache::RemoveImage(ImageKey(this));
 
+  // Relock the image if it's supposed to be locked.
+  if (mLockCount > 0) {
+    SurfaceCache::LockImage(ImageKey(this));
+  }
+
   // Animated images require some special handling, because we normally require
   // that they never be discarded.
   if (mAnim) {
