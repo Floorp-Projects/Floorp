@@ -33,6 +33,7 @@ EXPORTS.mozilla += [
     'HangAnnotations.h',
     'HangMonitor.h',
     'LazyIdleThread.h',
+    'MozPromise.h',
     'SharedThreadPool.h',
     'SyncRunnable.h',
     'TaskDispatcher.h',
