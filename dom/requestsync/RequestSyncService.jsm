@@ -47,9 +47,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "secMan",
                                    "@mozilla.org/scriptsecuritymanager;1",
                                    "nsIScriptSecurityManager");
 
-XPCOMUtils.defineLazyModuleGetter(this, "AlarmService",
-                                  "resource://gre/modules/AlarmService.jsm");
-
 this.RequestSyncService = {
   __proto__: IndexedDBHelper.prototype,
 
@@ -866,16 +863,17 @@ this.RequestSyncService = {
   },
 
   createTimer: function(aObj) {
+    this._timers[aObj.dbKey] = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+
     let interval = aObj.data.minInterval;
     if (aObj.data.overwrittenMinInterval > 0) {
       interval = aObj.data.overwrittenMinInterval;
     }
 
-    AlarmService.add(
-      { date: new Date(Date.now() + interval * 1000),
-        ignoreTimezone: false },
-      () => this.timeout(aObj),
-      aTimerId => this._timers[aObj.dbKey] = aTimerId);
+    let self = this;
+    this._timers[aObj.dbKey].initWithCallback(function() { self.timeout(aObj); },
+                                              interval * 1000,
+                                              Ci.nsITimer.TYPE_ONE_SHOT);
   },
 
   hasTimer: function(aObj) {
@@ -884,7 +882,7 @@ this.RequestSyncService = {
 
   removeTimer: function(aObj) {
     if (aObj.dbKey in this._timers) {
-      AlarmService.remove(this._timers[aObj.dbKey]);
+      this._timers[aObj.dbKey].cancel();
       delete this._timers[aObj.dbKey];
     }
   },
