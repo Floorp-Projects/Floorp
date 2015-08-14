@@ -458,7 +458,21 @@ var FullScreen = {
         this._element.removeAttribute(currentState);
       }
       if (newState != "hidden") {
-        this._element.setAttribute(newState, true);
+        if (currentState != "hidden") {
+          this._element.setAttribute(newState, true);
+        } else {
+          // When the previous state is hidden, the display was none,
+          // thus no box was constructed. We need to wait for the new
+          // display value taking effect first, otherwise, there won't
+          // be any transition. Since requestAnimationFrame callback is
+          // generally triggered before any style flush and layout, we
+          // should wait for the second animation frame.
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              this._element.setAttribute(newState, true);
+            });
+          });
+        }
       }
     },
 
@@ -476,7 +490,7 @@ var FullScreen = {
             }
           } else {
             let elemRect = this._element.getBoundingClientRect();
-            if (state == "hiding") {
+            if (state == "hiding" && this._lastState != "hidden") {
               // If we are on the hiding transition, and the pointer
               // moved near the box, restore to the previous state.
               if (event.clientY <= elemRect.bottom + 50) {

@@ -670,7 +670,6 @@ window[chromehidden~="toolbar"] toolbar:not(#nav-bar):not(#TabsToolbar):not(#pri
 }
 
 #fullscreen-warning {
-  display: flex;
   position: fixed;
   z-index: 2147483647 !important;
   visibility: visible;
@@ -684,13 +683,8 @@ window[chromehidden~="toolbar"] toolbar:not(#nav-bar):not(#TabsToolbar):not(#pri
   max-width: 95%;
   pointer-events: none;
 }
-#fullscreen-warning[hidden] {
-  /* To ensure the transition always works fine, never change
-     the value of display property. */
+#fullscreen-warning:not([hidden]) {
   display: flex;
-  visibility: hidden !important;
-  transition: initial;
-  pointer-events: none !important;
 }
 #fullscreen-warning[onscreen] {
   transform: translate(-50%, 50px);
