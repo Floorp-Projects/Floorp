@@ -431,6 +431,10 @@ nsWyciwygChannel::Open2(nsIInputStream** aStream)
 NS_IMETHODIMP
 nsWyciwygChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
 {
+  MOZ_ASSERT(!mLoadInfo || mLoadInfo->GetSecurityMode() == 0 ||
+             mLoadInfo->GetInitialSecurityCheckDone(),
+             "security flags in loadInfo but asyncOpen2() not called");
+
   LOG(("nsWyciwygChannel::AsyncOpen [this=%p]\n", this));
   MOZ_ASSERT(mMode == NONE, "nsWyciwygChannel already open");
 

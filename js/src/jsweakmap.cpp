@@ -355,14 +355,15 @@ SetWeakMapEntryInternal(JSContext* cx, Handle<WeakMapObject*> mapObj,
 {
     ObjectValueMap* map = mapObj->getMap();
     if (!map) {
-        map = cx->new_<ObjectValueMap>(cx, mapObj.get());
-        if (!map)
+        AutoInitGCManagedObject<ObjectValueMap> newMap(
+            cx->make_unique<ObjectValueMap>(cx, mapObj.get()));
+        if (!newMap)
             return false;
-        if (!map->init()) {
-            js_delete(map);
+        if (!newMap->init()) {
             JS_ReportOutOfMemory(cx);
             return false;
         }
+        map = newMap.release();
         mapObj->setPrivate(map);
     }
 
