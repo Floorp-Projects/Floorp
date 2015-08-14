@@ -698,15 +698,14 @@ loop.conversationViews = (function(mozL10n) {
             screenSharePosterUrl={null}
             screenShareVideoObject={this.state.screenShareVideoObject}
             showContextRoomName={false}
-            useDesktopPaths={true}>
-            <loop.shared.views.ConversationToolbar
-              audio={this.props.audio}
-              dispatcher={this.props.dispatcher}
-              edit={{ visible: false, enabled: false }}
-              hangup={this.hangup}
-              publishStream={this.publishStream}
-              video={this.props.video} />
-          </sharedViews.MediaLayoutView>
+            useDesktopPaths={true} />
+          <loop.shared.views.ConversationToolbar
+            audio={this.props.audio}
+            dispatcher={this.props.dispatcher}
+            edit={{ visible: false, enabled: false }}
+            hangup={this.hangup}
+            publishStream={this.publishStream}
+            video={this.props.video} />
         </div>
       );
     }
@@ -803,13 +802,13 @@ loop.conversationViews = (function(mozL10n) {
         }
         case CALL_STATES.ONGOING: {
           return (<OngoingConversationView
-            audio={{ enabled: !this.state.audioMuted, visible: true }}
+            audio={{enabled: !this.state.audioMuted}}
             conversationStore={this.getStore()}
             dispatcher={this.props.dispatcher}
             mediaConnected={this.state.mediaConnected}
             remoteSrcVideoObject={this.state.remoteSrcVideoObject}
             remoteVideoEnabled={this.state.remoteVideoEnabled}
-            video={{ enabled: !this.state.videoMuted, visible: true }} />
+            video={{enabled: !this.state.videoMuted}} />
           );
         }
         case CALL_STATES.FINISHED: {
