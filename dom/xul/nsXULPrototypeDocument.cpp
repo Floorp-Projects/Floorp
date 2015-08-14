@@ -54,8 +54,6 @@ nsresult
 nsXULPrototypeDocument::Init()
 {
     mNodeInfoManager = new nsNodeInfoManager();
-    NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_OUT_OF_MEMORY);
-
     return mNodeInfoManager->Init(nullptr);
 }
 
@@ -149,8 +147,6 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
     mNodeInfoManager->SetDocumentPrincipal(principal);
 
     mRoot = new nsXULPrototypeElement();
-    if (! mRoot)
-       return NS_ERROR_OUT_OF_MEMORY;
 
     // mozilla::dom::NodeInfo table
     nsTArray<nsRefPtr<mozilla::dom::NodeInfo>> nodeInfos;
@@ -208,10 +204,6 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
 
         if ((nsXULPrototypeNode::Type)type == nsXULPrototypeNode::eType_PI) {
             nsRefPtr<nsXULPrototypePI> pi = new nsXULPrototypePI();
-            if (! pi) {
-               rv = NS_ERROR_OUT_OF_MEMORY;
-               break;
-            }
 
             tmp = pi->Deserialize(aStream, this, mURI, &nodeInfos);
             if (NS_FAILED(tmp)) {

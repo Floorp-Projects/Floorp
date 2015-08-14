@@ -182,20 +182,6 @@ public:
   }
 
   /**
-   * Set whether the image is locked for the lifetime of this decoder. We lock
-   * the image during our initial decode to ensure that we don't evict any
-   * surfaces before we realize that the image is animated.
-   */
-  void SetImageIsLocked()
-  {
-    MOZ_ASSERT(!mInitialized, "Shouldn't be initialized yet");
-    mImageIsLocked = true;
-  }
-
-  bool ImageIsLocked() const { return mImageIsLocked; }
-
-
-  /**
    * Set whether we should stop decoding after the first frame.
    */
   void SetIsFirstFrameDecode()
@@ -225,7 +211,7 @@ public:
   }
 
   // Did we discover that the image we're decoding is animated?
-  bool HasAnimation() const { return mIsAnimated; }
+  bool HasAnimation() const { return mImageMetadata.HasAnimation(); }
 
   // Error tracking
   bool HasError() const { return HasDataError() || HasDecoderError(); }
@@ -344,9 +330,11 @@ protected:
   // actual contents of the frame and give a more accurate result.
   void PostHasTransparency();
 
-  // Called by decoders when they begin a frame. Informs the image, sends
-  // notifications, and does internal book-keeping.
-  void PostFrameStart();
+  // Called by decoders if they determine that the image is animated.
+  //
+  // @param aTimeout The time for which the first frame should be shown before
+  //                 we advance to the next frame.
+  void PostIsAnimated(int32_t aFirstFrameTimeout);
 
   // Called by decoders when they end a frame. Informs the image, sends
   // notifications, and does internal book-keeping.
@@ -451,10 +439,8 @@ private:
   bool mMetadataDecode : 1;
   bool mSendPartialInvalidations : 1;
   bool mImageIsTransient : 1;
-  bool mImageIsLocked : 1;
   bool mFirstFrameDecode : 1;
   bool mInFrame : 1;
-  bool mIsAnimated : 1;
   bool mDataDone : 1;
   bool mDecodeDone : 1;
   bool mDataError : 1;

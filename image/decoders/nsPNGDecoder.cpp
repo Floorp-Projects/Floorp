@@ -56,32 +56,33 @@ nsPNGDecoder::AnimFrameInfo::AnimFrameInfo()
 { }
 
 #ifdef PNG_APNG_SUPPORTED
+
+int32_t GetNextFrameDelay(png_structp aPNG, png_infop aInfo)
+{
+  // Delay, in seconds, is delayNum / delayDen.
+  png_uint_16 delayNum = png_get_next_frame_delay_num(aPNG, aInfo);
+  png_uint_16 delayDen = png_get_next_frame_delay_den(aPNG, aInfo);
+
+  if (delayNum == 0) {
+    return 0; // SetFrameTimeout() will set to a minimum.
+  }
+
+  if (delayDen == 0) {
+    delayDen = 100; // So says the APNG spec.
+  }
+
+  // Need to cast delay_num to float to have a proper division and
+  // the result to int to avoid a compiler warning.
+  return static_cast<int32_t>(static_cast<double>(delayNum) * 1000 / delayDen);
+}
+
 nsPNGDecoder::AnimFrameInfo::AnimFrameInfo(png_structp aPNG, png_infop aInfo)
  : mDispose(DisposalMethod::KEEP)
  , mBlend(BlendMethod::OVER)
  , mTimeout(0)
 {
-  png_uint_16 delay_num, delay_den;
-  // delay, in seconds is delay_num/delay_den
-  png_byte dispose_op;
-  png_byte blend_op;
-  delay_num = png_get_next_frame_delay_num(aPNG, aInfo);
-  delay_den = png_get_next_frame_delay_den(aPNG, aInfo);
-  dispose_op = png_get_next_frame_dispose_op(aPNG, aInfo);
-  blend_op = png_get_next_frame_blend_op(aPNG, aInfo);
-
-  if (delay_num == 0) {
-    mTimeout = 0; // SetFrameTimeout() will set to a minimum
-  } else {
-    if (delay_den == 0) {
-      delay_den = 100; // so says the APNG spec
-    }
-
-    // Need to cast delay_num to float to have a proper division and
-    // the result to int to avoid compiler warning
-    mTimeout = static_cast<int32_t>(static_cast<double>(delay_num) *
-                                    1000 / delay_den);
-  }
+  png_byte dispose_op = png_get_next_frame_dispose_op(aPNG, aInfo);
+  png_byte blend_op = png_get_next_frame_blend_op(aPNG, aInfo);
 
   if (dispose_op == PNG_DISPOSE_OP_PREVIOUS) {
     mDispose = DisposalMethod::RESTORE_PREVIOUS;
@@ -96,6 +97,8 @@ nsPNGDecoder::AnimFrameInfo::AnimFrameInfo(png_structp aPNG, png_infop aInfo)
   } else {
     mBlend = BlendMethod::OVER;
   }
+
+  mTimeout = GetNextFrameDelay(aPNG, aInfo);
 }
 #endif
 
@@ -595,18 +598,25 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
     png_longjmp(decoder->mPNG, 1); // invalid number of channels
   }
 
+#ifdef PNG_APNG_SUPPORTED
+  bool isAnimated = png_get_valid(png_ptr, info_ptr, PNG_INFO_acTL);
+  if (isAnimated) {
+    decoder->PostIsAnimated(GetNextFrameDelay(png_ptr, info_ptr));
+  }
+#endif
+
   if (decoder->IsMetadataDecode()) {
     decoder->CheckForTransparency(decoder->format,
                                   IntRect(0, 0, width, height));
 
-    // We have the size and transparency information we're looking for, so we
-    // don't need to decode any further.
+    // We have the metadata we're looking for, so we don't need to decode any
+    // further.
     decoder->mSuccessfulEarlyFinish = true;
     png_longjmp(decoder->mPNG, 1);
   }
 
 #ifdef PNG_APNG_SUPPORTED
-  if (png_get_valid(png_ptr, info_ptr, PNG_INFO_acTL)) {
+  if (isAnimated) {
     png_set_progressive_frame_fn(png_ptr, nsPNGDecoder::frame_info_callback,
                                  nullptr);
   }

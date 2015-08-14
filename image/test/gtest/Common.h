@@ -21,8 +21,9 @@ enum TestCaseFlags
 {
   TEST_CASE_DEFAULT_FLAGS   = 0,
   TEST_CASE_IS_FUZZY        = 1 << 0,
-  TEST_CASE_IS_TRANSPARENT  = 1 << 1,
-  TEST_CASE_HAS_ERROR       = 1 << 2
+  TEST_CASE_HAS_ERROR       = 1 << 1,
+  TEST_CASE_IS_TRANSPARENT  = 1 << 2,
+  TEST_CASE_IS_ANIMATED     = 1 << 3,
 };
 
 struct ImageTestCase
@@ -97,6 +98,7 @@ ImageTestCase CorruptTestCase();
 ImageTestCase TransparentPNGTestCase();
 ImageTestCase TransparentGIFTestCase();
 ImageTestCase FirstFramePaddingGIFTestCase();
+ImageTestCase NoFrameDelayGIFTestCase();
 
 ImageTestCase TransparentBMPWhenBMPAlphaEnabledTestCase();
 ImageTestCase RLE4BMPTestCase();

@@ -378,8 +378,8 @@ nsICODecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
     }
 
     if (!HasSize() && mContainedDecoder->HasSize()) {
-      PostSize(mContainedDecoder->GetImageMetadata().GetWidth(),
-               mContainedDecoder->GetImageMetadata().GetHeight());
+      nsIntSize size = mContainedDecoder->GetSize();
+      PostSize(size.width, size.height);
     }
 
     mPos += aCount;
@@ -479,8 +479,8 @@ nsICODecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
       return;
     }
 
-    PostSize(mContainedDecoder->GetImageMetadata().GetWidth(),
-             mContainedDecoder->GetImageMetadata().GetHeight());
+    nsIntSize size = mContainedDecoder->GetSize();
+    PostSize(size.width, size.height);
 
     // We have the size. If we're doing a metadata decode, we're done.
     if (IsMetadataDecode()) {
