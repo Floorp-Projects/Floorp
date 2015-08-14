@@ -53,7 +53,6 @@
     _(NewArray)                     \
     _(NewArrayCopyOnWrite)          \
     _(NewArrayDynamicLength)        \
-    _(ArraySplice)                  \
     _(NewObject)                    \
     _(NewTypedObject)               \
     _(NewDeclEnvObject)             \
