@@ -520,18 +520,18 @@ loop.standaloneRoomViews = (function(mozL10n) {
               joinRoom={this.joinRoom}
               roomState={this.state.roomState}
               roomUsed={this.state.used} />
-            <sharedViews.ConversationToolbar
-              audio={{enabled: !this.state.audioMuted,
-                      visible: this._roomIsActive()}}
-              dispatcher={this.props.dispatcher}
-              edit={{ visible: false, enabled: false }}
-              enableHangup={this._roomIsActive()}
-              hangup={this.leaveRoom}
-              hangupButtonLabel={mozL10n.get("rooms_leave_button_label")}
-              publishStream={this.publishStream}
-              video={{enabled: !this.state.videoMuted,
-                      visible: this._roomIsActive()}} />
           </sharedViews.MediaLayoutView>
+          <sharedViews.ConversationToolbar
+            audio={{enabled: !this.state.audioMuted,
+                    visible: this._roomIsActive()}}
+            dispatcher={this.props.dispatcher}
+            edit={{ visible: false, enabled: false }}
+            enableHangup={this._roomIsActive()}
+            hangup={this.leaveRoom}
+            hangupButtonLabel={mozL10n.get("rooms_leave_button_label")}
+            publishStream={this.publishStream}
+            video={{enabled: !this.state.videoMuted,
+                    visible: this._roomIsActive()}} />
           <loop.fxOSMarketplaceViews.FxOSHiddenMarketplaceView
             marketplaceSrc={this.state.marketplaceSrc}
             onMarketplaceMessage={this.state.onMarketplaceMessage} />

@@ -518,7 +518,7 @@
         "dropdown-white", "dropdown-active", "dropdown-disabled", "edit",
         "edit-active", "edit-disabled", "edit-white", "expand", "expand-active",
         "expand-disabled", "minimize", "minimize-active", "minimize-disabled",
-        "settings-cog-grey", "settings-cog-white"
+        "settings-cog"
       ],
       "14x14": ["audio", "audio-active", "audio-disabled", "facemute",
         "facemute-active", "facemute-disabled", "hangup", "hangup-active",
@@ -928,38 +928,76 @@
           ), 
 
           React.createElement(Section, {name: "ConversationToolbar"}, 
+            React.createElement("h2", null, "Desktop Conversation Window"), 
             React.createElement("div", null, 
               React.createElement(FramedExample, {dashed: true, 
-                             height: 56, 
+                             height: 26, 
                              summary: "Default", 
                              width: 300}, 
                 React.createElement("div", {className: "fx-embedded"}, 
-                  React.createElement(ConversationToolbar, {audio: { enabled: true, visible: true}, 
+                  React.createElement(ConversationToolbar, {audio: {enabled: true}, 
                                        hangup: noop, 
                                        publishStream: noop, 
-                                       video: { enabled: true, visible: true}})
+                                       video: {enabled: true}})
                 )
               ), 
               React.createElement(FramedExample, {dashed: true, 
-                             height: 56, 
+                             height: 26, 
                              summary: "Video muted", 
                              width: 300}, 
                 React.createElement("div", {className: "fx-embedded"}, 
-                  React.createElement(ConversationToolbar, {audio: { enabled: true, visible: true}, 
+                  React.createElement(ConversationToolbar, {audio: {enabled: true}, 
                                        hangup: noop, 
                                        publishStream: noop, 
-                                       video: { enabled: false, visible: true}})
+                                       video: {enabled: false}})
                 )
               ), 
               React.createElement(FramedExample, {dashed: true, 
-                             height: 56, 
+                             height: 26, 
                              summary: "Audio muted", 
                              width: 300}, 
                 React.createElement("div", {className: "fx-embedded"}, 
-                  React.createElement(ConversationToolbar, {audio: { enabled: false, visible: true}, 
+                  React.createElement(ConversationToolbar, {audio: {enabled: false}, 
                                        hangup: noop, 
                                        publishStream: noop, 
-                                       video: { enabled: true, visible: true}})
+                                       video: {enabled: true}})
+                )
+              )
+            ), 
+
+            React.createElement("h2", null, "Standalone"), 
+            React.createElement("div", {className: "standalone override-position"}, 
+              React.createElement(FramedExample, {dashed: true, 
+                             height: 26, 
+                             summary: "Default", 
+                             width: 300}, 
+                React.createElement("div", {className: "fx-embedded"}, 
+                  React.createElement(ConversationToolbar, {audio: {enabled: true}, 
+                                       hangup: noop, 
+                                       publishStream: noop, 
+                                       video: {enabled: true}})
+                )
+              ), 
+              React.createElement(FramedExample, {dashed: true, 
+                             height: 26, 
+                             summary: "Video muted", 
+                             width: 300}, 
+                React.createElement("div", {className: "fx-embedded"}, 
+                  React.createElement(ConversationToolbar, {audio: {enabled: true}, 
+                                       hangup: noop, 
+                                       publishStream: noop, 
+                                       video: {enabled: false}})
+                )
+              ), 
+              React.createElement(FramedExample, {dashed: true, 
+                             height: 26, 
+                             summary: "Audio muted", 
+                             width: 300}, 
+                React.createElement("div", {className: "fx-embedded"}, 
+                  React.createElement(ConversationToolbar, {audio: {enabled: false}, 
+                                       hangup: noop, 
+                                       publishStream: noop, 
+                                       video: {enabled: true}})
                 )
               )
             )
@@ -1019,14 +1057,14 @@
                            width: 298}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(OngoingConversationView, {
-                  audio: { enabled: true, visible: true}, 
+                  audio: {enabled: true}, 
                   conversationStore: conversationStores[0], 
                   dispatcher: dispatcher, 
                   localPosterUrl: "sample-img/video-screen-local.png", 
                   mediaConnected: true, 
                   remotePosterUrl: "sample-img/video-screen-remote.png", 
                   remoteVideoEnabled: true, 
-                  video: { enabled: true, visible: true}})
+                  video: {enabled: true}})
               )
             ), 
 
@@ -1037,14 +1075,14 @@
                            width: 600}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(OngoingConversationView, {
-                  audio: { enabled: true, visible: true}, 
+                  audio: {enabled: true}, 
                   conversationStore: conversationStores[1], 
                   dispatcher: dispatcher, 
                   localPosterUrl: "sample-img/video-screen-local.png", 
                   mediaConnected: true, 
                   remotePosterUrl: "sample-img/video-screen-remote.png", 
                   remoteVideoEnabled: true, 
-                  video: { enabled: true, visible: true}})
+                  video: {enabled: true}})
               )
             ), 
 
@@ -1054,14 +1092,14 @@
                            width: 800}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(OngoingConversationView, {
-                  audio: { enabled: true, visible: true}, 
+                  audio: {enabled: true}, 
                   conversationStore: conversationStores[2], 
                   dispatcher: dispatcher, 
                   localPosterUrl: "sample-img/video-screen-local.png", 
                   mediaConnected: true, 
                   remotePosterUrl: "sample-img/video-screen-remote.png", 
                   remoteVideoEnabled: true, 
-                  video: { enabled: true, visible: true}})
+                  video: {enabled: true}})
               )
             ), 
 
@@ -1072,14 +1110,14 @@
                            width: 298}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(OngoingConversationView, {
-                  audio: { enabled: true, visible: true}, 
+                  audio: {enabled: true}, 
                   conversationStore: conversationStores[3], 
                   dispatcher: dispatcher, 
                   localPosterUrl: "sample-img/video-screen-local.png", 
                   mediaConnected: true, 
                   remotePosterUrl: "sample-img/video-screen-remote.png", 
                   remoteVideoEnabled: true, 
-                  video: { enabled: true, visible: true}})
+                  video: {enabled: false}})
               )
             ), 
 
@@ -1090,14 +1128,14 @@
                            width: 298}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(OngoingConversationView, {
-                  audio: { enabled: true, visible: true}, 
+                  audio: {enabled: true}, 
                   conversationStore: conversationStores[4], 
                   dispatcher: dispatcher, 
                   localPosterUrl: "sample-img/video-screen-local.png", 
                   mediaConnected: true, 
                   remotePosterUrl: "sample-img/video-screen-remote.png", 
                   remoteVideoEnabled: false, 
-                  video: { enabled: true, visible: true}})
+                  video: {enabled: true}})
               )
             )
 
@@ -1590,7 +1628,7 @@
 
       // This simulates the mocha layout for errors which means we can run
       // this alongside our other unit tests but use the same harness.
-      var expectedWarningsCount = 10;
+      var expectedWarningsCount = 16;
       var warningsMismatch = caughtWarnings.length !== expectedWarningsCount;
       if (uncaughtError || warningsMismatch) {
         $("#results").append("<div class='failures'><em>" +
