@@ -43,20 +43,9 @@ CheckMetadata(const ImageTestCase& aTestCase, bool aEnableBMPAlpha = false)
   nsCOMPtr<nsIInputStream> inputStream = LoadFile(aTestCase.mPath);
   ASSERT_TRUE(inputStream != nullptr);
 
-  // Prepare the input stream.
-  nsresult rv;
-  if (!NS_InputStreamIsBuffered(inputStream)) {
-    nsCOMPtr<nsIInputStream> bufStream;
-    rv = NS_NewBufferedInputStream(getter_AddRefs(bufStream),
-                                   inputStream, 1024);
-    if (NS_SUCCEEDED(rv)) {
-      inputStream = bufStream;
-    }
-  }
-
   // Figure out how much data we have.
   uint64_t length;
-  rv = inputStream->Available(&length);
+  nsresult rv = inputStream->Available(&length);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   // Write the data into a SourceBuffer.
