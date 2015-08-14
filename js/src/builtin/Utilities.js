@@ -110,8 +110,7 @@ function ToLength(v) {
     if (v <= 0)
         return 0;
 
-    // Math.pow(2, 53) - 1 = 0x1fffffffffffff
-    return std_Math_min(v, 0x1fffffffffffff);
+    return std_Math_min(v, 2 ** 53 - 1);
 }
 
 /* Spec: ECMAScript Draft, 6th edition Oct 14, 2014, 7.2.4 */

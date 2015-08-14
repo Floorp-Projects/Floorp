@@ -74,7 +74,10 @@ MediaTrack*
 MediaTrackList::IndexedGetter(uint32_t aIndex, bool& aFound)
 {
   aFound = aIndex < mTracks.Length();
-  return aFound ? mTracks[aIndex] : nullptr;
+  if (!aFound) {
+    return nullptr;
+  }
+  return mTracks[aIndex];
 }
 
 MediaTrack*

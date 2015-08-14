@@ -40,7 +40,11 @@
 #include <media/stagefright/MediaDefs.h>
 #include <media/stagefright/MetaData.h>
 #include <media/stagefright/OMXClient.h>
+#if ANDROID_VERSION >= 21
+#include <media/stagefright/MediaCodecSource.h>
+#else
 #include <media/stagefright/OMXCodec.h>
+#endif
 #include <media/MediaProfiles.h>
 
 #include <utils/Errors.h>
@@ -68,10 +72,21 @@ GonkRecorder::GonkRecorder()
 GonkRecorder::~GonkRecorder() {
     RE_LOGV("Destructor");
     stop();
+
+#if ANDROID_VERSION >= 21
+    if (mLooper != NULL) {
+        mLooper->stop();
+    }
+#endif
 }
 
 status_t GonkRecorder::init() {
     RE_LOGV("init");
+#if ANDROID_VERSION >= 21
+    mLooper = new ALooper;
+    mLooper->setName("recorder_looper");
+    mLooper->start();
+#endif
     return OK;
 }
 
@@ -724,6 +739,71 @@ status_t GonkRecorder::start() {
     return status;
 }
 
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 21
+sp<MediaSource> GonkRecorder::createAudioSource() {
+    sp<AudioSource> audioSource =
+        new AudioSource(
+                mAudioSource,
+                mSampleRate,
+                mAudioChannels);
+
+    status_t err = audioSource->initCheck();
+
+    if (err != OK) {
+        RE_LOGE("audio source is not initialized");
+        return NULL;
+    }
+
+    sp<AMessage> format = new AMessage;
+    switch (mAudioEncoder) {
+        case AUDIO_ENCODER_AMR_NB:
+        case AUDIO_ENCODER_DEFAULT:
+            format->setString("mime", MEDIA_MIMETYPE_AUDIO_AMR_NB);
+            break;
+        case AUDIO_ENCODER_AMR_WB:
+            format->setString("mime", MEDIA_MIMETYPE_AUDIO_AMR_WB);
+            break;
+        case AUDIO_ENCODER_AAC:
+            format->setString("mime", MEDIA_MIMETYPE_AUDIO_AAC);
+            format->setInt32("aac-profile", OMX_AUDIO_AACObjectLC);
+            break;
+        case AUDIO_ENCODER_HE_AAC:
+            format->setString("mime", MEDIA_MIMETYPE_AUDIO_AAC);
+            format->setInt32("aac-profile", OMX_AUDIO_AACObjectHE);
+            break;
+        case AUDIO_ENCODER_AAC_ELD:
+            format->setString("mime", MEDIA_MIMETYPE_AUDIO_AAC);
+            format->setInt32("aac-profile", OMX_AUDIO_AACObjectELD);
+            break;
+
+        default:
+            RE_LOGE("Unknown audio encoder: %d", mAudioEncoder);
+            return NULL;
+    }
+
+    int32_t maxInputSize;
+    CHECK(audioSource->getFormat()->findInt32(
+                kKeyMaxInputSize, &maxInputSize));
+
+    format->setInt32("max-input-size", maxInputSize);
+    format->setInt32("channel-count", mAudioChannels);
+    format->setInt32("sample-rate", mSampleRate);
+    format->setInt32("bitrate", mAudioBitRate);
+    if (mAudioTimeScale > 0) {
+        format->setInt32("time-scale", mAudioTimeScale);
+    }
+
+    sp<MediaSource> audioEncoder =
+            MediaCodecSource::Create(mLooper, format, audioSource);
+    mAudioSourceNode = audioSource;
+
+    if (audioEncoder == NULL) {
+        RE_LOGE("Failed to create audio encoder");
+    }
+
+    return audioEncoder;
+}
+#else
 sp<MediaSource> GonkRecorder::createAudioSource() {
     sp<AudioSource> audioSource =
         new AudioSource(
@@ -792,6 +872,7 @@ sp<MediaSource> GonkRecorder::createAudioSource() {
 
     return audioEncoder;
 }
+#endif
 
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
 status_t GonkRecorder::startAACRecording() {
@@ -1213,6 +1294,87 @@ status_t GonkRecorder::setupCameraSource(
     return OK;
 }
 
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 21
+status_t GonkRecorder::setupVideoEncoder(
+        sp<MediaSource> cameraSource,
+        int32_t videoBitRate,
+        sp<MediaSource> *source) {
+    source->clear();
+
+    sp<AMessage> format = new AMessage();
+
+    switch (mVideoEncoder) {
+        case VIDEO_ENCODER_H263:
+            format->setString("mime", MEDIA_MIMETYPE_VIDEO_H263);
+            break;
+
+        case VIDEO_ENCODER_MPEG_4_SP:
+            format->setString("mime", MEDIA_MIMETYPE_VIDEO_MPEG4);
+            break;
+
+        case VIDEO_ENCODER_H264:
+            format->setString("mime", MEDIA_MIMETYPE_VIDEO_AVC);
+            break;
+
+        case VIDEO_ENCODER_VP8:
+            format->setString("mime", MEDIA_MIMETYPE_VIDEO_VP8);
+            break;
+
+        default:
+            CHECK(!"Should not be here, unsupported video encoding.");
+            break;
+    }
+
+    sp<MetaData> meta = cameraSource->getFormat();
+
+    int32_t width, height, stride, sliceHeight, colorFormat;
+    CHECK(meta->findInt32(kKeyWidth, &width));
+    CHECK(meta->findInt32(kKeyHeight, &height));
+    CHECK(meta->findInt32(kKeyStride, &stride));
+    CHECK(meta->findInt32(kKeySliceHeight, &sliceHeight));
+    CHECK(meta->findInt32(kKeyColorFormat, &colorFormat));
+
+    format->setInt32("width", width);
+    format->setInt32("height", height);
+    format->setInt32("stride", stride);
+    format->setInt32("slice-height", sliceHeight);
+    format->setInt32("color-format", colorFormat);
+
+    format->setInt32("bitrate", videoBitRate);
+    format->setInt32("frame-rate", mFrameRate);
+    format->setInt32("i-frame-interval", mIFramesIntervalSec);
+
+    if (mVideoTimeScale > 0) {
+        format->setInt32("time-scale", mVideoTimeScale);
+    }
+    if (mVideoEncoderProfile != -1) {
+        format->setInt32("profile", mVideoEncoderProfile);
+    }
+    if (mVideoEncoderLevel != -1) {
+        format->setInt32("level", mVideoEncoderLevel);
+    }
+
+    uint32_t flags = 0;
+    if (mIsMetaDataStoredInVideoBuffers) {
+        flags |= MediaCodecSource::FLAG_USE_METADATA_INPUT;
+    }
+
+    sp<MediaCodecSource> encoder =
+            MediaCodecSource::Create(mLooper, format, cameraSource, flags);
+    if (encoder == NULL) {
+        RE_LOGE("Failed to create video encoder");
+        // When the encoder fails to be created, we need
+        // release the camera source due to the camera's lock
+        // and unlock mechanism.
+        cameraSource->stop();
+        return UNKNOWN_ERROR;
+    }
+
+    *source = encoder;
+
+    return OK;
+}
+#else
 status_t GonkRecorder::setupVideoEncoder(
         sp<MediaSource> cameraSource,
         int32_t videoBitRate,
@@ -1301,6 +1463,7 @@ status_t GonkRecorder::setupVideoEncoder(
 
     return OK;
 }
+#endif
 
 status_t GonkRecorder::setupAudioEncoder(const sp<MediaWriter>& writer) {
     status_t status = BAD_VALUE;

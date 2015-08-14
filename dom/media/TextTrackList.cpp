@@ -69,7 +69,10 @@ TextTrack*
 TextTrackList::IndexedGetter(uint32_t aIndex, bool& aFound)
 {
   aFound = aIndex < mTextTracks.Length();
-  return aFound ? mTextTracks[aIndex] : nullptr;
+  if (!aFound) {
+    return nullptr;
+  }
+  return mTextTracks[aIndex];
 }
 
 TextTrack*

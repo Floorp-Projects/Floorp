@@ -619,11 +619,9 @@ txMozillaXMLOutput::createTxWrapper()
         RegisterNameSpace(NS_LITERAL_STRING(kTXNameSpaceURI), namespaceID);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIContent> wrapper;
-    rv = mDocument->CreateElem(nsDependentAtomString(nsGkAtoms::result),
-                               nsGkAtoms::transformiix, namespaceID,
-                               getter_AddRefs(wrapper));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<Element> wrapper =
+      mDocument->CreateElem(nsDependentAtomString(nsGkAtoms::result),
+                            nsGkAtoms::transformiix, namespaceID);
 
     uint32_t i, j, childCount = mDocument->GetChildCount();
 #ifdef DEBUG

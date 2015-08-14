@@ -137,7 +137,10 @@ BluetoothManager::DisconnectFromOwner()
 BluetoothAdapter*
 BluetoothManager::GetDefaultAdapter()
 {
-  return DefaultAdapterExists() ? mAdapters[mDefaultAdapterIndex] : nullptr;
+  if (!DefaultAdapterExists()) {
+    return nullptr;
+  }
+  return mAdapters[mDefaultAdapterIndex];
 }
 
 void

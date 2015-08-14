@@ -771,7 +771,8 @@ nsCertTree::DeleteEntryObject(uint32_t index)
         if (certdi->mAddonInfo) {
           cert = certdi->mAddonInfo->mCert;
         }
-        nsCertAddonInfo *addonInfo = certdi->mAddonInfo ? certdi->mAddonInfo : nullptr;
+        nsCertAddonInfo* addonInfo =
+          certdi->mAddonInfo ? certdi->mAddonInfo.get() : nullptr;
         if (certdi->mTypeOfEntry == nsCertTreeDispInfo::host_port_override) {
           mOverrideService->ClearValidityOverride(certdi->mAsciiHost, certdi->mPort);
           if (addonInfo) {

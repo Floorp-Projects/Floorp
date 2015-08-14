@@ -19,6 +19,7 @@ class nsCOMPtr_helper;
 
 namespace mozilla {
 template<class T> class OwningNonNull;
+template<class T> class RefPtr;
 } // namespace mozilla
 
 template <class T>
@@ -127,6 +128,10 @@ public:
   template<class U>
   MOZ_IMPLICIT nsRefPtr(const mozilla::OwningNonNull<U>& aOther);
 
+  // Defined in RefPtr.h
+  template<class U>
+  MOZ_IMPLICIT nsRefPtr(mozilla::RefPtr<U>&& aOther);
+
   // Assignment operators
 
   nsRefPtr<T>&
@@ -187,6 +192,11 @@ public:
   nsRefPtr<T>&
   operator=(const mozilla::OwningNonNull<U>& aOther);
 
+  // Defined in RefPtr.h
+  template<class U>
+  nsRefPtr<T>&
+  operator=(mozilla::RefPtr<U>&& aOther);
+
   // Other pointer operators
 
   void
@@ -241,6 +251,9 @@ public:
   }
 
   operator T*() const
+#ifdef MOZ_HAVE_REF_QUALIFIERS
+  &
+#endif
   /*
     ...makes an |nsRefPtr| act like its underlying raw pointer type whenever it
     is used in a context where a raw pointer is expected.  It is this operator
@@ -252,6 +265,19 @@ public:
   {
     return get();
   }
+
+#ifdef MOZ_HAVE_REF_QUALIFIERS
+  // Don't allow implicit conversion of temporary nsRefPtr to raw pointer,
+  // because the refcount might be one and the pointer will immediately become
+  // invalid.
+  operator T*() const && = delete;
+
+  // These are needed to avoid the deleted operator above.  XXX Why is operator!
+  // needed separately?  Shouldn't the compiler prefer using the non-deleted
+  // operator bool instead of the deleted operator T*?
+  explicit operator bool() const { return !!mRawPtr; }
+  bool operator!() const { return !mRawPtr; }
+#endif
 
   T*
   operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN

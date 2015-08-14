@@ -377,7 +377,7 @@ private:
   double AverageFrameLength() const;
 
   // The (hopefully) MPEG resource.
-  nsRefPtr<MediaResource> mSource;
+  MediaResourceIndex mSource;
 
   // MPEG frame parser used to detect frames and extract side info.
   FrameParser mParser;

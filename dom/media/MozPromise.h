@@ -814,6 +814,12 @@ public:
   MozPromiseRequestHolder() {}
   ~MozPromiseRequestHolder() { MOZ_ASSERT(!mRequest); }
 
+  void Begin(nsRefPtr<typename PromiseType::Request>&& aRequest)
+  {
+    MOZ_DIAGNOSTIC_ASSERT(!Exists());
+    mRequest = Move(aRequest);
+  }
+
   void Begin(typename PromiseType::Request* aRequest)
   {
     MOZ_DIAGNOSTIC_ASSERT(!Exists());
