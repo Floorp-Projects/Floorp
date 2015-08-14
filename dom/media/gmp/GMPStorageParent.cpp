@@ -30,11 +30,6 @@ extern PRLogModuleInfo* GetGMPLog();
 #define LOGD(msg) MOZ_LOG(GetGMPLog(), mozilla::LogLevel::Debug, msg)
 #define LOG(level, msg) MOZ_LOG(GetGMPLog(), (level), msg)
 
-#ifdef __CLASS__
-#undef __CLASS__
-#endif
-#define __CLASS__ "GMPStorageParent"
-
 namespace gmp {
 
 // We store the records in files in the profile dir.
@@ -165,7 +160,7 @@ public:
   {
     MOZ_ASSERT(!IsOpen(aRecordName));
     nsresult rv;
-    Record* record = nullptr; 
+    Record* record = nullptr;
     if (!mRecords.Get(aRecordName, &record)) {
       // New file.
       nsAutoString filename;
@@ -254,7 +249,7 @@ public:
       return GMPClosedErr;
     }
 
-    Record* record = nullptr; 
+    Record* record = nullptr;
     mRecords.Get(aRecordName, &record);
     MOZ_ASSERT(record && !!record->mFileDesc); // IsOpen() guarantees this.
 
@@ -581,6 +576,8 @@ GMPStorageParent::GMPStorageParent(const nsCString& aNodeId,
 nsresult
 GMPStorageParent::Init()
 {
+  LOGD(("GMPStorageParent[%p]::Init()", this));
+
   if (NS_WARN_IF(mNodeId.IsEmpty())) {
     return NS_ERROR_FAILURE;
   }
@@ -611,6 +608,9 @@ GMPStorageParent::Init()
 bool
 GMPStorageParent::RecvOpen(const nsCString& aRecordName)
 {
+  LOGD(("GMPStorageParent[%p]::RecvOpen(record='%s')",
+       this, aRecordName.get()));
+
   if (mShutdown) {
     return false;
   }
@@ -618,23 +618,30 @@ GMPStorageParent::RecvOpen(const nsCString& aRecordName)
   if (mNodeId.EqualsLiteral("null")) {
     // Refuse to open storage if the page is opened from local disk,
     // or shared across origin.
-    NS_WARNING("Refusing to open storage for null NodeId");
+    LOGD(("GMPStorageParent[%p]::RecvOpen(record='%s') failed; null nodeId",
+          this, aRecordName.get()));
     unused << SendOpenComplete(aRecordName, GMPGenericErr);
     return true;
   }
 
   if (aRecordName.IsEmpty()) {
+    LOGD(("GMPStorageParent[%p]::RecvOpen(record='%s') failed; record name empty",
+          this, aRecordName.get()));
     unused << SendOpenComplete(aRecordName, GMPGenericErr);
     return true;
   }
 
   if (mStorage->IsOpen(aRecordName)) {
+    LOGD(("GMPStorageParent[%p]::RecvOpen(record='%s') failed; record in use",
+          this, aRecordName.get()));
     unused << SendOpenComplete(aRecordName, GMPRecordInUse);
     return true;
   }
 
   auto err = mStorage->Open(aRecordName);
   MOZ_ASSERT(GMP_FAILED(err) || mStorage->IsOpen(aRecordName));
+  LOGD(("GMPStorageParent[%p]::RecvOpen(record='%s') complete; rv=%d",
+        this, aRecordName.get(), err));
   unused << SendOpenComplete(aRecordName, err);
 
   return true;
@@ -643,7 +650,8 @@ GMPStorageParent::RecvOpen(const nsCString& aRecordName)
 bool
 GMPStorageParent::RecvRead(const nsCString& aRecordName)
 {
-  LOGD(("%s::%s: %p record=%s", __CLASS__, __FUNCTION__, this, aRecordName.get()));
+  LOGD(("GMPStorageParent[%p]::RecvRead(record='%s')",
+       this, aRecordName.get()));
 
   if (mShutdown) {
     return false;
@@ -651,9 +659,14 @@ GMPStorageParent::RecvRead(const nsCString& aRecordName)
 
   nsTArray<uint8_t> data;
   if (!mStorage->IsOpen(aRecordName)) {
+    LOGD(("GMPStorageParent[%p]::RecvRead(record='%s') failed; record not open",
+         this, aRecordName.get()));
     unused << SendReadComplete(aRecordName, GMPClosedErr, data);
   } else {
-    unused << SendReadComplete(aRecordName, mStorage->Read(aRecordName, data), data);
+    GMPErr rv = mStorage->Read(aRecordName, data);
+    LOGD(("GMPStorageParent[%p]::RecvRead(record='%s') read %d bytes rv=%d",
+      this, aRecordName.get(), data.Length(), rv));
+    unused << SendReadComplete(aRecordName, rv, data);
   }
 
   return true;
@@ -663,23 +676,32 @@ bool
 GMPStorageParent::RecvWrite(const nsCString& aRecordName,
                             InfallibleTArray<uint8_t>&& aBytes)
 {
-  LOGD(("%s::%s: %p record=%s", __CLASS__, __FUNCTION__, this, aRecordName.get()));
+  LOGD(("GMPStorageParent[%p]::RecvWrite(record='%s') %d bytes",
+        this, aRecordName.get(), aBytes.Length()));
 
   if (mShutdown) {
     return false;
   }
 
   if (!mStorage->IsOpen(aRecordName)) {
+    LOGD(("GMPStorageParent[%p]::RecvWrite(record='%s') failed record not open",
+          this, aRecordName.get()));
     unused << SendWriteComplete(aRecordName, GMPClosedErr);
     return true;
   }
 
   if (aBytes.Length() > GMP_MAX_RECORD_SIZE) {
+    LOGD(("GMPStorageParent[%p]::RecvWrite(record='%s') failed record too big",
+          this, aRecordName.get()));
     unused << SendWriteComplete(aRecordName, GMPQuotaExceededErr);
     return true;
   }
 
-  unused << SendWriteComplete(aRecordName, mStorage->Write(aRecordName, aBytes));
+  GMPErr rv = mStorage->Write(aRecordName, aBytes);
+  LOGD(("GMPStorageParent[%p]::RecvWrite(record='%s') write complete rv=%d",
+        this, aRecordName.get(), rv));
+
+  unused << SendWriteComplete(aRecordName, rv);
 
   return true;
 }
@@ -687,14 +709,16 @@ GMPStorageParent::RecvWrite(const nsCString& aRecordName,
 bool
 GMPStorageParent::RecvGetRecordNames()
 {
-  LOGD(("%s::%s: %p", __CLASS__, __FUNCTION__, this));
-
   if (mShutdown) {
     return true;
   }
 
   nsTArray<nsCString> recordNames;
   GMPErr status = mStorage->GetRecordNames(recordNames);
+
+  LOGD(("GMPStorageParent[%p]::RecvGetRecordNames() status=%d numRecords=%d",
+        this, status, recordNames.Length()));
+
   unused << SendRecordNames(recordNames, status);
 
   return true;
@@ -703,7 +727,8 @@ GMPStorageParent::RecvGetRecordNames()
 bool
 GMPStorageParent::RecvClose(const nsCString& aRecordName)
 {
-  LOGD(("%s::%s: %p record=%s", __CLASS__, __FUNCTION__, this, aRecordName.get()));
+  LOGD(("GMPStorageParent[%p]::RecvClose(record='%s')",
+        this, aRecordName.get()));
 
   if (mShutdown) {
     return true;
@@ -717,14 +742,14 @@ GMPStorageParent::RecvClose(const nsCString& aRecordName)
 void
 GMPStorageParent::ActorDestroy(ActorDestroyReason aWhy)
 {
-  LOGD(("%s::%s: %p", __CLASS__, __FUNCTION__, this));
+  LOGD(("GMPStorageParent[%p]::ActorDestroy(reason=%d)", this, aWhy));
   Shutdown();
 }
 
 void
 GMPStorageParent::Shutdown()
 {
-  LOGD(("%s::%s: %p", __CLASS__, __FUNCTION__, this));
+  LOGD(("GMPStorageParent[%p]::Shutdown()", this));
 
   if (mShutdown) {
     return;

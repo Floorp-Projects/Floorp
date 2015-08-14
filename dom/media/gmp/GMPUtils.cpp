@@ -10,6 +10,7 @@
 #include "nsCOMPtr.h"
 #include "nsLiteralString.h"
 #include "nsCRTGlue.h"
+#include "mozilla/Base64.h"
 
 namespace mozilla {
 
@@ -48,6 +49,19 @@ SplitAt(const char* aDelims,
   while (!!(start = NS_strtok(aDelims, &end))) {
     aOutTokens.AppendElement(nsCString(start));
   }
+}
+
+nsCString
+ToBase64(const nsTArray<uint8_t>& aBytes)
+{
+  nsAutoCString base64;
+  nsDependentCSubstring raw(reinterpret_cast<const char*>(aBytes.Elements()),
+                            aBytes.Length());
+  nsresult rv = Base64Encode(raw, base64);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_LITERAL_CSTRING("[Base64EncodeFailed]");
+  }
+  return base64;
 }
 
 } // namespace mozilla
