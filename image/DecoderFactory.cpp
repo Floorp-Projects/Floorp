@@ -113,8 +113,7 @@ DecoderFactory::CreateDecoder(DecoderType aType,
                               int aSampleSize,
                               const IntSize& aResolution,
                               bool aIsRedecode,
-                              bool aImageIsTransient,
-                              bool aImageIsLocked)
+                              bool aImageIsTransient)
 {
   if (aType == DecoderType::UNKNOWN) {
     return nullptr;
@@ -131,10 +130,7 @@ DecoderFactory::CreateDecoder(DecoderType aType,
   decoder->SetResolution(aResolution);
   decoder->SetSendPartialInvalidations(!aIsRedecode);
   decoder->SetImageIsTransient(aImageIsTransient);
-
-  if (aImageIsLocked) {
-    decoder->SetImageIsLocked();
-  }
+  decoder->SetIsFirstFrameDecode();
 
   // Set a target size for downscale-during-decode if applicable.
   if (aTargetSize) {
@@ -143,6 +139,39 @@ DecoderFactory::CreateDecoder(DecoderType aType,
                "We're downscale-during-decode but decoder doesn't support it?");
     MOZ_ASSERT(NS_SUCCEEDED(rv), "Bad downscale-during-decode target size?");
   }
+
+  decoder->Init();
+  if (NS_FAILED(decoder->GetDecoderError())) {
+    return nullptr;
+  }
+
+  return decoder.forget();
+}
+
+/* static */ already_AddRefed<Decoder>
+DecoderFactory::CreateAnimationDecoder(DecoderType aType,
+                                       RasterImage* aImage,
+                                       SourceBuffer* aSourceBuffer,
+                                       uint32_t aFlags,
+                                       const IntSize& aResolution)
+{
+  if (aType == DecoderType::UNKNOWN) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(aType == DecoderType::GIF || aType == DecoderType::PNG,
+             "Calling CreateAnimationDecoder for non-animating DecoderType");
+
+  nsRefPtr<Decoder> decoder =
+    GetDecoder(aType, aImage, /* aIsRedecode = */ true);
+  MOZ_ASSERT(decoder, "Should have a decoder now");
+
+  // Initialize the decoder.
+  decoder->SetMetadataDecode(false);
+  decoder->SetIterator(aSourceBuffer->Iterator());
+  decoder->SetFlags(aFlags);
+  decoder->SetResolution(aResolution);
+  decoder->SetSendPartialInvalidations(false);
 
   decoder->Init();
   if (NS_FAILED(decoder->GetDecoderError())) {
