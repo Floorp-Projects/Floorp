@@ -224,7 +224,7 @@ DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
   aChildDoc->mParentDoc = this;
 
   if (aCreating) {
-    ProxyCreated(aChildDoc, 0);
+    ProxyCreated(aChildDoc, Interfaces::DOCUMENT | Interfaces::HYPERTEXT);
   }
 
   return true;
