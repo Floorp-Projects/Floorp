@@ -5196,6 +5196,9 @@ ContentParent::RecvBeginDriverCrashGuard(const uint32_t& aGuardType, bool* aOutC
     case gfx::CrashGuardType::D3D9Video:
       guard = MakeUnique<gfx::D3D9VideoCrashGuard>(this);
       break;
+    case gfx::CrashGuardType::GLContext:
+      guard = MakeUnique<gfx::GLContextCrashGuard>(this);
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("unknown crash guard type");
       return false;
