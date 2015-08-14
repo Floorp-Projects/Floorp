@@ -631,7 +631,14 @@ public abstract class GeckoApp
 
         } else if ("Share:Text".equals(event)) {
             String text = message.getString("text");
-            GeckoAppShell.openUriExternal(text, "text/plain", "", "", Intent.ACTION_SEND, "");
+            final Tab tab = Tabs.getInstance().getSelectedTab();
+            String title = "";
+            if (tab != null) {
+                title = tab.getDisplayTitle();
+                final String url = ReaderModeUtils.stripAboutReaderUrl(tab.getURL());
+                text += "\n\n" + url;
+            }
+            GeckoAppShell.openUriExternal(text, "text/plain", "", "", Intent.ACTION_SEND, title);
 
             // Context: Sharing via chrome list (no explicit session is active)
             Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.LIST);
