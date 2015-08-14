@@ -469,7 +469,9 @@ var FullScreen = {
           // should wait for the second animation frame.
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
-              this._element.setAttribute(newState, true);
+              if (this._element) {
+                this._element.setAttribute(newState, true);
+              }
             });
           });
         }
