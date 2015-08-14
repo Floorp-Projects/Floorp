@@ -105,6 +105,7 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_USER_SELECT_AUTO       7 // internal value - please use nsFrame::IsSelectable()
 #define NS_STYLE_USER_SELECT_MOZ_ALL    8 // force selection of all children, unless an ancestor has NONE set - bug 48096
 #define NS_STYLE_USER_SELECT_MOZ_NONE   9 // Like NONE, but doesn't change selection behavior for descendants whose user-select is not AUTO.
+#define NS_STYLE_USER_SELECT_MOZ_TEXT   10 // Like TEXT, except that it won't get overridden by ancestors having ALL.
 
 // user-input
 #define NS_STYLE_USER_INPUT_NONE      0
