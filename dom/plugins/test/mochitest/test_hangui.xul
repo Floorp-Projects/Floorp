@@ -96,11 +96,6 @@ function finishTest() {
 }
 
 function runTests() {
-  if (!SimpleTest.testPluginIsOOP()) {
-    ok(true, "Skipping this test when test plugin is not OOP.");
-    SimpleTest.finish();
-  }
-
   resetVars();
 
   hanguiOperation("Prime ChromeWorker", 0, false, false, HANGUIOP_NOTHING, 0,
