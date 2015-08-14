@@ -1021,11 +1021,10 @@ ArrayJoinKernel(JSContext* cx, SeparatorOp sepOp, HandleObject obj, uint32_t len
                 return false;
             if (!hole && !v.isNullOrUndefined()) {
                 if (Locale) {
-                    JSObject* robj = ToObject(cx, v);
-                    if (!robj)
+                    RootedValue fun(cx);
+                    if (!GetProperty(cx, v, cx->names().toLocaleString, &fun))
                         return false;
-                    RootedId id(cx, NameToId(cx->names().toLocaleString));
-                    if (!robj->callMethod(cx, id, 0, nullptr, &v))
+                    if (!Invoke(cx, v, fun, 0, nullptr, &v))
                         return false;
                 }
                 if (!ValueToStringBuffer(cx, v, sb))

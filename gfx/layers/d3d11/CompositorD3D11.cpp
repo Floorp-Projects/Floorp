@@ -18,6 +18,7 @@
 #include "gfxPrefs.h"
 #include "gfxCrashReporterUtils.h"
 #include "gfxVR.h"
+#include "mozilla/gfx/StackArray.h"
 
 #include "mozilla/EnumeratedArray.h"
 
@@ -1091,23 +1092,20 @@ CompositorD3D11::EndFrame()
       DXGI_PRESENT_PARAMETERS params;
       PodZero(&params);
       params.DirtyRectsCount = mInvalidRegion.GetNumRects();
-      std::vector<RECT> rects;
-      rects.reserve(params.DirtyRectsCount);
+      StackArray<RECT, 4> rects(params.DirtyRectsCount);
 
       nsIntRegionRectIterator iter(mInvalidRegion);
       const IntRect* r;
       uint32_t i = 0;
       while ((r = iter.Next()) != nullptr) {
-        RECT rect;
-        rect.left = r->x;
-        rect.top = r->y;
-        rect.bottom = r->YMost();
-        rect.right = r->XMost();
-
-        rects.push_back(rect);
+        rects[i].left = r->x;
+        rects[i].top = r->y;
+        rects[i].bottom = r->YMost();
+        rects[i].right = r->XMost();
+        i++;
       }
 
-      params.pDirtyRects = &rects.front();
+      params.pDirtyRects = rects.data();
       chain->Present1(presentInterval, mDisableSequenceForNextFrame ? DXGI_PRESENT_DO_NOT_SEQUENCE : 0, &params);
     } else {
       mSwapChain->Present(presentInterval, mDisableSequenceForNextFrame ? DXGI_PRESENT_DO_NOT_SEQUENCE : 0);
