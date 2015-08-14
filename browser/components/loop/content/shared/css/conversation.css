@@ -2,110 +2,134 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+html {
+  font-size: 10px;
+  font-family: menu;
+}
+
 /* Shared conversation window styles */
 .conversation {
   position: relative;
 }
 
-.conversation-toolbar {
-  z-index: 999; /* required to have it superimposed to the video element */
-  border: 1px solid #5a5a5a;
-  border-left: 0;
-  border-right: 0;
-  background: rgba(0,0,0,.70);
+button::-moz-focus-inner {
+  border: 0;
 }
 
-/* desktop version */
-.fx-embedded .conversation-toolbar {
-  /* required to have dropdowns float atop the .room-invitation-overlay: */
-  z-index: 1020;
+.conversation-toolbar {
+  z-index: 1020; /* required to have it superimposed to the video element */
+  border: 0;
+  left: 1.2rem;
+  right: .7rem;
+  height: 2.6rem;
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  /* note that .room-invitation-overlay top matches this */
-  height: 26px;
+  bottom: 1.5rem;
+}
+
+html[dir="rtl"] .conversation-toolbar {
+  left: .7rem;
+  right: 1.2rem;
+}
+
+.idle {
+  transition: opacity 1.5s;
+  opacity: .75;
 }
 
 /* standalone version */
-.standalone .conversation-toolbar {
-  padding: 20px;
-  height: 64px;
-  border: none;
-}
-
-.standalone .focus-stream {
-  /* Set at maximum height, minus height of conversation toolbar */
-  height: calc(100% - 64px);
-}
-
-.standalone .in-call .focus-stream {
-  height: 100%;
-}
 
 .conversation-toolbar > li {
   float: left;
+  margin-right: .7rem;
   font-size: 0; /* prevents vertical bottom padding added to buttons in google
                    chrome */
 }
 
-  .standalone .conversation-toolbar > li {
-    /* XXX Might make sense to use relative units here.
-     */
-    margin-right: 16px;
-  }
-
-.btn-edit-entry {
-  float: right !important;
-  border-left: 1px solid #5a5a5a;
+html[dir="rtl"] .conversation-toolbar > li {
+  float: right;
+  margin-left: .7rem;
+  margin-right: auto;
 }
-
-.conversation-toolbar-btn-box {
-  border-right: 1px solid #5a5a5a;
-}
-
-  .standalone .conversation-toolbar-btn-box {
-    /* overwrite the style for standalone
-     * because we reuse the same component */
-    border: none;
-  }
 
 .conversation-toolbar .btn {
-  /* dimensions according to spec
-   * https://people.mozilla.org/~dhenein/labs/loop-link-spec/#video-call */
-  width: 32px;
-  height: 24px;
   background-position: center;
-  background-size: 40%;
+  background-size: 28px;
   background-repeat: no-repeat;
+  background-color: transparent;
+  height: 28px;
+  width: 33px;
 }
 
-.standalone .media-control {
-  width: 36px;
+.conversation-toolbar-media-btn-group-box {
   background-position: center;
-  border-radius: 28px;
+  background-repeat: no-repeat;
+  background-color: transparent;
+  background-image: url("../img/svg/media-group.svg");
+  background-size: cover;
+  height: 28px;
+  width: 67px;
 }
 
-  .standalone-conversation-toolbar-media-btn:hover {
-    background-color: rgba(255,255,255,.35);
-  }
+.conversation-toolbar-media-btn-group-box > button:last-child:active,
+.conversation-toolbar-media-btn-group-box > button:last-child:hover {
+  background-image: url("../img/svg/media-group-right-hover.svg");
+  background-size: cover;
+}
+
+html[dir="rtl"] .conversation-toolbar-media-btn-group-box > button:last-child:active,
+html[dir="rtl"] .conversation-toolbar-media-btn-group-box > button:last-child:hover {
+  background-image: url("../img/svg/media-group-left-hover.svg");
+  background-size: cover;
+}
+
+.conversation-toolbar-media-btn-group-box > button:first-child:active,
+.conversation-toolbar-media-btn-group-box > button:first-child:hover {
+  background-image: url("../img/svg/media-group-left-hover.svg");
+  background-size: cover;
+}
+
+html[dir="rtl"] .conversation-toolbar-media-btn-group-box > button:first-child:active,
+html[dir="rtl"] .conversation-toolbar-media-btn-group-box > button:first-child:hover {
+  background-image: url("../img/svg/media-group-right-hover.svg");
+  background-size: cover;
+}
+
+.conversation-toolbar-media-btn-group-box > li {
+  float: left;
+}
+
+html[dir="rtl"] .conversation-toolbar-media-btn-group-box > li {
+  float: right;
+}
+
+.conversation-toolbar-btn-box.btn-edit-entry {
+  float: right;
+}
+
+html[dir="rtl"] .conversation-toolbar-btn-box.btn-edit-entry {
+  float: left;
+}
 
 .fx-embedded-answer-btn-text {
-  vertical-align: bottom;
   /* always leave space for the icon (width and margin) */
-  max-width: calc(100% - .8rem - .2rem);
+  max-width: calc(100% - 24px - .2rem);
+  height: 22px;
+  line-height: 22px;
 }
 
 .fx-embedded-btn-icon-video,
 .fx-embedded-btn-icon-audio {
+  width: 24px;
+  height: 24px;
   display: inline-block;
-  vertical-align: top;
-  width: .8rem;
-  height: .8rem;
   background-repeat: no-repeat;
-  cursor: pointer;
+  background-position: center;
+  background-size: 14px 14px;
+  border-radius: 50%;
   -moz-margin-start: .2rem;
 }
+
+/* conversationViews.jsx */
 
 .fx-embedded-btn-icon-video,
 .fx-embedded-btn-video-small,
@@ -124,113 +148,80 @@
   width: 26px;
   height: 26px;
   border-left: 1px solid rgba(255,255,255,.4);
+  background-color: #56b397;
   border-top-right-radius: 2px;
   border-bottom-right-radius: 2px;
-  background-color: #5bc0a4;
   background-position: center;
-  background-size: 1rem;
   background-repeat: no-repeat;
   cursor: pointer;
 }
 
   .fx-embedded-btn-video-small:hover,
   .fx-embedded-btn-audio-small:hover {
-    background-color: #6cb23e;
+    background-color: #50e3c2;
   }
 
-@media (min-resolution: 2dppx) {
-  .fx-embedded-btn-audio-small {
-    background-image: url("../img/audio-inverse-14x14@2x.png");
-  }
-  .fx-embedded-btn-video-small {
-    background-image: url("../img/video-inverse-14x14@2x.png");
-  }
-}
-
-.standalone .btn-hangup {
-  width: auto;
-  font-size: 12px;
-  border-radius: 2px;
-  padding: 0 20px;
-}
-
-.fx-embedded .conversation-toolbar .btn-hangup {
-  background-image: url(../img/hangup-inverse-14x14.png);
-}
-@media (min-resolution: 2dppx) {
-  .fx-embedded .conversation-toolbar .btn-hangup {
-    background-image: url(../img/hangup-inverse-14x14@2x.png);
-  }
-}
-
-/* Common media control buttons behavior */
-.conversation-toolbar .transparent-button {
-  background-color: transparent;
-  opacity: 1;
-}
-.conversation-toolbar .transparent-button:hover,
-.conversation-toolbar .transparent-button.menu-showing {
-  background-color: rgba(255,255,255,.35);
-  opacity: 1;
-}
-.conversation-toolbar .media-control.muted {
-  background-color: #0096DD;
-  opacity: 1;
+.conversation-toolbar .btn-hangup {
+  background-image: url("../img/svg/exit.svg");
+  border: 0;
 }
 
 /* Audio mute button */
-.btn-mute-audio {
-  background-image: url(../img/audio-inverse-14x14.png);
+.btn-mute-audio:after {
+  content: url("../img/svg/audio.svg");
 }
-.btn-mute-audio.muted {
-  background-image: url(../img/mute-inverse-14x14.png);
+
+.btn-mute-audio.muted:after {
+  content: url("../img/svg/audio-mute.svg");
 }
-@media (min-resolution: 2dppx) {
-  .btn-mute-audio {
-    background-image: url(../img/audio-inverse-14x14@2x.png);
-  }
-  .btn-mute-audio.muted {
-    background-image: url(../img/mute-inverse-14x14@2x.png);
-  }
+.btn-mute-audio:hover:after,
+.btn-mute-audio:active:after {
+  content: url("../img/svg/audio-hover.svg");
+}
+
+.btn-mute-audio.muted:hover:after,
+.btn-mute-audio.muted:active:after {
+  content: url("../img/svg/audio-mute-hover.svg");
 }
 
 /* Video mute button */
-.btn-mute-video {
-  background-image: url(../img/video-inverse-14x14.png);
-}
-.btn-mute-video.muted {
-  background-image: url(../img/facemute-14x14.png);
-}
-@media (min-resolution: 2dppx) {
-  .btn-mute-video {
-    background-image: url(../img/video-inverse-14x14@2x.png);
-  }
-  .btn-mute-video.muted {
-    background-image: url(../img/facemute-14x14@2x.png);
-  }
+.btn-mute-video:after {
+  content: url("../img/svg/video.svg");
 }
 
-/* Screen share button */
-.btn-mute-edit,
+.btn-mute-video:active:after,
+.btn-mute-video:hover:after {
+  content: url("../img/svg/video-hover.svg");
+}
+
+.btn-mute-video.muted:after {
+  content: url("../img/svg/video-mute.svg");
+}
+
+.btn-mute-video.muted:hover:after,
+.btn-mute-video.muted:active:after {
+  content: url("../img/svg/video-mute-hover.svg");
+}
+
+.btn-mute-edit {
+  width: 28px;
+  height: 28px;
+  background-size: 28px;
+  background-image: url("../img/svg/settings.svg");
+}
+
+.btn-mute-edit:hover,
+.btn-mute-edit:active {
+  background-image: url("../img/svg/settings-hover.svg");
+}
+
 .btn-screen-share {
-  position: relative;
-  background-image: url(../img/icons-10x10.svg#edit-white);
-  background-size: 16px 16px;
+  background-image: url("../img/svg/sharing.svg");
 }
 
-.btn-screen-share {
-  background-image: url(../img/icons-16x16.svg#screen-white);
-  width: 42px;
-}
-
-/* Make room for the chevron. */
-.conversation-toolbar .btn-screen-share:not(.active) {
-  background-position: 5px center;
-}
-
-.btn-screen-share.active {
-  background-image: url(../img/icons-16x16.svg#screenmute-white);
-  background-color: #6CB23E;
+.btn-screen-share:hover,
+.btn-screen-share:active {
+  background-image: url("../img/svg/sharing-hover.svg");
 }
 
 .btn-mute-edit.muted,
@@ -239,21 +230,7 @@
 }
 
 .btn-screen-share.disabled {
-  background-image: url(../img/icons-16x16.svg#screen-disabled);
-}
-
-.btn-screen-share .chevron {
-  background-image: url(../img/icons-10x10.svg#dropdown-white);
-  background-size: 10px 10px;
-  position: absolute;
-  right: 2px;
-  top: 8px;
-  width: 10px;
-  height: 10px;
-}
-
-.btn-screen-share.disabled .chevron {
-  background-image: url(../img/icons-10x10.svg#dropdown-disabled);
+  background-image: url("../img/svg/sharing-mute.svg");
 }
 
 .fx-embedded .remote_wrapper {
@@ -398,9 +375,13 @@
     background-color: #111;
   }
 
+.conversation-window-dropdown {
+  bottom: 4rem;
+}
+
 .conversation-window-dropdown > li {
-  padding: 2px;
-  font-size: .7rem;
+  padding: .2rem;
+  font-size: 1rem;
   white-space: nowrap;
 }
 
@@ -535,7 +516,8 @@
 /*
  * Used to center the loading spinner
  */
-.focus-stream, .remote {
+.focus-stream,
+.media-wrapper:not(.receiving-screen-share) > .remote {
   position: relative;
 }
 
@@ -620,19 +602,18 @@
 }
 
 .fx-embedded-call-detail {
-  padding-top: 1.2em;
+  padding-top: 0.6em;
 }
 
 .fx-embedded-tiny-video-icon {
-  margin: 0 0.8em;
+  margin: 0 .8em;
 }
 
 .fx-embedded-tiny-audio-icon,
 .fx-embedded-tiny-video-icon {
-  width: 18px;
-  height: 18px;
-  background-size: 12px 12px;
-  background-color: #4ba6e7;
+  width: 24px;
+  height: 24px;
+  background-color: #00a9dc;
   display: inline-block;
   background-repeat: no-repeat;
   background-position: center;
@@ -799,15 +780,14 @@ html[dir="rtl"] .room-conversation-wrapper header a {
 }
 
 .fx-embedded .room-conversation .conversation-toolbar .btn-hangup {
-  background-image: url("../img/icons-16x16.svg#leave");
+  background-image: url("../img/icons-14x14.svg#exit-white");
 }
 
 .room-invitation-overlay {
   position: absolute;
-  background: rgba(0,0,0,.6);
-  /* This matches .fx-embedded .conversation toolbar height */
-  top: 26px;
-  height: calc(100% - 26px);
+  background: rgba(255, 255, 255, 0.6);
+  top: 0;
+  height: 100%;
   right: 0;
   left: 0;
   text-align: center;
@@ -835,7 +815,7 @@ html[dir="rtl"] .room-conversation-wrapper header a {
 }
 
 .room-invitation-overlay .btn-group {
-  padding: 0 0 1em 0;
+  padding: 0 0 5rem 0;
 }
 
 .room-invitation-addcontext {
@@ -915,9 +895,7 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   left: 0;
   bottom: 0;
   width: 100%;
-  /* Stretch to the maximum available space whilst not covering the conversation
-     toolbar (26px). */
-  height: calc(100% - 26px);
+  height: 100%;
   font-size: .9em;
   display: flex;
   flex-flow: column nowrap;
@@ -1060,8 +1038,8 @@ html[dir="rtl"] .room-context-btn-close {
 }
 
 .standalone-room-wrapper > .media-layout {
-  /* 50px is the header, 64px for toolbar, 3em is the footer. */
-  height: calc(100% - 50px - 64px - 3em);
+  /* 50px is the header, 3em is the footer. */
+  height: calc(100% - 50px - 3em);
   margin: 0 10px;
 }
 
@@ -1109,6 +1087,10 @@ html[dir="rtl"] .room-context-btn-close {
   height: calc(100% - 150px);
 }
 
+.media-wrapper.showing-local-streams.receiving-screen-share {
+  position: relative;
+}
+
 .media-wrapper.showing-local-streams.receiving-screen-share > .text-chat-view {
   /* When we're displaying the local streams, then we need to make the text
      chat view a bit shorter to give room. */
@@ -1117,10 +1099,7 @@ html[dir="rtl"] .room-context-btn-close {
 
 .desktop-call-wrapper > .media-layout > .media-wrapper > .text-chat-view,
 .desktop-room-wrapper > .media-layout > .media-wrapper > .text-chat-view {
-  /* Account for height of .conversation-toolbar on desktop */
-  /* When we change the toolbar in bug 1184559 we can remove this. */
-  margin-top: 26px;
-  height: calc(100% - 150px - 26px);
+  height: calc(100% - 150px);
 }
 
 /* Temporarily slaved from .media-wrapper until we use it in more places
@@ -1199,6 +1178,11 @@ html[dir="rtl"] .room-context-btn-close {
     height: 100%;
   }
 
+  .media-wrapper > .focus-stream > .local ~ .conversation-toolbar {
+    /* 22px are the margins, 120px is for the local video area. */
+    max-width: calc(100% - 22px - 120px);
+  }
+
   .media-wrapper > .focus-stream > .local {
     /* Position over the remote video */
     position: absolute;
@@ -1206,12 +1190,19 @@ html[dir="rtl"] .room-context-btn-close {
     z-index: 2;
     margin: 3px;
     right: 0;
+    left:auto;
     /* 29px is (30% of 50px high header) + (height toolbar (38px) +
        height footer (25px) - height header (50px)) */
     bottom: 0;
     width: 120px;
     height: 120px;
   }
+
+  html[dir="rtl"] .media-wrapper > .focus-stream > .local {
+    right: auto;
+    left: 0;
+  }
+
 
   .standalone-room-wrapper > .media-layout > .media-wrapper > .local {
     /* Add 10px for the margin on standalone */
@@ -1239,9 +1230,6 @@ html[dir="rtl"] .room-context-btn-close {
 
   .desktop-call-wrapper > .media-layout > .media-wrapper > .text-chat-view,
   .desktop-room-wrapper > .media-layout > .media-wrapper > .text-chat-view {
-    /* When we change the toolbar in bug 1184559 we can remove this. */
-    /* Reset back to 0 for .conversation-toolbar override on desktop */
-    margin-top: 0;
     /* This is temp, to echo the .media-wrapper > .text-chat-view above */
     height: 30%;
   }
@@ -1293,9 +1281,15 @@ html[dir="rtl"] .room-context-btn-close {
     flex-flow: column nowrap;
   }
 
+  .media-wrapper > .focus-stream > .local ~ .conversation-toolbar {
+    max-width: calc(75% - 22px);
+  }
+
   .media-wrapper > .focus-stream > .local {
     position: absolute;
+    display:fixed;
     right: 0;
+    left: auto;
     /* 30% is the height of the text chat. As we have a margin,
        we don't need to worry about any offset for a border */
     bottom: 0;
@@ -1305,6 +1299,11 @@ html[dir="rtl"] .room-context-btn-close {
        video not too big */
     width: 25%;
     height: 25%;
+  }
+
+  html[dir="rtl"] .media-wrapper > .focus-stream > .local {
+    left: 0;
+    right: auto;
   }
 
   .media-wrapper:not(.showing-remote-streams) > .focus-stream > .no-video {
@@ -1320,6 +1319,10 @@ html[dir="rtl"] .room-context-btn-close {
     width: 100%;
     height: 100%;
     background-color: black;
+  }
+
+  .media-wrapper:not(.showing-remote-streams) > .focus-stream > .local ~ .conversation-toolbar {
+    max-width: calc(100% - 22px);
   }
 
   .media-wrapper > .focus-stream {
@@ -1339,7 +1342,6 @@ html[dir="rtl"] .room-context-btn-close {
   height: 100%;
   background: #000;
 }
-
 .standalone .room-conversation-wrapper .video-layout-wrapper {
   /* 50px = height of header, 3em = height of footer */
   /* XXX This is currently wrong for narrow/mobile display,
@@ -1709,11 +1711,6 @@ html[dir="rtl"] .text-chat-entry.received .text-chat-arrow {
   .standalone .room-conversation .video_wrapper.remote_wrapper.not-joined {
     width: 100%;
   }
-
-  .standalone .conversation-toolbar {
-    height: 38px;
-    padding: 8px;
-  }
   .standalone .conversation .focus-stream {
     /* Set at maximum height, minus height of conversation toolbar */
     height: 100%;
@@ -1734,20 +1731,14 @@ html[dir="rtl"] .text-chat-entry.received .text-chat-arrow {
     max-height: 160px;
     /* 60px min-height of .text-chat-entries plus 40px of .text-chat-box */
     min-height: 100px;
-    /* The !important is to override the values defined above which have more
-       specificity when we fix bug 1184559, we should be able to remove it,
-       but this should be tested first. */
-    height: auto !important;
+    height: auto;
     /* Let the view be the minimum size it needs to be - don't flex to take up
        more. */
     flex: 0 0 auto !important;
   }
 
   .text-chat-entries {
-    /* The !important is to override the values defined above which have more
-       specificity when we fix bug 1184559, we should be able to remove it,
-       but this should be tests first. */
-    flex: 1 1 auto !important;
+    flex: 1 1 auto;
     max-height: 120px;
     min-height: 60px;
   }
@@ -1834,7 +1825,7 @@ html[dir="rtl"] .text-chat-entry.received .text-chat-arrow {
 /* Make sure the loading spinner always gets the same background */
 .loading-background {
   background: black;
-  position: absolute;
+  position: relative;
   width: 100%;
   height: 100%;
 }
