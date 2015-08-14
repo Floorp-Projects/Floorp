@@ -901,7 +901,10 @@ SavedStacks::saveCurrentStack(JSContext* cx, MutableHandleSavedFrame frame, unsi
     MOZ_ASSERT(initialized());
     assertSameCompartment(cx, this);
 
-    if (creatingSavedFrame || cx->isExceptionPending()) {
+    if (creatingSavedFrame ||
+        cx->isExceptionPending() ||
+        !cx->global()->isStandardClassResolved(JSProto_Object))
+    {
         frame.set(nullptr);
         return true;
     }
