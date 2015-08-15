@@ -85,10 +85,6 @@ public:
   // Pushes a packet to the front of the video packet queue.
   virtual void PushVideoPacket(NesteggPacketHolder* aItem);
 
-  nsresult Read(char* aBuffer, uint32_t aCount, uint32_t * aBytes);
-  nsresult Seek(int32_t aWhence, int64_t aOffset);
-  int64_t Tell();
-
 private:
   friend class WebMTrackDemuxer;
 
@@ -113,7 +109,7 @@ private:
   // is responsible for making sure it doesn't get lost.
   nsRefPtr<NesteggPacketHolder> DemuxPacket();
 
-  nsRefPtr<MediaResource> mResource;
+  MediaResourceIndex mResource;
   MediaInfo mInfo;
   nsTArray<nsRefPtr<WebMTrackDemuxer>> mDemuxers;
 
@@ -126,7 +122,6 @@ private:
   // Access on reader's thread for main demuxer,
   // or main thread for cloned demuxer
   nestegg* mContext;
-  int64_t mOffset;
 
   // Queue of video and audio packets that have been read but not decoded.
   WebMPacketQueue mVideoPackets;
