@@ -535,6 +535,11 @@ FindFrameTargetedByInputEvent(WidgetGUIEvent* aEvent,
         aEvent->AsMouseEventBase()->hitCluster = true;
       }
       PET_LOG("Target %p is clickable\n", target);
+      // If the target that was directly hit has a clickable ancestor, that
+      // means it too is clickable. And since it is the same as or a descendant
+      // of clickableAncestor, it should become the root for the GetClosest
+      // search.
+      clickableAncestor = target->GetContent();
     }
   }
 
