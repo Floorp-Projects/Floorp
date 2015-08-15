@@ -58,8 +58,8 @@ add_task(function* test_notification_error() {
     )
   ]);
 
-  let ackDefer = Promise.defer();
-  let ackDone = after(records.length, ackDefer.resolve);
+  let ackDone;
+  let ackPromise = new Promise(resolve => ackDone = after(records.length, resolve));
   PushService.init({
     serverURI: "wss://push.example.org/",
     networkInfo: new MockDesktopNetworkInfo(),
@@ -112,7 +112,7 @@ add_task(function* test_notification_error() {
     'Wrong endpoint for notification C');
   equal(cPush.version, 4, 'Wrong version for notification C');
 
-  yield waitForPromise(ackDefer.promise, DEFAULT_TIMEOUT,
+  yield waitForPromise(ackPromise, DEFAULT_TIMEOUT,
     'Timed out waiting for acknowledgements');
 
   let aRecord = yield db.getByIdentifiers({scope: 'https://example.com/a',

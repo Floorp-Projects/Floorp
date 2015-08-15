@@ -41,8 +41,8 @@ add_task(function* test_notification_duplicate() {
   let notifyPromise = promiseObserverNotification('push-notification');
 
   let acks = 0;
-  let ackDefer = Promise.defer();
-  let ackDone = after(2, ackDefer.resolve);
+  let ackDone;
+  let ackPromise = new Promise(resolve => ackDone = after(2, resolve));
   PushService.init({
     serverURI: "wss://push.example.org/",
     networkInfo: new MockDesktopNetworkInfo(),
@@ -73,7 +73,7 @@ add_task(function* test_notification_duplicate() {
 
   yield waitForPromise(notifyPromise, DEFAULT_TIMEOUT,
     'Timed out waiting for notifications');
-  yield waitForPromise(ackDefer.promise, DEFAULT_TIMEOUT,
+  yield waitForPromise(ackPromise, DEFAULT_TIMEOUT,
     'Timed out waiting for stale acknowledgement');
 
   let staleRecord = yield db.getByKeyID(
