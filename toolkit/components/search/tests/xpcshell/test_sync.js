@@ -20,4 +20,8 @@ function run_test() {
   // test jar engine is loaded ok.
   let engine = Services.search.getEngineByName("bug645970");
   do_check_neq(engine, null);
+
+  // Check the hidden engine is not loaded.
+  engine = Services.search.getEngineByName("hidden");
+  do_check_eq(engine, null);
 }

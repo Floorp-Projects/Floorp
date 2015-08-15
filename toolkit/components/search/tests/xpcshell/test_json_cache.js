@@ -64,12 +64,32 @@ function run_test() {
     loadFromJARs = defaultBranch.getBoolPref("loadFromJars");
   } catch (ex) {}
 
+  let visibleDefaultEngines = [];
   if (!loadFromJARs) {
     filesToIgnore.push(getDir(NS_APP_SEARCH_DIR));
   } else {
     let rootURIPref = defaultBranch.getCharPref("jarURIs");
     let rootURIs = rootURIPref.split(",");
     for (let root of rootURIs) {
+      let visibleEnginesForRoot = [];
+      let listURL = root + "list.txt";
+      let chan = NetUtil.ioService.newChannelFromURI2(makeURI(listURL),
+                                                      null, // aLoadingNode
+                                                      Services.scriptSecurityManager.getSystemPrincipal(),
+                                                      null, // aTriggeringPrincipal
+                                                      Ci.nsILoadInfo.SEC_NORMAL,
+                                                      Ci.nsIContentPolicy.TYPE_OTHER);
+      let sis = Cc["@mozilla.org/scriptableinputstream;1"].
+                createInstance(Ci.nsIScriptableInputStream);
+      sis.init(chan.open());
+      let list = sis.read(sis.available());
+      let names = list.split("\n").filter(n => !!n);
+      for (let name of names) {
+        if (name.endsWith(":hidden"))
+          continue;
+        visibleEnginesForRoot.push(name);
+      }
+
       let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].
                         getService(Ci.nsIChromeRegistry);
       let chromeURI = chromeReg.convertChromeURL(makeURI(root));
@@ -82,23 +102,13 @@ function run_test() {
         filesToIgnore.push(fileURI.file);
       } else {
         // flat packaging, we need to find each .xml file.
-        let listURL = root + "list.txt";
-        let chan = NetUtil.ioService.newChannelFromURI2(makeURI(listURL),
-                                                        null, // aLoadingNode
-                                                        Services.scriptSecurityManager.getSystemPrincipal(),
-                                                        null, // aTriggeringPrincipal
-                                                        Ci.nsILoadInfo.SEC_NORMAL,
-                                                        Ci.nsIContentPolicy.TYPE_OTHER);
-        let sis = Cc["@mozilla.org/scriptableinputstream;1"].
-                  createInstance(Ci.nsIScriptableInputStream);
-        sis.init(chan.open());
-        let list = sis.read(sis.available());
-        let names = list.split("\n").filter(n => !!n);
-        for (let name of names) {
+        for (let name of visibleEnginesForRoot) {
           let uri = chromeReg.convertChromeURL(makeURI(root + name + ".xml"));
           filesToIgnore.push(uri.QueryInterface(Ci.nsIFileURL).file);
         }
       }
+
+      visibleDefaultEngines = visibleDefaultEngines.concat(visibleEnginesForRoot);
     }
   }
 
@@ -115,6 +125,8 @@ function run_test() {
   delete cacheTemplate.directories["[profile]/searchplugins"];
   cacheTemplate.directories[profPlugins].engines[0].filePath = engineFile.path;
   cacheTemplate.directories[profPlugins].lastModifiedTime = engineFile.parent.lastModifiedTime;
+
+  cacheTemplate.visibleDefaultEngines = visibleDefaultEngines;
 
   run_next_test();
 }
