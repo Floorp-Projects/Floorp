@@ -19,6 +19,7 @@
 #include "nsCOMPtr.h"                // for already_AddRefed
 #include "mozilla/gfx/Point.h"       // for mozilla::gfx::IntSize
 #include "mozilla/gfx/2D.h"          // for SourceSurface
+#include "SurfaceFlags.h"
 #include "SVGImageContext.h"         // for SVGImageContext
 
 namespace mozilla {
@@ -59,16 +60,16 @@ public:
   {
     uint32_t hash = HashGeneric(mSize.width, mSize.height);
     hash = AddToHash(hash, mSVGContext.map(HashSIC).valueOr(0));
-    hash = AddToHash(hash, mAnimationTime, mFlags);
+    hash = AddToHash(hash, mAnimationTime, uint32_t(mFlags));
     return hash;
   }
 
   IntSize Size() const { return mSize; }
   Maybe<SVGImageContext> SVGContext() const { return mSVGContext; }
   float AnimationTime() const { return mAnimationTime; }
-  uint32_t Flags() const { return mFlags; }
+  SurfaceFlags Flags() const { return mFlags; }
 
-  SurfaceKey WithNewFlags(uint32_t aFlags) const
+  SurfaceKey WithNewFlags(SurfaceFlags aFlags) const
   {
     return SurfaceKey(mSize, mSVGContext, mAnimationTime, aFlags);
   }
@@ -77,7 +78,7 @@ private:
   SurfaceKey(const IntSize& aSize,
              const Maybe<SVGImageContext>& aSVGContext,
              const float aAnimationTime,
-             const uint32_t aFlags)
+             const SurfaceFlags aFlags)
     : mSize(aSize)
     , mSVGContext(aSVGContext)
     , mAnimationTime(aAnimationTime)
@@ -88,7 +89,9 @@ private:
     return aSIC.Hash();
   }
 
-  friend SurfaceKey RasterSurfaceKey(const IntSize&, uint32_t, uint32_t);
+  friend SurfaceKey RasterSurfaceKey(const IntSize&,
+                                     SurfaceFlags,
+                                     uint32_t);
   friend SurfaceKey VectorSurfaceKey(const IntSize&,
                                      const Maybe<SVGImageContext>&,
                                      float);
@@ -96,12 +99,12 @@ private:
   IntSize                mSize;
   Maybe<SVGImageContext> mSVGContext;
   float                  mAnimationTime;
-  uint32_t               mFlags;
+  SurfaceFlags           mFlags;
 };
 
 inline SurfaceKey
 RasterSurfaceKey(const gfx::IntSize& aSize,
-                 uint32_t aFlags,
+                 SurfaceFlags aFlags,
                  uint32_t aFrameNum)
 {
   return SurfaceKey(aSize, Nothing(), float(aFrameNum), aFlags);
@@ -115,7 +118,7 @@ VectorSurfaceKey(const gfx::IntSize& aSize,
   // We don't care about aFlags for VectorImage because none of the flags we
   // have right now influence VectorImage's rendering. If we add a new flag that
   // *does* affect how a VectorImage renders, we'll have to change this.
-  return SurfaceKey(aSize, aSVGContext, aAnimationTime, 0);
+  return SurfaceKey(aSize, aSVGContext, aAnimationTime, DefaultSurfaceFlags());
 }
 
 enum class Lifetime : uint8_t {
@@ -196,7 +199,8 @@ struct SurfaceCache
    */
   static LookupResult Lookup(const ImageKey    aImageKey,
                              const SurfaceKey& aSurfaceKey,
-                             const Maybe<uint32_t>& aAlternateFlags = Nothing());
+                             const Maybe<SurfaceFlags>& aAlternateFlags
+                               = Nothing());
 
   /**
    * Looks up the best matching surface in the cache and returns a drawable
@@ -224,7 +228,7 @@ struct SurfaceCache
    */
   static LookupResult LookupBestMatch(const ImageKey    aImageKey,
                                       const SurfaceKey& aSurfaceKey,
-                                      const Maybe<uint32_t>& aAlternateFlags
+                                      const Maybe<SurfaceFlags>& aAlternateFlags
                                         = Nothing());
 
   /**
