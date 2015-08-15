@@ -2,9 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "builtin/TestingFunctions.h"
 #include "js/UbiNode.h"
-
 #include "jsapi-tests/tests.h"
+#include "vm/SavedFrame.h"
 
 using JS::RootedObject;
 using JS::RootedScript;
@@ -103,3 +104,94 @@ BEGIN_TEST(test_ubiNodeJSObjectConstructorName)
     return true;
 }
 END_TEST(test_ubiNodeJSObjectConstructorName)
+
+template <typename F, typename G>
+static bool
+checkString(const char* expected, F fillBufferFunction, G stringGetterFunction)
+{
+    auto expectedLength = strlen(expected);
+    char16_t buf[1024];
+    if (fillBufferFunction(mozilla::RangedPtr<char16_t>(buf, 1024), 1024) != expectedLength ||
+        !EqualChars(buf, expected, expectedLength))
+    {
+        return false;
+    }
+
+    auto string = stringGetterFunction();
+    // Expecting a |JSAtom*| from a live |JS::ubi::StackFrame|.
+    if (!string.template is<JSAtom*>() ||
+        !StringEqualsAscii(string.template as<JSAtom*>(), expected))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+BEGIN_TEST(test_ubiStackFrame)
+{
+    CHECK(js::DefineTestingFunctions(cx, global, false));
+
+    JS::RootedValue val(cx);
+    CHECK(evaluate("(function one() {                      \n"  // 1
+                   "  return (function two() {             \n"  // 2
+                   "    return (function three() {         \n"  // 3
+                   "      return saveStack();              \n"  // 4
+                   "    }());                              \n"  // 5
+                   "  }());                                \n"  // 6
+                   "}());                                  \n", // 7
+                   "filename.js",
+                   1,
+                   &val));
+
+    CHECK(val.isObject());
+    JS::RootedObject obj(cx, &val.toObject());
+
+    CHECK(obj->is<SavedFrame>());
+    JS::Rooted<SavedFrame*> savedFrame(cx, &obj->as<SavedFrame>());
+
+    JS::ubi::StackFrame ubiFrame(savedFrame);
+
+    // All frames should be from the "filename.js" source.
+    while (ubiFrame) {
+        CHECK(checkString("filename.js",
+                          [&] (mozilla::RangedPtr<char16_t> ptr, size_t length) {
+                              return ubiFrame.source(ptr, length);
+                          },
+                          [&] {
+                              return ubiFrame.source();
+                          }));
+        ubiFrame = ubiFrame.parent();
+    }
+
+    ubiFrame = savedFrame;
+
+    auto bufferFunctionDisplayName = [&] (mozilla::RangedPtr<char16_t> ptr, size_t length) {
+        return ubiFrame.functionDisplayName(ptr, length);
+    };
+    auto getFunctionDisplayName = [&] {
+        return ubiFrame.functionDisplayName();
+    };
+
+    CHECK(checkString("three", bufferFunctionDisplayName, getFunctionDisplayName));
+    CHECK(ubiFrame.line() == 4);
+
+    ubiFrame = ubiFrame.parent();
+    CHECK(checkString("two", bufferFunctionDisplayName, getFunctionDisplayName));
+    CHECK(ubiFrame.line() == 3);
+
+    ubiFrame = ubiFrame.parent();
+    CHECK(checkString("one", bufferFunctionDisplayName, getFunctionDisplayName));
+    CHECK(ubiFrame.line() == 2);
+
+    ubiFrame = ubiFrame.parent();
+    CHECK(ubiFrame.functionDisplayName().is<JSAtom*>());
+    CHECK(ubiFrame.functionDisplayName().as<JSAtom*>() == nullptr);
+    CHECK(ubiFrame.line() == 1);
+
+    ubiFrame = ubiFrame.parent();
+    CHECK(!ubiFrame);
+
+    return true;
+}
+END_TEST(test_ubiStackFrame)
