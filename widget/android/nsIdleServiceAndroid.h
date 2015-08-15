@@ -15,7 +15,7 @@ class nsIdleServiceAndroid : public nsIdleService
 public:
     NS_DECL_ISUPPORTS_INHERITED
 
-    bool PollIdleTime(uint32_t* aIdleTime);
+    bool PollIdleTime(uint32_t* aIdleTime) override;
 
     static already_AddRefed<nsIdleServiceAndroid> GetInstance() 
     {
@@ -30,7 +30,7 @@ public:
 protected:
     nsIdleServiceAndroid() { }
     virtual ~nsIdleServiceAndroid() { }
-    bool UsePollMode();
+    bool UsePollMode() override;
 };
 
 #endif // nsIdleServiceAndroid_h__

@@ -118,7 +118,7 @@ private:
 public:
   NS_DECL_ISUPPORTS;
 
-  nsresult Callback(const nsAString& topic, const nsAString& state) {
+  nsresult Callback(const nsAString& topic, const nsAString& state) override {
     widget::GeckoAppShell::NotifyWakeLockChanged(topic, state);
     return NS_OK;
   }
