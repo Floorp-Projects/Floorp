@@ -3438,6 +3438,18 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric* apply)
     emitPopArguments(apply, extraStackSpace);
 }
 
+typedef bool (*ArraySpliceDenseFn)(JSContext*, HandleObject, uint32_t, uint32_t);
+static const VMFunction ArraySpliceDenseInfo = FunctionInfo<ArraySpliceDenseFn>(ArraySpliceDense);
+
+void
+CodeGenerator::visitArraySplice(LArraySplice* lir)
+{
+    pushArg(ToRegister(lir->getDeleteCount()));
+    pushArg(ToRegister(lir->getStart()));
+    pushArg(ToRegister(lir->getObject()));
+    callVM(ArraySpliceDenseInfo, lir);
+}
+
 void
 CodeGenerator::visitBail(LBail* lir)
 {
