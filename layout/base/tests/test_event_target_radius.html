@@ -39,6 +39,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=780847
 
   <div class="target" id="t6" onmousedown="x=1" hidden>
     <div id="t6_inner" style="position:absolute; left:-40px; top:20px; width:60px; height:60px; background:yellow;"></div>
+    <div id="t6_inner_clickable" style="position:absolute; left:-40px; top: 80px; width: 60px; height: 5px; background:red" onmousedown="x=1"></div>
   </div>
   <div id="t6_outer" style="position:absolute; left:160px; top:120px; width:60px; height:60px; background:green;" onmousedown="x=1" hidden></div>
 
@@ -195,6 +196,16 @@ function test3() {
     "when outside both inner and parent, but in range of both, the inner is selected");
   testMouseClick("t6_inner", 45, -1, "t6_inner",
     "clicking in clickable parent close to inner activates inner, not parent");
+  testMouseClick("t6_inner_clickable", 1, -1, "t6_inner",
+    "clicking on inner doesn't get redirected to inner_clickable because they are both clickable");
+  testMouseClick("t6_inner_clickable", 1, 1, "t6_inner_clickable",
+    "clicking on inner_clickable doesn't get redirected to inner because they are both clickable");
+  testMouseClick("t6_inner_clickable", 45, -1, "t6_inner",
+    "clicking on inner while backed by its parent still doesn't get redirected to inner_clickable");
+  testMouseClick("t6_inner_clickable", 45, 1, "t6_inner_clickable",
+    "clicking on inner_clickable while backed by its parent still doesn't get redirected to inner");
+  testMouseClick("t6_inner_clickable", 45, 6, "t6_inner_clickable",
+    "clicking on parent near inner_clickable gets redirected to inner_clickable rather than inner because it is closer");
   ok(13*mm < 80, "no point inside t6 that's not within radius of t6_inner; adjust layout of t6/inner/outer as needed");
   testMouseClick("t6_outer", -40 + 13*mm, -1, "t6",
     "clicking in clickable container close to outer activates parent, not outer");
