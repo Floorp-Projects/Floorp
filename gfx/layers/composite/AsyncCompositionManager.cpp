@@ -600,7 +600,6 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
 
   Matrix4x4 oldTransform = aLayer->GetTransform();
 
-  Matrix4x4 combinedAsyncTransformWithoutOverscroll;
   Matrix4x4 combinedAsyncTransform;
   bool hasAsyncTransform = false;
   LayerMargin fixedLayerMargins(0, 0, 0, 0);
@@ -702,8 +701,22 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
       ancestorMaskLayers.AppendElement(ancestorMaskLayer);
     }
 
-    combinedAsyncTransformWithoutOverscroll *= asyncTransformWithoutOverscroll;
     combinedAsyncTransform *= asyncTransform;
+
+    // For the purpose of aligning fixed and sticky layers, we disregard
+    // the overscroll transform as well as any OMTA transform when computing the
+    // 'aCurrentTransformForRoot' parameter. This ensures that the overscroll
+    // and OMTA transforms are not unapplied, and therefore that the visual
+    // effects apply to fixed and sticky layers. We do this by using
+    // GetTransform() as the base transform rather than GetLocalTransform(),
+    // which would include those factors.
+    Matrix4x4 transformWithoutOverscrollOrOmta = aLayer->GetTransform() *
+        AdjustForClip(asyncTransformWithoutOverscroll, aLayer);
+
+    // Since fixed/sticky layers are relative to their nearest scrolling ancestor,
+    // we use the ViewID from the bottommost scrollable metrics here.
+    AlignFixedAndStickyLayers(aLayer, aLayer, metrics.GetScrollId(), oldTransform,
+                              transformWithoutOverscrollOrOmta, fixedLayerMargins);
   }
 
   if (hasAsyncTransform) {
@@ -723,23 +736,6 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
       SetShadowTransform(maskLayer,
           maskLayer->GetLocalTransform() * combinedAsyncTransform);
     }
-
-    const FrameMetrics& bottom = LayerMetricsWrapper::BottommostScrollableMetrics(aLayer);
-    MOZ_ASSERT(bottom.IsScrollable());  // must be true because hasAsyncTransform is true
-
-    // For the purpose of aligning fixed and sticky layers, we disregard
-    // the overscroll transform as well as any OMTA transform when computing the
-    // 'aCurrentTransformForRoot' parameter. This ensures that the overscroll
-    // and OMTA transforms are not unapplied, and therefore that the visual
-    // effects apply to fixed and sticky layers. We do this by using
-    // GetTransform() as the base transform rather than GetLocalTransform(),
-    // which would include those factors.
-    Matrix4x4 transformWithoutOverscrollOrOmta = aLayer->GetTransform() *
-        AdjustForClip(combinedAsyncTransformWithoutOverscroll, aLayer);
-    // Since fixed/sticky layers are relative to their nearest scrolling ancestor,
-    // we use the ViewID from the bottommost scrollable metrics here.
-    AlignFixedAndStickyLayers(aLayer, aLayer, bottom.GetScrollId(), oldTransform,
-                              transformWithoutOverscrollOrOmta, fixedLayerMargins);
 
     appliedTransform = true;
   }
