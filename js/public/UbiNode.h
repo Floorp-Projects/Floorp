@@ -956,6 +956,9 @@ class Concrete<JSObject> : public TracerConcreteWithCompartment<JSObject> {
                                  UniquePtr<char16_t[], JS::FreePolicy>& outName) const override;
     size_t size(mozilla::MallocSizeOf mallocSizeOf) const override;
 
+    bool hasAllocationStack() const override;
+    StackFrame allocationStack() const override;
+
   protected:
     explicit Concrete(JSObject* ptr) : TracerConcreteWithCompartment(ptr) { }
 
