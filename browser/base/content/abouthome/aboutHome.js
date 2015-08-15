@@ -21,6 +21,7 @@ const DATABASE_NAME = "abouthome";
 const DATABASE_VERSION = 1;
 const DATABASE_STORAGE = "persistent";
 const SNIPPETS_OBJECTSTORE_NAME = "snippets";
+let searchText, findKey;
 
 // This global tracks if the page has been set up before, to prevent double inits
 let gInitialized = false;
@@ -52,6 +53,16 @@ window.addEventListener("pageshow", function () {
 window.addEventListener("pagehide", function() {
   window.gObserver.disconnect();
   window.removeEventListener("resize", fitToWidth);
+});
+
+// make Accel+f focus the search box
+window.addEventListener("keypress", ev => {
+  // Make Ctrl/Cmd+f focus the search box.
+  let modifiers = ev.ctrlKey + ev.altKey + ev.shiftKey + ev.metaKey;
+  if (ev.getModifierState("Accel") && modifiers == 1 && ev.key == findKey) {
+    searchText.focus();
+    ev.preventDefault();
+  }
 });
 
 // This object has the same interface as Map and is used to store and retrieve
@@ -179,11 +190,12 @@ function setupSearch()
   // The "autofocus" attribute doesn't focus the form element
   // immediately when the element is first drawn, so the
   // attribute is also used for styling when the page first loads.
-  let searchText = document.getElementById("searchText");
+  searchText = document.getElementById("searchText");
   searchText.addEventListener("blur", function searchText_onBlur() {
     searchText.removeEventListener("blur", searchText_onBlur);
     searchText.removeAttribute("autofocus");
   });
+  findKey = searchText.dataset.findkey;
 
   if (!gContentSearchController) {
     gContentSearchController =
