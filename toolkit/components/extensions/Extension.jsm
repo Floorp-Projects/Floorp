@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["Extension"];
+const EXPORTED_SYMBOLS = ["Extension"];
 
 /*
  * This file is the main entry point for extensions. When an extension
@@ -306,7 +306,7 @@ let GlobalManager = {
 
 // We create one instance of this class per extension. |addonData|
 // comes directly from bootstrap.js when initializing.
-this.Extension = function(addonData)
+function Extension(addonData)
 {
   let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
   let uuid = uuidGenerator.generateUUID().number;

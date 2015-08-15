@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["ExtensionContent"];
+const EXPORTED_SYMBOLS = ["ExtensionContent"];
 
 /*
  * This file handles the content process side of extensions. It mainly
@@ -19,7 +19,6 @@ const Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionManagement",
                                   "resource://gre/modules/ExtensionManagement.jsm");
@@ -148,20 +147,8 @@ Script.prototype = {
     let scheduled = this.run_at || "document_idle";
     if (shouldRun(scheduled)) {
       for (let url of this.js) {
-        // On gonk we need to load the resources asynchronously because the
-        // app: channels only support asyncOpen. This is safe only in the
-        // `document_idle` state.
-        if (AppConstants.platform == "gonk" && scheduled != "document_idle") {
-          Cu.reportError(`Script injection: ignoring ${url} at ${scheduled}`);
-        }
         url = extension.baseURI.resolve(url);
-
-        let options = {
-          target: sandbox,
-          charset: "UTF-8",
-          async: AppConstants.platform == "gonk"
-        }
-        Services.scriptloader.loadSubScriptWithOptions(url, options);
+        Services.scriptloader.loadSubScript(url, sandbox);
       }
 
       if (this.options.jsCode) {
@@ -238,7 +225,6 @@ ExtensionContext.prototype = {
 
   callOnClose(obj) {
     this.onClose.add(obj);
-    Cu.nukeSandbox(this.sandbox);
   },
 
   forgetOnClose(obj) {
@@ -490,7 +476,7 @@ let ExtensionManager = {
   }
 };
 
-this.ExtensionContent = {
+let ExtensionContent = {
   globals: new Map(),
 
   init(global) {
