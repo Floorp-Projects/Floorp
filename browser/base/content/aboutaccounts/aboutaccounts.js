@@ -237,7 +237,7 @@ let wrapper = {
       // If the user data is verified, we want it to immediately look like
       // they are signed in without waiting for messages to bounce around.
       if (accountData.verified) {
-        show("stage", "manage");
+        openPrefs();
       }
       this.injectData("message", { status: "login" });
       // until we sort out a better UX, just leave the jelly page in place.
