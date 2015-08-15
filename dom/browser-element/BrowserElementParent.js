@@ -234,8 +234,6 @@ BrowserElementParent.prototype = {
                  .apply(self, arguments);
       }
     });
-
-    this._mm.loadFrameScript("chrome://global/content/extensions.js", true);
   },
 
   /**

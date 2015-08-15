@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["ExtensionUtils"];
+const EXPORTED_SYMBOLS = ["ExtensionUtils"];
 
 const Ci = Components.interfaces;
 const Cc = Components.classes;
@@ -527,8 +527,7 @@ Messenger.prototype = {
   },
 };
 
-this.ExtensionUtils = {
-  runSafeWithoutClone,
+let ExtensionUtils = {
   runSafe,
   DefaultWeakMap,
   EventManager,
