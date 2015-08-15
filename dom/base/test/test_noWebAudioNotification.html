@@ -1,36 +1,32 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test for audio controller in windows</title>
+  <title>Test for video controller in windows</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <pre id="test">
 </pre>
-<iframe></iframe>
 
 <script type="application/javascript">
 
 SimpleTest.waitForExplicitFinish();
-
-var expectedNotification = null;
-var iframe = null;
+SimpleTest.requestFlakyTimeout("Testing an event not happening");
 
 var observer = {
   observe: function(subject, topic, data) {
-    is(topic, "audio-playback", "audio-playback received");
-    is(data, expectedNotification, "This is the right notification");
-    SimpleTest.executeSoon(runTest);
+    ok(false, "should not receive audio-playback notification!");
   }
 };
 
 var observerService = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
                                    .getService(SpecialPowers.Ci.nsIObserverService);
 
+var ac;
+
 var tests = [
   function() {
-    iframe = document.querySelector("iframe");
     SpecialPowers.pushPrefEnv({"set": [["media.useAudioChannelService", true]]}, runTest);
   },
 
@@ -41,23 +37,8 @@ var tests = [
   },
 
   function() {
-    iframe.src = "file_webaudioLoop.html";
-    expectedNotification = 'active';
-  },
-
-  function() {
-    expectedNotification = 'inactive';
-    iframe.contentWindow.suspendAC();
-  },
-
-  function() {
-    expectedNotification = 'active';
-    iframe.contentWindow.resumeAC();
-  },
-
-  function() {
-    expectedNotification = 'inactive';
-    iframe.contentWindow.closeAC();
+    ac = new AudioContext();
+    setTimeout(runTest, 100);
   },
 
   function() {
@@ -77,7 +58,7 @@ function runTest() {
   test();
 }
 
-onload = runTest;
+runTest();
 
 </script>
 </body>
