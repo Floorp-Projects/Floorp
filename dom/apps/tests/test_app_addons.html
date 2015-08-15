@@ -20,10 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1042881
 
 SimpleTest.waitForExplicitFinish();
 
-const baseURL = "http://mochi.test:8888/tests/dom/apps/tests/addons/";
-
-const appManifestURL        = baseURL + "update.webapp";
-const invalidAppManifestURL = baseURL + "invalid.webapp";
+let appManifestURL = "http://mochi.test:8888/tests/dom/apps/tests/addons/update.webapp";
 
 let gGenerator = runTest();
 
@@ -71,7 +68,7 @@ function openPage(pageURL, messages) {
 
 let apps = [];
 
-function installApp(manifestURL, expectedError) {
+function installApp(manifestURL) {
   info("About to install app at " + manifestURL);
   let req = navigator.mozApps.installPackage(manifestURL);
   req.onsuccess = function() {
@@ -83,15 +80,6 @@ function installApp(manifestURL, expectedError) {
     } else {
       req.result.ondownloadapplied = function() {
         is(req.result.installState, "installed", "app downloaded");
-        continueTest();
-      }
-
-      req.result.ondownloaderror = function() {
-        if (expectedError) {
-          ok(true, "expected installation error.");
-        } else {
-          ok(false, "unexpected installation error.");
-        }
         continueTest();
       }
     }
@@ -128,12 +116,8 @@ function runTest() {
      "Uncustomized content", "rgb(0, 0, 0)"]);
   yield undefined;
 
-  // Install addon app with an invalid manifest.
-  installApp(invalidAppManifestURL, true);
-  yield undefined;
-
-  // Install valid addon app.
-  installApp(appManifestURL, false);
+  // Install addon app.
+  installApp(appManifestURL);
   yield undefined;
 
   // Opens the iframe to the test page, customized.
