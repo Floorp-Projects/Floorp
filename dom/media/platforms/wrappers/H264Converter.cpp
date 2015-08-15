@@ -42,6 +42,7 @@ H264Converter::~H264Converter()
 nsRefPtr<MediaDataDecoder::InitPromise>
 H264Converter::Init()
 {
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   if (mDecoder) {
     return mDecoder->Init();
   }
@@ -54,6 +55,7 @@ H264Converter::Init()
 nsresult
 H264Converter::Input(MediaRawData* aSample)
 {
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   if (!mNeedAVCC) {
     if (!mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample)) {
       return NS_ERROR_FAILURE;
@@ -93,6 +95,7 @@ H264Converter::Input(MediaRawData* aSample)
 nsresult
 H264Converter::Flush()
 {
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   if (mDecoder) {
     return mDecoder->Flush();
   }
@@ -102,6 +105,7 @@ H264Converter::Flush()
 nsresult
 H264Converter::Drain()
 {
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   if (mDecoder) {
     return mDecoder->Drain();
   }
@@ -112,6 +116,7 @@ H264Converter::Drain()
 nsresult
 H264Converter::Shutdown()
 {
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   if (mDecoder) {
     nsresult rv = mDecoder->Shutdown();
     mInitPromiseRequest.DisconnectIfExists();
@@ -124,6 +129,7 @@ H264Converter::Shutdown()
 bool
 H264Converter::IsHardwareAccelerated(nsACString& aFailureReason) const
 {
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   if (mDecoder) {
     return mDecoder->IsHardwareAccelerated(aFailureReason);
   }
@@ -154,6 +160,7 @@ H264Converter::CreateDecoder()
 nsresult
 H264Converter::CreateDecoderAndInit(MediaRawData* aSample)
 {
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   nsRefPtr<MediaByteBuffer> extra_data =
     mp4_demuxer::AnnexB::ExtractExtraData(aSample);
   if (!mp4_demuxer::AnnexB::HasSPS(extra_data)) {
@@ -170,11 +177,8 @@ H264Converter::CreateDecoderAndInit(MediaRawData* aSample)
 
     nsRefPtr<H264Converter> self = this;
 
-    // The mVideoTaskQueue is flushable which can't be used in MediaPromise. So
-    // we get the current AbstractThread instead of it. The MOZ_ASSERT above
-    // ensures we are running in AbstractThread so we won't get a nullptr.
     mInitPromiseRequest.Begin(mDecoder->Init()
-      ->Then(AbstractThread::GetCurrent(), __func__, this,
+      ->Then(AbstractThread::GetCurrent()->AsTaskQueue(), __func__, this,
              &H264Converter::OnDecoderInitDone,
              &H264Converter::OnDecoderInitFailed));
   }
@@ -184,7 +188,9 @@ H264Converter::CreateDecoderAndInit(MediaRawData* aSample)
 void
 H264Converter::OnDecoderInitDone(const TrackType aTrackType)
 {
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   mInitPromiseRequest.Complete();
+
   for (uint32_t i = 0 ; i < mMediaRawSamples.Length(); i++) {
     if (NS_FAILED(mDecoder->Input(mMediaRawSamples[i]))) {
       mCallback->Error();
@@ -197,13 +203,18 @@ H264Converter::OnDecoderInitDone(const TrackType aTrackType)
 void
 H264Converter::OnDecoderInitFailed(MediaDataDecoder::DecoderFailureReason aReason)
 {
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   mInitPromiseRequest.Complete();
   mCallback->Error();
+  mLastError = NS_ERROR_FAILURE;
+  // So we don't attempt to reuse the failed decoder.
+  Shutdown();
 }
 
 nsresult
 H264Converter::CheckForSPSChange(MediaRawData* aSample)
 {
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   nsRefPtr<MediaByteBuffer> extra_data =
     mp4_demuxer::AnnexB::ExtractExtraData(aSample);
   if (!mp4_demuxer::AnnexB::HasSPS(extra_data) ||
@@ -226,6 +237,7 @@ H264Converter::CheckForSPSChange(MediaRawData* aSample)
 void
 H264Converter::UpdateConfigFromExtraData(MediaByteBuffer* aExtraData)
 {
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   mp4_demuxer::SPSData spsdata;
   if (mp4_demuxer::H264::DecodeSPSFromExtraData(aExtraData, spsdata) &&
       spsdata.pic_width > 0 && spsdata.pic_height > 0) {
