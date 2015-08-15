@@ -556,11 +556,16 @@ let ensureKnownCountryCode = Task.async(function* () {
     let expir = engineMetadataService.getGlobalAttr("searchDefaultExpir") || 0;
     if (expir > Date.now()) {
       // The territory default we have already fetched hasn't expired yet.
-      // If we have an engine saved, the hash should be valid, verify it now.
+      // If we have a default engine or a list of visible default engines
+      // saved, the hashes should be valid, verify them now so that we can
+      // refetch if they have been tampered with.
       let defaultEngine = engineMetadataService.getGlobalAttr("searchDefault");
-      if (!defaultEngine ||
-          engineMetadataService.getGlobalAttr("searchDefaultHash") == getVerificationHash(defaultEngine)) {
-        // No geo default, or valid hash; nothing to do.
+      let visibleDefaultEngines =
+        engineMetadataService.getGlobalAttr("visibleDefaultEngines");
+      if ((!defaultEngine || engineMetadataService.getGlobalAttr("searchDefaultHash") == getVerificationHash(defaultEngine)) &&
+          (!visibleDefaultEngines ||
+           engineMetadataService.getGlobalAttr("visibleDefaultEnginesHash") == getVerificationHash(visibleDefaultEngines))) {
+        // No geo defaults, or valid hashes; nothing to do.
         return;
       }
     }
@@ -810,6 +815,16 @@ let fetchRegionDefault = () => new Promise(resolve => {
       LOG("fetchRegionDefault saved searchDefault: " + defaultEngine +
           " with verification hash: " + hash);
       engineMetadataService.setGlobalAttr("searchDefaultHash", hash);
+    }
+
+    if (response.settings && response.settings.visibleDefaultEngines) {
+      let visibleDefaultEngines = response.settings.visibleDefaultEngines;
+      let string = visibleDefaultEngines.join(",");
+      engineMetadataService.setGlobalAttr("visibleDefaultEngines", string);
+      let hash = getVerificationHash(string);
+      LOG("fetchRegionDefault saved visibleDefaultEngines: " + string +
+          " with verification hash: " + hash);
+      engineMetadataService.setGlobalAttr("visibleDefaultEnginesHash", hash);
     }
 
     let interval = response.interval || SEARCH_GEO_DEFAULT_UPDATE_INTERVAL;
@@ -3543,6 +3558,7 @@ SearchService.prototype = {
 
   _engines: { },
   __sortedEngines: null,
+  _visibleDefaultEngines: [],
   get _sortedEngines() {
     if (!this.__sortedEngines)
       return this._buildSortedEngineList();
@@ -3600,6 +3616,7 @@ SearchService.prototype = {
     cache.locale = locale;
 
     cache.directories = {};
+    cache.visibleDefaultEngines = this._visibleDefaultEngines;
 
     function getParent(engine) {
       if (engine._file)
@@ -3721,6 +3738,8 @@ SearchService.prototype = {
 
     function notInCachePath(aPathToLoad)
       cachePaths.indexOf(aPathToLoad.path) == -1;
+    function notInCacheVisibleEngines(aEngineName)
+      cache.visibleDefaultEngines.indexOf(aEngineName) == -1;
 
     let buildID = Services.appinfo.platformBuildID;
     let cachePaths = [path for (path in cache.directories)];
@@ -3731,6 +3750,8 @@ SearchService.prototype = {
                        cache.buildID != buildID ||
                        cachePaths.length != toLoad.length ||
                        toLoad.some(notInCachePath) ||
+                       cache.visibleDefaultEngines.length != this._visibleDefaultEngines.length ||
+                       this._visibleDefaultEngines.some(notInCacheVisibleEngines) ||
                        toLoad.some(modifiedDir);
 
     if (!cacheEnabled || rebuildCache) {
@@ -3858,6 +3879,8 @@ SearchService.prototype = {
 
       function notInCachePath(aPathToLoad)
         cachePaths.indexOf(aPathToLoad.path) == -1;
+      function notInCacheVisibleEngines(aEngineName)
+        cache.visibleDefaultEngines.indexOf(aEngineName) == -1;
 
       let buildID = Services.appinfo.platformBuildID;
       let cachePaths = [path for (path in cache.directories)];
@@ -3868,6 +3891,8 @@ SearchService.prototype = {
                          cache.buildID != buildID ||
                          cachePaths.length != toLoad.length ||
                          toLoad.some(notInCachePath) ||
+                         cache.visibleDefaultEngines.length != this._visibleDefaultEngines.length ||
+                         this._visibleDefaultEngines.some(notInCacheVisibleEngines) ||
                          (yield checkForSyncCompletion(hasModifiedDir(toLoad)));
 
       if (!cacheEnabled || rebuildCache) {
@@ -3913,6 +3938,7 @@ SearchService.prototype = {
     this.__sortedEngines = null;
     this._currentEngine = null;
     this._defaultEngine = null;
+    this._visibleDefaultEngines = [];
 
     // Clear the metadata service.
     engineMetadataService._initialized = false;
@@ -4224,7 +4250,7 @@ SearchService.prototype = {
     let uris = [];
     let chromeFiles = [];
 
-    rootURIs.forEach(function (root) {
+    rootURIs.forEach(root => {
       // Find the underlying JAR file for this chrome package (_loadEngines uses
       // it to determine whether it needs to invalidate the cache)
       let jarPackaging = false;
@@ -4256,18 +4282,8 @@ SearchService.prototype = {
         let sis = Cc["@mozilla.org/scriptableinputstream;1"].
                   createInstance(Ci.nsIScriptableInputStream);
         sis.init(chan.open());
-        let list = sis.read(sis.available());
-        let names = list.split("\n").filter(function (n) !!n);
-        for (let name of names) {
-          let uri = root + name + ".xml";
-          uris.push(uri);
-          if (!jarPackaging) {
-            // Flat packaging requires that _loadEngines checks the modification
-            // time of each engine file.
-            uri = gChromeReg.convertChromeURL(makeURI(uri));
-            chromeFiles.push(uri.QueryInterface(Ci.nsIFileURL).file);
-          }
-        }
+        this._parseListTxt(sis.read(sis.available()), root, jarPackaging,
+                           chromeFiles, uris);
       } catch (ex) {
         LOG("_findJAREngines: failed to retrieve list.txt from " + listURL + ": " + ex);
 
@@ -4340,21 +4356,73 @@ SearchService.prototype = {
         request.send();
         let list = yield deferred.promise;
 
-        let names = [];
-        names = list.split("\n").filter(function (n) !!n);
-        for (let name of names) {
-          let uri = root + name + ".xml";
-          uris.push(uri);
-          if (!jarPackaging) {
-            // Flat packaging requires that _loadEngines checks the modification
-            // time of each engine file.
-            uri = gChromeReg.convertChromeURL(makeURI(uri));
-            chromeFiles.push(uri.QueryInterface(Ci.nsIFileURL).file);
-          }
-        }
+        this._parseListTxt(list, root, jarPackaging, chromeFiles, uris);
       }
       throw new Task.Result([chromeFiles, uris]);
-    });
+    }.bind(this));
+  },
+
+  _parseListTxt: function SRCH_SVC_parseListTxt(list, root, jarPackaging,
+                                                chromeFiles, uris) {
+    let names = list.split("\n").filter(function (n) !!n);
+    // This maps the names of our built-in engines to a boolean
+    // indicating whether it should be hidden by default.
+    let jarNames = new Map();
+    for (let name of names) {
+      if (name.endsWith(":hidden")) {
+        name = name.split(":")[0];
+        jarNames.set(name, true);
+      } else {
+        jarNames.set(name, false);
+      }
+    }
+
+    // Check if we have a useable country specific list of visible default engines.
+    let engineNames;
+    let visibleDefaultEngines =
+      engineMetadataService.getGlobalAttr("visibleDefaultEngines");
+    if (visibleDefaultEngines &&
+        engineMetadataService.getGlobalAttr("visibleDefaultEnginesHash") == getVerificationHash(visibleDefaultEngines)) {
+      engineNames = visibleDefaultEngines.split(",");
+
+      for (let engineName of engineNames) {
+        // If all engineName values are part of jarNames,
+        // then we can use the country specific list, otherwise ignore it.
+        // The visibleDefaultEngines string containing the name of an engine we
+        // don't ship indicates the server is misconfigured to answer requests
+        // from the specific Firefox version we are running, so ignoring the
+        // value altogether is safer.
+        if (!jarNames.has(engineName)) {
+          LOG("_parseListTxt: ignoring visibleDefaultEngines value because " +
+              engineName + " is not in the jar engines we have found");
+          engineNames = null;
+          break;
+        }
+      }
+    }
+
+    // Fallback to building a list based on the :hidden suffixes found in list.txt.
+    if (!engineNames) {
+      engineNames = [];
+      for (let [name, hidden] of jarNames) {
+        if (!hidden)
+          engineNames.push(name);
+      }
+    }
+
+    for (let name of engineNames) {
+      let uri = root + name + ".xml";
+      uris.push(uri);
+      if (!jarPackaging) {
+        // Flat packaging requires that _loadEngines checks the modification
+        // time of each engine file.
+        uri = gChromeReg.convertChromeURL(makeURI(uri));
+        chromeFiles.push(uri.QueryInterface(Ci.nsIFileURL).file);
+      }
+    }
+
+    // Store this so that it can be used while writing the cache file.
+    this._visibleDefaultEngines = engineNames;
   },
 
 
