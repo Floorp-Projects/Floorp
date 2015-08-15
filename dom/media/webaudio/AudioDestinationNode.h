@@ -53,6 +53,9 @@ public:
   void Mute();
   void Unmute();
 
+  void Suspend();
+  void Resume();
+
   void StartRendering(Promise* aPromise);
 
   void OfflineShutdown();
