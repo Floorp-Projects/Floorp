@@ -49,13 +49,26 @@ $(ANDROID_APK_NAME).ap_: .aapt.deps ;
 # resource files one subdirectory below the parent resource directory.
 android_res_files := $(wildcard $(addsuffix /*,$(wildcard $(addsuffix /*,$(android_res_dirs)))))
 
- # aapt flag -m: 'make package directories under location specified by -J'.
+# An extra package like org.example.app generates dependencies like:
+# generated/org/example/app/R.java: .aapt.deps ;
+# classes.dex: generated/org/example/app/R.java
+# GARBAGE: generated/org/example/app/R.java
+$(foreach extra_package,$(ANDROID_EXTRA_PACKAGES), \
+  $(eval generated/$(subst .,/,$(extra_package))/R.java: .aapt.deps ;) \
+  $(eval classes.dex: generated/$(subst .,/,$(extra_package))/R.java) \
+  $(eval GARBAGE: generated/$(subst .,/,$(extra_package))/R.java) \
+)
+
+# aapt flag -m: 'make package directories under location specified by -J'.
+# The --extra-package list is colon separated.
 .aapt.deps: $(android_manifest) $(android_res_files) $(wildcard $(ANDROID_ASSETS_DIRS))
 	@$(TOUCH) $@
 	$(AAPT) package -f -M $< -I $(ANDROID_SDK)/android.jar $(_ANDROID_RES_FLAG) $(_ANDROID_ASSETS_FLAG) \
 		--custom-package $(ANDROID_APK_PACKAGE) \
 		--non-constant-id \
 		--auto-add-overlay \
+		$(if $(ANDROID_EXTRA_PACKAGES),--extra-packages $(subst $(NULL) ,:,$(strip $(ANDROID_EXTRA_PACKAGES)))) \
+		$(if $(ANDROID_EXTRA_RES_DIRS),$(addprefix -S ,$(ANDROID_EXTRA_RES_DIRS))) \
 		-m \
 		-J ${@D}/generated \
 		-F $(ANDROID_APK_NAME).ap_
