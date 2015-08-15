@@ -443,17 +443,13 @@ class AsmJSModule
             uint32_t endOffsetInModule_;    // so preserved by serialization.
         } pod;
 
-        // Used only during compilation => not needed during serialization
-        uint32_t funcIndex_;
-
         friend class AsmJSModule;
 
         ExportedFunction(PropertyName* name,
                          uint32_t startOffsetInModule, uint32_t endOffsetInModule,
                          PropertyName* maybeFieldName,
                          ArgCoercionVector&& argCoercions,
-                         ReturnType returnType,
-                         uint32_t funcIndex)
+                         ReturnType returnType)
         {
             MOZ_ASSERT(name->isTenured());
             MOZ_ASSERT_IF(maybeFieldName, maybeFieldName->isTenured());
@@ -466,7 +462,6 @@ class AsmJSModule
             pod.codeOffset_ = UINT32_MAX;
             pod.startOffsetInModule_ = startOffsetInModule;
             pod.endOffsetInModule_ = endOffsetInModule;
-            funcIndex_ = funcIndex;
         }
 
         ExportedFunction(PropertyName* name,
@@ -481,7 +476,6 @@ class AsmJSModule
             pod.isChangeHeap_ = true;
             pod.startOffsetInModule_ = startOffsetInModule;
             pod.endOffsetInModule_ = endOffsetInModule;
-            funcIndex_ = UINT32_MAX;
         }
 
         void trace(JSTracer* trc) {
@@ -495,7 +489,6 @@ class AsmJSModule
         ExportedFunction(ExportedFunction&& rhs) {
             name_ = rhs.name_;
             maybeFieldName_ = rhs.maybeFieldName_;
-            funcIndex_ = rhs.funcIndex_;
             argCoercions_ = mozilla::Move(rhs.argCoercions_);
             mozilla::PodZero(&pod);  // zero padding for Valgrind
             pod = rhs.pod;
@@ -503,10 +496,6 @@ class AsmJSModule
 
         PropertyName* name() const {
             return name_;
-        }
-        uint32_t funcIndex() const {
-            MOZ_ASSERT(funcIndex_ != UINT32_MAX);
-            return funcIndex_;
         }
         PropertyName* maybeFieldName() const {
             return maybeFieldName_;
@@ -1256,8 +1245,7 @@ class AsmJSModule
                              uint32_t funcSrcEnd,
                              PropertyName* maybeFieldName,
                              ArgCoercionVector&& argCoercions,
-                             ReturnType returnType,
-                             uint32_t funcIndex)
+                             ReturnType returnType)
     {
         // NB: funcSrcBegin/funcSrcEnd are given relative to the ScriptSource
         // (the entire file) and ExportedFunctions store offsets relative to
@@ -1266,7 +1254,7 @@ class AsmJSModule
         MOZ_ASSERT(srcStart_ < funcSrcBegin);
         MOZ_ASSERT(funcSrcBegin < funcSrcEnd);
         ExportedFunction func(name, funcSrcBegin - srcStart_, funcSrcEnd - srcStart_,
-                              maybeFieldName, mozilla::Move(argCoercions), returnType, funcIndex);
+                              maybeFieldName, mozilla::Move(argCoercions), returnType);
         return exports_.length() < UINT32_MAX && exports_.append(mozilla::Move(func));
     }
     bool addExportedChangeHeap(PropertyName* name,
