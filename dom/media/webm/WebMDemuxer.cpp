@@ -18,6 +18,7 @@
 #include "NesteggPacketHolder.h"
 
 #include <algorithm>
+#include <stdint.h>
 
 #define VPX_DONT_DEFINE_STDINT_TYPES
 #include "vpx/vp8dx.h"
@@ -33,32 +34,41 @@ extern PRLogModuleInfo* gMediaDecoderLog;
 extern PRLogModuleInfo* gNesteggLog;
 
 // Functions for reading and seeking using WebMDemuxer required for
-// nestegg_io. The 'user data' passed to these functions is the demuxer
+// nestegg_io. The 'user data' passed to these functions is the
+// demuxer's MediaResourceIndex
 static int webmdemux_read(void* aBuffer, size_t aLength, void* aUserData)
 {
   MOZ_ASSERT(aUserData);
-  WebMDemuxer* demuxer = reinterpret_cast<WebMDemuxer*>(aUserData);
+  MediaResourceIndex* resource =
+    reinterpret_cast<MediaResourceIndex*>(aUserData);
+  int64_t length = resource->GetLength();
+  MOZ_ASSERT(aLength < UINT32_MAX);
+  uint32_t count = aLength;
+  if (length >= 0 && count + resource->Tell() > length) {
+    count = uint32_t(length - resource->Tell());
+  }
+
   uint32_t bytes = 0;
-  bool eof = false;
-  char* p = static_cast<char*>(aBuffer);
-  nsresult rv = demuxer->Read(p, aLength, &bytes);
-  eof = bytes < aLength;
+  nsresult rv = resource->Read(static_cast<char*>(aBuffer), count, &bytes);
+  bool eof = !bytes;
   return NS_FAILED(rv) ? -1 : eof ? 0 : 1;
 }
 
 static int webmdemux_seek(int64_t aOffset, int aWhence, void* aUserData)
 {
   MOZ_ASSERT(aUserData);
-  WebMDemuxer* demuxer = reinterpret_cast<WebMDemuxer*>(aUserData);
-  nsresult rv = demuxer->Seek(aWhence, aOffset);
+  MediaResourceIndex* resource =
+    reinterpret_cast<MediaResourceIndex*>(aUserData);
+  nsresult rv = resource->Seek(aWhence, aOffset);
   return NS_SUCCEEDED(rv) ? 0 : -1;
 }
 
 static int64_t webmdemux_tell(void* aUserData)
 {
   MOZ_ASSERT(aUserData);
-  WebMDemuxer* demuxer = reinterpret_cast<WebMDemuxer*>(aUserData);
-  return demuxer->Tell();
+  MediaResourceIndex* resource =
+    reinterpret_cast<MediaResourceIndex*>(aUserData);
+  return resource->Tell();
 }
 
 static void webmdemux_log(nestegg* aContext,
@@ -109,7 +119,6 @@ WebMDemuxer::WebMDemuxer(MediaResource* aResource)
   , mBufferedState(nullptr)
   , mInitData(nullptr)
   , mContext(nullptr)
-  , mOffset(0)
   , mVideoTrack(0)
   , mAudioTrack(0)
   , mSeekPreroll(0)
@@ -162,7 +171,7 @@ WebMDemuxer::InitBufferedState()
 already_AddRefed<MediaDataDemuxer>
 WebMDemuxer::Clone() const
 {
-  nsRefPtr<WebMDemuxer> demuxer = new WebMDemuxer(mResource);
+  nsRefPtr<WebMDemuxer> demuxer = new WebMDemuxer(mResource.GetResource());
   demuxer->mInitData = mInitData;
   if (demuxer->InitBufferedState() != NS_OK ||
       demuxer->ReadMetadata() != NS_OK) {
@@ -243,10 +252,10 @@ WebMDemuxer::ReadMetadata()
   io.read = webmdemux_read;
   io.seek = webmdemux_seek;
   io.tell = webmdemux_tell;
-  io.userdata = this;
+  io.userdata = &mResource;
   int64_t maxOffset = mBufferedState->GetInitEndOffset();
   if (maxOffset == -1) {
-    maxOffset = mResource->GetLength();
+    maxOffset = mResource.GetLength();
   }
   int r = nestegg_init(&mContext, io, &webmdemux_log, maxOffset);
   if (r == -1) {
@@ -394,50 +403,6 @@ WebMDemuxer::ReadMetadata()
   return NS_OK;
 }
 
-nsresult
-WebMDemuxer::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
-{
-  int64_t length = mResource->GetLength();
-  if (length >= 0 && aCount + mOffset > length) {
-    WEBM_DEBUG("requested to large amount, trying to get %ld bytes at %ld (length: %ld)", aCount, mOffset, length);
-    aCount = length - mOffset;
-    WEBM_DEBUG("will only return %ld", aCount);
-  }
-  nsRefPtr<MediaByteBuffer> bytes = mResource->MediaReadAt(mOffset, aCount);
-  if (!bytes) {
-    return NS_ERROR_FAILURE;
-  }
-  mOffset += bytes->Length();
-  *aBytes = bytes->Length();
-  memcpy(aBuffer, bytes->Elements(), bytes->Length());
-  return NS_OK;
-}
-
-nsresult
-WebMDemuxer::Seek(int32_t aWhence, int64_t aOffset)
-{
-  if (aWhence == SEEK_CUR) {
-    aOffset += mOffset;
-  } else if (aWhence == SEEK_END) {
-    int64_t length = mResource->GetLength();
-    if (length == -1 || length - aOffset < 0) {
-      return NS_ERROR_FAILURE;
-    }
-    aOffset = mResource->GetLength() - aOffset;
-  }
-  if (aOffset > mResource->GetLength()) {
-    return NS_ERROR_FAILURE;
-  }
-  mOffset = aOffset;
-  return NS_OK;
-}
-
-int64_t
-WebMDemuxer::Tell()
-{
-  return mOffset;
-}
-
 bool
 WebMDemuxer::IsSeekable() const
 {
@@ -453,15 +418,15 @@ WebMDemuxer::EnsureUpToDateIndex()
   if (mInitData && mBufferedState->GetInitEndOffset() == -1) {
     mBufferedState->NotifyDataArrived(mInitData->Elements(), mInitData->Length(), 0);
   }
-  AutoPinned<MediaResource> resource(mResource);
+  AutoPinned<MediaResource> resource(mResource.GetResource());
   nsTArray<MediaByteRange> byteRanges;
   nsresult rv = resource->GetCachedRanges(byteRanges);
   if (NS_FAILED(rv) || !byteRanges.Length()) {
     return;
   }
-  mBufferedState->UpdateIndex(byteRanges, mResource);
+  mBufferedState->UpdateIndex(byteRanges, resource);
   if (!mInitData && mBufferedState->GetInitEndOffset() != -1) {
-    mInitData = mResource->MediaReadAt(0, mBufferedState->GetInitEndOffset());
+    mInitData = mResource.MediaReadAt(0, mBufferedState->GetInitEndOffset());
   }
   mNeedReIndex = false;
 }
@@ -642,7 +607,7 @@ WebMDemuxer::DemuxPacket()
     return nullptr;
   }
 
-  int64_t offset = Tell();
+  int64_t offset = mResource.Tell();
   nsRefPtr<NesteggPacketHolder> holder = new NesteggPacketHolder();
   if (!holder->Init(packet, offset, track, false)) {
     return nullptr;
@@ -731,7 +696,7 @@ media::TimeIntervals
 WebMDemuxer::GetBuffered()
 {
   EnsureUpToDateIndex();
-  AutoPinned<MediaResource> resource(mResource);
+  AutoPinned<MediaResource> resource(mResource.GetResource());
 
   media::TimeIntervals buffered;
 
