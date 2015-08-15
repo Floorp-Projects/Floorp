@@ -54,7 +54,6 @@ private:
 
   // VPx decoder state
   vpx_codec_ctx_t mVPX;
-  vpx_codec_iter_t mIter;
 
   const VideoInfo& mInfo;
 
