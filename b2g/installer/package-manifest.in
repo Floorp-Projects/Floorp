@@ -1006,6 +1006,3 @@ bin/libfreebl_32int64_3.so
 #ifdef PKG_LOCALE_MANIFEST
 #include @PKG_LOCALE_MANIFEST@
 #endif
-
-@RESPATH@/components/simpleServices.js
-@RESPATH@/components/utils.manifest
