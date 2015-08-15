@@ -699,6 +699,19 @@ VARIABLES = {
         """The name of the Android package to generate R.java for, like org.mozilla.gecko.
         """, 'export'),
 
+    'ANDROID_EXTRA_PACKAGES': (StrictOrderingOnAppendList, list,
+        """The name of extra Android packages to generate R.java for, like ['org.mozilla.other'].
+        """, 'export'),
+
+    'ANDROID_EXTRA_RES_DIRS': (ContextDerivedTypedListWithItems(Path, List), list,
+        """Android extra package resource directories.
+
+        This variable contains a list of directories containing static files
+        to package into a 'res' directory and merge into an APK file.  These
+        directories are packaged into the APK but are assumed to be static
+        unchecked dependencies that should not be otherwise re-distributed.
+        """, 'export'),
+
     'ANDROID_RES_DIRS': (ContextDerivedTypedListWithItems(Path, List), list,
         """Android resource directories.
 

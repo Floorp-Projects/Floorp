@@ -43,11 +43,8 @@ resjar.generated_sources += [
     'org/mozilla/gecko/R.java',
 ]
 
-if CONFIG['MOZ_NATIVE_DEVICES']:
-    resjar.generated_sources += ['com/google/android/gms/R.java']
-    resjar.generated_sources += ['android/support/v7/appcompat/R.java']
-    resjar.generated_sources += ['android/support/v7/mediarouter/R.java']
-
+ANDROID_EXTRA_PACKAGES += ['android.support.v7.recyclerview']
+ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_RECYCLERVIEW_RES']]
 resjar.generated_sources += ['android/support/v7/recyclerview/R.java']
 
 resjar.javac_flags += ['-Xlint:all']
@@ -641,6 +638,19 @@ moz_native_devices_sources = [
 if CONFIG['MOZ_NATIVE_DEVICES']:
     gbjar.extra_jars += moz_native_devices_jars
     gbjar.sources += moz_native_devices_sources
+
+    ANDROID_EXTRA_PACKAGES += ['android.support.v7.appcompat']
+    ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_APPCOMPAT_RES']]
+    resjar.generated_sources += ['android/support/v7/appcompat/R.java']
+
+    ANDROID_EXTRA_PACKAGES += ['android.support.v7.mediarouter']
+    ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_MEDIAROUTER_RES']]
+    resjar.generated_sources += ['android/support/v7/mediarouter/R.java']
+
+    ANDROID_EXTRA_PACKAGES += ['com.google.android.gms']
+    ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['GOOGLE_PLAY_SERVICES_RES']]
+    resjar.generated_sources += ['com/google/android/gms/R.java']
+
 gbjar.extra_jars += [CONFIG['ANDROID_RECYCLERVIEW_LIB']]
 
 gbjar.javac_flags += ['-Xlint:all,-deprecation,-fallthrough', '-J-Xmx512m', '-J-Xms128m']
