@@ -46,6 +46,7 @@ EXPORTS += [
     'IProgressObserver.h',
     'Orientation.h',
     'SurfaceCache.h',
+    'SurfaceFlags.h',
 ]
 
 UNIFIED_SOURCES += [
