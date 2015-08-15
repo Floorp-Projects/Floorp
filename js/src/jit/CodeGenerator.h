@@ -216,6 +216,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     void emitSetPropertyPolymorphic(LInstruction* lir, Register obj,
                                     Register scratch, const ConstantOrRegister& value);
     void visitSetPropertyPolymorphicV(LSetPropertyPolymorphicV* ins);
+    void visitArraySplice(LArraySplice* splice);
     void visitSetPropertyPolymorphicT(LSetPropertyPolymorphicT* ins);
     void visitAbsI(LAbsI* lir);
     void visitAtan2D(LAtan2D* lir);
