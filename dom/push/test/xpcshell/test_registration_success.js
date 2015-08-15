@@ -42,7 +42,8 @@ add_task(function* test_registration_success() {
     yield db.put(record);
   }
 
-  let handshakeDefer = Promise.defer();
+  let handshakeDone;
+  let handshakePromise = new Promise(resolve => handshakeDone = resolve);
   PushService.init({
     serverURI: "wss://push.example.org/",
     networkInfo: new MockDesktopNetworkInfo(),
@@ -60,14 +61,14 @@ add_task(function* test_registration_success() {
             status: 200,
             uaid: userAgentID
           }));
-          handshakeDefer.resolve();
+          handshakeDone();
         }
       });
     }
   });
 
   yield waitForPromise(
-    handshakeDefer.promise,
+    handshakePromise,
     DEFAULT_TIMEOUT,
     'Timed out waiting for handshake'
   );

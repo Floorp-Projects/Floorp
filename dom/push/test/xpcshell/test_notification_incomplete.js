@@ -57,8 +57,8 @@ add_task(function* test_notification_incomplete() {
     ok(false, 'Should not deliver malformed updates');
   }, 'push-notification', false);
 
-  let notificationDefer = Promise.defer();
-  let notificationDone = after(2, notificationDefer.resolve);
+  let notificationDone;
+  let notificationPromise = new Promise(resolve => notificationDone = after(2, resolve));
   let prevHandler = PushServiceWebSocket._handleNotificationReply;
   PushServiceWebSocket._handleNotificationReply = function _handleNotificationReply() {
     notificationDone();
@@ -107,7 +107,7 @@ add_task(function* test_notification_incomplete() {
     }
   });
 
-  yield waitForPromise(notificationDefer.promise, DEFAULT_TIMEOUT,
+  yield waitForPromise(notificationPromise, DEFAULT_TIMEOUT,
     'Timed out waiting for incomplete notifications');
 
   let storeRecords = yield db.getAllKeyIDs();
