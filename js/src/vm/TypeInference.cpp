@@ -3328,8 +3328,25 @@ PreliminaryObjectArray::sweep()
     // destroyed.
     for (size_t i = 0; i < COUNT; i++) {
         JSObject** ptr = &objects[i];
-        if (*ptr && IsAboutToBeFinalizedUnbarriered(ptr))
+        if (*ptr && IsAboutToBeFinalizedUnbarriered(ptr)) {
+            // Before we clear this reference, change the object's group to the
+            // Object.prototype group. This is done to ensure JSObject::finalize
+            // sees a NativeObject Class even if we change the current group's
+            // Class to one of the unboxed object classes in the meantime. If
+            // the compartment's global is dead, we don't do anything as the
+            // group's Class is not going to change in that case.
+            JSObject* obj = *ptr;
+            GlobalObject* global = obj->compartment()->maybeGlobal();
+            if (global && !obj->isSingleton()) {
+                JSObject* objectProto = GetBuiltinPrototypePure(global, JSProto_Object);
+                obj->setGroup(objectProto->groupRaw());
+                MOZ_ASSERT(obj->is<NativeObject>());
+                MOZ_ASSERT(obj->getClass() == objectProto->getClass());
+                MOZ_ASSERT(!obj->getClass()->finalize);
+            }
+
             *ptr = nullptr;
+        }
     }
 }
 
