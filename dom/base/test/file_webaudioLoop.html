@@ -9,15 +9,10 @@ fetch("audio.ogg").then(response => {
   var src = ac.createBufferSource();
   src.buffer = ab;
   src.loop = true;
+  src.loopStart = 0;
+  src.loopEnd = ab.duration;
   src.start();
   src.connect(ac.destination);
-  setTimeout(() => {
-    if (ac.state == "running") {
-      parent.runTest();
-    } else {
-      setTimeout(arguments.callee, 0);
-    }
-  });
 });
 
 var suspendPromise;
