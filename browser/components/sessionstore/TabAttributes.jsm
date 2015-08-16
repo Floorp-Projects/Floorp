@@ -24,7 +24,7 @@ this.TabAttributes = Object.freeze({
 });
 
 let TabAttributesInternal = {
-  _attrs: new Set(),
+  _attrs: new Set(["muted"]),
 
   // We never want to directly read or write those attributes.
   // 'image' should not be accessed directly but handled by using the
