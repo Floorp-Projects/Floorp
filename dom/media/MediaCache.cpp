@@ -1984,6 +1984,9 @@ MediaCacheStream::Close()
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
+  if (!mInitialized)
+    return;
+
   ReentrantMonitorAutoEnter mon(gMediaCache->GetReentrantMonitor());
   CloseInternal(mon);
   // Queue an Update since we may have created more free space. Don't do
