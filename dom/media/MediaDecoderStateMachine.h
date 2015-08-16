@@ -518,6 +518,10 @@ protected:
   // one lock count. Called on the state machine thread.
   void StartAudioThread();
 
+  void StopDecodedStream();
+
+  void StartDecodedStream();
+
   // Notification method invoked when mPlayState changes.
   void PlayStateChanged();
 
@@ -669,6 +673,10 @@ private:
 
   // Rejected by the AudioSink to signal errors.
   void OnAudioSinkError();
+
+  void OnDecodedStreamFinish();
+
+  void OnDecodedStreamError();
 
   // Return true if the video decoder's decode speed can not catch up the
   // play time.
@@ -1284,6 +1292,7 @@ private:
   nsRefPtr<MediaResource> mResource;
 
   MozPromiseRequestHolder<GenericPromise> mAudioSinkPromise;
+  MozPromiseRequestHolder<GenericPromise> mDecodedStreamPromise;
 
   MediaEventListener mAudioQueueListener;
   MediaEventListener mVideoQueueListener;
