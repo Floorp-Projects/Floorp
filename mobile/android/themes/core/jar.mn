@@ -74,6 +74,7 @@ chrome.jar:
   skin/images/certerror-warning.png         (images/certerror-warning.png)
   skin/images/throbber.png                  (images/throbber.png)
   skin/images/search-clear-30.png           (images/search-clear-30.png)
+  skin/images/placeholder_image.svg         (images/placeholder_image.svg)
   skin/images/play-hdpi.png                 (images/play-hdpi.png)
   skin/images/pause-hdpi.png                (images/pause-hdpi.png)
   skin/images/cast-ready-hdpi.png           (images/cast-ready-hdpi.png)
