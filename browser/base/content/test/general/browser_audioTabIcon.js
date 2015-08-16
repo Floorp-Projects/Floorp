@@ -70,6 +70,12 @@ function* test_mute_tab(tab, icon, expectMuted) {
   return mutedPromise;
 }
 
+function get_tab_attributes(tab) {
+  const ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+  let {attributes} = JSON.parse(ss.getTabState(tab));
+  return attributes;
+}
+
 function* test_playing_icon_on_tab(tab, browser, isPinned) {
   let icon = document.getAnonymousElementByAttribute(tab, "anonid",
                                                      isPinned ? "overlay-icon" : "soundplaying-icon");
@@ -83,11 +89,17 @@ function* test_playing_icon_on_tab(tab, browser, isPinned) {
 
   yield test_tooltip(icon, "Mute tab");
 
+  ok(!("muted" in get_tab_attributes(tab)), "No muted attribute should be persisted");
+
   yield test_mute_tab(tab, icon, true);
+
+  ok("muted" in get_tab_attributes(tab), "Muted attribute should be persisted");
 
   yield test_tooltip(icon, "Unmute tab");
 
   yield test_mute_tab(tab, icon, false);
+
+  ok(!("muted" in get_tab_attributes(tab)), "No muted attribute should be persisted");
 
   yield test_tooltip(icon, "Mute tab");
 
