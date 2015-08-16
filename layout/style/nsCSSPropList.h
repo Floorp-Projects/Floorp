@@ -2999,7 +2999,7 @@ CSS_PROP_DISPLAY(
     position,
     Position,
     CSS_PROPERTY_PARSE_VALUE |
-        // For position: sticky
+        // For position: sticky/fixed
         CSS_PROPERTY_CREATES_STACKING_CONTEXT,
     "",
     VARIANT_HK,
