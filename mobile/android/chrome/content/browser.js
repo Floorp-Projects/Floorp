@@ -970,6 +970,14 @@ var BrowserApp = {
                                       filePickerTitleKey, null, aTarget.ownerDocument.documentURIObject,
                                       aTarget.ownerDocument, true, null);
       });
+
+    NativeWindow.contextmenus.add(stringGetter("contextmenu.showImage"),
+      NativeWindow.contextmenus.imageBlockingPolicyContext,
+      function(target) {
+        UITelemetry.addEvent("action.1", "contextmenu", null, "web_show_image");
+        target.setAttribute("data-ctv-show", "true");
+        target.setAttribute("src", target.getAttribute("data-ctv-src"));
+    });
   },
 
   onAppUpdated: function() {
@@ -2517,6 +2525,23 @@ var NativeWindow = {
       matches: function mediaSaveableContextMatches(aElement) {
         return (aElement instanceof HTMLVideoElement ||
                aElement instanceof HTMLAudioElement);
+      }
+    },
+
+    imageBlockingPolicyContext: {
+      matches: function imageBlockingPolicyContextMatches(aElement) {
+        if (!Services.prefs.getBoolPref("browser.image_blocking.enabled")) {
+          return false;
+        }
+
+        if (aElement instanceof Ci.nsIDOMHTMLImageElement) {
+          // Only show the menuitem if we are blocking the image
+          if (aElement.getAttribute("data-ctv-show") == "true") {
+            return false;
+          }
+          return true;
+        }
+        return false;
       }
     },
 
