@@ -930,10 +930,7 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
 
       collection->Tick();
 
-      bool canThrottleTick = aFlags == Can_Throttle &&
-        collection->CanPerformOnCompositorThread(
-          AnimationCollection::CanAnimateFlags(0)) &&
-        collection->CanThrottleAnimation(now);
+      bool canThrottleTick = aFlags == Can_Throttle;
 
       MOZ_ASSERT(collection->mElement->GetCrossShadowCurrentDoc() ==
                    mPresContext->Document(),

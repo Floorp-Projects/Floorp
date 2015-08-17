@@ -974,17 +974,32 @@ AnimationCollection::RequestRestyle(RestyleType aRestyleType)
     return;
   }
 
-  switch (aRestyleType) {
-    case RestyleType::Throttled:
-      presContext->Document()->SetNeedStyleFlush();
-      break;
+  // SetNeedStyleFlush is cheap and required regardless of the restyle type
+  // so we do it unconditionally. Furthermore, if the posted animation restyle
+  // has been postponed due to the element being display:none (i.e.
+  // mHasPendingAnimationRestyle is set) then we should still mark the
+  // document as needing a style flush.
+  presContext->Document()->SetNeedStyleFlush();
 
-    case RestyleType::Standard:
-      if (!mHasPendingAnimationRestyle) {
-        mHasPendingAnimationRestyle = true;
-        PostRestyleForAnimation(presContext);
-      }
-      break;
+  // If we are already waiting on an animation restyle then there's nothing
+  // more to do.
+  if (mHasPendingAnimationRestyle) {
+    return;
+  }
+
+  // Upgrade throttled restyles if other factors prevent
+  // throttling (e.g. async animations are not enabled).
+  if (aRestyleType == RestyleType::Throttled) {
+    TimeStamp now = presContext->RefreshDriver()->MostRecentRefresh();
+    if (!CanPerformOnCompositorThread(CanAnimateFlags(0)) ||
+        !CanThrottleAnimation(now)) {
+      aRestyleType = RestyleType::Standard;
+    }
+  }
+
+  if (aRestyleType == RestyleType::Standard) {
+    mHasPendingAnimationRestyle = true;
+    PostRestyleForAnimation(presContext);
   }
 }
 
