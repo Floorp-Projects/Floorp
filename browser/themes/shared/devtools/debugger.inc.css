@@ -572,12 +572,12 @@
   }
 }
 
-#resume ~ toolbarbutton {
+#debugger-controls toolbarbutton {
   transition: opacity 0.15s ease-in-out;
 }
 
-#resume:not([checked]) ~ toolbarbutton {
-  opacity: 0.5;
+#debugger-controls toolbarbutton[disabled] {
+    opacity: .5;
 }
 
 #step-over {
