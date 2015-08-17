@@ -650,6 +650,16 @@ Animation::ComposeStyle(nsRefPtr<AnimValuesStyleRule>& aStyleRule,
   }
 }
 
+void
+Animation::NotifyEffectTimingUpdated()
+{
+  MOZ_ASSERT(mEffect,
+             "We should only update timing effect when we have a target "
+             "effect");
+  UpdateTiming(Animation::SeekFlag::NoSeek,
+               Animation::SyncNotifyFlag::Async);
+}
+
 // http://w3c.github.io/web-animations/#play-an-animation
 void
 Animation::DoPlay(ErrorResult& aRv, LimitBehavior aLimitBehavior)
