@@ -18,12 +18,14 @@
 #include "PerformanceEntry.h"
 #include "PerformanceMark.h"
 #include "PerformanceMeasure.h"
+#include "PerformanceObserver.h"
 #include "PerformanceResourceTiming.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/PerformanceBinding.h"
 #include "mozilla/dom/PerformanceEntryEvent.h"
 #include "mozilla/dom/PerformanceTimingBinding.h"
 #include "mozilla/dom/PerformanceNavigationBinding.h"
+#include "mozilla/dom/PerformanceObserverBinding.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/TimeStamp.h"
@@ -737,6 +739,25 @@ nsPerformance::IsEnabled(JSContext* aCx, JSObject* aGlobal)
   return runnable->IsEnabled();
 }
 
+/* static */ bool
+nsPerformance::IsObserverEnabled(JSContext* aCx, JSObject* aGlobal)
+{
+  if (NS_IsMainThread()) {
+    return Preferences::GetBool("dom.enable_performance_observer", false);
+  }
+
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+  MOZ_ASSERT(workerPrivate);
+  workerPrivate->AssertIsOnWorkerThread();
+
+  nsRefPtr<PrefEnabledRunnable> runnable =
+    new PrefEnabledRunnable(workerPrivate,
+                            NS_LITERAL_CSTRING("dom.enable_performance_observer"));
+  runnable->Dispatch(workerPrivate->GetJSContext());
+
+  return runnable->IsEnabled();
+}
+
 void
 nsPerformance::InsertUserEntry(PerformanceEntry* aEntry)
 {
@@ -1028,6 +1049,10 @@ PerformanceBase::InsertUserEntry(PerformanceEntry* aEntry)
 {
   mUserEntries.InsertElementSorted(aEntry,
                                    PerformanceEntryComparator());
+
+  NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(mObservers,
+                                           PerformanceObserver,
+                                           Notify, (aEntry));
 }
 
 void
@@ -1051,4 +1076,19 @@ PerformanceBase::InsertResourceEntry(PerformanceEntry* aEntry)
     // call onresourcetimingbufferfull
     DispatchBufferFullEvent();
   }
+  NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(mObservers,
+                                           PerformanceObserver,
+                                           Notify, (aEntry));
+}
+
+void
+PerformanceBase::AddObserver(PerformanceObserver* aObserver)
+{
+  mObservers.AppendElementUnlessExists(aObserver);
+}
+
+void
+PerformanceBase::RemoveObserver(PerformanceObserver* aObserver)
+{
+  mObservers.RemoveElement(aObserver);
 }

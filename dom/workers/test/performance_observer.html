@@ -1,0 +1,32 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<meta charset=utf-8>
+<html>
+<head>
+<title>Test for performance observer in worker</title>
+</head>
+<body>
+<div id="log"></div>
+<script>
+[
+ "async_test", "test", "setup",
+ "assert_true", "assert_equals", "assert_array_equals",
+ "assert_throws", "fetch_tests_from_worker"
+].forEach(func => {
+  window[func] = opener[func].bind(opener);
+});
+
+function done() {
+  opener.add_completion_callback(() => {
+    self.close();
+  });
+  opener.done();
+}
+
+fetch_tests_from_worker(new Worker("worker_performance_observer.js"));
+done();
+</script>
+</body>
