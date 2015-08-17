@@ -279,10 +279,6 @@ struct AnimationCollection : public PRCList
 
   void EnsureStyleRuleFor(TimeStamp aRefreshTime, EnsureStyleRuleFlags aFlags);
 
-  bool CanThrottleTransformChanges(TimeStamp aTime);
-
-  bool CanThrottleAnimation(TimeStamp aTime);
-
   enum CanAnimateFlags {
     // Testing for width, height, top, right, bottom, or left.
     CanAnimate_HasGeometricProperty = 1,
@@ -306,6 +302,9 @@ private:
   CanAnimatePropertyOnCompositor(const dom::Element *aElement,
                                  nsCSSProperty aProperty,
                                  CanAnimateFlags aFlags);
+
+  bool CanThrottleAnimation(TimeStamp aTime);
+  bool CanThrottleTransformChanges(TimeStamp aTime);
 
 public:
   static bool IsCompositorAnimationDisabledForFrame(nsIFrame* aFrame);
