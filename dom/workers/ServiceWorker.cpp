@@ -90,17 +90,22 @@ ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                            const Optional<Sequence<JS::Value>>& aTransferable,
                            ErrorResult& aRv)
 {
-  WorkerPrivate* workerPrivate = GetWorkerPrivate();
-  MOZ_ASSERT(workerPrivate);
-
   if (State() == ServiceWorkerState::Redundant) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(GetParentObject());
-  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
-  nsAutoPtr<ServiceWorkerClientInfo> clientInfo(new ServiceWorkerClientInfo(doc));
+  if (!window || !window->GetExtantDoc()) {
+    NS_WARNING("Trying to call post message from an invalid dom object.");
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  WorkerPrivate* workerPrivate = GetWorkerPrivate();
+  MOZ_ASSERT(workerPrivate);
+
+  nsAutoPtr<ServiceWorkerClientInfo> clientInfo(new ServiceWorkerClientInfo(window->GetExtantDoc()));
 
   workerPrivate->PostMessageToServiceWorker(aCx, aMessage, aTransferable,
                                             clientInfo, aRv);
