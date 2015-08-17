@@ -20,14 +20,12 @@ namespace dom {
 NS_IMPL_CYCLE_COLLECTION_CLASS(AudioBuffer)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AudioBuffer)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mContext)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mJSChannels)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   tmp->ClearJSChannels();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AudioBuffer)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -43,7 +41,7 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AudioBuffer, Release)
 
 AudioBuffer::AudioBuffer(AudioContext* aContext, uint32_t aNumberOfChannels,
                          uint32_t aLength, float aSampleRate)
-  : mContext(aContext),
+  : mOwnerWindow(do_GetWeakReference(aContext->GetOwner())),
     mLength(aLength),
     mSampleRate(aSampleRate)
 {
