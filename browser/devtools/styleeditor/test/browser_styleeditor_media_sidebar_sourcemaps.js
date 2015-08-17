@@ -2,6 +2,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // https rather than chrome to improve coverage
 const TESTCASE_URI = TEST_BASE_HTTPS + "media-rules-sourcemaps.html";
 const MAP_PREF = "devtools.styleeditor.source-maps-enabled";
@@ -60,7 +62,7 @@ function listenForMediaChange(UI) {
   let deferred = promise.defer();
   UI.once("media-list-changed", () => {
     deferred.resolve();
-  })
+  });
   return deferred.promise;
 }
 

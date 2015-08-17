@@ -33,8 +33,10 @@ function createNew(ui, panelWindow) {
     editor.getSourceEditor().then(deferred.resolve);
   });
 
-  waitForFocus(function () {// create a new style sheet
-    let newButton = panelWindow.document.querySelector(".style-editor-newButton");
+  waitForFocus(function() {
+    // create a new style sheet
+    let newButton = panelWindow.document
+      .querySelector(".style-editor-newButton");
     ok(newButton, "'new' button exists");
 
     EventUtils.synthesizeMouseAtCenter(newButton, {}, panelWindow);
@@ -46,7 +48,7 @@ function createNew(ui, panelWindow) {
 function onPropertyChange(aEditor) {
   let deferred = promise.defer();
 
-  aEditor.styleSheet.on("property-change", function onProp(property, value) {
+  aEditor.styleSheet.on("property-change", function onProp(property) {
     // wait for text to be entered fully
     let text = aEditor.sourceEditor.getText();
     if (property == "ruleCount" && text == TESTCASE_CSS_SOURCE + "}") {
@@ -70,8 +72,7 @@ function testInitialState(aEditor) {
 
   summary = aEditor.summary;
   let ruleCount = summary.querySelector(".stylesheet-rule-count").textContent;
-  is(parseInt(ruleCount), 0,
-     "new editor initially shows 0 rules");
+  is(parseInt(ruleCount, 10), 0, "new editor initially shows 0 rules");
 
   let computedStyle = content.getComputedStyle(content.document.body, null);
   is(computedStyle.backgroundColor, "rgb(255, 255, 255)",
@@ -81,7 +82,7 @@ function testInitialState(aEditor) {
 function typeInEditor(aEditor, panelWindow) {
   let deferred = promise.defer();
 
-  waitForFocus(function () {
+  waitForFocus(function() {
     for (let c of TESTCASE_CSS_SOURCE) {
       EventUtils.synthesizeKey(c, {}, panelWindow);
     }
@@ -99,8 +100,9 @@ function testUpdated(aEditor, originalHref) {
   is(aEditor.sourceEditor.getText(), TESTCASE_CSS_SOURCE + "}",
      "rule bracket has been auto-closed");
 
-  let ruleCount = aEditor.summary.querySelector(".stylesheet-rule-count").textContent;
-  is(parseInt(ruleCount), 1,
+  let ruleCount = aEditor.summary.querySelector(".stylesheet-rule-count")
+    .textContent;
+  is(parseInt(ruleCount, 10), 1,
      "new editor shows 1 rule after modification");
 
   is(aEditor.styleSheet.href, originalHref,

@@ -16,8 +16,8 @@ const DOCUMENT_WITH_LONG_SHEET = "data:text/html;charset=UTF-8," +
            "<html>",
            " <head>",
            "  <title>Editor scroll test page</title>",
-           '  <link rel="stylesheet" type="text/css" href="'+SIMPLE+'">',
-           '  <link rel="stylesheet" type="text/css" href="'+LONG+'">',
+           '  <link rel="stylesheet" type="text/css" href="' + SIMPLE + '">',
+           '  <link rel="stylesheet" type="text/css" href="' + LONG + '">',
            " </head>",
            " <body>Editor scroll test page</body>",
            "</html>"

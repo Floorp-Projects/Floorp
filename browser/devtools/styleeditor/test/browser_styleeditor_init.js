@@ -33,11 +33,12 @@ function checkSheet(editor, expected) {
     "Style sheet has correct index.");
 
   let summary = editor.summary;
-  let name = summary.querySelector(".stylesheet-name > label").getAttribute("value");
+  let name = summary.querySelector(".stylesheet-name > label")
+                    .getAttribute("value");
   ok(expected.name.test(name), "The name '" + name + "' is correct.");
 
   let ruleCount = summary.querySelector(".stylesheet-rule-count").textContent;
-  is(parseInt(ruleCount), expected.rules, "the rule count is correct");
+  is(parseInt(ruleCount, 10), expected.rules, "the rule count is correct");
 
   is(summary.classList.contains("splitview-active"), expected.active,
     "The active status for this sheet is correct.");
