@@ -52,7 +52,6 @@ let CustomizationHandler = {
   },
 
   _customizationChange: function() {
-    gHomeButton.updatePersonalToolbarStyle();
     PlacesToolbarHelper.customizeChange();
   },
 

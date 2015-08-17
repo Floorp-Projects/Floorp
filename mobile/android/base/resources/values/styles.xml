@@ -88,6 +88,7 @@
         <item name="android:padding">8dip</item>
         <item name="android:background">@drawable/action_bar_button</item>
         <item name="android:scaleType">fitCenter</item>
+        <item name="drawableTintList">@color/action_bar_menu_item_colors</item>"
     </style>
 
     <style name="Widget.MenuItemSecondaryActionBarBase">
