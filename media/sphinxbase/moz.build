@@ -67,7 +67,10 @@ SOURCES += [
 
 # Suppress warnings in third-party code.
 if CONFIG['GNU_CC']:
-    CFLAGS += ['-Wno-sign-compare']
+    CFLAGS += [
+        '-Wno-parentheses',
+        '-Wno-sign-compare',
+    ]
 
 # Add define required of third party code.
 if CONFIG['GNU_CC']:

@@ -308,7 +308,7 @@ public:
             bool aKeyframe,
             int64_t aTimecode,
             IntSize aDisplay,
-            int32_t aFrameID);
+            uint32_t aFrameID);
 
 protected:
   ~VideoData();

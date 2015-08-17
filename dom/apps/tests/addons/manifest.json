@@ -1,0 +1,13 @@
+{
+  "name": "Addon app",
+  "version": "1.0",
+  "manifest_version": 2,
+  "permissions": ["tabs"],
+  "description": "Let me inject script and css!",
+  "author": "The Mozilla Community",
+  "content_scripts": [
+    {"matches": ["http://mochi.test/tests/dom/apps/tests/addons/index.html"],
+     "js": ["script.js", "script2.js", "invalid.js", "script.js"],
+     "css": ["style.css", "style2.css"]}
+  ]
+}

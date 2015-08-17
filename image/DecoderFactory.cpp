@@ -109,28 +109,26 @@ DecoderFactory::CreateDecoder(DecoderType aType,
                               RasterImage* aImage,
                               SourceBuffer* aSourceBuffer,
                               const Maybe<IntSize>& aTargetSize,
-                              uint32_t aFlags,
+                              DecoderFlags aDecoderFlags,
+                              SurfaceFlags aSurfaceFlags,
                               int aSampleSize,
-                              const IntSize& aResolution,
-                              bool aIsRedecode,
-                              bool aImageIsTransient)
+                              const IntSize& aResolution)
 {
   if (aType == DecoderType::UNKNOWN) {
     return nullptr;
   }
 
-  nsRefPtr<Decoder> decoder = GetDecoder(aType, aImage, aIsRedecode);
+  nsRefPtr<Decoder> decoder =
+    GetDecoder(aType, aImage, bool(aDecoderFlags & DecoderFlags::IS_REDECODE));
   MOZ_ASSERT(decoder, "Should have a decoder now");
 
   // Initialize the decoder.
   decoder->SetMetadataDecode(false);
   decoder->SetIterator(aSourceBuffer->Iterator());
-  decoder->SetFlags(aFlags);
+  decoder->SetDecoderFlags(aDecoderFlags | DecoderFlags::FIRST_FRAME_ONLY);
+  decoder->SetSurfaceFlags(aSurfaceFlags);
   decoder->SetSampleSize(aSampleSize);
   decoder->SetResolution(aResolution);
-  decoder->SetSendPartialInvalidations(!aIsRedecode);
-  decoder->SetImageIsTransient(aImageIsTransient);
-  decoder->SetIsFirstFrameDecode();
 
   // Set a target size for downscale-during-decode if applicable.
   if (aTargetSize) {
@@ -152,7 +150,8 @@ DecoderFactory::CreateDecoder(DecoderType aType,
 DecoderFactory::CreateAnimationDecoder(DecoderType aType,
                                        RasterImage* aImage,
                                        SourceBuffer* aSourceBuffer,
-                                       uint32_t aFlags,
+                                       DecoderFlags aDecoderFlags,
+                                       SurfaceFlags aSurfaceFlags,
                                        const IntSize& aResolution)
 {
   if (aType == DecoderType::UNKNOWN) {
@@ -169,9 +168,9 @@ DecoderFactory::CreateAnimationDecoder(DecoderType aType,
   // Initialize the decoder.
   decoder->SetMetadataDecode(false);
   decoder->SetIterator(aSourceBuffer->Iterator());
-  decoder->SetFlags(aFlags);
+  decoder->SetDecoderFlags(aDecoderFlags | DecoderFlags::IS_REDECODE);
+  decoder->SetSurfaceFlags(aSurfaceFlags);
   decoder->SetResolution(aResolution);
-  decoder->SetSendPartialInvalidations(false);
 
   decoder->Init();
   if (NS_FAILED(decoder->GetDecoderError())) {
@@ -213,7 +212,7 @@ DecoderFactory::CreateMetadataDecoder(DecoderType aType,
 /* static */ already_AddRefed<Decoder>
 DecoderFactory::CreateAnonymousDecoder(DecoderType aType,
                                        SourceBuffer* aSourceBuffer,
-                                       uint32_t aFlags)
+                                       SurfaceFlags aSurfaceFlags)
 {
   if (aType == DecoderType::UNKNOWN) {
     return nullptr;
@@ -226,15 +225,20 @@ DecoderFactory::CreateAnonymousDecoder(DecoderType aType,
   // Initialize the decoder.
   decoder->SetMetadataDecode(false);
   decoder->SetIterator(aSourceBuffer->Iterator());
-  decoder->SetFlags(aFlags);
-  decoder->SetImageIsTransient(true);
+
+  // Anonymous decoders are always transient; we don't want to optimize surfaces
+  // or do any other expensive work that might be wasted.
+  DecoderFlags decoderFlags = DecoderFlags::IMAGE_IS_TRANSIENT;
 
   // Without an image, the decoder can't store anything in the SurfaceCache, so
   // callers will only be able to retrieve the most recent frame via
   // Decoder::GetCurrentFrame(). That means that anonymous decoders should
   // always be first-frame-only decoders, because nobody ever wants the *last*
   // frame.
-  decoder->SetIsFirstFrameDecode();
+  decoderFlags |= DecoderFlags::FIRST_FRAME_ONLY;
+
+  decoder->SetDecoderFlags(decoderFlags);
+  decoder->SetSurfaceFlags(aSurfaceFlags);
 
   decoder->Init();
   if (NS_FAILED(decoder->GetDecoderError())) {
@@ -259,7 +263,7 @@ DecoderFactory::CreateAnonymousMetadataDecoder(DecoderType aType,
   // Initialize the decoder.
   decoder->SetMetadataDecode(true);
   decoder->SetIterator(aSourceBuffer->Iterator());
-  decoder->SetIsFirstFrameDecode();
+  decoder->SetDecoderFlags(DecoderFlags::FIRST_FRAME_ONLY);
 
   decoder->Init();
   if (NS_FAILED(decoder->GetDecoderError())) {

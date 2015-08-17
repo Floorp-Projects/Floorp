@@ -5,19 +5,56 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 [CheckAnyPermissions="bluetooth"]
-interface BluetoothDevice : EventTarget {
-  readonly attribute DOMString      address;
-  readonly attribute DOMString      name;
-  readonly attribute DOMString      icon;
-  readonly attribute boolean        connected;
-  readonly attribute boolean        paired;
-  readonly attribute unsigned long  class;
+interface BluetoothDevice : EventTarget
+{
+  readonly attribute DOMString              address;
+  readonly attribute BluetoothClassOfDevice cod;
+  readonly attribute DOMString              name;
+  readonly attribute boolean                paired;
+  readonly attribute BluetoothDeviceType    type;
 
-  // array of type DOMString[]
-  [Throws]
-  readonly attribute any            uuids;
+  /**
+   * Retrieve the BluetoothGatt interface to interact with remote BLE devices.
+   * This attribute is null if the device type is not dual or le.
+   */
+  readonly attribute BluetoothGatt?         gatt;
 
-  // array of type DOMString[]
-  [Throws]
-  readonly attribute any            services;
+  [Cached, Pure]
+  readonly attribute sequence<DOMString>    uuids;
+
+  // Fired when attribute(s) of BluetoothDevice changed
+           attribute EventHandler           onattributechanged;
+
+  /**
+   * Fetch the up-to-date UUID list of each bluetooth service that the device
+   * provides and refresh the cache value of attribute uuids if it is updated.
+   *
+   * If the operation succeeds, the promise will be resolved with up-to-date
+   * UUID list which is identical to attribute uuids.
+   */
+  [NewObject]
+  Promise<sequence<DOMString>>              fetchUuids();
 };
+
+enum BluetoothDeviceType
+{
+  "unknown",
+  "classic",
+  "le",
+  "dual"
+};
+
+/*
+ * Possible device attributes that attributechanged event reports.
+ * Note "address" and "type" are excluded since they never change once
+ * BluetoothDevice is created.
+ */
+enum BluetoothDeviceAttribute
+{
+  "unknown",
+  "cod",
+  "name",
+  "paired",
+  "uuids"
+};
+

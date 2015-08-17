@@ -299,9 +299,9 @@ SharedDecoderProxy::Shutdown()
 }
 
 bool
-SharedDecoderProxy::IsHardwareAccelerated() const
+SharedDecoderProxy::IsHardwareAccelerated(nsACString& aFailureReason) const
 {
-  return mManager->mDecoder->IsHardwareAccelerated();
+  return mManager->mDecoder->IsHardwareAccelerated(aFailureReason);
 }
 
 } // namespace mozilla

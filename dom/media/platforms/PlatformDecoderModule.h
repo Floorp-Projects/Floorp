@@ -263,7 +263,7 @@ public:
   // Called from the state machine task queue or main thread.
   // Decoder needs to decide whether or not hardware accelearation is supported
   // after creating. It doesn't need to call Init() before calling this function.
-  virtual bool IsHardwareAccelerated() const { return false; }
+  virtual bool IsHardwareAccelerated(nsACString& aFailureReason) const { return false; }
 
   // ConfigurationChanged will be called to inform the video or audio decoder
   // that the format of the next input sample is about to change.

@@ -1,5 +1,6 @@
 {
   "name": "Addon app",
   "description": "Let me inject script and css!",
+  "developer": { "name": "The Mozilla Community" },
   "package_path" : "application.zip"
 }

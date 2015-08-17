@@ -23,8 +23,8 @@ function run_test() {
 
 add_task(function* test_register_no_id() {
   let registers = 0;
-  let helloDefer = Promise.defer();
-  let helloDone = after(2, helloDefer.resolve);
+  let helloDone;
+  let helloPromise = new Promise(resolve => helloDone = after(2, resolve));
 
   PushServiceWebSocket._generateID = () => channelID;
   PushService.init({
@@ -61,7 +61,7 @@ add_task(function* test_register_no_id() {
     'Wrong error for incomplete register response'
   );
 
-  yield waitForPromise(helloDefer.promise, DEFAULT_TIMEOUT,
+  yield waitForPromise(helloPromise, DEFAULT_TIMEOUT,
     'Reconnect after incomplete register response timed out');
   equal(registers, 1, 'Wrong register count');
 });

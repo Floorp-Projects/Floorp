@@ -308,7 +308,8 @@ SubstitutingProtocolHandler::SetSubstitution(const nsACString& root, nsIURI *bas
   nsresult rv = baseURI->GetScheme(scheme);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!scheme.Equals(mScheme)) {
-    if (mEnforceFileOrJar && !scheme.EqualsLiteral("file") && !scheme.EqualsLiteral("jar")) {
+    if (mEnforceFileOrJar && !scheme.EqualsLiteral("file") && !scheme.EqualsLiteral("jar")
+        && !scheme.EqualsLiteral("app")) {
       NS_WARNING("Refusing to create substituting URI to non-file:// target");
       return NS_ERROR_INVALID_ARG;
     }

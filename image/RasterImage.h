@@ -135,17 +135,6 @@ class FrameAnimator;
 class ImageMetadata;
 class SourceBuffer;
 
-/**
- * Given a set of imgIContainer FLAG_* flags, returns those flags that can
- * affect the output of decoders.
- */
-inline MOZ_CONSTEXPR uint32_t
-DecodeFlags(uint32_t aFlags)
-{
-  return aFlags & (imgIContainer::FLAG_DECODE_NO_PREMULTIPLY_ALPHA |
-                   imgIContainer::FLAG_DECODE_NO_COLORSPACE_CONVERSION);
-}
-
 class RasterImage final : public ImageResource
                         , public nsIProperties
                         , public SupportsWeakPtr<RasterImage>
@@ -196,13 +185,13 @@ public:
    *
    * @param aProgress    The progress notifications to send.
    * @param aInvalidRect An invalidation rect to send.
-   * @param aFlags       The decode flags used by the decoder that generated
-   *                     these notifications, or DECODE_FLAGS_DEFAULT if the
+   * @param aFlags       The surface flags used by the decoder that generated
+   *                     these notifications, or DefaultSurfaceFlags() if the
    *                     notifications don't come from a decoder.
    */
   void NotifyProgress(Progress aProgress,
                       const nsIntRect& aInvalidRect = nsIntRect(),
-                      uint32_t aFlags = DECODE_FLAGS_DEFAULT);
+                      SurfaceFlags aSurfaceFlags = DefaultSurfaceFlags());
 
   /**
    * Records telemetry and does final teardown of the provided decoder.
