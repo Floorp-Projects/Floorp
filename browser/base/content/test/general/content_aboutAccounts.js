@@ -13,6 +13,12 @@ addEventListener("load", function load(event) {
   }
 //  content.document.removeEventListener("load", load, true);
   sendAsyncMessage("test:document:load");
+  // Opening Sync prefs in tests is a pain as leaks are reported due to the
+  // in-flight promises. For now we just mock the openPrefs() function and have
+  // it send a message back to the test so we know it was called.
+  content.openPrefs = function() {
+    sendAsyncMessage("test:openPrefsCalled");
+  }
 }, true);
 
 addEventListener("DOMContentLoaded", function domContentLoaded(event) {
