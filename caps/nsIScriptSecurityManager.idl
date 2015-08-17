@@ -26,7 +26,7 @@ class DomainPolicyClone;
 [ptr] native JSObjectPtr(JSObject);
 [ptr] native DomainPolicyClonePtr(mozilla::dom::DomainPolicyClone);
 
-[scriptable, uuid(9a8f0b70-6b9f-4e19-8885-7cfe24f4a42d)]
+[scriptable, uuid(73f92674-f59d-4c9b-a9b5-f7a3ae8ffa98)]
 interface nsIScriptSecurityManager : nsISupports
 {
     /**
@@ -150,10 +150,12 @@ interface nsIScriptSecurityManager : nsISupports
      * @param appId is the app id of the principal. It can't be UNKNOWN_APP_ID.
      * @param inMozBrowser is true if the principal has to be considered as
      * inside a mozbrowser frame.
+     *
+     * @deprecated use createCodebasePrincipal instead.
      */
-    nsIPrincipal getAppCodebasePrincipal(in nsIURI uri,
-                                         in unsigned long appId,
-                                         in boolean inMozBrowser);
+    [deprecated] nsIPrincipal getAppCodebasePrincipal(in nsIURI uri,
+                                                      in unsigned long appId,
+                                                      in boolean inMozBrowser);
 
     /**
      * Returns a principal that has the appId and inMozBrowser of the load
