@@ -234,10 +234,10 @@ WMFMediaDataDecoder::Drain()
 }
 
 bool
-WMFMediaDataDecoder::IsHardwareAccelerated() const {
+WMFMediaDataDecoder::IsHardwareAccelerated(nsACString& aFailureReason) const {
   MOZ_ASSERT(!mIsShutDown);
 
-  return mMFTManager && mMFTManager->IsHardwareAccelerated();
+  return mMFTManager && mMFTManager->IsHardwareAccelerated(aFailureReason);
 }
 
 } // namespace mozilla

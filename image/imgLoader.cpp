@@ -276,9 +276,10 @@ private:
         surfacePathPrefix.Append("@");
         surfacePathPrefix.AppendFloat(counter.Key().AnimationTime());
 
-        if (counter.Key().Flags() != imgIContainer::DECODE_FLAGS_DEFAULT) {
+        if (counter.Key().Flags() != DefaultSurfaceFlags()) {
           surfacePathPrefix.Append(", flags:");
-          surfacePathPrefix.AppendInt(counter.Key().Flags(), /* aRadix = */ 16);
+          surfacePathPrefix.AppendInt(uint32_t(counter.Key().Flags()),
+                                      /* aRadix = */ 16);
         }
       } else if (counter.Type() == SurfaceMemoryCounterType::COMPOSITING) {
         surfacePathPrefix.Append(", compositing frame");

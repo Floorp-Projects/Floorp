@@ -392,8 +392,8 @@ struct TimedTexture {
   MaybeFence fence;
   TimeStamp timeStamp;
   IntRect picture;
-  int32_t frameID;
-  int32_t producerID;
+  uint32_t frameID;
+  uint32_t producerID;
 };
 
 /**
@@ -487,8 +487,8 @@ struct ImageCompositeNotification {
   PImageContainer imageContainer;
   TimeStamp imageTimeStamp;
   TimeStamp firstCompositeTimeStamp;
-  int32_t frameID;
-  int32_t producerID;
+  uint32_t frameID;
+  uint32_t producerID;
 };
 
 // Unit of a "changeset reply".  This is a weird abstraction, probably

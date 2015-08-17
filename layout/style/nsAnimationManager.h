@@ -100,6 +100,7 @@ public:
   }
 
   void Tick() override;
+  void QueueEvents();
 
   bool IsStylePaused() const { return mIsStylePaused; }
 
@@ -162,8 +163,6 @@ protected:
                                         "before a CSS animation is destroyed");
   }
   virtual CommonAnimationManager* GetAnimationManager() const override;
-
-  void QueueEvents();
 
   nsString mAnimationName;
 
@@ -254,11 +253,6 @@ public:
     const MOZ_MUST_OVERRIDE override;
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const MOZ_MUST_OVERRIDE override;
-
-  // nsARefreshObserver
-  virtual void WillRefresh(mozilla::TimeStamp aTime) override;
-
-  void FlushAnimations(FlushFlags aFlags);
 
   /**
    * Return the style rule that RulesMatching should add for

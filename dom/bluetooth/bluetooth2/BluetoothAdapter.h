@@ -10,7 +10,7 @@
 #include "BluetoothCommon.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
-#include "mozilla/dom/BluetoothAdapter2Binding.h"
+#include "mozilla/dom/BluetoothAdapterBinding.h"
 #include "mozilla/dom/BluetoothDeviceEvent.h"
 #include "mozilla/dom/Promise.h"
 #include "nsCOMPtr.h"

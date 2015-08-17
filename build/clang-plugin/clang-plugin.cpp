@@ -103,6 +103,11 @@ private:
     virtual void run(const MatchFinder::MatchResult &Result);
   };
 
+  class NoAutoTypeChecker : public MatchFinder::MatchCallback {
+  public:
+    virtual void run(const MatchFinder::MatchResult &Result);
+  };
+
   ScopeChecker scopeChecker;
   ArithmeticArgChecker arithmeticArgChecker;
   TrivialCtorDtorChecker trivialCtorDtorChecker;
@@ -114,6 +119,7 @@ private:
   NeedsNoVTableTypeChecker needsNoVTableTypeChecker;
   NonMemMovableChecker nonMemMovableChecker;
   ExplicitImplicitChecker explicitImplicitChecker;
+  NoAutoTypeChecker noAutoTypeChecker;
   MatchFinder astMatcher;
 };
 
@@ -250,6 +256,15 @@ public:
     return directAnnotationReason(T).valid();
   }
   void dumpAnnotationReason(DiagnosticsEngine &Diag, QualType T, SourceLocation Loc);
+
+  void reportErrorIfAbsent(DiagnosticsEngine &Diag, QualType T, SourceLocation Loc,
+                           unsigned ErrorID, unsigned NoteID) {
+    if (hasEffectiveAnnotation(T)) {
+      Diag.Report(Loc, ErrorID) << T;
+      Diag.Report(Loc, NoteID);
+      dumpAnnotationReason(Diag, T, Loc);
+    }
+  }
 
 private:
   bool hasLiteralAnnotation(QualType T) const;
@@ -777,6 +792,15 @@ AST_MATCHER(CXXRecordDecl, isConcreteClass) {
   return !Node.isAbstract();
 }
 
+AST_MATCHER(QualType, autoNonAutoableType) {
+  if (const AutoType *T = Node->getContainedAutoType()) {
+    if (const CXXRecordDecl *Rec = T->getAsCXXRecordDecl()) {
+      return MozChecker::hasCustomAnnotation(Rec, "moz_non_autoable");
+    }
+  }
+  return false;
+}
+
 }
 }
 
@@ -1023,6 +1047,9 @@ DiagnosticsMatcher::DiagnosticsMatcher() {
                       ofClass(allOf(isConcreteClass(), decl().bind("class"))),
                       unless(isMarkedImplicit())).bind("ctor"),
       &explicitImplicitChecker);
+
+  astMatcher.addMatcher(varDecl(hasType(autoNonAutoableType())
+                          ).bind("node"), &noAutoTypeChecker);
 }
 
 // These enum variants determine whether an allocation has occured in the code.
@@ -1100,60 +1127,24 @@ void DiagnosticsMatcher::ScopeChecker::run(
     return;
 
   case AV_Global:
-    if (StackClass.hasEffectiveAnnotation(T)) {
-      Diag.Report(Loc, StackID) << T;
-      Diag.Report(Loc, GlobalNoteID);
-      StackClass.dumpAnnotationReason(Diag, T, Loc);
-    }
-    if (HeapClass.hasEffectiveAnnotation(T)) {
-      Diag.Report(Loc, HeapID) << T;
-      Diag.Report(Loc, GlobalNoteID);
-      HeapClass.dumpAnnotationReason(Diag, T, Loc);
-    }
+    StackClass.reportErrorIfAbsent(Diag, T, Loc, StackID, GlobalNoteID);
+    HeapClass.reportErrorIfAbsent(Diag, T, Loc, HeapID, GlobalNoteID);
     break;
 
   case AV_Automatic:
-    if (GlobalClass.hasEffectiveAnnotation(T)) {
-      Diag.Report(Loc, GlobalID) << T;
-      Diag.Report(Loc, StackNoteID);
-      GlobalClass.dumpAnnotationReason(Diag, T, Loc);
-    }
-    if (HeapClass.hasEffectiveAnnotation(T)) {
-      Diag.Report(Loc, HeapID) << T;
-      Diag.Report(Loc, StackNoteID);
-      HeapClass.dumpAnnotationReason(Diag, T, Loc);
-    }
+    GlobalClass.reportErrorIfAbsent(Diag, T, Loc, GlobalID, StackNoteID);
+    HeapClass.reportErrorIfAbsent(Diag, T, Loc, HeapID, StackNoteID);
     break;
 
   case AV_Temporary:
-    if (GlobalClass.hasEffectiveAnnotation(T)) {
-      Diag.Report(Loc, GlobalID) << T;
-      Diag.Report(Loc, TemporaryNoteID);
-      GlobalClass.dumpAnnotationReason(Diag, T, Loc);
-    }
-    if (HeapClass.hasEffectiveAnnotation(T)) {
-      Diag.Report(Loc, HeapID) << T;
-      Diag.Report(Loc, TemporaryNoteID);
-      HeapClass.dumpAnnotationReason(Diag, T, Loc);
-    }
+    GlobalClass.reportErrorIfAbsent(Diag, T, Loc, GlobalID, TemporaryNoteID);
+    HeapClass.reportErrorIfAbsent(Diag, T, Loc, HeapID, TemporaryNoteID);
     break;
 
   case AV_Heap:
-    if (GlobalClass.hasEffectiveAnnotation(T)) {
-      Diag.Report(Loc, GlobalID) << T;
-      Diag.Report(Loc, HeapNoteID);
-      GlobalClass.dumpAnnotationReason(Diag, T, Loc);
-    }
-    if (StackClass.hasEffectiveAnnotation(T)) {
-      Diag.Report(Loc, StackID) << T;
-      Diag.Report(Loc, HeapNoteID);
-      StackClass.dumpAnnotationReason(Diag, T, Loc);
-    }
-    if (NonHeapClass.hasEffectiveAnnotation(T)) {
-      Diag.Report(Loc, NonHeapID) << T;
-      Diag.Report(Loc, HeapNoteID);
-      NonHeapClass.dumpAnnotationReason(Diag, T, Loc);
-    }
+    GlobalClass.reportErrorIfAbsent(Diag, T, Loc, GlobalID, HeapNoteID);
+    StackClass.reportErrorIfAbsent(Diag, T, Loc, StackID, HeapNoteID);
+    NonHeapClass.reportErrorIfAbsent(Diag, T, Loc, NonHeapID, HeapNoteID);
     break;
   }
 }
@@ -1373,6 +1364,20 @@ void DiagnosticsMatcher::ExplicitImplicitChecker::run(
 
   Diag.Report(Ctor->getLocation(), ErrorID) << Decl->getDeclName();
   Diag.Report(Ctor->getLocation(), NoteID);
+}
+
+void DiagnosticsMatcher::NoAutoTypeChecker::run(
+    const MatchFinder::MatchResult &Result) {
+  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
+  unsigned ErrorID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Error, "Cannot use auto to declare a variable of type %0");
+  unsigned NoteID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Note, "Please write out this type explicitly");
+
+  const VarDecl *D = Result.Nodes.getNodeAs<VarDecl>("node");
+
+  Diag.Report(D->getLocation(), ErrorID) << D->getType();
+  Diag.Report(D->getLocation(), NoteID);
 }
 
 class MozCheckAction : public PluginASTAction {
