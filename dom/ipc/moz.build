@@ -147,6 +147,7 @@ LOCAL_INCLUDES += [
     '/hal/sandbox',
     '/layout/base',
     '/media/webrtc',
+    '/modules/libjar',
     '/netwerk/base',
     '/toolkit/xre',
     '/uriloader/exthandler',
