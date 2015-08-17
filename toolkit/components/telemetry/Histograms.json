@@ -6688,6 +6688,26 @@
     "kind": "boolean",
     "description": "How many times has the DevTools WebIDE been opened?"
   },
+  "DEVTOOLS_WEBIDE_PROJECT_EDITOR_OPENED_BOOLEAN": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "How many times has the DevTools WebIDE project editor been opened?"
+  },
+  "DEVTOOLS_WEBIDE_PROJECT_EDITOR_SAVE_BOOLEAN": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "How many times has a file been saved in the DevTools WebIDE project editor?"
+  },
+  "DEVTOOLS_WEBIDE_NEW_PROJECT_BOOLEAN": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "How many times has a new project been created in the DevTools WebIDE?"
+  },
+  "DEVTOOLS_WEBIDE_IMPORT_PROJECT_BOOLEAN": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "How many times has a project been imported into the DevTools WebIDE?"
+  },
   "DEVTOOLS_CUSTOM_OPENED_BOOLEAN": {
     "expires_in_version": "never",
     "kind": "boolean",
@@ -6832,6 +6852,26 @@
     "expires_in_version": "never",
     "kind": "flag",
     "description": "How many users have opened the DevTools WebIDE?"
+  },
+  "DEVTOOLS_WEBIDE_PROJECT_EDITOR_OPENED_PER_USER_FLAG": {
+    "expires_in_version": "never",
+    "kind": "flag",
+    "description": "How many users have opened the DevTools WebIDE project editor?"
+  },
+  "DEVTOOLS_WEBIDE_PROJECT_EDITOR_SAVE_PER_USER_FLAG": {
+    "expires_in_version": "never",
+    "kind": "flag",
+    "description": "How many users have saved a file in the DevTools WebIDE project editor?"
+  },
+  "DEVTOOLS_WEBIDE_NEW_PROJECT_PER_USER_FLAG": {
+    "expires_in_version": "never",
+    "kind": "flag",
+    "description": "How many users have created a new project in the DevTools WebIDE?"
+  },
+  "DEVTOOLS_WEBIDE_IMPORT_PROJECT_PER_USER_FLAG": {
+    "expires_in_version": "never",
+    "kind": "flag",
+    "description": "How many users have imported a project into the DevTools WebIDE?"
   },
   "DEVTOOLS_CUSTOM_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
@@ -7012,6 +7052,13 @@
     "high": "10000000",
     "n_buckets": 100,
     "description": "How long has WebIDE been active (seconds)"
+  },
+  "DEVTOOLS_WEBIDE_PROJECT_EDITOR_TIME_ACTIVE_SECONDS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000000",
+    "n_buckets": 100,
+    "description": "How long has WebIDE's project editor been active (seconds)"
   },
   "DEVTOOLS_CUSTOM_TIME_ACTIVE_SECONDS": {
     "expires_in_version": "never",

@@ -147,6 +147,8 @@ let UI = {
     window.removeEventListener("message", this.onMessage);
     this.updateConnectionTelemetry();
     this._telemetry.toolClosed("webide");
+    this._telemetry.toolClosed("webideProjectEditor");
+    this._telemetry.destroy();
   },
 
   canCloseProject: function() {
@@ -670,13 +672,18 @@ let UI = {
     }
   },
 
-  updateProjectEditorMenusVisibility: function() {
+  /**
+   * Called when selecting or deselecting the project editor panel.
+   */
+  onChangeProjectEditorSelected: function() {
     if (this.projecteditor) {
       let panel = document.querySelector("#deck").selectedPanel;
       if (panel && panel.id == "deck-panel-projecteditor") {
         this.projecteditor.menuEnabled = true;
+        this._telemetry.toolOpened("webideProjectEditor");
       } else {
         this.projecteditor.menuEnabled = false;
+        this._telemetry.toolClosed("webideProjectEditor");
       }
     }
   },
@@ -691,8 +698,9 @@ let UI = {
       menubar: document.querySelector("#main-menubar"),
       menuindex: 1
     });
-    this.projecteditor.on("onEditorSave", (editor, resource) => {
+    this.projecteditor.on("onEditorSave", () => {
       AppManager.validateAndUpdateProject(AppManager.selectedProject);
+      this._telemetry.actionOccurred("webideProjectEditorSave");
     });
     return this.projecteditor.loaded;
   },
@@ -748,11 +756,11 @@ let UI = {
 
     // Show ProjectEditor
 
-    this.selectDeckPanel("projecteditor");
-
     this.getProjectEditor().then(() => {
       this.updateProjectEditorHeader();
     }, console.error);
+
+    this.selectDeckPanel("projecteditor");
   },
 
   autoStartProject: Task.async(function*() {
@@ -806,6 +814,8 @@ let UI = {
 
     // Select project
     AppManager.selectedProject = project;
+
+    this._telemetry.actionOccurred("webideImportProject");
   }),
 
   // Remember the last selected project on the runtime
@@ -919,7 +929,7 @@ let UI = {
       panel.setAttribute("src", lazysrc);
     }
     deck.selectedPanel = panel;
-    this.updateProjectEditorMenusVisibility();
+    this.onChangeProjectEditorSelected();
     this.updateToolboxFullscreenState();
   },
 
@@ -927,7 +937,7 @@ let UI = {
     this.resetFocus();
     let deck = document.querySelector("#deck");
     deck.selectedPanel = null;
-    this.updateProjectEditorMenusVisibility();
+    this.onChangeProjectEditorSelected();
   },
 
   buildIDToDate(buildID) {
