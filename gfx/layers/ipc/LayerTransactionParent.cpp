@@ -327,8 +327,11 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
       layer->SetBaseTransform(common.transform().value());
       layer->SetPostScale(common.postXScale(), common.postYScale());
       layer->SetIsFixedPosition(common.isFixedPosition());
-      layer->SetFixedPositionAnchor(common.fixedPositionAnchor());
-      layer->SetFixedPositionMargins(common.fixedPositionMargin());
+      if (common.isFixedPosition()) {
+        layer->SetFixedPositionData(common.fixedPositionScrollContainerId(),
+                                    common.fixedPositionAnchor(),
+                                    common.fixedPositionMargin());
+      }
       if (common.isStickyPosition()) {
         layer->SetStickyPositionData(common.stickyScrollContainerId(),
                                      common.stickyScrollRangeOuter(),
