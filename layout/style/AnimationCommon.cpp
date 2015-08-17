@@ -28,7 +28,6 @@
 #include "nsStyleSet.h"
 #include "nsStyleChangeList.h"
 
-
 using mozilla::layers::Layer;
 using mozilla::dom::Animation;
 using mozilla::dom::KeyframeEffectReadOnly;
@@ -824,6 +823,8 @@ void
 AnimationCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
                                         EnsureStyleRuleFlags aFlags)
 {
+  mHasPendingAnimationRestyle = false;
+
   if (!mNeedsRefreshes) {
     mStyleRuleRefreshTime = aRefreshTime;
     return;
@@ -962,6 +963,29 @@ AnimationCollection::CanThrottleAnimation(TimeStamp aTime)
   }
 
   return true;
+}
+
+void
+AnimationCollection::RequestRestyle(RestyleType aRestyleType)
+{
+  nsPresContext* presContext = mManager->PresContext();
+  if (!presContext) {
+    // Pres context will be null after the manager is disconnected.
+    return;
+  }
+
+  switch (aRestyleType) {
+    case RestyleType::Throttled:
+      presContext->Document()->SetNeedStyleFlush();
+      break;
+
+    case RestyleType::Standard:
+      if (!mHasPendingAnimationRestyle) {
+        mHasPendingAnimationRestyle = true;
+        PostRestyleForAnimation(presContext);
+      }
+      break;
+  }
 }
 
 void

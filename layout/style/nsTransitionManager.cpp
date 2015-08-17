@@ -915,7 +915,6 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
   }
 
   TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
-  bool didThrottle = false;
   // Post restyle events for frames that are transitioning.
   {
     PRCList *next = PR_LIST_HEAD(&mElementCollections);
@@ -958,16 +957,11 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
                  collection->mElementProperty ==
                    nsGkAtoms::transitionsOfAfterProperty,
                  "Unexpected element property; might restyle too much");
-      if (!canThrottleTick) {
-        collection->PostRestyleForAnimation(mPresContext);
-      } else {
-        didThrottle = true;
-      }
-    }
-  }
 
-  if (didThrottle) {
-    mPresContext->Document()->SetNeedStyleFlush();
+      collection->RequestRestyle(canThrottleTick ?
+                                 AnimationCollection::RestyleType::Throttled :
+                                 AnimationCollection::RestyleType::Standard);
+    }
   }
 
   MaybeStartOrStopObservingRefreshDriver();
