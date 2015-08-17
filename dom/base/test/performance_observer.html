@@ -1,0 +1,63 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<meta charset=utf-8>
+<html>
+<head>
+<title>Test for performance observer</title>
+<script>
+'use strict';
+[
+ "async_test", "test", "setup",
+ "assert_true", "assert_equals", "assert_array_equals",
+ "assert_throws"
+].forEach(func => {
+  window[func] = opener[func].bind(opener);
+});
+function done() {
+  opener.add_completion_callback(() => {
+    self.close();
+  });
+  opener.done();
+}
+
+</script>
+<script src="test_performance_observer.js"></script>
+</head>
+<body>
+<div id="log"></div>
+<script>
+function promiseXHR(aUrl) {
+  return new Promise(resolve => {
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.onload = resolve;
+    xmlhttp.open("get", aUrl, true);
+    xmlhttp.send();
+  });
+}
+
+async_test(t => {
+  performance.clearResourceTimings();
+
+  var observedEntries = [];
+  var observer = new PerformanceObserver(list => {
+    list.getEntries().forEach(entry => observedEntries.push(entry));
+  });
+  observer.observe({entryTypes: ['resource']});
+
+  assert_equals(observedEntries.length, 0);
+
+  promiseXHR("test-data.json").then(t.step_func_done(() => {
+    assert_equals(observedEntries.length, 1);
+    assert_array_equals(observedEntries,
+                        performance.getEntriesByType("resource"),
+                        "Observed 'resource' entries should equal to entries obtained by getEntriesByType.");
+  }));
+}, "resource-timing test");
+
+done();
+
+</script>
+</body>
