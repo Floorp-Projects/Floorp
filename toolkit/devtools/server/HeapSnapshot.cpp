@@ -649,15 +649,14 @@ ThreadSafeChromeUtils::ReadHeapSnapshot(GlobalObject& global,
   if (rv.Failed())
     return nullptr;
 
-  auto snapshot = HeapSnapshot::Create(cx, global,
-                                       reinterpret_cast<const uint8_t*>(mm.address()),
-                                       mm.size(), rv);
+  nsRefPtr<HeapSnapshot> snapshot = HeapSnapshot::Create(
+      cx, global, reinterpret_cast<const uint8_t*>(mm.address()), mm.size(), rv);
 
   if (!rv.Failed())
     Telemetry::AccumulateTimeDelta(Telemetry::DEVTOOLS_READ_HEAP_SNAPSHOT_MS,
                                    start);
 
-  return snapshot;
+  return snapshot.forget();
 }
 
 } // namespace dom

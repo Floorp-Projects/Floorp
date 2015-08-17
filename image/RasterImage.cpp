@@ -118,7 +118,9 @@ public:
     // Insert the new surface into the cache immediately. We need to do this so
     // that we won't start multiple scaling jobs for the same size.
     SurfaceCache::Insert(mDstRef.get(), ImageKey(mImage.get()),
-                         RasterSurfaceKey(mDstSize, mImageFlags, 0),
+                         RasterSurfaceKey(mDstSize,
+                                          ToSurfaceFlags(mImageFlags),
+                                          /* aFrameNum = */ 0),
                          Lifetime::Transient);
 
     return true;
@@ -168,7 +170,8 @@ public:
       // Remove the frame from the cache since we know we don't need it.
       SurfaceCache::RemoveSurface(ImageKey(mImage.get()),
                                   RasterSurfaceKey(mDstSize,
-                                                   mImageFlags, 0));
+                                                   ToSurfaceFlags(mImageFlags),
+                                                   /* aFrameNum = */ 0));
 
       // Release everything we're holding, too.
       mSrcRef.reset();
@@ -425,17 +428,18 @@ RasterImage::LookupFrameInternal(uint32_t aFrameNum,
   }
 
   if (mAnim && aFrameNum > 0) {
-    MOZ_ASSERT(DecodeFlags(aFlags) == DECODE_FLAGS_DEFAULT,
-               "Can't composite frames with non-default decode flags");
+    MOZ_ASSERT(ToSurfaceFlags(aFlags) == DefaultSurfaceFlags(),
+               "Can't composite frames with non-default surface flags");
     return mAnim->GetCompositedFrame(aFrameNum);
   }
 
-  Maybe<uint32_t> alternateFlags;
+  Maybe<SurfaceFlags> alternateFlags;
   if (IsOpaque()) {
     // If we're opaque, we can always substitute a frame that was decoded with a
     // different decode flag for premultiplied alpha, because that can only
     // matter for frames with transparency.
-    alternateFlags = Some(aFlags ^ FLAG_DECODE_NO_PREMULTIPLY_ALPHA);
+    alternateFlags.emplace(ToSurfaceFlags(aFlags) ^
+                             SurfaceFlags::NO_PREMULTIPLY_ALPHA);
   }
 
   // We don't want any substitution for sync decodes (except the premultiplied
@@ -443,7 +447,7 @@ RasterImage::LookupFrameInternal(uint32_t aFrameNum,
   if (aFlags & FLAG_SYNC_DECODE) {
     return SurfaceCache::Lookup(ImageKey(this),
                                 RasterSurfaceKey(aSize,
-                                                 DecodeFlags(aFlags),
+                                                 ToSurfaceFlags(aFlags),
                                                  aFrameNum),
                                 alternateFlags);
   }
@@ -451,7 +455,7 @@ RasterImage::LookupFrameInternal(uint32_t aFrameNum,
   // We'll return the best match we can find to the requested frame.
   return SurfaceCache::LookupBestMatch(ImageKey(this),
                                        RasterSurfaceKey(aSize,
-                                                        DecodeFlags(aFlags),
+                                                        ToSurfaceFlags(aFlags),
                                                         aFrameNum),
                                        alternateFlags);
 }
@@ -1408,18 +1412,31 @@ RasterImage::Decode(const IntSize& aSize, uint32_t aFlags)
 
   Maybe<IntSize> targetSize = mSize != aSize ? Some(aSize) : Nothing();
 
+  // Determine which flags we need to decode this image with.
+  DecoderFlags decoderFlags = DefaultDecoderFlags();
+  if (aFlags & FLAG_ASYNC_NOTIFY) {
+    decoderFlags |= DecoderFlags::ASYNC_NOTIFY;
+  }
+  if (mTransient) {
+    decoderFlags |= DecoderFlags::IMAGE_IS_TRANSIENT;
+  }
+  if (mHasBeenDecoded) {
+    decoderFlags |= DecoderFlags::IS_REDECODE;
+  }
+
   // Create a decoder.
   nsRefPtr<Decoder> decoder;
   if (mAnim) {
     decoder = DecoderFactory::CreateAnimationDecoder(mDecoderType, this,
-                                                     mSourceBuffer, aFlags,
+                                                     mSourceBuffer, decoderFlags,
+                                                     ToSurfaceFlags(aFlags),
                                                      mRequestedResolution);
   } else {
     decoder = DecoderFactory::CreateDecoder(mDecoderType, this, mSourceBuffer,
-                                            targetSize, aFlags,
+                                            targetSize, decoderFlags,
+                                            ToSurfaceFlags(aFlags),
                                             mRequestedSampleSize,
-                                            mRequestedResolution,
-                                            mHasBeenDecoded, mTransient);
+                                            mRequestedResolution);
   }
 
   // Make sure DecoderFactory was able to create a decoder successfully.
@@ -1432,7 +1449,7 @@ RasterImage::Decode(const IntSize& aSize, uint32_t aFlags)
   InsertOutcome outcome =
     SurfaceCache::InsertPlaceholder(ImageKey(this),
                                     RasterSurfaceKey(aSize,
-                                                     decoder->GetDecodeFlags(),
+                                                     decoder->GetSurfaceFlags(),
                                                      /* aFrameNum = */ 0));
   if (outcome != InsertOutcome::SUCCESS) {
     return NS_ERROR_FAILURE;
@@ -1641,7 +1658,7 @@ RasterImage::RequestScale(imgFrame* aFrame,
   }
 
   nsRefPtr<ScaleRunner> runner =
-    new ScaleRunner(this, DecodeFlags(aFlags), aSize, Move(frameRef));
+    new ScaleRunner(this, aFlags, aSize, Move(frameRef));
   if (runner->Init()) {
     if (!sScaleWorkerThread) {
       NS_NewNamedThread("Image Scaler", getter_AddRefs(sScaleWorkerThread));
@@ -1666,8 +1683,8 @@ RasterImage::DrawWithPreDownscaleIfNeeded(DrawableFrameRef&& aFrameRef,
     LookupResult result =
       SurfaceCache::Lookup(ImageKey(this),
                            RasterSurfaceKey(aSize,
-                                            DecodeFlags(aFlags),
-                                            0));
+                                            ToSurfaceFlags(aFlags),
+                                            /* aFrameNum = */ 0));
     if (!result) {
       // We either didn't have a matching scaled frame or the OS threw it away.
       // Request a new one so we'll be ready next time. For now, we'll fall back
@@ -1746,7 +1763,7 @@ RasterImage::Draw(gfxContext* aContext,
   // Illegal -- you can't draw with non-default decode flags.
   // (Disabling colorspace conversion might make sense to allow, but
   // we don't currently.)
-  if (DecodeFlags(aFlags) != DECODE_FLAGS_DEFAULT) {
+  if (ToSurfaceFlags(aFlags) != DefaultSurfaceFlags()) {
     return DrawResult::BAD_ARGS;
   }
 
@@ -1937,14 +1954,15 @@ RasterImage::GetFramesNotified(uint32_t* aFramesNotified)
 void
 RasterImage::NotifyProgress(Progress aProgress,
                             const IntRect& aInvalidRect /* = IntRect() */,
-                            uint32_t aFlags /* = DECODE_FLAGS_DEFAULT */)
+                            SurfaceFlags aSurfaceFlags
+                              /* = DefaultSurfaceFlags() */)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   // Ensure that we stay alive long enough to finish notifying.
   nsRefPtr<RasterImage> image(this);
 
-  bool wasDefaultFlags = aFlags == DECODE_FLAGS_DEFAULT;
+  bool wasDefaultFlags = aSurfaceFlags == DefaultSurfaceFlags();
 
   if (!aInvalidRect.IsEmpty() && wasDefaultFlags) {
     // Update our image container since we're invalidating.
@@ -1989,7 +2007,7 @@ RasterImage::FinalizeDecoder(Decoder* aDecoder)
   // Send out any final notifications.
   NotifyProgress(aDecoder->TakeProgress(),
                  aDecoder->TakeInvalidRect(),
-                 aDecoder->GetDecodeFlags());
+                 aDecoder->GetSurfaceFlags());
 
   bool wasMetadata = aDecoder->IsMetadataDecode();
   bool done = aDecoder->GetDecodeDone();
@@ -2094,8 +2112,8 @@ RasterImage::OptimalImageSizeForDest(const gfxSize& aDest, uint32_t aWhichFrame,
     LookupResult result =
       SurfaceCache::Lookup(ImageKey(this),
                            RasterSurfaceKey(destSize,
-                                            DecodeFlags(aFlags),
-                                            0));
+                                            ToSurfaceFlags(aFlags),
+                                            /* aFrameNum = */ 0));
 
     if (result && result.DrawableRef()->IsImageComplete()) {
       return destSize;  // We have an existing HQ scale for this size.

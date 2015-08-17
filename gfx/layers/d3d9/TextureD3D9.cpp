@@ -675,22 +675,45 @@ already_AddRefed<SharedTextureClientD3D9>
 SharedTextureClientD3D9::Create(ISurfaceAllocator* aAllocator,
                                 gfx::SurfaceFormat aFormat,
                                 TextureFlags aFlags,
-                                IDirect3DTexture9* aTexture,
-                                HANDLE aSharedHandle,
-                                D3DSURFACE_DESC aDesc)
+                                IDirect3DDevice9* aDevice,
+                                const gfx::IntSize& aSize)
 {
-  RefPtr<SharedTextureClientD3D9> texture =
+  MOZ_ASSERT(aFormat == gfx::SurfaceFormat::B8G8R8X8);
+
+  RefPtr<IDirect3DTexture9> texture;
+  HANDLE shareHandle = nullptr;
+  HRESULT hr = aDevice->CreateTexture(aSize.width,
+                                      aSize.height,
+                                      1,
+                                      D3DUSAGE_RENDERTARGET,
+                                      D3DFMT_X8R8G8B8,
+                                      D3DPOOL_DEFAULT,
+                                      byRef(texture),
+                                      &shareHandle);
+  NS_ENSURE_TRUE(SUCCEEDED(hr) && shareHandle, nullptr);
+
+  RefPtr<SharedTextureClientD3D9> client =
     new SharedTextureClientD3D9(aAllocator,
                                 aFormat,
                                 aFlags);
-  MOZ_ASSERT(!texture->mTexture);
-  texture->mTexture = aTexture;
-  texture->mHandle = aSharedHandle;
-  texture->mDesc = aDesc;
-  if (texture->mTexture) {
-    gfxWindowsPlatform::sD3D9SharedTextureUsed += texture->mDesc.Width * texture->mDesc.Height * 4;
-  }
-  return texture.forget();
+
+  client->mDevice = aDevice;
+  client->mTexture = texture;
+  client->mHandle = shareHandle;
+  texture->GetLevelDesc(0, &client->mDesc);
+
+  gfxWindowsPlatform::sD3D9SharedTextureUsed += aSize.width * aSize.height * 4;
+  return client.forget();
+}
+
+already_AddRefed<IDirect3DSurface9>
+SharedTextureClientD3D9::GetD3D9Surface() const
+{
+  RefPtr<IDirect3DSurface9> textureSurface;
+  HRESULT hr = mTexture->GetSurfaceLevel(0, byRef(textureSurface));
+  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+
+  return textureSurface.forget();
 }
 
 bool

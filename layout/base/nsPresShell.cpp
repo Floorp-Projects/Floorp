@@ -4089,7 +4089,7 @@ PresShell::FlushPendingNotifications(mozilla::ChangesToFlush aFlush)
         }
         if (mPresContext->TransitionManager()) {
           mPresContext->TransitionManager()->
-            FlushTransitions(CommonAnimationManager::Cannot_Throttle);
+            FlushAnimations(CommonAnimationManager::Cannot_Throttle);
         }
         mPresContext->TickLastStyleUpdateForAllAnimations();
       }

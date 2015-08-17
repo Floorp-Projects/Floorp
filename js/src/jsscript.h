@@ -38,6 +38,7 @@ namespace jit {
 
 # define ION_DISABLED_SCRIPT ((js::jit::IonScript*)0x1)
 # define ION_COMPILING_SCRIPT ((js::jit::IonScript*)0x2)
+# define ION_PENDING_SCRIPT ((js::jit::IonScript*)0x3)
 
 # define BASELINE_DISABLED_SCRIPT ((js::jit::BaselineScript*)0x1)
 
@@ -965,8 +966,15 @@ class JSScript : public js::gc::TenuredCell
     js::HeapPtrFunction function_;
     js::HeapPtrObject   enclosingStaticScope_;
 
-    /* Information attached by Baseline/Ion for sequential mode execution. */
+    /*
+     * Information attached by Ion. Nexto a valid IonScript this could be
+     * ION_DISABLED_SCRIPT, ION_COMPILING_SCRIPT or ION_PENDING_SCRIPT.
+     * The later is a ion compilation that is ready, but hasn't been linked
+     * yet.
+     */
     js::jit::IonScript* ion;
+
+    /* Information attached by Baseline. */
     js::jit::BaselineScript* baseline;
 
     /* Information used to re-lazify a lazily-parsed interpreted function. */
@@ -1472,14 +1480,14 @@ class JSScript : public js::gc::TenuredCell
     }
 
     bool hasIonScript() const {
-        bool res = ion && ion != ION_DISABLED_SCRIPT && ion != ION_COMPILING_SCRIPT;
+        bool res = ion && ion != ION_DISABLED_SCRIPT && ion != ION_COMPILING_SCRIPT &&
+                          ion != ION_PENDING_SCRIPT;
         MOZ_ASSERT_IF(res, baseline);
         return res;
     }
     bool canIonCompile() const {
         return ion != ION_DISABLED_SCRIPT;
     }
-
     bool isIonCompilingOffThread() const {
         return ion == ION_COMPILING_SCRIPT;
     }
@@ -1494,13 +1502,7 @@ class JSScript : public js::gc::TenuredCell
     js::jit::IonScript* const* addressOfIonScript() const {
         return &ion;
     }
-    void setIonScript(JSContext* maybecx, js::jit::IonScript* ionScript) {
-        if (hasIonScript())
-            js::jit::IonScript::writeBarrierPre(zone(), ion);
-        ion = ionScript;
-        MOZ_ASSERT_IF(hasIonScript(), hasBaselineScript());
-        updateBaselineOrIonRaw(maybecx);
-    }
+    void setIonScript(JSContext* maybecx, js::jit::IonScript* ionScript);
 
     bool hasBaselineScript() const {
         bool res = baseline && baseline != BASELINE_DISABLED_SCRIPT;
@@ -1517,16 +1519,6 @@ class JSScript : public js::gc::TenuredCell
     inline void setBaselineScript(JSContext* maybecx, js::jit::BaselineScript* baselineScript);
 
     void updateBaselineOrIonRaw(JSContext* maybecx);
-
-    void setPendingIonBuilder(JSContext* maybecx, js::jit::IonBuilder* builder) {
-        MOZ_ASSERT(!builder || !ion->pendingBuilder());
-        ion->setPendingBuilderPrivate(builder);
-        updateBaselineOrIonRaw(maybecx);
-    }
-    js::jit::IonBuilder* pendingIonBuilder() {
-        MOZ_ASSERT(hasIonScript());
-        return ion->pendingBuilder();
-    }
 
     static size_t offsetOfBaselineScript() {
         return offsetof(JSScript, baseline);
