@@ -274,9 +274,6 @@ public:
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     MOZ_MUST_OVERRIDE override;
 
-  // nsARefreshObserver
-  virtual void WillRefresh(mozilla::TimeStamp aTime) override;
-
   void QueueEvent(mozilla::TransitionEventInfo&& aEventInfo)
   {
     mEventDispatcher.QueueEvent(
