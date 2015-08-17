@@ -989,6 +989,16 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         self.set_buildbot_property('funsize_info', json.dumps(funsize_info),
                                    write_to_file=True)
 
+    def query_repo(self):
+        # Find the name of our repository
+        mozilla_dir = self.config['mozilla_dir']
+        repo = None
+        for repository in self.config['repos']:
+            if repository.get('dest') == mozilla_dir:
+                repo = repository['repo']
+                break
+        return repo
+
     def taskcluster_upload(self):
         auth = os.path.join(os.getcwd(), self.config['taskcluster_credentials_file'])
         credentials = {}
@@ -1016,6 +1026,10 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         branch = self.config['branch']
         platform = self.config['platform']
         revision = self._query_revision()
+        repo = self.query_repo()
+        if not repo:
+            self.fatal("Unable to determine repository for querying the push info.")
+        pushinfo = self.vcs_query_pushinfo(repo, revision, vcs='hgtool')
 
         routes_json = os.path.join(self.query_abs_dirs()['abs_mozilla_dir'],
                                    'testing/taskcluster/routes.json')
@@ -1038,10 +1052,10 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
                 }
                 fmt.update(self.buildid_to_dict(self._query_buildid()))
                 routes.append(template.format(**fmt))
-                self.info('Using routes: %s' % routes)
 
+            self.info('Using routes: %s' % routes)
             tc = Taskcluster(branch,
-                             self.query_pushdate(),
+                             pushinfo.pushdate, # Use pushdate as the rank
                              client_id,
                              access_token,
                              self.log_obj,
@@ -1056,48 +1070,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
                 # locations.
                 tc.create_artifact(task, upload_file)
             tc.report_completed(task)
-
-    def query_pushdate(self):
-        if self.pushdate:
-            return self.pushdate
-
-        mozilla_dir = self.config['mozilla_dir']
-        repo = None
-        for repository in self.config['repos']:
-            if repository.get('dest') == mozilla_dir:
-                repo = repository['repo']
-                break
-
-        if not repo:
-            self.fatal("Unable to determine repository for querying the pushdate.")
-        try:
-            url = '%s/json-pushes?changeset=%s' % (
-                repo,
-                self._query_revision(),
-            )
-            self.info('Pushdate URL is: %s' % url)
-            contents = self.retry(self.load_json_from_url, args=(url,))
-
-            # The contents should be something like:
-            # {
-            #   "28537": {
-            #    "changesets": [
-            #     "1d0a914ae676cc5ed203cdc05c16d8e0c22af7e5",
-            #    ],
-            #    "date": 1428072488,
-            #    "user": "user@mozilla.com"
-            #   }
-            # }
-            #
-            # So we grab the first element ("28537" in this case) and then pull
-            # out the 'date' field.
-            self.pushdate = contents.itervalues().next()['date']
-            self.info('Pushdate is: %s' % self.pushdate)
-        except Exception:
-            self.exception("Failed to get pushdate from hg.mozilla.org")
-            raise
-
-        return self.pushdate
 
 # main {{{
 if __name__ == '__main__':
