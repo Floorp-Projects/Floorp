@@ -1204,7 +1204,7 @@ is(cs.marginRight, "0px", "large negative delay test at 400ms");
 check_events([{ type: 'animationiteration', target: div,
                 animationName: 'anim2', elapsedTime: 4.0,
                 pseudoElement: "" }],
-             "right after start in large negative delay test");
+             "large negative delay test at 400ms");
 advance_clock(800);
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.8), 0.01,
           "large negative delay test at 1200ms");
@@ -1214,7 +1214,7 @@ is(cs.marginRight, "100px", "large negative delay test at 1400ms");
 check_events([{ type: 'animationend', target: div,
                 animationName: 'anim2', elapsedTime: 5.0,
                 pseudoElement: "" }],
-             "right after start in large negative delay test");
+             "large negative delay test at 1400ms");
 done_div();
 
 /*
