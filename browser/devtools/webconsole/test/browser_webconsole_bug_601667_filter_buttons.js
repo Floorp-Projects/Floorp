@@ -27,12 +27,14 @@ function testFilterButtons() {
   testMenuFilterButton("js");
   testMenuFilterButton("logging");
   testMenuFilterButton("security");
+  testMenuFilterButton("server");
 
   testIsolateFilterButton("net");
   testIsolateFilterButton("css");
   testIsolateFilterButton("js");
   testIsolateFilterButton("logging");
   testIsolateFilterButton("security");
+  testIsolateFilterButton("server");
 }
 
 function testMenuFilterButton(category) {
