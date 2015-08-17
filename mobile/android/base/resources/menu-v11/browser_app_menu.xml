@@ -58,7 +58,6 @@
           android:title="@string/find_in_page" />
 
     <item android:id="@+id/desktop_mode"
-          android:icon="@drawable/ic_menu_desktop_mode_off"
           android:title="@string/desktop_mode"
           android:checkable="true" />
 
