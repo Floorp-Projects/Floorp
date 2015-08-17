@@ -81,10 +81,15 @@ def get_normalized_signatures(signature, fileAnnot = None):
         signature = re.sub(r'inline\s+', '', signature)
         inline = True
 
-    return [
-        { 'arch': a, 'sig': 'inline ' + signature }
+    inlinePrefx = ''
+    if inline:
+        inlinePrefx = 'inline '
+    signatures =  [
+        { 'arch': a, 'sig': inlinePrefx + signature }
         for a in archs
     ]
+
+    return signatures
 
 file_suffixes = set([
     a.replace('_', '-') for a in
