@@ -80,13 +80,20 @@ static const uint32_t NumCallTempNonArgRegs = mozilla::ArrayLength(CallTempNonAr
 class ABIArgGenerator
 {
     unsigned usedArgSlots_;
-    bool firstArgFloat;
+    unsigned firstArgFloatSize_;
+    // Note: This is not compliant with the system ABI.  The Lowering phase
+    // expects to lower an MAsmJSParameter to only one register.
+    bool useGPRForFloats_;
     ABIArg current_;
 
   public:
     ABIArgGenerator();
     ABIArg next(MIRType argType);
     ABIArg& current() { return current_; }
+
+    void enforceO32ABI() {
+        useGPRForFloats_ = true;
+    }
 
     uint32_t stackBytesConsumedSoFar() const {
         if (usedArgSlots_ <= 4)
