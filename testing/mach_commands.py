@@ -80,9 +80,6 @@ TEST_SUITES = {
         'mach_command': 'mochitest',
         'kwargs': {'subsuite': 'devtools', 'test_paths': None},
     },
-    'mochitest-ipcplugins': {
-        'make_target': 'mochitest-ipcplugins',
-    },
     'mochitest-plain': {
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'plain', 'test_paths': None},
