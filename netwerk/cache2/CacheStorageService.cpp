@@ -876,8 +876,8 @@ CacheStorageService::RegisterEntry(CacheEntry* aEntry)
   LOG(("CacheStorageService::RegisterEntry [entry=%p]", aEntry));
 
   MemoryPool& pool = Pool(aEntry->IsUsingDisk());
-  pool.mFrecencyArray.InsertElementSorted(aEntry, FrecencyComparator());
-  pool.mExpirationArray.InsertElementSorted(aEntry, ExpirationComparator());
+  pool.mFrecencyArray.AppendElement(aEntry);
+  pool.mExpirationArray.AppendElement(aEntry);
 
   aEntry->SetRegistered(true);
 }
