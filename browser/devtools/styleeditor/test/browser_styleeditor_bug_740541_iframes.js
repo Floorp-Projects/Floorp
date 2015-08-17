@@ -4,9 +4,7 @@
 
 // Test that sheets inside iframes are shown in the editor.
 
-add_task(function* ()
-{
-
+add_task(function* () {
   function makeStylesheet(selector) {
     return ("data:text/css;charset=UTF-8," +
             encodeURIComponent(selector + " { }"));
@@ -21,13 +19,13 @@ add_task(function* ()
          "<html>",
          "<head>",
          "<title>Bug 740541</title>"],
-        stylesheets.map(function (sheet) {
-          return '<link rel="stylesheet" type="text/css" href="'+sheet+'">';
+        stylesheets.map(function(sheet) {
+          return '<link rel="stylesheet" type="text/css" href="' + sheet + '">';
         }),
         ["</head>",
          "<body>"],
-        framedDocuments.map(function (doc) {
-          return '<iframe src="'+doc+'"></iframe>';
+        framedDocuments.map(function(doc) {
+          return '<iframe src="' + doc + '"></iframe>';
         }),
         ["</body>",
          "</html>"]
@@ -55,7 +53,6 @@ add_task(function* ()
   const SIMPLE = TEST_BASE_HTTP + "simple.css";
 
   const SIMPLE_DOCUMENT = TEST_BASE_HTTP + "simple.html";
-
 
   const TESTCASE_URI = makeDocument(
     [makeStylesheet(".a")],

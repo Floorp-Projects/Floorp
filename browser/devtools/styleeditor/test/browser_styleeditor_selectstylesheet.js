@@ -9,7 +9,7 @@
 const TESTCASE_URI = TEST_BASE_HTTPS + "simple.html";
 
 const LINE_NO = 5;
-const COL_NO  = 0;
+const COL_NO = 0;
 
 add_task(function* () {
   let { ui } = yield openStyleEditorForURL(TESTCASE_URI);

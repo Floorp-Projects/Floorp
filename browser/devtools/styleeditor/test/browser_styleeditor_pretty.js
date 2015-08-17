@@ -8,24 +8,43 @@
 
 const TESTCASE_URI = TEST_BASE_HTTP + "minified.html";
 
+/*
+  body {
+    background:white;
+  }
+  div {
+    font-size:4em;
+    color:red
+  }
+  span {
+    color:green;
+  }
+*/
 const PRETTIFIED_SOURCE = "" +
-"body \{\r?\n" +                   // body{
-  "\tbackground\:white;\r?\n" +   //   background:white;
-"\}\r?\n" +                       // }
-"div \{\r?\n" +                    // div{
-  "\tfont\-size\:4em;\r?\n" +     //   font-size:4em;
-  "\tcolor\:red\r?\n" +           //   color:red
-"\}\r?\n" +                       // }
-"span \{\r?\n" +                   // span{
-  "\tcolor\:green;\r?\n"          //   color:green;
-"\}\r?\n";                        // }
+"body \{\r?\n" +
+  "\tbackground\:white;\r?\n" +
+"\}\r?\n" +
+"div \{\r?\n" +
+  "\tfont\-size\:4em;\r?\n" +
+  "\tcolor\:red\r?\n" +
+"\}\r?\n" +
+"span \{\r?\n" +
+  "\tcolor\:green;\r?\n" +
+"\}\r?\n";
 
+/*
+  body { background: red; }
+  div {
+    font-size: 5em;
+    color: red
+  }
+*/
 const ORIGINAL_SOURCE = "" +
-"body \{ background\: red; \}\r?\n" + // body { background: red; }
-"div \{\r?\n" +                       // div {
-  "font\-size\: 5em;\r?\n" +          // font-size: 5em;
-  "color\: red\r?\n" +                // color: red
-"\}";                                 // }
+"body \{ background\: red; \}\r?\n" +
+"div \{\r?\n" +
+  "font\-size\: 5em;\r?\n" +
+  "color\: red\r?\n" +
+"\}";
 
 add_task(function* () {
   let { ui } = yield openStyleEditorForURL(TESTCASE_URI);

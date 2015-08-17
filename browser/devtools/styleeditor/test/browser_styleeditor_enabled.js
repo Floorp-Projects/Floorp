@@ -32,7 +32,8 @@ add_task(function* () {
   info("Enabling the first stylesheet again.");
   yield toggleEnabled(editor, enabledToggle, panel.panelWindow);
 
-  is(editor.styleSheet.disabled, false, "first stylesheet is now enabled again");
+  is(editor.styleSheet.disabled, false,
+     "first stylesheet is now enabled again");
   is(summary.classList.contains("disabled"), false,
      "first stylesheet is now enabled again, UI does not have DISABLED class");
 });
