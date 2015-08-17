@@ -363,6 +363,8 @@ public:
         return IsContextLost() ? 0 : mHeight;
     }
 
+    layers::LayersBackend GetCompositorBackendType() const;
+
     void
     GetContextAttributes(dom::Nullable<dom::WebGLContextAttributes>& retval);
 
