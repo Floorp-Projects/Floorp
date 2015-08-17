@@ -15,7 +15,6 @@
 #include "mozilla/dom/ClientBinding.h"
 
 class nsIDocument;
-class nsPIDOMWindow;
 
 namespace mozilla {
 namespace dom {
@@ -32,7 +31,7 @@ class ServiceWorkerClientInfo final
   friend class ServiceWorkerWindowClient;
 
 public:
-  ServiceWorkerClientInfo(nsIDocument* aDoc, nsPIDOMWindow* aWindow);
+  explicit ServiceWorkerClientInfo(nsIDocument* aDoc);
 
 private:
   nsString mClientId;
