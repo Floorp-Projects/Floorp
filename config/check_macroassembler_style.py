@@ -33,13 +33,20 @@ architecture_independent = set([ 'generic' ])
 all_architecture_names = set([ 'x86', 'x64', 'arm', 'arm64', 'mips32' ])
 all_shared_architecture_names = set([ 'x86_shared', 'arm', 'arm64', 'mips32' ])
 
+reBeforeArg = "(?<=[(,\s])"
+reArgType = "(?P<type>[\w\s:*&]+)"
+reArgName = "(?P<name>\s\w+)"
+reArgDefault = "(?P<default>(?:\s=[^,)]+)?)"
+reAfterArg = "(?=[,)])"
+reMatchArg = re.compile(reBeforeArg + reArgType + reArgName + reArgDefault + reAfterArg)
+
 def get_normalized_signatures(signature, fileAnnot = None):
     # Remove semicolon.
     signature = signature.replace(';', ' ')
     # Normalize spaces.
     signature = re.sub(r'\s+', ' ', signature).strip()
-    # Remove argument names.
-    signature = re.sub(r'(?P<type>(?:[(]|,\s)[\w\s:*&]+)(?P<name>\s\w+)(?=[,)])', '\g<type>', signature)
+    # Match arguments, and keep only the type.
+    signature = reMatchArg.sub('\g<type>', signature)
     # Remove class name
     signature = signature.replace('MacroAssembler::', '')
 
