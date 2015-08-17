@@ -51,6 +51,9 @@ Animation::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 void
 Animation::SetEffect(KeyframeEffectReadOnly* aEffect)
 {
+  // FIXME: We should perform an early return if aEffect == mEffect but
+  // current nsAnimationManager::CheckAnimationRule is relying on this
+  // method updating timing even in that case.
   if (mEffect) {
     mEffect->SetParentTime(Nullable<TimeDuration>());
   }
@@ -58,7 +61,8 @@ Animation::SetEffect(KeyframeEffectReadOnly* aEffect)
   if (mEffect) {
     mEffect->SetParentTime(GetCurrentTime());
   }
-  UpdateRelevance();
+
+  UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
 }
 
 void
