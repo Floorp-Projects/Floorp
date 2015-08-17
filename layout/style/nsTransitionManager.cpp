@@ -903,48 +903,5 @@ nsTransitionManager::WillRefresh(mozilla::TimeStamp aTime)
     return;
   }
 
-  FlushTransitions(Can_Throttle);
-}
-
-void
-nsTransitionManager::FlushTransitions(FlushFlags aFlags)
-{
-  if (PR_CLIST_IS_EMPTY(&mElementCollections)) {
-    // no transitions, leave early
-    return;
-  }
-
-  TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
-  // Post restyle events for frames that are transitioning.
-  {
-    PRCList *next = PR_LIST_HEAD(&mElementCollections);
-    while (next != &mElementCollections) {
-      AnimationCollection* collection = static_cast<AnimationCollection*>(next);
-      next = PR_NEXT_LINK(next);
-
-      if (collection->mStyleRuleRefreshTime == now) {
-        continue;
-      }
-
-      nsAutoAnimationMutationBatch mb(collection->mElement);
-
-      collection->Tick();
-
-      bool canThrottleTick = aFlags == Can_Throttle;
-
-      // Look for any transitions that can't be throttled because they
-      // may be starting or stopping
-      for (auto iter = collection->mAnimations.cbegin();
-           canThrottleTick && iter != collection->mAnimations.cend();
-           ++iter) {
-        canThrottleTick &= (*iter)->CanThrottle();
-      }
-
-      collection->RequestRestyle(canThrottleTick ?
-                                 AnimationCollection::RestyleType::Throttled :
-                                 AnimationCollection::RestyleType::Standard);
-    }
-  }
-
-  MaybeStartOrStopObservingRefreshDriver();
+  FlushAnimations(Can_Throttle);
 }

@@ -277,8 +277,6 @@ public:
   // nsARefreshObserver
   virtual void WillRefresh(mozilla::TimeStamp aTime) override;
 
-  void FlushTransitions(FlushFlags aFlags);
-
   void QueueEvent(mozilla::TransitionEventInfo&& aEventInfo)
   {
     mEventDispatcher.QueueEvent(

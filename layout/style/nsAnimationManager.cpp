@@ -957,36 +957,3 @@ nsAnimationManager::WillRefresh(mozilla::TimeStamp aTime)
 
   FlushAnimations(Can_Throttle);
 }
-
-void
-nsAnimationManager::FlushAnimations(FlushFlags aFlags)
-{
-  TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
-  for (PRCList *l = PR_LIST_HEAD(&mElementCollections);
-       l != &mElementCollections;
-       l = PR_NEXT_LINK(l)) {
-    AnimationCollection* collection = static_cast<AnimationCollection*>(l);
-
-    if (collection->mStyleRuleRefreshTime == now) {
-      continue;
-    }
-
-    nsAutoAnimationMutationBatch mb(collection->mElement);
-
-    collection->Tick();
-
-    bool canThrottleTick = aFlags == Can_Throttle;
-
-    for (auto iter = collection->mAnimations.cbegin();
-         canThrottleTick && iter != collection->mAnimations.cend();
-         ++iter) {
-      canThrottleTick &= (*iter)->CanThrottle();
-    }
-
-    collection->RequestRestyle(canThrottleTick ?
-                               AnimationCollection::RestyleType::Throttled :
-                               AnimationCollection::RestyleType::Standard);
-  }
-
-  MaybeStartOrStopObservingRefreshDriver();
-}
