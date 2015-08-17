@@ -20,7 +20,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1042881
 
 SimpleTest.waitForExplicitFinish();
 
-let appManifestURL = "http://mochi.test:8888/tests/dom/apps/tests/addons/update.webapp";
+const baseURL = "http://mochi.test:8888/tests/dom/apps/tests/addons/";
+
+const appManifestURL        = baseURL + "update.webapp";
+const invalidAppManifestURL = baseURL + "invalid.webapp";
 
 let gGenerator = runTest();
 
@@ -68,7 +71,7 @@ function openPage(pageURL, messages) {
 
 let apps = [];
 
-function installApp(manifestURL) {
+function installApp(manifestURL, expectedError) {
   info("About to install app at " + manifestURL);
   let req = navigator.mozApps.installPackage(manifestURL);
   req.onsuccess = function() {
@@ -80,6 +83,15 @@ function installApp(manifestURL) {
     } else {
       req.result.ondownloadapplied = function() {
         is(req.result.installState, "installed", "app downloaded");
+        continueTest();
+      }
+
+      req.result.ondownloaderror = function() {
+        if (expectedError) {
+          is(req.result.downloadError.name, "MANIFEST_MISMATCH");
+        } else {
+          ok(false, "unexpected installation error: " + req.result.downloadError.name);
+        }
         continueTest();
       }
     }
@@ -110,14 +122,27 @@ function runTest() {
   SpecialPowers.autoConfirmAppUninstall(continueTest);
   yield undefined;
 
+  // Install addon app with an invalid manifest.
+  installApp(invalidAppManifestURL, true);
+  yield undefined;
+
+  // Uninstall the invalid app.
+  while (apps.length) {
+    let app = apps.pop();
+    req = navigator.mozApps.mgmt.uninstall(app);
+    req.onsuccess = continueTest;
+    req.onerror = mozAppsError;
+    yield undefined;
+  }
+
   // Opens the iframe to the test page, initial state.
   openPage("http://mochi.test:8888/tests/dom/apps/tests/addons/index.html",
     ["Lorem ipsum", "rgb(0, 0, 0)",
      "Uncustomized content", "rgb(0, 0, 0)"]);
   yield undefined;
 
-  // Install addon app.
-  installApp(appManifestURL);
+  // Install valid addon app.
+  installApp(appManifestURL, false);
   yield undefined;
 
   // Opens the iframe to the test page, customized.
