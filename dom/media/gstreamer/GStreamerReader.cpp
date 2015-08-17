@@ -873,6 +873,9 @@ GStreamerReader::Seek(int64_t aTarget, int64_t aEndTime)
 media::TimeIntervals GStreamerReader::GetBuffered()
 {
   MOZ_ASSERT(OnTaskQueue());
+  if (!HaveStartTime()) {
+    return media::TimeIntervals();
+  }
   media::TimeIntervals buffered;
   if (!mInfo.HasValidMedia()) {
     return buffered;
