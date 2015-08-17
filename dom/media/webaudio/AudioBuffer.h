@@ -43,9 +43,10 @@ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(AudioBuffer)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(AudioBuffer)
 
-  AudioContext* GetParentObject() const
+  nsPIDOMWindow* GetParentObject() const
   {
-    return mContext;
+    nsCOMPtr<nsPIDOMWindow> parentObject = do_QueryReferent(mOwnerWindow);
+    return parentObject;
   }
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
@@ -104,7 +105,7 @@ protected:
   bool RestoreJSChannelData(JSContext* aJSContext);
   void ClearJSChannels();
 
-  nsRefPtr<AudioContext> mContext;
+  nsWeakPtr mOwnerWindow;
   // Float32Arrays
   nsAutoTArray<JS::Heap<JSObject*>, 2> mJSChannels;
 
