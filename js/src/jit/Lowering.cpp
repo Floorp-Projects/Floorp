@@ -557,6 +557,16 @@ LIRGenerator::visitAssertRecoveredOnBailout(MAssertRecoveredOnBailout* assertion
 }
 
 void
+LIRGenerator::visitArraySplice(MArraySplice* ins)
+{
+    LArraySplice* lir = new(alloc()) LArraySplice(useRegisterAtStart(ins->object()),
+                                                  useRegisterAtStart(ins->start()),
+                                                  useRegisterAtStart(ins->deleteCount()));
+    add(lir, ins);
+    assignSafepoint(lir, ins);
+}
+
+void
 LIRGenerator::visitGetDynamicName(MGetDynamicName* ins)
 {
     MDefinition* scopeChain = ins->getScopeChain();

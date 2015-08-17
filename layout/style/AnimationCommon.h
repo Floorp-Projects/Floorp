@@ -62,6 +62,9 @@ public:
   virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
     const MOZ_MUST_OVERRIDE override;
 
+  // nsARefreshObserver
+  void WillRefresh(TimeStamp aTime) override;
+
 #ifdef DEBUG
   static void Initialize();
 #endif
@@ -105,6 +108,7 @@ public:
     Can_Throttle,
     Cannot_Throttle
   };
+  void FlushAnimations(FlushFlags aFlags);
 
   nsIStyleRule* GetAnimationRule(dom::Element* aElement,
                                  nsCSSPseudoElements::Type aPseudoType);
@@ -249,6 +253,7 @@ struct AnimationCollection : public PRCList
     , mAnimationGeneration(0)
     , mCheckGeneration(0)
     , mNeedsRefreshes(true)
+    , mHasPendingAnimationRestyle(false)
 #ifdef DEBUG
     , mCalledPropertyDtor(false)
 #endif
@@ -278,10 +283,6 @@ struct AnimationCollection : public PRCList
 
   void EnsureStyleRuleFor(TimeStamp aRefreshTime, EnsureStyleRuleFlags aFlags);
 
-  bool CanThrottleTransformChanges(TimeStamp aTime);
-
-  bool CanThrottleAnimation(TimeStamp aTime);
-
   enum CanAnimateFlags {
     // Testing for width, height, top, right, bottom, or left.
     CanAnimate_HasGeometricProperty = 1,
@@ -290,11 +291,24 @@ struct AnimationCollection : public PRCList
     CanAnimate_AllowPartial = 2
   };
 
+  enum class RestyleType {
+    // Animation style has changed but the compositor is applying the same
+    // change so we might be able to defer updating the main thread until it
+    // becomes necessary.
+    Throttled,
+    // Animation style has changed and needs to be updated on the main thread.
+    Standard
+  };
+  void RequestRestyle(RestyleType aRestyleType);
+
 private:
   static bool
   CanAnimatePropertyOnCompositor(const dom::Element *aElement,
                                  nsCSSProperty aProperty,
                                  CanAnimateFlags aFlags);
+
+  bool CanThrottleAnimation(TimeStamp aTime);
+  bool CanThrottleTransformChanges(TimeStamp aTime);
 
 public:
   static bool IsCompositorAnimationDisabledForFrame(nsIFrame* aFrame);
@@ -433,6 +447,12 @@ public:
   // indefinitely into the future (because all of our animations are
   // either completed or paused).  May be invalidated by a style change.
   bool mNeedsRefreshes;
+
+private:
+  // Whether or not we have already posted for animation restyle.
+  // This is used to avoid making redundant requests and is reset each time
+  // the animation restyle is performed.
+  bool mHasPendingAnimationRestyle;
 
 #ifdef DEBUG
   bool mCalledPropertyDtor;

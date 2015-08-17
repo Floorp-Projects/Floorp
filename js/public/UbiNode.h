@@ -13,12 +13,16 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
+#include "mozilla/RangedPtr.h"
+#include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Variant.h"
 
 #include "jspubtd.h"
 
 #include "js/GCAPI.h"
 #include "js/HashTable.h"
+#include "js/RootingAPI.h"
 #include "js/TracingAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Vector.h"
@@ -139,25 +143,292 @@
 // teach the GC how to root ubi::Nodes, fix up hash tables that use them as
 // keys, etc.
 
+class JSAtom;
+
 namespace JS {
 namespace ubi {
 
 class Edge;
 class EdgeRange;
+class StackFrame;
 
 } // namespace ubi
 } // namespace JS
 
 namespace mozilla {
+
 template<>
 class DefaultDelete<JS::ubi::EdgeRange> : public JS::DeletePolicy<JS::ubi::EdgeRange> { };
+
+template<>
+class DefaultDelete<JS::ubi::StackFrame> : public JS::DeletePolicy<JS::ubi::StackFrame> { };
+
 } // namespace mozilla
 
 namespace JS {
 namespace ubi {
 
 using mozilla::Maybe;
+using mozilla::Move;
+using mozilla::RangedPtr;
 using mozilla::UniquePtr;
+using mozilla::Variant;
+
+/*** ubi::StackFrame ******************************************************************************/
+
+// Concrete JS::ubi::StackFrame instances backed by a live SavedFrame object
+// store their strings as JSAtom*, while deserialized stack frames from offline
+// heap snapshots store their strings as const char16_t*. In order to provide
+// zero-cost accessors to these strings in a single interface that works with
+// both cases, we use this variant type.
+using AtomOrTwoByteChars = Variant<JSAtom*, const char16_t*>;
+
+// The base class implemented by each ConcreteStackFrame<T> type. Subclasses
+// must not add data members to this class.
+class BaseStackFrame {
+    friend class StackFrame;
+
+    BaseStackFrame(const StackFrame&) = delete;
+    BaseStackFrame& operator=(const StackFrame&) = delete;
+
+  protected:
+    void* ptr;
+    explicit BaseStackFrame(void* ptr) : ptr(ptr) { }
+
+  public:
+    // This is a value type that should not have a virtual destructor. Don't add
+    // destructors in subclasses!
+
+    // Get a unique identifier for this StackFrame. The identifier is not valid
+    // across garbage collections.
+    virtual uintptr_t identifier() const { return reinterpret_cast<uintptr_t>(ptr); }
+
+    // Get this frame's parent frame.
+    virtual StackFrame parent() const = 0;
+
+    // Get this frame's line number.
+    virtual uint32_t line() const = 0;
+
+    // Get this frame's column number.
+    virtual uint32_t column() const = 0;
+
+    // Get this frame's source name. Never null.
+    virtual AtomOrTwoByteChars source() const = 0;
+
+    // Return this frame's function name if named, otherwise the inferred
+    // display name. Can be null.
+    virtual AtomOrTwoByteChars functionDisplayName() const = 0;
+
+    // Returns true if this frame's function is system JavaScript running with
+    // trusted principals, false otherwise.
+    virtual bool isSystem() const = 0;
+
+    // Return true if this frame's function is a self-hosted JavaScript builtin,
+    // false otherwise.
+    virtual bool isSelfHosted() const = 0;
+
+    // Construct a SavedFrame stack for the stack starting with this frame and
+    // containing all of its parents. The SavedFrame objects will be placed into
+    // cx's current compartment.
+    //
+    // Note that the process of
+    //
+    //     SavedFrame
+    //         |
+    //         V
+    //     JS::ubi::StackFrame
+    //         |
+    //         V
+    //     offline heap snapshot
+    //         |
+    //         V
+    //     JS::ubi::StackFrame
+    //         |
+    //         V
+    //     SavedFrame
+    //
+    // is lossy because we cannot serialize and deserialize the SavedFrame's
+    // principals in the offline heap snapshot, so JS::ubi::StackFrame
+    // simplifies the principals check into the boolean isSystem() state. This
+    // is fine because we only expose JS::ubi::Stack to devtools and chrome
+    // code, and not to the web platform.
+    virtual bool constructSavedFrameStack(JSContext* cx,
+                                          MutableHandleObject outSavedFrameStack) const = 0;
+
+    // Trace the concrete implementation of JS::ubi::StackFrame.
+    virtual void trace(JSTracer* trc) = 0;
+};
+
+// A traits template with a specialization for each backing type that implements
+// the ubi::BaseStackFrame interface. Each specialization must be the a subclass
+// of ubi::BaseStackFrame.
+template<typename T> class ConcreteStackFrame;
+
+// A JS::ubi::StackFrame represents a frame in a recorded stack. It can be
+// backed either by a live SavedFrame object or by a structure deserialized from
+// an offline heap snapshot.
+//
+// It is a value type that may be memcpy'd hither and thither without worrying
+// about constructors or destructors, similar to POD types.
+//
+// Its lifetime is the same as the lifetime of the graph that is being analyzed
+// by the JS::ubi::Node that the JS::ubi::StackFrame came from. That is, if the
+// graph being analyzed is the live heap graph, the JS::ubi::StackFrame is only
+// valid within the scope of an AutoCheckCannotGC; if the graph being analyzed
+// is an offline heap snapshot, the JS::ubi::StackFrame is valid as long as the
+// offline heap snapshot is alive.
+class StackFrame : public JS::Traceable {
+    // Storage in which we allocate BaseStackFrame subclasses.
+    mozilla::AlignedStorage2<BaseStackFrame> storage;
+
+    BaseStackFrame* base() { return storage.addr(); }
+    const BaseStackFrame* base() const { return storage.addr(); }
+
+    template<typename T>
+    void construct(T* ptr) {
+        static_assert(mozilla::IsBaseOf<BaseStackFrame, ConcreteStackFrame<T>>::value,
+                      "ConcreteStackFrame<T> must inherit from BaseStackFrame");
+        static_assert(sizeof(ConcreteStackFrame<T>) == sizeof(*base()),
+                      "ubi::ConcreteStackFrame<T> specializations must be the same size as "
+                      "ubi::BaseStackFrame");
+        ConcreteStackFrame<T>::construct(base(), ptr);
+    }
+    struct ConstructFunctor;
+
+  public:
+    StackFrame() { construct<void>(nullptr); }
+
+    template<typename T>
+    MOZ_IMPLICIT StackFrame(T* ptr) {
+        construct(ptr);
+    }
+
+    template<typename T>
+    StackFrame& operator=(T* ptr) {
+        construct(ptr);
+        return *this;
+    }
+
+    // Constructors accepting SpiderMonkey's generic-pointer-ish types.
+
+    template<typename T>
+    explicit StackFrame(const JS::Handle<T*>& handle) {
+        construct(handle.get());
+    }
+
+    template<typename T>
+    StackFrame& operator=(const JS::Handle<T*>& handle) {
+        construct(handle.get());
+        return *this;
+    }
+
+    template<typename T>
+    explicit StackFrame(const JS::Rooted<T*>& root) {
+        construct(root.get());
+    }
+
+    template<typename T>
+    StackFrame& operator=(const JS::Rooted<T*>& root) {
+        construct(root.get());
+        return *this;
+    }
+
+    // Because StackFrame is just a vtable pointer and an instance pointer, we
+    // can memcpy everything around instead of making concrete classes define
+    // virtual constructors. See the comment above Node's copy constructor for
+    // more details; that comment applies here as well.
+    StackFrame(const StackFrame& rhs) {
+        memcpy(storage.u.mBytes, rhs.storage.u.mBytes, sizeof(storage.u));
+    }
+
+    StackFrame& operator=(const StackFrame& rhs) {
+        memcpy(storage.u.mBytes, rhs.storage.u.mBytes, sizeof(storage.u));
+        return *this;
+    }
+
+    bool operator==(const StackFrame& rhs) const { return base()->ptr == rhs.base()->ptr; }
+    bool operator!=(const StackFrame& rhs) const { return !(*this == rhs); }
+
+    explicit operator bool() const {
+        return base()->ptr != nullptr;
+    }
+
+    // Copy this StackFrame's source name into the given |destination|
+    // buffer. Copy no more than |length| characters. The result is *not* null
+    // terminated. Returns how many characters were written into the buffer.
+    size_t source(RangedPtr<char16_t> destination, size_t length) const;
+
+    // Copy this StackFrame's function display name into the given |destination|
+    // buffer. Copy no more than |length| characters. The result is *not* null
+    // terminated. Returns how many characters were written into the buffer.
+    size_t functionDisplayName(RangedPtr<char16_t> destination, size_t length) const;
+
+    // JS::Traceable implementation just forwards to our virtual trace method.
+    static void trace(StackFrame* frame, JSTracer* trc) {
+        if (frame)
+            frame->trace(trc);
+    }
+
+    // Methods that forward to virtual calls through BaseStackFrame.
+
+    void trace(JSTracer* trc) { base()->trace(trc); }
+    uintptr_t identifier() const { return base()->identifier(); }
+    uint32_t line() const { return base()->line(); }
+    uint32_t column() const { return base()->column(); }
+    AtomOrTwoByteChars source() const { return base()->source(); }
+    AtomOrTwoByteChars functionDisplayName() const { return base()->functionDisplayName(); }
+    StackFrame parent() const { return base()->parent(); }
+    bool isSystem() const { return base()->isSystem(); }
+    bool isSelfHosted() const { return base()->isSelfHosted(); }
+    bool constructSavedFrameStack(JSContext* cx,
+                                  MutableHandleObject outSavedFrameStack) const {
+        return base()->constructSavedFrameStack(cx, outSavedFrameStack);
+    }
+
+    struct HashPolicy {
+        using Lookup = JS::ubi::StackFrame;
+
+        static js::HashNumber hash(const Lookup& lookup) {
+            return lookup.identifier();
+        }
+
+        static bool match(const StackFrame& key, const Lookup& lookup) {
+            return key == lookup;
+        }
+
+        static void rekey(StackFrame& k, const StackFrame& newKey) {
+            k = newKey;
+        }
+    };
+};
+
+// The ubi::StackFrame null pointer. Any attempt to operate on a null
+// ubi::StackFrame crashes.
+template<>
+class ConcreteStackFrame<void> : public BaseStackFrame {
+    explicit ConcreteStackFrame(void* ptr) : BaseStackFrame(ptr) { }
+
+  public:
+    static void construct(void* storage, void*) { new (storage) ConcreteStackFrame(nullptr); }
+
+    uintptr_t identifier() const override { return 0; }
+    void trace(JSTracer* trc) override { }
+    bool constructSavedFrameStack(JSContext* cx, MutableHandleObject out) const override {
+        out.set(nullptr);
+        return true;
+    }
+
+    uint32_t line() const override { MOZ_CRASH("null JS::ubi::StackFrame"); }
+    uint32_t column() const override { MOZ_CRASH("null JS::ubi::StackFrame"); }
+    AtomOrTwoByteChars source() const override { MOZ_CRASH("null JS::ubi::StackFrame"); }
+    AtomOrTwoByteChars functionDisplayName() const override { MOZ_CRASH("null JS::ubi::StackFrame"); }
+    StackFrame parent() const override { MOZ_CRASH("null JS::ubi::StackFrame"); }
+    bool isSystem() const override { MOZ_CRASH("null JS::ubi::StackFrame"); }
+    bool isSelfHosted() const override { MOZ_CRASH("null JS::ubi::StackFrame"); }
+};
+
+
+/*** ubi::Node ************************************************************************************/
 
 // The base class implemented by each ubi::Node referent type. Subclasses must
 // not add data members to this class.
@@ -236,6 +507,16 @@ class Base {
     // with Zones). When the referent is not associated with a compartment,
     // nullptr is returned.
     virtual JSCompartment* compartment() const { return nullptr; }
+
+    // Return whether this node's referent's allocation stack was captured.
+    virtual bool hasAllocationStack() const { return false; }
+
+    // Get the stack recorded at the time this node's referent was
+    // allocated. This must only be called when hasAllocationStack() is true.
+    virtual StackFrame allocationStack() const {
+        MOZ_CRASH("Concrete classes that have an allocation stack must override both "
+                  "hasAllocationStack and allocationStack.");
+    }
 
     // Methods for JSObject Referents
     //
@@ -400,6 +681,11 @@ class Node {
         return base()->edges(cx, wantNames);
     }
 
+    bool hasAllocationStack() const { return base()->hasAllocationStack(); }
+    StackFrame allocationStack() const {
+        return base()->allocationStack();
+    }
+
     typedef Base::Id Id;
     Id identifier() const { return base()->identifier(); }
 
@@ -418,6 +704,8 @@ class Node {
     };
 };
 
+
+/*** Edge and EdgeRange ***************************************************************************/
 
 // Edge is the abstract base class representing an outgoing edge of a node.
 // Edges are owned by EdgeRanges, and need not have assignment operators or copy
@@ -549,6 +837,7 @@ class PreComputedEdgeRange : public EdgeRange {
     }
 };
 
+/*** RootList *************************************************************************************/
 
 // RootList is a class that can be pointed to by a |ubi::Node|, creating a
 // fictional root-of-roots which has edges to every GC root in the JS
@@ -606,7 +895,7 @@ class MOZ_STACK_CLASS RootList {
 };
 
 
-// Concrete classes for ubi::Node referent types.
+/*** Concrete classes for ubi::Node referent types ************************************************/
 
 template<>
 struct Concrete<RootList> : public Base {
@@ -667,6 +956,9 @@ class Concrete<JSObject> : public TracerConcreteWithCompartment<JSObject> {
                                  UniquePtr<char16_t[], JS::FreePolicy>& outName) const override;
     size_t size(mozilla::MallocSizeOf mallocSizeOf) const override;
 
+    bool hasAllocationStack() const override;
+    StackFrame allocationStack() const override;
+
   protected:
     explicit Concrete(JSObject* ptr) : TracerConcreteWithCompartment(ptr) { }
 
@@ -711,6 +1003,7 @@ namespace js {
 
 // Make ubi::Node::HashPolicy the default hash policy for ubi::Node.
 template<> struct DefaultHasher<JS::ubi::Node> : JS::ubi::Node::HashPolicy { };
+template<> struct DefaultHasher<JS::ubi::StackFrame> : JS::ubi::StackFrame::HashPolicy { };
 
 } // namespace js
 

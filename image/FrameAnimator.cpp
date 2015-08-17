@@ -281,7 +281,7 @@ FrameAnimator::GetCompositedFrame(uint32_t aFrameNum)
   LookupResult result =
     SurfaceCache::Lookup(ImageKey(mImage),
                          RasterSurfaceKey(mSize,
-                                          0,  // Default decode flags.
+                                          DefaultSurfaceFlags(),
                                           aFrameNum));
   MOZ_ASSERT(!result || !result.DrawableRef()->GetIsPaletted(),
              "About to return a paletted frame");
@@ -332,7 +332,7 @@ DoCollectSizeOfCompositingSurfaces(const RawAccessFrameRef& aSurface,
 {
   // Concoct a SurfaceKey for this surface.
   SurfaceKey key = RasterSurfaceKey(aSurface->GetImageSize(),
-                                    imgIContainer::DECODE_FLAGS_DEFAULT,
+                                    DefaultSurfaceFlags(),
                                     /* aFrameNum = */ 0);
 
   // Create a counter for this surface.
@@ -374,7 +374,7 @@ FrameAnimator::GetRawFrame(uint32_t aFrameNum) const
   LookupResult result =
     SurfaceCache::Lookup(ImageKey(mImage),
                          RasterSurfaceKey(mSize,
-                                          0,  // Default decode flags.
+                                          DefaultSurfaceFlags(),
                                           aFrameNum));
   return result ? result.DrawableRef()->RawAccessRef()
                 : RawAccessFrameRef();

@@ -47,35 +47,37 @@ public:
   static void Dispatch(RasterImage* aImage,
                        Progress aProgress,
                        const nsIntRect& aInvalidRect,
-                       uint32_t aFlags)
+                       SurfaceFlags aSurfaceFlags)
   {
     MOZ_ASSERT(aImage);
 
     nsCOMPtr<nsIRunnable> worker =
-      new NotifyProgressWorker(aImage, aProgress, aInvalidRect, aFlags);
+      new NotifyProgressWorker(aImage, aProgress, aInvalidRect, aSurfaceFlags);
     NS_DispatchToMainThread(worker);
   }
 
   NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
-    mImage->NotifyProgress(mProgress, mInvalidRect, mFlags);
+    mImage->NotifyProgress(mProgress, mInvalidRect, mSurfaceFlags);
     return NS_OK;
   }
 
 private:
-  NotifyProgressWorker(RasterImage* aImage, Progress aProgress,
-                       const nsIntRect& aInvalidRect, uint32_t aFlags)
+  NotifyProgressWorker(RasterImage* aImage,
+                       Progress aProgress,
+                       const nsIntRect& aInvalidRect,
+                       SurfaceFlags aSurfaceFlags)
     : mImage(aImage)
     , mProgress(aProgress)
     , mInvalidRect(aInvalidRect)
-    , mFlags(aFlags)
+    , mSurfaceFlags(aSurfaceFlags)
   { }
 
   nsRefPtr<RasterImage> mImage;
   const Progress mProgress;
   const nsIntRect mInvalidRect;
-  const uint32_t mFlags;
+  const SurfaceFlags mSurfaceFlags;
 };
 
 class NotifyDecodeCompleteWorker : public nsRunnable
@@ -470,17 +472,17 @@ DecodePool::NotifyProgress(Decoder* aDecoder)
   MOZ_ASSERT(aDecoder);
 
   if (!NS_IsMainThread() ||
-      (aDecoder->GetFlags() & imgIContainer::FLAG_ASYNC_NOTIFY)) {
+      (aDecoder->GetDecoderFlags() & DecoderFlags::ASYNC_NOTIFY)) {
     NotifyProgressWorker::Dispatch(aDecoder->GetImage(),
                                    aDecoder->TakeProgress(),
                                    aDecoder->TakeInvalidRect(),
-                                   aDecoder->GetDecodeFlags());
+                                   aDecoder->GetSurfaceFlags());
     return;
   }
 
   aDecoder->GetImage()->NotifyProgress(aDecoder->TakeProgress(),
                                        aDecoder->TakeInvalidRect(),
-                                       aDecoder->GetDecodeFlags());
+                                       aDecoder->GetSurfaceFlags());
 }
 
 void
@@ -489,7 +491,7 @@ DecodePool::NotifyDecodeComplete(Decoder* aDecoder)
   MOZ_ASSERT(aDecoder);
 
   if (!NS_IsMainThread() ||
-      (aDecoder->GetFlags() & imgIContainer::FLAG_ASYNC_NOTIFY)) {
+      (aDecoder->GetDecoderFlags() & DecoderFlags::ASYNC_NOTIFY)) {
     NotifyDecodeCompleteWorker::Dispatch(aDecoder);
     return;
   }

@@ -7,6 +7,8 @@
 #ifndef vm_SavedFrame_h
 #define vm_SavedFrame_h
 
+#include "js/UbiNode.h"
+
 namespace js {
 
 class SavedFrame : public NativeObject {
@@ -108,5 +110,50 @@ struct SavedFrame::HashPolicy
 inline void AssertObjectIsSavedFrameOrWrapper(JSContext* cx, HandleObject stack);
 
 } // namespace js
+
+namespace JS {
+namespace ubi {
+
+using js::SavedFrame;
+
+// A concrete JS::ubi::StackFrame that is backed by a live SavedFrame object.
+template<>
+class ConcreteStackFrame<SavedFrame> : public BaseStackFrame {
+    explicit ConcreteStackFrame(SavedFrame* ptr) : BaseStackFrame(ptr) { }
+    SavedFrame& get() const { return *static_cast<SavedFrame*>(ptr); }
+
+  public:
+    static void construct(void* storage, SavedFrame* ptr) { new (storage) ConcreteStackFrame(ptr); }
+
+    StackFrame parent() const override { return get().getParent(); }
+    uint32_t line() const override { return get().getLine(); }
+    uint32_t column() const override { return get().getColumn(); }
+
+    AtomOrTwoByteChars source() const override {
+        auto source = get().getSource();
+        return AtomOrTwoByteChars(source);
+    }
+
+    AtomOrTwoByteChars functionDisplayName() const override {
+        auto name = get().getFunctionDisplayName();
+        return AtomOrTwoByteChars(name);
+    }
+
+    void trace(JSTracer* trc) override {
+        JSObject* obj = &get();
+        js::TraceManuallyBarrieredEdge(trc, &obj, "ConcreteStackFrame<SavedFrame>::ptr");
+        ptr = obj;
+    }
+
+    bool isSelfHosted() const override { return get().isSelfHosted(); }
+
+    bool isSystem() const override;
+
+    bool constructSavedFrameStack(JSContext* cx,
+                                 MutableHandleObject outSavedFrameStack) const override;
+};
+
+} // namespace ubi
+} // namespace JS
 
 #endif // vm_SavedFrame_h
