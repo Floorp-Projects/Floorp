@@ -258,8 +258,6 @@ public:
   // nsARefreshObserver
   virtual void WillRefresh(mozilla::TimeStamp aTime) override;
 
-  void FlushAnimations(FlushFlags aFlags);
-
   /**
    * Return the style rule that RulesMatching should add for
    * aStyleContext.  This might be different from what RulesMatching
