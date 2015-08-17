@@ -29,7 +29,6 @@ import re
 from mozharness.base.config import BaseConfig, parse_config_file
 from mozharness.base.log import ERROR, OutputParser, FATAL
 from mozharness.base.script import PostScriptRun
-from mozharness.base.transfer import TransferMixin
 from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.buildbot import BuildbotMixin, TBPL_STATUS_DICT, \
     TBPL_EXCEPTION, TBPL_RETRY, EXIT_STATUS_DICT, TBPL_WARNING, TBPL_SUCCESS, \
@@ -534,7 +533,7 @@ def generate_build_UID():
 
 class BuildScript(BuildbotMixin, PurgeMixin, MockMixin, BalrogMixin,
                   SigningMixin, VirtualenvMixin, MercurialScript,
-                  TransferMixin, InfluxRecordingMixin):
+                  InfluxRecordingMixin):
     def __init__(self, **kwargs):
         # objdir is referenced in _query_abs_dirs() so let's make sure we
         # have that attribute before calling BaseScript.__init__
@@ -559,7 +558,6 @@ class BuildScript(BuildbotMixin, PurgeMixin, MockMixin, BalrogMixin,
         self.repo_path = None
         self.buildid = None
         self.builduid = None
-        self.pushdate = None
         self.query_buildid()  # sets self.buildid
         self.query_builduid()  # sets self.builduid
         self.generated_build_props = False
@@ -734,39 +732,6 @@ or run without that action (ie: --no-{action})"
 
         self.buildid = buildid
         return self.buildid
-
-    def query_pushdate(self):
-        if self.pushdate:
-            return self.pushdate
-
-        try:
-            url = '%s/json-pushes?changeset=%s' % (
-                self._query_repo(),
-                self.query_revision(),
-            )
-            self.info('Pushdate URL is: %s' % url)
-            contents = self.retry(self.load_json_from_url, args=(url,))
-
-            # The contents should be something like:
-            # {
-            #   "28537": {
-            #    "changesets": [
-            #     "1d0a914ae676cc5ed203cdc05c16d8e0c22af7e5",
-            #    ],
-            #    "date": 1428072488,
-            #    "user": "user@mozilla.com"
-            #   }
-            # }
-            #
-            # So we grab the first element ("28537" in this case) and then pull
-            # out the 'date' field.
-            self.pushdate = contents.itervalues().next()['date']
-            self.info('Pushdate is: %s' % self.pushdate)
-        except Exception:
-            self.exception("Failed to get pushdate from hg.mozilla.org")
-            raise
-
-        return self.pushdate
 
     def _query_objdir(self):
         if self.objdir:
@@ -1380,6 +1345,10 @@ or run without that action (ie: --no-{action})"
             self.warning('Skipping S3 file upload: No taskcluster credentials.')
             return
 
+        repo = self._query_repo()
+        revision = self.query_revision()
+        pushinfo = self.vcs_query_pushinfo(repo, revision)
+
         # We need to create & activate the virtualenv so that we can import
         # taskcluster (and its dependent modules, like requests and hawk).
         # Normally we could create the virtualenv as an action, but due to some
@@ -1411,7 +1380,7 @@ or run without that action (ie: --no-{action})"
             fmt = {
                 'index': index,
                 'project': self.buildbot_config['properties']['branch'],
-                'head_rev': self.query_revision(),
+                'head_rev': revision,
                 'build_product': self.config['stage_product'],
                 'build_name': self.query_build_name(),
                 'build_type': self.query_build_type(),
@@ -1422,7 +1391,7 @@ or run without that action (ie: --no-{action})"
         self.info("Using routes: %s" % routes)
 
         tc = Taskcluster(self.branch,
-                         self.query_pushdate(), # Use pushdate as the rank
+                         pushinfo.pushdate, # Use pushdate as the rank
                          client_id,
                          access_token,
                          self.log_obj,
@@ -1431,7 +1400,7 @@ or run without that action (ie: --no-{action})"
         # TODO: Bug 1165980 - these should be in tree
         routes.extend([
             "%s.buildbot.branches.%s.%s" % (index, self.branch, self.stage_platform),
-            "%s.buildbot.revisions.%s.%s.%s" % (index, self.query_revision(), self.branch, self.stage_platform),
+            "%s.buildbot.revisions.%s.%s.%s" % (index, revision, self.branch, self.stage_platform),
         ])
         task = tc.create_task(routes)
         tc.claim_task(task)
