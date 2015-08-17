@@ -18,6 +18,8 @@
 #endif
 #include "jit/VMFunctions.h"
 
+#include "jit/MacroAssembler-inl.h"
+
 namespace js {
 namespace jit {
 
