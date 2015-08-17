@@ -22,9 +22,17 @@ add_task(function*() {
 
 function* testRuleView(ruleView, inspector) {
   info("Showing the tooltip");
+
   let tooltip = ruleView.tooltips.previewTooltip;
+  tooltip.setTextContent({messages: ["rule-view tooltip"]});
+  // Stop listening for mouse movements because it's not needed for this test,
+  // and causes intermittent failures on Linux. When this test runs in the suite
+  // sometimes a mouseleave event is dispatched at the start, which causes the
+  // tooltip to hide in the middle of being shown, which causes timeouts later.
+  tooltip.stopTogglingOnHover();
+
   let onShown = tooltip.once("shown");
-  tooltip.show();
+  tooltip.show(ruleView.styleDocument.firstElementChild);
   yield onShown;
 
   info("Selecting a new node");
@@ -36,9 +44,17 @@ function* testRuleView(ruleView, inspector) {
 
 function* testComputedView(computedView, inspector) {
   info("Showing the tooltip");
+
   let tooltip = computedView.tooltips.previewTooltip;
+  tooltip.setTextContent({messages: ["computed-view tooltip"]});
+  // Stop listening for mouse movements because it's not needed for this test,
+  // and causes intermittent failures on Linux. When this test runs in the suite
+  // sometimes a mouseleave event is dispatched at the start, which causes the
+  // tooltip to hide in the middle of being shown, which causes timeouts later.
+  tooltip.stopTogglingOnHover();
+
   let onShown = tooltip.once("shown");
-  tooltip.show();
+  tooltip.show(computedView.styleDocument.firstElementChild);
   yield onShown;
 
   info("Selecting a new node");
