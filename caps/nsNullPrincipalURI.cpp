@@ -87,6 +87,12 @@ nsNullPrincipalURI::GetAsciiHost(nsACString &_host)
 }
 
 NS_IMETHODIMP
+nsNullPrincipalURI::GetAsciiHostPort(nsACString &_hostport)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsNullPrincipalURI::GetAsciiSpec(nsACString &_spec)
 {
   nsAutoCString buffer;
