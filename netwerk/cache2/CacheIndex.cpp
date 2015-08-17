@@ -37,6 +37,28 @@
 namespace mozilla {
 namespace net {
 
+namespace {
+
+class FrecencyComparator
+{
+public:
+  bool Equals(CacheIndexRecord* a, CacheIndexRecord* b) const {
+    return a->mFrecency == b->mFrecency;
+  }
+  bool LessThan(CacheIndexRecord* a, CacheIndexRecord* b) const {
+    // Place entries with frecency 0 at the end of the array.
+    if (a->mFrecency == 0) {
+      return false;
+    }
+    if (b->mFrecency == 0) {
+      return true;
+    }
+    return a->mFrecency < b->mFrecency;
+  }
+};
+
+} // namespace
+
 /**
  * This helper class is responsible for keeping CacheIndex::mIndexStats and
  * CacheIndex::mFrecencyArray up to date.
@@ -47,7 +69,6 @@ public:
   CacheIndexEntryAutoManage(const SHA1Sum::Hash *aHash, CacheIndex *aIndex)
     : mIndex(aIndex)
     , mOldRecord(nullptr)
-    , mOldFrecency(0)
     , mDoNotSearchInIndex(false)
     , mDoNotSearchInUpdates(false)
   {
@@ -58,7 +79,6 @@ public:
     mIndex->mIndexStats.BeforeChange(entry);
     if (entry && entry->IsInitialized() && !entry->IsRemoved()) {
       mOldRecord = entry->mRec;
-      mOldFrecency = entry->mRec->mFrecency;
     }
   }
 
@@ -79,22 +99,9 @@ public:
       mIndex->RemoveRecordFromFrecencyArray(mOldRecord);
       mIndex->RemoveRecordFromIterators(mOldRecord);
     } else if (entry && mOldRecord) {
-      bool replaceFrecency = false;
-
       if (entry->mRec != mOldRecord) {
         // record has a different address, we have to replace it
-        replaceFrecency = true;
         mIndex->ReplaceRecordInIterators(mOldRecord, entry->mRec);
-      } else if (entry->mRec->mFrecency == 0 &&
-                 entry->mRec->mExpirationTime == nsICacheEntry::NO_EXPIRATION_TIME) {
-        // This is a special case when we want to make sure that the entry is
-        // placed at the end of the lists even when the values didn't change.
-        replaceFrecency = true;
-      } else if (entry->mRec->mFrecency != mOldFrecency) {
-        replaceFrecency = true;
-      }
-
-      if (replaceFrecency) {
         mIndex->RemoveRecordFromFrecencyArray(mOldRecord);
         mIndex->InsertRecordToFrecencyArray(entry->mRec);
       }
@@ -141,7 +148,6 @@ private:
   const SHA1Sum::Hash *mHash;
   nsRefPtr<CacheIndex> mIndex;
   CacheIndexRecord    *mOldRecord;
-  uint32_t             mOldFrecency;
   bool                 mDoNotSearchInIndex;
   bool                 mDoNotSearchInUpdates;
 };
@@ -1188,6 +1194,7 @@ CacheIndex::GetEntryForEviction(bool aIgnoreEmptyEntries, SHA1Sum::Hash *aHash, 
   uint32_t i;
 
   // find first non-forced valid entry with the lowest frecency
+  index->mFrecencyArray.Sort(FrecencyComparator());
   for (i = 0; i < index->mFrecencyArray.Length(); ++i) {
     memcpy(&hash, &index->mFrecencyArray[i]->mHash, sizeof(SHA1Sum::Hash));
 
@@ -1381,6 +1388,7 @@ CacheIndex::GetIterator(nsILoadContextInfo *aInfo, bool aAddNew,
     iter = new CacheIndexIterator(index, aAddNew);
   }
 
+  index->mFrecencyArray.Sort(FrecencyComparator());
   iter->AddRecords(index->mFrecencyArray);
 
   index->mIterators.AppendElement(iter);
@@ -3144,28 +3152,6 @@ CacheIndex::ReleaseBuffer()
   mRWBufPos = 0;
 }
 
-namespace {
-
-class FrecencyComparator
-{
-public:
-  bool Equals(CacheIndexRecord* a, CacheIndexRecord* b) const {
-    return a->mFrecency == b->mFrecency;
-  }
-  bool LessThan(CacheIndexRecord* a, CacheIndexRecord* b) const {
-    // Place entries with frecency 0 at the end of the array.
-    if (a->mFrecency == 0) {
-      return false;
-    }
-    if (b->mFrecency == 0) {
-      return true;
-    }
-    return a->mFrecency < b->mFrecency;
-  }
-};
-
-} // namespace
-
 void
 CacheIndex::InsertRecordToFrecencyArray(CacheIndexRecord *aRecord)
 {
@@ -3173,7 +3159,7 @@ CacheIndex::InsertRecordToFrecencyArray(CacheIndexRecord *aRecord)
        "%08x%08x]", aRecord, LOGSHA1(aRecord->mHash)));
 
   MOZ_ASSERT(!mFrecencyArray.Contains(aRecord));
-  mFrecencyArray.InsertElementSorted(aRecord, FrecencyComparator());
+  mFrecencyArray.AppendElement(aRecord);
 }
 
 void
