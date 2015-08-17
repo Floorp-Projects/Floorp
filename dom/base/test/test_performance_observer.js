@@ -135,6 +135,10 @@ test(t => {
                                                     "entryType": "mark"}),
                       [],
                       "getEntries with non-existent name and entryType filter should return an empty array.");
+
+  assert_array_equals(observedEntryList.getEntries({initiatorType: "xmlhttprequest"}),
+                      [],
+                      "getEntries with initiatorType filter should return an empty array.");
 }, "Test for PerformanceObserverEntryList.getEntries");
 
 test(t => {
