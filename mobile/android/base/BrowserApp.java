@@ -2952,27 +2952,6 @@ public class BrowserApp extends GeckoApp
             }
         });
 
-        if (info.icon == null) {
-            item.setIcon(R.drawable.ic_menu_addons_filler);
-        } else {
-            final int id = info.id;
-            BitmapUtils.getDrawable(this, info.icon, new BitmapUtils.BitmapLoader() {
-                @Override
-                public void onBitmapFound(Drawable d) {
-                    // TODO: why do we re-find the item?
-                    final MenuItem item = destination.findItem(id);
-                    if (item == null) {
-                        return;
-                    }
-                    if (d == null) {
-                        item.setIcon(R.drawable.ic_menu_addons_filler);
-                        return;
-                    }
-                    item.setIcon(d);
-                }
-            });
-        }
-
         item.setCheckable(info.checkable);
         item.setChecked(info.checked);
         item.setEnabled(info.enabled);
