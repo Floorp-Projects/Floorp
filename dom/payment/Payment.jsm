@@ -236,8 +236,9 @@ let PaymentManager =  {
         if (systemAppId != Ci.nsIScriptSecurityManager.NO_APP_ID) {
           this.LOG("Granting firefox-accounts permission to " + provider.uri);
           let uri = Services.io.newURI(provider.uri, null, null);
-          let principal = Services.scriptSecurityManager
-                            .getAppCodebasePrincipal(uri, systemAppId, true);
+          let attrs = {appId: systemAppId, inBrowser: true};
+          let principal =
+            Services.scriptSecurityManager.createCodebasePrincipal(uri, attrs);
 
           Services.perms.addFromPrincipal(principal, "firefox-accounts",
                                           Ci.nsIPermissionManager.ALLOW_ACTION,

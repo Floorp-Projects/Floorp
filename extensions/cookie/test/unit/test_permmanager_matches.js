@@ -45,33 +45,37 @@ function run_test() {
   let uri4_n_n = secMan.getNoAppCodebasePrincipal(uri4);
   let uri5_n_n = secMan.getNoAppCodebasePrincipal(uri5);
 
-  let uri0_1000_n = secMan.getAppCodebasePrincipal(uri0, 1000, false);
-  let uri1_1000_n = secMan.getAppCodebasePrincipal(uri1, 1000, false);
-  let uri2_1000_n = secMan.getAppCodebasePrincipal(uri2, 1000, false);
-  let uri3_1000_n = secMan.getAppCodebasePrincipal(uri3, 1000, false);
-  let uri4_1000_n = secMan.getAppCodebasePrincipal(uri4, 1000, false);
-  let uri5_1000_n = secMan.getAppCodebasePrincipal(uri5, 1000, false);
+  let attrs = {appId: 1000};
+  let uri0_1000_n = secMan.createCodebasePrincipal(uri0, attrs);
+  let uri1_1000_n = secMan.createCodebasePrincipal(uri1, attrs);
+  let uri2_1000_n = secMan.createCodebasePrincipal(uri2, attrs);
+  let uri3_1000_n = secMan.createCodebasePrincipal(uri3, attrs);
+  let uri4_1000_n = secMan.createCodebasePrincipal(uri4, attrs);
+  let uri5_1000_n = secMan.createCodebasePrincipal(uri5, attrs);
 
-  let uri0_1000_y = secMan.getAppCodebasePrincipal(uri0, 1000, true);
-  let uri1_1000_y = secMan.getAppCodebasePrincipal(uri1, 1000, true);
-  let uri2_1000_y = secMan.getAppCodebasePrincipal(uri2, 1000, true);
-  let uri3_1000_y = secMan.getAppCodebasePrincipal(uri3, 1000, true);
-  let uri4_1000_y = secMan.getAppCodebasePrincipal(uri4, 1000, true);
-  let uri5_1000_y = secMan.getAppCodebasePrincipal(uri5, 1000, true);
+  attrs = {appId: 1000, inBrowser: true};
+  let uri0_1000_y = secMan.createCodebasePrincipal(uri0, attrs);
+  let uri1_1000_y = secMan.createCodebasePrincipal(uri1, attrs);
+  let uri2_1000_y = secMan.createCodebasePrincipal(uri2, attrs);
+  let uri3_1000_y = secMan.createCodebasePrincipal(uri3, attrs);
+  let uri4_1000_y = secMan.createCodebasePrincipal(uri4, attrs);
+  let uri5_1000_y = secMan.createCodebasePrincipal(uri5, attrs);
 
-  let uri0_2000_n = secMan.getAppCodebasePrincipal(uri0, 2000, false);
-  let uri1_2000_n = secMan.getAppCodebasePrincipal(uri1, 2000, false);
-  let uri2_2000_n = secMan.getAppCodebasePrincipal(uri2, 2000, false);
-  let uri3_2000_n = secMan.getAppCodebasePrincipal(uri3, 2000, false);
-  let uri4_2000_n = secMan.getAppCodebasePrincipal(uri4, 2000, false);
-  let uri5_2000_n = secMan.getAppCodebasePrincipal(uri5, 2000, false);
+  attrs = {appId: 2000};
+  let uri0_2000_n = secMan.createCodebasePrincipal(uri0, attrs);
+  let uri1_2000_n = secMan.createCodebasePrincipal(uri1, attrs);
+  let uri2_2000_n = secMan.createCodebasePrincipal(uri2, attrs);
+  let uri3_2000_n = secMan.createCodebasePrincipal(uri3, attrs);
+  let uri4_2000_n = secMan.createCodebasePrincipal(uri4, attrs);
+  let uri5_2000_n = secMan.createCodebasePrincipal(uri5, attrs);
 
-  let uri0_2000_y = secMan.getAppCodebasePrincipal(uri0, 2000, true);
-  let uri1_2000_y = secMan.getAppCodebasePrincipal(uri1, 2000, true);
-  let uri2_2000_y = secMan.getAppCodebasePrincipal(uri2, 2000, true);
-  let uri3_2000_y = secMan.getAppCodebasePrincipal(uri3, 2000, true);
-  let uri4_2000_y = secMan.getAppCodebasePrincipal(uri4, 2000, true);
-  let uri5_2000_y = secMan.getAppCodebasePrincipal(uri5, 2000, true);
+  attrs = {appId: 2000, inBrowser: true};
+  let uri0_2000_y = secMan.createCodebasePrincipal(uri0, attrs);
+  let uri1_2000_y = secMan.createCodebasePrincipal(uri1, attrs);
+  let uri2_2000_y = secMan.createCodebasePrincipal(uri2, attrs);
+  let uri3_2000_y = secMan.createCodebasePrincipal(uri3, attrs);
+  let uri4_2000_y = secMan.createCodebasePrincipal(uri4, attrs);
+  let uri5_2000_y = secMan.createCodebasePrincipal(uri5, attrs);
 
   pm.addFromPrincipal(uri0_n_n, "test/matches", pm.ALLOW_ACTION);
   let perm_n_n = pm.getPermissionObject(uri0_n_n, "test/matches", true);

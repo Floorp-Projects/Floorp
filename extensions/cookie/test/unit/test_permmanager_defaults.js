@@ -55,8 +55,9 @@ add_task(function* do_test() {
   let principalHttps = Services.scriptSecurityManager.getNoAppCodebasePrincipal(TEST_ORIGIN_HTTPS);
   let principal2 = Services.scriptSecurityManager.getNoAppCodebasePrincipal(TEST_ORIGIN_2);
   let principal3 = Services.scriptSecurityManager.getNoAppCodebasePrincipal(TEST_ORIGIN_3);
-  let principal4 = Services.scriptSecurityManager.getAppCodebasePrincipal(TEST_ORIGIN, 1000, true);
-  let principal5 = Services.scriptSecurityManager.getAppCodebasePrincipal(TEST_ORIGIN_3, 1000, true);
+  let attrs = {appId: 1000, inBrowser: true};
+  let principal4 = Services.scriptSecurityManager.createCodebasePrincipal(TEST_ORIGIN, attrs);
+  let principal5 = Services.scriptSecurityManager.createCodebasePrincipal(TEST_ORIGIN_3, attrs);
 
   do_check_eq(Ci.nsIPermissionManager.ALLOW_ACTION,
               pm.testPermissionFromPrincipal(principal, TEST_PERMISSION));
