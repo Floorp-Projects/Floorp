@@ -14,6 +14,8 @@ const DARK_BG = "#14171a";
 setTheme("dark");
 Services.prefs.setBoolPref(MEMORY_PREF, false);
 
+requestLongerTimeout(2);
+
 function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, $, OverviewView, document: doc } = panel.panelWin;
