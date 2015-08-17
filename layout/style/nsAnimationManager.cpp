@@ -968,19 +968,26 @@ nsAnimationManager::FlushAnimations(FlushFlags aFlags)
        l = PR_NEXT_LINK(l)) {
     AnimationCollection* collection = static_cast<AnimationCollection*>(l);
 
+    if (collection->mStyleRuleRefreshTime == now) {
+      continue;
+    }
+
     nsAutoAnimationMutationBatch mb(collection->mElement);
 
     collection->Tick();
+
     bool canThrottleTick = aFlags == Can_Throttle &&
       collection->CanPerformOnCompositorThread(
         AnimationCollection::CanAnimateFlags(0)) &&
       collection->CanThrottleAnimation(now);
 
-    nsRefPtr<AnimValuesStyleRule> oldStyleRule = collection->mStyleRule;
-    collection->EnsureStyleRuleFor(now, canThrottleTick
-                                        ? EnsureStyleRule_IsThrottled
-                                        : EnsureStyleRule_IsNotThrottled);
-    if (oldStyleRule != collection->mStyleRule) {
+    for (auto iter = collection->mAnimations.cbegin();
+         canThrottleTick && iter != collection->mAnimations.cend();
+         ++iter) {
+      canThrottleTick &= (*iter)->CanThrottle();
+    }
+
+    if (!canThrottleTick) {
       collection->PostRestyleForAnimation(mPresContext);
     } else {
       didThrottle = true;
