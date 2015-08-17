@@ -434,6 +434,9 @@ public:
 
   virtual bool RecvTakeFocus(const uint64_t& aID) override;
 
+  virtual bool RecvEmbeddedChildCount(const uint64_t& aID, uint32_t* aCount)
+    override final;
+
   virtual bool RecvIndexOfEmbeddedChild(const uint64_t& aID,
                                         const uint64_t& aChildID,
                                         uint32_t* aChildIdx) override final;
