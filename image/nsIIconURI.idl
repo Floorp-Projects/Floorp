@@ -45,7 +45,7 @@
    *                stock images.
    */
 
-[scriptable, uuid(da53adda-cbe3-41bc-a57d-fdd7a0ff448b)]
+[scriptable, uuid(f8fe5ef2-5f2b-43f3-857d-5b64d192c427)]
 interface nsIMozIconURI : nsIURI
 {
   /// iconFile: the file URL contained within this moz-icon url, or null.
