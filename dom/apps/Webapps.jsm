@@ -439,7 +439,7 @@ this.DOMApplicationRegistry = {
           app.redirects = this.sanitizeRedirects(aResult.redirects);
         }
         app.kind = this.appKind(app, aResult.manifest);
-        UserCustomizations.register(aResult.manifest, app);
+        UserCustomizations.register(app);
         Langpacks.register(app, aResult.manifest);
       });
 
@@ -1164,7 +1164,7 @@ this.DOMApplicationRegistry = {
         this._registerSystemMessages(manifest, app);
         this._registerInterAppConnections(manifest, app);
         appsToRegister.push({ manifest: manifest, app: app });
-        UserCustomizations.register(manifest, app);
+        UserCustomizations.register(app);
         Langpacks.register(app, manifest);
       });
       this._safeToClone.resolve();
@@ -2013,10 +2013,10 @@ this.DOMApplicationRegistry = {
 
     // Update user customizations and langpacks.
     if (aOldManifest) {
-      UserCustomizations.unregister(aOldManifest, aApp);
+      UserCustomizations.unregister(aApp);
       Langpacks.unregister(aApp, aOldManifest);
     }
-    UserCustomizations.register(aNewManifest, aApp);
+    UserCustomizations.register(aApp);
     Langpacks.register(aApp, aNewManifest);
   },
 
@@ -3757,11 +3757,21 @@ this.DOMApplicationRegistry = {
                          aIsSigned) {
     this._checkSignature(aNewApp, aIsSigned, aIsLocalFileInstall);
 
-    if (!aZipReader.hasEntry("manifest.webapp")) {
+    // Chrome-style extensions only have a manifest.json manifest.
+    // In this case we extract it, and convert it to a minimal
+    // manifest.webapp manifest.
+    // Packages that contain both manifest.webapp and manifest.json
+    // are considered as apps, not extensions.
+    let hasWebappManifest = aZipReader.hasEntry("manifest.webapp");
+    let hasJsonManifest = aZipReader.hasEntry("manifest.json");
+
+    if (!hasWebappManifest && !hasJsonManifest) {
       throw "MISSING_MANIFEST";
     }
 
-    let istream = aZipReader.getInputStream("manifest.webapp");
+    let istream =
+      aZipReader.getInputStream(hasWebappManifest ? "manifest.webapp"
+                                                  : "manifest.json");
 
     // Obtain a converter to read from a UTF-8 encoded input stream.
     let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
@@ -3770,6 +3780,14 @@ this.DOMApplicationRegistry = {
 
     let newManifest = JSON.parse(converter.ConvertToUnicode(
           NetUtil.readInputStreamToString(istream, istream.available()) || ""));
+
+    if (!hasWebappManifest) {
+      // Validate the extension manifest, and convert it.
+      if (!UserCustomizations.checkExtensionManifest(newManifest)) {
+        throw "INVALID_MANIFEST";
+      }
+      newManifest = UserCustomizations.convertManifest(newManifest);
+    }
 
     if (!AppsUtils.checkManifest(newManifest, aOldApp)) {
       throw "INVALID_MANIFEST";
@@ -3814,8 +3832,11 @@ this.DOMApplicationRegistry = {
     let isLangPack = newManifest.role === "langpack" &&
                      (aIsSigned || allowUnsignedLangpack);
 
+    let isAddon = newManifest.role === "addon" &&
+                     (aIsSigned || AppsUtils.allowUnsignedAddons);
+
     let status = AppsUtils.getAppManifestStatus(newManifest);
-    if (status > maxStatus && !isLangPack) {
+    if (status > maxStatus && !isLangPack && !isAddon) {
       throw "INVALID_SECURITY_LEVEL";
     }
 
@@ -4125,7 +4146,7 @@ this.DOMApplicationRegistry = {
     if (supportSystemMessages()) {
       this._unregisterActivities(aApp.manifest, aApp);
     }
-    UserCustomizations.unregister(aApp.manifest, aApp);
+    UserCustomizations.unregister(aApp);
     Langpacks.unregister(aApp, aApp.manifest);
 
     let dir = this._getAppDir(id);
@@ -4545,10 +4566,11 @@ this.DOMApplicationRegistry = {
     });
 
     // Update customization.
-    this.getManifestFor(app.manifestURL).then((aManifest) => {
-      app.enabled ? UserCustomizations.register(aManifest, app)
-                  : UserCustomizations.unregister(aManifest, app);
-    });
+    if (app.enabled) {
+      UserCustomizations.register(app);
+    } else {
+      UserCustomizations.unregister(app);
+    }
   },
 
   getManifestFor: function(aManifestURL, aEntryPoint) {
