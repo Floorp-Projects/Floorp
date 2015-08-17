@@ -17,7 +17,7 @@ interface nsIDOMFontFaceList;
 interface nsIDOMRange;
 interface nsIDOMCSSStyleSheet;
 
-[scriptable, uuid(60b4cbf7-2a08-4419-8937-6ef495417824)]
+[scriptable, uuid(d67c0463-592e-4d7c-b67e-923ee3f6c643)]
 interface inIDOMUtils : nsISupports
 {
   // CSS utilities
@@ -27,6 +27,16 @@ interface inIDOMUtils : nsISupports
   nsISupportsArray getCSSStyleRules(in nsIDOMElement aElement, [optional] in DOMString aPseudo);
   unsigned long getRuleLine(in nsIDOMCSSRule aRule);
   unsigned long getRuleColumn(in nsIDOMCSSRule aRule);
+
+  /**
+   * Like getRuleLine, but if the rule is in a <style> element,
+   * returns a line number relative to the start of the element.
+   *
+   * @param nsIDOMCSSRule aRule the rule to examine
+   * @return the line number of the rule, possibly relative to the
+   *         <style> element
+   */
+  unsigned long getRelativeRuleLine(in nsIDOMCSSRule aRule);
 
   [implicit_jscontext]
   jsval getCSSLexer(in DOMString aText);

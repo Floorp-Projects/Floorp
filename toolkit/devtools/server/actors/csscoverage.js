@@ -564,8 +564,9 @@ function getImportedSheets(stylesheet) {
  * @see deconstructRuleId(ruleId)
  */
 function ruleToId(rule) {
-  let loc = stylesheets.getRuleLocation(rule);
-  return sheetToUrl(rule.parentStyleSheet) + "|" + loc.line + "|" + loc.column;
+  let line = DOMUtils.getRelativeRuleLine(rule);
+  let column = DOMUtils.getRuleColumn(rule);
+  return sheetToUrl(rule.parentStyleSheet) + "|" + line + "|" + column;
 }
 
 /**
