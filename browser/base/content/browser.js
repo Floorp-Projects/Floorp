@@ -1296,7 +1296,6 @@ var gBrowserInit = {
 
     var homeButton = document.getElementById("home-button");
     gHomeButton.updateTooltip(homeButton);
-    gHomeButton.updatePersonalToolbarStyle(homeButton);
 
     let safeMode = document.getElementById("helpSafeMode");
     if (Services.appinfo.inSafeMode) {
@@ -5387,17 +5386,6 @@ var gHomeButton = {
     }
 
     return url;
-  },
-
-  updatePersonalToolbarStyle: function (homeButton)
-  {
-    if (!homeButton)
-      homeButton = document.getElementById("home-button");
-    if (homeButton)
-      homeButton.className = homeButton.parentNode.id == "PersonalToolbar"
-                               || homeButton.parentNode.parentNode.id == "PersonalToolbar" ?
-                             homeButton.className.replace("toolbarbutton-1", "bookmark-item") :
-                             homeButton.className.replace("bookmark-item", "toolbarbutton-1");
   },
 };
 

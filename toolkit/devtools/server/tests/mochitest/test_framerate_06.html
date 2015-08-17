@@ -65,7 +65,7 @@ window.onload = function() {
     // ticks can still be less than 16ms even on one frame (usually following a very slow
     // frame), so use a low number (2) to be our threshold
     var THRESHOLD = 2;
-    ok(ticks.length >= 60, "we should have 2 seconds worth of ticks, atleast 60 ticks");
+    ok(ticks.length >= 20, "we should have atleast 20 ticks over the course of two seconds.");
     var belowThreshold = diffs.filter(v => v <= THRESHOLD);
     ok(belowThreshold.length <= 10, "we should have very few frames less than the threshold");
 
