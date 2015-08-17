@@ -3235,7 +3235,6 @@ public class BrowserApp extends GeckoApp
         back.setEnabled(tab.canDoBack());
         forward.setEnabled(tab.canDoForward());
         desktopMode.setChecked(tab.getDesktopMode());
-        desktopMode.setIcon(tab.getDesktopMode() ? R.drawable.ic_menu_desktop_mode_on : R.drawable.ic_menu_desktop_mode_off);
 
         View backButtonView = MenuItemCompat.getActionView(back);
 
