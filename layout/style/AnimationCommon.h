@@ -105,6 +105,7 @@ public:
     Can_Throttle,
     Cannot_Throttle
   };
+  void FlushAnimations(FlushFlags aFlags);
 
   nsIStyleRule* GetAnimationRule(dom::Element* aElement,
                                  nsCSSPseudoElements::Type aPseudoType);
