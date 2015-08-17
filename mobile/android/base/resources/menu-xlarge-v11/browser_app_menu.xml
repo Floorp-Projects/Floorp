@@ -49,15 +49,12 @@
           android:showAsAction="collapseActionView"/>
 
     <item android:id="@+id/new_tab"
-          android:icon="@drawable/ic_menu_new_tab"
           android:title="@string/new_tab"/>
 
     <item android:id="@+id/new_private_tab"
-          android:icon="@drawable/ic_menu_new_private_tab"
           android:title="@string/new_private_tab"/>
 
     <item android:id="@+id/find_in_page"
-          android:icon="@drawable/ic_menu_find_in_page"
           android:title="@string/find_in_page" />
 
     <item android:id="@+id/desktop_mode"
@@ -67,8 +64,7 @@
 
 
     <item android:id="@+id/page"
-          android:title="@string/page"
-          android:icon="@drawable/ic_menu_tools">
+          android:title="@string/page">
 
         <menu>
 
@@ -92,29 +88,24 @@
     </item>
 
     <item android:id="@+id/tools"
-          android:title="@string/tools"
-          android:icon="@drawable/ic_menu_tools">
+          android:title="@string/tools">
 
         <menu>
 
             <item android:id="@+id/downloads"
-                  android:icon="@drawable/ic_menu_downloads"
                   android:title="@string/downloads"/>
 
             <item android:id="@+id/addons"
-                  android:icon="@drawable/ic_menu_addons"
                   android:title="@string/addons"/>
 
             <item android:id="@+id/logins"
                   android:title="@string/logins"/>
 
             <item android:id="@+id/new_guest_session"
-                  android:icon="@drawable/ic_menu_guest"
                   android:visible="false"
                   android:title="@string/new_guest_session"/>
 
             <item android:id="@+id/exit_guest_session"
-                  android:icon="@drawable/ic_menu_guest"
                   android:visible="false"
                   android:title="@string/exit_guest_session"/>
 
@@ -123,12 +114,10 @@
     </item>
 
     <item android:id="@+id/char_encoding"
-          android:icon="@drawable/ic_menu_character_encoding"
           android:visible="false"
           android:title="@string/char_encoding"/>
 
     <item android:id="@+id/settings"
-          android:icon="@drawable/ic_menu_settings"
           android:title="@string/settings" />
 
     <item android:id="@+id/help"
