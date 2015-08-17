@@ -152,7 +152,8 @@ struct SavedFrame::Lookup {
         activation(activation)
     {
         MOZ_ASSERT(source);
-        MOZ_ASSERT(activation);
+        MOZ_ASSERT_IF(framePtr.isSome(), pc);
+        MOZ_ASSERT_IF(framePtr.isSome(), activation);
     }
 
     explicit Lookup(SavedFrame& savedFrame)
