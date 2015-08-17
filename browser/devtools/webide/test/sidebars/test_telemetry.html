@@ -163,10 +163,17 @@
       function checkResults() {
         let result = Telemetry.prototype.telemetryInfo;
         for (let [histId, value] of Iterator(result)) {
-          if (histId.endsWith("OPENED_PER_USER_FLAG")) {
+          if (histId.endsWith("_PER_USER_FLAG")) {
             ok(value.length === 1 && !!value[0],
                "Per user value " + histId + " has a single value of true");
-          } else if (histId.endsWith("OPENED_BOOLEAN")) {
+          } else if (histId === "DEVTOOLS_WEBIDE_IMPORT_PROJECT_BOOLEAN") {
+            ok(value.length === 1 && !!value[0],
+               histId + " has 1 successful entry");
+          } else if (histId ===
+                     "DEVTOOLS_WEBIDE_PROJECT_EDITOR_OPENED_BOOLEAN") {
+            ok(value.length === 1 && !!value[0],
+               histId + " has 1 successful entry");
+          } else if (histId === "DEVTOOLS_WEBIDE_OPENED_BOOLEAN") {
             ok(value.length > 1, histId + " has more than one entry");
 
             let okay = value.every(function(element) {
@@ -174,7 +181,7 @@
             });
 
             ok(okay, "All " + histId + " entries are true");
-          } else if (histId.endsWith("TIME_ACTIVE_SECONDS")) {
+          } else if (histId.endsWith("WEBIDE_TIME_ACTIVE_SECONDS")) {
             ok(value.length > 1, histId + " has more than one entry");
 
             let okay = value.every(function(element) {
@@ -182,6 +189,9 @@
             });
 
             ok(okay, "All " + histId + " entries have time > 0");
+          } else if (histId.endsWith("EDITOR_TIME_ACTIVE_SECONDS")) {
+            ok(value.length === 1 && value[0] > 0,
+               histId + " has 1 entry with time > 0");
           } else if (histId === "DEVTOOLS_WEBIDE_CONNECTION_RESULT") {
             ok(value.length === 6, histId + " has 6 connection results");
 
