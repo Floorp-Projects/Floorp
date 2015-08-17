@@ -43,9 +43,12 @@ PerformanceObserverEntryList::GetEntries(
 {
   aRetval.Clear();
   for (const nsRefPtr<PerformanceEntry>& entry : mEntries) {
-    const PerformanceResourceTiming* resourceEntry =
-      entry->ToResourceTiming();
-    if (aFilter.mInitiatorType.WasPassed() && resourceEntry) {
+    if (aFilter.mInitiatorType.WasPassed()) {
+      const PerformanceResourceTiming* resourceEntry =
+        entry->ToResourceTiming();
+      if (!resourceEntry) {
+        continue;
+      }
       nsAutoString initiatorType;
       resourceEntry->GetInitiatorType(initiatorType);
       if (!initiatorType.Equals(aFilter.mInitiatorType.Value())) {
