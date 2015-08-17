@@ -45,6 +45,50 @@ suite.test('recording', function() {
     return Promise.all([domPromise, eventPromise]);
   }
 
+  function pauseRecording(p) {
+    var eventPromise = new Promise(function(resolve, reject) {
+      function onEvent(evt) {
+        ok(evt.newState === 'Paused', 'recorder state change event = ' + evt.newState);
+        suite.camera.removeEventListener('recorderstatechange', onEvent);
+        resolve();
+      }
+      suite.camera.addEventListener('recorderstatechange', onEvent);
+    });
+
+    var domPromise = new Promise(function(resolve, reject) {
+      try {
+        suite.camera.pauseRecording();
+        resolve();
+      } catch(e) {
+        reject(e);
+      }
+    });
+
+    return Promise.all([domPromise, eventPromise]);
+  }
+
+  function resumeRecording(p) {
+    var eventPromise = new Promise(function(resolve, reject) {
+      function onEvent(evt) {
+        ok(evt.newState === 'Resumed', 'recorder state change event = ' + evt.newState);
+        suite.camera.removeEventListener('recorderstatechange', onEvent);
+        resolve();
+      }
+      suite.camera.addEventListener('recorderstatechange', onEvent);
+    });
+
+    var domPromise = new Promise(function(resolve, reject) {
+      try {
+        suite.camera.resumeRecording();
+        resolve();
+      } catch(e) {
+        reject(e);
+      }
+    });
+
+    return Promise.all([domPromise, eventPromise]);
+  }
+
   function stopRecording(p) {
     var eventPromise = new Promise(function(resolve, reject) {
       function onEvent(evt) {
@@ -70,7 +114,9 @@ suite.test('recording', function() {
   return suite.getCamera(undefined, baseConfig)
     .then(cleanup, suite.rejectGetCamera)
     .then(startRecording)
-    .then(stopRecording, suite.rejectStartRecording)
+    .then(pauseRecording, suite.rejectStartRecording)
+    .then(resumeRecording, suite.rejectPauseRecording)
+    .then(stopRecording, suite.rejectResumeRecording)
     .catch(suite.rejectStopRecording);
 });
 
