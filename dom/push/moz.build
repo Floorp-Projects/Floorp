@@ -38,6 +38,8 @@ UNIFIED_SOURCES += [
     'PushManager.cpp',
 ]
 
+FAIL_ON_WARNINGS = True
+
 LOCAL_INCLUDES += [
     '../workers',
 ]

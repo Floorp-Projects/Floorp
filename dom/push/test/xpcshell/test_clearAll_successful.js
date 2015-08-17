@@ -25,7 +25,6 @@ add_task(function* test_unregister_success() {
     quota: Infinity,
   });
 
-  let unregisterDefer = Promise.defer();
   PushService.init({
     serverURI: "wss://push.example.org/",
     networkInfo: new MockDesktopNetworkInfo(),

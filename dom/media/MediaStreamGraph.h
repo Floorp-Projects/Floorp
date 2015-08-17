@@ -433,8 +433,6 @@ public:
   virtual AudioNodeStream* AsAudioNodeStream() { return nullptr; }
   virtual CameraPreviewMediaStream* AsCameraPreviewStream() { return nullptr; }
 
-  // media graph thread only
-  void Init();
   // These Impl methods perform the core functionality of the control methods
   // above, on the media graph thread.
   /**
@@ -632,8 +630,8 @@ protected:
   };
   nsTArray<AudioOutput> mAudioOutputs;
   nsTArray<nsRefPtr<VideoFrameContainer> > mVideoOutputs;
-  // We record the last played video frame to avoid redundant setting
-  // of the current video frame.
+  // We record the last played video frame to avoid playing the frame again
+  // with a different frame id.
   VideoFrame mLastPlayedVideoFrame;
   // The number of times this stream has been explicitly blocked by the control
   // API, minus the number of times it has been explicitly unblocked.
