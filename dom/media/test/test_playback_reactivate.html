@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test playback with dormant of media files that should play OK</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/* This testcase wants to test a video element's playback is not break
+   by dormant.
+   When the metadata is loaded, we remove the video element to trigger dormant.
+   Then set a timer to append the video element back and play it.
+   Test pass if the video plays to the end.
+*/
+
+// longer timeout for slow platforms
+if (isSlowPlatform()) {
+  SimpleTest.requestLongerTimeout(1.5);
+  SimpleTest.requestCompleteLog();
+}
+
+var manager = new MediaTestManager;
+
+function startTest(test, token) {
+  var v = document.createElement('video');
+  v.preload = "metadata";
+  v.token = token;
+
+  var handler = {
+    "ontimeout": function() {
+      Log(token, "timed out: ended=" + v.seenEnded + ", suspend=" + v.seenSuspend);
+    }
+  };
+  manager.started(token, handler);
+
+  v.src = test.name;
+  v.name = test.name;
+
+  var check = function(test, v) { return function() {
+    is(test.name, v.name, test.name + ": Name should match #1");
+    Log(v.token, "removeChild: " + v.name);
+    document.body.removeChild(v);
+    var appendAndPlayElement = function() {
+      Log(v.token, "appendChild: " + v.name);
+      document.body.appendChild(v);
+      Log(v.token, "Element play: " + v.name);
+      v.play();
+    }
+    setTimeout(appendAndPlayElement, 2000);
+  }}(test, v);
+
+  var finish = function() {
+    v.finished = true;
+    removeNodeAndSource(v);
+    manager.finished(v.token);
+  }
+
+  var checkEnded = function(test, v) { return function() {
+    is(test.name, v.name, test.name + ": Name should match #2");
+    checkMetadata(test.name, v, test);
+    is(v.readyState, v.HAVE_CURRENT_DATA, test.name + " checking readyState");
+    ok(v.readyState != v.NETWORK_LOADED, test.name + " shouldn't report NETWORK_LOADED");
+    ok(v.ended, test.name + " checking playback has ended");
+
+    finish();
+  }}(test, v);
+
+
+  v.addEventListener("loadedmetadata", check, false);
+  v.addEventListener("ended", checkEnded, false);
+
+  document.body.appendChild(v);
+
+  // Debug timeouts on slow platforms.
+  if (isSlowPlatform()) {
+    var events = ["suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
+                  "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
+                  "waiting", "pause"];
+    function logEvent(e) {
+      var v = e.target;
+      Log(e.target.token, "got " + e.type);
+    }
+    events.forEach(function(e) {
+      v.addEventListener(e, logEvent, false);
+    });
+  }
+}
+
+manager.runTests(gSmallTests, startTest);
+
+</script>
+</pre>
+</body>
+</html>
