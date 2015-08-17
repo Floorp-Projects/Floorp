@@ -39,8 +39,8 @@ size_t fakeMallocSizeOf(const void*) {
 DEF_TEST(DeserializedNodeUbiNodes, {
     const char16_t* typeName = MOZ_UTF16("TestTypeName");
 
-    NodeId id = uint64_t(1) << 33;
-    uint64_t size = uint64_t(1) << 60;
+    NodeId id = 1L << 33;
+    uint64_t size = 1L << 60;
     MockDeserializedNode mocked(id, typeName, size);
 
     DeserializedNode& deserialized = mocked;
