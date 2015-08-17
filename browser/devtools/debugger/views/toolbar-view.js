@@ -64,6 +64,8 @@ ToolbarView.prototype = {
     this._stepOverButton.setAttribute("tooltiptext", this._stepOverTooltip);
     this._stepInButton.setAttribute("tooltiptext", this._stepInTooltip);
     this._stepOutButton.setAttribute("tooltiptext", this._stepOutTooltip);
+    this._toggleButtonsState({ enabled: false });
+
     this._addCommands();
   },
 
@@ -111,18 +113,40 @@ ToolbarView.prototype = {
    *
    * @param string aState
    *        Either "paused" or "attached".
+   * @param boolean hasLocation
+   *        True if we are paused at a specific JS location
    */
-  toggleResumeButtonState: function(aState) {
+  toggleResumeButtonState: function(aState, hasLocation) {
     // If we're paused, check and show a resume label on the button.
     if (aState == "paused") {
       this._resumeButton.setAttribute("checked", "true");
       this._resumeButton.setAttribute("tooltiptext", this._resumeTooltip);
+
+      // Only enable the stepping buttons if we are paused at a
+      // specific location. After bug 789430, we'll always be paused
+      // at a location, but currently you can pause the entire engine
+      // at any point without knowing the location.
+      if (hasLocation) {
+        this._toggleButtonsState({ enabled: true });
+      }
     }
     // If we're attached, do the opposite.
     else if (aState == "attached") {
       this._resumeButton.removeAttribute("checked");
       this._resumeButton.setAttribute("tooltiptext", this._pauseTooltip);
-    }
+      this._toggleButtonsState({ enabled: false });
+   }
+  },
+
+  _toggleButtonsState: function({ enabled }) {
+    const buttons = [
+      this._stepOutButton,
+      this._stepInButton,
+      this._stepOverButton
+    ];
+    for (let button of buttons) {
+      button.disabled = !enabled;
+    };
   },
 
   /**
@@ -157,7 +181,7 @@ ToolbarView.prototype = {
    * Listener handling the step over button click event.
    */
   _onStepOverPressed: function() {
-    if (this.activeThread.paused) {
+    if (this.activeThread.paused && !this._stepOverButton.disabled) {
       this.StackFrames.currentFrameDepth = -1;
       this.activeThread.stepOver(this.resumptionWarnFunc);
     }
@@ -167,7 +191,8 @@ ToolbarView.prototype = {
    * Listener handling the step in button click event.
    */
   _onStepInPressed: function() {
-    if (this.StackFrames._currentFrameDescription != FRAME_TYPE.NORMAL) {
+    if (this.StackFrames._currentFrameDescription != FRAME_TYPE.NORMAL ||
+       this._stepInButton.disabled) {
       return;
     }
 
@@ -181,7 +206,7 @@ ToolbarView.prototype = {
    * Listener handling the step out button click event.
    */
   _onStepOutPressed: function() {
-    if (this.activeThread.paused) {
+    if (this.activeThread.paused && !this._stepOutButton.disabled) {
       this.StackFrames.currentFrameDepth = -1;
       this.activeThread.stepOut(this.resumptionWarnFunc);
     }

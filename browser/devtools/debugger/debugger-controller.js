@@ -593,7 +593,10 @@ ThreadState.prototype = {
     }
 
     this.interruptedByResumeButton = false;
-    DebuggerView.Toolbar.toggleResumeButtonState(this.activeThread.state);
+    DebuggerView.Toolbar.toggleResumeButtonState(
+      this.activeThread.state,
+      aPacket ? aPacket.frame : false
+    );
 
     if (gTarget && (aEvent == "paused" || aEvent == "resumed")) {
       gTarget.emit("thread-" + aEvent);
