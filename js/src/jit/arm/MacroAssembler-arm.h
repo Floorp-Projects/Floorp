@@ -401,9 +401,14 @@ class MacroAssemblerARM : public Assembler
     void ma_vcvt_U32_F32(FloatRegister src, FloatRegister dest, Condition cc = Always);
 
 
+    // Transfer (do not coerce) a float into a gpr.
     void ma_vxfer(VFPRegister src, Register dest, Condition cc = Always);
+    // Transfer (do not coerce) a double into a couple of gpr.
     void ma_vxfer(VFPRegister src, Register dest1, Register dest2, Condition cc = Always);
 
+    // Transfer (do not coerce) a gpr into a float
+    void ma_vxfer(Register src, FloatRegister dest, Condition cc = Always);
+    // Transfer (do not coerce) a couple of gpr into a double
     void ma_vxfer(Register src1, Register src2, FloatRegister dest, Condition cc = Always);
 
     BufferOffset ma_vdtr(LoadStore ls, const Address& addr, VFPRegister dest, Condition cc = Always);
