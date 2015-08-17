@@ -77,6 +77,7 @@ HttpBaseChannel::HttpBaseChannel()
   , mAllRedirectsSameOrigin(true)
   , mAllRedirectsPassTimingAllowCheck(true)
   , mForceNoIntercept(false)
+  , mResponseCouldBeSynthesized(false)
   , mSuspendCount(0)
   , mProxyResolveFlags(0)
   , mProxyURI(nullptr)
@@ -1435,14 +1436,14 @@ HttpBaseChannel::OverrideSecurityInfo(nsISupports* aSecurityInfo)
              "This can only be called when we don't have a security info object already");
   MOZ_RELEASE_ASSERT(aSecurityInfo,
                      "This can only be called with a valid security info object");
-  MOZ_ASSERT(ShouldIntercept(),
+  MOZ_ASSERT(mResponseCouldBeSynthesized,
              "This can only be called on channels that can be intercepted");
   if (mSecurityInfo) {
     LOG(("HttpBaseChannel::OverrideSecurityInfo mSecurityInfo is null! "
          "[this=%p]\n", this));
     return NS_ERROR_UNEXPECTED;
   }
-  if (!ShouldIntercept()) {
+  if (!mResponseCouldBeSynthesized) {
     LOG(("HttpBaseChannel::OverrideSecurityInfo channel cannot be intercepted! "
          "[this=%p]\n", this));
     return NS_ERROR_UNEXPECTED;
@@ -1464,7 +1465,7 @@ HttpBaseChannel::OverrideURI(nsIURI* aRedirectedURI)
          this));
     return NS_ERROR_UNEXPECTED;
   }
-  if (!ShouldIntercept()) {
+  if (!mResponseCouldBeSynthesized) {
     LOG(("HttpBaseChannel::OverrideURI channel cannot be intercepted! "
          "[this=%p]\n", this));
     return NS_ERROR_UNEXPECTED;
@@ -1969,6 +1970,7 @@ NS_IMETHODIMP
 HttpBaseChannel::ForceNoIntercept()
 {
   mForceNoIntercept = true;
+  mResponseCouldBeSynthesized = false;
   return NS_OK;
 }
 
