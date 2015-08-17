@@ -486,11 +486,11 @@ class MacroAssembler : public MacroAssemblerSpecific
     // Setup a call to C/C++ code, given the assumption that the framePushed
     // accruately define the state of the stack, and that the top of the stack
     // was properly aligned. Note that this only supports cdecl.
-    void setupAlignedABICall(uint32_t args); // CRASH_ON(arm64)
+    void setupAlignedABICall(); // CRASH_ON(arm64)
 
     // Setup an ABI call for when the alignment is not known. This may need a
     // scratch register.
-    void setupUnalignedABICall(uint32_t args, Register scratch) PER_ARCH;
+    void setupUnalignedABICall(Register scratch) PER_ARCH;
 
     // Arguments must be assigned to a C/C++ call in order. They are moved
     // in parallel immediately before performing the call. This process may

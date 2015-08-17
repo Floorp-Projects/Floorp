@@ -191,7 +191,7 @@ MacroAssemblerX64::handleFailureWithHandlerTail(void* handler)
     movq(rsp, rax);
 
     // Call the handler.
-    asMasm().setupUnalignedABICall(1, rcx);
+    asMasm().setupUnalignedABICall(rcx);
     asMasm().passABIArg(rax);
     asMasm().callWithABI(handler);
 
@@ -407,7 +407,7 @@ MacroAssembler::reserveStack(uint32_t amount)
 // ABI function calls.
 
 void
-MacroAssembler::setupUnalignedABICall(uint32_t args, Register scratch)
+MacroAssembler::setupUnalignedABICall(Register scratch)
 {
     setupABICall();
     dynamicAlignment_ = true;

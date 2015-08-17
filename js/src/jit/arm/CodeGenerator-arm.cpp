@@ -573,7 +573,7 @@ CodeGeneratorARM::visitSoftDivI(LSoftDivI* ins)
     Label done;
     divICommon(mir, lhs, rhs, output, ins->snapshot(), done);
 
-    masm.setupAlignedABICall(2);
+    masm.setupAlignedABICall();
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);
     if (gen->compilingAsmJS())
@@ -734,7 +734,7 @@ CodeGeneratorARM::visitSoftModI(LSoftModI* ins)
 
     modICommon(mir, lhs, rhs, output, ins->snapshot(), done);
 
-    masm.setupAlignedABICall(2);
+    masm.setupAlignedABICall();
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);
     if (gen->compilingAsmJS())
@@ -1916,7 +1916,7 @@ CodeGeneratorARM::visitAsmJSCompareExchangeCallout(LAsmJSCompareExchangeCallout*
 
     MOZ_ASSERT(ToRegister(ins->output()) == ReturnReg);
 
-    masm.setupAlignedABICall(4);
+    masm.setupAlignedABICall();
     masm.ma_mov(Imm32(viewType), ScratchRegister);
     masm.passABIArg(ScratchRegister);
     masm.passABIArg(ptr);
@@ -1969,7 +1969,7 @@ CodeGeneratorARM::visitAsmJSAtomicExchangeCallout(LAsmJSAtomicExchangeCallout* i
 
     MOZ_ASSERT(ToRegister(ins->output()) == ReturnReg);
 
-    masm.setupAlignedABICall(3);
+    masm.setupAlignedABICall();
     masm.ma_mov(Imm32(viewType), ScratchRegister);
     masm.passABIArg(ScratchRegister);
     masm.passABIArg(ptr);
@@ -2066,7 +2066,7 @@ CodeGeneratorARM::visitAsmJSAtomicBinopCallout(LAsmJSAtomicBinopCallout* ins)
     Register ptr = ToRegister(ins->ptr());
     Register value = ToRegister(ins->value());
 
-    masm.setupAlignedABICall(3);
+    masm.setupAlignedABICall();
     masm.ma_mov(Imm32(viewType), ScratchRegister);
     masm.passABIArg(ScratchRegister);
     masm.passABIArg(ptr);
@@ -2193,7 +2193,7 @@ CodeGeneratorARM::visitSoftUDivOrMod(LSoftUDivOrMod* ins)
     generateUDivModZeroCheck(rhs, output, &done, ins->snapshot(), div);
     generateUDivModZeroCheck(rhs, output, &done, ins->snapshot(), mod);
 
-    masm.setupAlignedABICall(2);
+    masm.setupAlignedABICall();
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);
     if (gen->compilingAsmJS())
@@ -2336,7 +2336,7 @@ CodeGeneratorARM::visitRandom(LRandom* ins)
 
     masm.loadJSContext(temp);
 
-    masm.setupUnalignedABICall(1, temp2);
+    masm.setupUnalignedABICall(temp2);
     masm.passABIArg(temp);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, math_random_no_outparam), MoveOp::DOUBLE);
 
