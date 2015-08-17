@@ -2548,6 +2548,9 @@ MacroAssembler::MacroAssembler(JSContext* cx, IonScript* ion,
                                JSScript* script, jsbytecode* pc)
   : emitProfilingInstrumentation_(false),
     framePushed_(0)
+#ifdef DEBUG
+  , inCall_(false)
+#endif
 {
     constructRoot(cx);
     jitContext_.emplace(cx, (js::jit::TempAllocator*)nullptr);
@@ -2762,6 +2765,110 @@ void
 MacroAssembler::freeStack(Register amount)
 {
     addToStackPtr(amount);
+}
+
+// ===============================================================
+// ABI function calls.
+
+void
+MacroAssembler::setupABICall()
+{
+#ifdef DEBUG
+    MOZ_ASSERT(!inCall_);
+    inCall_ = true;
+#endif
+
+#ifdef JS_SIMULATOR
+    signature_ = 0;
+#endif
+
+    // Reinitialize the ABIArg generator.
+    abiArgs_ = ABIArgGenerator();
+
+#if defined(JS_CODEGEN_ARM)
+    // On ARM, we need to know what ABI we are using, either in the
+    // simulator, or based on the configure flags.
+#if defined(JS_SIMULATOR_ARM)
+    abiArgs_.setUseHardFp(UseHardFpABI());
+#elif defined(JS_CODEGEN_ARM_HARDFP)
+    abiArgs_.setUseHardFp(true);
+#else
+    abiArgs_.setUseHardFp(false);
+#endif
+#endif
+
+#if defined(JS_CODEGEN_MIPS32)
+    // On MIPS, the system ABI use general registers pairs to encode double
+    // arguments, after one or 2 integer-like arguments. Unfortunately, the
+    // Lowering phase is not capable to express it at the moment. So we enforce
+    // the system ABI here.
+    abiArgs_.enforceO32ABI();
+#endif
+}
+
+void
+MacroAssembler::setupAlignedABICall(uint32_t args)
+{
+    setupABICall();
+    dynamicAlignment_ = false;
+    assertStackAlignment(ABIStackAlignment);
+
+#if defined(JS_CODEGEN_ARM64)
+    MOZ_CRASH("Not supported on arm64");
+#endif
+}
+
+void
+MacroAssembler::passABIArg(const MoveOperand& from, MoveOp::Type type)
+{
+    MOZ_ASSERT(inCall_);
+    appendSignatureType(type);
+
+    ABIArg arg;
+    switch (type) {
+      case MoveOp::FLOAT32:
+        arg = abiArgs_.next(MIRType_Float32);
+        break;
+      case MoveOp::DOUBLE:
+        arg = abiArgs_.next(MIRType_Double);
+        break;
+      case MoveOp::GENERAL:
+        arg = abiArgs_.next(MIRType_Pointer);
+        break;
+      default:
+        MOZ_CRASH("Unexpected argument type");
+    }
+
+    MoveOperand to(*this, arg);
+    if (from == to)
+        return;
+
+    if (!enoughMemory_)
+        return;
+    enoughMemory_ = moveResolver_.addMove(from, to, type);
+}
+
+void
+MacroAssembler::callWithABINoProfiler(void* fun, MoveOp::Type result)
+{
+    appendSignatureType(result);
+#ifdef JS_SIMULATOR
+    fun = Simulator::RedirectNativeFunction(fun, signature());
+#endif
+
+    uint32_t stackAdjust;
+    callWithABIPre(&stackAdjust);
+    call(ImmPtr(fun));
+    callWithABIPost(stackAdjust, result);
+}
+
+void
+MacroAssembler::callWithABINoProfiler(AsmJSImmPtr imm, MoveOp::Type result)
+{
+    uint32_t stackAdjust;
+    callWithABIPre(&stackAdjust, /* callFromAsmJS = */ true);
+    call(imm);
+    callWithABIPost(stackAdjust, result);
 }
 
 //}}} check_macroassembler_style
