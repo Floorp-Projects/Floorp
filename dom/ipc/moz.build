@@ -161,6 +161,11 @@ if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
         '/security/sandbox/chromium-shim',
     ]
 
+if CONFIG['OS_ARCH'] != 'WINNT':
+    LOCAL_INCLUDES += [
+        '/modules/libjar',
+    ]
+
 DEFINES['BIN_SUFFIX'] = '"%s"' % CONFIG['BIN_SUFFIX']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gonk', 'qt'):
