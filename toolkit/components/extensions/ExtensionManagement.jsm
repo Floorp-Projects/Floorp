@@ -4,7 +4,7 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["ExtensionManagement"];
+this.EXPORTED_SYMBOLS = ["ExtensionManagement"];
 
 const Ci = Components.interfaces;
 const Cc = Components.classes;
@@ -188,7 +188,7 @@ let Service = {
   },
 };
 
-let ExtensionManagement = {
+this.ExtensionManagement = {
   startupExtension: Service.startupExtension.bind(Service),
   shutdownExtension: Service.shutdownExtension.bind(Service),
 
@@ -198,4 +198,3 @@ let ExtensionManagement = {
   getFrameId: Frames.getId.bind(Frames),
   getParentFrameId: Frames.getParentId.bind(Frames),
 };
-
