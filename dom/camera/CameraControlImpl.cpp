@@ -298,6 +298,8 @@ CameraControlImpl::OnUserError(CameraControlListener::UserContext aContext,
     "TakePicture",
     "StartRecording",
     "StopRecording",
+    "PauseRecording",
+    "ResumeRecording",
     "SetConfiguration",
     "StartPreview",
     "StopPreview",
@@ -600,6 +602,48 @@ CameraControlImpl::StopRecording()
   };
 
   return Dispatch(new Message(this, CameraControlListener::kInStopRecording));
+}
+
+nsresult
+CameraControlImpl::PauseRecording()
+{
+  class Message : public ControlMessage
+  {
+  public:
+    Message(CameraControlImpl* aCameraControl,
+            CameraControlListener::UserContext aContext)
+      : ControlMessage(aCameraControl, aContext)
+    { }
+
+    nsresult
+    RunImpl() override
+    {
+      return mCameraControl->PauseRecordingImpl();
+    }
+  };
+
+  return Dispatch(new Message(this, CameraControlListener::kInPauseRecording));
+}
+
+nsresult
+CameraControlImpl::ResumeRecording()
+{
+  class Message : public ControlMessage
+  {
+  public:
+    Message(CameraControlImpl* aCameraControl,
+            CameraControlListener::UserContext aContext)
+      : ControlMessage(aCameraControl, aContext)
+    { }
+
+    nsresult
+    RunImpl() override
+    {
+      return mCameraControl->ResumeRecordingImpl();
+    }
+  };
+
+  return Dispatch(new Message(this, CameraControlListener::kInResumeRecording));
 }
 
 nsresult
