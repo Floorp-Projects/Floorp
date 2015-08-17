@@ -83,7 +83,7 @@ public class TabsPanel extends LinearLayout
     private final GeckoApp mActivity;
     private final LightweightTheme mTheme;
     private RelativeLayout mHeader;
-    private TabsLayoutContainer mTabsContainer;
+    private FrameLayout mTabsContainer;
     private PanelView mPanel;
     private PanelView mPanelNormal;
     private PanelView mPanelPrivate;
@@ -122,7 +122,7 @@ public class TabsPanel extends LinearLayout
 
     private void initialize() {
         mHeader = (RelativeLayout) findViewById(R.id.tabs_panel_header);
-        mTabsContainer = (TabsLayoutContainer) findViewById(R.id.tabs_container);
+        mTabsContainer = (FrameLayout) findViewById(R.id.tabs_container);
 
         mPanelNormal = (PanelView) findViewById(R.id.normal_tabs);
         mPanelNormal.setTabsPanel(this);
@@ -244,7 +244,7 @@ public class TabsPanel extends LinearLayout
         return mActivity.onOptionsItemSelected(item);
     }
 
-    private static int getTabContainerHeight(TabsLayoutContainer tabsContainer) {
+    private static int getTabContainerHeight(View tabsContainer) {
         Resources resources = tabsContainer.getContext().getResources();
 
         int screenHeight = resources.getDisplayMetrics().heightPixels;
@@ -287,18 +287,6 @@ public class TabsPanel extends LinearLayout
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
         onLightweightThemeChanged();
-    }
-
-    static class TabsLayoutContainer extends FrameLayout {
-        public TabsLayoutContainer(Context context, AttributeSet attrs) {
-            super(context, attrs);
-        }
-
-        @Override
-        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-            int heightSpec = MeasureSpec.makeMeasureSpec(getTabContainerHeight(TabsLayoutContainer.this), MeasureSpec.EXACTLY);
-            super.onMeasure(widthMeasureSpec, heightSpec);
-        }
     }
 
     // Tabs Panel Toolbar contains the Buttons
