@@ -51,6 +51,6 @@ function onTabAdded() {
   ok(false, "middle mouse click has opened a new tab");
 }
 
-registerCleanupFunction(function () {
+registerCleanupFunction(function() {
   gBrowser.tabContainer.removeEventListener("TabOpen", onTabAdded, false);
 });

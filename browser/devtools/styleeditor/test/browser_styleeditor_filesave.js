@@ -19,7 +19,7 @@ let NetUtil = tempScope.NetUtil;
 
 add_task(function* () {
   let htmlFile = yield copy(TESTCASE_URI_HTML, "simple.html");
-  let cssFile = yield copy(TESTCASE_URI_CSS, "simple.css");
+  yield copy(TESTCASE_URI_CSS, "simple.css");
   let uri = Services.io.newFileURI(htmlFile);
   let filePath = uri.resolve("");
 
@@ -42,7 +42,7 @@ add_task(function* () {
   info("Saving the changes.");
   dirty = editor.sourceEditor.once("dirty-change");
 
-  editor.saveToFile(null, function (file) {
+  editor.saveToFile(null, function(file) {
     ok(file, "file should get saved directly when using a file:// URI");
   });
 
@@ -53,26 +53,27 @@ add_task(function* () {
      "Star icon is not present in the corresponding summary.");
 });
 
-function copy(aSrcChromeURL, aDestFileName)
-{
+function copy(srcChromeURL, destFileName) {
   let deferred = promise.defer();
-  let destFile = FileUtils.getFile("ProfD", [aDestFileName]);
-  write(read(aSrcChromeURL), destFile, deferred.resolve);
+  let destFile = FileUtils.getFile("ProfD", [destFileName]);
+  write(read(srcChromeURL), destFile, deferred.resolve);
 
   return deferred.promise;
 }
 
-function read(aSrcChromeURL)
-{
+function read(srcChromeURL) {
   let scriptableStream = Cc["@mozilla.org/scriptableinputstream;1"]
     .getService(Ci.nsIScriptableInputStream);
 
-  let channel = Services.io.newChannel2(aSrcChromeURL,
+  let channel = Services.io.newChannel2(srcChromeURL,
                                         null,
                                         null,
-                                        null,      // aLoadingNode
-                                        Services.scriptSecurityManager.getSystemPrincipal(),
-                                        null,      // aTriggeringPrincipal
+                                        // aLoadingNode
+                                        null,
+                                        Services.scriptSecurityManager
+                                                .getSystemPrincipal(),
+                                        // aTriggeringPrincipal
+                                        null,
                                         Ci.nsILoadInfo.SEC_NORMAL,
                                         Ci.nsIContentPolicy.TYPE_OTHER);
   let input = channel.open();
@@ -88,22 +89,21 @@ function read(aSrcChromeURL)
   return data;
 }
 
-function write(aData, aFile, aCallback)
-{
+function write(data, file, callback) {
   let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
     .createInstance(Ci.nsIScriptableUnicodeConverter);
 
   converter.charset = "UTF-8";
 
-  let istream = converter.convertToInputStream(aData);
-  let ostream = FileUtils.openSafeFileOutputStream(aFile);
+  let istream = converter.convertToInputStream(data);
+  let ostream = FileUtils.openSafeFileOutputStream(file);
 
   NetUtil.asyncCopy(istream, ostream, function(status) {
     if (!Components.isSuccessCode(status)) {
-      info("Coudln't write to " + aFile.path);
+      info("Couldn't write to " + file.path);
       return;
     }
 
-    aCallback(aFile);
+    callback(file);
   });
 }

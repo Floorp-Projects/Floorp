@@ -2,6 +2,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Test that resizing the source editor container doesn't move the caret.
 
 const TESTCASE_URI = TEST_BASE_HTTP + "simple.html";
