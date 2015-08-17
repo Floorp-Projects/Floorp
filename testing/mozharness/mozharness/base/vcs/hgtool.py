@@ -1,10 +1,12 @@
 import os
 import re
 import urlparse
+from collections import namedtuple
 
 from mozharness.base.script import ScriptMixin
 from mozharness.base.log import LogMixin, OutputParser, WARNING
 from mozharness.base.errors import HgErrorList, VCSException
+from mozharness.base.transfer import TransferMixin
 
 HgtoolErrorList = [{
     'substr': 'abort: HTTP Error 404: Not Found',
@@ -28,7 +30,7 @@ class HgtoolParser(OutputParser):
         super(HgtoolParser, self).parse_single_line(line)
 
 
-class HgtoolVCS(ScriptMixin, LogMixin):
+class HgtoolVCS(ScriptMixin, LogMixin, TransferMixin):
     def __init__(self, log_obj=None, config=None, vcs_config=None,
                  script_obj=None):
         super(HgtoolVCS, self).__init__()
@@ -113,3 +115,38 @@ class HgtoolVCS(ScriptMixin, LogMixin):
             raise VCSException("Unable to checkout")
 
         return parser.got_revision
+
+    def query_pushinfo(self, repository, revision):
+        """Query the pushdate and pushid of a repository/revision.
+        This is intended to be used on hg.mozilla.org/mozilla-central and
+        similar. It may or may not work for other hg repositories.
+        """
+        PushInfo = namedtuple('PushInfo', ['pushid', 'pushdate'])
+
+        try:
+            url = '%s/json-pushes?changeset=%s' % (repository, revision)
+            self.info('Pushdate URL is: %s' % url)
+            contents = self.retry(self.load_json_from_url, args=(url,))
+
+            # The contents should be something like:
+            # {
+            #   "28537": {
+            #    "changesets": [
+            #     "1d0a914ae676cc5ed203cdc05c16d8e0c22af7e5",
+            #    ],
+            #    "date": 1428072488,
+            #    "user": "user@mozilla.com"
+            #   }
+            # }
+            #
+            # So we grab the first element ("28537" in this case) and then pull
+            # out the 'date' field.
+            pushid = contents.iterkeys().next()
+            self.info('Pushid is: %s' % pushid)
+            pushdate = contents[pushid]['date']
+            self.info('Pushdate is: %s' % pushdate)
+            return PushInfo(pushid, pushdate)
+
+        except Exception:
+            self.exception("Failed to get push info from hg.mozilla.org")
+            raise

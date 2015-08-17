@@ -53,19 +53,16 @@ class VCSMixin(object):
             self.rmtree(dest)
             raise
 
+    def _get_vcs_class(self, vcs):
+        vcs = vcs or self.config.get('default_vcs', getattr(self, 'default_vcs', None))
+        vcs_class = VCS_DICT.get(vcs)
+        return vcs_class
+
     def vcs_checkout(self, vcs=None, error_level=FATAL, **kwargs):
         """ Check out a single repo.
         """
         c = self.config
-        if not vcs:
-            if c.get('default_vcs'):
-                vcs = c['default_vcs']
-            else:
-                try:
-                    vcs = self.default_vcs
-                except AttributeError:
-                    pass
-        vcs_class = VCS_DICT.get(vcs)
+        vcs_class = self._get_vcs_class(vcs)
         if not vcs_class:
             self.error("Running vcs_checkout with kwargs %s" % str(kwargs))
             raise VCSException("No VCS set!")
@@ -109,6 +106,20 @@ class VCSMixin(object):
             revision_dict[dest]['revision'] = self.vcs_checkout(**kwargs)
         self.chdir(orig_dir)
         return revision_dict
+
+    def vcs_query_pushinfo(self, repository, revision, vcs=None):
+        """Query the pushid/pushdate of a repository/revision
+        Returns a namedtuple with "pushid" and "pushdate" elements
+        """
+        vcs_class = self._get_vcs_class(vcs)
+        if not vcs_class:
+            raise VCSException("No VCS set in vcs_query_pushinfo!")
+        vcs_obj = vcs_class(
+            log_obj=self.log_obj,
+            config=self.config,
+            script_obj=self,
+        )
+        return vcs_obj.query_pushinfo(repository, revision)
 
 
 class VCSScript(VCSMixin, BaseScript):
