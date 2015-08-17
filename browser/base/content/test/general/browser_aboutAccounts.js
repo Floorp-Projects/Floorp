@@ -39,7 +39,7 @@ let gTests = [
   desc: "Test the remote commands",
   teardown: function* () {
     gBrowser.removeCurrentTab();
-    yield fxAccounts.signOut();
+    yield signOut();
   },
   run: function* ()
   {
@@ -50,6 +50,9 @@ let gTests = [
 
     let deferred = Promise.defer();
 
+    // We'll get a message when openPrefs() is called, which this test should
+    // arrange.
+    let promisePrefsOpened = promiseOneMessage(tab, "test:openPrefsCalled");
     let results = 0;
     try {
       mm.addMessageListener("test:response", function responseHandler(msg) {
@@ -68,6 +71,7 @@ let gTests = [
       deferred.reject();
     }
     yield deferred.promise;
+    yield promisePrefsOpened;
   }
 },
 {

@@ -4,14 +4,24 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 [CheckAnyPermissions="bluetooth"]
-interface BluetoothManager : EventTarget {
-  [Throws]
-  readonly attribute boolean      enabled;
+interface BluetoothManager: EventTarget
+{
+  readonly attribute BluetoothAdapter? defaultAdapter;
 
-           attribute EventHandler onenabled;
-           attribute EventHandler ondisabled;
+  // Fired when attribute(s) of BluetoothManager changed
+           attribute EventHandler onattributechanged;
+
+  // Fired when a new adapter is plugged in
            attribute EventHandler onadapteradded;
 
-  [NewObject, Throws]
-  DOMRequest? getDefaultAdapter();
+  // Fired when an existing adapter is unplugged
+           attribute EventHandler onadapterremoved;
+
+  sequence<BluetoothAdapter> getAdapters();
+};
+
+enum BluetoothManagerAttribute
+{
+  "unknown",
+  "defaultAdapter"
 };

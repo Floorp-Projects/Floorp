@@ -10,8 +10,12 @@ function sendAlertsForNode(node) {
 }
 
 function run() {
-  sendAlertsForNode(document.getElementById("header"));
-  sendAlertsForNode(document.getElementById("header2"));
+  // We need to wait for the next tick because add-ons are injected in the
+  // onload event too.
+  window.setTimeout(function() {
+    sendAlertsForNode(document.getElementById("header"));
+    sendAlertsForNode(document.getElementById("header2"));
+  }, 0);
 }
     </script>
   </head>
