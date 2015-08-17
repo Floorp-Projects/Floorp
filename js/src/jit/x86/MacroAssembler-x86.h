@@ -24,14 +24,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     const MacroAssembler& asMasm() const;
 
   private:
-    // Number of bytes the stack is adjusted inside a call to C. Calls to C may
-    // not be nested.
-    bool inCall_;
-    uint32_t args_;
-    uint32_t passedArgs_;
-    uint32_t stackForCall_;
-    bool dynamicAlignment_;
-
     struct Double {
         double value;
         AbsoluteLabel uses;
@@ -99,7 +91,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     using MacroAssemblerX86Shared::call;
 
     MacroAssemblerX86()
-      : inCall_(false)
     {
     }
 
@@ -1141,40 +1132,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         bind(&done);
     }
 
-    // Setup a call to C/C++ code, given the number of general arguments it
-    // takes. Note that this only supports cdecl.
-    //
-    // In order for alignment to work correctly, the MacroAssembler must have a
-    // consistent view of the stack displacement. It is okay to call "push"
-    // manually, however, if the stack alignment were to change, the macro
-    // assembler should be notified before starting a call.
-    void setupAlignedABICall(uint32_t args);
-
-    // Sets up an ABI call for when the alignment is not known. This may need a
-    // scratch register.
-    void setupUnalignedABICall(uint32_t args, Register scratch);
-
-    // Arguments must be assigned to a C/C++ call in order. They are moved
-    // in parallel immediately before performing the call. This process may
-    // temporarily use more stack, in which case esp-relative addresses will be
-    // automatically adjusted. It is extremely important that esp-relative
-    // addresses are computed *after* setupABICall(). Furthermore, no
-    // operations should be emitted while setting arguments.
-    void passABIArg(const MoveOperand& from, MoveOp::Type type);
-    void passABIArg(Register reg);
-    void passABIArg(FloatRegister reg, MoveOp::Type type);
-
-  private:
-    void callWithABIPre(uint32_t* stackAdjust);
-    void callWithABIPost(uint32_t stackAdjust, MoveOp::Type result);
-
   public:
-    // Emits a call to a C/C++ function, resolving all argument moves.
-    void callWithABI(void* fun, MoveOp::Type result = MoveOp::GENERAL);
-    void callWithABI(AsmJSImmPtr fun, MoveOp::Type result = MoveOp::GENERAL);
-    void callWithABI(const Address& fun, MoveOp::Type result = MoveOp::GENERAL);
-    void callWithABI(Register fun, MoveOp::Type result = MoveOp::GENERAL);
-
     // Used from within an Exit frame to handle a pending exception.
     void handleFailureWithHandlerTail(void* handler);
 

@@ -14,6 +14,8 @@
 namespace js {
 namespace jit {
 
+class MacroAssembler;
+
 // This is similar to Operand, but carries more information. We're also not
 // guaranteed that Operand looks like this on all ISAs.
 class MoveOperand
@@ -59,6 +61,7 @@ class MoveOperand
         if (disp == 0 && kind_ == EFFECTIVE_ADDRESS)
             kind_ = REG;
     }
+    MoveOperand(MacroAssembler& masm, const ABIArg& arg);
     MoveOperand(const MoveOperand& other)
       : kind_(other.kind_),
         code_(other.code_),

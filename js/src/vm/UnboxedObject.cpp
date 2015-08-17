@@ -13,6 +13,7 @@
 #include "jsobjinlines.h"
 
 #include "gc/Nursery-inl.h"
+#include "jit/MacroAssembler-inl.h"
 #include "vm/Shape-inl.h"
 
 using mozilla::ArrayLength;
