@@ -274,17 +274,17 @@ AnnexB::ExtractExtraData(const mozilla::MediaRawData* aSample)
       case 3: nalLen = reader.ReadU24(); break;
       case 4: nalLen = reader.ReadU32(); break;
     }
-    uint8_t nalType = reader.PeekU8();
+    uint8_t nalType = reader.PeekU8() & 0x1f;
     const uint8_t* p = reader.Read(nalLen);
     if (!p) {
       return extradata.forget();
     }
 
-    if (nalType == 0x67) { /* SPS */
+    if (nalType == 0x7) { /* SPS */
       numSps++;
       spsw.WriteU16(nalLen);
       spsw.Write(p, nalLen);
-    } else if (nalType == 0x68) { /* PPS */
+    } else if (nalType == 0x8) { /* PPS */
       numPps++;
       ppsw.WriteU16(nalLen);
       ppsw.Write(p, nalLen);
