@@ -52,11 +52,6 @@ ServiceWorker::ServiceWorker(nsPIDOMWindow* aWindow,
   MOZ_ASSERT(aInfo);
   MOZ_ASSERT(mSharedWorker);
 
-  if (aWindow) {
-    mDocument = aWindow->GetExtantDoc();
-    mWindow = aWindow->GetOuterWindow();
-  }
-
   // This will update our state too.
   mInfo->AppendWorker(this);
 }
@@ -74,7 +69,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ServiceWorker)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorker, DOMEventTargetHelper,
-                                   mSharedWorker, mDocument, mWindow)
+                                   mSharedWorker)
 
 JSObject*
 ServiceWorker::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
@@ -103,12 +98,9 @@ ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
     return;
   }
 
-  MOZ_ASSERT(mDocument && mWindow,
-             "Cannot call PostMessage on a ServiceWorker object that doesn't "
-             "have a window");
-
-  nsAutoPtr<ServiceWorkerClientInfo> clientInfo(
-    new ServiceWorkerClientInfo(mDocument, mWindow));
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(GetParentObject());
+  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+  nsAutoPtr<ServiceWorkerClientInfo> clientInfo(new ServiceWorkerClientInfo(doc));
 
   workerPrivate->PostMessageToServiceWorker(aCx, aMessage, aTransferable,
                                             clientInfo, aRv);
