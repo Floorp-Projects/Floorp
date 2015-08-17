@@ -2120,7 +2120,7 @@ CodeGeneratorMIPS::visitRandom(LRandom* ins)
 
     masm.loadJSContext(temp);
 
-    masm.setupUnalignedABICall(1, temp2);
+    masm.setupUnalignedABICall(temp2);
     masm.passABIArg(temp);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, math_random_no_outparam), MoveOp::DOUBLE);
 
