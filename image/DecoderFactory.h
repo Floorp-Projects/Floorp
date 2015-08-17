@@ -7,9 +7,12 @@
 #ifndef mozilla_image_DecoderFactory_h
 #define mozilla_image_DecoderFactory_h
 
+#include "DecoderFlags.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/gfx/2D.h"
 #include "nsCOMPtr.h"
+#include "SurfaceFlags.h"
 
 class nsACString;
 
@@ -20,6 +23,10 @@ class Decoder;
 class RasterImage;
 class SourceBuffer;
 
+/**
+ * The type of decoder; this is usually determined from a MIME type using
+ * DecoderFactory::GetDecoderType().
+ */
 enum class DecoderType
 {
   PNG,
@@ -42,10 +49,6 @@ public:
    * (If the image *is* animated, only the first frame will be decoded.) The
    * decoder will send notifications to @aImage.
    *
-   * XXX(seth): @aIsRedecode and @aImageIsTransient should really be part of
-   * @aFlags. This requires changes to the way that decoder flags work, though.
-   * See bug 1185800.
-   *
    * @param aType Which type of decoder to create - JPEG, PNG, etc.
    * @param aImage The image will own the decoder and which should receive
    *               notifications as decoding progresses.
@@ -55,25 +58,23 @@ public:
    *                    be scaled to during decoding. It's an error to specify
    *                    a target size for a decoder type which doesn't support
    *                    downscale-during-decode.
-   * @param aFlags Flags specifying what type of output the decoder should
-   *               produce; see GetDecodeFlags() in RasterImage.h.
+   * @param aDecoderFlags Flags specifying the behavior of this decoder.
+   * @param aSurfaceFlags Flags specifying the type of output this decoder
+   *                      should produce.
    * @param aSampleSize The sample size requested using #-moz-samplesize (or 0
    *                    if none).
    * @param aResolution The resolution requested using #-moz-resolution (or an
    *                    empty rect if none).
-   * @param aIsRedecode Specify 'true' if this image has been decoded before.
-   * @param aImageIsTransient Specify 'true' if this image is transient.
    */
   static already_AddRefed<Decoder>
   CreateDecoder(DecoderType aType,
                 RasterImage* aImage,
                 SourceBuffer* aSourceBuffer,
                 const Maybe<gfx::IntSize>& aTargetSize,
-                uint32_t aFlags,
+                DecoderFlags aDecoderFlags,
+                SurfaceFlags aSurfaceFlags,
                 int aSampleSize,
-                const gfx::IntSize& aResolution,
-                bool aIsRedecode,
-                bool aImageIsTransient);
+                const gfx::IntSize& aResolution);
 
   /**
    * Creates and initializes a decoder for animated images of type @aType.
@@ -84,8 +85,9 @@ public:
    *               notifications as decoding progresses.
    * @param aSourceBuffer The SourceBuffer which the decoder will read its data
    *                      from.
-   * @param aFlags Flags specifying what type of output the decoder should
-   *               produce; see GetDecodeFlags() in RasterImage.h.
+   * @param aDecoderFlags Flags specifying the behavior of this decoder.
+   * @param aSurfaceFlags Flags specifying the type of output this decoder
+   *                      should produce.
    * @param aResolution The resolution requested using #-moz-resolution (or an
    *                    empty rect if none).
    */
@@ -93,7 +95,8 @@ public:
   CreateAnimationDecoder(DecoderType aType,
                          RasterImage* aImage,
                          SourceBuffer* aSourceBuffer,
-                         uint32_t aFlags,
+                         DecoderFlags aDecoderFlags,
+                         SurfaceFlags aSurfaceFlags,
                          const gfx::IntSize& aResolution);
 
   /**
@@ -126,13 +129,13 @@ public:
    * @param aType Which type of decoder to create - JPEG, PNG, etc.
    * @param aSourceBuffer The SourceBuffer which the decoder will read its data
    *                      from.
-   * @param aFlags Flags specifying what type of output the decoder should
-   *               produce; see GetDecodeFlags() in RasterImage.h.
+   * @param aSurfaceFlags Flags specifying the type of output this decoder
+   *                      should produce.
    */
   static already_AddRefed<Decoder>
   CreateAnonymousDecoder(DecoderType aType,
                          SourceBuffer* aSourceBuffer,
-                         uint32_t aFlags);
+                         SurfaceFlags aSurfaceFlags);
 
   /**
    * Creates and initializes an anonymous metadata decoder (one which isn't
@@ -143,8 +146,6 @@ public:
    * @param aType Which type of decoder to create - JPEG, PNG, etc.
    * @param aSourceBuffer The SourceBuffer which the decoder will read its data
    *                      from.
-   * @param aFlags Flags specifying what type of output the decoder should
-   *               produce; see GetDecodeFlags() in RasterImage.h.
    */
   static already_AddRefed<Decoder>
   CreateAnonymousMetadataDecoder(DecoderType aType,

@@ -22,7 +22,8 @@ function run_test() {
 
 add_task(function* test_register_timeout() {
   let handshakes = 0;
-  let timeoutDefer = Promise.defer();
+  let timeoutDone;
+  let timeoutPromise = new Promise(resolve => timeoutDone = resolve);
   let registers = 0;
 
   let db = PushServiceWebSocket.newPushDB();
@@ -74,7 +75,7 @@ add_task(function* test_register_timeout() {
               uaid: userAgentID,
               pushEndpoint: 'https://example.com/update/timeout',
             }));
-            timeoutDefer.resolve();
+            timeoutDone();
           }, 2000);
           registers++;
         }
@@ -95,7 +96,7 @@ add_task(function* test_register_timeout() {
   ok(!record, 'Should not store records for timed-out responses');
 
   yield waitForPromise(
-    timeoutDefer.promise,
+    timeoutPromise,
     DEFAULT_TIMEOUT,
     'Reconnect timed out'
   );

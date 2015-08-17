@@ -10,9 +10,36 @@
 #include "ImageContainer.h"
 #include "nsAutoPtr.h"
 #include "d3d9.h"
+#include "mozilla/layers/TextureClientRecycleAllocator.h"
 
 namespace mozilla {
 namespace layers {
+
+class SharedTextureClientD3D9;
+
+class D3D9RecycleAllocator : public TextureClientRecycleAllocator
+{
+public:
+  explicit D3D9RecycleAllocator(ISurfaceAllocator* aAllocator,
+                                IDirect3DDevice9* aDevice)
+    : TextureClientRecycleAllocator(aAllocator)
+    , mDevice(aDevice)
+  {}
+
+  already_AddRefed<SharedTextureClientD3D9>
+  CreateOrRecycleClient(gfx::SurfaceFormat aFormat,
+                        const gfx::IntSize& aSize);
+
+protected:
+  virtual already_AddRefed<TextureClient>
+  Allocate(gfx::SurfaceFormat aFormat,
+           gfx::IntSize aSize,
+           BackendSelector aSelector,
+           TextureFlags aTextureFlags,
+           TextureAllocationFlags aAllocFlags) override;
+
+  RefPtr<IDirect3DDevice9> mDevice;
+};
 
 // Image class that wraps a IDirect3DSurface9. This class copies the image
 // passed into SetData(), so that it can be accessed from other D3D devices.
@@ -22,10 +49,17 @@ class D3D9SurfaceImage : public Image {
 public:
 
   struct Data {
-    Data(IDirect3DSurface9* aSurface, const gfx::IntRect& aRegion)
-      : mSurface(aSurface), mRegion(aRegion) {}
+    Data(IDirect3DSurface9* aSurface,
+         const gfx::IntRect& aRegion,
+         D3D9RecycleAllocator* aAllocator)
+      : mSurface(aSurface)
+      , mRegion(aRegion)
+      , mAllocator(aAllocator)
+    {}
+
     RefPtr<IDirect3DSurface9> mSurface;
     gfx::IntRect mRegion;
+    RefPtr<D3D9RecycleAllocator> mAllocator;
   };
 
   D3D9SurfaceImage();
@@ -53,11 +87,8 @@ private:
   void EnsureSynchronized();
 
   gfx::IntSize mSize;
-  RefPtr<IDirect3DTexture9> mTexture;
   RefPtr<IDirect3DQuery9> mQuery;
-  RefPtr<TextureClient> mTextureClient;
-  HANDLE mShareHandle;
-  D3DSURFACE_DESC mDesc;
+  RefPtr<SharedTextureClientD3D9> mTextureClient;
   bool mValid;
 };
 

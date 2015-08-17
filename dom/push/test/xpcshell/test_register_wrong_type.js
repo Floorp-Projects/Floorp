@@ -21,8 +21,8 @@ function run_test() {
 
 add_task(function* test_register_wrong_type() {
   let registers = 0;
-  let helloDefer = Promise.defer();
-  let helloDone = after(2, helloDefer.resolve);
+  let helloDone;
+  let helloPromise = new Promise(resolve => helloDone = after(2, resolve));
 
   PushService._generateID = () => '1234';
   PushService.init({
@@ -63,7 +63,7 @@ add_task(function* test_register_wrong_type() {
     'Wrong error for non-string channel ID'
   );
 
-  yield waitForPromise(helloDefer.promise, DEFAULT_TIMEOUT,
+  yield waitForPromise(helloPromise, DEFAULT_TIMEOUT,
     'Reconnect after sending non-string channel ID timed out');
   equal(registers, 1, 'Wrong register count');
 });
