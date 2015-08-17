@@ -923,9 +923,14 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
       AnimationCollection* collection = static_cast<AnimationCollection*>(next);
       next = PR_NEXT_LINK(next);
 
+      if (collection->mStyleRuleRefreshTime == now) {
+        continue;
+      }
+
       nsAutoAnimationMutationBatch mb(collection->mElement);
 
       collection->Tick();
+
       bool canThrottleTick = aFlags == Can_Throttle &&
         collection->CanPerformOnCompositorThread(
           AnimationCollection::CanAnimateFlags(0)) &&
