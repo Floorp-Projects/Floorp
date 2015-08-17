@@ -82,8 +82,11 @@ this.StorageUI = function StorageUI(front, target, panelWin) {
   this.front.listStores().then(storageTypes => {
     this.populateStorageTree(storageTypes);
   }).then(null, Cu.reportError);
+
   this.onUpdate = this.onUpdate.bind(this);
   this.front.on("stores-update", this.onUpdate);
+  this.onCleared = this.onCleared.bind(this);
+  this.front.on("stores-cleared", this.onCleared);
 
   this.handleKeypress = this.handleKeypress.bind(this);
   this._panelDoc.addEventListener("keypress", this.handleKeypress);
@@ -101,6 +104,7 @@ StorageUI.prototype = {
 
   destroy: function() {
     this.front.off("stores-update", this.onUpdate);
+    this.front.off("stores-cleared", this.onCleared);
     this._panelDoc.removeEventListener("keypress", this.handleKeypress);
     this._telemetry.toolClosed("storage");
   },
@@ -132,6 +136,20 @@ StorageUI.prototype = {
     }
     else {
       this.table.remove(name);
+    }
+  },
+
+  /**
+   * Event handler for "stores-cleared" event coming from the storage actor.
+   *
+   * @param {object} argument0
+   *        An object containing which storage types were cleared
+   */
+  onCleared: function(response) {
+    let [type, host, db, objectStore] = this.tree.selectedItem;
+    if (response.hasOwnProperty(type) && response[type].indexOf(host) > -1) {
+      this.table.clear();
+      this.hideSidebar();
     }
   },
 
