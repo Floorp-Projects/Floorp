@@ -49,6 +49,7 @@
 <keyset id="configTreeKeyset" disabled="true">
   <key keycode="VK_RETURN" oncommand="ModifySelected();"/>
   <key key="&focusSearch.key;" modifiers="accel" oncommand="document.getElementById('textbox').focus();"/>
+  <key key="&focusSearch2.key;" modifiers="accel" oncommand="document.getElementById('textbox').focus();"/>
 </keyset>
 <deck id="configDeck" flex="1">
   <vbox id="warningScreen" flex="1" align="center" style="overflow: auto;">

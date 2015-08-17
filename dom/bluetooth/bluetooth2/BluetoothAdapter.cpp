@@ -14,7 +14,7 @@
 #include "nsIPrincipal.h"
 #include "nsTArrayHelpers.h"
 
-#include "mozilla/dom/BluetoothAdapter2Binding.h"
+#include "mozilla/dom/BluetoothAdapterBinding.h"
 #include "mozilla/dom/BluetoothAttributeEvent.h"
 #include "mozilla/dom/BluetoothStatusChangedEvent.h"
 #include "mozilla/dom/ContentChild.h"

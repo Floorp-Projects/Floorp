@@ -12,7 +12,7 @@
 #include "mozilla/dom/bluetooth/BluetoothAdapter.h"
 #include "mozilla/dom/bluetooth/BluetoothManager.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
-#include "mozilla/dom/BluetoothManager2Binding.h"
+#include "mozilla/dom/BluetoothManagerBinding.h"
 #include "mozilla/Services.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"

@@ -1,5 +1,5 @@
 {
-  "name": "Addon app",
+  "name": "Addon app with an invalid name",
   "description": "Let me inject script and css!",
   "developer": { "name": "The Mozilla Community" },
   "package_path" : "application.zip"

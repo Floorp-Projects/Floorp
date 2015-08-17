@@ -88,8 +88,6 @@ extern bool gBluetoothDebugFlag;
 /**
  * Wrap literal name and value into a BluetoothNamedValue
  * and insert it to the array.
- *
- * TODO: remove with bluetooth1
  */
 #define BT_INSERT_NAMED_VALUE(array, index, name, value)                      \
   array.InsertElementAt(index, BluetoothNamedValue(NS_LITERAL_STRING(name),   \
@@ -188,21 +186,6 @@ extern bool gBluetoothDebugFlag;
 #define PAIRING_REQ_TYPE_ENTERPINCODE         "enterpincodereq"
 #define PAIRING_REQ_TYPE_CONFIRMATION         "pairingconfirmationreq"
 #define PAIRING_REQ_TYPE_CONSENT              "pairingconsentreq"
-
-/**
- * When the pair status of a Bluetooth device is changed, we'll dispatch an
- * event.
- *
- * TODO: remove with bluetooth1
- */
-#define PAIRED_STATUS_CHANGED_ID             "pairedstatuschanged"
-
-/**
- * This event would be fired when discovery procedure starts or stops.
- *
- * TODO: remove with bluetooth1
- */
-#define DISCOVERY_STATE_CHANGED_ID           "discoverystatechanged"
 
 /**
  * System message to launch bluetooth app if no pairing listener is ready to

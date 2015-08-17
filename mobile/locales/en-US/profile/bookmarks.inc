@@ -30,4 +30,12 @@
 # link title for https://marketplace.firefox.com
 #define bookmarks_marketplace Firefox Marketplace
 
+# LOCALIZATION NOTE (bookmarks_restricted_support):
+# link title for https://support.mozilla.org/kb/kids
+#define bookmarks_restricted_support Firefox Help and Support for a simplified kid-friendly version of Firefox
+
+# LOCALIZATION NOTE (bookmarks_restricted_webmaker):
+# link title for https://webmaker.org
+#define bookmarks_restricted_webmaker Learn the Web: Mozilla Webmaker
+
 #unfilter emptyLines

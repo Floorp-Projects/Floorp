@@ -9,7 +9,7 @@
 #include "BluetoothUtils.h"
 
 #include "mozilla/dom/BluetoothAttributeEvent.h"
-#include "mozilla/dom/BluetoothDevice2Binding.h"
+#include "mozilla/dom/BluetoothDeviceBinding.h"
 #include "mozilla/dom/bluetooth/BluetoothClassOfDevice.h"
 #include "mozilla/dom/bluetooth/BluetoothDevice.h"
 #include "mozilla/dom/bluetooth/BluetoothGatt.h"
