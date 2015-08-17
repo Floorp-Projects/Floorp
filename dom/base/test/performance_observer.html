@@ -41,9 +41,11 @@ function promiseXHR(aUrl) {
 async_test(t => {
   performance.clearResourceTimings();
 
+  var observedEntryList;
   var observedEntries = [];
   var observer = new PerformanceObserver(list => {
     list.getEntries().forEach(entry => observedEntries.push(entry));
+    observedEntryList = list;
   });
   observer.observe({entryTypes: ['resource']});
 
@@ -54,6 +56,20 @@ async_test(t => {
     assert_array_equals(observedEntries,
                         performance.getEntriesByType("resource"),
                         "Observed 'resource' entries should equal to entries obtained by getEntriesByType.");
+
+    // getEntries filtering tests
+    assert_array_equals(observedEntryList.getEntries({name: "http://mochi.test:8888/tests/dom/base/test/test-data.json"}),
+                        performance.getEntriesByName("http://mochi.test:8888/tests/dom/base/test/test-data.json"),
+                        "getEntries with name filter should return correct results.");
+    assert_array_equals(observedEntryList.getEntries({entryType: "resource"}),
+                        performance.getEntriesByType("resource"),
+                        "getEntries with entryType filter should return correct results.");
+    assert_array_equals(observedEntryList.getEntries({initiatorType: "xmlhttprequest"}),
+                        performance.getEntriesByType("resource"),
+                        "getEntries with initiatorType filter should return correct results.");
+    assert_array_equals(observedEntryList.getEntries({initiatorType: "link"}),
+                        [],
+                        "getEntries with non-existent initiatorType filter should return an empty array.");
   }));
 }, "resource-timing test");
 
