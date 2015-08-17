@@ -9,7 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
-#include "mozilla/dom/BluetoothDevice2Binding.h"
+#include "mozilla/dom/BluetoothDeviceBinding.h"
 #include "mozilla/dom/bluetooth/BluetoothCommon.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"

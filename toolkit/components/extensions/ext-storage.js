@@ -1,3 +1,5 @@
+const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionStorage",
                                   "resource://gre/modules/ExtensionStorage.jsm");
 

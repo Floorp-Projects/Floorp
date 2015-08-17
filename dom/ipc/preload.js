@@ -27,11 +27,6 @@ const BrowserElementIsPreloaded = true;
   Cu.import("resource://gre/modules/Services.jsm");
   Cu.import("resource://gre/modules/SettingsDB.jsm");
   Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-  try {
-    if (Services.prefs.getBoolPref("dom.apps.customization.enabled")) {
-      Cu.import("resource://gre/modules/UserCustomizations.jsm");
-    }
-  } catch(e) {}
 
   Cc["@mozilla.org/appshell/appShellService;1"].getService(Ci["nsIAppShellService"]);
   Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci["nsIWindowMediator"]);
