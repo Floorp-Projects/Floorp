@@ -1703,6 +1703,12 @@ MacroAssemblerARM::ma_vxfer(FloatRegister src, Register dest1, Register dest2, C
 }
 
 void
+MacroAssemblerARM::ma_vxfer(Register src, FloatRegister dest, Condition cc)
+{
+    as_vxfer(src, InvalidReg, VFPRegister(dest).singleOverlay(), CoreToFloat, cc);
+}
+
+void
 MacroAssemblerARM::ma_vxfer(Register src1, Register src2, FloatRegister dest, Condition cc)
 {
     as_vxfer(src1, src2, VFPRegister(dest), CoreToFloat, cc);
@@ -4032,13 +4038,13 @@ MacroAssemblerARMCompat::callWithABIPost(uint32_t stackAdjust, MoveOp::Type resu
       case MoveOp::DOUBLE:
         if (!UseHardFpABI()) {
             // Move double from r0/r1 to ReturnFloatReg.
-            as_vxfer(r0, r1, ReturnDoubleReg, CoreToFloat);
+            ma_vxfer(r0, r1, ReturnDoubleReg);
             break;
         }
       case MoveOp::FLOAT32:
         if (!UseHardFpABI()) {
             // Move float32 from r0 to ReturnFloatReg.
-            as_vxfer(r0, InvalidReg, ReturnFloat32Reg.singleOverlay(), CoreToFloat);
+            ma_vxfer(r0, ReturnFloat32Reg);
             break;
         }
       case MoveOp::GENERAL:

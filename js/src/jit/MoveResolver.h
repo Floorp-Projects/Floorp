@@ -22,6 +22,12 @@ class MoveOperand
     enum Kind {
         // A register in the "integer", aka "general purpose", class.
         REG,
+#ifdef JS_CODEGEN_REGISTER_PAIR
+        // Two consecutive "integer" register (aka "general purpose"). The even
+        // register contains the lower part, the odd register has the high bits
+        // of the content.
+        REG_PAIR,
+#endif
         // A register in the "float" register class.
         FLOAT_REG,
         // A memory region.
@@ -64,6 +70,13 @@ class MoveOperand
     bool isGeneralReg() const {
         return kind_ == REG;
     }
+    bool isGeneralRegPair() const {
+#ifdef JS_CODEGEN_REGISTER_PAIR
+        return kind_ == REG_PAIR;
+#else
+        return false;
+#endif
+    }
     bool isMemory() const {
         return kind_ == MEMORY;
     }
@@ -76,6 +89,14 @@ class MoveOperand
     Register reg() const {
         MOZ_ASSERT(isGeneralReg());
         return Register::FromCode(code_);
+    }
+    Register evenReg() const {
+        MOZ_ASSERT(isGeneralRegPair());
+        return Register::FromCode(code_);
+    }
+    Register oddReg() const {
+        MOZ_ASSERT(isGeneralRegPair());
+        return Register::FromCode(code_ + 1);
     }
     FloatRegister floatReg() const {
         MOZ_ASSERT(isFloatReg());
@@ -100,6 +121,30 @@ class MoveOperand
                       base() != other.reg());
         MOZ_ASSERT_IF(other.isMemoryOrEffectiveAddress() && isGeneralReg(),
                       other.base() != reg());
+
+        // Check if one of the operand is a registe rpair, in which case, we
+        // have to check any other register, or register pair.
+        if (isGeneralRegPair() || other.isGeneralRegPair()) {
+            if (isGeneralRegPair() && other.isGeneralRegPair()) {
+                // Assume that register pairs are aligned on even registers.
+                MOZ_ASSERT(!evenReg().aliases(other.oddReg()));
+                MOZ_ASSERT(!oddReg().aliases(other.evenReg()));
+                // Pair of registers are composed of consecutive registers, thus
+                // if the first registers are aliased, then the second registers
+                // are aliased too.
+                MOZ_ASSERT(evenReg().aliases(other.evenReg()) == oddReg().aliases(other.oddReg()));
+                return evenReg().aliases(other.evenReg());
+            } else if (other.isGeneralReg()) {
+                MOZ_ASSERT(isGeneralRegPair());
+                return evenReg().aliases(other.reg()) ||
+                       oddReg().aliases(other.reg());
+            } else if (isGeneralReg()) {
+                MOZ_ASSERT(other.isGeneralRegPair());
+                return other.evenReg().aliases(reg()) ||
+                       other.oddReg().aliases(reg());
+            }
+            return false;
+        }
 
         if (kind_ != other.kind_)
             return false;
