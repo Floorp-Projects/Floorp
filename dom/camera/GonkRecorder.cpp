@@ -1616,14 +1616,40 @@ status_t GonkRecorder::pause() {
     if (mWriter == NULL) {
         return UNKNOWN_ERROR;
     }
-    mWriter->pause();
-
-    if (mStarted) {
+    if (!mStarted) {
+        return OK;
+    }
+    // Pause is not properly supported by all writers although
+    // for B2G we only currently use 3GPP/MPEG4
+    int err = INVALID_OPERATION;
+    switch (mOutputFormat) {
+        case OUTPUT_FORMAT_DEFAULT:
+        case OUTPUT_FORMAT_THREE_GPP:
+        case OUTPUT_FORMAT_MPEG_4:
+            err = mWriter->pause();
+            break;
+        default:
+            break;
+    }
+    if (err == OK) {
         mStarted = false;
     }
+    return err;
+}
 
-
-    return OK;
+status_t GonkRecorder::resume() {
+    RE_LOGV("resume");
+    if (mWriter == NULL) {
+        return UNKNOWN_ERROR;
+    }
+    if (mStarted) {
+        return OK;
+    }
+    int err = mWriter->start(NULL);
+    if (err == OK) {
+      mStarted = true;
+    }
+    return err;
 }
 
 status_t GonkRecorder::stop() {
