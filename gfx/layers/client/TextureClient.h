@@ -50,6 +50,7 @@ class PTextureChild;
 class TextureChild;
 class BufferTextureClient;
 class TextureClient;
+class TextureClientRecycleAllocator;
 #ifdef GFX_DEBUG_TRACK_CLIENTS_IN_POOL
 class TextureClientPool;
 #endif
@@ -491,7 +492,17 @@ public:
      mShared = true;
    }
 
+  ISurfaceAllocator* GetAllocator()
+  {
+    return mAllocator;
+  }
+
+   TextureClientRecycleAllocator* GetRecycleAllocator() { return mRecycleAllocator; }
+   void SetRecycleAllocator(TextureClientRecycleAllocator* aAllocator);
+
 private:
+  static void TextureClientRecycleCallback(TextureClient* aClient, void* aClosure);
+
   /**
    * Called once, just before the destructor.
    *
@@ -519,13 +530,9 @@ protected:
    */
   virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aDescriptor) = 0;
 
-  ISurfaceAllocator* GetAllocator()
-  {
-    return mAllocator;
-  }
-
   RefPtr<TextureChild> mActor;
   RefPtr<ISurfaceAllocator> mAllocator;
+  RefPtr<TextureClientRecycleAllocator> mRecycleAllocator;
   TextureFlags mFlags;
   FenceHandle mReleaseFenceHandle;
   FenceHandle mAcquireFenceHandle;

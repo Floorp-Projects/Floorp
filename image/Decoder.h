@@ -10,9 +10,11 @@
 #include "RasterImage.h"
 #include "mozilla/RefPtr.h"
 #include "DecodePool.h"
+#include "DecoderFlags.h"
 #include "ImageMetadata.h"
 #include "Orientation.h"
 #include "SourceBuffer.h"
+#include "SurfaceFlags.h"
 
 namespace mozilla {
 
@@ -138,24 +140,6 @@ public:
   virtual void SetResolution(const gfx::IntSize& aResolution) { }
 
   /**
-   * Set whether should send partial invalidations.
-   *
-   * If @aSend is true, we'll send partial invalidations when decoding the first
-   * frame of the image, so image notifications observers will be able to
-   * gradually draw in the image as it downloads.
-   *
-   * If @aSend is false (the default), we'll only send an invalidation when we
-   * complete the first frame.
-   *
-   * This must be called before Init() is called.
-   */
-  void SetSendPartialInvalidations(bool aSend)
-  {
-    MOZ_ASSERT(!mInitialized, "Shouldn't be initialized yet");
-    mSendPartialInvalidations = aSend;
-  }
-
-  /**
    * Set an iterator to the SourceBuffer which will feed data to this decoder.
    *
    * This should be called for almost all decoders; the exceptions are the
@@ -171,26 +155,20 @@ public:
   }
 
   /**
-   * Set whether this decoder is associated with a transient image. The decoder
-   * may choose to avoid certain optimizations that don't pay off for
-   * short-lived images in this case.
+   * Should this decoder send partial invalidations?
    */
-  void SetImageIsTransient(bool aIsTransient)
+  bool ShouldSendPartialInvalidations() const
   {
-    MOZ_ASSERT(!mInitialized, "Shouldn't be initialized yet");
-    mImageIsTransient = aIsTransient;
+    return !(mDecoderFlags & DecoderFlags::IS_REDECODE);
   }
 
   /**
-   * Set whether we should stop decoding after the first frame.
+   * Should we stop decoding after the first frame?
    */
-  void SetIsFirstFrameDecode()
+  bool IsFirstFrameDecode() const
   {
-    MOZ_ASSERT(!mInitialized, "Shouldn't be initialized yet");
-    mFirstFrameDecode = true;
+    return bool(mDecoderFlags & DecoderFlags::FIRST_FRAME_ONLY);
   }
-
-  bool IsFirstFrameDecode() const { return mFirstFrameDecode; }
 
   size_t BytesDecoded() const { return mBytesDecoded; }
 
@@ -255,9 +233,26 @@ public:
       SEQUENTIAL   // decode to final image immediately
   };
 
-  void SetFlags(uint32_t aFlags) { mFlags = aFlags; }
-  uint32_t GetFlags() const { return mFlags; }
-  uint32_t GetDecodeFlags() const { return DecodeFlags(mFlags); }
+  /**
+   * Get or set the DecoderFlags that influence the behavior of this decoder.
+   */
+  void SetDecoderFlags(DecoderFlags aDecoderFlags)
+  {
+    MOZ_ASSERT(!mInitialized);
+    mDecoderFlags = aDecoderFlags;
+  }
+  DecoderFlags GetDecoderFlags() const { return mDecoderFlags; }
+
+  /**
+   * Get or set the SurfaceFlags that select the kind of output this decoder
+   * will produce.
+   */
+  void SetSurfaceFlags(SurfaceFlags aSurfaceFlags)
+  {
+    MOZ_ASSERT(!mInitialized);
+    mSurfaceFlags = aSurfaceFlags;
+  }
+  SurfaceFlags GetSurfaceFlags() const { return mSurfaceFlags; }
 
   bool HasSize() const { return mImageMetadata.HasSize(); }
 
@@ -405,7 +400,6 @@ protected:
   RawAccessFrameRef AllocateFrameInternal(uint32_t aFrameNum,
                                           const nsIntSize& aTargetSize,
                                           const nsIntRect& aFrameRect,
-                                          uint32_t aDecodeFlags,
                                           gfx::SurfaceFormat aFormat,
                                           uint8_t aPaletteDepth,
                                           imgFrame* aPreviousFrame);
@@ -432,14 +426,12 @@ private:
   TimeDuration mDecodeTime;
   uint32_t mChunkCount;
 
-  uint32_t mFlags;
+  DecoderFlags mDecoderFlags;
+  SurfaceFlags mSurfaceFlags;
   size_t mBytesDecoded;
 
   bool mInitialized : 1;
   bool mMetadataDecode : 1;
-  bool mSendPartialInvalidations : 1;
-  bool mImageIsTransient : 1;
-  bool mFirstFrameDecode : 1;
   bool mInFrame : 1;
   bool mDataDone : 1;
   bool mDecodeDone : 1;

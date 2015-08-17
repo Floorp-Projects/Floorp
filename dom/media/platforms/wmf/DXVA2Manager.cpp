@@ -11,10 +11,12 @@
 #include "gfxWindowsPlatform.h"
 #include "D3D9SurfaceImage.h"
 #include "mozilla/layers/D3D11ShareHandleImage.h"
+#include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/Preferences.h"
 #include "mfapi.h"
 #include "MFTDecoder.h"
 #include "DriverCrashGuard.h"
+#include "nsPrintfCString.h"
 
 const CLSID CLSID_VideoProcessorMFT =
 {
@@ -40,6 +42,7 @@ namespace mozilla {
 using layers::Image;
 using layers::ImageContainer;
 using layers::D3D9SurfaceImage;
+using layers::D3D9RecycleAllocator;
 using layers::D3D11ShareHandleImage;
 
 class D3D9DXVA2Manager : public DXVA2Manager
@@ -48,7 +51,7 @@ public:
   D3D9DXVA2Manager();
   virtual ~D3D9DXVA2Manager();
 
-  HRESULT Init();
+  HRESULT Init(nsACString& aFailureReason);
 
   IUnknown* GetDXVADeviceManager() override;
 
@@ -59,12 +62,119 @@ public:
                       ImageContainer* aContainer,
                       Image** aOutImage) override;
 
+  virtual bool SupportsConfig(IMFMediaType* aType) override;
+
 private:
   nsRefPtr<IDirect3D9Ex> mD3D9;
   nsRefPtr<IDirect3DDevice9Ex> mDevice;
   nsRefPtr<IDirect3DDeviceManager9> mDeviceManager;
+  RefPtr<D3D9RecycleAllocator> mTextureClientAllocator;
+  nsRefPtr<IDirectXVideoDecoderService> mDecoderService;
   UINT32 mResetToken;
 };
+
+void GetDXVA2ExtendedFormatFromMFMediaType(IMFMediaType *pType,
+                                           DXVA2_ExtendedFormat *pFormat)
+{
+  // Get the interlace mode.
+  MFVideoInterlaceMode interlace =
+    (MFVideoInterlaceMode)MFGetAttributeUINT32(pType, MF_MT_INTERLACE_MODE, MFVideoInterlace_Unknown);
+
+  if (interlace == MFVideoInterlace_MixedInterlaceOrProgressive) {
+    pFormat->SampleFormat = DXVA2_SampleFieldInterleavedEvenFirst;
+  } else {
+    pFormat->SampleFormat = (UINT)interlace;
+  }
+
+  pFormat->VideoChromaSubsampling =
+    MFGetAttributeUINT32(pType, MF_MT_VIDEO_CHROMA_SITING, MFVideoChromaSubsampling_Unknown);
+  pFormat->NominalRange =
+    MFGetAttributeUINT32(pType, MF_MT_VIDEO_NOMINAL_RANGE, MFNominalRange_Unknown);
+  pFormat->VideoTransferMatrix =
+    MFGetAttributeUINT32(pType, MF_MT_YUV_MATRIX, MFVideoTransferMatrix_Unknown);
+  pFormat->VideoLighting =
+    MFGetAttributeUINT32(pType, MF_MT_VIDEO_LIGHTING, MFVideoLighting_Unknown);
+  pFormat->VideoPrimaries =
+    MFGetAttributeUINT32(pType, MF_MT_VIDEO_PRIMARIES, MFVideoPrimaries_Unknown);
+  pFormat->VideoTransferFunction =
+    MFGetAttributeUINT32(pType, MF_MT_TRANSFER_FUNCTION, MFVideoTransFunc_Unknown);
+}
+
+HRESULT ConvertMFTypeToDXVAType(IMFMediaType *pType, DXVA2_VideoDesc *pDesc)
+{
+  ZeroMemory(pDesc, sizeof(*pDesc));
+
+  // The D3D format is the first DWORD of the subtype GUID.
+  GUID subtype = GUID_NULL;
+  HRESULT hr = pType->GetGUID(MF_MT_SUBTYPE, &subtype);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  pDesc->Format = (D3DFORMAT)subtype.Data1;
+
+  UINT32 width = 0;
+  UINT32 height = 0;
+  hr = MFGetAttributeSize(pType, MF_MT_FRAME_SIZE, &width, &height);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  pDesc->SampleWidth = width;
+  pDesc->SampleHeight = height;
+
+  UINT32 fpsNumerator = 0;
+  UINT32 fpsDenominator = 0;
+  hr = MFGetAttributeRatio(pType, MF_MT_FRAME_RATE, &fpsNumerator, &fpsDenominator);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  pDesc->InputSampleFreq.Numerator = fpsNumerator;
+  pDesc->InputSampleFreq.Denominator = fpsDenominator;
+
+  GetDXVA2ExtendedFormatFromMFMediaType(pType, &pDesc->SampleFormat);
+  pDesc->OutputFrameFreq = pDesc->InputSampleFreq;
+  if ((pDesc->SampleFormat.SampleFormat == DXVA2_SampleFieldInterleavedEvenFirst) ||
+      (pDesc->SampleFormat.SampleFormat == DXVA2_SampleFieldInterleavedOddFirst)) {
+    pDesc->OutputFrameFreq.Numerator *= 2;
+  }
+
+  return S_OK;
+}
+
+static const GUID DXVA2_ModeH264_E = {
+  0x1b81be68, 0xa0c7, 0x11d3, { 0xb9, 0x84, 0x00, 0xc0, 0x4f, 0x2e, 0x73, 0xc5 }
+};
+
+// This tests if a DXVA video decoder can be created for the given media type/resolution.
+// It uses the same decoder device (DXVA2_ModeH264_E - DXVA2_ModeH264_VLD_NoFGT) as the H264
+// decoder MFT provided by windows (CLSID_CMSH264DecoderMFT) uses, so we can use it to determine
+// if the MFT will use software fallback or not.
+bool
+D3D9DXVA2Manager::SupportsConfig(IMFMediaType* aType)
+{
+  DXVA2_VideoDesc desc;
+  HRESULT hr = ConvertMFTypeToDXVAType(aType, &desc);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+
+  UINT configCount;
+  DXVA2_ConfigPictureDecode* configs = nullptr;
+  hr = mDecoderService->GetDecoderConfigurations(DXVA2_ModeH264_E, &desc, nullptr, &configCount, &configs);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+
+  nsRefPtr<IDirect3DSurface9> surface;
+  hr = mDecoderService->CreateSurface(desc.SampleWidth, desc.SampleHeight, 0, (D3DFORMAT)MAKEFOURCC('N', 'V', '1', '2'),
+  D3DPOOL_DEFAULT, 0, DXVA2_VideoDecoderRenderTarget,
+  surface.StartAssignment(), NULL);
+  if (!SUCCEEDED(hr)) {
+    CoTaskMemFree(configs);
+    return false;
+  }
+
+  for (UINT i = 0; i < configCount; i++) {
+    nsRefPtr<IDirectXVideoDecoder> decoder;
+    IDirect3DSurface9* surfaces = surface;
+    hr = mDecoderService->CreateVideoDecoder(DXVA2_ModeH264_E, &desc, &configs[i], &surfaces, 1, decoder.StartAssignment());
+    if (SUCCEEDED(hr) && decoder) {
+      CoTaskMemFree(configs);
+      return true;
+    }
+  }
+  CoTaskMemFree(configs);
+  return false;
+}
 
 D3D9DXVA2Manager::D3D9DXVA2Manager()
   : mResetToken(0)
@@ -87,13 +197,14 @@ D3D9DXVA2Manager::GetDXVADeviceManager()
 }
 
 HRESULT
-D3D9DXVA2Manager::Init()
+D3D9DXVA2Manager::Init(nsACString& aFailureReason)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   gfx::D3D9VideoCrashGuard crashGuard;
   if (crashGuard.Crashed()) {
     NS_WARNING("DXVA2D3D9 crash detected");
+    aFailureReason.AssignLiteral("DXVA2D3D9 crashes detected in the past");
     return E_FAIL;
   }
 
@@ -106,6 +217,7 @@ D3D9DXVA2Manager::Init()
   HRESULT hr = d3d9Create(D3D_SDK_VERSION, getter_AddRefs(d3d9Ex));
   if (!d3d9Ex) {
     NS_WARNING("Direct3DCreate9 failed");
+    aFailureReason.AssignLiteral("Direct3DCreate9 failed");
     return E_FAIL;
   }
 
@@ -115,7 +227,10 @@ D3D9DXVA2Manager::Init()
                                            D3DDEVTYPE_HAL,
                                            (D3DFORMAT)MAKEFOURCC('N','V','1','2'),
                                            D3DFMT_X8R8G8B8);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  if (!SUCCEEDED(hr)) {
+    aFailureReason = nsPrintfCString("CheckDeviceFormatConversion failed with error %X", hr);
+    return hr;
+  }
 
   // Create D3D9DeviceEx.
   D3DPRESENT_PARAMETERS params = {0};
@@ -138,7 +253,10 @@ D3D9DXVA2Manager::Init()
                               &params,
                               nullptr,
                               getter_AddRefs(device));
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  if (!SUCCEEDED(hr)) {
+    aFailureReason = nsPrintfCString("CreateDeviceEx failed with error %X", hr);
+    return hr;
+  }
 
   // Ensure we can create queries to synchronize operations between devices.
   // Without this, when we make a copy of the frame in order to share it with
@@ -147,7 +265,10 @@ D3D9DXVA2Manager::Init()
   nsRefPtr<IDirect3DQuery9> query;
 
   hr = device->CreateQuery(D3DQUERYTYPE_EVENT, getter_AddRefs(query));
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  if (!SUCCEEDED(hr)) {
+    aFailureReason = nsPrintfCString("CreateQuery failed with error %X", hr);
+    return hr;
+  }
 
   // Create and initialize IDirect3DDeviceManager9.
   UINT resetToken = 0;
@@ -155,14 +276,53 @@ D3D9DXVA2Manager::Init()
 
   hr = wmf::DXVA2CreateDirect3DDeviceManager9(&resetToken,
                                               getter_AddRefs(deviceManager));
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  if (!SUCCEEDED(hr)) {
+    aFailureReason = nsPrintfCString("DXVA2CreateDirect3DDeviceManager9 failed with error %X", hr);
+    return hr;
+  }
   hr = deviceManager->ResetDevice(device, resetToken);
+  if (!SUCCEEDED(hr)) {
+    aFailureReason = nsPrintfCString("IDirect3DDeviceManager9::ResetDevice failed with error %X", hr);
+    return hr;
+  }
+
+  HANDLE deviceHandle;
+  nsRefPtr<IDirectXVideoDecoderService> decoderService;
+  hr = deviceManager->OpenDeviceHandle(&deviceHandle);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+  hr = deviceManager->GetVideoService(deviceHandle, IID_PPV_ARGS(decoderService.StartAssignment()));
+  deviceManager->CloseDeviceHandle(deviceHandle);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+  UINT deviceCount;
+  GUID* decoderDevices = nullptr;
+  hr = decoderService->GetDecoderDeviceGuids(&deviceCount, &decoderDevices);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+  bool found = false;
+  for (UINT i = 0; i < deviceCount; i++) {
+    if (decoderDevices[i] == DXVA2_ModeH264_E) {
+      found = true;
+      break;
+    }
+  }
+  CoTaskMemFree(decoderDevices);
+
+  if (!found) {
+    return E_FAIL;
+  }
+
+  mDecoderService = decoderService;
 
   mResetToken = resetToken;
   mD3D9 = d3d9Ex;
   mDevice = device;
   mDeviceManager = deviceManager;
+
+  mTextureClientAllocator = new D3D9RecycleAllocator(layers::ImageBridgeChild::GetSingleton(),
+                                                     mDevice);
+  mTextureClientAllocator->SetMaxPoolSize(5);
 
   return S_OK;
 }
@@ -190,7 +350,7 @@ D3D9DXVA2Manager::CopyToImage(IMFSample* aSample,
                "Wrong format?");
 
   D3D9SurfaceImage* videoImage = static_cast<D3D9SurfaceImage*>(image.get());
-  hr = videoImage->SetData(D3D9SurfaceImage::Data(surface, aRegion));
+  hr = videoImage->SetData(D3D9SurfaceImage::Data(surface, aRegion, mTextureClientAllocator));
 
   image.forget(aOutImage);
 
@@ -203,7 +363,7 @@ static uint32_t sDXVAVideosCount = 0;
 
 /* static */
 DXVA2Manager*
-DXVA2Manager::CreateD3D9DXVA()
+DXVA2Manager::CreateD3D9DXVA(nsACString& aFailureReason)
 {
   MOZ_ASSERT(NS_IsMainThread());
   HRESULT hr;
@@ -213,11 +373,12 @@ DXVA2Manager::CreateD3D9DXVA()
   const uint32_t dxvaLimit =
     Preferences::GetInt("media.windows-media-foundation.max-dxva-videos", 8);
   if (sDXVAVideosCount == dxvaLimit) {
+    aFailureReason.AssignLiteral("Too many DXVA videos playing");
     return nullptr;
   }
 
   nsAutoPtr<D3D9DXVA2Manager> d3d9Manager(new D3D9DXVA2Manager());
-  hr = d3d9Manager->Init();
+  hr = d3d9Manager->Init(aFailureReason);
   if (SUCCEEDED(hr)) {
     return d3d9Manager.forget();
   }
@@ -232,7 +393,7 @@ public:
   D3D11DXVA2Manager();
   virtual ~D3D11DXVA2Manager();
 
-  HRESULT Init();
+  HRESULT Init(nsACString& aFailureReason);
 
   IUnknown* GetDXVADeviceManager() override;
 
@@ -281,28 +442,46 @@ D3D11DXVA2Manager::GetDXVADeviceManager()
 }
 
 HRESULT
-D3D11DXVA2Manager::Init()
+D3D11DXVA2Manager::Init(nsACString& aFailureReason)
 {
   HRESULT hr;
 
   mDevice = gfxWindowsPlatform::GetPlatform()->CreateD3D11DecoderDevice();
-  NS_ENSURE_TRUE(mDevice, E_FAIL);
+  if (!mDevice) {
+    aFailureReason.AssignLiteral("Failed to create D3D11 device for decoder");
+    return E_FAIL;
+  }
 
   mDevice->GetImmediateContext(byRef(mContext));
-  NS_ENSURE_TRUE(mContext, E_FAIL);
+  if (!mContext) {
+    aFailureReason.AssignLiteral("Failed to get immediate context for d3d11 device");
+    return E_FAIL;
+  }
 
   hr = wmf::MFCreateDXGIDeviceManager(&mDeviceManagerToken, byRef(mDXGIDeviceManager));
-  NS_ENSURE_TRUE(SUCCEEDED(hr),hr);
+  if (!SUCCEEDED(hr)) {
+    aFailureReason = nsPrintfCString("MFCreateDXGIDeviceManager failed with code %X", hr);
+    return hr;
+  }
 
   hr = mDXGIDeviceManager->ResetDevice(mDevice, mDeviceManagerToken);
-  NS_ENSURE_TRUE(SUCCEEDED(hr),hr);
+  if (!SUCCEEDED(hr)) {
+    aFailureReason = nsPrintfCString("IMFDXGIDeviceManager::ResetDevice failed with code %X", hr);
+    return hr;
+  }
 
   mTransform = new MFTDecoder();
   hr = mTransform->Create(CLSID_VideoProcessorMFT);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  if (!SUCCEEDED(hr)) {
+    aFailureReason = nsPrintfCString("MFTDecoder::Create(CLSID_VideoProcessorMFT) failed with code %X", hr);
+    return hr;
+  }
 
   hr = mTransform->SendMFTMessage(MFT_MESSAGE_SET_D3D_MANAGER, ULONG_PTR(mDXGIDeviceManager.get()));
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  if (!SUCCEEDED(hr)) {
+    aFailureReason = nsPrintfCString("MFTDecoder::SendMFTMessage(MFT_MESSAGE_SET_D3D_MANAGER) failed with code %X", hr);
+    return hr;
+  }
 
   return S_OK;
 }
@@ -458,18 +637,19 @@ D3D11DXVA2Manager::ConfigureForSize(uint32_t aWidth, uint32_t aHeight)
 
 /* static */
 DXVA2Manager*
-DXVA2Manager::CreateD3D11DXVA()
+DXVA2Manager::CreateD3D11DXVA(nsACString& aFailureReason)
 {
   // DXVA processing takes up a lot of GPU resources, so limit the number of
   // videos we use DXVA with at any one time.
   const uint32_t dxvaLimit =
     Preferences::GetInt("media.windows-media-foundation.max-dxva-videos", 8);
   if (sDXVAVideosCount == dxvaLimit) {
+    aFailureReason.AssignLiteral("Too many DXVA videos playing");
     return nullptr;
   }
 
   nsAutoPtr<D3D11DXVA2Manager> manager(new D3D11DXVA2Manager());
-  HRESULT hr = manager->Init();
+  HRESULT hr = manager->Init(aFailureReason);
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
   return manager.forget();

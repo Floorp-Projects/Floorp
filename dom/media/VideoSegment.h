@@ -117,14 +117,6 @@ public:
                    StreamTime aDuration,
                    const IntSize& aIntrinsicSize,
                    bool aForceBlack = false);
-  const VideoFrame* GetFrameAt(StreamTime aOffset, StreamTime* aStart = nullptr)
-  {
-    VideoChunk* c = FindChunkContaining(aOffset, aStart);
-    if (!c) {
-      return nullptr;
-    }
-    return &c->mFrame;
-  }
   const VideoFrame* GetLastFrame(StreamTime* aStart = nullptr)
   {
     VideoChunk* c = GetLastChunk();
