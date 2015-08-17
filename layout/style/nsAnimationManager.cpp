@@ -975,10 +975,7 @@ nsAnimationManager::FlushAnimations(FlushFlags aFlags)
 
     collection->Tick();
 
-    bool canThrottleTick = aFlags == Can_Throttle &&
-      collection->CanPerformOnCompositorThread(
-        AnimationCollection::CanAnimateFlags(0)) &&
-      collection->CanThrottleAnimation(now);
+    bool canThrottleTick = aFlags == Can_Throttle;
 
     for (auto iter = collection->mAnimations.cbegin();
          canThrottleTick && iter != collection->mAnimations.cend();
