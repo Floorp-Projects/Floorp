@@ -28,7 +28,6 @@
 
 var base_dir = '';
 load(base_dir + 'base.js');
-/*
 load(base_dir + 'richards.js');
 load(base_dir + 'deltablue.js');
 load(base_dir + 'crypto.js');
@@ -43,14 +42,11 @@ load(base_dir + 'gbemu-part1.js');
 load(base_dir + 'gbemu-part2.js');
 load(base_dir + 'code-load.js');
 load(base_dir + 'box2d.js');
-*/
 load(base_dir + 'zlib.js');
 load(base_dir + 'zlib-data.js');
-/*
 load(base_dir + 'typescript.js');
 load(base_dir + 'typescript-input.js');
 load(base_dir + 'typescript-compiler.js');
-*/
 
 var success = true;
 
