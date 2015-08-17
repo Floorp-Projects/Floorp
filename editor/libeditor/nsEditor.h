@@ -824,6 +824,13 @@ public:
   void FindBetterInsertionPoint(nsCOMPtr<nsINode>& aNode,
                                 int32_t& aOffset);
 
+  /**
+   * HideCaret() hides caret with nsCaret::AddForceHide() or may show carent
+   * with nsCaret::RemoveForceHide().  This does NOT set visibility of
+   * nsCaret.  Therefore, this is stateless.
+   */
+  void HideCaret(bool aHide);
+
 protected:
   enum Tristate {
     eTriUnset,
@@ -883,6 +890,7 @@ protected:
   bool mDidPostCreate;    // whether PostCreate has been called
   bool mDispatchInputEvent;
   bool mIsInEditAction;   // true while the instance is handling an edit action
+  bool mHidingCaret;      // whether caret is hidden forcibly.
 
   friend bool NSCanUnload(nsISupports* serviceMgr);
   friend class nsAutoTxnsConserveSelection;

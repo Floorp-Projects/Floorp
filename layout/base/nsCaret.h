@@ -78,6 +78,21 @@ class nsCaret final : public nsISelectionListener
      *  because we're in non-editable/disabled content.
      */
     bool IsVisible();
+    /**
+     * AddForceHide() increases mHideCount and hide the caret even if
+     * SetVisible(true) has been or will be called.  This is useful when the
+     * caller wants to hide caret temporarily and it needs to cancel later.
+     * Especially, in the latter case, it's too difficult to decide if the
+     * caret should be actually visible or not because caret visible state
+     * is set from a lot of event handlers.  So, it's very stateful.
+     */
+    void AddForceHide();
+    /**
+     * RemoveForceHide() decreases mHideCount if it's over 0.
+     * If the value becomes 0, this may show the caret if SetVisible(true)
+     * has been called.
+     */
+    void RemoveForceHide();
     /** SetCaretReadOnly set the appearance of the caret
      *  @param inMakeReadonly true to show the caret in a 'read only' state,
      *         false to show the caret in normal, editing state
@@ -201,17 +216,22 @@ protected:
      * Ignored if mOverrideContent is null.
      */
     int32_t               mOverrideOffset;
-
-    /**
-     * mIsBlinkOn is true when we're in a blink cycle where the caret is on.
-     */
-    bool                  mIsBlinkOn;
     /**
      * mBlinkCount is used to control the number of times to blink the caret
      * before stopping the blink. This is reset each time we reset the
      * blinking.
      */
     int32_t               mBlinkCount;
+    /**
+     * mHideCount is not 0, it means that somebody doesn't want the caret
+     * to be visible.  See AddForceHide() and RemoveForceHide().
+     */
+    uint32_t              mHideCount;
+
+    /**
+     * mIsBlinkOn is true when we're in a blink cycle where the caret is on.
+     */
+    bool                  mIsBlinkOn;
     /**
      * mIsVisible is true when SetVisible was last called with 'true'.
      */
