@@ -815,7 +815,6 @@
 
         <toolbarbutton id="bookmarks-menu-button"
                        class="toolbarbutton-1 chromeclass-toolbar-additional"
-                       persist="class"
                        removable="true"
                        type="menu-button"
                        label="&bookmarksMenuButton.label;"
@@ -939,7 +938,7 @@
                        tooltip="dynamic-shortcut-tooltip"/>
 
         <toolbarbutton id="home-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                       persist="class" removable="true"
+                       removable="true"
                        label="&homeButton.label;"
                        ondragover="homeButtonObserver.onDragOver(event)"
                        ondragenter="homeButtonObserver.onDragOver(event)"

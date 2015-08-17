@@ -347,6 +347,12 @@ class nsStyleSet final
     return mSheets[aType].ObjectAt(aIndex);
   }
 
+  void AppendAllXBLStyleSheets(nsTArray<mozilla::CSSStyleSheet*>& aArray) const {
+    if (mBindingManager) {
+      mBindingManager->AppendAllSheets(aArray);
+    }
+  }
+
   nsresult RemoveDocStyleSheet(nsIStyleSheet* aSheet);
   nsresult AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocument);
 

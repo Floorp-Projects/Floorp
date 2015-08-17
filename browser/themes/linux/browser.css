@@ -142,7 +142,7 @@ toolbarbutton.bookmark-item[open="true"] {
   -moz-padding-end: 2px;
 }
 
-.bookmark-item:not(#home-button) > .toolbarbutton-icon,
+.bookmark-item > .toolbarbutton-icon,
 #personal-bookmarks[cui-areatype="toolbar"] > #bookmarks-toolbar-placeholder > .toolbarbutton-icon {
   width: 16px;
   height: 16px;
@@ -1108,8 +1108,7 @@ notification[value="loop-sharing-notification"] .messageImage {
 
 .ac-result-type-bookmark,
 .autocomplete-treebody::-moz-tree-image(bookmark, treecolAutoCompleteImage) {
-  list-style-image: url("chrome://browser/skin/places/star-icons.png");
-  -moz-image-region: rect(0px 32px 16px 16px);
+  list-style-image: url("chrome://browser/skin/places/autocomplete-star.png");
   width: 16px;
   height: 16px;
 }
