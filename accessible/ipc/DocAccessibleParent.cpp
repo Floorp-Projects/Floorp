@@ -19,7 +19,7 @@ DocAccessibleParent::RecvShowEvent(const ShowEventData& aData)
   if (mShutdown)
     return true;
 
-  CheckDocTree();
+  MOZ_DIAGNOSTIC_ASSERT(CheckDocTree());
 
   if (aData.NewTree().IsEmpty()) {
     NS_ERROR("no children being added");
@@ -50,7 +50,7 @@ DocAccessibleParent::RecvShowEvent(const ShowEventData& aData)
   }
 #endif
 
-  CheckDocTree();
+  MOZ_DIAGNOSTIC_ASSERT(CheckDocTree());
 
   return true;
 }
@@ -104,7 +104,7 @@ DocAccessibleParent::RecvHideEvent(const uint64_t& aRootID)
   if (mShutdown)
     return true;
 
-  CheckDocTree();
+  MOZ_DIAGNOSTIC_ASSERT(CheckDocTree());
 
   ProxyEntry* rootEntry = mAccessibles.GetEntry(aRootID);
   if (!rootEntry) {
@@ -122,7 +122,7 @@ DocAccessibleParent::RecvHideEvent(const uint64_t& aRootID)
   parent->RemoveChild(root);
   root->Shutdown();
 
-  CheckDocTree();
+  MOZ_DIAGNOSTIC_ASSERT(CheckDocTree());
 
   return true;
 }
@@ -196,12 +196,12 @@ DocAccessibleParent::RecvBindChildDoc(PDocAccessibleParent* aChildDoc, const uin
   if (!aID)
     return false;
 
-  CheckDocTree();
+  MOZ_DIAGNOSTIC_ASSERT(CheckDocTree());
 
   auto childDoc = static_cast<DocAccessibleParent*>(aChildDoc);
   bool result = AddChildDoc(childDoc, aID, false);
   MOZ_ASSERT(result);
-  CheckDocTree();
+  MOZ_DIAGNOSTIC_ASSERT(CheckDocTree());
   return result;
 }
 
@@ -265,16 +265,20 @@ DocAccessibleParent::Destroy()
     GetAccService()->RemoteDocShutdown(this);
 }
 
-void
+bool
 DocAccessibleParent::CheckDocTree() const
 {
   size_t childDocs = mChildDocs.Length();
   for (size_t i = 0; i < childDocs; i++) {
     if (!mChildDocs[i] || mChildDocs[i]->mParentDoc != this)
-      MOZ_CRASH("document tree is broken!");
+      return false;
 
-    mChildDocs[i]->CheckDocTree();
+    if (!mChildDocs[i]->CheckDocTree()) {
+      return false;
+    }
   }
+
+  return true;
 }
 
 } // a11y

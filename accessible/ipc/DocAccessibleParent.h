@@ -72,7 +72,7 @@ public:
   void Destroy();
   virtual void ActorDestroy(ActorDestroyReason aWhy) override
   {
-    CheckDocTree();
+    MOZ_DIAGNOSTIC_ASSERT(CheckDocTree());
     if (!mShutdown)
       Destroy();
   }
@@ -151,7 +151,7 @@ private:
   uint32_t AddSubtree(ProxyAccessible* aParent,
                       const nsTArray<AccessibleData>& aNewTree, uint32_t aIdx,
                       uint32_t aIdxInParent);
-  void CheckDocTree() const;
+  MOZ_WARN_UNUSED_RESULT bool CheckDocTree() const;
 
   nsTArray<DocAccessibleParent*> mChildDocs;
   DocAccessibleParent* mParentDoc;
