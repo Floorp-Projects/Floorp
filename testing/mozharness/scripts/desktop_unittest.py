@@ -599,8 +599,9 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                 if not os.path.isdir(env['MOZ_UPLOAD_DIR']):
                     self.mkdir_p(env['MOZ_UPLOAD_DIR'])
                 env = self.query_env(partial_env=env, log_level=INFO)
+                cmd_timeout = 2500 if suite_category == 'cppunittest' else 1000
                 return_code = self.run_command(cmd, cwd=dirs['abs_work_dir'],
-                                               output_timeout=1000,
+                                               output_timeout=cmd_timeout,
                                                output_parser=parser,
                                                env=env)
 
