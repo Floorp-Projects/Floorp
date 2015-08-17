@@ -916,8 +916,7 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
 
   TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
   bool didThrottle = false;
-  // Trim transitions that have completed, post restyle events for frames that
-  // are still transitioning, and start transitions with delays.
+  // Post restyle events for frames that are transitioning.
   {
     PRCList *next = PR_LIST_HEAD(&mElementCollections);
     while (next != &mElementCollections) {
@@ -958,12 +957,6 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
         collection->PostRestyleForAnimation(mPresContext);
       } else {
         didThrottle = true;
-      }
-
-      if (collection->mAnimations.IsEmpty()) {
-        collection->Destroy();
-        // |collection| is now a dangling pointer!
-        collection = nullptr;
       }
     }
   }
