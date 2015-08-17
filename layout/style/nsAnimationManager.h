@@ -100,6 +100,7 @@ public:
   }
 
   void Tick() override;
+  void QueueEvents();
 
   bool IsStylePaused() const { return mIsStylePaused; }
 
@@ -162,8 +163,6 @@ protected:
                                         "before a CSS animation is destroyed");
   }
   virtual CommonAnimationManager* GetAnimationManager() const override;
-
-  void QueueEvents();
 
   nsString mAnimationName;
 

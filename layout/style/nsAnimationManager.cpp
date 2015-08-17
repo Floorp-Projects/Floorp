@@ -435,6 +435,13 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
           }
         }
         if (!oldAnim) {
+          // FIXME: Bug 1134163 - We shouldn't queue animationstart events
+          // until the animation is actually ready to run. However, we
+          // currently have some tests that assume that these events are
+          // dispatched within the same tick as the animation is added
+          // so we need to queue up any animationstart events from newly-created
+          // animations.
+          newAnim->AsCSSAnimation()->QueueEvents();
           continue;
         }
 
@@ -450,6 +457,12 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
             oldEffect->Properties() != newEffect->Properties();
           oldEffect->Timing() = newEffect->Timing();
           oldEffect->Properties() = newEffect->Properties();
+          // FIXME: Currently assigning to KeyframeEffect::Timing() does not
+          // update the corresponding Animation (which may, for example, no
+          // longer be finished). Until we introduce proper setters for
+          // properties on effects, we need to manually cause the owning
+          // Animation to update its timing by setting the effect again.
+          oldAnim->SetEffect(oldEffect);
         }
 
         // Reset compositor state so animation will be re-synchronized.
@@ -477,7 +490,10 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
 
         oldAnim->CopyAnimationIndex(*newAnim->AsCSSAnimation());
 
-        if (animationChanged) {
+        // Updating the effect timing above might already have caused the
+        // animation to become irrelevant so only add a changed record if
+        // the animation is still relevant.
+        if (animationChanged && oldAnim->IsRelevant()) {
           nsNodeUtils::AnimationChanged(oldAnim);
         }
 
@@ -500,10 +516,15 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
   } else {
     collection =
       GetAnimations(aElement, aStyleContext->GetPseudoType(), true);
+    for (Animation* animation : newAnimations) {
+      // FIXME: Bug 1134163 - As above, we have shouldn't actually need to
+      // queue events here. (But we do for now since some tests expect
+      // animationstart events to be dispatched immediately.)
+      animation->AsCSSAnimation()->QueueEvents();
+    }
   }
   collection->mAnimations.SwapElements(newAnimations);
   collection->mNeedsRefreshes = true;
-  collection->Tick();
 
   // Cancel removed animations
   for (size_t newAnimIdx = newAnimations.Length(); newAnimIdx-- != 0; ) {
