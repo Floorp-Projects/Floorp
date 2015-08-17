@@ -543,7 +543,12 @@ AudioDestinationNode::WindowAudioCaptureChanged()
     return NS_OK;
   }
 
-  bool captured = GetOwner()->GetAudioCaptured();
+  nsCOMPtr<nsPIDOMWindow> ownerWindow = GetOwner();
+  if (!ownerWindow) {
+    return NS_OK;
+  }
+
+  bool captured = ownerWindow->GetAudioCaptured();
 
   if (captured != mCaptured) {
     if (captured) {
