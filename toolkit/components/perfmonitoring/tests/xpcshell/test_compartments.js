@@ -11,8 +11,8 @@ function run_test() {
 }
 
 let promiseStatistics = Task.async(function*(name) {
-  yield Promise.resolve(); // Make sure that we wait until
-  // statistics have been updated.
+  yield new Promise(resolve => do_execute_soon(resolve));
+  // Make sure that we wait until statistics have been updated.
   let service = Cc["@mozilla.org/toolkit/performance-stats-service;1"].
     getService(Ci.nsIPerformanceStatsService);
   let snapshot = service.getSnapshot();
@@ -23,6 +23,7 @@ let promiseStatistics = Task.async(function*(name) {
     let normalized = JSON.parse(JSON.stringify(data));
     componentsData.push(data);
   }
+  yield new Promise(resolve => do_execute_soon(resolve));
   return {
     processData: JSON.parse(JSON.stringify(snapshot.getProcessData())),
     componentsData
@@ -34,14 +35,14 @@ let promiseSetMonitoring = Task.async(function*(to) {
     getService(Ci.nsIPerformanceStatsService);
   service.isMonitoringJank = to;
   service.isMonitoringCPOW = to;
-  yield Promise.resolve();
+  yield new Promise(resolve => do_execute_soon(resolve));
 });
 
 let promiseSetPerCompartment = Task.async(function*(to) {
   let service = Cc["@mozilla.org/toolkit/performance-stats-service;1"].
     getService(Ci.nsIPerformanceStatsService);
   service.isMonitoringPerCompartment = to;
-  yield Promise.resolve();
+  yield new Promise(resolve => do_execute_soon(resolve));
 });
 
 function getBuiltinStatistics(name, snapshot) {
@@ -63,7 +64,7 @@ function burnCPU(ms) {
     ignored.shift();
     ++counter;
   }
-  do_print("Burning CPU over, after " + counter + " iterations");
+  do_print(`Burning CPU over, after ${counter} iterations and ${Date.now() - start} milliseconds.`);
 }
 
 function ensureEquals(snap1, snap2, name) {
@@ -133,6 +134,7 @@ add_task(function* test_measure() {
   if (skipPrecisionTests) {
     do_print("Skipping totalUserTime check under Windows XP, as timer is not always updated by the OS.")
   } else {
+    do_print(JSON.stringify(process2));
     Assert.ok(process2.totalUserTime - process1.totalUserTime >= 10000, `At least 10ms counted for process time (${process2.totalUserTime - process1.totalUserTime})`);
   }
   Assert.equal(process2.totalCPOWTime, process1.totalCPOWTime, "We haven't used any CPOW time during the first burn");
@@ -162,8 +164,9 @@ add_task(function* test_measure() {
   for (let stats of [stats1, stats2, stats3, stats4]) {
     Assert.ok(!stats.componentsData.find(x => x.name.includes("Task.jsm")), "At this stage, Task.jsm doesn't show up in the components data");
   }
+  yield promiseSetMonitoring(true);
   yield promiseSetPerCompartment(true);
   burnCPU(300);
   let stats5 = yield promiseStatistics("With per-compartment monitoring");
-  Assert.ok(stats5.componentsData.find(x => x.name.includes("Task.jsm")), "With per-compartment monitoring, test_compartments.js shows up");
+  Assert.ok(stats5.componentsData.find(x => x.name.indexOf("Task.jsm") != -1), "With per-compartment monitoring, Task.jsm shows up");
 });
