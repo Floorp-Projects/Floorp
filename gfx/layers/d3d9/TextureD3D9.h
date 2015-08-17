@@ -244,13 +244,14 @@ public:
   Create(ISurfaceAllocator* aAllocator,
          gfx::SurfaceFormat aFormat,
          TextureFlags aFlags,
-         IDirect3DTexture9* aTexture,
-         HANDLE aSharedHandle,
-         D3DSURFACE_DESC aDesc);
+         IDirect3DDevice9* aDevice,
+         const gfx::IntSize& aSize);
 
   // TextureClient
 
   virtual bool IsAllocated() const override { return !!mTexture; }
+
+  virtual gfx::SurfaceFormat GetFormat() const override { return mFormat; }
 
   virtual bool Lock(OpenMode aOpenMode) override;
 
@@ -273,7 +274,18 @@ public:
   virtual already_AddRefed<TextureClient>
   CreateSimilar(TextureFlags, TextureAllocationFlags) const override { return nullptr; }
 
+  IDirect3DDevice9* GetD3D9Device() { return mDevice; }
+  IDirect3DTexture9* GetD3D9Texture() { return mTexture; }
+  HANDLE GetShareHandle() const { return mHandle; }
+  already_AddRefed<IDirect3DSurface9> GetD3D9Surface() const;
+
+  const D3DSURFACE_DESC& GetDesc() const
+  {
+    return mDesc;
+  }
+
 private:
+  RefPtr<IDirect3DDevice9> mDevice;
   RefPtr<IDirect3DTexture9> mTexture;
   gfx::SurfaceFormat mFormat;
   HANDLE mHandle;

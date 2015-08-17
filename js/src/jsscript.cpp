@@ -1328,6 +1328,17 @@ JSScript::getPCCounts(jsbytecode* pc) {
 }
 
 void
+JSScript::setIonScript(JSContext* maybecx, js::jit::IonScript* ionScript)
+{
+    MOZ_ASSERT_IF(ionScript != ION_DISABLED_SCRIPT, !baselineScript()->hasPendingIonBuilder());
+    if (hasIonScript())
+        js::jit::IonScript::writeBarrierPre(zone(), ion);
+    ion = ionScript;
+    MOZ_ASSERT_IF(hasIonScript(), hasBaselineScript());
+    updateBaselineOrIonRaw(maybecx);
+}
+
+void
 JSScript::addIonCounts(jit::IonScriptCounts* ionCounts)
 {
     ScriptCountsMap::Ptr p = GetScriptCountsMapEntry(this);
@@ -4045,15 +4056,14 @@ LazyScript::hasUncompiledEnclosingScript() const
 void
 JSScript::updateBaselineOrIonRaw(JSContext* maybecx)
 {
-    if (hasIonScript()) {
-        if (ion->pendingBuilder()) {
-            MOZ_ASSERT(maybecx);
-            baselineOrIonRaw = maybecx->runtime()->jitRuntime()->lazyLinkStub()->raw();
-            baselineOrIonSkipArgCheck = maybecx->runtime()->jitRuntime()->lazyLinkStub()->raw();
-        } else {
-            baselineOrIonRaw = ion->method()->raw();
-            baselineOrIonSkipArgCheck = ion->method()->raw() + ion->getSkipArgCheckEntryOffset();
-        }
+    if (hasBaselineScript() && baseline->hasPendingIonBuilder()) {
+        MOZ_ASSERT(maybecx);
+        MOZ_ASSERT(!isIonCompilingOffThread());
+        baselineOrIonRaw = maybecx->runtime()->jitRuntime()->lazyLinkStub()->raw();
+        baselineOrIonSkipArgCheck = maybecx->runtime()->jitRuntime()->lazyLinkStub()->raw();
+    } else if (hasIonScript()) {
+        baselineOrIonRaw = ion->method()->raw();
+        baselineOrIonSkipArgCheck = ion->method()->raw() + ion->getSkipArgCheckEntryOffset();
     } else if (hasBaselineScript()) {
         baselineOrIonRaw = baseline->method()->raw();
         baselineOrIonSkipArgCheck = baseline->method()->raw();

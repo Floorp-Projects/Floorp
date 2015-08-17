@@ -12,6 +12,7 @@
 
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/nsRefPtr.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/UniquePtr.h"
@@ -53,7 +54,11 @@ public:
 
   // Mimic MDSM::StartAudioThread.
   // Must be called before any calls to SendData().
-  void StartPlayback(int64_t aStartTime, const MediaInfo& aInfo);
+  //
+  // Return a promise which will be resolved when the stream is finished
+  // or rejected if any error.
+  nsRefPtr<GenericPromise> StartPlayback(int64_t aStartTime,
+                                         const MediaInfo& aInfo);
   // Mimic MDSM::StopAudioThread.
   void StopPlayback();
 
@@ -71,8 +76,7 @@ public:
   bool IsFinished() const;
   bool HasConsumers() const;
 
-  // Return true if stream is finished.
-  bool SendData();
+  void SendData();
 
 protected:
   virtual ~DecodedStream();

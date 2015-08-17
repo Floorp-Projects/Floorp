@@ -54,7 +54,8 @@ add_task(function* test_notification_ack() {
   ]);
 
   let acks = 0;
-  let ackDefer = Promise.defer();
+  let ackDone;
+  let ackPromise = new Promise(resolve => ackDone = resolve);
   PushService.init({
     serverURI: "wss://push.example.org/",
     networkInfo: new MockDesktopNetworkInfo(),
@@ -115,7 +116,7 @@ add_task(function* test_notification_ack() {
               channelID: '5477bfda-22db-45d4-9614-fee369630260',
               version: 6
             }], updates, 'Wrong updates for acknowledgement 3');
-            ackDefer.resolve();
+            ackDone();
             break;
 
           default:
@@ -128,6 +129,6 @@ add_task(function* test_notification_ack() {
 
   yield waitForPromise(notifyPromise, DEFAULT_TIMEOUT,
     'Timed out waiting for notifications');
-  yield waitForPromise(ackDefer.promise, DEFAULT_TIMEOUT,
+  yield waitForPromise(ackPromise, DEFAULT_TIMEOUT,
     'Timed out waiting for multiple acknowledgements');
 });

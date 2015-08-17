@@ -34,7 +34,7 @@ public:
   virtual nsresult Flush() override;
   virtual nsresult Drain() override;
   virtual nsresult Shutdown() override;
-  virtual bool IsHardwareAccelerated() const override;
+  virtual bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
 
   // Return true if mimetype is H.264.
   static bool IsH264(const TrackInfo& aConfig);
@@ -61,7 +61,6 @@ private:
   nsRefPtr<MediaDataDecoder> mDecoder;
   MozPromiseRequestHolder<InitPromise> mInitPromiseRequest;
   bool mNeedAVCC;
-  bool mDecoderInitializing;
   nsresult mLastError;
 };
 

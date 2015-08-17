@@ -39,8 +39,8 @@ add_task(function* test_unregister_invalid_json() {
     yield db.put(record);
   }
 
-  let unregisterDefer = Promise.defer();
-  let unregisterDone = after(2, unregisterDefer.resolve);
+  let unregisterDone;
+  let unregisterPromise = new Promise(resolve => unregisterDone = after(2, resolve));
   PushService.init({
     serverURI: "wss://push.example.org/",
     networkInfo: new MockDesktopNetworkInfo(),
@@ -77,6 +77,6 @@ add_task(function* test_unregister_invalid_json() {
   ok(!record,
     'Failed to delete unregistered record after receiving invalid JSON');
 
-  yield waitForPromise(unregisterDefer.promise, DEFAULT_TIMEOUT,
+  yield waitForPromise(unregisterPromise, DEFAULT_TIMEOUT,
     'Timed out waiting for unregister');
 });

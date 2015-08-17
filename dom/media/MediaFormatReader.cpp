@@ -1038,7 +1038,11 @@ MediaFormatReader::DecodeDemuxedSamples(TrackType aTrack,
     if (aTrack == TrackInfo::kVideoTrack) {
       aA.mParsed++;
     }
-    decoder.mDecoder->Input(sample);
+    if (NS_FAILED(decoder.mDecoder->Input(sample))) {
+      LOG("Unable to pass frame to decoder");
+      NotifyError(aTrack);
+      return;
+    }
     decoder.mQueuedSamples.RemoveElementAt(0);
     samplesPending = true;
   }
@@ -1114,8 +1118,9 @@ MediaFormatReader::Update(TrackType aTrack)
     if (!decoder.mOutput.IsEmpty()) {
       // We have a decoded sample ready to be returned.
       if (aTrack == TrackType::kVideoTrack) {
+        nsCString error;
         mVideo.mIsHardwareAccelerated =
-          mVideo.mDecoder && mVideo.mDecoder->IsHardwareAccelerated();
+          mVideo.mDecoder && mVideo.mDecoder->IsHardwareAccelerated(error);
       }
       while (decoder.mOutput.Length()) {
         nsRefPtr<MediaData> output = decoder.mOutput[0];

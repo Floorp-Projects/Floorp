@@ -28,7 +28,8 @@ add_task(function* test_notification_version_string() {
 
   let notifyPromise = promiseObserverNotification('push-notification');
 
-  let ackDefer = Promise.defer();
+  let ackDone;
+  let ackPromise = new Promise(resolve => ackDone = resolve);
   PushService.init({
     serverURI: "wss://push.example.org/",
     networkInfo: new MockDesktopNetworkInfo(),
@@ -49,7 +50,7 @@ add_task(function* test_notification_version_string() {
             }]
           }));
         },
-        onACK: ackDefer.resolve
+        onACK: ackDone
       });
     }
   });
@@ -65,7 +66,7 @@ add_task(function* test_notification_version_string() {
     'Wrong push endpoint');
   strictEqual(message.version, 4, 'Wrong version');
 
-  yield waitForPromise(ackDefer.promise, DEFAULT_TIMEOUT,
+  yield waitForPromise(ackPromise, DEFAULT_TIMEOUT,
     'Timed out waiting for string acknowledgement');
 
   let storeRecord = yield db.getByKeyID(

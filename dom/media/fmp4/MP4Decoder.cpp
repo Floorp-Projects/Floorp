@@ -283,14 +283,15 @@ CreateTestH264Decoder(layers::LayersBackend aBackend,
 }
 
 /* static */ bool
-MP4Decoder::IsVideoAccelerated(layers::LayersBackend aBackend)
+MP4Decoder::IsVideoAccelerated(layers::LayersBackend aBackend, nsACString& aFailureReason)
 {
   VideoInfo config;
   nsRefPtr<MediaDataDecoder> decoder(CreateTestH264Decoder(aBackend, config));
   if (!decoder) {
+    aFailureReason.AssignLiteral("Failed to create H264 decoder");
     return false;
   }
-  bool result = decoder->IsHardwareAccelerated();
+  bool result = decoder->IsHardwareAccelerated(aFailureReason);
   return result;
 }
 

@@ -249,6 +249,24 @@ TextureClient::SetAddedToCompositableClient()
   }
 }
 
+/* static */ void
+TextureClient::TextureClientRecycleCallback(TextureClient* aClient, void* aClosure)
+{
+  MOZ_ASSERT(aClient->GetRecycleAllocator());
+  aClient->GetRecycleAllocator()->RecycleTextureClient(aClient);
+}
+
+void
+TextureClient::SetRecycleAllocator(TextureClientRecycleAllocator* aAllocator)
+{
+  mRecycleAllocator = aAllocator;
+  if (aAllocator) {
+    SetRecycleCallback(TextureClientRecycleCallback, nullptr);
+  } else {
+    ClearRecycleCallback();
+  }
+}
+
 bool
 TextureClient::InitIPDLActor(CompositableForwarder* aForwarder)
 {
