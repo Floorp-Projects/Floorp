@@ -355,6 +355,13 @@ NS_IMETHODIMP nsXULPopupShownEvent::Run()
 NS_IMETHODIMP nsXULPopupShownEvent::HandleEvent(nsIDOMEvent* aEvent)
 {
   nsMenuPopupFrame* popup = do_QueryFrame(mPopup->GetPrimaryFrame());
+  nsCOMPtr<nsIDOMEventTarget> eventTarget;
+  aEvent->GetTarget(getter_AddRefs(eventTarget));
+  // Ignore events not targeted at the popup itself (ie targeted at
+  // descendants):
+  if (!SameCOMIdentity(mPopup, eventTarget)) {
+    return NS_OK;
+  }
   if (popup) {
     // ResetPopupShownDispatcher will delete the reference to this, so keep
     // another one until Run is finished.
