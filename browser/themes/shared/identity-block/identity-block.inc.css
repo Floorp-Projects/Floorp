@@ -80,9 +80,9 @@
 #tracking-protection-icon {
   width: 16px;
   height: 16px;
+  margin-inline-start: 0;
   margin-inline-end: 2px;
   list-style-image: url(chrome://browser/skin/tracking-protection-16.svg);
-  margin-left: 0;
   opacity: 1;
 }
 
@@ -91,11 +91,11 @@
 }
 
 #tracking-protection-icon[animate] {
-  transition: margin-left 200ms ease-out;
+  transition: margin-left 200ms ease-out, margin-right 200ms ease-out;
 }
 
 #tracking-protection-icon:not([state]) {
-  margin-left: -16px;
+  margin-inline-start: -18px;
   pointer-events: none;
   opacity: 0;
   /* Only animate the shield in, when it disappears hide it immediately. */
