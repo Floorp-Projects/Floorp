@@ -3766,7 +3766,7 @@ MacroAssemblerARMCompat::handleFailureWithHandlerTail(void* handler)
     ma_mov(sp, r0);
 
     // Call the handler.
-    asMasm().setupUnalignedABICall(1, r1);
+    asMasm().setupUnalignedABICall(r1);
     asMasm().passABIArg(r0);
     asMasm().callWithABI(handler);
 
@@ -4985,7 +4985,7 @@ MacroAssembler::call(JitCode* c)
 // ABI function calls.
 
 void
-MacroAssembler::setupUnalignedABICall(uint32_t args, Register scratch)
+MacroAssembler::setupUnalignedABICall(Register scratch)
 {
     setupABICall();
     dynamicAlignment_ = true;

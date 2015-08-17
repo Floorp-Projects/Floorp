@@ -139,7 +139,7 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler& masm)
         MOZ_ASSERT(R0 == ValueOperand(r3, r2));
         masm.moveValue(R0, savedValue);
 
-        masm.setupAlignedABICall(2);
+        masm.setupAlignedABICall();
         masm.passABIArg(R0.payloadReg());
         masm.passABIArg(R1.payloadReg());
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, __aeabi_idivmod));
