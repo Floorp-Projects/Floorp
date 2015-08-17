@@ -255,9 +255,6 @@ public:
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const MOZ_MUST_OVERRIDE override;
 
-  // nsARefreshObserver
-  virtual void WillRefresh(mozilla::TimeStamp aTime) override;
-
   /**
    * Return the style rule that RulesMatching should add for
    * aStyleContext.  This might be different from what RulesMatching

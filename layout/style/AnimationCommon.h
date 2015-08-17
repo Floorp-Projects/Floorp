@@ -62,6 +62,9 @@ public:
   virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
     const MOZ_MUST_OVERRIDE override;
 
+  // nsARefreshObserver
+  void WillRefresh(TimeStamp aTime) override;
+
 #ifdef DEBUG
   static void Initialize();
 #endif
