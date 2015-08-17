@@ -1220,7 +1220,14 @@ class AnyRegisterIterator
 class ABIArg
 {
   public:
-    enum Kind { GPR, FPU, Stack };
+    enum Kind {
+        GPR,
+#ifdef JS_CODEGEN_REGISTER_PAIR
+        GPR_PAIR,
+#endif
+        FPU,
+        Stack
+    };
 
   private:
     Kind kind_;
@@ -1233,11 +1240,39 @@ class ABIArg
   public:
     ABIArg() : kind_(Kind(-1)) { u.offset_ = -1; }
     explicit ABIArg(Register gpr) : kind_(GPR) { u.gpr_ = gpr.code(); }
+    explicit ABIArg(Register gprLow, Register gprHigh)
+    {
+#if defined(JS_CODEGEN_REGISTER_PAIR)
+        kind_ = GPR_PAIR;
+#else
+        MOZ_CRASH("Unsupported type of ABI argument.");
+#endif
+        u.gpr_ = gprLow.code();
+        MOZ_ASSERT(u.gpr_ % 2 == 0);
+        MOZ_ASSERT(u.gpr_ + 1 == gprHigh.code());
+    }
     explicit ABIArg(FloatRegister fpu) : kind_(FPU) { u.fpu_ = fpu.code(); }
     explicit ABIArg(uint32_t offset) : kind_(Stack) { u.offset_ = offset; }
 
     Kind kind() const { return kind_; }
-    Register gpr() const { MOZ_ASSERT(kind() == GPR); return Register::FromCode(u.gpr_); }
+#ifdef JS_CODEGEN_REGISTER_PAIR
+    bool isGeneralRegPair() const { return kind_ == GPR_PAIR; }
+#else
+    bool isGeneralRegPair() const { return false; }
+#endif
+
+    Register gpr() const {
+        MOZ_ASSERT(kind() == GPR);
+        return Register::FromCode(u.gpr_);
+    }
+    Register evenGpr() const {
+        MOZ_ASSERT(isGeneralRegPair());
+        return Register::FromCode(u.gpr_);
+    }
+    Register oddGpr() const {
+        MOZ_ASSERT(isGeneralRegPair());
+        return Register::FromCode(u.gpr_ + 1);
+    }
     FloatRegister fpu() const { MOZ_ASSERT(kind() == FPU); return FloatRegister::FromCode(u.fpu_); }
     uint32_t offsetFromArgBase() const { MOZ_ASSERT(kind() == Stack); return u.offset_; }
 
