@@ -692,15 +692,17 @@ public:
 class PrefEnabledRunnable final : public WorkerMainThreadRunnable
 {
 public:
-  explicit PrefEnabledRunnable(WorkerPrivate* aWorkerPrivate)
+  PrefEnabledRunnable(WorkerPrivate* aWorkerPrivate,
+                      const nsCString& aPrefName)
     : WorkerMainThreadRunnable(aWorkerPrivate)
     , mEnabled(false)
+    , mPrefName(aPrefName)
   { }
 
   bool MainThreadRun() override
   {
     MOZ_ASSERT(NS_IsMainThread());
-    mEnabled = Preferences::GetBool("dom.enable_user_timing", false);
+    mEnabled = Preferences::GetBool(mPrefName.get(), false);
     return true;
   }
 
@@ -711,6 +713,7 @@ public:
 
 private:
   bool mEnabled;
+  nsCString mPrefName;
 };
 
 } // namespace
@@ -727,7 +730,8 @@ nsPerformance::IsEnabled(JSContext* aCx, JSObject* aGlobal)
   workerPrivate->AssertIsOnWorkerThread();
 
   nsRefPtr<PrefEnabledRunnable> runnable =
-    new PrefEnabledRunnable(workerPrivate);
+    new PrefEnabledRunnable(workerPrivate,
+                            NS_LITERAL_CSTRING("dom.enable_user_timing"));
   runnable->Dispatch(workerPrivate->GetJSContext());
 
   return runnable->IsEnabled();
