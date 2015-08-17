@@ -21,8 +21,8 @@ function run_test() {
 }
 
 add_task(function* test_register_invalid_json() {
-  let helloDefer = Promise.defer();
-  let helloDone = after(2, helloDefer.resolve);
+  let helloDone;
+  let helloPromise = new Promise(resolve => helloDone = after(2, resolve));
   let registers = 0;
 
   PushServiceWebSocket._generateID = () => channelID;
@@ -57,7 +57,7 @@ add_task(function* test_register_invalid_json() {
     'Wrong error for invalid JSON response'
   );
 
-  yield waitForPromise(helloDefer.promise, DEFAULT_TIMEOUT,
+  yield waitForPromise(helloPromise, DEFAULT_TIMEOUT,
     'Reconnect after invalid JSON response timed out');
   equal(registers, 1, 'Wrong register count');
 });

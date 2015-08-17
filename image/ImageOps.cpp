@@ -116,7 +116,9 @@ ImageOps::DecodeToSurface(nsIInputStream* aInputStream,
   DecoderType decoderType =
     DecoderFactory::GetDecoderType(PromiseFlatCString(aMimeType).get());
   nsRefPtr<Decoder> decoder =
-    DecoderFactory::CreateAnonymousDecoder(decoderType, sourceBuffer, aFlags);
+    DecoderFactory::CreateAnonymousDecoder(decoderType,
+                                           sourceBuffer,
+                                           ToSurfaceFlags(aFlags));
   if (!decoder) {
     return nullptr;
   }

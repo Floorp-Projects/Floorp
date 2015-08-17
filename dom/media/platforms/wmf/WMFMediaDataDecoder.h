@@ -43,7 +43,7 @@ public:
   // Destroys all resources.
   virtual void Shutdown() = 0;
 
-  virtual bool IsHardwareAccelerated() const { return false; }
+  virtual bool IsHardwareAccelerated(nsACString& aFailureReason) const { return false; }
 
   virtual TrackInfo::TrackType GetType() = 0;
 
@@ -72,7 +72,7 @@ public:
 
   virtual nsresult Shutdown() override;
 
-  virtual bool IsHardwareAccelerated() const override;
+  virtual bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
 
 private:
 

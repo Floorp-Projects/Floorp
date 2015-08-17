@@ -59,6 +59,11 @@ public:
                 int64_t aTimestampUsecs);
   HRESULT Input(IMFSample* aSample);
 
+  HRESULT CreateInputSample(const uint8_t* aData,
+                            uint32_t aDataSize,
+                            int64_t aTimestampUsecs,
+                            RefPtr<IMFSample>* aOutSample);
+
   // Retrieves output from the MFT. Call this once Input() returns
   // MF_E_NOTACCEPTING. Some MFTs with hardware acceleration (the H.264
   // decoder MFT in particular) can't handle it if clients hold onto
@@ -80,14 +85,10 @@ public:
   // Sends a message to the MFT.
   HRESULT SendMFTMessage(MFT_MESSAGE_TYPE aMsg, ULONG_PTR aData);
 
-private:
 
   HRESULT SetDecoderOutputType(ConfigureOutputCallback aCallback, void* aData);
+private:
 
-  HRESULT CreateInputSample(const uint8_t* aData,
-                            uint32_t aDataSize,
-                            int64_t aTimestampUsecs,
-                            RefPtr<IMFSample>* aOutSample);
 
   HRESULT CreateOutputSample(RefPtr<IMFSample>* aOutSample);
 

@@ -4,13 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "DecodedStream.h"
-#include "MediaStreamGraph.h"
 #include "AudioSegment.h"
-#include "VideoSegment.h"
-#include "MediaQueue.h"
+#include "DecodedStream.h"
 #include "MediaData.h"
+#include "MediaQueue.h"
+#include "MediaStreamGraph.h"
 #include "SharedBuffer.h"
+#include "VideoSegment.h"
 #include "VideoUtils.h"
 
 namespace mozilla {
@@ -18,11 +18,15 @@ namespace mozilla {
 class DecodedStreamGraphListener : public MediaStreamListener {
   typedef MediaStreamListener::MediaStreamGraphEvent MediaStreamGraphEvent;
 public:
-  explicit DecodedStreamGraphListener(MediaStream* aStream)
+  DecodedStreamGraphListener(MediaStream* aStream,
+                             MozPromiseHolder<GenericPromise>&& aPromise)
     : mMutex("DecodedStreamGraphListener::mMutex")
     , mStream(aStream)
     , mLastOutputTime(aStream->StreamTimeToMicroseconds(aStream->GetCurrentTime()))
-    , mStreamFinishedOnMainThread(false) {}
+    , mStreamFinishedOnMainThread(false)
+  {
+    mFinishPromise = Move(aPromise);
+  }
 
   void NotifyOutput(MediaStreamGraph* aGraph, GraphTime aCurrentTime) override
   {
@@ -43,6 +47,7 @@ public:
 
   void DoNotifyFinished()
   {
+    mFinishPromise.ResolveIfExists(true, __func__);
     MutexAutoLock lock(mMutex);
     mStreamFinishedOnMainThread = true;
   }
@@ -56,6 +61,7 @@ public:
   void Forget()
   {
     MOZ_ASSERT(NS_IsMainThread());
+    mFinishPromise.ResolveIfExists(true, __func__);
     MutexAutoLock lock(mMutex);
     mStream = nullptr;
   }
@@ -72,6 +78,8 @@ private:
   nsRefPtr<MediaStream> mStream;
   int64_t mLastOutputTime; // microseconds
   bool mStreamFinishedOnMainThread;
+  // Main thread only.
+  MozPromiseHolder<GenericPromise> mFinishPromise;
 };
 
 static void
@@ -131,6 +139,8 @@ public:
   // True if we need to send a compensation video frame to ensure the
   // StreamTime going forward.
   bool mEOSVideoCompensation;
+  // This promise will be resolved when the SourceMediaStream is finished.
+  nsRefPtr<GenericPromise> mFinishPromise;
 };
 
 DecodedStreamData::DecodedStreamData(SourceMediaStream* aStream, bool aPlaying)
@@ -145,7 +155,10 @@ DecodedStreamData::DecodedStreamData(SourceMediaStream* aStream, bool aPlaying)
   , mPlaying(aPlaying)
   , mEOSVideoCompensation(false)
 {
-  mListener = new DecodedStreamGraphListener(mStream);
+  MozPromiseHolder<GenericPromise> promise;
+  mFinishPromise = promise.Ensure(__func__);
+  // DecodedStreamGraphListener will resolve this promise.
+  mListener = new DecodedStreamGraphListener(mStream, Move(promise));
   mStream->AddListener(mListener);
 
   // Block the stream if we are not playing.
@@ -244,14 +257,19 @@ DecodedStream::~DecodedStream()
 {
 }
 
-void
+nsRefPtr<GenericPromise>
 DecodedStream::StartPlayback(int64_t aStartTime, const MediaInfo& aInfo)
 {
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  if (mStartTime.isNothing()) {
-    mStartTime.emplace(aStartTime);
-    mInfo = aInfo;
-  }
+  MOZ_ASSERT(mStartTime.isNothing(), "playback already started.");
+  mStartTime.emplace(aStartTime);
+  mInfo = aInfo;
+
+  // TODO: Unfortunately, current call flow of MDSM guarantees mData is non-null
+  // when StartPlayback() is called which imposes an obscure dependency on MDSM.
+  // We will align the life cycle of mData with {Start,Stop}Playback so that
+  // DecodedStream doesn't need to make assumptions about mData's life cycle.
+  return mData->mFinishPromise;
 }
 
 void DecodedStream::StopPlayback()
@@ -680,11 +698,16 @@ DecodedStream::AdvanceTracks()
   }
 }
 
-bool
+void
 DecodedStream::SendData()
 {
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   MOZ_ASSERT(mStartTime.isSome(), "Must be called after StartPlayback()");
+
+  // Nothing to do when the stream is finished.
+  if (mData->mHaveSentFinish) {
+    return;
+  }
 
   InitTracks();
   SendAudio(mVolume, mSameOrigin);
@@ -698,8 +721,6 @@ DecodedStream::SendData()
     mData->mHaveSentFinish = true;
     mData->mStream->Finish();
   }
-
-  return finished;
 }
 
 int64_t
