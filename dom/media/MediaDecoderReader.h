@@ -11,7 +11,6 @@
 #include "AbstractMediaDecoder.h"
 #include "MediaInfo.h"
 #include "MediaData.h"
-#include "MediaMetadataManager.h"
 #include "MediaQueue.h"
 #include "MediaTimer.h"
 #include "AudioCompactor.h"
@@ -328,10 +327,6 @@ public:
 
   virtual void DisableHardwareAcceleration() {}
 
-  TimedMetadataEventSource& TimedMetadataEvent() {
-    return mTimedMetadataEvent;
-  }
-
 protected:
   virtual ~MediaDecoderReader();
 
@@ -422,9 +417,6 @@ protected:
   // async.
   bool mHitAudioDecodeError;
   bool mShutdown;
-
-  // Used to send TimedMetadata to the listener.
-  TimedMetadataEventProducer mTimedMetadataEvent;
 
 private:
   // Promises used only for the base-class (sync->async adapter) implementation
