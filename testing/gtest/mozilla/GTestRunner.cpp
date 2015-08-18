@@ -34,6 +34,8 @@ public:
     printf("TEST-%s | GTest unit test: %s\n",
            aUnitTest.Passed() ? "PASS" : "UNEXPECTED-FAIL",
            aUnitTest.Passed() ? "passed" : "failed");
+    printf("Passed: %d\n", aUnitTest.successful_test_count());
+    printf("Failed: %d\n", aUnitTest.failed_test_count());
   }
   virtual void OnTestStart(const TestInfo& aTestInfo) override {
     mTestInfo = &aTestInfo;
