@@ -34,6 +34,15 @@
    fun:_ZN13CrashReporter14SetupExtraDataEP7nsIFileRK19nsACString_internal
    ...
 }
+{
+   We purposely leak the StatisticsReporter object
+   Memcheck:Leak
+   fun:malloc
+   fun:moz_xmalloc
+   fun:operator new
+   fun:_Z21XRE_CreateStatsObjectv
+   ...
+}
 
 ####################################
 #  Leaks in third party libraries  #

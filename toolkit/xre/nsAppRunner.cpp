@@ -21,6 +21,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/MemoryChecking.h"
 
 #include "nsAppRunner.h"
 #include "mozilla/AppData.h"
@@ -3072,7 +3073,6 @@ public:
 
   ~XREMain() {
     mScopedXPCOM = nullptr;
-    mStatisticsRecorder = nullptr;
     mAppData = nullptr;
   }
 
@@ -3091,7 +3091,6 @@ public:
 #endif
 
   UniquePtr<ScopedXPCOMStartup> mScopedXPCOM;
-  UniquePtr<base::StatisticsRecorder> mStatisticsRecorder;
   nsAutoPtr<mozilla::ScopedAppData> mAppData;
 
   nsXREDirProvider mDirProvider;
@@ -4341,10 +4340,6 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
   NS_ENSURE_TRUE(aAppData, 2);
 
-  // A initializer to initialize histogram collection, a chromium
-  // thing used by Telemetry.
-  mStatisticsRecorder = MakeUnique<base::StatisticsRecorder>();
-
   mAppData = new ScopedAppData(aAppData);
   if (!mAppData)
     return 1;
@@ -4409,7 +4404,6 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   }
 
   mScopedXPCOM = nullptr;
-  mStatisticsRecorder = nullptr;
 
   // unlock the profile after ScopedXPCOMStartup object (xpcom) 
   // has gone out of scope.  see bug #386739 for more details
@@ -4467,10 +4461,24 @@ XRE_StopLateWriteChecks(void) {
   mozilla::StopLateWriteChecks();
 }
 
+// Separate stub function to let us specifically suppress it in Valgrind
+void
+XRE_CreateStatsObject()
+{
+  // A initializer to initialize histogram collection, a chromium
+  // thing used by Telemetry (and effectively a global; it's all static).
+  // Note: purposely leaked
+  base::StatisticsRecorder* statistics_recorder = new base::StatisticsRecorder();
+  MOZ_LSAN_INTENTIONALLY_LEAK_OBJECT(statistics_recorder);
+  unused << statistics_recorder;
+}
+
 int
 XRE_main(int argc, char* argv[], const nsXREAppData* aAppData, uint32_t aFlags)
 {
   XREMain main;
+
+  XRE_CreateStatsObject();
   int result = main.XRE_main(argc, argv, aAppData);
   mozilla::RecordShutdownEndTimeStamp();
   return result;
