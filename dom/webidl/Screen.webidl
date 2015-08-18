@@ -29,6 +29,7 @@ interface Screen : EventTarget {
   readonly attribute long availLeft;
 
   /**
+   * DEPRECATED, use ScreenOrientation API instead.
    * Returns the current screen orientation.
    * Can be: landscape-primary, landscape-secondary,
    *         portrait-primary or portrait-secondary.
@@ -38,6 +39,7 @@ interface Screen : EventTarget {
   attribute EventHandler onmozorientationchange;
 
   /**
+   * DEPRECATED, use ScreenOrientation API instead.
    * Lock screen orientation to the specified type.
    */
   [Throws, UnsafeInPrerendering]
@@ -46,8 +48,14 @@ interface Screen : EventTarget {
   boolean mozLockOrientation(sequence<DOMString> orientation);
 
   /**
+   * DEPRECATED, use ScreenOrientation API instead.
    * Unlock the screen orientation.
    */
   [UnsafeInPrerendering]
   void mozUnlockOrientation();
+};
+
+// https://w3c.github.io/screen-orientation
+partial interface Screen {
+  readonly attribute ScreenOrientation orientation;
 };
