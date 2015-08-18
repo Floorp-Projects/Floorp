@@ -355,11 +355,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         ImmutableViewportMetrics metrics = getViewportMetrics();
         ImmutableViewportMetrics clampedMetrics = metrics.clamp();
 
-        RectF margins = new RectF();
-        getFixedMargins(metrics, margins);
-        clampedMetrics = clampedMetrics.setMargins(
-            margins.left, margins.top, margins.right, margins.bottom);
-
         if (displayPort == null) {
             displayPort = DisplayPortCalculator.calculate(metrics, mPanZoomController.getVelocityVector());
         }

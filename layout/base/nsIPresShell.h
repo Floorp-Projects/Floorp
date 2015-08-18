@@ -1650,11 +1650,6 @@ public:
     return mScrollPositionClampingScrollPortSize;
   }
 
-  void SetContentDocumentFixedPositionMargins(const nsMargin& aMargins);
-  const nsMargin& GetContentDocumentFixedPositionMargins() {
-    return mContentDocumentFixedPositionMargins;
-  }
-
   virtual void WindowSizeMoveDone() = 0;
   virtual void SysColorChanged() = 0;
   virtual void ThemeChanged() = 0;
@@ -1746,12 +1741,6 @@ protected:
   uint64_t                  mPaintCount;
 
   nsSize                    mScrollPositionClampingScrollPortSize;
-
-  // This margin is intended to be used when laying out fixed position children
-  // on this PresShell's viewport frame. See the documentation of
-  // nsIDOMWindowUtils.setContentDocumentFixedPositionMargins for details of
-  // their use.
-  nsMargin                  mContentDocumentFixedPositionMargins;
 
   // A list of weak frames. This is a pointer to the last item in the list.
   nsWeakFrame*              mWeakFrames;
