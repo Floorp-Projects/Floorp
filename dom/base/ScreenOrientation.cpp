@@ -317,6 +317,7 @@ ScreenOrientation::LockInternal(ScreenOrientationInternal aOrientation, ErrorRes
     return nullptr;
   }
 
+  rootShell->SetOrientationLock(aOrientation);
   AbortOrientationPromises(rootShell);
 
   doc->SetOrientationPendingPromise(p);
@@ -527,6 +528,16 @@ ScreenOrientation::Notify(const hal::ScreenConfiguration& aConfiguration)
       &ScreenOrientation::DispatchChangeEvent);
     rv = NS_DispatchToMainThread(runnable);
     NS_WARN_IF(NS_FAILED(rv));
+  }
+}
+
+void
+ScreenOrientation::UpdateActiveOrientationLock(ScreenOrientationInternal aOrientation)
+{
+  if (aOrientation == eScreenOrientation_None) {
+    hal::UnlockScreenOrientation();
+  } else {
+    hal::LockScreenOrientation(aOrientation);
   }
 }
 
