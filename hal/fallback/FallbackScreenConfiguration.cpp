@@ -45,7 +45,7 @@ GetCurrentScreenConfiguration(hal::ScreenConfiguration* aScreenConfiguration)
                 : dom::eScreenOrientation_PortraitPrimary;
 
   *aScreenConfiguration =
-      hal::ScreenConfiguration(rect, orientation, colorDepth, pixelDepth);
+      hal::ScreenConfiguration(rect, orientation, 0, colorDepth, pixelDepth);
 }
 
 bool

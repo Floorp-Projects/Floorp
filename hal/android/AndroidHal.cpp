@@ -123,6 +123,7 @@ GetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration)
 
   nsIntRect rect;
   int32_t colorDepth, pixelDepth;
+  int16_t angle;
   ScreenOrientationInternal orientation;
   nsCOMPtr<nsIScreen> screen;
 
@@ -131,9 +132,10 @@ GetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration)
   screen->GetColorDepth(&colorDepth);
   screen->GetPixelDepth(&pixelDepth);
   orientation = static_cast<ScreenOrientationInternal>(bridge->GetScreenOrientation());
+  angle = bridge->GetScreenAngle();
 
   *aScreenConfiguration =
-    hal::ScreenConfiguration(rect, orientation, colorDepth, pixelDepth);
+    hal::ScreenConfiguration(rect, orientation, angle, colorDepth, pixelDepth);
 }
 
 bool

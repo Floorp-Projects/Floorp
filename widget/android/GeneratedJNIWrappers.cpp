@@ -369,6 +369,14 @@ auto GeckoAppShell::GetProxyForURIWrapper(mozilla::jni::String::Param a0, mozill
     return mozilla::jni::Method<GetProxyForURIWrapper_t>::Call(nullptr, nullptr, a0, a1, a2, a3);
 }
 
+constexpr char GeckoAppShell::GetScreenAngle_t::name[];
+constexpr char GeckoAppShell::GetScreenAngle_t::signature[];
+
+auto GeckoAppShell::GetScreenAngle() -> int32_t
+{
+    return mozilla::jni::Method<GetScreenAngle_t>::Call(nullptr, nullptr);
+}
+
 constexpr char GeckoAppShell::GetScreenDepthWrapper_t::name[];
 constexpr char GeckoAppShell::GetScreenDepthWrapper_t::signature[];
 

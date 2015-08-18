@@ -2430,6 +2430,11 @@ public class GeckoAppShell
     }
 
     @WrapForJNI
+    public static int getScreenAngle() {
+        return GeckoScreenOrientation.getInstance().getAngle();
+    }
+
+    @WrapForJNI
     public static void enableScreenOrientationNotifications() {
         GeckoScreenOrientation.getInstance().enableNotifications();
     }
