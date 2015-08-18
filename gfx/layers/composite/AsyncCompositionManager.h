@@ -141,7 +141,7 @@ private:
                         bool aLayersUpdated,
                         ParentLayerPoint& aScrollOffset,
                         CSSToParentLayerScale& aScale,
-                        LayerMargin& aFixedLayerMargins);
+                        ScreenMargin& aFixedLayerMargins);
   void SyncFrameMetrics(const ParentLayerPoint& aScrollOffset,
                         float aZoom,
                         const CSSRect& aCssPageRect,
@@ -149,7 +149,7 @@ private:
                         const CSSRect& aDisplayPort,
                         const CSSToLayerScale& aDisplayResolution,
                         bool aIsFirstPaint,
-                        LayerMargin& aFixedLayerMargins);
+                        ScreenMargin& aFixedLayerMargins);
 
   /**
    * Adds a translation to the transform of any fixed position (whose parent
@@ -170,7 +170,7 @@ private:
                                  FrameMetrics::ViewID aTransformScrollId,
                                  const gfx::Matrix4x4& aPreviousTransformForRoot,
                                  const gfx::Matrix4x4& aCurrentTransformForRoot,
-                                 const LayerMargin& aFixedLayerMargins);
+                                 const ScreenMargin& aFixedLayerMargins);
 
   /**
    * DRAWING PHASE ONLY

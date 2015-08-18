@@ -252,10 +252,10 @@ public:
     void SetPageRect(const CSSRect& aCssPageRect);
     void SyncViewportInfo(const LayerIntRect& aDisplayPort, const CSSToLayerScale& aDisplayResolution,
                           bool aLayersUpdated, ParentLayerPoint& aScrollOffset, CSSToParentLayerScale& aScale,
-                          LayerMargin& aFixedLayerMargins);
+                          ScreenMargin& aFixedLayerMargins);
     void SyncFrameMetrics(const ParentLayerPoint& aScrollOffset, float aZoom, const CSSRect& aCssPageRect,
                           bool aLayersUpdated, const CSSRect& aDisplayPort, const CSSToLayerScale& aDisplayResolution,
-                          bool aIsFirstPaint, LayerMargin& aFixedLayerMargins);
+                          bool aIsFirstPaint, ScreenMargin& aFixedLayerMargins);
 
     void AddPluginView(jobject view, const LayoutDeviceRect& rect, bool isFullScreen);
 
