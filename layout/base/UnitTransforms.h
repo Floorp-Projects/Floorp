@@ -69,6 +69,14 @@ template <class TargetUnits, class SourceUnits>
 gfx::IntRectTyped<TargetUnits> ViewAs(const gfx::IntRectTyped<SourceUnits>& aRect, PixelCastJustification) {
   return gfx::IntRectTyped<TargetUnits>(aRect.x, aRect.y, aRect.width, aRect.height);
 }
+template <class TargetUnits, class SourceUnits>
+gfx::MarginTyped<TargetUnits> ViewAs(const gfx::MarginTyped<SourceUnits>& aMargin, PixelCastJustification) {
+  return gfx::MarginTyped<TargetUnits>(aMargin.top, aMargin.right, aMargin.bottom, aMargin.left);
+}
+template <class TargetUnits, class SourceUnits>
+gfx::IntMarginTyped<TargetUnits> ViewAs(const gfx::IntMarginTyped<SourceUnits>& aMargin, PixelCastJustification) {
+  return gfx::IntMarginTyped<TargetUnits>(aMargin.top, aMargin.right, aMargin.bottom, aMargin.left);
+}
 template <class NewTargetUnits, class OldTargetUnits, class SourceUnits>
 gfx::ScaleFactor<SourceUnits, NewTargetUnits> ViewTargetAs(
     const gfx::ScaleFactor<SourceUnits, OldTargetUnits>& aScaleFactor,

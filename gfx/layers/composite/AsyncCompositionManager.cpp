@@ -231,7 +231,7 @@ AccumulateLayerTransforms(Layer* aLayer,
 
 static LayerPoint
 GetLayerFixedMarginsOffset(Layer* aLayer,
-                           const LayerMargin& aFixedLayerMargins)
+                           const ScreenMargin& aFixedLayerMargins)
 {
   // Work out the necessary translation, in root scrollable layer space.
   // Because fixed layer margins are stored relative to the root scrollable
@@ -272,7 +272,7 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
                                                    FrameMetrics::ViewID aTransformScrollId,
                                                    const Matrix4x4& aPreviousTransformForRoot,
                                                    const Matrix4x4& aCurrentTransformForRoot,
-                                                   const LayerMargin& aFixedLayerMargins)
+                                                   const ScreenMargin& aFixedLayerMargins)
 {
   bool isRootFixedForSubtree = aLayer->GetIsFixedPosition() &&
     aLayer->GetFixedPositionScrollContainerId() == aTransformScrollId &&
@@ -597,7 +597,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
 
   Matrix4x4 combinedAsyncTransform;
   bool hasAsyncTransform = false;
-  LayerMargin fixedLayerMargins(0, 0, 0, 0);
+  ScreenMargin fixedLayerMargins(0, 0, 0, 0);
 
   // Each layer has multiple clips. Its local clip, which must move with async
   // transforms, and its scrollframe clips, which are the clips between each
@@ -1012,7 +1012,7 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
     ) * geckoZoom);
   displayPort += scrollOffsetLayerPixels;
 
-  LayerMargin fixedLayerMargins(0, 0, 0, 0);
+  ScreenMargin fixedLayerMargins(0, 0, 0, 0);
 
   // Ideally we would initialize userZoom to AsyncPanZoomController::CalculateResolution(metrics)
   // but this causes a reftest-ipc test to fail (see bug 883646 comment 27). The reason for this
@@ -1088,6 +1088,25 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
   // when we're asynchronously panning or zooming
   AlignFixedAndStickyLayers(aLayer, aLayer, metrics.GetScrollId(), oldTransform,
                             aLayer->GetLocalTransform(), fixedLayerMargins);
+
+  // For Fennec we want to expand the root scrollable layer clip rect based on
+  // the fixed position margins. In particular, we want this while the dynamic
+  // toolbar is in the process of sliding offscreen and the area of the
+  // LayerView visible to the user is larger than the viewport size that Gecko
+  // knows about (and therefore larger than the clip rect). We could also just
+  // clear the clip rect on aLayer entirely but this seems more precise.
+  Maybe<ParentLayerIntRect> rootClipRect = aLayer->AsLayerComposite()->GetShadowClipRect();
+  if (rootClipRect && fixedLayerMargins != ScreenMargin()) {
+#ifndef MOZ_WIDGET_ANDROID
+    // We should never enter here on anything other than Fennec, since
+    // fixedLayerMargins should be empty everywhere else.
+    MOZ_ASSERT(false);
+#endif
+    ParentLayerRect rect(rootClipRect.value());
+    rect.Deflate(ViewAs<ParentLayerPixel>(fixedLayerMargins,
+      PixelCastJustification::ScreenIsParentLayerForRoot));
+    aLayer->AsLayerComposite()->SetShadowClipRect(Some(RoundedOut(rect)));
+  }
 }
 
 void
@@ -1180,7 +1199,7 @@ AsyncCompositionManager::SyncViewportInfo(const LayerIntRect& aDisplayPort,
                                           bool aLayersUpdated,
                                           ParentLayerPoint& aScrollOffset,
                                           CSSToParentLayerScale& aScale,
-                                          LayerMargin& aFixedLayerMargins)
+                                          ScreenMargin& aFixedLayerMargins)
 {
 #ifdef MOZ_WIDGET_ANDROID
   AndroidBridge::Bridge()->SyncViewportInfo(aDisplayPort,
@@ -1200,7 +1219,7 @@ AsyncCompositionManager::SyncFrameMetrics(const ParentLayerPoint& aScrollOffset,
                                           const CSSRect& aDisplayPort,
                                           const CSSToLayerScale& aDisplayResolution,
                                           bool aIsFirstPaint,
-                                          LayerMargin& aFixedLayerMargins)
+                                          ScreenMargin& aFixedLayerMargins)
 {
 #ifdef MOZ_WIDGET_ANDROID
   AndroidBridge::Bridge()->SyncFrameMetrics(aScrollOffset, aZoom, aCssPageRect,
