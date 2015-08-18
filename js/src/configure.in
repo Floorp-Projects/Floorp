@@ -3081,8 +3081,10 @@ elif test "$JS_SIMULATOR" = arm; then
     fi
     AC_DEFINE(JS_SIMULATOR)
     AC_DEFINE(JS_SIMULATOR_ARM)
+    AC_DEFINE(JS_DISASM_ARM)
     AC_DEFINE(JS_CODEGEN_ARM)
     JS_SIMULATOR_ARM=1
+    JS_DISASM_ARM=1
     JS_CODEGEN_ARM=1
 elif test "$JS_SIMULATOR" = arm64; then
     if test "$CPU_ARCH" != "x86_64"; then
@@ -3116,6 +3118,10 @@ elif test "$CPU_ARCH" = "x86_64"; then
 elif test "$CPU_ARCH" = "arm"; then
     AC_DEFINE(JS_CODEGEN_ARM)
     JS_CODEGEN_ARM=1
+    if test -n "$MOZ_DEBUG"; then
+        AC_DEFINE(JS_DISASM_ARM)
+        JS_DISASM_ARM=1
+    fi
 elif test "$CPU_ARCH" = "mips32"; then
     AC_DEFINE(JS_CODEGEN_MIPS32)
     JS_CODEGEN_MIPS32=1
@@ -3131,6 +3137,7 @@ AC_SUBST(JS_CODEGEN_MIPS32)
 AC_SUBST(JS_CODEGEN_X86)
 AC_SUBST(JS_CODEGEN_X64)
 AC_SUBST(JS_CODEGEN_NONE)
+AC_SUBST(JS_DISASM_ARM)
 AC_SUBST(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
 
 dnl ========================================================
