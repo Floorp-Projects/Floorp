@@ -106,7 +106,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitAssertFloat32(MAssertFloat32* ins);
     void visitAssertRecoveredOnBailout(MAssertRecoveredOnBailout* ins);
     void visitGetDynamicName(MGetDynamicName* ins);
-    void visitFilterArgumentsOrEval(MFilterArgumentsOrEval* ins);
     void visitCallDirectEval(MCallDirectEval* ins);
     void visitTest(MTest* test);
     void visitGotoWithFake(MGotoWithFake* ins);

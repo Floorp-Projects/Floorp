@@ -873,6 +873,9 @@ GStreamerReader::Seek(int64_t aTarget, int64_t aEndTime)
 media::TimeIntervals GStreamerReader::GetBuffered()
 {
   MOZ_ASSERT(OnTaskQueue());
+  if (!HaveStartTime()) {
+    return media::TimeIntervals();
+  }
   media::TimeIntervals buffered;
   if (!mInfo.HasValidMedia()) {
     return buffered;
@@ -885,9 +888,10 @@ media::TimeIntervals GStreamerReader::GetBuffered()
   nsTArray<MediaByteRange> ranges;
   resource->GetCachedRanges(ranges);
 
-  if (resource->IsDataCachedToEndOfResource(0) && mDuration.Ref().isSome()) {
+  if (resource->IsDataCachedToEndOfResource(0)) {
     /* fast path for local or completely cached files */
-    gint64 duration = mDuration.Ref().ref().ToMicroseconds();
+    gint64 duration =
+       mDuration.Ref().refOr(media::TimeUnit::FromMicroseconds(0)).ToMicroseconds();
     LOG(LogLevel::Debug, "complete range [0, %f] for [0, %li]",
         (double) duration / GST_MSECOND, GetDataLength());
     buffered +=

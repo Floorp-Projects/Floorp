@@ -644,6 +644,10 @@ protected:
   // Common processing at the end of a touch block.
   void OnTouchEndOrCancel();
 
+  // This is called by OverscrollAnimation to notify us when the overscroll
+  // animation is ending.
+  void OverscrollAnimationEnding();
+
   uint64_t mLayersId;
   nsRefPtr<CompositorParent> mCompositorParent;
   TaskThrottler mPaintThrottler;

@@ -465,6 +465,9 @@ nsresult
 DOMStorageCache::SetItem(const DOMStorage* aStorage, const nsAString& aKey,
                          const nsString& aValue, nsString& aOld)
 {
+  // Size of the cache that will change after this action.
+  int64_t delta = 0;
+
   if (Persist(aStorage)) {
     WaitForPreload(Telemetry::LOCALDOMSTORAGE_SETVALUE_BLOCKING_MS);
     if (NS_FAILED(mLoadResult)) {
@@ -475,11 +478,14 @@ DOMStorageCache::SetItem(const DOMStorage* aStorage, const nsAString& aKey,
   Data& data = DataSet(aStorage);
   if (!data.mKeys.Get(aKey, &aOld)) {
     SetDOMStringToNull(aOld);
+
+    // We only consider key size if the key doesn't exist before.
+    delta += static_cast<int64_t>(aKey.Length());
   }
 
-  // Check the quota first
-  const int64_t delta = static_cast<int64_t>(aValue.Length()) -
-                        static_cast<int64_t>(aOld.Length());
+  delta += static_cast<int64_t>(aValue.Length()) -
+           static_cast<int64_t>(aOld.Length());
+
   if (!ProcessUsageDelta(aStorage, delta)) {
     return NS_ERROR_DOM_QUOTA_REACHED;
   }
@@ -525,7 +531,8 @@ DOMStorageCache::RemoveItem(const DOMStorage* aStorage, const nsAString& aKey,
   }
 
   // Recalculate the cached data size
-  const int64_t delta = -(static_cast<int64_t>(aOld.Length()));
+  const int64_t delta = -(static_cast<int64_t>(aOld.Length()) +
+                          static_cast<int64_t>(aKey.Length()));
   unused << ProcessUsageDelta(aStorage, delta);
   data.mKeys.Remove(aKey);
 

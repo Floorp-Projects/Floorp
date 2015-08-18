@@ -718,6 +718,13 @@
     "description": "gfxDWriteFontList::DelayedInitFontList GetSystemFontCollection (ms)",
     "cpp_guard": "XP_WIN"
   },
+  "DWRITEFONT_INIT_PROBLEM": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 8,
+    "description": "DirectWrite system fontlist initialization problem (1=GDI interop, 2=system font collection, 3=no fonts)",
+    "cpp_guard": "XP_WIN"
+  },
   "GDI_INITFONTLIST_TOTAL": {
     "expires_in_version": "never",
     "kind": "exponential",

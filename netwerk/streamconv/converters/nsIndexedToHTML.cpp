@@ -542,7 +542,7 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
     // trying to play nice and escaping the quotes.  See bug
     // 358128.
 
-    if (baseUri.FindChar('"') == kNotFound)
+    if (!baseUri.Contains('"'))
     {
         // Great, the baseUri does not contain a char that
         // will prematurely close the string.  Go ahead an
@@ -699,7 +699,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
 
     // Adjust the length in case unescaping shortened the string.
     loc.Truncate(nsUnescapeCount(loc.BeginWriting()));
-    if (loc.First() == PRUnichar('.'))
+    if (loc.First() == char16_t('.'))
         pushBuffer.AppendLiteral(" class=\"hidden-object\"");
 
     pushBuffer.AppendLiteral(">\n <td sortable-data=\"");
