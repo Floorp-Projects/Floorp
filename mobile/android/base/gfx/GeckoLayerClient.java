@@ -725,7 +725,8 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     /** Implementation of LayerView.Listener */
     @Override
     public void surfaceChanged(int width, int height) {
-        setViewportSize(width, height);
+        IntSize viewportSize = mToolbarAnimator.getViewportSize();
+        setViewportSize(viewportSize.width, viewportSize.height);
     }
 
     /** Implementation of PanZoomTarget */
