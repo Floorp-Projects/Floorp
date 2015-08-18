@@ -100,7 +100,7 @@ private:
 
   void DispatchChangeEvent();
 
-  LockPermission GetLockOrientationPermission() const;
+  LockPermission GetLockOrientationPermission(bool aCheckSandbox) const;
 
   // Gets the responsible document as defined in the spec.
   nsIDocument* GetResponsibleDocument() const;
