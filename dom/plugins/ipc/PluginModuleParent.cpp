@@ -3185,8 +3185,7 @@ PluginProfilerObserver::Observe(nsISupports *aSubject,
     } else if (!strcmp(aTopic, "profiler-stopped")) {
         mPmp->StopProfiler();
     } else if (!strcmp(aTopic, "profiler-subprocess-gather")) {
-        RefPtr<ProfileGatherer> gatherer = static_cast<ProfileGatherer*>(aSubject);
-        mPmp->GatherAsyncProfile(gatherer);
+        mPmp->GatherAsyncProfile();
     } else if (!strcmp(aTopic, "profiler-subprocess")) {
         nsCOMPtr<nsIProfileSaveEvent> pse = do_QueryInterface(aSubject);
         mPmp->GatheredAsyncProfile(pse);
