@@ -8339,6 +8339,19 @@
     "n_values" : 20,
     "description": "The result of auto-filling a login form. See http://mzl.la/1Mbs6jL for bucket descriptions."
   },
+  "PWMGR_LOGIN_LAST_USED_DAYS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 750,
+    "n_buckets" : 40,
+    "description": "Time in days each saved login was last used"
+  },
+  "PWMGR_LOGIN_PAGE_SAFETY": {
+    "expires_in_version": "55",
+    "kind": "enumerated",
+    "n_values": 8,
+    "description": "The safety of a page where we see a password field. (0=unsafe, 1=safe)"
+  },
   "PWMGR_MANAGE_COPIED_PASSWORD": {
     "expires_in_version": "never",
     "kind": "count",
@@ -8397,13 +8410,6 @@
     "high": 750,
     "n_buckets" : 50,
     "description": "Number of HTTP Auth logins"
-  },
-  "PWMGR_LOGIN_LAST_USED_DAYS": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 750,
-    "n_buckets" : 40,
-    "description": "Time in days each saved login was last used"
   },
   "PWMGR_PASSWORD_INPUT_IN_FORM": {
     "expires_in_version": "never",
