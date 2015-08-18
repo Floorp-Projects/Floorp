@@ -2533,7 +2533,7 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
     // check for bad legacy cookies (domain not starting with a dot, or containing a port),
     // and discard
     if ((isDomain && !host.IsEmpty() && host.First() != '.') ||
-        host.FindChar(':') != kNotFound) {
+        host.Contains(':')) {
       continue;
     }
 
@@ -2868,7 +2868,7 @@ nsCookieService::SetCookieInternal(nsIURI                        *aHostURI,
     return newCookie;
   }
 
-  if (cookieAttributes.name.FindChar('\t') != kNotFound) {
+  if (cookieAttributes.name.Contains('\t')) {
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader, "invalid name character");
     return newCookie;
   }
@@ -3592,7 +3592,7 @@ nsCookieService::CheckPath(nsCookieAttributes &aCookieAttributes,
   }
 
   if (aCookieAttributes.path.Length() > kMaxBytesPerPath ||
-      aCookieAttributes.path.FindChar('\t') != kNotFound )
+      aCookieAttributes.path.Contains('\t'))
     return false;
 
   return true;

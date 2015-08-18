@@ -637,8 +637,6 @@ bool CreateThis(JSContext* cx, HandleObject callee, MutableHandleValue rval);
 
 void GetDynamicName(JSContext* cx, JSObject* scopeChain, JSString* str, Value* vp);
 
-bool FilterArgumentsOrEval(JSContext* cx, JSString* str);
-
 void PostWriteBarrier(JSRuntime* rt, JSObject* obj);
 void PostGlobalWriteBarrier(JSRuntime* rt, JSObject* obj);
 

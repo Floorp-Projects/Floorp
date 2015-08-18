@@ -66,7 +66,8 @@ chunk_dss_prec_set(dss_prec_t dss_prec)
 }
 
 void *
-chunk_alloc_dss(void *new_addr, size_t size, size_t alignment, bool *zero)
+chunk_alloc_dss(arena_t *arena, void *new_addr, size_t size, size_t alignment,
+    bool *zero, bool *commit)
 {
 	void *ret;
 
@@ -132,13 +133,20 @@ chunk_alloc_dss(void *new_addr, size_t size, size_t alignment, bool *zero)
 				/* Success. */
 				dss_max = dss_next;
 				malloc_mutex_unlock(&dss_mtx);
-				if (cpad_size != 0)
-					chunk_unmap(cpad, cpad_size);
+				if (cpad_size != 0) {
+					chunk_hooks_t chunk_hooks =
+					    CHUNK_HOOKS_INITIALIZER;
+					chunk_dalloc_wrapper(arena,
+					    &chunk_hooks, cpad, cpad_size,
+					    true);
+				}
 				if (*zero) {
 					JEMALLOC_VALGRIND_MAKE_MEM_UNDEFINED(
 					    ret, size);
 					memset(ret, 0, size);
 				}
+				if (!*commit)
+					*commit = pages_decommit(ret, size);
 				return (ret);
 			}
 		} while (dss_prev != (void *)-1);

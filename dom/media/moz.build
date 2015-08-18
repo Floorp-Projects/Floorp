@@ -152,7 +152,6 @@ EXPORTS += [
 
 EXPORTS.mozilla += [
     'MediaManager.h',
-    'MozPromise.h',
     'StateMirroring.h',
     'StateWatching.h',
 ]

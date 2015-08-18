@@ -1262,7 +1262,7 @@ BlobSet::AppendString(const nsAString& aString, bool nativeEOL, JSContext* aCx)
   nsCString utf8Str = NS_ConvertUTF16toUTF8(aString);
 
   if (nativeEOL) {
-    if (utf8Str.FindChar('\r') != kNotFound) {
+    if (utf8Str.Contains('\r')) {
       utf8Str.ReplaceSubstring("\r\n", "\n");
       utf8Str.ReplaceSubstring("\r", "\n");
     }

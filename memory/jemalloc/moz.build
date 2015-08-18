@@ -19,6 +19,7 @@ UNIFIED_SOURCES += [
     'src/src/jemalloc.c',
     'src/src/mb.c',
     'src/src/mutex.c',
+    'src/src/pages.c',
     'src/src/prof.c',
     'src/src/quarantine.c',
     'src/src/rtree.c',

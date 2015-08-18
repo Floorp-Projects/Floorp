@@ -34,8 +34,8 @@ MediaDataDecoderProxy::Init()
 {
   MOZ_ASSERT(!mIsShutdown);
 
-  return ProxyMediaCall(mProxyThreadWrapper, this, __func__,
-                        &MediaDataDecoderProxy::InternalInit);
+  return InvokeAsync(mProxyThreadWrapper, this, __func__,
+                     &MediaDataDecoderProxy::InternalInit);
 }
 
 nsresult
