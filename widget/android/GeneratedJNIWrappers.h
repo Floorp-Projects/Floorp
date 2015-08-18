@@ -2695,17 +2695,18 @@ public:
                 int32_t,
                 int32_t,
                 float,
-                bool> Args;
+                bool,
+                int32_t> Args;
         static constexpr char name[] = "syncViewportInfo";
         static constexpr char signature[] =
-                "(IIIIFZ)Lorg/mozilla/gecko/gfx/ViewTransform;";
+                "(IIIIFZI)Lorg/mozilla/gecko/gfx/ViewTransform;";
         static const bool isStatic = false;
         static const bool isMultithreaded = true;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    auto SyncViewportInfo(int32_t, int32_t, int32_t, int32_t, float, bool) const -> mozilla::jni::Object::LocalRef;
+    auto SyncViewportInfo(int32_t, int32_t, int32_t, int32_t, float, bool, int32_t) const -> mozilla::jni::Object::LocalRef;
 
 };
 
@@ -3082,6 +3083,25 @@ public:
     auto FixedLayerMarginTop(float) const -> void;
 
 public:
+    struct Height_t {
+        typedef ViewTransform Owner;
+        typedef float ReturnType;
+        typedef float SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "height";
+        static constexpr char signature[] =
+                "F";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    auto Height() const -> float;
+
+    auto Height(float) const -> void;
+
+public:
     struct Scale_t {
         typedef ViewTransform Owner;
         typedef float ReturnType;
@@ -3099,6 +3119,25 @@ public:
     auto Scale() const -> float;
 
     auto Scale(float) const -> void;
+
+public:
+    struct Width_t {
+        typedef ViewTransform Owner;
+        typedef float ReturnType;
+        typedef float SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "width";
+        static constexpr char signature[] =
+                "F";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    auto Width() const -> float;
+
+    auto Width(float) const -> void;
 
 public:
     struct X_t {

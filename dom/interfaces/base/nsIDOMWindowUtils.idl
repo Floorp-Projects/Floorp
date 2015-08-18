@@ -49,7 +49,7 @@ interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 interface nsIObserver;
 
-[scriptable, uuid(6af09215-d909-4d4a-866e-bdaed8fdcb96)]
+[scriptable, uuid(6ddc9a79-18cd-4dbc-9975-68928e6c9857)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1845,6 +1845,8 @@ interface nsIDOMWindowUtils : nsISupports {
    * running tests.
    */
   void forceUseCounterFlush(in nsIDOMNode aNode);
+
+  void setNextPaintSyncId(in long aSyncId);
 };
 
 [scriptable, uuid(c694e359-7227-4392-a138-33c0cc1f15a6)]

@@ -197,11 +197,12 @@ LayerTransactionParent::RecvUpdateNoSwap(InfallibleTArray<Edit>&& cset,
                                          const bool& scheduleComposite,
                                          const uint32_t& paintSequenceNumber,
                                          const bool& isRepeatTransaction,
-                                         const mozilla::TimeStamp& aTransactionStart)
+                                         const mozilla::TimeStamp& aTransactionStart,
+                                         const int32_t& aPaintSyncId)
 {
   return RecvUpdate(Move(cset), aTransactionId, targetConfig, Move(aPlugins), isFirstPaint,
       scheduleComposite, paintSequenceNumber, isRepeatTransaction,
-      aTransactionStart, nullptr);
+      aTransactionStart, aPaintSyncId, nullptr);
 }
 
 class MOZ_STACK_CLASS AutoLayerTransactionParentAsyncMessageSender
@@ -229,6 +230,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
                                    const uint32_t& paintSequenceNumber,
                                    const bool& isRepeatTransaction,
                                    const mozilla::TimeStamp& aTransactionStart,
+                                   const int32_t& aPaintSyncId,
                                    InfallibleTArray<EditReply>* reply)
 {
   profiler_tracing("Paint", "LayerTransaction", TRACING_INTERVAL_START);
@@ -590,7 +592,8 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
 
   mShadowLayersManager->ShadowLayersUpdated(this, aTransactionId, targetConfig,
                                             aPlugins, isFirstPaint, scheduleComposite,
-                                            paintSequenceNumber, isRepeatTransaction);
+                                            paintSequenceNumber, isRepeatTransaction,
+                                            aPaintSyncId);
 
   {
     AutoResolveRefLayers resolve(mShadowLayersManager->GetCompositionManager(this));

@@ -1454,7 +1454,7 @@ AndroidBridge::SetPageRect(const CSSRect& aCssPageRect)
 
 void
 AndroidBridge::SyncViewportInfo(const LayerIntRect& aDisplayPort, const CSSToLayerScale& aDisplayResolution,
-                                bool aLayersUpdated, ParentLayerPoint& aScrollOffset, CSSToParentLayerScale& aScale,
+                                bool aLayersUpdated, int32_t aPaintSyncId, ParentLayerRect& aScrollRect, CSSToParentLayerScale& aScale,
                                 ScreenMargin& aFixedLayerMargins)
 {
     if (!mLayerClient) {
@@ -1465,11 +1465,12 @@ AndroidBridge::SyncViewportInfo(const LayerIntRect& aDisplayPort, const CSSToLay
     ViewTransform::LocalRef viewTransform = mLayerClient->SyncViewportInfo(
             aDisplayPort.x, aDisplayPort.y,
             aDisplayPort.width, aDisplayPort.height,
-            aDisplayResolution.scale, aLayersUpdated);
+            aDisplayResolution.scale, aLayersUpdated, aPaintSyncId);
 
     MOZ_ASSERT(viewTransform, "No view transform object!");
 
-    aScrollOffset = ParentLayerPoint(viewTransform->X(), viewTransform->Y());
+    aScrollRect = ParentLayerRect(viewTransform->X(), viewTransform->Y(),
+                                  viewTransform->Width(), viewTransform->Height());
     aScale.scale = viewTransform->Scale();
     aFixedLayerMargins.top = viewTransform->FixedLayerMarginTop();
     aFixedLayerMargins.right = viewTransform->FixedLayerMarginRight();
