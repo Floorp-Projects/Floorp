@@ -121,8 +121,6 @@ class MachCommands(MachCommandBase):
         objdir('app/src/androidTest/AndroidManifest.xml', 'build/mobile/robocop/AndroidManifest.xml')
         srcdir('app/src/androidTest/res', 'build/mobile/robocop/res')
         srcdir('app/src/androidTest/assets', 'mobile/android/tests/browser/robocop/assets')
-        objdir('app/src/debug/assets', 'dist/fennec/assets')
-        objdir('app/src/debug/jniLibs', 'dist/fennec/lib')
         # Test code.
         srcdir('app/src/robocop_harness/org/mozilla/gecko', 'build/mobile/robocop')
         srcdir('app/src/robocop/org/mozilla/gecko/tests', 'mobile/android/tests/browser/robocop')

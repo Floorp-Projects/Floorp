@@ -446,6 +446,7 @@ $(abspath $(DIST)/fennec/$(OMNIJAR_NAME)): FORCE
 	$(MAKE) -C ../app
 	$(MAKE) -C ../themes/core
 	$(MAKE) -C ../installer stage-package
+	$(MKDIR) -p $(@D)
 	rsync --update $(DIST)/fennec/$(notdir $(OMNIJAR_NAME)) $@
 	$(RM) $(DIST)/fennec/$(notdir $(OMNIJAR_NAME))
 
