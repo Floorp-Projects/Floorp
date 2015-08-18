@@ -45,7 +45,7 @@ def run_marionette(tests, b2g_path=None, emulator=None, testtype=None,
 
     parser = BaseMarionetteOptions()
     commandline.add_logging_group(parser)
-    options, args = parser.parse_args()
+    options, args = parser.parse_known_args()
 
     if not tests:
         tests = [os.path.join(topsrcdir,

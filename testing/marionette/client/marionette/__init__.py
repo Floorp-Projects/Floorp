@@ -5,7 +5,7 @@
 
 __version__ = '0.18'
 
-
+from argparse import ArgumentParser
 from .marionette_test import MarionetteTestCase, MarionetteJSTestCase, CommonTestCase, expectedFailure, skip, SkipTest
 from .runner import (
         B2GTestCaseMixin,
@@ -23,7 +23,6 @@ from .runner import (
         MarionetteTestResult,
         MarionetteTextTestRunner,
         MemoryEnduranceTestCaseMixin,
-        OptionParser,
         TestManifest,
         TestResult,
         TestResultCollection
