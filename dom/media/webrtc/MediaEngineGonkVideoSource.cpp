@@ -410,7 +410,7 @@ MediaEngineGonkVideoSource::DeallocImpl() {
 
 // The same algorithm from bug 840244
 static int
-GetRotateAmount(ScreenOrientation aScreen, int aCameraMountAngle, bool aBackCamera) {
+GetRotateAmount(ScreenOrientationInternal aScreen, int aCameraMountAngle, bool aBackCamera) {
   int screenAngle = 0;
   switch (aScreen) {
     case eScreenOrientation_PortraitPrimary:
