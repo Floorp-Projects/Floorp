@@ -133,7 +133,7 @@ protected:
   nsresult GetAvailRect(nsRect& aRect);
   nsresult GetWindowInnerRect(nsRect& aRect);
 
-  mozilla::dom::ScreenOrientation mOrientation;
+  mozilla::dom::ScreenOrientationInternal mOrientationInternal;
 
 private:
   class FullScreenEventListener final : public nsIDOMEventListener

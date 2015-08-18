@@ -60,7 +60,7 @@ public:
   {}
 
   void Begin(const gfx::IntRect& aTargetBounds, ScreenRotation aRotation,
-             dom::ScreenOrientation aOrientation)
+             dom::ScreenOrientationInternal aOrientation)
   {
     mOpen = true;
     mTargetBounds = aTargetBounds;
@@ -138,7 +138,7 @@ public:
   ShadowableLayerSet mMutants;
   gfx::IntRect mTargetBounds;
   ScreenRotation mTargetRotation;
-  dom::ScreenOrientation mTargetOrientation;
+  dom::ScreenOrientationInternal mTargetOrientation;
   bool mSwapRequired;
 
 private:
@@ -185,7 +185,7 @@ ShadowLayerForwarder::~ShadowLayerForwarder()
 void
 ShadowLayerForwarder::BeginTransaction(const gfx::IntRect& aTargetBounds,
                                        ScreenRotation aRotation,
-                                       dom::ScreenOrientation aOrientation)
+                                       dom::ScreenOrientationInternal aOrientation)
 {
   MOZ_ASSERT(HasShadowManager(), "no manager to forward to");
   MOZ_ASSERT(mTxn->Finished(), "uncommitted txn?");
