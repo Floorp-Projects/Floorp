@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script src="orientationcommon.js"></script>
+<script>
+window.addEventListener("message", function(event) {
+  var p = specialPowersLock(event.data);
+  p.then(function() {
+    event.source.postMessage("success", "*");
+  }).catch(function(err) {
+    event.source.postMessage("error", "*");
+  });
+}, false);
+</script>
