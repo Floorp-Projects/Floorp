@@ -744,6 +744,9 @@ DXGITextureHostD3D11::SetCompositor(Compositor* aCompositor)
 {
   MOZ_ASSERT(aCompositor);
   mCompositor = static_cast<CompositorD3D11*>(aCompositor);
+  if (mTextureSource) {
+    mTextureSource->SetCompositor(aCompositor);
+  }
 }
 
 bool
@@ -846,6 +849,9 @@ DXGIYCbCrTextureHostD3D11::SetCompositor(Compositor* aCompositor)
 {
   MOZ_ASSERT(aCompositor);
   mCompositor = static_cast<CompositorD3D11*>(aCompositor);
+  if (mTextureSources[0]) {
+    mTextureSources[0]->SetCompositor(aCompositor);
+  }
 }
 
 bool
@@ -1065,11 +1071,10 @@ void
 DataTextureSourceD3D11::SetCompositor(Compositor* aCompositor)
 {
   MOZ_ASSERT(aCompositor);
-  CompositorD3D11* d3dCompositor = static_cast<CompositorD3D11*>(aCompositor);
-  if (mCompositor && mCompositor != d3dCompositor) {
-    Reset();
+  mCompositor = static_cast<CompositorD3D11*>(aCompositor);
+  if (mNextSibling) {
+    mNextSibling->SetCompositor(aCompositor);
   }
-  mCompositor = d3dCompositor;
 }
 
 CompositingRenderTargetD3D11::CompositingRenderTargetD3D11(ID3D11Texture2D* aTexture,
