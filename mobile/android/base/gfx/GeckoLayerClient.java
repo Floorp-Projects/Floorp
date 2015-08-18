@@ -96,6 +96,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
 
     private final PanZoomController mPanZoomController;
     private final LayerMarginsAnimator mMarginsAnimator;
+    private final DynamicToolbarAnimator mToolbarAnimator;
     private final LayerView mView;
 
     /* This flag is true from the time that browser.js detects a first-paint is about to start,
@@ -138,6 +139,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         mDrawListeners = new ArrayList<DrawListener>();
         mPanZoomController = PanZoomController.Factory.create(this, view, eventDispatcher);
         mMarginsAnimator = new LayerMarginsAnimator(this, view);
+        mToolbarAnimator = new DynamicToolbarAnimator(this);
         mView = view;
         mView.setListener(this);
         mContentDocumentIsDisplayed = true;
@@ -174,6 +176,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     public void destroy() {
         mPanZoomController.destroy();
         mMarginsAnimator.destroy();
+        mToolbarAnimator.destroy();
         mDrawListeners.clear();
     }
 
@@ -236,6 +239,10 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
 
     LayerMarginsAnimator getLayerMarginsAnimator() {
         return mMarginsAnimator;
+    }
+
+    DynamicToolbarAnimator getDynamicToolbarAnimator() {
+        return mToolbarAnimator;
     }
 
     /* Informs Gecko that the screen size has changed. */

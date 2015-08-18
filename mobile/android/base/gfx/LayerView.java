@@ -55,6 +55,7 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
     private GeckoLayerClient mLayerClient;
     private PanZoomController mPanZoomController;
     private LayerMarginsAnimator mMarginsAnimator;
+    private DynamicToolbarAnimator mToolbarAnimator;
     private final GLController mGLController;
     private InputConnectionHandler mInputConnectionHandler;
     private LayerRenderer mRenderer;
@@ -130,6 +131,7 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
 
         mPanZoomController = mLayerClient.getPanZoomController();
         mMarginsAnimator = mLayerClient.getLayerMarginsAnimator();
+        mToolbarAnimator = mLayerClient.getDynamicToolbarAnimator();
 
         mRenderer = new LayerRenderer(this);
         mInputConnectionHandler = null;
@@ -301,6 +303,7 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
 
     public PanZoomController getPanZoomController() { return mPanZoomController; }
     public LayerMarginsAnimator getLayerMarginsAnimator() { return mMarginsAnimator; }
+    public DynamicToolbarAnimator getDynamicToolbarAnimator() { return mToolbarAnimator; }
 
     public ImmutableViewportMetrics getViewportMetrics() {
         return mLayerClient.getViewportMetrics();
@@ -663,6 +666,12 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
             setZoomConstraints(tab.getZoomConstraints());
             setIsRTL(tab.getIsRTL());
         }
+    }
+
+    // Public hooks for dynamic toolbar translation
+
+    public interface DynamicToolbarListener {
+        public void onTranslationChanged(float aToolbarTranslation, float aLayerViewTranslation);
     }
 
     // Public hooks for listening to metrics changing
