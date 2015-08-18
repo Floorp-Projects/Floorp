@@ -2094,6 +2094,12 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
 
     mConsoleService = nullptr;
 
+#ifdef MOZ_ENABLE_PROFILER_SPS
+    if (mGatherer && !mProfile.IsEmpty()) {
+        mGatherer->OOPExitProfile(mProfile);
+    }
+#endif
+
     if (obs) {
         RefPtr<nsHashPropertyBag> props = new nsHashPropertyBag();
 
