@@ -187,11 +187,8 @@ SharedDecoderManager::InitDecoder()
     nsRefPtr<SharedDecoderManager> self = this;
     nsRefPtr<MediaDataDecoder::InitPromise> p = mDecoderInitPromise.Ensure(__func__);
 
-    // The mTaskQueue is flushable which can't be used in MediaPromise. So we get
-    // the current AbstractThread instead of it. The MOZ_ASSERT above ensures
-    // we are running in AbstractThread so we won't get a nullptr.
     mDecoderInitPromiseRequest.Begin(
-      mDecoder->Init()->Then(AbstractThread::GetCurrent(), __func__,
+      mDecoder->Init()->Then(AbstractThread::GetCurrent()->AsTaskQueue(), __func__,
         [self] (TrackInfo::TrackType aType) -> void {
           self->mDecoderInitPromiseRequest.Complete();
           self->mInit = true;
