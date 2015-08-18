@@ -1904,10 +1904,7 @@ BrowserGlue.prototype = {
     }
 
     if (currentUIVersion < 16) {
-      let isCollapsed = xulStore.getValue(BROWSER_DOCURL, "nav-bar", "collapsed");
-      if (isCollapsed == "true") {
-        xulStore.setValue(BROWSER_DOCURL, "nav-bar", "collapsed", "false");
-      }
+      xulStore.removeValue(BROWSER_DOCURL, "nav-bar", "collapsed");
     }
 
     // Insert the bookmarks-menu-button into the nav-bar if it isn't already
@@ -1965,12 +1962,6 @@ BrowserGlue.prototype = {
     if (currentUIVersion < 20) {
       // Remove persisted collapsed state from TabsToolbar.
       xulStore.removeValue(BROWSER_DOCURL, "TabsToolbar", "collapsed");
-    }
-
-    if (currentUIVersion < 21) {
-      // Make sure the 'toolbarbutton-1' class will always be present from here
-      // on out.
-      xulStore.removeValue(BROWSER_DOCURL, "bookmarks-menu-button", "class");
     }
 
     if (currentUIVersion < 22) {
