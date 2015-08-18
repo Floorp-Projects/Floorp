@@ -126,6 +126,8 @@ private:
    * Convert uint32_t to BluetoothDeviceType.
    *
    * @param aValue [in] uint32_t to convert
+   *
+   * @return the device type converted from |aValue|
    */
   BluetoothDeviceType ConvertUint32ToDeviceType(const uint32_t aValue);
 
@@ -133,6 +135,8 @@ private:
    * Convert string to BluetoothDeviceAttribute.
    *
    * @param aString [in] String to convert
+   *
+   * @return the device attribute converted from |aString|
    */
   BluetoothDeviceAttribute
     ConvertStringToDeviceAttribute(const nsAString& aString);
@@ -142,6 +146,8 @@ private:
    *
    * @param aType  [in] Device property to check
    * @param aValue [in] New value of the device property
+   *
+   * @return true is the device attribute has changed; false otherwise
    */
   bool IsDeviceAttributeChanged(BluetoothDeviceAttribute aType,
                                 const BluetoothValue& aValue);
@@ -152,7 +158,7 @@ private:
    * Parse 'Advertising Data Type' from an inquiry response and set name, UUIDs
    * and COD if they exist in ADV data.
    *
-   * @param aAdvData [in] advertising data which provided by the LeScan result.
+   * @param aAdvData [in] advertising data from LeScan result.
    */
   void UpdatePropertiesFromAdvData(const nsTArray<uint8_t>& aAdvData);
 

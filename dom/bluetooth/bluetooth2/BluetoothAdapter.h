@@ -314,6 +314,8 @@ private:
    * Convert string to BluetoothAdapterAttribute.
    *
    * @param aString [in] String to convert
+   *
+   * @return the adapter attribute converted from |aString|
    */
   BluetoothAdapterAttribute
     ConvertStringToAdapterAttribute(const nsAString& aString);
@@ -323,14 +325,16 @@ private:
    *
    * @param aType  [in] Adapter property to check
    * @param aValue [in] New value of the adapter property
+   *
+   * @return true if the adapter property has changed; false otherwise
    */
   bool IsAdapterAttributeChanged(BluetoothAdapterAttribute aType,
                                  const BluetoothValue& aValue);
 
   /**
-   * Check whether this adapter is owned by Bluetooth certified app.
+   * Check whether this adapter belongs to Bluetooth certified app.
    *
-   * @return a boolean value to indicate whether it's owned by Bluetooth app.
+   * @return true if this adapter belongs to Bluetooth app; false otherwise
    */
   bool IsBluetoothCertifiedApp();
 
