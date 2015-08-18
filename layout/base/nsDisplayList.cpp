@@ -1230,7 +1230,7 @@ nsDisplayListBuilder::IsInWillChangeBudget(nsIFrame* aFrame,
                                            const nsSize& aSize) {
   bool onBudget = AddToWillChangeBudget(aFrame, aSize);
 
-  if (onBudget) {
+  if (!onBudget) {
     nsString usageStr;
     usageStr.AppendInt(GetWillChangeCost(aFrame, aSize));
 
