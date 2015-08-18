@@ -1703,6 +1703,12 @@ MacroAssemblerARM::ma_vxfer(FloatRegister src, Register dest1, Register dest2, C
 }
 
 void
+MacroAssemblerARM::ma_vxfer(Register src, FloatRegister dest, Condition cc)
+{
+    as_vxfer(src, InvalidReg, VFPRegister(dest).singleOverlay(), CoreToFloat, cc);
+}
+
+void
 MacroAssemblerARM::ma_vxfer(Register src1, Register src2, FloatRegister dest, Condition cc)
 {
     as_vxfer(src1, src2, VFPRegister(dest), CoreToFloat, cc);
@@ -3745,409 +3751,9 @@ MacroAssemblerARMCompat::breakpoint(Condition cc)
 }
 
 void
-MacroAssemblerARMCompat::setupABICall(uint32_t args)
+MacroAssemblerARMCompat::checkStackAlignment()
 {
-    MOZ_ASSERT(!inCall_);
-    inCall_ = true;
-    args_ = args;
-    passedArgs_ = 0;
-    passedArgTypes_ = 0;
-    usedIntSlots_ = 0;
-#if defined(JS_CODEGEN_ARM_HARDFP) || defined(JS_SIMULATOR_ARM)
-    usedFloatSlots_ = 0;
-    usedFloat32_ = false;
-    padding_ = 0;
-#endif
-    floatArgsInGPR[0] = MoveOperand();
-    floatArgsInGPR[1] = MoveOperand();
-    floatArgsInGPR[2] = MoveOperand();
-    floatArgsInGPR[3] = MoveOperand();
-    floatArgsInGPRValid[0] = false;
-    floatArgsInGPRValid[1] = false;
-    floatArgsInGPRValid[2] = false;
-    floatArgsInGPRValid[3] = false;
-}
-
-void
-MacroAssemblerARMCompat::setupAlignedABICall(uint32_t args)
-{
-    setupABICall(args);
-
-    dynamicAlignment_ = false;
-}
-
-void
-MacroAssemblerARMCompat::setupUnalignedABICall(uint32_t args, Register scratch)
-{
-    setupABICall(args);
-    dynamicAlignment_ = true;
-
-    ma_mov(sp, scratch);
-
-    // Force sp to be aligned.
-    ma_and(Imm32(~(ABIStackAlignment - 1)), sp, sp);
-    ma_push(scratch);
-}
-
-#if defined(JS_CODEGEN_ARM_HARDFP) || defined(JS_SIMULATOR_ARM)
-void
-MacroAssemblerARMCompat::passHardFpABIArg(const MoveOperand& from, MoveOp::Type type)
-{
-    MoveOperand to;
-    ++passedArgs_;
-    if (!enoughMemory_)
-        return;
-    switch (type) {
-      case MoveOp::FLOAT32: {
-        FloatRegister fr;
-        passedArgTypes_ = (passedArgTypes_ << ArgType_Shift) | ArgType_Float32;
-        if (GetFloat32ArgReg(usedIntSlots_, usedFloatSlots_, &fr)) {
-            if (from.isFloatReg() && from.floatReg() == fr) {
-                // Nothing to do; the value is in the right register already.
-                usedFloatSlots_++;
-                passedArgTypes_ = (passedArgTypes_ << ArgType_Shift) | ArgType_Float32;
-                return;
-            }
-            to = MoveOperand(fr);
-        } else {
-            // If (and only if) the integer registers have started spilling, do
-            // we need to take the register's alignment into account.
-            uint32_t disp = GetFloat32ArgStackDisp(usedIntSlots_, usedFloatSlots_, &padding_);
-            to = MoveOperand(sp, disp);
-        }
-        usedFloatSlots_++;
-        break;
-      }
-
-      case MoveOp::DOUBLE: {
-          FloatRegister fr;
-          passedArgTypes_ = (passedArgTypes_ << ArgType_Shift) | ArgType_Double;
-          usedFloatSlots_ = (usedFloatSlots_ + 1) & -2;
-          if (GetDoubleArgReg(usedIntSlots_, usedFloatSlots_, &fr)) {
-              if (from.isFloatReg() && from.floatReg() == fr) {
-                  // Nothing to do; the value is in the right register already.
-                  usedFloatSlots_ += 2;
-                  return;
-              }
-              to = MoveOperand(fr);
-          } else {
-              // If (and only if) the integer registers have started spilling, do we
-              // need to take the register's alignment into account
-              uint32_t disp = GetDoubleArgStackDisp(usedIntSlots_, usedFloatSlots_, &padding_);
-              to = MoveOperand(sp, disp);
-          }
-          usedFloatSlots_+=2;
-          break;
-      }
-      case MoveOp::GENERAL: {
-        Register r;
-        passedArgTypes_ = (passedArgTypes_ << ArgType_Shift) | ArgType_General;
-        if (GetIntArgReg(usedIntSlots_, usedFloatSlots_, &r)) {
-            if (from.isGeneralReg() && from.reg() == r) {
-                // Nothing to do; the value is in the right register already.
-                usedIntSlots_++;
-                return;
-            }
-            to = MoveOperand(r);
-        } else {
-            uint32_t disp = GetIntArgStackDisp(usedIntSlots_, usedFloatSlots_, &padding_);
-            to = MoveOperand(sp, disp);
-        }
-        usedIntSlots_++;
-        break;
-      }
-      default:
-        MOZ_CRASH("Unexpected argument type");
-    }
-
-    enoughMemory_ = moveResolver_.addMove(from, to, type);
-}
-#endif
-
-#if !defined(JS_CODEGEN_ARM_HARDFP) || defined(JS_SIMULATOR_ARM)
-void
-MacroAssemblerARMCompat::passSoftFpABIArg(const MoveOperand& from, MoveOp::Type type)
-{
-    MoveOperand to;
-    uint32_t increment = 1;
-    bool useResolver = true;
-    ++passedArgs_;
-    switch (type) {
-      case MoveOp::DOUBLE:
-        // Double arguments need to be rounded up to the nearest doubleword
-        // boundary, even if it is in a register!
-        usedIntSlots_ = (usedIntSlots_ + 1) & ~1;
-        increment = 2;
-        passedArgTypes_ = (passedArgTypes_ << ArgType_Shift) | ArgType_Double;
-        break;
-      case MoveOp::FLOAT32:
-        passedArgTypes_ = (passedArgTypes_ << ArgType_Shift) | ArgType_Float32;
-        break;
-      case MoveOp::GENERAL:
-        passedArgTypes_ = (passedArgTypes_ << ArgType_Shift) | ArgType_General;
-        break;
-      default:
-        MOZ_CRASH("Unexpected argument type");
-    }
-
-    Register destReg;
-    MoveOperand dest;
-    if (GetIntArgReg(usedIntSlots_, 0, &destReg)) {
-        if (type == MoveOp::DOUBLE || type == MoveOp::FLOAT32) {
-            floatArgsInGPR[destReg.code()] = from;
-            floatArgsInGPRValid[destReg.code()] = true;
-            useResolver = false;
-        } else if (from.isGeneralReg() && from.reg() == destReg) {
-            // No need to move anything.
-            useResolver = false;
-        } else {
-            dest = MoveOperand(destReg);
-        }
-    } else {
-        uint32_t disp = GetArgStackDisp(usedIntSlots_);
-        dest = MoveOperand(sp, disp);
-    }
-
-    if (useResolver)
-        enoughMemory_ = enoughMemory_ && moveResolver_.addMove(from, dest, type);
-    usedIntSlots_ += increment;
-}
-#endif
-
-void
-MacroAssemblerARMCompat::passABIArg(const MoveOperand& from, MoveOp::Type type)
-{
-#if defined(JS_SIMULATOR_ARM)
-    if (UseHardFpABI())
-        MacroAssemblerARMCompat::passHardFpABIArg(from, type);
-    else
-        MacroAssemblerARMCompat::passSoftFpABIArg(from, type);
-#elif defined(JS_CODEGEN_ARM_HARDFP)
-    MacroAssemblerARMCompat::passHardFpABIArg(from, type);
-#else
-    MacroAssemblerARMCompat::passSoftFpABIArg(from, type);
-#endif
-}
-
-void
-MacroAssemblerARMCompat::passABIArg(Register reg)
-{
-    passABIArg(MoveOperand(reg), MoveOp::GENERAL);
-}
-
-void
-MacroAssemblerARMCompat::passABIArg(FloatRegister freg, MoveOp::Type type)
-{
-    passABIArg(MoveOperand(freg), type);
-}
-
-void MacroAssemblerARMCompat::checkStackAlignment()
-{
-#ifdef DEBUG
-    ma_tst(sp, Imm32(ABIStackAlignment - 1));
-    breakpoint(NonZero);
-#endif
-}
-
-void
-MacroAssemblerARMCompat::callWithABIPre(uint32_t* stackAdjust, bool callFromAsmJS)
-{
-    MOZ_ASSERT(inCall_);
-
-    *stackAdjust = ((usedIntSlots_ > NumIntArgRegs) ? usedIntSlots_ - NumIntArgRegs : 0) * sizeof(intptr_t);
-#if defined(JS_CODEGEN_ARM_HARDFP) || defined(JS_SIMULATOR_ARM)
-    if (UseHardFpABI())
-        *stackAdjust += 2*((usedFloatSlots_ > NumFloatArgRegs) ? usedFloatSlots_ - NumFloatArgRegs : 0) * sizeof(intptr_t);
-#endif
-    uint32_t alignmentAtPrologue = callFromAsmJS ? sizeof(AsmJSFrame) : 0;
-
-    if (!dynamicAlignment_) {
-        *stackAdjust += ComputeByteAlignment(asMasm().framePushed() + *stackAdjust + alignmentAtPrologue,
-                                             ABIStackAlignment);
-    } else {
-        // sizeof(intptr_t) accounts for the saved stack pointer pushed by
-        // setupUnalignedABICall.
-        *stackAdjust += ComputeByteAlignment(*stackAdjust + sizeof(intptr_t), ABIStackAlignment);
-    }
-
-    asMasm().reserveStack(*stackAdjust);
-
-    // Position all arguments.
-    {
-        enoughMemory_ = enoughMemory_ && moveResolver_.resolve();
-        if (!enoughMemory_)
-            return;
-
-        MoveEmitter emitter(asMasm());
-        emitter.emit(moveResolver_);
-        emitter.finish();
-    }
-    for (int i = 0; i < 4; i++) {
-        if (floatArgsInGPRValid[i]) {
-            MoveOperand from = floatArgsInGPR[i];
-            Register to0 = Register::FromCode(i);
-            Register to1;
-
-            if (!from.isFloatReg() || from.floatReg().isDouble()) {
-                // Doubles need to be moved into a pair of aligned registers
-                // whether they come from the stack, or VFP registers.
-                to1 = Register::FromCode(i + 1);
-                MOZ_ASSERT(i % 2 == 0);
-            }
-
-            if (from.isFloatReg()) {
-                if (from.floatReg().isDouble())
-                    ma_vxfer(from.floatReg(), to0, to1);
-                else
-                    ma_vxfer(from.floatReg(), to0);
-            } else {
-                MOZ_ASSERT(from.isMemory());
-                // Note: We can safely use the MoveOperand's displacement here,
-                // even if the base is SP: MoveEmitter::toOperand adjusts
-                // SP-relative operands by the difference between the current
-                // stack usage and stackAdjust, which emitter.finish() resets to
-                // 0.
-                //
-                // Warning: if the offset isn't within [-255,+255] then this
-                // will assert-fail (or, if non-debug, load the wrong words).
-                // Nothing uses such an offset at the time of this writing.
-                ma_ldrd(EDtrAddr(from.base(), EDtrOffImm(from.disp())), to0, to1);
-            }
-        }
-    }
-    checkStackAlignment();
-
-    // Save the lr register if we need to preserve it.
-    if (secondScratchReg_ != lr)
-        ma_mov(lr, secondScratchReg_);
-}
-
-void
-MacroAssemblerARMCompat::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result)
-{
-    if (secondScratchReg_ != lr)
-        ma_mov(secondScratchReg_, lr);
-
-    switch (result) {
-      case MoveOp::DOUBLE:
-        if (!UseHardFpABI()) {
-            // Move double from r0/r1 to ReturnFloatReg.
-            as_vxfer(r0, r1, ReturnDoubleReg, CoreToFloat);
-            break;
-        }
-      case MoveOp::FLOAT32:
-        if (!UseHardFpABI()) {
-            // Move float32 from r0 to ReturnFloatReg.
-            as_vxfer(r0, InvalidReg, ReturnFloat32Reg.singleOverlay(), CoreToFloat);
-            break;
-        }
-      case MoveOp::GENERAL:
-        break;
-
-      default:
-        MOZ_CRASH("unexpected callWithABI result");
-    }
-
-    asMasm().freeStack(stackAdjust);
-
-    if (dynamicAlignment_) {
-        // While the x86 supports pop esp, on ARM that isn't well defined, so
-        // just do it manually.
-        as_dtr(IsLoad, 32, Offset, sp, DTRAddr(sp, DtrOffImm(0)));
-    }
-
-    MOZ_ASSERT(inCall_);
-    inCall_ = false;
-}
-
-#if defined(DEBUG) && defined(JS_SIMULATOR_ARM)
-static void
-AssertValidABIFunctionType(uint32_t passedArgTypes)
-{
-    switch (passedArgTypes) {
-      case Args_General0:
-      case Args_General1:
-      case Args_General2:
-      case Args_General3:
-      case Args_General4:
-      case Args_General5:
-      case Args_General6:
-      case Args_General7:
-      case Args_General8:
-      case Args_Double_None:
-      case Args_Int_Double:
-      case Args_Float32_Float32:
-      case Args_Double_Double:
-      case Args_Double_Int:
-      case Args_Double_DoubleInt:
-      case Args_Double_DoubleDouble:
-      case Args_Double_IntDouble:
-      case Args_Int_IntDouble:
-      case Args_Double_DoubleDoubleDouble:
-      case Args_Double_DoubleDoubleDoubleDouble:
-        break;
-      default:
-        MOZ_CRASH("Unexpected type");
-    }
-}
-#endif
-
-void
-MacroAssemblerARMCompat::callWithABI(void* fun, MoveOp::Type result)
-{
-#ifdef JS_SIMULATOR_ARM
-    MOZ_ASSERT(passedArgs_ <= 15);
-    passedArgTypes_ <<= ArgType_Shift;
-    switch (result) {
-      case MoveOp::GENERAL: passedArgTypes_ |= ArgType_General; break;
-      case MoveOp::DOUBLE:  passedArgTypes_ |= ArgType_Double;  break;
-      case MoveOp::FLOAT32: passedArgTypes_ |= ArgType_Float32; break;
-      default: MOZ_CRASH("Invalid return type");
-    }
-#ifdef DEBUG
-    AssertValidABIFunctionType(passedArgTypes_);
-#endif
-    ABIFunctionType type = ABIFunctionType(passedArgTypes_);
-    fun = Simulator::RedirectNativeFunction(fun, type);
-#endif
-
-    uint32_t stackAdjust;
-    callWithABIPre(&stackAdjust);
-    ma_call(ImmPtr(fun));
-    callWithABIPost(stackAdjust, result);
-}
-
-void
-MacroAssemblerARMCompat::callWithABI(AsmJSImmPtr imm, MoveOp::Type result)
-{
-    uint32_t stackAdjust;
-    callWithABIPre(&stackAdjust, /* callFromAsmJS = */ true);
-    asMasm().call(imm);
-    callWithABIPost(stackAdjust, result);
-}
-
-void
-MacroAssemblerARMCompat::callWithABI(const Address& fun, MoveOp::Type result)
-{
-    // Load the callee in r12, no instruction between the ldr and call should
-    // clobber it. Note that we can't use fun.base because it may be one of the
-    // IntArg registers clobbered before the call.
-    ma_ldr(fun, r12);
-    uint32_t stackAdjust;
-    callWithABIPre(&stackAdjust);
-    asMasm().call(r12);
-    callWithABIPost(stackAdjust, result);
-}
-
-void
-MacroAssemblerARMCompat::callWithABI(Register fun, MoveOp::Type result)
-{
-    // Load the callee in r12, as above.
-    ma_mov(fun, r12);
-    uint32_t stackAdjust;
-    callWithABIPre(&stackAdjust);
-    asMasm().call(r12);
-    callWithABIPost(stackAdjust, result);
+    asMasm().assertStackAlignment(ABIStackAlignment);
 }
 
 void
@@ -4160,9 +3766,9 @@ MacroAssemblerARMCompat::handleFailureWithHandlerTail(void* handler)
     ma_mov(sp, r0);
 
     // Call the handler.
-    setupUnalignedABICall(1, r1);
-    passABIArg(r0);
-    callWithABI(handler);
+    asMasm().setupUnalignedABICall(r1);
+    asMasm().passABIArg(r0);
+    asMasm().callWithABI(handler);
 
     Label entryFrame;
     Label catch_;
@@ -5372,6 +4978,124 @@ MacroAssembler::call(JitCode* c)
 
     ma_movPatchable(ImmPtr(c->raw()), ScratchRegister, Always, rs);
     ma_callJitHalfPush(ScratchRegister);
+}
+
+
+// ===============================================================
+// ABI function calls.
+
+void
+MacroAssembler::setupUnalignedABICall(Register scratch)
+{
+    setupABICall();
+    dynamicAlignment_ = true;
+
+    ma_mov(sp, scratch);
+    // Force sp to be aligned.
+    ma_and(Imm32(~(ABIStackAlignment - 1)), sp, sp);
+    ma_push(scratch);
+}
+
+void
+MacroAssembler::callWithABIPre(uint32_t* stackAdjust, bool callFromAsmJS)
+{
+    MOZ_ASSERT(inCall_);
+    uint32_t stackForCall = abiArgs_.stackBytesConsumedSoFar();
+
+    if (dynamicAlignment_) {
+        // sizeof(intptr_t) accounts for the saved stack pointer pushed by
+        // setupUnalignedABICall.
+        stackForCall += ComputeByteAlignment(stackForCall + sizeof(intptr_t),
+                                             ABIStackAlignment);
+    } else {
+        uint32_t alignmentAtPrologue = callFromAsmJS ? sizeof(AsmJSFrame) : 0;
+        stackForCall += ComputeByteAlignment(stackForCall + framePushed() + alignmentAtPrologue,
+                                             ABIStackAlignment);
+    }
+
+    *stackAdjust = stackForCall;
+    reserveStack(stackForCall);
+
+    // Position all arguments.
+    {
+        enoughMemory_ = enoughMemory_ && moveResolver_.resolve();
+        if (!enoughMemory_)
+            return;
+
+        MoveEmitter emitter(*this);
+        emitter.emit(moveResolver_);
+        emitter.finish();
+    }
+
+    assertStackAlignment(ABIStackAlignment);
+
+    // Save the lr register if we need to preserve it.
+    if (secondScratchReg_ != lr)
+        ma_mov(lr, secondScratchReg_);
+}
+
+void
+MacroAssembler::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result)
+{
+    if (secondScratchReg_ != lr)
+        ma_mov(secondScratchReg_, lr);
+
+    switch (result) {
+      case MoveOp::DOUBLE:
+        if (!UseHardFpABI()) {
+            // Move double from r0/r1 to ReturnFloatReg.
+            ma_vxfer(r0, r1, ReturnDoubleReg);
+            break;
+        }
+      case MoveOp::FLOAT32:
+        if (!UseHardFpABI()) {
+            // Move float32 from r0 to ReturnFloatReg.
+            ma_vxfer(r0, ReturnFloat32Reg.singleOverlay());
+            break;
+        }
+      case MoveOp::GENERAL:
+        break;
+
+      default:
+        MOZ_CRASH("unexpected callWithABI result");
+    }
+
+    freeStack(stackAdjust);
+
+    if (dynamicAlignment_) {
+        // While the x86 supports pop esp, on ARM that isn't well defined, so
+        // just do it manually.
+        as_dtr(IsLoad, 32, Offset, sp, DTRAddr(sp, DtrOffImm(0)));
+    }
+
+#ifdef DEBUG
+    MOZ_ASSERT(inCall_);
+    inCall_ = false;
+#endif
+}
+
+void
+MacroAssembler::callWithABINoProfiler(Register fun, MoveOp::Type result)
+{
+    // Load the callee in r12, as above.
+    ma_mov(fun, r12);
+    uint32_t stackAdjust;
+    callWithABIPre(&stackAdjust);
+    call(r12);
+    callWithABIPost(stackAdjust, result);
+}
+
+void
+MacroAssembler::callWithABINoProfiler(const Address& fun, MoveOp::Type result)
+{
+    // Load the callee in r12, no instruction between the ldr and call should
+    // clobber it. Note that we can't use fun.base because it may be one of the
+    // IntArg registers clobbered before the call.
+    ma_ldr(fun, r12);
+    uint32_t stackAdjust;
+    callWithABIPre(&stackAdjust);
+    call(r12);
+    callWithABIPost(stackAdjust, result);
 }
 
 //}}} check_macroassembler_style

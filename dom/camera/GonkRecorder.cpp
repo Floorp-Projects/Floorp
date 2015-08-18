@@ -20,6 +20,7 @@
 #include "CameraCommon.h"
 #include "GonkCameraSource.h"
 #include "GonkRecorder.h"
+#include "mozilla/CondVar.h"
 
 #define RE_LOGD(fmt, ...) DOM_CAMERA_LOGA("[%s:%d]" fmt,__FILE__,__LINE__, ## __VA_ARGS__)
 #define RE_LOGV(fmt, ...) DOM_CAMERA_LOGI("[%s:%d]" fmt,__FILE__,__LINE__, ## __VA_ARGS__)
@@ -57,6 +58,132 @@
 
 #define RES_720P (720 * 1280)
 namespace android {
+
+struct GonkRecorder::WrappedMediaSource : MediaSource {
+public:
+    WrappedMediaSource(const sp<MediaSource> &encoder);
+    status_t start(MetaData *params = NULL) override;
+    status_t stop() override;
+    sp<MetaData> getFormat() override;
+    status_t read(MediaBuffer **buffer, const ReadOptions *options = NULL) override;
+    void block();
+    status_t resume();
+
+protected:
+    virtual ~WrappedMediaSource() {};
+
+private:
+    WrappedMediaSource(const WrappedMediaSource &);
+    WrappedMediaSource &operator=(const WrappedMediaSource &);
+
+    sp<MediaSource> mEncoder;
+    mozilla::Mutex mMutex;
+    mozilla::CondVar mCondVar;
+    bool mWait;
+    bool mResume;
+    status_t mResumeStatus;
+};
+
+GonkRecorder::WrappedMediaSource::WrappedMediaSource(const sp<MediaSource> &encoder)
+    : mEncoder(encoder)
+    , mMutex("GonkRecorder::WrappedMediaSource::mMutex")
+    , mCondVar(mMutex, "GonkRecorder::WrappedMediaSource::mCondVar")
+    , mWait(false)
+    , mResume(false)
+    , mResumeStatus(UNKNOWN_ERROR)
+{
+}
+
+status_t
+GonkRecorder::WrappedMediaSource::start(MetaData *params)
+{
+    return mEncoder->start(params);
+}
+
+status_t
+GonkRecorder::WrappedMediaSource::stop()
+{
+    {
+      // Ensure the writer thread is not blocked first.
+      MutexAutoLock lock(mMutex);
+      mWait = false;
+      mCondVar.Notify();
+    }
+    return mEncoder->stop();
+}
+
+sp<MetaData>
+GonkRecorder::WrappedMediaSource::getFormat()
+{
+    return mEncoder->getFormat();
+}
+
+status_t
+GonkRecorder::WrappedMediaSource::read(MediaBuffer **buffer, const ReadOptions *options)
+{
+    MutexAutoLock lock(mMutex);
+    while (mWait) {
+      mCondVar.Wait();
+    }
+
+    status_t rv = UNKNOWN_ERROR;
+    MediaBuffer *buf = NULL;
+
+    do {
+        rv = mEncoder->read(&buf, options);
+        if (!mResume) {
+            break;
+        }
+
+        if (rv != OK || !buf) {
+            mResume = false;
+            mResumeStatus = UNKNOWN_ERROR;
+            mCondVar.Notify();
+            break;
+        }
+
+        int32_t isSync = 0;
+        buf->meta_data()->findInt32(kKeyIsSyncFrame, &isSync);
+        if (isSync) {
+            mResume = false;
+            mResumeStatus = OK;
+            mCondVar.Notify();
+            break;
+        }
+
+        buf->release();
+        buf = NULL;
+    } while(true);
+
+    *buffer = buf;
+    return rv;
+}
+
+void
+GonkRecorder::WrappedMediaSource::block()
+{
+    MutexAutoLock lock(mMutex);
+    mWait = true;
+}
+
+status_t
+GonkRecorder::WrappedMediaSource::resume()
+{
+    MutexAutoLock lock(mMutex);
+    if (!mWait) {
+        return UNKNOWN_ERROR;
+    }
+
+    mWait = false;
+    mResume = true;
+    mCondVar.Notify();
+
+    do {
+        mCondVar.Wait();
+    } while(mResume);
+
+    return mResumeStatus;
+}
 
 GonkRecorder::GonkRecorder()
     : mWriter(NULL),
@@ -1500,11 +1627,13 @@ status_t GonkRecorder::setupMPEG4Recording(
         int32_t videoWidth, int32_t videoHeight,
         int32_t videoBitRate,
         int32_t *totalBitRate,
-        sp<MediaWriter> *mediaWriter) {
+        sp<MediaWriter> *mediaWriter,
+        sp<WrappedMediaSource> *mediaSource) {
     mediaWriter->clear();
     *totalBitRate = 0;
     status_t err = OK;
     sp<MediaWriter> writer = new MPEG4Writer(outputFd);
+    sp<WrappedMediaSource> writerSource;
 
     if (mVideoSource < VIDEO_SOURCE_LIST_END) {
 
@@ -1520,7 +1649,10 @@ status_t GonkRecorder::setupMPEG4Recording(
             return err;
         }
 
-        writer->addSource(encoder);
+        sp<GonkCameraSource> cameraSource = reinterpret_cast<GonkCameraSource *>(mediaSource.get());
+        writerSource = new WrappedMediaSource(encoder);
+
+        writer->addSource(writerSource);
         *totalBitRate += videoBitRate;
     }
 
@@ -1556,6 +1688,7 @@ status_t GonkRecorder::setupMPEG4Recording(
 
     writer->setListener(mListener);
     *mediaWriter = writer;
+    *mediaSource = writerSource;
     return OK;
 }
 
@@ -1587,7 +1720,8 @@ status_t GonkRecorder::startMPEG4Recording() {
     int32_t totalBitRate;
     status_t err = setupMPEG4Recording(
             mOutputFd, mVideoWidth, mVideoHeight,
-            mVideoBitRate, &totalBitRate, &mWriter);
+            mVideoBitRate, &totalBitRate, &mWriter,
+            &mWriterSource);
     if (err != OK) {
         return err;
     }
@@ -1616,20 +1750,56 @@ status_t GonkRecorder::pause() {
     if (mWriter == NULL) {
         return UNKNOWN_ERROR;
     }
-    mWriter->pause();
-
-    if (mStarted) {
+    if (!mStarted) {
+        return OK;
+    }
+    // Pause is not properly supported by all writers although
+    // for B2G we only currently use 3GPP/MPEG4
+    int err = INVALID_OPERATION;
+    switch (mOutputFormat) {
+        case OUTPUT_FORMAT_DEFAULT:
+        case OUTPUT_FORMAT_THREE_GPP:
+        case OUTPUT_FORMAT_MPEG_4:
+            err = mWriter->pause();
+            break;
+        default:
+            break;
+    }
+    if (err == OK) {
         mStarted = false;
     }
+    return err;
+}
 
-
-    return OK;
+status_t GonkRecorder::resume() {
+    RE_LOGV("resume");
+    if (mWriter == NULL) {
+        return UNKNOWN_ERROR;
+    }
+    if (mStarted) {
+        return OK;
+    }
+    /* While the writer is paused, it will continue to pull frames
+       from the encoder. This ensures continuity on the timestamps of
+       the encoded frames, etc. When we want to resume however, we must
+       ensure that the first read frame is a key frame. */
+    mWriterSource->block();
+    int err = mWriter->start(NULL);
+    if (err != OK) {
+        return err;
+    }
+    err = mWriterSource->resume();
+    if (err == OK) {
+      mStarted = true;
+    }
+    return err;
 }
 
 status_t GonkRecorder::stop() {
     RE_LOGV("stop");
     status_t err = OK;
 
+    mWriterSource.clear();
     if (mWriter != NULL) {
         err = mWriter->stop();
         mWriter.clear();

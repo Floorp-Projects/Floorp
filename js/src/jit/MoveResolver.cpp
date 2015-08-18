@@ -5,10 +5,39 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jit/MoveResolver.h"
+
+#include "jit/MacroAssembler.h"
 #include "jit/RegisterSets.h"
 
 using namespace js;
 using namespace js::jit;
+
+MoveOperand::MoveOperand(MacroAssembler& masm, const ABIArg& arg)
+{
+    switch (arg.kind()) {
+      case ABIArg::GPR:
+        kind_ = REG;
+        code_ = arg.gpr().code();
+        break;
+#ifdef JS_CODEGEN_REGISTER_PAIR
+      case ABIArg::GPR_PAIR:
+        kind_ = REG_PAIR;
+        code_ = arg.evenGpr().code();
+        MOZ_ASSERT(code_ % 2 == 0);
+        MOZ_ASSERT(code_ + 1 == arg.oddGpr().code());
+        break;
+#endif
+      case ABIArg::FPU:
+        kind_ = FLOAT_REG;
+        code_ = arg.fpu().code();
+        break;
+      case ABIArg::Stack:
+        kind_ = MEMORY;
+        code_ = masm.getStackPointer().code();
+        disp_ = arg.offsetFromArgBase();
+        break;
+    }
+}
 
 MoveResolver::MoveResolver()
   : numCycles_(0), curCycles_(0)

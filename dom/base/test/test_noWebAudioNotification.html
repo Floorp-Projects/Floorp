@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for video controller in windows</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<pre id="test">
+</pre>
+
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("Testing an event not happening");
+
+var observer = {
+  observe: function(subject, topic, data) {
+    ok(false, "should not receive audio-playback notification!");
+  }
+};
+
+var observerService = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
+                                   .getService(SpecialPowers.Ci.nsIObserverService);
+
+var ac;
+
+var tests = [
+  function() {
+    SpecialPowers.pushPrefEnv({"set": [["media.useAudioChannelService", true]]}, runTest);
+  },
+
+  function() {
+    observerService.addObserver(observer, "audio-playback", false);
+    ok(true, "Observer set");
+    runTest();
+  },
+
+  function() {
+    ac = new AudioContext();
+    setTimeout(runTest, 100);
+  },
+
+  function() {
+    observerService.removeObserver(observer, "audio-playback");
+    ok(true, "Observer removed");
+    runTest();
+  }
+];
+
+function runTest() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+
+runTest();
+
+</script>
+</body>
+</html>
+

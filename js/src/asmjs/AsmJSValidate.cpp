@@ -10987,6 +10987,11 @@ GenerateEntry(ModuleCompiler& m, unsigned exportIndex)
           case ABIArg::GPR:
             masm.load32(src, iter->gpr());
             break;
+#ifdef JS_CODEGEN_REGISTER_PAIR
+          case ABIArg::GPR_PAIR:
+            MOZ_CRASH("AsmJS uses hardfp for function calls.");
+            break;
+#endif
           case ABIArg::FPU: {
             static_assert(sizeof(AsmJSModule::EntryArg) >= jit::Simd128DataSize,
                           "EntryArg must be big enough to store SIMD values");
@@ -11099,6 +11104,11 @@ FillArgumentArray(ModuleCompiler& m, const VarTypeVector& argTypes,
           case ABIArg::GPR:
             masm.storeValue(JSVAL_TYPE_INT32, i->gpr(), dstAddr);
             break;
+#ifdef JS_CODEGEN_REGISTER_PAIR
+          case ABIArg::GPR_PAIR:
+            MOZ_CRASH("AsmJS uses hardfp for function calls.");
+            break;
+#endif
           case ABIArg::FPU:
             masm.canonicalizeDouble(i->fpu());
             masm.storeDouble(i->fpu(), dstAddr);
