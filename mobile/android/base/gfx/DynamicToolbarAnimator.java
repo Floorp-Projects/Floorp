@@ -9,8 +9,10 @@ import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
+import android.graphics.PointF;
 import android.util.Log;
 import android.view.animation.DecelerateInterpolator;
+import android.view.MotionEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,6 +63,11 @@ public class DynamicToolbarAnimator {
 
     /* The task that handles showing/hiding toolbar */
     private DynamicToolbarAnimationTask mAnimationTask;
+
+    /* The start point of a drag, used for scroll-based dynamic toolbar
+     * behaviour. */
+    private PointF mTouchStart;
+    private float mLastTouch;
 
     public DynamicToolbarAnimator(GeckoLayerClient aTarget) {
         mTarget = aTarget;
@@ -171,6 +178,134 @@ public class DynamicToolbarAnimator {
             Log.v(LOGTAG, "Resize viewport to dimensions " + viewWidth + "x" + viewHeightVisible);
             mTarget.setViewportSize(viewWidth, viewHeightVisible);
         }
+    }
+
+    /**
+     * "Shrinks" the absolute value of aValue by moving it closer to zero by
+     * aShrinkAmount, but prevents it from crossing over zero. If aShrinkAmount
+     * is negative it is ignored.
+     * @return The shrunken value.
+     */
+    private static float shrinkAbs(float aValue, float aShrinkAmount) {
+        if (aShrinkAmount <= 0) {
+            return aValue;
+        }
+        float shrinkBy = Math.min(Math.abs(aValue), aShrinkAmount);
+        return (aValue < 0 ? aValue + shrinkBy : aValue - shrinkBy);
+    }
+
+    /**
+     * This function takes in a scroll amount and decides how much of that
+     * should be used up to translate things on screen because of the dynamic
+     * toolbar behaviour. It returns the maximum amount that could be used
+     * for translation purposes; the rest must be used for scrolling.
+     */
+    private float decideTranslation(float aDelta,
+                                    ImmutableViewportMetrics aMetrics,
+                                    float aTouchTravelDistance) {
+
+        float exposeThreshold = aMetrics.getHeight() * SCROLL_TOOLBAR_THRESHOLD;
+        float translation = aDelta;
+
+        if (translation < 0) { // finger moving upwards
+            translation = shrinkAbs(translation, aMetrics.getOverscroll().top);
+
+            // If the toolbar is in a state between fully hidden and fully shown
+            // (i.e. the user is actively translating it), then we want the
+            // translation to take effect right away. Or if the user has moved
+            // their finger past the required threshold (and is not trying to
+            // scroll past the bottom of the page) then also we want the touch
+            // to cause translation.
+            boolean inBetween = (mToolbarTranslation != 0 && mToolbarTranslation != mMaxTranslation);
+            boolean reachedThreshold = -aTouchTravelDistance >= exposeThreshold;
+            boolean atBottomOfPage = aMetrics.viewportRectBottom() >= aMetrics.pageRectBottom;
+            if (inBetween || (reachedThreshold && !atBottomOfPage)) {
+                return translation;
+            }
+        } else {    // finger moving downwards
+            translation = shrinkAbs(translation, aMetrics.getOverscroll().bottom);
+
+            // Ditto above comment, but in this case if they reached the top and
+            // the toolbar is not shown, then we do want to allow translation
+            // right away.
+            boolean inBetween = (mToolbarTranslation != 0 && mToolbarTranslation != mMaxTranslation);
+            boolean reachedThreshold = aTouchTravelDistance >= exposeThreshold;
+            boolean atTopOfPage = aMetrics.viewportRectTop <= aMetrics.pageRectTop;
+            boolean isToolbarTranslated = (mToolbarTranslation != 0);
+            if (inBetween || reachedThreshold || (atTopOfPage && isToolbarTranslated)) {
+                return translation;
+            }
+        }
+
+        return 0;
+    }
+
+    boolean onInterceptTouchEvent(MotionEvent event) {
+        if (mPinned) {
+            return false;
+        }
+
+        // Animations should never co-exist with the user touching the screen.
+        if (mAnimationTask != null) {
+            mTarget.getView().removeRenderTask(mAnimationTask);
+            mAnimationTask = null;
+        }
+
+        // we only care about single-finger drags here; any other kind of event
+        // should reset and cause us to start over.
+        if (event.getActionMasked() != MotionEvent.ACTION_MOVE ||
+            event.getPointerCount() != 1)
+        {
+            if (mTouchStart != null) {
+                Log.v(LOGTAG, "Resetting touch sequence due to non-move");
+                mTouchStart = null;
+            }
+            return false;
+        }
+
+        if (mTouchStart != null) {
+            float prevDir = mLastTouch - mTouchStart.y;
+            float newDir = event.getRawY() - mLastTouch;
+            if (prevDir != 0 && newDir != 0 && ((prevDir < 0) != (newDir < 0))) {
+                Log.v(LOGTAG, "Direction changed: " + mTouchStart.y + " -> " + mLastTouch + " -> " + event.getRawY());
+                // If the direction of movement changed, reset the travel
+                // distance properties.
+                mTouchStart = null;
+            }
+        }
+
+        if (mTouchStart == null) {
+            mTouchStart = new PointF(event.getRawX(), event.getRawY());
+            mLastTouch = event.getRawY();
+            return false;
+        }
+
+        float deltaY = event.getRawY() - mLastTouch;
+        mLastTouch = event.getRawY();
+        float travelDistance = event.getRawY() - mTouchStart.y;
+
+        ImmutableViewportMetrics metrics = mTarget.getViewportMetrics();
+
+        if (metrics.getPageHeight() < metrics.getHeight()) {
+            return false;
+        }
+
+        float translation = decideTranslation(deltaY, metrics, travelDistance);
+        Log.v(LOGTAG, "Got vertical translation " + translation);
+
+        float oldToolbarTranslation = mToolbarTranslation;
+        float oldLayerViewTranslation = mLayerViewTranslation;
+        mToolbarTranslation = FloatUtils.clamp(mToolbarTranslation - translation, 0, mMaxTranslation);
+        mLayerViewTranslation = FloatUtils.clamp(mLayerViewTranslation - translation, 0, mMaxTranslation);
+
+        if (oldToolbarTranslation == mToolbarTranslation &&
+            oldLayerViewTranslation == mLayerViewTranslation) {
+            return false;
+        }
+
+        fireListeners();
+        mTarget.getView().requestRender();
+        return true;
     }
 
     class DynamicToolbarAnimationTask extends RenderTask {
