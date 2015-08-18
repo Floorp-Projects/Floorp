@@ -2180,6 +2180,14 @@ HttpChannelChild::ResetInterception()
   NS_ENSURE_SUCCESS_VOID(rv);
 }
 
+NS_IMETHODIMP
+HttpChannelChild::GetResponseSynthesized(bool* aSynthesized)
+{
+  NS_ENSURE_ARG_POINTER(aSynthesized);
+  *aSynthesized = mSynthesizedResponse;
+  return NS_OK;
+}
+
 void
 HttpChannelChild::OverrideWithSynthesizedResponse(nsAutoPtr<nsHttpResponseHead>& aResponseHead,
                                                   nsIInputStream* aSynthesizedInput,

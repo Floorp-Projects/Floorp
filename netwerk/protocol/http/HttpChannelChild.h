@@ -149,6 +149,8 @@ protected:
   bool GetAssociatedContentSecurity(nsIAssociatedContentSecurity** res = nullptr);
   virtual void DoNotifyListenerCleanup() override;
 
+  NS_IMETHOD GetResponseSynthesized(bool* aSynthesized) override;
+
 private:
   nsresult ContinueAsyncOpen();
 
