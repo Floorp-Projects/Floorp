@@ -855,14 +855,10 @@ nsTransitionManager::UpdateCascadeResults(AnimationCollection* aTransitions,
 #endif
   }
 
+  // If there is any change in the cascade result, update animations on layers
+  // with the winning animations.
   if (changed) {
-    mPresContext->RestyleManager()->IncrementAnimationGeneration();
-    aTransitions->UpdateAnimationGeneration(mPresContext);
-    aTransitions->PostUpdateLayerAnimations();
-
-    // Invalidate our style rule.
-    aTransitions->mStyleRuleRefreshTime = TimeStamp();
-    aTransitions->mNeedsRefreshes = true;
+    aTransitions->RequestRestyle(AnimationCollection::RestyleType::Layer);
   }
 }
 
