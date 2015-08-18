@@ -1324,6 +1324,48 @@ nsGonkCameraControl::StopRecordingImpl()
 }
 
 nsresult
+nsGonkCameraControl::PauseRecordingImpl()
+{
+  ReentrantMonitorAutoEnter mon(mRecorderMonitor);
+
+#ifdef MOZ_WIDGET_GONK
+  if (!mRecorder) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  int err = mRecorder->pause();
+  switch (err) {
+    case OK:
+      break;
+    case INVALID_OPERATION:
+      return NS_ERROR_NOT_IMPLEMENTED;
+    default:
+      return NS_ERROR_FAILURE;
+  }
+#endif
+  OnRecorderStateChange(CameraControlListener::kRecorderPaused);
+  return NS_OK;
+}
+
+nsresult
+nsGonkCameraControl::ResumeRecordingImpl()
+{
+  ReentrantMonitorAutoEnter mon(mRecorderMonitor);
+
+#ifdef MOZ_WIDGET_GONK
+  if (!mRecorder) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (mRecorder->resume() != OK) {
+    return NS_ERROR_FAILURE;
+  }
+#endif
+  OnRecorderStateChange(CameraControlListener::kRecorderResumed);
+  return NS_OK;
+}
+
+nsresult
 nsGonkCameraControl::ResumeContinuousFocusImpl()
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mCameraThread);
