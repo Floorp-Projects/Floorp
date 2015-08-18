@@ -190,6 +190,124 @@ private:
   Function mFunction;
 };
 
+/**
+ * Define whether an event data should be copied or moved to the listeners.
+ *
+ * @Copy Data will always be copied. Each listener gets a copy.
+ * @Move Data will always be moved.
+ * @Both Data will be moved when possible or copied when necessary.
+ */
+enum class EventPassMode : int8_t {
+  Copy,
+  Move,
+  Both
+};
+
+class ListenerBase {
+public:
+  ListenerBase() : mToken(new RevocableToken()) {}
+  ~ListenerBase() {
+    MOZ_ASSERT(Token()->IsRevoked(), "Must disconnect the listener.");
+  }
+  RevocableToken* Token() const {
+    return mToken;
+  }
+private:
+  const nsRefPtr<RevocableToken> mToken;
+};
+
+/**
+ * Stored by MediaEventSource to send notifications to the listener.
+ * Since virtual methods can not be templated, this class is specialized
+ * to provide different Dispatch() overloads depending on EventPassMode.
+ */
+template <typename ArgType, EventPassMode Mode = EventPassMode::Copy>
+class Listener : public ListenerBase {
+public:
+  virtual ~Listener() {}
+  virtual void Dispatch(const ArgType& aEvent) = 0;
+};
+
+template <typename ArgType>
+class Listener<ArgType, EventPassMode::Both> : public ListenerBase {
+public:
+  virtual ~Listener() {}
+  virtual void Dispatch(const ArgType& aEvent) = 0;
+  virtual void Dispatch(ArgType&& aEvent) = 0;
+};
+
+template <typename ArgType>
+class Listener<ArgType, EventPassMode::Move> : public ListenerBase {
+public:
+  virtual ~Listener() {}
+  virtual void Dispatch(ArgType&& aEvent) = 0;
+};
+
+/**
+ * Store the registered target thread and function so it knows where and to
+ * whom to send the event data.
+ */
+template <typename Target, typename Function, typename ArgType, EventPassMode>
+class ListenerImpl : public Listener<ArgType, EventPassMode::Copy> {
+public:
+  ListenerImpl(Target* aTarget, const Function& aFunction)
+    : mHelper(ListenerBase::Token(), aTarget, aFunction) {}
+  void Dispatch(const ArgType& aEvent) override {
+    mHelper.Dispatch(aEvent);
+  }
+private:
+  ListenerHelper<Target, Function> mHelper;
+};
+
+template <typename Target, typename Function, typename ArgType>
+class ListenerImpl<Target, Function, ArgType, EventPassMode::Both>
+  : public Listener<ArgType, EventPassMode::Both> {
+public:
+  ListenerImpl(Target* aTarget, const Function& aFunction)
+    : mHelper(ListenerBase::Token(), aTarget, aFunction) {}
+  void Dispatch(const ArgType& aEvent) override {
+    mHelper.Dispatch(aEvent);
+  }
+  void Dispatch(ArgType&& aEvent) override {
+    mHelper.Dispatch(Move(aEvent));
+  }
+private:
+  ListenerHelper<Target, Function> mHelper;
+};
+
+template <typename Target, typename Function, typename ArgType>
+class ListenerImpl<Target, Function, ArgType, EventPassMode::Move>
+  : public Listener<ArgType, EventPassMode::Move> {
+public:
+  ListenerImpl(Target* aTarget, const Function& aFunction)
+    : mHelper(ListenerBase::Token(), aTarget, aFunction) {}
+  void Dispatch(ArgType&& aEvent) override {
+    mHelper.Dispatch(Move(aEvent));
+  }
+private:
+  ListenerHelper<Target, Function> mHelper;
+};
+
+/**
+ * Select EventPassMode based on ListenerMode and if the type is copyable.
+ *
+ * @Copy Selected when ListenerMode is NonExclusive because each listener
+ * must get a copy.
+ *
+ * @Move Selected when ListenerMode is Exclusive and the type is move-only.
+ *
+ * @Both Selected when ListenerMode is Exclusive and the type is copyable.
+ * The data will be moved when possible and copied when necessary.
+ */
+template <typename ArgType, ListenerMode Mode>
+struct PassModePicker {
+  // TODO: pick EventPassMode::Both when we can detect if a type is
+  // copy-constructible to allow copy-only types in Exclusive mode.
+  static const EventPassMode Value =
+    Mode == ListenerMode::NonExclusive ?
+    EventPassMode::Copy : EventPassMode::Move;
+};
+
 } // namespace detail
 
 template <typename T, ListenerMode> class MediaEventSource;
@@ -239,6 +357,12 @@ template <typename EventType, ListenerMode Mode = ListenerMode::NonExclusive>
 class MediaEventSource {
   static_assert(!IsReference<EventType>::value, "Ref-type not supported!");
   typedef typename detail::EventTypeTraits<EventType>::ArgType ArgType;
+  static const detail::EventPassMode PassMode
+    = detail::PassModePicker<ArgType, Mode>::Value;
+  typedef detail::Listener<ArgType, PassMode> Listener;
+
+  template<typename Target, typename Func>
+  using ListenerImpl = detail::ListenerImpl<Target, Func, ArgType, PassMode>;
 
   template <typename Method>
   using TakeArgs = detail::TakeArgs<Method>;
