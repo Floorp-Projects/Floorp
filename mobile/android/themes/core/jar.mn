@@ -43,10 +43,8 @@ chrome.jar:
 #endif
 #
 
-#ifdef NIGHTLY_BUILD
 * skin/aboutLogins.css                      (aboutLogins.css)
   skin/images/spinning_throbber.svg         (images/spinning_throbber.svg)
-#endif
 
   skin/images/search.png                    (images/search.png)
   skin/images/lock.png                      (images/lock.png)

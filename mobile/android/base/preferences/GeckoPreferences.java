@@ -117,7 +117,6 @@ OnSharedPreferenceChangeListener
     private static final String PREFS_CRASHREPORTER_ENABLED = "datareporting.crashreporter.submitEnabled";
     private static final String PREFS_MENU_CHAR_ENCODING = "browser.menu.showCharacterEncoding";
     private static final String PREFS_MP_ENABLED = "privacy.masterpassword.enabled";
-    private static final String PREFS_LOGIN_MANAGE = NON_PREF_PREFIX + "signon.manage";
     private static final String PREFS_DISABLE_ZOOMED_VIEW = "ui.zoomedview.disabled";
     private static final String PREFS_UPDATER_AUTODOWNLOAD = "app.update.autodownload";
     private static final String PREFS_UPDATER_URL = "app.update.url.android";
@@ -732,12 +731,6 @@ OnSharedPreferenceChangeListener
                 pref.setOnPreferenceChangeListener(this);
                 if (PREFS_UPDATER_AUTODOWNLOAD.equals(key)) {
                     if (!AppConstants.MOZ_UPDATER) {
-                        preferences.removePreference(pref);
-                        i--;
-                        continue;
-                    }
-                } else if (PREFS_LOGIN_MANAGE.equals(key)) {
-                    if (!AppConstants.NIGHTLY_BUILD) {
                         preferences.removePreference(pref);
                         i--;
                         continue;

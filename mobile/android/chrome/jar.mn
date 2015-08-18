@@ -59,9 +59,9 @@ chrome.jar:
   content/aboutDevices.xhtml           (content/aboutDevices.xhtml)
   content/aboutDevices.js              (content/aboutDevices.js)
 #endif
-#ifdef NIGHTLY_BUILD
   content/aboutLogins.xhtml            (content/aboutLogins.xhtml)
   content/aboutLogins.js               (content/aboutLogins.js)
+#ifdef NIGHTLY_BUILD
   content/WebcompatReporter.js         (content/WebcompatReporter.js)
 #endif
 #ifdef MOZ_PAY
