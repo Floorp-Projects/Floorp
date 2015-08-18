@@ -184,6 +184,11 @@ let TelemetryReportingPolicyImpl = {
    * @return {Object} A date object or null on errors.
    */
   get dataSubmissionPolicyNotifiedDate() {
+    if (!Preferences.has(PREF_ACCEPTED_POLICY_DATE)) {
+      this._log.info("get dataSubmissionPolicyNotifiedDate - No date stored yet.");
+      return null;
+    }
+
     let prefString = Preferences.get(PREF_ACCEPTED_POLICY_DATE, 0);
     let valueInteger = parseInt(prefString, 10);
 
