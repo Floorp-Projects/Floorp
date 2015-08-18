@@ -28,6 +28,7 @@ const CATEGORY_WEBDEV = 3;
 const CATEGORY_INPUT = 4;
 const CATEGORY_OUTPUT = 5;
 const CATEGORY_SECURITY = 6;
+const CATEGORY_SERVER = 7;
 
 // The possible message severities.
 const SEVERITY_ERROR = 0;
