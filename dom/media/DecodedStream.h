@@ -39,9 +39,27 @@ class Image;
 class OutputStreamData {
 public:
   ~OutputStreamData();
-  void Init(DecodedStream* aDecodedStream, ProcessedMediaStream* aStream);
+  void Init(DecodedStream* aOwner, ProcessedMediaStream* aStream);
+
+  // Connect mStream to the input stream.
+  void Connect(MediaStream* aStream);
+  // Disconnect mStream from its input stream.
+  // Return false is mStream is already destroyed, otherwise true.
+  bool Disconnect();
+  // Called by OutputStreamListener to remove self from the output streams
+  // managed by DecodedStream.
+  void Remove();
+  // Return true if aStream points to the same object as mStream.
+  // Used by DecodedStream to remove an output stream.
+  bool Equals(MediaStream* aStream)
+  {
+    return mStream == aStream;
+  }
+
+private:
+  DecodedStream* mOwner;
   nsRefPtr<ProcessedMediaStream> mStream;
-  // mPort connects DecodedStreamData::mStream to our mStream.
+  // mPort connects our mStream to an input stream.
   nsRefPtr<MediaInputPort> mPort;
   nsRefPtr<OutputStreamListener> mListener;
 };
@@ -84,7 +102,6 @@ protected:
 private:
   ReentrantMonitor& GetReentrantMonitor() const;
   void RecreateData(MediaStreamGraph* aGraph);
-  void Connect(OutputStreamData* aStream);
   nsTArray<OutputStreamData>& OutputStreams();
   void InitTracks();
   void AdvanceTracks();

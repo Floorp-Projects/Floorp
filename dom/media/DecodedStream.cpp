@@ -197,8 +197,7 @@ DecodedStreamData::SetPlaying(bool aPlaying)
 class OutputStreamListener : public MediaStreamListener {
   typedef MediaStreamListener::MediaStreamGraphEvent MediaStreamGraphEvent;
 public:
-  OutputStreamListener(DecodedStream* aDecodedStream, MediaStream* aStream)
-    : mDecodedStream(aDecodedStream), mStream(aStream) {}
+  OutputStreamListener(OutputStreamData* aOwner) : mOwner(aOwner) {}
 
   void NotifyEvent(MediaStreamGraph* aGraph, MediaStreamGraphEvent event) override
   {
@@ -212,35 +211,86 @@ public:
   void Forget()
   {
     MOZ_ASSERT(NS_IsMainThread());
-    mDecodedStream = nullptr;
+    mOwner = nullptr;
   }
 
 private:
   void DoNotifyFinished()
   {
     MOZ_ASSERT(NS_IsMainThread());
-    if (mDecodedStream) {
+    if (mOwner) {
       // Remove the finished stream so it won't block the decoded stream.
-      mDecodedStream->Remove(mStream);
+      mOwner->Remove();
     }
   }
 
   // Main thread only
-  DecodedStream* mDecodedStream;
-  nsRefPtr<MediaStream> mStream;
+  OutputStreamData* mOwner;
 };
 
 OutputStreamData::~OutputStreamData()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   mListener->Forget();
+  // Break the connection to the input stream if necessary.
+  if (mPort) {
+    mPort->Destroy();
+  }
 }
 
 void
-OutputStreamData::Init(DecodedStream* aDecodedStream, ProcessedMediaStream* aStream)
+OutputStreamData::Init(DecodedStream* aOwner, ProcessedMediaStream* aStream)
 {
+  mOwner = aOwner;
   mStream = aStream;
-  mListener = new OutputStreamListener(aDecodedStream, aStream);
+  mListener = new OutputStreamListener(this);
   aStream->AddListener(mListener);
+}
+
+void
+OutputStreamData::Connect(MediaStream* aStream)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mPort, "Already connected?");
+  MOZ_ASSERT(!mStream->IsDestroyed(), "Can't connect a destroyed stream.");
+
+  // The output stream must stay in sync with the input stream, so if
+  // either stream is blocked, we block the other.
+  mPort = mStream->AllocateInputPort(aStream,
+    MediaInputPort::FLAG_BLOCK_INPUT | MediaInputPort::FLAG_BLOCK_OUTPUT);
+  // Unblock the output stream now. The input stream is responsible for
+  // controlling blocking from now on.
+  mStream->ChangeExplicitBlockerCount(-1);
+}
+
+bool
+OutputStreamData::Disconnect()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // During cycle collection, DOMMediaStream can be destroyed and send
+  // its Destroy message before this decoder is destroyed. So we have to
+  // be careful not to send any messages after the Destroy().
+  if (mStream->IsDestroyed()) {
+    return false;
+  }
+
+  // Disconnect the existing port if necessary.
+  if (mPort) {
+    mPort->Destroy();
+    mPort = nullptr;
+  }
+  // Block the stream again. It will be unlocked when connecting
+  // to the input stream.
+  mStream->ChangeExplicitBlockerCount(1);
+  return true;
+}
+
+void
+OutputStreamData::Remove()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mOwner->Remove(mStream);
 }
 
 DecodedStream::DecodedStream(MediaQueue<MediaData>& aAudioQueue,
@@ -289,24 +339,12 @@ DecodedStream::DestroyData()
     return;
   }
 
-  // All streams are having their SourceMediaStream disconnected, so they
-  // need to be explicitly blocked again.
   auto& outputStreams = OutputStreams();
   for (int32_t i = outputStreams.Length() - 1; i >= 0; --i) {
     OutputStreamData& os = outputStreams[i];
-    // Explicitly remove all existing ports.
-    // This is not strictly necessary but it's good form.
-    MOZ_ASSERT(os.mPort, "Double-delete of the ports!");
-    os.mPort->Destroy();
-    os.mPort = nullptr;
-    // During cycle collection, nsDOMMediaStream can be destroyed and send
-    // its Destroy message before this decoder is destroyed. So we have to
-    // be careful not to send any messages after the Destroy().
-    if (os.mStream->IsDestroyed()) {
-      // Probably the DOM MediaStream was GCed. Clean up.
+    if (!os.Disconnect()) {
+      // Probably the DOMMediaStream was GCed. Clean up.
       outputStreams.RemoveElementAt(i);
-    } else {
-      os.mStream->ChangeExplicitBlockerCount(1);
     }
   }
 
@@ -344,8 +382,7 @@ DecodedStream::RecreateData(MediaStreamGraph* aGraph)
   auto& outputStreams = OutputStreams();
   for (int32_t i = outputStreams.Length() - 1; i >= 0; --i) {
     OutputStreamData& os = outputStreams[i];
-    MOZ_ASSERT(!os.mStream->IsDestroyed(), "Should've been removed in DestroyData()");
-    Connect(&os);
+    os.Connect(mData->mStream);
   }
 }
 
@@ -372,22 +409,6 @@ DecodedStream::GetReentrantMonitor() const
 }
 
 void
-DecodedStream::Connect(OutputStreamData* aStream)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  GetReentrantMonitor().AssertCurrentThreadIn();
-  NS_ASSERTION(!aStream->mPort, "Already connected?");
-
-  // The output stream must stay in sync with the decoded stream, so if
-  // either stream is blocked, we block the other.
-  aStream->mPort = aStream->mStream->AllocateInputPort(mData->mStream,
-      MediaInputPort::FLAG_BLOCK_INPUT | MediaInputPort::FLAG_BLOCK_OUTPUT);
-  // Unblock the output stream now. While it's connected to DecodedStream,
-  // DecodedStream is responsible for controlling blocking.
-  aStream->mStream->ChangeExplicitBlockerCount(-1);
-}
-
-void
 DecodedStream::Connect(ProcessedMediaStream* aStream, bool aFinishWhenEnded)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -399,7 +420,7 @@ DecodedStream::Connect(ProcessedMediaStream* aStream, bool aFinishWhenEnded)
 
   OutputStreamData* os = OutputStreams().AppendElement();
   os->Init(this, aStream);
-  Connect(os);
+  os->Connect(mData->mStream);
   if (aFinishWhenEnded) {
     // Ensure that aStream finishes the moment mDecodedStream does.
     aStream->SetAutofinish(true);
@@ -415,12 +436,7 @@ DecodedStream::Remove(MediaStream* aStream)
   auto& streams = OutputStreams();
   for (int32_t i = streams.Length() - 1; i >= 0; --i) {
     auto& os = streams[i];
-    MediaStream* p = os.mStream.get();
-    if (p == aStream) {
-      if (os.mPort) {
-        os.mPort->Destroy();
-        os.mPort = nullptr;
-      }
+    if (os.Equals(aStream)) {
       streams.RemoveElementAt(i);
       break;
     }
