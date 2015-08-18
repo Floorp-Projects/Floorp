@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 let testUpdates = Task.async(function*() {
+"use strict";
+
 
   let $ = id => gPanelWindow.document.querySelector(id);
   let $$ = sel => gPanelWindow.document.querySelectorAll(sel);
@@ -17,7 +19,7 @@ let testUpdates = Task.async(function*() {
   let initialValue = [[
     {name: "c1", value: "1.2.3.4.5.6.7"},
     {name: "c1.path", value: "/browser"}
-  ],[
+  ], [
     {name: "c1", value: "Array"},
     {name: "c1.0", value: "1"},
     {name: "c1.6", value: "7"}
@@ -27,7 +29,7 @@ let testUpdates = Task.async(function*() {
   let finalValue = [[
     {name: "c1", value: '{"foo": 4,"bar":6}'},
     {name: "c1.path", value: "/browser"}
-  ],[
+  ], [
     {name: "c1", value: "Object"},
     {name: "c1.foo", value: "4"},
     {name: "c1.bar", value: "6"}
@@ -44,7 +46,8 @@ let testUpdates = Task.async(function*() {
 
   yield findVariableViewProperties(finalValue[0], false);
   yield findVariableViewProperties(finalValue[1], true);
-  ok($("#value [data-id='c1'].table-widget-cell"), "cell is present after update");
+  ok($("#value [data-id='c1'].table-widget-cell"),
+     "cell is present after update");
   is($("#value [data-id='c1'].table-widget-cell").value, '{"foo": 4,"bar":6}',
        "correct final value in table");
 

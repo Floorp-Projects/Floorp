@@ -18,6 +18,9 @@
 // indexedDB entries created in storage-listings.html,
 // storage-secured-iframe.html and storage-unsecured-iframe.html
 const storeItems = [
+
+"use strict";
+
   [["cookies", "test1.example.org"],
    ["c1", "cs2", "c3", "uc1"]],
   [["cookies", "sectest1.example.org"],

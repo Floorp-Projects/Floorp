@@ -11,6 +11,9 @@
 //     which will be asserted to exist in the storage sidebar,
 //   true if the check is to be made in the parsed value section
 // ]
+
+"use strict";
+
 const testCases = [
   ["cs2", [
     {name: "cs2", value: "sessionCookie"},
@@ -30,7 +33,7 @@ const testCases = [
     {name: "c1.expires", value: new Date(2000000000000).toLocaleString()},
     {name: "c1.isSecure", value: "false"},
   ]],
-  [/*"c1"*/, [
+  [null, [
     {name: "c1", value: "Array"},
     {name: "c1.0", value: "foo"},
     {name: "c1.1", value: "Bar"},
@@ -48,7 +51,7 @@ const testCases = [
         nobody: "cares"
       }]})}
   ]],
-  [/*ls1*/, [
+  [null, [
     {name: "ls1", value: "Object"},
     {name: "ls1.es6", value: "for"},
     {name: "ls1.the", value: "win"},
@@ -63,14 +66,14 @@ const testCases = [
   ["ls3", [
     {name: "ls3", "value": "http://foobar.com/baz.php"}
   ]],
-  [/*ls3*/, [
+  [null, [
     {name: "ls3", "value": "http://foobar.com/baz.php", dontMatch: true}
   ], true],
   [["sessionStorage", "http://test1.example.org"]],
   ["ss1", [
     {name: "ss1", value: "This#is#an#array"}
   ]],
-  [/*ss1*/, [
+  [null, [
     {name: "ss1", value: "Array"},
     {name: "ss1.0", value: "This"},
     {name: "ss1.1", value: "is"},
@@ -94,7 +97,7 @@ const testCases = [
   [1, [
     {name: 1, value: JSON.stringify({id: 1, name: "foo", email: "foo@bar.com"})}
   ]],
-  [/*1*/, [
+  [null, [
     {name: "1.id", value: "1"},
     {name: "1.name", value: "foo"},
     {name: "1.email", value: "foo@bar.com"},
@@ -105,7 +108,7 @@ const testCases = [
       id2: 1, name: "foo", email: "foo@bar.com", extra: "baz"
     })}
   ]],
-  [/*1*/, [
+  [null, [
     {name: "1.id2", value: "1"},
     {name: "1.name", value: "foo"},
     {name: "1.email", value: "foo@bar.com"},

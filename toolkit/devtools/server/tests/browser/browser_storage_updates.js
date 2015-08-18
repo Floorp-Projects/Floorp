@@ -29,7 +29,7 @@ function finishTests(client) {
 
 function markOutMatched(toBeEmptied, data, deleted) {
   if (!Object.keys(toBeEmptied).length) {
-    info("Object empty")
+    info("Object empty");
     return;
   }
   ok(Object.keys(data).length,
