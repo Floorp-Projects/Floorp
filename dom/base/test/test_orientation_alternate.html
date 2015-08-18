@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Test for ScreenOrientation API</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="orientationcommon.js"></script>
+<div id="log"></div>
+<script>
+async_test(function(t) {
+  var originalOrientation = screen.orientation.type;
+  var alternateOrientation = originalOrientation == "portrait-primary" ?
+    "landscape-primary" : "portrait-primary";
+  var p = specialPowersLock(alternateOrientation);
+  p.then(function() {
+    t.step(function() { assert_equals(screen.orientation.type, alternateOrientation); });
+    return specialPowersLock(originalOrientation);
+  }).then(function() {
+    t.step(function() { assert_equals(screen.orientation.type, originalOrientation); });
+    return specialPowersUnlock();
+  }).then(function() {
+    t.done();
+  }).catch(t.step_func(function(err) {
+    assert_unreached("Error setting orientation: " + err);
+    t.done();
+  }));
+}, "Test locking and unlocking orientation.");
+</script>
