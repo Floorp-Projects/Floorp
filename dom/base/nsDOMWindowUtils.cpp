@@ -3166,30 +3166,6 @@ nsDOMWindowUtils::SetScrollPositionClampingScrollPortSize(float aWidth, float aH
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDOMWindowUtils::SetContentDocumentFixedPositionMargins(float aTop, float aRight,
-                                                         float aBottom, float aLeft)
-{
-  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
-
-  if (!(aTop >= 0.0f && aRight >= 0.0f && aBottom >= 0.0f && aLeft >= 0.0f)) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-  nsIPresShell* presShell = GetPresShell();
-  if (!presShell) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsMargin margins(nsPresContext::CSSPixelsToAppUnits(aTop),
-                   nsPresContext::CSSPixelsToAppUnits(aRight),
-                   nsPresContext::CSSPixelsToAppUnits(aBottom),
-                   nsPresContext::CSSPixelsToAppUnits(aLeft));
-  presShell->SetContentDocumentFixedPositionMargins(margins);
-
-  return NS_OK;
-}
-
 nsresult
 nsDOMWindowUtils::RemoteFrameFullscreenChanged(nsIDOMElement* aFrameElement)
 {
