@@ -12,9 +12,8 @@ EXPORTS.pocketsphinx += [
     'pocketsphinx.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'src/acmod.c',
-    'src/allphone_search.c',
     'src/bin_mdef.c',
     'src/blkarray_list.c',
     'src/dict.c',
@@ -29,7 +28,6 @@ SOURCES += [
     'src/ms_gauden.c',
     'src/ms_mgau.c',
     'src/ms_senone.c',
-    'src/ngram_search.c',
     'src/ngram_search_fwdflat.c',
     'src/ngram_search_fwdtree.c',
     'src/phone_loop_search.c',
@@ -38,10 +36,15 @@ SOURCES += [
     'src/ps_lattice.c',
     'src/ps_mllr.c',
     'src/ptm_mgau.c',
-    'src/s2_semi_mgau.c',
-    'src/state_align_search.c',
     'src/tmat.c',
     'src/vector.c',
+]
+
+SOURCES += [
+    'src/allphone_search.c',
+    'src/ngram_search.c',
+    'src/s2_semi_mgau.c',
+    'src/state_align_search.c',
 ]
 
 # Suppress warnings in third-party code.
