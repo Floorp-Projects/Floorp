@@ -9,9 +9,9 @@
 #include "nsWeakPtr.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ReentrantMonitor.h"
+#include "mozilla/Mutex.h"
 #include "nsIFile.h"
 #include "nsProxyRelease.h"
-#include "AutoRwLock.h"
 #include "ICameraControl.h"
 #include "CameraCommon.h"
 #include "DeviceStorage.h"
@@ -91,7 +91,7 @@ protected:
   void AddListenerImpl(already_AddRefed<CameraControlListener> aListener);
   void RemoveListenerImpl(CameraControlListener* aListener);
   nsTArray<nsRefPtr<CameraControlListener> > mListeners;
-  PRRWLock* mListenerLock;
+  mutable Mutex mListenerLock;
 
   class ControlMessage;
   class ListenerMessage;

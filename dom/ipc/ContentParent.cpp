@@ -1459,9 +1459,6 @@ ContentParent::Init()
         unused << SendActivateA11y();
     }
 #endif
-
-    DebugOnly<FileUpdateDispatcher*> observer = FileUpdateDispatcher::GetSingleton();
-    NS_ASSERTION(observer, "FileUpdateDispatcher is null");
 }
 
 void
