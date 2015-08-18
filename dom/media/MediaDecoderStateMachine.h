@@ -154,10 +154,6 @@ public:
   // Set/Unset dormant state.
   void SetDormant(bool aDormant);
 
-  TimedMetadataEventSource& TimedMetadataEvent() {
-    return mMetadataManager.TimedMetadataEvent();
-  }
-
 private:
   // Initialization that needs to happen on the task queue. This is the first
   // task that gets run on the task queue, and is dispatched from the MDSM
@@ -335,6 +331,10 @@ public:
   // Returns true if the state machine has shutdown or is in the process of
   // shutting down. The decoder monitor must be held while calling this.
   bool IsShutdown();
+
+  void QueueMetadata(const media::TimeUnit& aPublishTime,
+                     nsAutoPtr<MediaInfo> aInfo,
+                     nsAutoPtr<MetadataTags> aTags);
 
   // Returns true if we're currently playing. The decoder monitor must
   // be held.

@@ -289,8 +289,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
     mTaskQueue, this, &MediaDecoderStateMachine::OnAudioPopped);
   mVideoQueueListener = VideoQueue().PopEvent().Connect(
     mTaskQueue, this, &MediaDecoderStateMachine::OnVideoPopped);
-
-  mMetadataManager.Connect(mReader->TimedMetadataEvent(), OwnerThread());
 }
 
 MediaDecoderStateMachine::~MediaDecoderStateMachine()
@@ -1098,7 +1096,7 @@ void MediaDecoderStateMachine::UpdatePlaybackPosition(int64_t aTime)
   UpdatePlaybackPositionInternal(aTime);
 
   bool fragmentEnded = mFragmentEndTime >= 0 && GetMediaTime() >= mFragmentEndTime;
-  mMetadataManager.DispatchMetadataIfNeeded(TimeUnit::FromMicroseconds(aTime));
+  mMetadataManager.DispatchMetadataIfNeeded(mDecoder, TimeUnit::FromMicroseconds(aTime));
 
   if (fragmentEnded) {
     StopPlayback();
@@ -2207,7 +2205,6 @@ MediaDecoderStateMachine::FinishShutdown()
   // Prevent dangling pointers by disconnecting the listeners.
   mAudioQueueListener.Disconnect();
   mVideoQueueListener.Disconnect();
-  mMetadataManager.Disconnect();
 
   // Disconnect canonicals and mirrors before shutting down our task queue.
   mBuffered.DisconnectIfConnected();
@@ -3031,6 +3028,19 @@ bool MediaDecoderStateMachine::IsShutdown()
 {
   MOZ_ASSERT(OnTaskQueue());
   return mIsShutdown;
+}
+
+void MediaDecoderStateMachine::QueueMetadata(const TimeUnit& aPublishTime,
+                                             nsAutoPtr<MediaInfo> aInfo,
+                                             nsAutoPtr<MetadataTags> aTags)
+{
+  MOZ_ASSERT(OnDecodeTaskQueue());
+  AssertCurrentThreadInMonitor();
+  TimedMetadata* metadata = new TimedMetadata;
+  metadata->mPublishTime = aPublishTime;
+  metadata->mInfo = aInfo.forget();
+  metadata->mTags = aTags.forget();
+  mMetadataManager.QueueMetadata(metadata);
 }
 
 int64_t
