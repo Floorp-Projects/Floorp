@@ -80,8 +80,8 @@ public:
   bool CanScrollInDirection(const AsyncPanZoomController* aApzc,
                             Layer::ScrollDirection aDirection) const;
 
-  // Determine whether any APZC along this handoff chain is overscrolled.
-  bool HasOverscrolledApzc() const;
+  // Determine whether any APZC along this handoff chain is panned into overscroll.
+  bool HasApzcPannedIntoOverscroll() const;
 
   // Determine whether any APZC along this handoff chain has been flung fast.
   bool HasFastFlungApzc() const;
