@@ -241,7 +241,7 @@ nsScreen::MozLockOrientation(const Sequence<nsString>& aOrientations,
     }
   }
 
-  switch (mScreenOrientation->GetLockOrientationPermission()) {
+  switch (mScreenOrientation->GetLockOrientationPermission(false)) {
     case ScreenOrientation::LOCK_DENIED:
       return false;
     case ScreenOrientation::LOCK_ALLOWED:

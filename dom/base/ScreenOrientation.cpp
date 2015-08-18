@@ -4,6 +4,7 @@
 
 #include "ScreenOrientation.h"
 #include "nsIDeviceSensors.h"
+#include "nsSandboxFlags.h"
 #include "nsScreen.h"
 
 using namespace mozilla::dom;
@@ -302,7 +303,7 @@ ScreenOrientation::LockInternal(ScreenOrientationInternal aOrientation, ErrorRes
   p->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
   return p.forget();
 #else
-  LockPermission perm = GetLockOrientationPermission();
+  LockPermission perm = GetLockOrientationPermission(true);
   if (perm == LOCK_DENIED) {
     p->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
     return p.forget();
@@ -425,7 +426,7 @@ ScreenOrientation::GetAngle(ErrorResult& aRv) const
 }
 
 ScreenOrientation::LockPermission
-ScreenOrientation::GetLockOrientationPermission() const
+ScreenOrientation::GetLockOrientationPermission(bool aCheckSandbox) const
 {
   nsCOMPtr<nsPIDOMWindow> owner = GetOwner();
   if (!owner) {
@@ -440,6 +441,11 @@ ScreenOrientation::GetLockOrientationPermission() const
 
   nsCOMPtr<nsIDocument> doc = owner->GetDoc();
   if (!doc || doc->Hidden()) {
+    return LOCK_DENIED;
+  }
+
+  // Sandboxed without "allow-orientation-lock"
+  if (aCheckSandbox && doc->GetSandboxFlags() & SANDBOXED_ORIENTATION_LOCK) {
     return LOCK_DENIED;
   }
 
