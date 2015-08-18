@@ -942,20 +942,20 @@ RasterImage::OnAddedFrame(uint32_t aNewFrameCount,
   }
 }
 
-nsresult
+void
 RasterImage::SetMetadata(const ImageMetadata& aMetadata,
                          bool aFromMetadataDecode)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mError) {
-    return NS_ERROR_FAILURE;
+    return;
   }
 
   if (aMetadata.HasSize()) {
     IntSize size = aMetadata.GetSize();
     if (size.width < 0 || size.height < 0) {
-      return NS_ERROR_INVALID_ARG;
+      return;
     }
 
     MOZ_ASSERT(aMetadata.HasOrientation());
@@ -966,7 +966,7 @@ RasterImage::SetMetadata(const ImageMetadata& aMetadata,
       NS_WARNING("Image changed size or orientation on redecode! "
                  "This should not happen!");
       DoError();
-      return NS_ERROR_UNEXPECTED;
+      return;
     }
 
     // Set the size and flag that we have it.
@@ -1010,8 +1010,6 @@ RasterImage::SetMetadata(const ImageMetadata& aMetadata,
     Set("hotspotX", intwrapx);
     Set("hotspotY", intwrapy);
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
