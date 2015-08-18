@@ -76,7 +76,7 @@ struct EventTypeTraits<void> {
  * Test if a method function or lambda accepts one or more arguments.
  */
 template <typename T>
-class TakeArgs {
+class TakeArgsHelper {
   template <typename C> static FalseType test(void(C::*)(), int);
   template <typename C> static FalseType test(void(C::*)() const, int);
   template <typename C> static FalseType test(void(C::*)() volatile, int);
@@ -86,6 +86,9 @@ class TakeArgs {
 public:
   typedef decltype(test(DeclVal<T>(), 0)) Type;
 };
+
+template <typename T>
+struct TakeArgs : public TakeArgsHelper<T>::Type {};
 
 template <typename T> struct EventTarget;
 
@@ -156,7 +159,7 @@ public:
 
   // |F| takes one argument.
   template <typename F, typename T>
-  typename EnableIf<TakeArgs<F>::Type::value, void>::Type
+  typename EnableIf<TakeArgs<F>::value, void>::Type
   Dispatch(const F& aFunc, T&& aEvent) {
     nsCOMPtr<nsIRunnable> r = new R<T>(mToken, aFunc, Forward<T>(aEvent));
     EventTarget<Target>::Dispatch(mTarget.get(), r.forget());
@@ -164,7 +167,7 @@ public:
 
   // |F| takes no arguments. Don't bother passing aEvent.
   template <typename F, typename T>
-  typename EnableIf<!TakeArgs<F>::Type::value, void>::Type
+  typename EnableIf<!TakeArgs<F>::value, void>::Type
   Dispatch(const F& aFunc, T&&) {
     const nsRefPtr<RevocableToken>& token = mToken;
     nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
@@ -237,6 +240,9 @@ class MediaEventSource {
   static_assert(!IsReference<EventType>::value, "Ref-type not supported!");
   typedef typename detail::EventTypeTraits<EventType>::ArgType ArgType;
 
+  template <typename Method>
+  using TakeArgs = detail::TakeArgs<Method>;
+
   /**
    * Stored by MediaEventSource to send notifications to the listener.
    */
@@ -286,8 +292,8 @@ class MediaEventSource {
 
   // |Method| takes one argument.
   template <typename Target, typename This, typename Method>
-  MediaEventListener
-  ConnectInternal(Target* aTarget, This* aThis, Method aMethod, TrueType) {
+  typename EnableIf<TakeArgs<Method>::value, MediaEventListener>::Type
+  ConnectInternal(Target* aTarget, This* aThis, Method aMethod) {
     detail::RawPtr<This> thiz(aThis);
     auto f = [=] (ArgType&& aEvent) {
       (thiz.get()->*aMethod)(Move(aEvent));
@@ -297,8 +303,8 @@ class MediaEventSource {
 
   // |Method| takes no arguments. Don't bother passing the event data.
   template <typename Target, typename This, typename Method>
-  MediaEventListener
-  ConnectInternal(Target* aTarget, This* aThis, Method aMethod, FalseType) {
+  typename EnableIf<!TakeArgs<Method>::value, MediaEventListener>::Type
+  ConnectInternal(Target* aTarget, This* aThis, Method aMethod) {
     detail::RawPtr<This> thiz(aThis);
     auto f = [=] () {
       (thiz.get()->*aMethod)();
@@ -341,15 +347,13 @@ public:
   template <typename This, typename Method>
   MediaEventListener
   Connect(AbstractThread* aTarget, This* aThis, Method aMethod) {
-    return ConnectInternal(aTarget, aThis, aMethod,
-      typename detail::TakeArgs<Method>::Type());
+    return ConnectInternal(aTarget, aThis, aMethod);
   }
 
   template <typename This, typename Method>
   MediaEventListener
   Connect(nsIEventTarget* aTarget, This* aThis, Method aMethod) {
-    return ConnectInternal(aTarget, aThis, aMethod,
-      typename detail::TakeArgs<Method>::Type());
+    return ConnectInternal(aTarget, aThis, aMethod);
   }
 
 protected:
