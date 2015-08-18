@@ -30,16 +30,19 @@ XDRBuffer::grow(size_t n)
     MOZ_ASSERT(n > size_t(limit - cursor));
 
     const size_t MIN_CAPACITY = 8192;
+    const size_t MAX_CAPACITY = size_t(INT32_MAX) + 1;
     size_t offset = cursor - base;
-    size_t newCapacity = mozilla::RoundUpPow2(offset + n);
-    if (newCapacity < MIN_CAPACITY)
-        newCapacity = MIN_CAPACITY;
-    if (isUint32Overflow(newCapacity)) {
+    MOZ_ASSERT(offset <= MAX_CAPACITY);
+    if (n > MAX_CAPACITY - offset) {
         js::gc::AutoSuppressGC suppressGC(cx());
         JS_ReportErrorNumber(cx(), GetErrorMessage, nullptr, JSMSG_TOO_BIG_TO_ENCODE);
         return false;
     }
+    size_t newCapacity = mozilla::RoundUpPow2(offset + n);
+    if (newCapacity < MIN_CAPACITY)
+        newCapacity = MIN_CAPACITY;
 
+    MOZ_ASSERT(newCapacity <= MAX_CAPACITY);
     void* data = js_realloc(base, newCapacity);
     if (!data) {
         ReportOutOfMemory(cx());

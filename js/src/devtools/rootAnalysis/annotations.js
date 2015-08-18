@@ -346,6 +346,7 @@ function isOverridableField(initialCSU, csu, field)
 
 function listGCTypes() {
     return [
+        'js::gc::Cell',
         'JSObject',
         'JSString',
         'JSFatInlineString',

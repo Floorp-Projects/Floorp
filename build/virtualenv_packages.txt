@@ -31,3 +31,4 @@ redo.pth:python/redo
 requests.pth:python/requests
 rsa.pth:python/rsa
 futures.pth:python/futures
+ecc.pth:python/PyECC

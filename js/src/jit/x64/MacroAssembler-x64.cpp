@@ -184,212 +184,6 @@ MacroAssemblerX64::finish()
 }
 
 void
-MacroAssemblerX64::setupABICall(uint32_t args)
-{
-    MOZ_ASSERT(!inCall_);
-    inCall_ = true;
-
-    args_ = args;
-    passedIntArgs_ = 0;
-    passedFloatArgs_ = 0;
-    stackForCall_ = ShadowStackSpace;
-}
-
-void
-MacroAssemblerX64::setupAlignedABICall(uint32_t args)
-{
-    setupABICall(args);
-    dynamicAlignment_ = false;
-}
-
-void
-MacroAssemblerX64::setupUnalignedABICall(uint32_t args, Register scratch)
-{
-    setupABICall(args);
-    dynamicAlignment_ = true;
-
-    movq(rsp, scratch);
-    andq(Imm32(~(ABIStackAlignment - 1)), rsp);
-    push(scratch);
-}
-
-void
-MacroAssemblerX64::passABIArg(const MoveOperand& from, MoveOp::Type type)
-{
-    MoveOperand to;
-    switch (type) {
-      case MoveOp::FLOAT32:
-      case MoveOp::DOUBLE: {
-        FloatRegister dest;
-        if (GetFloatArgReg(passedIntArgs_, passedFloatArgs_++, &dest)) {
-            // Convert to the right type of register.
-            if (type == MoveOp::FLOAT32)
-                dest = dest.asSingle();
-            if (from.isFloatReg() && from.floatReg() == dest) {
-                // Nothing to do; the value is in the right register already
-                return;
-            }
-            to = MoveOperand(dest);
-        } else {
-            to = MoveOperand(StackPointer, stackForCall_);
-            switch (type) {
-              case MoveOp::FLOAT32: stackForCall_ += sizeof(float);  break;
-              case MoveOp::DOUBLE:  stackForCall_ += sizeof(double); break;
-              default: MOZ_CRASH("Unexpected float register class argument type");
-            }
-        }
-        break;
-      }
-      case MoveOp::GENERAL: {
-        Register dest;
-        if (GetIntArgReg(passedIntArgs_++, passedFloatArgs_, &dest)) {
-            if (from.isGeneralReg() && from.reg() == dest) {
-                // Nothing to do; the value is in the right register already
-                return;
-            }
-            to = MoveOperand(dest);
-        } else {
-            to = MoveOperand(StackPointer, stackForCall_);
-            stackForCall_ += sizeof(int64_t);
-        }
-        break;
-      }
-      default:
-        MOZ_CRASH("Unexpected argument type");
-    }
-
-    enoughMemory_ = moveResolver_.addMove(from, to, type);
-}
-
-void
-MacroAssemblerX64::passABIArg(Register reg)
-{
-    passABIArg(MoveOperand(reg), MoveOp::GENERAL);
-}
-
-void
-MacroAssemblerX64::passABIArg(FloatRegister reg, MoveOp::Type type)
-{
-    passABIArg(MoveOperand(reg), type);
-}
-
-void
-MacroAssemblerX64::callWithABIPre(uint32_t* stackAdjust)
-{
-    MOZ_ASSERT(inCall_);
-    MOZ_ASSERT(args_ == passedIntArgs_ + passedFloatArgs_);
-
-    if (dynamicAlignment_) {
-        *stackAdjust = stackForCall_
-                     + ComputeByteAlignment(stackForCall_ + sizeof(intptr_t),
-                                            ABIStackAlignment);
-    } else {
-        *stackAdjust = stackForCall_
-                     + ComputeByteAlignment(stackForCall_ + asMasm().framePushed(),
-                                            ABIStackAlignment);
-    }
-
-    asMasm().reserveStack(*stackAdjust);
-
-    // Position all arguments.
-    {
-        enoughMemory_ &= moveResolver_.resolve();
-        if (!enoughMemory_)
-            return;
-
-        MoveEmitter emitter(asMasm());
-        emitter.emit(moveResolver_);
-        emitter.finish();
-    }
-
-#ifdef DEBUG
-    {
-        Label good;
-        testPtr(rsp, Imm32(ABIStackAlignment - 1));
-        j(Equal, &good);
-        breakpoint();
-        bind(&good);
-    }
-#endif
-}
-
-void
-MacroAssemblerX64::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result)
-{
-    asMasm().freeStack(stackAdjust);
-    if (dynamicAlignment_)
-        pop(rsp);
-
-    MOZ_ASSERT(inCall_);
-    inCall_ = false;
-}
-
-void
-MacroAssemblerX64::callWithABI(void* fun, MoveOp::Type result)
-{
-    uint32_t stackAdjust;
-    callWithABIPre(&stackAdjust);
-    asMasm().call(ImmPtr(fun));
-    callWithABIPost(stackAdjust, result);
-}
-
-void
-MacroAssemblerX64::callWithABI(AsmJSImmPtr imm, MoveOp::Type result)
-{
-    uint32_t stackAdjust;
-    callWithABIPre(&stackAdjust);
-    asMasm().call(imm);
-    callWithABIPost(stackAdjust, result);
-}
-
-static bool
-IsIntArgReg(Register reg)
-{
-    for (uint32_t i = 0; i < NumIntArgRegs; i++) {
-        if (IntArgRegs[i] == reg)
-            return true;
-    }
-
-    return false;
-}
-
-void
-MacroAssemblerX64::callWithABI(Address fun, MoveOp::Type result)
-{
-    if (IsIntArgReg(fun.base)) {
-        // Callee register may be clobbered for an argument. Move the callee to
-        // r10, a volatile, non-argument register.
-        moveResolver_.addMove(MoveOperand(fun.base), MoveOperand(r10), MoveOp::GENERAL);
-        fun.base = r10;
-    }
-
-    MOZ_ASSERT(!IsIntArgReg(fun.base));
-
-    uint32_t stackAdjust;
-    callWithABIPre(&stackAdjust);
-    asMasm().call(fun);
-    callWithABIPost(stackAdjust, result);
-}
-
-void
-MacroAssemblerX64::callWithABI(Register fun, MoveOp::Type result)
-{
-    if (IsIntArgReg(fun)) {
-        // Callee register may be clobbered for an argument. Move the callee to
-        // r10, a volatile, non-argument register.
-        moveResolver_.addMove(MoveOperand(fun), MoveOperand(r10), MoveOp::GENERAL);
-        fun = r10;
-    }
-
-    MOZ_ASSERT(!IsIntArgReg(fun));
-
-    uint32_t stackAdjust;
-    callWithABIPre(&stackAdjust);
-    asMasm().call(fun);
-    callWithABIPost(stackAdjust, result);
-}
-
-void
 MacroAssemblerX64::handleFailureWithHandlerTail(void* handler)
 {
     // Reserve space for exception information.
@@ -397,9 +191,9 @@ MacroAssemblerX64::handleFailureWithHandlerTail(void* handler)
     movq(rsp, rax);
 
     // Call the handler.
-    setupUnalignedABICall(1, rcx);
-    passABIArg(rax);
-    callWithABI(handler);
+    asMasm().setupUnalignedABICall(rcx);
+    asMasm().passABIArg(rax);
+    asMasm().callWithABI(handler);
 
     Label entryFrame;
     Label catch_;
@@ -606,6 +400,117 @@ MacroAssembler::reserveStack(uint32_t amount)
         subq(Imm32(amountLeft), StackPointer);
     }
     framePushed_ += amount;
+}
+
+
+// ===============================================================
+// ABI function calls.
+
+void
+MacroAssembler::setupUnalignedABICall(Register scratch)
+{
+    setupABICall();
+    dynamicAlignment_ = true;
+
+    movq(rsp, scratch);
+    andq(Imm32(~(ABIStackAlignment - 1)), rsp);
+    push(scratch);
+}
+
+void
+MacroAssembler::callWithABIPre(uint32_t* stackAdjust, bool callFromAsmJS)
+{
+    MOZ_ASSERT(inCall_);
+    uint32_t stackForCall = abiArgs_.stackBytesConsumedSoFar();
+
+    if (dynamicAlignment_) {
+        // sizeof(intptr_t) accounts for the saved stack pointer pushed by
+        // setupUnalignedABICall.
+        stackForCall += ComputeByteAlignment(stackForCall + sizeof(intptr_t),
+                                             ABIStackAlignment);
+    } else {
+        static_assert(sizeof(AsmJSFrame) % ABIStackAlignment == 0,
+                      "AsmJSFrame should be part of the stack alignment.");
+        stackForCall += ComputeByteAlignment(stackForCall + framePushed(),
+                                             ABIStackAlignment);
+    }
+
+    *stackAdjust = stackForCall;
+    reserveStack(stackForCall);
+
+    // Position all arguments.
+    {
+        enoughMemory_ &= moveResolver_.resolve();
+        if (!enoughMemory_)
+            return;
+
+        MoveEmitter emitter(*this);
+        emitter.emit(moveResolver_);
+        emitter.finish();
+    }
+
+    assertStackAlignment(ABIStackAlignment);
+}
+
+void
+MacroAssembler::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result)
+{
+    freeStack(stackAdjust);
+    if (dynamicAlignment_)
+        pop(rsp);
+
+#ifdef DEBUG
+    MOZ_ASSERT(inCall_);
+    inCall_ = false;
+#endif
+}
+
+static bool
+IsIntArgReg(Register reg)
+{
+    for (uint32_t i = 0; i < NumIntArgRegs; i++) {
+        if (IntArgRegs[i] == reg)
+            return true;
+    }
+
+    return false;
+}
+
+void
+MacroAssembler::callWithABINoProfiler(Register fun, MoveOp::Type result)
+{
+    if (IsIntArgReg(fun)) {
+        // Callee register may be clobbered for an argument. Move the callee to
+        // r10, a volatile, non-argument register.
+        moveResolver_.addMove(MoveOperand(fun), MoveOperand(r10), MoveOp::GENERAL);
+        fun = r10;
+    }
+
+    MOZ_ASSERT(!IsIntArgReg(fun));
+
+    uint32_t stackAdjust;
+    callWithABIPre(&stackAdjust);
+    call(fun);
+    callWithABIPost(stackAdjust, result);
+}
+
+void
+MacroAssembler::callWithABINoProfiler(const Address& fun, MoveOp::Type result)
+{
+    Address safeFun = fun;
+    if (IsIntArgReg(safeFun.base)) {
+        // Callee register may be clobbered for an argument. Move the callee to
+        // r10, a volatile, non-argument register.
+        moveResolver_.addMove(MoveOperand(fun.base), MoveOperand(r10), MoveOp::GENERAL);
+        safeFun.base = r10;
+    }
+
+    MOZ_ASSERT(!IsIntArgReg(safeFun.base));
+
+    uint32_t stackAdjust;
+    callWithABIPre(&stackAdjust);
+    call(safeFun);
+    callWithABIPost(stackAdjust, result);
 }
 
 //}}} check_macroassembler_style

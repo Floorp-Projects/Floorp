@@ -332,6 +332,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     MacroAssembler()
       : emitProfilingInstrumentation_(false),
         framePushed_(0)
+#ifdef DEBUG
+      , inCall_(false)
+#endif
     {
         JitContext* jcx = GetJitContext();
         JSContext* cx = jcx->cx;
@@ -364,6 +367,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     explicit MacroAssembler(AsmJSToken)
       : emitProfilingInstrumentation_(false),
         framePushed_(0)
+#ifdef DEBUG
+      , inCall_(false)
+#endif
     {
 #if defined(JS_CODEGEN_ARM)
         initWithAllocator();
@@ -472,6 +478,79 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void call(const CallSiteDesc& desc, const Register reg);
     inline void call(const CallSiteDesc& desc, Label* label);
+
+  public:
+    // ===============================================================
+    // ABI function calls.
+
+    // Setup a call to C/C++ code, given the assumption that the framePushed
+    // accruately define the state of the stack, and that the top of the stack
+    // was properly aligned. Note that this only supports cdecl.
+    void setupAlignedABICall(); // CRASH_ON(arm64)
+
+    // Setup an ABI call for when the alignment is not known. This may need a
+    // scratch register.
+    void setupUnalignedABICall(Register scratch) PER_ARCH;
+
+    // Arguments must be assigned to a C/C++ call in order. They are moved
+    // in parallel immediately before performing the call. This process may
+    // temporarily use more stack, in which case esp-relative addresses will be
+    // automatically adjusted. It is extremely important that esp-relative
+    // addresses are computed *after* setupABICall(). Furthermore, no
+    // operations should be emitted while setting arguments.
+    void passABIArg(const MoveOperand& from, MoveOp::Type type);
+    inline void passABIArg(Register reg);
+    inline void passABIArg(FloatRegister reg, MoveOp::Type type);
+
+    template <typename T>
+    inline void callWithABI(const T& fun, MoveOp::Type result = MoveOp::GENERAL);
+
+  private:
+    // Reinitialize the variables which have to be cleared before making a call
+    // with callWithABI.
+    void setupABICall();
+
+    // Reserve the stack and resolve the arguments move.
+    void callWithABIPre(uint32_t* stackAdjust, bool callFromAsmJS = false) PER_ARCH;
+
+    // Emits a call to a C/C++ function, resolving all argument moves.
+    void callWithABINoProfiler(void* fun, MoveOp::Type result);
+    void callWithABINoProfiler(AsmJSImmPtr imm, MoveOp::Type result);
+    void callWithABINoProfiler(Register fun, MoveOp::Type result) PER_ARCH;
+    void callWithABINoProfiler(const Address& fun, MoveOp::Type result) PER_ARCH;
+
+    // Restore the stack to its state before the setup function call.
+    void callWithABIPost(uint32_t stackAdjust, MoveOp::Type result) PER_ARCH;
+
+    // Create the signature to be able to decode the arguments of a native
+    // function, when calling a function within the simulator.
+    inline void appendSignatureType(MoveOp::Type type);
+    inline ABIFunctionType signature() const;
+
+    // Private variables used to handle moves between registers given as
+    // arguments to passABIArg and the list of ABI registers expected for the
+    // signature of the function.
+    MoveResolver moveResolver_;
+
+    // Architecture specific implementation which specify how registers & stack
+    // offsets are used for calling a function.
+    ABIArgGenerator abiArgs_;
+
+#ifdef DEBUG
+    // Flag use to assert that we use ABI function in the right context.
+    bool inCall_;
+#endif
+
+    // If set by setupUnalignedABICall then callWithABI will pop the stack
+    // register which is on the stack.
+    bool dynamicAlignment_;
+
+#ifdef JS_SIMULATOR
+    // The signature is used to accumulate all types of arguments which are used
+    // by the caller. This is used by the simulators to decode the arguments
+    // properly, and cast the function pointer to the right type.
+    uint32_t signature_;
+#endif
 
     //}}} check_macroassembler_style
   public:
@@ -1001,13 +1080,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     // instrumentation is enabled. For the functions that return a uint32_t,
     // they are returning the offset of the assembler just after the call has
     // been made so that a safepoint can be made at that location.
-
-    template <typename T>
-    void callWithABI(const T& fun, MoveOp::Type result = MoveOp::GENERAL) {
-        profilerPreCall();
-        MacroAssemblerSpecific::callWithABI(fun, result);
-        profilerPostReturn();
-    }
 
     // see above comment for what is returned
     uint32_t callJit(Register callee) {

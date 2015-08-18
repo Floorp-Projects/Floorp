@@ -24,17 +24,67 @@ using mozilla::CountLeadingZeroes32;
 
 void dbg_break() {}
 
-// Note this is used for inter-AsmJS calls and may pass arguments and results in
-// floating point registers even if the system ABI does not.
+// The ABIArgGenerator is used for making system ABI calls and for inter-AsmJS
+// calls. The system ABI can either be SoftFp or HardFp, and inter-AsmJS calls
+// are always HardFp calls. The initialization defaults to HardFp, and the ABI
+// choice is made before any system ABI calls with the method "setUseHardFp".
 ABIArgGenerator::ABIArgGenerator()
   : intRegIndex_(0),
     floatRegIndex_(0),
     stackOffset_(0),
-    current_()
+    current_(),
+    useHardFp_(true)
 { }
 
+// See the "Parameter Passing" section of the "Procedure Call Standard for the
+// ARM Architecture" documentation.
 ABIArg
-ABIArgGenerator::next(MIRType type)
+ABIArgGenerator::softNext(MIRType type)
+{
+    switch (type) {
+      case MIRType_Int32:
+      case MIRType_Pointer:
+        if (intRegIndex_ == NumIntArgRegs) {
+            current_ = ABIArg(stackOffset_);
+            stackOffset_ += sizeof(uint32_t);
+            break;
+        }
+        current_ = ABIArg(Register::FromCode(intRegIndex_));
+        intRegIndex_++;
+        break;
+      case MIRType_Float32:
+        if (intRegIndex_ == NumIntArgRegs) {
+            current_ = ABIArg(stackOffset_);
+            stackOffset_ += sizeof(uint32_t);
+            break;
+        }
+        current_ = ABIArg(Register::FromCode(intRegIndex_));
+        intRegIndex_++;
+        break;
+      case MIRType_Double:
+        // Make sure to use an even register index. Increase to next even number
+        // when odd.
+        intRegIndex_ = (intRegIndex_ + 1) & ~1;
+        if (intRegIndex_ == NumIntArgRegs) {
+            // Align the stack on 8 bytes.
+            static const int align = sizeof(double) - 1;
+            stackOffset_ = (stackOffset_ + align) & ~align;
+            current_ = ABIArg(stackOffset_);
+            stackOffset_ += sizeof(double);
+            break;
+        }
+        current_ = ABIArg(Register::FromCode(intRegIndex_), Register::FromCode(intRegIndex_ + 1));
+        intRegIndex_ += 2;
+        break;
+      default:
+        MOZ_CRASH("Unexpected argument type");
+    }
+
+    return current_;
+}
+
+ABIArg
+ABIArgGenerator::hardNext(MIRType type)
 {
     switch (type) {
       case MIRType_Int32:
@@ -59,7 +109,9 @@ ABIArgGenerator::next(MIRType type)
         floatRegIndex_++;
         break;
       case MIRType_Double:
-        // Bump the number of used registers up to the next multiple of two.
+        // Double register are composed of 2 float registers, thus we have to
+        // skip any float register which cannot be used in a pair of float
+        // registers in which a double value can be stored.
         floatRegIndex_ = (floatRegIndex_ + 1) & ~1;
         if (floatRegIndex_ == NumFloatArgRegs) {
             static const int align = sizeof(double) - 1;
@@ -69,13 +121,21 @@ ABIArgGenerator::next(MIRType type)
             break;
         }
         current_ = ABIArg(VFPRegister(floatRegIndex_ >> 1, VFPRegister::Double));
-        floatRegIndex_+=2;
+        floatRegIndex_ += 2;
         break;
       default:
         MOZ_CRASH("Unexpected argument type");
     }
 
     return current_;
+}
+
+ABIArg
+ABIArgGenerator::next(MIRType type)
+{
+    if (useHardFp_)
+        return hardNext(type);
+    return softNext(type);
 }
 
 const Register ABIArgGenerator::NonArgReturnReg0 = r4;
