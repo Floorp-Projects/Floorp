@@ -14,14 +14,12 @@ class BrowserMobProxyOptionsMixin(object):
 
     def __init__(self, **kwargs):
         # Inheriting object must call this __init__ to set up option handling
-        group = self.add_option_group('Browsermob Proxy')
-        group.add_option('--browsermob-script',
-                         action='store',
+        group = self.add_argument_group('Browsermob Proxy')
+        group.add_argument('--browsermob-script',
                          dest='browsermob_script',
                          type='string',
                          help='path to the browsermob-proxy shell script or batch file')
-        group.add_option('--browsermob-port',
-                         action='store',
+        group.add_argument('--browsermob-port',
                          dest='browsermob_port',
                          type='int',
                          help='port to run the browsermob proxy on')
