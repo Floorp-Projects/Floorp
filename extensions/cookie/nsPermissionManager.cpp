@@ -847,9 +847,7 @@ nsPermissionManager::InitDB(bool aRemoveFile)
   }
 
   rv = OpenDatabase(permissionsFile);
-  if (rv == NS_ERROR_UNEXPECTED) {
-    return rv;
-  } else if (rv == NS_ERROR_FILE_CORRUPTED) {
+  if (rv == NS_ERROR_FILE_CORRUPTED) {
     LogToConsole(NS_LITERAL_STRING("permissions.sqlite is corrupted! Try again!"));
 
     // Add telemetry probe
@@ -863,6 +861,8 @@ nsPermissionManager::InitDB(bool aRemoveFile)
     rv = OpenDatabase(permissionsFile);
     NS_ENSURE_SUCCESS(rv, rv);
     LogToConsole(NS_LITERAL_STRING("OpenDatabase to permissions.sqlite is successful!"));
+  } else if (NS_FAILED(rv)) {
+    return rv;
   }
 
   bool ready;
