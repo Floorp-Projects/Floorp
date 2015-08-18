@@ -58,7 +58,6 @@ elif CONFIG['ANDROID_VERSION'] == '15':
 SOURCES += [
     'GeckoTouchDispatcher.cpp',
     'GfxInfo.cpp',
-    'GonkClipboardData.cpp',
     'GonkMemoryPressureMonitoring.cpp',
     'GonkPermission.cpp',
     'HwcComposer2D.cpp',
@@ -83,7 +82,6 @@ LOCAL_INCLUDES += [
     '/dom/system/android',
     '/gfx/skia/skia/include/config',
     '/gfx/skia/skia/include/core',
-    '/image',
     '/widget',
 ]
 
