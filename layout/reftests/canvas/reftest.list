@@ -8,7 +8,7 @@ skip-if(B2G||Mulet) fuzzy-if(Android&&AndroidVersion>=15,8,1000) == size-1.html 
 
 skip-if(B2G||Mulet) asserts-if(cocoaWidget,0-2) == size-change-1.html size-change-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 
-random-if(cocoaWidget) == subpixel-1.html about:blank
+random-if(cocoaWidget||(Android&&AndroidVersion==15)) == subpixel-1.html about:blank # see bug 1192616, re-enable once we're off the pandaboards
 
 != text-ltr-left.html text-blank.html
 != text-ltr-right.html text-blank.html
