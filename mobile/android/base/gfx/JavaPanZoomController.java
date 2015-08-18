@@ -1103,6 +1103,10 @@ class JavaPanZoomController
         @Override
         protected float getPageLength() { return getMetrics().getPageWidthWithMargins(); }
         @Override
+        protected float getVisibleEndOfLayerView() {
+            return mTarget.getVisibleEndOfLayerView().x;
+        }
+        @Override
         protected void overscrollFling(final float velocity) {
             if (mOverscroll != null) {
                 mOverscroll.setVelocity(velocity, Overscroll.Axis.X);
@@ -1126,6 +1130,10 @@ class JavaPanZoomController
         protected float getPageStart() { return getMetrics().pageRectTop; }
         @Override
         protected float getPageLength() { return getMetrics().getPageHeightWithMargins(); }
+        @Override
+        protected float getVisibleEndOfLayerView() {
+            return mTarget.getVisibleEndOfLayerView().y;
+        }
         @Override
         protected void overscrollFling(final float velocity) {
             if (mOverscroll != null) {
