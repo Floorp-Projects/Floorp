@@ -244,13 +244,12 @@ class MarionetteTextTestRunner(StructuredTestRunner):
         return result
 
 
-class BaseMarionetteOptions(ArgumentParser):
+class BaseMarionetteArguments(ArgumentParser):
     socket_timeout_default = 360.0
 
     def __init__(self, **kwargs):
         ArgumentParser.__init__(self, **kwargs)
-        self.parse_args_handlers = [] # Used by mixins
-        self.verify_usage_handlers = [] # Used by mixins
+        self.argument_containers = []
         self.add_argument('tests',
                           nargs='*',
                           default=[],
@@ -384,67 +383,76 @@ class BaseMarionetteOptions(ArgumentParser):
                              "used multiple times in which case the test must contain "
                              "at least one of the given tags.")
 
+    def register_argument_container(self, container):
+        group = self.add_argument_group(container.name)
+
+        for cli, kwargs in container.args:
+            group.add_argument(*cli, **kwargs)
+
+        self.argument_containers.append(container)
+
     def parse_args(self, args=None, values=None):
         args = ArgumentParser.parse_args(self, args, values)
-        for handler in self.parse_args_handlers:
-            handler(options, tests, args, values)
+        for container in self.argument_containers:
+            if hasattr(container, 'parse_args_handler'):
+                container.parse_args_handler(args)
+        return args
 
-        return (args, args.tests)
-
-    def verify_usage(self, options, tests):
-        if not tests:
+    def verify_usage(self, args):
+        if not args.tests:
             print 'must specify one or more test files, manifests, or directories'
             sys.exit(1)
 
-        if not options.emulator and not options.address and not options.binary:
+        if not args.emulator and not args.address and not args.binary:
             print 'must specify --binary, --emulator or --address'
             sys.exit(1)
 
-        if options.emulator and options.binary:
+        if args.emulator and args.binary:
             print 'can\'t specify both --emulator and --binary'
             sys.exit(1)
 
         # default to storing logcat output for emulator runs
-        if options.emulator and not options.logdir:
-            options.logdir = 'logcat'
+        if args.emulator and not args.logdir:
+            args.logdir = 'logcat'
 
         # check for valid resolution string, strip whitespaces
         try:
-            if options.emulator_res:
-                dims = options.emulator_res.split('x')
+            if args.emulator_res:
+                dims = args.emulator_res.split('x')
                 assert len(dims) == 2
                 width = str(int(dims[0]))
                 height = str(int(dims[1]))
-                options.emulator_res = 'x'.join([width, height])
+                args.emulator_res = 'x'.join([width, height])
         except:
             raise ValueError('Invalid emulator resolution format. '
                              'Should be like "480x800".')
 
-        if options.total_chunks is not None and options.this_chunk is None:
+        if args.total_chunks is not None and args.this_chunk is None:
             self.error('You must specify which chunk to run.')
 
-        if options.this_chunk is not None and options.total_chunks is None:
+        if args.this_chunk is not None and args.total_chunks is None:
             self.error('You must specify how many chunks to split the tests into.')
 
-        if options.total_chunks is not None:
-            if not 1 <= options.total_chunks:
+        if args.total_chunks is not None:
+            if not 1 <= args.total_chunks:
                 self.error('Total chunks must be greater than 1.')
-            if not 1 <= options.this_chunk <= options.total_chunks:
-                self.error('Chunk to run must be between 1 and %s.' % options.total_chunks)
+            if not 1 <= args.this_chunk <= args.total_chunks:
+                self.error('Chunk to run must be between 1 and %s.' % args.total_chunks)
 
-        if options.jsdebugger:
-            options.app_args.append('-jsdebugger')
-            options.socket_timeout = None
+        if args.jsdebugger:
+            args.app_args.append('-jsdebugger')
+            args.socket_timeout = None
 
-        if options.e10s:
-            options.prefs = {
+        if args.e10s:
+            args.prefs = {
                 'browser.tabs.remote.autostart': True
             }
 
-        for handler in self.verify_usage_handlers:
-            handler(options, tests)
+        for container in self.argument_containers:
+            if hasattr(container, 'verify_usage_handler'):
+                container.verify_usage_handler(args)
 
-        return (options, tests)
+        return args
 
 
 class BaseMarionetteTestRunner(object):
@@ -462,7 +470,7 @@ class BaseMarionetteTestRunner(object):
                  sdcard=None, this_chunk=1, total_chunks=1, sources=None,
                  server_root=None, gecko_log=None, result_callbacks=None,
                  adb_host=None, adb_port=None, prefs=None, test_tags=None,
-                 socket_timeout=BaseMarionetteOptions.socket_timeout_default,
+                 socket_timeout=BaseMarionetteArguments.socket_timeout_default,
                  startup_timeout=None, addons=None, **kwargs):
         self.address = address
         self.emulator = emulator
