@@ -31,7 +31,8 @@ const beforeReload = {
 };
 
 function finishTests(client) {
-  // Cleanup so that indexed db created from this test do not interfere next ones
+  // Cleanup so that indexed db created from this test do not interfere next
+  // ones.
 
   /**
    * This method iterates over iframes in a window and clears the indexed db
@@ -41,11 +42,9 @@ function finishTests(client) {
     if (w[i] && w[i].clear) {
       w[i].clearIterator = w[i].clear(() => clearIDB(w, i + 1, c));
       w[i].clearIterator.next();
-    }
-    else if (w[i] && w[i + 1]) {
+    } else if (w[i] && w[i + 1]) {
       clearIDB(w, i + 1, c);
-    }
-    else {
+    } else {
       c();
     }
   };
@@ -60,7 +59,7 @@ function finishTests(client) {
       gFront = gWindow = null;
       finish();
     });
-  }
+  };
   gWindow.clearIterator = gWindow.clear(() => {
     clearIDB(gWindow, 0, closeConnection);
   });
@@ -89,7 +88,7 @@ function testWindowsBeforeReload(data) {
 
 function markOutMatched(toBeEmptied, data, deleted) {
   if (!Object.keys(toBeEmptied).length) {
-    info("Object empty")
+    info("Object empty");
     return;
   }
   ok(Object.keys(data).length,
@@ -112,8 +111,7 @@ function markOutMatched(toBeEmptied, data, deleted) {
         if (!toBeEmptied[storageType][host].length) {
           delete toBeEmptied[storageType][host];
         }
-      }
-      else {
+      } else {
         delete toBeEmptied[storageType][host];
       }
     }
@@ -257,7 +255,8 @@ function testRemoveIframe() {
       markOutMatched(shouldBeEmpty, data.deleted, true);
 
       ok(!data.deleted.cookies || !data.deleted.cookies["sectest1.example.org"],
-        "Nothing got deleted for Cookies as the same hostname is still present");
+        "Nothing got deleted for Cookies as " +
+        "the same hostname is still present");
 
       ok(!data.changed || !data.changed.cookies ||
          !data.changed.cookies["http://sectest1.example.org"],
@@ -321,11 +320,9 @@ function test() {
       if (w[i] && w[i].idbGenerator) {
         w[i].setupIDB = w[i].idbGenerator(() => setupIDBInFrames(w, i + 1, c));
         w[i].setupIDB.next();
-      }
-      else if (w[i] && w[i + 1]) {
+      } else if (w[i] && w[i + 1]) {
         setupIDBInFrames(w, i + 1, c);
-      }
-      else {
+      } else {
         c();
       }
     };

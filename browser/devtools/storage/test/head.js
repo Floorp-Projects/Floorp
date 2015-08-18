@@ -83,11 +83,9 @@ let openTabAndSetupStorage = Task.async(function*(url) {
     if (w[i] && w[i].idbGenerator) {
       w[i].setupIDB = w[i].idbGenerator(() => setupIDBInFrames(w, i + 1, c));
       w[i].setupIDB.next();
-    }
-    else if (w[i] && w[i + 1]) {
+    } else if (w[i] && w[i + 1]) {
       setupIDBInFrames(w, i + 1, c);
-    }
-    else {
+    } else {
       c();
     }
   };
@@ -138,12 +136,12 @@ let openStoragePanel = Task.async(function*(cb) {
       info("Toolbox and storage already open");
       if (cb) {
         return cb(storage, toolbox);
-      } else {
-        return {
-          toolbox: toolbox,
-          storage: storage
-        };
       }
+
+      return {
+        toolbox: toolbox,
+        storage: storage
+      };
     }
   }
 
@@ -161,12 +159,12 @@ let openStoragePanel = Task.async(function*(cb) {
 
   if (cb) {
     return cb(storage, toolbox);
-  } else {
-    return {
-      toolbox: toolbox,
-      storage: storage
-    };
   }
+
+  return {
+    toolbox: toolbox,
+    storage: storage
+  };
 });
 
 /**
@@ -233,8 +231,6 @@ function click(node) {
   executeSoon(() => EventUtils.synthesizeMouseAtCenter(node, {}, gPanelWindow));
 }
 
-
-
 /**
  * Recursively expand the variables view up to a given property.
  *
@@ -264,18 +260,13 @@ function variablesViewExpandTo(aOptions) {
       if (newProp && newProp.expand) {
         newProp.expand();
         getNext(newProp);
-      }
-      else {
+      } else {
         lastDeferred.reject(aProp);
       }
-    }
-    else {
-      if (newProp) {
-        lastDeferred.resolve(newProp);
-      }
-      else {
-        lastDeferred.reject(aProp);
-      }
+    } else if (newProp) {
+      lastDeferred.resolve(newProp);
+    } else {
+      lastDeferred.reject(aProp);
     }
   }
 
@@ -286,9 +277,8 @@ function variablesViewExpandTo(aOptions) {
   if (root && root.expand) {
     root.expand();
     getNext(root);
-  }
-  else {
-    lastDeferred.resolve(root)
+  } else {
+    lastDeferred.resolve(root);
   }
 
   return lastDeferred.promise;
@@ -321,7 +311,7 @@ function findVariableViewProperties(aRules, aParsed) {
     // Thus, adding a blank parent to each name
     if (aParsed) {
       aRules = aRules.map(({name, value, dontMatch}) => {
-        return {name: "." + name, value, dontMatch}
+        return {name: "." + name, value, dontMatch};
       });
     }
     // Separate out the rules that require expanding properties throughout the
@@ -357,10 +347,10 @@ function findVariableViewProperties(aRules, aParsed) {
     }
   }
 
-  function finder(aRules, aView, aPromises) {
+  function finder(rules, aView, aPromises) {
     for (let scope of aView) {
-      for (let [id, prop] of scope) {
-        for (let rule of aRules) {
+      for (let [, prop] of scope) {
+        for (let rule of rules) {
           let matcher = matchVariablesViewProperty(prop, rule);
           aPromises.push(matcher.then(onMatch.bind(null, prop, rule)));
         }
@@ -368,15 +358,15 @@ function findVariableViewProperties(aRules, aParsed) {
     }
   }
 
-  function processExpandRules(aRules) {
-    let rule = aRules.shift();
+  function processExpandRules(rules) {
+    let rule = rules.shift();
     if (!rule) {
       return promise.resolve(null);
     }
 
     let deferred = promise.defer();
     let expandOptions = {
-      rootVariable: gUI.view.getScopeAtIndex(aParsed ? 1: 0),
+      rootVariable: gUI.view.getScopeAtIndex(aParsed ? 1 : 0),
       expandTo: rule.name
     };
 
@@ -391,28 +381,26 @@ function findVariableViewProperties(aRules, aParsed) {
       });
     }, function onFailure() {
       return promise.resolve(null);
-    }).then(processExpandRules.bind(null, aRules)).then(function() {
+    }).then(processExpandRules.bind(null, rules)).then(function() {
       deferred.resolve(null);
     });
 
     return deferred.promise;
   }
 
-  function onAllRulesMatched(aRules) {
-    for (let rule of aRules) {
+  function onAllRulesMatched(rules) {
+    for (let rule of rules) {
       let matched = rule.matchedProp;
       if (matched && !rule.dontMatch) {
         ok(true, "rule " + rule.name + " matched for property " + matched.name);
-      }
-      else if (matched && rule.dontMatch) {
+      } else if (matched && rule.dontMatch) {
         ok(false, "rule " + rule.name + " should not match property " +
            matched.name);
-      }
-      else {
+      } else {
         ok(rule.dontMatch, "rule " + rule.name + " did not match any property");
       }
     }
-    return aRules;
+    return rules;
   }
 
   return init();
@@ -461,7 +449,7 @@ function matchVariablesViewProperty(aProp, aRule) {
                 displayValue == aRule.value;
     if (!match) {
       info("rule " + aRule.name + " did not match value, expected '" +
-           aRule.value + "', found '" + displayValue  + "'");
+           aRule.value + "', found '" + displayValue + "'");
       return resolve(false);
     }
   }
