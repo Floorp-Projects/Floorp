@@ -1085,23 +1085,61 @@ void MarkInterpreterActivations(JSRuntime* rt, JSTracer* trc);
 
 /*****************************************************************************/
 
-class InvokeArgs : public JS::CallArgs
+namespace detail {
+
+class GenericInvokeArgs : public JS::CallArgs
 {
+  protected:
     AutoValueVector v_;
 
-  public:
-    explicit InvokeArgs(JSContext* cx, bool construct = false) : v_(cx) {}
+    explicit GenericInvokeArgs(JSContext* cx) : v_(cx) {}
 
-    bool init(unsigned argc, bool construct = false) {
+    bool init(unsigned argc, bool construct) {
         MOZ_ASSERT(2 + argc + construct > argc);  // no overflow
         if (!v_.resize(2 + argc + construct))
             return false;
-        ImplicitCast<CallArgs>(*this) = CallArgsFromVp(argc, v_.begin());
-        // Set the internal flag, since we are not initializing from a made array
+
+        *static_cast<JS::CallArgs*>(this) = CallArgsFromVp(argc, v_.begin());
         constructing_ = construct;
         return true;
     }
 };
+
+} // namespace detail
+
+class InvokeArgs : public detail::GenericInvokeArgs
+{
+  public:
+    explicit InvokeArgs(JSContext* cx) : detail::GenericInvokeArgs(cx) {}
+
+    bool init(unsigned argc) {
+        return detail::GenericInvokeArgs::init(argc, false);
+    }
+};
+
+class ConstructArgs : public detail::GenericInvokeArgs
+{
+  public:
+    explicit ConstructArgs(JSContext* cx) : detail::GenericInvokeArgs(cx) {}
+
+    bool init(unsigned argc) {
+        return detail::GenericInvokeArgs::init(argc, true);
+    }
+};
+
+template <class Args, class Arraylike>
+inline bool
+FillArgumentsFromArraylike(JSContext* cx, Args& args, const Arraylike& arraylike)
+{
+    uint32_t len = arraylike.length();
+    if (!args.init(len))
+        return false;
+
+    for (uint32_t i = 0; i < len; i++)
+        args[i].set(arraylike[i]);
+
+    return true;
+}
 
 template <>
 struct DefaultHasher<AbstractFramePtr> {
