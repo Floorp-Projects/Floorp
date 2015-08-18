@@ -30,6 +30,7 @@ import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.login.Engaged;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.gfx.BitmapUtils;
+import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.gfx.LayerMarginsAnimator;
 import org.mozilla.gecko.gfx.LayerView;
@@ -1629,7 +1630,7 @@ public class BrowserApp extends GeckoApp
 
         if (mLayerView != null && height != mToolbarHeight) {
             mToolbarHeight = height;
-            mLayerView.getLayerMarginsAnimator().setMaxMargins(0, height, 0, 0);
+            mLayerView.getDynamicToolbarAnimator().setMaxTranslation(height);
             mDynamicToolbar.setVisible(true, VisibilityTransition.IMMEDIATE);
         }
     }
