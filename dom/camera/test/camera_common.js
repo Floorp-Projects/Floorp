@@ -80,6 +80,8 @@ function CameraTestSuite() {
   this.rejectTakePicture = this._rejectTakePicture.bind(this);
   this.rejectStartRecording = this._rejectStartRecording.bind(this);
   this.rejectStopRecording = this._rejectStopRecording.bind(this);
+  this.rejectPauseRecording = this._rejectPauseRecording.bind(this);
+  this.rejectResumeRecording = this._rejectResumeRecording.bind(this);
   this.rejectPreviewStarted = this._rejectPreviewStarted.bind(this);
 
   var self = this;
@@ -407,6 +409,14 @@ CameraTestSuite.prototype = {
 
   _rejectStopRecording: function(e) {
     return this.logError('stop recording failed', e);
+  },
+
+  _rejectPauseRecording: function(e) {
+    return this.logError('pause recording failed', e);
+  },
+
+  _rejectResumeRecording: function(e) {
+    return this.logError('resume recording failed', e);
   },
 
   _rejectPreviewStarted: function(e) {

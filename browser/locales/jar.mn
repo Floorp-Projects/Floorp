@@ -63,6 +63,7 @@
     locale/browser/devtools/promisedebugger.properties  (%chrome/browser/devtools/promisedebugger.properties)
     locale/browser/devtools/performance.dtd           (%chrome/browser/devtools/performance.dtd)
     locale/browser/devtools/performance.properties    (%chrome/browser/devtools/performance.properties)
+    locale/browser/devtools/graphs.properties         (%chrome/browser/devtools/graphs.properties)
     locale/browser/devtools/layoutview.dtd            (%chrome/browser/devtools/layoutview.dtd)
     locale/browser/devtools/responsiveUI.properties   (%chrome/browser/devtools/responsiveUI.properties)
     locale/browser/devtools/toolbox.dtd            (%chrome/browser/devtools/toolbox.dtd)

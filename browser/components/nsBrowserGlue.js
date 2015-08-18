@@ -1771,7 +1771,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 30;
+    const UI_VERSION = 31;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
     let currentUIVersion = 0;
     try {
@@ -2131,6 +2131,11 @@ BrowserGlue.prototype = {
       }
 
       Services.prefs.clearUserPref("browser.devedition.showCustomizeButton");
+    }
+ 
+    if (currentUIVersion < 31) {
+      xulStore.removeValue(BROWSER_DOCURL, "bookmarks-menu-button", "class");
+      xulStore.removeValue(BROWSER_DOCURL, "home-button", "class");
     }
 
     // Update the migration version.
