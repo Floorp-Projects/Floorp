@@ -19,7 +19,7 @@ namespace mozilla {
 namespace dom {
 namespace devicestorage {
 
-class DeviceStorageStatics : public nsIObserver
+class DeviceStorageStatics final : public nsIObserver
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -72,6 +72,7 @@ private:
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ListenerWrapper)
 
     explicit ListenerWrapper(nsDOMDeviceStorage* aListener);
+    bool Equals(nsDOMDeviceStorage* aListener);
     void OnFileWatcherUpdate(const nsCString& aData, DeviceStorageFile* aFile);
     void OnDiskSpaceWatcher(bool aLowDiskSpace);
     void OnWritableNameChanged();
@@ -79,10 +80,11 @@ private:
     void OnVolumeStateChanged(nsIVolume* aVolume);
 #endif
 
-    nsRefPtr<nsDOMDeviceStorage> mDeviceStorage;
-
   private:
     virtual ~ListenerWrapper();
+
+    nsWeakPtr mListener;
+    nsCOMPtr<nsIThread> mOwningThread;
   };
 
   nsTArray<nsRefPtr<ListenerWrapper> > mListeners;

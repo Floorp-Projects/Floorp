@@ -13,6 +13,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/DOMRequest.h"
+#include "nsWeakReference.h"
 
 #define DEVICESTORAGE_PICTURES   "pictures"
 #define DEVICESTORAGE_VIDEOS     "videos"
@@ -132,8 +133,13 @@ private:
                            uint64_t* aTotalSoFar);
 };
 
+#define NS_DOM_DEVICE_STORAGE_CID \
+  { 0xe4a9b969, 0x81fe, 0x44f1, \
+    { 0xaa, 0x0c, 0x9e, 0x16, 0x64, 0x86, 0x2a, 0xd5 } }
+
 class nsDOMDeviceStorage final
   : public mozilla::DOMEventTargetHelper
+  , public nsSupportsWeakReference
 {
   typedef mozilla::ErrorResult ErrorResult;
   typedef mozilla::dom::DeviceStorageEnumerationParameters
@@ -145,6 +151,7 @@ class nsDOMDeviceStorage final
 public:
   typedef nsTArray<nsString> VolumeNameArray;
 
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOM_DEVICE_STORAGE_CID)
   NS_DECL_ISUPPORTS_INHERITED
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(DOMEventTargetHelper)
 
@@ -252,22 +259,24 @@ public:
                          nsDOMDeviceStorage** aStore);
 
   static void
-  CreateDeviceStoragesFor(nsPIDOMWindow* aWin,
-                          const nsAString& aType,
-                          nsTArray<nsRefPtr<nsDOMDeviceStorage> >& aStores);
-
-  static void
   CreateDeviceStorageByNameAndType(nsPIDOMWindow* aWin,
                                    const nsAString& aName,
                                    const nsAString& aType,
                                    nsDOMDeviceStorage** aStore);
 
+  bool Equals(nsPIDOMWindow* aWin,
+              const nsAString& aName,
+              const nsAString& aType);
+
   void Shutdown();
+
+  static void GetOrderedVolumeNames(const nsAString& aType,
+                                    nsTArray<nsString>& aVolumeNames);
 
   static void GetOrderedVolumeNames(nsTArray<nsString>& aVolumeNames);
 
   static void GetDefaultStorageName(const nsAString& aStorageType,
-                                    nsAString &aStorageName);
+                                    nsAString& aStorageName);
 
   static bool ParseFullPath(const nsAString& aFullPath,
                             nsAString& aOutStorageName,
@@ -340,5 +349,7 @@ private:
 
   nsRefPtr<DeviceStorageFileSystem> mFileSystem;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsDOMDeviceStorage, NS_DOM_DEVICE_STORAGE_CID)
 
 #endif
