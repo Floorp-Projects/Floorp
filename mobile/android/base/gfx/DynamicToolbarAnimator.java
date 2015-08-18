@@ -331,6 +331,11 @@ public class DynamicToolbarAnimator {
         return true;
     }
 
+    public PointF getVisibleEndOfLayerView() {
+        return new PointF(mTarget.getView().getWidth(),
+            mTarget.getView().getHeight() - mMaxTranslation + mLayerViewTranslation);
+    }
+
     private float bottomOfCssViewport(ImmutableViewportMetrics aMetrics) {
         return aMetrics.getHeight() + mMaxTranslation - mLayerViewTranslation;
     }

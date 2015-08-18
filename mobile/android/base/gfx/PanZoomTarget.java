@@ -14,6 +14,7 @@ public interface PanZoomTarget {
     public ImmutableViewportMetrics getViewportMetrics();
     public ZoomConstraints getZoomConstraints();
     public FullScreenState getFullScreenState();
+    public PointF getVisibleEndOfLayerView();
 
     public void setAnimationTarget(ImmutableViewportMetrics viewport);
     public void setViewportMetrics(ImmutableViewportMetrics viewport);
