@@ -162,6 +162,7 @@ public class BrowserApp extends GeckoApp
                                    PropertyAnimator.PropertyAnimationListener,
                                    View.OnKeyListener,
                                    LayerView.OnMetricsChangedListener,
+                                   LayerView.DynamicToolbarListener,
                                    BrowserSearch.OnSearchListener,
                                    BrowserSearch.OnEditSuggestionListener,
                                    OnUrlOpenListener,
@@ -1220,7 +1221,7 @@ public class BrowserApp extends GeckoApp
 
         if (enabled) {
             if (mLayerView != null) {
-                mLayerView.setOnMetricsChangedDynamicToolbarViewportListener(this);
+                mLayerView.getDynamicToolbarAnimator().addTranslationListener(this);
             }
             setToolbarMargin(0);
             mHomePagerContainer.setPadding(0, mBrowserChrome.getHeight(), 0, 0);
@@ -1228,11 +1229,14 @@ public class BrowserApp extends GeckoApp
             // Immediately show the toolbar when disabling the dynamic
             // toolbar.
             if (mLayerView != null) {
-               mLayerView.setOnMetricsChangedDynamicToolbarViewportListener(null);
+                mLayerView.getDynamicToolbarAnimator().removeTranslationListener(this);
             }
             mHomePagerContainer.setPadding(0, 0, 0, 0);
             if (mBrowserChrome != null) {
                 ViewHelper.setTranslationY(mBrowserChrome, 0);
+            }
+            if (mLayerView != null) {
+                ViewHelper.setTranslationY(mLayerView, mBrowserChrome.getHeight());
             }
         }
 
@@ -1538,6 +1542,26 @@ public class BrowserApp extends GeckoApp
     }
 
     @Override
+    public void onTranslationChanged(float aToolbarTranslation, float aLayerViewTranslation) {
+        if (isHomePagerVisible() || mBrowserChrome == null) {
+            return;
+        }
+
+        final View browserChrome = mBrowserChrome;
+        final View layerView = mLayerView;
+        final ToolbarProgressView progressView = mProgressView;
+
+        ViewHelper.setTranslationY(browserChrome, -aToolbarTranslation);
+        ViewHelper.setTranslationY(layerView, mToolbarHeight - aLayerViewTranslation);
+
+        // Stop the progressView from moving all the way up so that we can still see a good chunk of it
+        // when the chrome is offscreen.
+        final float offset = getResources().getDimensionPixelOffset(R.dimen.progress_bar_scroll_offset);
+        final float progressTranslationY = Math.min(aToolbarTranslation, mToolbarHeight - offset);
+        ViewHelper.setTranslationY(progressView, -progressTranslationY);
+    }
+
+    @Override
     public void onMetricsChanged(ImmutableViewportMetrics aMetrics) {
         if (isHomePagerVisible() || mBrowserChrome == null) {
             return;
@@ -1560,23 +1584,6 @@ public class BrowserApp extends GeckoApp
         } else {
             mDynamicToolbarCanScroll = true;
         }
-
-        final View browserChrome = mBrowserChrome;
-        final ToolbarProgressView progressView = mProgressView;
-        final int marginTop = Math.round(aMetrics.marginTop);
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                final float translationY = marginTop - browserChrome.getHeight();
-                ViewHelper.setTranslationY(browserChrome, translationY);
-
-                // Stop the progressView from moving all the way up so that we can still see a good chunk of it
-                // when the chrome is offscreen.
-                final float offset = getResources().getDimensionPixelOffset(R.dimen.progress_bar_scroll_offset);
-                final float progressTranslationY = Math.max(marginTop - browserChrome.getHeight(), offset - browserChrome.getHeight());
-                ViewHelper.setTranslationY(progressView, progressTranslationY);
-            }
-        });
 
         if (mFormAssistPopup != null)
             mFormAssistPopup.onMetricsChanged(aMetrics);
