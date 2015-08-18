@@ -113,9 +113,9 @@ public class DynamicToolbar {
 
         final boolean isImmediate = transition == VisibilityTransition.IMMEDIATE;
         if (visible) {
-            layerView.getLayerMarginsAnimator().showMargins(isImmediate);
+            layerView.getDynamicToolbarAnimator().showToolbar(isImmediate);
         } else {
-            layerView.getLayerMarginsAnimator().hideMargins(isImmediate);
+            layerView.getDynamicToolbarAnimator().hideToolbar(isImmediate);
         }
     }
 
@@ -132,7 +132,7 @@ public class DynamicToolbar {
             pinFlags.remove(reason);
         }
 
-        layerView.getLayerMarginsAnimator().setMarginsPinned(!pinFlags.isEmpty());
+        layerView.getDynamicToolbarAnimator().setPinned(!pinFlags.isEmpty());
     }
 
     private void triggerEnabledListener() {
