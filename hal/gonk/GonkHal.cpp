@@ -1030,7 +1030,7 @@ GetCurrentScreenConfiguration(hal::ScreenConfiguration* aScreenConfiguration)
 }
 
 bool
-LockScreenOrientation(const dom::ScreenOrientation& aOrientation)
+LockScreenOrientation(const dom::ScreenOrientationInternal& aOrientation)
 {
   return OrientationObserver::GetInstance()->LockScreenOrientation(aOrientation);
 }

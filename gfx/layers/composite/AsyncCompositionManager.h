@@ -109,7 +109,7 @@ public:
     }
   }
 
-  bool RequiresReorientation(mozilla::dom::ScreenOrientation aOrientation)
+  bool RequiresReorientation(mozilla::dom::ScreenOrientationInternal aOrientation) const
   {
     return mTargetConfig.orientation() != aOrientation;
   }

@@ -51,7 +51,7 @@ using namespace mozilla::gfx;
 enum Op { Resolve, Detach };
 
 static bool
-IsSameDimension(dom::ScreenOrientation o1, dom::ScreenOrientation o2)
+IsSameDimension(dom::ScreenOrientationInternal o1, dom::ScreenOrientationInternal o2)
 {
   bool isO1portrait = (o1 == dom::eScreenOrientation_PortraitPrimary || o1 == dom::eScreenOrientation_PortraitSecondary);
   bool isO2portrait = (o2 == dom::eScreenOrientation_PortraitPrimary || o2 == dom::eScreenOrientation_PortraitSecondary);
@@ -74,8 +74,8 @@ WalkTheTree(Layer* aLayer,
     if (const CompositorParent::LayerTreeState* state = CompositorParent::GetIndirectShadowTree(ref->GetReferentId())) {
       if (Layer* referent = state->mRoot) {
         if (!ref->GetVisibleRegion().IsEmpty()) {
-          dom::ScreenOrientation chromeOrientation = aTargetConfig.orientation();
-          dom::ScreenOrientation contentOrientation = state->mTargetConfig.orientation();
+          dom::ScreenOrientationInternal chromeOrientation = aTargetConfig.orientation();
+          dom::ScreenOrientationInternal contentOrientation = state->mTargetConfig.orientation();
           if (!IsSameDimension(chromeOrientation, contentOrientation) &&
               ContentMightReflowOnOrientationChange(aTargetConfig.naturalBounds())) {
             aReady = false;

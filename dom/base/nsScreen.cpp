@@ -40,7 +40,7 @@ nsScreen::Create(nsPIDOMWindow* aWindow)
   hal::RegisterScreenConfigurationObserver(screen);
   hal::ScreenConfiguration config;
   hal::GetCurrentScreenConfiguration(&config);
-  screen->mOrientation = config.orientation();
+  screen->mOrientationInternal = config.orientation();
 
   return screen.forget();
 }
@@ -165,16 +165,16 @@ nsScreen::GetAvailRect(nsRect& aRect)
 void
 nsScreen::Notify(const hal::ScreenConfiguration& aConfiguration)
 {
-  ScreenOrientation previousOrientation = mOrientation;
-  mOrientation = aConfiguration.orientation();
+  ScreenOrientationInternal previousOrientation = mOrientationInternal;
+  mOrientationInternal = aConfiguration.orientation();
 
-  NS_ASSERTION(mOrientation == eScreenOrientation_PortraitPrimary ||
-               mOrientation == eScreenOrientation_PortraitSecondary ||
-               mOrientation == eScreenOrientation_LandscapePrimary ||
-               mOrientation == eScreenOrientation_LandscapeSecondary,
+  NS_ASSERTION(mOrientationInternal == eScreenOrientation_PortraitPrimary ||
+               mOrientationInternal == eScreenOrientation_PortraitSecondary ||
+               mOrientationInternal == eScreenOrientation_LandscapePrimary ||
+               mOrientationInternal == eScreenOrientation_LandscapeSecondary,
                "Invalid orientation value passed to notify method!");
 
-  if (mOrientation != previousOrientation) {
+  if (mOrientationInternal != previousOrientation) {
     DispatchTrustedEvent(NS_LITERAL_STRING("mozorientationchange"));
   }
 }
@@ -185,7 +185,7 @@ nsScreen::GetMozOrientation(nsString& aOrientation)
   if (ShouldResistFingerprinting()) {
     aOrientation.AssignLiteral("landscape-primary");
   } else {
-    switch (mOrientation) {
+    switch (mOrientationInternal) {
     case eScreenOrientation_PortraitPrimary:
       aOrientation.AssignLiteral("portrait-primary");
       break;
@@ -200,7 +200,7 @@ nsScreen::GetMozOrientation(nsString& aOrientation)
       break;
     case eScreenOrientation_None:
     default:
-      MOZ_CRASH("Unacceptable mOrientation value");
+      MOZ_CRASH("Unacceptable mOrientationInternal value");
     }
   }
 }
@@ -259,7 +259,7 @@ bool
 nsScreen::MozLockOrientation(const Sequence<nsString>& aOrientations,
                              ErrorResult& aRv)
 {
-  ScreenOrientation orientation = eScreenOrientation_None;
+  ScreenOrientationInternal orientation = eScreenOrientation_None;
 
   for (uint32_t i = 0; i < aOrientations.Length(); ++i) {
     const nsString& item = aOrientations[i];

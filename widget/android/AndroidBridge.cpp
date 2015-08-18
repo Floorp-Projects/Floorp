@@ -1578,7 +1578,7 @@ AndroidBridge::GetScreenOrientation()
     if (!orientation)
         return dom::eScreenOrientation_None;
 
-    return static_cast<dom::ScreenOrientation>(orientation);
+    return static_cast<dom::ScreenOrientationInternal>(orientation);
 }
 
 void
