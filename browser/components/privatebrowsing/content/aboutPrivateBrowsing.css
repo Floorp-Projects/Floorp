@@ -35,9 +35,9 @@ body:not([tpEnabled]) .showTpEnabled {
   background-size: 47px 26px;
   padding-inline-start: 87px;
   color: white;
-  font-size: 1.5em;
+  font-size: 24pt;
   font-weight: 200;
-  line-height: 2.5em;
+  line-height: 60pt;
 }
 
 #main {
@@ -51,7 +51,6 @@ body:not([tpEnabled]) .showTpEnabled {
 
 .sectionHeader {
   font-size: 1.75em;
-  white-space: nowrap;
 }
 
 /* PRIVATE BROWSING SECTION */
@@ -156,7 +155,8 @@ li {
 }
 
 #startTour {
-  display: block;
+  display: inline-block;
+  width: 16em;
   border-radius: 2px;
   background-color: var(--in-content-primary-button-background);
   color: var(--in-content-selected-text);
