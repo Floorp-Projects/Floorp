@@ -481,7 +481,8 @@ public:
     const BluetoothAvrcpNotificationParam& aParam,
     BluetoothAvrcpResultHandler* aRes) = 0;
 
-  virtual void SetVolume(uint8_t aVolume, BluetoothAvrcpResultHandler* aRes) = 0;
+  virtual void SetVolume(uint8_t aVolume,
+                         BluetoothAvrcpResultHandler* aRes) = 0;
 
 protected:
   BluetoothAvrcpInterface();
@@ -1073,7 +1074,8 @@ public:
   virtual void DiscoveryStateChangedNotification(bool aState) { }
 
   virtual void PinRequestNotification(const nsAString& aRemoteBdAddr,
-                                      const nsAString& aBdName, uint32_t aCod) { }
+                                      const nsAString& aBdName,
+                                      uint32_t aCod) { }
   virtual void SspRequestNotification(const nsAString& aRemoteBdAddr,
                                       const nsAString& aBdName,
                                       uint32_t aCod,
