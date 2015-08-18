@@ -1591,7 +1591,8 @@ public class BrowserApp extends GeckoApp
 
     @Override
     public void onPanZoomStopped() {
-        if (!mDynamicToolbar.isEnabled() || isHomePagerVisible()) {
+        if (!mDynamicToolbar.isEnabled() || isHomePagerVisible() ||
+            mBrowserChrome.getVisibility() != View.VISIBLE) {
             return;
         }
 
@@ -3149,18 +3150,18 @@ public class BrowserApp extends GeckoApp
             @Override
             public void run() {
                 if (fullscreen) {
-                    mBrowserChrome.setVisibility(View.GONE);
                     if (mDynamicToolbar.isEnabled()) {
                         mDynamicToolbar.setVisible(false, VisibilityTransition.IMMEDIATE);
-                        mLayerView.getLayerMarginsAnimator().setMaxMargins(0, 0, 0, 0);
+                        mDynamicToolbar.setPinned(true, PinReason.FULL_SCREEN);
                     } else {
                         setToolbarMargin(0);
                     }
+                    mBrowserChrome.setVisibility(View.GONE);
                 } else {
                     mBrowserChrome.setVisibility(View.VISIBLE);
                     if (mDynamicToolbar.isEnabled()) {
+                        mDynamicToolbar.setPinned(false, PinReason.FULL_SCREEN);
                         mDynamicToolbar.setVisible(true, VisibilityTransition.IMMEDIATE);
-                        mLayerView.getLayerMarginsAnimator().setMaxMargins(0, mToolbarHeight, 0, 0);
                     }
                 }
             }
