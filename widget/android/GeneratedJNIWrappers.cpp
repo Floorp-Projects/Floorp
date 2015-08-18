@@ -1127,9 +1127,9 @@ auto GeckoLayerClient::SyncFrameMetrics(float a0, float a1, float a2, float a3, 
 constexpr char GeckoLayerClient::SyncViewportInfo_t::name[];
 constexpr char GeckoLayerClient::SyncViewportInfo_t::signature[];
 
-auto GeckoLayerClient::SyncViewportInfo(int32_t a0, int32_t a1, int32_t a2, int32_t a3, float a4, bool a5) const -> mozilla::jni::Object::LocalRef
+auto GeckoLayerClient::SyncViewportInfo(int32_t a0, int32_t a1, int32_t a2, int32_t a3, float a4, bool a5, int32_t a6) const -> mozilla::jni::Object::LocalRef
 {
-    return mozilla::jni::Method<SyncViewportInfo_t>::Call(this, nullptr, a0, a1, a2, a3, a4, a5);
+    return mozilla::jni::Method<SyncViewportInfo_t>::Call(this, nullptr, a0, a1, a2, a3, a4, a5, a6);
 }
 
 constexpr char ImmutableViewportMetrics::name[];
@@ -1302,6 +1302,19 @@ auto ViewTransform::FixedLayerMarginTop(float a0) const -> void
     return mozilla::jni::Field<FixedLayerMarginTop_t>::Set(this, nullptr, a0);
 }
 
+constexpr char ViewTransform::Height_t::name[];
+constexpr char ViewTransform::Height_t::signature[];
+
+auto ViewTransform::Height() const -> float
+{
+    return mozilla::jni::Field<Height_t>::Get(this, nullptr);
+}
+
+auto ViewTransform::Height(float a0) const -> void
+{
+    return mozilla::jni::Field<Height_t>::Set(this, nullptr, a0);
+}
+
 constexpr char ViewTransform::Scale_t::name[];
 constexpr char ViewTransform::Scale_t::signature[];
 
@@ -1313,6 +1326,19 @@ auto ViewTransform::Scale() const -> float
 auto ViewTransform::Scale(float a0) const -> void
 {
     return mozilla::jni::Field<Scale_t>::Set(this, nullptr, a0);
+}
+
+constexpr char ViewTransform::Width_t::name[];
+constexpr char ViewTransform::Width_t::signature[];
+
+auto ViewTransform::Width() const -> float
+{
+    return mozilla::jni::Field<Width_t>::Get(this, nullptr);
+}
+
+auto ViewTransform::Width(float a0) const -> void
+{
+    return mozilla::jni::Field<Width_t>::Set(this, nullptr, a0);
 }
 
 constexpr char ViewTransform::X_t::name[];

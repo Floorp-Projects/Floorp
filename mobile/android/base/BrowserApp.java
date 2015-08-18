@@ -1536,7 +1536,7 @@ public class BrowserApp extends GeckoApp
 
     @Override
     public void onTranslationChanged(float aToolbarTranslation, float aLayerViewTranslation) {
-        if (isHomePagerVisible() || mBrowserChrome == null) {
+        if (mBrowserChrome == null) {
             return;
         }
 

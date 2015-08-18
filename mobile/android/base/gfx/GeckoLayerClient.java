@@ -23,6 +23,7 @@ import android.graphics.RectF;
 import android.os.SystemClock;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +31,7 @@ import java.util.List;
 class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
 {
     private static final String LOGTAG = "GeckoLayerClient";
+    private static int sPaintSyncId = 1;
 
     private LayerRenderer mLayerRenderer;
     private boolean mLayerRendererInitialized;
@@ -151,7 +153,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         mRootLayer = new VirtualLayer(new IntSize(mView.getWidth(), mView.getHeight()));
         mLayerRenderer = mView.getRenderer();
 
-        sendResizeEventIfNecessary(true);
+        sendResizeEventIfNecessary(true, null);
 
         DisplayPortCalculator.initPrefs();
 
@@ -212,19 +214,29 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
      * to the layer client. That way, the layer client won't be tempted to call this, which might
      * result in an infinite loop.
      */
-    void setViewportSize(int width, int height) {
+    boolean setViewportSize(int width, int height, PointF scrollChange) {
+        if (mViewportMetrics.viewportRectWidth == width &&
+            mViewportMetrics.viewportRectHeight == height &&
+            (scrollChange == null || (scrollChange.x == 0 && scrollChange.y == 0))) {
+            return false;
+        }
         mViewportMetrics = mViewportMetrics.setViewportSize(width, height);
+        if (scrollChange != null) {
+            mViewportMetrics = mViewportMetrics.offsetViewportBy(scrollChange.x, scrollChange.y);
+        }
 
         if (mGeckoIsReady) {
             // here we send gecko a resize message. The code in browser.js is responsible for
             // picking up on that resize event, modifying the viewport as necessary, and informing
             // us of the new viewport.
-            sendResizeEventIfNecessary(true);
+            sendResizeEventIfNecessary(true, scrollChange);
+
             // the following call also sends gecko a message, which will be processed after the resize
             // message above has updated the viewport. this message ensures that if we have just put
             // focus in a text field, we scroll the content so that the text field is in view.
             GeckoAppShell.viewSizeChanged();
         }
+        return true;
     }
 
     PanZoomController getPanZoomController() {
@@ -236,7 +248,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     }
 
     /* Informs Gecko that the screen size has changed. */
-    private void sendResizeEventIfNecessary(boolean force) {
+    private void sendResizeEventIfNecessary(boolean force, PointF scrollChange) {
         DisplayMetrics metrics = mContext.getResources().getDisplayMetrics();
 
         IntSize newScreenSize = new IntSize(metrics.widthPixels, metrics.heightPixels);
@@ -264,7 +276,26 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         GeckoEvent event = GeckoEvent.createSizeChangedEvent(mWindowSize.width, mWindowSize.height,
                                                              mScreenSize.width, mScreenSize.height);
         GeckoAppShell.sendEventToGecko(event);
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Window:Resize", ""));
+
+        String json = "";
+        try {
+            if (scrollChange != null) {
+                int id = ++sPaintSyncId;
+                if (id == 0) {
+                    // never use 0 as that is the default value for "this is not
+                    // a special transaction"
+                    id = ++sPaintSyncId;
+                }
+                JSONObject jsonObj = new JSONObject();
+                jsonObj.put("x", scrollChange.x / mViewportMetrics.zoomFactor);
+                jsonObj.put("y", scrollChange.y / mViewportMetrics.zoomFactor);
+                jsonObj.put("id", id);
+                json = jsonObj.toString();
+            }
+        } catch (Exception e) {
+            Log.e(LOGTAG, "Unable to convert point to JSON for " + event, e);
+        }
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Window:Resize", json));
     }
 
     /** Sets the current page rect. You must hold the monitor while calling this. */
@@ -345,6 +376,17 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
             case UPDATE:
                 // Keep the old viewport size
                 newMetrics = messageMetrics.setViewportSize(oldMetrics.viewportRectWidth, oldMetrics.viewportRectHeight);
+                if (mToolbarAnimator.isResizing()) {
+                    // If we're in the middle of a resize, we don't want to clobber
+                    // the scroll offset, so grab the one from the oldMetrics and
+                    // keep using that. We also don't want to abort animations,
+                    // because at that point we're guaranteed to not be animating
+                    // anyway, and calling abortPanZoomAnimation has a nasty
+                    // side-effect of clmaping and clobbering the metrics, which
+                    // we don't want here.
+                    newMetrics = newMetrics.setViewportOrigin(oldMetrics.viewportRectLeft, oldMetrics.viewportRectTop);
+                    break;
+                }
                 if (!oldMetrics.fuzzyEquals(newMetrics)) {
                     abortPanZoomAnimation();
                 }
@@ -602,7 +644,8 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
       * which would avoid the copy into mCurrentViewTransform.
       */
     @WrapForJNI(allowMultithread = true)
-    public ViewTransform syncViewportInfo(int x, int y, int width, int height, float resolution, boolean layersUpdated) {
+    public ViewTransform syncViewportInfo(int x, int y, int width, int height, float resolution, boolean layersUpdated,
+                                          int paintSyncId) {
         // getViewportMetrics is thread safe so we don't need to synchronize.
         // We save the viewport metrics here, so we later use it later in
         // createFrame (which will be called by nsWindow::DrawWindowUnderlay on
@@ -611,11 +654,10 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         // of the compositor thread.
         mFrameMetrics = getViewportMetrics();
 
-        mCurrentViewTransform.x = mFrameMetrics.viewportRectLeft;
-        mCurrentViewTransform.y = mFrameMetrics.viewportRectTop;
-        mCurrentViewTransform.scale = mFrameMetrics.zoomFactor;
-
-        mToolbarAnimator.populateFixedPositionMargins(mCurrentViewTransform, mFrameMetrics);
+        if (paintSyncId == sPaintSyncId) {
+            mToolbarAnimator.scrollChangeResizeCompleted();
+        }
+        mToolbarAnimator.populateViewTransform(mCurrentViewTransform, mFrameMetrics);
 
         if (mRootLayer != null) {
             mRootLayer.setPositionAndResolution(
@@ -656,7 +698,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
                                   cssPageLeft, cssPageTop, cssPageRight, cssPageBottom);
         }
 
-        return syncViewportInfo(x, y, width, height, resolution, layersUpdated);
+        return syncViewportInfo(x, y, width, height, resolution, layersUpdated, 0);
     }
 
     @WrapForJNI(allowMultithread = true)
@@ -694,7 +736,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
 
     private void geometryChanged(DisplayPortMetrics displayPort) {
         /* Let Gecko know if the screensize has changed */
-        sendResizeEventIfNecessary(false);
+        sendResizeEventIfNecessary(false, null);
         if (getRedrawHint()) {
             adjustViewport(displayPort);
         }
@@ -725,7 +767,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     @Override
     public void surfaceChanged(int width, int height) {
         IntSize viewportSize = mToolbarAnimator.getViewportSize();
-        setViewportSize(viewportSize.width, viewportSize.height);
+        setViewportSize(viewportSize.width, viewportSize.height, null);
     }
 
     /** Implementation of PanZoomTarget */

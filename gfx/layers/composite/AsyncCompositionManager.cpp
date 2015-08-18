@@ -101,6 +101,7 @@ AsyncCompositionManager::AsyncCompositionManager(LayerManagerComposite* aManager
   : mLayerManager(aManager)
   , mIsFirstPaint(true)
   , mLayersUpdated(false)
+  , mPaintSyncId(0)
   , mReadyForCompose(true)
 {
 }
@@ -1024,10 +1025,12 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
                                  // for which we can assume that x and y scales are equal.
                                * metrics.GetCumulativeResolution().ToScaleFactor()
                                * LayerToParentLayerScale(1));
-  ParentLayerPoint userScroll = metrics.GetScrollOffset() * userZoom;
-  SyncViewportInfo(displayPort, geckoZoom, mLayersUpdated,
-                   userScroll, userZoom, fixedLayerMargins);
+  ParentLayerRect userRect(metrics.GetScrollOffset() * userZoom,
+                           metrics.GetCompositionBounds().Size());
+  SyncViewportInfo(displayPort, geckoZoom, mLayersUpdated, mPaintSyncId,
+                   userRect, userZoom, fixedLayerMargins);
   mLayersUpdated = false;
+  mPaintSyncId = 0;
 
   // Handle transformations for asynchronous panning and zooming. We determine the
   // zoom used by Gecko from the transformation set on the root layer, and we
@@ -1041,7 +1044,7 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
   }
 
   LayerToParentLayerScale asyncZoom = userZoom / metrics.LayersPixelsPerCSSPixel().ToScaleFactor();
-  ParentLayerPoint translation = userScroll - geckoScroll;
+  ParentLayerPoint translation = userRect.TopLeft() - geckoScroll;
   Matrix4x4 treeTransform = ViewTransform(asyncZoom, -translation);
 
   // Apply the tree transform on top of GetLocalTransform() here (rather than
@@ -1057,17 +1060,15 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
   // AlignFixedAndStickyLayers.
   ParentLayerRect contentScreenRect = mContentRect * userZoom;
   Point3D overscrollTranslation;
-  if (userScroll.x < contentScreenRect.x) {
-    overscrollTranslation.x = contentScreenRect.x - userScroll.x;
-  } else if (userScroll.x + metrics.GetCompositionBounds().width > contentScreenRect.XMost()) {
-    overscrollTranslation.x = contentScreenRect.XMost() -
-      (userScroll.x + metrics.GetCompositionBounds().width);
+  if (userRect.x < contentScreenRect.x) {
+    overscrollTranslation.x = contentScreenRect.x - userRect.x;
+  } else if (userRect.XMost() > contentScreenRect.XMost()) {
+    overscrollTranslation.x = contentScreenRect.XMost() - userRect.XMost();
   }
-  if (userScroll.y < contentScreenRect.y) {
-    overscrollTranslation.y = contentScreenRect.y - userScroll.y;
-  } else if (userScroll.y + metrics.GetCompositionBounds().height > contentScreenRect.YMost()) {
-    overscrollTranslation.y = contentScreenRect.YMost() -
-      (userScroll.y + metrics.GetCompositionBounds().height);
+  if (userRect.y < contentScreenRect.y) {
+    overscrollTranslation.y = contentScreenRect.y - userRect.y;
+  } else if (userRect.YMost() > contentScreenRect.YMost()) {
+    overscrollTranslation.y = contentScreenRect.YMost() - userRect.YMost();
   }
   oldTransform.PreTranslate(overscrollTranslation.x,
                             overscrollTranslation.y,
@@ -1197,7 +1198,8 @@ void
 AsyncCompositionManager::SyncViewportInfo(const LayerIntRect& aDisplayPort,
                                           const CSSToLayerScale& aDisplayResolution,
                                           bool aLayersUpdated,
-                                          ParentLayerPoint& aScrollOffset,
+                                          int32_t aPaintSyncId,
+                                          ParentLayerRect& aScrollRect,
                                           CSSToParentLayerScale& aScale,
                                           ScreenMargin& aFixedLayerMargins)
 {
@@ -1205,7 +1207,8 @@ AsyncCompositionManager::SyncViewportInfo(const LayerIntRect& aDisplayPort,
   AndroidBridge::Bridge()->SyncViewportInfo(aDisplayPort,
                                             aDisplayResolution,
                                             aLayersUpdated,
-                                            aScrollOffset,
+                                            aPaintSyncId,
+                                            aScrollRect,
                                             aScale,
                                             aFixedLayerMargins);
 #endif

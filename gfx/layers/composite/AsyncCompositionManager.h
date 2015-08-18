@@ -98,11 +98,15 @@ public:
   void ComputeRotation();
 
   // Call after updating our layer tree.
-  void Updated(bool isFirstPaint, const TargetConfig& aTargetConfig)
+  void Updated(bool isFirstPaint, const TargetConfig& aTargetConfig,
+               int32_t aPaintSyncId)
   {
     mIsFirstPaint |= isFirstPaint;
     mLayersUpdated = true;
     mTargetConfig = aTargetConfig;
+    if (aPaintSyncId) {
+      mPaintSyncId = aPaintSyncId;
+    }
   }
 
   bool RequiresReorientation(mozilla::dom::ScreenOrientation aOrientation)
@@ -139,7 +143,8 @@ private:
   void SyncViewportInfo(const LayerIntRect& aDisplayPort,
                         const CSSToLayerScale& aDisplayResolution,
                         bool aLayersUpdated,
-                        ParentLayerPoint& aScrollOffset,
+                        int32_t aPaintSyncId,
+                        ParentLayerRect& aScrollRect,
                         CSSToParentLayerScale& aScale,
                         ScreenMargin& aFixedLayerMargins);
   void SyncFrameMetrics(const ParentLayerPoint& aScrollOffset,
@@ -203,6 +208,8 @@ private:
   // This flag is set during a layers update, so that the first composition
   // after a layers update has it set. It is cleared after that first composition.
   bool mLayersUpdated;
+
+  int32_t mPaintSyncId;
 
   bool mReadyForCompose;
 

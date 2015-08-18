@@ -6483,6 +6483,16 @@ var ViewportHandler = {
         for (let i = 0; i < tabs.length; i++)
           tabs[i].updateViewportSize(oldScreenWidth);
         break;
+      default:
+        return;
+    }
+
+    if (aData) {
+      let scrollChange = JSON.parse(aData);
+      let win = BrowserApp.selectedTab.browser.contentWindow;
+      let windowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      windowUtils.setNextPaintSyncId(scrollChange.id);
+      win.scrollBy(scrollChange.x, scrollChange.y);
     }
   },
 

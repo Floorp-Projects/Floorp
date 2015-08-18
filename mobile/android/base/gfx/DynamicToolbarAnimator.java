@@ -10,6 +10,7 @@ import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.graphics.PointF;
+import android.support.v4.view.ViewCompat;
 import android.util.Log;
 import android.view.animation.DecelerateInterpolator;
 import android.view.MotionEvent;
@@ -60,6 +61,21 @@ public class DynamicToolbarAnimator {
     private float SCROLL_TOOLBAR_THRESHOLD = 0.20f;
     /* The ID of the prefs listener for the scroll-toolbar threshold */
     private Integer mPrefObserverId;
+
+    /* While we are resizing the viewport to account for the toolbar, the Java
+     * code and painted layer metrics in the compositor have different notions
+     * of the CSS viewport height. The Java value is stored in the
+     * GeckoLayerClient's viewport metrics, and the Gecko one is stored here.
+     * This allows us to adjust fixed-pos items correctly.
+     * You must synchronize on mTarget.getLock() to read/write this. */
+    private Integer mHeightDuringResize;
+
+    /* This tracks if we should trigger a "snap" on the next composite. A "snap"
+     * is when we simultaneously move the LayerView and change the scroll offset
+     * in the compositor so that everything looks the same on the screen but
+     * has really been shifted.
+     * You must synchronize on |this| to read/write this. */
+    private boolean mSnapRequired = false;
 
     /* The task that handles showing/hiding toolbar */
     private DynamicToolbarAnimationTask mAnimationTask;
@@ -145,14 +161,14 @@ public class DynamicToolbarAnimator {
     }
 
     public void showToolbar(boolean immediately) {
-        animateToolbar(0, immediately);
+        animateToolbar(true, immediately);
     }
 
     public void hideToolbar(boolean immediately) {
-        animateToolbar(mMaxTranslation, immediately);
+        animateToolbar(false, immediately);
     }
 
-    private void animateToolbar(final float translation, boolean immediately) {
+    private void animateToolbar(final boolean showToolbar, boolean immediately) {
         ThreadUtils.assertOnUiThread();
 
         if (mAnimationTask != null) {
@@ -160,25 +176,62 @@ public class DynamicToolbarAnimator {
             mAnimationTask = null;
         }
 
-        Log.v(LOGTAG, "Requested " + (immediately ? "immedate " : "") + "toolbar animation to translation " + translation);
-        if (FloatUtils.fuzzyEquals(mToolbarTranslation, translation)) {
+        float desiredTranslation = (showToolbar ? 0 : mMaxTranslation);
+        Log.v(LOGTAG, "Requested " + (immediately ? "immediate " : "") + "toolbar animation to translation " + desiredTranslation);
+        if (FloatUtils.fuzzyEquals(mToolbarTranslation, desiredTranslation)) {
             // If we're already pretty much in the desired position, don't bother
             // with a full animation; do an immediate jump
             immediately = true;
             Log.v(LOGTAG, "Changing animation to immediate jump");
         }
 
-        if (immediately) {
-            mToolbarTranslation = translation;
+        if (showToolbar && immediately) {
+            // Special case for showing the toolbar immediately: some of the call
+            // sites expect this to happen synchronously, so let's do that. This
+            // is safe because if we are showing the toolbar from a hidden state
+            // there is no chance of showing garbage
+            mToolbarTranslation = desiredTranslation;
             fireListeners();
-            resizeViewport();
-            mTarget.getView().requestRender();
-            return;
+            // And then proceed with the normal flow (some of which will be
+            // a no-op now)...
         }
 
-        Log.v(LOGTAG, "Kicking off animation...");
-        mAnimationTask = new DynamicToolbarAnimationTask(false, translation);
+        if (!showToolbar) {
+            // If we are hiding the toolbar, we need to move the LayerView first,
+            // so that we don't end up showing garbage under the toolbar when
+            // it is hidden. In the case that we are showing the toolbar, we
+            // move the LayerView after the toolbar is shown - the
+            // DynamicToolbarAnimationTask calls that upon completion.
+            shiftLayerView(desiredTranslation);
+        }
+
+        mAnimationTask = new DynamicToolbarAnimationTask(desiredTranslation, immediately, showToolbar);
         mTarget.getView().postRenderTask(mAnimationTask);
+    }
+
+    private synchronized void shiftLayerView(float desiredTranslation) {
+        float layerViewTranslationNeeded = desiredTranslation - mLayerViewTranslation;
+        mLayerViewTranslation = desiredTranslation;
+        synchronized (mTarget.getLock()) {
+            mHeightDuringResize = new Integer(mTarget.getViewportMetrics().viewportRectHeight);
+            mSnapRequired = mTarget.setViewportSize(
+                mTarget.getView().getWidth(),
+                mTarget.getView().getHeight() - Math.round(mMaxTranslation - mLayerViewTranslation),
+                new PointF(0, -layerViewTranslationNeeded));
+            if (!mSnapRequired) {
+                mHeightDuringResize = null;
+                ThreadUtils.postToUiThread(new Runnable() {
+                    // Post to run it outside of the synchronize blocks. The
+                    // delay shouldn't hurt.
+                    @Override
+                    public void run() {
+                        fireListeners();
+                    }
+                });
+            }
+            // Request a composite, which will trigger the snap.
+            mTarget.getView().requestRender();
+        }
     }
 
     IntSize getViewportSize() {
@@ -188,15 +241,41 @@ public class DynamicToolbarAnimator {
         return new IntSize(viewWidth, viewHeightVisible);
     }
 
-    private void resizeViewport() {
-        ThreadUtils.assertOnUiThread();
+    boolean isResizing() {
+        return mHeightDuringResize != null;
+    }
 
-        // The animation is done, now we need to tell gecko to resize to the
-        // proper steady-state layout.
+    private final Runnable mSnapRunnable = new Runnable() {
+        private int mFrame = 0;
+
+        @Override
+        public final void run() {
+            // It takes 2 frames for the view translation to take effect, at
+            // least on a Nexus 4 device running Android 4.2.2. So we wait for
+            // two frames before doing the notifyAll(), otherwise we get a
+            // short user-visible glitch.
+            // TODO: find a better way to do this, if possible.
+            if (mFrame == 1) {
+                synchronized (this) {
+                    this.notifyAll();
+                }
+                mFrame = 0;
+                return;
+            }
+
+            if (mFrame == 0) {
+                fireListeners();
+            }
+
+            ViewCompat.postOnAnimation(mTarget.getView(), this);
+            mFrame++;
+        }
+    };
+
+    void scrollChangeResizeCompleted() {
         synchronized (mTarget.getLock()) {
-            IntSize viewportSize = getViewportSize();
-            Log.v(LOGTAG, "Resize viewport to dimensions " + viewportSize);
-            mTarget.setViewportSize(viewportSize.width, viewportSize.height);
+            Log.v(LOGTAG, "Scrollchange resize completed");
+            mHeightDuringResize = null;
         }
     }
 
@@ -337,30 +416,61 @@ public class DynamicToolbarAnimator {
     }
 
     private float bottomOfCssViewport(ImmutableViewportMetrics aMetrics) {
-        return aMetrics.getHeight() + mMaxTranslation - mLayerViewTranslation;
+        return (isResizing() ? mHeightDuringResize : aMetrics.getHeight())
+                + mMaxTranslation - mLayerViewTranslation;
     }
 
-    void populateFixedPositionMargins(ViewTransform aTransform, ImmutableViewportMetrics aMetrics) {
-        Log.v(LOGTAG, "Populating top fixed margin using " + mLayerViewTranslation + " - " + mToolbarTranslation);
+    private synchronized boolean getAndClearSnapRequired() {
+        boolean snapRequired = mSnapRequired;
+        mSnapRequired = false;
+        return snapRequired;
+    }
+
+    void populateViewTransform(ViewTransform aTransform, ImmutableViewportMetrics aMetrics) {
+        if (getAndClearSnapRequired()) {
+            synchronized (mSnapRunnable) {
+                ViewCompat.postOnAnimation(mTarget.getView(), mSnapRunnable);
+                try {
+                    // hold the in-progress composite until the views have been
+                    // translated because otherwise there is a visible glitch.
+                    // don't hold for more than 100ms just in case.
+                    mSnapRunnable.wait(100);
+                } catch (InterruptedException ie) {
+                }
+            }
+        }
+
+        aTransform.x = aMetrics.viewportRectLeft;
+        aTransform.y = aMetrics.viewportRectTop;
+        aTransform.width = aMetrics.viewportRectWidth;
+        aTransform.height = aMetrics.viewportRectHeight;
+        aTransform.scale = aMetrics.zoomFactor;
+
         aTransform.fixedLayerMarginTop = mLayerViewTranslation - mToolbarTranslation;
         float bottomOfScreen = mTarget.getView().getHeight();
         // We want to move a fixed item from "bottomOfCssViewport" to
         // "bottomOfScreen". But also the bottom margin > 0 means that bottom
         // fixed-pos items will move upwards.
-        Log.v(LOGTAG, "Populating bottom fixed margin using " + bottomOfCssViewport(aMetrics) + " - " + bottomOfScreen);
         aTransform.fixedLayerMarginBottom = bottomOfCssViewport(aMetrics) - bottomOfScreen;
+        //Log.v(LOGTAG, "ViewTransform is x=" + aTransform.x + " y=" + aTransform.y
+        //    + " z=" + aTransform.scale + " t=" + aTransform.fixedLayerMarginTop
+        //    + " b=" + aTransform.fixedLayerMarginBottom);
     }
 
     class DynamicToolbarAnimationTask extends RenderTask {
         private final float mStartTranslation;
         private final float mEndTranslation;
+        private final boolean mImmediate;
+        private final boolean mShiftLayerView;
         private boolean mContinueAnimation;
 
-        public DynamicToolbarAnimationTask(boolean aRunAfter, float aTranslation) {
-            super(aRunAfter);
+        public DynamicToolbarAnimationTask(float aTranslation, boolean aImmediate, boolean aShiftLayerView) {
+            super(false);
             mContinueAnimation = true;
             mStartTranslation = mToolbarTranslation;
             mEndTranslation = aTranslation;
+            mImmediate = aImmediate;
+            mShiftLayerView = aShiftLayerView;
         }
 
         @Override
@@ -370,7 +480,9 @@ public class DynamicToolbarAnimator {
             }
 
             // Calculate the progress (between 0 and 1)
-            final float progress = mInterpolator.getInterpolation(
+            final float progress = mImmediate
+                ? 1.0f
+                : mInterpolator.getInterpolation(
                     Math.min(1.0f, (System.nanoTime() - getStartTime())
                                     / (float)ANIMATION_DURATION));
 
@@ -383,13 +495,10 @@ public class DynamicToolbarAnimator {
                 public void run() {
                     // Move the toolbar as per the animation
                     mToolbarTranslation = FloatUtils.interpolate(mStartTranslation, mEndTranslation, progress);
-                    // Move the LayerView so that there is never a gap between the toolbar
-                    // and the LayerView, because there we will draw garbage.
-                    mLayerViewTranslation = Math.max(mLayerViewTranslation, mToolbarTranslation);
                     fireListeners();
 
-                    if (progress >= 1.0f) {
-                        resizeViewport();
+                    if (mShiftLayerView && progress >= 1.0f) {
+                        shiftLayerView(mEndTranslation);
                     }
                 }
             });
@@ -399,6 +508,18 @@ public class DynamicToolbarAnimator {
                 mContinueAnimation = false;
             }
             return mContinueAnimation;
+        }
+    }
+
+    class SnapMetrics {
+        public final int viewportWidth;
+        public final int viewportHeight;
+        public final float scrollChangeY;
+
+        SnapMetrics(ImmutableViewportMetrics aMetrics, float aScrollChange) {
+            viewportWidth = aMetrics.viewportRectWidth;
+            viewportHeight = aMetrics.viewportRectHeight;
+            scrollChangeY = aScrollChange;
         }
     }
 }
