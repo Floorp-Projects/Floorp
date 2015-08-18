@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(d27ce247-9c7c-4582-826b-125e8275e9c2)]
+[scriptable, uuid(88f18811-8f19-4902-a9b8-2a6430c71c94)]
 interface nsIDataCall : nsISupports
 {
   /**
@@ -55,6 +55,12 @@ interface nsIDataCall : nsISupports
    * A space-delimited list of default gateway addresses.
    */
   readonly attribute DOMString gateways;
+
+  /**
+   * A space-delimited list of Proxy Call State Control Function addresses for
+   * IMS client.
+   */
+  readonly attribute DOMString pcscf;
 };
 
 [scriptable, uuid(e119c54b-9354-4ad6-a1ee-18608bde9320)]
