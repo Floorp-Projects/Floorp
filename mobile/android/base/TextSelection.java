@@ -7,6 +7,7 @@ package org.mozilla.gecko;
 import android.content.res.Resources;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.BitmapUtils.BitmapLoader;
+import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.LayerView.DrawListener;
@@ -35,7 +36,8 @@ import java.util.TimerTask;
 import android.util.Log;
 import android.view.View;
 
-class TextSelection extends Layer implements GeckoEventListener {
+class TextSelection extends Layer implements GeckoEventListener,
+                                             LayerView.DynamicToolbarListener {
     private static final String LOGTAG = "GeckoTextSelection";
     private static final int SHUTDOWN_DELAY_MS = 250;
 
@@ -50,6 +52,7 @@ class TextSelection extends Layer implements GeckoEventListener {
     private float mViewLeft;
     private float mViewTop;
     private float mViewZoom;
+    private boolean mForceReposition;
 
     private String mCurrentItems;
 
@@ -157,6 +160,7 @@ class TextSelection extends Layer implements GeckoEventListener {
                         if (layerView != null) {
                             layerView.addDrawListener(mDrawListener);
                             layerView.addLayer(TextSelection.this);
+                            layerView.getDynamicToolbarAnimator().addTranslationListener(TextSelection.this);
                         }
 
                         if (handles.length() > 1)
@@ -171,6 +175,7 @@ class TextSelection extends Layer implements GeckoEventListener {
                         if (layerView != null) {
                             layerView.removeDrawListener(mDrawListener);
                             layerView.removeLayer(TextSelection.this);
+                            layerView.getDynamicToolbarAnimator().removeTranslationListener(TextSelection.this);
                         }
 
                         mActionModeTimerTask = new ActionModeTimerTask();
@@ -255,15 +260,17 @@ class TextSelection extends Layer implements GeckoEventListener {
         // cache the relevant values from the context and bail out if they are the same. we do this
         // because this draw function gets called a lot (once per compositor frame) and we want to
         // avoid doing a lot of extra work in cases where it's not needed.
-        final float viewLeft = context.viewport.left - context.offset.x;
-        final float viewTop = context.viewport.top - context.offset.y;
+        final float viewLeft = context.viewport.left;
+        final float viewTop = context.viewport.top;
         final float viewZoom = context.zoomFactor;
 
-        if (FloatUtils.fuzzyEquals(mViewLeft, viewLeft)
-                && FloatUtils.fuzzyEquals(mViewTop, viewTop)
-                && FloatUtils.fuzzyEquals(mViewZoom, viewZoom)) {
+        if (!mForceReposition
+            && FloatUtils.fuzzyEquals(mViewLeft, viewLeft)
+            && FloatUtils.fuzzyEquals(mViewTop, viewTop)
+            && FloatUtils.fuzzyEquals(mViewZoom, viewZoom)) {
             return;
         }
+        mForceReposition = false;
         mViewLeft = viewLeft;
         mViewTop = viewTop;
         mViewZoom = viewZoom;
@@ -276,6 +283,21 @@ class TextSelection extends Layer implements GeckoEventListener {
                 focusHandle.repositionWithViewport(viewLeft, viewTop, viewZoom);
             }
         });
+    }
+
+    @Override
+    public void onTranslationChanged(float aToolbarTranslation, float aLayerViewTranslation) {
+        mForceReposition = true;
+    }
+
+    @Override
+    public void onPanZoomStopped() {
+        // no-op
+    }
+
+    @Override
+    public void onMetricsChanged(ImmutableViewportMetrics viewport) {
+        mForceReposition = true;
     }
 
     private class TextSelectionActionModeCallback implements Callback {
