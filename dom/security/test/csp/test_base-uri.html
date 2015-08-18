@@ -23,45 +23,47 @@
 
 SimpleTest.waitForExplicitFinish();
 
-var testPolicies = [
- "base-uri http://example.com",
- "base-uri https:",
- "base-uri 'none'",
+var tests = [
+  {
+    policy: "base-uri http://mochi.test;",
+    result: "http://mochi.test"
+  },
+  {
+    policy: "base-uri http://example.com;",
+    result: "http://example.com"
+  },
+  {
+    policy: "base-uri https:",
+    result: "http://example.com"
+  },
+  {
+    policy: "base-uri 'none'",
+    result: "http://example.com"
+  }
 ];
 
 // initializing to -1 so we start at index 0 when we start the test
 var counter = -1;
 
-function examiner() {
-  SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
-}
-examiner.prototype  = {
-  observe: function(subject, topic, data) {
-    if (topic === "csp-on-violate-policy") {
-      var spec = SpecialPowers.getPrivilegedProps(
-                   SpecialPowers.do_QueryInterface(subject, "nsIURI"), "asciiSpec");
-
-      if (spec === "http://mochi.test/") {
-        // 'data' holds the violated directive
-        is(data, testPolicies[counter], "Disallowed setting the base-uri in test " + counter + "!");
-        loadNextTest();
-      }
-    }
-  },
-  remove: function() {
-    SpecialPowers.removeObserver(this, "csp-on-violate-policy");
-  }
-}
-window.BaseURIExaminer = new examiner();
-
 function finishTest() {
-  window.BaseURIExaminer.remove();
+  window.removeEventListener("message", receiveMessage, false);
   SimpleTest.finish();
+}
+
+// a postMessage handler that is used by sandboxed iframes without
+// 'allow-same-origin' to bubble up results back to this main page.
+window.addEventListener("message", receiveMessage, false);
+function receiveMessage(event) {
+  var result = event.data.result;
+  // we only care about the base uri, so instead of comparing the complete uri
+  // we just make sure that the base is correct which is sufficient here.
+  ok(result.startsWith(tests[counter].result), "Restricting base-uri in test " + counter + "!");
+  loadNextTest();
 }
 
 function loadNextTest() {
   counter++;
-  if (counter == testPolicies.length) {
+  if (counter == tests.length) {
     finishTest();
     return;
   }
@@ -69,7 +71,8 @@ function loadNextTest() {
   // append the file that should be served
   src += "?file=" + escape("tests/dom/security/test/csp/file_base-uri.html");
   // append the CSP that should be used to serve the file
-  src += "&csp=" + escape(testPolicies[counter]);
+  // please note that we have to include 'unsafe-inline' to permit sending the postMessage
+  src += "&csp=" + escape("script-src 'unsafe-inline'; " + tests[counter].policy);
   document.getElementById("testframe").src = src;
 }
 
