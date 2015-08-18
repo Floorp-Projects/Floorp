@@ -32,7 +32,6 @@ public class testSettingsMenuItems extends PixelTest {
 
     // Privacy menu items.
     String[] PATH_PRIVACY;
-    String[] MANAGE_LOGINS_ARR;
     String[][] OPTIONS_PRIVACY;
 
     // Mozilla/vendor menu items.
@@ -95,13 +94,12 @@ public class testSettingsMenuItems extends PixelTest {
         };
 
         PATH_PRIVACY = new String[] { mStringHelper.PRIVACY_SECTION_LABEL };
-        MANAGE_LOGINS_ARR = new String[] { mStringHelper.MANAGE_LOGINS_LABEL };
         OPTIONS_PRIVACY = new String[][] {
                 { mStringHelper.TRACKING_PROTECTION_LABEL },
                 { mStringHelper.DNT_LABEL },
                 { mStringHelper.COOKIES_LABEL, "Enabled", "Enabled, excluding 3rd party", "Disabled" },
                 { mStringHelper.REMEMBER_LOGINS_LABEL },
-                MANAGE_LOGINS_ARR,
+                { mStringHelper.MANAGE_LOGINS_LABEL },
                 { mStringHelper.MASTER_PASSWORD_LABEL },
                 { mStringHelper.CLEAR_PRIVATE_DATA_LABEL, "", "Browsing history", "Search history", "Downloads", "Form history", "Cookies & active logins", mStringHelper.CLEAR_PRIVATE_DATA_LABEL, "Cache", "Offline website data", "Site settings", "Clear data" },
         };
@@ -192,11 +190,6 @@ public class testSettingsMenuItems extends PixelTest {
                 String[] learnMoreUi = { "Learn more" };
                 settingsMap.get(PATH_MOZILLA).add(learnMoreUi);
             }
-        }
-
-        if (!AppConstants.NIGHTLY_BUILD) {
-            final List<String[]> privacy = settingsMap.get(PATH_PRIVACY);
-            privacy.remove(MANAGE_LOGINS_ARR);
         }
 
         // Automatic updates

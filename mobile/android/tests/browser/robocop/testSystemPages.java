@@ -49,9 +49,6 @@ public class testSystemPages extends PixelTest {
     // Load from Url the about: pages,verify the Url and the tabs number
     public void checkUrl(String urls []) {
         for (String url:urls) {
-            if (skipItemURL(url)) {
-                continue;
-            }
             loadAndPaint(url);
             verifyTabCount(mExpectedTabCount);
             verifyUrl(url);
@@ -67,10 +64,6 @@ public class testSystemPages extends PixelTest {
         for (String[][] item : menuItems) {
             String [] pathToItem = item[0];
             String expectedUrl = item[1][0];
-
-            if (skipItemURL(expectedUrl)) {
-                continue;
-            }
 
             expectedTabCount++;
 
@@ -97,12 +90,5 @@ public class testSystemPages extends PixelTest {
             }
             verifyTabCount(expectedTabCount);
         }
-    }
-
-    private boolean skipItemURL(String item) {
-        if (StringHelper.ABOUT_LOGINS_URL.equals(item) && !AppConstants.NIGHTLY_BUILD) {
-            return true;
-        }
-        return false;
     }
 }
