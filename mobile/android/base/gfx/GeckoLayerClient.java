@@ -235,10 +235,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         return mPanZoomController;
     }
 
-    LayerMarginsAnimator getLayerMarginsAnimator() {
-        return mMarginsAnimator;
-    }
-
     DynamicToolbarAnimator getDynamicToolbarAnimator() {
         return mToolbarAnimator;
     }
