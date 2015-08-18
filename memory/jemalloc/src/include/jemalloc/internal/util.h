@@ -1,6 +1,36 @@
 /******************************************************************************/
 #ifdef JEMALLOC_H_TYPES
 
+#ifdef _WIN32
+#  ifdef _WIN64
+#    define FMT64_PREFIX "ll"
+#    define FMTPTR_PREFIX "ll"
+#  else
+#    define FMT64_PREFIX "ll"
+#    define FMTPTR_PREFIX ""
+#  endif
+#  define FMTd32 "d"
+#  define FMTu32 "u"
+#  define FMTx32 "x"
+#  define FMTd64 FMT64_PREFIX "d"
+#  define FMTu64 FMT64_PREFIX "u"
+#  define FMTx64 FMT64_PREFIX "x"
+#  define FMTdPTR FMTPTR_PREFIX "d"
+#  define FMTuPTR FMTPTR_PREFIX "u"
+#  define FMTxPTR FMTPTR_PREFIX "x"
+#else
+#  include <inttypes.h>
+#  define FMTd32 PRId32
+#  define FMTu32 PRIu32
+#  define FMTx32 PRIx32
+#  define FMTd64 PRId64
+#  define FMTu64 PRIu64
+#  define FMTx64 PRIx64
+#  define FMTdPTR PRIdPTR
+#  define FMTuPTR PRIuPTR
+#  define FMTxPTR PRIxPTR
+#endif
+
 /* Size of stack-allocated buffer passed to buferror(). */
 #define	BUFERROR_BUF		64
 
@@ -22,17 +52,33 @@
  * uninitialized.
  */
 #ifdef JEMALLOC_CC_SILENCE
-#  define JEMALLOC_CC_SILENCE_INIT(v) = v
+#	define JEMALLOC_CC_SILENCE_INIT(v) = v
 #else
-#  define JEMALLOC_CC_SILENCE_INIT(v)
+#	define JEMALLOC_CC_SILENCE_INIT(v)
 #endif
 
+#define	JEMALLOC_GNUC_PREREQ(major, minor)				\
+    (!defined(__clang__) &&						\
+    (__GNUC__ > (major) || (__GNUC__ == (major) && __GNUC_MINOR__ >= (minor))))
+#ifndef __has_builtin
+#  define __has_builtin(builtin) (0)
+#endif
+#define	JEMALLOC_CLANG_HAS_BUILTIN(builtin)				\
+    (defined(__clang__) && __has_builtin(builtin))
+
 #ifdef __GNUC__
-#define likely(x) __builtin_expect(!!(x), 1)
-#define unlikely(x) __builtin_expect(!!(x), 0)
+#	define likely(x)   __builtin_expect(!!(x), 1)
+#	define unlikely(x) __builtin_expect(!!(x), 0)
+#  if JEMALLOC_GNUC_PREREQ(4, 6) ||					\
+      JEMALLOC_CLANG_HAS_BUILTIN(__builtin_unreachable)
+#	define unreachable() __builtin_unreachable()
+#  else
+#	define unreachable()
+#  endif
 #else
-#define likely(x) !!(x)
-#define unlikely(x) !!(x)
+#	define likely(x)   !!(x)
+#	define unlikely(x) !!(x)
+#	define unreachable()
 #endif
 
 /*
@@ -58,6 +104,7 @@
 		    __FILE__, __LINE__);				\
 		abort();						\
 	}								\
+	unreachable();							\
 } while (0)
 #endif
 
@@ -104,13 +151,12 @@ void	malloc_write(const char *s);
 int	malloc_vsnprintf(char *str, size_t size, const char *format,
     va_list ap);
 int	malloc_snprintf(char *str, size_t size, const char *format, ...)
-    JEMALLOC_ATTR(format(printf, 3, 4));
+    JEMALLOC_FORMAT_PRINTF(3, 4);
 void	malloc_vcprintf(void (*write_cb)(void *, const char *), void *cbopaque,
     const char *format, va_list ap);
 void malloc_cprintf(void (*write)(void *, const char *), void *cbopaque,
-    const char *format, ...) JEMALLOC_ATTR(format(printf, 3, 4));
-void	malloc_printf(const char *format, ...)
-    JEMALLOC_ATTR(format(printf, 1, 2));
+    const char *format, ...) JEMALLOC_FORMAT_PRINTF(3, 4);
+void	malloc_printf(const char *format, ...) JEMALLOC_FORMAT_PRINTF(1, 2);
 
 #endif /* JEMALLOC_H_EXTERNS */
 /******************************************************************************/
@@ -136,14 +182,14 @@ JEMALLOC_ALWAYS_INLINE int
 jemalloc_ffsl(long bitmap)
 {
 
-        return (JEMALLOC_INTERNAL_FFSL(bitmap));
+	return (JEMALLOC_INTERNAL_FFSL(bitmap));
 }
 
 JEMALLOC_ALWAYS_INLINE int
 jemalloc_ffs(int bitmap)
 {
 
-        return (JEMALLOC_INTERNAL_FFS(bitmap));
+	return (JEMALLOC_INTERNAL_FFS(bitmap));
 }
 
 /* Compute the smallest power of 2 that is >= x. */
@@ -170,6 +216,8 @@ lg_floor(size_t x)
 {
 	size_t ret;
 
+	assert(x != 0);
+
 	asm ("bsr %1, %0"
 	    : "=r"(ret) // Outputs.
 	    : "r"(x)    // Inputs.
@@ -180,21 +228,25 @@ lg_floor(size_t x)
 JEMALLOC_INLINE size_t
 lg_floor(size_t x)
 {
-    unsigned long ret;
+	unsigned long ret;
+
+	assert(x != 0);
 
 #if (LG_SIZEOF_PTR == 3)
-    _BitScanReverse64(&ret, x);
+	_BitScanReverse64(&ret, x);
 #elif (LG_SIZEOF_PTR == 2)
-    _BitScanReverse(&ret, x);
+	_BitScanReverse(&ret, x);
 #else
 #  error "Unsupported type sizes for lg_floor()"
 #endif
-    return (ret);
+	return (ret);
 }
 #elif (defined(JEMALLOC_HAVE_BUILTIN_CLZ))
 JEMALLOC_INLINE size_t
 lg_floor(size_t x)
 {
+
+	assert(x != 0);
 
 #if (LG_SIZEOF_PTR == LG_SIZEOF_INT)
 	return (((8 << LG_SIZEOF_PTR) - 1) - __builtin_clz(x));
@@ -208,6 +260,8 @@ lg_floor(size_t x)
 JEMALLOC_INLINE size_t
 lg_floor(size_t x)
 {
+
+	assert(x != 0);
 
 	x |= (x >> 1);
 	x |= (x >> 2);

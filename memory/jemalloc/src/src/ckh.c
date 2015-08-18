@@ -270,7 +270,8 @@ ckh_grow(tsd_t *tsd, ckh_t *ckh)
 			ret = true;
 			goto label_return;
 		}
-		tab = (ckhc_t *)ipalloc(tsd, usize, CACHELINE, true);
+		tab = (ckhc_t *)ipallocztm(tsd, usize, CACHELINE, true, NULL,
+		    true, NULL);
 		if (tab == NULL) {
 			ret = true;
 			goto label_return;
@@ -282,12 +283,12 @@ ckh_grow(tsd_t *tsd, ckh_t *ckh)
 		ckh->lg_curbuckets = lg_curcells - LG_CKH_BUCKET_CELLS;
 
 		if (!ckh_rebuild(ckh, tab)) {
-			idalloc(tsd, tab);
+			idalloctm(tsd, tab, tcache_get(tsd, false), true);
 			break;
 		}
 
 		/* Rebuilding failed, so back out partially rebuilt table. */
-		idalloc(tsd, ckh->tab);
+		idalloctm(tsd, ckh->tab, tcache_get(tsd, false), true);
 		ckh->tab = tab;
 		ckh->lg_curbuckets = lg_prevbuckets;
 	}
@@ -313,7 +314,8 @@ ckh_shrink(tsd_t *tsd, ckh_t *ckh)
 	usize = sa2u(sizeof(ckhc_t) << lg_curcells, CACHELINE);
 	if (usize == 0)
 		return;
-	tab = (ckhc_t *)ipalloc(tsd, usize, CACHELINE, true);
+	tab = (ckhc_t *)ipallocztm(tsd, usize, CACHELINE, true, NULL, true,
+	    NULL);
 	if (tab == NULL) {
 		/*
 		 * An OOM error isn't worth propagating, since it doesn't
@@ -328,7 +330,7 @@ ckh_shrink(tsd_t *tsd, ckh_t *ckh)
 	ckh->lg_curbuckets = lg_curcells - LG_CKH_BUCKET_CELLS;
 
 	if (!ckh_rebuild(ckh, tab)) {
-		idalloc(tsd, tab);
+		idalloctm(tsd, tab, tcache_get(tsd, false), true);
 #ifdef CKH_COUNT
 		ckh->nshrinks++;
 #endif
@@ -336,7 +338,7 @@ ckh_shrink(tsd_t *tsd, ckh_t *ckh)
 	}
 
 	/* Rebuilding failed, so back out partially rebuilt table. */
-	idalloc(tsd, ckh->tab);
+	idalloctm(tsd, ckh->tab, tcache_get(tsd, false), true);
 	ckh->tab = tab;
 	ckh->lg_curbuckets = lg_prevbuckets;
 #ifdef CKH_COUNT
@@ -389,7 +391,8 @@ ckh_new(tsd_t *tsd, ckh_t *ckh, size_t minitems, ckh_hash_t *hash,
 		ret = true;
 		goto label_return;
 	}
-	ckh->tab = (ckhc_t *)ipalloc(tsd, usize, CACHELINE, true);
+	ckh->tab = (ckhc_t *)ipallocztm(tsd, usize, CACHELINE, true, NULL, true,
+	    NULL);
 	if (ckh->tab == NULL) {
 		ret = true;
 		goto label_return;
@@ -408,9 +411,9 @@ ckh_delete(tsd_t *tsd, ckh_t *ckh)
 
 #ifdef CKH_VERBOSE
 	malloc_printf(
-	    "%s(%p): ngrows: %"PRIu64", nshrinks: %"PRIu64","
-	    " nshrinkfails: %"PRIu64", ninserts: %"PRIu64","
-	    " nrelocs: %"PRIu64"\n", __func__, ckh,
+	    "%s(%p): ngrows: %"FMTu64", nshrinks: %"FMTu64","
+	    " nshrinkfails: %"FMTu64", ninserts: %"FMTu64","
+	    " nrelocs: %"FMTu64"\n", __func__, ckh,
 	    (unsigned long long)ckh->ngrows,
 	    (unsigned long long)ckh->nshrinks,
 	    (unsigned long long)ckh->nshrinkfails,
@@ -418,7 +421,7 @@ ckh_delete(tsd_t *tsd, ckh_t *ckh)
 	    (unsigned long long)ckh->nrelocs);
 #endif
 
-	idalloc(tsd, ckh->tab);
+	idalloctm(tsd, ckh->tab, tcache_get(tsd, false), true);
 	if (config_debug)
 		memset(ckh, 0x5a, sizeof(ckh_t));
 }

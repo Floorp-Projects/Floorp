@@ -111,6 +111,13 @@ struct arena_stats_s {
 	uint64_t	nmadvise;
 	uint64_t	purged;
 
+	/*
+	 * Number of bytes currently mapped purely for metadata purposes, and
+	 * number of bytes currently allocated for internal metadata.
+	 */
+	size_t		metadata_mapped;
+	size_t		metadata_allocated; /* Protected via atomic_*_z(). */
+
 	/* Per-size-category statistics. */
 	size_t		allocated_large;
 	uint64_t	nmalloc_large;
@@ -126,21 +133,6 @@ struct arena_stats_s {
 
 	/* One element for each huge size class. */
 	malloc_huge_stats_t	*hstats;
-};
-
-struct chunk_stats_s {
-	/* Number of chunks that were allocated. */
-	uint64_t	nchunks;
-
-	/* High-water mark for number of chunks allocated. */
-	size_t		highchunks;
-
-	/*
-	 * Current number of chunks allocated.  This value isn't maintained for
-	 * any other purpose, so keep track of it in order to be able to set
-	 * highchunks.
-	 */
-	size_t		curchunks;
 };
 
 #endif /* JEMALLOC_H_STRUCTS */

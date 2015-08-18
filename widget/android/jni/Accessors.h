@@ -63,7 +63,7 @@ protected:
         JNIEnv* const env = Traits::isMultithreaded
                 ? GetEnvForThread() : GetGeckoThreadEnv();
 
-        EnsureClassRef<class Traits::Owner>(env);
+        EnsureClassRef<typename Traits::Owner>(env);
         return env;
     }
 
@@ -86,7 +86,7 @@ template<class Traits, typename ReturnType = typename Traits::ReturnType>
 class Method : public Accessor
 {
     typedef Accessor Base;
-    typedef class Traits::Owner Owner;
+    typedef typename Traits::Owner Owner;
 
 protected:
     static jmethodID sID;
@@ -173,7 +173,7 @@ public:
 // Constructor<> is used to construct a JNI instance given a traits class.
 template<class Traits>
 class Constructor : protected Method<Traits, typename Traits::ReturnType> {
-    typedef class Traits::Owner Owner;
+    typedef typename Traits::Owner Owner;
     typedef typename Traits::ReturnType ReturnType;
     typedef Method<Traits, ReturnType> Base;
 
@@ -202,7 +202,7 @@ template<class Traits>
 class Field : public Accessor
 {
     typedef Accessor Base;
-    typedef class Traits::Owner Owner;
+    typedef typename Traits::Owner Owner;
     typedef typename Traits::ReturnType GetterType;
     typedef typename Traits::SetterType SetterType;
 

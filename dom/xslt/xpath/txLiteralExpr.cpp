@@ -79,7 +79,7 @@ txLiteralExpr::toString(nsAString& aStr)
                 static_cast<StringResult*>(static_cast<txAExprResult*>
                                        (mValue));
             char16_t ch = '\'';
-            if (strRes->mValue.FindChar(ch) != kNotFound) {
+            if (strRes->mValue.Contains(ch)) {
                 ch = '\"';
             }
             aStr.Append(ch);

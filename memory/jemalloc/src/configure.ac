@@ -43,6 +43,9 @@ AC_CACHE_CHECK([whether $1 is compilable],
 
 dnl ============================================================================
 
+CONFIG=`echo ${ac_configure_args} | sed -e 's#'"'"'\([^ ]*\)'"'"'#\1#g'`
+AC_SUBST([CONFIG])
+
 dnl Library revision.
 rev=2
 AC_SUBST([rev])
@@ -134,6 +137,7 @@ if test "x$CFLAGS" = "x" ; then
       AC_DEFINE_UNQUOTED([JEMALLOC_HAS_RESTRICT])
     fi
     JE_CFLAGS_APPEND([-Wall])
+    JE_CFLAGS_APPEND([-Werror=declaration-after-statement])
     JE_CFLAGS_APPEND([-pipe])
     JE_CFLAGS_APPEND([-g3])
   elif test "x$je_cv_msvc" = "xyes" ; then
@@ -254,6 +258,7 @@ dnl Define cpp macros in CPPFLAGS, rather than doing AC_DEFINE(macro), since the
 dnl definitions need to be seen before any headers are included, which is a pain
 dnl to make happen otherwise.
 default_munmap="1"
+maps_coalesce="1"
 case "${host}" in
   *-*-darwin* | *-*-ios*)
 	CFLAGS="$CFLAGS"
@@ -264,7 +269,7 @@ case "${host}" in
 	so="dylib"
 	importlib="${so}"
 	force_tls="0"
-	DSO_LDFLAGS='-shared -Wl,-dylib_install_name,$(@F)'
+	DSO_LDFLAGS='-shared -Wl,-install_name,$(LIBDIR)/$(@F)'
 	SOREV="${rev}.${so}"
 	sbrk_deprecated="1"
 	;;
@@ -279,6 +284,17 @@ case "${host}" in
 	abi="elf"
 	AC_DEFINE([JEMALLOC_PURGE_MADVISE_FREE], [ ])
 	;;
+  *-*-openbsd*)
+	CFLAGS="$CFLAGS"
+	abi="elf"
+	AC_DEFINE([JEMALLOC_PURGE_MADVISE_FREE], [ ])
+	force_tls="0"
+	;;
+  *-*-bitrig*)
+	CFLAGS="$CFLAGS"
+	abi="elf"
+	AC_DEFINE([JEMALLOC_PURGE_MADVISE_FREE], [ ])
+	;;
   *-*-linux*)
 	CFLAGS="$CFLAGS"
 	CPPFLAGS="$CPPFLAGS -D_GNU_SOURCE"
@@ -286,6 +302,7 @@ case "${host}" in
 	AC_DEFINE([JEMALLOC_HAS_ALLOCA_H])
 	AC_DEFINE([JEMALLOC_PURGE_MADVISE_DONTNEED], [ ])
 	AC_DEFINE([JEMALLOC_THREADED_INIT], [ ])
+	AC_DEFINE([JEMALLOC_USE_CXX_THROW], [ ])
 	default_munmap="0"
 	;;
   *-*-netbsd*)
@@ -324,6 +341,8 @@ case "${host}" in
   *-*-mingw* | *-*-cygwin*)
 	abi="pecoff"
 	force_tls="0"
+	force_lazy_lock="1"
+	maps_coalesce="0"
 	RPATH=""
 	so="dll"
 	if test "x$je_cv_msvc" = "xyes" ; then
@@ -412,6 +431,36 @@ if test "x${je_cv_tls_model}" = "xyes" ; then
 else
   AC_DEFINE([JEMALLOC_TLS_MODEL], [ ])
 fi
+dnl Check for alloc_size attribute support.
+SAVED_CFLAGS="${CFLAGS}"
+JE_CFLAGS_APPEND([-Werror])
+JE_COMPILABLE([alloc_size attribute], [#include <stdlib.h>],
+              [void *foo(size_t size) __attribute__((alloc_size(1)));],
+              [je_cv_alloc_size])
+CFLAGS="${SAVED_CFLAGS}"
+if test "x${je_cv_alloc_size}" = "xyes" ; then
+  AC_DEFINE([JEMALLOC_HAVE_ATTR_ALLOC_SIZE], [ ])
+fi
+dnl Check for format(gnu_printf, ...) attribute support.
+SAVED_CFLAGS="${CFLAGS}"
+JE_CFLAGS_APPEND([-Werror])
+JE_COMPILABLE([format(gnu_printf, ...) attribute], [#include <stdlib.h>],
+              [void *foo(const char *format, ...) __attribute__((format(gnu_printf, 1, 2)));],
+              [je_cv_format_gnu_printf])
+CFLAGS="${SAVED_CFLAGS}"
+if test "x${je_cv_format_gnu_printf}" = "xyes" ; then
+  AC_DEFINE([JEMALLOC_HAVE_ATTR_FORMAT_GNU_PRINTF], [ ])
+fi
+dnl Check for format(printf, ...) attribute support.
+SAVED_CFLAGS="${CFLAGS}"
+JE_CFLAGS_APPEND([-Werror])
+JE_COMPILABLE([format(printf, ...) attribute], [#include <stdlib.h>],
+              [void *foo(const char *format, ...) __attribute__((format(printf, 1, 2)));],
+              [je_cv_format_printf])
+CFLAGS="${SAVED_CFLAGS}"
+if test "x${je_cv_format_printf}" = "xyes" ; then
+  AC_DEFINE([JEMALLOC_HAVE_ATTR_FORMAT_PRINTF], [ ])
+fi
 
 dnl Support optional additions to rpath.
 AC_ARG_WITH([rpath],
@@ -498,6 +547,7 @@ if test "x$JEMALLOC_PREFIX" != "x" ; then
   AC_DEFINE_UNQUOTED([JEMALLOC_PREFIX], ["$JEMALLOC_PREFIX"])
   AC_DEFINE_UNQUOTED([JEMALLOC_CPREFIX], ["$JEMALLOC_CPREFIX"])
 fi
+AC_SUBST([JEMALLOC_CPREFIX])
 
 AC_ARG_WITH([export],
   [AS_HELP_STRING([--without-export], [disable exporting jemalloc public APIs])],
@@ -616,7 +666,8 @@ fi
 
 dnl Do not compile with debugging by default.
 AC_ARG_ENABLE([debug],
-  [AS_HELP_STRING([--enable-debug], [Build debugging code (implies --enable-ivsalloc)])],
+  [AS_HELP_STRING([--enable-debug],
+                  [Build debugging code (implies --enable-ivsalloc)])],
 [if test "x$enable_debug" = "xno" ; then
   enable_debug="0"
 else
@@ -627,13 +678,17 @@ fi
 )
 if test "x$enable_debug" = "x1" ; then
   AC_DEFINE([JEMALLOC_DEBUG], [ ])
+fi
+if test "x$enable_debug" = "x1" ; then
+  AC_DEFINE([JEMALLOC_DEBUG], [ ])
   enable_ivsalloc="1"
 fi
 AC_SUBST([enable_debug])
 
 dnl Do not validate pointers by default.
 AC_ARG_ENABLE([ivsalloc],
-  [AS_HELP_STRING([--enable-ivsalloc], [Validate pointers passed through the public API])],
+  [AS_HELP_STRING([--enable-ivsalloc],
+                  [Validate pointers passed through the public API])],
 [if test "x$enable_ivsalloc" = "xno" ; then
   enable_ivsalloc="0"
 else
@@ -809,6 +864,12 @@ if test "x$enable_tcache" = "x1" ; then
 fi
 AC_SUBST([enable_tcache])
 
+dnl Indicate whether adjacent virtual memory mappings automatically coalesce
+dnl (and fragment on demand).
+if test "x${maps_coalesce}" = "x1" ; then
+  AC_DEFINE([JEMALLOC_MAPS_COALESCE], [ ])
+fi
+
 dnl Enable VM deallocation via munmap() by default.
 AC_ARG_ENABLE([munmap],
   [AS_HELP_STRING([--disable-munmap], [Disable VM deallocation via munmap(2)])],
@@ -932,6 +993,23 @@ if test "x$enable_xmalloc" = "x1" ; then
 fi
 AC_SUBST([enable_xmalloc])
 
+dnl Support cache-oblivious allocation alignment by default.
+AC_ARG_ENABLE([cache-oblivious],
+  [AS_HELP_STRING([--disable-cache-oblivious],
+                  [Disable support for cache-oblivious allocation alignment])],
+[if test "x$enable_cache_oblivious" = "xno" ; then
+  enable_cache_oblivious="0"
+else
+  enable_cache_oblivious="1"
+fi
+],
+[enable_cache_oblivious="1"]
+)
+if test "x$enable_cache_oblivious" = "x1" ; then
+  AC_DEFINE([JEMALLOC_CACHE_OBLIVIOUS], [ ])
+fi
+AC_SUBST([enable_cache_oblivious])
+
 dnl ============================================================================
 dnl Check for  __builtin_ffsl(), then ffsl(3), and fail if neither are found.
 dnl One of those two functions should (theoretically) exist on all platforms
@@ -989,7 +1067,7 @@ fi
 AC_ARG_WITH([lg_page],
   [AS_HELP_STRING([--with-lg-page=<lg-page>], [Base 2 log of system page size])],
   [LG_PAGE="$with_lg_page"], [LG_PAGE="detect"])
-if test "x$LG_PAGE" == "xdetect"; then
+if test "x$LG_PAGE" = "xdetect"; then
   AC_CACHE_CHECK([LG_PAGE],
                [je_cv_lg_page],
                AC_RUN_IFELSE([AC_LANG_PROGRAM(
@@ -1055,7 +1133,37 @@ dnl ============================================================================
 dnl jemalloc configuration.
 dnl 
 
-jemalloc_version=`cat "${srcroot}VERSION"`
+dnl Set VERSION if source directory is inside a git repository.
+if test "x`test ! \"${srcroot}\" && cd \"${srcroot}\"; git rev-parse --is-inside-work-tree 2>/dev/null`" = "xtrue" ; then
+  dnl Pattern globs aren't powerful enough to match both single- and
+  dnl double-digit version numbers, so iterate over patterns to support up to
+  dnl version 99.99.99 without any accidental matches.
+  rm -f "${objroot}VERSION"
+  for pattern in ['[0-9].[0-9].[0-9]' '[0-9].[0-9].[0-9][0-9]' \
+                 '[0-9].[0-9][0-9].[0-9]' '[0-9].[0-9][0-9].[0-9][0-9]' \
+                 '[0-9][0-9].[0-9].[0-9]' '[0-9][0-9].[0-9].[0-9][0-9]' \
+                 '[0-9][0-9].[0-9][0-9].[0-9]' \
+                 '[0-9][0-9].[0-9][0-9].[0-9][0-9]']; do
+    if test ! -e "${objroot}VERSION" ; then
+      (test ! "${srcroot}" && cd "${srcroot}"; git describe --long --abbrev=40 --match="${pattern}") > "${objroot}VERSION.tmp" 2>/dev/null
+      if test $? -eq 0 ; then
+        mv "${objroot}VERSION.tmp" "${objroot}VERSION"
+        break
+      fi
+    fi
+  done
+fi
+rm -f "${objroot}VERSION.tmp"
+if test ! -e "${objroot}VERSION" ; then
+  if test ! -e "${srcroot}VERSION" ; then
+    AC_MSG_RESULT(
+      [Missing VERSION file, and unable to generate it; creating bogus VERSION])
+    echo "0.0.0-0-g0000000000000000000000000000000000000000" > "${objroot}VERSION"
+  else
+    cp ${srcroot}VERSION ${objroot}VERSION
+  fi
+fi
+jemalloc_version=`cat "${objroot}VERSION"`
 jemalloc_version_major=`echo ${jemalloc_version} | tr ".g-" " " | awk '{print [$]1}'`
 jemalloc_version_minor=`echo ${jemalloc_version} | tr ".g-" " " | awk '{print [$]2}'`
 jemalloc_version_bugfix=`echo ${jemalloc_version} | tr ".g-" " " | awk '{print [$]3}'`
@@ -1134,9 +1242,9 @@ else
   enable_lazy_lock="1"
 fi
 ],
-[enable_lazy_lock="0"]
+[enable_lazy_lock=""]
 )
-if test "x$enable_lazy_lock" = "x0" -a "x${force_lazy_lock}" = "x1" ; then
+if test "x$enable_lazy_lock" = "x" -a "x${force_lazy_lock}" = "x1" ; then
   AC_MSG_RESULT([Forcing lazy-lock to avoid allocator/threading bootstrap issues])
   enable_lazy_lock="1"
 fi
@@ -1149,6 +1257,8 @@ if test "x$enable_lazy_lock" = "x1" ; then
       ])
   fi
   AC_DEFINE([JEMALLOC_LAZY_LOCK], [ ])
+else
+  enable_lazy_lock="0"
 fi
 AC_SUBST([enable_lazy_lock])
 
@@ -1160,13 +1270,13 @@ else
   enable_tls="1"
 fi
 ,
-enable_tls="1"
+enable_tls=""
 )
-if test "x${enable_tls}" = "x0" -a "x${force_tls}" = "x1" ; then
+if test "x${enable_tls}" = "x" -a "x${force_tls}" = "x1" ; then
   AC_MSG_RESULT([Forcing TLS to avoid allocator/threading bootstrap issues])
   enable_tls="1"
 fi
-if test "x${enable_tls}" = "x1" -a "x${force_tls}" = "x0" ; then
+if test "x${enable_tls}" = "x" -a "x${force_tls}" = "x0" ; then
   AC_MSG_RESULT([Forcing no TLS to avoid allocator/threading bootstrap issues])
   enable_tls="0"
 fi
@@ -1183,6 +1293,8 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
               AC_MSG_RESULT([yes]),
               AC_MSG_RESULT([no])
               enable_tls="0")
+else
+  enable_tls="0"
 fi
 AC_SUBST([enable_tls])
 if test "x${enable_tls}" = "x1" ; then
@@ -1366,7 +1478,6 @@ if test "x${enable_zone_allocator}" = "x1" ; then
   if test "x${abi}" != "xmacho"; then
     AC_MSG_ERROR([--enable-zone-allocator is only supported on Darwin])
   fi
-  AC_DEFINE([JEMALLOC_IVSALLOC], [ ])
   AC_DEFINE([JEMALLOC_ZONE], [ ])
 
   dnl The szone version jumped from 3 to 6 between the OS X 10.5.x and 10.6
@@ -1558,7 +1669,7 @@ AC_CONFIG_HEADERS([$cfghdrs_tup])
 dnl ============================================================================
 dnl Generate outputs.
 
-AC_CONFIG_FILES([$cfgoutputs_tup config.stamp bin/jemalloc.sh])
+AC_CONFIG_FILES([$cfgoutputs_tup config.stamp bin/jemalloc-config bin/jemalloc.sh bin/jeprof])
 AC_SUBST([cfgoutputs_in])
 AC_SUBST([cfgoutputs_out])
 AC_OUTPUT
@@ -1569,9 +1680,10 @@ AC_MSG_RESULT([=================================================================
 AC_MSG_RESULT([jemalloc version   : ${jemalloc_version}])
 AC_MSG_RESULT([library revision   : ${rev}])
 AC_MSG_RESULT([])
+AC_MSG_RESULT([CONFIG             : ${CONFIG}])
 AC_MSG_RESULT([CC                 : ${CC}])
-AC_MSG_RESULT([CPPFLAGS           : ${CPPFLAGS}])
 AC_MSG_RESULT([CFLAGS             : ${CFLAGS}])
+AC_MSG_RESULT([CPPFLAGS           : ${CPPFLAGS}])
 AC_MSG_RESULT([LDFLAGS            : ${LDFLAGS}])
 AC_MSG_RESULT([EXTRA_LDFLAGS      : ${EXTRA_LDFLAGS}])
 AC_MSG_RESULT([LIBS               : ${LIBS}])
@@ -1582,9 +1694,9 @@ AC_MSG_RESULT([XSLROOT            : ${XSLROOT}])
 AC_MSG_RESULT([])
 AC_MSG_RESULT([PREFIX             : ${PREFIX}])
 AC_MSG_RESULT([BINDIR             : ${BINDIR}])
+AC_MSG_RESULT([DATADIR            : ${DATADIR}])
 AC_MSG_RESULT([INCLUDEDIR         : ${INCLUDEDIR}])
 AC_MSG_RESULT([LIBDIR             : ${LIBDIR}])
-AC_MSG_RESULT([DATADIR            : ${DATADIR}])
 AC_MSG_RESULT([MANDIR             : ${MANDIR}])
 AC_MSG_RESULT([])
 AC_MSG_RESULT([srcroot            : ${srcroot}])
@@ -1613,4 +1725,5 @@ AC_MSG_RESULT([xmalloc            : ${enable_xmalloc}])
 AC_MSG_RESULT([munmap             : ${enable_munmap}])
 AC_MSG_RESULT([lazy_lock          : ${enable_lazy_lock}])
 AC_MSG_RESULT([tls                : ${enable_tls}])
+AC_MSG_RESULT([cache-oblivious    : ${enable_cache_oblivious}])
 AC_MSG_RESULT([===============================================================================])
