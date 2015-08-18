@@ -677,7 +677,7 @@ RasterImage::CopyFrame(uint32_t aWhichFrame, uint32_t aFlags)
   } else {
     RefPtr<SourceSurface> srcSurf = frameRef->GetSurface();
     if (!srcSurf) {
-      RecoverFromLossOfFrames(mSize, aFlags);
+      RecoverFromInvalidFrames(mSize, aFlags);
       return nullptr;
     }
 
@@ -988,7 +988,7 @@ RasterImage::SetMetadata(const ImageMetadata& aMetadata,
       // discovered that it actually was during the full decode. This is a
       // rare failure that only occurs for corrupt images. To recover, we need
       // to discard all existing surfaces and redecode.
-      RecoverFromLossOfFrames(mSize, DECODE_FLAGS_DEFAULT);
+      RecoverFromInvalidFrames(mSize, DECODE_FLAGS_DEFAULT);
     }
   }
 
@@ -1505,13 +1505,13 @@ RasterImage::DecodeMetadata(uint32_t aFlags)
 }
 
 void
-RasterImage::RecoverFromLossOfFrames(const IntSize& aSize, uint32_t aFlags)
+RasterImage::RecoverFromInvalidFrames(const IntSize& aSize, uint32_t aFlags)
 {
   if (!mHasSize) {
     return;
   }
 
-  NS_WARNING("An imgFrame became invalid. Attempting to recover...");
+  NS_WARNING("A RasterImage's frames became invalid. Attempting to recover...");
 
   // Discard all existing frames, since they're probably all now invalid.
   SurfaceCache::RemoveImage(ImageKey(this));
@@ -1721,7 +1721,7 @@ RasterImage::DrawWithPreDownscaleIfNeeded(DrawableFrameRef&& aFrameRef,
   }
 
   if (!frameRef->Draw(aContext, region, aFilter, aFlags)) {
-    RecoverFromLossOfFrames(aSize, aFlags);
+    RecoverFromInvalidFrames(aSize, aFlags);
     return DrawResult::TEMPORARY_ERROR;
   }
   if (!frameIsComplete) {
