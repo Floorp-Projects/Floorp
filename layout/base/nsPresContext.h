@@ -854,7 +854,8 @@ public:
   void UpdateIsChrome();
 
   // Public API for native theme code to get style internals.
-  virtual bool HasAuthorSpecifiedRules(nsIFrame *aFrame, uint32_t ruleTypeMask) const;
+  virtual bool HasAuthorSpecifiedRules(const nsIFrame *aFrame,
+                                       uint32_t ruleTypeMask) const;
 
   // Is it OK to let the page specify colors and backgrounds?
   bool UseDocumentColors() const {
