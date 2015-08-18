@@ -9,7 +9,6 @@
 
 #include "nsIFile.h"
 #include "nsIPrincipal.h"
-#include "nsIObserver.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
@@ -25,6 +24,9 @@
 class nsIInputStream;
 class nsIOutputStream;
 struct DeviceStorageFileDescriptor;
+#ifdef MOZ_WIDGET_GONK
+class nsIVolume;
+#endif
 
 namespace mozilla {
 class EventListenerManager;
@@ -130,36 +132,8 @@ private:
                            uint64_t* aTotalSoFar);
 };
 
-/*
-  The FileUpdateDispatcher converts file-watcher-notify
-  observer events to file-watcher-update events.  This is
-  used to be able to broadcast events from one child to
-  another child in B2G.  (f.e., if one child decides to add
-  a file, we want to be able to able to send a onchange
-  notifications to every other child watching that device
-  storage object).
-
-  We create this object (via GetSingleton) in two places:
-    * ContentParent::Init (for IPC)
-    * nsDOMDeviceStorage::Init (for non-ipc)
-*/
-class FileUpdateDispatcher final
-  : public nsIObserver
-{
-  ~FileUpdateDispatcher() {}
-
- public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-
-  static FileUpdateDispatcher* GetSingleton();
- private:
-  static mozilla::StaticRefPtr<FileUpdateDispatcher> sSingleton;
-};
-
 class nsDOMDeviceStorage final
   : public mozilla::DOMEventTargetHelper
-  , public nsIObserver
 {
   typedef mozilla::ErrorResult ErrorResult;
   typedef mozilla::dom::DeviceStorageEnumerationParameters
@@ -172,7 +146,6 @@ public:
   typedef nsTArray<nsString> VolumeNameArray;
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIOBSERVER
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(DOMEventTargetHelper)
 
   void EventListenerWasAdded(const nsAString& aType,
@@ -299,6 +272,15 @@ public:
   static bool ParseFullPath(const nsAString& aFullPath,
                             nsAString& aOutStorageName,
                             nsAString& aOutStoragePath);
+
+  // DeviceStorageStatics callbacks
+  void OnFileWatcherUpdate(const nsCString& aData, DeviceStorageFile* aFile);
+  void OnDiskSpaceWatcher(bool aLowDiskSpace);
+  void OnWritableNameChanged();
+#ifdef MOZ_WIDGET_GONK
+  void OnVolumeStateChanged(nsIVolume* aVolume);
+#endif
+
 private:
   ~nsDOMDeviceStorage();
 
@@ -341,7 +323,6 @@ private:
   bool mIsWatchingFile;
   bool mAllowedToWatchFile;
   bool mIsDefaultLocation;
-  void DispatchDefaultChangeEvent();
 
   nsresult Notify(const char* aReason, class DeviceStorageFile* aFile);
 
