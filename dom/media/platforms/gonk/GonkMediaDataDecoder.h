@@ -19,12 +19,12 @@ class MediaRawData;
 class GonkDecoderManager {
 public:
   typedef TrackInfo::TrackType TrackType;
+  typedef MediaDataDecoder::InitPromise InitPromise;
+  typedef MediaDataDecoder::DecoderFailureReason DecoderFailureReason;
 
   virtual ~GonkDecoderManager() {}
 
-  // Creates and initializs the GonkDecoder.
-  // Returns nullptr on failure.
-  virtual android::sp<android::MediaCodecProxy> Init(MediaDataDecoderCallback* aCallback) = 0;
+  virtual nsRefPtr<InitPromise> Init(MediaDataDecoderCallback* aCallback) = 0;
 
   // Add samples into OMX decoder or queue them if decoder is out of input buffer.
   virtual nsresult Input(MediaRawData* aSample) = 0;
@@ -41,15 +41,22 @@ public:
   // Flush the queued sample.
   virtual nsresult Flush() = 0;
 
+  // Shutdown decoder and rejects the init promise.
+  nsresult Shutdown();
+
   // True if sample is queued.
   virtual bool HasQueuedSample() = 0;
-
-  virtual TrackType GetTrackType() = 0;
 
 protected:
   nsRefPtr<MediaByteBuffer> mCodecSpecificData;
 
   nsAutoCString mMimeType;
+
+  // MediaCodedc's wrapper that performs the decoding.
+  android::sp<android::MediaCodecProxy> mDecoder;
+
+  MozPromiseHolder<InitPromise> mInitPromise;
+
 };
 
 // Samples are decoded using the GonkDecoder (MediaCodec)
@@ -94,7 +101,6 @@ private:
   RefPtr<FlushableTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
 
-  android::sp<android::MediaCodecProxy> mDecoder;
   nsAutoPtr<GonkDecoderManager> mManager;
 
   // The last offset into the media resource that was passed into Input().

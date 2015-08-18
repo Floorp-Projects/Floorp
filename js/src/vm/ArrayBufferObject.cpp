@@ -371,11 +371,6 @@ ArrayBufferObject::fun_transfer(JSContext* cx, unsigned argc, Value* vp)
         oldBuffer = &unwrapped->as<ArrayBufferObject>();
     }
 
-    if (oldBuffer->isNeutered()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
-        return false;
-    }
-
     size_t oldByteLength = oldBuffer->byteLength();
     size_t newByteLength;
     if (newByteLengthArg.isUndefined()) {
@@ -389,6 +384,11 @@ ArrayBufferObject::fun_transfer(JSContext* cx, unsigned argc, Value* vp)
             return false;
         }
         newByteLength = size_t(i32);
+    }
+
+    if (oldBuffer->isNeutered()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
+        return false;
     }
 
     UniquePtr<uint8_t, JS::FreePolicy> newData;
