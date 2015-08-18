@@ -327,7 +327,7 @@ private:
    * @param aFromMetadataDecode True if this metadata came from a metadata
    *                            decode; false if it came from a full decode.
    */
-  nsresult SetMetadata(const ImageMetadata& aMetadata, bool aFromMetadataDecode);
+  void SetMetadata(const ImageMetadata& aMetadata, bool aFromMetadataDecode);
 
   /**
    * In catastrophic circumstances like a GPU driver crash, the contents of our
