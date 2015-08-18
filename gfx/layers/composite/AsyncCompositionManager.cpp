@@ -238,22 +238,17 @@ GetLayerFixedMarginsOffset(Layer* aLayer,
   // layer, we can just take the difference between these values.
   LayerPoint translation;
   const LayerPoint& anchor = aLayer->GetFixedPositionAnchor();
-  const LayerMargin& fixedMargins = aLayer->GetFixedPositionMargins();
 
-  if (fixedMargins.left >= 0) {
-    if (anchor.x > 0) {
-      translation.x -= aFixedLayerMargins.right - fixedMargins.right;
-    } else {
-      translation.x += aFixedLayerMargins.left - fixedMargins.left;
-    }
+  if (anchor.x > 0) {
+    translation.x -= aFixedLayerMargins.right;
+  } else {
+    translation.x += aFixedLayerMargins.left;
   }
 
-  if (fixedMargins.top >= 0) {
-    if (anchor.y > 0) {
-      translation.y -= aFixedLayerMargins.bottom - fixedMargins.bottom;
-    } else {
-      translation.y += aFixedLayerMargins.top - fixedMargins.top;
-    }
+  if (anchor.y > 0) {
+    translation.y -= aFixedLayerMargins.bottom;
+  } else {
+    translation.y += aFixedLayerMargins.top;
   }
 
   return translation;
