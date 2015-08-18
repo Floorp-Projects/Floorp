@@ -238,11 +238,6 @@ private:
 
 typedef InfallibleTArray<nsRefPtr<dom::Animation>> AnimationPtrArray;
 
-enum EnsureStyleRuleFlags {
-  EnsureStyleRule_IsThrottled,
-  EnsureStyleRule_IsNotThrottled
-};
-
 struct AnimationCollection : public PRCList
 {
   AnimationCollection(dom::Element *aElement, nsIAtom *aElementProperty,
@@ -281,7 +276,7 @@ struct AnimationCollection : public PRCList
 
   void Tick();
 
-  void EnsureStyleRuleFor(TimeStamp aRefreshTime, EnsureStyleRuleFlags aFlags);
+  void EnsureStyleRuleFor(TimeStamp aRefreshTime);
 
   enum CanAnimateFlags {
     // Testing for width, height, top, right, bottom, or left.
