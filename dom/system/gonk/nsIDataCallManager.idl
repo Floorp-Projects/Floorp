@@ -5,7 +5,7 @@
 #include "nsISupports.idl"
 #include "nsINetworkInterface.idl"
 
-[scriptable, uuid(501b7041-0754-4ddb-9174-946e2c2ebd83)]
+[scriptable, uuid(b8bcd6aa-5b06-4362-a68c-317878429e51)]
 interface nsIRilNetworkInfo : nsINetworkInfo
 {
   readonly attribute unsigned long serviceId;
@@ -15,6 +15,17 @@ interface nsIRilNetworkInfo : nsINetworkInfo
   readonly attribute DOMString mmsc;     // Empty string if not set.
   readonly attribute DOMString mmsProxy; // Empty string if not set.
   readonly attribute long      mmsPort;  // -1 if not set.
+
+  /**
+   * Get the list of pcscf addresses, could be IPv4 or IPv6.
+   *
+   * @param count
+   *        The length of the list of pcscf addresses.
+   *
+   * @returns the list of pcscf addresses.
+   */
+  void getPcscf([optional] out unsigned long count,
+                [array, size_is(count), retval] out wstring pcscf);
 };
 
 [scriptable, function, uuid(cb2f0f5b-67f4-4c14-93e8-01e66b630464)]

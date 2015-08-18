@@ -14,6 +14,7 @@
 #include "mozilla/CDMProxy.h"
 #endif
 #include "mozilla/Logging.h"
+#include "nsMimeTypes.h"
 
 #ifdef XP_WIN
 #include "mozilla/WindowsVersion.h"
@@ -140,6 +141,12 @@ MP4Decoder::CanHandleMediaType(const nsACString& aType,
                                   aOutContainsAAC,
                                   aOutContainsMP3));
   }
+
+#ifdef MOZ_GONK_MEDIACODEC
+  if (aType.EqualsASCII(VIDEO_3GPP)) {
+    return Preferences::GetBool("media.fragmented-mp4.gonk.enabled", false);
+  }
+#endif
 
   if (!aType.EqualsASCII("video/mp4") ||
       !MP4Decoder::CanCreateH264Decoder()) {

@@ -236,7 +236,11 @@ class ExecutableAllocator
         }
         systemRelease(pool->m_allocation);
         MOZ_ASSERT(m_pools.initialized());
-        m_pools.remove(m_pools.lookup(pool));   // this asserts if |pool| is not in m_pools
+
+        // Pool may not be present in m_pools if we hit OOM during creation.
+        auto ptr = m_pools.lookup(pool);
+        if (ptr)
+            m_pools.remove(ptr);
     }
 
     void addSizeOfCode(JS::CodeSizes* sizes) const;
@@ -299,7 +303,13 @@ class ExecutableAllocator
             systemRelease(a);
             return nullptr;
         }
-        m_pools.put(pool);
+
+        if (!m_pools.put(pool)) {
+            js_delete(pool);
+            systemRelease(a);
+            return nullptr;
+        }
+
         return pool;
     }
 

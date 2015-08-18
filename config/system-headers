@@ -455,6 +455,7 @@ frame/log.h
 frame/req.h
 freetype/freetype.h
 freetype/ftcache.h
+freetype/ftfntfmt.h
 freetype/ftglyph.h
 freetype/ftsynth.h
 freetype/ftoutln.h

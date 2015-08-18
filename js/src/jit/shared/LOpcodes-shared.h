@@ -77,8 +77,6 @@
     _(Unreachable)                  \
     _(EncodeSnapshot)               \
     _(GetDynamicName)               \
-    _(FilterArgumentsOrEvalS)       \
-    _(FilterArgumentsOrEvalV)       \
     _(CallDirectEval)               \
     _(StackArgT)                    \
     _(StackArgV)                    \

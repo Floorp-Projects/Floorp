@@ -675,10 +675,10 @@ HangMonitoredProcess::GetHangType(uint32_t* aHangType)
     *aHangType = PLUGIN_HANG;
     break;
    default:
-    MOZ_ASSERT(false);
+    MOZ_ASSERT_UNREACHABLE("Unexpected HangData type");
     return NS_ERROR_UNEXPECTED;
-    break;
   }
+
   return NS_OK;
 }
 

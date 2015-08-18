@@ -22,7 +22,7 @@ void
 malloc_tsd_dalloc(void *wrapper)
 {
 
-	a0free(wrapper);
+	a0dalloc(wrapper);
 }
 
 void
@@ -151,7 +151,7 @@ _tls_callback(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 #  pragma section(".CRT$XLY",long,read)
 #endif
 JEMALLOC_SECTION(".CRT$XLY") JEMALLOC_ATTR(used)
-static const BOOL	(WINAPI *tls_callback)(HINSTANCE hinstDLL,
+static BOOL	(WINAPI *const tls_callback)(HINSTANCE hinstDLL,
     DWORD fdwReason, LPVOID lpvReserved) = _tls_callback;
 #endif
 
