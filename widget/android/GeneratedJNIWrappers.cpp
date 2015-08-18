@@ -1302,32 +1302,6 @@ auto ViewTransform::FixedLayerMarginTop(float a0) const -> void
     return mozilla::jni::Field<FixedLayerMarginTop_t>::Set(this, nullptr, a0);
 }
 
-constexpr char ViewTransform::OffsetX_t::name[];
-constexpr char ViewTransform::OffsetX_t::signature[];
-
-auto ViewTransform::OffsetX() const -> float
-{
-    return mozilla::jni::Field<OffsetX_t>::Get(this, nullptr);
-}
-
-auto ViewTransform::OffsetX(float a0) const -> void
-{
-    return mozilla::jni::Field<OffsetX_t>::Set(this, nullptr, a0);
-}
-
-constexpr char ViewTransform::OffsetY_t::name[];
-constexpr char ViewTransform::OffsetY_t::signature[];
-
-auto ViewTransform::OffsetY() const -> float
-{
-    return mozilla::jni::Field<OffsetY_t>::Get(this, nullptr);
-}
-
-auto ViewTransform::OffsetY(float a0) const -> void
-{
-    return mozilla::jni::Field<OffsetY_t>::Set(this, nullptr, a0);
-}
-
 constexpr char ViewTransform::Scale_t::name[];
 constexpr char ViewTransform::Scale_t::signature[];
 

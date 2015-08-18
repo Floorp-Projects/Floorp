@@ -3082,44 +3082,6 @@ public:
     auto FixedLayerMarginTop(float) const -> void;
 
 public:
-    struct OffsetX_t {
-        typedef ViewTransform Owner;
-        typedef float ReturnType;
-        typedef float SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "offsetX";
-        static constexpr char signature[] =
-                "F";
-        static const bool isStatic = false;
-        static const bool isMultithreaded = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    auto OffsetX() const -> float;
-
-    auto OffsetX(float) const -> void;
-
-public:
-    struct OffsetY_t {
-        typedef ViewTransform Owner;
-        typedef float ReturnType;
-        typedef float SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "offsetY";
-        static constexpr char signature[] =
-                "F";
-        static const bool isStatic = false;
-        static const bool isMultithreaded = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    auto OffsetY() const -> float;
-
-    auto OffsetY(float) const -> void;
-
-public:
     struct Scale_t {
         typedef ViewTransform Owner;
         typedef float ReturnType;
