@@ -226,9 +226,8 @@ class HTMLReportingTestRunnerMixin(object):
 class HTMLReportingOptionsMixin(object):
 
     def __init__(self, **kwargs):
-        group = self.add_option_group('htmlreporting')
-        group.add_option('--html-output',
-                         action='store',
+        group = self.add_argument_group('htmlreporting')
+        group.add_argument('--html-output',
                          dest='html_output',
                          help='html output',
                          metavar='path')
