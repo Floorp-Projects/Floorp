@@ -14050,7 +14050,8 @@ bool CSSParserImpl::ParseWillChange()
 
     nsString str;
     value.GetStringValue(str);
-    if (str.LowerCaseEqualsLiteral("default")) {
+    if (str.LowerCaseEqualsLiteral("default") ||
+        str.LowerCaseEqualsLiteral("will-change")) {
       return false;
     }
 
