@@ -141,8 +141,7 @@ private:
                         bool aLayersUpdated,
                         ParentLayerPoint& aScrollOffset,
                         CSSToParentLayerScale& aScale,
-                        LayerMargin& aFixedLayerMargins,
-                        ScreenPoint& aOffset);
+                        LayerMargin& aFixedLayerMargins);
   void SyncFrameMetrics(const ParentLayerPoint& aScrollOffset,
                         float aZoom,
                         const CSSRect& aCssPageRect,
@@ -150,8 +149,7 @@ private:
                         const CSSRect& aDisplayPort,
                         const CSSToLayerScale& aDisplayResolution,
                         bool aIsFirstPaint,
-                        LayerMargin& aFixedLayerMargins,
-                        ScreenPoint& aOffset);
+                        LayerMargin& aFixedLayerMargins);
 
   /**
    * Adds a translation to the transform of any fixed position (whose parent

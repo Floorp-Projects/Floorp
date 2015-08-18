@@ -1455,7 +1455,7 @@ AndroidBridge::SetPageRect(const CSSRect& aCssPageRect)
 void
 AndroidBridge::SyncViewportInfo(const LayerIntRect& aDisplayPort, const CSSToLayerScale& aDisplayResolution,
                                 bool aLayersUpdated, ParentLayerPoint& aScrollOffset, CSSToParentLayerScale& aScale,
-                                LayerMargin& aFixedLayerMargins, ScreenPoint& aOffset)
+                                LayerMargin& aFixedLayerMargins)
 {
     if (!mLayerClient) {
         ALOG_BRIDGE("Exceptional Exit: %s", __PRETTY_FUNCTION__);
@@ -1475,13 +1475,11 @@ AndroidBridge::SyncViewportInfo(const LayerIntRect& aDisplayPort, const CSSToLay
     aFixedLayerMargins.right = viewTransform->FixedLayerMarginRight();
     aFixedLayerMargins.bottom = viewTransform->FixedLayerMarginBottom();
     aFixedLayerMargins.left = viewTransform->FixedLayerMarginLeft();
-    aOffset.x = viewTransform->OffsetX();
-    aOffset.y = viewTransform->OffsetY();
 }
 
 void AndroidBridge::SyncFrameMetrics(const ParentLayerPoint& aScrollOffset, float aZoom, const CSSRect& aCssPageRect,
                                      bool aLayersUpdated, const CSSRect& aDisplayPort, const CSSToLayerScale& aDisplayResolution,
-                                     bool aIsFirstPaint, LayerMargin& aFixedLayerMargins, ScreenPoint& aOffset)
+                                     bool aIsFirstPaint, LayerMargin& aFixedLayerMargins)
 {
     if (!mLayerClient) {
         ALOG_BRIDGE("Exceptional Exit: %s", __PRETTY_FUNCTION__);
@@ -1505,9 +1503,6 @@ void AndroidBridge::SyncFrameMetrics(const ParentLayerPoint& aScrollOffset, floa
     aFixedLayerMargins.right = viewTransform->FixedLayerMarginRight();
     aFixedLayerMargins.bottom = viewTransform->FixedLayerMarginBottom();
     aFixedLayerMargins.left = viewTransform->FixedLayerMarginLeft();
-
-    aOffset.x = viewTransform->OffsetX();
-    aOffset.y = viewTransform->OffsetY();
 }
 
 /* Implementation file */

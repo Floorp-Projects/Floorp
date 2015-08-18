@@ -679,17 +679,9 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         mCurrentViewTransform.fixedLayerMarginRight = mCurrentViewTransformMargins.right;
         mCurrentViewTransform.fixedLayerMarginBottom = mCurrentViewTransformMargins.bottom;
 
-        // Offset the view transform so that it renders in the correct place.
-        PointF offset = mFrameMetrics.getMarginOffset();
-        mCurrentViewTransform.offsetX = offset.x;
-        mCurrentViewTransform.offsetY = offset.y;
-
         if (mRootLayer != null) {
             mRootLayer.setPositionAndResolution(
-                Math.round(x + mCurrentViewTransform.offsetX),
-                Math.round(y + mCurrentViewTransform.offsetY),
-                Math.round(x + width + mCurrentViewTransform.offsetX),
-                Math.round(y + height + mCurrentViewTransform.offsetY),
+                x, y, x + width, y + height,
                 resolution);
         }
 
