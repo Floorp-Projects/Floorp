@@ -154,6 +154,10 @@ public:
   // Set/Unset dormant state.
   void SetDormant(bool aDormant);
 
+  TimedMetadataEventSource& TimedMetadataEvent() {
+    return mMetadataManager.TimedMetadataEvent();
+  }
+
 private:
   // Initialization that needs to happen on the task queue. This is the first
   // task that gets run on the task queue, and is dispatched from the MDSM
