@@ -63,6 +63,8 @@ public:
 
   void Notify(const mozilla::hal::ScreenConfiguration& aConfiguration) override;
 
+  static void UpdateActiveOrientationLock(ScreenOrientationInternal aOrientation);
+
 private:
   virtual ~ScreenOrientation();
 

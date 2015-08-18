@@ -46,7 +46,7 @@ interface nsITabParent;
  
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(97471054-0BC8-4A57-BBFE-6C255BCBBB67)]
+[scriptable, builtinclass, uuid(35a26f70-dbb9-450d-b634-cd0bbb9b8e13)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -925,6 +925,9 @@ interface nsIDocShell : nsIDocShellTreeItem
   [infallible] readonly attribute boolean fullscreenAllowed;
   
   void setFullscreenAllowed(in boolean allowed);
+
+  [notxpcom] uint32_t orientationLock();
+  [notxpcom] void setOrientationLock(in uint32_t orientationLock);
 
   [noscript, infallible] attribute boolean affectPrivateSessionLifetime;
 

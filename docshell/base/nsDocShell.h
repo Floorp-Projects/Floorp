@@ -62,6 +62,7 @@
 namespace mozilla {
 namespace dom {
 class EventTarget;
+typedef uint32_t ScreenOrientationInternal;
 } // namespace dom
 } // namespace mozilla
 
@@ -874,6 +875,10 @@ protected:
     PARENT_PROHIBITS
   };
   FullscreenAllowedState mFullscreenAllowed;
+
+  // The orientation lock as described by
+  // https://w3c.github.io/screen-orientation/
+  mozilla::dom::ScreenOrientationInternal mOrientationLock;
 
   // Cached value of the "browser.xul.error_pages.enabled" preference.
   static bool sUseErrorPages;
