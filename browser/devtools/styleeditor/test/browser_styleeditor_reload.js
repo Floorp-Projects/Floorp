@@ -20,7 +20,7 @@ add_task(function* () {
   yield ui.selectStyleSheet(ui.editors[1].styleSheet, LINE_NO, COL_NO);
 
   info("Reloading page.");
-  executeInContent("devtools:test:reload", {}, {}, false /* no response */);
+  executeInContent("devtools:test:reload", {}, {}, false);
 
   info("Waiting for sheets to be loaded after reload.");
   yield ui.once("stylesheets-reset");
@@ -30,7 +30,8 @@ add_task(function* () {
   info("Waiting for source editor to be ready.");
   yield ui.editors[1].getSourceEditor();
 
-  is(ui.selectedEditor, ui.editors[1], "second editor is selected after reload");
+  is(ui.selectedEditor, ui.editors[1],
+    "second editor is selected after reload");
 
   let {line, ch} = ui.selectedEditor.sourceEditor.getCursor();
   is(line, LINE_NO, "correct line selected");

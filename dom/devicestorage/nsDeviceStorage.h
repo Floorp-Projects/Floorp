@@ -39,6 +39,25 @@ class Blob;
 } // namespace dom
 } // namespace mozilla
 
+//#define DS_LOGGING 1
+
+#ifdef DS_LOGGING
+/* Polyfill __func__ on MSVC to pass to the log. */
+#ifdef _MSC_VER
+#define __func__ __FUNCTION__
+#endif
+
+#define DS_LOG_DEBUG(msg, ...)  printf_stderr("[%s:%d] " msg "\n", __func__, __LINE__, ##__VA_ARGS__)
+#define DS_LOG_INFO DS_LOG_DEBUG
+#define DS_LOG_WARN DS_LOG_DEBUG
+#define DS_LOG_ERROR DS_LOG_DEBUG
+#else
+#define DS_LOG_DEBUG(msg, ...)
+#define DS_LOG_INFO(msg, ...)
+#define DS_LOG_WARN(msg, ...)
+#define DS_LOG_ERROR(msg, ...)
+#endif
+
 #define POST_ERROR_EVENT_FILE_EXISTS                 "NoModificationAllowedError"
 #define POST_ERROR_EVENT_FILE_DOES_NOT_EXIST         "NotFoundError"
 #define POST_ERROR_EVENT_FILE_NOT_ENUMERABLE         "TypeMismatchError"

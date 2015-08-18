@@ -4236,12 +4236,11 @@ RilObject.prototype[REQUEST_SETUP_DATA_CALL] = function REQUEST_SETUP_DATA_CALL(
   }
 
   let Buf = this.context.Buf;
-  // Skip version of data call.
-  Buf.readInt32();
+  let version = Buf.readInt32();
   // Skip number of data calls.
   Buf.readInt32();
 
-  this.readDataCall_v6(options);
+  this.readDataCall(options, version);
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_SIM_IO] = function REQUEST_SIM_IO(length, options) {
@@ -4512,9 +4511,13 @@ RilObject.prototype[REQUEST_LAST_DATA_CALL_FAIL_CAUSE] = null;
  *                length.
  *  # dnses     - A space-delimited list of DNS server addresses.
  *  # gateways  - A space-delimited list of default gateway addresses.
+ *
+ * V10:
+ *  # pcscf     - A space-delimited list of Proxy Call State Control Function
+ *                addresses.
  */
 
-RilObject.prototype.readDataCall_v6 = function(options) {
+RilObject.prototype.readDataCall = function(options, version) {
   if (!options) {
     options = {};
   }
@@ -4528,6 +4531,10 @@ RilObject.prototype.readDataCall_v6 = function(options) {
   options.addresses = Buf.readString();
   options.dnses = Buf.readString();
   options.gateways = Buf.readString();
+
+  if (version >= 10) {
+    options.pcscf = Buf.readString();
+  }
 
   return options;
 };
@@ -4557,7 +4564,7 @@ RilObject.prototype[REQUEST_DATA_CALL_LIST] = function REQUEST_DATA_CALL_LIST(le
   let datacalls = [];
   for (let i = 0; i < num; i++) {
     let datacall;
-    datacall = this.readDataCall_v6();
+    datacall = this.readDataCall({}, version);
     datacalls.push(datacall);
   }
 

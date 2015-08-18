@@ -32,7 +32,7 @@ class PrivateTabsPanel extends FrameLayout implements CloseAllPanelView {
         LayoutInflater.from(context).inflate(R.layout.private_tabs_panel, this);
         tabsLayout = (TabsLayout) findViewById(R.id.private_tabs_layout);
 
-        final ViewGroup emptyTabsFrame = (ViewGroup) findViewById(R.id.private_tabs_empty);
+        final View emptyTabsFrame = findViewById(R.id.private_tabs_empty);
         tabsLayout.setEmptyView(emptyTabsFrame);
     }
 
