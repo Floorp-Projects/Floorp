@@ -408,7 +408,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
             default:
             case UPDATE:
                 // Keep the old viewport size
-                newMetrics = messageMetrics.setViewportSize(oldMetrics.getWidth(), oldMetrics.getHeight());
+                newMetrics = messageMetrics.setViewportSize(oldMetrics.viewportRectWidth, oldMetrics.viewportRectHeight);
                 if (!oldMetrics.fuzzyEquals(newMetrics)) {
                     abortPanZoomAnimation();
                 }
@@ -547,8 +547,8 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         //     the page fall outside of the display-port.
         if (Math.max(viewportMetrics.viewportRectLeft, viewportMetrics.pageRectLeft) + 1 < x ||
             Math.max(viewportMetrics.viewportRectTop, viewportMetrics.pageRectTop) + 1 < y ||
-            Math.min(viewportMetrics.viewportRectRight, viewportMetrics.pageRectRight) - 1 > x + width ||
-            Math.min(viewportMetrics.viewportRectBottom, viewportMetrics.pageRectBottom) - 1 > y + height) {
+            Math.min(viewportMetrics.viewportRectRight(), viewportMetrics.pageRectRight) - 1 > x + width ||
+            Math.min(viewportMetrics.viewportRectBottom(), viewportMetrics.pageRectBottom) - 1 > y + height) {
             Log.d(LOGTAG, "Aborting update due to viewport not in display-port");
             mProgressiveUpdateData.abort = true;
 
@@ -850,7 +850,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         // updated is in GeckoLayerClient.setViewportSize, and the only place the margins should
         // ever be updated is in GeckoLayerClient.setFixedLayerMargins; both of these assign to
         // mViewportMetrics directly.
-        metrics = metrics.setViewportSize(mViewportMetrics.getWidth(), mViewportMetrics.getHeight());
+        metrics = metrics.setViewportSize(mViewportMetrics.viewportRectWidth, mViewportMetrics.viewportRectHeight);
         metrics = metrics.setMarginsFrom(mViewportMetrics);
         mViewportMetrics = metrics;
 

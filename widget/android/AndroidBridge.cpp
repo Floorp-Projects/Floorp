@@ -1888,7 +1888,8 @@ AndroidBridge::GetDisplayPort(bool aPageSizeUpdate, bool aIsBrowserContentDispla
     JNIEnv* const env = jni::GetGeckoThreadEnv();
     AutoLocalJNIFrame jniFrame(env, 1);
 
-    float x, y, width, height,
+    int width, height;
+    float x, y,
         pageLeft, pageTop, pageRight, pageBottom,
         cssPageLeft, cssPageTop, cssPageRight, cssPageBottom,
         zoom;
@@ -1909,7 +1910,7 @@ AndroidBridge::GetDisplayPort(bool aPageSizeUpdate, bool aIsBrowserContentDispla
     auto jmetrics = ImmutableViewportMetrics::New(
             pageLeft, pageTop, pageRight, pageBottom,
             cssPageLeft, cssPageTop, cssPageRight, cssPageBottom,
-            x, y, x + width, y + height,
+            x, y, width, height,
             zoom);
 
     DisplayPortMetrics::LocalRef displayPortMetrics = mLayerClient->GetDisplayPort(

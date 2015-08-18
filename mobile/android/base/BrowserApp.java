@@ -1602,7 +1602,7 @@ public class BrowserApp extends GeckoApp
 
         boolean shortPage = metrics.getPageHeight() < metrics.getHeight();
         boolean toolbarMostlyVisible = toolbarTranslation < (mToolbarHeight / 2);
-        boolean atBottomOfLongPage = (metrics.pageRectBottom == metrics.viewportRectBottom)
+        boolean atBottomOfLongPage = (metrics.pageRectBottom == metrics.viewportRectBottom())
             && (metrics.pageRectBottom > 2 * metrics.getHeight());
         Log.v(LOGTAG, "On pan/zoom stopped, short page: " + shortPage
             + "; toolbarMostlyVisible: " + toolbarMostlyVisible

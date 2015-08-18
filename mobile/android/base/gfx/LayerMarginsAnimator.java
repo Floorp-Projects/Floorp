@@ -233,7 +233,7 @@ public class LayerMarginsAnimator {
                 aDx = scrollMargin(newMarginsX, aDx,
                                    overscroll.left, overscroll.right,
                                    mTouchTravelDistance.x,
-                                   aMetrics.viewportRectLeft, aMetrics.viewportRectRight,
+                                   aMetrics.viewportRectLeft, aMetrics.viewportRectRight(),
                                    aMetrics.pageRectLeft, aMetrics.pageRectRight,
                                    mMaxMargins.left, mMaxMargins.right,
                                    aMetrics.isRTL);
@@ -242,7 +242,7 @@ public class LayerMarginsAnimator {
                 aDy = scrollMargin(newMarginsY, aDy,
                                    overscroll.top, overscroll.bottom,
                                    mTouchTravelDistance.y,
-                                   aMetrics.viewportRectTop, aMetrics.viewportRectBottom,
+                                   aMetrics.viewportRectTop, aMetrics.viewportRectBottom(),
                                    aMetrics.pageRectTop, aMetrics.pageRectBottom,
                                    mMaxMargins.top, mMaxMargins.bottom,
                                    false);
