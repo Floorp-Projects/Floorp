@@ -1552,6 +1552,10 @@ public class BrowserApp extends GeckoApp
         final float offset = getResources().getDimensionPixelOffset(R.dimen.progress_bar_scroll_offset);
         final float progressTranslationY = Math.min(aToolbarTranslation, mToolbarHeight - offset);
         ViewHelper.setTranslationY(progressView, -progressTranslationY);
+
+        if (mFormAssistPopup != null) {
+            mFormAssistPopup.onTranslationChanged();
+        }
     }
 
     @Override
@@ -1560,8 +1564,9 @@ public class BrowserApp extends GeckoApp
             return;
         }
 
-        if (mFormAssistPopup != null)
+        if (mFormAssistPopup != null) {
             mFormAssistPopup.onMetricsChanged(aMetrics);
+        }
     }
 
     @Override
