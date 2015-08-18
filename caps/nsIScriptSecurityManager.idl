@@ -26,7 +26,7 @@ class DomainPolicyClone;
 [ptr] native JSObjectPtr(JSObject);
 [ptr] native DomainPolicyClonePtr(mozilla::dom::DomainPolicyClone);
 
-[scriptable, uuid(73f92674-f59d-4c9b-a9b5-f7a3ae8ffa98)]
+[scriptable, uuid(6e8a4d1e-d9c6-4d86-bf53-d73f58f36148)]
 interface nsIScriptSecurityManager : nsISupports
 {
     /**
@@ -177,8 +177,10 @@ interface nsIScriptSecurityManager : nsISupports
      * Returns a principal with that has the same origin as uri and is not part
      * of an appliction.
      * The returned principal will have appId = NO_APP_ID.
+     *
+     * @deprecated use createCodebasePrincipal instead.
      */
-    nsIPrincipal getNoAppCodebasePrincipal(in nsIURI uri);
+    [deprecated] nsIPrincipal getNoAppCodebasePrincipal(in nsIURI uri);
 
     /**
      * Legacy method for getting a principal with no origin attributes.
