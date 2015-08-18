@@ -36,6 +36,10 @@ assertEq(buf.byteLength, 0);
 buf = XF(buf, Math.pow(2,32) + 10);
 assertEq(buf.byteLength, 10);
 
+assertThrowsInstanceOf(()=>XF(buf, {valueOf() { neuter(buf, "change-data"); return 10; }}), TypeError);
+var buf = new ArrayBuffer(100);
+assertThrowsInstanceOf(()=>XF(buf, {valueOf() { ArrayBuffer.transfer(buf, 0); return 100; }}), TypeError);
+
 // on undefined second argument, stay the same size:
 var buf1 = new ArrayBuffer(0);
 var buf2 = XF(buf1);
