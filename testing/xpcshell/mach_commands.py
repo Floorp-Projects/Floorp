@@ -162,7 +162,6 @@ class XPCShellRunner(MozbuildObject):
             'logfiles': False,
             'sequential': sequential,
             'shuffle': shuffle,
-            'testsRootDir': tests_dir,
             'testingModulesDir': modules_dir,
             'profileName': 'firefox',
             'verbose': verbose or single_test,
@@ -388,7 +387,6 @@ class B2GXPCShellRunner(MozbuildObject):
         options.objdir = self.topobjdir
         options.symbolsPath = os.path.join(self.distdir, 'crashreporter-symbols'),
         options.testingModulesDir = os.path.join(self.tests_dir, 'modules')
-        options.testsRootDir = self.xpcshell_dir
         options.testPath = test_path
         options.use_device_libs = True
 
