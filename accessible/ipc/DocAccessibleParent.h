@@ -152,6 +152,8 @@ private:
                       const nsTArray<AccessibleData>& aNewTree, uint32_t aIdx,
                       uint32_t aIdxInParent);
   MOZ_WARN_UNUSED_RESULT bool CheckDocTree() const;
+  MOZ_WARN_UNUSED_RESULT bool CheckDocTreeInternal() const;
+  const DocAccessibleParent* CheckTopDoc() const;
 
   nsTArray<DocAccessibleParent*> mChildDocs;
   DocAccessibleParent* mParentDoc;
