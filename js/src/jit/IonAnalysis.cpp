@@ -3470,25 +3470,13 @@ jit::AnalyzeArgumentsUsage(JSContext* cx, JSScript* scriptArg)
     // and also simplifies handling of early returns.
     script->setNeedsArgsObj(true);
 
-    // Always construct arguments objects when in debug mode and for generator
-    // scripts (generators can be suspended when speculation fails).
+    // Always construct arguments objects when in debug mode, for generator
+    // scripts (generators can be suspended when speculation fails) or when
+    // direct eval is present.
     //
     // FIXME: Don't build arguments for ES6 generator expressions.
-    if (scriptArg->isDebuggee() || script->isGenerator())
+    if (scriptArg->isDebuggee() || script->isGenerator() || script->bindingsAccessedDynamically())
         return true;
-
-    // If the script has dynamic name accesses which could reach 'arguments',
-    // the parser will already have checked to ensure there are no explicit
-    // uses of 'arguments' in the function. If there are such uses, the script
-    // will be marked as definitely needing an arguments object.
-    //
-    // New accesses on 'arguments' can occur through 'eval' or the debugger
-    // statement. In the former case, we will dynamically detect the use and
-    // mark the arguments optimization as having failed.
-    if (script->bindingsAccessedDynamically()) {
-        script->setNeedsArgsObj(false);
-        return true;
-    }
 
     if (!jit::IsIonEnabled(cx))
         return true;

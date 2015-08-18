@@ -586,30 +586,6 @@ LIRGenerator::visitGetDynamicName(MGetDynamicName* ins)
 }
 
 void
-LIRGenerator::visitFilterArgumentsOrEval(MFilterArgumentsOrEval* ins)
-{
-    MDefinition* string = ins->getString();
-    MOZ_ASSERT(string->type() == MIRType_String || string->type() == MIRType_Value);
-
-    LInstruction* lir;
-    if (string->type() == MIRType_String) {
-        lir = new(alloc()) LFilterArgumentsOrEvalS(useFixed(string, CallTempReg0),
-                                                   tempFixed(CallTempReg1),
-                                                   tempFixed(CallTempReg2));
-    } else {
-        lir = new(alloc()) LFilterArgumentsOrEvalV(tempFixed(CallTempReg0),
-                                                   tempFixed(CallTempReg1),
-                                                   tempFixed(CallTempReg2));
-        useBoxFixed(lir, LFilterArgumentsOrEvalV::Input, string,
-                    CallTempReg3, CallTempReg4);
-    }
-
-    assignSnapshot(lir, Bailout_StringArgumentsEval);
-    add(lir, ins);
-    assignSafepoint(lir, ins);
-}
-
-void
 LIRGenerator::visitCallDirectEval(MCallDirectEval* ins)
 {
     MDefinition* scopeChain = ins->getScopeChain();
