@@ -43,6 +43,7 @@ namespace gonk {
  * (3) Bluetooth : BT SCO/A2DP devices
  **/
 enum AudioOutputProfiles {
+  DEVICE_ERROR        = -1,
   DEVICE_PRIMARY      = 0,
   DEVICE_HEADSET      = 1,
   DEVICE_BLUETOOTH    = 2,
@@ -73,7 +74,7 @@ struct VolumeData {
 };
 
 class RecoverTask;
-class AudioChannelVolInitCallback;
+class VolumeInitCallback;
 class AudioProfileData;
 
 class AudioManager final : public nsIAudioManager
@@ -89,7 +90,7 @@ public:
   // When audio backend is dead, recovery task needs to read all volume
   // settings then set back into audio backend.
   friend class RecoverTask;
-  friend class AudioChannelVolInitCallback;
+  friend class VolumeInitCallback;
 
   // Open or close the specific profile
   void SwitchProfileData(AudioOutputProfiles aProfile, bool aActive);
@@ -122,7 +123,8 @@ private:
   void CreateAudioProfilesData();
 
   // Init the volume setting from the init setting callback
-  void InitProfilesVolume(uint32_t aCatogory, uint32_t aIndex);
+  void InitProfileVolume(AudioOutputProfiles aProfile,
+                        uint32_t aCatogory, uint32_t aIndex);
 
   // Update volume data of profiles
   void UpdateVolumeToProfile(AudioProfileData* aProfileData);
@@ -142,6 +144,17 @@ private:
   uint32_t GetMaxVolumeByCategory(uint32_t aCategory) const;
 
   AudioProfileData* FindAudioProfileData(AudioOutputProfiles aProfile);
+
+  // Append the profile to the volume setting string.
+  nsAutoCString AppendProfileToVolumeSetting(const char* aName,
+                                             AudioOutputProfiles aProfile);
+
+  // Init volume from the settings database.
+  void InitVolumeFromDatabase();
+
+  // Promise functions.
+  void InitProfileVolumeSucceeded();
+  void InitProfileVolumeFailed(const char* aError);
 
   AudioManager();
   ~AudioManager();

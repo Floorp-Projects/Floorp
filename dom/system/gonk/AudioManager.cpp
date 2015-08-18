@@ -31,6 +31,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "base/message_loop.h"
 
@@ -80,6 +81,24 @@ static const uint32_t sMaxStreamVolumeTbl[AUDIO_STREAM_CNT] = {
   15,  // TTS
   15,  // FM
 };
+
+// Use a half value of each volume category as the default volume.
+static const uint32_t sDefaultVolumeCategoriesTbl[VOLUME_TOTAL_NUMBER] = {
+  8, // VOLUME_MEDIA
+  8, // VOLUME_NOTIFICATION
+  8, // VOLUME_ALARM
+  3, // VOLUME_TELEPHONY
+  8, // VOLUME_BLUETOOTH_SCO
+};
+
+// Mappings AudioOutputProfiles to strings.
+static const nsAttrValue::EnumTable kAudioOutputProfilesTable[] = {
+  { "primary",   DEVICE_PRIMARY },
+  { "headset",   DEVICE_HEADSET },
+  { "bluetooth", DEVICE_BLUETOOTH },
+  { nullptr }
+};
+
 // A bitwise variable for recording what kind of headset is attached.
 static int sHeadsetState;
 #if defined(MOZ_B2G_BT) || ANDROID_VERSION >= 17
@@ -90,6 +109,8 @@ static bool sSwitchDone = true;
 #ifdef MOZ_B2G_BT
 static bool sA2dpSwitchDone = true;
 #endif
+
+typedef MozPromise<bool, const char*, true> VolumeInitPromise;
 
 namespace mozilla {
 namespace dom {
@@ -184,46 +205,78 @@ public:
   }
 };
 
-class AudioChannelVolInitCallback final : public nsISettingsServiceCallback
+class VolumeInitCallback final : public nsISettingsServiceCallback
 {
 public:
   NS_DECL_ISUPPORTS
 
-  AudioChannelVolInitCallback() {}
+  VolumeInitCallback()
+    : mInitCounter(0)
+  {
+    mPromise = mPromiseHolder.Ensure(__func__);
+  }
+
+  nsRefPtr<VolumeInitPromise> GetPromise() const
+  {
+    return mPromise;
+  }
 
   NS_IMETHOD Handle(const nsAString& aName, JS::Handle<JS::Value> aResult)
   {
-    NS_ENSURE_TRUE(aResult.isInt32(), NS_OK);
     nsRefPtr<AudioManager> audioManager = AudioManager::GetInstance();
     MOZ_ASSERT(audioManager);
-    uint32_t volIndex = aResult.toInt32();
     for (uint32_t idx = 0; idx < VOLUME_TOTAL_NUMBER; ++idx) {
-      if (aName.EqualsASCII(gVolumeData[idx].mChannelName)) {
+      NS_ConvertASCIItoUTF16 volumeType(gVolumeData[idx].mChannelName);
+      if (StringBeginsWith(aName, volumeType)) {
+        AudioOutputProfiles profile = GetProfileFromSettingName(aName);
+        MOZ_ASSERT(profile != DEVICE_ERROR);
+
         uint32_t category = gVolumeData[idx].mCategory;
+        uint32_t volIndex = aResult.isInt32() ?
+                  aResult.toInt32() : sDefaultVolumeCategoriesTbl[category];
         nsresult rv = audioManager->ValidateVolumeIndex(category, volIndex);
         if (NS_WARN_IF(NS_FAILED(rv))) {
+          mPromiseHolder.Reject("Error : invalid volume index.", __func__);
           return rv;
         }
-        audioManager->InitProfilesVolume(gVolumeData[idx].mCategory, volIndex);
+
+        audioManager->InitProfileVolume(profile, category, volIndex);
+        if (++mInitCounter == DEVICE_TOTAL_NUMBER * VOLUME_TOTAL_NUMBER) {
+          mPromiseHolder.Resolve(true, __func__);
+        }
         return NS_OK;
       }
     }
-    NS_WARNING("unexpected event name for initializing volume control");
+    mPromiseHolder.Reject("Error : unexpected audio init event.", __func__);
     return NS_OK;
   }
 
   NS_IMETHOD HandleError(const nsAString& aName)
   {
-    LOG("AudioChannelVolInitCallback::HandleError: %s\n",
-      NS_ConvertUTF16toUTF8(aName).get());
+    mPromiseHolder.Reject(NS_ConvertUTF16toUTF8(aName).get(), __func__);
     return NS_OK;
   }
 
 protected:
-  ~AudioChannelVolInitCallback() {}
+  ~VolumeInitCallback() {}
+
+  AudioOutputProfiles GetProfileFromSettingName(const nsAString& aName) const
+  {
+    for (uint32_t idx = 0; kAudioOutputProfilesTable[idx].tag; ++idx) {
+      NS_ConvertASCIItoUTF16 profile(kAudioOutputProfilesTable[idx].tag);
+      if (StringEndsWith(aName, profile)) {
+        return static_cast<AudioOutputProfiles>(kAudioOutputProfilesTable[idx].value);
+      }
+    }
+    return DEVICE_ERROR;
+  }
+
+  nsRefPtr<VolumeInitPromise> mPromise;
+  MozPromiseHolder<VolumeInitPromise> mPromiseHolder;
+  uint32_t mInitCounter;
 };
 
-NS_IMPL_ISUPPORTS(AudioChannelVolInitCallback, nsISettingsServiceCallback)
+NS_IMPL_ISUPPORTS(VolumeInitCallback, nsISettingsServiceCallback)
 } /* namespace gonk */
 } /* namespace dom */
 } /* namespace mozilla */
@@ -537,17 +590,7 @@ AudioManager::AudioManager()
   CreateAudioProfilesData();
 
   // Get the initial volume index from settings DB during boot up.
-  nsCOMPtr<nsISettingsService> settingsService =
-    do_GetService("@mozilla.org/settingsService;1");
-  NS_ENSURE_TRUE_VOID(settingsService);
-  nsCOMPtr<nsISettingsServiceLock> lock;
-  nsresult rv = settingsService->CreateLock(nullptr, getter_AddRefs(lock));
-  NS_ENSURE_SUCCESS_VOID(rv);
-  nsCOMPtr<nsISettingsServiceCallback> callback = new AudioChannelVolInitCallback();
-  NS_ENSURE_TRUE_VOID(callback);
-  for (uint32_t idx = 0; idx < VOLUME_TOTAL_NUMBER; ++idx) {
-    lock->Get(gVolumeData[idx].mChannelName, callback);
-  }
+  InitVolumeFromDatabase();
 
   // Gecko only control stream volume not master so set to default value
   // directly.
@@ -607,6 +650,9 @@ AudioManager::~AudioManager() {
   if (NS_FAILED(obs->RemoveObserver(this,  AUDIO_CHANNEL_PROCESS_CHANGED))) {
     NS_WARNING("Failed to remove audio-channel-process-changed!");
   }
+
+  // Store the present volume setting to setting database.
+  SendVolumeChangeNotification(FindAudioProfileData(mPresentProfile));
 }
 
 static StaticRefPtr<AudioManager> sAudioManager;
@@ -1024,6 +1070,63 @@ AudioManager::FindAudioProfileData(AudioOutputProfiles aProfile)
   return nullptr;
 }
 
+nsAutoCString
+AudioManager::AppendProfileToVolumeSetting(const char* aName, AudioOutputProfiles aProfile)
+{
+  nsAutoCString topic;
+  topic.Assign(aName);
+  for (uint32_t idx = 0; kAudioOutputProfilesTable[idx].tag; ++idx) {
+    if (kAudioOutputProfilesTable[idx].value == aProfile) {
+      topic.Append(".");
+      topic.Append(kAudioOutputProfilesTable[idx].tag);
+      break;
+    }
+  }
+  return topic;
+}
+
+
+void
+AudioManager::InitVolumeFromDatabase()
+{
+  nsresult rv;
+  nsCOMPtr<nsISettingsService> service = do_GetService(SETTINGS_SERVICE, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  nsCOMPtr<nsISettingsServiceLock> lock;
+  rv = service->CreateLock(nullptr, getter_AddRefs(lock));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  nsRefPtr<VolumeInitCallback> callback = new VolumeInitCallback();
+  MOZ_ASSERT(callback);
+  callback->GetPromise()->Then(AbstractThread::MainThread(), __func__, this,
+                               &AudioManager::InitProfileVolumeSucceeded,
+                               &AudioManager::InitProfileVolumeFailed);
+
+  for (uint32_t idx = 0; idx < VOLUME_TOTAL_NUMBER; ++idx) {
+    for (uint32_t pIdx = 0; pIdx < DEVICE_TOTAL_NUMBER; ++pIdx) {
+      lock->Get(AppendProfileToVolumeSetting(gVolumeData[idx].mChannelName,
+                  static_cast<AudioOutputProfiles>(pIdx)).get(), callback);
+    }
+  }
+}
+
+void
+AudioManager::InitProfileVolumeSucceeded()
+{
+  SendVolumeChangeNotification(FindAudioProfileData(mPresentProfile));
+}
+
+void
+AudioManager::InitProfileVolumeFailed(const char* aError)
+{
+  NS_WARNING(aError);
+}
+
 void
 AudioManager::SendVolumeChangeNotification(AudioProfileData* aProfileData)
 {
@@ -1045,7 +1148,13 @@ AudioManager::SendVolumeChangeNotification(AudioProfileData* aProfileData)
   JS::Rooted<JS::Value> value(cx);
   for (uint32_t idx = 0; idx < VOLUME_TOTAL_NUMBER; ++idx) {
     value.setInt32(aProfileData->mVolumeTable[gVolumeData[idx].mCategory]);
+    // For reducing the code dependency, Gaia doesn't need to know the current
+    // profile, it only need to care about different volume categories.
+    // However, we need to send the setting volume to the permanent database,
+    // so that we can store the volume setting even if the phone reboots.
     lock->Set(gVolumeData[idx].mChannelName, value, nullptr, nullptr);
+    lock->Set(AppendProfileToVolumeSetting(gVolumeData[idx].mChannelName,
+               mPresentProfile).get(), value, nullptr, nullptr);
   }
 }
 
@@ -1061,13 +1170,13 @@ AudioManager::CreateAudioProfilesData()
 }
 
 void
-AudioManager::InitProfilesVolume(uint32_t aCategory, uint32_t aIndex)
+AudioManager::InitProfileVolume(AudioOutputProfiles aProfile,
+                                 uint32_t aCategory,
+                                 uint32_t aIndex)
 {
-  uint32_t profilesNum = mAudioProfiles.Length();
-  MOZ_ASSERT(profilesNum == DEVICE_TOTAL_NUMBER, "Error profile numbers!");
-  for (uint32_t idx = 0; idx < profilesNum; ++idx) {
-    mAudioProfiles[idx]->mVolumeTable[aCategory] = aIndex;
-  }
+  AudioProfileData* profileData = FindAudioProfileData(aProfile);
+  MOZ_ASSERT(profileData);
+  profileData->mVolumeTable[aCategory] = aIndex;
   SetVolumeByCategory(aCategory, aIndex);
 }
 

@@ -52,7 +52,7 @@ class WidgetWheelEvent;
 // fake events such as scroll-end or long-tap providing APZ is not in use.
 //
 // State transition diagram:
-// http://hg.mozilla.org/mozilla-central/file/default/layout/base/doc/AccessibleCaretEventHubStates.png
+// http://hg.mozilla.org/mozilla-central/raw-file/default/layout/base/doc/AccessibleCaretEventHubStates.png
 // Source code of the diagram:
 // http://hg.mozilla.org/mozilla-central/file/default/layout/base/doc/AccessibleCaretEventHubStates.dot
 //
