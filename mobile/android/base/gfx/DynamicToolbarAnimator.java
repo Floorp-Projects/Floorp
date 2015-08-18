@@ -110,6 +110,12 @@ public class DynamicToolbarAnimator {
         }
     }
 
+    void onPanZoomStopped() {
+        for (LayerView.DynamicToolbarListener listener : mListeners) {
+            listener.onPanZoomStopped();
+        }
+    }
+
     public void setMaxTranslation(float maxTranslation) {
         ThreadUtils.assertOnUiThread();
         if (maxTranslation < 0) {
@@ -118,6 +124,10 @@ public class DynamicToolbarAnimator {
         } else {
             mMaxTranslation = maxTranslation;
         }
+    }
+
+    public float getToolbarTranslation() {
+        return mToolbarTranslation;
     }
 
     public void setPinned(boolean pinned) {
