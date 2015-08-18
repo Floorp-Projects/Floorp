@@ -321,6 +321,9 @@ add_task(function* test_corrupted_pending_pings() {
   h = Telemetry.getHistogramById("TELEMETRY_PENDING_LOAD_FAILURE_PARSE").snapshot();
   Assert.equal(h.sum, 1, "Telemetry must report a pending ping parse failure");
 
+  let exists = yield OS.File.exists(getSavePathForPingId(pendingPingId));
+  Assert.ok(!exists, "The unparseable ping should have been removed");
+
   yield clearPendingPings();
 });
 
