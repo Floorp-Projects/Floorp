@@ -1042,6 +1042,10 @@ public:
     return mX.IsOverscrolled() || mY.IsOverscrolled();
   }
 
+  bool IsPannedIntoOverscroll() const {
+    return IsOverscrolled() && IsInPanningState();
+  }
+
 private:
   /* This is the cumulative CSS transform for all the layers from (and including)
    * the parent APZC down to (but excluding) this one. */

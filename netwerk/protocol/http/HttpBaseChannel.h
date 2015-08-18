@@ -381,6 +381,9 @@ protected:
   // True if this channel should skip any interception checks
   uint32_t                          mForceNoIntercept           : 1;
 
+  // True if this channel was intercepted and could receive a synthesized response.
+  uint32_t                          mResponseCouldBeSynthesized : 1;
+
   // Current suspension depth for this channel object
   uint32_t                          mSuspendCount;
 

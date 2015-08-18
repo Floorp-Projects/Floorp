@@ -72,9 +72,23 @@ class ABIArgGenerator
     uint32_t stackOffset_;
     ABIArg current_;
 
+    // ARM can either use HardFp (use float registers for float arguments), or
+    // SoftFp (use general registers for float arguments) ABI.  We keep this
+    // switch as a runtime switch because AsmJS always use the HardFp back-end
+    // while the calls to native functions have to use the one provided by the
+    // system.
+    bool useHardFp_;
+
+    ABIArg softNext(MIRType argType);
+    ABIArg hardNext(MIRType argType);
+
   public:
     ABIArgGenerator();
 
+    void setUseHardFp(bool useHardFp) {
+        MOZ_ASSERT(intRegIndex_ == 0 && floatRegIndex_ == 0);
+        useHardFp_ = useHardFp;
+    }
     ABIArg next(MIRType argType);
     ABIArg& current() { return current_; }
     uint32_t stackBytesConsumedSoFar() const { return stackOffset_; }

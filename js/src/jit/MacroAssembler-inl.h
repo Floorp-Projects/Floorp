@@ -76,6 +76,82 @@ MacroAssembler::call(const CallSiteDesc& desc, Label* label)
     append(desc, currentOffset(), framePushed());
 }
 
+// ===============================================================
+// ABI function calls.
+
+void
+MacroAssembler::passABIArg(Register reg)
+{
+    passABIArg(MoveOperand(reg), MoveOp::GENERAL);
+}
+
+void
+MacroAssembler::passABIArg(FloatRegister reg, MoveOp::Type type)
+{
+    passABIArg(MoveOperand(reg), type);
+}
+
+template <typename T> void
+MacroAssembler::callWithABI(const T& fun, MoveOp::Type result)
+{
+    profilerPreCall();
+    callWithABINoProfiler(fun, result);
+    profilerPostReturn();
+}
+
+void
+MacroAssembler::appendSignatureType(MoveOp::Type type)
+{
+#ifdef JS_SIMULATOR
+    signature_ <<= ArgType_Shift;
+    switch (type) {
+      case MoveOp::GENERAL: signature_ |= ArgType_General; break;
+      case MoveOp::DOUBLE:  signature_ |= ArgType_Double;  break;
+      case MoveOp::FLOAT32: signature_ |= ArgType_Float32; break;
+      default: MOZ_CRASH("Invalid argument type");
+    }
+#endif
+}
+
+ABIFunctionType
+MacroAssembler::signature() const
+{
+#ifdef JS_SIMULATOR
+#ifdef DEBUG
+    switch (signature_) {
+      case Args_General0:
+      case Args_General1:
+      case Args_General2:
+      case Args_General3:
+      case Args_General4:
+      case Args_General5:
+      case Args_General6:
+      case Args_General7:
+      case Args_General8:
+      case Args_Double_None:
+      case Args_Int_Double:
+      case Args_Float32_Float32:
+      case Args_Double_Double:
+      case Args_Double_Int:
+      case Args_Double_DoubleInt:
+      case Args_Double_DoubleDouble:
+      case Args_Double_IntDouble:
+      case Args_Int_IntDouble:
+      case Args_Double_DoubleDoubleDouble:
+      case Args_Double_DoubleDoubleDoubleDouble:
+        break;
+      default:
+        MOZ_CRASH("Unexpected type");
+    }
+#endif // DEBUG
+
+    return ABIFunctionType(signature_);
+#else
+    // No simulator enabled.
+    MOZ_CRASH("Only available for making calls within a simulator.");
+#endif
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

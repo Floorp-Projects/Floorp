@@ -3149,133 +3149,6 @@ MacroAssemblerMIPSCompat::ensureDouble(const ValueOperand& source, FloatRegister
 }
 
 void
-MacroAssemblerMIPSCompat::setupABICall(uint32_t args)
-{
-    MOZ_ASSERT(!inCall_);
-    inCall_ = true;
-    args_ = args;
-    passedArgs_ = 0;
-    passedArgTypes_ = 0;
-
-    usedArgSlots_ = 0;
-    firstArgType = MoveOp::GENERAL;
-}
-
-void
-MacroAssemblerMIPSCompat::setupAlignedABICall(uint32_t args)
-{
-    setupABICall(args);
-
-    dynamicAlignment_ = false;
-}
-
-void
-MacroAssemblerMIPSCompat::setupUnalignedABICall(uint32_t args, Register scratch)
-{
-    setupABICall(args);
-    dynamicAlignment_ = true;
-
-    ma_move(scratch, StackPointer);
-
-    // Force sp to be aligned
-    ma_subu(StackPointer, StackPointer, Imm32(sizeof(uint32_t)));
-    ma_and(StackPointer, StackPointer, Imm32(~(ABIStackAlignment - 1)));
-    as_sw(scratch, StackPointer, 0);
-}
-
-void
-MacroAssemblerMIPSCompat::passABIArg(const MoveOperand& from, MoveOp::Type type)
-{
-    ++passedArgs_;
-    if (!enoughMemory_)
-        return;
-    switch (type) {
-      case MoveOp::FLOAT32:
-        if (!usedArgSlots_) {
-            if (from.floatReg() != f12)
-                enoughMemory_ = moveResolver_.addMove(from, MoveOperand(f12), type);
-            firstArgType = MoveOp::FLOAT32;
-        } else if ((usedArgSlots_ == 1 && firstArgType == MoveOp::FLOAT32) ||
-                  (usedArgSlots_ == 2 && firstArgType == MoveOp::DOUBLE)) {
-            if (from.floatReg() != f14)
-                enoughMemory_ = moveResolver_.addMove(from, MoveOperand(f14), type);
-        } else {
-            Register destReg;
-            if (GetIntArgReg(usedArgSlots_, &destReg)) {
-                if (from.isGeneralReg() && from.reg() == destReg) {
-                    // Nothing to do. Value is in the right register already
-                } else {
-                    enoughMemory_ = moveResolver_.addMove(from, MoveOperand(destReg), type);
-                }
-            } else {
-                uint32_t disp = GetArgStackDisp(usedArgSlots_);
-                enoughMemory_ = moveResolver_.addMove(from, MoveOperand(sp, disp), type);
-            }
-        }
-        usedArgSlots_++;
-        passedArgTypes_ = (passedArgTypes_ << ArgType_Shift) | ArgType_Float32;
-        break;
-      case MoveOp::DOUBLE:
-        if (!usedArgSlots_) {
-            if (from.floatReg() != f12)
-                enoughMemory_ = moveResolver_.addMove(from, MoveOperand(f12), type);
-            usedArgSlots_ = 2;
-            firstArgType = MoveOp::DOUBLE;
-        } else if (usedArgSlots_ <= 2) {
-            if ((usedArgSlots_ == 1 && firstArgType == MoveOp::FLOAT32) ||
-               (usedArgSlots_ == 2 && firstArgType == MoveOp::DOUBLE)) {
-                if (from.floatReg() != f14)
-                    enoughMemory_ = moveResolver_.addMove(from, MoveOperand(f14), type);
-            } else {
-                // Create two moves so that cycles are found. Move emitter
-                // will have special case to handle this.
-                enoughMemory_ = moveResolver_.addMove(from, MoveOperand(a2), type);
-                enoughMemory_ = moveResolver_.addMove(from, MoveOperand(a3), type);
-            }
-            usedArgSlots_ = 4;
-        } else {
-            // Align if necessary
-            usedArgSlots_ += usedArgSlots_ % 2;
-
-            uint32_t disp = GetArgStackDisp(usedArgSlots_);
-            enoughMemory_ = moveResolver_.addMove(from, MoveOperand(sp, disp), type);
-            usedArgSlots_ += 2;
-        }
-        passedArgTypes_ = (passedArgTypes_ << ArgType_Shift) | ArgType_Double;
-        break;
-      case MoveOp::GENERAL:
-        Register destReg;
-        if (GetIntArgReg(usedArgSlots_, &destReg)) {
-            if (from.isGeneralReg() && from.reg() == destReg) {
-                // Nothing to do. Value is in the right register already
-            } else {
-                enoughMemory_ = moveResolver_.addMove(from, MoveOperand(destReg), type);
-            }
-        } else {
-            uint32_t disp = GetArgStackDisp(usedArgSlots_);
-            enoughMemory_ = moveResolver_.addMove(from, MoveOperand(sp, disp), type);
-        }
-        usedArgSlots_++;
-        passedArgTypes_ = (passedArgTypes_ << ArgType_Shift) | ArgType_General;
-        break;
-      default:
-        MOZ_CRASH("Unexpected argument type");
-    }
-}
-
-void
-MacroAssemblerMIPSCompat::passABIArg(Register reg)
-{
-    passABIArg(MoveOperand(reg), MoveOp::GENERAL);
-}
-
-void
-MacroAssemblerMIPSCompat::passABIArg(FloatRegister freg, MoveOp::Type type)
-{
-    passABIArg(MoveOperand(freg), type);
-}
-
-void
 MacroAssemblerMIPSCompat::checkStackAlignment()
 {
 #ifdef DEBUG
@@ -3323,158 +3196,6 @@ MacroAssembler::restoreFrameAlignmentForICArguments(AfterICSaveLive& aic)
 }
 
 void
-MacroAssemblerMIPSCompat::callWithABIPre(uint32_t* stackAdjust, bool callFromAsmJS)
-{
-    MOZ_ASSERT(inCall_);
-
-    // Reserve place for $ra.
-    *stackAdjust = sizeof(intptr_t);
-
-    *stackAdjust += usedArgSlots_ > NumIntArgRegs ?
-                    usedArgSlots_ * sizeof(intptr_t) :
-                    NumIntArgRegs * sizeof(intptr_t);
-
-    uint32_t alignmentAtPrologue = callFromAsmJS ? sizeof(AsmJSFrame) : 0;
-
-    if (dynamicAlignment_) {
-        *stackAdjust += ComputeByteAlignment(*stackAdjust, ABIStackAlignment);
-    } else {
-        *stackAdjust += ComputeByteAlignment(asMasm().framePushed() + alignmentAtPrologue + *stackAdjust,
-                                             ABIStackAlignment);
-    }
-
-    asMasm().reserveStack(*stackAdjust);
-
-    // Save $ra because call is going to clobber it. Restore it in
-    // callWithABIPost. NOTE: This is needed for calls from BaselineIC.
-    // Maybe we can do this differently.
-    ma_sw(ra, Address(StackPointer, *stackAdjust - sizeof(intptr_t)));
-
-    // Position all arguments.
-    {
-        enoughMemory_ = enoughMemory_ && moveResolver_.resolve();
-        if (!enoughMemory_)
-            return;
-
-        MoveEmitter emitter(asMasm());
-        emitter.emit(moveResolver_);
-        emitter.finish();
-    }
-
-    checkStackAlignment();
-}
-
-void
-MacroAssemblerMIPSCompat::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result)
-{
-    // Restore ra value (as stored in callWithABIPre()).
-    ma_lw(ra, Address(StackPointer, stackAdjust - sizeof(intptr_t)));
-
-    if (dynamicAlignment_) {
-        // Restore sp value from stack (as stored in setupUnalignedABICall()).
-        ma_lw(StackPointer, Address(StackPointer, stackAdjust));
-        // Use adjustFrame instead of freeStack because we already restored sp.
-        asMasm().adjustFrame(-stackAdjust);
-    } else {
-        asMasm().freeStack(stackAdjust);
-    }
-
-    MOZ_ASSERT(inCall_);
-    inCall_ = false;
-}
-
-#if defined(DEBUG) && defined(JS_SIMULATOR_MIPS32)
-static void
-AssertValidABIFunctionType(uint32_t passedArgTypes)
-{
-    switch (passedArgTypes) {
-      case Args_General0:
-      case Args_General1:
-      case Args_General2:
-      case Args_General3:
-      case Args_General4:
-      case Args_General5:
-      case Args_General6:
-      case Args_General7:
-      case Args_General8:
-      case Args_Double_None:
-      case Args_Int_Double:
-      case Args_Float32_Float32:
-      case Args_Double_Double:
-      case Args_Double_Int:
-      case Args_Double_DoubleInt:
-      case Args_Double_DoubleDouble:
-      case Args_Double_IntDouble:
-      case Args_Int_IntDouble:
-      case Args_Double_DoubleDoubleDouble:
-      case Args_Double_DoubleDoubleDoubleDouble:
-        break;
-      default:
-        MOZ_CRASH("Unexpected type");
-    }
-}
-#endif
-
-void
-MacroAssemblerMIPSCompat::callWithABI(void* fun, MoveOp::Type result)
-{
-#ifdef JS_SIMULATOR_MIPS32
-    MOZ_ASSERT(passedArgs_ <= 15);
-    passedArgTypes_ <<= ArgType_Shift;
-    switch (result) {
-      case MoveOp::GENERAL: passedArgTypes_ |= ArgType_General; break;
-      case MoveOp::DOUBLE:  passedArgTypes_ |= ArgType_Double;  break;
-      case MoveOp::FLOAT32: passedArgTypes_ |= ArgType_Float32; break;
-      default: MOZ_CRASH("Invalid return type");
-    }
-#ifdef DEBUG
-    AssertValidABIFunctionType(passedArgTypes_);
-#endif
-    ABIFunctionType type = ABIFunctionType(passedArgTypes_);
-    fun = Simulator::RedirectNativeFunction(fun, type);
-#endif
-
-    uint32_t stackAdjust;
-    callWithABIPre(&stackAdjust);
-    ma_call(ImmPtr(fun));
-    callWithABIPost(stackAdjust, result);
-}
-
-void
-MacroAssemblerMIPSCompat::callWithABI(AsmJSImmPtr imm, MoveOp::Type result)
-{
-    uint32_t stackAdjust;
-    callWithABIPre(&stackAdjust, /* callFromAsmJS = */ true);
-    asMasm().call(imm);
-    callWithABIPost(stackAdjust, result);
-}
-
-void
-MacroAssemblerMIPSCompat::callWithABI(const Address& fun, MoveOp::Type result)
-{
-    // Load the callee in t9, no instruction between the lw and call
-    // should clobber it. Note that we can't use fun.base because it may
-    // be one of the IntArg registers clobbered before the call.
-    ma_lw(t9, Address(fun.base, fun.offset));
-    uint32_t stackAdjust;
-    callWithABIPre(&stackAdjust);
-    asMasm().call(t9);
-    callWithABIPost(stackAdjust, result);
-
-}
-
-void
-MacroAssemblerMIPSCompat::callWithABI(Register fun, MoveOp::Type result)
-{
-    // Load the callee in t9, as above.
-    ma_move(t9, fun);
-    uint32_t stackAdjust;
-    callWithABIPre(&stackAdjust);
-    asMasm().call(t9);
-    callWithABIPost(stackAdjust, result);
-}
-
-void
 MacroAssemblerMIPSCompat::handleFailureWithHandlerTail(void* handler)
 {
     // Reserve space for exception information.
@@ -3483,9 +3204,9 @@ MacroAssemblerMIPSCompat::handleFailureWithHandlerTail(void* handler)
     ma_move(a0, StackPointer); // Use a0 since it is a first function argument
 
     // Call the handler.
-    setupUnalignedABICall(1, a1);
-    passABIArg(a0);
-    callWithABI(handler);
+    asMasm().setupUnalignedABICall(a1);
+    asMasm().passABIArg(a0);
+    asMasm().callWithABI(handler);
 
     Label entryFrame;
     Label catch_;
@@ -3822,6 +3543,107 @@ MacroAssembler::call(JitCode* c)
     addPendingJump(bo, ImmPtr(c->raw()), Relocation::JITCODE);
     ma_liPatchable(ScratchRegister, Imm32((uint32_t)c->raw()));
     ma_callJitHalfPush(ScratchRegister);
+}
+
+// ===============================================================
+// ABI function calls.
+
+void
+MacroAssembler::setupUnalignedABICall(Register scratch)
+{
+    setupABICall();
+    dynamicAlignment_ = true;
+
+    ma_move(scratch, StackPointer);
+
+    // Force sp to be aligned
+    ma_subu(StackPointer, StackPointer, Imm32(sizeof(uint32_t)));
+    ma_and(StackPointer, StackPointer, Imm32(~(ABIStackAlignment - 1)));
+    as_sw(scratch, StackPointer, 0);
+}
+
+void
+MacroAssembler::callWithABIPre(uint32_t* stackAdjust, bool callFromAsmJS)
+{
+    MOZ_ASSERT(inCall_);
+    uint32_t stackForCall = abiArgs_.stackBytesConsumedSoFar();
+
+    // Reserve place for $ra.
+    stackForCall += sizeof(intptr_t);
+
+    if (dynamicAlignment_) {
+        stackForCall += ComputeByteAlignment(stackForCall, ABIStackAlignment);
+    } else {
+        uint32_t alignmentAtPrologue = callFromAsmJS ? sizeof(AsmJSFrame) : 0;
+        stackForCall += ComputeByteAlignment(stackForCall + framePushed() + alignmentAtPrologue,
+                                             ABIStackAlignment);
+    }
+
+    *stackAdjust = stackForCall;
+    reserveStack(stackForCall);
+
+    // Save $ra because call is going to clobber it. Restore it in
+    // callWithABIPost. NOTE: This is needed for calls from BaselineIC.
+    // Maybe we can do this differently.
+    ma_sw(ra, Address(StackPointer, stackForCall - sizeof(intptr_t)));
+
+    // Position all arguments.
+    {
+        enoughMemory_ = enoughMemory_ && moveResolver_.resolve();
+        if (!enoughMemory_)
+            return;
+
+        MoveEmitter emitter(*this);
+        emitter.emit(moveResolver_);
+        emitter.finish();
+    }
+
+    assertStackAlignment(ABIStackAlignment);
+}
+
+void
+MacroAssembler::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result)
+{
+    // Restore ra value (as stored in callWithABIPre()).
+    ma_lw(ra, Address(StackPointer, stackAdjust - sizeof(intptr_t)));
+
+    if (dynamicAlignment_) {
+        // Restore sp value from stack (as stored in setupUnalignedABICall()).
+        ma_lw(StackPointer, Address(StackPointer, stackAdjust));
+        // Use adjustFrame instead of freeStack because we already restored sp.
+        adjustFrame(-stackAdjust);
+    } else {
+        freeStack(stackAdjust);
+    }
+
+#ifdef DEBUG
+    MOZ_ASSERT(inCall_);
+    inCall_ = false;
+#endif
+}
+
+void
+MacroAssembler::callWithABINoProfiler(Register fun, MoveOp::Type result)
+{
+    // Load the callee in t9, no instruction between the lw and call
+    // should clobber it. Note that we can't use fun.base because it may
+    // be one of the IntArg registers clobbered before the call.
+    ma_move(t9, fun);
+    uint32_t stackAdjust;
+    callWithABIPre(&stackAdjust);
+    call(t9);
+    callWithABIPost(stackAdjust, result);
+}
+
+void
+MacroAssembler::callWithABINoProfiler(const Address& fun, MoveOp::Type result)
+{
+    // Load the callee in t9, as above.
+    ma_lw(t9, Address(fun.base, fun.offset));
+    uint32_t stackAdjust;
+    callWithABIPre(&stackAdjust);
+    call(t9);
+    callWithABIPost(stackAdjust, result);
 }
 
 //}}} check_macroassembler_style
