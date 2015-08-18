@@ -88,7 +88,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
      *    that because mViewportMetrics might get reassigned in between reading the different
      *    fields. */
     private volatile ImmutableViewportMetrics mViewportMetrics;
-    private LayerView.OnMetricsChangedListener mZoomedViewViewportChangeListener;
 
     private ZoomConstraints mZoomConstraints;
 
@@ -836,9 +835,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
      */
     private void viewportMetricsChanged(boolean notifyGecko) {
         mToolbarAnimator.onMetricsChanged(mViewportMetrics);
-        if (mZoomedViewViewportChangeListener != null) {
-            mZoomedViewViewportChangeListener.onMetricsChanged(mViewportMetrics);
-        }
 
         mView.requestRender();
         if (notifyGecko && mGeckoIsReady) {
@@ -879,9 +875,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     @Override
     public void panZoomStopped() {
         mToolbarAnimator.onPanZoomStopped();
-        if (mZoomedViewViewportChangeListener != null) {
-            mZoomedViewViewportChangeListener.onPanZoomStopped();
-        }
     }
 
     /** Implementation of PanZoomTarget */
@@ -949,10 +942,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
                 ((viewPoint.y + origin.y) / zoom) - (geckoOrigin.y / geckoZoom));
 
         return layerPoint;
-    }
-
-    void setOnMetricsChangedZoomedViewportListener(LayerView.OnMetricsChangedListener listener) {
-    	mZoomedViewViewportChangeListener = listener;
     }
 
     public void addDrawListener(DrawListener listener) {
