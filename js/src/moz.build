@@ -417,6 +417,8 @@ elif CONFIG['JS_CODEGEN_ARM']:
         'jit/arm/BaselineCompiler-arm.cpp',
         'jit/arm/BaselineIC-arm.cpp',
         'jit/arm/CodeGenerator-arm.cpp',
+        'jit/arm/disasm/Constants-arm.cpp',
+        'jit/arm/disasm/Disasm-arm.cpp',
         'jit/arm/Lowering-arm.cpp',
         'jit/arm/MacroAssembler-arm.cpp',
         'jit/arm/MoveEmitter-arm.cpp',
