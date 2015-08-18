@@ -46,10 +46,6 @@
   -  on a button that opens a dialog to import a saved profile data file. -->
 <!ENTITY performanceUI.importButton "Import…">
 
-<!-- LOCALIZATION NOTE (performanceUI.exportButton): This string is displayed
-  -  on a button that opens a dialog to export a saved profile data file. -->
-<!ENTITY performanceUI.exportButton "Save">
-
 <!-- LOCALIZATION NOTE (performanceUI.clearButton): This string is displayed
   -  on a button that removes all the recordings. -->
 <!ENTITY performanceUI.clearButton "Clear">
@@ -57,17 +53,14 @@
 <!-- LOCALIZATION NOTE (performanceUI.toolbar.*): These strings are displayed
   -  in the toolbar on buttons that select which view is currently shown. -->
 <!ENTITY performanceUI.toolbar.waterfall "Waterfall">
-<!ENTITY performanceUI.toolbar.js-calltree "Call Tree">
-<!ENTITY performanceUI.toolbar.memory-calltree "Allocations">
-<!ENTITY performanceUI.toolbar.js-flamegraph "JS Flame Chart">
-<!ENTITY performanceUI.toolbar.memory-flamegraph "Allocations Flame Chart">
-
-<!-- LOCALIZATION NOTE (performanceUI.toolbar.*.tooltiptext): These strings are
-  -  displayed as tooltips on buttons that select which view is shown. -->
 <!ENTITY performanceUI.toolbar.waterfall.tooltiptext "Shows the different operations the browser is performing during the recording, laid out sequentially as a waterfall.">
+<!ENTITY performanceUI.toolbar.js-calltree "Call Tree">
 <!ENTITY performanceUI.toolbar.js-calltree.tooltiptext "Highlights JavaScript functions where the browser spent most time during the recording.">
-<!ENTITY performanceUI.toolbar.js-flamegraph.tooltiptext "Shows the JavaScript call stack over the course of the recording.">
+<!ENTITY performanceUI.toolbar.memory-calltree "Allocations">
 <!ENTITY performanceUI.toolbar.allocations.tooltiptext "Shows where memory was allocated during the recording.">
+<!ENTITY performanceUI.toolbar.js-flamegraph "JS Flame Chart">
+<!ENTITY performanceUI.toolbar.js-flamegraph.tooltiptext "Shows the JavaScript call stack over the course of the recording.">
+<!ENTITY performanceUI.toolbar.memory-flamegraph "Allocations Flame Chart">
 
 <!-- LOCALIZATION NOTE (performanceUI.table.*): These strings are displayed
   -  in the call tree headers for a recording. -->
