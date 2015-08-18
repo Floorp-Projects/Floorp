@@ -9,7 +9,7 @@ Bug 970517 - Storage inspector front end - tests
 </head>
 <body>
 <script type="application/javascript;version=1.7">
-
+"use strict";
 let partialHostname = location.hostname.match(/^[^.]+(\..*)$/)[1];
 let cookieExpiresTime = 2000000000000;
 // Setting up some cookies to eat.
@@ -20,7 +20,7 @@ document.cookie = "c1=" + JSON.stringify([
   "; path=/browser";
 document.cookie = "cs2=sessionCookie; path=/; domain=" + partialHostname;
 // ... and some local storage items ..
-var es6 = "for";
+const es6 = "for";
 localStorage.setItem("ls1", JSON.stringify({
   es6, the: "win", baz: [0, 2, 3, {
     deep: "down",
@@ -42,7 +42,7 @@ window.idbGenerator = function*(callback) {
   let request = indexedDB.open("idb1", 1);
   request.onupgradeneeded = success;
   request.onsuccess = success;
-  request.onerror = function(e) {
+  request.onerror = function() {
     throw new Error("error opening db connection");
   };
   let event = yield undefined;
@@ -58,7 +58,11 @@ window.idbGenerator = function*(callback) {
   yield undefined;
   store1.add({id: 3, name: "foo2", email: "foo3@bar.com"}).onsuccess = success;
   yield undefined;
-  store2.add({id2: 1, name: "foo", email: "foo@bar.com", extra: "baz"}).onsuccess = success;
+  store2.add({
+    id2: 1,
+    name: "foo",
+    email: "foo@bar.com",
+    extra: "baz"}).onsuccess = success;
   yield undefined;
 
   yield undefined;

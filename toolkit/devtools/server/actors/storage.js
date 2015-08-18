@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {Cu, Cc, Ci} = require("chrome");
+const {Cc, Ci} = require("chrome");
 const events = require("sdk/event/core");
 const protocol = require("devtools/server/protocol");
 try {
@@ -14,7 +14,7 @@ try {
   // we don't use it there anyway.
 }
 const {async} = require("devtools/async-utils");
-const {Arg, Option, method, RetVal, types} = protocol;
+const {Arg, method, RetVal, types} = protocol;
 const {LongStringActor} = require("devtools/server/actors/string");
 const {DebuggerServer} = require("devtools/server/main");
 const Services = require("Services");
@@ -442,7 +442,7 @@ StorageActors.createActor = function(options = {}, overrides = {}) {
   }
 
   let actor = protocol.ActorClass(actorObject);
-  let front = protocol.FrontClass(actor, {
+  protocol.FrontClass(actor, {
     form: function(form, detail) {
       if (detail === "actorid") {
         this.actorID = form;
@@ -1272,7 +1272,7 @@ StorageActors.createActor({
 
       unresolvedPromises.set(methodName, deferred);
 
-      let reply = sendSyncMessage("storage:storage-indexedDB-request-parent", {
+      sendSyncMessage("storage:storage-indexedDB-request-parent", {
         method: methodName,
         args: args
       });
