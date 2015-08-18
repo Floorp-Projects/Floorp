@@ -116,6 +116,12 @@ public class DynamicToolbarAnimator {
         }
     }
 
+    void onMetricsChanged(ImmutableViewportMetrics aMetrics) {
+        for (LayerView.DynamicToolbarListener listener : mListeners) {
+            listener.onMetricsChanged(aMetrics);
+        }
+    }
+
     public void setMaxTranslation(float maxTranslation) {
         ThreadUtils.assertOnUiThread();
         if (maxTranslation < 0) {
@@ -300,7 +306,10 @@ public class DynamicToolbarAnimator {
 
         ImmutableViewportMetrics metrics = mTarget.getViewportMetrics();
 
-        if (metrics.getPageHeight() < metrics.getHeight()) {
+        if (metrics.getPageHeight() <= mTarget.getView().getHeight() &&
+            mToolbarTranslation == 0) {
+            // If the page is short and the toolbar is already visible, don't
+            // allow translating it out of view.
             return false;
         }
 

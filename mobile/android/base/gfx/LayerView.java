@@ -670,6 +670,7 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
     public interface DynamicToolbarListener {
         public void onTranslationChanged(float aToolbarTranslation, float aLayerViewTranslation);
         public void onPanZoomStopped();
+        public void onMetricsChanged(ImmutableViewportMetrics viewport);
     }
 
     // Public hooks for listening to metrics changing
@@ -677,10 +678,6 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
     public interface OnMetricsChangedListener {
         public void onMetricsChanged(ImmutableViewportMetrics viewport);
         public void onPanZoomStopped();
-    }
-
-    public void setOnMetricsChangedDynamicToolbarViewportListener(OnMetricsChangedListener listener) {
-        mLayerClient.setOnMetricsChangedDynamicToolbarViewportListener(listener);
     }
 
     public void setOnMetricsChangedZoomedViewportListener(OnMetricsChangedListener listener) {
