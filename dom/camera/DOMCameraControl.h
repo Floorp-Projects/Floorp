@@ -120,6 +120,8 @@ public:
                                                 const nsAString& filename,
                                                 ErrorResult& aRv);
   void StopRecording(ErrorResult& aRv);
+  void PauseRecording(ErrorResult& aRv);
+  void ResumeRecording(ErrorResult& aRv);
   void ResumePreview(ErrorResult& aRv);
   already_AddRefed<dom::Promise> ReleaseHardware(ErrorResult& aRv);
   void ResumeContinuousFocus(ErrorResult& aRv);

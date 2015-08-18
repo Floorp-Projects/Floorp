@@ -1,7 +1,9 @@
-[{
-"size": 1926016,
-"digest":
-"2b7c8922f27244b5d244a2d4a6f7dcbe2b29227952fbde9396575805f83f34f62afd3e659614eb38210a817788dbef8042b049938e56779bcba0f72798272144", 
-"algorithm": "sha512",
+[
+{
+"size": 2206824, 
+"visibility": "public", 
+"digest": "e4558bd5759bbb83bd3b86df65050aecc3337fc62962a2dc9a6c64c7168e2a679dc47b279ecdeb5912c9ed9300d7b135aabdbbe45975930ae2999c57da236862", 
+"algorithm": "sha512", 
 "filename": "linux64-minidump_stackwalk"
-}]
+}
+]

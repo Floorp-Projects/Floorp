@@ -20,6 +20,8 @@
 
 #include "jsscriptinlines.h"
 
+#include "jit/MacroAssembler-inl.h"
+
 using namespace js;
 using namespace js::jit;
 
@@ -222,7 +224,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
         masm.push(framePtr);
         masm.push(jitcode);
 
-        masm.setupUnalignedABICall(3, scratch);
+        masm.setupUnalignedABICall(scratch);
         masm.passABIArg(framePtr); // BaselineFrame
         masm.passABIArg(OsrFrameReg); // InterpreterFrame
         masm.passABIArg(numStackValues);
@@ -353,7 +355,7 @@ JitRuntime::generateInvalidator(JSContext* cx)
     masm.reserveStack(sizeof(void*));
     masm.movl(esp, ecx);
 
-    masm.setupUnalignedABICall(3, edx);
+    masm.setupUnalignedABICall(edx);
     masm.passABIArg(eax);
     masm.passABIArg(ebx);
     masm.passABIArg(ecx);
@@ -585,7 +587,7 @@ GenerateBailoutThunk(JSContext* cx, MacroAssembler& masm, uint32_t frameClass)
     masm.movl(esp, ebx);
 
     // Call the bailout function. This will correct the size of the bailout.
-    masm.setupUnalignedABICall(2, ecx);
+    masm.setupUnalignedABICall(ecx);
     masm.passABIArg(eax);
     masm.passABIArg(ebx);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, Bailout));
@@ -733,7 +735,7 @@ JitRuntime::generateVMWrapper(JSContext* cx, const VMFunction& f)
         break;
     }
 
-    masm.setupUnalignedABICall(f.argc(), regs.getAny());
+    masm.setupUnalignedABICall(regs.getAny());
     masm.passABIArg(cxreg);
 
     size_t argDisp = 0;
@@ -857,7 +859,7 @@ JitRuntime::generatePreBarrier(JSContext* cx, MIRType type)
     MOZ_ASSERT(PreBarrierReg == edx);
     masm.movl(ImmPtr(cx->runtime()), ecx);
 
-    masm.setupUnalignedABICall(2, eax);
+    masm.setupUnalignedABICall(eax);
     masm.passABIArg(ecx);
     masm.passABIArg(edx);
     masm.callWithABI(IonMarkFunction(type));

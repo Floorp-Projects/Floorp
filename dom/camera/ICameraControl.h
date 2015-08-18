@@ -256,6 +256,8 @@ public:
   virtual nsresult StartRecording(DeviceStorageFileDescriptor* aFileDescriptor,
                                   const StartRecordingOptions* aOptions = nullptr) = 0;
   virtual nsresult StopRecording() = 0;
+  virtual nsresult PauseRecording() = 0;
+  virtual nsresult ResumeRecording() = 0;
   virtual nsresult StartFaceDetection() = 0;
   virtual nsresult StopFaceDetection() = 0;
   virtual nsresult ResumeContinuousFocus() = 0;
