@@ -300,17 +300,6 @@ CommonAnimationManager::AddStyleUpdatesTo(RestyleTracker& aTracker)
   }
 }
 
-void
-CommonAnimationManager::NotifyCollectionUpdated(AnimationCollection&
-                                                  aCollection)
-{
-  MaybeStartObservingRefreshDriver();
-  mPresContext->ClearLastStyleUpdateForAllAnimations();
-  mPresContext->RestyleManager()->IncrementAnimationGeneration();
-  aCollection.UpdateAnimationGeneration(mPresContext);
-  aCollection.PostRestyleForAnimation(mPresContext);
-}
-
 /* static */ bool
 CommonAnimationManager::ExtractComputedValueForTransition(
                           nsCSSProperty aProperty,
@@ -801,16 +790,6 @@ AnimationCollection::GetElementToRestyle() const
   return pseudoFrame->GetContent()->AsElement();
 }
 
-void
-AnimationCollection::NotifyAnimationUpdated()
-{
-  // On the next flush, force us to update the style rule
-  mNeedsRefreshes = true;
-  mStyleRuleRefreshTime = TimeStamp();
-
-  mManager->NotifyCollectionUpdated(*this);
-}
-
 /* static */ void
 AnimationCollection::LogAsyncAnimationFailure(nsCString& aMessage,
                                                      const nsIContent* aContent)
@@ -1002,15 +981,23 @@ AnimationCollection::RequestRestyle(RestyleType aRestyleType)
              "Element::UnbindFromTree should have destroyed the element "
              "transition/animations object");
 
-  // SetNeedStyleFlush is cheap and required regardless of the restyle type
-  // so we do it unconditionally. Furthermore, if the posted animation restyle
-  // has been postponed due to the element being display:none (i.e.
-  // mHasPendingAnimationRestyle is set) then we should still mark the
-  // document as needing a style flush.
-  presContext->Document()->SetNeedStyleFlush();
+  // Steps for Restyle::Layer:
 
-  // If we are already waiting on an animation restyle then there's nothing
-  // more to do.
+  if (aRestyleType == RestyleType::Layer) {
+    mStyleRuleRefreshTime = TimeStamp();
+    // FIXME: We should be able to remove these two lines once we move
+    // ticking to animation timelines as part of bug 1151731.
+    mNeedsRefreshes = true;
+    mManager->MaybeStartObservingRefreshDriver();
+
+    // Prompt layers to re-sync their animations.
+    presContext->ClearLastStyleUpdateForAllAnimations();
+    presContext->RestyleManager()->IncrementAnimationGeneration();
+    UpdateAnimationGeneration(presContext);
+  }
+
+  // Steps for RestyleType::Standard and above:
+
   if (mHasPendingAnimationRestyle) {
     return;
   }
@@ -1025,10 +1012,17 @@ AnimationCollection::RequestRestyle(RestyleType aRestyleType)
     }
   }
 
-  if (aRestyleType == RestyleType::Standard) {
+  if (aRestyleType >= RestyleType::Standard) {
     mHasPendingAnimationRestyle = true;
     PostRestyleForAnimation(presContext);
+    return;
   }
+
+  // Steps for RestyleType::Throttled:
+
+  MOZ_ASSERT(aRestyleType == RestyleType::Throttled,
+             "Should have already handled all non-throttled restyles");
+  presContext->Document()->SetNeedStyleFlush();
 }
 
 void

@@ -100,10 +100,6 @@ public:
     return false;
   }
 
-  // Notify this manager that one of its collections of animations,
-  // has been updated.
-  void NotifyCollectionUpdated(AnimationCollection& aCollection);
-
   enum FlushFlags {
     Can_Throttle,
     Cannot_Throttle
@@ -292,7 +288,15 @@ struct AnimationCollection : public PRCList
     // becomes necessary.
     Throttled,
     // Animation style has changed and needs to be updated on the main thread.
-    Standard
+    Standard,
+    // Animation style has changed and needs to be updated on the main thread
+    // as well as forcing animations on layers to be updated.
+    // This is needed in cases such as when an animation becomes paused or has
+    // its playback rate changed. In such a case, although the computed style
+    // and refresh driver time might not change, we still need to ensure the
+    // corresponding animations on layers are updated to reflect the new
+    // configuration of the animation.
+    Layer
   };
   void RequestRestyle(RestyleType aRestyleType);
 
@@ -383,8 +387,6 @@ public:
       aPresContext->PresShell()->RestyleForAnimation(element, hint);
     }
   }
-
-  void NotifyAnimationUpdated();
 
   static void LogAsyncAnimationFailure(nsCString& aMessage,
                                        const nsIContent* aContent = nullptr);
