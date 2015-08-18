@@ -278,7 +278,6 @@ gbjar.sources += [
     'gfx/IntSize.java',
     'gfx/JavaPanZoomController.java',
     'gfx/Layer.java',
-    'gfx/LayerMarginsAnimator.java',
     'gfx/LayerRenderer.java',
     'gfx/LayerView.java',
     'gfx/NativePanZoomController.java',

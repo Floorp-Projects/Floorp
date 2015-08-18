@@ -94,7 +94,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     private boolean mGeckoIsReady;
 
     private final PanZoomController mPanZoomController;
-    private final LayerMarginsAnimator mMarginsAnimator;
     private final DynamicToolbarAnimator mToolbarAnimator;
     private final LayerView mView;
 
@@ -137,7 +136,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         mDrawListeners = new ArrayList<DrawListener>();
         mToolbarAnimator = new DynamicToolbarAnimator(this);
         mPanZoomController = PanZoomController.Factory.create(this, view, eventDispatcher);
-        mMarginsAnimator = new LayerMarginsAnimator(this, view);
         mView = view;
         mView.setListener(this);
         mContentDocumentIsDisplayed = true;
@@ -173,7 +171,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
 
     public void destroy() {
         mPanZoomController.destroy();
-        mMarginsAnimator.destroy();
         mToolbarAnimator.destroy();
         mDrawListeners.clear();
     }
@@ -747,12 +744,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     @Override
     public FullScreenState getFullScreenState() {
         return mView.getFullScreenState();
-    }
-
-    /** Implementation of PanZoomTarget */
-    @Override
-    public RectF getMaxMargins() {
-        return mMarginsAnimator.getMaxMargins();
     }
 
     /** Implementation of PanZoomTarget */
