@@ -318,6 +318,9 @@ pulse_context_init(cubeb * ctx)
 
   ctx->context = WRAP(pa_context_new)(WRAP(pa_threaded_mainloop_get_api)(ctx->mainloop),
                                       ctx->context_name);
+  if (!ctx->context) {
+    return -1;
+  }
   WRAP(pa_context_set_state_callback)(ctx->context, context_state_callback, ctx);
 
   WRAP(pa_threaded_mainloop_lock)(ctx->mainloop);
