@@ -100,10 +100,6 @@ public:
     return false;
   }
 
-  // Notify this manager that one of its collections of animations,
-  // has been updated.
-  void NotifyCollectionUpdated(AnimationCollection& aCollection);
-
   enum FlushFlags {
     Can_Throttle,
     Cannot_Throttle
@@ -238,11 +234,6 @@ private:
 
 typedef InfallibleTArray<nsRefPtr<dom::Animation>> AnimationPtrArray;
 
-enum EnsureStyleRuleFlags {
-  EnsureStyleRule_IsThrottled,
-  EnsureStyleRule_IsNotThrottled
-};
-
 struct AnimationCollection : public PRCList
 {
   AnimationCollection(dom::Element *aElement, nsIAtom *aElementProperty,
@@ -281,7 +272,7 @@ struct AnimationCollection : public PRCList
 
   void Tick();
 
-  void EnsureStyleRuleFor(TimeStamp aRefreshTime, EnsureStyleRuleFlags aFlags);
+  void EnsureStyleRuleFor(TimeStamp aRefreshTime);
 
   enum CanAnimateFlags {
     // Testing for width, height, top, right, bottom, or left.
@@ -297,7 +288,15 @@ struct AnimationCollection : public PRCList
     // becomes necessary.
     Throttled,
     // Animation style has changed and needs to be updated on the main thread.
-    Standard
+    Standard,
+    // Animation style has changed and needs to be updated on the main thread
+    // as well as forcing animations on layers to be updated.
+    // This is needed in cases such as when an animation becomes paused or has
+    // its playback rate changed. In such a case, although the computed style
+    // and refresh driver time might not change, we still need to ensure the
+    // corresponding animations on layers are updated to reflect the new
+    // configuration of the animation.
+    Layer
   };
   void RequestRestyle(RestyleType aRestyleType);
 
@@ -331,8 +330,6 @@ public:
   // off-main-thread compositing, although it does check whether
   // off-main-thread compositing is enabled as a whole.
   bool CanPerformOnCompositorThread(CanAnimateFlags aFlags) const;
-
-  void PostUpdateLayerAnimations();
 
   bool HasCurrentAnimationOfProperty(nsCSSProperty aProperty) const;
 
@@ -388,8 +385,6 @@ public:
       aPresContext->PresShell()->RestyleForAnimation(element, hint);
     }
   }
-
-  void NotifyAnimationUpdated();
 
   static void LogAsyncAnimationFailure(nsCString& aMessage,
                                        const nsIContent* aContent = nullptr);

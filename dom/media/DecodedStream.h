@@ -27,6 +27,7 @@ class MediaInputPort;
 class MediaStream;
 class MediaStreamGraph;
 class OutputStreamListener;
+class OutputStreamManager;
 class ProcessedMediaStream;
 class ReentrantMonitor;
 
@@ -39,11 +40,53 @@ class Image;
 class OutputStreamData {
 public:
   ~OutputStreamData();
-  void Init(DecodedStream* aDecodedStream, ProcessedMediaStream* aStream);
+  void Init(OutputStreamManager* aOwner, ProcessedMediaStream* aStream);
+
+  // Connect mStream to the input stream.
+  void Connect(MediaStream* aStream);
+  // Disconnect mStream from its input stream.
+  // Return false is mStream is already destroyed, otherwise true.
+  bool Disconnect();
+  // Called by OutputStreamListener to remove self from the output streams
+  // managed by OutputStreamManager.
+  void Remove();
+  // Return true if aStream points to the same object as mStream.
+  // Used by OutputStreamManager to remove an output stream.
+  bool Equals(MediaStream* aStream)
+  {
+    return mStream == aStream;
+  }
+
+private:
+  OutputStreamManager* mOwner;
   nsRefPtr<ProcessedMediaStream> mStream;
-  // mPort connects DecodedStreamData::mStream to our mStream.
+  // mPort connects our mStream to an input stream.
   nsRefPtr<MediaInputPort> mPort;
   nsRefPtr<OutputStreamListener> mListener;
+};
+
+class OutputStreamManager {
+public:
+  // Add the output stream to the collection.
+  void Add(ProcessedMediaStream* aStream, bool aFinishWhenEnded);
+  // Remove the output stream from the collection.
+  void Remove(MediaStream* aStream);
+  // Return true if the collection empty.
+  bool IsEmpty() const
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    return mStreams.IsEmpty();
+  }
+  // Connect all output streams in the collection to the input stream.
+  void Connect(MediaStream* aStream);
+  // Disconnect all output streams from the input stream.
+  void Disconnect();
+
+private:
+  // Keep the input stream so we can connect the output streams that
+  // are added after Connect().
+  nsRefPtr<MediaStream> mInputStream;
+  nsTArray<OutputStreamData> mStreams;
 };
 
 class DecodedStream {
@@ -84,8 +127,6 @@ protected:
 private:
   ReentrantMonitor& GetReentrantMonitor() const;
   void RecreateData(MediaStreamGraph* aGraph);
-  void Connect(OutputStreamData* aStream);
-  nsTArray<OutputStreamData>& OutputStreams();
   void InitTracks();
   void AdvanceTracks();
   void SendAudio(double aVolume, bool aIsSameOrigin);
@@ -93,7 +134,7 @@ private:
 
   UniquePtr<DecodedStreamData> mData;
   // Data about MediaStreams that are being fed by the decoder.
-  nsTArray<OutputStreamData> mOutputStreams;
+  OutputStreamManager mOutputStreamManager;
 
   // TODO: This is a temp solution to get rid of decoder monitor on the main
   // thread in MDSM::AddOutputStream and MDSM::RecreateDecodedStream as

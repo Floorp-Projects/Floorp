@@ -428,16 +428,9 @@ BytecodeCompiler::checkArgumentsWithinEval(JSContext* cx, HandleFunction fun)
         return false;
     }
 
-    // Force construction of arguments objects for functions that use
-    // |arguments| within an eval.
     RootedScript script(cx, fun->getOrCreateScript(cx));
     if (!script)
         return false;
-
-    if (script->argumentsHasVarBinding()) {
-        if (!JSScript::argumentsOptimizationFailed(cx, script))
-            return false;
-    }
 
     // It's an error to use |arguments| in a legacy generator expression.
     if (script->isGeneratorExp() && script->isLegacyGenerator()) {

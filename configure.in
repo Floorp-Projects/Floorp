@@ -2317,6 +2317,7 @@ ia64*-hpux*)
         dnl Probably also a compiler bug, but what can you do?
         PROFILE_USE_LDFLAGS="-LTCG:PGUPDATE"
         LDFLAGS="$LDFLAGS -DYNAMICBASE"
+        RCFLAGS="-nologo"
         if test "$_CC_MAJOR_VERSION" = "18" -a "$_CC_BUILD_VERSION" = "31101"; then
             dnl Use MaxILKSize as a workaround for LNK1248 in VS2013update4
             dnl See https://connect.microsoft.com/VisualStudio/feedback/details/1044914/fatal-error-lnk1248
@@ -9133,6 +9134,11 @@ if test -z "$MOZ_NATIVE_JEMALLOC" -a "$MOZ_MEMORY" && test -n "$MOZ_JEMALLOC3" -
   if test -n "$MOZ_REPLACE_MALLOC"; then
     # When using replace_malloc, we always want valloc exported from jemalloc.
     ac_configure_args="$ac_configure_args ac_cv_func_valloc=yes"
+    if test "${OS_ARCH}" = Darwin; then
+      # We also need to enable pointer validation on Mac because jemalloc's
+      # zone allocator is not used.
+      ac_configure_args="$ac_configure_args --enable-ivsalloc"
+    fi
   fi
   if test -n "$MOZ_JEMALLOC3"; then
     case "${OS_ARCH}" in
@@ -9142,6 +9148,11 @@ if test -z "$MOZ_NATIVE_JEMALLOC" -a "$MOZ_MEMORY" && test -n "$MOZ_JEMALLOC3" -
         ac_configure_args="$ac_configure_args --without-export"
         ;;
     esac
+    if test "${OS_ARCH}" = WINNT; then
+      # Lazy lock initialization doesn't play well with lazy linking of
+      # mozglue.dll on Windows XP (leads to startup crash), so disable it.
+      ac_configure_args="$ac_configure_args --disable-lazy-lock"
+    fi
   elif test "${OS_ARCH}" = Darwin; then
     # When building as a replace-malloc lib, disabling the zone allocator
     # forces to use pthread_atfork.
@@ -9178,20 +9189,27 @@ if test -z "$MOZ_NATIVE_JEMALLOC" -a "$MOZ_MEMORY" && test -n "$MOZ_JEMALLOC3" -
   for var in AS CC CXX CPP LD AR RANLIB STRIP CPPFLAGS EXTRA_CFLAGS LDFLAGS; do
     ac_configure_args="$ac_configure_args $var='`eval echo \\${${var}}`'"
   done
-  if test "$CROSS_COMPILE"; then
-    ac_configure_args="$ac_configure_args je_cv_static_page_shift=12"
-  fi
   # Force disable DSS support in jemalloc.
   ac_configure_args="$ac_configure_args ac_cv_func_sbrk=false"
 
   # Make Linux builds munmap freed chunks instead of recycling them.
   ac_configure_args="$ac_configure_args --enable-munmap"
 
+  # Disable cache oblivious behavior that appears to have a performance
+  # impact on Firefox.
+  ac_configure_args="$ac_configure_args --disable-cache-oblivious"
+
   if ! test -e memory/jemalloc; then
     mkdir -p memory/jemalloc
   fi
 
+  # jemalloc's configure runs git to determine the version. But when building
+  # from a gecko git clone, the git commands it uses is going to pick gecko's
+  # information, not jemalloc's, which is useless. So pretend we don't have git
+  # at all. That will make jemalloc's configure pick the in-tree VERSION file.
+  (PATH="$srcdir/memory/jemalloc/helper:$PATH";
   AC_OUTPUT_SUBDIRS(memory/jemalloc/src)
+  ) || exit 1
   ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 fi
 

@@ -18,12 +18,14 @@
 #include "PerformanceEntry.h"
 #include "PerformanceMark.h"
 #include "PerformanceMeasure.h"
+#include "PerformanceObserver.h"
 #include "PerformanceResourceTiming.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/PerformanceBinding.h"
 #include "mozilla/dom/PerformanceEntryEvent.h"
 #include "mozilla/dom/PerformanceTimingBinding.h"
 #include "mozilla/dom/PerformanceNavigationBinding.h"
+#include "mozilla/dom/PerformanceObserverBinding.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/TimeStamp.h"
@@ -692,15 +694,17 @@ public:
 class PrefEnabledRunnable final : public WorkerMainThreadRunnable
 {
 public:
-  explicit PrefEnabledRunnable(WorkerPrivate* aWorkerPrivate)
+  PrefEnabledRunnable(WorkerPrivate* aWorkerPrivate,
+                      const nsCString& aPrefName)
     : WorkerMainThreadRunnable(aWorkerPrivate)
     , mEnabled(false)
+    , mPrefName(aPrefName)
   { }
 
   bool MainThreadRun() override
   {
     MOZ_ASSERT(NS_IsMainThread());
-    mEnabled = Preferences::GetBool("dom.enable_user_timing", false);
+    mEnabled = Preferences::GetBool(mPrefName.get(), false);
     return true;
   }
 
@@ -711,6 +715,7 @@ public:
 
 private:
   bool mEnabled;
+  nsCString mPrefName;
 };
 
 } // namespace
@@ -727,7 +732,27 @@ nsPerformance::IsEnabled(JSContext* aCx, JSObject* aGlobal)
   workerPrivate->AssertIsOnWorkerThread();
 
   nsRefPtr<PrefEnabledRunnable> runnable =
-    new PrefEnabledRunnable(workerPrivate);
+    new PrefEnabledRunnable(workerPrivate,
+                            NS_LITERAL_CSTRING("dom.enable_user_timing"));
+  runnable->Dispatch(workerPrivate->GetJSContext());
+
+  return runnable->IsEnabled();
+}
+
+/* static */ bool
+nsPerformance::IsObserverEnabled(JSContext* aCx, JSObject* aGlobal)
+{
+  if (NS_IsMainThread()) {
+    return Preferences::GetBool("dom.enable_performance_observer", false);
+  }
+
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+  MOZ_ASSERT(workerPrivate);
+  workerPrivate->AssertIsOnWorkerThread();
+
+  nsRefPtr<PrefEnabledRunnable> runnable =
+    new PrefEnabledRunnable(workerPrivate,
+                            NS_LITERAL_CSTRING("dom.enable_performance_observer"));
   runnable->Dispatch(workerPrivate->GetJSContext());
 
   return runnable->IsEnabled();
@@ -1024,6 +1049,10 @@ PerformanceBase::InsertUserEntry(PerformanceEntry* aEntry)
 {
   mUserEntries.InsertElementSorted(aEntry,
                                    PerformanceEntryComparator());
+
+  NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(mObservers,
+                                           PerformanceObserver,
+                                           Notify, (aEntry));
 }
 
 void
@@ -1047,4 +1076,19 @@ PerformanceBase::InsertResourceEntry(PerformanceEntry* aEntry)
     // call onresourcetimingbufferfull
     DispatchBufferFullEvent();
   }
+  NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(mObservers,
+                                           PerformanceObserver,
+                                           Notify, (aEntry));
+}
+
+void
+PerformanceBase::AddObserver(PerformanceObserver* aObserver)
+{
+  mObservers.AppendElementUnlessExists(aObserver);
+}
+
+void
+PerformanceBase::RemoveObserver(PerformanceObserver* aObserver)
+{
+  mObservers.RemoveElement(aObserver);
 }
