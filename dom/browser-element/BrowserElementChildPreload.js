@@ -63,7 +63,6 @@ const OBSERVED_EVENTS = [
 const COMMAND_MAP = {
   'cut': 'cmd_cut',
   'copy': 'cmd_copyAndCollapseToEnd',
-  'copyImage': 'cmd_copyImage',
   'paste': 'cmd_paste',
   'selectall': 'cmd_selectAll'
 };
@@ -856,11 +855,6 @@ BrowserElementChild.prototype = {
     var elem = e.target;
     var menuData = {systemTargets: [], contextmenu: null};
     var ctxMenuId = null;
-    var hasImgElement = false;
-
-    // Set the event target as the copy image command needs it to
-    // determine what was context-clicked on.
-    docShell.contentViewer.QueryInterface(Ci.nsIContentViewerEdit).setCommandNode(elem);
 
     while (elem && elem.parentNode) {
       var ctxData = this._getSystemCtxMenuData(elem);
@@ -874,21 +868,14 @@ BrowserElementChild.prototype = {
       if (!ctxMenuId && 'hasAttribute' in elem && elem.hasAttribute('contextmenu')) {
         ctxMenuId = elem.getAttribute('contextmenu');
       }
-
-      // Enable copy image option
-      if (elem.nodeName == 'IMG') {
-        hasImgElement = true;
-      }
-
       elem = elem.parentNode;
     }
 
-    if (ctxMenuId || hasImgElement) {
-      var menu = null;
-      if (ctxMenuId) {
-        menu = e.target.ownerDocument.getElementById(ctxMenuId);
+    if (ctxMenuId) {
+      var menu = e.target.ownerDocument.getElementById(ctxMenuId);
+      if (menu) {
+        menuData.contextmenu = this._buildMenuObj(menu, '');
       }
-      menuData.contextmenu = this._buildMenuObj(menu, '', hasImgElement);
     }
 
     // Pass along the position where the context menu should be located
@@ -1221,44 +1208,31 @@ BrowserElementChild.prototype = {
 
   _recvFireCtxCallback: function(data) {
     debug("Received fireCtxCallback message: (" + data.json.menuitem + ")");
-
-    if (data.json.menuitem == 'copy-image') {
-      // Set command
-      data.json.command = 'copyImage';
-      this._recvDoCommand(data);
-    } else if (data.json.menuitem in this._ctxHandlers) {
+    // We silently ignore if the embedder uses an incorrect id in the callback
+    if (data.json.menuitem in this._ctxHandlers) {
       this._ctxHandlers[data.json.menuitem].click();
       this._ctxHandlers = {};
     } else {
-      // We silently ignore if the embedder uses an incorrect id in the callback
       debug("Ignored invalid contextmenu invocation");
     }
   },
 
-  _buildMenuObj: function(menu, idPrefix, hasImgElement) {
+  _buildMenuObj: function(menu, idPrefix) {
     var menuObj = {type: 'menu', items: []};
-    // Customized context menu
-    if (menu) {
-      this._maybeCopyAttribute(menu, menuObj, 'label');
+    this._maybeCopyAttribute(menu, menuObj, 'label');
 
-      for (var i = 0, child; child = menu.children[i++];) {
-        if (child.nodeName === 'MENU') {
-          menuObj.items.push(this._buildMenuObj(child, idPrefix + i + '_', false));
-        } else if (child.nodeName === 'MENUITEM') {
-          var id = this._ctxCounter + '_' + idPrefix + i;
-          var menuitem = {id: id, type: 'menuitem'};
-          this._maybeCopyAttribute(child, menuitem, 'label');
-          this._maybeCopyAttribute(child, menuitem, 'icon');
-          this._ctxHandlers[id] = child;
-          menuObj.items.push(menuitem);
-        }
+    for (var i = 0, child; child = menu.children[i++];) {
+      if (child.nodeName === 'MENU') {
+        menuObj.items.push(this._buildMenuObj(child, idPrefix + i + '_'));
+      } else if (child.nodeName === 'MENUITEM') {
+        var id = this._ctxCounter + '_' + idPrefix + i;
+        var menuitem = {id: id, type: 'menuitem'};
+        this._maybeCopyAttribute(child, menuitem, 'label');
+        this._maybeCopyAttribute(child, menuitem, 'icon');
+        this._ctxHandlers[id] = child;
+        menuObj.items.push(menuitem);
       }
     }
-    // "Copy Image" menu item
-    if (hasImgElement) {
-      menuObj.items.push({id: 'copy-image'});
-    }
-
     return menuObj;
   },
 
