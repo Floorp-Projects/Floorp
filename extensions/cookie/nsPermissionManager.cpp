@@ -20,7 +20,6 @@
 #include "nsTArray.h"
 #include "nsReadableUtils.h"
 #include "nsILineInputStream.h"
-#include "nsIIDNService.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
 #include "prprf.h"
@@ -2741,19 +2740,6 @@ nsPermissionManager::_DoImport(nsIInputStream *inputStream, mozIStorageConnectio
   } while (isMore);
 
   return NS_OK;
-}
-
-nsresult
-nsPermissionManager::NormalizeToACE(nsCString &aHost)
-{
-  // lazily init the IDN service
-  if (!mIDNService) {
-    nsresult rv;
-    mIDNService = do_GetService(NS_IDNSERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return mIDNService->ConvertUTF8toACE(aHost, aHost);
 }
 
 void
