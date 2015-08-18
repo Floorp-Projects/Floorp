@@ -85,12 +85,6 @@ public class LayerMarginsAnimator {
         ThreadUtils.assertOnUiThread();
 
         mMaxMargins.set(left, top, right, bottom);
-
-        // Update the Gecko-side global for fixed viewport margins.
-        GeckoAppShell.sendEventToGecko(
-            GeckoEvent.createBroadcastEvent("Viewport:FixedMarginsChanged",
-                "{ \"top\" : " + top + ", \"right\" : " + right
-                + ", \"bottom\" : " + bottom + ", \"left\" : " + left + " }"));
     }
 
     synchronized RectF getMaxMargins() {
