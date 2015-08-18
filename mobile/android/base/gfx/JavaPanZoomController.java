@@ -1087,7 +1087,7 @@ class JavaPanZoomController
         }
 
         /* Now we pan to the right origin. */
-        viewportMetrics = viewportMetrics.clampWithMargins();
+        viewportMetrics = viewportMetrics.clamp();
 
         return viewportMetrics;
     }
@@ -1101,7 +1101,7 @@ class JavaPanZoomController
         @Override
         protected float getPageStart() { return getMetrics().pageRectLeft; }
         @Override
-        protected float getPageLength() { return getMetrics().getPageWidthWithMargins(); }
+        protected float getPageLength() { return getMetrics().getPageWidth(); }
         @Override
         protected float getVisibleEndOfLayerView() {
             return mTarget.getVisibleEndOfLayerView().x;
@@ -1129,7 +1129,7 @@ class JavaPanZoomController
         @Override
         protected float getPageStart() { return getMetrics().pageRectTop; }
         @Override
-        protected float getPageLength() { return getMetrics().getPageHeightWithMargins(); }
+        protected float getPageLength() { return getMetrics().getPageHeight(); }
         @Override
         protected float getVisibleEndOfLayerView() {
             return mTarget.getVisibleEndOfLayerView().y;
