@@ -215,6 +215,7 @@ struct CommonLayerAttributes {
   bool useClipRect;
   ParentLayerIntRect clipRect;
   bool isFixedPosition;
+  uint64_t fixedPositionScrollContainerId;
   LayerPoint fixedPositionAnchor;
   LayerMargin fixedPositionMargin;
   bool isStickyPosition;

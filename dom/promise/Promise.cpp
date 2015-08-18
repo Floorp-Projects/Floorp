@@ -1481,7 +1481,7 @@ Promise::GetDependentPromises(nsTArray<nsRefPtr<Promise>>& aPromises)
 }
 
 // A WorkerRunnable to resolve/reject the Promise on the worker thread.
-
+// Calling thread MUST hold PromiseWorkerProxy's mutex before creating this.
 class PromiseWorkerProxyRunnable : public workers::WorkerRunnable
 {
 public:
@@ -1589,12 +1589,24 @@ PromiseWorkerProxy::GetWorkerPrivate() const
   // the assertion when we should not.
   MOZ_ASSERT(!mCleanedUp);
 
+#ifdef DEBUG
+  if (NS_IsMainThread()) {
+    mCleanUpLock.AssertCurrentThreadOwns();
+  }
+#endif
+
   return mWorkerPrivate;
 }
 
 Promise*
 PromiseWorkerProxy::GetWorkerPromise() const
 {
+
+#ifdef DEBUG
+  workers::WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
+  MOZ_ASSERT(worker);
+  worker->AssertIsOnWorkerThread();
+#endif
   return mWorkerPromise;
 }
 
