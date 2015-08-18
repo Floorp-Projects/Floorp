@@ -1,7 +1,7 @@
 [{
-"size": 65331947,
-"digest": "9d538d8fc9e1aa2851e825386e6e947c0e076e5ff425afc853f07a18675045971b8acc5902221c8e72de0fda480c79490ed82fe4a19e4fff334ecdf1fbb04808",
+"size": 65331941,
+"digest": "e938dda22a52eccfc2a56e4cda898cad15b9679eb9785816f3ae027983788b5a53f645ecb6a44f30f881b0ca2f69e4ab6f96da160aaca816b8f1b58d3fb20ca8",
 "algorithm": "sha512",
-"filename": "AVDs-armv7a-gingerbread-build-2015-03-09-ubuntu.tar.gz",
+"filename": "AVDs-armv7a-gingerbread-build-2015-08-17-ubuntu.tar.gz",
 "unpack": true
 }]
