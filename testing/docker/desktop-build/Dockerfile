@@ -1,4 +1,4 @@
-FROM          quay.io/djmitche/ubuntu-build:0.0.4
+FROM          taskcluster/ubuntu-build:0.0.5
 MAINTAINER    Morgan Reece Phillips <winter2718@gmail.com>
 
 # Add build scripts; these are the entry points from the taskcluster worker, and

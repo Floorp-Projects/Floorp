@@ -125,6 +125,10 @@
   padding-top: 0;
 }
 
+.category[selected="true"]:hover {
+  background-color:#1A2533;
+}
+
 .category[disabled] {
   overflow: hidden;
   height: 0;
