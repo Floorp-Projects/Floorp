@@ -1981,22 +1981,20 @@ RasterImage::FinalizeDecoder(Decoder* aDecoder)
   MOZ_ASSERT(aDecoder->HasError() || !aDecoder->InFrame(),
              "Finalizing a decoder in the middle of a frame");
 
+  bool wasMetadata = aDecoder->IsMetadataDecode();
+  bool done = aDecoder->GetDecodeDone();
+
   // If the decoder detected an error, log it to the error console.
   if (aDecoder->ShouldReportError() && !aDecoder->WasAborted()) {
     ReportDecoderError(aDecoder);
   }
 
   // Record all the metadata the decoder gathered about this image.
-  nsresult rv = SetMetadata(aDecoder->GetImageMetadata(),
-                            aDecoder->IsMetadataDecode());
-  if (NS_FAILED(rv)) {
-    aDecoder->PostResizeError();
-  }
-
+  SetMetadata(aDecoder->GetImageMetadata(), wasMetadata);
   MOZ_ASSERT(mError || mHasSize || !aDecoder->HasSize(),
-             "Should have handed off size by now");
+             "SetMetadata should've gotten a size");
 
-  if (aDecoder->GetDecodeTotallyDone() && !mError) {
+  if (!wasMetadata && aDecoder->GetDecodeDone() && !aDecoder->WasAborted()) {
     // Flag that we've been decoded before.
     mHasBeenDecoded = true;
     if (mAnim) {
@@ -2008,9 +2006,6 @@ RasterImage::FinalizeDecoder(Decoder* aDecoder)
   NotifyProgress(aDecoder->TakeProgress(),
                  aDecoder->TakeInvalidRect(),
                  aDecoder->GetSurfaceFlags());
-
-  bool wasMetadata = aDecoder->IsMetadataDecode();
-  bool done = aDecoder->GetDecodeDone();
 
   if (!wasMetadata && aDecoder->ChunkCount()) {
     Telemetry::Accumulate(Telemetry::IMAGE_DECODE_CHUNKS,
