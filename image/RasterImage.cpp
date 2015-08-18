@@ -955,6 +955,8 @@ RasterImage::SetMetadata(const ImageMetadata& aMetadata,
   if (aMetadata.HasSize()) {
     IntSize size = aMetadata.GetSize();
     if (size.width < 0 || size.height < 0) {
+      NS_WARNING("Image has negative intrinsic size");
+      DoError();
       return;
     }
 
