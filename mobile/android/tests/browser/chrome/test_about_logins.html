@@ -77,12 +77,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     SimpleTest.finish();
   }
 
-  if (AppConstants.NIGHTLY_BUILD) {
-    password_setup();
-  } else {
-    ok(true, "this test is disabled on non-Nightly builds");
-    SimpleTest.finish();
-  }
+  password_setup();
 
   </script>
 </head>
