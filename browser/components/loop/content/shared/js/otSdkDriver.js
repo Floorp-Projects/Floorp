@@ -1111,7 +1111,7 @@ loop.OTSdkDriver = (function() {
      * be running in the standalone client and return immediately.
      *
      * @param  {String}  type    Type of sharing that was flipped. May be 'window'
-     *                           or 'tab'.
+     *                           or 'browser'.
      * @param  {Boolean} enabled Flag that tells us if the feature was flipped on
      *                           or off.
      * @private
