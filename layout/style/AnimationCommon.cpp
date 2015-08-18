@@ -391,19 +391,12 @@ CommonAnimationManager::FlushAnimations(FlushFlags aFlags)
       continue;
     }
 
-    nsAutoAnimationMutationBatch mb(collection->mElement);
-    collection->Tick();
-
-    bool canThrottleTick = aFlags == Can_Throttle;
-    for (auto iter = collection->mAnimations.cbegin();
-         canThrottleTick && iter != collection->mAnimations.cend();
-         ++iter) {
-      canThrottleTick &= (*iter)->CanThrottle();
+    if (aFlags == Cannot_Throttle) {
+      collection->RequestRestyle(AnimationCollection::RestyleType::Standard);
     }
 
-    collection->RequestRestyle(canThrottleTick ?
-                               AnimationCollection::RestyleType::Throttled :
-                               AnimationCollection::RestyleType::Standard);
+    nsAutoAnimationMutationBatch mb(collection->mElement);
+    collection->Tick();
   }
 
   MaybeStartOrStopObservingRefreshDriver();

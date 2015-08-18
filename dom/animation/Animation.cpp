@@ -374,6 +374,14 @@ Animation::Tick()
   }
 
   UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
+
+  // FIXME: Detect the no-change case and don't request a restyle at all
+  AnimationCollection* collection = GetCollection();
+  if (collection) {
+    collection->RequestRestyle(CanThrottle() ?
+      AnimationCollection::RestyleType::Throttled :
+      AnimationCollection::RestyleType::Standard);
+  }
 }
 
 void
