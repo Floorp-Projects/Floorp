@@ -100,7 +100,7 @@ def markGotSIGINT(signum, stackFrame):
 
 class XPCShellTestThread(Thread):
     def __init__(self, test_object, event, cleanup_dir_list, retry=True,
-            tests_root_dir=None, app_dir_key=None, interactive=False,
+            app_dir_key=None, interactive=False,
             verbose=False, pStdout=None, pStderr=None, keep_going=False,
             log=None, **kwargs):
         Thread.__init__(self)
@@ -130,7 +130,6 @@ class XPCShellTestThread(Thread):
         self.failureManifest = kwargs.get('failureManifest')
         self.stack_fixer_function = kwargs.get('stack_fixer_function')
 
-        self.tests_root_dir = tests_root_dir
         self.app_dir_key = app_dir_key
         self.interactive = interactive
         self.verbose = verbose
@@ -1044,13 +1043,13 @@ class XPCShellTests(object):
             return '%s:%s' % (os.path.basename(test_object['ancestor-manifest']), path)
         return path
 
-    def runTests(self, xpcshell, xrePath=None, appPath=None, symbolsPath=None,
+    def runTests(self, xpcshell=None, xrePath=None, appPath=None, symbolsPath=None,
                  manifest=None, testdirs=None, testPath=None, mobileArgs=None,
                  interactive=False, verbose=False, keepGoing=False, logfiles=True,
                  thisChunk=1, totalChunks=1, debugger=None,
                  debuggerArgs=None, debuggerInteractive=False,
                  profileName=None, mozInfo=None, sequential=False, shuffle=False,
-                 testsRootDir=None, testingModulesDir=None, pluginsPath=None,
+                 testingModulesDir=None, pluginsPath=None,
                  testClass=XPCShellTestThread, failureManifest=None,
                  log=None, stream=None, jsDebugger=False, jsDebuggerPort=0,
                  test_tags=None, dump_tests=None, utility_path=None, **otherOptions):
@@ -1083,8 +1082,6 @@ class XPCShellTests(object):
           directory if running only a subset of tests.
         |mozInfo|, if set, specifies specifies build configuration information, either as a filename containing JSON, or a dict.
         |shuffle|, if True, execute tests in random order.
-        |testsRootDir|, absolute path to root directory of all tests. This is used
-          by xUnit generation to determine the package name of the tests.
         |testingModulesDir|, if provided, specifies where JS modules reside.
           xpcshell will register a resource handler mapping this path.
         |otherOptions| may be present for the convenience of subclasses
@@ -1279,13 +1276,10 @@ class XPCShellTests(object):
             if self.singleFile and not path.endswith(self.singleFile):
                 continue
 
-            if self.testPath and path.find(self.testPath) == -1:
-                continue
-
             self.testCount += 1
 
             test = testClass(test_object, self.event, self.cleanup_dir_list,
-                    tests_root_dir=testsRootDir, app_dir_key=appDirKey,
+                    app_dir_key=appDirKey,
                     interactive=interactive,
                     verbose=verbose or test_object.get("verbose") == "true",
                     pStdout=pStdout, pStderr=pStderr,
@@ -1377,7 +1371,7 @@ class XPCShellTests(object):
             self.log.info("Retrying tests that failed when run in parallel.")
         for test_object in self.try_again_list:
             test = testClass(test_object, self.event, self.cleanup_dir_list,
-                    retry=False, tests_root_dir=testsRootDir,
+                    retry=False,
                     app_dir_key=appDirKey, interactive=interactive,
                     verbose=verbose, pStdout=pStdout, pStderr=pStderr,
                     keep_going=keepGoing, log=self.log, mobileArgs=mobileArgs,
@@ -1464,9 +1458,6 @@ class XPCShellOptions(OptionParser):
         self.add_option("--test-path",
                         type="string", dest="testPath", default=None,
                         help="single path and/or test filename to test")
-        self.add_option("--tests-root-dir",
-                        type="string", dest="testsRootDir", default=None,
-                        help="absolute path to directory where all tests are located. this is typically $(objdir)/_tests")
         self.add_option("--testing-modules-dir",
                         dest="testingModulesDir", default=None,
                         help="Directory where testing modules are located.")
