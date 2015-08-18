@@ -20,7 +20,7 @@
 /*** Main indicator icon ***/
 
 @media not all and (min-resolution: 1.1dppx) {
-  #downloads-indicator-icon {
+  #downloads-button {
     --downloads-indicator-icon: -moz-image-rect(url("chrome://browser/skin/Toolbar.png"), 0, 198, 18, 180);
     --downloads-indicator-icon-attention: -moz-image-rect(url("chrome://browser/skin/Toolbar.png"), 18, 198, 36, 180);
     --downloads-indicator-icon-inverted: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted.png"), 0, 198, 18, 180);
@@ -29,7 +29,7 @@
 }
 
 @media (min-resolution: 1.1dppx) {
-  #downloads-indicator-icon {
+  #downloads-button {
     --downloads-indicator-icon: -moz-image-rect(url("chrome://browser/skin/Toolbar@2x.png"), 0, 396, 36, 360);
     --downloads-indicator-icon-attention: -moz-image-rect(url("chrome://browser/skin/Toolbar@2x.png"), 36, 396, 72, 360);
     --downloads-indicator-icon-inverted: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted@2x.png"), 0, 396, 36, 360);

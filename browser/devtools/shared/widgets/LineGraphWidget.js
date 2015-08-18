@@ -7,7 +7,7 @@ const { ViewHelpers, Heritage } = require("resource:///modules/devtools/ViewHelp
 const { AbstractCanvasGraph, CanvasGraphUtils } = require("devtools/shared/widgets/Graphs");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
-const L10N = new ViewHelpers.L10N();
+const L10N = new ViewHelpers.L10N("chrome://browser/locale/devtools/graphs.properties");
 
 // Line graph constants.
 
@@ -76,11 +76,11 @@ this.LineGraphWidget = function(parent, options = {}, ...args) {
     // are changed later
     this._gutter = this._createGutter();
     this._maxGutterLine = this._createGutterLine("maximum");
-    this._maxTooltip = this._createTooltip("maximum", "start", "max", metric);
+    this._maxTooltip = this._createTooltip("maximum", "start", L10N.getStr("graphs.label.maximum"), metric);
     this._minGutterLine = this._createGutterLine("minimum");
-    this._minTooltip = this._createTooltip("minimum", "start", "min", metric);
+    this._minTooltip = this._createTooltip("minimum", "start", L10N.getStr("graphs.label.minimum"), metric);
     this._avgGutterLine = this._createGutterLine("average");
-    this._avgTooltip = this._createTooltip("average", "end", "avg", metric);
+    this._avgTooltip = this._createTooltip("average", "end", L10N.getStr("graphs.label.average"), metric);
   });
 };
 

@@ -1,7 +1,9 @@
-[{
-"size": 1316240,
-"digest":
-"3d94d249e390c687d9545c80b8ea7a6cff38538bc4104ad99103ee56b765fa1dedb30d95dcdfe9fad5665bdf9f0dfe246e1e544f37b03e952abee7ad38dc1caa", 
-"algorithm": "sha512",
+[
+{
+"size": 823140, 
+"visibility": "public", 
+"digest": "b7c5fcb21a2fec452c73526f068d82cd43ce892dbf1bcdcab3ecc76e49526c77951ee29276cbdf7c77f3fd25753e4b586894f23ef9235b20b7cb27a0237fa49e", 
+"algorithm": "sha512", 
 "filename": "macosx64-minidump_stackwalk"
-}]
+}
+]
