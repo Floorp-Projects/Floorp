@@ -37,11 +37,13 @@ function testIndentifierGeneration(ui) {
     "styleSheetIndex": 2
   };
 
-  is(ui.getStyleSheetIdentifier(fakeStyleSheetFile), "http://example.com/test.css",
+  is(ui.getStyleSheetIdentifier(fakeStyleSheetFile),
+    "http://example.com/test.css",
     "URI is the identifier of style sheet file.");
 
-  is(ui.getStyleSheetIdentifier(fakeInlineStyleSheet), "inline-2-at-http://example.com/",
-    "Inline style sheets are identified by their page and position at that page.");
+  is(ui.getStyleSheetIdentifier(fakeInlineStyleSheet),
+    "inline-2-at-http://example.com/",
+    "Inline sheets are identified by their page and position in the page.");
 }
 
 function saveFirstInlineStyleSheet(ui) {
@@ -50,7 +52,7 @@ function saveFirstInlineStyleSheet(ui) {
 
   let destFile = FileUtils.getFile("ProfD", [SAVE_PATH]);
 
-  editor.saveToFile(destFile, function (file) {
+  editor.saveToFile(destFile, function(file) {
     ok(file, "File was correctly saved.");
     deferred.resolve();
   });
@@ -62,25 +64,28 @@ function testFriendlyNamesAfterSave(ui) {
   let firstEditor = ui.editors[0];
   let secondEditor = ui.editors[1];
 
-  // The friendly name of first sheet should've been remembered, the second should
-  // not be the same (bug 969900).
+  // The friendly name of first sheet should've been remembered, the second
+  // should not be the same (bug 969900).
   is(firstEditor.friendlyName, SAVE_PATH,
     "Friendly name is correct for the saved inline style sheet.");
   isnot(secondEditor.friendlyName, SAVE_PATH,
-    "Friendly name is for the second inline style sheet is not the same as first.");
+    "Friendly name for the second inline sheet isn't the same as the first.");
 
   return promise.resolve(null);
 }
 
 function reloadPage(ui) {
   info("Reloading page.");
-  executeInContent("devtools:test:reload", {}, {}, false /* no response */);
+  executeInContent("devtools:test:reload", {}, {},
+    /* no response */
+    false);
   return ui.once("stylesheets-reset");
 }
 
 function navigateToAnotherPage(ui) {
   info("Navigating to another page.");
-  executeInContent("devtools:test:navigate", { location: SECOND_TEST_PAGE }, {}, false);
+  executeInContent("devtools:test:navigate", { location: SECOND_TEST_PAGE },
+    {}, false);
   return ui.once("stylesheets-reset");
 }
 

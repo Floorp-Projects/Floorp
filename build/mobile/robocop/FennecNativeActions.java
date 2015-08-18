@@ -337,25 +337,25 @@ public class FennecNativeActions implements Actions {
     public void sendSpecialKey(SpecialKey button) {
         switch(button) {
             case DOWN:
-                sendKeyCode(KeyEvent.KEYCODE_DPAD_DOWN);
+                sendKeyCode(Solo.DOWN);
                 break;
             case UP:
-                sendKeyCode(KeyEvent.KEYCODE_DPAD_UP);
+                sendKeyCode(Solo.UP);
                 break;
             case LEFT:
-                sendKeyCode(KeyEvent.KEYCODE_DPAD_LEFT);
+                sendKeyCode(Solo.LEFT);
                 break;
             case RIGHT:
-                sendKeyCode(KeyEvent.KEYCODE_DPAD_RIGHT);
+                sendKeyCode(Solo.RIGHT);
                 break;
             case ENTER:
-                sendKeyCode(KeyEvent.KEYCODE_ENTER);
+                sendKeyCode(Solo.ENTER);
                 break;
             case MENU:
-                sendKeyCode(KeyEvent.KEYCODE_MENU);
+                sendKeyCode(Solo.MENU);
                 break;
-            case BACK:
-                sendKeyCode(KeyEvent.KEYCODE_BACK);
+            case DELETE:
+                sendKeyCode(Solo.DELETE);
                 break;
             default:
                 mAsserter.ok(false, "sendSpecialKey", "Unknown SpecialKey " + button);
@@ -367,7 +367,7 @@ public class FennecNativeActions implements Actions {
         if (keyCode <= 0 || keyCode > KeyEvent.getMaxKeyCode()) {
             mAsserter.ok(false, "sendKeyCode", "Unknown keyCode " + keyCode);
         }
-        mInstr.sendCharacterSync(keyCode);
+        mSolo.sendKey(keyCode);
     }
 
     @Override

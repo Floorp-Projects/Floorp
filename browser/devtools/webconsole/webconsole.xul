@@ -172,11 +172,27 @@ function goUpdateConsoleCommands() {
                         autocheck="false" prefKey="windowlessworkers"/>
             </menupopup>
           </toolbarbutton>
+          <toolbarbutton label="&btnServerLogging.label;" type="menu-button"
+                         category="server" class="devtools-toolbarbutton webconsole-filter-button"
+                         tooltiptext="&btnServerLogging.tooltip;"
+                         accesskey="&btnServerLogging.accesskey;"
+                         tabindex="8">
+            <menupopup id="server-logging-contextmenu">
+              <menuitem label="&btnServerErrors;" type="checkbox"
+                        autocheck="false" prefKey="servererror"/>
+              <menuitem label="&btnServerWarnings;" type="checkbox"
+                        autocheck="false" prefKey="serverwarn"/>
+              <menuitem label="&btnServerInfo;" type="checkbox" autocheck="false"
+                        prefKey="serverinfo"/>
+              <menuitem label="&btnServerLog;" type="checkbox" autocheck="false"
+                        prefKey="serverlog"/>
+            </menupopup>
+          </toolbarbutton>
         </hbox>
         <toolbarbutton class="webconsole-clear-console-button devtools-toolbarbutton"
                        label="&btnClear.label;" tooltiptext="&btnClear.tooltip;"
                        accesskey="&btnClear.accesskey;"
-                       tabindex="8"/>
+                       tabindex="9"/>
 
         <spacer flex="1"/>
 

@@ -6,7 +6,6 @@
 #include "base/basictypes.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/unused.h"
-#include "nsPrintfCString.h"
 #include "nsIWeakReferenceUtils.h"
 #include "CameraCommon.h"
 #include "nsGlobalWindow.h"
@@ -18,7 +17,7 @@ using namespace mozilla;
 /* static */ StaticRefPtr<nsIThread> CameraControlImpl::sCameraThread;
 
 CameraControlImpl::CameraControlImpl()
-  : mListenerLock(PR_NewRWLock(PR_RWLOCK_RANK_NONE, "CameraControlImpl.Listeners.Lock"))
+  : mListenerLock("mozilla::camera::CameraControlImpl.Listeners")
   , mPreviewState(CameraControlListener::kPreviewStopped)
   , mHardwareState(CameraControlListener::kHardwareUninitialized)
   , mHardwareStateChangeReason(NS_OK)
@@ -50,32 +49,11 @@ CameraControlImpl::CameraControlImpl()
     mCameraThread->Dispatch(new Delegate(), NS_DISPATCH_NORMAL);
     sCameraThread = mCameraThread;
   }
-
-  // Care must be taken with the mListenerLock read-write lock to prevent
-  // deadlocks. Currently this is handled by ensuring that any attempts to
-  // acquire the lock for writing (as in Add/RemoveListener()) happen in a
-  // runnable dispatched to the Camera Thread--even if the method is being
-  // called from that thread. This ensures that if a registered listener
-  // (which is invoked with a read-lock) tries to call Add/RemoveListener(),
-  // the lock-for-writing attempt won't happen until the listener has
-  // completed.
-  //
-  // Multiple parallel listeners being invoked are not a problem because
-  // the read-write lock allows multiple simultaneous read-locks.
-  if (!mListenerLock) {
-    MOZ_CRASH("Out of memory getting new PRRWLock");
-  }
 }
 
 CameraControlImpl::~CameraControlImpl()
 {
   DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
-
-  MOZ_ASSERT(mListenerLock, "mListenerLock missing in ~CameraControlImpl()");
-  if (mListenerLock) {
-    PR_DestroyRWLock(mListenerLock);
-    mListenerLock = nullptr;
-  }
 }
 
 void
@@ -85,7 +63,7 @@ CameraControlImpl::OnHardwareStateChange(CameraControlListener::HardwareState aN
   // This callback can run on threads other than the Main Thread and
   //  the Camera Thread. On Gonk, it may be called from the camera's
   //  local binder thread, should the mediaserver process die.
-  RwLockAutoEnterRead lock(mListenerLock);
+  MutexAutoLock lock(mListenerLock);
 
   if (aNewState == mHardwareState) {
     DOM_CAMERA_LOGI("OnHardwareStateChange: state did not change from %d\n", mHardwareState);
@@ -114,7 +92,7 @@ void
 CameraControlImpl::OnConfigurationChange()
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mCameraThread);
-  RwLockAutoEnterRead lock(mListenerLock);
+  MutexAutoLock lock(mListenerLock);
 
   DOM_CAMERA_LOGI("OnConfigurationChange : %zu listeners\n", mListeners.Length());
 
@@ -130,7 +108,7 @@ CameraControlImpl::OnAutoFocusComplete(bool aAutoFocusSucceeded)
   // This callback can run on threads other than the Main Thread and
   //  the Camera Thread. On Gonk, it is called from the camera
   //  library's auto focus thread.
-  RwLockAutoEnterRead lock(mListenerLock);
+  MutexAutoLock lock(mListenerLock);
 
   for (uint32_t i = 0; i < mListeners.Length(); ++i) {
     CameraControlListener* l = mListeners[i];
@@ -141,7 +119,7 @@ CameraControlImpl::OnAutoFocusComplete(bool aAutoFocusSucceeded)
 void
 CameraControlImpl::OnAutoFocusMoving(bool aIsMoving)
 {
-  RwLockAutoEnterRead lock(mListenerLock);
+  MutexAutoLock lock(mListenerLock);
 
   for (uint32_t i = 0; i < mListeners.Length(); ++i) {
     CameraControlListener* l = mListeners[i];
@@ -155,7 +133,7 @@ CameraControlImpl::OnFacesDetected(const nsTArray<Face>& aFaces)
   // This callback can run on threads other than the Main Thread and
   //  the Camera Thread. On Gonk, it is called from the camera
   //  library's face detection thread.
-  RwLockAutoEnterRead lock(mListenerLock);
+  MutexAutoLock lock(mListenerLock);
 
   for (uint32_t i = 0; i < mListeners.Length(); ++i) {
     CameraControlListener* l = mListeners[i];
@@ -169,7 +147,7 @@ CameraControlImpl::OnTakePictureComplete(const uint8_t* aData, uint32_t aLength,
   // This callback can run on threads other than the Main Thread and
   //  the Camera Thread. On Gonk, it is called from the camera
   //  library's snapshot thread.
-  RwLockAutoEnterRead lock(mListenerLock);
+  MutexAutoLock lock(mListenerLock);
 
   for (uint32_t i = 0; i < mListeners.Length(); ++i) {
     CameraControlListener* l = mListeners[i];
@@ -182,7 +160,7 @@ CameraControlImpl::OnPoster(dom::BlobImpl* aBlobImpl)
 {
   // This callback can run on threads other than the Main Thread and
   //  the Camera Thread.
-  RwLockAutoEnterRead lock(mListenerLock);
+  MutexAutoLock lock(mListenerLock);
 
   for (uint32_t i = 0; i < mListeners.Length(); ++i) {
     CameraControlListener* l = mListeners[i];
@@ -196,7 +174,7 @@ CameraControlImpl::OnShutter()
   // This callback can run on threads other than the Main Thread and
   //  the Camera Thread. On Gonk, it is called from the camera driver's
   //  preview thread.
-  RwLockAutoEnterRead lock(mListenerLock);
+  MutexAutoLock lock(mListenerLock);
 
   for (uint32_t i = 0; i < mListeners.Length(); ++i) {
     CameraControlListener* l = mListeners[i];
@@ -211,7 +189,7 @@ CameraControlImpl::OnRecorderStateChange(CameraControlListener::RecorderState aS
   // This callback can run on threads other than the Main Thread and
   //  the Camera Thread. On Gonk, it is called from the media encoder
   //  thread.
-  RwLockAutoEnterRead lock(mListenerLock);
+  MutexAutoLock lock(mListenerLock);
 
   for (uint32_t i = 0; i < mListeners.Length(); ++i) {
     CameraControlListener* l = mListeners[i];
@@ -225,7 +203,7 @@ CameraControlImpl::OnPreviewStateChange(CameraControlListener::PreviewState aNew
   // This callback runs on the Main Thread and the Camera Thread, and
   //  may run on the local binder thread, should the mediaserver
   //  process die.
-  RwLockAutoEnterRead lock(mListenerLock);
+  MutexAutoLock lock(mListenerLock);
 
   if (aNewState == mPreviewState) {
     DOM_CAMERA_LOGI("OnPreviewStateChange: state did not change from %d\n", mPreviewState);
@@ -252,7 +230,7 @@ void
 CameraControlImpl::OnRateLimitPreview(bool aLimit)
 {
   // This function runs on neither the Main Thread nor the Camera Thread.
-  RwLockAutoEnterRead lock(mListenerLock);
+  MutexAutoLock lock(mListenerLock);
 
   DOM_CAMERA_LOGI("OnRateLimitPreview: %d\n", aLimit);
 
@@ -267,7 +245,7 @@ CameraControlImpl::OnNewPreviewFrame(layers::Image* aImage, uint32_t aWidth, uin
 {
   // This function runs on neither the Main Thread nor the Camera Thread.
   //  On Gonk, it is called from the camera driver's preview thread.
-  RwLockAutoEnterRead lock(mListenerLock);
+  MutexAutoLock lock(mListenerLock);
 
   DOM_CAMERA_LOGI("OnNewPreviewFrame: we have %zu preview frame listener(s)\n",
     mListeners.Length());
@@ -287,7 +265,7 @@ CameraControlImpl::OnUserError(CameraControlListener::UserContext aContext,
 {
   // This callback can run on threads other than the Main Thread and
   //  the Camera Thread.
-  RwLockAutoEnterRead lock(mListenerLock);
+  MutexAutoLock lock(mListenerLock);
 
   const char* context[] = {
     "StartCamera",
@@ -328,7 +306,7 @@ CameraControlImpl::OnSystemError(CameraControlListener::SystemContext aContext,
 {
   // This callback can run on threads other than the Main Thread and
   //  the Camera Thread.
-  RwLockAutoEnterRead lock(mListenerLock);
+  MutexAutoLock lock(mListenerLock);
 
   const char* context[] = {
     "Camera Service"
@@ -746,7 +724,7 @@ protected:
 void
 CameraControlImpl::AddListenerImpl(already_AddRefed<CameraControlListener> aListener)
 {
-  RwLockAutoEnterWrite lock(mListenerLock);
+  MutexAutoLock lock(mListenerLock);
 
   CameraControlListener* l = *mListeners.AppendElement() = aListener;
   DOM_CAMERA_LOGI("Added camera control listener %p\n", l);
@@ -784,7 +762,7 @@ CameraControlImpl::AddListener(CameraControlListener* aListener)
 void
 CameraControlImpl::RemoveListenerImpl(CameraControlListener* aListener)
 {
-  RwLockAutoEnterWrite lock(mListenerLock);
+  MutexAutoLock lock(mListenerLock);
 
   nsRefPtr<CameraControlListener> l(aListener);
   mListeners.RemoveElement(l);

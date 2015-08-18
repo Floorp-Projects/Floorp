@@ -2,6 +2,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 const TESTCASE_URI = TEST_BASE_HTTPS + "simple.html";
 
 const NEW_RULE = "body { background-color: purple; }";

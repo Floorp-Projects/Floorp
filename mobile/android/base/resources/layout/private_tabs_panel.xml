@@ -6,20 +6,11 @@
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
        xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
-    <FrameLayout android:id="@+id/private_tabs_empty"
-                 android:layout_width="match_parent"
-                 android:layout_height="match_parent">
-
-        <!-- TODO: Remove the negative marginTop once we get rid of the 
-                   browser chrome at the bottom of the tabs tray. 
-                   Bug 1161638 -->
-        <ImageView android:layout_height="wrap_content"
-                   android:layout_width="wrap_content"
-                   android:src="@drawable/private_masq"
-                   android:layout_gravity="center"
-                   android:layout_marginTop="-10dp"/>
-
-    </FrameLayout>
+    <ImageView android:id="@+id/private_tabs_empty"
+               android:layout_height="wrap_content"
+               android:layout_width="wrap_content"
+               android:src="@drawable/private_masq"
+               android:layout_gravity="center"/>
 
     <!-- Note: for an unknown reason, scrolling in the TabsLayout
          does not work unless it is laid out after the empty view. -->

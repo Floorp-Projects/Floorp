@@ -2,6 +2,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // https rather than chrome to improve coverage
 const TESTCASE_URI = TEST_BASE_HTTPS + "media-rules.html";
 const MEDIA_PREF = "devtools.styleeditor.showMediaSidebar";
@@ -68,7 +70,8 @@ function testMediaMatchChanged(editor) {
   let sidebar = editor.details.querySelector(".stylesheet-sidebar");
 
   let cond = sidebar.querySelectorAll(".media-rule-condition")[2];
-  is(cond.textContent, "(max-width: 400px)", "third rule condition text is correct");
+  is(cond.textContent, "(max-width: 400px)",
+     "third rule condition text is correct");
   ok(!cond.classList.contains("media-condition-unmatched"),
      "media rule is now matched after resizing");
 }
@@ -128,7 +131,7 @@ function listenForMediaChange(UI) {
   let deferred = promise.defer();
   UI.once("media-list-changed", () => {
     deferred.resolve();
-  })
+  });
   return deferred.promise;
 }
 

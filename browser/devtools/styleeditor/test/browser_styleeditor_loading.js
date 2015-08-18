@@ -9,9 +9,9 @@ const TESTCASE_URI = TEST_BASE_HTTP + "longload.html";
 
 add_task(function* () {
   // launch Style Editor right when the tab is created (before load)
-  // this checks that the Style Editor still launches correctly when it is opened
-  // *while* the page is still loading. The Style Editor should not signal that
-  // it is loaded until the accompanying content page is loaded.
+  // this checks that the Style Editor still launches correctly when it is
+  // opened *while* the page is still loading. The Style Editor should not
+  // signal that it is loaded until the accompanying content page is loaded.
   let tabAdded = addTab(TESTCASE_URI);
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   let styleEditorLoaded = gDevTools.showToolbox(target, "styleeditor");
