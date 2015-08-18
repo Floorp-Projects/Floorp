@@ -59,8 +59,8 @@
         <a id="learnMore" target="_blank">&aboutPrivateBrowsing.learnMore;</a>
       </div>
       <div id="trackingProtectionSection"
-           style="display: table-cell;">
-        <div class="sectionHeader" style="display: table-row;width:1px;">Tracking Protection Feature
+           style="width: &trackingProtection.width;">
+        <div class="sectionHeader">&trackingProtection.title;
           <span id="tpEnabled"
                 style="width: &trackingProtection.state.width;"
                 class="showTpEnabled">&trackingProtection.state.enabled;</span>
@@ -68,9 +68,8 @@
                 style="width: &trackingProtection.state.width;"
                 class="showTpDisabled">&trackingProtection.state.disabled;</span>
         </div>
-        <div style="display: table-cell;width:1px;">
         <p id="tpDiagram"/>
-        <p style="min-width:18em;">&trackingProtection.description1;</p>
+        <p>&trackingProtection.description1;</p>
         <!-- Use text links to implement plain styled buttons without an href. -->
         <label xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
                id="disableTrackingProtection"
@@ -82,7 +81,7 @@
                value="&trackingProtection.enable;"/>
         <p id="tpStartTour"
            class="showTpEnabled"><a id="startTour">&trackingProtection.startTour1;</a></p>
-      </div></div>
+      </div>
     </div>
   </body>
 </html>
