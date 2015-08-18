@@ -3500,45 +3500,6 @@ CodeGenerator::visitGetDynamicName(LGetDynamicName* lir)
     bailoutFrom(&undefined, lir->snapshot());
 }
 
-void
-CodeGenerator::emitFilterArgumentsOrEval(LInstruction* lir, Register string,
-                                         Register temp1, Register temp2)
-{
-    masm.loadJSContext(temp2);
-
-    masm.setupUnalignedABICall(temp1);
-    masm.passABIArg(temp2);
-    masm.passABIArg(string);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, FilterArgumentsOrEval));
-
-    Label bail;
-    masm.branchIfFalseBool(ReturnReg, &bail);
-    bailoutFrom(&bail, lir->snapshot());
-}
-
-void
-CodeGenerator::visitFilterArgumentsOrEvalS(LFilterArgumentsOrEvalS* lir)
-{
-    emitFilterArgumentsOrEval(lir, ToRegister(lir->getString()),
-                              ToRegister(lir->temp1()),
-                              ToRegister(lir->temp2()));
-}
-
-void
-CodeGenerator::visitFilterArgumentsOrEvalV(LFilterArgumentsOrEvalV* lir)
-{
-    ValueOperand input = ToValue(lir, LFilterArgumentsOrEvalV::Input);
-
-    // Act as nop on non-strings.
-    Label done;
-    masm.branchTestString(Assembler::NotEqual, input, &done);
-
-    emitFilterArgumentsOrEval(lir, masm.extractString(input, ToRegister(lir->temp3())),
-                              ToRegister(lir->temp1()), ToRegister(lir->temp2()));
-
-    masm.bind(&done);
-}
-
 typedef bool (*DirectEvalSFn)(JSContext*, HandleObject, HandleScript, HandleValue, HandleValue,
                               HandleString, jsbytecode*, MutableHandleValue);
 static const VMFunction DirectEvalStringInfo = FunctionInfo<DirectEvalSFn>(DirectEvalStringFromIon);

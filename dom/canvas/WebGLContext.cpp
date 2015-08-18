@@ -672,6 +672,7 @@ PopulateCapFallbackQueue(const SurfaceCaps& baseCaps,
 static bool
 CreateOffscreen(GLContext* gl, const WebGLContextOptions& options,
                 const nsCOMPtr<nsIGfxInfo>& gfxInfo, WebGLContext* webgl,
+                layers::LayersBackend layersBackend,
                 layers::ISurfaceAllocator* surfAllocator)
 {
     SurfaceCaps baseCaps;
@@ -689,7 +690,7 @@ CreateOffscreen(GLContext* gl, const WebGLContextOptions& options,
 
     if (gl->IsANGLE() ||
         (gl->GetContextType() == GLContextType::GLX &&
-         gfxPlatform::GetPlatform()->GetCompositorBackend() == LayersBackend::LAYERS_OPENGL))
+         layersBackend == LayersBackend::LAYERS_OPENGL))
     {
         // We can't use no-alpha formats on ANGLE yet because of:
         // https://code.google.com/p/angleproject/issues/detail?id=764
@@ -763,7 +764,8 @@ WebGLContext::CreateOffscreenGL(bool forceEnabled)
         if (!gl)
             break;
 
-        if (!CreateOffscreen(gl, mOptions, gfxInfo, this, surfAllocator))
+        if (!CreateOffscreen(gl, mOptions, gfxInfo, this,
+                             GetCompositorBackendType(), surfAllocator))
             break;
 
         if (!InitAndValidateGL())
@@ -1290,6 +1292,17 @@ WebGLContext::GetCanvasLayer(nsDisplayListBuilder* builder,
     mResetLayer = false;
 
     return canvasLayer.forget();
+}
+
+layers::LayersBackend
+WebGLContext::GetCompositorBackendType() const
+{
+    nsIWidget* docWidget = nsContentUtils::WidgetForDocument(mCanvasElement->OwnerDoc());
+    if (docWidget) {
+        layers::LayerManager* layerManager = docWidget->GetLayerManager();
+        return layerManager->GetCompositorBackendType();
+    }
+    return LayersBackend::LAYERS_NONE;
 }
 
 void

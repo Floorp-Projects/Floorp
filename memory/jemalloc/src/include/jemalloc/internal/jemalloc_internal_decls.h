@@ -4,14 +4,8 @@
 #include <math.h>
 #ifdef _WIN32
 #  include <windows.h>
-#  define ENOENT ERROR_PATH_NOT_FOUND
-#  define EINVAL ERROR_BAD_ARGUMENTS
-#  define EAGAIN ERROR_OUTOFMEMORY
-#  define EPERM  ERROR_WRITE_FAULT
-#  define EFAULT ERROR_INVALID_ADDRESS
-#  define ENOMEM ERROR_NOT_ENOUGH_MEMORY
-#  undef ERANGE
-#  define ERANGE ERROR_INVALID_DATA
+#  include "msvc_compat/windows_extra.h"
+
 #else
 #  include <sys/param.h>
 #  include <sys/mman.h>
@@ -40,7 +34,6 @@
 #ifndef offsetof
 #  define offsetof(type, member)	((size_t)&(((type *)NULL)->member))
 #endif
-#include <inttypes.h>
 #include <string.h>
 #include <strings.h>
 #include <ctype.h>
@@ -50,12 +43,16 @@ typedef intptr_t ssize_t;
 #  define PATH_MAX 1024
 #  define STDERR_FILENO 2
 #  define __func__ __FUNCTION__
+#  ifdef JEMALLOC_HAS_RESTRICT
+#    define restrict __restrict
+#  endif
 /* Disable warnings about deprecated system functions. */
 #  pragma warning(disable: 4996)
 #if _MSC_VER < 1800
 static int
 isblank(int c)
 {
+
 	return (c == '\t' || c == ' ');
 }
 #endif

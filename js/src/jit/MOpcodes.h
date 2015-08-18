@@ -69,7 +69,6 @@ namespace jit {
     _(AssertFloat32)                                                        \
     _(AssertRecoveredOnBailout)                                             \
     _(GetDynamicName)                                                       \
-    _(FilterArgumentsOrEval)                                                \
     _(CallDirectEval)                                                       \
     _(BitNot)                                                               \
     _(TypeOf)                                                               \

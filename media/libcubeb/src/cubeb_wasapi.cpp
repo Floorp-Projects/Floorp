@@ -918,9 +918,6 @@ handle_channel_layout(cubeb_stream * stm,  WAVEFORMATEX ** mix_format, const cub
     return;
   }
 
-  /* Otherwise, the hardware supports more than two channels. */
-  WAVEFORMATEX hw_mixformat = **mix_format;
-
   /* The docs say that GetMixFormat is always of type WAVEFORMATEXTENSIBLE [1],
    * so the reinterpret_cast below should be safe. In practice, this is not
    * true, and we just want to bail out and let the rest of the code find a good
@@ -930,9 +927,13 @@ handle_channel_layout(cubeb_stream * stm,  WAVEFORMATEX ** mix_format, const cub
     return;
   }
 
+  WAVEFORMATEXTENSIBLE * format_pcm = reinterpret_cast<WAVEFORMATEXTENSIBLE *>(*mix_format);
+
+  /* Stash a copy of the original mix format in case we need to restore it later. */
+  WAVEFORMATEXTENSIBLE hw_mix_format = *format_pcm;
+
   /* The hardware is in surround mode, we want to only use front left and front
    * right. Try that, and check if it works. */
-  WAVEFORMATEXTENSIBLE * format_pcm = reinterpret_cast<WAVEFORMATEXTENSIBLE *>((*mix_format));
   switch (stream_params->channels) {
     case 1: /* Mono */
       format_pcm->dwChannelMask = KSAUDIO_SPEAKER_MONO;
@@ -969,7 +970,7 @@ handle_channel_layout(cubeb_stream * stm,  WAVEFORMATEX ** mix_format, const cub
     /* Not supported, no suggestion. This should not happen, but it does in the
      * field with some sound cards. We restore the mix format, and let the rest
      * of the code figure out the right conversion path. */
-    **mix_format = hw_mixformat;
+    *reinterpret_cast<WAVEFORMATEXTENSIBLE *>(*mix_format) = hw_mix_format;
   } else if (hr == S_OK) {
     LOG("Requested format accepted by WASAPI.\n");
   }

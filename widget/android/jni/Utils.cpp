@@ -13,29 +13,29 @@ namespace jni {
 
 namespace detail {
 
-#define DEFINE_PRIMITIVE_TYPE_ADAPTER(NativeType, JNIType, JNIName) \
+#define DEFINE_PRIMITIVE_TYPE_ADAPTER(NativeType, JNIType, JNIName, ABIName)	\
     \
     constexpr JNIType (JNIEnv::*TypeAdapter<NativeType>::Call) \
-            (jobject, jmethodID, jvalue*); \
+            (jobject, jmethodID, jvalue*) MOZ_JNICALL_ABI; \
     constexpr JNIType (JNIEnv::*TypeAdapter<NativeType>::StaticCall) \
-            (jclass, jmethodID, jvalue*); \
+            (jclass, jmethodID, jvalue*) MOZ_JNICALL_ABI; \
     constexpr JNIType (JNIEnv::*TypeAdapter<NativeType>::Get) \
-            (jobject, jfieldID); \
+            (jobject, jfieldID) ABIName; \
     constexpr JNIType (JNIEnv::*TypeAdapter<NativeType>::StaticGet) \
-            (jclass, jfieldID); \
+            (jclass, jfieldID) ABIName; \
     constexpr void (JNIEnv::*TypeAdapter<NativeType>::Set) \
-            (jobject, jfieldID, JNIType); \
+            (jobject, jfieldID, JNIType) ABIName; \
     constexpr void (JNIEnv::*TypeAdapter<NativeType>::StaticSet) \
-            (jclass, jfieldID, JNIType)
+            (jclass, jfieldID, JNIType) ABIName
 
-DEFINE_PRIMITIVE_TYPE_ADAPTER(bool,     jboolean, Boolean);
-DEFINE_PRIMITIVE_TYPE_ADAPTER(int8_t,   jbyte,    Byte);
-DEFINE_PRIMITIVE_TYPE_ADAPTER(char16_t, jchar,    Char);
-DEFINE_PRIMITIVE_TYPE_ADAPTER(int16_t,  jshort,   Short);
-DEFINE_PRIMITIVE_TYPE_ADAPTER(int32_t,  jint,     Int);
-DEFINE_PRIMITIVE_TYPE_ADAPTER(int64_t,  jlong,    Long);
-DEFINE_PRIMITIVE_TYPE_ADAPTER(float,    jfloat,   Float);
-DEFINE_PRIMITIVE_TYPE_ADAPTER(double,   jdouble,  Double);
+DEFINE_PRIMITIVE_TYPE_ADAPTER(bool,     jboolean, Boolean, /*nothing*/);
+DEFINE_PRIMITIVE_TYPE_ADAPTER(int8_t,   jbyte,    Byte,    /*nothing*/);
+DEFINE_PRIMITIVE_TYPE_ADAPTER(char16_t, jchar,    Char,    /*nothing*/);
+DEFINE_PRIMITIVE_TYPE_ADAPTER(int16_t,  jshort,   Short,   /*nothing*/);
+DEFINE_PRIMITIVE_TYPE_ADAPTER(int32_t,  jint,     Int,     /*nothing*/);
+DEFINE_PRIMITIVE_TYPE_ADAPTER(int64_t,  jlong,    Long,    /*nothing*/);
+DEFINE_PRIMITIVE_TYPE_ADAPTER(float,    jfloat,   Float,   MOZ_JNICALL_ABI);
+DEFINE_PRIMITIVE_TYPE_ADAPTER(double,   jdouble,  Double,  MOZ_JNICALL_ABI);
 
 #undef DEFINE_PRIMITIVE_TYPE_ADAPTER
 
