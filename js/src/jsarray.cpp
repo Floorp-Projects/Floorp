@@ -2988,16 +2988,13 @@ array_of(JSContext* cx, unsigned argc, Value* vp)
     // Step 4.
     RootedObject obj(cx);
     {
-        ConstructArgs cargs(cx);
-        if (!cargs.init(1))
-            return false;
-        cargs[0].setNumber(args.length());
-
         RootedValue v(cx);
-        if (!Construct(cx, args.thisv(), cargs, args.thisv(), &v))
+        Value argv[1] = {NumberValue(args.length())};
+        if (!InvokeConstructor(cx, args.thisv(), 1, argv, false, &v))
             return false;
-
-        obj = &v.toObject();
+        obj = ToObject(cx, v);
+        if (!obj)
+            return false;
     }
 
     // Step 8.

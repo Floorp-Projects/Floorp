@@ -24,9 +24,8 @@ using namespace js;
  * The elementTypes argument is not supported. The result list is
  * pushed to *args.
  */
-template <class InvokeArgs>
 static bool
-InitArgsFromArrayLike(JSContext* cx, HandleValue v, InvokeArgs* args)
+InitArgsFromArrayLike(JSContext* cx, HandleValue v, InvokeArgs* args, bool construct)
 {
     // Step 3.
     RootedObject obj(cx, NonNullObject(cx, v));
@@ -43,7 +42,7 @@ InitArgsFromArrayLike(JSContext* cx, HandleValue v, InvokeArgs* args)
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TOO_MANY_FUN_APPLY_ARGS);
         return false;
     }
-    if (!args->init(len))
+    if (!args->init(len, construct))
         return false;
 
     // Steps 6-8.
@@ -72,7 +71,7 @@ Reflect_apply(JSContext* cx, unsigned argc, Value* vp)
     // Steps 2-3.
     FastInvokeGuard fig(cx, args.get(0));
     InvokeArgs& invokeArgs = fig.args();
-    if (!InitArgsFromArrayLike(cx, args.get(2), &invokeArgs))
+    if (!InitArgsFromArrayLike(cx, args.get(2), &invokeArgs, false))
         return false;
     invokeArgs.setCallee(args.get(0));
     invokeArgs.setThis(args.get(1));
@@ -109,12 +108,18 @@ Reflect_construct(JSContext* cx, unsigned argc, Value* vp)
     }
 
     // Step 4-5.
-    ConstructArgs constructArgs(cx);
-    if (!InitArgsFromArrayLike(cx, args.get(1), &constructArgs))
+    InvokeArgs invokeArgs(cx);
+    if (!InitArgsFromArrayLike(cx, args.get(1), &invokeArgs, true))
         return false;
+    invokeArgs.setCallee(args.get(0));
+    invokeArgs.setThis(MagicValue(JS_THIS_POISON));
+    invokeArgs.newTarget().set(newTarget);
 
     // Step 6.
-    return Construct(cx, args.get(0), constructArgs, newTarget, args.rval());
+    if (!InvokeConstructor(cx, invokeArgs))
+        return false;
+    args.rval().set(invokeArgs.rval());
+    return true;
 }
 
 /* ES6 26.1.3 Reflect.defineProperty(target, propertyKey, attributes) */
