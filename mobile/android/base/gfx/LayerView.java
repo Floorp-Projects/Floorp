@@ -235,7 +235,7 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
             requestFocus();
         }
 
-        if (mMarginsAnimator != null && mMarginsAnimator.onInterceptTouchEvent(event)) {
+        if (mToolbarAnimator != null && mToolbarAnimator.onInterceptTouchEvent(event)) {
             return true;
         }
         if (mPanZoomController != null && mPanZoomController.onTouchEvent(event)) {
