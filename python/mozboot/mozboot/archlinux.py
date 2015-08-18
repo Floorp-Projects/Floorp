@@ -60,7 +60,7 @@ class ArchlinuxBootstrapper(BaseBootstrapper):
     ]
 
     AUR_PACKAGES = [
-        'https://aur.archlinux.org/packages/uu/uuid/uuid.tar.gz',
+        'https://aur.archlinux.org/cgit/aur.git/snapshot/uuid.tar.gz'
     ]
 
     def __init__(self, version, dist_id, **kwargs):
