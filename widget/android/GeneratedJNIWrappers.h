@@ -2739,19 +2739,19 @@ public:
                 float,
                 float,
                 float,
-                float,
-                float,
+                int32_t,
+                int32_t,
                 float> Args;
         static constexpr char name[] = "<init>";
         static constexpr char signature[] =
-                "(FFFFFFFFFFFFF)V";
+                "(FFFFFFFFFFIIF)V";
         static const bool isStatic = false;
         static const bool isMultithreaded = true;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static auto New(float, float, float, float, float, float, float, float, float, float, float, float, float) -> ImmutableViewportMetrics::LocalRef;
+    static auto New(float, float, float, float, float, float, float, float, float, float, int32_t, int32_t, float) -> ImmutableViewportMetrics::LocalRef;
 
 };
 
