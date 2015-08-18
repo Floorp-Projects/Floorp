@@ -32,7 +32,6 @@ import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
-import org.mozilla.gecko.gfx.LayerMarginsAnimator;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.health.BrowserHealthRecorder;
 import org.mozilla.gecko.health.BrowserHealthReporter;
@@ -207,7 +206,6 @@ public class BrowserApp extends GeckoApp
     private TabsPanel mTabsPanel;
     private ViewGroup mHomePagerContainer;
     private ActionModeCompat mActionMode;
-    private boolean mHideDynamicToolbarOnActionModeEnd;
     private TabHistoryController tabHistoryController;
     private ZoomedView mZoomedView;
 
@@ -483,7 +481,7 @@ public class BrowserApp extends GeckoApp
                     updateHomePagerForTab(tab);
                 }
 
-                mHideDynamicToolbarOnActionModeEnd = false;
+                mDynamicToolbar.persistTemporaryVisibility();
                 break;
             case START:
                 if (Tabs.getInstance().isSelectedTab(tab)) {
@@ -3910,17 +3908,14 @@ public class BrowserApp extends GeckoApp
         // If actionMode is null, we're not currently showing one. Flip to the action mode view
         if (mActionMode == null) {
             mActionBarFlipper.showNext();
-            LayerMarginsAnimator margins = mLayerView.getLayerMarginsAnimator();
+            DynamicToolbarAnimator toolbar = mLayerView.getDynamicToolbarAnimator();
 
             // If the toolbar is dynamic and not currently showing, just slide it in
-            if (mDynamicToolbar.isEnabled() && !margins.areMarginsShown()) {
-                margins.setMaxMargins(0, mBrowserChrome.getHeight(), 0, 0);
-                mDynamicToolbar.setVisible(true, VisibilityTransition.ANIMATE);
-                mHideDynamicToolbarOnActionModeEnd = true;
+            if (mDynamicToolbar.isEnabled() && toolbar.getToolbarTranslation() != 0) {
+                mDynamicToolbar.setTemporarilyVisible(true, VisibilityTransition.ANIMATE);
             } else {
                 // Otherwise, we animate the actionbar itself
                 mActionBar.animateIn();
-                mHideDynamicToolbarOnActionModeEnd = false;
             }
 
             mDynamicToolbar.setPinned(true, PinReason.ACTION_MODE);
@@ -3950,9 +3945,7 @@ public class BrowserApp extends GeckoApp
 
         // Only slide the urlbar out if it was hidden when the action mode started
         // Don't animate hiding it so that there's no flash as we switch back to url mode
-        if (mHideDynamicToolbarOnActionModeEnd) {
-            mDynamicToolbar.setVisible(false, VisibilityTransition.IMMEDIATE);
-        }
+        mDynamicToolbar.setTemporarilyVisible(false, VisibilityTransition.IMMEDIATE);
     }
 
     @Override
