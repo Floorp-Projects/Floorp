@@ -11,6 +11,8 @@ import org.mozilla.gecko.annotation.WrapForJNI;
 public class ViewTransform {
     public float x;
     public float y;
+    public float width;
+    public float height;
     public float scale;
     public float fixedLayerMarginLeft;
     public float fixedLayerMarginTop;
