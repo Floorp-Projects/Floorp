@@ -289,7 +289,7 @@ CommonAnimationManager::AddStyleUpdatesTo(RestyleTracker& aTracker)
     AnimationCollection* collection = static_cast<AnimationCollection*>(next);
     next = PR_NEXT_LINK(next);
 
-    collection->EnsureStyleRuleFor(now, EnsureStyleRule_IsNotThrottled);
+    collection->EnsureStyleRuleFor(now);
 
     dom::Element* elementToRestyle = collection->GetElementToRestyle();
     if (elementToRestyle) {
@@ -429,8 +429,7 @@ CommonAnimationManager::GetAnimationRule(mozilla::dom::Element* aElement,
   }
 
   collection->EnsureStyleRuleFor(
-    mPresContext->RefreshDriver()->MostRecentRefresh(),
-    EnsureStyleRule_IsNotThrottled);
+    mPresContext->RefreshDriver()->MostRecentRefresh());
 
   return collection->mStyleRule;
 }
@@ -862,8 +861,7 @@ AnimationCollection::Tick()
 }
 
 void
-AnimationCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
-                                        EnsureStyleRuleFlags aFlags)
+AnimationCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime)
 {
   mHasPendingAnimationRestyle = false;
 
@@ -875,25 +873,6 @@ AnimationCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
   if (!mStyleRuleRefreshTime.IsNull() &&
       mStyleRuleRefreshTime == aRefreshTime) {
     // mStyleRule may be null and valid, if we have no style to apply.
-    return;
-  }
-
-  // If we're performing animations on the compositor thread, then we can skip
-  // most of the work in this method. But even if we are throttled, then we
-  // have to do the work if an animation is ending in order to get correct end
-  // of animation behavior (the styles of the animation disappear, or the fill
-  // mode behavior). CanThrottle returns false for any finishing animations
-  // so we can force style recalculation in that case.
-  if (aFlags == EnsureStyleRule_IsThrottled) {
-    for (size_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-      if (!mAnimations[animIdx]->CanThrottle()) {
-        aFlags = EnsureStyleRule_IsNotThrottled;
-        break;
-      }
-    }
-  }
-
-  if (aFlags == EnsureStyleRule_IsThrottled) {
     return;
   }
 

@@ -534,7 +534,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
   UpdateCascadeResults(aStyleContext, collection);
 
   TimeStamp refreshTime = mPresContext->RefreshDriver()->MostRecentRefresh();
-  collection->EnsureStyleRuleFor(refreshTime, EnsureStyleRule_IsNotThrottled);
+  collection->EnsureStyleRuleFor(refreshTime);
   // We don't actually dispatch the pending events now.  We'll either
   // dispatch them the next time we get a refresh driver notification
   // or the next time somebody calls
