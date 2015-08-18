@@ -168,11 +168,8 @@ H264Converter::CreateDecoderAndInit(MediaRawData* aSample)
 
     nsRefPtr<H264Converter> self = this;
 
-    // The mVideoTaskQueue is flushable which can't be used in MediaPromise. So
-    // we get the current AbstractThread instead of it. The MOZ_ASSERT above
-    // ensures we are running in AbstractThread so we won't get a nullptr.
     mInitPromiseRequest.Begin(mDecoder->Init()
-      ->Then(AbstractThread::GetCurrent(), __func__, this,
+      ->Then(AbstractThread::GetCurrent()->AsTaskQueue(), __func__, this,
              &H264Converter::OnDecoderInitDone,
              &H264Converter::OnDecoderInitFailed));
   }

@@ -7,7 +7,6 @@
 #include "VideoUtils.h"
 #include "nsTArray.h"
 #include "MediaCodecProxy.h"
-#include "MediaData.h"
 
 #include "mozilla/Logging.h"
 #include <android/log.h>
@@ -19,6 +18,20 @@ PRLogModuleInfo* GetDemuxerLog();
 using namespace android;
 
 namespace mozilla {
+
+nsresult
+GonkDecoderManager::Shutdown()
+{
+  if (mDecoder.get()) {
+    mDecoder->stop();
+    mDecoder->ReleaseMediaResources();
+    mDecoder = nullptr;
+  }
+
+  mInitPromise.RejectIfExists(DecoderFailureReason::CANCELED, __func__);
+
+  return NS_OK;
+}
 
 GonkMediaDataDecoder::GonkMediaDataDecoder(GonkDecoderManager* aManager,
                                            FlushableTaskQueue* aTaskQueue,
@@ -40,25 +53,15 @@ GonkMediaDataDecoder::~GonkMediaDataDecoder()
 nsRefPtr<MediaDataDecoder::InitPromise>
 GonkMediaDataDecoder::Init()
 {
-  sp<MediaCodecProxy> decoder;
-  decoder = mManager->Init(mCallback);
-  mDecoder = decoder;
   mDrainComplete = false;
 
-  return InitPromise::CreateAndResolve(mManager->GetTrackType(), __func__);
+  return mManager->Init(mCallback);
 }
 
 nsresult
 GonkMediaDataDecoder::Shutdown()
 {
-  if (!mDecoder.get()) {
-    return NS_OK;
-  }
-
-  mDecoder->stop();
-  mDecoder->ReleaseMediaResources();
-  mDecoder = nullptr;
-  return NS_OK;
+  return mManager->Shutdown();
 }
 
 // Inserts data into the decoder's pipeline.

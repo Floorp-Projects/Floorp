@@ -4135,8 +4135,8 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
     void assertValidJmpSrc(JmpSrc src)
     {
         // The target offset is stored at offset - 4.
-        MOZ_ASSERT(src.offset() > int32_t(sizeof(int32_t)));
-        MOZ_ASSERT(size_t(src.offset()) <= size());
+        MOZ_RELEASE_ASSERT(src.offset() > int32_t(sizeof(int32_t)));
+        MOZ_RELEASE_ASSERT(size_t(src.offset()) <= size());
     }
 
     bool nextJump(const JmpSrc& from, JmpSrc* next)
@@ -4153,7 +4153,7 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
         if (offset == -1)
             return false;
 
-        MOZ_ASSERT(size_t(offset) < size());
+        MOZ_RELEASE_ASSERT(size_t(offset) < size());
         *next = JmpSrc(offset);
         return true;
     }
@@ -4165,7 +4165,7 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
             return;
 
         assertValidJmpSrc(from);
-        MOZ_ASSERT(to.offset() == -1 || size_t(to.offset()) <= size());
+        MOZ_RELEASE_ASSERT(to.offset() == -1 || size_t(to.offset()) <= size());
 
         unsigned char* code = m_formatter.data();
         SetInt32(code + from.offset(), to.offset());
@@ -4182,7 +4182,7 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
             return;
 
         assertValidJmpSrc(from);
-        MOZ_ASSERT(size_t(to.offset()) <= size());
+        MOZ_RELEASE_ASSERT(size_t(to.offset()) <= size());
 
         spew(".set .Lfrom%d, .Llabel%d", from.offset(), to.offset());
         unsigned char* code = m_formatter.data();

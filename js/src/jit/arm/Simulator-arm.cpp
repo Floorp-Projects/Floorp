@@ -600,20 +600,6 @@ ReadLine(const char* prompt)
     return result;
 }
 
-// Observe that llvm-mc may have a different name on your system.  Make a symlink.
-static void
-DisassembleInstruction(uint32_t pc)
-{
-    uint8_t* bytes = reinterpret_cast<uint8_t*>(pc);
-    char hexbytes[256];
-    sprintf(hexbytes, "0x%x 0x%x 0x%x 0x%x", bytes[0], bytes[1], bytes[2], bytes[3]);
-    char llvmcmd[1024];
-    sprintf(llvmcmd, "bash -c \"echo -n '%p'; echo '%s' | "
-            "llvm-mc -disassemble -arch=arm -mcpu=cortex-a9 | "
-            "grep -v pure_instructions | grep -v .text\"",
-            reinterpret_cast<void*>(pc), hexbytes);
-    system(llvmcmd);
-}
 
 void
 ArmDebugger::debug()
@@ -641,9 +627,24 @@ ArmDebugger::debug()
     // make them invisible to all commands.
     undoBreakpoints();
 
+#ifndef JS_DISASM_ARM
+    static bool disasm_warning_printed = false;
+    if (!disasm_warning_printed) {
+        printf("  No ARM disassembler present.  Enable JS_DISASM_ARM in configure.in.");
+        disasm_warning_printed = true;
+    }
+#endif
+
     while (!done && !sim_->has_bad_pc()) {
         if (last_pc != sim_->get_pc()) {
-            DisassembleInstruction(sim_->get_pc());
+#ifdef JS_DISASM_ARM
+            disasm::NameConverter converter;
+            disasm::Disassembler dasm(converter);
+            disasm::EmbeddedVector<char, disasm::ReasonableBufferSize> buffer;
+            dasm.InstructionDecode(buffer,
+                                   reinterpret_cast<uint8_t*>(sim_->get_pc()));
+            printf("  0x%08x  %s\n", sim_->get_pc(), buffer.start());
+#endif
             last_pc = sim_->get_pc();
         }
         char* line = ReadLine("sim> ");
@@ -756,8 +757,11 @@ ArmDebugger::debug()
                     cur++;
                 }
             } else if (strcmp(cmd, "disasm") == 0 || strcmp(cmd, "di") == 0) {
+#ifdef JS_DISASM_ARM
+                uint8_t* prev = nullptr;
                 uint8_t* cur = nullptr;
                 uint8_t* end = nullptr;
+
                 if (argc == 1) {
                     cur = reinterpret_cast<uint8_t*>(sim_->get_pc());
                     end = cur + (10 * SimInstruction::kInstrSize);
@@ -789,9 +793,15 @@ ArmDebugger::debug()
                     }
                 }
                 while (cur < end) {
-                    DisassembleInstruction(uint32_t(cur));
-                    cur += SimInstruction::kInstrSize;
+                    disasm::NameConverter converter;
+                    disasm::Disassembler dasm(converter);
+                    disasm::EmbeddedVector<char, disasm::ReasonableBufferSize> buffer;
+
+                    prev = cur;
+                    cur += dasm.InstructionDecode(buffer, cur);
+                    printf("  0x%08x  %s\n", reinterpret_cast<uint32_t>(prev), buffer.start());
                 }
+#endif
             } else if (strcmp(cmd, "gdb") == 0) {
                 printf("relinquishing control to gdb\n");
                 asm("int $3");
