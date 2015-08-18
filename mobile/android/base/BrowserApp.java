@@ -1596,14 +1596,18 @@ public class BrowserApp extends GeckoApp
         }
 
         // Make sure the toolbar is fully hidden or fully shown when the user
-        // lifts their finger. If the page is shorter than the viewport or if
-        // the user has reached the end of a long (longer than twice the viewport height) page,
-        // the toolbar is always shown.
+        // lifts their finger, depending on various conditions.
         ImmutableViewportMetrics metrics = mLayerView.getViewportMetrics();
-        final float height = metrics.viewportRectBottom - metrics.viewportRectTop;
-        if (metrics.getPageHeight() < metrics.getHeight()
-              || metrics.marginTop >= mToolbarHeight / 2
-              || (metrics.pageRectBottom == metrics.viewportRectBottom && metrics.pageRectBottom > 2*height)) {
+        float toolbarTranslation = mLayerView.getDynamicToolbarAnimator().getToolbarTranslation();
+
+        boolean shortPage = metrics.getPageHeight() < metrics.getHeight();
+        boolean toolbarMostlyVisible = toolbarTranslation < (mToolbarHeight / 2);
+        boolean atBottomOfLongPage = (metrics.pageRectBottom == metrics.viewportRectBottom)
+            && (metrics.pageRectBottom > 2 * metrics.getHeight());
+        Log.v(LOGTAG, "On pan/zoom stopped, short page: " + shortPage
+            + "; toolbarMostlyVisible: " + toolbarMostlyVisible
+            + "; atBottomOfLongPage: " + atBottomOfLongPage);
+        if (shortPage || toolbarMostlyVisible || atBottomOfLongPage) {
             mDynamicToolbar.setVisible(true, VisibilityTransition.ANIMATE);
         } else {
             mDynamicToolbar.setVisible(false, VisibilityTransition.ANIMATE);
