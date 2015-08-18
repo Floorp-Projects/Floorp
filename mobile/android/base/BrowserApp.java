@@ -1229,7 +1229,7 @@ public class BrowserApp extends GeckoApp
                 ViewHelper.setTranslationY(mBrowserChrome, 0);
             }
             if (mLayerView != null) {
-                ViewHelper.setTranslationY(mLayerView, mBrowserChrome.getHeight());
+                ViewHelper.setTranslationY(mLayerView, 0);
             }
         }
 
@@ -3142,6 +3142,8 @@ public class BrowserApp extends GeckoApp
                     if (mDynamicToolbar.isEnabled()) {
                         mDynamicToolbar.setPinned(false, PinReason.FULL_SCREEN);
                         mDynamicToolbar.setVisible(true, VisibilityTransition.IMMEDIATE);
+                    } else {
+                        setToolbarMargin(mBrowserChrome.getHeight());
                     }
                 }
             }
