@@ -137,9 +137,9 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         mFrameMetrics = mViewportMetrics;
 
         mDrawListeners = new ArrayList<DrawListener>();
+        mToolbarAnimator = new DynamicToolbarAnimator(this);
         mPanZoomController = PanZoomController.Factory.create(this, view, eventDispatcher);
         mMarginsAnimator = new LayerMarginsAnimator(this, view);
-        mToolbarAnimator = new DynamicToolbarAnimator(this);
         mView = view;
         mView.setListener(this);
         mContentDocumentIsDisplayed = true;
@@ -906,9 +906,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     /** Implementation of PanZoomTarget */
     @Override
     public void panZoomStopped() {
-        if (mDynamicToolbarViewportChangeListener != null) {
-            mDynamicToolbarViewportChangeListener.onPanZoomStopped();
-        }
+        mToolbarAnimator.onPanZoomStopped();
         if (mZoomedViewViewportChangeListener != null) {
             mZoomedViewViewportChangeListener.onPanZoomStopped();
         }

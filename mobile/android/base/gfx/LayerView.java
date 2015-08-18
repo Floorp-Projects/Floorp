@@ -672,6 +672,7 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
 
     public interface DynamicToolbarListener {
         public void onTranslationChanged(float aToolbarTranslation, float aLayerViewTranslation);
+        public void onPanZoomStopped();
     }
 
     // Public hooks for listening to metrics changing
