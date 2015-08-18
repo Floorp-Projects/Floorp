@@ -137,7 +137,8 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
     if (NS_WARN_IF(NS_FAILED(rv))) {
       nsAutoCString spec;
       scriptURI->GetSpec(spec);
-      aRv.ThrowTypeError(MSG_INVALID_SCOPE, &defaultScope, &spec);
+      NS_ConvertUTF8toUTF16 wSpec(spec);
+      aRv.ThrowTypeError(MSG_INVALID_SCOPE, &defaultScope, &wSpec);
       return nullptr;
     }
   } else {
@@ -149,7 +150,8 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
       if (window->GetDocBaseURI()) {
         window->GetDocBaseURI()->GetSpec(spec);
       }
-      aRv.ThrowTypeError(MSG_INVALID_SCOPE, &aOptions.mScope.Value(), &spec);
+      NS_ConvertUTF8toUTF16 wSpec(spec);
+      aRv.ThrowTypeError(MSG_INVALID_SCOPE, &aOptions.mScope.Value(), &wSpec);
       return nullptr;
     }
   }
