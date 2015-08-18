@@ -422,7 +422,6 @@ tail =
                                           manifest=self.manifest,
                                           mozInfo=mozinfo.info,
                                           shuffle=shuffle,
-                                          testsRootDir=self.tempdir,
                                           verbose=verbose,
                                           sequential=True,
                                           utility_path=self.utility_path),
