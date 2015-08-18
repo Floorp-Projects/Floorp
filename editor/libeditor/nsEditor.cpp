@@ -147,6 +147,7 @@ nsEditor::nsEditor()
 ,  mDidPostCreate(false)
 ,  mDispatchInputEvent(true)
 ,  mIsInEditAction(false)
+,  mHidingCaret(false)
 {
 }
 
@@ -158,6 +159,8 @@ nsEditor::~nsEditor()
     mComposition->OnEditorDestroyed();
     mComposition = nullptr;
   }
+  // If this editor is still hiding the caret, we need to restore it.
+  HideCaret(false);
   mTxnMgr = nullptr;
 
   delete mPhonetic;
@@ -464,6 +467,8 @@ nsEditor::PreDestroy(bool aDestroyingFrames)
 
   // Unregister event listeners
   RemoveEventListeners();
+  // If this editor is still hiding the caret, we need to restore it.
+  HideCaret(false);
   mActionListeners.Clear();
   mEditorObservers.Clear();
   mDocStateListeners.Clear();
@@ -2064,6 +2069,10 @@ nsEditor::EndIMEComposition()
                    "nsIAbsorbingTransaction::Commit() failed");
     }
   }
+
+  // Composition string may have hidden the caret.  Therefore, we need to
+  // cancel it here.
+  HideCaret(false);
 
   /* reset the data we need to construct a transaction */
   mIMETextNode = nullptr;
@@ -5257,4 +5266,24 @@ nsEditor::GetIMESelectionStartOffsetIn(nsINode* aTextNode)
     }
   }
   return minOffset < INT32_MAX ? minOffset : -1;
+}
+
+void
+nsEditor::HideCaret(bool aHide)
+{
+  if (mHidingCaret == aHide) {
+    return;
+  }
+
+  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+  NS_ENSURE_TRUE_VOID(presShell);
+  nsRefPtr<nsCaret> caret = presShell->GetCaret();
+  NS_ENSURE_TRUE_VOID(caret);
+
+  mHidingCaret = aHide;
+  if (aHide) {
+    caret->AddForceHide();
+  } else {
+    caret->RemoveForceHide();
+  }
 }

@@ -35,13 +35,14 @@ var tests = [
   },
 
   function() {
-    iframe.src = "file_webaudioLoop.html";
-  },
-
-  function() {
     observerService.addObserver(observer, "audio-playback", false);
     ok(true, "Observer set");
     runTest();
+  },
+
+  function() {
+    iframe.src = "file_webaudioLoop.html";
+    expectedNotification = 'active';
   },
 
   function() {

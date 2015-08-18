@@ -40,15 +40,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     const MacroAssembler& asMasm() const;
 
   private:
-    // Number of bytes the stack is adjusted inside a call to C. Calls to C may
-    // not be nested.
-    bool inCall_;
-    uint32_t args_;
-    uint32_t passedIntArgs_;
-    uint32_t passedFloatArgs_;
-    uint32_t stackForCall_;
-    bool dynamicAlignment_;
-
     // These use SystemAllocPolicy since asm.js releases memory after each
     // function is compiled, and these need to live until after all functions
     // are compiled.
@@ -83,11 +74,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     typedef HashMap<SimdConstant, size_t, SimdConstant, SystemAllocPolicy> SimdMap;
     SimdMap simdMap_;
 
-    void setupABICall(uint32_t arg);
-
-  protected:
-    MoveResolver moveResolver_;
-
   public:
     using MacroAssemblerX86Shared::callWithExitFrame;
     using MacroAssemblerX86Shared::branch32;
@@ -96,7 +82,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     using MacroAssemblerX86Shared::store32;
 
     MacroAssemblerX64()
-      : inCall_(false)
     {
     }
 
@@ -1364,40 +1349,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         bind(&done);
     }
 
-    // Setup a call to C/C++ code, given the number of general arguments it
-    // takes. Note that this only supports cdecl.
-    //
-    // In order for alignment to work correctly, the MacroAssembler must have a
-    // consistent view of the stack displacement. It is okay to call "push"
-    // manually, however, if the stack alignment were to change, the macro
-    // assembler should be notified before starting a call.
-    void setupAlignedABICall(uint32_t args);
-
-    // Sets up an ABI call for when the alignment is not known. This may need a
-    // scratch register.
-    void setupUnalignedABICall(uint32_t args, Register scratch);
-
-    // Arguments must be assigned to a C/C++ call in order. They are moved
-    // in parallel immediately before performing the call. This process may
-    // temporarily use more stack, in which case esp-relative addresses will be
-    // automatically adjusted. It is extremely important that esp-relative
-    // addresses are computed *after* setupABICall(). Furthermore, no
-    // operations should be emitted while setting arguments.
-    void passABIArg(const MoveOperand& from, MoveOp::Type type);
-    void passABIArg(Register reg);
-    void passABIArg(FloatRegister reg, MoveOp::Type type);
-
-  private:
-    void callWithABIPre(uint32_t* stackAdjust);
-    void callWithABIPost(uint32_t stackAdjust, MoveOp::Type result);
-
   public:
-    // Emits a call to a C/C++ function, resolving all argument moves.
-    void callWithABI(void* fun, MoveOp::Type result = MoveOp::GENERAL);
-    void callWithABI(AsmJSImmPtr imm, MoveOp::Type result = MoveOp::GENERAL);
-    void callWithABI(Address fun, MoveOp::Type result = MoveOp::GENERAL);
-    void callWithABI(Register fun, MoveOp::Type result = MoveOp::GENERAL);
-
     void handleFailureWithHandlerTail(void* handler);
 
     void makeFrameDescriptor(Register frameSizeReg, FrameType type) {
