@@ -5,7 +5,8 @@
 
 function getPrincipalFromURIString(uriStr)
 {
-  return Services.scriptSecurityManager.getNoAppCodebasePrincipal(NetUtil.newURI(uriStr));
+  let uri = NetUtil.newURI(uriStr);
+  return Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
 }
 
 function run_test() {
