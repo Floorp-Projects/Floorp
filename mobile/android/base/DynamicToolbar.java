@@ -25,7 +25,8 @@ public class DynamicToolbar {
 
     public enum PinReason {
         RELAYOUT,
-        ACTION_MODE
+        ACTION_MODE,
+        FULL_SCREEN
     }
 
     public enum VisibilityTransition {
