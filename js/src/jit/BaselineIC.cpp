@@ -10003,7 +10003,25 @@ DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_, uint
     }
 
     if (op == JSOP_NEW) {
-        if (!InvokeConstructor(cx, callee, argc, args, true, res))
+        // Callees from the stack could have any old non-constructor callee.
+        if (!IsConstructor(callee)) {
+            ReportValueError(cx, JSMSG_NOT_CONSTRUCTOR, JSDVG_IGNORE_STACK, callee, nullptr);
+            return false;
+        }
+
+        ConstructArgs cargs(cx);
+        if (!cargs.init(argc))
+            return false;
+
+        for (uint32_t i = 0; i < argc; i++)
+            cargs[i].set(args[i]);
+
+        RootedValue newTarget(cx, args[argc]);
+        MOZ_ASSERT(IsConstructor(newTarget),
+                   "either callee == newTarget, or the initial |new| checked "
+                   "that IsConstructor(newTarget)");
+
+        if (!Construct(cx, callee, cargs, newTarget, res))
             return false;
     } else if ((op == JSOP_EVAL || op == JSOP_STRICTEVAL) &&
                frame->scopeChain()->global().valueIsEval(callee))
