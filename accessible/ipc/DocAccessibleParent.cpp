@@ -439,22 +439,6 @@ DocAccessibleParent::Destroy()
     GetAccService()->RemoteDocShutdown(this);
 }
 
-bool
-DocAccessibleParent::CheckDocTree() const
-{
-  size_t childDocs = mChildDocs.Length();
-  for (size_t i = 0; i < childDocs; i++) {
-    if (!mChildDocs[i] || mChildDocs[i]->mParentDoc != this)
-      return false;
-
-    if (!mChildDocs[i]->CheckDocTree()) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 xpcAccessibleGeneric*
 DocAccessibleParent::GetXPCAccessible(ProxyAccessible* aProxy)
 {
@@ -462,6 +446,42 @@ DocAccessibleParent::GetXPCAccessible(ProxyAccessible* aProxy)
   MOZ_ASSERT(doc);
 
   return doc->GetXPCAccessible(aProxy);
+}
+
+bool
+DocAccessibleParent::CheckDocTreeInternal() const
+{
+  size_t childDocs = mChildDocs.Length();
+  for (size_t i = 0; i < childDocs; i++) {
+    if (!mChildDocs[i] || mChildDocs[i]->mParentDoc != this)
+      return false;
+
+    if (!mChildDocs[i]->CheckDocTreeInternal()) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+const DocAccessibleParent*
+DocAccessibleParent::CheckTopDoc() const
+{
+  const DocAccessibleParent* doc = this;
+  while (doc->ParentDoc()) {
+    doc = doc->ParentDoc();
+  }
+
+  MOZ_DIAGNOSTIC_ASSERT(doc->mTopLevel);
+  MOZ_DIAGNOSTIC_ASSERT(DocManager::TopLevelRemoteDocs()->Contains(doc));
+
+  return doc;
+}
+
+bool
+DocAccessibleParent::CheckDocTree() const
+{
+  return CheckTopDoc()->CheckDocTreeInternal();
 }
 
 #if defined(XP_WIN)
