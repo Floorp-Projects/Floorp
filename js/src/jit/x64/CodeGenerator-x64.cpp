@@ -11,6 +11,7 @@
 
 #include "jsscriptinlines.h"
 
+#include "jit/MacroAssembler-inl.h"
 #include "jit/shared/CodeGenerator-shared-inl.h"
 
 using namespace js;
@@ -980,7 +981,7 @@ CodeGeneratorX64::visitOutOfLineRandom(OutOfLineRandom* ool)
 
     masm.loadJSContext(temp);
 
-    masm.setupUnalignedABICall(1, temp2);
+    masm.setupUnalignedABICall(temp2);
     masm.passABIArg(temp);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, math_random_no_outparam), MoveOp::DOUBLE);
 

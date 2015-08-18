@@ -23,18 +23,18 @@ using namespace js::jit;
 
 ABIArgGenerator::ABIArgGenerator()
   : usedArgSlots_(0),
-    firstArgFloat(false),
+    firstArgFloatSize_(0),
+    useGPRForFloats_(false),
     current_()
 {}
 
 ABIArg
 ABIArgGenerator::next(MIRType type)
 {
-    FloatRegister::RegType regType;
+    Register destReg;
     switch (type) {
       case MIRType_Int32:
       case MIRType_Pointer:
-        Register destReg;
         if (GetIntArgReg(usedArgSlots_, &destReg))
             current_ = ABIArg(destReg);
         else
@@ -42,19 +42,34 @@ ABIArgGenerator::next(MIRType type)
         usedArgSlots_++;
         break;
       case MIRType_Float32:
-      case MIRType_Double:
-        regType = (type == MIRType_Double ? FloatRegister::Double : FloatRegister::Single);
         if (!usedArgSlots_) {
-            current_ = ABIArg(FloatRegister(FloatRegisters::f12, regType));
-            usedArgSlots_ += 2;
-            firstArgFloat = true;
-        } else if (usedArgSlots_ <= 2) {
-            // NOTE: We will use f14 always. This is not compatible with
-            // system ABI. We will have to introduce some infrastructure
-            // changes if we have to use system ABI here.
-            current_ = ABIArg(FloatRegister(FloatRegisters::f14, regType));
+            current_ = ABIArg(f12.asSingle());
+            firstArgFloatSize_ = 1;
+        } else if (usedArgSlots_ == firstArgFloatSize_) {
+            current_ = ABIArg(f14.asSingle());
+        } else if (useGPRForFloats_ && GetIntArgReg(usedArgSlots_, &destReg)) {
+            current_ = ABIArg(destReg);
+        } else {
+            if (usedArgSlots_ < NumIntArgRegs)
+                usedArgSlots_ = NumIntArgRegs;
+            current_ = ABIArg(usedArgSlots_ * sizeof(intptr_t));
+        }
+        usedArgSlots_++;
+        break;
+      case MIRType_Double:
+        if (!usedArgSlots_) {
+            current_ = ABIArg(f12);
+            usedArgSlots_ = 2;
+            firstArgFloatSize_ = 2;
+        } else if (usedArgSlots_ == firstArgFloatSize_) {
+            current_ = ABIArg(f14);
+            usedArgSlots_ = 4;
+        } else if (useGPRForFloats_ && usedArgSlots_ <= 2) {
+            current_ = ABIArg(a2, a3);
             usedArgSlots_ = 4;
         } else {
+            if (usedArgSlots_ < NumIntArgRegs)
+                usedArgSlots_ = NumIntArgRegs;
             usedArgSlots_ += usedArgSlots_ % 2;
             current_ = ABIArg(usedArgSlots_ * sizeof(intptr_t));
             usedArgSlots_ += 2;
@@ -64,8 +79,8 @@ ABIArgGenerator::next(MIRType type)
         MOZ_CRASH("Unexpected argument type");
     }
     return current_;
-
 }
+
 const Register ABIArgGenerator::NonArgReturnReg0 = t0;
 const Register ABIArgGenerator::NonArgReturnReg1 = t1;
 const Register ABIArgGenerator::NonArg_VolatileReg = v0;

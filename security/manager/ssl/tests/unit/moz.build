@@ -13,6 +13,7 @@ TEST_DIRS += [
     'test_cert_version',
     'test_ev_certs',
     'test_intermediate_basic_usage_constraints',
+    'test_keysize',
     'test_keysize_ev',
     'test_pinning_dynamic',
     'test_ocsp_fetch_method',

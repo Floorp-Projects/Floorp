@@ -12,10 +12,11 @@ The input format is as follows:
 
 issuer:<string to use as the issuer common name>
 subject:<string to use as the subject common name>
-[version:<{1,2,3,4}>]
+[version:{1,2,3,4}]
 [validity:<YYYYMMDD-YYYYMMDD|duration in days>]
 [issuerKey:<key specification>]
 [subjectKey:<key specification>]
+[signature:{sha256WithRSAEncryption,ecdsaWithSHA256}]
 [extension:<extension name:<extension-specific data>>]
 [...]
 
@@ -33,21 +34,20 @@ certificatePolicies:<policy OID>
 Where:
   [] indicates an optional field or component of a field
   <> indicates a required component of a field
-  {} indicates choice among a set of values
-  [a,b,c] indicates a list of potential values, of which more than one
+  {} indicates a choice of exactly one value among a set of values
+  [a,b,c] indicates a list of potential values, of which zero or more
           may be used
 
 For instance, the version field is optional. However, if it is
 specified, it must have exactly one value from the set {1,2,3,4}.
 
-In the future it will be possible to specify other properties of the
-generated certificate (for example, the signature algorithm). For now,
-those fields have reasonable default values. By default one shared RSA
+Most fields have reasonable default values. By default one shared RSA
 key is used for all signatures and subject public key information
 fields. Using "issuerKey:<key specification>" or
-"subjectKey:<key specification>" causes a different RSA key be used for
+"subjectKey:<key specification>" causes a different key be used for
 signing or as the subject public key information field, respectively.
 See pykey.py for the list of available specifications.
+The signature algorithm is sha256WithRSAEncryption by default.
 
 The validity period may be specified as either concrete notBefore and
 notAfter values or as a validity period centered around 'now'. For the
@@ -149,8 +149,9 @@ def stringToAlgorithmIdentifier(string):
     algorithm = None
     if string == 'sha256WithRSAEncryption':
         algorithm = univ.ObjectIdentifier('1.2.840.113549.1.1.11')
-    # In the future, more algorithms will be supported.
-    if algorithm == None:
+    elif string == 'ecdsaWithSHA256':
+        algorithm = univ.ObjectIdentifier('1.2.840.10045.4.3.2')
+    else:
         raise UnknownAlgorithmTypeError(string)
     algorithmIdentifier.setComponentByName('algorithm', algorithm)
     return algorithmIdentifier
@@ -197,10 +198,9 @@ class Certificate:
         self.notBefore = self.now - aYearAndAWhile
         self.notAfter = self.now + aYearAndAWhile
         self.subject = 'Default Subject'
-        self.signatureAlgorithm = 'sha256WithRSAEncryption'
         self.extensions = None
-        self.subjectKey = pykey.RSAKey('default')
-        self.issuerKey = pykey.RSAKey('default')
+        self.subjectKey = pykey.keyFromSpecification('default')
+        self.issuerKey = pykey.keyFromSpecification('default')
         self.decodeParams(paramStream)
         self.serialNumber = self.generateSerialNumber()
 
@@ -216,7 +216,10 @@ class Certificate:
         hasher.update(str(self.notBefore))
         hasher.update(str(self.notAfter))
         hasher.update(self.subject)
-        hasher.update(self.signatureAlgorithm)
+        # Bug 1194419: This is duplicated so as to not have to
+        # re-generate the EV testing root certificates. At some point
+        # we should clean this up and re-generate them.
+        hasher.update(self.signature)
         if self.extensions:
             for extension in self.extensions:
                 hasher.update(str(extension))
@@ -255,6 +258,8 @@ class Certificate:
             self.setupKey('issuer', value)
         elif param == 'subjectKey':
             self.setupKey('subject', value)
+        elif param == 'signature':
+            self.signature = value
         else:
             raise UnknownParameterTypeError(param)
 
@@ -295,9 +300,9 @@ class Certificate:
 
     def setupKey(self, subjectOrIssuer, value):
         if subjectOrIssuer == 'subject':
-            self.subjectKey = pykey.RSAKey(value)
+            self.subjectKey = pykey.keyFromSpecification(value)
         elif subjectOrIssuer == 'issuer':
-            self.issuerKey = pykey.RSAKey(value)
+            self.issuerKey = pykey.keyFromSpecification(value)
         else:
             raise UnknownKeyTargetError(subjectOrIssuer)
 
@@ -411,14 +416,12 @@ class Certificate:
     def getSubject(self):
         return stringToCommonName(self.subject)
 
-    def getSignatureAlgorithm(self):
-        return stringToAlgorithmIdentifier(self.signature)
-
     def toDER(self):
+        signatureOID = self.getSignature()
         tbsCertificate = rfc2459.TBSCertificate()
         tbsCertificate.setComponentByName('version', self.getVersion())
         tbsCertificate.setComponentByName('serialNumber', self.getSerialNumber())
-        tbsCertificate.setComponentByName('signature', self.getSignature())
+        tbsCertificate.setComponentByName('signature', signatureOID)
         tbsCertificate.setComponentByName('issuer', self.getIssuer())
         tbsCertificate.setComponentByName('validity', self.getValidity())
         tbsCertificate.setComponentByName('subject', self.getSubject())
@@ -434,7 +437,7 @@ class Certificate:
             tbsCertificate.setComponentByName('extensions', extensions)
         certificate = rfc2459.Certificate()
         certificate.setComponentByName('tbsCertificate', tbsCertificate)
-        certificate.setComponentByName('signatureAlgorithm', self.getSignatureAlgorithm())
+        certificate.setComponentByName('signatureAlgorithm', signatureOID)
         tbsDER = encoder.encode(tbsCertificate)
         certificate.setComponentByName('signatureValue', self.issuerKey.sign(tbsDER))
         return encoder.encode(certificate)

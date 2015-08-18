@@ -29,7 +29,7 @@ function build()
     rm -rf $install_dir
     mkdir $install_dir
     cd $objdir
-    CFLAGS=-O2 CXXFLAGS=-O2 /tmp/google-breakpad/configure --prefix=$install_dir --disable-tools $configure_args
+    CFLAGS="-O2 $CFLAGS" CXXFLAGS="-O2 $CXXFLAGS" /tmp/google-breakpad/configure --prefix=$install_dir --disable-tools $configure_args
     make -j`grep -c ^processor /proc/cpuinfo` $make_args
     make install-strip $make_args
     cp $install_dir/bin/minidump_stackwalk* /tmp/stackwalker/${platform}-minidump_stackwalk${ext}
@@ -70,6 +70,8 @@ function macosx64()
 function win32()
 {
     export LDFLAGS="-static-libgcc -static-libstdc++"
+    export CFLAGS="-D__USE_MINGW_ANSI_STDIO=1"
+    export CXXFLAGS="-D__USE_MINGW_ANSI_STDIO=1"
     build win32 "--host=i686-w64-mingw32"
     unset LDFLAGS
 }

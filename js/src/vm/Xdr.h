@@ -85,10 +85,6 @@ class XDRBuffer {
         return ptr;
     }
 
-    static bool isUint32Overflow(size_t n) {
-        return size_t(-1) > size_t(UINT32_MAX) && n > size_t(UINT32_MAX);
-    }
-
     void freeBuffer();
 
   private:

@@ -401,9 +401,14 @@ class MacroAssemblerARM : public Assembler
     void ma_vcvt_U32_F32(FloatRegister src, FloatRegister dest, Condition cc = Always);
 
 
+    // Transfer (do not coerce) a float into a gpr.
     void ma_vxfer(VFPRegister src, Register dest, Condition cc = Always);
+    // Transfer (do not coerce) a double into a couple of gpr.
     void ma_vxfer(VFPRegister src, Register dest1, Register dest2, Condition cc = Always);
 
+    // Transfer (do not coerce) a gpr into a float
+    void ma_vxfer(Register src, FloatRegister dest, Condition cc = Always);
+    // Transfer (do not coerce) a couple of gpr into a double
     void ma_vxfer(Register src1, Register src2, FloatRegister dest, Condition cc = Always);
 
     BufferOffset ma_vdtr(LoadStore ls, const Address& addr, VFPRegister dest, Condition cc = Always);
@@ -493,48 +498,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     MacroAssembler& asMasm();
     const MacroAssembler& asMasm() const;
 
-  private:
-    bool inCall_;
-    // Number of bytes the stack is adjusted inside a call to C. Calls to C may
-    // not be nested.
-    uint32_t args_;
-    // The actual number of arguments that were passed, used to assert that the
-    // initial number of arguments declared was correct.
-    uint32_t passedArgs_;
-    uint32_t passedArgTypes_;
-
-    // ARM treats arguments as a vector in registers/memory, that looks like:
-    // { r0, r1, r2, r3, [sp], [sp,+4], [sp,+8] ... }
-    // usedIntSlots_ keeps track of how many of these have been used. It bears a
-    // passing resemblance to passedArgs_, but a single argument can effectively
-    // use between one and three slots depending on its size and alignment
-    // requirements.
-    uint32_t usedIntSlots_;
-#if defined(JS_CODEGEN_ARM_HARDFP) || defined(JS_SIMULATOR_ARM)
-    uint32_t usedFloatSlots_;
-    bool usedFloat32_;
-    uint32_t padding_;
-#endif
-    bool dynamicAlignment_;
-
-    // Used to work around the move resolver's lack of support for moving into
-    // register pairs, which the softfp ABI needs.
-    mozilla::Array<MoveOperand, 4> floatArgsInGPR;
-    mozilla::Array<bool, 4> floatArgsInGPRValid;
-
-    // Compute space needed for the function call and set the properties of the
-    // callee. It returns the space which has to be allocated for calling the
-    // function.
-    //
-    // arg            Number of arguments of the function.
-    void setupABICall(uint32_t arg);
-
-  protected:
-    MoveResolver moveResolver_;
-
   public:
     MacroAssemblerARMCompat()
-      : inCall_(false)
     { }
 
   public:
@@ -1752,47 +1717,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         emitSet(cond, dest);
     }
 
-    // Setup a call to C/C++ code, given the number of general arguments it
-    // takes. Note that this only supports cdecl.
-    //
-    // In order for alignment to work correctly, the MacroAssembler must have a
-    // consistent view of the stack displacement. It is okay to call "push"
-    // manually, however, if the stack alignment were to change, the macro
-    // assembler should be notified before starting a call.
-    void setupAlignedABICall(uint32_t args);
-
-    // Sets up an ABI call for when the alignment is not known. This may need a
-    // scratch register.
-    void setupUnalignedABICall(uint32_t args, Register scratch);
-
-    // Arguments must be assigned in a left-to-right order. This process may
-    // temporarily use more stack, in which case esp-relative addresses will be
-    // automatically adjusted. It is extremely important that esp-relative
-    // addresses are computed *after* setupABICall(). Furthermore, no operations
-    // should be emitted while setting arguments.
-    void passABIArg(const MoveOperand& from, MoveOp::Type type);
-    void passABIArg(Register reg);
-    void passABIArg(FloatRegister reg, MoveOp::Type type);
-    void passABIArg(const ValueOperand& regs);
-
-  private:
-    void passHardFpABIArg(const MoveOperand& from, MoveOp::Type type);
-    void passSoftFpABIArg(const MoveOperand& from, MoveOp::Type type);
-
   protected:
     bool buildOOLFakeExitFrame(void* fakeReturnAddr);
 
-  private:
-    void callWithABIPre(uint32_t* stackAdjust, bool callFromAsmJS = false);
-    void callWithABIPost(uint32_t stackAdjust, MoveOp::Type result);
-
   public:
-    // Emits a call to a C/C++ function, resolving all argument moves.
-    void callWithABI(void* fun, MoveOp::Type result = MoveOp::GENERAL);
-    void callWithABI(AsmJSImmPtr imm, MoveOp::Type result = MoveOp::GENERAL);
-    void callWithABI(const Address& fun, MoveOp::Type result = MoveOp::GENERAL);
-    void callWithABI(Register fun, MoveOp::Type result = MoveOp::GENERAL);
-
     CodeOffsetLabel labelForPatch() {
         return CodeOffsetLabel(nextOffset().getOffset());
     }
