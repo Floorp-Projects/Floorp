@@ -4615,16 +4615,7 @@ JS::Construct(JSContext* cx, HandleValue fval, const JS::HandleValueArray& args,
     assertSameCompartment(cx, fval, args);
     AutoLastFrameCheck lfc(cx);
 
-    if (!IsConstructor(fval)) {
-        ReportValueError(cx, JSMSG_NOT_CONSTRUCTOR, JSDVG_IGNORE_STACK, fval, nullptr);
-        return false;
-    }
-
-    ConstructArgs cargs(cx);
-    if (!FillArgumentsFromArraylike(cx, cargs, args))
-        return false;
-
-    return js::Construct(cx, fval, cargs, fval, rval);
+    return InvokeConstructor(cx, fval, args.length(), args.begin(), false, rval);
 }
 
 JS_PUBLIC_API(bool)
@@ -4636,22 +4627,26 @@ JS::Construct(JSContext* cx, HandleValue fval, HandleObject newTarget, const JS:
     assertSameCompartment(cx, fval, newTarget, args);
     AutoLastFrameCheck lfc(cx);
 
-    if (!IsConstructor(fval)) {
-        ReportValueError(cx, JSMSG_NOT_CONSTRUCTOR, JSDVG_IGNORE_STACK, fval, nullptr);
+    // Reflect.construct ensures that the supplied new.target value is a
+    // constructor. Frankly, this makes good sense, so we reproduce the check.
+    if (!newTarget->isConstructor()) {
+        RootedValue val(cx, ObjectValue(*newTarget));
+        ReportValueError(cx, JSMSG_NOT_CONSTRUCTOR, JSDVG_IGNORE_STACK, val, nullptr);
         return false;
     }
 
-    RootedValue newTargetVal(cx, ObjectValue(*newTarget));
-    if (!IsConstructor(newTargetVal)) {
-        ReportValueError(cx, JSMSG_NOT_CONSTRUCTOR, JSDVG_IGNORE_STACK, newTargetVal, nullptr);
+    // This is a littlesilly, but we need to convert from what's useful for our
+    // consumers to what we can actually handle internally.
+    AutoValueVector argv(cx);
+    unsigned argc = args.length();
+    if (!argv.reserve(argc + 1))
         return false;
+    for (unsigned i = 0; i < argc; i++) {
+        argv.infallibleAppend(args[i]);
     }
+    argv.infallibleAppend(ObjectValue(*newTarget));
 
-    ConstructArgs cargs(cx);
-    if (!FillArgumentsFromArraylike(cx, cargs, args))
-        return false;
-
-    return js::Construct(cx, fval, cargs, newTargetVal, rval);
+    return InvokeConstructor(cx, fval, argc, argv.begin(), true, rval);
 }
 
 static JSObject*
@@ -4661,21 +4656,36 @@ JS_NewHelper(JSContext* cx, HandleObject ctor, const JS::HandleValueArray& input
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, ctor, inputArgs);
 
-    RootedValue ctorVal(cx, ObjectValue(*ctor));
-    if (!IsConstructor(ctorVal)) {
-        ReportValueError(cx, JSMSG_NOT_CONSTRUCTOR, JSDVG_IGNORE_STACK, ctorVal, nullptr);
+    // This is not a simple variation of JS_CallFunctionValue because JSOP_NEW
+    // is not a simple variation of JSOP_CALL. We have to determine what class
+    // of object to create, create it, and clamp the return value to an object,
+    // among other details. InvokeConstructor does the hard work.
+    InvokeArgs args(cx);
+    if (!args.init(inputArgs.length(), true))
+        return nullptr;
+
+    args.setCallee(ObjectValue(*ctor));
+    args.setThis(NullValue());
+    PodCopy(args.array(), inputArgs.begin(), inputArgs.length());
+    args.newTarget().setObject(*ctor);
+
+    if (!InvokeConstructor(cx, args))
+        return nullptr;
+
+    if (!args.rval().isObject()) {
+        /*
+         * Although constructors may return primitives (via proxies), this
+         * API is asking for an object, so we report an error.
+         */
+        JSAutoByteString bytes;
+        if (ValueToPrintable(cx, args.rval(), &bytes)) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_NEW_RESULT,
+                                 bytes.ptr());
+        }
         return nullptr;
     }
 
-    ConstructArgs args(cx);
-    if (!FillArgumentsFromArraylike(cx, args, inputArgs))
-        return nullptr;
-
-    RootedValue rval(cx);
-    if (!js::Construct(cx, ctorVal, args, ctorVal, &rval))
-        return nullptr;
-
-    return &rval.toObject();
+    return &args.rval().toObject();
 }
 
 JS_PUBLIC_API(JSObject*)
