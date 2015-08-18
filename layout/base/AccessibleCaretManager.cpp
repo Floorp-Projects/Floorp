@@ -162,10 +162,10 @@ AccessibleCaretManager::UpdateCaretsForCursorMode()
   if (nsContentUtils::HasNonEmptyTextContent(
         editingHost, nsContentUtils::eRecurseIntoChildren)) {
     mFirstCaret->SetAppearance(Appearance::Normal);
-    LaunchCaretTimeoutTimer();
   } else {
     mFirstCaret->SetAppearance(Appearance::NormalNotShown);
   }
+  LaunchCaretTimeoutTimer();
   mSecondCaret->SetAppearance(Appearance::None);
 
   if ((caretResult == PositionChangedResult::Changed ||
