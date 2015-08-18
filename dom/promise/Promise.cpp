@@ -1603,7 +1603,7 @@ PromiseWorkerProxy::GetWorkerPromise() const
 {
 
 #ifdef DEBUG
-  WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
+  workers::WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(worker);
   worker->AssertIsOnWorkerThread();
 #endif
