@@ -894,6 +894,23 @@ public:
     static auto GetProxyForURIWrapper(mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, int32_t) -> mozilla::jni::String::LocalRef;
 
 public:
+    struct GetScreenAngle_t {
+        typedef GeckoAppShell Owner;
+        typedef int32_t ReturnType;
+        typedef int32_t SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "getScreenAngle";
+        static constexpr char signature[] =
+                "()I";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto GetScreenAngle() -> int32_t;
+
+public:
     struct GetScreenDepthWrapper_t {
         typedef GeckoAppShell Owner;
         typedef int32_t ReturnType;

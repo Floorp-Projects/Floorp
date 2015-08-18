@@ -264,6 +264,7 @@ public:
     // include IPC headers which requires including basictypes.h which
     // requires a lot of changes...
     uint32_t GetScreenOrientation();
+    uint16_t GetScreenAngle();
 
     int GetAPIVersion() { return mAPIVersion; }
     bool IsHoneycomb() { return mAPIVersion >= 11 && mAPIVersion <= 13; }

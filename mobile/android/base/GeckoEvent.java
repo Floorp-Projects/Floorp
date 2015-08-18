@@ -212,6 +212,7 @@ public class GeckoEvent {
     private int mNativeWindow;
 
     private short mScreenOrientation;
+    private short mScreenAngle;
 
     private ByteBuffer mBuffer;
 
@@ -745,9 +746,10 @@ public class GeckoEvent {
         return event;
     }
 
-    public static GeckoEvent createScreenOrientationEvent(short aScreenOrientation) {
+    public static GeckoEvent createScreenOrientationEvent(short aScreenOrientation, short aScreenAngle) {
         GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.SCREENORIENTATION_CHANGED);
         event.mScreenOrientation = aScreenOrientation;
+        event.mScreenAngle = aScreenAngle;
         return event;
     }
 
