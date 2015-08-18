@@ -8,12 +8,8 @@ package org.mozilla.gecko.widget;
 import org.mozilla.gecko.R;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
+import android.graphics.Path;
 import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
@@ -22,9 +18,9 @@ import android.widget.LinearLayout;
 
 public class RoundedCornerLayout extends LinearLayout {
     private static final String LOGTAG = "Gecko" + RoundedCornerLayout.class.getSimpleName();
-    private Bitmap maskBitmap;
-    private Paint paint, maskPaint;
     private float cornerRadius;
+
+    private Path path;
 
     public RoundedCornerLayout(Context context) {
         super(context);
@@ -42,52 +38,28 @@ public class RoundedCornerLayout extends LinearLayout {
     }
 
     private void init(Context context) {
-        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+        final DisplayMetrics metrics = context.getResources().getDisplayMetrics();
 
         cornerRadius = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_PX,
                 getResources().getDimensionPixelSize(R.dimen.doorhanger_rounded_corner_radius), metrics);
-        paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-
-        maskPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
-        maskPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
 
         setWillNotDraw(false);
     }
 
-
     @Override
-    protected void onLayout(final boolean changed, final int l, final int t, final int r, final int b) {
-        super.onLayout(changed, l, t, r, b);
-        if (changed) {
-            maskBitmap = createMask(r, b);
-        }
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+        final RectF r = new RectF(0, 0, w, h);
+        path = new Path();
+        path.addRoundRect(r, cornerRadius, cornerRadius, Path.Direction.CW);
+        path.close();
     }
-
 
     @Override
     public void draw(Canvas canvas) {
-        Bitmap offscreenBitmap = Bitmap.createBitmap(canvas.getWidth(), canvas.getHeight(), Bitmap.Config.ARGB_8888);
-        Canvas offscreenCanvas = new Canvas(offscreenBitmap);
-
-        super.draw(offscreenCanvas);
-
-        offscreenCanvas.drawBitmap(maskBitmap, 0f, 0f, maskPaint);
-        canvas.drawBitmap(offscreenBitmap, 0f, 0f, paint);
-    }
-
-    private Bitmap createMask(int width, int height) {
-        Bitmap mask = Bitmap.createBitmap(width, height, Bitmap.Config.ALPHA_8);
-        Canvas canvas = new Canvas(mask);
-
-        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setColor(Color.WHITE);
-
-        canvas.drawRect(0, 0, width, height, paint);
-
-        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
-
-        canvas.drawRoundRect(new RectF(0, 0, width, height), cornerRadius, cornerRadius, paint);
-
-        return mask;
+        canvas.save();
+        canvas.clipPath(path);
+        super.draw(canvas);
+        canvas.restore();
     }
 }
