@@ -824,7 +824,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         // ever be updated is in GeckoLayerClient.setFixedLayerMargins; both of these assign to
         // mViewportMetrics directly.
         metrics = metrics.setViewportSize(mViewportMetrics.viewportRectWidth, mViewportMetrics.viewportRectHeight);
-        metrics = metrics.setMarginsFrom(mViewportMetrics);
         mViewportMetrics = metrics;
 
         viewportMetricsChanged(notifyGecko);
@@ -925,8 +924,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
 
         ImmutableViewportMetrics viewportMetrics = mViewportMetrics;
         PointF origin = viewportMetrics.getOrigin();
-        PointF offset = viewportMetrics.getMarginOffset();
-        origin.offset(-offset.x, -offset.y);
         float zoom = viewportMetrics.zoomFactor;
         ImmutableViewportMetrics geckoViewport = mGeckoViewport;
         PointF geckoOrigin = geckoViewport.getOrigin();
