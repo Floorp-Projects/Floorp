@@ -7,6 +7,7 @@
 
 #include "ServiceWorkerWindowClient.h"
 
+#include "mozilla/Mutex.h"
 #include "mozilla/dom/ClientBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
@@ -108,6 +109,12 @@ private:
   void
   DispatchResult(UniquePtr<ServiceWorkerClientInfo>&& aClientInfo)
   {
+    AssertIsOnMainThread();
+    MutexAutoLock lock(mPromiseProxy->GetCleanUpLock());
+    if (mPromiseProxy->IsClean()) {
+      return;
+    }
+
     WorkerPrivate* workerPrivate = mPromiseProxy->GetWorkerPrivate();
     MOZ_ASSERT(workerPrivate);
 

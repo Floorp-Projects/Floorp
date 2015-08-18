@@ -363,6 +363,10 @@ class StackFrame : public JS::Traceable {
     // terminated. Returns how many characters were written into the buffer.
     size_t functionDisplayName(RangedPtr<char16_t> destination, size_t length) const;
 
+    // Get the size of the respective strings. 0 is returned for null strings.
+    size_t sourceLength();
+    size_t functionDisplayNameLength();
+
     // JS::Traceable implementation just forwards to our virtual trace method.
     static void trace(StackFrame* frame, JSTracer* trc) {
         if (frame)

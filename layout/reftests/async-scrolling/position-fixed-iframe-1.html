@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html reftest-async-scroll
+      reftest-displayport-x="0" reftest-displayport-y="0"
+      reftest-displayport-w="800" reftest-displayport-h="2000"
+      reftest-async-scroll-x="0" reftest-async-scroll-y="0">
+<body style="overflow:hidden; height:3000px; margin:0;">
+  <!-- Test that position:fixed content stays fixed when we async-scroll -->
+  <iframe style="border:0; width:400px; height:400px;" src="data:text/html,
+    <!DOCTYPE HTML>
+    <html reftest-displayport-x='0' reftest-displayport-y='0'
+          reftest-displayport-w='800' reftest-displayport-h='2000'
+          reftest-async-scroll-x='0' reftest-async-scroll-y='50'>
+    <body style='overflow:hidden; height:3000px'>
+      <div style='position:fixed; background:blue; top:0; left:0; width:200px; height:100px'></div>
+      <div style='background:red; margin-top:100px; width:100px; height:50px'></div>
+    </body>
+    </html>
+  "></iframe>
+</body>
+</html>
