@@ -4,7 +4,7 @@
     <title>Bug 1045897 - Test CSP base-uri directive</title>
     <base href="http://mochi.test">
   </head>
-<body>
+<body onload='window.parent.postMessage({result: document.baseURI}, "*");'>
   <!-- just making use of the 'base' tag for this test -->
 </body>
 </html>
