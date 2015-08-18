@@ -17,9 +17,51 @@ html {
   -moz-margin-start: 10px;
 }
 
-.content-area input.contact-filter {
-  margin-top: 14px;
-  border-radius: 10000px;
+.contact-filter-container {
+  display: flex;
+  height: 2em;
+}
+
+.contact-filter {
+  margin: 0;
+  -moz-padding-start: 34px;
+  width: 100%;
+  height: 28px;
+  border: 0;
+  border-bottom: 1px solid #ddd;
+  background-image: url("../shared/img/icons-14x14.svg#magnifier");
+  background-position: 10px center;
+  background-size: 14px;
+  background-repeat: no-repeat;
+  color: #999;
+  font-size: 1.2rem;
+  flex: 2 1 auto;
+  align-self: stretch;
+}
+
+html[dir="rtl"] .contact-filter {
+  background-position: right 10px center;
+}
+
+.contact-filter:focus + .clear-search,
+.contact-filter:focus {
+  border-bottom: 1px solid #5cccee;
+  color: #4a4a4a;
+}
+
+.clear-search {
+  width: 34px;
+  height: 28px;
+  border: none;
+  border-bottom: 1px solid #ddd;
+  background-color: #fff;
+  background-image: url("../shared/img/icons-14x14.svg#clear");
+  background-position: center;
+  background-size: 14px;
+  background-repeat: no-repeat;
+  cursor: pointer;
+  flex: 0 1 auto;
+  align-self: stretch;
 }
 
 .contact-list {
@@ -28,6 +70,8 @@ html {
   /* Space for six contacts, not affected by filtering.  This is enough space
      to show the dropdown menu when there is only one contact. */
   height: 306px;
+  /* Contact list title goes away when searching, needed for spacing. */
+  margin-top: 4px;
 }
 
 .contact-list-title {
@@ -165,6 +209,36 @@ html {
   width: 100%;
 }
 
+.contact-list-empty,
+.contact-search-list-empty {
+  background-image: url("../shared/img/empty_contacts.svg");
+  background-repeat: no-repeat;
+  background-position: top center;
+  margin-top: 4rem;
+  padding-top: 10rem;
+  padding-bottom: 5rem;
+  text-align: center;
+  color: #4a4a4a;
+}
+
+.contact-search-list-empty {
+  background-image: url("../shared/img/empty_search.svg");
+}
+
+.panel-text-medium,
+.panel-text-large {
+  margin: 3px;
+  color: #4a4a4a;
+}
+
+.panel-text-medium {
+  font-size: 1.2rem;
+}
+
+.panel-text-large {
+  font-size: 2.2rem;
+}
+
 .contact > .details > .username {
   font-size: 1.3rem;
   line-height: 20px;
@@ -221,7 +295,7 @@ html {
   border-radius: 50%;
   background-color: #5bc0a4;
   background-image: url("../shared/img/icons-14x14.svg#video-white");
-  background-size: 16px 16px;
+  background-size: 14px 14px;
 }
 
 .icon-contact-video-call:hover {
@@ -250,6 +324,7 @@ html {
   right: 22px;
   bottom: auto;
   left: auto;
+  z-index: 2;
 }
 
 html[dir="rtl"] .contact > .dropdown-menu {
@@ -340,8 +415,19 @@ html[dir="rtl"] .contacts-gravatar-promo > .button-close {
   color: #fff;
 }
 
+.button.primary:active,
+.button.primary:hover {
+  background: #5cccee;
+}
+
 .button.secondary {
-  background: #EBEBEB;
+  background: #ebebeb;
+  color: #4D4D4D;
+}
+
+.button.secondary:hover,
+.button.secondary:active {
+  background: #dad6d6;
   color: #4D4D4D;
 }
 
