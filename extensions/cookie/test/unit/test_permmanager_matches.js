@@ -38,12 +38,12 @@ function run_test() {
   let uri4 = NetUtil.newURI("https://hangouts.google.com/#!/hangout", null, null);
   let uri5 = NetUtil.newURI("http://google.com:8096/", null, null);
 
-  let uri0_n_n = secMan.getNoAppCodebasePrincipal(uri0);
-  let uri1_n_n = secMan.getNoAppCodebasePrincipal(uri1);
-  let uri2_n_n = secMan.getNoAppCodebasePrincipal(uri2);
-  let uri3_n_n = secMan.getNoAppCodebasePrincipal(uri3);
-  let uri4_n_n = secMan.getNoAppCodebasePrincipal(uri4);
-  let uri5_n_n = secMan.getNoAppCodebasePrincipal(uri5);
+  let uri0_n_n = secMan.createCodebasePrincipal(uri0, {});
+  let uri1_n_n = secMan.createCodebasePrincipal(uri1, {});
+  let uri2_n_n = secMan.createCodebasePrincipal(uri2, {});
+  let uri3_n_n = secMan.createCodebasePrincipal(uri3, {});
+  let uri4_n_n = secMan.createCodebasePrincipal(uri4, {});
+  let uri5_n_n = secMan.createCodebasePrincipal(uri5, {});
 
   let attrs = {appId: 1000};
   let uri0_1000_n = secMan.createCodebasePrincipal(uri0, attrs);

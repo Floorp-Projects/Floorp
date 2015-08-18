@@ -138,10 +138,12 @@ GetPrincipal(nsIURI* aURI, uint32_t aAppId, bool aIsInBrowserElement, nsIPrincip
 nsresult
 GetPrincipal(nsIURI* aURI, nsIPrincipal** aPrincipal)
 {
-  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
-  NS_ENSURE_TRUE(secMan, NS_ERROR_FAILURE);
+  mozilla::OriginAttributes attrs;
+  nsCOMPtr<nsIPrincipal> principal = mozilla::BasePrincipal::CreateCodebasePrincipal(aURI, attrs);
+  NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
 
-  return secMan->GetNoAppCodebasePrincipal(aURI, aPrincipal);
+  principal.forget(aPrincipal);
+  return NS_OK;
 }
 
 nsCString

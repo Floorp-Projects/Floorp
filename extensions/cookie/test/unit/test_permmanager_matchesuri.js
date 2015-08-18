@@ -31,9 +31,8 @@ function mk_permission(uri, isAppPermission = false) {
 
   // Get the permission from the principal!
   let attrs = {appId: 1000};
-  let principal = isAppPermission ?
-        secMan.createCodebasePrincipal(uri, attrs) :
-        secMan.getNoAppCodebasePrincipal(uri);
+  let principal =
+    secMan.createCodebasePrincipal(uri, isAppPermission ? attrs : {});
 
   pm.addFromPrincipal(principal, "test/matchesuri", pm.ALLOW_ACTION);
   let permission = pm.getPermissionObject(principal, "test/matchesuri", true);
