@@ -21,7 +21,6 @@
 #include "nsDataHashtable.h"
 
 class nsIPermission;
-class nsIIDNService;
 class mozIStorageConnection;
 class mozIStorageAsyncStatement;
 
@@ -239,7 +238,6 @@ private:
 
   nsresult RemoveAllInternal(bool aNotifyObservers);
   nsresult RemoveAllFromMemory();
-  nsresult NormalizeToACE(nsCString &aHost);
   static void UpdateDB(OperationType aOp,
                        mozIStorageAsyncStatement* aStmt,
                        int64_t aID,
@@ -263,8 +261,6 @@ private:
    */
   nsresult
   FetchPermissions();
-
-  nsCOMPtr<nsIIDNService>      mIDNService;
 
   nsCOMPtr<mozIStorageConnection> mDBConn;
   nsCOMPtr<mozIStorageAsyncStatement> mStmtInsert;
