@@ -197,7 +197,7 @@ DecodedStreamData::SetPlaying(bool aPlaying)
 class OutputStreamListener : public MediaStreamListener {
   typedef MediaStreamListener::MediaStreamGraphEvent MediaStreamGraphEvent;
 public:
-  OutputStreamListener(OutputStreamData* aOwner) : mOwner(aOwner) {}
+  explicit OutputStreamListener(OutputStreamData* aOwner) : mOwner(aOwner) {}
 
   void NotifyEvent(MediaStreamGraph* aGraph, MediaStreamGraphEvent event) override
   {
@@ -239,7 +239,7 @@ OutputStreamData::~OutputStreamData()
 }
 
 void
-OutputStreamData::Init(DecodedStream* aOwner, ProcessedMediaStream* aStream)
+OutputStreamData::Init(OutputStreamManager* aOwner, ProcessedMediaStream* aStream)
 {
   mOwner = aOwner;
   mStream = aStream;
@@ -293,6 +293,60 @@ OutputStreamData::Remove()
   mOwner->Remove(mStream);
 }
 
+void
+OutputStreamManager::Add(ProcessedMediaStream* aStream, bool aFinishWhenEnded)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  // Ensure that aStream finishes the moment mDecodedStream does.
+  if (aFinishWhenEnded) {
+    aStream->SetAutofinish(true);
+  }
+
+  OutputStreamData* p = mStreams.AppendElement();
+  p->Init(this, aStream);
+
+  // Connect to the input stream if we have one. Otherwise the output stream
+  // will be connected in Connect().
+  if (mInputStream) {
+    p->Connect(mInputStream);
+  }
+}
+
+void
+OutputStreamManager::Remove(MediaStream* aStream)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  for (int32_t i = mStreams.Length() - 1; i >= 0; --i) {
+    if (mStreams[i].Equals(aStream)) {
+      mStreams.RemoveElementAt(i);
+      break;
+    }
+  }
+}
+
+void
+OutputStreamManager::Connect(MediaStream* aStream)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mInputStream = aStream;
+  for (auto&& os : mStreams) {
+    os.Connect(aStream);
+  }
+}
+
+void
+OutputStreamManager::Disconnect()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mInputStream = nullptr;
+  for (int32_t i = mStreams.Length() - 1; i >= 0; --i) {
+    if (!mStreams[i].Disconnect()) {
+      // Probably the DOMMediaStream was GCed. Clean up.
+      mStreams.RemoveElementAt(i);
+    }
+  }
+}
+
 DecodedStream::DecodedStream(MediaQueue<MediaData>& aAudioQueue,
                              MediaQueue<MediaData>& aVideoQueue)
   : mMonitor("DecodedStream::mMonitor")
@@ -339,15 +393,7 @@ DecodedStream::DestroyData()
     return;
   }
 
-  auto& outputStreams = OutputStreams();
-  for (int32_t i = outputStreams.Length() - 1; i >= 0; --i) {
-    OutputStreamData& os = outputStreams[i];
-    if (!os.Disconnect()) {
-      // Probably the DOMMediaStream was GCed. Clean up.
-      outputStreams.RemoveElementAt(i);
-    }
-  }
-
+  mOutputStreamManager.Disconnect();
   mData = nullptr;
 }
 
@@ -366,7 +412,7 @@ DecodedStream::RecreateData(MediaStreamGraph* aGraph)
 {
   MOZ_ASSERT(NS_IsMainThread());
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  MOZ_ASSERT((aGraph && !mData && OutputStreams().IsEmpty()) || // first time
+  MOZ_ASSERT((aGraph && !mData && !HasConsumers()) || // first time
              (!aGraph && mData)); // 2nd time and later
 
   if (!aGraph) {
@@ -376,30 +422,16 @@ DecodedStream::RecreateData(MediaStreamGraph* aGraph)
   DestroyData();
   mData.reset(new DecodedStreamData(source, mPlaying));
 
-  // Note that the delay between removing ports in DestroyDecodedStream
+  // Note that the delay between removing ports in DestroyData
   // and adding new ones won't cause a glitch since all graph operations
   // between main-thread stable states take effect atomically.
-  auto& outputStreams = OutputStreams();
-  for (int32_t i = outputStreams.Length() - 1; i >= 0; --i) {
-    OutputStreamData& os = outputStreams[i];
-    os.Connect(mData->mStream);
-  }
-}
-
-nsTArray<OutputStreamData>&
-DecodedStream::OutputStreams()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  GetReentrantMonitor().AssertCurrentThreadIn();
-  return mOutputStreams;
+  mOutputStreamManager.Connect(mData->mStream);
 }
 
 bool
 DecodedStream::HasConsumers() const
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  return mOutputStreams.IsEmpty();
+  return !mOutputStreamManager.IsEmpty();
 }
 
 ReentrantMonitor&
@@ -418,29 +450,13 @@ DecodedStream::Connect(ProcessedMediaStream* aStream, bool aFinishWhenEnded)
     RecreateData(aStream->Graph());
   }
 
-  OutputStreamData* os = OutputStreams().AppendElement();
-  os->Init(this, aStream);
-  os->Connect(mData->mStream);
-  if (aFinishWhenEnded) {
-    // Ensure that aStream finishes the moment mDecodedStream does.
-    aStream->SetAutofinish(true);
-  }
+  mOutputStreamManager.Add(aStream, aFinishWhenEnded);
 }
 
 void
 DecodedStream::Remove(MediaStream* aStream)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-
-  auto& streams = OutputStreams();
-  for (int32_t i = streams.Length() - 1; i >= 0; --i) {
-    auto& os = streams[i];
-    if (os.Equals(aStream)) {
-      streams.RemoveElementAt(i);
-      break;
-    }
-  }
+  mOutputStreamManager.Remove(aStream);
 }
 
 void
