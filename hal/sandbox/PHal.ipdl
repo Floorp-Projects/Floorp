@@ -59,6 +59,7 @@ struct WakeLockInformation {
 struct ScreenConfiguration {
   nsIntRect rect;
   ScreenOrientationInternal orientation;
+  uint16_t angle;
   uint32_t colorDepth;
   uint32_t pixelDepth;
 };

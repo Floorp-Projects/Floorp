@@ -588,6 +588,7 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
 
         nsIntRect rect;
         int32_t colorDepth, pixelDepth;
+        int16_t angle;
         dom::ScreenOrientationInternal orientation;
         nsCOMPtr<nsIScreen> screen;
 
@@ -597,9 +598,10 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
         screen->GetPixelDepth(&pixelDepth);
         orientation =
             static_cast<dom::ScreenOrientationInternal>(curEvent->ScreenOrientation());
+        angle = curEvent->ScreenAngle();
 
         hal::NotifyScreenConfigurationChange(
-            hal::ScreenConfiguration(rect, orientation, colorDepth, pixelDepth));
+            hal::ScreenConfiguration(rect, orientation, angle, colorDepth, pixelDepth));
         break;
     }
 

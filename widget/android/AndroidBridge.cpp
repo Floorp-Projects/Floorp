@@ -1581,6 +1581,12 @@ AndroidBridge::GetScreenOrientation()
     return static_cast<dom::ScreenOrientationInternal>(orientation);
 }
 
+uint16_t
+AndroidBridge::GetScreenAngle()
+{
+    return GeckoAppShell::GetScreenAngle();
+}
+
 void
 AndroidBridge::InvalidateAndScheduleComposite()
 {
