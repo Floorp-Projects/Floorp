@@ -318,6 +318,21 @@ public class DynamicToolbarAnimator {
         return true;
     }
 
+    private float bottomOfCssViewport(ImmutableViewportMetrics aMetrics) {
+        return aMetrics.getHeight() + mMaxTranslation - mLayerViewTranslation;
+    }
+
+    void populateFixedPositionMargins(ViewTransform aTransform, ImmutableViewportMetrics aMetrics) {
+        Log.v(LOGTAG, "Populating top fixed margin using " + mLayerViewTranslation + " - " + mToolbarTranslation);
+        aTransform.fixedLayerMarginTop = mLayerViewTranslation - mToolbarTranslation;
+        float bottomOfScreen = mTarget.getView().getHeight();
+        // We want to move a fixed item from "bottomOfCssViewport" to
+        // "bottomOfScreen". But also the bottom margin > 0 means that bottom
+        // fixed-pos items will move upwards.
+        Log.v(LOGTAG, "Populating bottom fixed margin using " + bottomOfCssViewport(aMetrics) + " - " + bottomOfScreen);
+        aTransform.fixedLayerMarginBottom = bottomOfCssViewport(aMetrics) - bottomOfScreen;
+    }
+
     class DynamicToolbarAnimationTask extends RenderTask {
         private final float mStartTranslation;
         private final float mEndTranslation;

@@ -64,7 +64,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
 
     /* Used as temporaries by syncViewportInfo */
     private final ViewTransform mCurrentViewTransform;
-    private final RectF mCurrentViewTransformMargins;
 
     /* Used as the return value of progressiveUpdateCallback */
     private final ProgressiveUpdateData mProgressiveUpdateData;
@@ -118,7 +117,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         mRecordDrawTimes = true;
         mDrawTimingQueue = new DrawTimingQueue();
         mCurrentViewTransform = new ViewTransform(0, 0, 1);
-        mCurrentViewTransformMargins = new RectF();
         mProgressiveUpdateData = new ProgressiveUpdateData();
         mProgressiveUpdateDisplayPort = new DisplayPortMetrics();
 
@@ -250,7 +248,8 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         DisplayMetrics metrics = mContext.getResources().getDisplayMetrics();
 
         IntSize newScreenSize = new IntSize(metrics.widthPixels, metrics.heightPixels);
-        IntSize newWindowSize = new IntSize(mView.getWidth(), mView.getHeight());
+        IntSize newWindowSize = new IntSize(mViewportMetrics.viewportRectWidth,
+                                            mViewportMetrics.viewportRectHeight);
 
         boolean screenSizeChanged = !mScreenSize.equals(newScreenSize);
         boolean windowSizeChanged = !mWindowSize.equals(newWindowSize);
@@ -296,61 +295,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
                 mView.requestRender();
             }
         });
-    }
-
-    /**
-     * Derives content document fixed position margins/fixed layer margins from
-     * the view margins in the given metrics object.
-     */
-    private void getFixedMargins(ImmutableViewportMetrics metrics, RectF fixedMargins) {
-        fixedMargins.left = 0;
-        fixedMargins.top = 0;
-        fixedMargins.right = 0;
-        fixedMargins.bottom = 0;
-
-        // The maximum margins are determined by the scrollable area of the page.
-        float maxMarginWidth = Math.max(0, metrics.getPageWidth() - metrics.getWidthWithoutMargins());
-        float maxMarginHeight = Math.max(0, metrics.getPageHeight() - metrics.getHeightWithoutMargins());
-
-        // If the margins can't fully hide, they're pinned on - in which case,
-        // fixed margins should always be zero.
-        if (maxMarginWidth < metrics.marginLeft + metrics.marginRight) {
-          maxMarginWidth = 0;
-        }
-        if (maxMarginHeight < metrics.marginTop + metrics.marginBottom) {
-          maxMarginHeight = 0;
-        }
-
-        PointF offset = metrics.getMarginOffset();
-        RectF overscroll = metrics.getOverscroll();
-        if (offset.x >= 0) {
-            fixedMargins.right = Math.max(0, Math.min(offset.x - overscroll.right, maxMarginWidth));
-        } else {
-            fixedMargins.left = Math.max(0, Math.min(-offset.x - overscroll.left, maxMarginWidth));
-        }
-        if (offset.y >= 0) {
-            fixedMargins.bottom = Math.max(0, Math.min(offset.y - overscroll.bottom, maxMarginHeight));
-        } else {
-            fixedMargins.top = Math.max(0, Math.min(-offset.y - overscroll.top, maxMarginHeight));
-        }
-
-        // Adjust for overscroll. If we're overscrolled on one side, add that
-        // distance to the margins of the other side (limiting to the maximum
-        // margin size calculated above).
-        if (overscroll.left > 0) {
-            fixedMargins.right = Math.min(maxMarginWidth - fixedMargins.left,
-                                          fixedMargins.right + overscroll.left);
-        } else if (overscroll.right > 0) {
-            fixedMargins.left = Math.min(maxMarginWidth - fixedMargins.right,
-                                         fixedMargins.left + overscroll.right);
-        }
-        if (overscroll.top > 0) {
-            fixedMargins.bottom = Math.min(maxMarginHeight - fixedMargins.top,
-                                           fixedMargins.bottom + overscroll.top);
-        } else if (overscroll.bottom > 0) {
-            fixedMargins.top = Math.min(maxMarginHeight - fixedMargins.bottom,
-                                        fixedMargins.top + overscroll.bottom);
-        }
     }
 
     private void adjustViewport(DisplayPortMetrics displayPort) {
@@ -679,12 +623,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         mCurrentViewTransform.y = mFrameMetrics.viewportRectTop;
         mCurrentViewTransform.scale = mFrameMetrics.zoomFactor;
 
-        // Adjust the fixed layer margins so that overscroll subtracts from them.
-        getFixedMargins(mFrameMetrics, mCurrentViewTransformMargins);
-        mCurrentViewTransform.fixedLayerMarginLeft = mCurrentViewTransformMargins.left;
-        mCurrentViewTransform.fixedLayerMarginTop = mCurrentViewTransformMargins.top;
-        mCurrentViewTransform.fixedLayerMarginRight = mCurrentViewTransformMargins.right;
-        mCurrentViewTransform.fixedLayerMarginBottom = mCurrentViewTransformMargins.bottom;
+        mToolbarAnimator.populateFixedPositionMargins(mCurrentViewTransform, mFrameMetrics);
 
         if (mRootLayer != null) {
             mRootLayer.setPositionAndResolution(
