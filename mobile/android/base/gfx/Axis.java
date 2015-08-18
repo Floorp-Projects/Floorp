@@ -206,6 +206,7 @@ abstract class Axis {
     protected abstract float getViewportLength();
     protected abstract float getPageStart();
     protected abstract float getPageLength();
+    protected abstract float getVisibleEndOfLayerView();
 
     Axis(SubdocumentScrollHelper subscroller) {
         mSubscroller = subscroller;
@@ -499,8 +500,8 @@ abstract class Axis {
 
             if (mDisplacement + getOrigin() < getPageStart()) {
                 mDisplacement = getPageStart() - getOrigin();
-            } else if (mDisplacement + getViewportEnd() > getPageEnd()) {
-                mDisplacement = getPageEnd() - getViewportEnd();
+            } else if (mDisplacement + getOrigin() + getVisibleEndOfLayerView() > getPageEnd()) {
+                mDisplacement = getPageEnd() - getOrigin() - getVisibleEndOfLayerView();
             }
 
             // Return the amount of overscroll so that the overscroll controller can draw it for us
