@@ -359,12 +359,15 @@ protected:
      * @param aPangoAttrIter            An iter which represents a clause of the
      *                                  composition string.
      * @param aUTF8CompositionString    The whole composition string (UTF-8).
+     * @param aUTF16CaretOffset         The caret offset in the composition
+     *                                  string encoded as UTF-16.
      * @param aTextRange                The result.
      * @return                          true if this initializes aTextRange.
      *                                  Otherwise, false.
      */
     bool SetTextRange(PangoAttrIterator* aPangoAttrIter,
                       const gchar* aUTF8CompositionString,
+                      int32_t aUTF16CaretOffset,
                       TextRange& aTextRange) const;
 
     /**

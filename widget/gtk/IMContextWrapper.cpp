@@ -1510,7 +1510,7 @@ IMContextWrapper::CreateTextRangeArray(GtkIMContext* aContext,
 
     do {
         TextRange range;
-        if (!SetTextRange(iter, preedit_string, range)) {
+        if (!SetTextRange(iter, preedit_string, cursor_pos, range)) {
             continue;
         }
         textRangeArray->AppendElement(range);
@@ -1555,6 +1555,7 @@ IMContextWrapper::ToNscolor(PangoAttrColor* aPangoAttrColor)
 bool
 IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
                                const gchar* aUTF8CompositionString,
+                               int32_t aUTF16CaretOffset,
                                TextRange& aTextRange) const
 {
     // Set the range offsets in UTF-16 string.
@@ -1673,34 +1674,53 @@ IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
     }
 
     /**
-     * Depend on gtk2's implementation on XIM support.
-     * In aFeedback got from gtk2, there are only three types of data:
-     * PANGO_ATTR_UNDERLINE, PANGO_ATTR_FOREGROUND, PANGO_ATTR_BACKGROUND.
-     * Corresponding to XIMUnderline, XIMReverse.
-     * Don't take PANGO_ATTR_BACKGROUND into account, since
-     * PANGO_ATTR_BACKGROUND and PANGO_ATTR_FOREGROUND are always
-     * a couple.
+     * We need to judge the meaning of the clause for a11y.  Before we support
+     * IME specific composition string style, we used following rules:
+     *
+     *   1: If attrUnderline and attrForground are specified, we assumed the
+     *      clause is NS_TEXTRANGE_SELECTEDCONVERTEDTEXT.
+     *   2: If only attrUnderline is specified, we assumed the clause is
+     *      NS_TEXTRANGE_CONVERTEDTEXT.
+     *   3: If only attrForground is specified, we assumed the clause is
+     *      NS_TEXTRANGE_SELECTEDRAWTEXT.
+     *   4: If neither attrUnderline nor attrForeground is specified, we assumed
+     *      the clause is NS_TEXTRANGE_RAWINPUT.
+     *
+     * However, this rules are odd since there can be two or more selected
+     * clauses.  Additionally, our old rules caused that IME developers/users
+     * cannot specify composition string style as they want.
+     *
+     * So, we shouldn't guess the meaning from its visual style.
      */
 
     if (!attrUnderline && !attrForeground && !attrBackground) {
         MOZ_LOG(gGtkIMLog, LogLevel::Warning,
-            ("GTKIM: %p   SetTextRange(), FAILED, due to no attr", this));
+            ("GTKIM: %p   SetTextRange(), FAILED, due to no attr, "
+             "aTextRange= { mStartOffset=%u, mEndOffset=%u }",
+             this, aTextRange.mStartOffset, aTextRange.mEndOffset));
         return false;
     }
 
-    // XIMReverse | XIMUnderline
-    if (attrUnderline && attrForeground) {
+    // If the range covers whole of composition string and the caret is at
+    // the end of the composition string, the range is probably not converted.
+    if (!utf8ClauseStart &&
+        utf8ClauseEnd == static_cast<gint>(strlen(aUTF8CompositionString)) &&
+        aTextRange.mEndOffset == static_cast<uint32_t>(aUTF16CaretOffset)) {
+        aTextRange.mRangeType = NS_TEXTRANGE_RAWINPUT;
+    }
+    // Typically, the caret is set at the start of the selected clause.
+    // So, if the caret is in the clause, we can assume that the clause is
+    // selected.
+    else if (aTextRange.mStartOffset <=
+                 static_cast<uint32_t>(aUTF16CaretOffset) &&
+             aTextRange.mEndOffset >
+                 static_cast<uint32_t>(aUTF16CaretOffset)) {
         aTextRange.mRangeType = NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
     }
-    // XIMUnderline
-    else if (attrUnderline) {
+    // Otherwise, we should assume that the clause is converted but not
+    // selected.
+    else {
         aTextRange.mRangeType = NS_TEXTRANGE_CONVERTEDTEXT;
-    }
-    // XIMReverse
-    else if (attrForeground) {
-        aTextRange.mRangeType = NS_TEXTRANGE_SELECTEDRAWTEXT;
-    } else {
-        aTextRange.mRangeType = NS_TEXTRANGE_RAWINPUT;
     }
 
     MOZ_LOG(gGtkIMLog, LogLevel::Debug,
