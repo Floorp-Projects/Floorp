@@ -489,6 +489,7 @@ class IonBuilder
     bool binaryArithTrySpecialized(bool* emitted, JSOp op, MDefinition* left, MDefinition* right);
     bool binaryArithTrySpecializedOnBaselineInspector(bool* emitted, JSOp op, MDefinition* left,
                                                       MDefinition* right);
+    bool binaryArithTrySharedStub(bool* emitted, JSOp op, MDefinition* left, MDefinition* right);
 
     // binary data lookup helpers.
     TypedObjectPrediction typedObjectPrediction(MDefinition* typedObj);
