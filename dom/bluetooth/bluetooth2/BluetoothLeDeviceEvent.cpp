@@ -38,7 +38,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(BluetoothLeDeviceEvent)
 NS_INTERFACE_MAP_END_INHERITING(Event)
 
-BluetoothLeDeviceEvent::BluetoothLeDeviceEvent(mozilla::dom::EventTarget* aOwner)
+BluetoothLeDeviceEvent::BluetoothLeDeviceEvent(
+  mozilla::dom::EventTarget* aOwner)
   : Event(aOwner, nullptr, nullptr)
 {
   mozilla::HoldJSObjects(this);
