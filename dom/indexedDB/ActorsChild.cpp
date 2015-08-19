@@ -2462,7 +2462,66 @@ BackgroundCursorChild::SendContinueInternal(const CursorRequestParams& aParams,
 
   mTransaction->OnNewRequest();
 
-  MOZ_ALWAYS_TRUE(PBackgroundIDBCursorChild::SendContinue(aParams, aKey));
+  CursorRequestParams params = aParams;
+  Key key = aKey;
+
+  switch (params.type()) {
+    case CursorRequestParams::TContinueParams: {
+      if (key.IsUnset()) {
+        break;
+      }
+      while (!mCachedResponses.IsEmpty()) {
+        if (mCachedResponses[0].mKey == key) {
+          break;
+        }
+        mCachedResponses.RemoveElementAt(0);
+      }
+      break;
+    }
+
+    case CursorRequestParams::TAdvanceParams: {
+      uint32_t& advanceCount = params.get_AdvanceParams().count();
+      while (advanceCount > 1 && !mCachedResponses.IsEmpty()) {
+        key = mCachedResponses[0].mKey;
+        mCachedResponses.RemoveElementAt(0);
+        --advanceCount;
+      }
+      break;
+    }
+
+    default:
+      MOZ_CRASH("Should never get here!");
+  }
+
+  if (!mCachedResponses.IsEmpty()) {
+    nsCOMPtr<nsIRunnable> continueRunnable = new DelayedActionRunnable(
+      this, &BackgroundCursorChild::SendDelayedContinueInternal);
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToCurrentThread(continueRunnable)));
+  } else {
+    MOZ_ALWAYS_TRUE(PBackgroundIDBCursorChild::SendContinue(params, key));
+  }
+}
+
+void
+BackgroundCursorChild::SendDelayedContinueInternal()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mTransaction);
+  MOZ_ASSERT(mCursor);
+  MOZ_ASSERT(mStrongCursor);
+  MOZ_ASSERT(!mCachedResponses.IsEmpty());
+
+  nsRefPtr<IDBCursor> cursor;
+  mStrongCursor.swap(cursor);
+
+  auto& item = mCachedResponses[0];
+  mCursor->Reset(Move(item.mKey), Move(item.mCloneInfo));
+  mCachedResponses.RemoveElementAt(0);
+
+  ResultHelper helper(mRequest, mTransaction, mCursor);
+  DispatchSuccessEvent(&helper);
+
+  mTransaction->OnRequestFinished(/* aActorDestroyedNormally */ true);
 }
 
 void
@@ -2483,6 +2542,14 @@ BackgroundCursorChild::SendDeleteMeInternal()
 
     MOZ_ALWAYS_TRUE(PBackgroundIDBCursorChild::SendDeleteMe());
   }
+}
+
+void
+BackgroundCursorChild::InvalidateCachedResponses()
+{
+  AssertIsOnOwningThread();
+
+  mCachedResponses.Clear();
 }
 
 void
@@ -2550,7 +2617,14 @@ BackgroundCursorChild::HandleResponse(
     nsRefPtr<IDBCursor> newCursor;
 
     if (mCursor) {
-      mCursor->Reset(Move(response.key()), Move(cloneReadInfo));
+      if (mCursor->IsContinueCalled()) {
+        mCursor->Reset(Move(response.key()), Move(cloneReadInfo));
+      } else {
+        CachedResponse cachedResponse;
+        cachedResponse.mKey = Move(response.key());
+        cachedResponse.mCloneInfo = Move(cloneReadInfo);
+        mCachedResponses.AppendElement(Move(cachedResponse));
+      }
     } else {
       newCursor = IDBCursor::Create(this,
                                     Move(response.key()),
@@ -2790,6 +2864,16 @@ DelayedActionRunnable::Cancel()
   Run();
 
   return NS_OK;
+}
+
+BackgroundCursorChild::CachedResponse::CachedResponse()
+{
+}
+
+BackgroundCursorChild::CachedResponse::CachedResponse(CachedResponse&& aOther)
+  : mKey(Move(aOther.mKey))
+{
+  mCloneInfo = Move(aOther.mCloneInfo);
 }
 
 } // namespace indexedDB
