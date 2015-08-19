@@ -25,6 +25,7 @@ import org.mozilla.gecko.RemoteTabsExpandableListAdapter;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.RemoteClient;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
+import org.mozilla.gecko.fxa.SyncStatusListener;
 import org.mozilla.gecko.widget.GeckoSwipeRefreshLayout;
 
 import java.util.ArrayList;
@@ -266,7 +267,7 @@ public abstract class RemoteTabsBaseFragment extends HomeFragment implements Rem
         }
     }
 
-    protected class RemoteTabsSyncListener implements FirefoxAccounts.SyncStatusListener {
+    protected class RemoteTabsSyncListener implements SyncStatusListener {
         @Override
         public Context getContext() {
             return getActivity();

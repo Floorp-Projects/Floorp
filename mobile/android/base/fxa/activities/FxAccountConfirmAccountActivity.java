@@ -7,6 +7,7 @@ package org.mozilla.gecko.fxa.activities;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
+import org.mozilla.gecko.fxa.SyncStatusListener;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.login.Engaged;
 import org.mozilla.gecko.fxa.login.State;
@@ -100,7 +101,7 @@ public class FxAccountConfirmAccountActivity extends FxAccountAbstractActivity i
     }
   }
 
-  protected class InnerSyncStatusDelegate implements FirefoxAccounts.SyncStatusListener {
+  protected class InnerSyncStatusDelegate implements SyncStatusListener {
     protected final Runnable refreshRunnable = new Runnable() {
       @Override
       public void run() {

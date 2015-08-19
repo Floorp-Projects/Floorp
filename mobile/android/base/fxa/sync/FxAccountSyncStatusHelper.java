@@ -8,8 +8,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.WeakHashMap;
 
-import org.mozilla.gecko.fxa.FirefoxAccounts;
+import org.mozilla.gecko.fxa.SyncStatusListener;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.ContentResolver;
 import android.content.SyncStatusObserver;
@@ -37,12 +38,12 @@ public class FxAccountSyncStatusHelper implements SyncStatusObserver {
 
   // Maps delegates to whether their underlying Android account was syncing the
   // last time we observed a status change.
-  protected Map<FirefoxAccounts.SyncStatusListener, Boolean> delegates = new WeakHashMap<FirefoxAccounts.SyncStatusListener, Boolean>();
+  protected Map<SyncStatusListener, Boolean> delegates = new WeakHashMap<SyncStatusListener, Boolean>();
 
   @Override
   public synchronized void onStatusChanged(int which) {
-    for (Entry<FirefoxAccounts.SyncStatusListener, Boolean> entry : delegates.entrySet()) {
-      final FirefoxAccounts.SyncStatusListener delegate = entry.getKey();
+    for (Entry<SyncStatusListener, Boolean> entry : delegates.entrySet()) {
+      final SyncStatusListener delegate = entry.getKey();
       final AndroidFxAccount fxAccount = new AndroidFxAccount(delegate.getContext(), delegate.getAccount());
       final boolean active = fxAccount.isCurrentlySyncing();
       // Remember for later.
@@ -52,11 +53,22 @@ public class FxAccountSyncStatusHelper implements SyncStatusObserver {
 
       if (active && !wasActiveLastTime) {
         // We've started a sync.
-        delegate.onSyncStarted();
+        ThreadUtils.postToUiThread(new Runnable() {
+          @Override
+          public void run() {
+            delegate.onSyncStarted();
+          }
+        });
       }
+
       if (!active && wasActiveLastTime) {
         // We've finished a sync.
-        delegate.onSyncFinished();
+        ThreadUtils.postToUiThread(new Runnable() {
+          @Override
+          public void run() {
+            delegate.onSyncFinished();
+          }
+        });
       }
     }
   }
@@ -77,7 +89,7 @@ public class FxAccountSyncStatusHelper implements SyncStatusObserver {
     }
   }
 
-  public synchronized void startObserving(FirefoxAccounts.SyncStatusListener delegate) {
+  public synchronized void startObserving(SyncStatusListener delegate) {
     if (delegate == null) {
       throw new IllegalArgumentException("delegate must not be null");
     }
@@ -91,7 +103,7 @@ public class FxAccountSyncStatusHelper implements SyncStatusObserver {
     delegates.put(delegate, Boolean.FALSE);
   }
 
-  public synchronized void stopObserving(FirefoxAccounts.SyncStatusListener delegate) {
+  public synchronized void stopObserving(SyncStatusListener delegate) {
     delegates.remove(delegate);
     // If we are the last delegate leaving the party, stop listening.
     if (delegates.isEmpty()) {
