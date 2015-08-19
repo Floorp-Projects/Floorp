@@ -156,13 +156,25 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         if self.upload_env:
             return self.upload_env
         c = self.config
-        buildid = self.query_buildid()
-        version = self.query_version()
+        replace_dict = {
+            'buildid': self.query_buildid(),
+            'version': self.query_version(),
+        }
+        replace_dict.update(c)
+
+        # Android l10n builds use a non-standard location for l10n files.  Other
+        # builds go to 'mozilla-central-l10n', while android builds add part of
+        # the platform name as well, like 'mozilla-central-android-api-11-l10n'.
+        # So we override the branch with something that contains the platform
+        # name.
+        replace_dict['branch'] = c['upload_branch']
+
         upload_env = self.query_env(partial_env=c.get("upload_env"),
-                                    replace_dict={'buildid': buildid,
-                                                  'version': version})
+                                    replace_dict=replace_dict)
         if 'MOZ_SIGNING_SERVERS' in os.environ:
             upload_env['MOZ_SIGN_CMD'] = subprocess.list2cmdline(self.query_moz_sign_cmd())
+        if self.query_is_release():
+            upload_env['MOZ_PKG_VERSION'] = '%(version)s' % replace_dict
         self.upload_env = upload_env
         return self.upload_env
 
