@@ -344,6 +344,22 @@ void WebMBufferedState::NotifyDataArrived(const unsigned char* aBuffer, uint32_t
       i += 1;
     }
   }
+
+  mLastEndOffset = std::max<int64_t>(aOffset + aLength, mLastEndOffset);
+
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
+  if (mTimeMapping.IsEmpty()) {
+    return;
+  }
+  int32_t endIdx = mTimeMapping.Length() - 1;
+  while (endIdx >= 0 && mLastEndOffset < mTimeMapping[endIdx].mEndOffset) {
+    endIdx -= 1;
+  }
+  if (endIdx < 0) {
+    return;
+  }
+  mLastBlockOffset = mTimeMapping[endIdx].mEndOffset;
 }
 
 void WebMBufferedState::Reset() {
@@ -396,6 +412,13 @@ int64_t WebMBufferedState::GetInitEndOffset()
     return -1;
   }
   return mRangeParsers[0].mInitEndOffset;
+}
+
+int64_t WebMBufferedState::GetLastBlockOffset()
+{
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
+  return mLastBlockOffset;
 }
 
 bool WebMBufferedState::GetStartTime(uint64_t *aTime)
