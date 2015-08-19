@@ -456,9 +456,11 @@ LIRGenerator::visitCall(MCall* call)
         MOZ_ASSERT(ok, "How can we not have four temp registers?");
         lir = new(alloc()) LCallDOMNative(tempFixed(cxReg), tempFixed(objReg),
                                           tempFixed(privReg), tempFixed(argsReg));
-    } else if (target && !(target->isClassConstructor() && !call->isConstructing())) {
+    } else if (target) {
         // Call known functions.
         if (target->isNative()) {
+            MOZ_ASSERT(!target->isClassConstructor());
+
             Register cxReg, numReg, vpReg, tmpReg;
             GetTempRegForIntArg(0, 0, &cxReg);
             GetTempRegForIntArg(1, 0, &numReg);
