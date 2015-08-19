@@ -203,6 +203,9 @@ describe("loop.contacts", function() {
       var promo = listView.getDOMNode().querySelector(".contacts-gravatar-promo");
       expect(promo).to.not.equal(null);
 
+      var avatars = listView.getDOMNode().querySelectorAll(".contacts-gravatar-avatars img");
+      expect(avatars).to.have.length(2, "two example avatars are shown");
+
       checkGravatarContacts(false);
     });
 
@@ -238,7 +241,7 @@ describe("loop.contacts", function() {
         }));
 
       React.addons.TestUtils.Simulate.click(listView.getDOMNode().querySelector(
-        ".contacts-gravatar-promo .button-accept"));
+        ".contacts-gravatar-promo .secondary:last-child"));
 
       sinon.assert.calledTwice(navigator.mozLoop.setLoopPref);
 
@@ -255,7 +258,7 @@ describe("loop.contacts", function() {
         }));
 
       React.addons.TestUtils.Simulate.click(listView.getDOMNode().querySelector(
-        ".contacts-gravatar-promo .button-accept"));
+        ".contacts-gravatar-promo .secondary:last-child"));
 
       sinon.assert.calledTwice(navigator.mozLoop.setLoopPref);
       sinon.assert.calledWithExactly(navigator.mozLoop.setLoopPref, "contacts.gravatars.promo", false);
@@ -271,13 +274,44 @@ describe("loop.contacts", function() {
         }));
 
       React.addons.TestUtils.Simulate.click(listView.getDOMNode().querySelector(
-        ".contacts-gravatar-promo .button-close"));
+        ".contacts-gravatar-promo .secondary:first-child"));
 
       var promo = listView.getDOMNode().querySelector(".contacts-gravatar-promo");
       expect(promo).to.equal(null);
     });
 
     it("should set prefs correctly when the 'close' button is clicked", function() {
+      listView = TestUtils.renderIntoDocument(
+        React.createElement(loop.contacts.ContactsList, {
+          mozLoop: navigator.mozLoop,
+          notifications: notifications,
+          startForm: function() {}
+        }));
+
+      React.addons.TestUtils.Simulate.click(listView.getDOMNode().querySelector(
+        ".contacts-gravatar-promo .secondary:first-child"));
+
+      sinon.assert.calledOnce(navigator.mozLoop.setLoopPref);
+      sinon.assert.calledWithExactly(navigator.mozLoop.setLoopPref,
+        "contacts.gravatars.promo", false);
+    });
+
+    it("should hide the gravatars promo box when the 'close' X button is clicked", function() {
+      listView = TestUtils.renderIntoDocument(
+        React.createElement(loop.contacts.ContactsList, {
+          mozLoop: navigator.mozLoop,
+          notifications: notifications,
+          startForm: function() {}
+        }));
+
+      React.addons.TestUtils.Simulate.click(listView.getDOMNode().querySelector(
+        ".contacts-gravatar-promo .button-close"));
+
+      var promo = listView.getDOMNode().querySelector(".contacts-gravatar-promo");
+      expect(promo).to.equal(null);
+    });
+
+    it("should set prefs correctly when the 'close' X button is clicked", function() {
       listView = TestUtils.renderIntoDocument(
         React.createElement(loop.contacts.ContactsList, {
           mozLoop: navigator.mozLoop,
@@ -326,9 +360,9 @@ describe("loop.contacts", function() {
 
       it("should display the no contacts strings", function() {
         sinon.assert.calledWithExactly(mozL10nGetSpy,
-                                       "no_contacts_message_heading");
+                                       "no_contacts_message_heading2");
         sinon.assert.calledWithExactly(mozL10nGetSpy,
-                                       "no_contacts_import_or_add");
+                                       "no_contacts_import_or_add2");
       });
     });
 

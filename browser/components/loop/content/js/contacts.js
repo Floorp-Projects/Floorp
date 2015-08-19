@@ -134,11 +134,17 @@ loop.contacts = (function(_, mozL10n) {
                   onClick: this.handleCloseButtonClick}), 
           React.createElement("p", {dangerouslySetInnerHTML: {__html: message}, 
              onClick: this.handleLinkClick}), 
-          React.createElement(ButtonGroup, null, 
-            React.createElement(Button, {caption: mozL10n.get("gravatars_promo_button_nothanks"), 
+          React.createElement("div", {className: "contacts-gravatar-avatars"}, 
+            React.createElement("img", {src: "loop/shared/img/avatars.svg#orange-avatar"}), 
+            React.createElement("span", {className: "contacts-gravatar-arrow"}), 
+            React.createElement("img", {src: "loop/shared/img/firefox-avatar.svg"})
+          ), 
+          React.createElement(ButtonGroup, {additionalClass: "contacts-gravatar-buttons"}, 
+            React.createElement(Button, {additionalClass: "secondary", 
+                    caption: mozL10n.get("gravatars_promo_button_nothanks2"), 
                     onClick: this.handleCloseButtonClick}), 
-            React.createElement(Button, {additionalClass: "button-accept", 
-                    caption: mozL10n.get("gravatars_promo_button_use"), 
+            React.createElement(Button, {additionalClass: "secondary", 
+                    caption: mozL10n.get("gravatars_promo_button_use2"), 
                     onClick: this.handleUseButtonClick})
           )
         )
@@ -666,10 +672,10 @@ loop.contacts = (function(_, mozL10n) {
         return (
           React.createElement("div", {className: "contact-list-empty"}, 
             React.createElement("p", {className: "panel-text-large"}, 
-              mozL10n.get("no_contacts_message_heading")
+              mozL10n.get("no_contacts_message_heading2")
             ), 
             React.createElement("p", {className: "panel-text-medium"}, 
-              mozL10n.get("no_contacts_import_or_add")
+              mozL10n.get("no_contacts_import_or_add2")
             )
           )
         );
@@ -714,7 +720,7 @@ loop.contacts = (function(_, mozL10n) {
               busy: this.state.importBusy})})
           ), 
           React.createElement(Button, {additionalClass: "primary", 
-            caption: mozL10n.get("new_contact_button"), 
+            caption: mozL10n.get("new_contact_button2"), 
             onClick: this.handleAddContactButtonClick})
         )
       );
@@ -726,9 +732,7 @@ loop.contacts = (function(_, mozL10n) {
       }
 
       return (
-        React.createElement("div", {className: "content-area"}, 
-          React.createElement(GravatarPromo, {handleUse: this.handleUseGravatar})
-        )
+        React.createElement(GravatarPromo, {handleUse: this.handleUseGravatar})
       );
     },
 
