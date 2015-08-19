@@ -1783,7 +1783,8 @@ class MochitestDesktop(MochitestBase):
             try:
                 minidump_path = os.path.join(self.profile.profile,
                                              'minidumps')
-                mozcrash.kill_and_get_minidump(processPID, minidump_path)
+                mozcrash.kill_and_get_minidump(processPID, minidump_path,
+                                               utilityPath)
             except OSError:
                 # https://bugzilla.mozilla.org/show_bug.cgi?id=921509
                 self.log.info(
