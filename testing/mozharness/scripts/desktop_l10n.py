@@ -161,6 +161,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
                 "list-locales",
                 "setup",
                 "repack",
+                "create-virtualenv",
                 "taskcluster-upload",
                 "funsize-props",
                 "submit-to-balrog",
@@ -991,16 +992,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         self.set_buildbot_property('funsize_info', json.dumps(funsize_info),
                                    write_to_file=True)
 
-    def query_repo(self):
-        # Find the name of our repository
-        mozilla_dir = self.config['mozilla_dir']
-        repo = None
-        for repository in self.config['repos']:
-            if repository.get('dest') == mozilla_dir:
-                repo = repository['repo']
-                break
-        return repo
-
     def taskcluster_upload(self):
         auth = os.path.join(os.getcwd(), self.config['taskcluster_credentials_file'])
         credentials = {}
@@ -1011,14 +1002,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
             self.warning('Skipping S3 file upload: No taskcluster credentials.')
             return
 
-        # We need to activate the virtualenv so that we can import taskcluster
-        # (and its dependent modules, like requests and hawk).  Normally we
-        # could create the virtualenv as an action, but due to some odd
-        # dependencies with query_build_env() being called from build(), which
-        # is necessary before the virtualenv can be created.
-        self.disable_mock()
-        self.create_virtualenv()
-        self.enable_mock()
         self.activate_virtualenv()
 
         # Enable Taskcluster debug logging, so at least we get some debug
@@ -1028,7 +1011,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         branch = self.config['branch']
         platform = self.config['platform']
         revision = self._query_revision()
-        repo = self.query_repo()
+        repo = self.query_l10n_repo()
         if not repo:
             self.fatal("Unable to determine repository for querying the push info.")
         pushinfo = self.vcs_query_pushinfo(repo, revision, vcs='hgtool')
