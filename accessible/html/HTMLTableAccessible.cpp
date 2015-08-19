@@ -147,8 +147,9 @@ GroupPos
 HTMLTableCellAccessible::GroupPosition()
 {
   int32_t count = 0, index = 0;
-  if (nsCoreUtils::GetUIntAttr(Table()->AsAccessible()->GetContent(),
-                               nsGkAtoms::aria_colcount, &count) &&
+  Accessible* table = Table()->AsAccessible();
+  if (table && nsCoreUtils::GetUIntAttr(table->GetContent(),
+                                        nsGkAtoms::aria_colcount, &count) &&
       nsCoreUtils::GetUIntAttr(mContent, nsGkAtoms::aria_colindex, &index)) {
     return GroupPos(0, index, count);
   }
