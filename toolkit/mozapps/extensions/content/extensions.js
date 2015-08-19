@@ -1250,8 +1250,11 @@ var gViewController = {
           if (!files.hasMoreElements()) {
             if (installs.length > 0) {
               // Display the normal install confirmation for the installs
-              AddonManager.installAddonsFromWebpage("application/x-xpinstall",
-                                                    getBrowserElement(), null, installs);
+              let webInstaller = Cc["@mozilla.org/addons/web-install-listener;1"].
+                                 getService(Ci.amIWebInstallListener);
+              webInstaller.onWebInstallRequested(getBrowserElement(),
+                                                 document.documentURIObject,
+                                                 installs);
             }
             return;
           }
@@ -3745,8 +3748,11 @@ var gDragDrop = {
       if (pos == urls.length) {
         if (installs.length > 0) {
           // Display the normal install confirmation for the installs
-          AddonManager.installAddonsFromWebpage("application/x-xpinstall",
-                                                getBrowserElement(), null, installs);
+          let webInstaller = Cc["@mozilla.org/addons/web-install-listener;1"].
+                             getService(Ci.amIWebInstallListener);
+          webInstaller.onWebInstallRequested(getBrowserElement(),
+                                             document.documentURIObject,
+                                             installs);
         }
         return;
       }
