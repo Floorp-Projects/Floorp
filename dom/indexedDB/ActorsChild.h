@@ -709,7 +709,7 @@ private:
   HandleResponse(const void_t& aResponse);
 
   void
-  HandleResponse(const ObjectStoreCursorResponse& aResponse);
+  HandleResponse(const nsTArray<ObjectStoreCursorResponse>& aResponse);
 
   void
   HandleResponse(const ObjectStoreKeyCursorResponse& aResponse);
