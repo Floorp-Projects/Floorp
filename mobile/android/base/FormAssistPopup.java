@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.gfx.FloatSize;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.util.GeckoEventListener;
@@ -284,12 +285,11 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
         }
 
         float zoom = aMetrics.zoomFactor;
-        PointF offset = aMetrics.getMarginOffset();
 
         // These values correspond to the input box for which we want to
         // display the FormAssistPopup.
-        int left = (int) (mX * zoom - aMetrics.viewportRectLeft + offset.x);
-        int top = (int) (mY * zoom - aMetrics.viewportRectTop + offset.y);
+        int left = (int) (mX * zoom - aMetrics.viewportRectLeft);
+        int top = (int) (mY * zoom - aMetrics.viewportRectTop + ViewHelper.getTranslationY(GeckoAppShell.getLayerView()));
         int width = (int) (mW * zoom);
         int height = (int) (mH * zoom);
 
@@ -381,6 +381,14 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
     void onInputMethodChanged(String newInputMethod) {
         boolean blocklisted = sInputMethodBlocklist.contains(newInputMethod);
         broadcastGeckoEvent("FormAssist:Blocklisted", String.valueOf(blocklisted));
+    }
+
+    void onTranslationChanged() {
+        ThreadUtils.assertOnUiThread();
+        if (!isShown()) {
+            return;
+        }
+        positionAndShowPopup();
     }
 
     void onMetricsChanged(final ImmutableViewportMetrics aMetrics) {

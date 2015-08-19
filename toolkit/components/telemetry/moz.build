@@ -65,6 +65,7 @@ GENERATED_FILES = [
 histogram_files = [
     'Histograms.json',
     '/dom/base/UseCounters.conf',
+    '/dom/base/nsDeprecatedOperationList.h',
 ]
 
 data = GENERATED_FILES['TelemetryHistogramData.inc']

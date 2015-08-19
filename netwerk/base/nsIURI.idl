@@ -67,7 +67,7 @@
  * we will need to add additional checks there for all intermediate IIDs, until
  * nsPrincipal is fixed to serialize its URIs as nsISupports (bug 662693).
  */
-[scriptable, uuid(395fe045-7d18-4adb-a3fd-af98c8a1af11)]
+[scriptable, uuid(92073a54-6d78-4f30-913a-b871813208c6)]
 interface nsIURI : nsISupports
 {
     /************************************************************************
@@ -193,6 +193,13 @@ interface nsIURI : nsISupports
      * RFC2396.  The result is strictly ASCII.
      */
     readonly attribute ACString asciiSpec;
+
+    /**
+     * The host:port (or simply the host, if port == -1), with an ASCII compatible
+     * encoding.  Host portion follows the IDNA draft spec.  The result is strictly
+     * ASCII.
+     */
+    readonly attribute ACString asciiHostPort;
 
     /**
      * The URI host with an ASCII compatible encoding.  Follows the IDNA

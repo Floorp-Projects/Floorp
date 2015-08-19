@@ -505,24 +505,22 @@ SpecialPowersObserverAPI.prototype = {
           throw new SpecialPowersError('Invalid operation for SPQuotaManager');
         }
 
-        let uri = this._getURI(msg.uri);
+        let secMan = Services.scriptSecurityManager;
+        let principal = secMan.createCodebasePrincipal(this._getURI(msg.uri), {
+          appId: msg.appId,
+          inBrowser: msg.inBrowser,
+        });
 
         if (op == 'clear') {
-          if (('inBrowser' in msg) && msg.inBrowser !== undefined) {
-            qm.clearStoragesForURI(uri, msg.appId, msg.inBrowser);
-          } else if (('appId' in msg) && msg.appId !== undefined) {
-            qm.clearStoragesForURI(uri, msg.appId);
-          } else {
-            qm.clearStoragesForURI(uri);
-          }
+          qm.clearStoragesForPrincipal(principal);
         } else if (op == 'reset') {
           qm.reset();
         }
 
-        // We always use the getUsageForURI callback even if we're clearing
-        // since we know that clear and getUsageForURI are synchronized by the
+        // We always use the getUsageForPrincipal callback even if we're clearing
+        // since we know that clear and getUsageForPrincipal are synchronized by the
         // QuotaManager.
-        let callback = function(uri, usage, fileUsage) {
+        let callback = function(principal, usage, fileUsage) {
           let reply = { id: msg.id };
           if (op == 'getUsage') {
             reply.usage = usage;
@@ -531,13 +529,7 @@ SpecialPowersObserverAPI.prototype = {
           mm.sendAsyncMessage(aMessage.name, reply);
         };
 
-        if (('inBrowser' in msg) && msg.inBrowser !== undefined) {
-          qm.getUsageForURI(uri, callback, msg.appId, msg.inBrowser);
-        } else if (('appId' in msg) && msg.appId !== undefined) {
-          qm.getUsageForURI(uri, callback, msg.appId);
-        } else {
-          qm.getUsageForURI(uri, callback);
-        }
+        qm.getUsageForPrincipal(principal, callback);
 
         return undefined;	// See comment at the beginning of this function.
       }

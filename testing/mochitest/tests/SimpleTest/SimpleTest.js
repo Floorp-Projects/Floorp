@@ -214,16 +214,6 @@ if (typeof(computedStyle) == 'undefined') {
     };
 }
 
-/**
- * Check for OOP test plugin
-**/
-SimpleTest.testPluginIsOOP = function () {
-    var testPluginIsOOP = false;
-    var ph = SpecialPowers.Cc["@mozilla.org/plugin/host;1"]
-                          .getService(SpecialPowers.Ci.nsIPluginHost);
-    return ph.isPluginOOP("application/x-test");
-};
-
 SimpleTest._tests = [];
 SimpleTest._stopOnLoad = true;
 SimpleTest._cleanupFunctions = [];

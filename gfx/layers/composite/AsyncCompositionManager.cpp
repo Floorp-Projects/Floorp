@@ -101,6 +101,7 @@ AsyncCompositionManager::AsyncCompositionManager(LayerManagerComposite* aManager
   : mLayerManager(aManager)
   , mIsFirstPaint(true)
   , mLayersUpdated(false)
+  , mPaintSyncId(0)
   , mReadyForCompose(true)
 {
 }
@@ -231,29 +232,24 @@ AccumulateLayerTransforms(Layer* aLayer,
 
 static LayerPoint
 GetLayerFixedMarginsOffset(Layer* aLayer,
-                           const LayerMargin& aFixedLayerMargins)
+                           const ScreenMargin& aFixedLayerMargins)
 {
   // Work out the necessary translation, in root scrollable layer space.
   // Because fixed layer margins are stored relative to the root scrollable
   // layer, we can just take the difference between these values.
   LayerPoint translation;
   const LayerPoint& anchor = aLayer->GetFixedPositionAnchor();
-  const LayerMargin& fixedMargins = aLayer->GetFixedPositionMargins();
 
-  if (fixedMargins.left >= 0) {
-    if (anchor.x > 0) {
-      translation.x -= aFixedLayerMargins.right - fixedMargins.right;
-    } else {
-      translation.x += aFixedLayerMargins.left - fixedMargins.left;
-    }
+  if (anchor.x > 0) {
+    translation.x -= aFixedLayerMargins.right;
+  } else {
+    translation.x += aFixedLayerMargins.left;
   }
 
-  if (fixedMargins.top >= 0) {
-    if (anchor.y > 0) {
-      translation.y -= aFixedLayerMargins.bottom - fixedMargins.bottom;
-    } else {
-      translation.y += aFixedLayerMargins.top - fixedMargins.top;
-    }
+  if (anchor.y > 0) {
+    translation.y -= aFixedLayerMargins.bottom;
+  } else {
+    translation.y += aFixedLayerMargins.top;
   }
 
   return translation;
@@ -277,7 +273,7 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
                                                    FrameMetrics::ViewID aTransformScrollId,
                                                    const Matrix4x4& aPreviousTransformForRoot,
                                                    const Matrix4x4& aCurrentTransformForRoot,
-                                                   const LayerMargin& aFixedLayerMargins)
+                                                   const ScreenMargin& aFixedLayerMargins)
 {
   bool isRootFixedForSubtree = aLayer->GetIsFixedPosition() &&
     aLayer->GetFixedPositionScrollContainerId() == aTransformScrollId &&
@@ -602,7 +598,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
 
   Matrix4x4 combinedAsyncTransform;
   bool hasAsyncTransform = false;
-  LayerMargin fixedLayerMargins(0, 0, 0, 0);
+  ScreenMargin fixedLayerMargins(0, 0, 0, 0);
 
   // Each layer has multiple clips. Its local clip, which must move with async
   // transforms, and its scrollframe clips, which are the clips between each
@@ -645,7 +641,6 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
     }
 
     const FrameMetrics& metrics = aLayer->GetFrameMetrics(i);
-    ScreenPoint offset(0, 0);
     // TODO: When we enable APZ on Fennec, we'll need to call SyncFrameMetrics here.
     // When doing so, it might be useful to look at how it was called here before
     // bug 1036967 removed the (dead) call.
@@ -663,9 +658,6 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
 
     mIsFirstPaint = false;
     mLayersUpdated = false;
-
-    // Apply the render offset
-    mLayerManager->GetCompositor()->SetScreenRenderOffset(offset);
 
     // Transform the current local clip by this APZC's async transform. If we're
     // using containerful scrolling, then the clip is not part of the scrolled
@@ -1021,8 +1013,7 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
     ) * geckoZoom);
   displayPort += scrollOffsetLayerPixels;
 
-  LayerMargin fixedLayerMargins(0, 0, 0, 0);
-  ScreenPoint offset(0, 0);
+  ScreenMargin fixedLayerMargins(0, 0, 0, 0);
 
   // Ideally we would initialize userZoom to AsyncPanZoomController::CalculateResolution(metrics)
   // but this causes a reftest-ipc test to fail (see bug 883646 comment 27). The reason for this
@@ -1034,14 +1025,12 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
                                  // for which we can assume that x and y scales are equal.
                                * metrics.GetCumulativeResolution().ToScaleFactor()
                                * LayerToParentLayerScale(1));
-  ParentLayerPoint userScroll = metrics.GetScrollOffset() * userZoom;
-  SyncViewportInfo(displayPort, geckoZoom, mLayersUpdated,
-                   userScroll, userZoom, fixedLayerMargins,
-                   offset);
+  ParentLayerRect userRect(metrics.GetScrollOffset() * userZoom,
+                           metrics.GetCompositionBounds().Size());
+  SyncViewportInfo(displayPort, geckoZoom, mLayersUpdated, mPaintSyncId,
+                   userRect, userZoom, fixedLayerMargins);
   mLayersUpdated = false;
-
-  // Apply the render offset
-  mLayerManager->GetCompositor()->SetScreenRenderOffset(offset);
+  mPaintSyncId = 0;
 
   // Handle transformations for asynchronous panning and zooming. We determine the
   // zoom used by Gecko from the transformation set on the root layer, and we
@@ -1055,7 +1044,7 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
   }
 
   LayerToParentLayerScale asyncZoom = userZoom / metrics.LayersPixelsPerCSSPixel().ToScaleFactor();
-  ParentLayerPoint translation = userScroll - geckoScroll;
+  ParentLayerPoint translation = userRect.TopLeft() - geckoScroll;
   Matrix4x4 treeTransform = ViewTransform(asyncZoom, -translation);
 
   // Apply the tree transform on top of GetLocalTransform() here (rather than
@@ -1071,17 +1060,15 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
   // AlignFixedAndStickyLayers.
   ParentLayerRect contentScreenRect = mContentRect * userZoom;
   Point3D overscrollTranslation;
-  if (userScroll.x < contentScreenRect.x) {
-    overscrollTranslation.x = contentScreenRect.x - userScroll.x;
-  } else if (userScroll.x + metrics.GetCompositionBounds().width > contentScreenRect.XMost()) {
-    overscrollTranslation.x = contentScreenRect.XMost() -
-      (userScroll.x + metrics.GetCompositionBounds().width);
+  if (userRect.x < contentScreenRect.x) {
+    overscrollTranslation.x = contentScreenRect.x - userRect.x;
+  } else if (userRect.XMost() > contentScreenRect.XMost()) {
+    overscrollTranslation.x = contentScreenRect.XMost() - userRect.XMost();
   }
-  if (userScroll.y < contentScreenRect.y) {
-    overscrollTranslation.y = contentScreenRect.y - userScroll.y;
-  } else if (userScroll.y + metrics.GetCompositionBounds().height > contentScreenRect.YMost()) {
-    overscrollTranslation.y = contentScreenRect.YMost() -
-      (userScroll.y + metrics.GetCompositionBounds().height);
+  if (userRect.y < contentScreenRect.y) {
+    overscrollTranslation.y = contentScreenRect.y - userRect.y;
+  } else if (userRect.YMost() > contentScreenRect.YMost()) {
+    overscrollTranslation.y = contentScreenRect.YMost() - userRect.YMost();
   }
   oldTransform.PreTranslate(overscrollTranslation.x,
                             overscrollTranslation.y,
@@ -1102,6 +1089,25 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
   // when we're asynchronously panning or zooming
   AlignFixedAndStickyLayers(aLayer, aLayer, metrics.GetScrollId(), oldTransform,
                             aLayer->GetLocalTransform(), fixedLayerMargins);
+
+  // For Fennec we want to expand the root scrollable layer clip rect based on
+  // the fixed position margins. In particular, we want this while the dynamic
+  // toolbar is in the process of sliding offscreen and the area of the
+  // LayerView visible to the user is larger than the viewport size that Gecko
+  // knows about (and therefore larger than the clip rect). We could also just
+  // clear the clip rect on aLayer entirely but this seems more precise.
+  Maybe<ParentLayerIntRect> rootClipRect = aLayer->AsLayerComposite()->GetShadowClipRect();
+  if (rootClipRect && fixedLayerMargins != ScreenMargin()) {
+#ifndef MOZ_WIDGET_ANDROID
+    // We should never enter here on anything other than Fennec, since
+    // fixedLayerMargins should be empty everywhere else.
+    MOZ_ASSERT(false);
+#endif
+    ParentLayerRect rect(rootClipRect.value());
+    rect.Deflate(ViewAs<ParentLayerPixel>(fixedLayerMargins,
+      PixelCastJustification::ScreenIsParentLayerForRoot));
+    aLayer->AsLayerComposite()->SetShadowClipRect(Some(RoundedOut(rect)));
+  }
 }
 
 void
@@ -1192,19 +1198,19 @@ void
 AsyncCompositionManager::SyncViewportInfo(const LayerIntRect& aDisplayPort,
                                           const CSSToLayerScale& aDisplayResolution,
                                           bool aLayersUpdated,
-                                          ParentLayerPoint& aScrollOffset,
+                                          int32_t aPaintSyncId,
+                                          ParentLayerRect& aScrollRect,
                                           CSSToParentLayerScale& aScale,
-                                          LayerMargin& aFixedLayerMargins,
-                                          ScreenPoint& aOffset)
+                                          ScreenMargin& aFixedLayerMargins)
 {
 #ifdef MOZ_WIDGET_ANDROID
   AndroidBridge::Bridge()->SyncViewportInfo(aDisplayPort,
                                             aDisplayResolution,
                                             aLayersUpdated,
-                                            aScrollOffset,
+                                            aPaintSyncId,
+                                            aScrollRect,
                                             aScale,
-                                            aFixedLayerMargins,
-                                            aOffset);
+                                            aFixedLayerMargins);
 #endif
 }
 
@@ -1216,14 +1222,13 @@ AsyncCompositionManager::SyncFrameMetrics(const ParentLayerPoint& aScrollOffset,
                                           const CSSRect& aDisplayPort,
                                           const CSSToLayerScale& aDisplayResolution,
                                           bool aIsFirstPaint,
-                                          LayerMargin& aFixedLayerMargins,
-                                          ScreenPoint& aOffset)
+                                          ScreenMargin& aFixedLayerMargins)
 {
 #ifdef MOZ_WIDGET_ANDROID
   AndroidBridge::Bridge()->SyncFrameMetrics(aScrollOffset, aZoom, aCssPageRect,
                                             aLayersUpdated, aDisplayPort,
                                             aDisplayResolution, aIsFirstPaint,
-                                            aFixedLayerMargins, aOffset);
+                                            aFixedLayerMargins);
 #endif
 }
 
