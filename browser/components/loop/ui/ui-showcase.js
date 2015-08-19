@@ -21,6 +21,7 @@
   var ContactDetailsForm = loop.contacts.ContactDetailsForm;
   var ContactDropdown = loop.contacts.ContactDropdown;
   var ContactDetail = loop.contacts.ContactDetail;
+  var GettingStartedView = loop.panel.GettingStartedView;
   // 1.2. Conversation Window
   var AcceptCallView = loop.conversationViews.AcceptCallView;
   var DesktopPendingConversationView = loop.conversationViews.PendingConversationView;
@@ -489,6 +490,15 @@
     callback(null, fakeFewerContacts); // Defined in fake-mozLoop.js.
   };
 
+  var firstTimeUseMozLoop = _.cloneDeep(navigator.mozLoop);
+  firstTimeUseMozLoop.getLoopPref = function(prop) {
+    if (prop === "gettingStarted.seen") {
+      return false;
+    }
+
+    return true;
+  };
+
   var mockContact = {
     name: ["Mr Smith"],
     email: [{
@@ -716,6 +726,21 @@
                            height: 410, 
                            summary: "Re-sign-in view", 
                            width: 332}, 
+              React.createElement("div", {className: "panel"}, 
+                React.createElement(PanelView, {client: mockClient, 
+                  dispatcher: dispatcher, 
+                  mozLoop: firstTimeUseMozLoop, 
+                  notifications: notifications, 
+                  roomStore: roomStore, 
+                  selectedTab: "rooms"})
+              )
+            ), 
+
+            React.createElement(FramedExample, {cssClass: "fx-embedded-panel", 
+              dashed: true, 
+              height: 410, 
+              summary: "Re-sign-in view", 
+              width: 332}, 
               React.createElement("div", {className: "panel"}, 
                 React.createElement(SignInRequestView, {mozLoop: mockMozLoopLoggedIn})
               )

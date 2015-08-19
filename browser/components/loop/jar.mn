@@ -71,6 +71,7 @@ browser.jar:
   content/browser/loop/shared/img/02.png                        (content/shared/img/02.png)
   content/browser/loop/shared/img/02@2x.png                     (content/shared/img/02@2x.png)
   content/browser/loop/shared/img/telefonica.png                (content/shared/img/telefonica.png)
+  content/browser/loop/shared/img/hello_logo.svg                (content/shared/img/hello_logo.svg)
   content/browser/loop/shared/img/telefonica@2x.png             (content/shared/img/telefonica@2x.png)
   content/browser/loop/shared/img/ellipsis-v.svg                (content/shared/img/ellipsis-v.svg)
   content/browser/loop/shared/img/empty_contacts.svg            (content/shared/img/empty_contacts.svg)
