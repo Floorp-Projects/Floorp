@@ -7,10 +7,11 @@
 DIRS += [
     'common',
     'crypto',
-    'fxaccounts',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
+    DIRS += ['fxaccounts']
+
     # MOZ_SERVICES_HEALTHREPORT and therefore MOZ_DATA_REPORTING are
     # defined on Android, but these features are implemented using Java.
     if CONFIG['MOZ_SERVICES_HEALTHREPORT']:
