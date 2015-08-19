@@ -387,6 +387,7 @@ WEBIDL_FILES = [
     'RGBColor.webidl',
     'RTCStatsReport.webidl',
     'Screen.webidl',
+    'ScreenOrientation.webidl',
     'ScriptProcessorNode.webidl',
     'ScrollAreaEvent.webidl',
     'ScrollBoxObject.webidl',

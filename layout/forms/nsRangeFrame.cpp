@@ -838,7 +838,7 @@ bool
 nsRangeFrame::ShouldUseNativeStyle() const
 {
   return (StyleDisplay()->mAppearance == NS_THEME_RANGE) &&
-         !PresContext()->HasAuthorSpecifiedRules(const_cast<nsRangeFrame*>(this),
+         !PresContext()->HasAuthorSpecifiedRules(this,
                                                  (NS_AUTHOR_SPECIFIED_BORDER |
                                                   NS_AUTHOR_SPECIFIED_BACKGROUND)) &&
          !PresContext()->HasAuthorSpecifiedRules(mTrackDiv->GetPrimaryFrame(),

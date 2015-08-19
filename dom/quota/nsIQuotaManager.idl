@@ -7,27 +7,24 @@
 #include "nsISupports.idl"
 
 interface nsIQuotaRequest;
-interface nsIURI;
+interface nsIPrincipal;
 interface nsIUsageCallback;
 
-[scriptable, builtinclass, uuid(2968fcd5-1872-4ddc-8c16-62b27e357f31)]
+[scriptable, builtinclass, uuid(101cf53c-e7f3-4723-9f43-a23a85c8eda0)]
 interface nsIQuotaManager : nsISupports
 {
   /**
    * Schedules an asynchronous callback that will return the total amount of
    * disk space being used by storages for the given origin.
    *
-   * @param aURI
-   *        The URI whose usage is being queried.
+   * @param aPrincipal
+   *        A principal for the origin whose usage is being queried.
    * @param aCallback
    *        The callback that will be called when the usage is available.
    */
-  [optional_argc]
   nsIQuotaRequest
-  getUsageForURI(in nsIURI aURI,
-                 in nsIUsageCallback aCallback,
-                 [optional] in unsigned long aAppId,
-                 [optional] in boolean aInMozBrowserOnly);
+  getUsageForPrincipal(in nsIPrincipal aPrincipal,
+                       in nsIUsageCallback aCallback);
 
   /**
    * Removes all storages. The files may not be deleted immediately depending
@@ -44,15 +41,12 @@ interface nsIQuotaManager : nsISupports
    * Removes all storages stored for the given URI. The files may not be
    * deleted immediately depending on prohibitive concurrent operations.
    *
-   * @param aURI
-   *        The URI whose storages are to be cleared.
+   * @param aPrincipal
+   *        A principal for the origin whose storages are to be cleared.
    */
-  [optional_argc]
   void
-  clearStoragesForURI(in nsIURI aURI,
-                      [optional] in unsigned long aAppId,
-                      [optional] in boolean aInMozBrowserOnly,
-                      [optional] in ACString aPersistenceType);
+  clearStoragesForPrincipal(in nsIPrincipal aPrincipal,
+                            [optional] in ACString aPersistenceType);
 
   /**
    * Resets quota and storage management. This can be used to force

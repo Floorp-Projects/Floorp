@@ -15,18 +15,11 @@
     setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
     function start() {
-      if (!SimpleTest.testPluginIsOOP()) {
-        ok(true, "Skipping this test when test plugin is not OOP.");
-        SimpleTest.finish();
-        return;
+      if (navigator.platform.startsWith("Win")) {
+        SimpleTest.expectAssertions(0, 350);
       }
-      else {
-        if (navigator.platform.startsWith("Win")) {
-          SimpleTest.expectAssertions(0, 350);
-        }
 
-        setTimeout(checkGCRace, 1000);
-      }
+      setTimeout(checkGCRace, 1000);
     }
 
     var nested = false;

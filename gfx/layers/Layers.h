@@ -1151,9 +1151,8 @@ public:
 
   /**
    * CONSTRUCTION PHASE ONLY
-   * If a layer represents a fixed position element or elements that are on
-   * a document that has had fixed position element margins set on it, this
-   * data is stored on the layer for use by the compositor.
+   * If a layer represents a fixed position element, this data is stored on the
+   * layer for use by the compositor.
    *
    *   - |aScrollId| identifies the scroll frame that this element is fixed
    *     with respect to.
@@ -1162,30 +1161,19 @@ public:
    *     point, that is, the point which remains in the same position when
    *     compositing the layer tree with a transformation (such as when
    *     asynchronously scrolling and zooming).
-   *
-   *   - |aMargins| are the fixed position margins set on the document this
-   *     element is part of. Storing them here allows for asynchronous
-   *     animation of the margins by reconciling the difference between this
-   *     value and a value that is updated more frequently.
-   *     If the left or top margins are negative, it means that the elements
-   *     this layer represents are auto-positioned, and so fxed position
-   *     margins should not have an effect on the corresponding axis.
    */
   void SetFixedPositionData(FrameMetrics::ViewID aScrollId,
-                            const LayerPoint& aAnchor,
-                            const LayerMargin& aMargins)
+                            const LayerPoint& aAnchor)
   {
     if (!mFixedPositionData ||
         mFixedPositionData->mScrollId != aScrollId ||
-        mFixedPositionData->mAnchor != aAnchor ||
-        mFixedPositionData->mMargins != aMargins) {
+        mFixedPositionData->mAnchor != aAnchor) {
       MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) FixedPositionData", this));
       if (!mFixedPositionData) {
         mFixedPositionData = MakeUnique<FixedPositionData>();
       }
       mFixedPositionData->mScrollId = aScrollId;
       mFixedPositionData->mAnchor = aAnchor;
-      mFixedPositionData->mMargins = aMargins;
       Mutated();
     }
   }
@@ -1279,7 +1267,6 @@ public:
   bool GetIsStickyPosition() { return mStickyPositionData; }
   FrameMetrics::ViewID GetFixedPositionScrollContainerId() { return mFixedPositionData ? mFixedPositionData->mScrollId : FrameMetrics::NULL_SCROLL_ID; }
   LayerPoint GetFixedPositionAnchor() { return mFixedPositionData ? mFixedPositionData->mAnchor : LayerPoint(); }
-  LayerMargin GetFixedPositionMargins() { return mFixedPositionData ? mFixedPositionData->mMargins : LayerMargin(); }
   FrameMetrics::ViewID GetStickyScrollContainerId() { return mStickyPositionData->mScrollId; }
   const LayerRect& GetStickyScrollRangeOuter() { return mStickyPositionData->mOuter; }
   const LayerRect& GetStickyScrollRangeInner() { return mStickyPositionData->mInner; }
@@ -1783,7 +1770,6 @@ protected:
   struct FixedPositionData {
     FrameMetrics::ViewID mScrollId;
     LayerPoint mAnchor;
-    LayerMargin mMargins;
   };
   UniquePtr<FixedPositionData> mFixedPositionData;
   struct StickyPositionData {

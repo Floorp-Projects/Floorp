@@ -57,7 +57,8 @@ parent:
   sync Update(Edit[] cset, uint64_t id, TargetConfig targetConfig,
               PluginWindowData[] plugins, bool isFirstPaint,
               bool scheduleComposite, uint32_t paintSequenceNumber,
-              bool isRepeatTransaction, TimeStamp transactionStart)
+              bool isRepeatTransaction, TimeStamp transactionStart,
+              int32_t paintSyncId)
     returns (EditReply[] reply);
 
   // We don't need to send a sync transaction if
@@ -65,7 +66,8 @@ parent:
   async UpdateNoSwap(Edit[] cset, uint64_t id, TargetConfig targetConfig,
                      PluginWindowData[] plugins, bool isFirstPaint,
                      bool scheduleComposite, uint32_t paintSequenceNumber,
-                     bool isRepeatTransaction, TimeStamp transactionStart);
+                     bool isRepeatTransaction, TimeStamp transactionStart,
+                     int32_t paintSyncId);
 
   // Testing APIs
 

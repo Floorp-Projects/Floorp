@@ -14,6 +14,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/unused.h"
+#include "mozilla/UseCounter.h"
 
 #include "AccessCheck.h"
 #include "jsfriendapi.h"
@@ -30,6 +31,7 @@
 #include "XrayWrapper.h"
 #include "nsPrintfCString.h"
 #include "prprf.h"
+#include "nsGlobalWindow.h"
 
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/DOMError.h"
@@ -46,6 +48,7 @@
 #include "WorkerPrivate.h"
 #include "nsDOMClassInfo.h"
 #include "ipc/ErrorIPCUtils.h"
+#include "mozilla/UseCounter.h"
 
 namespace mozilla {
 namespace dom {
@@ -3049,6 +3052,16 @@ AssertReflectorHasGivenProto(JSContext* aCx, JSObject* aReflector,
 }
 } // namespace binding_detail
 #endif // DEBUG
+
+void
+SetDocumentAndPageUseCounter(JSContext* aCx, JSObject* aObject,
+                             UseCounter aUseCounter)
+{
+  nsGlobalWindow* win = xpc::WindowGlobalOrNull(js::UncheckedUnwrap(aObject));
+  if (win && win->GetDocument()) {
+    win->GetDocument()->SetDocumentAndPageUseCounter(aUseCounter);
+  }
+}
 
 } // namespace dom
 } // namespace mozilla

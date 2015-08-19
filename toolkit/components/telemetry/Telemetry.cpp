@@ -3751,6 +3751,13 @@ GetHistogramById(ID id)
   return h;
 }
 
+const char*
+GetHistogramName(Telemetry::ID id)
+{
+  const TelemetryHistogram& h = gHistograms[id];
+  return h.id();
+}
+
 void
 RecordSlowSQLStatement(const nsACString &statement,
                        const nsACString &dbName,

@@ -55,8 +55,8 @@ public:
   GetAdaptersInternal(BluetoothReplyRunnable* aRunnable) override;
 
   virtual nsresult
-  GetConnectedDevicePropertiesInternal(uint16_t aServiceUuid,
-                                       BluetoothReplyRunnable* aRunnable) override;
+  GetConnectedDevicePropertiesInternal(
+    uint16_t aServiceUuid, BluetoothReplyRunnable* aRunnable) override;
 
   virtual nsresult
   GetPairedDevicePropertiesInternal(const nsTArray<nsString>& aDeviceAddresses,
@@ -66,9 +66,11 @@ public:
   FetchUuidsInternal(const nsAString& aDeviceAddress,
                      BluetoothReplyRunnable* aRunnable) override;
 
-  virtual void StartDiscoveryInternal(BluetoothReplyRunnable* aRunnable) override;
+  virtual void
+  StartDiscoveryInternal(BluetoothReplyRunnable* aRunnable) override;
 
-  virtual void StopDiscoveryInternal(BluetoothReplyRunnable* aRunnable) override;
+  virtual void
+  StopDiscoveryInternal(BluetoothReplyRunnable* aRunnable) override;
 
   virtual nsresult
   SetProperty(BluetoothObjectType aType,

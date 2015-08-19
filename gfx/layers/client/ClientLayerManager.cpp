@@ -194,7 +194,7 @@ ClientLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
   // If the last transaction was incomplete (a failed DoEmptyTransaction),
   // don't signal a new transaction to ShadowLayerForwarder. Carry on adding
   // to the previous transaction.
-  dom::ScreenOrientation orientation;
+  dom::ScreenOrientationInternal orientation;
   if (dom::TabChild* window = mWidget->GetOwningTabChild()) {
     orientation = window->GetOrientation();
   } else {
@@ -788,6 +788,12 @@ bool
 ClientLayerManager::AsyncPanZoomEnabled() const
 {
   return mWidget && mWidget->AsyncPanZoomEnabled();
+}
+
+void
+ClientLayerManager::SetNextPaintSyncId(int32_t aSyncId)
+{
+  mForwarder->SetPaintSyncId(aSyncId);
 }
 
 ClientLayer::~ClientLayer()

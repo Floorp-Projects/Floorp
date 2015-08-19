@@ -1258,7 +1258,8 @@ CompositorParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
                                       bool aIsFirstPaint,
                                       bool aScheduleComposite,
                                       uint32_t aPaintSequenceNumber,
-                                      bool aIsRepeatTransaction)
+                                      bool aIsRepeatTransaction,
+                                      int32_t aPaintSyncId)
 {
   ScheduleRotationOnCompositorThread(aTargetConfig, aIsFirstPaint);
 
@@ -1269,7 +1270,7 @@ CompositorParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
   mLayerManager->SetRegionToClear(aTargetConfig.clearRegion());
   mLayerManager->GetCompositor()->SetScreenRotation(aTargetConfig.rotation());
 
-  mCompositionManager->Updated(aIsFirstPaint, aTargetConfig);
+  mCompositionManager->Updated(aIsFirstPaint, aTargetConfig, aPaintSyncId);
   Layer* root = aLayerTree->GetRoot();
   mLayerManager->SetRoot(root);
 
@@ -1797,7 +1798,8 @@ public:
                                    bool aIsFirstPaint,
                                    bool aScheduleComposite,
                                    uint32_t aPaintSequenceNumber,
-                                   bool aIsRepeatTransaction) override;
+                                   bool aIsRepeatTransaction,
+                                   int32_t /*aPaintSyncId: unused*/) override;
   virtual void ForceComposite(LayerTransactionParent* aLayerTree) override;
   virtual void NotifyClearCachedResources(LayerTransactionParent* aLayerTree) override;
   virtual bool SetTestSampleTime(LayerTransactionParent* aLayerTree,
@@ -2026,7 +2028,8 @@ CrossProcessCompositorParent::ShadowLayersUpdated(
   bool aIsFirstPaint,
   bool aScheduleComposite,
   uint32_t aPaintSequenceNumber,
-  bool aIsRepeatTransaction)
+  bool aIsRepeatTransaction,
+  int32_t /*aPaintSyncId: unused*/)
 {
   uint64_t id = aLayerTree->GetId();
 

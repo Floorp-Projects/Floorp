@@ -188,8 +188,11 @@ function initIndexedDBRow()
 
   var quotaManager = Components.classes["@mozilla.org/dom/quota/manager;1"]
                                .getService(nsIQuotaManager);
+  let principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                            .getService(Components.interfaces.nsIScriptSecurityManager)
+                            .createCodebasePrincipal(gPermURI, {});
   gUsageRequest =
-    quotaManager.getUsageForURI(gPermURI, onIndexedDBUsageCallback);
+    quotaManager.getUsageForPrincipal(principal, onIndexedDBUsageCallback);
 
   var status = document.getElementById("indexedDBStatus");
   var button = document.getElementById("indexedDBClear");
@@ -201,9 +204,13 @@ function initIndexedDBRow()
 
 function onIndexedDBClear()
 {
+  let principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                            .getService(Components.interfaces.nsIScriptSecurityManager)
+                            .createCodebasePrincipal(gPermURI, {});
+
   Components.classes["@mozilla.org/dom/quota/manager;1"]
             .getService(nsIQuotaManager)
-            .clearStoragesForURI(gPermURI);
+            .clearStoragesForPrincipal(principal);
 
   Components.classes["@mozilla.org/serviceworkers/manager;1"]
             .getService(Components.interfaces.nsIServiceWorkerManager)
@@ -213,8 +220,9 @@ function onIndexedDBClear()
   initIndexedDBRow();
 }
 
-function onIndexedDBUsageCallback(uri, usage, fileUsage)
+function onIndexedDBUsageCallback(principal, usage, fileUsage)
 {
+  let uri = principal.URI;
   if (!uri.equals(gPermURI)) {
     throw new Error("Callback received for bad URI: " + uri);
   }

@@ -8,7 +8,7 @@ load 570884.html
 # the X server, which is a bad assumption for <browser remote>.
 # Plugin arch is going to change anyway with OOP content so skipping
 # this test for now is OK.
-skip-if(browserIsRemote||!haveTestPlugin||http.platform!="X11"||!testPluginIsOOP()) load 598862.html
+skip-if(browserIsRemote||!haveTestPlugin||http.platform!="X11") load 598862.html
 
 # SkiaGL is causing a compositor hang here, disable temporarily while that gets resolved in bug 908363
 skip-if(Android) load 626602-1.html

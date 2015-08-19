@@ -466,6 +466,12 @@ nsMozIconURI::GetAsciiSpec(nsACString& aSpecA)
 }
 
 NS_IMETHODIMP
+nsMozIconURI::GetAsciiHostPort(nsACString& aHostPortA)
+{
+  return GetHostPort(aHostPortA);
+}
+
+NS_IMETHODIMP
 nsMozIconURI::GetAsciiHost(nsACString& aHostA)
 {
   return GetHost(aHostA);
