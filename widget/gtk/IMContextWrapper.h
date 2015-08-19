@@ -368,6 +368,11 @@ protected:
                       TextRange& aTextRange) const;
 
     /**
+     * ToNscolor() converts the PangoColor in aPangoAttrColor to nscolor.
+     */
+    static nscolor ToNscolor(PangoAttrColor* aPangoAttrColor);
+
+    /**
      * Move the candidate window with "fake" cursor position.
      *
      * @param aContext              A GtkIMContext which is being handled.
