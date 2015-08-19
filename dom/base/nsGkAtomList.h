@@ -1900,7 +1900,7 @@ GK_ATOM(ondevicelight, "ondevicelight")
 
 // Audio channel events
 GK_ATOM(onmozinterruptbegin, "onmozinterruptbegin")
-GK_ATOM(onmozinterruptend, "onmozinterruptbegin")
+GK_ATOM(onmozinterruptend, "onmozinterruptend")
 
 //---------------------------------------------------------------------------
 // Special atoms
