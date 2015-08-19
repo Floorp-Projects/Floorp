@@ -61,7 +61,34 @@ let tests = [
                           .getService(Components.interfaces.nsIShellService);
     let isDefault = shell.isDefaultBrowser(false);
     gContentAPI.getConfiguration("appinfo", (data) => {
-      is(data.value, data.defaultBrowser, "gContentAPI result should match shellService.isDefaultBrowser");
+      is(isDefault, data.defaultBrowser, "gContentAPI result should match shellService.isDefaultBrowser");
+      done();
+    });
+  }),
+
+  taskify(function* test_setInBackgroundWhenPrefExists(done) {
+    Services.prefs.setCharPref("browser.shell.associationHash.http", "ABCDEFG");
+    gContentAPI.getConfiguration("appinfo", (data) => {
+      let canSetInBackground = true;
+      is(canSetInBackground, data.canSetDefaultBrowserInBackground,
+        "canSetDefaultBrowserInBackground should be true when a hash is present");
+      Services.prefs.clearUserPref("browser.shell.associationHash.http");
+      done();
+    });
+  }),
+
+  taskify(function* test_setInBackgroundWhenPrefDoesntExist(done) {
+    /* The association hashes are only supported on Windows. */
+    Cu.import("resource://gre/modules/AppConstants.jsm");
+    if (AppConstants.platform != "win") {
+      info("Skipping test_setInBackgroundWhenPrefDoesntExist on non-Windows platform");
+      return;
+    }
+
+    gContentAPI.getConfiguration("appinfo", (data) => {
+      let canSetInBackground = false;
+      is(canSetInBackground, data.canSetDefaultBrowserInBackground,
+        "canSetDefaultBrowserInBackground should be false when no hashes are present");
       done();
     });
   })

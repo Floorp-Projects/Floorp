@@ -8,6 +8,7 @@ this.EXPORTED_SYMBOLS = ["UITour", "UITourMetricsProvider"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
+Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
@@ -1805,6 +1806,27 @@ this.UITour = {
           }
         } catch (e) {}
         appinfo["defaultBrowser"] = isDefaultBrowser;
+
+        let canSetDefaultBrowserInBackground = true;
+        if (AppConstants.isPlatformAndVersionAtLeast("win", "6.2")) {
+          let prefBranch =
+            Services.prefs.getBranch("browser.shell.associationHash");
+          let prefChildren = prefBranch.getChildList("");
+          canSetDefaultBrowserInBackground = prefChildren.length > 0;
+        } else if (AppConstants.isPlatformAndVersionAtLeast("macosx", "10.10")) {
+          canSetDefaultBrowserInBackground = false;
+        } else if (AppConstants.platform == "linux") {
+          // The ShellService may not exist on some versions of Linux.
+          try {
+            let shell = aWindow.getShellService();
+          } catch (e) {
+            canSetDefaultBrowserInBackground = null;
+          }
+        }
+
+        appinfo["canSetDefaultBrowserInBackground"] =
+          canSetDefaultBrowserInBackground;
+
         this.sendPageCallback(aMessageManager, aCallbackID, appinfo);
         break;
       case "availableTargets":
