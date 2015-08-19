@@ -691,6 +691,14 @@ VARIABLES = {
         file.
         """, 'export'),
 
+    'ANDROID_APK_NAME': (unicode, unicode,
+        """The name of an Android APK file to generate.
+        """, 'export'),
+
+    'ANDROID_APK_PACKAGE': (unicode, unicode,
+        """The name of the Android package to generate R.java for, like org.mozilla.gecko.
+        """, 'export'),
+
     'ANDROID_RES_DIRS': (ContextDerivedTypedListWithItems(Path, List), list,
         """Android resource directories.
 

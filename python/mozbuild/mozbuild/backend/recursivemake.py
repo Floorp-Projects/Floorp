@@ -72,6 +72,8 @@ from ..util import (
 from ..makeutil import Makefile
 
 MOZBUILD_VARIABLES = [
+    b'ANDROID_APK_NAME',
+    b'ANDROID_APK_PACKAGE',
     b'ANDROID_ASSETS_DIRS',
     b'ANDROID_GENERATED_RESFILES',
     b'ANDROID_RES_DIRS',
