@@ -7,7 +7,7 @@
  * displayed.
  */
 function* spawnTest() {
-  loadFrameScripts();
+  PMM_loadFrameScripts(gBrowser);
   // Keep it large, but still get to 1% relatively quick
   Services.prefs.setIntPref(PROFILER_BUFFER_SIZE_PREF, 1000000);
   let { panel } = yield initPerformance(SIMPLE_URL);
