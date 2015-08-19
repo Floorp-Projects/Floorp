@@ -107,7 +107,7 @@ public class PluginLayer extends Layer {
 
             mLastZoomFactor = context.zoomFactor;
             mLastViewport = context.viewport;
-            mLayoutParams.reposition(context.viewport, context.offset, context.zoomFactor);
+            mLayoutParams.reposition(context.viewport, context.zoomFactor);
 
             showView();
         }
@@ -148,10 +148,9 @@ public class PluginLayer extends Layer {
             mRect = rect;
         }
 
-        public void reposition(RectF viewport, PointF offset, float zoomFactor) {
+        public void reposition(RectF viewport, float zoomFactor) {
 
             RectF scaled = RectUtils.scale(mRect, zoomFactor);
-            scaled.offset(offset.x, offset.y);
 
             this.x = Math.round(scaled.left - viewport.left);
             this.y = Math.round(scaled.top - viewport.top);

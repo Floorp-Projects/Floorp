@@ -7,11 +7,18 @@
 #include "StructuredCloneHelper.h"
 
 #include "ImageContainer.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/dom/BlobBinding.h"
+#include "mozilla/dom/File.h"
+#include "mozilla/dom/FileList.h"
 #include "mozilla/dom/FileListBinding.h"
 #include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
+#include "mozilla/dom/MessagePort.h"
+#include "mozilla/dom/MessagePortBinding.h"
+#include "mozilla/dom/PMessagePort.h"
 #include "mozilla/dom/StructuredCloneTags.h"
+#include "mozilla/dom/ToJSValue.h"
 
 namespace mozilla {
 namespace dom {

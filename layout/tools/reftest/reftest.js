@@ -711,37 +711,6 @@ function BuildConditionSandbox(aURL) {
         getIntPref:  function(p) { return prefs.getIntPref(p); }
     }, sandbox, { cloneFunctions: true });
 
-    sandbox.testPluginIsOOP = function () {
-        var prefservice = Components.classes["@mozilla.org/preferences-service;1"]
-                                    .getService(CI.nsIPrefBranch);
-
-        var testPluginIsOOP = false;
-        if (navigator.platform.indexOf("Mac") == 0) {
-            var xulRuntime = Components.classes["@mozilla.org/xre/app-info;1"]
-                                       .getService(CI.nsIXULAppInfo)
-                                       .QueryInterface(CI.nsIXULRuntime);
-            if (xulRuntime.XPCOMABI.match(/x86-/)) {
-                try {
-                    testPluginIsOOP = prefservice.getBoolPref("dom.ipc.plugins.enabled.i386.test.plugin");
-                } catch (e) {
-                    testPluginIsOOP = prefservice.getBoolPref("dom.ipc.plugins.enabled.i386");
-                }
-            }
-            else if (xulRuntime.XPCOMABI.match(/x86_64-/)) {
-                try {
-                    testPluginIsOOP = prefservice.getBoolPref("dom.ipc.plugins.enabled.x86_64.test.plugin");
-                } catch (e) {
-                    testPluginIsOOP = prefservice.getBoolPref("dom.ipc.plugins.enabled.x86_64");
-                }
-            }
-        }
-        else {
-            testPluginIsOOP = prefservice.getBoolPref("dom.ipc.plugins.enabled");
-        }
-
-        return testPluginIsOOP;
-    };
-
     // Tests shouldn't care about this except for when they need to
     // crash the content process
     sandbox.browserIsRemote = gBrowserIsRemote;

@@ -91,11 +91,6 @@ function onPluginCrashed(aEvent) {
 }
 
 function runTests() {
-  if (!SimpleTest.testPluginIsOOP()) {
-    ok(true, "Skipping this test when test plugin is not OOP.");
-    SimpleTest.finish();
-    return;
-  }
   // the test harness will have set MOZ_CRASHREPORTER_NO_REPORT,
   // ensure that we can change the setting and have our minidumps
   // wind up in Crash Reports/pending
@@ -106,7 +101,7 @@ function runTests() {
   var os = Components.classes["@mozilla.org/observer-service;1"].
            getService(Components.interfaces.nsIObserverService);
   os.addObserver(testObserver, "plugin-crashed", true);
-  
+
   document.addEventListener("PluginCrashed", onPluginCrashed, false);
 
   var pluginElement = document.getElementById("plugin1");

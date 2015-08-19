@@ -197,7 +197,6 @@ public:
   bool HasDecoderError() const { return NS_FAILED(mFailCode); }
   bool ShouldReportError() const { return mShouldReportError; }
   nsresult GetDecoderError() const { return mFailCode; }
-  void PostResizeError() { PostDataError(); }
 
   /// Did we finish decoding enough that calling Decode() again would be useless?
   bool GetDecodeDone() const
@@ -205,10 +204,6 @@ public:
     return mDecodeDone || (mMetadataDecode && HasSize()) ||
            HasError() || mDataDone;
   }
-
-  /// Did we finish decoding enough to set |RasterImage::mHasBeenDecoded|?
-  // XXX(seth): This will be removed in bug 1187401.
-  bool GetDecodeTotallyDone() const { return mDecodeDone && !IsMetadataDecode(); }
 
   /// Are we in the middle of a frame right now? Used for assertions only.
   bool InFrame() const { return mInFrame; }

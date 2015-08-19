@@ -917,9 +917,16 @@ nsBinaryInputStream::ReadObject(bool aIsStrongRef, nsISupports** aObject)
     { 0x88, 0xcf, 0x6e, 0x08, 0x76, 0x6e, 0x8b, 0x23 }
   };
 
+  // hackaround for bug 1195415
+  static const nsIID oldURIiid4 = {
+    0x395fe045, 0x7d18, 0x4adb,
+    { 0xa3, 0xfd, 0xaf, 0x98, 0xc8, 0xa1, 0xaf, 0x11 }
+  };
+
   if (iid.Equals(oldURIiid) ||
       iid.Equals(oldURIiid2) ||
-      iid.Equals(oldURIiid3)) {
+      iid.Equals(oldURIiid3) ||
+      iid.Equals(oldURIiid4)) {
     const nsIID newURIiid = NS_IURI_IID;
     iid = newURIiid;
   }

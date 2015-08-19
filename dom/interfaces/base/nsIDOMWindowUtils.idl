@@ -49,7 +49,7 @@ interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 interface nsIObserver;
 
-[scriptable, uuid(47fa312b-2ad1-4b80-8a0a-c9822e2d1ec9)]
+[scriptable, uuid(6ddc9a79-18cd-4dbc-9975-68928e6c9857)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1626,19 +1626,6 @@ interface nsIDOMWindowUtils : nsISupports {
   void setScrollPositionClampingScrollPortSize(in float aWidth, in float aHeight);
 
   /**
-   * Set margins for the layout of fixed position elements in the content
-   * document. These are used on mobile, where the viewable area can be
-   * temporarily obscured by the browser chrome. In this situation, we're ok
-   * with scrollable page content being obscured, but fixed position content
-   * cannot be revealed without removing the obscuring chrome, so we use these
-   * margins so that it can remain visible.
-   *
-   * The caller of this method must have chrome privileges.
-   */
-  void setContentDocumentFixedPositionMargins(in float aTop, in float aRight,
-                                              in float aBottom, in float aLeft);
-
-  /**
    * These are used to control whether dialogs (alert, prompt, confirm) are
    * allowed.
    */
@@ -1847,6 +1834,19 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aSheetType One of the nsIStyleSheetService.*_SHEET constants.
    */
   bool hasRuleProcessorUsedByMultipleStyleSets(in unsigned long aSheetType);
+
+  /*
+   * Force the use counters for the node's associated document(s) to be
+   * flushed to telemetry.  For example, a document node will flush its own
+   * counters and an image node with an SVG source will flush the SVG
+   * document's counters.  Normally, use counters are flushed to telemetry
+   * upon document destruction, but as document destruction is somewhat
+   * non-deterministic, we have this method here for more determinism when
+   * running tests.
+   */
+  void forceUseCounterFlush(in nsIDOMNode aNode);
+
+  void setNextPaintSyncId(in long aSyncId);
 };
 
 [scriptable, uuid(c694e359-7227-4392-a138-33c0cc1f15a6)]

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Test for ScreenOrientation API</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="orientationcommon.js"></script>
+<div id="log"></div>
+<iframe id="frame"></iframe>
+<script>
+async_test(function(t) {
+  var originalOrientation = screen.orientation.type;
+  var alternateOrientation = originalOrientation == "portrait-primary" ?
+    "landscape-primary" : "portrait-primary";
+
+  window.addEventListener("message", function(event) {
+    t.step(function() { assert_array_equals(event.data, [alternateOrientation, originalOrientation]); });
+    t.done();
+  }, false);
+
+  var frame = document.getElementById("frame");
+  frame.src = "file_record_orientation.html";
+
+  frame.onload = function() {
+    var p = specialPowersLock(alternateOrientation);
+    p.then(function() {
+      return specialPowersLock(originalOrientation);
+    }).then(function() {
+      return specialPowersUnlock();
+    }).then(function() {
+      frame.contentWindow.postMessage("report", "*");
+    }).catch(t.step_func(function(err) {
+      assert_unreached("Error setting orientation: " + err);
+      t.done();
+    }));
+  };
+}, "Test orientation change event in frame.");
+</script>

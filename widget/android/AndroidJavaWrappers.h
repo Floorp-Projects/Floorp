@@ -562,6 +562,7 @@ public:
     bool IsWifi() { return mIsWifi; }
     int DHCPGateway() { return mDHCPGateway; }
     short ScreenOrientation() { return mScreenOrientation; }
+    short ScreenAngle() { return mScreenAngle; }
     RefCountedJavaObject* ByteBuffer() { return mByteBuffer; }
     int Width() { return mWidth; }
     int Height() { return mHeight; }
@@ -611,6 +612,7 @@ protected:
     bool mIsWifi;
     int mDHCPGateway;
     short mScreenOrientation;
+    short mScreenAngle;
     nsRefPtr<RefCountedJavaObject> mByteBuffer;
     int mWidth, mHeight;
     int mID;
@@ -696,6 +698,7 @@ protected:
     static jfieldID jDHCPGatewayField;
 
     static jfieldID jScreenOrientationField;
+    static jfieldID jScreenAngleField;
     static jfieldID jByteBufferField;
 
     static jfieldID jWidthField;

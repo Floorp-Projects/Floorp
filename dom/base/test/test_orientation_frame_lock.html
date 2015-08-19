@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Test for ScreenOrientation API</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="orientationcommon.js"></script>
+<div id="log"></div>
+<iframe sandbox="allow-scripts allow-orientation-lock" id="frame"></iframe>
+<script>
+async_test(function(t) {
+  var originalOrientation = screen.orientation.type;
+  var alternateOrientation = originalOrientation == "portrait-primary" ?
+    "landscape-primary" : "portrait-primary";
+
+  var orientationChanges = [];
+  window.screen.orientation.onchange = function() {
+    orientationChanges.push(screen.orientation.type);
+  };
+
+  window.addEventListener("message", function(event) {
+    t.step(function() {
+      assert_equals(event.data, "success");
+      assert_array_equals(orientationChanges, [ alternateOrientation ]);
+    });
+
+    // Return the orientation to its original settings.
+    var p = specialPowersLock(originalOrientation);
+    p.then(function() {
+      return specialPowersUnlock();
+    }).then(function() {
+      t.done();
+    }).catch(t.step_func(function(err) {
+      assert_unreached("Error setting orientation: " + err);
+      t.done();
+    }));
+  }, false);
+
+  var frame = document.getElementById("frame");
+  frame.src = "http://example.com/tests/dom/base/test/file_lock_orientation.html";
+
+  frame.onload = function() {
+    assert_array_equals(orientationChanges, []);
+    frame.contentWindow.postMessage(alternateOrientation, "*");
+  };
+}, "Test orientation lock from within a frame with sandbox permission.");
+</script>

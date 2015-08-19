@@ -394,7 +394,7 @@ void NotifyScreenConfigurationChange(const hal::ScreenConfiguration& aScreenConf
  * Lock the screen orientation to the specific orientation.
  * @return Whether the lock has been accepted.
  */
-bool LockScreenOrientation(const dom::ScreenOrientation& aOrientation);
+bool LockScreenOrientation(const dom::ScreenOrientationInternal& aOrientation);
 
 /**
  * Unlock the screen orientation.

@@ -130,12 +130,6 @@ function onPluginCrashed(aEvent) {
 }
 
 function runTests() {
-  if (!SimpleTest.testPluginIsOOP()) {
-    todo(false, "Skipping this test when test plugin is not OOP.");
-    SimpleTest.finish();
-    return;
-  }
-
   // Default plugin hang timeout is too high for mochitests
   Services.prefs.setIntPref("dom.ipc.plugins.timeoutSecs", 1);
 

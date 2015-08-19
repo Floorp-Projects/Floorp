@@ -13,12 +13,6 @@
   var iframe = document.getElementById('iframe1');
 
   function mainLoaded() {
-    if (!SimpleTest.testPluginIsOOP()) {
-      ok(true, "Skipping this test when test plugin is not OOP.");
-      SimpleTest.finish();
-      return;
-    }
-
     SimpleTest.expectChildProcessCrash();
 
     var p = iframe.contentDocument.createElement('embed');

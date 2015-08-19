@@ -953,7 +953,7 @@ PendingLookup::SendRemoteQueryInternal()
                         nullptr, // aLoadingNode
                         nsContentUtils::GetSystemPrincipal(),
                         nullptr, // aTriggeringPrincipal
-                        nsILoadInfo::SEC_NORMAL,
+                        nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                         nsIContentPolicy::TYPE_OTHER,
                         getter_AddRefs(mChannel));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -981,7 +981,7 @@ PendingLookup::SendRemoteQueryInternal()
   mTimeoutTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
   mTimeoutTimer->InitWithCallback(this, timeoutMs, nsITimer::TYPE_ONE_SHOT);
 
-  rv = mChannel->AsyncOpen(this, nullptr);
+  rv = mChannel->AsyncOpen2(this);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

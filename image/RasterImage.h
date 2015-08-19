@@ -327,14 +327,20 @@ private:
    * @param aFromMetadataDecode True if this metadata came from a metadata
    *                            decode; false if it came from a full decode.
    */
-  nsresult SetMetadata(const ImageMetadata& aMetadata, bool aFromMetadataDecode);
+  void SetMetadata(const ImageMetadata& aMetadata, bool aFromMetadataDecode);
 
   /**
-   * In catastrophic circumstances like a GPU driver crash, we may lose our
-   * frames even if they're locked. RecoverFromLossOfFrames discards all
-   * existing frames and redecodes using the provided @aSize and @aFlags.
+   * In catastrophic circumstances like a GPU driver crash, the contents of our
+   * frames may become invalid.  If the information we gathered during the
+   * metadata decode proves to be wrong due to image corruption, the frames we
+   * have may violate this class's invariants. Either way, we need to
+   * immediately discard the invalid frames and redecode so that callers don't
+   * perceive that we've entered an invalid state. 
+   *
+   * RecoverFromInvalidFrames discards all existing frames and redecodes using
+   * the provided @aSize and @aFlags.
    */
-  void RecoverFromLossOfFrames(const nsIntSize& aSize, uint32_t aFlags);
+  void RecoverFromInvalidFrames(const nsIntSize& aSize, uint32_t aFlags);
 
 private: // data
   nsIntSize                  mSize;

@@ -51,15 +51,18 @@ public:
   struct Data {
     Data(IDirect3DSurface9* aSurface,
          const gfx::IntRect& aRegion,
-         D3D9RecycleAllocator* aAllocator)
+         D3D9RecycleAllocator* aAllocator,
+         bool aIsFirstFrame)
       : mSurface(aSurface)
       , mRegion(aRegion)
       , mAllocator(aAllocator)
+      , mIsFirstFrame(aIsFirstFrame)
     {}
 
     RefPtr<IDirect3DSurface9> mSurface;
     gfx::IntRect mRegion;
     RefPtr<D3D9RecycleAllocator> mAllocator;
+    bool mIsFirstFrame;
   };
 
   D3D9SurfaceImage();
@@ -90,6 +93,7 @@ private:
   RefPtr<IDirect3DQuery9> mQuery;
   RefPtr<SharedTextureClientD3D9> mTextureClient;
   bool mValid;
+  bool mIsFirstFrame;
 };
 
 } // namepace layers

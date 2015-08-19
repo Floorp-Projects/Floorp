@@ -91,7 +91,7 @@ nsUrlClassifierStreamUpdater::FetchUpdate(nsIURI *aUpdateUrl,
   rv = NS_NewChannel(getter_AddRefs(mChannel),
                      aUpdateUrl,
                      nsContentUtils::GetSystemPrincipal(),
-                     nsILoadInfo::SEC_NORMAL,
+                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                      nsIContentPolicy::TYPE_OTHER,
                      nullptr,  // aLoadGroup
                      this,     // aInterfaceRequestor
@@ -133,7 +133,7 @@ nsUrlClassifierStreamUpdater::FetchUpdate(nsIURI *aUpdateUrl,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Make the request.
-  rv = mChannel->AsyncOpen(this, nullptr);
+  rv = mChannel->AsyncOpen2(this);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mStreamTable = aStreamTable;

@@ -979,6 +979,14 @@ ProxyAccessible::TakeFocus()
   unused << mDoc->SendTakeFocus(mID);
 }
 
+uint32_t
+ProxyAccessible::EmbeddedChildCount() const
+{
+  uint32_t count;
+  unused << mDoc->SendEmbeddedChildCount(mID, &count);
+  return count;
+}
+
 int32_t
 ProxyAccessible::IndexOfEmbeddedChild(const ProxyAccessible* aChild)
 {
