@@ -549,42 +549,34 @@ operator!=(U* aLhs, const nsRefPtr<T>& aRhs)
   return const_cast<const U*>(aLhs) != static_cast<const T*>(aRhs.get());
 }
 
-namespace detail {
-class nsRefPtrZero;
-} // namespace detail
-
-// Comparing an |nsRefPtr| to |0|
+// Comparing an |nsRefPtr| to |nullptr|
 
 template <class T>
 inline bool
-operator==(const nsRefPtr<T>& aLhs, ::detail::nsRefPtrZero* aRhs)
-// specifically to allow |smartPtr == 0|
+operator==(const nsRefPtr<T>& aLhs, decltype(nullptr))
 {
-  return static_cast<const void*>(aLhs.get()) == reinterpret_cast<const void*>(aRhs);
+  return aLhs.get() == nullptr;
 }
 
 template <class T>
 inline bool
-operator==(::detail::nsRefPtrZero* aLhs, const nsRefPtr<T>& aRhs)
-// specifically to allow |0 == smartPtr|
+operator==(decltype(nullptr), const nsRefPtr<T>& aRhs)
 {
-  return reinterpret_cast<const void*>(aLhs) == static_cast<const void*>(aRhs.get());
+  return nullptr == aRhs.get();
 }
 
 template <class T>
 inline bool
-operator!=(const nsRefPtr<T>& aLhs, ::detail::nsRefPtrZero* aRhs)
-// specifically to allow |smartPtr != 0|
+operator!=(const nsRefPtr<T>& aLhs, decltype(nullptr))
 {
-  return static_cast<const void*>(aLhs.get()) != reinterpret_cast<const void*>(aRhs);
+  return aLhs.get() != nullptr;
 }
 
 template <class T>
 inline bool
-operator!=(::detail::nsRefPtrZero* aLhs, const nsRefPtr<T>& aRhs)
-// specifically to allow |0 != smartPtr|
+operator!=(decltype(nullptr), const nsRefPtr<T>& aRhs)
 {
-  return reinterpret_cast<const void*>(aLhs) != static_cast<const void*>(aRhs.get());
+  return nullptr != aRhs.get();
 }
 
 /*****************************************************************************/
