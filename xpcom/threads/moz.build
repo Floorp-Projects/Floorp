@@ -35,6 +35,8 @@ EXPORTS.mozilla += [
     'LazyIdleThread.h',
     'MozPromise.h',
     'SharedThreadPool.h',
+    'StateMirroring.h',
+    'StateWatching.h',
     'SyncRunnable.h',
     'TaskDispatcher.h',
     'TaskQueue.h',

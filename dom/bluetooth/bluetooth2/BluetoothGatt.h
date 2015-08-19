@@ -142,7 +142,7 @@ private:
 
   /**
    * The value of a GATT characteristic has changed. In the mean time, the
-   * cached value of this GATT characteristic has already been updated. An
+   * cached value of this GATT characteristic has already been updated. A
    * 'characteristicchanged' event will be fired by this function.
    *
    * @param aValue [in] BluetoothValue which contains an array of

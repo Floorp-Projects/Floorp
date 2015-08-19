@@ -10,7 +10,6 @@
 #include "mozilla/dom/ScreenOrientation.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/HalScreenConfiguration.h"
 #include "nsIDOMScreen.h"
 #include "nsCOMPtr.h"
 #include "nsRect.h"
@@ -20,7 +19,6 @@ class nsDeviceContext;
 // Script "screen" object
 class nsScreen : public mozilla::DOMEventTargetHelper
                , public nsIDOMScreen
-               , public mozilla::hal::ScreenConfigurationObserver
 {
   typedef mozilla::ErrorResult ErrorResult;
 public:
@@ -28,6 +26,7 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMSCREEN
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsScreen, mozilla::DOMEventTargetHelper)
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(mozilla::DOMEventTargetHelper)
 
   nsPIDOMWindow* GetParentObject() const
@@ -115,7 +114,8 @@ public:
     return rect.height;
   }
 
-  void GetMozOrientation(nsString& aOrientation);
+  // Deprecated
+  void GetMozOrientation(nsString& aOrientation) const;
 
   IMPL_EVENT_HANDLER(mozorientationchange)
 
@@ -125,7 +125,7 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  void Notify(const mozilla::hal::ScreenConfiguration& aConfiguration) override;
+  mozilla::dom::ScreenOrientation* Orientation() const;
 
 protected:
   nsDeviceContext* GetDeviceContext();
@@ -133,35 +133,15 @@ protected:
   nsresult GetAvailRect(nsRect& aRect);
   nsresult GetWindowInnerRect(nsRect& aRect);
 
-  mozilla::dom::ScreenOrientation mOrientation;
-
 private:
-  class FullScreenEventListener final : public nsIDOMEventListener
-  {
-    ~FullScreenEventListener() {}
-  public:
-    FullScreenEventListener() {}
-
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIDOMEVENTLISTENER
-  };
-
   explicit nsScreen(nsPIDOMWindow* aWindow);
   virtual ~nsScreen();
-
-  enum LockPermission {
-    LOCK_DENIED,
-    FULLSCREEN_LOCK_ALLOWED,
-    LOCK_ALLOWED
-  };
-
-  LockPermission GetLockOrientationPermission() const;
 
   bool IsDeviceSizePageSize();
 
   bool ShouldResistFingerprinting() const;
 
-  nsRefPtr<FullScreenEventListener> mEventListener;
+  nsRefPtr<mozilla::dom::ScreenOrientation> mScreenOrientation;
 };
 
 #endif /* nsScreen_h___ */

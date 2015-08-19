@@ -20,7 +20,6 @@
 #include "nsTArray.h"
 #include "nsReadableUtils.h"
 #include "nsILineInputStream.h"
-#include "nsIIDNService.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
 #include "prprf.h"
@@ -847,9 +846,7 @@ nsPermissionManager::InitDB(bool aRemoveFile)
   }
 
   rv = OpenDatabase(permissionsFile);
-  if (rv == NS_ERROR_UNEXPECTED) {
-    return rv;
-  } else if (rv == NS_ERROR_FILE_CORRUPTED) {
+  if (rv == NS_ERROR_FILE_CORRUPTED) {
     LogToConsole(NS_LITERAL_STRING("permissions.sqlite is corrupted! Try again!"));
 
     // Add telemetry probe
@@ -863,6 +860,8 @@ nsPermissionManager::InitDB(bool aRemoveFile)
     rv = OpenDatabase(permissionsFile);
     NS_ENSURE_SUCCESS(rv, rv);
     LogToConsole(NS_LITERAL_STRING("OpenDatabase to permissions.sqlite is successful!"));
+  } else if (NS_FAILED(rv)) {
+    return rv;
   }
 
   bool ready;
@@ -2741,19 +2740,6 @@ nsPermissionManager::_DoImport(nsIInputStream *inputStream, mozIStorageConnectio
   } while (isMore);
 
   return NS_OK;
-}
-
-nsresult
-nsPermissionManager::NormalizeToACE(nsCString &aHost)
-{
-  // lazily init the IDN service
-  if (!mIDNService) {
-    nsresult rv;
-    mIDNService = do_GetService(NS_IDNSERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return mIDNService->ConvertUTF8toACE(aHost, aHost);
 }
 
 void

@@ -18,6 +18,8 @@ struct JSContext;
 struct JSStructuredCloneReader;
 struct JSStructuredCloneWriter;
 
+class nsIGlobalObject;
+
 namespace mozilla {
 
 class ErrorResult;

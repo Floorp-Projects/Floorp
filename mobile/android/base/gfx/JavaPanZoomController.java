@@ -823,11 +823,7 @@ class JavaPanZoomController
         if (FloatUtils.fuzzyEquals(displacement.x, 0.0f) && FloatUtils.fuzzyEquals(displacement.y, 0.0f)) {
             return;
         }
-        if (mDefaultPrevented || mSubscroller.scrollBy(displacement)) {
-            synchronized (mTarget.getLock()) {
-                mTarget.scrollMarginsBy(displacement.x, displacement.y);
-            }
-        } else {
+        if (!mDefaultPrevented && !mSubscroller.scrollBy(displacement)) {
             synchronized (mTarget.getLock()) {
                 scrollBy(displacement.x, displacement.y);
             }
@@ -1040,11 +1036,6 @@ class JavaPanZoomController
         float zoomFactor = viewportMetrics.zoomFactor;
         RectF pageRect = viewportMetrics.getPageRect();
         RectF viewport = viewportMetrics.getViewport();
-        RectF maxMargins = mTarget.getMaxMargins();
-        RectF margins = new RectF(Math.max(maxMargins.left, viewportMetrics.marginLeft),
-                                  Math.max(maxMargins.top, viewportMetrics.marginTop),
-                                  Math.max(maxMargins.right, viewportMetrics.marginRight),
-                                  Math.max(maxMargins.bottom, viewportMetrics.marginBottom));
 
         float focusX = viewport.width() / 2.0f;
         float focusY = viewport.height() / 2.0f;
@@ -1066,14 +1057,14 @@ class JavaPanZoomController
 
         // Ensure minZoomFactor keeps the page at least as big as the viewport.
         if (pageRect.width() > 0) {
-            float pageWidth = pageRect.width() + margins.left + margins.right;
+            float pageWidth = pageRect.width();
             float scaleFactor = viewport.width() / pageWidth;
             minZoomFactor = Math.max(minZoomFactor, zoomFactor * scaleFactor);
             if (viewport.width() > pageWidth)
                 focusX = 0.0f;
         }
         if (pageRect.height() > 0) {
-            float pageHeight = pageRect.height() + margins.top + margins.bottom;
+            float pageHeight = pageRect.height();
             float scaleFactor = viewport.height() / pageHeight;
             minZoomFactor = Math.max(minZoomFactor, zoomFactor * scaleFactor);
             if (viewport.height() > pageHeight)
@@ -1096,7 +1087,7 @@ class JavaPanZoomController
         }
 
         /* Now we pan to the right origin. */
-        viewportMetrics = viewportMetrics.clampWithMargins();
+        viewportMetrics = viewportMetrics.clamp();
 
         return viewportMetrics;
     }
@@ -1110,16 +1101,10 @@ class JavaPanZoomController
         @Override
         protected float getPageStart() { return getMetrics().pageRectLeft; }
         @Override
-        protected float getMarginStart() { return mTarget.getMaxMargins().left - getMetrics().marginLeft; }
+        protected float getPageLength() { return getMetrics().getPageWidth(); }
         @Override
-        protected float getMarginEnd() { return mTarget.getMaxMargins().right - getMetrics().marginRight; }
-        @Override
-        protected float getPageLength() { return getMetrics().getPageWidthWithMargins(); }
-        @Override
-        protected boolean marginsHidden() {
-            ImmutableViewportMetrics metrics = getMetrics();
-            RectF maxMargins = mTarget.getMaxMargins();
-            return (metrics.marginLeft < maxMargins.left || metrics.marginRight < maxMargins.right);
+        protected float getVisibleEndOfLayerView() {
+            return mTarget.getVisibleEndOfLayerView().x;
         }
         @Override
         protected void overscrollFling(final float velocity) {
@@ -1144,16 +1129,10 @@ class JavaPanZoomController
         @Override
         protected float getPageStart() { return getMetrics().pageRectTop; }
         @Override
-        protected float getPageLength() { return getMetrics().getPageHeightWithMargins(); }
+        protected float getPageLength() { return getMetrics().getPageHeight(); }
         @Override
-        protected float getMarginStart() { return mTarget.getMaxMargins().top - getMetrics().marginTop; }
-        @Override
-        protected float getMarginEnd() { return mTarget.getMaxMargins().bottom - getMetrics().marginBottom; }
-        @Override
-        protected boolean marginsHidden() {
-            ImmutableViewportMetrics metrics = getMetrics();
-            RectF maxMargins = mTarget.getMaxMargins();
-            return (metrics.marginTop < maxMargins.top || metrics.marginBottom < maxMargins.bottom);
+        protected float getVisibleEndOfLayerView() {
+            return mTarget.getVisibleEndOfLayerView().y;
         }
         @Override
         protected void overscrollFling(final float velocity) {

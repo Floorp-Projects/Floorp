@@ -17,22 +17,17 @@ BEGIN_BLUETOOTH_NAMESPACE
 class BluetoothServiceBluedroid : public BluetoothService
                                 , public BluetoothNotificationHandler
 {
-  class CancelDiscoveryResultHandler;
   class CleanupResultHandler;
-  class CreateBondResultHandler;
   class DisableResultHandler;
+  class DispatchReplyErrorResultHandler;
   class EnableResultHandler;
   class GetRemoteDevicePropertiesResultHandler;
-  class GetRemoteServicesResultHandler;
   class InitResultHandler;
   class PinReplyResultHandler;
   class ProfileDeinitResultHandler;
   class ProfileInitResultHandler;
-  class RemoveBondResultHandler;
   class SetAdapterPropertyDiscoverableResultHandler;
-  class SetAdapterPropertyResultHandler;
   class SspReplyResultHandler;
-  class StartDiscoveryResultHandler;
 
   class GetDeviceRequest;
 

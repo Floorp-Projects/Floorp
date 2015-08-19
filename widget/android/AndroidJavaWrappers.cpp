@@ -61,6 +61,7 @@ jfieldID AndroidGeckoEvent::jConnectionTypeField = 0;
 jfieldID AndroidGeckoEvent::jIsWifiField = 0;
 jfieldID AndroidGeckoEvent::jDHCPGatewayField = 0;
 jfieldID AndroidGeckoEvent::jScreenOrientationField = 0;
+jfieldID AndroidGeckoEvent::jScreenAngleField = 0;
 jfieldID AndroidGeckoEvent::jByteBufferField = 0;
 jfieldID AndroidGeckoEvent::jWidthField = 0;
 jfieldID AndroidGeckoEvent::jHeightField = 0;
@@ -169,6 +170,7 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jIsWifiField = geckoEvent.getField("mIsWifi", "Z");
     jDHCPGatewayField = geckoEvent.getField("mDHCPGateway", "I");
     jScreenOrientationField = geckoEvent.getField("mScreenOrientation", "S");
+    jScreenAngleField = geckoEvent.getField("mScreenAngle", "S");
     jByteBufferField = geckoEvent.getField("mBuffer", "Ljava/nio/ByteBuffer;");
     jWidthField = geckoEvent.getField("mWidth", "I");
     jHeightField = geckoEvent.getField("mHeight", "I");
@@ -528,6 +530,7 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
 
         case SCREENORIENTATION_CHANGED: {
             mScreenOrientation = jenv->GetShortField(jobj, jScreenOrientationField);
+            mScreenAngle = jenv->GetShortField(jobj, jScreenAngleField);
             break;
         }
 

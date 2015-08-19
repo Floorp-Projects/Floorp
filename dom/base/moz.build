@@ -337,6 +337,7 @@ UNIFIED_SOURCES += [
     'ProcessGlobal.cpp',
     'ResponsiveImageSelector.cpp',
     'SameProcessMessageQueue.cpp',
+    'ScreenOrientation.cpp',
     'ScriptSettings.cpp',
     'ShadowRoot.cpp',
     'StructuredCloneHelper.cpp',
