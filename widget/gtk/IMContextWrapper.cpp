@@ -1434,76 +1434,12 @@ IMContextWrapper::CreateTextRangeArray(GtkIMContext* aContext,
         return textRangeArray.forget();
     }
 
-    /*
-     * Depend on gtk2's implementation on XIM support.
-     * In aFeedback got from gtk2, there are only three types of data:
-     * PANGO_ATTR_UNDERLINE, PANGO_ATTR_FOREGROUND, PANGO_ATTR_BACKGROUND.
-     * Corresponding to XIMUnderline, XIMReverse.
-     * Don't take PANGO_ATTR_BACKGROUND into account, since
-     * PANGO_ATTR_BACKGROUND and PANGO_ATTR_FOREGROUND are always
-     * a couple.
-     */
     do {
-        PangoAttribute* attrUnderline =
-            pango_attr_iterator_get(iter, PANGO_ATTR_UNDERLINE);
-        PangoAttribute* attrForeground =
-            pango_attr_iterator_get(iter, PANGO_ATTR_FOREGROUND);
-        if (!attrUnderline && !attrForeground) {
+        TextRange range;
+        if (!SetTextRange(iter, preedit_string, range)) {
             continue;
         }
-
-        // Get the range of the current attribute(s)
-        gint start, end;
-        pango_attr_iterator_range(iter, &start, &end);
-
-        TextRange range;
-        // XIMReverse | XIMUnderline
-        if (attrUnderline && attrForeground) {
-            range.mRangeType = NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
-        }
-        // XIMUnderline
-        else if (attrUnderline) {
-            range.mRangeType = NS_TEXTRANGE_CONVERTEDTEXT;
-        }
-        // XIMReverse
-        else if (attrForeground) {
-            range.mRangeType = NS_TEXTRANGE_SELECTEDRAWTEXT;
-        } else {
-            range.mRangeType = NS_TEXTRANGE_RAWINPUT;
-        }
-
-        gunichar2* uniStr = nullptr;
-        if (start == 0) {
-            range.mStartOffset = 0;
-        } else {
-            glong uniStrLen;
-            uniStr = g_utf8_to_utf16(preedit_string, start,
-                                     nullptr, &uniStrLen, nullptr);
-            if (uniStr) {
-                range.mStartOffset = uniStrLen;
-                g_free(uniStr);
-                uniStr = nullptr;
-            }
-        }
-
-        glong uniStrLen;
-        uniStr = g_utf8_to_utf16(preedit_string + start, end - start,
-                                 nullptr, &uniStrLen, nullptr);
-        if (!uniStr) {
-            range.mEndOffset = range.mStartOffset;
-        } else {
-            range.mEndOffset = range.mStartOffset + uniStrLen;
-            g_free(uniStr);
-            uniStr = nullptr;
-        }
-
         textRangeArray->AppendElement(range);
-
-        MOZ_LOG(gGtkIMLog, LogLevel::Debug,
-            ("GTKIM: %p   CreateTextRangeArray(), mStartOffset=%u, "
-             "mEndOffset=%u, mRangeType=%s",
-             this, range.mStartOffset, range.mEndOffset,
-             GetRangeTypeName(range.mRangeType)));
     } while (pango_attr_iterator_next(iter));
 
     TextRange range;
@@ -1529,6 +1465,84 @@ IMContextWrapper::CreateTextRangeArray(GtkIMContext* aContext,
     g_free(preedit_string);
 
     return textRangeArray.forget();
+}
+
+bool
+IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
+                               const gchar* aUTF8CompositionString,
+                               TextRange& aTextRange) const
+{
+    /**
+     * Depend on gtk2's implementation on XIM support.
+     * In aFeedback got from gtk2, there are only three types of data:
+     * PANGO_ATTR_UNDERLINE, PANGO_ATTR_FOREGROUND, PANGO_ATTR_BACKGROUND.
+     * Corresponding to XIMUnderline, XIMReverse.
+     * Don't take PANGO_ATTR_BACKGROUND into account, since
+     * PANGO_ATTR_BACKGROUND and PANGO_ATTR_FOREGROUND are always
+     * a couple.
+     */
+
+    PangoAttribute* attrUnderline =
+        pango_attr_iterator_get(aPangoAttrIter, PANGO_ATTR_UNDERLINE);
+    PangoAttribute* attrForeground =
+        pango_attr_iterator_get(aPangoAttrIter, PANGO_ATTR_FOREGROUND);
+    if (!attrUnderline && !attrForeground) {
+        MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+            ("GTKIM: %p   SetTextRange(), FAILED, due to no attr", this));
+        return false;
+    }
+
+    // Get the range of the current attribute(s)
+    gint start, end;
+    pango_attr_iterator_range(aPangoAttrIter, &start, &end);
+
+    // XIMReverse | XIMUnderline
+    if (attrUnderline && attrForeground) {
+        aTextRange.mRangeType = NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
+    }
+    // XIMUnderline
+    else if (attrUnderline) {
+        aTextRange.mRangeType = NS_TEXTRANGE_CONVERTEDTEXT;
+    }
+    // XIMReverse
+    else if (attrForeground) {
+        aTextRange.mRangeType = NS_TEXTRANGE_SELECTEDRAWTEXT;
+    } else {
+        aTextRange.mRangeType = NS_TEXTRANGE_RAWINPUT;
+    }
+
+    gunichar2* uniStr = nullptr;
+    if (start == 0) {
+        aTextRange.mStartOffset = 0;
+    } else {
+        glong uniStrLen;
+        uniStr = g_utf8_to_utf16(aUTF8CompositionString, start,
+                                 nullptr, &uniStrLen, nullptr);
+        if (uniStr) {
+            aTextRange.mStartOffset = uniStrLen;
+            g_free(uniStr);
+            uniStr = nullptr;
+        }
+    }
+
+    glong uniStrLen;
+    uniStr = g_utf8_to_utf16(aUTF8CompositionString + start, end - start,
+                             nullptr, &uniStrLen, nullptr);
+    if (!uniStr) {
+        aTextRange.mEndOffset = aTextRange.mStartOffset;
+    } else {
+        aTextRange.mEndOffset = aTextRange.mStartOffset + uniStrLen;
+        g_free(uniStr);
+        uniStr = nullptr;
+    }
+
+    MOZ_LOG(gGtkIMLog, LogLevel::Debug,
+        ("GTKIM: %p   SetTextRange(), succeeded, aTextRange= { "
+         "mStartOffset=%u, mEndOffset=%u, mRangeType=%s }",
+         this, aTextRange.mStartOffset, aTextRange.mEndOffset,
+         GetRangeTypeName(aTextRange.mRangeType)));
+
+    return true;
 }
 
 void
