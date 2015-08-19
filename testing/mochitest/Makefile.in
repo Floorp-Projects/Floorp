@@ -33,6 +33,7 @@ ifeq ($(OS_ARCH),WINNT)
 TEST_HARNESS_BINS += \
   crashinject$(BIN_SUFFIX) \
   crashinjectdll$(DLL_SUFFIX) \
+  minidumpwriter$(BIN_SUFFIX) \
   $(NULL)
 endif
 
