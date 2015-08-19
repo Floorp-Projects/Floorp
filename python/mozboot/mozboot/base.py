@@ -158,22 +158,33 @@ class BaseBootstrapper(object):
 
         subprocess.check_call(command, stdin=sys.stdin)
 
-    def yum_install(self, *packages):
-        command = ['yum', 'install']
+    def dnf_install(self, *packages):
+        if self.which('dnf'):
+            command = ['dnf', 'install']
+        else:
+            command = ['yum', 'install']
+
         if self.no_interactive:
             command.append('-y')
         command.extend(packages)
 
         self.run_as_root(command)
 
-    def yum_groupinstall(self, *packages):
-        command = ['yum', 'groupinstall']
+    def dnf_groupinstall(self, *packages):
+        if self.which('dnf'):
+            command = ['dnf', 'groupinstall']
+        else:
+            command = ['yum', 'groupinstall']
         command.extend(packages)
 
         self.run_as_root(command)
 
-    def yum_update(self, *packages):
-        command = ['yum', 'update']
+    def dnf_update(self, *packages):
+        if self.which('dnf'):
+            command = ['dnf', 'update']
+        else:
+            command = ['yum', 'update']
+
         if self.no_interactive:
             command.append('-y')
         command.extend(packages)
