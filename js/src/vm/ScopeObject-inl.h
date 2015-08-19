@@ -71,13 +71,6 @@ CallObject::initAliasedLexicalsToThrowOnTouch(JSScript* script)
 }
 
 template <AllowGC allowGC>
-inline bool
-StaticScopeIter<allowGC>::done() const
-{
-    return !obj;
-}
-
-template <AllowGC allowGC>
 inline void
 StaticScopeIter<allowGC>::operator++(int)
 {
