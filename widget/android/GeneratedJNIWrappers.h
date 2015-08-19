@@ -2155,6 +2155,23 @@ public:
     static auto MOZGLUE_READY() -> State::LocalRef;
 
 public:
+    struct PROFILE_READY_t {
+        typedef State Owner;
+        typedef State::LocalRef ReturnType;
+        typedef State::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "PROFILE_READY";
+        static constexpr char signature[] =
+                "Lorg/mozilla/gecko/GeckoThread$State;";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto PROFILE_READY() -> State::LocalRef;
+
+public:
     struct RUNNING_t {
         typedef State Owner;
         typedef State::LocalRef ReturnType;

@@ -916,6 +916,14 @@ auto GeckoThread::State::MOZGLUE_READY() -> State::LocalRef
     return mozilla::jni::Field<MOZGLUE_READY_t>::Get(nullptr, nullptr);
 }
 
+constexpr char GeckoThread::State::PROFILE_READY_t::name[];
+constexpr char GeckoThread::State::PROFILE_READY_t::signature[];
+
+auto GeckoThread::State::PROFILE_READY() -> State::LocalRef
+{
+    return mozilla::jni::Field<PROFILE_READY_t>::Get(nullptr, nullptr);
+}
+
 constexpr char GeckoThread::State::RUNNING_t::name[];
 constexpr char GeckoThread::State::RUNNING_t::signature[];
 
