@@ -19,11 +19,14 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
+                                  "resource://gre/modules/BrowserUtils.jsm");
+
 this.EXPORTED_SYMBOLS = ["PushRecord"];
 
 const prefs = new Preferences("dom.push.");
 
-// History transition types that can fire an `pushsubscriptionchange` event
+// History transition types that can fire a `pushsubscriptionchange` event
 // when the user visits a site with expired push registrations. Visits only
 // count if the user sees the origin in the address bar. This excludes embedded
 // resources, downloads, and framed links.
@@ -38,7 +41,6 @@ const QUOTA_REFRESH_TRANSITIONS_SQL = [
 function PushRecord(props) {
   this.pushEndpoint = props.pushEndpoint;
   this.scope = props.scope;
-  this.origin = Services.io.newURI(this.scope, null, null).prePath;
   this.originAttributes = props.originAttributes;
   this.pushCount = props.pushCount || 0;
   this.lastPush = props.lastPush || 0;
@@ -116,8 +118,8 @@ PushRecord.prototype = {
         `,
         {
           // Restrict the query to all pages for this origin.
-          urlLowerBound: this.origin,
-          urlUpperBound: this.origin + "\x7f"
+          urlLowerBound: this.uri.prePath,
+          urlUpperBound: this.uri.prePath + "\x7f",
         }
       );
     }).then(rows => {
@@ -143,12 +145,30 @@ PushRecord.prototype = {
       for (let tab of tabs) {
         // `linkedBrowser` on Desktop; `browser` on Fennec.
         let tabURI = (tab.linkedBrowser || tab.browser).currentURI;
-        if (tabURI.prePath == this.origin) {
+        if (tabURI.prePath == this.uri.prePath) {
           return true;
         }
       }
     }
     return false;
+  },
+
+  /**
+   * Returns the push permission state for the principal associated with
+   * this registration.
+   */
+  pushPermission() {
+    return Services.perms.testExactPermissionFromPrincipal(
+           this.principal, "push");
+  },
+
+  /**
+   * Indicates whether the registration can deliver push messages to its
+   * associated service worker.
+   */
+  hasPermission() {
+    let permission = this.pushPermission();
+    return permission == Ci.nsIPermissionManager.ALLOW_ACTION;
   },
 
   quotaApplies() {
@@ -174,10 +194,31 @@ PushRecord.prototype = {
   },
 };
 
-// Mark the `origin` property as non-enumerable to avoid storing the
-// registration origin in IndexedDB.
-Object.defineProperty(PushRecord.prototype, "origin", {
-  configurable: true,
-  enumerable: false,
-  writable: true,
+// Define lazy getters for the principal and scope URI. IndexedDB can't store
+// `nsIPrincipal` objects, so we keep them in a private weak map.
+let principals = new WeakMap();
+Object.defineProperties(PushRecord.prototype, {
+  principal: {
+    get() {
+      let principal = principals.get(this);
+      if (!principal) {
+        let url = this.scope;
+        if (this.originAttributes) {
+          // Allow tests to omit origin attributes.
+          url += this.originAttributes;
+        }
+        principal = BrowserUtils.principalFromOrigin(url);
+        principals.set(this, principal);
+      }
+      return principal;
+    },
+    configurable: true,
+  },
+
+  uri: {
+    get() {
+      return this.principal.URI;
+    },
+    configurable: true,
+  },
 });
