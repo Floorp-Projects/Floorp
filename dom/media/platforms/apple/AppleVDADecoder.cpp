@@ -40,8 +40,9 @@ AppleVDADecoder::AppleVDADecoder(const VideoInfo& aConfig,
   , mPictureHeight(aConfig.mImage.height)
   , mDisplayWidth(aConfig.mDisplay.width)
   , mDisplayHeight(aConfig.mDisplay.height)
-  , mDecoder(nullptr)
+  , mUseSoftwareImages(true)
   , mIs106(!nsCocoaFeatures::OnLionOrLater())
+  , mDecoder(nullptr)
 {
   MOZ_COUNT_CTOR(AppleVDADecoder);
   // TODO: Verify aConfig.mime_type.
@@ -247,18 +248,16 @@ nsresult
 AppleVDADecoder::OutputFrame(CVPixelBufferRef aImage,
                              nsAutoPtr<AppleVDADecoder::AppleFrameRef> aFrameRef)
 {
-  IOSurfacePtr surface = MacIOSurfaceLib::CVPixelBufferGetIOSurface(aImage);
-  MOZ_ASSERT(surface, "Decoder didn't return an IOSurface backed buffer");
-
   LOG("mp4 output frame %lld dts %lld pts %lld duration %lld us%s",
-    aFrameRef->byte_offset,
-    aFrameRef->decode_timestamp,
-    aFrameRef->composition_timestamp,
-    aFrameRef->duration,
-    aFrameRef->is_sync_point ? " keyframe" : ""
+      aFrameRef->byte_offset,
+      aFrameRef->decode_timestamp,
+      aFrameRef->composition_timestamp,
+      aFrameRef->duration,
+      aFrameRef->is_sync_point ? " keyframe" : ""
   );
 
-  nsRefPtr<MacIOSurface> macSurface = new MacIOSurface(surface);
+  // Where our resulting image will end up.
+  nsRefPtr<VideoData> data;
   // Bounds.
   VideoInfo info;
   info.mDisplay = nsIntSize(mDisplayWidth, mDisplayHeight);
@@ -267,21 +266,83 @@ AppleVDADecoder::OutputFrame(CVPixelBufferRef aImage,
                                       mPictureWidth,
                                       mPictureHeight);
 
-  nsRefPtr<layers::Image> image =
-    mImageContainer->CreateImage(ImageFormat::MAC_IOSURFACE);
-  layers::MacIOSurfaceImage* videoImage =
-    static_cast<layers::MacIOSurfaceImage*>(image.get());
-  videoImage->SetSurface(macSurface);
+  if (mUseSoftwareImages) {
+    size_t width = CVPixelBufferGetWidth(aImage);
+    size_t height = CVPixelBufferGetHeight(aImage);
+    DebugOnly<size_t> planes = CVPixelBufferGetPlaneCount(aImage);
+    MOZ_ASSERT(planes == 2, "Likely not NV12 format and it must be.");
 
-  nsRefPtr<VideoData> data;
-  data = VideoData::CreateFromImage(info,
-                                    mImageContainer,
-                                    aFrameRef->byte_offset,
-                                    aFrameRef->composition_timestamp,
-                                    aFrameRef->duration, image.forget(),
-                                    aFrameRef->is_sync_point,
-                                    aFrameRef->decode_timestamp,
-                                    visible);
+    VideoData::YCbCrBuffer buffer;
+
+    // Lock the returned image data.
+    CVReturn rv = CVPixelBufferLockBaseAddress(aImage, kCVPixelBufferLock_ReadOnly);
+    if (rv != kCVReturnSuccess) {
+      NS_ERROR("error locking pixel data");
+      mCallback->Error();
+      return NS_ERROR_FAILURE;
+    }
+    // Y plane.
+    buffer.mPlanes[0].mData =
+      static_cast<uint8_t*>(CVPixelBufferGetBaseAddressOfPlane(aImage, 0));
+    buffer.mPlanes[0].mStride = CVPixelBufferGetBytesPerRowOfPlane(aImage, 0);
+    buffer.mPlanes[0].mWidth = width;
+    buffer.mPlanes[0].mHeight = height;
+    buffer.mPlanes[0].mOffset = 0;
+    buffer.mPlanes[0].mSkip = 0;
+    // Cb plane.
+    buffer.mPlanes[1].mData =
+      static_cast<uint8_t*>(CVPixelBufferGetBaseAddressOfPlane(aImage, 1));
+    buffer.mPlanes[1].mStride = CVPixelBufferGetBytesPerRowOfPlane(aImage, 1);
+    buffer.mPlanes[1].mWidth = (width+1) / 2;
+    buffer.mPlanes[1].mHeight = (height+1) / 2;
+    buffer.mPlanes[1].mOffset = 0;
+    buffer.mPlanes[1].mSkip = 1;
+    // Cr plane.
+    buffer.mPlanes[2].mData =
+      static_cast<uint8_t*>(CVPixelBufferGetBaseAddressOfPlane(aImage, 1));
+    buffer.mPlanes[2].mStride = CVPixelBufferGetBytesPerRowOfPlane(aImage, 1);
+    buffer.mPlanes[2].mWidth = (width+1) / 2;
+    buffer.mPlanes[2].mHeight = (height+1) / 2;
+    buffer.mPlanes[2].mOffset = 1;
+    buffer.mPlanes[2].mSkip = 1;
+
+    // Copy the image data into our own format.
+    data =
+      VideoData::Create(info,
+                        mImageContainer,
+                        nullptr,
+                        aFrameRef->byte_offset,
+                        aFrameRef->composition_timestamp,
+                        aFrameRef->duration,
+                        buffer,
+                        aFrameRef->is_sync_point,
+                        aFrameRef->decode_timestamp,
+                        visible);
+    // Unlock the returned image data.
+    CVPixelBufferUnlockBaseAddress(aImage, kCVPixelBufferLock_ReadOnly);
+  } else {
+    IOSurfacePtr surface = MacIOSurfaceLib::CVPixelBufferGetIOSurface(aImage);
+    MOZ_ASSERT(surface, "Decoder didn't return an IOSurface backed buffer");
+
+    nsRefPtr<MacIOSurface> macSurface = new MacIOSurface(surface);
+
+    nsRefPtr<layers::Image> image =
+      mImageContainer->CreateImage(ImageFormat::MAC_IOSURFACE);
+    layers::MacIOSurfaceImage* videoImage =
+      static_cast<layers::MacIOSurfaceImage*>(image.get());
+    videoImage->SetSurface(macSurface);
+
+    data =
+      VideoData::CreateFromImage(info,
+                                 mImageContainer,
+                                 aFrameRef->byte_offset,
+                                 aFrameRef->composition_timestamp,
+                                 aFrameRef->duration,
+                                 image.forget(),
+                                 aFrameRef->is_sync_point,
+                                 aFrameRef->decode_timestamp,
+                                 visible);
+  }
 
   if (!data) {
     NS_ERROR("Couldn't create VideoData for frame");
@@ -457,6 +518,29 @@ AppleVDADecoder::CreateDecoderSpecification()
 CFDictionaryRef
 AppleVDADecoder::CreateOutputConfiguration()
 {
+  // Output format type:
+  SInt32 PixelFormatTypeValue = mUseSoftwareImages ?
+    kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange : kCVPixelFormatType_32BGRA;
+
+  AutoCFRelease<CFNumberRef> PixelFormatTypeNumber =
+    CFNumberCreate(kCFAllocatorDefault,
+                   kCFNumberSInt32Type,
+                   &PixelFormatTypeValue);
+
+  if (mUseSoftwareImages) {
+    const void* outputKeys[] = { kCVPixelBufferPixelFormatTypeKey };
+    const void* outputValues[] = { PixelFormatTypeNumber };
+    static_assert(ArrayLength(outputKeys) == ArrayLength(outputValues),
+                  "Non matching keys/values array size");
+
+    return CFDictionaryCreate(kCFAllocatorDefault,
+                              outputKeys,
+                              outputValues,
+                              ArrayLength(outputKeys),
+                              &kCFTypeDictionaryKeyCallBacks,
+                              &kCFTypeDictionaryValueCallBacks);
+  }
+
   // Construct IOSurface Properties
   const void* IOSurfaceKeys[] = { MacIOSurfaceLib::kPropIsGlobal };
   const void* IOSurfaceValues[] = { kCFBooleanTrue };
@@ -471,12 +555,6 @@ AppleVDADecoder::CreateOutputConfiguration()
                        ArrayLength(IOSurfaceKeys),
                        &kCFTypeDictionaryKeyCallBacks,
                        &kCFTypeDictionaryValueCallBacks);
-
-  SInt32 PixelFormatTypeValue = kCVPixelFormatType_32BGRA;
-  AutoCFRelease<CFNumberRef> PixelFormatTypeNumber =
-    CFNumberCreate(kCFAllocatorDefault,
-                   kCFNumberSInt32Type,
-                   &PixelFormatTypeValue);
 
   const void* outputKeys[] = { kCVPixelBufferIOSurfacePropertiesKey,
                                kCVPixelBufferPixelFormatTypeKey,
