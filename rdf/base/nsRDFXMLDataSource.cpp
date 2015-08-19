@@ -952,12 +952,12 @@ RDFXMLDataSourceImpl::Refresh(bool aBlocking)
         rv = NS_NewChannel(getter_AddRefs(channel),
                            mURL,
                            nsContentUtils::GetSystemPrincipal(),
-                           nsILoadInfo::SEC_NORMAL,
+                           nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                            nsIContentPolicy::TYPE_OTHER,
                            nullptr, // aLoadGroup
                            this);   // aCallbacks
         NS_ENSURE_SUCCESS(rv, rv);
-        rv = channel->AsyncOpen(this, nullptr);
+        rv = channel->AsyncOpen2(this);
         NS_ENSURE_SUCCESS(rv, rv);
 
         // So we don't try to issue two asynchronous loads at once.

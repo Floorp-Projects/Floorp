@@ -303,7 +303,7 @@ public:
                           const bool& aParentIsActive) override;
     virtual bool RecvUpdateDimensions(const CSSRect& rect,
                                       const CSSSize& size,
-                                      const ScreenOrientation& orientation,
+                                      const ScreenOrientationInternal& orientation,
                                       const LayoutDeviceIntPoint& chromeDisp) override;
     virtual bool RecvUpdateFrame(const layers::FrameMetrics& aFrameMetrics) override;
     virtual bool RecvRequestFlingSnap(const ViewID& aScrollId,
@@ -419,7 +419,7 @@ public:
 
     void GetMaxTouchPoints(uint32_t* aTouchPoints);
 
-    ScreenOrientation GetOrientation() { return mOrientation; }
+    ScreenOrientationInternal GetOrientation() const { return mOrientation; }
 
     void SetBackgroundColor(const nscolor& aColor);
 
@@ -628,7 +628,7 @@ private:
     bool mDidFakeShow;
     bool mNotified;
     bool mTriedBrowserInit;
-    ScreenOrientation mOrientation;
+    ScreenOrientationInternal mOrientation;
     bool mUpdateHitRegion;
 
     bool mIgnoreKeyPressEvent;

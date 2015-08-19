@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=968923
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 968923</title>
+  <style>
+/* Use a query string to work around imagelib caching.
+   Otherwise, we won't get use counters for this file.  */
+ul { list-style-image: url('file_use_counter_svg_currentScale.svg?asliststyleimage=1') }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=968923">Mozilla Bug 968923</a>
+<ul>
+  <li>Some text</li>
+  <li>Some other text</li>
+</ul>
+</body>
+</html>

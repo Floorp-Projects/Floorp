@@ -19,6 +19,7 @@ D3D9SurfaceImage::D3D9SurfaceImage()
   : Image(nullptr, ImageFormat::D3D9_RGB32_TEXTURE)
   , mSize(0, 0)
   , mValid(false)
+  , mIsFirstFrame(false)
 {}
 
 D3D9SurfaceImage::~D3D9SurfaceImage()
@@ -83,6 +84,7 @@ D3D9SurfaceImage::SetData(const Data& aData)
   mTextureClient = textureClient;
   mSize = region.Size();
   mQuery = query;
+  mIsFirstFrame = aData.mIsFirstFrame;
 
   return S_OK;
 }
@@ -103,7 +105,7 @@ D3D9SurfaceImage::EnsureSynchronized()
     return;
   }
   int iterations = 0;
-  while (iterations < 10) {
+  while (iterations < (mIsFirstFrame ? 100 : 10)) {
     HRESULT hr = query->GetData(nullptr, 0, D3DGETDATA_FLUSH);
     if (hr == S_FALSE) {
       Sleep(1);

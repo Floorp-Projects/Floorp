@@ -42,7 +42,7 @@ namespace {
 // screen orientation.  Similar to what Android SensorManager.remapCoordinateSystem
 // does, except only for a fixed number of transforms that we need.
 Matrix4x4
-RemapMatrixForOrientation(ScreenOrientation screenConfig, const Matrix4x4& aMatrix)
+RemapMatrixForOrientation(ScreenOrientationInternal screenConfig, const Matrix4x4& aMatrix)
 {
   Matrix4x4 out;
   const float *in = &aMatrix._11;

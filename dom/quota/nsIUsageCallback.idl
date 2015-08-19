@@ -6,15 +6,12 @@
 
 #include "nsISupports.idl"
 
-interface nsIURI;
+interface nsIPrincipal;
 
-[scriptable, function, uuid(7b0f9928-0ddc-42c7-b9f2-6b2308b90b18)]
+[scriptable, function, uuid(54b9f44f-533f-41ee-8fa8-86cc978125f0)]
 interface nsIUsageCallback : nsISupports
 {
-  void
-  onUsageResult(in nsIURI aURI,
-                in unsigned long long aUsage,
-                in unsigned long long aFileUsage,
-                in unsigned long aAppId,
-                in boolean aInMozBrowserOnly);
+  void onUsageResult(in nsIPrincipal aPrincipal,
+                     in unsigned long long aUsage,
+                     in unsigned long long aFileUsage);
 };

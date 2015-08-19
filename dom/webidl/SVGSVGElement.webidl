@@ -33,6 +33,7 @@ interface SVGSVGElement : SVGGraphicsElement {
   readonly attribute float screenPixelToMillimeterY;
   readonly attribute boolean useCurrentView;
   // readonly attribute SVGViewSpec currentView;
+  [UseCounter]
            attribute float currentScale;
   readonly attribute SVGPoint currentTranslate;
 
@@ -70,6 +71,7 @@ interface SVGSVGElement : SVGGraphicsElement {
   SVGTransform createSVGTransform();
   [NewObject]
   SVGTransform createSVGTransformFromMatrix(SVGMatrix matrix);
+  [UseCounter]
   Element? getElementById(DOMString elementId);
 };
 

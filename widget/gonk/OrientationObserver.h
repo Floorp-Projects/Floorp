@@ -32,7 +32,7 @@ typedef mozilla::Observer<SensorData> ISensorObserver;
 
 using mozilla::hal::ISensorObserver;
 using mozilla::hal::SensorData;
-using mozilla::dom::ScreenOrientation;
+using mozilla::dom::ScreenOrientationInternal;
 
 class OrientationObserver : public ISensorObserver {
 public:
@@ -51,7 +51,7 @@ public:
   void DisableAutoOrientation();
 
   // Methods called by methods in hal_impl namespace.
-  bool LockScreenOrientation(ScreenOrientation aOrientation);
+  bool LockScreenOrientation(ScreenOrientationInternal aOrientation);
   void UnlockScreenOrientation();
 
   static OrientationObserver* GetInstance();

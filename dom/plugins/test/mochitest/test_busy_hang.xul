@@ -22,12 +22,6 @@
 SimpleTest.waitForExplicitFinish();
 
 function runTests() {
-  if (!SimpleTest.testPluginIsOOP()) {
-    ok(true, "Skipping this test when test plugin is not OOP.");
-    SimpleTest.finish();
-    return;
-  }
-  
   // Default plugin hang timeout is too high for mochitests
   var prefs = Cc["@mozilla.org/preferences-service;1"]
                     .getService(Ci.nsIPrefBranch);

@@ -212,6 +212,7 @@ public class GeckoEvent {
     private int mNativeWindow;
 
     private short mScreenOrientation;
+    private short mScreenAngle;
 
     private ByteBuffer mBuffer;
 
@@ -691,10 +692,6 @@ public class GeckoEvent {
         sb.append("{ \"x\" : ").append(metrics.viewportRectLeft)
           .append(", \"y\" : ").append(metrics.viewportRectTop)
           .append(", \"zoom\" : ").append(metrics.zoomFactor)
-          .append(", \"fixedMarginLeft\" : ").append(metrics.marginLeft)
-          .append(", \"fixedMarginTop\" : ").append(metrics.marginTop)
-          .append(", \"fixedMarginRight\" : ").append(metrics.marginRight)
-          .append(", \"fixedMarginBottom\" : ").append(metrics.marginBottom)
           .append(", \"displayPort\" :").append(displayPort.toJSON())
           .append('}');
         event.mCharactersExtra = sb.toString();
@@ -749,9 +746,10 @@ public class GeckoEvent {
         return event;
     }
 
-    public static GeckoEvent createScreenOrientationEvent(short aScreenOrientation) {
+    public static GeckoEvent createScreenOrientationEvent(short aScreenOrientation, short aScreenAngle) {
         GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.SCREENORIENTATION_CHANGED);
         event.mScreenOrientation = aScreenOrientation;
+        event.mScreenAngle = aScreenAngle;
         return event;
     }
 
