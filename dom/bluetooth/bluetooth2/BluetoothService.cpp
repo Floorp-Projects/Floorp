@@ -301,7 +301,8 @@ RemoveAllSignalHandlers(const nsAString& aKey,
                         nsAutoPtr<BluetoothSignalObserverList>& aData,
                         void* aUserArg)
 {
-  BluetoothSignalObserver* handler = static_cast<BluetoothSignalObserver*>(aUserArg);
+  BluetoothSignalObserver* handler =
+    static_cast<BluetoothSignalObserver*>(aUserArg);
   aData->RemoveObserver(handler);
   // We shouldn't have duplicate instances in the ObserverList, but there's
   // no appropriate way to do duplication check while registering, so
@@ -320,13 +321,15 @@ BluetoothService::UnregisterAllSignalHandlers(BluetoothSignalObserver* aHandler)
 }
 
 void
-BluetoothService::DistributeSignal(const nsAString& aName, const nsAString& aPath)
+BluetoothService::DistributeSignal(const nsAString& aName,
+                                   const nsAString& aPath)
 {
   DistributeSignal(aName, aPath, BluetoothValue(true));
 }
 
 void
-BluetoothService::DistributeSignal(const nsAString& aName, const nsAString& aPath,
+BluetoothService::DistributeSignal(const nsAString& aName,
+                                   const nsAString& aPath,
                                    const BluetoothValue& aValue)
 {
   BluetoothSignal signal(nsString(aName), nsString(aPath), aValue);
