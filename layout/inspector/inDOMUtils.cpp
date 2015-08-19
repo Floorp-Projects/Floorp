@@ -707,7 +707,11 @@ inDOMUtils::CssPropertyIsShorthand(const nsAString& aProperty, bool *_retval)
     return NS_ERROR_FAILURE;
   }
 
-  *_retval = nsCSSProps::IsShorthand(propertyID);
+  if (propertyID == eCSSPropertyExtra_variable) {
+    *_retval = false;
+  } else {
+    *_retval = nsCSSProps::IsShorthand(propertyID);
+  }
   return NS_OK;
 }
 
