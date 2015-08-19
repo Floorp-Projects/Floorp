@@ -47,9 +47,15 @@ struct WebMTimeDataOffset
 struct WebMBufferedParser
 {
   explicit WebMBufferedParser(int64_t aOffset)
-    : mStartOffset(aOffset), mCurrentOffset(aOffset), mInitEndOffset(-1),
-      mState(READ_ELEMENT_ID), mVIntRaw(false), mClusterSyncPos(0),
-      mTimecodeScale(1000000), mGotTimecodeScale(false)
+    : mStartOffset(aOffset)
+    , mCurrentOffset(aOffset)
+    , mInitEndOffset(-1)
+    , mBlockEndOffset(-1)
+    , mState(READ_ELEMENT_ID)
+    , mVIntRaw(false)
+    , mClusterSyncPos(0)
+    , mTimecodeScale(1000000)
+    , mGotTimecodeScale(false)
   {
     if (mStartOffset != 0) {
       mState = FIND_CLUSTER_SYNC;
@@ -95,6 +101,10 @@ struct WebMBufferedParser
   // Tracks element's end offset. This indicates the end of the init segment.
   // Will only be set if a Segment Information has been found.
   int64_t mInitEndOffset;
+
+  // End offset of the last block.
+  // Will only be set if a full block has been parsed.
+  int64_t mBlockEndOffset;
 
 private:
   enum State {
@@ -225,7 +235,10 @@ class WebMBufferedState final
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebMBufferedState)
 
 public:
-  WebMBufferedState() : mReentrantMonitor("WebMBufferedState") {
+  WebMBufferedState()
+    : mReentrantMonitor("WebMBufferedState")
+    , mLastBlockOffset(-1)
+  {
     MOZ_COUNT_CTOR(WebMBufferedState);
   }
 
@@ -242,6 +255,8 @@ public:
 
   // Returns end offset of init segment or -1 if none found.
   int64_t GetInitEndOffset();
+  // Returns the end offset of the last complete block or -1 if none found.
+  int64_t GetLastBlockOffset();
 
   // Returns start time
   bool GetStartTime(uint64_t *aTime);
@@ -255,12 +270,14 @@ private:
     MOZ_COUNT_DTOR(WebMBufferedState);
   }
 
-  // Synchronizes access to the mTimeMapping array.
+  // Synchronizes access to the mTimeMapping array and mLastBlockOffset.
   ReentrantMonitor mReentrantMonitor;
 
   // Sorted (by offset) map of data offsets to timecodes.  Populated
   // on the main thread as data is received and parsed by WebMBufferedParsers.
   nsTArray<WebMTimeDataOffset> mTimeMapping;
+  // The last complete block parsed. -1 if not set.
+  int64_t mLastBlockOffset;
 
   // Sorted (by offset) live parser instances.  Main thread only.
   nsTArray<WebMBufferedParser> mRangeParsers;
