@@ -36,7 +36,7 @@ class BrowserToolbarTablet extends BrowserToolbarTabletBase {
         super(context, attrs);
 
         forwardButtonTranslationWidth =
-                getResources().getDimensionPixelOffset(R.dimen.new_tablet_nav_button_width);
+                getResources().getDimensionPixelOffset(R.dimen.tablet_nav_button_width);
 
         // The forward button is initially expanded (in the layout file)
         // so translate it for start of the expansion animation; future
