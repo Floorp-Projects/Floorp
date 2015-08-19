@@ -77,7 +77,7 @@ protocol PBackgroundIDBCursor
 parent:
   DeleteMe();
 
-  Continue(CursorRequestParams params);
+  Continue(CursorRequestParams params, Key key);
 
 child:
   __delete__();

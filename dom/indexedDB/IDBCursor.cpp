@@ -483,7 +483,7 @@ IDBCursor::Continue(JSContext* aCx,
                  IDB_LOG_STRINGIFY(key));
   }
 
-  mBackgroundActor->SendContinueInternal(ContinueParams(key));
+  mBackgroundActor->SendContinueInternal(ContinueParams(key), Key());
 
   mContinueCalled = true;
 }
@@ -541,7 +541,7 @@ IDBCursor::Advance(uint32_t aCount, ErrorResult &aRv)
                  aCount);
   }
 
-  mBackgroundActor->SendContinueInternal(AdvanceParams(aCount));
+  mBackgroundActor->SendContinueInternal(AdvanceParams(aCount), Key());
 
   mContinueCalled = true;
 }

@@ -660,7 +660,7 @@ public:
 #endif
 
   void
-  SendContinueInternal(const CursorRequestParams& aParams);
+  SendContinueInternal(const CursorRequestParams& aParams, const Key& aKey);
 
   void
   SendDeleteMeInternal();
@@ -729,7 +729,7 @@ private:
 
   // Force callers to use SendContinueInternal.
   bool
-  SendContinue(const CursorRequestParams& aParams) = delete;
+  SendContinue(const CursorRequestParams& aParams, const Key& aKey) = delete;
 
   bool
   SendDeleteMe() = delete;
