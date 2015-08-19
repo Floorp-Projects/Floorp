@@ -31,16 +31,6 @@
 #include "nsStyleUtil.h"
 #include "nsQueryObject.h"
 
-static PRLogModuleInfo*
-GetSriLog()
-{
-  static PRLogModuleInfo *gSriPRLog;
-  if (!gSriPRLog) {
-    gSriPRLog = PR_NewLogModule("SRI");
-  }
-  return gSriPRLog;
-}
-
 using namespace mozilla;
 using namespace mozilla::dom;
 
