@@ -354,6 +354,20 @@ protected:
                              const nsAString& aLastDispatchedData);
 
     /**
+     * SetTextRange() initializes aTextRange with aPangoAttrIter.
+     *
+     * @param aPangoAttrIter            An iter which represents a clause of the
+     *                                  composition string.
+     * @param aUTF8CompositionString    The whole composition string (UTF-8).
+     * @param aTextRange                The result.
+     * @return                          true if this initializes aTextRange.
+     *                                  Otherwise, false.
+     */
+    bool SetTextRange(PangoAttrIterator* aPangoAttrIter,
+                      const gchar* aUTF8CompositionString,
+                      TextRange& aTextRange) const;
+
+    /**
      * Move the candidate window with "fake" cursor position.
      *
      * @param aContext              A GtkIMContext which is being handled.
