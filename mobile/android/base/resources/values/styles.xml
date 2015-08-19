@@ -103,7 +103,7 @@
     </style>
 
     <style name="Widget.MenuItemDefault">
-        <item name="android:paddingLeft">10dip</item>
+        <item name="android:paddingLeft">15dip</item>
         <item name="android:paddingRight">10dip</item>
         <item name="android:drawablePadding">6dip</item>
         <item name="android:gravity">center_vertical</item>
