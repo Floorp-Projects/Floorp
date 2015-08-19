@@ -1229,6 +1229,11 @@ public abstract class GeckoApp
             GeckoThread.ensureInit(args, action,
                     TextUtils.isEmpty(uri) ? null : uri,
                     /* debugging */ ACTION_DEBUG.equals(action));
+
+            if (!TextUtils.isEmpty(uri)) {
+                // Start a speculative connection as soon as Gecko loads.
+                GeckoThread.speculativeConnect(uri);
+            }
         }
 
         // GeckoThread has to register for "Gecko:Ready" first, so GeckoApp registers
