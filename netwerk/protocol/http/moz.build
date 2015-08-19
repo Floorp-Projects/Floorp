@@ -21,6 +21,7 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'necko_http'
 
 EXPORTS += [
+    'nsCORSListenerProxy.h',
     'nsHttp.h',
     'nsHttpAtomList.h',
     'nsHttpHeaderArray.h',
@@ -62,6 +63,7 @@ UNIFIED_SOURCES += [
     'HttpChannelParentListener.cpp',
     'HttpInfo.cpp',
     'InterceptedChannel.cpp',
+    'nsCORSListenerProxy.cpp',
     'nsHttp.cpp',
     'nsHttpActivityDistributor.cpp',
     'nsHttpAuthManager.cpp',
