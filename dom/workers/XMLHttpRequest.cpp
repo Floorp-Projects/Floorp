@@ -1967,6 +1967,12 @@ XMLHttpRequest::Open(const nsACString& aMethod, const nsAString& aUrl,
     return;
   }
 
+  // We have been released in one of the nested Open() calls.
+  if (!mProxy) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
   --mProxy->mOpenCount;
   mProxy->mIsSyncXHR = !aAsync;
 }
