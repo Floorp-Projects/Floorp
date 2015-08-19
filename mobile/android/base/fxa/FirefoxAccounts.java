@@ -69,13 +69,6 @@ public class FirefoxAccounts {
       SyncHint.IGNORE_LOCAL_RATE_LIMIT,
       SyncHint.IGNORE_REMOTE_SERVER_BACKOFF);
 
-  public interface SyncStatusListener {
-    public Context getContext();
-    public Account getAccount();
-    public void onSyncStarted();
-    public void onSyncFinished();
-  }
-
   /**
    * Returns true if a FirefoxAccount exists, false otherwise.
    *

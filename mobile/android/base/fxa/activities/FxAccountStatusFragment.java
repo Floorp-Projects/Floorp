@@ -18,6 +18,7 @@ import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.background.preferences.PreferenceFragment;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.FxAccountConstants;
+import org.mozilla.gecko.fxa.SyncStatusListener;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.login.Married;
 import org.mozilla.gecko.fxa.login.State;
@@ -387,7 +388,7 @@ public class FxAccountStatusFragment
     setCheckboxesEnabled(true);
   }
 
-  protected class InnerSyncStatusDelegate implements FirefoxAccounts.SyncStatusListener {
+  protected class InnerSyncStatusDelegate implements SyncStatusListener {
     protected final Runnable refreshRunnable = new Runnable() {
       @Override
       public void run() {
