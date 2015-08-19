@@ -87,7 +87,7 @@ promise_test(function(t) {
     var scope = 'resources/scope/no-such-worker';
     return assert_promise_rejects(
         navigator.serviceWorker.register(script, {scope: scope}),
-        'NetworkError',
+        new TypeError(),
         'Registration of non-existent script should fail.');
   }, 'Registering non-existent script');
 
@@ -96,7 +96,7 @@ promise_test(function(t) {
     var scope = 'resources/scope/invalid-chunked-encoding/';
     return assert_promise_rejects(
         navigator.serviceWorker.register(script, {scope: scope}),
-        'NetworkError',
+        new TypeError(),
         'Registration of invalid chunked encoding script should fail.');
   }, 'Registering invalid chunked encoding script');
 
@@ -105,7 +105,7 @@ promise_test(function(t) {
     var scope = 'resources/scope/invalid-chunked-encoding-with-flush/';
     return assert_promise_rejects(
         navigator.serviceWorker.register(script, {scope: scope}),
-        'NetworkError',
+        new TypeError(),
         'Registration of invalid chunked encoding script should fail.');
   }, 'Registering invalid chunked encoding script with flush');
 
@@ -142,7 +142,7 @@ promise_test(function(t) {
     var scope = 'resources/scope/parse-error';
     return assert_promise_rejects(
         navigator.serviceWorker.register(script, {scope: scope}),
-        'AbortError',
+        new SyntaxError(),
         'Registration of script including parse error should fail.');
   }, 'Registering script including parse error');
 
@@ -151,7 +151,7 @@ promise_test(function(t) {
     var scope = 'resources/scope/undefined-error';
     return assert_promise_rejects(
         navigator.serviceWorker.register(script, {scope: scope}),
-        'AbortError',
+        new ReferenceError(),
         'Registration of script including undefined error should fail.');
   }, 'Registering script including undefined error');
 
@@ -180,7 +180,7 @@ promise_test(function(t) {
     var scope = 'resources/scope/import-malformed-script';
     return assert_promise_rejects(
         navigator.serviceWorker.register(script, {scope: scope}),
-        'AbortError',
+        new SyntaxError(),
         'Registration of script importing malformed script should fail.');
   }, 'Registering script importing malformed script');
 
@@ -228,7 +228,7 @@ promise_test(function(t) {
     var scope = 'resources/scope/encoded-slash-in-script-url';
     return assert_promise_rejects(
         navigator.serviceWorker.register(script, {scope: scope}),
-        'SecurityError',
+        new TypeError(),
         'URL-encoded slash in the script URL should be rejected.');
   }, 'Script URL including URL-encoded slash');
 
@@ -237,7 +237,7 @@ promise_test(function(t) {
     var scope = 'resources/scope%2fencoded-slash-in-scope';
     return assert_promise_rejects(
         navigator.serviceWorker.register(script, {scope: scope}),
-        'SecurityError',
+        new TypeError(),
         'URL-encoded slash in the scope should be rejected.');
   }, 'Scope including URL-encoded slash');
 
@@ -246,7 +246,7 @@ promise_test(function(t) {
     var scope = 'resources/scope/encoded-slash-in-script-url';
     return assert_promise_rejects(
         navigator.serviceWorker.register(script, {scope: scope}),
-        'SecurityError',
+        new TypeError(),
         'URL-encoded backslash in the script URL should be rejected.');
   }, 'Script URL including URL-encoded backslash');
 
@@ -255,7 +255,7 @@ promise_test(function(t) {
     var scope = 'resources/scope%5cencoded-slash-in-scope';
     return assert_promise_rejects(
         navigator.serviceWorker.register(script, {scope: scope}),
-        'SecurityError',
+        new TypeError(),
         'URL-encoded backslash in the scope should be rejected.');
   }, 'Scope including URL-encoded backslash');
 
