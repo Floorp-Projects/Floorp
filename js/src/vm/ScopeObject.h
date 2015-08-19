@@ -114,7 +114,7 @@ class StaticScopeIter
                       "used in NoGC code");
     }
 
-    bool done() const;
+    bool done() const { return !obj; }
     void operator++(int);
 
     JSObject* staticScope() const { MOZ_ASSERT(!done()); return obj; }
@@ -652,6 +652,9 @@ class StaticBlockObject : public BlockObject
     bool isAliased(unsigned i) {
         return slotValue(i).isTrue();
     }
+
+    // Look up if the block has an aliased binding named |name|.
+    Shape* lookupAliasedName(PropertyName* name);
 
     /*
      * A static block object is cloned (when entering the block) iff some
