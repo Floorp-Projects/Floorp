@@ -77,16 +77,6 @@ config = {
     "mozilla_dir": MOZILLA_DIR,
     "mozconfig": "%s/mobile/android/config/mozconfigs/android/l10n-release" % MOZILLA_DIR,
     "signature_verification_script": "tools/release/signing/verify-android-signature.sh",
-    "default_actions": [
-        "clobber",
-        "pull",
-        "list-locales",
-        "setup",
-        "repack",
-        "upload-repacks",
-        "submit-to-balrog",
-        "summary",
-    ],
 
     # Mock
     "mock_target": "mozilla-centos6-x86_64-android",
