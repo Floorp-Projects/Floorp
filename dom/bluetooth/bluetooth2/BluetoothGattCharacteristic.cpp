@@ -188,12 +188,14 @@ BluetoothGattCharacteristic::GetProperties(
 {
   aProperties.mBroadcast = mProperties & GATT_CHAR_PROP_BIT_BROADCAST;
   aProperties.mRead = mProperties & GATT_CHAR_PROP_BIT_READ;
-  aProperties.mWriteNoResponse = mProperties & GATT_CHAR_PROP_BIT_WRITE_NO_RESPONSE;
+  aProperties.mWriteNoResponse =
+    mProperties & GATT_CHAR_PROP_BIT_WRITE_NO_RESPONSE;
   aProperties.mWrite = mProperties & GATT_CHAR_PROP_BIT_WRITE;
   aProperties.mNotify = mProperties & GATT_CHAR_PROP_BIT_NOTIFY;
   aProperties.mIndicate = mProperties & GATT_CHAR_PROP_BIT_INDICATE;
   aProperties.mSignedWrite = mProperties & GATT_CHAR_PROP_BIT_SIGNED_WRITE;
-  aProperties.mExtendedProps = mProperties & GATT_CHAR_PROP_BIT_EXTENDED_PROPERTIES;
+  aProperties.mExtendedProps =
+    mProperties & GATT_CHAR_PROP_BIT_EXTENDED_PROPERTIES;
 }
 
 class ReadValueTask final : public BluetoothReplyRunnable

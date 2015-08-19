@@ -146,14 +146,16 @@ BluetoothHidManager::Disconnect(BluetoothProfileController* aController)
   BluetoothService* bs = BluetoothService::Get();
   if (!bs) {
     if (aController) {
-      aController->NotifyCompletion(NS_LITERAL_STRING(ERR_NO_AVAILABLE_RESOURCE));
+      aController->NotifyCompletion(
+        NS_LITERAL_STRING(ERR_NO_AVAILABLE_RESOURCE));
     }
     return;
   }
 
   if (!mConnected) {
     if (aController) {
-      aController->NotifyCompletion(NS_LITERAL_STRING(ERR_ALREADY_DISCONNECTED));
+      aController->NotifyCompletion(
+        NS_LITERAL_STRING(ERR_ALREADY_DISCONNECTED));
     }
     return;
   }
@@ -210,7 +212,8 @@ void
 BluetoothHidManager::HandleInputPropertyChanged(const BluetoothSignal& aSignal)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aSignal.value().type() == BluetoothValue::TArrayOfBluetoothNamedValue);
+  MOZ_ASSERT(aSignal.value().type() ==
+             BluetoothValue::TArrayOfBluetoothNamedValue);
 
   const InfallibleTArray<BluetoothNamedValue>& arr =
     aSignal.value().get_ArrayOfBluetoothNamedValue();
