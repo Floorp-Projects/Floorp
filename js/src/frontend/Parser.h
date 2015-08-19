@@ -106,6 +106,11 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
 
     Node            maybeFunction;  /* sc->isFunctionBox, the pn where pn->pn_funbox == sc */
 
+    // If sc->isFunctionBox(), this is used to temporarily link up the
+    // FunctionBox with the JSFunction so the static scope chain may be walked
+    // without a JSScript.
+    mozilla::Maybe<JSFunction::AutoParseUsingFunctionBox> parseUsingFunctionBox;
+
     // lastYieldOffset stores the offset of the last yield that was parsed.
     // NoYieldOffset is its initial value.
     static const uint32_t NoYieldOffset = UINT32_MAX;
@@ -270,6 +275,8 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
         inDeclDestructuring(false)
     {
         prs->pc = this;
+        if (sc->isFunctionBox())
+            parseUsingFunctionBox.emplace(prs->context, sc->asFunctionBox());
     }
 
     ~ParseContext();
@@ -463,17 +470,10 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
      * cx->tempLifoAlloc.
      */
     ObjectBox* newObjectBox(JSObject* obj);
-    FunctionBox* newFunctionBoxWithScope(Node fn, JSFunction* fun,
-                                         ParseContext<ParseHandler>* outerpc,
-                                         Directives directives, GeneratorKind generatorKind,
-                                         JSObject* staticScope);
-
-  private:
-    FunctionBox* newFunctionBox(Node fn, HandleFunction fun, ParseContext<ParseHandler>* outerpc,
+    FunctionBox* newFunctionBox(Node fn, JSFunction* fun, ParseContext<ParseHandler>* outerpc,
                                 Directives directives, GeneratorKind generatorKind,
-                                HandleObject enclosingStaticScope);
+                                JSObject* enclosingStaticScope);
 
-  public:
     // Use when the funbox is the outermost.
     FunctionBox* newFunctionBox(Node fn, HandleFunction fun, Directives directives,
                                 GeneratorKind generatorKind, HandleObject enclosingStaticScope)
