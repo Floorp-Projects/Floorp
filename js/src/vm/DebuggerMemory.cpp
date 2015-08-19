@@ -1147,21 +1147,21 @@ class ByUbinodeType : public CountType {
 // A count type that categorizes nodes by the JS stack under which they were
 // allocated.
 class ByAllocationStack : public CountType {
-    typedef HashMap<SavedFrame*, CountBasePtr, DefaultHasher<SavedFrame*>,
+    typedef HashMap<JS::ubi::StackFrame, CountBasePtr, DefaultHasher<JS::ubi::StackFrame>,
                     SystemAllocPolicy> Table;
     typedef Table::Entry Entry;
 
     struct Count : public CountBase {
-        // NOTE: You may look up entries in this table by SavedFrame key only
-        // during traversal, NOT ONCE TRAVERSAL IS COMPLETE. Once traversal is
-        // complete, you may only iterate over it.
+        // NOTE: You may look up entries in this table by JS::ubi::StackFrame
+        // key only during traversal, NOT ONCE TRAVERSAL IS COMPLETE. Once
+        // traversal is complete, you may only iterate over it.
         //
-        // In this hash table, keys are JSObjects, and we use JSObject identity
-        // (that is, address identity) as key identity. The normal way to
-        // support such a table is to make the trace function notice keys that
-        // have moved and re-key them in the table. However, our trace function
-        // does *not* rehash; the first GC may render the hash table
-        // unsearchable.
+        // In this hash table, keys are JSObjects (with some indirection), and
+        // we use JSObject identity (that is, address identity) as key
+        // identity. The normal way to support such a table is to make the trace
+        // function notice keys that have moved and re-key them in the
+        // table. However, our trace function does *not* rehash; the first GC
+        // may render the hash table unsearchable.
         //
         // This is as it should be:
         //
@@ -1216,10 +1216,11 @@ class ByAllocationStack : public CountType {
             // Trace our child Counts.
             r.front().value()->trace(trc);
 
-            // Trace the SavedFrame that is this entry's key. Do not re-key if
+            // Trace the StackFrame that is this entry's key. Do not re-key if
             // it has moved; see comments for ByAllocationStack::Count::table.
-            SavedFrame** keyPtr = const_cast<SavedFrame**>(&r.front().key());
-            TraceRoot(trc, keyPtr, "Debugger.Memory.prototype.census byAllocationStack count key");
+            const JS::ubi::StackFrame* key = &r.front().key();
+            auto& k = *const_cast<JS::ubi::StackFrame*>(key);
+            k.trace(trc);
         }
         count.noStack->trace(trc);
     }
@@ -1233,24 +1234,17 @@ class ByAllocationStack : public CountType {
         Count& count = static_cast<Count&>(countBase);
         count.total_++;
 
-        SavedFrame* allocationStack = nullptr;
-        if (node.is<JSObject>()) {
-            JSObject* metadata = GetObjectMetadata(node.as<JSObject>());
-            if (metadata && metadata->is<SavedFrame>())
-                allocationStack = &metadata->as<SavedFrame>();
-        }
-        // If any other types had allocation site data, we could retrieve it
-        // here.
-
         // If we do have an allocation stack for this node, include it in the
         // count for that stack.
-        if (allocationStack) {
-            Table::AddPtr p = count.table.lookupForAdd(allocationStack);
+        if (node.hasAllocationStack()) {
+            auto allocationStack = node.allocationStack();
+            auto p = count.table.lookupForAdd(allocationStack);
             if (!p) {
                 CountBasePtr stackCount(entryType->makeCount());
                 if (!stackCount || !count.table.add(p, allocationStack, Move(stackCount)))
                     return false;
             }
+            MOZ_ASSERT(p);
             return p->value()->count(node);
         }
 
@@ -1283,18 +1277,22 @@ class ByAllocationStack : public CountType {
             return false;
         for (Entry** entryPtr = entries.begin(); entryPtr < entries.end(); entryPtr++) {
             Entry& entry = **entryPtr;
-
             MOZ_ASSERT(entry.key());
-            RootedValue stack(cx, ObjectValue(*entry.key()));
-            if (!cx->compartment()->wrap(cx, &stack))
+
+            RootedObject stack(cx);
+            if (!entry.key().constructSavedFrameStack(cx, &stack) ||
+                !cx->compartment()->wrap(cx, &stack))
+            {
                 return false;
+            }
+            RootedValue stackVal(cx, ObjectValue(*stack));
 
             CountBasePtr& stackCount = entry.value();
             RootedValue stackReport(cx);
             if (!stackCount->report(&stackReport))
                 return false;
 
-            if (!MapObject::set(cx, map, stack, stackReport))
+            if (!MapObject::set(cx, map, stackVal, stackReport))
                 return false;
         }
 
