@@ -287,6 +287,7 @@ TabParent::TabParent(nsIContentParent* aManager,
   , mCursor(nsCursor(-1))
   , mTabSetsCursor(false)
   , mHasContentOpener(false)
+  , mActiveSupressDisplayportCount(0)
 {
   MOZ_ASSERT(aManager);
 }
@@ -2952,6 +2953,25 @@ NS_IMETHODIMP
 TabParent::SetIsDocShellActive(bool isActive)
 {
   unused << SendSetIsDocShellActive(isActive);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TabParent::SuppressDisplayport(bool aEnabled)
+{
+  if (IsDestroyed()) {
+    return NS_OK;
+  }
+
+  if (aEnabled) {
+    mActiveSupressDisplayportCount++;
+  } else {
+    mActiveSupressDisplayportCount--;
+  }
+
+  MOZ_ASSERT(mActiveSupressDisplayportCount >= 0);
+
+  unused << SendSuppressDisplayport(aEnabled);
   return NS_OK;
 }
 

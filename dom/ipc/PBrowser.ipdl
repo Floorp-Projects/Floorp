@@ -710,6 +710,17 @@ child:
     SetIsDocShellActive(bool aIsActive);
 
     /**
+     * Notify the child that it shouldn't paint the offscreen displayport.
+     * This is useful to speed up interactive operations over async
+     * scrolling performance like resize, tabswitch, pageload.
+     *
+     * Each enable call must be matched with a disable call. The child
+     * will remain in the suppress mode as long as there's
+     * a single unmatched call.
+     */
+    async SuppressDisplayport(bool aEnabled);
+
+    /**
      * Navigate by key (Tab/Shift+Tab/F6/Shift+f6).
      */
     NavigateByKey(bool aForward, bool aForDocumentNavigation);

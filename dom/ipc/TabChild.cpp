@@ -554,6 +554,7 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mRemoteFrame(nullptr)
   , mManager(aManager)
   , mChromeFlags(aChromeFlags)
+  , mActiveSuppressDisplayport(0)
   , mLayersId(0)
   , mActivePointerId(-1)
   , mAppPackageFileDescriptorRecved(false)
@@ -1694,6 +1695,20 @@ TabChild::RecvUpdateFrame(const FrameMetrics& aFrameMetrics)
 }
 
 bool
+TabChild::RecvSuppressDisplayport(const bool& aEnabled)
+{
+  if (aEnabled) {
+    mActiveSuppressDisplayport++;
+  } else {
+    mActiveSuppressDisplayport--;
+  }
+
+  MOZ_ASSERT(mActiveSuppressDisplayport >= 0);
+  APZCCallbackHelper::SuppressDisplayport(aEnabled);
+  return true;
+}
+
+bool
 TabChild::RecvRequestFlingSnap(const FrameMetrics::ViewID& aScrollId,
                                const mozilla::CSSPoint& aDestination)
 {
@@ -2412,6 +2427,11 @@ TabChild::RecvDestroy()
 {
   MOZ_ASSERT(mDestroyed == false);
   mDestroyed = true;
+
+  while (mActiveSuppressDisplayport > 0) {
+    APZCCallbackHelper::SuppressDisplayport(false);
+    mActiveSuppressDisplayport--;
+  }
 
   if (mTabChildGlobal) {
     // Message handlers are called from the event loop, so it better be safe to
