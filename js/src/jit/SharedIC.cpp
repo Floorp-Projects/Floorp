@@ -832,6 +832,23 @@ ICStubCompiler::emitPostWriteBarrierSlot(MacroAssembler& masm, Register obj, Val
     return true;
 }
 
+static ICStubCompiler::Engine
+SharedStubEngine(BaselineFrame* frame)
+{
+    return frame ? ICStubCompiler::Engine::Baseline : ICStubCompiler::Engine::IonMonkey;
+}
+
+static JSScript*
+SharedStubScript(BaselineFrame* frame, ICFallbackStub* stub)
+{
+    ICStubCompiler::Engine engine = SharedStubEngine(frame);
+    if (engine == ICStubCompiler::Engine::Baseline)
+        return frame->script();
+
+    IonICEntry* entry = (IonICEntry*) stub->icEntry();
+    return entry->script();
+}
+
 //
 // BinaryArith_Fallback
 //
@@ -840,10 +857,12 @@ static bool
 DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame, ICBinaryArith_Fallback* stub_,
                       HandleValue lhs, HandleValue rhs, MutableHandleValue ret)
 {
+    ICStubCompiler::Engine engine = SharedStubEngine(frame);
+    RootedScript script(cx, SharedStubScript(frame, stub_));
+
     // This fallback stub may trigger debug mode toggling.
     DebugModeOSRVolatileStub<ICBinaryArith_Fallback*> stub(frame, stub_);
 
-    RootedScript script(cx, frame->script());
     jsbytecode* pc = stub->icEntry()->pc(script);
     JSOp op = JSOp(*pc);
     FallbackICSpew(cx, stub, "BinaryArith(%s,%d,%d)", js_CodeName[op],
@@ -944,7 +963,7 @@ DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame, ICBinaryArith_Fallbac
         if (lhs.isString() && rhs.isString()) {
             JitSpew(JitSpew_BaselineIC, "  Generating %s(String, String) stub", js_CodeName[op]);
             MOZ_ASSERT(ret.isString());
-            ICBinaryArith_StringConcat::Compiler compiler(cx);
+            ICBinaryArith_StringConcat::Compiler compiler(cx, engine);
             ICStub* strcatStub = compiler.getStub(compiler.getStubSpace(script));
             if (!strcatStub)
                 return false;
@@ -957,7 +976,7 @@ DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame, ICBinaryArith_Fallbac
                     lhs.isString() ? "String" : "Object",
                     lhs.isString() ? "Object" : "String");
             MOZ_ASSERT(ret.isString());
-            ICBinaryArith_StringObjectConcat::Compiler compiler(cx, lhs.isString());
+            ICBinaryArith_StringObjectConcat::Compiler compiler(cx, engine, lhs.isString());
             ICStub* strcatStub = compiler.getStub(compiler.getStubSpace(script));
             if (!strcatStub)
                 return false;
@@ -973,7 +992,8 @@ DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame, ICBinaryArith_Fallbac
     {
         JitSpew(JitSpew_BaselineIC, "  Generating %s(%s, %s) stub", js_CodeName[op],
                 lhs.isBoolean() ? "Boolean" : "Int32", rhs.isBoolean() ? "Boolean" : "Int32");
-        ICBinaryArith_BooleanWithInt32::Compiler compiler(cx, op, lhs.isBoolean(), rhs.isBoolean());
+        ICBinaryArith_BooleanWithInt32::Compiler compiler(cx, op, engine,
+                                                          lhs.isBoolean(), rhs.isBoolean());
         ICStub* arithStub = compiler.getStub(compiler.getStubSpace(script));
         if (!arithStub)
             return false;
@@ -1003,7 +1023,7 @@ DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame, ICBinaryArith_Fallbac
             stub->unlinkStubsWithKind(cx, ICStub::BinaryArith_Int32);
             JitSpew(JitSpew_BaselineIC, "  Generating %s(Double, Double) stub", js_CodeName[op]);
 
-            ICBinaryArith_Double::Compiler compiler(cx, op);
+            ICBinaryArith_Double::Compiler compiler(cx, op, engine);
             ICStub* doubleStub = compiler.getStub(compiler.getStubSpace(script));
             if (!doubleStub)
                 return false;
@@ -1021,7 +1041,7 @@ DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame, ICBinaryArith_Fallbac
             stub->unlinkStubsWithKind(cx, ICStub::BinaryArith_Int32);
         JitSpew(JitSpew_BaselineIC, "  Generating %s(Int32, Int32%s) stub", js_CodeName[op],
                 allowDouble ? " => Double" : "");
-        ICBinaryArith_Int32::Compiler compilerInt32(cx, op, allowDouble);
+        ICBinaryArith_Int32::Compiler compilerInt32(cx, op, engine, allowDouble);
         ICStub* int32Stub = compilerInt32.getStub(compilerInt32.getStubSpace(script));
         if (!int32Stub)
             return false;
@@ -1040,7 +1060,7 @@ DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame, ICBinaryArith_Fallbac
             JitSpew(JitSpew_BaselineIC, "  Generating %s(%s, %s) stub", js_CodeName[op],
                         lhs.isDouble() ? "Double" : "Int32",
                         lhs.isDouble() ? "Int32" : "Double");
-            ICBinaryArith_DoubleWithInt32::Compiler compiler(cx, op, lhs.isDouble());
+            ICBinaryArith_DoubleWithInt32::Compiler compiler(cx, op, engine, lhs.isDouble());
             ICStub* optStub = compiler.getStub(compiler.getStubSpace(script));
             if (!optStub)
                 return false;
@@ -1064,7 +1084,6 @@ static const VMFunction DoBinaryArithFallbackInfo =
 bool
 ICBinaryArith_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
     MOZ_ASSERT(R0 == JSReturnOperand);
 
     // Restore the tail call register.
@@ -1100,8 +1119,6 @@ static const VMFunction DoConcatStringsInfo = FunctionInfo<DoConcatStringsFn>(Do
 bool
 ICBinaryArith_StringConcat::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     Label failure;
     masm.branchTestString(Assembler::NotEqual, R0, &failure);
     masm.branchTestString(Assembler::NotEqual, R1, &failure);
@@ -1182,8 +1199,6 @@ static const VMFunction DoConcatStringObjectInfo =
 bool
 ICBinaryArith_StringObjectConcat::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     Label failure;
     if (lhsIsString_) {
         masm.branchTestString(Assembler::NotEqual, R0, &failure);
@@ -1216,8 +1231,6 @@ ICBinaryArith_StringObjectConcat::Compiler::generateStubCode(MacroAssembler& mas
 bool
 ICBinaryArith_Double::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     Label failure;
     masm.ensureDouble(R0, FloatReg0, &failure);
     masm.ensureDouble(R1, FloatReg1, &failure);
@@ -1258,8 +1271,6 @@ ICBinaryArith_Double::Compiler::generateStubCode(MacroAssembler& masm)
 bool
 ICBinaryArith_BooleanWithInt32::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     Label failure;
     if (lhsIsBool_)
         masm.branchTestBoolean(Assembler::NotEqual, R0, &failure);
@@ -1335,7 +1346,6 @@ ICBinaryArith_BooleanWithInt32::Compiler::generateStubCode(MacroAssembler& masm)
 bool
 ICBinaryArith_DoubleWithInt32::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
     MOZ_ASSERT(op == JSOP_BITOR || op == JSOP_BITAND || op == JSOP_BITXOR);
 
     Label failure;
@@ -1396,6 +1406,7 @@ ICBinaryArith_DoubleWithInt32::Compiler::generateStubCode(MacroAssembler& masm)
     EmitStubGuardFailure(masm);
     return true;
 }
+
 
 
 } // namespace jit
