@@ -78,6 +78,7 @@ GeckoTouchDispatcher::GeckoTouchDispatcher()
   mEnabledUniformityInfo = gfxPrefs::UniformityInfo();
   mVsyncAdjust = TimeDuration::FromMilliseconds(gfxPrefs::TouchVsyncSampleAdjust());
   mMaxPredict = TimeDuration::FromMilliseconds(gfxPrefs::TouchResampleMaxPredict());
+  mMinDelta = TimeDuration::FromMilliseconds(gfxPrefs::TouchResampleMinDelta());
   mOldTouchThreshold = TimeDuration::FromMilliseconds(gfxPrefs::TouchResampleOldTouchThreshold());
   mDelayedVsyncThreshold = TimeDuration::FromMilliseconds(gfxPrefs::TouchResampleVsyncDelayThreshold());
 }
@@ -274,6 +275,14 @@ GeckoTouchDispatcher::ResampleTouchMoves(MultiTouchInput& aOutTouch, TimeStamp a
 
   TimeStamp sampleTime = aVsyncTime - mVsyncAdjust;
   TimeDuration touchDiff = currentTouch.mTimeStamp - baseTouch.mTimeStamp;
+
+  if (touchDiff < mMinDelta) {
+    aOutTouch = currentTouch;
+    #ifdef LOG_RESAMPLE_DATA
+    LOG("The touches are too close, skip resampling\n");
+    #endif
+    return;
+  }
 
   if (currentTouch.mTimeStamp < sampleTime) {
     TimeDuration maxResampleTime = std::min(touchDiff / int64_t(2), mMaxPredict);
