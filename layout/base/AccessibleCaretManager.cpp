@@ -335,11 +335,6 @@ AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint)
     return NS_ERROR_FAILURE;
   }
 
-  bool selectable;
-  ptFrame->IsSelectable(&selectable, nullptr);
-  if (!selectable) {
-    return NS_ERROR_FAILURE;
-  }
 
   nsPoint ptInFrame = aPoint;
   nsLayoutUtils::TransformPoint(rootFrame, ptFrame, ptInFrame);
@@ -539,6 +534,12 @@ AccessibleCaretManager::ChangeFocus(nsIFrame* aFrame) const
 nsresult
 AccessibleCaretManager::SelectWord(nsIFrame* aFrame, const nsPoint& aPoint) const
 {
+  bool selectable;
+  aFrame->IsSelectable(&selectable, nullptr);
+  if (!selectable) {
+    return NS_ERROR_FAILURE;
+  }
+
   SetSelectionDragState(true);
   nsFrame* frame = static_cast<nsFrame*>(aFrame);
   nsresult rs = frame->SelectByTypeAtPoint(mPresShell->GetPresContext(), aPoint,
