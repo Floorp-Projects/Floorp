@@ -15,27 +15,6 @@ BEGIN_BLUETOOTH_NAMESPACE
 
 const char FINAL_BIT = 0x80;
 
-/**
- * Section 3.2 "Response format", IrOBEX ver 1.2
- * The format of an OBEX response header is
- * [response code:1][response length:2]
- */
-static const uint32_t kObexRespHeaderSize = 3;
-
-/**
- * Section 2.2.9 "Body, End-of-Body", IrOBEX ver 1.2
- * The format of an OBEX Body header is
- * [headerId:1][header length:2]
- */
-static const uint32_t kObexBodyHeaderSize = 3;
-
-/**
- * Section 3.3.1.4 "Minimum OBEX Packet Length", IrOBEX ver 1.2
- * The minimum size of the OBEX Maximum packet length allowed for negotiation is
- * 255 bytes.
- */
-static const uint32_t kObexLeastMaxSize = 255;
-
 /*
  * Defined in section 2.1 "OBEX Headers", IrOBEX ver 1.2
  */
@@ -272,8 +251,7 @@ public:
   }
 
   /**
-   * Get a specified parameter from the 'Application Parameters' header with
-   * big-endian byte ordering.
+   * Get a specified parameter from the 'Application Parameters' header.
    *
    * @param aTagId      [in]  The tag ID of parameter which is defined by
    *                          applications or upper protocol layer.
@@ -345,10 +323,6 @@ int AppendHeaderBody(uint8_t* aRetBuf, int aBufferSize, const uint8_t* aBody,
                      int aLength);
 int AppendHeaderWho(uint8_t* aRetBuf, int aBufferSize, const uint8_t* aWho,
                     int aLength);
-int AppendHeaderAppParameters(uint8_t* aRetBuf, int aBufferSize,
-                              const uint8_t* aAppParameters, int aLength);
-int AppendAppParameter(uint8_t* aRetBuf, int aBufferSize, const uint8_t aTagId,
-                       const uint8_t* aValue, int aLength);
 int AppendHeaderLength(uint8_t* aRetBuf, int aObjectLength);
 int AppendHeaderConnectionId(uint8_t* aRetBuf, int aConnectionId);
 int AppendHeaderEndOfBody(uint8_t* aRetBuf);
