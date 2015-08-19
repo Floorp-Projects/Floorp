@@ -2444,7 +2444,8 @@ BackgroundCursorChild::AssertIsOnOwningThread() const
 #endif // DEBUG
 
 void
-BackgroundCursorChild::SendContinueInternal(const CursorRequestParams& aParams)
+BackgroundCursorChild::SendContinueInternal(const CursorRequestParams& aParams,
+                                            const Key& aKey)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mRequest);
@@ -2461,7 +2462,7 @@ BackgroundCursorChild::SendContinueInternal(const CursorRequestParams& aParams)
 
   mTransaction->OnNewRequest();
 
-  MOZ_ALWAYS_TRUE(PBackgroundIDBCursorChild::SendContinue(aParams));
+  MOZ_ALWAYS_TRUE(PBackgroundIDBCursorChild::SendContinue(aParams, aKey));
 }
 
 void
