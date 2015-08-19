@@ -861,7 +861,7 @@ DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame, ICBinaryArith_Fallbac
     RootedScript script(cx, SharedStubScript(frame, stub_));
 
     // This fallback stub may trigger debug mode toggling.
-    DebugModeOSRVolatileStub<ICBinaryArith_Fallback*> stub(frame, stub_);
+    DebugModeOSRVolatileStub<ICBinaryArith_Fallback*> stub(engine, frame, stub_);
 
     jsbytecode* pc = stub->icEntry()->pc(script);
     JSOp op = JSOp(*pc);
