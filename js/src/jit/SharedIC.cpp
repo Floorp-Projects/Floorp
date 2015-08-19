@@ -81,6 +81,14 @@ ICEntry::fallbackStub() const
     return firstStub()->getChainFallback();
 }
 
+void
+ICEntry::trace(JSTracer* trc)
+{
+    if (!hasStub())
+        return;
+    for (ICStub* stub = firstStub(); stub; stub = stub->next())
+        stub->trace(trc);
+}
 
 ICStubConstIterator&
 ICStubConstIterator::operator++()
@@ -142,7 +150,7 @@ ICStub::updateCode(JitCode* code)
 /* static */ void
 ICStub::trace(JSTracer* trc)
 {
-    markCode(trc, "baseline-stub-jitcode");
+    markCode(trc, "shared-stub-jitcode");
 
     // If the stub is a monitored fallback stub, then mark the monitor ICs hanging
     // off of that stub.  We don't need to worry about the regular monitored stubs,
