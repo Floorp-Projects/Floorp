@@ -181,8 +181,8 @@ final class DisplayPortCalculator {
     private static DisplayPortMetrics getTileAlignedDisplayPortMetrics(RectF margins, float zoom, ImmutableViewportMetrics metrics) {
         float left = metrics.viewportRectLeft - margins.left;
         float top = metrics.viewportRectTop - margins.top;
-        float right = metrics.viewportRectRight + margins.right;
-        float bottom = metrics.viewportRectBottom + margins.bottom;
+        float right = metrics.viewportRectRight() + margins.right;
+        float bottom = metrics.viewportRectBottom() + margins.bottom;
         left = (float) Math.max(metrics.pageRectLeft, TILE_SIZE * Math.floor(left / TILE_SIZE));
         top = (float) Math.max(metrics.pageRectTop, TILE_SIZE * Math.floor(top / TILE_SIZE));
         right = (float) Math.min(metrics.pageRectRight, TILE_SIZE * Math.ceil(right / TILE_SIZE));
@@ -201,9 +201,9 @@ final class DisplayPortCalculator {
         // and rightOverflow can be greater than zero, and at most one of topOverflow and bottomOverflow
         // can be greater than zero, because of the assumption described in the method javadoc.
         float leftOverflow = metrics.pageRectLeft - (metrics.viewportRectLeft - margins.left);
-        float rightOverflow = (metrics.viewportRectRight + margins.right) - metrics.pageRectRight;
+        float rightOverflow = (metrics.viewportRectRight() + margins.right) - metrics.pageRectRight;
         float topOverflow = metrics.pageRectTop - (metrics.viewportRectTop - margins.top);
-        float bottomOverflow = (metrics.viewportRectBottom + margins.bottom) - metrics.pageRectBottom;
+        float bottomOverflow = (metrics.viewportRectBottom() + margins.bottom) - metrics.pageRectBottom;
 
         // if the margins overflow the page bounds, shift them to other side on the same axis
         if (leftOverflow > 0) {
@@ -246,8 +246,8 @@ final class DisplayPortCalculator {
         public DisplayPortMetrics calculate(ImmutableViewportMetrics metrics, PointF velocity) {
             return new DisplayPortMetrics(metrics.viewportRectLeft,
                     metrics.viewportRectTop,
-                    metrics.viewportRectRight,
-                    metrics.viewportRectBottom,
+                    metrics.viewportRectRight(),
+                    metrics.viewportRectBottom(),
                     metrics.zoomFactor);
         }
 
@@ -445,8 +445,8 @@ final class DisplayPortCalculator {
             RectF adjustedViewport = new RectF(
                     metrics.viewportRectLeft - dangerMargins.left,
                     metrics.viewportRectTop - dangerMargins.top,
-                    metrics.viewportRectRight + dangerMargins.right,
-                    metrics.viewportRectBottom + dangerMargins.bottom);
+                    metrics.viewportRectRight() + dangerMargins.right,
+                    metrics.viewportRectBottom() + dangerMargins.bottom);
             return !displayPort.contains(adjustedViewport);
         }
 
@@ -588,8 +588,8 @@ final class DisplayPortCalculator {
             DisplayPortMetrics dpMetrics = new DisplayPortMetrics(
                 metrics.viewportRectLeft - margins.left,
                 metrics.viewportRectTop - margins.top,
-                metrics.viewportRectRight + margins.right,
-                metrics.viewportRectBottom + margins.bottom,
+                metrics.viewportRectRight() + margins.right,
+                metrics.viewportRectBottom() + margins.bottom,
                 displayResolution);
             return dpMetrics;
         }

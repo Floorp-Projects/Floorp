@@ -38,12 +38,12 @@ interface nsIAndroidBrowserApp : nsISupports {
   nsIUITelemetryObserver getUITelemetryObserver();
 };
 
-[scriptable, uuid(59cfcb35-69b7-47b2-8155-32b193272666)]
+[scriptable, uuid(92ae801d-da9c-4a24-b2b6-344c4af7008b)]
 interface nsIAndroidViewport : nsISupports {
   readonly attribute float x;
   readonly attribute float y;
-  readonly attribute float width;
-  readonly attribute float height;
+  readonly attribute int32_t width;
+  readonly attribute int32_t height;
   readonly attribute float pageLeft;
   readonly attribute float pageTop;
   readonly attribute float pageRight;
