@@ -1712,6 +1712,13 @@ CodeGenerator::visitBinarySharedStub(LBinarySharedStub* lir)
 {
     JSOp jsop = JSOp(*lir->mir()->resumePoint()->pc());
     switch (jsop) {
+      case JSOP_ADD:
+      case JSOP_SUB:
+      case JSOP_MUL:
+      case JSOP_DIV:
+      case JSOP_MOD:
+        emitSharedStub(ICStub::Kind::BinaryArith_Fallback, lir);
+        break;
       default:
         MOZ_CRASH("Unsupported jsop in shared stubs.");
     }
@@ -7857,6 +7864,11 @@ CodeGenerator::linkSharedStubs(JSContext* cx)
         ICStub *stub = nullptr;
 
         switch (sharedStubs_[i].kind) {
+          case ICStub::Kind::BinaryArith_Fallback: {
+            ICBinaryArith_Fallback::Compiler stubCompiler(cx, ICStubCompiler::Engine::IonMonkey);
+            stub = stubCompiler.getStub(&stubSpace_);
+            break;
+          }
           default:
             MOZ_CRASH("Unsupported shared stub.");
         }
