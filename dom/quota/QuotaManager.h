@@ -124,8 +124,6 @@ public:
   NS_DECL_NSIQUOTAMANAGER
   NS_DECL_NSIOBSERVER
 
-  static const char kReplaceChars[];
-
   // Returns a non-owning reference.
   static QuotaManager*
   GetOrCreate();
