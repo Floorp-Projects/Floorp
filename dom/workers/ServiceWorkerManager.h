@@ -552,7 +552,7 @@ private:
   // Removes all service worker registrations that matches the given
   // mozIApplicationClearPrivateDataParams.
   void
-  RemoveAllRegistrations(OriginAttributes* aParams);
+  RemoveAllRegistrations(mozIApplicationClearPrivateDataParams* aParams);
 
   nsRefPtr<ServiceWorkerManagerChild> mActor;
 
