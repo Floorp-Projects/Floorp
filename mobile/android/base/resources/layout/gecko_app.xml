@@ -23,7 +23,7 @@
         <RelativeLayout android:id="@+id/gecko_layout"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:layout_below="@+id/new_tablet_tab_strip"
+                        android:layout_below="@+id/tablet_tab_strip"
                         android:layout_above="@+id/find_in_page">
 
             <include layout="@layout/shared_ui_components"/>
@@ -98,8 +98,8 @@
                       android:layout_height="wrap_content"
                       android:orientation="vertical">
 
-            <ViewStub android:id="@+id/new_tablet_tab_strip"
-                      android:inflatedId="@id/new_tablet_tab_strip"
+            <ViewStub android:id="@+id/tablet_tab_strip"
+                      android:inflatedId="@id/tablet_tab_strip"
                       android:layout="@layout/tab_strip"
                       android:layout_width="match_parent"
                       android:layout_height="@dimen/tablet_tab_strip_height"
