@@ -30,12 +30,10 @@ union BluetoothValue
 {
   int32_t;
   uint32_t;
-  nsCString;
   nsString;
   bool;
   nsString[];
   uint8_t[];
-  uint32_t[];
   BluetoothNamedValue[];
   BluetoothGattId;
   BluetoothGattId[];

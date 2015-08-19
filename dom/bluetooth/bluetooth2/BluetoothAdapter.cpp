@@ -16,10 +16,7 @@
 
 #include "mozilla/dom/BluetoothAdapterBinding.h"
 #include "mozilla/dom/BluetoothAttributeEvent.h"
-#include "mozilla/dom/BluetoothPhonebookPullingEvent.h"
 #include "mozilla/dom/BluetoothStatusChangedEvent.h"
-#include "mozilla/dom/BluetoothVCardListingEvent.h"
-#include "mozilla/dom/BluetoothVCardPullingEvent.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/File.h"
@@ -30,7 +27,6 @@
 #include "mozilla/dom/bluetooth/BluetoothDiscoveryHandle.h"
 #include "mozilla/dom/bluetooth/BluetoothGattServer.h"
 #include "mozilla/dom/bluetooth/BluetoothPairingListener.h"
-#include "mozilla/dom/bluetooth/BluetoothPbapRequestHandle.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 
 using namespace mozilla;
@@ -528,12 +524,6 @@ BluetoothAdapter::Notify(const BluetoothSignal& aData)
   } else if (aData.name().EqualsLiteral(PAIRING_ABORTED_ID) ||
              aData.name().EqualsLiteral(REQUEST_MEDIA_PLAYSTATUS_ID)) {
     DispatchEmptyEvent(aData.name());
-  } else if (aData.name().EqualsLiteral(PULL_PHONEBOOK_REQ_ID)) {
-    HandlePullPhonebookReq(aData.value());
-  } else if (aData.name().EqualsLiteral(PULL_VCARD_ENTRY_REQ_ID)) {
-    HandlePullVCardEntryReq(aData.value());
-  } else if (aData.name().EqualsLiteral(PULL_VCARD_LISTING_REQ_ID)) {
-    HandlePullVCardListingReq(aData.value());
   } else {
     BT_WARNING("Not handling adapter signal: %s",
                NS_ConvertUTF16toUTF8(aData.name()).get());
@@ -1198,178 +1188,6 @@ BluetoothAdapter::HandleDeviceUnpaired(const BluetoothValue& aValue)
   BluetoothDeviceEventInit init;
   init.mAddress = deviceAddress;
   DispatchDeviceEvent(NS_LITERAL_STRING(DEVICE_UNPAIRED_ID), init);
-}
-
-void
-BluetoothAdapter::HandlePullPhonebookReq(const BluetoothValue& aValue)
-{
-  MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfBluetoothNamedValue);
-  const InfallibleTArray<BluetoothNamedValue>& arr =
-    aValue.get_ArrayOfBluetoothNamedValue();
-
-  MOZ_ASSERT(arr.Length() >= 1 &&
-             arr[0].value().type() == BluetoothValue::TnsString);
-
-  BluetoothPhonebookPullingEventInit init;
-
-  for (uint32_t i = 0, propCount = arr.Length(); i < propCount; ++i) {
-    const nsString& name = arr[i].name();
-    const BluetoothValue& value = arr[i].value();
-    if (name.EqualsLiteral("name")) {
-      init.mName = value.get_nsString();
-    } else if (name.EqualsLiteral("format")) {
-      init.mFormat = value.get_bool() ? vCardVersion::VCard30
-                                      : vCardVersion::VCard21;
-    } else if (name.EqualsLiteral("propSelector")) {
-      init.mPropSelector = getVCardProperties(value);
-    } else if (name.EqualsLiteral("maxListCount")) {
-      init.mMaxListCount = value.get_uint32_t();
-    } else if (name.EqualsLiteral("listStartOffset")) {
-      init.mListStartOffset = value.get_uint32_t();
-    } else if (name.EqualsLiteral("vCardSelector_AND")) {
-      init.mVcardSelector = getVCardProperties(value);
-      init.mVcardSelectorOperator = vCardSelectorOp::AND;
-    } else if (name.EqualsLiteral("vCardSelector_OR")) {
-      init.mVcardSelector = getVCardProperties(value);
-      init.mVcardSelectorOperator = vCardSelectorOp::OR;
-    }
-  }
-
-  init.mHandle = BluetoothPbapRequestHandle::Create(GetOwner());
-
-  nsRefPtr<BluetoothPhonebookPullingEvent> event =
-    BluetoothPhonebookPullingEvent::Constructor(this,
-      NS_LITERAL_STRING(PULL_PHONEBOOK_REQ_ID), init);
-  DispatchTrustedEvent(event);
-}
-
-void
-BluetoothAdapter::HandlePullVCardEntryReq(const BluetoothValue& aValue)
-{
-  MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfBluetoothNamedValue);
-  const InfallibleTArray<BluetoothNamedValue>& arr =
-    aValue.get_ArrayOfBluetoothNamedValue();
-
-  MOZ_ASSERT(arr.Length() >= 1 &&
-             arr[0].value().type() == BluetoothValue::TnsString);
-
-  BluetoothVCardPullingEventInit init;
-  Sequence<vCardProperties> propSelector;
-
-  for (uint32_t i = 0, propCount = arr.Length(); i < propCount; ++i) {
-    const nsString& name = arr[i].name();
-    const BluetoothValue& value = arr[i].value();
-    if (name.EqualsLiteral("name")) {
-      init.mName = value.get_nsString();
-    } else if (name.EqualsLiteral("format")) {
-      init.mFormat = value.get_bool() ? vCardVersion::VCard30
-                                      : vCardVersion::VCard21;
-    } else if (name.EqualsLiteral("propSelector")) {
-      init.mPropSelector = getVCardProperties(value);
-    }
-  }
-
-  init.mHandle = BluetoothPbapRequestHandle::Create(GetOwner());
-
-  nsRefPtr<BluetoothVCardPullingEvent> event =
-    BluetoothVCardPullingEvent::Constructor(this,
-      NS_LITERAL_STRING(PULL_VCARD_ENTRY_REQ_ID), init);
-  DispatchTrustedEvent(event);
-}
-
-void
-BluetoothAdapter::HandlePullVCardListingReq(const BluetoothValue& aValue)
-{
-  MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfBluetoothNamedValue);
-  const InfallibleTArray<BluetoothNamedValue>& arr =
-    aValue.get_ArrayOfBluetoothNamedValue();
-
-  MOZ_ASSERT(arr.Length() >= 1 &&
-             arr[0].value().type() == BluetoothValue::TnsString);
-
-  BluetoothVCardListingEventInit init;
-
-  for (uint32_t i = 0, propCount = arr.Length(); i < propCount; ++i) {
-    const nsString& name = arr[i].name();
-    const BluetoothValue& value = arr[i].value();
-    if (name.EqualsLiteral("name")) {
-      init.mName = value.get_nsString();
-    } else if (name.EqualsLiteral("order")) {
-      init.mOrder = ConvertStringToVCardOrderType(value.get_nsString());
-    } else if (name.EqualsLiteral("searchText")) {
-      init.mSearchValue = value.get_nsString();
-    } else if (name.EqualsLiteral("searchKey")) {
-      init.mSearchKey = ConvertStringToVCardSearchKeyType(value.get_nsString());
-    } else if (name.EqualsLiteral("maxListCount")) {
-      init.mMaxListCount = value.get_uint32_t();
-    } else if (name.EqualsLiteral("listStartOffset")) {
-      init.mListStartOffset = value.get_uint32_t();
-    } else if (name.EqualsLiteral("vCardSelector_AND")) {
-      init.mVcardSelector = getVCardProperties(value);
-      init.mVcardSelectorOperator = vCardSelectorOp::AND;
-    } else if (name.EqualsLiteral("vCardSelector_OR")) {
-      init.mVcardSelector = getVCardProperties(value);
-      init.mVcardSelectorOperator = vCardSelectorOp::OR;
-    }
-  }
-
-  init.mHandle = BluetoothPbapRequestHandle::Create(GetOwner());
-
-  nsRefPtr<BluetoothVCardListingEvent> event =
-    BluetoothVCardListingEvent::Constructor(this,
-      NS_LITERAL_STRING(PULL_VCARD_LISTING_REQ_ID), init);
-  DispatchTrustedEvent(event);
-}
-
-Sequence<vCardProperties>
-BluetoothAdapter::getVCardProperties(const BluetoothValue &aValue)
-{
-  MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfuint32_t);
-
-  Sequence<vCardProperties> propSelector;
-
-  const InfallibleTArray<uint32_t>& propSelectorArr =
-    aValue.get_ArrayOfuint32_t();
-  for (uint32_t i = 0; i < propSelectorArr.Length(); ++i) {
-    propSelector.AppendElement(
-      static_cast<vCardProperties>(propSelectorArr[i]), mozilla::fallible);
-  }
-
-  return propSelector;
-}
-
-vCardOrderType
-BluetoothAdapter::ConvertStringToVCardOrderType(const nsAString& aString)
-{
-  using namespace mozilla::dom::vCardOrderTypeValues;
-
-  for (size_t index = 0; index < ArrayLength(strings) - 1; index++) {
-    if (aString.LowerCaseEqualsASCII(strings[index].value,
-                                     strings[index].length)) {
-      return static_cast<vCardOrderType>(index);
-    }
-  }
-
-  BT_WARNING("Treat the unexpected string '%s' as vCardOrderType::Indexed",
-    NS_ConvertUTF16toUTF8(aString).get());
-  return vCardOrderType::Indexed; // The default value is 'Indexed'.
-}
-
-vCardSearchKeyType
-BluetoothAdapter::ConvertStringToVCardSearchKeyType(const nsAString& aString)
-{
-  using namespace mozilla::dom::vCardSearchKeyTypeValues;
-
-  for (size_t index = 0; index < ArrayLength(strings) - 1; index++) {
-    if (aString.LowerCaseEqualsASCII(strings[index].value,
-                                     strings[index].length)) {
-      return static_cast<vCardSearchKeyType>(index);
-    }
-  }
-
-  BT_WARNING("Treat the unexpected string '%s' as vCardSearchKeyType::Name",
-    NS_ConvertUTF16toUTF8(aString).get());
-  return vCardSearchKeyType::Name; // The default value is 'Name'.
 }
 
 void

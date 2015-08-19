@@ -366,66 +366,6 @@ BluetoothServiceChildProcess::IsScoConnected(BluetoothReplyRunnable* aRunnable)
   SendRequest(aRunnable, IsScoConnectedRequest());
 }
 
-void
-BluetoothServiceChildProcess::ReplyTovCardPulling(
-  BlobParent* aBlobParent,
-  BlobChild* aBlobChild,
-  BluetoothReplyRunnable* aRunnable)
-{
-  SendRequest(aRunnable, ReplyTovCardPullingRequest(nullptr, aBlobChild));
-}
-
-void
-BluetoothServiceChildProcess::ReplyTovCardPulling(
-  Blob* aBlobChild,
-  BluetoothReplyRunnable* aRunnable)
-{
-  // Parent-process-only method
-  MOZ_CRASH("This should never be called!");
-}
-
-void
-BluetoothServiceChildProcess::ReplyToPhonebookPulling(
-  BlobParent* aBlobParent,
-  BlobChild* aBlobChild,
-  uint16_t aPhonebookSize,
-  BluetoothReplyRunnable* aRunnable)
-{
-  SendRequest(aRunnable,
-    ReplyToPhonebookPullingRequest(nullptr, aBlobChild, aPhonebookSize));
-}
-
-void
-BluetoothServiceChildProcess::ReplyToPhonebookPulling(
-  Blob* aBlobChild,
-  uint16_t aPhonebookSize,
-  BluetoothReplyRunnable* aRunnable)
-{
-  // Parent-process-only method
-  MOZ_CRASH("This should never be called!");
-}
-
-void
-BluetoothServiceChildProcess::ReplyTovCardListing(
-  BlobParent* aBlobParent,
-  BlobChild* aBlobChild,
-  uint16_t aPhonebookSize,
-  BluetoothReplyRunnable* aRunnable)
-{
-  SendRequest(aRunnable,
-    ReplyTovCardListingRequest(nullptr, aBlobChild, aPhonebookSize));
-}
-
-void
-BluetoothServiceChildProcess::ReplyTovCardListing(
-  Blob* aBlobChild,
-  uint16_t aPhonebookSize,
-  BluetoothReplyRunnable* aRunnable)
-{
-  // Parent-process-only method
-  MOZ_CRASH("This should never be called!");
-}
-
 #ifdef MOZ_B2G_RIL
 void
 BluetoothServiceChildProcess::AnswerWaitingCall(

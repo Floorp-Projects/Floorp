@@ -69,15 +69,6 @@ interface BluetoothAdapter : EventTarget {
   // Fired when remote devices query current media play status
            attribute EventHandler   onrequestmediaplaystatus;
 
-  // Fired when PBAP manager requests for 'pullphonebook'
-           attribute EventHandler   onpullphonebookreq;
-
-  // Fired when PBAP manager requests for 'pullvcardentry'
-           attribute EventHandler   onpullvcardentryreq;
-
-  // Fired when PBAP manager requests for 'pullvcardlisting'
-           attribute EventHandler   onpullvcardlistingreq;
-
   /**
    * Enable/Disable a local bluetooth adapter by asynchronus methods and return
    * its result through a Promise.
