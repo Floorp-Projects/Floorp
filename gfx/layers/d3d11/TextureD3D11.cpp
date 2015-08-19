@@ -1025,6 +1025,13 @@ SyncObjectD3D11::FinalizeFrame()
   if (!mD3D10Texture && mD3D10SyncedTextures.size()) {
     ID3D10Device* device = gfxWindowsPlatform::GetPlatform()->GetD3D10Device();
 
+    if (!device) {
+      // We've lost our device during the frame, no point in syncing.
+      mD3D10SyncedTextures.clear();
+      gfxCriticalError() << "No device to execute texture syncing on!";
+      return;
+    }
+
     hr = device->OpenSharedResource(mHandle, __uuidof(ID3D10Texture2D), (void**)(ID3D10Texture2D**)byRef(mD3D10Texture));
     
     if (FAILED(hr) || !mD3D10Texture) {
@@ -1049,6 +1056,13 @@ SyncObjectD3D11::FinalizeFrame()
 
   if (!mD3D11Texture && mD3D11SyncedTextures.size()) {
     ID3D11Device* device = gfxWindowsPlatform::GetPlatform()->GetD3D11ContentDevice();
+    
+    if (!device) {
+      // We've lost our device during the frame, no point in syncing.
+      mD3D11SyncedTextures.clear();
+      gfxCriticalError() << "No device to execute texture syncing on!";
+      return;
+    }
 
     hr = device->OpenSharedResource(mHandle, __uuidof(ID3D11Texture2D), (void**)(ID3D11Texture2D**)byRef(mD3D11Texture));
     
