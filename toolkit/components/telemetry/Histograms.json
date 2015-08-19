@@ -8716,6 +8716,47 @@
     "kind": "boolean",
     "description": "Is the title shown in the url bar (as determined by the titlebar title or url preference)?"
   },
+  "DEVTOOLS_HUD_JANK": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "keyed": "true",
+    "description": "The duration which a thread is blocked in ms, keyed by appName.",
+    "high": "5000",
+    "n_buckets": 10
+  },
+  "DEVTOOLS_HUD_REFLOW_DURATION": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "keyed": "true",
+    "description": "The duration a reflow takes in ms, keyed by appName.",
+    "high": "1000",
+    "n_buckets": 10
+  },
+  "DEVTOOLS_HUD_REFLOWS": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "keyed": "true",
+    "description": "A count of the number of reflows, keyed by appName."
+  },
+  "DEVTOOLS_HUD_SECURITY_CATEGORY": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "keyed": "true",
+    "description": "The security error enums, keyed by appName.",
+    "n_values": 8
+  },
+  "DEVTOOLS_HUD_ERRORS": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "keyed": "true",
+    "description": "Number of errors, keyed by appName."
+  },
+  "DEVTOOLS_HUD_WARNINGS": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "keyed": "true",
+    "description": "Number of warnings, keyed by appName."
+  },
   "GRAPHICS_SANITY_TEST_REASON": {
     "alert_emails": ["danderson@mozilla.com"],
     "expires_in_version": "43",
