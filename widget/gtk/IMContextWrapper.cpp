@@ -1472,6 +1472,54 @@ IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
                                const gchar* aUTF8CompositionString,
                                TextRange& aTextRange) const
 {
+    // Set the range offsets in UTF-16 string.
+    gint utf8ClauseStart, utf8ClauseEnd;
+    pango_attr_iterator_range(aPangoAttrIter, &utf8ClauseStart, &utf8ClauseEnd);
+    if (utf8ClauseStart == utf8ClauseEnd) {
+        MOZ_LOG(gGtkIMLog, LogLevel::Error,
+            ("GTKIM: %p   SetTextRange(), FAILED, due to collapsed range",
+             this));
+        return false;
+    }
+
+    if (!utf8ClauseStart) {
+        aTextRange.mStartOffset = 0;
+    } else {
+        glong utf16PreviousClausesLength;
+        gunichar2* utf16PreviousClausesString =
+            g_utf8_to_utf16(aUTF8CompositionString, utf8ClauseStart, nullptr,
+                            &utf16PreviousClausesLength, nullptr);
+
+        if (NS_WARN_IF(!utf16PreviousClausesString)) {
+            MOZ_LOG(gGtkIMLog, LogLevel::Error,
+                ("GTKIM: %p   SetTextRange(), FAILED, due to g_utf8_to_utf16() "
+                 "failure (retrieving previous string of current clause)",
+                 this));
+            return false;
+        }
+
+        aTextRange.mStartOffset = utf16PreviousClausesLength;
+        g_free(utf16PreviousClausesString);
+    }
+
+    glong utf16CurrentClauseLength;
+    gunichar2* utf16CurrentClauseString =
+        g_utf8_to_utf16(aUTF8CompositionString + utf8ClauseStart,
+                        utf8ClauseEnd - utf8ClauseStart,
+                        nullptr, &utf16CurrentClauseLength, nullptr);
+
+    if (NS_WARN_IF(!utf16CurrentClauseString)) {
+        MOZ_LOG(gGtkIMLog, LogLevel::Error,
+            ("GTKIM: %p   SetTextRange(), FAILED, due to g_utf8_to_utf16() "
+             "failure (retrieving current clause)",
+             this));
+        return false;
+    }
+
+    aTextRange.mEndOffset = aTextRange.mStartOffset + utf16CurrentClauseLength;
+    g_free(utf16CurrentClauseString);
+    utf16CurrentClauseString = nullptr;
+
     /**
      * Depend on gtk2's implementation on XIM support.
      * In aFeedback got from gtk2, there are only three types of data:
@@ -1492,10 +1540,6 @@ IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
         return false;
     }
 
-    // Get the range of the current attribute(s)
-    gint start, end;
-    pango_attr_iterator_range(aPangoAttrIter, &start, &end);
-
     // XIMReverse | XIMUnderline
     if (attrUnderline && attrForeground) {
         aTextRange.mRangeType = NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
@@ -1509,31 +1553,6 @@ IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
         aTextRange.mRangeType = NS_TEXTRANGE_SELECTEDRAWTEXT;
     } else {
         aTextRange.mRangeType = NS_TEXTRANGE_RAWINPUT;
-    }
-
-    gunichar2* uniStr = nullptr;
-    if (start == 0) {
-        aTextRange.mStartOffset = 0;
-    } else {
-        glong uniStrLen;
-        uniStr = g_utf8_to_utf16(aUTF8CompositionString, start,
-                                 nullptr, &uniStrLen, nullptr);
-        if (uniStr) {
-            aTextRange.mStartOffset = uniStrLen;
-            g_free(uniStr);
-            uniStr = nullptr;
-        }
-    }
-
-    glong uniStrLen;
-    uniStr = g_utf8_to_utf16(aUTF8CompositionString + start, end - start,
-                             nullptr, &uniStrLen, nullptr);
-    if (!uniStr) {
-        aTextRange.mEndOffset = aTextRange.mStartOffset;
-    } else {
-        aTextRange.mEndOffset = aTextRange.mStartOffset + uniStrLen;
-        g_free(uniStr);
-        uniStr = nullptr;
     }
 
     MOZ_LOG(gGtkIMLog, LogLevel::Debug,
