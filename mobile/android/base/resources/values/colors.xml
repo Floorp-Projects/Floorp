@@ -47,13 +47,13 @@
   <color name="highlight_dark_focused">#1AFFFFFF</color>
 
   <!-- Synced w/ toolbar_grey_pressed -->
-  <color name="new_tablet_highlight_lwt">#AAD7D7DC</color>
+  <color name="tablet_highlight_lwt">#AAD7D7DC</color>
 
   <!-- Synced w/ tabs_tray_grey_pressed -->
-  <color name="new_tablet_highlight_dark_lwt">#AA45494E</color>
+  <color name="tablet_highlight_dark_lwt">#AA45494E</color>
 
   <!-- (bug 1077195) Focused state values are temporary. -->
-  <color name="new_tablet_highlight_focused">#C0C9D0</color>
+  <color name="tablet_highlight_focused">#C0C9D0</color>
 
   <!-- highlight on shaped button: 20% white over text_and_tabs_tray_grey -->
   <color name="highlight_shaped">#FF696D71</color>
