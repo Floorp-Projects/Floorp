@@ -28,25 +28,25 @@
     <dimen name="browser_toolbar_shadow_size">2dp</dimen>
 
     <!-- If you update one of these values, update the others. -->
-    <dimen name="new_tablet_nav_button_width">42dp</dimen>
-    <dimen name="new_tablet_nav_button_width_half">21dp</dimen>
-    <dimen name="new_tablet_nav_button_width_plus_half">63dp</dimen>
+    <dimen name="tablet_nav_button_width">42dp</dimen>
+    <dimen name="tablet_nav_button_width_half">21dp</dimen>
+    <dimen name="tablet_nav_button_width_plus_half">63dp</dimen>
 
     <!-- This is the system default for the vertical padding for the divider of the TabWidget.
          Used to mimic the divider padding on the tablet tabs panel back button. -->
-    <dimen name="new_tablet_tab_panel_divider_vertical_padding">12dp</dimen>
+    <dimen name="tablet_tab_panel_divider_vertical_padding">12dp</dimen>
 
-    <dimen name="new_tablet_tab_strip_height">48dp</dimen>
-    <dimen name="new_tablet_tab_strip_item_width">208dp</dimen>
-    <dimen name="new_tablet_tab_strip_item_margin">-28dp</dimen>
-    <dimen name="new_tablet_tab_strip_fading_edge_size">15dp</dimen>
-    <dimen name="new_tablet_browser_toolbar_menu_item_width">56dp</dimen>
+    <dimen name="tablet_tab_strip_height">48dp</dimen>
+    <dimen name="tablet_tab_strip_item_width">208dp</dimen>
+    <dimen name="tablet_tab_strip_item_margin">-28dp</dimen>
+    <dimen name="tablet_tab_strip_fading_edge_size">15dp</dimen>
+    <dimen name="tablet_browser_toolbar_menu_item_width">56dp</dimen>
     <!-- Padding combines with an 18dp image to form the menu item width and height. -->
-    <dimen name="new_tablet_browser_toolbar_menu_item_padding_horizontal">19dp</dimen>
-    <dimen name="new_tablet_browser_toolbar_menu_item_inset_vertical">5dp</dimen>
-    <dimen name="new_tablet_browser_toolbar_menu_item_inset_horizontal">3dp</dimen>
-    <dimen name="new_tablet_browser_toolbar_menu_item_corner_radius">5dp</dimen>
-    <dimen name="new_tablet_tab_strip_button_inset">5dp</dimen>
+    <dimen name="tablet_browser_toolbar_menu_item_padding_horizontal">19dp</dimen>
+    <dimen name="tablet_browser_toolbar_menu_item_inset_vertical">5dp</dimen>
+    <dimen name="tablet_browser_toolbar_menu_item_inset_horizontal">3dp</dimen>
+    <dimen name="tablet_browser_toolbar_menu_item_corner_radius">5dp</dimen>
+    <dimen name="tablet_tab_strip_button_inset">5dp</dimen>
 
     <!-- Dimensions used by Favicons and FaviconView -->
     <dimen name="favicon_bg">32dp</dimen>
@@ -145,14 +145,14 @@
     <dimen name="validation_message_height">50dp</dimen>
     <dimen name="validation_message_margin_top">6dp</dimen>
 
-    <dimen name="new_tablet_tab_thumbnail_width">168dp</dimen>
-    <dimen name="new_tablet_tab_thumbnail_height">140dp</dimen>
-    <dimen name="new_tablet_tab_panel_column_width">178dp</dimen>
-    <dimen name="new_tablet_tab_panel_grid_padding">19dp</dimen>
-    <dimen name="new_tablet_tab_panel_grid_vspacing">21dp</dimen>
-    <dimen name="new_tablet_tab_panel_grid_padding_top">24dp</dimen>
+    <dimen name="tablet_tab_thumbnail_width">168dp</dimen>
+    <dimen name="tablet_tab_thumbnail_height">140dp</dimen>
+    <dimen name="tablet_tab_panel_column_width">178dp</dimen>
+    <dimen name="tablet_tab_panel_grid_padding">19dp</dimen>
+    <dimen name="tablet_tab_panel_grid_vspacing">21dp</dimen>
+    <dimen name="tablet_tab_panel_grid_padding_top">24dp</dimen>
 
-    <dimen name="new_tablet_tab_highlight_stroke_width">5dp</dimen>
+    <dimen name="tablet_tab_highlight_stroke_width">5dp</dimen>
 
     <!-- PageActionButtons dimensions -->
     <dimen name="page_action_button_width">32dp</dimen>
