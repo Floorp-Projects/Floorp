@@ -40,6 +40,13 @@ public:
          ID3D11Texture2D* aTexture,
          gfx::IntSize aSize);
 
+  static already_AddRefed<TextureClientD3D11>
+  Create(ISurfaceAllocator* aAllocator,
+         gfx::SurfaceFormat aFormat,
+         TextureFlags aFlags,
+         ID3D11Device* aDevice,
+         const gfx::IntSize& aSize);
+
   // TextureClient
 
   virtual bool IsAllocated() const override { return mTexture || mTexture10; }
@@ -75,7 +82,11 @@ public:
 
   virtual void SyncWithObject(SyncObject* aSyncObject) override;
 
+  ID3D11Texture2D* GetD3D11Texture() { return mTexture; }
+
 protected:
+  bool AllocateD3D11Surface(ID3D11Device* aDevice, const gfx::IntSize& aSize);
+
   gfx::IntSize mSize;
   RefPtr<ID3D10Texture2D> mTexture10;
   RefPtr<ID3D11Texture2D> mTexture;

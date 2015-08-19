@@ -415,7 +415,7 @@ private:
   HRESULT CreateFormatConverter();
 
   HRESULT CreateOutputSample(RefPtr<IMFSample>& aSample,
-                             RefPtr<ID3D11Texture2D>& aTexture);
+                             ID3D11Texture2D* aTexture);
 
   RefPtr<ID3D11Device> mDevice;
   RefPtr<ID3D11DeviceContext> mContext;
@@ -490,37 +490,19 @@ D3D11DXVA2Manager::Init(nsACString& aFailureReason)
 }
 
 HRESULT
-D3D11DXVA2Manager::CreateOutputSample(RefPtr<IMFSample>& aSample, RefPtr<ID3D11Texture2D>& aTexture)
+D3D11DXVA2Manager::CreateOutputSample(RefPtr<IMFSample>& aSample, ID3D11Texture2D* aTexture)
 {
   RefPtr<IMFSample> sample;
   HRESULT hr = wmf::MFCreateSample(byRef(sample));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  D3D11_TEXTURE2D_DESC desc;
-  desc.Width = mWidth;
-  desc.Height = mHeight;
-  desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-  desc.MipLevels = 1;
-  desc.ArraySize = 1;
-  desc.SampleDesc.Count = 1;
-  desc.SampleDesc.Quality = 0;
-  desc.Usage = D3D11_USAGE_DEFAULT;
-  desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-  desc.CPUAccessFlags = 0;
-  desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
-
-  RefPtr<ID3D11Texture2D> texture;
-  hr = mDevice->CreateTexture2D(&desc, nullptr, byRef(texture));
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
   RefPtr<IMFMediaBuffer> buffer;
-  hr = wmf::MFCreateDXGISurfaceBuffer(__uuidof(ID3D11Texture2D), texture, 0, FALSE, byRef(buffer));
+  hr = wmf::MFCreateDXGISurfaceBuffer(__uuidof(ID3D11Texture2D), aTexture, 0, FALSE, byRef(buffer));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   sample->AddBuffer(buffer);
 
   aSample = sample;
-  aTexture = texture;
   return S_OK;
 }
 
@@ -538,11 +520,21 @@ D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
   // to create a copy of that frame as a sharable resource, save its share
   // handle, and put that handle into the rendering pipeline.
 
-  HRESULT hr = mTransform->Input(aVideoSample);
+  ImageFormat format = ImageFormat::D3D11_SHARE_HANDLE_TEXTURE;
+  nsRefPtr<Image> image(aContainer->CreateImage(format));
+  NS_ENSURE_TRUE(image, E_FAIL);
+  NS_ASSERTION(image->GetFormat() == ImageFormat::D3D11_SHARE_HANDLE_TEXTURE,
+               "Wrong format?");
+
+  D3D11ShareHandleImage* videoImage = static_cast<D3D11ShareHandleImage*>(image.get());
+  HRESULT hr = videoImage->SetData(D3D11ShareHandleImage::Data(mDevice, gfx::IntSize(mWidth, mHeight), aRegion));
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+  hr = mTransform->Input(aVideoSample);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   RefPtr<IMFSample> sample;
-  RefPtr<ID3D11Texture2D> texture;
+  RefPtr<ID3D11Texture2D> texture = videoImage->GetTexture();
   hr = CreateOutputSample(sample, texture);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
@@ -556,16 +548,6 @@ D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
   hr = mTransform->Output(&sample);
 
   keyedMutex->ReleaseSync(0);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
-  ImageFormat format = ImageFormat::D3D11_SHARE_HANDLE_TEXTURE;
-  nsRefPtr<Image> image(aContainer->CreateImage(format));
-  NS_ENSURE_TRUE(image, E_FAIL);
-  NS_ASSERTION(image->GetFormat() == ImageFormat::D3D11_SHARE_HANDLE_TEXTURE,
-               "Wrong format?");
-
-  D3D11ShareHandleImage* videoImage = static_cast<D3D11ShareHandleImage*>(image.get());
-  hr = videoImage->SetData(D3D11ShareHandleImage::Data(texture, mDevice, mContext, aRegion));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   image.forget(aOutImage);
