@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ANDROID_APK_NAME := FfxCP
+include $(topsrcdir)/config/config.mk
 
 JAVAFILES = \
   DirCursor.java \
@@ -10,7 +10,5 @@ JAVAFILES = \
   FfxCPFP.java \
   FileCursor.java \
   $(NULL)
-
-include $(topsrcdir)/config/rules.mk
 
 tools:: $(ANDROID_APK_NAME).apk
