@@ -535,7 +535,6 @@ gbjar.sources += [
     'widget/FlowLayout.java',
     'widget/GeckoActionProvider.java',
     'widget/GeckoPopupMenu.java',
-    'widget/GeckoSwipeRefreshLayout.java',
     'widget/GeckoViewFlipper.java',
     'widget/IconTabWidget.java',
     'widget/LoginDoorHanger.java',
