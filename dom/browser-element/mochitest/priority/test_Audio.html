@@ -47,12 +47,7 @@ function runTest() {
   document.body.appendChild(iframe);
 }
 
-// This test relies on <audio> elements interacting with the audio channel
-// service.  This is controled by the media.useAudioChannelService pref.
-addEventListener('testready', function() {
-  SpecialPowers.pushPrefEnv({set: [['media.useAudioChannelService', true]]},
-                            runTest);
-});
+addEventListener('testready', runTest);
 
 </script>
 </body>
