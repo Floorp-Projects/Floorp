@@ -355,6 +355,9 @@ public:
     }
   }
 
+  nscolor GetSystemFieldForegroundColor();
+  nscolor GetSystemFieldBackgroundColor();
+
 protected:
   nsTextFrame*   mFrame;
   nsPresContext* mPresContext;
@@ -374,6 +377,8 @@ protected:
 
   int32_t mSufficientContrast;
   nscolor mFrameBackgroundColor;
+  nscolor mSystemFieldForegroundColor;
+  nscolor mSystemFieldBackgroundColor;
 
   // selection colors and underline info, the colors are resolved colors if
   // mResolveColors is true (which is the default), i.e., the foreground color
@@ -3635,6 +3640,11 @@ nsTextPaintStyle::InitCommonColors()
   nscolor defaultBgColor = mPresContext->DefaultBackgroundColor();
   mFrameBackgroundColor = NS_ComposeColors(defaultBgColor, bgColor);
 
+  mSystemFieldForegroundColor =
+    LookAndFeel::GetColor(LookAndFeel::eColorID__moz_fieldtext);
+  mSystemFieldBackgroundColor =
+    LookAndFeel::GetColor(LookAndFeel::eColorID__moz_field);
+
   if (bgFrame->IsThemed()) {
     // Assume a native widget has sufficient contrast always
     mSufficientContrast = 0;
@@ -3660,6 +3670,20 @@ nsTextPaintStyle::InitCommonColors()
                                            selectionBGColor));
 
   mInitCommonColors = true;
+}
+
+nscolor
+nsTextPaintStyle::GetSystemFieldForegroundColor()
+{
+  InitCommonColors();
+  return mSystemFieldForegroundColor;
+}
+
+nscolor
+nsTextPaintStyle::GetSystemFieldBackgroundColor()
+{
+  InitCommonColors();
+  return mSystemFieldBackgroundColor;
 }
 
 static Element*
@@ -5339,13 +5363,25 @@ nsTextFrame::DrawSelectionDecorations(gfxContext* aContext,
           // There is no underline style definition.
           return;
         }
-        if (aRangeStyle.IsUnderlineColorDefined()) {
+        // If underline color is defined and that doesn't depend on the
+        // foreground color, we should use the color directly.
+        if (aRangeStyle.IsUnderlineColorDefined() &&
+            aRangeStyle.IsForegroundColorDefined() &&
+            aRangeStyle.mUnderlineColor != aRangeStyle.mForegroundColor) {
           color = aRangeStyle.mUnderlineColor;
-        } else if (aRangeStyle.IsForegroundColorDefined()) {
-          color = aRangeStyle.mForegroundColor;
-        } else {
-          NS_ASSERTION(!aRangeStyle.IsBackgroundColorDefined(),
-                       "Only the background color is defined");
+        }
+        // If foreground color or background color is defined, the both colors
+        // are computed by GetSelectionTextColors().  Then, we should use its
+        // foreground color always.  The color should have sufficient contrast
+        // with the background color.
+        else if (aRangeStyle.IsForegroundColorDefined() ||
+                 aRangeStyle.IsBackgroundColorDefined()) {
+          nscolor bg;
+          GetSelectionTextColors(aType, aTextPaintStyle, aRangeStyle,
+                                 &color, &bg);
+        }
+        // Otherwise, use the foreground color of the frame.
+        else {
           color = aTextPaintStyle.GetTextColor();
         }
       } else if (!weDefineSelectionUnderline) {
@@ -5406,17 +5442,28 @@ nsTextFrame::GetSelectionTextColors(SelectionType aType,
     case nsISelectionController::SELECTION_IME_CONVERTEDTEXT:
     case nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT:
       if (aRangeStyle.IsDefined()) {
-        *aForeground = aTextPaintStyle.GetTextColor();
-        *aBackground = NS_RGBA(0,0,0,0);
         if (!aRangeStyle.IsForegroundColorDefined() &&
             !aRangeStyle.IsBackgroundColorDefined()) {
+          *aForeground = aTextPaintStyle.GetTextColor();
+          *aBackground = NS_RGBA(0,0,0,0);
           return false;
         }
         if (aRangeStyle.IsForegroundColorDefined()) {
           *aForeground = aRangeStyle.mForegroundColor;
-        }
-        if (aRangeStyle.IsBackgroundColorDefined()) {
+          if (aRangeStyle.IsBackgroundColorDefined()) {
+            *aBackground = aRangeStyle.mBackgroundColor;
+          } else {
+            // If foreground color is defined but background color isn't
+            // defined, we can guess that IME must expect that the background
+            // color is system's default field background color.
+            *aBackground = aTextPaintStyle.GetSystemFieldBackgroundColor();
+          }
+        } else { // aRangeStyle.IsBackgroundColorDefined() is true
           *aBackground = aRangeStyle.mBackgroundColor;
+          // If background color is defined but foreground color isn't defined,
+          // we can assume that IME must expect that the foreground color is
+          // same as system's field text color.
+          *aForeground = aTextPaintStyle.GetSystemFieldForegroundColor();
         }
         return true;
       }
