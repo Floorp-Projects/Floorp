@@ -185,7 +185,9 @@ typedef enum {
   /* Paints a GtkHPaned separator */
   MOZ_GTK_SPLITTER_VERTICAL,
   /* Paints the background of a window, dialog or page. */
-  MOZ_GTK_WINDOW
+  MOZ_GTK_WINDOW,
+  /* Paints a GtkInfoBar, for notifications. */
+  MOZ_GTK_INFO_BAR
 } GtkThemeWidgetType;
 
 /*** General library functions ***/

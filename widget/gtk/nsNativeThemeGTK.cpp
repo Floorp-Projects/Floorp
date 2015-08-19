@@ -684,6 +684,9 @@ nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
   case NS_THEME_DIALOG:
     aGtkWidgetType = MOZ_GTK_WINDOW;
     break;
+  case NS_THEME_GTK_INFO_BAR:
+    aGtkWidgetType = MOZ_GTK_INFO_BAR;
+    break;
   default:
     return false;
   }
@@ -1773,6 +1776,9 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_SPLITTER:
   case NS_THEME_WINDOW:
   case NS_THEME_DIALOG:
+#if (MOZ_WIDGET_GTK == 3)
+  case NS_THEME_GTK_INFO_BAR:
+#endif
     return !IsWidgetStyled(aPresContext, aFrame, aWidgetType);
 
   case NS_THEME_DROPDOWN_BUTTON:
