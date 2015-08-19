@@ -192,7 +192,9 @@ void WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
         left = std::min(left, mSkipBytes);
         p += left;
         mSkipBytes -= left;
-      } else {
+      }
+      if (!mSkipBytes) {
+        mBlockEndOffset = mCurrentOffset + (p - aBuffer);
         mState = mNextState;
       }
       break;
@@ -344,6 +346,13 @@ void WebMBufferedState::NotifyDataArrived(const unsigned char* aBuffer, uint32_t
       i += 1;
     }
   }
+
+  if (mRangeParsers.IsEmpty()) {
+    return;
+  }
+
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  mLastBlockOffset = mRangeParsers.LastElement().mBlockEndOffset;
 }
 
 void WebMBufferedState::Reset() {
@@ -396,6 +405,13 @@ int64_t WebMBufferedState::GetInitEndOffset()
     return -1;
   }
   return mRangeParsers[0].mInitEndOffset;
+}
+
+int64_t WebMBufferedState::GetLastBlockOffset()
+{
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
+  return mLastBlockOffset;
 }
 
 bool WebMBufferedState::GetStartTime(uint64_t *aTime)
