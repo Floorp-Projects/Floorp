@@ -7,6 +7,7 @@
 // settings.js loads this file when the HUD setting is enabled.
 
 const DEVELOPER_HUD_LOG_PREFIX = 'DeveloperHUD';
+const CUSTOM_HISTOGRAM_PREFIX = 'DEVTOOLS_HUD_CUSTOM_';
 
 XPCOMUtils.defineLazyGetter(this, 'devtools', function() {
   const {devtools} = Cu.import('resource://gre/modules/devtools/Loader.jsm', {});
@@ -35,7 +36,7 @@ XPCOMUtils.defineLazyGetter(this, 'MemoryFront', function() {
 
 Cu.import('resource://gre/modules/Frames.jsm');
 
-let _telemetryDebug = true;
+let _telemetryDebug = false;
 
 function telemetryDebug(...args) {
   if (_telemetryDebug) {
@@ -52,6 +53,8 @@ function telemetryDebug(...args) {
 let developerHUD = {
 
   _targets: new Map(),
+  _histograms: new Set(),
+  _customHistograms: new Set(),
   _client: null,
   _conn: null,
   _watchers: [],
@@ -275,18 +278,62 @@ Target.prototype = {
    */
   destroy() {
     delete this.metrics;
-    this._send({});
+    this._send({metric: {skipTelemetry: true}});
   },
 
   _send(data) {
     let frame = this.frame;
 
     shell.sendEvent(frame, 'developer-hud-update', Cu.cloneInto(data, frame));
-    this._sendTelemetryEvent(data.metric);
+    this._logHistogram(data.metric);
   },
 
-  _sendTelemetryEvent(metric) {
-    if (!developerHUD._telemetry || !metric || metric.skipTelemetry) {
+  _getAddonHistogram(item) {
+    let APPNAME_IDX = 3;
+    let HISTNAME_IDX = 4;
+
+    let array = item.split('_');
+    let appName = array[APPNAME_IDX].toUpperCase();
+    let histName = array[HISTNAME_IDX].toUpperCase();
+    return Services.telemetry.getAddonHistogram(appName,
+      CUSTOM_HISTOGRAM_PREFIX + histName);
+  },
+
+  _clearTelemetryData() {
+    developerHUD._histograms.forEach(function(item) {
+      Services.telemetry.getKeyedHistogramById(item).clear();
+    });
+
+    developerHUD._customHistograms.forEach(item => {
+      this._getAddonHistogram(item).clear();
+    });
+  },
+
+  _sendTelemetryData() {
+    if (!developerHUD._telemetry) {
+      return;
+    }
+    telemetryDebug('calling sendTelemetryData');
+    let frame = this.frame;
+    let payload = {
+      keyedHistograms: {},
+      addonHistograms: {}
+    };
+    // Package the hud histograms.
+    developerHUD._histograms.forEach(function(item) {
+      payload.keyedHistograms[item] =
+        Services.telemetry.getKeyedHistogramById(item).snapshot();
+    });
+    // Package the registered hud custom histograms
+    developerHUD._customHistograms.forEach(item => {
+      payload.addonHistograms[item] = this._getAddonHistogram(item).snapshot();
+    });
+
+    shell.sendEvent(frame, 'advanced-telemetry-update', Cu.cloneInto(payload, frame));
+  },
+
+  _logHistogram(metric) {
+    if (!developerHUD._telemetry || metric.skipTelemetry) {
       return;
     }
 
@@ -302,11 +349,36 @@ Target.prototype = {
 
     metric.appName = this.appName;
 
-    let data = { metric: metric };
-    let frame = this.frame;
-
-    telemetryDebug('sending advanced-telemetry-update with this data: ' + JSON.stringify(data));
-    shell.sendEvent(frame, 'advanced-telemetry-update', Cu.cloneInto(data, frame));
+    let metricName = metric.name.toUpperCase();
+    let metricAppName = metric.appName.toUpperCase();
+    if (!metric.custom) {
+      let keyedMetricName = 'DEVTOOLS_HUD_' + metricName;
+      try {
+        let keyed = Services.telemetry.getKeyedHistogramById(keyedMetricName);
+        if (keyed) {
+          keyed.add(metric.appName, parseInt(metric.value, 10));
+          developerHUD._histograms.add(keyedMetricName);
+        }
+      } catch(err) {
+        console.error('Histogram error is metricname added to histograms.json:'
+          + keyedMetricName);
+      }
+    } else {
+      let histogramName = CUSTOM_HISTOGRAM_PREFIX + metricAppName + '_'
+        + metricName;
+      if (!developerHUD._customHistograms.has(histogramName)) {
+        try {
+          Services.telemetry.registerAddonHistogram(metricAppName,
+            CUSTOM_HISTOGRAM_PREFIX + metricName,
+            Services.telemetry.HISTOGRAM_LINEAR, 1, 10000, 10);
+          developerHUD._customHistograms.add(histogramName);
+        } catch(err) {
+          console.error('Histogram error: ' + err);
+        }
+      }
+      Services.telemetry.getAddonHistogram(metricAppName,
+        CUSTOM_HISTOGRAM_PREFIX + metricName).add(parseInt(metric.value, 10));
+    }
   }
 };
 
@@ -411,9 +483,9 @@ let consoleWatcher = {
 
           // Telemetry sends the security error category not the
           // count of security errors.
-          target._sendTelemetryEvent({
-            name: 'security',
-            value: pageError.category,
+          target._logHistogram({
+            name: 'security_category',
+            value: pageError.category
           });
 
           // Indicate that the 'hud' security metric (the count of security
@@ -467,7 +539,10 @@ let consoleWatcher = {
         }
 
         // Telemetry also records reflow duration.
-        target._sendTelemetryEvent({name: 'reflow-duration', value: Math.round(duration)});
+        target._logHistogram({
+          name: 'reflow_duration',
+          value: Math.round(duration)
+        });
         break;
 
       default:
@@ -513,7 +588,6 @@ let consoleWatcher = {
     let TELEMETRY_IDENTIFIER_IDX = 0;
     let NAME_IDX = 1;
     let VALUE_IDX = 2;
-    let CONTEXT_IDX = 3;
 
     if (telemetryData[TELEMETRY_IDENTIFIER_IDX] != 'telemetry' ||
         telemetryData.length < 3 || telemetryData.length > 4) {
@@ -524,14 +598,17 @@ let consoleWatcher = {
       name: telemetryData[NAME_IDX],
       value: telemetryData[VALUE_IDX]
     };
-
-    // The metric's app name, if a 'context' was provided, is the
-    // specified context appended to the specified app name.
-    if (telemetryData.length === 4) {
-      metric.context = telemetryData[CONTEXT_IDX];
+    if (metric.name == 'MGMT') {
+      if (metric.value == 'TIMETOSHIP') {
+        telemetryDebug('Received a Ship event');
+        target._sendTelemetryData();
+      } else if (metric.value == 'CLEARMETRICS') {
+        target._clearTelemetryData();
+      }
+    } else {
+      metric.custom = true;
+      target._logHistogram(metric);
     }
-
-    target._sendTelemetryEvent(metric);
   }
 };
 developerHUD.registerWatcher(consoleWatcher);
@@ -646,11 +723,11 @@ let performanceEntriesWatcher = {
 
             // Events based on performance marks are for telemetry only, they are
             // not displayed in the HUD front end.
-            target._sendTelemetryEvent({name: eventName, value: time});
+            target._logHistogram({name: eventName, value: time});
 
             memoryWatcher.front(target).residentUnique().then(value => {
               eventName = 'app-memory-' + name;
-              target._sendTelemetryEvent({name: eventName, value: value});
+              target._logHistogram({name: eventName, value: value});
             }, err => {
               console.error(err);
             });
