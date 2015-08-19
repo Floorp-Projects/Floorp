@@ -789,7 +789,6 @@ this.PushService = {
     }
 
     debug("notifyApp() " + aPushRecord.scope);
-    let scopeURI = Services.io.newURI(aPushRecord.scope, null, null);
     // Notify XPCOM observers.
     let notification = Cc["@mozilla.org/push/ObserverNotification;1"]
                          .createInstance(Ci.nsIPushObserverNotification);
@@ -806,8 +805,7 @@ this.PushService = {
     );
 
     // If permission has been revoked, trash the message.
-    if (Services.perms.testExactPermission(scopeURI, "push") !=
-        Ci.nsIPermissionManager.ALLOW_ACTION) {
+    if (!aPushRecord.hasPermission()) {
       debug("Does not have permission for push.");
       return;
     }
@@ -1096,7 +1094,7 @@ this.PushService = {
 
     let clear = (db, domain) => {
       db.clearIf(record => {
-        return hasRootDomain(record.origin, domain);
+        return hasRootDomain(record.uri.prePath, domain);
       });
     }
 
