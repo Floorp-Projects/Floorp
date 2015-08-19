@@ -367,7 +367,7 @@ protected:
      */
     bool SetTextRange(PangoAttrIterator* aPangoAttrIter,
                       const gchar* aUTF8CompositionString,
-                      int32_t aUTF16CaretOffset,
+                      uint32_t aUTF16CaretOffset,
                       TextRange& aTextRange) const;
 
     /**
