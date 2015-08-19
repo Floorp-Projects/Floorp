@@ -1804,6 +1804,7 @@ void CheckIfRenderTargetViewNeedsRecreating(ID3D11Device *device)
     // match the clear
     if (resultColor != 0xffffff00) {
         gfxCriticalNote << "RenderTargetViewNeedsRecreating";
+        gANGLESupportsD3D11 = false;
     }
 
     keyedMutex->ReleaseSync(0);
