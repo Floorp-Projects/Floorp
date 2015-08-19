@@ -345,13 +345,34 @@ protected:
      * Generates our text range array from current composition string.
      *
      * @param aContext              A GtkIMContext which is being handled.
-     * @param aLastDispatchedData   The data of the last compositionchange event
-     *                              of current composition.  This should be
-     *                              mDispatchedCompositionString.
+     * @param aCompositionString    The data to be dispatched with
+     *                              compositionchange event.
      */
     already_AddRefed<TextRangeArray>
         CreateTextRangeArray(GtkIMContext* aContext,
-                             const nsAString& aLastDispatchedData);
+                             const nsAString& aCompositionString);
+
+    /**
+     * SetTextRange() initializes aTextRange with aPangoAttrIter.
+     *
+     * @param aPangoAttrIter            An iter which represents a clause of the
+     *                                  composition string.
+     * @param aUTF8CompositionString    The whole composition string (UTF-8).
+     * @param aUTF16CaretOffset         The caret offset in the composition
+     *                                  string encoded as UTF-16.
+     * @param aTextRange                The result.
+     * @return                          true if this initializes aTextRange.
+     *                                  Otherwise, false.
+     */
+    bool SetTextRange(PangoAttrIterator* aPangoAttrIter,
+                      const gchar* aUTF8CompositionString,
+                      uint32_t aUTF16CaretOffset,
+                      TextRange& aTextRange) const;
+
+    /**
+     * ToNscolor() converts the PangoColor in aPangoAttrColor to nscolor.
+     */
+    static nscolor ToNscolor(PangoAttrColor* aPangoAttrColor);
 
     /**
      * Move the candidate window with "fake" cursor position.

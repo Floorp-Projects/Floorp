@@ -202,7 +202,6 @@ public class ScrollbarLayer extends Layer {
         float viewHeight = context.viewport.height();
 
         mBarRectF.set(mBarRect.left, viewHeight - mBarRect.top, mBarRect.right, viewHeight - mBarRect.bottom);
-        mBarRectF.offset(context.offset.x, -context.offset.y);
 
         // We take a 1-pixel slice from the center of the image and scale it to become the bar
         fillRectCoordBuffer(mCoords, mBarRectF, viewWidth, viewHeight, mBodyTexCoords, mTexWidth, mTexHeight);
@@ -286,9 +285,9 @@ public class ScrollbarLayer extends Layer {
     private void getVerticalRect(RenderContext context, RectF dest) {
         RectF viewport = context.viewport;
         RectF pageRect = context.pageRect;
-        float viewportHeight = viewport.height() - context.offset.y;
-        float barStart = ((viewport.top - context.offset.y - pageRect.top) * (viewportHeight / pageRect.height())) + mCapLength;
-        float barEnd = ((viewport.bottom - context.offset.y - pageRect.top) * (viewportHeight / pageRect.height())) - mCapLength;
+        float viewportHeight = viewport.height();
+        float barStart = ((viewport.top - pageRect.top) * (viewportHeight / pageRect.height())) + mCapLength;
+        float barEnd = ((viewport.bottom - pageRect.top) * (viewportHeight / pageRect.height())) - mCapLength;
         if (barStart > barEnd) {
             float middle = (barStart + barEnd) / 2.0f;
             barStart = barEnd = middle;
@@ -299,9 +298,9 @@ public class ScrollbarLayer extends Layer {
     private void getHorizontalRect(RenderContext context, RectF dest) {
         RectF viewport = context.viewport;
         RectF pageRect = context.pageRect;
-        float viewportWidth = viewport.width() - context.offset.x;
-        float barStart = ((viewport.left - context.offset.x - pageRect.left) * (viewport.width() / pageRect.width())) + mCapLength;
-        float barEnd = ((viewport.right - context.offset.x - pageRect.left) * (viewport.width() / pageRect.width())) - mCapLength;
+        float viewportWidth = viewport.width();
+        float barStart = ((viewport.left - pageRect.left) * (viewport.width() / pageRect.width())) + mCapLength;
+        float barEnd = ((viewport.right - pageRect.left) * (viewport.width() / pageRect.width())) - mCapLength;
         if (barStart > barEnd) {
             float middle = (barStart + barEnd) / 2.0f;
             barStart = barEnd = middle;

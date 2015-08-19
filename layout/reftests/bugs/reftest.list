@@ -1755,12 +1755,12 @@ skip-if(B2G||Mulet) fuzzy-if(Android,4,400) == 815593-1.html 815593-1-ref.html #
 == 816359-1.html 816359-1-ref.html
 == 816458-1.html 816458-1-ref.html
 == 816948-1.html 816948-1-ref.html
-== 817019-1.html about:blank
+random-if(Android&&AndroidVersion==15) == 817019-1.html about:blank # see bug 1192616, re-enable once we're off the pandaboards
 skip-if(B2G||Mulet) == 818276-1.html 818276-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 fuzzy-if(asyncPan,190,510) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,510) == 825999.html 825999-ref.html
 == 827577-1a.html 827577-1-ref.html
 == 827577-1b.html 827577-1-ref.html
-== 827799-1.html about:blank
+random-if(Android&&AndroidVersion==15) == 827799-1.html about:blank # see bug 1192616, re-enable once we're off the pandaboards
 == 829958.html 829958-ref.html
 == 836844-1.html 836844-1-ref.html
 == 841192-1.html 841192-1-ref.html
@@ -1840,7 +1840,7 @@ pref(browser.display.use_document_fonts,0) == 1022481-1.html 1022481-1-ref.html
 == 1044198-1.html 1044198-1-ref.html
 == 1049499-1.html 1049499-1-ref.html
 == 1050493-1.html 1050493-1-ref.html
-== 1050788-1.html about:blank
+random-if(Android&&AndroidVersion==15) == 1050788-1.html about:blank # see bug 1192616, re-enable once we're off the pandaboards
 == 1053035-1-flex.html 1053035-1-ref.html
 test-pref(layout.css.grid.enabled,true) == 1053035-1-grid.html 1053035-1-ref.html
 == 1059167-1.html 1059167-1-ref.html
@@ -1852,14 +1852,14 @@ fuzzy-if(Mulet,1,5) == 1062792-1.html 1062792-1-ref.html
 == 1062963-floatmanager-reflow.html 1062963-floatmanager-reflow-ref.html
 test-pref(dom.webcomponents.enabled,true) == 1066554-1.html 1066554-1-ref.html
 == 1069716-1.html 1069716-1-ref.html
-== 1078262-1.html about:blank
+random-if(Android&&AndroidVersion==15) == 1078262-1.html about:blank # see bug 1192616, re-enable once we're off the pandaboards
 test-pref(layout.testing.overlay-scrollbars.always-visible,false) == 1081072-1.html 1081072-1-ref.html
 == 1081185-1.html 1081185-1-ref.html
 == 1097437-1.html 1097437-1-ref.html
 == 1103258-1.html 1103258-1-ref.html # assertion crash test with layers culling test
 == 1105137-1.html 1105137-1-ref.html
 fuzzy-if(d2d,36,304) HTTP(..) == 1116480-1-fakeitalic-overflow.html 1116480-1-fakeitalic-overflow-ref.html
-== 1111753-1.html about:blank
+random-if(Android&&AndroidVersion==15) == 1111753-1.html about:blank # see bug 1192616, re-enable once we're off the pandaboards
 == 1114526-1.html 1114526-1-ref.html
 == 1119117-1a.html 1119117-1-ref.html
 == 1119117-1b.html 1119117-1-ref.html

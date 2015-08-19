@@ -98,14 +98,18 @@ public:
   void ComputeRotation();
 
   // Call after updating our layer tree.
-  void Updated(bool isFirstPaint, const TargetConfig& aTargetConfig)
+  void Updated(bool isFirstPaint, const TargetConfig& aTargetConfig,
+               int32_t aPaintSyncId)
   {
     mIsFirstPaint |= isFirstPaint;
     mLayersUpdated = true;
     mTargetConfig = aTargetConfig;
+    if (aPaintSyncId) {
+      mPaintSyncId = aPaintSyncId;
+    }
   }
 
-  bool RequiresReorientation(mozilla::dom::ScreenOrientation aOrientation)
+  bool RequiresReorientation(mozilla::dom::ScreenOrientationInternal aOrientation) const
   {
     return mTargetConfig.orientation() != aOrientation;
   }
@@ -139,10 +143,10 @@ private:
   void SyncViewportInfo(const LayerIntRect& aDisplayPort,
                         const CSSToLayerScale& aDisplayResolution,
                         bool aLayersUpdated,
-                        ParentLayerPoint& aScrollOffset,
+                        int32_t aPaintSyncId,
+                        ParentLayerRect& aScrollRect,
                         CSSToParentLayerScale& aScale,
-                        LayerMargin& aFixedLayerMargins,
-                        ScreenPoint& aOffset);
+                        ScreenMargin& aFixedLayerMargins);
   void SyncFrameMetrics(const ParentLayerPoint& aScrollOffset,
                         float aZoom,
                         const CSSRect& aCssPageRect,
@@ -150,8 +154,7 @@ private:
                         const CSSRect& aDisplayPort,
                         const CSSToLayerScale& aDisplayResolution,
                         bool aIsFirstPaint,
-                        LayerMargin& aFixedLayerMargins,
-                        ScreenPoint& aOffset);
+                        ScreenMargin& aFixedLayerMargins);
 
   /**
    * Adds a translation to the transform of any fixed position (whose parent
@@ -172,7 +175,7 @@ private:
                                  FrameMetrics::ViewID aTransformScrollId,
                                  const gfx::Matrix4x4& aPreviousTransformForRoot,
                                  const gfx::Matrix4x4& aCurrentTransformForRoot,
-                                 const LayerMargin& aFixedLayerMargins);
+                                 const ScreenMargin& aFixedLayerMargins);
 
   /**
    * DRAWING PHASE ONLY
@@ -205,6 +208,8 @@ private:
   // This flag is set during a layers update, so that the first composition
   // after a layers update has it set. It is cleared after that first composition.
   bool mLayersUpdated;
+
+  int32_t mPaintSyncId;
 
   bool mReadyForCompose;
 

@@ -8,7 +8,9 @@
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/MozPromise.h" // We initialize the MozPromise logging in this file.
 #include "mozilla/StaticPtr.h"
+#include "mozilla/StateWatching.h" // We initialize the StateWatching logging in this file.
 #include "mozilla/TaskQueue.h"
 #include "mozilla/TaskDispatcher.h"
 #include "mozilla/unused.h"
@@ -115,6 +117,9 @@ AbstractThread::MainThread()
 void
 AbstractThread::InitStatics()
 {
+  gMozPromiseLog = PR_NewLogModule("MozPromise");
+  gStateWatchingLog = PR_NewLogModule("StateWatching");
+
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!sMainThread);
   nsCOMPtr<nsIThread> mainThread;
