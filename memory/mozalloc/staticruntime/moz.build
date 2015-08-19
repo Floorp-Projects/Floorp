@@ -6,17 +6,11 @@
 
 NO_VISIBILITY_FLAGS = True
 
-if CONFIG['MOZ_MSVC_STL_WRAP_RAISE'] or CONFIG['MOZ_MSVC_STL_WRAP_Throw']:
-    build_msvc_wrappers = 1
-else:
-    build_msvc_wrappers = 0
-
 if CONFIG['WRAP_STL_INCLUDES']:
     DEFINES['_HAS_EXCEPTIONS'] = 0
-    if build_msvc_wrappers:
+    if CONFIG['MOZ_MSVC_STL_WRAP_RAISE']:
         SOURCES += [
             '../msvc_raise_wrappers.cpp',
-            '../msvc_throw_wrapper.cpp',
         ]
 
 UNIFIED_SOURCES += [
