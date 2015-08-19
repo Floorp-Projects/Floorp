@@ -74,6 +74,9 @@ struct ReturnTypeIs {
  * fulfilled immediately. When an API returns a promise, the consumer may attach
  * callbacks to be invoked (asynchronously, on a specified thread) when the
  * request is either completed (resolved) or cannot be completed (rejected).
+ * Whereas JS promise callbacks are dispatched from Microtask checkpoints,
+ * MozPromises resolution/rejection make a normal round-trip through the event
+ * loop, which simplifies their ordering semantics relative to other native code.
  *
  * MozPromises attempt to mirror the spirit of JS Promises to the extent that
  * is possible (and desirable) in C++. While the intent is that MozPromises
