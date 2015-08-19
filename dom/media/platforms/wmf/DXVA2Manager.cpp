@@ -44,6 +44,7 @@ using layers::ImageContainer;
 using layers::D3D9SurfaceImage;
 using layers::D3D9RecycleAllocator;
 using layers::D3D11ShareHandleImage;
+using layers::D3D11RecycleAllocator;
 
 class D3D9DXVA2Manager : public DXVA2Manager
 {
@@ -421,6 +422,7 @@ private:
   RefPtr<ID3D11DeviceContext> mContext;
   RefPtr<IMFDXGIDeviceManager> mDXGIDeviceManager;
   RefPtr<MFTDecoder> mTransform;
+  RefPtr<D3D11RecycleAllocator> mTextureClientAllocator;
   uint32_t mWidth;
   uint32_t mHeight;
   UINT mDeviceManagerToken;
@@ -486,6 +488,10 @@ D3D11DXVA2Manager::Init(nsACString& aFailureReason)
     return hr;
   }
 
+  mTextureClientAllocator = new D3D11RecycleAllocator(layers::ImageBridgeChild::GetSingleton(),
+                                                      mDevice);
+  mTextureClientAllocator->SetMaxPoolSize(5);
+
   return S_OK;
 }
 
@@ -527,7 +533,9 @@ D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
                "Wrong format?");
 
   D3D11ShareHandleImage* videoImage = static_cast<D3D11ShareHandleImage*>(image.get());
-  HRESULT hr = videoImage->SetData(D3D11ShareHandleImage::Data(mDevice, gfx::IntSize(mWidth, mHeight), aRegion));
+  HRESULT hr = videoImage->SetData(D3D11ShareHandleImage::Data(mTextureClientAllocator,
+                                                               gfx::IntSize(mWidth, mHeight),
+                                                               aRegion));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   hr = mTransform->Input(aVideoSample);

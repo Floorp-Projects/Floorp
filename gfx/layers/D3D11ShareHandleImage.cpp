@@ -22,11 +22,9 @@ D3D11ShareHandleImage::SetData(const Data& aData)
   mPictureRect = aData.mRegion;
   mSize = aData.mSize;
 
-  mTextureClient = TextureClientD3D11::Create(nullptr,
-                                              gfx::SurfaceFormat::B8G8R8A8,
-                                              TextureFlags::DEFAULT,
-                                              aData.mDevice,
-                                              mSize);
+  mTextureClient =
+    aData.mAllocator->CreateOrRecycleClient(gfx::SurfaceFormat::B8G8R8A8,
+                                            mSize);
   if (!mTextureClient) {
     return E_FAIL;
   }
@@ -134,6 +132,38 @@ ID3D11Texture2D*
 D3D11ShareHandleImage::GetTexture() const {
   return mTextureClient->GetD3D11Texture();
 }
+
+already_AddRefed<TextureClient>
+D3D11RecycleAllocator::Allocate(gfx::SurfaceFormat aFormat,
+                                gfx::IntSize aSize,
+                                BackendSelector aSelector,
+                                TextureFlags aTextureFlags,
+                                TextureAllocationFlags aAllocFlags)
+{
+  return TextureClientD3D11::Create(mSurfaceAllocator,
+                                    aFormat,
+                                    TextureFlags::DEFAULT,
+                                    mDevice,
+                                    aSize);
+}
+
+already_AddRefed<TextureClientD3D11>
+D3D11RecycleAllocator::CreateOrRecycleClient(gfx::SurfaceFormat aFormat,
+                                             const gfx::IntSize& aSize)
+{
+  RefPtr<TextureClient> textureClient =
+    CreateOrRecycle(aFormat,
+                    aSize,
+                    BackendSelector::Content,
+                    layers::TextureFlags::DEFAULT);
+  if (!textureClient) {
+    return nullptr;
+  }
+
+  RefPtr<TextureClientD3D11> textureD3D11 = static_cast<TextureClientD3D11*>(textureClient.get());
+  return textureD3D11.forget();
+}
+
 
 } // namespace layers
 } // namespace mozilla
