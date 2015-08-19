@@ -2523,7 +2523,7 @@ BackgroundCursorChild::HandleResponse(const void_t& aResponse)
 
 void
 BackgroundCursorChild::HandleResponse(
-                                     const ObjectStoreCursorResponse& aResponse)
+    const nsTArray<ObjectStoreCursorResponse>& aResponses)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mRequest);
@@ -2532,25 +2532,30 @@ BackgroundCursorChild::HandleResponse(
   MOZ_ASSERT(!mStrongRequest);
   MOZ_ASSERT(!mStrongCursor);
 
+  MOZ_ASSERT(aResponses.Length() == 1);
+
   // XXX Fix this somehow...
-  auto& response = const_cast<ObjectStoreCursorResponse&>(aResponse);
+  auto& responses =
+    const_cast<nsTArray<ObjectStoreCursorResponse>&>(aResponses);
 
-  StructuredCloneReadInfo cloneReadInfo(Move(response.cloneInfo()));
-  cloneReadInfo.mDatabase = mTransaction->Database();
+  for (ObjectStoreCursorResponse& response : responses) {
+    StructuredCloneReadInfo cloneReadInfo(Move(response.cloneInfo()));
+    cloneReadInfo.mDatabase = mTransaction->Database();
 
-  ConvertActorsToBlobs(mTransaction->Database(),
-                       response.cloneInfo(),
-                       cloneReadInfo.mFiles);
+    ConvertActorsToBlobs(mTransaction->Database(),
+                         response.cloneInfo(),
+                         cloneReadInfo.mFiles);
 
-  nsRefPtr<IDBCursor> newCursor;
+    nsRefPtr<IDBCursor> newCursor;
 
-  if (mCursor) {
-    mCursor->Reset(Move(response.key()), Move(cloneReadInfo));
-  } else {
-    newCursor = IDBCursor::Create(this,
-                                  Move(response.key()),
-                                  Move(cloneReadInfo));
-    mCursor = newCursor;
+    if (mCursor) {
+      mCursor->Reset(Move(response.key()), Move(cloneReadInfo));
+    } else {
+      newCursor = IDBCursor::Create(this,
+                                    Move(response.key()),
+                                    Move(cloneReadInfo));
+      mCursor = newCursor;
+    }
   }
 
   ResultHelper helper(mRequest, mTransaction, mCursor);
@@ -2706,8 +2711,8 @@ BackgroundCursorChild::RecvResponse(const CursorResponse& aResponse)
       HandleResponse(aResponse.get_void_t());
       break;
 
-    case CursorResponse::TObjectStoreCursorResponse:
-      HandleResponse(aResponse.get_ObjectStoreCursorResponse());
+    case CursorResponse::TArrayOfObjectStoreCursorResponse:
+      HandleResponse(aResponse.get_ArrayOfObjectStoreCursorResponse());
       break;
 
     case CursorResponse::TObjectStoreKeyCursorResponse:

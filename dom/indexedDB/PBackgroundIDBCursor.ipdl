@@ -64,7 +64,7 @@ union CursorResponse
 {
   void_t;
   nsresult;
-  ObjectStoreCursorResponse;
+  ObjectStoreCursorResponse[];
   ObjectStoreKeyCursorResponse;
   IndexCursorResponse;
   IndexKeyCursorResponse;
