@@ -49,6 +49,8 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         LIBS_READY,
         // After initializing nsAppShell and JNI calls.
         JNI_READY,
+        // After initializing profile and prefs.
+        PROFILE_READY,
         // After initializing frontend JS (corresponding to "Gecko:Ready" event)
         RUNNING,
         // After leaving Gecko event loop
