@@ -14778,8 +14778,6 @@ Cursor::RecvContinue(const CursorRequestParams& aParams, const Key& aKey)
 #endif
     ;
 
-  MOZ_ASSERT(aKey.IsUnset());
-
   if (!trustParams && !VerifyRequestParams(aParams)) {
     ASSERT_UNLESS_FUZZING();
     return false;
@@ -25284,32 +25282,29 @@ ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection)
 
   // Note: Changing the number or order of SELECT columns in the query will
   // require changes to CursorOpBase::PopulateResponseFromStatement.
-  nsCString query;
-  nsAutoCString countString;
-
   bool hasContinueKey = false;
-  uint32_t advanceCount;
+  uint32_t advanceCount = 1;
 
   if (mParams.type() == CursorRequestParams::TContinueParams) {
     // Always go to the next result.
-    advanceCount = 1;
-    countString.AppendLiteral("1");
-
     if (mParams.get_ContinueParams().key().IsUnset()) {
-      query = mCursor->mContinueQuery + countString;
       hasContinueKey = false;
     } else {
-      query = mCursor->mContinueToQuery + countString;
       hasContinueKey = true;
     }
   } else {
     advanceCount = mParams.get_AdvanceParams().count();
-    MOZ_ASSERT(advanceCount > 0);
-    countString.AppendInt(advanceCount);
-
-    query = mCursor->mContinueQuery + countString;
     hasContinueKey = false;
   }
+
+  const nsCString& continueQuery =
+    hasContinueKey ? mCursor->mContinueToQuery : mCursor->mContinueQuery;
+
+  MOZ_ASSERT(advanceCount > 0);
+  nsAutoCString countString;
+  countString.AppendInt(advanceCount);
+
+  nsCString query = continueQuery + countString;
 
   NS_NAMED_LITERAL_CSTRING(currentKeyName, "current_key");
   NS_NAMED_LITERAL_CSTRING(rangeKeyName, "range_key");
@@ -25378,6 +25373,23 @@ ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection)
   rv = PopulateResponseFromStatement(stmt, true);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
+
+  uint32_t extraCount = 1;
+  for (uint32_t i = 0; i < extraCount; i++) {
+    rv = stmt->ExecuteStep(&hasResult);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (!hasResult) {
+      break;
+    }
+
+    rv = PopulateResponseFromStatement(stmt, false);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   return NS_OK;

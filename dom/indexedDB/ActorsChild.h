@@ -626,6 +626,17 @@ class BackgroundCursorChild final
 
   class DelayedActionRunnable;
 
+  struct CachedResponse
+  {
+    CachedResponse();
+
+    explicit CachedResponse(CachedResponse&& aOther);
+
+    Key mKey;
+    Key mObjectKey;
+    StructuredCloneReadInfo mCloneInfo;
+  };
+
   IDBRequest* mRequest;
   IDBTransaction* mTransaction;
   IDBObjectStore* mObjectStore;
@@ -641,6 +652,8 @@ class BackgroundCursorChild final
 #ifdef DEBUG
   PRThread* mOwningThread;
 #endif
+
+  nsTArray<CachedResponse> mCachedResponses;
 
 public:
   BackgroundCursorChild(IDBRequest* aRequest,
@@ -664,6 +677,9 @@ public:
 
   void
   SendDeleteMeInternal();
+
+  void
+  InvalidateCachedResponses();
 
   IDBRequest*
   GetRequest() const
@@ -701,6 +717,9 @@ private:
   // Only destroyed by BackgroundTransactionChild or
   // BackgroundVersionChangeTransactionChild.
   ~BackgroundCursorChild();
+
+  void
+  SendDelayedContinueInternal();
 
   void
   HandleResponse(nsresult aResponse);
