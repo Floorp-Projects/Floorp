@@ -469,7 +469,7 @@ this.UITour = {
         }
 
         // Finally show the Heartbeat UI.
-        this.showHeartbeat(window, messageManager, data);
+        this.showHeartbeat(window, data);
         break;
       }
 
@@ -1077,8 +1077,6 @@ this.UITour = {
    *
    * @param aChromeWindow
    *        The chrome window that the heartbeat notification is displayed in.
-   * @param aMessageManager
-   *        The message manager to communicate with the API caller.
    * @param {Object} aOptions Options object.
    * @param {String} aOptions.message
    *        The message, or question, to display on the notification.
@@ -1096,7 +1094,7 @@ this.UITour = {
    *        The learn more URL to open when clicking on the learn more link. No learn more
    *        will be shown if this is an invalid URL.
    */
-  showHeartbeat: function(aChromeWindow, aMessageManager, aOptions) {
+  showHeartbeat(aChromeWindow, aOptions) {
     let nb = aChromeWindow.document.getElementById("high-priority-global-notificationbox");
 
     // Create the notification. Prefix its ID to decrease the chances of collisions.
