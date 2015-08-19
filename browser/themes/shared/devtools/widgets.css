@@ -220,6 +220,12 @@
   padding-bottom: 0;
 }
 
+%ifdef XP_WIN
+.breadcrumbs-widget-item:-moz-focusring > .button-box {
+  border-width: 0;
+}
+%endif
+
 .breadcrumbs-widget-item:not([checked]) {
   background: -moz-element(#breadcrumb-separator-normal) no-repeat center left;
 }
