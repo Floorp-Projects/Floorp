@@ -18,6 +18,7 @@ EdgeProfileMigrator.prototype = Object.create(MigratorPrototype);
 EdgeProfileMigrator.prototype.getResources = function() {
   let resources = [
     MSMigrationUtils.getBookmarksMigrator(MSMigrationUtils.MIGRATION_TYPE_EDGE),
+    MSMigrationUtils.getCookiesMigrator(MSMigrationUtils.MIGRATION_TYPE_EDGE),
   ];
   return resources.filter(r => r.exists);
 };
