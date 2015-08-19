@@ -76,14 +76,16 @@ IccContactToMozContact(JSContext* aCx, GlobalObject& aGlobal,
   ErrorResult er;
   nsRefPtr<mozContact> contact
     = mozContact::Constructor(aGlobal, aCx, properties, er);
-  NS_ENSURE_FALSE(er.Failed(), er.StealNSResult());
+  rv = er.StealNSResult();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString contactId;
   rv = aIccContact->GetId(contactId);
   NS_ENSURE_SUCCESS(rv, rv);
 
   contact->SetId(contactId, er);
-  NS_ENSURE_FALSE(er.Failed(), er.StealNSResult());
+  rv = er.StealNSResult();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   contact.forget(aMozContact);
 
