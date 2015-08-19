@@ -92,6 +92,12 @@ namespace mozilla {
 namespace dom {
 namespace quota {
 
+// We want profiles to be platform-independent so we always need to replace
+// the same characters on every platform. Windows has the most extensive set
+// of illegal characters so we use its FILE_ILLEGAL_CHARACTERS and
+// FILE_PATH_SEPARATOR.
+const char QuotaManager::kReplaceChars[] = CONTROL_CHARACTERS "/:*?\"<>|\\";
+
 namespace {
 
 /*******************************************************************************
@@ -1075,11 +1081,6 @@ public:
 void
 SanitizeOriginString(nsCString& aOrigin)
 {
-  // We want profiles to be platform-independent so we always need to replace
-  // the same characters on every platform. Windows has the most extensive set
-  // of illegal characters so we use its FILE_ILLEGAL_CHARACTERS and
-  // FILE_PATH_SEPARATOR.
-  static const char kReplaceChars[] = CONTROL_CHARACTERS "/:*?\"<>|\\";
 
 #ifdef XP_WIN
   NS_ASSERTION(!strcmp(kReplaceChars,
@@ -1087,7 +1088,7 @@ SanitizeOriginString(nsCString& aOrigin)
                "Illegal file characters have changed!");
 #endif
 
-  aOrigin.ReplaceChar(kReplaceChars, '+');
+  aOrigin.ReplaceChar(QuotaManager::kReplaceChars, '+');
 }
 
 bool
