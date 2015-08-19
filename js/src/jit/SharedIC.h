@@ -1116,7 +1116,7 @@ class ICMultiStubCompiler : public ICStubCompiler
 };
 
 // BinaryArith
-//      JSOP_ADD
+//      JSOP_ADD, JSOP_SUB, JSOP_MUL, JOP_DIV, JSOP_MOD
 //      JSOP_BITAND, JSOP_BITXOR, JSOP_BITOR
 //      JSOP_LSH, JSOP_RSH, JSOP_URSH
 
@@ -1155,8 +1155,8 @@ class ICBinaryArith_Fallback : public ICFallbackStub
         bool generateStubCode(MacroAssembler& masm);
 
       public:
-        explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::BinaryArith_Fallback, Engine::Baseline) {}
+        explicit Compiler(JSContext* cx, Engine engine)
+          : ICStubCompiler(cx, ICStub::BinaryArith_Fallback, engine) {}
 
         ICStub* getStub(ICStubSpace* space) {
             return newStub<ICBinaryArith_Fallback>(space, getStubCode());
@@ -1196,8 +1196,8 @@ class ICBinaryArith_Int32 : public ICStub
         }
 
       public:
-        Compiler(JSContext* cx, JSOp op, bool allowDouble)
-          : ICStubCompiler(cx, ICStub::BinaryArith_Int32, Engine::Baseline),
+        Compiler(JSContext* cx, JSOp op, Engine engine, bool allowDouble)
+          : ICStubCompiler(cx, ICStub::BinaryArith_Int32, engine),
             op_(op), allowDouble_(allowDouble) {}
 
         ICStub* getStub(ICStubSpace* space) {
@@ -1220,8 +1220,8 @@ class ICBinaryArith_StringConcat : public ICStub
         bool generateStubCode(MacroAssembler& masm);
 
       public:
-        explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::BinaryArith_StringConcat, Engine::Baseline)
+        explicit Compiler(JSContext* cx, Engine engine)
+          : ICStubCompiler(cx, ICStub::BinaryArith_StringConcat, engine)
         {}
 
         ICStub* getStub(ICStubSpace* space) {
@@ -1257,8 +1257,8 @@ class ICBinaryArith_StringObjectConcat : public ICStub
         }
 
       public:
-        Compiler(JSContext* cx, bool lhsIsString)
-          : ICStubCompiler(cx, ICStub::BinaryArith_StringObjectConcat, Engine::Baseline),
+        Compiler(JSContext* cx, Engine engine, bool lhsIsString)
+          : ICStubCompiler(cx, ICStub::BinaryArith_StringObjectConcat, engine),
             lhsIsString_(lhsIsString)
         {}
 
@@ -1283,8 +1283,8 @@ class ICBinaryArith_Double : public ICStub
         bool generateStubCode(MacroAssembler& masm);
 
       public:
-        Compiler(JSContext* cx, JSOp op)
-          : ICMultiStubCompiler(cx, ICStub::BinaryArith_Double, op, Engine::Baseline)
+        Compiler(JSContext* cx, JSOp op, Engine engine)
+          : ICMultiStubCompiler(cx, ICStub::BinaryArith_Double, op, engine)
         {}
 
         ICStub* getStub(ICStubSpace* space) {
@@ -1333,8 +1333,8 @@ class ICBinaryArith_BooleanWithInt32 : public ICStub
         }
 
       public:
-        Compiler(JSContext* cx, JSOp op, bool lhsIsBool, bool rhsIsBool)
-          : ICStubCompiler(cx, ICStub::BinaryArith_BooleanWithInt32, Engine::Baseline),
+        Compiler(JSContext* cx, JSOp op, Engine engine, bool lhsIsBool, bool rhsIsBool)
+          : ICStubCompiler(cx, ICStub::BinaryArith_BooleanWithInt32, engine),
             op_(op), lhsIsBool_(lhsIsBool), rhsIsBool_(rhsIsBool)
         {
             MOZ_ASSERT(op_ == JSOP_ADD || op_ == JSOP_SUB || op_ == JSOP_BITOR ||
@@ -1377,8 +1377,8 @@ class ICBinaryArith_DoubleWithInt32 : public ICStub
         }
 
       public:
-        Compiler(JSContext* cx, JSOp op, bool lhsIsDouble)
-          : ICMultiStubCompiler(cx, ICStub::BinaryArith_DoubleWithInt32, op, Engine::Baseline),
+        Compiler(JSContext* cx, JSOp op, Engine engine, bool lhsIsDouble)
+          : ICMultiStubCompiler(cx, ICStub::BinaryArith_DoubleWithInt32, op, engine),
             lhsIsDouble_(lhsIsDouble)
         {}
 
