@@ -206,12 +206,12 @@ void TypeFallbackICSpew(JSContext* cx, ICTypeMonitor_Fallback* stub, const char*
 #endif
 
 //
-// An entry in the Baseline IC descriptor table.
+// An entry in the JIT IC descriptor table.
 //
 class ICEntry
 {
   private:
-    // A pointer to the baseline IC stub for this instruction.
+    // A pointer to the shared IC stub for this instruction.
     ICStub* firstStub_;
 
     // Offset from the start of the JIT code where the IC
@@ -335,7 +335,26 @@ class ICEntry
     inline ICStub** addressOfFirstStub() {
         return &firstStub_;
     }
+
+    void trace(JSTracer* trc);
 };
+
+class IonICEntry : public ICEntry
+{
+  JSScript* script_;
+
+  public:
+    IonICEntry(uint32_t pcOffset, Kind kind, JSScript* script)
+      : ICEntry(pcOffset, kind),
+        script_(script)
+    { }
+
+    JSScript* script() {
+        return script_;
+    }
+
+};
+
 
 class ICMonitoredStub;
 class ICMonitoredFallbackStub;
@@ -782,7 +801,7 @@ class ICFallbackStub : public ICStub
 
     // The icEntry and lastStubPtrAddr_ fields can't be initialized when the stub is
     // created since the stub is created at compile time, and we won't know the IC entry
-    // address until after compile when the BaselineScript is created.  This method
+    // address until after compile when the JitScript is created.  This method
     // allows these fields to be fixed up at that point.
     void fixupICEntry(ICEntry* icEntry) {
         MOZ_ASSERT(icEntry_ == nullptr);
