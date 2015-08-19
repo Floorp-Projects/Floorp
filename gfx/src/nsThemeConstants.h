@@ -286,3 +286,5 @@
 #define NS_THEME_MAC_VIBRANCY_DARK                         244
 #define NS_THEME_MAC_DISCLOSURE_BUTTON_OPEN                245
 #define NS_THEME_MAC_DISCLOSURE_BUTTON_CLOSED              246
+
+#define NS_THEME_GTK_INFO_BAR                              247
