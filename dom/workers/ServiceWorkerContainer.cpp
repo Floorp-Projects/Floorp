@@ -8,6 +8,7 @@
 
 #include "nsIDocument.h"
 #include "nsIServiceWorkerManager.h"
+#include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/Preferences.h"
@@ -100,6 +101,31 @@ ServiceWorkerContainer::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenP
   return ServiceWorkerContainerBinding::Wrap(aCx, this, aGivenProto);
 }
 
+static nsresult
+CheckForSlashEscapedCharsInPath(nsIURI* aURI)
+{
+  MOZ_ASSERT(aURI);
+
+  nsCOMPtr<nsIURL> url(do_QueryInterface(aURI));
+  if (NS_WARN_IF(!url)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsAutoCString path;
+  nsresult rv = url->GetFilePath(path);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  ToLowerCase(path);
+  if (path.Find("%2f") != kNotFound ||
+      path.Find("%5c") != kNotFound) {
+    return NS_ERROR_DOM_TYPE_ERR;
+  }
+
+  return NS_OK;
+}
+
 already_AddRefed<Promise>
 ServiceWorkerContainer::Register(const nsAString& aScriptURL,
                                  const RegistrationOptions& aOptions,
@@ -144,6 +170,11 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
     return nullptr;
   }
 
+  aRv = CheckForSlashEscapedCharsInPath(scriptURI);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
   // In ServiceWorkerContainer.register() the scope argument is parsed against
   // different base URLs depending on whether it was passed or not.
   nsCOMPtr<nsIURI> scopeURI;
@@ -169,6 +200,11 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
       baseURI->GetSpec(spec);
       NS_ConvertUTF8toUTF16 wSpec(spec);
       aRv.ThrowTypeError(MSG_INVALID_SCOPE, &aOptions.mScope.Value(), &wSpec);
+      return nullptr;
+    }
+
+    aRv = CheckForSlashEscapedCharsInPath(scopeURI);
+    if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
   }
