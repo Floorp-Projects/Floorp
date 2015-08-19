@@ -122,6 +122,7 @@ WebMDemuxer::WebMDemuxer(MediaResource* aResource)
   , mVideoTrack(0)
   , mAudioTrack(0)
   , mSeekPreroll(0)
+  , mLastAudioFrameTime(0)
   , mLastVideoFrameTime(0)
   , mAudioCodec(-1)
   , mVideoCodec(-1)
@@ -689,6 +690,10 @@ WebMDemuxer::SeekInternal(const media::TimeUnit& aTarget)
     }
     WEBM_DEBUG("got offset from buffered state: %" PRIu64 "", offset);
   }
+
+  mLastAudioFrameTime = 0;
+  mLastVideoFrameTime = 0;
+
   return NS_OK;
 }
 
