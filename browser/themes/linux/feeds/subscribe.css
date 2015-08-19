@@ -20,6 +20,7 @@ html {
   border-radius: 10px;
   margin: -4em auto 0 auto;
   background-color: InfoBackground;
+  -moz-appearance: -moz-gtk-info-bar;
 }
 
 #feedHeader {  
@@ -29,19 +30,19 @@ html {
   -moz-margin-end: 1em;
   -moz-padding-start: 2.9em;
   font-size: 110%;
-  color: InfoText;
+  color: -moz-gtk-info-bar-text;
 }
 
 .feedBackground {
-  background: url("chrome://browser/skin/feeds/feedIcon.png") 0% 10% no-repeat InfoBackground;
+  background: url("chrome://browser/skin/feeds/feedIcon.png") 0% 10% no-repeat;
 }
 
 .videoPodcastBackground {
-  background: url("chrome://browser/skin/feeds/videoFeedIcon.png") 0% 10% no-repeat InfoBackground;
+  background: url("chrome://browser/skin/feeds/videoFeedIcon.png") 0% 10% no-repeat;
 }
 
 .audioPodcastBackground {
-  background: url("chrome://browser/skin/feeds/audioFeedIcon.png") 0% 10% no-repeat InfoBackground;
+  background: url("chrome://browser/skin/feeds/audioFeedIcon.png") 0% 10% no-repeat;
 }
 
 #feedHeader[dir="rtl"] {
