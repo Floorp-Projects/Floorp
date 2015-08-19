@@ -328,27 +328,37 @@ AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  // Find content offsets for mouse down point
+  // Find the frame under point.
   nsIFrame* ptFrame = nsLayoutUtils::GetFrameForPoint(rootFrame, aPoint,
     nsLayoutUtils::IGNORE_PAINT_SUPPRESSION | nsLayoutUtils::IGNORE_CROSS_DOC);
   if (!ptFrame) {
     return NS_ERROR_FAILURE;
   }
 
+  nsIFrame* focusedFrame = ChangeFocus(ptFrame);
 
-  nsPoint ptInFrame = aPoint;
-  nsLayoutUtils::TransformPoint(rootFrame, ptFrame, ptInFrame);
+#ifdef DEBUG_FRAME_DUMP
+  AC_LOG("%s: Found %s under (%d, %d)", __FUNCTION__, ptFrame->ListTag().get(),
+         aPoint.x, aPoint.y);
+  AC_LOG("%s: Focused on %s", __FUNCTION__,
+         focusedFrame ? focusedFrame->ListTag().get() : "no frame");
+#endif
 
-  nsIContent* editingHost = ptFrame->GetContent()->GetEditingHost();
-  if (ChangeFocus(ptFrame) &&
-      (editingHost && !nsContentUtils::HasNonEmptyTextContent(
-                         editingHost, nsContentUtils::eRecurseIntoChildren))) {
-    // Content is empty. No need to select word.
-    AC_LOG("%s, Cannot select word bacause content is empty", __FUNCTION__);
-    DispatchCaretStateChangedEvent(CaretChangedReason::Longpressonemptycontent);
+  // Firstly check long press on an empty editable content.
+  Element* newFocusEditingHost = ptFrame->GetContent()->GetEditingHost();
+  if (focusedFrame && newFocusEditingHost &&
+      !nsContentUtils::HasNonEmptyTextContent(
+        newFocusEditingHost, nsContentUtils::eRecurseIntoChildren)) {
+    // We need to update carets to get correct information before dispatching
+    // CaretStateChangedEvent.
     UpdateCarets();
+    DispatchCaretStateChangedEvent(CaretChangedReason::Longpressonemptycontent);
     return NS_OK;
   }
+
+  // Then try select a word under point.
+  nsPoint ptInFrame = aPoint;
+  nsLayoutUtils::TransformPoint(rootFrame, ptFrame, ptInFrame);
 
   nsresult rv = SelectWord(ptFrame, ptInFrame);
   UpdateCarets();
@@ -544,12 +554,6 @@ AccessibleCaretManager::SelectWord(nsIFrame* aFrame, const nsPoint& aPoint) cons
   nsFrame* frame = static_cast<nsFrame*>(aFrame);
   nsresult rs = frame->SelectByTypeAtPoint(mPresShell->GetPresContext(), aPoint,
                                            eSelectWord, eSelectWord, 0);
-
-#ifdef DEBUG_FRAME_DUMP
-  nsCString frameTag;
-  frame->ListTag(frameTag);
-  AC_LOG("Frame=%s, ptInFrame=(%d, %d)", frameTag.get(), aPoint.x, aPoint.y);
-#endif
 
   SetSelectionDragState(false);
   ClearMaintainedSelection();
@@ -950,6 +954,10 @@ AccessibleCaretManager::DispatchCaretStateChangedEvent(CaretChangedReason aReaso
 
   event->SetTrusted(true);
   event->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
+
+  AC_LOG("%s: reason %d, collapsed %d, caretVisible %d", __FUNCTION__,
+         init.mReason, init.mCollapsed, init.mCaretVisible);
+
   (new AsyncEventDispatcher(doc, event))->RunDOMEventWhenSafe();
 }
 
