@@ -1551,11 +1551,14 @@ BluetoothOppManager::OnSocketDisconnect(BluetoothSocket* aSocket)
    */
   if (!mSuccessFlag) {
     if (mIsServer) {
+      // Remove received file and inform gaia of receiving failure
       DeleteReceivedFile();
-    }
-
-    FileTransferComplete();
-    if (!mIsServer) {
+      FileTransferComplete();
+    } else {
+      // Inform gaia of current blob transfer failure
+      if (mCurrentBlobIndex >= 0) {
+        FileTransferComplete();
+      }
       // Inform gaia of remaining blobs' sending failure
       DiscardBlobsToSend();
     }

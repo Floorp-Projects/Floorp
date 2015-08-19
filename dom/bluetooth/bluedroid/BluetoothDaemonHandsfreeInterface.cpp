@@ -40,8 +40,8 @@ BluetoothDaemonHandsfreeModule::Send(DaemonSocketPDU* aPDU,
 }
 
 void
-BluetoothDaemonHandsfreeModule::HandleSvc(const DaemonSocketPDUHeader& aHeader,
-                                          DaemonSocketPDU& aPDU, void* aUserData)
+BluetoothDaemonHandsfreeModule::HandleSvc(
+  const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU, void* aUserData)
 {
   static void (BluetoothDaemonHandsfreeModule::* const HandleOp[])(
     const DaemonSocketPDUHeader&, DaemonSocketPDU&, void*) = {
