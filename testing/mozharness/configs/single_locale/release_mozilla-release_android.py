@@ -78,16 +78,6 @@ config = {
     "mozconfig": "%s/mobile/android/config/mozconfigs/android/l10n-release" % MOZILLA_DIR,
     "signature_verification_script": "tools/release/signing/verify-android-signature.sh",
     "key_alias": "release",
-    "default_actions": [
-        "clobber",
-        "pull",
-        "list-locales",
-        "setup",
-        "repack",
-        "upload-repacks",
-        "submit-to-balrog",
-        "summary",
-    ],
     # Mock
     "mock_target": "mozilla-centos6-x86_64-android",
     "mock_packages": ['autoconf213', 'python', 'zip', 'mozilla-python27-mercurial', 'git', 'ccache',
