@@ -5,7 +5,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(CE6F563B-BD77-4EF2-9D7C-A94C587353E4)]
+[scriptable, uuid(531b902b-b551-4faa-9814-1a73e8299ac4)]
 interface nsITabParent : nsISupports
 {
   void injectTouchEvent(in AString aType,
@@ -24,6 +24,14 @@ interface nsITabParent : nsISupports
   readonly attribute boolean useAsyncPanZoom;
 
   void setIsDocShellActive(in bool aIsActive);
+
+  /**
+   * During interactions where painting performance
+   * is more important than scrolling, we may temporarily
+   * suppress the displayport. Each enable called must be matched
+   * with a disable call.
+   */
+  void suppressDisplayport(in bool aEnabled);
 
   readonly attribute uint64_t tabId;
 
