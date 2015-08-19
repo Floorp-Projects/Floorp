@@ -253,10 +253,7 @@ OutputStreamData::Connect(MediaStream* aStream)
   MOZ_ASSERT(!mPort, "Already connected?");
   MOZ_ASSERT(!mStream->IsDestroyed(), "Can't connect a destroyed stream.");
 
-  // The output stream must stay in sync with the input stream, so if
-  // either stream is blocked, we block the other.
-  mPort = mStream->AllocateInputPort(aStream,
-    MediaInputPort::FLAG_BLOCK_INPUT | MediaInputPort::FLAG_BLOCK_OUTPUT);
+  mPort = mStream->AllocateInputPort(aStream, 0);
   // Unblock the output stream now. The input stream is responsible for
   // controlling blocking from now on.
   mStream->ChangeExplicitBlockerCount(-1);
