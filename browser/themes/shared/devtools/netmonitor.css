@@ -827,3 +827,57 @@ box.requests-menu-status[code^="5"] {
        right border and box-shadow of "Size" column should be hidden. */
   }
 }
+
+/* Platform overrides (copied in from the old platform specific files) */
+%ifdef XP_WIN
+.requests-menu-header-button > .button-box {
+  padding: 0;
+}
+
+.requests-menu-timings-division {
+  padding-top: 1px;
+  font-size: 90%;
+}
+
+.requests-menu-footer-button,
+.requests-menu-footer-label {
+  padding-top: 0px;
+  padding-bottom: 0px;
+}
+
+/* Responsive sidebar */
+@media (max-width: 700px) {
+  .requests-menu-footer-button,
+  .requests-menu-footer-label {
+    padding-top: 0px;
+    padding-bottom: 0px;
+  }
+}
+%elifdef XP_LINUX
+#headers-summary-resend {
+  padding: 4px;
+}
+
+#toggle-raw-headers {
+  padding: 4px;
+}
+
+.requests-menu-status-and-method {
+  width: 9em;
+}
+
+.requests-menu-security-and-domain {
+  width: 16vw;
+}
+
+.requests-menu-size {
+  width: 6em;
+}
+
+/* Responsive sidebar */
+@media (max-width: 700px) {
+  .requests-menu-header-button {
+    font-size: 85%;
+  }
+}
+%endif

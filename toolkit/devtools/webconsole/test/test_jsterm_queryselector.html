@@ -14,16 +14,24 @@
 <script class="testbody" type="text/javascript;version=1.8">
 SimpleTest.waitForExplicitFinish();
 let gState;
+let gWin;
 
 function evaluateJS(input) {
   return new Promise((resolve) => gState.client.evaluateJS(input, resolve));
 }
 
 function startTest() {
-  removeEventListener("load", startTest);
+  info ("Content window opened, attaching console to it");
+
+  let systemPrincipal = Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal);
+  ok (!gWin.document.nodePrincipal.equals(systemPrincipal),
+      "The test document is not using the system principal");
+
   attachConsole([], state => {
     gState = state;
     let tests = [
+      setupWindow,
+      checkQuerySelector,
       checkQuerySelectorAll,
       checkQuerySelectorAllNotExist,
       checkQuerySelectorAllException
@@ -31,6 +39,27 @@ function startTest() {
     runTests(tests, testEnd);
   }, true);
 }
+
+let setupWindow = Task.async(function*() {
+  info ("Shimming window functions for the content privileged tab");
+  yield evaluateJS("document.querySelector = function() { throw 'should not call qS'; }");
+  yield evaluateJS("document.querySelectorAll = function() { throw 'should not call qSA'; }");
+  nextTest();
+});
+
+let checkQuerySelector = Task.async(function*() {
+  info ("$ returns an DOMNode");
+  let response = yield evaluateJS("$('body')");
+  basicResultCheck(response, "$('body')", {
+    type: "object",
+    class: "HTMLBodyElement",
+    preview: {
+      kind: "DOMNode",
+      nodeName: "body"
+    }
+  });
+  nextTest();
+});
 
 let checkQuerySelectorAll = Task.async(function*() {
   info ("$$ returns an array");
@@ -86,13 +115,20 @@ function basicResultCheck(response, input, output) {
 }
 
 function testEnd() {
+  gWin.close();
+  gWin = null;
   closeDebugger(gState, function() {
     gState = null;
     SimpleTest.finish();
   });
 }
 
-addEventListener("load", startTest);
+window.onload = function() {
+  // Open a content window to test XRay functionality on built in functions.
+  gWin = window.open("data:text/html,");
+  info ("Waiting for content window to load");
+  gWin.onload = startTest;
+}
 </script>
 </body>
 </html>
