@@ -99,7 +99,7 @@ if (typeof Mozilla == 'undefined') {
 	};
 
 	Mozilla.UITour.showHeartbeat = function(message, thankyouMessage, flowId, engagementURL,
-																					learnMoreLabel, learnMoreURL) {
+						learnMoreLabel, learnMoreURL) {
 		_sendEvent('showHeartbeat', {
 			message: message,
 			thankyouMessage: thankyouMessage,
