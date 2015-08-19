@@ -1482,10 +1482,10 @@ IMContextWrapper::CreateTextRangeArray(GtkIMContext* aContext,
     nsRefPtr<TextRangeArray> textRangeArray = new TextRangeArray();
 
     gchar *preedit_string;
-    gint cursor_pos;
+    gint cursor_pos_in_chars;
     PangoAttrList *feedback_list;
     gtk_im_context_get_preedit_string(aContext, &preedit_string,
-                                      &feedback_list, &cursor_pos);
+                                      &feedback_list, &cursor_pos_in_chars);
     if (!preedit_string || !*preedit_string) {
         MOZ_LOG(gGtkIMLog, LogLevel::Error,
             ("GTKIM: %p   CreateTextRangeArray(), FAILED, due to "
@@ -1494,6 +1494,53 @@ IMContextWrapper::CreateTextRangeArray(GtkIMContext* aContext,
         pango_attr_list_unref(feedback_list);
         g_free(preedit_string);
         return textRangeArray.forget();
+    }
+
+    // Convert caret offset from offset in characters to offset in UTF-16
+    // string.  If we couldn't proper offset in UTF-16 string, we should
+    // assume that the caret is at the end of the composition string.
+    uint32_t caretOffsetInUTF16 = aLastDispatchedData.Length();
+    if (NS_WARN_IF(cursor_pos_in_chars < 0)) {
+        // Note that this case is undocumented.  We should assume that the
+        // caret is at the end of the composition string.
+    } else if (cursor_pos_in_chars == 0) {
+        caretOffsetInUTF16 = 0;
+    } else {
+        gchar* charAfterCaret =
+            g_utf8_offset_to_pointer(preedit_string, cursor_pos_in_chars);
+        if (NS_WARN_IF(!charAfterCaret)) {
+            MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+                ("GTKIM: %p   CreateTextRangeArray(), failed to get UTF-8 "
+                 "string before the caret (cursor_pos_in_chars=%d)",
+                 this, cursor_pos_in_chars));
+        } else {
+            glong caretOffset = 0;
+            gunichar2* utf16StrBeforeCaret =
+                g_utf8_to_utf16(preedit_string, charAfterCaret - preedit_string,
+                                nullptr, &caretOffset, nullptr);
+            if (NS_WARN_IF(!utf16StrBeforeCaret) ||
+                NS_WARN_IF(caretOffset < 0)) {
+                MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+                    ("GTKIM: %p   CreateTextRangeArray(), WARNING, failed to "
+                     "convert to UTF-16 string before the caret "
+                     "(cursor_pos_in_chars=%d, caretOffset=%d)",
+                     this, cursor_pos_in_chars, caretOffset));
+            } else {
+                caretOffsetInUTF16 = static_cast<uint32_t>(caretOffset);
+                uint32_t compositionStringLength = aLastDispatchedData.Length();
+                if (NS_WARN_IF(caretOffsetInUTF16 > compositionStringLength)) {
+                    MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+                        ("GTKIM: %p   CreateTextRangeArray(), WARNING, "
+                         "caretOffsetInUTF16=%u is larger than "
+                         "compositionStringLength=%u",
+                         this, caretOffsetInUTF16, compositionStringLength));
+                    caretOffsetInUTF16 = compositionStringLength;
+                }
+            }
+            if (utf16StrBeforeCaret) {
+                g_free(utf16StrBeforeCaret);
+            }
+        }
     }
 
     PangoAttrIterator* iter;
@@ -1510,27 +1557,19 @@ IMContextWrapper::CreateTextRangeArray(GtkIMContext* aContext,
 
     do {
         TextRange range;
-        if (!SetTextRange(iter, preedit_string, cursor_pos, range)) {
+        if (!SetTextRange(iter, preedit_string, caretOffsetInUTF16, range)) {
             continue;
         }
         textRangeArray->AppendElement(range);
     } while (pango_attr_iterator_next(iter));
 
     TextRange range;
-    if (cursor_pos < 0) {
-        range.mStartOffset = 0;
-    } else if (uint32_t(cursor_pos) > aLastDispatchedData.Length()) {
-        range.mStartOffset = aLastDispatchedData.Length();
-    } else {
-        range.mStartOffset = uint32_t(cursor_pos);
-    }
-    range.mEndOffset = range.mStartOffset;
+    range.mStartOffset = range.mEndOffset = caretOffsetInUTF16;
     range.mRangeType = NS_TEXTRANGE_CARETPOSITION;
     textRangeArray->AppendElement(range);
-
     MOZ_LOG(gGtkIMLog, LogLevel::Debug,
-        ("GTKIM: %p   CreateTextRangeArray(), mStartOffset=%u, mEndOffset=%u, "
-         "mRangeType=%s",
+        ("GTKIM: %p   CreateTextRangeArray(), mStartOffset=%u, "
+         "mEndOffset=%u, mRangeType=%s",
          this, range.mStartOffset, range.mEndOffset,
          GetRangeTypeName(range.mRangeType)));
 
@@ -1555,7 +1594,7 @@ IMContextWrapper::ToNscolor(PangoAttrColor* aPangoAttrColor)
 bool
 IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
                                const gchar* aUTF8CompositionString,
-                               int32_t aUTF16CaretOffset,
+                               uint32_t aUTF16CaretOffset,
                                TextRange& aTextRange) const
 {
     // Set the range offsets in UTF-16 string.
@@ -1705,16 +1744,14 @@ IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
     // the end of the composition string, the range is probably not converted.
     if (!utf8ClauseStart &&
         utf8ClauseEnd == static_cast<gint>(strlen(aUTF8CompositionString)) &&
-        aTextRange.mEndOffset == static_cast<uint32_t>(aUTF16CaretOffset)) {
+        aTextRange.mEndOffset == aUTF16CaretOffset) {
         aTextRange.mRangeType = NS_TEXTRANGE_RAWINPUT;
     }
     // Typically, the caret is set at the start of the selected clause.
     // So, if the caret is in the clause, we can assume that the clause is
     // selected.
-    else if (aTextRange.mStartOffset <=
-                 static_cast<uint32_t>(aUTF16CaretOffset) &&
-             aTextRange.mEndOffset >
-                 static_cast<uint32_t>(aUTF16CaretOffset)) {
+    else if (aTextRange.mStartOffset <= aUTF16CaretOffset &&
+             aTextRange.mEndOffset > aUTF16CaretOffset) {
         aTextRange.mRangeType = NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
     }
     // Otherwise, we should assume that the clause is converted but not
