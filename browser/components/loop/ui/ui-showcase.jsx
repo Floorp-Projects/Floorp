@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global Frame:false uncaughtError:true fakeContacts:true */
+/* global Frame:false uncaughtError:true fakeManyContacts:true fakeFewerContacts:true */
 
 (function() {
   "use strict";
@@ -469,12 +469,24 @@
   var mockMozLoopRooms = _.extend({}, navigator.mozLoop);
 
   var mozLoopNoContacts = _.cloneDeep(navigator.mozLoop);
+  mozLoopNoContacts.contacts.getAll = function(callback) {
+    callback(null, []);
+  };
   mozLoopNoContacts.userProfile = {
     email: "reallyreallylongtext@example.com",
     uid: "0354b278a381d3cb408bb46ffc01266"
   };
   mozLoopNoContacts.contacts.getAll = function(callback) {
     callback(null, []);
+  };
+
+  var mozLoopNoContactsFilter = _.cloneDeep(navigator.mozLoop);
+  mozLoopNoContactsFilter.userProfile = {
+    email: "reallyreallylongtext@example.com",
+    uid: "0354b278a381d3cb408bb46ffc01266"
+  };
+  mozLoopNoContactsFilter.contacts.getAll = function(callback) {
+    callback(null, fakeFewerContacts); // Defined in fake-mozLoop.js.
   };
 
   var mockContact = {
@@ -539,7 +551,7 @@
         "link", "link-active", "link-disabled", "mute", "mute-active",
         "mute-disabled", "pause", "pause-active", "pause-disabled", "video",
         "video-white", "video-active", "video-disabled", "volume", "volume-active",
-        "volume-disabled"
+        "volume-disabled", "clear", "magnifier"
       ],
       "16x16": ["add", "add-hover", "add-active", "audio", "audio-hover", "audio-active",
         "block", "block-red", "block-hover", "block-active", "contacts", "contacts-hover",
@@ -756,6 +768,20 @@
             <FramedExample cssClass="fx-embedded-panel"
                            dashed={true}
                            height={410}
+                           summary="Contact list tab (no search filter)"
+                           width={332}>
+              <div className="panel">
+                <PanelView client={mockClient}
+                           dispatcher={dispatcher}
+                           mozLoop={mozLoopNoContactsFilter}
+                           notifications={notifications}
+                           roomStore={roomStore}
+                           selectedTab="contacts" />
+              </div>
+            </FramedExample>
+            <FramedExample cssClass="fx-embedded-panel"
+                           dashed={true}
+                           height={410}
                            summary="Contact list tab long email"
                            width={332}>
               <div className="panel">
@@ -882,7 +908,7 @@
                            summary="ContactDetail"
                            width={300}>
               <div className="panel force-menu-show">
-                <ContactDetail contact={fakeContacts[0]}
+                <ContactDetail contact={fakeManyContacts[0]}
                                handleContactAction={function() {}} />
               </div>
             </FramedExample>

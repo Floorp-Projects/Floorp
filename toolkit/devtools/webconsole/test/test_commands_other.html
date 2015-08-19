@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for the other command helpers</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript;version=1.8" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for the querySelector / querySelectorAll helpers</p>
+
+<script class="testbody" type="text/javascript;version=1.8">
+SimpleTest.waitForExplicitFinish();
+let gState;
+let gWin;
+let tests;
+
+function evaluateJS(input) {
+  return new Promise((resolve) => gState.client.evaluateJS(input, resolve));
+}
+
+function startTest() {
+  info ("Content window opened, attaching console to it");
+
+  let systemPrincipal = Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal);
+  ok (!gWin.document.nodePrincipal.equals(systemPrincipal),
+      "The test document is not using the system principal");
+
+  attachConsole([], state => {
+    gState = state;
+    runTests(tests, testEnd);
+  }, true);
+}
+
+tests = [
+  Task.async(function* keys() {
+    let response = yield evaluateJS("keys({foo: 'bar'})");
+    checkObject(response, {
+      from: gState.actor,
+      result: {
+        class: "Array",
+        preview: {
+          items: ["foo"]
+        }
+      }
+    });
+    nextTest();
+  }),
+  Task.async(function* values() {
+    let response = yield evaluateJS("values({foo: 'bar'})");
+    checkObject(response, {
+      from: gState.actor,
+      result: {
+        class: "Array",
+        preview: {
+          items: ["bar"]
+        }
+      }
+    });
+    nextTest();
+  }),
+];
+
+function testEnd() {
+  gWin.close();
+  gWin = null;
+  closeDebugger(gState, function() {
+    gState = null;
+    SimpleTest.finish();
+  });
+}
+
+window.onload = function() {
+  // Open a content window to test XRay functionality on built in functions.
+  gWin = window.open("data:text/html,");
+  info ("Waiting for content window to load");
+  gWin.onload = startTest;
+}
+</script>
+</body>
+</html>
