@@ -20,8 +20,5 @@ function test() {
     test_locbar_suggestion_retention("history", false),
   ];
 
-  if (Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete"))
-    tests.push(test_locbar_suggestion_retention("searches", true));
-
   run_test_subset(tests);
 }
