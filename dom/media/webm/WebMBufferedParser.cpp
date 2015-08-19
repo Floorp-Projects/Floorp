@@ -208,6 +208,7 @@ void WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
       if (!mSkipBytes) {
         if (mInitEndOffset < 0) {
           mInitEndOffset = mCurrentOffset + (p - aBuffer);
+          mBlockEndOffset = mCurrentOffset + (p - aBuffer);
         }
         mState = READ_ELEMENT_ID;
       }
