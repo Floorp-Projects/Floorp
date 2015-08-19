@@ -135,10 +135,6 @@ FMRadio::Init(nsPIDOMWindow *aWindow)
     RegisterSwitchObserver(SWITCH_HEADPHONES, this);
   }
 
-  // All of the codes below are for AudioChannel. We can directly return here
-  // if preferences doesn't enable AudioChannelService.
-  NS_ENSURE_TRUE_VOID(Preferences::GetBool("media.useAudioChannelService"));
-
   nsCOMPtr<nsIAudioChannelAgent> audioChannelAgent =
     do_CreateInstance("@mozilla.org/audiochannelagent;1");
   NS_ENSURE_TRUE_VOID(audioChannelAgent);
