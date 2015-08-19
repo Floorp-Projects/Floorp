@@ -932,6 +932,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       <property name="shouldShowSearchSuggestionsNotification" readonly="true">
         <getter><![CDATA[
           return !this._userMadeSearchSuggestionsChoice &&
+                 !this.inPrivateContext &&
                  // When _urlbarFocused is true, tabbrowser would close the
                  // popup if it's opened here, so don't show the notification.
                  !gBrowser.selectedBrowser._urlbarFocused &&
