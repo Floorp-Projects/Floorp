@@ -11,6 +11,7 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.content.Loader;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.MenuInflater;
@@ -26,7 +27,6 @@ import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.RemoteClient;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.SyncStatusListener;
-import org.mozilla.gecko.widget.GeckoSwipeRefreshLayout;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -65,7 +65,7 @@ public abstract class RemoteTabsBaseFragment extends HomeFragment implements Rem
     protected CursorLoaderCallbacks mCursorLoaderCallbacks;
 
     // Child refresh layout view.
-    protected GeckoSwipeRefreshLayout mRefreshLayout;
+    protected SwipeRefreshLayout mRefreshLayout;
 
     // Sync listener that stops refreshing when a sync is completed.
     protected RemoteTabsSyncListener mSyncStatusListener;
@@ -85,7 +85,7 @@ public abstract class RemoteTabsBaseFragment extends HomeFragment implements Rem
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        mRefreshLayout = (GeckoSwipeRefreshLayout) view.findViewById(R.id.remote_tabs_refresh_layout);
+        mRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.remote_tabs_refresh_layout);
         mRefreshLayout.setColorScheme(
                 R.color.swipe_refresh_orange, R.color.swipe_refresh_white,
                 R.color.swipe_refresh_orange, R.color.swipe_refresh_white);
@@ -254,7 +254,7 @@ public abstract class RemoteTabsBaseFragment extends HomeFragment implements Rem
         }
     }
 
-    protected class RemoteTabsRefreshListener implements GeckoSwipeRefreshLayout.OnRefreshListener {
+    protected class RemoteTabsRefreshListener implements SwipeRefreshLayout.OnRefreshListener {
         @Override
         public void onRefresh() {
             if (FirefoxAccounts.firefoxAccountsExist(getActivity())) {

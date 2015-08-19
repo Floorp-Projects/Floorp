@@ -11,14 +11,13 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.home.PanelLayout.DatasetBacked;
 import org.mozilla.gecko.home.PanelLayout.FilterManager;
-import org.mozilla.gecko.widget.GeckoSwipeRefreshLayout;
-import org.mozilla.gecko.widget.GeckoSwipeRefreshLayout.OnRefreshListener;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.View;
 
@@ -29,7 +28,7 @@ import android.view.View;
  * This view acts as a decorator to forward the {@code DatasetBacked} methods to the child view
  * while providing the refresh gesture support on top of it.
  */
-class PanelRefreshLayout extends GeckoSwipeRefreshLayout implements DatasetBacked {
+class PanelRefreshLayout extends SwipeRefreshLayout implements DatasetBacked {
     private static final String LOGTAG = "GeckoPanelRefreshLayout";
 
     private static final String JSON_KEY_PANEL_ID = "panelId";
@@ -60,8 +59,8 @@ class PanelRefreshLayout extends GeckoSwipeRefreshLayout implements DatasetBacke
         addView(childView);
 
         // Must be called after the child view has been added.
-        setColorScheme(R.color.swipe_refresh_orange, R.color.swipe_refresh_white,
-                       R.color.swipe_refresh_orange, R.color.swipe_refresh_white);
+        setColorSchemeResources(R.color.swipe_refresh_orange, R.color.swipe_refresh_white,
+                R.color.swipe_refresh_orange, R.color.swipe_refresh_white);
     }
 
     @Override
