@@ -148,7 +148,7 @@ public:
   { }
 
   virtual
-  void UpdateFailed(const ErrorEventInit& aDesc)
+  void UpdateFailed(JSExnType aExnType, const ErrorEventInit& aDesc)
   { }
 };
 
@@ -375,7 +375,8 @@ public:
               nsString aLine,
               uint32_t aLineNumber,
               uint32_t aColumnNumber,
-              uint32_t aFlags);
+              uint32_t aFlags,
+              JSExnType aExnType);
 
   void
   GetAllClients(nsIPrincipal* aPrincipal,

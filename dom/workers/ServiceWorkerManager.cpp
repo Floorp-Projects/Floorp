@@ -574,7 +574,7 @@ public:
   }
 
   void
-  UpdateFailed(const ErrorEventInit& aErrorDesc) override
+  UpdateFailed(JSExnType aExnType, const ErrorEventInit& aErrorDesc) override
   {
     AutoJSAPI jsapi;
     jsapi.Init(mWindow);
@@ -598,7 +598,8 @@ public:
     JS::Rooted<JSString*> msg(cx, msgval.toString());
 
     JS::Rooted<JS::Value> error(cx);
-    if (!JS::CreateError(cx, JSEXN_ERR, nullptr, fn, aErrorDesc.mLineno,
+    if ((aExnType < JSEXN_ERR) ||
+        !JS::CreateError(cx, aExnType, nullptr, fn, aErrorDesc.mLineno,
                          aErrorDesc.mColno, nullptr, msg, &error)) {
       JS_ClearPendingException(cx);
       mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
@@ -975,13 +976,17 @@ public:
                    const nsACString& aMaxScope) override
   {
     nsRefPtr<ServiceWorkerRegisterJob> kungFuDeathGrip = this;
-    if (mCanceled) {
+    if (NS_WARN_IF(mCanceled)) {
       Fail(NS_ERROR_DOM_TYPE_ERR);
       return;
     }
 
     if (NS_WARN_IF(NS_FAILED(aStatus))) {
-      Fail(NS_ERROR_DOM_TYPE_ERR);
+      if (aStatus == NS_ERROR_DOM_SECURITY_ERR) {
+        Fail(aStatus);
+      } else {
+        Fail(NS_ERROR_DOM_TYPE_ERR);
+      }
       return;
     }
 
@@ -1101,7 +1106,7 @@ public:
   // Public so our error handling code can use it.
   // Callers MUST hold a strong ref before calling this!
   void
-  Fail(const ErrorEventInit& aError)
+  Fail(JSExnType aExnType, const ErrorEventInit& aError)
   {
     MOZ_ASSERT(mCallback);
     nsRefPtr<ServiceWorkerUpdateFinishCallback> callback = mCallback.forget();
@@ -1111,7 +1116,7 @@ public:
     // FailCommon relies on it.
     // FailCommon does check for cancellation, but let's be safe here.
     nsRefPtr<ServiceWorkerRegisterJob> kungFuDeathGrip = this;
-    callback->UpdateFailed(aError);
+    callback->UpdateFailed(aExnType, aError);
     FailCommon(NS_ERROR_DOM_JS_EXCEPTION);
   }
 
@@ -2927,7 +2932,8 @@ ServiceWorkerManager::HandleError(JSContext* aCx,
                                   nsString aLine,
                                   uint32_t aLineNumber,
                                   uint32_t aColumnNumber,
-                                  uint32_t aFlags)
+                                  uint32_t aFlags,
+                                  JSExnType aExnType)
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(aPrincipal);
@@ -2967,7 +2973,7 @@ ServiceWorkerManager::HandleError(JSContext* aCx,
               "Script error caused ServiceWorker registration to fail: %s:%u '%s'",
               NS_ConvertUTF16toUTF8(aFilename).get(), aLineNumber,
               NS_ConvertUTF16toUTF8(aMessage).get()).get());
-    regJob->Fail(init);
+    regJob->Fail(aExnType, init);
   }
 
   return true;
