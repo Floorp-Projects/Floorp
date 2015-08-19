@@ -257,8 +257,8 @@ public:
   }
   void dumpAnnotationReason(DiagnosticsEngine &Diag, QualType T, SourceLocation Loc);
 
-  void reportErrorIfAbsent(DiagnosticsEngine &Diag, QualType T, SourceLocation Loc,
-                           unsigned ErrorID, unsigned NoteID) {
+  void reportErrorIfPresent(DiagnosticsEngine &Diag, QualType T, SourceLocation Loc,
+                            unsigned ErrorID, unsigned NoteID) {
     if (hasEffectiveAnnotation(T)) {
       Diag.Report(Loc, ErrorID) << T;
       Diag.Report(Loc, NoteID);
@@ -1127,24 +1127,24 @@ void DiagnosticsMatcher::ScopeChecker::run(
     return;
 
   case AV_Global:
-    StackClass.reportErrorIfAbsent(Diag, T, Loc, StackID, GlobalNoteID);
-    HeapClass.reportErrorIfAbsent(Diag, T, Loc, HeapID, GlobalNoteID);
+    StackClass.reportErrorIfPresent(Diag, T, Loc, StackID, GlobalNoteID);
+    HeapClass.reportErrorIfPresent(Diag, T, Loc, HeapID, GlobalNoteID);
     break;
 
   case AV_Automatic:
-    GlobalClass.reportErrorIfAbsent(Diag, T, Loc, GlobalID, StackNoteID);
-    HeapClass.reportErrorIfAbsent(Diag, T, Loc, HeapID, StackNoteID);
+    GlobalClass.reportErrorIfPresent(Diag, T, Loc, GlobalID, StackNoteID);
+    HeapClass.reportErrorIfPresent(Diag, T, Loc, HeapID, StackNoteID);
     break;
 
   case AV_Temporary:
-    GlobalClass.reportErrorIfAbsent(Diag, T, Loc, GlobalID, TemporaryNoteID);
-    HeapClass.reportErrorIfAbsent(Diag, T, Loc, HeapID, TemporaryNoteID);
+    GlobalClass.reportErrorIfPresent(Diag, T, Loc, GlobalID, TemporaryNoteID);
+    HeapClass.reportErrorIfPresent(Diag, T, Loc, HeapID, TemporaryNoteID);
     break;
 
   case AV_Heap:
-    GlobalClass.reportErrorIfAbsent(Diag, T, Loc, GlobalID, HeapNoteID);
-    StackClass.reportErrorIfAbsent(Diag, T, Loc, StackID, HeapNoteID);
-    NonHeapClass.reportErrorIfAbsent(Diag, T, Loc, NonHeapID, HeapNoteID);
+    GlobalClass.reportErrorIfPresent(Diag, T, Loc, GlobalID, HeapNoteID);
+    StackClass.reportErrorIfPresent(Diag, T, Loc, StackID, HeapNoteID);
+    NonHeapClass.reportErrorIfPresent(Diag, T, Loc, NonHeapID, HeapNoteID);
     break;
   }
 }

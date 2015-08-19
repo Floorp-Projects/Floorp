@@ -32,6 +32,7 @@
 #include "SVGDocumentWrapper.h"
 #include "nsIDOMEventListener.h"
 #include "SurfaceCache.h"
+#include "nsDocument.h"
 
 // undef the GetCurrentTime macro defined in WinBase.h from the MS Platform SDK
 #undef GetCurrentTime
@@ -1247,6 +1248,24 @@ VectorImage::InvalidateObserversOnNextRefreshDriverTick()
     mHasPendingInvalidation = true;
   } else {
     SendInvalidationNotifications();
+  }
+}
+
+void
+VectorImage::PropagateUseCounters(nsIDocument* aParentDocument)
+{
+  nsIDocument* doc = mSVGDocumentWrapper->GetDocument();
+  if (doc) {
+    doc->PropagateUseCounters(aParentDocument);
+  }
+}
+
+void
+VectorImage::ReportUseCounters()
+{
+  nsIDocument* doc = mSVGDocumentWrapper->GetDocument();
+  if (doc) {
+    static_cast<nsDocument*>(doc)->ReportUseCounters();
   }
 }
 

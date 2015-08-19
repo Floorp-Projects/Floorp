@@ -271,7 +271,7 @@ nsMeterFrame::ShouldUseNativeStyle() const
   //   background.
   return StyleDisplay()->mAppearance == NS_THEME_METERBAR &&
          mBarDiv->GetPrimaryFrame()->StyleDisplay()->mAppearance == NS_THEME_METERBAR_CHUNK &&
-         !PresContext()->HasAuthorSpecifiedRules(const_cast<nsMeterFrame*>(this),
+         !PresContext()->HasAuthorSpecifiedRules(this,
                                                  NS_AUTHOR_SPECIFIED_BORDER | NS_AUTHOR_SPECIFIED_BACKGROUND) &&
          !PresContext()->HasAuthorSpecifiedRules(mBarDiv->GetPrimaryFrame(),
                                                  NS_AUTHOR_SPECIFIED_BORDER | NS_AUTHOR_SPECIFIED_BACKGROUND);

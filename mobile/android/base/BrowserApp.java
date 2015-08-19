@@ -30,8 +30,8 @@ import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.login.Engaged;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.gfx.BitmapUtils;
+import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
-import org.mozilla.gecko.gfx.LayerMarginsAnimator;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.health.BrowserHealthRecorder;
 import org.mozilla.gecko.health.BrowserHealthReporter;
@@ -160,7 +160,7 @@ public class BrowserApp extends GeckoApp
                         implements TabsPanel.TabsLayoutChangeListener,
                                    PropertyAnimator.PropertyAnimationListener,
                                    View.OnKeyListener,
-                                   LayerView.OnMetricsChangedListener,
+                                   LayerView.DynamicToolbarListener,
                                    BrowserSearch.OnSearchListener,
                                    BrowserSearch.OnEditSuggestionListener,
                                    OnUrlOpenListener,
@@ -205,7 +205,6 @@ public class BrowserApp extends GeckoApp
     private TabsPanel mTabsPanel;
     private ViewGroup mHomePagerContainer;
     private ActionModeCompat mActionMode;
-    private boolean mHideDynamicToolbarOnActionModeEnd;
     private TabHistoryController tabHistoryController;
     private ZoomedView mZoomedView;
 
@@ -250,10 +249,6 @@ public class BrowserApp extends GeckoApp
 
     // Stored value of the toolbar height, so we know when it's changed.
     private int mToolbarHeight;
-
-    // Stored value of whether the last metrics change allowed for toolbar
-    // scrolling.
-    private boolean mDynamicToolbarCanScroll;
 
     private SharedPreferencesHelper mSharedPreferencesHelper;
 
@@ -481,7 +476,7 @@ public class BrowserApp extends GeckoApp
                     updateHomePagerForTab(tab);
                 }
 
-                mHideDynamicToolbarOnActionModeEnd = false;
+                mDynamicToolbar.persistTemporaryVisibility();
                 break;
             case START:
                 if (Tabs.getInstance().isSelectedTab(tab)) {
@@ -1219,7 +1214,7 @@ public class BrowserApp extends GeckoApp
 
         if (enabled) {
             if (mLayerView != null) {
-                mLayerView.setOnMetricsChangedDynamicToolbarViewportListener(this);
+                mLayerView.getDynamicToolbarAnimator().addTranslationListener(this);
             }
             setToolbarMargin(0);
             mHomePagerContainer.setPadding(0, mBrowserChrome.getHeight(), 0, 0);
@@ -1227,11 +1222,14 @@ public class BrowserApp extends GeckoApp
             // Immediately show the toolbar when disabling the dynamic
             // toolbar.
             if (mLayerView != null) {
-               mLayerView.setOnMetricsChangedDynamicToolbarViewportListener(null);
+                mLayerView.getDynamicToolbarAnimator().removeTranslationListener(this);
             }
             mHomePagerContainer.setPadding(0, 0, 0, 0);
             if (mBrowserChrome != null) {
                 ViewHelper.setTranslationY(mBrowserChrome, 0);
+            }
+            if (mLayerView != null) {
+                ViewHelper.setTranslationY(mLayerView, 0);
             }
         }
 
@@ -1537,65 +1535,60 @@ public class BrowserApp extends GeckoApp
     }
 
     @Override
+    public void onTranslationChanged(float aToolbarTranslation, float aLayerViewTranslation) {
+        if (mBrowserChrome == null) {
+            return;
+        }
+
+        final View browserChrome = mBrowserChrome;
+        final View layerView = mLayerView;
+        final ToolbarProgressView progressView = mProgressView;
+
+        ViewHelper.setTranslationY(browserChrome, -aToolbarTranslation);
+        ViewHelper.setTranslationY(layerView, mToolbarHeight - aLayerViewTranslation);
+
+        // Stop the progressView from moving all the way up so that we can still see a good chunk of it
+        // when the chrome is offscreen.
+        final float offset = getResources().getDimensionPixelOffset(R.dimen.progress_bar_scroll_offset);
+        final float progressTranslationY = Math.min(aToolbarTranslation, mToolbarHeight - offset);
+        ViewHelper.setTranslationY(progressView, -progressTranslationY);
+
+        if (mFormAssistPopup != null) {
+            mFormAssistPopup.onTranslationChanged();
+        }
+    }
+
+    @Override
     public void onMetricsChanged(ImmutableViewportMetrics aMetrics) {
         if (isHomePagerVisible() || mBrowserChrome == null) {
             return;
         }
 
-        // If the page has shrunk so that the toolbar no longer scrolls, make
-        // sure the toolbar is visible.
-        if (aMetrics.getPageHeight() <= aMetrics.getHeight()) {
-            if (mDynamicToolbarCanScroll) {
-                mDynamicToolbarCanScroll = false;
-                if (mBrowserChrome.getVisibility() != View.VISIBLE) {
-                    ThreadUtils.postToUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mDynamicToolbar.setVisible(true, VisibilityTransition.ANIMATE);
-                        }
-                    });
-                }
-            }
-        } else {
-            mDynamicToolbarCanScroll = true;
-        }
-
-        final View browserChrome = mBrowserChrome;
-        final ToolbarProgressView progressView = mProgressView;
-        final int marginTop = Math.round(aMetrics.marginTop);
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                final float translationY = marginTop - browserChrome.getHeight();
-                ViewHelper.setTranslationY(browserChrome, translationY);
-
-                // Stop the progressView from moving all the way up so that we can still see a good chunk of it
-                // when the chrome is offscreen.
-                final float offset = getResources().getDimensionPixelOffset(R.dimen.progress_bar_scroll_offset);
-                final float progressTranslationY = Math.max(marginTop - browserChrome.getHeight(), offset - browserChrome.getHeight());
-                ViewHelper.setTranslationY(progressView, progressTranslationY);
-            }
-        });
-
-        if (mFormAssistPopup != null)
+        if (mFormAssistPopup != null) {
             mFormAssistPopup.onMetricsChanged(aMetrics);
+        }
     }
 
     @Override
     public void onPanZoomStopped() {
-        if (!mDynamicToolbar.isEnabled() || isHomePagerVisible()) {
+        if (!mDynamicToolbar.isEnabled() || isHomePagerVisible() ||
+            mBrowserChrome.getVisibility() != View.VISIBLE) {
             return;
         }
 
         // Make sure the toolbar is fully hidden or fully shown when the user
-        // lifts their finger. If the page is shorter than the viewport or if
-        // the user has reached the end of a long (longer than twice the viewport height) page,
-        // the toolbar is always shown.
+        // lifts their finger, depending on various conditions.
         ImmutableViewportMetrics metrics = mLayerView.getViewportMetrics();
-        final float height = metrics.viewportRectBottom - metrics.viewportRectTop;
-        if (metrics.getPageHeight() < metrics.getHeight()
-              || metrics.marginTop >= mToolbarHeight / 2
-              || (metrics.pageRectBottom == metrics.viewportRectBottom && metrics.pageRectBottom > 2*height)) {
+        float toolbarTranslation = mLayerView.getDynamicToolbarAnimator().getToolbarTranslation();
+
+        boolean shortPage = metrics.getPageHeight() < metrics.getHeight();
+        boolean toolbarMostlyVisible = toolbarTranslation < (mToolbarHeight / 2);
+        boolean atBottomOfLongPage = (metrics.pageRectBottom == metrics.viewportRectBottom())
+            && (metrics.pageRectBottom > 2 * metrics.getHeight());
+        Log.v(LOGTAG, "On pan/zoom stopped, short page: " + shortPage
+            + "; toolbarMostlyVisible: " + toolbarMostlyVisible
+            + "; atBottomOfLongPage: " + atBottomOfLongPage);
+        if (shortPage || toolbarMostlyVisible || atBottomOfLongPage) {
             mDynamicToolbar.setVisible(true, VisibilityTransition.ANIMATE);
         } else {
             mDynamicToolbar.setVisible(false, VisibilityTransition.ANIMATE);
@@ -1629,7 +1622,7 @@ public class BrowserApp extends GeckoApp
 
         if (mLayerView != null && height != mToolbarHeight) {
             mToolbarHeight = height;
-            mLayerView.getLayerMarginsAnimator().setMaxMargins(0, height, 0, 0);
+            mLayerView.getDynamicToolbarAnimator().setMaxTranslation(height);
             mDynamicToolbar.setVisible(true, VisibilityTransition.IMMEDIATE);
         }
     }
@@ -3137,18 +3130,20 @@ public class BrowserApp extends GeckoApp
             @Override
             public void run() {
                 if (fullscreen) {
-                    mBrowserChrome.setVisibility(View.GONE);
                     if (mDynamicToolbar.isEnabled()) {
                         mDynamicToolbar.setVisible(false, VisibilityTransition.IMMEDIATE);
-                        mLayerView.getLayerMarginsAnimator().setMaxMargins(0, 0, 0, 0);
+                        mDynamicToolbar.setPinned(true, PinReason.FULL_SCREEN);
                     } else {
                         setToolbarMargin(0);
                     }
+                    mBrowserChrome.setVisibility(View.GONE);
                 } else {
                     mBrowserChrome.setVisibility(View.VISIBLE);
                     if (mDynamicToolbar.isEnabled()) {
+                        mDynamicToolbar.setPinned(false, PinReason.FULL_SCREEN);
                         mDynamicToolbar.setVisible(true, VisibilityTransition.IMMEDIATE);
-                        mLayerView.getLayerMarginsAnimator().setMaxMargins(0, mToolbarHeight, 0, 0);
+                    } else {
+                        setToolbarMargin(mBrowserChrome.getHeight());
                     }
                 }
             }
@@ -3897,17 +3892,14 @@ public class BrowserApp extends GeckoApp
         // If actionMode is null, we're not currently showing one. Flip to the action mode view
         if (mActionMode == null) {
             mActionBarFlipper.showNext();
-            LayerMarginsAnimator margins = mLayerView.getLayerMarginsAnimator();
+            DynamicToolbarAnimator toolbar = mLayerView.getDynamicToolbarAnimator();
 
             // If the toolbar is dynamic and not currently showing, just slide it in
-            if (mDynamicToolbar.isEnabled() && !margins.areMarginsShown()) {
-                margins.setMaxMargins(0, mBrowserChrome.getHeight(), 0, 0);
-                mDynamicToolbar.setVisible(true, VisibilityTransition.ANIMATE);
-                mHideDynamicToolbarOnActionModeEnd = true;
+            if (mDynamicToolbar.isEnabled() && toolbar.getToolbarTranslation() != 0) {
+                mDynamicToolbar.setTemporarilyVisible(true, VisibilityTransition.ANIMATE);
             } else {
                 // Otherwise, we animate the actionbar itself
                 mActionBar.animateIn();
-                mHideDynamicToolbarOnActionModeEnd = false;
             }
 
             mDynamicToolbar.setPinned(true, PinReason.ACTION_MODE);
@@ -3937,9 +3929,7 @@ public class BrowserApp extends GeckoApp
 
         // Only slide the urlbar out if it was hidden when the action mode started
         // Don't animate hiding it so that there's no flash as we switch back to url mode
-        if (mHideDynamicToolbarOnActionModeEnd) {
-            mDynamicToolbar.setVisible(false, VisibilityTransition.IMMEDIATE);
-        }
+        mDynamicToolbar.setTemporarilyVisible(false, VisibilityTransition.IMMEDIATE);
     }
 
     @Override

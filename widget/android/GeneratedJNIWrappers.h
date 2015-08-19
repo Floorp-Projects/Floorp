@@ -2695,17 +2695,18 @@ public:
                 int32_t,
                 int32_t,
                 float,
-                bool> Args;
+                bool,
+                int32_t> Args;
         static constexpr char name[] = "syncViewportInfo";
         static constexpr char signature[] =
-                "(IIIIFZ)Lorg/mozilla/gecko/gfx/ViewTransform;";
+                "(IIIIFZI)Lorg/mozilla/gecko/gfx/ViewTransform;";
         static const bool isStatic = false;
         static const bool isMultithreaded = true;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    auto SyncViewportInfo(int32_t, int32_t, int32_t, int32_t, float, bool) const -> mozilla::jni::Object::LocalRef;
+    auto SyncViewportInfo(int32_t, int32_t, int32_t, int32_t, float, bool, int32_t) const -> mozilla::jni::Object::LocalRef;
 
 };
 
@@ -2739,19 +2740,19 @@ public:
                 float,
                 float,
                 float,
-                float,
-                float,
+                int32_t,
+                int32_t,
                 float> Args;
         static constexpr char name[] = "<init>";
         static constexpr char signature[] =
-                "(FFFFFFFFFFFFF)V";
+                "(FFFFFFFFFFIIF)V";
         static const bool isStatic = false;
         static const bool isMultithreaded = true;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static auto New(float, float, float, float, float, float, float, float, float, float, float, float, float) -> ImmutableViewportMetrics::LocalRef;
+    static auto New(float, float, float, float, float, float, float, float, float, float, int32_t, int32_t, float) -> ImmutableViewportMetrics::LocalRef;
 
 };
 
@@ -3082,12 +3083,12 @@ public:
     auto FixedLayerMarginTop(float) const -> void;
 
 public:
-    struct OffsetX_t {
+    struct Height_t {
         typedef ViewTransform Owner;
         typedef float ReturnType;
         typedef float SetterType;
         typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "offsetX";
+        static constexpr char name[] = "height";
         static constexpr char signature[] =
                 "F";
         static const bool isStatic = false;
@@ -3096,28 +3097,9 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    auto OffsetX() const -> float;
+    auto Height() const -> float;
 
-    auto OffsetX(float) const -> void;
-
-public:
-    struct OffsetY_t {
-        typedef ViewTransform Owner;
-        typedef float ReturnType;
-        typedef float SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "offsetY";
-        static constexpr char signature[] =
-                "F";
-        static const bool isStatic = false;
-        static const bool isMultithreaded = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    auto OffsetY() const -> float;
-
-    auto OffsetY(float) const -> void;
+    auto Height(float) const -> void;
 
 public:
     struct Scale_t {
@@ -3137,6 +3119,25 @@ public:
     auto Scale() const -> float;
 
     auto Scale(float) const -> void;
+
+public:
+    struct Width_t {
+        typedef ViewTransform Owner;
+        typedef float ReturnType;
+        typedef float SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "width";
+        static constexpr char signature[] =
+                "F";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    auto Width() const -> float;
+
+    auto Width(float) const -> void;
 
 public:
     struct X_t {

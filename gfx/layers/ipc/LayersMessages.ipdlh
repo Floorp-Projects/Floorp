@@ -217,7 +217,6 @@ struct CommonLayerAttributes {
   bool isFixedPosition;
   uint64_t fixedPositionScrollContainerId;
   LayerPoint fixedPositionAnchor;
-  LayerMargin fixedPositionMargin;
   bool isStickyPosition;
   uint64_t stickyScrollContainerId;
   LayerRect stickyScrollRangeOuter;

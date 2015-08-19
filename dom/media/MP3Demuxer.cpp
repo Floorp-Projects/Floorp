@@ -380,6 +380,7 @@ MP3TrackDemuxer::Duration(int64_t aNumFrames) const {
 MediaByteRange
 MP3TrackDemuxer::FindNextFrame() {
   static const int BUFFER_SIZE = 4096;
+  static const int MAX_SKIPPED_BYTES = 10 * BUFFER_SIZE;
 
   MP3DEMUXER_LOGV("FindNext() Begin mOffset=%" PRIu64 " mNumParsedFrames=%" PRIu64
               " mFrameIndex=%" PRId64
@@ -393,8 +394,13 @@ MP3TrackDemuxer::FindNextFrame() {
   const uint8_t* frameBeg = nullptr;
   const uint8_t* bufferEnd = nullptr;
 
-  while (frameBeg == bufferEnd &&
-         (read = Read(buffer, mOffset, BUFFER_SIZE)) > 0) {
+  while (frameBeg == bufferEnd) {
+    if ((!mParser.FirstFrame().Length() &&
+         mOffset - mParser.ID3Header().Size() > MAX_SKIPPED_BYTES) ||
+        (read = Read(buffer, mOffset, BUFFER_SIZE)) == 0) {
+      // This is not a valid MPEG audio stream or we've reached EOS, give up.
+      break;
+    }
     MOZ_ASSERT(mOffset + read > mOffset);
     mOffset += read;
     bufferEnd = buffer + read;

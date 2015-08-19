@@ -307,14 +307,6 @@ public:
                nsACString& aDatabaseId);
 
   static nsresult
-  GetInfoFromURI(nsIURI* aURI,
-                 uint32_t aAppId,
-                 bool aInMozBrowser,
-                 nsACString* aGroup,
-                 nsACString* aOrigin,
-                 bool* aIsApp);
-
-  static nsresult
   GetInfoFromPrincipal(nsIPrincipal* aPrincipal,
                        nsACString* aGroup,
                        nsACString* aOrigin,

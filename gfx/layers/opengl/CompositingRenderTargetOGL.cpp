@@ -16,9 +16,10 @@ using namespace mozilla::gl;
 
 CompositingRenderTargetOGL::~CompositingRenderTargetOGL()
 {
-  mGL->MakeCurrent();
-  mGL->fDeleteTextures(1, &mTextureHandle);
-  mGL->fDeleteFramebuffers(1, &mFBO);
+  if (mGL->MakeCurrent()) {
+    mGL->fDeleteTextures(1, &mTextureHandle);
+    mGL->fDeleteFramebuffers(1, &mFBO);
+  }
 }
 
 void

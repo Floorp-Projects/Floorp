@@ -972,6 +972,8 @@ public:
    */
   void OnAppThemeChanged();
 
+  void ReportUseCounters();
+
 private:
   void AddOnDemandBuiltInUASheet(mozilla::CSSStyleSheet* aSheet);
   nsRadioGroupStruct* GetRadioGroupInternal(const nsAString& aName) const;
@@ -1478,11 +1480,14 @@ public:
 
   static void XPCOMShutdown();
 
-  bool mIsTopLevelContentDocument:1;
+  bool mIsTopLevelContentDocument: 1;
+  bool mIsContentDocument: 1;
 
   bool IsTopLevelContentDocument();
-
   void SetIsTopLevelContentDocument(bool aIsTopLevelContentDocument);
+
+  bool IsContentDocument() const;
+  void SetIsContentDocument(bool aIsContentDocument);
 
   js::ExpandoAndGeneration mExpandoAndGeneration;
 
@@ -1675,6 +1680,14 @@ public:
   // The number of pointer lock requests which are cancelled by the user.
   // The value is saturated to kPointerLockRequestLimit+1 = 3.
   uint8_t mCancelledPointerLockRequests:2;
+
+  // Whether we have reported use counters for this document with Telemetry yet.
+  // Normally this is only done at document destruction time, but for image
+  // documents (SVG documents) that are not guaranteed to be destroyed, we
+  // report use counters when the image cache no longer has any imgRequestProxys
+  // pointing to them.  We track whether we ever reported use counters so
+  // that we only report them once for the document.
+  bool mReportedUseCounters:1;
 
   uint8_t mPendingFullscreenRequests;
 

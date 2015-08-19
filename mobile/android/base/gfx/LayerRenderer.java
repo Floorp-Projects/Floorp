@@ -323,22 +323,22 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         return pixelBuffer;
     }
 
-    private RenderContext createScreenContext(ImmutableViewportMetrics metrics, PointF offset) {
+    private RenderContext createScreenContext(ImmutableViewportMetrics metrics) {
         RectF viewport = new RectF(0.0f, 0.0f, metrics.getWidth(), metrics.getHeight());
         RectF pageRect = metrics.getPageRect();
 
-        return createContext(viewport, pageRect, 1.0f, offset);
+        return createContext(viewport, pageRect, 1.0f);
     }
 
-    private RenderContext createPageContext(ImmutableViewportMetrics metrics, PointF offset) {
+    private RenderContext createPageContext(ImmutableViewportMetrics metrics) {
         RectF viewport = metrics.getViewport();
         RectF pageRect = metrics.getPageRect();
         float zoomFactor = metrics.zoomFactor;
 
-        return createContext(new RectF(RectUtils.round(viewport)), pageRect, zoomFactor, offset);
+        return createContext(new RectF(RectUtils.round(viewport)), pageRect, zoomFactor);
     }
 
-    private RenderContext createContext(RectF viewport, RectF pageRect, float zoomFactor, PointF offset) {
+    private RenderContext createContext(RectF viewport, RectF pageRect, float zoomFactor) {
         if (mCoordBuffer == null) {
             // Initialize the FloatBuffer that will be used to store all vertices and texture
             // coordinates in draw() commands.
@@ -349,7 +349,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
                 throw new IllegalStateException();
             }
         }
-        return new RenderContext(viewport, pageRect, zoomFactor, offset,
+        return new RenderContext(viewport, pageRect, zoomFactor,
                                  mPositionHandle, mTextureHandle, mCoordBuffer);
     }
 
@@ -435,16 +435,14 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         private boolean mUpdated;
         private final Rect mPageRect;
         private final Rect mAbsolutePageRect;
-        private final PointF mRenderOffset;
 
         public Frame(ImmutableViewportMetrics metrics) {
             mFrameMetrics = metrics;
 
             // Work out the offset due to margins
             Layer rootLayer = mView.getLayerClient().getRoot();
-            mRenderOffset = mFrameMetrics.getMarginOffset();
-            mPageContext = createPageContext(metrics, mRenderOffset);
-            mScreenContext = createScreenContext(metrics, mRenderOffset);
+            mPageContext = createPageContext(metrics);
+            mScreenContext = createScreenContext(metrics);
 
             RectF pageRect = mFrameMetrics.getPageRect();
             mAbsolutePageRect = RectUtils.round(pageRect);
@@ -582,8 +580,8 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
             // When scrolling fast, do not request zoomed view render to avoid to slow down
             // the scroll in the main view.
             // Speed is estimated using the offset changes between 2 display frame calls
-            final float viewLeft = context.viewport.left - context.offset.x;
-            final float viewTop = context.viewport.top - context.offset.y;
+            final float viewLeft = context.viewport.left;
+            final float viewTop = context.viewport.top;
             boolean shouldWaitToRender = false;
 
             if (Math.abs(mLastViewLeft - viewLeft) > MAX_SCROLL_SPEED_TO_REQUEST_ZOOM_RENDER ||
