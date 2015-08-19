@@ -1,9 +1,10 @@
 // ----------------------------------------------------------------------------
-// Tests that navigating away from the initiating page during the install
-// doesn't break the install.
-// This verifies bug 473060
+// Tests that navigating to a new origin cancels ongoing installs and closes
+// the install UI.
+let sawUnload = null;
+
 function test() {
-  Harness.downloadProgressCallback = download_progress;
+  Harness.installConfirmCallback = confirm_install;
   Harness.installEndedCallback = install_ended;
   Harness.installsCompletedCallback = finish_test;
   Harness.setup();
@@ -18,19 +19,26 @@ function test() {
   gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
 }
 
-function download_progress(addon, value, maxValue) {
-  gBrowser.loadURI(TESTROOT + "enabled.html");
+function confirm_install(window) {
+  sawUnload = BrowserTestUtils.waitForEvent(window, "unload");
+
+  gBrowser.loadURI(TESTROOT2 + "enabled.html");
+
+  return Harness.leaveOpen;
 }
 
 function install_ended(install, addon) {
-  install.cancel();
+  ok(false, "Should not have seen installs complete");
 }
 
 function finish_test(count) {
-  is(count, 1, "1 Add-on should have been successfully installed");
+  is(count, 0, "No add-ons should have been successfully installed");
 
   Services.perms.remove(makeURI("http://example.com"), "install");
 
-  gBrowser.removeCurrentTab();
-  Harness.finish();
+  sawUnload.then(() => {
+    ok(true, "The install UI should have closed itself.");
+    gBrowser.removeCurrentTab();
+    Harness.finish();
+  });
 }
