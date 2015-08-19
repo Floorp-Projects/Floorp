@@ -171,23 +171,6 @@ struct IsScoConnectedRequest
 {
 };
 
-struct ReplyTovCardPullingRequest
-{
-  PBlob blob;
-};
-
-struct ReplyToPhonebookPullingRequest
-{
-  PBlob blob;
-  uint16_t phonebookSize;
-};
-
-struct ReplyTovCardListingRequest
-{
-  PBlob blob;
-  uint16_t phonebookSize;
-};
-
 struct AnswerWaitingCallRequest
 {
 };
@@ -323,9 +306,6 @@ union Request
   ConnectScoRequest;
   DisconnectScoRequest;
   IsScoConnectedRequest;
-  ReplyTovCardPullingRequest;
-  ReplyToPhonebookPullingRequest;
-  ReplyTovCardListingRequest;
   AnswerWaitingCallRequest;
   IgnoreWaitingCallRequest;
   ToggleCallsRequest;

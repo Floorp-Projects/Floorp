@@ -143,37 +143,6 @@ public:
   IsScoConnected(BluetoothReplyRunnable* aRunnable);
 
   virtual void
-  ReplyTovCardPulling(BlobParent* aBlobParent,
-                      BlobChild* aBlobChild,
-                      BluetoothReplyRunnable* aRunnable);
-
-  virtual void
-  ReplyTovCardPulling(Blob* aBlob,
-                      BluetoothReplyRunnable* aRunnable);
-
-  virtual void
-  ReplyToPhonebookPulling(BlobParent* aBlobParent,
-                          BlobChild* aBlobChild,
-                          uint16_t aPhonebookSize,
-                          BluetoothReplyRunnable* aRunnable);
-
-  virtual void
-  ReplyToPhonebookPulling(Blob* aBlob,
-                          uint16_t aPhonebookSize,
-                          BluetoothReplyRunnable* aRunnable);
-
-  virtual void
-  ReplyTovCardListing(BlobParent* aBlobParent,
-                      BlobChild* aBlobChild,
-                      uint16_t aPhonebookSize,
-                      BluetoothReplyRunnable* aRunnable);
-
-  virtual void
-  ReplyTovCardListing(Blob* aBlob,
-                      uint16_t aPhonebookSize,
-                      BluetoothReplyRunnable* aRunnable);
-
-  virtual void
   AnswerWaitingCall(BluetoothReplyRunnable* aRunnable);
 
   virtual void
