@@ -8,7 +8,7 @@
  */
 
 function* spawnTest() {
-  loadFrameScripts();
+  PMM_loadFrameScripts(gBrowser);
   let { target, toolbox, panel } = yield initPerformance(SIMPLE_URL);
   let { $, EVENTS, gFront, PerformanceController, OverviewView, RecordingsView, WaterfallView } = panel.panelWin;
 
