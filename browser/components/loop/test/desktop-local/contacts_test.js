@@ -13,7 +13,7 @@ describe("loop.contacts", function() {
   var fakeEditContactButtonText = "Fake Edit Contact";
   var fakeDoneButtonText = "Fake Done";
   // The fake contacts array is copied each time mozLoop.contacts.getAll() is called.
-  var fakeContacts = [{
+  var fakeManyContacts = [{
     id: 1,
     _guid: 1,
     name: ["Ally Avocado"],
@@ -71,7 +71,45 @@ describe("loop.contacts", function() {
     category: ["google"],
     published: 1406798311748,
     updated: 1406798311748
+  }, {
+    id: 5,
+    _guid: 5,
+    name: ["Erin J. Bazile"],
+    email: [{
+      "pref": true,
+      "type": ["work"],
+      "value": "erinjbazile@armyspy.com"
+    }],
+    category: ["google"],
+    published: 1406798311748,
+    updated: 1406798311748
+  }, {
+    id: 6,
+    _guid: 6,
+    name: ["Kelly F. Maldanado"],
+    email: [{
+      "pref": true,
+      "type": ["work"],
+      "value": "kellyfmaldonado@jourrapide.com"
+    }],
+    category: ["google"],
+    published: 1406798311748,
+    updated: 1406798311748
+  }, {
+    id: 7,
+    _guid: 7,
+    name: ["John J. Brown"],
+    email: [{
+      "pref": true,
+      "type": ["work"],
+      "value": "johnjbrow@johndoe.com"
+    }],
+    category: ["google"],
+    published: 1406798311748,
+    updated: 1406798311748,
+    blocked: true
   }];
+  var fakeFewerContacts = fakeManyContacts.slice(0, 4);
   var sandbox;
   var fakeWindow;
   var notifications;
@@ -115,7 +153,7 @@ describe("loop.contacts", function() {
       },
       contacts: {
         getAll: function(callback) {
-          callback(null, [].concat(fakeContacts));
+          callback(null, [].concat(fakeFewerContacts));
         },
         on: sandbox.stub()
       },
@@ -148,10 +186,10 @@ describe("loop.contacts", function() {
 
       // When gravatars are enabled, contacts should be rendered with gravatars.
       var gravatars = node.querySelectorAll(".contact img[src=gravatarsEnabled]");
-      expect(gravatars.length).to.equal(enabled ? fakeContacts.length : 0);
+      expect(gravatars.length).to.equal(enabled ? fakeFewerContacts.length : 0);
       // Sanity check the reverse:
       gravatars = node.querySelectorAll(".contact img[src=gravatarsDisabled]");
-      expect(gravatars.length).to.equal(enabled ? 0 : fakeContacts.length);
+      expect(gravatars.length).to.equal(enabled ? 0 : fakeFewerContacts.length);
     }
 
     it("should show the gravatars promo box", function() {
@@ -297,7 +335,7 @@ describe("loop.contacts", function() {
     describe("#RenderWithContacts", function() {
       beforeEach(function() {
         sandbox.stub(navigator.mozLoop.contacts, "getAll", function(cb) {
-          cb(null, [].concat(fakeContacts));
+          cb(null, [].concat(fakeFewerContacts));
         });
         listView = TestUtils.renderIntoDocument(
           React.createElement(loop.contacts.ContactsList, {
@@ -311,6 +349,120 @@ describe("loop.contacts", function() {
       it("should show a contacts title", function() {
         expect(node.querySelector(".contact-list-title")).not.to.eql(null);
         sinon.assert.calledWithExactly(mozL10nGetSpy, "contact_list_title");
+      });
+
+      it("should not render the filter view unless MIN_CONTACTS_FOR_FILTERING",
+         function() {
+           var filterView = listView.getDOMNode()
+             .querySelector(".contact-filter-container");
+
+           expect(filterView).to.eql(null);
+         });
+    });
+
+    describe("ContactsFiltering", function() {
+      beforeEach(function() {
+        navigator.mozLoop.contacts = {
+          getAll: function(callback) {
+            callback(null, [].concat(fakeManyContacts));
+          },
+          on: sandbox.stub()
+        };
+        listView = TestUtils.renderIntoDocument(
+          React.createElement(loop.contacts.ContactsList, {
+            mozLoop: navigator.mozLoop,
+            notifications: notifications,
+            startForm: function() {}
+          }));
+        node = listView.getDOMNode();
+      });
+
+      it("should filter a non-existent user name", function() {
+        expect(listView.filterContact("foo")(fakeFewerContacts[0]))
+          .to.eql(false);
+      });
+
+      it("should display search returned no contacts view", function() {
+        listView.setState({
+          filter: "foo"
+        });
+
+        var view = node.querySelector(".contact-search-list-empty");
+
+        expect(view).to.not.eql(null);
+      });
+
+      it("should display the no search results strings", function() {
+        listView.setState({
+          filter: "foo"
+        });
+
+        sinon.assert.calledWithExactly(mozL10nGetSpy,
+                                       "no_search_results_message_heading");
+        sinon.assert.calledWithExactly(mozL10nGetSpy,
+                                       "no_search_results_message_subheading");
+      });
+
+      it("should filter the user name correctly", function() {
+        expect(listView.filterContact("ally")(fakeFewerContacts[0]))
+          .to.eql(true);
+      });
+
+      it("should filter and render a contact", function() {
+        listView.setState({
+          filter: "Ally"
+        });
+
+        var contacts = node.querySelectorAll(".contact");
+
+        expect(contacts.length).to.eql(1);
+      });
+
+      it("should render a list of contacts", function() {
+        var contactList = listView.getDOMNode().querySelectorAll(".contact");
+
+        expect(contactList.length).to.eql(fakeManyContacts.length);
+      });
+
+      it("should render the filter view for >= MIN_CONTACTS_FOR_FILTERING",
+         function() {
+           var filterView = listView.getDOMNode()
+             .querySelector(".contact-filter-container");
+
+           expect(filterView).to.not.eql(null);
+         });
+
+      it("should filter by name", function() {
+        var input = listView.getDOMNode()
+          .querySelector(".contact-filter-container input");
+
+        React.addons.TestUtils.Simulate.change(input,
+                                               { target: { value: "Ally" } });
+        var contactList = listView.getDOMNode().querySelectorAll(".contact");
+
+        expect(contactList.length).to.eql(1);
+      });
+
+      it("should filter by email", function() {
+        var input = listView.getDOMNode()
+          .querySelector(".contact-filter-container input");
+
+        React.addons.TestUtils.Simulate.change(input,
+                                               { target: { value: "@hotmail" } });
+        var contactList = listView.getDOMNode().querySelectorAll(".contact");
+
+        expect(contactList.length).to.eql(1);
+      });
+
+      it("should filter by phone number", function() {
+        var input = listView.getDOMNode()
+          .querySelector(".contact-filter-container input");
+
+        React.addons.TestUtils.Simulate.change(input,
+                                               { target: { value: "12345678" } });
+        var contactList = listView.getDOMNode().querySelectorAll(".contact");
+
+        expect(contactList.length).to.eql(1);
       });
     });
 
