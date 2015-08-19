@@ -1173,7 +1173,8 @@ BluetoothGattManager::WriteCharacteristicValue(
     return;
   }
 
-  client->mWriteCharacteristicState.Assign(aWriteType, aValue, false, aRunnable);
+  client->mWriteCharacteristicState.Assign(
+    aWriteType, aValue, false, aRunnable);
 
   /**
    * First, write the characteristic value through an unauthenticated physical

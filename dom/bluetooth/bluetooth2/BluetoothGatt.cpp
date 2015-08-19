@@ -302,7 +302,8 @@ BluetoothGatt::HandleCharacteristicsDiscovered(const BluetoothValue& aValue)
     aValue.get_ArrayOfBluetoothNamedValue();
   MOZ_ASSERT(values.Length() == 2); // ServiceId, Characteristics
   MOZ_ASSERT(values[0].name().EqualsLiteral("serviceId"));
-  MOZ_ASSERT(values[0].value().type() == BluetoothValue::TBluetoothGattServiceId);
+  MOZ_ASSERT(values[0].value().type() ==
+             BluetoothValue::TBluetoothGattServiceId);
   MOZ_ASSERT(values[1].name().EqualsLiteral("characteristics"));
   MOZ_ASSERT(values[1].value().type() ==
              BluetoothValue::TArrayOfBluetoothGattCharAttribute);
@@ -325,11 +326,13 @@ BluetoothGatt::HandleDescriptorsDiscovered(const BluetoothValue& aValue)
     aValue.get_ArrayOfBluetoothNamedValue();
   MOZ_ASSERT(values.Length() == 3); // ServiceId, CharacteristicId, Descriptors
   MOZ_ASSERT(values[0].name().EqualsLiteral("serviceId"));
-  MOZ_ASSERT(values[0].value().type() == BluetoothValue::TBluetoothGattServiceId);
+  MOZ_ASSERT(values[0].value().type() ==
+             BluetoothValue::TBluetoothGattServiceId);
   MOZ_ASSERT(values[1].name().EqualsLiteral("characteristicId"));
   MOZ_ASSERT(values[1].value().type() == BluetoothValue::TBluetoothGattId);
   MOZ_ASSERT(values[2].name().EqualsLiteral("descriptors"));
-  MOZ_ASSERT(values[2].value().type() == BluetoothValue::TArrayOfBluetoothGattId);
+  MOZ_ASSERT(values[2].value().type() ==
+             BluetoothValue::TArrayOfBluetoothGattId);
 
   size_t index = mServices.IndexOf(
     values[0].value().get_BluetoothGattServiceId());
