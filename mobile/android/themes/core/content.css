@@ -316,6 +316,15 @@ xul|menulist:active {
   background-color: @color_background_highlight_overlay@;
 }
 
+button:active:hover,
+input[type="color"]:-moz-system-metric(color-picker-available):active:hover,
+input[type="reset"]:active:hover,
+input[type="button"]:active:hover,
+input[type="submit"]:active:hover {
+  -moz-padding-end: 7px;
+  -moz-padding-start: 7px;
+}
+
 input[type=number] > div > div, /* work around bug 946184 */
 input[type=number]::-moz-number-spin-box {
   display: none;
