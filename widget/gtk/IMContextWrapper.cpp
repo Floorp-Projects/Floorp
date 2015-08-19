@@ -94,6 +94,80 @@ public:
   virtual ~GetWritingModeName() {}
 };
 
+class GetTextRangeStyleText final : public nsAutoCString
+{
+public:
+    explicit GetTextRangeStyleText(const TextRangeStyle& aStyle)
+    {
+        if (!aStyle.IsDefined()) {
+            AssignLiteral("{ IsDefined()=false }");
+            return;
+        }
+
+        if (aStyle.IsLineStyleDefined()) {
+            AppendLiteral("{ mLineStyle=");
+            AppendLineStyle(aStyle.mLineStyle);
+            if (aStyle.IsUnderlineColorDefined()) {
+                AppendLiteral(", mUnderlineColor=");
+                AppendColor(aStyle.mUnderlineColor);
+            } else {
+                AppendLiteral(", IsUnderlineColorDefined=false");
+            }
+        } else {
+            AppendLiteral("{ IsLineStyleDefined()=false");
+        }
+
+        if (aStyle.IsForegroundColorDefined()) {
+            AppendLiteral(", mForegroundColor=");
+            AppendColor(aStyle.mForegroundColor);
+        } else {
+            AppendLiteral(", IsForegroundColorDefined()=false");
+        }
+
+        if (aStyle.IsBackgroundColorDefined()) {
+            AppendLiteral(", mBackgroundColor=");
+            AppendColor(aStyle.mBackgroundColor);
+        } else {
+            AppendLiteral(", IsBackgroundColorDefined()=false");
+        }
+
+        AppendLiteral(" }");
+    }
+    void AppendLineStyle(uint8_t aLineStyle)
+    {
+        switch (aLineStyle) {
+            case TextRangeStyle::LINESTYLE_NONE:
+                AppendLiteral("LINESTYLE_NONE");
+                break;
+            case TextRangeStyle::LINESTYLE_SOLID:
+                AppendLiteral("LINESTYLE_SOLID");
+                break;
+            case TextRangeStyle::LINESTYLE_DOTTED:
+                AppendLiteral("LINESTYLE_DOTTED");
+                break;
+            case TextRangeStyle::LINESTYLE_DASHED:
+                AppendLiteral("LINESTYLE_DASHED");
+                break;
+            case TextRangeStyle::LINESTYLE_DOUBLE:
+                AppendLiteral("LINESTYLE_DOUBLE");
+                break;
+            case TextRangeStyle::LINESTYLE_WAVY:
+                AppendLiteral("LINESTYLE_WAVY");
+                break;
+            default:
+                AppendPrintf("Invalid(0x%02X)", aLineStyle);
+                break;
+        }
+    }
+    void AppendColor(nscolor aColor)
+    {
+        AppendPrintf("{ R=0x%02X, G=0x%02X, B=0x%02X, A=0x%02X }",
+                     NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor),
+                     NS_GET_A(aColor));
+    }
+    virtual ~GetTextRangeStyleText() {};
+};
+
 const static bool kUseSimpleContextDefault = MOZ_WIDGET_GTK == 2;
 
 /******************************************************************************
@@ -1467,6 +1541,17 @@ IMContextWrapper::CreateTextRangeArray(GtkIMContext* aContext,
     return textRangeArray.forget();
 }
 
+/* static */
+nscolor
+IMContextWrapper::ToNscolor(PangoAttrColor* aPangoAttrColor)
+{
+    PangoColor& pangoColor = aPangoAttrColor->color;
+    uint8_t r = pangoColor.red / 0x100;
+    uint8_t g = pangoColor.green / 0x100;
+    uint8_t b = pangoColor.blue / 0x100;
+    return NS_RGB(r, g, b);
+}
+
 bool
 IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
                                const gchar* aUTF8CompositionString,
@@ -1520,6 +1605,73 @@ IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
     g_free(utf16CurrentClauseString);
     utf16CurrentClauseString = nullptr;
 
+    // Set styles
+    TextRangeStyle& style = aTextRange.mRangeStyle;
+
+    // Underline
+    PangoAttrInt* attrUnderline =
+        reinterpret_cast<PangoAttrInt*>(
+            pango_attr_iterator_get(aPangoAttrIter, PANGO_ATTR_UNDERLINE));
+    if (attrUnderline) {
+        switch (attrUnderline->value) {
+            case PANGO_UNDERLINE_NONE:
+                style.mLineStyle = TextRangeStyle::LINESTYLE_NONE;
+                break;
+            case PANGO_UNDERLINE_DOUBLE:
+                style.mLineStyle = TextRangeStyle::LINESTYLE_DOUBLE;
+                break;
+            case PANGO_UNDERLINE_ERROR:
+                style.mLineStyle = TextRangeStyle::LINESTYLE_WAVY;
+                break;
+            case PANGO_UNDERLINE_SINGLE:
+            case PANGO_UNDERLINE_LOW:
+                style.mLineStyle = TextRangeStyle::LINESTYLE_SOLID;
+                break;
+            default:
+                MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+                    ("GTKIM: %p   SetTextRange(), retrieved unknown underline "
+                     "style: %d",
+                     this, attrUnderline->value));
+                style.mLineStyle = TextRangeStyle::LINESTYLE_SOLID;
+                break;
+        }
+        style.mDefinedStyles |= TextRangeStyle::DEFINED_LINESTYLE;
+
+        // Underline color
+        PangoAttrColor* attrUnderlineColor =
+            reinterpret_cast<PangoAttrColor*>(
+                pango_attr_iterator_get(aPangoAttrIter,
+                                        PANGO_ATTR_UNDERLINE_COLOR));
+        if (attrUnderlineColor) {
+            style.mUnderlineColor = ToNscolor(attrUnderlineColor);
+            style.mDefinedStyles |= TextRangeStyle::DEFINED_UNDERLINE_COLOR;
+        }
+    } else {
+        style.mLineStyle = TextRangeStyle::LINESTYLE_NONE;
+        style.mDefinedStyles |= TextRangeStyle::DEFINED_LINESTYLE;
+    }
+
+    // Don't set colors if they are not specified.  They should be computed by
+    // textframe if only one of the colors are specified.
+
+    // Foreground color (text color)
+    PangoAttrColor* attrForeground =
+        reinterpret_cast<PangoAttrColor*>(
+            pango_attr_iterator_get(aPangoAttrIter, PANGO_ATTR_FOREGROUND));
+    if (attrForeground) {
+        style.mForegroundColor = ToNscolor(attrForeground);
+        style.mDefinedStyles |= TextRangeStyle::DEFINED_FOREGROUND_COLOR;
+    }
+
+    // Background color
+    PangoAttrColor* attrBackground =
+        reinterpret_cast<PangoAttrColor*>(
+            pango_attr_iterator_get(aPangoAttrIter, PANGO_ATTR_BACKGROUND));
+    if (attrBackground) {
+        style.mBackgroundColor = ToNscolor(attrBackground);
+        style.mDefinedStyles |= TextRangeStyle::DEFINED_BACKGROUND_COLOR;
+    }
+
     /**
      * Depend on gtk2's implementation on XIM support.
      * In aFeedback got from gtk2, there are only three types of data:
@@ -1530,11 +1682,7 @@ IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
      * a couple.
      */
 
-    PangoAttribute* attrUnderline =
-        pango_attr_iterator_get(aPangoAttrIter, PANGO_ATTR_UNDERLINE);
-    PangoAttribute* attrForeground =
-        pango_attr_iterator_get(aPangoAttrIter, PANGO_ATTR_FOREGROUND);
-    if (!attrUnderline && !attrForeground) {
+    if (!attrUnderline && !attrForeground && !attrBackground) {
         MOZ_LOG(gGtkIMLog, LogLevel::Warning,
             ("GTKIM: %p   SetTextRange(), FAILED, due to no attr", this));
         return false;
@@ -1557,9 +1705,10 @@ IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
 
     MOZ_LOG(gGtkIMLog, LogLevel::Debug,
         ("GTKIM: %p   SetTextRange(), succeeded, aTextRange= { "
-         "mStartOffset=%u, mEndOffset=%u, mRangeType=%s }",
+         "mStartOffset=%u, mEndOffset=%u, mRangeType=%s, mRangeStyle=%s }",
          this, aTextRange.mStartOffset, aTextRange.mEndOffset,
-         GetRangeTypeName(aTextRange.mRangeType)));
+         GetRangeTypeName(aTextRange.mRangeType),
+         GetTextRangeStyleText(aTextRange.mRangeStyle).get()));
 
     return true;
 }
