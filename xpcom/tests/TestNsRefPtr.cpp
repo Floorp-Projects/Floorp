@@ -451,15 +451,15 @@ main()
       else
         printf("foo1p == foo2p\n");
 
-      printf("\n### Test  7.5: can you compare a |nsCOMPtr| with NULL, 0, nullptr [!=]?\n");
-      if ( foo1p != 0 )
-      	printf("foo1p != 0\n");
-      if ( 0 != foo1p )
-      	printf("0 != foo1p\n");
-      if ( foo1p == 0 )
-      	printf("foo1p == 0\n");
-      if ( 0 == foo1p )
-      	printf("0 == foo1p\n");
+      printf("\n### Test  7.5: can you compare a |nsCOMPtr| with nullptr [!=]?\n");
+      if ( foo1p != nullptr )
+      	printf("foo1p != nullptr\n");
+      if ( nullptr != foo1p )
+      	printf("nullptr != foo1p\n");
+      if ( foo1p == nullptr )
+      	printf("foo1p == nullptr\n");
+      if ( nullptr == foo1p )
+      	printf("nullptr == foo1p\n");
 
 
       Foo* raw_foo2p = foo2p.get();
@@ -500,8 +500,8 @@ main()
       else
         printf("foo1p is NULL\n");
 
-      printf("\n### Test 13: numeric pointer test?\n");
-      if ( foo1p == 0 )
+      printf("\n### Test 13: null pointer test?\n");
+      if ( foo1p == nullptr )
         printf("foo1p is NULL\n");
       else
         printf("foo1p is not NULL\n");
