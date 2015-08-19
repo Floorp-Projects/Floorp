@@ -29,7 +29,7 @@
 #include "nsIScriptContext.h"
 #include "mozilla/Preferences.h"
 #include "nsIHTMLDocument.h"
-#include "nsILoadInfo.h"
+#include "nsIViewSourceChannel.h"
 
 using namespace mozilla;
 
@@ -803,15 +803,12 @@ nsHtml5TreeOpExecutor::GetViewSourceBaseURI()
     // We query the channel for the baseURI because in certain situations it
     // cannot otherwise be determined. If this process fails, fall back to the
     // standard method.
-    nsCOMPtr<nsIChannel> channel = mDocument->GetChannel();
-    if (channel) {
-      nsCOMPtr<nsILoadInfo> loadInfo;
-      nsresult rv = channel->GetLoadInfo(getter_AddRefs(loadInfo));
-      if (NS_SUCCEEDED(rv) && loadInfo) {
-        rv = loadInfo->GetBaseURI(getter_AddRefs(mViewSourceBaseURI));
-        if (NS_SUCCEEDED(rv) && mViewSourceBaseURI) {
-          return mViewSourceBaseURI;
-        }
+    nsCOMPtr<nsIViewSourceChannel> vsc =
+      do_QueryInterface(mDocument->GetChannel());
+    if (vsc) {
+      nsresult rv =  vsc->GetBaseURI(getter_AddRefs(mViewSourceBaseURI));
+      if (NS_SUCCEEDED(rv) && mViewSourceBaseURI) {
+        return mViewSourceBaseURI;
       }
     }
 

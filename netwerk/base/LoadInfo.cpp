@@ -23,8 +23,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    nsIPrincipal* aTriggeringPrincipal,
                    nsINode* aLoadingContext,
                    nsSecurityFlags aSecurityFlags,
-                   nsContentPolicyType aContentPolicyType,
-                   nsIURI* aBaseURI)
+                   nsContentPolicyType aContentPolicyType)
   : mLoadingPrincipal(aLoadingContext ?
                         aLoadingContext->NodePrincipal() : aLoadingPrincipal)
   , mTriggeringPrincipal(aTriggeringPrincipal ?
@@ -32,7 +31,6 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mLoadingContext(do_GetWeakReference(aLoadingContext))
   , mSecurityFlags(aSecurityFlags)
   , mContentPolicyType(aContentPolicyType)
-  , mBaseURI(aBaseURI)
   , mUpgradeInsecureRequests(false)
   , mInnerWindowID(0)
   , mOuterWindowID(0)
@@ -224,20 +222,6 @@ nsContentPolicyType
 LoadInfo::InternalContentPolicyType()
 {
   return mContentPolicyType;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetBaseURI(nsIURI** aBaseURI)
-{
-  *aBaseURI = mBaseURI;
-  NS_IF_ADDREF(*aBaseURI);
-  return NS_OK;
-}
-
-nsIURI*
-LoadInfo::BaseURI()
-{
-  return mBaseURI;
 }
 
 NS_IMETHODIMP
