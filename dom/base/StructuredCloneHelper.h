@@ -12,6 +12,7 @@
 #include "nsTArray.h"
 
 namespace mozilla {
+class ErrorResult;
 namespace layers {
 class Image;
 }

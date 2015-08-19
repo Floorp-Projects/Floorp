@@ -155,7 +155,7 @@ public:
    */
   void BeginTransaction(const gfx::IntRect& aTargetBounds,
                         ScreenRotation aRotation,
-                        mozilla::dom::ScreenOrientation aOrientation);
+                        mozilla::dom::ScreenOrientationInternal aOrientation);
 
   /**
    * The following methods may only be called after BeginTransaction()
@@ -344,6 +344,8 @@ public:
    */
   void SetIsFirstPaint() { mIsFirstPaint = true; }
 
+  void SetPaintSyncId(int32_t aSyncId) { mPaintSyncId = aSyncId; }
+
   static void PlatformSyncBeforeUpdate();
 
 protected:
@@ -366,6 +368,7 @@ private:
   DiagnosticTypes mDiagnosticTypes;
   bool mIsFirstPaint;
   bool mWindowOverlayChanged;
+  int32_t mPaintSyncId;
   InfallibleTArray<PluginWindowData> mPluginWindowData;
 };
 

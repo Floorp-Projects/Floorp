@@ -11,6 +11,7 @@
 #include "nsCOMPtr.h"
 
 class nsIChannel;
+class nsIDocument;
 class nsIURI;
 
 namespace mozilla {
@@ -66,6 +67,7 @@ public:
     return *this;
   }
 
+  void InitFromDocument(nsIDocument* aDoc);
   void InitFromChannel(nsIChannel* aChannel);
   void InitFromIPCChannelInfo(const IPCChannelInfo& aChannelInfo);
 

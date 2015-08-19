@@ -22,10 +22,12 @@ public class DynamicToolbar {
     private final EnumSet<PinReason> pinFlags = EnumSet.noneOf(PinReason.class);
     private LayerView layerView;
     private OnEnabledChangedListener enabledChangedListener;
+    private boolean temporarilyVisible;
 
     public enum PinReason {
         RELAYOUT,
-        ACTION_MODE
+        ACTION_MODE,
+        FULL_SCREEN
     }
 
     public enum VisibilityTransition {
@@ -113,9 +115,39 @@ public class DynamicToolbar {
 
         final boolean isImmediate = transition == VisibilityTransition.IMMEDIATE;
         if (visible) {
-            layerView.getLayerMarginsAnimator().showMargins(isImmediate);
+            layerView.getDynamicToolbarAnimator().showToolbar(isImmediate);
         } else {
-            layerView.getLayerMarginsAnimator().hideMargins(isImmediate);
+            layerView.getDynamicToolbarAnimator().hideToolbar(isImmediate);
+        }
+    }
+
+    public void setTemporarilyVisible(boolean visible, VisibilityTransition transition) {
+        ThreadUtils.assertOnUiThread();
+
+        if (layerView == null) {
+            return;
+        }
+
+        if (visible == temporarilyVisible) {
+            // nothing to do
+            return;
+        }
+
+        temporarilyVisible = visible;
+        final boolean isImmediate = transition == VisibilityTransition.IMMEDIATE;
+        if (visible) {
+            layerView.getDynamicToolbarAnimator().showToolbar(isImmediate);
+        } else {
+            layerView.getDynamicToolbarAnimator().hideToolbar(isImmediate);
+        }
+    }
+
+    public void persistTemporaryVisibility() {
+        ThreadUtils.assertOnUiThread();
+
+        if (temporarilyVisible) {
+            temporarilyVisible = false;
+            setVisible(true, VisibilityTransition.IMMEDIATE);
         }
     }
 
@@ -132,7 +164,7 @@ public class DynamicToolbar {
             pinFlags.remove(reason);
         }
 
-        layerView.getLayerMarginsAnimator().setMarginsPinned(!pinFlags.isEmpty());
+        layerView.getDynamicToolbarAnimator().setPinned(!pinFlags.isEmpty());
     }
 
     private void triggerEnabledListener() {

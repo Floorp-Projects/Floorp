@@ -11,9 +11,35 @@
 #include "nsAutoPtr.h"
 #include "d3d11.h"
 #include "mozilla/layers/TextureClient.h"
+#include "mozilla/layers/TextureD3D11.h"
+#include "mozilla/layers/TextureClientRecycleAllocator.h"
 
 namespace mozilla {
 namespace layers {
+
+class D3D11RecycleAllocator : public TextureClientRecycleAllocator
+{
+public:
+  explicit D3D11RecycleAllocator(ISurfaceAllocator* aAllocator,
+                                 ID3D11Device* aDevice)
+    : TextureClientRecycleAllocator(aAllocator)
+    , mDevice(aDevice)
+  {}
+
+  already_AddRefed<TextureClientD3D11>
+  CreateOrRecycleClient(gfx::SurfaceFormat aFormat,
+                        const gfx::IntSize& aSize);
+
+protected:
+  virtual already_AddRefed<TextureClient>
+  Allocate(gfx::SurfaceFormat aFormat,
+           gfx::IntSize aSize,
+           BackendSelector aSelector,
+           TextureFlags aTextureFlags,
+           TextureAllocationFlags aAllocFlags) override;
+
+  RefPtr<ID3D11Device> mDevice;
+};
 
 // Image class that wraps a ID3D11Texture2D. This class copies the image
 // passed into SetData(), so that it can be accessed from other D3D devices.
@@ -23,17 +49,14 @@ class D3D11ShareHandleImage : public Image {
 public:
 
   struct Data {
-    Data(ID3D11Texture2D* aTexture,
-         ID3D11Device* aDevice,
-         ID3D11DeviceContext* aContext,
+    Data(D3D11RecycleAllocator* aAllocator,
+         const gfx::IntSize& aSize,
          const gfx::IntRect& aRegion)
-      : mTexture(aTexture),
-        mDevice(aDevice),
-        mContext(aContext),
-        mRegion(aRegion) {}
-    RefPtr<ID3D11Texture2D> mTexture;
-    RefPtr<ID3D11Device> mDevice;
-    RefPtr<ID3D11DeviceContext> mContext;
+      : mAllocator(aAllocator)
+      , mSize(aSize)
+      , mRegion(aRegion) {}
+    RefPtr<D3D11RecycleAllocator> mAllocator;
+    gfx::IntSize mSize;
     gfx::IntRect mRegion;
   };
 
@@ -58,11 +81,7 @@ private:
 
   gfx::IntSize mSize;
   gfx::IntRect mPictureRect;
-  RefPtr<ID3D11Texture2D> mTexture;
-  RefPtr<TextureClient> mTextureClient;
-  HANDLE mShareHandle;
-  gfx::SurfaceFormat mFormat;
-
+  RefPtr<TextureClientD3D11> mTextureClient;
 };
 
 } // namepace layers

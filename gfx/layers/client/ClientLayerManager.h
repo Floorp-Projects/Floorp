@@ -253,6 +253,8 @@ public:
 
   bool AsyncPanZoomEnabled() const override;
 
+  void SetNextPaintSyncId(int32_t aSyncId);
+
 protected:
   enum TransactionPhase {
     PHASE_NONE, PHASE_CONSTRUCTION, PHASE_DRAWING, PHASE_FORWARD

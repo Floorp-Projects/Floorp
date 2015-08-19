@@ -1,0 +1,15 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" 
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="8cm" height="4cm" viewBox="0 0 800 400" version="1.1"
+     xmlns="http://www.w3.org/2000/svg">
+  <desc>Borrowed from http://www.w3.org/TR/SVG/pservers.html</desc>
+  <!-- Outline the drawing area in blue -->
+  <rect fill="none" stroke="blue" 
+        x="1" y="1" width="798" height="398"/>
+
+  <!-- The ellipse is filled using a triangle pattern paint server
+       and stroked with black -->
+  <ellipse fill="url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iIAogICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPgo8c3ZnIHdpZHRoPSI4Y20iIGhlaWdodD0iNGNtIiB2aWV3Qm94PSIwIDAgODAwIDQwMCIgdmVyc2lvbj0iMS4xIgogICAgIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGRlc2M+Qm9ycm93ZWQgZnJvbSBodHRwOi8vd3d3LnczLm9yZy9UUi9TVkcvcHNlcnZlcnMuaHRtbDwvZGVzYz4KICA8ZGVmcz4KICAgIDxwYXR0ZXJuIGlkPSJUcmlhbmdsZVBhdHRlcm4iIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiCiAgICAgICAgICAgICB4PSIwIiB5PSIwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIKICAgICAgICAgICAgIHZpZXdCb3g9IjAgMCAxMCAxMCIgPgogICAgICA8cGF0aCBkPSJNIDAgMCBMIDcgMCBMIDMuNSA3IHoiIGZpbGw9InJlZCIgZmlsbC1vcGFjaXR5PSIwLjciIHN0cm9rZT0iYmx1ZSIgLz4KICAgIDwvcGF0dGVybj4gCiAgPC9kZWZzPgo8L3N2Zz4K#TrianglePattern)" stroke="black" stroke-width="5"  
+           cx="400" cy="200" rx="350" ry="150" />
+</svg>

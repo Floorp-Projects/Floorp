@@ -123,21 +123,23 @@ GetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration)
 
   nsIntRect rect;
   int32_t colorDepth, pixelDepth;
-  ScreenOrientation orientation;
+  int16_t angle;
+  ScreenOrientationInternal orientation;
   nsCOMPtr<nsIScreen> screen;
 
   screenMgr->GetPrimaryScreen(getter_AddRefs(screen));
   screen->GetRect(&rect.x, &rect.y, &rect.width, &rect.height);
   screen->GetColorDepth(&colorDepth);
   screen->GetPixelDepth(&pixelDepth);
-  orientation = static_cast<ScreenOrientation>(bridge->GetScreenOrientation());
+  orientation = static_cast<ScreenOrientationInternal>(bridge->GetScreenOrientation());
+  angle = bridge->GetScreenAngle();
 
   *aScreenConfiguration =
-    hal::ScreenConfiguration(rect, orientation, colorDepth, pixelDepth);
+    hal::ScreenConfiguration(rect, orientation, angle, colorDepth, pixelDepth);
 }
 
 bool
-LockScreenOrientation(const ScreenOrientation& aOrientation)
+LockScreenOrientation(const ScreenOrientationInternal& aOrientation)
 {
   switch (aOrientation) {
     // The Android backend only supports these orientations.

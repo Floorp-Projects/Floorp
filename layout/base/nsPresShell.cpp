@@ -3315,15 +3315,6 @@ static void ScrollToShowRect(nsIFrame*                aFrame,
   nsRect visibleRect(scrollPt,
                      aFrameAsScrollable->GetScrollPositionClampingScrollPortSize());
 
-  // If this is the root scroll frame, make sure to take into account the
-  // content document fixed position margins. When set, these indicate that
-  // chrome is obscuring the viewport.
-  nsRect targetRect(aRect);
-  nsIPresShell *presShell = aFrame->PresContext()->PresShell();
-  if (aFrameAsScrollable == presShell->GetRootScrollFrameAsScrollable()) {
-    targetRect.Inflate(presShell->GetContentDocumentFixedPositionMargins());
-  }
-
   nsSize lineSize;
   // Don't call GetLineScrollAmount unless we actually need it. Not only
   // does this save time, but it's not safe to call GetLineScrollAmount
@@ -3346,15 +3337,15 @@ static void ScrollToShowRect(nsIFrame*                aFrame,
 
     if (ComputeNeedToScroll(aVertical.mWhenToScroll,
                             lineSize.height,
-                            targetRect.y,
-                            targetRect.YMost(),
+                            aRect.y,
+                            aRect.YMost(),
                             visibleRect.y,
                             visibleRect.YMost())) {
       nscoord maxHeight;
       scrollPt.y = ComputeWhereToScroll(aVertical.mWhereToScroll,
                                         scrollPt.y,
-                                        targetRect.y,
-                                        targetRect.YMost(),
+                                        aRect.y,
+                                        aRect.YMost(),
                                         visibleRect.y,
                                         visibleRect.YMost(),
                                         &allowedRange.y, &maxHeight);
@@ -3370,15 +3361,15 @@ static void ScrollToShowRect(nsIFrame*                aFrame,
 
     if (ComputeNeedToScroll(aHorizontal.mWhenToScroll,
                             lineSize.width,
-                            targetRect.x,
-                            targetRect.XMost(),
+                            aRect.x,
+                            aRect.XMost(),
                             visibleRect.x,
                             visibleRect.XMost())) {
       nscoord maxWidth;
       scrollPt.x = ComputeWhereToScroll(aHorizontal.mWhereToScroll,
                                         scrollPt.x,
-                                        targetRect.x,
-                                        targetRect.XMost(),
+                                        aRect.x,
+                                        aRect.XMost(),
                                         visibleRect.x,
                                         visibleRect.XMost(),
                                         &allowedRange.x, &maxWidth);
@@ -10786,18 +10777,6 @@ nsIPresShell::SetScrollPositionClampingScrollPortSize(nscoord aWidth, nscoord aH
     }
     MarkFixedFramesForReflow(eResize);
   }
-}
-
-void
-nsIPresShell::SetContentDocumentFixedPositionMargins(const nsMargin& aMargins)
-{
-  if (mContentDocumentFixedPositionMargins == aMargins) {
-    return;
-  }
-
-  mContentDocumentFixedPositionMargins = aMargins;
-
-  MarkFixedFramesForReflow(eResize);
 }
 
 void
