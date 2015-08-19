@@ -502,46 +502,38 @@ AccessibleCaretManager::GetCaretMode() const
   return CaretMode::Selection;
 }
 
-bool
+nsIFrame*
 AccessibleCaretManager::ChangeFocus(nsIFrame* aFrame) const
 {
-  nsIFrame* currFrame = aFrame;
-  nsIContent* newFocusContent = nullptr;
-  while (currFrame) {
-    int32_t tabIndexUnused = 0;
-    if (currFrame->IsFocusable(&tabIndexUnused, true)) {
-      newFocusContent = currFrame->GetContent();
-      nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(newFocusContent));
-      if (domElement)
-        break;
+  // This implementation is similar to EventStateManager::PostHandleEvent().
+  // Look for the nearest enclosing focusable frame.
+  nsIFrame* focusableFrame = aFrame;
+  while (focusableFrame) {
+    if (focusableFrame->IsFocusable(nullptr, true)) {
+      break;
     }
-    currFrame = currFrame->GetParent();
+    focusableFrame = focusableFrame->GetParent();
   }
 
-  // If target frame is focusable, we should move focus to it. If target frame
-  // isn't focusable, and our previous focused content is editable, we should
-  // clear focus.
+  // If a focusable frame is found, move focus to it. Otherwise, clear the old
+  // focus then re-focus the window.
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (newFocusContent && currFrame) {
-    nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(newFocusContent));
-    fm->SetFocus(domElement, 0);
+  MOZ_ASSERT(fm);
+
+  if (focusableFrame) {
+    nsIContent* focusableContent = focusableFrame->GetContent();
+    MOZ_ASSERT(focusableContent, "Focusable frame must have content!");
+    nsCOMPtr<nsIDOMElement> focusableElement = do_QueryInterface(focusableContent);
+    fm->SetFocus(focusableElement, nsIFocusManager::FLAG_BYMOUSE);
   } else {
-    nsIContent* focusedContent = GetFocusedContent();
-    if (focusedContent) {
-      // Clear focus if content was editable element, or contentEditable.
-      nsGenericHTMLElement* focusedGeneric =
-        nsGenericHTMLElement::FromContent(focusedContent);
-      if (focusedContent->GetTextEditorRootContent() ||
-          (focusedGeneric && focusedGeneric->IsContentEditable())) {
-        nsIDOMWindow* win = mPresShell->GetDocument()->GetWindow();
-        if (win) {
-          fm->ClearFocus(win);
-        }
-      }
+    nsIDOMWindow* win = mPresShell->GetDocument()->GetWindow();
+    if (win) {
+      fm->ClearFocus(win);
+      fm->SetFocusedWindow(win);
     }
   }
 
-  return (newFocusContent && currFrame);
+  return focusableFrame;
 }
 
 nsresult
