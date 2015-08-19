@@ -213,6 +213,10 @@ SourceBuffer::AddWaitingConsumer(IResumable* aConsumer)
 
   MOZ_ASSERT(!mStatus, "Waiting when we're complete?");
 
+  if (MOZ_UNLIKELY(NS_IsMainThread())) {
+    NS_WARNING("SourceBuffer consumer on the main thread needed to wait");
+  }
+
   mWaitingConsumers.AppendElement(aConsumer);
 }
 
