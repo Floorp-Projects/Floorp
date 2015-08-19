@@ -345,13 +345,12 @@ protected:
      * Generates our text range array from current composition string.
      *
      * @param aContext              A GtkIMContext which is being handled.
-     * @param aLastDispatchedData   The data of the last compositionchange event
-     *                              of current composition.  This should be
-     *                              mDispatchedCompositionString.
+     * @param aCompositionString    The data to be dispatched with
+     *                              compositionchange event.
      */
     already_AddRefed<TextRangeArray>
         CreateTextRangeArray(GtkIMContext* aContext,
-                             const nsAString& aLastDispatchedData);
+                             const nsAString& aCompositionString);
 
     /**
      * SetTextRange() initializes aTextRange with aPangoAttrIter.

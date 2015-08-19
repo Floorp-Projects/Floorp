@@ -1471,13 +1471,13 @@ IMContextWrapper::DispatchCompositionCommitEvent(
 
 already_AddRefed<TextRangeArray>
 IMContextWrapper::CreateTextRangeArray(GtkIMContext* aContext,
-                                       const nsAString& aLastDispatchedData)
+                                       const nsAString& aCompositionString)
 {
     MOZ_LOG(gGtkIMLog, LogLevel::Info,
         ("GTKIM: %p CreateTextRangeArray(aContext=%p, "
-         "aLastDispatchedData=\"%s\" (Length()=%u))",
-         this, aContext, NS_ConvertUTF16toUTF8(aLastDispatchedData).get(),
-         aLastDispatchedData.Length()));
+         "aCompositionString=\"%s\" (Length()=%u))",
+         this, aContext, NS_ConvertUTF16toUTF8(aCompositionString).get(),
+         aCompositionString.Length()));
 
     nsRefPtr<TextRangeArray> textRangeArray = new TextRangeArray();
 
@@ -1499,7 +1499,7 @@ IMContextWrapper::CreateTextRangeArray(GtkIMContext* aContext,
     // Convert caret offset from offset in characters to offset in UTF-16
     // string.  If we couldn't proper offset in UTF-16 string, we should
     // assume that the caret is at the end of the composition string.
-    uint32_t caretOffsetInUTF16 = aLastDispatchedData.Length();
+    uint32_t caretOffsetInUTF16 = aCompositionString.Length();
     if (NS_WARN_IF(cursor_pos_in_chars < 0)) {
         // Note that this case is undocumented.  We should assume that the
         // caret is at the end of the composition string.
@@ -1527,7 +1527,7 @@ IMContextWrapper::CreateTextRangeArray(GtkIMContext* aContext,
                      this, cursor_pos_in_chars, caretOffset));
             } else {
                 caretOffsetInUTF16 = static_cast<uint32_t>(caretOffset);
-                uint32_t compositionStringLength = aLastDispatchedData.Length();
+                uint32_t compositionStringLength = aCompositionString.Length();
                 if (NS_WARN_IF(caretOffsetInUTF16 > compositionStringLength)) {
                     MOZ_LOG(gGtkIMLog, LogLevel::Warning,
                         ("GTKIM: %p   CreateTextRangeArray(), WARNING, "
