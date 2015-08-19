@@ -7,6 +7,7 @@
 #define nsTextFrame_h__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/EventForwards.h"
 #include "mozilla/gfx/2D.h"
 #include "nsFrame.h"
 #include "nsSplittableFrame.h"
@@ -39,6 +40,7 @@ public:
 };
 
 class nsTextFrame : public nsTextFrameBase {
+  typedef mozilla::TextRangeStyle TextRangeStyle;
   typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::gfx::Rect Rect;
 
@@ -728,6 +730,74 @@ protected:
   // If the result rect is larger than the given rect, this returns true.
   bool CombineSelectionUnderlineRect(nsPresContext* aPresContext,
                                        nsRect& aRect);
+
+  /**
+   * Utility methods to paint selection.
+   */
+  void DrawSelectionDecorations(gfxContext* aContext,
+                                const gfxRect& aDirtyRect,
+                                SelectionType aType,
+                                nsTextPaintStyle& aTextPaintStyle,
+                                const TextRangeStyle &aRangeStyle,
+                                const gfxPoint& aPt,
+                                gfxFloat aICoordInFrame,
+                                gfxFloat aWidth,
+                                gfxFloat aAscent,
+                                const gfxFont::Metrics& aFontMetrics,
+                                DrawPathCallbacks* aCallbacks,
+                                bool aVertical,
+                                uint8_t aDecoration);
+  enum DecorationType
+  {
+    eNormalDecoration,
+    eSelectionDecoration
+  };
+  void PaintDecorationLine(gfxContext* const aCtx,
+                           const gfxRect& aDirtyRect,
+                           nscolor aColor,
+                           const nscolor* aOverrideColor,
+                           const gfxPoint& aPt,
+                           gfxFloat aICoordInFrame,
+                           const gfxSize& aLineSize,
+                           gfxFloat aAscent,
+                           gfxFloat aOffset,
+                           uint8_t aDecoration,
+                           uint8_t aStyle,
+                           DecorationType aDecorationType,
+                           DrawPathCallbacks* aCallbacks,
+                           bool aVertical,
+                           gfxFloat aDescentLimit = -1.0);
+  /**
+   * ComputeDescentLimitForSelectionUnderline() computes the most far position
+   * where we can put selection underline.
+   *
+   * @return The maximum underline offset from the baseline (positive value
+   *         means that the underline can put below the baseline).
+   */
+  gfxFloat ComputeDescentLimitForSelectionUnderline(
+             nsPresContext* aPresContext,
+             const gfxFont::Metrics& aFontMetrics);
+  /**
+   * This function encapsulates all knowledge of how selections affect
+   * foreground and background colors.
+   * @param aForeground the foreground color to use
+   * @param aBackground the background color to use, or RGBA(0,0,0,0) if no
+   *                    background should be painted
+   * @return            true if the selection affects colors, false otherwise
+   */
+  static bool GetSelectionTextColors(SelectionType aType,
+                                     nsTextPaintStyle& aTextPaintStyle,
+                                     const TextRangeStyle &aRangeStyle,
+                                     nscolor* aForeground,
+                                     nscolor* aBackground);
+  /**
+   * ComputeSelectionUnderlineHeight() computes selection underline height of
+   * the specified selection type from the font metrics.
+   */
+  static gfxFloat ComputeSelectionUnderlineHeight(
+                    nsPresContext* aPresContext,
+                    const gfxFont::Metrics& aFontMetrics,
+                    SelectionType aSelectionType);
 
   ContentOffsets GetCharacterOffsetAtFramePointInternal(nsPoint aPoint,
                    bool aForInsertionPoint);
