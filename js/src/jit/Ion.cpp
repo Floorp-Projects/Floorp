@@ -635,8 +635,7 @@ JitRuntime::MarkJitcodeGlobalTableUnconditionally(JSTracer* trc)
 /* static */ bool
 JitRuntime::MarkJitcodeGlobalTableIteratively(JSTracer* trc)
 {
-    if (trc->runtime()->spsProfiler.enabled() &&
-        trc->runtime()->hasJitRuntime() &&
+    if (trc->runtime()->hasJitRuntime() &&
         trc->runtime()->jitRuntime()->hasJitcodeGlobalTable())
     {
         return trc->runtime()->jitRuntime()->getJitcodeGlobalTable()->markIteratively(trc);
