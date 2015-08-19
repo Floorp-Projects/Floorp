@@ -60,6 +60,8 @@ private:
 
   void DecodeTask(GMPVideoEncodedFrame* aInputFrame);
 
+  void ResetCompleteTask();
+
   void ReturnOutput(IMFSample* aSample,
                     int32_t aWidth,
                     int32_t aHeight,
@@ -84,6 +86,8 @@ private:
 
   int32_t mNumInputTasks;
   bool mSentExtraData;
+
+  std::atomic<bool> mIsFlushing;
 
   bool mHasShutdown;
 };
