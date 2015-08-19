@@ -37,11 +37,8 @@ NfcCallback.prototype = {
   _requestId: null,
 
   _createPromise: function _createPromise() {
-    this.promise = this.createPromise((aResolve, aReject) => {
-      this._requestId = btoa(this.getPromiseResolverId({
-        resolve: aResolve,
-        reject: aReject
-      }));
+    this.promise = this.createPromiseWithId((aResolverId) => {
+      this._requestId = btoa(aResolverId);
     });
   },
 
