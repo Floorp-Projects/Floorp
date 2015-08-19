@@ -808,11 +808,14 @@ JitcodeGlobalTable::markIteratively(JSTracer* trc)
     // above is checked in JitcodeGlobalTable::lookupForSampler.
 
     MOZ_ASSERT(!trc->runtime()->isHeapMinorCollecting());
-    MOZ_ASSERT(trc->runtime()->spsProfiler.enabled());
 
     AutoSuppressProfilerSampling suppressSampling(trc->runtime());
     uint32_t gen = trc->runtime()->profilerSampleBufferGen();
     uint32_t lapCount = trc->runtime()->profilerSampleBufferLapCount();
+
+    // If the profiler is off, all entries are considered to be expired.
+    if (!trc->runtime()->spsProfiler.enabled())
+        gen = UINT32_MAX;
 
     bool markedAny = false;
     for (Range r(*this); !r.empty(); r.popFront()) {
