@@ -146,18 +146,6 @@ function ResourceStatsManager() {
 ResourceStatsManager.prototype = {
   __proto__: DOMRequestIpcHelper.prototype,
 
-  _getPromise: function(aCallback) {
-    let self = this;
-    return this.createPromise(function(aResolve, aReject) {
-      let resolverId = self.getPromiseResolverId({
-        resolve: aResolve,
-        reject: aReject
-      });
-
-      aCallback(resolverId);
-    });
-  },
-
   // Check time range.
   _checkTimeRange: function(aStart, aEnd) {
     if (DEBUG) {
@@ -180,7 +168,7 @@ ResourceStatsManager.prototype = {
 
     // Create Promise.
     let self = this;
-    return this._getPromise(function(aResolverId) {
+    return this.createPromiseWithId(function(aResolverId) {
       self.cpmm.sendAsyncMessage("ResourceStats:GetStats", {
         resolverId: aResolverId,
         type: self.type,
@@ -198,7 +186,7 @@ ResourceStatsManager.prototype = {
 
     // Create Promise.
     let self = this;
-    return this._getPromise(function(aResolverId) {
+    return this.createPromiseWithId(function(aResolverId) {
       self.cpmm.sendAsyncMessage("ResourceStats:ClearStats", {
         resolverId: aResolverId,
         type: self.type,
@@ -213,7 +201,7 @@ ResourceStatsManager.prototype = {
   clearAllStats: function() {
     // Create Promise.
     let self = this;
-    return this._getPromise(function(aResolverId) {
+    return this.createPromiseWithId(function(aResolverId) {
       self.cpmm.sendAsyncMessage("ResourceStats:ClearAllStats", {
         resolverId: aResolverId,
         type: self.type,
@@ -239,7 +227,7 @@ ResourceStatsManager.prototype = {
 
     // Create Promise.
     let self = this;
-    return this._getPromise(function(aResolverId) {
+    return this.createPromiseWithId(function(aResolverId) {
       self.cpmm.sendAsyncMessage("ResourceStats:AddAlarm", {
         resolverId: aResolverId,
         type: self.type,
@@ -255,7 +243,7 @@ ResourceStatsManager.prototype = {
   getAlarms: function(aStatsOptions) {
     // Create Promise.
     let self = this;
-    return this._getPromise(function(aResolverId) {
+    return this.createPromiseWithId(function(aResolverId) {
       self.cpmm.sendAsyncMessage("ResourceStats:GetAlarms", {
         resolverId: aResolverId,
         type: self.type,
@@ -268,7 +256,7 @@ ResourceStatsManager.prototype = {
   removeAlarm: function(aAlarmId) {
     // Create Promise.
     let self = this;
-    return this._getPromise(function(aResolverId) {
+    return this.createPromiseWithId(function(aResolverId) {
       self.cpmm.sendAsyncMessage("ResourceStats:RemoveAlarm", {
         resolverId: aResolverId,
         type: self.type,
@@ -281,7 +269,7 @@ ResourceStatsManager.prototype = {
   removeAllAlarms: function() {
     // Create Promise.
     let self = this;
-    return this._getPromise(function(aResolverId) {
+    return this.createPromiseWithId(function(aResolverId) {
       self.cpmm.sendAsyncMessage("ResourceStats:RemoveAllAlarms", {
         resolverId: aResolverId,
         type: self.type,
@@ -293,7 +281,7 @@ ResourceStatsManager.prototype = {
   getAvailableComponents: function() {
     // Create Promise.
     let self = this;
-    return this._getPromise(function(aResolverId) {
+    return this.createPromiseWithId(function(aResolverId) {
       self.cpmm.sendAsyncMessage("ResourceStats:GetComponents", {
         resolverId: aResolverId,
         type: self.type,
