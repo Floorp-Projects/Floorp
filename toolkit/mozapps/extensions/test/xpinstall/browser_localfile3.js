@@ -18,8 +18,11 @@ function test() {
   } catch (ex) {
     var xpipath = chromeroot + "unsigned.xpi"; //scenario where we are running from a .jar and already extracted
   }
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.loadURI(xpipath);
+
+  gBrowser.selectedTab = gBrowser.addTab("about:blank");
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
+    gBrowser.loadURI(xpipath);
+  });
 }
 
 function allow_blocked(installInfo) {
