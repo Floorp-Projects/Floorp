@@ -32,10 +32,10 @@
           android:color="@color/background_normal_lwt" />
     <item android:state_pressed="true"
           gecko:state_light="true"
-          android:color="@color/new_tablet_highlight_lwt" />
+          android:color="@color/tablet_highlight_lwt" />
     <item android:state_pressed="true"
           gecko:state_dark="true"
-          android:color="@color/new_tablet_highlight_dark_lwt" />
+          android:color="@color/tablet_highlight_dark_lwt" />
 
     <item android:state_checked="true"
           android:color="@color/toolbar_grey" />
