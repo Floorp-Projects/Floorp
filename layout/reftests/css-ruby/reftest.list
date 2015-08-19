@@ -29,8 +29,8 @@ test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLin
 fuzzy-if(winWidget,255,792) == lang-specific-style-1.html lang-specific-style-1-ref.html # bug 1134947
 == line-breaking-1.html line-breaking-1-ref.html
 == line-breaking-2.html line-breaking-2-ref.html
-== line-break-suppression-1.html line-break-suppression-1-ref.html
-== line-break-suppression-2.html line-break-suppression-2-ref.html
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),3,2) == line-break-suppression-1.html line-break-suppression-1-ref.html
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),3,2) == line-break-suppression-2.html line-break-suppression-2-ref.html
 == line-break-suppression-3.html line-break-suppression-3-ref.html
 == line-break-suppression-4.html line-break-suppression-4-ref.html
 == line-break-suppression-5.html line-break-suppression-5-ref.html
@@ -50,7 +50,7 @@ load nested-ruby-1.html
 pref(layout.css.vertical-text.enabled,true) == ruby-position-vertical-lr.html ruby-position-vertical-lr-ref.html
 pref(layout.css.vertical-text.enabled,true) == ruby-position-vertical-rl.html ruby-position-vertical-rl-ref.html
 != ruby-reflow-1-opaqueruby.html ruby-reflow-1-noruby.html
-== ruby-reflow-1-transparentruby.html ruby-reflow-1-noruby.html
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),9,1) == ruby-reflow-1-transparentruby.html ruby-reflow-1-noruby.html
 == ruby-span-1.html ruby-span-1-ref.html
 == ruby-whitespace-1.html ruby-whitespace-1-ref.html
 == ruby-whitespace-2.html ruby-whitespace-2-ref.html
