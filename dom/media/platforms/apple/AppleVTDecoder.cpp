@@ -12,7 +12,6 @@
 #include "AppleVTLinker.h"
 #include "mp4_demuxer/H264.h"
 #include "MediaData.h"
-#include "MacIOSurfaceImage.h"
 #include "mozilla/ArrayUtils.h"
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
@@ -350,23 +349,19 @@ AppleVTDecoder::CreateDecoderExtensions()
   const void* extensionKeys[] =
     { kCVImageBufferChromaLocationBottomFieldKey,
       kCVImageBufferChromaLocationTopFieldKey,
-      AppleCMLinker::skPropExtensionAtoms,
-      AppleCMLinker::skPropFullRangeVideo /* Not defined in 10.6 */ };
+      AppleCMLinker::skPropExtensionAtoms };
 
   const void* extensionValues[] =
     { kCVImageBufferChromaLocation_Left,
       kCVImageBufferChromaLocation_Left,
-      atoms,
-      kCFBooleanTrue };
+      atoms };
   static_assert(ArrayLength(extensionKeys) == ArrayLength(extensionValues),
                 "Non matching keys/values array size");
 
   return CFDictionaryCreate(kCFAllocatorDefault,
                             extensionKeys,
                             extensionValues,
-                            AppleCMLinker::skPropFullRangeVideo ?
-                              ArrayLength(extensionKeys) :
-                              ArrayLength(extensionKeys) - 1,
+                            ArrayLength(extensionKeys),
                             &kCFTypeDictionaryKeyCallBacks,
                             &kCFTypeDictionaryValueCallBacks);
 }
