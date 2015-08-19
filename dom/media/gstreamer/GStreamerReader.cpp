@@ -903,7 +903,8 @@ media::TimeIntervals GStreamerReader::GetBuffered()
   for(uint32_t index = 0; index < ranges.Length(); index++) {
     int64_t startOffset = ranges[index].mStart;
     int64_t endOffset = ranges[index].mEnd;
-    gint64 startTime, endTime;
+    gint64 startTime, endTime, duration;
+    bool haveDuration = false;
 
 #if GST_VERSION_MAJOR >= 1
     if (!gst_element_query_convert(GST_ELEMENT(mPlayBin), GST_FORMAT_BYTES,
@@ -912,6 +913,10 @@ media::TimeIntervals GStreamerReader::GetBuffered()
     if (!gst_element_query_convert(GST_ELEMENT(mPlayBin), GST_FORMAT_BYTES,
       endOffset, GST_FORMAT_TIME, &endTime))
       continue;
+    if (gst_element_query_duration(GST_ELEMENT(mPlayBin),
+      GST_FORMAT_TIME, &duration)) {
+      haveDuration = true;
+    }
 #else
     if (!gst_element_query_convert(GST_ELEMENT(mPlayBin), GST_FORMAT_BYTES,
       startOffset, &format, &startTime) || format != GST_FORMAT_TIME)
@@ -919,7 +924,18 @@ media::TimeIntervals GStreamerReader::GetBuffered()
     if (!gst_element_query_convert(GST_ELEMENT(mPlayBin), GST_FORMAT_BYTES,
       endOffset, &format, &endTime) || format != GST_FORMAT_TIME)
       continue;
+    if (gst_element_query_duration(GST_ELEMENT(mPlayBin),
+      &format, &duration) && format == GST_FORMAT_TIME) {
+      haveDuration = true;
+    }
 #endif
+    // Check that the estimated time doesn't go beyond known duration
+    // as this indicates a buggy gst plugin.
+    if (haveDuration && endTime > duration) {
+      LOG(LogLevel::Debug, "Have duration %" GST_TIME_FORMAT "contradicting endTime %" GST_TIME_FORMAT,
+          GST_TIME_ARGS(duration), GST_TIME_ARGS(endTime));
+      endTime = std::min(endTime, duration);
+    }
 
     LOG(LogLevel::Debug, "adding range [%f, %f] for [%li %li] size %li",
         (double) GST_TIME_AS_USECONDS (startTime) / GST_MSECOND,
