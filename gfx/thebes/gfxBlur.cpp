@@ -416,6 +416,9 @@ CreateBlurMask(const IntSize& aRectSize,
 
   IntPoint topLeft;
   RefPtr<SourceSurface> result = blur.DoBlur(&aDestDrawTarget, &topLeft);
+  if (!result) {
+    return nullptr;
+  }
 
   IntRect expandedMinRect(topLeft, result->GetSize());
   aExtendDestBy = expandedMinRect - minRect;
