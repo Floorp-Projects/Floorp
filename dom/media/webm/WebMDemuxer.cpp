@@ -35,40 +35,39 @@ extern PRLogModuleInfo* gNesteggLog;
 
 // Functions for reading and seeking using WebMDemuxer required for
 // nestegg_io. The 'user data' passed to these functions is the
-// demuxer's MediaResourceIndex
+// demuxer.
 static int webmdemux_read(void* aBuffer, size_t aLength, void* aUserData)
 {
   MOZ_ASSERT(aUserData);
-  MediaResourceIndex* resource =
-    reinterpret_cast<MediaResourceIndex*>(aUserData);
-  int64_t length = resource->GetLength();
   MOZ_ASSERT(aLength < UINT32_MAX);
+  WebMDemuxer* demuxer = reinterpret_cast<WebMDemuxer*>(aUserData);
+  int64_t length = demuxer->GetEndDataOffset();
   uint32_t count = aLength;
-  if (length >= 0 && count + resource->Tell() > length) {
-    count = uint32_t(length - resource->Tell());
+  int64_t position = demuxer->GetResource()->Tell();
+  if (length >= 0 && count + position > length) {
+    count = length - position;
   }
 
   uint32_t bytes = 0;
-  nsresult rv = resource->Read(static_cast<char*>(aBuffer), count, &bytes);
-  bool eof = !bytes;
+  nsresult rv =
+    demuxer->GetResource()->Read(static_cast<char*>(aBuffer), count, &bytes);
+  bool eof = bytes < aLength;
   return NS_FAILED(rv) ? -1 : eof ? 0 : 1;
 }
 
 static int webmdemux_seek(int64_t aOffset, int aWhence, void* aUserData)
 {
   MOZ_ASSERT(aUserData);
-  MediaResourceIndex* resource =
-    reinterpret_cast<MediaResourceIndex*>(aUserData);
-  nsresult rv = resource->Seek(aWhence, aOffset);
+  WebMDemuxer* demuxer = reinterpret_cast<WebMDemuxer*>(aUserData);
+  nsresult rv = demuxer->GetResource()->Seek(aWhence, aOffset);
   return NS_SUCCEEDED(rv) ? 0 : -1;
 }
 
 static int64_t webmdemux_tell(void* aUserData)
 {
   MOZ_ASSERT(aUserData);
-  MediaResourceIndex* resource =
-    reinterpret_cast<MediaResourceIndex*>(aUserData);
-  return resource->Tell();
+  WebMDemuxer* demuxer = reinterpret_cast<WebMDemuxer*>(aUserData);
+  return demuxer->GetResource()->Tell();
 }
 
 static void webmdemux_log(nestegg* aContext,
@@ -129,6 +128,8 @@ WebMDemuxer::WebMDemuxer(MediaResource* aResource)
   , mHasVideo(false)
   , mHasAudio(false)
   , mNeedReIndex(true)
+  , mLastWebMBlockOffset(-1)
+  , mIsExpectingMoreData(true)
 {
   if (!gNesteggLog) {
     gNesteggLog = PR_NewLogModule("Nestegg");
@@ -253,7 +254,7 @@ WebMDemuxer::ReadMetadata()
   io.read = webmdemux_read;
   io.seek = webmdemux_seek;
   io.tell = webmdemux_tell;
-  io.userdata = &mResource;
+  io.userdata = this;
   int64_t maxOffset = mBufferedState->GetInitEndOffset();
   if (maxOffset == -1) {
     maxOffset = mResource.GetLength();
@@ -429,6 +430,8 @@ WebMDemuxer::EnsureUpToDateIndex()
   if (!mInitData && mBufferedState->GetInitEndOffset() != -1) {
     mInitData = mResource.MediaReadAt(0, mBufferedState->GetInitEndOffset());
   }
+  mLastWebMBlockOffset = mBufferedState->GetLastBlockOffset();
+  mIsExpectingMoreData = mResource.GetResource()->IsExpectingMoreData();
   mNeedReIndex = false;
 }
 
@@ -455,6 +458,8 @@ WebMDemuxer::GetCrypto()
 bool
 WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType, MediaRawDataQueue *aSamples)
 {
+  EnsureUpToDateIndex();
+
   nsRefPtr<NesteggPacketHolder> holder(NextPacket(aType));
 
   if (!holder) {
