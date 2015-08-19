@@ -7,7 +7,6 @@
 #include "ServiceWorkerManager.h"
 
 #include "mozIApplication.h"
-#include "mozIApplicationClearPrivateDataParams.h"
 #include "nsIAppsService.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDocument.h"
@@ -83,7 +82,7 @@ BEGIN_WORKERS_NAMESPACE
 
 #define PURGE_DOMAIN_DATA "browser:purge-domain-data"
 #define PURGE_SESSION_HISTORY "browser:purge-session-history"
-#define WEBAPPS_CLEAR_DATA "webapps-clear-data"
+#define CLEAR_ORIGIN_DATA "clear-origin-data"
 
 static_assert(nsIHttpChannelInternal::CORS_MODE_SAME_ORIGIN == static_cast<uint32_t>(RequestMode::Same_origin),
               "RequestMode enumeration value should match Necko CORS mode value.");
@@ -431,7 +430,7 @@ ServiceWorkerManager::Init()
       MOZ_ASSERT(NS_SUCCEEDED(rv));
       rv = obs->AddObserver(this, PURGE_DOMAIN_DATA, false /* ownsWeak */);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
-      rv = obs->AddObserver(this, WEBAPPS_CLEAR_DATA, false /* ownsWeak */);
+      rv = obs->AddObserver(this, CLEAR_ORIGIN_DATA, false /* ownsWeak */);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   }
@@ -4663,46 +4662,36 @@ UnregisterIfMatchesHostPerPrincipal(const nsACString& aKey,
 }
 
 PLDHashOperator
-UnregisterIfMatchesClearPrivateDataParams(const nsACString& aScope,
-                                          ServiceWorkerRegistrationInfo* aReg,
-                                          void* aPtr)
+UnregisterIfMatchesClearOriginParams(const nsACString& aScope,
+                                     ServiceWorkerRegistrationInfo* aReg,
+                                     void* aPtr)
 {
   UnregisterIfMatchesUserData* data =
     static_cast<UnregisterIfMatchesUserData*>(aPtr);
+  MOZ_ASSERT(data);
 
   if (data->mUserData) {
-    mozIApplicationClearPrivateDataParams *params =
-      static_cast<mozIApplicationClearPrivateDataParams*>(data->mUserData);
+    OriginAttributes* params = static_cast<OriginAttributes*>(data->mUserData);
     MOZ_ASSERT(params);
+    MOZ_ASSERT(aReg);
     MOZ_ASSERT(aReg->mPrincipal);
-
-    uint32_t appId;
-    nsresult rv = params->GetAppId(&appId);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return PL_DHASH_NEXT;
-    }
-
-    bool browserOnly;
-    rv = params->GetBrowserOnly(&browserOnly);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return PL_DHASH_NEXT;
-    }
 
     bool equals = false;
 
-    if (browserOnly) {
+    if (params->mInBrowser) {
       // When we do a system wide "clear cookies and stored data" on B2G we get
-      // the "webapps-clear-data" notification with the System app appID and
+      // the "clear-origin-data" notification with the System app appID and
       // the browserOnly flag set to true.
       // Web sites registering a service worker on B2G have a principal with the
       // following information: web site origin + System app appId + inBrowser=1
       // So we need to check if the service worker registration info contains
       // the System app appID and the enabled inBrowser flag and in that case
       // remove it from the registry.
-      equals = (appId == aReg->mPrincipal->GetAppId()) &&
-               aReg->mPrincipal->GetIsInBrowserElement();
+      OriginAttributes attrs =
+        mozilla::BasePrincipal::Cast(aReg->mPrincipal)->OriginAttributesRef();
+      equals = attrs == *params;
     } else {
-      // If we get the "webapps-clear-data" notification because of an app
+      // If we get the "clear-origin-data" notification because of an app
       // uninstallation, we need to check the full principal to get the match
       // in the service workers registry. If we find a match, we unregister the
       // worker.
@@ -4713,7 +4702,7 @@ UnregisterIfMatchesClearPrivateDataParams(const nsACString& aScope,
       }
 
       nsCOMPtr<mozIApplication> app;
-      appsService->GetAppByLocalId(appId, getter_AddRefs(app));
+      appsService->GetAppByLocalId(params->mAppId, getter_AddRefs(app));
       if (NS_WARN_IF(!app)) {
         return PL_DHASH_NEXT;
       }
@@ -4737,7 +4726,7 @@ UnregisterIfMatchesClearPrivateDataParams(const nsACString& aScope,
 }
 
 PLDHashOperator
-UnregisterIfMatchesClearPrivateDataParams(const nsACString& aKey,
+UnregisterIfMatchesClearOriginParams(const nsACString& aKey,
                              ServiceWorkerManager::RegistrationDataPerPrincipal* aData,
                              void* aUserData)
 {
@@ -4745,7 +4734,7 @@ UnregisterIfMatchesClearPrivateDataParams(const nsACString& aKey,
   // We can use EnumerateRead because ForceUnregister (and Unregister) are async.
   // Otherwise doing some R/W operations on an hashtable during an EnumerateRead
   // will crash.
-  aData->mInfos.EnumerateRead(UnregisterIfMatchesClearPrivateDataParams,
+  aData->mInfos.EnumerateRead(UnregisterIfMatchesClearOriginParams,
                               &data);
   return PL_DHASH_NEXT;
 }
@@ -4963,14 +4952,13 @@ UpdateEachRegistration(const nsACString& aKey,
 }
 
 void
-ServiceWorkerManager::RemoveAllRegistrations(
-    mozIApplicationClearPrivateDataParams* aParams)
+ServiceWorkerManager::RemoveAllRegistrations(OriginAttributes* aParams)
 {
   AssertIsOnMainThread();
 
   MOZ_ASSERT(aParams);
 
-  mRegistrationInfos.EnumerateRead(UnregisterIfMatchesClearPrivateDataParams,
+  mRegistrationInfos.EnumerateRead(UnregisterIfMatchesClearOriginParams,
                                    aParams);
 }
 
@@ -5011,15 +4999,12 @@ ServiceWorkerManager::Observe(nsISupports* aSubject,
     return NS_OK;
   }
 
-  if (strcmp(aTopic, WEBAPPS_CLEAR_DATA) == 0) {
+  if (strcmp(aTopic, CLEAR_ORIGIN_DATA) == 0) {
     MOZ_ASSERT(XRE_IsParentProcess());
-    nsCOMPtr<mozIApplicationClearPrivateDataParams> params =
-      do_QueryInterface(aSubject);
-    if (NS_WARN_IF(!params)) {
-      return NS_OK;
-    }
+    OriginAttributes attrs;
+    MOZ_ALWAYS_TRUE(attrs.Init(nsAutoString(aData)));
 
-    RemoveAllRegistrations(params);
+    RemoveAllRegistrations(&attrs);
     return NS_OK;
   }
 
@@ -5033,7 +5018,7 @@ ServiceWorkerManager::Observe(nsISupports* aSubject,
       if (XRE_IsParentProcess()) {
         obs->RemoveObserver(this, PURGE_SESSION_HISTORY);
         obs->RemoveObserver(this, PURGE_DOMAIN_DATA);
-        obs->RemoveObserver(this, WEBAPPS_CLEAR_DATA);
+        obs->RemoveObserver(this, CLEAR_ORIGIN_DATA);
       }
     }
 
