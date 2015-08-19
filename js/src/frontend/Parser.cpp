@@ -2075,6 +2075,9 @@ Parser<FullParseHandler>::checkFunctionDefinition(HandlePropertyName funName,
         if (!funbox)
             return false;
 
+        if (fun->lazyScript()->needsHomeObject())
+            funbox->setNeedsHomeObject();
+
         if (!addFreeVariablesFromLazyFunction(fun, pc))
             return false;
 
@@ -2395,6 +2398,8 @@ Parser<SyntaxParseHandler>::finishFunctionDefinition(Node pn, FunctionBox* funbo
         lazy->setUsesArgumentsApplyAndThis();
     if (funbox->isDerivedClassConstructor())
         lazy->setIsDerivedClassConstructor();
+    if (funbox->needsHomeObject())
+        lazy->setNeedsHomeObject();
     PropagateTransitiveParseFlags(funbox, lazy);
 
     fun->initLazyScript(lazy);
