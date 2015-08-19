@@ -1857,6 +1857,22 @@ public:
     static auto SetState(mozilla::jni::Object::Param) -> void;
 
 public:
+    struct SpeculativeConnect_t {
+        typedef GeckoThread Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "speculativeConnectNative";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;)V";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
     struct ClsLoader_t {
         typedef GeckoThread Owner;
         typedef mozilla::jni::Object::LocalRef ReturnType;
@@ -1892,6 +1908,8 @@ public:
 
     static auto MsgQueue(mozilla::jni::Object::Param) -> void;
 
+public:
+    template<class Impl> class Natives;
 };
 
 class GeckoThread::State : public mozilla::jni::Class<State>

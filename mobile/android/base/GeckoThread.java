@@ -546,4 +546,16 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         flushQueuedNativeCalls(newState);
         return true;
     }
+
+    @WrapForJNI(stubName = "SpeculativeConnect")
+    private static native void speculativeConnectNative(String uri);
+
+    public static void speculativeConnect(final String uri) {
+        // This is almost always called before Gecko loads, so we don't
+        // bother checking here if Gecko is actually loaded or not.
+        // Speculative connection depends on proxy settings,
+        // so the earliest it can happen is after profile is ready.
+        queueNativeCallUntil(State.PROFILE_READY, GeckoThread.class,
+                             "speculativeConnectNative", uri);
+    }
 }
