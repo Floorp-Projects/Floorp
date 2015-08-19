@@ -33,6 +33,7 @@ VideoDecoder::VideoDecoder(GMPVideoHost *aHostAPI)
   , mMutex(nullptr)
   , mNumInputTasks(0)
   , mSentExtraData(false)
+  , mIsFlushing(false)
   , mHasShutdown(false)
 {
   // We drop the ref in DecodingComplete().
@@ -139,6 +140,11 @@ VideoDecoder::DecodeTask(GMPVideoEncodedFrame* aInput)
   CK_LOGD("VideoDecoder::DecodeTask");
   AutoReleaseVideoFrame ensureFrameReleased(aInput);
   HRESULT hr;
+
+  if (mIsFlushing) {
+    CK_LOGD("VideoDecoder::DecodeTask rejecting frame: flushing.");
+    return;
+  }
 
   {
     AutoLock lock(mMutex);
@@ -344,14 +350,28 @@ VideoDecoder::SampleToVideoFrame(IMFSample* aSample,
 }
 
 void
+VideoDecoder::ResetCompleteTask()
+{
+  mIsFlushing = false;
+  if (mCallback) {
+    MaybeRunOnMainThread(WrapTask(mCallback,
+                                  &GMPVideoDecoderCallback::ResetComplete));
+  }
+}
+
+void
 VideoDecoder::Reset()
 {
+  mIsFlushing = true;
   if (mDecoder) {
     mDecoder->Reset();
   }
-  if (mCallback) {
-    mCallback->ResetComplete();
-  }
+
+  // Schedule ResetComplete callback to run after existing frames have been
+  // flushed out of the task queue.
+  EnsureWorker();
+  mWorkerThread->Post(WrapTaskRefCounted(this,
+                                         &VideoDecoder::ResetCompleteTask));
 }
 
 void
