@@ -412,6 +412,8 @@ public:
 
   virtual bool IsD3D11() override { return true; }
 
+  virtual bool SupportsConfig(IMFMediaType* aType) override;
+
 private:
   HRESULT CreateFormatConverter();
 
@@ -427,6 +429,43 @@ private:
   uint32_t mHeight;
   UINT mDeviceManagerToken;
 };
+
+bool
+D3D11DXVA2Manager::SupportsConfig(IMFMediaType* aType)
+{
+  RefPtr<ID3D11VideoDevice> videoDevice;
+  HRESULT hr = mDevice->QueryInterface(static_cast<ID3D11VideoDevice**>(byRef(videoDevice)));
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+
+  D3D11_VIDEO_DECODER_DESC desc;
+  desc.Guid = DXVA2_ModeH264_E;
+
+  UINT32 width = 0;
+  UINT32 height = 0;
+  hr = MFGetAttributeSize(aType, MF_MT_FRAME_SIZE, &width, &height);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  desc.SampleWidth = width;
+  desc.SampleHeight = height;
+
+  desc.OutputFormat = DXGI_FORMAT_NV12;
+
+  UINT configCount = 0;
+  hr = videoDevice->GetVideoDecoderConfigCount(&desc, &configCount);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+
+  for (UINT i = 0; i < configCount; i++) {
+    D3D11_VIDEO_DECODER_CONFIG config;
+    hr = videoDevice->GetVideoDecoderConfig(&desc, i, &config);
+    if (SUCCEEDED(hr)) {
+      nsRefPtr<ID3D11VideoDecoder> decoder;
+      hr = videoDevice->CreateVideoDecoder(&desc, &config, decoder.StartAssignment());
+      if (SUCCEEDED(hr) && decoder) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
 
 D3D11DXVA2Manager::D3D11DXVA2Manager()
   : mWidth(0)
@@ -486,6 +525,31 @@ D3D11DXVA2Manager::Init(nsACString& aFailureReason)
   if (!SUCCEEDED(hr)) {
     aFailureReason = nsPrintfCString("MFTDecoder::SendMFTMessage(MFT_MESSAGE_SET_D3D_MANAGER) failed with code %X", hr);
     return hr;
+  }
+
+  RefPtr<ID3D11VideoDevice> videoDevice;
+  hr = mDevice->QueryInterface(static_cast<ID3D11VideoDevice**>(byRef(videoDevice)));
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+  bool found = false;
+  UINT profileCount = videoDevice->GetVideoDecoderProfileCount();
+  for (UINT i = 0; i < profileCount; i++) {
+    GUID id;
+    hr = videoDevice->GetVideoDecoderProfile(i, &id);
+    if (SUCCEEDED(hr) && id == DXVA2_ModeH264_E) {
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    return E_FAIL;
+  }
+
+  BOOL nv12Support = false;
+  hr = videoDevice->CheckVideoDecoderFormat(&DXVA2_ModeH264_E, DXGI_FORMAT_NV12, &nv12Support);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  if (!nv12Support) {
+    return E_FAIL;
   }
 
   mTextureClientAllocator = new D3D11RecycleAllocator(layers::ImageBridgeChild::GetSingleton(),
