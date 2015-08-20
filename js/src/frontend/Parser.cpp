@@ -48,6 +48,22 @@ using mozilla::Maybe;
 
 using JS::AutoGCRooter;
 
+JSFunction::AutoParseUsingFunctionBox::AutoParseUsingFunctionBox(ExclusiveContext* cx,
+                                                                 frontend::FunctionBox* funbox)
+  : fun_(cx, funbox->function()),
+    oldEnv_(cx, fun_->environment())
+{
+    fun_->setFunctionBox(funbox);
+    funbox->computeAllowSyntax(fun_);
+    funbox->computeInWith(fun_);
+}
+
+JSFunction::AutoParseUsingFunctionBox::~AutoParseUsingFunctionBox()
+{
+    fun_->unsetFunctionBox();
+    fun_->setEnvironment(oldEnv_);
+}
+
 namespace js {
 namespace frontend {
 
@@ -613,12 +629,12 @@ Parser<ParseHandler>::newObjectBox(JSObject* obj)
 
 template <typename ParseHandler>
 FunctionBox::FunctionBox(ExclusiveContext* cx, ObjectBox* traceListHead, JSFunction* fun,
-                         JSObject* staticScope, ParseContext<ParseHandler>* outerpc,
+                         JSObject* enclosingStaticScope, ParseContext<ParseHandler>* outerpc,
                          Directives directives, bool extraWarnings, GeneratorKind generatorKind)
   : ObjectBox(fun, traceListHead),
     SharedContext(cx, directives, extraWarnings),
     bindings(),
-    staticScope_(staticScope),
+    enclosingStaticScope_(enclosingStaticScope),
     bufStart(0),
     bufEnd(0),
     length(0),
@@ -636,22 +652,17 @@ FunctionBox::FunctionBox(ExclusiveContext* cx, ObjectBox* traceListHead, JSFunct
     // baked into JIT code, so they must be allocated tenured. They are held by
     // the JSScript so cannot be collected during a minor GC anyway.
     MOZ_ASSERT(fun->isTenured());
-
-    if (staticScope->is<StaticFunctionBoxScopeObject>())
-        staticScope->as<StaticFunctionBoxScopeObject>().setFunctionBox(this);
-
-    computeAllowSyntax(staticScope);
-    computeInWith(staticScope);
 }
 
 template <typename ParseHandler>
 FunctionBox*
-Parser<ParseHandler>::newFunctionBoxWithScope(Node fn, JSFunction* fun,
-                                              ParseContext<ParseHandler>* outerpc,
-                                              Directives inheritedDirectives,
-                                              GeneratorKind generatorKind,
-                                              JSObject* staticScope)
+Parser<ParseHandler>::newFunctionBox(Node fn, JSFunction* fun,
+                                     ParseContext<ParseHandler>* outerpc,
+                                     Directives inheritedDirectives,
+                                     GeneratorKind generatorKind,
+                                     JSObject* enclosingStaticScope)
 {
+    MOZ_ASSERT_IF(outerpc, enclosingStaticScope == outerpc->innermostStaticScope());
     MOZ_ASSERT(fun);
 
     /*
@@ -662,9 +673,8 @@ Parser<ParseHandler>::newFunctionBoxWithScope(Node fn, JSFunction* fun,
      * function.
      */
     FunctionBox* funbox =
-        alloc.new_<FunctionBox>(context, traceListHead, fun, staticScope, outerpc,
-                                inheritedDirectives,
-                                options().extraWarningsOption,
+        alloc.new_<FunctionBox>(context, traceListHead, fun, enclosingStaticScope, outerpc,
+                                inheritedDirectives, options().extraWarningsOption,
                                 generatorKind);
     if (!funbox) {
         ReportOutOfMemory(context);
@@ -674,29 +684,6 @@ Parser<ParseHandler>::newFunctionBoxWithScope(Node fn, JSFunction* fun,
     traceListHead = funbox;
     if (fn)
         handler.setFunctionBox(fn, funbox);
-
-    return funbox;
-}
-
-template <typename ParseHandler>
-FunctionBox*
-Parser<ParseHandler>::newFunctionBox(Node fn, HandleFunction fun,
-                                     ParseContext<ParseHandler>* outerpc,
-                                     Directives inheritedDirectives,
-                                     GeneratorKind generatorKind,
-                                     HandleObject enclosingStaticScope)
-{
-    MOZ_ASSERT_IF(outerpc, enclosingStaticScope == outerpc->innermostStaticScope());
-
-    StaticFunctionBoxScopeObject* scope =
-        StaticFunctionBoxScopeObject::create(context, enclosingStaticScope);
-    if (!scope)
-        return nullptr;
-
-    FunctionBox* funbox = newFunctionBoxWithScope(fn, fun, outerpc, inheritedDirectives,
-                                                  generatorKind, scope);
-    if (!funbox)
-        return nullptr;
 
     return funbox;
 }

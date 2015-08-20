@@ -593,25 +593,6 @@ const Class NonSyntacticVariablesObject::class_ = {
     JSCLASS_IS_ANONYMOUS
 };
 
-/* static */ StaticFunctionBoxScopeObject*
-StaticFunctionBoxScopeObject::create(ExclusiveContext* cx, HandleObject enclosing)
-{
-    StaticFunctionBoxScopeObject* obj =
-        NewObjectWithNullTaggedProto<StaticFunctionBoxScopeObject>(cx, GenericObject,
-                                                                   BaseShape::DELEGATE);
-    if (!obj)
-        return nullptr;
-
-    obj->setReservedSlot(SCOPE_CHAIN_SLOT, ObjectOrNullValue(enclosing));
-    return obj;
-}
-
-const Class StaticFunctionBoxScopeObject::class_ = {
-    "StaticFunctionBoxScopeObject",
-    JSCLASS_HAS_RESERVED_SLOTS(StaticFunctionBoxScopeObject::RESERVED_SLOTS) |
-    JSCLASS_IS_ANONYMOUS
-};
-
 /*****************************************************************************/
 
 /* static */ ClonedBlockObject*
@@ -2612,7 +2593,7 @@ js::DumpStaticScopeChain(JSObject* staticScope)
     for (StaticScopeIter<NoGC> ssi(staticScope); !ssi.done(); ssi++) {
         switch (ssi.type()) {
           case StaticScopeIter<NoGC>::Function:
-            if (ssi.maybeFunctionBox())
+            if (ssi.fun().isBeingParsed())
                 fprintf(stdout, "funbox [%p fun=%p]", ssi.maybeFunctionBox(), &ssi.fun());
             else
                 fprintf(stdout, "function [%p]", &ssi.fun());
