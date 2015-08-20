@@ -102,6 +102,8 @@ public:
   void Dump(const char* aPath) override;
 #endif
 
+  void AddSizeOfResources(MediaSourceDecoder::ResourceSizes* aSizes);
+
 private:
   // for MediaSourceDemuxer::GetMozDebugReaderData
   friend class MediaSourceDemuxer;
@@ -281,6 +283,8 @@ private:
       mLongestFrameDuration.reset();
       mNextInsertionIndex.reset();
     }
+
+    void AddSizeOfResources(MediaSourceDecoder::ResourceSizes* aSizes);
   };
 
   void CheckSequenceDiscontinuity(const media::TimeUnit& aPresentationTime);
