@@ -15,7 +15,6 @@
 
 #include "gc/Heap.h"
 #include "jit/ExecutableAllocator.h"
-#include "jit/ICStubSpace.h"
 #include "jit/IonOptimizationLevels.h"
 #include "jit/IonTypes.h"
 #include "js/UbiNode.h"
@@ -28,7 +27,6 @@ namespace jit {
 class MacroAssembler;
 class PatchableBackedge;
 class IonBuilder;
-class IonICEntry;
 
 typedef Vector<JSObject*, 4, JitAllocPolicy> ObjectVector;
 
@@ -261,10 +259,6 @@ struct IonScript
     uint32_t backedgeList_;
     uint32_t backedgeEntries_;
 
-    // List of entries to the shared stub.
-    uint32_t sharedStubList_;
-    uint32_t sharedStubEntries_;
-
     // Number of references from invalidation records.
     uint32_t invalidationCount_;
 
@@ -277,9 +271,6 @@ struct IonScript
     // Number of times we tried to enter this script via OSR but failed due to
     // a LOOPENTRY pc other than osrPc_.
     uint32_t osrPcMismatchCounter_;
-
-    // Allocated space for fallback stubs.
-    FallbackICStubSpace fallbackStubSpace_;
 
     // The tracelogger event used to log the start/stop of this IonScript.
     TraceLoggerEvent traceLoggerScriptEvent_;
@@ -336,8 +327,7 @@ struct IonScript
                           size_t constants, size_t safepointIndexEntries,
                           size_t osiIndexEntries, size_t cacheEntries,
                           size_t runtimeSize, size_t safepointsSize,
-                          size_t backedgeEntries, size_t sharedStubEntries,
-                          OptimizationLevel optimizationLevel);
+                          size_t backedgeEntries, OptimizationLevel optimizationLevel);
     static void Trace(JSTracer* trc, IonScript* script);
     static void Destroy(FreeOp* fop, IonScript* script);
 
@@ -496,12 +486,6 @@ struct IonScript
     size_t numCaches() const {
         return cacheEntries_;
     }
-    IonICEntry* sharedStubList() {
-        return (IonICEntry*) &bottomBuffer()[sharedStubList_];
-    }
-    size_t numSharedStubs() const {
-        return sharedStubEntries_;
-    }
     size_t runtimeSize() const {
         return runtimeSize_;
     }
@@ -571,12 +555,6 @@ struct IonScript
     void clearRecompiling() {
         recompiling_ = false;
     }
-
-    FallbackICStubSpace* fallbackStubSpace() {
-        return &fallbackStubSpace_;
-    }
-    void adoptFallbackStubs(FallbackICStubSpace* stubSpace);
-    void purgeOptimizedStubs(Zone* zone);
 
     enum ShouldIncreaseAge {
         IncreaseAge = true,

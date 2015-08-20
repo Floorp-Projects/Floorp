@@ -7062,45 +7062,6 @@ class MOsrReturnValue
     }
 };
 
-class MBinarySharedStub
-  : public MBinaryInstruction,
-    public MixPolicy<BoxPolicy<0>, BoxPolicy<1> >::Data
-{
-    explicit MBinarySharedStub(MDefinition* left, MDefinition* right)
-      : MBinaryInstruction(left, right)
-    {
-        setResultType(MIRType_Value);
-    }
-
-  public:
-    INSTRUCTION_HEADER(BinarySharedStub)
-
-    static MBinarySharedStub* New(TempAllocator& alloc, MDefinition* left, MDefinition* right)
-    {
-        return new(alloc) MBinarySharedStub(left, right);
-    }
-
-};
-
-class MUnarySharedStub
-  : public MUnaryInstruction,
-    public BoxPolicy<0>::Data
-{
-    explicit MUnarySharedStub(MDefinition* input)
-      : MUnaryInstruction(input)
-    {
-        setResultType(MIRType_Value);
-    }
-
-  public:
-    INSTRUCTION_HEADER(UnarySharedStub)
-
-    static MUnarySharedStub* New(TempAllocator& alloc, MDefinition* input)
-    {
-        return new(alloc) MUnarySharedStub(input);
-    }
-};
-
 // Check the current frame for over-recursion past the global stack limit.
 class MCheckOverRecursed
   : public MNullaryInstruction

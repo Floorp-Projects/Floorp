@@ -3920,31 +3920,6 @@ class LStringReplace: public LStrReplace
     }
 };
 
-class LBinarySharedStub : public LCallInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 0>
-{
-  public:
-    LIR_HEADER(BinarySharedStub)
-
-    const MBinarySharedStub* mir() const {
-        return mir_->toBinarySharedStub();
-    }
-
-    static const size_t LhsInput = 0;
-    static const size_t RhsInput = BOX_PIECES;
-};
-
-class LUnarySharedStub : public LCallInstructionHelper<BOX_PIECES, BOX_PIECES, 0>
-{
-  public:
-    LIR_HEADER(UnarySharedStub)
-
-    const MUnarySharedStub* mir() const {
-        return mir_->toUnarySharedStub();
-    }
-
-    static const size_t Input = 0;
-};
-
 class LLambdaForSingleton : public LCallInstructionHelper<1, 1, 0>
 {
   public:

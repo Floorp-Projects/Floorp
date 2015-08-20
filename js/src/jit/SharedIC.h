@@ -206,12 +206,12 @@ void TypeFallbackICSpew(JSContext* cx, ICTypeMonitor_Fallback* stub, const char*
 #endif
 
 //
-// An entry in the JIT IC descriptor table.
+// An entry in the Baseline IC descriptor table.
 //
 class ICEntry
 {
   private:
-    // A pointer to the shared IC stub for this instruction.
+    // A pointer to the baseline IC stub for this instruction.
     ICStub* firstStub_;
 
     // Offset from the start of the JIT code where the IC
@@ -335,26 +335,7 @@ class ICEntry
     inline ICStub** addressOfFirstStub() {
         return &firstStub_;
     }
-
-    void trace(JSTracer* trc);
 };
-
-class IonICEntry : public ICEntry
-{
-  JSScript* script_;
-
-  public:
-    IonICEntry(uint32_t pcOffset, Kind kind, JSScript* script)
-      : ICEntry(pcOffset, kind),
-        script_(script)
-    { }
-
-    JSScript* script() {
-        return script_;
-    }
-
-};
-
 
 class ICMonitoredStub;
 class ICMonitoredFallbackStub;
@@ -801,7 +782,7 @@ class ICFallbackStub : public ICStub
 
     // The icEntry and lastStubPtrAddr_ fields can't be initialized when the stub is
     // created since the stub is created at compile time, and we won't know the IC entry
-    // address until after compile when the JitScript is created.  This method
+    // address until after compile when the BaselineScript is created.  This method
     // allows these fields to be fixed up at that point.
     void fixupICEntry(ICEntry* icEntry) {
         MOZ_ASSERT(icEntry_ == nullptr);
@@ -1113,280 +1094,6 @@ class ICMultiStubCompiler : public ICStubCompiler
 
     ICMultiStubCompiler(JSContext* cx, ICStub::Kind kind, JSOp op, Engine engine)
       : ICStubCompiler(cx, kind, engine), op(op) {}
-};
-
-// BinaryArith
-//      JSOP_ADD, JSOP_SUB, JSOP_MUL, JOP_DIV, JSOP_MOD
-//      JSOP_BITAND, JSOP_BITXOR, JSOP_BITOR
-//      JSOP_LSH, JSOP_RSH, JSOP_URSH
-
-class ICBinaryArith_Fallback : public ICFallbackStub
-{
-    friend class ICStubSpace;
-
-    explicit ICBinaryArith_Fallback(JitCode* stubCode)
-      : ICFallbackStub(BinaryArith_Fallback, stubCode)
-    {
-        extra_ = 0;
-    }
-
-    static const uint16_t SAW_DOUBLE_RESULT_BIT = 0x1;
-    static const uint16_t UNOPTIMIZABLE_OPERANDS_BIT = 0x2;
-
-  public:
-    static const uint32_t MAX_OPTIMIZED_STUBS = 8;
-
-    bool sawDoubleResult() const {
-        return extra_ & SAW_DOUBLE_RESULT_BIT;
-    }
-    void setSawDoubleResult() {
-        extra_ |= SAW_DOUBLE_RESULT_BIT;
-    }
-    bool hadUnoptimizableOperands() const {
-        return extra_ & UNOPTIMIZABLE_OPERANDS_BIT;
-    }
-    void noteUnoptimizableOperands() {
-        extra_ |= UNOPTIMIZABLE_OPERANDS_BIT;
-    }
-
-    // Compiler for this stub kind.
-    class Compiler : public ICStubCompiler {
-      protected:
-        bool generateStubCode(MacroAssembler& masm);
-
-      public:
-        explicit Compiler(JSContext* cx, Engine engine)
-          : ICStubCompiler(cx, ICStub::BinaryArith_Fallback, engine) {}
-
-        ICStub* getStub(ICStubSpace* space) {
-            return newStub<ICBinaryArith_Fallback>(space, getStubCode());
-        }
-    };
-};
-
-class ICBinaryArith_Int32 : public ICStub
-{
-    friend class ICStubSpace;
-
-    ICBinaryArith_Int32(JitCode* stubCode, bool allowDouble)
-      : ICStub(BinaryArith_Int32, stubCode)
-    {
-        extra_ = allowDouble;
-    }
-
-  public:
-    bool allowDouble() const {
-        return extra_;
-    }
-
-    // Compiler for this stub kind.
-    class Compiler : public ICStubCompiler {
-      protected:
-        JSOp op_;
-        bool allowDouble_;
-
-        bool generateStubCode(MacroAssembler& masm);
-
-        // Stub keys shift-stubs need to encode the kind, the JSOp and if we allow doubles.
-        virtual int32_t getKey() const {
-            return static_cast<int32_t>(engine_) |
-                  (static_cast<int32_t>(kind) << 1) |
-                  (static_cast<int32_t>(op_) << 17) |
-                  (static_cast<int32_t>(allowDouble_) << 25);
-        }
-
-      public:
-        Compiler(JSContext* cx, JSOp op, Engine engine, bool allowDouble)
-          : ICStubCompiler(cx, ICStub::BinaryArith_Int32, engine),
-            op_(op), allowDouble_(allowDouble) {}
-
-        ICStub* getStub(ICStubSpace* space) {
-            return newStub<ICBinaryArith_Int32>(space, getStubCode(), allowDouble_);
-        }
-    };
-};
-
-class ICBinaryArith_StringConcat : public ICStub
-{
-    friend class ICStubSpace;
-
-    explicit ICBinaryArith_StringConcat(JitCode* stubCode)
-      : ICStub(BinaryArith_StringConcat, stubCode)
-    {}
-
-  public:
-    class Compiler : public ICStubCompiler {
-      protected:
-        bool generateStubCode(MacroAssembler& masm);
-
-      public:
-        explicit Compiler(JSContext* cx, Engine engine)
-          : ICStubCompiler(cx, ICStub::BinaryArith_StringConcat, engine)
-        {}
-
-        ICStub* getStub(ICStubSpace* space) {
-            return newStub<ICBinaryArith_StringConcat>(space, getStubCode());
-        }
-    };
-};
-
-class ICBinaryArith_StringObjectConcat : public ICStub
-{
-    friend class ICStubSpace;
-
-    ICBinaryArith_StringObjectConcat(JitCode* stubCode, bool lhsIsString)
-      : ICStub(BinaryArith_StringObjectConcat, stubCode)
-    {
-        extra_ = lhsIsString;
-    }
-
-  public:
-    bool lhsIsString() const {
-        return extra_;
-    }
-
-    class Compiler : public ICStubCompiler {
-      protected:
-        bool lhsIsString_;
-        bool generateStubCode(MacroAssembler& masm);
-
-        virtual int32_t getKey() const {
-            return static_cast<int32_t>(engine_) |
-                  (static_cast<int32_t>(kind) << 1) |
-                  (static_cast<int32_t>(lhsIsString_) << 17);
-        }
-
-      public:
-        Compiler(JSContext* cx, Engine engine, bool lhsIsString)
-          : ICStubCompiler(cx, ICStub::BinaryArith_StringObjectConcat, engine),
-            lhsIsString_(lhsIsString)
-        {}
-
-        ICStub* getStub(ICStubSpace* space) {
-            return newStub<ICBinaryArith_StringObjectConcat>(space, getStubCode(),
-                                                                 lhsIsString_);
-        }
-    };
-};
-
-class ICBinaryArith_Double : public ICStub
-{
-    friend class ICStubSpace;
-
-    explicit ICBinaryArith_Double(JitCode* stubCode)
-      : ICStub(BinaryArith_Double, stubCode)
-    {}
-
-  public:
-    class Compiler : public ICMultiStubCompiler {
-      protected:
-        bool generateStubCode(MacroAssembler& masm);
-
-      public:
-        Compiler(JSContext* cx, JSOp op, Engine engine)
-          : ICMultiStubCompiler(cx, ICStub::BinaryArith_Double, op, engine)
-        {}
-
-        ICStub* getStub(ICStubSpace* space) {
-            return newStub<ICBinaryArith_Double>(space, getStubCode());
-        }
-    };
-};
-
-class ICBinaryArith_BooleanWithInt32 : public ICStub
-{
-    friend class ICStubSpace;
-
-    ICBinaryArith_BooleanWithInt32(JitCode* stubCode, bool lhsIsBool, bool rhsIsBool)
-      : ICStub(BinaryArith_BooleanWithInt32, stubCode)
-    {
-        MOZ_ASSERT(lhsIsBool || rhsIsBool);
-        extra_ = 0;
-        if (lhsIsBool)
-            extra_ |= 1;
-        if (rhsIsBool)
-            extra_ |= 2;
-    }
-
-  public:
-    bool lhsIsBoolean() const {
-        return extra_ & 1;
-    }
-
-    bool rhsIsBoolean() const {
-        return extra_ & 2;
-    }
-
-    class Compiler : public ICStubCompiler {
-      protected:
-        JSOp op_;
-        bool lhsIsBool_;
-        bool rhsIsBool_;
-        bool generateStubCode(MacroAssembler& masm);
-
-        virtual int32_t getKey() const {
-            return static_cast<int32_t>(engine_) |
-                  (static_cast<int32_t>(kind) << 1) |
-                  (static_cast<int32_t>(op_) << 17) |
-                  (static_cast<int32_t>(lhsIsBool_) << 25) |
-                  (static_cast<int32_t>(rhsIsBool_) << 26);
-        }
-
-      public:
-        Compiler(JSContext* cx, JSOp op, Engine engine, bool lhsIsBool, bool rhsIsBool)
-          : ICStubCompiler(cx, ICStub::BinaryArith_BooleanWithInt32, engine),
-            op_(op), lhsIsBool_(lhsIsBool), rhsIsBool_(rhsIsBool)
-        {
-            MOZ_ASSERT(op_ == JSOP_ADD || op_ == JSOP_SUB || op_ == JSOP_BITOR ||
-                       op_ == JSOP_BITAND || op_ == JSOP_BITXOR);
-            MOZ_ASSERT(lhsIsBool_ || rhsIsBool_);
-        }
-
-        ICStub* getStub(ICStubSpace* space) {
-            return newStub<ICBinaryArith_BooleanWithInt32>(space, getStubCode(),
-                                                               lhsIsBool_, rhsIsBool_);
-        }
-    };
-};
-
-class ICBinaryArith_DoubleWithInt32 : public ICStub
-{
-    friend class ICStubSpace;
-
-    ICBinaryArith_DoubleWithInt32(JitCode* stubCode, bool lhsIsDouble)
-      : ICStub(BinaryArith_DoubleWithInt32, stubCode)
-    {
-        extra_ = lhsIsDouble;
-    }
-
-  public:
-    bool lhsIsDouble() const {
-        return extra_;
-    }
-
-    class Compiler : public ICMultiStubCompiler {
-      protected:
-        bool lhsIsDouble_;
-        bool generateStubCode(MacroAssembler& masm);
-
-        virtual int32_t getKey() const {
-            return static_cast<int32_t>(engine_) |
-                  (static_cast<int32_t>(kind) << 1) |
-                  (static_cast<int32_t>(op) << 17) |
-                  (static_cast<int32_t>(lhsIsDouble_) << 25);
-        }
-
-      public:
-        Compiler(JSContext* cx, JSOp op, Engine engine, bool lhsIsDouble)
-          : ICMultiStubCompiler(cx, ICStub::BinaryArith_DoubleWithInt32, op, engine),
-            lhsIsDouble_(lhsIsDouble)
-        {}
-
-        ICStub* getStub(ICStubSpace* space) {
-            return newStub<ICBinaryArith_DoubleWithInt32>(space, getStubCode(),
-                                                              lhsIsDouble_);
-        }
-    };
 };
 
 } // namespace jit

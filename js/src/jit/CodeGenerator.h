@@ -59,7 +59,6 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool generate();
     bool generateAsmJS(AsmJSFunctionLabels* labels);
     bool link(JSContext* cx, CompilerConstraintList* constraints);
-    bool linkSharedStubs(JSContext* cx);
 
     void visitOsiPoint(LOsiPoint* lir);
     void visitGoto(LGoto* lir);
@@ -107,9 +106,6 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitOutOfLineRegExpTest(OutOfLineRegExpTest* ool);
     void visitRegExpReplace(LRegExpReplace* lir);
     void visitStringReplace(LStringReplace* lir);
-    void emitSharedStub(ICStub::Kind kind, LInstruction* lir);
-    void visitBinarySharedStub(LBinarySharedStub* lir);
-    void visitUnarySharedStub(LUnarySharedStub* lir);
     void visitLambda(LLambda* lir);
     void visitOutOfLineLambdaArrow(OutOfLineLambdaArrow* ool);
     void visitLambdaArrow(LLambdaArrow* lir);
@@ -482,18 +478,6 @@ class CodeGenerator : public CodeGeneratorSpecific
     void emitAssertRangeD(const Range* r, FloatRegister input, FloatRegister temp);
 
     Vector<CodeOffsetLabel, 0, JitAllocPolicy> ionScriptLabels_;
-
-    struct SharedStub {
-        ICStub::Kind kind;
-        IonICEntry entry;
-        CodeOffsetLabel label;
-
-        SharedStub(ICStub::Kind kind, IonICEntry entry, CodeOffsetLabel label)
-          : kind(kind), entry(entry), label(label)
-        {}
-    };
-
-    Vector<SharedStub, 0, SystemAllocPolicy> sharedStubs_;
 
     void branchIfInvalidated(Register temp, Label* invalidated);
 

@@ -85,11 +85,6 @@ class CodeGeneratorShared : public LElementVisitor
     Label invalidate_;
     CodeOffsetLabel invalidateEpilogueData_;
 
-    // Label for the common return path.
-    NonAssertingLabel returnLabel_;
-
-    FallbackICStubSpace stubSpace_;
-
     js::Vector<SafepointIndex, 0, SystemAllocPolicy> safepointIndices_;
     js::Vector<OsiIndex, 0, SystemAllocPolicy> osiIndices_;
 
@@ -109,6 +104,9 @@ class CodeGeneratorShared : public LElementVisitor
     js::Vector<CodeOffsetLabel, 0, SystemAllocPolicy> patchableTraceLoggers_;
     js::Vector<CodeOffsetLabel, 0, SystemAllocPolicy> patchableTLScripts_;
 #endif
+
+    // Label for the common return path.
+    NonAssertingLabel returnLabel_;
 
   public:
     struct NativeToBytecode {
