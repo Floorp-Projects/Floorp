@@ -116,31 +116,23 @@ const testCases = [
   ], true]
 ];
 
-let testValues = Task.async(function*() {
+add_task(function*() {
+  yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-complex-values.html");
+
   gUI.tree.expandAll();
-  let doc = gPanelWindow.document;
+
   for (let item of testCases) {
     info("clicking for item " + item);
+
     if (Array.isArray(item[0])) {
-      selectTreeItem(item[0]);
-      yield gUI.once("store-objects-updated");
+      yield selectTreeItem(item[0]);
       continue;
+    } else if (item[0]) {
+      yield selectTableItem(item[0]);
     }
-    else if (item[0]) {
-      selectTableItem(item[0]);
-    }
-    if (item[0] && item[1]) {
-      yield gUI.once("sidebar-updated");
-    }
+
     yield findVariableViewProperties(item[1], item[2]);
   }
-});
 
-let startTest = Task.async(function*() {
-  yield testValues();
-  finishTests();
+  yield finishTests();
 });
-
-function test() {
-  openTabAndSetupStorage(MAIN_DOMAIN + "storage-complex-values.html").then(startTest);
-}
