@@ -107,8 +107,8 @@ public:
 
   void DestroyData();
   void RecreateData();
-  void Connect(ProcessedMediaStream* aStream, bool aFinishWhenEnded);
-  void Remove(MediaStream* aStream);
+  void AddOutput(ProcessedMediaStream* aStream, bool aFinishWhenEnded);
+  void RemoveOutput(MediaStream* aStream);
 
   void SetPlaying(bool aPlaying);
   void SetVolume(double aVolume);
