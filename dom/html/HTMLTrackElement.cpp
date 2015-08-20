@@ -70,7 +70,7 @@ static MOZ_CONSTEXPR nsAttrValue::EnumTable kKindTable[] = {
 };
 
 // The default value for kKindTable is "subtitles"
-static MOZ_CONSTEXPR const char* kKindTableDefaultString = kKindTable->tag;
+static MOZ_CONSTEXPR const char* kKindTableDefaultString = kKindTable[0].tag;
 
 /** HTMLTrackElement */
 HTMLTrackElement::HTMLTrackElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
