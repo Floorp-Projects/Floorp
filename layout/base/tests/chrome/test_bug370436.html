@@ -42,27 +42,32 @@ function startTest()
 	ta.focus();
 	ta.selectionStart = ta.selectionEnd = ta.value.length;
 
+// Note: This test, intentionally or by accident, relies on sending button '0'
+// with contextMenu, which triggers some key-equiv stuff in
+// PresShell::AdjustContextMenuKeyEvent.
+var mouseParams = { type: 'contextmenu', button: 0 };
+
 	/* Put cursor at start and middle of "sheep" */
 	synthesizeKey("VK_UP", {})
-	synthesizeMouse(ta, 0, 0, { type : "contextmenu" });
+	synthesizeMouse(ta, 0, 0, mouseParams);
 	synthesizeKey("VK_RIGHT", {})
-	synthesizeMouse(ta, 0, 0, { type : "contextmenu" });
+	synthesizeMouse(ta, 0, 0, mouseParams);
 	synthesizeKey("VK_RIGHT", {})
-	synthesizeMouse(ta, 0, 0, { type : "contextmenu" });
+	synthesizeMouse(ta, 0, 0, mouseParams);
 
 	/* Put cursor at the end of "hello" */
 	synthesizeKey("VK_UP", {})
-	synthesizeMouse(ta, 0, 0, { type : "contextmenu" });
+	synthesizeMouse(ta, 0, 0, mouseParams);
 	synthesizeKey("VK_RIGHT", {})
 	synthesizeKey("VK_RIGHT", {})
 	synthesizeKey("VK_RIGHT", {})
-	synthesizeMouse(ta, 0, 0, { type : "contextmenu" });
+	synthesizeMouse(ta, 0, 0, mouseParams);
 	synthesizeKey("VK_RIGHT", {})
-	synthesizeMouse(ta, 0, 0, { type : "contextmenu" });
+	synthesizeMouse(ta, 0, 0, mouseParams);
 
 	/* Put cursor on "welcome" */
 	synthesizeKey("VK_UP", {})
-	synthesizeMouse(ta, 0, 0, { type : "contextmenu" });
+	synthesizeMouse(ta, 0, 0, mouseParams);
 
 	is(words.pop(), "welcome", "Word 1 selected correctly");	
 	is(words.pop(), "world"  , "Word 2 selected correctly");	
