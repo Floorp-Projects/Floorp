@@ -227,7 +227,9 @@
     // twitterCDN. More specific rules take precedence because we search for
     // exact domain name first.
     { "name": "twitter.com", "include_subdomains": true,
-      "pins": "twitterCDN", "test_mode": false }
+      "pins": "twitterCDN", "test_mode": false },
+    { "name": "aus5.mozilla.org", "include_subdomains": true,
+      "pins": "mozilla", "test_mode": true, "id": 7 }
   ],
 
   "extra_certificates": []
