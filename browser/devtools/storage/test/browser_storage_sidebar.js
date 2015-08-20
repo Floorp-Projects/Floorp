@@ -11,57 +11,115 @@
 //   <do we wait for the async "sidebar-updated" event>,
 //   <is the sidebar open>
 // ]
+
+"use strict";
+
 const testCases = [
-  [["cookies", "sectest1.example.org"], 0, 0],
-  ["cs2", 1, 1],
-  [null, 0, 0],
-  ["cs2", 1, 1],
-  ["uc1", 1, 1],
-  ["uc1", 0, 1],
-  [["localStorage", "http://sectest1.example.org"], 0, 0],
-  ["iframe-u-ls1", 1, 1],
-  ["iframe-u-ls1", 0, 1],
-  [null, 0, 0],
-  [["sessionStorage", "http://test1.example.org"], 0, 0],
-  ["ss1", 1, 1],
-  [null, 0, 0],
-  [["indexedDB", "http://test1.example.org"], 0, 0],
-  ["idb2", 1, 1],
-  [["indexedDB", "http://test1.example.org", "idb2", "obj3"], 0, 0],
-  [["indexedDB", "https://sectest1.example.org", "idb-s2"], 0, 0],
-  ["obj-s2", 1, 1],
-  [null, 0, 0],
-  [null, 0, 0],
-  ["obj-s2", 1, 1],
-  [null, 0, 0],
+  {
+    location: ["cookies", "sectest1.example.org"],
+    sidebarHidden: true
+  },
+  {
+    location: "cs2",
+    sidebarHidden: false
+  },
+  {
+    sendEscape: true
+  },
+  {
+    location: "cs2",
+    sidebarHidden: false
+  },
+  {
+    location: "uc1",
+    sidebarHidden: false
+  },
+  {
+    location: "uc1",
+    sidebarHidden: false
+  },
+
+  {
+    location: ["localStorage", "http://sectest1.example.org"],
+    sidebarHidden: true
+  },
+  {
+    location: "iframe-u-ls1",
+    sidebarHidden: false
+  },
+  {
+    location: "iframe-u-ls1",
+    sidebarHidden: false
+  },
+  {
+    sendEscape: true
+  },
+
+  {
+    location: ["sessionStorage", "http://test1.example.org"],
+    sidebarHidden: true
+  },
+  {
+    location: "ss1",
+    sidebarHidden: false
+  },
+  {
+    sendEscape: true
+  },
+
+  {
+    location: ["indexedDB", "http://test1.example.org"],
+    sidebarHidden: true
+  },
+  {
+    location: "idb2",
+    sidebarHidden: false
+  },
+
+  {
+    location: ["indexedDB", "http://test1.example.org", "idb2", "obj3"],
+    sidebarHidden: true
+  },
+
+  {
+    location: ["indexedDB", "https://sectest1.example.org", "idb-s2"],
+    sidebarHidden: true
+  },
+  {
+    location: "obj-s2",
+    sidebarHidden: false
+  },
+  {
+    sendEscape: true
+  }, {
+    location: "obj-s2",
+    sidebarHidden: false
+  }
 ];
 
-let testSidebar = Task.async(function*() {
-  let doc = gPanelWindow.document;
-  for (let item of testCases) {
-    info("clicking for item " + item);
-    if (Array.isArray(item[0])) {
-      selectTreeItem(item[0]);
-      yield gUI.once("store-objects-updated");
+add_task(function*() {
+  yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-listings.html");
+
+  for (let test of testCases) {
+    let { location, sidebarHidden, sendEscape } = test;
+
+    info("running " + JSON.stringify(test));
+
+    if (Array.isArray(location)) {
+      yield selectTreeItem(location);
+    } else if (location) {
+      yield selectTableItem(location);
     }
-    else if (item[0]) {
-      selectTableItem(item[0]);
-    }
-    else {
+
+    if (sendEscape) {
       EventUtils.sendKey("ESCAPE", gPanelWindow);
+    } else {
+      is(gUI.sidebar.hidden, sidebarHidden,
+        "correct visibility state of sidebar.");
     }
-    if (item[1]) {
-      yield gUI.once("sidebar-updated");
-    }
-    is(!item[2], gUI.sidebar.hidden, "Correct visibility state of sidebar");
+
+    info("-".repeat(80));
   }
-});
 
-let startTest = Task.async(function*() {
-  yield testSidebar();
-  finishTests();
+  yield finishTests();
 });
-
-function test() {
-  openTabAndSetupStorage(MAIN_DOMAIN + "storage-listings.html").then(startTest);
-}

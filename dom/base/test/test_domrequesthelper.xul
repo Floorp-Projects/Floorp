@@ -409,6 +409,18 @@
         promise.then(next);
       },
       function() {
+        info("== Test createPromiseWithId()");
+        var _resolverId;
+        var promise = dummy.createPromiseWithId(function(resolverId) {
+          _resolverId = resolverId;
+        });
+        var resolver = dummy.getPromiseResolver(_resolverId);
+        ok(promise instanceof Promise, "Returned a Promise");
+        ok(typeof _resolverId === "string", "resolverId is a string");
+        ok(resolver != null, "resolverId is a valid id");
+        next();
+      },
+      function() {
         info("== Test getResolver()");
         var id;
         var resolver;

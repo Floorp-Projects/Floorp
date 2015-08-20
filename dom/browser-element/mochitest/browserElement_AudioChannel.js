@@ -9,8 +9,6 @@ SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
 
-SpecialPowers.setBoolPref("media.useAudioChannelService", true);
-
 function noaudio() {
   var iframe = document.createElement('iframe');
   iframe.setAttribute('mozbrowser', 'true');

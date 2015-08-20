@@ -298,6 +298,17 @@ DOMRequestIpcHelper.prototype = {
     return new this._window.Promise(aPromiseInit);
   },
 
+  /**
+   * createPromiseWithId() creates a new Promise, accepting a callback
+   * which is immediately called with the generated resolverId.
+   */
+  createPromiseWithId: function(aCallback) {
+    return this.createPromise(function(aResolve, aReject) {
+      let resolverId = this.getPromiseResolverId({ resolve: aResolve, reject: aReject });
+      aCallback(resolverId);
+    }.bind(this));
+  },
+
   forEachRequest: function(aCallback) {
     if (!this._requests) {
       return;

@@ -914,6 +914,20 @@ this.DownloadIntegration = {
   },
 
   /**
+   * Force a save on _store if it exists. Used to ensure downloads do not
+   * persist after being sanitized on Android.
+   *
+   * @return {Promise}
+   * @resolves When _store.save() completes.
+   */
+  forceSave: function DI_forceSave() {
+    if (this._store) {
+      return this._store.save();
+    }
+    return Promise.resolve();
+  },
+
+  /**
    * Checks if we have already imported (or attempted to import)
    * the downloads database from the previous SQLite storage.
    *

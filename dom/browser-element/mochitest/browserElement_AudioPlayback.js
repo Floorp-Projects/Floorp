@@ -68,8 +68,4 @@ function runTest() {
   iframe.src = browserElementTestHelpers.emptyPage1;
 }
 
-addEventListener('testready', () => {
-  // Audio channel service is needed for events
-  SpecialPowers.pushPrefEnv({"set": [["media.useAudioChannelService", true]]},
-                            runTest);
-});
+addEventListener('testready', runTest);

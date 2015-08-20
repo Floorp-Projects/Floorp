@@ -193,6 +193,8 @@
     _(RegExpReplace)                \
     _(StringReplace)                \
     _(Substr)                       \
+    _(BinarySharedStub)             \
+    _(UnarySharedStub)              \
     _(Lambda)                       \
     _(LambdaArrow)                  \
     _(LambdaForSingleton)           \

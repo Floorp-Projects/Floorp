@@ -1195,6 +1195,7 @@ FilterTypeSetPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
     _(MixPolicy<SimdSameAsReturnedTypePolicy<0>, SimdScalarPolicy<1> >) \
     _(MixPolicy<StringPolicy<0>, IntPolicy<1> >)                        \
     _(MixPolicy<StringPolicy<0>, StringPolicy<1> >)                     \
+    _(MixPolicy<BoxPolicy<0>, BoxPolicy<1> >)                           \
     _(NoFloatPolicy<0>)                                                 \
     _(NoFloatPolicyAfter<1>)                                            \
     _(NoFloatPolicyAfter<2>)                                            \

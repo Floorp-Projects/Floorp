@@ -71,13 +71,6 @@ CallObject::initAliasedLexicalsToThrowOnTouch(JSScript* script)
 }
 
 template <AllowGC allowGC>
-inline bool
-StaticScopeIter<allowGC>::done() const
-{
-    return !obj;
-}
-
-template <AllowGC allowGC>
 inline void
 StaticScopeIter<allowGC>::operator++(int)
 {
@@ -87,11 +80,13 @@ StaticScopeIter<allowGC>::operator++(int)
         obj = obj->template as<StaticEvalObject>().enclosingScopeForStaticScopeIter();
     } else if (obj->template is<StaticNonSyntacticScopeObjects>()) {
         obj = obj->template as<StaticNonSyntacticScopeObjects>().enclosingScopeForStaticScopeIter();
-    } else if (obj->template is<StaticFunctionBoxScopeObject>()) {
-        obj = obj->template as<StaticFunctionBoxScopeObject>().enclosingScopeForStaticScopeIter();
     } else if (onNamedLambda || !obj->template as<JSFunction>().isNamedLambda()) {
         onNamedLambda = false;
-        obj = obj->template as<JSFunction>().nonLazyScript()->enclosingStaticScope();
+        JSFunction& fun = obj->template as<JSFunction>();
+        if (fun.isBeingParsed())
+            obj = fun.functionBox()->enclosingStaticScope();
+        else
+            obj = fun.nonLazyScript()->enclosingStaticScope();
     } else {
         onNamedLambda = true;
     }
@@ -103,10 +98,12 @@ template <AllowGC allowGC>
 inline bool
 StaticScopeIter<allowGC>::hasSyntacticDynamicScopeObject() const
 {
-    if (obj->template is<JSFunction>())
-        return obj->template as<JSFunction>().isHeavyweight();
-    if (obj->template is<StaticFunctionBoxScopeObject>())
-        return obj->template as<StaticFunctionBoxScopeObject>().functionBox()->isHeavyweight();
+    if (obj->template is<JSFunction>()) {
+        JSFunction& fun = obj->template as<JSFunction>();
+        if (fun.isBeingParsed())
+            return fun.functionBox()->isHeavyweight();
+        return fun.isHeavyweight();
+    }
     if (obj->template is<StaticBlockObject>())
         return obj->template as<StaticBlockObject>().needsClone();
     if (obj->template is<StaticWithObject>())
@@ -190,8 +187,6 @@ inline JSFunction&
 StaticScopeIter<allowGC>::fun() const
 {
     MOZ_ASSERT(type() == Function);
-    if (maybeFunctionBox())
-        return *maybeFunctionBox()->function();
     return obj->template as<JSFunction>();
 }
 
@@ -200,8 +195,8 @@ inline frontend::FunctionBox*
 StaticScopeIter<allowGC>::maybeFunctionBox() const
 {
     MOZ_ASSERT(type() == Function);
-    if (obj->template is<StaticFunctionBoxScopeObject>())
-        return obj->template as<StaticFunctionBoxScopeObject>().functionBox();
+    if (fun().isBeingParsed())
+        return fun().functionBox();
     return nullptr;
 }
 

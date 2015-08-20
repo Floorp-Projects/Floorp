@@ -8,20 +8,23 @@ Iframe for testing multiple host detetion in storage actor
 </head>
 <body>
 <script>
-
+"use strict";
 document.cookie = "uc1=foobar; domain=.example.org; path=/; secure=true";
 localStorage.setItem("iframe-u-ls1", "foobar");
 sessionStorage.setItem("iframe-u-ss1", "foobar1");
 sessionStorage.setItem("iframe-u-ss2", "foobar2");
 console.log("added cookies and stuff from unsecured iframe");
 
-window.clear = function*(callback) {
-  document.cookie = "uc1=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=.example.org; secure=true";
+window.clear = function*() {
+  document.cookie = "uc1=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; " +
+                    "domain=.example.org; secure=true";
+
   localStorage.clear();
   sessionStorage.clear();
-  console.log("removed cookies and stuff from unsecured iframe");
-  callback();
-}
+
+  dump("removed cookies, localStorage and sessionStorage from " +
+       document.location + "\n");
+};
 </script>
 </body>
 </html>

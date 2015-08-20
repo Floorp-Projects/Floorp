@@ -21,8 +21,6 @@ DEFINES += \
   $(NULL)
 
 GARBAGE += \
-  AndroidManifest.xml  \
-  WebappManifestFragment.xml.frag \
   classes.dex  \
   gecko.ap_  \
   res/values/strings.xml \
@@ -103,9 +101,7 @@ ALL_JARS += search-activity.jar
 endif
 
 ifdef MOZ_ANDROID_MLS_STUMBLER
-extra_packages += org.mozilla.mozstumbler
 ALL_JARS += ../stumbler/stumbler.jar
-generated/org/mozilla/mozstumbler/R.java: .aapt.deps ;
 endif
 
 ifdef MOZ_INSTALL_TRACKING
@@ -223,7 +219,6 @@ GeneratedJNIWrappers.cpp: $(ALL_JARS)
 
 manifest := \
   AndroidManifest.xml.in \
-  WebappManifestFragment.xml.frag.in \
   fennec_ids.txt.in \
   $(NULL)
 
@@ -317,7 +312,6 @@ res/raw/suggestedsites.json: .locales.deps ;
 
 all_resources = \
   $(CURDIR)/AndroidManifest.xml \
-  $(CURDIR)/WebappManifestFragment.xml.frag \
   $(android_res_files) \
   $(ANDROID_GENERATED_RESFILES) \
   $(NULL)
@@ -363,20 +357,6 @@ generated/android/support/v7/mediarouter/R.java: .aapt.deps ;
 generated/android/support/v7/recyclerview/R.java: .aapt.deps ;
 generated/com/google/android/gms/R.java: .aapt.deps ;
 
-ifdef MOZ_NATIVE_DEVICES
-    extra_packages += android.support.v7.appcompat
-    extra_res_dirs += $(ANDROID_APPCOMPAT_RES)
-
-    extra_packages += android.support.v7.mediarouter
-    extra_res_dirs += $(ANDROID_MEDIAROUTER_RES)
-
-    extra_packages += com.google.android.gms
-    extra_res_dirs += $(GOOGLE_PLAY_SERVICES_RES)
-endif
-
-extra_packages += android.support.v7.recyclerview
-extra_res_dirs += $(ANDROID_RECYCLERVIEW_RES)
-
 gecko.ap_: .aapt.deps ;
 R.txt: .aapt.deps ;
 
@@ -396,8 +376,6 @@ gecko-nodeps/R.txt: .aapt.nodeps ;
 # not_android_res_files as well.
 
 ANDROID_AAPT_IGNORE := !.svn:!.git:.*:<dir>_*:!CVS:!thumbs.db:!picasa.ini:!*.scc:*~:\#*:*.rej:*.orig
-
-extra_packages := $(subst $(NULL) ,:,$(strip $(extra_packages)))
 
 # 1: target file.
 # 2: dependencies.
@@ -421,8 +399,8 @@ $(1): $$(call mkdir_deps,$(filter-out ./,$(dir $(3) $(4) $(5)))) $(2)
 		--auto-add-overlay \
 		$$(addprefix -S ,$$(ANDROID_RES_DIRS)) \
 		$$(addprefix -A ,$$(ANDROID_ASSETS_DIRS)) \
-		$(if $(extra_res_dirs),$$(addprefix -S ,$$(extra_res_dirs)),) \
-		$(if $(extra_packages),--extra-packages $$(extra_packages),) \
+		$(if $(ANDROID_EXTRA_PACKAGES),--extra-packages $$(subst $$(NULL) ,:,$$(strip $$(ANDROID_EXTRA_PACKAGES)))) \
+		$(if $(ANDROID_EXTRA_RES_DIRS),$$(addprefix -S ,$$(ANDROID_EXTRA_RES_DIRS))) \
 		--custom-package org.mozilla.gecko \
 		--non-constant-id \
 		-F $(3) \

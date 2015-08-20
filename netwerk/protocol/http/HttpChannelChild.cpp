@@ -1627,6 +1627,11 @@ HttpChannelChild::ContinueAsyncOpen()
     openArgs.synthesizedResponseHead() = mozilla::void_t();
   }
 
+  nsCOMPtr<nsISerializable> secInfoSer = do_QueryInterface(mSecurityInfo);
+  if (secInfoSer) {
+    NS_SerializeToString(secInfoSer, openArgs.synthesizedSecurityInfoSerialization());
+  }
+
   OptionalFileDescriptorSet optionalFDs;
 
   if (fds.IsEmpty()) {

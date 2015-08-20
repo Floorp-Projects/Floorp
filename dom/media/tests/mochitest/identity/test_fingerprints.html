@@ -105,8 +105,7 @@ function testMultipleFingerprints() {
 
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({
-  set: [ [ 'dom.messageChannel.enabled', true ],
-         [ 'media.peerconnection.identity.enabled', true ] ]
+  set: [ [ 'media.peerconnection.identity.enabled', true ] ]
 }, testMultipleFingerprints);
 </script>
   </body>

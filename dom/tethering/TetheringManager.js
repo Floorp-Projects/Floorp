@@ -40,19 +40,6 @@ TetheringManager.prototype = {
     this.initDOMRequestHelper(aWindow, messages);
   },
 
-  _getPromise: function(aCallback) {
-    let self = this;
-
-    return this.createPromise(function(aResolve, aReject) {
-      let resolverId = self.getPromiseResolverId({
-        resolve: aResolve,
-        reject: aReject
-      });
-
-      aCallback(resolverId);
-    });
-  },
-
   // TODO : aMessage format may be different after supporting bt/usb.
   //        for now, use wifi format first.
   receiveMessage: function(aMessage) {
@@ -77,7 +64,7 @@ TetheringManager.prototype = {
     let self = this;
     switch (aType) {
       case TETHERING_TYPE_WIFI:
-        return this._getPromise(function(aResolverId) {
+        return this.createPromiseWithId(function(aResolverId) {
           let data = { resolverId: aResolverId, enabled: aEnabled, config: aConfig };
           cpmm.sendAsyncMessage("WifiManager:setWifiTethering", { data: data});
         });
@@ -85,7 +72,7 @@ TetheringManager.prototype = {
       case TETHERING_TYPE_USB:
       default:
         debug("tethering type(" + aType + ") doesn't support");
-        return this._getPromise(function(aResolverId) {
+        return this.createPromiseWithId(function(aResolverId) {
           self.takePromiseResolver(aResolverId).reject();
         });
     }

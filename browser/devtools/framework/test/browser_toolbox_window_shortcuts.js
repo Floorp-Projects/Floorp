@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 let {Toolbox} = require("devtools/framework/toolbox");
 
 let toolbox, toolIDs, idIndex, modifiedPrefs = [];
@@ -42,12 +44,6 @@ function testShortcuts(aToolbox, aIndex) {
 
   toolbox = aToolbox;
   info("Toolbox fired a `ready` event");
-
-  // FIXME Bug 1175850 - Enable storage inspector tests after upgrading for E10S
-  if (toolIDs[aIndex] === "storage") {
-    testShortcuts(toolbox, aIndex + 1);
-    return;
-  }
 
   toolbox.once("select", selectCB);
 
