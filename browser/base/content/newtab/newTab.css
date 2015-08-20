@@ -213,6 +213,8 @@ input[type=button] {
 .newtab-title {
   left: 0;
   padding: 0 4px;
+  border: 1px solid #FFFFFF;
+  border-radius: 0px 0px 8px 8px;
 }
 
 .newtab-sponsored {
