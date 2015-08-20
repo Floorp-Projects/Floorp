@@ -1,9 +1,9 @@
 fails-if(Android||B2G) skip-if((B2G&&browserIsRemote)||Mulet) == empty-1.xul empty-ref.xul # bug 783658 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if((B2G&&browserIsRemote)||Mulet) != empty-2.xul empty-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
-# There is no way to simulate an autocomplete textbox in windows XP/Vista/7 default theme using CSS.
+# There is no way to simulate an autocomplete textbox in windows XP/Vista/7/8/10 default theme using CSS.
 # Therefore, the equlity tests below should be marked as failing.
-fails-if(Android||B2G) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012])/.test(http.oscpu)) skip-if((B2G&&browserIsRemote)||Mulet) == autocomplete-1.xul autocomplete-ref.xul # bug 783658 # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(Android||B2G) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012])/.test(http.oscpu)) skip-if((B2G&&browserIsRemote)||Mulet) == emptyautocomplete-1.xul emptyautocomplete-ref.xul # bug 783658 # Initial mulet triage: parity with B2G/B2G Desktop
+fails-if(Android||B2G) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012]|10\.0)/.test(http.oscpu)) skip-if((B2G&&browserIsRemote)||Mulet) == autocomplete-1.xul autocomplete-ref.xul # bug 783658 # Initial mulet triage: parity with B2G/B2G Desktop
+fails-if(Android||B2G) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012]|10\.0)/.test(http.oscpu)) skip-if((B2G&&browserIsRemote)||Mulet) == emptyautocomplete-1.xul emptyautocomplete-ref.xul # bug 783658 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if((B2G&&browserIsRemote)||Mulet) != emptymultiline-1.xul emptymultiline-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
 fails-if(Android||B2G) skip-if((B2G&&browserIsRemote)||Mulet) == emptymultiline-2.xul emptymultiline-ref.xul # bug 783658 # Initial mulet triage: parity with B2G/B2G Desktop
 fails-if(Android||B2G) skip-if((B2G&&browserIsRemote)||Mulet) == emptytextbox-1.xul emptytextbox-ref.xul # bug 783658 # Initial mulet triage: parity with B2G/B2G Desktop
@@ -15,10 +15,10 @@ fails-if(Android||B2G) skip-if((B2G&&browserIsRemote)||Mulet) == emptytextbox-5.
 # Therefore, the equlity tests below should be marked as failing.
 skip-if((B2G&&browserIsRemote)||Mulet) != number-1.xul number-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if((B2G&&browserIsRemote)||Mulet) != number-2.xul number-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(Android||B2G) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012])/.test(http.oscpu)) skip-if((B2G&&browserIsRemote)||Mulet) == number-3.xul number-ref.xul # bug 783658 # Initial mulet triage: parity with B2G/B2G Desktop
+fails-if(Android||B2G) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012]|10\.0)/.test(http.oscpu)) skip-if((B2G&&browserIsRemote)||Mulet) == number-3.xul number-ref.xul # bug 783658 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if((B2G&&browserIsRemote)||Mulet) != number-4.xul number-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(Android||B2G) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012])/.test(http.oscpu)) skip-if((B2G&&browserIsRemote)||Mulet) == number-5.xul number-ref.xul # bug 783658 # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(Android||B2G) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012])/.test(http.oscpu)) skip-if((B2G&&browserIsRemote)||Mulet) == numberwithvalue-1.xul numberwithvalue-ref.xul # bug 783658 # Initial mulet triage: parity with B2G/B2G Desktop
+fails-if(Android||B2G) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012]|10\.0)/.test(http.oscpu)) skip-if((B2G&&browserIsRemote)||Mulet) == number-5.xul number-ref.xul # bug 783658 # Initial mulet triage: parity with B2G/B2G Desktop
+fails-if(Android||B2G) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012]|10\.0)/.test(http.oscpu)) skip-if((B2G&&browserIsRemote)||Mulet) == numberwithvalue-1.xul numberwithvalue-ref.xul # bug 783658 # Initial mulet triage: parity with B2G/B2G Desktop
 fails-if(Android||B2G) skip-if((B2G&&browserIsRemote)||Mulet) == passwd-1.xul passwd-ref.xul # bug 783658 # Initial mulet triage: parity with B2G/B2G Desktop
 fails-if(Android||B2G) skip-if((B2G&&browserIsRemote)||Mulet) == passwd-2.xul passwd-ref.xul # bug 783658 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if((B2G&&browserIsRemote)||Mulet) != passwd-3.xul passwd-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
@@ -26,4 +26,4 @@ fails-if(Android||B2G) skip-if((B2G&&browserIsRemote)||Mulet) == plain-1.xul pla
 fails-if(Android||B2G) skip-if((B2G&&browserIsRemote)||Mulet) == textbox-1.xul textbox-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if((B2G&&browserIsRemote)||Mulet) != textbox-disabled.xul textbox-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
 # Read-only textboxes look like normal textboxes in windows Vista/7 default theme
-fails-if(windowsDefaultTheme&&/^Windows\x20NT\x206\.[012]/.test(http.oscpu)) skip-if((B2G&&browserIsRemote)||Mulet) != textbox-readonly.xul textbox-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
+fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(6\.[012]|10\.0)/.test(http.oscpu)) skip-if((B2G&&browserIsRemote)||Mulet) != textbox-readonly.xul textbox-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop

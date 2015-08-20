@@ -4350,7 +4350,7 @@ class MUnbox final : public MUnaryInstruction, public BoxInputsPolicy::Data
     Mode mode_;
     BailoutKind bailoutKind_;
 
-    MUnbox(MDefinition* ins, MIRType type, Mode mode, BailoutKind kind)
+    MUnbox(MDefinition* ins, MIRType type, Mode mode, BailoutKind kind, TempAllocator& alloc)
       : MUnaryInstruction(ins),
         mode_(mode)
     {
@@ -4366,8 +4366,12 @@ class MUnbox final : public MUnaryInstruction, public BoxInputsPolicy::Data
                    type == MIRType_Symbol  ||
                    type == MIRType_Object);
 
+        TemporaryTypeSet* resultSet = ins->resultTypeSet();
+        if (resultSet && type == MIRType_Object)
+            resultSet = resultSet->cloneObjectsOnly(alloc.lifoAlloc());
+
         setResultType(type);
-        setResultTypeSet(ins->resultTypeSet());
+        setResultTypeSet(resultSet);
         setMovable();
 
         if (mode_ == TypeBarrier || mode_ == Fallible)
@@ -4405,13 +4409,13 @@ class MUnbox final : public MUnaryInstruction, public BoxInputsPolicy::Data
             MOZ_CRASH("Given MIRType cannot be unboxed.");
         }
 
-        return new(alloc) MUnbox(ins, type, mode, kind);
+        return new(alloc) MUnbox(ins, type, mode, kind, alloc);
     }
 
     static MUnbox* New(TempAllocator& alloc, MDefinition* ins, MIRType type, Mode mode,
                        BailoutKind kind)
     {
-        return new(alloc) MUnbox(ins, type, mode, kind);
+        return new(alloc) MUnbox(ins, type, mode, kind, alloc);
     }
 
     Mode mode() const {
@@ -7059,6 +7063,45 @@ class MOsrReturnValue
 
     MOsrEntry* entry() {
         return getOperand(0)->toOsrEntry();
+    }
+};
+
+class MBinarySharedStub
+  : public MBinaryInstruction,
+    public MixPolicy<BoxPolicy<0>, BoxPolicy<1> >::Data
+{
+    explicit MBinarySharedStub(MDefinition* left, MDefinition* right)
+      : MBinaryInstruction(left, right)
+    {
+        setResultType(MIRType_Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(BinarySharedStub)
+
+    static MBinarySharedStub* New(TempAllocator& alloc, MDefinition* left, MDefinition* right)
+    {
+        return new(alloc) MBinarySharedStub(left, right);
+    }
+
+};
+
+class MUnarySharedStub
+  : public MUnaryInstruction,
+    public BoxPolicy<0>::Data
+{
+    explicit MUnarySharedStub(MDefinition* input)
+      : MUnaryInstruction(input)
+    {
+        setResultType(MIRType_Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(UnarySharedStub)
+
+    static MUnarySharedStub* New(TempAllocator& alloc, MDefinition* input)
+    {
+        return new(alloc) MUnarySharedStub(input);
     }
 };
 

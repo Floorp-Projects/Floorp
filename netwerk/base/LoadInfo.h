@@ -48,8 +48,7 @@ public:
            nsIPrincipal* aTriggeringPrincipal,
            nsINode* aLoadingContext,
            nsSecurityFlags aSecurityFlags,
-           nsContentPolicyType aContentPolicyType,
-           nsIURI* aBaseURI = nullptr);
+           nsContentPolicyType aContentPolicyType);
 
 private:
   // private constructor that is only allowed to be called from within
@@ -80,7 +79,6 @@ private:
   nsWeakPtr                        mLoadingContext;
   nsSecurityFlags                  mSecurityFlags;
   nsContentPolicyType              mContentPolicyType;
-  nsCOMPtr<nsIURI>                 mBaseURI;
   bool                             mUpgradeInsecureRequests;
   uint64_t                         mInnerWindowID;
   uint64_t                         mOuterWindowID;

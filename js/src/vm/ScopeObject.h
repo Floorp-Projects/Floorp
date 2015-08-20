@@ -26,7 +26,6 @@ class FunctionBox;
 class StaticWithObject;
 class StaticEvalObject;
 class StaticNonSyntacticScopeObjects;
-class StaticFunctionBoxScopeObject;
 
 /*****************************************************************************/
 
@@ -59,10 +58,6 @@ class StaticFunctionBoxScopeObject;
  * StaticNonSyntacticScopeObjects
  *   Signals presence of "polluting" scope objects. Used by Gecko.
  *
- * StaticFunctionBoxScopeObject
- *   Stands in for JSFunctions in the Parser, before their JSScripts
- *   are compiled.
- *
  * There is an additional scope for named lambdas without a static scope
  * object. E.g., in:
  *
@@ -83,7 +78,6 @@ class StaticScopeIter
                obj->is<StaticWithObject>() ||
                obj->is<StaticEvalObject>() ||
                obj->is<StaticNonSyntacticScopeObjects>() ||
-               obj->is<StaticFunctionBoxScopeObject>() ||
                obj->is<JSFunction>();
     }
 
@@ -120,7 +114,7 @@ class StaticScopeIter
                       "used in NoGC code");
     }
 
-    bool done() const;
+    bool done() const { return !obj; }
     void operator++(int);
 
     JSObject* staticScope() const { MOZ_ASSERT(!done()); return obj; }
@@ -459,33 +453,6 @@ class NonSyntacticVariablesObject : public ScopeObject
     static NonSyntacticVariablesObject* create(JSContext* cx, Handle<GlobalObject*> global);
 };
 
-// Function static scopes that wrap around FunctionBoxes used in the Parser,
-// before a JSScript has been created.
-class StaticFunctionBoxScopeObject : public ScopeObject
-{
-    static const unsigned FUNCTION_BOX_SLOT = 1;
-
-  public:
-    static const unsigned RESERVED_SLOTS = 2;
-    static const Class class_;
-
-    static StaticFunctionBoxScopeObject* create(ExclusiveContext* cx,
-                                                HandleObject enclosing);
-
-    void setFunctionBox(frontend::FunctionBox* funbox) {
-        setReservedSlot(FUNCTION_BOX_SLOT, PrivateValue(funbox));
-    }
-
-    frontend::FunctionBox* functionBox() {
-        return reinterpret_cast<frontend::FunctionBox*>(
-            getReservedSlot(FUNCTION_BOX_SLOT).toPrivate());
-    }
-
-    JSObject* enclosingScopeForStaticScopeIter() {
-        return getReservedSlot(SCOPE_CHAIN_SLOT).toObjectOrNull();
-    }
-};
-
 class NestedScopeObject : public ScopeObject
 {
   public:
@@ -685,6 +652,9 @@ class StaticBlockObject : public BlockObject
     bool isAliased(unsigned i) {
         return slotValue(i).isTrue();
     }
+
+    // Look up if the block has an aliased binding named |name|.
+    Shape* lookupAliasedName(PropertyName* name);
 
     /*
      * A static block object is cloned (when entering the block) iff some
