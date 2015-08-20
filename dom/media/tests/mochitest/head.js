@@ -235,7 +235,6 @@ function setupEnvironment() {
   SpecialPowers.pushPrefEnv({
     'set': [
       ['canvas.capturestream.enabled', true],
-      ['dom.messageChannel.enabled', true],
       ['media.peerconnection.enabled', true],
       ['media.peerconnection.identity.enabled', true],
       ['media.peerconnection.identity.timeout', 120000],
