@@ -8,15 +8,15 @@
 
 """BSD specific tests.  These are implicitly run by test_psutil.py."""
 
-import subprocess
-import time
-import sys
 import os
+import subprocess
+import sys
+import time
 
 import psutil
 
 from psutil._compat import PY3
-from test_psutil import (TOLERANCE, sh, get_test_subprocess, which,
+from test_psutil import (TOLERANCE, BSD, sh, get_test_subprocess, which,
                          retry_before_failing, reap_children, unittest)
 
 
@@ -50,6 +50,7 @@ def muse(field):
     return int(line.split()[1])
 
 
+@unittest.skipUnless(BSD, "not a BSD system")
 class BSDSpecificTestCase(unittest.TestCase):
 
     @classmethod
@@ -106,6 +107,7 @@ class BSDSpecificTestCase(unittest.TestCase):
             if abs(usage.used - used) > 10 * 1024 * 1024:
                 self.fail("psutil=%s, df=%s" % (usage.used, used))
 
+    @retry_before_failing()
     def test_memory_maps(self):
         out = sh('procstat -v %s' % self.pid)
         maps = psutil.Process(self.pid).memory_maps(grouped=False)
@@ -119,6 +121,29 @@ class BSDSpecificTestCase(unittest.TestCase):
             self.assertEqual(int(res), map.rss)
             if not map.path.startswith('['):
                 self.assertEqual(fields[10], map.path)
+
+    def test_exe(self):
+        out = sh('procstat -b %s' % self.pid)
+        self.assertEqual(psutil.Process(self.pid).exe(),
+                         out.split('\n')[1].split()[-1])
+
+    def test_cmdline(self):
+        out = sh('procstat -c %s' % self.pid)
+        self.assertEqual(' '.join(psutil.Process(self.pid).cmdline()),
+                         ' '.join(out.split('\n')[1].split()[2:]))
+
+    def test_uids_gids(self):
+        out = sh('procstat -s %s' % self.pid)
+        euid, ruid, suid, egid, rgid, sgid = out.split('\n')[1].split()[2:8]
+        p = psutil.Process(self.pid)
+        uids = p.uids()
+        gids = p.gids()
+        self.assertEqual(uids.real, int(ruid))
+        self.assertEqual(uids.effective, int(euid))
+        self.assertEqual(uids.saved, int(suid))
+        self.assertEqual(gids.real, int(rgid))
+        self.assertEqual(gids.effective, int(egid))
+        self.assertEqual(gids.saved, int(sgid))
 
     # --- virtual_memory(); tests against sysctl
 
@@ -161,6 +186,10 @@ class BSDSpecificTestCase(unittest.TestCase):
         syst = sysctl("vfs.bufspace")
         self.assertAlmostEqual(psutil.virtual_memory().buffers, syst,
                                delta=TOLERANCE)
+
+    def test_cpu_count_logical(self):
+        syst = sysctl("hw.ncpu")
+        self.assertEqual(psutil.cpu_count(logical=True), syst)
 
     # --- virtual_memory(); tests against muse
 
@@ -212,12 +241,12 @@ class BSDSpecificTestCase(unittest.TestCase):
                                delta=TOLERANCE)
 
 
-def test_main():
+def main():
     test_suite = unittest.TestSuite()
     test_suite.addTest(unittest.makeSuite(BSDSpecificTestCase))
     result = unittest.TextTestRunner(verbosity=2).run(test_suite)
     return result.wasSuccessful()
 
 if __name__ == '__main__':
-    if not test_main():
+    if not main():
         sys.exit(1)

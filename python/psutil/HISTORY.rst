@@ -1,9 +1,142 @@
 Bug tracker at https://github.com/giampaolo/psutil/issues
 
-2.1.3 2014-09-26
-================
+3.1.1 - 2015-07-15
+==================
 
 **Bug fixes**
+
+- #645: [Linux] psutil.cpu_times_percent() may produce negative results.
+- #656: 'from psutil import *' does not work.
+
+
+3.1.0 - 2015-07-15
+==================
+
+**Enhancements**
+
+- #534: [Linux] disk_partitions() added support for ZFS filesystems.
+- #646: continuous tests integration for Windows with
+  https://ci.appveyor.com/project/giampaolo/psutil.
+- #647: new dev guide:
+  https://github.com/giampaolo/psutil/blob/master/DEVGUIDE.rst
+- #651: continuous code quality test integration with
+  https://scrutinizer-ci.com/g/giampaolo/psutil/
+
+**Bug fixes**
+
+- #340: [Windows] Process.open_files() no longer hangs. Instead it uses a
+  thred which times out and skips the file handle in case it's taking too long
+  to be retrieved.  (patch by Jeff Tang, PR #597)
+- #627: [Windows] Process.name() no longer raises AccessDenied for pids owned
+  by another user.
+- #636: [Windows] Process.memory_info() raise AccessDenied.
+- #637: [UNIX] raise exception if trying to send signal to Process PID 0 as it
+  will affect os.getpid()'s process group instead of PID 0.
+- #639: [Linux] Process.cmdline() can be truncated.
+- #640: [Linux] *connections functions may swallow errors and return an
+  incomplete list of connnections.
+- #642: repr() of exceptions is incorrect.
+- #653: [Windows] Add inet_ntop function for Windows XP to support IPv6.
+- #641: [Windows] Replace deprecated string functions with safe equivalents.
+
+
+3.0.1 - 2015-06-18
+==================
+
+**Bug fixes**
+
+- #632: [Linux] better error message if cannot parse process UNIX connections.
+- #634: [Linux] Proces.cmdline() does not include empty string arguments.
+- #635: [UNIX] crash on module import if 'enum' package is installed on python
+  < 3.4.
+
+
+3.0.0 - 2015-06-13
+==================
+
+**Enhancements**
+
+- #250: new psutil.net_if_stats() returning NIC statistics (isup, duplex,
+  speed, MTU).
+- #376: new psutil.net_if_addrs() returning all NIC addresses a-la ifconfig.
+- #469: on Python >= 3.4 ``IOPRIO_CLASS_*`` and ``*_PRIORITY_CLASS`` constants
+  returned by psutil.Process' ionice() and nice() methods are enums instead of
+  plain integers.
+- #581: add .gitignore. (patch by Gabi Davar)
+- #582: connection constants returned by psutil.net_connections() and
+  psutil.Process.connections() were turned from int to enums on Python > 3.4.
+- #587: Move native extension into the package.
+- #589: Process.cpu_affinity() accepts any kind of iterable (set, tuple, ...),
+  not only lists.
+- #594: all deprecated APIs were removed.
+- #599: [Windows] process name() can now be determined for all processes even
+  when running as a limited user.
+- #602: pre-commit GIT hook.
+- #629: enhanced support for py.test and nose test discovery and tests run.
+- #616: [Windows] Add inet_ntop function for Windows XP.
+
+**Bug fixes**
+
+- #428: [all UNIXes except Linux] correct handling of zombie processes;
+  introduced new ZombieProcess exception class.
+- #512: [BSD] fix segfault in net_connections().
+- #555: [Linux] psutil.users() correctly handles ":0" as an alias for
+  "localhost"
+- #579: [Windows] Fixed open_files() for PID>64K.
+- #579: [Windows] fixed many compiler warnings.
+- #585: [FreeBSD] net_connections() may raise KeyError.
+- #586: [FreeBSD] cpu_affinity() segfaults on set in case an invalid CPU
+  number is provided.
+- #593: [FreeBSD] Process().memory_maps() segfaults.
+- #606: Process.parent() may swallow NoSuchProcess exceptions.
+- #611: [SunOS] net_io_counters has send and received swapped
+- #614: [Linux]: cpu_count(logical=False) return the number of physical CPUs
+  instead of physical cores.
+- #618: [SunOS] swap tests fail on Solaris when run as normal user
+- #628: [Linux] Process.name() truncates process name in case it contains
+  spaces or parentheses.
+
+
+2.2.1 - 2015-02-02
+==================
+
+**Bug fixes**
+
+- #496: [Linux] fix "ValueError: ambiguos inode with multiple PIDs references"
+  (patch by Bruno Binet)
+
+
+2.2.0 - 2015-01-06
+==================
+
+**Enhancements**
+
+- #521: drop support for Python 2.4 and 2.5.
+- #553: new examples/pstree.py script.
+- #564: C extension version mismatch in case the user messed up with psutil
+  installation or with sys.path is now detected at import time.
+- #568: New examples/pidof.py script.
+- #569: [FreeBSD] add support for process CPU affinity.
+
+**Bug fixes**
+
+- #496: [Solaris] can't import psutil.
+- #547: [UNIX] Process.username() may raise KeyError if UID can't be resolved.
+- #551: [Windows] get rid of the unicode hack for net_io_counters() NIC names.
+- #556: [Linux] lots of file handles were left open.
+- #561: [Linux] net_connections() might skip some legitimate UNIX sockets.
+  (patch by spacewander)
+- #565: [Windows] use proper encoding for psutil.Process.username() and
+  psutil.users(). (patch by Sylvain Mouquet)
+- #567: [Linux] in the alternative implementation of CPU affinity PyList_Append
+  and Py_BuildValue return values are not checked.
+- #569: [FreeBSD] fix memory leak in psutil.cpu_count(logical=False).
+- #571: [Linux] Process.open_files() might swallow AccessDenied exceptions and
+  return an incomplete list of open files.
+
+
+2.1.3 - 2014-09-26
+==================
 
 - #536: [Linux]: fix "undefined symbol: CPU_ALLOC" compilation error.
 
