@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1170484
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1170484</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1170484 **/
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm", window);
+
+  SimpleTest.waitForFocus(doTest, window);
+  function doTest() {
+    var mutations = 0;
+    var observer = new MutationObserver(() => { mutations++; });
+    observer.observe($('area'), { childList: true, characterData: true, characterDataOldValue: true, subtree: true });
+    var inputEvents = 0;
+    $('area').addEventListener('input', () => ++inputEvents);
+
+    // Clicking the contentEditable during onload doesn't seem  to do anything.
+    // Not sure why, but postponing through the event loop seems to be enough.
+    SimpleTest.executeSoon(function() {
+      synthesizeMouseAtCenter($('misspelled'), {}, window);
+      onSpellCheck($('area'), function() {
+        synthesizeMouseAtCenter($('misspelled'), {type: 'contextmenu'}, window);
+        var mm = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('helper_bug1170484.js'))
+        info("Loaded chrome script");
+        mm.addMessageListener('spellingCorrected', function() {
+          is($('area').textContent, 'testing spellcheck', "Spelling corrected properly");
+          is(mutations, 1, "Got correct number of mutations");
+          is(inputEvents, 1, "Got correct number of input events");
+          SimpleTest.finish();
+        });
+      });
+    });
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1170484">Mozilla Bug 1170484</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+  <div id="area" contenteditable="true">testing <span id="misspelled">spellechek</span></div>
+</pre>
+</body>
+</html>
