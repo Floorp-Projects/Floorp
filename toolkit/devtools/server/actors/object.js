@@ -607,6 +607,36 @@ ObjectActor.prototype = {
   },
 
   /**
+   * Handle a protocol request to get the rejection stack of a promise.
+   */
+  onRejectionStack: function() {
+    if (this.obj.class != "Promise") {
+      return { error: "objectNotPromise",
+               message: "'rejectionStack' request is only valid for " +
+                        "object grips with a 'Promise' class." };
+    }
+
+    let rawPromise = this.obj.unsafeDereference();
+    let stack = PromiseDebugging.getRejectionStack(rawPromise);
+    let rejectionStacks = [];
+
+    while (stack) {
+      if (stack.source) {
+        let source = this._getSourceOriginalLocation(stack);
+
+        if (source) {
+          rejectionStacks.push(source);
+        }
+      }
+      stack = stack.parent;
+    }
+
+    return Promise.all(rejectionStacks).then(stacks => {
+      return { rejectionStack: stacks };
+    });
+  },
+
+  /**
    * Helper function for fetching the source location of a SavedFrame stack.
    *
    * @param SavedFrame stack
@@ -656,7 +686,8 @@ ObjectActor.prototype.requestTypes = {
   "scope": ObjectActor.prototype.onScope,
   "dependentPromises": ObjectActor.prototype.onDependentPromises,
   "allocationStack": ObjectActor.prototype.onAllocationStack,
-  "fulfillmentStack": ObjectActor.prototype.onFulfillmentStack
+  "fulfillmentStack": ObjectActor.prototype.onFulfillmentStack,
+  "rejectionStack": ObjectActor.prototype.onRejectionStack
 };
 
 /**
