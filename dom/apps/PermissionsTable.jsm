@@ -579,6 +579,12 @@ this.PermissionsTable =  { geolocation: {
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
+                           "moz-extremely-unstable-and-will-change-webcomponents": {
+                              app: DENY_ACTION,
+                              trusted: DENY_ACTION,
+                              privileged: ALLOW_ACTION,
+                              certified: ALLOW_ACTION
+                           }
                          };
 
 /**
