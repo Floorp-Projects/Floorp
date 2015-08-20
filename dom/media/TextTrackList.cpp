@@ -181,6 +181,13 @@ void
 TextTrackList::CreateAndDispatchTrackEventRunner(TextTrack* aTrack,
                                                  const nsAString& aEventName)
 {
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv = NS_GetMainThread(getter_AddRefs(thread));
+  if (NS_FAILED(rv)) {
+    // If we are not able to get the main-thread object we are shutting down.
+    return;
+  }
+
   TrackEventInit eventInit;
   eventInit.mTrack.SetValue().SetAsTextTrack() = aTrack;
   nsRefPtr<TrackEvent> event =
