@@ -92,6 +92,7 @@
 #include "nsIAuthPrompt2.h"
 
 #include "nsIScriptSecurityManager.h"
+#include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
 
 #include "nsIDOMWindow.h"
@@ -5831,9 +5832,31 @@ nsDocument::CustomElementConstructor(JSContext* aCx, unsigned aArgc, JS::Value* 
 bool
 nsDocument::IsWebComponentsEnabled(JSContext* aCx, JSObject* aObject)
 {
-  JS::Rooted<JSObject*> obj(aCx, aObject);
-  return Preferences::GetBool("dom.webcomponents.enabled") ||
-    IsInCertifiedApp(aCx, obj);
+  if (Preferences::GetBool("dom.webcomponents.enabled")) {
+    return true;
+  }
+
+  // Check for the webcomponents permission. See Bug 1181555.
+  JSAutoCompartment ac(aCx, aObject);
+  JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForObject(aCx, aObject));
+  nsCOMPtr<nsPIDOMWindow> window =
+    do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(global));
+
+  if (window) {
+    nsresult rv;
+    nsCOMPtr<nsIPermissionManager> permMgr =
+      do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, false);
+
+    uint32_t perm;
+    rv = permMgr->TestPermissionFromWindow(
+      window, "moz-extremely-unstable-and-will-change-webcomponents", &perm);
+    NS_ENSURE_SUCCESS(rv, false);
+
+    return perm == nsIPermissionManager::ALLOW_ACTION;
+  }
+
+  return false;
 }
 
 nsresult
