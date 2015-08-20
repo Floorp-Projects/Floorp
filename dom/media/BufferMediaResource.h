@@ -26,6 +26,7 @@ public:
                       const nsACString& aContentType) :
     mBuffer(aBuffer),
     mLength(aLength),
+    mOffset(0),
     mPrincipal(aPrincipal),
     mContentType(aContentType)
   {
