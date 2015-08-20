@@ -43,12 +43,10 @@ resjar.generated_sources += [
     'org/mozilla/gecko/R.java',
 ]
 
-if CONFIG['MOZ_NATIVE_DEVICES']:
-    resjar.generated_sources += ['com/google/android/gms/R.java']
-    resjar.generated_sources += ['android/support/v7/appcompat/R.java']
-    resjar.generated_sources += ['android/support/v7/mediarouter/R.java']
-
-resjar.generated_sources += ['android/support/v7/recyclerview/R.java']
+if CONFIG['ANDROID_RECYCLERVIEW_RES']:
+    ANDROID_EXTRA_PACKAGES += ['android.support.v7.recyclerview']
+    ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_RECYCLERVIEW_RES']]
+    resjar.generated_sources += ['android/support/v7/recyclerview/R.java']
 
 resjar.javac_flags += ['-Xlint:all']
 
@@ -641,6 +639,22 @@ moz_native_devices_sources = [
 if CONFIG['MOZ_NATIVE_DEVICES']:
     gbjar.extra_jars += moz_native_devices_jars
     gbjar.sources += moz_native_devices_sources
+
+    if CONFIG['ANDROID_APPCOMPAT_RES']:
+        ANDROID_EXTRA_PACKAGES += ['android.support.v7.appcompat']
+        ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_APPCOMPAT_RES']]
+        resjar.generated_sources += ['android/support/v7/appcompat/R.java']
+
+    if CONFIG['ANDROID_MEDIAROUTER_RES']:
+        ANDROID_EXTRA_PACKAGES += ['android.support.v7.mediarouter']
+        ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_MEDIAROUTER_RES']]
+        resjar.generated_sources += ['android/support/v7/mediarouter/R.java']
+
+    if CONFIG['GOOGLE_PLAY_SERVICES_RES']:
+        ANDROID_EXTRA_PACKAGES += ['com.google.android.gms']
+        ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['GOOGLE_PLAY_SERVICES_RES']]
+        resjar.generated_sources += ['com/google/android/gms/R.java']
+
 gbjar.extra_jars += [CONFIG['ANDROID_RECYCLERVIEW_LIB']]
 
 gbjar.javac_flags += ['-Xlint:all,-deprecation,-fallthrough', '-J-Xmx512m', '-J-Xms128m']
@@ -822,160 +836,5 @@ if CONFIG['MOZ_ANDROID_SEARCH_ACTIVITY']:
         'gecko-thirdparty.jar',
         'gecko-util.jar'
     ]
-
-generated_recursive_make_targets = ['.aapt.deps', '.locales.deps'] # Captures dependencies on Android manifest and all resources.
-
-generated = add_android_eclipse_library_project('FennecResourcesGenerated')
-generated.package_name = 'org.mozilla.gecko.generated'
-generated.res = OBJDIR + '/res'
-generated.recursive_make_targets += generated_recursive_make_targets
-
-branding = add_android_eclipse_library_project('FennecResourcesBranding')
-branding.package_name = 'org.mozilla.gecko.branding'
-branding.res = TOPSRCDIR + '/' + CONFIG['MOZ_BRANDING_DIRECTORY'] + '/res'
-branding.recursive_make_targets += generated_recursive_make_targets
-
-static = add_android_eclipse_library_project('FennecResourcesStatic')
-# 'org.mozilla.gecko.static' is not a valid Java package name, so we use a different one.
-static.package_name = 'org.mozilla.gecko.resources'
-static.res = SRCDIR + '/resources'
-static.recursive_make_targets += generated_recursive_make_targets
-static.included_projects += ['../' + generated.name, '../' + branding.name]
-static.referenced_projects += ['../' + generated.name, '../' + branding.name]
-
-main = add_android_eclipse_project('Fennec', OBJDIR + '/AndroidManifest.xml')
-main.package_name = 'org.mozilla.gecko'
-
-# These values were extracted from an existing Eclipse project.  Use
-# Project > Resource > Resource Filters and inspect the resulting
-# .project file to modify this list.
-main.filtered_resources += [
-    '1.0-projectRelativePath-matches-false-false-*org/mozilla/gecko/resources/**',
-]
-
-main.recursive_make_targets += generated_recursive_make_targets
-main.recursive_make_targets += ['generated/' + f for f in mgjar.generated_sources]
-main.recursive_make_targets += ['generated/' + f for f in gbjar.generated_sources]
-
-main.extra_jars += [CONFIG['ANDROID_COMPAT_LIB']]
-main.assets = TOPOBJDIR + '/dist/' + CONFIG['MOZ_APP_NAME'] + '/assets'
-main.libs = [
-    (TOPOBJDIR + '/dist/' + CONFIG['MOZ_APP_NAME'] + '/lib/' + CONFIG['ANDROID_CPU_ARCH'] + '/libmozglue.so',
-     'libs/' + CONFIG['ANDROID_CPU_ARCH'] + '/libmozglue.so'),
-    (TOPOBJDIR + '/dist/' + CONFIG['MOZ_APP_NAME'] + '/lib/' + CONFIG['ANDROID_CPU_ARCH'] + '/libplugin-container.so',
-     'libs/' + CONFIG['ANDROID_CPU_ARCH'] + '/libplugin-container.so'),
-]
-main.res = None
-
-cpe = main.add_classpathentry('src', SRCDIR,
-    dstdir='src/org/mozilla/gecko',
-    exclude_patterns=[
-        'org/mozilla/gecko/resources/**'])
-
-if not CONFIG['MOZ_CRASHREPORTER']:
-    cpe.exclude_patterns += ['org/mozilla/gecko/CrashReporter.java']
-
-if CONFIG['MOZ_NATIVE_DEVICES']:
-    # This is rather hacky, but: we define three Eclipse projects for appcompat,
-    # mediarouter, and Google Play Services. mediarouter depends on appcompat;
-    # Google Play Services depends on both mediarouter and appcompat.  The three
-    # projects are "resources only" because it is difficult to arrange for
-    # exactly one version of each shipped Java JAR file to end up in the final
-    # APK when including the JARs in the Eclipse projects. To work around this,
-    # we instead add all the JAR files to the main Fennec project.
-
-    appcompat = add_android_eclipse_library_project('appcompat')
-    appcompat.package_name = 'android.support.v7.appcompat'
-    appcompat.res = CONFIG['ANDROID_APPCOMPAT_RES']
-
-    mediarouter = add_android_eclipse_library_project('mediarouter')
-    mediarouter.package_name = 'android.support.v7.mediarouter'
-    mediarouter.res = CONFIG['ANDROID_MEDIAROUTER_RES']
-    mediarouter.included_projects += ['../' + appcompat.name]
-    mediarouter.referenced_projects += ['../' + appcompat.name]
-
-    gps = add_android_eclipse_library_project('google-play-services_lib')
-    gps.package_name = 'com.google.android.gms'
-    gps.res = CONFIG['GOOGLE_PLAY_SERVICES_RES']
-    gps.included_projects += ['../' + appcompat.name, '../' + mediarouter.name]
-    gps.referenced_projects += ['../' + appcompat.name, '../' + mediarouter.name]
-
-    main.included_projects += ['../' + gps.name, '../' + appcompat.name, '../' + mediarouter.name]
-    main.referenced_projects += ['../' + gps.name, '../' + appcompat.name, '../' + mediarouter.name]
-
-    main.extra_jars += moz_native_devices_jars
-else:
-    cpe.exclude_patterns += moz_native_devices_sources
-
-# The generated/ directory includes both files generated by aapt (R.java and
-# Manifest.java for all packages) but also preprocessed files. In the past, the
-# generated R.java files were used by the Eclipse build, but now Eclipse
-# generates these files itself. Therefore, we exclude those generated sources.
-main.add_classpathentry('generated', OBJDIR + '/generated/preprocessed',
-    dstdir='generated')
-main.add_classpathentry('thirdparty', TOPSRCDIR + '/mobile/android/thirdparty',
-    dstdir='thirdparty',
-    ignore_warnings=True)
-
-# Eclipse generates org.mozilla.gecko.R for this project, which is referenced by
-# all the Java code. The reason that this is not generated in the main Fennec
-# project is that you cannot specify a custom package to the Eclipse Android
-# builder; that is, the Eclipse Android builder always builds the
-# org.mozilla.fennec_*.R class. This approach works because Eclipse shares
-# resources and some code across projects implicitly, which lets us provide
-# org.mozilla.gecko.R to the main Fennec project from the FennecResources
-# project.
-#
-# Previously, the static resources were in the FennecResources project. To let
-# the FennecResources Eclipse project produce org.mozilla.gecko.R, however, the
-# project must depend on all the resource projects.  But the crash reporter
-# resources depend on some of the static resources, and that causes a cycle.
-# This layer of indirection lets us break the cycle.
-
-resources = add_android_eclipse_library_project('FennecResources')
-resources.package_name = 'org.mozilla.gecko'
-resources.res = None
-resources.included_projects += ['../' + static.name, '../' + generated.name, '../' + branding.name]
-resources.recursive_make_targets += generated_recursive_make_targets
-
-# The resources are included in the Fennec APK.
-main.included_projects += ['../' + resources.name]
-
-omnijar = add_android_eclipse_library_project('FennecOmnijar')
-omnijar.package_name = 'org.mozilla.gecko.omnijar'
-# This is delicate.  We write into OBJDIR, and write triggers a new build of the
-# Fennec project, because the omni.ja timestamp is always updated. (The target
-# is FORCE and the installer does not track dependencies.) However, Eclipse only
-# triggers a new build (of FennecOmnijar) when something actually changes, so
-# we're not constantly rebuilding the FennecOmnijar (or Fennec) project.
-omnijar.recursive_make_targets += [TOPOBJDIR + '/dist/fennec/assets/omni.ja']
-for d in ['app', 'chrome', 'components', 'locales', 'modules', 'themes']:
-    omnijar.add_classpathentry(d, TOPSRCDIR + '/mobile/android/' + d, dstdir=d)
-
-# The omnijar is included in the Fennec APK (although it's empty,
-# having no resources, assets, or Java code).
-main.included_projects += ['../' + omnijar.name]
-
-if CONFIG['MOZ_CRASHREPORTER']:
-    crashreporter = add_android_eclipse_library_project('FennecResourcesCrashReporter')
-    crashreporter.package_name = 'org.mozilla.gecko.crashreporter'
-    crashreporter.res = SRCDIR + '/crashreporter/res'
-    crashreporter.recursive_make_targets += generated_recursive_make_targets
-
-    # layout/crash_reporter.xml references strings and other resources, and
-    # therefore depends on other resource projects.
-    crashreporter.included_projects += ['../' + static.name, '../' + generated.name]
-    crashreporter.referenced_projects += ['../' + static.name, '../' + generated.name]
-
-    resources.included_projects += ['../' + crashreporter.name]
-    resources.referenced_projects += ['../' + crashreporter.name]
-
-if CONFIG['MOZ_ANDROID_MLS_STUMBLER']:
-    main.included_projects += ['../FennecStumbler']
-    main.referenced_projects += ['../FennecStumbler']
-
-if CONFIG['MOZ_ANDROID_SEARCH_ACTIVITY']:
-    # The Search Activity code is built as part of Fennec, so we follow suit in Eclipse.
-    main.add_classpathentry('search', TOPSRCDIR + '/mobile/android/search/java', dstdir='search')
 
 DIST_FILES += ['package-name.txt.in']

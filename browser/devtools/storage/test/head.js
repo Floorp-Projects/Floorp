@@ -10,6 +10,8 @@ let { console } = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 
 const SPLIT_CONSOLE_PREF = "devtools.toolbox.splitconsoleEnabled";
 const STORAGE_PREF = "devtools.storage.enabled";
+const DUMPEMIT_PREF = "devtools.dump.emit";
+const DEBUGGERLOG_PREF = "devtools.debugger.log";
 const PATH = "browser/browser/devtools/storage/test/";
 const MAIN_DOMAIN = "http://test1.example.org/" + PATH;
 const ALT_DOMAIN = "http://sectest1.example.org/" + PATH;
@@ -22,12 +24,17 @@ waitForExplicitFinish();
 
 let gToolbox, gPanelWindow, gWindow, gUI;
 
+// Services.prefs.setBoolPref(DUMPEMIT_PREF, true);
+// Services.prefs.setBoolPref(DEBUGGERLOG_PREF, true);
+
 Services.prefs.setBoolPref(STORAGE_PREF, true);
 DevToolsUtils.testing = true;
 registerCleanupFunction(() => {
   gToolbox = gPanelWindow = gWindow = gUI = null;
   Services.prefs.clearUserPref(STORAGE_PREF);
   Services.prefs.clearUserPref(SPLIT_CONSOLE_PREF);
+  Services.prefs.clearUserPref(DUMPEMIT_PREF);
+  Services.prefs.clearUserPref(DEBUGGERLOG_PREF);
   DevToolsUtils.testing = false;
   while (gBrowser.tabs.length > 1) {
     gBrowser.removeCurrentTab();
@@ -66,15 +73,16 @@ function addTab(url) {
 }
 
 /**
- * Opens the given url in a new tab, then sets up the page by waiting for
- * all cookies, indexedDB items etc. to be created; Then opens the storage
- * inspector and waits for the storage tree and table to be populated
+ * This generator function opens the given url in a new tab, then sets up the
+ * page by waiting for all cookies, indexedDB items etc. to be created; Then
+ * opens the storage inspector and waits for the storage tree and table to be
+ * populated.
  *
  * @param url {String} The url to be opened in the new tab
  *
  * @return {Promise} A promise that resolves after storage inspector is ready
  */
-let openTabAndSetupStorage = Task.async(function*(url) {
+function* openTabAndSetupStorage(url) {
   /**
    * This method iterates over iframes in a window and setups the indexed db
    * required for this test.
@@ -83,11 +91,9 @@ let openTabAndSetupStorage = Task.async(function*(url) {
     if (w[i] && w[i].idbGenerator) {
       w[i].setupIDB = w[i].idbGenerator(() => setupIDBInFrames(w, i + 1, c));
       w[i].setupIDB.next();
-    }
-    else if (w[i] && w[i + 1]) {
+    } else if (w[i] && w[i + 1]) {
       setupIDBInFrames(w, i + 1, c);
-    }
-    else {
+    } else {
       c();
     }
   };
@@ -109,7 +115,7 @@ let openTabAndSetupStorage = Task.async(function*(url) {
 
   // open storage inspector
   return yield openStoragePanel();
-});
+}
 
 /**
  * Open the toolbox, with the storage tool visible.
@@ -138,12 +144,12 @@ let openStoragePanel = Task.async(function*(cb) {
       info("Toolbox and storage already open");
       if (cb) {
         return cb(storage, toolbox);
-      } else {
-        return {
-          toolbox: toolbox,
-          storage: storage
-        };
       }
+
+      return {
+        toolbox: toolbox,
+        storage: storage
+      };
     }
   }
 
@@ -161,12 +167,12 @@ let openStoragePanel = Task.async(function*(cb) {
 
   if (cb) {
     return cb(storage, toolbox);
-  } else {
-    return {
-      toolbox: toolbox,
-      storage: storage
-    };
   }
+
+  return {
+    toolbox: toolbox,
+    storage: storage
+  };
 });
 
 /**
@@ -195,45 +201,60 @@ function forceCollections() {
 }
 
 /**
- * Cleans up and finishes the test
+ * Get all windows including frames recursively.
+ *
+ * @param {Window} [baseWindow]
+ *        The base window at which to start looking for child windows
+ *        (optional).
+ * @return {Set}
+ *         A set of windows.
  */
-function finishTests() {
-  // Cleanup so that indexed db created from this test do not interfere next ones
+function getAllWindows(baseWindow=gWindow) {
+  let windows = new Set();
 
-  /**
-   * This method iterates over iframes in a window and clears the indexed db
-   * created by this test.
-   */
-  let clearIDB = (w, i, c) => {
-    if (w[i] && w[i].clear) {
-      w[i].clearIterator = w[i].clear(() => clearIDB(w, i + 1, c));
-      w[i].clearIterator.next();
-    }
-    else if (w[i] && w[i + 1]) {
-      clearIDB(w, i + 1, c);
-    }
-    else {
-      c();
+  let _getAllWindows = function(win) {
+    windows.add(win);
+
+    for (let i = 0; i < win.length; i++) {
+      _getAllWindows(win[i]);
     }
   };
+  _getAllWindows(baseWindow);
 
-  gWindow.clearIterator = gWindow.clear(() => {
-    clearIDB(gWindow, 0, () => {
-      // Forcing GC/CC to get rid of docshells and windows created by this test.
-      forceCollections();
-      finish();
-    });
-  });
-  gWindow.clearIterator.next();
+  return windows;
+}
+
+/**
+ * Cleans up and finishes the test
+ */
+function* finishTests() {
+  for (let win of getAllWindows()) {
+    if (win.clear) {
+      console.log("Clearing cookies, localStorage and indexedDBs from " +
+                  win.document.location);
+      yield win.clear();
+    }
+  }
+
+  forceCollections();
+  finish();
 }
 
 // Sends a click event on the passed DOM node in an async manner
-function click(node) {
+function* click(node) {
+  let def = promise.defer();
+
   node.scrollIntoView();
-  executeSoon(() => EventUtils.synthesizeMouseAtCenter(node, {}, gPanelWindow));
+
+  // We need setTimeout here to allow any scrolling to complete before clicking
+  // the node.
+  setTimeout(() => {
+    node.click();
+    def.resolve();
+  }, 200);
+
+  return def;
 }
-
-
 
 /**
  * Recursively expand the variables view up to a given property.
@@ -264,18 +285,13 @@ function variablesViewExpandTo(aOptions) {
       if (newProp && newProp.expand) {
         newProp.expand();
         getNext(newProp);
-      }
-      else {
+      } else {
         lastDeferred.reject(aProp);
       }
-    }
-    else {
-      if (newProp) {
-        lastDeferred.resolve(newProp);
-      }
-      else {
-        lastDeferred.reject(aProp);
-      }
+    } else if (newProp) {
+      lastDeferred.resolve(newProp);
+    } else {
+      lastDeferred.reject(aProp);
     }
   }
 
@@ -286,9 +302,8 @@ function variablesViewExpandTo(aOptions) {
   if (root && root.expand) {
     root.expand();
     getNext(root);
-  }
-  else {
-    lastDeferred.resolve(root)
+  } else {
+    lastDeferred.resolve(root);
   }
 
   return lastDeferred.promise;
@@ -321,7 +336,7 @@ function findVariableViewProperties(aRules, aParsed) {
     // Thus, adding a blank parent to each name
     if (aParsed) {
       aRules = aRules.map(({name, value, dontMatch}) => {
-        return {name: "." + name, value, dontMatch}
+        return {name: "." + name, value, dontMatch};
       });
     }
     // Separate out the rules that require expanding properties throughout the
@@ -357,10 +372,10 @@ function findVariableViewProperties(aRules, aParsed) {
     }
   }
 
-  function finder(aRules, aView, aPromises) {
+  function finder(rules, aView, aPromises) {
     for (let scope of aView) {
-      for (let [id, prop] of scope) {
-        for (let rule of aRules) {
+      for (let [, prop] of scope) {
+        for (let rule of rules) {
           let matcher = matchVariablesViewProperty(prop, rule);
           aPromises.push(matcher.then(onMatch.bind(null, prop, rule)));
         }
@@ -368,15 +383,15 @@ function findVariableViewProperties(aRules, aParsed) {
     }
   }
 
-  function processExpandRules(aRules) {
-    let rule = aRules.shift();
+  function processExpandRules(rules) {
+    let rule = rules.shift();
     if (!rule) {
       return promise.resolve(null);
     }
 
     let deferred = promise.defer();
     let expandOptions = {
-      rootVariable: gUI.view.getScopeAtIndex(aParsed ? 1: 0),
+      rootVariable: gUI.view.getScopeAtIndex(aParsed ? 1 : 0),
       expandTo: rule.name
     };
 
@@ -391,28 +406,26 @@ function findVariableViewProperties(aRules, aParsed) {
       });
     }, function onFailure() {
       return promise.resolve(null);
-    }).then(processExpandRules.bind(null, aRules)).then(function() {
+    }).then(processExpandRules.bind(null, rules)).then(function() {
       deferred.resolve(null);
     });
 
     return deferred.promise;
   }
 
-  function onAllRulesMatched(aRules) {
-    for (let rule of aRules) {
+  function onAllRulesMatched(rules) {
+    for (let rule of rules) {
       let matched = rule.matchedProp;
       if (matched && !rule.dontMatch) {
         ok(true, "rule " + rule.name + " matched for property " + matched.name);
-      }
-      else if (matched && rule.dontMatch) {
+      } else if (matched && rule.dontMatch) {
         ok(false, "rule " + rule.name + " should not match property " +
            matched.name);
-      }
-      else {
+      } else {
         ok(rule.dontMatch, "rule " + rule.name + " did not match any property");
       }
     }
-    return aRules;
+    return rules;
   }
 
   return init();
@@ -461,7 +474,7 @@ function matchVariablesViewProperty(aProp, aRule) {
                 displayValue == aRule.value;
     if (!match) {
       info("rule " + aRule.name + " did not match value, expected '" +
-           aRule.value + "', found '" + displayValue  + "'");
+           aRule.value + "', found '" + displayValue + "'");
       return resolve(false);
     }
   }
@@ -475,39 +488,18 @@ function matchVariablesViewProperty(aProp, aRule) {
  * @param {[String]} ids
  *        The array id of the item in the tree
  */
-function selectTreeItem(ids) {
+function* selectTreeItem(ids) {
   // Expand tree as some/all items could be collapsed leading to click on an
   // incorrect tree item
   gUI.tree.expandAll();
-  let target = gPanelWindow.document.querySelector(
-                 "[data-id='" + JSON.stringify(ids) + "'] > .tree-widget-item");
 
-  // Look for an animating list
-  //
-  // If the list is still expanding we won't be able to click the requested
-  // item. We detect if a list (or one of its ancestor lists) is animating
-  // by checking if max-height is set. If the animation effect in
-  // widgets.inc.css changes this will likely break but until the Web
-  // Animations API is available (specifically, bug 1074630 and bug 1112422)
-  // there is no reliable way to detect if animations are running, particularly
-  // in the face of interactions that can cancel an animation without triggering
-  // an animationend event.
-  let animatingList = target.nextElementSibling;
-  while (animatingList) {
-    if (window.getComputedStyle(animatingList).maxHeight != "none") {
-      break;
-    }
-    animatingList = animatingList.parentNode.closest(".tree-widget-item + ul");
-  }
+  let selector = "[data-id='" + JSON.stringify(ids) + "'] > .tree-widget-item";
+  let target = gPanelWindow.document.querySelector(selector);
 
-  if (animatingList) {
-    animatingList.addEventListener("animationend", function animationend() {
-      animatingList.removeEventListener("animationend", animationend);
-      click(target);
-    });
-  } else {
-    click(target);
-  }
+  let updated = gUI.once("store-objects-updated");
+
+  yield click(target);
+  yield updated;
 }
 
 /**
@@ -516,7 +508,40 @@ function selectTreeItem(ids) {
  * @param {String} id
  *        The id of the row in the table widget
  */
-function selectTableItem(id) {
-  click(gPanelWindow.document.querySelector(".table-widget-cell[data-id='" +
-        id + "']"));
+function* selectTableItem(id) {
+  let selector = ".table-widget-cell[data-id='" + id + "']";
+  let target = gPanelWindow.document.querySelector(selector);
+
+  yield click(target);
+  yield gUI.once("sidebar-updated");
+}
+
+/**
+ * Wait for eventName on target.
+ * @param {Object} target An observable object that either supports on/off or
+ * addEventListener/removeEventListener
+ * @param {String} eventName
+ * @param {Boolean} [useCapture] for addEventListener/removeEventListener
+ * @return A promise that resolves when the event has been handled
+ */
+function once(target, eventName, useCapture=false) {
+  info("Waiting for event: '" + eventName + "' on " + target + ".");
+
+  let deferred = promise.defer();
+
+  for (let [add, remove] of [
+    ["addEventListener", "removeEventListener"],
+    ["addListener", "removeListener"],
+    ["on", "off"]
+  ]) {
+    if ((add in target) && (remove in target)) {
+      target[add](eventName, function onEvent(...aArgs) {
+        target[remove](eventName, onEvent, useCapture);
+        deferred.resolve.apply(deferred, aArgs);
+      }, useCapture);
+      break;
+    }
+  }
+
+  return deferred.promise;
 }

@@ -2107,6 +2107,11 @@ public:
    */
   static bool IsPDFJSEnabled();
 
+  /**
+   * Checks if internal SWF player is enabled.
+   */
+  static bool IsSWFPlayerEnabled();
+
   enum ContentViewerType
   {
       TYPE_UNSUPPORTED,

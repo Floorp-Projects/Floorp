@@ -130,6 +130,18 @@ add_task(function* enable() {
   assertSuggestionsPresent(true);
 });
 
+add_task(function* privateWindow() {
+  // Since suggestions are disabled in private windows, the notification should
+  // not appear even when suggestions are otherwise enabled.
+  let win = yield BrowserTestUtils.openNewBrowserWindow({ private: true });
+  win.gURLBar.blur();
+  win.gURLBar.focus();
+  yield promiseAutocompleteResultPopup("foo", win);
+  assertVisible(false, win);
+  win.gURLBar.blur();
+  yield BrowserTestUtils.closeWindow(win);
+});
+
 function assertSuggestionsPresent(expectedPresent) {
   let controller = gURLBar.popup.input.controller;
   let matchCount = controller.matchCount;
@@ -147,9 +159,9 @@ function assertSuggestionsPresent(expectedPresent) {
   Assert.equal(actualPresent, expectedPresent);
 }
 
-function assertVisible(visible) {
+function assertVisible(visible, win=window) {
   let style =
-    window.getComputedStyle(gURLBar.popup.searchSuggestionsNotification);
+    win.getComputedStyle(win.gURLBar.popup.searchSuggestionsNotification);
   Assert.equal(style.visibility, visible ? "visible" : "collapse");
 }
 

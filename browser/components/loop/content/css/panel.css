@@ -206,35 +206,12 @@ html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
   font-weight: 700;
 }
 
-#fte-getstarted {
-  padding-top: .5rem;
-  padding-bottom: .5rem;
-}
-
-#fte-title {
-  text-align: center;
-  margin-bottom: .5rem;
-}
-
-#fte-button {
-  width: 50%;
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-  font-size: 1rem;
-  padding: .5rem 1rem;
-}
-
-#fte-getstarted + #powered-by-wrapper {
-  position: absolute;
-  bottom: 0;
-}
-
 /* Need to remove when these rules when the Beta tag is removed */
 #share-link-header {
   -moz-padding-start: 20px;
 }
-#fte-getstarted + .generate-url > #share-link-header,
+
+.fte-get-started-container + .generate-url > #share-link-header,
 .tab-view + .tab .content-area > .generate-url > #share-link-header {
   /* The header shouldn't be indented if the tabs are present. */
   -moz-padding-start: 0;
@@ -560,7 +537,7 @@ html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
   background-color: #ebebeb;
 }
 
-.button:hover:active {
+.button:active {
   background-color: #ccc;
   color: #fff;
 }
@@ -593,6 +570,12 @@ html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
 .button.button-cancel:disabled {
   background-color: #ebebeb;
   color: #c3c3c3;
+}
+
+.button.button-accept:active {
+  background-color: #3aa689;
+  border-color: #3aa689;
+  color: #fff;
 }
 
 .button-close {
@@ -671,9 +654,8 @@ html[dir="rtl"] .generate-url-spinner {
   right: auto;
 }
 
-#fte-button,
 .generate-url .button {
-  background-color: #0096dd;
+  background-color: #00a9dc;
   border-color: #0096dd;
   color: #fff;
 }
@@ -681,18 +663,17 @@ html[dir="rtl"] .generate-url-spinner {
 .generate-url .button:hover {
   background-color: #008acb;
   border-color: #008acb;
-  color: #fff;
 }
 
 #powered-by,
 .terms-service {
-  color: #888;
-  font-size: .9em;
+  color: #4a4a4a;
+  font-size: 1.1rem;
 }
 
 #powered-by {
   border-top: 1px solid #ccc;
-  padding-top: .5rem;
+  padding-top: 1.5rem;
   text-align: center;
   margin-top: 0;
 }
@@ -750,13 +731,15 @@ html[dir="rtl"] .generate-url-spinner {
 }
 
 .terms-service {
-  padding-left: 1rem;
-  padding-right: 1rem;
-  padding-bottom: .5rem;
+  padding-left: 5rem;
+  padding-right: 5rem;
+  padding-bottom: 1rem;
+  text-align: center;
 }
 
 .terms-service > a {
   color: #00a9dc;
+  text-decoration: none;
 }
 
 /* DnD menu */
@@ -929,4 +912,66 @@ html[dir="rtl"] .settings-menu .dropdown-menu {
   color: #000;
   font-weight: bold;
   margin: 0;
+}
+
+/* First time use */
+
+.fte-get-started-content {
+  flex: 1;
+  padding: 4.5rem 0 3.4rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.fte-title {
+  flex: 1;
+  margin: 0 44px;
+}
+
+.fte-title > img {
+  width: 100%;
+}
+
+.fte-subheader {
+  text-align: center;
+  font-size: 1.8rem;
+  margin-bottom: 2rem;
+  color: #4a4a4a;
+}
+
+.fte-get-started-content + .powered-by-wrapper {
+  flex: 0;
+}
+
+.fte-get-started-container {
+  height: 100%;
+  width: 100%;
+  min-height: 270px;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  align-content: flex-start;
+  align-items: flex-start;
+  background: #fbfbfb;
+}
+
+.fte-get-started-button {
+  border: none;
+  color: #fff;
+  background-color: #00a9dc;
+  border-color: none;
+  line-height: 43px;
+  margin: 0 15px;
+  padding: 0;
+  border-radius: 4px;
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+.fte-get-started-button:hover,
+.fte-get-started-button:focus,
+.fte-get-started-button:active {
+  background-color: #5cccee;
+  color: #fff;
 }

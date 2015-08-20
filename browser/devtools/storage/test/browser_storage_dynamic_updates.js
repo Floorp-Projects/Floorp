@@ -2,7 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let testUpdates = Task.async(function*() {
+"use strict";
+
+add_task(function*() {
+  yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-updates.html");
 
   let $ = id => gPanelWindow.document.querySelector(id);
   let $$ = sel => gPanelWindow.document.querySelectorAll(sel);
@@ -10,14 +13,13 @@ let testUpdates = Task.async(function*() {
   gUI.tree.expandAll();
 
   ok(gUI.sidebar.hidden, "Sidebar is initially hidden");
-  selectTableItem("c1");
-  yield gUI.once("sidebar-updated");
+  yield selectTableItem("c1");
 
   // test that value is something initially
   let initialValue = [[
     {name: "c1", value: "1.2.3.4.5.6.7"},
     {name: "c1.path", value: "/browser"}
-  ],[
+  ], [
     {name: "c1", value: "Array"},
     {name: "c1.0", value: "1"},
     {name: "c1.6", value: "7"}
@@ -27,7 +29,7 @@ let testUpdates = Task.async(function*() {
   let finalValue = [[
     {name: "c1", value: '{"foo": 4,"bar":6}'},
     {name: "c1.path", value: "/browser"}
-  ],[
+  ], [
     {name: "c1", value: "Object"},
     {name: "c1.foo", value: "4"},
     {name: "c1.bar", value: "6"}
@@ -44,9 +46,10 @@ let testUpdates = Task.async(function*() {
 
   yield findVariableViewProperties(finalValue[0], false);
   yield findVariableViewProperties(finalValue[1], true);
-  ok($("#value [data-id='c1'].table-widget-cell"), "cell is present after update");
+  ok($("#value [data-id='c1'].table-widget-cell"),
+     "cell is present after update");
   is($("#value [data-id='c1'].table-widget-cell").value, '{"foo": 4,"bar":6}',
-       "correct final value in table");
+     "correct final value in table");
 
   // Add a new entry
   is($$("#value .table-widget-cell").length, 2,
@@ -116,8 +119,7 @@ let testUpdates = Task.async(function*() {
   ok(gUI.sidebar.hidden, "Sidebar is hidden when no rows");
 
   // Testing in local storage
-  selectTreeItem(["localStorage", "http://test1.example.org"]);
-  yield gUI.once("store-objects-updated");
+  yield selectTreeItem(["localStorage", "http://test1.example.org"]);
 
   is($$("#value .table-widget-cell").length, 7,
      "Correct number of rows after delete update 7");
@@ -153,9 +155,7 @@ let testUpdates = Task.async(function*() {
       "Value got updated for local storage");
 
   // Testing in session storage
-  selectTreeItem(["sessionStorage", "http://test1.example.org"]);
-
-  yield gUI.once("store-objects-updated");
+  yield selectTreeItem(["sessionStorage", "http://test1.example.org"]);
 
   is($$("#value .table-widget-cell").length, 3,
      "Correct number of rows for session storage");
@@ -181,9 +181,7 @@ let testUpdates = Task.async(function*() {
   is($$("#value .table-widget-cell").length, 2,
      "Correct number of rows after removing items from session storage");
 
-  selectTableItem("ss2");
-
-  yield gUI.once("sidebar-updated");
+  yield selectTableItem("ss2");
 
   ok(!gUI.sidebar.hidden, "sidebar is visible");
 
@@ -199,13 +197,5 @@ let testUpdates = Task.async(function*() {
 
   yield findVariableViewProperties([{name: "ss2", value: "changed=ss2"}]);
 
+  yield finishTests();
 });
-
-let startTest = Task.async(function*() {
-  yield testUpdates();
-  finishTests();
-});
-
-function test() {
-  openTabAndSetupStorage(MAIN_DOMAIN + "storage-updates.html").then(startTest);
-}
