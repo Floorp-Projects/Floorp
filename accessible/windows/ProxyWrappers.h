@@ -29,12 +29,16 @@ class ProxyAccessibleWrap : public AccessibleWrap
   }
 };
 
-class HyperTextProxyAccessibleWrap : public ProxyAccessibleWrap,
-                                     public ia2AccessibleEditableText,
-                                     public ia2AccessibleHypertext
+class HyperTextProxyAccessibleWrap : public HyperTextAccessibleWrap
 {
   HyperTextProxyAccessibleWrap(ProxyAccessible* aProxy) :
-    ProxyAccessibleWrap(aProxy) {}
+    HyperTextAccessibleWrap(nullptr, nullptr)
+  {
+    mType = eProxyType;
+    mBits.proxy = aProxy;
+  }
+
+  virtual void Shutdown() override { mBits.proxy = nullptr; }
 };
 
 template<typename T>

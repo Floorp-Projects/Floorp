@@ -9,11 +9,10 @@
 #include "AccEvent.h"
 #include "Compatibility.h"
 #include "HyperTextAccessibleWrap.h"
+#include "ia2AccessibleText.h"
 #include "nsWinUtils.h"
 #include "mozilla/a11y/ProxyAccessible.h"
 #include "ProxyWrappers.h"
-
-#include "mozilla/ClearOnShutdown.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -24,8 +23,7 @@ a11y::PlatformInit()
   Compatibility::Init();
 
   nsWinUtils::MaybeStartWindowEmulation();
-  ClearOnShutdown(&HyperTextAccessibleWrap::sLastTextChangeAcc);
-  ClearOnShutdown(&HyperTextAccessibleWrap::sLastTextChangeString);
+  ia2AccessibleText::InitTextChangeData();
 }
 
 void
@@ -74,7 +72,12 @@ a11y::ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset)
 }
 
 void
-a11y::ProxyTextChangeEvent(ProxyAccessible*, const nsString&, int32_t, uint32_t,
-                     bool, bool)
+a11y::ProxyTextChangeEvent(ProxyAccessible* aText, const nsString& aStr,
+                           int32_t aStart, uint32_t aLen, bool aInsert, bool)
 {
+  AccessibleWrap* wrapper = WrapperFor(aText);
+  auto text = static_cast<HyperTextAccessibleWrap*>(wrapper->AsHyperText());
+  if (text) {
+    ia2AccessibleText::UpdateTextChangeData(text, aInsert, aStr, aStart, aLen);
+  }
 }

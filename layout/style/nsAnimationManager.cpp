@@ -455,14 +455,8 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
           animationChanged =
             oldEffect->Timing() != newEffect->Timing() ||
             oldEffect->Properties() != newEffect->Properties();
-          oldEffect->Timing() = newEffect->Timing();
+          oldEffect->SetTiming(newEffect->Timing(), *oldAnim);
           oldEffect->Properties() = newEffect->Properties();
-          // FIXME: Currently assigning to KeyframeEffect::Timing() does not
-          // update the corresponding Animation (which may, for example, no
-          // longer be finished). Until we introduce proper setters for
-          // properties on effects, we need to manually cause the owning
-          // Animation to update its timing by setting the effect again.
-          oldAnim->SetEffect(oldEffect);
         }
 
         // Reset compositor state so animation will be re-synchronized.
@@ -507,10 +501,6 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
         newAnim = nullptr;
         newAnimations.ReplaceElementAt(newIdx, oldAnim);
         collection->mAnimations.RemoveElementAt(oldIdx);
-
-        // We've touched the old animation's timing properties, so this
-        // could update the old animation's relevance.
-        oldAnim->UpdateRelevance();
       }
     }
   } else {

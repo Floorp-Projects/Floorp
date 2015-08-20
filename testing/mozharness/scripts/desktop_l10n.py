@@ -1028,9 +1028,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
             routes = []
             for template in templates:
                 fmt = {
-                    # TODO: Bug 1133074
-                    #index = self.config.get('taskcluster_index', 'index.garbage.staging')
-                    'index': 'index.garbage.staging.mshal-testing',
+                    'index': self.config.get('taskcluster_index', 'index.garbage.staging'),
                     'project': branch,
                     'head_rev': revision,
                     'build_product': self.config['stage_product'],

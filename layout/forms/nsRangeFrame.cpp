@@ -837,15 +837,22 @@ nsRangeFrame::GetType() const
 bool
 nsRangeFrame::ShouldUseNativeStyle() const
 {
+  nsIFrame* trackFrame = mTrackDiv->GetPrimaryFrame();
+  nsIFrame* progressFrame = mProgressDiv->GetPrimaryFrame();
+  nsIFrame* thumbFrame = mThumbDiv->GetPrimaryFrame();
+
   return (StyleDisplay()->mAppearance == NS_THEME_RANGE) &&
          !PresContext()->HasAuthorSpecifiedRules(this,
                                                  (NS_AUTHOR_SPECIFIED_BORDER |
                                                   NS_AUTHOR_SPECIFIED_BACKGROUND)) &&
-         !PresContext()->HasAuthorSpecifiedRules(mTrackDiv->GetPrimaryFrame(),
+         trackFrame &&
+         !PresContext()->HasAuthorSpecifiedRules(trackFrame,
                                                  STYLES_DISABLING_NATIVE_THEMING) &&
-         !PresContext()->HasAuthorSpecifiedRules(mProgressDiv->GetPrimaryFrame(),
+         progressFrame &&
+         !PresContext()->HasAuthorSpecifiedRules(progressFrame,
                                                  STYLES_DISABLING_NATIVE_THEMING) &&
-         !PresContext()->HasAuthorSpecifiedRules(mThumbDiv->GetPrimaryFrame(),
+         thumbFrame &&
+         !PresContext()->HasAuthorSpecifiedRules(thumbFrame,
                                                  STYLES_DISABLING_NATIVE_THEMING);
 }
 

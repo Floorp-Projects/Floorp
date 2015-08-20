@@ -99,8 +99,11 @@ hardware (via AudioStream).
 
 namespace mozilla {
 
-class AudioSegment;
+namespace media {
 class AudioSink;
+}
+
+class AudioSegment;
 class TaskQueue;
 
 extern PRLogModuleInfo* gMediaDecoderLog;
@@ -510,13 +513,15 @@ protected:
   // state machine thread.
   void UpdateRenderedVideoFrames();
 
-  // Stops the audio thread. The decoder monitor must be held with exactly
-  // one lock count. Called on the state machine thread.
-  void StopAudioThread();
+  // Stops the audio sink and shut it down.
+  // The decoder monitor must be held with exactly one lock count.
+  // Called on the state machine thread.
+  void StopAudioSink();
 
-  // Starts the audio thread. The decoder monitor must be held with exactly
-  // one lock count. Called on the state machine thread.
-  void StartAudioThread();
+  // Create and start the audio sink.
+  // The decoder monitor must be held with exactly one lock count.
+  // Called on the state machine thread.
+  void StartAudioSink();
 
   void StopDecodedStream();
 
@@ -997,7 +1002,7 @@ private:
   int64_t mFragmentEndTime;
 
   // The audio sink resource.  Used on state machine and audio threads.
-  RefPtr<AudioSink> mAudioSink;
+  RefPtr<media::AudioSink> mAudioSink;
 
   // The reader, don't call its methods with the decoder monitor held.
   // This is created in the state machine's constructor.
