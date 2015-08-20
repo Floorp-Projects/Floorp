@@ -84,7 +84,7 @@ add_task(function* test_nouser() {
   Assert.ok(!panelUIFooter.hasAttribute("fxastatus"), "no fxsstatus when signed out");
   Assert.ok(!panelUIFooter.hasAttribute("fxaprofileimage"), "no fxaprofileimage when signed out");
 
-  let promiseOpen = promiseTabOpen("about:accounts?entryPoint=menupanel");
+  let promiseOpen = promiseTabOpen("about:accounts?entrypoint=menupanel");
   panelUIStatus.click();
   yield promiseOpen;
 });

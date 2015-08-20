@@ -15,13 +15,6 @@ function* test_on_browser(url, browser) {
   yield wait_for_event(browser, "DOMAudioPlaybackStopped");
 }
 
-add_task(function*() {
-  yield new Promise((resolve) => {
-    SpecialPowers.pushPrefEnv({"set": [["media.useAudioChannelService", true]]},
-                              resolve);
-  });
-});
-
 add_task(function* test_page() {
   yield BrowserTestUtils.withNewTab({
     gBrowser,

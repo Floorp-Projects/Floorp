@@ -10,7 +10,6 @@
 interface nsIDOMDocument;
 interface nsINode;
 interface nsIPrincipal;
-interface nsIURI;
 
 %{C++
 #include "nsTArray.h"
@@ -23,7 +22,7 @@ typedef unsigned long nsSecurityFlags;
 /**
  * An nsILoadOwner represents per-load information about who started the load.
  */
-[scriptable, builtinclass, uuid(cc51498e-f8f8-469d-85ba-6dcba17027e4)]
+[scriptable, builtinclass, uuid(99abb145-29d2-4a0a-8bca-213fa6211cc9)]
 interface nsILoadInfo : nsISupports
 {
   /**
@@ -269,19 +268,6 @@ interface nsILoadInfo : nsISupports
    */
   [noscript, notxpcom]
   nsContentPolicyType internalContentPolicyType();
-
-  /**
-   * A base URI for use in situations where it cannot otherwise be inferred.
-   * This attribute may be null.  The value of this attribute may be
-   * ignored if the base URI can be inferred by the channel's URI.
-   */
-  readonly attribute nsIURI baseURI;
-
-  /**
-   * A C++-friendly version of baseURI.
-   */
-  [noscript, notxpcom, nostdcall, binaryname(BaseURI)]
-  nsIURI binaryBaseURI();
 
   /**
    * Returns true if document or any of the documents ancestors

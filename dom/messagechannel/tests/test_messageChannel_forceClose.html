@@ -16,21 +16,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1176034
 </pre>
   <script type="application/javascript">
 
-  function runTests() {
-    var mc = new MessageChannel();
+  var mc = new MessageChannel();
 
-    try {
-      postMessage(42, "*", [ mc.port1, window ]);
-      ok(false, "Something went wrong.");
-    } catch(e) {
-      ok(true, "PostMessage should fail and we should not leak.");
-    }
-
-    SimpleTest.finish();
+  try {
+    postMessage(42, "*", [ mc.port1, window ]);
+    ok(false, "Something went wrong.");
+  } catch(e) {
+    ok(true, "PostMessage should fail and we should not leak.");
   }
 
-  SimpleTest.waitForExplicitFinish();
-  SpecialPowers.pushPrefEnv({"set": [["dom.messageChannel.enabled", true]]}, runTests);
   </script>
 </body>
 </html>

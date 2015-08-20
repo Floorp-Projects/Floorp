@@ -65,9 +65,6 @@ config = {
         "jetpack-package": ["--jetpack-package"],
         "jetpack-addon": ["--jetpack-addon"],
         "a11y": ["--a11y"],
-        "plugins": ['--setpref=dom.ipc.plugins.enabled=false',
-                    '--setpref=dom.ipc.plugins.enabled.x86_64=false',
-                    '--manifest=tests/dom/plugins/test/mochitest/mochitest.ini']
     },
     # local webapprt suites
     "all_webapprt_suites": {

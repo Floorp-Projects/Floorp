@@ -319,7 +319,6 @@ public:
     if (mReader) {
       mReader->BreakCycles();
     }
-    mDecodedStream->DestroyData();
     mResource = nullptr;
     mDecoder = nullptr;
   }

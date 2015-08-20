@@ -13,6 +13,7 @@
 #include "nsContentSecurityManager.h"
 #include "nsNullPrincipal.h"
 #include "nsServiceManagerUtils.h"
+#include "nsIInputStreamChannel.h"
 
 NS_IMPL_ADDREF(nsViewSourceChannel)
 NS_IMPL_RELEASE(nsViewSourceChannel)
@@ -91,9 +92,15 @@ nsViewSourceChannel::Init(nsIURI* uri)
 }
 
 nsresult
-nsViewSourceChannel::InitSrcdoc(nsIURI* aURI, const nsAString &aSrcdoc)
+nsViewSourceChannel::InitSrcdoc(nsIURI* aURI,
+                                nsIURI* aBaseURI,
+                                const nsAString &aSrcdoc,
+                                nsINode *aLoadingNode,
+                                nsIPrincipal *aLoadingPrincipal,
+                                nsIPrincipal *aTriggeringPrincipal,
+                                nsSecurityFlags aSecurityFlags,
+                                nsContentPolicyType aContentPolicyType)
 {
-
     nsresult rv;
 
     nsCOMPtr<nsIURI> inStreamURI;
@@ -104,14 +111,16 @@ nsViewSourceChannel::InitSrcdoc(nsIURI* aURI, const nsAString &aSrcdoc)
                    NS_LITERAL_STRING("about:srcdoc"));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = NS_NewInputStreamChannel(getter_AddRefs(mChannel),
-                                  inStreamURI,
-                                  aSrcdoc,
-                                  NS_LITERAL_CSTRING("text/html"),
-                                  nsContentUtils::GetSystemPrincipal(),
-                                  nsILoadInfo::SEC_NORMAL,
-                                  nsIContentPolicy::TYPE_OTHER,
-                                  true);
+    rv = NS_NewInputStreamChannelInternal(getter_AddRefs(mChannel),
+                                          inStreamURI,
+                                          aSrcdoc,
+                                          NS_LITERAL_CSTRING("text/html"),
+                                          aLoadingNode,
+                                          aLoadingPrincipal,
+                                          aTriggeringPrincipal,
+                                          aSecurityFlags,
+                                          aContentPolicyType,
+                                          true);
 
     NS_ENSURE_SUCCESS(rv, rv);
     mOriginalURI = aURI;
@@ -124,6 +133,10 @@ nsViewSourceChannel::InitSrcdoc(nsIURI* aURI, const nsAString &aSrcdoc)
     mCacheInfoChannel = do_QueryInterface(mChannel);
     mApplicationCacheChannel = do_QueryInterface(mChannel);
     mUploadChannel = do_QueryInterface(mChannel);
+
+    nsCOMPtr<nsIInputStreamChannel> isc = do_QueryInterface(mChannel);
+    MOZ_ASSERT(isc);
+    isc->SetBaseURI(aBaseURI);
     return NS_OK;
 }
 
@@ -590,6 +603,27 @@ nsViewSourceChannel::GetIsSrcdocChannel(bool* aIsSrcdocChannel)
 {
     *aIsSrcdocChannel = mIsSrcdocChannel;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::GetBaseURI(nsIURI** aBaseURI)
+{
+  if (mIsSrcdocChannel) {
+    nsCOMPtr<nsIInputStreamChannel> isc = do_QueryInterface(mChannel);
+    if (isc) {
+      return isc->GetBaseURI(aBaseURI);
+    }
+  }
+  *aBaseURI = mBaseURI;
+  NS_IF_ADDREF(*aBaseURI);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::SetBaseURI(nsIURI* aBaseURI)
+{
+  mBaseURI = aBaseURI;
+  return NS_OK;
 }
 
 // nsIRequestObserver methods
