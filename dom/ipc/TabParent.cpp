@@ -438,6 +438,8 @@ TabParent::Destroy()
     return;
   }
 
+  IMEStateManager::OnTabParentDestroying(this);
+
   RemoveWindowListeners();
 
   // If this fails, it's most likely due to a content-process crash,
@@ -484,6 +486,8 @@ TabParent::Recv__delete__()
 void
 TabParent::ActorDestroy(ActorDestroyReason why)
 {
+  // Even though TabParent::Destroy calls this, we need to do it here too in
+  // case of a crash.
   IMEStateManager::OnTabParentDestroying(this);
 
   nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader(true);

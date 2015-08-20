@@ -242,6 +242,10 @@ public:
     return mTiming;
   }
 
+  // FIXME: Drop |aOwningAnimation| once we make AnimationEffects track their
+  // owning animation.
+  void SetTiming(const AnimationTiming& aTiming, Animation& aOwningAnimtion);
+
   // Return the duration from the start the active interval to the point where
   // the animation begins playback. This is zero unless the animation has
   // a negative delay in which case it is the absolute value of the delay.
