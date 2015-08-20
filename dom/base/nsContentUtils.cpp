@@ -7937,3 +7937,17 @@ nsContentUtils::SetFetchReferrerURIWithPolicy(nsIPrincipal* aPrincipal,
   net::ReferrerPolicy referrerPolicy = aDoc->GetReferrerPolicy();
   return aChannel->SetReferrerWithPolicy(referrerURI, referrerPolicy);
 }
+
+bool
+nsContentUtils::URIIsNetflix(nsIURI* aURI)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aURI);
+
+  nsCString hostname;
+  if (!NS_SUCCEEDED(aURI->GetHost(hostname))) {
+    return false;
+  }
+
+  return hostname.Find("nflxvideo.net") != -1;
+}
