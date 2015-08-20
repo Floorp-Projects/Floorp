@@ -183,6 +183,9 @@ protected:
 
   // The engine that will generate output for this node.
   nsAutoPtr<AudioNodeEngine> mEngine;
+  // The mixed input blocks are kept from iteration to iteration to avoid
+  // reallocating channel data arrays.
+  OutputChunks mInputChunks;
   // The last block produced by this node.
   OutputChunks mLastChunks;
   // The stream's sampling rate
