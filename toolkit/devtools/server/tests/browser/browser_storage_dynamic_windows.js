@@ -31,7 +31,8 @@ const beforeReload = {
 };
 
 function finishTests(client) {
-  // Cleanup so that indexed db created from this test do not interfere next ones
+  // Cleanup so that indexed db created from this test do not interfere next
+  // ones.
 
   /**
    * This method iterates over iframes in a window and clears the indexed db
@@ -41,11 +42,9 @@ function finishTests(client) {
     if (w[i] && w[i].clear) {
       w[i].clearIterator = w[i].clear(() => clearIDB(w, i + 1, c));
       w[i].clearIterator.next();
-    }
-    else if (w[i] && w[i + 1]) {
+    } else if (w[i] && w[i + 1]) {
       clearIDB(w, i + 1, c);
-    }
-    else {
+    } else {
       c();
     }
   };
@@ -60,7 +59,7 @@ function finishTests(client) {
       gFront = gWindow = null;
       finish();
     });
-  }
+  };
   gWindow.clearIterator = gWindow.clear(() => {
     clearIDB(gWindow, 0, closeConnection);
   });
@@ -69,8 +68,11 @@ function finishTests(client) {
 
 function testStores(data, client) {
   testWindowsBeforeReload(data);
-  testReload().then(() =>
-  testAddIframe()).then(() =>
+
+  // FIXME: Bug 1183581 - browser_storage_dynamic_windows.js IsSafeToRunScript
+  //                      errors when testing reload in E10S mode
+  // testReload().then(() =>
+  testAddIframe().then(() =>
   testRemoveIframe()).then(() =>
   finishTests(client));
 }
@@ -89,11 +91,11 @@ function testWindowsBeforeReload(data) {
 
 function markOutMatched(toBeEmptied, data, deleted) {
   if (!Object.keys(toBeEmptied).length) {
-    info("Object empty")
+    info("Object empty");
     return;
   }
   ok(Object.keys(data).length,
-     "Atleast some storage types should be present in deleted");
+     "At least one storage type should be present");
   for (let storageType in toBeEmptied) {
     if (!data[storageType]) {
       continue;
@@ -112,8 +114,7 @@ function markOutMatched(toBeEmptied, data, deleted) {
         if (!toBeEmptied[storageType][host].length) {
           delete toBeEmptied[storageType][host];
         }
-      }
-      else {
+      } else {
         delete toBeEmptied[storageType][host];
       }
     }
@@ -123,54 +124,53 @@ function markOutMatched(toBeEmptied, data, deleted) {
   }
 }
 
-function testReload() {
-  info("Testing if reload works properly");
+// function testReload() {
+//   info("Testing if reload works properly");
 
-  let shouldBeEmptyFirst = Cu.cloneInto(beforeReload,  {});
-  let shouldBeEmptyLast = Cu.cloneInto(beforeReload,  {});
-  return new Promise(resolve => {
+//   let shouldBeEmptyFirst = Cu.cloneInto(beforeReload,  {});
+//   let shouldBeEmptyLast = Cu.cloneInto(beforeReload,  {});
+//   return new Promise(resolve => {
 
-    let onStoresUpdate = data => {
-      info("in stores update of testReload");
-      // This might be second time stores update is happening, in which case,
-      // data.deleted will be null.
-      // OR.. This might be the first time on a super slow machine where both
-      // data.deleted and data.added is missing in the first update.
-      if (data.deleted) {
-        markOutMatched(shouldBeEmptyFirst, data.deleted, true);
-      }
+//     let onStoresUpdate = data => {
+//       info("in stores update of testReload");
+//       // This might be second time stores update is happening, in which case,
+//       // data.deleted will be null.
+//       // OR.. This might be the first time on a super slow machine where both
+//       // data.deleted and data.added is missing in the first update.
+//       if (data.deleted) {
+//         markOutMatched(shouldBeEmptyFirst, data.deleted, true);
+//       }
 
-      if (!Object.keys(shouldBeEmptyFirst).length) {
-        info("shouldBeEmptyFirst is empty now");
-      }
+//       if (!Object.keys(shouldBeEmptyFirst).length) {
+//         info("shouldBeEmptyFirst is empty now");
+//       }
 
-      // stores-update call might not have data.added for the first time on slow
-      // machines, in which case, data.added will be null
-      if (data.added) {
-        markOutMatched(shouldBeEmptyLast, data.added);
-      }
+//       // stores-update call might not have data.added for the first time on
+//       // slow machines, in which case, data.added will be null
+//       if (data.added) {
+//         markOutMatched(shouldBeEmptyLast, data.added);
+//       }
 
-      if (!Object.keys(shouldBeEmptyLast).length) {
-        info("Everything to be received is received.");
-        endTestReloaded();
-      }
-    };
+//       if (!Object.keys(shouldBeEmptyLast).length) {
+//         info("Everything to be received is received.");
+//         endTestReloaded();
+//       }
+//     };
 
-    let endTestReloaded = () => {
-      gFront.off("stores-update", onStoresUpdate);
-      resolve();
-    };
+//     let endTestReloaded = () => {
+//       gFront.off("stores-update", onStoresUpdate);
+//       resolve();
+//     };
 
-    gFront.on("stores-update", onStoresUpdate);
+//     gFront.on("stores-update", onStoresUpdate);
 
-    content.location.reload();
-  });
-}
+//     content.location.reload();
+//   });
+// }
 
 function testAddIframe() {
   info("Testing if new iframe addition works properly");
   return new Promise(resolve => {
-
     let shouldBeEmpty = {
       localStorage: {
         "https://sectest1.example.org": ["iframe-s-ls1"]
@@ -241,7 +241,6 @@ function testAddIframe() {
 function testRemoveIframe() {
   info("Testing if iframe removal works properly");
   return new Promise(resolve => {
-
     let shouldBeEmpty = {
       localStorage: {
         "http://sectest1.example.org": []
@@ -257,7 +256,8 @@ function testRemoveIframe() {
       markOutMatched(shouldBeEmpty, data.deleted, true);
 
       ok(!data.deleted.cookies || !data.deleted.cookies["sectest1.example.org"],
-        "Nothing got deleted for Cookies as the same hostname is still present");
+        "Nothing got deleted for Cookies as " +
+        "the same hostname is still present");
 
       ok(!data.changed || !data.changed.cookies ||
          !data.changed.cookies["http://sectest1.example.org"],
@@ -321,11 +321,9 @@ function test() {
       if (w[i] && w[i].idbGenerator) {
         w[i].setupIDB = w[i].idbGenerator(() => setupIDBInFrames(w, i + 1, c));
         w[i].setupIDB.next();
-      }
-      else if (w[i] && w[i + 1]) {
+      } else if (w[i] && w[i + 1]) {
         setupIDBInFrames(w, i + 1, c);
-      }
-      else {
+      } else {
         c();
       }
     };

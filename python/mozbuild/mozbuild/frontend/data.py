@@ -986,3 +986,30 @@ class AndroidAssetsDirs(ContextDerived):
     def __init__(self, context, paths):
         ContextDerived.__init__(self, context)
         self.paths = paths
+
+class AndroidExtraResDirs(ContextDerived):
+    """Represents Android extra resource directories.
+
+    Extra resources are resources provided by libraries and including in a
+    packaged APK, but not otherwise redistributed.  In practice, this means
+    resources included in Fennec but not in GeckoView.
+    """
+
+    __slots__ = (
+        'paths',
+    )
+
+    def __init__(self, context, paths):
+        ContextDerived.__init__(self, context)
+        self.paths = paths
+
+class AndroidExtraPackages(ContextDerived):
+    """Represents Android extra packages."""
+
+    __slots__ = (
+        'packages',
+    )
+
+    def __init__(self, context, packages):
+        ContextDerived.__init__(self, context)
+        self.packages = packages
