@@ -19,6 +19,9 @@ Cu.import("resource://gre/modules/Downloads.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Accounts.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "DownloadIntegration",
+                                  "resource://gre/modules/DownloadIntegration.jsm");
+
 function dump(a) {
   Services.console.logStringMessage(a);
 }
@@ -200,6 +203,7 @@ Sanitizer.prototype = {
       clear: Task.async(function* () {
         let list = yield Downloads.getList(Downloads.ALL);
         let downloads = yield list.getAll();
+        var finalizePromises = [];
 
         // Logic copied from DownloadList.removeFinished. Ideally, we would
         // just use that method directly, but we want to be able to remove the
@@ -216,16 +220,19 @@ Sanitizer.prototype = {
             // This works even if the download state has changed meanwhile.  We
             // don't need to wait for the procedure to be complete before
             // processing the other downloads in the list.
-            download.finalize(true).then(null, Cu.reportError);
+            finalizePromises.push(download.finalize(true).then(() => null, Cu.reportError));
 
             // Delete the downloaded files themselves.
-            OS.File.remove(download.target.path).then(null, ex => {
+            OS.File.remove(download.target.path).then(() => null, ex => {
               if (!(ex instanceof OS.File.Error && ex.becauseNoSuchFile)) {
                 Cu.reportError(ex);
               }
             });
           }
         }
+
+        yield Promise.all(finalizePromises);
+        yield DownloadIntegration.forceSave();
       }),
 
       get canClear()

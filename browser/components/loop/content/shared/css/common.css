@@ -118,15 +118,15 @@ p {
 .btn-accept,
 .btn-success,
 .btn-accept + .btn-chevron {
-  background-color: #5bc0a4;
-  border: 1px solid #5bc0a4;
+  background-color: #56b397;
+  border: 1px solid #56b397;
 }
 
   .btn-accept:hover,
   .btn-success:hover,
   .btn-accept + .btn-chevron:hover {
-    background-color: #47b396;
-    border: 1px solid #47b396;
+    background-color: #50e3c2;
+    border: 1px solid #50e3c2;
   }
 
   .btn-accept:active,

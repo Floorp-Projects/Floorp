@@ -114,6 +114,10 @@ public class StringHelper {
     public final String DISTRIBUTION1_LABEL = "Distribution 1";
     public final String DISTRIBUTION2_LABEL = "Distribution 2";
 
+    // Import strings
+    public final String BOOKMARKS;
+    public final String IMPORT;
+
     // Settings menu strings
     // Section labels - ordered as found in the settings menu
     public final String CUSTOMIZE_SECTION_LABEL;
@@ -154,6 +158,16 @@ public class StringHelper {
     public final String MANAGE_LOGINS_LABEL;
     public final String MASTER_PASSWORD_LABEL;
     public final String CLEAR_PRIVATE_DATA_LABEL;
+    public final String ENABLED_EXCLUDE_3RD_PARTY;
+    public final String BROWSING_HISTORY;
+    public final String SEARCH_HISTORY;
+    public final String DOWNLOADS;
+    public final String FORM_HISTORY;
+    public final String COOKIES_AND_LOGINS;
+    public final String CACHE;
+    public final String OFFLINE_DATA;
+    public final String SITE_SETTINGS;
+    public final String CLEAR_DATA_BUTTON;
 
     // Mozilla
     public final String BRAND_NAME = "(Fennec|Nightly|Aurora|Firefox Beta|Firefox)";
@@ -163,6 +177,15 @@ public class StringHelper {
     public final String LOCATION_SERVICES_LABEL = "Mozilla Location Service";
     public final String HEALTH_REPORT_LABEL = BRAND_NAME + " Health Report";
     public final String MY_HEALTH_REPORT_LABEL;
+    public final String DATA_CHOICES;
+    public final String HEALTH_REPORT_EXPLANATION;
+    public final String MOZ_LOCATION;
+    public final String MOZ_LOCATION_MSG;
+    public final String LEARN_MORE;
+    public final String CRASH_REPORTER;
+    public final String CRASH_REPORTER_MSG;
+    public final String TELEMETRY;
+    public final String TELEMETRY_MSG;
 
     // Developer tools
     public final String REMOTE_DEBUGGING_USB_LABEL;
@@ -239,6 +262,37 @@ public class StringHelper {
     // Strings used as content description, e.g. for ImageButtons
     public final String CONTENT_DESCRIPTION_READER_MODE_BUTTON = "Enter Reader View";
 
+    // Home Panel Settings
+    public final String CUSTOMIZE_HOME;
+    public final String ENABLED;
+    public final String HISTORY;
+    public final String PANELS;
+
+    // Search Settings
+    public final String SEARCH_TITLE;
+    public final String SEARCH_SUGGESTIONS;
+    public final String SEARCH_INSTALLED;
+
+    // Advanced Settings
+    public final String ADVANCED;
+    public final String DONT_SHOW_MENU;
+    public final String SHOW_MENU;
+    public final String DISABLED;
+    public final String TAP_TO_PLAY;
+    public final String HIDE_TITLE_BAR;
+
+    // Update Settings
+    public final String AUTOMATIC_UPDATES;
+    public final String OVER_WIFI_OPTION;
+    public final String DOWNLOAD_UPDATES_AUTO;
+    public final String ALWAYS;
+    public final String NEVER;
+
+    // Restore Tabs Settings
+    public final String DONT_RESTORE_TABS;
+    public final String ALWAYS_RESTORE_TABS;
+    public final String DONT_RESTORE_QUIT;
+
     private StringHelper(final Resources res) {
 
         OK = res.getString(R.string.button_ok);
@@ -306,6 +360,10 @@ public class StringHelper {
 
         TITLE_PLACE_HOLDER = res.getString(R.string.url_bar_default_text);
 
+        // Import strings
+        IMPORT = res.getString(R.string.bookmarkhistory_button_import);
+        BOOKMARKS = res.getString(R.string.bookmark);
+
         // Settings menu strings
         // Section labels - ordered as found in the settings menu
         CUSTOMIZE_SECTION_LABEL = res.getString(R.string.pref_category_customize);
@@ -341,11 +399,30 @@ public class StringHelper {
         MANAGE_LOGINS_LABEL = res.getString(R.string.pref_manage_logins);
         MASTER_PASSWORD_LABEL = res.getString(R.string.pref_use_master_password);
         CLEAR_PRIVATE_DATA_LABEL = res.getString(R.string.pref_clear_private_data);
+        ENABLED_EXCLUDE_3RD_PARTY = res.getString(R.string.pref_cookies_not_accept_foreign);
+        BROWSING_HISTORY = res.getString(R.string.pref_private_data_history2);
+        SEARCH_HISTORY = res.getString(R.string.pref_private_data_searchHistory);
+        DOWNLOADS = res.getString(R.string.pref_private_data_downloadFiles2);
+        FORM_HISTORY = res.getString(R.string.pref_private_data_formdata2);
+        COOKIES_AND_LOGINS = res.getString(R.string.pref_private_data_cookies2);
+        CACHE = res.getString(R.string.pref_private_data_cache);
+        OFFLINE_DATA = res.getString(R.string.pref_private_data_offlineApps);
+        SITE_SETTINGS = res.getString(R.string.pref_private_data_siteSettings);
+        CLEAR_DATA_BUTTON = res.getString(R.string.button_clear_data);
 
         // Mozilla
         FAQS_LABEL = res.getString(R.string.pref_vendor_faqs);
         FEEDBACK_LABEL = res.getString(R.string.pref_vendor_feedback);
+        DATA_CHOICES = res.getString(R.string.pref_category_datareporting);
         MY_HEALTH_REPORT_LABEL = res.getString(R.string.datareporting_abouthr_title);
+        HEALTH_REPORT_EXPLANATION = res.getString(R.string.datareporting_fhr_summary2);
+        MOZ_LOCATION = res.getString(R.string.datareporting_wifi_title);
+        MOZ_LOCATION_MSG = res.getString(R.string.datareporting_wifi_geolocation_summary);
+        LEARN_MORE = res.getString(R.string.pref_learn_more);
+        CRASH_REPORTER = res.getString(R.string.datareporting_crashreporter_title_short);
+        CRASH_REPORTER_MSG = res.getString(R.string.datareporting_crashreporter_summary);
+        TELEMETRY = res.getString(R.string.datareporting_telemetry_title);
+        TELEMETRY_MSG = res.getString(R.string.datareporting_telemetry_summary);
 
         // Developer tools
         REMOTE_DEBUGGING_USB_LABEL = res.getString(R.string.pref_developer_remotedebugging_usb);
@@ -403,6 +480,37 @@ public class StringHelper {
         GEO_ALLOW = res.getString(R.string.share);
 
         POPUP_ALLOW = res.getString(R.string.pref_panels_show);
+
+        // Home Settings
+        PANELS = res.getString(R.string.pref_category_home_panels);
+        CUSTOMIZE_HOME = res.getString(R.string.pref_category_home);
+        ENABLED = res.getString(R.string.pref_home_updates_enabled);
+        HISTORY = res.getString(R.string.home_history_title);
+
+        // Search Settings
+        SEARCH_TITLE = res.getString(R.string.search);
+        SEARCH_SUGGESTIONS = res.getString(R.string.pref_search_suggestions);
+        SEARCH_INSTALLED = res.getString(R.string.pref_category_installed_search_engines);
+
+        // Advanced Settings
+        ADVANCED = res.getString(R.string.pref_category_advanced);
+        DONT_SHOW_MENU = res.getString(R.string.pref_char_encoding_off);
+        SHOW_MENU = res.getString(R.string.pref_char_encoding_on);
+        DISABLED = res.getString(R.string.pref_plugins_disabled );
+        TAP_TO_PLAY = res.getString(R.string.pref_plugins_tap_to_play);
+        HIDE_TITLE_BAR = res.getString(R.string.pref_scroll_title_bar_summary );
+
+        // Update Settings
+        AUTOMATIC_UPDATES = res.getString(R.string.pref_home_updates);
+        OVER_WIFI_OPTION = res.getString(R.string.pref_update_autodownload_wifi);
+        DOWNLOAD_UPDATES_AUTO = res.getString(R.string.pref_update_autodownload);
+        ALWAYS = res.getString(R.string.pref_update_autodownload_enabled);
+        NEVER = res.getString(R.string.pref_update_autodownload_disabled);
+
+        // Restore Tabs Settings
+        DONT_RESTORE_TABS = res.getString(R.string.pref_restore_quit);
+        ALWAYS_RESTORE_TABS = res.getString(R.string.pref_restore_always);
+        DONT_RESTORE_QUIT = res.getString(R.string.pref_restore_quit);
     }
 
     public static void initialize(Resources res) {

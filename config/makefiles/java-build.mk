@@ -16,15 +16,19 @@ endif #} JAVAFILES
 
 
 ifdef ANDROID_APK_NAME #{
+$(if $(ANDROID_APK_PACKAGE),,$(error Missing ANDROID_APK_PACKAGE with ANDROID_APK_NAME))
+
 android_res_dirs := $(or $(ANDROID_RES_DIRS),$(srcdir)/res)
 _ANDROID_RES_FLAG := $(addprefix -S ,$(android_res_dirs))
 _ANDROID_ASSETS_FLAG := $(if $(ANDROID_ASSETS_DIRS),$(addprefix -A ,$(ANDROID_ASSETS_DIRS)))
 android_manifest := $(or $(ANDROID_MANIFEST_FILE),AndroidManifest.xml)
 
-GENERATED_DIRS += classes
+GENERATED_DIRS += classes generated
+
+generated_r_java := generated/$(subst .,/,$(ANDROID_APK_PACKAGE))/R.java
 
 classes.dex: $(call mkdir_deps,classes)
-classes.dex: R.java
+classes.dex: $(generated_r_java)
 classes.dex: $(ANDROID_APK_NAME).ap_
 classes.dex: $(ANDROID_EXTRA_JARS)
 classes.dex: $(JAVAFILES)
@@ -38,17 +42,35 @@ classes.dex: $(JAVAFILES)
 # all causes Make to treat the target differently, in a way that
 # defeats our dependencies.
 
-R.java: .aapt.deps ;
+$(generated_r_java): .aapt.deps ;
 $(ANDROID_APK_NAME).ap_: .aapt.deps ;
 
 # This uses the fact that Android resource directories list all
 # resource files one subdirectory below the parent resource directory.
 android_res_files := $(wildcard $(addsuffix /*,$(wildcard $(addsuffix /*,$(android_res_dirs)))))
 
+# An extra package like org.example.app generates dependencies like:
+# generated/org/example/app/R.java: .aapt.deps ;
+# classes.dex: generated/org/example/app/R.java
+# GARBAGE: generated/org/example/app/R.java
+$(foreach extra_package,$(ANDROID_EXTRA_PACKAGES), \
+  $(eval generated/$(subst .,/,$(extra_package))/R.java: .aapt.deps ;) \
+  $(eval classes.dex: generated/$(subst .,/,$(extra_package))/R.java) \
+  $(eval GARBAGE: generated/$(subst .,/,$(extra_package))/R.java) \
+)
+
+# aapt flag -m: 'make package directories under location specified by -J'.
+# The --extra-package list is colon separated.
 .aapt.deps: $(android_manifest) $(android_res_files) $(wildcard $(ANDROID_ASSETS_DIRS))
 	@$(TOUCH) $@
 	$(AAPT) package -f -M $< -I $(ANDROID_SDK)/android.jar $(_ANDROID_RES_FLAG) $(_ANDROID_ASSETS_FLAG) \
-		-J ${@D} \
+		--custom-package $(ANDROID_APK_PACKAGE) \
+		--non-constant-id \
+		--auto-add-overlay \
+		$(if $(ANDROID_EXTRA_PACKAGES),--extra-packages $(subst $(NULL) ,:,$(strip $(ANDROID_EXTRA_PACKAGES)))) \
+		$(if $(ANDROID_EXTRA_RES_DIRS),$(addprefix -S ,$(ANDROID_EXTRA_RES_DIRS))) \
+		-m \
+		-J ${@D}/generated \
 		-F $(ANDROID_APK_NAME).ap_
 
 $(ANDROID_APK_NAME)-unsigned-unaligned.apk: $(ANDROID_APK_NAME).ap_ classes.dex
@@ -60,10 +82,10 @@ $(ANDROID_APK_NAME)-unaligned.apk: $(ANDROID_APK_NAME)-unsigned-unaligned.apk
 	$(DEBUG_JARSIGNER) $@
 
 $(ANDROID_APK_NAME).apk: $(ANDROID_APK_NAME)-unaligned.apk
-	$(ZIPALIGN) -f -v 4 $< $@
+	$(ZIPALIGN) -f 4 $< $@
 
 GARBAGE += \
-  R.java \
+  $(generated_r_java) \
   classes.dex  \
   $(ANDROID_APK_NAME).ap_ \
   $(ANDROID_APK_NAME)-unsigned-unaligned.apk \

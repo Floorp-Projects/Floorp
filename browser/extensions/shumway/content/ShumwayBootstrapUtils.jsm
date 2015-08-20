@@ -69,11 +69,20 @@ Factory.prototype = {
     var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
     registrar.registerFactory(proto.classID, proto.classDescription,
       proto.contractID, factory);
+
+    if (proto.classID2) {
+      this._classID2 = proto.classID2;
+      registrar.registerFactory(proto.classID2, proto.classDescription,
+                                proto.contractID2, factory);
+    }
   },
 
   unregister: function unregister() {
     var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
     registrar.unregisterFactory(this._classID, this._factory);
+    if (this._classID2) {
+      registrar.unregisterFactory(this._classID2, this._factory);
+    }
   }
 };
 
@@ -128,25 +137,6 @@ var ShumwayBootstrapUtils = {
       let converterFactory = new Factory();
       converterFactory.register(ShumwayStreamConverter);
       this.converterFactory = converterFactory;
-      let overlayConverterFactory = new Factory();
-      overlayConverterFactory.register(ShumwayStreamOverlayConverter);
-      this.overlayConverterFactory = overlayConverterFactory;
-
-      let registerOverlayPreview = 'registerPlayPreviewMimeType' in Ph;
-      if (registerOverlayPreview) {
-        var ignoreCTP = getBoolPref(PREF_IGNORE_CTP, true);
-        var whitelist = getStringPref(PREF_WHITELIST);
-        // Some platforms cannot support video playback, and our whitelist targets
-        // only video players atm. We need to disable Shumway for those platforms.
-        if (whitelist && !Services.prefs.prefHasUserValue(PREF_WHITELIST) && !allowedPlatformForMedia()) {
-          log('Default SWF whitelist is used on an unsupported platform -- ' +
-          'using demo whitelist.');
-          whitelist = 'http://www.areweflashyet.com/*.swf';
-        }
-        Ph.registerPlayPreviewMimeType(SWF_CONTENT_TYPE, ignoreCTP,
-          undefined, whitelist);
-      }
-      this.registerOverlayPreview = registerOverlayPreview;
     }
   },
 
@@ -163,12 +153,6 @@ var ShumwayBootstrapUtils = {
     } else {
       this.converterFactory.unregister();
       this.converterFactory = null;
-      this.overlayConverterFactory.unregister();
-      this.overlayConverterFactory = null;
-
-      if (this.registerOverlayPreview) {
-        Ph.unregisterPlayPreviewMimeType(SWF_CONTENT_TYPE);
-      }
     }
   }
 };
