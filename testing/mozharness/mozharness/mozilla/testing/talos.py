@@ -522,15 +522,18 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
         talos from its source, we have to wrap that method here."""
         # XXX This method could likely be replaced with a PreScriptAction hook.
         if self.has_cloned_talos:
+            # require pip >= 1.5 so pip will prefer .whl files to install
+            super(Talos, self).create_virtualenv(
+                modules=['mozinstall', 'pip>=1.5']
+            )
             # talos in harness requires mozinstall and what is
             # listed in talos requirements.txt file.
-            return super(Talos, self).create_virtualenv(
-                modules=['mozinstall'],
+            self.install_module(
                 requirements=[os.path.join(self.talos_path,
                                            'requirements.txt')]
             )
         else:
-            return super(Talos, self).create_virtualenv(**kwargs)
+            super(Talos, self).create_virtualenv(**kwargs)
 
     def postflight_create_virtualenv(self):
         """ This belongs in download_and_install() but requires the
