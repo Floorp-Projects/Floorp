@@ -82,7 +82,7 @@ let StorageUI = this.StorageUI = function StorageUI(front, target, panelWin) {
 
   this.front.listStores().then(storageTypes => {
     this.populateStorageTree(storageTypes);
-  }).then(null, Cu.reportError);
+  }).then(null, console.error);
 
   this.onUpdate = this.onUpdate.bind(this);
   this.front.on("stores-update", this.onUpdate);
@@ -305,6 +305,10 @@ StorageUI.prototype = {
   populateStorageTree: function(storageTypes) {
     this.storageTypes = {};
     for (let type in storageTypes) {
+      if (type === "from") {
+        continue;
+      }
+
       let typeLabel = L10N.getStr("tree.labels." + type);
       this.tree.add([{id: type, label: typeLabel, type: "store"}]);
       if (storageTypes[type].hosts) {
