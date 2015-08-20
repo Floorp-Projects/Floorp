@@ -292,6 +292,8 @@ WMFVideoMFTManager::Input(MediaRawData* aSample)
                                            &mLastInput);
   NS_ENSURE_TRUE(SUCCEEDED(hr) && mLastInput != nullptr, hr);
 
+  mLastDuration = aSample->mDuration;
+
   // Forward sample data to the decoder.
   return mDecoder->Input(mLastInput);
 }
@@ -315,7 +317,11 @@ WMFVideoMFTManager::MaybeToggleDXVA(IMFMediaType* aType)
     return false;
   }
 
-  if (mDXVA2Manager->SupportsConfig(aType)) {
+  // Assume the current samples duration is representative for the
+  // entire video.
+  float framerate = 1000000.0 / mLastDuration;
+
+  if (mDXVA2Manager->SupportsConfig(aType, framerate)) {
     if (!mUseHwAccel) {
       // DXVA disabled, but supported for this resolution
       ULONG_PTR manager = ULONG_PTR(mDXVA2Manager->GetDXVADeviceManager());
