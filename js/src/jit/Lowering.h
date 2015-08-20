@@ -50,7 +50,6 @@ class LIRGenerator : public LIRGeneratorSpecific
 
     void useBoxAtStart(LInstruction* lir, size_t n, MDefinition* mir,
                        LUse::Policy policy = LUse::REGISTER);
-    void useBoxFixedAtStart(LInstruction* lir, size_t n, MDefinition* mir, ValueOperand op);
 
     void lowerBitOp(JSOp op, MInstruction* ins);
     void lowerShiftOp(JSOp op, MShiftInstruction* ins);
@@ -161,8 +160,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitRegExpTest(MRegExpTest* ins);
     void visitRegExpReplace(MRegExpReplace* ins);
     void visitStringReplace(MStringReplace* ins);
-    void visitBinarySharedStub(MBinarySharedStub* ins);
-    void visitUnarySharedStub(MUnarySharedStub* ins);
     void visitLambda(MLambda* ins);
     void visitLambdaArrow(MLambdaArrow* ins);
     void visitKeepAliveObject(MKeepAliveObject* ins);

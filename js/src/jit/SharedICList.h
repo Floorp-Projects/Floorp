@@ -11,15 +11,7 @@ namespace js {
 namespace jit {
 
 // List of IC stub kinds that can run in Baseline and in IonMonkey
-#define IC_SHARED_STUB_KIND_LIST(_)              \
-    _(BinaryArith_Fallback)                      \
-    _(BinaryArith_Int32)                         \
-    _(BinaryArith_Double)                        \
-    _(BinaryArith_StringConcat)                  \
-    _(BinaryArith_StringObjectConcat)            \
-    _(BinaryArith_BooleanWithInt32)              \
-    _(BinaryArith_DoubleWithInt32)               \
-                                                 \
+#define IC_SHARED_STUB_KIND_LIST(_)
 
 } // namespace jit
 } // namespace js

@@ -252,12 +252,12 @@ class LUse : public LAllocation
     explicit LUse(FloatRegister reg, bool usedAtStart = false) {
         set(FIXED, reg.code(), usedAtStart);
     }
-    LUse(Register reg, uint32_t virtualRegister, bool usedAtStart = false) {
-        set(FIXED, reg.code(), usedAtStart);
+    LUse(Register reg, uint32_t virtualRegister) {
+        set(FIXED, reg.code(), false);
         setVirtualRegister(virtualRegister);
     }
-    LUse(FloatRegister reg, uint32_t virtualRegister, bool usedAtStart = false) {
-        set(FIXED, reg.code(), usedAtStart);
+    LUse(FloatRegister reg, uint32_t virtualRegister) {
+        set(FIXED, reg.code(), false);
         setVirtualRegister(virtualRegister);
     }
 
