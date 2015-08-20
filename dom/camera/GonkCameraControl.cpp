@@ -139,19 +139,13 @@ nsGonkCameraControl::StartInternal(const Configuration* aInitialConfig)
     case NS_ERROR_ALREADY_INITIALIZED:
     case NS_OK:
       break;
-
+    
     default:
       return rv;
   }
 
   if (aInitialConfig) {
-    Configuration config;
-    rv = ValidateConfiguration(*aInitialConfig, config);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = SetConfigurationInternal(config);
+    rv = SetConfigurationInternal(*aInitialConfig);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       // The initial configuration failed, close up the hardware
       StopInternal();
@@ -189,8 +183,6 @@ nsGonkCameraControl::Initialize()
 
   DOM_CAMERA_LOGI("Initializing camera %d (this=%p, mCameraHw=%p)\n", mCameraId, this, mCameraHw.get());
   mCurrentConfiguration.mRecorderProfile.Truncate();
-  mRequestedPreviewSize.width = UINT32_MAX;
-  mRequestedPreviewSize.height = UINT32_MAX;
 
   // Initialize our camera configuration database.
   mCameraHw->PullParameters(mParams);
@@ -286,7 +278,7 @@ nsGonkCameraControl::Initialize()
     DOM_CAMERA_LOGI(" - metering mode:                 '%s'\n",
       NS_ConvertUTF16toUTF8(mode).get());
   }
-
+      
   return NS_OK;
 }
 
@@ -329,19 +321,9 @@ nsGonkCameraControl::ValidateConfiguration(const Configuration& aConfig, Configu
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (mCurrentConfiguration.mMode == aConfig.mMode &&
-      mRequestedPreviewSize.width == aConfig.mPreviewSize.width &&
-      mRequestedPreviewSize.height == aConfig.mPreviewSize.height &&
-      mCurrentConfiguration.mRecorderProfile.Equals(profile->GetName()))
-  {
-    DOM_CAMERA_LOGI("Camera configuration is unchanged\n");
-    return NS_ERROR_ALREADY_INITIALIZED;
-  }
-
   aValidatedConfig.mMode = aConfig.mMode;
   aValidatedConfig.mPreviewSize = aConfig.mPreviewSize;
   aValidatedConfig.mRecorderProfile = profile->GetName();
-  mRequestedPreviewSize = aConfig.mPreviewSize;
   return NS_OK;
 }
 
@@ -350,46 +332,53 @@ nsGonkCameraControl::SetConfigurationInternal(const Configuration& aConfig)
 {
   DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
 
-  ICameraControlParameterSetAutoEnter set(this);
-
-  nsresult rv;
-  switch (aConfig.mMode) {
-    case kPictureMode:
-      rv = SetPictureConfiguration(aConfig);
-      break;
-
-    case kVideoMode:
-      rv = SetVideoConfiguration(aConfig);
-      break;
-
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unanticipated camera mode in SetConfigurationInternal()");
-      rv = NS_ERROR_FAILURE;
-      break;
-  }
-
-  DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
+  // Ensure sanity of all provided parameters and determine defaults if
+  // none are provided when given a new configuration
+  Configuration config;
+  nsresult rv = ValidateConfiguration(aConfig, config);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    mRequestedPreviewSize.width = UINT32_MAX;
-    mRequestedPreviewSize.height = UINT32_MAX;
     return rv;
   }
 
-  rv = Set(CAMERA_PARAM_RECORDINGHINT, aConfig.mMode == kVideoMode);
-  if (NS_FAILED(rv)) {
-    DOM_CAMERA_LOGE("Failed to set recording hint (0x%x)\n", rv);
-  }
+  {
+    ICameraControlParameterSetAutoEnter set(this);
 
-  mCurrentConfiguration.mMode = aConfig.mMode;
-  mCurrentConfiguration.mRecorderProfile = aConfig.mRecorderProfile;
+    switch (config.mMode) {
+      case kPictureMode:
+        rv = SetPictureConfiguration(config);
+        break;
 
-  if (aConfig.mMode == kPictureMode) {
-    mCurrentConfiguration.mPictureSize = aConfig.mPictureSize;
-  } else /* if config.mMode == kVideoMode */ {
-    // The following is best-effort; we don't currently support taking
-    // pictures while in video mode, but we should at least return
-    // sane values to OnConfigurationChange() handlers...
-    SetPictureSizeImpl(aConfig.mPictureSize);
+      case kVideoMode:
+        rv = SetVideoConfiguration(config);
+        break;
+
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unanticipated camera mode in SetConfigurationInternal()");
+        rv = NS_ERROR_FAILURE;
+        break;
+    }
+
+    DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = Set(CAMERA_PARAM_RECORDINGHINT, config.mMode == kVideoMode);
+    if (NS_FAILED(rv)) {
+      DOM_CAMERA_LOGE("Failed to set recording hint (0x%x)\n", rv);
+    }
+
+    mCurrentConfiguration.mMode = config.mMode;
+    mCurrentConfiguration.mRecorderProfile = config.mRecorderProfile;
+    
+    if (config.mMode == kPictureMode) {
+      mCurrentConfiguration.mPictureSize = config.mPictureSize;
+    } else /* if config.mMode == kVideoMode */ {
+      // The following is best-effort; we don't currently support taking
+      // pictures while in video mode, but we should at least return
+      // sane values to OnConfigurationChange() handlers...
+      SetPictureSizeImpl(config.mPictureSize);
+    }
   }
   return NS_OK;
 }
@@ -405,19 +394,8 @@ nsGonkCameraControl::SetConfigurationImpl(const Configuration& aConfig)
     return NS_ERROR_INVALID_ARG;
   }
 
-  Configuration config;
-  nsresult rv = ValidateConfiguration(aConfig, config);
-  if (rv == NS_ERROR_ALREADY_INITIALIZED) {
-    // Configuration did not change, so no need to stop/start the preview
-    // or push parameters to the camera hardware
-    OnConfigurationChange();
-    return NS_OK;
-  } else if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
   // Stop any currently running preview
-  rv = PausePreview();
+  nsresult rv = PausePreview();
   if (NS_FAILED(rv)) {
     DOM_CAMERA_LOGW("PausePreview() in SetConfigurationImpl() failed (0x%x)\n", rv);
     if (rv == NS_ERROR_NOT_INITIALIZED) {
@@ -428,7 +406,7 @@ nsGonkCameraControl::SetConfigurationImpl(const Configuration& aConfig)
   }
 
   DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
-  rv = SetConfigurationInternal(config);
+  rv = SetConfigurationInternal(aConfig);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     StopPreviewImpl();
     return rv;
