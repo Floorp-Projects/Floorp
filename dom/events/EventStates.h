@@ -262,8 +262,6 @@ private:
 #define NS_EVENT_STATE_LTR NS_DEFINE_EVENT_STATE_MACRO(42)
 // Element is rtl (for :dir pseudo-class)
 #define NS_EVENT_STATE_RTL NS_DEFINE_EVENT_STATE_MACRO(43)
-// Handler for play preview plugin
-#define NS_EVENT_STATE_TYPE_PLAY_PREVIEW NS_DEFINE_EVENT_STATE_MACRO(44)
 // Element is highlighted (devtools inspector)
 #define NS_EVENT_STATE_DEVTOOLS_HIGHLIGHTED NS_DEFINE_EVENT_STATE_MACRO(45)
 // Element is an unresolved custom element candidate
