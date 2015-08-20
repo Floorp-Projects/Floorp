@@ -349,7 +349,21 @@ add_task(function test_2() {
 });
 '''
 
+LOAD_MOZINFO = '''
+function run_test() {
+  do_check_neq(typeof mozinfo, undefined);
+  do_check_neq(typeof mozinfo.os, undefined);
+}
+'''
 
+CHILD_MOZINFO = '''
+function run_test () { run_next_test(); }
+
+add_test(function test_child_mozinfo () {
+  run_test_in_child("test_mozinfo.js");
+  run_next_test();
+});
+'''
 class XPCShellTestsTests(unittest.TestCase):
     """
     Yes, these are unit tests for a unit test harness.
@@ -1200,6 +1214,35 @@ add_test({
         self.assertEquals(1, self.x.testCount)
         self.assertEquals(1, self.x.passCount)
         self.assertEquals(0, self.x.failCount)
+        self.assertInLog(TEST_PASS_STRING)
+        self.assertNotInLog(TEST_FAIL_STRING)
+
+    def testMozinfo(self):
+        """
+        Check that mozinfo.json is loaded
+        """
+        self.writeFile("test_mozinfo.js", LOAD_MOZINFO)
+        self.writeManifest(["test_mozinfo.js"])
+        self.assertTestResult(True)
+        self.assertEquals(1, self.x.testCount)
+        self.assertEquals(1, self.x.passCount)
+        self.assertEquals(0, self.x.failCount)
+        self.assertEquals(0, self.x.todoCount)
+        self.assertInLog(TEST_PASS_STRING)
+        self.assertNotInLog(TEST_FAIL_STRING)
+
+    def testChildMozinfo(self):
+        """
+        Check that mozinfo.json is loaded in child process
+        """
+        self.writeFile("test_mozinfo.js", LOAD_MOZINFO)
+        self.writeFile("test_child_mozinfo.js", CHILD_MOZINFO)
+        self.writeManifest(["test_child_mozinfo.js"])
+        self.assertTestResult(True)
+        self.assertEquals(1, self.x.testCount)
+        self.assertEquals(1, self.x.passCount)
+        self.assertEquals(0, self.x.failCount)
+        self.assertEquals(0, self.x.todoCount)
         self.assertInLog(TEST_PASS_STRING)
         self.assertNotInLog(TEST_FAIL_STRING)
 
