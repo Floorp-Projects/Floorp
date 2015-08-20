@@ -36,7 +36,6 @@ let WebappRT = {
     pref("toolkit.telemetry.prompted", 999),
     pref("toolkit.telemetry.notifiedOptOut", 999),
     pref("media.useAudioChannelAPI", true),
-    pref("media.useAudioChannelService", true),
     pref("dom.mozTCPSocket.enabled", true),
 
     // Enabled system messages for web activity support

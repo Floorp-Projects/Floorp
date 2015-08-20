@@ -1682,6 +1682,58 @@ CodeGenerator::visitStringReplace(LStringReplace* lir)
     callVM(StringReplaceInfo, lir);
 }
 
+void
+CodeGenerator::emitSharedStub(ICStub::Kind kind, LInstruction* lir)
+{
+    JSScript* script = lir->mirRaw()->block()->info().script();
+    jsbytecode* pc = lir->mirRaw()->toInstruction()->resumePoint()->pc();
+
+    // Create descriptor signifying end of Ion frame.
+    uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), JitFrame_IonJS);
+    masm.Push(Imm32(descriptor));
+
+    // Call into the stubcode.
+    CodeOffsetLabel patchOffset;
+    IonICEntry entry(script->pcToOffset(pc), ICEntry::Kind_Op, script);
+    EmitCallIC(&patchOffset, masm);
+    entry.setReturnOffset(CodeOffsetLabel(masm.currentOffset()));
+
+    SharedStub sharedStub(kind, entry, patchOffset);
+    masm.propagateOOM(sharedStubs_.append(sharedStub));
+
+    // Fix up upon return.
+    uint32_t callOffset = masm.currentOffset();
+    masm.freeStack(sizeof(intptr_t));
+    markSafepointAt(callOffset, lir);
+}
+
+void
+CodeGenerator::visitBinarySharedStub(LBinarySharedStub* lir)
+{
+    JSOp jsop = JSOp(*lir->mir()->resumePoint()->pc());
+    switch (jsop) {
+      case JSOP_ADD:
+      case JSOP_SUB:
+      case JSOP_MUL:
+      case JSOP_DIV:
+      case JSOP_MOD:
+        emitSharedStub(ICStub::Kind::BinaryArith_Fallback, lir);
+        break;
+      default:
+        MOZ_CRASH("Unsupported jsop in shared stubs.");
+    }
+}
+
+void
+CodeGenerator::visitUnarySharedStub(LUnarySharedStub* lir)
+{
+    JSOp jsop = JSOp(*lir->mir()->resumePoint()->pc());
+    switch (jsop) {
+      default:
+        MOZ_CRASH("Unsupported jsop in shared stubs.");
+    }
+}
+
 typedef JSObject* (*LambdaFn)(JSContext*, HandleFunction, HandleObject);
 static const VMFunction LambdaInfo = FunctionInfo<LambdaFn>(js::Lambda);
 
@@ -3127,14 +3179,20 @@ CodeGenerator::visitCallKnown(LCallKnown* call)
 
     // Native single targets are handled by LCallNative.
     MOZ_ASSERT(!target->isNative());
-    MOZ_ASSERT_IF(target->isClassConstructor(), call->isConstructing());
     // Missing arguments must have been explicitly appended by the IonBuilder.
     DebugOnly<unsigned> numNonArgsOnStack = 1 + call->isConstructing();
     MOZ_ASSERT(target->nargs() <= call->mir()->numStackArgs() - numNonArgsOnStack);
 
-    MOZ_ASSERT_IF(call->mir()->isConstructing(), target->isConstructor());
+    MOZ_ASSERT_IF(call->isConstructing(), target->isConstructor());
 
     masm.checkStackAlignment();
+
+    if (target->isClassConstructor() && !call->isConstructing()) {
+        emitCallInvokeFunction(call, calleereg, call->isConstructing(), call->numActualArgs(), unusedStack);
+        return;
+    }
+
+    MOZ_ASSERT_IF(target->isClassConstructor(), call->isConstructing());
 
     // The calleereg is known to be a non-native function, but might point to
     // a LazyScript instead of a JSScript.
@@ -7800,6 +7858,30 @@ struct AutoDiscardIonCode
 };
 
 bool
+CodeGenerator::linkSharedStubs(JSContext* cx)
+{
+    for (uint32_t i = 0; i < sharedStubs_.length(); i++) {
+        ICStub *stub = nullptr;
+
+        switch (sharedStubs_[i].kind) {
+          case ICStub::Kind::BinaryArith_Fallback: {
+            ICBinaryArith_Fallback::Compiler stubCompiler(cx, ICStubCompiler::Engine::IonMonkey);
+            stub = stubCompiler.getStub(&stubSpace_);
+            break;
+          }
+          default:
+            MOZ_CRASH("Unsupported shared stub.");
+        }
+
+        if (!stub)
+            return false;
+
+        sharedStubs_[i].entry.setFirstStub(stub);
+    }
+    return true;
+}
+
+bool
 CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
 {
     RootedScript script(cx, gen->info().script());
@@ -7822,6 +7904,9 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
     }
 
     if (scriptCounts_ && !script->hasScriptCounts() && !script->initScriptCounts(cx))
+        return false;
+
+    if (!linkSharedStubs(cx))
         return false;
 
     // Check to make sure we didn't have a mid-build invalidation. If so, we
@@ -7855,7 +7940,8 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
                      recovers_.size(), bailouts_.length(), graph.numConstants(),
                      safepointIndices_.length(), osiIndices_.length(),
                      cacheList_.length(), runtimeData_.length(),
-                     safepoints_.size(), patchableBackedges_.length(), optimizationLevel);
+                     safepoints_.size(), patchableBackedges_.length(),
+                     sharedStubs_.length(), optimizationLevel);
     if (!ionScript)
         return false;
     discardIonCode.ionScript = ionScript;
@@ -7949,6 +8035,9 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
 
     script->setIonScript(cx, ionScript);
 
+    // Adopt fallback shared stubs from the compiler into the ion script.
+    ionScript->adoptFallbackStubs(&stubSpace_);
+
     {
         AutoWritableJitCode awjc(code);
         invalidateEpilogueData_.fixup(&masm);
@@ -7985,6 +8074,23 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
             }
         }
 #endif
+        // Patch shared stub IC loads using IC entries
+        for (size_t i = 0; i < sharedStubs_.length(); i++) {
+            CodeOffsetLabel label = sharedStubs_[i].label;
+            label.fixup(&masm);
+
+            IonICEntry& entry = ionScript->sharedStubList()[i];
+            entry = sharedStubs_[i].entry;
+            entry.fixupReturnOffset(masm);
+            Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, label),
+                                               ImmPtr(&entry),
+                                               ImmPtr((void*)-1));
+
+            MOZ_ASSERT(entry.hasStub());
+            MOZ_ASSERT(entry.firstStub()->isFallback());
+
+            entry.firstStub()->toFallbackStub()->fixupICEntry(&entry);
+        }
     }
 
     JitSpew(JitSpew_Codegen, "Created IonScript %p (raw %p)",

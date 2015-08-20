@@ -49,12 +49,12 @@ class CentOSBootstrapper(BaseBootstrapper):
         ]
 
     def install_system_packages(self):
-        self.yum_groupinstall(*self.group_packages)
-        self.yum_install(*self.packages)
+        self.dnf_groupinstall(*self.group_packages)
+        self.dnf_install(*self.packages)
 
     def install_browser_packages(self):
-        self.yum_groupinstall(*self.browser_group_packages)
-        self.yum_install(*self.browser_packages)
+        self.dnf_groupinstall(*self.browser_group_packages)
+        self.dnf_install(*self.browser_packages)
 
         kern = platform.uname()
         yasm = 'http://pkgs.repoforge.org/yasm/yasm-1.1.0-1.el6.rf.i686.rpm'
@@ -64,4 +64,4 @@ class CentOSBootstrapper(BaseBootstrapper):
         self.run_as_root(['rpm', '-ivh', yasm])
 
     def upgrade_mercurial(self, current):
-        self.yum_update('mercurial')
+        self.dnf_update('mercurial')
