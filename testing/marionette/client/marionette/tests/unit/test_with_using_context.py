@@ -14,13 +14,13 @@ class TestSetContext(MarionetteTestCase):
         self.chrome = self.marionette.CONTEXT_CHROME
         self.content = self.marionette.CONTEXT_CONTENT
 
-        test_url = self.marionette.absolute_url('empty.html')
+        test_url = self.marionette.absolute_url("empty.html")
         self.marionette.navigate(test_url)
         self.marionette.set_context(self.content)
         self.assertEquals(self.get_context(), self.content)
 
     def get_context(self):
-        return self.marionette._send_message('getContext', 'value')
+        return self.marionette._send_message("getContext", key="value")
 
     def test_set_different_context_using_with_block(self):
         with self.marionette.using_context(self.chrome):

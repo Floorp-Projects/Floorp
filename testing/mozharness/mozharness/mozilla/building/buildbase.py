@@ -1405,10 +1405,11 @@ or run without that action (ie: --no-{action})"
                     templates.extend(contents['l10n'])
             else:
                 templates = contents['routes']
+        index = self.config.get('taskcluster_index', 'index.garbage.staging')
         routes = []
         for template in templates:
             fmt = {
-                'index': 'index.garbage.staging.mshal-testing', # TODO
+                'index': index,
                 'project': self.buildbot_config['properties']['branch'],
                 'head_rev': self.query_revision(),
                 'build_product': self.config['stage_product'],
@@ -1427,7 +1428,6 @@ or run without that action (ie: --no-{action})"
                          self.log_obj,
                          )
 
-        index = self.config.get('taskcluster_index', 'index.garbage.staging')
         # TODO: Bug 1165980 - these should be in tree
         routes.extend([
             "%s.buildbot.branches.%s.%s" % (index, self.branch, self.stage_platform),
