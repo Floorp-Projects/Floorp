@@ -87,6 +87,17 @@ KeyframeEffectReadOnly::SetParentTime(Nullable<TimeDuration> aParentTime)
   mParentTime = aParentTime;
 }
 
+void
+KeyframeEffectReadOnly::SetTiming(const AnimationTiming& aTiming,
+                                  Animation& aOwningAnimation)
+{
+  if (mTiming == aTiming) {
+    return;
+  }
+  mTiming = aTiming;
+  aOwningAnimation.NotifyEffectTimingUpdated();
+}
+
 ComputedTiming
 KeyframeEffectReadOnly::GetComputedTimingAt(
                           const Nullable<TimeDuration>& aLocalTime,

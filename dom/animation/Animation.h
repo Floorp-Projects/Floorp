@@ -297,6 +297,9 @@ public:
   void ComposeStyle(nsRefPtr<AnimValuesStyleRule>& aStyleRule,
                     nsCSSPropertySet& aSetProperties,
                     bool& aNeedsRefreshes);
+
+  void NotifyEffectTimingUpdated();
+
 protected:
   void SilentlySetCurrentTime(const TimeDuration& aNewCurrentTime);
   void SilentlySetPlaybackRate(double aPlaybackRate);

@@ -287,7 +287,7 @@ class Graph(object):
 
         # Template parameters used when expanding the graph
         parameters = dict(gaia_info().items() + {
-            'index': 'index.garbage.staging.mshal-testing', #TODO
+            'index': 'index',
             'project': project,
             'pushlog_id': params.get('pushlog_id', 0),
             'docker_image': docker_image,

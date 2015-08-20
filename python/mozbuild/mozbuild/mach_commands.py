@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
+import itertools
 import json
 import logging
 import operator
@@ -125,21 +126,17 @@ class BuildProgressFooter(object):
         # terminal is a blessings.Terminal.
         self._t = terminal
         self._fh = sys.stdout
-        self._monitor = monitor
-
-    def _clear_lines(self, n):
-        self._fh.write(self._t.move_x(0))
-        self._fh.write(self._t.clear_eos())
+        self.tiers = monitor.tiers.tier_status.viewitems()
 
     def clear(self):
         """Removes the footer from the current terminal."""
-        self._clear_lines(1)
+        self._fh.write(self._t.move_x(0))
+        self._fh.write(self._t.clear_eos())
 
     def draw(self):
         """Draws this footer in the terminal."""
-        tiers = self._monitor.tiers
 
-        if not tiers.tiers:
+        if not self.tiers:
             return
 
         # The drawn terminal looks something like:
@@ -148,15 +145,15 @@ class BuildProgressFooter(object):
         # This is a list of 2-tuples of (encoding function, input). None means
         # no encoding. For a full reason on why we do things this way, read the
         # big comment below.
-        parts = [('bold', 'TIER'), ':', ' ']
-
-        for tier, active, finished in tiers.tier_status():
-            if active:
-                parts.extend([('underline_yellow', tier), ' '])
-            elif finished:
-                parts.extend([('green', tier), ' '])
+        parts = [('bold', 'TIER:')]
+        append = parts.append
+        for tier, status in self.tiers:
+            if status is None:
+                append(tier)
+            elif status == 'finished':
+                append(('green', tier))
             else:
-                parts.extend([tier, ' '])
+                append(('underline_yellow', tier))
 
         # We don't want to write more characters than the current width of the
         # terminal otherwise wrapping may result in weird behavior. We can't
@@ -168,30 +165,25 @@ class BuildProgressFooter(object):
         written = 0
         write_pieces = []
         for part in parts:
-            if isinstance(part, tuple):
-                func, arg = part
+            try:
+                func, part = part
+                encoded = getattr(self._t, func)(part)
+            except ValueError:
+                encoded = part
 
-                if written + len(arg) > max_width:
-                    write_pieces.append(arg[0:max_width - written])
-                    written += len(arg)
-                    break
+            len_part = len(part)
+            len_spaces = len(write_pieces)
+            if written + len_part + len_spaces > max_width:
+                write_pieces.append(part[0:max_width - written - len_spaces])
+                written += len_part
+                break
 
-                encoded = getattr(self._t, func)(arg)
+            write_pieces.append(encoded)
+            written += len_part
 
-                write_pieces.append(encoded)
-                written += len(arg)
-            else:
-                if written + len(part) > max_width:
-                    write_pieces.append(part[0:max_width - written])
-                    written += len(part)
-                    break
-
-                write_pieces.append(part)
-                written += len(part)
         with self._t.location():
             self._t.move(self._t.height-1,0)
-            self._fh.write(''.join(write_pieces))
-        self._fh.flush()
+            self._fh.write(' '.join(write_pieces))
 
 
 class BuildOutputManager(LoggingMixin):
