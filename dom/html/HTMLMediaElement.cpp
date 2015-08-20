@@ -4006,7 +4006,15 @@ bool HTMLMediaElement::IsBeingDestroyed()
 void HTMLMediaElement::NotifyOwnerDocumentActivityChanged()
 {
   bool pauseElement = NotifyOwnerDocumentActivityChangedInternal();
-  if (pauseElement && mAudioChannelAgent) {
+  if (pauseElement && mAudioChannelAgent
+#ifdef PAUSE_MEDIA_ELEMENT_FROM_AUDIOCHANNEL
+      // On B2G, NotifyOwnerDocumentActivityChangedInternal may return true for
+      // two reasons: the document no longer being active, or the element being
+      // paused by the audio channel.  However we are only interested in the
+      // first case here, so we need to filter out the second case.
+      && !ComputedMuted()
+#endif
+      ) {
     // If the element is being paused since we are navigating away from the
     // document, notify the audio channel agent.
     // Be careful to ignore this event during a docshell frame swap.
