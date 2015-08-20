@@ -44,7 +44,7 @@ public:
 
   virtual ~DXVA2Manager();
 
-  virtual bool SupportsConfig(IMFMediaType* aType) { return true; }
+  virtual bool SupportsConfig(IMFMediaType* aType) = 0;
 
 protected:
   Mutex mLock;
