@@ -183,6 +183,14 @@ class Nursery
 
     void waitBackgroundFreeEnd();
 
+    bool addedUniqueIdToCell(gc::Cell* cell) {
+        if (!IsInsideNursery(cell) || !isEnabled())
+            return true;
+        MOZ_ASSERT(cellsWithUid_.initialized());
+        MOZ_ASSERT(!cellsWithUid_.has(cell));
+        return cellsWithUid_.put(cell);
+    }
+
     size_t sizeOfHeapCommitted() const {
         return numActiveChunks_ * gc::ChunkSize;
     }
@@ -266,6 +274,21 @@ class Nursery
     typedef HashMap<void*, void*, PointerHasher<void*, 1>, SystemAllocPolicy> ForwardedBufferMap;
     ForwardedBufferMap forwardedBuffers;
 
+    /*
+     * When we assign a unique id to cell in the nursery, that almost always
+     * means that the cell will be in a hash table, and thus, held live,
+     * automatically moving the uid from the nursery to its new home in
+     * tenured. It is possible, if rare, for an object that acquired a uid to
+     * be dead before the next collection, in which case we need to know to
+     * remove it when we sweep.
+     *
+     * Note: we store the pointers as Cell* here, resulting in an ugly cast in
+     *       sweep. This is because this structure is used to help implement
+     *       stable object hashing and we have to break the cycle somehow.
+     */
+    using CellsWithUniqueIdSet = HashSet<gc::Cell*, PointerHasher<gc::Cell*, 3>, SystemAllocPolicy>;
+    CellsWithUniqueIdSet cellsWithUid_;
+
     /* The maximum number of bytes allowed to reside in nursery buffers. */
     static const size_t MaxNurseryBufferSize = 1024;
 
@@ -287,10 +310,8 @@ class Nursery
     }
 
     MOZ_ALWAYS_INLINE void initChunk(int chunkno) {
-        NurseryChunkLayout& c = chunk(chunkno);
-        c.trailer.storeBuffer = JS::shadow::Runtime::asShadowRuntime(runtime())->gcStoreBufferPtr();
-        c.trailer.location = gc::ChunkLocationBitNursery;
-        c.trailer.runtime = runtime();
+        gc::StoreBuffer* sb = JS::shadow::Runtime::asShadowRuntime(runtime())->gcStoreBufferPtr();
+        new (&chunk(chunkno).trailer) gc::ChunkTrailer(runtime(), sb);
     }
 
     MOZ_ALWAYS_INLINE void setCurrentChunk(int chunkno) {
