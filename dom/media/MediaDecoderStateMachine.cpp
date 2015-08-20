@@ -2463,10 +2463,16 @@ MediaDecoderStateMachine::Reset()
   DecodeTaskQueue()->Dispatch(resetTask.forget());
 }
 
-void MediaDecoderStateMachine::CheckTurningOffHardwareDecoder(VideoData* aData)
+bool MediaDecoderStateMachine::CheckFrameValidity(VideoData* aData)
 {
   MOZ_ASSERT(OnTaskQueue());
   AssertCurrentThreadInMonitor();
+
+  // If we've sent this frame before then only return the valid state,
+  // don't update the statistics.
+  if (aData->mSentToCompositor) {
+    return !aData->mImage || aData->mImage->IsValid();
+  }
 
   // Update corrupt-frames statistics
   if (aData->mImage && !aData->mImage->IsValid()) {
@@ -2486,8 +2492,10 @@ void MediaDecoderStateMachine::CheckTurningOffHardwareDecoder(VideoData* aData)
       mDisabledHardwareAcceleration = true;
       gfxCriticalNote << "Too many dropped/corrupted frames, disabling DXVA";
     }
+    return false;
   } else {
     mCorruptFrames.insert(0);
+    return true;
   }
 }
 
@@ -2509,13 +2517,20 @@ void MediaDecoderStateMachine::RenderVideoFrames(int32_t aMaxFrames,
   TimeStamp lastFrameTime;
   for (uint32_t i = 0; i < frames.Length(); ++i) {
     VideoData* frame = frames[i]->As<VideoData>();
+
+    bool valid = CheckFrameValidity(frame);
     frame->mSentToCompositor = true;
+
+    if (!valid) {
+      continue;
+    }
 
     int64_t frameTime = frame->mTime;
     if (frameTime < 0) {
       // Frame times before the start time are invalid; drop such frames
       continue;
     }
+
 
     TimeStamp t;
     if (aMaxFrames > 1) {
@@ -2663,7 +2678,6 @@ void MediaDecoderStateMachine::UpdateRenderedVideoFrames()
         VERBOSE_LOG("discarding video frame mTime=%lld clock_time=%lld",
                     currentFrame->mTime, clockTime);
       }
-      CheckTurningOffHardwareDecoder(currentFrame->As<VideoData>());
       currentFrame = VideoQueue().PopFront();
 
     }

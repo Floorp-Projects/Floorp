@@ -493,7 +493,7 @@ protected:
   void UpdatePlaybackPositionInternal(int64_t aTime);
 
   // Decode monitor must be held.
-  void CheckTurningOffHardwareDecoder(VideoData* aData);
+  bool CheckFrameValidity(VideoData* aData);
 
   // Sets VideoQueue images into the VideoFrameContainer. Called on the shared
   // state machine thread. Decode monitor must be held. The first aMaxFrames
