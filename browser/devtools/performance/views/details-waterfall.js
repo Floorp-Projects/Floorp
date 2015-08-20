@@ -11,6 +11,9 @@ const MARKER_DETAILS_WIDTH = 200;
  */
 let WaterfallView = Heritage.extend(DetailsSubview, {
 
+  // Smallest unit of time between two markers. Larger by 10x^3 than Number.EPSILON.
+  MARKER_EPSILON: 0.000000000001,
+
   observedPrefs: [
     "hidden-markers"
   ],
@@ -32,6 +35,7 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
     this._onMarkerSelected = this._onMarkerSelected.bind(this);
     this._onResize = this._onResize.bind(this);
     this._onViewSource = this._onViewSource.bind(this);
+    this._onShowAllocations = this._onShowAllocations.bind(this);
     this._hiddenMarkers = PerformanceController.getPref("hidden-markers");
 
     this.headerContainer = $("#waterfall-header");
@@ -44,6 +48,7 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
 
     this.details.on("resize", this._onResize);
     this.details.on("view-source", this._onViewSource);
+    this.details.on("show-allocations", this._onShowAllocations);
     window.addEventListener("resize", this._onResize);
 
     // TODO bug 1167093 save the previously set width, and ensure minimum width
@@ -60,6 +65,7 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
 
     this.details.off("resize", this._onResize);
     this.details.off("view-source", this._onViewSource);
+    this.details.off("show-allocations", this._onShowAllocations);
     window.removeEventListener("resize", this._onResize);
   },
 
@@ -87,9 +93,10 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
   _onMarkerSelected: function (event, marker) {
     let recording = PerformanceController.getCurrentRecording();
     let frames = recording.getFrames();
+    let allocations = recording.getConfiguration().withAllocations;
 
     if (event === "selected") {
-      this.details.render({ toolbox: gToolbox, marker, frames });
+      this.details.render({ marker, frames, allocations });
       this.details.hidden = false;
       this._lastSelected = marker;
     }
@@ -122,8 +129,43 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
   /**
    * Called when MarkerDetails view emits an event to view source.
    */
-  _onViewSource: function (_, file, line) {
-    gToolbox.viewSourceInDebugger(file, line);
+  _onViewSource: function (_, data) {
+    gToolbox.viewSourceInDebugger(data.file, data.line);
+  },
+
+  /**
+   * Called when MarkerDetails view emits an event to snap to allocations.
+   */
+  _onShowAllocations: function (_, data) {
+    let { endTime } = data;
+    let startTime = 0;
+    let recording = PerformanceController.getCurrentRecording();
+    let markers = recording.getMarkers();
+
+    let mostRecentGC = null;
+
+    // Iterate over markers looking for the most recent GC marker
+    // before the one who's start time is `endTime`.
+    for (let marker of markers) {
+      // We found the marker whose allocations we're tracking; abort
+      if (marker.start === endTime) {
+        break;
+      }
+      if (marker.name === "GarbageCollection") {
+        mostRecentGC = marker;
+      }
+    }
+
+    if (mostRecentGC) {
+      startTime = mostRecentGC.end;
+    }
+
+    // Adjust times so we don't include the range of these markers themselves.
+    endTime -= this.MARKER_EPSILON;
+    startTime += startTime !== 0 ? this.MARKER_EPSILON : 0;
+
+    OverviewView.setTimeInterval({ startTime, endTime });
+    DetailsView.selectView("memory-calltree");
   },
 
   /**
