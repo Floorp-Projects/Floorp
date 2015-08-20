@@ -135,6 +135,7 @@ protected:
 private:
   ReentrantMonitor& GetReentrantMonitor() const;
   void RecreateData(MediaStreamGraph* aGraph);
+  void CreateData(MozPromiseHolder<GenericPromise>&& aPromise);
   void InitTracks();
   void AdvanceTracks();
   void SendAudio(double aVolume, bool aIsSameOrigin);
