@@ -311,7 +311,7 @@ res/raw/browsersearch.json: .locales.deps ;
 res/raw/suggestedsites.json: .locales.deps ;
 
 all_resources = \
-  $(CURDIR)/AndroidManifest.xml \
+  $(abspath $(CURDIR)/AndroidManifest.xml) \
   $(android_res_files) \
   $(ANDROID_GENERATED_RESFILES) \
   $(NULL)
@@ -420,8 +420,8 @@ endef
 # .aapt.deps: $(all_resources)
 $(eval $(call aapt_command,.aapt.deps,$(all_resources),gecko.ap_,generated/,./))
 
-# .aapt.nodeps: $(CURDIR)/AndroidManifest.xml FORCE
-$(eval $(call aapt_command,.aapt.nodeps,$(CURDIR)/AndroidManifest.xml FORCE,gecko-nodeps.ap_,gecko-nodeps/,gecko-nodeps/))
+# .aapt.nodeps: $(abspath $(CURDIR)/AndroidManifest.xml) FORCE
+$(eval $(call aapt_command,.aapt.nodeps,$(abspath $(CURDIR)/AndroidManifest.xml) FORCE,gecko-nodeps.ap_,gecko-nodeps/,gecko-nodeps/))
 
 # Override the Java settings with some specific android settings
 include $(topsrcdir)/config/android-common.mk
