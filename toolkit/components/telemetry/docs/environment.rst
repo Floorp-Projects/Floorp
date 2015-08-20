@@ -32,6 +32,7 @@ Structure::
         hotfixVersion: <string>, // e.g. "20141211.01"
       },
       settings: {
+        addonCompatibilityCheckEnabled: <bool>, // Whether application compatibility is respected for add-ons
         blocklistEnabled: <bool>, // true on failure
         isDefaultBrowser: <bool>, // null on failure, not available on Android
         defaultSearchEngine: <string>, // e.g. "yahoo"
