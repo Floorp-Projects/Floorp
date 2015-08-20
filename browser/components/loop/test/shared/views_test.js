@@ -253,7 +253,7 @@ describe("loop.shared.views", function() {
   });
 
   describe("ConversationToolbar", function() {
-    var hangup, publishStream;
+    var clock, hangup, publishStream;
 
     function mountTestComponent(props) {
       props = _.extend({
@@ -266,6 +266,47 @@ describe("loop.shared.views", function() {
     beforeEach(function() {
       hangup = sandbox.stub();
       publishStream = sandbox.stub();
+      clock = sinon.useFakeTimers();
+    });
+
+    afterEach(function() {
+      clock.restore();
+    });
+
+    it("should start no idle", function() {
+      var comp = mountTestComponent({
+        hangupButtonLabel: "foo",
+        hangup: hangup,
+        publishStream: publishStream
+      });
+      expect(comp.getDOMNode().classList.contains("idle")).eql(false);
+    });
+
+    it("should be on idle state after 6 seconds", function() {
+      var comp = mountTestComponent({
+        hangupButtonLabel: "foo",
+        hangup: hangup,
+        publishStream: publishStream
+      });
+      expect(comp.getDOMNode().classList.contains("idle")).eql(false);
+
+      clock.tick(6001);
+      expect(comp.getDOMNode().classList.contains("idle")).eql(true);
+    });
+
+    it("should remove idle state when the user moves the mouse", function() {
+      var comp = mountTestComponent({
+        hangupButtonLabel: "foo",
+        hangup: hangup,
+        publishStream: publishStream
+      });
+
+      clock.tick(6001);
+      expect(comp.getDOMNode().classList.contains("idle")).eql(true);
+
+      document.body.dispatchEvent(new CustomEvent("mousemove"));
+
+      expect(comp.getDOMNode().classList.contains("idle")).eql(false);
     });
 
     it("should accept a hangupButtonLabel optional prop", function() {
