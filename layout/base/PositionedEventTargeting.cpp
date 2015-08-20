@@ -76,7 +76,7 @@ struct EventRadiusPrefs
   bool mRegistered;
   bool mTouchOnly;
   bool mRepositionEventCoords;
-  bool mTouchClusterDetectionEnabled;
+  bool mTouchClusterDetectionDisabled;
   uint32_t mLimitReadableSize;
 };
 
@@ -125,8 +125,8 @@ GetPrefsFor(EventClassID aEventClassID)
     nsPrintfCString repositionPref("ui.%s.radius.reposition", prefBranch);
     Preferences::AddBoolVarCache(&prefs->mRepositionEventCoords, repositionPref.get(), false);
 
-    nsPrintfCString touchClusterPref("ui.zoomedview.enabled", prefBranch);
-    Preferences::AddBoolVarCache(&prefs->mTouchClusterDetectionEnabled, touchClusterPref.get(), false);
+    nsPrintfCString touchClusterPref("ui.zoomedview.disabled", prefBranch);
+    Preferences::AddBoolVarCache(&prefs->mTouchClusterDetectionDisabled, touchClusterPref.get(), true);
 
     nsPrintfCString limitReadableSizePref("ui.zoomedview.limitReadableSize", prefBranch);
     Preferences::AddUintVarCache(&prefs->mLimitReadableSize, limitReadableSizePref.get(), 8);
@@ -451,7 +451,7 @@ GetClosest(nsIFrame* aRoot, const nsPoint& aPointRelativeToRootFrame,
 static bool
 IsElementClickableAndReadable(nsIFrame* aFrame, WidgetGUIEvent* aEvent, const EventRadiusPrefs* aPrefs)
 {
-  if (!aPrefs->mTouchClusterDetectionEnabled) {
+  if (aPrefs->mTouchClusterDetectionDisabled) {
     return true;
   }
 
@@ -578,7 +578,7 @@ FindFrameTargetedByInputEvent(WidgetGUIEvent* aEvent,
                restrictToDescendants, clickableAncestor, candidates,
                &elementsInCluster);
   if (closestClickable) {
-    if ((prefs->mTouchClusterDetectionEnabled && elementsInCluster > 1) ||
+    if ((!prefs->mTouchClusterDetectionDisabled && elementsInCluster > 1) ||
         (!IsElementClickableAndReadable(closestClickable, aEvent, prefs))) {
       if (aEvent->mClass == eMouseEventClass) {
         WidgetMouseEventBase* mouseEventBase = aEvent->AsMouseEventBase();

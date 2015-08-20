@@ -33,9 +33,9 @@
                         android:title="@string/pref_zoom_force_enabled"
                         android:summary="@string/pref_zoom_force_enabled_summary" />
 
-    <CheckBoxPreference android:key="ui.zoomedview.enabled"
-                        android:title="@string/pref_magnifying_glass_enabled"
-                        android:summary="@string/pref_magnifying_glass_enabled_summary" />
+    <CheckBoxPreference android:key="ui.zoomedview.disabled"
+                        android:title="@string/pref_prevent_magnifying_glass"
+                        android:summary="@string/pref_prevent_magnifying_glass_summary" />
 
     <PreferenceCategory android:title="@string/pref_category_input_options"
                         android:key="@string/pref_category_input_options">
