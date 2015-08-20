@@ -208,6 +208,9 @@
   <string name="pref_cookies_not_accept_foreign">&pref_cookies_not_accept_foreign;</string>
   <string name="pref_cookies_disabled">&pref_cookies_disabled;</string>
 
+  <string name="pref_tap_to_load_images_title">&pref_tap_to_load_images_title;</string>
+  <string name="pref_tap_to_load_images_summary">&pref_tap_to_load_images_summary;</string>
+
   <string name="pref_tracking_protection_title">&pref_tracking_protection_title;</string>
   <string name="pref_tracking_protection_summary">&pref_tracking_protection_summary3;</string>
   <string name="pref_donottrack_title">&pref_donottrack_title;</string>
