@@ -24,12 +24,6 @@ import org.mozilla.gecko.favicons.LoadFaviconTask;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.favicons.decoders.IconDirectoryEntry;
 import org.mozilla.gecko.firstrun.FirstrunPane;
-import org.mozilla.gecko.fxa.FirefoxAccounts;
-import org.mozilla.gecko.fxa.FxAccountConstants;
-import org.mozilla.gecko.fxa.activities.FxAccountGetStartedActivity;
-import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
-import org.mozilla.gecko.fxa.login.Engaged;
-import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
@@ -57,9 +51,7 @@ import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.prompts.Prompt;
 import org.mozilla.gecko.prompts.PromptListItem;
 import org.mozilla.gecko.restrictions.Restriction;
-import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.repositories.android.FennecTabsRepository;
-import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.tabqueue.TabQueueHelper;
 import org.mozilla.gecko.tabqueue.TabQueuePrompt;
 import org.mozilla.gecko.tabs.TabHistoryController;
@@ -261,6 +253,8 @@ public class BrowserApp extends GeckoApp
     private BrowserHealthReporter mBrowserHealthReporter;
 
     private ReadingListHelper mReadingListHelper;
+
+    private AccountsHelper mAccountsHelper;
 
     // The tab to be selected on editing mode exit.
     private Integer mTargetTabForEditingMode;
@@ -839,12 +833,9 @@ public class BrowserApp extends GeckoApp
             "Menu:Update",
             "LightweightTheme:Update",
             "Search:Keyword",
-            "Prompt:ShowTop",
-            "Accounts:Exist");
+            "Prompt:ShowTop");
 
         EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener)this,
-            "Accounts:Create",
-            "Accounts:CreateFirefoxAccountFromJSON",
             "CharEncoding:Data",
             "CharEncoding:State",
             "Favicon:CacheLoad",
@@ -872,6 +863,7 @@ public class BrowserApp extends GeckoApp
         mOrderedBroadcastHelper = new OrderedBroadcastHelper(appContext);
         mBrowserHealthReporter = new BrowserHealthReporter();
         mReadingListHelper = new ReadingListHelper(appContext, getProfile(), this);
+        mAccountsHelper = new AccountsHelper(appContext, getProfile());
 
         if (AppConstants.MOZ_ANDROID_BEAM) {
             NfcAdapter nfc = NfcAdapter.getDefaultAdapter(this);
@@ -1415,6 +1407,12 @@ public class BrowserApp extends GeckoApp
             mReadingListHelper.uninit();
             mReadingListHelper = null;
         }
+
+        if (mAccountsHelper != null) {
+            mAccountsHelper.uninit();
+            mAccountsHelper = null;
+        }
+
         if (mZoomedView != null) {
             mZoomedView.destroy();
         }
@@ -1424,12 +1422,9 @@ public class BrowserApp extends GeckoApp
             "Menu:Update",
             "LightweightTheme:Update",
             "Search:Keyword",
-            "Prompt:ShowTop",
-            "Accounts:Exist");
+            "Prompt:ShowTop");
 
         EventDispatcher.getInstance().unregisterGeckoThreadListener((NativeEventListener) this,
-            "Accounts:Create",
-            "Accounts:CreateFirefoxAccountFromJSON",
             "CharEncoding:Data",
             "CharEncoding:State",
             "Favicon:CacheLoad",
@@ -1688,53 +1683,7 @@ public class BrowserApp extends GeckoApp
     @Override
     public void handleMessage(final String event, final NativeJSObject message,
                               final EventCallback callback) {
-        if ("Accounts:CreateFirefoxAccountFromJSON".equals(event)) {
-            AndroidFxAccount fxAccount = null;
-            try {
-                final NativeJSObject json = message.getObject("json");
-                final String email = json.getString("email");
-                final String uid = json.getString("uid");
-                final boolean verified = json.optBoolean("verified", false);
-                final byte[] unwrapkB = Utils.hex2Byte(json.getString("unwrapBKey"));
-                final byte[] sessionToken = Utils.hex2Byte(json.getString("sessionToken"));
-                final byte[] keyFetchToken = Utils.hex2Byte(json.getString("keyFetchToken"));
-                final String authServerEndpoint =
-                    json.optString("authServerEndpoint", FxAccountConstants.DEFAULT_AUTH_SERVER_ENDPOINT);
-                final String tokenServerEndpoint =
-                    json.optString("tokenServerEndpoint", FxAccountConstants.DEFAULT_TOKEN_SERVER_ENDPOINT);
-                final String profileServerEndpoint =
-                    json.optString("profileServerEndpoint", FxAccountConstants.DEFAULT_PROFILE_SERVER_ENDPOINT);
-                // TODO: handle choose what to Sync.
-                State state = new Engaged(email, uid, verified, unwrapkB, sessionToken, keyFetchToken);
-                fxAccount = AndroidFxAccount.addAndroidAccount(this,
-                        email,
-                        getProfile().getName(),
-                        authServerEndpoint,
-                        tokenServerEndpoint,
-                        profileServerEndpoint,
-                        state,
-                        AndroidFxAccount.DEFAULT_AUTHORITIES_TO_SYNC_AUTOMATICALLY_MAP);
-            } catch (Exception e) {
-                Log.w(LOGTAG, "Got exception creating Firefox Account from JSON; ignoring.", e);
-                if (callback == null) {
-                    callback.sendError("Could not create Firefox Account from JSON: " + e.toString());
-                }
-            }
-            if (callback != null) {
-                callback.sendSuccess(fxAccount != null);
-            }
-
-        } else if ("Accounts:Create".equals(event)) {
-            // Do exactly the same thing as if you tapped 'Sync' in Settings.
-            final Intent intent = new Intent(FxAccountConstants.ACTION_FXA_GET_STARTED);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            final NativeJSObject extras = message.optObject("extras", null);
-            if (extras != null) {
-                intent.putExtra("extras", extras.toString());
-            }
-            getContext().startActivity(intent);
-
-        } else if ("CharEncoding:Data".equals(event)) {
+        if ("CharEncoding:Data".equals(event)) {
             final NativeJSObject[] charsets = message.getObjectArray("charsets");
             final int selected = message.getInt("selected");
 
@@ -2033,24 +1982,6 @@ public class BrowserApp extends GeckoApp
                 bringToFrontIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
                 bringToFrontIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                 startActivity(bringToFrontIntent);
-            } else if (event.equals("Accounts:Exist")) {
-                final String kind = message.getString("kind");
-                final JSONObject response = new JSONObject();
-
-                if ("any".equals(kind)) {
-                    response.put("exists", SyncAccounts.syncAccountsExist(getContext()) ||
-                                           FirefoxAccounts.firefoxAccountsExist(getContext()));
-                    EventDispatcher.sendResponse(message, response);
-                } else if ("fxa".equals(kind)) {
-                    response.put("exists", FirefoxAccounts.firefoxAccountsExist(getContext()));
-                    EventDispatcher.sendResponse(message, response);
-                } else if ("sync11".equals(kind)) {
-                    response.put("exists", SyncAccounts.syncAccountsExist(getContext()));
-                    EventDispatcher.sendResponse(message, response);
-                } else {
-                    response.put("error", "Unknown kind");
-                    EventDispatcher.sendError(message, response);
-                }
             } else {
                 super.handleMessage(event, message);
             }
