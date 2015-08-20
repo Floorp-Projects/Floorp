@@ -1582,16 +1582,12 @@ public class BrowserApp extends GeckoApp
         float toolbarTranslation = mLayerView.getDynamicToolbarAnimator().getToolbarTranslation();
 
         boolean shortPage = metrics.getPageHeight() < metrics.getHeight();
-        boolean toolbarMostlyVisible = toolbarTranslation < (mToolbarHeight / 2);
         boolean atBottomOfLongPage = (metrics.pageRectBottom == metrics.viewportRectBottom())
             && (metrics.pageRectBottom > 2 * metrics.getHeight());
         Log.v(LOGTAG, "On pan/zoom stopped, short page: " + shortPage
-            + "; toolbarMostlyVisible: " + toolbarMostlyVisible
             + "; atBottomOfLongPage: " + atBottomOfLongPage);
-        if (shortPage || toolbarMostlyVisible || atBottomOfLongPage) {
+        if (shortPage || atBottomOfLongPage) {
             mDynamicToolbar.setVisible(true, VisibilityTransition.ANIMATE);
-        } else {
-            mDynamicToolbar.setVisible(false, VisibilityTransition.ANIMATE);
         }
     }
 
