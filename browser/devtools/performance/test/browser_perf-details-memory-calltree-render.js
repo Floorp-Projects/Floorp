@@ -12,7 +12,7 @@ function* spawnTest() {
   Services.prefs.setBoolPref(ALLOCATIONS_PREF, true);
 
   yield startRecording(panel);
-  yield waitUntil(() => PerformanceController.getCurrentRecording().getAllocations().timestamps.length);
+  yield waitUntil(() => PerformanceController.getCurrentRecording().getAllocations().sizes.length);
   yield stopRecording(panel);
 
   let rendered = once(MemoryCallTreeView, EVENTS.MEMORY_CALL_TREE_RENDERED);

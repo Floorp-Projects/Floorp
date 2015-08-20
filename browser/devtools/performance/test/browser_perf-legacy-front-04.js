@@ -38,6 +38,7 @@ let test = Task.async(function*() {
   isEmptyArray(allocations.sites, "allocations.sites");
   isEmptyArray(allocations.timestamps, "allocations.timestamps");
   isEmptyArray(allocations.frames, "allocations.frames");
+  isEmptyArray(allocations.sizes, "allocations.sizes");
 
   let sampleCount = 0;
 
