@@ -20,19 +20,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
 </pre>
   <script type="application/javascript">
 
-  function runTest() {
-    var a = new SharedWorker('sharedWorker_messageChannel.js');
-    a.port.onmessage = function(evt) {
-      is(evt.ports.length, 1, "We received a port.");
-      evt.ports[0].onmessage = function(e) {
-        is(e.data, 42, "Message reiceved back!");
-        SimpleTest.finish();
-      }
-      evt.ports[0].postMessage(42);
+  var a = new SharedWorker('sharedWorker_messageChannel.js');
+  a.port.onmessage = function(evt) {
+    is(evt.ports.length, 1, "We received a port.");
+    evt.ports[0].onmessage = function(e) {
+      is(e.data, 42, "Message reiceved back!");
+      SimpleTest.finish();
     }
+    evt.ports[0].postMessage(42);
   }
 
-  SpecialPowers.pushPrefEnv({"set": [["dom.messageChannel.enabled", true]]}, runTest);
   SimpleTest.waitForExplicitFinish();
   </script>
 </body>

@@ -21,29 +21,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
 </pre>
   <script type="application/javascript">
 
-  function runTest() {
-    /** Test for Bug 677638 **/
-    var a = new MessageChannel();
-    ok(a, "MessageChannel created");
+  /** Test for Bug 677638 **/
+  var a = new MessageChannel();
+  ok(a, "MessageChannel created");
 
-    var port1 = a.port1;
-    ok(port1, "MessageChannel.port1 exists");
-    is(port1, a.port1, "MessageChannel.port1 is port1");
+  var port1 = a.port1;
+  ok(port1, "MessageChannel.port1 exists");
+  is(port1, a.port1, "MessageChannel.port1 is port1");
 
-    var port2 = a.port2;
-    ok(port2, "MessageChannel.port1 exists");
-    is(port2, a.port2, "MessageChannel.port2 is port2");
+  var port2 = a.port2;
+  ok(port2, "MessageChannel.port1 exists");
+  is(port2, a.port2, "MessageChannel.port2 is port2");
 
-    [ 'postMessage', 'start', 'close' ].forEach(function(e) {
-      ok(e in port1, "MessagePort1." + e + " exists");
-      ok(e in port2, "MessagePort2." + e + " exists");
-    });
+  [ 'postMessage', 'start', 'close' ].forEach(function(e) {
+    ok(e in port1, "MessagePort1." + e + " exists");
+    ok(e in port2, "MessagePort2." + e + " exists");
+  });
 
-    SimpleTest.finish();
-  }
-
-  SimpleTest.waitForExplicitFinish();
-  SpecialPowers.pushPrefEnv({"set": [["dom.messageChannel.enabled", true]]}, runTest);
   </script>
 </body>
 </html>

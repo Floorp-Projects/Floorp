@@ -394,7 +394,7 @@ MozInputMethod.prototype = {
   },
 
   removeInput: function(inputId) {
-    return this._sendPromise(function(resolverId) {
+    return this.createPromiseWithId(function(resolverId) {
       let appId = this._window.document.nodePrincipal.appId;
 
       cpmm.sendAsyncMessage('InputRegistry:Remove', {
@@ -435,14 +435,6 @@ MozInputMethod.prototype = {
     if (!this._isSystem) {
       throw new this._window.Error("Should have 'input-manage' permssion.");
     }
-  },
-
-  _sendPromise: function(callback) {
-    let self = this;
-    return this.createPromise(function(resolve, reject) {
-      let resolverId = self.getPromiseResolverId({ resolve: resolve, reject: reject });
-      callback(resolverId);
-    });
   }
 };
 
@@ -786,14 +778,13 @@ MozInputContext.prototype = {
 
   _sendPromise: function(callback) {
     let self = this;
-    return this._ipcHelper.createPromise(function(resolve, reject) {
-      let resolverId = self._ipcHelper.getPromiseResolverId({ resolve: resolve, reject: reject });
+    return this._ipcHelper.createPromiseWithId(function(aResolverId) {
       if (!WindowMap.isActive(self._window)) {
-        self._ipcHelper.removePromiseResolver(resolverId);
+        self._ipcHelper.removePromiseResolver(aResolverId);
         reject('Input method is not active.');
         return;
       }
-      callback(resolverId);
+      callback(aResolverId);
     });
   }
 };

@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ANDROID_APK_NAME := background-junit3-debug
-
 ANDROID_EXTRA_JARS := \
   background-junit3.jar \
   $(NULL)
@@ -30,6 +28,6 @@ JAVA_BOOTCLASSPATH := $(ANDROID_SDK)/android.jar:$(subst $(NULL) ,:,$(wildcard $
 # content changes.
 classes.dex: $(wildcard $(JARS_DIR)/*.jar)
 
-tools:: $(ANDROID_APK_NAME).apk
-
 include $(topsrcdir)/config/rules.mk
+
+tools:: $(ANDROID_APK_NAME).apk

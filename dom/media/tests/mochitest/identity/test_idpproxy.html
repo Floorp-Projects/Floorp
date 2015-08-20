@@ -162,9 +162,7 @@ function run_all_tests() {
 }
 
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({
-  set: [ [ 'dom.messageChannel.enabled', true ] ]
-}, run_all_tests);
+run_all_tests();
 </script>
   </body>
 </html>

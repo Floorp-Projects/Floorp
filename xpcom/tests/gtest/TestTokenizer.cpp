@@ -290,3 +290,240 @@ TEST(Tokenizer, HasFailed)
   while (p2.Next(t) && t.Type() != Tokenizer::TOKEN_CHAR);
   EXPECT_TRUE(p2.HasFailed());
 }
+
+TEST(Tokenizer, Construction)
+{
+  {
+    nsCString a("test");
+    Tokenizer p1(a);
+    EXPECT_TRUE(p1.CheckWord("test"));
+    EXPECT_TRUE(p1.CheckEOF());
+  }
+
+  {
+    nsAutoCString a("test");
+    Tokenizer p1(a);
+    EXPECT_TRUE(p1.CheckWord("test"));
+    EXPECT_TRUE(p1.CheckEOF());
+  }
+
+  {
+    static const char _a[] = "test";
+    nsDependentCString a(_a);
+    Tokenizer p1(a);
+    EXPECT_TRUE(p1.CheckWord("test"));
+    EXPECT_TRUE(p1.CheckEOF());
+  }
+
+  {
+    static const char* _a = "test";
+    nsDependentCString a(_a);
+    Tokenizer p1(a);
+    EXPECT_TRUE(p1.CheckWord("test"));
+    EXPECT_TRUE(p1.CheckEOF());
+  }
+
+  {
+    Tokenizer p1(nsDependentCString("test"));
+    EXPECT_TRUE(p1.CheckWord("test"));
+    EXPECT_TRUE(p1.CheckEOF());
+  }
+
+  {
+    Tokenizer p1(NS_LITERAL_CSTRING("test"));
+    EXPECT_TRUE(p1.CheckWord("test"));
+    EXPECT_TRUE(p1.CheckEOF());
+  }
+
+  {
+    Tokenizer p1("test");
+    EXPECT_TRUE(p1.CheckWord("test"));
+    EXPECT_TRUE(p1.CheckEOF());
+  }
+}
+
+TEST(Tokenizer, Customization)
+{
+  Tokenizer p1(NS_LITERAL_CSTRING("test-custom*words and\tdefault-whites"), nullptr, "-*");
+  EXPECT_TRUE(p1.CheckWord("test-custom*words"));
+  EXPECT_TRUE(p1.CheckWhite());
+  EXPECT_TRUE(p1.CheckWord("and"));
+  EXPECT_TRUE(p1.CheckWhite());
+  EXPECT_TRUE(p1.CheckWord("default-whites"));
+
+  Tokenizer p2(NS_LITERAL_CSTRING("test, custom,whites"), ", ");
+  EXPECT_TRUE(p2.CheckWord("test"));
+  EXPECT_TRUE(p2.CheckWhite());
+  EXPECT_TRUE(p2.CheckWhite());
+  EXPECT_TRUE(p2.CheckWord("custom"));
+  EXPECT_TRUE(p2.CheckWhite());
+  EXPECT_TRUE(p2.CheckWord("whites"));
+
+  Tokenizer p3(NS_LITERAL_CSTRING("test, custom, whites-and#word-chars"), ",", "-#");
+  EXPECT_TRUE(p3.CheckWord("test"));
+  EXPECT_TRUE(p3.CheckWhite());
+  EXPECT_FALSE(p3.CheckWhite());
+  EXPECT_TRUE(p3.CheckChar(' '));
+  EXPECT_TRUE(p3.CheckWord("custom"));
+  EXPECT_TRUE(p3.CheckWhite());
+  EXPECT_FALSE(p3.CheckWhite());
+  EXPECT_TRUE(p3.CheckChar(' '));
+  EXPECT_TRUE(p3.CheckWord("whites-and#word-chars"));
+}
+
+TEST(Tokenizer, ShortcutChecks)
+{
+  Tokenizer p("test1 test2,123");
+
+  nsAutoCString test1;
+  nsDependentCString test2;
+  char comma;
+  uint32_t integer;
+
+  EXPECT_TRUE(p.ReadWord(test1));
+  EXPECT_TRUE(test1 == "test1");
+  p.SkipWhites();
+  EXPECT_TRUE(p.ReadWord(test2));
+  EXPECT_TRUE(test2 == "test2");
+  EXPECT_TRUE(p.ReadChar(&comma));
+  EXPECT_TRUE(comma == ',');
+  EXPECT_TRUE(p.ReadInteger(&integer));
+  EXPECT_TRUE(integer == 123);
+  EXPECT_TRUE(p.CheckEOF());
+}
+
+TEST(Tokenizer, SkipWhites)
+{
+  Tokenizer p("Text1 \nText2 \nText3\n Text4\n ");
+
+  EXPECT_TRUE(p.CheckWord("Text1"));
+  p.SkipWhites();
+  EXPECT_TRUE(p.CheckEOL());
+
+  EXPECT_TRUE(p.CheckWord("Text2"));
+  p.SkipWhites(Tokenizer::INCLUDE_NEW_LINE);
+
+  EXPECT_TRUE(p.CheckWord("Text3"));
+  p.SkipWhites();
+  EXPECT_TRUE(p.CheckEOL());
+  p.SkipWhites();
+
+  EXPECT_TRUE(p.CheckWord("Text4"));
+  p.SkipWhites(Tokenizer::INCLUDE_NEW_LINE);
+  EXPECT_TRUE(p.CheckEOF());
+}
+
+TEST(Tokenizer, IntegerReading)
+{
+#define INT_6_BITS                 64U
+#define INT_30_BITS                1073741824UL
+#define INT_32_BITS                4294967295UL
+#define INT_50_BITS                1125899906842624ULL
+#define STR_INT_MORE_THAN_64_BITS "922337203685477580899"
+
+  {
+    Tokenizer p(NS_STRINGIFY(INT_6_BITS));
+    uint8_t u8;
+    uint16_t u16;
+    uint32_t u32;
+    uint64_t u64;
+    EXPECT_TRUE(p.ReadInteger(&u8));
+    EXPECT_TRUE(u8 == INT_6_BITS);
+    p.Rollback();
+    EXPECT_TRUE(p.ReadInteger(&u16));
+    EXPECT_TRUE(u16 == INT_6_BITS);
+    p.Rollback();
+    EXPECT_TRUE(p.ReadInteger(&u32));
+    EXPECT_TRUE(u32 == INT_6_BITS);
+    p.Rollback();
+    EXPECT_TRUE(p.ReadInteger(&u64));
+    EXPECT_TRUE(u64 == INT_6_BITS);
+
+    p.Rollback();
+
+    int8_t s8;
+    int16_t s16;
+    int32_t s32;
+    int64_t s64;
+    EXPECT_TRUE(p.ReadInteger(&s8));
+    EXPECT_TRUE(s8 == INT_6_BITS);
+    p.Rollback();
+    EXPECT_TRUE(p.ReadInteger(&s16));
+    EXPECT_TRUE(s16 == INT_6_BITS);
+    p.Rollback();
+    EXPECT_TRUE(p.ReadInteger(&s32));
+    EXPECT_TRUE(s32 == INT_6_BITS);
+    p.Rollback();
+    EXPECT_TRUE(p.ReadInteger(&s64));
+    EXPECT_TRUE(s64 == INT_6_BITS);
+
+    EXPECT_TRUE(p.CheckWord("U"));
+    EXPECT_TRUE(p.CheckEOF());
+  }
+
+  {
+    Tokenizer p(NS_STRINGIFY(INT_30_BITS));
+    uint8_t u8;
+    uint16_t u16;
+    uint32_t u32;
+    uint64_t u64;
+    EXPECT_FALSE(p.ReadInteger(&u8));
+    EXPECT_FALSE(p.ReadInteger(&u16));
+    EXPECT_TRUE(p.ReadInteger(&u32));
+    EXPECT_TRUE(u32 == INT_30_BITS);
+    p.Rollback();
+    EXPECT_TRUE(p.ReadInteger(&u64));
+    EXPECT_TRUE(u64 == INT_30_BITS);
+
+    p.Rollback();
+
+    int8_t s8;
+    int16_t s16;
+    int32_t s32;
+    int64_t s64;
+    EXPECT_FALSE(p.ReadInteger(&s8));
+    EXPECT_FALSE(p.ReadInteger(&s16));
+    EXPECT_TRUE(p.ReadInteger(&s32));
+    EXPECT_TRUE(s32 == INT_30_BITS);
+    p.Rollback();
+    EXPECT_TRUE(p.ReadInteger(&s64));
+    EXPECT_TRUE(s64 == INT_30_BITS);
+    EXPECT_TRUE(p.CheckWord("UL"));
+    EXPECT_TRUE(p.CheckEOF());
+  }
+
+  {
+    Tokenizer p(NS_STRINGIFY(INT_32_BITS));
+    uint32_t u32;
+    int32_t s32;
+    EXPECT_FALSE(p.ReadInteger(&s32));
+    EXPECT_TRUE(p.ReadInteger(&u32));
+    EXPECT_TRUE(u32 == INT_32_BITS);
+    EXPECT_TRUE(p.CheckWord("UL"));
+    EXPECT_TRUE(p.CheckEOF());
+  }
+
+  {
+    Tokenizer p(NS_STRINGIFY(INT_50_BITS));
+    uint8_t u8;
+    uint16_t u16;
+    uint32_t u32;
+    uint64_t u64;
+    EXPECT_FALSE(p.ReadInteger(&u8));
+    EXPECT_FALSE(p.ReadInteger(&u16));
+    EXPECT_FALSE(p.ReadInteger(&u32));
+    EXPECT_TRUE(p.ReadInteger(&u64));
+    EXPECT_TRUE(u64 == INT_50_BITS);
+    EXPECT_TRUE(p.CheckWord("ULL"));
+    EXPECT_TRUE(p.CheckEOF());
+  }
+
+  {
+    Tokenizer p(STR_INT_MORE_THAN_64_BITS);
+    int64_t i;
+    EXPECT_FALSE(p.ReadInteger(&i));
+    uint64_t u;
+    EXPECT_FALSE(p.ReadInteger(&u));
+    EXPECT_FALSE(p.CheckEOF());
+  }
+}

@@ -363,7 +363,6 @@ function* test_on_browser(browser) {
 add_task(function*() {
   yield new Promise((resolve) => {
     SpecialPowers.pushPrefEnv({"set": [
-                                ["media.useAudioChannelService", true],
                                 ["browser.tabs.showAudioPlayingIcon", true],
                               ]}, resolve);
   });
