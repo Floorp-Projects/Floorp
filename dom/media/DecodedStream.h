@@ -113,8 +113,6 @@ public:
   // Mimic MDSM::StopAudioThread.
   void StopPlayback();
 
-  void DestroyData();
-  void RecreateData();
   void AddOutput(ProcessedMediaStream* aStream, bool aFinishWhenEnded);
   void RemoveOutput(MediaStream* aStream);
 
@@ -134,7 +132,6 @@ protected:
 
 private:
   ReentrantMonitor& GetReentrantMonitor() const;
-  void RecreateData(MediaStreamGraph* aGraph);
   void CreateData(MozPromiseHolder<GenericPromise>&& aPromise);
   void InitTracks();
   void AdvanceTracks();
