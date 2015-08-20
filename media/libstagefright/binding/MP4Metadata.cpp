@@ -68,13 +68,13 @@ private:
 
 static inline bool
 ConvertIndex(FallibleTArray<Index::Indice>& aDest,
-             const nsTArray<stagefright::MediaSource::Indice>& aIndex,
+             const stagefright::Vector<stagefright::MediaSource::Indice>& aIndex,
              int64_t aMediaTime)
 {
-  if (!aDest.SetCapacity(aIndex.Length(), mozilla::fallible)) {
+  if (!aDest.SetCapacity(aIndex.size(), mozilla::fallible)) {
     return false;
   }
-  for (size_t i = 0; i < aIndex.Length(); i++) {
+  for (size_t i = 0; i < aIndex.size(); i++) {
     Index::Indice indice;
     const stagefright::MediaSource::Indice& s_indice = aIndex[i];
     indice.start_offset = s_indice.start_offset;
