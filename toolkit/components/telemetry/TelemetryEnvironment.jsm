@@ -109,6 +109,8 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["dom.ipc.plugins.asyncInit", TelemetryEnvironment.RECORD_PREF_VALUE],
   ["dom.ipc.plugins.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
   ["experiments.manifest.uri", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["extensions.autoDisableScopes", {what: RECORD_PREF_VALUE}],
+  ["extensions.enabledScopes", {what: RECORD_PREF_VALUE}],
   ["extensions.blocklist.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
   ["extensions.blocklist.url", TelemetryEnvironment.RECORD_PREF_VALUE],
   ["extensions.strictCompatibility", TelemetryEnvironment.RECORD_PREF_VALUE],
@@ -973,6 +975,9 @@ EnvironmentCache.prototype = {
     } catch (e) {}
 
     this._currentEnvironment.settings = {
+#ifndef MOZ_WIDGET_GONK
+      addonCompatibilityCheckEnabled: AddonManager.checkCompatibility,
+#endif
       blocklistEnabled: Preferences.get(PREF_BLOCKLIST_ENABLED, true),
 #ifndef MOZ_WIDGET_ANDROID
       isDefaultBrowser: this._isDefaultBrowser(),
