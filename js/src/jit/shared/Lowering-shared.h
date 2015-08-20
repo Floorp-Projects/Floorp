@@ -142,7 +142,6 @@ class LIRGeneratorShared : public MDefinitionVisitor
     inline void defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps>* lir, MDefinition* mir,
                           LDefinition::Policy policy = LDefinition::REGISTER);
 
-    inline void defineSharedStubReturn(LInstruction* lir, MDefinition* mir);
     inline void defineReturn(LInstruction* lir, MDefinition* mir);
 
     template <size_t X>

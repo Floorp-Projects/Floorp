@@ -109,30 +109,6 @@ LIRGeneratorShared::defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps>* lir, M
 }
 
 void
-LIRGeneratorShared::defineSharedStubReturn(LInstruction* lir, MDefinition* mir)
-{
-    lir->setMir(mir);
-
-    MOZ_ASSERT(lir->isBinarySharedStub() || lir->isUnarySharedStub());
-    MOZ_ASSERT(mir->type() == MIRType_Value);
-
-    uint32_t vreg = getVirtualRegister();
-
-#if defined(JS_NUNBOX32)
-    lir->setDef(TYPE_INDEX, LDefinition(vreg + VREG_TYPE_OFFSET, LDefinition::TYPE,
-                                        LGeneralReg(JSReturnReg_Type)));
-    lir->setDef(PAYLOAD_INDEX, LDefinition(vreg + VREG_DATA_OFFSET, LDefinition::PAYLOAD,
-                                           LGeneralReg(JSReturnReg_Data)));
-    getVirtualRegister();
-#elif defined(JS_PUNBOX64)
-    lir->setDef(0, LDefinition(vreg, LDefinition::BOX, LGeneralReg(JSReturnReg)));
-#endif
-
-    mir->setVirtualRegister(vreg);
-    add(lir);
-}
-
-void
 LIRGeneratorShared::defineReturn(LInstruction* lir, MDefinition* mir)
 {
     lir->setMir(mir);
