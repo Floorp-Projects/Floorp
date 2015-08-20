@@ -268,6 +268,14 @@ function checkSettingsSection(data) {
                  f + " must have the correct type.");
   }
 
+  // Check "addonCompatibilityCheckEnabled" separately, as it is not available
+  // on Gonk.
+  if (gIsGonk) {
+    Assert.ok(!("addonCompatibilityCheckEnabled" in data.settings), "Must not be available on Gonk.");
+  } else {
+    Assert.equal(data.settings.addonCompatibilityCheckEnabled, AddonManager.checkCompatibility);
+  }
+
   // Check "isDefaultBrowser" separately, as it is not available on Android an can either be
   // null or boolean on other platforms.
   if (gIsAndroid) {
