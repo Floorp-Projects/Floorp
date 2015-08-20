@@ -180,6 +180,9 @@ var TextEditor = Class({
     this.editor.on("focus", (...args) => {
       this.emit("focus", ...args);
     });
+    this.editor.on("saveRequested", (...args) => {
+      this.emit("saveRequested", ...args);
+    })
 
     this.appended = this.editor.appendTo(this.elt);
   },
