@@ -7,8 +7,10 @@
 #include "jit/SharedIC.h"
 #include "mozilla/SizePrintfMacros.h"
 
+#include "jslibmath.h"
 #include "jstypes.h"
 
+#include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineIC.h"
 #include "jit/JitSpewer.h"
 #include "jit/Linker.h"
@@ -17,8 +19,10 @@
 # include "jit/PerfSpewer.h"
 #endif
 #include "jit/VMFunctions.h"
+#include "vm/Interpreter.h"
 
 #include "jit/MacroAssembler-inl.h"
+#include "vm/Interpreter-inl.h"
 
 namespace js {
 namespace jit {
@@ -81,6 +85,14 @@ ICEntry::fallbackStub() const
     return firstStub()->getChainFallback();
 }
 
+void
+ICEntry::trace(JSTracer* trc)
+{
+    if (!hasStub())
+        return;
+    for (ICStub* stub = firstStub(); stub; stub = stub->next())
+        stub->trace(trc);
+}
 
 ICStubConstIterator&
 ICStubConstIterator::operator++()
@@ -142,7 +154,7 @@ ICStub::updateCode(JitCode* code)
 /* static */ void
 ICStub::trace(JSTracer* trc)
 {
-    markCode(trc, "baseline-stub-jitcode");
+    markCode(trc, "shared-stub-jitcode");
 
     // If the stub is a monitored fallback stub, then mark the monitor ICs hanging
     // off of that stub.  We don't need to worry about the regular monitored stubs,
@@ -819,6 +831,583 @@ ICStubCompiler::emitPostWriteBarrierSlot(MacroAssembler& masm, Register obj, Val
     masm.bind(&skipBarrier);
     return true;
 }
+
+static ICStubCompiler::Engine
+SharedStubEngine(BaselineFrame* frame)
+{
+    return frame ? ICStubCompiler::Engine::Baseline : ICStubCompiler::Engine::IonMonkey;
+}
+
+static JSScript*
+SharedStubScript(BaselineFrame* frame, ICFallbackStub* stub)
+{
+    ICStubCompiler::Engine engine = SharedStubEngine(frame);
+    if (engine == ICStubCompiler::Engine::Baseline)
+        return frame->script();
+
+    IonICEntry* entry = (IonICEntry*) stub->icEntry();
+    return entry->script();
+}
+
+//
+// BinaryArith_Fallback
+//
+
+static bool
+DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame, ICBinaryArith_Fallback* stub_,
+                      HandleValue lhs, HandleValue rhs, MutableHandleValue ret)
+{
+    ICStubCompiler::Engine engine = SharedStubEngine(frame);
+    RootedScript script(cx, SharedStubScript(frame, stub_));
+
+    // This fallback stub may trigger debug mode toggling.
+    DebugModeOSRVolatileStub<ICBinaryArith_Fallback*> stub(engine, frame, stub_);
+
+    jsbytecode* pc = stub->icEntry()->pc(script);
+    JSOp op = JSOp(*pc);
+    FallbackICSpew(cx, stub, "BinaryArith(%s,%d,%d)", js_CodeName[op],
+            int(lhs.isDouble() ? JSVAL_TYPE_DOUBLE : lhs.extractNonDoubleType()),
+            int(rhs.isDouble() ? JSVAL_TYPE_DOUBLE : rhs.extractNonDoubleType()));
+
+    // Don't pass lhs/rhs directly, we need the original values when
+    // generating stubs.
+    RootedValue lhsCopy(cx, lhs);
+    RootedValue rhsCopy(cx, rhs);
+
+    // Perform the compare operation.
+    switch(op) {
+      case JSOP_ADD:
+        // Do an add.
+        if (!AddValues(cx, &lhsCopy, &rhsCopy, ret))
+            return false;
+        break;
+      case JSOP_SUB:
+        if (!SubValues(cx, &lhsCopy, &rhsCopy, ret))
+            return false;
+        break;
+      case JSOP_MUL:
+        if (!MulValues(cx, &lhsCopy, &rhsCopy, ret))
+            return false;
+        break;
+      case JSOP_DIV:
+        if (!DivValues(cx, &lhsCopy, &rhsCopy, ret))
+            return false;
+        break;
+      case JSOP_MOD:
+        if (!ModValues(cx, &lhsCopy, &rhsCopy, ret))
+            return false;
+        break;
+      case JSOP_POW:
+        if (!math_pow_handle(cx, lhsCopy, rhsCopy, ret))
+            return false;
+        break;
+      case JSOP_BITOR: {
+        int32_t result;
+        if (!BitOr(cx, lhs, rhs, &result))
+            return false;
+        ret.setInt32(result);
+        break;
+      }
+      case JSOP_BITXOR: {
+        int32_t result;
+        if (!BitXor(cx, lhs, rhs, &result))
+            return false;
+        ret.setInt32(result);
+        break;
+      }
+      case JSOP_BITAND: {
+        int32_t result;
+        if (!BitAnd(cx, lhs, rhs, &result))
+            return false;
+        ret.setInt32(result);
+        break;
+      }
+      case JSOP_LSH: {
+        int32_t result;
+        if (!BitLsh(cx, lhs, rhs, &result))
+            return false;
+        ret.setInt32(result);
+        break;
+      }
+      case JSOP_RSH: {
+        int32_t result;
+        if (!BitRsh(cx, lhs, rhs, &result))
+            return false;
+        ret.setInt32(result);
+        break;
+      }
+      case JSOP_URSH: {
+        if (!UrshOperation(cx, lhs, rhs, ret))
+            return false;
+        break;
+      }
+      default:
+        MOZ_CRASH("Unhandled baseline arith op");
+    }
+
+    // Check if debug mode toggling made the stub invalid.
+    if (stub.invalid())
+        return true;
+
+    if (ret.isDouble())
+        stub->setSawDoubleResult();
+
+    // Check to see if a new stub should be generated.
+    if (stub->numOptimizedStubs() >= ICBinaryArith_Fallback::MAX_OPTIMIZED_STUBS) {
+        stub->noteUnoptimizableOperands();
+        return true;
+    }
+
+    // Handle string concat.
+    if (op == JSOP_ADD) {
+        if (lhs.isString() && rhs.isString()) {
+            JitSpew(JitSpew_BaselineIC, "  Generating %s(String, String) stub", js_CodeName[op]);
+            MOZ_ASSERT(ret.isString());
+            ICBinaryArith_StringConcat::Compiler compiler(cx, engine);
+            ICStub* strcatStub = compiler.getStub(compiler.getStubSpace(script));
+            if (!strcatStub)
+                return false;
+            stub->addNewStub(strcatStub);
+            return true;
+        }
+
+        if ((lhs.isString() && rhs.isObject()) || (lhs.isObject() && rhs.isString())) {
+            JitSpew(JitSpew_BaselineIC, "  Generating %s(%s, %s) stub", js_CodeName[op],
+                    lhs.isString() ? "String" : "Object",
+                    lhs.isString() ? "Object" : "String");
+            MOZ_ASSERT(ret.isString());
+            ICBinaryArith_StringObjectConcat::Compiler compiler(cx, engine, lhs.isString());
+            ICStub* strcatStub = compiler.getStub(compiler.getStubSpace(script));
+            if (!strcatStub)
+                return false;
+            stub->addNewStub(strcatStub);
+            return true;
+        }
+    }
+
+    if (((lhs.isBoolean() && (rhs.isBoolean() || rhs.isInt32())) ||
+         (rhs.isBoolean() && (lhs.isBoolean() || lhs.isInt32()))) &&
+        (op == JSOP_ADD || op == JSOP_SUB || op == JSOP_BITOR || op == JSOP_BITAND ||
+         op == JSOP_BITXOR))
+    {
+        JitSpew(JitSpew_BaselineIC, "  Generating %s(%s, %s) stub", js_CodeName[op],
+                lhs.isBoolean() ? "Boolean" : "Int32", rhs.isBoolean() ? "Boolean" : "Int32");
+        ICBinaryArith_BooleanWithInt32::Compiler compiler(cx, op, engine,
+                                                          lhs.isBoolean(), rhs.isBoolean());
+        ICStub* arithStub = compiler.getStub(compiler.getStubSpace(script));
+        if (!arithStub)
+            return false;
+        stub->addNewStub(arithStub);
+        return true;
+    }
+
+    // Handle only int32 or double.
+    if (!lhs.isNumber() || !rhs.isNumber()) {
+        stub->noteUnoptimizableOperands();
+        return true;
+    }
+
+    MOZ_ASSERT(ret.isNumber());
+
+    if (lhs.isDouble() || rhs.isDouble() || ret.isDouble()) {
+        if (!cx->runtime()->jitSupportsFloatingPoint)
+            return true;
+
+        switch (op) {
+          case JSOP_ADD:
+          case JSOP_SUB:
+          case JSOP_MUL:
+          case JSOP_DIV:
+          case JSOP_MOD: {
+            // Unlink int32 stubs, it's faster to always use the double stub.
+            stub->unlinkStubsWithKind(cx, ICStub::BinaryArith_Int32);
+            JitSpew(JitSpew_BaselineIC, "  Generating %s(Double, Double) stub", js_CodeName[op]);
+
+            ICBinaryArith_Double::Compiler compiler(cx, op, engine);
+            ICStub* doubleStub = compiler.getStub(compiler.getStubSpace(script));
+            if (!doubleStub)
+                return false;
+            stub->addNewStub(doubleStub);
+            return true;
+          }
+          default:
+            break;
+        }
+    }
+
+    if (lhs.isInt32() && rhs.isInt32() && op != JSOP_POW) {
+        bool allowDouble = ret.isDouble();
+        if (allowDouble)
+            stub->unlinkStubsWithKind(cx, ICStub::BinaryArith_Int32);
+        JitSpew(JitSpew_BaselineIC, "  Generating %s(Int32, Int32%s) stub", js_CodeName[op],
+                allowDouble ? " => Double" : "");
+        ICBinaryArith_Int32::Compiler compilerInt32(cx, op, engine, allowDouble);
+        ICStub* int32Stub = compilerInt32.getStub(compilerInt32.getStubSpace(script));
+        if (!int32Stub)
+            return false;
+        stub->addNewStub(int32Stub);
+        return true;
+    }
+
+    // Handle Double <BITOP> Int32 or Int32 <BITOP> Double case.
+    if (((lhs.isDouble() && rhs.isInt32()) || (lhs.isInt32() && rhs.isDouble())) &&
+        ret.isInt32())
+    {
+        switch(op) {
+          case JSOP_BITOR:
+          case JSOP_BITXOR:
+          case JSOP_BITAND: {
+            JitSpew(JitSpew_BaselineIC, "  Generating %s(%s, %s) stub", js_CodeName[op],
+                        lhs.isDouble() ? "Double" : "Int32",
+                        lhs.isDouble() ? "Int32" : "Double");
+            ICBinaryArith_DoubleWithInt32::Compiler compiler(cx, op, engine, lhs.isDouble());
+            ICStub* optStub = compiler.getStub(compiler.getStubSpace(script));
+            if (!optStub)
+                return false;
+            stub->addNewStub(optStub);
+            return true;
+          }
+          default:
+            break;
+        }
+    }
+
+    stub->noteUnoptimizableOperands();
+    return true;
+}
+
+typedef bool (*DoBinaryArithFallbackFn)(JSContext*, BaselineFrame*, ICBinaryArith_Fallback*,
+                                        HandleValue, HandleValue, MutableHandleValue);
+static const VMFunction DoBinaryArithFallbackInfo =
+    FunctionInfo<DoBinaryArithFallbackFn>(DoBinaryArithFallback, TailCall, PopValues(2));
+
+bool
+ICBinaryArith_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
+{
+    MOZ_ASSERT(R0 == JSReturnOperand);
+
+    // Restore the tail call register.
+    EmitRestoreTailCallReg(masm);
+
+    // Ensure stack is fully synced for the expression decompiler.
+    masm.pushValue(R0);
+    masm.pushValue(R1);
+
+    // Push arguments.
+    masm.pushValue(R1);
+    masm.pushValue(R0);
+    masm.push(ICStubReg);
+    pushFramePtr(masm, R0.scratchReg());
+
+    return tailCallVM(DoBinaryArithFallbackInfo, masm);
+}
+
+static bool
+DoConcatStrings(JSContext* cx, HandleString lhs, HandleString rhs, MutableHandleValue res)
+{
+    JSString* result = ConcatStrings<CanGC>(cx, lhs, rhs);
+    if (!result)
+        return false;
+
+    res.setString(result);
+    return true;
+}
+
+typedef bool (*DoConcatStringsFn)(JSContext*, HandleString, HandleString, MutableHandleValue);
+static const VMFunction DoConcatStringsInfo = FunctionInfo<DoConcatStringsFn>(DoConcatStrings, TailCall);
+
+bool
+ICBinaryArith_StringConcat::Compiler::generateStubCode(MacroAssembler& masm)
+{
+    Label failure;
+    masm.branchTestString(Assembler::NotEqual, R0, &failure);
+    masm.branchTestString(Assembler::NotEqual, R1, &failure);
+
+    // Restore the tail call register.
+    EmitRestoreTailCallReg(masm);
+
+    masm.unboxString(R0, R0.scratchReg());
+    masm.unboxString(R1, R1.scratchReg());
+
+    masm.push(R1.scratchReg());
+    masm.push(R0.scratchReg());
+    if (!tailCallVM(DoConcatStringsInfo, masm))
+        return false;
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+static JSString*
+ConvertObjectToStringForConcat(JSContext* cx, HandleValue obj)
+{
+    MOZ_ASSERT(obj.isObject());
+    RootedValue rootedObj(cx, obj);
+    if (!ToPrimitive(cx, &rootedObj))
+        return nullptr;
+    return ToString<CanGC>(cx, rootedObj);
+}
+
+static bool
+DoConcatStringObject(JSContext* cx, bool lhsIsString, HandleValue lhs, HandleValue rhs,
+                     MutableHandleValue res)
+{
+    JSString* lstr = nullptr;
+    JSString* rstr = nullptr;
+    if (lhsIsString) {
+        // Convert rhs first.
+        MOZ_ASSERT(lhs.isString() && rhs.isObject());
+        rstr = ConvertObjectToStringForConcat(cx, rhs);
+        if (!rstr)
+            return false;
+
+        // lhs is already string.
+        lstr = lhs.toString();
+    } else {
+        MOZ_ASSERT(rhs.isString() && lhs.isObject());
+        // Convert lhs first.
+        lstr = ConvertObjectToStringForConcat(cx, lhs);
+        if (!lstr)
+            return false;
+
+        // rhs is already string.
+        rstr = rhs.toString();
+    }
+
+    JSString* str = ConcatStrings<NoGC>(cx, lstr, rstr);
+    if (!str) {
+        RootedString nlstr(cx, lstr), nrstr(cx, rstr);
+        str = ConcatStrings<CanGC>(cx, nlstr, nrstr);
+        if (!str)
+            return false;
+    }
+
+    // Technically, we need to call TypeScript::MonitorString for this PC, however
+    // it was called when this stub was attached so it's OK.
+
+    res.setString(str);
+    return true;
+}
+
+typedef bool (*DoConcatStringObjectFn)(JSContext*, bool lhsIsString, HandleValue, HandleValue,
+                                       MutableHandleValue);
+static const VMFunction DoConcatStringObjectInfo =
+    FunctionInfo<DoConcatStringObjectFn>(DoConcatStringObject, TailCall, PopValues(2));
+
+bool
+ICBinaryArith_StringObjectConcat::Compiler::generateStubCode(MacroAssembler& masm)
+{
+    Label failure;
+    if (lhsIsString_) {
+        masm.branchTestString(Assembler::NotEqual, R0, &failure);
+        masm.branchTestObject(Assembler::NotEqual, R1, &failure);
+    } else {
+        masm.branchTestObject(Assembler::NotEqual, R0, &failure);
+        masm.branchTestString(Assembler::NotEqual, R1, &failure);
+    }
+
+    // Restore the tail call register.
+    EmitRestoreTailCallReg(masm);
+
+    // Sync for the decompiler.
+    masm.pushValue(R0);
+    masm.pushValue(R1);
+
+    // Push arguments.
+    masm.pushValue(R1);
+    masm.pushValue(R0);
+    masm.push(Imm32(lhsIsString_));
+    if (!tailCallVM(DoConcatStringObjectInfo, masm))
+        return false;
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+bool
+ICBinaryArith_Double::Compiler::generateStubCode(MacroAssembler& masm)
+{
+    Label failure;
+    masm.ensureDouble(R0, FloatReg0, &failure);
+    masm.ensureDouble(R1, FloatReg1, &failure);
+
+    switch (op) {
+      case JSOP_ADD:
+        masm.addDouble(FloatReg1, FloatReg0);
+        break;
+      case JSOP_SUB:
+        masm.subDouble(FloatReg1, FloatReg0);
+        break;
+      case JSOP_MUL:
+        masm.mulDouble(FloatReg1, FloatReg0);
+        break;
+      case JSOP_DIV:
+        masm.divDouble(FloatReg1, FloatReg0);
+        break;
+      case JSOP_MOD:
+        masm.setupUnalignedABICall(R0.scratchReg());
+        masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
+        masm.passABIArg(FloatReg1, MoveOp::DOUBLE);
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, NumberMod), MoveOp::DOUBLE);
+        MOZ_ASSERT(ReturnDoubleReg == FloatReg0);
+        break;
+      default:
+        MOZ_CRASH("Unexpected op");
+    }
+
+    masm.boxDouble(FloatReg0, R0);
+    EmitReturnFromIC(masm);
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+bool
+ICBinaryArith_BooleanWithInt32::Compiler::generateStubCode(MacroAssembler& masm)
+{
+    Label failure;
+    if (lhsIsBool_)
+        masm.branchTestBoolean(Assembler::NotEqual, R0, &failure);
+    else
+        masm.branchTestInt32(Assembler::NotEqual, R0, &failure);
+
+    if (rhsIsBool_)
+        masm.branchTestBoolean(Assembler::NotEqual, R1, &failure);
+    else
+        masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
+
+    Register lhsReg = lhsIsBool_ ? masm.extractBoolean(R0, ExtractTemp0)
+                                 : masm.extractInt32(R0, ExtractTemp0);
+    Register rhsReg = rhsIsBool_ ? masm.extractBoolean(R1, ExtractTemp1)
+                                 : masm.extractInt32(R1, ExtractTemp1);
+
+    MOZ_ASSERT(op_ == JSOP_ADD || op_ == JSOP_SUB ||
+               op_ == JSOP_BITOR || op_ == JSOP_BITXOR || op_ == JSOP_BITAND);
+
+    switch(op_) {
+      case JSOP_ADD: {
+        Label fixOverflow;
+
+        masm.branchAdd32(Assembler::Overflow, rhsReg, lhsReg, &fixOverflow);
+        masm.tagValue(JSVAL_TYPE_INT32, lhsReg, R0);
+        EmitReturnFromIC(masm);
+
+        masm.bind(&fixOverflow);
+        masm.sub32(rhsReg, lhsReg);
+        // Proceed to failure below.
+        break;
+      }
+      case JSOP_SUB: {
+        Label fixOverflow;
+
+        masm.branchSub32(Assembler::Overflow, rhsReg, lhsReg, &fixOverflow);
+        masm.tagValue(JSVAL_TYPE_INT32, lhsReg, R0);
+        EmitReturnFromIC(masm);
+
+        masm.bind(&fixOverflow);
+        masm.add32(rhsReg, lhsReg);
+        // Proceed to failure below.
+        break;
+      }
+      case JSOP_BITOR: {
+        masm.orPtr(rhsReg, lhsReg);
+        masm.tagValue(JSVAL_TYPE_INT32, lhsReg, R0);
+        EmitReturnFromIC(masm);
+        break;
+      }
+      case JSOP_BITXOR: {
+        masm.xorPtr(rhsReg, lhsReg);
+        masm.tagValue(JSVAL_TYPE_INT32, lhsReg, R0);
+        EmitReturnFromIC(masm);
+        break;
+      }
+      case JSOP_BITAND: {
+        masm.andPtr(rhsReg, lhsReg);
+        masm.tagValue(JSVAL_TYPE_INT32, lhsReg, R0);
+        EmitReturnFromIC(masm);
+        break;
+      }
+      default:
+       MOZ_CRASH("Unhandled op for BinaryArith_BooleanWithInt32.");
+    }
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+bool
+ICBinaryArith_DoubleWithInt32::Compiler::generateStubCode(MacroAssembler& masm)
+{
+    MOZ_ASSERT(op == JSOP_BITOR || op == JSOP_BITAND || op == JSOP_BITXOR);
+
+    Label failure;
+    Register intReg;
+    Register scratchReg;
+    if (lhsIsDouble_) {
+        masm.branchTestDouble(Assembler::NotEqual, R0, &failure);
+        masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
+        intReg = masm.extractInt32(R1, ExtractTemp0);
+        masm.unboxDouble(R0, FloatReg0);
+        scratchReg = R0.scratchReg();
+    } else {
+        masm.branchTestInt32(Assembler::NotEqual, R0, &failure);
+        masm.branchTestDouble(Assembler::NotEqual, R1, &failure);
+        intReg = masm.extractInt32(R0, ExtractTemp0);
+        masm.unboxDouble(R1, FloatReg0);
+        scratchReg = R1.scratchReg();
+    }
+
+    // Truncate the double to an int32.
+    {
+        Label doneTruncate;
+        Label truncateABICall;
+        masm.branchTruncateDouble(FloatReg0, scratchReg, &truncateABICall);
+        masm.jump(&doneTruncate);
+
+        masm.bind(&truncateABICall);
+        masm.push(intReg);
+        masm.setupUnalignedABICall(scratchReg);
+        masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
+        masm.callWithABI(mozilla::BitwiseCast<void*, int32_t(*)(double)>(JS::ToInt32));
+        masm.storeCallResult(scratchReg);
+        masm.pop(intReg);
+
+        masm.bind(&doneTruncate);
+    }
+
+    Register intReg2 = scratchReg;
+    // All handled ops commute, so no need to worry about ordering.
+    switch(op) {
+      case JSOP_BITOR:
+        masm.orPtr(intReg, intReg2);
+        break;
+      case JSOP_BITXOR:
+        masm.xorPtr(intReg, intReg2);
+        break;
+      case JSOP_BITAND:
+        masm.andPtr(intReg, intReg2);
+        break;
+      default:
+       MOZ_CRASH("Unhandled op for BinaryArith_DoubleWithInt32.");
+    }
+    masm.tagValue(JSVAL_TYPE_INT32, intReg2, R0);
+    EmitReturnFromIC(masm);
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+
 
 } // namespace jit
 } // namespace js

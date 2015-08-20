@@ -36,13 +36,16 @@ public:
   void Init();
 
   /**
-   * Decodes, reading all data currently available in the SourceBuffer. If more
-   * data is needed, Decode() automatically ensures that it will be called again
-   * on a DecodePool thread when the data becomes available.
+   * Decodes, reading all data currently available in the SourceBuffer.
+   *
+   * If more data is needed, Decode() will schedule @aOnResume to be called when
+   * more data is available. If @aOnResume is null or unspecified, the default
+   * implementation resumes decoding on a DecodePool thread. Most callers should
+   * use the default implementation.
    *
    * Any errors are reported by setting the appropriate state on the decoder.
    */
-  nsresult Decode();
+  nsresult Decode(IResumable* aOnResume = nullptr);
 
   /**
    * Given a maximum number of bytes we're willing to decode, @aByteLimit,

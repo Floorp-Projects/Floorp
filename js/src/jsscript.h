@@ -1098,9 +1098,6 @@ class JSScript : public js::gc::TenuredCell
     // Script came from eval(), and is in eval cache.
     bool isCachedEval_:1;
 
-    // Set for functions defined at the top level within an 'eval' script.
-    bool directlyInsideEval_:1;
-
     // 'this', 'arguments' and f.apply() are used. This is likely to be a wrapper.
     bool usesArgumentsApplyAndThis_:1;
 
@@ -1334,7 +1331,6 @@ class JSScript : public js::gc::TenuredCell
 
     bool isActiveEval() const { return isActiveEval_; }
     bool isCachedEval() const { return isCachedEval_; }
-    bool directlyInsideEval() const { return directlyInsideEval_; }
 
     void cacheForEval() {
         MOZ_ASSERT(isActiveEval() && !isCachedEval());
@@ -1353,7 +1349,6 @@ class JSScript : public js::gc::TenuredCell
     }
 
     void setActiveEval() { isActiveEval_ = true; }
-    void setDirectlyInsideEval() { directlyInsideEval_ = true; }
 
     bool usesArgumentsApplyAndThis() const {
         return usesArgumentsApplyAndThis_;
@@ -2064,7 +2059,6 @@ class LazyScript : public gc::TenuredCell
         uint32_t bindingsAccessedDynamically : 1;
         uint32_t hasDebuggerStatement : 1;
         uint32_t hasDirectEval : 1;
-        uint32_t directlyInsideEval : 1;
         uint32_t usesArgumentsApplyAndThis : 1;
         uint32_t hasBeenCloned : 1;
         uint32_t treatAsRunOnce : 1;
@@ -2210,13 +2204,6 @@ class LazyScript : public gc::TenuredCell
     }
     void setHasDirectEval() {
         p_.hasDirectEval = true;
-    }
-
-    bool directlyInsideEval() const {
-        return p_.directlyInsideEval;
-    }
-    void setDirectlyInsideEval() {
-        p_.directlyInsideEval = true;
     }
 
     bool usesArgumentsApplyAndThis() const {

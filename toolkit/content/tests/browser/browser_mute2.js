@@ -19,13 +19,6 @@ function* test_on_browser2(browser) {
 }
 
 add_task(function*() {
-  yield new Promise((resolve) => {
-    SpecialPowers.pushPrefEnv({"set": [["media.useAudioChannelService", true]]},
-                              resolve);
-  });
-});
-
-add_task(function*() {
   yield BrowserTestUtils.withNewTab({
     gBrowser,
     url: PAGE,
