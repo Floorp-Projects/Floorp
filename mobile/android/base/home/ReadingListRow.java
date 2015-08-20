@@ -18,6 +18,7 @@ import android.database.Cursor;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -28,6 +29,7 @@ public class ReadingListRow extends LinearLayout {
     private final TextView title;
     private final TextView excerpt;
     private final TextView readTime;
+    private final ImageView indicator;
 
     // Average reading speed in words per minute.
     private static final int AVERAGE_READING_SPEED = 250;
@@ -50,6 +52,7 @@ public class ReadingListRow extends LinearLayout {
         title = (TextView) findViewById(R.id.title);
         excerpt = (TextView) findViewById(R.id.excerpt);
         readTime = (TextView) findViewById(R.id.read_time);
+        indicator = (ImageView) findViewById(R.id.indicator);
     }
 
     public void updateFromCursor(Cursor cursor) {
@@ -57,13 +60,19 @@ public class ReadingListRow extends LinearLayout {
             return;
         }
 
+        final boolean isUnread = cursor.getInt(cursor.getColumnIndexOrThrow(ReadingListItems.IS_UNREAD)) == 1;
+
         final String url = cursor.getString(cursor.getColumnIndexOrThrow(ReadingListItems.URL));
 
         final String titleText = cursor.getString(cursor.getColumnIndexOrThrow(ReadingListItems.TITLE));
         title.setText(TextUtils.isEmpty(titleText) ? StringUtils.stripCommonSubdomains(StringUtils.stripScheme(url)) : titleText);
+        title.setTextAppearance(getContext(), isUnread ? R.style.Widget_ReadingListRow_Title_Unread : R.style.Widget_ReadingListRow_Title_Read);
 
         final String excerptText = cursor.getString(cursor.getColumnIndexOrThrow(ReadingListItems.EXCERPT));
         excerpt.setText(TextUtils.isEmpty(excerptText) ? url : excerptText);
+        excerpt.setTextAppearance(getContext(), isUnread ? R.style.Widget_ReadingListRow_Title_Unread : R.style.Widget_ReadingListRow_Title_Read);
+
+        indicator.setImageResource(isUnread ? R.drawable.reading_list_indicator_unread : R.drawable.reading_list_indicator_read);
 
         /* Disabled until UX issues are fixed (see bug 1110461).
         final int lengthIndex = cursor.getColumnIndexOrThrow(ReadingListItems.LENGTH);

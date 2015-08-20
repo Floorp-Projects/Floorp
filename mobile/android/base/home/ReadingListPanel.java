@@ -90,6 +90,8 @@ public class ReadingListPanel extends HomeFragment {
 
                 // This item is a TwoLinePageRow, so we allow switch-to-tab.
                 mUrlOpenListener.onUrlOpen(url, EnumSet.of(OnUrlOpenListener.Flags.ALLOW_SWITCH_TO_TAB));
+
+                markAsRead(id);
             }
         });
 
@@ -100,11 +102,21 @@ public class ReadingListPanel extends HomeFragment {
                 info.url = cursor.getString(cursor.getColumnIndexOrThrow(ReadingListItems.URL));
                 info.title = cursor.getString(cursor.getColumnIndexOrThrow(ReadingListItems.TITLE));
                 info.readingListItemId = cursor.getInt(cursor.getColumnIndexOrThrow(ReadingListItems._ID));
+                info.isUnread = cursor.getInt(cursor.getColumnIndexOrThrow(ReadingListItems.IS_UNREAD)) == 1;
                 info.itemType = RemoveItemType.READING_LIST;
                 return info;
             }
         });
         registerForContextMenu(mList);
+    }
+
+    private void markAsRead(long id) {
+        final Context context = getActivity();
+
+        GeckoProfile.get(context).getDB().getReadingListAccessor().markAsRead(
+            context.getContentResolver(),
+            id
+        );
     }
 
     @Override
