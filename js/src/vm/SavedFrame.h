@@ -140,11 +140,9 @@ class ConcreteStackFrame<SavedFrame> : public BaseStackFrame {
     }
 
     void trace(JSTracer* trc) override {
-        JSObject* prev = &get();
-        JSObject* next = prev;
-        js::TraceRoot(trc, &next, "ConcreteStackFrame<SavedFrame>::ptr");
-        if (next != prev)
-            ptr = next;
+        JSObject* obj = &get();
+        js::TraceManuallyBarrieredEdge(trc, &obj, "ConcreteStackFrame<SavedFrame>::ptr");
+        ptr = obj;
     }
 
     bool isSelfHosted() const override { return get().isSelfHosted(); }
