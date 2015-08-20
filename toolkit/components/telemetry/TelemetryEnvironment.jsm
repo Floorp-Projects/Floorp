@@ -111,6 +111,8 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["dom.ipc.plugins.enabled", {what: RECORD_PREF_VALUE}],
   ["dom.ipc.processCount", {what: RECORD_PREF_VALUE, requiresRestart: true}],
   ["experiments.manifest.uri", {what: RECORD_PREF_VALUE}],
+  ["extensions.autoDisableScopes", {what: RECORD_PREF_VALUE}],
+  ["extensions.enabledScopes", {what: RECORD_PREF_VALUE}],
   ["extensions.blocklist.enabled", {what: RECORD_PREF_VALUE}],
   ["extensions.blocklist.url", {what: RECORD_PREF_VALUE}],
   ["extensions.strictCompatibility", {what: RECORD_PREF_VALUE}],
@@ -141,6 +143,7 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["privacy.trackingprotection.enabled", {what: RECORD_PREF_VALUE}],
   ["privacy.donottrackheader.enabled", {what: RECORD_PREF_VALUE}],
   ["services.sync.serverURL", {what: RECORD_PREF_STATE}],
+  ["xpinstall.signatures.required", {what: RECORD_PREF_VALUE}],
 ]);
 
 const LOGGER_NAME = "Toolkit.Telemetry";
@@ -1013,6 +1016,9 @@ EnvironmentCache.prototype = {
     } catch (e) {}
 
     this._currentEnvironment.settings = {
+#ifndef MOZ_WIDGET_GONK
+      addonCompatibilityCheckEnabled: AddonManager.checkCompatibility,
+#endif
       blocklistEnabled: Preferences.get(PREF_BLOCKLIST_ENABLED, true),
 #ifndef MOZ_WIDGET_ANDROID
       isDefaultBrowser: this._isDefaultBrowser(),
