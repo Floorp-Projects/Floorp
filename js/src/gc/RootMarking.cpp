@@ -146,10 +146,6 @@ AutoGCRooter::trace(JSTracer* trc)
         return;
       }
 
-      case JSONPARSER:
-        static_cast<js::JSONParserBase*>(this)->trace(trc);
-        return;
-
       case CUSTOM:
         static_cast<JS::CustomAutoRooter*>(this)->trace(trc);
         return;
