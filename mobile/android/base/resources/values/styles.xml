@@ -81,19 +81,20 @@
     </style>
 
     <style name="Widget.GeckoMenuListView" parent="Widget.ListView">
+        <item name="android:listSelector">@drawable/menu_item_action_bar_bg</item>
         <item name="android:divider">@color/divider_light</item>
     </style>
 
     <style name="Widget.MenuItemActionBar">
         <item name="android:padding">8dip</item>
-        <item name="android:background">@drawable/action_bar_button</item>
+        <item name="android:background">@drawable/menu_item_action_bar_bg</item>
         <item name="android:scaleType">fitCenter</item>
         <item name="drawableTintList">@color/action_bar_menu_item_colors</item>"
     </style>
 
     <style name="Widget.MenuItemSecondaryActionBar">
         <item name="android:padding">8dip</item>
-        <item name="android:background">@drawable/action_bar_button</item>
+        <item name="android:background">@drawable/menu_item_action_bar_bg</item>
         <item name="android:scaleType">centerInside</item>
         <item name="drawableTintList">@color/action_bar_secondary_menu_item_colors</item>
     </style>
