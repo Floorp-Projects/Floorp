@@ -99,7 +99,7 @@ function runTest() {
   iframe.src = "data:text/html,page";
 }
 
-SpecialPowers.pushPrefEnv({ "set": [["media.useAudioChannelService", true]]}, runTest);
+onload = runTest;
 SimpleTest.waitForExplicitFinish();
 
 </script>

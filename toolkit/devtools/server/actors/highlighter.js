@@ -532,14 +532,14 @@ let CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClas
    * is destroyed.
    */
   finalize: method(function() {
-    if (this._highlighterEnv) {
-      this._highlighterEnv.destroy();
-      this._highlighterEnv = null;
-    }
-
     if (this._highlighter) {
       this._highlighter.destroy();
       this._highlighter = null;
+    }
+
+    if (this._highlighterEnv) {
+      this._highlighterEnv.destroy();
+      this._highlighterEnv = null;
     }
   }, {
     oneway: true
@@ -2740,12 +2740,13 @@ exports.GeometryEditorHighlighter = GeometryEditorHighlighter;
  * graduations, useful for users to quickly check distances
  */
 function RulersHighlighter(highlighterEnv) {
-  this.win = highlighterEnv.window;
+  this.env = highlighterEnv;
   this.markup = new CanvasFrameAnonymousContentHelper(highlighterEnv,
     this._buildMarkup.bind(this));
 
-  this.win.addEventListener("scroll", this, true);
-  this.win.addEventListener("pagehide", this, true);
+  let { pageListenerTarget } = highlighterEnv;
+  pageListenerTarget.addEventListener("scroll", this);
+  pageListenerTarget.addEventListener("pagehide", this);
 }
 
 RulersHighlighter.prototype = {
@@ -2754,8 +2755,8 @@ RulersHighlighter.prototype = {
   ID_CLASS_PREFIX: "rulers-highlighter-",
 
   _buildMarkup: function() {
+    let { window } = this.env;
     let prefix = this.ID_CLASS_PREFIX;
-    let window = this.win;
 
     function createRuler(axis, size) {
       let width, height;
@@ -2934,9 +2935,11 @@ RulersHighlighter.prototype = {
   },
 
   _update: function() {
+    let { window } = this.env;
+
     setIgnoreLayoutChanges(true);
 
-    let zoom = LayoutHelpers.getCurrentZoom(this.win);
+    let zoom = LayoutHelpers.getCurrentZoom(window);
     let isZoomChanged = zoom !== this._zoom;
 
     if (isZoomChanged) {
@@ -2944,19 +2947,19 @@ RulersHighlighter.prototype = {
       this.updateViewport();
     }
 
-    setIgnoreLayoutChanges(false, this.win.document.documentElement);
+    setIgnoreLayoutChanges(false, window.document.documentElement);
 
-    this._rafID = this.win.requestAnimationFrame(() => this._update());
+    this._rafID = window.requestAnimationFrame(() => this._update());
   },
 
   _cancelUpdate: function() {
     if (this._rafID) {
-      this.win.cancelAnimationFrame(this._rafID);
+      this.env.window.cancelAnimationFrame(this._rafID);
       this._rafID = 0;
     }
   },
   updateViewport: function() {
-    let { devicePixelRatio } = this.win;
+    let { devicePixelRatio } = this.env.window;
 
     // Because `devicePixelRatio` is affected by zoom (see bug 809788),
     // in order to get the "real" device pixel ratio, we need divide by `zoom`
@@ -2975,8 +2978,9 @@ RulersHighlighter.prototype = {
   destroy: function() {
     this.hide();
 
-    this.win.removeEventListener("scroll", this, true);
-    this.win.removeEventListener("pagehide", this, true);
+    let { pageListenerTarget } = this.env;
+    pageListenerTarget.removeEventListener("scroll", this);
+    pageListenerTarget.removeEventListener("pagehide", this);
 
     this.markup.destroy();
 

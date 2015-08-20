@@ -24,6 +24,11 @@ Preferences
   When true, we enable the Telemetry system only for people that opted into Telemetry, even if unified Telemetry is enabled.
   Defaults to false & requires a restart.
 
+``toolkit.telemetry.optoutSample``
+
+  When true, we enable Telemetry opt-out for a sample of users when ``.unified`` and ``unifiedIsOptIn`` are on.
+  Defaults to false.
+
 ``toolkit.telemetry.enabled``
 
   If ``unified`` is off, this controls whether the Telemetry module is enabled.

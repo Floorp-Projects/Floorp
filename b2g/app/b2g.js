@@ -927,8 +927,6 @@ pref("general.useragent.updates.retry", 86400); // 1 day
 // Device ID can be composed of letter, numbers, hyphen ("-") and dot (".")
 pref("general.useragent.device_id", "");
 
-// Make <audio> and <video> talk to the AudioChannelService.
-pref("media.useAudioChannelService", true);
 // Add Mozilla AudioChannel APIs.
 pref("media.useAudioChannelAPI", true);
 

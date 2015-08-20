@@ -16,7 +16,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
 </pre>
   <script type="application/javascript">
 
-function runTest() {
   var a = new MessageChannel();
 
   var status = false;
@@ -27,11 +26,7 @@ function runTest() {
   }
 
   ok(status, "Transfering the same port should throw");
-  SimpleTest.finish();
-}
 
-SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [["dom.messageChannel.enabled", true]]}, runTest);
   </script>
 </body>
 </html>

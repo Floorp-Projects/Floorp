@@ -673,20 +673,22 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   updateCanvas: function TabItem_updateCanvas() {
     // ___ thumbnail
     let $canvas = this.$canvas;
-    if (!this.canvasSizeForced) {
-      let w = $canvas.width();
-      let h = $canvas.height();
-      if (w != $canvas[0].width || h != $canvas[0].height) {
-        $canvas[0].width = w;
-        $canvas[0].height = h;
-      }
-    }
+    let w = $canvas.width();
+    let h = $canvas.height();
+    let dimsChanged = !this.canvasSizeForced &&
+      (w != $canvas[0].width || h != $canvas[0].height);
 
     TabItems._lastUpdateTime = Date.now();
     this._lastTabUpdateTime = TabItems._lastUpdateTime;
 
-    if (this.tabCanvas)
-      this.tabCanvas.paint();
+    if (this.tabCanvas) {
+      if (dimsChanged) {
+        // more tasking as it involves the creation of a temp canvas.
+        this.tabCanvas.update(w, h);
+      } else {
+        this.tabCanvas.paint();
+      }
+    }
 
     // ___ cache
     if (this.isShowingCachedData())
@@ -1384,6 +1386,31 @@ TabCanvas.prototype = Utils.extend(new Subscribable(), {
       return;
 
     gPageThumbnails.captureToCanvas(this.tab.linkedBrowser, this.canvas, () => {
+      this._sendToSubscribers("painted");
+    });
+  },
+
+  // ----------
+  // Function: update
+  // Changing the dims of a canvas will clear it, so we don't want to do
+  // do this to a canvas we're currently displaying. This method grabs
+  // a new thumbnail at the new dims and then copies it over to the
+  // displayed canvas.
+  update: function TabCanvas_update(aWidth, aHeight) {
+    let temp = gPageThumbnails.createCanvas(window);
+    temp.width = aWidth;
+    temp.height = aHeight;
+    gPageThumbnails.captureToCanvas(this.tab.linkedBrowser, temp, () => {
+      let ctx = this.canvas.getContext('2d');
+      this.canvas.width = aWidth;
+      this.canvas.height = aHeight;
+      try {
+        ctx.drawImage(temp, 0, 0);
+      } catch (ex if ex.name == "InvalidStateError") {
+        // Can't draw if the canvas created by page thumbs isn't valid. This
+        // can happen during shutdown.
+        return;
+      }
       this._sendToSubscribers("painted");
     });
   },

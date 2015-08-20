@@ -91,8 +91,8 @@ malloc_good_size_impl(size_t size)
   return je_(nallocx)(size, 0);
 }
 
-static size_t
-compute_bin_unused(unsigned int narenas)
+static void
+compute_bin_unused_and_bookkeeping(jemalloc_stats_t *stats, unsigned int narenas)
 {
     size_t bin_unused = 0;
 
@@ -103,6 +103,10 @@ compute_bin_unused(unsigned int narenas)
 
     unsigned int nbins; // number of bins per arena
     unsigned int i, j;
+
+    size_t stats_metadata;
+    size_t ameta; // internal allocations for a single arena
+    size_t stats_ametadata = 0; // total internal allocations in all arenas
 
     // narenas also counts uninitialized arenas, and initialized arenas
     // are not guaranteed to be adjacent
@@ -121,6 +125,9 @@ compute_bin_unused(unsigned int narenas)
                 continue;
             }
 
+            CTL_I_GET("stats.arenas.0.metadata.allocated", ameta, i);
+            stats_ametadata += ameta;
+
             CTL_IJ_GET("stats.arenas.0.bins.0.curruns", curruns, i, j);
             CTL_IJ_GET("stats.arenas.0.bins.0.curregs", curregs, i, j);
 
@@ -128,7 +135,9 @@ compute_bin_unused(unsigned int narenas)
         }
     }
 
-    return bin_unused;
+    CTL_GET("stats.metadata", stats_metadata);
+    stats->bookkeeping = stats_metadata - stats_ametadata;
+    stats->bin_unused = bin_unused;
 }
 
 MOZ_JEMALLOC_API void
@@ -150,7 +159,6 @@ jemalloc_stats_impl(jemalloc_stats_t *stats)
   CTL_GET("stats.allocated", allocated);
   CTL_GET("stats.mapped", mapped);
   CTL_GET("opt.lg_chunk", lg_chunk);
-  CTL_GET("stats.bookkeeping", stats->bookkeeping);
 
   /* get the summation for all arenas, i == narenas */
   CTL_I_GET("stats.arenas.0.pdirty", pdirty, narenas);
@@ -160,7 +168,7 @@ jemalloc_stats_impl(jemalloc_stats_t *stats)
   stats->allocated = allocated;
   stats->waste = active - allocated;
   stats->page_cache = pdirty * page;
-  stats->bin_unused = compute_bin_unused(narenas);
+  compute_bin_unused_and_bookkeeping(stats, narenas);
   stats->waste -= stats->bin_unused;
 }
 

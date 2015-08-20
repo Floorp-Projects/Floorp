@@ -188,6 +188,10 @@ loop.panel = (function(_, mozL10n) {
   var GettingStartedView = React.createClass({
     mixins: [sharedMixins.WindowCloseMixin],
 
+    propTypes: {
+      mozLoop: React.PropTypes.object.isRequired
+    },
+
     handleButtonClick: function() {
       navigator.mozLoop.openGettingStartedTour("getting-started");
       navigator.mozLoop.setLoopPref("gettingStarted.seen", true);
@@ -197,17 +201,19 @@ loop.panel = (function(_, mozL10n) {
     },
 
     render: function() {
-      if (navigator.mozLoop.getLoopPref("gettingStarted.seen")) {
+      if (this.props.mozLoop.getLoopPref("gettingStarted.seen")) {
         return null;
       }
       return (
-        <div id="fte-getstarted">
-          <header id="fte-title">
-            {mozL10n.get("first_time_experience_title", {
-              "clientShortname": mozL10n.get("clientShortname2")
-            })}
+        <div className="fte-get-started-content">
+          <header className="fte-title">
+            <img src="loop/shared/img/hello_logo.svg" />
+            <div className="fte-subheader">
+              {mozL10n.get("first_time_experience_subheading")}
+            </div>
           </header>
-          <Button caption={mozL10n.get("first_time_experience_button_label")}
+          <Button additionalClass="fte-get-started-button"
+                  caption={mozL10n.get("first_time_experience_button_label")}
                   htmlId="fte-button"
                   onClick={this.handleButtonClick} />
         </div>
@@ -268,20 +274,24 @@ loop.panel = (function(_, mozL10n) {
   var ToSView = React.createClass({
     mixins: [sharedMixins.WindowCloseMixin],
 
+    propTypes: {
+      mozLoop: React.PropTypes.object.isRequired
+    },
+
     handleLinkClick: function(event) {
       if (!event.target || !event.target.href) {
         return;
       }
 
       event.preventDefault();
-      navigator.mozLoop.openURL(event.target.href);
+      this.props.mozLoop.openURL(event.target.href);
       this.closeWindow();
     },
 
     render: function() {
       var locale = mozL10n.getLanguage();
-      var terms_of_use_url = navigator.mozLoop.getLoopPref("legal.ToS_url");
-      var privacy_notice_url = navigator.mozLoop.getLoopPref("legal.privacy_url");
+      var terms_of_use_url = this.props.mozLoop.getLoopPref("legal.ToS_url");
+      var privacy_notice_url = this.props.mozLoop.getLoopPref("legal.privacy_url");
       var tosHTML = mozL10n.get("legal_text_and_links3", {
         "clientShortname": mozL10n.get("clientShortname2"),
         "terms_of_use": React.renderToStaticMarkup(
@@ -295,11 +305,12 @@ loop.panel = (function(_, mozL10n) {
           </a>
         )
       });
+
       return (
         <div id="powered-by-wrapper">
           <p className="powered-by" id="powered-by">
             {mozL10n.get("powered_by_beforeLogo")}
-            <img className={locale} id="powered-by-logo" />
+            <span className={locale} id="powered-by-logo"/>
             {mozL10n.get("powered_by_afterLogo")}
           </p>
           <p className="terms-service"
@@ -939,12 +950,12 @@ loop.panel = (function(_, mozL10n) {
 
       if (!this.state.gettingStartedSeen) {
         return (
-          <div>
+          <div className="fte-get-started-container">
             <NotificationListView
               clearOnDocumentHidden={true}
               notifications={this.props.notifications} />
-            <GettingStartedView />
-            <ToSView />
+            <GettingStartedView mozLoop={this.props.mozLoop} />
+            <ToSView mozLoop={this.props.mozLoop} />
           </div>
         );
       }

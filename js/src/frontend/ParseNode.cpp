@@ -1160,8 +1160,8 @@ ObjectBox::trace(JSTracer* trc)
         if (box->isFunctionBox()) {
             FunctionBox* funbox = box->asFunctionBox();
             funbox->bindings.trace(trc);
-            if (funbox->staticScope_)
-                TraceRoot(trc, &funbox->staticScope_, "funbox-staticScope");
+            if (funbox->enclosingStaticScope_)
+                TraceRoot(trc, &funbox->enclosingStaticScope_, "funbox-enclosingStaticScope");
         }
         box = box->traceLink;
     }

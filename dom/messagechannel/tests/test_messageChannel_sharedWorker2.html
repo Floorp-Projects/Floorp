@@ -15,22 +15,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
 
   <script type="application/javascript">
 
-  function runTest() {
-    var iframe = document.createElement('iframe');
-    iframe.setAttribute('src', "iframe_messageChannel_sharedWorker2.html");
-    document.getElementById('content').appendChild(iframe);
+  var iframe = document.createElement('iframe');
+  iframe.setAttribute('src', "iframe_messageChannel_sharedWorker2.html");
+  document.getElementById('content').appendChild(iframe);
 
-    var a = new SharedWorker('sharedWorker2_messageChannel.js');
-    a.port.onmessage = function(evt) {
-      is(evt.ports.length, 1, "We received a port.");
-      evt.ports[0].onmessage = function(e) {
-        is(e.data, "Hello from the iframe!", "Message reiceved from the iframe!");
-        SimpleTest.finish();
-      }
+  var a = new SharedWorker('sharedWorker2_messageChannel.js');
+  a.port.onmessage = function(evt) {
+    is(evt.ports.length, 1, "We received a port.");
+    evt.ports[0].onmessage = function(e) {
+      is(e.data, "Hello from the iframe!", "Message reiceved from the iframe!");
+      SimpleTest.finish();
     }
   }
 
-  SpecialPowers.pushPrefEnv({"set": [["dom.messageChannel.enabled", true]]}, runTest);
   SimpleTest.waitForExplicitFinish();
   </script>
 </body>

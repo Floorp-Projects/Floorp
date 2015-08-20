@@ -1,12 +1,14 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-///////////////////
-//
-// Whitelisting this test.
-// As part of bug 1077403, the leaking uncaught rejection should be fixed.
-//
-thisTestLeaksUncaughtRejectionsAndShouldBeFixed("Error: Shader Editor is still waiting for a WebGL context to be created.");
+"use strict";
+
+/**
+ * Whitelisting this test.
+ * As part of bug 1077403, the leaking uncaught rejection should be fixed.
+ */
+thisTestLeaksUncaughtRejectionsAndShouldBeFixed("Error: Shader Editor is " +
+  "still waiting for a WebGL context to be created.");
 
 function performChecks(target) {
   return Task.spawn(function*() {
@@ -17,11 +19,6 @@ function performChecks(target) {
     let toolbox;
     for (let index = 0; index < toolIds.length; index++) {
       let toolId = toolIds[index];
-
-      // FIXME Bug 1175850 - Enable storage inspector tests after upgrading for E10S
-      if (toolId === "storage") {
-        continue;
-      }
 
       info("About to open " + index + "/" + toolId);
       toolbox = yield gDevTools.showToolbox(target, toolId);

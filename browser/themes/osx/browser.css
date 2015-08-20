@@ -1453,6 +1453,13 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   -moz-image-region: rect(2px, 78px, 18px, 62px);
 }
 
+/* tabview yosemite vibrancy background */
+@media (-moz-mac-yosemite-theme) {
+  #tab-view {
+    -moz-appearance: -moz-mac-vibrancy-light;
+  }
+}
+
 /* undo close tab menu item */
 #alltabs_undoCloseTab {
   list-style-image: url(chrome://browser/skin/undoCloseTab.png);

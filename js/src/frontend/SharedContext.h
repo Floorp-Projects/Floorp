@@ -191,10 +191,6 @@ class SharedContext
     bool inWith_;
     bool superScopeAlreadyNeedsHomeObject_;
 
-  protected:
-    void computeAllowSyntax(JSObject* staticScope);
-    void computeInWith(JSObject* staticScope);
-
   public:
     SharedContext(ExclusiveContext* cx, Directives directives,
                   bool extraWarnings)
@@ -215,6 +211,8 @@ class SharedContext
     // for the static scope. FunctionBoxes are LifoAlloc'd and need to
     // manually trace their static scope.
     virtual JSObject* staticScope() const = 0;
+    void computeAllowSyntax(JSObject* staticScope);
+    void computeInWith(JSObject* staticScope);
 
     virtual ObjectBox* toObjectBox() { return nullptr; }
     inline bool isFunctionBox() { return toObjectBox() && toObjectBox()->isFunctionBox(); }
@@ -277,7 +275,7 @@ class FunctionBox : public ObjectBox, public SharedContext
 {
   public:
     Bindings        bindings;               /* bindings for this function */
-    JSObject*       staticScope_;
+    JSObject*       enclosingStaticScope_;
     uint32_t        bufStart;
     uint32_t        bufEnd;
     uint32_t        startLine;
@@ -285,7 +283,6 @@ class FunctionBox : public ObjectBox, public SharedContext
     uint16_t        length;
 
     uint8_t         generatorKindBits_;     /* The GeneratorKind of this function. */
-    bool            inWith_:1;              /* some enclosing scope is a with-statement */
     bool            inGenexpLambda:1;       /* lambda from generator expression */
     bool            hasDestructuringArgs:1; /* arguments list contains destructuring expression */
     bool            useAsm:1;               /* see useAsmOrInsideUseAsm */
@@ -300,13 +297,13 @@ class FunctionBox : public ObjectBox, public SharedContext
 
     template <typename ParseHandler>
     FunctionBox(ExclusiveContext* cx, ObjectBox* traceListHead, JSFunction* fun,
-                JSObject* staticScope, ParseContext<ParseHandler>* pc,
+                JSObject* enclosingStaticScope, ParseContext<ParseHandler>* pc,
                 Directives directives, bool extraWarnings, GeneratorKind generatorKind);
 
     ObjectBox* toObjectBox() override { return this; }
     JSFunction* function() const { return &object->as<JSFunction>(); }
-    JSObject* staticScope() const override { return staticScope_; }
-    void switchStaticScopeToFunction();
+    JSObject* staticScope() const override { return function(); }
+    JSObject* enclosingStaticScope() const { return enclosingStaticScope_; }
 
     GeneratorKind generatorKind() const { return GeneratorKindFromBits(generatorKindBits_); }
     bool isGenerator() const { return generatorKind() != NotGenerator; }

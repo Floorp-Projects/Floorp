@@ -1350,40 +1350,34 @@ operator!=(U* aLhs, const nsCOMPtr<T>& aRhs)
 
 
 
-// Comparing an |nsCOMPtr| to |0|
+// Comparing an |nsCOMPtr| to |nullptr|
 
-class NSCAP_Zero;
-
-// Specifically to allow |smartPtr == 0|.
 template<class T>
 inline bool
-operator==(const nsCOMPtr<T>& aLhs, NSCAP_Zero* aRhs)
+operator==(const nsCOMPtr<T>& aLhs, decltype(nullptr))
 {
-  return static_cast<const void*>(aLhs.get()) == reinterpret_cast<const void*>(aRhs);
+  return aLhs.get() == nullptr;
 }
 
-// Specifically to allow |0 == smartPtr|.
 template<class T>
 inline bool
-operator==(NSCAP_Zero* aLhs, const nsCOMPtr<T>& aRhs)
+operator==(decltype(nullptr), const nsCOMPtr<T>& aRhs)
 {
-  return reinterpret_cast<const void*>(aLhs) == static_cast<const void*>(aRhs.get());
+  return nullptr == aRhs.get();
 }
 
-// Specifically to allow |smartPtr != 0|.
 template<class T>
 inline bool
-operator!=(const nsCOMPtr<T>& aLhs, NSCAP_Zero* aRhs)
+operator!=(const nsCOMPtr<T>& aLhs, decltype(nullptr))
 {
-  return static_cast<const void*>(aLhs.get()) != reinterpret_cast<const void*>(aRhs);
+  return aLhs.get() != nullptr;
 }
 
-// Specifically to allow |0 != smartPtr|.
 template<class T>
 inline bool
-operator!=(NSCAP_Zero* aLhs, const nsCOMPtr<T>& aRhs)
+operator!=(decltype(nullptr), const nsCOMPtr<T>& aRhs)
 {
-  return reinterpret_cast<const void*>(aLhs) != static_cast<const void*>(aRhs.get());
+  return nullptr != aRhs.get();
 }
 
 
