@@ -179,7 +179,6 @@ protected:
 
   Size                      mLastThumbnailSize;
   Size                      mLastRecorderSize;
-  Size                      mRequestedPreviewSize;
   uint32_t                  mPreviewFps;
   bool                      mResumePreviewAfterTakingPicture;
   bool                      mFlashSupported;
