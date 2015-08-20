@@ -83,6 +83,16 @@ public:
     return result;
   }
 
+  void MarkForCC()
+  {
+    if (mCallback) {
+      JS::ExposeObjectToActiveJS(mCallback);
+    }
+    if (mCreationStack) {
+      JS::ExposeObjectToActiveJS(mCreationStack);
+    }
+  }
+
   /*
    * This getter does not change the color of the JSObject meaning that the
    * object returned is not guaranteed to be kept alive past the next CC.
