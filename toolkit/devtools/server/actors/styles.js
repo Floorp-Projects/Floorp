@@ -1448,17 +1448,39 @@ let StyleRuleFront = protocol.FrontClass(StyleRuleActor, {
 
 /**
  * Convenience API for building a list of attribute modifications
- * for the `modifyAttributes` request.
+ * for the `modifyProperties` request.  A RuleModificationList holds a
+ * list of modifications that will be applied to a StyleRuleActor.
+ * The modifications are processed in the order in which they are
+ * added to the RuleModificationList.
  */
 let RuleModificationList = Class({
+  /**
+   * Initialize a RuleModificationList.
+   * @param {StyleRuleFront} rule the associated rule
+   */
   initialize: function(rule) {
     this.rule = rule;
     this.modifications = [];
   },
 
+  /**
+   * Apply the modifications in this object to the associated rule.
+   *
+   * @return {Promise} A promise which will be resolved when the modifications
+   *         are complete; @see StyleRuleActor.modifyProperties.
+   */
   apply: function() {
     return this.rule.modifyProperties(this.modifications);
   },
+
+  /**
+   * Add a "set" entry to the modification list.
+   *
+   * @param {string} name the property's name
+   * @param {string} value the property's value
+   * @param {string} priority the property's priority, either the empty
+   *                          string or "important"
+   */
   setProperty: function(name, value, priority) {
     this.modifications.push({
       type: "set",
@@ -1467,6 +1489,12 @@ let RuleModificationList = Class({
       priority: priority
     });
   },
+
+  /**
+   * Add a "remove" entry to the modification list.
+   *
+   * @param {string} name the name of the property to remove
+   */
   removeProperty: function(name) {
     this.modifications.push({
       type: "remove",

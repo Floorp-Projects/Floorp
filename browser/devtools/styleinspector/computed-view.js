@@ -514,6 +514,17 @@ CssComputedView.prototype = {
   },
 
   /**
+   * Set the filter style search value.
+   * @param {String} value
+   *        The search value.
+   */
+  setFilterStyles: function(value="") {
+    this.searchField.value = value;
+    this.searchField.focus();
+    this._onFilterStyles();
+  },
+
+  /**
    * Called when the user enters a search term in the filter style search box.
    */
   _onFilterStyles: function() {
@@ -568,9 +579,7 @@ CssComputedView.prototype = {
    */
   _onClearSearch: function() {
     if (this.searchField.value) {
-      this.searchField.value = "";
-      this.searchField.focus();
-      this._onFilterStyles();
+      this.setFilterStyles("");
       return true;
     }
 

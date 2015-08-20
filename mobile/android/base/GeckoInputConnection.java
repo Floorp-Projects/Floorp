@@ -402,7 +402,11 @@ class GeckoInputConnection
             // reasonable, deterministic value
             notifySelectionChange(-1, -1);
         }
-        imm.restartInput(v);
+        try {
+            imm.restartInput(v);
+        } catch(RuntimeException e) {
+            Log.e(LOGTAG, "Error restarting input", e);
+        }
     }
 
     private void resetInputConnection() {

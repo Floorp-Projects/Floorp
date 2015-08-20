@@ -188,6 +188,10 @@ loop.panel = (function(_, mozL10n) {
   var GettingStartedView = React.createClass({displayName: "GettingStartedView",
     mixins: [sharedMixins.WindowCloseMixin],
 
+    propTypes: {
+      mozLoop: React.PropTypes.object.isRequired
+    },
+
     handleButtonClick: function() {
       navigator.mozLoop.openGettingStartedTour("getting-started");
       navigator.mozLoop.setLoopPref("gettingStarted.seen", true);
@@ -197,17 +201,19 @@ loop.panel = (function(_, mozL10n) {
     },
 
     render: function() {
-      if (navigator.mozLoop.getLoopPref("gettingStarted.seen")) {
+      if (this.props.mozLoop.getLoopPref("gettingStarted.seen")) {
         return null;
       }
       return (
-        React.createElement("div", {id: "fte-getstarted"}, 
-          React.createElement("header", {id: "fte-title"}, 
-            mozL10n.get("first_time_experience_title", {
-              "clientShortname": mozL10n.get("clientShortname2")
-            })
+        React.createElement("div", {className: "fte-get-started-content"}, 
+          React.createElement("header", {className: "fte-title"}, 
+            React.createElement("img", {src: "loop/shared/img/hello_logo.svg"}), 
+            React.createElement("div", {className: "fte-subheader"}, 
+              mozL10n.get("first_time_experience_subheading")
+            )
           ), 
-          React.createElement(Button, {caption: mozL10n.get("first_time_experience_button_label"), 
+          React.createElement(Button, {additionalClass: "fte-get-started-button", 
+                  caption: mozL10n.get("first_time_experience_button_label"), 
                   htmlId: "fte-button", 
                   onClick: this.handleButtonClick})
         )
@@ -268,20 +274,24 @@ loop.panel = (function(_, mozL10n) {
   var ToSView = React.createClass({displayName: "ToSView",
     mixins: [sharedMixins.WindowCloseMixin],
 
+    propTypes: {
+      mozLoop: React.PropTypes.object.isRequired
+    },
+
     handleLinkClick: function(event) {
       if (!event.target || !event.target.href) {
         return;
       }
 
       event.preventDefault();
-      navigator.mozLoop.openURL(event.target.href);
+      this.props.mozLoop.openURL(event.target.href);
       this.closeWindow();
     },
 
     render: function() {
       var locale = mozL10n.getLanguage();
-      var terms_of_use_url = navigator.mozLoop.getLoopPref("legal.ToS_url");
-      var privacy_notice_url = navigator.mozLoop.getLoopPref("legal.privacy_url");
+      var terms_of_use_url = this.props.mozLoop.getLoopPref("legal.ToS_url");
+      var privacy_notice_url = this.props.mozLoop.getLoopPref("legal.privacy_url");
       var tosHTML = mozL10n.get("legal_text_and_links3", {
         "clientShortname": mozL10n.get("clientShortname2"),
         "terms_of_use": React.renderToStaticMarkup(
@@ -295,11 +305,12 @@ loop.panel = (function(_, mozL10n) {
           )
         )
       });
+
       return (
         React.createElement("div", {id: "powered-by-wrapper"}, 
           React.createElement("p", {className: "powered-by", id: "powered-by"}, 
             mozL10n.get("powered_by_beforeLogo"), 
-            React.createElement("img", {className: locale, id: "powered-by-logo"}), 
+            React.createElement("span", {className: locale, id: "powered-by-logo"}), 
             mozL10n.get("powered_by_afterLogo")
           ), 
           React.createElement("p", {className: "terms-service", 
@@ -939,12 +950,12 @@ loop.panel = (function(_, mozL10n) {
 
       if (!this.state.gettingStartedSeen) {
         return (
-          React.createElement("div", null, 
+          React.createElement("div", {className: "fte-get-started-container"}, 
             React.createElement(NotificationListView, {
               clearOnDocumentHidden: true, 
               notifications: this.props.notifications}), 
-            React.createElement(GettingStartedView, null), 
-            React.createElement(ToSView, null)
+            React.createElement(GettingStartedView, {mozLoop: this.props.mozLoop}), 
+            React.createElement(ToSView, {mozLoop: this.props.mozLoop})
           )
         );
       }
