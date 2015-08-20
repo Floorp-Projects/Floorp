@@ -14,17 +14,24 @@
 
 #include "js/Utility.h"
 
-// gcc appears to use _mips_hard_float to denote
-// that the target is a hard-float target.
-#ifdef _mips_hard_float
-#define JS_CODEGEN_MIPS32_HARDFP
-#endif
+#define REGISTERS_NAMES         \
+    { "zero", "at", "v0", "v1", "a0", "a1", "a2", "a3", \
+      "t0",   "t1", "t2", "t3", "t4", "t5", "t6", "t7", \
+      "s0",   "s1", "s2", "s3", "s4", "s5", "s6", "s7", \
+      "t8",   "t9", "k0", "k1", "gp", "sp", "fp", "ra"};
 
-#if _MIPS_SIM == _ABIO32
-#define USES_O32_ABI
-#else
-#error "Unsupported ABI"
-#endif
+#define REGISTERS_ALLOCATABLE   14
+#define REGISTERS_ARGREGMASK    SharedArgRegMask
+
+#define REGISTERS_JSCALLMASK    \
+    (1 << Registers::a2) |      \
+    (1 << Registers::a3);
+
+#define REGISTERS_CALLMASK      \
+    (1 << Registers::v0) |      \
+    (1 << Registers::v1);  // used for double-size returns
+
+#include "jit/mips-shared/Architecture-mips.h"
 
 namespace js {
 namespace jit {
@@ -42,185 +49,6 @@ static const int32_t NUNBOX32_PAYLOAD_OFFSET = 0;
 // For MIPS this is 2 instructions relative call.
 static const uint32_t BAILOUT_TABLE_ENTRY_SIZE = 2 * sizeof(void*);
 
-class Registers
-{
-  public:
-    enum RegisterID {
-        r0 = 0,
-        r1,
-        r2,
-        r3,
-        r4,
-        r5,
-        r6,
-        r7,
-        r8,
-        r9,
-        r10,
-        r11,
-        r12,
-        r13,
-        r14,
-        r15,
-        r16,
-        r17,
-        r18,
-        r19,
-        r20,
-        r21,
-        r22,
-        r23,
-        r24,
-        r25,
-        r26,
-        r27,
-        r28,
-        r29,
-        r30,
-        r31,
-        zero = r0,
-        at = r1,
-        v0 = r2,
-        v1 = r3,
-        a0 = r4,
-        a1 = r5,
-        a2 = r6,
-        a3 = r7,
-        t0 = r8,
-        t1 = r9,
-        t2 = r10,
-        t3 = r11,
-        t4 = r12,
-        t5 = r13,
-        t6 = r14,
-        t7 = r15,
-        s0 = r16,
-        s1 = r17,
-        s2 = r18,
-        s3 = r19,
-        s4 = r20,
-        s5 = r21,
-        s6 = r22,
-        s7 = r23,
-        t8 = r24,
-        t9 = r25,
-        k0 = r26,
-        k1 = r27,
-        gp = r28,
-        sp = r29,
-        fp = r30,
-        ra = r31,
-        invalid_reg
-    };
-    typedef uint8_t Code;
-    typedef RegisterID Encoding;
-
-    // Content spilled during bailouts.
-    union RegisterContent {
-        uintptr_t r;
-    };
-
-    static const char* GetName(Code code) {
-        MOZ_ASSERT(code < Total);
-        static const char * const Names[] = { "zero", "at", "v0", "v1", "a0", "a1", "a2", "a3",
-                                              "t0",   "t1", "t2", "t3", "t4", "t5", "t6", "t7",
-                                              "s0",   "s1", "s2", "s3", "s4", "s5", "s6", "s7",
-                                              "t8",   "t9", "k0", "k1", "gp", "sp", "fp", "ra"};
-        return Names[code];
-    }
-    static const char* GetName(Encoding i) {
-        return GetName(Code(i));
-    }
-
-    static Code FromName(const char* name);
-
-    static const Encoding StackPointer = sp;
-    static const Encoding Invalid = invalid_reg;
-
-    static const uint32_t Total = 32;
-    static const uint32_t Allocatable = 14;
-
-    typedef uint32_t SetType;
-    static const SetType AllMask = 0xffffffff;
-    static const SetType ArgRegMask = (1 << a0) | (1 << a1) | (1 << a2) | (1 << a3);
-
-    static const SetType VolatileMask =
-        (1 << Registers::v0) |
-        (1 << Registers::v1) |
-        (1 << Registers::a0) |
-        (1 << Registers::a1) |
-        (1 << Registers::a2) |
-        (1 << Registers::a3) |
-        (1 << Registers::t0) |
-        (1 << Registers::t1) |
-        (1 << Registers::t2) |
-        (1 << Registers::t3) |
-        (1 << Registers::t4) |
-        (1 << Registers::t5) |
-        (1 << Registers::t6) |
-        (1 << Registers::t7);
-
-    // We use this constant to save registers when entering functions. This
-    // is why $ra is added here even though it is not "Non Volatile".
-    static const SetType NonVolatileMask =
-        (1 << Registers::s0) |
-        (1 << Registers::s1) |
-        (1 << Registers::s2) |
-        (1 << Registers::s3) |
-        (1 << Registers::s4) |
-        (1 << Registers::s5) |
-        (1 << Registers::s6) |
-        (1 << Registers::s7) |
-        (1 << Registers::ra);
-
-    static const SetType WrapperMask =
-        VolatileMask |         // = arguments
-        (1 << Registers::t0) | // = outReg
-        (1 << Registers::t1);  // = argBase
-
-    static const SetType NonAllocatableMask =
-        (1 << Registers::zero) |
-        (1 << Registers::at) | // at = scratch
-        (1 << Registers::t8) | // t8 = scratch
-        (1 << Registers::t9) | // t9 = scratch
-        (1 << Registers::k0) |
-        (1 << Registers::k1) |
-        (1 << Registers::gp) |
-        (1 << Registers::sp) |
-        (1 << Registers::fp) |
-        (1 << Registers::ra);
-
-    // Registers that can be allocated without being saved, generally.
-    static const SetType TempMask = VolatileMask & ~NonAllocatableMask;
-
-    // Registers returned from a JS -> JS call.
-    static const SetType JSCallMask =
-        (1 << Registers::a2) |
-        (1 << Registers::a3);
-
-    // Registers returned from a JS -> C call.
-    static const SetType CallMask =
-        (1 << Registers::v0) |
-        (1 << Registers::v1);  // used for double-size returns
-
-    static const SetType AllocatableMask = AllMask & ~NonAllocatableMask;
-
-    static uint32_t SetSize(SetType x) {
-        static_assert(sizeof(SetType) == 4, "SetType must be 32 bits");
-        return mozilla::CountPopulation32(x);
-    }
-    static uint32_t FirstBit(SetType x) {
-        return mozilla::CountTrailingZeroes32(x);
-    }
-    static uint32_t LastBit(SetType x) {
-        return 31 - mozilla::CountLeadingZeroes32(x);
-    }
-};
-
-// Smallest integer type that can hold a register bitmask.
-typedef uint32_t PackedRegisterMask;
-
-
 // MIPS32 can have two types of floating-point coprocessors:
 // - 32 bit floating-point coprocessor - In this case, there are 32 single
 // precision registers and pairs of even and odd float registers are used as
@@ -231,68 +59,15 @@ typedef uint32_t PackedRegisterMask;
 
 // When using O32 ABI, floating-point coprocessor is 32 bit.
 // When using N32 ABI, floating-point coprocessor is 64 bit.
-class FloatRegisters
+class FloatRegisters : public BaseFloatRegisters
 {
   public:
-    enum FPRegisterID {
-        f0 = 0,
-        f1,
-        f2,
-        f3,
-        f4,
-        f5,
-        f6,
-        f7,
-        f8,
-        f9,
-        f10,
-        f11,
-        f12,
-        f13,
-        f14,
-        f15,
-        f16,
-        f17,
-        f18,
-        f19,
-        f20,
-        f21,
-        f22,
-        f23,
-        f24,
-        f25,
-        f26,
-        f27,
-        f28,
-        f29,
-        f30,
-        f31,
-        invalid_freg
-    };
-    typedef FPRegisterID Code;
-    typedef FPRegisterID Encoding;
-
-    // Content spilled during bailouts.
-    union RegisterContent {
-        double d;
-    };
-
-    static const char* GetName(Code code) {
-        static const char * const Names[] = { "f0", "f1", "f2", "f3",  "f4", "f5",  "f6", "f7",
-                                              "f8", "f9",  "f10", "f11", "f12", "f13",
-                                              "f14", "f15", "f16", "f17", "f18", "f19",
-                                              "f20", "f21", "f22", "f23", "f24", "f25",
-                                              "f26", "f27", "f28", "f29", "f30", "f31"};
-        return Names[code];
-    }
     static const char* GetName(uint32_t i) {
         MOZ_ASSERT(i < Total);
         return GetName(Code(i % 32));
     }
 
     static Code FromName(const char* name);
-
-    static const Code Invalid = invalid_freg;
 
     static const uint32_t Total = 64;
     static const uint32_t TotalDouble = 16;
@@ -301,7 +76,9 @@ class FloatRegisters
     // When saving all registers we only need to do is save double registers.
     static const uint32_t TotalPhys = 16;
 
-    typedef uint64_t SetType;
+    static_assert(sizeof(SetType) * 8 >= Total,
+                  "SetType should be large enough to enumerate all registers.");
+
     static const SetType AllDoubleMask = 0x55555555ULL << 32;
     static const SetType AllMask = AllDoubleMask | ((1ULL << 32) - 1);
 
@@ -351,10 +128,7 @@ class FloatRegisters
     static const SetType AllocatableMask = AllMask & ~NonAllocatableMask;
 };
 
-template <typename T>
-class TypedRegisterSet;
-
-class FloatRegister
+class FloatRegister : public BaseFloatRegister
 {
   public:
     enum RegType {
@@ -391,8 +165,6 @@ class FloatRegister
 
     bool isSingle() const { return kind_ == Single; }
     bool isDouble() const { return kind_ == Double; }
-    bool isInt32x4() const { return false; }
-    bool isFloat32x4() const { return false; }
 
     FloatRegister doubleOverlay(unsigned int which = 0) const;
     FloatRegister singleOverlay(unsigned int which = 0) const;
@@ -489,7 +261,6 @@ class FloatRegister
         MOZ_ASSERT(aliasIdx == 1);
         *ret = singleOverlay(aliasIdx - 1);
     }
-    typedef FloatRegisters::SetType SetType;
 
     SetType alignedOrDominatedAliasedSet() const {
         if (isSingle())
@@ -499,52 +270,19 @@ class FloatRegister
         return SetType(0b11) << code_;
     }
 
-    static uint32_t SetSize(SetType x) {
-        static_assert(sizeof(SetType) == 8, "SetType must be 64 bits");
-        return mozilla::CountPopulation32(x);
-    }
     static Code FromName(const char* name) {
         return FloatRegisters::FromName(name);
     }
     static TypedRegisterSet<FloatRegister> ReduceSetForPush(const TypedRegisterSet<FloatRegister>& s);
     static uint32_t GetPushSizeInBytes(const TypedRegisterSet<FloatRegister>& s);
     uint32_t getRegisterDumpOffsetInBytes();
-    static uint32_t FirstBit(SetType x) {
-        return mozilla::CountTrailingZeroes64(x);
-    }
-    static uint32_t LastBit(SetType x) {
-        return 63 - mozilla::CountLeadingZeroes64(x);
-    }
 };
-
-uint32_t GetMIPSFlags();
-bool hasFPU();
-
-// MIPS doesn't have double registers that can NOT be treated as float32.
-inline bool
-hasUnaliasedDouble() {
-    return false;
-}
-
-// On MIPS, fn-double aliases both fn-float32 and fn+1-float32, so if you need
-// to convert a float32 to a double as a temporary, you need a temporary
-// double register.
-inline bool
-hasMultiAlias() {
-    return true;
-}
 
 // In order to handle functions such as int(*)(int, double) where the first
 // argument is a general purpose register, and the second argument is a floating
 // point register, we have to store the double content into 2 general purpose
 // registers, namely a2 and a3.
 #define JS_CODEGEN_REGISTER_PAIR 1
-
-// See the comments above AsmJSMappedSize in AsmJSValidate.h for more info.
-// TODO: Implement this for MIPS. Note that it requires Codegen to respect the
-// offset field of AsmJSHeapAccess.
-static const size_t AsmJSCheckedImmediateRange = 0;
-static const size_t AsmJSImmediateRange = 0;
 
 } // namespace jit
 } // namespace js
