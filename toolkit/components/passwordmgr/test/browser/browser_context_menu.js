@@ -8,6 +8,7 @@ Cu.import("resource://testing-common/LoginTestUtils.jsm", this);
 
 // The hostname for the test URIs.
 const TEST_HOSTNAME = "https://example.com";
+const MULTIPLE_FORMS_PAGE_PATH = "/browser/toolkit/components/passwordmgr/test/browser/multiple_forms.html";
 
 /**
  * Initialize logins needed for the tests and disable autofill
@@ -28,13 +29,35 @@ add_task(function* test_initialize() {
  * Check if the context menu is populated with the right
  * menuitems for the target password input field.
  */
-add_task(function* test_context_menu_populate() {
+add_task(function* test_context_menu_populate_password() {
+  yield BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: TEST_HOSTNAME + MULTIPLE_FORMS_PAGE_PATH,
+  }, function* (browser) {
+    let passwordInput = browser.contentWindow.document.getElementById("test-password-1");
+
+    yield openPasswordContextMenu(browser, passwordInput);
+
+    // Check the content of the password manager popup
+    let popupMenu = document.getElementById("fill-login-popup");
+    checkMenu(popupMenu);
+
+    let contextMenu = document.getElementById("contentAreaContextMenu");
+    contextMenu.hidePopup();
+  });
+});
+
+/**
+ * Check if the context menu is populated with the right menuitems
+ * for the target username field with a password field present.
+ */
+add_task(function* test_context_menu_populate_username_with_password() {
   yield BrowserTestUtils.withNewTab({
     gBrowser,
     url: TEST_HOSTNAME + "/browser/toolkit/components/" +
          "passwordmgr/test/browser/multiple_forms.html",
   }, function* (browser) {
-    let passwordInput = browser.contentWindow.document.getElementById("test-password-1");
+    let passwordInput = browser.contentWindow.document.getElementById("test-username-2");
 
     yield openPasswordContextMenu(browser, passwordInput);
 
@@ -52,87 +75,104 @@ add_task(function* test_context_menu_populate() {
  * login menuitem is clicked.
  */
 add_task(function* test_context_menu_password_fill() {
-  // Set of element ids to check.
-  let testSet = [
-    {
-      passwordInput: "test-password-1",
-      unchangedFields: null,
-    },
-    {
-      passwordInput: "test-password-2",
-      unchangedFields: ["test-username-2"],
-    },
-    {
-      passwordInput: "test-password-3",
-      unchangedFields: ["test-username-3"],
-    },
-    {
-      passwordInput: "test-password-4",
-      unchangedFields: ["test-username-4"],
-    },
-    {
-      passwordInput: "test-password-5",
-      unchangedFields: ["test-username-5", "test-password2-5"],
-    },
-    {
-      passwordInput: "test-password2-5",
-      unchangedFields: ["test-username-5", "test-password-5"],
-    },
-    {
-      passwordInput: "test-password-6",
-      unchangedFields: ["test-username-6", "test-password2-6"],
-    },
-    {
-      passwordInput: "test-password2-6",
-      unchangedFields: ["test-username-6", "test-password-6"],
-    },
-    {
-      passwordInput: "test-password-7",
-      unchangedFields: null,
-    },
-  ];
-
   yield BrowserTestUtils.withNewTab({
     gBrowser,
-    url: TEST_HOSTNAME + "/browser/toolkit/components/" +
-         "passwordmgr/test/browser/multiple_forms.html",
+    url: TEST_HOSTNAME + MULTIPLE_FORMS_PAGE_PATH,
   }, function* (browser) {
-    for (let testCase of testSet) {
-      let passwordInput = browser.contentWindow.document.getElementById(testCase.passwordInput);
 
-      yield openPasswordContextMenu(browser, passwordInput);
+    let testForms = browser.contentWindow.document.getElementsByClassName("test-form");
+    for (let form of testForms) {
+      let usernameInputList = form.querySelectorAll("input[type='password']");
+      info("Testing form: " + form.getAttribute("description"));
 
-      let popupMenu = document.getElementById("fill-login-popup");
+      for (let passwordField of usernameInputList) {
+        info("Testing password field: " + passwordField.id);
 
-      // Store the values of fields that should remain unchanged.
-      let unchangedFieldsValues = null;
-      if (testCase.unchangedFields) {
-        unchangedFieldsValues = [];
-        for (let fieldId of testCase.unchangedFields) {
-          unchangedFieldsValues[fieldId] = browser.contentWindow.document.getElementById(fieldId).value;
+        let contextMenu = document.getElementById("contentAreaContextMenu");
+        let menuItemStatus = form.getAttribute("menuitemStatus");
+
+        // Synthesize a right mouse click over the username input element.
+        yield openPasswordContextMenu(browser, passwordField, ()=> {
+          let popupHeader = document.getElementById("fill-login");
+
+          // If the password field is disabled or read-only, we want to see
+          // the disabled Fill Password popup header.
+          if (passwordField.disabled || passwordField.readOnly) {
+            Assert.ok(!popupHeader.hidden, "Popup menu is not hidden.");
+            Assert.ok(popupHeader.disabled, "Popup menu is disabled.");
+            contextMenu.hidePopup();
+            return false;
+          }
+          return true;
+        });
+
+        if (contextMenu.state != "open") {
+          continue;
         }
+
+        // The only field affected by the password fill
+        // should be the target password field itself.
+        let unchangedFields = form.querySelectorAll('input:not(#' + passwordField.id + ')');
+        yield assertContextMenuFill(form, null, passwordField, unchangedFields);
+        contextMenu.hidePopup();
       }
+    }
+  });
+});
 
-      // Execute the default command of the first login menuitem found at the context menu.
-      let firstLoginItem = popupMenu.getElementsByClassName("context-login-item")[0];
-      firstLoginItem.doCommand();
+/**
+ * Check if the form is correctly filled when one
+ * username context menu login menuitem is clicked.
+ */
+add_task(function* test_context_menu_username_login_fill() {
+  yield BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: TEST_HOSTNAME + MULTIPLE_FORMS_PAGE_PATH,
+  }, function* (browser) {
 
-      yield BrowserTestUtils.waitForEvent(passwordInput, "input", "Password input value changed");
+    let testForms = browser.contentWindow.document.getElementsByClassName("test-form");
+    for (let form of testForms) {
+      let usernameInputList = form.querySelectorAll("input[type='text']");
+      info("Testing form: " + form.getAttribute("description"));
 
-      // Find the used login by it's username (Use only unique usernames in this test).
-      let login = getLoginFromUsername(firstLoginItem.label);
+      for (let usernameField of usernameInputList) {
+        info("Testing username field: " + usernameField.id);
 
-      Assert.equal(login.password, passwordInput.value, "Password filled and correct.");
+        // We always want to check if the first password field is filled,
+        // since this is the current behavior from the _fillForm function.
+        let passwordField = form.querySelector("input[type='password']");
 
-      // Check that the fields that should remain unchanged didn't got modified.
-      if (testCase.unchangedFields) {
-        Assert.ok(testCase.unchangedFields.every(fieldId => {
-          return unchangedFieldsValues[fieldId] == browser.contentWindow.document.getElementById(fieldId).value;
-        }), "Other fields were not changed.");
+        let contextMenu = document.getElementById("contentAreaContextMenu");
+        let menuItemStatus = form.getAttribute("menuitemStatus");
+
+        // Synthesize a right mouse click over the username input element.
+        yield openPasswordContextMenu(browser, usernameField, ()=> {
+          let popupHeader = document.getElementById("fill-login");
+
+          // If we don't want to see the actual popup menu,
+          // check if the popup is hidden or disabled.
+          if (!passwordField || usernameField.disabled || usernameField.readOnly ||
+              passwordField.disabled || passwordField.readOnly) {
+            if (!passwordField) {
+              Assert.ok(popupHeader.hidden, "Popup menu is hidden.");
+            } else {
+              Assert.ok(!popupHeader.hidden, "Popup menu is not hidden.");
+              Assert.ok(popupHeader.disabled, "Popup menu is disabled.");
+            }
+            contextMenu.hidePopup();
+            return false;
+          }
+          return true;
+        });
+
+        if (contextMenu.state != "open") {
+          continue;
+        }
+        // We shouldn't change any field that's not the target username field or the first password field
+        let unchangedFields = form.querySelectorAll('input:not(#' + usernameField.id + '):not(#' + passwordField.id + ')');
+        yield assertContextMenuFill(form, usernameField, passwordField, unchangedFields);
+        contextMenu.hidePopup();
       }
-
-      let contextMenu = document.getElementById("contentAreaContextMenu");
-      contextMenu.hidePopup();
     }
   });
 });
@@ -143,8 +183,7 @@ add_task(function* test_context_menu_password_fill() {
 add_task(function* test_context_menu_iframe_fill() {
   yield BrowserTestUtils.withNewTab({
     gBrowser,
-    url: TEST_HOSTNAME + "/browser/toolkit/components/" +
-         "passwordmgr/test/browser/multiple_forms.html",
+    url: TEST_HOSTNAME + MULTIPLE_FORMS_PAGE_PATH,
   }, function* (browser) {
     let iframe = browser.contentWindow.document.getElementById("test-iframe");
     let passwordInput = iframe.contentDocument.getElementById("form-basic-password");
@@ -199,19 +238,72 @@ add_task(function* test_context_menu_iframe_fill() {
 /**
  * Synthesize mouse clicks to open the password manager context menu popup
  * for a target password input element.
+ *
+ * assertCallback should return true if we should continue or else false.
  */
-function* openPasswordContextMenu(browser, passwordInput) {
+function* openPasswordContextMenu(browser, passwordInput, assertCallback = null) {
   // Synthesize a right mouse click over the password input element.
   let contextMenuShownPromise = BrowserTestUtils.waitForEvent(window, "popupshown");
   let eventDetails = {type: "contextmenu", button: 2};
   BrowserTestUtils.synthesizeMouseAtCenter(passwordInput, eventDetails, browser);
   yield contextMenuShownPromise;
 
+  if (assertCallback) {
+    if (!assertCallback.call()) {
+      return;
+    }
+  }
+
   // Synthesize a mouse click over the fill login menu header.
   let popupHeader = document.getElementById("fill-login");
   let popupShownPromise = BrowserTestUtils.waitForEvent(popupHeader, "popupshown");
   EventUtils.synthesizeMouseAtCenter(popupHeader, {});
   yield popupShownPromise;
+}
+
+/**
+ * Verify that only the expected form fields are filled.
+ */
+function* assertContextMenuFill(form, usernameField, passwordField, unchangedFields){
+  let popupMenu = document.getElementById("fill-login-popup");
+
+  // Store the value of fields that should remain unchanged.
+  if (unchangedFields.length) {
+    for (let field of unchangedFields) {
+      field.setAttribute("original-value", field.value);
+    }
+  }
+
+  // Execute the default command of the first login menuitem found at the context menu.
+  let firstLoginItem = popupMenu.getElementsByClassName("context-login-item")[0];
+  firstLoginItem.doCommand();
+
+  yield BrowserTestUtils.waitForEvent(form, "input", "Username input value changed");
+
+  // Find the used login by it's username (Use only unique usernames in this test).
+  let login = getLoginFromUsername(firstLoginItem.label);
+
+  // If we have an username field, check if it's correctly filled
+  if (usernameField && usernameField.getAttribute("expectedFail") == null) {
+    Assert.equal(login.username, usernameField.value, "Username filled and correct.");
+  }
+
+  // If we have a password field, check if it's correctly filled
+  if (passwordField && passwordField.getAttribute("expectedFail") == null) {
+    Assert.equal(passwordField.value, login.password, "Password filled and correct.");
+  }
+
+  // Check that all fields that should not change have the same value as before.
+  if (unchangedFields.length) {
+    Assert.ok(()=> {
+      for (let field of unchangedFields) {
+        if (field.value != field.getAttribute("original-value")) {
+          return false;
+        }
+      }
+      return true;
+    }, "Other fields were not changed.");
+  }
 }
 
 /**
