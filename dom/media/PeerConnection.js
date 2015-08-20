@@ -323,6 +323,12 @@ RTCPeerConnection.prototype = {
   __init: function(rtcConfig) {
     this._winID = this._win.QueryInterface(Ci.nsIInterfaceRequestor)
     .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
+    // TODO: Update this code once we support pc.setConfiguration, to track
+    // setting from content independently from pref (Bug 1181768).
+    if (rtcConfig.iceTransportPolicy == "all" &&
+        Services.prefs.getBoolPref("media.peerconnection.ice.relay_only")) {
+      rtcConfig.iceTransportPolicy = "relay";
+    }
     if (!rtcConfig.iceServers ||
         !Services.prefs.getBoolPref("media.peerconnection.use_document_iceservers")) {
       try {
