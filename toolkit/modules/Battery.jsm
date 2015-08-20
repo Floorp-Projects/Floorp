@@ -5,12 +5,12 @@
 
 "use strict";
 
-/** This module wraps around navigator.battery (https://developer.mozilla.org/en-US/docs/Web/API/Navigator.battery).
+/** This module wraps around navigator.getBattery (https://developer.mozilla.org/en-US/docs/Web/API/Navigator.getBattery).
   * and provides a framework for spoofing battery values in test code.
   * To spoof the battery values, set `Debugging.fake = true` after exporting this with a BackstagePass,
-  * after which you can spoof a property yb setting the relevant property of the Battery object.
+  * after which you can spoof a property yb setting the relevant property of the BatteryManager object.
   */
-this.EXPORTED_SYMBOLS = ["Battery"];
+this.EXPORTED_SYMBOLS = ["GetBattery", "Battery"];
 
 const Ci = Components.interfaces;
 const Cc = Components.classes;
@@ -40,6 +40,17 @@ this.Debugging = {
   fake: false
 }
 
+this.GetBattery = function () {
+  return new Services.appShell.hiddenDOMWindow.Promise(function (resolve, reject) {
+    // Return fake values if spoofing is enabled, otherwise fetch the real values from the BatteryManager API
+    if (Debugging.fake) {
+      resolve(gFakeBattery);
+      return;
+    }
+    Services.appShell.hiddenDOMWindow.navigator.getBattery().then(resolve, reject);
+  });
+};
+
 this.Battery = {};
 
 for (let k of ["charging", "chargingTime", "dischargingTime", "level"]) {
@@ -54,7 +65,7 @@ for (let k of ["charging", "chargingTime", "dischargingTime", "level"]) {
     },
     set: function(fakeSetting) {
       if (!Debugging.fake) {
-          throw new Error("Tried to set fake battery value when battery spoofing was disabled");
+        throw new Error("Tried to set fake battery value when battery spoofing was disabled");
       }
       gFakeBattery[prop] = fakeSetting;
     }
