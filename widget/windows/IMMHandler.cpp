@@ -2695,13 +2695,13 @@ IMMHandler::OnKeyDownEvent(nsWindow* aWindow,
     case VK_UP:
     case VK_RIGHT:
     case VK_DOWN:
+    case VK_RETURN:
       // If IME didn't process the key message (the virtual key code wasn't
       // converted to VK_PROCESSKEY), and the virtual key code event causes
-      // to move caret, we should cancel the composition here.  Then, this
-      // event will be dispatched.
-      // XXX I think that we should dispatch all key events during composition,
-      //     and nsEditor should cancel/commit the composition if it *thinks*
-      //     it's needed.
+      // moving caret or editing text with keeping composing state, we should
+      // cancel the composition here because we cannot support moving
+      // composition string with DOM events (IE also cancels the composition
+      // in same cases).  Then, this event will be dispatched.
       if (IsComposingOnOurEditor()) {
         // NOTE: We don't need to cancel the composition on another window.
         CancelComposition(aWindow, false);
