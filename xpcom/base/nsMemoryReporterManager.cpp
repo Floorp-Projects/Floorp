@@ -177,8 +177,8 @@ public:
 NS_IMPL_ISUPPORTS(ResidentUniqueReporter, nsIMemoryReporter)
 
 #define HAVE_SYSTEM_HEAP_REPORTER 1
-size_t
-SystemHeapSize()
+nsresult
+SystemHeapSize(int64_t* aSizeOut)
 {
     struct mallinfo info = mallinfo();
 
@@ -192,7 +192,8 @@ SystemHeapSize()
     // Linux should usually be zero (so long as jemalloc is enabled) so that
     // shouldn't be a problem. Nonetheless, cast the |int|s to |size_t| before
     // adding them to provide a small amount of extra overflow protection.
-    return size_t(info.hblkhd) + size_t(info.uordblks);
+    *aSizeOut = size_t(info.hblkhd) + size_t(info.uordblks);
+    return NS_OK;
 }
 
 #elif defined(__DragonFly__) || defined(__FreeBSD__) \
@@ -568,6 +569,57 @@ PrivateDistinguishedAmount(int64_t* aN)
   return NS_OK;
 }
 
+#define HAVE_SYSTEM_HEAP_REPORTER 1
+// Windows can have multiple separate heaps. During testing there were multiple
+// heaps present but the non-default ones had sizes no more than a few 10s of
+// KiBs. So we combine their sizes into a single measurement.
+nsresult
+SystemHeapSize(int64_t* aSizeOut)
+{
+  // Get the number of heaps.
+  DWORD nHeaps = GetProcessHeaps(0, nullptr);
+  NS_ENSURE_TRUE(nHeaps != 0, NS_ERROR_FAILURE);
+
+  // Get handles to all heaps, checking that the number of heaps hasn't
+  // changed in the meantime.
+  UniquePtr<HANDLE[]> heaps(new HANDLE[nHeaps]);
+  DWORD nHeaps2 = GetProcessHeaps(nHeaps, heaps.get());
+  NS_ENSURE_TRUE(nHeaps2 != 0 && nHeaps2 == nHeaps, NS_ERROR_FAILURE);
+
+  // Lock and iterate over each heap to get its size.
+  int64_t heapsSize = 0;
+  for (DWORD i = 0; i < nHeaps; i++) {
+    HANDLE heap = heaps[i];
+
+    NS_ENSURE_TRUE(HeapLock(heap), NS_ERROR_FAILURE);
+
+    int64_t heapSize = 0;
+    PROCESS_HEAP_ENTRY entry;
+    entry.lpData = nullptr;
+    while (HeapWalk(heap, &entry)) {
+      // We don't count entry.cbOverhead, because we just want to measure the
+      // space available to the program.
+      if (entry.wFlags & PROCESS_HEAP_ENTRY_BUSY) {
+        heapSize += entry.cbData;
+      }
+    }
+
+    // Check this result only after unlocking the heap, so that we don't leave
+    // the heap locked if there was an error.
+    DWORD lastError = GetLastError();
+
+    // I have no idea how things would proceed if unlocking this heap failed...
+    NS_ENSURE_TRUE(HeapUnlock(heap), NS_ERROR_FAILURE);
+
+    NS_ENSURE_TRUE(lastError == ERROR_NO_MORE_ITEMS, NS_ERROR_FAILURE);
+
+    heapsSize += heapSize;
+  }
+
+  *aSizeOut = heapsSize;
+  return NS_OK;
+}
+
 class WindowsAddressSpaceReporter final : public nsIMemoryReporter
 {
   ~WindowsAddressSpaceReporter() {}
@@ -835,7 +887,9 @@ public:
   NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
                            nsISupports* aData, bool aAnonymize) override
   {
-    int64_t amount = SystemHeapSize();
+    int64_t amount;
+    nsresult rv = SystemHeapSize(&amount);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     return MOZ_COLLECT_REPORT(
       "system-heap-allocated", KIND_OTHER, UNITS_BYTES, amount,
