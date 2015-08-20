@@ -218,7 +218,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mCurrentTimeBeforeSeek(0),
   mCorruptFrames(30),
   mDecodingFirstFrame(true),
-  mDisabledHardwareAcceleration(false),
   mSentLoadedMetadataEvent(false),
   mSentFirstFrameLoadedEvent(false),
   mSentPlaybackEndedEvent(false),
@@ -2482,14 +2481,13 @@ bool MediaDecoderStateMachine::CheckFrameValidity(VideoData* aData)
     // hardware acceleration. We use 10 as the corrupt value because RollingMean<>
     // only supports integer types.
     mCorruptFrames.insert(10);
-    if (!mDisabledHardwareAcceleration &&
-        mReader->VideoIsHardwareAccelerated() &&
+    if (mReader->VideoIsHardwareAccelerated() &&
         frameStats.GetPresentedFrames() > 30 &&
         mCorruptFrames.mean() >= 1 /* 10% */) {
         nsCOMPtr<nsIRunnable> task =
           NS_NewRunnableMethod(mReader, &MediaDecoderReader::DisableHardwareAcceleration);
         DecodeTaskQueue()->Dispatch(task.forget());
-      mDisabledHardwareAcceleration = true;
+        mCorruptFrames.clear();
       gfxCriticalNote << "Too many dropped/corrupted frames, disabling DXVA";
     }
     return false;
