@@ -110,16 +110,6 @@ struct frontend::LoopStmtInfo : public StmtInfoBCE
     }
 };
 
-void
-FunctionBox::switchStaticScopeToFunction()
-{
-    if (staticScope_->is<StaticFunctionBoxScopeObject>()) {
-        MOZ_ASSERT(staticScope_->as<StaticFunctionBoxScopeObject>().functionBox() == this);
-        staticScope_ = function();
-    }
-    MOZ_ASSERT(staticScope_ == function());
-}
-
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
                                  Parser<FullParseHandler>* parser, SharedContext* sc,
                                  HandleScript script, Handle<LazyScript*> lazyScript,
