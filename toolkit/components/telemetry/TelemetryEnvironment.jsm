@@ -72,7 +72,6 @@ this.TelemetryEnvironment = {
   // Policy to use when saving preferences. Exported for using them in tests.
   RECORD_PREF_STATE: 1, // Don't record the preference value
   RECORD_PREF_VALUE: 2, // We only record user-set prefs.
-  RECORD_PREF_NOTIFY_ONLY: 3, // Record nothing, just notify of changes.
 
   // Testing method
   _watchPreferences: function(prefMap) {
@@ -764,12 +763,11 @@ EnvironmentCache.prototype = {
   _getPrefData: function () {
     let prefData = {};
     for (let [pref, policy] of this._watchedPrefs.entries()) {
-      // Only record preferences if they are non-default and policy allows recording.
-      if (!Preferences.isSet(pref) ||
-          policy.what == TelemetryEnvironment.RECORD_PREF_NOTIFY_ONLY) {
+      // Only record preferences if they are non-default
+      if (!Preferences.isSet(pref)) {
         continue;
       }
-
+      
       // Check the policy for the preference and decide if we need to store its value
       // or whether it changed from the default value.
       let prefValue = undefined;
