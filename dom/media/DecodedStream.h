@@ -56,6 +56,8 @@ public:
   {
     return mStream == aStream;
   }
+  // Return the graph mStream belongs to.
+  MediaStreamGraph* Graph() const;
 
 private:
   OutputStreamManager* mOwner;
@@ -81,6 +83,12 @@ public:
   void Connect(MediaStream* aStream);
   // Disconnect all output streams from the input stream.
   void Disconnect();
+  // Return the graph these streams belong to or null if empty.
+  MediaStreamGraph* Graph() const
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    return !IsEmpty() ? mStreams[0].Graph() : nullptr;
+  }
 
 private:
   // Keep the input stream so we can connect the output streams that
