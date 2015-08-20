@@ -18,6 +18,7 @@ class TestCapabilities(MarionetteTestCase):
         self.assertIn("browserVersion", self.caps)
         self.assertIn("platformName", self.caps)
         self.assertIn("platformVersion", self.caps)
+        self.assertIn("specificationLevel", self.caps)
 
         self.assertEqual(self.caps["browserName"], self.appinfo["name"])
         self.assertEqual(self.caps["browserVersion"], self.appinfo["version"])
