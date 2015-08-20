@@ -18,9 +18,6 @@ let test = asyncTest(function* () {
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref(NON_BUILTIN_ROOT_PREF);
   });
-  // The root used for mochitests is not built-in, so set the relevant pref to
-  // true to force all pinning error messages to appear.
-  Services.prefs.setBoolPref(NON_BUILTIN_ROOT_PREF, true);
 
   yield loadTab(TEST_URI);
 
@@ -75,11 +72,25 @@ let test = asyncTest(function* () {
           "multiple 'report-uri' directives."
   }, hud);
 
+  // The root used for mochitests is not built-in, so set the relevant pref to
+  // true to have the PKP implementation return more specific errors.
+  Services.prefs.setBoolPref(NON_BUILTIN_ROOT_PREF, true);
+
   yield* checkForMessage({
     url: SJS_URL + "?pinsetDoesNotMatch",
     name: "Non-matching pinset error displayed successfully",
     text: "Public-Key-Pins: The site specified a header that did not include " +
           "a matching pin."
+  }, hud);
+
+  Services.prefs.setBoolPref(NON_BUILTIN_ROOT_PREF, false);
+
+  yield* checkForMessage({
+    url: SJS_URL + "?pinsetDoesNotMatch",
+    name: "Non-built-in root error displayed successfully",
+    text: "Public-Key-Pins: The certificate used by the site was not issued " +
+          "by a certificate in the default root certificate store. To " +
+          "prevent accidental breakage, the specified header was ignored."
   }, hud);
 });
 
