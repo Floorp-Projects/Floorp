@@ -26,11 +26,14 @@ describe("loop.conversation", function() {
       },
       setLoopPref: setLoopPrefStub,
       getLoopPref: function(prefName) {
-        if (prefName === "debug.sdk") {
-          return false;
+        switch (prefName) {
+          case "contextInConversations.enabled":
+            return false;
+          case "debug.sdk":
+            return false;
+          default:
+            return "http://fake";
         }
-
-        return "http://fake";
       },
       LOOP_SESSION_TYPE: {
         GUEST: 1,

@@ -624,7 +624,7 @@ loop.contacts = (function(_, mozL10n) {
         return (
           React.createElement("div", {className: "contact-filter-container"}, 
             React.createElement("input", {className: "contact-filter", 
-                   placeholder: mozL10n.get("contacts_search_placesholder"), 
+                   placeholder: mozL10n.get("contacts_search_placesholder2"), 
                    valueLink: this.linkState("filter")}), 
             this._renderFilterClearButton()
           )

@@ -4,7 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Cc, Ci, Cu, Cr} = require("chrome");
+"use strict";
+
+const {Cu} = require("chrome");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -18,7 +20,8 @@ loader.lazyGetter(this, "StorageFront",
 loader.lazyGetter(this, "StorageUI",
   () => require("devtools/storage/ui").StorageUI);
 
-this.StoragePanel = function StoragePanel(panelWin, toolbox) {
+let StoragePanel = this.StoragePanel =
+function StoragePanel(panelWin, toolbox) {
   EventEmitter.decorate(this);
 
   this._toolbox = toolbox;
@@ -26,7 +29,7 @@ this.StoragePanel = function StoragePanel(panelWin, toolbox) {
   this._panelWin = panelWin;
 
   this.destroy = this.destroy.bind(this);
-}
+};
 
 exports.StoragePanel = StoragePanel;
 
@@ -58,8 +61,9 @@ StoragePanel.prototype = {
       this.UI = new StorageUI(this._front, this._target, this._panelWin);
       this.isReady = true;
       this.emit("ready");
+
       return this;
-    }, console.error);
+    }).catch(this.destroy);
   },
 
   /**
@@ -68,22 +72,25 @@ StoragePanel.prototype = {
   destroy: function() {
     if (!this._destroyed) {
       this.UI.destroy();
+      this.UI = null;
+
       // Destroy front to ensure packet handler is removed from client
       this._front.destroy();
+      this._front = null;
       this._destroyed = true;
 
       this._target.off("close", this.destroy);
       this._target = null;
       this._toolbox = null;
-      this._panelDoc = null;
+      this._panelWin = null;
     }
 
     return Promise.resolve(null);
   },
-}
+};
 
 XPCOMUtils.defineLazyGetter(StoragePanel.prototype, "strings",
-  function () {
+  function() {
     return Services.strings.createBundle(
             "chrome://browser/locale/devtools/storage.properties");
   });

@@ -9,12 +9,14 @@ body {
   font-size: 12px;
 }
 
-#bg {
-  background: linear-gradient(#C4C4C4, #9E9E9E);
-}
+@media not all and (-moz-mac-yosemite-theme) { /* yosemite uses vibrant background on parent iframe */
+  #bg {
+    background: linear-gradient(#C4C4C4, #9E9E9E);
+  }
 
-#bg:-moz-window-inactive {
-  background: linear-gradient(#EDEDED, #D8D8D8);
+  #bg:-moz-window-inactive {
+    background: linear-gradient(#EDEDED, #D8D8D8);
+  }
 }
 
 /* Tabs

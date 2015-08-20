@@ -10,10 +10,10 @@ Bug 965872 - Storage inspector actor with cookies, local storage and session sto
 <body>
 <iframe src="http://sectest1.example.org/browser/toolkit/devtools/server/tests/browser/storage-unsecured-iframe.html"></iframe>
 <script type="application/javascript;version=1.7">
-
-var partialHostname = location.hostname.match(/^[^.]+(\..*)$/)[1];
-var cookieExpiresTime1 = 2000000000000;
-var cookieExpiresTime2 = 2000000001000;
+"use strict";
+const partialHostname = location.hostname.match(/^[^.]+(\..*)$/)[1];
+const cookieExpiresTime1 = 2000000000000;
+const cookieExpiresTime2 = 2000000001000;
 // Setting up some cookies to eat.
 document.cookie = "c1=foobar; expires=" +
   new Date(cookieExpiresTime1).toGMTString() + "; path=/browser";
@@ -34,7 +34,7 @@ window.idbGenerator = function*(callback) {
   let request = indexedDB.open("idb1", 1);
   request.onupgradeneeded = success;
   request.onsuccess = success;
-  request.onerror = function(e) {
+  request.onerror = function() {
     throw new Error("error opening db connection");
   };
   let event = yield undefined;
@@ -50,7 +50,11 @@ window.idbGenerator = function*(callback) {
   yield undefined;
   store1.add({id: 3, name: "foo2", email: "foo3@bar.com"}).onsuccess = success;
   yield undefined;
-  store2.add({id2: 1, name: "foo", email: "foo@bar.com", extra: "baz"}).onsuccess = success;
+  store2.add({
+    id2: 1,
+    name: "foo",
+    email: "foo@bar.com",
+    extra: "baz"}).onsuccess = success;
   yield undefined;
 
   yield undefined;
@@ -68,7 +72,7 @@ window.idbGenerator = function*(callback) {
   db2.close();
   console.log("added cookies and stuff from main page");
   callback();
-}
+};
 
 function successClear(event) {
   clearIterator.next(event);
@@ -78,14 +82,17 @@ window.clear = function*(callback) {
   document.cookie = "c1=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
   document.cookie = "c3=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
   document.cookie = "cs2=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+
   localStorage.clear();
   indexedDB.deleteDatabase("idb1").onsuccess = successClear;
   yield undefined;
   indexedDB.deleteDatabase("idb2").onsuccess = successClear;
   yield undefined;
-  console.log("removed cookies and stuff from main page");
+
+  dump("removed cookies, localStorage and indexedDB data from " +
+       document.location + "\n");
   callback();
-}
+};
 </script>
 </body>
 </html>

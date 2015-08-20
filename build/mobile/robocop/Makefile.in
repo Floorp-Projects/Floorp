@@ -5,8 +5,6 @@
 mobile-tests := mobile/android/tests/browser/robocop
 TESTPATH     := $(topsrcdir)/$(mobile-tests)
 
-ANDROID_APK_NAME := robocop-debug
-
 ANDROID_EXTRA_JARS += \
   $(srcdir)/robotium-solo-4.3.1.jar \
   $(NULL)

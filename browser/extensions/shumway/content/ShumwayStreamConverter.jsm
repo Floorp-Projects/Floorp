@@ -403,7 +403,10 @@ ShumwayStreamConverter.prototype = new ShumwayStreamConverterBase();
 copyProperties(ShumwayStreamConverter.prototype, {
   classID: Components.ID('{4c6030f7-e20a-264f-5b0e-ada3a9e97384}'),
   classDescription: 'Shumway Content Converter Component',
-  contractID: '@mozilla.org/streamconv;1?from=application/x-shockwave-flash&to=*/*'
+  contractID: '@mozilla.org/streamconv;1?from=application/x-shockwave-flash&to=*/*',
+
+  classID2: Components.ID('{4c6030f8-e20a-264f-5b0e-ada3a9e97384}'),
+  contractID2: '@mozilla.org/streamconv;1?from=application/x-shockwave-flash&to=text/html'
 });
 
 function ShumwayStreamOverlayConverter() {}
