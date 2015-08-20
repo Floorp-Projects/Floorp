@@ -3,20 +3,17 @@
 
 MARIONETTE_TIMEOUT = 10000;
 
-let battery = null;
-let fromStatus = "charging";
-let fromCharging = true;
+let battery = window.navigator.battery;
+let fromStatus = "not-charging";
+let fromCharging = false;
 
 function verifyInitialState() {
-  window.navigator.getBattery().then(function (b) {
-    battery = b;
-    ok(battery, "battery");
-    ok(battery.charging, "battery.charging");
-    runEmulatorCmd("power display", function (result) {
-      is(result.pop(), "OK", "power display successful");
-      ok(result.indexOf("status: Charging") !== -1, "power status charging");
-      setUp();
-    });
+  ok(battery, "battery");
+  ok(battery.charging, "battery.charging");
+  runEmulatorCmd("power display", function (result) {
+    is(result.pop(), "OK", "power display successful");
+    ok(result.indexOf("status: Charging") !== -1, "power status charging");
+    setUp();
   });
 }
 
@@ -25,9 +22,13 @@ function unexpectedEvent(event) {
 }
 
 function setUp() {
-  battery.onchargingchange = unexpectedEvent;
+  battery.onchargingchange = function () {
+    battery.onchargingchange = unexpectedEvent;
+    toCharging();
+  };
   battery.onlevelchange = unexpectedEvent;
-  toDischarging();
+  log("Changing power status to " + fromStatus);
+  runEmulatorCmd("power status " + fromStatus);
 }
 
 function resetStatus(charging, nextFunction) {
@@ -63,16 +64,16 @@ function changeStatus(toStatus, toCharging, nextFunction) {
   }
 }
 
+function toCharging() {
+  changeStatus("charging", true, toDischarging);
+}
+
 function toDischarging() {
   changeStatus("discharging", false, toFull);
 }
 
 function toFull() {
-  changeStatus("full", true, toNotCharging);
-}
-
-function toNotCharging() {
-  changeStatus("not-charging", false, toUnknown);
+  changeStatus("full", true, toUnknown);
 }
 
 function toUnknown() {
@@ -80,9 +81,13 @@ function toUnknown() {
 }
 
 function cleanUp() {
-  battery.onchargingchange = null;
+  battery.onchargingchange = function () {
+    battery.onchargingchange = null;
+    finish();
+  };
   battery.onlevelchange = null;
-  finish();
+  log("Resetting power status to charging");
+  runEmulatorCmd("power status charging");
 }
 
 verifyInitialState();

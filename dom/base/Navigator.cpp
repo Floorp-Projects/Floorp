@@ -185,6 +185,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGeolocation)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNotification)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBatteryManager)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBatteryPromise)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPowerManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCellBroadcast)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIccManager)
@@ -251,6 +252,8 @@ Navigator::Invalidate()
     mBatteryManager->Shutdown();
     mBatteryManager = nullptr;
   }
+
+  mBatteryPromise = nullptr;
 
 #ifdef MOZ_B2G_FM
   if (mFMRadio) {
@@ -1455,8 +1458,37 @@ Navigator::GetMozFMRadio(ErrorResult& aRv)
 //    Navigator::nsINavigatorBattery
 //*****************************************************************************
 
-battery::BatteryManager*
+Promise*
 Navigator::GetBattery(ErrorResult& aRv)
+{
+  if (mBatteryPromise) {
+    return mBatteryPromise;
+  }
+
+  if (!mWindow || !mWindow->GetDocShell()) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(mWindow);
+  nsRefPtr<Promise> batteryPromise = Promise::Create(go, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+  mBatteryPromise = batteryPromise;
+
+  if (!mBatteryManager) {
+    mBatteryManager = new battery::BatteryManager(mWindow);
+    mBatteryManager->Init();
+  }
+
+  mBatteryPromise->MaybeResolve(mBatteryManager);
+
+  return mBatteryPromise;
+}
+
+battery::BatteryManager*
+Navigator::GetDeprecatedBattery(ErrorResult& aRv)
 {
   if (!mBatteryManager) {
     if (!mWindow) {
