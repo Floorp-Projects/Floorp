@@ -154,6 +154,7 @@ function test() {
     signedState: AddonManager.SIGNEDSTATE_MISSING,
     isActive: false,
     appDisabled: true,
+    isCompatible: false,
   }, {
     id: "hotfix@tests.mozilla.org",
     name: "Test hotfix 1",
@@ -720,6 +721,44 @@ add_test(function() {
   });
 });
 
+// Opens and tests the details view for add-on 9 with signing required
+add_test(function() {
+  close_manager(gManagerWindow, function() {
+    Services.prefs.setBoolPref("xpinstall.signatures.required", true);
+    open_manager(null, function(aWindow) {
+      gManagerWindow = aWindow;
+      gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+
+      open_details("addon9@tests.mozilla.org", "extension", function() {
+        is(get("detail-name").textContent, "Test add-on 9", "Name should be correct");
+
+        is_element_hidden(get("detail-prefs-btn"), "Preferences button should be hidden");
+        is_element_hidden(get("detail-enable-btn"), "Enable button should be hidden");
+        is_element_visible(get("detail-disable-btn"), "Disable button should be visible");
+        is_element_visible(get("detail-uninstall-btn"), "Remove button should be visible");
+
+        is_element_hidden(get("detail-warning"), "Warning message should be hidden");
+        is_element_hidden(get("detail-warning-link"), "Warning link should be hidden");
+        is_element_visible(get("detail-error"), "Error message should be visible");
+        is(get("detail-error").textContent, "Test add-on 9 could not be verified for use in " + gApp + " and has been disabled.", "Error message should be correct");
+        is_element_visible(get("detail-error-link"), "Error link should be visible");
+        is(get("detail-error-link").value, "More Information", "Error link text should be correct");
+        is(get("detail-error-link").href, infoURL, "Error link should be correct");
+
+        close_manager(gManagerWindow, function() {
+          Services.prefs.setBoolPref("xpinstall.signatures.required", false);
+          open_manager(null, function(aWindow) {
+            gManagerWindow = aWindow;
+            gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+
+            run_next_test();
+          });
+        });
+      });
+    });
+  });
+});
+
 // Opens and tests the details view for add-on 10
 add_test(function() {
   open_details("addon10@tests.mozilla.org", "extension", function() {
@@ -730,16 +769,52 @@ add_test(function() {
     is_element_hidden(get("detail-disable-btn"), "Disable button should be hidden");
     is_element_visible(get("detail-uninstall-btn"), "Remove button should be visible");
 
-    is_element_hidden(get("detail-warning"), "Warning message should be hidden");
+    is_element_visible(get("detail-warning"), "Warning message should be visible");
+    is(get("detail-warning").textContent, "Test add-on 10 is incompatible with " + gApp + " " + gVersion + ".", "Warning message should be correct");
     is_element_hidden(get("detail-warning-link"), "Warning link should be hidden");
-    is_element_visible(get("detail-error"), "Error message should be visible");
-    is(get("detail-error").textContent, "Test add-on 10 could not be verified for use in " + gApp + " and has been disabled.", "Error message should be correct");
-    is_element_visible(get("detail-error-link"), "Error link should be visible");
-    is(get("detail-error-link").value, "More Information", "Error link text should be correct");
-    is(get("detail-error-link").href, infoURL, "Error link should be correct");
+    is_element_hidden(get("detail-error"), "Error message should be hidden");
+    is_element_hidden(get("detail-error-link"), "Error link should be hidden");
     is_element_hidden(get("detail-pending"), "Pending message should be hidden");
 
     run_next_test();
+  });
+});
+
+// Opens and tests the details view for add-on 10 with signing required
+add_test(function() {
+  close_manager(gManagerWindow, function() {
+    Services.prefs.setBoolPref("xpinstall.signatures.required", true);
+    open_manager(null, function(aWindow) {
+      gManagerWindow = aWindow;
+      gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+
+      open_details("addon10@tests.mozilla.org", "extension", function() {
+        is(get("detail-name").textContent, "Test add-on 10", "Name should be correct");
+
+        is_element_hidden(get("detail-prefs-btn"), "Preferences button should be hidden");
+        is_element_hidden(get("detail-enable-btn"), "Enable button should be hidden");
+        is_element_hidden(get("detail-disable-btn"), "Disable button should be hidden");
+        is_element_visible(get("detail-uninstall-btn"), "Remove button should be visible");
+
+        is_element_hidden(get("detail-warning"), "Warning message should be hidden");
+        is_element_hidden(get("detail-warning-link"), "Warning link should be hidden");
+        is_element_visible(get("detail-error"), "Error message should be visible");
+        is(get("detail-error").textContent, "Test add-on 10 could not be verified for use in " + gApp + " and has been disabled.", "Error message should be correct");
+        is_element_visible(get("detail-error-link"), "Error link should be visible");
+        is(get("detail-error-link").value, "More Information", "Error link text should be correct");
+        is(get("detail-error-link").href, infoURL, "Error link should be correct");
+
+        close_manager(gManagerWindow, function() {
+          Services.prefs.setBoolPref("xpinstall.signatures.required", false);
+          open_manager(null, function(aWindow) {
+            gManagerWindow = aWindow;
+            gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+
+            run_next_test();
+          });
+        });
+      });
+    });
   });
 });
 
