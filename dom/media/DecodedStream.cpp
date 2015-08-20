@@ -293,10 +293,19 @@ OutputStreamData::Remove()
   mOwner->Remove(mStream);
 }
 
+MediaStreamGraph*
+OutputStreamData::Graph() const
+{
+  return mStream->Graph();
+}
+
 void
 OutputStreamManager::Add(ProcessedMediaStream* aStream, bool aFinishWhenEnded)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  // All streams must belong to the same graph.
+  MOZ_ASSERT(!Graph() || Graph() == aStream->Graph());
+
   // Ensure that aStream finishes the moment mDecodedStream does.
   if (aFinishWhenEnded) {
     aStream->SetAutofinish(true);
