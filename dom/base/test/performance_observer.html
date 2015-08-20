@@ -48,6 +48,7 @@ async_test(t => {
     observedEntryList = list;
   });
   observer.observe({entryTypes: ['resource']});
+  t.add_cleanup(() => observer.disconnect());
 
   assert_equals(observedEntries.length, 0);
 
