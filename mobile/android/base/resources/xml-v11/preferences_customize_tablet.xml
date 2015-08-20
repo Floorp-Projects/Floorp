@@ -38,6 +38,11 @@
                     android:entryValues="@array/pref_restore_values"
                     android:persistent="true" />
 
+    <CheckBoxPreference android:key="browser.image_blocking.enabled"
+                        android:title="@string/pref_tap_to_load_images_title"
+                        android:summary="@string/pref_tap_to_load_images_summary"
+                        android:defaultValue="false"/>
+
     <CheckBoxPreference android:key="android.not_a_preference.tab_queue"
                         android:title="@string/pref_tab_queue_title"
                         android:summary="@string/pref_tab_queue_summary"
