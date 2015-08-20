@@ -18,6 +18,7 @@ const L10N = new ViewHelpers.MultiL10N([
  * if somebody edits edits about:config or the prefs change somewhere else.
  */
 const PREFS = new ViewHelpers.Prefs("devtools.performance", {
+  "show-triggers-for-gc-types": ["Char", "ui.show-triggers-for-gc-types"],
   "show-platform-data": ["Bool", "ui.show-platform-data"],
   "hidden-markers": ["Json", "timeline.hidden-markers"],
   "memory-sample-probability": ["Float", "memory.sample-probability"],

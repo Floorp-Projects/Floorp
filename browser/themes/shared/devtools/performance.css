@@ -528,6 +528,11 @@
   font-weight: bold;
 }
 
+.marker-details-customcontainer .custom-button {
+  padding: 2px 5px;
+  border-width: 1px;
+}
+
 /**
  * Marker colors
  */
