@@ -157,7 +157,7 @@ let gProfileThreadFromAllocationCache = new WeakMap();
  * @see MemoryActor.prototype.getAllocations for more information.
  *
  * @param object allocations
- *        A list of { sites, timestamps, frames, counts } arrays.
+ *        A list of { sites, timestamps, frames, sizes } arrays.
  * @return object
  *         The "profile" describing the allocations log.
  */
@@ -167,7 +167,7 @@ function getProfileThreadFromAllocations(allocations) {
     return cached;
   }
 
-  let { sites, timestamps, frames } = allocations;
+  let { sites, timestamps, frames, sizes } = allocations;
   let uniqueStrings = new UniqueStrings();
 
   // Convert allocation frames to the the stack and frame tables expected by
@@ -239,14 +239,14 @@ function getProfileThreadFromAllocations(allocations) {
   let writePos = 0;
   for (let i = 0; i < sites.length; i++) {
     // Schema:
-    //   [stack, time]
+    //   [stack, time, size]
     //
     // Originally, sites[i] indexes into the frames array. Note that in the
     // loop above, stackTable[sites[i]] and frames[sites[i]] index the same
     // information.
     let stackIndex = sites[i];
     if (frames[stackIndex]) {
-      samples[writePos++] = [stackIndex, timestamps[i]];
+      samples[writePos++] = [stackIndex, timestamps[i], sizes[i]];
     }
   }
   samples.length = writePos;
@@ -269,6 +269,7 @@ function allocationsWithSchema (data) {
     schema: {
       stack: slot++,
       time: slot++,
+      size: slot++,
     },
     data: data
   };

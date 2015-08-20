@@ -55,6 +55,7 @@ function *testMockMemory () {
   isEmptyArray(allocations.sites, "allocations.sites");
   isEmptyArray(allocations.timestamps, "allocations.timestamps");
   isEmptyArray(allocations.frames, "allocations.frames");
+  isEmptyArray(allocations.sizes, "allocations.sizes");
 
   is(isVisible($("#overview-pane")), true,
     "overview pane not hidden when server not supporting memory actors, yet UI prefs request them.");
@@ -110,6 +111,7 @@ function *testMockMemoryAndTimeline() {
   isEmptyArray(allocations.sites, "allocations.sites");
   isEmptyArray(allocations.timestamps, "allocations.timestamps");
   isEmptyArray(allocations.frames, "allocations.frames");
+  isEmptyArray(allocations.sizes, "allocations.sizes");
 
   is(isVisible($("#overview-pane")), false,
     "overview pane hidden when server not supporting memory/timeline actors, yet UI prefs request them.");

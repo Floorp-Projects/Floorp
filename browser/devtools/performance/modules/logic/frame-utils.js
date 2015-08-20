@@ -488,13 +488,17 @@ function getFrameInfo (node, options) {
     gFrameData.set(node, data);
   }
 
+  // If no options specified, we can't calculate relative values, abort here
+  if (!options) {
+    return data;
+  }
+
   // If a root specified, calculate the relative costs in the context of
   // this call tree. The cached store may already have this, but generate
   // if it does not.
+  let totalSamples = options.root.samples;
+  let totalDuration = options.root.duration;
   if (options && options.root && !data.COSTS_CALCULATED) {
-    let totalSamples = options.root.samples;
-    let totalDuration = options.root.duration;
-
     data.selfDuration = node.youngestFrameSamples / totalSamples * totalDuration;
     data.selfPercentage = node.youngestFrameSamples / totalSamples * 100;
     data.totalDuration = node.samples / totalSamples * totalDuration;
@@ -503,8 +507,15 @@ function getFrameInfo (node, options) {
   }
 
   if (options && options.allocations && !data.ALLOCATION_DATA_CALCULATED) {
+    let totalBytes = options.root.byteSize;
     data.selfCount = node.youngestFrameSamples;
     data.totalCount = node.samples;
+    data.selfCountPercentage = node.youngestFrameSamples / totalSamples * 100;
+    data.totalCountPercentage = node.samples / totalSamples * 100;
+    data.selfSize = node.youngestFrameByteSize;
+    data.totalSize = node.byteSize;
+    data.selfSizePercentage = node.youngestFrameByteSize / totalBytes * 100;
+    data.totalSizePercentage = node.byteSize / totalBytes * 100;
     data.ALLOCATION_DATA_CALCULATED = true;
   }
 

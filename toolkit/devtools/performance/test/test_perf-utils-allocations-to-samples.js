@@ -2,21 +2,25 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Tests if allocations data received from the memory actor is properly
+ * Tests if allocations data received from the performance actor is properly
  * converted to something that follows the same structure as the samples data
  * received from the profiler.
  */
 
-function test() {
-  let output = RecordingUtils.getProfileThreadFromAllocations(TEST_DATA);
-  is(output.toSource(), EXPECTED_OUTPUT.toSource(), "The output is correct.");
-
-  finish();
+function run_test() {
+  run_next_test();
 }
+
+add_task(function () {
+  const { getProfileThreadFromAllocations } = require("devtools/toolkit/performance/utils");
+  let output = getProfileThreadFromAllocations(TEST_DATA);
+  equal(output.toSource(), EXPECTED_OUTPUT.toSource(), "The output is correct.");
+});
 
 let TEST_DATA = {
   sites: [0, 0, 1, 2, 3],
   timestamps: [50, 100, 150, 200, 250],
+  sizes: [0, 0, 100, 200, 300],
   frames: [
     null, {
       source: "A",
@@ -46,11 +50,12 @@ let EXPECTED_OUTPUT = {
     "schema": {
       "stack": 0,
       "time": 1,
+      "size": 2,
     },
     data: [
-      [ 1, 150 ],
-      [ 2, 200 ],
-      [ 3, 250 ]
+      [ 1, 150, 100 ],
+      [ 2, 200, 200 ],
+      [ 3, 250, 300 ]
     ]
   },
   stackTable: {
