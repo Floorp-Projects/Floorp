@@ -4034,7 +4034,7 @@ GCRuntime::markWeakReferences(gcstats::Phase phase)
         for (CompartmentIterT c(rt); !c.done(); c.next()) {
             if (c->watchpointMap)
                 markedAny |= c->watchpointMap->markIteratively(&marker);
-            if (marker.weakMapAction() != ExpandWeakMaps)
+            if (!marker.isWeakMarkingTracer())
                 markedAny |= WeakMapBase::markCompartmentIteratively(c, &marker);
         }
         markedAny |= Debugger::markAllIteratively(&marker);
