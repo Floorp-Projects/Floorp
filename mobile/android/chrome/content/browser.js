@@ -6499,9 +6499,7 @@ var XPInstallObserver = {
     this._showErrorMessage(aInstall);
   },
 
-  onDownloadCancelled: function(aInstall) {
-    this._showErrorMessage(aInstall);
-  },
+  onDownloadCancelled: function(aInstall) {},
 
   _showErrorMessage: function(aInstall) {
     // Don't create a notification for distribution add-ons.
