@@ -4,6 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+ANDROID_APK_NAME = 'javaaddons-test'
+ANDROID_APK_PACKAGE = 'org.mozilla.javaaddons.test'
+
 jar = add_java_jar('javaaddons-test')
 jar.extra_jars += [
     TOPOBJDIR + '/mobile/android/javaaddons/javaaddons-1.0.jar',

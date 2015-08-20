@@ -21,6 +21,7 @@
   var ContactDetailsForm = loop.contacts.ContactDetailsForm;
   var ContactDropdown = loop.contacts.ContactDropdown;
   var ContactDetail = loop.contacts.ContactDetail;
+  var GettingStartedView = loop.panel.GettingStartedView;
   // 1.2. Conversation Window
   var AcceptCallView = loop.conversationViews.AcceptCallView;
   var DesktopPendingConversationView = loop.conversationViews.PendingConversationView;
@@ -489,6 +490,15 @@
     callback(null, fakeFewerContacts); // Defined in fake-mozLoop.js.
   };
 
+  var firstTimeUseMozLoop = _.cloneDeep(navigator.mozLoop);
+  firstTimeUseMozLoop.getLoopPref = function(prop) {
+    if (prop === "gettingStarted.seen") {
+      return false;
+    }
+
+    return true;
+  };
+
   var mockContact = {
     name: ["Mr Smith"],
     email: [{
@@ -542,7 +552,7 @@
         "dropdown-white", "dropdown-active", "dropdown-disabled", "edit",
         "edit-active", "edit-disabled", "edit-white", "expand", "expand-active",
         "expand-disabled", "minimize", "minimize-active", "minimize-disabled",
-        "settings-cog"
+        "settings-cog-grey", "settings-cog-white"
       ],
       "14x14": ["audio", "audio-active", "audio-disabled", "facemute",
         "facemute-active", "facemute-disabled", "hangup", "hangup-active",
@@ -716,6 +726,21 @@
                            height: 410, 
                            summary: "Re-sign-in view", 
                            width: 332}, 
+              React.createElement("div", {className: "panel"}, 
+                React.createElement(PanelView, {client: mockClient, 
+                  dispatcher: dispatcher, 
+                  mozLoop: firstTimeUseMozLoop, 
+                  notifications: notifications, 
+                  roomStore: roomStore, 
+                  selectedTab: "rooms"})
+              )
+            ), 
+
+            React.createElement(FramedExample, {cssClass: "fx-embedded-panel", 
+              dashed: true, 
+              height: 410, 
+              summary: "Re-sign-in view", 
+              width: 332}, 
               React.createElement("div", {className: "panel"}, 
                 React.createElement(SignInRequestView, {mozLoop: mockMozLoopLoggedIn})
               )
@@ -981,76 +1006,38 @@
           ), 
 
           React.createElement(Section, {name: "ConversationToolbar"}, 
-            React.createElement("h2", null, "Desktop Conversation Window"), 
             React.createElement("div", null, 
               React.createElement(FramedExample, {dashed: true, 
-                             height: 26, 
+                             height: 56, 
                              summary: "Default", 
                              width: 300}, 
                 React.createElement("div", {className: "fx-embedded"}, 
-                  React.createElement(ConversationToolbar, {audio: {enabled: true}, 
+                  React.createElement(ConversationToolbar, {audio: { enabled: true, visible: true}, 
                                        hangup: noop, 
                                        publishStream: noop, 
-                                       video: {enabled: true}})
+                                       video: { enabled: true, visible: true}})
                 )
               ), 
               React.createElement(FramedExample, {dashed: true, 
-                             height: 26, 
+                             height: 56, 
                              summary: "Video muted", 
                              width: 300}, 
                 React.createElement("div", {className: "fx-embedded"}, 
-                  React.createElement(ConversationToolbar, {audio: {enabled: true}, 
+                  React.createElement(ConversationToolbar, {audio: { enabled: true, visible: true}, 
                                        hangup: noop, 
                                        publishStream: noop, 
-                                       video: {enabled: false}})
+                                       video: { enabled: false, visible: true}})
                 )
               ), 
               React.createElement(FramedExample, {dashed: true, 
-                             height: 26, 
+                             height: 56, 
                              summary: "Audio muted", 
                              width: 300}, 
                 React.createElement("div", {className: "fx-embedded"}, 
-                  React.createElement(ConversationToolbar, {audio: {enabled: false}, 
+                  React.createElement(ConversationToolbar, {audio: { enabled: false, visible: true}, 
                                        hangup: noop, 
                                        publishStream: noop, 
-                                       video: {enabled: true}})
-                )
-              )
-            ), 
-
-            React.createElement("h2", null, "Standalone"), 
-            React.createElement("div", {className: "standalone override-position"}, 
-              React.createElement(FramedExample, {dashed: true, 
-                             height: 26, 
-                             summary: "Default", 
-                             width: 300}, 
-                React.createElement("div", {className: "fx-embedded"}, 
-                  React.createElement(ConversationToolbar, {audio: {enabled: true}, 
-                                       hangup: noop, 
-                                       publishStream: noop, 
-                                       video: {enabled: true}})
-                )
-              ), 
-              React.createElement(FramedExample, {dashed: true, 
-                             height: 26, 
-                             summary: "Video muted", 
-                             width: 300}, 
-                React.createElement("div", {className: "fx-embedded"}, 
-                  React.createElement(ConversationToolbar, {audio: {enabled: true}, 
-                                       hangup: noop, 
-                                       publishStream: noop, 
-                                       video: {enabled: false}})
-                )
-              ), 
-              React.createElement(FramedExample, {dashed: true, 
-                             height: 26, 
-                             summary: "Audio muted", 
-                             width: 300}, 
-                React.createElement("div", {className: "fx-embedded"}, 
-                  React.createElement(ConversationToolbar, {audio: {enabled: false}, 
-                                       hangup: noop, 
-                                       publishStream: noop, 
-                                       video: {enabled: true}})
+                                       video: { enabled: true, visible: true}})
                 )
               )
             )
@@ -1110,14 +1097,14 @@
                            width: 298}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(OngoingConversationView, {
-                  audio: {enabled: true}, 
+                  audio: { enabled: true, visible: true}, 
                   conversationStore: conversationStores[0], 
                   dispatcher: dispatcher, 
                   localPosterUrl: "sample-img/video-screen-local.png", 
                   mediaConnected: true, 
                   remotePosterUrl: "sample-img/video-screen-remote.png", 
                   remoteVideoEnabled: true, 
-                  video: {enabled: true}})
+                  video: { enabled: true, visible: true}})
               )
             ), 
 
@@ -1128,14 +1115,14 @@
                            width: 600}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(OngoingConversationView, {
-                  audio: {enabled: true}, 
+                  audio: { enabled: true, visible: true}, 
                   conversationStore: conversationStores[1], 
                   dispatcher: dispatcher, 
                   localPosterUrl: "sample-img/video-screen-local.png", 
                   mediaConnected: true, 
                   remotePosterUrl: "sample-img/video-screen-remote.png", 
                   remoteVideoEnabled: true, 
-                  video: {enabled: true}})
+                  video: { enabled: true, visible: true}})
               )
             ), 
 
@@ -1145,14 +1132,14 @@
                            width: 800}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(OngoingConversationView, {
-                  audio: {enabled: true}, 
+                  audio: { enabled: true, visible: true}, 
                   conversationStore: conversationStores[2], 
                   dispatcher: dispatcher, 
                   localPosterUrl: "sample-img/video-screen-local.png", 
                   mediaConnected: true, 
                   remotePosterUrl: "sample-img/video-screen-remote.png", 
                   remoteVideoEnabled: true, 
-                  video: {enabled: true}})
+                  video: { enabled: true, visible: true}})
               )
             ), 
 
@@ -1163,14 +1150,14 @@
                            width: 298}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(OngoingConversationView, {
-                  audio: {enabled: true}, 
+                  audio: { enabled: true, visible: true}, 
                   conversationStore: conversationStores[3], 
                   dispatcher: dispatcher, 
                   localPosterUrl: "sample-img/video-screen-local.png", 
                   mediaConnected: true, 
                   remotePosterUrl: "sample-img/video-screen-remote.png", 
                   remoteVideoEnabled: true, 
-                  video: {enabled: false}})
+                  video: { enabled: true, visible: true}})
               )
             ), 
 
@@ -1181,14 +1168,14 @@
                            width: 298}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(OngoingConversationView, {
-                  audio: {enabled: true}, 
+                  audio: { enabled: true, visible: true}, 
                   conversationStore: conversationStores[4], 
                   dispatcher: dispatcher, 
                   localPosterUrl: "sample-img/video-screen-local.png", 
                   mediaConnected: true, 
                   remotePosterUrl: "sample-img/video-screen-remote.png", 
                   remoteVideoEnabled: false, 
-                  video: {enabled: true}})
+                  video: { enabled: true, visible: true}})
               )
             )
 
@@ -1681,7 +1668,7 @@
 
       // This simulates the mocha layout for errors which means we can run
       // this alongside our other unit tests but use the same harness.
-      var expectedWarningsCount = 16;
+      var expectedWarningsCount = 10;
       var warningsMismatch = caughtWarnings.length !== expectedWarningsCount;
       if (uncaughtError || warningsMismatch) {
         $("#results").append("<div class='failures'><em>" +

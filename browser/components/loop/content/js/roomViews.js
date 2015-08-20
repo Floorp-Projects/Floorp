@@ -743,6 +743,15 @@ loop.roomViews = (function(mozL10n) {
                 screenShareVideoObject: this.state.screenShareVideoObject, 
                 showContextRoomName: false, 
                 useDesktopPaths: true}, 
+                React.createElement(sharedViews.ConversationToolbar, {
+                  audio: {enabled: !this.state.audioMuted, visible: true}, 
+                  dispatcher: this.props.dispatcher, 
+                  edit: { visible: this.state.contextEnabled, enabled: !this.state.showEditContext}, 
+                  hangup: this.leaveRoom, 
+                  onEditClick: this.handleEditContextClick, 
+                  publishStream: this.publishStream, 
+                  screenShare: screenShareData, 
+                  video: {enabled: !this.state.videoMuted, visible: true}}), 
                 React.createElement(DesktopRoomInvitationView, {
                   dispatcher: this.props.dispatcher, 
                   error: this.state.error, 
@@ -762,16 +771,7 @@ loop.roomViews = (function(mozL10n) {
                   roomData: roomData, 
                   savingContext: this.state.savingContext, 
                   show: !shouldRenderInvitationOverlay && shouldRenderEditContextView})
-              ), 
-              React.createElement(sharedViews.ConversationToolbar, {
-                audio: {enabled: !this.state.audioMuted, visible: true}, 
-                dispatcher: this.props.dispatcher, 
-                edit: { visible: this.state.contextEnabled, enabled: !this.state.showEditContext}, 
-                hangup: this.leaveRoom, 
-                onEditClick: this.handleEditContextClick, 
-                publishStream: this.publishStream, 
-                screenShare: screenShareData, 
-                video: {enabled: !this.state.videoMuted, visible: true}})
+              )
             )
           );
         }

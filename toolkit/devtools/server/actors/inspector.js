@@ -1354,6 +1354,10 @@ var WalkerActor = protocol.ActorClass({
     protocol.Actor.prototype.unmanage.call(this, actor);
   },
 
+  hasNode: function(node) {
+    return this._refMap.has(node);
+  },
+
   _ref: function(node) {
     let actor = this._refMap.get(node);
     if (actor) return actor;
