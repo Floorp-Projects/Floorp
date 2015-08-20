@@ -6,7 +6,6 @@
 #ifndef __mozilla_widget_GfxDriverInfo_h__
 #define __mozilla_widget_GfxDriverInfo_h__
 
-#include "mozilla/ArrayUtils.h" // ArrayLength
 #include "nsString.h"
 
 // Macros for adding a blocklist item to the static list.
@@ -186,17 +185,20 @@ inline bool SplitDriverVersion(const char *aSource, char *aAStr, char *aBStr, ch
 {
   // sscanf doesn't do what we want here to we parse this manually.
   int len = strlen(aSource);
+
+  // This "4" is hardcoded in a few places, including once as a 3.
   char *dest[4] = { aAStr, aBStr, aCStr, aDStr };
   unsigned destIdx = 0;
   unsigned destPos = 0;
 
   for (int i = 0; i < len; i++) {
-    if (destIdx > ArrayLength(dest)) {
+    if (destIdx >= 4) {
       // Invalid format found. Ensure we don't access dest beyond bounds.
       return false;
     }
 
     if (aSource[i] == '.') {
+      MOZ_ASSERT (destIdx < 4 && destPos <= 4);
       dest[destIdx++][destPos] = 0;
       destPos = 0;
       continue;
@@ -208,13 +210,20 @@ inline bool SplitDriverVersion(const char *aSource, char *aAStr, char *aBStr, ch
       continue;
     }
 
+    MOZ_ASSERT (destIdx < 4 && destPos < 4);
     dest[destIdx][destPos++] = aSource[i];
   }
 
+  // Take care of the trailing period
+  if (destIdx >= 4) {
+    return false;
+  }
+
   // Add last terminator.
+  MOZ_ASSERT (destIdx < 4 && destPos <= 4);
   dest[destIdx][destPos] = 0;
 
-  if (destIdx != ArrayLength(dest) - 1) {
+  if (destIdx != 3) {
     return false;
   }
   return true;

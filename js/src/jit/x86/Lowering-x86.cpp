@@ -16,14 +16,14 @@ using namespace js::jit;
 
 void
 LIRGeneratorX86::useBoxFixed(LInstruction* lir, size_t n, MDefinition* mir, Register reg1,
-                             Register reg2)
+                             Register reg2, bool useAtStart)
 {
     MOZ_ASSERT(mir->type() == MIRType_Value);
     MOZ_ASSERT(reg1 != reg2);
 
     ensureDefined(mir);
-    lir->setOperand(n, LUse(reg1, mir->virtualRegister()));
-    lir->setOperand(n + 1, LUse(reg2, VirtualRegisterOfPayload(mir)));
+    lir->setOperand(n, LUse(reg1, mir->virtualRegister(), useAtStart));
+    lir->setOperand(n + 1, LUse(reg2, VirtualRegisterOfPayload(mir), useAtStart));
 }
 
 LAllocation

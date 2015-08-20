@@ -49,7 +49,14 @@ public:
 
     nsresult Init(nsIURI* uri);
 
-    nsresult InitSrcdoc(nsIURI* aURI, const nsAString &aSrcdoc);
+    nsresult InitSrcdoc(nsIURI* aURI,
+                        nsIURI* aBaseURI,
+                        const nsAString &aSrcdoc,
+                        nsINode *aLoadingNode,
+                        nsIPrincipal *aLoadingPrincipal,
+                        nsIPrincipal *aTriggeringPrincipal,
+                        nsSecurityFlags aSecurityFlags,
+                        nsContentPolicyType aContentPolicyType);
 
 protected:
     ~nsViewSourceChannel() {}
@@ -63,6 +70,7 @@ protected:
     nsCOMPtr<nsIUploadChannel>  mUploadChannel;
     nsCOMPtr<nsIStreamListener> mListener;
     nsCOMPtr<nsIURI>            mOriginalURI;
+    nsCOMPtr<nsIURI>            mBaseURI;
     nsCString                   mContentType;
     bool                        mIsDocument; // keeps track of the LOAD_DOCUMENT_URI flag
     bool                        mOpened;
