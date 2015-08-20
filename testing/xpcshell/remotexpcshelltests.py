@@ -71,6 +71,14 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
             self.log.info("profile dir is %s" % self.profileDir)
         return self.profileDir
 
+    def setupMozinfoJS(self):
+        local = tempfile.mktemp()
+        mozinfo.output_to_file(local)
+        mozInfoJSPath = remoteJoin(self.profileDir, "mozinfo.json")
+        self.device.pushFile(local, mozInfoJSPath)
+        os.remove(local)
+        return mozInfoJSPath
+
     def logCommand(self, name, completeCmd, testdir):
         self.log.info("%s | full command: %r" % (name, completeCmd))
         self.log.info("%s | current directory: %r" % (name, self.remoteHere))
