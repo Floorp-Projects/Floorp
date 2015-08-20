@@ -30,7 +30,7 @@ public:
   ~MP4Metadata();
 
   static bool HasCompleteMetadata(Stream* aSource);
-  static mozilla::MediaByteRange MetadataRange(Stream* aSource);
+  static already_AddRefed<mozilla::MediaByteBuffer> Metadata(Stream* aSource);
   uint32_t GetNumberTracks(mozilla::TrackInfo::TrackType aType) const;
   mozilla::UniquePtr<mozilla::TrackInfo> GetTrackInfo(mozilla::TrackInfo::TrackType aType,
                                                       size_t aTrackNumber) const;
