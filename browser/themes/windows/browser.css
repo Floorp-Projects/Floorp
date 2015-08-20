@@ -107,17 +107,21 @@
 @media (-moz-windows-default-theme) {
   @media (-moz-os-version: windows-vista),
          (-moz-os-version: windows-win7) {
-    #navigator-toolbox:not(:-moz-lwtheme)::after {
+    #navigator-toolbox::after {
       background-color: #aabccf;
     }
   }
 
   @media (-moz-os-version: windows-win8),
          (-moz-os-version: windows-win10) {
-    #navigator-toolbox:not(:-moz-lwtheme)::after {
+    #navigator-toolbox::after {
       background-color: #c2c2c2;
     }
   }
+}
+
+#navigator-toolbox:-moz-lwtheme::after {
+  background-color: rgba(0,0,0,.3);
 }
 
 #navigator-toolbox > toolbar {

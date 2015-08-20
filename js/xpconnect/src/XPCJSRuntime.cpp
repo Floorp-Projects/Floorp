@@ -35,7 +35,7 @@
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "nsCycleCollector.h"
 #include "nsScriptLoader.h"
-#include "jsfriendapi.h"
+#include "jsapi.h"
 #include "jsprf.h"
 #include "js/MemoryMetrics.h"
 #include "mozilla/dom/GeneratedAtomList.h"
@@ -3602,7 +3602,10 @@ XPCJSRuntime::BeforeProcessTask(bool aMightBlock)
     // Start the slow script timer.
     mSlowScriptCheckpoint = mozilla::TimeStamp::NowLoRes();
     mSlowScriptSecondHalf = false;
-    js::ResetStopwatches(Get()->Runtime());
+
+    // As we may be entering a nested event loop, we need to
+    // cancel any ongoing performance measurement.
+    js::ResetPerformanceMonitoring(Get()->Runtime());
 
     // Push a null JSContext so that we don't see any script during
     // event processing.
@@ -3623,6 +3626,10 @@ XPCJSRuntime::AfterProcessTask(uint32_t aNewRecursionDepth)
     nsJSContext::MaybePokeCC();
 
     CycleCollectedJSRuntime::AfterProcessTask(aNewRecursionDepth);
+
+    // Now that we are certain that the event is complete,
+    // we can flush any ongoing performance measurement.
+    js::FlushPerformanceMonitoring(Get()->Runtime());
 
     PopNullJSContext();
 }
