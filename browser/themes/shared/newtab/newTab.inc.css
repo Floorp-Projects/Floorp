@@ -167,7 +167,10 @@
 }
 
 .newtab-site:hover .newtab-title {
-  color: #222;
+  color: white;
+  background-color: black;
+  border: 1px solid black;
+  border-top: 1px solid white;
 }
 
 .newtab-site[pinned] .newtab-title {
