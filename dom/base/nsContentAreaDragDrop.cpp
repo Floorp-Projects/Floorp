@@ -534,6 +534,14 @@ DragDataProducer::Produce(DataTransfer* aDataTransfer,
         // grab the href as the url, use alt text as the title of the
         // area if it's there.  the drag data is the image tag and src
         // attribute.
+        nsCOMPtr<nsIURI> imageURI;
+        image->GetCurrentURI(getter_AddRefs(imageURI));
+        if (imageURI) {
+          nsAutoCString spec;
+          imageURI->GetSpec(spec);
+          CopyUTF8toUTF16(spec, mUrlString);
+        }
+
         nsCOMPtr<nsIDOMElement> imageElement(do_QueryInterface(image));
         // XXXbz Shouldn't we use the "title" attr for title?  Using
         // "alt" seems very wrong....
@@ -541,10 +549,13 @@ DragDataProducer::Produce(DataTransfer* aDataTransfer,
           imageElement->GetAttribute(NS_LITERAL_STRING("alt"), mTitleString);
         }
 
-        mUrlString.Truncate();
+        if (mTitleString.IsEmpty()) {
+          mTitleString = mUrlString;
+        }
+
+        nsCOMPtr<imgIRequest> imgRequest;
 
         // grab the image data, and its request.
-        nsCOMPtr<imgIRequest> imgRequest;
         nsCOMPtr<imgIContainer> img =
           nsContentUtils::GetImageFromContent(image,
                                               getter_AddRefs(imgRequest));
@@ -555,7 +566,7 @@ DragDataProducer::Produce(DataTransfer* aDataTransfer,
         // Fix the file extension in the URL if necessary
         if (imgRequest && mimeService) {
           nsCOMPtr<nsIURI> imgUri;
-          imgRequest->GetCurrentURI(getter_AddRefs(imgUri));
+          imgRequest->GetURI(getter_AddRefs(imgUri));
 
           nsCOMPtr<nsIURL> imgUrl(do_QueryInterface(imgUri));
 
@@ -576,7 +587,6 @@ DragDataProducer::Produce(DataTransfer* aDataTransfer,
 
               // pass out the image source string
               CopyUTF8toUTF16(spec, mImageSourceString);
-              mUrlString = mImageSourceString;
 
               bool validExtension;
               if (extension.IsEmpty() || 
@@ -610,18 +620,6 @@ DragDataProducer::Produce(DataTransfer* aDataTransfer,
               mImage = img;
             }
           }
-        }
-        if (mUrlString.IsEmpty()) {
-          nsCOMPtr<nsIURI> imageURI;
-          image->GetCurrentURI(getter_AddRefs(imageURI));
-          if (imageURI) {
-            nsAutoCString spec;
-            imageURI->GetSpec(spec);
-            CopyUTF8toUTF16(spec, mUrlString);
-          }
-        }
-        if (mTitleString.IsEmpty()) {
-          mTitleString = mUrlString;
         }
 
         if (parentLink) {
