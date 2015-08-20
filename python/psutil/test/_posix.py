@@ -14,8 +14,8 @@ import time
 
 import psutil
 
-from psutil._compat import PY3
-from test_psutil import LINUX, SUNOS, OSX, BSD, PYTHON
+from psutil._compat import PY3, callable
+from test_psutil import LINUX, SUNOS, OSX, BSD, PYTHON, POSIX, TRAVIS
 from test_psutil import (get_test_subprocess, skip_on_access_denied,
                          retry_before_failing, reap_children, sh, unittest,
                          get_kernel_version, wait_for_pid)
@@ -42,6 +42,7 @@ def ps(cmd):
         return output
 
 
+@unittest.skipUnless(POSIX, "not a POSIX system")
 class PosixSpecificTestCase(unittest.TestCase):
     """Compare psutil results against 'ps' command line utility."""
 
@@ -111,11 +112,14 @@ class PosixSpecificTestCase(unittest.TestCase):
     def test_process_create_time(self):
         time_ps = ps("ps --no-headers -o start -p %s" % self.pid).split(' ')[0]
         time_psutil = psutil.Process(self.pid).create_time()
-        if SUNOS:
-            time_psutil = round(time_psutil)
         time_psutil_tstamp = datetime.datetime.fromtimestamp(
             time_psutil).strftime("%H:%M:%S")
-        self.assertEqual(time_ps, time_psutil_tstamp)
+        # sometimes ps shows the time rounded up instead of down, so we check
+        # for both possible values
+        round_time_psutil = round(time_psutil)
+        round_time_psutil_tstamp = datetime.datetime.fromtimestamp(
+            round_time_psutil).strftime("%H:%M:%S")
+        self.assertIn(time_ps, [time_psutil_tstamp, round_time_psutil_tstamp])
 
     def test_process_exe(self):
         ps_pathname = ps("ps --no-headers -o command -p %s" %
@@ -173,9 +177,10 @@ class PosixSpecificTestCase(unittest.TestCase):
                          [x for x in pids_ps if x not in pids_psutil]
             self.fail("difference: " + str(difference))
 
-    # for some reason ifconfig -a does not report differente interfaces
-    # psutil does
+    # for some reason ifconfig -a does not report all interfaces
+    # returned by psutil
     @unittest.skipIf(SUNOS, "test not reliable on SUNOS")
+    @unittest.skipIf(TRAVIS, "test not reliable on Travis")
     def test_nic_names(self):
         p = subprocess.Popen("ifconfig -a", shell=1, stdout=subprocess.PIPE)
         output = p.communicate()[0].strip()
@@ -186,7 +191,9 @@ class PosixSpecificTestCase(unittest.TestCase):
                 if line.startswith(nic):
                     break
             else:
-                self.fail("couldn't find %s nic in 'ifconfig -a' output" % nic)
+                self.fail(
+                    "couldn't find %s nic in 'ifconfig -a' output\n%s" % (
+                        nic, output))
 
     @retry_before_failing()
     def test_users(self):
@@ -208,8 +215,6 @@ class PosixSpecificTestCase(unittest.TestCase):
             if attr is not None and callable(attr):
                 if name == 'rlimit':
                     args = (psutil.RLIMIT_NOFILE,)
-                elif name == 'set_rlimit':
-                    args = (psutil.RLIMIT_NOFILE, (5, 5))
                 attr(*args)
             else:
                 attr
@@ -220,11 +225,10 @@ class PosixSpecificTestCase(unittest.TestCase):
                          'send_signal', 'wait', 'children', 'as_dict']
         if LINUX and get_kernel_version() < (2, 6, 36):
             ignored_names.append('rlimit')
+        if LINUX and get_kernel_version() < (2, 6, 23):
+            ignored_names.append('num_ctx_switches')
         for name in dir(psutil.Process):
-            if (name.startswith('_')
-                    or name.startswith('set_')
-                    or name.startswith('get')  # deprecated APIs
-                    or name in ignored_names):
+            if (name.startswith('_') or name in ignored_names):
                 continue
             else:
                 try:
@@ -243,12 +247,12 @@ class PosixSpecificTestCase(unittest.TestCase):
             self.fail('\n' + '\n'.join(failures))
 
 
-def test_main():
+def main():
     test_suite = unittest.TestSuite()
     test_suite.addTest(unittest.makeSuite(PosixSpecificTestCase))
     result = unittest.TextTestRunner(verbosity=2).run(test_suite)
     return result.wasSuccessful()
 
 if __name__ == '__main__':
-    if not test_main():
+    if not main():
         sys.exit(1)
