@@ -386,7 +386,9 @@ void MediaDecoderStateMachine::SendStreamData()
     // keep decoding audio samples till the end and consume a lot of memory.
     // Therefore we only discard those behind the stream clock to throttle
     // the decoding speed.
-    if (a && a->mTime <= clockTime) {
+    // Note we don't discard a sample when |a->mTime == clockTime| because that
+    // will discard the 1st sample when clockTime is still 0.
+    if (a && a->mTime < clockTime) {
       nsRefPtr<MediaData> releaseMe = AudioQueue().PopFront();
       continue;
     }
@@ -1551,10 +1553,6 @@ MediaDecoderStateMachine::InitiateSeek()
   NS_ASSERTION(seekTime >= 0 && seekTime <= end,
                "Can only seek in range [0,duration]");
   mCurrentSeek.mTarget.mTime = seekTime;
-
-  if (mAudioCaptured) {
-    mDecodedStream->RecreateData();
-  }
 
   mDropAudioUntilNextDiscontinuity = HasAudio();
   mDropVideoUntilNextDiscontinuity = HasVideo();
