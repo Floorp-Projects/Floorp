@@ -2163,8 +2163,8 @@ IMMHandler::GetCharacterRectOfSelectedTextAt(nsWindow* aWindow,
       if (aWritingMode) {
         *aWritingMode = charRect.GetWritingMode();
       }
-      MOZ_LOG(gIMMLog, LogLevel::Error,
-        ("IMM: GetCharacterRectOfSelectedTextAt, FAILED, due to "
+      MOZ_LOG(gIMMLog, LogLevel::Debug,
+        ("IMM: GetCharacterRectOfSelectedTextAt, Succeeded, aOffset=%u, "
          "aCharRect={ x: %ld, y: %ld, width: %ld, height: %ld }, "
          "charRect.GetWritingMode()=%s",
          aOffset, aCharRect.x, aCharRect.y, aCharRect.width, aCharRect.height,
