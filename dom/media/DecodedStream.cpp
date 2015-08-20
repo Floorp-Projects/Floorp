@@ -441,7 +441,7 @@ DecodedStream::GetReentrantMonitor() const
 }
 
 void
-DecodedStream::Connect(ProcessedMediaStream* aStream, bool aFinishWhenEnded)
+DecodedStream::AddOutput(ProcessedMediaStream* aStream, bool aFinishWhenEnded)
 {
   MOZ_ASSERT(NS_IsMainThread());
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
@@ -454,7 +454,7 @@ DecodedStream::Connect(ProcessedMediaStream* aStream, bool aFinishWhenEnded)
 }
 
 void
-DecodedStream::Remove(MediaStream* aStream)
+DecodedStream::RemoveOutput(MediaStream* aStream)
 {
   mOutputStreamManager.Remove(aStream);
 }
