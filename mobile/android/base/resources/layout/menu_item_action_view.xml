@@ -15,7 +15,7 @@
                 android:id="@+id/menu_item"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@drawable/action_bar_button"
+                android:background="@drawable/menu_item_action_bar_bg"
                 android:clickable="true"
                 android:focusable="true"/>
 
@@ -24,7 +24,6 @@
                 android:id="@+id/menu_item_button"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@drawable/action_bar_button"
                 android:layout_gravity="center_vertical"
                 android:visibility="gone"/>
 
