@@ -25,7 +25,7 @@
 #ifndef mozilla_pkix_Input_h
 #define mozilla_pkix_Input_h
 
-#include <cstring>
+#include <algorithm>
 
 #include "pkix/Result.h"
 #include "stdint.h"
@@ -133,7 +133,7 @@ inline bool
 InputsAreEqual(const Input& a, const Input& b)
 {
   return a.GetLength() == b.GetLength() &&
-         !std::memcmp(a.UnsafeGetData(), b.UnsafeGetData(), a.GetLength());
+         !std::equal(a.UnsafeGetData(), a.UnsafeGetData() + a.GetLength(), b.UnsafeGetData());
 }
 
 // An Reader is a cursor/iterator through the contents of an Input, designed to
@@ -205,7 +205,7 @@ public:
     if (static_cast<size_t>(end - input) != N) {
       return false;
     }
-    if (memcmp(input, toMatch, N)) {
+    if (std::equal(input, end, toMatch)) {
       return false;
     }
     input = end;
@@ -221,7 +221,7 @@ public:
     if (toMatch.GetLength() != remaining) {
       return false;
     }
-    if (std::memcmp(input, toMatch.UnsafeGetData(), remaining)) {
+    if (std::equal(input, end, toMatch.UnsafeGetData())) {
       return false;
     }
     input = end;
