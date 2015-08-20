@@ -226,6 +226,7 @@ static const char* const gOmxTypes[] = {
   "audio/3gpp",
   "audio/flac",
   "video/mp4",
+  "video/x-m4v",
   "video/3gpp",
   "video/3gpp2",
   "video/quicktime",
@@ -332,7 +333,7 @@ IsAndroidMediaType(const nsACString& aType)
   }
 
   static const char* supportedTypes[] = {
-    "audio/mpeg", "audio/mp4", "video/mp4", nullptr
+    "audio/mpeg", "audio/mp4", "video/mp4", "video/x-m4v", nullptr
   };
   return CodecListContains(supportedTypes, aType);
 }

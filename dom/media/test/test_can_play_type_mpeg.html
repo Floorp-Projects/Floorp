@@ -26,11 +26,13 @@ function check_mp4(v, enabled) {
   }
 
   check("video/mp4", "maybe");
+  check("video/x-m4v", "maybe");
   check("audio/mp4", "maybe");
   check("audio/x-m4a", "maybe");
 
   // Not the MIME type that other browsers respond to, so we won't either.
   check("audio/m4a", "");
+  check("video/m4v", "");
   // Only Safari responds affirmatively to "audio/aac",
   // so we'll let x-m4a cover aac support.
   check("audio/aac", "");
