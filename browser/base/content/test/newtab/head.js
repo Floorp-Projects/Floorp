@@ -587,7 +587,8 @@ function createExternalDropIframe() {
   iframe.style.position = "absolute";
   iframe.style.zIndex = 50;
 
-  let margin = doc.getElementById("newtab-margin-top");
+  // the frame has to be attached to a visible element
+  let margin = doc.getElementById("newtab-search-container");
   margin.appendChild(iframe);
 
   iframe.addEventListener("load", function onLoad() {

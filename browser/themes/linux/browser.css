@@ -61,6 +61,10 @@
   background-color: ThreeDShadow;
 }
 
+#navigator-toolbox:-moz-lwtheme::after {
+  background-color: rgba(0,0,0,.3);
+}
+
 #navigator-toolbox > toolbar:not(:-moz-lwtheme):not(#toolbar-menubar):not(#TabsToolbar) {
   -moz-appearance: none;
   border-style: none;
