@@ -5,7 +5,7 @@
     },
     "global": {
         "talos_repo": "https://hg.mozilla.org/build/talos",
-        "talos_revision": "d44548b8feb9"
+        "talos_revision": "c0039de7a1c6"
     },
     "extra_options": {
         "android": [ "--apkPath=%(apk_path)s" ]
@@ -164,7 +164,8 @@
             "talos_options": [
                 "--e10s",
                 "--xperf_path",
-                "\"c:/Program Files/Microsoft Windows Performance Toolkit/xperf.exe\""
+                "\"c:/Program Files/Microsoft Windows Performance Toolkit/xperf.exe\"",
+                "C:/slave/talos-data/talos/xperf.config"
             ]
         }
     },
