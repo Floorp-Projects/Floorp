@@ -457,6 +457,7 @@ this.MigrationUtils = Object.freeze({
    *
    * @param aKey internal name of the migration source.
    *             Supported values: ie (windows),
+   *                               edge (windows),
    *                               safari (mac/windows),
    *                               canary (mac/windows),
    *                               chrome (mac/windows/linux),
