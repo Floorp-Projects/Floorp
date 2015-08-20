@@ -2467,11 +2467,8 @@ nsListEventListener::HandleEvent(nsIDOMEvent* aEvent)
     return mFrame->nsListControlFrame::MouseDown(aEvent);
   }
   if (eventType.EqualsLiteral("mouseup")) {
-    bool defaultPrevented = false;
-    aEvent->GetDefaultPrevented(&defaultPrevented);
-    if (defaultPrevented) {
-      return NS_OK;
-    }
+    // Don't try to honor defaultPrevented here - it's not web compatible.
+    // (bug 1194733)
     return mFrame->nsListControlFrame::MouseUp(aEvent);
   }
   if (eventType.EqualsLiteral("mousemove")) {
