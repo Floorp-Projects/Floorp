@@ -148,7 +148,7 @@ MP4Decoder::CanHandleMediaType(const nsACString& aType,
   }
 #endif
 
-  if ((!aType.EqualsASCII("video/mp4") && !aType.EqualsASCII("video/x-m4v")) ||
+  if (!aType.EqualsASCII("video/mp4") ||
       !MP4Decoder::CanCreateH264Decoder()) {
     return false;
   }
