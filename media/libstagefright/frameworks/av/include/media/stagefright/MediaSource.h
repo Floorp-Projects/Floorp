@@ -23,7 +23,6 @@
 #include <media/stagefright/MediaErrors.h>
 #include <utils/RefBase.h>
 #include <utils/Vector.h>
-#include "nsTArray.h"
 
 namespace stagefright {
 
@@ -119,7 +118,7 @@ struct MediaSource : public virtual RefBase {
       bool sync;
     };
 
-    virtual nsTArray<Indice> exportIndex() = 0;
+    virtual Vector<Indice> exportIndex() = 0;
 
 protected:
     virtual ~MediaSource();
