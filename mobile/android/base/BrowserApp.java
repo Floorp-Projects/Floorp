@@ -74,6 +74,7 @@ import org.mozilla.gecko.trackingprotection.TrackingProtectionPrompt;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.HardwareUtils;
@@ -1582,7 +1583,8 @@ public class BrowserApp extends GeckoApp
         float toolbarTranslation = mLayerView.getDynamicToolbarAnimator().getToolbarTranslation();
 
         boolean shortPage = metrics.getPageHeight() < metrics.getHeight();
-        boolean atBottomOfLongPage = (metrics.pageRectBottom == metrics.viewportRectBottom())
+        boolean atBottomOfLongPage =
+            FloatUtils.fuzzyEquals(metrics.pageRectBottom, metrics.viewportRectBottom())
             && (metrics.pageRectBottom > 2 * metrics.getHeight());
         Log.v(LOGTAG, "On pan/zoom stopped, short page: " + shortPage
             + "; atBottomOfLongPage: " + atBottomOfLongPage);
