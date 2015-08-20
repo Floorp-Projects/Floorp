@@ -167,26 +167,7 @@ PluginInstanceParent::InitMetadata(const nsACString& aMimeType,
         return false;
     }
     nsCOMPtr<nsIURI> baseUri(owner->GetBaseURI());
-    nsresult rv = NS_MakeAbsoluteURI(mSrcAttribute, aSrcAttribute, baseUri);
-    if (NS_FAILED(rv)) {
-        return false;
-    }
-    // Check the whitelist
-    nsAutoCString baseUrlSpec;
-    rv = baseUri->GetSpec(baseUrlSpec);
-    if (NS_FAILED(rv)) {
-        return false;
-    }
-    auto whitelist = Preferences::GetCString(kShumwayWhitelistPref);
-    // Empty whitelist is interpreted by CheckWhitelist as "allow everything,"
-    // which is not valid for our use case and should be treated as a failure.
-    if (whitelist.IsEmpty()) {
-        return false;
-    }
-    rv = nsPluginPlayPreviewInfo::CheckWhitelist(baseUrlSpec, mSrcAttribute,
-                                                 whitelist,
-                                                 &mIsWhitelistedForShumway);
-    return NS_SUCCEEDED(rv);
+    return NS_SUCCEEDED(NS_MakeAbsoluteURI(mSrcAttribute, aSrcAttribute, baseUri));
 }
 
 void

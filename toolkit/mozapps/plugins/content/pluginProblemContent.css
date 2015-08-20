@@ -71,10 +71,6 @@ html|applet:not([height]), html|applet[height=""] {
   direction: rtl;
 }
 
-:-moz-handler-playpreview .mainBox {
-  display: none;
-}
-
 :-moz-handler-clicktoplay .hoverBox,
 :-moz-handler-vulnerable-updatable .hoverBox,
 :-moz-handler-vulnerable-no-update .hoverBox {
@@ -86,23 +82,6 @@ html|applet:not([height]), html|applet[height=""] {
 }
 .icon {
   cursor: inherit;
-}
-
-.previewPluginContent {
-  display: none;
-}
-
-.previewPluginContent > iframe {
-  width: inherit;
-  height: inherit;
-  border: none;
-}
-
-:-moz-handler-playpreview .previewPluginContent {
-  display: block;
-  width: inherit;
-  height: inherit;
-  overflow: hidden;
 }
 
 .msg {
