@@ -84,6 +84,12 @@ class TestMozinfo(unittest.TestCase):
             self.assertEqual(mozinfo.find_and_update_from_json(), j)
         self.assertEqual(mozinfo.info["foo"], "123456")
 
+    def test_output_to_file(self):
+        """Test that mozinfo.output_to_file works."""
+        path = os.path.join(self.tempdir, "mozinfo.json")
+        mozinfo.output_to_file(path)
+        self.assertEqual(open(path).read(), json.dumps(mozinfo.info))
+
 
 class TestStringVersion(unittest.TestCase):
     def test_os_version_is_a_StringVersion(self):
