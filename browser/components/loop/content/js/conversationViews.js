@@ -698,14 +698,15 @@ loop.conversationViews = (function(mozL10n) {
             screenSharePosterUrl: null, 
             screenShareVideoObject: this.state.screenShareVideoObject, 
             showContextRoomName: false, 
-            useDesktopPaths: true}), 
-          React.createElement(loop.shared.views.ConversationToolbar, {
-            audio: this.props.audio, 
-            dispatcher: this.props.dispatcher, 
-            edit: { visible: false, enabled: false}, 
-            hangup: this.hangup, 
-            publishStream: this.publishStream, 
-            video: this.props.video})
+            useDesktopPaths: true}, 
+            React.createElement(loop.shared.views.ConversationToolbar, {
+              audio: this.props.audio, 
+              dispatcher: this.props.dispatcher, 
+              edit: { visible: false, enabled: false}, 
+              hangup: this.hangup, 
+              publishStream: this.publishStream, 
+              video: this.props.video})
+          )
         )
       );
     }
@@ -802,13 +803,13 @@ loop.conversationViews = (function(mozL10n) {
         }
         case CALL_STATES.ONGOING: {
           return (React.createElement(OngoingConversationView, {
-            audio: {enabled: !this.state.audioMuted}, 
+            audio: { enabled: !this.state.audioMuted, visible: true}, 
             conversationStore: this.getStore(), 
             dispatcher: this.props.dispatcher, 
             mediaConnected: this.state.mediaConnected, 
             remoteSrcVideoObject: this.state.remoteSrcVideoObject, 
             remoteVideoEnabled: this.state.remoteVideoEnabled, 
-            video: {enabled: !this.state.videoMuted}})
+            video: { enabled: !this.state.videoMuted, visible: true}})
           );
         }
         case CALL_STATES.FINISHED: {
