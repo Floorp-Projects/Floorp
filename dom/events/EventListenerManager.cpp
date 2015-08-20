@@ -1467,13 +1467,12 @@ EventListenerManager::MarkForCC()
       const TypedEventHandler& typedHandler =
         jsEventHandler->GetTypedEventHandler();
       if (typedHandler.HasEventHandler()) {
-        JS::ExposeObjectToActiveJS(typedHandler.Ptr()->Callable());
+        typedHandler.Ptr()->MarkForCC();
       }
     } else if (listener.mListenerType == Listener::eWrappedJSListener) {
       xpc_TryUnmarkWrappedGrayObject(listener.mListener.GetXPCOMCallback());
     } else if (listener.mListenerType == Listener::eWebIDLListener) {
-      // Callback() unmarks gray
-      listener.mListener.GetWebIDLCallback()->Callback();
+      listener.mListener.GetWebIDLCallback()->MarkForCC();
     }
   }
   if (mRefCnt.IsPurple()) {
