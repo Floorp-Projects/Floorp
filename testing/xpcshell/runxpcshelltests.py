@@ -392,6 +392,12 @@ class XPCShellTestThread(Thread):
             self.log.info("profile dir is %s" % profileDir)
         return profileDir
 
+    def setupMozinfoJS(self):
+        mozInfoJSPath = os.path.join(self.profileDir, 'mozinfo.json')
+        mozInfoJSPath = mozInfoJSPath.replace('\\', '\\\\')
+        mozinfo.output_to_file(mozInfoJSPath)
+        return mozInfoJSPath
+
     def buildCmdHead(self, headfiles, tailfiles, xpcscmd):
         """
           Build the command line arguments for the head and tail files,
@@ -456,7 +462,8 @@ class XPCShellTestThread(Thread):
             '-r', self.httpdManifest,
             '-m',
             '-s',
-            '-e', 'const _HEAD_JS_PATH = "%s";' % self.headJSPath
+            '-e', 'const _HEAD_JS_PATH = "%s";' % self.headJSPath,
+            '-e', 'const _MOZINFO_JS_PATH = "%s";' % self.mozInfoJSPath,
         ]
 
         if self.testingModulesDir:
@@ -634,14 +641,16 @@ class XPCShellTestThread(Thread):
             self.appPath = None
 
         test_dir = os.path.dirname(path)
-        self.buildXpcsCmd(test_dir)
-        head_files, tail_files = self.getHeadAndTailFiles(self.test_object)
-        cmdH = self.buildCmdHead(head_files, tail_files, self.xpcsCmd)
 
         # Create a profile and a temp dir that the JS harness can stick
         # a profile and temporary data in
         self.profileDir = self.setupProfileDir()
         self.tempDir = self.setupTempDir()
+        self.mozInfoJSPath = self.setupMozinfoJS()
+
+        self.buildXpcsCmd(test_dir)
+        head_files, tail_files = self.getHeadAndTailFiles(self.test_object)
+        cmdH = self.buildCmdHead(head_files, tail_files, self.xpcsCmd)
 
         # The test file will have to be loaded after the head files.
         cmdT = self.buildCmdTestFile(path)
