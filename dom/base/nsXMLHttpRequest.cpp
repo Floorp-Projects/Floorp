@@ -77,6 +77,8 @@
 #include "nsZipArchive.h"
 #include "mozilla/Preferences.h"
 #include "private/pprio.h"
+#include "nsDirectoryServiceUtils.h"
+#include "nsAppDirectoryServiceDefs.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1608,6 +1610,45 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url,
   return Open(method, url, async, realUser, realPassword);
 }
 
+#ifdef XP_WIN
+static already_AddRefed<nsIFile>
+GetNetflixCrashSentinelFile()
+{
+  nsCOMPtr<nsIFile> f;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(f));
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv), nullptr);
+  rv = f->Append(NS_LITERAL_STRING("bug-1160447-xhr-failure-sentinel"));
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv), nullptr);
+  return f.forget();
+}
+
+static MOZ_NEVER_INLINE bool
+CrashedForNetflixAlready()
+{
+  nsCOMPtr<nsIFile> f(GetNetflixCrashSentinelFile());
+  bool exists = false;
+  return f && NS_SUCCEEDED(f->Exists(&exists)) && exists;
+}
+
+static MOZ_NEVER_INLINE void
+RecordCrashedForNetflix()
+{
+  MOZ_ASSERT(!CrashedForNetflixAlready());
+  nsCOMPtr<nsIFile> f(GetNetflixCrashSentinelFile());
+  NS_ENSURE_TRUE_VOID(!!f);
+  nsresult rv = f->Create(nsIFile::NORMAL_FILE_TYPE, 0700);
+  NS_ENSURE_TRUE_VOID(NS_SUCCEEDED(rv));
+  MOZ_ASSERT(CrashedForNetflixAlready());
+}
+
+static MOZ_NEVER_INLINE void
+CrashForNetflix()
+{
+  RecordCrashedForNetflix();
+  MOZ_CRASH("1160447 testing");
+}
+#endif
+
 nsresult
 nsXMLHttpRequest::Open(const nsACString& inMethod, const nsACString& url,
                        bool async, const Optional<nsAString>& user,
@@ -1727,6 +1768,11 @@ nsXMLHttpRequest::Open(const nsACString& inMethod, const nsACString& url,
   if (NS_FAILED(rv)) return rv;
   if (NS_CP_REJECTED(shouldLoad)) {
     // Disallowed by content policy
+#ifdef XP_WIN
+    if (nsContentUtils::URIIsNetflix(uri) && !CrashedForNetflixAlready()) {
+      CrashForNetflix();
+    }
+#endif
     return NS_ERROR_CONTENT_BLOCKED;
   }
 
