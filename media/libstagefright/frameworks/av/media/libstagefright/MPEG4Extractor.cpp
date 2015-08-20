@@ -62,7 +62,7 @@ public:
 
     virtual status_t read(MediaBuffer **buffer, const ReadOptions *options = NULL);
     virtual status_t fragmentedRead(MediaBuffer **buffer, const ReadOptions *options = NULL);
-    virtual Vector<Indice> exportIndex();
+    virtual nsTArray<Indice> exportIndex();
 
 protected:
     virtual ~MPEG4Source();
@@ -4108,13 +4108,30 @@ static int compositionOrder(MediaSource::Indice* const* indice0,
   }
 }
 
-Vector<MediaSource::Indice> MPEG4Source::exportIndex()
+class CompositionSorter
 {
-  Vector<Indice> index;
+public:
+  bool LessThan(MediaSource::Indice* aFirst, MediaSource::Indice* aSecond) const
+  {
+    return aFirst->start_composition < aSecond->start_composition;
+  }
+
+  bool Equals(MediaSource::Indice* aFirst, MediaSource::Indice* aSecond) const
+  {
+    return aFirst->start_composition == aSecond->start_composition;
+  }
+};
+
+nsTArray<MediaSource::Indice> MPEG4Source::exportIndex()
+{
+  nsTArray<MediaSource::Indice> index;
   if (!mTimescale) {
     return index;
   }
 
+  if (!index.SetCapacity(mSampleTable->countSamples(), mozilla::fallible)) {
+    return index;
+  }
   for (uint32_t sampleIndex = 0; sampleIndex < mSampleTable->countSamples();
           sampleIndex++) {
       off64_t offset;
@@ -4138,20 +4155,21 @@ Vector<MediaSource::Indice> MPEG4Source::exportIndex()
       indice.end_composition =
           (compositionTime * 1000000ll + duration * 1000000ll) / mTimescale;
       indice.sync = isSyncSample;
-      index.add(indice);
+      index.AppendElement(indice);
   }
 
   // Fix up composition durations so we don't end up with any unsightly gaps.
-  if (index.size() != 0) {
-      Indice* array = index.editArray();
-      Vector<Indice*> composition_order;
-      composition_order.reserve(index.size());
-      for (uint32_t i = 0; i < index.size(); i++) {
-          composition_order.add(&array[i]);
+  if (index.Length() != 0) {
+      nsTArray<Indice*> composition_order;
+      if (!composition_order.SetCapacity(index.Length(), mozilla::fallible)) {
+        return index;
+      }
+      for (uint32_t i = 0; i < index.Length(); i++) {
+        composition_order.AppendElement(&index[i]);
       }
 
-      composition_order.sort(compositionOrder);
-      for (uint32_t i = 0; i + 1 < composition_order.size(); i++) {
+      composition_order.Sort(CompositionSorter());
+      for (uint32_t i = 0; i + 1 < composition_order.Length(); i++) {
         composition_order[i]->end_composition =
                 composition_order[i + 1]->start_composition;
       }
