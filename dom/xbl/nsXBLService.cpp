@@ -377,9 +377,6 @@ nsXBLStreamListener::HandleEvent(nsIDOMEvent* aEvent)
 
 // Implementation /////////////////////////////////////////////////////////////////
 
-// Static member variable initialization
-bool nsXBLService::gAllowDataURIs = false;
-
 // Implement our nsISupports methods
 NS_IMPL_ISUPPORTS(nsXBLService, nsISupportsWeakReference)
 
@@ -393,7 +390,6 @@ nsXBLService::Init()
 // Constructors/Destructors
 nsXBLService::nsXBLService(void)
 {
-  Preferences::AddBoolVarCache(&gAllowDataURIs, "layout.debug.enable_data_xbl");
 }
 
 nsXBLService::~nsXBLService(void)
@@ -847,15 +843,6 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
   return NS_OK;
 }
 
-static bool SchemeIs(nsIURI* aURI, const char* aScheme)
-{
-  nsCOMPtr<nsIURI> baseURI = NS_GetInnermostURI(aURI);
-  NS_ENSURE_TRUE(baseURI, false);
-
-  bool isScheme = false;
-  return NS_SUCCEEDED(baseURI->SchemeIs(aScheme, &isScheme)) && isScheme;
-}
-
 nsresult
 nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
                                       nsIDocument* aBoundDocument,
@@ -1039,10 +1026,6 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
   if (aOriginPrincipal) {
     // if there is an originPrincipal we should also have aBoundDocument
     MOZ_ASSERT(aBoundDocument, "can not create a channel without aBoundDocument");
-
-    if (!gAllowDataURIs && SchemeIs(aDocumentURI, "data")) {
-      return NS_ERROR_XBL_BLOCKED;
-    }
 
     rv = NS_NewChannelWithTriggeringPrincipal(getter_AddRefs(channel),
                                               aDocumentURI,

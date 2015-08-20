@@ -16,10 +16,17 @@
 <div id="div2"></div>
 <script>
 onload = function() {
-  nodes = SpecialPowers.wrap(document).getAnonymousNodes(document.getElementById('div1'));
-  parent.postMessage(nodes ? nodes.length : 0, "http://mochi.test:8888");
-  nodes = SpecialPowers.wrap(document).getAnonymousNodes(document.getElementById('div2'));
-  parent.postMessage(nodes ? nodes.length : 0, "http://mochi.test:8888");
+  // same origin should be allowed
+  var nodes1 = SpecialPowers.wrap(document).getAnonymousNodes(document.getElementById('div1'));
+  parent.postMessage({test: "sameOriginIsAllowed",
+                      result: nodes1 ? nodes1.length : 0,
+                      senderURL: "http://mochi.test:8888"}, "*");
+
+  // cross origin should be blocked
+  var nodes2 = SpecialPowers.wrap(document).getAnonymousNodes(document.getElementById('div2'));
+  parent.postMessage({test: "crossOriginIsBlocked",
+                      result: nodes2 ? nodes2.length : 0,
+                      senderURL: "http://mochi.test:8888"}, "*");
 }
 </script>
 </html>
