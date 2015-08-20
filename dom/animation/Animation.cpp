@@ -51,9 +51,9 @@ Animation::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 void
 Animation::SetEffect(KeyframeEffectReadOnly* aEffect)
 {
-  // FIXME: We should perform an early return if aEffect == mEffect but
-  // current nsAnimationManager::CheckAnimationRule is relying on this
-  // method updating timing even in that case.
+  if (mEffect == aEffect) {
+    return;
+  }
   if (mEffect) {
     mEffect->SetParentTime(Nullable<TimeDuration>());
   }
@@ -648,6 +648,16 @@ Animation::ComposeStyle(nsRefPtr<AnimValuesStyleRule>& aStyleRule,
 
     mFinishedAtLastComposeStyle = (playState == AnimationPlayState::Finished);
   }
+}
+
+void
+Animation::NotifyEffectTimingUpdated()
+{
+  MOZ_ASSERT(mEffect,
+             "We should only update timing effect when we have a target "
+             "effect");
+  UpdateTiming(Animation::SeekFlag::NoSeek,
+               Animation::SyncNotifyFlag::Async);
 }
 
 // http://w3c.github.io/web-animations/#play-an-animation

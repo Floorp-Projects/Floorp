@@ -38,18 +38,6 @@ public:
 
 protected:
   ~HyperTextAccessibleWrap() {}
-
-  virtual nsresult GetModifiedText(bool aGetInsertedText, nsAString& aText,
-                                   uint32_t *aStartOffset,
-                                   uint32_t *aEndOffset);
-
-  static StaticRefPtr<Accessible> sLastTextChangeAcc;
-  static StaticAutoPtr<nsString> sLastTextChangeString;
-  static bool sLastTextChangeWasInsert;
-  static uint32_t sLastTextChangeStart;
-  static uint32_t sLastTextChangeEnd;
-
-  friend void PlatformInit();
 };
 
 } // namespace a11y
