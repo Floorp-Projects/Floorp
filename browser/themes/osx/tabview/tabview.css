@@ -9,7 +9,7 @@ body {
   font-size: 12px;
 }
 
-@media not (-moz-mac-yosemite-theme) { /* yosemite uses vibrant background on parent iframe */
+@media not all and (-moz-mac-yosemite-theme) { /* yosemite uses vibrant background on parent iframe */
   #bg {
     background: linear-gradient(#C4C4C4, #9E9E9E);
   }
