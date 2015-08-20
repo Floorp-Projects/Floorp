@@ -11,7 +11,7 @@
 <script class="testbody" type="text/javascript">
 //longer timeout for slow platforms
 if (isSlowPlatform()) {
-  SimpleTest.requestLongerTimeout(1.5);
+  SimpleTest.requestLongerTimeout(2);
 }
 
 var manager = new MediaTestManager;
@@ -38,8 +38,8 @@ function startTest(test, token) {
 
   v.addEventListener("seeked", function (e) {
     e.target.seekedCount += 1;
-    if (e.target.seekedCount == 3) {
-      ok(e.target.seekingCount == 3, "Expect matched pairs of seeking/seeked events.");
+    if (e.target.seekedCount == 2) {
+      ok(e.target.seekingCount == 2, "Expect matched pairs of seeking/seeked events.");
       e.target.loop = false;
     }
   }, false);
