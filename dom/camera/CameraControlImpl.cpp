@@ -6,6 +6,7 @@
 #include "base/basictypes.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/unused.h"
+#include "nsPrintfCString.h"
 #include "nsIWeakReferenceUtils.h"
 #include "CameraCommon.h"
 #include "nsGlobalWindow.h"
