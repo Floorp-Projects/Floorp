@@ -116,7 +116,7 @@ LegacyPerformanceRecording.prototype = {
     this._frames = [];
     this._memory = [];
     this._ticks = [];
-    this._allocations = { sites: [], timestamps: [], frames: [] };
+    this._allocations = { sites: [], timestamps: [], frames: [], sizes: [] };
   },
 
   /**

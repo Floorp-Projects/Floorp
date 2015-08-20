@@ -128,7 +128,7 @@ let test = Task.async(function*() {
     memory: [].toSource(),
     ticks: TICKS_DATA.toSource(),
     profile: RecordingUtils.deflateProfile(JSON.parse(JSON.stringify(PROFILER_DATA))).toSource(),
-    allocations: ({sites:[], timestamps:[], frames:[]}).toSource(),
+    allocations: ({sites:[], timestamps:[], frames:[], sizes: []}).toSource(),
     withTicks: true,
     withMemory: false,
     sampleFrequency: void 0
