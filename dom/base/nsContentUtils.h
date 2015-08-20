@@ -1696,12 +1696,16 @@ public:
 
   /**
    * Convert ASCII A-Z to a-z.
+   * @return NS_OK on success, or NS_ERROR_OUT_OF_MEMORY if making the string
+   * writable needs to allocate memory and that allocation fails.
    */
   static void ASCIIToLower(nsAString& aStr);
   static void ASCIIToLower(const nsAString& aSource, nsAString& aDest);
 
   /**
    * Convert ASCII a-z to A-Z.
+   * @return NS_OK on success, or NS_ERROR_OUT_OF_MEMORY if making the string
+   * writable needs to allocate memory and that allocation fails.
    */
   static void ASCIIToUpper(nsAString& aStr);
   static void ASCIIToUpper(const nsAString& aSource, nsAString& aDest);
