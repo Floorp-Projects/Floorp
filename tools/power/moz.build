@@ -1,0 +1,15 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+if (CONFIG['OS_ARCH'] == 'Darwin' and CONFIG['CPU_ARCH'] == 'x86_64') or \
+   (CONFIG['OS_ARCH'] == 'Linux' and CONFIG['OS_TARGET'] != 'Android'):
+    SimplePrograms([
+        'rapl',
+    ])
+
+if CONFIG['GNU_CXX']:
+    FAIL_ON_WARNINGS = True
+
