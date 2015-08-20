@@ -194,8 +194,11 @@ TextTrackList::CreateAndDispatchTrackEventRunner(TextTrack* aTrack,
     TrackEvent::Constructor(this, aEventName, eventInit);
 
   // Dispatch the TrackEvent asynchronously.
-  nsCOMPtr<nsIRunnable> eventRunner = new TrackEventRunner(this, event);
-  NS_DispatchToMainThread(eventRunner);
+  rv = thread->Dispatch(do_AddRef(new TrackEventRunner(this, event)),
+                        NS_DISPATCH_NORMAL);
+
+  // If we are shutting down this can file but it's still ok.
+  NS_WARN_IF(NS_FAILED(rv));
 }
 
 HTMLMediaElement*
