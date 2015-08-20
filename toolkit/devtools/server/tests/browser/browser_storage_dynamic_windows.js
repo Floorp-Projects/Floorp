@@ -68,8 +68,11 @@ function finishTests(client) {
 
 function testStores(data, client) {
   testWindowsBeforeReload(data);
-  testReload().then(() =>
-  testAddIframe()).then(() =>
+
+  // FIXME: Bug 1183581 - browser_storage_dynamic_windows.js IsSafeToRunScript
+  //                      errors when testing reload in E10S mode
+  // testReload().then(() =>
+  testAddIframe().then(() =>
   testRemoveIframe()).then(() =>
   finishTests(client));
 }
@@ -92,7 +95,7 @@ function markOutMatched(toBeEmptied, data, deleted) {
     return;
   }
   ok(Object.keys(data).length,
-     "Atleast some storage types should be present in deleted");
+     "At least one storage type should be present");
   for (let storageType in toBeEmptied) {
     if (!data[storageType]) {
       continue;
@@ -121,54 +124,53 @@ function markOutMatched(toBeEmptied, data, deleted) {
   }
 }
 
-function testReload() {
-  info("Testing if reload works properly");
+// function testReload() {
+//   info("Testing if reload works properly");
 
-  let shouldBeEmptyFirst = Cu.cloneInto(beforeReload,  {});
-  let shouldBeEmptyLast = Cu.cloneInto(beforeReload,  {});
-  return new Promise(resolve => {
+//   let shouldBeEmptyFirst = Cu.cloneInto(beforeReload,  {});
+//   let shouldBeEmptyLast = Cu.cloneInto(beforeReload,  {});
+//   return new Promise(resolve => {
 
-    let onStoresUpdate = data => {
-      info("in stores update of testReload");
-      // This might be second time stores update is happening, in which case,
-      // data.deleted will be null.
-      // OR.. This might be the first time on a super slow machine where both
-      // data.deleted and data.added is missing in the first update.
-      if (data.deleted) {
-        markOutMatched(shouldBeEmptyFirst, data.deleted, true);
-      }
+//     let onStoresUpdate = data => {
+//       info("in stores update of testReload");
+//       // This might be second time stores update is happening, in which case,
+//       // data.deleted will be null.
+//       // OR.. This might be the first time on a super slow machine where both
+//       // data.deleted and data.added is missing in the first update.
+//       if (data.deleted) {
+//         markOutMatched(shouldBeEmptyFirst, data.deleted, true);
+//       }
 
-      if (!Object.keys(shouldBeEmptyFirst).length) {
-        info("shouldBeEmptyFirst is empty now");
-      }
+//       if (!Object.keys(shouldBeEmptyFirst).length) {
+//         info("shouldBeEmptyFirst is empty now");
+//       }
 
-      // stores-update call might not have data.added for the first time on slow
-      // machines, in which case, data.added will be null
-      if (data.added) {
-        markOutMatched(shouldBeEmptyLast, data.added);
-      }
+//       // stores-update call might not have data.added for the first time on
+//       // slow machines, in which case, data.added will be null
+//       if (data.added) {
+//         markOutMatched(shouldBeEmptyLast, data.added);
+//       }
 
-      if (!Object.keys(shouldBeEmptyLast).length) {
-        info("Everything to be received is received.");
-        endTestReloaded();
-      }
-    };
+//       if (!Object.keys(shouldBeEmptyLast).length) {
+//         info("Everything to be received is received.");
+//         endTestReloaded();
+//       }
+//     };
 
-    let endTestReloaded = () => {
-      gFront.off("stores-update", onStoresUpdate);
-      resolve();
-    };
+//     let endTestReloaded = () => {
+//       gFront.off("stores-update", onStoresUpdate);
+//       resolve();
+//     };
 
-    gFront.on("stores-update", onStoresUpdate);
+//     gFront.on("stores-update", onStoresUpdate);
 
-    content.location.reload();
-  });
-}
+//     content.location.reload();
+//   });
+// }
 
 function testAddIframe() {
   info("Testing if new iframe addition works properly");
   return new Promise(resolve => {
-
     let shouldBeEmpty = {
       localStorage: {
         "https://sectest1.example.org": ["iframe-s-ls1"]
@@ -239,7 +241,6 @@ function testAddIframe() {
 function testRemoveIframe() {
   info("Testing if iframe removal works properly");
   return new Promise(resolve => {
-
     let shouldBeEmpty = {
       localStorage: {
         "http://sectest1.example.org": []

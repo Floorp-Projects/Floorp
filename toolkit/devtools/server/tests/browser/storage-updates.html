@@ -31,13 +31,16 @@ window.removeCookie = function(name) {
   document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT";
 };
 
-window.clear = function() {
-  var cookies = document.cookie;
-  for (var cookie of cookies.split(";")) {
-    removeCookie(cookie.split("=")[0]);
-  }
+window.clearLocalAndSessionStores = function() {
   localStorage.clear();
   sessionStorage.clear();
+};
+
+window.clearCookies = function() {
+  let cookies = document.cookie;
+  for (let cookie of cookies.split(";")) {
+    removeCookie(cookie.split("=")[0]);
+  }
 };
 </script>
 </body>

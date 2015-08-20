@@ -38,10 +38,13 @@ window.clear = function*() {
     removeCookie(cookie.split("=")[0]);
     removeCookie(cookie.split("=")[0], "/browser");
   }
+
   localStorage.clear();
   sessionStorage.clear();
-  callback();
-}
+
+  dump("removed cookies, localStorage and sessionStorage from " +
+       document.location + "\n");
+};
 
 window.onload = function() {
   addCookie("c1", "1.2.3.4.5.6.7", "/browser");
