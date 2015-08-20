@@ -2434,6 +2434,21 @@ ObjectClient.prototype = {
       }
       return packet;
     }
+  }),
+
+  /**
+   * Request the stack to the promise's rejection point.
+   */
+  getPromiseRejectionStack: DebuggerClient.requester({
+    type: "rejectionStack"
+  }, {
+    before: function(packet) {
+      if (this._grip.class !== "Promise") {
+        throw new Error("getPromiseRejectionStack is only valid for " +
+          "promise grips.");
+      }
+      return packet;
+    }
   })
 };
 
