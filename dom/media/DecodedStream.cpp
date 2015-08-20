@@ -453,52 +453,6 @@ DecodedStream::CreateData(MozPromiseHolder<GenericPromise>&& aPromise)
   mOutputStreamManager.Connect(mData->mStream);
 }
 
-void
-DecodedStream::DestroyData()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-
-  // Avoid the redundant blocking to output stream.
-  if (!mData) {
-    return;
-  }
-
-  mOutputStreamManager.Disconnect();
-  mData = nullptr;
-}
-
-void
-DecodedStream::RecreateData()
-{
-  nsRefPtr<DecodedStream> self = this;
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self] () -> void {
-    self->RecreateData(nullptr);
-  });
-  AbstractThread::MainThread()->Dispatch(r.forget());
-}
-
-void
-DecodedStream::RecreateData(MediaStreamGraph* aGraph)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  MOZ_ASSERT((aGraph && !mData && !HasConsumers()) || // first time
-             (!aGraph && mData)); // 2nd time and later
-
-  if (!aGraph) {
-    aGraph = mData->mStream->Graph();
-  }
-  auto source = aGraph->CreateSourceStream(nullptr);
-  DestroyData();
-  mData.reset(new DecodedStreamData(source, mPlaying));
-
-  // Note that the delay between removing ports in DestroyData
-  // and adding new ones won't cause a glitch since all graph operations
-  // between main-thread stable states take effect atomically.
-  mOutputStreamManager.Connect(mData->mStream);
-}
-
 bool
 DecodedStream::HasConsumers() const
 {
