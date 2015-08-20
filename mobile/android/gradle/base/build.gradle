@@ -77,10 +77,6 @@ dependencies {
     compile project(':thirdparty')
 }
 
-android.libraryVariants.all { variant ->
-    variant.checkManifest.dependsOn rootProject.generateCodeAndResources
-}
-
 apply plugin: 'idea'
 
 idea {
