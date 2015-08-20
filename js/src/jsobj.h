@@ -1004,8 +1004,7 @@ GetObjectClassName(JSContext* cx, HandleObject obj);
  */
 
 /*
- * If obj is a WindowProxy, return its current inner Window. Otherwise return
- * obj. This function can't fail and never returns nullptr.
+ * If obj a WindowProxy, return its current inner Window. Otherwise return obj.
  *
  * GetInnerObject is called when we need a scope chain; you never want a
  * WindowProxy on a scope chain.
@@ -1028,7 +1027,6 @@ GetInnerObject(JSObject* obj)
 
 /*
  * If obj is a Window object, return the WindowProxy. Otherwise return obj.
- * This function can't fail; it never sets an exception or returns nullptr.
  *
  * This must be called before passing an object to script, if the object might
  * be a Window. (But usually those cases involve scope objects, and for those,
