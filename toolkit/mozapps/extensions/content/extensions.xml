@@ -1239,17 +1239,15 @@
               this._errorLink.href = this.mAddon.blocklistURL;
               this._errorLink.hidden = false;
             } else if (!isUpgrade &&
-                       this.mAddon.signedState <= AddonManager.SIGNEDSTATE_MISSING) {
-              this.setAttribute("notification", this.mAddon.appDisabled ? "error" : "warning");
-              let msg = this.mAddon.appDisabled ? this._error : this._warning;
-              msg.textContent = gStrings.ext.formatStringFromName(
-                "notification.unsigned" + (this.mAddon.appDisabled ? "AndDisabled" : ""),
-                [this.mAddon.name, gStrings.brandShortName], 2
+                       this.mAddon.signedState <= AddonManager.SIGNEDSTATE_MISSING &&
+                       SIGNING_REQUIRED) {
+              this.setAttribute("notification", "error");
+              this._error.textContent = gStrings.ext.formatStringFromName(
+                "notification.unsignedAndDisabled", [this.mAddon.name, gStrings.brandShortName], 2
               );
-              let infoLink = this.mAddon.appDisabled ? this._errorLink : this._warningLink;
-              infoLink.value = gStrings.ext.GetStringFromName("notification.unsigned.link");
-              infoLink.href = Services.urlFormatter.formatURLPref("app.support.baseURL") + "unsigned-addons";
-              infoLink.hidden = false;
+              this._errorLink.value = gStrings.ext.GetStringFromName("notification.unsigned.link");
+              this._errorLink.href = Services.urlFormatter.formatURLPref("app.support.baseURL") + "unsigned-addons";
+              this._errorLink.hidden = false;
             } else if ((!isUpgrade && !this.mAddon.isCompatible) && (AddonManager.checkCompatibility
             || (this.mAddon.blocklistState != Ci.nsIBlocklistService.STATE_SOFTBLOCKED))) {
               this.setAttribute("notification", "warning");
@@ -1259,6 +1257,15 @@
               );
               this._warningLink.hidden = true;
               this._warningBtn.hidden = true;
+            } else if (!isUpgrade &&
+                       this.mAddon.signedState <= AddonManager.SIGNEDSTATE_MISSING) {
+              this.setAttribute("notification", "warning");
+              this._warning.textContent = gStrings.ext.formatStringFromName(
+                "notification.unsigned", [this.mAddon.name, gStrings.brandShortName], 2
+              );
+              this._warningLink.value = gStrings.ext.GetStringFromName("notification.unsigned.link");
+              this._warningLink.href = Services.urlFormatter.formatURLPref("app.support.baseURL") + "unsigned-addons";
+              this._warningLink.hidden = false;
             } else if (!isUpgrade && this.mAddon.blocklistState == Ci.nsIBlocklistService.STATE_SOFTBLOCKED) {
               this.setAttribute("notification", "warning");
               this._warning.textContent = gStrings.ext.formatStringFromName(
