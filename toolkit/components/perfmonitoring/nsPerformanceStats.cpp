@@ -21,6 +21,10 @@
 #include "nsIDOMWindow.h"
 #include "nsGlobalWindow.h"
 
+#include "mozilla/unused.h"
+#include "mozilla/Services.h"
+#include "mozilla/Telemetry.h"
+
 #if defined(XP_WIN)
 #include "windows.h"
 #else
@@ -440,7 +444,7 @@ NS_IMETHODIMP nsPerformanceSnapshot::GetProcessData(nsIPerformanceStats * *aProc
 }
 
 
-NS_IMPL_ISUPPORTS(nsPerformanceStatsService, nsIPerformanceStatsService)
+NS_IMPL_ISUPPORTS(nsPerformanceStatsService, nsIPerformanceStatsService, nsIObserver)
 
 nsPerformanceStatsService::nsPerformanceStatsService()
 #if defined(XP_WIN)
@@ -448,7 +452,13 @@ nsPerformanceStatsService::nsPerformanceStatsService()
 #else
   : mProcessId(getpid())
 #endif
+  , mProcessStayed(0)
+  , mProcessMoved(0)
 {
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    mozilla::unused << obs->AddObserver(this, "profile-before-shutdown", false);
+  }
 }
 
 nsPerformanceStatsService::~nsPerformanceStatsService()
@@ -507,8 +517,28 @@ NS_IMETHODIMP nsPerformanceStatsService::GetSnapshot(JSContext* cx, nsIPerforman
     return rv;
   }
 
+  js::GetPerfMonitoringTestCpuRescheduling(JS_GetRuntime(cx), &mProcessStayed, &mProcessMoved);
   snapshot.forget(aSnapshot);
+
   return NS_OK;
 }
 
 
+/* void observe (in nsISupports aSubject, in string aTopic, in wstring aData); */
+NS_IMETHODIMP nsPerformanceStatsService::Observe(nsISupports *, const char *, const char16_t *)
+{
+  // Upload telemetry
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    mozilla::unused << obs->RemoveObserver(this, "profile-before-shutdown");
+  }
+
+  if (mProcessStayed + mProcessMoved == 0) {
+    // Nothing to report.
+    return NS_OK;
+  }
+  const uint32_t proportion = ( 100 * mProcessStayed ) / ( mProcessStayed + mProcessMoved );
+  mozilla::Telemetry::Accumulate("PERF_MONITORING_TEST_CPU_RESCHEDULING_PROPORTION_MOVED", proportion);
+
+  return NS_OK;
+}

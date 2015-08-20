@@ -109,7 +109,10 @@ config = {
     },
     "all_xpcshell_suites": {
         "xpcshell": ["--manifest=tests/xpcshell/tests/all-test-dirs.list",
-                     "%(abs_app_dir)s/" + XPCSHELL_NAME]
+                     "%(abs_app_dir)s/" + XPCSHELL_NAME],
+        "xpcshell-addons": ["--manifest=tests/xpcshell/tests/all-test-dirs.list",
+                            "--tag=addons",
+                            "%(abs_app_dir)s/" + XPCSHELL_NAME]
     },
     "all_cppunittest_suites": {
         "cppunittest": ['tests/cppunittest']
