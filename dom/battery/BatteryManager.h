@@ -46,13 +46,19 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  bool Charging() const;
+  bool Charging() const
+  {
+    return mCharging;
+  }
 
   double ChargingTime() const;
 
   double DischargingTime() const;
 
-  double Level() const;
+  double Level() const
+  {
+    return mLevel;
+  }
 
   IMPL_EVENT_HANDLER(chargingchange)
   IMPL_EVENT_HANDLER(chargingtimechange)
