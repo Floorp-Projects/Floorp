@@ -60,7 +60,7 @@ loop.shared.views = (function(_, mozL10n) {
       }
 
       var prefix = this.props.enabled ? "mute" : "unmute";
-      var suffix = "button_title";
+      var suffix = (this.props.type === "video") ? "button_title2" : "button_title";
       var msgId = [prefix, this.props.scope, this.props.type, suffix].join("_");
       return mozL10n.get(msgId);
     },
