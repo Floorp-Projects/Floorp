@@ -102,6 +102,7 @@ add_task(function*() {
     name: "Test add-on 11",
     signedState: AddonManager.SIGNEDSTATE_MISSING,
     isActive: false,
+    isCompatible: false,
     appDisabled: true,
   }]);
 
@@ -434,13 +435,11 @@ add_task(function*() {
   is_element_hidden(get_node(addon, "disable-btn"), "Disable button should be hidden");
   is_element_visible(get_node(addon, "remove-btn"), "Remove button should be visible");
 
-  is_element_hidden(get_node(addon, "warning"), "Warning message should be hidden");
+  is_element_visible(get_node(addon, "warning"), "Warning message should be visible");
+  is(get_node(addon, "warning").textContent, "Test add-on 11 is incompatible with " + gApp + " " + gVersion + ".", "Warning message should be correct");
   is_element_hidden(get_node(addon, "warning-link"), "Warning link should be hidden");
-  is_element_visible(get_node(addon, "error"), "Error message should be visible");
-  is(get_node(addon, "error").textContent, "Test add-on 11 could not be verified for use in " + gApp + " and has been disabled.", "Error message should be correct");
-  is_element_visible(get_node(addon, "error-link"), "Error link should be visible");
-  is(get_node(addon, "error-link").value, "More Information", "Error link text should be correct");
-  is(get_node(addon, "error-link").href, infoURL, "Error link should be correct");
+  is_element_hidden(get_node(addon, "error"), "Error message should be hidden");
+  is_element_hidden(get_node(addon, "error-link"), "Error link should be hidden");
   is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
 
   info("Filter for disabled unsigned extensions");
@@ -830,6 +829,60 @@ add_task(function*() {
   is(el.getAttribute("active"), "false", "Addon should not be marked as active");
   is_element_visible(get_node(el, "warning"), "Warning message should be visible");
   is(get_node(el, "warning").textContent, "Test add-on 2 is incompatible with " + gApp + " " + gVersion + ".", "Warning message should be correct");
+});
+
+// Check that the list displays correctly when signing is required
+add_task(function*() {
+  yield close_manager(gManagerWindow);
+  Services.prefs.setBoolPref("xpinstall.signatures.required", true);
+  gManagerWindow = yield open_manager(null);
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+
+  yield gCategoryUtilities.openType("extension");
+  let items = get_test_items();
+  is(Object.keys(items).length, 11, "Should be the right number of add-ons installed");
+
+  info("Addon 10");
+  let addon = items["Test add-on 10"];
+  addon.parentNode.ensureElementIsVisible(addon);
+  let { name, version } = yield get_tooltip_info(addon);
+  is(get_node(addon, "name").value, "Test add-on 10", "Name should be correct");
+  is(name, "Test add-on 10", "Tooltip name should be correct");
+
+  is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
+  is_element_hidden(get_node(addon, "enable-btn"), "Enable button should be hidden");
+  is_element_visible(get_node(addon, "disable-btn"), "Disable button should be visible");
+  is_element_visible(get_node(addon, "remove-btn"), "Remove button should be visible");
+
+  is_element_hidden(get_node(addon, "warning"), "Warning message should be hidden");
+  is_element_hidden(get_node(addon, "warning-link"), "Warning link should be hidden");
+  is_element_visible(get_node(addon, "error"), "Error message should be visible");
+  is(get_node(addon, "error").textContent, "Test add-on 10 could not be verified for use in " + gApp + " and has been disabled.", "Error message should be correct");
+  is_element_visible(get_node(addon, "error-link"), "Error link should be visible");
+  is(get_node(addon, "error-link").value, "More Information", "Error link text should be correct");
+  is(get_node(addon, "error-link").href, infoURL, "Error link should be correct");
+
+  info("Addon 11");
+  addon = items["Test add-on 11"];
+  addon.parentNode.ensureElementIsVisible(addon);
+  ({ name, version } = yield get_tooltip_info(addon));
+  is(get_node(addon, "name").value, "Test add-on 11", "Name should be correct");
+  is(name, "Test add-on 11", "Tooltip name should be correct");
+
+  is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
+  is_element_hidden(get_node(addon, "enable-btn"), "Enable button should be hidden");
+  is_element_hidden(get_node(addon, "disable-btn"), "Disable button should be hidden");
+  is_element_visible(get_node(addon, "remove-btn"), "Remove button should be visible");
+
+  is_element_hidden(get_node(addon, "warning"), "Warning message should be hidden");
+  is_element_hidden(get_node(addon, "warning-link"), "Warning link should be hidden");
+  is_element_visible(get_node(addon, "error"), "Error message should be visible");
+  is(get_node(addon, "error").textContent, "Test add-on 11 could not be verified for use in " + gApp + " and has been disabled.", "Error message should be correct");
+  is_element_visible(get_node(addon, "error-link"), "Error link should be visible");
+  is(get_node(addon, "error-link").value, "More Information", "Error link text should be correct");
+  is(get_node(addon, "error-link").href, infoURL, "Error link should be correct");
+
+  Services.prefs.setBoolPref("xpinstall.signatures.required", false);
 });
 
 add_task(function*() {
