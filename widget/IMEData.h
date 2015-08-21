@@ -539,7 +539,7 @@ struct IMENotification final
   };
 
   // NOTIFY_IME_OF_SELECTION_CHANGE specific data
-  struct SelectionChangeData
+  struct SelectionChangeDataBase
   {
     // Selection range.
     uint32_t mOffset;
@@ -590,7 +590,7 @@ struct IMENotification final
     {
       return mOffset != UINT32_MAX;
     }
-    void Assign(const SelectionChangeData& aOther)
+    void Assign(const SelectionChangeDataBase& aOther)
     {
       mOffset = aOther.mOffset;
       *mString = aOther.String();
@@ -599,6 +599,46 @@ struct IMENotification final
       mCausedByComposition = aOther.mCausedByComposition;
       mCausedBySelectionEvent = aOther.mCausedBySelectionEvent;
     }
+  };
+
+  // SelectionChangeDataBase cannot have constructors because it's used in
+  // the union.  Therefore, SelectionChangeData should only implement
+  // constructors.  In other words, add other members to
+  // SelectionChangeDataBase.
+  struct SelectionChangeData final : public SelectionChangeDataBase
+  {
+    SelectionChangeData()
+    {
+      mString = &mStringInstance;
+      Clear();
+    }
+    explicit SelectionChangeData(const SelectionChangeDataBase& aOther)
+    {
+      mString = &mStringInstance;
+      Assign(aOther);
+    }
+    SelectionChangeData(const SelectionChangeData& aOther)
+    {
+      mString = &mStringInstance;
+      Assign(aOther);
+    }
+    SelectionChangeData& operator=(const SelectionChangeDataBase& aOther)
+    {
+      mString = &mStringInstance;
+      Assign(aOther);
+      return *this;
+    }
+    SelectionChangeData& operator=(const SelectionChangeData& aOther)
+    {
+      mString = &mStringInstance;
+      Assign(aOther);
+      return *this;
+    }
+
+  private:
+    // When SelectionChangeData is used outside of union, it shouldn't create
+    // nsString instance in the heap as far as possible.
+    nsString mStringInstance;
   };
 
   struct TextChangeDataBase
@@ -708,7 +748,7 @@ struct IMENotification final
   union
   {
     // NOTIFY_IME_OF_SELECTION_CHANGE specific data
-    SelectionChangeData mSelectionChangeData;
+    SelectionChangeDataBase mSelectionChangeData;
 
     // NOTIFY_IME_OF_TEXT_CHANGE specific data
     TextChangeDataBase mTextChangeData;
