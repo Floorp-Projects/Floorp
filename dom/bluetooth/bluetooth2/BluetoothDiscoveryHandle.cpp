@@ -23,7 +23,6 @@ NS_IMPL_RELEASE_INHERITED(BluetoothDiscoveryHandle, DOMEventTargetHelper)
 
 BluetoothDiscoveryHandle::BluetoothDiscoveryHandle(nsPIDOMWindow* aWindow)
   : DOMEventTargetHelper(aWindow)
-  , mLeScanUuid(EmptyString())
 {
   MOZ_ASSERT(aWindow);
 }

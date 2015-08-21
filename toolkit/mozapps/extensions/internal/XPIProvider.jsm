@@ -7663,9 +7663,17 @@ DirectoryInstallLocation.prototype = {
   getTrashDir: function DirInstallLocation_getTrashDir() {
     let trashDir = this._directory.clone();
     trashDir.append(DIR_TRASH);
-    if (trashDir.exists())
-      recursiveRemove(trashDir);
-    trashDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+    let trashDirExists = trashDir.exists();
+    try {
+      if (trashDirExists)
+        recursiveRemove(trashDir);
+      trashDirExists = false;
+    } catch (e) {
+      logger.warn("Failed to remove trash directory", e);
+    }
+    if (!trashDirExists)
+      trashDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+
     return trashDir;
   },
 

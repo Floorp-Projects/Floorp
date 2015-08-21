@@ -112,18 +112,18 @@ function handleRequest(aRequest, aResponse) {
     return;
   }
 
-  let hash;
+  let size;
   let patches = "";
   if (!params.partialPatchOnly) {
-    hash = SHA512_HASH_SIMPLE_MAR + (params.invalidCompleteHash ? "e" : "");
+    size = SIZE_SIMPLE_MAR + (params.invalidCompleteSize ? "1" : "");
     patches += getRemotePatchString("complete", SERVICE_URL, "SHA512",
-                                    hash, SIZE_SIMPLE_MAR);
+                                    SHA512_HASH_SIMPLE_MAR, size);
   }
 
   if (!params.completePatchOnly) {
-    hash = SHA512_HASH_SIMPLE_MAR + (params.invalidPartialHash ? "e" : "");
+    size = SIZE_SIMPLE_MAR + (params.invalidPartialSize ? "1" : "");
     patches += getRemotePatchString("partial", SERVICE_URL, "SHA512",
-                                    hash, SIZE_SIMPLE_MAR);
+                                    SHA512_HASH_SIMPLE_MAR, size);
   }
 
   let type = params.type ? params.type : "major";
