@@ -7,6 +7,11 @@
 #include "mozilla/Compression.h"
 #include "mozilla/CheckedInt.h"
 
+// Without including <string>, MSVC 2015 complains about e.g. the impossibility
+// to convert `const void* const` to `void*` when calling memchr from
+// corecrt_memory.h.
+#include <string>
+
 using namespace mozilla::Compression;
 
 namespace {
