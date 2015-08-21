@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+  <Description about="urn:mozilla:install-manifest">
+    <em:id>first-webextension2@tests.mozilla.org</em:id>
+    <em:version>2.0</em:version>
+
+    <em:targetApplication>
+      <Description>
+        <em:id>xpcshell@tests.mozilla.org</em:id>
+        <em:minVersion>1</em:minVersion>
+        <em:maxVersion>1</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+
+    <!-- Front End MetaData -->
+    <em:name>XPI Add-on 1</em:name>
+    <em:description>XPI Add-on 1 - Description</em:description>
+    <em:creator>XPI Add-on 1 - Creator</em:creator>
+    <em:developer>XPI Add-on 1 - First Developer</em:developer>
+    <em:translator>XPI Add-on 1 - First Translator</em:translator>
+    <em:contributor>XPI Add-on 1 - First Contributor</em:contributor>
+    <em:homepageURL>http://localhost/xpi/1/homepage.html</em:homepageURL>
+    <em:optionsURL>http://localhost/xpi/1/options.html</em:optionsURL>
+    <em:aboutURL>http://localhost/xpi/1/about.html</em:aboutURL>
+    <em:iconURL>http://localhost/xpi/1/icon.png</em:iconURL>
+  </Description>
+</RDF>
