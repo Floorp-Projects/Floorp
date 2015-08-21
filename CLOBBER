@@ -22,5 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1195388 - Moving location of generated R.java files requires a
-clobber.
+Bug 1193379 - Moving location of files under dom/bluetooth requires a clobber
