@@ -409,16 +409,11 @@ IMEContentObserver::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
                                            nsISelection* aSelection,
                                            int16_t aReason)
 {
-  bool causedByComposition = IsEditorHandlingEventForComposition();
-  if (causedByComposition &&
-      !mUpdatePreference.WantChangesCausedByComposition()) {
-    return NS_OK;
-  }
-
   int32_t count = 0;
   nsresult rv = aSelection->GetRangeCount(&count);
   NS_ENSURE_SUCCESS(rv, rv);
   if (count > 0 && mWidget) {
+    bool causedByComposition = IsEditorHandlingEventForComposition();
     bool causedBySelectionEvent = TextComposition::IsHandlingSelectionEvent();
     MaybeNotifyIMEOfSelectionChange(causedByComposition,
                                     causedBySelectionEvent);
@@ -1067,6 +1062,8 @@ IMEContentObserver::FocusSetEvent::Run()
   }
 
   mIMEContentObserver->mIMEHasFocus = true;
+  // Initialize selection cache with the first selection data.
+  mIMEContentObserver->UpdateSelectionCache();
   IMEStateManager::NotifyIME(IMENotification(NOTIFY_IME_OF_FOCUS),
                              mIMEContentObserver->mWidget);
   return NS_OK;
@@ -1090,6 +1087,14 @@ IMEContentObserver::SelectionChangeEvent::Run()
   }
 
   if (NS_WARN_IF(!mIMEContentObserver->UpdateSelectionCache())) {
+    return NS_OK;
+  }
+
+  // If the IME doesn't want selection change notifications caused by
+  // composition, we should do nothing anymore.
+  if (mCausedByComposition &&
+      !mIMEContentObserver->
+        mUpdatePreference.WantChangesCausedByComposition()) {
     return NS_OK;
   }
 
