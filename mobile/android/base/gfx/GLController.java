@@ -272,6 +272,7 @@ public class GLController {
         if (mCompositorCreated) {
             GeckoAppShell.scheduleResumeComposition(width, height);
             GeckoAppShell.sendEventToGecko(GeckoEvent.createCompositorResumeEvent());
+            mView.requestRender();
         }
     }
 
