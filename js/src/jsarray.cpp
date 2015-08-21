@@ -1250,10 +1250,10 @@ ArrayReverseDenseKernel(JSContext* cx, HandleObject obj, uint32_t length)
         /* Fill out the array's initialized length to its proper length. */
         obj->as<NativeObject>().ensureDenseInitializedLength(cx, length, 0);
     } else {
-        // Unboxed arrays can only be reversed if their initialized length
+        // Unboxed arrays can only be reversed here if their initialized length
         // matches their actual length. Otherwise the reversal will place holes
         // at the beginning of the array, which we don't support.
-        if (length != obj->as<UnboxedArrayObject>().length())
+        if (length != obj->as<UnboxedArrayObject>().initializedLength())
             return DenseElementResult::Incomplete;
     }
 
