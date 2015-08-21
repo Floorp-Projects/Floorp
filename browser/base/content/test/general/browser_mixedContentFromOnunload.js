@@ -48,6 +48,7 @@ function SecStateTest1B() {
   // check security state.  Since current url is https and doesn't have any
   // mixed content resources, we expect it to be secure.
   isSecurityState("secure");
+  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: false, passiveLoaded: false});
 
   whenLoaded(gTestBrowser, SecStateTest2A);
 
@@ -57,7 +58,7 @@ function SecStateTest1B() {
 }
 
 // Navigation from an http page to a https page that has mixed display content
-// The http page loads an http image on unload
+// The https page loads an http image on unload
 function SecStateTest2A() {
   whenLoaded(gTestBrowser, SecStateTest2B);
   let url = gHttpsTestRoot2 + "file_mixedContentFromOnunload_test2.html";
@@ -66,6 +67,7 @@ function SecStateTest2A() {
 
 function SecStateTest2B() {
   isSecurityState("broken");
+  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: false, passiveLoaded: true});
 
   SecStateTestsCompleted();
 }
