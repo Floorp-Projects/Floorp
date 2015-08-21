@@ -7060,10 +7060,10 @@ var gIdentityHandler = {
     mixedcontent = mixedcontent.join(" ");
 
     // We have no specific flags for weak ciphers (yet). If a connection is
-    // broken and we can't detect any mixed active content loaded then it's
-    // a weak cipher.
+    // broken and we can't detect any mixed content loaded then it's a weak
+    // cipher.
     let ciphers = "";
-    if (isBroken && !isMixedActiveContentLoaded) {
+    if (isBroken && !isMixedActiveContentLoaded && !isMixedPassiveContentLoaded) {
       ciphers = "weak";
     }
 
