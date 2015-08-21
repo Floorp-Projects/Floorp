@@ -99,15 +99,26 @@ if (typeof Mozilla == 'undefined') {
 	};
 
 	Mozilla.UITour.showHeartbeat = function(message, thankyouMessage, flowId, engagementURL,
-						learnMoreLabel, learnMoreURL) {
-		_sendEvent('showHeartbeat', {
+						learnMoreLabel, learnMoreURL, options) {
+		var args = {
 			message: message,
 			thankyouMessage: thankyouMessage,
 			flowId: flowId,
 			engagementURL: engagementURL,
 			learnMoreLabel: learnMoreLabel,
 			learnMoreURL: learnMoreURL,
-		});
+		};
+
+		if (options) {
+			for (var option in options) {
+				if (!options.hasOwnProperty(option)) {
+					continue;
+				}
+				args[option] = options[option];
+			}
+		}
+
+		_sendEvent('showHeartbeat', args);
 	};
 
 	Mozilla.UITour.showHighlight = function(target, effect) {
