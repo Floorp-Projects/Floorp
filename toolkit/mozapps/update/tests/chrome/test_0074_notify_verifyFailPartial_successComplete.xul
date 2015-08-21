@@ -8,7 +8,7 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 
-<window title="Update Wizard pages: finishedBackground (partial patch with an invalid hash and successful complete patch)"
+<window title="Update Wizard pages: finishedBackground (partial patch with an invalid size and successful complete patch)"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="runTestDefault();">
 <script type="application/javascript"
@@ -27,7 +27,7 @@ const TESTS = [ {
 function runTest() {
   debugDump("entering");
 
-  let patches = getLocalPatchString("partial", null, null, "1234", null, null,
+  let patches = getLocalPatchString("partial", null, null, null, "1234", null,
                                     STATE_DOWNLOADING) +
                 getLocalPatchString("complete", null, null, null, null,
                                     "false");

@@ -119,6 +119,8 @@ HELPER_SHEET += ":-moz-devtools-highlighted { outline: 2px dashed #F06!important
 loader.lazyRequireGetter(this, "DevToolsUtils",
                          "devtools/toolkit/DevToolsUtils");
 
+loader.lazyRequireGetter(this, "AsyncUtils", "devtools/toolkit/async-utils");
+
 loader.lazyGetter(this, "DOMParser", function() {
   return Cc["@mozilla.org/xmlextras/domparser;1"].createInstance(Ci.nsIDOMParser);
 });
@@ -624,16 +626,12 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
    * transfered in the longstring back to the client will be that much smaller
    */
   getImageData: method(function(maxDim) {
-    // imageToImageData may fail if the node isn't an image
-    try {
-      let imageData = imageToImageData(this.rawNode, maxDim);
-      return promise.resolve({
+    return imageToImageData(this.rawNode, maxDim).then(imageData => {
+      return {
         data: LongStringActor(this.conn, imageData.data),
         size: imageData.size
-      });
-    } catch(e) {
-      return promise.reject(new Error("Image not available"));
-    }
+      };
+    });
   }, {
     request: {maxDim: Arg(0, "nullable:number")},
     response: RetVal("imageData")
@@ -3645,39 +3643,16 @@ var InspectorActor = exports.InspectorActor = protocol.ActorClass({
    * transfered in the longstring back to the client will be that much smaller
    */
   getImageDataFromURL: method(function(url, maxDim) {
-    let deferred = promise.defer();
     let img = new this.window.Image();
-
-    // On load, get the image data and send the response
-    img.onload = () => {
-      // imageToImageData throws an error if the image is missing
-      try {
-        let imageData = imageToImageData(img, maxDim);
-        deferred.resolve({
-          data: LongStringActor(this.conn, imageData.data),
-          size: imageData.size
-        });
-      } catch (e) {
-        deferred.reject(new Error("Image " + url+ " not available"));
-      }
-    }
-
-    // If the URL doesn't point to a resource, reject
-    img.onerror = () => {
-      deferred.reject(new Error("Image " + url+ " not available"));
-    }
-
-    // If the request hangs for too long, kill it to avoid queuing up other requests
-    // to the same actor, except if we're running tests
-    if (!DevToolsUtils.testing) {
-      this.window.setTimeout(() => {
-        deferred.reject(new Error("Image " + url + " could not be retrieved in time"));
-      }, IMAGE_FETCHING_TIMEOUT);
-    }
-
     img.src = url;
 
-    return deferred.promise;
+    // imageToImageData waits for the image to load.
+    return imageToImageData(img, maxDim).then(imageData => {
+      return {
+        data: LongStringActor(this.conn, imageData.data),
+        size: imageData.size
+      };
+    });
   }, {
     request: {url: Arg(0), maxDim: Arg(1, "nullable:number")},
     response: RetVal("imageData")
@@ -3922,20 +3897,84 @@ function allAnonymousContentTreeWalkerFilter(aNode) {
 }
 
 /**
- * Given an image DOMNode, return the image data-uri.
- * @param {DOMNode} node The image node
- * @param {Number} maxDim Optionally pass a maximum size you want the longest
- * side of the image to be resized to before getting the image data.
- * @return {Object} An object containing the data-uri and size-related information
- * {data: "...", size: {naturalWidth: 400, naturalHeight: 300, resized: true}}
- * @throws an error if the node isn't an image or if the image is missing
+ * Returns a promise that is settled once the given HTMLImageElement has
+ * finished loading.
+ *
+ * @param {HTMLImageElement} image - The image element.
+ * @param {Number} timeout - Maximum amount of time the image is allowed to load
+ * before the waiting is aborted. Ignored if DevToolsUtils.testing is set.
+ *
+ * @return {Promise} that is fulfilled once the image has loaded. If the image
+ * fails to load or the load takes too long, the promise is rejected.
  */
-function imageToImageData(node, maxDim) {
-  let isImg = node.tagName.toLowerCase() === "img";
-  let isCanvas = node.tagName.toLowerCase() === "canvas";
+function ensureImageLoaded(image, timeout) {
+  let { HTMLImageElement } = image.ownerDocument.defaultView;
+  if (!(image instanceof HTMLImageElement)) {
+    return promise.reject("image must be an HTMLImageELement");
+  }
+
+  if (image.complete) {
+    // The image has already finished loading.
+    return promise.resolve();
+  }
+
+  // This image is still loading.
+  let onLoad = AsyncUtils.listenOnce(image, "load");
+
+  // Reject if loading fails.
+  let onError = AsyncUtils.listenOnce(image, "error").then(() => {
+    return promise.reject("Image '" + image.src + "' failed to load.");
+  });
+
+  // Don't timeout when testing. This is never settled.
+  let onAbort = new promise(() => {});
+
+  if (!DevToolsUtils.testing) {
+    // Tests are not running. Reject the promise after given timeout.
+    onAbort = DevToolsUtils.waitForTime(timeout).then(() => {
+      return promise.reject("Image '" + image.src + "' took too long to load.");
+    });
+  }
+
+  // See which happens first.
+  return promise.race([onLoad, onError, onAbort]);
+}
+
+/**
+ * Given an <img> or <canvas> element, return the image data-uri. If @param node
+ * is an <img> element, the method waits a while for the image to load before
+ * the data is generated. If the image does not finish loading in a reasonable
+ * time (IMAGE_FETCHING_TIMEOUT milliseconds) the process aborts.
+ *
+ * @param {HTMLImageElement|HTMLCanvasElement} node - The <img> or <canvas>
+ * element, or Image() object. Other types cause the method to reject.
+ * @param {Number} maxDim - Optionally pass a maximum size you want the longest
+ * side of the image to be resized to before getting the image data.
+
+ * @return {Promise} A promise that is fulfilled with an object containing the
+ * data-uri and size-related information:
+ * { data: "...",
+ *   size: {
+ *     naturalWidth: 400,
+ *     naturalHeight: 300,
+ *     resized: true }
+ *  }.
+ *
+ * If something goes wrong, the promise is rejected.
+ */
+let imageToImageData = Task.async(function* (node, maxDim) {
+  let { HTMLCanvasElement, HTMLImageElement } = node.ownerDocument.defaultView;
+
+  let isImg = node instanceof HTMLImageElement;
+  let isCanvas = node instanceof HTMLCanvasElement;
 
   if (!isImg && !isCanvas) {
-    return null;
+    throw "node is not a <canvas> or <img> element.";
+  }
+
+  if (isImg) {
+    // Ensure that the image is ready.
+    yield ensureImageLoaded(node, IMAGE_FETCHING_TIMEOUT);
   }
 
   // Get the image resize ratio if a maxDim was provided
@@ -3973,7 +4012,7 @@ function imageToImageData(node, maxDim) {
       resized: resizeRatio !== 1
     }
   }
-}
+});
 
 loader.lazyGetter(this, "DOMUtils", function () {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);

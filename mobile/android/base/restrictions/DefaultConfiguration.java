@@ -24,4 +24,7 @@ public class DefaultConfiguration implements RestrictionConfiguration {
     public boolean isRestricted() {
         return false;
     }
+
+    @Override
+    public void update() {}
 }

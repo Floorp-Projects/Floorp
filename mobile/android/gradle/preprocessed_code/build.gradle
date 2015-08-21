@@ -21,21 +21,30 @@ android {
     sourceSets {
         main {
             java {
-                srcDir "${topsrcdir}/mobile/android/base/adjust"
+                srcDir "${project.buildDir}/generated/source/java"
+
+                srcDir 'src/adjust/java'
                 if (mozconfig.substs.MOZ_INSTALL_TRACKING) {
-                    exclude 'StubAdjustHelper.java'
+                    exclude 'org/mozilla/gecko/adjust/StubAdjustHelper.java'
                 } else {
-                    exclude 'AdjustHelper.java'
+                    exclude 'org/mozilla/gecko/adjust/AdjustHelper.java'
                 }
             }
         }
     }
 }
 
-android.libraryVariants.all { variant ->
-    variant.checkManifest.dependsOn rootProject.generateCodeAndResources
+task syncGeneratedSources(type: Sync) {
+    into("${project.buildDir}/generated/source/java")
+    from("${topobjdir}/mobile/android/base/generated/preprocessed")
 }
 
+android.libraryVariants.all { variant ->
+    // variant does not expose its generate sources task.
+    def name = variant.buildType.name
+    def generateSourcesTask = tasks.findByName("generate${name.capitalize()}Sources")
+    generateSourcesTask.dependsOn syncGeneratedSources
+}
 
 dependencies {
     if (mozconfig.substs.MOZ_INSTALL_TRACKING) {

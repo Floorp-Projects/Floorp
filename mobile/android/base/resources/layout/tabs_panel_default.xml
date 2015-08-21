@@ -28,7 +28,7 @@
                                                     android:layout_height="match_parent"
                                                     android:tabStripEnabled="false"
                                                     android:divider="@drawable/tab_indicator_divider"
-                                                    android:dividerPadding="@dimen/new_tablet_tab_panel_divider_vertical_padding"
+                                                    android:dividerPadding="@dimen/tablet_tab_panel_divider_vertical_padding"
                                                     android:layout="@layout/tabs_panel_indicator"/>
 
             <View android:layout_width="0dip"
