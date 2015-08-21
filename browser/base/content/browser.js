@@ -7079,6 +7079,7 @@ var gIdentityHandler = {
       updateAttribute(element, "connection", connection);
       updateAttribute(element, "ciphers", ciphers);
       updateAttribute(element, "mixedcontent", mixedcontent);
+      updateAttribute(element, "isbroken", isBroken);
     }
 
     // Initialize the optional strings to empty values

@@ -10,14 +10,12 @@ const PREF_ACTIVE = "security.mixed_content.block_active_content";
 const gHttpTestRoot = "https://example.com/browser/browser/base/content/test/general/";
 const gHttpTestRoot2 = "https://test1.example.com/browser/browser/base/content/test/general/";
 
-var origBlockDisplay;
-var origBlockActive;
 var gTestBrowser = null;
 
 registerCleanupFunction(function() {
   // Set preferences back to their original values
-  Services.prefs.setBoolPref(PREF_DISPLAY, origBlockDisplay);
-  Services.prefs.setBoolPref(PREF_ACTIVE, origBlockActive);
+  Services.prefs.clearUserPref(PREF_DISPLAY);
+  Services.prefs.clearUserPref(PREF_ACTIVE);
 });
 
 function MixedTestsCompleted() {
@@ -28,9 +26,6 @@ function MixedTestsCompleted() {
 
 function test() {
   waitForExplicitFinish();
-
-  origBlockDisplay = Services.prefs.getBoolPref(PREF_DISPLAY);
-  origBlockActive = Services.prefs.getBoolPref(PREF_ACTIVE);
 
   Services.prefs.setBoolPref(PREF_DISPLAY, true);
   Services.prefs.setBoolPref(PREF_ACTIVE, true);

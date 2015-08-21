@@ -40,6 +40,7 @@ function SecStateTests() {
 function SecStateTest1() {
   // check security state is insecure
   isSecurityState("insecure");
+  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: false, passiveLoaded: true});
 
   SecStateTestsCompleted();
 }
