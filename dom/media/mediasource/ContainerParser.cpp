@@ -178,6 +178,16 @@ public:
         (*aData)[3] == 0x6b) {
       return true;
     }
+    // 0xa3 // SimpleBlock
+    if (aData->Length() >= 1 &&
+        (*aData)[0] == 0xa3) {
+      return true;
+    }
+    // 0xa1 // Block
+    if (aData->Length() >= 1 &&
+        (*aData)[0] == 0xa1) {
+      return true;
+    }
     return false;
   }
 
@@ -186,17 +196,6 @@ public:
   {
     bool initSegment = IsInitSegmentPresent(aData);
     if (initSegment) {
-      if (mLastMapping) {
-        // The last data contained a complete cluster but we can only detect it
-        // now that a new one is starting.
-        // We use mOffset as end position to ensure that any blocks not reported
-        // by WebMBufferParser are properly skipped.
-        mCompleteMediaSegmentRange = MediaByteRange(mLastMapping.ref().mSyncOffset,
-                                                    mOffset);
-        mLastMapping.reset();
-        MSE_DEBUG(WebMContainerParser, "New cluster found at start, ending previous one");
-        return false;
-      }
       mOffset = 0;
       mParser = WebMBufferedParser(0);
       mOverlappedMapping.Clear();
@@ -244,71 +243,38 @@ public:
       return false;
     }
 
-    if (mLastMapping &&
-        mLastMapping.ref().mSyncOffset != mapping[0].mSyncOffset) {
-      // The last data contained a complete cluster but we can only detect it
-      // now that a new one is starting.
-      // We use the start of the next cluster as end position to ensure that any
-      // blocks not reported by WebMBufferParser is properly skipped.
-      mCompleteMediaSegmentRange = MediaByteRange(mLastMapping.ref().mSyncOffset,
-                                                  mapping[0].mSyncOffset);
-      mOverlappedMapping.AppendElements(mapping);
-      mLastMapping.reset();
-      MSE_DEBUG(WebMContainerParser, "New cluster found at start, ending previous one");
-      return false;
-    }
-
-    // Calculate media range for first media segment.
-
-    // Check if we have a cluster finishing in the current data.
     uint32_t endIdx = mapping.Length() - 1;
-    bool foundNewCluster = false;
-    while (mapping[0].mSyncOffset != mapping[endIdx].mSyncOffset) {
-      endIdx -= 1;
-      foundNewCluster = true;
+
+    // Calculate media range for first media segment
+    uint32_t segmentEndIdx = endIdx;
+    while (mapping[0].mSyncOffset != mapping[segmentEndIdx].mSyncOffset) {
+      segmentEndIdx -= 1;
     }
-
-    int32_t completeIdx = endIdx;
-    while (completeIdx >= 0 && mOffset < mapping[completeIdx].mEndOffset) {
-      MSE_DEBUG(WebMContainerParser, "block is incomplete, missing: %lld",
-                mapping[completeIdx].mEndOffset - mOffset);
-      completeIdx -= 1;
-    }
-
-    // Save parsed blocks for which we do not have all data yet.
-    mOverlappedMapping.AppendElements(mapping.Elements() + completeIdx + 1,
-                                      mapping.Length() - completeIdx - 1);
-
-    if (completeIdx < 0) {
-      mLastMapping.reset();
-      return false;
-    }
-
-    if (mCompleteMediaHeaderRange.IsNull()) {
-      mCompleteMediaHeaderRange = MediaByteRange(mapping[0].mSyncOffset,
+    if (segmentEndIdx > 0 && mOffset >= mapping[segmentEndIdx].mEndOffset) {
+      mCompleteMediaHeaderRange = MediaByteRange(mParser.mInitEndOffset,
                                                  mapping[0].mEndOffset);
-    }
-    mLastMapping = Some(mapping[completeIdx]);
-
-    if (foundNewCluster && mOffset >= mapping[endIdx].mEndOffset) {
-      // We now have all information required to delimit a complete cluster.
-      mCompleteMediaSegmentRange = MediaByteRange(mapping[endIdx].mSyncOffset,
-                                                  mapping[endIdx].mEndOffset);
+      mCompleteMediaSegmentRange = MediaByteRange(mParser.mInitEndOffset,
+                                                  mapping[segmentEndIdx].mEndOffset);
     }
 
-    if (!completeIdx) {
+    // Exclude frames that we don't have enough data to cover the end of.
+    while (mOffset < mapping[endIdx].mEndOffset && endIdx > 0) {
+      endIdx -= 1;
+    }
+
+    if (endIdx == 0) {
       return false;
     }
 
-    uint64_t frameDuration =
-      mapping[completeIdx].mTimecode - mapping[completeIdx - 1].mTimecode;
+    uint64_t frameDuration = mapping[endIdx].mTimecode - mapping[endIdx - 1].mTimecode;
     aStart = mapping[0].mTimecode / NS_PER_USEC;
-    aEnd = (mapping[completeIdx].mTimecode + frameDuration) / NS_PER_USEC;
+    aEnd = (mapping[endIdx].mTimecode + frameDuration) / NS_PER_USEC;
 
-    MSE_DEBUG(WebMContainerParser, "[%lld, %lld] [fso=%lld, leo=%lld, l=%u processedIdx=%u fs=%lld]",
-              aStart, aEnd, mapping[0].mSyncOffset,
-              mapping[completeIdx].mEndOffset, mapping.Length(), completeIdx,
-              mCompleteMediaSegmentRange.mEnd);
+    MSE_DEBUG(WebMContainerParser, "[%lld, %lld] [fso=%lld, leo=%lld, l=%u endIdx=%u]",
+              aStart, aEnd, mapping[0].mSyncOffset, mapping[endIdx].mEndOffset, mapping.Length(), endIdx);
+
+    mapping.RemoveElementsAt(0, endIdx + 1);
+    mOverlappedMapping.AppendElements(mapping);
 
     return true;
   }
@@ -323,7 +289,6 @@ private:
   WebMBufferedParser mParser;
   nsTArray<WebMTimeDataOffset> mOverlappedMapping;
   int64_t mOffset;
-  Maybe<WebMTimeDataOffset> mLastMapping;
 };
 
 #ifdef MOZ_FMP4
