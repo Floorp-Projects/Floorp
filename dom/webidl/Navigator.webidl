@@ -125,14 +125,15 @@ interface NavigatorGeolocation {
 Navigator implements NavigatorGeolocation;
 
 // http://www.w3.org/TR/battery-status/#navigatorbattery-interface
-[NoInterfaceObject]
-interface NavigatorBattery {
-    // XXXbz Per spec this should be non-nullable, but we return null in
-    // torn-down windows.  See bug 884925.
-    [Throws, Pref="dom.battery.enabled"]
-    readonly attribute BatteryManager? battery;
+partial interface Navigator {
+  [Throws, Pref="dom.battery.enabled"]
+  Promise<BatteryManager> getBattery();
+  // Deprecated. Use getBattery() instead.
+  // XXXbz Per spec this should be non-nullable, but we return null in
+  // torn-down windows.  See bug 884925.
+  [Throws, Pref="dom.battery.enabled", BinaryName="deprecatedBattery"]
+  readonly attribute BatteryManager? battery;
 };
-Navigator implements NavigatorBattery;
 
 // https://wiki.mozilla.org/WebAPI/DataStore
 [NoInterfaceObject,
