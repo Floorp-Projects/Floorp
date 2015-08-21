@@ -292,7 +292,7 @@ Cookies.prototype = {
   _readCookieFile: function C__readCookieFile(aFile, aCallback) {
     let fileReader = Cc["@mozilla.org/files/filereader;1"].
                      createInstance(Ci.nsIDOMFileReader);
-    fileReader.addEventListener("loadend", (function onLoadEnd() {
+    let onLoadEnd = () => {
       fileReader.removeEventListener("loadend", onLoadEnd, false);
 
       if (fileReader.readyState != fileReader.DONE) {
@@ -310,7 +310,8 @@ Cookies.prototype = {
       } finally {
         aCallback(success);
       }
-    }).bind(this), false);
+    };
+    fileReader.addEventListener("loadend", onLoadEnd, false);
     fileReader.readAsText(new File(aFile));
   },
 
