@@ -1,4 +1,3 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -192,6 +191,7 @@ let getElementTextFn = dispatch(getElementText);
 let getElementTagNameFn = dispatch(getElementTagName);
 let getElementRectFn = dispatch(getElementRect);
 let isElementEnabledFn = dispatch(isElementEnabled);
+let getCurrentUrlFn = dispatch(getCurrentUrl);
 
 /**
  * Start all message listeners
@@ -208,7 +208,7 @@ function startListeners() {
   addMessageListenerId("Marionette:get", get);
   addMessageListenerId("Marionette:pollForReadyState", pollForReadyState);
   addMessageListenerId("Marionette:cancelRequest", cancelRequest);
-  addMessageListenerId("Marionette:getCurrentUrl", getCurrentUrl);
+  addMessageListenerId("Marionette:getCurrentUrl", getCurrentUrlFn);
   addMessageListenerId("Marionette:getTitle", getTitle);
   addMessageListenerId("Marionette:getPageSource", getPageSource);
   addMessageListenerId("Marionette:goBack", goBack);
@@ -315,7 +315,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:cancelRequest", cancelRequest);
   removeMessageListenerId("Marionette:getTitle", getTitle);
   removeMessageListenerId("Marionette:getPageSource", getPageSource);
-  removeMessageListenerId("Marionette:getCurrentUrl", getCurrentUrl);
+  removeMessageListenerId("Marionette:getCurrentUrl", getCurrentUrlFn);
   removeMessageListenerId("Marionette:goBack", goBack);
   removeMessageListenerId("Marionette:goForward", goForward);
   removeMessageListenerId("Marionette:refresh", refresh);
@@ -1281,16 +1281,14 @@ function cancelRequest() {
 }
 
 /**
- * Get URL of the top level browsing context.
+ * Get URL of the top-level browsing context.
  */
-function getCurrentUrl(msg) {
-  let url;
-  if (msg.json.isB2G) {
-    url = curFrame.location.href;
+function getCurrentUrl(isB2G) {
+  if (isB2G) {
+    return curFrame.location.href;
   } else {
-    url = content.location.href;
+    return content.location.href;
   }
-  sendResponse({value: url}, msg.json.command_id);
 }
 
 /**
