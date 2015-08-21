@@ -128,7 +128,6 @@ LOCAL_INCLUDES += [
     '/chrome',
     '/docshell/base',
     '/dom/base',
-    '/dom/bluetooth',
     '/dom/bluetooth/common',
     '/dom/bluetooth/ipc',
     '/dom/devicestorage',
