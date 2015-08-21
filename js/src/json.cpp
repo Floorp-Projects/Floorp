@@ -135,13 +135,19 @@ class StringifyContext
       : sb(sb),
         gap(gap),
         replacer(cx, replacer),
+        stack(cx, TraceableHashSet<JSObject*>(cx)),
         propertyList(propertyList),
         depth(0)
     {}
 
+    bool init() {
+        return stack.init(8);
+    }
+
     StringBuffer& sb;
     const StringBuffer& gap;
     RootedObject replacer;
+    Rooted<TraceableHashSet<JSObject*>> stack;
     const AutoIdVector& propertyList;
     uint32_t depth;
 };
@@ -290,6 +296,32 @@ IsFilteredValue(const Value& v)
     return v.isUndefined() || v.isSymbol() || IsCallable(v);
 }
 
+class CycleDetector
+{
+  public:
+    CycleDetector(StringifyContext* scx, HandleObject obj)
+      : stack(&scx->stack), obj_(obj) {
+    }
+
+    bool foundCycle(JSContext* cx) {
+        auto addPtr = stack.lookupForAdd(obj_);
+        if (addPtr) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_JSON_CYCLIC_VALUE,
+                                 js_object_str);
+            return false;
+        }
+        return stack.add(addPtr, obj_);
+    }
+
+    ~CycleDetector() {
+        stack.remove(obj_);
+    }
+
+  private:
+    MutableHandle<TraceableHashSet<JSObject*>> stack;
+    HandleObject obj_;
+};
+
 /* ES5 15.12.3 JO. */
 static bool
 JO(JSContext* cx, HandleObject obj, StringifyContext* scx)
@@ -305,14 +337,9 @@ JO(JSContext* cx, HandleObject obj, StringifyContext* scx)
      */
 
     /* Steps 1-2, 11. */
-    AutoCycleDetector detect(cx, obj);
-    if (!detect.init())
+    CycleDetector detect(scx, obj);
+    if (!detect.foundCycle(cx))
         return false;
-    if (detect.foundCycle()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_JSON_CYCLIC_VALUE,
-                             js_object_str);
-        return false;
-    }
 
     if (!scx->sb.append('{'))
         return false;
@@ -396,14 +423,9 @@ JA(JSContext* cx, HandleObject obj, StringifyContext* scx)
      */
 
     /* Steps 1-2, 11. */
-    AutoCycleDetector detect(cx, obj);
-    if (!detect.init())
+    CycleDetector detect(scx, obj);
+    if (!detect.foundCycle(cx))
         return false;
-    if (detect.foundCycle()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_JSON_CYCLIC_VALUE,
-                             js_object_str);
-        return false;
-    }
 
     if (!scx->sb.append('['))
         return false;
@@ -670,6 +692,8 @@ js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_, Value s
 
     /* Step 11. */
     StringifyContext scx(cx, sb, gap, replacer, propertyList);
+    if (!scx.init())
+        return false;
     if (!PreprocessValue(cx, wrapper, HandleId(emptyId), vp, &scx))
         return false;
     if (IsFilteredValue(vp))
