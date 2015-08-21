@@ -89,6 +89,10 @@ public class RestrictedProfiles {
         return false;
     }
 
+    public static void update(Context context) {
+        getConfiguration(context).update();
+    }
+
     private static Restriction geckoActionToRestriction(int action) {
         for (Restriction rest : Restriction.values()) {
             if (rest.id == action) {
