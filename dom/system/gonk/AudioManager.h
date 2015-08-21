@@ -16,6 +16,7 @@
 #ifndef mozilla_dom_system_b2g_audiomanager_h__
 #define mozilla_dom_system_b2g_audiomanager_h__
 
+#include "mozilla/HalTypes.h"
 #include "mozilla/Observer.h"
 #include "nsAutoPtr.h"
 #include "nsIAudioManager.h"
@@ -98,8 +99,25 @@ public:
   // Validate whether the volume index is within the range
   nsresult ValidateVolumeIndex(uint32_t aCategory, uint32_t aIndex) const;
 
+  // Called when android AudioFlinger in mediaserver is died
+  void HandleAudioFlingerDied();
+
+  void HandleHeadphoneSwitchEvent(const hal::SwitchEvent& aEvent);
+
 protected:
   int32_t mPhoneState;
+
+  // A bitwise variable for recording what kind of headset/headphone is attached.
+  int32_t mHeadsetState;
+
+  bool mSwitchDone;
+
+#if defined(MOZ_B2G_BT) || ANDROID_VERSION >= 17
+  bool mBluetoothA2dpEnabled;
+#endif
+#ifdef MOZ_B2G_BT
+  bool mA2dpSwitchDone;
+#endif
   uint32_t mCurrentStreamVolumeTbl[AUDIO_STREAM_CNT];
 
   nsresult SetStreamVolumeIndex(int32_t aStream, uint32_t aIndex);
@@ -155,6 +173,8 @@ private:
   // Promise functions.
   void InitProfileVolumeSucceeded();
   void InitProfileVolumeFailed(const char* aError);
+
+  void UpdateHeadsetConnectionState(hal::SwitchState aState);
 
   AudioManager();
   ~AudioManager();
