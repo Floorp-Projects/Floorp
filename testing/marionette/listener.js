@@ -185,6 +185,7 @@ function removeMessageListenerId(messageName, handler) {
 
 let getTitleFn = dispatch(getTitle);
 let getElementSizeFn = dispatch(getElementSize);
+let getPageSourceFn = dispatch(getPageSource);
 let getActiveElementFn = dispatch(getActiveElement);
 let clickElementFn = dispatch(clickElement);
 let getElementAttributeFn = dispatch(getElementAttribute);
@@ -211,7 +212,7 @@ function startListeners() {
   addMessageListenerId("Marionette:cancelRequest", cancelRequest);
   addMessageListenerId("Marionette:getCurrentUrl", getCurrentUrlFn);
   addMessageListenerId("Marionette:getTitle", getTitleFn);
-  addMessageListenerId("Marionette:getPageSource", getPageSource);
+  addMessageListenerId("Marionette:getPageSource", getPageSourceFn);
   addMessageListenerId("Marionette:goBack", goBack);
   addMessageListenerId("Marionette:goForward", goForward);
   addMessageListenerId("Marionette:refresh", refresh);
@@ -315,7 +316,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:pollForReadyState", pollForReadyState);
   removeMessageListenerId("Marionette:cancelRequest", cancelRequest);
   removeMessageListenerId("Marionette:getTitle", getTitleFn);
-  removeMessageListenerId("Marionette:getPageSource", getPageSource);
+  removeMessageListenerId("Marionette:getPageSource", getPageSourceFn);
   removeMessageListenerId("Marionette:getCurrentUrl", getCurrentUrlFn);
   removeMessageListenerId("Marionette:goBack", goBack);
   removeMessageListenerId("Marionette:goForward", goForward);
@@ -1300,12 +1301,12 @@ function getTitle() {
 }
 
 /**
- * Get the current page source
+ * Get source of the current browsing context's DOM.
  */
-function getPageSource(msg) {
-  var XMLSerializer = curFrame.XMLSerializer;
-  var pageSource = new XMLSerializer().serializeToString(curFrame.document);
-  sendResponse({value: pageSource}, msg.json.command_id);
+function getPageSource() {
+  let XMLSerializer = curFrame.XMLSerializer;
+  let source = new XMLSerializer().serializeToString(curFrame.document);
+  return source;
 }
 
 /**
