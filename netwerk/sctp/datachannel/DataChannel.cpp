@@ -599,6 +599,32 @@ DataChannelConnection::CompleteConnect(TransportFlow *flow, TransportLayer::Stat
     LOG(("Calling usrsctp_connect"));
     r = usrsctp_connect(mMasterSocket, reinterpret_cast<struct sockaddr *>(&addr),
                         sizeof(addr));
+    if (r >= 0 || errno == EINPROGRESS) {
+      struct sctp_paddrparams paddrparams;
+      socklen_t opt_len;
+
+      memset(&paddrparams, 0, sizeof(struct sctp_paddrparams));
+      memcpy(&paddrparams.spp_address, &addr, sizeof(struct sockaddr_conn));
+      opt_len = (socklen_t)sizeof(struct sctp_paddrparams);
+      r = usrsctp_getsockopt(mMasterSocket, IPPROTO_SCTP, SCTP_PEER_ADDR_PARAMS,
+                             &paddrparams, &opt_len);
+      if (r < 0) {
+        LOG(("usrsctp_getsockopt failed: %d", r));
+      } else {
+        // draft-ietf-rtcweb-data-channel-13 section 5: max initial MTU IPV4 1200, IPV6 1280
+        paddrparams.spp_pathmtu = 1200; // safe for either
+        paddrparams.spp_flags &= !SPP_PMTUD_ENABLE;
+        paddrparams.spp_flags |= SPP_PMTUD_DISABLE;
+        opt_len = (socklen_t)sizeof(struct sctp_paddrparams);
+        r = usrsctp_setsockopt(mMasterSocket, IPPROTO_SCTP, SCTP_PEER_ADDR_PARAMS,
+                               &paddrparams, opt_len);
+        if (r < 0) {
+          LOG(("usrsctp_getsockopt failed: %d", r));
+        } else {
+          LOG(("usrsctp: PMTUD disabled, MTU set to %u", paddrparams.spp_pathmtu));
+        }
+      }
+    }
     if (r < 0) {
       if (errno == EINPROGRESS) {
         // non-blocking
