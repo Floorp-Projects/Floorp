@@ -89,13 +89,11 @@ gfxQtPlatform::GetXScreen(QWindow* aWindow)
 #endif
 
 already_AddRefed<gfxASurface>
-gfxQtPlatform::CreateOffscreenSurface(const IntSize& size,
-                                      gfxContentType contentType)
+gfxQtPlatform::CreateOffscreenSurface(const IntSize& aSize,
+                                      gfxImageFormat aFormat)
 {
-    gfxImageFormat imageFormat = OptimalFormatForContent(contentType);
-
     nsRefPtr<gfxASurface> newSurface =
-        new gfxImageSurface(size, imageFormat);
+        new gfxImageSurface(aSize, aFormat);
 
     return newSurface.forget();
 }
