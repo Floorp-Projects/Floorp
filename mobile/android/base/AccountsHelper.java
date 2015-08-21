@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko;
 
+import android.accounts.Account;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
@@ -46,6 +47,7 @@ public class AccountsHelper implements NativeEventListener {
         }
         dispatcher.registerGeckoThreadListener(this,
                 "Accounts:CreateFirefoxAccountFromJSON",
+                "Accounts:UpdateFirefoxAccountFromJSON",
                 "Accounts:Create",
                 "Accounts:Exist");
     }
@@ -58,6 +60,7 @@ public class AccountsHelper implements NativeEventListener {
         }
         dispatcher.unregisterGeckoThreadListener(this,
                 "Accounts:CreateFirefoxAccountFromJSON",
+                "Accounts:UpdateFirefoxAccountFromJSON",
                 "Accounts:Create",
                 "Accounts:Exist");
     }
@@ -101,6 +104,39 @@ public class AccountsHelper implements NativeEventListener {
                 callback.sendSuccess(fxAccount != null);
             }
 
+        } else if ("Accounts:UpdateFirefoxAccountFromJSON".equals(event)) {
+            try {
+                final Account account = FirefoxAccounts.getFirefoxAccount(mContext);
+                if (account == null) {
+                    if (callback != null) {
+                        callback.sendError("Could not update Firefox Account since non exists");
+                    }
+                    return;
+                }
+
+                final NativeJSObject json = message.getObject("json");
+                final String email = json.getString("email");
+                final String uid = json.getString("uid");
+                final boolean verified = json.optBoolean("verified", false);
+                final byte[] unwrapkB = Utils.hex2Byte(json.getString("unwrapBKey"));
+                final byte[] sessionToken = Utils.hex2Byte(json.getString("sessionToken"));
+                final byte[] keyFetchToken = Utils.hex2Byte(json.getString("keyFetchToken"));
+                final State state = new Engaged(email, uid, verified, unwrapkB, sessionToken, keyFetchToken);
+
+                final AndroidFxAccount fxAccount = new AndroidFxAccount(mContext, account);
+                fxAccount.setState(state);
+
+                if (callback != null) {
+                    callback.sendSuccess(true);
+                }
+            } catch (Exception e) {
+                Log.w(LOGTAG, "Got exception updating Firefox Account from JSON; ignoring.", e);
+                if (callback != null) {
+                    callback.sendError("Could not update Firefox Account from JSON: " + e.toString());
+                    return;
+                }
+            }
+
         } else if ("Accounts:Create".equals(event)) {
             // Do exactly the same thing as if you tapped 'Sync' in Settings.
             final Intent intent = new Intent(FxAccountConstants.ACTION_FXA_GET_STARTED);
@@ -126,7 +162,26 @@ public class AccountsHelper implements NativeEventListener {
                             FirefoxAccounts.firefoxAccountsExist(mContext));
                     callback.sendSuccess(response);
                 } else if ("fxa".equals(kind)) {
-                    response.put("exists", FirefoxAccounts.firefoxAccountsExist(mContext));
+                    final Account account = FirefoxAccounts.getFirefoxAccount(mContext);
+                    response.put("exists", account != null);
+                    if (account != null) {
+                        response.put("email", account.name);
+                        // We should always be able to extract the server endpoints.
+                        final AndroidFxAccount fxAccount = new AndroidFxAccount(mContext, account);
+                        response.put("authServerEndpoint", fxAccount.getAccountServerURI());
+                        response.put("profileServerEndpoint", fxAccount.getProfileServerURI());
+                        response.put("tokenServerEndpoint", fxAccount.getTokenServerURI());
+                        try {
+                            // It is possible for the state fetch to fail and us to not be able to provide a UID.
+                            // Long term, the UID (and verification flag) will be attached to the Android account
+                            // user data and not the internal state representation.
+                            final State state = fxAccount.getState();
+                            response.put("uid", state.uid);
+                        } catch (Exception e) {
+                            Log.w(LOGTAG, "Got exception extracting account UID; ignoring.", e);
+                        }
+                    }
+
                     callback.sendSuccess(response);
                 } else if ("sync11".equals(kind)) {
                     response.put("exists", SyncAccounts.syncAccountsExist(mContext));
