@@ -106,14 +106,14 @@ namespace mozilla {
 namespace widget {
 
 void
-IMENotification::SelectionChangeData::SetWritingMode(
+IMENotification::SelectionChangeDataBase::SetWritingMode(
                                         const WritingMode& aWritingMode)
 {
   mWritingMode = aWritingMode.mWritingMode;
 }
 
 WritingMode
-IMENotification::SelectionChangeData::GetWritingMode() const
+IMENotification::SelectionChangeDataBase::GetWritingMode() const
 {
   return WritingMode(mWritingMode);
 }
