@@ -124,7 +124,8 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
         /*optional out*/ SECOidTag* evOidPolicy,
         /*optional out*/ OCSPStaplingStatus* ocspStaplingStatus,
         /*optional out*/ KeySizeStatus* keySizeStatus,
-        /*optional out*/ SignatureDigestStatus* sigDigestStatus)
+        /*optional out*/ SignatureDigestStatus* sigDigestStatus,
+        /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo)
 {
   MOZ_LOG(gCertVerifierLog, LogLevel::Debug, ("Top of VerifyCert\n"));
 
@@ -212,7 +213,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                        mCertShortLifetimeInDays,
                                        pinningDisabled, MIN_RSA_BITS_WEAK,
                                        ValidityCheckingMode::CheckingOff,
-                                       AcceptAllAlgorithms, nullptr,
+                                       AcceptAllAlgorithms, nullptr, nullptr,
                                        builtChain);
       rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeEndEntity,
@@ -262,12 +263,18 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
       for (size_t i=0;
            i < digestAlgorithmOptionsCount && rv != Success && srv == SECSuccess;
            i++) {
+        // Because of the try-strict and fallback approach, we have to clear any
+        // previously noted telemetry information
+        if (pinningTelemetryInfo) {
+          pinningTelemetryInfo->Reset();
+        }
         NSSCertDBTrustDomain
           trustDomain(trustSSL, evOCSPFetching,
                       mOCSPCache, pinArg, ocspGETConfig,
                       mCertShortLifetimeInDays, mPinningMode, MIN_RSA_BITS,
                       ValidityCheckingMode::CheckForEV,
-                      digestAlgorithmOptions[i], hostname, builtChain);
+                      digestAlgorithmOptions[i], pinningTelemetryInfo, hostname,
+                      builtChain);
         rv = BuildCertChainForOneKeyUsage(trustDomain, certDER, time,
                                           KeyUsage::digitalSignature,// (EC)DHE
                                           KeyUsage::keyEncipherment, // RSA
@@ -315,12 +322,19 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
 
       for (size_t i=0; i<keySizeOptionsCount && rv != Success; i++) {
         for (size_t j=0; j<digestAlgorithmOptionsCount && rv != Success; j++) {
+
+          // invalidate any telemetry info relating to failed chains
+          if (pinningTelemetryInfo) {
+            pinningTelemetryInfo->Reset();
+          }
+
           NSSCertDBTrustDomain trustDomain(trustSSL, defaultOCSPFetching,
                                            mOCSPCache, pinArg, ocspGETConfig,
                                            mCertShortLifetimeInDays,
                                            mPinningMode, keySizeOptions[i],
                                            ValidityCheckingMode::CheckingOff,
                                            digestAlgorithmOptions[j],
+                                           pinningTelemetryInfo,
                                            hostname, builtChain);
           rv = BuildCertChainForOneKeyUsage(trustDomain, certDER, time,
                                             KeyUsage::digitalSignature,//(EC)DHE
@@ -361,7 +375,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                        mCertShortLifetimeInDays,
                                        pinningDisabled, MIN_RSA_BITS_WEAK,
                                        ValidityCheckingMode::CheckingOff,
-                                       AcceptAllAlgorithms, nullptr,
+                                       AcceptAllAlgorithms, nullptr, nullptr,
                                        builtChain);
       rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeCA, KeyUsage::keyCertSign,
@@ -376,7 +390,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                        mCertShortLifetimeInDays,
                                        pinningDisabled, MIN_RSA_BITS_WEAK,
                                        ValidityCheckingMode::CheckingOff,
-                                       AcceptAllAlgorithms, nullptr,
+                                       AcceptAllAlgorithms, nullptr, nullptr,
                                        builtChain);
       rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeEndEntity,
@@ -402,7 +416,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                        mCertShortLifetimeInDays,
                                        pinningDisabled, MIN_RSA_BITS_WEAK,
                                        ValidityCheckingMode::CheckingOff,
-                                       AcceptAllAlgorithms, nullptr,
+                                       AcceptAllAlgorithms, nullptr, nullptr,
                                        builtChain);
       rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeEndEntity,
@@ -425,7 +439,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                        mCertShortLifetimeInDays,
                                        pinningDisabled, MIN_RSA_BITS_WEAK,
                                        ValidityCheckingMode::CheckingOff,
-                                       AcceptAllAlgorithms, nullptr,
+                                       AcceptAllAlgorithms, nullptr, nullptr,
                                        builtChain);
       rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeEndEntity,
@@ -457,7 +471,8 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                     pinArg, ocspGETConfig, mCertShortLifetimeInDays,
                                     pinningDisabled, MIN_RSA_BITS_WEAK,
                                     ValidityCheckingMode::CheckingOff,
-                                    AcceptAllAlgorithms, nullptr, builtChain);
+                                    AcceptAllAlgorithms, nullptr, nullptr,
+                                    builtChain);
       rv = BuildCertChain(sslTrust, certDER, time, endEntityOrCA,
                           keyUsage, eku, CertPolicyId::anyPolicy,
                           stapledOCSPResponse);
@@ -467,7 +482,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                         mCertShortLifetimeInDays,
                                         pinningDisabled, MIN_RSA_BITS_WEAK,
                                         ValidityCheckingMode::CheckingOff,
-                                        AcceptAllAlgorithms, nullptr,
+                                        AcceptAllAlgorithms, nullptr, nullptr,
                                         builtChain);
         rv = BuildCertChain(emailTrust, certDER, time, endEntityOrCA,
                             keyUsage, eku, CertPolicyId::anyPolicy,
@@ -481,7 +496,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                                   MIN_RSA_BITS_WEAK,
                                                   ValidityCheckingMode::CheckingOff,
                                                   AcceptAllAlgorithms,
-                                                  nullptr, builtChain);
+                                                  nullptr, nullptr, builtChain);
           rv = BuildCertChain(objectSigningTrust, certDER, time,
                               endEntityOrCA, keyUsage, eku,
                               CertPolicyId::anyPolicy, stapledOCSPResponse);
@@ -515,7 +530,8 @@ CertVerifier::VerifySSLServerCert(CERTCertificate* peerCert,
                  /*optional out*/ SECOidTag* evOidPolicy,
                  /*optional out*/ OCSPStaplingStatus* ocspStaplingStatus,
                  /*optional out*/ KeySizeStatus* keySizeStatus,
-                 /*optional out*/ SignatureDigestStatus* sigDigestStatus)
+                 /*optional out*/ SignatureDigestStatus* sigDigestStatus,
+                 /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo)
 {
   PR_ASSERT(peerCert);
   // XXX: PR_ASSERT(pinarg)
@@ -540,7 +556,8 @@ CertVerifier::VerifySSLServerCert(CERTCertificate* peerCert,
   SECStatus rv = VerifyCert(peerCert, certificateUsageSSLServer, time, pinarg,
                             hostname, flags, stapledOCSPResponse,
                             &builtChainTemp, evOidPolicy, ocspStaplingStatus,
-                            keySizeStatus, sigDigestStatus);
+                            keySizeStatus, sigDigestStatus,
+                            pinningTelemetryInfo);
   if (rv != SECSuccess) {
     return rv;
   }
