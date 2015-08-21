@@ -212,15 +212,6 @@ protected:
   bool
   DoRequest(const IsScoConnectedRequest& aRequest);
 
-  bool
-  DoRequest(const ReplyTovCardPullingRequest& aRequest);
-
-  bool
-  DoRequest(const ReplyToPhonebookPullingRequest& aRequest);
-
-  bool
-  DoRequest(const ReplyTovCardListingRequest& aRequest);
-
 #ifdef MOZ_B2G_RIL
   bool
   DoRequest(const AnswerWaitingCallRequest& aRequest);

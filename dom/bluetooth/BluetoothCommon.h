@@ -214,13 +214,6 @@ extern bool gBluetoothDebugFlag;
 #define REQUEST_MEDIA_PLAYSTATUS_ID          "requestmediaplaystatus"
 
 /**
- * When receiving a PBAP request from a remote device, we'll dispatch an event.
- */
-#define PULL_PHONEBOOK_REQ_ID                "pullphonebookreq"
-#define PULL_VCARD_ENTRY_REQ_ID              "pullvcardentryreq"
-#define PULL_VCARD_LISTING_REQ_ID            "pullvcardlistingreq"
-
-/**
  * When the value of a characteristic of a remote BLE device changes, we'll
  * dispatch an event
  */
