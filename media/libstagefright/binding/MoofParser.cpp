@@ -148,9 +148,8 @@ MoofParser::BlockingReadNextMoof()
   return false;
 }
 
-void
-MoofParser::ScanForMetadata(mozilla::MediaByteRange& aFtyp,
-                            mozilla::MediaByteRange& aMoov)
+bool
+MoofParser::HasMetadata()
 {
   int64_t length = std::numeric_limits<int64_t>::max();
   mSource->Length(&length);
@@ -158,57 +157,24 @@ MoofParser::ScanForMetadata(mozilla::MediaByteRange& aFtyp,
   byteRanges.AppendElement(MediaByteRange(0, length));
   nsRefPtr<mp4_demuxer::BlockingStream> stream = new BlockingStream(mSource);
 
+  MediaByteRange ftyp;
+  MediaByteRange moov;
   BoxContext context(stream, byteRanges);
   for (Box box(&context, mOffset); box.IsAvailable(); box = box.Next()) {
     if (box.IsType("ftyp")) {
-      aFtyp = box.Range();
+      ftyp = box.Range();
       continue;
     }
     if (box.IsType("moov")) {
-      aMoov = box.Range();
+      moov = box.Range();
       break;
     }
   }
-  mInitRange = aFtyp.Extents(aMoov);
-}
-
-bool
-MoofParser::HasMetadata()
-{
-  MediaByteRange ftyp;
-  MediaByteRange moov;
-  ScanForMetadata(ftyp, moov);
-  return !!ftyp.Length() && !!moov.Length();
-}
-
-already_AddRefed<MediaByteBuffer>
-MoofParser::Metadata()
-{
-  MediaByteRange ftyp;
-  MediaByteRange moov;
-  ScanForMetadata(ftyp, moov);
   if (!ftyp.Length() || !moov.Length()) {
-    return nullptr;
+    return false;
   }
-  nsRefPtr<MediaByteBuffer> metadata = new MediaByteBuffer();
-  if (!metadata->SetLength(ftyp.Length() + moov.Length(), fallible)) {
-    // OOM
-    return nullptr;
-  }
-
-  nsRefPtr<mp4_demuxer::BlockingStream> stream = new BlockingStream(mSource);
-  size_t read;
-  bool rv =
-    stream->ReadAt(ftyp.mStart, metadata->Elements(), ftyp.Length(), &read);
-  if (!rv || read != ftyp.Length()) {
-    return nullptr;
-  }
-  rv =
-    stream->ReadAt(moov.mStart, metadata->Elements() + ftyp.Length(), moov.Length(), &read);
-  if (!rv || read != moov.Length()) {
-    return nullptr;
-  }
-  return metadata.forget();
+  mInitRange = ftyp.Extents(moov);
+  return true;
 }
 
 Interval<Microseconds>
