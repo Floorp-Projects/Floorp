@@ -39,10 +39,10 @@ add_task(function () {
   equal(fields[1].label, "Phase:", "getMarkerFields() correctly returns fields via function (3)");
   equal(fields[1].value, "Target", "getMarkerFields() correctly returns fields via function (4)");
 
-  fields = Utils.getMarkerFields({ name: "GarbageCollection", cause: "ALLOC_TRIGGER" });
+  fields = Utils.getMarkerFields({ name: "GarbageCollection", causeName: "ALLOC_TRIGGER" });
   equal(fields[0].value, "Too Many Allocations", "Uses L10N for GC reasons");
 
-  fields = Utils.getMarkerFields({ name: "GarbageCollection", cause: "NOT_A_GC_REASON" });
+  fields = Utils.getMarkerFields({ name: "GarbageCollection", causeName: "NOT_A_GC_REASON" });
   equal(fields[0].value, "NOT_A_GC_REASON", "Defaults to enum for GC reasons when not L10N'd");
 
   equal(Utils.getMarkerFields({ name: "Javascript", causeName: "Some Platform Field" })[0].value, "(Gecko)",

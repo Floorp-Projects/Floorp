@@ -1847,7 +1847,7 @@ public:
       return rv;
     }
     /* Read connected */
-    rv = UnpackPDU(pdu, aArg3);
+    rv = UnpackPDU(pdu, UnpackConversion<int32_t, bool>(aArg3));
     if (NS_FAILED(rv)) {
       return rv;
     }

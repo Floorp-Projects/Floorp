@@ -261,7 +261,7 @@ interface CameraControl : MediaStream
              'TrackCompleted' if audio or video track complete when stopping
              'TrackFailed' if audio or video track incomplete when stopping
              'MediaRecorderFailed' if failed due to local error
-             'MediaServerFailed' if failed due to media server
+             'MediaServerFailed' if failed due to media server */
   attribute EventHandler    onrecorderstatechange;
 
   /* the event dispatched when the viewfinder stops or starts,

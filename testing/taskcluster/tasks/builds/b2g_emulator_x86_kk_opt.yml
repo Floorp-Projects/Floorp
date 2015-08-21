@@ -12,6 +12,7 @@ task:
 
   extra:
     treeherderEnv:
+      - production
       - staging
     treeherder:
       # Disable "TC" prefix...

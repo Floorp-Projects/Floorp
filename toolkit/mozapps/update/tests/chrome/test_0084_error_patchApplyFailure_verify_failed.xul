@@ -42,7 +42,7 @@ function runTest() {
   let patches = getLocalPatchString("partial", null, null, null, null, null,
                                     STATE_PENDING) +
                 getLocalPatchString("complete", slowDownloadURL, "MD5",
-                                    "1234cd43a1c77e30191c53a329a3f99d", null,
+                                    null, "1234",
                                     "false");
   let updates = getLocalUpdateString(patches, null, null, null,
                                      Services.appinfo.version,

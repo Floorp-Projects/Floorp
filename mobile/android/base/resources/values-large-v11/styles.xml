@@ -6,7 +6,7 @@
 <resources>
 
     <style name="UrlBar.ImageButton" parent="UrlBar.ImageButtonBase">
-        <item name="android:layout_width">@dimen/new_tablet_browser_toolbar_menu_item_width</item>
+        <item name="android:layout_width">@dimen/tablet_browser_toolbar_menu_item_width</item>
     </style>
 
     <style name="UrlBar.ImageButton.TabCount">
@@ -54,8 +54,8 @@
                  * The reload button contains whitespace at the top of the image to lower it -->
         <item name="android:paddingTop">19dp</item>
         <item name="android:paddingBottom">21dp</item>
-        <item name="android:paddingLeft">@dimen/new_tablet_browser_toolbar_menu_item_padding_horizontal</item>
-        <item name="android:paddingRight">@dimen/new_tablet_browser_toolbar_menu_item_padding_horizontal</item>
+        <item name="android:paddingLeft">@dimen/tablet_browser_toolbar_menu_item_padding_horizontal</item>
+        <item name="android:paddingRight">@dimen/tablet_browser_toolbar_menu_item_padding_horizontal</item>
     </style>
 
     <style name="Widget.MenuItemSecondaryActionBar" parent="Widget.MenuItemSecondaryActionBarBase">

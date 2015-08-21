@@ -20,12 +20,12 @@ import org.mozilla.gecko.sync.repositories.android.ClientsDatabaseAccessor;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
 import org.mozilla.gecko.tabqueue.TabQueueDispatcher;
 
-import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 
 /**
  * Process commands received from Sync clients.
@@ -264,26 +264,27 @@ public class CommandProcessor {
     }
 
     final String ns = Context.NOTIFICATION_SERVICE;
-    final NotificationManager notificationManager = (NotificationManager) context.getSystemService(ns);
 
-    // Create a Notification.
-    final int icon = R.drawable.flat_icon;
     String notificationTitle = context.getString(R.string.sync_new_tab);
     if (title != null) {
       notificationTitle = notificationTitle.concat(": " + title);
     }
 
-    final long when = System.currentTimeMillis();
-    Notification notification = new Notification(icon, notificationTitle, when);
-    notification.flags = Notification.FLAG_AUTO_CANCEL;
-
-    // Set pending intent associated with the notification.
     Intent notificationIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
     notificationIntent.putExtra(TabQueueDispatcher.SKIP_TAB_QUEUE_FLAG, true);
     PendingIntent contentIntent = PendingIntent.getActivity(context, 0, notificationIntent, 0);
-    notification.setLatestEventInfo(context, notificationTitle, uri, contentIntent);
+
+    NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
+    builder.setSmallIcon(R.drawable.flat_icon);
+    builder.setContentTitle(notificationTitle);
+    builder.setWhen(System.currentTimeMillis());
+    builder.setAutoCancel(true);
+    builder.setContentIntent(contentIntent);
+    builder.setContentText(uri);
+    builder.setContentIntent(contentIntent);
 
     // Send notification.
-    notificationManager.notify(currentId.getAndIncrement(), notification);
+    final NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+    notificationManager.notify(currentId.getAndIncrement(), builder.build());
   }
 }
