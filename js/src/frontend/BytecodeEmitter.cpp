@@ -4574,7 +4574,7 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp op, ParseNode* rhs)
 
 bool
 ParseNode::getConstantValue(ExclusiveContext* cx, AllowConstantObjects allowObjects, MutableHandleValue vp,
-                            NewObjectKind newKind)
+                            Value* compare, size_t ncompare, NewObjectKind newKind)
 {
     MOZ_ASSERT(newKind == TenuredObject || newKind == SingletonObject);
 
@@ -4625,7 +4625,7 @@ ParseNode::getConstantValue(ExclusiveContext* cx, AllowConstantObjects allowObje
             return false;
         size_t idx;
         for (idx = 0; pn; idx++, pn = pn->pn_next) {
-            if (!pn->getConstantValue(cx, allowObjects, values[idx]))
+            if (!pn->getConstantValue(cx, allowObjects, values[idx], values.begin(), idx))
                 return false;
             if (values[idx].isMagic(JS_GENERIC_MAGIC)) {
                 vp.setMagic(JS_GENERIC_MAGIC);
@@ -4637,6 +4637,9 @@ ParseNode::getConstantValue(ExclusiveContext* cx, AllowConstantObjects allowObje
         JSObject* obj = ObjectGroup::newArrayObject(cx, values.begin(), values.length(),
                                                     newKind, arrayKind);
         if (!obj)
+            return false;
+
+        if (!CombineArrayElementTypes(cx, obj, compare, ncompare))
             return false;
 
         vp.setObject(*obj);
@@ -4685,6 +4688,9 @@ ParseNode::getConstantValue(ExclusiveContext* cx, AllowConstantObjects allowObje
         if (!obj)
             return false;
 
+        if (!CombinePlainObjectPropertyTypes(cx, obj, compare, ncompare))
+            return false;
+
         vp.setObject(*obj);
         return true;
       }
@@ -4700,7 +4706,7 @@ BytecodeEmitter::emitSingletonInitialiser(ParseNode* pn)
     NewObjectKind newKind = (pn->getKind() == PNK_OBJECT) ? SingletonObject : TenuredObject;
 
     RootedValue value(cx);
-    if (!pn->getConstantValue(cx, ParseNode::AllowObjects, &value, newKind))
+    if (!pn->getConstantValue(cx, ParseNode::AllowObjects, &value, nullptr, 0, newKind))
         return false;
 
     MOZ_ASSERT_IF(newKind == SingletonObject, value.toObject().isSingleton());

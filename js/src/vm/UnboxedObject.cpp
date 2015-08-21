@@ -979,15 +979,9 @@ DefineBoxedOrUnboxedFunctor3(AppendUnboxedDenseElements,
                              UnboxedArrayObject*, uint32_t, AutoValueVector*);
 
 /* static */ bool
-UnboxedArrayObject::convertToNative(JSContext* cx, JSObject* obj)
+UnboxedArrayObject::convertToNativeWithGroup(ExclusiveContext* cx, JSObject* obj,
+                                             ObjectGroup* group, Shape* shape)
 {
-    const UnboxedLayout& layout = obj->as<UnboxedArrayObject>().layout();
-
-    if (!layout.nativeGroup()) {
-        if (!UnboxedLayout::makeNativeGroup(cx, obj->group()))
-            return false;
-    }
-
     size_t length = obj->as<UnboxedArrayObject>().length();
     size_t initlen = obj->as<UnboxedArrayObject>().initializedLength();
 
@@ -999,10 +993,10 @@ UnboxedArrayObject::convertToNative(JSContext* cx, JSObject* obj)
     DebugOnly<DenseElementResult> result = CallBoxedOrUnboxedSpecialization(functor, obj);
     MOZ_ASSERT(result.value == DenseElementResult::Success);
 
-    obj->setGroup(layout.nativeGroup());
+    obj->setGroup(group);
 
     ArrayObject* aobj = &obj->as<ArrayObject>();
-    aobj->setLastPropertyMakeNative(cx, layout.nativeShape());
+    aobj->setLastPropertyMakeNative(cx, shape);
 
     // Make sure there is at least one element, so that this array does not
     // use emptyObjectElements.
@@ -1013,6 +1007,46 @@ UnboxedArrayObject::convertToNative(JSContext* cx, JSObject* obj)
     aobj->setDenseInitializedLength(initlen);
     aobj->initDenseElements(0, values.begin(), initlen);
     aobj->setLengthInt32(length);
+
+    return true;
+}
+
+/* static */ bool
+UnboxedArrayObject::convertToNative(JSContext* cx, JSObject* obj)
+{
+    const UnboxedLayout& layout = obj->as<UnboxedArrayObject>().layout();
+
+    if (!layout.nativeGroup()) {
+        if (!UnboxedLayout::makeNativeGroup(cx, obj->group()))
+            return false;
+    }
+
+    return convertToNativeWithGroup(cx, obj, layout.nativeGroup(), layout.nativeShape());
+}
+
+bool
+UnboxedArrayObject::convertInt32ToDouble(ExclusiveContext* cx, ObjectGroup* group)
+{
+    MOZ_ASSERT(elementType() == JSVAL_TYPE_INT32);
+    MOZ_ASSERT(group->unboxedLayout().elementType() == JSVAL_TYPE_DOUBLE);
+
+    Vector<int32_t> values(cx);
+    if (!values.reserve(initializedLength()))
+        return false;
+    for (size_t i = 0; i < initializedLength(); i++)
+        values.infallibleAppend(getElementSpecific<JSVAL_TYPE_INT32>(i).toInt32());
+
+    uint8_t* newElements = ReallocateObjectBuffer<uint8_t>(cx, this, elements(),
+                                                           capacity() * sizeof(int32_t),
+                                                           capacity() * sizeof(double));
+    if (!newElements)
+        return false;
+
+    setGroup(group);
+    elements_ = newElements;
+
+    for (size_t i = 0; i < initializedLength(); i++)
+        setElementNoTypeChangeSpecific<JSVAL_TYPE_DOUBLE>(i, DoubleValue(values[i]));
 
     return true;
 }
