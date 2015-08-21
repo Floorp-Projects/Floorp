@@ -6,22 +6,17 @@
 
 this.EXPORTED_SYMBOLS = [
   "Translation",
-  "TranslationProvider",
+  "TranslationTelemetry",
 ];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 const TRANSLATION_PREF_SHOWUI = "browser.translation.ui.show";
+const TRANSLATION_PREF_DETECT_LANG = "browser.translation.detectLanguage";
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
-Cu.import("resource://gre/modules/Metrics.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
-
-const DAILY_COUNTER_FIELD = {type: Metrics.Storage.FIELD_DAILY_COUNTER};
-const DAILY_LAST_TEXT_FIELD = {type: Metrics.Storage.FIELD_DAILY_LAST_TEXT};
-const DAILY_LAST_NUMERIC_FIELD = {type: Metrics.Storage.FIELD_DAILY_LAST_NUMERIC};
-
 
 this.Translation = {
   STATE_OFFER: 0,
@@ -55,11 +50,11 @@ this.Translation = {
 
       if (this.supportedSourceLanguages.indexOf(aData.detectedLanguage) == -1) {
         // Detected language is not part of the supported languages.
-        TranslationHealthReport.recordMissedTranslationOpportunity(aData.detectedLanguage);
+        TranslationTelemetry.recordMissedTranslationOpportunity(aData.detectedLanguage);
         return;
       }
 
-      TranslationHealthReport.recordTranslationOpportunity(aData.detectedLanguage);
+      TranslationTelemetry.recordTranslationOpportunity(aData.detectedLanguage);
     }
 
     if (!Services.prefs.getBoolPref(TRANSLATION_PREF_SHOWUI))
@@ -151,12 +146,12 @@ TranslationUI.prototype = {
 
     if (this.state == Translation.STATE_OFFER) {
       if (this.detectedLanguage != aFrom)
-        TranslationHealthReport.recordDetectedLanguageChange(true);
+        TranslationTelemetry.recordDetectedLanguageChange(true);
     } else {
       if (this.translatedFrom != aFrom)
-        TranslationHealthReport.recordDetectedLanguageChange(false);
+        TranslationTelemetry.recordDetectedLanguageChange(false);
       if (this.translatedTo != aTo)
-        TranslationHealthReport.recordTargetLanguageChange();
+        TranslationTelemetry.recordTargetLanguageChange();
     }
 
     this.state = Translation.STATE_TRANSLATING;
@@ -219,7 +214,7 @@ TranslationUI.prototype = {
     this.originalShown = true;
     this.showURLBarIcon();
     this.browser.messageManager.sendAsyncMessage("Translation:ShowOriginal");
-    TranslationHealthReport.recordShowOriginalContent();
+    TranslationTelemetry.recordShowOriginalContent();
   },
 
   showTranslatedContent: function() {
@@ -248,14 +243,14 @@ TranslationUI.prototype = {
     let neverForLangs =
       Services.prefs.getCharPref("browser.translation.neverForLanguages");
     if (neverForLangs.split(",").indexOf(this.detectedLanguage) != -1) {
-      TranslationHealthReport.recordAutoRejectedTranslationOffer();
+      TranslationTelemetry.recordAutoRejectedTranslationOffer();
       return false;
     }
 
     // or if we should never show the infobar for this domain.
     let perms = Services.perms;
     if (perms.testExactPermission(aURI, "translate") ==  perms.DENY_ACTION) {
-      TranslationHealthReport.recordAutoRejectedTranslationOffer();
+      TranslationTelemetry.recordAutoRejectedTranslationOffer();
       return false;
     }
 
@@ -271,7 +266,7 @@ TranslationUI.prototype = {
           this.showURLBarIcon();
 
           // Record the number of characters translated.
-          TranslationHealthReport.recordTranslation(msg.data.from, msg.data.to,
+          TranslationTelemetry.recordTranslation(msg.data.from, msg.data.to,
                                                     msg.data.characterCount);
         } else if (msg.data.unavailable) {
           Translation.serviceUnavailable = true;
@@ -285,22 +280,49 @@ TranslationUI.prototype = {
 
   infobarClosed: function() {
     if (this.state == Translation.STATE_OFFER)
-      TranslationHealthReport.recordDeniedTranslationOffer();
+      TranslationTelemetry.recordDeniedTranslationOffer();
   }
 };
 
 /**
- * Helper methods for recording translation data in FHR.
+ * Uses telemetry histograms for collecting statistics on the usage of the
+ * translation component.
+ *
+ * NOTE: Metrics are only recorded if the user enabled the telemetry option.
  */
-let TranslationHealthReport = {
+this.TranslationTelemetry = {
+
+  init: function () {
+    // Constructing histograms.
+    const plain = (id) => Services.telemetry.getHistogramById(id);
+    const keyed = (id) => Services.telemetry.getKeyedHistogramById(id);
+    this.HISTOGRAMS = {
+      OPPORTUNITIES         : () => plain("TRANSLATION_OPPORTUNITIES"),
+      OPPORTUNITIES_BY_LANG : () => keyed("TRANSLATION_OPPORTUNITIES_BY_LANGUAGE"),
+      PAGES                 : () => plain("TRANSLATED_PAGES"),
+      PAGES_BY_LANG         : () => keyed("TRANSLATED_PAGES_BY_LANGUAGE"),
+      CHARACTERS            : () => plain("TRANSLATED_CHARACTERS"),
+      DENIED                : () => plain("DENIED_TRANSLATION_OFFERS"),
+      AUTO_REJECTED         : () => plain("AUTO_REJECTED_TRANSLATION_OFFERS"),
+      SHOW_ORIGINAL         : () => plain("REQUESTS_OF_ORIGINAL_CONTENT"),
+      TARGET_CHANGES        : () => plain("CHANGES_OF_TARGET_LANGUAGE"),
+      DETECTION_CHANGES     : () => plain("CHANGES_OF_DETECTED_LANGUAGE"),
+      SHOW_UI               : () => plain("SHOULD_TRANSLATION_UI_APPEAR"),
+      DETECT_LANG           : () => plain("SHOULD_AUTO_DETECT_LANGUAGE"),
+    };
+
+    // Capturing the values of flags at the startup.
+    this.recordPreferences();
+  },
+
   /**
    * Record a translation opportunity in the health report.
    * @param language
    *        The language of the page.
    */
   recordTranslationOpportunity: function (language) {
-    this._withProvider(provider => provider.recordTranslationOpportunity(language));
-   },
+    return this._recordOpportunity(language, true);
+  },
 
   /**
    * Record a missed translation opportunity in the health report.
@@ -310,7 +332,7 @@ let TranslationHealthReport = {
    *        The language of the page.
    */
   recordMissedTranslationOpportunity: function (language) {
-    this._withProvider(provider => provider.recordMissedTranslationOpportunity(language));
+    return this._recordOpportunity(language, false);
   },
 
   /**
@@ -324,7 +346,8 @@ let TranslationHealthReport = {
    * recording the automatic rejection of the offer.
    */
   recordAutoRejectedTranslationOffer: function () {
-    this._withProvider(provider => provider.recordAutoRejectedTranslationOffer());
+    if (!this._canRecord) return;
+    this.HISTOGRAMS.AUTO_REJECTED().add();
   },
 
    /**
@@ -337,7 +360,10 @@ let TranslationHealthReport = {
    *        The number of characters that were translated
    */
   recordTranslation: function (langFrom, langTo, numCharacters) {
-    this._withProvider(provider => provider.recordTranslation(langFrom, langTo, numCharacters));
+    if (!this._canRecord) return;
+    this.HISTOGRAMS.PAGES().add();
+    this.HISTOGRAMS.PAGES_BY_LANG().add(langFrom + " -> " + langTo);
+    this.HISTOGRAMS.CHARACTERS().add(numCharacters);
   },
 
   /**
@@ -353,7 +379,8 @@ let TranslationHealthReport = {
    *        be passed.
    */
   recordDetectedLanguageChange: function (beforeFirstTranslation) {
-    this._withProvider(provider => provider.recordDetectedLanguageChange(beforeFirstTranslation));
+    if (!this._canRecord) return;
+    this.HISTOGRAMS.DETECTION_CHANGES().add(beforeFirstTranslation);
   },
 
   /**
@@ -362,279 +389,52 @@ let TranslationHealthReport = {
    * user changes in the language in the UI.
    */
   recordTargetLanguageChange: function () {
-    this._withProvider(provider => provider.recordTargetLanguageChange());
+    if (!this._canRecord) return;
+    this.HISTOGRAMS.TARGET_CHANGES().add();
   },
 
   /**
    * Record a denied translation offer.
    */
   recordDeniedTranslationOffer: function () {
-    this._withProvider(provider => provider.recordDeniedTranslationOffer());
+    if (!this._canRecord) return;
+    this.HISTOGRAMS.DENIED().add();
   },
 
   /**
    * Record a "Show Original" command use.
    */
   recordShowOriginalContent: function () {
-    this._withProvider(provider => provider.recordShowOriginalContent());
+    if (!this._canRecord) return;
+    this.HISTOGRAMS.SHOW_ORIGINAL().add();
   },
 
   /**
-   * Retrieve the translation provider and pass it to the given function.
-   *
-   * @param callback
-   *        The function that will be passed the translation provider.
+   * Record the state of translation preferences.
    */
-  _withProvider: function (callback) {
-    try {
-      let reporter = Cc["@mozilla.org/datareporting/service;1"]
-                        .getService().wrappedJSObject.healthReporter;
-
-      if (reporter) {
-        reporter.onInit().then(function () {
-          callback(reporter.getProvider("org.mozilla.translation"));
-        }, Cu.reportError);
-      } else {
-        callback(null);
-      }
-    } catch (ex) {
-      Cu.reportError(ex);
+  recordPreferences: function () {
+    if (!this._canRecord) return;
+    if (Services.prefs.getBoolPref(TRANSLATION_PREF_SHOWUI)) {
+      this.HISTOGRAMS.SHOW_UI().add(1);
     }
+    if (Services.prefs.getBoolPref(TRANSLATION_PREF_DETECT_LANG)) {
+      this.HISTOGRAMS.DETECT_LANG().add(1);
+    }
+  },
+
+  _recordOpportunity: function(language, success) {
+    if (!this._canRecord) return;
+    this.HISTOGRAMS.OPPORTUNITIES().add(success);
+    this.HISTOGRAMS.OPPORTUNITIES_BY_LANG().add(language, success);
+  },
+
+  /**
+   * A shortcut for reading the telemetry preference.
+   *
+   */
+  _canRecord: function () {
+    return Services.prefs.getBoolPref("toolkit.telemetry.enabled");
   }
 };
 
-/**
- * Holds usage data about the Translation feature.
- *
- * This is a special telemetry measurement that is transmitted in the FHR
- * payload. Data will only be recorded/transmitted when both telemetry and
- * FHR are enabled. Additionally, if telemetry was previously enabled but
- * is currently disabled, old recorded data will not be transmitted.
- */
-function TranslationMeasurement1() {
-  Metrics.Measurement.call(this);
-
-  this._serializers[this.SERIALIZE_JSON].singular =
-    this._wrapJSONSerializer(this._serializers[this.SERIALIZE_JSON].singular);
-
-  this._serializers[this.SERIALIZE_JSON].daily =
-    this._wrapJSONSerializer(this._serializers[this.SERIALIZE_JSON].daily);
-}
-
-TranslationMeasurement1.prototype = Object.freeze({
-  __proto__: Metrics.Measurement.prototype,
-
-  name: "translation",
-  version: 1,
-
-  fields: {
-    translationOpportunityCount: DAILY_COUNTER_FIELD,
-    missedTranslationOpportunityCount: DAILY_COUNTER_FIELD,
-    pageTranslatedCount: DAILY_COUNTER_FIELD,
-    charactersTranslatedCount: DAILY_COUNTER_FIELD,
-    translationOpportunityCountsByLanguage: DAILY_LAST_TEXT_FIELD,
-    missedTranslationOpportunityCountsByLanguage: DAILY_LAST_TEXT_FIELD,
-    pageTranslatedCountsByLanguage: DAILY_LAST_TEXT_FIELD,
-    detectedLanguageChangedBefore: DAILY_COUNTER_FIELD,
-    detectedLanguageChangedAfter: DAILY_COUNTER_FIELD,
-    targetLanguageChanged: DAILY_COUNTER_FIELD,
-    deniedTranslationOffer: DAILY_COUNTER_FIELD,
-    showOriginalContent: DAILY_COUNTER_FIELD,
-    detectLanguageEnabled: DAILY_LAST_NUMERIC_FIELD,
-    showTranslationUI: DAILY_LAST_NUMERIC_FIELD,
-    autoRejectedTranslationOffer: DAILY_COUNTER_FIELD,
-  },
-
-  shouldIncludeField: function (field) {
-    if (!Services.prefs.getBoolPref("toolkit.telemetry.enabled")) {
-      // This measurement should only be included when telemetry is
-      // enabled, so we will not include any fields.
-      return false;
-    }
-
-    return field in this._fields;
-  },
-
-  _getDailyLastTextFieldAsJSON: function(name, date) {
-    let id = this.fieldID(name);
-
-    return this.storage.getDailyLastTextFromFieldID(id, date).then((data) => {
-      if (data.hasDay(date)) {
-        data = JSON.parse(data.getDay(date));
-      } else {
-        data = {};
-      }
-
-      return data;
-    });
-  },
-
-  _wrapJSONSerializer: function (serializer) {
-    let _parseInPlace = function(o, k) {
-      if (k in o) {
-        o[k] = JSON.parse(o[k]);
-      }
-    };
-
-    return function (data) {
-      let result = serializer(data);
-
-      // Special case the serialization of these fields so that
-      // they are sent as objects, not stringified objects.
-      _parseInPlace(result, "translationOpportunityCountsByLanguage");
-      _parseInPlace(result, "missedTranslationOpportunityCountsByLanguage");
-      _parseInPlace(result, "pageTranslatedCountsByLanguage");
-
-      return result;
-    }
-  }
-});
-
-this.TranslationProvider = function () {
-  Metrics.Provider.call(this);
-}
-
-TranslationProvider.prototype = Object.freeze({
-  __proto__: Metrics.Provider.prototype,
-
-  name: "org.mozilla.translation",
-
-  measurementTypes: [
-    TranslationMeasurement1,
-  ],
-
-  recordTranslationOpportunity: function (language, date=new Date()) {
-    let m = this.getMeasurement(TranslationMeasurement1.prototype.name,
-                                TranslationMeasurement1.prototype.version);
-
-    return this._enqueueTelemetryStorageTask(function* recordTask() {
-      yield m.incrementDailyCounter("translationOpportunityCount", date);
-
-      let langCounts = yield m._getDailyLastTextFieldAsJSON(
-        "translationOpportunityCountsByLanguage", date);
-
-      langCounts[language] = (langCounts[language] || 0) + 1;
-      langCounts = JSON.stringify(langCounts);
-
-      yield m.setDailyLastText("translationOpportunityCountsByLanguage",
-                               langCounts, date);
-
-    }.bind(this));
-  },
-
-  recordMissedTranslationOpportunity: function (language, date=new Date()) {
-    let m = this.getMeasurement(TranslationMeasurement1.prototype.name,
-                                TranslationMeasurement1.prototype.version);
-
-    return this._enqueueTelemetryStorageTask(function* recordTask() {
-      yield m.incrementDailyCounter("missedTranslationOpportunityCount", date);
-
-      let langCounts = yield m._getDailyLastTextFieldAsJSON(
-        "missedTranslationOpportunityCountsByLanguage", date);
-
-      langCounts[language] = (langCounts[language] || 0) + 1;
-      langCounts = JSON.stringify(langCounts);
-
-      yield m.setDailyLastText("missedTranslationOpportunityCountsByLanguage",
-                               langCounts, date);
-
-    }.bind(this));
-  },
-
-  recordAutoRejectedTranslationOffer: function (date=new Date()) {
-    let m = this.getMeasurement(TranslationMeasurement1.prototype.name,
-                                TranslationMeasurement1.prototype.version);
-
-    return this._enqueueTelemetryStorageTask(function* recordTask() {
-      yield m.incrementDailyCounter("autoRejectedTranslationOffer", date);
-    }.bind(this));
-  },
-
-  recordTranslation: function (langFrom, langTo, numCharacters, date=new Date()) {
-    let m = this.getMeasurement(TranslationMeasurement1.prototype.name,
-                                TranslationMeasurement1.prototype.version);
-
-    return this._enqueueTelemetryStorageTask(function* recordTask() {
-      yield m.incrementDailyCounter("pageTranslatedCount", date);
-      yield m.incrementDailyCounter("charactersTranslatedCount", date,
-                                    numCharacters);
-
-      let langCounts = yield m._getDailyLastTextFieldAsJSON(
-        "pageTranslatedCountsByLanguage", date);
-
-      let counts = langCounts[langFrom] || {};
-      counts["total"] = (counts["total"] || 0) + 1;
-      counts[langTo] = (counts[langTo] || 0) + 1;
-      langCounts[langFrom] = counts;
-      langCounts = JSON.stringify(langCounts);
-
-      yield m.setDailyLastText("pageTranslatedCountsByLanguage",
-                               langCounts, date);
-    }.bind(this));
-  },
-
-  recordDetectedLanguageChange: function (beforeFirstTranslation) {
-    let m = this.getMeasurement(TranslationMeasurement1.prototype.name,
-                                TranslationMeasurement1.prototype.version);
-
-    return this._enqueueTelemetryStorageTask(function* recordTask() {
-      if (beforeFirstTranslation) {
-          yield m.incrementDailyCounter("detectedLanguageChangedBefore");
-        } else {
-          yield m.incrementDailyCounter("detectedLanguageChangedAfter");
-        }
-    }.bind(this));
-  },
-
-  recordTargetLanguageChange: function () {
-    let m = this.getMeasurement(TranslationMeasurement1.prototype.name,
-                                TranslationMeasurement1.prototype.version);
-
-    return this._enqueueTelemetryStorageTask(function* recordTask() {
-      yield m.incrementDailyCounter("targetLanguageChanged");
-    }.bind(this));
-  },
-
-  recordDeniedTranslationOffer: function () {
-    let m = this.getMeasurement(TranslationMeasurement1.prototype.name,
-                                TranslationMeasurement1.prototype.version);
-
-    return this._enqueueTelemetryStorageTask(function* recordTask() {
-      yield m.incrementDailyCounter("deniedTranslationOffer");
-    }.bind(this));
-  },
-
-  recordShowOriginalContent: function () {
-    let m = this.getMeasurement(TranslationMeasurement1.prototype.name,
-                                TranslationMeasurement1.prototype.version);
-
-    return this._enqueueTelemetryStorageTask(function* recordTask() {
-      yield m.incrementDailyCounter("showOriginalContent");
-    }.bind(this));
-  },
-
-  collectDailyData: function () {
-    let m = this.getMeasurement(TranslationMeasurement1.prototype.name,
-                                TranslationMeasurement1.prototype.version);
-
-    return this._enqueueTelemetryStorageTask(function* recordTask() {
-      let detectLanguageEnabled = Services.prefs.getBoolPref("browser.translation.detectLanguage");
-      yield m.setDailyLastNumeric("detectLanguageEnabled", detectLanguageEnabled ? 1 : 0);
-
-      let showTranslationUI = Services.prefs.getBoolPref("browser.translation.ui.show");
-      yield m.setDailyLastNumeric("showTranslationUI", showTranslationUI ? 1 : 0);
-    }.bind(this));
-  },
-
-  _enqueueTelemetryStorageTask: function (task) {
-    if (!Services.prefs.getBoolPref("toolkit.telemetry.enabled")) {
-      // This measurement should only be included when telemetry is
-      // enabled, so don't record any data.
-      return Promise.resolve(null);
-    }
-
-    return this.enqueueStorageOperation(() => {
-      return Task.spawn(task);
-    });
-  }
-});
+this.TranslationTelemetry.init();
