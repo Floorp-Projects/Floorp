@@ -1998,15 +1998,6 @@ MCall::addArg(size_t argnum, MDefinition* arg)
     initOperand(argnum + NumNonArgumentOperands, arg);
 }
 
-void
-MBitNot::infer()
-{
-    if (getOperand(0)->mightBeType(MIRType_Object) || getOperand(0)->mightBeType(MIRType_Symbol))
-        specialization_ = MIRType_None;
-    else
-        specialization_ = MIRType_Int32;
-}
-
 static inline bool
 IsConstant(MDefinition* def, double v)
 {
