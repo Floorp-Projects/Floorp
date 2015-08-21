@@ -665,20 +665,20 @@ function getExternalType(aType) {
 
 function getManifestFileForDir(aDir) {
   let file = aDir.clone();
-  file.append(FILE_WEB_MANIFEST);
+  file.append(FILE_RDF_MANIFEST);
   if (file.exists() && file.isFile())
     return file;
-  file.leafName = FILE_RDF_MANIFEST;
+  file.leafName = FILE_WEB_MANIFEST;
   if (file.exists() && file.isFile())
     return file;
   return null;
 }
 
 function getManifestEntryForZipReader(aZipReader) {
-  if (aZipReader.hasEntry(FILE_WEB_MANIFEST))
-    return FILE_WEB_MANIFEST;
   if (aZipReader.hasEntry(FILE_RDF_MANIFEST))
     return FILE_RDF_MANIFEST;
+  if (aZipReader.hasEntry(FILE_WEB_MANIFEST))
+    return FILE_WEB_MANIFEST;
   return null;
 }
 

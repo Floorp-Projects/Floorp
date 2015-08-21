@@ -187,3 +187,25 @@ add_task(function*() {
 
   yield promiseRestartManager();
 });
+
+// install.rdf should be read before manifest.json
+add_task(function*() {
+
+  yield Promise.all([
+    promiseInstallAllFiles([do_get_addon("webextension_2")], true)
+  ]);
+
+  yield promiseRestartManager();
+
+  let installrdf_id = "first-webextension2@tests.mozilla.org";
+  let first_addon = yield promiseAddonByID(installrdf_id);
+  do_check_neq(first_addon, null);
+  do_check_false(first_addon.appDisabled);
+  do_check_true(first_addon.isActive);
+
+  let manifestjson_id= "last-webextension2@tests.mozilla.org";
+  let last_addon = yield promiseAddonByID(manifestjson_id);
+  do_check_eq(last_addon, null);
+
+  yield promiseRestartManager();
+});
