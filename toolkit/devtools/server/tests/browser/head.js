@@ -11,7 +11,6 @@ const {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const {DebuggerClient} = require("devtools/toolkit/client/main");
 const {DebuggerServer} = require("devtools/server/main");
-const {defer} = require("sdk/core/promise");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 
 const PATH = "browser/toolkit/devtools/server/tests/browser/";
@@ -40,7 +39,7 @@ let addTab = Task.async(function* (url) {
   yield new Promise(resolve => {
     let isBlank = url == "about:blank";
     waitForFocus(resolve, content, isBlank);
-  });
+  });;
 
   return tab.linkedBrowser.contentWindow.document;
 });
@@ -169,30 +168,4 @@ function waitUntil(predicate, interval = 10) {
   });
 }
 
-function waitForMarkerType(front, types, predicate) {
-  types = [].concat(types);
-  predicate = predicate || function(){ return true; };
-  let filteredMarkers = [];
-  let { promise, resolve } = defer();
-
-  info("Waiting for markers of type: " + types);
-
-  function handler (name, data) {
-    if (name !== "markers") {
-      return;
-    }
-
-    let markers = data.markers;
-    info("Got markers: " + JSON.stringify(markers, null, 2));
-
-    filteredMarkers = filteredMarkers.concat(markers.filter(m => types.indexOf(m.name) !== -1));
-
-    if (types.every(t => filteredMarkers.some(m => m.name === t)) && predicate(filteredMarkers)) {
-      front.off("timeline-data", handler);
-      resolve(filteredMarkers);
-    }
-  }
-  front.on("timeline-data", handler);
-
-  return promise;
-}
+// EventUtils just doesn't work!
