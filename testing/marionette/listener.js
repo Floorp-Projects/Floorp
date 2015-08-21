@@ -183,6 +183,7 @@ function removeMessageListenerId(messageName, handler) {
   removeMessageListener(messageName + listenerId, handler);
 }
 
+let getTitleFn = dispatch(getTitle);
 let getElementSizeFn = dispatch(getElementSize);
 let getActiveElementFn = dispatch(getActiveElement);
 let clickElementFn = dispatch(clickElement);
@@ -209,7 +210,7 @@ function startListeners() {
   addMessageListenerId("Marionette:pollForReadyState", pollForReadyState);
   addMessageListenerId("Marionette:cancelRequest", cancelRequest);
   addMessageListenerId("Marionette:getCurrentUrl", getCurrentUrlFn);
-  addMessageListenerId("Marionette:getTitle", getTitle);
+  addMessageListenerId("Marionette:getTitle", getTitleFn);
   addMessageListenerId("Marionette:getPageSource", getPageSource);
   addMessageListenerId("Marionette:goBack", goBack);
   addMessageListenerId("Marionette:goForward", goForward);
@@ -313,7 +314,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:get", get);
   removeMessageListenerId("Marionette:pollForReadyState", pollForReadyState);
   removeMessageListenerId("Marionette:cancelRequest", cancelRequest);
-  removeMessageListenerId("Marionette:getTitle", getTitle);
+  removeMessageListenerId("Marionette:getTitle", getTitleFn);
   removeMessageListenerId("Marionette:getPageSource", getPageSource);
   removeMessageListenerId("Marionette:getCurrentUrl", getCurrentUrlFn);
   removeMessageListenerId("Marionette:goBack", goBack);
@@ -1292,10 +1293,10 @@ function getCurrentUrl(isB2G) {
 }
 
 /**
- * Get the current Title of the window
+ * Get the title of the current browsing context.
  */
-function getTitle(msg) {
-  sendResponse({value: curFrame.top.document.title}, msg.json.command_id);
+function getTitle() {
+  return curFrame.top.document.title;
 }
 
 /**
