@@ -265,6 +265,12 @@ html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
   font-weight: lighter;
 }
 
+/* Don't show the empty contacts image if we're showing gravatar promo. */
+.contacts-gravatar-promo ~ .contact-list-empty {
+  background-image: none;
+  padding-top: 3%;
+}
+
 .contact-list-empty {
   padding-top: 27%;
 }

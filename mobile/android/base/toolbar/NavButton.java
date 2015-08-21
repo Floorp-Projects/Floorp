@@ -71,7 +71,7 @@ abstract class NavButton extends ShapedButton {
         stateList.addState(PRIVATE_PRESSED_STATE_SET, getColorDrawable(R.color.placeholder_active_grey));
         stateList.addState(PRESSED_ENABLED_STATE_SET, getColorDrawable(R.color.toolbar_grey_pressed));
         stateList.addState(PRIVATE_FOCUSED_STATE_SET, getColorDrawable(R.color.text_and_tabs_tray_grey));
-        stateList.addState(FOCUSED_STATE_SET, getColorDrawable(R.color.new_tablet_highlight_focused));
+        stateList.addState(FOCUSED_STATE_SET, getColorDrawable(R.color.tablet_highlight_focused));
         stateList.addState(PRIVATE_STATE_SET, getColorDrawable(R.color.tabs_tray_grey_pressed));
         stateList.addState(EMPTY_STATE_SET, drawable);
 

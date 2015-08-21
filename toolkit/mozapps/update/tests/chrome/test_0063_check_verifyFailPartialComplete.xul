@@ -8,7 +8,7 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 
-<window title="Update Wizard pages: update check, basic, download, and errors (partial and complete patches with invalid hashes)"
+<window title="Update Wizard pages: update check, basic, download, and errors (partial and complete patches with invalid sizes)"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="runTestDefault();">
 <script type="application/javascript"
@@ -34,8 +34,8 @@ const TESTS = [ {
 function runTest() {
   debugDump("entering");
 
-  let url = URL_HTTP_UPDATE_XML + "?showDetails=1&invalidPartialHash=1" +
-            "&invalidCompleteHash=1" + getVersionParams();
+  let url = URL_HTTP_UPDATE_XML + "?showDetails=1&invalidPartialSize=1" +
+            "&invalidCompleteSize=1" + getVersionParams();
   setUpdateURLOverride(url);
 
   gUP.checkForUpdates();

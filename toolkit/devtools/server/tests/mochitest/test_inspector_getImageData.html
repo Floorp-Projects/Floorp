@@ -95,10 +95,27 @@ addTest(function testSmallImage() {
   });
 });
 
+addTest(function testNonImgOrCanvasElements() {
+  gWalker.querySelector(gWalker.rootNode, "body").then(body => {
+    ensureRejects(body.getImageData(), "Invalid element").then(runNextTest);
+  });
+});
+
 addTest(function cleanup() {
   delete gWalker;
   runNextTest();
 });
+
+/**
+ * Asserts that the given promise rejects.
+ */
+function ensureRejects(promise, desc) {
+  return promise.then(() => {
+    ok(false, desc + ": promise resolved unexpectedly.");
+  }, () => {
+    ok(true, desc + ": promise rejected as expected.");
+  });
+}
   </script>
 </head>
 <body>

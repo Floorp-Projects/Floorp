@@ -362,7 +362,7 @@ const Formatters = {
 
   GCFields: function (marker) {
     let fields = Object.create(null);
-    let cause = marker.cause;
+    let cause = marker.causeName;
     let label = L10N.getStr(`marker.gcreason.label.${cause}`) || cause;
 
     fields[L10N.getStr("marker.field.causeName")] = label;
