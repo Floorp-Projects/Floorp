@@ -2,13 +2,13 @@ $inherits:
   from: 'tasks/builds/b2g_emulator_x86_base.yml'
   variables:
     build_name: 'emulator-x86-kk'
-    build_type: 'opt'
+    build_type: 'debug'
 task:
   workerType: emulator-x86-kk
   scopes:
-    - 'docker-worker:cache:workspace-emulator-kk-x86-opt'
+    - 'docker-worker:cache:workspace-emulator-kk-x86-debug'
   metadata:
-    name: '[TC] B2G KK X86 Emulator (Opt)'
+    name: '[TC] B2G KK X86 Emulator (Debug)'
 
   extra:
     treeherderEnv:
@@ -17,11 +17,14 @@ task:
     treeherder:
       # Disable "TC" prefix...
       groupSymbol: "?"
+      collection:
+        debug: true
       machine:
         platform: b2g-emu-x86-kk
 
   payload:
     cache:
-      workspace-emulator-kk-x86-opt: /home/worker/workspace
+      workspace-emulator-kk-x86-debug: /home/worker/workspace
     env:
       TARGET: 'emulator-x86-kk'
+      B2G_DEBUG: 1

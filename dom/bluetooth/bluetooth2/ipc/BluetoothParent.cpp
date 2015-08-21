@@ -286,6 +286,14 @@ BluetoothParent::RecvPBluetoothRequestConstructor(
     case Request::TGattClientWriteDescriptorValueRequest:
       return actor->DoRequest(
         aRequest.get_GattClientWriteDescriptorValueRequest());
+    case Request::TGattServerConnectPeripheralRequest:
+      return actor->DoRequest(
+        aRequest.get_GattServerConnectPeripheralRequest());
+    case Request::TGattServerDisconnectPeripheralRequest:
+      return actor->DoRequest(
+        aRequest.get_GattServerDisconnectPeripheralRequest());
+    case Request::TUnregisterGattServerRequest:
+      return actor->DoRequest(aRequest.get_UnregisterGattServerRequest());
     default:
       MOZ_CRASH("Unknown type!");
   }
@@ -926,6 +934,48 @@ BluetoothRequestParent::DoRequest(
                                                    aRequest.descId(),
                                                    aRequest.value(),
                                                    mReplyRunnable.get());
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(
+  const GattServerConnectPeripheralRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType ==
+             Request::TGattServerConnectPeripheralRequest);
+
+  mService->GattServerConnectPeripheralInternal(aRequest.appUuid(),
+                                                aRequest.address(),
+                                                mReplyRunnable.get());
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(
+  const GattServerDisconnectPeripheralRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType ==
+             Request::TGattServerDisconnectPeripheralRequest);
+
+  mService->GattServerDisconnectPeripheralInternal(aRequest.appUuid(),
+                                                   aRequest.address(),
+                                                   mReplyRunnable.get());
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const UnregisterGattServerRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TUnregisterGattServerRequest);
+
+  mService->UnregisterGattServerInternal(aRequest.serverIf(),
+                                         mReplyRunnable.get());
 
   return true;
 }
