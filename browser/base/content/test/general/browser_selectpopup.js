@@ -5,6 +5,8 @@
 // in a child process. This is different than single-process as a <menulist> is used
 // to implement the dropdown list.
 
+const XHTML_DTD = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">';
+
 const PAGECONTENT =
   "<html xmlns='http://www.w3.org/1999/xhtml'>" + 
   "<body onload='gChangeEvents = 0; document.body.firstChild.focus()'><select onchange='gChangeEvents++'>" +
@@ -19,8 +21,8 @@ const PAGECONTENT =
   "  </optgroup>" +
   "  <option value='Six' disabled='true'>Six</option>" +
   "  <optgroup label='Third Group'>" +
-  "    <option value='Seven'>Seven</option>" +
-  "    <option value='Eight'>Eight</option>" +
+  "    <option value='Seven'>   Seven  </option>" +
+  "    <option value='Eight'>&nbsp;&nbsp;Eight&nbsp;&nbsp;</option>" +
   "  </optgroup></select><input />" +
   "</body></html>";
 
@@ -58,11 +60,11 @@ function getChangeEvents()
   });
 }
 
-function doSelectTests(contentType)
+function doSelectTests(contentType, dtd)
 {
   let tab = gBrowser.selectedTab = gBrowser.addTab();
   let browser = gBrowser.getBrowserForTab(tab);
-  yield promiseTabLoadEvent(tab, "data:" + contentType + "," + escape(PAGECONTENT));
+  yield promiseTabLoadEvent(tab, "data:" + contentType + "," + escape(dtd + "\n" + PAGECONTENT));
 
   yield SimpleTest.promiseFocus(browser.contentWindow);
 
@@ -127,15 +129,17 @@ function doSelectTests(contentType)
   EventUtils.synthesizeKey("VK_TAB", { shiftKey: true });
   is((yield getChangeEvents()), isWindows ? 2 : 1, "Tab away from select with change - number of change events");
 
+  is(selectPopup.lastChild.previousSibling.label, "Seven", "Spaces collapsed");
+  is(selectPopup.lastChild.label, "\xA0\xA0Eight\xA0\xA0", "Non-breaking spaces not collapsed");
+
   gBrowser.removeCurrentTab();
 }
 
 add_task(function*() {
-  yield doSelectTests("text/html");
+  yield doSelectTests("text/html", "");
 });
 
 add_task(function*() {
-  yield doSelectTests("application/xhtml+xml");
+  yield doSelectTests("application/xhtml+xml", XHTML_DTD);
 });
-
 
