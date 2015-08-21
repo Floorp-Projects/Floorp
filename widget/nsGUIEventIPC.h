@@ -701,9 +701,9 @@ struct ParamTraits<mozilla::widget::IMENotification::Rect>
 };
 
 template<>
-struct ParamTraits<mozilla::widget::IMENotification::SelectionChangeData>
+struct ParamTraits<mozilla::widget::IMENotification::SelectionChangeDataBase>
 {
-  typedef mozilla::widget::IMENotification::SelectionChangeData paramType;
+  typedef mozilla::widget::IMENotification::SelectionChangeDataBase paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
