@@ -19,56 +19,71 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|center"
             android:background="@android:color/white"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingBottom="40dp">
 
-        <ImageView android:layout_width="wrap_content"
-                   android:layout_height="wrap_content"
-                   android:src="@drawable/tracking_protection_toolbar_illustration"
-                   android:layout_gravity="center"
-                   android:layout_marginTop="40dp"
-                   android:layout_marginBottom="20dp" />
+        <ScrollView android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:fillViewport="true"
+                    android:fadeScrollbars="false">
 
-        <TextView
-                android:id="@+id/title"
-                android:layout_width="@dimen/overlay_prompt_content_width"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:fontFamily="sans-serif-light"
-                android:gravity="center_horizontal"
-                android:text="@string/tracking_protection_prompt_title"
-                android:textColor="@color/text_and_tabs_tray_grey"
-                android:textSize="20sp"
+            <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
 
-                tools:text="Now with Tracking Protection"/>
+                <ImageView android:layout_width="wrap_content"
+                           android:layout_height="wrap_content"
+                           android:src="@drawable/tracking_protection_toolbar_illustration"
+                           android:layout_gravity="center"
+                           android:layout_marginTop="40dp"
+                           android:layout_marginBottom="20dp"/>
 
-        <TextView
-                android:id="@+id/text"
-                android:layout_width="@dimen/overlay_prompt_content_width"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:gravity="center"
-                android:lineSpacingMultiplier="1.25"
-                android:paddingTop="20dp"
-                android:text="@string/tracking_protection_prompt_text"
-                android:textColor="@color/placeholder_grey"
-                android:textSize="16sp"
+                <TextView
+                        android:id="@+id/title"
+                        android:layout_width="@dimen/overlay_prompt_content_width"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:fontFamily="sans-serif-light"
+                        android:gravity="center_horizontal"
+                        android:text="@string/tracking_protection_prompt_title"
+                        android:textColor="@color/text_and_tabs_tray_grey"
+                        android:textSize="20sp"
 
-                tools:text="Actively block tracking elements so you don't have to worry."/>
+                        tools:text="Now with Tracking Protection"/>
 
-        <TextView
-                android:id="@+id/link_text"
-                android:layout_width="@dimen/overlay_prompt_content_width"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:gravity="center"
-                android:paddingBottom="30dp"
-                android:paddingTop="20dp"
-                android:text="@string/tracking_protection_prompt_tip_text"
-                android:textColor="@color/link_blue"
-                android:textSize="14sp"
+                <TextView
+                        android:id="@+id/text"
+                        android:layout_width="@dimen/overlay_prompt_content_width"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:gravity="center"
+                        android:lineSpacingMultiplier="1.25"
+                        android:paddingTop="20dp"
+                        android:text="@string/tracking_protection_prompt_text"
+                        android:textColor="@color/placeholder_grey"
+                        android:textSize="16sp"
 
-                tools:text="Visit Privacy settings to learn more"/>
+                        tools:text="Actively block tracking elements so you don't have to worry."/>
 
+                <TextView
+                        android:id="@+id/link_text"
+                        android:layout_width="@dimen/overlay_prompt_content_width"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:gravity="center"
+                        android:paddingBottom="30dp"
+                        android:paddingTop="20dp"
+                        android:text="@string/tracking_protection_prompt_tip_text"
+                        android:textColor="@color/link_blue"
+                        android:textSize="14sp"
+
+                        tools:text="Visit Privacy settings to learn more"/>
+
+            </LinearLayout>
+
+        </ScrollView>
 
         <Button
                 android:id="@+id/ok_button"
@@ -77,7 +92,6 @@
 
                 android:layout_height="52dp"
                 android:layout_gravity="center"
-                android:layout_marginBottom="40dp"
                 android:background="@drawable/button_background_action_orange_round"
                 android:text="@string/tracking_protection_prompt_action_button"
                 android:textColor="@android:color/white"
@@ -88,4 +102,5 @@
                 tools:text="Got it"/>
 
     </LinearLayout>
+
 </merge>
