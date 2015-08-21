@@ -1,65 +1,65 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// The test loads a web page with mixed active and display content
-// on it while the "block mixed content" settings are _on_.
-// It then checks that the mixed content flags have been set correctly.
-// The test then overrides the MCB settings and checks that the flags
-// have been set correctly again.
-// Bug 838396 - Not setting hasMixedDisplayContentLoaded and
-// hasMixedDisplayContentBlocked flag in nsMixedContentBlocker.cpp
+// The test loads a web page with mixed active and mixed display content and
+// makes sure that the mixed content flags on the docshell are set correctly.
+// * Using default about:config prefs (mixed active blocked, mixed display
+//   loaded) we load the page and check the flags.
+// * We change the about:config prefs (mixed active blocked, mixed display
+//   blocked), reload the page, and check the flags again.
+// * We override protection so all mixed content can load and check the
+//   flags again.
 
 const TEST_URI = "https://example.com/browser/browser/base/content/test/general/test-mixedcontent-securityerrors.html";
+const PREF_DISPLAY = "security.mixed_content.block_display_content";
+const PREF_ACTIVE = "security.mixed_content.block_active_content";
 let gTestBrowser = null;
+waitForExplicitFinish();
 
-function test()
-{
-  waitForExplicitFinish();
-  SpecialPowers.pushPrefEnv({"set": [["security.mixed_content.block_active_content", true],
-                            ["security.mixed_content.block_display_content", true]]}, blockMixedContentTest);
-}
+registerCleanupFunction(function() {
+  // Set preferences back to their original values
+  Services.prefs.clearUserPref(PREF_DISPLAY);
+  Services.prefs.clearUserPref(PREF_ACTIVE);
+  gBrowser.removeCurrentTab();
+});
 
-function blockMixedContentTest()
-{
-  gBrowser.selectedTab = gBrowser.addTab(TEST_URI);
-  let tab = gBrowser.selectedTab;
+add_task(function* blockMixedActiveContentTest() {
+  // Turn on mixed active blocking and mixed display loading and load the page.
+  Services.prefs.setBoolPref(PREF_DISPLAY, false);
+  Services.prefs.setBoolPref(PREF_ACTIVE, true);
+
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URI);
   gTestBrowser = gBrowser.getBrowserForTab(tab);
 
-  gTestBrowser.addEventListener("load", function onLoad(aEvent) {
-    gTestBrowser.removeEventListener(aEvent.type, onLoad, true);
-    is(gTestBrowser.docShell.hasMixedDisplayContentBlocked, true, "hasMixedDisplayContentBlocked flag has been set");
-    is(gTestBrowser.docShell.hasMixedActiveContentBlocked, true, "hasMixedActiveContentBlocked flag has been set");
-    is(gTestBrowser.docShell.hasMixedDisplayContentLoaded, false, "hasMixedDisplayContentLoaded flag has been set");
-    is(gTestBrowser.docShell.hasMixedActiveContentLoaded, false, "hasMixedActiveContentLoaded flag has been set");
-    overrideMCB();
-  }, true);
-}
+  is(gTestBrowser.docShell.hasMixedDisplayContentBlocked, false, "hasMixedDisplayContentBlocked flag has been set");
+  is(gTestBrowser.docShell.hasMixedActiveContentBlocked, true, "hasMixedActiveContentBlocked flag has been set");
+  is(gTestBrowser.docShell.hasMixedDisplayContentLoaded, true, "hasMixedDisplayContentLoaded flag has been set");
+  is(gTestBrowser.docShell.hasMixedActiveContentLoaded, false, "hasMixedActiveContentLoaded flag has been set");
+  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: true});
 
-function overrideMCB()
-{
-  // test mixed content flags on load (reload)
-  gTestBrowser.addEventListener("load", mixedContentOverrideTest, true);
+  // Turn on mixed active and mixed display blocking and reload the page.
+  Services.prefs.setBoolPref(PREF_DISPLAY, true);
+  Services.prefs.setBoolPref(PREF_ACTIVE, true);
 
+  gBrowser.reload();
+  yield BrowserTestUtils.browserLoaded(gTestBrowser);
+
+  is(gTestBrowser.docShell.hasMixedDisplayContentBlocked, true, "hasMixedDisplayContentBlocked flag has been set");
+  is(gTestBrowser.docShell.hasMixedActiveContentBlocked, true, "hasMixedActiveContentBlocked flag has been set");
+  is(gTestBrowser.docShell.hasMixedDisplayContentLoaded, false, "hasMixedDisplayContentLoaded flag has been set");
+  is(gTestBrowser.docShell.hasMixedActiveContentLoaded, false, "hasMixedActiveContentLoaded flag has been set");
   assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
+});
 
-  // Click on the doorhanger to allow mixed content (and reload page)
+add_task(function* overrideMCB() {
+  // Disable mixed content blocking (reloads page) and retest
   let {gIdentityHandler} = gTestBrowser.ownerGlobal;
   gIdentityHandler.disableMixedContentProtection();
-
-  notification.remove();
-}
-
-function mixedContentOverrideTest()
-{
-  gTestBrowser.removeEventListener("load", mixedContentOverrideTest, true);
+  yield BrowserTestUtils.browserLoaded(gTestBrowser);
 
   is(gTestBrowser.docShell.hasMixedDisplayContentLoaded, true, "hasMixedDisplayContentLoaded flag has not been set");
   is(gTestBrowser.docShell.hasMixedActiveContentLoaded, true, "hasMixedActiveContentLoaded flag has not been set");
   is(gTestBrowser.docShell.hasMixedDisplayContentBlocked, false, "second hasMixedDisplayContentBlocked flag has been set");
   is(gTestBrowser.docShell.hasMixedActiveContentBlocked, false, "second hasMixedActiveContentBlocked flag has been set");
-
   assertMixedContentBlockingState(gTestBrowser, {activeLoaded: true, activeBlocked: false, passiveLoaded: true});
-
-  gBrowser.removeCurrentTab();
-  finish();
-}
+});
