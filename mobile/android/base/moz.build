@@ -556,6 +556,7 @@ gbjar.sources += [
 # editing this list, make sure to edit that script.
 gbjar.sources += [
     'widget/ThemedEditText.java',
+    'widget/ThemedFrameLayout.java',
     'widget/ThemedImageButton.java',
     'widget/ThemedImageView.java',
     'widget/ThemedLinearLayout.java',
