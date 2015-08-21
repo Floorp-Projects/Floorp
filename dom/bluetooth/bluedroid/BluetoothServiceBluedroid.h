@@ -290,6 +290,22 @@ public:
     const nsTArray<uint8_t>& aValue,
     BluetoothReplyRunnable* aRunnable) override;
 
+  virtual void
+  GattServerConnectPeripheralInternal(
+    const nsAString& aAppUuid,
+    const nsAString& aAddress,
+    BluetoothReplyRunnable* aRunnable) override;
+
+  virtual void
+  GattServerDisconnectPeripheralInternal(
+    const nsAString& aAppUuid,
+    const nsAString& aAddress,
+    BluetoothReplyRunnable* aRunnable) override;
+
+  virtual void
+  UnregisterGattServerInternal(int aServerIf,
+                               BluetoothReplyRunnable* aRunnable) override;
+
   //
   // Bluetooth notifications
   //

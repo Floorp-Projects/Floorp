@@ -270,6 +270,15 @@ protected:
 
   bool
   DoRequest(const GattClientWriteDescriptorValueRequest& aRequest);
+
+  bool
+  DoRequest(const GattServerConnectPeripheralRequest& aRequest);
+
+  bool
+  DoRequest(const GattServerDisconnectPeripheralRequest& aRequest);
+
+  bool
+  DoRequest(const UnregisterGattServerRequest& aRequest);
 };
 
 END_BLUETOOTH_NAMESPACE

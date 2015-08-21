@@ -490,6 +490,25 @@ public:
     const nsTArray<uint8_t>& aValue,
     BluetoothReplyRunnable* aRunnable) = 0;
 
+  virtual void
+  GattServerConnectPeripheralInternal(
+    const nsAString& aAppUuid,
+    const nsAString& aAddress,
+    BluetoothReplyRunnable* aRunnable) = 0;
+
+  virtual void
+  GattServerDisconnectPeripheralInternal(
+    const nsAString& aAppUuid,
+    const nsAString& aAddress,
+    BluetoothReplyRunnable* aRunnable) = 0;
+
+  /**
+   * Unregister a GATT server. (platform specific implementation)
+   */
+  virtual void
+  UnregisterGattServerInternal(int aServerIf,
+                               BluetoothReplyRunnable* aRunnable) = 0;
+
   bool
   IsEnabled() const
   {
