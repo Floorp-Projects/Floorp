@@ -22,7 +22,7 @@ function testRecordings (win, expected) {
 }
 
 function* spawnTest() {
-  PMM_loadFrameScripts(gBrowser);
+  loadFrameScripts();
   let { target, toolbox, panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, PerformanceController, OverviewView, RecordingsView, WaterfallView } = panel.panelWin;
 

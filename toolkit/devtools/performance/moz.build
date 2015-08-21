@@ -6,7 +6,6 @@
 
 EXTRA_JS_MODULES.devtools.performance += [
   'io.js',
-  'process-communication.js',
   'recorder.js',
   'utils.js',
 ]
