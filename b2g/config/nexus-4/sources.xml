@@ -17,10 +17,10 @@
   </project>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="09e233d1476e8745f192f13259d7b16662bb2e7e"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="b81f9af74a788a4ee5b209340cfbcd48b04e861f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="62cfa11ae7d77f6330de019a5aa79607e35be7d1"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="bfdb6348725a33bdcdc4e17999cb500be6beedb5"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="a6f9a1245d98c51172c15afecb9ade1a6ca511e2"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="645df01a38e993d78adde2e44ba158143ea9f112"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
   <!-- Stock Android things -->
