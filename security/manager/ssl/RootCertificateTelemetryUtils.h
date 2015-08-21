@@ -12,6 +12,15 @@
 
 namespace mozilla { namespace psm {
 
+// Note: New CAs will show up as UNKNOWN_ROOT until
+// RootHashes.inc is updated to include them. 0 is reserved by
+// genRootCAHashes.js for the unknowns.
+#define ROOT_CERTIFICATE_UNKNOWN  0
+#define ROOT_CERTIFICATE_HASH_FAILURE -1
+
+int32_t
+RootCABinNumber(const SECItem* cert);
+
 void
 AccumulateTelemetryForRootCA(mozilla::Telemetry::ID probe, const CERTCertificate* cert);
 
