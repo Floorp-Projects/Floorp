@@ -7,10 +7,7 @@
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
-
-XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
-                                   "@mozilla.org/childprocessmessagemanager;1",
-                                   "nsIMessageSender");
+Cu.import('resource://gre/modules/ActivityChannel.jsm');
 
 function MailtoProtocolHandler() {
 }
@@ -32,11 +29,10 @@ MailtoProtocolHandler.prototype = {
   },
 
   newChannel2: function Proto_newChannel2(aURI, aLoadInfo) {
-    cpmm.sendAsyncMessage("mail-handler", {
-      URI: aURI.spec,
-      type: "mail" });
-
-    throw Components.results.NS_ERROR_ILLEGAL_VALUE;
+    return new ActivityChannel(aURI, aLoadInfo,
+                               "mail-handler",
+                               { URI: aURI.spec,
+                                 type: "mail" });
   },
 
   newChannel: function Proto_newChannel(aURI) {
