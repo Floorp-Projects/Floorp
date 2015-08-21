@@ -3872,6 +3872,13 @@ Downloader.prototype = {
     }
 
     LOG("Downloader:_verifyDownload downloaded size == expected size.");
+
+    // The hash check is not necessary when mar signatures are used to verify
+    // the downloaded mar file.
+    if (AppConstants.MOZ_VERIFY_MAR_SIGNATURE) {
+      return true;
+    }
+
     let fileStream = Cc["@mozilla.org/network/file-input-stream;1"].
                      createInstance(Ci.nsIFileInputStream);
     fileStream.init(destination, FileUtils.MODE_RDONLY, FileUtils.PERMS_FILE, 0);

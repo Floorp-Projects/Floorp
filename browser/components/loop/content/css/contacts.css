@@ -360,24 +360,18 @@ html[dir="rtl"] .contact > .dropdown-menu {
 }
 
 .contacts-gravatar-promo {
-  position: relative;
-  border: 1px dashed #c1c1c1;
+  border: 1px solid #5cccee;
   border-radius: 2px;
-  background-color: #fbfbfb;
-  padding: 10px;
-  margin-top: 10px;
+  background-color: #fff;
+  font-size: 1.2rem;
+  margin: 1.5rem;
+  padding: 1.5rem 1rem;
+  position: relative;
 }
 
 .contacts-gravatar-promo > p {
-  margin-top: 2px;
-  margin-bottom: 8px;
-  margin-right: 4px;
+  margin-top: 0;
   word-wrap: break-word;
-}
-
-html[dir="rtl"] .contacts-gravatar-promo > p {
-  margin-right: 0;
-  margin-left: 4px;
 }
 
 .contacts-gravatar-promo > p > a {
@@ -398,6 +392,44 @@ html[dir="rtl"] .contacts-gravatar-promo > p {
 html[dir="rtl"] .contacts-gravatar-promo > .button-close {
   right: auto;
   left: 8px;
+}
+
+.contacts-gravatar-avatars {
+  height: 50px;
+  margin: 1.5rem auto;
+  text-align: center;
+  width: 200px;
+}
+
+.contacts-gravatar-avatars img {
+  margin: 0 1.5rem;
+  vertical-align: middle;
+  width: 50px;
+}
+
+/* Adjust the Firefox avatar because it has pointy ears. */
+.contacts-gravatar-avatars img:last-child {
+  transform: scale(1.08) translateY(-2px);
+}
+
+.contacts-gravatar-arrow {
+  border-color: #9b9b9b;
+  border-style: solid solid none none;
+  border-width: 2px;
+  display: inline-block;
+  height: 1.5rem;
+  -moz-margin-start: -.75rem;
+  transform: rotateZ(45deg);
+  vertical-align: middle;
+  width: 1.5rem;
+}
+
+html[dir="rtl"] .contacts-gravatar-arrow {
+  transform: rotateZ(225deg);
+}
+
+.contacts-gravatar-buttons {
+  padding: 0 .5rem;
 }
 
 .contact-controls {

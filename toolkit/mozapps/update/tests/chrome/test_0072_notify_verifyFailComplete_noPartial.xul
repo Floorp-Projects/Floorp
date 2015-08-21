@@ -8,7 +8,7 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 
-<window title="Update Wizard pages: errors (complete patch with an invalid hash)"
+<window title="Update Wizard pages: errors (complete patch with an invalid size)"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="runTestDefault();">
 <script type="application/javascript"
@@ -27,7 +27,7 @@ const TESTS = [ {
 function runTest() {
   debugDump("entering");
 
-  let patches = getLocalPatchString("complete", null, null, "1234", null, null,
+  let patches = getLocalPatchString("complete", null, null, null, "1234", null,
                                     STATE_DOWNLOADING);
   let updates = getLocalUpdateString(patches, null, null, null,
                                      Services.appinfo.version,

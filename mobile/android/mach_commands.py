@@ -95,11 +95,10 @@ class MachCommands(MachCommandBase):
 
         srcdir('preprocessed_code/build.gradle', 'mobile/android/gradle/preprocessed_code/build.gradle')
         srcdir('preprocessed_code/src/main/AndroidManifest.xml', 'mobile/android/gradle/preprocessed_code/AndroidManifest.xml')
-        objdir('preprocessed_code/src/main/java', 'mobile/android/base/generated/preprocessed')
+        srcdir('preprocessed_code/src/adjust/java/org/mozilla/gecko/adjust', 'mobile/android/base/adjust')
 
         srcdir('preprocessed_resources/build.gradle', 'mobile/android/gradle/preprocessed_resources/build.gradle')
         srcdir('preprocessed_resources/src/main/AndroidManifest.xml', 'mobile/android/gradle/preprocessed_resources/AndroidManifest.xml')
-        objdir('preprocessed_resources/src/main/res', 'mobile/android/base/res')
 
         srcdir('thirdparty/build.gradle', 'mobile/android/gradle/thirdparty/build.gradle')
         srcdir('thirdparty/src/main/AndroidManifest.xml', 'mobile/android/gradle/thirdparty/AndroidManifest.xml')
@@ -120,8 +119,6 @@ class MachCommands(MachCommandBase):
         objdir('app/src/androidTest/AndroidManifest.xml', 'build/mobile/robocop/AndroidManifest.xml')
         srcdir('app/src/androidTest/res', 'build/mobile/robocop/res')
         srcdir('app/src/androidTest/assets', 'mobile/android/tests/browser/robocop/assets')
-        objdir('app/src/debug/assets', 'dist/fennec/assets')
-        objdir('app/src/debug/jniLibs', 'dist/fennec/lib')
         # Test code.
         srcdir('app/src/robocop_harness/org/mozilla/gecko', 'build/mobile/robocop')
         srcdir('app/src/robocop/org/mozilla/gecko/tests', 'mobile/android/tests/browser/robocop')
