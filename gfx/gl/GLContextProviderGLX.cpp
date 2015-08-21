@@ -237,7 +237,9 @@ GLXLibrary::EnsureInitialized()
     }
 
     if (HasExtension(extensionsStr, "GLX_ARB_create_context_robustness") &&
-        GLLibraryLoader::LoadSymbols(mOGLLibrary, symbols_robustness)) {
+        GLLibraryLoader::LoadSymbols(mOGLLibrary, symbols_robustness,
+                                     (GLLibraryLoader::PlatformLookupFunction)&xGetProcAddress))
+    {
         mHasRobustness = true;
     }
 
