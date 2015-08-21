@@ -28,7 +28,6 @@
 #include <ctime>
 #include <stdint.h> // Some Mozilla-supported compilers lack <cstdint>
 #include <string>
-#include <cstring>
 
 #include "pkix/pkixtypes.h"
 #include "../../lib/ScopedPtr.h"
