@@ -49,7 +49,7 @@ typedef unsigned int char32_t;
 #endif
 
 #ifdef MOZ_USE_CHAR16_WRAPPER
-# include <string>
+# include <cstdint>
   /**
    * Win32 API extensively uses wchar_t, which is represented by a separated
    * builtin type than char16_t per spec. It's not the case for MSVC prior to
@@ -92,10 +92,6 @@ public:
   operator bool() const
   {
     return mPtr != nullptr;
-  }
-  operator std::wstring() const
-  {
-    return std::wstring(static_cast<const wchar_t*>(*this));
   }
 
   /* Explicit cast operators to allow things like (char16_t*)str. */
