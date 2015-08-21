@@ -413,8 +413,8 @@ FAIL_ON_WARNINGS = True
 
 LOCAL_INCLUDES += [
     '../battery',
-    '../bluetooth',
     '../bluetooth/common',
+    '../bluetooth/common/webapi',
     '../events',
     '../media',
     '../network',
