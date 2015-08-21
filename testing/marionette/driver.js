@@ -1288,7 +1288,7 @@ GeckoDriver.prototype.getCurrentUrl = function(cmd, resp) {
 
     case Context.CONTENT:
       let isB2G = this.appName == "B2G";
-      resp.value = yield this.listener.getCurrentUrl({isB2G: isB2G});
+      resp.value = yield this.listener.getCurrentUrl(isB2G);
       break;
   }
 };
