@@ -48,7 +48,6 @@ EXTRA_PP_JS_MODULES += [
     'InterAppCommService.jsm',
     'OperatorApps.jsm',
     'ScriptPreloader.jsm',
-    'TrustedHostedAppsUtils.jsm',
     'Webapps.jsm',
 ]
 
