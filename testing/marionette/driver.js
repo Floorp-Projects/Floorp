@@ -2309,7 +2309,7 @@ GeckoDriver.prototype.clearElement = function(cmd, resp) {
       break;
 
     case Context.CONTENT:
-      yield this.listener.clearElement({id: id});
+      yield this.listener.clearElement(id);
       break;
   }
 };
