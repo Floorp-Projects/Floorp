@@ -69,6 +69,8 @@ protected:
   virtual bool RecvCancel() override;
 
   virtual bool RecvForceEnd() override;
+
+  virtual bool RecvSetAudioOutputVolume(const uint32_t& aVolume) override;
 };
 
 class SpeechTaskParent : public nsSpeechTask
