@@ -1945,10 +1945,10 @@ GeckoDriver.prototype.findElements = function(cmd, resp) {
 
     case Context.CONTENT:
       resp.value = yield this.listener.findElementsContent({
-        value: cmd.parameters.value,
-        using: cmd.parameters.using,
-        element: cmd.parameters.element,
-        searchTimeout: this.searchTimeout});
+          value: cmd.parameters.value,
+          using: cmd.parameters.using,
+          element: cmd.parameters.element,
+          searchTimeout: this.searchTimeout});
       break;
   }
 };
