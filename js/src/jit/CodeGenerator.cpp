@@ -7242,22 +7242,23 @@ CodeGenerator::visitArrayConcat(LArrayConcat* lir)
     // inline and pass it to the stub. Else, we just pass nullptr and the stub falls
     // back to a slow path.
     Label fail, call;
-    if (lir->mir()->unboxedType() == JSVAL_TYPE_MAGIC) {
-        masm.loadPtr(Address(lhs, NativeObject::offsetOfElements()), temp1);
-        masm.load32(Address(temp1, ObjectElements::offsetOfInitializedLength()), temp2);
-        masm.branch32(Assembler::NotEqual, Address(temp1, ObjectElements::offsetOfLength()), temp2, &fail);
-
-        masm.loadPtr(Address(rhs, NativeObject::offsetOfElements()), temp1);
-        masm.load32(Address(temp1, ObjectElements::offsetOfInitializedLength()), temp2);
-        masm.branch32(Assembler::NotEqual, Address(temp1, ObjectElements::offsetOfLength()), temp2, &fail);
-    } else {
+    if (lir->mir()->unboxedThis()) {
         masm.load32(Address(lhs, UnboxedArrayObject::offsetOfCapacityIndexAndInitializedLength()), temp1);
         masm.and32(Imm32(UnboxedArrayObject::InitializedLengthMask), temp1);
         masm.branch32(Assembler::NotEqual, Address(lhs, UnboxedArrayObject::offsetOfLength()), temp1, &fail);
-
+    } else {
+        masm.loadPtr(Address(lhs, NativeObject::offsetOfElements()), temp1);
+        masm.load32(Address(temp1, ObjectElements::offsetOfInitializedLength()), temp2);
+        masm.branch32(Assembler::NotEqual, Address(temp1, ObjectElements::offsetOfLength()), temp2, &fail);
+    }
+    if (lir->mir()->unboxedArg()) {
         masm.load32(Address(rhs, UnboxedArrayObject::offsetOfCapacityIndexAndInitializedLength()), temp1);
         masm.and32(Imm32(UnboxedArrayObject::InitializedLengthMask), temp1);
         masm.branch32(Assembler::NotEqual, Address(rhs, UnboxedArrayObject::offsetOfLength()), temp1, &fail);
+    } else {
+        masm.loadPtr(Address(rhs, NativeObject::offsetOfElements()), temp1);
+        masm.load32(Address(temp1, ObjectElements::offsetOfInitializedLength()), temp2);
+        masm.branch32(Assembler::NotEqual, Address(temp1, ObjectElements::offsetOfLength()), temp2, &fail);
     }
 
     // Try to allocate an object.
