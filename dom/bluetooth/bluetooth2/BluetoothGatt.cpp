@@ -51,7 +51,6 @@ NS_IMPL_RELEASE_INHERITED(BluetoothGatt, DOMEventTargetHelper)
 BluetoothGatt::BluetoothGatt(nsPIDOMWindow* aWindow,
                              const nsAString& aDeviceAddr)
   : DOMEventTargetHelper(aWindow)
-  , mAppUuid(EmptyString())
   , mClientIf(0)
   , mConnectionState(BluetoothConnectionState::Disconnected)
   , mDeviceAddr(aDeviceAddr)
