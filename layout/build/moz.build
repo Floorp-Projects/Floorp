@@ -107,7 +107,7 @@ if CONFIG['MOZ_B2G_FM']:
 if CONFIG['MOZ_B2G_BT']:
     LOCAL_INCLUDES += [
         '/dom/bluetooth',
-        '/dom/bluetooth/bluetooth2',
+        '/dom/bluetooth/common',
     ]
 
 if CONFIG['MOZ_WEBSPEECH']:
