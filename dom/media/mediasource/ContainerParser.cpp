@@ -11,7 +11,6 @@
 #include "mozilla/ErrorResult.h"
 #include "mp4_demuxer/MoofParser.h"
 #include "mozilla/Logging.h"
-#include "mozilla/Maybe.h"
 #include "MediaData.h"
 #ifdef MOZ_FMP4
 #include "MP4Stream.h"
