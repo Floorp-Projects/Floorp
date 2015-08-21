@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jit/SharedIC.h"
+
+#include "mozilla/Casting.h"
 #include "mozilla/SizePrintfMacros.h"
 
 #include "jslibmath.h"
@@ -23,6 +25,8 @@
 
 #include "jit/MacroAssembler-inl.h"
 #include "vm/Interpreter-inl.h"
+
+using mozilla::BitwiseCast;
 
 namespace js {
 namespace jit {
@@ -1435,10 +1439,12 @@ static bool
 DoUnaryArithFallback(JSContext* cx, BaselineFrame* frame, ICUnaryArith_Fallback* stub_,
                      HandleValue val, MutableHandleValue res)
 {
-    // This fallback stub may trigger debug mode toggling.
-    DebugModeOSRVolatileStub<ICUnaryArith_Fallback*> stub(frame, stub_);
+    ICStubCompiler::Engine engine = SharedStubEngine(frame);
+    RootedScript script(cx, SharedStubScript(frame, stub_));
 
-    RootedScript script(cx, frame->script());
+    // This fallback stub may trigger debug mode toggling.
+    DebugModeOSRVolatileStub<ICUnaryArith_Fallback*> stub(engine, frame, stub_);
+
     jsbytecode* pc = stub->icEntry()->pc(script);
     JSOp op = JSOp(*pc);
     FallbackICSpew(cx, stub, "UnaryArith(%s)", js_CodeName[op]);
@@ -1473,7 +1479,7 @@ DoUnaryArithFallback(JSContext* cx, BaselineFrame* frame, ICUnaryArith_Fallback*
 
     if (val.isInt32() && res.isInt32()) {
         JitSpew(JitSpew_BaselineIC, "  Generating %s(Int32 => Int32) stub", js_CodeName[op]);
-        ICUnaryArith_Int32::Compiler compiler(cx, op);
+        ICUnaryArith_Int32::Compiler compiler(cx, op, engine);
         ICStub* int32Stub = compiler.getStub(compiler.getStubSpace(script));
         if (!int32Stub)
             return false;
@@ -1487,7 +1493,7 @@ DoUnaryArithFallback(JSContext* cx, BaselineFrame* frame, ICUnaryArith_Fallback*
         // Unlink int32 stubs, the double stub handles both cases and TI specializes for both.
         stub->unlinkStubsWithKind(cx, ICStub::UnaryArith_Int32);
 
-        ICUnaryArith_Double::Compiler compiler(cx, op);
+        ICUnaryArith_Double::Compiler compiler(cx, op, engine);
         ICStub* doubleStub = compiler.getStub(compiler.getStubSpace(script));
         if (!doubleStub)
             return false;
@@ -1506,7 +1512,6 @@ static const VMFunction DoUnaryArithFallbackInfo =
 bool
 ICUnaryArith_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
     MOZ_ASSERT(R0 == JSReturnOperand);
 
     // Restore the tail call register.
@@ -1526,8 +1531,6 @@ ICUnaryArith_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 bool
 ICUnaryArith_Double::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     Label failure;
     masm.ensureDouble(R0, FloatReg0, &failure);
 

@@ -1419,8 +1419,8 @@ class ICUnaryArith_Fallback : public ICFallbackStub
         bool generateStubCode(MacroAssembler& masm);
 
       public:
-        explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::UnaryArith_Fallback, Engine::Baseline)
+        explicit Compiler(JSContext* cx, Engine engine)
+          : ICStubCompiler(cx, ICStub::UnaryArith_Fallback, engine)
         {}
 
         ICStub* getStub(ICStubSpace* space) {
@@ -1443,8 +1443,8 @@ class ICUnaryArith_Int32 : public ICStub
         bool generateStubCode(MacroAssembler& masm);
 
       public:
-        Compiler(JSContext* cx, JSOp op)
-          : ICMultiStubCompiler(cx, ICStub::UnaryArith_Int32, op, Engine::Baseline)
+        Compiler(JSContext* cx, JSOp op, Engine engine)
+          : ICMultiStubCompiler(cx, ICStub::UnaryArith_Int32, op, engine)
         {}
 
         ICStub* getStub(ICStubSpace* space) {
@@ -1467,8 +1467,8 @@ class ICUnaryArith_Double : public ICStub
         bool generateStubCode(MacroAssembler& masm);
 
       public:
-        Compiler(JSContext* cx, JSOp op)
-          : ICMultiStubCompiler(cx, ICStub::UnaryArith_Double, op, Engine::Baseline)
+        Compiler(JSContext* cx, JSOp op, Engine engine)
+          : ICMultiStubCompiler(cx, ICStub::UnaryArith_Double, op, engine)
         {}
 
         ICStub* getStub(ICStubSpace* space) {
