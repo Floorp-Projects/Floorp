@@ -1067,9 +1067,8 @@ function run_test_21() {
     do_check_eq(getUninstallReason(), -1);
     do_check_eq(getUninstallNewVersion(), -1);
 
-    // TODO this reason should probably be ADDON_DOWNGRADE (bug 607818)
-    do_check_eq(getInstallReason(), ADDON_INSTALL);
-    do_check_eq(getInstallOldVersion(), 0);
+    do_check_eq(getInstallReason(), ADDON_DOWNGRADE);
+    do_check_eq(getInstallOldVersion(), 2);
 
     do_check_eq(getStartupReason(), APP_STARTUP);
     do_check_eq(getStartupOldVersion(), 0);
