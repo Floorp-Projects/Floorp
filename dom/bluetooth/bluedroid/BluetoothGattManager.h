@@ -90,6 +90,19 @@ public:
     const nsTArray<uint8_t>& aValue,
     BluetoothReplyRunnable* aRunnable);
 
+  void ConnectPeripheral(
+    const nsAString& aAppUuid,
+    const nsAString& aAddress,
+    BluetoothReplyRunnable* aRunnable);
+
+  void DisconnectPeripheral(
+    const nsAString& aAppUuid,
+    const nsAString& aAddress,
+    BluetoothReplyRunnable* aRunnable);
+
+  void UnregisterServer(int aServerIf,
+                        BluetoothReplyRunnable* aRunnable);
+
 private:
   ~BluetoothGattManager();
 
@@ -111,6 +124,11 @@ private:
   class ReadDescriptorValueResultHandler;
   class WriteDescriptorValueResultHandler;
   class ScanDeviceTypeResultHandler;
+
+  class RegisterServerResultHandler;
+  class ConnectPeripheralResultHandler;
+  class DisconnectPeripheralResultHandler;
+  class UnregisterServerResultHandler;
 
   BluetoothGattManager();
 
@@ -199,6 +217,15 @@ private:
 
   void ProceedDiscoverProcess(BluetoothGattClient* aClient,
                               const BluetoothGattServiceId& aServiceId);
+
+  void RegisterServerNotification(BluetoothGattStatus aStatus,
+                                  int aServerIf,
+                                  const BluetoothUuid& aAppUuid) override;
+
+  void ConnectionNotification(int aConnId,
+                              int aServerIf,
+                              bool aConnected,
+                              const nsAString& aBdAddr) override;
 
   static bool mInShutdown;
 };
