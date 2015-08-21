@@ -20,6 +20,7 @@ import uuid
 import copy
 import glob
 import logging
+import shlex
 from itertools import chain
 
 # import the power of mozharness ;)
@@ -1671,6 +1672,7 @@ or run without that action (ie: --no-{action})"
         if not self.query_is_nightly():
             self.info("Not a nightly build, skipping multi l10n.")
             return
+        self._initialize_taskcluster()
 
         self._checkout_compare_locales()
         dirs = self.query_abs_dirs()
@@ -1729,6 +1731,19 @@ or run without that action (ie: --no-{action})"
             self.set_buildbot_property(prop,
                                        parser.matches[prop],
                                        write_to_file=True)
+        upload_files_cmd = [
+            'make',
+            'echo-variable-UPLOAD_FILES',
+            'AB_CD=multi',
+        ]
+        output = self.get_output_from_command_m(
+            upload_files_cmd,
+            cwd=objdir,
+        )
+        files = shlex.split(output)
+        abs_files = [os.path.abspath(os.path.join(objdir, f)) for f in files]
+        self._taskcluster_upload(abs_files, self.routes_json['l10n'],
+                                 locale='multi')
 
     def postflight_build(self, console_output=True):
         """grabs properties from post build and calls ccache -s"""
