@@ -759,16 +759,19 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
     }
   }
 
-  // Elements with display:inline whose writing-mode is orthogonal to their
-  // parent's mode will be converted to display:inline-block.
+  /*
+   * According to https://drafts.csswg.org/css-writing-modes-3/#block-flow:
+   *
+   * If a box has a different block flow direction than its containing block:
+   *   * If the box has a specified display of inline, its display computes
+   *     to inline-block. [CSS21]
+   *   ...etc.
+   */
   if (disp->mDisplay == NS_STYLE_DISPLAY_INLINE && mParent) {
-    // We don't need the full mozilla::WritingMode value (incorporating dir and
-    // text-orientation) here, all we care about is vertical vs horizontal.
-    bool thisHorizontal =
-      StyleVisibility()->mWritingMode == NS_STYLE_WRITING_MODE_HORIZONTAL_TB;
-    bool parentHorizontal = mParent->StyleVisibility()->mWritingMode ==
-                              NS_STYLE_WRITING_MODE_HORIZONTAL_TB;
-    if (thisHorizontal != parentHorizontal) {
+    // We don't need the full mozilla::WritingMode value (incorporating dir
+    // and text-orientation) here; just the writing-mode property is enough.
+    if (StyleVisibility()->mWritingMode !=
+        mParent->StyleVisibility()->mWritingMode) {
       nsStyleDisplay *mutable_display =
         static_cast<nsStyleDisplay*>(GetUniqueStyleData(eStyleStruct_Display));
       mutable_display->mOriginalDisplay = mutable_display->mDisplay =
