@@ -134,11 +134,17 @@ loop.contacts = (function(_, mozL10n) {
                   onClick={this.handleCloseButtonClick} />
           <p dangerouslySetInnerHTML={{__html: message}}
              onClick={this.handleLinkClick}></p>
-          <ButtonGroup>
-            <Button caption={mozL10n.get("gravatars_promo_button_nothanks")}
+          <div className="contacts-gravatar-avatars">
+            <img src="loop/shared/img/avatars.svg#orange-avatar" />
+            <span className="contacts-gravatar-arrow" />
+            <img src="loop/shared/img/firefox-avatar.svg" />
+          </div>
+          <ButtonGroup additionalClass="contacts-gravatar-buttons">
+            <Button additionalClass="secondary"
+                    caption={mozL10n.get("gravatars_promo_button_nothanks2")}
                     onClick={this.handleCloseButtonClick}/>
-            <Button additionalClass="button-accept"
-                    caption={mozL10n.get("gravatars_promo_button_use")}
+            <Button additionalClass="secondary"
+                    caption={mozL10n.get("gravatars_promo_button_use2")}
                     onClick={this.handleUseButtonClick}/>
           </ButtonGroup>
         </div>
@@ -666,10 +672,10 @@ loop.contacts = (function(_, mozL10n) {
         return (
           <div className="contact-list-empty">
             <p className="panel-text-large">
-              {mozL10n.get("no_contacts_message_heading")}
+              {mozL10n.get("no_contacts_message_heading2")}
             </p>
             <p className="panel-text-medium">
-              {mozL10n.get("no_contacts_import_or_add")}
+              {mozL10n.get("no_contacts_import_or_add2")}
             </p>
           </div>
         );
@@ -714,7 +720,7 @@ loop.contacts = (function(_, mozL10n) {
               busy: this.state.importBusy})} />
           </Button>
           <Button additionalClass="primary"
-            caption={mozL10n.get("new_contact_button")}
+            caption={mozL10n.get("new_contact_button2")}
             onClick={this.handleAddContactButtonClick} />
         </ButtonGroup>
       );
@@ -726,9 +732,7 @@ loop.contacts = (function(_, mozL10n) {
       }
 
       return (
-        <div className="content-area">
-          <GravatarPromo handleUse={this.handleUseGravatar}/>
-        </div>
+        <GravatarPromo handleUse={this.handleUseGravatar} />
       );
     },
 

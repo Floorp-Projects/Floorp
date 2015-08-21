@@ -88,10 +88,10 @@ class TabsGridLayout extends GridView
         setClipToPadding(false);
 
         final Resources resources = getResources();
-        mColumnWidth = resources.getDimensionPixelSize(R.dimen.new_tablet_tab_panel_column_width);
+        mColumnWidth = resources.getDimensionPixelSize(R.dimen.tablet_tab_panel_column_width);
 
-        final int padding = resources.getDimensionPixelSize(R.dimen.new_tablet_tab_panel_grid_padding);
-        final int paddingTop = resources.getDimensionPixelSize(R.dimen.new_tablet_tab_panel_grid_padding_top);
+        final int padding = resources.getDimensionPixelSize(R.dimen.tablet_tab_panel_grid_padding);
+        final int paddingTop = resources.getDimensionPixelSize(R.dimen.tablet_tab_panel_grid_padding_top);
 
         // Lets set double the top padding on the bottom so that the last row shows up properly!
         // Your demise, GridView, cannot come fast enough.
@@ -142,7 +142,7 @@ class TabsGridLayout extends GridView
 
             final int removedHeight = getChildAt(0).getMeasuredHeight();
             final int verticalSpacing =
-                    getResources().getDimensionPixelOffset(R.dimen.new_tablet_tab_panel_grid_vspacing);
+                    getResources().getDimensionPixelOffset(R.dimen.tablet_tab_panel_grid_vspacing);
 
             ValueAnimator paddingAnimator = ValueAnimator.ofInt(getPaddingBottom() + removedHeight + verticalSpacing, getPaddingBottom());
             paddingAnimator.setDuration(ANIM_TIME_MS * 2);

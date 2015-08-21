@@ -575,7 +575,7 @@ let settingsToObserve = {
   },
   'dom.mozApps.use_reviewer_certs': false,
   'dom.mozApps.signed_apps_installable_from': 'https://marketplace.firefox.com',
-  'dom.presentation.discovery.enabled': true,
+  'dom.presentation.discovery.enabled': false,
   'dom.presentation.discoverable': false,
   'dom.serviceWorkers.interception.enabled': true,
   'dom.serviceWorkers.testing.enabled': false,

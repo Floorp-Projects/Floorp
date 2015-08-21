@@ -72,4 +72,7 @@ public class GuestProfileConfiguration implements RestrictionConfiguration {
     public boolean isRestricted() {
         return true;
     }
+
+    @Override
+    public void update() {}
 }

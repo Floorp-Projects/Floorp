@@ -1962,6 +1962,8 @@ public abstract class GeckoApp
                 }
             }
         });
+
+        RestrictedProfiles.update(this);
     }
 
     @Override
