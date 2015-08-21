@@ -431,14 +431,17 @@ struct IMENotification final
 
   void Assign(const IMENotification& aOther)
   {
-    Clear();
-    mMessage = aOther.mMessage;
+    bool changingMessage = mMessage != aOther.mMessage;
+    if (changingMessage) {
+      Clear();
+      mMessage = aOther.mMessage;
+    }
     switch (mMessage) {
       case NOTIFY_IME_OF_SELECTION_CHANGE:
-        mSelectionChangeData = aOther.mSelectionChangeData;
-        // mString should be different instance because of ownership issue.
-        mSelectionChangeData.mString =
-          new nsString(aOther.mSelectionChangeData.String());
+        if (changingMessage) {
+          mSelectionChangeData.mString = new nsString();
+        }
+        mSelectionChangeData.Assign(aOther.mSelectionChangeData);
         break;
       case NOTIFY_IME_OF_TEXT_CHANGE:
         mTextChangeData = aOther.mTextChangeData;
@@ -481,30 +484,7 @@ struct IMENotification final
         break;
       case NOTIFY_IME_OF_SELECTION_CHANGE:
         MOZ_ASSERT(aNotification.mMessage == NOTIFY_IME_OF_SELECTION_CHANGE);
-        mSelectionChangeData.mOffset =
-          aNotification.mSelectionChangeData.mOffset;
-        *mSelectionChangeData.mString =
-          aNotification.mSelectionChangeData.String();
-        mSelectionChangeData.mWritingMode =
-          aNotification.mSelectionChangeData.mWritingMode;
-        mSelectionChangeData.mReversed =
-          aNotification.mSelectionChangeData.mReversed;
-        if (!mSelectionChangeData.mCausedByComposition) {
-          mSelectionChangeData.mCausedByComposition =
-            aNotification.mSelectionChangeData.mCausedByComposition;
-        } else {
-          mSelectionChangeData.mCausedByComposition =
-            mSelectionChangeData.mCausedByComposition &&
-              aNotification.mSelectionChangeData.mCausedByComposition;
-        }
-        if (!mSelectionChangeData.mCausedBySelectionEvent) {
-          mSelectionChangeData.mCausedBySelectionEvent =
-            aNotification.mSelectionChangeData.mCausedBySelectionEvent;
-        } else {
-          mSelectionChangeData.mCausedBySelectionEvent =
-            mSelectionChangeData.mCausedBySelectionEvent &&
-              aNotification.mSelectionChangeData.mCausedBySelectionEvent;
-        }
+        mSelectionChangeData.Assign(aNotification.mSelectionChangeData);
         break;
       case NOTIFY_IME_OF_TEXT_CHANGE:
         MOZ_ASSERT(aNotification.mMessage == NOTIFY_IME_OF_TEXT_CHANGE);
@@ -609,6 +589,15 @@ struct IMENotification final
     bool IsValid() const
     {
       return mOffset != UINT32_MAX;
+    }
+    void Assign(const SelectionChangeData& aOther)
+    {
+      mOffset = aOther.mOffset;
+      *mString = aOther.String();
+      mWritingMode = aOther.mWritingMode;
+      mReversed = aOther.mReversed;
+      mCausedByComposition = aOther.mCausedByComposition;
+      mCausedBySelectionEvent = aOther.mCausedBySelectionEvent;
     }
   };
 
