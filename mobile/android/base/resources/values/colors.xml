@@ -131,7 +131,7 @@
   <color name="remote_tabs_setup_button_background_hit">#D95300</color>
 
   <!-- Button toast colors. -->
-  <color name="toast_background">#DD363B40</color>
+  <color name="toast_background">#DD222222</color>
   <color name="toast_button_background">#00000000</color>
   <color name="toast_button_pressed">#DD2C3136</color>
   <color name="toast_button_text">#FFFFFFFF</color>
