@@ -173,7 +173,7 @@ public:
    * opaque content. aOpaqueRegion is the region already known to be covered
    * with opaque content, in the post-transform coordinate space of aLayer.
    */
-  void ApplyOcclusionCulling(Layer* aLayer, nsIntRegion& aOpaqueRegion, const nsIntRect* aClipFromAncestors);
+  void ApplyOcclusionCulling(Layer* aLayer, nsIntRegion& aOpaqueRegion);
 
   /**
    * RAII helper class to add a mask effect with the compositable from aMaskLayer
