@@ -557,9 +557,9 @@ skip-if(B2G||Mulet) == 363858-1.html 363858-1-ref.html # Initial mulet triage: p
 skip-if(B2G||Mulet) == 363858-2.html 363858-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) == 363858-3.html 363858-3-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) == 363858-4.html 363858-4-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-fuzzy-if(OSX>=1008,45,2) fuzzy-if(winWidget,37,1) == 363858-5a.html 363858-5-ref.html
+fuzzy-if(OSX>=1008,45,2) fuzzy-if(winWidget,114,1) == 363858-5a.html 363858-5-ref.html
 == 363858-5b.html 363858-5-ref.html
-fuzzy-if(OSX>=1008,45,2) fuzzy-if(winWidget,37,1) == 363858-6a.html 363858-6-ref.html
+fuzzy-if(OSX>=1008,45,2) fuzzy-if(winWidget,114,1) == 363858-6a.html 363858-6-ref.html
 == 363858-6b.html 363858-6-ref.html
 == 363874.html 363874-ref.html
 == 363874-max-width.html 363874-max-width-ref.html
