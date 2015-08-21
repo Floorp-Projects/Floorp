@@ -421,6 +421,10 @@ class UnboxedArrayObject : public JSObject
                                       uint32_t length, NewObjectKind newKind,
                                       uint32_t maxLength = MaximumCapacity);
 
+    static bool convertToNativeWithGroup(ExclusiveContext* cx, JSObject* obj,
+                                         ObjectGroup* group, Shape* shape);
+    bool convertInt32ToDouble(ExclusiveContext* cx, ObjectGroup* group);
+
     void fillAfterConvert(ExclusiveContext* cx,
                           const AutoValueVector& values, size_t* valueCursor);
 
