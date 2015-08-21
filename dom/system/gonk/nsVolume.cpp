@@ -66,6 +66,22 @@ nsVolume::nsVolume(const Volume* aVolume)
 {
 }
 
+nsVolume::nsVolume(const nsVolume* aVolume)
+  : mName(aVolume->mName),
+    mMountPoint(aVolume->mMountPoint),
+    mState(aVolume->mState),
+    mMountGeneration(aVolume->mMountGeneration),
+    mMountLocked(aVolume->mMountLocked),
+    mIsFake(aVolume->mIsFake),
+    mIsMediaPresent(aVolume->mIsMediaPresent),
+    mIsSharing(aVolume->mIsSharing),
+    mIsFormatting(aVolume->mIsFormatting),
+    mIsUnmounting(aVolume->mIsUnmounting),
+    mIsRemovable(aVolume->mIsRemovable),
+    mIsHotSwappable(aVolume->mIsHotSwappable)
+{
+}
+
 void nsVolume::Dump(const char* aLabel) const
 {
   LOG("%s: Volume: %s is %s and %s @ %s gen %d locked %d",
@@ -333,40 +349,28 @@ nsVolume::LogState() const
   LOG("nsVolume: %s state %s", NameStr().get(), StateStr());
 }
 
-void nsVolume::Set(nsIVolume* aVolume)
+void nsVolume::UpdateMountLock(nsVolume* aOldVolume)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  aVolume->GetName(mName);
-  aVolume->GetMountPoint(mMountPoint);
-  aVolume->GetState(&mState);
-  aVolume->GetIsFake(&mIsFake);
-  aVolume->GetIsMediaPresent(&mIsMediaPresent);
-  aVolume->GetIsSharing(&mIsSharing);
-  aVolume->GetIsFormatting(&mIsFormatting);
-  aVolume->GetIsUnmounting(&mIsUnmounting);
-  aVolume->GetIsRemovable(&mIsRemovable);
-  aVolume->GetIsHotSwappable(&mIsHotSwappable);
-
-  int32_t volMountGeneration;
-  aVolume->GetMountGeneration(&volMountGeneration);
-
+  bool oldMountLocked = aOldVolume ? aOldVolume->mMountLocked : false;
   if (mState != nsIVolume::STATE_MOUNTED) {
     // Since we're not in the mounted state, we need to
     // forgot whatever mount generation we may have had.
     mMountGeneration = -1;
-    return;
-  }
-  if (mMountGeneration == volMountGeneration) {
-    // No change in mount generation, nothing else to do
+    mMountLocked = oldMountLocked;
     return;
   }
 
-  mMountGeneration = volMountGeneration;
+  int32_t oldMountGeneration = aOldVolume ? aOldVolume->mMountGeneration : -1;
+  if (mMountGeneration == oldMountGeneration) {
+    // No change in mount generation, nothing else to do
+    mMountLocked = oldMountLocked;
+    return;
+  }
 
   if (!XRE_IsParentProcess()) {
     // Child processes just track the state, not maintain it.
-    aVolume->GetIsMountLocked(&mMountLocked);
     return;
   }
 
