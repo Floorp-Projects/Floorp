@@ -11,6 +11,7 @@ template<class T> class nsCOMArray;
 class nsCString;
 %}
 [ptr] native StringArray(nsTArray<nsCString>);
+[ref] native StringArrayRef(const nsTArray<nsCString>);
 [ref] native securityMessagesArray(nsCOMArray<nsISecurityConsoleMessage>);
 
 interface nsIAsyncInputStream;
@@ -25,7 +26,7 @@ interface nsIURI;
  * The callback interface for nsIHttpChannelInternal::HTTPUpgrade()
  */
 
-[scriptable, uuid(7b48d081-1dc1-4d08-b7a5-81491bf28c0e)]
+[scriptable, uuid(5b515449-ab64-4dba-b3cd-da8fc2f83064)]
 interface nsIHttpUpgradeListener : nsISupports
 {
     void onTransportAvailable(in nsISocketTransport   aTransport,
@@ -38,7 +39,7 @@ interface nsIHttpUpgradeListener : nsISupports
  * using any feature exposed by this interface, be aware that this interface
  * will change and you will be broken.  You have been warned.
  */
-[scriptable, uuid(e2eebad8-e51f-473a-bbb7-8e2829376625)]
+[scriptable, uuid(46ef729f-4c9b-4084-b9e2-498992a31aee)]
 
 interface nsIHttpChannelInternal : nsISupports
 {
@@ -264,4 +265,13 @@ interface nsIHttpChannelInternal : nsISupports
      * proxies for this channel.
      */
     readonly attribute nsIURI proxyURI;
+
+    /**
+     * Make cross-origin CORS loads happen with a CORS preflight, and specify
+     * the CORS preflight parameters.
+     */
+    [noscript]
+    void setCorsPreflightParameters(in StringArrayRef unsafeHeaders,
+                                    in boolean withCredentials,
+                                    in nsIPrincipal preflightPrincipal);
 };
