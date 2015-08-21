@@ -455,17 +455,22 @@ this.UITour = {
         // Validate the input parameters.
         if (typeof data.message !== "string" || data.message === "") {
           log.error("showHeartbeat: Invalid message specified.");
-          break;
+          return false;
         }
 
         if (typeof data.thankyouMessage !== "string" || data.thankyouMessage === "") {
           log.error("showHeartbeat: Invalid thank you message specified.");
-          break;
+          return false;
         }
 
         if (typeof data.flowId !== "string" || data.flowId === "") {
           log.error("showHeartbeat: Invalid flowId specified.");
-          break;
+          return false;
+        }
+
+        if (data.engagementButtonLabel && typeof data.engagementButtonLabel != "string") {
+          log.error("showHeartbeat: Invalid engagementButtonLabel specified");
+          return false;
         }
 
         // Finally show the Heartbeat UI.
@@ -1071,7 +1076,8 @@ this.UITour = {
    * Show the Heartbeat UI to request user feedback. This function reports back to the
    * caller using |notify|. The notification event name reflects the current status the UI
    * is in (either "Heartbeat:NotificationOffered", "Heartbeat:NotificationClosed",
-   * "Heartbeat:LearnMore" or "Heartbeat:Voted"). When a "Heartbeat:Voted" event is notified
+   * "Heartbeat:LearnMore", "Heartbeat:Engaged" or "Heartbeat:Voted").
+   * When a "Heartbeat:Voted" event is notified
    * the data payload contains a |score| field which holds the rating picked by the user.
    * Please note that input parameters are already validated by the caller.
    *
@@ -1085,8 +1091,11 @@ this.UITour = {
    * @param {String} aOptions.flowId
    *        An identifier for this rating flow. Please note that this is only used to
    *        identify the notification box.
+   * @param {String} [aOptions.engagementButtonLabel=null]
+   *        The text of the engagement button to use instad of stars. If this is null
+   *        or invalid, rating stars are used.
    * @param {String} [aOptions.engagementURL=null]
-   *        The engagement URL to open in a new tab once user has voted. If this is null
+   *        The engagement URL to open in a new tab once user has engaged. If this is null
    *        or invalid, no new tab is opened.
    * @param {String} [aOptions.learnMoreLabel=null]
    *        The label of the learn more link. No link will be shown if this is null.
@@ -1096,10 +1105,25 @@ this.UITour = {
    */
   showHeartbeat(aChromeWindow, aOptions) {
     let nb = aChromeWindow.document.getElementById("high-priority-global-notificationbox");
+    let buttons = null;
 
+    if (aOptions.engagementButtonLabel) {
+      buttons = [{
+        label: aOptions.engagementButtonLabel,
+        callback: () => {
+          // Let the consumer know user engaged.
+          this.notify("Heartbeat:Engaged", { flowId: aOptions.flowId, timestamp: Date.now() });
+
+          userEngaged(new Map([
+            ["type", "button"],
+            ["flowid", aOptions.flowId]
+          ]));
+        },
+      }];
+    }
     // Create the notification. Prefix its ID to decrease the chances of collisions.
     let notice = nb.appendNotification(aOptions.message, "heartbeat-" + aOptions.flowId,
-      "chrome://browser/skin/heartbeat-icon.svg", nb.PRIORITY_INFO_HIGH, null, function() {
+      "chrome://browser/skin/heartbeat-icon.svg", nb.PRIORITY_INFO_HIGH, buttons, function() {
         // Let the consumer know the notification bar was closed. This also happens
         // after voting.
         this.notify("Heartbeat:NotificationClosed", { flowId: aOptions.flowId, timestamp: Date.now() });
@@ -1111,11 +1135,51 @@ this.UITour = {
     let messageText =
       aChromeWindow.document.getAnonymousElementByAttribute(notice, "anonid", "messageText");
 
+    function userEngaged(aEngagementParams) {
+      // Make the heartbeat icon pulse twice.
+      notice.label = aOptions.thankyouMessage;
+      messageImage.classList.remove("pulse-onshow");
+      messageImage.classList.add("pulse-twice");
+
+      // Remove all the children of the notice (rating container
+      // and the flex).
+      while (notice.firstChild) {
+        notice.removeChild(notice.firstChild);
+      }
+
+      // Make sure that we have a valid URL. If we haven't, do not open the engagement page.
+      let engagementURL = null;
+      try {
+        engagementURL = new URL(aOptions.engagementURL);
+      } catch (error) {
+        log.error("showHeartbeat: Invalid URL specified.");
+      }
+
+      // Just open the engagement tab if we have a valid engagement URL.
+      if (engagementURL) {
+        for (let [param, value] of aEngagementParams) {
+          engagementURL.searchParams.append(param, value);
+        }
+
+        // Open the engagement URL in a new tab.
+        aChromeWindow.gBrowser.selectedTab =
+          aChromeWindow.gBrowser.addTab(engagementURL.toString(), {
+            owner: aChromeWindow.gBrowser.selectedTab,
+            relatedToCurrent: true
+          });
+      }
+
+      // Remove the notification bar after 3 seconds.
+      aChromeWindow.setTimeout(() => {
+        nb.removeNotification(notice);
+      }, 3000);
+    }
+
     // Create the fragment holding the rating UI.
     let frag = aChromeWindow.document.createDocumentFragment();
 
     // Build the Heartbeat star rating.
-    const numStars = 5;
+    const numStars = aOptions.engagementButtonLabel ? 0 : 5;
     let ratingContainer = aChromeWindow.document.createElement("hbox");
     ratingContainer.id = "star-rating-container";
 
@@ -1136,44 +1200,12 @@ this.UITour = {
         // Let the consumer know user voted.
         this.notify("Heartbeat:Voted", { flowId: aOptions.flowId, score: rating, timestamp: Date.now() });
 
-        // Make the heartbeat icon pulse twice.
-        notice.label = aOptions.thankyouMessage;
-        messageImage.classList.remove("pulse-onshow");
-        messageImage.classList.add("pulse-twice");
-
-        // Remove all the children of the notice (rating container
-        // and the flex).
-        while (notice.firstChild) {
-          notice.removeChild(notice.firstChild);
-        }
-
-        // Make sure that we have a valid URL. If we haven't, do not open the engagement page.
-        let engagementURL = null;
-        try {
-          engagementURL = new URL(aOptions.engagementURL);
-        } catch (error) {
-          log.error("showHeartbeat: Invalid URL specified.");
-        }
-
-        // Just open the engagement tab if we have a valid engagement URL.
-        if (engagementURL) {
-          // Append the score data to the engagement URL.
-          engagementURL.searchParams.append("type", "stars");
-          engagementURL.searchParams.append("score", rating);
-          engagementURL.searchParams.append("flowid", aOptions.flowId);
-
-          // Open the engagement URL in a new tab.
-          aChromeWindow.gBrowser.selectedTab =
-            aChromeWindow.gBrowser.addTab(engagementURL.toString(), {
-              owner: aChromeWindow.gBrowser.selectedTab,
-              relatedToCurrent: true
-            });
-        }
-
-        // Remove the notification bar after 3 seconds.
-        aChromeWindow.setTimeout(() => {
-          nb.removeNotification(notice);
-        }, 3000);
+        // Append the score data to the engagement URL.
+        userEngaged(new Map([
+          ["type", "stars"],
+          ["score", rating],
+          ["flowid", aOptions.flowId]
+        ]));
       }.bind(this));
 
       // Add it to the container.
