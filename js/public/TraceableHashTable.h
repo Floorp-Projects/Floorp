@@ -153,6 +153,164 @@ class HandleBase<TraceableHashMap<A,B,C,D,E,F>>
   : public TraceableHashMapOperations<JS::Handle<TraceableHashMap<A,B,C,D,E,F>>, A,B,C,D,E,F>
 {};
 
+// A TraceableHashSet is a HashSet with an additional trace method that knows
+// how to visit all set element.  HashSets that contain GC pointers that must
+// be traced to be kept alive will generally want to use this TraceableHashSet
+// specializeation in lieu of HashSet.
+//
+// Most types of GC pointers can be traced with no extra infrastructure.  For
+// structs and non-gc-pointer members, ensure that there is a specialization of
+// DefaultTracer<T> with an appropriate trace method available to handle the
+// custom type.
+//
+// Note that although this HashSet's trace will deal correctly with moved
+// elements, it does not itself know when to barrier or trace elements.  To
+// function properly it must either be used with Rooted or barriered and traced
+// manually.
+template <typename T,
+          typename HashPolicy = DefaultHasher<T>,
+          typename AllocPolicy = TempAllocPolicy,
+          typename ElemTraceFunc = DefaultTracer<T>>
+class TraceableHashSet : public HashSet<T, HashPolicy, AllocPolicy>,
+                         public JS::Traceable
+{
+    using Base = HashSet<T, HashPolicy, AllocPolicy>;
+
+  public:
+    explicit TraceableHashSet(AllocPolicy a = AllocPolicy()) : Base(a)  {}
+
+    static void trace(TraceableHashSet* set, JSTracer* trc) { set->trace(trc); }
+    void trace(JSTracer* trc) {
+        if (!this->initialized())
+            return;
+        for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {
+            T elem = e.front();
+            ElemTraceFunc::trace(trc, &elem, "hashset element");
+            if (elem != e.front())
+                e.rekeyFront(elem);
+        }
+    }
+
+    // TraceableHashSet is movable
+    TraceableHashSet(TraceableHashSet&& rhs) : Base(mozilla::Forward<TraceableHashSet>(rhs)) {}
+    void operator=(TraceableHashSet&& rhs) {
+        MOZ_ASSERT(this != &rhs, "self-move assignment is prohibited");
+        Base::operator=(mozilla::Forward<TraceableHashSet>(rhs));
+    }
+
+  private:
+    // TraceableHashSet is not copyable or assignable
+    TraceableHashSet(const TraceableHashSet& hs) = delete;
+    TraceableHashSet& operator=(const TraceableHashSet& hs) = delete;
+};
+
+template <typename Outer, typename... Args>
+class TraceableHashSetOperations
+{
+    using Set = TraceableHashSet<Args...>;
+    using Lookup = typename Set::Lookup;
+    using Ptr = typename Set::Ptr;
+    using AddPtr = typename Set::AddPtr;
+    using Range = typename Set::Range;
+    using Enum = typename Set::Enum;
+
+    const Set& set() const { return static_cast<const Outer*>(this)->extract(); }
+
+  public:
+    bool initialized() const                   { return set().initialized(); }
+    Ptr lookup(const Lookup& l) const          { return set().lookup(l); }
+    AddPtr lookupForAdd(const Lookup& l) const { return set().lookupForAdd(l); }
+    Range all() const                          { return set().all(); }
+    bool empty() const                         { return set().empty(); }
+    uint32_t count() const                     { return set().count(); }
+    size_t capacity() const                    { return set().capacity(); }
+    uint32_t generation() const                { return set().generation(); }
+    bool has(const Lookup& l) const            { return set().lookup(l).found(); }
+};
+
+template <typename Outer, typename... Args>
+class MutableTraceableHashSetOperations
+  : public TraceableHashSetOperations<Outer, Args...>
+{
+    using Set = TraceableHashSet<Args...>;
+    using Lookup = typename Set::Lookup;
+    using Ptr = typename Set::Ptr;
+    using AddPtr = typename Set::AddPtr;
+    using Range = typename Set::Range;
+    using Enum = typename Set::Enum;
+
+    Set& set() { return static_cast<Outer*>(this)->extract(); }
+
+  public:
+    bool init(uint32_t len = 16) { return set().init(len); }
+    void clear()                 { set().clear(); }
+    void finish()                { set().finish(); }
+    void remove(const Lookup& l) { set().remove(l); }
+
+    template<typename TInput>
+    bool add(AddPtr& p, TInput&& t) {
+        return set().add(p, mozilla::Forward<TInput>(t));
+    }
+
+    template<typename TInput>
+    bool relookupOrAdd(AddPtr& p, const Lookup& l, TInput&& t) {
+        return set().relookupOrAdd(p, l, mozilla::Forward<TInput>(t));
+    }
+
+    template<typename TInput>
+    bool put(TInput&& t) {
+        return set().put(mozilla::Forward<TInput>(t));
+    }
+
+    template<typename TInput>
+    bool putNew(TInput&& t) {
+        return set().putNew(mozilla::Forward<TInput>(t));
+    }
+
+    template<typename TInput>
+    bool putNew(const Lookup& l, TInput&& t) {
+        return set().putNew(l, mozilla::Forward<TInput>(t));
+    }
+};
+
+template <typename T, typename HP, typename AP, typename TF>
+class RootedBase<TraceableHashSet<T, HP, AP, TF>>
+  : public MutableTraceableHashSetOperations<JS::Rooted<TraceableHashSet<T, HP, AP, TF>>, T, HP, AP, TF>
+{
+    using Set = TraceableHashSet<T, HP, AP, TF>;
+
+    friend class TraceableHashSetOperations<JS::Rooted<Set>, T, HP, AP, TF>;
+    const Set& extract() const { return *static_cast<const JS::Rooted<Set>*>(this)->address(); }
+
+    friend class MutableTraceableHashSetOperations<JS::Rooted<Set>, T, HP, AP, TF>;
+    Set& extract() { return *static_cast<JS::Rooted<Set>*>(this)->address(); }
+};
+
+template <typename T, typename HP, typename AP, typename TF>
+class MutableHandleBase<TraceableHashSet<T, HP, AP, TF>>
+  : public MutableTraceableHashSetOperations<JS::MutableHandle<TraceableHashSet<T, HP, AP, TF>>,
+                                             T, HP, AP, TF>
+{
+    using Set = TraceableHashSet<T, HP, AP, TF>;
+
+    friend class TraceableHashSetOperations<JS::MutableHandle<Set>, T, HP, AP, TF>;
+    const Set& extract() const {
+        return *static_cast<const JS::MutableHandle<Set>*>(this)->address();
+    }
+
+    friend class MutableTraceableHashSetOperations<JS::MutableHandle<Set>, T, HP, AP, TF>;
+    Set& extract() { return *static_cast<JS::MutableHandle<Set>*>(this)->address(); }
+};
+
+template <typename T, typename HP, typename AP, typename TF>
+class HandleBase<TraceableHashSet<T, HP, AP, TF>>
+  : public TraceableHashSetOperations<JS::Handle<TraceableHashSet<T, HP, AP, TF>>, T, HP, AP, TF>
+{
+    using Set = TraceableHashSet<T, HP, AP, TF>;
+    friend class TraceableHashSetOperations<JS::Handle<Set>, T, HP, AP, TF>;
+    const Set& extract() const { return *static_cast<const JS::Handle<Set>*>(this)->address(); }
+};
+
 } /* namespace js */
 
 #endif /* gc_HashTable_h */
