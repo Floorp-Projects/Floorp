@@ -2172,7 +2172,7 @@ GeckoDriver.prototype.isElementSelected = function(cmd, resp) {
       break;
 
     case Context.CONTENT:
-      resp.value = yield this.listener.isElementSelected({id: id});
+      resp.value = yield this.listener.isElementSelected(id);
       break;
   }
 };
