@@ -723,7 +723,7 @@ class Marionette(object):
         return self._send_emulator_result(id, result)
 
     def _emulator_shell(self, id, args):
-        if not self.emulator:
+        if not isinstance(args, list) or not self.emulator:
             raise errors.MarionetteException(
                 "No emulator in this test to run shell command against")
         buf = StringIO.StringIO()
@@ -733,9 +733,9 @@ class Marionette(object):
         return self._send_emulator_result(id, result)
 
     def _send_emulator_result(self, id, result):
-        return self.client.send({"name": "emulatorCmdResult",
-                                 "id": id,
-                                 "result": result})
+        return self.client.send(json.dumps({"name": "emulatorCmdResult",
+                                            "id": id,
+                                            "result": result}))
 
     def _handle_error(self, resp):
         if self.protocol == 1:
