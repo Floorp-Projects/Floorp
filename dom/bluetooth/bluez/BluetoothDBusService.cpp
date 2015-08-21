@@ -4380,6 +4380,26 @@ BluetoothDBusService::GattClientWriteDescriptorValueInternal(
 }
 
 void
+BluetoothDBusService::GattServerConnectPeripheralInternal(
+  const nsAString& aAppUuid, const nsAString& aAddress,
+  BluetoothReplyRunnable* aRunnable)
+{
+}
+
+void
+BluetoothDBusService::GattServerDisconnectPeripheralInternal(
+  const nsAString& aAppUuid, const nsAString& aAddress,
+  BluetoothReplyRunnable* aRunnable)
+{
+}
+
+void
+BluetoothDBusService::UnregisterGattServerInternal(
+  int aServerIf, BluetoothReplyRunnable* aRunnable)
+{
+}
+
+void
 BluetoothDBusService::ReplyTovCardPulling(
   BlobParent* aBlobParent,
   BlobChild* aBlobChild,

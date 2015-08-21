@@ -552,6 +552,51 @@ BluetoothServiceBluedroid::GattClientWriteDescriptorValueInternal(
                              aDescriptorId, aValue, aRunnable);
 }
 
+// GATT Server
+void
+BluetoothServiceBluedroid::GattServerConnectPeripheralInternal(
+  const nsAString& aAppUuid, const nsAString& aAddress,
+  BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  ENSURE_BLUETOOTH_IS_READY_VOID(aRunnable);
+
+  BluetoothGattManager* gatt = BluetoothGattManager::Get();
+  ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
+
+  gatt->ConnectPeripheral(aAppUuid, aAddress, aRunnable);
+}
+
+void
+BluetoothServiceBluedroid::GattServerDisconnectPeripheralInternal(
+  const nsAString& aAppUuid, const nsAString& aAddress,
+  BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  ENSURE_BLUETOOTH_IS_READY_VOID(aRunnable);
+
+  BluetoothGattManager* gatt = BluetoothGattManager::Get();
+  ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
+
+  gatt->DisconnectPeripheral(aAppUuid, aAddress, aRunnable);
+}
+
+void
+BluetoothServiceBluedroid::UnregisterGattServerInternal(
+  int aServerIf, BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  ENSURE_BLUETOOTH_IS_READY_VOID(aRunnable);
+
+  BluetoothGattManager* gatt = BluetoothGattManager::Get();
+  ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
+
+  gatt->UnregisterServer(aServerIf, aRunnable);
+}
+
 nsresult
 BluetoothServiceBluedroid::GetAdaptersInternal(
   BluetoothReplyRunnable* aRunnable)
