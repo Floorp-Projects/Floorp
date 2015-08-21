@@ -16,7 +16,7 @@
 #identity-popup[connection=chrome] [when-connection~=chrome],
 #identity-popup[connection=file] [when-connection~=file],
 /* Show weak cipher messages when needed. */
-#identity-popup[ciphers=weak]:not([mixedcontent]) [when-ciphers~=weak],
+#identity-popup[ciphers=weak] [when-ciphers~=weak],
 /* Show mixed content warnings when needed */
 #identity-popup[mixedcontent~=active-loaded] [when-mixedcontent=active-loaded],
 #identity-popup[mixedcontent~=passive-loaded]:not([mixedcontent~=active-loaded]) [when-mixedcontent=passive-loaded],
