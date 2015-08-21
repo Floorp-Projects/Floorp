@@ -384,7 +384,9 @@ MediaSource::Enabled(JSContext* cx, JSObject* aGlobal)
           eTLDplusOne.EqualsLiteral("youtube-nocookie.com") ||
           eTLDplusOne.EqualsLiteral("netflix.com") ||
           eTLDplusOne.EqualsLiteral("dailymotion.com") ||
-          eTLDplusOne.EqualsLiteral("dmcdn.net");
+          eTLDplusOne.EqualsLiteral("dmcdn.net") ||
+          eTLDplusOne.EqualsLiteral("bbc.com") ||
+          eTLDplusOne.EqualsLiteral("bbc.co.uk");
 }
 
 bool
