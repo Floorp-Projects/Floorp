@@ -440,7 +440,7 @@ frames_to_bytes_before_mix(cubeb_stream * stm, size_t frames)
   return stream_frame_size * frames;
 }
 
-void
+long
 refill(cubeb_stream * stm, float * data, long frames_needed)
 {
   /* If we need to upmix after resampling, resample into the mix buffer to
@@ -453,15 +453,12 @@ refill(cubeb_stream * stm, float * data, long frames_needed)
   }
 
   long out_frames = cubeb_resampler_fill(stm->resampler, dest, frames_needed);
+  /* TODO: Report out_frames < 0 as an error via the API. */
+  XASSERT(out_frames >= 0);
 
   {
     auto_lock lock(stm->stream_reset_lock);
     stm->frames_written += out_frames;
-  }
-
-  /* XXX: Handle this error. */
-  if (out_frames < 0) {
-    XASSERT(false);
   }
 
   /* Go in draining mode if we got fewer frames than requested. */
@@ -481,6 +478,8 @@ refill(cubeb_stream * stm, float * data, long frames_needed)
     downmix(dest, out_frames, data,
             stm->stream_params.channels, stm->mix_params.channels);
   }
+
+  return out_frames;
 }
 
 static unsigned int __stdcall
@@ -582,9 +581,10 @@ wasapi_stream_render_loop(LPVOID stream)
       BYTE * data;
       hr = stm->render_client->GetBuffer(available, &data);
       if (SUCCEEDED(hr)) {
-        refill(stm, reinterpret_cast<float *>(data), available);
+        long wrote = refill(stm, reinterpret_cast<float *>(data), available);
+        XASSERT(wrote == available || stm->draining);
 
-        hr = stm->render_client->ReleaseBuffer(available, 0);
+        hr = stm->render_client->ReleaseBuffer(wrote, 0);
         if (FAILED(hr)) {
           LOG("failed to release buffer.\n");
           is_playing = false;
