@@ -794,16 +794,16 @@ JitRuntime::generateDebugTrapHandler(JSContext* cx)
     // stub frame has a nullptr ICStub pointer, since this pointer is marked
     // during GC.
     masm.movePtr(ImmPtr(nullptr), ICStubReg);
-    EmitEnterStubFrame(masm, scratch2);
+    EmitBaselineEnterStubFrame(masm, scratch2);
 
     JitCode* code = cx->runtime()->jitRuntime()->getVMWrapper(HandleDebugTrapInfo);
     if (!code)
         return nullptr;
 
     masm.asVIXL().Push(vixl::lr, ARMRegister(scratch1, 64));
-    EmitCallVM(code, masm);
+    EmitBaselineCallVM(code, masm);
 
-    EmitLeaveStubFrame(masm);
+    EmitBaselineLeaveStubFrame(masm);
 
     // If the stub returns |true|, we have to perform a forced return (return
     // from the JS frame). If the stub returns |false|, just return from the
