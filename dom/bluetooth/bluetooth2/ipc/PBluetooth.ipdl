@@ -292,6 +292,23 @@ struct GattClientWriteDescriptorValueRequest
   uint8_t[] value;
 };
 
+struct GattServerConnectPeripheralRequest
+{
+  nsString appUuid;
+  nsString address;
+};
+
+struct GattServerDisconnectPeripheralRequest
+{
+  nsString appUuid;
+  nsString address;
+};
+
+struct UnregisterGattServerRequest
+{
+  int serverIf;
+};
+
 union Request
 {
   GetAdaptersRequest;
@@ -342,6 +359,9 @@ union Request
   GattClientWriteCharacteristicValueRequest;
   GattClientReadDescriptorValueRequest;
   GattClientWriteDescriptorValueRequest;
+  GattServerConnectPeripheralRequest;
+  GattServerDisconnectPeripheralRequest;
+  UnregisterGattServerRequest;
 };
 
 protocol PBluetooth
