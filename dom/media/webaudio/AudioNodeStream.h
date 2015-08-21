@@ -117,6 +117,14 @@ public:
    * the output.  This is used only for DelayNodeEngine in a feedback loop.
    */
   void ProduceOutputBeforeInput(GraphTime aFrom);
+  /**
+   * Remove references to shared AudioChunk buffers.  Called on downstream
+   * nodes first after an iteration has called ProcessInput() on the entire
+   * graph, so that upstream nodes can re-use their buffers on the next
+   * iteration.
+   */
+  void ReleaseSharedBuffers();
+
   StreamTime GetCurrentPosition();
   bool IsAudioParamStream() const
   {
@@ -184,7 +192,7 @@ protected:
   // The engine that will generate output for this node.
   nsAutoPtr<AudioNodeEngine> mEngine;
   // The mixed input blocks are kept from iteration to iteration to avoid
-  // reallocating channel data arrays.
+  // reallocating channel data arrays and any buffers for mixing.
   OutputChunks mInputChunks;
   // The last block produced by this node.
   OutputChunks mLastChunks;
