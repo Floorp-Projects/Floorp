@@ -6,6 +6,7 @@
  */
 
 const { PerformanceFront } = require("devtools/server/actors/performance");
+const { defer } = require("sdk/core/promise");
 
 add_task(function*() {
   let doc = yield addTab(MAIN_DOMAIN + "doc_perf.html");

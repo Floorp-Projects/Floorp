@@ -18,9 +18,8 @@ let { merge } = require("sdk/util/object");
 let { createPerformanceFront } = require("devtools/server/actors/performance");
 let RecordingUtils = require("devtools/toolkit/performance/utils");
 let {
-  PMM_loadFrameScripts, PMM_isProfilerActive, PMM_stopProfiler,
-  sendProfilerCommand, consoleMethod
-} = require("devtools/toolkit/performance/process-communication");
+  PMM_loadProfilerScripts, PMM_isProfilerActive, PMM_stopProfiler, sendProfilerCommand
+} = require("devtools/toolkit/shared/profiler");
 
 let mm = null;
 
@@ -287,6 +286,21 @@ function busyWait(time) {
   let start = Date.now();
   let stack;
   while (Date.now() - start < time) { stack = Components.stack; }
+}
+
+function consoleMethod (...args) {
+  if (!mm) {
+    throw new Error("`loadFrameScripts()` must be called before using frame scripts.");
+  }
+  // Terrible ugly hack -- this gets stringified when it uses the
+  // message manager, so an undefined arg in `console.profileEnd()`
+  // turns into a stringified "null", which is terrible. This method is only used
+  // for test helpers, so swap out the argument if its undefined with an empty string.
+  // Differences between empty string and undefined are tested on the front itself.
+  if (args[1] == null) {
+    args[1] = "";
+  }
+  mm.sendAsyncMessage("devtools:test:console", args);
 }
 
 function* consoleProfile(win, label) {
