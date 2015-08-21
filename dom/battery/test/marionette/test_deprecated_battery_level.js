@@ -3,18 +3,15 @@
 
 MARIONETTE_TIMEOUT = 10000;
 
-let battery = null;
+let battery = window.navigator.battery;
 
 function verifyInitialState() {
-  window.navigator.getBattery().then(function (b) {
-    battery = b;
-    ok(battery, "battery");
-    is(battery.level, 0.5, "battery.level");
-    runEmulatorCmd("power display", function (result) {
-      is(result.pop(), "OK", "power display successful");
-      ok(result.indexOf("capacity: 50") !== -1, "power capacity");
-      setUp();
-    });
+  ok(battery, "battery");
+  is(battery.level, 0.5, "battery.level");
+  runEmulatorCmd("power display", function (result) {
+    is(result.pop(), "OK", "power display successful");
+    ok(result.indexOf("capacity: 50") !== -1, "power capacity");
+    setUp();
   });
 }
 
@@ -32,10 +29,10 @@ function changeCapacity(capacity, changeExpected, nextFunction) {
   log("Changing power capacity to " + capacity);
   if (changeExpected) {
     battery.onlevelchange = function (event) {
-      battery.onlevelchange = unexpectedEvent;
-      is(event.type, "levelchange", "event.type");
-      is(battery.level, capacity / 100, "battery.level");
-      nextFunction();
+     battery.onlevelchange = unexpectedEvent;
+     is(event.type, "levelchange", "event.type");
+     is(battery.level, capacity / 100, "battery.level");
+     nextFunction();
     };
     runEmulatorCmd("power capacity " + capacity);
   }

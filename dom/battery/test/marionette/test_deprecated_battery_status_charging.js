@@ -3,20 +3,17 @@
 
 MARIONETTE_TIMEOUT = 10000;
 
-let battery = null;
+let battery = window.navigator.battery;
 let fromStatus = "charging";
 let fromCharging = true;
 
 function verifyInitialState() {
-  window.navigator.getBattery().then(function (b) {
-    battery = b;
-    ok(battery, "battery");
-    ok(battery.charging, "battery.charging");
-    runEmulatorCmd("power display", function (result) {
-      is(result.pop(), "OK", "power display successful");
-      ok(result.indexOf("status: Charging") !== -1, "power status charging");
-      setUp();
-    });
+  ok(battery, "battery");
+  ok(battery.charging, "battery.charging");
+  runEmulatorCmd("power display", function (result) {
+    is(result.pop(), "OK", "power display successful");
+    ok(result.indexOf("status: Charging") !== -1, "power status charging");
+    setUp();
   });
 }
 
