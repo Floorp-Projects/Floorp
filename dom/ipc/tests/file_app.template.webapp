@@ -1,0 +1,6 @@
+{
+  "name": "Nested-OOP",
+  "description": "Nested-OOP test app used for mochitest.",
+  "launch_path": "/tests/dom/ipc/tests/TESTTOKEN",
+  "icons": { "128": "default_icon" }
+}
