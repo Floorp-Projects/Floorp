@@ -221,7 +221,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         }
         mViewportMetrics = mViewportMetrics.setViewportSize(width, height);
         if (scrollChange != null) {
-            mViewportMetrics = mViewportMetrics.offsetViewportBy(scrollChange.x, scrollChange.y);
+            mViewportMetrics = mViewportMetrics.offsetViewportByAndClamp(scrollChange.x, scrollChange.y);
         }
 
         if (mGeckoIsReady) {
