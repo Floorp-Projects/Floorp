@@ -209,6 +209,7 @@ let findElementContentFn = dispatch(findElementContent);
 let findElementsContentFn = dispatch(findElementsContent);
 let isElementSelectedFn = dispatch(isElementSelected);
 let getElementLocationFn = dispatch(getElementLocation);
+let clearElementFn = dispatch(clearElement);
 
 /**
  * Start all message listeners
@@ -246,7 +247,7 @@ function startListeners() {
   addMessageListenerId("Marionette:isElementSelected", isElementSelectedFn);
   addMessageListenerId("Marionette:sendKeysToElement", sendKeysToElement);
   addMessageListenerId("Marionette:getElementLocation", getElementLocationFn); //deprecated
-  addMessageListenerId("Marionette:clearElement", clearElement);
+  addMessageListenerId("Marionette:clearElement", clearElementFn);
   addMessageListenerId("Marionette:switchToFrame", switchToFrame);
   addMessageListenerId("Marionette:deleteSession", deleteSession);
   addMessageListenerId("Marionette:sleepSession", sleepSession);
@@ -351,7 +352,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:isElementSelected", isElementSelectedFn);
   removeMessageListenerId("Marionette:sendKeysToElement", sendKeysToElement);
   removeMessageListenerId("Marionette:getElementLocation", getElementLocationFn);
-  removeMessageListenerId("Marionette:clearElement", clearElement);
+  removeMessageListenerId("Marionette:clearElement", clearElementFn);
   removeMessageListenerId("Marionette:switchToFrame", switchToFrame);
   removeMessageListenerId("Marionette:deleteSession", deleteSession);
   removeMessageListenerId("Marionette:sleepSession", sleepSession);
@@ -1590,25 +1591,24 @@ function getElementLocation(id) {
 }
 
 /**
- * Clear the text of an element
+ * Clear the text of an element.
  */
-function clearElement(msg) {
-  let command_id = msg.json.command_id;
+function clearElement(id) {
   try {
-    let el = elementManager.getKnownElement(msg.json.id, curFrame);
+    let el = elementManager.getKnownElement(id, curFrame);
     if (el.type == "file") {
       el.value = null;
     } else {
       utils.clearElement(el);
     }
-    sendOk(command_id);
   } catch (e) {
     // Bug 964738: Newer atoms contain status codes which makes wrapping
     // this in an error prototype that has a status property unnecessary
     if (e.name == "InvalidElementStateError") {
-      e = new InvalidElementStateError(e.message);
+      throw new InvalidElementStateError(e.message);
+    } else {
+      throw e;
     }
-    sendError(e, command_id);
   }
 }
 
