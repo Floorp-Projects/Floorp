@@ -106,7 +106,6 @@ if CONFIG['MOZ_B2G_FM']:
 
 if CONFIG['MOZ_B2G_BT']:
     LOCAL_INCLUDES += [
-        '/dom/bluetooth',
         '/dom/bluetooth/common',
     ]
 
