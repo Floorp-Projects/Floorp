@@ -9,6 +9,7 @@
 
 class nsPIDOMWindow;
 #include "mozilla/Attributes.h"
+#include "mozilla/Logging.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestChild.h"
 
 #include "DOMRequest.h"
@@ -42,11 +43,6 @@ class Blob;
 //#define DS_LOGGING 1
 
 #ifdef DS_LOGGING
-/* Polyfill __func__ on MSVC to pass to the log. */
-#ifdef _MSC_VER
-#define __func__ __FUNCTION__
-#endif
-
 #define DS_LOG_DEBUG(msg, ...)  printf_stderr("[%s:%d] " msg "\n", __func__, __LINE__, ##__VA_ARGS__)
 #define DS_LOG_INFO DS_LOG_DEBUG
 #define DS_LOG_WARN DS_LOG_DEBUG
