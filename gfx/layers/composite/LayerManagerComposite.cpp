@@ -204,66 +204,36 @@ LayerManagerComposite::BeginTransactionWithDrawTarget(DrawTarget* aTarget, const
   mTargetBounds = aRect;
 }
 
-static bool
-IsIntegerTranslation(const Matrix4x4& aMatrix, nsIntPoint* aOutTranslation)
-{
-  Matrix transform2d;
-  if (aMatrix.Is2D(&transform2d)) {
-    if (transform2d.IsIntegerTranslation()) {
-      *aOutTranslation = nsIntPoint(transform2d._31, transform2d._32);
-      return true;
-    }
-  }
-  return false;
-}
-
 void
-LayerManagerComposite::ApplyOcclusionCulling(Layer* aLayer, nsIntRegion& aOpaqueRegion, const nsIntRect* aClipFromAncestors)
+LayerManagerComposite::ApplyOcclusionCulling(Layer* aLayer, nsIntRegion& aOpaqueRegion)
 {
+  nsIntRegion localOpaque;
+  Matrix transform2d;
+  bool isTranslation = false;
   // If aLayer has a simple transform (only an integer translation) then we
   // can easily convert aOpaqueRegion into pre-transform coordinates and include
   // that region.
-  nsIntPoint translation;
-  bool isTranslation = IsIntegerTranslation(aLayer->GetLocalTransform(), &translation);
-
-  LayerComposite* composite = aLayer->AsLayerComposite();
-
-  nsIntRegion localOpaque;
-  nsIntRect clip;
-  bool haveClip = false;
-
-  if (isTranslation) {
-    localOpaque = aOpaqueRegion.MovedBy(-translation);
-
-    // Combine our clip with the one from our descendants.
-    const Maybe<ParentLayerIntRect>& selfClip = aLayer->GetEffectiveClipRect();
-    if (aClipFromAncestors) {
-      clip = *aClipFromAncestors - translation;
-      if (selfClip) {
-        // *selfClip is in parent layer coordinates.
-        clip = clip.Intersect(ParentLayerPixel::ToUntyped(*selfClip) - translation);
-      }
-      haveClip = true;
-    } else if (selfClip) {
-      clip = ParentLayerPixel::ToUntyped(*selfClip) - translation;
-      haveClip = true;
+  if (aLayer->GetLocalTransform().Is2D(&transform2d)) {
+    if (transform2d.IsIntegerTranslation()) {
+      isTranslation = true;
+      localOpaque = aOpaqueRegion;
+      localOpaque.MoveBy(-transform2d._31, -transform2d._32);
     }
+  }
 
-    // Subtract any areas that we know to be opaque from our
-    // visible region.
+  // Subtract any areas that we know to be opaque from our
+  // visible region.
+  LayerComposite *composite = aLayer->AsLayerComposite();
+  if (!localOpaque.IsEmpty()) {
     nsIntRegion visible = composite->GetShadowVisibleRegion();
-    nsIntRegion afterCulling;
-    afterCulling.Sub(visible, localOpaque);
-    if (haveClip) {
-      afterCulling.AndWith(clip);
-    }
+    visible.Sub(visible, localOpaque);
     composite->SetShadowVisibleRegion(visible);
   }
 
   // Compute occlusions for our descendants (in front-to-back order) and allow them to
   // contribute to localOpaque.
   for (Layer* child = aLayer->GetLastChild(); child; child = child->GetPrevSibling()) {
-    ApplyOcclusionCulling(child, localOpaque, haveClip ? &clip : nullptr);
+    ApplyOcclusionCulling(child, localOpaque);
   }
 
   // If we have a simple transform, then we can add our opaque area into
@@ -272,12 +242,14 @@ LayerManagerComposite::ApplyOcclusionCulling(Layer* aLayer, nsIntRegion& aOpaque
       !aLayer->HasMaskLayers() &&
       aLayer->GetLocalOpacity() == 1.0f) {
     if (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE) {
-      localOpaque.OrWith(composite->GetFullyRenderedRegion());
+      localOpaque.Or(localOpaque, composite->GetFullyRenderedRegion());
     }
-    if (haveClip) {
-      localOpaque.AndWith(clip);
+    localOpaque.MoveBy(transform2d._31, transform2d._32);
+    const Maybe<ParentLayerIntRect>& clip = aLayer->GetEffectiveClipRect();
+    if (clip) {
+      localOpaque.And(localOpaque, ParentLayerIntRect::ToUntyped(*clip));
     }
-    aOpaqueRegion.OrWith(localOpaque.MovedBy(translation));
+    aOpaqueRegion.Or(aOpaqueRegion, localOpaque);
   }
 }
 
@@ -333,7 +305,7 @@ LayerManagerComposite::EndTransaction(const TimeStamp& aTimeStamp,
     mRoot->ComputeEffectiveTransforms(gfx::Matrix4x4());
 
     nsIntRegion opaque;
-    ApplyOcclusionCulling(mRoot, opaque, nullptr);
+    ApplyOcclusionCulling(mRoot, opaque);
 
     Render();
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
@@ -1000,7 +972,7 @@ LayerManagerComposite::RenderToPresentationSurface()
 
   mRoot->ComputeEffectiveTransforms(matrix);
   nsIntRegion opaque;
-  ApplyOcclusionCulling(mRoot, opaque, nullptr);
+  ApplyOcclusionCulling(mRoot, opaque);
 
   nsIntRegion invalid;
   Rect bounds(0.0f, 0.0f, scale * pageWidth, (float)actualHeight);
