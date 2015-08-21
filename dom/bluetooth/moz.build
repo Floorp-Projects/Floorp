@@ -10,18 +10,9 @@ if CONFIG['MOZ_B2G_BT']:
     # Generic code
     #
 
-    SOURCES += [
-        'BluetoothHidManager.cpp',
-        'BluetoothInterface.cpp',
-        'BluetoothPbapRequestHandle.cpp',
-        'BluetoothUtils.cpp',
-        'BluetoothUuid.cpp',
-        'ObexBase.cpp'
-    ]
-
     if CONFIG['MOZ_B2G_RIL']:
         SOURCES += [
-            'BluetoothRilListener.cpp'
+            'common/BluetoothRilListener.cpp'
         ]
 
     SOURCES += [
@@ -34,13 +25,19 @@ if CONFIG['MOZ_B2G_BT']:
         'common/BluetoothGattDescriptor.cpp',
         'common/BluetoothGattServer.cpp',
         'common/BluetoothGattService.cpp',
+        'common/BluetoothHidManager.cpp',
+        'common/BluetoothInterface.cpp',
         'common/BluetoothLeDeviceEvent.cpp',
         'common/BluetoothManager.cpp',
         'common/BluetoothPairingHandle.cpp',
         'common/BluetoothPairingListener.cpp',
+        'common/BluetoothPbapRequestHandle.cpp',
         'common/BluetoothProfileController.cpp',
         'common/BluetoothReplyRunnable.cpp',
         'common/BluetoothService.cpp',
+        'common/BluetoothUtils.cpp',
+        'common/BluetoothUuid.cpp',
+        'common/ObexBase.cpp',
         'ipc/BluetoothChild.cpp',
         'ipc/BluetoothParent.cpp',
         'ipc/BluetoothServiceChildProcess.cpp',
@@ -132,10 +129,9 @@ EXPORTS.mozilla.dom.bluetooth.ipc += [
     'ipc/BluetoothMessageUtils.h',
 ]
 EXPORTS.mozilla.dom.bluetooth += [
-    'BluetoothCommon.h',
-    'BluetoothPbapRequestHandle.h',
     'common/BluetoothAdapter.h',
     'common/BluetoothClassOfDevice.h',
+    'common/BluetoothCommon.h',
     'common/BluetoothDevice.h',
     'common/BluetoothDiscoveryHandle.h',
     'common/BluetoothGatt.h',
@@ -147,6 +143,7 @@ EXPORTS.mozilla.dom.bluetooth += [
     'common/BluetoothManager.h',
     'common/BluetoothPairingHandle.h',
     'common/BluetoothPairingListener.h',
+    'common/BluetoothPbapRequestHandle.h',
 ]
 IPDL_SOURCES += [
     'ipc/BluetoothTypes.ipdlh',
