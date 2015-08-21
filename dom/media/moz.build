@@ -147,6 +147,7 @@ EXPORTS += [
     'VideoSegment.h',
     'VideoUtils.h',
     'VorbisUtils.h',
+    'XiphExtradata.h',
 ]
 
 EXPORTS.mozilla += [
@@ -248,6 +249,7 @@ UNIFIED_SOURCES += [
     'VideoTrackList.cpp',
     'VideoUtils.cpp',
     'WebVTTListener.cpp',
+    'XiphExtradata.cpp',
 ]
 
 if CONFIG['OS_TARGET'] == 'WINNT':
