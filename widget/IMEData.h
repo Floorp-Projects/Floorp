@@ -410,12 +410,8 @@ struct IMENotification final
   {
     switch (aMessage) {
       case NOTIFY_IME_OF_SELECTION_CHANGE:
-        mSelectionChangeData.mOffset = UINT32_MAX;
         mSelectionChangeData.mString = new nsString();
-        mSelectionChangeData.mWritingMode = 0;
-        mSelectionChangeData.mReversed = false;
-        mSelectionChangeData.mCausedByComposition = false;
-        mSelectionChangeData.mCausedBySelectionEvent = false;
+        mSelectionChangeData.Clear();
         break;
       case NOTIFY_IME_OF_TEXT_CHANGE:
         mTextChangeData.Clear();
@@ -600,6 +596,19 @@ struct IMENotification final
     bool IsInInt32Range() const
     {
       return mOffset + Length() <= INT32_MAX;
+    }
+    void Clear()
+    {
+      mOffset = UINT32_MAX;
+      mString->Truncate();
+      mWritingMode = 0;
+      mReversed = false;
+      mCausedByComposition = false;
+      mCausedBySelectionEvent = false;
+    }
+    bool IsValid() const
+    {
+      return mOffset != UINT32_MAX;
     }
   };
 
