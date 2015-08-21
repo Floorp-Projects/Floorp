@@ -225,11 +225,7 @@ class WebMBufferedState final
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebMBufferedState)
 
 public:
-  WebMBufferedState()
-    : mReentrantMonitor("WebMBufferedState")
-    , mLastBlockOffset(-1)
-    , mLastEndOffset(-1)
-  {
+  WebMBufferedState() : mReentrantMonitor("WebMBufferedState") {
     MOZ_COUNT_CTOR(WebMBufferedState);
   }
 
@@ -246,8 +242,6 @@ public:
 
   // Returns end offset of init segment or -1 if none found.
   int64_t GetInitEndOffset();
-  // Returns the end offset of the last complete block or -1 if none found.
-  int64_t GetLastBlockOffset();
 
   // Returns start time
   bool GetStartTime(uint64_t *aTime);
@@ -261,16 +255,12 @@ private:
     MOZ_COUNT_DTOR(WebMBufferedState);
   }
 
-  // Synchronizes access to the mTimeMapping array and mLastBlockOffset.
+  // Synchronizes access to the mTimeMapping array.
   ReentrantMonitor mReentrantMonitor;
 
   // Sorted (by offset) map of data offsets to timecodes.  Populated
   // on the main thread as data is received and parsed by WebMBufferedParsers.
   nsTArray<WebMTimeDataOffset> mTimeMapping;
-  // The last complete block parsed. -1 if not set.
-  int64_t mLastBlockOffset;
-  // The last seen data end offset. -1 if not set.
-  int64_t mLastEndOffset;
 
   // Sorted (by offset) live parser instances.  Main thread only.
   nsTArray<WebMBufferedParser> mRangeParsers;
