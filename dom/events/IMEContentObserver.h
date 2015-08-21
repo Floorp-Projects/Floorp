@@ -40,6 +40,7 @@ class IMEContentObserver final : public nsISelectionListener
                                , public nsIEditorObserver
 {
 public:
+  typedef widget::IMENotification::SelectionChangeData SelectionChangeData;
   typedef widget::IMENotification::TextChangeData TextChangeData;
   typedef widget::IMENotification::TextChangeDataBase TextChangeDataBase;
 
@@ -167,6 +168,15 @@ private:
     mTextChangeData.Clear();
   }
 
+  /**
+   * UpdateSelectionCache() updates mSelectionData with the latest selection.
+   * This should be called only when IsSafeToNotifyIME() returns true.
+   *
+   * Note that this does nothing if mUpdatePreference.WantSelectionChange()
+   * returns false.
+   */
+  bool UpdateSelectionCache();
+
   nsCOMPtr<nsIWidget> mWidget;
   nsCOMPtr<nsISelection> mSelection;
   nsCOMPtr<nsIContent> mRootContent;
@@ -229,6 +239,11 @@ private:
   FlatTextCache mStartOfRemovingTextRangeCache;
 
   TextChangeData mTextChangeData;
+
+  // mSelectionData is the last selection data which was notified.  This is
+  // modified by UpdateSelectionCache().  Note that mCausedBy* are always
+  // false.  Do NOT refer them.
+  SelectionChangeData mSelectionData;
 
   EventStateManager* mESM;
 

@@ -852,6 +852,35 @@ IMEContentObserver::PostSelectionChangeNotification(
   mIsSelectionChangeEventPending = true;
 }
 
+bool
+IMEContentObserver::UpdateSelectionCache()
+{
+  MOZ_ASSERT(IsSafeToNotifyIME());
+
+  if (!mUpdatePreference.WantSelectionChange()) {
+    return false;
+  }
+
+  mSelectionData.Clear();
+
+  // XXX Cannot we cache some information for reducing the cost to compute
+  //     selection offset and writing mode?
+  WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, mWidget);
+  ContentEventHandler handler(GetPresContext());
+  handler.OnQuerySelectedText(&selection);
+  if (NS_WARN_IF(!selection.mSucceeded)) {
+    return false;
+  }
+
+  mSelectionData.mOffset = selection.mReply.mOffset;
+  *mSelectionData.mString = selection.mReply.mString;
+  mSelectionData.SetWritingMode(selection.GetWritingMode());
+  mSelectionData.mReversed = selection.mReply.mReversed;
+  mSelectionData.mCausedByComposition = false;
+  mSelectionData.mCausedBySelectionEvent = false;
+  return mSelectionData.IsValid();
+}
+
 void
 IMEContentObserver::PostPositionChangeNotification()
 {
@@ -1060,13 +1089,7 @@ IMEContentObserver::SelectionChangeEvent::Run()
     return NS_OK;
   }
 
-  // XXX Cannot we cache some information for reducing the cost to compute
-  //     selection offset and writing mode?
-  WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT,
-                                    mIMEContentObserver->mWidget);
-  ContentEventHandler handler(mIMEContentObserver->GetPresContext());
-  handler.OnQuerySelectedText(&selection);
-  if (NS_WARN_IF(!selection.mSucceeded)) {
+  if (NS_WARN_IF(!mIMEContentObserver->UpdateSelectionCache())) {
     return NS_OK;
   }
 
@@ -1076,15 +1099,8 @@ IMEContentObserver::SelectionChangeEvent::Run()
   }
 
   IMENotification notification(NOTIFY_IME_OF_SELECTION_CHANGE);
-  notification.mSelectionChangeData.mOffset = selection.mReply.mOffset;
-  *notification.mSelectionChangeData.mString = selection.mReply.mString;
-  notification.mSelectionChangeData.SetWritingMode(
-                                      selection.GetWritingMode());
-  notification.mSelectionChangeData.mReversed = selection.mReply.mReversed;
-  notification.mSelectionChangeData.mCausedByComposition =
-    mCausedByComposition;
-  notification.mSelectionChangeData.mCausedBySelectionEvent =
-    mCausedBySelectionEvent;
+  notification.SetData(mIMEContentObserver->mSelectionData,
+                       mCausedByComposition, mCausedBySelectionEvent);
   IMEStateManager::NotifyIME(notification, mIMEContentObserver->mWidget);
   return NS_OK;
 }
@@ -1106,7 +1122,7 @@ IMEContentObserver::TextChangeEvent::Run()
   }
 
   IMENotification notification(NOTIFY_IME_OF_TEXT_CHANGE);
-  notification.mTextChangeData = mTextChangeData;
+  notification.SetData(mTextChangeData);
   IMEStateManager::NotifyIME(notification, mIMEContentObserver->mWidget);
   return NS_OK;
 }
