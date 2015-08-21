@@ -210,15 +210,16 @@
   background-image: url(chrome://browser/skin/controlcenter/conn-secure.svg);
 }
 
+/* Use [isbroken] to make sure we don't show a lock on an http page. See Bug 1192162. */
 #identity-popup[ciphers=weak] #identity-popup-securityView,
 #identity-popup[ciphers=weak] #identity-popup-security-content,
-#identity-popup[mixedcontent~=passive-loaded] #identity-popup-securityView,
-#identity-popup[mixedcontent~=passive-loaded] #identity-popup-security-content {
+#identity-popup[mixedcontent~=passive-loaded][isbroken] #identity-popup-securityView,
+#identity-popup[mixedcontent~=passive-loaded][isbroken] #identity-popup-security-content {
   background-image: url(chrome://browser/skin/controlcenter/conn-degraded.svg);
 }
 
-#identity-popup[mixedcontent~=active-loaded] #identity-popup-securityView,
-#identity-popup[mixedcontent~=active-loaded] #identity-popup-security-content {
+#identity-popup[mixedcontent~=active-loaded][isbroken] #identity-popup-securityView,
+#identity-popup[mixedcontent~=active-loaded][isbroken] #identity-popup-security-content {
   background-image: url(chrome://browser/skin/controlcenter/mcb-disabled.svg);
 }
 
