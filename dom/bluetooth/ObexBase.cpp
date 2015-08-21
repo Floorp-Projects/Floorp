@@ -20,14 +20,14 @@ AppendHeader(uint8_t aHeaderId, uint8_t* aRetBuf, int aBufferSize,
              const uint8_t* aData, int aLength)
 {
   int headerLength = aLength + 3;
-  int writtenLength = (headerLength < aBufferSize) ? headerLength : aBufferSize;
 
   aRetBuf[0] = aHeaderId;
   aRetBuf[1] = (headerLength & 0xFF00) >> 8;
   aRetBuf[2] = headerLength & 0x00FF;
-  memcpy(&aRetBuf[3], aData, writtenLength - 3);
+  memcpy(&aRetBuf[3], aData, (aLength < aBufferSize - 3) ? aLength
+                                                         : aBufferSize - 3);
 
-  return writtenLength;
+  return headerLength;
 }
 
 /**
@@ -71,34 +71,6 @@ AppendHeaderWho(uint8_t* aRetBuf, int aBufferSize, const uint8_t* aWho,
 {
   return AppendHeader(ObexHeaderId::Who, aRetBuf, aBufferSize,
                       aWho, aLength);
-}
-
-int
-AppendHeaderAppParameters(uint8_t* aRetBuf, int aBufferSize,
-                          const uint8_t* aAppParameters, int aLength)
-{
-  return AppendHeader(ObexHeaderId::AppParameters, aRetBuf, aBufferSize,
-                      aAppParameters, aLength);
-}
-
-int
-AppendAppParameter(uint8_t* aRetBuf, int aBufferSize, const uint8_t aTagId,
-                   const uint8_t* aValue, int aLength)
-{
-  // An application parameter is a [tag]-[length]-[value] triplet. The [tag] and
-  // [length] fields are 1-byte length each.
-
-  if (aBufferSize < aLength + 2) {
-    // aBufferSize should be larger than size of AppParameter + header.
-    BT_WARNING("Return buffer size is too small for the AppParameter");
-    return 0;
-  }
-
-  aRetBuf[0] = aTagId;
-  aRetBuf[1] = aLength;
-  memcpy(&aRetBuf[2], aValue, aLength);
-
-  return aLength + 2;
 }
 
 int
