@@ -101,12 +101,9 @@ function buildOptionListForChildren(node) {
     if (tagName == 'OPTION' || tagName == 'OPTGROUP') {
       let textContent =
         tagName == 'OPTGROUP' ? child.getAttribute("label")
-                              : child.textContent;
-
-      if (textContent != null) {
-        textContent = textContent.trim();
-      } else {
-        textContent = ""
+                              : child.text;
+      if (textContent == null) {
+        textContent = "";
       }
 
       let info = {
