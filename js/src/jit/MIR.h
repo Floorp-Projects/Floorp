@@ -5775,8 +5775,6 @@ class MSqrt
     MSqrt(MDefinition* num, MIRType type)
       : MUnaryInstruction(num)
     {
-        printf("type: %d\n", type);
-        printf("type: %d\n", num->type());
         setResultType(type);
         specialization_ = type;
         setMovable();

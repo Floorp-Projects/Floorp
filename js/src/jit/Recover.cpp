@@ -819,8 +819,6 @@ RAbs::recover(JSContext* cx, SnapshotIterator& iter) const
 bool
 MSqrt::writeRecoverData(CompactBufferWriter& writer) const
 {
-    printf("recover type: %d\n", type());
-
     MOZ_ASSERT(canRecoverOnBailout());
     writer.writeUnsigned(uint32_t(RInstruction::Recover_Sqrt));
     writer.writeByte(type() == MIRType_Float32);
@@ -837,8 +835,6 @@ RSqrt::recover(JSContext* cx, SnapshotIterator& iter) const
 {
     RootedValue num(cx, iter.read());
     RootedValue result(cx);
-
-    DumpValue(num);
 
     MOZ_ASSERT(num.isNumber());
     if (!math_sqrt_handle(cx, num, &result))
@@ -1102,18 +1098,10 @@ RToDouble::RToDouble(CompactBufferReader& reader)
 bool
 RToDouble::recover(JSContext* cx, SnapshotIterator& iter) const
 {
-    RootedValue v(cx, iter.read());
-    RootedValue result(cx);
+    Value v = iter.read();
 
     MOZ_ASSERT(!v.isObject());
-    MOZ_ASSERT(!v.isSymbol());
-
-    double dbl;
-    if (!ToNumber(cx, v, &dbl))
-        return false;
-
-    result.setDouble(dbl);
-    iter.storeInstructionResult(result);
+    iter.storeInstructionResult(v);
     return true;
 }
 
