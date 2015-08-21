@@ -252,6 +252,56 @@ let tests = [
   },
 
   /**
+   * Test that the engagement button opens the engagement URL.
+   */
+  function test_heartbeat_engagement_button(done) {
+    let engagementURL = "http://example.com";
+    let flowId = "ui-engagewithfirefox-" + Math.random();
+    let originalTabCount = gBrowser.tabs.length;
+    const expectedTabCount = originalTabCount + 1;
+    let heartbeatEngagedSeen = false;
+
+    gContentAPI.observe(function (aEventName, aData) {
+      switch (aEventName) {
+        case "Heartbeat:NotificationOffered": {
+          info("'Heartbeat:Offered' notification received (timestamp " + aData.timestamp.toString() + ").");
+          ok(Number.isFinite(aData.timestamp), "Timestamp must be a number.");
+          let notification = getHeartbeatNotification(flowId);
+          is(notification.querySelectorAll(".star-x").length, 0, "No stars should be present");
+          // The UI was just shown. We can simulate a click on the engagement button.
+          let engagementButton = notification.querySelector(".notification-button");
+          is(engagementButton.label, "Engage Me", "Check engagement button text");
+          engagementButton.doCommand();
+          break;
+        }
+        case "Heartbeat:Engaged": {
+          info("'Heartbeat:Engaged' notification received (timestamp " + aData.timestamp.toString() + ").");
+          ok(Number.isFinite(aData.timestamp), "Timestamp must be a number.");
+          heartbeatEngagedSeen = true;
+          break;
+        }
+        case "Heartbeat:NotificationClosed": {
+          info("'Heartbeat:NotificationClosed' notification received (timestamp " + aData.timestamp.toString() + ").");
+          ok(heartbeatEngagedSeen, "Heartbeat:Engaged should have been received");
+          ok(Number.isFinite(aData.timestamp), "Timestamp must be a number.");
+          is(gBrowser.tabs.length, expectedTabCount, "Engagement URL should open in a new tab.");
+          gBrowser.removeCurrentTab();
+          done();
+          break;
+        }
+        default: {
+          // We are not expecting other states for this test.
+          ok(false, "Unexpected notification received: " + aEventName);
+        }
+      }
+    });
+
+    gContentAPI.showHeartbeat("Do you want to engage with us?", "Thank you!", flowId, engagementURL, null, null, {
+      engagementButtonLabel: "Engage Me",
+    });
+  },
+
+  /**
    * Test that the learn more link is displayed and that the page is correctly opened when
    * clicking on it.
    */
@@ -292,5 +342,23 @@ let tests = [
 
     gContentAPI.showHeartbeat("How would you rate Firefox?", "Thank you!", flowId, dummyURL,
                               "What is this?", dummyURL);
-  }
+  },
+
+  function test_invalidEngagementButtonLabel(done) {
+    let engagementURL = "http://example.com";
+    let flowId = "ui-engagewithfirefox-" + Math.random();
+
+    Services.mm.addMessageListener("UITour:onPageEvent", function onPageEvent(aMessage) {
+      Services.mm.removeMessageListener("UITour:onPageEvent", onPageEvent);
+      SimpleTest.executeSoon(() => {
+        ok(!(UITour.tourBrowsersByWindow.get(window) &&
+             UITour.tourBrowsersByWindow.get(window).has(gBrowser.selectedBrowser)),
+           "Invalid engagementButtonLabel should prevent init");
+      });
+      done();
+    });
+    gContentAPI.showHeartbeat("Do you want to engage with us?", "Thank you!", flowId, engagementURL, null, null, {
+      engagementButtonLabel: 42,
+    });
+  },
 ];
