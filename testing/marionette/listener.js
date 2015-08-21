@@ -208,6 +208,7 @@ let getCurrentUrlFn = dispatch(getCurrentUrl);
 let findElementContentFn = dispatch(findElementContent);
 let findElementsContentFn = dispatch(findElementsContent);
 let isElementSelectedFn = dispatch(isElementSelected);
+let getElementLocationFn = dispatch(getElementLocation);
 
 /**
  * Start all message listeners
@@ -244,7 +245,7 @@ function startListeners() {
   addMessageListenerId("Marionette:isElementEnabled", isElementEnabledFn);
   addMessageListenerId("Marionette:isElementSelected", isElementSelectedFn);
   addMessageListenerId("Marionette:sendKeysToElement", sendKeysToElement);
-  addMessageListenerId("Marionette:getElementLocation", getElementLocation); //deprecated
+  addMessageListenerId("Marionette:getElementLocation", getElementLocationFn); //deprecated
   addMessageListenerId("Marionette:clearElement", clearElement);
   addMessageListenerId("Marionette:switchToFrame", switchToFrame);
   addMessageListenerId("Marionette:deleteSession", deleteSession);
@@ -349,7 +350,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:isElementEnabled", isElementEnabledFn);
   removeMessageListenerId("Marionette:isElementSelected", isElementSelectedFn);
   removeMessageListenerId("Marionette:sendKeysToElement", sendKeysToElement);
-  removeMessageListenerId("Marionette:getElementLocation", getElementLocation);
+  removeMessageListenerId("Marionette:getElementLocation", getElementLocationFn);
   removeMessageListenerId("Marionette:clearElement", clearElement);
   removeMessageListenerId("Marionette:switchToFrame", switchToFrame);
   removeMessageListenerId("Marionette:deleteSession", deleteSession);
@@ -1582,20 +1583,10 @@ function sendKeysToElement(msg) {
 /**
  * Get the element's top left-hand corner point.
  */
-function getElementLocation(msg) {
-  let command_id = msg.json.command_id;
-  try {
-    let el = elementManager.getKnownElement(msg.json.id, curFrame);
-    let rect = el.getBoundingClientRect();
-
-    let location = {};
-    location.x = rect.left;
-    location.y = rect.top;
-
-    sendResponse({value: location}, command_id);
-  } catch (e) {
-    sendError(e, command_id);
-  }
+function getElementLocation(id) {
+  let el = elementManager.getKnownElement(id, curFrame);
+  let rect = el.getBoundingClientRect();
+  return {x: rect.left, y: rect.top};
 }
 
 /**
