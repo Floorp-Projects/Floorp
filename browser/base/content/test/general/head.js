@@ -782,38 +782,124 @@ function assertMixedContentBlockingState(tabbrowser, states = {}) {
   let doc = tabbrowser.ownerDocument;
   let identityBox = gIdentityHandler._identityBox;
   let classList = identityBox.classList;
+  let identityBoxImage = tabbrowser.ownerGlobal.getComputedStyle(doc.getElementById("page-proxy-favicon"), "").
+                         getPropertyValue("list-style-image");
 
-  // Make sure the identity box UI has the correct mixedcontent states
-  is(classList.contains("mixedActiveContent"), activeLoaded,
-      "identityBox has expected class for activeLoaded");
-  is(classList.contains("mixedActiveBlocked"), activeBlocked && !passiveLoaded,
-      "identityBox has expected class for activeBlocked && !passiveLoaded");
-  is(classList.contains("mixedDisplayContent"), passiveLoaded && !activeLoaded,
-     "identityBox has expected class for passiveLoaded && activeLoaded");
-  is(classList.contains("mixedDisplayContentLoadedActiveBlocked"), passiveLoaded && activeBlocked,
-     "identityBox has expected class for passiveLoaded && activeBlocked");
-  is (classList.contains("mixedContent"), activeBlocked || activeLoaded || passiveLoaded,
-     "identityBox is showing no mixed content");
+  let stateSecure = gIdentityHandler._state & Ci.nsIWebProgressListener.STATE_IS_SECURE;
+  let stateBroken = gIdentityHandler._state & Ci.nsIWebProgressListener.STATE_IS_BROKEN;
+  let stateInsecure = gIdentityHandler._state & Ci.nsIWebProgressListener.STATE_IS_INSECURE;
+  let stateActiveBlocked = gIdentityHandler._state & Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT;
+  let stateActiveLoaded = gIdentityHandler._state & Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT;
+  let statePassiveLoaded = gIdentityHandler._state & Ci.nsIWebProgressListener.STATE_LOADED_MIXED_DISPLAY_CONTENT;
+
+  is(activeBlocked, !!stateActiveBlocked, "Expected state for activeBlocked matches UI state");
+  is(activeLoaded, !!stateActiveLoaded, "Expected state for activeLoaded matches UI state");
+  is(passiveLoaded, !!statePassiveLoaded, "Expected state for passiveLoaded matches UI state");
+
+  if (stateInsecure) {
+    // HTTP request, there should be no MCB classes for the identity box and the non secure icon
+    // should always be visible regardless of MCB state.
+    ok(classList.contains("unknownIdentity"), "unknownIdentity on HTTP page");
+    is(identityBoxImage, "url(\"chrome://browser/skin/identity-not-secure.svg\")", "Using 'non-secure' icon");
+
+    ok(!classList.contains("mixedActiveContent"), "No MCB icon on HTTP page");
+    ok(!classList.contains("mixedActiveBlocked"), "No MCB icon on HTTP page");
+    ok(!classList.contains("mixedDisplayContent"), "No MCB icon on HTTP page");
+    ok(!classList.contains("mixedDisplayContentLoadedActiveBlocked"), "No MCB icon on HTTP page");
+    ok(!classList.contains("mixedContent"), "No MCB icon on HTTP page");
+  } else {
+    // Make sure the identity box UI has the correct mixedcontent states and icons
+    is(classList.contains("mixedActiveContent"), activeLoaded,
+        "identityBox has expected class for activeLoaded");
+    is(classList.contains("mixedActiveBlocked"), activeBlocked && !passiveLoaded,
+        "identityBox has expected class for activeBlocked && !passiveLoaded");
+    is(classList.contains("mixedDisplayContent"), passiveLoaded && !(activeLoaded || activeBlocked),
+       "identityBox has expected class for passiveLoaded && !(activeLoaded || activeBlocked)");
+    is(classList.contains("mixedDisplayContentLoadedActiveBlocked"), passiveLoaded && activeBlocked,
+       "identityBox has expected class for passiveLoaded && activeBlocked");
+    is (classList.contains("mixedContent"), activeBlocked || activeLoaded || passiveLoaded,
+       "identityBox has expected class for mixed content");
+
+    if (activeLoaded) {
+      is(identityBoxImage, "url(\"chrome://browser/skin/identity-mixed-active-loaded.svg\")",
+        "Using active loaded icon");
+    }
+    if (activeBlocked && !passiveLoaded) {
+      is(identityBoxImage, "url(\"chrome://browser/skin/identity-mixed-active-blocked.svg\")",
+        "Using active blocked icon");
+    }
+    if (passiveLoaded && !(activeLoaded || activeBlocked)) {
+      is(identityBoxImage, "url(\"chrome://browser/skin/identity-mixed-passive-loaded.svg\")",
+        "Using passive loaded icon");
+    }
+    if (passiveLoaded && activeBlocked) {
+      is(identityBoxImage, "url(\"chrome://browser/skin/identity-mixed-passive-loaded.svg\")",
+        "Using active blocked and passive loaded icon");
+    }
+  }
 
   // Make sure the identity popup has the correct mixedcontent states
   gIdentityHandler._identityBox.click();
   let popupAttr = doc.getElementById("identity-popup").getAttribute("mixedcontent");
   let bodyAttr = doc.getElementById("identity-popup-securityView-body").getAttribute("mixedcontent");
 
-  is(popupAttr.contains("active-loaded"), activeLoaded,
+  is(popupAttr.includes("active-loaded"), activeLoaded,
       "identity-popup has expected attr for activeLoaded");
-  is(bodyAttr.contains("active-loaded"), activeLoaded,
+  is(bodyAttr.includes("active-loaded"), activeLoaded,
       "securityView-body has expected attr for activeLoaded");
 
-  is(popupAttr.contains("active-blocked"), activeBlocked,
+  is(popupAttr.includes("active-blocked"), activeBlocked,
       "identity-popup has expected attr for activeBlocked");
-  is(bodyAttr.contains("active-blocked"), activeBlocked,
+  is(bodyAttr.includes("active-blocked"), activeBlocked,
       "securityView-body has expected attr for activeBlocked");
 
-  is(popupAttr.contains("passive-loaded"), passiveLoaded,
+  is(popupAttr.includes("passive-loaded"), passiveLoaded,
       "identity-popup has expected attr for passiveLoaded");
-  is(bodyAttr.contains("passive-loaded"), passiveLoaded,
+  is(bodyAttr.includes("passive-loaded"), passiveLoaded,
       "securityView-body has expected attr for passiveLoaded");
+
+  // Make sure the correct icon is visible in the Control Center.
+  // This logic is controlled with CSS, so this helps prevent regressions there.
+  let securityView = doc.getElementById("identity-popup-securityView");
+  let securityContent = doc.getElementById("identity-popup-security-content");
+  let securityViewBG = tabbrowser.ownerGlobal.getComputedStyle(securityView, "").
+                       getPropertyValue("background-image");
+  let securityContentBG = tabbrowser.ownerGlobal.getComputedStyle(securityView, "").
+                          getPropertyValue("background-image");
+
+  if (stateInsecure) {
+    is(securityViewBG, "url(\"chrome://browser/skin/controlcenter/conn-not-secure.svg\")",
+      "CC using 'not secure' icon");
+    is(securityContentBG, "url(\"chrome://browser/skin/controlcenter/conn-not-secure.svg\")",
+      "CC using 'not secure' icon");
+  }
+
+  if (stateSecure) {
+    is(securityViewBG, "url(\"chrome://browser/skin/controlcenter/conn-secure.svg\")",
+      "CC using secure icon");
+    is(securityContentBG, "url(\"chrome://browser/skin/controlcenter/conn-secure.svg\")",
+      "CC using secure icon");
+  }
+
+  if (stateBroken) {
+    if (activeLoaded) {
+      is(securityViewBG, "url(\"chrome://browser/skin/controlcenter/mcb-disabled.svg\")",
+        "CC using active loaded icon");
+      is(securityContentBG, "url(\"chrome://browser/skin/controlcenter/mcb-disabled.svg\")",
+        "CC using active loaded icon");
+    } else if (activeBlocked || passiveLoaded) {
+      is(securityViewBG, "url(\"chrome://browser/skin/controlcenter/conn-degraded.svg\")",
+        "CC using degraded icon");
+      is(securityContentBG, "url(\"chrome://browser/skin/controlcenter/conn-degraded.svg\")",
+        "CC using degraded icon");
+    } else {
+      // There is a case here with weak ciphers, but no bc tests are handling this yet.
+      is(securityViewBG, "url(\"chrome://browser/skin/controlcenter/conn-degraded.svg\")",
+        "CC using degraded icon");
+      is(securityContentBG, "url(\"chrome://browser/skin/controlcenter/conn-degraded.svg\")",
+        "CC using degraded icon");
+    }
+  }
 
   gIdentityHandler._identityPopup.hidden = true;
 }
