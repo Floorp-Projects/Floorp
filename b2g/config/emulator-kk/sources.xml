@@ -118,7 +118,7 @@
   <project name="platform_system_bluetoothd" path="system/bluetoothd" remote="b2g" revision="58bf825bb7a0aa981237993db731236a1f19c492"/>
   <project name="platform/system/extras" path="system/extras" revision="5356165f67f4a81c2ef28671c13697f1657590df"/>
   <project name="platform/system/media" path="system/media" revision="be0e2fe59a8043fa5200f75697df9220a99abe9d"/>
-  <project name="platform_system_libfdio" path="system/libfdio" remote="b2g" revision="3c5405863d2002f665ef2b901abb3853c420129b"/>
+  <project name="platform_system_libfdio" path="system/libfdio" remote="b2g" revision="34adfb400e031f3dd3353d92413572db5e3a7376"/>
   <project name="platform/system/netd" path="system/netd" revision="36704b0da24debcab8090156568ac236315036bb"/>
   <project name="platform/system/security" path="system/security" revision="583374f69f531ba68fc3dcbff1f74893d2a96406"/>
   <project name="platform/system/vold" path="system/vold" revision="d4455b8cf361f8353e8aebac15ffd64b4aedd2b9"/>
@@ -128,7 +128,7 @@
   <default remote="caf" revision="refs/tags/android-4.4.2_r1" sync-j="4"/>
   <!-- Emulator specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="72ffdf71c68a96309212eb13d63560d66db14c9e"/>
-  <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="dea95f1a539f037db1b00732048a8722532b4d47"/>
+  <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="8d4018ebd33ac3f1a043b2d54bc578028656a659"/>
   <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="96f78964a9a317a6c8b494ab71e10e0276d02490"/>
   <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="f37bd545063039e30a92f2550ae78c0e6e4e2d08"/>
   <project name="platform_external_wpa_supplicant_8" path="external/wpa_supplicant_8" remote="b2g" revision="0c6a6547cd1fd302fa2b0f6e375654df36bf0ec4"/>
