@@ -197,6 +197,29 @@ nsScreen::GetSlowMozOrientation(nsAString& aOrientation)
   return NS_OK;
 }
 
+static void
+UpdateDocShellOrientationLock(nsPIDOMWindow* aWindow,
+                              ScreenOrientationInternal aOrientation)
+{
+  if (!aWindow) {
+    return;
+  }
+
+  nsCOMPtr<nsIDocShell> docShell = aWindow->GetDocShell();
+  if (!docShell) {
+    return;
+  }
+
+  nsCOMPtr<nsIDocShellTreeItem> root;
+  docShell->GetSameTypeRootTreeItem(getter_AddRefs(root));
+  nsCOMPtr<nsIDocShell> rootShell(do_QueryInterface(root));
+  if (!rootShell) {
+    return;
+  }
+
+  rootShell->SetOrientationLock(aOrientation);
+}
+
 bool
 nsScreen::MozLockOrientation(const nsAString& aOrientation, ErrorResult& aRv)
 {
@@ -245,8 +268,10 @@ nsScreen::MozLockOrientation(const Sequence<nsString>& aOrientations,
     case ScreenOrientation::LOCK_DENIED:
       return false;
     case ScreenOrientation::LOCK_ALLOWED:
+      UpdateDocShellOrientationLock(GetOwner(), orientation);
       return mScreenOrientation->LockDeviceOrientation(orientation, false, aRv);
     case ScreenOrientation::FULLSCREEN_LOCK_ALLOWED:
+      UpdateDocShellOrientationLock(GetOwner(), orientation);
       return mScreenOrientation->LockDeviceOrientation(orientation, true, aRv);
   }
 
@@ -258,6 +283,7 @@ nsScreen::MozLockOrientation(const Sequence<nsString>& aOrientations,
 void
 nsScreen::MozUnlockOrientation()
 {
+  UpdateDocShellOrientationLock(GetOwner(), eScreenOrientation_None);
   mScreenOrientation->UnlockDeviceOrientation();
 }
 
