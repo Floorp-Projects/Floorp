@@ -12,6 +12,10 @@
   --even-animation-timeline-background-color: rgba(128,128,128,0.03);
 }
 
+:root {
+  --timeline-sidebar-width: 150px;
+}
+
 html {
   height: 100%;
 }
@@ -127,17 +131,40 @@ body {
   background-repeat: repeat-y;
   /* The animations are drawn 150px from the left edge so that animated nodes
      can be displayed in a sidebar */
-  background-position: 150px 0;
+  background-position: var(--timeline-sidebar-width) 0;
   display: flex;
   flex-direction: column;
 }
 
+.animation-timeline .scrubber {
+  position: absolute;
+  height: 100%;
+  width: var(--timeline-sidebar-width);
+  border-right: 1px solid red;
+  box-sizing: border-box;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.animation-timeline .scrubber::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 1px;
+  right: -6px;
+  border-top: 5px solid red;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+}
+
 .animation-timeline .time-header {
-  margin-left: 150px;
+  margin-left: var(--timeline-sidebar-width);
   height: 20px;
   overflow: hidden;
   position: relative;
   border-bottom: 1px solid var(--theme-splitter-color);
+  cursor: col-resize;
+  -moz-user-select: none;
 }
 
 .animation-timeline .time-header .time-tick {
@@ -167,7 +194,7 @@ body {
 }
 
 .animation-timeline .animation .target {
-  width: 150px;
+  width: var(--timeline-sidebar-width);
   overflow: hidden;
   height: 100%;
 }
@@ -179,7 +206,7 @@ body {
 .animation-timeline .animation .time-block {
   position: absolute;
   top: 0;
-  left: 150px;
+  left: var(--timeline-sidebar-width);
   right: 0;
   height: 100%;
 }
