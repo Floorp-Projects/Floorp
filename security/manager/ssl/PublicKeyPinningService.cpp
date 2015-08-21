@@ -271,7 +271,8 @@ FindPinningInformation(const char* hostname, mozilla::pkix::Time time,
 static nsresult
 CheckPinsForHostname(const CERTCertList* certList, const char* hostname,
                      bool enforceTestMode, mozilla::pkix::Time time,
-             /*out*/ bool& chainHasValidPins)
+             /*out*/ bool& chainHasValidPins,
+    /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo)
 {
   chainHasValidPins = false;
   if (!certList) {
@@ -316,22 +317,32 @@ CheckPinsForHostname(const CERTCertList* certList, const char* hostname,
     }
     // We can collect per-host pinning violations for this host because it is
     // operationally critical to Firefox.
-    if (staticFingerprints->mId != kUnknownId) {
-      int32_t bucket = staticFingerprints->mId * 2 + (enforceTestModeResult ? 1 : 0);
-      histogram = staticFingerprints->mTestMode
-        ? Telemetry::CERT_PINNING_MOZ_TEST_RESULTS_BY_HOST
-        : Telemetry::CERT_PINNING_MOZ_RESULTS_BY_HOST;
-      Telemetry::Accumulate(histogram, bucket);
-    } else {
-      Telemetry::Accumulate(histogram, enforceTestModeResult ? 1 : 0);
+    if (pinningTelemetryInfo) {
+      if (staticFingerprints->mId != kUnknownId) {
+        int32_t bucket = staticFingerprints->mId * 2
+                         + (enforceTestModeResult ? 1 : 0);
+        histogram = staticFingerprints->mTestMode
+          ? Telemetry::CERT_PINNING_MOZ_TEST_RESULTS_BY_HOST
+          : Telemetry::CERT_PINNING_MOZ_RESULTS_BY_HOST;
+        pinningTelemetryInfo->certPinningResultBucket = bucket;
+      } else {
+        pinningTelemetryInfo->certPinningResultBucket =
+            enforceTestModeResult ? 1 : 0;
+      }
+      pinningTelemetryInfo->accumulateResult = true;
+      pinningTelemetryInfo->certPinningResultHistogram = histogram;
     }
 
     // We only collect per-CA pinning statistics upon failures.
     CERTCertListNode* rootNode = CERT_LIST_TAIL(certList);
     // Only log telemetry if the certificate list is non-empty.
     if (!CERT_LIST_END(rootNode, certList)) {
-      if (!enforceTestModeResult) {
-        AccumulateTelemetryForRootCA(Telemetry::CERT_PINNING_FAILURES_BY_CA, rootNode->cert);
+      if (!enforceTestModeResult && pinningTelemetryInfo) {
+        int32_t binNumber = RootCABinNumber(&rootNode->cert->derCert);
+        if (binNumber != ROOT_CERTIFICATE_UNKNOWN ) {
+          pinningTelemetryInfo->accumulateForRoot = true;
+          pinningTelemetryInfo->rootBucket = binNumber;
+        }
       }
     }
 
@@ -350,7 +361,8 @@ PublicKeyPinningService::ChainHasValidPins(const CERTCertList* certList,
                                            const char* hostname,
                                            mozilla::pkix::Time time,
                                            bool enforceTestMode,
-                                   /*out*/ bool& chainHasValidPins)
+                                   /*out*/ bool& chainHasValidPins,
+                          /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo)
 {
   chainHasValidPins = false;
   if (!certList) {
@@ -361,7 +373,8 @@ PublicKeyPinningService::ChainHasValidPins(const CERTCertList* certList,
   }
   nsAutoCString canonicalizedHostname(CanonicalizeHostname(hostname));
   return CheckPinsForHostname(certList, canonicalizedHostname.get(),
-                              enforceTestMode, time, chainHasValidPins);
+                              enforceTestMode, time, chainHasValidPins,
+                              pinningTelemetryInfo);
 }
 
 nsresult
