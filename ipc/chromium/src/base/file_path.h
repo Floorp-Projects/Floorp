@@ -116,6 +116,10 @@ class FilePath {
   FilePath(const FilePath& that) : path_(that.path_) {}
   explicit FilePath(const StringType& path) : path_(path) {}
 
+#if defined(OS_WIN)
+  explicit FilePath(const wchar_t* path) : path_(path) {}
+#endif
+
   FilePath& operator=(const FilePath& that) {
     path_ = that.path_;
     return *this;

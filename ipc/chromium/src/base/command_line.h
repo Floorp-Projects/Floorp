@@ -119,6 +119,12 @@ class CommandLine {
   // Append a loose value to the command line.
   void AppendLooseValue(const std::wstring& value);
 
+#if defined(OS_WIN)
+  void AppendLooseValue(const wchar_t* value) {
+    AppendLooseValue(std::wstring(value));
+  }
+#endif
+
   // Append the arguments from another command line to this one.
   // If |include_program| is true, include |other|'s program as well.
   void AppendArguments(const CommandLine& other,
