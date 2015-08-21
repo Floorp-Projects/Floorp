@@ -2119,8 +2119,7 @@ GeckoDriver.prototype.getElementValueOfCssProperty = function(cmd, resp) {
       break;
 
     case Context.CONTENT:
-      resp.value = yield this.listener.getElementValueOfCssProperty(
-          {id: id, propertyName: prop});
+      resp.value = yield this.listener.getElementValueOfCssProperty(id, prop);
       break;
   }
 };
