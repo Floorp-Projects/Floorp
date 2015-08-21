@@ -107,7 +107,7 @@ public:
                             bool* aFinished) override
   {
     if (!mReverb) {
-      *aOutput = aInput;
+      aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
       return;
     }
 
