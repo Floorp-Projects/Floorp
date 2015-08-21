@@ -1086,6 +1086,7 @@ IMEContentObserver::SelectionChangeEvent::Run()
     return NS_OK;
   }
 
+  SelectionChangeData lastSelChangeData = mIMEContentObserver->mSelectionData;
   if (NS_WARN_IF(!mIMEContentObserver->UpdateSelectionCache())) {
     return NS_OK;
   }
@@ -1100,6 +1101,17 @@ IMEContentObserver::SelectionChangeEvent::Run()
 
   // The state may be changed since querying content causes flushing layout.
   if (!CanNotifyIME()) {
+    return NS_OK;
+  }
+
+  // If the selection isn't changed actually, we shouldn't notify IME of
+  // selection change.
+  SelectionChangeData& newSelChangeData = mIMEContentObserver->mSelectionData;
+  if (lastSelChangeData.IsValid() &&
+      lastSelChangeData.mOffset == newSelChangeData.mOffset &&
+      lastSelChangeData.String() == newSelChangeData.String() &&
+      lastSelChangeData.GetWritingMode() == newSelChangeData.GetWritingMode() &&
+      lastSelChangeData.mReversed == newSelChangeData.mReversed) {
     return NS_OK;
   }
 
