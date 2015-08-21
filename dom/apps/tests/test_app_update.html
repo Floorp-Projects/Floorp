@@ -17,13 +17,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
   var gBaseURL = 'http://test/tests/dom/apps/tests/';
   var gHostedManifestURL = gBaseURL + 'file_app.sjs?apptype=hosted&getmanifest=true';
   var gCachedManifestURL = gBaseURL + 'file_app.sjs?apptype=cached&getmanifest=true';
-  var gTrustedManifestURL = gBaseURL + 'file_app.sjs?apptype=trusted&getmanifest=true';
   var gGenerator;
   // We need to set the trusted hosted app csp pref since it's only in
   // b2g.js for now.
   function setCSPPrefs() {
-    SpecialPowers.pushPrefEnv({'set':[["security.apps.trusted.CSP.default",
-"default-src *; object-src 'none'"], ["dom.mozBrowserFramesEnabled",true]]},
+    SpecialPowers.pushPrefEnv({'set':[["dom.mozBrowserFramesEnabled",true]]},
       function() {  gGenerator = runTest(); gGenerator.next(); });
   }
 
@@ -190,54 +188,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
     request.onsuccess = continueTest;
     yield undefined;
     info("Uninstalled hosted appcache app");
-
-    /**
-      * DISABLED FOR NOW UNTIL WE CAN TEST PINNING PROPERLY
-      */
-    // Install the trusted app.
-    /*setAppVersion(4, continueTest);
-    yield undefined;
-    ok(true, "Installing trusted app");
-    var request = navigator.mozApps.install(gTrustedManifestURL);
-    request.onerror = mozAppsError;
-    request.onsuccess = continueTest;
-    yield undefined;
-    var app = request.result;
-    ok(app, "App is non-null");
-    if (app.installState == "pending") {
-      ok(true, "App is pending. Waiting for progress");
-      app.onprogress = function() ok(true, "Got download progress");
-      app.ondownloadsuccess = continueTest;
-      app.ondownloaderror = mozAppsError;
-      yield undefined;
-    }
-    is(app.installState, "installed", "Trusted App is installed");
-    is(app.manifest.type, "trusted", "App is trusted");
-*/
-    // Check the cached app.
-    /*checkAppState(app, true, 4, continueTest);
-    yield undefined;*/
-
-    // Check for updates. The current infrastructure always returns a new appcache
-    // manifest, so there should always be an update.
-    /*var lastCheck = app.lastUpdateCheck;
-    ok(true, "Setting callbacks");
-    app.ondownloadapplied = function() ok(true, "downloadapplied fired.");
-    app.ondownloadavailable = function() ok(false, "downloadavailable fired");
-    ok(true, "Checking for updates");
-    var request = app.checkForUpdate();
-    request.onerror = mozAppsError;
-    request.onsuccess = continueTest;
-    yield undefined;
-    todo(app.lastUpdateCheck > lastCheck, "lastUpdateCheck updated appropriately");*/
-
-
-    // Uninstall the app.
-    /*request = navigator.mozApps.mgmt.uninstall(app);
-    request.onerror = mozAppsError;
-    request.onsuccess = continueTest;
-    yield undefined;
-    info("Uninstalled trusted app");*/
   }
 
   function setAppVersion(version, cb) {

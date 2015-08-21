@@ -26,8 +26,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "appsService",
                                    "@mozilla.org/AppsService;1",
                                    "nsIAppsService");
 
-// Shared code for AppsServiceChild.jsm, TrustedHostedAppsUtils.jsm,
-// Webapps.jsm and Webapps.js
+// Shared code for AppsServiceChild.jsm, Webapps.jsm and Webapps.js
 
 this.EXPORTED_SYMBOLS =
   ["AppsUtils", "ManifestHelper", "isAbsoluteURI", "mozIApplication"];
@@ -300,9 +299,7 @@ this.AppsUtils = {
               return Services.prefs.getCharPref("security.apps.privileged.CSP.default");
               break;
             case Ci.nsIPrincipal.APP_STATUS_INSTALLED:
-              return app.kind == "hosted-trusted"
-                ? Services.prefs.getCharPref("security.apps.trusted.CSP.default")
-                : "";
+              return "";
               break;
           }
         } catch(e) {}
@@ -605,7 +602,6 @@ this.AppsUtils = {
 
     switch(type) {
     case "web":
-    case "trusted":
       return Ci.nsIPrincipal.APP_STATUS_INSTALLED;
     case "privileged":
       return Ci.nsIPrincipal.APP_STATUS_PRIVILEGED;

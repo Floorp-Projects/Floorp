@@ -436,8 +436,6 @@ pref("browser.dom.window.dump.enabled", false);
 // Default Content Security Policy to apply to certified apps.
 // If you change this CSP, make sure to update the fast path in nsCSPService.cpp
 pref("security.apps.certified.CSP.default", "default-src * data: blob:; script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline' app://theme.gaiamobile.org");
-// Default Content Security Policy to apply to trusted apps.
-pref("security.apps.trusted.CSP.default", "default-src * data: blob:; object-src 'none'; frame-src 'none'");
 
 // handle links targeting new windows
 // 1=current window/tab, 2=new window, 3=new tab in most recent window
