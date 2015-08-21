@@ -205,6 +205,7 @@ let getElementTagNameFn = dispatch(getElementTagName);
 let getElementRectFn = dispatch(getElementRect);
 let isElementEnabledFn = dispatch(isElementEnabled);
 let getCurrentUrlFn = dispatch(getCurrentUrl);
+let findElementContentFn = dispatch(findElementContent);
 let findElementsContentFn = dispatch(findElementsContent);
 
 /**
@@ -228,7 +229,7 @@ function startListeners() {
   addMessageListenerId("Marionette:goBack", goBackFn);
   addMessageListenerId("Marionette:goForward", goForward);
   addMessageListenerId("Marionette:refresh", refresh);
-  addMessageListenerId("Marionette:findElementContent", findElementContent);
+  addMessageListenerId("Marionette:findElementContent", findElementContentFn);
   addMessageListenerId("Marionette:findElementsContent", findElementsContentFn);
   addMessageListenerId("Marionette:getActiveElement", getActiveElementFn);
   addMessageListenerId("Marionette:clickElement", clickElementFn);
@@ -333,7 +334,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:goBack", goBackFn);
   removeMessageListenerId("Marionette:goForward", goForward);
   removeMessageListenerId("Marionette:refresh", refresh);
-  removeMessageListenerId("Marionette:findElementContent", findElementContent);
+  removeMessageListenerId("Marionette:findElementContent", findElementContentFn);
   removeMessageListenerId("Marionette:findElementsContent", findElementsContentFn);
   removeMessageListenerId("Marionette:getActiveElement", getActiveElementFn);
   removeMessageListenerId("Marionette:clickElement", clickElementFn);
@@ -1351,18 +1352,19 @@ function refresh(msg) {
 }
 
 /**
- * Find an element in the document using requested search strategy
+ * Find an element in the current browsing context's document using the
+ * given search strategy.
  */
-function findElementContent(msg) {
-  let command_id = msg.json.command_id;
-  try {
-    let onSuccess = (el, id) => sendResponse({value: el}, id);
-    let onError = (err, id) => sendError(err, id);
-    elementManager.find(curFrame, msg.json, msg.json.searchTimeout,
-        false /* all */, onSuccess, onError, command_id);
-  } catch (e) {
-    sendError(e, command_id);
-  }
+function findElementContent(opts) {
+  return new Promise((resolve, reject) => {
+    elementManager.find(
+        curFrame,
+        opts,
+        opts.searchTimeout,
+        false /* all */,
+        resolve,
+        reject);
+  });
 }
 
 /**
