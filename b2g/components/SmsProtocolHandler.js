@@ -16,10 +16,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import("resource:///modules/TelURIParser.jsm");
-
-XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
-                                   "@mozilla.org/childprocessmessagemanager;1",
-                                   "nsIMessageSender");
+Cu.import('resource://gre/modules/ActivityChannel.jsm');
 
 function SmsProtocolHandler() {
 }
@@ -56,10 +53,11 @@ SmsProtocolHandler.prototype = {
     }
 
     if (number || body) {
-      cpmm.sendAsyncMessage("sms-handler", {
-        number: number || "",
-        type: "websms/sms",
-        body: body });
+      return new ActivityChannel(aURI, aLoadInfo,
+                                 "sms-handler",
+                                 { number: number || "",
+                                   type: "websms/sms",
+                                   body: body });
     }
 
     throw Components.results.NS_ERROR_ILLEGAL_VALUE;
