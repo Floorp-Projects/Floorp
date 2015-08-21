@@ -757,6 +757,27 @@ struct IMENotification final
     MouseButtonEventData mMouseButtonEventData;
   };
 
+  void SetData(const SelectionChangeDataBase& aSelectionChangeData)
+  {
+    MOZ_RELEASE_ASSERT(mMessage == NOTIFY_IME_OF_SELECTION_CHANGE);
+    mSelectionChangeData.Assign(aSelectionChangeData);
+  }
+  void SetData(const SelectionChangeDataBase& aSelectionChangeData,
+               bool aCausedByComposition,
+               bool aCausedBySelectionEvent)
+  {
+    MOZ_RELEASE_ASSERT(mMessage == NOTIFY_IME_OF_SELECTION_CHANGE);
+    mSelectionChangeData.Assign(aSelectionChangeData);
+    mSelectionChangeData.mCausedByComposition = aCausedByComposition;
+    mSelectionChangeData.mCausedBySelectionEvent = aCausedBySelectionEvent;
+  }
+
+  void SetData(const TextChangeDataBase& aTextChangeData)
+  {
+    MOZ_RELEASE_ASSERT(mMessage == NOTIFY_IME_OF_TEXT_CHANGE);
+    mTextChangeData = aTextChangeData;
+  }
+
   bool IsCausedByComposition() const
   {
     switch (mMessage) {
