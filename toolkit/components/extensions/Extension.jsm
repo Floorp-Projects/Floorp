@@ -44,6 +44,7 @@ ExtensionManagement.registerScript("chrome://extensions/content/ext-extension.js
 ExtensionManagement.registerScript("chrome://extensions/content/ext-webNavigation.js");
 ExtensionManagement.registerScript("chrome://extensions/content/ext-webRequest.js");
 ExtensionManagement.registerScript("chrome://extensions/content/ext-storage.js");
+ExtensionManagement.registerScript("chrome://extensions/content/ext-test.js");
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 let {
@@ -331,10 +332,28 @@ this.Extension = function(addonData)
   this.whiteListedHosts = null;
   this.webAccessibleResources = new Set();
 
+  this.emitter = new EventEmitter();
+
   ExtensionManagement.startupExtension(this.uuid, this.addonData.resourceURI, this);
 }
 
 Extension.prototype = {
+  on(hook, f) {
+    return this.emitter.on(hook, f);
+  },
+
+  off(hook, f) {
+    return this.emitter.off(hook, f);
+  },
+
+  emit(...args) {
+    return this.emitter.emit(...args);
+  },
+
+  testMessage(...args) {
+    Management.emit("test-message", this, ...args);
+  },
+
   // Representation of the extension to send to content
   // processes. This should include anything the content process might
   // need.
