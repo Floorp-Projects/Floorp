@@ -1100,7 +1100,7 @@ InitKeyEvent(WidgetKeyboardEvent& aEvent, QKeyEvent* aQEvent)
                               aQEvent->modifiers() & Qt::MetaModifier);
 
     aEvent.mIsRepeat =
-        (aEvent.message == NS_KEY_DOWN || aEvent.message == NS_KEY_PRESS) &&
+        (aEvent.mMessage == NS_KEY_DOWN || aEvent.mMessage == NS_KEY_PRESS) &&
         aQEvent->isAutoRepeat();
     aEvent.time = 0;
 

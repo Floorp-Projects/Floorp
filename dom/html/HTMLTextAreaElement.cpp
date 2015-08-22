@@ -480,13 +480,13 @@ nsresult
 HTMLTextAreaElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = false;
-  if (IsDisabledForEvents(aVisitor.mEvent->message)) {
+  if (IsDisabledForEvents(aVisitor.mEvent->mMessage)) {
     return NS_OK;
   }
 
   // Don't dispatch a second select event if we are already handling
   // one.
-  if (aVisitor.mEvent->message == NS_FORM_SELECTED) {
+  if (aVisitor.mEvent->mMessage == NS_FORM_SELECTED) {
     if (mHandlingSelect) {
       return NS_OK;
     }
@@ -499,14 +499,14 @@ HTMLTextAreaElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
   if (aVisitor.mEvent->mFlags.mNoContentDispatch) {
     aVisitor.mItemFlags |= NS_NO_CONTENT_DISPATCH;
   }
-  if (aVisitor.mEvent->message == NS_MOUSE_CLICK &&
+  if (aVisitor.mEvent->mMessage == NS_MOUSE_CLICK &&
       aVisitor.mEvent->AsMouseEvent()->button ==
         WidgetMouseEvent::eMiddleButton) {
     aVisitor.mEvent->mFlags.mNoContentDispatch = false;
   }
 
   // Fire onchange (if necessary), before we do the blur, bug 370521.
-  if (aVisitor.mEvent->message == NS_BLUR_CONTENT) {
+  if (aVisitor.mEvent->mMessage == NS_BLUR_CONTENT) {
     FireChangeEventIfNeeded();
   }
 
@@ -534,13 +534,13 @@ HTMLTextAreaElement::FireChangeEventIfNeeded()
 nsresult
 HTMLTextAreaElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
 {
-  if (aVisitor.mEvent->message == NS_FORM_SELECTED) {
+  if (aVisitor.mEvent->mMessage == NS_FORM_SELECTED) {
     mHandlingSelect = false;
   }
 
-  if (aVisitor.mEvent->message == NS_FOCUS_CONTENT ||
-      aVisitor.mEvent->message == NS_BLUR_CONTENT) {
-    if (aVisitor.mEvent->message == NS_FOCUS_CONTENT) {
+  if (aVisitor.mEvent->mMessage == NS_FOCUS_CONTENT ||
+      aVisitor.mEvent->mMessage == NS_BLUR_CONTENT) {
+    if (aVisitor.mEvent->mMessage == NS_FOCUS_CONTENT) {
       // If the invalid UI is shown, we should show it while focusing (and
       // update). Otherwise, we should not.
       GetValueInternal(mFocusedValue, true);

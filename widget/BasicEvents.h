@@ -599,7 +599,7 @@ class WidgetEvent
 protected:
   WidgetEvent(bool aIsTrusted, uint32_t aMessage, EventClassID aEventClassID)
     : mClass(aEventClassID)
-    , message(aMessage)
+    , mMessage(aMessage)
     , refPoint(0, 0)
     , lastRefPoint(0, 0)
     , time(0)
@@ -621,7 +621,7 @@ protected:
 public:
   WidgetEvent(bool aIsTrusted, uint32_t aMessage)
     : mClass(eBasicEventClass)
-    , message(aMessage)
+    , mMessage(aMessage)
     , refPoint(0, 0)
     , lastRefPoint(0, 0)
     , time(0)
@@ -650,7 +650,7 @@ public:
   {
     MOZ_ASSERT(mClass == eBasicEventClass,
                "Duplicate() must be overridden by sub class");
-    WidgetEvent* result = new WidgetEvent(false, message);
+    WidgetEvent* result = new WidgetEvent(false, mMessage);
     result->AssignEventData(*this, true);
     result->mFlags = mFlags;
     return result;
@@ -658,7 +658,7 @@ public:
 
   EventClassID mClass;
   // See GUI MESSAGES,
-  uint32_t message;
+  uint32_t mMessage;
   // Relative to the widget of the event, or if there is no widget then it is
   // in screen coordinates. Not modified by layout code.
   LayoutDeviceIntPoint refPoint;
@@ -686,7 +686,7 @@ public:
   void AssignEventData(const WidgetEvent& aEvent, bool aCopyTargets)
   {
     // mClass should be initialized with the constructor.
-    // message should be initialized with the constructor.
+    // mMessage should be initialized with the constructor.
     refPoint = aEvent.refPoint;
     // lastRefPoint doesn't need to be copied.
     time = aEvent.time;
@@ -735,24 +735,24 @@ public:
   bool IsNativeEventDelivererForPlugin() const;
 
   /**
-   * Returns true if the event message is one of mouse events.
+   * Returns true if the event mMessage is one of mouse events.
    */
   bool HasMouseEventMessage() const;
   /**
-   * Returns true if the event message is one of drag events.
+   * Returns true if the event mMessage is one of drag events.
    */
   bool HasDragEventMessage() const;
   /**
-   * Returns true if the event message is one of key events.
+   * Returns true if the event mMessage is one of key events.
    */
   bool HasKeyEventMessage() const;
   /**
-   * Returns true if the event message is one of composition events or text
+   * Returns true if the event mMessage is one of composition events or text
    * event.
    */
   bool HasIMEEventMessage() const;
   /**
-   * Returns true if the event message is one of plugin activation events.
+   * Returns true if the event mMessage is one of plugin activation events.
    */
   bool HasPluginActivationEventMessage() const;
 
@@ -842,7 +842,7 @@ public:
     MOZ_ASSERT(mClass == eGUIEventClass,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
-    WidgetGUIEvent* result = new WidgetGUIEvent(false, message, nullptr);
+    WidgetGUIEvent* result = new WidgetGUIEvent(false, mMessage, nullptr);
     result->AssignGUIEventData(*this, true);
     result->mFlags = mFlags;
     return result;
@@ -1006,7 +1006,7 @@ public:
     MOZ_ASSERT(mClass == eInputEventClass,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
-    WidgetInputEvent* result = new WidgetInputEvent(false, message, nullptr);
+    WidgetInputEvent* result = new WidgetInputEvent(false, mMessage, nullptr);
     result->AssignInputEventData(*this, true);
     result->mFlags = mFlags;
     return result;
@@ -1175,7 +1175,7 @@ public:
   {
     MOZ_ASSERT(mClass == eUIEventClass,
                "Duplicate() must be overridden by sub class");
-    InternalUIEvent* result = new InternalUIEvent(false, message);
+    InternalUIEvent* result = new InternalUIEvent(false, mMessage);
     result->AssignUIEventData(*this, true);
     result->mFlags = mFlags;
     return result;

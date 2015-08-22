@@ -151,7 +151,7 @@ KeyboardEvent::CharCode()
     return mEvent->AsKeyboardEvent()->charCode;
   }
 
-  switch (mEvent->message) {
+  switch (mEvent->mMessage) {
   case NS_KEY_BEFORE_DOWN:
   case NS_KEY_DOWN:
   case NS_KEY_AFTER_DOWN:
@@ -195,7 +195,7 @@ KeyboardEvent::Which()
     return mInitializedWhichValue;
   }
 
-  switch (mEvent->message) {
+  switch (mEvent->mMessage) {
     case NS_KEY_BEFORE_DOWN:
     case NS_KEY_DOWN:
     case NS_KEY_AFTER_DOWN:
