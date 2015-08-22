@@ -15,6 +15,9 @@
 <script type="application/javascript;version=1.8">
 'use strict';
 
+let { UNKNOWN_ACTION, PROMPT_ACTION, ALLOW_ACTION, DENY_ACTION } =
+  SpecialPowers.Ci.nsIPermissionManager;
+
 SimpleTest.waitForExplicitFinish();
 
 const PERMISSIONS = [
@@ -68,20 +71,48 @@ function checkUserVisiblePushPermission() {
     error => ok(true, `query should have rejected for userVisible push`));
 }
 
-function runTests() {
-  let permMgr = SpecialPowers.Ci.nsIPermissionManager;
+function promiseStateChanged(name, state) {
+  return navigator.permissions.query({ name }).then(
+    status => {
+      return new Promise((resolve, reject) => {
+        status.onchange = () => {
+          status.onchange = null;
+          is(status.state, state, `state changed for '${name}'`);
+          resolve();
+        };
+      });
+    },
+    error => ok(false, `query should not have rejected for '${name}'`));
+}
 
+function testStatusOnChange() {
+  return new Promise((resolve, reject) => {
+    SpecialPowers.popPermissions(() => {
+      let permission = 'geolocation';
+      let promiseGranted = promiseStateChanged(permission, 'granted');
+      setPermissions(ALLOW_ACTION);
+      promiseGranted.then(() => {
+        let promisePrompt = promiseStateChanged(permission, 'prompt');
+        SpecialPowers.popPermissions();
+        return promisePrompt;
+      }).then(resolve);
+    });
+  });
+}
+
+function runTests() {
   setup()
     .then(checkUnsupportedPermissions)
     .then(checkUserVisiblePushPermission)
-    .then(() => setPermissions(permMgr.UNKNOWN_ACTION))
+    .then(() => setPermissions(UNKNOWN_ACTION))
     .then(() => checkPermissions('prompt'))
-    .then(() => setPermissions(permMgr.PROMPT_ACTION))
+    .then(() => setPermissions(PROMPT_ACTION))
     .then(() => checkPermissions('prompt'))
-    .then(() => setPermissions(permMgr.ALLOW_ACTION))
+    .then(() => setPermissions(ALLOW_ACTION))
     .then(() => checkPermissions('granted'))
-    .then(() => setPermissions(permMgr.DENY_ACTION))
+    .then(() => setPermissions(DENY_ACTION))
     .then(() => checkPermissions('denied'))
+    .then(testStatusOnChange)
     .then(SimpleTest.finish)
     .catch ((e) => {
       ok(false, 'Unexpected error ' + e);
@@ -92,4 +123,3 @@ function runTests() {
 </pre>
 </body>
 </html>
-

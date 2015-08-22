@@ -44,7 +44,7 @@ private:
 
   nsIPrincipal* GetPrincipal() const;
 
-  void PermissionChanged() {}
+  void PermissionChanged();
 
   PermissionName mName;
   PermissionState mState;
