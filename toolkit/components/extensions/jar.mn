@@ -14,3 +14,4 @@ toolkit.jar:
     content/extensions/ext-runtime.js (ext-runtime.js)
     content/extensions/ext-extension.js (ext-extension.js)
     content/extensions/ext-storage.js (ext-storage.js)
+    content/extensions/ext-test.js (ext-test.js)
