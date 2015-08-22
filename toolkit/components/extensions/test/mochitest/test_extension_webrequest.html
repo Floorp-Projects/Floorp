@@ -1,0 +1,134 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for simple WebExtension</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript;version=1.8" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript;version=1.8">
+"use strict";
+
+const BASE = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest";
+
+const expected_requested = [BASE + "/file_WebRequest_page1.html",
+                            BASE + "/file_style_good.css",
+                            BASE + "/file_style_bad.css",
+                            BASE + "/file_style_redirect.css",
+                            BASE + "/file_image_good.png",
+                            BASE + "/file_image_bad.png",
+                            BASE + "/file_image_redirect.png",
+                            BASE + "/file_script_good.js",
+                            BASE + "/file_script_bad.js",
+                            BASE + "/file_script_redirect.js",
+                            BASE + "/file_script_xhr.js",
+                            BASE + "/file_WebRequest_page2.html",
+                            BASE + "/nonexistent_script_url.js",
+                            BASE + "/xhr_resource"];
+
+const expected_sendHeaders = [BASE + "/file_WebRequest_page1.html",
+                              BASE + "/file_style_good.css",
+                              BASE + "/file_style_redirect.css",
+                              BASE + "/file_image_good.png",
+                              BASE + "/file_image_redirect.png",
+                              BASE + "/file_script_good.js",
+                              BASE + "/file_script_redirect.js",
+                              BASE + "/file_script_xhr.js",
+                              BASE + "/file_WebRequest_page2.html",
+                              BASE + "/nonexistent_script_url.js",
+                              BASE + "/xhr_resource"];
+
+const expected_headersReceived = [BASE + "/file_WebRequest_page1.html",
+                                  BASE + "/file_style_good.css",
+                                  BASE + "/file_image_good.png",
+                                  BASE + "/file_script_good.js",
+                                  BASE + "/file_script_xhr.js",
+                                  BASE + "/file_WebRequest_page2.html",
+                                  BASE + "/nonexistent_script_url.js",
+                                  BASE + "/xhr_resource"];
+
+function removeDupes(list)
+{
+  let j = 0;
+  for (let i = 1; i < list.length; i++) {
+    if (list[i] != list[j]) {
+      j++;
+      if (i != j) {
+        list[j] = list[i];
+      }
+    }
+  }
+  list.length = j + 1;
+}
+
+function compareLists(list1, list2, kind)
+{
+  list1.sort();
+  removeDupes(list1);
+  list2.sort();
+  removeDupes(list2);
+  is(String(list1), String(list2), `${kind} URLs correct`);
+}
+
+function* test_once()
+{
+  let extension = loadExtension("webrequest");
+  yield extension.startup();
+  yield extension.awaitMessage("ready");
+  info("webrequest extension loaded");
+
+  yield new Promise(resolve => { setTimeout(resolve, 0); });
+
+  let win = window.open();
+
+  // Clear the image cache, since it gets in the way otherwise.
+  var imgTools = SpecialPowers.Cc["@mozilla.org/image/tools;1"].getService(SpecialPowers.Ci.imgITools);
+  var cache = imgTools.getImgCacheForDocument(win.document);
+  cache.clearCache(false);
+
+  //yield waitForLoad(win);
+  info("about:blank loaded");
+
+  win.location = "file_WebRequest_page1.html";
+
+  yield waitForLoad(win);
+  info("test page loaded");
+
+  is(win.success, 2, "Good script ran");
+  is(win.failure, undefined, "Failure script didn't run");
+
+  let style = win.getComputedStyle(win.document.getElementById("test"), null);
+  is(style.getPropertyValue("color"), "rgb(255, 0, 0)", "Good CSS loaded");
+
+  win.close();
+
+  extension.sendMessage("getResults");
+  let [requested, sendHeaders, headersReceived] = yield extension.awaitMessage("results");
+
+  compareLists(requested, expected_requested, "requested");
+  compareLists(sendHeaders, expected_sendHeaders, "sendHeaders");
+  compareLists(headersReceived, expected_headersReceived, "headersReceived");
+
+  yield extension.unload();
+  info("webrequest extension unloaded");
+}
+
+// Run the test twice to make sure it works with caching.
+add_task(test_once);
+add_task(test_once);
+
+function waitForLoad(win) {
+  return new Promise(resolve => {
+    win.addEventListener("load", function listener() {
+      win.removeEventListener("load", listener, true);
+      resolve();
+    }, true);
+  });
+}
+</script>
+
+</body>
+</html>
