@@ -277,11 +277,11 @@ PocketSphinxSpeechRecognitionService::ValidateAndSetGrammarList(
     int result = ps_set_jsgf_string(mPSHandle, "name",
                                     NS_ConvertUTF16toUTF8(grammar).get());
 
-    ps_set_search(mPSHandle, "name");
-
     if (result != 0) {
       ISGrammarCompiled = false;
     } else {
+      ps_set_search(mPSHandle, "name");
+
       ISGrammarCompiled = true;
     }
   } else {
