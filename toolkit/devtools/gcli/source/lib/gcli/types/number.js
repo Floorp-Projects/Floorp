@@ -69,7 +69,7 @@ exports.items = [
     },
 
     getMin: function(context) {
-      if (this.min) {
+      if (this.min != null) {
         if (typeof this.min === 'function') {
           return this.min(context);
         }
@@ -81,7 +81,7 @@ exports.items = [
     },
 
     getMax: function(context) {
-      if (this.max) {
+      if (this.max != null) {
         if (typeof this.max === 'function') {
           return this.max(context);
         }
