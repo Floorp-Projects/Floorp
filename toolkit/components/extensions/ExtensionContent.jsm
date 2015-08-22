@@ -221,7 +221,8 @@ function ExtensionContext(extensionId, contentWindow)
   this.messenger = new Messenger(this, broker, {id: extensionId, frameId, url},
                                  {id: extensionId, frameId}, delegate);
 
-  let chromeObj = Cu.createObjectIn(this.sandbox, {defineAs: "chrome"});
+  let chromeObj = Cu.createObjectIn(this.sandbox, {defineAs: "browser"});
+  this.sandbox.wrappedJSObject.chrome = this.sandbox.wrappedJSObject.browser;
   injectAPI(api(this), chromeObj);
 
   this.onClose = new Set();

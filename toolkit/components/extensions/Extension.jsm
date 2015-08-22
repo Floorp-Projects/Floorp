@@ -259,7 +259,8 @@ let GlobalManager = {
 
   observe(contentWindow, topic, data) {
     function inject(extension, context) {
-      let chromeObj = Cu.createObjectIn(contentWindow, {defineAs: "chrome"});
+      let chromeObj = Cu.createObjectIn(contentWindow, {defineAs: "browser"});
+      contentWindow.wrappedJSObject.chrome = contentWindow.wrappedJSObject.browser;
       let api = Management.generateAPIs(extension, context);
       injectAPI(api, chromeObj);
     }
