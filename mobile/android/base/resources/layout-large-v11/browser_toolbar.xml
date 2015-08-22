@@ -37,7 +37,7 @@
          (for paddingLeft) We use left padding to center the
          arrow in the visible area as opposed to the true width. -->
     <org.mozilla.gecko.toolbar.ForwardButton
-            style="@style/UrlBar.ImageButton"
+            style="@style/UrlBar.ImageButton.BrowserToolbarColors"
             android:id="@+id/forward"
             android:layout_alignLeft="@id/back"
             android:contentDescription="@string/forward"
@@ -56,7 +56,7 @@
             android:paddingLeft="18dp"/>
 
     <org.mozilla.gecko.toolbar.BackButton android:id="@id/back"
-                                          style="@style/UrlBar.ImageButton"
+                                          style="@style/UrlBar.ImageButton.BrowserToolbarColors"
                                           android:layout_width="@dimen/tablet_nav_button_width"
                                           android:layout_height="@dimen/tablet_nav_button_width"
                                           android:layout_centerVertical="true"
@@ -120,7 +120,7 @@
 
     <org.mozilla.gecko.widget.ThemedImageView
             android:id="@+id/menu_icon"
-            style="@style/UrlBar.ImageButton"
+            style="@style/UrlBar.ImageButton.BrowserToolbarColors"
             android:layout_alignLeft="@id/menu"
             android:layout_alignRight="@id/menu"
             android:src="@drawable/tablet_menu"
