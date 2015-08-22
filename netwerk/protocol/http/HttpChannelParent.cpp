@@ -476,7 +476,12 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
   schedulingContextID.Parse(aSchedulingContextID.BeginReading());
   mChannel->SetSchedulingContextID(schedulingContextID);
 
-  rv = mChannel->AsyncOpen(mParentListener, nullptr);
+  if (loadInfo && loadInfo->GetEnforceSecurity()) {
+    rv = mChannel->AsyncOpen2(mParentListener);
+  }
+  else {
+    rv = mChannel->AsyncOpen(mParentListener, nullptr);
+  }
   if (NS_FAILED(rv))
     return SendFailedAsyncOpen(rv);
 
