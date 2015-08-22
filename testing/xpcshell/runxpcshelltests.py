@@ -837,6 +837,15 @@ class XPCShellTests(object):
                            "combination of filters: {}".format(
                                 mp.fmt_filters()))
 
+        if self.dump_tests:
+            self.dump_tests = os.path.expanduser(self.dump_tests)
+            assert os.path.exists(os.path.dirname(self.dump_tests))
+            with open(self.dump_tests, 'w') as dumpFile:
+                dumpFile.write(json.dumps({'active_tests': self.alltests}))
+
+            self.log.info("Dumping active_tests to %s file." % self.dump_tests)
+            sys.exit()
+
     def setAbsPath(self):
         """
           Set the absolute path for xpcshell, httpdjspath and xrepath.
@@ -1076,7 +1085,7 @@ class XPCShellTests(object):
                  testsRootDir=None, testingModulesDir=None, pluginsPath=None,
                  testClass=XPCShellTestThread, failureManifest=None,
                  log=None, stream=None, jsDebugger=False, jsDebuggerPort=0,
-                 test_tags=None, utility_path=None, **otherOptions):
+                 test_tags=None, dump_tests=None, utility_path=None, **otherOptions):
         """Run xpcshell tests.
 
         |xpcshell|, is the xpcshell executable to use to run the tests.
@@ -1160,6 +1169,7 @@ class XPCShellTests(object):
         self.manifest = manifest
         self.testdirs = testdirs
         self.testPath = testPath
+        self.dump_tests = dump_tests
         self.interactive = interactive
         self.verbose = verbose
         self.keepGoing = keepGoing
@@ -1473,6 +1483,9 @@ class XPCShellOptions(OptionParser):
         self.add_option("--logfiles",
                         action="store_true", dest="logfiles", default=True,
                         help="create log files (default, only used to override --no-logfiles)")
+        self.add_option("--dump-tests",
+                        type="string", dest="dump_tests", default=None,
+                        help="Specify path to a filename to dump all the tests that will be run")
         self.add_option("--manifest",
                         type="string", dest="manifest", default=None,
                         help="Manifest of test directories to use")

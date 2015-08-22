@@ -1978,6 +1978,15 @@ class Mochitest(MochitestUtilsMixin):
 
         paths.sort(path_sort)
         self._active_tests = paths
+        if options.dump_tests:
+            options.dump_tests = os.path.expanduser(options.dump_tests)
+            assert os.path.exists(os.path.dirname(options.dump_tests))
+            with open(options.dump_tests, 'w') as dumpFile:
+                dumpFile.write(json.dumps({'active_tests': self._active_tests}))
+
+            self.log.info("Dumping active_tests to %s file." % options.dump_tests)
+            sys.exit()
+
         return self._active_tests
 
     def logPreamble(self, tests):
