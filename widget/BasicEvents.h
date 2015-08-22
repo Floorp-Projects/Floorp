@@ -719,6 +719,7 @@ class InternalUIEvent : public WidgetGUIEvent
 protected:
   InternalUIEvent()
     : detail(0)
+    , mCausedByUntrustedEvent(false)
   {
   }
 
@@ -726,6 +727,7 @@ protected:
                   EventClassID aEventClassID)
     : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, aEventClassID)
     , detail(0)
+    , mCausedByUntrustedEvent(false)
   {
   }
 
@@ -733,15 +735,24 @@ protected:
                   EventClassID aEventClassID)
     : WidgetGUIEvent(aIsTrusted, aMessage, nullptr, aEventClassID)
     , detail(0)
+    , mCausedByUntrustedEvent(false)
   {
   }
 
 public:
   virtual InternalUIEvent* AsUIEvent() override { return this; }
 
-  InternalUIEvent(bool aIsTrusted, uint32_t aMessage)
+  /**
+   * If the UIEvent is caused by another event (e.g., click event),
+   * aEventCausesThisEvent should be the event.  If there is no such event,
+   * this should be nullptr.
+   */
+  InternalUIEvent(bool aIsTrusted, uint32_t aMessage,
+                  const WidgetEvent* aEventCausesThisEvent)
     : WidgetGUIEvent(aIsTrusted, aMessage, nullptr, eUIEventClass)
     , detail(0)
+    , mCausedByUntrustedEvent(
+        aEventCausesThisEvent && !aEventCausesThisEvent->mFlags.mIsTrusted)
   {
   }
 
@@ -749,19 +760,29 @@ public:
   {
     MOZ_ASSERT(mClass == eUIEventClass,
                "Duplicate() must be overridden by sub class");
-    InternalUIEvent* result = new InternalUIEvent(false, mMessage);
+    InternalUIEvent* result = new InternalUIEvent(false, mMessage, nullptr);
     result->AssignUIEventData(*this, true);
     result->mFlags = mFlags;
     return result;
   }
 
   int32_t detail;
+  // mCausedByUntrustedEvent is true if the event is caused by untrusted event.
+  bool mCausedByUntrustedEvent;
+
+  // If you check the event is a trusted event and NOT caused by an untrusted
+  // event, IsTrustable() returns what you expected.
+  bool IsTrustable() const
+  {
+    return mFlags.mIsTrusted && !mCausedByUntrustedEvent;
+  }
 
   void AssignUIEventData(const InternalUIEvent& aEvent, bool aCopyTargets)
   {
     AssignGUIEventData(aEvent, aCopyTargets);
 
     detail = aEvent.detail;
+    mCausedByUntrustedEvent = aEvent.mCausedByUntrustedEvent;
   }
 };
 
