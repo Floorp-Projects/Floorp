@@ -26,7 +26,7 @@ const { defer } = require("sdk/core/promise");
  *    A promise resolved once the delay given is passed, or the object
  *    receives the event specified
  */
-const wait = (target, type, capture) => {
+const wait = function(target, type, capture) {
   let { promise, resolve, reject } = defer();
 
   if (!arguments.length) {
