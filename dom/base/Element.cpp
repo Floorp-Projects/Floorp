@@ -2983,7 +2983,9 @@ Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor)
       if (shell) {
         // single-click
         nsEventStatus status = nsEventStatus_eIgnore;
-        InternalUIEvent actEvent(mouseEvent->mFlags.mIsTrusted, NS_UI_ACTIVATE);
+        // DOMActive event should be trusted since the activation is actually
+        // occurred even if the cause is an untrusted click event.
+        InternalUIEvent actEvent(true, NS_UI_ACTIVATE, mouseEvent);
         actEvent.detail = 1;
 
         rv = shell->HandleDOMEventWithTarget(this, &actEvent, &status);
@@ -2999,9 +3001,10 @@ Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor)
       if (aVisitor.mEvent->originalTarget == this) {
         nsAutoString target;
         GetLinkTarget(target);
+        const InternalUIEvent* activeEvent = aVisitor.mEvent->AsUIEvent();
+        MOZ_ASSERT(activeEvent);
         nsContentUtils::TriggerLink(this, aVisitor.mPresContext, absURI, target,
-                                    true, true,
-                                    aVisitor.mEvent->mFlags.mIsTrusted);
+                                    true, true, activeEvent->IsTrustable());
         aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
       }
     }
