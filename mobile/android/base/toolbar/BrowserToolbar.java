@@ -32,6 +32,7 @@ import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.ColorUtils;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.MenuUtils;
+import org.mozilla.gecko.widget.themed.ThemedFrameLayout;
 import org.mozilla.gecko.widget.themed.ThemedImageButton;
 import org.mozilla.gecko.widget.themed.ThemedImageView;
 import org.mozilla.gecko.widget.themed.ThemedRelativeLayout;
@@ -117,7 +118,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
 
     private ToolbarProgressView progressBar;
     protected final TabCounter tabsCounter;
-    protected final ThemedImageButton menuButton;
+    protected final ThemedFrameLayout menuButton;
     protected final ThemedImageView menuIcon;
     private MenuPopup menuPopup;
     protected final List<View> focusOrder;
@@ -192,7 +193,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
             tabsCounter.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
         }
 
-        menuButton = (ThemedImageButton) findViewById(R.id.menu);
+        menuButton = (ThemedFrameLayout) findViewById(R.id.menu);
         menuIcon = (ThemedImageView) findViewById(R.id.menu_icon);
         hasSoftMenuButton = !HardwareUtils.hasMenuButton();
 
@@ -324,8 +325,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
 
         if (hasSoftMenuButton) {
             menuButton.setVisibility(View.VISIBLE);
-            menuIcon.setVisibility(View.VISIBLE);
-
             menuButton.setOnClickListener(new Button.OnClickListener() {
                 @Override
                 public void onClick(View view) {
