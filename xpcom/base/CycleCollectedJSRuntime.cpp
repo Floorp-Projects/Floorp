@@ -1138,7 +1138,9 @@ CycleCollectedJSRuntime::RunInMetastableState(already_AddRefed<nsIRunnable>&& aR
   data.mRecursionDepth = RecursionDepth();
 
   // There must be an event running to get here.
+#ifndef MOZ_WIDGET_COCOA
   MOZ_ASSERT(data.mRecursionDepth > mBaseRecursionDepth);
+#endif
 
   mMetastableStateEvents.AppendElement(Move(data));
 }
