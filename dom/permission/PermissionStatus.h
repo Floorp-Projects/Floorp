@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_PermissionStatus_h_
 #define mozilla_dom_PermissionStatus_h_
 
+#include "mozilla/dom/PermissionsBinding.h"
 #include "mozilla/dom/PermissionStatusBinding.h"
 #include "mozilla/DOMEventTargetHelper.h"
 
@@ -17,7 +18,11 @@ class PermissionStatus final
   : public DOMEventTargetHelper
 {
 public:
-  explicit PermissionStatus(nsPIDOMWindow* aWindow, PermissionState aState);
+  ~PermissionStatus();
+
+  static nsresult Create(nsPIDOMWindow* aWindow,
+                         PermissionName aName,
+                         PermissionStatus** aStatus);
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
@@ -27,8 +32,11 @@ public:
   IMPL_EVENT_HANDLER(change)
 
 private:
-  ~PermissionStatus();
+  PermissionStatus(nsPIDOMWindow* aWindow, PermissionName aName);
 
+  nsresult UpdateState();
+
+  PermissionName mName;
   PermissionState mState;
 };
 
