@@ -1062,10 +1062,10 @@ nsresult nsHTMLEditor::InsertObject(const char* aType, nsISupports* aObject, boo
       rv = NS_NewChannel(getter_AddRefs(channel),
                          fileURI,
                          nsContentUtils::GetSystemPrincipal(),
-                         nsILoadInfo::SEC_NORMAL,
+                         nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                          nsIContentPolicy::TYPE_OTHER);
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = channel->Open(getter_AddRefs(imageStream));
+      rv = channel->Open2(getter_AddRefs(imageStream));
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
       imageStream = do_QueryInterface(aObject);
