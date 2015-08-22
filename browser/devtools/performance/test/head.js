@@ -541,3 +541,7 @@ function synthesizeProfileForTest(samples) {
     markers: []
   }, uniqueStacks);
 }
+
+function isVisible (element) {
+  return !element.classList.contains("hidden") && !element.hidden;
+}

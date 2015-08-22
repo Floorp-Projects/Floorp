@@ -56,7 +56,7 @@ function *testMockMemory () {
   isEmptyArray(allocations.timestamps, "allocations.timestamps");
   isEmptyArray(allocations.frames, "allocations.frames");
 
-  is($("#overview-pane").hidden, false,
+  is(isVisible($("#overview-pane")), true,
     "overview pane not hidden when server not supporting memory actors, yet UI prefs request them.");
   is($("#select-waterfall-view").hidden, false,
     "waterfall view button not hidden when memory mocked, and UI prefs enable them");
@@ -111,7 +111,7 @@ function *testMockMemoryAndTimeline() {
   isEmptyArray(allocations.timestamps, "allocations.timestamps");
   isEmptyArray(allocations.frames, "allocations.frames");
 
-  is($("#overview-pane").hidden, true,
+  is(isVisible($("#overview-pane")), false,
     "overview pane hidden when server not supporting memory/timeline actors, yet UI prefs request them.");
   is($("#select-waterfall-view").hidden, true,
     "waterfall view button hidden when memory/timeline mocked, and UI prefs enable them");

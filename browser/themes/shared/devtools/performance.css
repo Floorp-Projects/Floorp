@@ -20,6 +20,16 @@
   --row-hover-background-color: rgba(76,158,217,0.2);
 }
 
+/**
+ * A generic class to hide elements, replacing the `element.hidden` attribute
+ * that we use to hide elements that can later be active
+ */
+.hidden {
+  display: none;
+  width: 0px;
+  height: 0px;
+}
+
 /* Toolbar */
 
 #performance-toolbar-control-other {
