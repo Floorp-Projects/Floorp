@@ -9302,7 +9302,10 @@ nsDocument::OnPageHide(bool aPersisted,
     mAnimationController->OnPageHide();
   }
 
-  if (aPersisted) {
+  // We do not stop the animations (bug 1024343)
+  // when the page is refreshing while being dragged out
+  nsDocShell* docShell = mDocumentContainer.get();
+  if (aPersisted && !(docShell && docShell->InFrameSwap())) {
     SetImagesNeedAnimating(false);
   }
 
