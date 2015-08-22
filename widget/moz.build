@@ -113,6 +113,7 @@ EXPORTS.mozilla += [
     'ContentEvents.h',
     'EventClassList.h',
     'EventForwards.h',
+    'EventMessageList.h',
     'FontRange.h',
     'LookAndFeel.h',
     'MiscEvents.h',
