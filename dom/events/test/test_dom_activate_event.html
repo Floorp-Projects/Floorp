@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test DOMActivate event</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display">
+<a id="a" href="#dummy">link</a>
+<button id="button">button</button>
+<input id="checkbox" type="checkbox">
+<input id="radio" type="radio">
+<input id="submit" type="submit">
+<input id="ibutton" type="button">
+<input id="reset" type="reset">
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests);
+
+function runIsTrustedTestCausedByTrustedClick(aElement, aNextTest)
+{
+  const kDescription = "runIsTrustedTestCausedByTrustedClick(aElement.id=" + aElement.id + "): ";
+  var DOMActivateFired = false;
+  aElement.addEventListener("DOMActivate", function (aEvent) {
+    DOMActivateFired = true;
+    ok(aEvent.isTrusted, kDescription + "DOMActivate event should be trusted event");
+    aElement.removeEventListener("DOMActivate", arguments.callee);
+    aNextTest();
+  });
+  aElement.addEventListener("click", function (aEvent) {
+    ok(aEvent.isTrusted, kDescription + "click event should be trusted event");
+    aElement.removeEventListener("click", arguments.callee);
+  });
+  synthesizeMouseAtCenter(aElement, {});
+}
+
+function runIsTrustedTestCausedByUntrustedClick(aElement, aNextTest)
+{
+  const kDescription = "runIsTrustedTestCausedByUntrustedClick(aElement.id=" + aElement.id + "): ";
+  var DOMActivateFired = false;
+  aElement.addEventListener("DOMActivate", function (aEvent) {
+    DOMActivateFired = true;
+    ok(aEvent.isTrusted,
+       kDescription + "DOMActivate event should be trusted event even if it's caused by untrusted event");
+    aElement.removeEventListener("DOMActivate", arguments.callee);
+    aNextTest();
+  });
+  aElement.addEventListener("click", function (aEvent) {
+    ok(!aEvent.isTrusted, kDescription + "click event should be untrusted event");
+    aElement.removeEventListener("click", arguments.callee);
+  });
+  var click = new MouseEvent("click", { button: 0 });
+  aElement.dispatchEvent(click);
+}
+
+function runTests()
+{
+  // XXX Don't add indentation here. If you add indentation, the diff will be
+  //     complicated when somebody adds new tests.
+  runIsTrustedTestCausedByTrustedClick(document.getElementById("a"), function () {
+  runIsTrustedTestCausedByTrustedClick(document.getElementById("button"), function () {
+  runIsTrustedTestCausedByTrustedClick(document.getElementById("checkbox"), function () {
+  runIsTrustedTestCausedByTrustedClick(document.getElementById("radio"), function () {
+  runIsTrustedTestCausedByTrustedClick(document.getElementById("submit"), function () {
+  runIsTrustedTestCausedByTrustedClick(document.getElementById("ibutton"), function () {
+  runIsTrustedTestCausedByTrustedClick(document.getElementById("reset"), function () {
+  runIsTrustedTestCausedByUntrustedClick(document.getElementById("a"), function () {
+  runIsTrustedTestCausedByUntrustedClick(document.getElementById("button"), function () {
+  runIsTrustedTestCausedByUntrustedClick(document.getElementById("checkbox"), function () {
+  runIsTrustedTestCausedByUntrustedClick(document.getElementById("radio"), function () {
+  runIsTrustedTestCausedByUntrustedClick(document.getElementById("submit"), function () {
+  runIsTrustedTestCausedByUntrustedClick(document.getElementById("ibutton"), function () {
+  runIsTrustedTestCausedByUntrustedClick(document.getElementById("reset"), function () {
+    SimpleTest.finish();
+  });});});});});});});});});});});});});});
+}
+
+</script>
+</pre>
+</body>
+</html>
