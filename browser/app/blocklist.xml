@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1439594505000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1440089769000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -319,6 +319,12 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i988" id="{b12785f5-d8d0-4530-a3ea-5c4263b85bef}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i856" id="/^({94d62e35-4b43-494c-bf52-ba5935df36ef}|firefox@advanceelite\.com|{bb7b7a60-f574-47c2-8a0b-4c56f2da9802})$/">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
@@ -466,8 +472,10 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i644" id="youtubeunblocker@unblocker.yt">
+      <emItem  blockID="i990" id="youtubeunblocker@unblocker.yt">
                         <versionRange  minVersion="43.4.1" maxVersion="77.5.1" severity="3">
+                    </versionRange>
+                                <versionRange  minVersion="0" maxVersion="0.6.16" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -3212,6 +3220,24 @@
                   </devices>
             <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus>    </gfxBlacklistEntry>
     <gfxBlacklistEntry  blockID="g984">      <os>All</os>      <vendor>0x8086</vendor>            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.2413</driverVersion>      <driverVersionComparator>LESS_THAN_OR_EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g992">      <os>WINNT 8.1</os>      <vendor>0x1002</vendor>              <devices>
+                      <device>0x6920</device>
+                      <device>0x6921</device>
+                      <device>0x6928</device>
+                      <device>0x6929</device>
+                      <device>0x692b</device>
+                      <device>0x692f</device>
+                      <device>0x6930</device>
+                      <device>0x6938</device>
+                      <device>0x6939</device>
+                      <device>0x6900</device>
+                      <device>0x6901</device>
+                      <device>0x6902</device>
+                      <device>0x6903</device>
+                      <device>0x6907</device>
+                      <device>0x7300</device>
+                  </devices>
+            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus>    </gfxBlacklistEntry>
     </gfxItems>
 
   <certItems>
