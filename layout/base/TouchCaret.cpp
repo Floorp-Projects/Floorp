@@ -759,7 +759,7 @@ TouchCaret::HandleEvent(WidgetEvent* aEvent)
 
   nsEventStatus status = nsEventStatus_eIgnore;
 
-  switch (aEvent->message) {
+  switch (aEvent->mMessage) {
     case NS_TOUCH_START:
       status = HandleTouchDownEvent(aEvent->AsTouchEvent());
       break;
@@ -790,7 +790,7 @@ TouchCaret::HandleEvent(WidgetEvent* aEvent)
     case NS_WHEEL_START:
     case NS_WHEEL_STOP:
       // Disable touch caret while key/wheel event is received.
-      TOUCHCARET_LOG("Receive key/wheel event %d", aEvent->message);
+      TOUCHCARET_LOG("Receive key/wheel event %d", aEvent->mMessage);
       SetVisibility(false);
       break;
     case NS_MOUSE_MOZLONGTAP:

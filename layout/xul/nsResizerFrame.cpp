@@ -61,7 +61,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
   nsWeakFrame weakFrame(this);
   bool doDefault = true;
 
-  switch (aEvent->message) {
+  switch (aEvent->mMessage) {
     case NS_TOUCH_START:
     case NS_MOUSE_BUTTON_DOWN: {
       if (aEvent->mClass == eTouchEventClass ||

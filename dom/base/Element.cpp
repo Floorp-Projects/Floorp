@@ -2850,9 +2850,9 @@ Element::CheckHandleEventForLinksPrecondition(EventChainVisitor& aVisitor,
 {
   if (aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault ||
       (!aVisitor.mEvent->mFlags.mIsTrusted &&
-       (aVisitor.mEvent->message != NS_MOUSE_CLICK) &&
-       (aVisitor.mEvent->message != NS_KEY_PRESS) &&
-       (aVisitor.mEvent->message != NS_UI_ACTIVATE)) ||
+       (aVisitor.mEvent->mMessage != NS_MOUSE_CLICK) &&
+       (aVisitor.mEvent->mMessage != NS_KEY_PRESS) &&
+       (aVisitor.mEvent->mMessage != NS_UI_ACTIVATE)) ||
       !aVisitor.mPresContext ||
       aVisitor.mEvent->mFlags.mMultipleActionsPrevented) {
     return false;
@@ -2867,7 +2867,7 @@ Element::PreHandleEventForLinks(EventChainPreVisitor& aVisitor)
 {
   // Optimisation: return early if this event doesn't interest us.
   // IMPORTANT: this switch and the switch below it must be kept in sync!
-  switch (aVisitor.mEvent->message) {
+  switch (aVisitor.mEvent->mMessage) {
   case NS_MOUSE_OVER:
   case NS_FOCUS_CONTENT:
   case NS_MOUSE_OUT:
@@ -2887,7 +2887,7 @@ Element::PreHandleEventForLinks(EventChainPreVisitor& aVisitor)
 
   // We do the status bar updates in PreHandleEvent so that the status bar gets
   // updated even if the event is consumed before we have a chance to set it.
-  switch (aVisitor.mEvent->message) {
+  switch (aVisitor.mEvent->mMessage) {
   // Set the status bar similarly for mouseover and focus
   case NS_MOUSE_OVER:
     aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
@@ -2928,7 +2928,7 @@ Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor)
 {
   // Optimisation: return early if this event doesn't interest us.
   // IMPORTANT: this switch and the switch below it must be kept in sync!
-  switch (aVisitor.mEvent->message) {
+  switch (aVisitor.mEvent->mMessage) {
   case NS_MOUSE_BUTTON_DOWN:
   case NS_MOUSE_CLICK:
   case NS_UI_ACTIVATE:
@@ -2946,7 +2946,7 @@ Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor)
 
   nsresult rv = NS_OK;
 
-  switch (aVisitor.mEvent->message) {
+  switch (aVisitor.mEvent->mMessage) {
   case NS_MOUSE_BUTTON_DOWN:
     {
       if (aVisitor.mEvent->AsMouseEvent()->button ==

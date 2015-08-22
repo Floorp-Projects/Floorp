@@ -35,7 +35,7 @@ MultiTouchInput::MultiTouchInput(const WidgetTouchEvent& aTouchEvent)
   MOZ_ASSERT(NS_IsMainThread(),
              "Can only copy from WidgetTouchEvent on main thread");
 
-  switch (aTouchEvent.message) {
+  switch (aTouchEvent.mMessage) {
     case NS_TOUCH_START:
       mType = MULTITOUCH_START;
       break;
@@ -181,7 +181,7 @@ MultiTouchInput::MultiTouchInput(const WidgetMouseEvent& aMouseEvent)
 {
   MOZ_ASSERT(NS_IsMainThread(),
              "Can only copy from WidgetMouseEvent on main thread");
-  switch (aMouseEvent.message) {
+  switch (aMouseEvent.mMessage) {
   case NS_MOUSE_BUTTON_DOWN:
     mType = MULTITOUCH_START;
     break;

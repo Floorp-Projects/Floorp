@@ -388,7 +388,7 @@ nsSplitterFrame::HandleEvent(nsPresContext* aPresContext,
 
   nsWeakFrame weakFrame(this);
   nsRefPtr<nsSplitterFrameInner> kungFuDeathGrip(mInner);
-  switch (aEvent->message) {
+  switch (aEvent->mMessage) {
     case NS_MOUSE_MOVE: 
       mInner->MouseDrag(aPresContext, aEvent);
     break;

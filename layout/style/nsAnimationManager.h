@@ -44,7 +44,8 @@ struct AnimationEventInfo {
   // InternalAnimationEvent doesn't support copy-construction, so we need
   // to ourselves in order to work with nsTArray
   AnimationEventInfo(const AnimationEventInfo &aOther)
-    : mElement(aOther.mElement), mEvent(true, aOther.mEvent.message)
+    : mElement(aOther.mElement)
+    , mEvent(true, aOther.mEvent.mMessage)
   {
     mEvent.AssignAnimationEventData(aOther.mEvent, false);
   }

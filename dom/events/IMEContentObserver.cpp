@@ -456,7 +456,7 @@ IMEContentObserver::OnMouseButtonEvent(nsPresContext* aPresContext,
     return false;
   }
   // Now, we need to notify only mouse down and mouse up event.
-  switch (aMouseEvent->message) {
+  switch (aMouseEvent->mMessage) {
     case NS_MOUSE_BUTTON_UP:
     case NS_MOUSE_BUTTON_DOWN:
       break;
@@ -501,7 +501,7 @@ IMEContentObserver::OnMouseButtonEvent(nsPresContext* aPresContext,
   }
 
   IMENotification notification(NOTIFY_IME_OF_MOUSE_BUTTON_EVENT);
-  notification.mMouseButtonEventData.mEventMessage = aMouseEvent->message;
+  notification.mMouseButtonEventData.mEventMessage = aMouseEvent->mMessage;
   notification.mMouseButtonEventData.mOffset = charAtPt.mReply.mOffset;
   notification.mMouseButtonEventData.mCursorPos.Set(
     LayoutDeviceIntPoint::ToUntyped(charAtPt.refPoint));

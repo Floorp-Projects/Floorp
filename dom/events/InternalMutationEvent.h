@@ -30,7 +30,7 @@ public:
   {
     MOZ_ASSERT(mClass == eMutationEventClass,
                "Duplicate() must be overridden by sub class");
-    InternalMutationEvent* result = new InternalMutationEvent(false, message);
+    InternalMutationEvent* result = new InternalMutationEvent(false, mMessage);
     result->AssignMutationEventData(*this, true);
     result->mFlags = mFlags;
     return result;
