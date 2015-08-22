@@ -23,16 +23,9 @@ class MercurialUpdater(object):
 
     def __init__(self, state_dir):
         self.state_dir = os.path.normpath(state_dir)
-        self.ext_dir = os.path.join(self.state_dir, 'mercurial', 'extensions')
         self.vcs_tools_dir = os.path.join(self.state_dir, 'version-control-tools')
 
     def update_all(self):
-        try:
-            os.makedirs(self.ext_dir)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
-
         try:
             hg = which.which('hg')
         except which.WhichError as e:
