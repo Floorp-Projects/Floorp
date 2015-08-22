@@ -100,6 +100,12 @@ function testStatusOnChange() {
   });
 }
 
+function testInvalidQuery() {
+  navigator.permissions.query({ name: 'invalid' }).then(
+    result => ok(false, 'invalid query should not have resolved'),
+    error => ok(true, 'invalid query should have rejected'));
+}
+
 function runTests() {
   setup()
     .then(checkUnsupportedPermissions)
@@ -113,6 +119,7 @@ function runTests() {
     .then(() => setPermissions(DENY_ACTION))
     .then(() => checkPermissions('denied'))
     .then(testStatusOnChange)
+    .then(testInvalidQuery)
     .then(SimpleTest.finish)
     .catch ((e) => {
       ok(false, 'Unexpected error ' + e);
