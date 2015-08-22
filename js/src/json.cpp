@@ -348,7 +348,11 @@ JO(JSContext* cx, HandleObject obj, StringifyContext* scx)
     Maybe<AutoIdVector> ids;
     const AutoIdVector* props;
     if (scx->replacer && !scx->replacer->isCallable()) {
-        MOZ_ASSERT(IsArray(scx->replacer, cx));
+        // NOTE: We can't assert |IsArray(scx->replacer)| because the replacer
+        //       might have been a revocable proxy to an array.  Such a proxy
+        //       satisfies |IsArray|, but any side effect of JSON.stringify
+        //       could revoke the proxy so that |!IsArray(scx->replacer)|.  See
+        //       bug 1196497.
         props = &scx->propertyList;
     } else {
         MOZ_ASSERT_IF(scx->replacer, scx->propertyList.length() == 0);
