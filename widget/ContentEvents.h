@@ -51,7 +51,7 @@ public:
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     InternalScrollPortEvent* result =
-      new InternalScrollPortEvent(false, message, nullptr);
+      new InternalScrollPortEvent(false, mMessage, nullptr);
     result->AssignScrollPortEventData(*this, true);
     result->mFlags = mFlags;
     return result;
@@ -92,7 +92,7 @@ public:
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     InternalScrollAreaEvent* result =
-      new InternalScrollAreaEvent(false, message, nullptr);
+      new InternalScrollAreaEvent(false, mMessage, nullptr);
     result->AssignScrollAreaEventData(*this, true);
     result->mFlags = mFlags;
     return result;
@@ -131,7 +131,7 @@ public:
   {
     MOZ_ASSERT(mClass == eFormEventClass,
                "Duplicate() must be overridden by sub class");
-    InternalFormEvent* result = new InternalFormEvent(false, message);
+    InternalFormEvent* result = new InternalFormEvent(false, mMessage);
     result->AssignFormEventData(*this, true);
     result->mFlags = mFlags;
     return result;
@@ -168,7 +168,8 @@ public:
   {
     MOZ_ASSERT(mClass == eClipboardEventClass,
                "Duplicate() must be overridden by sub class");
-    InternalClipboardEvent* result = new InternalClipboardEvent(false, message);
+    InternalClipboardEvent* result =
+      new InternalClipboardEvent(false, mMessage);
     result->AssignClipboardEventData(*this, true);
     result->mFlags = mFlags;
     return result;
@@ -205,7 +206,7 @@ public:
   {
     MOZ_ASSERT(mClass == eFocusEventClass,
                "Duplicate() must be overridden by sub class");
-    InternalFocusEvent* result = new InternalFocusEvent(false, message);
+    InternalFocusEvent* result = new InternalFocusEvent(false, mMessage);
     result->AssignFocusEventData(*this, true);
     result->mFlags = mFlags;
     return result;
@@ -251,7 +252,7 @@ public:
     MOZ_ASSERT(mClass == eTransitionEventClass,
                "Duplicate() must be overridden by sub class");
     InternalTransitionEvent* result =
-      new InternalTransitionEvent(false, message);
+      new InternalTransitionEvent(false, mMessage);
     result->AssignTransitionEventData(*this, true);
     result->mFlags = mFlags;
     return result;
@@ -295,7 +296,8 @@ public:
   {
     MOZ_ASSERT(mClass == eAnimationEventClass,
                "Duplicate() must be overridden by sub class");
-    InternalAnimationEvent* result = new InternalAnimationEvent(false, message);
+    InternalAnimationEvent* result =
+      new InternalAnimationEvent(false, mMessage);
     result->AssignAnimationEventData(*this, true);
     result->mFlags = mFlags;
     return result;
@@ -336,7 +338,7 @@ public:
     MOZ_ASSERT(mClass == eSVGZoomEventClass,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
-    InternalSVGZoomEvent* result = new InternalSVGZoomEvent(false, message);
+    InternalSVGZoomEvent* result = new InternalSVGZoomEvent(false, mMessage);
     result->AssignSVGZoomEventData(*this, true);
     result->mFlags = mFlags;
     return result;
@@ -372,7 +374,7 @@ public:
   {
     MOZ_ASSERT(mClass == eSMILTimeEventClass,
                "Duplicate() must be overridden by sub class");
-    InternalSMILTimeEvent* result = new InternalSMILTimeEvent(false, message);
+    InternalSMILTimeEvent* result = new InternalSMILTimeEvent(false, mMessage);
     result->AssignSMILTimeEventData(*this, true);
     result->mFlags = mFlags;
     return result;

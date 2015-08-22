@@ -233,7 +233,7 @@ TextComposition::DispatchCompositionEvent(
     RemoveControlCharactersFrom(aCompositionEvent->mData,
                                 aCompositionEvent->mRanges);
   }
-  if (aCompositionEvent->message == NS_COMPOSITION_COMMIT_AS_IS) {
+  if (aCompositionEvent->mMessage == NS_COMPOSITION_COMMIT_AS_IS) {
     NS_ASSERTION(!aCompositionEvent->mRanges,
                  "mRanges of NS_COMPOSITION_COMMIT_AS_IS should be null");
     aCompositionEvent->mRanges = nullptr;
@@ -247,7 +247,7 @@ TextComposition::DispatchCompositionEvent(
     } else {
       aCompositionEvent->mData = mLastData;
     }
-  } else if (aCompositionEvent->message == NS_COMPOSITION_COMMIT) {
+  } else if (aCompositionEvent->mMessage == NS_COMPOSITION_COMMIT) {
     NS_ASSERTION(!aCompositionEvent->mRanges,
                  "mRanges of NS_COMPOSITION_COMMIT should be null");
     aCompositionEvent->mRanges = nullptr;
@@ -282,7 +282,7 @@ TextComposition::DispatchCompositionEvent(
   // 2. non-empty string is committed at requesting cancel.
   if (!aIsSynthesized && (mIsRequestingCommit || mIsRequestingCancel)) {
     nsString* committingData = nullptr;
-    switch (aCompositionEvent->message) {
+    switch (aCompositionEvent->mMessage) {
       case NS_COMPOSITION_END:
       case NS_COMPOSITION_CHANGE:
       case NS_COMPOSITION_COMMIT_AS_IS:
@@ -312,7 +312,7 @@ TextComposition::DispatchCompositionEvent(
   // composition string empty or didn't have clause information), we don't
   // need to dispatch redundant DOM text event.
   if (dispatchDOMTextEvent &&
-      aCompositionEvent->message != NS_COMPOSITION_CHANGE &&
+      aCompositionEvent->mMessage != NS_COMPOSITION_CHANGE &&
       !mIsComposing && mLastData == aCompositionEvent->mData) {
     dispatchEvent = dispatchDOMTextEvent = false;
   }
@@ -321,7 +321,7 @@ TextComposition::DispatchCompositionEvent(
   // which modifies neither composition string, clauses nor caret
   // position.  In such case, we shouldn't dispatch DOM events.
   if (dispatchDOMTextEvent &&
-      aCompositionEvent->message == NS_COMPOSITION_CHANGE &&
+      aCompositionEvent->mMessage == NS_COMPOSITION_CHANGE &&
       mLastData == aCompositionEvent->mData &&
       mRanges && aCompositionEvent->mRanges &&
       mRanges->Equals(*aCompositionEvent->mRanges)) {
@@ -340,7 +340,7 @@ TextComposition::DispatchCompositionEvent(
     // the limitation of mapping between event messages and DOM event types,
     // we cannot map multiple event messages to a DOM event type.
     if (dispatchDOMTextEvent &&
-        aCompositionEvent->message != NS_COMPOSITION_CHANGE) {
+        aCompositionEvent->mMessage != NS_COMPOSITION_CHANGE) {
       aCompositionEvent->mFlags =
         CloneAndDispatchAs(aCompositionEvent, NS_COMPOSITION_CHANGE,
                            aStatus, aCallBack);
@@ -365,7 +365,7 @@ TextComposition::DispatchCompositionEvent(
 
   if (aCompositionEvent->CausesDOMCompositionEndEvent()) {
     // Dispatch a compositionend event if it's necessary.
-    if (aCompositionEvent->message != NS_COMPOSITION_END) {
+    if (aCompositionEvent->mMessage != NS_COMPOSITION_END) {
       CloneAndDispatchAs(aCompositionEvent, NS_COMPOSITION_END);
     }
     MOZ_ASSERT(!mIsComposing, "Why is the editor still composing?");
@@ -411,7 +411,7 @@ TextComposition::NotityUpdateComposition(
   // When compositon start, notify the rect of first offset character.
   // When not compositon start, notify the rect of selected composition
   // string if compositionchange event.
-  if (aCompositionEvent->message == NS_COMPOSITION_START) {
+  if (aCompositionEvent->mMessage == NS_COMPOSITION_START) {
     nsCOMPtr<nsIWidget> widget = mPresContext->GetRootWidget();
     // Update composition start offset
     WidgetQueryContentEvent selectedTextEvent(true,

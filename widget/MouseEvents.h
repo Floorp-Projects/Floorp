@@ -155,7 +155,7 @@ public:
    */
   bool IsLeftClickEvent() const
   {
-    return message == NS_MOUSE_CLICK && button == eLeftButton;
+    return mMessage == NS_MOUSE_CLICK && button == eLeftButton;
   }
 };
 
@@ -240,7 +240,7 @@ public:
 #ifdef DEBUG
   virtual ~WidgetMouseEvent()
   {
-    NS_WARN_IF_FALSE(message != NS_CONTEXTMENU ||
+    NS_WARN_IF_FALSE(mMessage != NS_CONTEXTMENU ||
                      button ==
                        ((context == eNormal) ? eRightButton : eLeftButton),
                      "Wrong button set to NS_CONTEXTMENU event?");
@@ -253,7 +253,7 @@ public:
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetMouseEvent* result =
-      new WidgetMouseEvent(false, message, nullptr, reason, context);
+      new WidgetMouseEvent(false, mMessage, nullptr, reason, context);
     result->AssignMouseEventData(*this, true);
     result->mFlags = mFlags;
     return result;
@@ -287,7 +287,7 @@ public:
    */
   bool IsContextMenuKeyEvent() const
   {
-    return message == NS_CONTEXTMENU && context == eContextMenuKey;
+    return mMessage == NS_CONTEXTMENU && context == eContextMenuKey;
   }
 
   /**
@@ -332,7 +332,7 @@ public:
     MOZ_ASSERT(mClass == eDragEventClass,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
-    WidgetDragEvent* result = new WidgetDragEvent(false, message, nullptr);
+    WidgetDragEvent* result = new WidgetDragEvent(false, mMessage, nullptr);
     result->AssignDragEventData(*this, true);
     result->mFlags = mFlags;
     return result;
@@ -394,7 +394,7 @@ public:
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetMouseScrollEvent* result =
-      new WidgetMouseScrollEvent(false, message, nullptr);
+      new WidgetMouseScrollEvent(false, mMessage, nullptr);
     result->AssignMouseScrollEventData(*this, true);
     result->mFlags = mFlags;
     return result;
@@ -462,7 +462,7 @@ public:
     MOZ_ASSERT(mClass == eWheelEventClass,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
-    WidgetWheelEvent* result = new WidgetWheelEvent(false, message, nullptr);
+    WidgetWheelEvent* result = new WidgetWheelEvent(false, mMessage, nullptr);
     result->AssignWheelEventData(*this, true);
     result->mFlags = mFlags;
     return result;
@@ -608,7 +608,7 @@ public:
 
   void UpdateFlags()
   {
-    switch (message) {
+    switch (mMessage) {
       case NS_POINTER_ENTER:
       case NS_POINTER_LEAVE:
         mFlags.mBubbles = false;
@@ -630,7 +630,7 @@ public:
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetPointerEvent* result =
-      new WidgetPointerEvent(false, message, nullptr);
+      new WidgetPointerEvent(false, mMessage, nullptr);
     result->AssignPointerEventData(*this, true);
     result->mFlags = mFlags;
     return result;

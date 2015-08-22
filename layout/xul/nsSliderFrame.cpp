@@ -477,7 +477,7 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
 
   if (isDraggingThumb())
   {
-    switch (aEvent->message) {
+    switch (aEvent->mMessage) {
     case NS_TOUCH_MOVE:
     case NS_MOUSE_MOVE: {
       nsPoint eventPoint;
@@ -596,9 +596,9 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
            aEvent->AsMouseEvent()->button == WidgetMouseEvent::eRightButton) {
     // HandlePress and HandleRelease are usually called via
     // nsFrame::HandleEvent, but only for the left mouse button.
-    if (aEvent->message == NS_MOUSE_BUTTON_DOWN) {
+    if (aEvent->mMessage == NS_MOUSE_BUTTON_DOWN) {
       HandlePress(aPresContext, aEvent, aEventStatus);
-    } else if (aEvent->message == NS_MOUSE_BUTTON_UP) {
+    } else if (aEvent->mMessage == NS_MOUSE_BUTTON_UP) {
       HandleRelease(aPresContext, aEvent, aEventStatus);
     }
 
@@ -607,10 +607,13 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
 #endif
 
   // XXX hack until handle release is actually called in nsframe.
-//  if (aEvent->message == NS_MOUSE_OUT || aEvent->message == NS_MOUSE_RIGHT_BUTTON_UP || aEvent->message == NS_MOUSE_LEFT_BUTTON_UP)
-  //   HandleRelease(aPresContext, aEvent, aEventStatus);
+  //  if (aEvent->mMessage == NS_MOUSE_OUT ||
+  //      aEvent->mMessage == NS_MOUSE_RIGHT_BUTTON_UP ||
+  //      aEvent->mMessage == NS_MOUSE_LEFT_BUTTON_UP) {
+  //    HandleRelease(aPresContext, aEvent, aEventStatus);
+  //  }
 
-  if (aEvent->message == NS_MOUSE_OUT && mChange)
+  if (aEvent->mMessage == NS_MOUSE_OUT && mChange)
      HandleRelease(aPresContext, aEvent, aEventStatus);
 
   return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
@@ -1042,7 +1045,7 @@ nsSliderFrame::RemoveListener()
 bool
 nsSliderFrame::ShouldScrollForEvent(WidgetGUIEvent* aEvent)
 {
-  switch (aEvent->message) {
+  switch (aEvent->mMessage) {
     case NS_TOUCH_START:
     case NS_TOUCH_END:
       return true;
@@ -1070,11 +1073,11 @@ nsSliderFrame::ShouldScrollToClickForEvent(WidgetGUIEvent* aEvent)
     return false;
   }
 
-  if (aEvent->message == NS_TOUCH_START) {
+  if (aEvent->mMessage == NS_TOUCH_START) {
     return GetScrollToClick();
   }
 
-  if (aEvent->message != NS_MOUSE_BUTTON_DOWN) {
+  if (aEvent->mMessage != NS_MOUSE_BUTTON_DOWN) {
     return false;
   }
 

@@ -94,7 +94,7 @@ WheelTransaction::BeginTransaction(nsIFrame* aTargetFrame,
                                    WidgetWheelEvent* aEvent)
 {
   NS_ASSERTION(!sTargetFrame, "previous transaction is not finished!");
-  MOZ_ASSERT(aEvent->message == NS_WHEEL_WHEEL,
+  MOZ_ASSERT(aEvent->mMessage == NS_WHEEL_WHEEL,
              "Transaction must be started with a wheel event");
   ScrollbarsForWheel::OwnWheelTransaction(false);
   sTargetFrame = aTargetFrame;
@@ -175,7 +175,7 @@ WheelTransaction::OnEvent(WidgetEvent* aEvent)
     return;
   }
 
-  switch (aEvent->message) {
+  switch (aEvent->mMessage) {
     case NS_WHEEL_WHEEL:
       if (sMouseMoved != 0 &&
           OutOfTime(sMouseMoved, GetIgnoreMoveDelayTime())) {
@@ -413,7 +413,7 @@ ScrollbarsForWheel::PrepareToScrollText(EventStateManager* aESM,
                                         nsIFrame* aTargetFrame,
                                         WidgetWheelEvent* aEvent)
 {
-  if (aEvent->message == NS_WHEEL_START) {
+  if (aEvent->mMessage == NS_WHEEL_START) {
     WheelTransaction::OwnScrollbars(false);
     if (!IsActive()) {
       TemporarilyActivateAllPossibleScrollTargets(aESM, aTargetFrame, aEvent);
