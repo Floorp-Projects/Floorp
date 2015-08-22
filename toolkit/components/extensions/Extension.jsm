@@ -333,8 +333,6 @@ this.Extension = function(addonData)
   this.webAccessibleResources = new Set();
 
   this.emitter = new EventEmitter();
-
-  ExtensionManagement.startupExtension(this.uuid, this.addonData.resourceURI, this);
 }
 
 Extension.prototype = {
@@ -553,6 +551,12 @@ Extension.prototype = {
   },
 
   startup() {
+    try {
+      ExtensionManagement.startupExtension(this.uuid, this.addonData.resourceURI, this);
+    } catch (e) {
+      return Promise.reject(e);
+    }
+
     return Promise.all([this.readManifest(), this.readLocaleMessages()]).then(([manifest, messages]) => {
       if (this.hasShutdown) {
         return;
@@ -569,6 +573,7 @@ Extension.prototype = {
     }).catch(e => {
       dump(`Extension error: ${e} ${e.fileName}:${e.lineNumber}\n`);
       Cu.reportError(e);
+      throw e;
     });
   },
 
