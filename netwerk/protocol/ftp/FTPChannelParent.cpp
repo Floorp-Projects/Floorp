@@ -188,10 +188,16 @@ FTPChannelParent::DoAsyncOpen(const URIParams& aURI,
   if (NS_FAILED(rv))
     return SendFailedAsyncOpen(rv);
 
-  rv = ftpChan->AsyncOpen(this, nullptr);
+  if (loadInfo && loadInfo->GetEnforceSecurity()) {
+    rv = ftpChan->AsyncOpen2(this);
+  }
+  else {
+    rv = ftpChan->AsyncOpen(this, nullptr);
+  }
+
   if (NS_FAILED(rv))
     return SendFailedAsyncOpen(rv);
-  
+
   return true;
 }
 
