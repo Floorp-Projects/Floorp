@@ -173,11 +173,6 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
     }
 
     protected static void setButtonEnabled(final ImageButton button, final boolean enabled) {
-        final Drawable drawable = button.getDrawable();
-        if (drawable != null) {
-            drawable.setAlpha(enabled ? 255 : 61);
-        }
-
         button.setEnabled(enabled);
     }
 }
