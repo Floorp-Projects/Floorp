@@ -547,7 +547,7 @@ VariablesView.prototype = {
    *        The variable or property to search for.
    */
   _doSearch: function(aToken) {
-    if (this.controller.supportsSearch()) {
+    if (this.controller && this.controller.supportsSearch()) {
       // Retrieve the main Scope in which we add attributes
       let scope = this._store[0]._store.get("");
       if (!aToken) {
