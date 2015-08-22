@@ -1753,7 +1753,7 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
   NS_NewChannel(getter_AddRefs(channel),
                 uri,
                 nsContentUtils::GetSystemPrincipal(),
-                nsILoadInfo::SEC_NORMAL,
+                nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                 nsIContentPolicy::TYPE_OTHER);
 
   if (!channel) {
@@ -1761,7 +1761,8 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
   }
 
   nsCOMPtr<nsIInputStream> input;
-  channel->Open(getter_AddRefs(input));
+  rv = channel->Open2(getter_AddRefs(input));
+  NS_ENSURE_SUCCESS_VOID(rv);
   nsString dataString;
   char16_t* dataStringBuf = nullptr;
   size_t dataStringLength = 0;
