@@ -342,8 +342,11 @@ let DocumentManager = {
     }
 
     // TODO: Somehow make sure we have the right permissions for this origin!
-    // FIXME: Need to keep this around so that I will execute it later if we're not in the right state.
-    context.execute(script, scheduled => scheduled == state);
+
+    // FIXME: Script should be executed only if current state has
+    // already reached its run_at state, or we have to keep it around
+    // somewhere to execute later.
+    context.execute(script, scheduled => true);
   },
 
   enumerateWindows: function*(docShell) {
@@ -415,7 +418,7 @@ let DocumentManager = {
       for (let script of extension.scripts) {
         if (script.matches(window)) {
           let context = this.getContext(extensionId, window);
-          context.execute(script, scheduled => isWhenBeforeOrSame(scheduled, state));
+          context.execute(script, scheduled => scheduled == state);
         }
       }
     }

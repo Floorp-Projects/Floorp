@@ -14,7 +14,7 @@ function loadExtension(name)
   let testResolve;
   let testDone = new Promise(resolve => { testResolve = resolve; });
 
-  let messageResolve = new Map();
+  let messageHandler = new Map();
 
   let handler = {
     testResult(kind, pass, msg, ...args) {
@@ -26,13 +26,12 @@ function loadExtension(name)
     },
 
     testMessage(msg, ...args) {
-      let resolve = messageResolve.get(msg);
-      if (!resolve) {
+      let handler = messageHandler.get(msg);
+      if (!handler) {
         return;
       }
-      messageResolve.delete(msg);
 
-      resolve(...args);
+      handler(...args);
     },
   };
 
@@ -46,8 +45,22 @@ function loadExtension(name)
 
   extension.awaitMessage = (msg) => {
     return new Promise(resolve => {
-      messageResolve.set(msg, resolve);
+      if (messageHandler.has(msg)) {
+        throw new Error("only one message handler allowed");
+      }
+
+      messageHandler.set(msg, (...args) => {
+        messageHandler.delete(msg);
+        resolve(...args);
+      });
     });
+  };
+
+  extension.onMessage = (msg, callback) => {
+    if (messageHandler.has(msg)) {
+      throw new Error("only one message handler allowed");
+    }
+    messageHandler.set(msg, callback);
   };
 
   extension.awaitFinish = () => {
