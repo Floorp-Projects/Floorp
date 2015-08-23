@@ -7,7 +7,7 @@
  */
 
 const { PerformanceFront } = require("devtools/server/actors/performance");
-const { PMM_isProfilerActive, PMM_stopProfiler, PMM_loadProfilerScripts } = require("devtools/toolkit/shared/profiler");
+const { sendProfilerCommand, PMM_isProfilerActive, PMM_stopProfiler, PMM_loadFrameScripts } = require("devtools/toolkit/performance/process-communication");
 
 add_task(function*() {
   yield addTab(MAIN_DOMAIN + "doc_perf.html");
@@ -17,7 +17,7 @@ add_task(function*() {
   let firstFront = PerformanceFront(client, form);
   yield firstFront.connect();
 
-  PMM_loadProfilerScripts(gBrowser);
+  PMM_loadFrameScripts(gBrowser);
 
   yield firstFront.startRecording();
 
@@ -26,7 +26,7 @@ add_task(function*() {
   let form2 = yield connectDebuggerClient(client2);
   let secondFront = PerformanceFront(client2, form2);
   yield secondFront.connect();
-  PMM_loadProfilerScripts(gBrowser);
+  PMM_loadFrameScripts(gBrowser);
 
   yield secondFront.startRecording();
 

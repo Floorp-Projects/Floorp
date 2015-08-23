@@ -309,7 +309,8 @@ this.WebChannel.prototype = {
           errno: ERRNO_UNKNOWN_ERROR,
           error: ex.message ? ex.message : ERROR_UNKNOWN
         }, sendingContext);
-        Cu.reportError("Failed to execute callback:" + ex);
+        Cu.reportError("Failed to execute WebChannel callback:");
+        Cu.reportError(ex);
       }
     } else {
       Cu.reportError("No callback set for this channel.");

@@ -45,11 +45,10 @@ function assertNodeSelected(inspector, tagName) {
 }
 
 function* selectWithBrowserMenu(inspector) {
-  yield executeInContent("Test:SynthesizeMouse", {
-    center: true,
-    selector: "div",
-    options: {type: "contextmenu", button: 2}
-  });
+  yield BrowserTestUtils.synthesizeMouseAtCenter("div", {
+    type: "contextmenu",
+    button: 2
+  }, gBrowser.selectedBrowser);
 
   // nsContextMenu also requires the popupNode to be set, but we can't set it to
   // node under e10s as it's a CPOW, not a DOM node. But under e10s,
@@ -71,11 +70,9 @@ function* selectWithBrowserMenu(inspector) {
 
 function* selectWithElementPicker(inspector) {
   yield inspector.toolbox.highlighterUtils.startPicker();
-  yield executeInContent("Test:SynthesizeMouse", {
-    center: true,
-    selector: "div",
-    options: {type: "mousemove"}
-  });
+  yield BrowserTestUtils.synthesizeMouseAtCenter("div", {
+    type: "mousemove",
+  }, gBrowser.selectedBrowser);
   executeInContent("Test:SynthesizeKey", {
     key: "VK_RETURN",
     options: {}
