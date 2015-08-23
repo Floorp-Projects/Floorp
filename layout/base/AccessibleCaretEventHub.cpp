@@ -500,7 +500,7 @@ AccessibleCaretEventHub::HandleMouseEvent(WidgetMouseEvent* aEvent)
                 kDefaultTouchId : mActiveTouchId);
   nsPoint point = GetMouseEventPosition(aEvent);
 
-  switch (aEvent->message) {
+  switch (aEvent->mMessage) {
   case NS_MOUSE_BUTTON_DOWN:
     AC_LOGV("Before NS_MOUSE_BUTTON_DOWN, state: %s", mState->Name());
     rv = mState->OnPress(this, point, id);
@@ -538,7 +538,7 @@ AccessibleCaretEventHub::HandleMouseEvent(WidgetMouseEvent* aEvent)
 nsEventStatus
 AccessibleCaretEventHub::HandleWheelEvent(WidgetWheelEvent* aEvent)
 {
-  switch (aEvent->message) {
+  switch (aEvent->mMessage) {
   case NS_WHEEL_WHEEL:
     AC_LOGV("NS_WHEEL_WHEEL, isMomentum %d, state: %s", aEvent->isMomentum,
             mState->Name());
@@ -573,7 +573,7 @@ AccessibleCaretEventHub::HandleTouchEvent(WidgetTouchEvent* aEvent)
                 aEvent->touches[0]->Identifier() : mActiveTouchId);
   nsPoint point = GetTouchEventPosition(aEvent, id);
 
-  switch (aEvent->message) {
+  switch (aEvent->mMessage) {
   case NS_TOUCH_START:
     AC_LOGV("Before NS_TOUCH_START, state: %s", mState->Name());
     rv = mState->OnPress(this, point, id);
@@ -609,7 +609,7 @@ AccessibleCaretEventHub::HandleTouchEvent(WidgetTouchEvent* aEvent)
 nsEventStatus
 AccessibleCaretEventHub::HandleKeyboardEvent(WidgetKeyboardEvent* aEvent)
 {
-  switch (aEvent->message) {
+  switch (aEvent->mMessage) {
   case NS_KEY_UP:
   case NS_KEY_DOWN:
   case NS_KEY_PRESS:

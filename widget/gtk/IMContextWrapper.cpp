@@ -883,7 +883,7 @@ IMContextWrapper::OnSelectionChange(nsWindow* aCaller,
         return;
     }
 
-    const IMENotification::SelectionChangeData& selectionChangeData =
+    const IMENotification::SelectionChangeDataBase& selectionChangeData =
         aIMENotification.mSelectionChangeData;
 
     MOZ_LOG(gGtkIMLog, LogLevel::Info,
@@ -2201,7 +2201,7 @@ IMContextWrapper::Selection::Assign(const IMENotification& aIMENotification)
 void
 IMContextWrapper::Selection::Assign(const WidgetQueryContentEvent& aEvent)
 {
-    MOZ_ASSERT(aEvent.message == NS_QUERY_SELECTED_TEXT);
+    MOZ_ASSERT(aEvent.mMessage == NS_QUERY_SELECTED_TEXT);
     MOZ_ASSERT(aEvent.mSucceeded);
     mOffset = aEvent.mReply.mOffset;
     mLength = aEvent.mReply.mString.Length();

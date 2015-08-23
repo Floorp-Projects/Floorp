@@ -395,9 +395,14 @@ ExtendableEvent::ExtendableEvent(EventTarget* aOwner)
 }
 
 void
-ExtendableEvent::WaitUntil(Promise& aPromise)
+ExtendableEvent::WaitUntil(Promise& aPromise, ErrorResult& aRv)
 {
   MOZ_ASSERT(!NS_IsMainThread());
+
+  if (EventPhase() == nsIDOMEvent::NONE) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
 
   // Only first caller counts.
   if (EventPhase() == AT_TARGET && !mPromise) {

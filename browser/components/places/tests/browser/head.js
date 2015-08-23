@@ -170,13 +170,13 @@ function promiseBookmarksNotification(notification, conditionFn) {
           return XPCOMUtils.generateQI([ Ci.nsINavBookmarkObserver ]);
         info(`promiseBookmarksNotification: got ${name} notification`);
         if (name == notification)
-          return () => {
-            if (conditionFn.apply(this, arguments)) {
+          return (...args) => {
+            if (conditionFn.apply(this, args)) {
               clearTimeout(timeout);
               PlacesUtils.bookmarks.removeObserver(proxifiedObserver, false);
               executeSoon(resolve);
             } else {
-              info(`promiseBookmarksNotification: skip cause condition doesn't apply to ${JSON.stringify(arguments)}`);
+              info(`promiseBookmarksNotification: skip cause condition doesn't apply to ${JSON.stringify(args)}`);
             }
           }
         return () => {};
@@ -198,8 +198,8 @@ function promiseHistoryNotification(notification, conditionFn) {
         if (name == "QueryInterface")
           return XPCOMUtils.generateQI([ Ci.nsINavHistoryObserver ]);
         if (name == notification)
-          return () => {
-            if (conditionFn.apply(this, arguments)) {
+          return (...args) => {
+            if (conditionFn.apply(this, args)) {
               clearTimeout(timeout);
               PlacesUtils.history.removeObserver(proxifiedObserver, false);
               executeSoon(resolve);

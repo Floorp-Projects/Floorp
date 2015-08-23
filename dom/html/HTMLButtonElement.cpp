@@ -211,7 +211,7 @@ nsresult
 HTMLButtonElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = false;
-  if (IsDisabledForEvents(aVisitor.mEvent->message)) {
+  if (IsDisabledForEvents(aVisitor.mEvent->mMessage)) {
     return NS_OK;
   }
 
@@ -222,7 +222,7 @@ HTMLButtonElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
   WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
   bool outerActivateEvent =
     ((mouseEvent && mouseEvent->IsLeftClickEvent()) ||
-     (aVisitor.mEvent->message == NS_UI_ACTIVATE &&
+     (aVisitor.mEvent->mMessage == NS_UI_ACTIVATE &&
       !mInInternalActivate));
 
   if (outerActivateEvent) {
@@ -250,10 +250,9 @@ HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
   if (aVisitor.mEventStatus != nsEventStatus_eConsumeNoDefault) {
     WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
     if (mouseEvent && mouseEvent->IsLeftClickEvent()) {
-      // XXX Activating actually occurs even if it's caused by untrusted event.
-      //     Therefore, shouldn't this be always trusted event?
-      InternalUIEvent actEvent(aVisitor.mEvent->mFlags.mIsTrusted,
-                               NS_UI_ACTIVATE);
+      // DOMActive event should be trusted since the activation is actually
+      // occurred even if the cause is an untrusted click event.
+      InternalUIEvent actEvent(true, NS_UI_ACTIVATE, mouseEvent);
       actEvent.detail = 1;
 
       nsCOMPtr<nsIPresShell> shell = aVisitor.mPresContext->GetPresShell();
@@ -282,7 +281,7 @@ HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
   }
 
   if (nsEventStatus_eIgnore == aVisitor.mEventStatus) {
-    switch (aVisitor.mEvent->message) {
+    switch (aVisitor.mEvent->mMessage) {
       case NS_KEY_PRESS:
       case NS_KEY_UP:
         {
@@ -290,9 +289,9 @@ HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
           // (bug 25300)
           WidgetKeyboardEvent* keyEvent = aVisitor.mEvent->AsKeyboardEvent();
           if ((keyEvent->keyCode == NS_VK_RETURN &&
-               NS_KEY_PRESS == aVisitor.mEvent->message) ||
+               NS_KEY_PRESS == aVisitor.mEvent->mMessage) ||
               (keyEvent->keyCode == NS_VK_SPACE &&
-               NS_KEY_UP == aVisitor.mEvent->message)) {
+               NS_KEY_UP == aVisitor.mEvent->mMessage)) {
             nsEventStatus status = nsEventStatus_eIgnore;
 
             WidgetMouseEvent event(aVisitor.mEvent->mFlags.mIsTrusted,
@@ -383,7 +382,7 @@ HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
         //
         // Using presShell to dispatch the event. It makes sure that
         // event is not handled if the window is being destroyed.
-        if (presShell && (event.message != NS_FORM_SUBMIT ||
+        if (presShell && (event.mMessage != NS_FORM_SUBMIT ||
                           mForm->HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate) ||
                           // We know the element is a submit control, if this check is moved,
                           // make sure formnovalidate is used only if it's a submit control.

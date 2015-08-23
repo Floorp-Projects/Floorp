@@ -1676,82 +1676,82 @@ template <class Outer> class MutableValueOperations;
 /*
  * A class designed for CRTP use in implementing the non-mutating parts of the
  * Value interface in Value-like classes.  Outer must be a class inheriting
- * ValueOperations<Outer> with a visible extract() method returning the
- * const Value* abstracted by Outer.
+ * ValueOperations<Outer> with a visible get() method returning a const
+ * reference to the Value abstracted by Outer.
  */
 template <class Outer>
 class ValueOperations
 {
     friend class MutableValueOperations<Outer>;
 
-    const JS::Value * value() const { return static_cast<const Outer*>(this)->extract(); }
+    const JS::Value& value() const { return static_cast<const Outer*>(this)->get(); }
 
   public:
-    bool isUndefined() const { return value()->isUndefined(); }
-    bool isNull() const { return value()->isNull(); }
-    bool isBoolean() const { return value()->isBoolean(); }
-    bool isTrue() const { return value()->isTrue(); }
-    bool isFalse() const { return value()->isFalse(); }
-    bool isNumber() const { return value()->isNumber(); }
-    bool isInt32() const { return value()->isInt32(); }
-    bool isInt32(int32_t i32) const { return value()->isInt32(i32); }
-    bool isDouble() const { return value()->isDouble(); }
-    bool isString() const { return value()->isString(); }
-    bool isSymbol() const { return value()->isSymbol(); }
-    bool isObject() const { return value()->isObject(); }
-    bool isMagic() const { return value()->isMagic(); }
-    bool isMagic(JSWhyMagic why) const { return value()->isMagic(why); }
-    bool isMarkable() const { return value()->isMarkable(); }
-    bool isPrimitive() const { return value()->isPrimitive(); }
-    bool isGCThing() const { return value()->isGCThing(); }
+    bool isUndefined() const { return value().isUndefined(); }
+    bool isNull() const { return value().isNull(); }
+    bool isBoolean() const { return value().isBoolean(); }
+    bool isTrue() const { return value().isTrue(); }
+    bool isFalse() const { return value().isFalse(); }
+    bool isNumber() const { return value().isNumber(); }
+    bool isInt32() const { return value().isInt32(); }
+    bool isInt32(int32_t i32) const { return value().isInt32(i32); }
+    bool isDouble() const { return value().isDouble(); }
+    bool isString() const { return value().isString(); }
+    bool isSymbol() const { return value().isSymbol(); }
+    bool isObject() const { return value().isObject(); }
+    bool isMagic() const { return value().isMagic(); }
+    bool isMagic(JSWhyMagic why) const { return value().isMagic(why); }
+    bool isMarkable() const { return value().isMarkable(); }
+    bool isPrimitive() const { return value().isPrimitive(); }
+    bool isGCThing() const { return value().isGCThing(); }
 
-    bool isNullOrUndefined() const { return value()->isNullOrUndefined(); }
-    bool isObjectOrNull() const { return value()->isObjectOrNull(); }
+    bool isNullOrUndefined() const { return value().isNullOrUndefined(); }
+    bool isObjectOrNull() const { return value().isObjectOrNull(); }
 
-    bool toBoolean() const { return value()->toBoolean(); }
-    double toNumber() const { return value()->toNumber(); }
-    int32_t toInt32() const { return value()->toInt32(); }
-    double toDouble() const { return value()->toDouble(); }
-    JSString* toString() const { return value()->toString(); }
-    JS::Symbol* toSymbol() const { return value()->toSymbol(); }
-    JSObject& toObject() const { return value()->toObject(); }
-    JSObject* toObjectOrNull() const { return value()->toObjectOrNull(); }
-    gc::Cell* toGCThing() const { return value()->toGCThing(); }
-    JS::TraceKind traceKind() const { return value()->traceKind(); }
-    uint64_t asRawBits() const { return value()->asRawBits(); }
+    bool toBoolean() const { return value().toBoolean(); }
+    double toNumber() const { return value().toNumber(); }
+    int32_t toInt32() const { return value().toInt32(); }
+    double toDouble() const { return value().toDouble(); }
+    JSString* toString() const { return value().toString(); }
+    JS::Symbol* toSymbol() const { return value().toSymbol(); }
+    JSObject& toObject() const { return value().toObject(); }
+    JSObject* toObjectOrNull() const { return value().toObjectOrNull(); }
+    gc::Cell* toGCThing() const { return value().toGCThing(); }
+    JS::TraceKind traceKind() const { return value().traceKind(); }
+    uint64_t asRawBits() const { return value().asRawBits(); }
 
-    JSValueType extractNonDoubleType() const { return value()->extractNonDoubleType(); }
-    uint32_t toPrivateUint32() const { return value()->toPrivateUint32(); }
+    JSValueType extractNonDoubleType() const { return value().extractNonDoubleType(); }
+    uint32_t toPrivateUint32() const { return value().toPrivateUint32(); }
 
-    JSWhyMagic whyMagic() const { return value()->whyMagic(); }
-    uint32_t magicUint32() const { return value()->magicUint32(); }
+    JSWhyMagic whyMagic() const { return value().whyMagic(); }
+    uint32_t magicUint32() const { return value().magicUint32(); }
 };
 
 /*
  * A class designed for CRTP use in implementing all the mutating parts of the
  * Value interface in Value-like classes.  Outer must be a class inheriting
- * MutableValueOperations<Outer> with visible extractMutable() and extract()
- * methods returning the const Value* and Value* abstracted by Outer.
+ * MutableValueOperations<Outer> with visible get() methods returning const and
+ * non-const references to the Value abstracted by Outer.
  */
 template <class Outer>
 class MutableValueOperations : public ValueOperations<Outer>
 {
-    JS::Value * value() { return static_cast<Outer*>(this)->extractMutable(); }
+    JS::Value& value() { return static_cast<Outer*>(this)->get(); }
 
   public:
-    void setNull() { value()->setNull(); }
-    void setUndefined() { value()->setUndefined(); }
-    void setInt32(int32_t i) { value()->setInt32(i); }
-    void setDouble(double d) { value()->setDouble(d); }
+    void setNull() { value().setNull(); }
+    void setUndefined() { value().setUndefined(); }
+    void setInt32(int32_t i) { value().setInt32(i); }
+    void setDouble(double d) { value().setDouble(d); }
     void setNaN() { setDouble(JS::GenericNaN()); }
-    void setBoolean(bool b) { value()->setBoolean(b); }
-    void setMagic(JSWhyMagic why) { value()->setMagic(why); }
-    bool setNumber(uint32_t ui) { return value()->setNumber(ui); }
-    bool setNumber(double d) { return value()->setNumber(d); }
-    void setString(JSString* str) { this->value()->setString(str); }
-    void setSymbol(JS::Symbol* sym) { this->value()->setSymbol(sym); }
-    void setObject(JSObject& obj) { this->value()->setObject(obj); }
-    void setObjectOrNull(JSObject* arg) { this->value()->setObjectOrNull(arg); }
+    void setBoolean(bool b) { value().setBoolean(b); }
+    void setMagic(JSWhyMagic why) { value().setMagic(why); }
+    bool setNumber(uint32_t ui) { return value().setNumber(ui); }
+    bool setNumber(double d) { return value().setNumber(d); }
+    void setString(JSString* str) { this->value().setString(str); }
+    void setSymbol(JS::Symbol* sym) { this->value().setSymbol(sym); }
+    void setObject(JSObject& obj) { this->value().setObject(obj); }
+    void setObjectOrNull(JSObject* arg) { this->value().setObjectOrNull(arg); }
 };
 
 /*
@@ -1764,8 +1764,6 @@ class HeapBase<JS::Value> : public ValueOperations<JS::Heap<JS::Value> >
     typedef JS::Heap<JS::Value> Outer;
 
     friend class ValueOperations<Outer>;
-
-    const JS::Value * extract() const { return static_cast<const Outer*>(this)->address(); }
 
     void setBarriered(const JS::Value& v) {
         *static_cast<JS::Heap<JS::Value>*>(this) = v;
@@ -1812,72 +1810,21 @@ class HeapBase<JS::Value> : public ValueOperations<JS::Heap<JS::Value> >
     }
 };
 
-/*
- * Augment the generic Handle<T> interface when T = Value with type-querying
- * and value-extracting operations.
- */
 template <>
 class HandleBase<JS::Value> : public ValueOperations<JS::Handle<JS::Value> >
-{
-    friend class ValueOperations<JS::Handle<JS::Value> >;
-    const JS::Value * extract() const {
-        return static_cast<const JS::Handle<JS::Value>*>(this)->address();
-    }
-};
+{};
 
-/*
- * Augment the generic MutableHandle<T> interface when T = Value with
- * type-querying, value-extracting, and mutating operations.
- */
 template <>
 class MutableHandleBase<JS::Value> : public MutableValueOperations<JS::MutableHandle<JS::Value> >
-{
-    friend class ValueOperations<JS::MutableHandle<JS::Value> >;
-    const JS::Value * extract() const {
-        return static_cast<const JS::MutableHandle<JS::Value>*>(this)->address();
-    }
+{};
 
-    friend class MutableValueOperations<JS::MutableHandle<JS::Value> >;
-    JS::Value * extractMutable() {
-        return static_cast<JS::MutableHandle<JS::Value>*>(this)->address();
-    }
-};
-
-/*
- * Augment the generic Rooted<T> interface when T = Value with type-querying,
- * value-extracting, and mutating operations.
- */
 template <>
 class RootedBase<JS::Value> : public MutableValueOperations<JS::Rooted<JS::Value> >
-{
-    friend class ValueOperations<JS::Rooted<JS::Value> >;
-    const JS::Value * extract() const {
-        return static_cast<const JS::Rooted<JS::Value>*>(this)->address();
-    }
+{};
 
-    friend class MutableValueOperations<JS::Rooted<JS::Value> >;
-    JS::Value * extractMutable() {
-        return static_cast<JS::Rooted<JS::Value>*>(this)->address();
-    }
-};
-
-/*
- * Augment the generic PersistentRooted<T> interface when T = Value with type-querying,
- * value-extracting, and mutating operations.
- */
 template <>
 class PersistentRootedBase<JS::Value> : public MutableValueOperations<JS::PersistentRooted<JS::Value>>
-{
-    friend class ValueOperations<JS::PersistentRooted<JS::Value>>;
-    const JS::Value * extract() const {
-        return static_cast<const JS::PersistentRooted<JS::Value>*>(this)->address();
-    }
-
-    friend class MutableValueOperations<JS::PersistentRooted<JS::Value>>;
-    JS::Value * extractMutable() {
-        return static_cast<JS::PersistentRooted<JS::Value>*>(this)->address();
-    }
-};
+{};
 
 /*
  * If the Value is a GC pointer type, convert to that type and call |f| with

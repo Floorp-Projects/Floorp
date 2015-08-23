@@ -68,6 +68,7 @@ private:
   nsRefPtr<PerformanceObserverCallback> mCallback;
   nsRefPtr<PerformanceBase> mPerformance;
   nsTArray<nsString> mEntryTypes;
+  bool mConnected;
 };
 
 } // namespace dom

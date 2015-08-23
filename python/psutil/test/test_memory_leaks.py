@@ -10,6 +10,7 @@ functions many times and compare process memory usage before and
 after the calls.  It might produce false positives.
 """
 
+import functools
 import gc
 import os
 import socket
@@ -17,19 +18,19 @@ import sys
 import threading
 import time
 
+import psutil
+import psutil._common
+
+from psutil._compat import xrange, callable
+from test_psutil import (WINDOWS, POSIX, OSX, LINUX, SUNOS, BSD, TESTFN,
+                         RLIMIT_SUPPORT, TRAVIS)
+from test_psutil import (reap_children, supports_ipv6, safe_remove,
+                         get_test_subprocess)
+
 if sys.version_info < (2, 7):
     import unittest2 as unittest  # https://pypi.python.org/pypi/unittest2
 else:
     import unittest
-
-import psutil
-import psutil._common
-
-from psutil._compat import callable, xrange
-from test_psutil import (WINDOWS, POSIX, OSX, LINUX, SUNOS, TESTFN,
-                         RLIMIT_SUPPORT)
-from test_psutil import (reap_children, supports_ipv6, safe_remove,
-                         get_test_subprocess)
 
 
 LOOPS = 1000
@@ -43,7 +44,7 @@ def skip_if_linux():
 
 
 class Base(unittest.TestCase):
-    proc = psutil.Process(os.getpid())
+    proc = psutil.Process()
 
     def execute(self, function, *args, **kwargs):
         def call_many_times():
@@ -73,7 +74,7 @@ class Base(unittest.TestCase):
             # Let's keep calling fun for 3 more seconds and fail if
             # we notice any difference.
             stop_at = time.time() + 3
-            while 1:
+            while True:
                 self.call(function, *args, **kwargs)
                 if time.time() >= stop_at:
                     break
@@ -85,10 +86,14 @@ class Base(unittest.TestCase):
                 self.fail("rss2=%s, rss3=%s, difference=%s"
                           % (rss2, rss3, difference))
 
-    def get_mem(self):
-        return psutil.Process(os.getpid()).memory_info()[0]
+    def execute_w_exc(self, exc, function, *args, **kwargs):
+        kwargs['_exc'] = exc
+        self.execute(function, *args, **kwargs)
 
-    def call(self, *args, **kwargs):
+    def get_mem(self):
+        return psutil.Process().memory_info()[0]
+
+    def call(self, function, *args, **kwargs):
         raise NotImplementedError("must be implemented in subclass")
 
 
@@ -102,12 +107,25 @@ class TestProcessObjectLeaks(Base):
         reap_children()
 
     def call(self, function, *args, **kwargs):
-        try:
-            obj = getattr(self.proc, function)
-            if callable(obj):
-                obj(*args, **kwargs)
-        except psutil.Error:
-            pass
+        if callable(function):
+            if '_exc' in kwargs:
+                exc = kwargs.pop('_exc')
+                self.assertRaises(exc, function, *args, **kwargs)
+            else:
+                try:
+                    function(*args, **kwargs)
+                except psutil.Error:
+                    pass
+        else:
+            meth = getattr(self.proc, function)
+            if '_exc' in kwargs:
+                exc = kwargs.pop('_exc')
+                self.assertRaises(exc, meth, *args, **kwargs)
+            else:
+                try:
+                    meth(*args, **kwargs)
+                except psutil.Error:
+                    pass
 
     @skip_if_linux()
     def test_name(self):
@@ -143,7 +161,7 @@ class TestProcessObjectLeaks(Base):
         self.execute('nice')
 
     def test_nice_set(self):
-        niceness = psutil.Process(os.getpid()).nice()
+        niceness = psutil.Process().nice()
         self.execute('nice', niceness)
 
     @unittest.skipUnless(hasattr(psutil.Process, 'ionice'),
@@ -155,16 +173,20 @@ class TestProcessObjectLeaks(Base):
                          "Linux and Windows Vista only")
     def test_ionice_set(self):
         if WINDOWS:
-            value = psutil.Process(os.getpid()).ionice()
+            value = psutil.Process().ionice()
             self.execute('ionice', value)
         else:
+            from psutil._pslinux import cext
             self.execute('ionice', psutil.IOPRIO_CLASS_NONE)
+            fun = functools.partial(cext.proc_ioprio_set, os.getpid(), -1, 0)
+            self.execute_w_exc(OSError, fun)
 
-    @unittest.skipIf(OSX, "feature not supported on this platform")
+    @unittest.skipIf(OSX or SUNOS, "feature not supported on this platform")
     @skip_if_linux()
     def test_io_counters(self):
         self.execute('io_counters')
 
+    @unittest.skipUnless(WINDOWS, "not worth being tested on posix")
     def test_username(self):
         self.execute('username')
 
@@ -215,23 +237,24 @@ class TestProcessObjectLeaks(Base):
     def test_cwd(self):
         self.execute('cwd')
 
-    @unittest.skipUnless(WINDOWS or LINUX, "Windows or Linux only")
+    @unittest.skipUnless(WINDOWS or LINUX or BSD,
+                         "Windows or Linux or BSD only")
     def test_cpu_affinity_get(self):
         self.execute('cpu_affinity')
 
-    @unittest.skipUnless(WINDOWS or LINUX, "Windows or Linux only")
+    @unittest.skipUnless(WINDOWS or LINUX or BSD,
+                         "Windows or Linux or BSD only")
     def test_cpu_affinity_set(self):
-        affinity = psutil.Process(os.getpid()).cpu_affinity()
+        affinity = psutil.Process().cpu_affinity()
         self.execute('cpu_affinity', affinity)
+        if not TRAVIS:
+            self.execute_w_exc(ValueError, 'cpu_affinity', [-1])
 
     @skip_if_linux()
     def test_open_files(self):
         safe_remove(TESTFN)  # needed after UNIX socket test has run
-        f = open(TESTFN, 'w')
-        try:
+        with open(TESTFN, 'w'):
             self.execute('open_files')
-        finally:
-            f.close()
 
     # OSX implementation is unbelievably slow
     @unittest.skipIf(OSX, "OSX implementation is too slow")
@@ -251,6 +274,7 @@ class TestProcessObjectLeaks(Base):
     def test_rlimit_set(self):
         limit = psutil.Process().rlimit(psutil.RLIMIT_NOFILE)
         self.execute('rlimit', psutil.RLIMIT_NOFILE, limit)
+        self.execute_w_exc(OSError, 'rlimit', -1)
 
     @skip_if_linux()
     # Windows implementation is based on a single system-wide function
@@ -301,6 +325,12 @@ class TestProcessObjectLeaksZombie(TestProcessObjectLeaks):
     """
     proc = DEAD_PROC
 
+    def call(self, *args, **kwargs):
+        try:
+            TestProcessObjectLeaks.call(self, *args, **kwargs)
+        except psutil.NoSuchProcess:
+            pass
+
     if not POSIX:
         def test_kill(self):
             self.execute('kill')
@@ -325,9 +355,8 @@ class TestModuleFunctionsLeaks(Base):
         gc.collect()
 
     def call(self, function, *args, **kwargs):
-        obj = getattr(psutil, function)
-        if callable(obj):
-            obj(*args, **kwargs)
+        fun = getattr(psutil, function)
+        fun(*args, **kwargs)
 
     @skip_if_linux()
     def test_cpu_count_logical(self):
@@ -393,8 +422,15 @@ class TestModuleFunctionsLeaks(Base):
     def test_net_connections(self):
         self.execute('net_connections')
 
+    def test_net_if_addrs(self):
+        self.execute('net_if_addrs')
 
-def test_main():
+    @unittest.skipIf(TRAVIS, "EPERM on travis")
+    def test_net_if_stats(self):
+        self.execute('net_if_stats')
+
+
+def main():
     test_suite = unittest.TestSuite()
     tests = [TestProcessObjectLeaksZombie,
              TestProcessObjectLeaks,
@@ -405,5 +441,5 @@ def test_main():
     return result.wasSuccessful()
 
 if __name__ == '__main__':
-    if not test_main():
+    if not main():
         sys.exit(1)

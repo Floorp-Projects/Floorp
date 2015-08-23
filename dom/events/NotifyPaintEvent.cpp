@@ -23,7 +23,7 @@ NotifyPaintEvent::NotifyPaintEvent(EventTarget* aOwner,
   : Event(aOwner, aPresContext, aEvent)
 {
   if (mEvent) {
-    mEvent->message = aEventType;
+    mEvent->mMessage = aEventType;
   }
   if (aInvalidateRequests) {
     mInvalidateRequests.AppendElements(Move(aInvalidateRequests->mRequests));

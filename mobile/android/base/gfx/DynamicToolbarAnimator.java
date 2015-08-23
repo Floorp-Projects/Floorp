@@ -235,9 +235,17 @@ public class DynamicToolbarAnimator {
     }
 
     IntSize getViewportSize() {
+        ThreadUtils.assertOnUiThread();
+
         int viewWidth = mTarget.getView().getWidth();
         int viewHeight = mTarget.getView().getHeight();
-        int viewHeightVisible = viewHeight - Math.round(mMaxTranslation - mToolbarTranslation);
+        float toolbarTranslation = mToolbarTranslation;
+        if (mAnimationTask != null) {
+            // If we have an animation going, mToolbarTranslation may be in flux
+            // and we should use the final value it will settle on.
+            toolbarTranslation = mAnimationTask.getFinalToolbarTranslation();
+        }
+        int viewHeightVisible = viewHeight - Math.round(mMaxTranslation - toolbarTranslation);
         return new IntSize(viewWidth, viewHeightVisible);
     }
 
@@ -359,6 +367,15 @@ public class DynamicToolbarAnimator {
                 Log.v(LOGTAG, "Resetting touch sequence due to non-move");
                 mTouchStart = null;
             }
+
+            if (event.getActionMasked() == MotionEvent.ACTION_UP) {
+                // We need to do this even if the toolbar is already fully
+                // visible or fully hidden, because this is what triggers the
+                // viewport resize in content and updates the viewport metrics.
+                boolean toolbarMostlyVisible = mToolbarTranslation < (mMaxTranslation / 2);
+                Log.v(LOGTAG, "All fingers lifted, completing " + (toolbarMostlyVisible ? "show" : "hide"));
+                animateToolbar(toolbarMostlyVisible, false);
+            }
             return false;
         }
 
@@ -471,6 +488,10 @@ public class DynamicToolbarAnimator {
             mEndTranslation = aTranslation;
             mImmediate = aImmediate;
             mShiftLayerView = aShiftLayerView;
+        }
+
+        float getFinalToolbarTranslation() {
+            return mEndTranslation;
         }
 
         @Override

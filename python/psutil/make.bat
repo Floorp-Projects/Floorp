@@ -7,18 +7,16 @@ rem psutil ("make.bat build", "make.bat install") and running tests
 rem ("make.bat test").
 rem
 rem This script is modeled after my Windows installation which uses:
-rem - mingw32 for Python 2.4 and 2.5
 rem - Visual studio 2008 for Python 2.6, 2.7, 3.2
 rem - Visual studio 2010 for Python 3.3+
 rem ...therefore it might not work on your Windows installation.
 rem
 rem By default C:\Python27\python.exe is used.
 rem To compile for a specific Python version run:
+rem     set PYTHON=C:\Python34\python.exe & make.bat build
 rem
-rem     set PYTHON=C:\Python24\python.exe & make.bat build
-rem
-rem If you compile by using mingw on Python 2.4 and 2.5 you need to patch
-rem distutils first: http://stackoverflow.com/questions/13592192
+rem To use a different test script:
+rem      set PYTHON=C:\Python34\python.exe & set TSCRIPT=foo.py & make.bat test
 rem ==========================================================================
 
 if "%PYTHON%" == "" (
@@ -28,8 +26,16 @@ if "%TSCRIPT%" == "" (
     set TSCRIPT=test\test_psutil.py
 )
 
-rem Needed to compile using Mingw.
-set PATH=C:\MinGW\bin;%PATH%
+set PYTHON26=C:\Python26\python.exe
+set PYTHON27=C:\Python27\python.exe
+set PYTHON33=C:\Python33\python.exe
+set PYTHON34=C:\Python34\python.exe
+set PYTHON26-64=C:\Python26-64\python.exe
+set PYTHON27-64=C:\Python27-64\python.exe
+set PYTHON33-64=C:\Python33-64\python.exe
+set PYTHON34-64=C:\Python34-64\python.exe
+
+set ALL_PYTHONS=%PYTHON26% %PYTHON27% %PYTHON33% %PYTHON34% %PYTHON26-64% %PYTHON27-64% %PYTHON33-64% %PYTHON34-64%
 
 rem Needed to locate the .pypirc file and upload exes on PYPI.
 set HOME=%USERPROFILE%
@@ -40,23 +46,21 @@ if "%1" == "help" (
     :help
     echo Run `make ^<target^>` where ^<target^> is one of:
     echo   build         compile without installing
-    echo   build-exes    create exe installers in dist directory
-    echo   build-wheels  create wheel installers in dist directory
+    echo   build-all     build exes + wheels
     echo   clean         clean build files
+    echo   flake8        run flake8
     echo   install       compile and install
-    echo   memtest       run memory leak tests
-    echo   setup-env     install pip, unittest2, wheels for all python versions
+    echo   setup-dev-env install pip, pywin32, wheels, etc. for all python versions
     echo   test          run tests
+    echo   test-memleaks run memory leak tests
     echo   test-process  run process related tests
     echo   test-system   run system APIs related tests
     echo   uninstall     uninstall
-    echo   upload-exes   upload exe installers on pypi
-    echo   upload-wheels upload wheel installers on pypi
+    echo   upload-all    upload exes + wheels
     goto :eof
 )
 
 if "%1" == "clean" (
-    :clean
     for /r %%R in (__pycache__) do if exist %%R (rmdir /S /Q %%R)
     for /r %%R in (*.pyc) do if exist %%R (del /s %%R)
     for /r %%R in (*.pyd) do if exist %%R (del /s %%R)
@@ -71,31 +75,25 @@ if "%1" == "clean" (
 
 if "%1" == "build" (
     :build
-    if %PYTHON%==C:\Python24\python.exe (
-        %PYTHON% setup.py build -c mingw32
-    ) else if %PYTHON%==C:\Python25\python.exe (
-        %PYTHON% setup.py build -c mingw32
-    ) else (
-        %PYTHON% setup.py build
-    )
+    "C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\bin\vcvars64.bat"
+    %PYTHON% setup.py build
+    if %errorlevel% neq 0 goto :error
+	rem copies *.pyd files in ./psutil directory in order to allow
+	rem "import psutil" when using the interactive interpreter from
+    rem within this directory.
+    %PYTHON% setup.py build_ext -i
     if %errorlevel% neq 0 goto :error
     goto :eof
 )
 
 if "%1" == "install" (
     :install
-    if %PYTHON%==C:\Python24\python.exe (
-        %PYTHON% setup.py build -c mingw32 install
-    ) else if %PYTHON%==C:\Python25\python.exe (
-        %PYTHON% setup.py build -c mingw32 install
-    ) else (
-        %PYTHON% setup.py build install
-    )
+    call :build
+    %PYTHON% setup.py install
     goto :eof
 )
 
 if "%1" == "uninstall" (
-    :uninstall
     for %%A in ("%PYTHON%") do (
         set folder=%%~dpA
     )
@@ -106,125 +104,98 @@ if "%1" == "uninstall" (
 )
 
 if "%1" == "test" (
-    :test
     call :install
     %PYTHON% %TSCRIPT%
     goto :eof
 )
 
 if "%1" == "test-process" (
-    :test
     call :install
     %PYTHON% -m unittest -v test.test_psutil.TestProcess
     goto :eof
 )
 
 if "%1" == "test-system" (
-    :test
     call :install
     %PYTHON% -m unittest -v test.test_psutil.TestSystem
     goto :eof
 )
 
 if "%1" == "test-memleaks" (
-    :memtest
     call :install
     %PYTHON% test\test_memory_leaks.py
     goto :eof
 )
 
-if "%1" == "build-exes" (
-    :build-exes
-    rem mingw 32 versions
-    C:\Python24\python.exe setup.py build -c mingw32 bdist_wininst || goto :error
-    C:\Python25\python.exe setup.py build -c mingw32 bdist_wininst || goto :error
-    rem "standard" 32 bit versions, using VS 2008 (2.6, 2.7) or VS 2010 (3.3+)
-    C:\Python26\python.exe setup.py build bdist_wininst || goto :error
-    C:\Python27\python.exe setup.py build bdist_wininst || goto :error
-    C:\Python33\python.exe setup.py build bdist_wininst || goto :error
-    C:\Python34\python.exe setup.py build bdist_wininst || goto :error
-    rem 64 bit versions
-    rem Python 2.7 + VS 2008 requires vcvars64.bat to be run first:
-    rem http://stackoverflow.com/questions/11072521/
-    rem Windows SDK and .NET Framework 3.5 SP1 also need to be installed (sigh)
+if "%1" == "build-all" (
+    :build-all
     "C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\bin\vcvars64.bat"
-    C:\Python27-64\python.exe setup.py build bdist_wininst || goto :error
-    C:\Python33-64\python.exe setup.py build bdist_wininst || goto :error
-    C:\Python34-64\python.exe setup.py build bdist_wininst || goto :error
+    for %%P in (%ALL_PYTHONS%) do (
+        @echo ------------------------------------------------
+        @echo building exe for %%P
+        @echo ------------------------------------------------
+        %%P setup.py build bdist_wininst || goto :error
+        @echo ------------------------------------------------
+        @echo building wheel for %%P
+        @echo ------------------------------------------------
+        %%P setup.py build bdist_wheel || goto :error
+    )
     echo OK
     goto :eof
 )
 
-if "%1" == "upload-exes" (
+if "%1" == "upload-all" (
     :upload-exes
-    rem mingw 32 versions
-    C:\Python25\python.exe setup.py build -c mingw32 bdist_wininst upload || goto :error
-    rem "standard" 32 bit versions, using VS 2008 (2.6, 2.7) or VS 2010 (3.3+)
-    C:\Python26\python.exe setup.py bdist_wininst upload || goto :error
-    C:\Python27\python.exe setup.py bdist_wininst upload || goto :error
-    C:\Python33\python.exe setup.py bdist_wininst upload || goto :error
-    C:\Python34\python.exe setup.py bdist_wininst upload || goto :error
-    rem 64 bit versions
-    C:\Python27-64\python.exe setup.py build bdist_wininst upload || goto :error
-    C:\Python33-64\python.exe setup.py build bdist_wininst upload || goto :error
-    C:\Python34-64\python.exe setup.py build bdist_wininst upload || goto :error
+    "C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\bin\vcvars64.bat"
+    for %%P in (%ALL_PYTHONS%) do (
+        @echo ------------------------------------------------
+        @echo uploading exe for %%P
+        @echo ------------------------------------------------
+        %%P setup.py build bdist_wininst upload || goto :error
+        @echo ------------------------------------------------
+        @echo uploading wheel for %%P
+        @echo ------------------------------------------------
+        %%P setup.py build bdist_wheel upload || goto :error
+    )
     echo OK
     goto :eof
 )
 
-if "%1" == "setup-env" (
+if "%1" == "setup-dev-env" (
     :setup-env
-    C:\python27\python.exe -c "import urllib2; url = urllib2.urlopen('https://raw.github.com/pypa/pip/master/contrib/get-pip.py'); data = url.read(); f = open('get-pip.py', 'w'); f.write(data)"
-    C:\python26\python.exe get-pip.py & C:\python26\scripts\pip install unittest2 wheel --upgrade
-    C:\python27\python.exe get-pip.py & C:\python27\scripts\pip install wheel --upgrade
-    C:\python33\python.exe get-pip.py & C:\python33\scripts\pip install wheel --upgrade
-    C:\python34\scripts\easy_install.exe wheel
-    rem 64-bit versions
-    C:\python27-64\python.exe get-pip.py & C:\python27-64\scripts\pip install wheel --upgrade
-    C:\python33-64\python.exe get-pip.py & C:\python33-64\scripts\pip install wheel --upgrade
-    C:\python34-64\scripts\easy_install.exe wheel
+    @echo ------------------------------------------------
+    @echo downloading pip installer
+    @echo ------------------------------------------------
+    C:\python27\python.exe -c "import urllib2; r = urllib2.urlopen('https://raw.github.com/pypa/pip/master/contrib/get-pip.py'); open('get-pip.py', 'wb').write(r.read())"
+    for %%P in (%ALL_PYTHONS%) do (
+        @echo ------------------------------------------------
+        @echo installing pip for %%P
+        @echo ------------------------------------------------
+        %%P get-pip.py
+    )
+    for %%P in (%ALL_PYTHONS%) do (
+        @echo ------------------------------------------------
+        @echo installing deps for %%P
+        @echo ------------------------------------------------
+        rem mandatory / for unittests
+        %%P -m pip install unittest2 ipaddress mock wmi wheel pypiwin32 --upgrade
+        rem nice to have
+        %%P -m pip install ipdb pep8 pyflakes flake8 --upgrade
+    )
     goto :eof
 )
 
-if "%1" == "build-wheels" (
-    :build-wheels
-    C:\Python26\python.exe setup.py build bdist_wheel || goto :error
-    C:\Python27\python.exe setup.py build bdist_wheel || goto :error
-    C:\Python33\python.exe setup.py build bdist_wheel || goto :error
-    C:\Python34\python.exe setup.py build bdist_wheel || goto :error
-    rem 64 bit versions
-    rem Python 2.7 + VS 2008 requires vcvars64.bat to be run first:
-    rem http://stackoverflow.com/questions/11072521/
-    rem Windows SDK and .NET Framework 3.5 SP1 also need to be installed (sigh)
-    "C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\bin\vcvars64.bat"
-    C:\Python27-64\python.exe setup.py build bdist_wheel || goto :error
-    C:\Python33-64\python.exe setup.py build bdist_wheel || goto :error
-    C:\Python34-64\python.exe setup.py build bdist_wheel || goto :error
-    echo OK
-    goto :eof
-)
-
-if "%1" == "upload-wheels" (
-    :build-wheels
-    C:\Python26\python.exe setup.py build bdist_wheel upload || goto :error
-    C:\Python27\python.exe setup.py build bdist_wheel upload || goto :error
-    C:\Python33\python.exe setup.py build bdist_wheel upload || goto :error
-    C:\Python34\python.exe setup.py build bdist_wheel upload || goto :error
-    rem 64 bit versions
-    rem Python 2.7 + VS 2008 requires vcvars64.bat to be run first:
-    rem http://stackoverflow.com/questions/11072521/
-    rem Windows SDK and .NET Framework 3.5 SP1 also need to be installed (sigh)
-    "C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\bin\vcvars64.bat"
-    C:\Python27-64\python.exe setup.py build bdist_wheel upload || goto :error
-    C:\Python33-64\python.exe setup.py build bdist_wheel upload || goto :error
-    C:\Python34-64\python.exe setup.py build bdist_wheel upload || goto :error
-    echo OK
+if "%1" == "flake8" (
+    :flake8
+    %PYTHON% -c "from flake8.main import main; main()"
     goto :eof
 )
 
 goto :help
 
 :error
-    echo last command exited with error code %errorlevel%
-    exit /b %errorlevel%
+    @echo ------------------------------------------------
+    @echo last command exited with error code %errorlevel%
+    @echo ------------------------------------------------
+    @exit /b %errorlevel%
     goto :eof

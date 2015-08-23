@@ -410,12 +410,8 @@ struct IMENotification final
   {
     switch (aMessage) {
       case NOTIFY_IME_OF_SELECTION_CHANGE:
-        mSelectionChangeData.mOffset = UINT32_MAX;
         mSelectionChangeData.mString = new nsString();
-        mSelectionChangeData.mWritingMode = 0;
-        mSelectionChangeData.mReversed = false;
-        mSelectionChangeData.mCausedByComposition = false;
-        mSelectionChangeData.mCausedBySelectionEvent = false;
+        mSelectionChangeData.Clear();
         break;
       case NOTIFY_IME_OF_TEXT_CHANGE:
         mTextChangeData.Clear();
@@ -435,14 +431,17 @@ struct IMENotification final
 
   void Assign(const IMENotification& aOther)
   {
-    Clear();
-    mMessage = aOther.mMessage;
+    bool changingMessage = mMessage != aOther.mMessage;
+    if (changingMessage) {
+      Clear();
+      mMessage = aOther.mMessage;
+    }
     switch (mMessage) {
       case NOTIFY_IME_OF_SELECTION_CHANGE:
-        mSelectionChangeData = aOther.mSelectionChangeData;
-        // mString should be different instance because of ownership issue.
-        mSelectionChangeData.mString =
-          new nsString(aOther.mSelectionChangeData.String());
+        if (changingMessage) {
+          mSelectionChangeData.mString = new nsString();
+        }
+        mSelectionChangeData.Assign(aOther.mSelectionChangeData);
         break;
       case NOTIFY_IME_OF_TEXT_CHANGE:
         mTextChangeData = aOther.mTextChangeData;
@@ -485,30 +484,7 @@ struct IMENotification final
         break;
       case NOTIFY_IME_OF_SELECTION_CHANGE:
         MOZ_ASSERT(aNotification.mMessage == NOTIFY_IME_OF_SELECTION_CHANGE);
-        mSelectionChangeData.mOffset =
-          aNotification.mSelectionChangeData.mOffset;
-        *mSelectionChangeData.mString =
-          aNotification.mSelectionChangeData.String();
-        mSelectionChangeData.mWritingMode =
-          aNotification.mSelectionChangeData.mWritingMode;
-        mSelectionChangeData.mReversed =
-          aNotification.mSelectionChangeData.mReversed;
-        if (!mSelectionChangeData.mCausedByComposition) {
-          mSelectionChangeData.mCausedByComposition =
-            aNotification.mSelectionChangeData.mCausedByComposition;
-        } else {
-          mSelectionChangeData.mCausedByComposition =
-            mSelectionChangeData.mCausedByComposition &&
-              aNotification.mSelectionChangeData.mCausedByComposition;
-        }
-        if (!mSelectionChangeData.mCausedBySelectionEvent) {
-          mSelectionChangeData.mCausedBySelectionEvent =
-            aNotification.mSelectionChangeData.mCausedBySelectionEvent;
-        } else {
-          mSelectionChangeData.mCausedBySelectionEvent =
-            mSelectionChangeData.mCausedBySelectionEvent &&
-              aNotification.mSelectionChangeData.mCausedBySelectionEvent;
-        }
+        mSelectionChangeData.Assign(aNotification.mSelectionChangeData);
         break;
       case NOTIFY_IME_OF_TEXT_CHANGE:
         MOZ_ASSERT(aNotification.mMessage == NOTIFY_IME_OF_TEXT_CHANGE);
@@ -563,7 +539,7 @@ struct IMENotification final
   };
 
   // NOTIFY_IME_OF_SELECTION_CHANGE specific data
-  struct SelectionChangeData
+  struct SelectionChangeDataBase
   {
     // Selection range.
     uint32_t mOffset;
@@ -601,6 +577,68 @@ struct IMENotification final
     {
       return mOffset + Length() <= INT32_MAX;
     }
+    void Clear()
+    {
+      mOffset = UINT32_MAX;
+      mString->Truncate();
+      mWritingMode = 0;
+      mReversed = false;
+      mCausedByComposition = false;
+      mCausedBySelectionEvent = false;
+    }
+    bool IsValid() const
+    {
+      return mOffset != UINT32_MAX;
+    }
+    void Assign(const SelectionChangeDataBase& aOther)
+    {
+      mOffset = aOther.mOffset;
+      *mString = aOther.String();
+      mWritingMode = aOther.mWritingMode;
+      mReversed = aOther.mReversed;
+      mCausedByComposition = aOther.mCausedByComposition;
+      mCausedBySelectionEvent = aOther.mCausedBySelectionEvent;
+    }
+  };
+
+  // SelectionChangeDataBase cannot have constructors because it's used in
+  // the union.  Therefore, SelectionChangeData should only implement
+  // constructors.  In other words, add other members to
+  // SelectionChangeDataBase.
+  struct SelectionChangeData final : public SelectionChangeDataBase
+  {
+    SelectionChangeData()
+    {
+      mString = &mStringInstance;
+      Clear();
+    }
+    explicit SelectionChangeData(const SelectionChangeDataBase& aOther)
+    {
+      mString = &mStringInstance;
+      Assign(aOther);
+    }
+    SelectionChangeData(const SelectionChangeData& aOther)
+    {
+      mString = &mStringInstance;
+      Assign(aOther);
+    }
+    SelectionChangeData& operator=(const SelectionChangeDataBase& aOther)
+    {
+      mString = &mStringInstance;
+      Assign(aOther);
+      return *this;
+    }
+    SelectionChangeData& operator=(const SelectionChangeData& aOther)
+    {
+      mString = &mStringInstance;
+      Assign(aOther);
+      return *this;
+    }
+
+  private:
+    // When SelectionChangeData is used outside of union, it shouldn't create
+    // nsString instance in the heap as far as possible.
+    nsString mStringInstance;
   };
 
   struct TextChangeDataBase
@@ -710,7 +748,7 @@ struct IMENotification final
   union
   {
     // NOTIFY_IME_OF_SELECTION_CHANGE specific data
-    SelectionChangeData mSelectionChangeData;
+    SelectionChangeDataBase mSelectionChangeData;
 
     // NOTIFY_IME_OF_TEXT_CHANGE specific data
     TextChangeDataBase mTextChangeData;
@@ -718,6 +756,27 @@ struct IMENotification final
     // NOTIFY_IME_OF_MOUSE_BUTTON_EVENT specific data
     MouseButtonEventData mMouseButtonEventData;
   };
+
+  void SetData(const SelectionChangeDataBase& aSelectionChangeData)
+  {
+    MOZ_RELEASE_ASSERT(mMessage == NOTIFY_IME_OF_SELECTION_CHANGE);
+    mSelectionChangeData.Assign(aSelectionChangeData);
+  }
+  void SetData(const SelectionChangeDataBase& aSelectionChangeData,
+               bool aCausedByComposition,
+               bool aCausedBySelectionEvent)
+  {
+    MOZ_RELEASE_ASSERT(mMessage == NOTIFY_IME_OF_SELECTION_CHANGE);
+    mSelectionChangeData.Assign(aSelectionChangeData);
+    mSelectionChangeData.mCausedByComposition = aCausedByComposition;
+    mSelectionChangeData.mCausedBySelectionEvent = aCausedBySelectionEvent;
+  }
+
+  void SetData(const TextChangeDataBase& aTextChangeData)
+  {
+    MOZ_RELEASE_ASSERT(mMessage == NOTIFY_IME_OF_TEXT_CHANGE);
+    mTextChangeData = aTextChangeData;
+  }
 
   bool IsCausedByComposition() const
   {

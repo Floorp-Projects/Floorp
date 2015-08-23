@@ -821,7 +821,7 @@ MouseScrollHandler::LastEventInfo::InitWheelEvent(
                                      WidgetWheelEvent& aWheelEvent,
                                      const ModifierKeyState& aModKeyState)
 {
-  MOZ_ASSERT(aWheelEvent.message == NS_WHEEL_WHEEL);
+  MOZ_ASSERT(aWheelEvent.mMessage == NS_WHEEL_WHEEL);
 
   // XXX Why don't we use lParam value? We should use lParam value because
   //     our internal message is always posted by original message handler.

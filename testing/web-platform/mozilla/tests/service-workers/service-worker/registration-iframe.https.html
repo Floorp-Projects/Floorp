@@ -68,7 +68,7 @@ async_test(function(t) {
         assert_unreached('register() should reject');
       },
       function(e) {
-        assert_equals(e.name, 'NetworkError');
+        assert_equals(e.name, 'TypeError');
         frame.remove();
         return service_worker_unregister_and_done(t, scope);
       })

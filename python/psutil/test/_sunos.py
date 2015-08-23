@@ -7,15 +7,17 @@
 """Sun OS specific tests.  These are implicitly run by test_psutil.py."""
 
 import sys
+import os
 
-from test_psutil import sh, unittest
+from test_psutil import SUNOS, sh, unittest
 import psutil
 
 
+@unittest.skipUnless(SUNOS, "not a SunOS system")
 class SunOSSpecificTestCase(unittest.TestCase):
 
     def test_swap_memory(self):
-        out = sh('swap -l -k')
+        out = sh('env PATH=/usr/sbin:/sbin:%s swap -l -k' % os.environ['PATH'])
         lines = out.strip().split('\n')[1:]
         if not lines:
             raise ValueError('no swap device(s) configured')
@@ -35,12 +37,12 @@ class SunOSSpecificTestCase(unittest.TestCase):
         self.assertEqual(psutil_swap.free, free)
 
 
-def test_main():
+def main():
     test_suite = unittest.TestSuite()
     test_suite.addTest(unittest.makeSuite(SunOSSpecificTestCase))
     result = unittest.TextTestRunner(verbosity=2).run(test_suite)
     return result.wasSuccessful()
 
 if __name__ == '__main__':
-    if not test_main():
+    if not main():
         sys.exit(1)

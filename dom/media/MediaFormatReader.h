@@ -399,6 +399,8 @@ private:
   // Set to true if any of our track buffers may be blocking.
   bool mTrackDemuxersMayBlock;
 
+  bool mHardwareAccelerationDisabled;
+
   // Seeking objects.
   bool IsSeeking() const { return mPendingSeekTime.isSome(); }
   void AttemptSeek();

@@ -651,7 +651,7 @@ nsresult nsHTMLFramesetFrame::HandleEvent(nsPresContext* aPresContext,
   NS_ENSURE_ARG_POINTER(aEventStatus);
   if (mDragger) {
     // the nsFramesetBorderFrame has captured NS_MOUSE_DOWN
-    switch (aEvent->message) {
+    switch (aEvent->mMessage) {
       case NS_MOUSE_MOVE:
         MouseDrag(aPresContext, aEvent);
 	      break;
@@ -1537,7 +1537,7 @@ nsHTMLFramesetBorderFrame::HandleEvent(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  if (aEvent->message == NS_MOUSE_BUTTON_DOWN &&
+  if (aEvent->mMessage == NS_MOUSE_BUTTON_DOWN &&
       aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton) {
     nsHTMLFramesetFrame* parentFrame = do_QueryFrame(GetParent());
     if (parentFrame) {

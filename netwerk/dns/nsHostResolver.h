@@ -342,20 +342,21 @@ private:
     uint32_t      mDefaultGracePeriod; // granularity seconds
     mutable Mutex mLock;    // mutable so SizeOfIncludingThis can be const
     CondVar       mIdleThreadCV;
-    uint32_t      mNumIdleThreads;
-    uint32_t      mThreadCount;
-    uint32_t      mActiveAnyThreadCount;
     PLDHashTable  mDB;
     PRCList       mHighQ;
     PRCList       mMediumQ;
     PRCList       mLowQ;
     PRCList       mEvictionQ;
     uint32_t      mEvictionQSize;
-    uint32_t      mPendingCount;
     PRTime        mCreationTime;
-    bool          mShutdown;
     PRIntervalTime mLongIdleTimeout;
     PRIntervalTime mShortIdleTimeout;
+
+    mozilla::Atomic<bool>     mShutdown;
+    mozilla::Atomic<uint32_t> mNumIdleThreads;
+    mozilla::Atomic<uint32_t> mThreadCount;
+    mozilla::Atomic<uint32_t> mActiveAnyThreadCount;
+    mozilla::Atomic<uint32_t> mPendingCount;
 
     // Set the expiration time stamps appropriately.
     void PrepareRecordExpiration(nsHostRecord* rec) const;

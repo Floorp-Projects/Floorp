@@ -85,5 +85,11 @@ config = {
     "partial_env": {
         "PATH": "%(pythondir)s/bin:%(gccdir)s/bin:%(PATH)s",
         "LD_LIBRARY_PATH": "%(sixgilldir)s/usr/lib64",
+
+        # Suppress the mercurial-setup check. When running in automation, this
+        # is redundant with MOZ_AUTOMATION, but a local developer-mode build
+        # will have the mach state directory set to a nonstandard location and
+        # therefore will always claim that mercurial-setup has not been run.
+        "I_PREFER_A_SUBOPTIMAL_MERCURIAL_EXPERIENCE": "1",
     },
 }

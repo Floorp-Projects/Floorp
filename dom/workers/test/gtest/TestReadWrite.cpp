@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gtest/gtest.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
 #include "mozilla/dom/ServiceWorkerRegistrarTypes.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
@@ -140,11 +141,11 @@ TEST(ServiceWorkerRegistrar, TestReadData)
 {
   nsAutoCString buffer(SERVICEWORKERREGISTRAR_VERSION "\n");
 
-  buffer.Append("123\n" SERVICEWORKERREGISTRAR_TRUE "\n");
+  buffer.Append("^appId=123&inBrowser=1\n");
   buffer.Append("spec 0\nscope 0\nscriptSpec 0\ncurrentWorkerURL 0\nactiveCache 0\nwaitingCache 0\n");
   buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
-  buffer.Append("0\n" SERVICEWORKERREGISTRAR_FALSE "\n");
+  buffer.Append("\n");
   buffer.Append("spec 1\nscope 1\nscriptSpec 1\ncurrentWorkerURL 1\nactiveCache 1\nwaitingCache 1\n");
   buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
@@ -162,8 +163,11 @@ TEST(ServiceWorkerRegistrar, TestReadData)
   ASSERT_EQ(info0.type(), mozilla::ipc::PrincipalInfo::TContentPrincipalInfo) << "First principal must be content";
   const mozilla::ipc::ContentPrincipalInfo& cInfo0 = data[0].principal();
 
-  ASSERT_EQ((uint32_t)123, cInfo0.appId());
-  ASSERT_EQ((uint32_t)true, cInfo0.isInBrowserElement());
+  mozilla::OriginAttributes attrs0(cInfo0.appId(), cInfo0.isInBrowserElement());
+  nsAutoCString suffix0;
+  attrs0.CreateSuffix(suffix0);
+
+  ASSERT_STREQ("^appId=123&inBrowser=1", suffix0.get());
   ASSERT_STREQ("spec 0", cInfo0.spec().get());
   ASSERT_STREQ("scope 0", data[0].scope().get());
   ASSERT_STREQ("scriptSpec 0", data[0].scriptSpec().get());
@@ -175,8 +179,11 @@ TEST(ServiceWorkerRegistrar, TestReadData)
   ASSERT_EQ(info1.type(), mozilla::ipc::PrincipalInfo::TContentPrincipalInfo) << "First principal must be content";
   const mozilla::ipc::ContentPrincipalInfo& cInfo1 = data[1].principal();
 
-  ASSERT_EQ((uint32_t)0, cInfo1.appId());
-  ASSERT_EQ((uint32_t)false, cInfo1.isInBrowserElement());
+  mozilla::OriginAttributes attrs1(cInfo1.appId(), cInfo1.isInBrowserElement());
+  nsAutoCString suffix1;
+  attrs1.CreateSuffix(suffix1);
+
+  ASSERT_STREQ("", suffix1.get());
   ASSERT_STREQ("spec 1", cInfo1.spec().get());
   ASSERT_STREQ("scope 1", data[1].scope().get());
   ASSERT_STREQ("scriptSpec 1", data[1].scriptSpec().get());

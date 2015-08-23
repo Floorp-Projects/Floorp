@@ -10,7 +10,7 @@
 #
 # Any library added here should also be reflected in the about:license page.
 
-SharedLibrary('lgpllibs')
+GeckoSharedLibrary('lgpllibs', linkage=None)
 SHARED_LIBRARY_NAME = 'lgpllibs'
 
 if CONFIG['MOZ_LIBAV_FFT']:

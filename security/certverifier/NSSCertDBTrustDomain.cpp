@@ -51,6 +51,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
                                            unsigned int minRSABits,
                                            ValidityCheckingMode validityCheckingMode,
                                            SignatureDigestOption signatureDigestOption,
+                              /*optional*/ PinningTelemetryInfo* pinningTelemetryInfo,
                               /*optional*/ const char* hostname,
                               /*optional*/ ScopedCERTCertList* builtChain)
   : mCertDBTrustType(certDBTrustType)
@@ -63,6 +64,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
   , mMinRSABits(minRSABits)
   , mValidityCheckingMode(validityCheckingMode)
   , mSignatureDigestOption(signatureDigestOption)
+  , mPinningTelemetryInfo(pinningTelemetryInfo)
   , mHostname(hostname)
   , mBuiltChain(builtChain)
   , mCertBlocklist(do_GetService(NS_CERTBLOCKLIST_CONTRACTID))
@@ -792,7 +794,8 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time)
       (mPinningMode == CertVerifier::pinningEnforceTestMode);
     bool chainHasValidPins;
     nsresult nsrv = PublicKeyPinningService::ChainHasValidPins(
-      certList, mHostname, time, enforceTestMode, chainHasValidPins);
+      certList, mHostname, time, enforceTestMode, chainHasValidPins,
+      mPinningTelemetryInfo);
     if (NS_FAILED(nsrv)) {
       return Result::FATAL_ERROR_LIBRARY_FAILURE;
     }

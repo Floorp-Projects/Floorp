@@ -1056,8 +1056,10 @@ InnerViewTable::addView(JSContext* cx, ArrayBufferObject* obj, ArrayBufferViewOb
             }
         }
 
-        if (!views.append(view))
+        if (!views.append(view)) {
+            ReportOutOfMemory(cx);
             return false;
+        }
     } else {
         if (!map.add(p, obj, ViewVector()))
             return false;
@@ -1128,7 +1130,7 @@ InnerViewTable::sweep(JSRuntime* rt)
 void
 InnerViewTable::sweepAfterMinorGC(JSRuntime* rt)
 {
-    MOZ_ASSERT(!nurseryKeys.empty());
+    MOZ_ASSERT(needsSweepAfterMinorGC());
 
     if (nurseryKeysValid) {
         for (size_t i = 0; i < nurseryKeys.length(); i++) {

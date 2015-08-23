@@ -72,46 +72,21 @@ const ACTION_FUNCS = [
   }
 ];
 
-const DISABLE_LIST = [
-  // Bug 1180574
-  { openWinFunc: "openNewWindow",
-    actionFunc: "navigate",
-    platform: "Linux i686" }
-];
-
 function* testGenerator() {
   for (var openWinFunc of OPEN_WINDOW_FUNCS) {
     for (var actionFunc of ACTION_FUNCS) {
-      var skipTest = false;
-      for (var disabledItem of DISABLE_LIST) {
-        if (openWinFunc.name == disabledItem.openWinFunc &&
-            actionFunc.name == disabledItem.actionFunc &&
-            navigator.platform == disabledItem.platform) {
-          skipTest = true;
-          break;
-        }
-      }
-      if (!skipTest) {
-        info(`Testing ${openWinFunc.name}, ${actionFunc.name}`);
-        yield { openWinFunc: openWinFunc, actionFunc: actionFunc };
-      }
+      info(`Testing ${openWinFunc.name}, ${actionFunc.name}`);
+      yield { openWinFunc: openWinFunc, actionFunc: actionFunc };
     }
   }
 }
 
-var tests = testGenerator();
-
-function next() {
-  var test = tests.next().value;
-  if (!test) {
-    SimpleTest.finish();
-    return;
-  }
+function runTest(test) {
   var win = test.openWinFunc();
-  new Promise(resolve => {
+  return new Promise(resolve => {
     SimpleTest.waitForFocus(resolve, win, true);
   }).then(() => {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       var retried = false;
       function listener(evt) {
         if (!retried && evt.type == "mozfullscreenerror") {
@@ -129,6 +104,12 @@ function next() {
         ok(win.fullScreen, "The window should be in fullscreen");
         test.actionFunc(win).then(resolve);
       }
+      if (win.fullScreen) {
+        todo(false, "Should not open in fullscreen mode");
+        win.close();
+        reject();
+        return;
+      }
       info("About to enter fullscreen");
       win.addEventListener("mozfullscreenchange", listener);
       win.addEventListener("mozfullscreenerror", listener);
@@ -136,8 +117,26 @@ function next() {
     });
   }).then(() => {
     ok(win.closed, "The window should have been closed");
-    SimpleTest.waitForFocus(next);
   });
+}
+
+var tests = testGenerator();
+
+function next() {
+  var test = tests.next().value;
+  if (test) {
+    runTest(test).catch(() => {
+      return new Promise(resolve => {
+        SimpleTest.waitForFocus(resolve);
+      }).then(() => runTest(test));
+    }).catch(() => {
+      ok(false, "Fail to run test " +
+         `${test.openWinFunc.name}, ${test.actionFunc.name}`);
+    }).then(() => SimpleTest.waitForFocus(next));
+  } else {
+    SimpleTest.finish();
+    return;
+  }
 }
 
 </script>

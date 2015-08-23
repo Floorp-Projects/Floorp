@@ -348,6 +348,8 @@ public class GeckoAccessibility {
                                 info.addAction(AccessibilityNodeInfo.ACTION_LONG_CLICK);
                                 info.addAction(AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY);
                                 info.addAction(AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY);
+                                info.addAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
+                                info.addAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD);
                                 info.setMovementGranularities(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER |
                                                               AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD |
                                                               AccessibilityNodeInfo.MOVEMENT_GRANULARITY_PARAGRAPH);
@@ -387,6 +389,14 @@ public class GeckoAccessibility {
                             } else if (action == AccessibilityNodeInfo.ACTION_LONG_CLICK && virtualViewId == VIRTUAL_CURSOR_POSITION) {
                                 GeckoAppShell.
                                     sendEventToGecko(GeckoEvent.createBroadcastEvent("Accessibility:LongPress", null));
+                                return true;
+                            } else if (action == AccessibilityNodeInfo.ACTION_SCROLL_FORWARD && virtualViewId == VIRTUAL_CURSOR_POSITION) {
+                                GeckoAppShell.
+                                    sendEventToGecko(GeckoEvent.createBroadcastEvent("Accessibility:ScrollForward", null));
+                                return true;
+                            } else if (action == AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD && virtualViewId == VIRTUAL_CURSOR_POSITION) {
+                                GeckoAppShell.
+                                    sendEventToGecko(GeckoEvent.createBroadcastEvent("Accessibility:ScrollBackward", null));
                                 return true;
                             } else if (action == AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY &&
                                        virtualViewId == VIRTUAL_CURSOR_POSITION) {

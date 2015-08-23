@@ -88,21 +88,31 @@ private:
   friend class CompositorParent;
 };
 
-class CompositorScheduler
+/**
+ * Manages the vsync (de)registration and tracking on behalf of the
+ * compositor when it need to paint.
+ * Turns vsync notifications into scheduled composites.
+ **/
+class CompositorVsyncScheduler
 {
-public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorScheduler)
-  explicit CompositorScheduler(CompositorParent* aCompositorParent);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorVsyncScheduler)
 
-  virtual void ScheduleComposition() = 0;
-  virtual void CancelCurrentCompositeTask();
-  virtual bool NeedsComposite() = 0;
-  virtual void Composite(TimeStamp aTimestamp) = 0;
-  virtual void ScheduleTask(CancelableTask*, int);
-  virtual void ResumeComposition();
-  virtual void ForceComposeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect);
-  virtual void ComposeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr);
-  virtual void Destroy();
+public:
+  explicit CompositorVsyncScheduler(CompositorParent* aCompositorParent, nsIWidget* aWidget);
+  bool NotifyVsync(TimeStamp aVsyncTimestamp);
+  void SetNeedsComposite(bool aSchedule);
+  void OnForceComposeToTarget();
+
+  void ScheduleTask(CancelableTask*, int);
+  void ResumeComposition();
+  void ComposeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr);
+  void PostCompositeTask(TimeStamp aCompositeTimestamp);
+  void Destroy();
+  void ScheduleComposition();
+  void CancelCurrentCompositeTask();
+  bool NeedsComposite();
+  void Composite(TimeStamp aVsyncTimestamp);
+  void ForceComposeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect);
 
   const TimeStamp& GetLastComposeTime()
   {
@@ -115,56 +125,7 @@ public:
     return mExpectedComposeStartTime;
   }
 #endif
-
-protected:
-  virtual ~CompositorScheduler();
-
-  CompositorParent* mCompositorParent;
-  TimeStamp mLastCompose;
-  CancelableTask* mCurrentCompositeTask;
-
-#ifdef COMPOSITOR_PERFORMANCE_WARNING
-  TimeStamp mExpectedComposeStartTime;
-#endif
-};
-
-class CompositorSoftwareTimerScheduler final : public CompositorScheduler
-{
-public:
-  explicit CompositorSoftwareTimerScheduler(CompositorParent* aCompositorParent);
-
-  // from CompositorScheduler
-  virtual void ScheduleComposition() override;
-  virtual bool NeedsComposite() override;
-  virtual void Composite(TimeStamp aTimestamp) override;
-
-  void CallComposite();
-private:
-  virtual ~CompositorSoftwareTimerScheduler();
-};
-
-/**
- * Manages the vsync (de)registration and tracking on behalf of the
- * compositor when it need to paint.
- * Turns vsync notifications into scheduled composites.
- **/
-
-class CompositorVsyncScheduler final : public CompositorScheduler
-{
-public:
-  explicit CompositorVsyncScheduler(CompositorParent* aCompositorParent, nsIWidget* aWidget);
-  bool NotifyVsync(TimeStamp aVsyncTimestamp);
-  void SetNeedsComposite(bool aSchedule);
-  void OnForceComposeToTarget();
-
-  // from CompositorScheduler
-  virtual void ScheduleComposition() override;
-  virtual void CancelCurrentCompositeTask() override;
-  virtual bool NeedsComposite() override;
-  virtual void Composite(TimeStamp aVsyncTimestamp) override;
-  virtual void ForceComposeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect) override;
-  virtual void Destroy() override;
-
+ 
 private:
   virtual ~CompositorVsyncScheduler();
 
@@ -188,10 +149,18 @@ private:
     CompositorVsyncScheduler* mOwner;
   };
 
+  CompositorParent* mCompositorParent;
+  TimeStamp mLastCompose;
+  CancelableTask* mCurrentCompositeTask;
+
+#ifdef COMPOSITOR_PERFORMANCE_WARNING
+  TimeStamp mExpectedComposeStartTime;
+#endif
+
+  bool mAsapScheduling;
   bool mNeedsComposite;
   bool mIsObservingVsync;
   int32_t mVsyncNotificationsSkipped;
-  CompositorParent* mCompositorParent;
   nsRefPtr<CompositorVsyncDispatcher> mCompositorVsyncDispatcher;
   nsRefPtr<CompositorVsyncScheduler::Observer> mVsyncObserver;
 
@@ -216,7 +185,7 @@ class CompositorParent final : public PCompositorParent,
                                public ShadowLayersManager
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(CompositorParent)
-  friend class CompositorScheduler;
+  friend class CompositorVsyncScheduler;
 
 public:
   explicit CompositorParent(nsIWidget* aWidget,
@@ -498,7 +467,7 @@ protected:
   nsRefPtr<APZCTreeManager> mApzcTreeManager;
 
   nsRefPtr<CompositorThreadHolder> mCompositorThreadHolder;
-  nsRefPtr<CompositorScheduler> mCompositorScheduler;
+  nsRefPtr<CompositorVsyncScheduler> mCompositorScheduler;
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorParent);
 };

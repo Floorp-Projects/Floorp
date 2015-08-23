@@ -61,6 +61,7 @@ static GtkWidget* gMenuSeparatorWidget;
 static GtkWidget* gHPanedWidget;
 static GtkWidget* gVPanedWidget;
 static GtkWidget* gScrolledWindowWidget;
+static GtkWidget* gInfoBar;
 
 static style_prop_t style_prop_func;
 static gboolean have_arrow_scaling;
@@ -356,6 +357,15 @@ ensure_combo_box_widgets()
      * is invalid we just won't paint it. */
 
     return MOZ_GTK_SUCCESS;
+}
+
+static void
+ensure_info_bar()
+{
+  if (!gInfoBar) {
+      gInfoBar = gtk_info_bar_new();
+      setup_widget_prototype(gInfoBar);
+  }
 }
 
 /* We need to have pointers to the inner widgets (entry, button, arrow) of
@@ -2603,6 +2613,29 @@ moz_gtk_check_menu_item_paint(cairo_t *cr, GdkRectangle* rect,
     return MOZ_GTK_SUCCESS;
 }
 
+static gint
+moz_gtk_info_bar_paint(cairo_t *cr, GdkRectangle* rect,
+                       GtkWidgetState* state)
+{
+    GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
+    GtkStyleContext *style;
+    ensure_info_bar();
+
+    style = gtk_widget_get_style_context(gInfoBar);
+    gtk_style_context_save(style);
+
+    gtk_style_context_set_state(style, state_flags);
+    gtk_style_context_add_class(style, GTK_STYLE_CLASS_INFO);
+
+    gtk_render_background(style, cr, rect->x, rect->y, rect->width,
+                          rect->height);
+    gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
+
+    gtk_style_context_restore(style);
+
+    return MOZ_GTK_SUCCESS;
+}
+
 static void
 moz_gtk_add_style_border(GtkStyleContext* style,
                          gint* left, gint* top, gint* right, gint* bottom)
@@ -2829,6 +2862,10 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
                                       left, top, right, bottom);
             return MOZ_GTK_SUCCESS;
         }
+    case MOZ_GTK_INFO_BAR:
+        ensure_info_bar();
+        w = gInfoBar;
+        break;
     /* These widgets have no borders, since they are not containers. */
     case MOZ_GTK_CHECKBUTTON_LABEL:
     case MOZ_GTK_RADIOBUTTON_LABEL:
@@ -3309,6 +3346,9 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, cairo_t *cr,
         break;
     case MOZ_GTK_WINDOW:
         return moz_gtk_window_paint(cr, rect, direction);
+        break;
+    case MOZ_GTK_INFO_BAR:
+        return moz_gtk_info_bar_paint(cr, rect, state);
         break;
     default:
         g_warning("Unknown widget type: %d", widget);

@@ -348,12 +348,14 @@ public:
 private:
   // This helper class makes |nsRefPtr<const T>| possible by casting away
   // the constness from the pointer when calling AddRef() and Release().
+  //
   // This is necessary because AddRef() and Release() implementations can't
   // generally expected to be const themselves (without heavy use of |mutable|
   // and |const_cast| in their own implementations).
-  // This should be sound because while |nsRefPtr<const T>| provides a const
-  // view of an object, the object itself should be const (it would have to be
-  // allocated as |new const T| or similar to itself be const).
+  //
+  // This should be sound because while |nsRefPtr<const T>| provides a
+  // const view of an object, the object itself should not be const (it
+  // would have to be allocated as |new const T| or similar to be const).
   template<class U>
   struct AddRefTraits
   {

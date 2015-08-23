@@ -106,14 +106,14 @@ namespace mozilla {
 namespace widget {
 
 void
-IMENotification::SelectionChangeData::SetWritingMode(
+IMENotification::SelectionChangeDataBase::SetWritingMode(
                                         const WritingMode& aWritingMode)
 {
   mWritingMode = aWritingMode.mWritingMode;
 }
 
 WritingMode
-IMENotification::SelectionChangeData::GetWritingMode() const
+IMENotification::SelectionChangeDataBase::GetWritingMode() const
 {
   return WritingMode(mWritingMode);
 }
@@ -992,7 +992,7 @@ nsBaseWidget::ProcessUntransformedAPZEvent(WidgetInputEvent* aEvent,
     // TODO: Eventually we'll be able to move the SendSetTargetAPZCNotification
     // call into APZEventState::Process*Event() as well.
     if (WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent()) {
-      if (touchEvent->message == NS_TOUCH_START) {
+      if (touchEvent->mMessage == NS_TOUCH_START) {
         if (gfxPrefs::TouchActionEnabled()) {
           APZCCallbackHelper::SendSetAllowedTouchBehaviorNotification(this, *touchEvent,
               aInputBlockId, mSetAllowedTouchBehaviorCallback);
@@ -2628,7 +2628,7 @@ nsBaseWidget::debug_GuiEventToString(WidgetGUIEvent* aGuiEvent)
 #define _ASSIGN_eventName(_value,_name)\
 case _value: eventName.AssignLiteral(_name) ; break
 
-  switch(aGuiEvent->message)
+  switch(aGuiEvent->mMessage)
   {
     _ASSIGN_eventName(NS_BLUR_CONTENT,"NS_BLUR_CONTENT");
     _ASSIGN_eventName(NS_DRAGDROP_GESTURE,"NS_DND_GESTURE");
@@ -2670,7 +2670,7 @@ case _value: eventName.AssignLiteral(_name) ; break
     {
       char buf[32];
 
-      snprintf_literal(buf,"UNKNOWN: %d",aGuiEvent->message);
+      snprintf_literal(buf,"UNKNOWN: %d",aGuiEvent->mMessage);
 
       CopyASCIItoUTF16(buf, eventName);
     }
@@ -2802,15 +2802,13 @@ nsBaseWidget::debug_DumpEvent(FILE *                aFileOut,
                               const nsAutoCString & aWidgetName,
                               int32_t               aWindowID)
 {
-  if (aGuiEvent->message == NS_MOUSE_MOVE)
-  {
+  if (aGuiEvent->mMessage == NS_MOUSE_MOVE) {
     if (!debug_GetCachedBoolPref("nglayout.debug.motion_event_dumping"))
       return;
   }
 
-  if (aGuiEvent->message == NS_MOUSE_ENTER_WIDGET ||
-      aGuiEvent->message == NS_MOUSE_EXIT_WIDGET)
-  {
+  if (aGuiEvent->mMessage == NS_MOUSE_ENTER_WIDGET ||
+      aGuiEvent->mMessage == NS_MOUSE_EXIT_WIDGET) {
     if (!debug_GetCachedBoolPref("nglayout.debug.crossing_event_dumping"))
       return;
   }

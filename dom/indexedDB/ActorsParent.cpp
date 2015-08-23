@@ -7597,8 +7597,9 @@ private:
   Start(const OpenCursorParams& aParams);
 
   void
-  SendResponseInternal(CursorResponse& aResponse,
-                       const nsTArray<StructuredCloneFile>& aFiles);
+  SendResponseInternal(
+    CursorResponse& aResponse,
+    const nsTArray<FallibleTArray<StructuredCloneFile>>& aFiles);
 
   // Must call SendResponseInternal!
   bool
@@ -7612,7 +7613,7 @@ private:
   RecvDeleteMe() override;
 
   virtual bool
-  RecvContinue(const CursorRequestParams& aParams) override;
+  RecvContinue(const CursorRequestParams& aParams, const Key& key) override;
 };
 
 class Cursor::CursorOpBase
@@ -7620,7 +7621,7 @@ class Cursor::CursorOpBase
 {
 protected:
   nsRefPtr<Cursor> mCursor;
-  FallibleTArray<StructuredCloneFile> mFiles;
+  nsTArray<FallibleTArray<StructuredCloneFile>> mFiles;
 
   CursorResponse mResponse;
 
@@ -7647,7 +7648,8 @@ protected:
   Cleanup() override;
 
   nsresult
-  PopulateResponseFromStatement(DatabaseConnection::CachedStatement& aStmt);
+  PopulateResponseFromStatement(DatabaseConnection::CachedStatement& aStmt,
+                                bool aInitializeResponse);
 };
 
 class Cursor::OpenOp final
@@ -7697,12 +7699,16 @@ class Cursor::ContinueOp final
   friend class Cursor;
 
   const CursorRequestParams mParams;
+  const Key mKey;
 
 private:
   // Only created by Cursor.
-  ContinueOp(Cursor* aCursor, const CursorRequestParams& aParams)
+  ContinueOp(Cursor* aCursor,
+             const CursorRequestParams& aParams,
+             const Key& aKey)
     : CursorOpBase(aCursor)
     , mParams(aParams)
+    , mKey(aKey)
   {
     MOZ_ASSERT(aParams.type() != CursorRequestParams::T__None);
   }
@@ -14638,8 +14644,9 @@ Cursor::Start(const OpenCursorParams& aParams)
 }
 
 void
-Cursor::SendResponseInternal(CursorResponse& aResponse,
-                             const nsTArray<StructuredCloneFile>& aFiles)
+Cursor::SendResponseInternal(
+    CursorResponse& aResponse,
+    const nsTArray<FallibleTArray<StructuredCloneFile>>& aFiles)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aResponse.type() != CursorResponse::T__None);
@@ -14662,30 +14669,38 @@ Cursor::SendResponseInternal(CursorResponse& aResponse,
   MOZ_ASSERT(!mActorDestroyed);
   MOZ_ASSERT(mCurrentlyRunningOp);
 
-  if (!aFiles.IsEmpty()) {
-    MOZ_ASSERT(aResponse.type() == CursorResponse::TObjectStoreCursorResponse ||
-               aResponse.type() == CursorResponse::TIndexCursorResponse);
-    MOZ_ASSERT(mFileManager);
-    MOZ_ASSERT(mBackgroundParent);
+  for (size_t i = 0; i < aFiles.Length(); ++i) {
+    const auto& files = aFiles[i];
+    if (!files.IsEmpty()) {
+      MOZ_ASSERT(aResponse.type() ==
+                   CursorResponse::TArrayOfObjectStoreCursorResponse ||
+                 aResponse.type() == CursorResponse::TIndexCursorResponse);
+      MOZ_ASSERT(mFileManager);
+      MOZ_ASSERT(mBackgroundParent);
 
-    FallibleTArray<PBlobParent*> actors;
-    FallibleTArray<intptr_t> fileInfos;
-    nsresult rv = ConvertBlobsToActors(mBackgroundParent,
-                                       mFileManager,
-                                       aFiles,
-                                       actors,
-                                       fileInfos);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      aResponse = ClampResultCode(rv);
-    } else {
+      FallibleTArray<PBlobParent*> actors;
+      FallibleTArray<intptr_t> fileInfos;
+      nsresult rv = ConvertBlobsToActors(mBackgroundParent,
+                                         mFileManager,
+                                         files,
+                                         actors,
+                                         fileInfos);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        aResponse = ClampResultCode(rv);
+        break;
+      }
+
       SerializedStructuredCloneReadInfo* serializedInfo = nullptr;
       switch (aResponse.type()) {
-        case CursorResponse::TObjectStoreCursorResponse:
-          serializedInfo =
-            &aResponse.get_ObjectStoreCursorResponse().cloneInfo();
+        case CursorResponse::TArrayOfObjectStoreCursorResponse: {
+          auto& responses = aResponse.get_ArrayOfObjectStoreCursorResponse();
+          MOZ_ASSERT(i < responses.Length());
+          serializedInfo = &responses[i].cloneInfo();
           break;
+        }
 
         case CursorResponse::TIndexCursorResponse:
+          MOZ_ASSERT(i == 0);
           serializedInfo = &aResponse.get_IndexCursorResponse().cloneInfo();
           break;
 
@@ -14744,7 +14759,7 @@ Cursor::RecvDeleteMe()
 }
 
 bool
-Cursor::RecvContinue(const CursorRequestParams& aParams)
+Cursor::RecvContinue(const CursorRequestParams& aParams, const Key& aKey)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() != CursorRequestParams::T__None);
@@ -14782,7 +14797,7 @@ Cursor::RecvContinue(const CursorRequestParams& aParams)
     return true;
   }
 
-  nsRefPtr<ContinueOp> continueOp = new ContinueOp(this, aParams);
+  nsRefPtr<ContinueOp> continueOp = new ContinueOp(this, aParams, aKey);
   if (NS_WARN_IF(!continueOp->Init(mTransaction))) {
     continueOp->Cleanup();
     return false;
@@ -24308,11 +24323,12 @@ CursorOpBase::Cleanup()
 nsresult
 Cursor::
 CursorOpBase::PopulateResponseFromStatement(
-    DatabaseConnection::CachedStatement& aStmt)
+    DatabaseConnection::CachedStatement& aStmt,
+    bool aInitializeResponse)
 {
   Transaction()->AssertIsOnConnectionThread();
   MOZ_ASSERT(mResponse.type() == CursorResponse::T__None);
-  MOZ_ASSERT(mFiles.IsEmpty());
+  MOZ_ASSERT_IF(mFiles.IsEmpty(), aInitializeResponse);
 
   nsresult rv = mCursor->mKey.SetFromStatement(aStmt, 0);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -24331,17 +24347,24 @@ CursorOpBase::PopulateResponseFromStatement(
         return rv;
       }
 
-      mResponse = ObjectStoreCursorResponse();
+      if (aInitializeResponse) {
+        mResponse = nsTArray<ObjectStoreCursorResponse>();
+      } else {
+        MOZ_ASSERT(mResponse.type() ==
+                     CursorResponse::TArrayOfObjectStoreCursorResponse);
+      }
 
-      auto& response = mResponse.get_ObjectStoreCursorResponse();
+      auto& responses = mResponse.get_ArrayOfObjectStoreCursorResponse();
+      auto& response = *responses.AppendElement();
       response.cloneInfo().data().SwapElements(cloneInfo.mData);
       response.key() = mCursor->mKey;
 
-      mFiles.SwapElements(cloneInfo.mFiles);
+      mFiles.AppendElement(Move(cloneInfo.mFiles));
       break;
     }
 
     case OpenCursorParams::TObjectStoreOpenKeyCursorParams: {
+      MOZ_ASSERT(aInitializeResponse);
       mResponse = ObjectStoreKeyCursorResponse(mCursor->mKey);
       break;
     }
@@ -24362,6 +24385,7 @@ CursorOpBase::PopulateResponseFromStatement(
         return rv;
       }
 
+      MOZ_ASSERT(aInitializeResponse);
       mResponse = IndexCursorResponse();
 
       auto& response = mResponse.get_IndexCursorResponse();
@@ -24369,7 +24393,7 @@ CursorOpBase::PopulateResponseFromStatement(
       response.key() = mCursor->mKey;
       response.objectKey() = mCursor->mObjectKey;
 
-      mFiles.SwapElements(cloneInfo.mFiles);
+      mFiles.AppendElement(Move(cloneInfo.mFiles));
       break;
     }
 
@@ -24379,6 +24403,7 @@ CursorOpBase::PopulateResponseFromStatement(
         return rv;
       }
 
+      MOZ_ASSERT(aInitializeResponse);
       mResponse = IndexKeyCursorResponse(mCursor->mKey, mCursor->mObjectKey);
       break;
     }
@@ -24506,7 +24531,7 @@ OpenOp::DoObjectStoreDatabaseWork(DatabaseConnection* aConnection)
     return NS_OK;
   }
 
-  rv = PopulateResponseFromStatement(stmt);
+  rv = PopulateResponseFromStatement(stmt, true);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -24665,7 +24690,7 @@ OpenOp::DoObjectStoreKeyDatabaseWork(DatabaseConnection* aConnection)
     return NS_OK;
   }
 
-  rv = PopulateResponseFromStatement(stmt);
+  rv = PopulateResponseFromStatement(stmt, true);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -24842,7 +24867,7 @@ OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection)
     return NS_OK;
   }
 
-  rv = PopulateResponseFromStatement(stmt);
+  rv = PopulateResponseFromStatement(stmt, true);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -25049,7 +25074,7 @@ OpenOp::DoIndexKeyDatabaseWork(DatabaseConnection* aConnection)
     return NS_OK;
   }
 
-  rv = PopulateResponseFromStatement(stmt);
+  rv = PopulateResponseFromStatement(stmt, true);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -25257,32 +25282,29 @@ ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection)
 
   // Note: Changing the number or order of SELECT columns in the query will
   // require changes to CursorOpBase::PopulateResponseFromStatement.
-  nsCString query;
-  nsAutoCString countString;
-
   bool hasContinueKey = false;
-  uint32_t advanceCount;
+  uint32_t advanceCount = 1;
 
   if (mParams.type() == CursorRequestParams::TContinueParams) {
     // Always go to the next result.
-    advanceCount = 1;
-    countString.AppendLiteral("1");
-
     if (mParams.get_ContinueParams().key().IsUnset()) {
-      query = mCursor->mContinueQuery + countString;
       hasContinueKey = false;
     } else {
-      query = mCursor->mContinueToQuery + countString;
       hasContinueKey = true;
     }
   } else {
     advanceCount = mParams.get_AdvanceParams().count();
-    MOZ_ASSERT(advanceCount > 0);
-    countString.AppendInt(advanceCount);
-
-    query = mCursor->mContinueQuery + countString;
     hasContinueKey = false;
   }
+
+  const nsCString& continueQuery =
+    hasContinueKey ? mCursor->mContinueToQuery : mCursor->mContinueQuery;
+
+  MOZ_ASSERT(advanceCount > 0);
+  nsAutoCString countString;
+  countString.AppendInt(advanceCount);
+
+  nsCString query = continueQuery + countString;
 
   NS_NAMED_LITERAL_CSTRING(currentKeyName, "current_key");
   NS_NAMED_LITERAL_CSTRING(rangeKeyName, "range_key");
@@ -25348,9 +25370,26 @@ ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection)
     }
   }
 
-  rv = PopulateResponseFromStatement(stmt);
+  rv = PopulateResponseFromStatement(stmt, true);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
+
+  uint32_t extraCount = 1;
+  for (uint32_t i = 0; i < extraCount; i++) {
+    rv = stmt->ExecuteStep(&hasResult);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (!hasResult) {
+      break;
+    }
+
+    rv = PopulateResponseFromStatement(stmt, false);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   return NS_OK;

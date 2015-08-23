@@ -9,6 +9,7 @@
 
 #include "MediaStreamGraph.h"
 #include "SpeechSynthesisUtterance.h"
+#include "nsIAudioChannelAgent.h"
 #include "nsISpeechService.h"
 
 namespace mozilla {
@@ -19,6 +20,7 @@ class SpeechSynthesis;
 class SynthStreamListener;
 
 class nsSpeechTask : public nsISpeechTask
+                   , public nsIAudioChannelAgentCallback
 {
   friend class SynthStreamListener;
 
@@ -27,6 +29,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsSpeechTask, nsISpeechTask)
 
   NS_DECL_NSISPEECHTASK
+  NS_DECL_NSIAUDIOCHANNELAGENTCALLBACK
 
   explicit nsSpeechTask(SpeechSynthesisUtterance* aUtterance);
   nsSpeechTask(float aVolume, const nsAString& aText);
@@ -48,6 +51,8 @@ public:
   void Init(ProcessedMediaStream* aStream);
 
   void SetChosenVoiceURI(const nsAString& aUri);
+
+  virtual void SetAudioOutputVolume(uint32_t aVolume);
 
   bool IsPreCanceled()
   {
@@ -102,11 +107,17 @@ private:
 
   nsresult DispatchEndInner(float aElapsedTime, uint32_t aCharIndex);
 
+  void CreateAudioChannelAgent();
+
+  void DestroyAudioChannelAgent();
+
   nsRefPtr<SourceMediaStream> mStream;
 
   nsRefPtr<MediaInputPort> mPort;
 
   nsCOMPtr<nsISpeechTaskCallback> mCallback;
+
+  nsCOMPtr<nsIAudioChannelAgent> mAudioChannelAgent;
 
   uint32_t mChannels;
 

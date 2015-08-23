@@ -409,16 +409,11 @@ IMEContentObserver::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
                                            nsISelection* aSelection,
                                            int16_t aReason)
 {
-  bool causedByComposition = IsEditorHandlingEventForComposition();
-  if (causedByComposition &&
-      !mUpdatePreference.WantChangesCausedByComposition()) {
-    return NS_OK;
-  }
-
   int32_t count = 0;
   nsresult rv = aSelection->GetRangeCount(&count);
   NS_ENSURE_SUCCESS(rv, rv);
   if (count > 0 && mWidget) {
+    bool causedByComposition = IsEditorHandlingEventForComposition();
     bool causedBySelectionEvent = TextComposition::IsHandlingSelectionEvent();
     MaybeNotifyIMEOfSelectionChange(causedByComposition,
                                     causedBySelectionEvent);
@@ -461,7 +456,7 @@ IMEContentObserver::OnMouseButtonEvent(nsPresContext* aPresContext,
     return false;
   }
   // Now, we need to notify only mouse down and mouse up event.
-  switch (aMouseEvent->message) {
+  switch (aMouseEvent->mMessage) {
     case NS_MOUSE_BUTTON_UP:
     case NS_MOUSE_BUTTON_DOWN:
       break;
@@ -506,7 +501,7 @@ IMEContentObserver::OnMouseButtonEvent(nsPresContext* aPresContext,
   }
 
   IMENotification notification(NOTIFY_IME_OF_MOUSE_BUTTON_EVENT);
-  notification.mMouseButtonEventData.mEventMessage = aMouseEvent->message;
+  notification.mMouseButtonEventData.mEventMessage = aMouseEvent->mMessage;
   notification.mMouseButtonEventData.mOffset = charAtPt.mReply.mOffset;
   notification.mMouseButtonEventData.mCursorPos.Set(
     LayoutDeviceIntPoint::ToUntyped(charAtPt.refPoint));
@@ -852,6 +847,35 @@ IMEContentObserver::PostSelectionChangeNotification(
   mIsSelectionChangeEventPending = true;
 }
 
+bool
+IMEContentObserver::UpdateSelectionCache()
+{
+  MOZ_ASSERT(IsSafeToNotifyIME());
+
+  if (!mUpdatePreference.WantSelectionChange()) {
+    return false;
+  }
+
+  mSelectionData.Clear();
+
+  // XXX Cannot we cache some information for reducing the cost to compute
+  //     selection offset and writing mode?
+  WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, mWidget);
+  ContentEventHandler handler(GetPresContext());
+  handler.OnQuerySelectedText(&selection);
+  if (NS_WARN_IF(!selection.mSucceeded)) {
+    return false;
+  }
+
+  mSelectionData.mOffset = selection.mReply.mOffset;
+  *mSelectionData.mString = selection.mReply.mString;
+  mSelectionData.SetWritingMode(selection.GetWritingMode());
+  mSelectionData.mReversed = selection.mReply.mReversed;
+  mSelectionData.mCausedByComposition = false;
+  mSelectionData.mCausedBySelectionEvent = false;
+  return mSelectionData.IsValid();
+}
+
 void
 IMEContentObserver::PostPositionChangeNotification()
 {
@@ -1038,6 +1062,8 @@ IMEContentObserver::FocusSetEvent::Run()
   }
 
   mIMEContentObserver->mIMEHasFocus = true;
+  // Initialize selection cache with the first selection data.
+  mIMEContentObserver->UpdateSelectionCache();
   IMEStateManager::NotifyIME(IMENotification(NOTIFY_IME_OF_FOCUS),
                              mIMEContentObserver->mWidget);
   return NS_OK;
@@ -1060,13 +1086,16 @@ IMEContentObserver::SelectionChangeEvent::Run()
     return NS_OK;
   }
 
-  // XXX Cannot we cache some information for reducing the cost to compute
-  //     selection offset and writing mode?
-  WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT,
-                                    mIMEContentObserver->mWidget);
-  ContentEventHandler handler(mIMEContentObserver->GetPresContext());
-  handler.OnQuerySelectedText(&selection);
-  if (NS_WARN_IF(!selection.mSucceeded)) {
+  SelectionChangeData lastSelChangeData = mIMEContentObserver->mSelectionData;
+  if (NS_WARN_IF(!mIMEContentObserver->UpdateSelectionCache())) {
+    return NS_OK;
+  }
+
+  // If the IME doesn't want selection change notifications caused by
+  // composition, we should do nothing anymore.
+  if (mCausedByComposition &&
+      !mIMEContentObserver->
+        mUpdatePreference.WantChangesCausedByComposition()) {
     return NS_OK;
   }
 
@@ -1075,16 +1104,20 @@ IMEContentObserver::SelectionChangeEvent::Run()
     return NS_OK;
   }
 
+  // If the selection isn't changed actually, we shouldn't notify IME of
+  // selection change.
+  SelectionChangeData& newSelChangeData = mIMEContentObserver->mSelectionData;
+  if (lastSelChangeData.IsValid() &&
+      lastSelChangeData.mOffset == newSelChangeData.mOffset &&
+      lastSelChangeData.String() == newSelChangeData.String() &&
+      lastSelChangeData.GetWritingMode() == newSelChangeData.GetWritingMode() &&
+      lastSelChangeData.mReversed == newSelChangeData.mReversed) {
+    return NS_OK;
+  }
+
   IMENotification notification(NOTIFY_IME_OF_SELECTION_CHANGE);
-  notification.mSelectionChangeData.mOffset = selection.mReply.mOffset;
-  *notification.mSelectionChangeData.mString = selection.mReply.mString;
-  notification.mSelectionChangeData.SetWritingMode(
-                                      selection.GetWritingMode());
-  notification.mSelectionChangeData.mReversed = selection.mReply.mReversed;
-  notification.mSelectionChangeData.mCausedByComposition =
-    mCausedByComposition;
-  notification.mSelectionChangeData.mCausedBySelectionEvent =
-    mCausedBySelectionEvent;
+  notification.SetData(mIMEContentObserver->mSelectionData,
+                       mCausedByComposition, mCausedBySelectionEvent);
   IMEStateManager::NotifyIME(notification, mIMEContentObserver->mWidget);
   return NS_OK;
 }
@@ -1106,7 +1139,7 @@ IMEContentObserver::TextChangeEvent::Run()
   }
 
   IMENotification notification(NOTIFY_IME_OF_TEXT_CHANGE);
-  notification.mTextChangeData = mTextChangeData;
+  notification.SetData(mTextChangeData);
   IMEStateManager::NotifyIME(notification, mIMEContentObserver->mWidget);
   return NS_OK;
 }

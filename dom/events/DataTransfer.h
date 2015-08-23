@@ -255,7 +255,7 @@ protected:
   nsCOMPtr<nsISupports> mParent;
 
   // the event type this data transfer is for. This will correspond to an
-  // event->message value.
+  // event->mMessage value.
   uint32_t mEventType;
 
   // the drop effect and effect allowed

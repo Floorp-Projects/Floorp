@@ -41,7 +41,6 @@ public:
   friend class SharedDecoderProxy;
   friend class SharedDecoderCallback;
 
-  void DisableHardwareAcceleration();
   bool Recreate(const VideoInfo& aConfig);
 
 private:

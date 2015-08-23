@@ -425,6 +425,12 @@ CreateFileFromPath(const xpstring& path, nsIFile** file)
 {
   NS_NewLocalFile(nsDependentString(path.c_str()), false, file);
 }
+
+static void
+CreateFileFromPath(const wchar_t* path, nsIFile** file)
+{
+  CreateFileFromPath(std::wstring(path), file);
+}
 #else
 static void
 CreateFileFromPath(const xpstring& path, nsIFile** file)
@@ -1227,6 +1233,8 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
     ExceptionHandler(
 #ifdef XP_LINUX
                      descriptor,
+#elif defined(XP_WIN)
+                     std::wstring(tempPath.get()),
 #else
                      tempPath.get(),
 #endif
@@ -1341,7 +1349,7 @@ nsresult SetMinidumpPath(const nsAString& aPath)
     return NS_ERROR_NOT_INITIALIZED;
 
 #ifdef XP_WIN32
-  gExceptionHandler->set_dump_path(char16ptr_t(aPath.BeginReading()));
+  gExceptionHandler->set_dump_path(std::wstring(char16ptr_t(aPath.BeginReading())));
 #elif defined(XP_LINUX)
   gExceptionHandler->set_minidump_descriptor(
       MinidumpDescriptor(NS_ConvertUTF16toUTF8(aPath).BeginReading()));
@@ -2733,7 +2741,7 @@ OOPInit()
 
   const std::wstring dumpPath = gExceptionHandler->dump_path();
   crashServer = new CrashGenerationServer(
-    NS_ConvertASCIItoUTF16(childCrashNotifyPipe).get(),
+    std::wstring(NS_ConvertASCIItoUTF16(childCrashNotifyPipe).get()),
     nullptr,                    // default security attributes
     nullptr, nullptr,           // we don't care about process connect here
     OnChildProcessDumpRequested, nullptr,

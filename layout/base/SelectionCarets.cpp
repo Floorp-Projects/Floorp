@@ -204,11 +204,11 @@ SelectionCarets::HandleEvent(WidgetEvent* aEvent)
   nsPoint ptInRoot =
     nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, movePoint, rootFrame);
 
-  if (aEvent->message == NS_TOUCH_START ||
-      (aEvent->message == NS_MOUSE_BUTTON_DOWN &&
+  if (aEvent->mMessage == NS_TOUCH_START ||
+      (aEvent->mMessage == NS_MOUSE_BUTTON_DOWN &&
        mouseEvent->button == WidgetMouseEvent::eLeftButton)) {
     // If having a active touch, ignore other touch down event
-    if (aEvent->message == NS_TOUCH_START && mActiveTouchId >= 0) {
+    if (aEvent->mMessage == NS_TOUCH_START && mActiveTouchId >= 0) {
       return nsEventStatus_eConsumeNoDefault;
     }
 
@@ -231,9 +231,9 @@ SelectionCarets::HandleEvent(WidgetEvent* aEvent)
       mActiveTouchId = -1;
       LaunchLongTapDetector();
     }
-  } else if (aEvent->message == NS_TOUCH_END ||
-             aEvent->message == NS_TOUCH_CANCEL ||
-             aEvent->message == NS_MOUSE_BUTTON_UP) {
+  } else if (aEvent->mMessage == NS_TOUCH_END ||
+             aEvent->mMessage == NS_TOUCH_CANCEL ||
+             aEvent->mMessage == NS_MOUSE_BUTTON_UP) {
     CancelLongTapDetector();
     if (mDragMode != NONE) {
       // Only care about same id
@@ -244,8 +244,8 @@ SelectionCarets::HandleEvent(WidgetEvent* aEvent)
       }
       return nsEventStatus_eConsumeNoDefault;
     }
-  } else if (aEvent->message == NS_TOUCH_MOVE ||
-             aEvent->message == NS_MOUSE_MOVE) {
+  } else if (aEvent->mMessage == NS_TOUCH_MOVE ||
+             aEvent->mMessage == NS_MOUSE_MOVE) {
     if (mDragMode == START_FRAME || mDragMode == END_FRAME) {
       if (mActiveTouchId == nowTouchId) {
         ptInRoot.y += mCaretCenterToDownPointOffsetY;
@@ -271,7 +271,7 @@ SelectionCarets::HandleEvent(WidgetEvent* aEvent)
       CancelLongTapDetector();
     }
 
-  } else if (aEvent->message == NS_MOUSE_MOZLONGTAP) {
+  } else if (aEvent->mMessage == NS_MOUSE_MOZLONGTAP) {
     if (!mVisible || !sSelectionCaretDetectsLongTap) {
       SELECTIONCARETS_LOG("SelectWord from NS_MOUSE_MOZLONGTAP");
 

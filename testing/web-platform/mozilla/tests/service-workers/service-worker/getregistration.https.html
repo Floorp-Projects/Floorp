@@ -24,7 +24,7 @@ async_test(function(t) {
           return navigator.serviceWorker.getRegistration(scope);
         })
       .then(function(value) {
-          assert_equals(value, registration,
+          assert_equals(value.scope, registration.scope,
                         'getRegistration should resolve with registration');
           service_worker_unregister_and_done(t, scope);
         })
@@ -42,7 +42,7 @@ async_test(function(t) {
           return navigator.serviceWorker.getRegistration(documentURL);
         })
       .then(function(value) {
-          assert_equals(value, registration,
+          assert_equals(value.scope, registration.scope,
                         'getRegistration should resolve with registration');
           service_worker_unregister_and_done(t, scope);
         })

@@ -155,6 +155,18 @@ class MultiTcpSocketTest : public ::testing::Test {
             NS_DISPATCH_SYNC);
   }
 
+  void Destroy_s(nr_socket *sock) {
+    int r = nr_socket_destroy(&sock);
+    ASSERT_EQ(0, r);
+  }
+
+  void Destroy(nr_socket *sock) {
+    test_utils->sts_target()->Dispatch(
+            WrapRunnable(
+                this, &MultiTcpSocketTest::Destroy_s, sock),
+            NS_DISPATCH_SYNC);
+  }
+
   void Connect_s(nr_socket *from, nr_socket *to) {
     nr_transport_addr addr_to;
     nr_transport_addr addr_from;
@@ -251,6 +263,31 @@ class MultiTcpSocketTest : public ::testing::Test {
             NS_DISPATCH_SYNC);
   }
 
+  void RecvDataFailed_s(nr_socket *sent_to, size_t expected_len, int expected_err) {
+    SetReadable(false);
+    char received_data[expected_len+1];
+    nr_transport_addr addr_to;
+    nr_transport_addr retaddr;
+    size_t retlen;
+
+    int r=nr_socket_getaddr(sent_to, &addr_to);
+    ASSERT_EQ(0, r);
+    r=nr_socket_recvfrom(sent_to, received_data, expected_len+1,
+                         &retlen, 0, &retaddr);
+    ASSERT_EQ(expected_err, r) << "Expecting receive failure " << expected_err
+    << " on " << addr_to.as_string;
+  }
+
+  void RecvDataFailed(nr_socket *sent_to, size_t expected_len,
+                      int expected_err) {
+    ASSERT_TRUE_WAIT(IsReadable(), 1000);
+    test_utils->sts_target()->Dispatch(
+            WrapRunnable(
+                this, &MultiTcpSocketTest::RecvDataFailed_s, sent_to, expected_len,
+                expected_err),
+            NS_DISPATCH_SYNC);
+  }
+
   void TransferData(nr_socket *from, nr_socket *to, const char *data,
                     size_t len) {
     SendData(from, to, data, len);
@@ -293,6 +330,44 @@ TEST_F(MultiTcpSocketTest, TestTransmit) {
 
   TransferData(socks[0], socks[1], data, sizeof(data));
   TransferData(socks[1], socks[0], data, sizeof(data));
+}
+
+TEST_F(MultiTcpSocketTest, TestClosePassive) {
+  const char data[] = "TestClosePassive";
+  socks[0] = Create(TCP_TYPE_ACTIVE);
+  socks[1] = Create(TCP_TYPE_PASSIVE);
+  Listen(socks[1]);
+  Connect(socks[0], socks[1]);
+
+  TransferData(socks[0], socks[1], data, sizeof(data));
+  TransferData(socks[1], socks[0], data, sizeof(data));
+
+  /* We have to destroy as only that calls PR_Close() */
+  std::cerr << "Destructing socket" << std::endl;
+  Destroy(socks[1]);
+
+  RecvDataFailed(socks[0], sizeof(data), R_EOD);
+
+  socks[1] = nullptr;
+}
+
+TEST_F(MultiTcpSocketTest, TestCloseActive) {
+  const char data[] = "TestCloseActive";
+  socks[0] = Create(TCP_TYPE_ACTIVE);
+  socks[1] = Create(TCP_TYPE_PASSIVE);
+  Listen(socks[1]);
+  Connect(socks[0], socks[1]);
+
+  TransferData(socks[0], socks[1], data, sizeof(data));
+  TransferData(socks[1], socks[0], data, sizeof(data));
+
+  /* We have to destroy as only that calls PR_Close() */
+  std::cerr << "Destructing socket" << std::endl;
+  Destroy(socks[0]);
+
+  RecvDataFailed(socks[1], sizeof(data), R_EOD);
+
+  socks[0] = nullptr;
 }
 
 TEST_F(MultiTcpSocketTest, TestTwoSendsBeforeReceives) {

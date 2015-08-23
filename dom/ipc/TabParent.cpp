@@ -287,6 +287,7 @@ TabParent::TabParent(nsIContentParent* aManager,
   , mCursor(nsCursor(-1))
   , mTabSetsCursor(false)
   , mHasContentOpener(false)
+  , mActiveSupressDisplayportCount(0)
 {
   MOZ_ASSERT(aManager);
 }
@@ -1367,19 +1368,19 @@ bool TabParent::SendRealMouseEvent(WidgetMouseEvent& event)
   if (widget) {
     // When we mouseenter the tab, the tab's cursor should
     // become the current cursor.  When we mouseexit, we stop.
-    if (NS_MOUSE_ENTER_WIDGET == event.message) {
+    if (NS_MOUSE_ENTER_WIDGET == event.mMessage) {
       mTabSetsCursor = true;
       if (mCustomCursor) {
         widget->SetCursor(mCustomCursor, mCustomCursorHotspotX, mCustomCursorHotspotY);
       } else if (mCursor != nsCursor(-1)) {
         widget->SetCursor(mCursor);
       }
-    } else if (NS_MOUSE_EXIT_WIDGET == event.message) {
+    } else if (NS_MOUSE_EXIT_WIDGET == event.mMessage) {
       mTabSetsCursor = false;
     }
   }
 
-  if (NS_MOUSE_MOVE == event.message) {
+  if (NS_MOUSE_MOVE == event.mMessage) {
     return SendRealMouseMoveEvent(event);
   }
   return SendRealMouseButtonEvent(event);
@@ -1721,7 +1722,7 @@ bool TabParent::SendRealKeyEvent(WidgetKeyboardEvent& event)
 
   MaybeNativeKeyBinding bindings;
   bindings = void_t();
-  if (event.message == NS_KEY_PRESS) {
+  if (event.mMessage == NS_KEY_PRESS) {
     nsCOMPtr<nsIWidget> widget = GetWidget();
 
     AutoInfallibleTArray<mozilla::CommandInt, 4> singleLine;
@@ -1753,7 +1754,7 @@ bool TabParent::SendRealTouchEvent(WidgetTouchEvent& event)
   // confuses remote content and the panning and zooming logic into thinking
   // that the added touches are part of the touchend/cancel, when actually
   // they're not.
-  if (event.message == NS_TOUCH_END || event.message == NS_TOUCH_CANCEL) {
+  if (event.mMessage == NS_TOUCH_END || event.mMessage == NS_TOUCH_CANCEL) {
     for (int i = event.touches.Length() - 1; i >= 0; i--) {
       if (!event.touches[i]->mChanged) {
         event.touches.RemoveElementAt(i);
@@ -1775,7 +1776,7 @@ bool TabParent::SendRealTouchEvent(WidgetTouchEvent& event)
     event.touches[i]->mRefPoint += offset;
   }
 
-  return (event.message == NS_TOUCH_MOVE) ?
+  return (event.mMessage == NS_TOUCH_MOVE) ?
     PBrowserParent::SendRealTouchMoveEvent(event, guid, blockId, apzResponse) :
     PBrowserParent::SendRealTouchEvent(event, guid, blockId, apzResponse);
 }
@@ -2262,7 +2263,7 @@ TabParent::RecvDispatchAfterKeyboardEvent(const WidgetKeyboardEvent& aEvent)
 
   if (mFrameElement &&
       PresShell::BeforeAfterKeyboardEventEnabled() &&
-      localEvent.message != NS_KEY_PRESS) {
+      localEvent.mMessage != NS_KEY_PRESS) {
     presShell->DispatchAfterKeyboardEvent(mFrameElement, localEvent,
                                           aEvent.mFlags.mDefaultPrevented);
   }
@@ -2281,7 +2282,7 @@ TabParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent)
       NS_WARN_IF(!aEvent.mSucceeded)) {
     return true;
   }
-  switch (aEvent.message) {
+  switch (aEvent.mMessage) {
     case NS_QUERY_TEXT_RECT:
     case NS_QUERY_CARET_RECT:
     case NS_QUERY_EDITOR_RECT:
@@ -2952,6 +2953,25 @@ NS_IMETHODIMP
 TabParent::SetIsDocShellActive(bool isActive)
 {
   unused << SendSetIsDocShellActive(isActive);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TabParent::SuppressDisplayport(bool aEnabled)
+{
+  if (IsDestroyed()) {
+    return NS_OK;
+  }
+
+  if (aEnabled) {
+    mActiveSupressDisplayportCount++;
+  } else {
+    mActiveSupressDisplayportCount--;
+  }
+
+  MOZ_ASSERT(mActiveSupressDisplayportCount >= 0);
+
+  unused << SendSuppressDisplayport(aEnabled);
   return NS_OK;
 }
 

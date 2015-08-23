@@ -280,6 +280,10 @@ NS_IMETHODIMP
 RtspChannelChild::CompleteRedirectSetup(nsIStreamListener *aListener,
                                         nsISupports *aContext)
 {
+  if (mLoadInfo && mLoadInfo->GetEnforceSecurity()) {
+    MOZ_ASSERT(!aContext, "aContext should be null!");
+    return AsyncOpen2(aListener);
+  }
   return AsyncOpen(aListener, aContext);
 }
 

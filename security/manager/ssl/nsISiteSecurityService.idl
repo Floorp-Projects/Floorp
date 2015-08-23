@@ -23,7 +23,7 @@ namespace mozilla
 [ref] native nsCStringTArrayRef(nsTArray<nsCString>);
 [ref] native mozillaPkixTime(mozilla::pkix::Time);
 
-[scriptable, uuid(e6cac961-9f03-4cc3-ad00-a829ae7304dc)]
+[scriptable, uuid(275127f8-dbd7-4681-afbf-6df0c6587a01)]
 interface nsISiteSecurityService : nsISupports
 {
     const uint32_t HEADER_HSTS = 0;
@@ -44,6 +44,7 @@ interface nsISiteSecurityService : nsISupports
     const uint32_t ERROR_PINSET_DOES_NOT_MATCH_CHAIN = 11;
     const uint32_t ERROR_NO_BACKUP_PIN = 12;
     const uint32_t ERROR_COULD_NOT_SAVE_STATE = 13;
+    const uint32_t ERROR_ROOT_NOT_BUILT_IN = 14;
 
     /**
      * Parses a given HTTP header and records the results internally.

@@ -966,7 +966,7 @@ nsWindow::OnMouseEvent(AndroidGeckoEvent *ae)
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
 
     WidgetMouseEvent event = ae->MakeMouseEvent(this);
-    if (event.message == NS_EVENT_NULL) {
+    if (event.mMessage == NS_EVENT_NULL) {
         // invalid event type, abort
         return;
     }
@@ -1001,7 +1001,7 @@ nsWindow::OnContextmenuEvent(AndroidGeckoEvent *ae)
     // triggering further element behaviour such as link-clicks.
     if (contextMenuStatus == nsEventStatus_eConsumeNoDefault) {
         WidgetTouchEvent canceltouchEvent = ae->MakeTouchEvent(this);
-        canceltouchEvent.message = NS_TOUCH_CANCEL;
+        canceltouchEvent.mMessage = NS_TOUCH_CANCEL;
         DispatchEvent(&canceltouchEvent);
         return true;
     }
@@ -1052,7 +1052,7 @@ bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
     bool isDownEvent = false;
 
     WidgetTouchEvent event = ae->MakeTouchEvent(this);
-    if (event.message != NS_EVENT_NULL) {
+    if (event.mMessage != NS_EVENT_NULL) {
         nsEventStatus status;
         DispatchEvent(&event, status);
         // We check mMultipleActionsPrevented because that's what <input type=range>
@@ -1061,7 +1061,7 @@ bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
         // from running.
         preventDefaultActions = (status == nsEventStatus_eConsumeNoDefault ||
                                 event.mFlags.mMultipleActionsPrevented);
-        isDownEvent = (event.message == NS_TOUCH_START);
+        isDownEvent = (event.mMessage == NS_TOUCH_START);
     }
 
     if (isDownEvent && event.touches.Length() == 1) {
@@ -1461,7 +1461,7 @@ nsWindow::InitKeyEvent(WidgetKeyboardEvent& event, AndroidGeckoEvent& key,
     event.mCodeNameIndex = ConvertAndroidScanCodeToCodeNameIndex(key);
     uint32_t domKeyCode = ConvertAndroidKeyCodeToDOMKeyCode(key.KeyCode());
 
-    if (event.message == NS_KEY_PRESS) {
+    if (event.mMessage == NS_KEY_PRESS) {
         // Android gives us \n, so filter out some control characters.
         int charCode = key.UnicodeChar();
         if (!charCode) {
@@ -1473,13 +1473,13 @@ nsWindow::InitKeyEvent(WidgetKeyboardEvent& event, AndroidGeckoEvent& key,
         event.mPluginEvent.Clear();
     } else {
 #ifdef DEBUG
-        if (event.message != NS_KEY_DOWN && event.message != NS_KEY_UP) {
-            ALOG("InitKeyEvent: unexpected event.message %d", event.message);
+        if (event.mMessage != NS_KEY_DOWN && event.mMessage != NS_KEY_UP) {
+            ALOG("InitKeyEvent: unexpected event.mMessage %d", event.mMessage);
         }
 #endif // DEBUG
 
         // Flash will want a pluginEvent for keydown and keyup events.
-        ANPKeyActions action = event.message == NS_KEY_DOWN
+        ANPKeyActions action = event.mMessage == NS_KEY_DOWN
                              ? kDown_ANPKeyAction
                              : kUp_ANPKeyAction;
         InitPluginEvent(pluginEvent, action, key);
@@ -1500,13 +1500,13 @@ nsWindow::InitKeyEvent(WidgetKeyboardEvent& event, AndroidGeckoEvent& key,
     // Note that on Android 4.x, Alt modifier isn't set when the key input
     // causes text input even while right Alt key is pressed.  However, this
     // is necessary for Android 2.3 compatibility.
-    if (event.message == NS_KEY_PRESS &&
+    if (event.mMessage == NS_KEY_PRESS &&
         key.UnicodeChar() && key.UnicodeChar() != key.BaseUnicodeChar()) {
         event.modifiers &= ~(MODIFIER_ALT | MODIFIER_CONTROL | MODIFIER_META);
     }
 
     event.mIsRepeat =
-        (event.message == NS_KEY_DOWN || event.message == NS_KEY_PRESS) &&
+        (event.mMessage == NS_KEY_DOWN || event.mMessage == NS_KEY_PRESS) &&
         (!!(key.Flags() & AKEY_EVENT_FLAG_LONG_PRESS) || !!key.RepeatCount());
     event.location =
         WidgetKeyboardEvent::ComputeLocationFromCodeValue(event.mCodeNameIndex);
