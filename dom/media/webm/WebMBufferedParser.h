@@ -17,8 +17,14 @@ namespace mozilla {
 // that offset.
 struct WebMTimeDataOffset
 {
-  WebMTimeDataOffset(int64_t aEndOffset, uint64_t aTimecode, int64_t aSyncOffset)
-    : mEndOffset(aEndOffset), mSyncOffset(aSyncOffset), mTimecode(aTimecode)
+  WebMTimeDataOffset(int64_t aEndOffset, uint64_t aTimecode,
+                     int64_t aInitOffset, int64_t aSyncOffset,
+                     int64_t aClusterEndOffset)
+    : mEndOffset(aEndOffset)
+    , mInitOffset(aInitOffset)
+    , mSyncOffset(aSyncOffset)
+    , mClusterEndOffset(aClusterEndOffset)
+    , mTimecode(aTimecode)
   {}
 
   bool operator==(int64_t aEndOffset) const {
@@ -34,7 +40,9 @@ struct WebMTimeDataOffset
   }
 
   int64_t mEndOffset;
+  int64_t mInitOffset;
   int64_t mSyncOffset;
+  int64_t mClusterEndOffset;
   uint64_t mTimecode;
 };
 
@@ -53,7 +61,9 @@ struct WebMBufferedParser
     , mBlockEndOffset(-1)
     , mState(READ_ELEMENT_ID)
     , mVIntRaw(false)
+    , mLastInitStartOffset(-1)
     , mClusterSyncPos(0)
+    , mClusterEndOffset(-1)
     , mTimecodeScale(1000000)
     , mGotTimecodeScale(false)
   {
@@ -89,21 +99,26 @@ struct WebMBufferedParser
     return mCurrentOffset < aOffset;
   }
 
+  // Returns the start offset of the init (EBML) or media segment (Cluster)
+  // following the aOffset position. If none were found, returns mBlockEndOffset.
+  // This allows to determine the end of the interval containg aOffset.
+  int64_t EndSegmentOffset(int64_t aOffset);
+
   // The offset at which this parser started parsing.  Used to merge
   // adjacent parsers, in which case the later parser adopts the earlier
   // parser's mStartOffset.
   int64_t mStartOffset;
 
-  // Current offset with the stream.  Updated in chunks as Append() consumes
+  // Current offset within the stream.  Updated in chunks as Append() consumes
   // data.
   int64_t mCurrentOffset;
 
-  // Tracks element's end offset. This indicates the end of the init segment.
-  // Will only be set if a Segment Information has been found.
+  // Tracks element's end offset. This indicates the end of the first init
+  // segment. Will only be set if a Segment Information has been found.
   int64_t mInitEndOffset;
 
-  // End offset of the last block.
-  // Will only be set if a full block has been parsed.
+  // End offset of the last block parsed.
+  // Will only be set if a complete block has been parsed.
   int64_t mBlockEndOffset;
 
 private:
@@ -185,6 +200,10 @@ private:
 
   bool mVIntRaw;
 
+  // EBML start offset. This indicates the start of the last init segment
+  // parsed. Will only be set if an EBML element has been found.
+  int64_t mLastInitStartOffset;
+
   // Current match position within CLUSTER_SYNC_ID.  Used to find sync
   // within arbitrary data.
   uint32_t mClusterSyncPos;
@@ -204,6 +223,9 @@ private:
   // point offset for the offset-to-time mapping as each block timecode is
   // been parsed.
   int64_t mClusterOffset;
+
+  // End offset of the cluster currently being parsed. -1 if unknown.
+  int64_t mClusterEndOffset;
 
   // Start offset of the block currently being parsed.  Used as the byte
   // offset for the offset-to-time mapping once the block timecode has been
