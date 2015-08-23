@@ -11,6 +11,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "xpcprivate.h"
+#include "js/Class.h"
 #include "jsfriendapi.h"
 
 using namespace JS;
@@ -519,6 +520,32 @@ WrapperAnswer::RecvObjectClassIs(const ObjectId& objId, const uint32_t& classVal
 
     *result = js::ObjectClassIs(cx, obj, (js::ESClassValue)classValue);
     return true;
+}
+
+bool
+WrapperAnswer::RecvIsArray(const ObjectId& objId, ReturnStatus* rs,
+                           uint32_t* ans)
+{
+    *ans = uint32_t(IsArrayAnswer::NotArray);
+
+    AutoJSAPI jsapi;
+    if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
+        return false;
+    jsapi.TakeOwnershipOfErrorReporting();
+    JSContext* cx = jsapi.cx();
+
+    RootedObject obj(cx, findObjectById(cx, objId));
+    if (!obj)
+        return fail(jsapi, rs);
+
+    LOG("%s.isArray()", ReceiverObj(objId));
+
+    IsArrayAnswer answer;
+    if (!JS::IsArray(cx, obj, &answer))
+        return fail(jsapi, rs);
+
+    *ans = uint32_t(answer);
+    return ok(rs);
 }
 
 bool

@@ -323,6 +323,7 @@ class JS_FRIEND_API(BaseProxyHandler)
                             const CallArgs& args) const;
     virtual bool hasInstance(JSContext* cx, HandleObject proxy, MutableHandleValue v, bool* bp) const;
     virtual bool objectClassIs(HandleObject obj, ESClassValue classValue, JSContext* cx) const;
+    virtual bool isArray(JSContext* cx, HandleObject proxy, JS::IsArrayAnswer* answer) const;
     virtual const char* className(JSContext* cx, HandleObject proxy) const;
     virtual JSString* fun_toString(JSContext* cx, HandleObject proxy, unsigned indent) const;
     virtual bool regexp_toShared(JSContext* cx, HandleObject proxy, RegExpGuard* g) const;
@@ -414,6 +415,8 @@ class JS_FRIEND_API(DirectProxyHandler) : public BaseProxyHandler
                              bool* bp) const override;
     virtual bool objectClassIs(HandleObject obj, ESClassValue classValue,
                                JSContext* cx) const override;
+    virtual bool isArray(JSContext* cx, HandleObject proxy,
+                         JS::IsArrayAnswer* answer) const override;
     virtual const char* className(JSContext* cx, HandleObject proxy) const override;
     virtual JSString* fun_toString(JSContext* cx, HandleObject proxy,
                                    unsigned indent) const override;

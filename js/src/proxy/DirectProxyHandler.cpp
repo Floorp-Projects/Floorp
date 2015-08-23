@@ -161,6 +161,13 @@ DirectProxyHandler::objectClassIs(HandleObject proxy, ESClassValue classValue,
     return ObjectClassIs(target, classValue, cx);
 }
 
+bool
+DirectProxyHandler::isArray(JSContext* cx, HandleObject proxy, JS::IsArrayAnswer* answer) const
+{
+    RootedObject target(cx, proxy->as<ProxyObject>().target());
+    return IsArray(cx, target, answer);
+}
+
 const char*
 DirectProxyHandler::className(JSContext* cx, HandleObject proxy) const
 {
