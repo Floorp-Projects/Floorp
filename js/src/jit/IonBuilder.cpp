@@ -4485,18 +4485,48 @@ IonBuilder::pushConstant(const Value& v)
 }
 
 bool
+IonBuilder::bitnotTrySpecialized(bool* emitted, MDefinition* input)
+{
+    MOZ_ASSERT(*emitted == false);
+
+    // Try to emit a specialized bitnot instruction based on the input type
+    // of the operand.
+
+    if (input->mightBeType(MIRType_Object) || input->mightBeType(MIRType_Symbol))
+        return true;
+
+    MBitNot* ins = MBitNot::New(alloc(), input);
+    ins->setSpecialization(MIRType_Int32);
+
+    current->add(ins);
+    current->push(ins);
+
+    *emitted = true;
+    return true;
+}
+
+bool
 IonBuilder::jsop_bitnot()
 {
+    bool emitted = false;
+
     MDefinition* input = current->pop();
+
+    if (!forceInlineCaches()) {
+        if (!bitnotTrySpecialized(&emitted, input) || emitted)
+            return emitted;
+    }
+
+    if (!arithTrySharedStub(&emitted, JSOP_BITNOT, nullptr, input) || emitted)
+        return emitted;
+
+    // Not possible to optimize. Do a slow vm call.
     MBitNot* ins = MBitNot::New(alloc(), input);
 
     current->add(ins);
-    ins->infer();
-
     current->push(ins);
-    if (ins->isEffectful() && !resumeAfter(ins))
-        return false;
-    return true;
+    MOZ_ASSERT(ins->isEffectful());
+    return resumeAfter(ins);
 }
 bool
 IonBuilder::jsop_bitop(JSOp op)
@@ -4672,21 +4702,42 @@ IonBuilder::binaryArithTrySpecializedOnBaselineInspector(bool* emitted, JSOp op,
 }
 
 bool
-IonBuilder::binaryArithTrySharedStub(bool* emitted, JSOp op,
-                                     MDefinition* left, MDefinition* right)
+IonBuilder::arithTrySharedStub(bool* emitted, JSOp op,
+                               MDefinition* left, MDefinition* right)
 {
     MOZ_ASSERT(*emitted == false);
+    JSOp actualOp = JSOp(*pc);
 
     // Try to emit a shared stub cache.
 
     if (js_JitOptions.disableSharedStubs)
         return true;
 
-    // It is not possible for shared stubs to impersonate another op.
-    if (JSOp(*pc) != op)
+    // The actual jsop 'jsop_pos' is not supported yet.
+    if (actualOp == JSOP_POS)
         return true;
 
-    MBinarySharedStub *stub = MBinarySharedStub::New(alloc(), left, right);
+    MInstruction* stub = nullptr;
+    switch (actualOp) {
+      case JSOP_NEG:
+      case JSOP_BITNOT:
+        MOZ_ASSERT_IF(op == JSOP_MUL, left->isConstantValue() &&
+                                      left->constantValue().toInt32() == -1);
+        MOZ_ASSERT_IF(op != JSOP_MUL, !left);
+
+        stub = MUnarySharedStub::New(alloc(), right);
+        break;
+      case JSOP_ADD:
+      case JSOP_SUB:
+      case JSOP_MUL:
+      case JSOP_DIV:
+      case JSOP_MOD:
+        stub = MBinarySharedStub::New(alloc(), left, right);
+        break;
+      default:
+        MOZ_CRASH("unsupported arith");
+    }
+
     current->add(stub);
     current->push(stub);
 
@@ -4717,7 +4768,7 @@ IonBuilder::jsop_binary_arith(JSOp op, MDefinition* left, MDefinition* right)
             return emitted;
     }
 
-    if (!binaryArithTrySharedStub(&emitted, op, left, right) || emitted)
+    if (!arithTrySharedStub(&emitted, op, left, right) || emitted)
         return emitted;
 
     // Not possible to optimize. Do a slow vm call.
@@ -4791,9 +4842,7 @@ IonBuilder::jsop_neg()
 
     MDefinition* right = current->pop();
 
-    if (!jsop_binary_arith(JSOP_MUL, negator, right))
-        return false;
-    return true;
+    return jsop_binary_arith(JSOP_MUL, negator, right);
 }
 
 class AutoAccumulateReturns

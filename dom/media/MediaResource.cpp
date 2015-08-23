@@ -69,12 +69,14 @@ ChannelMediaResource::ChannelMediaResource(MediaDecoder* aDecoder,
                                            nsIURI* aURI,
                                            const nsACString& aContentType)
   : BaseMediaResource(aDecoder, aChannel, aURI, aContentType),
-    mOffset(0), mSuspendCount(0),
-    mReopenOnError(false), mIgnoreClose(false),
+    mOffset(0),
+    mReopenOnError(false),
+    mIgnoreClose(false),
     mCacheStream(this),
     mLock("ChannelMediaResource.mLock"),
     mIgnoreResume(false),
-    mIsTransportSeekable(true)
+    mIsTransportSeekable(true),
+    mSuspendAgent(mChannel)
 {
   if (!gMediaResourceLog) {
     gMediaResourceLog = PR_NewLogModule("MediaResource");
@@ -317,13 +319,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
   mReopenOnError = false;
   mIgnoreClose = false;
 
-  if (mSuspendCount > 0) {
-    // Re-suspend the channel if it needs to be suspended
-    // No need to call PossiblySuspend here since the channel is
-    // definitely in the right state for us in OnStartRequest.
-    mChannel->Suspend();
-    mIgnoreResume = false;
-  }
+  mSuspendAgent.UpdateSuspendedStatusIfNeeded();
 
   // Fires an initial progress event.
   owner->DownloadProgressed();
@@ -389,7 +385,7 @@ nsresult
 ChannelMediaResource::OnStopRequest(nsIRequest* aRequest, nsresult aStatus)
 {
   NS_ASSERTION(mChannel.get() == aRequest, "Wrong channel!");
-  NS_ASSERTION(mSuspendCount == 0,
+  NS_ASSERTION(!mSuspendAgent.IsSuspended(),
                "How can OnStopRequest fire while we're suspended?");
 
   {
@@ -439,6 +435,7 @@ ChannelMediaResource::OnChannelRedirect(nsIChannel* aOld, nsIChannel* aNew,
                                         uint32_t aFlags)
 {
   mChannel = aNew;
+  mSuspendAgent.NotifyChannelOpened(mChannel);
   return SetupChannelHeaders();
 }
 
@@ -678,7 +675,7 @@ already_AddRefed<MediaResource> ChannelMediaResource::CloneData(MediaDecoder* aD
     // which will recreate the channel. This way, if all of the media data
     // is already in the cache we don't create an unnecessary HTTP channel
     // and perform a useless HTTP transaction.
-    resource->mSuspendCount = 1;
+    resource->mSuspendAgent.Suspend();
     resource->mCacheStream.InitAsClone(&mCacheStream);
     resource->mChannelStatistics = new MediaChannelStatistics(mChannelStatistics);
     resource->mChannelStatistics->Stop();
@@ -701,10 +698,7 @@ void ChannelMediaResource::CloseChannel()
   }
 
   if (mChannel) {
-    if (mSuspendCount > 0) {
-      // Resume the channel before we cancel it
-      PossiblyResume();
-    }
+    mSuspendAgent.NotifyChannelClosing();
     // The status we use here won't be passed to the decoder, since
     // we've already revoked the listener. It can however be passed
     // to nsDocumentViewer::LoadComplete if our channel is the one
@@ -790,29 +784,27 @@ void ChannelMediaResource::Suspend(bool aCloseImmediately)
     return;
   }
 
-  if (mChannel) {
-    if (aCloseImmediately && mCacheStream.IsTransportSeekable()) {
-      // Kill off our channel right now, but don't tell anyone about it.
-      mIgnoreClose = true;
-      CloseChannel();
-      element->DownloadSuspended();
-    } else if (mSuspendCount == 0) {
+  if (mChannel && aCloseImmediately && mCacheStream.IsTransportSeekable()) {
+    // Kill off our channel right now, but don't tell anyone about it.
+    mIgnoreClose = true;
+    CloseChannel();
+    element->DownloadSuspended();
+  }
+
+  if (mSuspendAgent.Suspend()) {
+    if (mChannel) {
       {
         MutexAutoLock lock(mLock);
         mChannelStatistics->Stop();
       }
-      PossiblySuspend();
       element->DownloadSuspended();
     }
   }
-
-  ++mSuspendCount;
 }
 
 void ChannelMediaResource::Resume()
 {
   NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
-  NS_ASSERTION(mSuspendCount > 0, "Too many resumes!");
 
   MediaDecoderOwner* owner = mDecoder->GetMediaOwner();
   if (!owner) {
@@ -825,9 +817,7 @@ void ChannelMediaResource::Resume()
     return;
   }
 
-  NS_ASSERTION(mSuspendCount > 0, "Resume without previous Suspend!");
-  --mSuspendCount;
-  if (mSuspendCount == 0) {
+  if (mSuspendAgent.Resume()) {
     if (mChannel) {
       // Just wake up our existing channel
       {
@@ -837,7 +827,6 @@ void ChannelMediaResource::Resume()
       // if an error occurs after Resume, assume it's because the server
       // timed out the connection and we should reopen it.
       mReopenOnError = true;
-      PossiblyResume();
       element->DownloadResumed();
     } else {
       int64_t totalLength = mCacheStream.GetLength();
@@ -909,6 +898,7 @@ ChannelMediaResource::RecreateChannel()
   NS_ASSERTION(!GetContentType().IsEmpty(),
       "When recreating a channel, we should know the Content-Type.");
   mChannel->SetContentType(GetContentType());
+  mSuspendAgent.NotifyChannelOpened(mChannel);
 
   // Tell the cache to reset the download status when the channel is reopened.
   mCacheStream.NotifyChannelRecreated();
@@ -1000,21 +990,19 @@ ChannelMediaResource::CacheClientSeek(int64_t aOffset, bool aResume)
 
   CloseChannel();
 
-  if (aResume) {
-    NS_ASSERTION(mSuspendCount > 0, "Too many resumes!");
-    // No need to mess with the channel, since we're making a new one
-    --mSuspendCount;
-  }
-
   mOffset = aOffset;
 
   // Don't report close of the channel because the channel is not closed for
   // download ended, but for internal changes in the read position.
   mIgnoreClose = true;
 
+  if (aResume) {
+    mSuspendAgent.Resume();
+  }
+
   // Don't create a new channel if we are still suspended. The channel will
   // be recreated when we are resumed.
-  if (mSuspendCount > 0) {
+  if (mSuspendAgent.IsSuspended()) {
     return NS_OK;
   }
 
@@ -1091,7 +1079,7 @@ ChannelMediaResource::IsSuspendedByCache()
 bool
 ChannelMediaResource::IsSuspended()
 {
-  return mSuspendCount > 0;
+  return mSuspendAgent.IsSuspended();
 }
 
 void
@@ -1131,28 +1119,79 @@ ChannelMediaResource::GetLength()
   return mCacheStream.GetLength();
 }
 
-void
-ChannelMediaResource::PossiblySuspend()
+// ChannelSuspendAgent
+
+bool
+ChannelSuspendAgent::Suspend()
 {
-  bool isPending = false;
-  nsresult rv = mChannel->IsPending(&isPending);
-  if (NS_SUCCEEDED(rv) && isPending) {
-    mChannel->Suspend();
-    mIgnoreResume = false;
-  } else {
-    mIgnoreResume = true;
+  SuspendInternal();
+  return (++mSuspendCount == 1);
+}
+
+void
+ChannelSuspendAgent::SuspendInternal()
+{
+  if (mChannel) {
+    bool isPending = false;
+    nsresult rv = mChannel->IsPending(&isPending);
+    if (NS_SUCCEEDED(rv) && isPending && !mIsChannelSuspended) {
+      mChannel->Suspend();
+      mIsChannelSuspended = true;
+    }
+  }
+}
+
+bool
+ChannelSuspendAgent::Resume()
+{
+  MOZ_ASSERT(IsSuspended(), "Resume without suspend!");
+  --mSuspendCount;
+
+  if (mSuspendCount == 0) {
+    if (mChannel && mIsChannelSuspended) {
+      mChannel->Resume();
+      mIsChannelSuspended = false;
+    }
+    return true;
+  }
+  return false;
+}
+
+void
+ChannelSuspendAgent::UpdateSuspendedStatusIfNeeded()
+{
+  if (!mIsChannelSuspended && IsSuspended()) {
+    SuspendInternal();
   }
 }
 
 void
-ChannelMediaResource::PossiblyResume()
+ChannelSuspendAgent::NotifyChannelOpened(nsIChannel* aChannel)
 {
-  if (!mIgnoreResume) {
-    mChannel->Resume();
-  } else {
-    mIgnoreResume = false;
-  }
+  MOZ_ASSERT(aChannel);
+  mChannel = aChannel;
 }
+
+void
+ChannelSuspendAgent::NotifyChannelClosing()
+{
+  MOZ_ASSERT(mChannel);
+  // Before close the channel, it need to be resumed to make sure its internal
+  // state is correct. Besides, We need to suspend the channel after recreating.
+  if (mIsChannelSuspended) {
+    mChannel->Resume();
+    mIsChannelSuspended = false;
+  }
+  mChannel = nullptr;
+}
+
+bool
+ChannelSuspendAgent::IsSuspended()
+{
+  return (mSuspendCount > 0);
+}
+
+// FileMediaResource
 
 class FileMediaResource : public BaseMediaResource
 {

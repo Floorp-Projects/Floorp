@@ -558,20 +558,20 @@ EventListenerManager::ListenerCanHandle(Listener* aListener,
                                         WidgetEvent* aEvent)
 {
   // This is slightly different from EVENT_TYPE_EQUALS in that it returns
-  // true even when aEvent->message == NS_USER_DEFINED_EVENT and
+  // true even when aEvent->mMessage == NS_USER_DEFINED_EVENT and
   // aListener=>mEventType != NS_USER_DEFINED_EVENT as long as the atoms are
   // the same
   if (aListener->mAllEvents) {
     return true;
   }
-  if (aEvent->message == NS_USER_DEFINED_EVENT) {
+  if (aEvent->mMessage == NS_USER_DEFINED_EVENT) {
     if (mIsMainThreadELM) {
       return aListener->mTypeAtom == aEvent->userType;
     }
     return aListener->mTypeString.Equals(aEvent->typeString);
   }
   MOZ_ASSERT(mIsMainThreadELM);
-  return aListener->mEventType == aEvent->message;
+  return aListener->mEventType == aEvent->mMessage;
 }
 
 void
@@ -1163,7 +1163,7 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
   aEvent->currentTarget = nullptr;
 
   if (mIsMainThreadELM && !hasListener) {
-    mNoListenerForEvent = aEvent->message;
+    mNoListenerForEvent = aEvent->mMessage;
     mNoListenerForEventAtom = aEvent->userType;
   }
 
@@ -1469,13 +1469,12 @@ EventListenerManager::MarkForCC()
       const TypedEventHandler& typedHandler =
         jsEventHandler->GetTypedEventHandler();
       if (typedHandler.HasEventHandler()) {
-        JS::ExposeObjectToActiveJS(typedHandler.Ptr()->Callable());
+        typedHandler.Ptr()->MarkForCC();
       }
     } else if (listener.mListenerType == Listener::eWrappedJSListener) {
       xpc_TryUnmarkWrappedGrayObject(listener.mListener.GetXPCOMCallback());
     } else if (listener.mListenerType == Listener::eWebIDLListener) {
-      // Callback() unmarks gray
-      listener.mListener.GetWebIDLCallback()->Callback();
+      listener.mListener.GetWebIDLCallback()->MarkForCC();
     }
   }
   if (mRefCnt.IsPurple()) {

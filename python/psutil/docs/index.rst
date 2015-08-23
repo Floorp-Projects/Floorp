@@ -18,8 +18,10 @@ Quick links
 
 * `Home page <https://github.com/giampaolo/psutil>`__
 * `Blog <http://grodola.blogspot.com/search/label/psutil>`__
-* `Download <https://pypi.python.org/pypi?:action=display&name=psutil#downloads>`__
 * `Forum <http://groups.google.com/group/psutil/topics>`__
+* `Download <https://pypi.python.org/pypi?:action=display&name=psutil#downloads>`__
+* `Installation <https://github.com/giampaolo/psutil/blob/master/INSTALL.rst>`_
+* `Development guide <https://github.com/giampaolo/psutil/blob/master/DEVGUIDE.rst>`_
 * `What's new <https://github.com/giampaolo/psutil/blob/master/HISTORY.rst>`__
 
 About
@@ -38,8 +40,8 @@ From project's home page:
   ionice, iostat, iotop, uptime, pidof, tty, taskset, pmap*.
   It currently supports **Linux, Windows, OSX, FreeBSD** and **Sun Solaris**,
   both **32-bit** and **64-bit** architectures, with Python versions from
-  **2.4** to **3.4**.
-  `Pypy <http://pypy.org/>`__ is also known to work.
+  **2.6 to 3.4** (users of Python 2.4 and 2.5 may use `2.1.3 <https://pypi.python.org/pypi?name=psutil&version=2.1.3&:action=files>`__ version).
+  `PyPy <http://pypy.org/>`__ is also known to work.
 
 The psutil documentation you're reading is distributed as a single HTML page.
 
@@ -66,7 +68,7 @@ CPU
   - **guest** *(Linux 2.6.24+)*
   - **guest_nice** *(Linux 3.2.0+)*
 
-  When *percpu* is ``True`` return a list of nameduples for each logical CPU
+  When *percpu* is ``True`` return a list of namedtuples for each logical CPU
   on the system.
   First element of the list refers to first CPU, second element to second CPU
   and so on.
@@ -199,7 +201,7 @@ Memory
   * **total**: total swap memory in bytes
   * **used**: used swap memory in bytes
   * **free**: free swap memory in bytes
-  * **percent**: the percentage usage
+  * **percent**: the percentage usage calculated as ``(total - available) / total * 100``
   * **sin**: the number of bytes the system has swapped in from disk
     (cumulative)
   * **sout**: the number of bytes the system has swapped out from disk
@@ -274,7 +276,7 @@ Disks
 
   If *perdisk* is ``True`` return the same information for every physical disk
   installed on the system as a dictionary with partition names as the keys and
-  the namedutuple described above as the values.
+  the namedtuple described above as the values.
   See `examples/iotop.py <https://github.com/giampaolo/psutil/blob/master/examples/iotop.py>`__
   for an example application.
 
@@ -321,7 +323,7 @@ Network
 
 .. function:: net_connections(kind='inet')
 
-  Return system-wide socket connections as a list of namedutples.
+  Return system-wide socket connections as a list of namedtuples.
   Every namedtuple provides 7 attributes:
 
   - **fd**: the socket file descriptor, if retrievable, else ``-1``.
@@ -383,6 +385,7 @@ Network
    | "all"          | the sum of all the possible families and protocols  |
    +----------------+-----------------------------------------------------+
 
+  On OSX this function requires root privileges.
   To get per-process connections use :meth:`Process.connections`.
   Also, see
   `netstat.py sample script <https://github.com/giampaolo/psutil/blob/master/examples/netstat.py>`__.
@@ -390,17 +393,85 @@ Network
 
     >>> import psutil
     >>> psutil.net_connections()
-    [pconn(fd=115, family=2, type=1, laddr=('10.0.0.1', 48776), raddr=('93.186.135.91', 80), status='ESTABLISHED', pid=1254),
-     pconn(fd=117, family=2, type=1, laddr=('10.0.0.1', 43761), raddr=('72.14.234.100', 80), status='CLOSING', pid=2987),
-     pconn(fd=-1, family=2, type=1, laddr=('10.0.0.1', 60759), raddr=('72.14.234.104', 80), status='ESTABLISHED', pid=None),
-     pconn(fd=-1, family=2, type=1, laddr=('10.0.0.1', 51314), raddr=('72.14.234.83', 443), status='SYN_SENT', pid=None)
+    [pconn(fd=115, family=<AddressFamily.AF_INET: 2>, type=<SocketType.SOCK_STREAM: 1>, laddr=('10.0.0.1', 48776), raddr=('93.186.135.91', 80), status='ESTABLISHED', pid=1254),
+     pconn(fd=117, family=<AddressFamily.AF_INET: 2>, type=<SocketType.SOCK_STREAM: 1>, laddr=('10.0.0.1', 43761), raddr=('72.14.234.100', 80), status='CLOSING', pid=2987),
+     pconn(fd=-1, family=<AddressFamily.AF_INET: 2>, type=<SocketType.SOCK_STREAM: 1>, laddr=('10.0.0.1', 60759), raddr=('72.14.234.104', 80), status='ESTABLISHED', pid=None),
+     pconn(fd=-1, family=<AddressFamily.AF_INET: 2>, type=<SocketType.SOCK_STREAM: 1>, laddr=('10.0.0.1', 51314), raddr=('72.14.234.83', 443), status='SYN_SENT', pid=None)
      ...]
 
   .. note:: (OSX) :class:`psutil.AccessDenied` is always raised unless running
      as root (lsof does the same).
   .. note:: (Solaris) UNIX sockets are not supported.
 
-  *New in 2.1.0*
+  .. versionadded:: 2.1.0
+
+.. function:: net_if_addrs()
+
+  Return the addresses associated to each NIC (network interface card)
+  installed on the system as a dictionary whose keys are the NIC names and
+  value is a list of namedtuples for each address assigned to the NIC.
+  Each namedtuple includes 4 fields:
+
+  - **family**
+  - **address**
+  - **netmask**
+  - **broadcast**
+
+  *family* can be either
+  `AF_INET <http://docs.python.org//library/socket.html#socket.AF_INET>`__,
+  `AF_INET6 <http://docs.python.org//library/socket.html#socket.AF_INET6>`__
+  or :const:`psutil.AF_LINK`, which refers to a MAC address.
+  *address* is the primary address, *netmask* and *broadcast* may be ``None``.
+  Example::
+
+    >>> import psutil
+    >>> psutil.net_if_addrs()
+    {'lo': [snic(family=<AddressFamily.AF_INET: 2>, address='127.0.0.1', netmask='255.0.0.0', broadcast='127.0.0.1'),
+            snic(family=<AddressFamily.AF_INET6: 10>, address='::1', netmask='ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff', broadcast=None),
+            snic(family=<AddressFamily.AF_LINK: 17>, address='00:00:00:00:00:00', netmask=None, broadcast='00:00:00:00:00:00')],
+     'wlan0': [snic(family=<AddressFamily.AF_INET: 2>, address='192.168.1.3', netmask='255.255.255.0', broadcast='192.168.1.255'),
+               snic(family=<AddressFamily.AF_INET6: 10>, address='fe80::c685:8ff:fe45:641%wlan0', netmask='ffff:ffff:ffff:ffff::', broadcast=None),
+               snic(family=<AddressFamily.AF_LINK: 17>, address='c4:85:08:45:06:41', netmask=None, broadcast='ff:ff:ff:ff:ff:ff')]}
+    >>>
+
+  See also `examples/ifconfig.py <https://github.com/giampaolo/psutil/blob/master/examples/ifconfig.py>`__
+  for an example application.
+
+  .. note:: if you're interested in others families (e.g. AF_BLUETOOTH) you can
+    use the more powerful `netifaces <https://pypi.python.org/pypi/netifaces/>`__
+    extension.
+
+  .. note:: you can have more than one address of the same family associated
+    with each interface (that's why dict values are lists).
+
+  *New in 3.0.0*
+
+.. function:: net_if_stats()
+
+  Return information about each NIC (network interface card) installed on the
+  system as a dictionary whose keys are the NIC names and value is a namedtuple
+  with the following fields:
+
+  - **isup**
+  - **duplex**
+  - **speed**
+  - **mtu**
+
+  *isup* is a boolean indicating whether the NIC is up and running, *duplex*
+  can be either :const:`NIC_DUPLEX_FULL`, :const:`NIC_DUPLEX_HALF` or
+  :const:`NIC_DUPLEX_UNKNOWN`, *speed* is the NIC speed expressed in mega bits
+  (MB), if it can't be determined (e.g. 'localhost') it will be set to ``0``,
+  *mtu* is the maximum transmission unit expressed in bytes.
+  See also `examples/ifconfig.py <https://github.com/giampaolo/psutil/blob/master/examples/ifconfig.py>`__
+  for an example application.
+  Example:
+
+    >>> import psutil
+    >>> psutil.net_if_stats()
+    {'eth0': snicstats(isup=True, duplex=<NicDuplex.NIC_DUPLEX_FULL: 2>, speed=100, mtu=1500),
+     'lo': snicstats(isup=True, duplex=<NicDuplex.NIC_DUPLEX_UNKNOWN: 0>, speed=0, mtu=65536)}
+
+  *New in 3.0.0*
 
 
 Other system info
@@ -498,7 +569,7 @@ Functions
     import psutil
 
     def on_terminate(proc):
-        print("process {} terminated".format(proc))
+        print("process {} terminated with exit code {}".format(proc, proc.returncode))
 
     procs = [...]  # a list of Process instances
     for p in procs:
@@ -520,6 +591,18 @@ Exceptions
    *pid* is found in the current process list or when a process no longer
    exists. "name" is the name the process had before disappearing
    and gets set only if :meth:`Process.name()` was previosly called.
+
+.. class:: ZombieProcess(pid, name=None, ppid=None, msg=None)
+
+   This may be raised by :class:`Process` class methods when querying a zombie
+   process on UNIX (Windows doesn't have zombie processes). Depending on the
+   method called the OS may be able to succeed in retrieving the process
+   information or not.
+   Note: this is a subclass of :class:`NoSuchProcess` so if you're not
+   interested in retrieving zombies (e.g. when using :func:`process_iter()`)
+   you can ignore this exception and just catch :class:`NoSuchProcess`.
+
+   *New in 3.0.0*
 
 .. class:: AccessDenied(pid=None, name=None, msg=None)
 
@@ -609,19 +692,23 @@ Process class
         >>> datetime.datetime.fromtimestamp(p.create_time()).strftime("%Y-%m-%d %H:%M:%S")
         '2011-03-05 18:03:52'
 
-  .. method:: as_dict(attrs=[], ad_value=None)
+  .. method:: as_dict(attrs=None, ad_value=None)
 
      Utility method returning process information as a hashable dictionary.
      If *attrs* is specified it must be a list of strings reflecting available
      :class:`Process` class's attribute names (e.g. ``['cpu_times', 'name']``)
      else all public (read only) attributes are assumed. *ad_value* is the
      value which gets assigned to a dict key in case :class:`AccessDenied`
-     exception is raised when retrieving that particular process information.
+     or :class:`ZombieProcess` exception is raised when retrieving that
+     particular process information.
 
         >>> import psutil
         >>> p = psutil.Process()
         >>> p.as_dict(attrs=['pid', 'name', 'username'])
         {'username': 'giampaolo', 'pid': 12366, 'name': 'python'}
+
+     .. versionchanged:: 3.0.0 *ad_value* is used also when incurring into
+        :class:`ZombieProcess` exception, not only :class:`AccessDenied`
 
   .. method:: parent()
 
@@ -646,7 +733,7 @@ Process class
   .. method:: uids()
 
      The **real**, **effective** and **saved** user ids of this process as a
-     nameduple. This is the same as
+     namedtuple. This is the same as
      `os.getresuid() <http://docs.python.org//library/os.html#os.getresuid>`__
      but can be used for every process PID.
 
@@ -655,7 +742,7 @@ Process class
   .. method:: gids()
 
      The **real**, **effective** and **saved** group ids of this process as a
-     nameduple. This is the same as
+     namedtuple. This is the same as
      `os.getresgid() <http://docs.python.org//library/os.html#os.getresgid>`__
      but can be used for every process PID.
 
@@ -682,6 +769,13 @@ Process class
         10
         >>>
 
+     Starting from `Python 3.3 <http://bugs.python.org/issue10784>`__ this
+     functionality is also available as
+     `os.getpriority() <http://docs.python.org/3/library/os.html#os.getpriority>`__
+     and
+     `os.setpriority() <http://docs.python.org/3/library/os.html#os.setpriority>`__
+     (UNIX only).
+
      On Windows this is available as well by using
      `GetPriorityClass <http://msdn.microsoft.com/en-us/library/ms683211(v=vs.85).aspx>`__
      and `SetPriorityClass <http://msdn.microsoft.com/en-us/library/ms686219(v=vs.85).aspx>`__
@@ -691,12 +785,6 @@ Process class
      Example which increases process priority on Windows:
 
         >>> p.nice(psutil.HIGH_PRIORITY_CLASS)
-
-     Starting from `Python 3.3 <http://bugs.python.org/issue10784>`__ this
-     same functionality is available as
-     `os.getpriority() <http://docs.python.org/3/library/os.html#os.getpriority>`__
-     and
-     `os.setpriority() <http://docs.python.org/3/library/os.html#os.setpriority>`__.
 
   .. method:: ionice(ioclass=None, value=None)
 
@@ -714,13 +802,17 @@ Process class
       >>> p = psutil.Process()
       >>> p.ionice(psutil.IOPRIO_CLASS_IDLE)  # set
       >>> p.ionice()  # get
-      pionice(ioclass=3, value=0)
+      pionice(ioclass=<IOPriority.IOPRIO_CLASS_IDLE: 3>, value=0)
       >>>
 
      On Windows only *ioclass* is used and it can be set to ``2`` (normal),
      ``1`` (low) or ``0`` (very low).
 
      Availability: Linux and Windows > Vista
+
+     .. versionchanged:: 3.0.0 on >= Python 3.4 the returned ``ioclass``
+        constant is an `enum <https://docs.python.org/3/library/enum.html#module-enum>`__
+        instead of a plain integer.
 
   .. method:: rlimit(resource, limits=None)
 
@@ -761,7 +853,7 @@ Process class
       >>> p.io_counters()
       pio(read_count=454556, write_count=3456, read_bytes=110592, write_bytes=0)
 
-     Availability: all platforms except OSX
+     Availability: all platforms except OSX and Solaris
 
   .. method:: num_ctx_switches()
 
@@ -836,7 +928,8 @@ Process class
      `CPU affinity <http://www.linuxjournal.com/article/6799?page=0,0>`__.
      CPU affinity consists in telling the OS to run a certain process on a
      limited set of CPUs only. The number of eligible CPUs can be obtained with
-     ``list(range(psutil.cpu_count()))``.
+     ``list(range(psutil.cpu_count()))``. On set raises ``ValueError`` in case
+     an invalid CPU number is specified.
 
       >>> import psutil
       >>> psutil.cpu_count()
@@ -845,9 +938,17 @@ Process class
       >>> p.cpu_affinity()  # get
       [0, 1, 2, 3]
       >>> p.cpu_affinity([0])  # set; from now on, process will run on CPU #0 only
+      >>> p.cpu_affinity()
+      [0]
+      >>>
+      >>> # reset affinity against all CPUs
+      >>> all_cpus = list(range(psutil.cpu_count()))
+      >>> p.cpu_affinity(all_cpus)
       >>>
 
-     Availability: Linux, Windows
+     Availability: Linux, Windows, BSD
+
+     .. versionchanged:: 2.2.0 added support for FreeBSD
 
   .. method:: memory_info()
 
@@ -903,7 +1004,7 @@ Process class
 
   .. method:: memory_maps(grouped=True)
 
-     Return process's mapped memory regions as a list of nameduples whose
+     Return process's mapped memory regions as a list of namedtuples whose
      fields are variable depending on the platform. As such, portable
      applications should rely on namedtuple's `path` and `rss` fields only.
      This method is useful to obtain a detailed representation of process
@@ -958,15 +1059,31 @@ Process class
      the absolute file name and the file descriptor number (on Windows this is
      always ``-1``). Example:
 
-      >>> import psutil
-      >>> f = open('file.ext', 'w')
-      >>> p = psutil.Process()
-      >>> p.open_files()
-      [popenfile(path='/home/giampaolo/svn/psutil/file.ext', fd=3)]
+     >>> import psutil
+     >>> f = open('file.ext', 'w')
+     >>> p = psutil.Process()
+     >>> p.open_files()
+     [popenfile(path='/home/giampaolo/svn/psutil/file.ext', fd=3)]
+
+     .. warning::
+       on Windows this is not fully reliable as due to some limitations of the
+       Windows API the underlying implementation may hang when retrieving
+       certain file handles.
+       In order to work around that psutil on Windows Vista (and higher) spawns
+       a thread and kills it if it's not responding after 100ms.
+       That implies that on Windows this method is not guaranteed to enumerate
+       all regular file handles (see full discusion
+       `here <https://github.com/giampaolo/psutil/pull/597>`_).
+
+     .. warning::
+       on FreeBSD this method can return files with a 'null' path (see
+       `issue 595 <https://github.com/giampaolo/psutil/pull/595>`_).
+
+     .. versionchanged:: 3.1.0 no longer hangs on Windows.
 
   .. method:: connections(kind="inet")
 
-    Return socket connections opened by process as a list of namedutples.
+    Return socket connections opened by process as a list of namedtuples.
     To get system-wide connections use :func:`psutil.net_connections()`.
     Every namedtuple provides 6 attributes:
 
@@ -1032,10 +1149,10 @@ Process class
       >>> p.name()
       'firefox'
       >>> p.connections()
-      [pconn(fd=115, family=2, type=1, laddr=('10.0.0.1', 48776), raddr=('93.186.135.91', 80), status='ESTABLISHED'),
-       pconn(fd=117, family=2, type=1, laddr=('10.0.0.1', 43761), raddr=('72.14.234.100', 80), status='CLOSING'),
-       pconn(fd=119, family=2, type=1, laddr=('10.0.0.1', 60759), raddr=('72.14.234.104', 80), status='ESTABLISHED'),
-       pconn(fd=123, family=2, type=1, laddr=('10.0.0.1', 51314), raddr=('72.14.234.83', 443), status='SYN_SENT')]
+      [pconn(fd=115, family=<AddressFamily.AF_INET: 2>, type=<SocketType.SOCK_STREAM: 1>, laddr=('10.0.0.1', 48776), raddr=('93.186.135.91', 80), status='ESTABLISHED'),
+       pconn(fd=117, family=<AddressFamily.AF_INET: 2>, type=<SocketType.SOCK_STREAM: 1>, laddr=('10.0.0.1', 43761), raddr=('72.14.234.100', 80), status='CLOSING'),
+       pconn(fd=119, family=<AddressFamily.AF_INET: 2>, type=<SocketType.SOCK_STREAM: 1>, laddr=('10.0.0.1', 60759), raddr=('72.14.234.104', 80), status='ESTABLISHED'),
+       pconn(fd=123, family=<AddressFamily.AF_INET: 2>, type=<SocketType.SOCK_STREAM: 1>, laddr=('10.0.0.1', 51314), raddr=('72.14.234.83', 443), status='SYN_SENT')]
 
   .. method:: is_running()
 
@@ -1125,7 +1242,7 @@ Popen class
      :meth:`send_signal() <psutil.Process.send_signal()>`,
      :meth:`terminate() <psutil.Process.terminate()>` and
      :meth:`kill() <psutil.Process.kill()>`
-     so that you don't accidentally terminate another process, fixing
+     so that you can't accidentally terminate another process, fixing
      http://bugs.python.org/issue6973.
 
   >>> import psutil
@@ -1197,6 +1314,10 @@ Constants
 
   Availability: Windows
 
+  .. versionchanged:: 3.0.0 on Python >= 3.4 these constants are
+    `enums <https://docs.python.org/3/library/enum.html#module-enum>`__
+    instead of a plain integer.
+
 .. _const-ioprio:
 .. data:: IOPRIO_CLASS_NONE
           IOPRIO_CLASS_RT
@@ -1219,6 +1340,10 @@ Constants
   system call.
 
   Availability: Linux
+
+  .. versionchanged:: 3.0.0 on Python >= 3.4 thse constants are
+    `enums <https://docs.python.org/3/library/enum.html#module-enum>`__
+    instead of a plain integer.
 
 .. _const-rlimit:
 .. data:: RLIMIT_INFINITY
@@ -1245,3 +1370,31 @@ Constants
   `man prlimit <http://linux.die.net/man/2/prlimit>`__ for futher information.
 
   Availability: Linux
+
+.. _const-aflink:
+.. data:: AF_LINK
+
+  Constant which identifies a MAC address associated with a network interface.
+  To be used in conjunction with :func:`psutil.net_if_addrs()`.
+
+  *New in 3.0.0*
+
+.. _const-duplex:
+.. data:: NIC_DUPLEX_FULL
+          NIC_DUPLEX_HALF
+          NIC_DUPLEX_UNKNOWN
+
+  Constants which identifies whether a NIC (network interface card) has full or
+  half mode speed.  NIC_DUPLEX_FULL means the NIC is able to send and receive
+  data (files) simultaneously, NIC_DUPLEX_FULL means the NIC can either send or
+  receive data at a time.
+  To be used in conjunction with :func:`psutil.net_if_stats()`.
+
+  *New in 3.0.0*
+
+Development guide
+=================
+
+If you plan on hacking on psutil (e.g. want to add a new feature or fix a bug)
+take a look at the
+`development guide <https://github.com/giampaolo/psutil/blob/master/DEVGUIDE.rst>`_.

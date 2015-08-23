@@ -590,6 +590,13 @@ JSONParserBase::finishObject(MutableHandleValue vp, PropertyVector& properties)
     if (!freeProperties.append(&properties))
         return false;
     stack.popBack();
+
+    if (!stack.empty() && stack.back().state == FinishArrayElement) {
+        const ElementVector& elements = stack.back().elements();
+        if (!CombinePlainObjectPropertyTypes(cx, obj, elements.begin(), elements.length()))
+            return false;
+    }
+
     return true;
 }
 
@@ -607,6 +614,13 @@ JSONParserBase::finishArray(MutableHandleValue vp, ElementVector& elements)
     if (!freeElements.append(&elements))
         return false;
     stack.popBack();
+
+    if (!stack.empty() && stack.back().state == FinishArrayElement) {
+        const ElementVector& elements = stack.back().elements();
+        if (!CombineArrayElementTypes(cx, obj, elements.begin(), elements.length()))
+            return false;
+    }
+
     return true;
 }
 

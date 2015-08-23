@@ -181,13 +181,30 @@ gfxAndroidPlatform::GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
 {
     static const char kDroidSansJapanese[] = "Droid Sans Japanese";
     static const char kMotoyaLMaru[] = "MotoyaLMaru";
+    static const char kNotoColorEmoji[] = "Noto Color Emoji";
+#ifdef MOZ_WIDGET_GONK
+    static const char kFirefoxEmoji[] = "Firefox Emoji";
+#endif
 
     if (aNextCh == 0xfe0fu) {
         // if char is followed by VS16, try for a color emoji glyph
-        aFontList.AppendElement("Noto Color Emoji");
+#ifdef MOZ_WIDGET_GONK
+        aFontList.AppendElement(kFirefoxEmoji);
+#endif
+        aFontList.AppendElement(kNotoColorEmoji);
     }
 
-    if (IS_IN_BMP(aCh)) {
+    if (!IS_IN_BMP(aCh)) {
+        uint32_t p = aCh >> 16;
+        if (p == 1) { // try color emoji font, unless VS15 (text style) present
+            if (aNextCh != 0xfe0fu && aNextCh != 0xfe0eu) {
+#ifdef MOZ_WIDGET_GONK
+                aFontList.AppendElement(kFirefoxEmoji);
+#endif
+                aFontList.AppendElement(kNotoColorEmoji);
+            }
+        }
+    } else {
         // try language-specific "Droid Sans *" and "Noto Sans *" fonts for
         // certain blocks, as most devices probably have these
         uint8_t block = (aCh >> 8) & 0xff;

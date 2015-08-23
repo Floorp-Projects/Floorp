@@ -4,6 +4,7 @@
 
 from abc import ABCMeta, abstractmethod, abstractproperty
 from argparse import ArgumentParser, SUPPRESS
+from distutils.util import strtobool
 from urlparse import urlparse
 import os
 import tempfile
@@ -66,10 +67,12 @@ class MochitestArguments(ArgumentContainer):
                   "(to run recursively). If omitted, the entire suite is run.",
           }],
         [["--keep-open"],
-         {"action": "store_false",
-          "dest": "closeWhenDone",
-          "default": True,
-          "help": "Always keep the browser open after tests complete.",
+         {"nargs": "?",
+          "type": strtobool,
+          "const": "true",
+          "default": None,
+          "help": "Always keep the browser open after tests complete. Or always close the "
+                  "browser with --keep-open=false",
           }],
         [["--appname"],
          {"dest": "app",

@@ -15,6 +15,7 @@
 #include "nsStringStream.h"
 #include "nsToolkitCompsCID.h"
 #include "nsUrlClassifierStreamUpdater.h"
+#include "mozilla/ErrorNames.h"
 #include "mozilla/Logging.h"
 #include "nsIInterfaceRequestor.h"
 #include "mozilla/LoadContext.h"
@@ -456,9 +457,20 @@ nsUrlClassifierStreamUpdater::OnStartRequest(nsIRequest *request,
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(request);
   if (httpChannel) {
     rv = httpChannel->GetStatus(&status);
-    LOG(("nsUrlClassifierStreamUpdater::OnStartRequest (status=%x, this=%p)",
-         status, this));
     NS_ENSURE_SUCCESS(rv, rv);
+
+    if (MOZ_LOG_TEST(gUrlClassifierStreamUpdaterLog, mozilla::LogLevel::Debug)) {
+      nsAutoCString errorName, spec;
+      mozilla::GetErrorName(status, errorName);
+      nsCOMPtr<nsIURI> uri;
+      rv = httpChannel->GetURI(getter_AddRefs(uri));
+      if (NS_SUCCEEDED(rv) && uri) {
+        uri->GetAsciiSpec(spec);
+      }
+      LOG(("nsUrlClassifierStreamUpdater::OnStartRequest "
+           "(status=%s, uri=%s, this=%p)", errorName.get(),
+           spec.get(), this));
+    }
 
     if (NS_FAILED(status)) {
       // Assume we're overloading the server and trigger backoff.
@@ -468,17 +480,13 @@ nsUrlClassifierStreamUpdater::OnStartRequest(nsIRequest *request,
       rv = httpChannel->GetRequestSucceeded(&succeeded);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      LOG(("nsUrlClassifierStreamUpdater::OnStartRequest (%s)", succeeded ?
-           "succeeded" : "failed"));
+      uint32_t requestStatus;
+      rv = httpChannel->GetResponseStatus(&requestStatus);
+      NS_ENSURE_SUCCESS(rv, rv);
+      LOG(("nsUrlClassifierStreamUpdater::OnStartRequest %s (%d)", succeeded ?
+           "succeeded" : "failed", requestStatus));
       if (!succeeded) {
         // 404 or other error, pass error status back
-        LOG(("HTTP request returned failure code."));
-
-        uint32_t requestStatus;
-        rv = httpChannel->GetResponseStatus(&requestStatus);
-        LOG(("HTTP request returned failure code: %d.", requestStatus));
-        NS_ENSURE_SUCCESS(rv, rv);
-
         strStatus.AppendInt(requestStatus);
         downloadError = true;
       }

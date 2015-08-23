@@ -2128,6 +2128,16 @@ JS_FRIEND_API(bool)
 JS_IsDataViewObject(JSObject* obj);
 
 /*
+ * Create a new DataView using the given ArrayBuffer for storage. The given
+ * buffer must be an ArrayBuffer (or a cross-compartment wrapper of an
+ * ArrayBuffer), and the offset and length must fit within the bounds of the
+ * arrayBuffer. Currently, nullptr will be returned and an exception will be
+ * thrown if these conditions do not hold, but do not depend on that behavior.
+ */
+JS_FRIEND_API(JSObject*)
+JS_NewDataView(JSContext* cx, JS::HandleObject arrayBuffer, uint32_t byteOffset, int32_t byteLength);
+
+/*
  * Return the byte offset of a data view into its array buffer. |obj| must be a
  * DataView.
  *

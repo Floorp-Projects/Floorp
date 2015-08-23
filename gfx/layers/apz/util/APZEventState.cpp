@@ -251,14 +251,14 @@ APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
                                  uint64_t aInputBlockId,
                                  nsEventStatus aApzResponse)
 {
-  if (aEvent.message == NS_TOUCH_START && aEvent.touches.Length() > 0) {
+  if (aEvent.mMessage == NS_TOUCH_START && aEvent.touches.Length() > 0) {
     mActiveElementManager->SetTargetElement(aEvent.touches[0]->GetTarget());
   }
 
   bool isTouchPrevented = TouchManager::gPreventMouseEvents ||
       aEvent.mFlags.mMultipleActionsPrevented;
   bool sentContentResponse = false;
-  switch (aEvent.message) {
+  switch (aEvent.mMessage) {
   case NS_TOUCH_START: {
     mTouchEndCancelled = false;
     if (mPendingTouchPreventedResponse) {
@@ -305,8 +305,8 @@ APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
         aApzResponse == nsEventStatus_eConsumeDoDefault &&
         gfxPrefs::PointerEventsEnabled()) {
     WidgetTouchEvent cancelEvent(aEvent);
-    cancelEvent.message = NS_TOUCH_CANCEL;
-    cancelEvent.mFlags.mCancelable = false; // message != NS_TOUCH_CANCEL;
+    cancelEvent.mMessage = NS_TOUCH_CANCEL;
+    cancelEvent.mFlags.mCancelable = false; // mMessage != NS_TOUCH_CANCEL;
     for (uint32_t i = 0; i < cancelEvent.touches.Length(); ++i) {
       if (mozilla::dom::Touch* touch = cancelEvent.touches[i]) {
         touch->convertToPointer = true;

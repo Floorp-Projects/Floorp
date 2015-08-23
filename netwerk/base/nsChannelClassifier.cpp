@@ -620,8 +620,9 @@ nsChannelClassifier::OnClassifyComplete(nsresult aErrorCode)
       aErrorCode = NS_OK;
     }
 
-    LOG(("nsChannelClassifier[%p]:OnClassifyComplete %d", this, aErrorCode));
     if (mSuspendedChannel) {
+        LOG(("nsChannelClassifier[%p]:OnClassifyComplete %d (suspended channel)",
+             this, aErrorCode));
         MarkEntryClassified(aErrorCode);
 
         if (NS_FAILED(aErrorCode)) {

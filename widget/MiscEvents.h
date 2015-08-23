@@ -158,7 +158,7 @@ public:
     MOZ_ASSERT(mClass == ePluginEventClass,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
-    WidgetPluginEvent* result = new WidgetPluginEvent(false, message, nullptr);
+    WidgetPluginEvent* result = new WidgetPluginEvent(false, mMessage, nullptr);
     result->AssignPluginEventData(*this, true);
     result->mFlags = mFlags;
     return result;

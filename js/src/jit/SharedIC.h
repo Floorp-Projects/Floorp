@@ -1389,6 +1389,95 @@ class ICBinaryArith_DoubleWithInt32 : public ICStub
     };
 };
 
+// UnaryArith
+//     JSOP_BITNOT
+//     JSOP_NEG
+
+class ICUnaryArith_Fallback : public ICFallbackStub
+{
+    friend class ICStubSpace;
+
+    explicit ICUnaryArith_Fallback(JitCode* stubCode)
+      : ICFallbackStub(UnaryArith_Fallback, stubCode)
+    {
+        extra_ = 0;
+    }
+
+  public:
+    static const uint32_t MAX_OPTIMIZED_STUBS = 8;
+
+    bool sawDoubleResult() {
+        return extra_;
+    }
+    void setSawDoubleResult() {
+        extra_ = 1;
+    }
+
+    // Compiler for this stub kind.
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler& masm);
+
+      public:
+        explicit Compiler(JSContext* cx, Engine engine)
+          : ICStubCompiler(cx, ICStub::UnaryArith_Fallback, engine)
+        {}
+
+        ICStub* getStub(ICStubSpace* space) {
+            return newStub<ICUnaryArith_Fallback>(space, getStubCode());
+        }
+    };
+};
+
+class ICUnaryArith_Int32 : public ICStub
+{
+    friend class ICStubSpace;
+
+    explicit ICUnaryArith_Int32(JitCode* stubCode)
+      : ICStub(UnaryArith_Int32, stubCode)
+    {}
+
+  public:
+    class Compiler : public ICMultiStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler& masm);
+
+      public:
+        Compiler(JSContext* cx, JSOp op, Engine engine)
+          : ICMultiStubCompiler(cx, ICStub::UnaryArith_Int32, op, engine)
+        {}
+
+        ICStub* getStub(ICStubSpace* space) {
+            return newStub<ICUnaryArith_Int32>(space, getStubCode());
+        }
+    };
+};
+
+class ICUnaryArith_Double : public ICStub
+{
+    friend class ICStubSpace;
+
+    explicit ICUnaryArith_Double(JitCode* stubCode)
+      : ICStub(UnaryArith_Double, stubCode)
+    {}
+
+  public:
+    class Compiler : public ICMultiStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler& masm);
+
+      public:
+        Compiler(JSContext* cx, JSOp op, Engine engine)
+          : ICMultiStubCompiler(cx, ICStub::UnaryArith_Double, op, engine)
+        {}
+
+        ICStub* getStub(ICStubSpace* space) {
+            return newStub<ICUnaryArith_Double>(space, getStubCode());
+        }
+    };
+};
+
+
 } // namespace jit
 } // namespace js
 

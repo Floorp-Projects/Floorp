@@ -430,8 +430,8 @@ function expectNotifications() {
       }
 
       if (name.startsWith("onItem")) {
-        return () => {
-          let args = Array.from(arguments, arg => {
+        return (...origArgs) => {
+          let args = Array.from(origArgs, arg => {
             if (arg && arg instanceof Ci.nsIURI)
               return new URL(arg.spec);
             if (arg && typeof(arg) == "number" && arg >= Date.now() * 1000)

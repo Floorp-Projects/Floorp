@@ -78,6 +78,9 @@ protected:
     nscolor sTextSelectedText;
     nscolor sTextSelectedBackground;
     nscolor sMozScrollbar;
+#if (MOZ_WIDGET_GTK == 3)
+    nscolor sInfoBarText;
+#endif
     char16_t sInvisibleCharacter;
     float   sCaretRatio;
     bool    sMenuSupportsDrag;

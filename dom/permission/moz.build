@@ -10,8 +10,10 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
+    'PermissionObserver.cpp',
     'Permissions.cpp',
     'PermissionStatus.cpp',
+    'PermissionUtils.cpp',
 ]
 
 EXTRA_COMPONENTS += [

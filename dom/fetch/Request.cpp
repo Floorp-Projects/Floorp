@@ -163,8 +163,8 @@ Request::Constructor(const GlobalObject& aGlobal,
                      const RequestOrUSVString& aInput,
                      const RequestInit& aInit, ErrorResult& aRv)
 {
+  nsCOMPtr<nsIInputStream> temporaryBody;
   nsRefPtr<InternalRequest> request;
-  bool inputRequestHasBody = false;
 
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
 
@@ -173,13 +173,11 @@ Request::Constructor(const GlobalObject& aGlobal,
     nsCOMPtr<nsIInputStream> body;
     inputReq->GetBody(getter_AddRefs(body));
     if (body) {
-      inputRequestHasBody = true;
       if (inputReq->BodyUsed()) {
         aRv.ThrowTypeError(MSG_FETCH_BODY_CONSUMED_ERROR);
         return nullptr;
-      } else {
-        inputReq->SetBodyUsed();
       }
+      temporaryBody = body;
     }
 
     request = inputReq->GetInternalRequest();
@@ -327,7 +325,7 @@ Request::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  if (aInit.mBody.WasPassed() || inputRequestHasBody) {
+  if (aInit.mBody.WasPassed() || temporaryBody) {
     // HEAD and GET are not allowed to have a body.
     nsAutoCString method;
     request->GetMethod(method);
@@ -347,8 +345,8 @@ Request::Constructor(const GlobalObject& aGlobal,
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
-    request->ClearCreatedByFetchEvent();
-    request->SetBody(stream);
+
+    temporaryBody = stream;
 
     if (!contentType.IsVoid() &&
         !requestHeaders->Has(NS_LITERAL_CSTRING("Content-Type"), aRv)) {
@@ -356,13 +354,26 @@ Request::Constructor(const GlobalObject& aGlobal,
                              contentType, aRv);
     }
 
-    if (aRv.Failed()) {
+    if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
+
+    request->ClearCreatedByFetchEvent();
+    request->SetBody(temporaryBody);
   }
 
   nsRefPtr<Request> domRequest = new Request(global, request);
   domRequest->SetMimeType();
+
+  if (aInput.IsRequest()) {
+    nsRefPtr<Request> inputReq = &aInput.GetAsRequest();
+    nsCOMPtr<nsIInputStream> body;
+    inputReq->GetBody(getter_AddRefs(body));
+    if (body) {
+      inputReq->SetBody(nullptr);
+      inputReq->SetBodyUsed();
+    }
+  }
   return domRequest.forget();
 }
 

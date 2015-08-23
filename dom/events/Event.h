@@ -270,7 +270,7 @@ protected:
   bool                        mPrivateDataDuplicated;
   bool                        mIsMainThreadEvent;
   // True when popup control check should rely on event.type, not
-  // WidgetEvent.message.
+  // WidgetEvent.mMessage.
   bool                        mWantsPopupControlCheck;
 };
 

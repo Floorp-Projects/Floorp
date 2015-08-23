@@ -239,28 +239,142 @@ ServiceWorkerRegistrationMainThread::InvalidateWorkers(WhichServiceWorker aWhich
 namespace {
 
 void
-UpdateInternal(nsIPrincipal* aPrincipal, const nsAString& aScope)
+UpdateInternal(nsIPrincipal* aPrincipal,
+               const nsAString& aScope,
+               ServiceWorkerUpdateFinishCallback* aCallback)
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(aPrincipal);
+  MOZ_ASSERT(aCallback);
 
   nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   MOZ_ASSERT(swm);
 
   // The spec defines ServiceWorkerRegistration.update() exactly as Soft Update.
-  swm->SoftUpdate(aPrincipal, NS_ConvertUTF16toUTF8(aScope));
+  swm->SoftUpdate(aPrincipal, NS_ConvertUTF16toUTF8(aScope), aCallback);
 }
 
-// This Runnable needs to have a valid WorkerPrivate. For this reason it is also
-// a WorkerFeature that is registered before dispatching itself to the
-// main-thread and it's removed with ReleaseRunnable when the operation is
-// completed. This will keep the worker alive as long as necessary.
+class MainThreadUpdateCallback final : public ServiceWorkerUpdateFinishCallback
+{
+  nsRefPtr<Promise> mPromise;
+
+  ~MainThreadUpdateCallback()
+  { }
+
+public:
+  explicit MainThreadUpdateCallback(Promise* aPromise)
+    : mPromise(aPromise)
+  {
+    AssertIsOnMainThread();
+  }
+
+  void
+  UpdateSucceeded(ServiceWorkerRegistrationInfo* aRegistration) override
+  {
+    mPromise->MaybeResolve(JS::UndefinedHandleValue);
+  }
+
+  using ServiceWorkerUpdateFinishCallback::UpdateFailed;
+
+  void
+  UpdateFailed(nsresult aStatus) override
+  {
+    mPromise->MaybeReject(aStatus);
+  }
+};
+
+class UpdateResultRunnable final : public WorkerRunnable
+{
+  nsRefPtr<PromiseWorkerProxy> mPromiseProxy;
+  nsresult mStatus;
+
+  ~UpdateResultRunnable()
+  {}
+
+public:
+  UpdateResultRunnable(PromiseWorkerProxy* aPromiseProxy, nsresult aStatus)
+    : WorkerRunnable(aPromiseProxy->GetWorkerPrivate(), WorkerThreadModifyBusyCount)
+    , mPromiseProxy(aPromiseProxy)
+    , mStatus(aStatus)
+  { }
+
+  bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  {
+    Promise* promise = mPromiseProxy->GetWorkerPromise();
+    if (NS_SUCCEEDED(mStatus)) {
+      promise->MaybeResolve(JS::UndefinedHandleValue);
+    } else {
+      promise->MaybeReject(mStatus);
+    }
+    mPromiseProxy->CleanUp(aCx);
+    return true;
+  }
+};
+
+class WorkerThreadUpdateCallback final : public ServiceWorkerUpdateFinishCallback
+{
+  nsRefPtr<PromiseWorkerProxy> mPromiseProxy;
+
+  ~WorkerThreadUpdateCallback()
+  {
+    Finish(NS_ERROR_FAILURE);
+  }
+
+public:
+  explicit WorkerThreadUpdateCallback(PromiseWorkerProxy* aPromiseProxy)
+    : mPromiseProxy(aPromiseProxy)
+  {
+    AssertIsOnMainThread();
+  }
+
+  void
+  UpdateSucceeded(ServiceWorkerRegistrationInfo* aRegistration) override
+  {
+    Finish(NS_OK);
+  }
+
+  using ServiceWorkerUpdateFinishCallback::UpdateFailed;
+
+  void
+  UpdateFailed(nsresult aStatus) override
+  {
+    Finish(aStatus);
+  }
+
+  void
+  Finish(nsresult aStatus)
+  {
+    if (!mPromiseProxy) {
+      return;
+    }
+
+    nsRefPtr<PromiseWorkerProxy> proxy = mPromiseProxy.forget();
+
+    MutexAutoLock lock(proxy->GetCleanUpLock());
+    if (proxy->IsClean()) {
+      return;
+    }
+
+    AutoJSAPI jsapi;
+    jsapi.Init();
+
+    nsRefPtr<UpdateResultRunnable> r =
+      new UpdateResultRunnable(proxy, aStatus);
+    if (!r->Dispatch(jsapi.cx())) {
+      nsRefPtr<PromiseWorkerProxyControlRunnable> r =
+        new PromiseWorkerProxyControlRunnable(proxy->GetWorkerPrivate(), proxy);
+      r->Dispatch(jsapi.cx());
+    }
+  }
+};
+
 class UpdateRunnable final : public nsRunnable
-                           , public WorkerFeature
 {
 public:
-  UpdateRunnable(WorkerPrivate* aWorkerPrivate, const nsAString& aScope)
-    : mWorkerPrivate(aWorkerPrivate)
+  UpdateRunnable(PromiseWorkerProxy* aPromiseProxy,
+                 const nsAString& aScope)
+    : mPromiseProxy(aPromiseProxy)
     , mScope(aScope)
   {}
 
@@ -268,74 +382,24 @@ public:
   Run() override
   {
     AssertIsOnMainThread();
-    UpdateInternal(mWorkerPrivate->GetPrincipal(), mScope);
+    ErrorResult result;
 
-    class ReleaseRunnable final : public MainThreadWorkerControlRunnable
-    {
-      nsRefPtr<UpdateRunnable> mFeature;
+    MutexAutoLock lock(mPromiseProxy->GetCleanUpLock());
+    if (mPromiseProxy->IsClean()) {
+      return NS_OK;
+    }
 
-    public:
-      ReleaseRunnable(WorkerPrivate* aWorkerPrivate,
-                      UpdateRunnable* aFeature)
-        : MainThreadWorkerControlRunnable(aWorkerPrivate)
-        , mFeature(aFeature)
-      {
-        MOZ_ASSERT(aFeature);
-      }
-
-      virtual bool
-      WorkerRun(JSContext* aCx,
-                workers::WorkerPrivate* aWorkerPrivate) override
-      {
-        MOZ_ASSERT(aWorkerPrivate);
-        aWorkerPrivate->AssertIsOnWorkerThread();
-
-        aWorkerPrivate->RemoveFeature(aCx, mFeature);
-        return true;
-      }
-
-    private:
-      ~ReleaseRunnable()
-      {}
-    };
-
-    nsRefPtr<WorkerControlRunnable> runnable =
-      new ReleaseRunnable(mWorkerPrivate, this);
-    runnable->Dispatch(nullptr);
-
+    nsRefPtr<WorkerThreadUpdateCallback> cb =
+      new WorkerThreadUpdateCallback(mPromiseProxy);
+    UpdateInternal(mPromiseProxy->GetWorkerPrivate()->GetPrincipal(), mScope, cb);
     return NS_OK;
-  }
-
-  virtual bool Notify(JSContext* aCx, workers::Status aStatus) override
-  {
-    // We don't care about the notification. We just want to keep the
-    // mWorkerPrivate alive.
-    return true;
-  }
-
-  bool
-  Dispatch()
-  {
-    mWorkerPrivate->AssertIsOnWorkerThread();
-
-    JSContext* cx = mWorkerPrivate->GetJSContext();
-
-    if (NS_WARN_IF(!mWorkerPrivate->AddFeature(cx, this))) {
-      return false;
-    }
-
-    nsCOMPtr<nsIRunnable> that(this);
-    if (NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(this)))) {
-      NS_ASSERTION(false, "Failed to dispatch update back to MainThread in ServiceWorker");
-    }
-    return true;
   }
 
 private:
   ~UpdateRunnable()
   {}
 
-  WorkerPrivate* mWorkerPrivate;
+  nsRefPtr<PromiseWorkerProxy> mPromiseProxy;
   const nsString mScope;
 };
 
@@ -525,13 +589,29 @@ public:
 };
 } // namespace
 
-void
-ServiceWorkerRegistrationMainThread::Update()
+already_AddRefed<Promise>
+ServiceWorkerRegistrationMainThread::Update(ErrorResult& aRv)
 {
+  AssertIsOnMainThread();
+  nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(GetOwner());
+  if (!go) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<Promise> promise = Promise::Create(go, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
   nsCOMPtr<nsIDocument> doc = GetOwner()->GetExtantDoc();
   MOZ_ASSERT(doc);
 
-  UpdateInternal(doc->NodePrincipal(), mScope);
+  nsRefPtr<MainThreadUpdateCallback> cb =
+    new MainThreadUpdateCallback(promise);
+  UpdateInternal(doc->NodePrincipal(), mScope, cb);
+
+  return promise.forget();
 }
 
 already_AddRefed<Promise>
@@ -868,17 +948,28 @@ ServiceWorkerRegistrationWorkerThread::GetActive()
   return nullptr;
 }
 
-void
-ServiceWorkerRegistrationWorkerThread::Update()
+already_AddRefed<Promise>
+ServiceWorkerRegistrationWorkerThread::Update(ErrorResult& aRv)
 {
   WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(worker);
   worker->AssertIsOnWorkerThread();
 
-  // XXX: this pattern guarantees we won't know which thread UpdateRunnable
-  // will die on (here or MainThread)
-  nsRefPtr<UpdateRunnable> r = new UpdateRunnable(worker, mScope);
-  r->Dispatch();
+  nsRefPtr<Promise> promise = Promise::Create(worker->GlobalScope(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  nsRefPtr<PromiseWorkerProxy> proxy = PromiseWorkerProxy::Create(worker, promise);
+  if (!proxy) {
+    promise->MaybeResolve(NS_ERROR_DOM_ABORT_ERR);
+    return promise.forget();
+  }
+
+  nsRefPtr<UpdateRunnable> r = new UpdateRunnable(proxy, mScope);
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
+
+  return promise.forget();
 }
 
 already_AddRefed<Promise>

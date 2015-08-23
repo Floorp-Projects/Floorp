@@ -141,6 +141,7 @@ this.GeckoDriver = function(appName, device, emulator) {
     "browserVersion": Services.appinfo.version,
     "platformName": Services.appinfo.OS.toUpperCase(),
     "platformVersion": Services.appinfo.platformVersion,
+    "specificationLevel": "1",
 
     // Supported features
     "raisesAccessibilityExceptions": false,

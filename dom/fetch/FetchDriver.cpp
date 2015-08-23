@@ -160,6 +160,10 @@ FetchDriver::ContinueFetch(bool aCORSFlag)
       (mRequest->UnsafeRequest() && (!mRequest->HasSimpleMethod() || !mRequest->Headers()->HasOnlySimpleHeaders()))) {
     corsPreflight = true;
   }
+  // The Request constructor should ensure that no-cors requests have simple
+  // method and headers, so we should never attempt to preflight for such
+  // Requests.
+  MOZ_ASSERT_IF(mRequest->Mode() == RequestMode::No_cors, !corsPreflight);
 
   mRequest->SetResponseTainting(InternalRequest::RESPONSETAINT_CORS);
   return HttpFetch(true /* aCORSFlag */, corsPreflight);
@@ -541,6 +545,8 @@ FetchDriver::HttpFetch(bool aCORSFlag, bool aCORSPreflightFlag, bool aAuthentica
   // unsafeHeaders so they can be verified against the response's
   // "Access-Control-Allow-Headers" header.
   if (aCORSPreflightFlag) {
+    MOZ_ASSERT(mRequest->Mode() != RequestMode::No_cors,
+               "FetchDriver::ContinueFetch() should ensure that the request is not no-cors");
     nsCOMPtr<nsIChannel> preflightChannel;
     nsAutoTArray<nsCString, 5> unsafeHeaders;
     mRequest->Headers()->GetUnsafeHeaders(unsafeHeaders);

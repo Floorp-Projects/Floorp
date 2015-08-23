@@ -38,7 +38,8 @@ this.ContentControl.prototype = {
                        'AccessFu:AutoMove',
                        'AccessFu:Activate',
                        'AccessFu:MoveCaret',
-                       'AccessFu:MoveByGranularity'],
+                       'AccessFu:MoveByGranularity',
+                       'AccessFu:AndroidScroll'],
 
   start: function cc_start() {
     let cs = this._contentScope.get();
@@ -89,6 +90,27 @@ this.ContentControl.prototype = {
       Logger.logException(
         x, 'Error handling message: ' + JSON.stringify(aMessage.json));
     }
+  },
+
+  handleAndroidScroll: function cc_handleAndroidScroll(aMessage) {
+    let vc = this.vc;
+    let position = vc.position;
+
+    if (aMessage.json.origin != 'child' && this.sendToChild(vc, aMessage)) {
+      // Forwarded succesfully to child cursor.
+      return;
+    }
+
+    // Counter-intuitive, but scrolling backward (ie. up), actually should
+    // increase range values.
+    if (this.adjustRange(position, aMessage.json.direction === 'backward')) {
+      return;
+    }
+
+    this._contentScope.get().sendAsyncMessage('AccessFu:DoScroll',
+      { bounds: Utils.getBounds(position, true),
+        page: aMessage.json.direction === 'forward' ? 1 : -1,
+        horizontal: false });
   },
 
   handleMoveCursor: function cc_handleMoveCursor(aMessage) {

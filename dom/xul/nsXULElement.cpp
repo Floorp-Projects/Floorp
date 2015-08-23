@@ -1265,18 +1265,18 @@ nsXULElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
     aVisitor.mForceContentDispatch = true; //FIXME! Bug 329119
     if (IsRootOfNativeAnonymousSubtree() &&
         (IsAnyOfXULElements(nsGkAtoms::scrollbar, nsGkAtoms::scrollcorner)) &&
-        (aVisitor.mEvent->message == NS_MOUSE_CLICK ||
-         aVisitor.mEvent->message == NS_MOUSE_DOUBLECLICK ||
-         aVisitor.mEvent->message == NS_XUL_COMMAND ||
-         aVisitor.mEvent->message == NS_CONTEXTMENU ||
-         aVisitor.mEvent->message == NS_DRAGDROP_START ||
-         aVisitor.mEvent->message == NS_DRAGDROP_GESTURE)) {
+        (aVisitor.mEvent->mMessage == NS_MOUSE_CLICK ||
+         aVisitor.mEvent->mMessage == NS_MOUSE_DOUBLECLICK ||
+         aVisitor.mEvent->mMessage == NS_XUL_COMMAND ||
+         aVisitor.mEvent->mMessage == NS_CONTEXTMENU ||
+         aVisitor.mEvent->mMessage == NS_DRAGDROP_START ||
+         aVisitor.mEvent->mMessage == NS_DRAGDROP_GESTURE)) {
         // Don't propagate these events from native anonymous scrollbar.
         aVisitor.mCanHandle = true;
         aVisitor.mParentTarget = nullptr;
         return NS_OK;
     }
-    if (aVisitor.mEvent->message == NS_XUL_COMMAND &&
+    if (aVisitor.mEvent->mMessage == NS_XUL_COMMAND &&
         aVisitor.mEvent->mClass == eInputEventClass &&
         aVisitor.mEvent->originalTarget == static_cast<nsIContent*>(this) &&
         !IsXULElement(nsGkAtoms::command)) {

@@ -79,19 +79,13 @@ MP4Demuxer::Init()
   AutoPinned<mp4_demuxer::ResourceStream> stream(mStream);
 
   // Check that we have enough data to read the metadata.
-  MediaByteRange br = mp4_demuxer::MP4Metadata::MetadataRange(stream);
-  if (br.IsNull()) {
+  if (!mp4_demuxer::MP4Metadata::HasCompleteMetadata(stream)) {
     return InitPromise::CreateAndReject(DemuxerFailureReason::WAITING_FOR_DATA, __func__);
   }
 
-  if (!mInitData->SetLength(br.Length(), fallible)) {
+  mInitData = mp4_demuxer::MP4Metadata::Metadata(stream);
+  if (!mInitData) {
     // OOM
-    return InitPromise::CreateAndReject(DemuxerFailureReason::DEMUXER_ERROR, __func__);
-  }
-
-  size_t size;
-  mStream->ReadAt(br.mStart, mInitData->Elements(), br.Length(), &size);
-  if (size != size_t(br.Length())) {
     return InitPromise::CreateAndReject(DemuxerFailureReason::DEMUXER_ERROR, __func__);
   }
 

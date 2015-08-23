@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jit/SharedIC.h"
+
+#include "mozilla/Casting.h"
 #include "mozilla/SizePrintfMacros.h"
 
 #include "jslibmath.h"
@@ -23,6 +25,8 @@
 
 #include "jit/MacroAssembler-inl.h"
 #include "vm/Interpreter-inl.h"
+
+using mozilla::BitwiseCast;
 
 namespace js {
 namespace jit {
@@ -746,7 +750,12 @@ ICStubCompiler::tailCallVM(const VMFunction& fun, MacroAssembler& masm)
 
     MOZ_ASSERT(fun.expectTailCall == TailCall);
     uint32_t argSize = fun.explicitStackSlots() * sizeof(void*);
-    EmitTailCallVM(code, masm, argSize);
+    if (engine_ == Engine::Baseline) {
+        EmitBaselineTailCallVM(code, masm, argSize);
+    } else {
+        uint32_t stackSize = argSize + fun.extraValuesToPop * sizeof(Value);
+        EmitIonTailCallVM(code, masm, stackSize);
+    }
     return true;
 }
 
@@ -760,7 +769,10 @@ ICStubCompiler::callVM(const VMFunction& fun, MacroAssembler& masm)
         return false;
 
     MOZ_ASSERT(fun.expectTailCall == NonTailCall);
-    EmitCallVM(code, masm);
+    if (engine_ == Engine::Baseline)
+        EmitBaselineCallVM(code, masm);
+    else
+        EmitIonCallVM(code, fun.explicitStackSlots(), masm);
     return true;
 }
 
@@ -778,7 +790,10 @@ ICStubCompiler::callTypeUpdateIC(MacroAssembler& masm, uint32_t objectOffset)
 void
 ICStubCompiler::enterStubFrame(MacroAssembler& masm, Register scratch)
 {
-    EmitEnterStubFrame(masm, scratch);
+    if (engine_ == Engine::Baseline)
+        EmitBaselineEnterStubFrame(masm, scratch);
+    else
+        EmitIonEnterStubFrame(masm, scratch);
 
     MOZ_ASSERT(!inStubFrame_);
     inStubFrame_ = true;
@@ -793,12 +808,21 @@ ICStubCompiler::leaveStubFrame(MacroAssembler& masm, bool calledIntoIon)
 {
     MOZ_ASSERT(entersStubFrame_ && inStubFrame_);
     inStubFrame_ = false;
-    EmitLeaveStubFrame(masm, calledIntoIon);
+
+    if (engine_ == Engine::Baseline)
+        EmitBaselineLeaveStubFrame(masm, calledIntoIon);
+    else
+        EmitIonLeaveStubFrame(masm);
 }
 
 void
 ICStubCompiler::pushFramePtr(MacroAssembler& masm, Register scratch)
 {
+    if (engine_ == Engine::IonMonkey) {
+        masm.push(Imm32(0));
+        return;
+    }
+
     if (inStubFrame_) {
         masm.loadPtr(Address(BaselineFrameReg, 0), scratch);
         masm.pushBaselineFramePtr(scratch, scratch);
@@ -1407,7 +1431,141 @@ ICBinaryArith_DoubleWithInt32::Compiler::generateStubCode(MacroAssembler& masm)
     return true;
 }
 
+//
+// UnaryArith_Fallback
+//
 
+static bool
+DoUnaryArithFallback(JSContext* cx, BaselineFrame* frame, ICUnaryArith_Fallback* stub_,
+                     HandleValue val, MutableHandleValue res)
+{
+    ICStubCompiler::Engine engine = SharedStubEngine(frame);
+    RootedScript script(cx, SharedStubScript(frame, stub_));
+
+    // This fallback stub may trigger debug mode toggling.
+    DebugModeOSRVolatileStub<ICUnaryArith_Fallback*> stub(engine, frame, stub_);
+
+    jsbytecode* pc = stub->icEntry()->pc(script);
+    JSOp op = JSOp(*pc);
+    FallbackICSpew(cx, stub, "UnaryArith(%s)", js_CodeName[op]);
+
+    switch (op) {
+      case JSOP_BITNOT: {
+        int32_t result;
+        if (!BitNot(cx, val, &result))
+            return false;
+        res.setInt32(result);
+        break;
+      }
+      case JSOP_NEG:
+        if (!NegOperation(cx, script, pc, val, res))
+            return false;
+        break;
+      default:
+        MOZ_CRASH("Unexpected op");
+    }
+
+    // Check if debug mode toggling made the stub invalid.
+    if (stub.invalid())
+        return true;
+
+    if (res.isDouble())
+        stub->setSawDoubleResult();
+
+    if (stub->numOptimizedStubs() >= ICUnaryArith_Fallback::MAX_OPTIMIZED_STUBS) {
+        // TODO: Discard/replace stubs.
+        return true;
+    }
+
+    if (val.isInt32() && res.isInt32()) {
+        JitSpew(JitSpew_BaselineIC, "  Generating %s(Int32 => Int32) stub", js_CodeName[op]);
+        ICUnaryArith_Int32::Compiler compiler(cx, op, engine);
+        ICStub* int32Stub = compiler.getStub(compiler.getStubSpace(script));
+        if (!int32Stub)
+            return false;
+        stub->addNewStub(int32Stub);
+        return true;
+    }
+
+    if (val.isNumber() && res.isNumber() && cx->runtime()->jitSupportsFloatingPoint) {
+        JitSpew(JitSpew_BaselineIC, "  Generating %s(Number => Number) stub", js_CodeName[op]);
+
+        // Unlink int32 stubs, the double stub handles both cases and TI specializes for both.
+        stub->unlinkStubsWithKind(cx, ICStub::UnaryArith_Int32);
+
+        ICUnaryArith_Double::Compiler compiler(cx, op, engine);
+        ICStub* doubleStub = compiler.getStub(compiler.getStubSpace(script));
+        if (!doubleStub)
+            return false;
+        stub->addNewStub(doubleStub);
+        return true;
+    }
+
+    return true;
+}
+
+typedef bool (*DoUnaryArithFallbackFn)(JSContext*, BaselineFrame*, ICUnaryArith_Fallback*,
+                                       HandleValue, MutableHandleValue);
+static const VMFunction DoUnaryArithFallbackInfo =
+    FunctionInfo<DoUnaryArithFallbackFn>(DoUnaryArithFallback, TailCall, PopValues(1));
+
+bool
+ICUnaryArith_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
+{
+    MOZ_ASSERT(R0 == JSReturnOperand);
+
+    // Restore the tail call register.
+    EmitRestoreTailCallReg(masm);
+
+    // Ensure stack is fully synced for the expression decompiler.
+    masm.pushValue(R0);
+
+    // Push arguments.
+    masm.pushValue(R0);
+    masm.push(ICStubReg);
+    pushFramePtr(masm, R0.scratchReg());
+
+    return tailCallVM(DoUnaryArithFallbackInfo, masm);
+}
+
+bool
+ICUnaryArith_Double::Compiler::generateStubCode(MacroAssembler& masm)
+{
+    Label failure;
+    masm.ensureDouble(R0, FloatReg0, &failure);
+
+    MOZ_ASSERT(op == JSOP_NEG || op == JSOP_BITNOT);
+
+    if (op == JSOP_NEG) {
+        masm.negateDouble(FloatReg0);
+        masm.boxDouble(FloatReg0, R0);
+    } else {
+        // Truncate the double to an int32.
+        Register scratchReg = R1.scratchReg();
+
+        Label doneTruncate;
+        Label truncateABICall;
+        masm.branchTruncateDouble(FloatReg0, scratchReg, &truncateABICall);
+        masm.jump(&doneTruncate);
+
+        masm.bind(&truncateABICall);
+        masm.setupUnalignedABICall(scratchReg);
+        masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
+        masm.callWithABI(BitwiseCast<void*, int32_t(*)(double)>(JS::ToInt32));
+        masm.storeCallResult(scratchReg);
+
+        masm.bind(&doneTruncate);
+        masm.not32(scratchReg);
+        masm.tagValue(JSVAL_TYPE_INT32, scratchReg, R0);
+    }
+
+    EmitReturnFromIC(masm);
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
 
 } // namespace jit
 } // namespace js

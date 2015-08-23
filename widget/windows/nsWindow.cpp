@@ -4080,7 +4080,7 @@ bool nsWindow::DispatchMouseEvent(uint32_t aEventType, WPARAM wParam,
   LONG curMsgTime = ::GetMessageTime();
 
   if (aEventType == NS_MOUSE_DOUBLECLICK) {
-    event.message = NS_MOUSE_BUTTON_DOWN;
+    event.mMessage = NS_MOUSE_BUTTON_DOWN;
     event.button = aButton;
     sLastClickCount = 2;
     sLastMouseDownTime = curMsgTime;

@@ -898,11 +898,11 @@ nsListControlFrame::HandleEvent(nsPresContext* aPresContext,
                           "NS_MOUSE_LEFT_CLICK",
                           "NS_MOUSE_MIDDLE_CLICK",
                           "NS_MOUSE_RIGHT_CLICK"};
-  int inx = aEvent->message-NS_MOUSE_MESSAGE_START;
+  int inx = aEvent->mMessage-NS_MOUSE_MESSAGE_START;
   if (inx >= 0 && inx <= (NS_MOUSE_RIGHT_CLICK-NS_MOUSE_MESSAGE_START)) {
-    printf("Mouse in ListFrame %s [%d]\n", desc[inx], aEvent->message);
+    printf("Mouse in ListFrame %s [%d]\n", desc[inx], aEvent->mMessage);
   } else {
-    printf("Mouse in ListFrame <UNKNOWN> [%d]\n", aEvent->message);
+    printf("Mouse in ListFrame <UNKNOWN> [%d]\n", aEvent->mMessage);
   }*/
 
   if (nsEventStatus_eConsumeNoDefault == *aEventStatus)
@@ -2461,11 +2461,8 @@ nsListEventListener::HandleEvent(nsIDOMEvent* aEvent)
     return mFrame->nsListControlFrame::MouseDown(aEvent);
   }
   if (eventType.EqualsLiteral("mouseup")) {
-    bool defaultPrevented = false;
-    aEvent->GetDefaultPrevented(&defaultPrevented);
-    if (defaultPrevented) {
-      return NS_OK;
-    }
+    // Don't try to honor defaultPrevented here - it's not web compatible.
+    // (bug 1194733)
     return mFrame->nsListControlFrame::MouseUp(aEvent);
   }
   if (eventType.EqualsLiteral("mousemove")) {

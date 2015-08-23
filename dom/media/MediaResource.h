@@ -537,6 +537,47 @@ protected:
   bool mLoadInBackground;
 };
 
+
+/**
+ * This class is responsible for managing the suspend count and report suspend
+ * status of channel.
+ **/
+class ChannelSuspendAgent {
+public:
+  explicit ChannelSuspendAgent(nsIChannel* aChannel)
+  : mChannel(aChannel),
+    mSuspendCount(0),
+    mIsChannelSuspended(false)
+  {}
+
+  // True when the channel has been suspended or needs to be suspended.
+  bool IsSuspended();
+
+  // Return true when the channel is logically suspended, i.e. the suspend
+  // count goes from 0 to 1.
+  bool Suspend();
+
+  // Return true only when the suspend count is equal to zero.
+  bool Resume();
+
+  // Call after opening channel, set channel and check whether the channel
+  // needs to be suspended.
+  void NotifyChannelOpened(nsIChannel* aChannel);
+
+  // Call before closing channel, reset the channel internal status if needed.
+  void NotifyChannelClosing();
+
+  // Check whether we need to suspend the channel.
+  void UpdateSuspendedStatusIfNeeded();
+private:
+  // Only suspends channel but not changes the suspend count.
+  void SuspendInternal();
+
+  nsIChannel* mChannel;
+  Atomic<uint32_t> mSuspendCount;
+  bool mIsChannelSuspended;
+};
+
 /**
  * This is the MediaResource implementation that wraps Necko channels.
  * Much of its functionality is actually delegated to MediaCache via
@@ -707,21 +748,12 @@ protected:
                                       uint32_t aCount,
                                       uint32_t *aWriteCount);
 
-  // Suspend the channel only if the channels is currently downloading data.
-  // If it isn't we set a flag, mIgnoreResume, so that PossiblyResume knows
-  // whether to acutually resume or not.
-  void PossiblySuspend();
-
-  // Resume from a suspend if we actually suspended (See PossiblySuspend).
-  void PossiblyResume();
-
   // Main thread access only
   int64_t            mOffset;
   nsRefPtr<Listener> mListener;
   // A data received event for the decoder that has been dispatched but has
   // not yet been processed.
   nsRevocableEventPtr<nsRunnableMethod<ChannelMediaResource, void, false> > mDataReceivedEvent;
-  Atomic<uint32_t>   mSuspendCount;
   // When this flag is set, if we get a network error we should silently
   // reopen the stream.
   bool               mReopenOnError;
@@ -747,6 +779,8 @@ protected:
   // True if the stream can seek into unbuffered ranged, i.e. if the
   // connection supports byte range requests.
   bool mIsTransportSeekable;
+
+  ChannelSuspendAgent mSuspendAgent;
 };
 
 /**

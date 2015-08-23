@@ -1918,10 +1918,7 @@ nsGlobalWindow::UnmarkGrayTimers()
     if (timeout->mScriptHandler) {
       Function* f = timeout->mScriptHandler->GetCallback();
       if (f) {
-        // Callable() already does xpc_UnmarkGrayObject.
-        DebugOnly<JS::Handle<JSObject*> > o = f->Callable();
-        MOZ_ASSERT(!JS::ObjectIsMarkedGray(o.value),
-                   "Should have been unmarked");
+        f->MarkForCC();
       }
     }
   }
@@ -3047,7 +3044,7 @@ nsGlobalWindow::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   NS_PRECONDITION(IsInnerWindow(), "PreHandleEvent is used on outer window!?");
   static uint32_t count = 0;
-  uint32_t msg = aVisitor.mEvent->message;
+  uint32_t msg = aVisitor.mEvent->mMessage;
 
   aVisitor.mCanHandle = true;
   aVisitor.mForceContentDispatch = true; //FIXME! Bug 329119
@@ -3255,7 +3252,7 @@ nsGlobalWindow::PostHandleEvent(EventChainPostVisitor& aVisitor)
   NS_PRECONDITION(IsInnerWindow(), "PostHandleEvent is used on outer window!?");
 
   // Return early if there is nothing to do.
-  switch (aVisitor.mEvent->message) {
+  switch (aVisitor.mEvent->mMessage) {
     case NS_RESIZE_EVENT:
     case NS_PAGE_UNLOAD:
     case NS_LOAD:
@@ -3270,9 +3267,9 @@ nsGlobalWindow::PostHandleEvent(EventChainPostVisitor& aVisitor)
   nsCOMPtr<nsIDOMEventTarget> kungFuDeathGrip1(mChromeEventHandler);
   nsCOMPtr<nsIScriptContext> kungFuDeathGrip2(GetContextInternal());
 
-  if (aVisitor.mEvent->message == NS_RESIZE_EVENT) {
+  if (aVisitor.mEvent->mMessage == NS_RESIZE_EVENT) {
     mIsHandlingResizeEvent = false;
-  } else if (aVisitor.mEvent->message == NS_PAGE_UNLOAD &&
+  } else if (aVisitor.mEvent->mMessage == NS_PAGE_UNLOAD &&
              aVisitor.mEvent->mFlags.mIsTrusted) {
     // Execute bindingdetached handlers before we tear ourselves
     // down.
@@ -3280,7 +3277,7 @@ nsGlobalWindow::PostHandleEvent(EventChainPostVisitor& aVisitor)
       mDoc->BindingManager()->ExecuteDetachedHandlers();
     }
     mIsDocumentLoaded = false;
-  } else if (aVisitor.mEvent->message == NS_LOAD &&
+  } else if (aVisitor.mEvent->mMessage == NS_LOAD &&
              aVisitor.mEvent->mFlags.mIsTrusted) {
     // This is page load event since load events don't propagate to |window|.
     // @see nsDocument::PreHandleEvent.

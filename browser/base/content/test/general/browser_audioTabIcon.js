@@ -173,9 +173,6 @@ function* test_browser_swapping(tab, browser) {
   }, function*(newBrowser) {
     yield test_swapped_browser(tab, newBrowser, true)
 
-    // FIXME: this is needed to work around bug 1190903.
-    yield new Promise(resolve => setTimeout(resolve, 3000));
-
     // Now, test swapping with a muted but not playing tab.
     // Note that the tab remains muted, so we only need to pause playback.
     tab = gBrowser.getTabForBrowser(newBrowser);
