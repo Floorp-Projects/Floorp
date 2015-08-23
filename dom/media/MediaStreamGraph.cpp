@@ -2383,9 +2383,8 @@ MediaStream::AddMainThreadListener(MainThreadMediaStreamListener* aListener)
 
   mMainThreadListeners.AppendElement(aListener);
 
-  // If we have to send the notification or we have a runnable that will do it,
-  // let finish here.
-  if (!mFinishedNotificationSent || mNotificationMainThreadRunnable) {
+  // If it is not yet time to send the notification, then finish here.
+  if (!mFinishedNotificationSent) {
     return;
   }
 
@@ -2399,7 +2398,6 @@ MediaStream::AddMainThreadListener(MainThreadMediaStreamListener* aListener)
     NS_IMETHOD Run() override
     {
       MOZ_ASSERT(NS_IsMainThread());
-      mStream->mNotificationMainThreadRunnable = nullptr;
       mStream->NotifyMainThreadListeners();
       return NS_OK;
     }
@@ -2411,11 +2409,7 @@ MediaStream::AddMainThreadListener(MainThreadMediaStreamListener* aListener)
   };
 
   nsRefPtr<nsRunnable> runnable = new NotifyRunnable(this);
-  if (NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable.forget())))) {
-    return;
-  }
-
-  mNotificationMainThreadRunnable = runnable;
+  NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable.forget())));
 }
 
 void
