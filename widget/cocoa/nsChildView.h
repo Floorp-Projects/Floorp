@@ -43,6 +43,7 @@ class RectTextureImage;
 
 namespace mozilla {
 class VibrancyManager;
+class InputData;
 namespace layers {
 class GLManager;
 class APZCTreeManager;
@@ -552,6 +553,8 @@ public:
   bool IsPluginFocused() { return mPluginFocused; }
 
   virtual nsIntPoint GetClientOffset() override;
+
+  mozilla::WidgetWheelEvent DispatchAPZWheelInputEvent(mozilla::InputData& aEvent);
 
 protected:
   virtual ~nsChildView();

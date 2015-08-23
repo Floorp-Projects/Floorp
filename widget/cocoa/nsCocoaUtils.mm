@@ -234,6 +234,15 @@ void nsCocoaUtils::GetScrollingDeltas(NSEvent* aEvent, CGFloat* aOutDeltaX, CGFl
   *aOutDeltaY = [aEvent deltaY] * lineDeltaPixels;
 }
 
+BOOL nsCocoaUtils::EventHasPhaseInformation(NSEvent* aEvent)
+{
+  if (![aEvent respondsToSelector:@selector(phase)]) {
+    return NO;
+  }
+  return EventPhase(aEvent) != NSEventPhaseNone ||
+         EventMomentumPhase(aEvent) != NSEventPhaseNone;
+}
+
 void nsCocoaUtils::HideOSChromeOnScreen(bool aShouldHide)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
