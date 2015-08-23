@@ -535,7 +535,6 @@ gbjar.sources += [
     'widget/FlowLayout.java',
     'widget/GeckoActionProvider.java',
     'widget/GeckoPopupMenu.java',
-    'widget/GeckoSwipeRefreshLayout.java',
     'widget/GeckoViewFlipper.java',
     'widget/IconTabWidget.java',
     'widget/LoginDoorHanger.java',
@@ -557,6 +556,7 @@ gbjar.sources += [
 # editing this list, make sure to edit that script.
 gbjar.sources += [
     'widget/ThemedEditText.java',
+    'widget/ThemedFrameLayout.java',
     'widget/ThemedImageButton.java',
     'widget/ThemedImageView.java',
     'widget/ThemedLinearLayout.java',

@@ -470,9 +470,8 @@ let UI = {
     gTabViewFrame.contentWindow.focus();
 
     gBrowser.updateTitlebar();
-#ifdef XP_MACOSX
-    this.setTitlebarColors(true);
-#endif
+    if (AppConstants.platform == "macosx")
+      this.setTitlebarColors(true);
     let event = document.createEvent("Events");
     event.initEvent("tabviewshown", true, false);
 
@@ -545,9 +544,8 @@ let UI = {
 
     gBrowser.updateTitlebar();
     gBrowser.tabContainer.mTabstrip.smoothScroll = this._originalSmoothScroll;
-#ifdef XP_MACOSX
-    this.setTitlebarColors(false);
-#endif
+    if (AppConstants.platform == "macosx")
+      this.setTitlebarColors(false);
     Storage.saveVisibilityData(gWindow, "false");
 
     this._isChangingVisibility = false;
@@ -557,7 +555,6 @@ let UI = {
     dispatchEvent(event);
   },
 
-#ifdef XP_MACOSX
   // ----------
   // Function: setTitlebarColors
   // Used on the Mac to make the title bar match the gradient in the rest of the
@@ -569,19 +566,20 @@ let UI = {
   //         properties to specify directly.
   setTitlebarColors: function UI_setTitlebarColors(colors) {
     // Mac Only
-    var mainWindow = gWindow.document.getElementById("main-window");
-    if (colors === true) {
-      mainWindow.setAttribute("activetitlebarcolor", "#C4C4C4");
-      mainWindow.setAttribute("inactivetitlebarcolor", "#EDEDED");
-    } else if (colors && "active" in colors && "inactive" in colors) {
-      mainWindow.setAttribute("activetitlebarcolor", colors.active);
-      mainWindow.setAttribute("inactivetitlebarcolor", colors.inactive);
-    } else {
-      mainWindow.removeAttribute("activetitlebarcolor");
-      mainWindow.removeAttribute("inactivetitlebarcolor");
+    if (AppConstants.platform == "macosx") {
+      let mainWindow = gWindow.document.getElementById("main-window");
+      if (colors === true) {
+        mainWindow.setAttribute("activetitlebarcolor", "#C4C4C4");
+        mainWindow.setAttribute("inactivetitlebarcolor", "#EDEDED");
+      } else if (colors && "active" in colors && "inactive" in colors) {
+        mainWindow.setAttribute("activetitlebarcolor", colors.active);
+        mainWindow.setAttribute("inactivetitlebarcolor", colors.inactive);
+      } else {
+        mainWindow.removeAttribute("activetitlebarcolor");
+        mainWindow.removeAttribute("inactivetitlebarcolor");
+      }
     }
   },
-#endif
 
   // ----------
   // Function: storageBusy
@@ -932,18 +930,17 @@ let UI = {
   _setupBrowserKeys: function UI__setupKeyWhiteList() {
     let keys = {};
 
-    [
-#ifdef XP_UNIX
-      "quitApplication",
-#else
-      "redo",
-#endif
-#ifdef XP_MACOSX
-      "preferencesCmdMac", "minimizeWindow", "hideThisAppCmdMac",
-#endif
-      "newNavigator", "newNavigatorTab", "undo", "cut", "copy", "paste", 
+    let keyArray = [
+      "newNavigator", "newNavigatorTab", "undo", "cut", "copy", "paste",
       "selectAll", "find"
-    ].forEach(function(key) {
+    ];
+    if (AppConstants.platform == "macosx")
+      keyArray.push("preferencesCmdMac", "minimizeWindow", "hideThisAppCmdMac")
+    if (AppConstants.platform == "macosx" || AppConstants.platform == "linux")
+      keyArray.push("quitApplication");
+    else
+      keyArray.push("redo");
+    keyArray.forEach(function(key) {
       let element = gWindow.document.getElementById("key_" + key);
       let code = element.getAttribute("key").toLocaleLowerCase().charCodeAt(0);
       keys[code] = key;
@@ -954,15 +951,14 @@ let UI = {
     // The lower case letters are passed to processBrowserKeys() even with shift 
     // key when stimulating a key press using EventUtils.synthesizeKey() so need 
     // to handle both upper and lower cases here.
-    [
-#ifdef XP_UNIX
-      "redo",
-#endif
-#ifdef XP_MACOSX
-      "fullScreen",
-#endif
+    keyArray = [
       "closeWindow", "tabview", "undoCloseTab", "undoCloseWindow"
-    ].forEach(function(key) {
+    ];
+    if (AppConstants.platform == "macosx" || AppConstants.platform == "linux")
+      keyArray.push("redo");
+    if (AppConstants.platform == "macosx")
+      keyArray.push("fullScreen");
+    keyArray.forEach(function(key) {
       let element = gWindow.document.getElementById("key_" + key);
       let code = element.getAttribute("key").toLocaleLowerCase().charCodeAt(0);
       keys[code] = key;
@@ -992,11 +988,8 @@ let UI = {
         if (evt.altKey)
           return;
 
-#ifdef XP_MACOSX
-        if (evt.metaKey) {
-#else
-        if (evt.ctrlKey) {
-#endif
+        if ((AppConstants.platform == "macosx" && evt.metaKey) || 
+            (AppConstants.platform != "macosx" && evt.ctrlKey)) {
           let preventDefault = true;
           if (evt.shiftKey) {
             // when a user presses ctrl+shift+key, upper case letter charCode 
