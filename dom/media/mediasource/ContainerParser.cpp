@@ -185,18 +185,20 @@ public:
                                   int64_t& aStart, int64_t& aEnd) override
   {
     bool initSegment = IsInitSegmentPresent(aData);
+
+    if (mLastMapping && (initSegment || IsMediaSegmentPresent(aData))) {
+      // The last data contained a complete cluster but we can only detect it
+      // now that a new one is starting.
+      // We use mOffset as end position to ensure that any blocks not reported
+      // by WebMBufferParser are properly skipped.
+      mCompleteMediaSegmentRange = MediaByteRange(mLastMapping.ref().mSyncOffset,
+                                                  mOffset);
+      mLastMapping.reset();
+      MSE_DEBUG(WebMContainerParser, "New cluster found at start, ending previous one");
+      return false;
+    }
+
     if (initSegment) {
-      if (mLastMapping) {
-        // The last data contained a complete cluster but we can only detect it
-        // now that a new one is starting.
-        // We use mOffset as end position to ensure that any blocks not reported
-        // by WebMBufferParser are properly skipped.
-        mCompleteMediaSegmentRange = MediaByteRange(mLastMapping.ref().mSyncOffset,
-                                                    mOffset);
-        mLastMapping.reset();
-        MSE_DEBUG(WebMContainerParser, "New cluster found at start, ending previous one");
-        return false;
-      }
       mOffset = 0;
       mParser = WebMBufferedParser(0);
       mOverlappedMapping.Clear();
@@ -244,20 +246,6 @@ public:
       return false;
     }
 
-    if (mLastMapping &&
-        mLastMapping.ref().mSyncOffset != mapping[0].mSyncOffset) {
-      // The last data contained a complete cluster but we can only detect it
-      // now that a new one is starting.
-      // We use the start of the next cluster as end position to ensure that any
-      // blocks not reported by WebMBufferParser is properly skipped.
-      mCompleteMediaSegmentRange = MediaByteRange(mLastMapping.ref().mSyncOffset,
-                                                  mapping[0].mSyncOffset);
-      mOverlappedMapping.AppendElements(mapping);
-      mLastMapping.reset();
-      MSE_DEBUG(WebMContainerParser, "New cluster found at start, ending previous one");
-      return false;
-    }
-
     // Calculate media range for first media segment.
 
     // Check if we have a cluster finishing in the current data.
@@ -292,8 +280,17 @@ public:
 
     if (foundNewCluster && mOffset >= mapping[endIdx].mEndOffset) {
       // We now have all information required to delimit a complete cluster.
+      int64_t endOffset = mapping[endIdx+1].mSyncOffset;
+      if (mapping[endIdx+1].mInitOffset > mapping[endIdx].mInitOffset) {
+        // We have a new init segment before this cluster.
+        endOffset = mapping[endIdx+1].mInitOffset;
+      }
       mCompleteMediaSegmentRange = MediaByteRange(mapping[endIdx].mSyncOffset,
-                                                  mapping[endIdx].mEndOffset);
+                                                  endOffset);
+    } else if (mapping[endIdx].mClusterEndOffset >= 0 &&
+               mOffset >= mapping[endIdx].mClusterEndOffset) {
+      mCompleteMediaSegmentRange = MediaByteRange(mapping[endIdx].mSyncOffset,
+                                                  mParser.EndSegmentOffset(mapping[endIdx].mClusterEndOffset));
     }
 
     if (!completeIdx) {
