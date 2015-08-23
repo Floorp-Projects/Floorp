@@ -89,6 +89,7 @@ def build_dict(config, env=os.environ):
     d['telemetry'] = substs.get('MOZ_TELEMETRY_REPORTING') == '1'
     d['tests_enabled'] = substs.get('ENABLE_TESTS') == "1"
     d['bin_suffix'] = substs.get('BIN_SUFFIX', '')
+    d['addon_signing'] = substs.get('MOZ_ADDON_SIGNING') == '1'
 
     d['webm'] = bool(substs.get('MOZ_WEBM'))
     d['wave'] = bool(substs.get('MOZ_WAVE'))
