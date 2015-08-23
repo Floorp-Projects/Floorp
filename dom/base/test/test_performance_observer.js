@@ -44,6 +44,7 @@ test(t => {
     list.getEntries().forEach(entry => observedEntries.push(entry));
   });
   observer.observe({entryTypes: ['mark', 'measure']});
+  t.add_cleanup(() => observer.disconnect());
 
   assert_equals(observedEntries.length, 0,
                 "User timing entries should never be observed.");
@@ -107,6 +108,7 @@ test(t => {
     observedEntryList = list;
   });
   observer.observe({entryTypes: ['mark']});
+  t.add_cleanup(() => observer.disconnect());
 
   performance.mark("test");
   assert_array_equals(observedEntryList.getEntries({"entryType": "mark"}),
@@ -150,6 +152,7 @@ test(t => {
     observedEntryList = list;
   });
   observer.observe({entryTypes: ['mark', 'measure']});
+  t.add_cleanup(() => observer.disconnect());
 
   performance.mark("test");
   assert_array_equals(observedEntryList.getEntriesByType("mark"),
@@ -169,6 +172,7 @@ test(t => {
     observedEntryList = list;
   });
   observer.observe({entryTypes: ['mark', 'measure']});
+  t.add_cleanup(() => observer.disconnect());
 
   performance.mark("test");
   assert_array_equals(observedEntryList.getEntriesByName("test"),
@@ -190,6 +194,7 @@ test(t => {
 
   observer.observe({entryTypes: ['mark', 'measure']});
   observer.observe({entryTypes: ['mark', 'measure']});
+  t.add_cleanup(() => observer.disconnect());
 
   performance.mark("test-start");
   performance.mark("test-end");
@@ -210,6 +215,7 @@ test(t => {
 
   observer.observe({entryTypes: ['mark', 'measure']});
   observer.observe({entryTypes: ['mark']});
+  t.add_cleanup(() => observer.disconnect());
 
   performance.mark("test-start");
   performance.mark("test-end");
@@ -230,6 +236,7 @@ test(t => {
 
   observer.observe({entryTypes: ['mark']});
   observer.observe({entryTypes: ['measure']});
+  t.add_cleanup(() => observer.disconnect());
 
   performance.mark("test-start");
   performance.mark("test-end");

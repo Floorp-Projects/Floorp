@@ -22,6 +22,7 @@
 #define nsScriptNameSpaceManager_h__
 
 #include "mozilla/MemoryReporting.h"
+#include "nsBaseHashtable.h"
 #include "nsIMemoryReporter.h"
 #include "nsIScriptNameSpaceManager.h"
 #include "nsString.h"

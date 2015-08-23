@@ -279,7 +279,7 @@ static bool RestartApplication()
    modalDelegate:nil didEndSelector:nil contextInfo:nil];
 }
 
-- (IBAction)viewReportOkClicked:(id)sender;
+- (IBAction)viewReportOkClicked:(id)sender
 {
   [mViewReportWindow orderOut:nil];
   [NSApp endSheet:mViewReportWindow];

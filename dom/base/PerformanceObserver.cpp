@@ -38,6 +38,7 @@ PerformanceObserver::PerformanceObserver(nsPIDOMWindow* aOwner,
                                          PerformanceObserverCallback& aCb)
   : mOwner(aOwner)
   , mCallback(&aCb)
+  , mConnected(false)
 {
   MOZ_ASSERT(mOwner);
   mPerformance = aOwner->GetPerformance();
@@ -46,6 +47,7 @@ PerformanceObserver::PerformanceObserver(nsPIDOMWindow* aOwner,
 PerformanceObserver::PerformanceObserver(WorkerPrivate* aWorkerPrivate,
                                          PerformanceObserverCallback& aCb)
   : mCallback(&aCb)
+  , mConnected(false)
 {
   MOZ_ASSERT(aWorkerPrivate);
   mPerformance = aWorkerPrivate->GlobalScope()->GetPerformance();
@@ -53,6 +55,8 @@ PerformanceObserver::PerformanceObserver(WorkerPrivate* aWorkerPrivate,
 
 PerformanceObserver::~PerformanceObserver()
 {
+  Disconnect();
+  MOZ_ASSERT(!mConnected);
 }
 
 // static
@@ -145,10 +149,15 @@ PerformanceObserver::Observe(const PerformanceObserverInit& aOptions,
   mEntryTypes = validEntryTypes;
 
   mPerformance->AddObserver(this);
+  mConnected = true;
 }
 
 void
 PerformanceObserver::Disconnect()
 {
-  mPerformance->RemoveObserver(this);
+  if (mConnected) {
+    MOZ_ASSERT(mPerformance);
+    mPerformance->RemoveObserver(this);
+    mConnected = false;
+  }
 }

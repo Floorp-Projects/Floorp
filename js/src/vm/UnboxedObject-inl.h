@@ -272,6 +272,12 @@ UnboxedArrayObject::triggerPreBarrier(size_t index)
 // Combined methods for NativeObject and UnboxedArrayObject accesses.
 /////////////////////////////////////////////////////////////////////
 
+static inline bool
+HasAnyBoxedOrUnboxedDenseElements(JSObject* obj)
+{
+    return obj->isNative() || obj->is<UnboxedArrayObject>();
+}
+
 static inline size_t
 GetAnyBoxedOrUnboxedInitializedLength(JSObject* obj)
 {
@@ -328,6 +334,16 @@ SetAnyBoxedOrUnboxedDenseElement(JSContext* cx, JSObject* obj, size_t index, con
         return true;
     }
     return obj->as<UnboxedArrayObject>().setElement(cx, index, value);
+}
+
+static inline bool
+InitAnyBoxedOrUnboxedDenseElement(JSContext* cx, JSObject* obj, size_t index, const Value& value)
+{
+    if (obj->isNative()) {
+        obj->as<NativeObject>().initDenseElementWithType(cx, index, value);
+        return true;
+    }
+    return obj->as<UnboxedArrayObject>().initElement(cx, index, value);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -417,19 +433,19 @@ SetBoxedOrUnboxedDenseElement(JSContext* cx, JSObject* obj, size_t index, const 
 }
 
 template <JSValueType Type>
-static inline bool
+static inline DenseElementResult
 EnsureBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* obj, size_t count)
 {
     if (Type == JSVAL_TYPE_MAGIC) {
         if (!obj->as<ArrayObject>().ensureElements(cx, count))
-            return false;
+            return DenseElementResult::Failure;
     } else {
         if (obj->as<UnboxedArrayObject>().capacity() < count) {
             if (!obj->as<UnboxedArrayObject>().growElements(cx, count))
-                return false;
+                return DenseElementResult::Failure;
         }
     }
-    return true;
+    return DenseElementResult::Success;
 }
 
 template <JSValueType Type>
@@ -547,33 +563,54 @@ MoveBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* obj, uint32_t dstStart,
     return DenseElementResult::Success;
 }
 
-template <JSValueType Type>
+template <JSValueType DstType, JSValueType SrcType>
 static inline DenseElementResult
 CopyBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* dst, JSObject* src,
                                 uint32_t dstStart, uint32_t srcStart, uint32_t length)
 {
-    MOZ_ASSERT(HasBoxedOrUnboxedDenseElements<Type>(src));
-    MOZ_ASSERT(HasBoxedOrUnboxedDenseElements<Type>(dst));
-    MOZ_ASSERT(GetBoxedOrUnboxedInitializedLength<Type>(dst) == dstStart);
-    MOZ_ASSERT(GetBoxedOrUnboxedCapacity<Type>(dst) >= length);
+    MOZ_ASSERT(HasBoxedOrUnboxedDenseElements<SrcType>(src));
+    MOZ_ASSERT(HasBoxedOrUnboxedDenseElements<DstType>(dst));
+    MOZ_ASSERT(GetBoxedOrUnboxedInitializedLength<DstType>(dst) == dstStart);
+    MOZ_ASSERT(GetBoxedOrUnboxedInitializedLength<DstType>(src) >= srcStart + length);
+    MOZ_ASSERT(GetBoxedOrUnboxedCapacity<DstType>(dst) >= dstStart + length);
 
-    SetBoxedOrUnboxedInitializedLength<Type>(cx, dst, dstStart + length);
+    SetBoxedOrUnboxedInitializedLength<DstType>(cx, dst, dstStart + length);
 
-    if (Type == JSVAL_TYPE_MAGIC) {
-        const Value* vp = src->as<NativeObject>().getDenseElements() + srcStart;
-        dst->as<NativeObject>().initDenseElements(dstStart, vp, length);
-    } else {
+    if (DstType == JSVAL_TYPE_MAGIC) {
+        if (SrcType == JSVAL_TYPE_MAGIC) {
+            const Value* vp = src->as<NativeObject>().getDenseElements() + srcStart;
+            dst->as<NativeObject>().initDenseElements(dstStart, vp, length);
+        } else {
+            for (size_t i = 0; i < length; i++) {
+                Value v = GetBoxedOrUnboxedDenseElement<SrcType>(src, srcStart + i);
+                dst->as<NativeObject>().initDenseElement(dstStart + i, v);
+            }
+        }
+    } else if (DstType == SrcType) {
         uint8_t* dstData = dst->as<UnboxedArrayObject>().elements();
         uint8_t* srcData = src->as<UnboxedArrayObject>().elements();
-        size_t elementSize = UnboxedTypeSize(Type);
+        size_t elementSize = UnboxedTypeSize(DstType);
 
         memcpy(dstData + dstStart * elementSize,
                srcData + srcStart * elementSize,
                length * elementSize);
 
         // Add a store buffer entry if we might have copied a nursery pointer to dst.
-        if (UnboxedTypeNeedsPostBarrier(Type) && !IsInsideNursery(dst))
+        if (UnboxedTypeNeedsPostBarrier(DstType) && !IsInsideNursery(dst))
             dst->runtimeFromMainThread()->gc.storeBuffer.putWholeCellFromMainThread(dst);
+    } else if (DstType == JSVAL_TYPE_DOUBLE && SrcType == JSVAL_TYPE_INT32) {
+        uint8_t* dstData = dst->as<UnboxedArrayObject>().elements();
+        uint8_t* srcData = src->as<UnboxedArrayObject>().elements();
+
+        for (size_t i = 0; i < length; i++) {
+            int32_t v = *reinterpret_cast<int32_t*>(srcData + (srcStart + i) * sizeof(int32_t));
+            *reinterpret_cast<double*>(dstData + (dstStart + i) * sizeof(double)) = v;
+        }
+    } else {
+        for (size_t i = 0; i < length; i++) {
+            Value v = GetBoxedOrUnboxedDenseElement<SrcType>(src, srcStart + i);
+            dst->as<UnboxedArrayObject>().initElementNoTypeChangeSpecific<DstType>(dstStart + i, v);
+        }
     }
 
     return DenseElementResult::Success;
@@ -598,19 +635,70 @@ template <typename F>
 DenseElementResult
 CallBoxedOrUnboxedSpecialization(F f, JSObject* obj)
 {
-    if (HasBoxedOrUnboxedDenseElements<JSVAL_TYPE_MAGIC>(obj))
+    if (!HasAnyBoxedOrUnboxedDenseElements(obj))
+        return DenseElementResult::Incomplete;
+    switch (GetBoxedOrUnboxedType(obj)) {
+      case JSVAL_TYPE_MAGIC:
         return f. DEPENDENT_TEMPLATE_HINT operator()<JSVAL_TYPE_MAGIC>();
-    if (HasBoxedOrUnboxedDenseElements<JSVAL_TYPE_BOOLEAN>(obj))
+      case JSVAL_TYPE_BOOLEAN:
         return f. DEPENDENT_TEMPLATE_HINT operator()<JSVAL_TYPE_BOOLEAN>();
-    if (HasBoxedOrUnboxedDenseElements<JSVAL_TYPE_INT32>(obj))
+      case JSVAL_TYPE_INT32:
         return f. DEPENDENT_TEMPLATE_HINT operator()<JSVAL_TYPE_INT32>();
-    if (HasBoxedOrUnboxedDenseElements<JSVAL_TYPE_DOUBLE>(obj))
+      case JSVAL_TYPE_DOUBLE:
         return f. DEPENDENT_TEMPLATE_HINT operator()<JSVAL_TYPE_DOUBLE>();
-    if (HasBoxedOrUnboxedDenseElements<JSVAL_TYPE_STRING>(obj))
+      case JSVAL_TYPE_STRING:
         return f. DEPENDENT_TEMPLATE_HINT operator()<JSVAL_TYPE_STRING>();
-    if (HasBoxedOrUnboxedDenseElements<JSVAL_TYPE_OBJECT>(obj))
+      case JSVAL_TYPE_OBJECT:
         return f. DEPENDENT_TEMPLATE_HINT operator()<JSVAL_TYPE_OBJECT>();
-    return DenseElementResult::Incomplete;
+      default:
+        MOZ_CRASH();
+    }
+}
+
+// As above, except the specialization can reflect the unboxed type of two objects.
+template <typename F>
+DenseElementResult
+CallBoxedOrUnboxedSpecialization(F f, JSObject* obj1, JSObject* obj2)
+{
+    if (!HasAnyBoxedOrUnboxedDenseElements(obj1) || !HasAnyBoxedOrUnboxedDenseElements(obj2))
+        return DenseElementResult::Incomplete;
+
+#define SPECIALIZE_OBJ2(TYPE)                                                     \
+    switch (GetBoxedOrUnboxedType(obj2)) {                                        \
+      case JSVAL_TYPE_MAGIC:                                                      \
+        return f. DEPENDENT_TEMPLATE_HINT operator()<TYPE, JSVAL_TYPE_MAGIC>();   \
+      case JSVAL_TYPE_BOOLEAN:                                                    \
+        return f. DEPENDENT_TEMPLATE_HINT operator()<TYPE, JSVAL_TYPE_BOOLEAN>(); \
+      case JSVAL_TYPE_INT32:                                                      \
+        return f. DEPENDENT_TEMPLATE_HINT operator()<TYPE, JSVAL_TYPE_INT32>();   \
+      case JSVAL_TYPE_DOUBLE:                                                     \
+        return f. DEPENDENT_TEMPLATE_HINT operator()<TYPE, JSVAL_TYPE_DOUBLE>();  \
+      case JSVAL_TYPE_STRING:                                                     \
+        return f. DEPENDENT_TEMPLATE_HINT operator()<TYPE, JSVAL_TYPE_STRING>();  \
+      case JSVAL_TYPE_OBJECT:                                                     \
+        return f. DEPENDENT_TEMPLATE_HINT operator()<TYPE, JSVAL_TYPE_OBJECT>();  \
+      default:                                                                    \
+        MOZ_CRASH();                                                              \
+    }
+
+    switch (GetBoxedOrUnboxedType(obj1)) {
+      case JSVAL_TYPE_MAGIC:
+        SPECIALIZE_OBJ2(JSVAL_TYPE_MAGIC)
+      case JSVAL_TYPE_BOOLEAN:
+        SPECIALIZE_OBJ2(JSVAL_TYPE_BOOLEAN)
+      case JSVAL_TYPE_INT32:
+        SPECIALIZE_OBJ2(JSVAL_TYPE_INT32)
+      case JSVAL_TYPE_DOUBLE:
+        SPECIALIZE_OBJ2(JSVAL_TYPE_DOUBLE)
+      case JSVAL_TYPE_STRING:
+        SPECIALIZE_OBJ2(JSVAL_TYPE_STRING)
+      case JSVAL_TYPE_OBJECT:
+        SPECIALIZE_OBJ2(JSVAL_TYPE_OBJECT)
+      default:
+        MOZ_CRASH();
+    }
+
+#undef SPECIALIZE_OBJ2
 }
 
 #undef DEPENDENT_TEMPLATE_HINT
@@ -651,6 +739,18 @@ struct Signature ## Functor {                                           \
     }                                                                   \
 }
 
+#define DefineBoxedOrUnboxedFunctorPair4(Signature, A, B, C, D)         \
+struct Signature ## Functor {                                           \
+    A a; B b; C c; D d;                                                 \
+    Signature ## Functor(A a, B b, C c, D d)                            \
+      : a(a), b(b), c(c), d(d)                                          \
+    {}                                                                  \
+    template <JSValueType TypeOne, JSValueType TypeTwo>                 \
+    DenseElementResult operator()() {                                   \
+        return Signature<TypeOne, TypeTwo>(a, b, c, d);                 \
+    }                                                                   \
+}
+
 #define DefineBoxedOrUnboxedFunctor5(Signature, A, B, C, D, E)          \
 struct Signature ## Functor {                                           \
     A a; B b; C c; D d; E e;                                            \
@@ -675,6 +775,18 @@ struct Signature ## Functor {                                           \
     }                                                                   \
 }
 
+#define DefineBoxedOrUnboxedFunctorPair6(Signature, A, B, C, D, E, F)   \
+struct Signature ## Functor {                                           \
+    A a; B b; C c; D d; E e; F f;                                       \
+    Signature ## Functor(A a, B b, C c, D d, E e, F f)                  \
+      : a(a), b(b), c(c), d(d), e(e), f(f)                              \
+    {}                                                                  \
+    template <JSValueType TypeOne, JSValueType TypeTwo>                 \
+    DenseElementResult operator()() {                                   \
+        return Signature<TypeOne, TypeTwo>(a, b, c, d, e, f);           \
+    }                                                                   \
+}
+
 DenseElementResult
 SetOrExtendAnyBoxedOrUnboxedDenseElements(ExclusiveContext* cx, JSObject* obj,
                                           uint32_t start, const Value* vp, uint32_t count,
@@ -691,7 +803,7 @@ CopyAnyBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* dst, JSObject* src,
 void
 SetAnyBoxedOrUnboxedInitializedLength(JSContext* cx, JSObject* obj, size_t initlen);
 
-bool
+DenseElementResult
 EnsureAnyBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* obj, size_t count);
 
 } // namespace js

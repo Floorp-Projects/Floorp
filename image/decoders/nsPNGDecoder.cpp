@@ -693,7 +693,7 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
     return;
   }
 
-  if (row_num >= (png_uint_32) decoder->mFrameRect.height) {
+  if (row_num >= static_cast<png_uint_32>(decoder->mFrameRect.height)) {
     return;
   }
 
@@ -772,11 +772,14 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
         png_longjmp(decoder->mPNG, 1);
     }
 
-    if (decoder->mNumFrames <= 1) {
-      // Only do incremental image display for the first frame
-      // XXXbholley - this check should be handled in the superclass
-      nsIntRect r(0, row_num, width, 1);
-      decoder->PostInvalidation(r);
+    if (!decoder->interlacebuf) {
+      // Do line-by-line partial invalidations for non-interlaced images
+      decoder->PostInvalidation(IntRect(0, row_num, width, 1));
+    } else if (row_num ==
+               static_cast<png_uint_32>(decoder->mFrameRect.height - 1)) {
+      // Do only one full image invalidation for each pass (Bug 1187569)
+      decoder->PostInvalidation(IntRect(0, 0, width,
+                                decoder->mFrameRect.height));
     }
   }
 }

@@ -810,6 +810,27 @@ APZCCallbackHelper::NotifyFlushComplete()
   observerService->NotifyObservers(nullptr, "apz-repaints-flushed", nullptr);
 }
 
+static int32_t sActiveSuppressDisplayport = 0;
+
+void
+APZCCallbackHelper::SuppressDisplayport(const bool& aEnabled)
+{
+  if (aEnabled) {
+    sActiveSuppressDisplayport++;
+  } else {
+    sActiveSuppressDisplayport--;
+  }
+
+  MOZ_ASSERT(sActiveSuppressDisplayport >= 0);
+}
+
+bool
+APZCCallbackHelper::IsDisplayportSuppressed()
+{
+  return sActiveSuppressDisplayport > 0;
+}
+
+
 } // namespace layers
 } // namespace mozilla
 

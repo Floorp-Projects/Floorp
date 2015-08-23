@@ -159,7 +159,7 @@ void
 nsQueryContentEventResult::SetEventResult(nsIWidget* aWidget,
                                           const WidgetQueryContentEvent &aEvent)
 {
-  mEventID = aEvent.message;
+  mEventID = aEvent.mMessage;
   mSucceeded = aEvent.mSucceeded;
   mReversed = aEvent.mReply.mReversed;
   mRect = aEvent.mReply.mRect;

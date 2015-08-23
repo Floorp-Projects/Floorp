@@ -420,12 +420,12 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
   NS_ASSERTION(aEvent, "Trying to dispatch without WidgetEvent!");
   NS_ENSURE_TRUE(!aEvent->mFlags.mIsBeingDispatched,
                  NS_ERROR_DOM_INVALID_STATE_ERR);
-  NS_ASSERTION(!aTargets || !aEvent->message, "Wrong parameters!");
+  NS_ASSERTION(!aTargets || !aEvent->mMessage, "Wrong parameters!");
 
   // If we're dispatching an already created DOMEvent object, make
   // sure it is initialized!
   // If aTargets is non-null, the event isn't going to be dispatched.
-  NS_ENSURE_TRUE(aEvent->message || !aDOMEvent || aTargets,
+  NS_ENSURE_TRUE(aEvent->mMessage || !aDOMEvent || aTargets,
                  NS_ERROR_DOM_INVALID_STATE_ERR);
 
 #ifdef MOZ_TASK_TRACER
@@ -493,7 +493,8 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
   }
 
 #ifdef DEBUG
-  if (aEvent->message != NS_EVENT_NULL && !nsContentUtils::IsSafeToRunScript()) {
+  if (aEvent->mMessage != NS_EVENT_NULL &&
+      !nsContentUtils::IsSafeToRunScript()) {
     nsresult rv = NS_ERROR_FAILURE;
     if (target->GetContextForEventHandlers(&rv) ||
         NS_FAILED(rv)) {

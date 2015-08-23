@@ -7,17 +7,24 @@
 #ifndef mozilla_dom_PermissionStatus_h_
 #define mozilla_dom_PermissionStatus_h_
 
+#include "mozilla/dom/PermissionsBinding.h"
 #include "mozilla/dom/PermissionStatusBinding.h"
 #include "mozilla/DOMEventTargetHelper.h"
 
 namespace mozilla {
 namespace dom {
 
+class PermissionObserver;
+
 class PermissionStatus final
   : public DOMEventTargetHelper
 {
+  friend class PermissionObserver;
+
 public:
-  explicit PermissionStatus(nsPIDOMWindow* aWindow, PermissionState aState);
+  static already_AddRefed<PermissionStatus> Create(nsPIDOMWindow* aWindow,
+                                                   PermissionName aName,
+                                                   ErrorResult& aRv);
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
@@ -29,7 +36,20 @@ public:
 private:
   ~PermissionStatus();
 
+  PermissionStatus(nsPIDOMWindow* aWindow, PermissionName aName);
+
+  nsresult Init();
+
+  nsresult UpdateState();
+
+  nsIPrincipal* GetPrincipal() const;
+
+  void PermissionChanged();
+
+  PermissionName mName;
   PermissionState mState;
+
+  nsRefPtr<PermissionObserver> mObserver;
 };
 
 } // namespace dom

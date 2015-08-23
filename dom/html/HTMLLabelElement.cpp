@@ -104,7 +104,7 @@ HTMLLabelElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
   WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
   if (mHandlingEvent ||
       (!(mouseEvent && mouseEvent->IsLeftClickEvent()) &&
-       aVisitor.mEvent->message != NS_MOUSE_BUTTON_DOWN) ||
+       aVisitor.mEvent->mMessage != NS_MOUSE_BUTTON_DOWN) ||
       aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault ||
       !aVisitor.mPresContext ||
       // Don't handle the event if it's already been handled by another label
@@ -122,7 +122,7 @@ HTMLLabelElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
 
   if (content) {
     mHandlingEvent = true;
-    switch (aVisitor.mEvent->message) {
+    switch (aVisitor.mEvent->mMessage) {
       case NS_MOUSE_BUTTON_DOWN:
         if (mouseEvent->button == WidgetMouseEvent::eLeftButton) {
           // We reset the mouse-down point on every event because there is

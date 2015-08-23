@@ -101,7 +101,7 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
                              bool& aIsHandlingUserInput,
                              nsCOMPtr<nsIContent>& aCurrentEventContent)
 {
-  switch (aEvent->message) {
+  switch (aEvent->mMessage) {
     case NS_TOUCH_START: {
       aIsHandlingUserInput = true;
       WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();
@@ -123,7 +123,7 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
           // If it is not already in the queue, it is a new touch
           touch->mChanged = true;
         }
-        touch->mMessage = aEvent->message;
+        touch->mMessage = aEvent->mMessage;
         gCaptureTouchList->Put(id, touch);
       }
       break;
@@ -140,7 +140,7 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
           continue;
         }
         int32_t id = touch->Identifier();
-        touch->mMessage = aEvent->message;
+        touch->mMessage = aEvent->mMessage;
 
         nsRefPtr<dom::Touch> oldTouch = gCaptureTouchList->GetWeak(id);
         if (!oldTouch) {
@@ -203,7 +203,7 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
         if (!touch) {
           continue;
         }
-        touch->mMessage = aEvent->message;
+        touch->mMessage = aEvent->mMessage;
         touch->mChanged = true;
 
         int32_t id = touch->Identifier();

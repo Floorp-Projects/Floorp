@@ -2250,7 +2250,7 @@ nsresult
 nsGenericHTMLFormElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   if (aVisitor.mEvent->mFlags.mIsTrusted) {
-    switch (aVisitor.mEvent->message) {
+    switch (aVisitor.mEvent->mMessage) {
       case NS_FOCUS_CONTENT:
       {
         // Check to see if focus has bubbled up from a form control's

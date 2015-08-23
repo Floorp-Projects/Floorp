@@ -391,6 +391,20 @@ var ContentMessages = {
     }
   },
 
+  androidScrollForward: function adjustUp() {
+    return {
+      name: 'AccessFu:AndroidScroll',
+      json: { origin: 'top', direction: 'forward' }
+    };
+  },
+
+  androidScrollBackward: function adjustDown() {
+    return {
+      name: 'AccessFu:AndroidScroll',
+      json: { origin: 'top', direction: 'backward' }
+    };
+  },
+
   focusSelector: function focusSelector(aSelector, aBlur) {
     return {
       name: 'AccessFuTest:Focus',

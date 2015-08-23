@@ -141,7 +141,7 @@ public:
   }
 
   void
-  WaitUntil(Promise& aPromise);
+  WaitUntil(Promise& aPromise, ErrorResult& aRv);
 
   already_AddRefed<Promise>
   GetPromise() const

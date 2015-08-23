@@ -11,13 +11,13 @@
 #include <android/log.h>
 #include "AndroidSurfaceTexture.h"
 #include "gfxImageSurface.h"
+#include "gfxPrefs.h"
 #include "AndroidBridge.h"
 #include "nsThreadUtils.h"
 #include "mozilla/gfx/Matrix.h"
 #include "GeneratedJNIWrappers.h"
 #include "SurfaceTexture.h"
 #include "GLContext.h"
-#include "mozilla/Preferences.h"
 
 using namespace mozilla;
 using namespace mozilla::jni;
@@ -132,7 +132,7 @@ AndroidSurfaceTexture::UpdateCanDetach()
   // The API for attach/detach only exists on 16+, and PowerVR has some sort of
   // fencing issue. Additionally, attach/detach seems to be busted on at least some
   // Mali adapters (400MP2 for sure, bug 1131793)
-  bool canDetach = Preferences::GetBool("gfx.SurfaceTexture.detach.enabled", true);
+  bool canDetach = gfxPrefs::SurfaceTextureDetachEnabled();
 
   mCanDetach = AndroidBridge::Bridge()->GetAPIVersion() >= 16 &&
     (!mAttachedContext || mAttachedContext->Vendor() != GLVendor::Imagination) &&

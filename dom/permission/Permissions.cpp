@@ -9,8 +9,8 @@
 #include "mozilla/dom/PermissionsBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/Services.h"
-
 #include "nsIPermissionManager.h"
+#include "PermissionUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -42,89 +42,52 @@ Permissions::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 
 namespace {
 
-PermissionState
-ActionToPermissionState(uint32_t aAction)
-{
-  switch (aAction) {
-    case nsIPermissionManager::ALLOW_ACTION:
-      return PermissionState::Granted;
-
-    case nsIPermissionManager::DENY_ACTION:
-      return PermissionState::Denied;
-
-    default:
-    case nsIPermissionManager::PROMPT_ACTION:
-      return PermissionState::Prompt;
-  }
-}
-
-nsresult
-CheckPermission(const char* aName,
-                nsPIDOMWindow* aWindow,
-                PermissionState& aResult)
-{
-  MOZ_ASSERT(aName);
-  MOZ_ASSERT(aWindow);
-
-  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
-  if (NS_WARN_IF(!permMgr)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  uint32_t action = nsIPermissionManager::DENY_ACTION;
-  nsresult rv = permMgr->TestPermissionFromWindow(aWindow, aName, &action);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  aResult = ActionToPermissionState(action);
-  return NS_OK;
-}
-
-nsresult
-CheckPushPermission(JSContext* aCx,
-                    JS::Handle<JSObject*> aPermission,
-                    nsPIDOMWindow* aWindow,
-                    PermissionState& aResult)
+already_AddRefed<PermissionStatus>
+CreatePushPermissionStatus(JSContext* aCx,
+                           JS::Handle<JSObject*> aPermission,
+                           nsPIDOMWindow* aWindow,
+                           ErrorResult& aRv)
 {
   PushPermissionDescriptor permission;
   JS::Rooted<JS::Value> value(aCx, JS::ObjectOrNullValue(aPermission));
   if (NS_WARN_IF(!permission.Init(aCx, value))) {
-    return NS_ERROR_UNEXPECTED;
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
   }
 
   if (permission.mUserVisible) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
   }
 
-  return CheckPermission("push", aWindow, aResult);
+  return PermissionStatus::Create(aWindow, permission.mName, aRv);
 }
 
-nsresult
-CheckPermission(JSContext* aCx,
-                JS::Handle<JSObject*> aPermission,
-                nsPIDOMWindow* aWindow,
-                PermissionState& aResult)
+already_AddRefed<PermissionStatus>
+CreatePermissionStatus(JSContext* aCx,
+                       JS::Handle<JSObject*> aPermission,
+                       nsPIDOMWindow* aWindow,
+                       ErrorResult& aRv)
 {
   PermissionDescriptor permission;
   JS::Rooted<JS::Value> value(aCx, JS::ObjectOrNullValue(aPermission));
   if (NS_WARN_IF(!permission.Init(aCx, value))) {
-    return NS_ERROR_UNEXPECTED;
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
   }
 
   switch (permission.mName) {
     case PermissionName::Geolocation:
-      return CheckPermission("geo", aWindow, aResult);
-
     case PermissionName::Notifications:
-      return CheckPermission("desktop-notification", aWindow, aResult);
+      return PermissionStatus::Create(aWindow, permission.mName, aRv);
 
     case PermissionName::Push:
-      return CheckPushPermission(aCx, aPermission, aWindow, aResult);
+      return CreatePushPermissionStatus(aCx, aPermission, aWindow, aRv);
 
     case PermissionName::Midi:
     default:
-      return NS_ERROR_NOT_IMPLEMENTED;
+      aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+      return nullptr;
   }
 }
 
@@ -146,12 +109,14 @@ Permissions::Query(JSContext* aCx,
     return nullptr;
   }
 
-  PermissionState state = PermissionState::Denied;
-  nsresult rv = CheckPermission(aCx, aPermission, mWindow, state);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    promise->MaybeReject(rv);
+  nsRefPtr<PermissionStatus> status =
+    CreatePermissionStatus(aCx, aPermission, mWindow, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    MOZ_ASSERT(!status);
+    promise->MaybeReject(aRv);
   } else {
-    promise->MaybeResolve(new PermissionStatus(mWindow, state));
+    MOZ_ASSERT(status);
+    promise->MaybeResolve(status);
   }
   return promise.forget();
 }

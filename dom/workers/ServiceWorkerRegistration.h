@@ -106,8 +106,8 @@ public:
   ServiceWorkerRegistrationMainThread(nsPIDOMWindow* aWindow,
                                       const nsAString& aScope);
 
-  void
-  Update();
+  already_AddRefed<Promise>
+  Update(ErrorResult& aRv);
 
   already_AddRefed<Promise>
   Unregister(ErrorResult& aRv);
@@ -195,8 +195,8 @@ public:
   ServiceWorkerRegistrationWorkerThread(workers::WorkerPrivate* aWorkerPrivate,
                                         const nsAString& aScope);
 
-  void
-  Update();
+  already_AddRefed<Promise>
+  Update(ErrorResult& aRv);
 
   already_AddRefed<Promise>
   Unregister(ErrorResult& aRv);

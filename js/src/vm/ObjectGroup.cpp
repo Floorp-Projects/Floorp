@@ -868,6 +868,206 @@ ObjectGroup::newArrayObject(ExclusiveContext* cx,
                                      ShouldUpdateTypes::DontUpdate);
 }
 
+static bool
+GiveObjectGroup(ExclusiveContext* cx, JSObject* source, JSObject* target)
+{
+    MOZ_ASSERT(source->group() != target->group());
+
+    if (!target->is<ArrayObject>() && !target->is<UnboxedArrayObject>())
+        return true;
+
+    if (target->group()->maybePreliminaryObjects()) {
+        bool force = IsInsideNursery(source);
+        target->group()->maybePreliminaryObjects()->maybeAnalyze(cx, target->group(), force);
+    }
+
+    if (target->is<ArrayObject>()) {
+        ObjectGroup* sourceGroup = source->group();
+
+        if (source->is<UnboxedArrayObject>()) {
+            Shape* shape = target->as<ArrayObject>().lastProperty();
+            if (!UnboxedArrayObject::convertToNativeWithGroup(cx, source, target->group(), shape))
+                return false;
+        } else if (source->is<ArrayObject>()) {
+            source->setGroup(target->group());
+        } else {
+            return true;
+        }
+
+        if (sourceGroup->maybePreliminaryObjects())
+            sourceGroup->maybePreliminaryObjects()->unregisterObject(source);
+        if (target->group()->maybePreliminaryObjects())
+            target->group()->maybePreliminaryObjects()->registerNewObject(source);
+
+        for (size_t i = 0; i < source->as<ArrayObject>().getDenseInitializedLength(); i++) {
+            Value v = source->as<ArrayObject>().getDenseElement(i);
+            AddTypePropertyId(cx, source->group(), source, JSID_VOID, v);
+        }
+
+        return true;
+    }
+
+    if (target->is<UnboxedArrayObject>()) {
+        if (!source->is<UnboxedArrayObject>())
+            return true;
+        if (source->as<UnboxedArrayObject>().elementType() != JSVAL_TYPE_INT32)
+            return true;
+        if (target->as<UnboxedArrayObject>().elementType() != JSVAL_TYPE_DOUBLE)
+            return true;
+
+        return source->as<UnboxedArrayObject>().convertInt32ToDouble(cx, target->group());
+    }
+
+    return true;
+}
+
+static bool
+SameGroup(JSObject* first, JSObject* second)
+{
+    return first->group() == second->group();
+}
+
+// When generating a multidimensional array of literals, such as
+// [[1,2],[3,4],[5.5,6.5]], try to ensure that each element of the array has
+// the same group. This is mainly important when the elements might have
+// different native vs. unboxed layouts, or different unboxed layouts, and
+// accessing the heterogenous layouts from JIT code will be much slower than
+// if they were homogenous.
+//
+// To do this, with each new array element we compare it with one of the
+// previous ones, and try to mutate the group of the new element to fit that
+// of the old element. If this isn't possible, the groups for all old elements
+// are mutated to fit that of the new element.
+bool
+js::CombineArrayElementTypes(ExclusiveContext* cx, JSObject* newObj,
+                             const Value* compare, size_t ncompare)
+{
+    if (!ncompare || !compare[0].isObject())
+        return true;
+
+    JSObject* oldObj = &compare[0].toObject();
+    if (SameGroup(oldObj, newObj))
+        return true;
+
+    if (!GiveObjectGroup(cx, oldObj, newObj))
+        return false;
+
+    if (SameGroup(oldObj, newObj))
+        return true;
+
+    if (!GiveObjectGroup(cx, newObj, oldObj))
+        return false;
+
+    if (SameGroup(oldObj, newObj)) {
+        for (size_t i = 1; i < ncompare; i++) {
+            if (compare[i].isObject() && !SameGroup(&compare[i].toObject(), newObj)) {
+                if (!GiveObjectGroup(cx, newObj, &compare[i].toObject()))
+                    return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+// Similarly to CombineArrayElementTypes, if we are generating an array of
+// plain objects with a consistent property layout, such as
+// [{p:[1,2]},{p:[3,4]},{p:[5.5,6.5]}], where those plain objects in
+// turn have arrays as their own properties, try to ensure that a consistent
+// group is given to each array held by the same property of the plain objects.
+bool
+js::CombinePlainObjectPropertyTypes(ExclusiveContext* cx, JSObject* newObj,
+                                    const Value* compare, size_t ncompare)
+{
+    if (!ncompare || !compare[0].isObject())
+        return true;
+
+    JSObject* oldObj = &compare[0].toObject();
+    if (!SameGroup(oldObj, newObj))
+        return true;
+
+    if (newObj->is<PlainObject>()) {
+        MOZ_ASSERT(newObj->as<PlainObject>().lastProperty() == oldObj->as<PlainObject>().lastProperty());
+
+        for (size_t slot = 0; slot < newObj->as<PlainObject>().slotSpan(); slot++) {
+            Value newValue = newObj->as<PlainObject>().getSlot(slot);
+            Value oldValue = oldObj->as<PlainObject>().getSlot(slot);
+
+            if (!newValue.isObject() || !oldValue.isObject())
+                continue;
+
+            JSObject* newInnerObj = &newValue.toObject();
+            JSObject* oldInnerObj = &oldValue.toObject();
+
+            if (SameGroup(oldInnerObj, newInnerObj))
+                continue;
+
+            if (!GiveObjectGroup(cx, oldInnerObj, newInnerObj))
+                return false;
+
+            if (SameGroup(oldInnerObj, newInnerObj))
+                continue;
+
+            if (!GiveObjectGroup(cx, newInnerObj, oldInnerObj))
+                return false;
+
+            if (SameGroup(oldInnerObj, newInnerObj)) {
+                for (size_t i = 1; i < ncompare; i++) {
+                    if (compare[i].isObject() && SameGroup(&compare[i].toObject(), newObj)) {
+                        Value otherValue = compare[i].toObject().as<PlainObject>().getSlot(slot);
+                        if (otherValue.isObject() && !SameGroup(&otherValue.toObject(), newInnerObj)) {
+                            if (!GiveObjectGroup(cx, newInnerObj, &otherValue.toObject()))
+                                return false;
+                        }
+                    }
+                }
+            }
+        }
+    } else if (newObj->is<UnboxedPlainObject>()) {
+        const UnboxedLayout& layout = newObj->as<UnboxedPlainObject>().layout();
+        const int32_t* traceList = layout.traceList();
+        if (!traceList)
+            return true;
+
+        uint8_t* newData = newObj->as<UnboxedPlainObject>().data();
+        uint8_t* oldData = oldObj->as<UnboxedPlainObject>().data();
+
+        for (; *traceList != -1; traceList++) {}
+        traceList++;
+        for (; *traceList != -1; traceList++) {
+            JSObject* newInnerObj = *reinterpret_cast<JSObject**>(newData + *traceList);
+            JSObject* oldInnerObj = *reinterpret_cast<JSObject**>(oldData + *traceList);
+
+            if (!newInnerObj || !oldInnerObj || SameGroup(oldInnerObj, newInnerObj))
+                continue;
+
+            if (!GiveObjectGroup(cx, oldInnerObj, newInnerObj))
+                return false;
+
+            if (SameGroup(oldInnerObj, newInnerObj))
+                continue;
+
+            if (!GiveObjectGroup(cx, newInnerObj, oldInnerObj))
+                return false;
+
+            if (SameGroup(oldInnerObj, newInnerObj)) {
+                for (size_t i = 1; i < ncompare; i++) {
+                    if (compare[i].isObject() && SameGroup(&compare[i].toObject(), newObj)) {
+                        uint8_t* otherData = compare[i].toObject().as<UnboxedPlainObject>().data();
+                        JSObject* otherInnerObj = *reinterpret_cast<JSObject**>(otherData + *traceList);
+                        if (otherInnerObj && !SameGroup(otherInnerObj, newInnerObj)) {
+                            if (!GiveObjectGroup(cx, newInnerObj, otherInnerObj))
+                                return false;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
 /////////////////////////////////////////////////////////////////////
 // ObjectGroupCompartment PlainObjectTable
 /////////////////////////////////////////////////////////////////////

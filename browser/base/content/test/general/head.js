@@ -558,8 +558,8 @@ let FullZoomHelper = {
       let didPs = false;
       let didZoom = false;
 
-      gBrowser.addEventListener("pageshow", function (event) {
-        gBrowser.removeEventListener("pageshow", arguments.callee, true);
+      gBrowser.addEventListener("pageshow", function listener(event) {
+        gBrowser.removeEventListener("pageshow", listener, true);
         didPs = true;
         if (didZoom)
           resolve();
@@ -718,9 +718,9 @@ function assertWebRTCIndicatorStatus(expected) {
       let win = Services.wm.getMostRecentWindow("Browser:WebRTCGlobalIndicator");
       if (win) {
         yield new Promise((resolve, reject) => {
-          win.addEventListener("unload", (e) => {
+          win.addEventListener("unload", function listener(e) {
             if (e.target == win.document) {
-              win.removeEventListener("unload", arguments.callee);
+              win.removeEventListener("unload", listener);
               resolve();
             }
           }, false);

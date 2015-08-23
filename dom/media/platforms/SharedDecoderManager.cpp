@@ -120,13 +120,6 @@ SharedDecoderManager::CreateVideoDecoder(
   return proxy.forget();
 }
 
-void
-SharedDecoderManager::DisableHardwareAcceleration()
-{
-  MOZ_ASSERT(mPDM);
-  mPDM->DisableHardwareAcceleration();
-}
-
 bool
 SharedDecoderManager::Recreate(const VideoInfo& aConfig)
 {

@@ -23,20 +23,26 @@ function test() {
                              Uint32Array,
                              Float32Array,
                              Float64Array,
-                             Uint8ClampedArray ];
+                             Uint8ClampedArray,
+                             DataView ];
 
         for (var ctor of constructors) {
+            var dataview = (ctor === DataView);
+
             var buf = new buffer_ctor(size);
             var old_arr = new ctor(buf);
             assertEq(buf.byteLength, size);
             assertEq(buf, old_arr.buffer);
-            assertEq(old_arr.length, size / old_arr.BYTES_PER_ELEMENT);
+            if (!dataview)
+                assertEq(old_arr.length, size / old_arr.BYTES_PER_ELEMENT);
 
             var copy_arr = deserialize(serialize(old_arr, [ buf ]));
             assertEq(buf.byteLength, 0, "donor array buffer should be neutered");
-            assertEq(old_arr.length, 0, "donor typed array should be neutered");
+            if (!dataview)
+                assertEq(old_arr.length, 0, "donor typed array should be neutered");
             assertEq(copy_arr.buffer.byteLength == size, true);
-            assertEq(copy_arr.length, size / old_arr.BYTES_PER_ELEMENT);
+            if (!dataview)
+                assertEq(copy_arr.length, size / old_arr.BYTES_PER_ELEMENT);
 
             buf = null;
             old_arr = null;
@@ -44,12 +50,16 @@ function test() {
         }
 
         for (var ctor of constructors) {
+            var dataview = (ctor === DataView);
+
             var buf = new buffer_ctor(size);
             var old_arr = new ctor(buf);
             var dv = new DataView(buf); // Second view
             var copy_arr = deserialize(serialize(old_arr, [ buf ]));
             assertEq(buf.byteLength, 0, "donor array buffer should be neutered");
-            assertEq(old_arr.length, 0, "donor typed array should be neutered");
+            assertEq(old_arr.byteLength, 0, "donor typed array should be neutered");
+            if (!dataview)
+                assertEq(old_arr.length, 0, "donor typed array should be neutered");
             assertEq(dv.byteLength, 0, "all views of donor array buffer should be neutered");
 
             buf = null;

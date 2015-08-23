@@ -1224,6 +1224,9 @@ GetPKPConsoleErrorTag(uint32_t failureResult, nsAString& consoleErrorTag)
         case nsISiteSecurityService::ERROR_COULD_NOT_SAVE_STATE:
             consoleErrorTag = NS_LITERAL_STRING("PKPCouldNotSaveState");
             break;
+        case nsISiteSecurityService::ERROR_ROOT_NOT_BUILT_IN:
+            consoleErrorTag = NS_LITERAL_STRING("PKPRootNotBuiltIn");
+            break;
         default:
             consoleErrorTag = NS_LITERAL_STRING("PKPUnknownError");
             break;

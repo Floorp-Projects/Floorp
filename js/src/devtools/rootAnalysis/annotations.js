@@ -251,23 +251,8 @@ function ignoreGCFunction(mangled)
 
 function stripUCSAndNamespace(name)
 {
-    if (name.startsWith('struct '))
-        name = name.substr(7);
-    if (name.startsWith('class '))
-        name = name.substr(6);
-    if (name.startsWith('const '))
-        name = name.substr(6);
-    if (name.startsWith('js::ctypes::'))
-        name = name.substr(12);
-    if (name.startsWith('js::'))
-        name = name.substr(4);
-    if (name.startsWith('JS::'))
-        name = name.substr(4);
-    if (name.startsWith('mozilla::dom::'))
-        name = name.substr(14);
-    if (name.startsWith('mozilla::'))
-        name = name.substr(9);
-
+    name = name.replace(/(struct|class|union|const) /g, "");
+    name = name.replace(/(js::ctypes::|js::|JS::|mozilla::dom::|mozilla::)/g, "");
     return name;
 }
 

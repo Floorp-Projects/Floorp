@@ -4,7 +4,7 @@
 
 from marionette import MarionetteTestCase
 from marionette_driver.errors import (ElementNotAccessibleException,
-                                     ElementNotVisibleException)
+                                      ElementNotVisibleException)
 
 
 class TestAccessibility(MarionetteTestCase):
@@ -16,7 +16,13 @@ class TestAccessibility(MarionetteTestCase):
         "button1",
         # Button2 is an accessible button with a valid accessible name
         # computed from aria-label
-        "button2"
+        "button2",
+        # Button13 is an accessible button that is implemented via role="button"
+        # and is explorable using tabindex="0"
+        "button13",
+        # button17 is an accessible button that overrides parent's
+        # pointer-events:none; property with its own pointer-events:all;
+        "button17"
     ]
 
     # Elements that are not accessible with the accessibility API
@@ -35,7 +41,10 @@ class TestAccessibility(MarionetteTestCase):
         "button7",
         # Button8 is not currently visible via the accessibility API and may
         # not be manipulated by it (in hidden subtree)
-        "button8"
+        "button8",
+        # Button14 is accessible button but is not explorable because of lack
+        # of tabindex that would make it focusable.
+        "button14"
     ]
 
     # Elements that are either accessible to accessibility API or not accessible
@@ -56,6 +65,12 @@ class TestAccessibility(MarionetteTestCase):
     displayed_but_a11y_hidden_elementIDs = ["button7", "button8"]
 
     disabled_elementIDs = ["button11", "no_accessible_but_disabled"]
+
+    # Elements that are enabled but otherwise disabled or not explorable via the accessibility API
+    disabled_accessibility_elementIDs = ["button12", "button15", "button16"]
+
+    # Elements that are reporting selected state
+    valid_option_elementIDs = ["option1", "option2"]
 
     def run_element_test(self, ids, testFn):
         for id in ids:
@@ -129,13 +144,50 @@ class TestAccessibility(MarionetteTestCase):
         # No exception should be raised
         self.run_element_test(self.displayed_elementIDs, lambda element: element.is_displayed())
 
-    def test_is_element_is_not_enabled_to_accessbility(self):
+    def test_element_is_not_enabled_to_accessbility(self):
         self.setup_accessibility()
-        # Button is enabled but disabled via the accessibility API
-        self.assertRaises(ElementNotAccessibleException,
-                          self.marionette.find_element("id", "button12").is_enabled)
+        # Buttons are enabled but disabled/not-explorable via the accessibility API
+        self.run_element_test(self.disabled_accessibility_elementIDs,
+                              lambda element: self.assertRaises(ElementNotAccessibleException,
+                                                                element.is_enabled))
+
+        # Buttons are enabled but disabled/not-explorable via the accessibility API and thus are not
+        # clickable via the accessibility API
+        self.run_element_test(self.disabled_accessibility_elementIDs,
+                              lambda element: self.assertRaises(ElementNotAccessibleException,
+                                                                element.click))
+
+        self.setup_accessibility(False, False)
+        self.run_element_test(self.disabled_accessibility_elementIDs,
+                              lambda element: element.is_enabled())
+        self.run_element_test(self.disabled_accessibility_elementIDs,
+                              lambda element: element.click())
 
     def test_element_is_enabled_to_accessibility(self):
         self.setup_accessibility()
         # No exception should be raised
         self.run_element_test(self.disabled_elementIDs, lambda element: element.is_enabled())
+
+    def test_send_keys_raises_no_exception(self):
+        self.setup_accessibility()
+        # Sending keys to valid input should not raise any exceptions
+        self.run_element_test(['input1'], lambda element: element.send_keys("a"))
+
+        self.setup_accessibility(False, False)
+        # Sending keys to invalid element should not raise any exceptions when raising accessibility
+        # exceptions is disabled
+        self.run_element_test(['button5'], lambda element: element.send_keys("abc"))
+
+    def test_send_keys_raises_element_not_accessible(self):
+        self.setup_accessibility()
+        # Sending keys to invalid element should raise an exception
+        self.run_element_test(['button5'],
+                              lambda element: self.assertRaises(ElementNotAccessibleException,
+                                                                element.send_keys))
+
+    def test_is_selected_raises_no_exception(self):
+        self.setup_accessibility()
+        # No exception should be raised for valid options
+        self.run_element_test(self.valid_option_elementIDs, lambda element: element.is_selected())
+        # No exception should be raised for non-selectable elements
+        self.run_element_test(self.valid_elementIDs, lambda element: element.is_selected())

@@ -134,6 +134,8 @@ this.AccessFu = { // jshint ignore:line
     Services.obs.addObserver(this, 'Accessibility:Focus', false);
     Services.obs.addObserver(this, 'Accessibility:ActivateObject', false);
     Services.obs.addObserver(this, 'Accessibility:LongPress', false);
+    Services.obs.addObserver(this, 'Accessibility:ScrollForward', false);
+    Services.obs.addObserver(this, 'Accessibility:ScrollBackward', false);
     Services.obs.addObserver(this, 'Accessibility:MoveByGranularity', false);
     Utils.win.addEventListener('TabOpen', this);
     Utils.win.addEventListener('TabClose', this);
@@ -187,6 +189,8 @@ this.AccessFu = { // jshint ignore:line
     Services.obs.removeObserver(this, 'Accessibility:Focus');
     Services.obs.removeObserver(this, 'Accessibility:ActivateObject');
     Services.obs.removeObserver(this, 'Accessibility:LongPress');
+    Services.obs.removeObserver(this, 'Accessibility:ScrollForward');
+    Services.obs.removeObserver(this, 'Accessibility:ScrollBackward');
     Services.obs.removeObserver(this, 'Accessibility:MoveByGranularity');
 
     delete this._quicknavModesPref;
@@ -314,6 +318,12 @@ this.AccessFu = { // jshint ignore:line
         break;
       case 'Accessibility:LongPress':
         this.Input.sendContextMenuMessage();
+        break;
+      case 'Accessibility:ScrollForward':
+        this.Input.androidScroll('forward');
+        break;
+      case 'Accessibility:ScrollBackward':
+        this.Input.androidScroll('backward');
         break;
       case 'Accessibility:Focus':
         this._focused = JSON.parse(aData);
@@ -835,6 +845,12 @@ var Input = {
                         { action: aAction, rule: aRule,
                           origin: 'top', inputType: aInputType,
                           adjustRange: aAdjustRange });
+  },
+
+  androidScroll: function androidScroll(aDirection) {
+    let mm = Utils.getMessageManager(Utils.CurrentBrowser);
+    mm.sendAsyncMessage('AccessFu:AndroidScroll',
+                        { direction: aDirection, origin: 'top' });
   },
 
   moveByGranularity: function moveByGranularity(aDetails) {

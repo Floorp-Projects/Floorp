@@ -339,9 +339,12 @@ class MochitestRunner(MozbuildObject):
         manifest.tests.extend(tests)
         options.manifestFile = manifest
 
-        # XXX why is this such a special case?
-        if len(tests) == 1 and options.closeWhenDone and suite == 'plain':
-            options.closeWhenDone = False
+        # When developing mochitest-plain tests, it's often useful to be able to
+        # refresh the page to pick up modifications. Therefore leave the browser
+        # open if only running a single mochitest-plain test. This behaviour can
+        # be overridden by passing in --keep-open=false.
+        if len(tests) == 1 and options.keep_open is None and suite == 'plain':
+            options.keep_open = True
 
         # We need this to enable colorization of output.
         self.log_manager.enable_unstructured()

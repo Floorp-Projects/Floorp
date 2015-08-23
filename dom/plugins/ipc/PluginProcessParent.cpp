@@ -67,7 +67,7 @@ AddSandboxAllowedFile(vector<std::wstring>& aAllowedFiles, nsIProperties* aDirSv
     if (!aSuffix.IsEmpty()) {
         userDirPath.Append(aSuffix);
     }
-    aAllowedFiles.push_back(userDirPath.get());
+    aAllowedFiles.push_back(std::wstring(userDirPath.get()));
     return;
 }
 

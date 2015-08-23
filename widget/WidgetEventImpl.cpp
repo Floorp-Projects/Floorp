@@ -77,7 +77,7 @@ WidgetEvent::IsNativeEventDelivererForPlugin() const
 bool
 WidgetEvent::HasMouseEventMessage() const
 {
-  switch (message) {
+  switch (mMessage) {
     case NS_MOUSE_BUTTON_DOWN:
     case NS_MOUSE_BUTTON_UP:
     case NS_MOUSE_CLICK:
@@ -98,7 +98,7 @@ WidgetEvent::HasMouseEventMessage() const
 bool
 WidgetEvent::HasDragEventMessage() const
 {
-  switch (message) {
+  switch (mMessage) {
     case NS_DRAGDROP_ENTER:
     case NS_DRAGDROP_OVER:
     case NS_DRAGDROP_EXIT:
@@ -118,7 +118,7 @@ WidgetEvent::HasDragEventMessage() const
 bool
 WidgetEvent::HasKeyEventMessage() const
 {
-  switch (message) {
+  switch (mMessage) {
     case NS_KEY_DOWN:
     case NS_KEY_PRESS:
     case NS_KEY_UP:
@@ -135,7 +135,7 @@ WidgetEvent::HasKeyEventMessage() const
 bool
 WidgetEvent::HasIMEEventMessage() const
 {
-  switch (message) {
+  switch (mMessage) {
     case NS_COMPOSITION_START:
     case NS_COMPOSITION_END:
     case NS_COMPOSITION_UPDATE:
@@ -151,8 +151,8 @@ WidgetEvent::HasIMEEventMessage() const
 bool
 WidgetEvent::HasPluginActivationEventMessage() const
 {
-  return message == NS_PLUGIN_ACTIVATE ||
-         message == NS_PLUGIN_FOCUS;
+  return mMessage == NS_PLUGIN_ACTIVATE ||
+         mMessage == NS_PLUGIN_FOCUS;
 }
 
 /******************************************************************************

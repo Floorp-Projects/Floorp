@@ -108,8 +108,8 @@ ClipboardEvent::GetClipboardData()
         new DataTransfer(ToSupports(this), NS_COPY, false, -1);
     } else {
       event->clipboardData =
-        new DataTransfer(ToSupports(this), event->message,
-                         event->message == NS_PASTE,
+        new DataTransfer(ToSupports(this), event->mMessage,
+                         event->mMessage == NS_PASTE,
                          nsIClipboard::kGlobalClipboard);
     }
   }

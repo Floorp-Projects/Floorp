@@ -677,10 +677,10 @@ nsIContent::PreHandleEvent(EventChainPreVisitor& aVisitor)
   // Don't propagate mouseover and mouseout events when mouse is moving
   // inside chrome access only content.
   bool isAnonForEvents = IsRootOfChromeAccessOnlySubtree();
-  if ((aVisitor.mEvent->message == NS_MOUSE_OVER ||
-       aVisitor.mEvent->message == NS_MOUSE_OUT ||
-       aVisitor.mEvent->message == NS_POINTER_OVER ||
-       aVisitor.mEvent->message == NS_POINTER_OUT) &&
+  if ((aVisitor.mEvent->mMessage == NS_MOUSE_OVER ||
+       aVisitor.mEvent->mMessage == NS_MOUSE_OUT ||
+       aVisitor.mEvent->mMessage == NS_POINTER_OVER ||
+       aVisitor.mEvent->mMessage == NS_POINTER_OUT) &&
       // Check if we should stop event propagation when event has just been
       // dispatched or when we're about to propagate from
       // chrome access only subtree or if we are about to propagate out of
@@ -739,7 +739,7 @@ nsIContent::PreHandleEvent(EventChainPreVisitor& aVisitor)
               printf("Stopping %s propagation:"
                      "\n\toriginalTarget=%s \n\tcurrentTarget=%s %s"
                      "\n\trelatedTarget=%s %s \n%s",
-                     (aVisitor.mEvent->message == NS_MOUSE_OVER)
+                     (aVisitor.mEvent->mMessage == NS_MOUSE_OVER)
                        ? "mouseover" : "mouseout",
                      NS_ConvertUTF16toUTF8(ot).get(),
                      NS_ConvertUTF16toUTF8(ct).get(),
@@ -805,7 +805,7 @@ nsIContent::PreHandleEvent(EventChainPreVisitor& aVisitor)
     //   scroll
     //   selectstart
     bool stopEvent = false;
-    switch (aVisitor.mEvent->message) {
+    switch (aVisitor.mEvent->mMessage) {
       case NS_IMAGE_ABORT:
       case NS_LOAD_ERROR:
       case NS_FORM_SELECTED:
@@ -841,7 +841,7 @@ nsIContent::PreHandleEvent(EventChainPreVisitor& aVisitor)
       // The load event is special in that we don't ever propagate it
       // to chrome.
       nsCOMPtr<nsPIDOMWindow> win = OwnerDoc()->GetWindow();
-      EventTarget* parentTarget = win && aVisitor.mEvent->message != NS_LOAD
+      EventTarget* parentTarget = win && aVisitor.mEvent->mMessage != NS_LOAD
         ? win->GetParentTarget() : nullptr;
 
       aVisitor.mParentTarget = parentTarget;

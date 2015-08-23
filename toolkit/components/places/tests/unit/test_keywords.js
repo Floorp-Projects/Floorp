@@ -56,7 +56,7 @@ function expectBookmarkNotifications() {
       }
 
       if (name.startsWith("onItemChanged")) {
-        return (itemId, property) => {
+        return function(itemId, property) {
           if (property != "keyword")
             return;
           let args = Array.from(arguments, arg => {

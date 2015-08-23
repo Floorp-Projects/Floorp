@@ -1143,7 +1143,7 @@ NativeKey::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
   nsIntPoint point(0, 0);
   mWidget->InitEvent(aKeyEvent, &point);
 
-  switch (aKeyEvent.message) {
+  switch (aKeyEvent.mMessage) {
     case NS_KEY_DOWN:
       aKeyEvent.keyCode = mDOMKeyCode;
       // Unique id for this keydown event and its associated keypress.

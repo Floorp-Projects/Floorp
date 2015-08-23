@@ -181,14 +181,24 @@ void
 TextTrackList::CreateAndDispatchTrackEventRunner(TextTrack* aTrack,
                                                  const nsAString& aEventName)
 {
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv = NS_GetMainThread(getter_AddRefs(thread));
+  if (NS_FAILED(rv)) {
+    // If we are not able to get the main-thread object we are shutting down.
+    return;
+  }
+
   TrackEventInit eventInit;
   eventInit.mTrack.SetValue().SetAsTextTrack() = aTrack;
   nsRefPtr<TrackEvent> event =
     TrackEvent::Constructor(this, aEventName, eventInit);
 
   // Dispatch the TrackEvent asynchronously.
-  nsCOMPtr<nsIRunnable> eventRunner = new TrackEventRunner(this, event);
-  NS_DispatchToMainThread(eventRunner);
+  rv = thread->Dispatch(do_AddRef(new TrackEventRunner(this, event)),
+                        NS_DISPATCH_NORMAL);
+
+  // If we are shutting down this can file but it's still ok.
+  NS_WARN_IF(NS_FAILED(rv));
 }
 
 HTMLMediaElement*

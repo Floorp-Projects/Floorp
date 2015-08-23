@@ -52,9 +52,6 @@ task:
       GECKO_HEAD_REPOSITORY: '{{head_repository}}'
       GECKO_HEAD_REV: '{{head_rev}}'
       GECKO_HEAD_REF: '{{head_ref}}'
-      MOZHARNESS_REPOSITORY: '{{mozharness_repository}}'
-      MOZHARNESS_REV: '{{mozharness_rev}}'
-      MOZHARNESS_REF: '{{mozharness_ref}}'
       TOOLTOOL_REPO: 'https://github.com/mozilla/build-tooltool'
       TOOLTOOL_REV: 'master'
 

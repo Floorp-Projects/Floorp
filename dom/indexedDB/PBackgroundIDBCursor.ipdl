@@ -64,7 +64,7 @@ union CursorResponse
 {
   void_t;
   nsresult;
-  ObjectStoreCursorResponse;
+  ObjectStoreCursorResponse[];
   ObjectStoreKeyCursorResponse;
   IndexCursorResponse;
   IndexKeyCursorResponse;
@@ -77,7 +77,7 @@ protocol PBackgroundIDBCursor
 parent:
   DeleteMe();
 
-  Continue(CursorRequestParams params);
+  Continue(CursorRequestParams params, Key key);
 
 child:
   __delete__();
