@@ -127,6 +127,8 @@ class CPOWProxyHandler : public BaseProxyHandler
                              MutableHandleValue v, bool* bp) const override;
     virtual bool objectClassIs(HandleObject obj, js::ESClassValue classValue,
                                JSContext* cx) const override;
+    virtual bool isArray(JSContext* cx, HandleObject obj,
+                         IsArrayAnswer* answer) const override;
     virtual const char* className(JSContext* cx, HandleObject proxy) const override;
     virtual bool regexp_toShared(JSContext* cx, HandleObject proxy, RegExpGuard* g) const override;
     virtual void finalize(JSFreeOp* fop, JSObject* proxy) const override;
@@ -739,6 +741,33 @@ WrapperOwner::objectClassIs(JSContext* cx, HandleObject proxy, js::ESClassValue 
     LOG_STACK();
 
     return result;
+}
+
+bool
+CPOWProxyHandler::isArray(JSContext* cx, HandleObject proxy,
+                          IsArrayAnswer* answer) const
+{
+    FORWARD(isArray, (cx, proxy, answer));
+}
+
+bool
+WrapperOwner::isArray(JSContext* cx, HandleObject proxy, IsArrayAnswer* answer)
+{
+    ObjectId objId = idOf(proxy);
+
+    uint32_t ans;
+    ReturnStatus status;
+    if (!SendIsArray(objId, &status, &ans))
+        return ipcfail(cx);
+
+    LOG_STACK();
+
+    *answer = IsArrayAnswer(ans);
+    MOZ_ASSERT(*answer == IsArrayAnswer::Array ||
+               *answer == IsArrayAnswer::NotArray ||
+               *answer == IsArrayAnswer::RevokedProxy);
+
+    return ok(cx, status);
 }
 
 const char*

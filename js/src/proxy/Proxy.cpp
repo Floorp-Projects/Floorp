@@ -461,6 +461,12 @@ Proxy::objectClassIs(HandleObject proxy, ESClassValue classValue, JSContext* cx)
     return proxy->as<ProxyObject>().handler()->objectClassIs(proxy, classValue, cx);
 }
 
+bool
+Proxy::isArray(JSContext* cx, HandleObject proxy, JS::IsArrayAnswer* answer)
+{
+    return proxy->as<ProxyObject>().handler()->isArray(cx, proxy, answer);
+}
+
 const char*
 Proxy::className(JSContext* cx, HandleObject proxy)
 {

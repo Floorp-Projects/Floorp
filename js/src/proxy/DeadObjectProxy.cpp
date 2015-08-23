@@ -120,6 +120,13 @@ DeadObjectProxy::objectClassIs(HandleObject obj, ESClassValue classValue, JSCont
     return false;
 }
 
+bool
+DeadObjectProxy::isArray(JSContext* cx, HandleObject obj, JS::IsArrayAnswer* answer) const
+{
+    ReportDead(cx);
+    return false;
+}
+
 const char*
 DeadObjectProxy::className(JSContext* cx, HandleObject wrapper) const
 {
