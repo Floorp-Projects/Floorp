@@ -11,6 +11,8 @@
 #include "jsobjinlines.h"
 
 using namespace js;
+
+using JS::IsArrayAnswer;
 using mozilla::ArrayLength;
 
 static inline bool
@@ -1103,20 +1105,19 @@ bool
 ScriptedDirectProxyHandler::objectClassIs(HandleObject proxy, ESClassValue classValue,
                                           JSContext* cx) const
 {
-    // Special case IsArray. In every other instance ES wants to have exactly
-    // one object type and not a proxy around it, so return false.
-    if (classValue != ESClass_IsArray)
-        return false;
+    return false;
+}
 
-    // In ES6 IsArray is supposed to poke at the Proxy target, instead we do this here.
-    // The reason for this is that we have proxies for which looking at the target might
-    // be impossible. So instead we use our little objectClassIs function that just works
-    // already across different wrappers.
+bool
+ScriptedDirectProxyHandler::isArray(JSContext* cx, HandleObject proxy,
+                                    IsArrayAnswer* answer) const
+{
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    if (!target)
-        return false;
+    if (target)
+        return JS::IsArray(cx, target, answer);
 
-    return IsArray(target, cx);
+    *answer = IsArrayAnswer::RevokedProxy;
+    return true;
 }
 
 const char*
