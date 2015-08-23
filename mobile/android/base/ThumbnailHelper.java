@@ -73,7 +73,7 @@ public final class ThumbnailHelper {
     }
 
     public void getAndProcessThumbnailFor(Tab tab) {
-        if (AboutPages.isAboutHome(tab.getURL())) {
+        if (AboutPages.isAboutHome(tab.getURL()) || AboutPages.isAboutPrivateBrowsing(tab.getURL())) {
             tab.updateThumbnail(null, CachePolicy.NO_STORE);
             return;
         }

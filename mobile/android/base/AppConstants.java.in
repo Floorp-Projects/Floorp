@@ -323,4 +323,11 @@ public class AppConstants {
 //#else
     false;
 //#endif
+
+    public static final boolean MOZ_ANDROID_NATIVE_ACCOUNT_UI =
+//#ifdef MOZ_ANDROID_NATIVE_ACCOUNT_UI
+    true;
+//#else
+    false;
+//#endif
 }

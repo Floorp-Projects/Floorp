@@ -530,9 +530,8 @@ let Search = {
 
     iQ("#searchbutton").css({ opacity:.8 });
 
-#ifdef XP_MACOSX
-    UI.setTitlebarColors(true);
-#endif
+    if (AppConstants.platform == "macosx")
+      UI.setTitlebarColors(true);
 
     this.perform();
     this.switchToBeforeMode();
@@ -594,9 +593,8 @@ let Search = {
       $searchShade.show();
       $search.show();
 
-#ifdef XP_MACOSX
-      UI.setTitlebarColors({active: "#717171", inactive: "#EDEDED"});
-#endif
+      if (AppConstants.platform == "macosx")
+        UI.setTitlebarColors({active: "#717171", inactive: "#EDEDED"});
 
       if (activatedByKeypress) {
         // set the focus so key strokes are entered into the textbox.

@@ -897,6 +897,7 @@ sync_java_files = [
     'fxa/sync/FxAccountSyncService.java',
     'fxa/sync/FxAccountSyncStatusHelper.java',
     'fxa/sync/SchedulePolicy.java',
+    'fxa/SyncStatusListener.java',
     'fxa/tasks/FxAccountCodeResender.java',
     'fxa/tasks/FxAccountCreateAccountTask.java',
     'fxa/tasks/FxAccountSetupTask.java',

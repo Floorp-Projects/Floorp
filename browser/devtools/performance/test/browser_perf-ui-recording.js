@@ -11,7 +11,7 @@ function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, PerformanceController } = panel.panelWin;
   let front = panel.panelWin.gFront;
-  PMM_loadProfilerScripts(gBrowser);
+  PMM_loadFrameScripts(gBrowser);
 
   ok(!(yield PMM_isProfilerActive()),
     "The built-in profiler module should not have been automatically started.");
