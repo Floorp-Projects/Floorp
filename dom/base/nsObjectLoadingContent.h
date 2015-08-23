@@ -94,6 +94,9 @@ class nsObjectLoadingContent : public nsImageLoadingContent
       eFallbackVulnerableUpdatable = nsIObjectLoadingContent::PLUGIN_VULNERABLE_UPDATABLE,
       // The plugin is vulnerable (no update available)
       eFallbackVulnerableNoUpdate = nsIObjectLoadingContent::PLUGIN_VULNERABLE_NO_UPDATE,
+      // The plugin is disabled and play preview content is displayed until
+      // the extension code enables it by sending the MozPlayPlugin event
+      eFallbackPlayPreview = nsIObjectLoadingContent::PLUGIN_PLAY_PREVIEW
     };
 
     nsObjectLoadingContent();
@@ -221,6 +224,10 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     bool HasRunningPlugin() const
     {
       return !!mInstanceOwner;
+    }
+    void CancelPlayPreview(mozilla::ErrorResult& aRv)
+    {
+      aRv = CancelPlayPreview();
     }
     void SwapFrameLoaders(nsXULElement& aOtherOwner, mozilla::ErrorResult& aRv)
     {
@@ -615,13 +622,16 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     // activated by PlayPlugin(). (see ShouldPlay())
     bool                        mActivated : 1;
 
+    // Used to keep track of whether or not a plugin is blocked by play-preview.
+    bool                        mPlayPreviewCanceled : 1;
+
     // Protects DoStopPlugin from reentry (bug 724781).
     bool                        mIsStopping : 1;
 
     // Protects LoadObject from re-entry
     bool                        mIsLoading : 1;
 
-    // For plugin stand-in types (click-to-play) tracks
+    // For plugin stand-in types (click-to-play, play preview, ...) tracks
     // whether content js has tried to access the plugin script object.
     bool                        mScriptRequested : 1;
 
