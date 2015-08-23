@@ -9,7 +9,6 @@
 #include "nsJSPrincipals.h"
 #include "nsScriptSecurityManager.h"
 #include "jsfriendapi.h"
-#include "prprf.h"
 #ifdef MOZ_THREADSTACKHELPER_NATIVE
 #include "shared-libraries.h"
 #endif
@@ -21,6 +20,7 @@
 #include "mozilla/Scoped.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/MemoryChecking.h"
+#include "mozilla/Snprintf.h"
 
 #ifdef MOZ_THREADSTACKHELPER_NATIVE
 #include "google_breakpad/processor/call_stack.h"
@@ -464,12 +464,12 @@ ThreadStackHelper::GetNativeStack(Stack& aStack)
     char buffer[0x100];
     size_t len = 0;
     if (!frame.function_name.empty()) {
-      len = PR_snprintf(buffer, sizeof(buffer), "%s:%s",
-                        module_name, frame.function_name.c_str());
+      len = snprintf_literal(buffer, "%s:%s",
+                             module_name, frame.function_name.c_str());
     } else {
-      len = PR_snprintf(buffer, sizeof(buffer), "%s:0x%p",
-                        module_name, (intptr_t)
-                        (frame.instruction - frame.module->base_address()));
+      len = snprintf_literal(buffer, "%s:0x%p", module_name,
+                             (intptr_t)(frame.instruction -
+                                          frame.module->base_address()));
     }
     if (len) {
       aStack.AppendViaBuffer(buffer, len);
@@ -619,7 +619,7 @@ ThreadStackHelper::AppendJSEntry(const volatile StackEntry* aEntry,
       }
     }
 
-    size_t len = PR_snprintf(buffer, sizeof(buffer), "%s:%u", basename, lineno);
+    size_t len = snprintf_literal(buffer, "%s:%u", basename, lineno);
     if (len < sizeof(buffer)) {
       if (mStackToFill->IsSameAsEntry(aPrevLabel, buffer)) {
         return aPrevLabel;
