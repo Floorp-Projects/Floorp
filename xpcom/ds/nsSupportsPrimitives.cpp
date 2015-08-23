@@ -6,7 +6,8 @@
 
 #include "nsSupportsPrimitives.h"
 #include "nsMemory.h"
-#include "prprf.h"
+#include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/Snprintf.h"
 
 /***************************************************************************/
 
@@ -239,9 +240,8 @@ NS_IMETHODIMP
 nsSupportsPRUint8Impl::ToString(char** aResult)
 {
   NS_ASSERTION(aResult, "Bad pointer");
-  static const int size = 8;
-  char buf[size];
-  PR_snprintf(buf, size, "%u", (uint16_t)mData);
+  char buf[8];
+  snprintf_literal(buf, "%u", (unsigned int)mData);
 
   *aResult = (char*)nsMemory::Clone(buf, (strlen(buf) + 1) * sizeof(char));
   return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
@@ -285,9 +285,8 @@ NS_IMETHODIMP
 nsSupportsPRUint16Impl::ToString(char** aResult)
 {
   NS_ASSERTION(aResult, "Bad pointer");
-  static const int size = 8;
-  char buf[size];
-  PR_snprintf(buf, size, "%u", (int)mData);
+  char buf[8];
+  snprintf_literal(buf, "%u", (unsigned int)mData);
 
   *aResult = (char*)nsMemory::Clone(buf, (strlen(buf) + 1) * sizeof(char));
   return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
@@ -331,9 +330,8 @@ NS_IMETHODIMP
 nsSupportsPRUint32Impl::ToString(char** aResult)
 {
   NS_ASSERTION(aResult, "Bad pointer");
-  static const int size = 16;
-  char buf[size];
-  PR_snprintf(buf, size, "%lu", mData);
+  char buf[16];
+  snprintf_literal(buf, "%u", mData);
 
   *aResult = (char*)nsMemory::Clone(buf, (strlen(buf) + 1) * sizeof(char));
   return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
@@ -377,9 +375,8 @@ NS_IMETHODIMP
 nsSupportsPRUint64Impl::ToString(char** aResult)
 {
   NS_ASSERTION(aResult, "Bad pointer");
-  static const int size = 32;
-  char buf[size];
-  PR_snprintf(buf, size, "%llu", mData);
+  char buf[32];
+  snprintf_literal(buf, "%llu", mData);
 
   *aResult = (char*)nsMemory::Clone(buf, (strlen(buf) + 1) * sizeof(char));
   return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
@@ -423,9 +420,8 @@ NS_IMETHODIMP
 nsSupportsPRTimeImpl::ToString(char** aResult)
 {
   NS_ASSERTION(aResult, "Bad pointer");
-  static const int size = 32;
-  char buf[size];
-  PR_snprintf(buf, size, "%llu", mData);
+  char buf[32];
+  snprintf_literal(buf, "%" PRIu64, mData);
 
   *aResult = (char*)nsMemory::Clone(buf, (strlen(buf) + 1) * sizeof(char));
   return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
@@ -517,9 +513,8 @@ NS_IMETHODIMP
 nsSupportsPRInt16Impl::ToString(char** aResult)
 {
   NS_ASSERTION(aResult, "Bad pointer");
-  static const int size = 8;
-  char buf[size];
-  PR_snprintf(buf, size, "%d", mData);
+  char buf[8];
+  snprintf_literal(buf, "%d", (int)mData);
 
   *aResult = (char*)nsMemory::Clone(buf, (strlen(buf) + 1) * sizeof(char));
   return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
@@ -563,9 +558,8 @@ NS_IMETHODIMP
 nsSupportsPRInt32Impl::ToString(char** aResult)
 {
   NS_ASSERTION(aResult, "Bad pointer");
-  static const int size = 16;
-  char buf[size];
-  PR_snprintf(buf, size, "%ld", mData);
+  char buf[16];
+  snprintf_literal(buf, "%d", mData);
 
   *aResult = (char*)nsMemory::Clone(buf, (strlen(buf) + 1) * sizeof(char));
   return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
@@ -609,9 +603,8 @@ NS_IMETHODIMP
 nsSupportsPRInt64Impl::ToString(char** aResult)
 {
   NS_ASSERTION(aResult, "Bad pointer");
-  static const int size = 32;
-  char buf[size];
-  PR_snprintf(buf, size, "%lld", mData);
+  char buf[32];
+  snprintf_literal(buf, "%" PRId64, mData);
 
   *aResult = (char*)nsMemory::Clone(buf, (strlen(buf) + 1) * sizeof(char));
   return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
@@ -655,9 +648,8 @@ NS_IMETHODIMP
 nsSupportsFloatImpl::ToString(char** aResult)
 {
   NS_ASSERTION(aResult, "Bad pointer");
-  static const int size = 32;
-  char buf[size];
-  PR_snprintf(buf, size, "%f", (double)mData);
+  char buf[32];
+  snprintf_literal(buf, "%f", (double)mData);
 
   *aResult = (char*)nsMemory::Clone(buf, (strlen(buf) + 1) * sizeof(char));
   return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
@@ -701,9 +693,8 @@ NS_IMETHODIMP
 nsSupportsDoubleImpl::ToString(char** aResult)
 {
   NS_ASSERTION(aResult, "Bad pointer");
-  static const int size = 32;
-  char buf[size];
-  PR_snprintf(buf, size, "%f", mData);
+  char buf[32];
+  snprintf_literal(buf, "%f", mData);
 
   *aResult = (char*)nsMemory::Clone(buf, (strlen(buf) + 1) * sizeof(char));
   return  *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;

@@ -27,7 +27,7 @@
 #include <string.h>
 #include "prdtoa.h"
 #include "mozilla/Logging.h"
-#include "prprf.h"
+#include "mozilla/Snprintf.h"
 #include "prmem.h"
 #include "nsCRTGlue.h"
 #include "nsTextFormatter.h"
@@ -406,7 +406,8 @@ cvt_f(SprintfState* aState, double aDouble, int aWidth, int aPrec,
           }
         }
         *bufp++ = exp;
-        PR_snprintf(bufp, bufsz - (bufp - buf), "%+03d", decpt - 1);
+
+        snprintf(bufp, bufsz - (bufp - buf), "%+03d", decpt - 1);
         break;
 
       case 'f':
@@ -458,7 +459,7 @@ cvt_f(SprintfState* aState, double aDouble, int aWidth, int aPrec,
             }
           }
           *bufp++ = exp;
-          PR_snprintf(bufp, bufsz - (bufp - buf), "%+03d", decpt - 1);
+          snprintf(bufp, bufsz - (bufp - buf), "%+03d", decpt - 1);
         } else {
           if (decpt < 1) {
             *bufp++ = '0';
