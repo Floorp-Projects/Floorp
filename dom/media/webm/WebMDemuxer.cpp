@@ -45,9 +45,19 @@ static int webmdemux_read(void* aBuffer, size_t aLength, void* aUserData)
   int64_t length = demuxer->GetEndDataOffset();
   uint32_t count = aLength;
   int64_t position = demuxer->GetResource()->Tell();
+  if (position >= length) {
+    // GetLastBlockOffset was calculated after we had read past it.
+    // This condition can only occurs with plain webm, as with MSE,
+    // EnsureUpdateIndex would have been called first.
+    // Continue reading to the end instead.
+    length = demuxer->GetResource()->GetLength();
+  }
+  MOZ_ASSERT(position <= demuxer->GetResource()->GetLength());
+  MOZ_ASSERT(position <= length);
   if (length >= 0 && count + position > length) {
     count = length - position;
   }
+  MOZ_ASSERT(count <= aLength);
 
   uint32_t bytes = 0;
   nsresult rv =
@@ -446,6 +456,7 @@ WebMDemuxer::EnsureUpToDateIndex()
   }
   mLastWebMBlockOffset = mBufferedState->GetLastBlockOffset();
   mIsExpectingMoreData = mResource.GetResource()->IsExpectingMoreData();
+  MOZ_ASSERT(mLastWebMBlockOffset <= mResource.GetLength());
   mNeedReIndex = false;
 }
 
