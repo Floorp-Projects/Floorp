@@ -367,43 +367,6 @@ class MediaEventSource {
   template <typename Method>
   using TakeArgs = detail::TakeArgs<Method>;
 
-  /**
-   * Stored by MediaEventSource to send notifications to the listener.
-   */
-  class Listener {
-  public:
-    Listener() : mToken(new RevocableToken()) {}
-
-    virtual ~Listener() {
-      MOZ_ASSERT(Token()->IsRevoked(), "Must disconnect the listener.");
-    }
-
-    virtual void Dispatch(const ArgType& aEvent) = 0;
-
-    RevocableToken* Token() const {
-      return mToken;
-    }
-
-  private:
-    const nsRefPtr<RevocableToken> mToken;
-  };
-
-  /**
-   * Store the registered target thread and function so it knows where and to
-   * whom to send the event data.
-   */
-  template<typename Target, typename Function>
-  class ListenerImpl : public Listener {
-  public:
-    explicit ListenerImpl(Target* aTarget, const Function& aFunction)
-      : mHelper(Listener::Token(), aTarget, aFunction) {}
-    void Dispatch(const ArgType& aEvent) override {
-      mHelper.Dispatch(aEvent);
-    }
-  private:
-    detail::ListenerHelper<Target, Function> mHelper;
-  };
-
   template<typename Target, typename Function>
   MediaEventListener
   ConnectInternal(Target* aTarget, const Function& aFunction) {
