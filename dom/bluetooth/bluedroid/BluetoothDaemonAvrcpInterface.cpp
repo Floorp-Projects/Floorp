@@ -32,10 +32,13 @@ nsresult
 BluetoothDaemonAvrcpModule::Send(DaemonSocketPDU* aPDU,
                                  BluetoothAvrcpResultHandler* aRes)
 {
-  if (aRes) {
-    aRes->AddRef(); // Keep reference for response
+  nsRefPtr<BluetoothAvrcpResultHandler> res(aRes);
+  nsresult rv = Send(aPDU, static_cast<void*>(res.get()));
+  if (NS_FAILED(rv)) {
+    return rv;
   }
-  return Send(aPDU, static_cast<void*>(aRes));
+  unused << res.forget(); // Keep reference for response
+  return NS_OK;
 }
 
 void
