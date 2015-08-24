@@ -15,6 +15,8 @@
 
 namespace js {
 
+class ModuleEnvironmentObject;
+
 namespace frontend {
 class ParseNode;
 } /* namespace frontend */
@@ -74,6 +76,7 @@ class ModuleObject : public NativeObject
     enum
     {
         ScriptSlot = 0,
+        InitialEnvironmentSlot,
         RequestedModulesSlot,
         ImportEntriesSlot,
         LocalExportEntriesSlot,
@@ -88,6 +91,7 @@ class ModuleObject : public NativeObject
 
     static ModuleObject* create(ExclusiveContext* cx);
     void init(HandleScript script);
+    void setInitialEnvironment(Handle<ModuleEnvironmentObject*> initialEnvironment);
     void initImportExportData(HandleArrayObject requestedModules,
                               HandleArrayObject importEntries,
                               HandleArrayObject localExportEntries,
@@ -95,6 +99,7 @@ class ModuleObject : public NativeObject
                               HandleArrayObject starExportEntries);
 
     JSScript* script() const;
+    ModuleEnvironmentObject& initialEnvironment() const;
     ArrayObject& requestedModules() const;
     ArrayObject& importEntries() const;
     ArrayObject& localExportEntries() const;

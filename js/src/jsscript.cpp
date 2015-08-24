@@ -158,6 +158,7 @@ Bindings::initWithTemporaryStorage(ExclusiveContext* cx, MutableHandle<Bindings>
 
     uint32_t slot = CallObject::RESERVED_SLOTS;
     for (BindingIter bi(self); bi; bi++) {
+        MOZ_ASSERT_IF(isModule, bi->aliased());
         if (!bi->aliased())
             continue;
 
@@ -3728,6 +3729,8 @@ JSScript::innermostStaticScopeInScript(jsbytecode* pc)
 {
     if (JSObject* scope = getStaticBlockScope(pc))
         return scope;
+    if (module())
+        return module();
     return functionNonDelazifying();
 }
 

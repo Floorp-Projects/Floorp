@@ -306,7 +306,17 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
     }
 
     bool atGlobalLevel() {
-        return atBodyLevel() && !sc->isFunctionBox() && !innermostScopeStmt();
+        return atBodyLevel() && sc->isGlobalContext() && !innermostScopeStmt();
+    }
+
+    // True if we are at the topmost level of a module only.
+    bool atModuleLevel() {
+        return atBodyLevel() && sc->isModuleBox();
+    }
+
+    // True if the current lexical scope is the topmost level of a module.
+    bool atModuleScope() {
+        return sc->isModuleBox() && !innermostScopeStmt();
     }
 
     // True if this is the ParseContext for the body of a function created by
