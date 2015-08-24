@@ -323,10 +323,8 @@ public:
     mDecoder = nullptr;
   }
 
-  // Copy queued audio/video data in the reader to any output MediaStreams that
-  // need it.
-  void SendStreamData();
-  void FinishStreamData();
+  // Discard audio/video data that are already played by MSG.
+  void DiscardStreamData();
   bool HaveEnoughDecodedAudio(int64_t aAmpleAudioUSecs);
   bool HaveEnoughDecodedVideo();
 
