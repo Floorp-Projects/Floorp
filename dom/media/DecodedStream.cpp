@@ -105,7 +105,7 @@ UpdateStreamBlocking(MediaStream* aStream, bool aBlocking)
  */
 class DecodedStreamData {
 public:
-  DecodedStreamData(SourceMediaStream* aStream, bool aPlaying,
+  DecodedStreamData(SourceMediaStream* aStream,
                     MozPromiseHolder<GenericPromise>&& aPromise);
   ~DecodedStreamData();
   bool IsFinished() const;
@@ -142,7 +142,7 @@ public:
   bool mEOSVideoCompensation;
 };
 
-DecodedStreamData::DecodedStreamData(SourceMediaStream* aStream, bool aPlaying,
+DecodedStreamData::DecodedStreamData(SourceMediaStream* aStream,
                                      MozPromiseHolder<GenericPromise>&& aPromise)
   : mAudioFramesWritten(0)
   , mNextVideoTime(-1)
@@ -152,17 +152,15 @@ DecodedStreamData::DecodedStreamData(SourceMediaStream* aStream, bool aPlaying,
   , mHaveSentFinishAudio(false)
   , mHaveSentFinishVideo(false)
   , mStream(aStream)
-  , mPlaying(aPlaying)
+  , mPlaying(true)
   , mEOSVideoCompensation(false)
 {
   // DecodedStreamGraphListener will resolve this promise.
   mListener = new DecodedStreamGraphListener(mStream, Move(aPromise));
   mStream->AddListener(mListener);
 
-  // Block the stream if we are not playing.
-  if (!aPlaying) {
-    UpdateStreamBlocking(mStream, true);
-  }
+  // mPlaying is initially true because MDSM won't start playback until playing
+  // becomes true. This is consistent with the settings of AudioSink.
 }
 
 DecodedStreamData::~DecodedStreamData()
@@ -358,6 +356,7 @@ DecodedStream::DecodedStream(AbstractThread* aOwnerThread,
                              MediaQueue<MediaData>& aAudioQueue,
                              MediaQueue<MediaData>& aVideoQueue)
   : mOwnerThread(aOwnerThread)
+  , mShuttingDown(false)
   , mMonitor("DecodedStream::mMonitor")
   , mPlaying(false)
   , mVolume(1.0)
@@ -369,6 +368,13 @@ DecodedStream::DecodedStream(AbstractThread* aOwnerThread,
 DecodedStream::~DecodedStream()
 {
   MOZ_ASSERT(mStartTime.isNothing(), "playback should've ended.");
+}
+
+void
+DecodedStream::Shutdown()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mShuttingDown = true;
 }
 
 nsRefPtr<GenericPromise>
@@ -424,12 +430,20 @@ void DecodedStream::StopPlayback()
 
   // Clear mData immediately when this playback session ends so we won't
   // send data to the wrong stream in SendData() in next playback session.
-  DecodedStreamData* data = mData.release();
-  // mData is not yet created on the main thread.
-  if (!data) {
+  DestroyData(Move(mData));
+}
+
+void
+DecodedStream::DestroyData(UniquePtr<DecodedStreamData> aData)
+{
+  AssertOwnerThread();
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+
+  if (!aData) {
     return;
   }
 
+  DecodedStreamData* data = aData.release();
   nsRefPtr<DecodedStream> self = this;
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
     self->mOutputStreamManager.Disconnect();
@@ -443,40 +457,66 @@ DecodedStream::CreateData(MozPromiseHolder<GenericPromise>&& aPromise)
 {
   MOZ_ASSERT(NS_IsMainThread());
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  MOZ_ASSERT(!mData, "Already created.");
 
   // No need to create a source stream when there are no output streams. This
   // happens when RemoveOutput() is called immediately after StartPlayback().
-  // We also bail out when the playback session has ended. This happens when
-  // StopPlayback() is called immediately after StartPlayback().
-  if (!mOutputStreamManager.Graph() || mStartTime.isNothing()) {
+  // Also we don't create a source stream when MDSM has begun shutdown.
+  if (!mOutputStreamManager.Graph() || mShuttingDown) {
     // Resolve the promise to indicate the end of playback.
     aPromise.Resolve(true, __func__);
     return;
   }
 
   auto source = mOutputStreamManager.Graph()->CreateSourceStream(nullptr);
-  mData.reset(new DecodedStreamData(source, mPlaying, Move(aPromise)));
-  mOutputStreamManager.Connect(mData->mStream);
+  auto data = new DecodedStreamData(source, Move(aPromise));
+  mOutputStreamManager.Connect(data->mStream);
 
-  // Start to send data to the stream immediately
-  nsRefPtr<DecodedStream> self = this;
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
-    ReentrantMonitorAutoEnter mon(self->GetReentrantMonitor());
-    // Don't send data if playback has ended.
-    if (self->mStartTime.isSome()) {
-      self->SendData();
+  class R : public nsRunnable {
+    typedef void(DecodedStream::*Method)(UniquePtr<DecodedStreamData>);
+  public:
+    R(DecodedStream* aThis, Method aMethod, DecodedStreamData* aData)
+      : mThis(aThis), mMethod(aMethod), mData(aData) {}
+    NS_IMETHOD Run() override
+    {
+      (mThis->*mMethod)(Move(mData));
+      return NS_OK;
     }
-  });
-  // Don't assert success because the owner thread might have begun shutdown
-  // while we are still dealing with jobs on the main thread.
-  mOwnerThread->Dispatch(r.forget(), AbstractThread::DontAssertDispatchSuccess);
+  private:
+    nsRefPtr<DecodedStream> mThis;
+    Method mMethod;
+    UniquePtr<DecodedStreamData> mData;
+  };
+
+  // Post a message to ensure |mData| is only updated on the worker thread.
+  // Note this must be done before MDSM's shutdown since dispatch could fail
+  // when the worker thread is shut down.
+  nsCOMPtr<nsIRunnable> r = new R(this, &DecodedStream::OnDataCreated, data);
+  mOwnerThread->Dispatch(r.forget());
 }
 
 bool
 DecodedStream::HasConsumers() const
 {
   return !mOutputStreamManager.IsEmpty();
+}
+
+void
+DecodedStream::OnDataCreated(UniquePtr<DecodedStreamData> aData)
+{
+  AssertOwnerThread();
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  MOZ_ASSERT(!mData, "Already created.");
+
+  // Start to send data to the stream immediately
+  if (mStartTime.isSome()) {
+    aData->SetPlaying(mPlaying);
+    mData = Move(aData);
+    SendData();
+    return;
+  }
+
+  // Playback has ended. Destroy aData which is not needed anymore.
+  DestroyData(Move(aData));
 }
 
 ReentrantMonitor&

@@ -171,6 +171,7 @@ public:
 
   void DispatchShutdown()
   {
+    mDecodedStream->Shutdown();
     nsCOMPtr<nsIRunnable> runnable =
       NS_NewRunnableMethod(this, &MediaDecoderStateMachine::Shutdown);
     OwnerThread()->Dispatch(runnable.forget());
