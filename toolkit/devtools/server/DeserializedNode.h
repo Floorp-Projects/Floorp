@@ -165,6 +165,8 @@ struct DeserializedStackFrame {
     MOZ_ASSERT(source);
   }
 
+  JS::ubi::StackFrame getParentStackFrame() const;
+
   struct HashPolicy;
 };
 
@@ -187,6 +189,7 @@ namespace JS {
 namespace ubi {
 
 using mozilla::devtools::DeserializedNode;
+using mozilla::devtools::DeserializedStackFrame;
 using mozilla::UniquePtr;
 
 template<>
@@ -213,6 +216,42 @@ public:
   // We ignore the `bool wantNames` parameter because we can't control whether
   // the core dump was serialized with edge names or not.
   UniquePtr<EdgeRange> edges(JSContext* cx, bool) const override;
+};
+
+template<>
+class ConcreteStackFrame<DeserializedStackFrame> : public BaseStackFrame
+{
+protected:
+  explicit ConcreteStackFrame(DeserializedStackFrame* ptr)
+    : BaseStackFrame(ptr)
+  { }
+
+  DeserializedStackFrame& get() const {
+    return *static_cast<DeserializedStackFrame*>(ptr);
+  }
+
+public:
+  static void construct(void* storage, DeserializedStackFrame* ptr) {
+    new (storage) ConcreteStackFrame(ptr);
+  }
+
+  uintptr_t identifier() const override { return get().id; }
+  uint32_t line() const override { return get().line; }
+  uint32_t column() const override { return get().column; }
+  bool isSystem() const override { return get().isSystem; }
+  bool isSelfHosted() const override { return get().isSelfHosted; }
+  void trace(JSTracer* trc) override { }
+  AtomOrTwoByteChars source() const override {
+    return AtomOrTwoByteChars(get().source);
+  }
+  AtomOrTwoByteChars functionDisplayName() const override {
+    return AtomOrTwoByteChars(get().functionDisplayName);
+  }
+
+  StackFrame parent() const override;
+  bool constructSavedFrameStack(JSContext* cx,
+                                MutableHandleObject outSavedFrameStack)
+    const override;
 };
 
 } // namespace ubi
