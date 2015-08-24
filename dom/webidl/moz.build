@@ -684,6 +684,8 @@ if CONFIG['MOZ_B2G_BT']:
         'BluetoothManager.webidl',
         'BluetoothPairingHandle.webidl',
         'BluetoothPairingListener.webidl',
+        'BluetoothPbapParameters.webidl',
+        'BluetoothPbapRequestHandle.webidl',
     ]
 
 if CONFIG['MOZ_SIMPLEPUSH']:
@@ -830,7 +832,10 @@ if CONFIG['MOZ_B2G_BT']:
         'BluetoothDeviceEvent.webidl',
         'BluetoothGattCharacteristicEvent.webidl',
         'BluetoothPairingEvent.webidl',
+        'BluetoothPhonebookPullingEvent.webidl',
         'BluetoothStatusChangedEvent.webidl',
+        'BluetoothVCardListingEvent.webidl',
+        'BluetoothVCardPullingEvent.webidl'
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
