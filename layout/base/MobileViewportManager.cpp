@@ -15,6 +15,7 @@
 NS_IMPL_ISUPPORTS(MobileViewportManager, nsIDOMEventListener, nsIObserver)
 
 static const nsLiteralString DOM_META_ADDED = NS_LITERAL_STRING("DOMMetaAdded");
+static const nsLiteralString DOM_META_CHANGED = NS_LITERAL_STRING("DOMMetaChanged");
 static const nsLiteralString FULL_ZOOM_CHANGE = NS_LITERAL_STRING("FullZoomChange");
 static const nsLiteralCString BEFORE_FIRST_PAINT = NS_LITERAL_CSTRING("before-first-paint");
 
@@ -38,6 +39,7 @@ MobileViewportManager::MobileViewportManager(nsIPresShell* aPresShell,
   }
   if (mEventTarget) {
     mEventTarget->AddEventListener(DOM_META_ADDED, this, false);
+    mEventTarget->AddEventListener(DOM_META_CHANGED, this, false);
     mEventTarget->AddEventListener(FULL_ZOOM_CHANGE, this, false);
   }
 
@@ -58,6 +60,7 @@ MobileViewportManager::Destroy()
 
   if (mEventTarget) {
     mEventTarget->RemoveEventListener(DOM_META_ADDED, this, false);
+    mEventTarget->RemoveEventListener(DOM_META_CHANGED, this, false);
     mEventTarget->RemoveEventListener(FULL_ZOOM_CHANGE, this, false);
     mEventTarget = nullptr;
   }
@@ -86,6 +89,9 @@ MobileViewportManager::HandleEvent(nsIDOMEvent* event)
 
   if (type.Equals(DOM_META_ADDED)) {
     MVM_LOG("%p: got a dom-meta-added event\n", this);
+    RefreshViewportSize(mPainted);
+  } else if (type.Equals(DOM_META_CHANGED)) {
+    MVM_LOG("%p: got a dom-meta-changed event\n", this);
     RefreshViewportSize(mPainted);
   } else if (type.Equals(FULL_ZOOM_CHANGE)) {
     MVM_LOG("%p: got a full-zoom-change event\n", this);
