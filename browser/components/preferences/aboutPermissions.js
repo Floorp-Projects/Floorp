@@ -355,6 +355,7 @@ let AboutPermissions = {
    */
   _sites: {},
 
+  sitesFilter: null,
   sitesList: null,
   _selectedSite: null,
 
@@ -391,6 +392,7 @@ let AboutPermissions = {
    * Called on page load.
    */
   init: function() {
+    this.sitesFilter = document.getElementById("sites-filter");
     this.sitesList = document.getElementById("sites-list");
 
     this.getSitesFromPlaces();
@@ -620,7 +622,7 @@ let AboutPermissions = {
     aSite.listitem = item;
 
     // Make sure to only display relevant items when list is filtered
-    let filterValue = document.getElementById("sites-filter").value.toLowerCase();
+    let filterValue = this.sitesFilter.value.toLowerCase();
     item.collapsed = aSite.principal.origin.toLowerCase().indexOf(filterValue) == -1;
 
     (this._listFragment || this.sitesList).appendChild(item);
@@ -643,7 +645,7 @@ let AboutPermissions = {
    */
   filterSitesList: function() {
     let siteItems = this.sitesList.children;
-    let filterValue = document.getElementById("sites-filter").value.toLowerCase();
+    let filterValue = this.sitesFilter.value.toLowerCase();
 
     if (filterValue == "") {
       for (let i = 0; i < siteItems.length; i++) {
@@ -880,6 +882,13 @@ let AboutPermissions = {
       window.openDialog("chrome://browser/content/preferences/cookies.xul",
                         "Browser:Cookies", "", {filterString : selectedHost});
     }
+  },
+
+  /**
+   * Focusses the filter box.
+   */
+  focusFilterBox: function() {
+    this.sitesFilter.focus();
   }
 }
 
