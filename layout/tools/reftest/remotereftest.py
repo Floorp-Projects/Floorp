@@ -381,6 +381,9 @@ class RemoteReftest(RefTest):
         # Make sure the GMPInstallManager won't hit the network
         prefs["media.gmp-manager.url.override"] = "http://127.0.0.1:8888/dummy-gmp-manager.xml";
         prefs["layout.css.devPixelsPerPx"] = "1.0"
+        # Because Fennec is a little wacky (see bug 1156817) we need to load the
+        # reftest pages at 1.0 zoom, rather than zooming to fit the CSS viewport.
+        prefs["apz.allow_zooming"] = False
 
         # Disable skia-gl: see bug 907351
         prefs["gfx.canvas.azure.accelerated"] = False
