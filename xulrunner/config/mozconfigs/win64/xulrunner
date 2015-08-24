@@ -5,6 +5,7 @@ ac_add_options --host=x86_64-pc-mingw32
 
 export MOZILLA_OFFICIAL=1
 export JAVA_HOME=/d/jdk1.6.0_14
+export SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE=c:/builds/crash-stats-api.token
 
 ac_add_options --enable-application=xulrunner
 ac_add_options --enable-jemalloc
