@@ -219,6 +219,31 @@ function testUrlFragment() {
   is(req.url, (new URL("./request", self.location.href)).href, "request.url should be serialized with exclude fragment flag set");
 }
 
+function testUrlMalformed() {
+  try {
+    var req = new Request("http:// example.com");
+    ok(false, "Creating a Request with a malformed URL should throw a TypeError");
+  } catch(e) {
+    is(e.name, "TypeError", "Creating a Request with a malformed URL should throw a TypeError");
+  }
+}
+
+function testUrlCredentials() {
+  try {
+    var req = new Request("http://user@example.com");
+    ok(false, "URLs with credentials should be rejected");
+  } catch(e) {
+    is(e.name, "TypeError", "URLs with credentials should be rejected");
+  }
+
+  try {
+    var req = new Request("http://user:password@example.com");
+    ok(false, "URLs with credentials should be rejected");
+  } catch(e) {
+    is(e.name, "TypeError", "URLs with credentials should be rejected");
+  }
+}
+
 function testBodyUsed() {
   var req = new Request("./bodyused", { method: 'post', body: "Sample body" });
   is(req.bodyUsed, false, "bodyUsed is initially false.");
@@ -471,6 +496,8 @@ function runTest() {
   testDefaultCtor();
   testSimpleUrlParse();
   testUrlFragment();
+  testUrlCredentials();
+  testUrlMalformed();
   testMethod();
   testBug1109574();
   testHeaderGuard();
