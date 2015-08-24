@@ -149,8 +149,97 @@ HeapSnapshot::saveNode(const protobuf::Node& node)
     edges.infallibleAppend(Move(edge));
   }
 
-  DeserializedNode dn(id, typeName, size, Move(edges), *this);
+  Maybe<StackFrameId> allocationStack;
+  if (node.has_allocationstack()) {
+    StackFrameId id = 0;
+    if (!saveStackFrame(node.allocationstack(), id))
+      return false;
+    allocationStack = Some(id);
+  }
+
+  DeserializedNode dn(id, typeName, size, Move(edges), allocationStack, *this);
   return nodes.putNew(id, Move(dn));
+}
+
+bool
+HeapSnapshot::saveStackFrame(const protobuf::StackFrame& frame,
+                             StackFrameId& outFrameId)
+{
+  if (frame.has_ref()) {
+    // We should only get a reference to the previous frame if we have already
+    // seen the previous frame.
+    if (!frames.has(frame.ref()))
+      return false;
+
+    outFrameId = frame.ref();
+    return true;
+  }
+
+  // Incomplete message.
+  if (!frame.has_data())
+    return false;
+
+  auto data = frame.data();
+
+  if (!data.has_id())
+    return false;
+  StackFrameId id = data.id();
+
+  // This should be the first and only time we see this frame.
+  if (frames.has(id))
+    return false;
+
+  Maybe<StackFrameId> parent;
+  if (data.has_parent()) {
+    StackFrameId parentId = 0;
+    if (!saveStackFrame(data.parent(), parentId))
+      return false;
+    parent = Some(parentId);
+  }
+
+  if (!data.has_line())
+    return false;
+  uint32_t line = data.line();
+
+  if (!data.has_column())
+    return false;
+  uint32_t column = data.column();
+
+  auto duplicatedSource = reinterpret_cast<const char16_t*>(
+    data.source().data());
+  size_t sourceLength = data.source().length() / sizeof(char16_t);
+  const char16_t* source = borrowUniqueString(duplicatedSource, sourceLength);
+  if (!source)
+    return false;
+
+  const char16_t* functionDisplayName = nullptr;
+  if (data.has_functiondisplayname()) {
+    auto duplicatedName = reinterpret_cast<const char16_t*>(
+      data.functiondisplayname().data());
+    size_t nameLength = data.functiondisplayname().length() / sizeof(char16_t);
+    const char16_t* functionDisplayName = borrowUniqueString(duplicatedName,
+                                                             nameLength);
+    if (!functionDisplayName)
+      return false;
+  }
+
+  if (!data.has_issystem())
+    return false;
+  bool isSystem = data.issystem();
+
+  if (!data.has_isselfhosted())
+    return false;
+  bool isSelfHosted = data.isselfhosted();
+
+  if (!frames.putNew(id, DeserializedStackFrame(id, parent, line, column,
+                                                source, functionDisplayName,
+                                                isSystem, isSelfHosted, *this)))
+  {
+    return false;
+  }
+
+  outFrameId = id;
+  return true;
 }
 
 static inline bool
@@ -179,7 +268,7 @@ StreamHasData(GzipInputStream& stream)
 bool
 HeapSnapshot::init(const uint8_t* buffer, uint32_t size)
 {
-  if (!nodes.init() || !strings.init())
+  if (!nodes.init() || !frames.init() || !strings.init())
     return false;
 
   ArrayInputStream stream(buffer, size);
