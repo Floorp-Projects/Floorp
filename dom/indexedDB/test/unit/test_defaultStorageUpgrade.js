@@ -92,8 +92,9 @@ function testSteps()
       let uri = ios.newURI(params.url, null, null);
       let principal;
       if ("appId" in params) {
-        principal = ssm.getAppCodebasePrincipal(uri, params.appId,
-                                                params.inMozBrowser);
+        principal =
+          ssm.createCodebasePrincipal(uri, {appId: params.appId,
+                                            inBrowser: params.inMozBrowser});
       } else {
         principal = ssm.getNoAppCodebasePrincipal(uri);
       }
