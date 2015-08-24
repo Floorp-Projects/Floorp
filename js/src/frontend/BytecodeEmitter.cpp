@@ -815,7 +815,7 @@ BytecodeEmitter::computeAliasedSlots(Handle<StaticBlockObject*> blockObj)
 void
 BytecodeEmitter::computeLocalOffset(Handle<StaticBlockObject*> blockObj)
 {
-    unsigned nbodyfixed = sc->isFunctionBox()
+    unsigned nbodyfixed = !sc->isGlobalContext()
                           ? script->bindings.numUnaliasedBodyLevelLocals()
                           : 0;
     unsigned localOffset = nbodyfixed;
@@ -1427,7 +1427,9 @@ BytecodeEmitter::computeDefinitionIsAliased(BytecodeEmitter* bceOfDef, Definitio
         // object. Aliased block bindings do not need adjusting; see
         // computeAliasedSlots.
         uint32_t slot = dn->pn_scopecoord.slot();
-        if (blockScopeOfDef(dn)->is<JSFunction>()) {
+        if (blockScopeOfDef(dn)->is<JSFunction>() ||
+            blockScopeOfDef(dn)->is<ModuleObject>())
+        {
             MOZ_ASSERT(IsArgOp(*op) || slot < bceOfDef->script->bindings.numBodyLevelLocals());
             MOZ_ALWAYS_TRUE(bceOfDef->lookupAliasedName(bceOfDef->script, dn->name(), &slot));
         }
@@ -3518,6 +3520,7 @@ BytecodeEmitter::emitModuleScript(ParseNode* body)
      */
 
     ModuleBox* modulebox = sc->asModuleBox();
+    MOZ_ASSERT(modulebox);
 
     // Link the module and the script to each other, so that StaticScopeIter
     // may walk the scope chain of currently compiling scripts.
@@ -5880,7 +5883,7 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
      * invocation of the emitter and calls to emitTree for function
      * definitions can be scheduled before generating the rest of code.
      */
-    if (!sc->isFunctionBox()) {
+    if (sc->isGlobalContext()) {
         MOZ_ASSERT(pn->pn_scopecoord.isFree());
         MOZ_ASSERT(pn->getOp() == JSOP_NOP);
         MOZ_ASSERT(!innermostStmt() || sc->isModuleBox());

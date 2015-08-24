@@ -221,6 +221,7 @@ class SharedContext
     inline FunctionBox* asFunctionBox();
     bool isModuleBox() { return isObjectBox() && toObjectBox()->isModuleBox(); }
     inline ModuleBox* asModuleBox();
+    bool isGlobalContext() { return !toObjectBox(); }
 
     bool allowNewTarget()              const { return allowNewTarget_; }
     bool allowSuperProperty()          const { return allowSuperProperty_; }

@@ -224,7 +224,8 @@ struct BytecodeEmitter
     JSObject* innermostStaticScope() const;
     JSObject* blockScopeOfDef(ParseNode* pn) const {
         MOZ_ASSERT(pn->resolve());
-        return parser->blockScopes[pn->resolve()->pn_blockid];
+        unsigned blockid = pn->resolve()->pn_blockid;
+        return parser->blockScopes[blockid];
     }
 
     uint32_t computeHops(ParseNode* pn, BytecodeEmitter** bceOfDefOut);
