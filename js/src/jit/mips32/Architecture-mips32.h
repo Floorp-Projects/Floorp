@@ -31,7 +31,7 @@
     (1 << Registers::v0) |      \
     (1 << Registers::v1);  // used for double-size returns
 
-#include "jit/mips-shared/Architecture-mips.h"
+#include "jit/mips-shared/Architecture-mips-shared.h"
 
 namespace js {
 namespace jit {
