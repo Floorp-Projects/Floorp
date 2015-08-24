@@ -147,6 +147,8 @@ xul|tab {
   color: var(--in-content-tab-color);
   background-color: var(--in-content-page-background);
   border-width: 0;
+  /* !important overrides tabbox.css RTL and visuallyselected rules */
+  border-radius: 0 !important;
   transition: background-color 50ms ease 0s;
 }
 
