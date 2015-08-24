@@ -115,6 +115,7 @@ IF_SAB(real,imaginary)(Atomics,                 53,     InitAtomicsClass, OCLASP
     real(Reflect,               55,      InitReflect,           nullptr) \
     real(Module,                56,      InitModuleClass,       OCLASP(Module)) \
     real(ImportEntry,           57,      InitImportEntryClass,  OCLASP(ImportEntry)) \
+    real(ExportEntry,           58,      InitExportEntryClass,  OCLASP(ExportEntry)) \
 
 #define JS_FOR_EACH_PROTOTYPE(macro) JS_FOR_PROTOTYPES(macro,macro)
 

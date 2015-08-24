@@ -42,6 +42,32 @@ class ImportEntryObject : public NativeObject
     JSAtom* localName();
 };
 
+class ExportEntryObject : public NativeObject
+{
+  public:
+    enum
+    {
+        ExportNameSlot = 0,
+        ModuleRequestSlot,
+        ImportNameSlot,
+        LocalNameSlot,
+        SlotCount
+    };
+
+    static const Class class_;
+    static JSObject* initClass(JSContext* cx, HandleObject obj);
+    static bool isInstance(HandleValue value);
+    static ExportEntryObject* create(JSContext* cx,
+                                     HandleAtom maybeExportName,
+                                     HandleAtom maybeModuleRequest,
+                                     HandleAtom maybeImportName,
+                                     HandleAtom maybeLocalName);
+    JSAtom* exportName();
+    JSAtom* moduleRequest();
+    JSAtom* importName();
+    JSAtom* localName();
+};
+
 class ModuleObject : public NativeObject
 {
   public:
@@ -50,6 +76,9 @@ class ModuleObject : public NativeObject
         ScriptSlot = 0,
         RequestedModulesSlot,
         ImportEntriesSlot,
+        LocalExportEntriesSlot,
+        IndirectExportEntriesSlot,
+        StarExportEntriesSlot,
         SlotCount
     };
 
@@ -60,11 +89,17 @@ class ModuleObject : public NativeObject
     static ModuleObject* create(ExclusiveContext* cx);
     void init(HandleScript script);
     void initImportExportData(HandleArrayObject requestedModules,
-                              HandleArrayObject importEntries);
+                              HandleArrayObject importEntries,
+                              HandleArrayObject localExportEntries,
+                              HandleArrayObject indiretExportEntries,
+                              HandleArrayObject starExportEntries);
 
     JSScript* script() const;
     ArrayObject& requestedModules() const;
     ArrayObject& importEntries() const;
+    ArrayObject& localExportEntries() const;
+    ArrayObject& indirectExportEntries() const;
+    ArrayObject& starExportEntries() const;
 
   private:
     static void trace(JSTracer* trc, JSObject* obj);
@@ -87,14 +122,27 @@ class MOZ_STACK_CLASS ModuleBuilder
     using RootedAtomVector = JS::Rooted<AtomVector>;
     using ImportEntryVector = TraceableVector<ImportEntryObject*>;
     using RootedImportEntryVector = JS::Rooted<ImportEntryVector>;
+    using ExportEntryVector = TraceableVector<ExportEntryObject*> ;
+    using RootedExportEntryVector = JS::Rooted<ExportEntryVector> ;
 
     JSContext* cx_;
     RootedAtomVector requestedModules_;
     RootedAtomVector importedBoundNames_;
     RootedImportEntryVector importEntries_;
+    RootedExportEntryVector exportEntries_;
+    RootedExportEntryVector localExportEntries_;
+    RootedExportEntryVector indirectExportEntries_;
+    RootedExportEntryVector starExportEntries_;
 
     bool processImport(frontend::ParseNode* pn);
+    bool processExport(frontend::ParseNode* pn);
     bool processExportFrom(frontend::ParseNode* pn);
+
+    ImportEntryObject* importEntryFor(JSAtom* localName);
+
+    bool appendLocalExportEntry(HandleAtom exportName, HandleAtom localName);
+    bool appendIndirectExportEntry(HandleAtom exportName, HandleAtom moduleRequest,
+                                   HandleAtom importName);
 
     bool maybeAppendRequestedModule(HandleAtom module);
 
@@ -104,6 +152,7 @@ class MOZ_STACK_CLASS ModuleBuilder
 
 JSObject* InitModuleClass(JSContext* cx, HandleObject obj);
 JSObject* InitImportEntryClass(JSContext* cx, HandleObject obj);
+JSObject* InitExportEntryClass(JSContext* cx, HandleObject obj);
 
 } // namespace js
 
