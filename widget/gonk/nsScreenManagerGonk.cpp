@@ -565,10 +565,7 @@ nsScreenManagerGonk::Initialize()
 void
 nsScreenManagerGonk::DisplayEnabled(bool aEnabled)
 {
-    if (gfxPrefs::HardwareVsyncEnabled()) {
-        VsyncControl(aEnabled);
-    }
-
+    VsyncControl(aEnabled);
     NS_DispatchToMainThread(aEnabled ? mScreenOnEvent : mScreenOffEvent);
 }
 
@@ -637,8 +634,6 @@ nsScreenManagerGonk::GetSystemDefaultScale(float *aDefaultScale)
 void
 nsScreenManagerGonk::VsyncControl(bool aEnabled)
 {
-    MOZ_ASSERT(gfxPrefs::HardwareVsyncEnabled());
-
     if (!NS_IsMainThread()) {
         NS_DispatchToMainThread(
             NS_NewRunnableMethodWithArgs<bool>(this,
