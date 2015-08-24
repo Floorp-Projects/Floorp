@@ -89,22 +89,12 @@ public:
  * Note that the Notification's JS wrapper does it's standard
  * AddRef()/Release() and is not affected by any of this.
  *
- * There is one case related to the WorkerNotificationObserver having to
- * dispatch WorkerRunnables to the worker thread which will use the
- * Notification object. We can end up in a situation where an event runnable is
- * dispatched to the worker, gets queued in the worker's event queue, but then,
- * the worker yields to the main thread. Here the main thread observer is
- * destroyed, which frees its NotificationRef. The NotificationRef dispatches
- * a ControlRunnable to the worker, which runs before the event runnable,
- * leading to the event runnable possibly not having a valid Notification
- * reference.
- * We solve this problem by having WorkerNotificationObserver's dtor
- * dispatching a standard WorkerRunnable to do the release (this guarantees the
- * ordering of the release is after the event runnables). All WorkerRunnables
- * that get dispatched successfully are guaranteed to run on the worker before
- * it shuts down. If that dispatch fails, the standard ControlRunnable based
- * shutdown is acceptable since the already dispatched event runnables have
- * already run or canceled (the worker is already past Running).
+ * Since the worker event queue can have runnables that will dispatch events on
+ * the Notification, the NotificationRef destructor will first try to release
+ * the Notification by dispatching a normal runnable to the worker so that it is
+ * queued after any event runnables. If that dispatch fails, it means the worker
+ * is no longer running and queued WorkerRunnables will be canceled, so we
+ * dispatch a control runnable instead.
  *
  */
 class Notification : public DOMEventTargetHelper

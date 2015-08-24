@@ -409,6 +409,22 @@ public:
   }
 };
 
+class ReleaseNotificationRunnable final : public NotificationWorkerRunnable
+{
+  Notification* mNotification;
+public:
+  explicit ReleaseNotificationRunnable(Notification* aNotification)
+    : NotificationWorkerRunnable(aNotification->mWorkerPrivate)
+    , mNotification(aNotification)
+  {}
+
+  void
+  WorkerRunInternal(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  {
+    mNotification->ReleaseObject();
+  }
+};
+
 // Create one whenever you require ownership of the notification. Use with
 // UniquePtr<>. See Notification.h for details.
 class NotificationRef final {
@@ -452,18 +468,31 @@ public:
   ~NotificationRef()
   {
     if (Initialized() && mNotification) {
-      if (mNotification->mWorkerPrivate && NS_IsMainThread()) {
-        nsRefPtr<ReleaseNotificationControlRunnable> r =
-          new ReleaseNotificationControlRunnable(mNotification);
-        AutoSafeJSContext cx;
-        if (!r->Dispatch(cx)) {
-          MOZ_CRASH("Will leak worker thread Notification!");
+      Notification* notification = mNotification;
+      mNotification = nullptr;
+      if (notification->mWorkerPrivate && NS_IsMainThread()) {
+        // Try to pass ownership back to the worker. If the dispatch succeeds we
+        // are guaranteed this runnable will run, and that it will run after queued
+        // event runnables, so event runnables will have a safe pointer to the
+        // Notification.
+        //
+        // If the dispatch fails, the worker isn't running anymore and the event
+        // runnables have already run or been canceled. We can use a control
+        // runnable to release the reference.
+        nsRefPtr<ReleaseNotificationRunnable> r =
+          new ReleaseNotificationRunnable(notification);
+
+        AutoJSAPI jsapi;
+        jsapi.Init();
+        if (!r->Dispatch(jsapi.cx())) {
+          nsRefPtr<ReleaseNotificationControlRunnable> r =
+            new ReleaseNotificationControlRunnable(notification);
+          MOZ_ALWAYS_TRUE(r->Dispatch(jsapi.cx()));
         }
       } else {
-        mNotification->AssertIsOnTargetThread();
-        mNotification->ReleaseObject();
+        notification->AssertIsOnTargetThread();
+        notification->ReleaseObject();
       }
-      mNotification = nullptr;
     }
   }
 
@@ -973,44 +1002,6 @@ protected:
     AssertIsOnMainThread();
 
     MOZ_ASSERT(mNotificationRef);
-    Notification* notification = mNotificationRef->GetNotification();
-    if (!notification) {
-      return;
-    }
-
-    // Try to pass ownership back to the worker. If the dispatch succeeds we
-    // are guaranteed this runnable will run, and that it will run after queued
-    // event runnables, so event runnables will have a safe pointer to the
-    // Notification.
-    //
-    // If the dispatch fails, the worker isn't running anymore and the event
-    // runnables have already run. We can just let the standard NotificationRef
-    // release routine take over when ReleaseNotificationRunnable gets deleted.
-    class ReleaseNotificationRunnable final : public NotificationWorkerRunnable
-    {
-      UniquePtr<NotificationRef> mNotificationRef;
-    public:
-      explicit ReleaseNotificationRunnable(UniquePtr<NotificationRef> aRef)
-        : NotificationWorkerRunnable(aRef->GetNotification()->mWorkerPrivate)
-        , mNotificationRef(Move(aRef))
-      {}
-
-      void
-      WorkerRunInternal(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
-      {
-        UniquePtr<NotificationRef> ref;
-        mozilla::Swap(ref, mNotificationRef);
-        // Gets released at the end of the function.
-      }
-    };
-
-    nsRefPtr<ReleaseNotificationRunnable> r =
-      new ReleaseNotificationRunnable(Move(mNotificationRef));
-    notification = nullptr;
-
-    AutoJSAPI jsapi;
-    jsapi.Init();
-    r->Dispatch(jsapi.cx());
   }
 };
 
