@@ -406,7 +406,11 @@
       <method name="purgeSessionHistory">
         <body>
           <![CDATA[
-            this.messageManager.sendAsyncMessage("Browser:PurgeSessionHistory");
+            try {
+              this.messageManager.sendAsyncMessage("Browser:PurgeSessionHistory");
+            } catch (ex if ex.result == Components.results.NS_ERROR_NOT_INITIALIZED) {
+              // This can throw if the browser has started to go away.
+            }
             this.webNavigation.canGoBack = false;
             this.webNavigation.canGoForward = false;
           ]]>
