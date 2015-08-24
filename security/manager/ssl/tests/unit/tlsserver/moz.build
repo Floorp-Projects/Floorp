@@ -6,3 +6,79 @@
 
 # lib must be first, because cmd depends on its output
 DIRS += ['lib', 'cmd']
+
+test_certificates = (
+    'badSubjectAltNames.pem',
+    'beforeEpochINT.pem',
+    'beforeEpochIssuer.pem',
+    'beforeEpoch.pem',
+    'ca-used-as-end-entity.pem',
+    'default-ee.pem',
+    'delegatedSHA1Signer.pem',
+    'delegatedSigner.pem',
+    'eeIssuedByNonCA.pem',
+    'eeIssuedByV1Cert.pem',
+    'expired-ee.pem',
+    'expiredINT.pem',
+    'expiredissuer.pem',
+    'inadequateKeySizeEE.pem',
+    'inadequatekeyusage-ee.pem',
+    'invalidDelegatedSignerFromIntermediate.pem',
+    'invalidDelegatedSignerKeyUsageCrlSigning.pem',
+    'invalidDelegatedSignerNoExtKeyUsage.pem',
+    'invalidDelegatedSignerWrongExtKeyUsage.pem',
+    'ipAddressAsDNSNameInSAN.pem',
+    'md5signature-expired.pem',
+    'md5signature.pem',
+    'mismatchCN.pem',
+    'mismatch-expired.pem',
+    'mismatch-notYetValid.pem',
+    'mismatch.pem',
+    'mismatch-untrusted-expired.pem',
+    'mismatch-untrusted.pem',
+    'notYetValidINT.pem',
+    'notYetValidIssuer.pem',
+    'notYetValid.pem',
+    'noValidNames.pem',
+    'nsCertTypeCritical.pem',
+    'nsCertTypeCriticalWithExtKeyUsage.pem',
+    'nsCertTypeNotCritical.pem',
+    'ocspEEWithIntermediate.pem',
+    'ocspOtherEndEntity.pem',
+    'other-test-ca.pem',
+    'other-issuer-ee.pem',
+    'rsa-1016-keysizeDelegatedSigner.pem',
+    'same-issuer-ee.pem',
+    'self-signed-EE-with-cA-true.pem',
+    'selfsigned-inadequateEKU.pem',
+    'selfsigned.pem',
+    'test-ca.pem',
+    'test-int-ee.pem',
+    'test-int.pem',
+    'unknownissuer.pem',
+    'untrusted-expired.pem',
+    'untrustedissuer.pem',
+    'v1Cert.pem',
+)
+
+for test_certificate in test_certificates:
+    input_file = test_certificate + '.certspec'
+    GENERATED_FILES += [test_certificate]
+    props = GENERATED_FILES[test_certificate]
+    props.script = '../pycert.py'
+    props.inputs = [input_file]
+    TEST_HARNESS_FILES.xpcshell.security.manager.ssl.tests.unit.tlsserver += ['!%s' % test_certificate]
+
+test_keys = (
+    'default-ee.key',
+    'other-test-ca.key',
+    'rsa-1016-keysizeDelegatedSigner.key',
+)
+
+for test_key in test_keys:
+    input_file = test_key + '.keyspec'
+    GENERATED_FILES += [test_key]
+    props = GENERATED_FILES[test_key]
+    props.script = '../pykey.py'
+    props.inputs = [input_file]
+    TEST_HARNESS_FILES.xpcshell.security.manager.ssl.tests.unit.tlsserver += ['!%s' % test_key]
