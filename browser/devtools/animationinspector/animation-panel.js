@@ -52,13 +52,14 @@ let AnimationsPanel = {
     this.refreshAnimations = this.refreshAnimations.bind(this);
     this.toggleAll = this.toggleAll.bind(this);
     this.onTabNavigated = this.onTabNavigated.bind(this);
-
-    this.startListeners();
+    this.onTimelineTimeChanged = this.onTimelineTimeChanged.bind(this);
 
     if (AnimationsController.isNewUI) {
       this.animationsTimelineComponent = new AnimationsTimeline(gInspector);
       this.animationsTimelineComponent.init(this.playersEl);
     }
+
+    this.startListeners();
 
     yield this.refreshAnimations();
 
@@ -101,6 +102,11 @@ let AnimationsPanel = {
 
     this.toggleAllButtonEl.addEventListener("click", this.toggleAll, false);
     gToolbox.target.on("navigate", this.onTabNavigated);
+
+    if (this.animationsTimelineComponent) {
+      this.animationsTimelineComponent.on("current-time-changed",
+        this.onTimelineTimeChanged);
+    }
   },
 
   stopListeners: function() {
@@ -113,6 +119,11 @@ let AnimationsPanel = {
 
     this.toggleAllButtonEl.removeEventListener("click", this.toggleAll, false);
     gToolbox.target.off("navigate", this.onTabNavigated);
+
+    if (this.animationsTimelineComponent) {
+      this.animationsTimelineComponent.off("current-time-changed",
+        this.onTimelineTimeChanged);
+    }
   },
 
   displayErrorMessage: function() {
@@ -146,7 +157,7 @@ let AnimationsPanel = {
           currentWidgetStateChange.push(btnClass.contains("paused")
             ? widget.play() : widget.pause());
         }
-        yield promise.all(currentWidgetStateChange).catch(Cu.reportError);
+        yield promise.all(currentWidgetStateChange).catch(e => console.error(e));
       }
     }
 
@@ -156,6 +167,10 @@ let AnimationsPanel = {
 
   onTabNavigated: function() {
     this.toggleAllButtonEl.classList.remove("paused");
+  },
+
+  onTimelineTimeChanged: function(e, time) {
+    AnimationsController.setCurrentTimeAll(time, true).catch(e => console.error(e));
   },
 
   refreshAnimations: Task.async(function*() {

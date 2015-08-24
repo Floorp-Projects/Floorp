@@ -779,7 +779,8 @@ AnimationsTimeline.prototype = {
 
     this.scrubberEl.style.left = offset + "px";
 
-    let time = TimeScale.distanceToTime(offset, this.timeHeaderEl.offsetWidth);
+    let time = TimeScale.distanceToRelativeTime(offset,
+      this.timeHeaderEl.offsetWidth);
     this.emit("current-time-changed", time);
   },
 
