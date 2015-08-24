@@ -20,7 +20,7 @@
     // attach to a different origin's CacheStorage
     var url = 'http://example.com/';
     var uri = Services.io.newURI(url, null, null);
-    var principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(uri);
+    var principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
     var storage = new CacheStorage('content', principal);
 
     // verify we can use the other origin's CacheStorage as normal

@@ -29,7 +29,6 @@
 #include "nsICryptoHash.h"
 #include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStreamUtils.h"
@@ -718,9 +717,9 @@ nsOfflineCacheUpdateService::OfflineAppAllowedForURI(nsIURI *aURI,
                                                      nsIPrefBranch *aPrefBranch,
                                                      bool *aAllowed)
 {
-    nsCOMPtr<nsIPrincipal> principal;
-    nsContentUtils::GetSecurityManager()->
-        GetNoAppCodebasePrincipal(aURI, getter_AddRefs(principal));
+    OriginAttributes attrs;
+    nsCOMPtr<nsIPrincipal> principal =
+        BasePrincipal::CreateCodebasePrincipal(aURI, attrs);
     return OfflineAppPermForPrincipal(principal, aPrefBranch, false, aAllowed);
 }
 
@@ -729,9 +728,9 @@ nsOfflineCacheUpdateService::OfflineAppPinnedForURI(nsIURI *aDocumentURI,
                                                     nsIPrefBranch *aPrefBranch,
                                                     bool *aPinned)
 {
-    nsCOMPtr<nsIPrincipal> principal;
-    nsContentUtils::GetSecurityManager()->
-        GetNoAppCodebasePrincipal(aDocumentURI, getter_AddRefs(principal));
+    OriginAttributes attrs;
+    nsCOMPtr<nsIPrincipal> principal =
+        BasePrincipal::CreateCodebasePrincipal(aDocumentURI, attrs);
     return OfflineAppPermForPrincipal(principal, aPrefBranch, true, aPinned);
 }
 

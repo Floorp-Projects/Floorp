@@ -39,8 +39,8 @@ function importPrefBranch(aPrefBranch, aPermission, aAction) {
           let httpsURI = Services.io.newURI("https://" + origin, null, null);
 
           principals = [
-            Services.scriptSecurityManager.getNoAppCodebasePrincipal(httpURI),
-            Services.scriptSecurityManager.getNoAppCodebasePrincipal(httpsURI)
+            Services.scriptSecurityManager.createCodebasePrincipal(httpURI, {}),
+            Services.scriptSecurityManager.createCodebasePrincipal(httpsURI, {})
           ];
         } catch (e2) {}
       }

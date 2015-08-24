@@ -134,8 +134,9 @@ function run_test() {
   do_check_true(numMigrated > 0, "we found at least 1 record that was migrated");
 
   // This permission should always be there.
-  let principal = Cc["@mozilla.org/scriptsecuritymanager;1"]
-                    .getService(Ci.nsIScriptSecurityManager)
-                    .getNoAppCodebasePrincipal(NetUtil.newURI("http://example.org"));
+  let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
+              .getService(Ci.nsIScriptSecurityManager);
+  let uri = NetUtil.newURI("http://example.org");
+  let principal = ssm.createCodebasePrincipal(uri, {});
   do_check_eq(pm.testPermissionFromPrincipal(principal, 'test-load-invalid-entries'), Ci.nsIPermissionManager.ALLOW_ACTION);
 }
