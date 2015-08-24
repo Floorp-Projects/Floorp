@@ -246,6 +246,12 @@ BluetoothParent::RecvPBluetoothRequestConstructor(
       return actor->DoRequest(aRequest.get_DisconnectScoRequest());
     case Request::TIsScoConnectedRequest:
       return actor->DoRequest(aRequest.get_IsScoConnectedRequest());
+    case Request::TReplyTovCardPullingRequest:
+      return actor->DoRequest(aRequest.get_ReplyTovCardPullingRequest());
+    case Request::TReplyToPhonebookPullingRequest:
+      return actor->DoRequest(aRequest.get_ReplyToPhonebookPullingRequest());
+    case Request::TReplyTovCardListingRequest:
+      return actor->DoRequest(aRequest.get_ReplyTovCardListingRequest());
 #ifdef MOZ_B2G_RIL
     case Request::TAnswerWaitingCallRequest:
       return actor->DoRequest(aRequest.get_AnswerWaitingCallRequest());
@@ -708,6 +714,44 @@ BluetoothRequestParent::DoRequest(const IsScoConnectedRequest& aRequest)
   MOZ_ASSERT(mRequestType == Request::TIsScoConnectedRequest);
 
   mService->IsScoConnected(mReplyRunnable.get());
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const ReplyTovCardPullingRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TReplyTovCardPullingRequest);
+
+  mService->ReplyTovCardPulling((BlobParent*)aRequest.blobParent(),
+                                (BlobChild*)aRequest.blobChild(),
+                                mReplyRunnable.get());
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const ReplyToPhonebookPullingRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TReplyToPhonebookPullingRequest);
+
+  mService->ReplyToPhonebookPulling((BlobParent*)aRequest.blobParent(),
+                                    (BlobChild*)aRequest.blobChild(),
+                                    aRequest.phonebookSize(),
+                                    mReplyRunnable.get());
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const ReplyTovCardListingRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TReplyTovCardListingRequest);
+
+  mService->ReplyTovCardListing((BlobParent*)aRequest.blobParent(),
+                                (BlobChild*)aRequest.blobChild(),
+                                aRequest.phonebookSize(),
+                                mReplyRunnable.get());
   return true;
 }
 
