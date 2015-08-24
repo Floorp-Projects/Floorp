@@ -209,6 +209,11 @@ const TYPE_ALIASES = {
   "webextension": "extension",
 };
 
+const CHROME_TYPES = new Set([
+  "extension",
+  "locale",
+]);
+
 const RESTARTLESS_TYPES = new Set([
   "webextension",
   "dictionary",
@@ -4733,7 +4738,7 @@ this.XPIProvider = {
     }
 
     let timeStart = new Date();
-    if (aMethod == "startup") {
+    if (CHROME_TYPES.has(aAddon.type) && aMethod == "startup") {
       logger.debug("Registering manifest for " + aFile.path);
       Components.manager.addBootstrappedManifestLocation(aFile);
     }
@@ -4776,7 +4781,7 @@ this.XPIProvider = {
       }
     }
     finally {
-      if (aMethod == "shutdown" && aReason != BOOTSTRAP_REASONS.APP_SHUTDOWN) {
+      if (CHROME_TYPES.has(aAddon.type) && aMethod == "shutdown" && aReason != BOOTSTRAP_REASONS.APP_SHUTDOWN) {
         logger.debug("Removing manifest for " + aFile.path);
         Components.manager.removeBootstrappedManifestLocation(aFile);
 
