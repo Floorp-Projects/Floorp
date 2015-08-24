@@ -19,6 +19,7 @@
 #include "mozilla/devtools/ZeroCopyNSIOutputStream.h"
 #include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/HeapSnapshotBinding.h"
+#include "mozilla/RangedPtr.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
@@ -381,8 +382,13 @@ EstablishBoundaries(JSContext* cx,
 // given `ZeroCopyOutputStream`.
 class MOZ_STACK_CLASS StreamWriter : public CoreDumpWriter
 {
+  using Set = js::HashSet<uint64_t>;
+
   JSContext* cx;
-  bool      wantNames;
+  bool       wantNames;
+  // The set of |JS::ubi::StackFrame::identifier()|s that have already been
+  // serialized and written to the core dump.
+  Set        framesAlreadySerialized;
 
   ::google::protobuf::io::ZeroCopyOutputStream& stream;
 
@@ -396,14 +402,78 @@ class MOZ_STACK_CLASS StreamWriter : public CoreDumpWriter
     return !codedStream.HadError();
   }
 
+  protobuf::StackFrame* getProtobufStackFrame(JS::ubi::StackFrame& frame) {
+    MOZ_ASSERT(frame,
+               "null frames should be represented as the lack of a serialized "
+               "stack frame");
+
+    auto id = frame.identifier();
+    auto protobufStackFrame = MakeUnique<protobuf::StackFrame>();
+    if (!protobufStackFrame)
+      return nullptr;
+
+    if (framesAlreadySerialized.has(id)) {
+      protobufStackFrame->set_ref(id);
+      return protobufStackFrame.release();
+    }
+
+    auto data = MakeUnique<protobuf::StackFrame_Data>();
+    if (!data)
+      return nullptr;
+
+    data->set_id(id);
+    data->set_line(frame.line());
+    data->set_column(frame.column());
+    data->set_issystem(frame.isSystem());
+    data->set_isselfhosted(frame.isSelfHosted());
+
+    auto source = MakeUnique<std::string>(frame.sourceLength() * sizeof(char16_t),
+                                          '\0');
+    if (!source)
+      return nullptr;
+    auto buf = const_cast<char16_t*>(reinterpret_cast<const char16_t*>(source->data()));
+    frame.source(RangedPtr<char16_t>(buf, frame.sourceLength()),
+                 frame.sourceLength());
+    data->set_allocated_source(source.release());
+
+    auto nameLength = frame.functionDisplayNameLength();
+    if (nameLength > 0) {
+      auto functionDisplayName = MakeUnique<std::string>(nameLength * sizeof(char16_t),
+                                                         '\0');
+      if (!functionDisplayName)
+        return nullptr;
+      auto buf = const_cast<char16_t*>(reinterpret_cast<const char16_t*>(functionDisplayName->data()));
+      frame.functionDisplayName(RangedPtr<char16_t>(buf, nameLength), nameLength);
+      data->set_allocated_functiondisplayname(functionDisplayName.release());
+    }
+
+    auto parent = frame.parent();
+    if (parent) {
+      auto protobufParent = getProtobufStackFrame(parent);
+      if (!protobufParent)
+        return nullptr;
+      data->set_allocated_parent(protobufParent);
+    }
+
+    protobufStackFrame->set_allocated_data(data.release());
+
+    if (!framesAlreadySerialized.put(id))
+      return nullptr;
+
+    return protobufStackFrame.release();
+  }
+
 public:
   StreamWriter(JSContext* cx,
                ::google::protobuf::io::ZeroCopyOutputStream& stream,
                bool wantNames)
     : cx(cx)
     , wantNames(wantNames)
+    , framesAlreadySerialized(cx)
     , stream(stream)
   { }
+
+  bool init() { return framesAlreadySerialized.init(); }
 
   ~StreamWriter() override { }
 
@@ -414,7 +484,7 @@ public:
   }
 
   virtual bool writeNode(const JS::ubi::Node& ubiNode,
-                         EdgePolicy includeEdges) override {
+                         EdgePolicy includeEdges) final {
     protobuf::Node protobufNode;
     protobufNode.set_id(ubiNode.identifier());
 
@@ -426,6 +496,14 @@ public:
     mozilla::MallocSizeOf mallocSizeOf = dbg::GetDebuggerMallocSizeOf(rt);
     MOZ_ASSERT(mallocSizeOf);
     protobufNode.set_size(ubiNode.size(mallocSizeOf));
+
+    if (ubiNode.hasAllocationStack()) {
+      auto ubiStackFrame = ubiNode.allocationStack();
+      auto protoStackFrame = getProtobufStackFrame(ubiStackFrame);
+      if (NS_WARN_IF(!protoStackFrame))
+        return false;
+      protobufNode.set_allocated_allocationstack(protoStackFrame);
+    }
 
     if (includeEdges) {
       auto edges = ubiNode.edges(cx, wantNames);
@@ -592,6 +670,10 @@ ThreadSafeChromeUtils::SaveHeapSnapshot(GlobalObject& global,
   ::google::protobuf::io::GzipOutputStream gzipStream(&zeroCopyStream);
 
   StreamWriter writer(cx, gzipStream, wantNames);
+  if (NS_WARN_IF(!writer.init())) {
+    rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
 
   {
     Maybe<AutoCheckCannotGC> maybeNoGC;
