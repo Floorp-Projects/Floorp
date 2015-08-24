@@ -235,29 +235,59 @@ BluetoothPbapManager::ReceiveSocketData(BluetoothSocket* aSocket,
       AfterPbapDisconnected();
       break;
     case ObexRequestCode::SetPath: {
-        // Section 3.3.6 "SetPath", IrOBEX 1.2
-        // [opcode:1][length:2][flags:1][contants:1][Headers:var]
-        if (receivedLength < 5 ||
-            !ParseHeaders(&data[5], receivedLength - 5, &pktHeaders)) {
-          ReplyError(ObexResponseCode::BadRequest);
-          return;
-        }
+      // Section 3.3.6 "SetPath", IrOBEX 1.2
+      // [opcode:1][length:2][flags:1][contants:1][Headers:var]
+      if (receivedLength < 5 ||
+          !ParseHeaders(&data[5], receivedLength - 5, &pktHeaders)) {
+        ReplyError(ObexResponseCode::BadRequest);
+        return;
+      }
 
-        uint8_t response = SetPhoneBookPath(data[3], pktHeaders);
-        if (response != ObexResponseCode::Success) {
-          ReplyError(response);
-          return;
-        }
+      uint8_t response = SetPhoneBookPath(data[3], pktHeaders);
+      if (response != ObexResponseCode::Success) {
+        ReplyError(response);
+        return;
+      }
 
-        ReplyToSetPath();
+      ReplyToSetPath();
+      break;
+    }
+    case ObexRequestCode::Get:
+    case ObexRequestCode::GetFinal: {
+      // [opcode:1][length:2][Headers:var]
+      if (receivedLength < 3 ||
+          !ParseHeaders(&data[3], receivedLength - 3, &pktHeaders)) {
+        ReplyError(ObexResponseCode::BadRequest);
+        return;
+      }
+
+      nsString type;
+      pktHeaders.GetContentType(type);
+
+      uint8_t response;
+      if (type.EqualsLiteral("x-bt/vcard-listing")) {
+        response = PullvCardListing(pktHeaders);
+      } else if (type.EqualsLiteral("x-bt/vcard")) {
+        response = PullvCardEntry(pktHeaders);
+      } else if (type.EqualsLiteral("x-bt/phonebook")) {
+        response = PullPhonebook(pktHeaders);
+      } else {
+        response = ObexResponseCode::BadRequest;
+        BT_LOGR("Unknown PBAP request type: %s",
+                NS_ConvertUTF16toUTF8(type).get());
+      }
+
+      // The OBEX success response will be sent after Gaia replies the PBAP
+      // request.
+      if (response != ObexResponseCode::Success) {
+        ReplyError(response);
+        return;
       }
       break;
+    }
     case ObexRequestCode::Put:
     case ObexRequestCode::PutFinal:
-    case ObexRequestCode::Get:
-    case ObexRequestCode::GetFinal:
       ReplyError(ObexResponseCode::BadRequest);
-      BT_LOGR("Unsupported ObexRequestCode %x", opCode);
       break;
     default:
       ReplyError(ObexResponseCode::NotImplemented);
@@ -345,6 +375,241 @@ BluetoothPbapManager::SetPhoneBookPath(uint8_t flags,
   BT_LOGR("current path [%s]", NS_ConvertUTF16toUTF8(mCurrentPath).get());
 
   return ObexResponseCode::Success;
+}
+
+uint8_t
+BluetoothPbapManager::PullPhonebook(const ObexHeaderSet& aHeader)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs) {
+    return ObexResponseCode::PreconditionFailed;
+  }
+
+  InfallibleTArray<BluetoothNamedValue> data;
+
+  nsString name;
+  aHeader.GetName(name);
+  BT_APPEND_NAMED_VALUE(data, "name", name);
+
+  AppendBtNamedValueByTagId(aHeader, data, AppParameterTag::Format);
+  AppendBtNamedValueByTagId(aHeader, data, AppParameterTag::PropertySelector);
+  AppendBtNamedValueByTagId(aHeader, data, AppParameterTag::MaxListCount);
+  AppendBtNamedValueByTagId(aHeader, data, AppParameterTag::ListStartOffset);
+  AppendBtNamedValueByTagId(aHeader, data, AppParameterTag::vCardSelector);
+
+  #ifdef MOZ_B2G_BT_API_V1
+    bs->DistributeSignal(
+      BluetoothSignal(NS_LITERAL_STRING(PULL_PHONEBOOK_REQ_ID),
+                      NS_LITERAL_STRING(KEY_ADAPTER),
+                      data));
+  #else
+    bs->DistributeSignal(NS_LITERAL_STRING(PULL_PHONEBOOK_REQ_ID),
+                         NS_LITERAL_STRING(KEY_ADAPTER),
+                         data);
+  #endif
+
+  return ObexResponseCode::Success;
+}
+
+uint8_t
+BluetoothPbapManager::PullvCardListing(const ObexHeaderSet& aHeader)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs) {
+    return ObexResponseCode::PreconditionFailed;
+  }
+
+  InfallibleTArray<BluetoothNamedValue> data;
+
+  nsString name;
+  aHeader.GetName(name);
+  BT_APPEND_NAMED_VALUE(data, "name", name);
+
+  AppendBtNamedValueByTagId(aHeader, data, AppParameterTag::Order);
+  AppendBtNamedValueByTagId(aHeader, data, AppParameterTag::SearchValue);
+  AppendBtNamedValueByTagId(aHeader, data, AppParameterTag::SearchProperty);
+  AppendBtNamedValueByTagId(aHeader, data, AppParameterTag::MaxListCount);
+  AppendBtNamedValueByTagId(aHeader, data, AppParameterTag::ListStartOffset);
+  AppendBtNamedValueByTagId(aHeader, data, AppParameterTag::vCardSelector);
+
+  #ifdef MOZ_B2G_BT_API_V1
+    bs->DistributeSignal(
+      BluetoothSignal(NS_LITERAL_STRING(PULL_VCARD_LISTING_REQ_ID),
+                      NS_LITERAL_STRING(KEY_ADAPTER),
+                      data));
+  #else
+    bs->DistributeSignal(NS_LITERAL_STRING(PULL_VCARD_LISTING_REQ_ID),
+                         NS_LITERAL_STRING(KEY_ADAPTER),
+                         data);
+  #endif
+
+  return ObexResponseCode::Success;
+}
+
+uint8_t
+BluetoothPbapManager::PullvCardEntry(const ObexHeaderSet& aHeader)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs) {
+    return ObexResponseCode::PreconditionFailed;
+  }
+
+  InfallibleTArray<BluetoothNamedValue> data;
+
+  nsString name;
+  aHeader.GetName(name);
+  BT_APPEND_NAMED_VALUE(data, "name", name);
+
+  AppendBtNamedValueByTagId(aHeader, data, AppParameterTag::Format);
+  AppendBtNamedValueByTagId(aHeader, data, AppParameterTag::PropertySelector);
+
+  #ifdef MOZ_B2G_BT_API_V1
+    bs->DistributeSignal(
+      BluetoothSignal(NS_LITERAL_STRING(PULL_VCARD_ENTRY_REQ_ID),
+                      NS_LITERAL_STRING(KEY_ADAPTER),
+                      data));
+  #else
+    bs->DistributeSignal(NS_LITERAL_STRING(PULL_VCARD_ENTRY_REQ_ID),
+                         NS_LITERAL_STRING(KEY_ADAPTER),
+                         data);
+  #endif
+
+  return ObexResponseCode::Success;
+}
+
+void
+BluetoothPbapManager::AppendBtNamedValueByTagId(
+  const ObexHeaderSet& aHeader,
+  InfallibleTArray<BluetoothNamedValue>& aValues,
+  const AppParameterTag aTagId)
+{
+  uint8_t buf[64];
+
+  switch (aTagId) {
+    case AppParameterTag::Order: {
+      if (!aHeader.GetAppParameter(AppParameterTag::Order, buf, 64)) {
+        break;
+      }
+
+      static const nsString sOrderStr[] = {NS_LITERAL_STRING("alphanumeric"),
+                                           NS_LITERAL_STRING("indexed"),
+                                           NS_LITERAL_STRING("phonetical")};
+      uint8_t order = buf[0];
+      if (order < MOZ_ARRAY_LENGTH(sOrderStr)) {
+        BT_APPEND_NAMED_VALUE(aValues, "order", sOrderStr[order]);
+      } else {
+        BT_WARNING("%s: Unexpected value '%d' of 'Order'", __FUNCTION__, order);
+      }
+      break;
+    }
+    case AppParameterTag::SearchValue: {
+      if (!aHeader.GetAppParameter(AppParameterTag::SearchValue, buf, 64)) {
+        break;
+      }
+
+      // Section 5.3.4.3 "SearchValue {<text string>}", PBAP 1.2
+      // The UTF-8 character set shall be used for <text string>.
+
+      // Use nsCString to store UTF-8 string here to follow the suggestion of
+      // 'MDN:Internal_strings'.
+      nsCString text((char *) buf);
+
+      BT_APPEND_NAMED_VALUE(aValues, "searchText", text);
+      break;
+    }
+    case AppParameterTag::SearchProperty: {
+      if (!aHeader.GetAppParameter(AppParameterTag::SearchProperty, buf, 64)) {
+        break;
+      }
+
+      static const nsString sSearchKeyStr[] = {NS_LITERAL_STRING("name"),
+                                               NS_LITERAL_STRING("number"),
+                                               NS_LITERAL_STRING("sound")};
+      uint8_t searchKey = buf[0];
+      if (searchKey < MOZ_ARRAY_LENGTH(sSearchKeyStr)) {
+        BT_APPEND_NAMED_VALUE(aValues, "searchKey", sSearchKeyStr[searchKey]);
+      } else {
+        BT_WARNING("%s: Unexpected value '%d' of 'SearchProperty'",
+                   __FUNCTION__, searchKey);
+      }
+      break;
+    }
+    case AppParameterTag::MaxListCount: {
+      if (!aHeader.GetAppParameter(AppParameterTag::MaxListCount, buf, 64)) {
+        break;
+      }
+
+      uint16_t maxListCount = *((uint16_t *)buf);
+
+      // convert big endian to little endian
+      maxListCount = (maxListCount >> 8) | (maxListCount << 8);
+
+      BT_APPEND_NAMED_VALUE(aValues, "maxListCount", (uint32_t) maxListCount);
+      break;
+    }
+    case AppParameterTag::ListStartOffset: {
+      if (!aHeader.GetAppParameter(AppParameterTag::ListStartOffset, buf, 64)) {
+        break;
+      }
+
+      uint16_t listStartOffset = *((uint16_t *)buf);
+
+      // convert big endian to little endian
+      listStartOffset = (listStartOffset >> 8) | (listStartOffset << 8);
+
+      BT_APPEND_NAMED_VALUE(aValues, "listStartOffset",
+                           (uint32_t) listStartOffset);
+      break;
+    }
+    case AppParameterTag::PropertySelector: {
+      if (!aHeader.GetAppParameter(
+          AppParameterTag::PropertySelector, buf, 64)) {
+        break;
+      }
+
+      InfallibleTArray<uint32_t> props = PackPropertiesMask(buf, 64);
+
+      BT_APPEND_NAMED_VALUE(aValues, "propSelector", props);
+      break;
+    }
+    case AppParameterTag::Format: {
+      if (!aHeader.GetAppParameter(AppParameterTag::Format, buf, 64)) {
+        break;
+      }
+
+      bool usevCard3 = buf[0];
+      BT_APPEND_NAMED_VALUE(aValues, "format", usevCard3);
+      break;
+    }
+    case AppParameterTag::vCardSelector: {
+      if (!aHeader.GetAppParameter(AppParameterTag::vCardSelector, buf, 64)) {
+        break;
+      }
+
+      InfallibleTArray<uint32_t> props = PackPropertiesMask(buf, 64);
+
+      bool hasVCardSelectorOperator = aHeader.GetAppParameter(
+        AppParameterTag::vCardSelectorOperator, buf, 64);
+
+      if (hasVCardSelectorOperator && buf[0]) {
+        BT_APPEND_NAMED_VALUE(aValues, "vCardSelector_AND",
+                              BluetoothValue(props));
+      } else {
+        BT_APPEND_NAMED_VALUE(aValues, "vCardSelector_OR",
+                              BluetoothValue(props));
+      }
+      break;
+    }
+    default:
+      BT_LOGR("Unsupported AppParameterTag: %x", aTagId);
+      break;
+  }
 }
 
 bool
@@ -458,6 +723,53 @@ BluetoothPbapManager::ReplyToSetPath()
   int index = 3;
 
   SendObexData(req, ObexResponseCode::Success, index);
+}
+
+InfallibleTArray<uint32_t>
+BluetoothPbapManager::PackPropertiesMask(uint8_t* aData, int aSize)
+{
+  InfallibleTArray<uint32_t> propSelector;
+
+  // Table 5.1 "Property Mask", PBAP 1.2
+  // PropertyMask is a 64-bit mask that indicates the properties contained in
+  // the requested vCard objects. We only support bit 0~31 since the rest are
+  // reserved for future use or vendor specific properties.
+
+  // convert big endian to little endian
+  uint32_t x = (aData[7] << 0)  | (aData[6] << 8) |
+               (aData[5] << 16) | (aData[4] << 24);
+
+  uint32_t count = 0;
+  while (!x) {
+    if (x & 1) {
+      propSelector.AppendElement(count);
+    }
+
+    ++count;
+    x >>= 1;
+  }
+
+  return propSelector;
+}
+
+void
+BluetoothPbapManager::ReplyToPullPhonebook(Blob* aBlob, uint16_t aPhonebookSize)
+{
+  // TODO: Implement this function (Bug 1180556)
+}
+
+void
+BluetoothPbapManager::ReplyToPullvCardListing(
+  Blob* aBlob,
+  uint16_t aPhonebookSize)
+{
+  // TODO: Implement this function (Bug 1180556)
+}
+
+void
+BluetoothPbapManager::ReplyToPullvCardEntry(Blob* aBlob)
+{
+  // TODO: Implement this function (Bug 1180556)
 }
 
 void
