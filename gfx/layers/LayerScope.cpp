@@ -782,7 +782,7 @@ public:
     {
     public:
         NS_DECL_THREADSAFE_ISUPPORTS
-        ClearTask(DebugDataSender *host)
+        explicit ClearTask(DebugDataSender *host)
             : mHost(host)
         {  }
 
@@ -804,7 +804,7 @@ public:
     public:
         NS_DECL_THREADSAFE_ISUPPORTS
 
-        SendTask(DebugDataSender *host)
+        explicit SendTask(DebugDataSender *host)
             : mHost(host)
         {  }
 
@@ -829,7 +829,7 @@ public:
         nsRefPtr<DebugDataSender> mHost;
     };
 
-    DebugDataSender(nsIThread *thread)
+    explicit DebugDataSender(nsIThread *thread)
         : mThread(thread)
     {  }
 
