@@ -28,7 +28,6 @@
 #include "nsCocoaFeatures.h"
 #include "nsCocoaUtils.h"
 #include "nsChildView.h"
-#include "nsMenuBarX.h"
 #include "nsToolkit.h"
 #include "TextInputHandler.h"
 #include "mozilla/HangMonitor.h"
@@ -658,7 +657,6 @@ nsAppShell::Run(void)
   mStarted = true;
 
   AddScreenWakeLockListener();
-  nsMenuBarX::ResetNativeApplicationMenu();
 
   NS_OBJC_TRY_ABORT([NSApp run]);
 
