@@ -46,7 +46,6 @@ MediaSourceReader::MediaSourceReader(MediaSourceDecoder* aDecoder)
   : MediaDecoderReader(aDecoder)
   , mLastAudioTime(0)
   , mLastVideoTime(0)
-  , mForceVideoDecodeAhead(false)
   , mOriginalSeekTime(-1)
   , mPendingSeekTime(-1)
   , mWaitingForSeekData(false)
@@ -307,9 +306,7 @@ MediaSourceReader::OnAudioNotDecoded(NotDecodedReason aReason)
 }
 
 nsRefPtr<MediaDecoderReader::VideoDataPromise>
-MediaSourceReader::RequestVideoData(bool aSkipToNextKeyframe,
-                                    int64_t aTimeThreshold,
-                                    bool aForceDecodeAhead)
+MediaSourceReader::RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThreshold)
 {
   MOZ_ASSERT(OnTaskQueue());
   MOZ_DIAGNOSTIC_ASSERT(mSeekPromise.IsEmpty(), "No sample requests allowed while seeking");
@@ -333,7 +330,6 @@ MediaSourceReader::RequestVideoData(bool aSkipToNextKeyframe,
     return p;
   }
   MOZ_DIAGNOSTIC_ASSERT(!mVideoSeekRequest.Exists());
-  mForceVideoDecodeAhead = aForceDecodeAhead;
 
   SwitchSourceResult ret = SwitchVideoSource(&mLastVideoTime);
   switch (ret) {
@@ -367,8 +363,7 @@ void
 MediaSourceReader::DoVideoRequest()
 {
   mVideoRequest.Begin(GetVideoReader()->RequestVideoData(mDropVideoBeforeThreshold,
-                                                         GetReaderVideoTime(mTimeThreshold),
-                                                         mForceVideoDecodeAhead)
+                                                         GetReaderVideoTime(mTimeThreshold))
                       ->Then(OwnerThread(), __func__, this,
                              &MediaSourceReader::OnVideoDecoded,
                              &MediaSourceReader::OnVideoNotDecoded));
@@ -893,9 +888,6 @@ MediaSourceReader::ResetDecode()
   // Reset miscellaneous seeking state.
   mWaitingForSeekData = false;
   mPendingSeekTime = -1;
-
-  // Reset force video decode ahead.
-  mForceVideoDecodeAhead = false;
 
   // Reset all the readers.
   if (GetAudioReader()) {
