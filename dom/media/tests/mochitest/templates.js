@@ -208,20 +208,10 @@ var commandsGetUserMedia = [
 var commandsPeerConnectionOfferAnswer = [
   function PC_LOCAL_SETUP_ICE_HANDLER(test) {
     test.pcLocal.setupIceCandidateHandler(test);
-    if (test.steeplechase) {
-      test.pcLocal.endOfTrickleIce.then(() => {
-        send_message({"type": "end_of_trickle_ice"});
-      });
-    }
   },
 
   function PC_REMOTE_SETUP_ICE_HANDLER(test) {
     test.pcRemote.setupIceCandidateHandler(test);
-    if (test.steeplechase) {
-      test.pcRemote.endOfTrickleIce.then(() => {
-        send_message({"type": "end_of_trickle_ice"});
-      });
-    }
   },
 
   function PC_LOCAL_STEEPLECHASE_SIGNAL_EXPECTED_LOCAL_TRACKS(test) {
@@ -316,15 +306,17 @@ var commandsPeerConnectionOfferAnswer = [
   },
 
   function PC_LOCAL_SANE_LOCAL_SDP(test) {
-    test.pcLocal.verifySdp(test._local_offer, "offer",
-                           test._offer_constraints, test._offer_options,
-                           true);
+    test.pcLocal.localRequiresTrickleIce =
+      sdputils.verifySdp(test._local_offer, "offer",
+                         test._offer_constraints, test._offer_options,
+                         test.testOptions);
   },
 
   function PC_REMOTE_SANE_REMOTE_SDP(test) {
-    test.pcRemote.verifySdp(test._local_offer, "offer",
-                            test._offer_constraints, test._offer_options,
-                            false);
+    test.pcRemote.remoteRequiresTrickleIce =
+      sdputils.verifySdp(test._local_offer, "offer",
+                         test._offer_constraints, test._offer_options,
+                         test.testOptions);
   },
 
   function PC_REMOTE_CREATE_ANSWER(test) {
@@ -340,46 +332,6 @@ var commandsPeerConnectionOfferAnswer = [
           test._answer_constraints = test.pcRemote.constraints;
         }
       });
-  },
-
-  function PC_REMOTE_CHECK_FOR_DUPLICATED_PORTS_IN_SDP(test) {
-    var re = /a=candidate.* (UDP|TCP) [\d]+ ([\d\.]+) ([\d]+) typ host/g;
-
-    var _sdpCandidatesIntoArray = sdp => {
-      var regexArray = [];
-      var resultArray = [];
-      while ((regexArray = re.exec(sdp)) !== null) {
-        info("regexArray: " + regexArray);
-        if ((regexArray[1] === "TCP") && (regexArray[3] === "9")) {
-          // As both sides can advertise TCP active connection on port 9 lets
-          // ignore them all together
-          info("Ignoring TCP candidate on port 9");
-          continue;
-        }
-        var triple = regexArray[1] + ":" + regexArray[2] + ":" + regexArray[3];
-        info("triple: " + triple);
-        if (resultArray.indexOf(triple) !== -1) {
-          dump("SDP: " + sdp.replace(/[\r]/g, '') + "\n");
-          ok(false, "This Transport:IP:Port " + triple + " appears twice in the SDP above!");
-        }
-        resultArray.push(triple);
-      }
-      return resultArray;
-    };
-
-    var offerTriples = _sdpCandidatesIntoArray(test._local_offer.sdp);
-    info("Offer ICE host candidates: " + JSON.stringify(offerTriples));
-
-    var answerTriples = _sdpCandidatesIntoArray(test.originalAnswer.sdp);
-    info("Answer ICE host candidates: " + JSON.stringify(answerTriples));
-
-    offerTriples.forEach(o => {
-      if (answerTriples.indexOf(o) !== -1) {
-        dump("SDP offer: " + test._local_offer.sdp.replace(/[\r]/g, '') + "\n");
-        dump("SDP answer: " + test.originalAnswer.sdp.replace(/[\r]/g, '') + "\n");
-        ok(false, "This IP:Port " + o + " appears in SDP offer and answer!");
-      }
-    });
   },
 
   function PC_REMOTE_SET_LOCAL_DESCRIPTION(test) {
@@ -412,14 +364,16 @@ var commandsPeerConnectionOfferAnswer = [
       });
   },
   function PC_REMOTE_SANE_LOCAL_SDP(test) {
-    test.pcRemote.verifySdp(test._remote_answer, "answer",
-                            test._offer_constraints, test._offer_options,
-                            true);
+    test.pcRemote.localRequiresTrickleIce =
+      sdputils.verifySdp(test._remote_answer, "answer",
+                         test._offer_constraints, test._offer_options,
+                         test.testOptions);
   },
   function PC_LOCAL_SANE_REMOTE_SDP(test) {
-    test.pcLocal.verifySdp(test._remote_answer, "answer",
-                           test._offer_constraints, test._offer_options,
-                           false);
+    test.pcLocal.remoteRequiresTrickleIce =
+      sdputils.verifySdp(test._remote_answer, "answer",
+                         test._offer_constraints, test._offer_options,
+                         test.testOptions);
   },
 
   function PC_LOCAL_WAIT_FOR_ICE_CONNECTED(test) {
@@ -483,7 +437,7 @@ var commandsPeerConnectionOfferAnswer = [
       test.pcLocal.checkStatsIceConnections(stats,
                                             test._offer_constraints,
                                             test._offer_options,
-                                            test._remote_answer);
+                                            test.testOptions);
     });
   },
 
@@ -492,7 +446,7 @@ var commandsPeerConnectionOfferAnswer = [
       test.pcRemote.checkStatsIceConnections(stats,
                                              test._offer_constraints,
                                              test._offer_options,
-                                             test.originalAnswer);
+                                             test.testOptions);
     });
   },
 
@@ -509,20 +463,44 @@ var commandsPeerConnectionOfferAnswer = [
   function PC_REMOTE_CHECK_STATS(test) {
     return checkAllTrackStats(test.pcRemote);
   },
-  function PC_LOCAL_WAIT_FOR_END_OF_TRICKLE(test) {
-    return test.pcLocal.endOfTrickleIce;
+  function PC_LOCAL_VERIFY_SDP_AFTER_END_OF_TRICKLE(test) {
+    /* In case the endOfTrickleSdp promise is resolved already it will win the
+     * race because it gets evaluated first. But if endOfTrickleSdp is still
+     * pending the rejection will win the race. */
+    return Promise.race([
+      test.pcLocal.endOfTrickleSdp,
+      Promise.reject("No SDP")
+    ])
+    .then(sdp => sdputils.checkSdpAfterEndOfTrickle(sdp, test.testOptions, test.pcLocal.label),
+          () => info("pcLocal: Gathering is not complete yet, skipping post-gathering SDP check"));
   },
-  function PC_REMOTE_WAIT_FOR_END_OF_TRICKLE(test) {
-    return test.pcRemote.endOfTrickleIce;
+  function PC_REMOTE_VERIFY_SDP_AFTER_END_OF_TRICKLE(test) {
+    /* In case the endOfTrickleSdp promise is resolved already it will win the
+     * race because it gets evaluated first. But if endOfTrickleSdp is still
+     * pending the rejection will win the race. */
+    return Promise.race([
+      test.pcRemote.endOfTrickleSdp,
+      Promise.reject("No SDP")
+    ])
+    .then(sdp => sdputils.checkSdpAfterEndOfTrickle(sdp, test.testOptions, test.pcRemote.label),
+          () => info("pcRemote: Gathering is not complete yet, skipping post-gathering SDP check"));
   }
 ];
 
+function PC_LOCAL_REMOVE_VP8_FROM_OFFER(test) {
+  isnot(test.originalOffer.sdp.search("H264/90000"), -1, "H.264 should be present in the SDP offer");
+  test.originalOffer.sdp = sdputils.removeVP8(test.originalOffer.sdp);
+  info("Updated H264 only offer: " + JSON.stringify(test.originalOffer));
+};
+
 function PC_LOCAL_REMOVE_BUNDLE_FROM_OFFER(test) {
-  test.originalOffer.sdp = test.originalOffer.sdp.replace(
-      /a=group:BUNDLE .*\r\n/g,
-      ""
-      );
+  test.originalOffer.sdp = sdputils.removeBundle(test.originalOffer.sdp);
   info("Updated no bundle offer: " + JSON.stringify(test.originalOffer));
+};
+
+function PC_LOCAL_REMOVE_RTCPMUX_FROM_OFFER(test) {
+  test.originalOffer.sdp = sdputils.removeRtcpMux(test.originalOffer.sdp);
+  info("Updated no RTCP-Mux offer: " + JSON.stringify(test.originalOffer));
 };
 
 var addRenegotiation = (chain, commands, checks) => {

@@ -13,6 +13,8 @@
 
   var test;
   runNetworkTest(function (options) {
+    options = options || { };
+    options.bundle = false;
     test = new PeerConnectionTest(options);
     addRenegotiation(test.chain,
                      commandsCreateDataChannel.concat(
@@ -26,9 +28,6 @@
                        ]
                       ),
                      commandsCheckDataChannel);
-
-    test.chain.insertAfterEach('PC_LOCAL_CREATE_OFFER',
-                              PC_LOCAL_REMOVE_BUNDLE_FROM_OFFER);
 
     // Insert before the second PC_LOCAL_CHECK_MEDIA_TRACKS
     test.chain.insertBefore('PC_LOCAL_CHECK_MEDIA_TRACKS',

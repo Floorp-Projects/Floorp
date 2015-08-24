@@ -1,0 +1,39 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1167443",
+    title: "Basic audio & video call with disabled bundle and disbaled RTCP-Mux"
+  });
+
+  var test;
+  runNetworkTest(function (options) {
+    options = options || { };
+    options.bundle = false;
+    options.rtcpmux = false;
+    test = new PeerConnectionTest(options);
+    test.chain.replace("PC_LOCAL_VERIFY_SDP_AFTER_END_OF_TRICKLE", [
+      function PC_LOCAL_REQUIRE_SDP_AFTER_END_OF_TRICKLE(test) {
+        return test.pcLocal.endOfTrickleSdp .then(sdp =>
+          sdputils.checkSdpAfterEndOfTrickle(sdp, test.testOptions, test.pcLocal.label));
+      }
+    ]);
+    test.chain.replace("PC_REMOTE_VERIFY_SDP_AFTER_END_OF_TRICKLE", [
+      function PC_REMOTE_REQUIRE_SDP_AFTER_END_OF_TRICKLE(test) {
+        return test.pcRemote.endOfTrickleSdp .then(sdp =>
+          sdputils.checkSdpAfterEndOfTrickle(sdp, test.testOptions, test.pcRemote.label));
+      }
+    ]);
+    test.setMediaConstraints([{audio: true}, {video: true}],
+                             [{audio: true}, {video: true}]);
+    test.run();
+  });
+</script>
+</pre>
+</body>
+</html>
