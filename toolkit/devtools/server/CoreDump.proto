@@ -86,6 +86,8 @@ message Node {
     optional uint64     size            = 3;
     repeated Edge       edges           = 4;
     optional StackFrame allocationStack = 5;
+    // char[]
+    optional bytes      jsObjectClassName = 6;
 }
 
 // A serialized edge from the heap graph.
