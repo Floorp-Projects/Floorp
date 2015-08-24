@@ -46,10 +46,20 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
 
-this.__defineGetter__("gDecimalSymbol", function() {
-  delete this.gDecimalSymbol;
-  return this.gDecimalSymbol = Number(5.4).toLocaleString().match(/\D/);
-});
+let localeNumberFormatCache = new Map();
+function getLocaleNumberFormat(fractionDigits) {
+  // Backward compatibility: don't use localized digits
+  let locale = Intl.NumberFormat().resolvedOptions().locale +
+               "-u-nu-latn";
+  let key = locale + "_" + fractionDigits;
+  if (!localeNumberFormatCache.has(key)) {
+    localeNumberFormatCache.set(key,
+      Intl.NumberFormat(locale,
+                        { maximumFractionDigits: fractionDigits,
+                          minimumFractionDigits: fractionDigits }));
+  }
+  return localeNumberFormatCache.get(key);
+}
 
 const kDownloadProperties =
   "chrome://mozapps/locale/downloads/downloads.properties";
@@ -461,11 +471,17 @@ this.DownloadUtils = {
 
     // Get rid of insignificant bits by truncating to 1 or 0 decimal points
     // 0 -> 0; 1.2 -> 1.2; 12.3 -> 12.3; 123.4 -> 123; 234.5 -> 235
-    // added in bug 462064: (unitIndex != 0) makes sure that no decimal digit for bytes appears when aBytes < 100 
-    aBytes = aBytes.toFixed((aBytes > 0) && (aBytes < 100) && (unitIndex != 0) ? 1 : 0);
+    // added in bug 462064: (unitIndex != 0) makes sure that no decimal digit for bytes appears when aBytes < 100
+    let fractionDigits = (aBytes > 0) && (aBytes < 100) && (unitIndex != 0) ? 1 : 0;
 
-    if (gDecimalSymbol != ".")
-      aBytes = aBytes.replace(".", gDecimalSymbol);
+    // Don't try to format Infinity values using NumberFormat.
+    if (aBytes === Infinity) {
+      aBytes = "Infinity";
+    } else {
+      aBytes = getLocaleNumberFormat(fractionDigits)
+                 .format(aBytes);
+    }
+
     return [aBytes, gBundle.GetStringFromName(gStr.units[unitIndex])];
   },
 
