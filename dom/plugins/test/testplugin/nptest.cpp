@@ -171,6 +171,7 @@ static bool echoString(NPObject* npobj, const NPVariant* args, uint32_t argCount
 static bool startAudioPlayback(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool stopAudioPlayback(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getAudioMuted(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool nativeWidgetIsVisible(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "npnEvaluateTest",
@@ -240,6 +241,7 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "startAudioPlayback",
   "stopAudioPlayback",
   "audioMuted",
+  "nativeWidgetIsVisible",
 };
 static NPIdentifier sPluginMethodIdentifiers[MOZ_ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[] = {
@@ -310,6 +312,7 @@ static const ScriptableFunction sPluginMethodFunctions[] = {
   startAudioPlayback,
   stopAudioPlayback,
   getAudioMuted,
+  nativeWidgetIsVisible,
 };
 
 static_assert(MOZ_ARRAY_LENGTH(sPluginMethodIdentifierNames) ==
@@ -3315,6 +3318,27 @@ crashPluginInNestedLoop(NPObject* npobj, const NPVariant* args,
 bool
 destroySharedGfxStuff(NPObject* npobj, const NPVariant* args,
                         uint32_t argCount, NPVariant* result)
+{
+  // XXX Not implemented!
+  return false;
+}
+#endif
+
+#if defined(XP_WIN)
+bool
+nativeWidgetIsVisible(NPObject* npobj, const NPVariant* args,
+                        uint32_t argCount, NPVariant* result)
+{
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
+  bool visible = pluginNativeWidgetIsVisible(id);
+  BOOLEAN_TO_NPVARIANT(visible, *result);
+  return true;
+}
+#else
+bool
+nativeWidgetIsVisible(NPObject* npobj, const NPVariant* args,
+                      uint32_t argCount, NPVariant* result)
 {
   // XXX Not implemented!
   return false;
