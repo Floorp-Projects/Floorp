@@ -137,8 +137,13 @@ protected:
 
   nsresult Send(DaemonSocketPDU* aPDU, BluetoothSetupResultHandler* aRes)
   {
-    aRes->AddRef(); // Keep reference for response
-    return Send(aPDU, static_cast<void*>(aRes));
+    nsRefPtr<BluetoothSetupResultHandler> res(aRes);
+    nsresult rv = Send(aPDU, static_cast<void*>(res.get()));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    unused << res.forget(); // Keep reference for response
+    return NS_OK;
   }
 
 private:
@@ -610,8 +615,13 @@ protected:
 
   nsresult Send(DaemonSocketPDU* aPDU, BluetoothResultHandler* aRes)
   {
-    aRes->AddRef(); // Keep reference for response
-    return Send(aPDU, static_cast<void*>(aRes));
+    nsRefPtr<BluetoothResultHandler> res(aRes);
+    nsresult rv = Send(aPDU, static_cast<void*>(res.get()));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    unused << res.forget(); // Keep reference for response
+    return NS_OK;
   }
 
 private:
