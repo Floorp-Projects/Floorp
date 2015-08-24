@@ -103,24 +103,6 @@ public class TabsLayoutItemView extends LinearLayout
         mThumbnailWrapper = (TabThumbnailWrapper) findViewById(R.id.wrapper);
 
         growCloseButtonHitArea();
-
-        mAudioPlayingButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mTabId < 0) {
-                    throw new IllegalStateException("Invalid tab id:" + mTabId);
-                }
-
-                // TODO: Toggle icon in the UI as well (bug 1190301)
-                final JSONObject args = new JSONObject();
-                try {
-                    args.put("tabId", mTabId);
-                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:ToggleMuteAudio", args.toString()));
-                } catch (JSONException e) {
-                    Log.e(LOGTAG, "Error toggling mute audio: error building json arguments", e);
-                }
-            }
-        });
     }
 
     private void growCloseButtonHitArea() {
