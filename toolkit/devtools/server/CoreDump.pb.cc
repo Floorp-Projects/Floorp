@@ -108,12 +108,13 @@ void protobuf_AssignDesc_CoreDump_2eproto() {
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(StackFrame_Data));
   Node_descriptor_ = file->message_type(2);
-  static const int Node_offsets_[5] = {
+  static const int Node_offsets_[6] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Node, id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Node, typename__),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Node, size_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Node, edges_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Node, allocationstack_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Node, jsobjectclassname_),
   };
   Node_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -198,12 +199,13 @@ void protobuf_AddDesc_CoreDump_2eproto() {
     "\022\014\n\004line\030\003 \001(\r\022\016\n\006column\030\004 \001(\r\022\016\n\006source"
     "\030\005 \001(\014\022\033\n\023functionDisplayName\030\006 \001(\014\022\020\n\010i"
     "sSystem\030\007 \001(\010\022\024\n\014isSelfHosted\030\010 \001(\010B\020\n\016S"
-    "tackFrameType\"\242\001\n\004Node\022\n\n\002id\030\001 \001(\004\022\020\n\010ty"
+    "tackFrameType\"\275\001\n\004Node\022\n\n\002id\030\001 \001(\004\022\020\n\010ty"
     "peName\030\002 \001(\014\022\014\n\004size\030\003 \001(\004\022.\n\005edges\030\004 \003("
     "\0132\037.mozilla.devtools.protobuf.Edge\022>\n\017al"
     "locationStack\030\005 \001(\0132%.mozilla.devtools.p"
-    "rotobuf.StackFrame\"&\n\004Edge\022\020\n\010referent\030\001"
-    " \001(\004\022\014\n\004name\030\002 \001(\014", 578);
+    "rotobuf.StackFrame\022\031\n\021jsObjectClassName\030"
+    "\006 \001(\014\"&\n\004Edge\022\020\n\010referent\030\001 \001(\004\022\014\n\004name\030"
+    "\002 \001(\014", 605);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "CoreDump.proto", &protobuf_RegisterTypes);
   Metadata::default_instance_ = new Metadata();
@@ -1276,6 +1278,7 @@ const int Node::kTypeNameFieldNumber;
 const int Node::kSizeFieldNumber;
 const int Node::kEdgesFieldNumber;
 const int Node::kAllocationStackFieldNumber;
+const int Node::kJsObjectClassNameFieldNumber;
 #endif  // !_MSC_VER
 
 Node::Node()
@@ -1302,6 +1305,7 @@ void Node::SharedCtor() {
   typename__ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   size_ = GOOGLE_ULONGLONG(0);
   allocationstack_ = NULL;
+  jsobjectclassname_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -1313,6 +1317,9 @@ Node::~Node() {
 void Node::SharedDtor() {
   if (typename__ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
     delete typename__;
+  }
+  if (jsobjectclassname_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    delete jsobjectclassname_;
   }
   if (this != default_instance_) {
     delete allocationstack_;
@@ -1341,7 +1348,7 @@ Node* Node::New() const {
 }
 
 void Node::Clear() {
-  if (_has_bits_[0 / 32] & 23) {
+  if (_has_bits_[0 / 32] & 55) {
     id_ = GOOGLE_ULONGLONG(0);
     if (has_typename_()) {
       if (typename__ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
@@ -1351,6 +1358,11 @@ void Node::Clear() {
     size_ = GOOGLE_ULONGLONG(0);
     if (has_allocationstack()) {
       if (allocationstack_ != NULL) allocationstack_->::mozilla::devtools::protobuf::StackFrame::Clear();
+    }
+    if (has_jsobjectclassname()) {
+      if (jsobjectclassname_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+        jsobjectclassname_->clear();
+      }
     }
   }
   edges_.Clear();
@@ -1433,6 +1445,19 @@ bool Node::MergePartialFromCodedStream(
         } else {
           goto handle_unusual;
         }
+        if (input->ExpectTag(50)) goto parse_jsObjectClassName;
+        break;
+      }
+
+      // optional bytes jsObjectClassName = 6;
+      case 6: {
+        if (tag == 50) {
+         parse_jsObjectClassName:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+                input, this->mutable_jsobjectclassname()));
+        } else {
+          goto handle_unusual;
+        }
         if (input->ExpectAtEnd()) goto success;
         break;
       }
@@ -1490,6 +1515,12 @@ void Node::SerializeWithCachedSizes(
       5, this->allocationstack(), output);
   }
 
+  // optional bytes jsObjectClassName = 6;
+  if (has_jsobjectclassname()) {
+    ::google::protobuf::internal::WireFormatLite::WriteBytesMaybeAliased(
+      6, this->jsobjectclassname(), output);
+  }
+
   if (!unknown_fields().empty()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -1531,6 +1562,13 @@ void Node::SerializeWithCachedSizes(
         5, this->allocationstack(), target);
   }
 
+  // optional bytes jsObjectClassName = 6;
+  if (has_jsobjectclassname()) {
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
+        6, this->jsobjectclassname(), target);
+  }
+
   if (!unknown_fields().empty()) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
         unknown_fields(), target);
@@ -1569,6 +1607,13 @@ int Node::ByteSize() const {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
           this->allocationstack());
+    }
+
+    // optional bytes jsObjectClassName = 6;
+    if (has_jsobjectclassname()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::BytesSize(
+          this->jsobjectclassname());
     }
 
   }
@@ -1619,6 +1664,9 @@ void Node::MergeFrom(const Node& from) {
     if (from.has_allocationstack()) {
       mutable_allocationstack()->::mozilla::devtools::protobuf::StackFrame::MergeFrom(from.allocationstack());
     }
+    if (from.has_jsobjectclassname()) {
+      set_jsobjectclassname(from.jsobjectclassname());
+    }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
@@ -1647,6 +1695,7 @@ void Node::Swap(Node* other) {
     std::swap(size_, other->size_);
     edges_.Swap(&other->edges_);
     std::swap(allocationstack_, other->allocationstack_);
+    std::swap(jsobjectclassname_, other->jsobjectclassname_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);

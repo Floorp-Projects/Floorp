@@ -64,6 +64,7 @@ struct DeserializedNode {
   uint64_t            size;
   EdgeVector          edges;
   Maybe<StackFrameId> allocationStack;
+  UniquePtr<char[]>   jsObjectClassName;
   // A weak pointer to this node's owning `HeapSnapshot`. Safe without
   // AddRef'ing because this node's lifetime is equal to that of its owner.
   HeapSnapshot*       owner;
@@ -73,12 +74,14 @@ struct DeserializedNode {
                    uint64_t size,
                    EdgeVector&& edges,
                    Maybe<StackFrameId> allocationStack,
+                   UniquePtr<char[]>&& className,
                    HeapSnapshot& owner)
     : id(id)
     , typeName(typeName)
     , size(size)
     , edges(Move(edges))
     , allocationStack(allocationStack)
+    , jsObjectClassName(Move(className))
     , owner(&owner)
   { }
   virtual ~DeserializedNode() { }
@@ -226,6 +229,7 @@ public:
   bool isLive() const override { return false; }
   const char16_t* typeName() const override;
   size_t size(mozilla::MallocSizeOf mallocSizeof) const override;
+  const char* jsObjectClassName() const override { return get().jsObjectClassName.get(); }
 
   // We ignore the `bool wantNames` parameter because we can't control whether
   // the core dump was serialized with edge names or not.

@@ -61,6 +61,7 @@ DeserializedNode::DeserializedNode(DeserializedNode&& rhs)
   rhs.size = 0;
 
   edges = Move(rhs.edges);
+  jsObjectClassName = Move(rhs.jsObjectClassName);
 
   owner = rhs.owner;
   rhs.owner = nullptr;
