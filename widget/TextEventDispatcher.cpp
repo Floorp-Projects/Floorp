@@ -141,33 +141,15 @@ TextEventDispatcher::DispatchEvent(nsIWidget* aWidget,
                                    WidgetGUIEvent& aEvent,
                                    nsEventStatus& aStatus)
 {
-  MOZ_ASSERT(!aEvent.AsInputEvent(), "Use DispatchInputEvent()");
-
-  nsRefPtr<TextEventDispatcher> kungFuDeathGrip(this);
-  nsCOMPtr<nsIWidget> widget(aWidget);
-  mDispatchingEvent++;
-  nsresult rv = widget->DispatchEvent(&aEvent, aStatus);
-  mDispatchingEvent--;
-  return rv;
-}
-
-nsresult
-TextEventDispatcher::DispatchInputEvent(nsIWidget* aWidget,
-                                        WidgetInputEvent& aEvent,
-                                        nsEventStatus& aStatus,
-                                        DispatchTo aDispatchTo)
-{
   nsRefPtr<TextEventDispatcher> kungFuDeathGrip(this);
   nsCOMPtr<nsIWidget> widget(aWidget);
   mDispatchingEvent++;
 
-  // If the event is dispatched via nsIWidget::DispatchInputEvent(), it
-  // sends the event to the parent process first since APZ needs to handle it
-  // first.  However, some callers (e.g., keyboard apps on B2G and tests
-  // expecting synchronous dispatch) don't want this to do that.
   nsresult rv = NS_OK;
-  if (aDispatchTo == eDispatchToParentProcess) {
-    aStatus = widget->DispatchInputEvent(&aEvent);
+  if (aEvent.AsInputEvent() &&
+      (!aEvent.mFlags.mIsSynthesizedForTests || gfxPrefs::TestEventsAsyncEnabled()))
+  {
+    aStatus = widget->DispatchInputEvent(aEvent.AsInputEvent());
   } else {
     rv = widget->DispatchEvent(&aEvent, aStatus);
   }
@@ -304,11 +286,9 @@ bool
 TextEventDispatcher::DispatchKeyboardEvent(
                        uint32_t aMessage,
                        const WidgetKeyboardEvent& aKeyboardEvent,
-                       nsEventStatus& aStatus,
-                       DispatchTo aDispatchTo)
+                       nsEventStatus& aStatus)
 {
-  return DispatchKeyboardEventInternal(aMessage, aKeyboardEvent, aStatus,
-                                       aDispatchTo);
+  return DispatchKeyboardEventInternal(aMessage, aKeyboardEvent, aStatus);
 }
 
 bool
@@ -316,7 +296,6 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
                        uint32_t aMessage,
                        const WidgetKeyboardEvent& aKeyboardEvent,
                        nsEventStatus& aStatus,
-                       DispatchTo aDispatchTo,
                        uint32_t aIndexOfKeypress)
 {
   MOZ_ASSERT(aMessage == NS_KEY_DOWN || aMessage == NS_KEY_UP ||
@@ -395,15 +374,14 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
   keyEvent.mPluginEvent.Clear();
   // TODO: Manage mUniqueId here.
 
-  DispatchInputEvent(mWidget, keyEvent, aStatus, aDispatchTo);
+  DispatchEvent(mWidget, keyEvent, aStatus);
   return true;
 }
 
 bool
 TextEventDispatcher::MaybeDispatchKeypressEvents(
                        const WidgetKeyboardEvent& aKeyboardEvent,
-                       nsEventStatus& aStatus,
-                       DispatchTo aDispatchTo)
+                       nsEventStatus& aStatus)
 {
   // If the key event was consumed, keypress event shouldn't be fired.
   if (aStatus == nsEventStatus_eConsumeNoDefault) {
@@ -423,7 +401,7 @@ TextEventDispatcher::MaybeDispatchKeypressEvents(
   for (size_t i = 0; i < keypressCount; i++) {
     aStatus = nsEventStatus_eIgnore;
     if (!DispatchKeyboardEventInternal(NS_KEY_PRESS, aKeyboardEvent,
-                                       aStatus, aDispatchTo, i)) {
+                                       aStatus, i)) {
       // The widget must have been gone.
       break;
     }

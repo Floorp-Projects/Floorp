@@ -9,7 +9,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
-#include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEventDispatcherListener.h"
 #include "nsAutoPtr.h"
 #include "nsITextInputProcessor.h"
@@ -17,6 +16,10 @@
 #include "nsTArray.h"
 
 namespace mozilla {
+
+namespace widget{
+class TextEventDispatcher;
+} // namespace widget
 
 class TextInputProcessor final : public nsITextInputProcessor
                                , public widget::TextEventDispatcherListener
@@ -57,11 +60,10 @@ private:
   nsresult KeydownInternal(const WidgetKeyboardEvent& aKeyboardEvent,
                            uint32_t aKeyFlags,
                            bool aAllowToDispatchKeypress,
-                           uint32_t& aConsumedFlags);
+                           bool& aDoDefault);
   nsresult KeyupInternal(const WidgetKeyboardEvent& aKeyboardEvent,
                          uint32_t aKeyFlags,
                          bool& aDoDefault);
-  TextEventDispatcher::DispatchTo GetDispatchTo() const;
   nsresult IsValidStateForComposition();
   void UnlinkFromTextEventDispatcher();
   nsresult PrepareKeyboardEventToDispatch(WidgetKeyboardEvent& aKeyboardEvent,
