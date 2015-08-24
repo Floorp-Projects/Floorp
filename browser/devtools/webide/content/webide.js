@@ -77,6 +77,14 @@ let UI = {
     projectList = new ProjectList(window, window);
     if (projectList.sidebarsEnabled) {
       ProjectPanel.toggleSidebar();
+
+      // TODO: Remove if/when dropdown layout is removed.
+      let toolbarNode = document.querySelector("#main-toolbar");
+      toolbarNode.classList.add("sidebar-layout");
+      let projectNode = document.querySelector("#project-panel-button");
+      projectNode.setAttribute("hidden", "true");
+      let runtimeNode = document.querySelector("#runtime-panel-button");
+      runtimeNode.setAttribute("hidden", "true");
     }
     runtimeList = new RuntimeList(window, window);
     if (runtimeList.sidebarsEnabled) {
@@ -499,8 +507,14 @@ let UI = {
 
     if (AppManager.connected) {
       runtimePanelButton.setAttribute("active", "true");
+      if (projectList.sidebarsEnabled) {
+        runtimePanelButton.removeAttribute("hidden");
+      }
     } else {
       runtimePanelButton.removeAttribute("active");
+      if (projectList.sidebarsEnabled) {
+        runtimePanelButton.setAttribute("hidden", "true");
+      }
     }
 
     projectPanelCmd.removeAttribute("disabled");
