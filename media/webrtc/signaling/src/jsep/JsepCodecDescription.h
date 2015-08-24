@@ -204,16 +204,17 @@ struct JsepVideoCodecDescription : public JsepCodecDescription {
         mMaxMbps(0),
         mMaxCpb(0),
         mMaxDpb(0),
-        mMaxBr(0),
-        mUseTmmbr(false)
+        mMaxBr(0)
   {
     // Add supported rtcp-fb types
     mNackFbTypes.push_back("");
     mNackFbTypes.push_back(SdpRtcpFbAttributeList::pli);
     mCcmFbTypes.push_back(SdpRtcpFbAttributeList::fir);
-    if (mUseTmmbr) {
-      mCcmFbTypes.push_back(SdpRtcpFbAttributeList::tmmbr);
-    }
+  }
+
+  virtual void
+  EnableTmmbr() {
+    mCcmFbTypes.push_back(SdpRtcpFbAttributeList::tmmbr);
   }
 
   virtual void
@@ -596,7 +597,6 @@ struct JsepVideoCodecDescription : public JsepCodecDescription {
   uint32_t mMaxCpb;
   uint32_t mMaxDpb;
   uint32_t mMaxBr;
-  bool     mUseTmmbr;
   std::string mSpropParameterSets;
 };
 
