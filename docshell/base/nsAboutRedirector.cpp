@@ -74,10 +74,12 @@ static RedirEntry kRedirMap[] = {
     "memory", "chrome://global/content/aboutMemory.xhtml",
     nsIAboutModule::ALLOW_SCRIPT
   },
+#ifdef NIGHTLY_BUILD
   {
     "performance", "chrome://global/content/aboutPerformance.xhtml",
     nsIAboutModule::ALLOW_SCRIPT
   },
+#endif
   {
     "addons", "chrome://mozapps/content/extensions/extensions.xul",
     nsIAboutModule::ALLOW_SCRIPT
