@@ -43,14 +43,23 @@
                          android:contentDescription="@string/new_tab"
                          android:background="@drawable/action_bar_button_inverse"/>
 
-            <ImageButton android:id="@+id/menu"
+            <FrameLayout android:id="@+id/menu"
                          style="@style/UrlBar.ImageButton"
                          android:layout_width="@dimen/tabs_panel_button_width"
-                         android:padding="@dimen/browser_toolbar_button_padding"
-                         android:src="@drawable/menu"
-                         android:contentDescription="@string/menu"
                          android:background="@drawable/action_bar_button_inverse"
-                         android:visibility="gone"/>
+                         android:contentDescription="@string/menu"
+                         android:visibility="gone">
+
+                <ImageButton
+                        style="@style/UrlBar.ImageButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="@dimen/browser_toolbar_menu_icon_height"
+                        android:layout_gravity="center"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/menu"
+                        android:tint="@color/tabs_tray_icon_grey"/>
+
+            </FrameLayout>
 
         </view>
 
