@@ -14,18 +14,25 @@ const FAVICON_PRIVACY = "chrome://browser/skin/Privacy-16.png";
 let stringBundle = Services.strings.createBundle(
                      "chrome://browser/locale/aboutPrivateBrowsing.properties");
 
-let prefBranch = Services.prefs.getBranch("privacy.trackingprotection.pbmode.");
+let prefBranch = Services.prefs.getBranch("privacy.trackingprotection.");
 let prefObserver = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                          Ci.nsISupportsWeakReference]),
   observe: function () {
     if (prefBranch.getBoolPref("enabled")) {
+      document.body.setAttribute("globalTpEnabled", "true");
+    } else {
+      document.body.removeAttribute("globalTpEnabled");
+    }
+    if (prefBranch.getBoolPref("pbmode.enabled") ||
+        prefBranch.getBoolPref("enabled")) {
       document.body.setAttribute("tpEnabled", "true");
     } else {
       document.body.removeAttribute("tpEnabled");
     }
   },
 };
+prefBranch.addObserver("pbmode.enabled", prefObserver, true);
 prefBranch.addObserver("enabled", prefObserver, true);
 
 function setFavIcon(url) {
