@@ -66,21 +66,13 @@ public:
     }
 
     // Handle the case of allocation failure in the input buffer
-    if (mBuffer) {
-      return;
-    }
-
-    if (mWriteIndex >= mLength) {
-      NS_ASSERTION(mWriteIndex == mLength, "Overshot length");
-      // Don't record any more.
-      return;
-    }
+    uint32_t outputChannelCount = mBuffer ? mNumberOfChannels : 0;
 
     // Record our input buffer
     MOZ_ASSERT(mWriteIndex < mLength, "How did this happen?");
     const uint32_t duration = std::min(WEBAUDIO_BLOCK_SIZE, mLength - mWriteIndex);
     const uint32_t inputChannelCount = aInput.mChannelData.Length();
-    for (uint32_t i = 0; i < mNumberOfChannels; ++i) {
+    for (uint32_t i = 0; i < outputChannelCount; ++i) {
       float* outputData = mBuffer->GetDataForWrite(i) + mWriteIndex;
       if (aInput.IsNull() || i >= inputChannelCount) {
         PodZero(outputData, duration);
