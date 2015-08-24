@@ -12,6 +12,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/BluetoothAdapterBinding.h"
 #include "mozilla/dom/BluetoothDeviceEvent.h"
+#include "mozilla/dom/BluetoothPbapParametersBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "nsCOMPtr.h"
 
@@ -89,6 +90,9 @@ public:
   IMPL_EVENT_HANDLER(pairingaborted);
   IMPL_EVENT_HANDLER(a2dpstatuschanged);
   IMPL_EVENT_HANDLER(hfpstatuschanged);
+  IMPL_EVENT_HANDLER(pullphonebookreq);
+  IMPL_EVENT_HANDLER(pullvcardentryreq);
+  IMPL_EVENT_HANDLER(pullvcardlistingreq);
   IMPL_EVENT_HANDLER(requestmediaplaystatus);
   IMPL_EVENT_HANDLER(scostatuschanged);
 
@@ -285,6 +289,73 @@ private:
    * @param aValue [in] Properties array of the scanned device.
    */
   void HandleLeDeviceFound(const BluetoothValue& aValue);
+
+  /**
+   * Handle PULL_PHONEBOOK_REQ_ID bluetooth signal.
+   *
+   * @param aValue [in] Properties array of the PBAP request.
+   *                    The array should contain few properties:
+   *                    - nsString   'name'
+   *                    - bool       'format'
+   *                    - uint32_t[] 'propSelector'
+   *                    - uint32_t   'maxListCount'
+   *                    - uint32_t   'listStartOffset'
+   *                    - uint32_t[] 'vCardSelector_AND'
+   *                    - uint32_t[] 'vCardSelector_AND'
+   */
+  void HandlePullPhonebookReq(const BluetoothValue& aValue);
+
+  /**
+   * Handle PULL_VCARD_ENTRY_REQ_ID bluetooth signal.
+   *
+   * @param aValue [in] Properties array of the PBAP request.
+   *                    The array should contain few properties:
+   *                    - nsString   'name'
+   *                    - bool       'format'
+   *                    - uint32_t[] 'propSelector'
+   */
+  void HandlePullVCardEntryReq(const BluetoothValue& aValue);
+
+  /**
+   * Handle PULL_VCARD_LISTING_REQ_ID bluetooth signal.
+   *
+   * @param aValue [in] Properties array of the PBAP request.
+   *                    The array should contain few properties:
+   *                    - nsString   'name'
+   *                    - nsString   'order'
+   *                    - nsString   'searchText'
+   *                    - nsString   'searchKey'
+   *                    - uint32_t   'maxListCount'
+   *                    - uint32_t   'listStartOffset'
+   *                    - uint32_t[] 'vCardSelector_AND'
+   *                    - uint32_t[] 'vCardSelector_AND'
+   */
+  void HandlePullVCardListingReq(const BluetoothValue& aValue);
+
+  /**
+   * Get a Sequence of vCard properies from a BluetoothValue. The name of
+   * BluetoothValue must be propSelector, vCardSelector_OR or vCardSelector_AND.
+   *
+   * @param aValue [in] a BluetoothValue with 'TArrayOfuint32_t' type
+   *                    The name of BluetoothValue must be 'propSelector',
+   *                    'vCardSelector_OR' or 'vCardSelector_AND'.
+   */
+  Sequence<vCardProperties> getVCardProperties(const BluetoothValue &aValue);
+
+  /**
+   * Convert string to vCardOrderType.
+   *
+   * @param aString [in] String to convert
+   */
+  vCardOrderType ConvertStringToVCardOrderType(const nsAString& aString);
+
+  /**
+   * Convert string to vCardSearchKeyType.
+   *
+   * @param aString [in] String to convert
+   */
+  vCardSearchKeyType ConvertStringToVCardSearchKeyType(
+    const nsAString& aString);
 
   /**
    * Fire BluetoothAttributeEvent to trigger onattributechanged event handler.

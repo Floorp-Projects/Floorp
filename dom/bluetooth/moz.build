@@ -13,6 +13,7 @@ if CONFIG['MOZ_B2G_BT']:
     SOURCES += [
         'BluetoothHidManager.cpp',
         'BluetoothInterface.cpp',
+        'BluetoothPbapRequestHandle.cpp',
         'BluetoothUtils.cpp',
         'BluetoothUuid.cpp',
         'ObexBase.cpp'
@@ -144,7 +145,8 @@ EXPORTS.mozilla.dom.bluetooth += [
     'bluetooth2/BluetoothManager.h',
     'bluetooth2/BluetoothPairingHandle.h',
     'bluetooth2/BluetoothPairingListener.h',
-    'BluetoothCommon.h'
+    'BluetoothCommon.h',
+    'BluetoothPbapRequestHandle.h',
 ]
 IPDL_SOURCES += [
     'bluetooth2/ipc/BluetoothTypes.ipdlh',
