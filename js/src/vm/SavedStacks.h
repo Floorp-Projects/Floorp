@@ -147,6 +147,9 @@ namespace js {
 
 class SavedStacks {
     friend JSObject* SavedStacksMetadataCallback(JSContext* cx, JSObject* target);
+    friend bool JS::ubi::ConstructSavedFrameStackSlow(JSContext* cx,
+                                                      JS::ubi::StackFrame& ubiFrame,
+                                                      MutableHandleObject outSavedFrameStack);
 
   public:
     SavedStacks()
