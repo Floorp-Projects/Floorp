@@ -2436,9 +2436,6 @@ public:
                                                 nsIDocument* aDoc,
                                                 nsIHttpChannel* aChannel);
 
-  // testing and diagnostic code only!
-  static bool URIIsNetflix(nsIURI* aUri);
-
 private:
   static bool InitializeEventTable();
 
