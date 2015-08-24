@@ -64,7 +64,7 @@ class FloatRegisters : public BaseFloatRegisters
   public:
     static const char* GetName(uint32_t i) {
         MOZ_ASSERT(i < Total);
-        return GetName(Code(i % 32));
+        return BaseFloatRegisters::GetName(Encoding(i % 32));
     }
 
     static Code FromName(const char* name);
@@ -182,7 +182,7 @@ class FloatRegister : public BaseFloatRegister
     }
     Encoding encoding() const {
         MOZ_ASSERT(!isInvalid());
-        return Code(code_  | (kind_ << 5));
+        return Encoding(code_);
     }
     uint32_t id() const {
         return code_;
