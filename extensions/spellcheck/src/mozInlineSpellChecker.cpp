@@ -946,7 +946,7 @@ mozInlineSpellChecker::ReplaceWord(nsIDOMNode *aNode, int32_t aOffset,
 
   if (range)
   {
-    nsAutoPlaceHolderBatch(editor, nullptr);
+    nsAutoPlaceHolderBatch phb(editor, nullptr);
   
     nsCOMPtr<nsISelection> selection;
     res = editor->GetSelection(getter_AddRefs(selection));
