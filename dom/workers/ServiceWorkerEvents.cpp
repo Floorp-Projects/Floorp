@@ -404,25 +404,10 @@ ExtendableEvent::WaitUntil(Promise& aPromise, ErrorResult& aRv)
     return;
   }
 
-  mPromises.AppendElement(&aPromise);
-}
-
-already_AddRefed<Promise>
-ExtendableEvent::GetPromise()
-{
-  WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
-  MOZ_ASSERT(worker);
-  worker->AssertIsOnWorkerThread();
-
-  GlobalObject global(worker->GetJSContext(), worker->GlobalScope()->GetGlobalJSObject());
-
-  ErrorResult result;
-  nsRefPtr<Promise> p = Promise::All(global, Move(mPromises), result);
-  if (NS_WARN_IF(result.Failed())) {
-    return nullptr;
+  // Only first caller counts.
+  if (EventPhase() == AT_TARGET && !mPromise) {
+    mPromise = &aPromise;
   }
-
-  return p.forget();
 }
 
 NS_IMPL_ADDREF_INHERITED(ExtendableEvent, Event)
@@ -431,7 +416,7 @@ NS_IMPL_RELEASE_INHERITED(ExtendableEvent, Event)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ExtendableEvent)
 NS_INTERFACE_MAP_END_INHERITING(Event)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(ExtendableEvent, Event, mPromises)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(ExtendableEvent, Event, mPromise)
 
 #ifndef MOZ_SIMPLEPUSH
 
