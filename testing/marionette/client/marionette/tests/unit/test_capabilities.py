@@ -86,3 +86,7 @@ class TestCapabilities(MarionetteTestCase):
         # Start a new session just to make sure we leave the browser in the
         # same state it was before it started the test
         self.marionette.start_session()
+
+    def test_we_get_valid_uuid_4_when_creating_a_session(self):
+        self.assertNotIn("{", self.marionette.session_id, 'Session ID has {} in it. %s ' \
+                         % self.marionette.session_id)
