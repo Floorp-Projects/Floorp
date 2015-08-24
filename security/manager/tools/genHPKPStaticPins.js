@@ -8,13 +8,13 @@
 // 3. run `[path to]/run-mozilla.sh [path to]/xpcshell \
 //                                  [path to]/genHPKPStaticpins.js \
 //                                  [absolute path to]/PreloadedHPKPins.json \
-//                                  [absolute path to]/default-ee.der \
+//                                  [an unused argument - see bug 1205406] \
 //                                  [absolute path to]/StaticHPKPins.h
 
 if (arguments.length != 3) {
   throw "Usage: genHPKPStaticPins.js " +
         "<absolute path to PreloadedHPKPins.json> " +
-        "<absolute path to default-ee.der> " +
+        "<an unused argument - see bug 1205406> " +
         "<absolute path to StaticHPKPins.h>";
 }
 
@@ -68,7 +68,8 @@ const PINSETDEF = "/* Pinsets are each an ordered list by the actual value of th
 
 // Command-line arguments
 var gStaticPins = parseJson(arguments[0]);
-var gTestCertFile = arguments[1];
+
+// arguments[1] is ignored for now. See bug 1205406.
 
 // Open the output file.
 var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
@@ -350,7 +351,7 @@ function downloadAndParseChromePins(filename,
 
 // Returns a pair of maps [certNameToSKD, certSKDToName] between cert
 // nicknames and digests of the SPKInfo for the mozilla trust store
-function loadNSSCertinfo(derTestFile, extraCertificates) {
+function loadNSSCertinfo(extraCertificates) {
   let allCerts = gCertDB.getCerts();
   let enumerator = allCerts.getEnumerator();
   let certNameToSKD = {};
@@ -374,13 +375,10 @@ function loadNSSCertinfo(derTestFile, extraCertificates) {
   }
 
   {
-    // A certificate for *.example.com.
-    let der = readFileToString(derTestFile);
-    let testCert = gCertDB.constructX509(der, der.length);
-    // We can't include this cert in the previous loop, because it skips
-    // non-builtin certs and the nickname is not built-in to the cert.
+    // This is the pinning test certificate. The key hash identifies the
+    // default RSA key from pykey.
     let name = "End Entity Test Cert";
-    let SKD  = testCert.sha256SubjectPublicKeyInfoDigest;
+    let SKD = "VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=";
     certNameToSKD[name] = SKD;
     certSKDToName[SKD] = name;
   }
@@ -599,8 +597,7 @@ function loadExtraCertificates(certStringList) {
 }
 
 var extraCertificates = loadExtraCertificates(gStaticPins.extra_certificates);
-var [ certNameToSKD, certSKDToName ] = loadNSSCertinfo(gTestCertFile,
-                                                       extraCertificates);
+var [ certNameToSKD, certSKDToName ] = loadNSSCertinfo(extraCertificates);
 var [ chromeNameToHash, chromeNameToMozName ] = downloadAndParseChromeCerts(
   gStaticPins.chromium_data.cert_file_url, certSKDToName);
 var [ chromeImportedPinsets, chromeImportedEntries ] =
