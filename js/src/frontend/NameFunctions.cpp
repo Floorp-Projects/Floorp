@@ -337,7 +337,7 @@ class NameResolver
         if (cur == nullptr)
             return true;
 
-        MOZ_ASSERT(cur->isKind(PNK_FUNCTION) == cur->isArity(PN_CODE));
+        MOZ_ASSERT((cur->isKind(PNK_FUNCTION) || cur->isKind(PNK_MODULE)) == cur->isArity(PN_CODE));
         if (cur->isKind(PNK_FUNCTION)) {
             RootedAtom prefix2(cx);
             if (!resolveFun(cur, prefix, &prefix2))
@@ -767,6 +767,7 @@ class NameResolver
             break;
 
           case PNK_FUNCTION:
+          case PNK_MODULE:
             MOZ_ASSERT(cur->isArity(PN_CODE));
             if (!resolve(cur->pn_body, prefix))
                 return false;
