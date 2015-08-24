@@ -321,6 +321,56 @@ public:
   UnregisterGattServerInternal(int aServerIf,
                                BluetoothReplyRunnable* aRunnable) override;
 
+  virtual void
+  GattServerAddServiceInternal(
+    const nsAString& aAppUuid,
+    const BluetoothGattServiceId& aServiceId,
+    uint16_t aHandleCount,
+    BluetoothReplyRunnable* aRunnable) override;
+
+  virtual void
+  GattServerAddIncludedServiceInternal(
+    const nsAString& aAppUuid,
+    const BluetoothAttributeHandle& aServiceHandle,
+    const BluetoothAttributeHandle& aIncludedServiceHandle,
+    BluetoothReplyRunnable* aRunnable) override;
+
+  virtual void
+  GattServerAddCharacteristicInternal(
+    const nsAString& aAppUuid,
+    const BluetoothAttributeHandle& aServiceHandle,
+    const BluetoothUuid& aCharacteristicUuid,
+    BluetoothGattAttrPerm aPermissions,
+    BluetoothGattCharProp aProperties,
+    BluetoothReplyRunnable* aRunnable) override;
+
+  virtual void
+  GattServerAddDescriptorInternal(
+    const nsAString& aAppUuid,
+    const BluetoothAttributeHandle& aServiceHandle,
+    const BluetoothAttributeHandle& aCharacteristicHandle,
+    const BluetoothUuid& aDescriptorUuid,
+    BluetoothGattAttrPerm aPermissions,
+    BluetoothReplyRunnable* aRunnable) override;
+
+  virtual void
+  GattServerRemoveServiceInternal(
+    const nsAString& aAppUuid,
+    const BluetoothAttributeHandle& aServiceHandle,
+    BluetoothReplyRunnable* aRunnable) override;
+
+  virtual void
+  GattServerStartServiceInternal(
+    const nsAString& aAppUuid,
+    const BluetoothAttributeHandle& aServiceHandle,
+    BluetoothReplyRunnable* aRunnable) override;
+
+  virtual void
+  GattServerStopServiceInternal(
+    const nsAString& aAppUuid,
+    const BluetoothAttributeHandle& aServiceHandle,
+    BluetoothReplyRunnable* aRunnable) override;
+
 private:
   nsresult SendGetPropertyMessage(const nsAString& aPath,
                                   const char* aInterface,

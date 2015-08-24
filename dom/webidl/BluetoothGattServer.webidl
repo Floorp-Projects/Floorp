@@ -7,6 +7,9 @@
 [CheckAnyPermissions="bluetooth"]
 interface BluetoothGattServer : EventTarget
 {
+  [Cached, Pure]
+  readonly attribute sequence<BluetoothGattService> services;
+
   // Fired when a remote device has been connected/disconnected
   attribute EventHandler  onconnectionstatechanged;
 
@@ -20,4 +23,22 @@ interface BluetoothGattServer : EventTarget
   Promise<void> connect(DOMString address);
   [NewObject]
   Promise<void> disconnect(DOMString address);
+
+  /**
+   * Add a BLE service to the local GATT server.
+   *
+   * This API will be rejected if this service has been added to the GATT
+   * server.
+   */
+  [NewObject]
+  Promise<void> addService(BluetoothGattService service);
+
+  /**
+   * Remove a BLE service to the local GATT server.
+   *
+   * This API will be rejected if this service does not exist in the GATT
+   * server.
+   */
+  [NewObject]
+  Promise<void> removeService(BluetoothGattService service);
 };
