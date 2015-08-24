@@ -701,6 +701,7 @@ MediaFormatReader::NotifyNewOutput(TrackType aTrack, MediaData* aSample)
   }
   decoder.mOutput.AppendElement(aSample);
   decoder.mNumSamplesOutput++;
+  decoder.mNumSamplesOutputTotal++;
   ScheduleUpdate(aTrack);
 }
 
@@ -1025,9 +1026,9 @@ MediaFormatReader::Update(TrackType aTrack)
 
   if (aTrack == TrackInfo::kVideoTrack) {
     uint64_t delta =
-      decoder.mNumSamplesOutput - mLastReportedNumDecodedFrames;
+      decoder.mNumSamplesOutputTotal - mLastReportedNumDecodedFrames;
     a.mDecoded = static_cast<uint32_t>(delta);
-    mLastReportedNumDecodedFrames = decoder.mNumSamplesOutput;
+    mLastReportedNumDecodedFrames = decoder.mNumSamplesOutputTotal;
   }
 
   if (decoder.HasPromise()) {
