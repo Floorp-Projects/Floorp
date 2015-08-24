@@ -30,3 +30,8 @@ var tests = [
     inputWithoutGrouping: "123456.78", value: 123456.78
   },
 ];
+
+var invalidTests = [
+  { desc: "Invalid German", langTag: "de", input: "12.34" }
+];
+
