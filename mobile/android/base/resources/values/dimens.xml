@@ -21,6 +21,7 @@
     <dimen name="browser_toolbar_height_flipper">48dp</dimen>
     <dimen name="browser_toolbar_button_padding">12dp</dimen>
     <dimen name="browser_toolbar_icon_width">48dp</dimen>
+    <dimen name="browser_toolbar_menu_icon_height">16dp</dimen>
 
     <!-- favicon_size includes 4dp of right padding. We can't use margin (which would allow us to
          specify the actual size) because that would decrease the size of our hit target. -->
