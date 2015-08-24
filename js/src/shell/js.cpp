@@ -56,6 +56,7 @@
 #endif
 #include "jswrapper.h"
 
+#include "builtin/ModuleObject.h"
 #include "builtin/TestingFunctions.h"
 #include "frontend/Parser.h"
 #include "gc/GCInternals.h"
@@ -2067,7 +2068,12 @@ DisassembleToSprinter(JSContext* cx, unsigned argc, Value* vp, Sprinter* sprinte
     } else {
         for (unsigned i = 0; i < p.argc; i++) {
             RootedFunction fun(cx);
-            RootedScript script (cx, ValueToScript(cx, p.argv[i], fun.address()));
+            RootedScript script(cx);
+            RootedValue value(cx, p.argv[i]);
+            if (value.isObject() && value.toObject().is<ModuleObject>())
+                script = value.toObject().as<ModuleObject>().script();
+            else
+                script = ValueToScript(cx, value, fun.address());
             if (!script)
                 return false;
             if (!DisassembleScript(cx, script, fun, p.lines, p.recursive, sprinter))
@@ -3056,6 +3062,45 @@ Compile(JSContext* cx, unsigned argc, Value* vp)
     bool ok = JS_CompileUCScript(cx, chars, scriptContents->length(), options, &script);
     args.rval().setUndefined();
     return ok;
+}
+
+static bool
+ParseModule(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() < 1) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                             JSMSG_MORE_ARGS_NEEDED, "parseModule", "0", "s");
+        return false;
+    }
+    if (!args[0].isString()) {
+        JS_ReportError(cx, "expected string to compile, got %s",
+                       JS_TypeOfValue(cx, args[0]));
+        return false;
+    }
+
+    RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
+    JSFlatString* scriptContents = args[0].toString()->ensureFlat(cx);
+    if (!scriptContents)
+        return false;
+
+    CompileOptions options(cx);
+    options.setFileAndLine("<string>", 1);
+
+    AutoStableStringChars stableChars(cx);
+    if (!stableChars.initTwoByte(cx, scriptContents))
+        return false;
+
+    const char16_t* chars = stableChars.twoByteRange().start().get();
+    SourceBufferHolder srcBuf(chars, scriptContents->length(),
+                              SourceBufferHolder::NoOwnership);
+
+    RootedObject module(cx, frontend::CompileModule(cx, global, options, srcBuf));
+    if (!module)
+        return false;
+
+    args.rval().setObject(*module);
+    return true;
 }
 
 static bool
@@ -4605,6 +4650,10 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("compile", Compile, 1, 0,
 "compile(code)",
 "  Compiles a string to bytecode, potentially throwing."),
+
+    JS_FN_HELP("parseModule", ParseModule, 1, 0,
+"parseModule(code)",
+"  Parses source text as a module and returns a Module object."),
 
     JS_FN_HELP("parse", Parse, 1, 0,
 "parse(code)",

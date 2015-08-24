@@ -2212,6 +2212,10 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         *answer = false;
         return true;
 
+      case PNK_MODULE:
+        *answer = false;
+        return true;
+
       // Generator expressions have no side effects on their own.
       case PNK_GENEXP:
         MOZ_ASSERT(pn->isArity(PN_LIST));
@@ -3494,6 +3498,55 @@ BytecodeEmitter::emitFunctionScript(ParseNode* body)
         script->setTreatAsRunOnce();
         MOZ_ASSERT(!script->hasRunOnce());
     }
+
+    tellDebuggerAboutCompiledScript(cx);
+
+    return true;
+}
+
+bool
+BytecodeEmitter::emitModuleScript(ParseNode* body)
+{
+    if (!updateLocalsToFrameSlots())
+        return false;
+
+    /*
+     * IonBuilder has assumptions about what may occur immediately after
+     * script->main (e.g., in the case of destructuring params). Thus, put the
+     * following ops into the range [script->code, script->main). Note:
+     * execution starts from script->code, so this has no semantic effect.
+     */
+
+    ModuleBox* modulebox = sc->asModuleBox();
+
+    // Link the module and the script to each other, so that StaticScopeIter
+    // may walk the scope chain of currently compiling scripts.
+    JSScript::linkToModuleFromEmitter(cx, script, modulebox);
+
+    if (!emitTree(body))
+        return false;
+
+    // Always end the script with a JSOP_RETRVAL. Some other parts of the codebase
+    // depend on this opcode, e.g. InterpreterRegs::setToEndOfScript.
+    if (!emit1(JSOP_RETRVAL))
+        return false;
+
+    // If all locals are aliased, the frame's block slots won't be used, so we
+    // can set numBlockScoped = 0. This is nice for generators as it ensures
+    // nfixed == 0, so we don't have to initialize any local slots when resuming
+    // a generator.
+    if (sc->allLocalsAliased())
+        script->bindings.setAllLocalsAliased();
+
+    if (!JSScript::fullyInitFromEmitter(cx, script, this))
+        return false;
+
+    /*
+     * Since modules are only run once. Mark the script so that initializers
+     * created within it may be given more precise types.
+     */
+    script->setTreatAsRunOnce();
+    MOZ_ASSERT(!script->hasRunOnce());
 
     tellDebuggerAboutCompiledScript(cx);
 
