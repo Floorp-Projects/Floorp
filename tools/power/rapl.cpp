@@ -76,6 +76,19 @@ CmdLineAbort(const char* aMsg)
 // A special value that represents an estimate from an unsupported RAPL domain.
 static const double kUnsupported_j = -1.0;
 
+// Print to stdout and flush it, so that the output appears immediately even if
+// being redirected through |tee| or anything like that.
+static void
+PrintAndFlush(const char* aFormat, ...)
+{
+  va_list vargs;
+  va_start(vargs, aFormat);
+  vfprintf(stdout, aFormat, vargs);
+  va_end(vargs);
+
+  fflush(stdout);
+}
+
 //---------------------------------------------------------------------------
 // Mac-specific code
 //---------------------------------------------------------------------------
@@ -627,8 +640,11 @@ SigprofHandler(int aSigNum, siginfo_t* aInfo, void* aContext)
   double total = pkg_J + ram_J;
   NormalizeAndPrintAsWatts(totalStr, total);
 
-  printf("#%02d %s W = %s (%s + %s + %s) + %s W\n",
-         sampleNumber++, totalStr, pkgStr, coresStr, gpuStr, otherStr, ramStr);
+  // Print and flush so that the output appears immediately even if being
+  // redirected through |tee| or anything like that.
+  PrintAndFlush("#%02d %s W = %s (%s + %s + %s) + %s W\n",
+                sampleNumber++, totalStr, pkgStr, coresStr, gpuStr, otherStr,
+                ramStr);
 }
 
 static void
@@ -754,7 +770,7 @@ main(int argc, char** argv)
   }
 
   // Print header.
-  printf("    total W = _pkg_ (cores + _gpu_ + other) + _ram_ W\n");
+  PrintAndFlush("    total W = _pkg_ (cores + _gpu_ + other) + _ram_ W\n");
 
   // Take samples.
   if (sampleCount == 0) {
