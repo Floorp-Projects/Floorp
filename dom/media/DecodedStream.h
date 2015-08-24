@@ -8,6 +8,7 @@
 #define DecodedStream_h_
 
 #include "nsTArray.h"
+#include "MediaEventSource.h"
 #include "MediaInfo.h"
 
 #include "mozilla/AbstractThread.h"
@@ -127,8 +128,6 @@ public:
   bool IsFinished() const;
   bool HasConsumers() const;
 
-  void SendData();
-
 protected:
   virtual ~DecodedStream();
 
@@ -139,10 +138,14 @@ private:
   void AdvanceTracks();
   void SendAudio(double aVolume, bool aIsSameOrigin);
   void SendVideo(bool aIsSameOrigin);
+  void SendData();
 
   void AssertOwnerThread() const {
     MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   }
+
+  void ConnectListener();
+  void DisconnectListener();
 
   const nsRefPtr<AbstractThread> mOwnerThread;
 
@@ -168,6 +171,11 @@ private:
 
   MediaQueue<MediaData>& mAudioQueue;
   MediaQueue<MediaData>& mVideoQueue;
+
+  MediaEventListener mAudioPushListener;
+  MediaEventListener mVideoPushListener;
+  MediaEventListener mAudioFinishListener;
+  MediaEventListener mVideoFinishListener;
 };
 
 } // namespace mozilla
