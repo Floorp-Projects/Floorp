@@ -38,20 +38,20 @@ var MainTabbedArea = React.createClass({
   render: function() {
     return (
       Tabs({tabActive: this.state.tabActive, onAfterChange: this.onTabChanged},
-        TabPanel({title: Locale.$STR("jsonViewer.tab.JSON")},
+        TabPanel({className: "json", title: Locale.$STR("jsonViewer.tab.JSON")},
           JsonPanel({
             data: this.props.json,
             actions: this.props.actions,
             searchFilter: this.state.searchFilter
           })
         ),
-        TabPanel({title: Locale.$STR("jsonViewer.tab.RawData")},
+        TabPanel({className: "rawdata", title: Locale.$STR("jsonViewer.tab.RawData")},
           TextPanel({
             data: this.state.jsonText,
             actions: this.props.actions
           })
         ),
-        TabPanel({title: Locale.$STR("jsonViewer.tab.Headers")},
+        TabPanel({className: "headers", title: Locale.$STR("jsonViewer.tab.Headers")},
           HeadersPanel({
             data: this.props.headers,
             actions: this.props.actions,

@@ -127,9 +127,11 @@ var Tabs = React.createClass({
       }).map(function(panel, index) {
         var ref = ("tab-menu-" + (index + 1));
         var title = panel.props.title;
+        var tabClassName = panel.props.className;
 
         var classes = [
           "tabs-menu-item",
+          tabClassName,
           this.state.tabActive === (index + 1) && "is-active"
         ].join(" ");
 
