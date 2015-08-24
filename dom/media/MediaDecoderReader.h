@@ -148,7 +148,7 @@ public:
   // If aSkipToKeyframe is true, the decode should skip ahead to the
   // the next keyframe at or after aTimeThreshold microseconds.
   virtual nsRefPtr<VideoDataPromise>
-  RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThreshold, bool aForceDecodeAhead);
+  RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThreshold);
 
   friend class ReRequestVideoWithSkipTask;
   friend class ReRequestAudioTask;
