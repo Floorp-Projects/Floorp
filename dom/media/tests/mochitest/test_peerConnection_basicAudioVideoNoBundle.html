@@ -12,10 +12,9 @@
   });
 
   runNetworkTest(options => {
+    options = options || { };
+    options.bundle = false;
     var test = new PeerConnectionTest(options);
-    test.chain.insertAfter(
-      'PC_LOCAL_CREATE_OFFER',
-      [PC_LOCAL_REMOVE_BUNDLE_FROM_OFFER]);
     test.setMediaConstraints([{audio: true}, {video: true}],
                              [{audio: true}, {video: true}]);
     test.run();

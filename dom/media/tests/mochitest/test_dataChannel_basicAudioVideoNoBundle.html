@@ -12,17 +12,11 @@
   });
 
 var test;
-runNetworkTest(function () {
-  test = new PeerConnectionTest();
+runNetworkTest(function (options) {
+  options = options || { };
+  options.bundle = false;
+  test = new PeerConnectionTest(options);
   addInitialDataChannel(test.chain);
-  test.chain.insertAfter("PC_LOCAL_CREATE_OFFER", [
-    function PC_LOCAL_REMOVE_BUNDLE_FROM_OFFER(test) {
-      // Just replace a=group:BUNDLE with something that will be ignored.
-      test.originalOffer.sdp = test.originalOffer.sdp.replace(
-        "a=group:BUNDLE",
-        "a=foo:");
-    }
-  ]);
   test.setMediaConstraints([{audio: true}, {video: true}],
                            [{audio: true}, {video: true}]);
   test.run();
