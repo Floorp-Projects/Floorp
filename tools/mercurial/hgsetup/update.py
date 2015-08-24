@@ -34,14 +34,15 @@ class MercurialUpdater(object):
                 'up to date.')
             return 1
 
-        if os.path.isdir(self.vcs_tools_dir):
-            self.update_mercurial_repo(
-                hg,
-                'https://hg.mozilla.org/hgcustom/version-control-tools',
-                self.vcs_tools_dir,
-                'default',
-                'Ensuring version-control-tools is up to date...')
-        print(FINISHED)
+        repo_existed = os.path.isdir(self.vcs_tools_dir)
+        self.update_mercurial_repo(
+            hg,
+            'https://hg.mozilla.org/hgcustom/version-control-tools',
+            self.vcs_tools_dir,
+            'default',
+            'Ensuring version-control-tools is up to date...')
+        if repo_existed:
+            print(FINISHED)
         return 0
 
     def update_mercurial_repo(self, hg, url, dest, branch, msg):
