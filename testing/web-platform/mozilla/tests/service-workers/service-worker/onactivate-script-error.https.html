@@ -37,12 +37,6 @@ function make_test(name, script) {
           })
         .then(function() {
             // Activate should succeed regardless of script errors.
-            if (registration.active && registration.active.state == 'activated') {
-              return Promise.resolve();
-            } else if (registration.active) {
-              return wait_for_activate(registration.active);
-            }
-
             return wait_for_activate(registration.waiting);
           });
     }, name);

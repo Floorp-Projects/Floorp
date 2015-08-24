@@ -18,33 +18,21 @@ function testAboutURL() {
 }
 
 function testDataURL() {
-  return Promise.all(
-    [
-      ["data:text/plain;charset=UTF-8,Hello", 'text/plain;charset=UTF-8', 'Hello'],
-      ["data:text/plain;charset=utf-8;base64,SGVsbG8=", 'text/plain;charset=utf-8', 'Hello'],
-      ['data:text/xml,%3Cres%3Ehello%3C/res%3E%0A', 'text/xml', '<res>hello</res>\n'],
-      ['data:text/plain,hello%20pass%0A', 'text/plain', 'hello pass\n'],
-      ['data:,foo', 'text/plain;charset=US-ASCII', 'foo'],
-      ['data:text/plain;base64,Zm9v', 'text/plain', 'foo'],
-      ['data:text/plain,foo#bar', 'text/plain', 'foo'],
-      ['data:text/plain,foo%23bar', 'text/plain', 'foo#bar'],
-    ].map(test => {
-      var uri = test[0], contentType = test[1], expectedBody = test[2];
-      return fetch(uri).then(res => {
-        ok(true, "Data URL fetch should resolve");
-        if (res.type == "error") {
-          ok(false, "Data URL fetch should not fail.");
-          return Promise.reject();
-        }
-        ok(res instanceof Response, "Fetch should resolve to a Response");
-        is(res.status, 200, "Data URL status should be 200");
-        is(res.statusText, "OK", "Data URL statusText should be OK");
-        ok(res.headers.has("content-type"), "Headers must have Content-Type header");
-        is(res.headers.get("content-type"), contentType, "Content-Type header should match specified value");
-        return res.text().then(body => is(body, expectedBody, "Data URL Body should match"));
-      })
-    })
-  );
+  return fetch("data:text/plain;charset=UTF-8,Hello").then(function(res) {
+    ok(true, "Data URL fetch should resolve");
+    if (res.type == "error") {
+      ok(false, "Data URL fetch should not fail.");
+      return Promise.reject();
+    }
+    ok(res instanceof Response, "Fetch should resolve to a Response");
+    is(res.status, 200, "Data URL status should be 200");
+    is(res.statusText, "OK", "Data URL statusText should be OK");
+    ok(res.headers.has("content-type"), "Headers must have Content-Type header");
+    is(res.headers.get("content-type"), "text/plain;charset=UTF-8", "Content-Type header should match specified value");
+    return res.text().then(function(body) {
+      is(body, "Hello", "Data URL Body should match");
+    });
+  });
 }
 
 function testSameOriginBlobURL() {

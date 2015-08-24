@@ -1903,7 +1903,7 @@ LifecycleEventWorkerRunnable::DispatchLifecycleEvent(JSContext* aCx, WorkerPriva
     // FIXME(nsm): Bug 982787 pass previous active worker.
     ExtendableEventInit init;
     init.mBubbles = false;
-    init.mCancelable = false;
+    init.mCancelable = true;
     event = ExtendableEvent::Constructor(target, mEventName, init);
   } else {
     MOZ_CRASH("Unexpected lifecycle event");
@@ -2304,7 +2304,7 @@ public:
     // FIXME(nsm): Bug 1149195.
     // pei.mData.Construct(mData);
     pei.mBubbles = false;
-    pei.mCancelable = false;
+    pei.mCancelable = true;
 
     ErrorResult result;
     nsRefPtr<PushEvent> event =
@@ -2503,7 +2503,7 @@ public:
     NotificationEventInit nei;
     nei.mNotification = notification;
     nei.mBubbles = false;
-    nei.mCancelable = false;
+    nei.mCancelable = true;
 
     nsRefPtr<NotificationEvent> event =
       NotificationEvent::Constructor(target, NS_LITERAL_STRING("notificationclick"), nei, result);
@@ -2980,10 +2980,14 @@ ServiceWorkerRegistrationInfo::FinishActivate(bool aSuccess)
     return;
   }
 
-  // Activation never fails, so aSuccess is ignored.
-  mActiveWorker->UpdateState(ServiceWorkerState::Activated);
-  nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  swm->StoreRegistration(mPrincipal, this);
+  if (aSuccess) {
+    mActiveWorker->UpdateState(ServiceWorkerState::Activated);
+    nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    swm->StoreRegistration(mPrincipal, this);
+  } else {
+    mActiveWorker->UpdateState(ServiceWorkerState::Redundant);
+    mActiveWorker = nullptr;
+  }
 }
 
 NS_IMETHODIMP
@@ -3818,7 +3822,7 @@ private:
     init.mRequest.Construct();
     init.mRequest.Value() = request;
     init.mBubbles = false;
-    init.mCancelable = false;
+    init.mCancelable = true;
     init.mIsReload.Construct(mIsReload);
     nsRefPtr<FetchEvent> event =
       FetchEvent::Constructor(globalObj, NS_LITERAL_STRING("fetch"), init, result);
