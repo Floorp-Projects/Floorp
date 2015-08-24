@@ -413,6 +413,8 @@ bool
 ParseContext<ParseHandler>::generateBindings(ExclusiveContext* cx, TokenStream& ts, LifoAlloc& alloc,
                                              MutableHandle<Bindings> bindings) const
 {
+    MOZ_ASSERT_IF(sc->isFunctionBox(), args_.length() < ARGNO_LIMIT);
+    MOZ_ASSERT_IF(sc->isModuleBox(), args_.length() == 0);
     MOZ_ASSERT(vars_.length() + bodyLevelLexicals_.length() < LOCALNO_LIMIT);
 
     /*
@@ -448,29 +450,7 @@ ParseContext<ParseHandler>::generateBindings(ExclusiveContext* cx, TokenStream& 
     return Bindings::initWithTemporaryStorage(cx, bindings, args_.length(), vars_.length(),
                                               bodyLevelLexicals_.length(), blockScopeDepth,
                                               numUnaliasedVars, numUnaliasedBodyLevelLexicals,
-                                              packedBindings);
-}
-
-template <typename ParseHandler>
-bool
-ParseContext<ParseHandler>::generateFunctionBindings(ExclusiveContext* cx, TokenStream& ts,
-                                                     LifoAlloc& alloc,
-                                                     MutableHandle<Bindings> bindings) const
-{
-    MOZ_ASSERT(sc->isFunctionBox());
-    MOZ_ASSERT(args_.length() < ARGNO_LIMIT);
-    return generateBindings(cx, ts, alloc, bindings);
-}
-
-template <typename ParseHandler>
-bool
-ParseContext<ParseHandler>::generateModuleBindings(ExclusiveContext* cx, TokenStream& ts,
-                                                   LifoAlloc& alloc,
-                                                   MutableHandle<Bindings> bindings) const
-{
-    MOZ_ASSERT(sc->isModuleBox());
-    MOZ_ASSERT(args_.length() == 0);
-    return generateBindings(cx, ts, alloc, bindings);
+                                              packedBindings, sc->isModuleBox());
 }
 
 template <typename ParseHandler>
@@ -883,7 +863,7 @@ Parser<ParseHandler>::standaloneModule(HandleModuleObject module)
         return null();
 
     Rooted<Bindings> bindings(context, modulebox->bindings);
-    if (!modulepc.generateModuleBindings(context, tokenStream, alloc, &bindings))
+    if (!modulepc.generateBindings(context, tokenStream, alloc, &bindings))
         return null();
     modulebox->bindings = bindings;
 
@@ -973,7 +953,7 @@ Parser<FullParseHandler>::standaloneFunctionBody(HandleFunction fun,
     }
 
     Rooted<Bindings> bindings(context, funbox->bindings);
-    if (!funpc.generateFunctionBindings(context, tokenStream, alloc, &bindings))
+    if (!funpc.generateBindings(context, tokenStream, alloc, &bindings))
         return null();
     funbox->bindings = bindings;
 
@@ -1529,7 +1509,7 @@ ConvertDefinitionToNamedLambdaUse(TokenStream& ts, ParseContext<FullParseHandler
      * Since 'dn' is a placeholder, it has not been defined in the
      * ParseContext and hence we must manually flag a closed-over
      * callee name as needing a dynamic scope (this is done for all
-     * definitions in the ParseContext by generateFunctionBindings).
+     * definitions in the ParseContext by generateBindings).
      *
      * If 'dn' has been assigned to, then we also flag the function
      * scope has needing a dynamic scope so that dynamic scope
@@ -1690,7 +1670,7 @@ Parser<FullParseHandler>::leaveFunction(ParseNode* fn, ParseContext<FullParseHan
     }
 
     Rooted<Bindings> bindings(context, funbox->bindings);
-    if (!pc->generateFunctionBindings(context, tokenStream, alloc, &bindings))
+    if (!pc->generateBindings(context, tokenStream, alloc, &bindings))
         return false;
     funbox->bindings = bindings;
 
@@ -2716,7 +2696,7 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, bool strict
     }
 
     Rooted<Bindings> bindings(context, funbox->bindings);
-    if (!pc->generateFunctionBindings(context, tokenStream, alloc, &bindings))
+    if (!pc->generateBindings(context, tokenStream, alloc, &bindings))
         return null();
     funbox->bindings = bindings;
 
@@ -3231,7 +3211,7 @@ Parser<FullParseHandler>::bindLexical(BindData<FullParseHandler>* data,
     // script->nfixed and body-level lets.
     //
     // For body-level lets, the index is bogus at this point and is adjusted
-    // when creating Bindings. See ParseContext::generateFunctionBindings and
+    // when creating Bindings. See ParseContext::generateBindings and
     // AppendPackedBindings.
     if (!pn->pn_scopecoord.setSlot(parser->tokenStream, index))
         return false;
