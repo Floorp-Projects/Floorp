@@ -253,6 +253,11 @@ AudioBuffer::StealJSArrayDataIntoSharedChannels(JSContext* aJSContext)
       return nullptr;
     }
   }
+
+  for (uint32_t i = 0; i < mJSChannels.Length(); ++i) {
+    mJSChannels[i] = nullptr;
+  }
+
   return result.forget();
 }
 
