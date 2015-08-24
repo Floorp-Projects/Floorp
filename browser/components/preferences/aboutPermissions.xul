@@ -25,10 +25,6 @@
   <script type="application/javascript"
           src="chrome://browser/content/preferences/aboutPermissions.js"/>
 
-  <keyset>
-    <key key="&focusSearch.key;" modifiers="accel" oncommand="AboutPermissions.focusFilterBox();"/>
-  </keyset>
-
   <hbox flex="1" id="permissions-content" class="main-content">
 
     <vbox id="sites-box">
