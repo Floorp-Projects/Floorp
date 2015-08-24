@@ -212,18 +212,8 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
      *  - Sometimes a script's bindings are accessed at runtime to retrieve the
      *    contents of the lexical scope (e.g., from the debugger).
      */
-  private:
     bool generateBindings(ExclusiveContext* cx, TokenStream& ts, LifoAlloc& alloc,
                           MutableHandle<Bindings> bindings) const;
-
-  public:
-    bool generateFunctionBindings(ExclusiveContext* cx, TokenStream& ts,
-                                  LifoAlloc& alloc,
-                                  MutableHandle<Bindings> bindings) const;
-
-    bool generateModuleBindings(ExclusiveContext* cx, TokenStream& ts,
-                                LifoAlloc& alloc,
-                                MutableHandle<Bindings> bindings) const;
 
   private:
     ParseContext**  parserPC;     /* this points to the Parser's active pc

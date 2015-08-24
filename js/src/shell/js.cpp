@@ -4245,18 +4245,28 @@ DumpStaticScopeChain(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    if (!args[0].isObject() || !args[0].toObject().is<JSFunction>()) {
-        ReportUsageError(cx, callee, "Argument must be an interpreted function");
+    if (!args[0].isObject() ||
+        !(args[0].toObject().is<JSFunction>() || args[0].toObject().is<ModuleObject>()))
+    {
+        ReportUsageError(cx, callee, "Argument must be an interpreted function or a module");
         return false;
     }
 
-    RootedFunction fun(cx, &args[0].toObject().as<JSFunction>());
-    if (!fun->isInterpreted()) {
-        ReportUsageError(cx, callee, "Argument must be an interpreted function");
-        return false;
+    RootedObject obj(cx, &args[0].toObject());
+    RootedScript script(cx);
+
+    if (obj->is<JSFunction>()) {
+        RootedFunction fun(cx, &obj->as<JSFunction>());
+        if (!fun->isInterpreted()) {
+            ReportUsageError(cx, callee, "Argument must be an interpreted function");
+            return false;
+        }
+        script = fun->getOrCreateScript(cx);
+    } else {
+        script = obj->as<ModuleObject>().script();
     }
 
-    js::DumpStaticScopeChain(fun->getOrCreateScript(cx));
+    js::DumpStaticScopeChain(script);
 
     args.rval().setUndefined();
     return true;
@@ -4910,8 +4920,8 @@ static const JSFunctionSpecWithHelp fuzzing_unsafe_functions[] = {
 
 #ifdef DEBUG
     JS_FN_HELP("dumpStaticScopeChain", DumpStaticScopeChain, 1, 0,
-"dumpStaticScopeChain(fun)",
-"  Prints the static scope chain of an interpreted function fun."),
+"dumpStaticScopeChain(obj)",
+"  Prints the static scope chain of an interpreted function or a module."),
 #endif
 
     JS_FS_HELP_END

@@ -274,7 +274,8 @@ class Bindings : public JS::Traceable
                                          uint32_t numBlockScoped,
                                          uint32_t numUnaliasedVars,
                                          uint32_t numUnaliasedBodyLevelLexicals,
-                                         const Binding* bindingArray);
+                                         const Binding* bindingArray,
+                                         bool isModule = false);
 
     // Initialize a trivial Bindings with no slots and an empty callObjShape.
     bool initTrivial(ExclusiveContext* cx);
