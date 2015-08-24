@@ -6,6 +6,7 @@
 
 #include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/net/NeckoChannelParams.h"
 #include "nsPrincipal.h"
@@ -23,6 +24,8 @@ namespace net {
 class OptionalLoadInfoArgs;
 }
 
+using mozilla::BasePrincipal;
+using mozilla::OriginAttributes;
 using namespace mozilla::net;
 
 namespace ipc {
@@ -77,10 +80,10 @@ PrincipalInfoToPrincipal(const PrincipalInfo& aPrincipalInfo,
       if (info.appId() == nsIScriptSecurityManager::UNKNOWN_APP_ID) {
         rv = secMan->GetSimpleCodebasePrincipal(uri, getter_AddRefs(principal));
       } else {
-        rv = secMan->GetAppCodebasePrincipal(uri,
-                                             info.appId(),
-                                             info.isInBrowserElement(),
-                                             getter_AddRefs(principal));
+        // TODO: Bug 1167100 - User nsIPrincipal.originAttribute in ContentPrincipalInfo
+        OriginAttributes attrs(info.appId(), info.isInBrowserElement());
+        principal = BasePrincipal::CreateCodebasePrincipal(uri, attrs);
+        rv = principal ? NS_OK : NS_ERROR_FAILURE;
       }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return nullptr;

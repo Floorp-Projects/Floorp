@@ -30,8 +30,9 @@ function mk_permission(uri, isAppPermission = false) {
         .getService(Ci.nsIScriptSecurityManager);
 
   // Get the permission from the principal!
+  let attrs = {appId: 1000};
   let principal = isAppPermission ?
-        secMan.getAppCodebasePrincipal(uri, 1000, false) :
+        secMan.createCodebasePrincipal(uri, attrs) :
         secMan.getNoAppCodebasePrincipal(uri);
 
   pm.addFromPrincipal(principal, "test/matchesuri", pm.ALLOW_ACTION);
