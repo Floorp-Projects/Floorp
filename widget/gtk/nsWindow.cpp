@@ -276,7 +276,7 @@ namespace mozilla {
 class CurrentX11TimeGetter
 {
 public:
-    CurrentX11TimeGetter(GdkWindow* aWindow)
+    explicit CurrentX11TimeGetter(GdkWindow* aWindow)
         : mWindow(aWindow)
         , mAsyncUpdateStart()
     {
