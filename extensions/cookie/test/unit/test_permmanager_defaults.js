@@ -51,10 +51,11 @@ add_task(function* do_test() {
            getService(Ci.nsIPermissionManager);
 
   // test the default permission was applied.
-  let principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(TEST_ORIGIN);
-  let principalHttps = Services.scriptSecurityManager.getNoAppCodebasePrincipal(TEST_ORIGIN_HTTPS);
-  let principal2 = Services.scriptSecurityManager.getNoAppCodebasePrincipal(TEST_ORIGIN_2);
-  let principal3 = Services.scriptSecurityManager.getNoAppCodebasePrincipal(TEST_ORIGIN_3);
+  let principal = Services.scriptSecurityManager.createCodebasePrincipal(TEST_ORIGIN, {});
+  let principalHttps = Services.scriptSecurityManager.createCodebasePrincipal(TEST_ORIGIN_HTTPS, {});
+  let principal2 = Services.scriptSecurityManager.createCodebasePrincipal(TEST_ORIGIN_2, {});
+  let principal3 = Services.scriptSecurityManager.createCodebasePrincipal(TEST_ORIGIN_3, {});
+
   let attrs = {appId: 1000, inBrowser: true};
   let principal4 = Services.scriptSecurityManager.createCodebasePrincipal(TEST_ORIGIN, attrs);
   let principal5 = Services.scriptSecurityManager.createCodebasePrincipal(TEST_ORIGIN_3, attrs);
@@ -223,7 +224,7 @@ function checkCapabilityViaDB(expected, origin = TEST_ORIGIN, type = TEST_PERMIS
 // value (ie, the "capability" in nsIPermission parlance) or null if it can't
 // be found.
 function findCapabilityViaDB(origin = TEST_ORIGIN, type = TEST_PERMISSION) {
-  let principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(origin);
+  let principal = Services.scriptSecurityManager.createCodebasePrincipal(origin, {});
   let originStr = principal.origin;
 
   let file = Services.dirsvc.get("ProfD", Ci.nsIFile);

@@ -185,9 +185,9 @@ function add_permission(aURI)
   check_permission_exists(aURI, false);
   let pm = Cc["@mozilla.org/permissionmanager;1"].
            getService(Ci.nsIPermissionManager);
-  let principal = Cc["@mozilla.org/scriptsecuritymanager;1"]
-                    .getService(Ci.nsIScriptSecurityManager)
-                    .getNoAppCodebasePrincipal(aURI);
+  let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
+              .getService(Ci.nsIScriptSecurityManager);
+  let principal = ssm.createCodebasePrincipal(aURI, {});
 
   pm.addFromPrincipal(principal, PERMISSION_TYPE, PERMISSION_VALUE);
   check_permission_exists(aURI, true);
@@ -205,9 +205,9 @@ function check_permission_exists(aURI, aExists)
 {
   let pm = Cc["@mozilla.org/permissionmanager;1"].
            getService(Ci.nsIPermissionManager);
-  let principal = Cc["@mozilla.org/scriptsecuritymanager;1"]
-                    .getService(Ci.nsIScriptSecurityManager)
-                    .getNoAppCodebasePrincipal(aURI);
+  let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
+              .getService(Ci.nsIScriptSecurityManager);
+  let principal = ssm.createCodebasePrincipal(aURI, {});
 
   let perm = pm.testExactPermissionFromPrincipal(principal, PERMISSION_TYPE);
   let checker = aExists ? do_check_eq : do_check_neq;
@@ -554,9 +554,10 @@ function test_storage_cleared()
 {
   function getStorageForURI(aURI)
   {
-    let principal = Cc["@mozilla.org/scriptsecuritymanager;1"].
-                    getService(Ci.nsIScriptSecurityManager).
-                    getNoAppCodebasePrincipal(aURI);
+    let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
+              .getService(Ci.nsIScriptSecurityManager);
+    let principal = ssm.createCodebasePrincipal(aURI, {});
+
     let dsm = Cc["@mozilla.org/dom/localStorage-manager;1"].
               getService(Ci.nsIDOMStorageManager);
     return dsm.createStorage(null, principal, "");
