@@ -6,9 +6,13 @@
 
 #include "builtin/ModuleObject.h"
 
+#include "gc/Tracer.h"
+
 #include "jsobjinlines.h"
 
 using namespace js;
+
+typedef JS::Rooted<ImportEntryObject*> RootedImportEntry;
 
 template<typename T, Value ValueGetter(T* obj)>
 static bool
@@ -37,6 +41,83 @@ ModuleValueGetter(JSContext* cx, unsigned argc, Value* vp)
     {                                                                         \
         return ModuleValueGetter<cls, cls##_##name##Value>(cx, argc, vp);     \
     }
+
+#define DEFINE_ATOM_ACCESSOR_METHOD(cls, name)                                \
+    JSAtom*                                                                   \
+    cls::name()                                                               \
+    {                                                                         \
+        Value value = cls##_##name##Value(this);                              \
+        return &value.toString()->asAtom();                                   \
+    }
+
+///////////////////////////////////////////////////////////////////////////
+// ImportEntryObject
+
+/* static */ const Class
+ImportEntryObject::class_ = {
+    "ImportEntry",
+    JSCLASS_HAS_RESERVED_SLOTS(ImportEntryObject::SlotCount) |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_ImportEntry) |
+    JSCLASS_IS_ANONYMOUS |
+    JSCLASS_IMPLEMENTS_BARRIERS
+};
+
+DEFINE_GETTER_FUNCTIONS(ImportEntryObject, moduleRequest, ModuleRequestSlot)
+DEFINE_GETTER_FUNCTIONS(ImportEntryObject, importName, ImportNameSlot)
+DEFINE_GETTER_FUNCTIONS(ImportEntryObject, localName, LocalNameSlot)
+
+DEFINE_ATOM_ACCESSOR_METHOD(ImportEntryObject, moduleRequest)
+DEFINE_ATOM_ACCESSOR_METHOD(ImportEntryObject, importName)
+DEFINE_ATOM_ACCESSOR_METHOD(ImportEntryObject, localName)
+
+/* static */ bool
+ImportEntryObject::isInstance(HandleValue value)
+{
+    return value.isObject() && value.toObject().is<ImportEntryObject>();
+}
+
+/* static */ JSObject*
+ImportEntryObject::initClass(JSContext* cx, HandleObject obj)
+{
+    static const JSPropertySpec protoAccessors[] = {
+        JS_PSG("moduleRequest", ImportEntryObject_moduleRequestGetter, 0),
+        JS_PSG("importName", ImportEntryObject_importNameGetter, 0),
+        JS_PSG("localName", ImportEntryObject_localNameGetter, 0),
+        JS_PS_END
+    };
+
+    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
+    RootedObject proto(cx, global->createBlankPrototype<PlainObject>(cx));
+    if (!proto)
+        return nullptr;
+
+    if (!DefinePropertiesAndFunctions(cx, proto, protoAccessors, nullptr))
+        return nullptr;
+
+    global->setPrototype(JSProto_ImportEntry, ObjectValue(*proto));
+    return proto;
+}
+
+JSObject*
+js::InitImportEntryClass(JSContext* cx, HandleObject obj)
+{
+    return ImportEntryObject::initClass(cx, obj);
+}
+
+/* static */ ImportEntryObject*
+ImportEntryObject::create(JSContext* cx,
+                          HandleAtom moduleRequest,
+                          HandleAtom importName,
+                          HandleAtom localName)
+{
+    RootedImportEntry self(cx, NewBuiltinClassInstance<ImportEntryObject>(cx));
+    if (!self)
+        return nullptr;
+    self->initReservedSlot(ModuleRequestSlot, StringValue(moduleRequest));
+    self->initReservedSlot(ImportNameSlot, StringValue(importName));
+    self->initReservedSlot(LocalNameSlot, StringValue(localName));
+    return self;
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // ModuleObject
@@ -71,8 +152,7 @@ ModuleObject::class_ = {
     }
 
 DEFINE_ARRAY_SLOT_ACCESSOR(ModuleObject, requestedModules, RequestedModulesSlot)
-
-#undef DEFINE_ARRAY_SLOT_ACCESSOR
+DEFINE_ARRAY_SLOT_ACCESSOR(ModuleObject, importEntries, ImportEntriesSlot)
 
 /* static */ bool
 ModuleObject::isInstance(HandleValue value)
@@ -93,9 +173,11 @@ ModuleObject::init(HandleScript script)
 }
 
 void
-ModuleObject::initImportExportData(HandleArrayObject requestedModules)
+ModuleObject::initImportExportData(HandleArrayObject requestedModules,
+                                   HandleArrayObject importEntries)
 {
     initReservedSlot(RequestedModulesSlot, ObjectValue(*requestedModules));
+    initReservedSlot(ImportEntriesSlot, ObjectValue(*importEntries));
 }
 
 JSScript*
@@ -114,14 +196,14 @@ ModuleObject::trace(JSTracer* trc, JSObject* obj)
 }
 
 DEFINE_GETTER_FUNCTIONS(ModuleObject, requestedModules, RequestedModulesSlot)
-
-#undef DEFINE_GETTER_FUNCTIONS
+DEFINE_GETTER_FUNCTIONS(ModuleObject, importEntries, ImportEntriesSlot)
 
 JSObject*
 js::InitModuleClass(JSContext* cx, HandleObject obj)
 {
     static const JSPropertySpec protoAccessors[] = {
         JS_PSG("requestedModules", ModuleObject_requestedModulesGetter, 0),
+        JS_PSG("importEntries", ModuleObject_importEntriesGetter, 0),
         JS_PS_END
     };
 
@@ -138,12 +220,18 @@ js::InitModuleClass(JSContext* cx, HandleObject obj)
     return proto;
 }
 
+#undef DEFINE_GETTER_FUNCTIONS
+#undef DEFINE_STRING_ACCESSOR_METHOD
+#undef DEFINE_ARRAY_SLOT_ACCESSOR
+
 ///////////////////////////////////////////////////////////////////////////
 // ModuleBuilder
 
 ModuleBuilder::ModuleBuilder(JSContext* cx)
   : cx_(cx),
-    requestedModules_(cx, AtomVector(cx))
+    requestedModules_(cx, AtomVector(cx)),
+    importedBoundNames_(cx, AtomVector(cx)),
+    importEntries_(cx, ImportEntryVector(cx))
 {}
 
 bool
@@ -182,7 +270,13 @@ ModuleBuilder::buildAndInit(frontend::ParseNode* moduleNode, HandleModuleObject 
     if (!requestedModules)
         return false;
 
-    module->initImportExportData(requestedModules);
+    RootedArrayObject importEntries(cx_, createArray<ImportEntryObject*>(importEntries_));
+    if (!importEntries)
+        return false;
+
+    module->initImportExportData(requestedModules,
+                                 importEntries);
+
     return true;
 }
 
@@ -196,6 +290,28 @@ ModuleBuilder::processImport(frontend::ParseNode* pn)
     RootedAtom module(cx_, pn->pn_right->pn_atom);
     if (!maybeAppendRequestedModule(module))
         return false;
+
+    for (ParseNode* spec = pn->pn_left->pn_head; spec; spec = spec->pn_next) {
+        MOZ_ASSERT(spec->isKind(PNK_IMPORT_SPEC));
+        MOZ_ASSERT(spec->pn_left->isArity(PN_NAME));
+        MOZ_ASSERT(spec->pn_right->isArity(PN_NAME));
+
+        RootedAtom importName(cx_, spec->pn_left->pn_atom);
+        RootedAtom localName(cx_, spec->pn_right->pn_atom);
+
+        if (!importedBoundNames_.append(localName))
+            return false;
+
+        RootedImportEntry importEntry(cx_);
+        importEntry = ImportEntryObject::create(cx_, module, importName, localName);
+        if (!importEntry)
+            return false;
+
+        if (!importEntries_.append(importEntry)) {
+            ReportOutOfMemory(cx_);
+            return false;
+        }
+    }
 
     return true;
 }
@@ -227,6 +343,12 @@ static Value
 MakeElementValue(JSString *string)
 {
     return StringValue(string);
+}
+
+static Value
+MakeElementValue(JSObject *object)
+{
+    return ObjectValue(*object);
 }
 
 template <typename T>

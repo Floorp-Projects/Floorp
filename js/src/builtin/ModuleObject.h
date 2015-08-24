@@ -19,6 +19,29 @@ namespace frontend {
 class ParseNode;
 } /* namespace frontend */
 
+class ImportEntryObject : public NativeObject
+{
+  public:
+    enum
+    {
+        ModuleRequestSlot = 0,
+        ImportNameSlot,
+        LocalNameSlot,
+        SlotCount
+    };
+
+    static const Class class_;
+    static JSObject* initClass(JSContext* cx, HandleObject obj);
+    static bool isInstance(HandleValue value);
+    static ImportEntryObject* create(JSContext* cx,
+                                     HandleAtom moduleRequest,
+                                     HandleAtom importName,
+                                     HandleAtom localName);
+    JSAtom* moduleRequest();
+    JSAtom* importName();
+    JSAtom* localName();
+};
+
 class ModuleObject : public NativeObject
 {
   public:
@@ -26,6 +49,7 @@ class ModuleObject : public NativeObject
     {
         ScriptSlot = 0,
         RequestedModulesSlot,
+        ImportEntriesSlot,
         SlotCount
     };
 
@@ -35,10 +59,12 @@ class ModuleObject : public NativeObject
 
     static ModuleObject* create(ExclusiveContext* cx);
     void init(HandleScript script);
-    void initImportExportData(HandleArrayObject requestedModules);
+    void initImportExportData(HandleArrayObject requestedModules,
+                              HandleArrayObject importEntries);
 
     JSScript* script() const;
     ArrayObject& requestedModules() const;
+    ArrayObject& importEntries() const;
 
   private:
     static void trace(JSTracer* trc, JSObject* obj);
@@ -59,9 +85,13 @@ class MOZ_STACK_CLASS ModuleBuilder
   private:
     using AtomVector = TraceableVector<JSAtom*>;
     using RootedAtomVector = JS::Rooted<AtomVector>;
+    using ImportEntryVector = TraceableVector<ImportEntryObject*>;
+    using RootedImportEntryVector = JS::Rooted<ImportEntryVector>;
 
     JSContext* cx_;
     RootedAtomVector requestedModules_;
+    RootedAtomVector importedBoundNames_;
+    RootedImportEntryVector importEntries_;
 
     bool processImport(frontend::ParseNode* pn);
     bool processExportFrom(frontend::ParseNode* pn);
@@ -73,6 +103,7 @@ class MOZ_STACK_CLASS ModuleBuilder
 };
 
 JSObject* InitModuleClass(JSContext* cx, HandleObject obj);
+JSObject* InitImportEntryClass(JSContext* cx, HandleObject obj);
 
 } // namespace js
 
