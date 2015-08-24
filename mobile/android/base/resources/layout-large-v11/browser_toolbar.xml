@@ -121,7 +121,7 @@
         <org.mozilla.gecko.widget.themed.ThemedImageView
                 android:id="@+id/menu_icon"
                 style="@style/UrlBar.ImageButton.BrowserToolbarColors"
-                android:layout_height="18dp"
+                android:layout_height="@dimen/browser_toolbar_menu_icon_height"
                 android:layout_width="wrap_content"
                 android:scaleType="centerInside"
                 android:src="@drawable/menu"

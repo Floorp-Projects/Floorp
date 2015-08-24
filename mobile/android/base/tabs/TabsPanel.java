@@ -80,7 +80,7 @@ public class TabsPanel extends LinearLayout
     private TabsLayoutChangeListener mLayoutChangeListener;
 
     private IconTabWidget mTabWidget;
-    private static ImageButton mMenuButton;
+    private static View mMenuButton;
     private static ImageButton mAddTab;
     private ImageButton mNavBackButton;
 
@@ -141,7 +141,7 @@ public class TabsPanel extends LinearLayout
 
         mTabWidget.setTabSelectionListener(this);
 
-        mMenuButton = (ImageButton) findViewById(R.id.menu);
+        mMenuButton = findViewById(R.id.menu);
         mMenuButton.setOnClickListener(new Button.OnClickListener() {
             @Override
             public void onClick(View view) {
