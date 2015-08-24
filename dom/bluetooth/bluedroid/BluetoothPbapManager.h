@@ -16,6 +16,7 @@
 namespace mozilla {
   namespace dom {
     class Blob;
+    class BlobParent;
   }
 }
 
@@ -62,8 +63,51 @@ public:
 
   static BluetoothPbapManager* Get();
   bool Listen();
+
+  /**
+   * Reply vCard object to the *IPC* 'pullphonebook' request.
+   *
+   * @param aActor [in]          a blob actor containing the vCard objects
+   * @param aPhonebookSize [in]  the number of vCard indexes in the blob
+   */
+  void ReplyToPullPhonebook(BlobParent* aActor, uint16_t aPhonebookSize);
+
+  /**
+   * Reply vCard object to the *in-process* 'pullphonebook' request.
+   *
+   * @param aBlob [in]           a blob contained the vCard objects
+   * @param aPhonebookSize [in]  the number of vCard indexes in the blob
+   */
   void ReplyToPullPhonebook(Blob* aBlob, uint16_t aPhonebookSize);
+
+  /**
+   * Reply vCard object to the *IPC* 'pullvcardlisting' request.
+   *
+   * @param aActor [in]          a blob actor containing the vCard objects
+   * @param aPhonebookSize [in]  the number of vCard indexes in the blob
+   */
+  void ReplyToPullvCardListing(BlobParent* aActor, uint16_t aPhonebookSize);
+
+  /**
+   * Reply vCard object to the *in-process* 'pullvcardlisting' request.
+   *
+   * @param aBlob [in]           a blob contained the vCard objects
+   * @param aPhonebookSize [in]  the number of vCard indexes in the blob
+   */
   void ReplyToPullvCardListing(Blob* aBlob, uint16_t aPhonebookSize);
+
+  /**
+   * Reply vCard object to the *IPC* 'pullvcardentry' request.
+   *
+   * @param aActor [in]  a blob actor containing the vCard objects
+   */
+  void ReplyToPullvCardEntry(BlobParent* aActor);
+
+  /**
+   * Reply vCard object to the *in-process* 'pullvcardentry' request.
+   *
+   * @param aBlob [in]  a blob contained the vCard objects
+   */
   void ReplyToPullvCardEntry(Blob* aBlob);
 
 protected:

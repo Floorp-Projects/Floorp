@@ -10,6 +10,7 @@
 #include "BluetoothService.h"
 
 #include "mozilla/dom/BluetoothPbapRequestHandleBinding.h"
+#include "mozilla/dom/ContentChild.h"
 
 using namespace mozilla;
 using namespace dom;
@@ -49,8 +50,42 @@ already_AddRefed<DOMRequest>
 BluetoothPbapRequestHandle::ReplyTovCardPulling(Blob& aBlob,
                                                 ErrorResult& aRv)
 {
-  // TODO: Implement this function (Bug 1180555)
-  return nullptr;
+  nsCOMPtr<nsPIDOMWindow> win = GetParentObject();
+  if (!win) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<DOMRequest> request = new DOMRequest(win);
+  nsRefPtr<BluetoothVoidReplyRunnable> result =
+    new BluetoothVoidReplyRunnable(request);
+
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    // In-process reply
+    bs->ReplyTovCardPulling(&aBlob, result);
+  } else {
+    ContentChild *cc = ContentChild::GetSingleton();
+    if (!cc) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+
+    BlobChild* actor = cc->GetOrCreateActorForBlob(&aBlob);
+    if (!actor) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+
+    bs->ReplyTovCardPulling(nullptr, actor, result);
+  }
+
+  return request.forget();
 }
 
 already_AddRefed<DOMRequest>
@@ -58,8 +93,42 @@ BluetoothPbapRequestHandle::ReplyToPhonebookPulling(Blob& aBlob,
                                                     uint16_t phonebookSize,
                                                     ErrorResult& aRv)
 {
-  // TODO: Implement this function (Bug 1180555)
-  return nullptr;
+  nsCOMPtr<nsPIDOMWindow> win = GetParentObject();
+  if (!win) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<DOMRequest> request = new DOMRequest(win);
+  nsRefPtr<BluetoothVoidReplyRunnable> result =
+    new BluetoothVoidReplyRunnable(request);
+
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    // In-process reply
+    bs->ReplyToPhonebookPulling(&aBlob, phonebookSize, result);
+  } else {
+    ContentChild *cc = ContentChild::GetSingleton();
+    if (!cc) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+
+    BlobChild* actor = cc->GetOrCreateActorForBlob(&aBlob);
+    if (!actor) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+
+    bs->ReplyToPhonebookPulling(nullptr, actor, phonebookSize, result);
+  }
+
+  return request.forget();
 }
 
 already_AddRefed<DOMRequest>
@@ -67,8 +136,42 @@ BluetoothPbapRequestHandle::ReplyTovCardListing(Blob& aBlob,
                                                 uint16_t phonebookSize,
                                                 ErrorResult& aRv)
 {
-  // TODO: Implement this function (Bug 1180555)
-  return nullptr;
+  nsCOMPtr<nsPIDOMWindow> win = GetParentObject();
+  if (!win) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<DOMRequest> request = new DOMRequest(win);
+  nsRefPtr<BluetoothVoidReplyRunnable> result =
+    new BluetoothVoidReplyRunnable(request);
+
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    // In-process reply
+    bs->ReplyTovCardListing(&aBlob, phonebookSize, result);
+  } else {
+    ContentChild *cc = ContentChild::GetSingleton();
+    if (!cc) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+
+    BlobChild* actor = cc->GetOrCreateActorForBlob(&aBlob);
+    if (!actor) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+
+    bs->ReplyTovCardListing(nullptr, actor, phonebookSize, result);
+  }
+
+  return request.forget();
 }
 
 JSObject*
