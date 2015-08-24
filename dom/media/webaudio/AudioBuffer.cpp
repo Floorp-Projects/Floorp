@@ -197,15 +197,6 @@ AudioBuffer::CopyToChannel(JSContext* aJSContext, const Float32Array& aSource,
 }
 
 void
-AudioBuffer::SetRawChannelContents(uint32_t aChannel, float* aContents)
-{
-  MOZ_ASSERT(!GetWrapperPreserveColor() && !mSharedChannels,
-             "The AudioBuffer object should not have been handed to JS or have C++ callers neuter its typed array");
-  JS::AutoCheckCannotGC nogc;
-  PodCopy(JS_GetFloat32ArrayData(mJSChannels[aChannel], nogc), aContents, mLength);
-}
-
-void
 AudioBuffer::GetChannelData(JSContext* aJSContext, uint32_t aChannel,
                             JS::MutableHandle<JSObject*> aRetval,
                             ErrorResult& aRv)
