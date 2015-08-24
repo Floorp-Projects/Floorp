@@ -136,6 +136,26 @@ struct ParamTraits<mozilla::dom::bluetooth::BluetoothGattCharAttribute>
   }
 };
 
+template <>
+struct ParamTraits<mozilla::dom::bluetooth::BluetoothAttributeHandle>
+{
+  typedef mozilla::dom::bluetooth::BluetoothAttributeHandle paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mHandle);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    if (!ReadParam(aMsg, aIter, &(aResult->mHandle))) {
+      return false;
+    }
+
+    return true;
+  }
+};
+
 } // namespace IPC
 
 #endif // mozilla_dom_bluetooth_ipc_BluetoothMessageUtils_h

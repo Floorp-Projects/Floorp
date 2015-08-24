@@ -57,6 +57,9 @@ private:
   nsresult FireReplySuccess(JS::Handle<JS::Value> aVal);
   nsresult FireErrorString();
 
+  virtual void OnSuccessFired();
+  virtual void OnErrorFired();
+
   /**
    * Either mDOMRequest or mPromise is not nullptr to reply applications
    * success or error string. One special case is internal IPC that require
@@ -86,6 +89,107 @@ protected:
     aValue.setUndefined();
     return true;
   }
+};
+
+class BluetoothReplyTaskQueue : public nsRunnable
+{
+public:
+  NS_DECL_NSIRUNNABLE
+
+  class SubReplyRunnable : public BluetoothReplyRunnable
+  {
+  public:
+    SubReplyRunnable(nsIDOMDOMRequest* aReq,
+                     Promise* aPromise,
+                     BluetoothReplyTaskQueue* aRootQueue);
+    ~SubReplyRunnable();
+
+    BluetoothReplyTaskQueue* GetRootQueue() const;
+
+  private:
+    virtual void OnSuccessFired() override;
+    virtual void OnErrorFired() override;
+
+    nsRefPtr<BluetoothReplyTaskQueue> mRootQueue;
+  };
+  friend class BluetoothReplyTaskQueue::SubReplyRunnable;
+
+  class VoidSubReplyRunnable : public SubReplyRunnable
+  {
+  public:
+    VoidSubReplyRunnable(nsIDOMDOMRequest* aReq,
+                         Promise* aPromise,
+                         BluetoothReplyTaskQueue* aRootQueue);
+    ~VoidSubReplyRunnable();
+
+  protected:
+    virtual bool ParseSuccessfulReply(
+      JS::MutableHandle<JS::Value> aValue) override;
+  };
+
+  class SubTask
+  {
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SubTask)
+  public:
+    SubTask(BluetoothReplyTaskQueue* aRootQueue,
+            SubReplyRunnable* aReply);
+
+    BluetoothReplyTaskQueue* GetRootQueue() const;
+    SubReplyRunnable* GetReply() const;
+
+    /*
+     * Use SubReplyRunnable as the reply runnable to execute the task.
+     *
+     * Example:
+     * <pre>
+     * <code>
+     * bool SomeInheritedSubTask::Execute()
+     * {
+     *   BluetoothService* bs = BluetoothService::Get();
+     *   if (!bs) {
+     *     return false;
+     *   }
+     *   bs->DoSomethingInternal(
+     *     aSomeParameter,
+     *     new SomeInheritedSubReplyRunnable(aSomeDOMRequest,
+     *                                       aSomePromise,
+     *                                       GetRootQueue()));
+     *   return true;
+     * }
+     * </code>
+     * </pre>
+     */
+    virtual bool Execute() = 0;
+
+  protected:
+    virtual ~SubTask();
+
+  private:
+    nsRefPtr<BluetoothReplyTaskQueue> mRootQueue;
+    nsRefPtr<SubReplyRunnable> mReply;
+  };
+
+  BluetoothReplyTaskQueue(BluetoothReplyRunnable* aReply);
+
+  void AppendTask(already_AddRefed<SubTask> aTask);
+
+protected:
+  ~BluetoothReplyTaskQueue();
+
+  void FireSuccessReply();
+  void FireErrorReply();
+
+private:
+  void Clear();
+
+  void OnSubReplySuccessFired(SubReplyRunnable* aSubReply);
+  void OnSubReplyErrorFired(SubReplyRunnable* aSubReply);
+
+  virtual void OnSuccessFired();
+  virtual void OnErrorFired();
+
+  nsRefPtr<BluetoothReplyRunnable> mReply;
+  nsTArray<nsRefPtr<SubTask>> mTasks;
 };
 
 END_BLUETOOTH_NAMESPACE

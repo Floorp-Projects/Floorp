@@ -10,6 +10,8 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/BluetoothGattServerBinding.h"
 #include "mozilla/dom/bluetooth/BluetoothCommon.h"
+#include "mozilla/dom/bluetooth/BluetoothGattService.h"
+#include "mozilla/dom/Promise.h"
 #include "nsCOMPtr.h"
 #include "nsPIDOMWindow.h"
 
@@ -34,6 +36,11 @@ public:
   /****************************************************************************
    * Attribute Getters
    ***************************************************************************/
+  void GetServices(
+    nsTArray<nsRefPtr<BluetoothGattService>>& aServices) const
+  {
+    aServices = mServices;
+  }
 
   /****************************************************************************
    * Event Handlers
@@ -47,6 +54,10 @@ public:
     const nsAString& aAddress, ErrorResult& aRv);
   already_AddRefed<Promise> Disconnect(
     const nsAString& aAddress, ErrorResult& aRv);
+  already_AddRefed<Promise> AddService(BluetoothGattService& aService,
+                                       ErrorResult& aRv);
+  already_AddRefed<Promise> RemoveService(BluetoothGattService& aService,
+                                          ErrorResult& aRv);
 
   /****************************************************************************
    * Others
@@ -73,6 +84,28 @@ public:
 private:
   ~BluetoothGattServer();
 
+  class AddIncludedServiceTask;
+  class AddCharacteristicTask;
+  class AddDescriptorTask;
+  class StartServiceTask;
+  class CancelAddServiceTask;
+  class AddServiceTaskQueue;
+  class AddServiceTask;
+  class RemoveServiceTask;
+
+  friend class AddIncludedServiceTask;
+  friend class AddCharacteristicTask;
+  friend class AddDescriptorTask;
+  friend class StartServiceTask;
+  friend class CancelAddServiceTask;
+  friend class AddServiceTaskQueue;
+  friend class AddServiceTask;
+  friend class RemoveServiceTask;
+
+  void HandleServiceHandleUpdated(const BluetoothValue& aValue);
+  void HandleCharacteristicHandleUpdated(const BluetoothValue& aValue);
+  void HandleDescriptorHandleUpdated(const BluetoothValue& aValue);
+
   /****************************************************************************
    * Variables
    ***************************************************************************/
@@ -90,6 +123,16 @@ private:
   int mServerIf;
 
   bool mValid;
+
+  /**
+   * Array of services for this server.
+   */
+  nsTArray<nsRefPtr<BluetoothGattService>> mServices;
+
+  /**
+   * The service that is being added to this server.
+   */
+  nsRefPtr<BluetoothGattService> mPendingService;
 };
 
 END_BLUETOOTH_NAMESPACE

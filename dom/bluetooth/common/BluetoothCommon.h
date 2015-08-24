@@ -112,6 +112,68 @@ extern bool gBluetoothDebugFlag;
 #define BT_ENSURE_SUCCESS_REJECT(rv, promise, ret)                   \
   BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(rv), promise, ret)
 
+/**
+ * Resolve |promise| with |value| and return |ret| if |x| is false.
+ */
+#define BT_ENSURE_TRUE_RESOLVE_RETURN(x, promise, value, ret)        \
+  do {                                                               \
+    if (MOZ_UNLIKELY(!(x))) {                                        \
+      BT_LOGR("BT_ENSURE_TRUE_RESOLVE_RETURN(" #x ") failed");       \
+      (promise)->MaybeResolve(value);                                \
+      return ret;                                                    \
+    }                                                                \
+  } while(0)
+
+/**
+ * Resolve |promise| with |value| and return if |x| is false.
+ */
+#define BT_ENSURE_TRUE_RESOLVE_VOID(x, promise, value)               \
+  do {                                                               \
+    if (MOZ_UNLIKELY(!(x))) {                                        \
+      BT_LOGR("BT_ENSURE_TRUE_RESOLVE_VOID(" #x ") failed");         \
+      (promise)->MaybeResolve(value);                                \
+      return;                                                        \
+    }                                                                \
+  } while(0)
+
+/**
+ * Reject |promise| with |value| and return |ret| if |x| is false.
+ */
+#define BT_ENSURE_TRUE_REJECT_RETURN(x, promise, value, ret)         \
+  do {                                                               \
+    if (MOZ_UNLIKELY(!(x))) {                                        \
+      BT_LOGR("BT_ENSURE_TRUE_REJECT_RETURN(" #x ") failed");        \
+      (promise)->MaybeReject(value);                                 \
+      return ret;                                                    \
+    }                                                                \
+  } while(0)
+
+/**
+ * Reject |promise| with |value| and return if |x| is false.
+ */
+#define BT_ENSURE_TRUE_REJECT_VOID(x, promise, value)                \
+  do {                                                               \
+    if (MOZ_UNLIKELY(!(x))) {                                        \
+      BT_LOGR("BT_ENSURE_TRUE_REJECT_VOID(" #x ") failed");          \
+      (promise)->MaybeReject(value);                                 \
+      return;                                                        \
+    }                                                                \
+  } while(0)
+
+/**
+ * Reject |promise| with |value| and return |ret| if nsresult |rv|
+ * is not successful.
+ */
+#define BT_ENSURE_SUCCESS_REJECT_RETURN(rv, promise, value, ret)     \
+  BT_ENSURE_TRUE_REJECT_RETURN(NS_SUCCEEDED(rv), promise, value, ret)
+
+/**
+ * Reject |promise| with |value| and return if nsresult |rv|
+ * is not successful.
+ */
+#define BT_ENSURE_SUCCESS_REJECT_VOID(rv, promise, value)            \
+  BT_ENSURE_TRUE_REJECT_VOID(NS_SUCCEEDED(rv), promise, value)
+
 #define BEGIN_BLUETOOTH_NAMESPACE \
   namespace mozilla { namespace dom { namespace bluetooth {
 #define END_BLUETOOTH_NAMESPACE \
@@ -601,6 +663,11 @@ struct BluetoothAvrcpPlayerSettings {
   uint8_t mValues[256];
 };
 
+enum BluetoothAttRole {
+  ATT_SERVER_ROLE,
+  ATT_CLIENT_ROLE
+};
+
 enum BluetoothGattStatus {
   GATT_STATUS_SUCCESS,
   GATT_STATUS_INVALID_HANDLE,
@@ -776,6 +843,19 @@ enum BluetoothGapDataType {
   GAP_COMPLETE_UUID128   = 0X07, // Complete List of 128-bit Service Class UUIDs
   GAP_SHORTENED_NAME     = 0X08, // Shortened Local Name
   GAP_COMPLETE_NAME      = 0X09, // Complete Local Name
+};
+
+struct BluetoothAttributeHandle {
+  uint16_t mHandle;
+
+  BluetoothAttributeHandle()
+    : mHandle(0x0000)
+  { }
+
+  bool operator==(const BluetoothAttributeHandle& aOther) const
+  {
+    return mHandle == aOther.mHandle;
+  }
 };
 
 END_BLUETOOTH_NAMESPACE

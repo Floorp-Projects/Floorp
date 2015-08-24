@@ -206,6 +206,56 @@ private:
 
 NS_IMPL_ISUPPORTS0(BluetoothGattClient)
 
+struct BluetoothGattServerAddServiceState
+{
+  BluetoothGattServiceId mServiceId;
+  uint16_t mHandleCount;
+  nsRefPtr<BluetoothReplyRunnable> mRunnable;
+
+  void Assign(const BluetoothGattServiceId& aServiceId,
+              uint16_t aHandleCount,
+              BluetoothReplyRunnable* aRunnable)
+  {
+    mServiceId = aServiceId;
+    mHandleCount = aHandleCount;
+    mRunnable = aRunnable;
+  }
+
+  void Reset()
+  {
+    memset(&mServiceId, 0, sizeof(mServiceId));
+    mHandleCount = 0;
+    mRunnable = nullptr;
+  }
+};
+
+struct BluetoothGattServerAddDescriptorState
+{
+  BluetoothAttributeHandle mServiceHandle;
+  BluetoothAttributeHandle mCharacteristicHandle;
+  BluetoothUuid mDescriptorUuid;
+  nsRefPtr<BluetoothReplyRunnable> mRunnable;
+
+  void Assign(const BluetoothAttributeHandle& aServiceHandle,
+              const BluetoothAttributeHandle& aCharacteristicHandle,
+              const BluetoothUuid& aDescriptorUuid,
+              BluetoothReplyRunnable* aRunnable)
+  {
+    mServiceHandle = aServiceHandle;
+    mCharacteristicHandle = aCharacteristicHandle;
+    mDescriptorUuid = aDescriptorUuid;
+    mRunnable = aRunnable;
+  }
+
+  void Reset()
+  {
+    memset(&mServiceHandle, 0, sizeof(mServiceHandle));
+    memset(&mCharacteristicHandle, 0, sizeof(mCharacteristicHandle));
+    memset(&mDescriptorUuid, 0, sizeof(mDescriptorUuid));
+    mRunnable = nullptr;
+  }
+};
+
 class BluetoothGattServer final : public nsISupports
 {
 public:
@@ -214,14 +264,33 @@ public:
   BluetoothGattServer(const nsAString& aAppUuid)
   : mAppUuid(aAppUuid)
   , mServerIf(0)
+  , mIsRegistering(false)
   { }
 
   nsString mAppUuid;
   int mServerIf;
 
+  /*
+   * Some actions will trigger the registration procedure:
+   *  - Connect the GATT server to a peripheral client
+   *  - Add a service to the GATT server
+   * These actions will be taken only after the registration has been done
+   * successfully. If the registration fails, all the existing actions above
+   * should be rejected.
+   */
+  bool mIsRegistering;
+
   nsRefPtr<BluetoothReplyRunnable> mConnectPeripheralRunnable;
   nsRefPtr<BluetoothReplyRunnable> mDisconnectPeripheralRunnable;
   nsRefPtr<BluetoothReplyRunnable> mUnregisterServerRunnable;
+
+  BluetoothGattServerAddServiceState mAddServiceState;
+  nsRefPtr<BluetoothReplyRunnable> mAddIncludedServiceRunnable;
+  nsRefPtr<BluetoothReplyRunnable> mAddCharacteristicRunnable;
+  BluetoothGattServerAddDescriptorState mAddDescriptorState;
+  nsRefPtr<BluetoothReplyRunnable> mRemoveServiceRunnable;
+  nsRefPtr<BluetoothReplyRunnable> mStartServiceRunnable;
+  nsRefPtr<BluetoothReplyRunnable> mStopServiceRunnable;
 
   // Map connection id from device address
   nsDataHashtable<nsStringHashKey, int> mConnectionMap;
@@ -1399,8 +1468,17 @@ public:
   : mServer(aServer)
   {
     MOZ_ASSERT(mServer);
+    MOZ_ASSERT(!mServer->mIsRegistering);
+
+    mServer->mIsRegistering = true;
   }
 
+  /*
+   * Some actions will trigger the registration procedure. These actions will
+   * be taken only after the registration has been done successfully.
+   * If the registration fails, all the existing actions above should be
+   * rejected.
+   */
   void OnError(BluetoothStatus aStatus) override
   {
     BT_WARNING("BluetoothGattServerInterface::RegisterServer failed: %d",
@@ -1416,6 +1494,14 @@ public:
       mServer->mConnectPeripheralRunnable = nullptr;
     }
 
+    // Reject the add service request
+    if (mServer->mAddServiceState.mRunnable) {
+      DispatchReplyError(mServer->mAddServiceState.mRunnable,
+                         NS_LITERAL_STRING("Register GATT server failed"));
+      mServer->mAddServiceState.Reset();
+    }
+
+    mServer->mIsRegistering = false;
     sServers->RemoveElement(mServer);
   }
 
@@ -1509,7 +1595,9 @@ BluetoothGattManager::ConnectPeripheral(
       true, // direct connect
       TRANSPORT_AUTO,
       new ConnectPeripheralResultHandler(server, aAddress));
-  } else {
+  } else if (!server->mIsRegistering) { /* avoid triggering another registration
+                                         * procedure if there is an on-going one
+                                         * already */
     BluetoothUuid uuid;
     StringToUuid(aAppUuid, uuid);
 
@@ -1661,6 +1749,477 @@ BluetoothGattManager::UnregisterServer(int aServerIf,
   sBluetoothGattInterface->UnregisterServer(
     aServerIf,
     new UnregisterServerResultHandler(server));
+}
+
+class BluetoothGattManager::ServerAddServiceResultHandler final
+  : public BluetoothGattResultHandler
+{
+public:
+  ServerAddServiceResultHandler(BluetoothGattServer* aServer)
+  : mServer(aServer)
+  {
+    MOZ_ASSERT(mServer);
+  }
+
+  void OnError(BluetoothStatus aStatus) override
+  {
+    BT_WARNING("BluetoothGattServerInterface::ServerAddService failed: %d",
+               (int)aStatus);
+    MOZ_ASSERT(mServer->mAddServiceState.mRunnable);
+
+    DispatchReplyError(mServer->mAddServiceState.mRunnable,
+                       NS_LITERAL_STRING("ServerAddService failed"));
+    mServer->mAddServiceState.Reset();
+  }
+
+private:
+  nsRefPtr<BluetoothGattServer> mServer;
+};
+
+void
+BluetoothGattManager::ServerAddService(
+  const nsAString& aAppUuid,
+  const BluetoothGattServiceId& aServiceId,
+  uint16_t aHandleCount,
+  BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aRunnable);
+
+  ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
+
+  size_t index = sServers->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  if (index == sServers->NoIndex) {
+    index = sServers->Length();
+    sServers->AppendElement(new BluetoothGattServer(aAppUuid));
+  }
+  nsRefPtr<BluetoothGattServer> server = sServers->ElementAt(index);
+
+  // Reject the request if there is an ongoing add service request.
+  if (server->mAddServiceState.mRunnable) {
+    DispatchReplyError(aRunnable, STATUS_BUSY);
+    return;
+  }
+
+  server->mAddServiceState.Assign(aServiceId, aHandleCount, aRunnable);
+
+  if (server->mServerIf > 0) {
+    sBluetoothGattInterface->AddService(
+      server->mServerIf,
+      aServiceId,
+      aHandleCount,
+      new ServerAddServiceResultHandler(server));
+  } else if (!server->mIsRegistering) { /* avoid triggering another registration
+                                         * procedure if there is an on-going one
+                                         * already */
+    BluetoothUuid uuid;
+    StringToUuid(aAppUuid, uuid);
+
+    // add service will be proceeded after server registered
+    sBluetoothGattInterface->RegisterServer(
+      uuid, new RegisterServerResultHandler(server));
+  }
+}
+
+class BluetoothGattManager::ServerAddIncludedServiceResultHandler final
+  : public BluetoothGattResultHandler
+{
+public:
+  ServerAddIncludedServiceResultHandler(BluetoothGattServer* aServer)
+  : mServer(aServer)
+  {
+    MOZ_ASSERT(mServer);
+  }
+
+  void OnError(BluetoothStatus aStatus) override
+  {
+    BT_WARNING("BluetoothGattServerInterface::AddIncludedService failed: %d",
+               (int)aStatus);
+
+    // Reject the add included service request
+    if (mServer->mAddIncludedServiceRunnable) {
+      DispatchReplyError(mServer->mAddIncludedServiceRunnable,
+                         NS_LITERAL_STRING("Add GATT included service failed"));
+      mServer->mAddIncludedServiceRunnable = nullptr;
+    }
+  }
+
+private:
+  nsRefPtr<BluetoothGattServer> mServer;
+};
+
+void
+BluetoothGattManager::ServerAddIncludedService(
+  const nsAString& aAppUuid,
+  const BluetoothAttributeHandle& aServiceHandle,
+  const BluetoothAttributeHandle& aIncludedServiceHandle,
+  BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aRunnable);
+
+  ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
+
+  size_t index = sServers->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  if (NS_WARN_IF(index == sServers->NoIndex)) {
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return;
+  }
+  nsRefPtr<BluetoothGattServer> server = sServers->ElementAt(index);
+
+  // Reject the request if the service has not been registered successfully.
+  if (!server->mServerIf) {
+    DispatchReplyError(aRunnable, STATUS_NOT_READY);
+    return;
+  }
+  // Reject the request if there is an ongoing add included service request.
+  if (server->mAddIncludedServiceRunnable) {
+    DispatchReplyError(aRunnable, STATUS_BUSY);
+    return;
+  }
+
+  server->mAddIncludedServiceRunnable = aRunnable;
+
+  sBluetoothGattInterface->AddIncludedService(
+    server->mServerIf,
+    aServiceHandle,
+    aIncludedServiceHandle,
+    new ServerAddIncludedServiceResultHandler(server));
+}
+
+class BluetoothGattManager::ServerAddCharacteristicResultHandler final
+  : public BluetoothGattResultHandler
+{
+public:
+  ServerAddCharacteristicResultHandler(BluetoothGattServer* aServer)
+  : mServer(aServer)
+  {
+    MOZ_ASSERT(mServer);
+  }
+
+  void OnError(BluetoothStatus aStatus) override
+  {
+    BT_WARNING("BluetoothGattServerInterface::AddCharacteristic failed: %d",
+               (int)aStatus);
+
+    // Reject the add characteristic request
+    if (mServer->mAddCharacteristicRunnable) {
+      DispatchReplyError(mServer->mAddCharacteristicRunnable,
+                         NS_LITERAL_STRING("Add GATT characteristic failed"));
+      mServer->mAddCharacteristicRunnable = nullptr;
+    }
+  }
+
+private:
+  nsRefPtr<BluetoothGattServer> mServer;
+};
+
+void
+BluetoothGattManager::ServerAddCharacteristic(
+  const nsAString& aAppUuid,
+  const BluetoothAttributeHandle& aServiceHandle,
+  const BluetoothUuid& aCharacteristicUuid,
+  BluetoothGattAttrPerm aPermissions,
+  BluetoothGattCharProp aProperties,
+  BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aRunnable);
+
+  ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
+
+  size_t index = sServers->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  if (NS_WARN_IF(index == sServers->NoIndex)) {
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return;
+  }
+  nsRefPtr<BluetoothGattServer> server = sServers->ElementAt(index);
+
+  // Reject the request if the service has not been registered successfully.
+  if (!server->mServerIf) {
+    DispatchReplyError(aRunnable, STATUS_NOT_READY);
+    return;
+  }
+  // Reject the request if there is an ongoing add characteristic request.
+  if (server->mAddCharacteristicRunnable) {
+    DispatchReplyError(aRunnable, STATUS_BUSY);
+    return;
+  }
+
+  server->mAddCharacteristicRunnable = aRunnable;
+
+  sBluetoothGattInterface->AddCharacteristic(
+    server->mServerIf,
+    aServiceHandle,
+    aCharacteristicUuid,
+    aPermissions,
+    aProperties,
+    new ServerAddCharacteristicResultHandler(server));
+}
+
+class BluetoothGattManager::ServerAddDescriptorResultHandler final
+  : public BluetoothGattResultHandler
+{
+public:
+  ServerAddDescriptorResultHandler(BluetoothGattServer* aServer)
+  : mServer(aServer)
+  {
+    MOZ_ASSERT(mServer);
+  }
+
+  void OnError(BluetoothStatus aStatus) override
+  {
+    BT_WARNING("BluetoothGattServerInterface::AddDescriptor failed: %d",
+               (int)aStatus);
+
+    // Reject the add descriptor request
+    if (mServer->mAddDescriptorState.mRunnable) {
+      DispatchReplyError(mServer->mAddDescriptorState.mRunnable,
+                         NS_LITERAL_STRING("Add GATT descriptor failed"));
+      mServer->mAddDescriptorState.Reset();
+    }
+  }
+
+private:
+  nsRefPtr<BluetoothGattServer> mServer;
+};
+
+void
+BluetoothGattManager::ServerAddDescriptor(
+  const nsAString& aAppUuid,
+  const BluetoothAttributeHandle& aServiceHandle,
+  const BluetoothAttributeHandle& aCharacteristicHandle,
+  const BluetoothUuid& aDescriptorUuid,
+  BluetoothGattAttrPerm aPermissions,
+  BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aRunnable);
+
+  ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
+
+  size_t index = sServers->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  if (NS_WARN_IF(index == sServers->NoIndex)) {
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return;
+  }
+  nsRefPtr<BluetoothGattServer> server = sServers->ElementAt(index);
+
+  // Reject the request if the service has not been registered successfully.
+  if (!server->mServerIf) {
+    DispatchReplyError(aRunnable, STATUS_NOT_READY);
+    return;
+  }
+  // Reject the request if there is an ongoing add descriptor request.
+  if (server->mAddDescriptorState.mRunnable) {
+    DispatchReplyError(aRunnable, STATUS_BUSY);
+    return;
+  }
+
+  server->mAddDescriptorState.Assign(aServiceHandle,
+                                     aCharacteristicHandle,
+                                     aDescriptorUuid,
+                                     aRunnable);
+
+  sBluetoothGattInterface->AddDescriptor(
+    server->mServerIf,
+    aServiceHandle,
+    aDescriptorUuid,
+    aPermissions,
+    new ServerAddDescriptorResultHandler(server));
+}
+
+class BluetoothGattManager::ServerRemoveDescriptorResultHandler final
+  : public BluetoothGattResultHandler
+{
+public:
+  ServerRemoveDescriptorResultHandler(BluetoothGattServer* aServer)
+  : mServer(aServer)
+  {
+    MOZ_ASSERT(mServer);
+  }
+
+  void OnError(BluetoothStatus aStatus) override
+  {
+    BT_WARNING("BluetoothGattServerInterface::RemoveService failed: %d",
+               (int)aStatus);
+
+    // Reject the remove service request
+    if (mServer->mRemoveServiceRunnable) {
+      DispatchReplyError(mServer->mRemoveServiceRunnable,
+                         NS_LITERAL_STRING("Remove GATT service failed"));
+      mServer->mRemoveServiceRunnable = nullptr;
+    }
+  }
+
+private:
+  nsRefPtr<BluetoothGattServer> mServer;
+};
+
+void
+BluetoothGattManager::ServerRemoveService(
+  const nsAString& aAppUuid,
+  const BluetoothAttributeHandle& aServiceHandle,
+  BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aRunnable);
+
+  ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
+
+  size_t index = sServers->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  if (NS_WARN_IF(index == sServers->NoIndex)) {
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return;
+  }
+  nsRefPtr<BluetoothGattServer> server = sServers->ElementAt(index);
+
+  // Reject the request if the service has not been registered successfully.
+  if (!server->mServerIf) {
+    DispatchReplyError(aRunnable, STATUS_NOT_READY);
+    return;
+  }
+  // Reject the request if there is an ongoing remove service request.
+  if (server->mRemoveServiceRunnable) {
+    DispatchReplyError(aRunnable, STATUS_BUSY);
+    return;
+  }
+
+  server->mRemoveServiceRunnable = aRunnable;
+
+  sBluetoothGattInterface->DeleteService(
+    server->mServerIf,
+    aServiceHandle,
+    new ServerRemoveDescriptorResultHandler(server));
+}
+
+class BluetoothGattManager::ServerStartServiceResultHandler final
+  : public BluetoothGattResultHandler
+{
+public:
+  ServerStartServiceResultHandler(BluetoothGattServer* aServer)
+  : mServer(aServer)
+  {
+    MOZ_ASSERT(mServer);
+  }
+
+  void OnError(BluetoothStatus aStatus) override
+  {
+    BT_WARNING("BluetoothGattServerInterface::StartService failed: %d",
+               (int)aStatus);
+
+    // Reject the remove service request
+    if (mServer->mStartServiceRunnable) {
+      DispatchReplyError(mServer->mStartServiceRunnable,
+                         NS_LITERAL_STRING("Start GATT service failed"));
+      mServer->mStartServiceRunnable = nullptr;
+    }
+  }
+
+private:
+  nsRefPtr<BluetoothGattServer> mServer;
+};
+
+void
+BluetoothGattManager::ServerStartService(
+  const nsAString& aAppUuid,
+  const BluetoothAttributeHandle& aServiceHandle,
+  BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aRunnable);
+
+  ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
+
+  size_t index = sServers->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  if (NS_WARN_IF(index == sServers->NoIndex)) {
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return;
+  }
+  nsRefPtr<BluetoothGattServer> server = sServers->ElementAt(index);
+
+  // Reject the request if the service has not been registered successfully.
+  if (!server->mServerIf) {
+    DispatchReplyError(aRunnable, STATUS_NOT_READY);
+    return;
+  }
+  // Reject the request if there is an ongoing start service request.
+  if (server->mStartServiceRunnable) {
+    DispatchReplyError(aRunnable, STATUS_BUSY);
+    return;
+  }
+
+  server->mStartServiceRunnable = aRunnable;
+
+  sBluetoothGattInterface->StartService(
+    server->mServerIf,
+    aServiceHandle,
+    TRANSPORT_AUTO,
+    new ServerStartServiceResultHandler(server));
+}
+
+class BluetoothGattManager::ServerStopServiceResultHandler final
+  : public BluetoothGattResultHandler
+{
+public:
+  ServerStopServiceResultHandler(BluetoothGattServer* aServer)
+  : mServer(aServer)
+  {
+    MOZ_ASSERT(mServer);
+  }
+
+  void OnError(BluetoothStatus aStatus) override
+  {
+    BT_WARNING("BluetoothGattServerInterface::StopService failed: %d",
+               (int)aStatus);
+
+    // Reject the remove service request
+    if (mServer->mStopServiceRunnable) {
+      DispatchReplyError(mServer->mStopServiceRunnable,
+                         NS_LITERAL_STRING("Stop GATT service failed"));
+      mServer->mStopServiceRunnable = nullptr;
+    }
+  }
+
+private:
+  nsRefPtr<BluetoothGattServer> mServer;
+};
+
+void
+BluetoothGattManager::ServerStopService(
+  const nsAString& aAppUuid,
+  const BluetoothAttributeHandle& aServiceHandle,
+  BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aRunnable);
+
+  ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
+
+  size_t index = sServers->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  if (NS_WARN_IF(index == sServers->NoIndex)) {
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return;
+  }
+  nsRefPtr<BluetoothGattServer> server = sServers->ElementAt(index);
+
+  // Reject the request if the service has not been registered successfully.
+  if (!server->mServerIf) {
+    DispatchReplyError(aRunnable, STATUS_NOT_READY);
+    return;
+  }
+  // Reject the request if there is an ongoing stop service request.
+  if (server->mStopServiceRunnable) {
+    DispatchReplyError(aRunnable, STATUS_BUSY);
+    return;
+  }
+
+  server->mStopServiceRunnable = aRunnable;
+
+  sBluetoothGattInterface->StopService(
+    server->mServerIf,
+    aServiceHandle,
+    new ServerStopServiceResultHandler(server));
 }
 
 //
@@ -2417,6 +2976,12 @@ BluetoothGattManager::ListenNotification(BluetoothGattStatus aStatus,
                                          int aServerIf)
 { }
 
+/*
+ * Some actions will trigger the registration procedure. These actions will
+ * be taken only after the registration has been done successfully.
+ * If the registration fails, all the existing actions above should be
+ * rejected.
+ */
 void
 BluetoothGattManager::RegisterServerNotification(BluetoothGattStatus aStatus,
                                                  int aServerIf,
@@ -2432,10 +2997,10 @@ BluetoothGattManager::RegisterServerNotification(BluetoothGattStatus aStatus,
 
   nsRefPtr<BluetoothGattServer> server = (*sServers)[index];
 
-  BluetoothService* bs = BluetoothService::Get();
-  NS_ENSURE_TRUE_VOID(bs);
+  server->mIsRegistering = false;
 
-  if (aStatus != GATT_STATUS_SUCCESS) {
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs || aStatus != GATT_STATUS_SUCCESS) {
     BT_LOGD("RegisterServer failed: serverIf = %d, status = %d, appUuid = %s",
              aServerIf, aStatus, NS_ConvertUTF16toUTF8(uuid).get());
 
@@ -2448,7 +3013,17 @@ BluetoothGattManager::RegisterServerNotification(BluetoothGattStatus aStatus,
       server->mConnectPeripheralRunnable = nullptr;
     }
 
+    if (server->mAddServiceState.mRunnable) {
+      // Reject the add service request
+      DispatchReplyError(
+        server->mAddServiceState.mRunnable,
+        NS_LITERAL_STRING(
+          "AddService failed due to registration failed"));
+      server->mAddServiceState.Reset();
+    }
+
     sServers->RemoveElement(server);
+    return;
   }
 
   server->mServerIf = aServerIf;
@@ -2465,6 +3040,14 @@ BluetoothGattManager::RegisterServerNotification(BluetoothGattStatus aStatus,
     sBluetoothGattInterface->ConnectPeripheral(
       aServerIf, deviceAddr, true /* direct connect */, TRANSPORT_AUTO,
       new ConnectPeripheralResultHandler(server, deviceAddr));
+  }
+
+  if (server->mAddServiceState.mRunnable) {
+    sBluetoothGattInterface->AddService(
+      server->mServerIf,
+      server->mAddServiceState.mServiceId,
+      server->mAddServiceState.mHandleCount,
+      new ServerAddServiceResultHandler(server));
   }
 }
 
@@ -2518,6 +3101,253 @@ BluetoothGattManager::ConnectionNotification(int aConnId,
                          NS_LITERAL_STRING("DisconnectPeripheral failed"));
     }
     server->mDisconnectPeripheralRunnable = nullptr;
+  }
+}
+
+void
+BluetoothGattManager::ServiceAddedNotification(
+  BluetoothGattStatus aStatus,
+  int aServerIf,
+  const BluetoothGattServiceId& aServiceId,
+  const BluetoothAttributeHandle& aServiceHandle)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  size_t index = sServers->IndexOf(aServerIf, 0 /* Start */,
+                                   InterfaceIdComparator());
+  NS_ENSURE_TRUE_VOID(index != sServers->NoIndex);
+
+  nsRefPtr<BluetoothGattServer> server = sServers->ElementAt(index);
+
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs || aStatus != GATT_STATUS_SUCCESS) {
+    if (server->mAddServiceState.mRunnable) {
+      DispatchReplyError(server->mAddServiceState.mRunnable,
+                         NS_LITERAL_STRING("ServiceAddedNotification failed"));
+      server->mAddServiceState.Reset();
+    }
+    return;
+  }
+
+  // Notify BluetoothGattServer to update service handle
+  InfallibleTArray<BluetoothNamedValue> props;
+  AppendNamedValue(props, "ServiceId", aServiceId);
+  AppendNamedValue(props, "ServiceHandle", aServiceHandle);
+  bs->DistributeSignal(NS_LITERAL_STRING("ServiceHandleUpdated"),
+                       server->mAppUuid,
+                       BluetoothValue(props));
+
+  if (server->mAddServiceState.mRunnable) {
+    DispatchReplySuccess(server->mAddServiceState.mRunnable);
+    server->mAddServiceState.Reset();
+  }
+}
+
+void
+BluetoothGattManager::IncludedServiceAddedNotification(
+  BluetoothGattStatus aStatus,
+  int aServerIf,
+  const BluetoothAttributeHandle& aServiceHandle,
+  const BluetoothAttributeHandle& aIncludedServiceHandle)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  size_t index = sServers->IndexOf(aServerIf, 0 /* Start */,
+                                   InterfaceIdComparator());
+  NS_ENSURE_TRUE_VOID(index != sServers->NoIndex);
+
+  nsRefPtr<BluetoothGattServer> server = sServers->ElementAt(index);
+
+  if (aStatus != GATT_STATUS_SUCCESS) {
+    if (server->mAddIncludedServiceRunnable) {
+      DispatchReplyError(
+        server->mAddIncludedServiceRunnable,
+        NS_LITERAL_STRING("IncludedServiceAddedNotification failed"));
+      server->mAddIncludedServiceRunnable = nullptr;
+    }
+    return;
+  }
+
+  if (server->mAddIncludedServiceRunnable) {
+    DispatchReplySuccess(server->mAddIncludedServiceRunnable);
+    server->mAddIncludedServiceRunnable = nullptr;
+  }
+}
+
+void
+BluetoothGattManager::CharacteristicAddedNotification(
+  BluetoothGattStatus aStatus,
+  int aServerIf,
+  const BluetoothUuid& aCharId,
+  const BluetoothAttributeHandle& aServiceHandle,
+  const BluetoothAttributeHandle& aCharacteristicHandle)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  size_t index = sServers->IndexOf(aServerIf, 0 /* Start */,
+                                   InterfaceIdComparator());
+  NS_ENSURE_TRUE_VOID(index != sServers->NoIndex);
+
+  nsRefPtr<BluetoothGattServer> server = sServers->ElementAt(index);
+
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs || aStatus != GATT_STATUS_SUCCESS) {
+    if (server->mAddCharacteristicRunnable) {
+      DispatchReplyError(
+        server->mAddCharacteristicRunnable,
+        NS_LITERAL_STRING("CharacteristicAddedNotification failed"));
+      server->mAddCharacteristicRunnable = nullptr;
+    }
+    return;
+  }
+
+  // Notify BluetoothGattServer to update characteristic handle
+  InfallibleTArray<BluetoothNamedValue> props;
+  AppendNamedValue(props, "CharacteristicUuid", aCharId);
+  AppendNamedValue(props, "ServiceHandle", aServiceHandle);
+  AppendNamedValue(props, "CharacteristicHandle", aCharacteristicHandle);
+  bs->DistributeSignal(NS_LITERAL_STRING("CharacteristicHandleUpdated"),
+                       server->mAppUuid,
+                       BluetoothValue(props));
+
+  if (server->mAddCharacteristicRunnable) {
+    DispatchReplySuccess(server->mAddCharacteristicRunnable);
+    server->mAddCharacteristicRunnable = nullptr;
+  }
+}
+
+void
+BluetoothGattManager::DescriptorAddedNotification(
+  BluetoothGattStatus aStatus,
+  int aServerIf,
+  const BluetoothUuid& aCharId,
+  const BluetoothAttributeHandle& aServiceHandle,
+  const BluetoothAttributeHandle& aDescriptorHandle)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  size_t index = sServers->IndexOf(aServerIf, 0 /* Start */,
+                                   InterfaceIdComparator());
+  NS_ENSURE_TRUE_VOID(index != sServers->NoIndex);
+
+  nsRefPtr<BluetoothGattServer> server = sServers->ElementAt(index);
+  MOZ_ASSERT(aServiceHandle == server->mAddDescriptorState.mServiceHandle);
+
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs || aStatus != GATT_STATUS_SUCCESS) {
+    if (server->mAddDescriptorState.mRunnable) {
+      DispatchReplyError(
+        server->mAddDescriptorState.mRunnable,
+        NS_LITERAL_STRING("DescriptorAddedNotification failed"));
+      server->mAddDescriptorState.Reset();
+    }
+    return;
+  }
+
+  // Notify BluetoothGattServer to update descriptor handle
+  InfallibleTArray<BluetoothNamedValue> props;
+  AppendNamedValue(props, "CharacteristicUuid", aCharId);
+  AppendNamedValue(props, "ServiceHandle", aServiceHandle);
+  AppendNamedValue(props, "CharacteristicHandle",
+    server->mAddDescriptorState.mCharacteristicHandle);
+  AppendNamedValue(props, "DescriptorHandle", aDescriptorHandle);
+  bs->DistributeSignal(NS_LITERAL_STRING("DescriptorHandleUpdated"),
+                       server->mAppUuid,
+                       BluetoothValue(props));
+
+  if (server->mAddDescriptorState.mRunnable) {
+    DispatchReplySuccess(server->mAddDescriptorState.mRunnable);
+    server->mAddDescriptorState.Reset();
+  }
+}
+
+void
+BluetoothGattManager::ServiceStartedNotification(
+  BluetoothGattStatus aStatus,
+  int aServerIf,
+  const BluetoothAttributeHandle& aServiceHandle)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  size_t index = sServers->IndexOf(aServerIf, 0 /* Start */,
+                                   InterfaceIdComparator());
+  NS_ENSURE_TRUE_VOID(index != sServers->NoIndex);
+
+  nsRefPtr<BluetoothGattServer> server = sServers->ElementAt(index);
+
+  if (aStatus != GATT_STATUS_SUCCESS) {
+    if (server->mStartServiceRunnable) {
+      DispatchReplyError(
+        server->mStartServiceRunnable,
+        NS_LITERAL_STRING("ServiceStartedNotification failed"));
+      server->mStartServiceRunnable = nullptr;
+    }
+    return;
+  }
+
+  if (server->mStartServiceRunnable) {
+    DispatchReplySuccess(server->mStartServiceRunnable);
+    server->mStartServiceRunnable = nullptr;
+  }
+}
+
+void
+BluetoothGattManager::ServiceStoppedNotification(
+  BluetoothGattStatus aStatus,
+  int aServerIf,
+  const BluetoothAttributeHandle& aServiceHandle)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  size_t index = sServers->IndexOf(aServerIf, 0 /* Start */,
+                                   InterfaceIdComparator());
+  NS_ENSURE_TRUE_VOID(index != sServers->NoIndex);
+
+  nsRefPtr<BluetoothGattServer> server = sServers->ElementAt(index);
+
+  if (aStatus != GATT_STATUS_SUCCESS) {
+    if (server->mStopServiceRunnable) {
+      DispatchReplyError(
+        server->mStopServiceRunnable,
+        NS_LITERAL_STRING("ServiceStoppedNotification failed"));
+      server->mStopServiceRunnable = nullptr;
+    }
+    return;
+  }
+
+  if (server->mStopServiceRunnable) {
+    DispatchReplySuccess(server->mStopServiceRunnable);
+    server->mStopServiceRunnable = nullptr;
+  }
+}
+
+void
+BluetoothGattManager::ServiceDeletedNotification(
+  BluetoothGattStatus aStatus,
+  int aServerIf,
+  const BluetoothAttributeHandle& aServiceHandle)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  size_t index = sServers->IndexOf(aServerIf, 0 /* Start */,
+                                   InterfaceIdComparator());
+  NS_ENSURE_TRUE_VOID(index != sServers->NoIndex);
+
+  nsRefPtr<BluetoothGattServer> server = sServers->ElementAt(index);
+
+  if (aStatus != GATT_STATUS_SUCCESS) {
+    if (server->mRemoveServiceRunnable) {
+      DispatchReplyError(
+        server->mRemoveServiceRunnable,
+        NS_LITERAL_STRING("ServiceStoppedNotification failed"));
+      server->mRemoveServiceRunnable = nullptr;
+    }
+    return;
+  }
+
+  if (server->mRemoveServiceRunnable) {
+    DispatchReplySuccess(server->mRemoveServiceRunnable);
+    server->mRemoveServiceRunnable = nullptr;
   }
 }
 

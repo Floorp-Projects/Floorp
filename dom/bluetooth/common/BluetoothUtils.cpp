@@ -8,6 +8,7 @@
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothService.h"
 #include "jsapi.h"
+#include "mozilla/dom/BluetoothGattCharacteristicBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "nsContentUtils.h"
@@ -89,6 +90,102 @@ GenerateUuid(nsAString &aUuidString)
 
   return NS_OK;
 }
+
+void
+GattPermissionsToDictionary(BluetoothGattAttrPerm aBits,
+                            GattPermissions& aPermissions)
+{
+  aPermissions.mRead = aBits & GATT_ATTR_PERM_BIT_READ;
+  aPermissions.mReadEncrypted = aBits & GATT_ATTR_PERM_BIT_READ_ENCRYPTED;
+  aPermissions.mReadEncryptedMITM =
+    aBits & GATT_ATTR_PERM_BIT_READ_ENCRYPTED_MITM;
+  aPermissions.mWrite = aBits & GATT_ATTR_PERM_BIT_WRITE;
+  aPermissions.mWriteEncrypted = aBits & GATT_ATTR_PERM_BIT_WRITE_ENCRYPTED;
+  aPermissions.mWriteEncryptedMITM =
+    aBits & GATT_ATTR_PERM_BIT_WRITE_ENCRYPTED_MITM;
+  aPermissions.mWriteSigned = aBits & GATT_ATTR_PERM_BIT_WRITE_SIGNED;
+  aPermissions.mWriteSignedMITM = aBits & GATT_ATTR_PERM_BIT_WRITE_SIGNED_MITM;
+}
+
+void
+GattPermissionsToBits(const GattPermissions& aPermissions,
+                      BluetoothGattAttrPerm& aBits)
+{
+  aBits = BLUETOOTH_EMPTY_GATT_ATTR_PERM;
+
+  if (aPermissions.mRead) {
+    aBits |= GATT_ATTR_PERM_BIT_READ;
+  }
+  if (aPermissions.mReadEncrypted) {
+    aBits |= GATT_ATTR_PERM_BIT_READ_ENCRYPTED;
+  }
+  if (aPermissions.mReadEncryptedMITM) {
+    aBits |= GATT_ATTR_PERM_BIT_READ_ENCRYPTED_MITM;
+  }
+  if (aPermissions.mWrite) {
+    aBits |= GATT_ATTR_PERM_BIT_WRITE;
+  }
+  if (aPermissions.mWriteEncrypted) {
+    aBits |= GATT_ATTR_PERM_BIT_WRITE_ENCRYPTED;
+  }
+  if (aPermissions.mWriteEncryptedMITM) {
+    aBits |= GATT_ATTR_PERM_BIT_WRITE_ENCRYPTED_MITM;
+  }
+  if (aPermissions.mWriteSigned) {
+    aBits |= GATT_ATTR_PERM_BIT_WRITE_SIGNED;
+  }
+  if (aPermissions.mWriteSignedMITM) {
+    aBits |= GATT_ATTR_PERM_BIT_WRITE_SIGNED_MITM;
+  }
+}
+
+void
+GattPropertiesToDictionary(BluetoothGattCharProp aBits,
+                           GattCharacteristicProperties& aProperties)
+{
+  aProperties.mBroadcast = aBits & GATT_CHAR_PROP_BIT_BROADCAST;
+  aProperties.mRead = aBits & GATT_CHAR_PROP_BIT_READ;
+  aProperties.mWriteNoResponse = aBits & GATT_CHAR_PROP_BIT_WRITE_NO_RESPONSE;
+  aProperties.mWrite = aBits & GATT_CHAR_PROP_BIT_WRITE;
+  aProperties.mNotify = aBits & GATT_CHAR_PROP_BIT_NOTIFY;
+  aProperties.mIndicate = aBits & GATT_CHAR_PROP_BIT_INDICATE;
+  aProperties.mSignedWrite = aBits & GATT_CHAR_PROP_BIT_SIGNED_WRITE;
+  aProperties.mExtendedProps = aBits & GATT_CHAR_PROP_BIT_EXTENDED_PROPERTIES;
+}
+
+void
+GattPropertiesToBits(const GattCharacteristicProperties& aProperties,
+                     BluetoothGattCharProp& aBits)
+{
+  aBits = BLUETOOTH_EMPTY_GATT_CHAR_PROP;
+
+  if (aProperties.mBroadcast) {
+    aBits |= GATT_CHAR_PROP_BIT_BROADCAST;
+  }
+  if (aProperties.mRead) {
+    aBits |= GATT_CHAR_PROP_BIT_READ;
+  }
+  if (aProperties.mWriteNoResponse) {
+    aBits |= GATT_CHAR_PROP_BIT_WRITE_NO_RESPONSE;
+  }
+  if (aProperties.mWrite) {
+    aBits |= GATT_CHAR_PROP_BIT_WRITE;
+  }
+  if (aProperties.mNotify) {
+    aBits |= GATT_CHAR_PROP_BIT_NOTIFY;
+  }
+  if (aProperties.mIndicate) {
+    aBits |= GATT_CHAR_PROP_BIT_INDICATE;
+  }
+  if (aProperties.mSignedWrite) {
+    aBits |= GATT_CHAR_PROP_BIT_SIGNED_WRITE;
+  }
+  if (aProperties.mExtendedProps) {
+    aBits |= GATT_CHAR_PROP_BIT_EXTENDED_PROPERTIES;
+  }
+}
+
+
 
 void
 GeneratePathFromGattId(const BluetoothGattId& aId,
