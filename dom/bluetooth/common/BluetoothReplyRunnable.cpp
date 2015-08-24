@@ -6,6 +6,7 @@
 
 #include "base/basictypes.h"
 #include "BluetoothReplyRunnable.h"
+#include "BluetoothUtils.h"
 #include "DOMRequest.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
@@ -58,6 +59,7 @@ BluetoothReplyRunnable::FireReplySuccess(JS::Handle<JS::Value> aVal)
     mPromise->MaybeResolve(aVal);
   }
 
+  OnSuccessFired();
   return NS_OK;
 }
 
@@ -80,6 +82,7 @@ BluetoothReplyRunnable::FireErrorString()
     mPromise->MaybeReject(rv);
   }
 
+  OnErrorFired();
   return NS_OK;
 }
 
@@ -118,6 +121,14 @@ BluetoothReplyRunnable::Run()
   return rv;
 }
 
+void
+BluetoothReplyRunnable::OnSuccessFired()
+{}
+
+void
+BluetoothReplyRunnable::OnErrorFired()
+{}
+
 BluetoothVoidReplyRunnable::BluetoothVoidReplyRunnable(nsIDOMDOMRequest* aReq,
                                                        Promise* aPromise)
   : BluetoothReplyRunnable(aReq, aPromise)
@@ -126,3 +137,181 @@ BluetoothVoidReplyRunnable::BluetoothVoidReplyRunnable(nsIDOMDOMRequest* aReq,
 BluetoothVoidReplyRunnable::~BluetoothVoidReplyRunnable()
 {}
 
+BluetoothReplyTaskQueue::SubReplyRunnable::SubReplyRunnable(
+  nsIDOMDOMRequest* aReq,
+  Promise* aPromise,
+  BluetoothReplyTaskQueue* aRootQueue)
+  : BluetoothReplyRunnable(aReq, aPromise)
+  , mRootQueue(aRootQueue)
+{}
+
+BluetoothReplyTaskQueue::SubReplyRunnable::~SubReplyRunnable()
+{}
+
+BluetoothReplyTaskQueue*
+BluetoothReplyTaskQueue::SubReplyRunnable::GetRootQueue() const
+{
+  return mRootQueue;
+}
+
+void
+BluetoothReplyTaskQueue::SubReplyRunnable::OnSuccessFired()
+{
+  mRootQueue->OnSubReplySuccessFired(this);
+}
+
+void
+BluetoothReplyTaskQueue::SubReplyRunnable::OnErrorFired()
+{
+  mRootQueue->OnSubReplyErrorFired(this);
+}
+
+BluetoothReplyTaskQueue::VoidSubReplyRunnable::VoidSubReplyRunnable(
+  nsIDOMDOMRequest* aReq,
+  Promise* aPromise,
+  BluetoothReplyTaskQueue* aRootQueue)
+  : BluetoothReplyTaskQueue::SubReplyRunnable(aReq, aPromise, aRootQueue)
+{}
+
+BluetoothReplyTaskQueue::VoidSubReplyRunnable::~VoidSubReplyRunnable()
+{}
+
+bool
+BluetoothReplyTaskQueue::VoidSubReplyRunnable::ParseSuccessfulReply(
+  JS::MutableHandle<JS::Value> aValue)
+{
+  aValue.setUndefined();
+  return true;
+}
+
+BluetoothReplyTaskQueue::SubTask::SubTask(
+  BluetoothReplyTaskQueue* aRootQueue,
+  SubReplyRunnable* aReply)
+  : mRootQueue(aRootQueue)
+  , mReply(aReply)
+{
+  if (!mReply) {
+    mReply = new VoidSubReplyRunnable(nullptr, nullptr, mRootQueue);
+  }
+}
+
+BluetoothReplyTaskQueue::SubTask::~SubTask()
+{}
+
+BluetoothReplyTaskQueue*
+BluetoothReplyTaskQueue::SubTask::GetRootQueue() const
+{
+  return mRootQueue;
+}
+
+BluetoothReplyTaskQueue::SubReplyRunnable*
+BluetoothReplyTaskQueue::SubTask::GetReply() const
+{
+  return mReply;
+}
+
+BluetoothReplyTaskQueue::BluetoothReplyTaskQueue(
+  BluetoothReplyRunnable* aReply)
+  : mReply(aReply)
+{}
+
+BluetoothReplyTaskQueue::~BluetoothReplyTaskQueue()
+{
+  Clear();
+}
+
+void
+BluetoothReplyTaskQueue::AppendTask(already_AddRefed<SubTask> aTask)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsRefPtr<SubTask> task(aTask);
+
+  if (task) {
+    mTasks.AppendElement(task.forget());
+  }
+}
+
+NS_IMETHODIMP
+BluetoothReplyTaskQueue::Run()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mTasks.IsEmpty()) {
+    nsRefPtr<SubTask> task = mTasks[0];
+    mTasks.RemoveElementAt(0);
+
+    MOZ_ASSERT(task);
+
+    if (!task->Execute()) {
+      FireErrorReply();
+    }
+  }
+
+  return NS_OK;
+}
+
+void
+BluetoothReplyTaskQueue::OnSubReplySuccessFired(SubReplyRunnable* aSubReply)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aSubReply);
+
+  if (mTasks.IsEmpty()) {
+    FireSuccessReply();
+  } else {
+    if (NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(this)))) {
+      FireErrorReply();
+    }
+  }
+}
+
+void
+BluetoothReplyTaskQueue::OnSubReplyErrorFired(SubReplyRunnable* aSubReply)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aSubReply);
+
+  FireErrorReply();
+}
+
+void
+BluetoothReplyTaskQueue::FireSuccessReply()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mReply) {
+    DispatchReplySuccess(mReply);
+  }
+  OnSuccessFired();
+  Clear();
+}
+
+void
+BluetoothReplyTaskQueue::FireErrorReply()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mReply) {
+    DispatchReplyError(mReply, STATUS_FAIL);
+  }
+  OnErrorFired();
+  Clear();
+}
+
+void
+BluetoothReplyTaskQueue::OnSuccessFired()
+{}
+
+void
+BluetoothReplyTaskQueue::OnErrorFired()
+{}
+
+void
+BluetoothReplyTaskQueue::Clear()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mReply = nullptr;
+  mTasks.Clear();
+}

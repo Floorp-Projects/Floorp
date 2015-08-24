@@ -309,6 +309,56 @@ struct UnregisterGattServerRequest
   int serverIf;
 };
 
+struct GattServerAddServiceRequest
+{
+  nsString appUuid;
+  BluetoothGattServiceId serviceId;
+  uint16_t handleCount;
+};
+
+struct GattServerAddIncludedServiceRequest
+{
+  nsString appUuid;
+  BluetoothAttributeHandle serviceHandle;
+  BluetoothAttributeHandle includedServiceHandle;
+};
+
+struct GattServerAddCharacteristicRequest
+{
+  nsString appUuid;
+  BluetoothAttributeHandle serviceHandle;
+  BluetoothUuid characteristicUuid;
+  BluetoothGattAttrPerm permissions;
+  BluetoothGattCharProp properties;
+};
+
+struct GattServerAddDescriptorRequest
+{
+  nsString appUuid;
+  BluetoothAttributeHandle serviceHandle;
+  BluetoothAttributeHandle characteristicHandle;
+  BluetoothUuid descriptorUuid;
+  BluetoothGattAttrPerm permissions;
+};
+
+struct GattServerRemoveServiceRequest
+{
+  nsString appUuid;
+  BluetoothAttributeHandle serviceHandle;
+};
+
+struct GattServerStartServiceRequest
+{
+  nsString appUuid;
+  BluetoothAttributeHandle serviceHandle;
+};
+
+struct GattServerStopServiceRequest
+{
+  nsString appUuid;
+  BluetoothAttributeHandle serviceHandle;
+};
+
 union Request
 {
   GetAdaptersRequest;
@@ -362,6 +412,13 @@ union Request
   GattServerConnectPeripheralRequest;
   GattServerDisconnectPeripheralRequest;
   UnregisterGattServerRequest;
+  GattServerAddServiceRequest;
+  GattServerAddIncludedServiceRequest;
+  GattServerAddCharacteristicRequest;
+  GattServerAddDescriptorRequest;
+  GattServerRemoveServiceRequest;
+  GattServerStartServiceRequest;
+  GattServerStopServiceRequest;
 };
 
 protocol PBluetooth

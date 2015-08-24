@@ -103,6 +103,49 @@ public:
   void UnregisterServer(int aServerIf,
                         BluetoothReplyRunnable* aRunnable);
 
+  void ServerAddService(
+    const nsAString& aAppUuid,
+    const BluetoothGattServiceId& aServiceId,
+    uint16_t aHandleCount,
+    BluetoothReplyRunnable* aRunnable);
+
+  void ServerAddIncludedService(
+    const nsAString& aAppUuid,
+    const BluetoothAttributeHandle& aServiceHandle,
+    const BluetoothAttributeHandle& aIncludedServiceHandle,
+    BluetoothReplyRunnable* aRunnable);
+
+  void ServerAddCharacteristic(
+    const nsAString& aAppUuid,
+    const BluetoothAttributeHandle& aServiceHandle,
+    const BluetoothUuid& aCharacteristicUuid,
+    BluetoothGattAttrPerm aPermissions,
+    BluetoothGattCharProp aProperties,
+    BluetoothReplyRunnable* aRunnable);
+
+  void ServerAddDescriptor(
+    const nsAString& aAppUuid,
+    const BluetoothAttributeHandle& aServiceHandle,
+    const BluetoothAttributeHandle& aCharacteristicHandle,
+    const BluetoothUuid& aDescriptorUuid,
+    BluetoothGattAttrPerm aPermissions,
+    BluetoothReplyRunnable* aRunnable);
+
+  void ServerRemoveService(
+    const nsAString& aAppUuid,
+    const BluetoothAttributeHandle& aServiceHandle,
+    BluetoothReplyRunnable* aRunnable);
+
+  void ServerStartService(
+    const nsAString& aAppUuid,
+    const BluetoothAttributeHandle& aServiceHandle,
+    BluetoothReplyRunnable* aRunnable);
+
+  void ServerStopService(
+    const nsAString& aAppUuid,
+    const BluetoothAttributeHandle& aServiceHandle,
+    BluetoothReplyRunnable* aRunnable);
+
 private:
   ~BluetoothGattManager();
 
@@ -129,6 +172,13 @@ private:
   class ConnectPeripheralResultHandler;
   class DisconnectPeripheralResultHandler;
   class UnregisterServerResultHandler;
+  class ServerAddServiceResultHandler;
+  class ServerAddIncludedServiceResultHandler;
+  class ServerAddCharacteristicResultHandler;
+  class ServerAddDescriptorResultHandler;
+  class ServerRemoveDescriptorResultHandler;
+  class ServerStartServiceResultHandler;
+  class ServerStopServiceResultHandler;
 
   BluetoothGattManager();
 
@@ -226,6 +276,54 @@ private:
                               int aServerIf,
                               bool aConnected,
                               const nsAString& aBdAddr) override;
+
+  void
+  ServiceAddedNotification(
+    BluetoothGattStatus aStatus,
+    int aServerIf,
+    const BluetoothGattServiceId& aServiceId,
+    const BluetoothAttributeHandle& aServiceHandle) override;
+
+  void
+  IncludedServiceAddedNotification(
+    BluetoothGattStatus aStatus,
+    int aServerIf,
+    const BluetoothAttributeHandle& aServiceHandle,
+    const BluetoothAttributeHandle& aIncludedServiceHandle) override;
+
+  void
+  CharacteristicAddedNotification(
+    BluetoothGattStatus aStatus,
+    int aServerIf,
+    const BluetoothUuid& aCharId,
+    const BluetoothAttributeHandle& aServiceHandle,
+    const BluetoothAttributeHandle& aCharacteristicHandle) override;
+
+  void
+  DescriptorAddedNotification(
+    BluetoothGattStatus aStatus,
+    int aServerIf,
+    const BluetoothUuid& aCharId,
+    const BluetoothAttributeHandle& aServiceHandle,
+    const BluetoothAttributeHandle& aDescriptorHandle) override;
+
+  void
+  ServiceStartedNotification(
+    BluetoothGattStatus aStatus,
+    int aServerIf,
+    const BluetoothAttributeHandle& aServiceHandle) override;
+
+  void
+  ServiceStoppedNotification(
+    BluetoothGattStatus aStatus,
+    int aServerIf,
+    const BluetoothAttributeHandle& aServiceHandle) override;
+
+  void
+  ServiceDeletedNotification(
+    BluetoothGattStatus aStatus,
+    int aServerIf,
+    const BluetoothAttributeHandle& aServiceHandle) override;
 
   static bool mInShutdown;
 };
