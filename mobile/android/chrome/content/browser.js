@@ -325,7 +325,6 @@ const kStateActive = 0x00000001; // :active pseudoclass for elements
 const kXLinkNamespace = "http://www.w3.org/1999/xlink";
 
 const kDefaultCSSViewportWidth = 980;
-const kDefaultCSSViewportHeight = 480;
 
 const kViewportRemeasureThrottle = 500;
 
@@ -2117,12 +2116,6 @@ var BrowserApp = {
     this.setLocalizedPref("intl.accept_languages", result);
   },
 
-  get defaultBrowserWidth() {
-    delete this.defaultBrowserWidth;
-    let width = Services.prefs.getIntPref("browser.viewport.desktopWidth");
-    return this.defaultBrowserWidth = width;
-  },
-
   // nsIAndroidBrowserApp
   get selectedTab() {
     return this._selectedTab;
@@ -3419,8 +3412,6 @@ function Tab(aURL, aParams) {
   this.desktopMode = false;
   this.originalURI = null;
   this.hasTouchListener = false;
-  this.browserWidth = 0;
-  this.browserHeight = 0;
   this.tilesData = null;
 
   this.create(aURL, aParams);
@@ -3469,7 +3460,6 @@ Tab.prototype = {
     this.browser = document.createElement("browser");
     this.browser.setAttribute("type", "content-targetable");
     this.browser.setAttribute("messagemanagergroup", "browsers");
-    this.setBrowserSize(kDefaultCSSViewportWidth, kDefaultCSSViewportHeight);
 
     // Make sure the previously selected panel remains selected. The selected panel of a deck is
     // not stable when panels are added.
@@ -4620,13 +4610,6 @@ Tab.prototype = {
     if (!sameDocument) {
       // XXX This code assumes that this is the earliest hook we have at which
       // browser.contentDocument is changed to the new document we're loading
-
-      // We have a new browser and a new window, so the old browserWidth and
-      // browserHeight are no longer valid.  We need to force-set the browser
-      // size to ensure it sets the CSS viewport size before the document
-      // has a chance to check it.
-      this.setBrowserSize(kDefaultCSSViewportWidth, kDefaultCSSViewportHeight, true);
-
       this.contentDocumentIsDisplayed = false;
       this.hasTouchListener = false;
     } else {
@@ -4740,12 +4723,13 @@ Tab.prototype = {
   },
 
   /** Update viewport when the metadata changes. */
-  updateViewportMetadata: function updateViewportMetadata(aMetadata, aInitialLoad) {
+  updateViewportMetadata: function updateViewportMetadata(aMetadata) {
     if (Services.prefs.getBoolPref("browser.ui.zoom.force-user-scalable")) {
       aMetadata.allowZoom = true;
       aMetadata.allowDoubleTapZoom = true;
       aMetadata.minZoom = aMetadata.maxZoom = NaN;
     }
+    this.recomputeDoubleTapToZoomAllowed();
 
     let scaleRatio = window.devicePixelRatio;
 
@@ -4760,125 +4744,30 @@ Tab.prototype = {
 
     ViewportHandler.setMetadataForDocument(this.browser.contentDocument, aMetadata);
     this.sendViewportMetadata();
-
-    this.updateViewportSize(gScreenWidth, aInitialLoad);
   },
 
-  /** Update viewport when the metadata or the window size changes. */
-  updateViewportSize: function updateViewportSize(aOldScreenWidth, aInitialLoad) {
-    // When this function gets called on window resize, we must execute
-    // this.sendViewportUpdate() so that refreshDisplayPort is called.
-    // Ensure that when making changes to this function that code path
-    // is not accidentally removed (the call to sendViewportUpdate() is
-    // at the very end).
+  viewportSizeUpdated: function viewportSizeUpdated() {
+    if (this.recomputeDoubleTapToZoomAllowed()) {
+      this.sendViewportMetadata();
+    }
+    this.sendViewportUpdate(); // recompute displayport
+  },
 
-    let browser = this.browser;
-    if (!browser)
-      return;
-
-    let viewportW, viewportH;
-
+  recomputeDoubleTapToZoomAllowed: function recomputeDoubleTapToZoomAllowed() {
     let metadata = this.metadata;
-    if (metadata.autoSize) {
-      viewportW = gScreenWidth / window.devicePixelRatio;
-      viewportH = gScreenHeight / window.devicePixelRatio;
-    } else {
-      viewportW = metadata.width;
-      viewportH = metadata.height;
-
-      // If (scale * width) < device-width, increase the width (bug 561413).
-      let maxInitialZoom = metadata.defaultZoom || metadata.maxZoom;
-      if (maxInitialZoom && viewportW) {
-        viewportW = Math.max(viewportW, gScreenWidth / maxInitialZoom);
-      }
-
-      let validW = viewportW > 0;
-      let validH = viewportH > 0;
-
-      if (!validW)
-        viewportW = validH ? (viewportH * (gScreenWidth / gScreenHeight)) : BrowserApp.defaultBrowserWidth;
-      if (!validH)
-        viewportH = viewportW * (gScreenHeight / gScreenWidth);
-    }
-
-    // Make sure the viewport height is not shorter than the window when
-    // the page is zoomed out to show its full width. Note that before
-    // we set the viewport width, the "full width" of the page isn't properly
-    // defined, so that's why we have to call setBrowserSize twice - once
-    // to set the width, and the second time to figure out the height based
-    // on the layout at that width.
-    let oldBrowserWidth = this.browserWidth;
-    this.setBrowserSize(viewportW, viewportH);
-
-    // if this page has not been painted yet, then this must be getting run
-    // because a meta-viewport element was added (via the DOMMetaAdded handler).
-    // in this case, we should not do anything that forces a reflow (see bug 759678)
-    // such as requesting the page size or sending a viewport update. this code
-    // will get run again in the before-first-paint handler and that point we
-    // will run though all of it. the reason we even bother executing up to this
-    // point on the DOMMetaAdded handler is so that scripts that use window.innerWidth
-    // before they are painted have a correct value (bug 771575).
-    if (!this.contentDocumentIsDisplayed) {
-      return;
-    }
-
-    // This change to the zoom accounts for all types of changes I can conceive:
-    // 1. screen size changes, CSS viewport does not (pages with no meta viewport
-    //    or a fixed size viewport)
-    // 2. screen size changes, CSS viewport also does (pages with a device-width
-    //    viewport)
-    // 3. screen size remains constant, but CSS viewport changes (meta viewport
-    //    tag is added or removed)
-    // 4. neither screen size nor CSS viewport changes
-    //
-    // In all of these cases, we maintain how much actual content is visible
-    // within the screen width. Note that "actual content" may be different
-    // with respect to CSS pixels because of the CSS viewport size changing.
-    let zoom = this.restoredSessionZoom() || metadata.defaultZoom;
-    if (!zoom || !aInitialLoad) {
-      let zoomScale = (gScreenWidth * oldBrowserWidth) / (aOldScreenWidth * viewportW);
-      zoom = this.clampZoom(this._zoom * zoomScale);
-    }
-    this.setResolution(zoom, false);
-    this.setScrollClampingSize(zoom);
-
-    let minScale = 1.0;
-    if (this.browser.contentDocument) {
-      // this may get run during a Viewport:Change message while the document
-      // has not yet loaded, so need to guard against a null document.
-      let cwu = this.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-      let cssPageRect = cwu.getRootBounds();
-
-      minScale = gScreenWidth / cssPageRect.width;
-    }
-    minScale = this.clampZoom(minScale);
-    viewportH = Math.max(viewportH, gScreenHeight / minScale);
-
-    // In general we want to keep calls to setBrowserSize and setScrollClampingSize
-    // together because setBrowserSize could mark the viewport size as dirty, creating
-    // a pending resize event for content. If that resize gets dispatched (which happens
-    // on the next reflow) without setScrollClampingSize having being called, then
-    // content might be exposed to incorrect innerWidth/innerHeight values.
-    this.setBrowserSize(viewportW, viewportH);
-    this.setScrollClampingSize(zoom);
-
-    // Avoid having the scroll position jump around after device rotation.
-    let win = this.browser.contentWindow;
-    this.userScrollPos.x = win.scrollX;
-    this.userScrollPos.y = win.scrollY;
-
-    this.sendViewportUpdate();
-
     if (metadata.allowZoom && !Services.prefs.getBoolPref("browser.ui.zoom.force-user-scalable")) {
       // If the CSS viewport is narrower than the screen (i.e. width <= device-width)
       // then we disable double-tap-to-zoom behaviour.
       var oldAllowDoubleTapZoom = metadata.allowDoubleTapZoom;
-      var newAllowDoubleTapZoom = (!metadata.isSpecified) || (viewportW > gScreenWidth / window.devicePixelRatio);
+      // XXX: the window.innerWidth in the next line should really be the CSS viewport width
+      // (but the innerWidth is the SPCSPS width)
+      var newAllowDoubleTapZoom = (!metadata.isSpecified) || (window.innerWidth > gScreenWidth / window.devicePixelRatio);
       if (oldAllowDoubleTapZoom !== newAllowDoubleTapZoom) {
         metadata.allowDoubleTapZoom = newAllowDoubleTapZoom;
-        this.sendViewportMetadata();
+        return true;
       }
     }
+    return false;
   },
 
   sendViewportMetadata: function sendViewportMetadata() {
@@ -4893,22 +4782,6 @@ Tab.prototype = {
       isRTL: metadata.isRTL,
       tabID: this.id
     });
-  },
-
-  setBrowserSize: function(aWidth, aHeight, aForce) {
-    if (!aForce) {
-      if (fuzzyEquals(this.browserWidth, aWidth) && fuzzyEquals(this.browserHeight, aHeight)) {
-        return;
-      }
-    }
-
-    this.browserWidth = aWidth;
-    this.browserHeight = aHeight;
-
-    if (!this.browser.contentWindow)
-      return;
-    let cwu = this.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-    cwu.setCSSViewport(aWidth, aHeight);
   },
 
   /** Takes a scale and restricts it based on this tab's zoom limits. */
@@ -4937,32 +4810,17 @@ Tab.prototype = {
           }
           this.contentDocumentIsDisplayed = true;
 
-          // reset CSS viewport and zoom to default on new page, and then calculate
-          // them properly using the actual metadata from the page. note that the
-          // updateMetadata call takes into account the existing CSS viewport size
-          // and zoom when calculating the new ones, so we need to reset these
-          // things here before calling updateMetadata.
-          this.setBrowserSize(kDefaultCSSViewportWidth, kDefaultCSSViewportHeight);
-          let zoom = this.restoredSessionZoom() || gScreenWidth / this.browserWidth;
-          this.setResolution(zoom, true);
-          ViewportHandler.updateMetadata(this, true);
-
-          // Note that if we draw without a display-port, things can go wrong. By the
-          // time we execute this, it's almost certain a display-port has been set via
-          // the MozScrolledAreaChanged event. If that didn't happen, the updateMetadata
-          // call above does so at the end of the updateViewportSize function. As long
-          // as that is happening, we don't need to do it again here.
+          ViewportHandler.updateMetadata(this);
+          let zoom = this.restoredSessionZoom();
+          if (zoom) {
+            this.setResolution(zoom, true);
+          }
 
           if (!this.restoredSessionZoom() && contentDocument.mozSyntheticDocument) {
-            // for images, scale to fit width. this needs to happen *after* the call
-            // to updateMetadata above, because that call sets the CSS viewport which
-            // will affect the page size (i.e. contentDocument.body.scroll*) that we
-            // use in this calculation. also we call sendViewportUpdate after changing
-            // the resolution so that the display port gets recalculated appropriately.
             let fitZoom = Math.min(gScreenWidth / contentDocument.body.scrollWidth,
                                    gScreenHeight / contentDocument.body.scrollHeight);
             this.setResolution(fitZoom, false);
-            this.sendViewportUpdate();
+            this.sendViewportUpdate();  // recompute displayport
           }
         }
 
@@ -4987,7 +4845,7 @@ Tab.prototype = {
         break;
       case "nsPref:changed":
         if (aData == "browser.ui.zoom.force-user-scalable")
-          ViewportHandler.updateMetadata(this, false);
+          ViewportHandler.updateMetadata(this);
         break;
     }
   },
@@ -6463,7 +6321,7 @@ var ViewportHandler = {
         let browser = BrowserApp.getBrowserForDocument(document);
         let tab = BrowserApp.getTabForBrowser(browser);
         if (tab)
-          this.updateMetadata(tab, false);
+          this.updateMetadata(tab);
         break;
     }
   },
@@ -6476,12 +6334,12 @@ var ViewportHandler = {
         if (window.outerWidth == 0 || window.outerHeight == 0)
           break;
 
-        let oldScreenWidth = gScreenWidth;
         gScreenWidth = window.outerWidth * window.devicePixelRatio;
         gScreenHeight = window.outerHeight * window.devicePixelRatio;
         let tabs = BrowserApp.tabs;
-        for (let i = 0; i < tabs.length; i++)
-          tabs[i].updateViewportSize(oldScreenWidth);
+        for (let i = 0; i < tabs.length; i++) {
+          tabs[i].viewportSizeUpdated();
+        }
         break;
       default:
         return;
@@ -6496,11 +6354,11 @@ var ViewportHandler = {
     }
   },
 
-  updateMetadata: function updateMetadata(tab, aInitialLoad) {
+  updateMetadata: function updateMetadata(tab) {
     let contentWindow = tab.browser.contentWindow;
     if (contentWindow.document.documentElement) {
       let metadata = this.getViewportMetadata(contentWindow);
-      tab.updateViewportMetadata(metadata, aInitialLoad);
+      tab.updateViewportMetadata(metadata);
     }
   },
 
@@ -6518,8 +6376,6 @@ var ViewportHandler = {
       return new ViewportMetadata({
         minZoom: kViewportMinScale,
         maxZoom: kViewportMaxScale,
-        width: kDefaultCSSViewportWidth,
-        height: -1,
         allowZoom: true,
         allowDoubleTapZoom: true,
         isSpecified: false
@@ -6541,8 +6397,6 @@ var ViewportHandler = {
 
     let widthStr = windowUtils.getDocumentMetadata("viewport-width");
     let heightStr = windowUtils.getDocumentMetadata("viewport-height");
-    let width = this.clamp(parseInt(widthStr), kViewportMinWidth, kViewportMaxWidth) || 0;
-    let height = this.clamp(parseInt(heightStr), kViewportMinHeight, kViewportMaxHeight) || 0;
 
     // Allow zoom unless explicity disabled or minScale and maxScale are equal.
     // WebKit allows 0, "no", or "false" for viewport-user-scalable.
@@ -6555,15 +6409,12 @@ var ViewportHandler = {
     // disable it in updateViewportSize.
     let allowDoubleTapZoom = allowZoom;
 
-    let autoSize = true;
-
     if (isNaN(scale) && isNaN(minScale) && isNaN(maxScale) && allowZoomStr == "" && widthStr == "" && heightStr == "") {
       // Only check for HandheldFriendly if we don't have a viewport meta tag
       let handheldFriendly = windowUtils.getDocumentMetadata("HandheldFriendly");
       if (handheldFriendly == "true") {
         return new ViewportMetadata({
           defaultZoom: 1,
-          autoSize: true,
           allowZoom: true,
           allowDoubleTapZoom: false
         });
@@ -6573,7 +6424,6 @@ var ViewportHandler = {
       if (doctype && /(WAP|WML|Mobile)/.test(doctype.publicId)) {
         return new ViewportMetadata({
           defaultZoom: 1,
-          autoSize: true,
           allowZoom: true,
           allowDoubleTapZoom: false
         });
@@ -6583,18 +6433,12 @@ var ViewportHandler = {
       let defaultZoom = Services.prefs.getIntPref("browser.viewport.defaultZoom");
       if (defaultZoom >= 0) {
         scale = defaultZoom / 1000;
-        autoSize = false;
       }
     }
 
     scale = this.clamp(scale, kViewportMinScale, kViewportMaxScale);
     minScale = this.clamp(minScale, kViewportMinScale, kViewportMaxScale);
     maxScale = this.clamp(maxScale, (isNaN(minScale) ? kViewportMinScale : minScale), kViewportMaxScale);
-    if (autoSize) {
-      // If initial scale is 1.0 and width is not set, assume width=device-width
-      autoSize = (widthStr == "device-width" ||
-                  (!widthStr && (heightStr == "device-height" || scale == 1.0)));
-    }
 
     let isRTL = aWindow.document.documentElement.dir == "rtl";
 
@@ -6602,9 +6446,6 @@ var ViewportHandler = {
       defaultZoom: scale,
       minZoom: minScale,
       maxZoom: maxScale,
-      width: width,
-      height: height,
-      autoSize: autoSize,
       allowZoom: allowZoom,
       allowDoubleTapZoom: allowDoubleTapZoom,
       isSpecified: hasMetaViewport,
@@ -6646,23 +6487,17 @@ var ViewportHandler = {
 
 /**
  * An object which represents the page's preferred viewport properties:
- *   width (int): The CSS viewport width in px.
- *   height (int): The CSS viewport height in px.
  *   defaultZoom (float): The initial scale when the page is loaded.
  *   minZoom (float): The minimum zoom level.
  *   maxZoom (float): The maximum zoom level.
- *   autoSize (boolean): Resize the CSS viewport when the window resizes.
  *   allowZoom (boolean): Let the user zoom in or out.
  *   allowDoubleTapZoom (boolean): Allow double-tap to zoom in.
  *   isSpecified (boolean): Whether the page viewport is specified or not.
  */
 function ViewportMetadata(aMetadata = {}) {
-  this.width = ("width" in aMetadata) ? aMetadata.width : 0;
-  this.height = ("height" in aMetadata) ? aMetadata.height : 0;
   this.defaultZoom = ("defaultZoom" in aMetadata) ? aMetadata.defaultZoom : 0;
   this.minZoom = ("minZoom" in aMetadata) ? aMetadata.minZoom : 0;
   this.maxZoom = ("maxZoom" in aMetadata) ? aMetadata.maxZoom : 0;
-  this.autoSize = ("autoSize" in aMetadata) ? aMetadata.autoSize : false;
   this.allowZoom = ("allowZoom" in aMetadata) ? aMetadata.allowZoom : true;
   this.allowDoubleTapZoom = ("allowDoubleTapZoom" in aMetadata) ? aMetadata.allowDoubleTapZoom : true;
   this.isSpecified = ("isSpecified" in aMetadata) ? aMetadata.isSpecified : false;
@@ -6671,24 +6506,18 @@ function ViewportMetadata(aMetadata = {}) {
 }
 
 ViewportMetadata.prototype = {
-  width: null,
-  height: null,
   defaultZoom: null,
   minZoom: null,
   maxZoom: null,
-  autoSize: null,
   allowZoom: null,
   allowDoubleTapZoom: null,
   isSpecified: null,
   isRTL: null,
 
   toString: function() {
-    return "width=" + this.width
-         + "; height=" + this.height
-         + "; defaultZoom=" + this.defaultZoom
+    return "; defaultZoom=" + this.defaultZoom
          + "; minZoom=" + this.minZoom
          + "; maxZoom=" + this.maxZoom
-         + "; autoSize=" + this.autoSize
          + "; allowZoom=" + this.allowZoom
          + "; allowDoubleTapZoom=" + this.allowDoubleTapZoom
          + "; isSpecified=" + this.isSpecified
