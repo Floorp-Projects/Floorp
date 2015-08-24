@@ -63,10 +63,10 @@ let shutdown = Task.async(function*() {
 
 // This is what makes the sidebar widget able to load/unload the panel.
 function setPanel(panel) {
-  return startup(panel).catch(Cu.reportError);
+  return startup(panel).catch(e => console.error(e));
 }
 function destroy() {
-  return shutdown().catch(Cu.reportError);
+  return shutdown().catch(e => console.error(e));
 }
 
 /**
@@ -115,6 +115,8 @@ let AnimationsController = {
                                                           "setPlaybackRate");
     this.hasTargetNode = yield target.actorHasMethod("domwalker",
                                                      "getNodeFromActor");
+    this.hasSetCurrentTimes = yield target.actorHasMethod("animations",
+                                                          "setCurrentTimes");
     this.isNewUI = Services.prefs.getBoolPref("devtools.inspector.animationInspectorV3");
 
     if (this.destroyed) {
@@ -214,8 +216,31 @@ let AnimationsController = {
       return promise.resolve();
     }
 
-    return this.animationsFront.toggleAll().catch(Cu.reportError);
+    return this.animationsFront.toggleAll().catch(e => console.error(e));
   },
+
+  /**
+   * Set all known animations' currentTimes to the provided time.
+   * Note that depending on the server's capabilities, this might resolve in
+   * either one packet, or as many packets as there are animations. In the
+   * latter case, some time deltas might be introduced.
+   * @param {Number} time.
+   * @param {Boolean} shouldPause Should the animations be paused too.
+   * @return {Promise} Resolves when the current time has been set.
+   */
+  setCurrentTimeAll: Task.async(function*(time, shouldPause) {
+    if (this.hasSetCurrentTimes) {
+      yield this.animationsFront.setCurrentTimes(this.animationPlayers, time,
+                                                 shouldPause);
+    } else {
+      for (let animation of this.animationPlayers) {
+        if (shouldPause) {
+          yield animation.pause();
+        }
+        yield animation.setCurrentTime(time);
+      }
+    }
+  }),
 
   // AnimationPlayerFront objects are managed by this controller. They are
   // retrieved when refreshAnimationPlayers is called, stored in the
