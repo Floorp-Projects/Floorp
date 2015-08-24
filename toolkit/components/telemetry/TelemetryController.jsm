@@ -53,7 +53,7 @@ const IS_UNIFIED_OPTIN = Preferences.get(PREF_UNIFIED_OPTIN, false);
 const PING_FORMAT_VERSION = 4;
 
 // Delay before intializing telemetry (ms)
-const TELEMETRY_DELAY = 60000;
+const TELEMETRY_DELAY = Preferences.get("toolkit.telemetry.initDelay", 60) * 1000;
 // Delay before initializing telemetry if we're testing (ms)
 const TELEMETRY_TEST_DELAY = 100;
 
