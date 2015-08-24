@@ -58,21 +58,39 @@
       });
   }
 
-  function activateError() {
+  function testActive(worker) {
+    is(worker.state, "activating", "Should be activating");
+    return new Promise(function(resolve, reject) {
+      worker.onstatechange = function(e) {
+        e.target.onstatechange = null;
+        is(e.target.state, "activated", "Activation of worker with error in activate event handler should still succeed.");
+        resolve();
+      }
+    });
+  }
+
+  function activateErrorShouldSucceed() {
     // Silence worker errors so they don't cause the test to fail.
     window.onerror = function() { }
     return navigator.serviceWorker.register("activate_event_error_worker.js", { scope: "./activate_error" })
       .then(function(swr) {
-        return new Promise(function(resolve, reject) {
-          ok(swr.installing.state == "installing", "activateError(): Installing worker's state should be 'installing'");
+        var p = new Promise(function(resolve, reject) {
+          ok(swr.installing.state == "installing", "activateErrorShouldSucceed(): Installing worker's state should be 'installing'");
           swr.installing.onstatechange = function(e) {
-            ok(swr.active, "transition to active successfully");
-            is(swr.active.state, "activating", "should be activating");
-            swr.active.onstatechange = function(e) {
-              is(e.target.state, "redundant", "Activation of worker with error in activate event handler should fail.");
-              resolve(swr);
+            e.target.onstatechange = null;
+            if (swr.waiting) {
+              swr.waiting.onstatechange = function(e) {
+                e.target.onstatechange = null;
+                testActive(swr.active).then(resolve, reject);
+              }
+            } else {
+              testActive(swr.active).then(resolve, reject);
             }
           }
+        });
+
+        return p.then(function() {
+          return Promise.resolve(swr);
         });
       }).then(function(swr) {
         return swr.unregister();
@@ -90,7 +108,7 @@
       .then(simpleRegister)
       .then(nextRegister)
       .then(installError)
-      .then(activateError)
+      .then(activateErrorShouldSucceed)
       .then(unregister)
       .then(function() {
         SimpleTest.finish();
