@@ -236,7 +236,6 @@ class MercurialSetupWizard(object):
         self.state_dir = os.path.normpath(state_dir)
         self.ext_dir = os.path.join(self.state_dir, 'mercurial', 'extensions')
         self.vcs_tools_dir = os.path.join(self.state_dir, 'version-control-tools')
-        self.update_vcs_tools = False
         self.updater = MercurialUpdater(state_dir)
 
     def run(self, config_paths):
@@ -277,6 +276,8 @@ class MercurialSetupWizard(object):
             print('Line %d: %s' % (e.line, e.message))
 
             return 1
+
+        self.updater.update_all()
 
         print(INITIAL_MESSAGE)
         raw_input()
@@ -399,14 +400,6 @@ class MercurialSetupWizard(object):
             if bzuser or bzpass:
                 c.set_bugzilla_credentials(bzuser, bzpass)
 
-        if self.update_vcs_tools:
-            self.updater.update_mercurial_repo(
-                hg,
-                'https://hg.mozilla.org/hgcustom/version-control-tools',
-                self.vcs_tools_dir,
-                'default',
-                'Ensuring version-control-tools is up to date...')
-
         # Look for and clean up old extensions.
         for ext in {'bzexport', 'qimportbz', 'mqext'}:
             path = os.path.join(self.ext_dir, ext)
@@ -517,7 +510,6 @@ class MercurialSetupWizard(object):
                 return
         if not path:
             path = os.path.join(self.vcs_tools_dir, 'hgext', name)
-        self.update_vcs_tools = True
         c.activate_extension(name, path)
         print('Activated %s extension.\n' % name)
 
