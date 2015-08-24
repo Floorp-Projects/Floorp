@@ -18,6 +18,7 @@
 #include "jsopcode.h"
 #include "jstypes.h"
 
+#include "builtin/ModuleObject.h"
 #include "gc/Barrier.h"
 #include "gc/Rooting.h"
 #include "jit/IonCode.h"
@@ -46,15 +47,16 @@ class BreakpointSite;
 class BindingIter;
 class Debugger;
 class LazyScript;
+class NestedScopeObject;
 class RegExpObject;
 struct SourceCompressionTask;
 class Shape;
-class NestedScopeObject;
 
 namespace frontend {
     struct BytecodeEmitter;
     class UpvarCookie;
     class FunctionBox;
+    class ModuleBox;
 } // namespace frontend
 
 namespace detail {
@@ -949,6 +951,7 @@ class JSScript : public js::gc::TenuredCell
     js::HeapPtrObject sourceObject_;
 
     js::HeapPtrFunction function_;
+    js::HeapPtr<js::ModuleObject*> module_;
     js::HeapPtrObject   enclosingStaticScope_;
 
     /*
@@ -1139,7 +1142,7 @@ class JSScript : public js::gc::TenuredCell
     // instead of private to suppress -Wunused-private-field compiler warnings.
   protected:
 #if JS_BITS_PER_WORD == 32
-    uint32_t padding;
+    // No padding currently required.
 #endif
 
     //
@@ -1167,6 +1170,8 @@ class JSScript : public js::gc::TenuredCell
                                      js::frontend::BytecodeEmitter* bce);
     static void linkToFunctionFromEmitter(js::ExclusiveContext* cx, JS::Handle<JSScript*> script,
                                           js::frontend::FunctionBox* funbox);
+    static void linkToModuleFromEmitter(js::ExclusiveContext* cx, JS::Handle<JSScript*> script,
+                                        js::frontend::ModuleBox* funbox);
     // Initialize a no-op script.
     static bool fullyInitTrivial(js::ExclusiveContext* cx, JS::Handle<JSScript*> script);
 
@@ -1546,6 +1551,11 @@ class JSScript : public js::gc::TenuredCell
      * that expects the function to be non-lazy.
      */
     inline void ensureNonLazyCanonicalFunction(JSContext* cx);
+
+    js::ModuleObject* module() const {
+        return module_;
+    }
+    inline void setModule(js::ModuleObject* module);
 
     JSFlatString* sourceData(JSContext* cx);
 

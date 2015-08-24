@@ -21,6 +21,7 @@ namespace js {
 namespace frontend {
 struct Definition;
 class FunctionBox;
+class ModuleBox;
 }
 
 class StaticWithObject;
@@ -47,6 +48,9 @@ class StaticNonSyntacticScopeObjects;
  * JSFunction
  *   Scope for function bodies. e.g., |function f() { var x; let y; }|
  *
+ * ModuleObject
+ *   Scope for moddules.
+ *
  * StaticWithObject
  *   Scope for |with|. e.g., |with ({}) { ... }|
  *
@@ -63,8 +67,8 @@ class StaticNonSyntacticScopeObjects;
  *
  *   (function f() { var x; function g() { } })
  *
- * All static scope objects are ScopeObjects with the exception of
- * JSFunction. A JSFunction keeps its enclosing scope link on
+ * All static scope objects are ScopeObjects with the exception of JSFunction
+ * and ModuleObject, which keeps their enclosing scope link on
  * |JSScript::enclosingStaticScope()|.
  */
 template <AllowGC allowGC>
@@ -78,7 +82,8 @@ class StaticScopeIter
                obj->is<StaticWithObject>() ||
                obj->is<StaticEvalObject>() ||
                obj->is<StaticNonSyntacticScopeObjects>() ||
-               obj->is<JSFunction>();
+               obj->is<JSFunction>() ||
+               obj->is<ModuleObject>();
     }
 
   public:

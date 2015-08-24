@@ -29,6 +29,7 @@
 #include "jstypes.h"
 
 #include "asmjs/AsmJSValidate.h"
+#include "builtin/ModuleObject.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/FoldConstants.h"
 #include "frontend/ParseMaps.h"
@@ -409,12 +410,9 @@ AppendPackedBindings(const ParseContext<ParseHandler>* pc, const DeclVector& vec
 
 template <typename ParseHandler>
 bool
-ParseContext<ParseHandler>::generateFunctionBindings(ExclusiveContext* cx, TokenStream& ts,
-                                                     LifoAlloc& alloc,
-                                                     MutableHandle<Bindings> bindings) const
+ParseContext<ParseHandler>::generateBindings(ExclusiveContext* cx, TokenStream& ts, LifoAlloc& alloc,
+                                             MutableHandle<Bindings> bindings) const
 {
-    MOZ_ASSERT(sc->isFunctionBox());
-    MOZ_ASSERT(args_.length() < ARGNO_LIMIT);
     MOZ_ASSERT(vars_.length() + bodyLevelLexicals_.length() < LOCALNO_LIMIT);
 
     /*
@@ -451,6 +449,28 @@ ParseContext<ParseHandler>::generateFunctionBindings(ExclusiveContext* cx, Token
                                               bodyLevelLexicals_.length(), blockScopeDepth,
                                               numUnaliasedVars, numUnaliasedBodyLevelLexicals,
                                               packedBindings);
+}
+
+template <typename ParseHandler>
+bool
+ParseContext<ParseHandler>::generateFunctionBindings(ExclusiveContext* cx, TokenStream& ts,
+                                                     LifoAlloc& alloc,
+                                                     MutableHandle<Bindings> bindings) const
+{
+    MOZ_ASSERT(sc->isFunctionBox());
+    MOZ_ASSERT(args_.length() < ARGNO_LIMIT);
+    return generateBindings(cx, ts, alloc, bindings);
+}
+
+template <typename ParseHandler>
+bool
+ParseContext<ParseHandler>::generateModuleBindings(ExclusiveContext* cx, TokenStream& ts,
+                                                   LifoAlloc& alloc,
+                                                   MutableHandle<Bindings> bindings) const
+{
+    MOZ_ASSERT(sc->isModuleBox());
+    MOZ_ASSERT(args_.length() == 0);
+    return generateBindings(cx, ts, alloc, bindings);
 }
 
 template <typename ParseHandler>
@@ -689,6 +709,49 @@ Parser<ParseHandler>::newFunctionBox(Node fn, JSFunction* fun,
 }
 
 template <typename ParseHandler>
+ModuleBox::ModuleBox(ExclusiveContext* cx, ObjectBox* traceListHead, ModuleObject* module,
+                     ParseContext<ParseHandler>* outerpc)
+  : ObjectBox(module, traceListHead),
+    SharedContext(cx, Directives(true), extraWarnings),
+    bindings()
+{}
+
+template <typename ParseHandler>
+ModuleBox*
+Parser<ParseHandler>::newModuleBox(Node pn, HandleModuleObject module)
+{
+    MOZ_ASSERT(module);
+
+    /*
+     * We use JSContext.tempLifoAlloc to allocate parsed objects and place them
+     * on a list in this Parser to ensure GC safety. Thus the tempLifoAlloc
+     * arenas containing the entries must be alive until we are done with
+     * scanning, parsing and code generation for the whole module.
+     */
+    ParseContext<ParseHandler>* outerpc = nullptr;
+    ModuleBox* modbox =
+        alloc.new_<ModuleBox>(context, traceListHead, module, outerpc);
+    if (!modbox) {
+        ReportOutOfMemory(context);
+        return nullptr;
+    }
+
+    traceListHead = modbox;
+    if (pn)
+        handler.setModuleBox(pn, modbox);
+
+    return modbox;
+}
+
+template <>
+ModuleBox*
+Parser<SyntaxParseHandler>::newModuleBox(Node pn, HandleModuleObject module)
+{
+    MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
+    return nullptr;
+}
+
+template <typename ParseHandler>
 void
 Parser<ParseHandler>::trace(JSTracer* trc)
 {
@@ -783,6 +846,57 @@ Parser<ParseHandler>::checkStrictBinding(PropertyName* name, Node pn)
     }
 
     return true;
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::standaloneModule(HandleModuleObject module)
+{
+    MOZ_ASSERT(checkOptionsCalled);
+
+    Node mn = handler.newModule();
+    if (!mn)
+        return null();
+
+    ModuleBox* modulebox = newModuleBox(mn, module);
+    if (!modulebox)
+        return null();
+    handler.setModuleBox(mn, modulebox);
+
+    ParseContext<FullParseHandler> modulepc(this, pc, mn, modulebox, nullptr, 0);
+    if (!modulepc.init(*this))
+        return null();
+
+    ParseNode* pn = statements(YieldIsKeyword);
+    if (!pn)
+        return null();
+
+    MOZ_ASSERT(pn->isKind(PNK_STATEMENTLIST));
+    mn->pn_body = pn;
+
+    TokenKind tt;
+    if (!tokenStream.getToken(&tt, TokenStream::Operand))
+        return null();
+    MOZ_ASSERT(tt == TOK_EOF);
+
+    if (!FoldConstants(context, &pn, this))
+        return null();
+
+    Rooted<Bindings> bindings(context, modulebox->bindings);
+    if (!modulepc.generateModuleBindings(context, tokenStream, alloc, &bindings))
+        return null();
+    modulebox->bindings = bindings;
+
+    MOZ_ASSERT(mn->pn_modulebox == modulebox);
+    return mn;
+}
+
+template <>
+SyntaxParseHandler::Node
+Parser<SyntaxParseHandler>::standaloneModule(HandleModuleObject module)
+{
+    MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
+    return SyntaxParseHandler::NodeFailure;
 }
 
 template <>
