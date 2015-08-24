@@ -273,7 +273,9 @@ MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution)
     MVM_LOG("%p: New zoom is %f\n", this, zoom.scale);
     UpdateSPCSPS(displaySize, zoom);
   }
-  UpdateDisplayPortMargins();
+  if (gfxPlatform::AsyncPanZoomEnabled()) {
+    UpdateDisplayPortMargins();
+  }
 
   // Update internal state.
   mIsFirstPaint = false;
