@@ -4,12 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/**
+ * BluetoothGattDescriptor could be in the server role as a descriptor provided
+ * by a local GATT server, or in the client role as a descriptor provided by a
+ * remote GATT server.
+ */
 [CheckAnyPermissions="bluetooth"]
 interface BluetoothGattDescriptor
 {
   readonly attribute BluetoothGattCharacteristic            characteristic;
   readonly attribute DOMString                              uuid;
   readonly attribute ArrayBuffer?                           value;
+  [Cached, Constant]
+  readonly attribute GattPermissions                        permissions;
 
   [NewObject]
   Promise<ArrayBuffer>  readValue();

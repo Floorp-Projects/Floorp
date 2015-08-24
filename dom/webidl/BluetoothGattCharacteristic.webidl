@@ -6,16 +6,33 @@
 
 dictionary GattCharacteristicProperties
 {
-  required boolean broadcast;
-  required boolean read;
-  required boolean writeNoResponse;
-  required boolean write;
-  required boolean notify;
-  required boolean indicate;
-  required boolean signedWrite;
-  required boolean extendedProps;
+  boolean broadcast = false;
+  boolean read = false;
+  boolean writeNoResponse = false;
+  boolean write = false;
+  boolean notify = false;
+  boolean indicate = false;
+  boolean signedWrite = false;
+  boolean extendedProps = false;
 };
 
+dictionary GattPermissions
+{
+  boolean read = false;
+  boolean readEncrypted = false;
+  boolean readEncryptedMITM = false;
+  boolean write = false;
+  boolean writeEncrypted = false;
+  boolean writeEncryptedMITM = false;
+  boolean writeSigned = false;
+  boolean writeSignedMITM = false;
+};
+
+/**
+ * BluetoothGattCharacteristic could be in the server role as a characteristic
+ * provided by a local GATT server, or in the client role as a characteristic
+ * provided by a remote GATT server.
+ */
 [CheckAnyPermissions="bluetooth"]
 interface BluetoothGattCharacteristic
 {
@@ -27,6 +44,8 @@ interface BluetoothGattCharacteristic
   readonly attribute unsigned short                         instanceId;
   readonly attribute ArrayBuffer?                           value;
   [Cached, Constant]
+  readonly attribute GattPermissions                        permissions;
+  [Cached, Constant]
   readonly attribute GattCharacteristicProperties           properties;
 
   [NewObject]
@@ -37,9 +56,23 @@ interface BluetoothGattCharacteristic
   /**
    * Start or stop subscribing notifications of this characteristic from the
    * remote GATT server.
+   *
+   * This API will be rejected if this characteristic is in the server role.
    */
   [NewObject]
   Promise<void> startNotifications();
   [NewObject]
   Promise<void> stopNotifications();
+
+  /**
+   * Add a BLE descriptor to the local GATT characteristic.
+   *
+   * The promise will be rejected if this characteristic is in the client role
+   * since a GATT client is not allowed to manipulate the descriptor list in a
+   * remote GATT server.
+   */
+  [NewObject]
+  Promise<BluetoothGattDescriptor> addDescriptor(DOMString uuid,
+                                                 GattPermissions permissions,
+                                                 ArrayBuffer value);
 };
