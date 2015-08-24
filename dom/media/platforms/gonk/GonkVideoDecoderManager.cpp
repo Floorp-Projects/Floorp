@@ -25,6 +25,7 @@
 #include "GonkNativeWindowClient.h"
 #include "mozilla/layers/GrallocTextureClient.h"
 #include "mozilla/layers/TextureClient.h"
+#include <cutils/properties.h>
 
 #define READ_OUTPUT_BUFFER_TIMEOUT_US  3000
 
@@ -78,6 +79,19 @@ GonkVideoDecoderManager::Init(MediaDataDecoderCallback* aCallback)
 {
   nsIntSize displaySize(mDisplayWidth, mDisplayHeight);
   nsIntRect pictureRect(0, 0, mVideoWidth, mVideoHeight);
+
+  uint32_t maxWidth, maxHeight;
+  char propValue[PROPERTY_VALUE_MAX];
+  property_get("ro.moz.omx.hw.max_width", propValue, "-1");
+  maxWidth = -1 == atoi(propValue) ? MAX_VIDEO_WIDTH : atoi(propValue);
+  property_get("ro.moz.omx.hw.max_height", propValue, "-1");
+  maxHeight = -1 == atoi(propValue) ? MAX_VIDEO_HEIGHT : atoi(propValue) ;
+
+  if (mVideoWidth * mVideoHeight > maxWidth * maxHeight) {
+    GVDM_LOG("Video resolution exceeds hw codec capability");
+    return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
+  }
+
   // Validate the container-reported frame and pictureRect sizes. This ensures
   // that our video frame creation code doesn't overflow.
   nsIntSize frameSize(mVideoWidth, mVideoHeight);
@@ -355,6 +369,10 @@ GonkVideoDecoderManager::SetVideoFormat()
 nsresult
 GonkVideoDecoderManager::Flush()
 {
+  if (mDecoder == nullptr) {
+    GVDM_LOG("Decoder is not inited");
+    return NS_ERROR_UNEXPECTED;
+  }
   {
     MonitorAutoLock mon(mMonitor);
     mQueueSample.Clear();
