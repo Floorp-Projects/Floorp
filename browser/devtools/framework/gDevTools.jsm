@@ -27,7 +27,6 @@ loader.lazyRequireGetter(this, "DebuggerClient", "devtools/toolkit/client/main",
 const DefaultTools = require("definitions").defaultTools;
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const Telemetry = require("devtools/shared/telemetry");
-const {JsonView} = require("devtools/jsonview/main");
 
 const TABS_OPEN_PEAK_HISTOGRAM = "DEVTOOLS_TABS_OPEN_PEAK_LINEAR";
 const TABS_OPEN_AVG_HISTOGRAM = "DEVTOOLS_TABS_OPEN_AVERAGE_LINEAR";
@@ -52,9 +51,6 @@ this.DevTools = function DevTools() {
   // destroy() is an observer's handler so we need to preserve context.
   this.destroy = this.destroy.bind(this);
   this._teardown = this._teardown.bind(this);
-
-  // JSON Viewer for 'application/json' documents.
-  JsonView.initialize();
 
   EventEmitter.decorate(this);
 
@@ -491,8 +487,6 @@ DevTools.prototype = {
     for (let [key, tool] of this.getToolDefinitionMap()) {
       this.unregisterTool(key, true);
     }
-
-    JsonView.destroy();
 
     this._pingTelemetry();
     this._telemetry = null;
