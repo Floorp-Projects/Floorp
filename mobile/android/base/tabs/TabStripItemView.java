@@ -108,23 +108,6 @@ public class TabStripItemView extends ThemedLinearLayout
         });
 
         audioPlayingView = (ThemedImageButton) findViewById(R.id.audio_playing);
-        audioPlayingView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (id < 0) {
-                    throw new IllegalStateException("Invalid tab id:" + id);
-                }
-
-                // TODO: Toggle icon in the UI as well (bug 1190301)
-                final JSONObject args = new JSONObject();
-                try {
-                    args.put("tabId", id);
-                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:ToggleMuteAudio", args.toString()));
-                } catch (JSONException e) {
-                    Log.e(LOGTAG, "Error toggling mute audio: error building json arguments", e);
-                }
-            }
-        });
     }
 
     @Override
