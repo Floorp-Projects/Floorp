@@ -267,6 +267,12 @@ ModuleObject::init(HandleScript script)
 }
 
 void
+ModuleObject::setInitialEnvironment(HandleModuleEnvironmentObject initialEnvironment)
+{
+    initReservedSlot(InitialEnvironmentSlot, ObjectValue(*initialEnvironment));
+}
+
+void
 ModuleObject::initImportExportData(HandleArrayObject requestedModules,
                                    HandleArrayObject importEntries,
                                    HandleArrayObject localExportEntries,
@@ -286,6 +292,12 @@ ModuleObject::script() const
     return static_cast<JSScript*>(getReservedSlot(ScriptSlot).toPrivate());
 }
 
+ModuleEnvironmentObject&
+ModuleObject::initialEnvironment() const
+{
+    return getReservedSlot(InitialEnvironmentSlot).toObject().as<ModuleEnvironmentObject>();
+}
+
 /* static */ void
 ModuleObject::trace(JSTracer* trc, JSObject* obj)
 {
@@ -295,6 +307,7 @@ ModuleObject::trace(JSTracer* trc, JSObject* obj)
     module.setReservedSlot(ScriptSlot, PrivateValue(script));
 }
 
+DEFINE_GETTER_FUNCTIONS(ModuleObject, initialEnvironment, InitialEnvironmentSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, requestedModules, RequestedModulesSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, importEntries, ImportEntriesSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, localExportEntries, LocalExportEntriesSlot)
@@ -305,6 +318,7 @@ JSObject*
 js::InitModuleClass(JSContext* cx, HandleObject obj)
 {
     static const JSPropertySpec protoAccessors[] = {
+        JS_PSG("initialEnvironment", ModuleObject_initialEnvironmentGetter, 0),
         JS_PSG("requestedModules", ModuleObject_requestedModulesGetter, 0),
         JS_PSG("importEntries", ModuleObject_importEntriesGetter, 0),
         JS_PSG("localExportEntries", ModuleObject_localExportEntriesGetter, 0),

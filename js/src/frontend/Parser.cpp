@@ -242,7 +242,7 @@ ParseContext<FullParseHandler>::define(TokenStream& ts,
 
       case Definition::GLOBALCONST:
       case Definition::VAR:
-        if (sc->isFunctionBox()) {
+        if (!sc->isGlobalContext()) {
             dn->setOp((js_CodeSpec[dn->getOp()].format & JOF_SET) ? JSOP_SETLOCAL : JSOP_GETLOCAL);
             dn->pn_blockid = bodyid;
             dn->pn_dflags |= PND_BOUND;
@@ -253,6 +253,8 @@ ParseContext<FullParseHandler>::define(TokenStream& ts,
             if (!checkLocalsOverflow(ts))
                 return false;
         }
+        if (atModuleScope())
+            dn->pn_dflags |= PND_CLOSED;
         if (!decls_.addUnique(name, dn))
             return false;
         break;
@@ -261,6 +263,8 @@ ParseContext<FullParseHandler>::define(TokenStream& ts,
       case Definition::CONST:
         dn->setOp(JSOP_INITLEXICAL);
         dn->pn_dflags |= (PND_LEXICAL | PND_BOUND);
+        if (atModuleLevel())
+            dn->pn_dflags |= PND_CLOSED;
         if (atBodyLevel()) {
             if (!bodyLevelLexicals_.append(dn))
                 return false;
@@ -850,6 +854,8 @@ Parser<ParseHandler>::standaloneModule(HandleModuleObject module)
     ParseNode* pn = statements(YieldIsKeyword);
     if (!pn)
         return null();
+
+    pn->pn_blockid = modulepc.blockid();
 
     MOZ_ASSERT(pn->isKind(PNK_STATEMENTLIST));
     mn->pn_body = pn;
@@ -2093,8 +2099,7 @@ Parser<FullParseHandler>::checkFunctionDefinition(HandlePropertyName funName,
 
         if (bodyLevel) {
             MOZ_ASSERT(pn->functionIsHoisted());
-            MOZ_ASSERT_IF(pc->sc->isFunctionBox(), !pn->pn_scopecoord.isFree());
-            MOZ_ASSERT_IF(!pc->sc->isFunctionBox(), pn->pn_scopecoord.isFree());
+            MOZ_ASSERT(pc->sc->isGlobalContext() == pn->pn_scopecoord.isFree());
         } else {
             /*
              * As a SpiderMonkey-specific extension, non-body-level function

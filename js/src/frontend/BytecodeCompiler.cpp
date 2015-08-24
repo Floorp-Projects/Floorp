@@ -637,6 +637,12 @@ ModuleObject* BytecodeCompiler::compileModule()
 
     script->bindings = pn->pn_modulebox->bindings;
 
+    RootedModuleEnvironmentObject dynamicScope(cx, ModuleEnvironmentObject::create(cx, module));
+    if (!dynamicScope)
+        return nullptr;
+
+    module->setInitialEnvironment(dynamicScope);
+
     if (!createEmitter(pn->pn_modulebox) ||
         !emitter->emitModuleScript(pn->pn_body))
     {

@@ -19,6 +19,8 @@ function testModuleSource(source) {
 
 parseModule("");
 parseModule("const foo = 1;");
+parseModule("var foo = 1;");
+parseModule("let foo = 1; var bar = 2; const baz = 3");
 
 testModuleSource("import * as ns from 'bar';");
 testModuleSource("export { a } from 'b';");
