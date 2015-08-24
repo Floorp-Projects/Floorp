@@ -13,6 +13,8 @@
 
   var test;
   runNetworkTest(function (options) {
+    options = options || { };
+    options.bundle = false;
     test = new PeerConnectionTest(options);
     addRenegotiation(test.chain,
       [
@@ -29,9 +31,6 @@
         },
       ]
     );
-
-    test.chain.insertAfterEach('PC_LOCAL_CREATE_OFFER',
-                              PC_LOCAL_REMOVE_BUNDLE_FROM_OFFER);
 
     // TODO(bug 1093835): figure out how to verify if media flows through the new stream
     test.setMediaConstraints([{audio: true}], [{audio: true}]);
