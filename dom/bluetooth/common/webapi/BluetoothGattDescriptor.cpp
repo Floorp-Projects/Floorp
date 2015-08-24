@@ -7,6 +7,7 @@
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothService.h"
 #include "BluetoothUtils.h"
+#include "mozilla/dom/BluetoothGattCharacteristicBinding.h"
 #include "mozilla/dom/BluetoothGattDescriptorBinding.h"
 #include "mozilla/dom/bluetooth/BluetoothCommon.h"
 #include "mozilla/dom/bluetooth/BluetoothGattCharacteristic.h"
@@ -52,6 +53,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BluetoothGattDescriptor)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
+const uint16_t BluetoothGattDescriptor::sHandleCount = 1;
+
+// Constructor of BluetoothGattDescriptor in ATT client role
 BluetoothGattDescriptor::BluetoothGattDescriptor(
   nsPIDOMWindow* aOwner,
   BluetoothGattCharacteristic* aCharacteristic,
@@ -59,6 +63,9 @@ BluetoothGattDescriptor::BluetoothGattDescriptor(
   : mOwner(aOwner)
   , mCharacteristic(aCharacteristic)
   , mDescriptorId(aDescriptorId)
+  , mPermissions(BLUETOOTH_EMPTY_GATT_ATTR_PERM)
+  , mAttRole(ATT_CLIENT_ROLE)
+  , mActive(true)
 {
   MOZ_ASSERT(aOwner);
   MOZ_ASSERT(aCharacteristic);
@@ -69,6 +76,35 @@ BluetoothGattDescriptor::BluetoothGattDescriptor(
   nsString path;
   GeneratePathFromGattId(mDescriptorId, path);
   RegisterBluetoothSignalHandler(path, this);
+}
+
+// Constructor of BluetoothGattDescriptor in ATT server role
+BluetoothGattDescriptor::BluetoothGattDescriptor(
+  nsPIDOMWindow* aOwner,
+  BluetoothGattCharacteristic* aCharacteristic,
+  const nsAString& aDescriptorUuid,
+  const GattPermissions& aPermissions,
+  const ArrayBuffer& aValue)
+  : mOwner(aOwner)
+  , mCharacteristic(aCharacteristic)
+  , mUuidStr(aDescriptorUuid)
+  , mPermissions(BLUETOOTH_EMPTY_GATT_ATTR_PERM)
+  , mAttRole(ATT_SERVER_ROLE)
+  , mActive(false)
+{
+  MOZ_ASSERT(aOwner);
+  MOZ_ASSERT(aCharacteristic);
+
+  // UUID
+  memset(&mDescriptorId, 0, sizeof(mDescriptorId));
+  StringToUuid(aDescriptorUuid, mDescriptorId.mUuid);
+
+  // permissions
+  GattPermissionsToBits(aPermissions, mPermissions);
+
+  // value
+  aValue.ComputeLengthAndData();
+  mValue.AppendElements(aValue.Data(), aValue.Length());
 }
 
 BluetoothGattDescriptor::~BluetoothGattDescriptor()
@@ -88,6 +124,18 @@ BluetoothGattDescriptor::HandleDescriptorValueUpdated(
 }
 
 void
+BluetoothGattDescriptor::AssignDescriptorHandle(
+  const BluetoothAttributeHandle& aDescriptorHandle)
+{
+  MOZ_ASSERT(mAttRole == ATT_SERVER_ROLE);
+  MOZ_ASSERT(!mActive);
+  MOZ_ASSERT(!mDescriptorHandle.mHandle);
+
+  mDescriptorHandle = aDescriptorHandle;
+  mActive = true;
+}
+
+void
 BluetoothGattDescriptor::Notify(const BluetoothSignal& aData)
 {
   BT_LOGD("[D] %s", NS_ConvertUTF16toUTF8(aData.name()).get());
@@ -100,6 +148,12 @@ BluetoothGattDescriptor::Notify(const BluetoothSignal& aData)
     BT_WARNING("Not handling GATT Descriptor signal: %s",
                NS_ConvertUTF16toUTF8(aData.name()).get());
   }
+}
+
+void
+BluetoothGattDescriptor::GetUuid(BluetoothUuid& aUuid) const
+{
+  aUuid = mDescriptorId.mUuid;
 }
 
 JSObject*
@@ -116,6 +170,12 @@ BluetoothGattDescriptor::GetValue(JSContext* cx,
   aValue.set(mValue.IsEmpty()
              ? nullptr
              : ArrayBuffer::Create(cx, mValue.Length(), mValue.Elements()));
+}
+
+void
+BluetoothGattDescriptor::GetPermissions(GattPermissions& aPermissions) const
+{
+  GattPermissionsToDictionary(mPermissions, aPermissions);
 }
 
 class ReadValueTask final : public BluetoothReplyRunnable

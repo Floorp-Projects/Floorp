@@ -4,7 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+using mozilla::dom::bluetooth::BluetoothAttributeHandle
+  from "mozilla/dom/bluetooth/BluetoothCommon.h";
+using mozilla::dom::bluetooth::BluetoothGattAttrPerm
+  from "mozilla/dom/bluetooth/BluetoothCommon.h";
 using mozilla::dom::bluetooth::BluetoothGattCharAttribute
+  from "mozilla/dom/bluetooth/BluetoothCommon.h";
+using mozilla::dom::bluetooth::BluetoothGattCharProp
   from "mozilla/dom/bluetooth/BluetoothCommon.h";
 using mozilla::dom::bluetooth::BluetoothGattId
   from "mozilla/dom/bluetooth/BluetoothCommon.h";
@@ -15,6 +21,8 @@ using mozilla::dom::bluetooth::BluetoothGattWriteType
 using mozilla::dom::bluetooth::BluetoothSspVariant
   from "mozilla/dom/bluetooth/BluetoothCommon.h";
 using mozilla::dom::bluetooth::BluetoothStatus
+  from "mozilla/dom/bluetooth/BluetoothCommon.h";
+using mozilla::dom::bluetooth::BluetoothUuid
   from "mozilla/dom/bluetooth/BluetoothCommon.h";
 
 namespace mozilla {
@@ -42,6 +50,8 @@ union BluetoothValue
   BluetoothGattServiceId;
   BluetoothGattServiceId[];
   BluetoothGattCharAttribute[];
+  BluetoothAttributeHandle;
+  BluetoothUuid;
 };
 
 /**
