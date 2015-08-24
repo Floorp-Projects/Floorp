@@ -359,7 +359,8 @@ public:
 protected:
   MediaEventSource() : mMutex("MediaEventSource::mMutex") {}
 
-  void NotifyInternal(const ArgType& aEvent) {
+  template <typename T>
+  void NotifyInternal(T&& aEvent) {
     MutexAutoLock lock(mMutex);
     for (int32_t i = mListeners.Length() - 1; i >= 0; --i) {
       auto&& l = mListeners[i];
@@ -369,7 +370,7 @@ protected:
         mListeners.RemoveElementAt(i);
         continue;
       }
-      l->Dispatch(aEvent);
+      l->Dispatch(Forward<T>(aEvent));
     }
   }
 
@@ -386,8 +387,9 @@ private:
 template <typename EventType, ListenerMode Mode = ListenerMode::NonExclusive>
 class MediaEventProducer : public MediaEventSource<EventType, Mode> {
 public:
-  void Notify(const EventType& aEvent) {
-    this->NotifyInternal(aEvent);
+  template <typename T>
+  void Notify(T&& aEvent) {
+    this->NotifyInternal(Forward<T>(aEvent));
   }
 };
 
