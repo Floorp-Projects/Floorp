@@ -54,18 +54,26 @@ public:
     // will not go anywhere.
     *aOutput = aInput;
 
-    // The output buffer is allocated lazily, on the rendering thread.
-    if (!mBufferAllocated) {
+    // The output buffer is allocated lazily, on the rendering thread, when
+    // non-null input is received.
+    if (!mBufferAllocated && !aInput.IsNull()) {
       // These allocations might fail if content provides a huge number of
       // channels or size, but it's OK since we'll deal with the failure
       // gracefully.
       mBuffer = ThreadSharedFloatArrayBufferList::
         Create(mNumberOfChannels, mLength, fallible);
+      if (mBuffer && mWriteIndex) {
+        // Zero leading for any null chunks that were skipped.
+        for (uint32_t i = 0; i < mNumberOfChannels; ++i) {
+          float* channelData = mBuffer->GetDataForWrite(i);
+          PodZero(channelData, mWriteIndex);
+        }
+      }
 
       mBufferAllocated = true;
     }
 
-    // Handle the case of allocation failure in the input buffer
+    // Skip copying if there is no buffer.
     uint32_t outputChannelCount = mBuffer ? mNumberOfChannels : 0;
 
     // Record our input buffer
