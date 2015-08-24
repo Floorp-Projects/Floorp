@@ -76,8 +76,20 @@ const kEventConstructors = {
                                                           return new BluetoothPairingEvent(aName, aProps);
                                                        },
                                              },
+  BluetoothPhonebookPullingEvent:            { create: function (aName, aProps) {
+                                                          return new BluetoothPhonebookPullingEvent(aName, aProps);
+                                                       },
+                                             },
   BluetoothStatusChangedEvent:               { create: function (aName, aProps) {
                                                           return new BluetoothStatusChangedEvent(aName, aProps);
+                                                       },
+                                             },
+  BluetoothVCardListingEvent:                { create: function (aName, aProps) {
+                                                          return new BluetoothVCardListingEvent(aName, aProps);
+                                                       },
+                                             },
+  BluetoothVCardPullingEvent:                { create: function (aName, aProps) {
+                                                          return new BluetoothVCardPullingEvent(aName, aProps);
                                                        },
                                              },
   CallEvent:                                 { create: function (aName, aProps) {
