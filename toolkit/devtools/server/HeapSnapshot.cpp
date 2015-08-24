@@ -123,6 +123,10 @@ HeapSnapshot::saveNode(const protobuf::Node& node)
     return false;
   NodeId id = node.id();
 
+  // Should only deserialize each node once.
+  if (nodes.has(id))
+    return false;
+
   if (!node.has_typename_())
     return false;
 
@@ -157,8 +161,21 @@ HeapSnapshot::saveNode(const protobuf::Node& node)
     allocationStack = Some(id);
   }
 
-  DeserializedNode dn(id, typeName, size, Move(edges), allocationStack, *this);
-  return nodes.putNew(id, Move(dn));
+  UniquePtr<char[]> jsObjectClassName;
+  if (node.has_jsobjectclassname()) {
+    auto length = node.jsobjectclassname().length();
+    jsObjectClassName.reset(static_cast<char*>(malloc(length + 1)));
+    if (!jsObjectClassName)
+      return false;
+    strncpy(jsObjectClassName.get(), node.jsobjectclassname().data(),
+            length);
+    jsObjectClassName.get()[length] = '\0';
+  }
+
+  return nodes.putNew(id, DeserializedNode(id, typeName, size, Move(edges),
+                                           allocationStack,
+                                           Move(jsObjectClassName),
+                                           *this));
 }
 
 bool
@@ -592,6 +609,11 @@ public:
       if (NS_WARN_IF(!protoStackFrame))
         return false;
       protobufNode.set_allocated_allocationstack(protoStackFrame);
+    }
+
+    if (auto className = ubiNode.jsObjectClassName()) {
+      size_t length = strlen(className);
+      protobufNode.set_jsobjectclassname(className, length);
     }
 
     if (includeEdges) {
