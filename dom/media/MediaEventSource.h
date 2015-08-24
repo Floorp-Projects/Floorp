@@ -118,6 +118,75 @@ private:
   T* const mPtr;
 };
 
+/**
+ * A helper class to pass event data to the listeners. Optimized to save
+ * copy when Move is possible or |Function| takes no arguments.
+ */
+template<typename Target, typename Function>
+class ListenerHelper {
+  // Define our custom runnable to minimize copy of the event data.
+  // NS_NewRunnableFunction will result in 2 copies of the event data.
+  // One is captured by the lambda and the other is the copy of the lambda.
+  template <typename T>
+  class R : public nsRunnable {
+    typedef typename RemoveCV<typename RemoveReference<T>::Type>::Type ArgType;
+  public:
+    template <typename U>
+    R(RevocableToken* aToken, const Function& aFunction, U&& aEvent)
+      : mToken(aToken), mFunction(aFunction), mEvent(Forward<U>(aEvent)) {}
+
+    NS_IMETHOD Run() override {
+      // Don't call the listener if it is disconnected.
+      if (!mToken->IsRevoked()) {
+        // Enable move whenever possible since mEvent won't be used anymore.
+        mFunction(Move(mEvent));
+      }
+      return NS_OK;
+    }
+
+  private:
+    nsRefPtr<RevocableToken> mToken;
+    Function mFunction;
+    ArgType mEvent;
+  };
+
+public:
+  ListenerHelper(RevocableToken* aToken, Target* aTarget, const Function& aFunc)
+    : mToken(aToken), mTarget(aTarget), mFunction(aFunc) {}
+
+  // |F| takes one argument.
+  template <typename F, typename T>
+  typename EnableIf<TakeArgs<F>::Type::value, void>::Type
+  Dispatch(const F& aFunc, T&& aEvent) {
+    nsCOMPtr<nsIRunnable> r = new R<T>(mToken, aFunc, Forward<T>(aEvent));
+    EventTarget<Target>::Dispatch(mTarget.get(), r.forget());
+  }
+
+  // |F| takes no arguments. Don't bother passing aEvent.
+  template <typename F, typename T>
+  typename EnableIf<!TakeArgs<F>::Type::value, void>::Type
+  Dispatch(const F& aFunc, T&&) {
+    const nsRefPtr<RevocableToken>& token = mToken;
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
+      // Don't call the listener if it is disconnected.
+      if (!token->IsRevoked()) {
+        aFunc();
+      }
+    });
+    EventTarget<Target>::Dispatch(mTarget.get(), r.forget());
+  }
+
+  template <typename T>
+  void Dispatch(T&& aEvent) {
+    Dispatch(mFunction, Forward<T>(aEvent));
+  }
+
+private:
+  nsRefPtr<RevocableToken> mToken;
+  const nsRefPtr<Target> mTarget;
+  Function mFunction;
+};
+
 } // namespace detail
 
 template <typename T, ListenerMode> class MediaEventSource;
@@ -197,58 +266,12 @@ class MediaEventSource {
   class ListenerImpl : public Listener {
   public:
     explicit ListenerImpl(Target* aTarget, const Function& aFunction)
-      : mTarget(aTarget), mFunction(aFunction) {}
-
-    // |Function| takes one argument.
-    void Dispatch(const ArgType& aEvent, TrueType) {
-      // Define our custom runnable to minimize copy of the event data.
-      // NS_NewRunnableFunction will result in 2 copies of the event data.
-      // One is captured by the lambda and the other is the copy of the lambda.
-      class R : public nsRunnable {
-      public:
-        R(RevocableToken* aToken,
-          const Function& aFunction, const ArgType& aEvent)
-          : mToken(aToken), mFunction(aFunction), mEvent(aEvent) {}
-
-        NS_IMETHOD Run() override {
-          // Don't call the listener if it is disconnected.
-          if (!mToken->IsRevoked()) {
-            // Enable move whenever possible since mEvent won't be used anymore.
-            mFunction(Move(mEvent));
-          }
-          return NS_OK;
-        }
-
-      private:
-        nsRefPtr<RevocableToken> mToken;
-        Function mFunction;
-        ArgType mEvent;
-      };
-
-      nsCOMPtr<nsIRunnable> r = new R(this->Token(), mFunction, aEvent);
-      detail::EventTarget<Target>::Dispatch(mTarget.get(), r.forget());
-    }
-
-    // |Function| takes no arguments. Don't bother passing aEvent.
-    void Dispatch(const ArgType& aEvent, FalseType) {
-      nsRefPtr<RevocableToken> token = this->Token();
-      const Function& function = mFunction;
-      nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
-        // Don't call the listener if it is disconnected.
-        if (!token->IsRevoked()) {
-          function();
-        }
-      });
-      detail::EventTarget<Target>::Dispatch(mTarget.get(), r.forget());
-    }
-
+      : mHelper(Listener::Token(), aTarget, aFunction) {}
     void Dispatch(const ArgType& aEvent) override {
-      Dispatch(aEvent, typename detail::TakeArgs<Function>::Type());
+      mHelper.Dispatch(aEvent);
     }
-
   private:
-    const nsRefPtr<Target> mTarget;
-    Function mFunction;
+    detail::ListenerHelper<Target, Function> mHelper;
   };
 
   template<typename Target, typename Function>
