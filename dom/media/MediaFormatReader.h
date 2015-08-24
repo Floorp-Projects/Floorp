@@ -206,6 +206,7 @@ private:
       , mDrainComplete(false)
       , mNumSamplesInput(0)
       , mNumSamplesOutput(0)
+      , mNumSamplesOutputTotal(0)
       , mSizeOfQueue(0)
       , mIsHardwareAccelerated(false)
       , mLastStreamSourceID(UINT32_MAX)
@@ -263,6 +264,7 @@ private:
     nsTArray<nsRefPtr<MediaData>> mOutput;
     uint64_t mNumSamplesInput;
     uint64_t mNumSamplesOutput;
+    uint64_t mNumSamplesOutputTotal;
 
     // These get overriden in the templated concrete class.
     // Indicate if we have a pending promise for decoded frame.
