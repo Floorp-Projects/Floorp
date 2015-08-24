@@ -696,7 +696,7 @@ template <typename ParseHandler>
 ModuleBox::ModuleBox(ExclusiveContext* cx, ObjectBox* traceListHead, ModuleObject* module,
                      ParseContext<ParseHandler>* outerpc)
   : ObjectBox(module, traceListHead),
-    SharedContext(cx, Directives(true), extraWarnings),
+    SharedContext(cx, Directives(true), false),
     bindings()
 {}
 
