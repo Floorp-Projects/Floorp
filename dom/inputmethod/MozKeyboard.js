@@ -381,7 +381,7 @@ MozInputMethod.prototype = {
   },
 
   addInput: function(inputId, inputManifest) {
-    return this._sendPromise(function(resolverId) {
+    return this.createPromiseWithId(function(resolverId) {
       let appId = this._window.document.nodePrincipal.appId;
 
       cpmm.sendAsyncMessage('InputRegistry:Add', {
