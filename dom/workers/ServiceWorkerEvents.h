@@ -102,7 +102,7 @@ public:
 
 class ExtendableEvent : public Event
 {
-  nsTArray<nsRefPtr<Promise>> mPromises;
+  nsRefPtr<Promise> mPromise;
 
 protected:
   explicit ExtendableEvent(mozilla::dom::EventTarget* aOwner);
@@ -144,7 +144,11 @@ public:
   WaitUntil(Promise& aPromise, ErrorResult& aRv);
 
   already_AddRefed<Promise>
-  GetPromise();
+  GetPromise() const
+  {
+    nsRefPtr<Promise> p = mPromise;
+    return p.forget();
+  }
 
   virtual ExtendableEvent* AsExtendableEvent() override
   {
