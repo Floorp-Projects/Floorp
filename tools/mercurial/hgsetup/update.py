@@ -4,10 +4,9 @@
 
 from __future__ import unicode_literals
 
-import errno
 import os
-import which
 
+from mozversioncontrol import get_hg_path
 from mozversioncontrol.repoupdate import update_mercurial_repo
 
 from .config import (
@@ -26,13 +25,7 @@ class MercurialUpdater(object):
         self.vcs_tools_dir = os.path.join(self.state_dir, 'version-control-tools')
 
     def update_all(self):
-        try:
-            hg = which.which('hg')
-        except which.WhichError as e:
-            print(e)
-            print('Try running |mach bootstrap| to ensure your environment is '
-                'up to date.')
-            return 1
+        hg = get_hg_path()
 
         repo_existed = os.path.isdir(self.vcs_tools_dir)
         self.update_mercurial_repo(

@@ -10,7 +10,6 @@ import os
 import shutil
 import stat
 import sys
-import which
 import subprocess
 
 from distutils.version import LooseVersion
@@ -18,7 +17,7 @@ from distutils.version import LooseVersion
 from configobj import ConfigObjError
 from StringIO import StringIO
 
-from mozversioncontrol import get_hg_version
+from mozversioncontrol import get_hg_path, get_hg_version
 
 from .update import MercurialUpdater
 from .config import (
@@ -245,22 +244,7 @@ class MercurialSetupWizard(object):
             if e.errno != errno.EEXIST:
                 raise
 
-        # We use subprocess in places, which expects a Win32 executable or
-        # batch script. On some versions of MozillaBuild, we have "hg.exe",
-        # "hg.bat," and "hg" (a Python script). "which" will happily return the
-        # Python script, which will cause subprocess to choke. Explicitly favor
-        # the Windows version over the plain script.
-        try:
-            hg = which.which('hg.exe')
-        except which.WhichError:
-            try:
-                hg = which.which('hg')
-            except which.WhichError as e:
-                print(e)
-                print('Try running |mach bootstrap| to ensure your environment is '
-                      'up to date.')
-                return 1
-
+        hg = get_hg_path()
         config_path = config_file(config_paths)
 
         try:
