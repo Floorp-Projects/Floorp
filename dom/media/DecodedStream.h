@@ -10,6 +10,7 @@
 #include "nsTArray.h"
 #include "MediaInfo.h"
 
+#include "mozilla/AbstractThread.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
@@ -100,7 +101,8 @@ private:
 class DecodedStream {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DecodedStream);
 public:
-  DecodedStream(MediaQueue<MediaData>& aAudioQueue,
+  DecodedStream(AbstractThread* aOwnerThread,
+                MediaQueue<MediaData>& aAudioQueue,
                 MediaQueue<MediaData>& aVideoQueue);
 
   // Mimic MDSM::StartAudioThread.
@@ -137,6 +139,12 @@ private:
   void AdvanceTracks();
   void SendAudio(double aVolume, bool aIsSameOrigin);
   void SendVideo(bool aIsSameOrigin);
+
+  void AssertOwnerThread() const {
+    MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+  }
+
+  const nsRefPtr<AbstractThread> mOwnerThread;
 
   UniquePtr<DecodedStreamData> mData;
   // Data about MediaStreams that are being fed by the decoder.

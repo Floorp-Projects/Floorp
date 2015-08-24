@@ -354,9 +354,11 @@ OutputStreamManager::Disconnect()
   }
 }
 
-DecodedStream::DecodedStream(MediaQueue<MediaData>& aAudioQueue,
+DecodedStream::DecodedStream(AbstractThread* aOwnerThread,
+                             MediaQueue<MediaData>& aAudioQueue,
                              MediaQueue<MediaData>& aVideoQueue)
-  : mMonitor("DecodedStream::mMonitor")
+  : mOwnerThread(aOwnerThread)
+  , mMonitor("DecodedStream::mMonitor")
   , mPlaying(false)
   , mVolume(1.0)
   , mAudioQueue(aAudioQueue)
@@ -372,6 +374,7 @@ DecodedStream::~DecodedStream()
 nsRefPtr<GenericPromise>
 DecodedStream::StartPlayback(int64_t aStartTime, const MediaInfo& aInfo)
 {
+  AssertOwnerThread();
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   MOZ_ASSERT(mStartTime.isNothing(), "playback already started.");
 
@@ -408,6 +411,7 @@ DecodedStream::StartPlayback(int64_t aStartTime, const MediaInfo& aInfo)
 
 void DecodedStream::StopPlayback()
 {
+  AssertOwnerThread();
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   // Playback didn't even start at all.
   if (mStartTime.isNothing()) {
@@ -480,6 +484,7 @@ DecodedStream::RemoveOutput(MediaStream* aStream)
 void
 DecodedStream::SetPlaying(bool aPlaying)
 {
+  AssertOwnerThread();
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   mPlaying = aPlaying;
   if (mData) {
@@ -490,6 +495,7 @@ DecodedStream::SetPlaying(bool aPlaying)
 void
 DecodedStream::SetVolume(double aVolume)
 {
+  AssertOwnerThread();
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   mVolume = aVolume;
 }
@@ -497,6 +503,7 @@ DecodedStream::SetVolume(double aVolume)
 void
 DecodedStream::SetSameOrigin(bool aSameOrigin)
 {
+  AssertOwnerThread();
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   mSameOrigin = aSameOrigin;
 }
@@ -504,6 +511,7 @@ DecodedStream::SetSameOrigin(bool aSameOrigin)
 void
 DecodedStream::InitTracks()
 {
+  AssertOwnerThread();
   GetReentrantMonitor().AssertCurrentThreadIn();
 
   if (mData->mStreamInitialized) {
@@ -584,6 +592,7 @@ SendStreamAudio(DecodedStreamData* aStream, int64_t aStartTime,
 void
 DecodedStream::SendAudio(double aVolume, bool aIsSameOrigin)
 {
+  AssertOwnerThread();
   GetReentrantMonitor().AssertCurrentThreadIn();
 
   if (!mInfo.HasAudio()) {
@@ -649,6 +658,7 @@ ZeroDurationAtLastChunk(VideoSegment& aInput)
 void
 DecodedStream::SendVideo(bool aIsSameOrigin)
 {
+  AssertOwnerThread();
   GetReentrantMonitor().AssertCurrentThreadIn();
 
   if (!mInfo.HasVideo()) {
@@ -727,6 +737,7 @@ DecodedStream::SendVideo(bool aIsSameOrigin)
 void
 DecodedStream::AdvanceTracks()
 {
+  AssertOwnerThread();
   GetReentrantMonitor().AssertCurrentThreadIn();
 
   StreamTime endPosition = 0;
@@ -751,6 +762,7 @@ DecodedStream::AdvanceTracks()
 void
 DecodedStream::SendData()
 {
+  AssertOwnerThread();
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   MOZ_ASSERT(mStartTime.isSome(), "Must be called after StartPlayback()");
 
@@ -781,6 +793,7 @@ DecodedStream::SendData()
 int64_t
 DecodedStream::AudioEndTime() const
 {
+  AssertOwnerThread();
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   if (mStartTime.isSome() && mInfo.HasAudio() && mData) {
     CheckedInt64 t = mStartTime.ref() +
@@ -795,6 +808,7 @@ DecodedStream::AudioEndTime() const
 int64_t
 DecodedStream::GetPosition() const
 {
+  AssertOwnerThread();
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   // This is only called after MDSM starts playback. So mStartTime is
   // guaranteed to be something.
@@ -805,6 +819,7 @@ DecodedStream::GetPosition() const
 bool
 DecodedStream::IsFinished() const
 {
+  AssertOwnerThread();
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   return mData && mData->IsFinished();
 }
