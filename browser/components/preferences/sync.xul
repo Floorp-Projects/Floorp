@@ -231,8 +231,7 @@
                 <label id="fxaEmailAddress1"/>
                 <vbox>
                   <label class="text-link"
-                         onclick="gSyncPane.manageFirefoxAccount();"
-                         value="&manage.label;"/>
+                         onclick="gSyncPane.manageFirefoxAccount();"/>
                 </vbox>
                 <spacer flex="1"/>
                 <vbox>
