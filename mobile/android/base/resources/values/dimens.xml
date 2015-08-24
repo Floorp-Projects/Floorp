@@ -213,9 +213,6 @@
 
     <dimen name="progress_bar_scroll_offset">1.5dp</dimen>
 
-    <!-- This is a 4:7 ratio (as per UX decision). -->
-    <item name="thumbnail_aspect_ratio" format="float" type="dimen">0.571</item>
-
     <!-- http://blog.danlew.net/2015/01/06/handling-android-resources-with-non-standard-formats/ -->
     <item name="match_parent" type="dimen">-1</item>
     <item name="wrap_content" type="dimen">-2</item>
