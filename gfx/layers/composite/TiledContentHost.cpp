@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "TiledContentHost.h"
+#include "gfxPrefs.h"                   // for gfxPrefs
 #include "PaintedLayerComposite.h"      // for PaintedLayerComposite
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4
