@@ -476,7 +476,9 @@ var LoginManagerContent = {
     // If we have a target input, fills it's form.
     if (inputElement) {
       form = FormLikeFactory.createFromField(inputElement);
-      clobberUsername = false;
+      if (inputElement.type == "password") {
+        clobberUsername = false;
+      }
     }
     this._fillForm(form, true, clobberUsername, true, true, loginsFound, recipes, options);
   },
@@ -812,8 +814,11 @@ var LoginManagerContent = {
    *
    * @param {HTMLFormElement} form
    * @param {bool} autofillForm denotes if we should fill the form in automatically
-   * @param {bool} clobberUsername controls if an existing username can be
-   *                               overwritten
+   * @param {bool} clobberUsername controls if an existing username can be overwritten.
+   *                               If this is false and an inputElement of type password
+   *                               is also passed, the username field will be ignored.
+   *                               If this is false and no inputElement is passed, if the username
+   *                               field value is not found in foundLogins, it will not fill the password.
    * @param {bool} clobberPassword controls if an existing password value can be
    *                               overwritten
    * @param {bool} userTriggered is an indication of whether this filling was triggered by
@@ -867,11 +872,16 @@ var LoginManagerContent = {
       // the same as the one heuristically found, use the parameter
       // one instead.
       if (inputElement) {
-        if (inputElement.type != "password") {
+        if (inputElement.type == "password") {
+          passwordField = inputElement;
+          if (!clobberUsername) {
+            usernameField = null;
+          }
+        } else if (LoginHelper.isUsernameFieldType(inputElement)) {
+          usernameField = inputElement;
+        } else {
           throw new Error("Unexpected input element type.");
         }
-        passwordField = inputElement;
-        usernameField = null;
       }
 
       // Need a valid password field to do anything.
@@ -1029,6 +1039,53 @@ var LoginManagerContent = {
     } finally {
       Services.obs.notifyObservers(form.rootElement, "passwordmgr-processed-form", null);
     }
+  },
+
+  /**
+   * Verify if a field is a valid login form field and
+   * returns some information about it's FormLike.
+   *
+   * @param {Element} aField
+   *                  A form field we want to verify.
+   *
+   * @returns {Object} an object with information about the
+   *                   FormLike username and password field
+   *                   or null if the passed field is invalid.
+   */
+  getFieldContext(aField) {
+    // If the element is not a proper form field, return null.
+    if (!(aField instanceof Ci.nsIDOMHTMLInputElement) ||
+        (aField.type != "password" && !LoginHelper.isUsernameFieldType(aField)) ||
+        !aField.ownerDocument) {
+      return null;
+    }
+    let form = FormLikeFactory.createFromField(aField);
+
+    let doc = aField.ownerDocument;
+    let messageManager = messageManagerFromWindow(doc.defaultView);
+    let recipes = messageManager.sendSyncMessage("RemoteLogins:findRecipes", {
+      formOrigin: LoginUtils._getPasswordOrigin(doc.documentURI),
+    })[0];
+
+    let [usernameField, newPasswordField, oldPasswordField] =
+          this._getFormFields(form, false, recipes);
+
+    // If we are not verifying a password field, we want
+    // to use aField as the username field.
+    if (aField.type != "password") {
+      usernameField = aField;
+    }
+
+    return {
+      usernameField: {
+        found: !!usernameField,
+        disabled: usernameField && (usernameField.disabled || usernameField.readOnly),
+      },
+      passwordField: {
+        found: !!newPasswordField,
+        disabled: newPasswordField && (newPasswordField.disabled || newPasswordField.readOnly),
+      },
+    };
   },
 
 };
