@@ -13,7 +13,7 @@ using namespace mozilla::dom;
 namespace mozilla {
 
 AudioNodeExternalInputStream::AudioNodeExternalInputStream(AudioNodeEngine* aEngine, TrackRate aSampleRate, uint32_t aContextId)
-  : AudioNodeStream(aEngine, MediaStreamGraph::INTERNAL_STREAM, aSampleRate, aContextId)
+  : AudioNodeStream(aEngine, NO_STREAM_FLAGS, aSampleRate, aContextId)
 {
   MOZ_COUNT_CTOR(AudioNodeExternalInputStream);
 }
@@ -21,6 +21,20 @@ AudioNodeExternalInputStream::AudioNodeExternalInputStream(AudioNodeEngine* aEng
 AudioNodeExternalInputStream::~AudioNodeExternalInputStream()
 {
   MOZ_COUNT_DTOR(AudioNodeExternalInputStream);
+}
+
+/* static */ already_AddRefed<AudioNodeExternalInputStream>
+AudioNodeExternalInputStream::Create(MediaStreamGraph* aGraph,
+                                     AudioNodeEngine* aEngine)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aGraph->GraphRate() == aEngine->NodeMainThread()->Context()->SampleRate());
+
+  nsRefPtr<AudioNodeExternalInputStream> stream =
+    new AudioNodeExternalInputStream(aEngine, aGraph->GraphRate(),
+                                     aEngine->NodeMainThread()->Context()->Id());
+  aGraph->AddStream(stream);
+  return stream.forget();
 }
 
 /**

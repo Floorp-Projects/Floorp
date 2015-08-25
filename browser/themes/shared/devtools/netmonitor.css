@@ -142,25 +142,27 @@
   width: 16px;
   height: 16px;
   -moz-margin-end: 4px;
+  cursor: pointer;
 }
 
 .security-state-insecure {
-  list-style-image: url(chrome://browser/skin/identity-not-secure.svg);
+  list-style-image: url(chrome://browser/skin/identity-mixed-active-loaded.svg);
 }
 
 .security-state-secure {
-  cursor: pointer;
   list-style-image: url(chrome://browser/skin/identity-secure.svg);
 }
 
 .security-state-weak {
-  cursor: pointer;
   list-style-image: url(chrome://browser/skin/identity-mixed-passive-loaded.svg);
 }
 
 .security-state-broken {
-  cursor: pointer;
-  list-style-image: url(chrome://browser/skin/identity-mixed-active-loaded.svg);
+  list-style-image: url(chrome://browser/skin/controlcenter/warning-gray.svg);
+}
+
+.security-state-local {
+  list-style-image: url(chrome://browser/skin/identity-not-secure.svg);
 }
 
 .requests-menu-type {
@@ -196,7 +198,8 @@ label.requests-menu-status-code {
 }
 
 box.requests-menu-status:not([code]) {
-  background-color: var(--theme-content-color2);
+  background-color: var(--theme-highlight-red);
+  border-radius: 0; /* squares */
 }
 
 box.requests-menu-status[code="cached"] {
