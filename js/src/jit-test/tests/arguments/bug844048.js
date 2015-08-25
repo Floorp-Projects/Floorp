@@ -16,9 +16,4 @@ function bar() {
 bar();
 
 (function(){assertEq(typeof eval("var arguments; arguments"), "object")})();
-try {
-  (function(... rest){assertEq(typeof eval("var arguments; arguments"), "object")})();
-  assertEq(false, true);
-} catch (e) {
-  assertEq(/SyntaxError/.test(e), true);
-}
+(function(... rest){assertEq(typeof eval("var arguments; arguments"), "object")})();

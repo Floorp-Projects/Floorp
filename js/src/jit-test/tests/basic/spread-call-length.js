@@ -46,8 +46,6 @@ function checkLength(f, makeFn) {
 
 checkLength(function(x) arguments.length, makeCall);
 checkLength(function(x) arguments.length, makeFunCall);
-checkLength((x) => arguments.length, makeCall);
-checkLength((x) => arguments.length, makeFunCall);
 function lengthClass(x) {
   this.length = arguments.length;
 }
