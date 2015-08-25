@@ -147,10 +147,6 @@ TEST_F(VsyncTester, CompositorGetVsyncNotifications)
 // Test that if we have vsync enabled, the parent refresh driver should get notifications
 TEST_F(VsyncTester, ParentRefreshDriverGetVsyncNotifications)
 {
-  if (!gfxPrefs::VsyncAlignedRefreshDriver()) {
-    return;
-  }
-
   VsyncSource::Display& globalDisplay = mVsyncSource->GetGlobalDisplay();
   globalDisplay.DisableVsync();
   ASSERT_FALSE(globalDisplay.IsVsyncEnabled());
@@ -177,10 +173,6 @@ TEST_F(VsyncTester, ParentRefreshDriverGetVsyncNotifications)
 // Test that child refresh vsync observers get vsync notifications
 TEST_F(VsyncTester, ChildRefreshDriverGetVsyncNotifications)
 {
-  if (!gfxPrefs::VsyncAlignedRefreshDriver()) {
-    return;
-  }
-
   VsyncSource::Display& globalDisplay = mVsyncSource->GetGlobalDisplay();
   globalDisplay.DisableVsync();
   ASSERT_FALSE(globalDisplay.IsVsyncEnabled());
