@@ -605,7 +605,7 @@ describe("loop.roomViews", function () {
 
         expect(node.querySelector(".room-context")).to.eql(null);
 
-        var editButton = node.querySelector(".btn-mute-edit");
+        var editButton = node.querySelector(".settings-menu > li.entry-settings-edit");
         React.addons.TestUtils.Simulate.click(editButton);
 
         expect(view.getDOMNode().querySelector(".room-context")).to.not.eql(null);
@@ -614,7 +614,7 @@ describe("loop.roomViews", function () {
       it("should hide the form when the edit button is clicked again", function() {
         view = mountTestComponent();
 
-        var editButton = view.getDOMNode().querySelector(".btn-mute-edit");
+        var editButton = view.getDOMNode().querySelector(".settings-menu > li.entry-settings-edit");
         React.addons.TestUtils.Simulate.click(editButton);
 
         // Click again.
