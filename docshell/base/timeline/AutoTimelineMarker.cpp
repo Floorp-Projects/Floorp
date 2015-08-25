@@ -6,7 +6,7 @@
 
 #include "mozilla/AutoTimelineMarker.h"
 
-#include "mozilla/TimelineConsumers.h"
+#include "TimelineConsumers.h"
 #include "MainThreadUtils.h"
 #include "nsDocShell.h"
 

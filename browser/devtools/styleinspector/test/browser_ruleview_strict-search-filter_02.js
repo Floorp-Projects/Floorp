@@ -4,9 +4,10 @@
 
 "use strict";
 
-// Tests that the rule view search filter works properly for stylesheet source.
+// Tests that the rule view strict search filter works properly for stylesheet
+// source.
 
-const SEARCH = "doc_urls_clickable.css";
+const SEARCH = "`doc_urls_clickable.css:1`";
 const TEST_URI = TEST_URL_ROOT + "doc_urls_clickable.html";
 
 add_task(function*() {
@@ -16,23 +17,15 @@ add_task(function*() {
   yield testAddTextInFilter(inspector, view);
 });
 
-function* testAddTextInFilter(inspector, ruleView) {
-  info("Setting filter text to \"" + SEARCH + "\"");
-
-  let win = ruleView.styleWindow;
-  let searchField = ruleView.searchField;
-  let onRuleViewFiltered = inspector.once("ruleview-filtered");
-
-  searchField.focus();
-  synthesizeKeys(SEARCH, win);
-  yield onRuleViewFiltered;
+function* testAddTextInFilter(inspector, view) {
+  yield setSearchFilter(view, SEARCH);
 
   info("Check that the correct rules are visible");
-  is(ruleView.element.children.length, 2, "Should have 2 rules.");
-  is(getRuleViewRuleEditor(ruleView, 0).rule.selectorText, "element",
+  is(view.element.children.length, 2, "Should have 2 rules.");
+  is(getRuleViewRuleEditor(view, 0).rule.selectorText, "element",
     "First rule is inline element.");
 
-  let rule = getRuleViewRuleEditor(ruleView, 1).rule;
+  let rule = getRuleViewRuleEditor(view, 1).rule;
   let source = rule.textProps[0].editor.ruleEditor.source;
 
   is(rule.selectorText, ".relative1", "Second rule is .relative1.");

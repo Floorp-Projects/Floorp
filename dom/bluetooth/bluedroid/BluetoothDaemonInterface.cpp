@@ -113,10 +113,10 @@ protected:
       const DaemonSocketPDUHeader&,
       DaemonSocketPDU&,
       BluetoothSetupResultHandler*) = {
-      INIT_ARRAY_AT(0x00, &BluetoothDaemonSetupModule::ErrorRsp),
-      INIT_ARRAY_AT(0x01, &BluetoothDaemonSetupModule::RegisterModuleRsp),
-      INIT_ARRAY_AT(0x02, &BluetoothDaemonSetupModule::UnregisterModuleRsp),
-      INIT_ARRAY_AT(0x03, &BluetoothDaemonSetupModule::ConfigurationRsp)
+      [0x00] = &BluetoothDaemonSetupModule::ErrorRsp,
+      [0x01] = &BluetoothDaemonSetupModule::RegisterModuleRsp,
+      [0x02] = &BluetoothDaemonSetupModule::UnregisterModuleRsp,
+      [0x03] = &BluetoothDaemonSetupModule::ConfigurationRsp
     };
 
     if (NS_WARN_IF(aHeader.mOpcode >= MOZ_ARRAY_LENGTH(HandleRsp)) ||
@@ -604,8 +604,8 @@ protected:
   {
     static void (BluetoothDaemonCoreModule::* const HandleOp[])(
       const DaemonSocketPDUHeader&, DaemonSocketPDU&, void*) = {
-      INIT_ARRAY_AT(0, &BluetoothDaemonCoreModule::HandleRsp),
-      INIT_ARRAY_AT(1, &BluetoothDaemonCoreModule::HandleNtf),
+      [0] = &BluetoothDaemonCoreModule::HandleRsp,
+      [1] = &BluetoothDaemonCoreModule::HandleNtf
     };
 
     MOZ_ASSERT(!NS_IsMainThread());
@@ -831,31 +831,27 @@ private:
       const DaemonSocketPDUHeader&,
       DaemonSocketPDU&,
       BluetoothResultHandler*) = {
-      INIT_ARRAY_AT(0x00, &BluetoothDaemonCoreModule::ErrorRsp),
-      INIT_ARRAY_AT(0x01, &BluetoothDaemonCoreModule::EnableRsp),
-      INIT_ARRAY_AT(0x02, &BluetoothDaemonCoreModule::DisableRsp),
-      INIT_ARRAY_AT(0x03, &BluetoothDaemonCoreModule::GetAdapterPropertiesRsp),
-      INIT_ARRAY_AT(0x04, &BluetoothDaemonCoreModule::GetAdapterPropertyRsp),
-      INIT_ARRAY_AT(0x05, &BluetoothDaemonCoreModule::SetAdapterPropertyRsp),
-      INIT_ARRAY_AT(0x06,
-        &BluetoothDaemonCoreModule::GetRemoteDevicePropertiesRsp),
-      INIT_ARRAY_AT(0x07,
-        &BluetoothDaemonCoreModule::GetRemoteDevicePropertyRsp),
-      INIT_ARRAY_AT(0x08,
-        &BluetoothDaemonCoreModule::SetRemoteDevicePropertyRsp),
-      INIT_ARRAY_AT(0x09,
-        &BluetoothDaemonCoreModule::GetRemoteServiceRecordRsp),
-      INIT_ARRAY_AT(0x0a, &BluetoothDaemonCoreModule::GetRemoteServicesRsp),
-      INIT_ARRAY_AT(0x0b, &BluetoothDaemonCoreModule::StartDiscoveryRsp),
-      INIT_ARRAY_AT(0x0c, &BluetoothDaemonCoreModule::CancelDiscoveryRsp),
-      INIT_ARRAY_AT(0x0d, &BluetoothDaemonCoreModule::CreateBondRsp),
-      INIT_ARRAY_AT(0x0e, &BluetoothDaemonCoreModule::RemoveBondRsp),
-      INIT_ARRAY_AT(0x0f, &BluetoothDaemonCoreModule::CancelBondRsp),
-      INIT_ARRAY_AT(0x10, &BluetoothDaemonCoreModule::PinReplyRsp),
-      INIT_ARRAY_AT(0x11, &BluetoothDaemonCoreModule::SspReplyRsp),
-      INIT_ARRAY_AT(0x12, &BluetoothDaemonCoreModule::DutModeConfigureRsp),
-      INIT_ARRAY_AT(0x13, &BluetoothDaemonCoreModule::DutModeSendRsp),
-      INIT_ARRAY_AT(0x14, &BluetoothDaemonCoreModule::LeTestModeRsp),
+      [0x00] = &BluetoothDaemonCoreModule::ErrorRsp,
+      [0x01] = &BluetoothDaemonCoreModule::EnableRsp,
+      [0x02] = &BluetoothDaemonCoreModule::DisableRsp,
+      [0x03] = &BluetoothDaemonCoreModule::GetAdapterPropertiesRsp,
+      [0x04] = &BluetoothDaemonCoreModule::GetAdapterPropertyRsp,
+      [0x05] = &BluetoothDaemonCoreModule::SetAdapterPropertyRsp,
+      [0x06] = &BluetoothDaemonCoreModule::GetRemoteDevicePropertiesRsp,
+      [0x07] = &BluetoothDaemonCoreModule::GetRemoteDevicePropertyRsp,
+      [0x08] = &BluetoothDaemonCoreModule::SetRemoteDevicePropertyRsp,
+      [0x09] = &BluetoothDaemonCoreModule::GetRemoteServiceRecordRsp,
+      [0x0a] = &BluetoothDaemonCoreModule::GetRemoteServicesRsp,
+      [0x0b] = &BluetoothDaemonCoreModule::StartDiscoveryRsp,
+      [0x0c] = &BluetoothDaemonCoreModule::CancelDiscoveryRsp,
+      [0x0d] = &BluetoothDaemonCoreModule::CreateBondRsp,
+      [0x0e] = &BluetoothDaemonCoreModule::RemoveBondRsp,
+      [0x0f] = &BluetoothDaemonCoreModule::CancelBondRsp,
+      [0x10] = &BluetoothDaemonCoreModule::PinReplyRsp,
+      [0x11] = &BluetoothDaemonCoreModule::SspReplyRsp,
+      [0x12] = &BluetoothDaemonCoreModule::DutModeConfigureRsp,
+      [0x13] = &BluetoothDaemonCoreModule::DutModeSendRsp,
+      [0x14] = &BluetoothDaemonCoreModule::LeTestModeRsp,
     };
 
     MOZ_ASSERT(!NS_IsMainThread());
@@ -1353,17 +1349,17 @@ private:
   {
     static void (BluetoothDaemonCoreModule::* const HandleNtf[])(
       const DaemonSocketPDUHeader&, DaemonSocketPDU&) = {
-      INIT_ARRAY_AT(0, &BluetoothDaemonCoreModule::AdapterStateChangedNtf),
-      INIT_ARRAY_AT(1, &BluetoothDaemonCoreModule::AdapterPropertiesNtf),
-      INIT_ARRAY_AT(2, &BluetoothDaemonCoreModule::RemoteDevicePropertiesNtf),
-      INIT_ARRAY_AT(3, &BluetoothDaemonCoreModule::DeviceFoundNtf),
-      INIT_ARRAY_AT(4, &BluetoothDaemonCoreModule::DiscoveryStateChangedNtf),
-      INIT_ARRAY_AT(5, &BluetoothDaemonCoreModule::PinRequestNtf),
-      INIT_ARRAY_AT(6, &BluetoothDaemonCoreModule::SspRequestNtf),
-      INIT_ARRAY_AT(7, &BluetoothDaemonCoreModule::BondStateChangedNtf),
-      INIT_ARRAY_AT(8, &BluetoothDaemonCoreModule::AclStateChangedNtf),
-      INIT_ARRAY_AT(9, &BluetoothDaemonCoreModule::DutModeRecvNtf),
-      INIT_ARRAY_AT(10, &BluetoothDaemonCoreModule::LeTestModeNtf)
+      [0] = &BluetoothDaemonCoreModule::AdapterStateChangedNtf,
+      [1] = &BluetoothDaemonCoreModule::AdapterPropertiesNtf,
+      [2] = &BluetoothDaemonCoreModule::RemoteDevicePropertiesNtf,
+      [3] = &BluetoothDaemonCoreModule::DeviceFoundNtf,
+      [4] = &BluetoothDaemonCoreModule::DiscoveryStateChangedNtf,
+      [5] = &BluetoothDaemonCoreModule::PinRequestNtf,
+      [6] = &BluetoothDaemonCoreModule::SspRequestNtf,
+      [7] = &BluetoothDaemonCoreModule::BondStateChangedNtf,
+      [8] = &BluetoothDaemonCoreModule::AclStateChangedNtf,
+      [9] = &BluetoothDaemonCoreModule::DutModeRecvNtf,
+      [10] = &BluetoothDaemonCoreModule::LeTestModeNtf
     };
 
     MOZ_ASSERT(!NS_IsMainThread());
@@ -1594,20 +1590,20 @@ BluetoothDaemonProtocol::Handle(DaemonSocketPDU& aPDU)
 {
   static void (BluetoothDaemonProtocol::* const HandleSvc[])(
     const DaemonSocketPDUHeader&, DaemonSocketPDU&, void*) = {
-    INIT_ARRAY_AT(0x00, &BluetoothDaemonProtocol::HandleSetupSvc),
-    INIT_ARRAY_AT(0x01, &BluetoothDaemonProtocol::HandleCoreSvc),
-    INIT_ARRAY_AT(0x02, &BluetoothDaemonProtocol::HandleSocketSvc),
-    INIT_ARRAY_AT(0x03, nullptr), // HID host
-    INIT_ARRAY_AT(0x04, nullptr), // PAN
-    INIT_ARRAY_AT(BluetoothDaemonHandsfreeModule::SERVICE_ID,
-      &BluetoothDaemonProtocol::HandleHandsfreeSvc),
-    INIT_ARRAY_AT(BluetoothDaemonA2dpModule::SERVICE_ID,
-      &BluetoothDaemonProtocol::HandleA2dpSvc),
-    INIT_ARRAY_AT(0x07, nullptr), // Health
-    INIT_ARRAY_AT(BluetoothDaemonAvrcpModule::SERVICE_ID,
-      &BluetoothDaemonProtocol::HandleAvrcpSvc),
-    INIT_ARRAY_AT(BluetoothDaemonGattModule::SERVICE_ID,
-      &BluetoothDaemonProtocol::HandleGattSvc)
+    [0x00] = &BluetoothDaemonProtocol::HandleSetupSvc,
+    [0x01] = &BluetoothDaemonProtocol::HandleCoreSvc,
+    [0x02] = &BluetoothDaemonProtocol::HandleSocketSvc,
+    [0x03] = nullptr, // HID host
+    [0x04] = nullptr, // PAN
+    [BluetoothDaemonHandsfreeModule::SERVICE_ID] =
+      &BluetoothDaemonProtocol::HandleHandsfreeSvc,
+    [BluetoothDaemonA2dpModule::SERVICE_ID] =
+      &BluetoothDaemonProtocol::HandleA2dpSvc,
+    [0x07] = nullptr, // Health
+    [BluetoothDaemonAvrcpModule::SERVICE_ID] =
+      &BluetoothDaemonProtocol::HandleAvrcpSvc,
+    [BluetoothDaemonGattModule::SERVICE_ID] =
+      &BluetoothDaemonProtocol::HandleGattSvc
   };
 
   DaemonSocketPDUHeader header;

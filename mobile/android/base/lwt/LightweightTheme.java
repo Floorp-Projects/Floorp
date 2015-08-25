@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko.lwt;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +23,7 @@ import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
 import android.app.Application;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -39,6 +42,8 @@ public class LightweightTheme implements GeckoEventListener {
 
     private static final String PREFS_URL = "lightweightTheme.headerURL";
     private static final String PREFS_COLOR = "lightweightTheme.color";
+
+    private static final String ASSETS_PREFIX = "resource://android/assets/";
 
     private final Application mApplication;
 
@@ -119,8 +124,31 @@ public class LightweightTheme implements GeckoEventListener {
                 croppedURL = croppedURL.substring(0, mark);
             }
 
-            // Get the image and convert it to a bitmap.
-            final Bitmap bitmap = BitmapUtils.decodeUrl(croppedURL);
+            if (croppedURL.startsWith(ASSETS_PREFIX)) {
+                onBitmapLoaded(loadFromAssets(croppedURL));
+            } else {
+                onBitmapLoaded(BitmapUtils.decodeUrl(croppedURL));
+            }
+        }
+
+        private Bitmap loadFromAssets(String url) {
+            InputStream stream = null;
+
+            try {
+                stream = mApplication.getAssets().open(url.substring(ASSETS_PREFIX.length()));
+                return BitmapFactory.decodeStream(stream);
+            } catch (IOException e) {
+                return null;
+            } finally {
+                if (stream != null) {
+                    try {
+                        stream.close();
+                    } catch (IOException e) {}
+                }
+            }
+        }
+
+        private void onBitmapLoaded(final Bitmap bitmap) {
             ThreadUtils.postToUiThread(new Runnable() {
                 @Override
                 public void run() {
