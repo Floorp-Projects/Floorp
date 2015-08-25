@@ -670,7 +670,9 @@ nsGridContainerFrame::ResolveAbsPosLineRange(
     if (aEnd.mHasSpan) {
       ++end;
     }
-    return LineRange(kAutoLine, clamped(end, aGridStart, aGridEnd));
+    // A line outside the existing grid is treated as 'auto' for abs.pos (10.1).
+    end = AutoIfOutside(end, aGridStart, aGridEnd);
+    return LineRange(kAutoLine, end);
   }
 
   if (aEnd.IsAuto()) {
@@ -680,7 +682,8 @@ nsGridContainerFrame::ResolveAbsPosLineRange(
     if (aStart.mHasSpan) {
       start = std::max(aGridEnd - start, aGridStart);
     }
-    return LineRange(clamped(start, aGridStart, aGridEnd), kAutoLine);
+    start = AutoIfOutside(start, aGridStart, aGridEnd);
+    return LineRange(start, kAutoLine);
   }
 
   LineRange r = ResolveLineRange(aStart, aEnd, aLineNameList, aAreaStart,
@@ -693,12 +696,8 @@ nsGridContainerFrame::ResolveAbsPosLineRange(
     return LineRange(kAutoLine, kAutoLine);
   }
 
-  // Clamp definite lines to be within the implicit grid.
-  // Note that this implies mUntranslatedStart may be equal to mUntranslatedEnd.
-  r.mUntranslatedStart = clamped(r.mUntranslatedStart, aGridStart, aGridEnd);
-  r.mUntranslatedEnd = clamped(r.mUntranslatedEnd, aGridStart, aGridEnd);
-  MOZ_ASSERT(r.mUntranslatedStart <= r.mUntranslatedEnd);
-  return r;
+  return LineRange(AutoIfOutside(r.mUntranslatedStart, aGridStart, aGridEnd),
+                   AutoIfOutside(r.mUntranslatedEnd, aGridStart, aGridEnd));
 }
 
 uint32_t

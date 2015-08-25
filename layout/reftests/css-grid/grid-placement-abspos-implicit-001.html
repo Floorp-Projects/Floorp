@@ -15,14 +15,13 @@ body,html { color:black; background:white; font-size:16px; padding:0; margin:0; 
 .grid {
  display: grid;
  position: relative;
- border: 0 dashed blue;
- border-width: 7px 11px 13px 17px;
+ border: 1px solid;
  grid-auto-flow: row;
  grid-auto-columns: 23px;
- grid-auto-rows: 17px;
- padding: 17px 7px 11px 13px;
+ grid-auto-rows: 7px;
+ padding: 1px 7px 3px 13px;
  width: 200px;
- height: 200px;
+ height: 60px;
 }
 
 span.negative {
@@ -72,23 +71,58 @@ span {
 
 <div class="grid">
 <span class="negative"></span>
-<span class="a">a</span>
+<span class="a"></span>
 <span class="b abs">b</span>
+</div>
+
+<div class="grid">
+<span class="negative"></span>
+<span class="a"></span>
 <span class="c abs">c</span>
+</div>
+
+<div class="grid">
+<span class="negative"></span>
+<span class="a"></span>
 <span class="d abs">d</span>
+</div>
+
+<div class="grid">
+<span class="negative"></span>
+<span class="a"></span>
 <span class="e abs">e</span>
+</div>
+
+<div class="grid">
+<span class="negative"></span>
+<span class="a"></span>
 <span class="f abs">f</span>
 </div>
 
 <div class="grid">
 <span class="negative"></span>
 <div><span class="b abs">b</span></div>
-<x><span class="c abs">c</span></x>
-<span class="d abs">d</span>
-<div><span class="e abs">e</span></div>
-<span class="f abs">f</span>
 </div>
 
+<div class="grid">
+<span class="negative"></span>
+<x><span class="c abs">c</span></x>
+</div>
+
+<div class="grid">
+<span class="negative"></span>
+<span class="d abs">d</span>
+</div>
+
+<div class="grid">
+<span class="negative"></span>
+<div><span class="e abs">e</span></div>
+</div>
+
+<div class="grid">
+<span class="negative"></span>
+<span class="f abs">f</span>
+</div>
 
 </body>
 </html>
