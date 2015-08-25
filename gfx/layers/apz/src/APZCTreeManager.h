@@ -8,20 +8,22 @@
 
 #include <stdint.h>                     // for uint64_t, uint32_t
 #include <map>                          // for std::map
+
 #include "FrameMetrics.h"               // for FrameMetrics, etc
-#include "Units.h"                      // for CSSPoint, CSSRect, etc
 #include "gfxPoint.h"                   // for gfxPoint
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
 #include "mozilla/EventForwards.h"      // for WidgetInputEvent, nsEventStatus
-#include "mozilla/Monitor.h"            // for Monitor
+#include "mozilla/gfx/Logging.h"        // for gfx::TreeLog
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4
+#include "mozilla/layers/APZUtils.h"    // for HitTestResult
+#include "mozilla/layers/TouchCounter.h"// for TouchCounter
+#include "mozilla/Monitor.h"            // for Monitor
+#include "mozilla/Vector.h"             // for mozilla::Vector
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
-#include "mozilla/Vector.h"             // for mozilla::Vector
 #include "nsTArrayForwardDeclare.h"     // for nsTArray, nsTArray_Impl, etc
-#include "mozilla/gfx/Logging.h"        // for gfx::TreeLog
-#include "mozilla/layers/APZUtils.h"    // for HitTestResult
+#include "Units.h"                      // for CSSPoint, CSSRect, etc
 
 namespace mozilla {
 class InputData;
@@ -520,8 +522,9 @@ private:
    * this is set to -1.
    */
   int32_t mRetainedTouchIdentifier;
-  /* The number of touch points we are tracking that are currently on the screen. */
-  uint32_t mTouchCount;
+  /* Tracks the number of touch points we are tracking that are currently on
+   * the screen. */
+  TouchCounter mTouchCounter;
   /* For logging the APZC tree for debugging (enabled by the apz.printtree
    * pref). */
   gfx::TreeLog mApzcTreeLog;
