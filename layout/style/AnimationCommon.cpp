@@ -54,7 +54,6 @@ CommonAnimationManager::CommonAnimationManager(nsPresContext *aPresContext)
   : mPresContext(aPresContext)
   , mIsObservingRefreshDriver(false)
 {
-  PR_INIT_CLIST(&mElementCollections);
 }
 
 CommonAnimationManager::~CommonAnimationManager()
@@ -82,17 +81,15 @@ CommonAnimationManager::AddElementCollection(AnimationCollection* aCollection)
     mIsObservingRefreshDriver = true;
   }
 
-  PR_INSERT_BEFORE(aCollection, &mElementCollections);
+  mElementCollections.insertBack(aCollection);
 }
 
 void
 CommonAnimationManager::RemoveAllElementCollections()
 {
-  while (!PR_CLIST_IS_EMPTY(&mElementCollections)) {
-    AnimationCollection* head =
-      static_cast<AnimationCollection*>(PR_LIST_HEAD(&mElementCollections));
-    head->Destroy();
-  }
+ while (AnimationCollection* head = mElementCollections.getFirst()) {
+   head->Destroy(); // Note: this removes 'head' from mElementCollections.
+ }
 }
 
 void
@@ -121,10 +118,9 @@ CommonAnimationManager::MaybeStartOrStopObservingRefreshDriver()
 bool
 CommonAnimationManager::NeedsRefresh() const
 {
-  for (PRCList *l = PR_LIST_HEAD(&mElementCollections);
-       l != &mElementCollections;
-       l = PR_NEXT_LINK(l)) {
-    if (static_cast<AnimationCollection*>(l)->mNeedsRefreshes) {
+  for (const AnimationCollection* collection = mElementCollections.getFirst();
+       collection; collection = collection->getNext()) {
+    if (collection->mNeedsRefreshes) {
       return true;
     }
   }
@@ -284,11 +280,8 @@ CommonAnimationManager::AddStyleUpdatesTo(RestyleTracker& aTracker)
 {
   TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
 
-  PRCList* next = PR_LIST_HEAD(&mElementCollections);
-  while (next != &mElementCollections) {
-    AnimationCollection* collection = static_cast<AnimationCollection*>(next);
-    next = PR_NEXT_LINK(next);
-
+  for (AnimationCollection* collection = mElementCollections.getFirst();
+       collection; collection = collection->getNext()) {
     collection->EnsureStyleRuleFor(now);
 
     dom::Element* elementToRestyle = collection->GetElementToRestyle();
@@ -324,7 +317,7 @@ CommonAnimationManager::GetAnimations(dom::Element *aElement,
                                       nsCSSPseudoElements::Type aPseudoType,
                                       bool aCreateIfNeeded)
 {
-  if (!aCreateIfNeeded && PR_CLIST_IS_EMPTY(&mElementCollections)) {
+  if (!aCreateIfNeeded && mElementCollections.isEmpty()) {
     // Early return for the most common case.
     return nullptr;
   }
@@ -371,11 +364,8 @@ void
 CommonAnimationManager::FlushAnimations(FlushFlags aFlags)
 {
   TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
-  for (PRCList *l = PR_LIST_HEAD(&mElementCollections);
-       l != &mElementCollections;
-       l = PR_NEXT_LINK(l)) {
-    AnimationCollection* collection = static_cast<AnimationCollection*>(l);
-
+  for (AnimationCollection* collection = mElementCollections.getFirst();
+       collection; collection = collection->getNext()) {
     if (collection->mStyleRuleRefreshTime == now) {
       continue;
     }

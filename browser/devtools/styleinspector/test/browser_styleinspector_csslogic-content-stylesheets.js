@@ -15,9 +15,9 @@ const TEST_URI_XUL = TEST_URL_ROOT + "doc_content_stylesheet.xul";
 const XUL_URI = Cc["@mozilla.org/network/io-service;1"]
                 .getService(Ci.nsIIOService)
                 .newURI(TEST_URI_XUL, null, null);
-let ssm = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
-                            .getService(Ci.nsIScriptSecurityManager);
-const XUL_PRINCIPAL = ssm.createCodebasePrincipal(XUL_URI, {});
+const XUL_PRINCIPAL = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                        .getService(Ci.nsIScriptSecurityManager)
+                        .getNoAppCodebasePrincipal(XUL_URI);
 
 add_task(function*() {
   info("Checking stylesheets on HTML document");

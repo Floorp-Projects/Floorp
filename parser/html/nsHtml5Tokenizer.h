@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2005-2007 Henri Sivonen
- * Copyright (c) 2007-2013 Mozilla Foundation
+ * Copyright (c) 2007-2015 Mozilla Foundation
  * Portions of comments Copyright 2004-2010 Apple Computer, Inc., Mozilla 
  * Foundation, and Opera Software ASA.
  *
@@ -98,8 +98,7 @@ class nsHtml5Tokenizer
     int32_t lo;
     int32_t hi;
     int32_t candidate;
-    int32_t strBufMark;
-    int32_t prevValue;
+    int32_t charRefBufMark;
   protected:
     int32_t value;
   private:
@@ -111,8 +110,8 @@ class nsHtml5Tokenizer
     nsString* systemId;
     autoJArray<char16_t,int32_t> strBuf;
     int32_t strBufLen;
-    autoJArray<char16_t,int32_t> longStrBuf;
-    int32_t longStrBufLen;
+    autoJArray<char16_t,int32_t> charRefBuf;
+    int32_t charRefBufLen;
     autoJArray<char16_t,int32_t> bmpChar;
     autoJArray<char16_t,int32_t> astralChar;
   protected:
@@ -156,6 +155,18 @@ class nsHtml5Tokenizer
 
     nsHtml5HtmlAttributes* emptyAttributes();
   private:
+    inline void appendCharRefBuf(char16_t c)
+    {
+      charRefBuf[charRefBufLen++] = c;
+    }
+
+    inline void clearCharRefBufAndAppend(char16_t c)
+    {
+      charRefBuf[0] = c;
+      charRefBufLen = 1;
+    }
+
+    void emitOrAppendCharRefBuf(int32_t returnState);
     inline void clearStrBufAndAppend(char16_t c)
     {
       strBuf[0] = c;
@@ -173,36 +184,23 @@ class nsHtml5Tokenizer
   private:
     void strBufToDoctypeName();
     void emitStrBuf();
-    inline void clearLongStrBuf()
-    {
-      longStrBufLen = 0;
-    }
-
-    inline void clearLongStrBufAndAppend(char16_t c)
-    {
-      longStrBuf[0] = c;
-      longStrBufLen = 1;
-    }
-
-    void appendLongStrBuf(char16_t c);
     inline void appendSecondHyphenToBogusComment()
     {
-      appendLongStrBuf('-');
+      appendStrBuf('-');
     }
 
-    inline void adjustDoubleHyphenAndAppendToLongStrBufAndErr(char16_t c)
+    inline void adjustDoubleHyphenAndAppendToStrBufAndErr(char16_t c)
     {
       errConsecutiveHyphens();
-      appendLongStrBuf(c);
+      appendStrBuf(c);
     }
 
-    void appendLongStrBuf(char16_t* buffer, int32_t offset, int32_t length);
-    inline void appendStrBufToLongStrBuf()
+    void appendStrBuf(char16_t* buffer, int32_t offset, int32_t length);
+    inline void appendCharRefBufToStrBuf()
     {
-      appendLongStrBuf(strBuf, 0, strBufLen);
+      appendStrBuf(charRefBuf, 0, charRefBufLen);
     }
 
-    nsString* longStrBufToString();
     void emitComment(int32_t provisionalHyphens, int32_t pos);
   protected:
     void flushChars(char16_t* buf, int32_t pos);
@@ -218,28 +216,28 @@ class nsHtml5Tokenizer
   private:
     template<class P> int32_t stateLoop(int32_t state, char16_t c, int32_t pos, char16_t* buf, bool reconsume, int32_t returnState, int32_t endPos);
     void initDoctypeFields();
-    inline void adjustDoubleHyphenAndAppendToLongStrBufCarriageReturn()
+    inline void adjustDoubleHyphenAndAppendToStrBufCarriageReturn()
     {
       silentCarriageReturn();
-      adjustDoubleHyphenAndAppendToLongStrBufAndErr('\n');
+      adjustDoubleHyphenAndAppendToStrBufAndErr('\n');
     }
 
-    inline void adjustDoubleHyphenAndAppendToLongStrBufLineFeed()
+    inline void adjustDoubleHyphenAndAppendToStrBufLineFeed()
     {
       silentLineFeed();
-      adjustDoubleHyphenAndAppendToLongStrBufAndErr('\n');
+      adjustDoubleHyphenAndAppendToStrBufAndErr('\n');
     }
 
-    inline void appendLongStrBufLineFeed()
+    inline void appendStrBufLineFeed()
     {
       silentLineFeed();
-      appendLongStrBuf('\n');
+      appendStrBuf('\n');
     }
 
-    inline void appendLongStrBufCarriageReturn()
+    inline void appendStrBufCarriageReturn()
     {
       silentCarriageReturn();
-      appendLongStrBuf('\n');
+      appendStrBuf('\n');
     }
 
   protected:
@@ -261,7 +259,6 @@ class nsHtml5Tokenizer
     void setAdditionalAndRememberAmpersandLocation(char16_t add);
     void bogusDoctype();
     void bogusDoctypeWithoutQuirks();
-    void emitOrAppendStrBuf(int32_t returnState);
     void handleNcrValue(int32_t returnState);
   public:
     void eof();
@@ -370,7 +367,6 @@ class nsHtml5Tokenizer
 #define NS_HTML5TOKENIZER_PROCESSING_INSTRUCTION 73
 #define NS_HTML5TOKENIZER_PROCESSING_INSTRUCTION_QUESTION_MARK 74
 #define NS_HTML5TOKENIZER_LEAD_OFFSET (0xD800 - (0x10000 >> 10))
-#define NS_HTML5TOKENIZER_BUFFER_GROW_BY 1024
 
 
 #endif

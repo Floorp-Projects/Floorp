@@ -205,9 +205,9 @@ ContentPermissionPrompt.prototype = {
     // URL.
     let notDenyAppPrincipal = function(type) {
       let url = Services.io.newURI(app.origin, null, null);
-      let principal =
-        secMan.createCodebasePrincipal(url,
-                                       {appId: request.principal.appId});
+      let principal = secMan.getAppCodebasePrincipal(url,
+                                                     request.principal.appId,
+                                                     /*mozbrowser*/false);
       let result = Services.perms.testExactPermissionFromPrincipal(principal,
                                                                    type.access);
 

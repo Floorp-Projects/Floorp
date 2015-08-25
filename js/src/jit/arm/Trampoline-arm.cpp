@@ -338,12 +338,17 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
         masm.loadPtr(Address(r11, offsetof(EnterJITStack, scopeChain)), R1.scratchReg());
     }
 
-    // The space for the return address is already reserved. Check that it is
-    // correctly aligned for a Jit frame.
-    masm.assertStackAlignment(JitStackAlignment);
+    // The Data transfer is pushing 4 words, which already account for the
+    // return address space of the Jit frame.  We have to undo what the data
+    // transfer did before making the call.
+    masm.addPtr(Imm32(sizeof(uintptr_t)), sp);
+
+    // The callee will push the return address on the stack, thus we check that
+    // the stack would be aligned once the call is complete.
+    masm.assertStackAlignment(JitStackAlignment, sizeof(uintptr_t));
 
     // Call the function.
-    masm.ma_callJitNoPush(r0);
+    masm.ma_callJitHalfPush(r0);
 
     if (type == EnterJitBaseline) {
         // Baseline OSR will return here.

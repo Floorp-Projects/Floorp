@@ -987,7 +987,8 @@ js::CombinePlainObjectPropertyTypes(ExclusiveContext* cx, JSObject* newObj,
         return true;
 
     if (newObj->is<PlainObject>()) {
-        MOZ_ASSERT(newObj->as<PlainObject>().lastProperty() == oldObj->as<PlainObject>().lastProperty());
+        if (newObj->as<PlainObject>().lastProperty() != oldObj->as<PlainObject>().lastProperty())
+            return true;
 
         for (size_t slot = 0; slot < newObj->as<PlainObject>().slotSpan(); slot++) {
             Value newValue = newObj->as<PlainObject>().getSlot(slot);

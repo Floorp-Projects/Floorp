@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Battery API</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+/** Test for Battery API **/
+navigator.getBattery().then(function (battery) {
+  ok(battery.level >= 0.0 && battery.level <= 1.0, "Battery level " + battery.level + " should be in the range [0.0, 1.0]");
+
+  SpecialPowers.pushPrefEnv({"set": [["dom.battery.test.discharging", true]]}, function () {
+    is(battery.charging, false, "Battery should be discharging");
+    is(battery.chargingTime, Infinity, "Battery chargingTime should be Infinity when discharging");
+    ok(battery.dischargingTime > 0, "Battery dischargingTime " + battery.dischargingTime + " should be positive when discharging");
+
+    SimpleTest.finish();
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>
