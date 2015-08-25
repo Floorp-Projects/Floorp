@@ -357,8 +357,6 @@ public class Tokenizer implements Locator {
 
     private int charRefBufMark;
 
-    private int prevValue;
-
     protected int value;
 
     private boolean seenDigits;
@@ -3217,7 +3215,6 @@ public class Tokenizer implements Locator {
                         break stateloop;
                     }
                     c = checkChar(buf, pos);
-                    prevValue = -1;
                     value = 0;
                     seenDigits = false;
                     /*
@@ -3269,21 +3266,18 @@ public class Tokenizer implements Locator {
                             }
                             c = checkChar(buf, pos);
                         }
-                        // Deal with overflow gracefully
-                        if (value < prevValue) {
-                            value = 0x110000; // Value above Unicode range but
-                            // within int
-                            // range
-                        }
-                        prevValue = value;
                         /*
                          * Consume as many characters as match the range of
                          * characters given above.
                          */
+                        assert value >= 0: "value must not become negative.";
                         if (c >= '0' && c <= '9') {
                             seenDigits = true;
-                            value *= 10;
-                            value += c - '0';
+                            // Avoid overflow
+                            if (value <= 0x10FFFF) {
+                                value *= 10;
+                                value += c - '0';
+                            }
                             continue;
                         } else if (c == ';') {
                             if (seenDigits) {
@@ -3350,31 +3344,34 @@ public class Tokenizer implements Locator {
                             break stateloop;
                         }
                         c = checkChar(buf, pos);
-                        // Deal with overflow gracefully
-                        if (value < prevValue) {
-                            value = 0x110000; // Value above Unicode range but
-                            // within int
-                            // range
-                        }
-                        prevValue = value;
                         /*
                          * Consume as many characters as match the range of
                          * characters given above.
                          */
+                        assert value >= 0: "value must not become negative.";
                         if (c >= '0' && c <= '9') {
                             seenDigits = true;
-                            value *= 16;
-                            value += c - '0';
+                            // Avoid overflow
+                            if (value <= 0x10FFFF) {
+                                value *= 16;
+                                value += c - '0';
+                            }
                             continue;
                         } else if (c >= 'A' && c <= 'F') {
                             seenDigits = true;
-                            value *= 16;
-                            value += c - 'A' + 10;
+                            // Avoid overflow
+                            if (value <= 0x10FFFF) {
+                                value *= 16;
+                                value += c - 'A' + 10;
+                            }
                             continue;
                         } else if (c >= 'a' && c <= 'f') {
                             seenDigits = true;
-                            value *= 16;
-                            value += c - 'a' + 10;
+                            // Avoid overflow
+                            if (value <= 0x10FFFF) {
+                                value *= 16;
+                                value += c - 'a' + 10;
+                            }
                             continue;
                         } else if (c == ';') {
                             if (seenDigits) {
@@ -6613,7 +6610,6 @@ public class Tokenizer implements Locator {
         hi = 0; // will always be overwritten before use anyway
         candidate = -1;
         charRefBufMark = 0;
-        prevValue = -1;
         value = 0;
         seenDigits = false;
         endTag = false;
@@ -6663,7 +6659,6 @@ public class Tokenizer implements Locator {
         hi = other.hi;
         candidate = other.candidate;
         charRefBufMark = other.charRefBufMark;
-        prevValue = other.prevValue;
         value = other.value;
         seenDigits = other.seenDigits;
         endTag = other.endTag;

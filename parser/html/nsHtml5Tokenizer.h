@@ -99,7 +99,6 @@ class nsHtml5Tokenizer
     int32_t hi;
     int32_t candidate;
     int32_t charRefBufMark;
-    int32_t prevValue;
   protected:
     int32_t value;
   private:
