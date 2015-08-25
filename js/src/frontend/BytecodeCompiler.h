@@ -29,7 +29,8 @@ CompileScript(ExclusiveContext* cx, LifoAlloc* alloc,
               HandleObject scopeChain, Handle<ScopeObject*> enclosingStaticScope,
               HandleScript evalCaller, const ReadOnlyCompileOptions& options,
               SourceBufferHolder& srcBuf, JSString* source_ = nullptr,
-              SourceCompressionTask* extraSct = nullptr);
+              SourceCompressionTask* extraSct = nullptr,
+              ScriptSourceObject** sourceObjectOut = nullptr);
 
 ModuleObject *
 CompileModule(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
