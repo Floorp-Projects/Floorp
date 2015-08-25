@@ -56,7 +56,7 @@
 }
 
 .identity-popup-section:not(:first-child) {
-  border-top: 1px solid ThreeDShadow;
+  border-top: 1px solid var(--panel-separator-color);
 }
 
 #identity-popup-securityView,
@@ -114,13 +114,13 @@
 .identity-popup-expander > .button-box {
   padding: 0;
   -moz-appearance: none;
-  border: solid ThreeDShadow;
-  border-width: 0 0 0 1px;
+  border-style: none;
+  border-left: 1px solid var(--panel-separator-color);
 }
 
 .identity-popup-expander:-moz-focusring > .button-box,
 .identity-popup-expander[panel-multiview-anchor] > .button-box {
-  border: 0 none;
+  border-style: none;
 }
 
 .identity-popup-expander:hover {
@@ -183,7 +183,7 @@
 }
 
 #identity-popup-securityView-header {
-  border-bottom: 1px solid ThreeDShadow;
+  border-bottom: 1px solid var(--panel-separator-color);
   padding-bottom: 1em;
   margin-bottom: 1em;
 }
@@ -223,7 +223,7 @@
 
 #identity-popup-more-info-button {
   border: none;
-  border-top: 1px solid ThreeDShadow;
+  border-top: 1px solid var(--panel-separator-color);
   background: transparent;
   -moz-appearance: none;
   margin-top: 5px;

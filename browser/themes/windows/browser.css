@@ -46,6 +46,8 @@
   --urlbar-dropmarker-2x-region: rect(0, 22px, 28px, 0);
   --urlbar-dropmarker-hover-2x-region: rect(0, 44px, 28px, 22px);
   --urlbar-dropmarker-active-2x-region: rect(0, 66px, 28px, 44px);
+
+  --panel-separator-color: ThreeDLightShadow;
 }
 
 #menubar-items {
