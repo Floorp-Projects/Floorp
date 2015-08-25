@@ -1,0 +1,21 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+CONFIGURE_SUBST_FILES += ['installer/Makefile']
+
+# These are used to localize the GeckoView Android and Gecko resources, but not
+# yet to localize the b2gdroid Android resources.
+DIRS += [
+    '../../locales',
+    '../locales',
+]
+
+DIRS += [
+    '../components',
+    '../modules',
+    '../javaaddons',
+    '../base',
+    '../fonts',
+    '../geckoview_library',
+]

@@ -1,0 +1,86 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+STANDALONE_MAKEFILE := 1
+
+# overwrite mobile-l10n.js with a matchOS=true one for multi-locale builds
+ifeq ($(AB_CD),multi)
+L10N_PREF_JS_EXPORTS = $(srcdir)/mobile-l10n.js
+L10N_PREF_JS_EXPORTS_PATH = $(FINAL_TARGET)/$(PREF_DIR)
+L10N_PREF_JS_EXPORTS_FLAGS = $(PREF_PPFLAGS) --silence-missing-directive-warnings
+PP_TARGETS += L10N_PREF_JS_EXPORTS
+endif
+
+include $(topsrcdir)/config/rules.mk
+
+MOZ_PKG_REMOVALS = $(srcdir)/removed-files.in
+
+MOZ_PKG_MANIFEST_P = $(srcdir)/package-manifest.in
+
+DEFINES += \
+  -DMOZ_APP_NAME=$(MOZ_APP_NAME) \
+  -DPREF_DIR=$(PREF_DIR) \
+  -DJAREXT= \
+  -DMOZ_CHILD_PROCESS_NAME=$(MOZ_CHILD_PROCESS_NAME) \
+  -DMOZ_CHILD_PROCESS_NAME_PIE=$(MOZ_CHILD_PROCESS_NAME_PIE) \
+  -DANDROID_CPU_ARCH=$(ANDROID_CPU_ARCH) \
+  $(NULL)
+
+ifdef MOZ_DEBUG
+DEFINES += -DMOZ_DEBUG=1
+endif
+
+ifdef MOZ_PKG_MANIFEST_P
+MOZ_PKG_MANIFEST = package-manifest
+endif
+
+MOZ_PACKAGER_MINIFY=1
+
+include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
+
+# Note that JS_BINARY can be defined in packager.mk, so this test must come
+# after including that file. MOZ_PACKAGER_MINIFY_JS is used in packager.mk, but
+# since recipe evaluation is deferred, we can set it here after the inclusion.
+ifneq (,$(JS_BINARY))
+ifndef MOZ_DEBUG
+ifndef NIGHTLY_BUILD
+MOZ_PACKAGER_MINIFY_JS=1
+endif
+endif
+endif
+
+ifeq (bundle, $(MOZ_FS_LAYOUT))
+BINPATH = $(_BINPATH)
+DEFINES += -DAPPNAME=$(_APPNAME)
+else
+# Every other platform just winds up in dist/bin
+BINPATH = bin
+endif
+DEFINES += -DBINPATH=$(BINPATH)
+
+ifdef ENABLE_MARIONETTE
+DEFINES += -DENABLE_MARIONETTE=1
+endif
+
+ifdef MOZ_PKG_MANIFEST_P
+# When MOZ_CHROME_MULTILOCALE is defined, we write multilocale.json like:
+# {"locales": ["en-US", "de", "ar", ...]}
+
+$(MOZ_PKG_MANIFEST): $(MOZ_PKG_MANIFEST_P) $(GLOBAL_DEPS) FORCE
+	$(call py_action,preprocessor,$(DEFINES) $(ACDEFINES) $< -o $@)
+ifdef MOZ_CHROME_MULTILOCALE
+	printf '\n[multilocale]\n' >> $@
+	printf '@BINPATH@/res/multilocale.json\n' >> $@
+	for LOCALE in en-US $(MOZ_CHROME_MULTILOCALE) ;\
+	do \
+	  printf '$(BINPATH)/chrome/'"$$LOCALE"'$(JAREXT)\n' >> $@; \
+	  printf '$(BINPATH)/chrome/'"$$LOCALE"'.manifest\n' >> $@; \
+	done
+	COMMA=,
+	echo '{"locales": [$(foreach l,$(MOZ_CHROME_MULTILOCALE),"$(l)"$(COMMA)) "en-US"]}' \
+	  > $(FINAL_TARGET)/res/multilocale.json
+endif
+
+GARBAGE += $(MOZ_PKG_MANIFEST)
+endif
