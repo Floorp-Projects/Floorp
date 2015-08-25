@@ -457,7 +457,7 @@ nsPerformanceStatsService::nsPerformanceStatsService()
 {
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
-    mozilla::unused << obs->AddObserver(this, "profile-before-shutdown", false);
+    mozilla::unused << obs->AddObserver(this, "profile-before-change", false);
   }
 }
 
@@ -530,7 +530,7 @@ NS_IMETHODIMP nsPerformanceStatsService::Observe(nsISupports *, const char *, co
   // Upload telemetry
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
-    mozilla::unused << obs->RemoveObserver(this, "profile-before-shutdown");
+    mozilla::unused << obs->RemoveObserver(this, "profile-before-change");
   }
 
   if (mProcessStayed + mProcessMoved == 0) {
