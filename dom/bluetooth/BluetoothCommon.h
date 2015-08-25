@@ -33,9 +33,6 @@ extern bool gBluetoothDebugFlag;
   out_
 #endif
 
-#define CONVERT(in_, out_) \
-  INIT_ARRAY_AT(in_, out_)
-
 #undef BT_LOG
 #if defined(MOZ_WIDGET_GONK)
 #include <android/log.h>
