@@ -453,6 +453,7 @@ private:
 
   nsresult AttemptAsyncScriptParse(nsScriptLoadRequest* aRequest);
   nsresult ProcessRequest(nsScriptLoadRequest* aRequest);
+  nsresult ParseOffThreadOrProcessRequest(nsScriptLoadRequest* aRequest);
   void FireScriptAvailable(nsresult aResult,
                            nsScriptLoadRequest* aRequest);
   void FireScriptEvaluated(nsresult aResult,
