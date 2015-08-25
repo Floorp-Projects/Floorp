@@ -18,6 +18,10 @@ UNIFIED_SOURCES += [
 
 FINAL_LIBRARY = 'xul'
 
+if CONFIG['GNU_CC']:
+    CFLAGS += ['-Wshadow']
+    CXXFLAGS += ['-Wshadow']
+
 FAIL_ON_WARNINGS = True
 
 with Files('**'):

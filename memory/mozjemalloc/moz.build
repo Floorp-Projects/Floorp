@@ -42,3 +42,5 @@ LOCAL_INCLUDES += [
     '/memory/build',
 ]
 
+if CONFIG['GNU_CC']:
+    CFLAGS += ['-Wshadow']

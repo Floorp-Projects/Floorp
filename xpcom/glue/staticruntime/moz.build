@@ -36,6 +36,9 @@ USE_STATIC_LIBS = True
 # Don't use STL wrappers here (i.e. wrapped <new>); they require mozalloc
 DISABLE_STL_WRAPPING = True
 
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']
+
 FAIL_ON_WARNINGS = True
 
 # Include fallible for third party code using the xpcom glue
