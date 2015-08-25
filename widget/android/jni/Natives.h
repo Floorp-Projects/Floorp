@@ -147,7 +147,7 @@ struct NativePtr<Impl, /* UseWeakPtr = */ true>
     }
 
     template<class LocalRef>
-    static void Set(const LocalRef& instance, SupportsWeakPtr<Impl>* ptr)
+    static void Set(const LocalRef& instance, Impl* ptr)
     {
         Clear(instance);
         SetNativeHandle(instance.Env(), instance.Get(),
@@ -171,6 +171,8 @@ struct NativePtr<Impl, /* UseWeakPtr = */ true>
 };
 
 } // namespace
+
+template<class Cls, class Impl> class NativeImpl;
 
 namespace detail {
 
@@ -257,6 +259,19 @@ public:
         }
         auto self = Owner::LocalRef::Adopt(env, instance);
         (impl->*Method)(self, TypeAdapter<Args>::ToNative(env, args)...);
+        self.Forget();
+    }
+
+    // Overload for DisposeNative
+    template<void (NativeImpl<Owner, Impl>::*Method) (const typename Owner::LocalRef&)>
+    static void Wrap(JNIEnv* env, jobject instance)
+    {
+        Impl* const impl = NativePtr<Impl>::Get(env, instance);
+        if (!impl) {
+            return;
+        }
+        auto self = Owner::LocalRef::Adopt(env, instance);
+        (impl->*Method)(self);
         self.Forget();
     }
 };
@@ -369,7 +384,7 @@ protected:
     {
         static_assert(mozilla::IsBaseOf<SupportsWeakPtr<Impl>, Impl>::value,
                       "Attach with UniquePtr&& when not using WeakPtr");
-        return NativePtr<Impl>::Set(instance, ptr);
+        return NativePtr<Impl>::Set(instance, static_cast<Impl*>(ptr));
     }
 
     static void AttachNative(const typename Cls::LocalRef& instance,
