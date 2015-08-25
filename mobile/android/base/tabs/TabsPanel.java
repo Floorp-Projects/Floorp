@@ -372,7 +372,6 @@ public class TabsPanel extends LinearLayout
         mPanel.show();
 
         mAddTab.setVisibility(View.VISIBLE);
-        mAddTab.setImageLevel(index);
 
         if (!HardwareUtils.hasMenuButton()) {
             mMenuButton.setVisibility(View.VISIBLE);
