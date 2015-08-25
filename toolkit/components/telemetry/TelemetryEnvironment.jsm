@@ -684,6 +684,7 @@ function EnvironmentCache() {
     this._startWatchingPrefs();
     this._addonBuilder.watchForChanges();
     this._addObservers();
+    this._updateGraphicsFeatures();
     return this.currentEnvironment;
   };
 
@@ -850,7 +851,7 @@ EnvironmentCache.prototype = {
         // Full graphics information is not available until we have created at
         // least one off-main-thread-composited window. Thus we wait for the
         // first compositor to be created and then query nsIGfxInfo again.
-        this._onCompositorCreated();
+        this._updateGraphicsFeatures();
         break;
     }
   },
@@ -921,7 +922,7 @@ EnvironmentCache.prototype = {
   /**
    * Update the graphics features object.
    */
-  _onCompositorCreated: function () {
+  _updateGraphicsFeatures: function () {
     let gfxData = this._currentEnvironment.system.gfx;
     try {
       let gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
