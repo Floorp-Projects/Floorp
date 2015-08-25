@@ -223,11 +223,6 @@ nsHtml5Tokenizer::emitOrAppendCharRefBuf(int32_t returnState)
 void 
 nsHtml5Tokenizer::appendStrBuf(char16_t c)
 {
-  if (strBufLen == strBuf.length) {
-    jArray<char16_t,int32_t> newBuf = jArray<char16_t,int32_t>::newJArray(strBuf.length + NS_HTML5TOKENIZER_BUFFER_GROW_BY);
-    nsHtml5ArrayCopy::arraycopy(strBuf, newBuf, strBuf.length);
-    strBuf = newBuf;
-  }
   strBuf[strBufLen++] = c;
 }
 
@@ -374,6 +369,7 @@ nsHtml5Tokenizer::tokenizeBuffer(nsHtml5UTF16Buffer* buffer)
   shouldSuspend = false;
   lastCR = false;
   int32_t start = buffer->getStart();
+  int32_t end = buffer->getEnd();
   int32_t pos = start - 1;
   switch(state) {
     case NS_HTML5TOKENIZER_DATA:
@@ -408,7 +404,7 @@ nsHtml5Tokenizer::tokenizeBuffer(nsHtml5UTF16Buffer* buffer)
   } else {
     pos = stateLoop<nsHtml5SilentPolicy>(state, c, pos, buffer->getBuffer(), false, returnState, buffer->getEnd());
   }
-  if (pos == buffer->getEnd()) {
+  if (pos == end) {
     buffer->setStart(pos);
   } else {
     buffer->setStart(pos + 1);
@@ -4045,7 +4041,7 @@ void
 nsHtml5Tokenizer::initializeWithoutStarting()
 {
   confident = false;
-  strBuf = jArray<char16_t,int32_t>::newJArray(1024);
+  strBuf = nullptr;
   line = 1;
   resetToDataState();
 }

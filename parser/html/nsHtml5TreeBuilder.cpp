@@ -88,7 +88,7 @@ nsHtml5TreeBuilder::startTokenization(nsHtml5Tokenizer* self)
   deepTreeSurrogateParent = nullptr;
   start(fragment);
   charBufferLen = 0;
-  charBuffer = jArray<char16_t,int32_t>::newJArray(1024);
+  charBuffer = nullptr;
   framesetOk = true;
   if (fragment) {
     nsIContentHandle* elt;

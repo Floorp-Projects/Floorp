@@ -370,6 +370,9 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
         lineNumberSave = mTokenizer->getLineNumber();
       }
 
+      if (!mTokenizer->EnsureBufferSpace(stackBuffer.getLength())) {
+        return mExecutor->MarkAsBroken(NS_ERROR_OUT_OF_MEMORY);
+      }
       mLastWasCR = mTokenizer->tokenizeBuffer(&stackBuffer);
 
       if (inRootContext) {
@@ -476,6 +479,10 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
     while (stackBuffer.hasMore()) {
       stackBuffer.adjust(mDocWriteSpeculativeLastWasCR);
       if (stackBuffer.hasMore()) {
+        if (!mDocWriteSpeculativeTokenizer->EnsureBufferSpace(
+            stackBuffer.getLength())) {
+          return mExecutor->MarkAsBroken(NS_ERROR_OUT_OF_MEMORY);
+        }
         mDocWriteSpeculativeLastWasCR =
             mDocWriteSpeculativeTokenizer->tokenizeBuffer(&stackBuffer);
       }
@@ -613,16 +620,19 @@ nsHtml5Parser::ParseUntilBlocked()
           return NS_OK;
         }
         if (mDocumentClosed) {
+          nsresult rv;
           NS_ASSERTION(!GetStreamParser(),
                        "This should only happen with script-created parser.");
-          mTokenizer->eof();
-          mTreeBuilder->StreamEnded();
+          if (NS_SUCCEEDED((rv = mExecutor->IsBroken()))) {
+            mTokenizer->eof();
+            mTreeBuilder->StreamEnded();
+          }
           mTreeBuilder->Flush();
           mExecutor->FlushDocumentWrite();
           // The below call does memory cleanup, so call it even if the
           // parser has been marked as broken.
           mTokenizer->end();
-          return NS_OK;
+          return rv;
         }
         // never release the last buffer.
         NS_ASSERTION(!mLastBuffer->getStart() && !mLastBuffer->getEnd(),
@@ -661,6 +671,9 @@ nsHtml5Parser::ParseUntilBlocked()
       bool inRootContext = (!GetStreamParser() && !mFirstBuffer->key);
       if (inRootContext) {
         mTokenizer->setLineNumber(mRootContextLineNumber);
+      }
+      if (!mTokenizer->EnsureBufferSpace(mFirstBuffer->getLength())) {
+        return mExecutor->MarkAsBroken(NS_ERROR_OUT_OF_MEMORY);
       }
       mLastWasCR = mTokenizer->tokenizeBuffer(mFirstBuffer);
       if (inRootContext) {
