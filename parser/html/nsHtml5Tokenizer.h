@@ -157,11 +157,6 @@ class nsHtml5Tokenizer
   private:
     inline void appendCharRefBuf(char16_t c)
     {
-      if (charRefBufLen == charRefBuf.length) {
-        jArray<char16_t,int32_t> newBuf = jArray<char16_t,int32_t>::newJArray(charRefBuf.length + NS_HTML5TOKENIZER_BUFFER_GROW_BY);
-        nsHtml5ArrayCopy::arraycopy(charRefBuf, newBuf, charRefBuf.length);
-        charRefBuf = newBuf;
-      }
       charRefBuf[charRefBufLen++] = c;
     }
 

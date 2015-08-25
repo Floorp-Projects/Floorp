@@ -91,6 +91,7 @@ staticJArray<char16_t,int32_t> nsHtml5Tokenizer::NOFRAMES_ARR = { NOFRAMES_ARR_D
 nsHtml5Tokenizer::nsHtml5Tokenizer(nsHtml5TreeBuilder* tokenHandler, bool viewingXmlSource)
   : tokenHandler(tokenHandler),
     encodingDeclarationHandler(nullptr),
+    charRefBuf(jArray<char16_t,int32_t>::newJArray(32)),
     bmpChar(jArray<char16_t,int32_t>::newJArray(1)),
     astralChar(jArray<char16_t,int32_t>::newJArray(2)),
     tagName(nullptr),
@@ -3899,7 +3900,6 @@ void
 nsHtml5Tokenizer::end()
 {
   strBuf = nullptr;
-  charRefBuf = nullptr;
   doctypeName = nullptr;
   if (systemIdentifier) {
     nsHtml5Portability::releaseString(systemIdentifier);
@@ -3981,9 +3981,6 @@ nsHtml5Tokenizer::loadState(nsHtml5Tokenizer* other)
   }
   nsHtml5ArrayCopy::arraycopy(other->strBuf, strBuf, strBufLen);
   charRefBufLen = other->charRefBufLen;
-  if (charRefBufLen > charRefBuf.length) {
-    charRefBuf = jArray<char16_t,int32_t>::newJArray(charRefBufLen);
-  }
   nsHtml5ArrayCopy::arraycopy(other->charRefBuf, charRefBuf, charRefBufLen);
   stateSave = other->stateSave;
   returnStateSave = other->returnStateSave;
@@ -4049,7 +4046,6 @@ nsHtml5Tokenizer::initializeWithoutStarting()
 {
   confident = false;
   strBuf = jArray<char16_t,int32_t>::newJArray(1024);
-  charRefBuf = jArray<char16_t,int32_t>::newJArray(64);
   line = 1;
   resetToDataState();
 }
