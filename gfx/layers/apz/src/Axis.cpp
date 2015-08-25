@@ -415,14 +415,13 @@ bool Axis::CanScroll() const {
   return GetPageLength() - GetCompositionLength() > COORDINATE_EPSILON;
 }
 
-bool Axis::CanScroll(double aDelta) const
+bool Axis::CanScroll(ParentLayerCoord aDelta) const
 {
   if (!CanScroll() || mAxisLocked) {
     return false;
   }
 
-  ParentLayerCoord delta = aDelta;
-  return DisplacementWillOverscrollAmount(delta) != delta;
+  return DisplacementWillOverscrollAmount(aDelta) != aDelta;
 }
 
 CSSCoord Axis::ClampOriginToScrollableRect(CSSCoord aOrigin) const
