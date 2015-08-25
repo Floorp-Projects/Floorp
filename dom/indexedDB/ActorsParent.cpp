@@ -18519,6 +18519,12 @@ FactoryOp::CheckAtLeastOneAppHasPermission(ContentParent* aContentParent,
       return false;
     }
 
+    nsCOMPtr<nsIScriptSecurityManager> secMan =
+      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
+    if (NS_WARN_IF(!secMan)) {
+      return false;
+    }
+
     nsCOMPtr<nsIPermissionManager> permMan =
       mozilla::services::GetPermissionManager();
     if (NS_WARN_IF(!permMan)) {
@@ -18542,9 +18548,24 @@ FactoryOp::CheckAtLeastOneAppHasPermission(ContentParent* aContentParent,
         return false;
       }
 
+      nsString origin;
+      rv = app->GetOrigin(origin);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return false;
+      }
+
+      nsCOMPtr<nsIURI> uri;
+      rv = NS_NewURI(getter_AddRefs(uri), origin, nullptr, nullptr, ioService);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return false;
+      }
+
       nsCOMPtr<nsIPrincipal> principal;
-      app->GetPrincipal(getter_AddRefs(principal));
-      NS_ENSURE_TRUE(principal, false);
+      rv = secMan->GetAppCodebasePrincipal(uri, appId, false,
+                                           getter_AddRefs(principal));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return false;
+      }
 
       uint32_t permission;
       rv = permMan->TestExactPermissionFromPrincipal(principal,

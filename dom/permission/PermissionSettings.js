@@ -35,14 +35,10 @@ XPCOMUtils.defineLazyServiceGetter(this,
 
 PermissionSettings.prototype = {
   get: function get(aPermName, aManifestURL, aOrigin, aBrowserFlag) {
-    // TODO: Bug 1196644 - Add signPKg parameter into PermissionSettings.js
     debug("Get called with: " + aPermName + ", " + aManifestURL + ", " + aOrigin + ", " + aBrowserFlag);
     let uri = Services.io.newURI(aOrigin, null, null);
     let appID = appsService.getAppLocalIdByManifestURL(aManifestURL);
-    let principal =
-      Services.scriptSecurityManager.createCodebasePrincipal(uri,
-                                                             {appId: appID,
-                                                              inBrowser: aBrowserFlag});
+    let principal = Services.scriptSecurityManager.getAppCodebasePrincipal(uri, appID, aBrowserFlag);
     let result = Services.perms.testExactPermanentPermission(principal, aPermName);
 
     switch (result)
@@ -63,12 +59,11 @@ PermissionSettings.prototype = {
 
   isExplicit: function isExplicit(aPermName, aManifestURL, aOrigin,
                                   aBrowserFlag) {
-    // TODO: Bug 1196644 - Add signPKg parameter into PermissionSettings.js
     debug("isExplicit: " + aPermName + ", " + aManifestURL + ", " + aOrigin);
     let uri = Services.io.newURI(aOrigin, null, null);
     let app = appsService.getAppByManifestURL(aManifestURL);
     let principal = Services.scriptSecurityManager
-      .createCodebasePrincipal(uri, {appId: app.localId, inBrowser: aBrowserFlag});
+      .getAppCodebasePrincipal(uri, app.localId, aBrowserFlag);
 
     return isExplicitInPermissionsTable(aPermName,
                                         principal.appStatus,
@@ -104,13 +99,9 @@ PermissionSettings.prototype = {
   },
 
   remove: function remove(aPermName, aManifestURL, aOrigin) {
-    // TODO: Bug 1196644 - Add signPKg parameter into PermissionSettings.js
     let uri = Services.io.newURI(aOrigin, null, null);
     let appID = appsService.getAppLocalIdByManifestURL(aManifestURL);
-    let principal =
-      Services.scriptSecurityManager.createCodebasePrincipal(uri,
-                                                             {appId: appID,
-                                                              inBrowser: true});
+    let principal = Services.scriptSecurityManager.getAppCodebasePrincipal(uri, appID, true);
 
     if (principal.appStatus !== Ci.nsIPrincipal.APP_STATUS_NOT_INSTALLED) {
       let errorMsg = "PermissionSettings.js: '" + aOrigin + "'" +

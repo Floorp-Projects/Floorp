@@ -17,6 +17,7 @@
 #include "nsNetUtil.h"
 #include "nsISupportsPriority.h"
 #include "nsIAuthPromptProvider.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsSerializationHelper.h"
 #include "nsISerializable.h"
 #include "nsIAssociatedContentSecurity.h"
@@ -33,10 +34,7 @@
 #include "mozilla/LoadInfo.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsQueryObject.h"
-#include "mozilla/BasePrincipal.h"
 
-using mozilla::BasePrincipal;
-using mozilla::OriginAttributes;
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
 
@@ -458,15 +456,17 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
         mLoadContext->GetIsInBrowserElement(&inBrowser);
       }
 
-      // TODO: Bug 1165466 - use originAttribute in nsILoadContext.
-      OriginAttributes attrs(appId, inBrowser);
-      nsCOMPtr<nsIPrincipal> principal =
-        BasePrincipal::CreateCodebasePrincipal(uri, attrs);
-
       bool chooseAppCache = false;
-      // This works because we've already called SetNotificationCallbacks and
-      // done mPBOverride logic by this point.
-      chooseAppCache = NS_ShouldCheckAppCache(principal, NS_UsePrivateBrowsing(mChannel));
+      nsCOMPtr<nsIScriptSecurityManager> secMan =
+        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
+      if (secMan) {
+        nsCOMPtr<nsIPrincipal> principal;
+        secMan->GetAppCodebasePrincipal(uri, appId, inBrowser, getter_AddRefs(principal));
+
+        // This works because we've already called SetNotificationCallbacks and
+        // done mPBOverride logic by this point.
+        chooseAppCache = NS_ShouldCheckAppCache(principal, NS_UsePrivateBrowsing(mChannel));
+      }
 
       appCacheChan->SetChooseApplicationCache(chooseAppCache);
     }
