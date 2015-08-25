@@ -42,6 +42,8 @@
   --urlbar-dropmarker-2x-url: url("chrome://browser/skin/urlbar-history-dropmarker@2x.png");
   --urlbar-dropmarker-2x-region: rect(0, 22px, 28px, 0);
   --urlbar-dropmarker-active-2x-region: rect(0, 44px, 28px, 22px);
+
+  --panel-separator-color: hsla(210,4%,10%,.14);
 }
 
 #urlbar:-moz-lwtheme:not([focused="true"]),

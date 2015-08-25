@@ -33,6 +33,8 @@
   --toolbarbutton-combined-backgroundimage: linear-gradient(hsla(210,54%,20%,.2) 0, hsla(210,54%,20%,.2) 18px);
 
   --verified-identity-box-backgroundcolor: #fff;
+
+  --panel-separator-color: ThreeDShadow;
 }
 
 #menubar-items {
