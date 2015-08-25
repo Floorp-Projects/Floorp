@@ -3816,6 +3816,14 @@ nsWindow::Create(nsIWidget        *aParent,
     if (!mIsTopLevel)
         Resize(mBounds.x, mBounds.y, mBounds.width, mBounds.height, false);
 
+#ifdef MOZ_X11
+    if (mGdkWindow) {
+      // force creation of native window via internal call to gdk_window_ensure_native
+      // in case it was not created already
+      gdk_x11_window_get_xid(mGdkWindow);
+    }
+#endif
+
     return NS_OK;
 }
 
