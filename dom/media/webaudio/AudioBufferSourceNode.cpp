@@ -113,14 +113,24 @@ public:
     switch (aIndex) {
     case AudioBufferSourceNode::SAMPLE_RATE: mBufferSampleRate = aParam; break;
     case AudioBufferSourceNode::BUFFERSTART:
+      MOZ_ASSERT(aParam >= 0);
       if (mBufferPosition == 0) {
         mBufferPosition = aParam;
       }
       break;
-    case AudioBufferSourceNode::BUFFEREND: mBufferEnd = aParam; break;
+    case AudioBufferSourceNode::BUFFEREND:
+      MOZ_ASSERT(aParam >= 0);
+      mBufferEnd = aParam;
+      break;
     case AudioBufferSourceNode::LOOP: mLoop = !!aParam; break;
-    case AudioBufferSourceNode::LOOPSTART: mLoopStart = aParam; break;
-    case AudioBufferSourceNode::LOOPEND: mLoopEnd = aParam; break;
+    case AudioBufferSourceNode::LOOPSTART:
+      MOZ_ASSERT(aParam >= 0);
+      mLoopStart = aParam;
+      break;
+    case AudioBufferSourceNode::LOOPEND:
+      MOZ_ASSERT(aParam >= 0);
+      mLoopEnd = aParam;
+      break;
     default:
       NS_ERROR("Bad AudioBufferSourceNodeEngine Int32Parameter");
     }
@@ -227,7 +237,7 @@ public:
                                          uint32_t* aOffsetWithinBlock,
                                          uint32_t aAvailableInOutput,
                                          StreamTime* aCurrentPosition,
-                                         int32_t aBufferMax)
+                                         uint32_t aBufferMax)
   {
     if (*aOffsetWithinBlock == 0) {
       aOutput->AllocateChannels(aChannels);
@@ -305,8 +315,8 @@ public:
                          static_cast<AudioDataValue*>(nullptr), &inSamples,
                          outputData, &outSamples);
         if (++i == aChannels) {
+          MOZ_ASSERT(inSamples <= mRemainingResamplerTail);
           mRemainingResamplerTail -= inSamples;
-          MOZ_ASSERT(mRemainingResamplerTail >= 0);
           *aOffsetWithinBlock += outSamples;
           *aCurrentPosition += outSamples;
           break;
@@ -359,7 +369,7 @@ public:
                       uint32_t aChannels,
                       uint32_t* aOffsetWithinBlock,
                       StreamTime* aCurrentPosition,
-                      int32_t aBufferMax)
+                      uint32_t aBufferMax)
   {
     MOZ_ASSERT(*aCurrentPosition < mStop);
     uint32_t availableInOutput =
@@ -392,8 +402,8 @@ public:
       return;
     }
 
-    uint32_t numFrames = std::min<uint32_t>(aBufferMax - mBufferPosition,
-                                            availableInOutput);
+    uint32_t numFrames = std::min(aBufferMax - mBufferPosition,
+                                  availableInOutput);
     if (numFrames == WEBAUDIO_BLOCK_SIZE) {
       MOZ_ASSERT(mBufferPosition < aBufferMax);
       BorrowFromInputBuffer(aOutput, aChannels);
@@ -534,11 +544,11 @@ public:
   SpeexResamplerState* mResampler;
   // mRemainingResamplerTail, like mBufferPosition, and
   // mBufferEnd, is measured in input buffer samples.
-  int mRemainingResamplerTail;
-  int32_t mBufferEnd;
-  int32_t mLoopStart;
-  int32_t mLoopEnd;
-  int32_t mBufferPosition;
+  uint32_t mRemainingResamplerTail;
+  uint32_t mBufferEnd;
+  uint32_t mLoopStart;
+  uint32_t mLoopEnd;
+  uint32_t mBufferPosition;
   int32_t mBufferSampleRate;
   int32_t mResamplerOutRate;
   uint32_t mChannels;
