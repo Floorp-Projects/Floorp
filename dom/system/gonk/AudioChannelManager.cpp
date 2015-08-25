@@ -25,11 +25,9 @@ NS_IMPL_ADDREF_INHERITED(AudioChannelManager, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(AudioChannelManager, DOMEventTargetHelper)
 
 AudioChannelManager::AudioChannelManager()
-  : mState(SWITCH_STATE_UNKNOWN)
-  , mVolumeChannel(-1)
+  : mVolumeChannel(-1)
 {
   RegisterSwitchObserver(SWITCH_HEADPHONES, this);
-  mState = GetCurrentSwitchState(SWITCH_HEADPHONES);
 }
 
 AudioChannelManager::~AudioChannelManager()
@@ -68,7 +66,7 @@ AudioChannelManager::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProt
 void
 AudioChannelManager::Notify(const SwitchEvent& aEvent)
 {
-  mState = aEvent.status();
+  mState = Some(aEvent.status());
 
   DispatchTrustedEvent(NS_LITERAL_STRING("headphoneschange"));
 }

@@ -128,9 +128,9 @@ BluetoothDeviceType
 BluetoothDevice::ConvertUint32ToDeviceType(const uint32_t aValue)
 {
   static const BluetoothDeviceType sDeviceType[] = {
-    CONVERT(TYPE_OF_DEVICE_BREDR, BluetoothDeviceType::Classic),
-    CONVERT(TYPE_OF_DEVICE_BLE, BluetoothDeviceType::Le),
-    CONVERT(TYPE_OF_DEVICE_DUAL, BluetoothDeviceType::Dual),
+    [TYPE_OF_DEVICE_BREDR] = BluetoothDeviceType::Classic,
+    [TYPE_OF_DEVICE_BLE] = BluetoothDeviceType::Le,
+    [TYPE_OF_DEVICE_DUAL] = BluetoothDeviceType::Dual,
   };
 
   BluetoothTypeOfDevice type = static_cast<BluetoothTypeOfDevice>(aValue);

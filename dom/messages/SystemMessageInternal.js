@@ -273,7 +273,7 @@ SystemMessageInternal.prototype = {
                                    type: aType,
                                    msg: aMessage,
                                    extra: aExtra });
-      return;
+      return Promise.resolve();
     }
 
     // Give this message an ID so that we can identify the message and
@@ -285,37 +285,50 @@ SystemMessageInternal.prototype = {
 
     let shouldDispatchFunc = this._getMessageConfigurator(aType).shouldDispatch;
 
-    // Find pages that registered an handler for this type.
-    this._pages.forEach(function(aPage) {
-      if (aPage.type !== aType) {
-        return;
-      }
+    if (!this._pages.length) {
+      return Promise.resolve();
+    }
 
-      let doDispatch = () => {
-        let result = this._sendMessageCommon(aType,
-                                             aMessage,
-                                             messageID,
-                                             aPage.pageURL,
-                                             aPage.manifestURL,
-                                             aExtra);
-        debug("Returned status of sending message: " + result);
-      };
-
-      if ('function' !== typeof shouldDispatchFunc) {
-        // If the configurator has no 'shouldDispatch' defined,
-        // always dispatch this message.
-        doDispatch();
-        return;
-      }
-
-      shouldDispatchFunc(aPage.manifestURL, aPage.pageURL, aType, aMessage, aExtra)
-        .then(aShouldDispatch => {
-          if (aShouldDispatch) {
-            doDispatch();
+    // Find pages that registered a handler for this type.
+    let promises = [];
+    for (let i = 0; i < this._pages.length; i++) {
+      let promise = ((page) => {
+        return new Promise((resolve, reject) => {
+          if (page.type !== aType) {
+            resolve();
+            return;
           }
-        });
 
-    }, this);
+          let doDispatch = () => {
+            let result = this._sendMessageCommon(aType,
+                                                 aMessage,
+                                                 messageID,
+                                                 page.pageURL,
+                                                 page.manifestURL,
+                                                 aExtra);
+            debug("Returned status of sending message: " + result);
+            resolve();
+          };
+
+          if ('function' !== typeof shouldDispatchFunc) {
+            // If the configurator has no 'shouldDispatch' defined,
+            // always dispatch this message.
+            doDispatch();
+            return;
+          }
+
+          shouldDispatchFunc(page.manifestURL, page.pageURL, aType, aMessage, aExtra)
+            .then(aShouldDispatch => {
+              if (aShouldDispatch) {
+                doDispatch();
+              }
+            });
+        });
+      })(this._pages[i]);
+      promises.push(promise);
+    }
+
+    return Promise.all(promises);
   },
 
   registerPage: function(aType, aPageURI, aManifestURI) {
