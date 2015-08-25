@@ -75,6 +75,9 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'version',
     ]
 
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']
+
 FAIL_ON_WARNINGS = True
 
 JS_PREFERENCE_FILES += [
