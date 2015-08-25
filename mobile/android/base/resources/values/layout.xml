@@ -4,13 +4,10 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <resources>
-    <item type="layout" name="tabs_layout_item_view">@layout/tabs_item_row</item>
-
     <!-- These items are v11+ resources but are referenced in code shipped with
          API 9 builds. Since v11+ resources don't ship on API 9 builds, in order
          for the resource ID to be found (and thus compilation to succeed), we
          provide dummy values below. -->
     <item type="layout" name="tab_strip">@null</item>
-    <item type="layout" name="tablet_tabs_item_cell">@null</item>
     <item type="layout" name="tabs_panel_back_button">@null</item>
 </resources>
