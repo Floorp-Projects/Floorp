@@ -272,14 +272,17 @@ loop.OTSdkDriver = (function() {
       }));
 
       if (this.session) {
-        this.session.off("sessionDisconnected streamCreated streamDestroyed connectionCreated connectionDestroyed streamPropertyChanged");
+        this.session.off("sessionDisconnected streamCreated streamDestroyed " +
+                         "connectionCreated connectionDestroyed " +
+                         "streamPropertyChanged signal:readyForDataChannel");
         this.session.disconnect();
         delete this.session;
 
         this._notifyMetricsEvent("Session.connectionDestroyed", "local");
       }
       if (this.publisher) {
-        this.publisher.off("accessAllowed accessDenied accessDialogOpened streamCreated");
+        this.publisher.off("accessAllowed accessDenied accessDialogOpened " +
+                           "streamCreated streamDestroyed");
         this.publisher.destroy();
         delete this.publisher;
       }
