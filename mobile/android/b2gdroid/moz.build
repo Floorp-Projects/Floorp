@@ -22,4 +22,8 @@ DIRS += [
     '/b2g/components',
     '/b2g/chrome',
     '/b2g/gaia',
+    # We must build the libs target of app after building the libs target of
+    # /b2g/gaia, since the gaia directory is packed into the APK as an assets/
+    # directory.  This relies on the serial nature of the libs tier recursion.
+    'app',
 ]
