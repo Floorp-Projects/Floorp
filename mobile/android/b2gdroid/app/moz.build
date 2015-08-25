@@ -23,3 +23,7 @@ ANDROID_ASSETS_DIRS += [
 # the transitive set of resource classes.  For now, let's assume that b2gdroid
 # will not induce accesses to other package's resources at runtime.
 ANDROID_EXTRA_PACKAGES += ['org.mozilla.gecko']
+
+JS_PREFERENCE_FILES += [
+     'b2gdroid.js',
+]

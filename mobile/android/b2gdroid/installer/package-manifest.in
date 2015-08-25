@@ -42,6 +42,7 @@
 @BINPATH@/@DLL_PREFIX@plds4@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@nspr4@DLL_SUFFIX@
 #endif
+@BINPATH@/@DLL_PREFIX@lgpllibs@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@omxplugin@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@omxplugingb@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@omxplugingb235@DLL_SUFFIX@
@@ -131,6 +132,7 @@
 @BINPATH@/components/content_webrtc.xpt
 @BINPATH@/components/content_xslt.xpt
 @BINPATH@/components/cookie.xpt
+@BINPATH@/components/devtools_security.xpt
 @BINPATH@/components/directory.xpt
 @BINPATH@/components/docshell.xpt
 @BINPATH@/components/dom.xpt
@@ -240,9 +242,7 @@
 @BINPATH@/components/saxparser.xpt
 @BINPATH@/components/sessionstore.xpt
 @BINPATH@/components/services-crypto-component.xpt
-#ifdef MOZ_CAPTIVEDETECT
 @BINPATH@/components/captivedetect.xpt
-#endif
 @BINPATH@/components/shellservice.xpt
 @BINPATH@/components/shistory.xpt
 @BINPATH@/components/spellchecker.xpt
@@ -321,6 +321,8 @@
 @BINPATH@/components/BrowserComponents.manifest
 @BINPATH@/components/nsBrowserContentHandler.js
 @BINPATH@/components/nsBrowserGlue.js
+@BINPATH@/components/nsDNSServiceDiscovery.manifest
+@BINPATH@/components/nsDNSServiceDiscovery.js
 @BINPATH@/components/nsSetDefaultBrowser.manifest
 @BINPATH@/components/nsSetDefaultBrowser.js
 @BINPATH@/components/toolkitsearch.manifest
@@ -438,10 +440,8 @@
 @BINPATH@/components/HealthReportService.js
 #endif
 
-#ifdef MOZ_CAPTIVEDETECT
 @BINPATH@/components/CaptivePortalDetectComponents.manifest
 @BINPATH@/components/captivedetect.js
-#endif
 
 #ifdef MOZ_WEBSPEECH
 @BINPATH@/components/dom_webspeechsynth.xpt
@@ -476,6 +476,7 @@
 @BINPATH@/components/nsUrlClassifierHashCompleter.js
 @BINPATH@/components/nsUrlClassifierListManager.js
 @BINPATH@/components/nsUrlClassifierLib.js
+@BINPATH@/components/PrivateBrowsingTrackingProtectionWhitelist.js
 @BINPATH@/components/url-classifier.xpt
 #endif
 
@@ -657,7 +658,60 @@ bin/libfreebl_32int64_3.so
 @BINPATH@/components/marionettecomponent.js
 #endif
 
-@BINPATH@/components/WebappsUpdateTimer.js
 @BINPATH@/components/DataStore.manifest
 @BINPATH@/components/DataStoreImpl.js
 @BINPATH@/components/dom_datastore.xpt
+
+# b2g and b2gdroid components
+@BINPATH@/components/b2gdroid.manifest
+@BINPATH@/components/Setup.js
+
+@BINPATH@/components/dom_alarm.xpt
+@BINPATH@/components/AlarmsManager.js
+@BINPATH@/components/AlarmsManager.manifest
+
+@BINPATH@/components/InterAppComm.manifest
+@BINPATH@/components/InterAppCommService.js
+@BINPATH@/components/InterAppConnection.js
+@BINPATH@/components/InterAppMessagePort.js
+
+@BINPATH@/components/nsDOMIdentity.js
+@BINPATH@/components/nsIDService.js
+@BINPATH@/components/Identity.manifest
+
+@BINPATH@/components/SystemMessageInternal.js
+@BINPATH@/components/SystemMessageManager.js
+@BINPATH@/components/SystemMessageCache.js
+@BINPATH@/components/SystemMessageManager.manifest
+
+@BINPATH@/components/B2GComponents.manifest
+@BINPATH@/components/AlertsService.js
+@BINPATH@/components/ContentPermissionPrompt.js
+@BINPATH@/components/ActivitiesGlue.js
+@BINPATH@/components/InterAppCommUIGlue.js
+@BINPATH@/components/SystemMessageGlue.js
+@BINPATH@/components/ProcessGlobal.js
+@BINPATH@/components/OMAContentHandler.js
+@BINPATH@/components/PaymentGlue.js
+@BINPATH@/components/TelProtocolHandler.js
+@BINPATH@/components/SmsProtocolHandler.js
+@BINPATH@/components/MailtoProtocolHandler.js
+@BINPATH@/components/RecoveryService.js
+@BINPATH@/components/B2GAboutRedirector.js
+@BINPATH@/components/FilePicker.js
+@BINPATH@/components/WebappsUpdateTimer.js
+@BINPATH@/components/FxAccountsUIGlue.js
+@BINPATH@/components/HelperAppDialog.js
+@BINPATH@/components/MobileIdentityUIGlue.js
+@BINPATH@/components/B2GAppMigrator.js
+@BINPATH@/components/B2GPresentationDevicePrompt.js
+@BINPATH@/components/BootstrapCommandLine.js
+#ifdef MOZ_UPDATER
+@BINPATH@/components/UpdatePrompt.js
+#endif
+@BINPATH@/components/DownloadsAPI.js
+@BINPATH@/components/DownloadsAPI.manifest
+; InputMethod API
+@BINPATH@/components/MozKeyboard.js
+@BINPATH@/components/InputMethod.manifest
+@BINPATH@/@PREF_DIR@/b2gdroid.js
