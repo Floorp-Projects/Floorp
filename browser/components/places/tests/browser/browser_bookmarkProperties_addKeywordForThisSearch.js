@@ -10,7 +10,7 @@ add_task(function* () {
     // We must wait for the context menu code to build metadata.
     yield openContextMenuForContentSelector(browser, 'form > input[name="search"]');
 
-    yield withBookmarksDialog(AddKeywordForSearchField, function* (dialogWin) {
+    yield withBookmarksDialog(true, AddKeywordForSearchField, function* (dialogWin) {
       let acceptBtn = dialogWin.document.documentElement.getButton("accept");
       ok(acceptBtn.disabled, "Accept button is disabled");
 
