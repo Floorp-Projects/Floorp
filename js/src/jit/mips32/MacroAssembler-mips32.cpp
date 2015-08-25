@@ -1563,13 +1563,8 @@ MacroAssemblerMIPSCompat::callWithExitFrame(JitCode* target, Register dynStack)
 void
 MacroAssemblerMIPSCompat::callJit(Register callee)
 {
-    MOZ_ASSERT((asMasm().framePushed() & 3) == 0);
-    if ((asMasm().framePushed() & 7) == 4) {
-        ma_callJitHalfPush(callee);
-    } else {
-        asMasm().adjustFrame(sizeof(uint32_t));
-        ma_callJit(callee);
-    }
+    MOZ_ASSERT((asMasm().framePushed() & 7) == 4);
+    ma_callJitHalfPush(callee);
 }
 
 void
@@ -3072,17 +3067,6 @@ void
 MacroAssemblerMIPS::ma_callJitNoPush(const Register r)
 {
     // This is a MIPS hack to push return address during jalr delay slot.
-    as_jalr(r);
-    as_sw(ra, StackPointer, 0);
-}
-
-// This macrosintruction calls the ion code and pushes the return address to
-// the stack in the case when stack is alligned.
-void
-MacroAssemblerMIPS::ma_callJit(const Register r)
-{
-    // This is a MIPS hack to push return address during jalr delay slot.
-    as_addiu(StackPointer, StackPointer, -2 * sizeof(intptr_t));
     as_jalr(r);
     as_sw(ra, StackPointer, 0);
 }
