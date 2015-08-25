@@ -151,6 +151,12 @@ CancelableBlockState::DispatchImmediate(const InputData& aEvent) const
 {
   MOZ_ASSERT(!HasEvents());
   MOZ_ASSERT(GetTargetApzc());
+  DispatchEvent(aEvent);
+}
+
+void
+CancelableBlockState::DispatchEvent(const InputData& aEvent) const
+{
   GetTargetApzc()->HandleInputEvent(aEvent, mTransformToApzc);
 }
 
@@ -273,7 +279,7 @@ WheelBlockState::HandleEvents()
     TBS_LOG("%p returning first of %" PRIuSIZE " events\n", this, mEvents.Length());
     ScrollWheelInput event = mEvents[0];
     mEvents.RemoveElementAt(0);
-    GetTargetApzc()->HandleInputEvent(event, mTransformToApzc);
+    DispatchEvent(event);
   }
 }
 
@@ -416,11 +422,12 @@ WheelBlockState::EndTransaction()
 }
 
 TouchBlockState::TouchBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc,
-                                 bool aTargetConfirmed)
+                                 bool aTargetConfirmed, TouchCounter& aCounter)
   : CancelableBlockState(aTargetApzc, aTargetConfirmed)
   , mAllowedTouchBehaviorSet(false)
   , mDuringFastFling(false)
   , mSingleTapOccurred(false)
+  , mTouchCounter(aCounter)
 {
   TBS_LOG("Creating %p\n", this);
 }
@@ -542,8 +549,16 @@ TouchBlockState::HandleEvents()
     TBS_LOG("%p returning first of %" PRIuSIZE " events\n", this, mEvents.Length());
     MultiTouchInput event = mEvents[0];
     mEvents.RemoveElementAt(0);
-    GetTargetApzc()->HandleInputEvent(event, mTransformToApzc);
+    DispatchEvent(event);
   }
+}
+
+void
+TouchBlockState::DispatchEvent(const InputData& aEvent) const
+{
+  MOZ_ASSERT(aEvent.mInputType == MULTITOUCH_INPUT);
+  mTouchCounter.Update(aEvent.AsMultiTouchInput());
+  CancelableBlockState::DispatchEvent(aEvent);
 }
 
 bool
