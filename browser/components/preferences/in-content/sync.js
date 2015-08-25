@@ -565,6 +565,25 @@ let gSyncPane = {
       gSyncUtils.resetPassphrase();
   },
 
+  _getEntryPoint: function () {
+    let params = new URLSearchParams(document.URL.split("#")[0].split("?")[1] || "");
+    return params.get("entrypoint") || "preferences";
+  },
+
+  _openAboutAccounts: function(action) {
+    let entryPoint = this._getEntryPoint();
+    let params = new URLSearchParams();
+    if (action) {
+      params.set("action", action);
+    }
+    params.set("entrypoint", entryPoint);
+
+    this.openContentInBrowser("about:accounts?" + params, {
+      replaceQueryString: true
+    });
+
+  },
+
   /**
    * Invoke the Sync setup wizard.
    *
@@ -580,9 +599,7 @@ let gSyncPane = {
                   .wrappedJSObject;
 
     if (service.fxAccountsEnabled) {
-      this.openContentInBrowser("about:accounts?entrypoint=preferences", {
-        replaceQueryString: true
-      });
+      this._openAboutAccounts();
     } else {
       let win = Services.wm.getMostRecentWindow("Weave:AccountSetup");
       if (win)
@@ -618,25 +635,19 @@ let gSyncPane = {
   },
 
   signUp: function() {
-    this.openContentInBrowser("about:accounts?action=signup&entrypoint=preferences", {
-      replaceQueryString: true
-    });
+    this._openAboutAccounts("signup");
   },
 
   signIn: function() {
-    this.openContentInBrowser("about:accounts?action=signin&entrypoint=preferences", {
-      replaceQueryString: true
-    });
+    this._openAboutAccounts("signin");
   },
 
   reSignIn: function() {
-    this.openContentInBrowser("about:accounts?action=reauth&entrypoint=preferences", {
-      replaceQueryString: true
-    });
+    this._openAboutAccounts("reauth");
   },
 
   openChangeProfileImage: function() {
-    fxAccounts.promiseAccountsChangeProfileURI("preferences", "avatar")
+    fxAccounts.promiseAccountsChangeProfileURI(this._getEntryPoint(), "avatar")
       .then(url => {
         this.openContentInBrowser(url, {
           replaceQueryString: true
@@ -645,7 +656,7 @@ let gSyncPane = {
   },
 
   manageFirefoxAccount: function() {
-    fxAccounts.promiseAccountsManageURI("preferences")
+    fxAccounts.promiseAccountsManageURI(this._getEntryPoint())
       .then(url => {
         this.openContentInBrowser(url, {
           replaceQueryString: true

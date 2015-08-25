@@ -1,8 +1,7 @@
 <?xml version="1.0"?>
-# -*- Mode: HTML -*-
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!DOCTYPE bindings [
 <!ENTITY % searchBarDTD SYSTEM "chrome://browser/locale/searchbar.dtd" >
@@ -492,13 +491,10 @@
             var newTabPref = textBox._prefBranch.getBoolPref("browser.search.openintab");
             if (((aEvent instanceof KeyboardEvent) && aEvent.altKey) ^ newTabPref)
               where = "tab";
-            if ((aEvent instanceof MouseEvent) && (aEvent.button == 1 ||
-#ifdef XP_MACOSX
-                                                   aEvent.metaKey))
-#else
-                                                   aEvent.ctrlKey))
-#endif
+            if ((aEvent instanceof MouseEvent) &&
+                (aEvent.button == 1 || aEvent.getModifierState("Accel"))) {
               where = "tab-background";
+            }
           }
 
           let selection = this.telemetrySearchDetails;
@@ -871,6 +867,11 @@
         this._suggestMenuItem = element;
         cxmenu.appendChild(element);
 
+        this.addEventListener("keypress", aEvent => {
+          if (navigator.platform.startsWith("Mac") && aEvent.keyCode == KeyEvent.VK_F4)
+            this.openSearch()
+        }, true);
+
         this.controllers.appendController(this.searchbarController);
         document.getBindingParent(this)._textboxInitialized = true;
 
@@ -1163,11 +1164,7 @@
 
           // accel + up/down changes the default engine and shouldn't affect
           // the selection on the one-off buttons.
-#ifdef XP_MACOSX
-          if (aEvent.metaKey)
-#else
-          if (aEvent.ctrlKey)
-#endif
+          if (aEvent.getModifierState("Accel"))
             return;
 
           let stopEvent = false;
@@ -1250,12 +1247,6 @@
       <handler event="keypress" keycode="VK_UP" modifiers="alt"
                phase="capturing"
                action="return this.openSearch();"/>
-
-#ifndef XP_MACOSX
-      <handler event="keypress" keycode="VK_F4"
-               phase="capturing"
-               action="return this.openSearch();"/>
-#endif
 
       <handler event="dragover">
       <![CDATA[

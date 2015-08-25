@@ -883,7 +883,7 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
      0.5rem for padding of .text-chat-entry > p */
   padding: calc(18px - 1px - 0.5rem);
   margin-bottom: 0.5em;
-  background-color: #E8F6FE;
+  background-color: #dbf7ff;
 }
 
 .room-context {
@@ -1610,13 +1610,13 @@ html[dir="rtl"] .text-chat-entry.received .text-chat-arrow {
   color: black;
   font-weight: bold;
   text-align: start;
-  background-color: #E8F6FE;
+  background-color: #dbf7ff;
   margin-bottom: 0;
   margin-right: 0;
 }
 
 .text-chat-entry.special.room-name p {
-  background: #E8F6FE;
+  background: #dbf7ff;
   max-width: 100%;
   /* 18px for indent of .text-chat-arrow, 1px for border of .text-chat-entry > p,
    0.5rem for padding of .text-chat-entry > p */
