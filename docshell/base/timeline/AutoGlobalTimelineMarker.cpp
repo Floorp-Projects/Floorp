@@ -6,7 +6,7 @@
 
 #include "mozilla/AutoGlobalTimelineMarker.h"
 
-#include "mozilla/TimelineConsumers.h"
+#include "TimelineConsumers.h"
 #include "MainThreadUtils.h"
 
 namespace mozilla {
