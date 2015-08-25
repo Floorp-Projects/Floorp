@@ -447,7 +447,7 @@ let gFxAccounts = {
       this.openPreferences();
       break;
     default:
-      this.openAccountsPage(null, { entrypoint: "menupanel" });
+      this.openPreferences();
       break;
     }
 
@@ -455,7 +455,7 @@ let gFxAccounts = {
   },
 
   openPreferences: function () {
-    openPreferences("paneSync");
+    openPreferences("paneSync", { urlParams: { entrypoint: "menupanel" } });
   },
 
   openAccountsPage: function (action, urlParams={}) {
