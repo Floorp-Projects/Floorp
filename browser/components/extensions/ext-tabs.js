@@ -298,7 +298,7 @@ extensions.registerAPI((extension, context) => {
         }
 
         let tab = tabId ? TabManager.getTab(tabId) : TabManager.activeTab;
-        let tabbrowser = tab.ownerDocument.gBrowser;
+        let tabbrowser = tab.ownerDocument.defaultView.gBrowser;
         if ("url" in updateProperties) {
           tab.linkedBrowser.loadURI(updateProperties.url);
         }
