@@ -721,3 +721,72 @@ FOO&#xFFFFFF;ZOO
 |   <head>
 |   <body>
 |     "FOO�ZOO"
+
+#data
+FOO&#11111111111
+#errors
+(1,3): expected-doctype-but-got-chars
+(1,13): illegal-codepoint-for-numeric-entity
+(1,13): eof-in-numeric-entity
+#document
+| <html>
+|   <head>
+|   <body>
+|     "FOO�"
+
+#data
+FOO&#1111111111
+#errors
+(1,3): expected-doctype-but-got-chars
+(1,13): illegal-codepoint-for-numeric-entity
+(1,13): eof-in-numeric-entity
+#document
+| <html>
+|   <head>
+|   <body>
+|     "FOO�"
+
+#data
+FOO&#111111111111
+#errors
+(1,3): expected-doctype-but-got-chars
+(1,13): illegal-codepoint-for-numeric-entity
+(1,13): eof-in-numeric-entity
+#document
+| <html>
+|   <head>
+|   <body>
+|     "FOO�"
+
+#data
+FOO&#11111111111ZOO
+#errors
+(1,3): expected-doctype-but-got-chars
+(1,13): illegal-codepoint-for-numeric-entity
+#document
+| <html>
+|   <head>
+|   <body>
+|     "FOO�ZOO"
+
+#data
+FOO&#1111111111ZOO
+#errors
+(1,3): expected-doctype-but-got-chars
+(1,13): illegal-codepoint-for-numeric-entity
+#document
+| <html>
+|   <head>
+|   <body>
+|     "FOO�ZOO"
+
+#data
+FOO&#111111111111ZOO
+#errors
+(1,3): expected-doctype-but-got-chars
+(1,13): illegal-codepoint-for-numeric-entity
+#document
+| <html>
+|   <head>
+|   <body>
+|     "FOO�ZOO"
