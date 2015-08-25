@@ -1002,10 +1002,6 @@ Parser<FullParseHandler>::checkFunctionArguments()
         }
     }
 
-    /*
-     * Report error if both rest parameters and 'arguments' are used. Do this
-     * check before adding artificial 'arguments' below.
-     */
     Definition* maybeArgDef = pc->decls().lookupFirst(arguments);
     bool argumentsHasBinding = !!maybeArgDef;
     // ES6 9.2.13.17 says that a lexical binding of 'arguments' shadows the
@@ -1013,18 +1009,12 @@ Parser<FullParseHandler>::checkFunctionArguments()
     bool argumentsHasLocalBinding = maybeArgDef && (maybeArgDef->kind() != Definition::ARG &&
                                                     maybeArgDef->kind() != Definition::LET &&
                                                     maybeArgDef->kind() != Definition::CONST);
-    bool hasRest = pc->sc->asFunctionBox()->function()->hasRest();
-    if (hasRest && argumentsHasLocalBinding) {
-        report(ParseError, false, nullptr, JSMSG_ARGUMENTS_AND_REST);
-        return false;
-    }
 
     /*
      * Even if 'arguments' isn't explicitly mentioned, dynamic name lookup
-     * forces an 'arguments' binding. The exception is that functions with rest
-     * parameters are free from 'arguments'.
+     * forces an 'arguments' binding.
      */
-    if (!argumentsHasBinding && pc->sc->bindingsAccessedDynamically() && !hasRest) {
+    if (!argumentsHasBinding && pc->sc->bindingsAccessedDynamically()) {
         ParseNode* pn = newName(arguments);
         if (!pn)
             return false;
@@ -1082,21 +1072,8 @@ template <>
 bool
 Parser<SyntaxParseHandler>::checkFunctionArguments()
 {
-    bool hasRest = pc->sc->asFunctionBox()->function()->hasRest();
-
-    if (pc->lexdeps->lookup(context->names().arguments)) {
+    if (pc->lexdeps->lookup(context->names().arguments))
         pc->sc->asFunctionBox()->usesArguments = true;
-        if (hasRest) {
-            report(ParseError, false, null(), JSMSG_ARGUMENTS_AND_REST);
-            return false;
-        }
-    } else if (hasRest) {
-        DefinitionNode maybeArgDef = pc->decls().lookupFirst(context->names().arguments);
-        if (maybeArgDef && handler.getDefinitionKind(maybeArgDef) != Definition::ARG) {
-            report(ParseError, false, null(), JSMSG_ARGUMENTS_AND_REST);
-            return false;
-        }
-    }
 
     return true;
 }
@@ -1182,9 +1159,12 @@ Parser<ParseHandler>::functionBody(InHandling inHandling, YieldHandling yieldHan
             return null();
     }
 
-    /* Define the 'arguments' binding if necessary. */
-    if (!checkFunctionArguments())
-        return null();
+    if (kind != Arrow) {
+        // Define the 'arguments' binding if necessary. Arrow functions
+        // don't have 'arguments'.
+        if (!checkFunctionArguments())
+            return null();
+    }
 
     return pn;
 }
@@ -2205,8 +2185,9 @@ Parser<ParseHandler>::addFreeVariablesFromLazyFunction(JSFunction* fun,
     for (size_t i = 0; i < lazy->numFreeVariables(); i++) {
         JSAtom* atom = freeVariables[i].atom();
 
-        // 'arguments' will be implicitly bound within the inner function.
-        if (atom == context->names().arguments)
+        // 'arguments' will be implicitly bound within the inner function,
+        // except if the inner function is an arrow function.
+        if (atom == context->names().arguments && !fun->isArrow())
             continue;
 
         DefinitionNode dn = pc->decls().lookupFirst(atom);

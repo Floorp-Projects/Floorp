@@ -24,6 +24,7 @@ nsHtml5TreeBuilder::nsHtml5TreeBuilder(nsHtml5OplessBuilder* aBuilder)
   , mHandles(nullptr)
   , mHandlesUsed(0)
   , mSpeculativeLoadStage(nullptr)
+  , mBroken(NS_OK)
   , mCurrentHtmlScriptIsAsyncOrDefer(false)
   , mPreventScriptExecution(false)
 #ifdef DEBUG
@@ -48,6 +49,7 @@ nsHtml5TreeBuilder::nsHtml5TreeBuilder(nsAHtml5TreeOpSink* aOpSink,
   , mHandles(new nsIContent*[NS_HTML5_TREE_BUILDER_HANDLE_ARRAY_LENGTH])
   , mHandlesUsed(0)
   , mSpeculativeLoadStage(aStage)
+  , mBroken(NS_OK)
   , mCurrentHtmlScriptIsAsyncOrDefer(false)
   , mPreventScriptExecution(false)
 #ifdef DEBUG
@@ -499,7 +501,15 @@ nsHtml5TreeBuilder::insertFosterParentedCharacters(char16_t* aBuffer, int32_t aS
     return;
   }
 
-  char16_t* bufferCopy = new char16_t[aLength];
+  char16_t* bufferCopy = new (mozilla::fallible) char16_t[aLength];
+  if (!bufferCopy) {
+    // Just assigning mBroken instead of generating tree op. The caller
+    // of tokenizeBuffer() will call MarkAsBroken() as appropriate.
+    mBroken = NS_ERROR_OUT_OF_MEMORY;
+    requestSuspension();
+    return;
+  }
+
   memcpy(bufferCopy, aBuffer, aLength * sizeof(char16_t));
   
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
@@ -551,7 +561,15 @@ nsHtml5TreeBuilder::appendCharacters(nsIContentHandle* aParent, char16_t* aBuffe
     return;
   }
 
-  char16_t* bufferCopy = new char16_t[aLength];
+  char16_t* bufferCopy = new (mozilla::fallible) char16_t[aLength];
+  if (!bufferCopy) {
+    // Just assigning mBroken instead of generating tree op. The caller
+    // of tokenizeBuffer() will call MarkAsBroken() as appropriate.
+    mBroken = NS_ERROR_OUT_OF_MEMORY;
+    requestSuspension();
+    return;
+  }
+
   memcpy(bufferCopy, aBuffer, aLength * sizeof(char16_t));
   
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
@@ -603,7 +621,15 @@ nsHtml5TreeBuilder::appendComment(nsIContentHandle* aParent, char16_t* aBuffer, 
     return;
   }
 
-  char16_t* bufferCopy = new char16_t[aLength];
+  char16_t* bufferCopy = new (mozilla::fallible) char16_t[aLength];
+  if (!bufferCopy) {
+    // Just assigning mBroken instead of generating tree op. The caller
+    // of tokenizeBuffer() will call MarkAsBroken() as appropriate.
+    mBroken = NS_ERROR_OUT_OF_MEMORY;
+    requestSuspension();
+    return;
+  }
+
   memcpy(bufferCopy, aBuffer, aLength * sizeof(char16_t));
   
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
@@ -628,7 +654,15 @@ nsHtml5TreeBuilder::appendCommentToDocument(char16_t* aBuffer, int32_t aStart, i
     return;
   }
 
-  char16_t* bufferCopy = new char16_t[aLength];
+  char16_t* bufferCopy = new (mozilla::fallible) char16_t[aLength];
+  if (!bufferCopy) {
+    // Just assigning mBroken instead of generating tree op. The caller
+    // of tokenizeBuffer() will call MarkAsBroken() as appropriate.
+    mBroken = NS_ERROR_OUT_OF_MEMORY;
+    requestSuspension();
+    return;
+  }
+
   memcpy(bufferCopy, aBuffer, aLength * sizeof(char16_t));
   
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
@@ -912,15 +946,39 @@ nsHtml5TreeBuilder::elementPopped(int32_t aNamespace, nsIAtom* aName, nsIContent
 void
 nsHtml5TreeBuilder::accumulateCharacters(const char16_t* aBuf, int32_t aStart, int32_t aLength)
 {
-  int32_t newFillLen = charBufferLen + aLength;
-  if (newFillLen > charBuffer.length) {
-    int32_t newAllocLength = newFillLen + (newFillLen >> 1);
-    jArray<char16_t,int32_t> newBuf = jArray<char16_t,int32_t>::newJArray(newAllocLength);
+  MOZ_ASSERT(charBufferLen + aLength <= charBuffer.length,
+             "About to memcpy past the end of the buffer!");
+  memcpy(charBuffer + charBufferLen, aBuf + aStart, sizeof(char16_t) * aLength);
+  charBufferLen += aLength;
+}
+
+bool
+nsHtml5TreeBuilder::EnsureBufferSpace(size_t aLength)
+{
+  // TODO: Unify nsHtml5Tokenizer::strBuf and nsHtml5TreeBuilder::charBuffer
+  // so that this method becomes unnecessary.
+  size_t worstCase = size_t(charBufferLen) + aLength;
+  if (worstCase > INT32_MAX) {
+    // Since we index into the buffer using int32_t due to the Java heritage
+    // of the code, let's treat this as OOM.
+    return false;
+  }
+  if (!charBuffer) {
+    // Add one to round to the next power of two to avoid immediate
+    // reallocation once there are a few characters in the buffer.
+    charBuffer = jArray<char16_t,int32_t>::newFallibleJArray(mozilla::RoundUpPow2(worstCase + 1));
+    if (!charBuffer) {
+      return false;
+    }
+  } else if (worstCase > size_t(charBuffer.length)) {
+    jArray<char16_t,int32_t> newBuf = jArray<char16_t,int32_t>::newFallibleJArray(mozilla::RoundUpPow2(worstCase));
+    if (!newBuf) {
+      return false;
+    }
     memcpy(newBuf, charBuffer, sizeof(char16_t) * charBufferLen);
     charBuffer = newBuf;
   }
-  memcpy(charBuffer + charBufferLen, aBuf + aStart, sizeof(char16_t) * aLength);
-  charBufferLen = newFillLen;
+  return true;
 }
 
 nsIContentHandle*
@@ -958,20 +1016,30 @@ nsHtml5TreeBuilder::Flush(bool aDiscretionary)
     MOZ_ASSERT_UNREACHABLE("Must never flush with builder.");
     return false;
   }
-  if (!aDiscretionary ||
-      !(charBufferLen &&
-        currentPtr >= 0 &&
-        stack[currentPtr]->isFosterParenting())) {
-    // Don't flush text on discretionary flushes if the current element on
-    // the stack is a foster-parenting element and there's pending text,
-    // because flushing in that case would make the tree shape dependent on
-    // where the flush points fall.
-    flushCharacters();
+  if (NS_SUCCEEDED(mBroken)) {
+    if (!aDiscretionary ||
+        !(charBufferLen &&
+          currentPtr >= 0 &&
+          stack[currentPtr]->isFosterParenting())) {
+      // Don't flush text on discretionary flushes if the current element on
+      // the stack is a foster-parenting element and there's pending text,
+      // because flushing in that case would make the tree shape dependent on
+      // where the flush points fall.
+      flushCharacters();
+    }
+    FlushLoads();
   }
-  FlushLoads();
   if (mOpSink) {
     bool hasOps = !mOpQueue.IsEmpty();
     if (hasOps) {
+      // If the builder is broken and mOpQueue is not empty, there must be
+      // one op and it must be eTreeOpMarkAsBroken.
+      if (NS_FAILED(mBroken)) {
+        MOZ_ASSERT(mOpQueue.Length() == 1,
+          "Tree builder is broken with a non-empty op queue whose length isn't 1.");
+        MOZ_ASSERT(mOpQueue[0].IsMarkAsBroken(),
+          "Tree builder is broken but the op in queue is not marked as broken.");
+      }
       mOpSink->MoveOpsFrom(mOpQueue);
     }
     return hasOps;
@@ -1074,8 +1142,20 @@ nsHtml5TreeBuilder::MarkAsBroken(nsresult aRv)
     MOZ_ASSERT_UNREACHABLE("Must not call this with builder.");
     return;
   }
+  mBroken = aRv;
   mOpQueue.Clear(); // Previous ops don't matter anymore
   mOpQueue.AppendElement()->Init(aRv);
+}
+
+void
+nsHtml5TreeBuilder::MarkAsBrokenFromPortability(nsresult aRv)
+{
+  if (mBuilder) {
+    MarkAsBrokenAndRequestSuspension(aRv);
+    return;
+  }
+  mBroken = aRv;
+  requestSuspension();
 }
 
 void

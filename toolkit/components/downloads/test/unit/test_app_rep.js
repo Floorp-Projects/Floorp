@@ -317,11 +317,11 @@ add_test(function test_redirect_on_blocklist() {
   let secman = Services.scriptSecurityManager;
   let badRedirects = Cc["@mozilla.org/array;1"]
                        .createInstance(Ci.nsIMutableArray);
-  badRedirects.appendElement(secman.createCodebasePrincipal(exampleURI, {}),
+  badRedirects.appendElement(secman.getNoAppCodebasePrincipal(exampleURI),
                              false);
-  badRedirects.appendElement(secman.createCodebasePrincipal(blocklistedURI, {}),
+  badRedirects.appendElement(secman.getNoAppCodebasePrincipal(blocklistedURI),
                              false);
-  badRedirects.appendElement(secman.createCodebasePrincipal(whitelistedURI, {}),
+  badRedirects.appendElement(secman.getNoAppCodebasePrincipal(whitelistedURI),
                              false);
   gAppRep.queryReputation({
     sourceURI: whitelistedURI,

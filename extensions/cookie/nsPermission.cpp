@@ -7,6 +7,7 @@
 #include "nsContentUtils.h"
 #include "nsIClassInfoImpl.h"
 #include "nsIEffectiveTLDService.h"
+#include "nsIScriptSecurityManager.h"
 #include "mozilla/BasePrincipal.h"
 
 // nsPermission Implementation
@@ -167,9 +168,12 @@ nsPermission::MatchesURI(nsIURI* aURI, bool aExactHost, bool* aMatches)
 {
   NS_ENSURE_ARG_POINTER(aURI);
 
-  mozilla::OriginAttributes attrs;
-  nsCOMPtr<nsIPrincipal> principal = mozilla::BasePrincipal::CreateCodebasePrincipal(aURI, attrs);
-  NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
+  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+  NS_ENSURE_TRUE(secMan, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIPrincipal> principal;
+  nsresult rv = secMan->GetNoAppCodebasePrincipal(aURI, getter_AddRefs(principal));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return Matches(principal, aExactHost, aMatches);
 }

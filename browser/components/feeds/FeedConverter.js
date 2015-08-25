@@ -254,7 +254,7 @@ FeedConverter.prototype = {
         chromeChannel = ios.newChannelFromURIWithLoadInfo(aboutFeedsURI, loadInfo);
         chromeChannel.originalURI = result.uri;
         chromeChannel.owner =
-          Services.scriptSecurityManager.createCodebasePrincipal(aboutFeedsURI, {});
+          Services.scriptSecurityManager.getNoAppCodebasePrincipal(aboutFeedsURI);
       } else {
         chromeChannel = ios.newChannelFromURIWithLoadInfo(result.uri, loadInfo);
       }

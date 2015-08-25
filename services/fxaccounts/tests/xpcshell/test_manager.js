@@ -25,7 +25,7 @@ function makePrincipal(origin, appId) {
   let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
                  .getService(Ci.nsIScriptSecurityManager);
   let uri = Services.io.newURI(origin, null, null);
-  return secMan.createCodebasePrincipal(uri, {appId: appId});
+  return secMan.getAppCodebasePrincipal(uri, appId, false);
 }
 let principal = makePrincipal('app://settings.gaiamobile.org', 27, false);
 

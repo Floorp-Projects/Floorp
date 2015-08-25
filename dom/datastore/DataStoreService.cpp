@@ -14,7 +14,6 @@
 #include "mozilla/dom/DataStoreImplBinding.h"
 #include "nsIDataStore.h"
 
-#include "mozilla/BasePrincipal.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
@@ -56,9 +55,6 @@
   if (NS_WARN_IF(!XRE_IsParentProcess())) {                                 \
     return NS_ERROR_FAILURE;                                                \
   }
-
-using mozilla::BasePrincipal;
-using mozilla::OriginAttributes;
 
 namespace mozilla {
 namespace dom {
@@ -217,10 +213,17 @@ ResetPermission(uint32_t aAppId, const nsAString& aOriginURL,
     return rv;
   }
 
-  OriginAttributes attrs(aAppId, false);
-  nsCOMPtr<nsIPrincipal> principal =
-    BasePrincipal::CreateCodebasePrincipal(uri, attrs);
-  NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  if (!ssm) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIPrincipal> principal;
+  rv = ssm->GetAppCodebasePrincipal(uri, aAppId, false,
+                                    getter_AddRefs(principal));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   nsCOMPtr<nsIPermissionManager> pm =
     do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);

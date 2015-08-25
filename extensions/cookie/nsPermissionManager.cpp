@@ -126,24 +126,19 @@ GetPrincipalFromOrigin(const nsACString& aOrigin, nsIPrincipal** aPrincipal)
 nsresult
 GetPrincipal(nsIURI* aURI, uint32_t aAppId, bool aIsInBrowserElement, nsIPrincipal** aPrincipal)
 {
-  // TODO: Bug 1165267 - Use OriginAttributes for nsCookieService
-  mozilla::OriginAttributes attrs(aAppId, aIsInBrowserElement);
-  nsCOMPtr<nsIPrincipal> principal = mozilla::BasePrincipal::CreateCodebasePrincipal(aURI, attrs);
-  NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
+  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+  NS_ENSURE_TRUE(secMan, NS_ERROR_FAILURE);
 
-  principal.forget(aPrincipal);
-  return NS_OK;
+  return secMan->GetAppCodebasePrincipal(aURI, aAppId, aIsInBrowserElement, aPrincipal);
 }
 
 nsresult
 GetPrincipal(nsIURI* aURI, nsIPrincipal** aPrincipal)
 {
-  mozilla::OriginAttributes attrs;
-  nsCOMPtr<nsIPrincipal> principal = mozilla::BasePrincipal::CreateCodebasePrincipal(aURI, attrs);
-  NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
+  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+  NS_ENSURE_TRUE(secMan, NS_ERROR_FAILURE);
 
-  principal.forget(aPrincipal);
-  return NS_OK;
+  return secMan->GetNoAppCodebasePrincipal(aURI, aPrincipal);
 }
 
 nsCString

@@ -39,36 +39,37 @@ def run_marionette(tests, b2g_path=None, emulator=None, testtype=None,
 
     from marionette.runtests import (
         MarionetteTestRunner,
-        BaseMarionetteOptions,
+        BaseMarionetteArguments,
         startTestRunner
     )
 
-    parser = BaseMarionetteOptions()
+    parser = BaseMarionetteArguments()
     commandline.add_logging_group(parser)
-    options, args = parser.parse_args()
+    args = parser.parse_args()
 
     if not tests:
         tests = [os.path.join(topsrcdir,
-                    'testing/marionette/client/marionette/tests/unit-tests.ini')]
+                 'testing/marionette/client/marionette/tests/unit-tests.ini')]
+    args.tests = tests
 
     if b2g_path:
-        options.homedir = b2g_path
+        args.homedir = b2g_path
         if emulator:
-            options.emulator = emulator
+            args.emulator = emulator
     else:
-        options.binary = binary
-        path, exe = os.path.split(options.binary)
+        args.binary = binary
+        path, exe = os.path.split(args.binary)
 
     for k, v in kwargs.iteritems():
-        setattr(options, k, v)
+        setattr(args, k, v)
 
-    parser.verify_usage(options, tests)
+    parser.verify_usage(args)
 
-    options.logger = commandline.setup_logging("Marionette Unit Tests",
-                                               options,
-                                               {"mach": sys.stdout})
+    args.logger = commandline.setup_logging("Marionette Unit Tests",
+                                            args,
+                                            {"mach": sys.stdout})
 
-    runner = startTestRunner(MarionetteTestRunner, options, tests)
+    runner = startTestRunner(MarionetteTestRunner, args)
     if runner.failed > 0:
         return 1
 

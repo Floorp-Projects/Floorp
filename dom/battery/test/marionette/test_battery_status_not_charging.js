@@ -8,12 +8,15 @@ let fromStatus = "not-charging";
 let fromCharging = false;
 
 function verifyInitialState() {
-  ok(battery, "battery");
-  ok(battery.charging, "battery.charging");
-  runEmulatorCmd("power display", function (result) {
-    is(result.pop(), "OK", "power display successful");
-    ok(result.indexOf("status: Charging") !== -1, "power status charging");
-    setUp();
+  window.navigator.getBattery().then(function (b) {
+    battery = b;
+    ok(battery, "battery");
+    ok(battery.charging, "battery.charging");
+    runEmulatorCmd("power display", function (result) {
+      is(result.pop(), "OK", "power display successful");
+      ok(result.indexOf("status: Charging") !== -1, "power status charging");
+      setUp();
+    });
   });
 }
 

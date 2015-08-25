@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2007 Henri Sivonen
- * Copyright (c) 2007-2011 Mozilla Foundation
+ * Copyright (c) 2007-2015 Mozilla Foundation
  * Portions of comments Copyright 2004-2008 Apple Computer, Inc., Mozilla
  * Foundation, and Opera Software ASA.
  *
@@ -88,7 +88,7 @@ nsHtml5TreeBuilder::startTokenization(nsHtml5Tokenizer* self)
   deepTreeSurrogateParent = nullptr;
   start(fragment);
   charBufferLen = 0;
-  charBuffer = jArray<char16_t,int32_t>::newJArray(1024);
+  charBuffer = nullptr;
   framesetOk = true;
   if (fragment) {
     nsIContentHandle* elt;
@@ -1991,7 +1991,7 @@ nsHtml5TreeBuilder::isSpecialParentInForeign(nsHtml5StackNode* stackNode)
 }
 
 nsString* 
-nsHtml5TreeBuilder::extractCharsetFromContent(nsString* attributeValue)
+nsHtml5TreeBuilder::extractCharsetFromContent(nsString* attributeValue, nsHtml5TreeBuilder* tb)
 {
   int32_t charsetState = NS_HTML5TREE_BUILDER_CHARSET_INITIAL;
   int32_t start = -1;
@@ -2180,7 +2180,7 @@ nsHtml5TreeBuilder::extractCharsetFromContent(nsString* attributeValue)
     if (end == -1) {
       end = buffer.length;
     }
-    charset = nsHtml5Portability::newStringFromBuffer(buffer, start, end - start);
+    charset = nsHtml5Portability::newStringFromBuffer(buffer, start, end - start, tb);
   }
   return charset;
 }
@@ -2201,7 +2201,7 @@ nsHtml5TreeBuilder::checkMetaCharset(nsHtml5HtmlAttributes* attributes)
   }
   nsString* content = attributes->getValue(nsHtml5AttributeName::ATTR_CONTENT);
   if (content) {
-    nsString* extract = nsHtml5TreeBuilder::extractCharsetFromContent(content);
+    nsString* extract = nsHtml5TreeBuilder::extractCharsetFromContent(content, this);
     if (extract) {
       if (tokenizer->internalEncodingDeclaration(extract)) {
         requestSuspension();

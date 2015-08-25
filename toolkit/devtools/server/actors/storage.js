@@ -1324,7 +1324,7 @@ let indexedDBHelpers = {
       principal = Services.scriptSecurityManager.getSystemPrincipal();
     } else {
       let uri = Services.io.newURI(host, null, null);
-      principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+      principal = Services.scriptSecurityManager.getCodebasePrincipal(uri);
     }
 
     return require("indexedDB").openForPrincipal(principal, name);

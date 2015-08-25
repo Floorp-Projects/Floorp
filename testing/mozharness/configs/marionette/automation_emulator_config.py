@@ -37,10 +37,9 @@ config = {
     "download_symbols": "ondemand",
     "download_minidump_stackwalk": True,
     "default_blob_upload_servers": [
-         "https://blobupload.elasticbeanstalk.com",
+        "https://blobupload.elasticbeanstalk.com",
     ],
-    "blob_uploader_auth_file" : os.path.join(os.getcwd(), "oauth.txt"),
-    },
+    "blob_uploader_auth_file": os.path.join(os.getcwd(), "oauth.txt"),
     "suite_definitions": {
         "gaiatest_desktop": {
             "options": [
@@ -124,6 +123,6 @@ config = {
             ],
             "run_filename": "",
             "testsdir": ""
-        }
+        },
     },
 }

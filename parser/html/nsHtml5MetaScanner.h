@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2007 Henri Sivonen
- * Copyright (c) 2008-2010 Mozilla Foundation
+ * Copyright (c) 2008-2015 Mozilla Foundation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a 
  * copy of this software and associated documentation files (the "Software"), 
@@ -79,8 +79,9 @@ class nsHtml5MetaScanner
     nsString* content;
     nsString* charset;
     int32_t httpEquivState;
+    nsHtml5TreeBuilder* treeBuilder;
   public:
-    nsHtml5MetaScanner();
+    explicit nsHtml5MetaScanner(nsHtml5TreeBuilder* tb);
     ~nsHtml5MetaScanner();
   protected:
     void stateLoop(int32_t state);

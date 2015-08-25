@@ -497,7 +497,7 @@ let AboutPermissions = {
         while (row = aResults.getNextRow()) {
           let spec = row.getResultByName("url");
           let uri = NetUtil.newURI(spec);
-          let principal = gSecMan.createCodebasePrincipal(uri, {});
+          let principal = gSecMan.getNoAppCodebasePrincipal(uri);
 
           AboutPermissions.addPrincipal(principal);
         }
@@ -548,7 +548,7 @@ let AboutPermissions = {
       try {
         // aLogin.hostname is a string in origin URL format (e.g. "http://foo.com")
         let uri = NetUtil.newURI(aLogin.hostname);
-        let principal = gSecMan.createCodebasePrincipal(uri, {});
+        let principal = gSecMan.getNoAppCodebasePrincipal(uri);
         this.addPrincipal(principal);
       } catch (e) {
         // newURI will throw for add-ons logins stored in chrome:// URIs
@@ -564,7 +564,7 @@ let AboutPermissions = {
       try {
         // aHostname is a string in origin URL format (e.g. "http://foo.com")
         let uri = NetUtil.newURI(aHostname);
-        let principal = gSecMan.createCodebasePrincipal(uri, {});
+        let principal = gSecMan.getNoAppCodebasePrincipal(uri);
         this.addPrincipal(principal);
       } catch (e) {
         // newURI will throw for add-ons logins stored in chrome:// URIs

@@ -13,9 +13,9 @@ function run_test() {
 
   var secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
   const kURI1 = "http://example.com";
-  var app1 = secMan.createCodebasePrincipal(createURI(kURI1), {appId: 1});
-  var app10 = secMan.createCodebasePrincipal(createURI(kURI1),{appId: 10});
-  var app1browser = secMan.createCodebasePrincipal(createURI(kURI1), {appId: 1, inBrowser: true});
+  var app1 = secMan.getAppCodebasePrincipal(createURI(kURI1), 1, false);
+  var app10 = secMan.getAppCodebasePrincipal(createURI(kURI1), 10, false);
+  var app1browser = secMan.getAppCodebasePrincipal(createURI(kURI1), 1, true);
 
   var am = Cc["@mozilla.org/network/http-auth-manager;1"].
            getService(Ci.nsIHttpAuthManager);

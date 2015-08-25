@@ -103,10 +103,10 @@ function run_test()
 
   var pm = Cc["@mozilla.org/permissionmanager;1"]
     .getService(Ci.nsIPermissionManager);
-  var ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
-              .getService(Ci.nsIScriptSecurityManager);
   var uri = make_uri("http://localhost:4444");
-  var principal = ssm.createCodebasePrincipal(uri, {});
+  var principal = Cc["@mozilla.org/scriptsecuritymanager;1"]
+                    .getService(Ci.nsIScriptSecurityManager)
+                    .getNoAppCodebasePrincipal(uri);
 
   if (pm.testPermissionFromPrincipal(principal, "offline-app") != 0) {
     dump("Previous test failed to clear offline-app permission!  Expect failures.\n");

@@ -118,6 +118,15 @@ public final class UTF16Buffer {
     }
 
     /**
+     * Returns <code>end - start</code>.
+     *
+     * @return <code>end - start</code>
+     */
+    public int getLength() {
+        return end - start;
+    }
+
+    /**
      * Adjusts the start index to skip over the first character if it is a line
      * feed and the previous character was a carriage return.
      * 

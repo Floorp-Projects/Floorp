@@ -129,14 +129,6 @@ ArgumentsRestrictions(JSContext* cx, HandleFunction fun)
         return false;
     }
 
-    // Functions with rest arguments don't include a local |arguments| binding.
-    // Similarly, "arguments" shouldn't work on them.
-    if (fun->hasRest()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                             JSMSG_FUNCTION_ARGUMENTS_AND_REST);
-        return false;
-    }
-
     // Otherwise emit a strict warning about |f.arguments| to discourage use of
     // this non-standard, performance-harmful feature.
     if (!JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING | JSREPORT_STRICT, GetErrorMessage,
