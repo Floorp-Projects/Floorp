@@ -424,12 +424,12 @@ public:
   /**
    * Add aStream to the graph and initializes its graph-specific state.
    */
-  void AddStream(MediaStream* aStream);
+  void AddStreamGraphThread(MediaStream* aStream);
   /**
    * Remove aStream from the graph. Ensures that pending messages about the
    * stream back to the main thread are flushed.
    */
-  void RemoveStream(MediaStream* aStream);
+  void RemoveStreamGraphThread(MediaStream* aStream);
   /**
    * Remove aPort from the graph and release it.
    */
